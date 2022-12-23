@@ -1,7 +1,4 @@
-.. This explicit qtkeyword directive serves to identify the "home" location:
-.. when just opening the manual, this is what is displayed.
-
-.. qtkeyword:: id="home"
+.. index:: SpeedCrunch Manual
 
 Introduction
 ============
