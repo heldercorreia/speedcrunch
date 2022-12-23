@@ -1,5 +1,3 @@
-.. index:: SpeedCrunch Manual
-
 Introduction
 ============
 
