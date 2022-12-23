@@ -3,6 +3,8 @@ SPHINX_INTL := sphinx-intl
 PYGETTEXT := pygettext3
 QHELPGENERATOR := qhelpgenerator
 
+default: build-bundled
+
 update-prebuilt-manual: build-bundled
 	rm -rf ../build_html_embedded
 	cp -r _build-bundled ../build_html_embedded

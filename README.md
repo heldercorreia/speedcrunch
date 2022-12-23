@@ -36,28 +36,9 @@ running CMake, in the form `cmake ../src -Dvariable=value`.
 - **HTML_DOCS_DIR**: Change the path to the HTML manual that's embedded in the binary
   by the build. By default, a bundled prebuilt copy is used to minimize dependencies.
 
-## Building the HTML manual
+## Building the manual
 Building the HTML manual is normally not necessary because a prebuilt copy is included
-with the SpeedCrunch source. Rebuilding the manual requires the following additional
-software:
-
-  - [Python](http://python.org) 3.4 or later
-  - [Sphinx](http://sphinx-doc.org) 1.8 or later
-  - [the Qt help builder extension](https://github.com/sphinx-doc/sphinxcontrib-qthelp) 1.0 or later
-  - [the Quark theme](https://pypi.python.org/pypi/quark-sphinx-theme) 0.2 or later
-
-To build the manual in a dedicated build directory, run the following commands from
-the root of the source directory:
-
-    mkdir docs-build
-    cd docs-build
-    cmake ../doc/src
-    make
-
-Then, when building SpeedCrunch itself, point the `HTML_DOCS_DIR` to your manual build
-directory:
-
-    cmake <SpeedCrunch source>/src -DHTML_DOCS_DIR=<manual build dir>
+with the SpeedCrunch source. For more information, see the [manual's README](doc/src/README.md).
 
 ## Contributing
 - Report bugs or request features in the
