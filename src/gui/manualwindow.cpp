@@ -46,6 +46,10 @@ ManualWindow::ManualWindow(QWidget* parent)
     connect(this, SIGNAL(sourceChanged(const QUrl&)), SLOT(handleSourceChanged(const QUrl&)));
 
     m_server = ManualServer::instance();
+    auto homePage = m_server->homePage();
+    if (homePage.isValid()) {
+        openPage(homePage);
+    }
     retranslateText();
 }
 

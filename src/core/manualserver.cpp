@@ -103,6 +103,18 @@ ManualServer *ManualServer::instance()
     return s_instance;
 }
 
+QUrl ManualServer::homePage()
+{
+    ensureCorrectLanguage();
+    if (!m_helpEngine)
+        return QUrl();
+    auto docs = m_helpEngine->documentsForKeyword("SpeedCrunch");
+    if (!docs.isEmpty()) {
+        return docs[0].url;
+    }
+    return QUrl();
+}
+
 QUrl ManualServer::urlForKeyword(const QString& keyword)
 {
     ensureCorrectLanguage();
