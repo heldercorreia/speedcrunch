@@ -38,7 +38,7 @@ private:
 
 public:
     static ManualServer* instance();
-    bool URLforKeyword(const QString id, QUrl &result);
+    QUrl urlForKeyword(const QString& keyword);
     QByteArray fileData(const QUrl &url);
     bool isSupportedLanguage(const QString&);
 
