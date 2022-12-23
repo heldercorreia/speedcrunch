@@ -2,11 +2,6 @@
 host = https://www.transifex.com
 type = PO
 
-[test-439.reference]
-file_filter = locale/<lang>/LC_MESSAGES/reference.po
-source_file = locale/pot/reference.pot
-source_lang = en
-
 [test-439.advanced]
 file_filter = locale/<lang>/LC_MESSAGES/advanced.po
 source_file = locale/pot/advanced.pot
@@ -25,6 +20,11 @@ source_lang = en
 [test-439.introduction]
 file_filter = locale/<lang>/LC_MESSAGES/introduction.po
 source_file = locale/pot/introduction.pot
+source_lang = en
+
+[test-439.reference]
+file_filter = locale/<lang>/LC_MESSAGES/reference.po
+source_file = locale/pot/reference.pot
 source_lang = en
 
 [test-439.sphinx]
