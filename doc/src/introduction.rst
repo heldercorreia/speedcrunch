@@ -1,3 +1,4 @@
+.. This index entry identifies the "home page" of the manual, which is displayed when opening the manual in the application.
 .. index:: SpeedCrunch
 
 Introduction
