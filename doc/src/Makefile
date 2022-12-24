@@ -40,4 +40,4 @@ locale/pot:
 	$(SPHINX_BUILD) -b gettext . $@
 	$(PYGETTEXT) -d extra-doc-strings -p $@ extensions/*.py
 
-.PHONY: update-prebuilt-manual update-translations
+.PHONY: default update-prebuilt-manual update-translations build-bundled build-html
