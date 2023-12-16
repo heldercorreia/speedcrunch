@@ -1,2 +1,4 @@
 CMakeLists.txt.user
 src/speedcrunch.pro.user
+/.idea
+cmake-build-debug

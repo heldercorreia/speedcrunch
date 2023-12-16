@@ -46,15 +46,11 @@ ManualWindow::ManualWindow(QWidget* parent)
     connect(this, SIGNAL(sourceChanged(const QUrl&)), SLOT(handleSourceChanged(const QUrl&)));
 
     m_server = ManualServer::instance();
-    showHelpForKeyword("home");
+    auto homePage = m_server->homePage();
+    if (homePage.isValid()) {
+        openPage(homePage);
+    }
     retranslateText();
-}
-
-void ManualWindow::showHelpForKeyword(const QString &id)
-{
-    QUrl url;
-    if(m_server->URLforKeyword(id, url))
-        openPage(url);
 }
 
 void ManualWindow::openPage(const QUrl& url)
@@ -152,7 +148,7 @@ void ManualWindow::paintEvent(QPaintEvent* e)
 
 void ManualWindow::handleAnchorClick(const QUrl &url)
 {
-    if (url.scheme() == "qthelp") 
+    if (url.scheme() == "qthelp")
         openPage(url);
     else
         QDesktopServices::openUrl(url);

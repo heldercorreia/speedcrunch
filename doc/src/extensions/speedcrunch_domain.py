@@ -38,8 +38,6 @@ from sphinx.util.docfields import Field, GroupedField
 from sphinx.util.nodes import make_refnode
 from sphinx.locale import get_translation
 
-import qtkeyword
-
 _MESSAGE_CATALOG = 'extra-doc-strings'
 _ = get_translation(_MESSAGE_CATALOG)
 
@@ -139,8 +137,6 @@ class SpeedCrunchObject(ObjectDescription):
 
         indextext = self.get_index_text(name)
         self.add_index_entry('single', indextext, targetname)
-
-        qtkeyword.add_id_keyword(self.env, name, self.env.docname, targetname)
 
 
 class SpeedCrunchFunction(SpeedCrunchObject):

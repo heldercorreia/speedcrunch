@@ -33,7 +33,6 @@ class ManualWindow : public QTextBrowser {
 
 public:
     ManualWindow(QWidget* parent = 0);
-    void showHelpForKeyword(const QString &id);
 
 signals:
     void windowClosed();

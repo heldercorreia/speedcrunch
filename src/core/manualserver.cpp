@@ -103,17 +103,32 @@ ManualServer *ManualServer::instance()
     return s_instance;
 }
 
-bool ManualServer::URLforKeyword(const QString id, QUrl &result)
+QUrl ManualServer::homePage()
 {
     ensureCorrectLanguage();
-    result = "";
     if (!m_helpEngine)
-        return false;
-    auto docs = m_helpEngine->documentsForIdentifier(id);
-    if (docs.isEmpty())
-        return false;
-    result = docs[0].url;
-    return true;
+        return QUrl();
+    auto docs = m_helpEngine->documentsForKeyword("SpeedCrunch");
+    if (!docs.isEmpty()) {
+        return docs[0].url;
+    }
+    return QUrl();
+}
+
+QUrl ManualServer::urlForKeyword(const QString& keyword)
+{
+    ensureCorrectLanguage();
+    if (!m_helpEngine)
+        return QUrl();
+    auto constants = m_helpEngine->documentsForIdentifier(QString("constant.%1").arg(keyword));
+    if (!constants.isEmpty()) {
+        return constants[0].url;
+    }
+    auto functions = m_helpEngine->documentsForIdentifier(QString("function.%1").arg(keyword));
+    if (!functions.isEmpty()) {
+        return functions[0].url;
+    }
+    return QUrl();
 }
 
 QByteArray ManualServer::fileData(const QUrl &url)

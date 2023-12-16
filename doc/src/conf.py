@@ -16,9 +16,12 @@
 import sys
 import os
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
-from languages import LANGUAGES
-
+LANGUAGES = {
+    'en_US': 'English',
+    'de_DE': 'Deutsch',
+    'es_ES': 'Español',
+    'fr_FR': 'Français'
+}
 
 try:
     bundled = tags.has('sc_bundled_docs')
@@ -33,15 +36,14 @@ gettext_additional_targets = ['index']
 gettext_compact = True
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = '1.8'
+needs_sphinx = '3.0'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 sys.path.append(os.path.abspath('extensions'))
 
-extensions = ['qtkeyword', 'speedcrunch_domain', 'sc_post_config', 'sc_lexer']
-ignore_qtkeywords = not bundled
+extensions = ['speedcrunch_domain', 'sc_lexer']
 primary_domain = 'sc'
 
 if bundled:
@@ -313,6 +315,3 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
-
-
-del bundled

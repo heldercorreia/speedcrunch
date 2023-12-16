@@ -63,7 +63,7 @@ class SpeedCrunchLexer(RegexLexer):
             (r'[?].*\n', Comment),
 
             # regular operators
-            (r'(\*\*|<<|>>|->|[+\-*/=^!\\&|])', Operator),
+            (r'(\*\*|<<|>>|->|[+\-*/=^!\\&|:\'"°])', Operator),
             # keyword operators
             (words(['in']), Operator.Word),
             # additional punctuation

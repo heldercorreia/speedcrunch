@@ -1,17 +1,43 @@
-# Makefile for Sphinx documentation
-#
+SPHINX_BUILD := sphinx-build
+SPHINX_INTL := sphinx-intl
+PYGETTEXT := pygettext3
+QHELPGENERATOR := qhelpgenerator
 
-# You can set these variables from the command line.
-SPHINXOPTS   =
-SPHINXBUILD  = sphinx-build
-SOURCEDIR    = .
-BUILDDIR     = _build
+default: build-bundled
 
-# Has to be explicit, otherwise we don't get "make" without targets right.
-help:
-	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+update-prebuilt-manual: build-bundled
+	rm -rf ../build_html_embedded
+	cp -r _build-bundled ../build_html_embedded
 
-# Catch-all target: route all unknown targets to Sphinx using the new
-# "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
-%:
-	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+update-translations: locale/pot
+	$(SPHINX_INTL) update
+	$(SPHINX_INTL) update-txconfig-resources
+
+build-html: \
+	_build-html/de_DE \
+	_build-html/en_US \
+	_build-html/es_ES \
+	_build-html/fr_FR
+
+build-bundled: \
+	_build-bundled/de_DE \
+	_build-bundled/en_US \
+	_build-bundled/es_ES \
+	_build-bundled/fr_FR \
+	_build-bundled/manual.qrc
+
+_build-html/%:
+	$(SPHINX_BUILD) -b html -Dlanguage=$* . $@
+
+_build-bundled/%:
+	$(SPHINX_BUILD) -b qthelp -Dlanguage=$* -Dqthelp_basename=manual-$* -t sc_bundled_docs . $@
+	$(QHELPGENERATOR) $@/manual-$*.qhcp
+
+_build-bundled/manual.qrc: manual.qrc
+	cp $< $@
+
+locale/pot:
+	$(SPHINX_BUILD) -b gettext . $@
+	$(PYGETTEXT) -d extra-doc-strings -p $@ extensions/*.py
+
+.PHONY: default update-prebuilt-manual update-translations build-bundled build-html

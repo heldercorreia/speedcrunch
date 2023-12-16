@@ -1095,10 +1095,10 @@ void MainWindow::showContextHelp()
     if(m_widgets.editor->hasFocus()) {
         kw = m_widgets.editor->getKeyword();
         if (kw != "") {
-            QUrl tg;
-            if (m_manualServer->URLforKeyword(kw, tg)) {
+            auto url = m_manualServer->urlForKeyword(kw);
+            if (url.isValid()) {
                 showManualWindow();
-                m_widgets.manual->openPage(tg);
+                m_widgets.manual->openPage(url);
             }
         }
     }
