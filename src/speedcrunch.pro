@@ -2,10 +2,10 @@ equals(QT_MAJOR_VERSION, 5) {
     lessThan(QT_MINOR_VERSION, 15) {
         error(Qt 5.15 or newer is required but version $$[QT_VERSION] was detected.)
     }
-
-    QT += widgets
-    CONFIG += c++11
 }
+
+QT += widgets
+CONFIG += c++11
 
 CONFIG(debug, debug|release) {
     DEFINES += EVALUATOR_DEBUG

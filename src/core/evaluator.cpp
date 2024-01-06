@@ -627,15 +627,16 @@ bool Evaluator::isRadixChar(const QChar& ch)
 bool Evaluator::isSeparatorChar(const QChar& ch)
 {
     // Match everything that is not alphanumeric or an operator or NUL.
-    static const QRegExp s_separatorRE(
-        "[^a-zA-Z0-9\\+\\-−\\*×⋅÷/\\^;\\(\\)%!=\\\\&\\|<>\\?#\\x0000]"
+    static const QRegularExpression s_separatorRE(
+        R"([^a-zA-Z0-9\+\-\−\*\×⋅÷\/\^;\(\)%!=\\&\|<>\?#\x0000])"
     );
 
     if (isRadixChar(ch))
         return false;
 
-    return s_separatorRE.exactMatch(ch);
+    return s_separatorRE.match(ch).hasMatch();
 }
+
 
 QString Evaluator::fixNumberRadix(const QString& number)
 {
@@ -689,9 +690,9 @@ QString Evaluator::fixNumberRadix(const QString& number)
 }
 
 HNumber getNumber(const QString& number) {
-    if (number.size() == 0)
+    if (number.isEmpty())
         return HNumber(0);
-    int endPos = number.indexOf(QRegExp("['\":]"));
+    int endPos = number.indexOf(QRegularExpression("['\":]"));
     if (endPos == 0)
         return HNumber(0);
     if (endPos > 0)
@@ -708,7 +709,7 @@ QString Evaluator::fixSexagesimal(const QString& number, QString& unit)
     int colonCount = 0, degreeCount = 0, minuteCount = 0, secondCount = 0, digitCount = 0;
     for (int i = 0 ; i < number.size() ; ++i) { // check order and amount
         QChar c = number[i];
-        if (c == 0xB0) {   // °
+        if (c == QChar(0xB0)) {   // °
             if (colonCount || minuteCount || secondCount)
                 return bad;
             if (++degreeCount > 1)
@@ -744,7 +745,7 @@ QString Evaluator::fixSexagesimal(const QString& number, QString& unit)
             return bad;
         HNumber::Format fixed = HNumber::Format::Fixed();
         HNumber mains(0), minutes(0), seconds(0), sign(1);
-        int minPos = number.indexOf(arc ? 0xB0 : ':');
+        int minPos = number.indexOf(arc ? QChar(0xB0) : ':');
         if (minPos >= 0) {  // degree sign or first colon -> minutes
             mains = getNumber(number.left(minPos));    // hours or degrees
             if (mains.isNegative())
@@ -804,7 +805,7 @@ QString Evaluator::fixSexagesimal(const QString& number, QString& unit)
             return bad;
         if (!minutes.isZero() && !mains.isInteger())
             return bad;
-        int dotNumber = number.lastIndexOf(QRegExp("[.,]"));
+        int dotNumber = number.lastIndexOf(QRegularExpression("[.,]"));
         if (dotNumber >= 0) {  // append decimals, remove possible postfix units
             int minPos = number.indexOf('\''), secPos = number.indexOf('"');
             int unitPos = (secPos >= 0 && secPos < minPos) ? secPos : minPos;
@@ -954,7 +955,7 @@ Tokens Evaluator::tokens() const
 }
 
 bool isArcTime(QChar ch) {
-    return (ch == 0xB0 || ch == '\'' || ch == '"' || ch == ':');
+    return (ch == QChar(0xB0) || ch == '\'' || ch == '"' || ch == ':');
 }
 
 Tokens Evaluator::scan(const QString& expr) const
@@ -1654,9 +1655,10 @@ void Evaluator::compile(const Tokens& tokens)
                        m_codes.append(Opcode::BOr);
                        break;
                    case Token::UnitConversion: {
-                       static const QRegExp unitNameNumberRE(
+                       static const QRegularExpression unitNameNumberRE(
                            "(^[0-9e\\+\\-\\.,]|[0-9e\\.,]$)",
-                           Qt::CaseInsensitive);
+                           QRegularExpression::CaseInsensitiveOption
+                       );
                        QString unitName =
                            m_expression.mid(b.pos(), b.size()).simplified();
                        // Make sure the whole unit name can be used
@@ -1668,10 +1670,14 @@ void Evaluator::compile(const Tokens& tokens)
                        }
                        // Protect the unit name
                        // if it starts or ends with a number.
-                       else if (unitNameNumberRE.indexIn(unitName) != -1)
-                           unitName = "(" + unitName + ")";
+                       else {
+                           QRegularExpressionMatch match = unitNameNumberRE.match(unitName);
+                           if (match.hasMatch())
+                               unitName = "(" + unitName + ")";
+                       }
                        m_codes.append(Opcode(Opcode::Conv, unitName));
-                       break; }
+                       break;
+                   }
                    default: break;
                    };
                    syntaxStack.reduce(3);
@@ -2420,17 +2426,17 @@ static void replaceSuperscriptPowersWithCaretEquivalent(QString& expr)
         "(\\x{207B})?[\\x{2070}¹²³\\x{2074}-\\x{2079}]+"
     );
     static const QHash<QChar, QChar> s_superscriptPowersHash {
-        {L'\u207B', '-'},
-        {L'\u2070', '0'},
-        {L'\u00B9', '1'},
-        {L'\u00B2', '2'},
-        {L'\u00B3', '3'},
-        {L'\u2074', '4'},
-        {L'\u2075', '5'},
-        {L'\u2076', '6'},
-        {L'\u2077', '7'},
-        {L'\u2078', '8'},
-        {L'\u2079', '9'},
+        {QChar(0x207B), '-'},
+        {QChar(0x2070), '0'},
+        {QChar(0x00B9), '1'},
+        {QChar(0x00B2), '2'},
+        {QChar(0x00B3), '3'},
+        {QChar(0x2074), '4'},
+        {QChar(0x2075), '5'},
+        {QChar(0x2076), '6'},
+        {QChar(0x2077), '7'},
+        {QChar(0x2078), '8'},
+        {QChar(0x2079), '9'},
     };
 
     int offset = 0;

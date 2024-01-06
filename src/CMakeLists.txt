@@ -3,7 +3,12 @@ cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
-find_package(Qt5Core 5.15.0 REQUIRED)
+# First, try to find Qt6
+find_package(Qt6 COMPONENTS Core Widgets Help QUIET)
+if(NOT Qt6_FOUND)
+    # If Qt6 is not found, fall back to Qt5
+    find_package(Qt5 5.15 COMPONENTS Core Widgets Help REQUIRED)
+endif()
 
 if (MSVC)
     add_definitions(-D_USE_MATH_DEFINES)
@@ -83,8 +88,12 @@ set_property(TARGET ${APPLICATION_NAME} PROPERTY CXX_STANDARD 11)
 
 add_custom_target(confclean COMMAND rm -rf Makefile CMakeFiles/ CMakeCache.txt cmake_install.cmake DartTestfile.txt install_manifest.txt)
 
-set(QT_LIBRARIES Qt5::Widgets Qt5::Help)
-target_link_libraries(${APPLICATION_NAME} ${QT_LIBRARIES} Qt5::Widgets Qt5::Help Qt5::Sql)
+if(Qt6_FOUND)
+    set(QT_LIBRARIES Qt6::Widgets Qt6::Help Qt6::Core)
+else()
+    set(QT_LIBRARIES Qt5::Widgets Qt5::Help Qt5::Core)
+endif()
+target_link_libraries(${APPLICATION_NAME} ${QT_LIBRARIES})
 
 enable_testing()
 

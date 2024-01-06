@@ -37,7 +37,7 @@ HistoryWidget::HistoryWidget(QWidget *parent)
     m_list->setCursor(QCursor(Qt::PointingHandCursor));
 
     QVBoxLayout *layout = new QVBoxLayout;
-    layout->setMargin(3);
+    layout->setContentsMargins(3, 3, 3, 3);
     layout->addWidget(m_list);
     setLayout(layout);
 
