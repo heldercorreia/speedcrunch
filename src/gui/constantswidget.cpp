@@ -49,7 +49,7 @@ ConstantsWidget::ConstantsWidget(QWidget* parent)
     categoryBox->setLayout(categoryLayout);
     categoryLayout->addWidget(m_categoryLabel);
     categoryLayout->addWidget(m_category);
-    categoryLayout->setMargin(0);
+    categoryLayout->setContentsMargins(0, 0, 0, 0);
 
     m_label = new QLabel(this);
 
@@ -63,7 +63,7 @@ ConstantsWidget::ConstantsWidget(QWidget* parent)
     searchBox->setLayout(searchLayout);
     searchLayout->addWidget(m_label);
     searchLayout->addWidget(m_filter);
-    searchLayout->setMargin(0);
+    searchLayout->setContentsMargins(0, 0, 0, 0);
 
     m_list = new QTreeWidget(this);
     m_list->setAutoScroll(true);
@@ -82,7 +82,7 @@ ConstantsWidget::ConstantsWidget(QWidget* parent)
 
     QVBoxLayout* layout = new QVBoxLayout;
     setLayout(layout);
-    layout->setMargin(3);
+    layout->setContentsMargins(3, 3, 3, 3);
     layout->addWidget(categoryBox);
     layout->addWidget(searchBox);
     layout->addWidget(m_list);

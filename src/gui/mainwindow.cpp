@@ -54,11 +54,11 @@
 #include <QTranslator>
 #include <QUrl>
 #include <QAction>
+#include <QActionGroup>
 #include <QApplication>
 #include <QClipboard>
 #include <QCloseEvent>
 #include <QDesktopServices>
-#include <QDesktopWidget>
 #include <QFileDialog>
 #include <QFont>
 #include <QFontDialog>
@@ -68,6 +68,9 @@
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QScreen>
+#include <QGuiApplication>
+#include <QStandardPaths>
 #include <QScrollBar>
 #include <QStatusBar>
 #include <QToolTip>
@@ -990,9 +993,8 @@ void MainWindow::applySettings()
         // We couldn't restore the saved geometry; that means it was either empty
         // or just isn't valid anymore so we use default size and position.
         resize(640, 480);
-        QDesktopWidget* desktop = QApplication::desktop();
-        QRect screen = desktop->availableGeometry(this);
-        move(screen.center() - rect().center());
+        QRect screenGeometry = QGuiApplication::primaryScreen()->availableGeometry();
+        move(screenGeometry.center() - rect().center());
     }
     restoreState(m_settings->windowState);
 
@@ -1640,11 +1642,7 @@ void MainWindow::setAngleModeGradian()
 
 inline static QString documentsLocation()
 {
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     return QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-#else
-    return QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
-#endif
 }
 
 void MainWindow::exportHtml()
@@ -1662,7 +1660,6 @@ void MainWindow::exportHtml()
     }
 
     QTextStream stream(& file);
-    stream.setCodec("UTF-8");
     stream << m_widgets.display->exportHtml();
 
     file.close();
@@ -1684,7 +1681,6 @@ void MainWindow::exportPlainText()
 
     QByteArray text;
     QTextStream stream(&text, QIODevice::WriteOnly | QIODevice::Text);
-    stream.setCodec("UTF-8");
     stream << m_widgets.display->document()->toPlainText();
     stream.flush();
 

@@ -277,8 +277,16 @@ void Settings::save()
 
 char Settings::radixCharacter() const
 {
-    if (isRadixCharacterAuto() || isRadixCharacterBoth())
-        return QLocale().decimalPoint().toLatin1();
+    if (isRadixCharacterAuto() || isRadixCharacterBoth()) {
+        #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+            // In Qt 6, decimalPoint returns a QString
+            QChar decimalPoint = QLocale().decimalPoint().at(0);
+        #else
+            // In Qt 5, decimalPoint returns a QChar
+            QChar decimalPoint = QLocale().decimalPoint();
+        #endif
+        return decimalPoint.toLatin1();
+    }
 
     return s_radixCharacter;
 }

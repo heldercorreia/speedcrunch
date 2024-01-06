@@ -123,7 +123,7 @@ QString NumberFormatter::format(Quantity q)
         seconds -= (minutes * HNumber(60));
         HNumber::Format fixed = HNumber::Format::Fixed();
         QString sexa = HMath::format(mains, fixed);
-        sexa.append(time ? ':' : 0xB0).append(minutes < 10 ? "0" : "").append(HMath::format(minutes, fixed));
+        sexa.append(time ? QChar(':') : QChar(0xB0)).append(minutes < 10 ? "0" : "").append(HMath::format(minutes, fixed));
         sexa.append(time ? ':' : '\'').append(seconds < 10 ? "0" : "").append(HMath::format(seconds, fixed));
         if (dotPos > 0)     // append decimals
             sexa.append(result.mid(dotPos));

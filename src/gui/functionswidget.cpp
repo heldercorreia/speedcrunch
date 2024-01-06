@@ -62,11 +62,11 @@ FunctionsWidget::FunctionsWidget(QWidget* parent)
     QHBoxLayout* searchLayout = new QHBoxLayout;
     searchLayout->addWidget(m_searchLabel);
     searchLayout->addWidget(m_searchFilter);
-    searchLayout->setMargin(0);
+    searchLayout->setContentsMargins(0, 0, 0, 0);
     searchBox->setLayout(searchLayout);
 
     QVBoxLayout* layout = new QVBoxLayout;
-    layout->setMargin(3);
+    layout->setContentsMargins(3, 3, 3, 3);
     layout->addWidget(searchBox);
     layout->addWidget(m_functions);
     setLayout(layout);
