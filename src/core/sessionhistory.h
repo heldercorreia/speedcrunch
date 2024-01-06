@@ -37,6 +37,7 @@ public:
     HistoryEntry(const QJsonObject & json);
     HistoryEntry(const QString & expr, const Quantity & num) : m_expr(expr), m_result(num) {}
     HistoryEntry(const HistoryEntry & other) :  m_expr(other.m_expr), m_result(other.m_result) {}
+    HistoryEntry& operator=(const HistoryEntry& other) = default;    
 
     void setExpr(const QString & e);
     void setResult(const Quantity & n);

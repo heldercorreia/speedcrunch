@@ -842,7 +842,9 @@ float_setscientific(
     switch(*expptr)
     {
     case '-':
-      expsign = -1; /* and fall through */
+      expsign = -1;
+      // C++17: [[fallthrough]];
+      // fall through
     case '+':
       ++expptr;
     }

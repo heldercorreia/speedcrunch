@@ -28,8 +28,6 @@
 #include <QString>
 #include <QJsonArray>
 
-
-
 class Session {
 private:
     typedef QList<HistoryEntry> History ;
@@ -42,6 +40,7 @@ private:
 public:
     Session() {}
     Session(QJsonObject & json);
+    Session& operator=(const Session&) = default;
 
     void load();
     void save();

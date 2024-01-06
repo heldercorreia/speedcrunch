@@ -25,11 +25,6 @@
 #include <QJsonDocument>
 #include <functions.h>
 
-
-
-
-
-
 void Session::serialize(QJsonObject &json) const
 {
     json["version"] = QString(SPEEDCRUNCH_VERSION);
@@ -212,4 +207,3 @@ const UserFunction * Session::getUserFunction(const QString &fname) const
 {
     return &*m_userFunctions.find(fname);
 }
-

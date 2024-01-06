@@ -40,6 +40,7 @@ public:
     Variable(const QJsonObject & json);
     Variable(const QString & id, const Quantity & val, Type t = UserDefined) : m_identifier(id), m_value(val), m_type(t) {}
     Variable(const Variable & other) :  m_identifier(other.m_identifier), m_value(other.m_value), m_type(other.m_type) {}
+    Variable& operator=(const Variable&) = default;
 
     Quantity value() const {return m_value;}
     QString identifier() const {return m_identifier;}

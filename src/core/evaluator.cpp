@@ -1025,7 +1025,8 @@ Tokens Evaluator::scan(const QString& expr) const
             numberBase = 10;
             expBase = 0;
 
-            // No break here on purpose (make sure Start is the next case)
+            // C++17: [[fallthrough]];
+            // fall through
 
         case Start:
             // Skip any whitespaces.
