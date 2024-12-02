@@ -1,9 +1,9 @@
-find_package(Qt5Core)
+find_package(Qt6Core REQUIRED)
 
 
-# Basic stuff; locate the Qt5Core DLL so we can determine the other directories from it.
+# Basic stuff; locate the Qt6Core DLL so we can determine the other directories from it.
 # TODO: This might need to be configurable.
-get_target_property(qtwin32_QTCORE_DLL Qt5::Core LOCATION)
+get_target_property(qtwin32_QTCORE_DLL Qt6::Core LOCATION)
 get_filename_component(qtwin32_QT_LIBDIR ${qtwin32_QTCORE_DLL} DIRECTORY)
 get_filename_component(qtwin32_QT_PLUGINDIR ${qtwin32_QT_LIBDIR}/../plugins REALPATH)
 get_filename_component(qtwin32_QT_QMLDIR ${qtwin32_QT_LIBDIR}/../qml REALPATH)
@@ -13,14 +13,14 @@ set(qtwin32_QMLPLUGIN_SUFFIX_RELEASE "plugin${qtwin32_DLL_SUFFIX_RELEASE}")
 set(qtwin32_QMLPLUGIN_SUFFIX_DEBUG "plugin${qtwin32_DLL_SUFFIX_DEBUG}")
 
 
-# Determine the Qt minor version (so '5.4' or '5.5') for version checking. There's unlikely to be enough changes in
+# Determine the Qt minor version (so '6.4' or '6.5') for version checking. There's unlikely to be enough changes in
 # patch releases to make it worth distinguishing based on those.
-string(REGEX MATCH "[0-9]+[.][0-9]+" qtwin32_QT_MINOR_VERSION ${Qt5Core_VERSION_STRING})
+string(REGEX MATCH "[0-9]+[.][0-9]+" qtwin32_QT_MINOR_VERSION ${Qt6Core_VERSION_STRING})
 
 
 # qtwin32_check_qt_version([STRICT] <version>...)
 # Check the current Qt version and warn if it's not any of the specified versions. Only the first two components of the
-# version number are considered (so '5.4' or '5.5'). If STRICT is specified, the build will abort if the versions don't
+# version number are considered (so '6.4' or '6.5'). If STRICT is specified, the build will abort if the versions don't
 # match.
 function(qtwin32_check_qt_version arg)
   if(${arg} STREQUAL "STRICT" AND ${ARGC} EQUAL 1)
@@ -180,39 +180,39 @@ endfunction()
 # qtwin32_D3DCompiler - the d3dcompiler_*.dll
 # qtwin32_MinGW - MinGW runtime libraries
 set(qtwin32_MinGW_LIBS libgcc_s_dw2-1 libstdc++-6 libwinpthread-1)
-# qtwin32_Qt5Core - just QtCore
-set(qtwin32_Qt5Core_LIBS Qt5Core)
+# qtwin32_Qt6Core - just QtCore
+set(qtwin32_Qt6Core_LIBS Qt6Core)
 if(MINGW)
-  set(qtwin32_Qt5Core_DEPS qtwin32_MinGW)
+  set(qtwin32_Qt6Core_DEPS qtwin32_MinGW)
 endif()
-# qtwin32_Qt5Network - QtNetwork, without any plugins it might need though
-set(qtwin32_Qt5Network_LIBS Qt5Network)
-set(qtwin32_Qt5Network_DEPS qtwin32_Qt5Core)
-# qtwin32_Qt5Gui - QtGui (without QtQuick or Widgets), including the platform plugin
-set(qtwin32_Qt5Gui_LIBS Qt5Gui)
-set(qtwin32_Qt5Gui_PLUGINS platforms/qwindows)
-set(qtwin32_Qt5Gui_DEPS qtwin32_Qt5Core)
-# qtwin32_Qt5Widgets - libraries and plugins for a basic Widgets application
-set(qtwin32_Qt5Widgets_LIBS Qt5Widgets)
-set(qtwin32_Qt5Widgets_DEPS qtwin32_Qt5Gui)
-# qtwin32_Qt5Sql - basic QtSql libraries
-set(qtwin32_Qt5Sql_LIBS Qt5Sql)
-set(qtwin32_Qt5Sql_DEPS qtwin32_Qt5Core)
-# qtwin32_Qt5Help - libraries and plugins for QtHelp
-set(qtwin32_Qt5Help_LIBS Qt5Help Qt5CLucene)
-set(qtwin32_Qt5Help_PLUGINS sqldrivers/qsqlite)
-set(qtwin32_Qt5Help_DEPS qtwin32_Qt5Core qtwin32_Qt5Network qtwin32_Qt5Sql qtwin32_Qt5Widgets)
-# qtwin32_Qt5Svg - libraries and plugins for QtSvg (does this really depend on Widgets?)
-set(qtwin32_Qt5Svg_LIBS Qt5Svg)
-set(qtwin32_Qt5Svg_PLUGINS iconengines/qsvgicon imageformats/qsvg)
-set(qtwin32_Qt5Svg_DEPS qtwin32_Qt5Widgets)
-# qtwin32_Qt5Quick - libraries and plugins for a basic QtQuick 2 application
-set(qtwin32_Qt5Quick_LIBS Qt5Qml Qt5Quick)
-set(qtwin32_Qt5Quick_QML QtQuick:2 QtQuick.Window:2)
-set(qtwin32_Qt5Quick_DEPS qtwin32_Qt5Network qtwin32_Qt5Gui)
-# qtwin32_Qt5WinExtras - QtWinExtras and dependencies
-set(qtwin32_Qt5WinExtras_LIBS Qt5WinExtras)
-set(qtwin32_Qt5WinExtras_DEPS qtwin32_Qt5Widgets)
+# qtwin32_Qt6Network - QtNetwork, without any plugins it might need though
+set(qtwin32_Qt6Network_LIBS Qt6Network)
+set(qtwin32_Qt6Network_DEPS qtwin32_Qt6Core)
+# qtwin32_Qt6Gui - QtGui (without QtQuick or Widgets), including the platform plugin
+set(qtwin32_Qt6Gui_LIBS Qt6Gui)
+set(qtwin32_Qt6Gui_PLUGINS platforms/qwindows)
+set(qtwin32_Qt6Gui_DEPS qtwin32_Qt6Core)
+# qtwin32_Qt6Widgets - libraries and plugins for a basic Widgets application
+set(qtwin32_Qt6Widgets_LIBS Qt6Widgets)
+set(qtwin32_Qt6Widgets_DEPS qtwin32_Qt6Gui)
+# qtwin32_Qt6Sql - basic QtSql libraries
+set(qtwin32_Qt6Sql_LIBS Qt6Sql)
+set(qtwin32_Qt6Sql_DEPS qtwin32_Qt6Core)
+# qtwin32_Qt6Help - libraries and plugins for QtHelp
+set(qtwin32_Qt6Help_LIBS Qt6Help Qt6CLucene)
+set(qtwin32_Qt6Help_PLUGINS sqldrivers/qsqlite)
+set(qtwin32_Qt6Help_DEPS qtwin32_Qt6Core qtwin32_Qt6Network qtwin32_Qt6Sql qtwin32_Qt6Widgets)
+# qtwin32_Qt6Svg - libraries and plugins for QtSvg (does this really depend on Widgets?)
+set(qtwin32_Qt6Svg_LIBS Qt6Svg)
+set(qtwin32_Qt6Svg_PLUGINS iconengines/qsvgicon imageformats/qsvg)
+set(qtwin32_Qt6Svg_DEPS qtwin32_Qt6Widgets)
+# qtwin32_Qt6Quick - libraries and plugins for a basic QtQuick 2 application
+set(qtwin32_Qt6Quick_LIBS Qt6Qml Qt6Quick)
+set(qtwin32_Qt6Quick_QML QtQuick:2 QtQuick.Window:2)
+set(qtwin32_Qt6Quick_DEPS qtwin32_Qt6Network qtwin32_Qt6Gui)
+# qtwin32_Qt6WinExtras - QtWinExtras and dependencies
+set(qtwin32_Qt6WinExtras_LIBS Qt6WinExtras)
+set(qtwin32_Qt6WinExtras_DEPS qtwin32_Qt6Widgets)
 # qtwin32_ANGLE - libraries required for ANGLE
 set(qtwin32_ANGLE_LIBS libEGL libGLESv2)
 if(MSVC)

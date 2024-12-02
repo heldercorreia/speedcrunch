@@ -38,15 +38,17 @@ public:
     Rational(const double &num);
     Rational(const QString & str);
     Rational(const int a, const int b) : m_num(a), m_denom(b), m_valid(true) {normalize();}
+    Rational(const Rational& other) = default;
 
     int numerator() const {return m_num;}
     int denominator() const {return m_denom;}
 
+    Rational& operator=(const Rational& other) = default;
+    Rational& operator=(Rational&& other) noexcept = default;
     Rational operator*(const Rational & other) const;
     Rational operator/(const Rational & other) const;
     Rational operator+(const Rational & other) const;
     Rational operator-(const Rational & other) const;
-    Rational &operator=(const Rational & other);
     Rational &operator+=(const Rational & other);
     Rational &operator-=(const Rational & other);
     Rational &operator*=(const Rational & other);

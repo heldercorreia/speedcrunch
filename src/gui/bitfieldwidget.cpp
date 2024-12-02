@@ -49,10 +49,11 @@ void BitWidget::setState(bool state)
 {
     if (state != m_state) {
         m_state = state;
+        QPalette palette = QApplication::palette();
         setStyleSheet(
             QString("QLabel { background-color : %1; color : %2; }")
-                .arg(QApplication::palette().color(state ? QPalette::WindowText : QPalette::Window).name(),
-                     QApplication::palette().color(state ? QPalette::Window : QPalette::WindowText).name())
+                .arg(palette.color(state ? QPalette::WindowText : QPalette::Window).name(),
+                     palette.color(state ? QPalette::Window : QPalette::WindowText).name())
         );
         update();
     }
@@ -68,7 +69,8 @@ BitFieldWidget::BitFieldWidget(QWidget* parent) :
     QWidget(parent)
 {
     // Build the CSS border color using 50% opacity (same result as previous method with painting)
-    auto& borderColor = QApplication::palette().color(QPalette::WindowText);
+    QPalette palette = QApplication::palette();
+    auto borderColor = palette.color(QPalette::WindowText);
     QString cssBorderColor = QString("rgba(%1, %2, %3, %4)")
                                 .arg(borderColor.red())
                                 .arg(borderColor.green())
@@ -88,8 +90,8 @@ BitFieldWidget::BitFieldWidget(QWidget* parent) :
                           " border-left: 1px solid %3;"
                           "}"
                           )
-                      .arg(QApplication::palette().color(QPalette::Window).name(),
-                           QApplication::palette().color(QPalette::WindowText).name(),
+                      .arg(palette.color(QPalette::Window).name(),
+                           palette.color(QPalette::WindowText).name(),
                            cssBorderColor)
                  );
 

@@ -183,13 +183,13 @@ Rational Rational::operator-(const Rational &other) const
     return Rational(this->m_num*other.m_denom - this->m_denom*other.m_num, this->m_denom*other.m_denom);
 }
 
-Rational &Rational::operator=(const Rational &other)
+/*Rational &Rational::operator=(const Rational &other)
 {
     m_num = other.m_num;
     m_denom = other.m_denom;
     m_valid = other.m_valid;
     return *this;
-}
+}*/
 
 Rational &Rational::operator+=(const Rational &other)
 {

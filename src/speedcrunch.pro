@@ -1,11 +1,12 @@
-equals(QT_MAJOR_VERSION, 5) {
-    lessThan(QT_MINOR_VERSION, 15) {
-        error(Qt 5.15 or newer is required but version $$[QT_VERSION] was detected.)
+equals(QT_MAJOR_VERSION, 6) {
+    lessThan(QT_MINOR_VERSION, 4) {
+        error(Qt 6.4 or newer is required but version $$[QT_VERSION] was detected.)
     }
 }
 
 QT += widgets
-CONFIG += c++11
+CONFIG += c++17
+QMAKE_CXXFLAGS += "-Wall -pedantic"
 
 CONFIG(debug, debug|release) {
     DEFINES += EVALUATOR_DEBUG
@@ -53,7 +54,7 @@ macx {
     QMAKE_INFO_PLIST = ../pkg/Info.plist
     TARGET = SpeedCrunch
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.8
-    QMAKE_CXXFLAGS += -std=c++11
+    QMAKE_CXXFLAGS += -std=c++17
 }
 
 

@@ -14,16 +14,11 @@ set(CMAKE_C_EXTENSIONS OFF)
 message("Using C${CMAKE_C_STANDARD}")
 
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type (Debug, Release, RelWithDebInfo, MinSizeRel)" FORCE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type (Debug, Release, RelWithDebInfo, MinSizeRel)" FORCE)
 endif()
 message("Build type: ${CMAKE_BUILD_TYPE}")
 
-# First, try to find Qt6
 find_package(Qt6 COMPONENTS Core Widgets Help QUIET)
-if(NOT Qt6_FOUND)
-    # If Qt6 is not found, fall back to Qt5
-    find_package(Qt5 5.15 COMPONENTS Core Widgets Help REQUIRED)
-endif()
 
 if (MSVC)
     add_definitions(-D_USE_MATH_DEFINES)
@@ -46,10 +41,6 @@ set(CMAKE_VERBOSE_MAKEFILE OFF)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(CMAKE_MACOSX_RPATH ON)
-
-find_package(Qt5 COMPONENTS REQUIRED Core)
-find_package(Qt5 COMPONENTS REQUIRED Widgets)
-find_package(Qt5 COMPONENTS REQUIRED Help)
 
 ADD_DEFINITIONS("-DSPEEDCRUNCH_VERSION=\"${speedcrunch_VERSION}\"")
 ADD_DEFINITIONS(-DQT_USE_QSTRINGBUILDER)
@@ -103,11 +94,7 @@ set_property(TARGET ${APPLICATION_NAME} PROPERTY CXX_STANDARD 11)
 
 add_custom_target(confclean COMMAND rm -rf Makefile CMakeFiles/ CMakeCache.txt cmake_install.cmake DartTestfile.txt install_manifest.txt)
 
-if(Qt6_FOUND)
-    set(QT_LIBRARIES Qt6::Widgets Qt6::Help Qt6::Core)
-else()
-    set(QT_LIBRARIES Qt5::Widgets Qt5::Help Qt5::Core)
-endif()
+set(QT_LIBRARIES Qt6::Widgets Qt6::Help Qt6::Core)
 target_link_libraries(${APPLICATION_NAME} ${QT_LIBRARIES})
 
 enable_testing()
@@ -177,7 +164,7 @@ endif()
 
 if(WIN32)
     include(QtWin32Deploy)
-    qtwin32_deploy_modules(${BIN_INSTALL_DIR} qtwin32_Qt5Widgets qtwin32_Qt5Help)
+    qtwin32_deploy_modules(${BIN_INSTALL_DIR} qtwin32_Qt6Widgets qtwin32_Qt6Help)
     qtwin32_deploy_default_qt_conf(${BIN_INSTALL_DIR})
 elseif(APPLE)
     include(MacdeployQt)
