@@ -6945,4 +6945,4 @@ int main(int argc, char* argv[])
   printf("\nall tests PASSED\n");
 #endif /* _FLOATNUMTEST */
   return 0;
-};
+}

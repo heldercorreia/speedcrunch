@@ -1,7 +1,22 @@
-project(speedcrunch)
 cmake_minimum_required(VERSION 3.16)
+project(speedcrunch)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+message("Using C++${CMAKE_CXX_STANDARD}")
+
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
+message("Using C${CMAKE_C_STANDARD}")
+
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type (Debug, Release, RelWithDebInfo, MinSizeRel)" FORCE)
+endif()
+message("Build type: ${CMAKE_BUILD_TYPE}")
 
 # First, try to find Qt6
 find_package(Qt6 COMPONENTS Core Widgets Help QUIET)
@@ -14,9 +29,9 @@ if (MSVC)
     add_definitions(-D_USE_MATH_DEFINES)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
 else()
-    add_compile_options(-Wall
-                        -Wno-shift-negative-value)
+    add_compile_options(-Wno-shift-negative-value)
 endif()
+add_compile_options(-Wall -pedantic)
 
 if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
@@ -182,4 +197,3 @@ configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
                 IMMEDIATE @ONLY)
 
 add_custom_target(uninstall "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
-

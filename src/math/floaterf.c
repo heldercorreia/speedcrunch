@@ -33,7 +33,7 @@
 #include "floatconst.h"
 #include "floatcommon.h"
 #include "floatexp.h"
-#include "math.h"
+#include <math.h>
 
 /*
   The Taylor expansion of sqrt(pi)*erf(x)/2 around x = 0.

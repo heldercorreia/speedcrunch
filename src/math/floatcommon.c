@@ -33,6 +33,7 @@
 #include "floatconst.h"
 #include "floatlong.h"
 #include <string.h>
+#define _USE_MATH_DEFINES
 #include <math.h>
 
 #define MSB (1 << (sizeof(unsigned)*8 - 1))
