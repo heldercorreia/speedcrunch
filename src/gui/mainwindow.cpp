@@ -2127,7 +2127,7 @@ void MainWindow::handleKeypadButtonPress(Keypad::Button b)
 
 void MainWindow::openUpdatesURL()
 {
-    QDesktopServices::openUrl(QUrl(QString::fromLatin1("http://speedcrunch.org")));
+    QDesktopServices::openUrl(QUrl(QString::fromLatin1("https://heldercorreia.bitbucket.io/speedcrunch/")));
 }
 
 void MainWindow::openFeedbackURL()
@@ -2147,7 +2147,7 @@ void MainWindow::openNewsURL()
 
 void MainWindow::openDonateURL()
 {
-    QDesktopServices::openUrl(QUrl(QString::fromLatin1("http://speedcrunch.org/donate.html")));
+    QDesktopServices::openUrl(QUrl(QString::fromLatin1("https://heldercorreia.bitbucket.io/speedcrunch/donate.html")));
 }
 
 void MainWindow::copy()
