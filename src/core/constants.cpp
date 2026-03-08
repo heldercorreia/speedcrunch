@@ -372,7 +372,7 @@ void Constants::Private::populate()
     // General Physics.
     PUSH_CONSTANT_CODATA("Characteristic Impedance of Vacuum", "376.730313461", "Ω",          "exact",           "2016-03-28");
     PUSH_CONSTANT_CODATA("Dirac's Constant",          "1.054571800e-34",        "J·s",        "0.000000013e-34", "2016-03-28");  // CODATA name: Planck constant over 2 pi
-    PUSH_CONSTANT_CODATA("Electric Constant",         "8.854187817e-12",        "F/m",        "exact",           "2016-03-28");
+    PUSH_CONSTANT_CODATA("Electric Constant",         "8.8541878188e-12",       "F/m",        "exact",           "2026-03-08");
     PUSH_CONSTANT_CODATA("Gravitation Constant",      "6.67408e-11",            "m³/(kg·s²)", "0.00031e-11",     "2016-03-28");
     PUSH_CONSTANT_CODATA("Magnetic Constant",         "12.566370614e-7",        "N/A²",       "exact",           "2016-03-28");  // TODO: Put more figures !
     PUSH_CONSTANT_CODATA("Planck's Constant",         "6.626070040e-34",        "J·s",        "0.000000081e-34", "2016-03-28");
