@@ -588,6 +588,11 @@ void test_function_basic()
     CHECK_EVAL("sum(10;abs(-100);1)", "111");
     CHECK_EVAL("sum(abs(-100);10;1)", "111");
     CHECK_EVAL("sum(10;1;abs(-100))", "111");
+
+    CHECK_EVAL("ieee754_half_decode(0x7E00)", "NaN");
+    CHECK_EVAL("hex(ieee754_half_encode(1))", "0x3C00");
+    CHECK_EVAL("hex(ieee754_half_encode(0.99951171875))", "0x3BFF");
+    CHECK_EVAL("hex(ieee754_half_encode(0.999755859375))", "0x3C00");
 }
 
 void test_function_trig()

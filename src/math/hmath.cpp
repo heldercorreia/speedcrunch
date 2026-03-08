@@ -2088,9 +2088,15 @@ HNumber HMath::encodeIeee754(const HNumber& val, const HNumber& exp_bits, const 
             // Subnormal value.
             exponent = 0;
         } else if (intpart > 1) {
-            // Infinity.
-            exponent = HMath::raise(2, exp_bits) - 1;
+            // Round-to-nearest carry into the implicit leading bit.
+            exponent = exponent + 1;
             significand = 0;
+
+            // Infinity only if the rounded exponent overflows the representable range.
+            if (exponent > max_exp)
+                exponent = HMath::raise(2, exp_bits) - 1;
+            else
+                exponent = exponent + exp_bias;
         } else {
             // Normalised value.
             exponent = exponent + exp_bias;

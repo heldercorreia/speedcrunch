@@ -975,6 +975,7 @@ void test_functions()
     CHECK_FORMAT(Format::Fixed() + Format::Hexadecimal(), HMath::encodeIeee754("10", "8", "23"), "0x41200000");
     CHECK_FORMAT(Format::Fixed() + Format::Hexadecimal(), HMath::encodeIeee754("-10", "8", "23"), "0xC1200000");
     CHECK_FORMAT(Format::Fixed() + Format::Hexadecimal(), HMath::encodeIeee754("1.5", "8", "23"), "0x3FC00000");
+    CHECK_FORMAT(Format::Fixed() + Format::Hexadecimal(), HMath::encodeIeee754("0.999755859375", "5", "10"), "0x3C00");
     CHECK_FORMAT(Format::Fixed() + Format::Hexadecimal(), HMath::encodeIeee754("340282346638528859811704183484516925440","8", "23"), "0x7F7FFFFF");
     CHECK_FORMAT(Format::Fixed() + Format::Hexadecimal(), HMath::encodeIeee754("9999999999999999999999999999999999", "5", "10"), "0x7C00");
     CHECK_FORMAT(Format::Fixed() + Format::Hexadecimal(), HMath::encodeIeee754("-0.1", "8", "23"), "0xBDCCCCCD");
