@@ -19,6 +19,8 @@
 #ifndef RATIONAL_H
 #define RATIONAL_H
 
+#include <QHashFunctions>
+
 class HNumber;
 class QString;
 
@@ -65,5 +67,10 @@ public:
     HNumber toHNumber( )const;
     double toDouble() const;
 };
+
+inline size_t qHash(const Rational& value, size_t seed = 0) noexcept
+{
+    return qHashMulti(seed, value.numerator(), value.denominator());
+}
 
 #endif // RATIONAL_H

@@ -24,7 +24,7 @@
 #include <QMap>
 
 #include "math/quantity.h"
-class Rational;
+#include "math/rational.h"
 
 struct Unit {
     QString name;
