@@ -75,8 +75,8 @@ extern floatstruct erfcalphasqr;
 extern floatstruct erfct2;
 extern floatstruct erfct3;
 
-void floatmath_init();
-void floatmath_exit();
+void floatmath_init(void);
+void floatmath_exit(void);
 
 #ifdef __cplusplus
 }

@@ -64,18 +64,18 @@ typedef enum {TONEAREST, TOZERO, TOINFINITY, TOPLUSINFINITY, TOMINUSINFINITY} ro
 
 /* initializes this module. Has to be called prior to the first
    use of any of the following functions */
-void floatnum_init();
+void floatnum_init(void);
 
 /* sets the error to `code' unless it is already set */
 void float_seterror(Error code);
 
 /* gets the last error and clears the error afterwards */
-Error float_geterror();
+Error float_geterror(void);
 
 /* returns the current overflow limit. It is the maximum possible
    exponent. The smallest exponent is -`return value' - 1.
    This function never reports an error */
-int float_getrange();
+int float_getrange(void);
 
 /* sets the overflow/underflow limit. Subsequent arithmetic results with exponents
    between `maxexp' >= exponent >= -`maxexp'-1 are considered valid, all others
@@ -91,7 +91,7 @@ int float_setrange(int maxexp);
 
 /* returns the current precision limit. Arithmetic results may be cut off
    after this number of decimal digits */
-int float_getprecision();
+int float_getprecision(void);
 
 /* sets the current maximum precision (in decimal digits) that is used by basic
    arithmetic operations. The precision is at least 1 and at most MAXDIGITS.

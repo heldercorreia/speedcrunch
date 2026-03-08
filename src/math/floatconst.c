@@ -289,7 +289,7 @@ floatstruct erfct2;
 floatstruct erfct3;
 
 void
-floatmath_init()
+floatmath_init(void)
 {
   int i, save;
   floatnum_init();
@@ -365,7 +365,7 @@ floatmath_init()
 }
 
 void
-floatmath_exit()
+floatmath_exit(void)
 {
   int i;
 

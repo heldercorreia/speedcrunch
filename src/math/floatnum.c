@@ -211,13 +211,13 @@ _limit_scale(
 /*============================   floatnum routines  ===================*/
 
 int
-float_getrange()
+float_getrange(void)
 {
   return expmax;
 }
 
 int
-float_getprecision()
+float_getprecision(void)
 {
   return maxdigits;
 }
@@ -255,7 +255,7 @@ float_isvalidexp(
 
 /* clears the error state as well */
 Error
-float_geterror()
+float_geterror(void)
 {
   Error tmp;
 
@@ -275,7 +275,7 @@ float_seterror(
 }
 
 void
-floatnum_init()
+floatnum_init(void)
 {
   bc_init_numbers();
   float_geterror();

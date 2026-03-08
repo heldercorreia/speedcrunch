@@ -47,6 +47,13 @@ ADD_DEFINITIONS(-DQT_USE_QSTRINGBUILDER)
 
 include(SourceFiles.cmake)
 
+# Legacy GNU bc number implementation uses K&R-style definitions.
+# Keep global warnings strict while silencing C23 prototype deprecations for this file.
+set_source_files_properties(math/number.c PROPERTIES
+    COMPILE_OPTIONS "-Wno-deprecated-non-prototype;-Wno-strict-prototypes")
+set_source_files_properties(tests/testfloatnum.c PROPERTIES
+    COMPILE_OPTIONS "-Wno-strict-prototypes")
+
 if(APPLE)
     set(APP_ICON_FILE speedcrunch.icns)
     set(APP_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/${APP_ICON_FILE}")

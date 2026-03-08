@@ -176,7 +176,7 @@ const char* basePrefix(char base);
 Error parse(p_itokens tokens, const char** buf);
 int cattokens(char* buf, int bufsz, p_otokens tokens,
               signed char expbase, unsigned flags);
-void float_stdconvert();
+void float_stdconvert(void);
 char setioparams(p_ioparams params);
 char delioparams(signed char base);
 p_ioparams getioparams(signed char base);

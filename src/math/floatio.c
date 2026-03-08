@@ -669,7 +669,7 @@ getioparams(
 }
 
 static signed char
-_getdefaultbase()
+_getdefaultbase(void)
 {
   p_ioparams param;
 
@@ -689,7 +689,7 @@ setdefaultbase(
 }
 
 void
-float_stdconvert()
+float_stdconvert(void)
 {
   int i;
 
