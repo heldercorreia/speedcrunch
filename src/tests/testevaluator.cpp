@@ -259,6 +259,10 @@ void test_binary()
     CHECK_EVAL("10÷2", "5");
     CHECK_EVAL("2/10", "0.2");
     CHECK_EVAL("2÷10", "0.2");
+    CHECK_EVAL("1/(1/(1/0.2425-4)-8)-12", "0");
+    CHECK_EVAL("1/(1/(1/(2425/10000)-4)-8)-12", "0");
+    CHECK_EVAL("1/(1/(1/(1/(1/(1/0.25636-3)-1)-9)-12)-1)-48", "0");
+    CHECK_EVAL("1/(1/(1/(1/(1/(1/(25636/100000)-3)-1)-9)-12)-1)-48", "0");
 
     // Check that parentheses are added in unit conversion results when needed
     CHECK_EVAL("1 meter -> 10 meter", "0.1 (10 meter)");

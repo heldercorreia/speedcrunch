@@ -40,6 +40,8 @@
 //TODO make this configurable
 #define HMATH_WORKING_PREC (DECPRECISION + 3)
 #define HMATH_EVAL_PREC (HMATH_WORKING_PREC + 2)
+// If cancellation leaves only a handful of digits, treat the residual as noise.
+#define HMATH_CANCELLATION_GUARD_DIGITS 8
 
 //TODO should go into a separate format file
 // default scale for fall back in formatting
@@ -58,8 +60,8 @@ static void checkfullcancellation(cfloatnum op1, cfloatnum op2,
       && float_getlength(r) != 0) {
         // NaN or zero not involved in computation.
         int expr = float_getexponent(r);
-        if (float_getexponent(op1) - expr >= HMATH_WORKING_PREC - 1
-            || float_getexponent(op2) - expr >= HMATH_WORKING_PREC - 1)
+        if (float_getexponent(op1) - expr >= HMATH_WORKING_PREC - HMATH_CANCELLATION_GUARD_DIGITS
+            || float_getexponent(op2) - expr >= HMATH_WORKING_PREC - HMATH_CANCELLATION_GUARD_DIGITS)
             float_setzero(r);
     }
 }
