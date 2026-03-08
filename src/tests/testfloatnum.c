@@ -48,9 +48,37 @@
 #include "math/floatlogic.h"
 #include "math/floaterf.h"
 #include <stdio.h>
+#include <stdarg.h>
 #include <string.h>
 
 #ifdef _FLOATNUMTEST
+#ifndef FLOATNUM_TEST_DEBUG
+#define FLOATNUM_TEST_DEBUG 0
+#endif
+
+static int should_print_message(const char* msg)
+{
+  return strstr(msg, "FAILED") != NULL
+      || strstr(msg, "failed") != NULL
+      || strstr(msg, "IMPRECISE") != NULL
+      || strstr(msg, "imprecise") != NULL;
+}
+
+static int filtered_printf(const char* fmt, ...)
+{
+  int result = 0;
+  va_list args;
+
+  if (!FLOATNUM_TEST_DEBUG && !should_print_message(fmt))
+    return 0;
+
+  va_start(args, fmt);
+  result = vprintf(fmt, args);
+  va_end(args);
+  return result;
+}
+
+#define printf(...) filtered_printf(__VA_ARGS__)
 
 /* From math/floaterf.c */
 char erfseries(floatnum x, int digits);
@@ -80,7 +108,7 @@ void DisplayErrorOnStrMismatch(const char* file, int line, const char* msg, cons
 {
     if (strcmp(result, expected) != 0) {
         ++(*failed);
-        fprintf(stderr, "%s[%d]\t%s", file, line, msg);
+        fprintf(stderr, "%s[%d]\t%s\tFAILED\n", file, line, msg);
         if (issue)
             fprintf(stderr, "\t[ISSUE %d]\n", issue);
         else {
@@ -110,7 +138,7 @@ void DisplayErrorOnFloatMismatch(const char* file, int line, const char* msg, co
 
     if (cmp != 0) {
         ++(*failed);
-        fprintf(stderr, "%s[%d]\t%s", file, line, msg);
+        fprintf(stderr, "%s[%d]\t%s\tFAILED\n", file, line, msg);
         if (issue)
             fprintf(stderr, "\t[ISSUE %d]\n", issue);
         else {
@@ -6704,7 +6732,7 @@ static int test_erfc()
       float_erfc(&x1, prec+4);
       if (!_cmprelerror(&x, &x1, -prec))
       {
-        printf("evaluation IMPRECICE for 1e-%d\n", i);
+        printf("evaluation IMPRECISE for 1e-%d\n", i);
         return 0;
       }
     }
@@ -6740,7 +6768,7 @@ static int test_erfc()
       }
       if (!_cmprelerror(&x, &results[i], -prec))
       {
-        printf("evaluation IMPRECICE for case %d\n", i);
+        printf("evaluation IMPRECISE for case %d\n", i);
         return 0;
       }
     }
@@ -6801,7 +6829,7 @@ static int test_erf()
       }
       if (!_cmprelerror(&x, &x1, -prec))
       {
-        printf("evaluation IMPRECICE for case %d\n", i);
+        printf("evaluation IMPRECISE for case %d\n", i);
         return 0;
       }
     }
@@ -6814,7 +6842,7 @@ static int test_erf()
 
 static int testfailed(char* msg)
 {
-  printf("\n%s FAILED, tests aborted\n", msg);
+  fprintf(stderr, "%s FAILED\n", msg);
   return 1;
 }
 

@@ -1137,10 +1137,8 @@ int main(int argc, char* argv[])
 
     test_angle_mode(settings);
 
-    if (!eval_failed_tests) {
-        cout << "All tests succeed" << endl;
+    if (!eval_failed_tests)
         return 0;
-    }
 
     cout << eval_total_tests  << " total, "
          << eval_failed_tests << " failed, "
