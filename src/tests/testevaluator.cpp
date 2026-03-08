@@ -739,6 +739,9 @@ void test_function_discrete()
     CHECK_EVAL("gcd(12;18)", "6");
     CHECK_EVAL("gcd(36;56;210)", "2");
     CHECK_EVAL("gcd(28;120;126)", "2");
+    CHECK_EVAL("round(5.5e-10;2)", "0");
+    CHECK_EVAL("round(5.5*10^-10;2)", "0");
+    CHECK_EVAL("round(0.00000000055;2)", "0");
 
     CHECK_EVAL("ncr(-3;-1)", "0");
     CHECK_EVAL("ncr(-3;0)", "1");

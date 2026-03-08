@@ -283,6 +283,7 @@ void test_functions()
     CHECK(HMath::round("NaN", 3), "NaN");
     CHECK(HMath::round("0.005", -3), "0");
     CHECK(HMath::round("0.005", 2), "0");
+    CHECK(HMath::round("0.00000000055", 2), "0");
     CHECK(HMath::round("3.14159", 4), "3.1416");
     CHECK(HMath::round("3.14159", 3), "3.142");
     CHECK(HMath::round("3.14159", 2), "3.14");

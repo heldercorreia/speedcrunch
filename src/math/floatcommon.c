@@ -364,11 +364,17 @@ float_roundtoint(
   switch (mode)
   {
   case TONEAREST:
-    digit = float_getdigit(x, 0);
-    if (digit < 5 || (digit == 5 && float_getlength(x) == 1))
+    /* For |x| < 0.1, x is always closer to 0 than to +/-1. */
+    if (float_getexponent(x) < -1)
       value = 0;
     else
-      value = sign;
+    {
+      digit = float_getdigit(x, 0);
+      if (digit < 5 || (digit == 5 && float_getlength(x) == 1))
+        value = 0;
+      else
+        value = sign;
+    }
     break;
   case TOINFINITY:
     value = sign;
