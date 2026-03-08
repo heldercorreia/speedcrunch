@@ -32,7 +32,7 @@ if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 endif()
 
-set(speedcrunch_VERSION "master")
+set(speedcrunch_VERSION "1.0")
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)

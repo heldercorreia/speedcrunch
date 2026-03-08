@@ -1,6 +1,7 @@
 # SpeedCrunch
-SpeedCrunch is a high-precision scientific calculator. It features a syntax-highlighted
-scrollable display and is designed to be fully used via keyboard. Some distinctive
+SpeedCrunch is a high-precision scientific calculator.
+Current stable version: 1.0.
+It features a syntax-highlighted scrollable display and is designed to be fully used via keyboard. Some distinctive
 features are auto-completion of functions and variables, a formula book, and quick
 insertion of constants from various fields of knowledge. It is available for Windows, macOS,
 and Linux in a number of languages.

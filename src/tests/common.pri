@@ -1,4 +1,4 @@
-DEFINES += SPEEDCRUNCH_VERSION=\\\"master\\\"
+DEFINES += SPEEDCRUNCH_VERSION=\\\"1.0\\\"
 
 win32:DEFINES += _USE_MATH_DEFINES
 win32:DEFINES += _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_WARNINGS _SCL_SECURE_NO_WARNINGS
@@ -93,4 +93,3 @@ SOURCES += ../core/book.cpp \
            ../math/rational.cpp \
            ../math/units.cpp \
            ../gui/manualwindow.cpp
-

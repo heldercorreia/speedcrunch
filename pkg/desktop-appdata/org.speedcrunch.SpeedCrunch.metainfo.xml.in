@@ -67,6 +67,7 @@
   <url type="help">https://heldercorreia.bitbucket.io/speedcrunch/introduction.html</url>
 
   <releases>
+    <release version="1.0" date="2026-03-08"/>
     <release version="0.12" date="2016-11-29"/>
     <release version="0.11" date="2014-01-30"/>
     <release version="0.10.1" date="2008-06-03"/>

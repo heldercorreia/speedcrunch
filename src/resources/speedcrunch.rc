@@ -7,8 +7,8 @@
 SPEEDCRUNCH_ICON ICON DISCARDABLE "speedcrunch.ico"
 
 VS_VERSION_INFO VERSIONINFO
-	FILEVERSION 0,12,0,0
-	PRODUCTVERSION 0,12,0,0
+	FILEVERSION 1,0,0,0
+	PRODUCTVERSION 1,0,0,0
 	FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
 	FILEFLAGS VS_FF_DEBUG
@@ -24,7 +24,7 @@ VS_VERSION_INFO VERSIONINFO
 			BLOCK "040904B0"
 			BEGIN
 				VALUE "CompanyName", "http://SpeedCrunch.org\0"
-				VALUE "FileVersion", "trunk\0"
+				VALUE "FileVersion", "1.0\0"
 				VALUE "LegalCopyright", "Copyright 2004-2009 http://SpeedCrunch.org\0"
 			END
 		END
