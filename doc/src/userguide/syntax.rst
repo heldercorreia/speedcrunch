@@ -168,6 +168,9 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 |                               |   that the power operation is                                 |                         |
 |                               |   *right-associative*, i.e. it is                             | ``2^2^3 = 2^8 = 256``   |
 |                               |   evaluated from right to left.                               |                         |
+|                               |   In *real mode*, fractional powers of                        |                         |
+|                               |   negative numbers are only defined for                       | ``(-1)^(2/3) = 1``      |
+|                               |   rational exponents with odd denominators.                   |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
 | ``+x``, ``-x``                | **Unary plus and minus**                                      | ``--5 = +5``            |
 +-------------------------------+---------------------------------------------------------------+-------------------------+

@@ -71,6 +71,7 @@ void test_rational()
     CHECK_STRING(Rational(-12345./96457).toString().toStdString(), "-12345/96457");
     CHECK_STRING(Rational(HNumber("-1234")/HNumber("7895")).toString().toStdString(), "-1234/7895");
     CHECK_STRING(Rational(HNumber("-1235000")/HNumber("78950000")).toString().toStdString(), "-247/15790");
+    CHECK_STRING(Rational(HNumber("1")/HNumber("7")).toString().toStdString(), "1/7");
     CHECK_STRING(Rational(0.).toString().toStdString(), "0");
     CHECK_STRING(Rational(HNumber(0)).toString().toStdString(), "0");
 }
@@ -140,6 +141,7 @@ void test_functions()
 
     DMath::complexMode = false;
     CHECK(DMath::raise(Quantity(CNumber("-2"))*Units::ampere(), Quantity(CNumber("0.6"))), "-1.51571656651039808235 ampere^(3/5)");
+    CHECK(DMath::raise(Quantity(CNumber("-8"))*Units::ampere(), Quantity(CNumber("2") / CNumber("3"))), "4 ampere^(2/3)");
     DMath::complexMode = true;
     CHECK(DMath::raise(Quantity(CNumber("-2"))*Units::ampere(), Quantity(CNumber("0.6"))), "(-0.46838217770735830743+1.44153211743623063689j) ampere^(3/5)");
 

@@ -461,6 +461,9 @@ void test_functions()
     CHECK(HMath::raise("4", "4"), "256");
     CHECK(HMath::raise("-27", HNumber("1") / HNumber("3")), "-3");
     CHECK(HMath::raise("-27", HNumber("-1") / HNumber("3")), "-0.33333333333333333333");
+    CHECK(HMath::raise("-1", HNumber("1") / HNumber("7")), "-1");
+    CHECK(HMath::raise("-1", HNumber("2") / HNumber("3")), "1");
+    CHECK(HMath::raise("-8", HNumber("2") / HNumber("3")), "4");
     CHECK(HMath::raise("-2", HMath::pi()), "NaN");
     CHECK_PRECISE(HMath::raise("2", "0.1"), "1.07177346253629316421300632502334202290638460497756");
     CHECK_PRECISE(HMath::raise("2", "0.2"), "1.14869835499703500679862694677792758944385088909780");

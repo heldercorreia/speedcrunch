@@ -1253,7 +1253,7 @@ HNumber HMath::raise(const HNumber& n1, const HNumber& n2)
     HNumber result;
     HNumber temp = n1;
     Rational exp;
-    bool change_sgn=false;
+    bool result_negative = false;
     if (n1.isNegative() && !n2.isInteger()){
         //Try to convert n2 to a Rational. If n2 is not rational, return NaN.
         // For negative bases only allow odd denominators.
@@ -1261,14 +1261,13 @@ HNumber HMath::raise(const HNumber& n1, const HNumber& n2)
         if (abs(exp.toHNumber() - n2) >= RATIONAL_TOL
             || (n1.isNegative() && exp.denominator()%2 == 0))
             return HMath::nan(OutOfDomain);
-        if (n1.isNegative() && !n2.isInteger()) {
-            temp = -temp;
-            change_sgn = true;
-        }
+
+        temp = -temp;
+        result_negative = (exp.numerator() % 2 != 0);
     }
 
     call2Args(result.d, temp.d, n2.d, float_raise);
-    result *= (change_sgn) ? -1 : 1;
+    result *= result_negative ? -1 : 1;
     return result;
 }
 

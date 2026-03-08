@@ -59,6 +59,8 @@ int Rational::compare(const Rational &other) const
 Rational::Rational(const HNumber &num) :
     m_num(1), m_denom(1), m_valid(1)
 {
+    const HNumber nearIntTol("1e-18");
+
     if(num.isZero()) {
         m_num = 0;
         return;
@@ -75,7 +77,16 @@ Rational::Rational(const HNumber &num) :
     unsigned long long p0=0, q0=1, p1=1, q1=0;
     HNumber val(HMath::abs(num));
     while(true) {
-        long a = HMath::floor(val).toInt();
+        HNumber aNum = HMath::floor(val);
+        HNumber frac = val - aNum;
+
+        // Guard against rounding noise near integer boundaries.
+        if (HMath::abs(HNumber(1) - frac) < nearIntTol) {
+            aNum += 1;
+            frac = 0;
+        }
+
+        long a = aNum.toInt();
         unsigned long long q2 = q0 + a*q1;
         if(q2>MAXD)
             break;
@@ -84,8 +95,8 @@ Rational::Rational(const HNumber &num) :
         q0 = temp3;
         p1 = temp1 + a*temp2;
         q1 = q2;
-        if(HMath::frac(val).isZero()) break;
-        val = HNumber(1)/HMath::frac(val);
+        if(HMath::abs(frac) < nearIntTol) break;
+        val = HNumber(1)/frac;
         if(val>HNumber(MAXD)) break;
     }
 
