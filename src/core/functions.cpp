@@ -778,6 +778,59 @@ Quantity function_emod(Function* f, const Function::ArgumentList& args)
     return result;
 }
 
+Quantity function_powmod(Function* f, const Function::ArgumentList& args)
+{
+    /* TODO : complex mode switch for this function */
+    ENSURE_ARGUMENT_COUNT(3);
+
+    const Quantity base = args.at(0);
+    const Quantity exponent = args.at(1);
+    const Quantity modulo = args.at(2);
+
+    if (!base.isInteger() || !exponent.isInteger() || !modulo.isInteger()) {
+        f->setError(TypeMismatch);
+        return DMath::nan(TypeMismatch);
+    }
+    if (modulo.isZero()) {
+        f->setError(ZeroDivide);
+        return DMath::nan(ZeroDivide);
+    }
+    if (exponent.isNegative()) {
+        f->setError(OutOfDomain);
+        return DMath::nan(OutOfDomain);
+    }
+
+    // Euclidean reduction helper: result has divisor sign (or is zero).
+    auto emod = [&modulo](const Quantity& value) {
+        Quantity result = value % modulo;
+        if (result.isNan() || result.isZero()) {
+            return result;
+        }
+        if (result.isNegative() != modulo.isNegative()) {
+            result += modulo;
+        }
+        return result;
+    };
+
+    Quantity e = exponent;
+    Quantity factor = emod(base);
+    Quantity result = emod(Quantity(1));
+    const Quantity zero(0);
+    const Quantity two(2);
+
+    while (e > zero) {
+        if (!(e % two).isZero()) {
+            result = emod(result * factor);
+        }
+        e = DMath::idiv(e, two);
+        if (e > zero) {
+            factor = emod(factor * factor);
+        }
+    }
+
+    return result;
+}
+
 Quantity function_ieee754_decode(Function* f, const Function::ArgumentList& args)
 {
     /* TODO : complex mode switch for this function */
@@ -981,6 +1034,7 @@ void FunctionRepo::createFunctions()
     FUNCTION_INSERT(idiv);
     FUNCTION_INSERT(mod);
     FUNCTION_INSERT(emod);
+    FUNCTION_INSERT(powmod);
 
     // IEEE-754.
     FUNCTION_INSERT(ieee754_decode);
@@ -1128,6 +1182,7 @@ void FunctionRepo::setTranslatableFunctionUsages()
     FUNCTION_USAGE_TR(mask, "x; bits");
     FUNCTION_USAGE_TR(mod, tr("value; modulo"));
     FUNCTION_USAGE_TR(emod, tr("value; modulo"));
+    FUNCTION_USAGE_TR(powmod, tr("base; exponent; modulo"));
     FUNCTION_USAGE_TR(poicdf, tr("events; average_events"));
     FUNCTION_USAGE_TR(poimean, tr("average_events"));
     FUNCTION_USAGE_TR(poipmf, tr("events; average_events"));
@@ -1205,6 +1260,7 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(min, tr("Minimum"));
     FUNCTION_NAME(mod, tr("Modulo"));
     FUNCTION_NAME(emod, tr("Euclidean Modulo"));
+    FUNCTION_NAME(powmod, tr("Modular Exponentiation"));
     FUNCTION_NAME(ncr, tr("Combination (Binomial Coefficient)"));
     FUNCTION_NAME(not, tr("Logical NOT"));
     FUNCTION_NAME(npr, tr("Permutation (Arrangement)"));

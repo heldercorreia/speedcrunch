@@ -296,6 +296,7 @@ void test_divide_by_zero()
     CHECK_DIV_BY_ZERO("-345.3 / binompmf (1; 10; 0)");
     CHECK_DIV_BY_ZERO("mod(1;0)");
     CHECK_DIV_BY_ZERO("emod(1;0)");
+    CHECK_DIV_BY_ZERO("powmod(2;10;0)");
 }
 
 void test_radix_char()
@@ -778,6 +779,16 @@ void test_function_discrete()
     CHECK_EVAL("emod(-361;-360)", "-1");
     CHECK_EVAL("emod(2.5;2)", "0.5");
     CHECK_EVAL("emod(-2.5;2)", "1.5");
+
+    CHECK_EVAL("powmod(2;10;7)", "2");
+    CHECK_EVAL("powmod(3;233;353)", "248");
+    CHECK_EVAL("powmod(-3;233;353)", "105");
+    CHECK_EVAL("powmod(123456789;0;97)", "1");
+    CHECK_EVAL("powmod(123456789;1234567;1)", "0");
+    CHECK_EVAL("powmod(123456789;1234567;-97)", "-80");
+    CHECK_EVAL_FAIL("powmod(2;-1;5)");
+    CHECK_EVAL_FAIL("powmod(2;3.5;5)");
+    CHECK_EVAL_FAIL("powmod(2.5;3;5)");
 
     CHECK_EVAL("gcd(12;18)", "6");
     CHECK_EVAL("gcd(36;56;210)", "2");

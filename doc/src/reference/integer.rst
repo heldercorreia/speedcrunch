@@ -157,6 +157,10 @@ Integer Division
     If you want wrap-around behavior in ``[0, 360)``, use :func:`emod`:
     ``emod(-1; 360) = 359``.
 
+    For large powers, avoid computing the full power first (for example,
+    ``mod(3^233; 353)``), since the intermediate value may lose precision.
+    Use :func:`powmod` instead.
+
     This function always returns an exact result, provided that the parameters are exact.
 
     You can use this function with non-integers as well, but rounding errors might lead to off-by-one errors. Evaluating :func:`mod` can be computationally expensive, so the function is internally restricted to 250 division loops.
@@ -177,6 +181,18 @@ Integer Division
     You can use this function with non-integers as well, but rounding errors might lead to off-by-one errors.
 
     Only real, dimensionless arguments are allowed.
+
+.. function:: powmod(base; exponent; modulo)
+
+    Compute ``base^exponent`` reduced by ``modulo`` using modular exponentiation.
+    This avoids building huge intermediate powers and is therefore the recommended
+    approach for large exponents (for example in cryptography).
+
+    Arguments must be real, integer, and dimensionless.
+    ``modulo`` must be non-zero, and ``exponent`` must be non-negative.
+
+    The result follows :func:`emod` semantics (same sign as ``modulo`` or zero).
+    Example: ``powmod(3; 233; 353) = 248``.
 
 .. function:: gcd(n1; n2; ...)
 
