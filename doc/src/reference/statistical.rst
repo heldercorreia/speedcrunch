@@ -30,6 +30,17 @@ General
 
     Computes the sum of all the given arguments. These must share the same dimension.
 
+.. function:: sigma(start; end; expression)
+
+    Computes a summation over integer values of ``n`` from ``start`` to ``end`` (inclusive), evaluating ``expression`` at each step.
+
+    Inside ``expression``, the identifier ``n`` is bound to the current iteration value.
+
+    Example::
+
+        sigma(1; 10; 2+n)
+        = 75
+
 .. function:: product(x1; x2; ...)
 
     Computes the product of all the given arguments.

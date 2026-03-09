@@ -428,6 +428,29 @@ static bool tokenPositionCompare(const Token& a, const Token& b)
     return (a.pos() < b.pos());
 }
 
+static QStringList splitTopLevelFunctionArguments(const QString& text)
+{
+    QStringList arguments;
+    int parenDepth = 0;
+    int argumentStart = 0;
+
+    for (int i = 0; i < text.size(); ++i) {
+        const QChar ch = text.at(i);
+        if (ch == '(') {
+            ++parenDepth;
+        } else if (ch == ')') {
+            if (parenDepth > 0)
+                --parenDepth;
+        } else if (ch == ';' && parenDepth == 0) {
+            arguments.append(text.mid(argumentStart, i - argumentStart).trimmed());
+            argumentStart = i + 1;
+        }
+    }
+
+    arguments.append(text.mid(argumentStart).trimmed());
+    return arguments;
+}
+
 TokenStack::TokenStack() : QVector<Token>()
 {
     topIndex = 0;
@@ -1431,7 +1454,16 @@ void Evaluator::compile(const Tokens& tokens)
                 {
                     ruleFound = true;
                     syntaxStack.reduce(4, MAX_PRECEDENCE);
-                    m_codes.append(Opcode(Opcode::Function, argCount));
+                    Opcode functionCall(Opcode::Function, argCount);
+                    if (id.text().compare("sigma", Qt::CaseInsensitive) == 0
+                        && argCount == 3)
+                    {
+                        const QString argText = m_expression.mid(arg.pos(), arg.size());
+                        const QStringList argList = splitTopLevelFunctionArguments(argText);
+                        if (argList.count() == 3)
+                            functionCall.text = argList.at(2);
+                    }
+                    m_codes.append(functionCall);
 #ifdef EVALUATOR_DEBUG
                         dbg << "\tRule for function last argument "
                             << argCount << " \n";
@@ -1940,6 +1972,25 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
     QString fname;
     Function* function;
     const UserFunction* userFunction = nullptr;
+    auto hasPendingDeferredOperandContext = [&refs](int stackSize) {
+        QHash<int, QString>::const_iterator it = refs.constBegin();
+        for (; it != refs.constEnd(); ++it) {
+            if (it.key() <= stackSize
+                && it.value().compare("sigma", Qt::CaseInsensitive) == 0)
+            {
+                return true;
+            }
+        }
+        return false;
+    };
+    auto checkOperatorResultWithDeferredNoOperand = [this, &hasPendingDeferredOperandContext, &stack](const Quantity& result) {
+        if (result.error() == NoOperand
+            && hasPendingDeferredOperandContext(stack.count()))
+        {
+            return result;
+        }
+        return checkOperatorResult(result);
+    };
 
     for (int pc = 0; pc < opcodes.count(); ++pc) {
         const Opcode& opcode = opcodes.at(pc);
@@ -1962,7 +2013,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     return CMath::nan();
                 }
                 val1 = stack.pop();
-                val1 = checkOperatorResult(-val1);
+                val1 = checkOperatorResultWithDeferredNoOperand(-val1);
                 stack.push(val1);
                 break;
 
@@ -1975,7 +2026,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 }
                 val1 = stack.pop();
                 val2 = stack.pop();
-                val2 = checkOperatorResult(val2 + val1);
+                val2 = checkOperatorResultWithDeferredNoOperand(val2 + val1);
                 stack.push(val2);
                 break;
 
@@ -1986,7 +2037,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 }
                 val1 = stack.pop();
                 val2 = stack.pop();
-                val2 = checkOperatorResult(val2 - val1);
+                val2 = checkOperatorResultWithDeferredNoOperand(val2 - val1);
                 stack.push(val2);
                 break;
 
@@ -1997,7 +2048,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 }
                 val1 = stack.pop();
                 val2 = stack.pop();
-                val2 = checkOperatorResult(val2 * val1);
+                val2 = checkOperatorResultWithDeferredNoOperand(val2 * val1);
                 stack.push(val2);
                 break;
 
@@ -2008,7 +2059,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 }
                 val1 = stack.pop();
                 val2 = stack.pop();
-                val2 = checkOperatorResult(val2 / val1);
+                val2 = checkOperatorResultWithDeferredNoOperand(val2 / val1);
                 stack.push(val2);
                 break;
 
@@ -2019,7 +2070,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 }
                 val1 = stack.pop();
                 val2 = stack.pop();
-                val2 = checkOperatorResult(DMath::raise(val2, val1));
+                val2 = checkOperatorResultWithDeferredNoOperand(DMath::raise(val2, val1));
                 stack.push(val2);
                 break;
 
@@ -2029,7 +2080,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     return CMath::nan();
                 }
                 val1 = stack.pop();
-                val1 = checkOperatorResult(DMath::factorial(val1));
+                val1 = checkOperatorResultWithDeferredNoOperand(DMath::factorial(val1));
                 stack.push(val1);
                 break;
 
@@ -2040,7 +2091,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 }
                 val1 = stack.pop();
                 val2 = stack.pop();
-                val2 = checkOperatorResult(val2 % val1);
+                val2 = checkOperatorResultWithDeferredNoOperand(val2 % val1);
                 stack.push(val2);
                 break;
 
@@ -2051,7 +2102,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 }
                 val1 = stack.pop();
                 val2 = stack.pop();
-                val2 = checkOperatorResult(val2 / val1);
+                val2 = checkOperatorResultWithDeferredNoOperand(val2 / val1);
                 stack.push(DMath::integer(val2));
                 break;
 
@@ -2141,6 +2192,10 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     } else if (hasUserFunction(fname)) {
                         stack.push(CMath::nan());
                         refs.insert(stack.count(), fname);
+                    } else if (fname.compare("n", Qt::CaseInsensitive) == 0
+                               && hasPendingDeferredOperandContext(stack.count()))
+                    {
+                        stack.push(CMath::nan());
                     } else {
                         m_error = "<b>" + fname + "</b>: "
                                   + tr("unknown function or variable");
@@ -2212,6 +2267,79 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     stack.push(execUserFunction(userFunction, args));
                     if (!m_error.isEmpty())
                         return CMath::nan();
+                } else if (fname.compare("sigma", Qt::CaseInsensitive) == 0) {
+                    if (args.count() != 3) {
+                        m_error = QString::fromLatin1("<b>%1</b>: ").arg(fname)
+                                + tr("wrong number of arguments");
+                        return CMath::nan();
+                    }
+                    if (!args.at(0).isInteger() || !args.at(1).isInteger()) {
+                        m_error = QString::fromLatin1("<b>%1</b>: ").arg(fname)
+                                + tr("undefined for argument domain");
+                        return CMath::nan();
+                    }
+
+                    const bool hadN = hasVariable("n");
+                    const Variable oldN = hadN ? getVariable("n")
+                                               : Variable(QString(), Quantity(0));
+                    auto restoreN = [this, hadN, oldN]() {
+                        if (hadN) {
+                            setVariable("n", oldN.value(), oldN.type());
+                        } else {
+                            unsetVariable("n");
+                        }
+                    };
+
+                    const Quantity start = args.at(0);
+                    const Quantity end = args.at(1);
+                    const Quantity step = (start <= end) ? Quantity(1) : Quantity(-1);
+                    const bool hasExpression = !opcode.text.isEmpty();
+                    Quantity sigmaResult(0);
+
+                    for (Quantity n = start; step > 0 ? (n <= end) : (n >= end); n += step) {
+                        setVariable("n", n);
+
+                        Quantity term = args.at(2);
+                        if (hasExpression) {
+                            const bool savedDirty = m_dirty;
+                            const QString savedExpression = m_expression;
+                            const bool savedValid = m_valid;
+                            const QString savedAssignId = m_assignId;
+                            const bool savedAssignFunc = m_assignFunc;
+                            const QStringList savedAssignArg = m_assignArg;
+                            const QVector<Opcode> savedCodes = m_codes;
+                            const QVector<Quantity> savedConstants = m_constants;
+                            const QStringList savedIdentifiers = m_identifiers;
+                            const QString savedError = m_error;
+
+                            setExpression(opcode.text);
+                            term = evalNoAssign();
+                            const QString termError = m_error;
+
+                            m_dirty = savedDirty;
+                            m_expression = savedExpression;
+                            m_valid = savedValid;
+                            m_assignId = savedAssignId;
+                            m_assignFunc = savedAssignFunc;
+                            m_assignArg = savedAssignArg;
+                            m_codes = savedCodes;
+                            m_constants = savedConstants;
+                            m_identifiers = savedIdentifiers;
+                            m_error = savedError;
+
+                            if (!termError.isEmpty()) {
+                                restoreN();
+                                m_error = QString::fromLatin1("<b>%1</b>: ").arg(fname)
+                                        + termError;
+                                return CMath::nan();
+                            }
+                        }
+
+                        sigmaResult += term;
+                    }
+
+                    restoreN();
+                    stack.push(sigmaResult);
                 } else {
                     stack.push(function->exec(args));
                     if (function->error()) {

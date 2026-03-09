@@ -692,6 +692,33 @@ void test_function_stat()
     CHECK_EVAL("SUM(1;2;3;4;5;6)", "21");
     CHECK_EVAL("SUM(1;-2;3;-4;5;-6)", "-3");
 
+    CHECK_EVAL_FAIL("SIGMA(1;10)");
+    CHECK_EVAL_FAIL("SIGMA(1;2;3;4)");
+    CHECK_EVAL_FAIL("SIGMA(1.5;10;n)");
+    CHECK_EVAL_FAIL("SIGMA(1 meter;10;n)");
+    CHECK_EVAL_FAIL("SIGMA(1;10;n+unknown_var)");
+    CHECK_EVAL("SIGMA(1;1;n)", "1");
+    CHECK_EVAL("SIGMA(3;3;2+n)", "5");
+    CHECK_EVAL("SIGMA(1;4;3)", "12");
+    CHECK_EVAL("SIGMA(-2;2;n)", "0");
+    CHECK_EVAL("SIGMA(1;10;2+n)", "75");
+    CHECK_EVAL("SIGMA(10;1;n)", "55");
+    CHECK_EVAL("SIGMA(-1;-4;n)", "-10");
+    CHECK_EVAL("SIGMA(1;4;n^2)", "30");
+    CHECK_EVAL("SIGMA(1;4;1/n)", "2.08333333333333333333");
+    CHECK_EVAL("SIGMA(1;3;n meter)", "NaN");
+    CHECK_EVAL("SIGMA(1;3;n^2+n)", "20");
+    CHECK_EVAL("SIGMA(1;3;SIGMA(1;2;1))", "6");
+    CHECK_EVAL_FAIL("SIGMA(1;3;SIGMA(1;n;1))");
+    CHECK_EVAL("f(k)=k^2", "NaN");
+    CHECK_EVAL_FAIL("SIGMA(1;4;f(n))");
+    CHECK_EVAL("x=10", "10");
+    CHECK_EVAL("SIGMA(1;3;n+x)", "36");
+    CHECK_EVAL("x", "10");
+    CHECK_EVAL("n=123", "123");
+    CHECK_EVAL("SIGMA(1;3;n)", "6");
+    CHECK_EVAL("n", "123");
+
     CHECK_EVAL_FAIL("PRODUCT(-1)");
     CHECK_EVAL("PRODUCT(100;0)", "0");
     CHECK_EVAL("PRODUCT(100;1)", "100");

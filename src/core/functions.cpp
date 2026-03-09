@@ -546,6 +546,26 @@ Quantity function_sum(Function* f, const Function::ArgumentList& args)
     return std::accumulate(args.begin(), args.end(), Quantity(0));
 }
 
+Quantity function_sigma(Function* f, const Function::ArgumentList& args)
+{
+    ENSURE_ARGUMENT_COUNT(3);
+    if (!args.at(0).isInteger() || !args.at(1).isInteger()) {
+        f->setError(OutOfDomain);
+        return DMath::nan(OutOfDomain);
+    }
+
+    const Quantity start = args.at(0);
+    const Quantity end = args.at(1);
+    const Quantity step = (start <= end) ? Quantity(1) : Quantity(-1);
+    Quantity result(0);
+
+    for (Quantity n = start; step > 0 ? (n <= end) : (n >= end); n += step) {
+        result += args.at(2);
+    }
+
+    return result;
+}
+
 Quantity function_product(Function* f, const Function::ArgumentList& args)
 {
     ENSURE_MINIMUM_ARGUMENT_COUNT(2);
@@ -960,6 +980,7 @@ void FunctionRepo::createFunctions()
     FUNCTION_INSERT(product);
     FUNCTION_INSERT(round);
     FUNCTION_INSERT(sgn);
+    FUNCTION_INSERT(sigma);
     FUNCTION_INSERT(sqrt);
     FUNCTION_INSERT(stddev);
     FUNCTION_INSERT(sum);
@@ -1152,6 +1173,7 @@ void FunctionRepo::setNonTranslatableFunctionUsages()
     FUNCTION_USAGE(real, "x");
     FUNCTION_USAGE(sec, "x)");
     FUNCTION_USAGE(sgn, "x");
+    FUNCTION_USAGE(sigma, "start; end; expression");
     FUNCTION_USAGE(sin, "x");
     FUNCTION_USAGE(sinh, "x");
     FUNCTION_USAGE(sqrt, "x");
@@ -1280,6 +1302,7 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(shl, tr("Arithmetic Shift Left"));
     FUNCTION_NAME(shr, tr("Arithmetic Shift Right"));
     FUNCTION_NAME(sgn, tr("Signum"));
+    FUNCTION_NAME(sigma, tr("Sigma Sum"));
     FUNCTION_NAME(sin, tr("Sine"));
     FUNCTION_NAME(sinh, tr("Hyperbolic Sine"));
     FUNCTION_NAME(sqrt, tr("Square Root"));
