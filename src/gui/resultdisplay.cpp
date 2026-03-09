@@ -31,6 +31,8 @@
 #include <QLatin1String>
 #include <QApplication>
 #include <QClipboard>
+#include <QContextMenuEvent>
+#include <QMenu>
 #include <QPainter>
 #include <QScrollBar>
 
@@ -209,6 +211,22 @@ void ResultDisplay::mouseDoubleClickEvent(QMouseEvent*)
     emit expressionSelected(text);
 }
 
+void ResultDisplay::contextMenuEvent(QContextMenuEvent* event)
+{
+    QMenu* menu = createStandardContextMenu();
+    const int historyIndex = historyIndexAtPosition(event->pos());
+    if (historyIndex >= 0) {
+        menu->addSeparator();
+        QAction* removeAction = menu->addAction(tr("Remove This Calculation"));
+        connect(removeAction, &QAction::triggered, this, [this, historyIndex]() {
+            emit removeHistoryEntryRequested(historyIndex);
+        });
+    }
+
+    menu->exec(event->globalPos());
+    delete menu;
+}
+
 void ResultDisplay::timerEvent(QTimerEvent* event)
 {
     if (event->timerId() != m_scrollTimer.timerId()) {
@@ -302,4 +320,35 @@ void ResultDisplay::updateScrollBarStyleSheet()
         "}"
     ).arg(m_highlighter->colorForRole(ColorScheme::Background).name(),
           m_highlighter->colorForRole(ColorScheme::ScrollBar).name()));
+}
+
+int ResultDisplay::historyIndexAtPosition(const QPoint& pos) const
+{
+    const QTextCursor cursor = cursorForPosition(pos);
+    if (cursor.block().text().trimmed().isEmpty())
+        return -1;
+
+    const int blockNumber = cursor.blockNumber();
+    if (blockNumber < 0)
+        return -1;
+
+    const QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
+    int currentBlock = 0;
+    for (int i = 0; i < history.count(); ++i) {
+        if (currentBlock == blockNumber)
+            return i;
+        ++currentBlock;
+
+        if (!history.at(i).result().isNan()) {
+            if (currentBlock == blockNumber)
+                return i;
+            ++currentBlock;
+        }
+
+        if (currentBlock == blockNumber)
+            return i;
+        ++currentBlock;
+    }
+
+    return -1;
 }

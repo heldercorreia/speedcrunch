@@ -26,6 +26,8 @@ class Quantity;
 class SyntaxHighlighter;
 class HistoryEntry;
 class Session;
+class QContextMenuEvent;
+class QPoint;
 
 class ResultDisplay : public QPlainTextEdit
 {
@@ -48,6 +50,7 @@ signals:
     void controlWheelDown();
     void controlWheelUp();
     void expressionSelected(const QString&);
+    void removeHistoryEntryRequested(int index);
 
 public slots:
     void clear();
@@ -64,6 +67,7 @@ public slots:
     void scrollToTop();
 
 protected:
+    virtual void contextMenuEvent(QContextMenuEvent*);
     virtual void mouseDoubleClickEvent(QMouseEvent*);
     virtual void wheelEvent(QWheelEvent*);
     virtual void timerEvent(QTimerEvent*);
@@ -73,6 +77,7 @@ protected:
     void scrollToDirection(int);
     void stopActiveScrollingAnimation();
     void updateScrollBarStyleSheet();
+    int historyIndexAtPosition(const QPoint& pos) const;
 
 private:
     Q_DISABLE_COPY(ResultDisplay)

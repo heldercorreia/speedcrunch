@@ -934,6 +934,7 @@ void MainWindow::createFixedConnections()
 
     connect(m_widgets.display, SIGNAL(copyAvailable(bool)), SLOT(handleCopyAvailable(bool)));
     connect(m_widgets.display, SIGNAL(expressionSelected(const QString&)), SLOT(insertTextIntoEditor(const QString&)));
+    connect(m_widgets.display, SIGNAL(removeHistoryEntryRequested(int)), SLOT(removeHistoryEntryAt(int)));
     connect(m_widgets.display, SIGNAL(selectionChanged()), SLOT(handleDisplaySelectionChange()));
     connect(m_widgets.display, SIGNAL(shiftWheelUp()), SLOT(increaseDisplayFontPointSize()));
     connect(m_widgets.display, SIGNAL(shiftWheelDown()), SLOT(decreaseDisplayFontPointSize()));
@@ -2220,6 +2221,17 @@ void MainWindow::evaluateEditorExpression()
     m_widgets.editor->stopAutoComplete();
     if (!result.isNan())
         m_conditions.autoAns = true;
+}
+
+void MainWindow::removeHistoryEntryAt(int index)
+{
+    const int historySize = m_session->historyToList().size();
+    if (index < 0 || index >= historySize)
+        return;
+
+    m_session->removeHistoryEntryAt(index);
+    m_conditions.autoAns = !m_session->historyToList().empty();
+    emit historyChanged();
 }
 
 void MainWindow::clearTextEditSelection(QPlainTextEdit* edit)
