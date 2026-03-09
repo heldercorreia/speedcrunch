@@ -83,6 +83,8 @@ Not every function in SpeedCrunch supports complex arguments. Refer to a functio
 Caution is advised when using functions like :func:`cbrt` or any fractional power operation with complex numbers.
 With complex number support enabled, the power operation ``x^(1/3)`` will return the first complex cubic root of ``x`` which is usually non-real.
 However, when given a real argument, :func:`cbrt` will *always* return the real cubic root, regardless of whether or not complex numbers are enabled.
+In *real mode*, ``x^y`` with negative real ``x`` is only defined when ``y`` can be reduced to a rational with an odd denominator;
+otherwise the result is ``NaN``.
 
 When complex numbers are disabled, the constant :const:`j` is not available. However, previously stored variables may still contain complex values.
 In that case, the imaginary part of these numbers is discarded when passing them as an argument to a built-in function.

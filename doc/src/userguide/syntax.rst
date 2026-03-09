@@ -185,6 +185,8 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 |                               |   In *real mode*, fractional powers of                        |                         |
 |                               |   negative numbers are only defined for                       | ``(-1)^(2/3) = 1``      |
 |                               |   rational exponents with odd denominators.                   |                         |
+|                               |   The result is negative only when the reduced                | ``(-8)^(2/3) = 4``      |
+|                               |   rational exponent has an odd numerator.                     |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
 | ``+x``, ``-x``                | **Unary plus and minus**                                      | ``--5 = +5``            |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
@@ -223,6 +225,21 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 |                               |   unit. Both forms are equivalent. See                        | ``1000 meter -> mile``  |
 |                               |   :ref:`units` for more information.                          |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
+
+For negative bases in *real mode*, the exponentiation rule can be read as:
+
+1. Express the exponent as a reduced rational ``p/q``.
+2. If ``q`` is even, the result is ``NaN``.
+3. If ``q`` is odd, the result is real, with sign set by ``p``:
+   odd ``p`` gives a negative result, even ``p`` gives a positive result.
+
+Examples::
+
+    (-13)^(1/3) = -2.3513346877207574895
+    (-13)^(2/3) = 5.5287748136788717828
+    (-13)^(1/9.123) = 1.32465488702830785593
+    (-13)^(1/2) = NaN
+    (-13)^pi = NaN
 
 
 .. We want to keep the following heading, paragraph and table together. By forcing a page break
