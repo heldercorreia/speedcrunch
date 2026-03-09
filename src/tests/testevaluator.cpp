@@ -936,6 +936,8 @@ void test_auto_fix_powers()
 void test_comments()
 {
     CHECK_EVAL("ncr(3;3) ? this is because foo",  "1");
+    CHECK_EVAL("? this is a comment-only line", "NaN");
+    CHECK_EVAL("   ? this is an indented comment-only line", "NaN");
 }
 
 void test_user_functions()

@@ -637,6 +637,16 @@ bool Evaluator::isSeparatorChar(const QChar& ch)
     return s_separatorRE.match(ch).hasMatch();
 }
 
+bool Evaluator::isCommentOnlyExpression(const QString& expr)
+{
+    for (QChar ch : expr) {
+        if (!ch.isSpace())
+            return ch == '?';
+    }
+
+    return false;
+}
+
 
 QString Evaluator::fixNumberRadix(const QString& number)
 {
@@ -1843,6 +1853,14 @@ Quantity Evaluator::evalNoAssign()
         if (!tokens.valid()) {
             m_error = tr("invalid expression");
             return Quantity(0);
+        }
+
+        if (tokens.count() == 0 && isCommentOnlyExpression(m_expression)) {
+            m_valid = true;
+            m_constants.clear();
+            m_codes.clear();
+            m_identifiers.clear();
+            return CMath::nan();
         }
 
         // Variable assignment?

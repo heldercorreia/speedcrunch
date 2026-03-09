@@ -49,6 +49,12 @@ To continue the computation directly from the previous result, you can use the s
     ans + 3
     = 38
 
+You can also write comment-only entries. Any line whose first non-space character is ``?`` is treated as a comment and stored in the history::
+
+    ? start algorithm
+
+      ? this comment is also valid
+
 As you can see, ``ans`` provides a quick and easy way to access the previous result. Sometimes,
 SpeedCrunch can even insert ``ans`` for you: When you start a new expression with an operator (e.g. ``+``, ``-``, ``*``, ``/``, ``^``), ``ans`` will be prepended automatically. [#f1]_ To try it out, type ``7`` :kbd:`Enter` ``+3`` :kbd:`Enter`.
 SpeedCrunch expands this as follows::

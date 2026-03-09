@@ -140,6 +140,20 @@ Input                Fixed Decimal          Sexagecimal
 
 Note that when entering time values with colons, no additional dimension units are needed. Formatting itself works as an unit.
 
+Comments
+--------
+
+The question mark character ``?`` starts a comment. Everything from ``?`` to the end of the line is ignored by the evaluator::
+
+    1 + 2 ? simple sum
+    = 3
+
+A line can also be comment-only. If the first non-space character is ``?``, the whole line is treated as a comment::
+
+    ? start algorithm
+
+      ? this is also a comment-only line
+
 Operators and Precedence
 ------------------------
 

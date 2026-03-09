@@ -556,8 +556,10 @@ void Editor::autoCalc()
     auto quantity = m_evaluator->evalNoAssign();
 
     if (m_evaluator->error().isEmpty()) {
-        if (quantity.isNan() && m_evaluator->isUserFunctionAssign()) {
-            // Result is not always available when assigning a user function.
+        if (quantity.isNan() && (m_evaluator->isUserFunctionAssign()
+            || Evaluator::isCommentOnlyExpression(str))) {
+            // Result is not available for user function assignment and
+            // comment-only expressions.
             emit autoCalcDisabled();
         } else {
             auto formatted = NumberFormatter::format(quantity);
@@ -605,8 +607,10 @@ void Editor::autoCalcSelection(const QString& custom)
     auto quantity = m_evaluator->evalNoAssign();
 
     if (m_evaluator->error().isEmpty()) {
-        if (quantity.isNan() && m_evaluator->isUserFunctionAssign()) {
-            // Result is not always available when assigning a user function.
+        if (quantity.isNan() && (m_evaluator->isUserFunctionAssign()
+            || Evaluator::isCommentOnlyExpression(str))) {
+            // Result is not available for user function assignment and
+            // comment-only expressions.
             auto message = tr("Selection result: n/a");
             emit autoCalcMessageAvailable(message);
         } else {

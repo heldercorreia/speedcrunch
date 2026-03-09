@@ -2180,6 +2180,7 @@ void MainWindow::restoreSession() {
 void MainWindow::evaluateEditorExpression()
 {
     QString expr = m_evaluator->autoFix(m_widgets.editor->text());
+    const bool isCommentOnly = Evaluator::isCommentOnlyExpression(expr);
 
     if (expr.isEmpty())
         return;
@@ -2195,7 +2196,7 @@ void MainWindow::evaluateEditorExpression()
     if (m_evaluator->isUserFunctionAssign()) {
         result = CMath::nan();
         emit functionsChanged();
-    } else if (result.isNan())
+    } else if (result.isNan() && !isCommentOnly)
         return;
 
     m_session->addHistoryEntry(HistoryEntry(expr, result));
