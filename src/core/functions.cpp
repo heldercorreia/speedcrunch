@@ -764,6 +764,20 @@ Quantity function_mod(Function* f, const Function::ArgumentList& args)
     return args.at(0) % args.at(1);
 }
 
+Quantity function_emod(Function* f, const Function::ArgumentList& args)
+{
+    /* TODO : complex mode switch for this function */
+    ENSURE_ARGUMENT_COUNT(2);
+    Quantity result = args.at(0) % args.at(1);
+    if (result.isNan() || result.isZero()) {
+        return result;
+    }
+    if (result.isNegative() != args.at(1).isNegative()) {
+        result += args.at(1);
+    }
+    return result;
+}
+
 Quantity function_ieee754_decode(Function* f, const Function::ArgumentList& args)
 {
     /* TODO : complex mode switch for this function */
@@ -966,6 +980,7 @@ void FunctionRepo::createFunctions()
     FUNCTION_INSERT(shr);
     FUNCTION_INSERT(idiv);
     FUNCTION_INSERT(mod);
+    FUNCTION_INSERT(emod);
 
     // IEEE-754.
     FUNCTION_INSERT(ieee754_decode);
@@ -1112,6 +1127,7 @@ void FunctionRepo::setTranslatableFunctionUsages()
     FUNCTION_USAGE_TR(log, tr("base; x"));
     FUNCTION_USAGE_TR(mask, "x; bits");
     FUNCTION_USAGE_TR(mod, tr("value; modulo"));
+    FUNCTION_USAGE_TR(emod, tr("value; modulo"));
     FUNCTION_USAGE_TR(poicdf, tr("events; average_events"));
     FUNCTION_USAGE_TR(poimean, tr("average_events"));
     FUNCTION_USAGE_TR(poipmf, tr("events; average_events"));
@@ -1188,6 +1204,7 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(median, tr("Median Value (50th Percentile)"));
     FUNCTION_NAME(min, tr("Minimum"));
     FUNCTION_NAME(mod, tr("Modulo"));
+    FUNCTION_NAME(emod, tr("Euclidean Modulo"));
     FUNCTION_NAME(ncr, tr("Combination (Binomial Coefficient)"));
     FUNCTION_NAME(not, tr("Logical NOT"));
     FUNCTION_NAME(npr, tr("Permutation (Arrangement)"));

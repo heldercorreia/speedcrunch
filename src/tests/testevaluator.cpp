@@ -294,6 +294,8 @@ void test_divide_by_zero()
     CHECK_DIV_BY_ZERO("1/round(0.456)");
     CHECK_DIV_BY_ZERO("-1/binompmf(1;10;0)");
     CHECK_DIV_BY_ZERO("-345.3 / binompmf (1; 10; 0)");
+    CHECK_DIV_BY_ZERO("mod(1;0)");
+    CHECK_DIV_BY_ZERO("emod(1;0)");
 }
 
 void test_radix_char()
@@ -745,6 +747,38 @@ void test_function_logic()
 
 void test_function_discrete()
 {
+    CHECK_EVAL("idiv(10;3)", "3");
+    CHECK_EVAL("idiv(-10;3)", "-3");
+    CHECK_EVAL("idiv(10;-3)", "-3");
+    CHECK_EVAL("idiv(-10;-3)", "3");
+
+    CHECK_EVAL("mod(10;3)", "1");
+    CHECK_EVAL("mod(-10;3)", "-1");
+    CHECK_EVAL("mod(10;-3)", "1");
+    CHECK_EVAL("mod(-10;-3)", "-1");
+
+    CHECK_EVAL("emod(10;3)", "1");
+    CHECK_EVAL("emod(-10;3)", "2");
+    CHECK_EVAL("emod(10;-3)", "-2");
+    CHECK_EVAL("emod(-10;-3)", "-1");
+    CHECK_EVAL("emod(-1;360)", "359");
+    CHECK_EVAL("emod(360;360)", "0");
+    CHECK_EVAL("emod(361;360)", "1");
+    CHECK_EVAL("emod(-360;360)", "0");
+    CHECK_EVAL("emod(-361;360)", "359");
+    CHECK_EVAL("emod(721;360)", "1");
+    CHECK_EVAL("emod(-721;360)", "359");
+    CHECK_EVAL("emod(0;360)", "0");
+    CHECK_EVAL("emod(180;360)", "180");
+    CHECK_EVAL("emod(-180;360)", "180");
+    CHECK_EVAL("emod(1;-360)", "-359");
+    CHECK_EVAL("emod(359;-360)", "-1");
+    CHECK_EVAL("emod(360;-360)", "0");
+    CHECK_EVAL("emod(-1;-360)", "-1");
+    CHECK_EVAL("emod(-361;-360)", "-1");
+    CHECK_EVAL("emod(2.5;2)", "0.5");
+    CHECK_EVAL("emod(-2.5;2)", "1.5");
+
     CHECK_EVAL("gcd(12;18)", "6");
     CHECK_EVAL("gcd(36;56;210)", "2");
     CHECK_EVAL("gcd(28;120;126)", "2");

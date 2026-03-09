@@ -150,9 +150,31 @@ Integer Division
 
     Compute the remainder of the integer division ``a/b``. The divisor ``b`` must be non-zero. The result takes the sign of ``a``.
 
+    This function is paired with :func:`idiv` (truncating integer quotient), so
+    ``a = idiv(a; b) * b + mod(a; b)``.
+
+    Example: ``mod(-1; 360) = -1``.
+    If you want wrap-around behavior in ``[0, 360)``, use :func:`emod`:
+    ``emod(-1; 360) = 359``.
+
     This function always returns an exact result, provided that the parameters are exact.
 
     You can use this function with non-integers as well, but rounding errors might lead to off-by-one errors. Evaluating :func:`mod` can be computationally expensive, so the function is internally restricted to 250 division loops.
+
+    Only real, dimensionless arguments are allowed.
+
+.. function:: emod(a; b)
+
+    Compute the Euclidean remainder of ``a/b``. The divisor ``b`` must be non-zero.
+    The result has the sign of ``b`` (or is zero), and its absolute value is
+    smaller than the absolute value of ``b``.
+
+    For positive ``b``, this maps values to ``[0, b)``; for example,
+    ``emod(-1; 360) = 359``.
+
+    This function always returns an exact result, provided that the parameters are exact.
+
+    You can use this function with non-integers as well, but rounding errors might lead to off-by-one errors.
 
     Only real, dimensionless arguments are allowed.
 
