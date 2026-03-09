@@ -2254,12 +2254,32 @@ void MainWindow::handleManualClosed()
 void MainWindow::handleDisplaySelectionChange()
 {
     clearTextEditSelection(m_widgets.editor);
-    m_widgets.editor->autoCalcSelection(m_widgets.display->textCursor().selectedText());
+    const QTextCursor displayCursor = m_widgets.display->textCursor();
+    if (displayCursor.hasSelection()) {
+        m_widgets.editor->autoCalcSelection(displayCursor.selectedText());
+        return;
+    }
+
+    if (m_widgets.editor->text().trimmed().isEmpty()) {
+        hideStateLabel();
+        return;
+    }
+
+    m_widgets.editor->refreshAutoCalc();
 }
 
 void MainWindow::handleEditorSelectionChange()
 {
     clearTextEditSelection(m_widgets.display);
+    if (m_widgets.editor->textCursor().hasSelection())
+        return;
+
+    if (m_widgets.editor->text().trimmed().isEmpty()) {
+        hideStateLabel();
+        return;
+    }
+
+    m_widgets.editor->refreshAutoCalc();
 }
 
 void MainWindow::handleCopyAvailable(bool copyAvailable)

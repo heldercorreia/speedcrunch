@@ -1919,7 +1919,7 @@ Quantity Evaluator::evalNoAssign()
         compile(tokens);
         if (!m_valid) {
             if (m_error.isEmpty())
-                m_error = tr("compile error");
+                m_error = tr("syntax error");
             return CNumber(0);
         }
     }

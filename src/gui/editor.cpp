@@ -621,8 +621,10 @@ void Editor::autoCalcSelection(const QString& custom)
             emit autoCalcMessageAvailable(message);
             emit autoCalcQuantityAvailable(quantity);
         }
-    } else
-        emit autoCalcMessageAvailable(m_evaluator->error());
+    } else {
+        auto message = tr("Selection result: %1").arg(m_evaluator->error());
+        emit autoCalcMessageAvailable(message);
+    }
 }
 
 void Editor::insertConstant(const QString& constant)
