@@ -197,6 +197,9 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 |                               |   multiplication* allows writing                              |                         |
 |                               |   multiplications without the ``*``                           |                         |
 |                               |   operator.                                                   |                         |
+|                               |   Implicit multiplication has                                 | ``6/2(2+1)=9``          |
+|                               |   the same precedence as ``*`` and ``/``,                     |                         |
+|                               |   evaluated from left to right.                               |                         |
 |                               |                                                               |                         |
 |                               | .. versionadded:: 0.12                                        |                         |
 |                               |    Implicit multiplication was added                          |                         |

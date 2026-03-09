@@ -1132,11 +1132,11 @@ void test_implicit_multiplication()
     /* Tests issue 598 */
     CHECK_EVAL("2(a)^3", "250");
 
-    CHECK_EVAL_KNOWN_ISSUE("6/2(2+1)", "9", 741);
-    CHECK_EVAL_KNOWN_ISSUE("2^2(2)", "8", 741);
-    CHECK_EVAL_KNOWN_ISSUE("2^2(2)(2)", "16", 741);
-    CHECK_EVAL_KNOWN_ISSUE("2^2(2*2)", "16", 741);
-    CHECK_EVAL_KNOWN_ISSUE("2^2(2)+3", "11", 741);
+    CHECK_EVAL("6/2(2+1)", "9");
+    CHECK_EVAL("2^2(2)", "8");
+    CHECK_EVAL("2^2(2)(2)", "16");
+    CHECK_EVAL("2^2(2*2)", "16");
+    CHECK_EVAL("2^2(2)+3", "11");
     CHECK_EVAL_FAIL("pi (2)");
 
     CHECK_EVAL_KNOWN_ISSUE("2(7.5−0.5)+4(12−0.75)", "59", 1155);
