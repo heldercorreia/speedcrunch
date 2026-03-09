@@ -709,7 +709,11 @@ CNumber CMath::phase(const CNumber& x)
  */
 CNumber CMath::arctan(const CNumber& x)
 {
-    return CMath::i() * (CMath::ln(CNumber(1) - CMath::i() * x) - CMath::ln(CNumber(1) + CMath::i() * x)) / 2;
+    CNumber result = CMath::i() * (CMath::ln(CNumber(1) - CMath::i() * x) - CMath::ln(CNumber(1) + CMath::i() * x)) / 2;
+    if (result.isNearReal()) {
+        result.imag = 0;
+    }
+    return result;
 }
 
 /**
@@ -717,7 +721,11 @@ CNumber CMath::arctan(const CNumber& x)
  */
 CNumber CMath::arcsin(const CNumber& x)
 {
-    return -CMath::i() * CMath::ln(CMath::i() * x + sqrt(CNumber(1) - x * x));
+    CNumber result = -CMath::i() * CMath::ln(CMath::i() * x + sqrt(CNumber(1) - x * x));
+    if (result.isNearReal()) {
+        result.imag = 0;
+    }
+    return result;
 }
 
 /**
@@ -725,7 +733,11 @@ CNumber CMath::arcsin(const CNumber& x)
  */
 CNumber CMath::arccos(const CNumber& x)
 {
-    return -CMath::i() * CMath::ln(x + sqrt(x * x - CNumber(1)));
+    CNumber result = -CMath::i() * CMath::ln(x + sqrt(x * x - CNumber(1)));
+    if (result.isNearReal()) {
+        result.imag = 0;
+    }
+    return result;
 }
 
 /**

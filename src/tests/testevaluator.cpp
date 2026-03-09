@@ -1030,6 +1030,12 @@ void test_angle_mode(Settings* settings)
     Evaluator::instance()->initializeAngleUnits();
     CHECK_EVAL("sin(pi)", "0");
     CHECK_EVAL("arcsin(-1)", "-1.57079632679489661923");
+    CHECK_EVAL("arccos(0)", "1.57079632679489661923");
+    CHECK_EVAL("tan(arctan(1))", "1");
+    CHECK_EVAL("tan(arctan2(1;1))", "1");
+    CHECK_EVAL("sin(arcsin(0.25))", "0.25");
+    CHECK_EVAL("cos(arccos(0.25))", "0.25");
+    CHECK_EVAL("tan(arctan(0.25))", "0.25");
     CHECK_EVAL("sin(1j)", "1.17520119364380145688j");
     CHECK_EVAL("arcsin(-2)", "-1.57079632679489661923+1.31695789692481670863j");
     CHECK_EVAL("radian","1");
@@ -1041,6 +1047,12 @@ void test_angle_mode(Settings* settings)
     Evaluator::instance()->initializeAngleUnits();
     CHECK_EVAL("sin(180)", "0");
     CHECK_EVAL("arcsin(-1)", "-90");
+    CHECK_EVAL("arccos(0)", "90");
+    CHECK_EVAL("arctan(1)", "45");
+    CHECK_EVAL("arctan2(1;1)", "45");
+    CHECK_EVAL("sin(arcsin(0.25))", "0.25");
+    CHECK_EVAL("cos(arccos(0.25))", "0.25");
+    CHECK_EVAL("tan(arctan(0.25))", "0.25");
     CHECK_EVAL_FAIL("sin(1j)");
     CHECK_EVAL("arcsin(-2)", "-90+75.4561292902168920041j");
     CHECK_EVAL("radian","57.2957795130823208768");
@@ -1053,6 +1065,12 @@ void test_angle_mode(Settings* settings)
     Evaluator::instance()->initializeAngleUnits();
     CHECK_EVAL("sin(200)", "0");
     CHECK_EVAL("arcsin(-1)", "-100");
+    CHECK_EVAL("arccos(0)", "100");
+    CHECK_EVAL("arctan(1)", "50");
+    CHECK_EVAL("arctan2(1;1)", "50");
+    CHECK_EVAL("sin(arcsin(0.25))", "0.25");
+    CHECK_EVAL("cos(arccos(0.25))", "0.25");
+    CHECK_EVAL("tan(arctan(0.25))", "0.25");
     CHECK_EVAL_FAIL("sin(1j)");
     CHECK_EVAL("arcsin(-2)", "-100+83.84014365579654667122j");
     CHECK_EVAL("radian","63.66197723675813430755");
