@@ -2289,6 +2289,11 @@ void MainWindow::handleBitsChanged(const QString& str)
 void MainWindow::handleEditorTextChange()
 {
     clearTextEditSelection(m_widgets.display);
+    if (m_widgets.editor->text().trimmed().isEmpty()) {
+        hideStateLabel();
+        return;
+    }
+
     if (m_conditions.autoAns && m_settings->autoAns) {
         QString expr = m_evaluator->autoFix(m_widgets.editor->text());
         if (expr.isEmpty())

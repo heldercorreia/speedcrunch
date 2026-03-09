@@ -599,8 +599,10 @@ void Editor::autoCalcSelection(const QString& custom)
     auto str = custom.isNull() ?
         m_evaluator->autoFix(textCursor().selectedText())
         : custom;
-    if (str.isEmpty())
+    if (str.isEmpty()) {
+        emit autoCalcDisabled();
         return;
+    }
 
     // Same reason as above, do not update "ans".
     m_evaluator->setExpression(str);
