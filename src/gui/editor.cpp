@@ -20,6 +20,7 @@
 // Boston, MA 02110-1301, USA.
 
 #include "gui/editor.h"
+#include "gui/editorutils.h"
 #include "gui/syntaxhighlighter.h"
 #include "core/constants.h"
 #include "core/evaluator.h"
@@ -529,8 +530,10 @@ void Editor::autoComplete(const QString& item)
 
 void Editor::insertFromMimeData(const QMimeData* source)
 {
-    QStringList expressions =
-        source->text().split("\n", Qt::SkipEmptyParts, Qt::CaseSensitive);
+    const QStringList expressions = EditorUtils::parsePastedExpressions(source->text());
+    if (expressions.isEmpty())
+        return;
+
     if (expressions.size() == 1) {
         // Insert text manually to make sure expression does not contain new line characters
         insert(expressions.at(0));
