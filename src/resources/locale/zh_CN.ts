@@ -2530,7 +2530,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="373"/>
         <source>&amp;Language...</source>
-        <translation>语言(&amp;L)</translation>
+        <translation>语言(&amp;L)...</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="603"/>
@@ -2745,17 +2745,17 @@ If no, current variables and display will be cleared.</source>
         <translation>显示字体</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2457"/>
+        <location filename="../../gui/mainwindow.cpp" line="2460"/>
         <source>System Default</source>
         <translation>系统默认(&amp;D)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2461"/>
+        <location filename="../../gui/mainwindow.cpp" line="2464"/>
         <source>Language</source>
         <translation>语言</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2461"/>
+        <location filename="../../gui/mainwindow.cpp" line="2464"/>
         <source>Select the language:</source>
         <translation>选择语言：</translation>
     </message>
@@ -2772,7 +2772,7 @@ If no, current variables and display will be cleared.</source>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="307"/>
         <source>&amp;HTML</source>
-        <translation>&amp;HTML</translation>
+        <translation>HTML(&amp;H)</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="308"/>

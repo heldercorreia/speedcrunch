@@ -22,7 +22,7 @@
     <message>
         <location filename="../../gui/aboutbox.cpp" line="56"/>
         <source>Original author</source>
-        <translation>Авторський задум</translation>
+        <translation>Початковий автор</translation>
     </message>
     <message>
         <source>Copyright (C) 2004-2016 The SpeedCrunch developers</source>
@@ -169,7 +169,7 @@
         <location filename="../../core/book.cpp" line="102"/>
         <location filename="../../core/book.cpp" line="329"/>
         <source>Radio Frequency</source>
-        <translation>Радіохвилі</translation>
+        <translation>Радіочастота</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="103"/>
@@ -180,19 +180,19 @@
         <location filename="../../core/book.cpp" line="104"/>
         <location filename="../../core/book.cpp" line="344"/>
         <source>Characteristic Impedance (coax)</source>
-        <translation>Хвильовий опір (coaxial)</translation>
+        <translation>Хвильовий опір (коаксіал)</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="105"/>
         <location filename="../../core/book.cpp" line="359"/>
         <source>Velocity of Propagation (coax)</source>
-        <translation>Швидкість поширення (coaxial)</translation>
+        <translation>Швидкість поширення (коаксіал)</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="106"/>
         <location filename="../../core/book.cpp" line="376"/>
         <source>Standing Wave Ratio &amp; Return Loss</source>
-        <translation>Стояча хвиля</translation>
+        <translation>КСХ і зворотні втрати</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="107"/>
@@ -485,7 +485,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="576"/>
         <source>Standard Gravity</source>
-        <translation>Гравітаційна стала</translation>
+        <translation>Стандартне прискорення вільного падіння</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="580"/>
@@ -2745,17 +2745,17 @@ If no, current variables and display will be cleared.</source>
         <translation>Шрифт</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2457"/>
+        <location filename="../../gui/mainwindow.cpp" line="2460"/>
         <source>System Default</source>
         <translation>Системний за замовчуванням</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2461"/>
+        <location filename="../../gui/mainwindow.cpp" line="2464"/>
         <source>Language</source>
         <translation>Мова</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2461"/>
+        <location filename="../../gui/mainwindow.cpp" line="2464"/>
         <source>Select the language:</source>
         <translation>Виберіть мову:</translation>
     </message>
@@ -2818,7 +2818,7 @@ If no, current variables and display will be cleared.</source>
         <location filename="../../gui/mainwindow.cpp" line="1388"/>
         <location filename="../../gui/mainwindow.cpp" line="1433"/>
         <source>SpeedCrunch Sessions (*.json);;All Files (*)</source>
-        <translation>SpeedCrunch Санси (*.json);;Всі файли (*)</translation>
+        <translation>Сеанси SpeedCrunch (*.json);;Всі файли (*)</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="1406"/>

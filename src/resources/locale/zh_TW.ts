@@ -2745,17 +2745,17 @@ If no, current variables and display will be cleared.</source>
         <translation>顯示字型</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2457"/>
+        <location filename="../../gui/mainwindow.cpp" line="2460"/>
         <source>System Default</source>
         <translation>系統預設</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2461"/>
+        <location filename="../../gui/mainwindow.cpp" line="2464"/>
         <source>Language</source>
         <translation>語言</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2461"/>
+        <location filename="../../gui/mainwindow.cpp" line="2464"/>
         <source>Select the language:</source>
         <translation>選擇語言:</translation>
     </message>

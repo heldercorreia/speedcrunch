@@ -46,7 +46,7 @@
     <message>
         <location filename="../../gui/aboutbox.cpp" line="126"/>
         <source>Copyright (C) 2004-2026 The SpeedCrunch developers</source>
-        <translation>Copyright (C) 2004-2026 The SpeedCrunch developers</translation>
+        <translation>Ophavsret (C) 2004-2026 SpeedCrunchs udviklere</translation>
     </message>
     <message>
         <location filename="../../gui/aboutbox.cpp" line="130"/>
@@ -180,13 +180,13 @@
         <location filename="../../core/book.cpp" line="104"/>
         <location filename="../../core/book.cpp" line="344"/>
         <source>Characteristic Impedance (coax)</source>
-        <translation>Karakteristisk impedans (coax)</translation>
+        <translation>Karakteristisk impedans (koaksial)</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="105"/>
         <location filename="../../core/book.cpp" line="359"/>
         <source>Velocity of Propagation (coax)</source>
-        <translation>Udbredelseshastighed (coax)</translation>
+        <translation>Udbredelseshastighed (koaksial)</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="106"/>
@@ -480,7 +480,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="575"/>
         <source>Speed of Light in Vacuum</source>
-        <translation>Lystets hastighed i vacuum</translation>
+        <translation>Lysets hastighed i vakuum</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="576"/>
@@ -2745,17 +2745,17 @@ Hvis nej, vil de aktuelle variabler og displayet ryddes.</translation>
         <translation>Vis skrifttype</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2457"/>
+        <location filename="../../gui/mainwindow.cpp" line="2460"/>
         <source>System Default</source>
         <translation>System Standard</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2461"/>
+        <location filename="../../gui/mainwindow.cpp" line="2464"/>
         <source>Language</source>
         <translation>Sprog</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2461"/>
+        <location filename="../../gui/mainwindow.cpp" line="2464"/>
         <source>Select the language:</source>
         <translation>Vælg sprog:</translation>
     </message>
@@ -2807,7 +2807,7 @@ Hvis nej, vil de aktuelle variabler og displayet ryddes.</translation>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="604"/>
         <source>&amp;Export</source>
-        <translation>&amp;Eksportere</translation>
+        <translation>&amp;Eksport</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="617"/>
@@ -2829,7 +2829,7 @@ Hvis nej, vil de aktuelle variabler og displayet ryddes.</translation>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="1656"/>
         <source>Export session as HTML</source>
-        <translation>Eksportere sessionen som HTML</translation>
+        <translation>Eksportér sessionen som HTML</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="1657"/>
@@ -2839,7 +2839,7 @@ Hvis nej, vil de aktuelle variabler og displayet ryddes.</translation>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="1676"/>
         <source>Export session as plain text</source>
-        <translation>Eksportere sessionen som almindelig tekst</translation>
+        <translation>Eksportér sessionen som almindelig tekst</translation>
     </message>
 </context>
 <context>

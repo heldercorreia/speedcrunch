@@ -2745,17 +2745,17 @@ Ak nie, aktuálne premenné a vzhľad budú vymazané.</translation>
         <translation>Písmo zobrazenia</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2457"/>
+        <location filename="../../gui/mainwindow.cpp" line="2460"/>
         <source>System Default</source>
         <translation>Systémové nastavenie</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2461"/>
+        <location filename="../../gui/mainwindow.cpp" line="2464"/>
         <source>Language</source>
         <translation>Jazyk</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2461"/>
+        <location filename="../../gui/mainwindow.cpp" line="2464"/>
         <source>Select the language:</source>
         <translation>Vyberte jazyk:</translation>
     </message>

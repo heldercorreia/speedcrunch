@@ -169,44 +169,44 @@ SOURCES += main.cpp \
 RESOURCES += resources/speedcrunch.qrc ../doc/build_html_embedded/manual.qrc
 TRANSLATIONS += resources/locale/ar.ts \
                 resources/locale/bg.ts \
-                resources/locale/ca_ES.ts \
-                resources/locale/cs_CZ.ts \
+                resources/locale/ca.ts \
+                resources/locale/cs.ts \
                 resources/locale/da.ts \
-                resources/locale/de_DE.ts \
+                resources/locale/de.ts \
                 resources/locale/el.ts \
                 resources/locale/en_GB.ts \
                 resources/locale/en_US.ts \
                 resources/locale/eo.ts \
-                resources/locale/es_AR.ts \
+                resources/locale/es.ts \
                 resources/locale/es_ES.ts \
-                resources/locale/et_EE.ts \
-                resources/locale/eu_ES.ts \
-                resources/locale/fa_IR.ts \
-                resources/locale/fi_FI.ts \
-                resources/locale/fr_FR.ts \
-                resources/locale/he_IL.ts \
-                resources/locale/hu_HU.ts \
-                resources/locale/id_ID.ts \
-                resources/locale/it_IT.ts \
-                resources/locale/ja_JP.ts \
-                resources/locale/ko_KR.ts \
+                resources/locale/et.ts \
+                resources/locale/eu.ts \
+                resources/locale/fa.ts \
+                resources/locale/fi.ts \
+                resources/locale/fr.ts \
+                resources/locale/he.ts \
+                resources/locale/hu.ts \
+                resources/locale/id.ts \
+                resources/locale/it.ts \
+                resources/locale/ja.ts \
+                resources/locale/ko.ts \
                 resources/locale/lt.ts \
-                resources/locale/lv_LV.ts \
-                resources/locale/nb_NO.ts \
-                resources/locale/nl_NL.ts \
-                resources/locale/pl_PL.ts \
+                resources/locale/lv.ts \
+                resources/locale/nb.ts \
+                resources/locale/nl.ts \
+                resources/locale/pl.ts \
                 resources/locale/pt_BR.ts \
                 resources/locale/pt_PT.ts \
-                resources/locale/ro_RO.ts \
-                resources/locale/ru_RU.ts \
+                resources/locale/ro.ts \
+                resources/locale/ru.ts \
                 resources/locale/sk.ts \
-                resources/locale/sl_SI.ts \
-                resources/locale/sv_SE.ts \
+                resources/locale/sl.ts \
+                resources/locale/sv.ts \
                 resources/locale/ta.ts \
                 resources/locale/te.ts \
-                resources/locale/tr_TR.ts \
+                resources/locale/tr.ts \
                 resources/locale/uk.ts \
-                resources/locale/uz_Latn_UZ.ts \
+                resources/locale/uz_Latn.ts \
                 resources/locale/vi.ts \
                 resources/locale/zh_CN.ts \
                 resources/locale/zh_TW.ts

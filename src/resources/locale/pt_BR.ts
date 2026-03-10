@@ -425,7 +425,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="560"/>
         <source>Universal</source>
-        <translation>Universal</translation>
+        <translation>Constantes universais</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="562"/>
@@ -560,7 +560,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="598"/>
         <source>Fermi Coupling Constant</source>
-        <translation>Constante de Fermi Coupling</translation>
+        <translation>Constante de acoplamento de Fermi</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="599"/>
@@ -595,7 +595,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="605"/>
         <source>Thomson Cross Section</source>
-        <translation>Disperção de Thomson</translation>
+        <translation>Seção de choque de Thomson</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="606"/>
@@ -630,7 +630,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="615"/>
         <source>Compton wavelength over 2 pi</source>
-        <translation>Comprimento de onda Compton em 2pi</translation>
+        <translation>Comprimento de onda de Compton dividido por 2 pi</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="616"/>
@@ -660,12 +660,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="621"/>
         <source>Loschmidt constant (273.15 K, 100 kPa)</source>
-        <translation>Constante Loschmidt (273.15 K, 100 kPa)</translation>
+        <translation>Constante de Loschmidt (273.15 K, 100 kPa)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="622"/>
         <source>Loschmidt constant (273.15 K, 101.325 kPa)</source>
-        <translation>Constante Loschmidt (273.15 K, 101.325 kPa)</translation>
+        <translation>Constante de Loschmidt (273.15 K, 101.325 kPa)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="623"/>
@@ -685,7 +685,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="626"/>
         <source>{220} Lattice Spacing of Silicon</source>
-        <translation>Espaçamento {220} de Estrutura de Silício</translation>
+        <translation>Espaçamento de rede {220} do silício</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="629"/>
@@ -700,7 +700,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="632"/>
         <source>Light Year</source>
-        <translation>Ano Luz</translation>
+        <translation>Ano-luz</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="633"/>
@@ -1240,12 +1240,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="752"/>
         <source>Higgs-Boson Mass</source>
-        <translation>Massa do Higgs-Boson</translation>
+        <translation>Massa do bóson de Higgs</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="753"/>
         <source>Proton Mass</source>
-        <translation>Massa do Proton</translation>
+        <translation>Massa do próton</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="754"/>
@@ -1260,7 +1260,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="756"/>
         <source>Proton Mass (SI)</source>
-        <translation>Massa do Proton (SI)</translation>
+        <translation>Massa do próton (SI)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="757"/>
@@ -1327,7 +1327,7 @@
     <message>
         <location filename="../../gui/editor.cpp" line="619"/>
         <source>Selection result: n/a</source>
-        <translation>Resultado da seleção: n/a</translation>
+        <translation>Resultado da seleção: indisponível</translation>
     </message>
     <message>
         <location filename="../../gui/editor.cpp" line="623"/>
@@ -1372,7 +1372,7 @@
     <message>
         <location filename="../../core/evaluator.cpp" line="109"/>
         <source>too time consuming - computation was rejected</source>
-        <translation>tomando muito tempo - a computação foi rejeitada</translation>
+        <translation>demorado demais - o cálculo foi rejeitado</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="116"/>
@@ -1389,7 +1389,7 @@
         <location filename="../../core/evaluator.cpp" line="125"/>
         <location filename="../../core/evaluator.cpp" line="168"/>
         <source>Computation aborted - encountered numerical instability</source>
-        <translation>Computação abortada - foi encontrada uma instabilidade numérica</translation>
+        <translation>Cálculo interrompido - foi detectada instabilidade numérica</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="178"/>
@@ -2166,12 +2166,12 @@
     <message>
         <location filename="../../gui/keypad.cpp" line="181"/>
         <source>Assign variable x</source>
-        <translation>Atribua a variável x</translation>
+        <translation>Atribuir à variável x</translation>
     </message>
     <message>
         <location filename="../../gui/keypad.cpp" line="182"/>
         <source>The variable x</source>
-        <translation>A variávlel x</translation>
+        <translation>A variável x</translation>
     </message>
 </context>
 <context>
@@ -2192,7 +2192,7 @@
         <location filename="../../gui/mainwindow.cpp" line="282"/>
         <location filename="../../gui/mainwindow.cpp" line="1643"/>
         <source>Gradian</source>
-        <translation>Grado</translation>
+        <translation>Grado centesimal</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="286"/>
@@ -2360,22 +2360,22 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="335"/>
         <source>&amp;Gradian</source>
-        <translation>&amp;Grado</translation>
+        <translation>G&amp;rado centesimal</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="336"/>
         <source>&amp;Cycle Unit</source>
-        <translation>Unidade de &amp;ciclo</translation>
+        <translation>Al&amp;ternar unidade</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="338"/>
         <source>Automatic Result &amp;Reuse</source>
-        <translation>Resultado Automático e &amp;Reuso</translation>
+        <translation>Reaproveitar &amp;resultado automaticamente</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="339"/>
         <source>Automatic &amp;Completion</source>
-        <translation>&amp;Completamento Automático</translation>
+        <translation>Conclusão &amp;automática</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="340"/>
@@ -2405,7 +2405,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="349"/>
         <source>Automatic &amp;Result to Clipboard</source>
-        <translation>Resultado &amp;Automático para a Área de Transferência</translation>
+        <translation>Copiar &amp;resultado automaticamente para a área de transferência</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="351"/>
@@ -2430,7 +2430,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="366"/>
         <source>&amp;Binary</source>
-        <translation>&amp;Binária</translation>
+        <translation>&amp;Binário</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="364"/>
@@ -2440,7 +2440,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="363"/>
         <source>&amp;Fixed Decimal</source>
-        <translation>Ponto Decimal &amp;Fixo</translation>
+        <translation>Decimal &amp;fixo</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="362"/>
@@ -2460,7 +2460,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="365"/>
         <source>&amp;Scientific</source>
-        <translation>&amp;Científica</translation>
+        <translation>&amp;Científico</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="370"/>
@@ -2475,7 +2475,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="375"/>
         <source>User &amp;Manual</source>
-        <translation>&amp;Manual de Usuário</translation>
+        <translation>Manual do &amp;usuário</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="381"/>
@@ -2485,7 +2485,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="609"/>
         <source>&amp;Input Format</source>
-        <translation>Formato &amp;Entrada</translation>
+        <translation>Formato de &amp;entrada</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="614"/>
@@ -2660,7 +2660,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="616"/>
         <source>&amp;Display</source>
-        <translation>&amp;Display</translation>
+        <translation>&amp;Exibição</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="618"/>
@@ -2742,20 +2742,20 @@ Em caso negativo, as variáveis e a tela atuais serão apagadas.</translation>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="1714"/>
         <source>Display font</source>
-        <translation>Mostrar fonte</translation>
+        <translation>Fonte de exibição</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2457"/>
+        <location filename="../../gui/mainwindow.cpp" line="2460"/>
         <source>System Default</source>
-        <translation>Padrão do &amp;Sistema</translation>
+        <translation>Padrão do sistema</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2461"/>
+        <location filename="../../gui/mainwindow.cpp" line="2464"/>
         <source>Language</source>
         <translation>Idioma</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2461"/>
+        <location filename="../../gui/mainwindow.cpp" line="2464"/>
         <source>Select the language:</source>
         <translation>Selecione o idioma:</translation>
     </message>
@@ -2772,12 +2772,12 @@ Em caso negativo, as variáveis e a tela atuais serão apagadas.</translation>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="307"/>
         <source>&amp;HTML</source>
-        <translation>&amp;HTML</translation>
+        <translation>HTML(&amp;H)</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="308"/>
         <source>Plain &amp;text</source>
-        <translation>Texto plano</translation>
+        <translation>Texto &amp;simples</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="327"/>
@@ -2787,12 +2787,12 @@ Em caso negativo, as variáveis e a tela atuais serão apagadas.</translation>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="377"/>
         <source>Check &amp;Updates</source>
-        <translation>Checar &amp;Atualizações</translation>
+        <translation>Verificar &amp;atualizações</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="378"/>
         <source>Send &amp;Feedback</source>
-        <translation>Enviar &amp;Comentários</translation>
+        <translation>Enviar &amp;feedback</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="379"/>
@@ -2802,7 +2802,7 @@ Em caso negativo, as variáveis e a tela atuais serão apagadas.</translation>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="380"/>
         <source>&amp;News Feed</source>
-        <translation>Feed de &amp;Notícias</translation>
+        <translation>&amp;Feed de notícias</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="604"/>
@@ -2824,7 +2824,7 @@ Em caso negativo, as variáveis e a tela atuais serão apagadas.</translation>
         <location filename="../../gui/mainwindow.cpp" line="1406"/>
         <location filename="../../gui/mainwindow.cpp" line="1472"/>
         <source>Merge?</source>
-        <translation>Unir?</translation>
+        <translation>Mesclar?</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="1656"/>

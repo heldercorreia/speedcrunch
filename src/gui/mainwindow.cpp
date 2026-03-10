@@ -2443,8 +2443,11 @@ void MainWindow::showLanguageChooserDialog()
         QString localeName = fileInfo.baseName();
         QString langName = QLocale(localeName).nativeLanguageName();
 
-        // Kludge for es_AR which shows as "Español"
-        if(localeName == "es_AR") langName = QString::fromUtf8("Español Argentino");
+        // Kludges for region-specific translations
+        if(localeName == "es") langName = QString::fromUtf8("Español (Latinoamérica)");
+        if(localeName == "es_ES") langName = QString::fromUtf8("Español (España)");
+        if(localeName == "pt_BR") langName = QString::fromUtf8("Português (Brasil)");
+        if(localeName == "pt_PT") langName = QString::fromUtf8("Português (Portugal)");
 
         // The first letter is not always capitalized so force it
         langName[0] = langName[0].toUpper();

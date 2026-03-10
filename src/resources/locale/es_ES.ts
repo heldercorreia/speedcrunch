@@ -99,7 +99,7 @@
         <location filename="../../core/book.cpp" line="90"/>
         <location filename="../../core/book.cpp" line="292"/>
         <source>Sector</source>
-        <translation>Sector</translation>
+        <translation>Sector circular</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="91"/>
@@ -163,7 +163,7 @@
         <location filename="../../core/book.cpp" line="101"/>
         <location filename="../../core/book.cpp" line="200"/>
         <source>Resonance</source>
-        <translation>Resonacia</translation>
+        <translation>Resonancia</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="102"/>
@@ -180,7 +180,7 @@
         <location filename="../../core/book.cpp" line="104"/>
         <location filename="../../core/book.cpp" line="344"/>
         <source>Characteristic Impedance (coax)</source>
-        <translation>Impudencia Característica (coax)</translation>
+        <translation>Impedancia característica (coaxial)</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="105"/>
@@ -295,7 +295,7 @@
         <location filename="../../core/book.cpp" line="242"/>
         <location filename="../../core/book.cpp" line="262"/>
         <source>surface area</source>
-        <translation>área de la superfice</translation>
+        <translation>área de la superficie</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="244"/>
@@ -425,7 +425,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="560"/>
         <source>Universal</source>
-        <translation>Universal</translation>
+        <translation>Universales</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="562"/>
@@ -2180,7 +2180,7 @@
         <location filename="../../gui/mainwindow.cpp" line="281"/>
         <location filename="../../gui/mainwindow.cpp" line="1629"/>
         <source>Radian</source>
-        <translation>Radian</translation>
+        <translation>Radián</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="282"/>
@@ -2228,19 +2228,19 @@
         <location filename="../../gui/mainwindow.cpp" line="291"/>
         <location filename="../../gui/mainwindow.cpp" line="1987"/>
         <source>Engineering decimal</source>
-        <translation>Decimal ingeniería</translation>
+        <translation>Decimal de ingeniería</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="292"/>
         <location filename="../../gui/mainwindow.cpp" line="2035"/>
         <source>Scientific decimal</source>
-        <translation>Decimal científica</translation>
+        <translation>Decimal científico</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="293"/>
         <location filename="../../gui/mainwindow.cpp" line="2002"/>
         <source>General decimal</source>
-        <translation>Decimal genérica</translation>
+        <translation>Decimal general</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="300"/>
@@ -2355,7 +2355,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="334"/>
         <source>&amp;Radian</source>
-        <translation>&amp;Radian</translation>
+        <translation>Ra&amp;dián</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="335"/>
@@ -2365,7 +2365,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="336"/>
         <source>&amp;Cycle Unit</source>
-        <translation>&amp;Unidad de ciclo</translation>
+        <translation>Cam&amp;biar unidad</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="338"/>
@@ -2385,7 +2385,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="341"/>
         <source>Save &amp;History on Exit</source>
-        <translation>Guardar la &amp;Historia al Salir</translation>
+        <translation>Guardar el &amp;historial al salir</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="342"/>
@@ -2400,7 +2400,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="348"/>
         <source>Leave &amp;Last Expression</source>
-        <translation>Conservar la Ú&amp;ltima Expresión</translation>
+        <translation>Conservar la ú&amp;ltima expresión</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="349"/>
@@ -2415,7 +2415,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="352"/>
         <source>&amp;System Default</source>
-        <translation>Defecto (&amp;Sistema)</translation>
+        <translation>Predeterminado del &amp;sistema</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="353"/>
@@ -2460,7 +2460,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="365"/>
         <source>&amp;Scientific</source>
-        <translation>&amp;Científica</translation>
+        <translation>C&amp;ientífico</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="370"/>
@@ -2475,7 +2475,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="375"/>
         <source>User &amp;Manual</source>
-        <translation>&amp;Manual del Usuario</translation>
+        <translation>Manual del &amp;usuario</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="381"/>
@@ -2520,7 +2520,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="1117"/>
         <source>Type an expression here</source>
-        <translation>Tipee una expresión aquí</translation>
+        <translation>Escriba una expresión aquí</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="372"/>
@@ -2660,7 +2660,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="616"/>
         <source>&amp;Display</source>
-        <translation>Pantalla</translation>
+        <translation>&amp;Pantalla</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="618"/>
@@ -2742,20 +2742,20 @@ Si no es así, las variables actuales y la pantalla serán borradas.</translatio
     <message>
         <location filename="../../gui/mainwindow.cpp" line="1714"/>
         <source>Display font</source>
-        <translation>Fuente en Pantalla</translation>
+        <translation>Fuente de pantalla</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2457"/>
+        <location filename="../../gui/mainwindow.cpp" line="2460"/>
         <source>System Default</source>
-        <translation>Defecto (Sistema)</translation>
+        <translation>Predeterminado del sistema</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2461"/>
+        <location filename="../../gui/mainwindow.cpp" line="2464"/>
         <source>Language</source>
         <translation>Idioma</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2461"/>
+        <location filename="../../gui/mainwindow.cpp" line="2464"/>
         <source>Select the language:</source>
         <translation>Seleccione el idioma:</translation>
     </message>
@@ -2772,7 +2772,7 @@ Si no es así, las variables actuales y la pantalla serán borradas.</translatio
     <message>
         <location filename="../../gui/mainwindow.cpp" line="307"/>
         <source>&amp;HTML</source>
-        <translation>&amp;HTML</translation>
+        <translation>HTML(&amp;H)</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="308"/>
@@ -2792,12 +2792,12 @@ Si no es así, las variables actuales y la pantalla serán borradas.</translatio
     <message>
         <location filename="../../gui/mainwindow.cpp" line="378"/>
         <source>Send &amp;Feedback</source>
-        <translation>Enviar Comentarios</translation>
+        <translation>Enviar come&amp;ntarios</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="379"/>
         <source>Join &amp;Community</source>
-        <translation>Unirse a la Comunidad</translation>
+        <translation>Unirse a la &amp;comunidad</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="380"/>

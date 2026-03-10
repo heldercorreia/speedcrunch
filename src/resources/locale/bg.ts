@@ -36,12 +36,12 @@
     <message>
         <location filename="../../gui/aboutbox.cpp" line="57"/>
         <source>Math engine</source>
-        <translation>Изчислителен енджин</translation>
+        <translation>Математически модул</translation>
     </message>
     <message>
         <location filename="../../gui/aboutbox.cpp" line="59"/>
         <source>Thanks</source>
-        <translation>Благодарности на</translation>
+        <translation>Благодарности</translation>
     </message>
     <message>
         <location filename="../../gui/aboutbox.cpp" line="126"/>
@@ -51,12 +51,12 @@
     <message>
         <location filename="../../gui/aboutbox.cpp" line="130"/>
         <source>This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version</source>
-        <translation>This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version</translation>
+        <translation>Тази програма е свободен софтуер; можете да я разпространявате и/или променяте съгласно условията на GNU General Public License, публикуван от Free Software Foundation; версия 2 на лиценза или (по ваш избор) която и да е по-нова версия.</translation>
     </message>
     <message>
         <location filename="../../gui/aboutbox.cpp" line="136"/>
         <source>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.</source>
-        <translation>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.</translation>
+        <translation>Тази програма се разпространява с надеждата, че ще бъде полезна, но БЕЗ НИКАКВА ГАРАНЦИЯ; дори без подразбиращата се гаранция за ТЪРГОВСКА ПРИГОДНОСТ или ПРИГОДНОСТ ЗА ОПРЕДЕЛЕНА ЦЕЛ. Вижте GNU General Public License за повече подробности.</translation>
     </message>
 </context>
 <context>
@@ -76,13 +76,13 @@
         <location filename="../../core/book.cpp" line="86"/>
         <location filename="../../core/book.cpp" line="116"/>
         <source>Quadratic Equation</source>
-        <translation>Квадратни уравнения</translation>
+        <translation>Квадратно уравнение</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="87"/>
         <location filename="../../core/book.cpp" line="127"/>
         <source>Logarithmic Base Conversion</source>
-        <translation>Смяна на логаритъм</translation>
+        <translation>Смяна на основата на логаритъм</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="88"/>
@@ -99,7 +99,7 @@
         <location filename="../../core/book.cpp" line="90"/>
         <location filename="../../core/book.cpp" line="292"/>
         <source>Sector</source>
-        <translation>Част</translation>
+        <translation>Сектор</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="91"/>
@@ -180,13 +180,13 @@
         <location filename="../../core/book.cpp" line="104"/>
         <location filename="../../core/book.cpp" line="344"/>
         <source>Characteristic Impedance (coax)</source>
-        <translation>Характеристично съпротивление (coax)</translation>
+        <translation>Характеристично съпротивление (коаксиал)</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="105"/>
         <location filename="../../core/book.cpp" line="359"/>
         <source>Velocity of Propagation (coax)</source>
-        <translation>Скорост на разпространение (coax)</translation>
+        <translation>Скорост на разпространение (коаксиал)</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="106"/>
@@ -243,7 +243,7 @@
         <location filename="../../core/book.cpp" line="189"/>
         <location filename="../../core/book.cpp" line="207"/>
         <source>capacitance</source>
-        <translation>Електричният капацитет</translation>
+        <translation>капацитет</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="190"/>
@@ -306,7 +306,7 @@
     <message>
         <location filename="../../core/book.cpp" line="245"/>
         <source>slant height</source>
-        <translation>Височина на наклон</translation>
+        <translation>наклонена височина</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="263"/>
@@ -369,12 +369,12 @@
     <message>
         <location filename="../../core/book.cpp" line="348"/>
         <source>outer conductor&apos;s inner diameter</source>
-        <translation>outer conductor&apos;s inner diameter</translation>
+        <translation>вътрешен диаметър на външния проводник</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="349"/>
         <source>inner conductor&apos;s outer diameter</source>
-        <translation>inner conductor&apos;s outer diameter</translation>
+        <translation>външен диаметър на вътрешния проводник</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="365"/>
@@ -2745,17 +2745,17 @@ If no, current variables and display will be cleared.</source>
         <translation>Покажи шрифт</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2457"/>
+        <location filename="../../gui/mainwindow.cpp" line="2460"/>
         <source>System Default</source>
         <translation>Системно по подразбиране</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2461"/>
+        <location filename="../../gui/mainwindow.cpp" line="2464"/>
         <source>Language</source>
         <translation>Език</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2461"/>
+        <location filename="../../gui/mainwindow.cpp" line="2464"/>
         <source>Select the language:</source>
         <translation>Избери език:</translation>
     </message>

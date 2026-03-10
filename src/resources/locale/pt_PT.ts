@@ -2055,7 +2055,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1312"/>
         <source>Hyperbolic Tangent</source>
-        <translation> Tangente hiperbólica</translation>
+        <translation>Tangente hiperbólica</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1313"/>
@@ -2745,17 +2745,17 @@ Se não o fizer, as variáveis atuais e o ecrã serão limpos.</translation>
         <translation>Tipo de letra de exibição</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2457"/>
+        <location filename="../../gui/mainwindow.cpp" line="2460"/>
         <source>System Default</source>
         <translation>Definições do sistema</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2461"/>
+        <location filename="../../gui/mainwindow.cpp" line="2464"/>
         <source>Language</source>
         <translation>Idioma</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2461"/>
+        <location filename="../../gui/mainwindow.cpp" line="2464"/>
         <source>Select the language:</source>
         <translation>Selecione o idioma:</translation>
     </message>
