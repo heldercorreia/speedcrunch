@@ -18,11 +18,15 @@ require_cmd cpack
 
 mkdir -p "$OUT_DIR"
 
+if [[ -z "${JOBS:-}" ]]; then
+  JOBS="$(sysctl -n hw.ncpu 2>/dev/null || echo 4)"
+fi
+
 echo "Configuring arm64 build..."
 cmake -S "$SRC_DIR" -B "$BUILD_DIR" -DCMAKE_OSX_ARCHITECTURES="arm64"
 
-echo "Building SpeedCrunch (arm64)..."
-cmake --build "$BUILD_DIR" --target SpeedCrunch
+echo "Building SpeedCrunch (arm64, parallel jobs: $JOBS)..."
+cmake --build "$BUILD_DIR" --target SpeedCrunch --parallel "$JOBS"
 
 echo "Generating DMG with CPack (DragNDrop)..."
 (
