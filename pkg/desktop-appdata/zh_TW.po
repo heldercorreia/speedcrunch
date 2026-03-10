@@ -22,18 +22,18 @@ msgstr ""
 #: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:1
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:2
 msgid "SpeedCrunch"
-msgstr ""
+msgstr "SpeedCrunch"
 
 #. TRANSLATORS: Short one-line description.
 #: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:2
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:4
 msgid "A high-precision scientific calculator"
-msgstr ""
+msgstr "高精度科學計算器"
 
 #. TRANSLATORS: Extra keywords for finding the application in the desktop environment. The trailing ';' is important!
 #: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:4
 msgid "arithmetic;calculation;math;scientific;"
-msgstr ""
+msgstr "計算;數學;科學計算;計算器;公式;"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:5
 msgid ""
@@ -41,6 +41,8 @@ msgid ""
 "syntax-highlighted scrollable display and is designed to be fully used via "
 "keyboard."
 msgstr ""
+"SpeedCrunch 是一款快速且高精度的科學計算器。它具備語法醒目提示的可捲動顯示，並"
+"且設計為可完全透過鍵盤操作。"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:6
 msgid ""
@@ -49,24 +51,26 @@ msgid ""
 "combined with a simple yet powerful user interface featuring on-the-fly "
 "results preview, syntax highlighting, and autocompletion."
 msgstr ""
+"它包含多種內建數學函數，並支援進階功能，例如使用者自訂函數、複數與單位轉換。這"
+"些功能搭配簡潔但強大的使用者介面，提供即時結果預覽、語法醒目提示與自動補完。"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:7
 msgid ""
 "SpeedCrunch is available for several platforms in a number of languages."
-msgstr ""
+msgstr "SpeedCrunch 可在多個平台上使用，並提供多種語言。"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:8
 msgid "Main window with optional keypad"
-msgstr ""
+msgstr "主視窗（含選用數字鍵盤）"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:9
 msgid "The constants list and formula book"
-msgstr ""
+msgstr "常數清單與公式手冊"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:10
 msgid "Customizable user interface"
-msgstr ""
+msgstr "可自訂的使用者介面"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:11
 msgid "The built-in user manual"
-msgstr ""
+msgstr "內建使用者手冊"

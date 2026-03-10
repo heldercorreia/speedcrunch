@@ -22,18 +22,18 @@ msgstr ""
 #: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:1
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:2
 msgid "SpeedCrunch"
-msgstr ""
+msgstr "SpeedCrunch"
 
 #. TRANSLATORS: Short one-line description.
 #: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:2
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:4
 msgid "A high-precision scientific calculator"
-msgstr ""
+msgstr "高精度の科学計算機"
 
 #. TRANSLATORS: Extra keywords for finding the application in the desktop environment. The trailing ';' is important!
 #: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:4
 msgid "arithmetic;calculation;math;scientific;"
-msgstr ""
+msgstr "算術;計算;数学;科学;"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:5
 msgid ""
@@ -41,6 +41,8 @@ msgid ""
 "syntax-highlighted scrollable display and is designed to be fully used via "
 "keyboard."
 msgstr ""
+"SpeedCrunch は高速で高精度な科学計算機です。構文強調表示付きのスクロール可能な"
+"表示を備え、キーボードだけで完全に操作できるよう設計されています。"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:6
 msgid ""
@@ -49,24 +51,27 @@ msgid ""
 "combined with a simple yet powerful user interface featuring on-the-fly "
 "results preview, syntax highlighting, and autocompletion."
 msgstr ""
+"多数の組み込み数学関数を備え、ユーザー定義関数、複素数、単位変換などの高度な"
+"機能をサポートします。さらに、結果のリアルタイムプレビュー、構文強調表示、自動"
+"補完を備えたシンプルかつ強力なユーザーインターフェースと組み合わされています。"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:7
 msgid ""
 "SpeedCrunch is available for several platforms in a number of languages."
-msgstr ""
+msgstr "SpeedCrunch は複数のプラットフォームで、多言語に対応しています。"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:8
 msgid "Main window with optional keypad"
-msgstr ""
+msgstr "オプションのテンキー付きメインウィンドウ"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:9
 msgid "The constants list and formula book"
-msgstr ""
+msgstr "定数リストと数式集"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:10
 msgid "Customizable user interface"
-msgstr ""
+msgstr "カスタマイズ可能なユーザーインターフェース"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:11
 msgid "The built-in user manual"
-msgstr ""
+msgstr "内蔵ユーザーマニュアル"

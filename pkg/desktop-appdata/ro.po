@@ -23,18 +23,18 @@ msgstr ""
 #: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:1
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:2
 msgid "SpeedCrunch"
-msgstr ""
+msgstr "SpeedCrunch"
 
 #. TRANSLATORS: Short one-line description.
 #: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:2
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:4
 msgid "A high-precision scientific calculator"
-msgstr ""
+msgstr "Un calculator științific de înaltă precizie"
 
 #. TRANSLATORS: Extra keywords for finding the application in the desktop environment. The trailing ';' is important!
 #: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:4
 msgid "arithmetic;calculation;math;scientific;"
-msgstr ""
+msgstr "aritmetică;calcul;matematică;științific;"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:5
 msgid ""
@@ -42,6 +42,9 @@ msgid ""
 "syntax-highlighted scrollable display and is designed to be fully used via "
 "keyboard."
 msgstr ""
+"SpeedCrunch este un calculator științific rapid, de înaltă precizie. Oferă "
+"un afișaj derulabil cu evidențiere a sintaxei și este conceput pentru a fi "
+"folosit în întregime de la tastatură."
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:6
 msgid ""
@@ -50,24 +53,29 @@ msgid ""
 "combined with a simple yet powerful user interface featuring on-the-fly "
 "results preview, syntax highlighting, and autocompletion."
 msgstr ""
+"Include multe funcții matematice integrate și acceptă funcționalități "
+"avansate, precum funcții definite de utilizator, numere complexe și "
+"conversii de unități. Toate acestea sunt combinate cu o interfață de "
+"utilizator simplă, dar puternică, cu previzualizare a rezultatelor în timp "
+"real, evidențiere a sintaxei și completare automată."
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:7
 msgid ""
 "SpeedCrunch is available for several platforms in a number of languages."
-msgstr ""
+msgstr "SpeedCrunch este disponibil pentru mai multe platforme în mai multe limbi."
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:8
 msgid "Main window with optional keypad"
-msgstr ""
+msgstr "Fereastra principală cu tastatură numerică opțională"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:9
 msgid "The constants list and formula book"
-msgstr ""
+msgstr "Lista constantelor și cartea de formule"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:10
 msgid "Customizable user interface"
-msgstr ""
+msgstr "Interfață de utilizator personalizabilă"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:11
 msgid "The built-in user manual"
-msgstr ""
+msgstr "Manualul de utilizare integrat"

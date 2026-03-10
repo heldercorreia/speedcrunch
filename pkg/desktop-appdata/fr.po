@@ -22,18 +22,18 @@ msgstr ""
 #: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:1
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:2
 msgid "SpeedCrunch"
-msgstr ""
+msgstr "SpeedCrunch"
 
 #. TRANSLATORS: Short one-line description.
 #: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:2
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:4
 msgid "A high-precision scientific calculator"
-msgstr ""
+msgstr "Une calculatrice scientifique de haute précision"
 
 #. TRANSLATORS: Extra keywords for finding the application in the desktop environment. The trailing ';' is important!
 #: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:4
 msgid "arithmetic;calculation;math;scientific;"
-msgstr ""
+msgstr "arithmétique;calcul;mathématiques;scientifique;"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:5
 msgid ""
@@ -41,6 +41,9 @@ msgid ""
 "syntax-highlighted scrollable display and is designed to be fully used via "
 "keyboard."
 msgstr ""
+"SpeedCrunch est une calculatrice scientifique rapide et de haute précision. "
+"Elle propose un affichage défilant avec coloration syntaxique et est conçue "
+"pour être utilisée entièrement au clavier."
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:6
 msgid ""
@@ -49,24 +52,31 @@ msgid ""
 "combined with a simple yet powerful user interface featuring on-the-fly "
 "results preview, syntax highlighting, and autocompletion."
 msgstr ""
+"Elle inclut de nombreuses fonctions mathématiques intégrées et prend en "
+"charge des fonctionnalités avancées comme les fonctions définies par "
+"l'utilisateur, les nombres complexes et les conversions d'unités. Le tout "
+"est associé à une interface simple mais puissante offrant l'aperçu des "
+"résultats à la volée, la coloration syntaxique et l'autocomplétion."
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:7
 msgid ""
 "SpeedCrunch is available for several platforms in a number of languages."
 msgstr ""
+"SpeedCrunch est disponible sur plusieurs plateformes dans de nombreuses "
+"langues."
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:8
 msgid "Main window with optional keypad"
-msgstr ""
+msgstr "Fenêtre principale avec pavé numérique optionnel"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:9
 msgid "The constants list and formula book"
-msgstr ""
+msgstr "La liste des constantes et le livre de formules"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:10
 msgid "Customizable user interface"
-msgstr ""
+msgstr "Interface utilisateur personnalisable"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:11
 msgid "The built-in user manual"
-msgstr ""
+msgstr "Le manuel d'utilisation intégré"

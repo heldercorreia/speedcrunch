@@ -22,18 +22,18 @@ msgstr ""
 #: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:1
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:2
 msgid "SpeedCrunch"
-msgstr ""
+msgstr "SpeedCrunch"
 
 #. TRANSLATORS: Short one-line description.
 #: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:2
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:4
 msgid "A high-precision scientific calculator"
-msgstr ""
+msgstr "ماشین‌حساب علمی با دقت بالا"
 
 #. TRANSLATORS: Extra keywords for finding the application in the desktop environment. The trailing ';' is important!
 #: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:4
 msgid "arithmetic;calculation;math;scientific;"
-msgstr ""
+msgstr "حساب;محاسبه;ریاضی;علمی;"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:5
 msgid ""
@@ -41,6 +41,9 @@ msgid ""
 "syntax-highlighted scrollable display and is designed to be fully used via "
 "keyboard."
 msgstr ""
+"SpeedCrunch یک ماشین‌حساب علمی سریع و با دقت بالاست. این برنامه دارای "
+"نمایشگر قابل‌پیمایش با برجسته‌سازی نحو است و برای استفادهٔ کامل از طریق "
+"صفحه‌کلید طراحی شده است."
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:6
 msgid ""
@@ -49,24 +52,28 @@ msgid ""
 "combined with a simple yet powerful user interface featuring on-the-fly "
 "results preview, syntax highlighting, and autocompletion."
 msgstr ""
+"این برنامه شامل بسیاری از توابع ریاضیِ داخلی است و از قابلیت‌های پیشرفته‌ای "
+"مانند توابعِ تعریف‌شده توسط کاربر، اعداد مختلط و تبدیل واحدها پشتیبانی می‌کند. "
+"همهٔ این‌ها با یک رابط کاربری ساده اما قدرتمند همراه است که پیش‌نمایشِ آنیِ "
+"نتایج، برجسته‌سازیِ نحو و تکمیل خودکار را فراهم می‌کند."
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:7
 msgid ""
 "SpeedCrunch is available for several platforms in a number of languages."
-msgstr ""
+msgstr "SpeedCrunch برای چندین سکوی نرم‌افزاری و به چندین زبان در دسترس است."
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:8
 msgid "Main window with optional keypad"
-msgstr ""
+msgstr "پنجرهٔ اصلی با صفحه‌کلید عددیِ اختیاری"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:9
 msgid "The constants list and formula book"
-msgstr ""
+msgstr "فهرست ثابت‌ها و کتاب فرمول‌ها"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:10
 msgid "Customizable user interface"
-msgstr ""
+msgstr "رابط کاربری قابل سفارشی‌سازی"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:11
 msgid "The built-in user manual"
-msgstr ""
+msgstr "راهنمای کاربرِ داخلی"

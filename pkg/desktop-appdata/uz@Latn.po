@@ -22,18 +22,18 @@ msgstr ""
 #: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:1
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:2
 msgid "SpeedCrunch"
-msgstr ""
+msgstr "SpeedCrunch"
 
 #. TRANSLATORS: Short one-line description.
 #: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:2
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:4
 msgid "A high-precision scientific calculator"
-msgstr ""
+msgstr "Yuqori aniqlikdagi ilmiy kalkulyator"
 
 #. TRANSLATORS: Extra keywords for finding the application in the desktop environment. The trailing ';' is important!
 #: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:4
 msgid "arithmetic;calculation;math;scientific;"
-msgstr ""
+msgstr "arifmetika;hisoblash;matematika;ilmiy;"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:5
 msgid ""
@@ -41,6 +41,9 @@ msgid ""
 "syntax-highlighted scrollable display and is designed to be fully used via "
 "keyboard."
 msgstr ""
+"SpeedCrunch tezkor va yuqori aniqlikdagi ilmiy kalkulyator. Unda sintaksis "
+"yoritilgan, aylantiriladigan displey mavjud va u to'liq klaviatura orqali "
+"foydalanish uchun mo'ljallangan."
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:6
 msgid ""
@@ -49,24 +52,30 @@ msgid ""
 "combined with a simple yet powerful user interface featuring on-the-fly "
 "results preview, syntax highlighting, and autocompletion."
 msgstr ""
+"U ko'plab ichki matematik funksiyalarni o'z ichiga oladi va foydalanuvchi "
+"tomonidan belgilangan funksiyalar, kompleks sonlar hamda birliklarni "
+"o'zgartirish kabi ilg'or imkoniyatlarni qo'llab-quvvatlaydi. Bularning "
+"barchasi natijalarni darhol oldindan ko'rish, sintaksisni yoritish va "
+"avtomatik to'ldirish kabi funksiyalarga ega sodda, ammo kuchli foydalanuvchi "
+"interfeysi bilan uyg'unlashgan."
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:7
 msgid ""
 "SpeedCrunch is available for several platforms in a number of languages."
-msgstr ""
+msgstr "SpeedCrunch bir nechta platformalar uchun ko'plab tillarda mavjud."
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:8
 msgid "Main window with optional keypad"
-msgstr ""
+msgstr "Ixtiyoriy raqamli klaviaturali asosiy oyna"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:9
 msgid "The constants list and formula book"
-msgstr ""
+msgstr "Doimiylar ro'yxati va formulalar kitobi"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:10
 msgid "Customizable user interface"
-msgstr ""
+msgstr "Moslashtiriladigan foydalanuvchi interfeysi"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:11
 msgid "The built-in user manual"
-msgstr ""
+msgstr "Ichki foydalanuvchi qo'llanmasi"

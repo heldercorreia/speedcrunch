@@ -45,6 +45,9 @@ msgstr ""
 "SpeedCrunch is a fast, high-precision scientific calculator. It features a "
 "syntax-highlighted scrollable display and is designed to be fully used via "
 "keyboard."
+"SpeedCrunch is a fast, high-precision scientific calculator. It features a "
+"syntax-highlighted scrollable display and is designed to be fully used via "
+"keyboard."
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:6
 msgid ""
@@ -57,25 +60,29 @@ msgstr ""
 "like user-defined functions, complex numbers, and unit conversions. This is "
 "combined with a simple yet powerful user interface featuring on-the-fly "
 "results preview, syntax highlighting, and autocompletion."
+"It includes many built-in maths functions and supports advanced features "
+"like user-defined functions, complex numbers, and unit conversions. This is "
+"combined with a simple yet powerful user interface featuring on-the-fly "
+"results preview, syntax highlighting, and autocompletion."
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:7
 msgid ""
 "SpeedCrunch is available for several platforms in a number of languages."
-msgstr ""
+msgstr "SpeedCrunch is available for several platforms in a number of languages."
 "SpeedCrunch is available for several platforms in a number of languages."
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:8
 msgid "Main window with optional keypad"
-msgstr ""
+msgstr "Main window with optional keypad"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:9
 msgid "The constants list and formula book"
-msgstr ""
+msgstr "The constants list and formula book"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:10
 msgid "Customizable user interface"
-msgstr ""
+msgstr "Customizable user interface"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:11
 msgid "The built-in user manual"
-msgstr ""
+msgstr "The built-in user manual"

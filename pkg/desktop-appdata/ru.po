@@ -37,7 +37,7 @@ msgstr "Научный инженерный калькулятор"
 #. TRANSLATORS: Extra keywords for finding the application in the desktop environment. The trailing ';' is important!
 #: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:4
 msgid "arithmetic;calculation;math;scientific;"
-msgstr ""
+msgstr "арифметика;вычисления;математика;научный;"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:5
 msgid ""
@@ -45,6 +45,9 @@ msgid ""
 "syntax-highlighted scrollable display and is designed to be fully used via "
 "keyboard."
 msgstr ""
+"SpeedCrunch — быстрый высокоточный научный калькулятор. Он имеет "
+"прокручиваемый дисплей с подсветкой синтаксиса и предназначен для полного "
+"управления с клавиатуры."
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:6
 msgid ""
@@ -53,6 +56,11 @@ msgid ""
 "combined with a simple yet powerful user interface featuring on-the-fly "
 "results preview, syntax highlighting, and autocompletion."
 msgstr ""
+"Он включает множество встроенных математических функций и поддерживает "
+"расширенные возможности, такие как пользовательские функции, комплексные "
+"числа и преобразование единиц. Всё это сочетается с простым, но мощным "
+"интерфейсом с мгновенным предпросмотром результатов, подсветкой синтаксиса "
+"и автодополнением."
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:7
 msgid ""
@@ -73,4 +81,4 @@ msgstr "Настраиваемый пользовательский интерф
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:11
 msgid "The built-in user manual"
-msgstr ""
+msgstr "Встроенное руководство пользователя"
