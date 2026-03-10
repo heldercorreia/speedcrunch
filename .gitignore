@@ -4,3 +4,5 @@ src/speedcrunch.pro.user
 cmake-build-debug
 src/build*/
 **/.DS_Store
+doc/src/_build-*/.doctrees/
+doc/build_html_embedded/*/.doctrees/
