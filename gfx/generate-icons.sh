@@ -4,8 +4,10 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SVG_FILE="$ROOT_DIR/gfx/speedcrunch.svg"
 RES_DIR="$ROOT_DIR/src/resources"
+DOC_DIR="$ROOT_DIR/doc/src"
 
 PNG_OUT="$RES_DIR/speedcrunch.png"
+DOC_LOGO_OUT="$DOC_DIR/logo.png"
 ICO_OUT="$RES_DIR/speedcrunch.ico"
 ICNS_OUT="$RES_DIR/speedcrunch.icns"
 
@@ -36,6 +38,7 @@ rsvg-convert -w 1024 -h 1024 "$SVG_FILE" -o "$MASTER_PNG"
 
 echo "Generating Linux PNG (256x256)..."
 sips -z 256 256 "$MASTER_PNG" --out "$PNG_OUT" >/dev/null
+cp "$PNG_OUT" "$DOC_LOGO_OUT"
 
 echo "Generating Windows ICO (16..256)..."
 magick "$MASTER_PNG" -background none \
@@ -53,4 +56,4 @@ png2icns "$ICNS_OUT" \
   "$TMP_DIR/icon-128.png" >/dev/null
 
 echo "Done."
-file "$PNG_OUT" "$ICO_OUT" "$ICNS_OUT"
+file "$PNG_OUT" "$DOC_LOGO_OUT" "$ICO_OUT" "$ICNS_OUT"
