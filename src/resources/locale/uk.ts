@@ -46,7 +46,7 @@
     <message>
         <location filename="../../gui/aboutbox.cpp" line="126"/>
         <source>Copyright (C) 2004-2026 The SpeedCrunch developers</source>
-        <translation type="unfinished"></translation>
+        <translation>Авторські права (C) 2004-2026 належать розробникам SpeedCrunch</translation>
     </message>
     <message>
         <location filename="../../gui/aboutbox.cpp" line="130"/>
@@ -1337,7 +1337,7 @@
     <message>
         <location filename="../../gui/editor.cpp" line="628"/>
         <source>Selection result: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Вибраний результат: %1</translation>
     </message>
 </context>
 <context>
@@ -1490,7 +1490,7 @@
     <message>
         <location filename="../../core/evaluator.cpp" line="1954"/>
         <source>syntax error</source>
-        <translation type="unfinished"></translation>
+        <translation>синтаксична помилка</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="2439"/>
@@ -1573,7 +1573,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1207"/>
         <source>base; exponent; modulo</source>
-        <translation type="unfinished"></translation>
+        <translation>основа; показник; модуль</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1208"/>
@@ -1895,12 +1895,12 @@
     <message>
         <location filename="../../core/functions.cpp" line="1284"/>
         <source>Euclidean Modulo</source>
-        <translation type="unfinished"></translation>
+        <translation>Евклідів модуль</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1285"/>
         <source>Modular Exponentiation</source>
-        <translation type="unfinished"></translation>
+        <translation>Модульне піднесення до степеня</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1286"/>
@@ -2020,7 +2020,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1305"/>
         <source>Sigma Sum</source>
-        <translation type="unfinished"></translation>
+        <translation>Сигма-сума</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1306"/>
@@ -2860,7 +2860,7 @@ If no, current variables and display will be cleared.</source>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="220"/>
         <source>Remove This Calculation</source>
-        <translation type="unfinished"></translation>
+        <translation>Вилучити це обчислення</translation>
     </message>
 </context>
 <context>

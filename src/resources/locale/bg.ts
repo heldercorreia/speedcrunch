@@ -46,7 +46,7 @@
     <message>
         <location filename="../../gui/aboutbox.cpp" line="126"/>
         <source>Copyright (C) 2004-2026 The SpeedCrunch developers</source>
-        <translation type="unfinished"></translation>
+        <translation>Copyright (C) 2004-2026 Разработчиците на SpeedCrunch</translation>
     </message>
     <message>
         <location filename="../../gui/aboutbox.cpp" line="130"/>
@@ -192,13 +192,13 @@
         <location filename="../../core/book.cpp" line="106"/>
         <location filename="../../core/book.cpp" line="376"/>
         <source>Standing Wave Ratio &amp; Return Loss</source>
-        <translation type="unfinished"></translation>
+        <translation>Коефициент на стоящата вълна и възвратни загуби</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="107"/>
         <location filename="../../core/book.cpp" line="402"/>
         <source>Free Space Wavelength</source>
-        <translation type="unfinished"></translation>
+        <translation>Дължина на вълната в свободното пространство</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="142"/>
@@ -348,7 +348,7 @@
     <message>
         <location filename="../../core/book.cpp" line="387"/>
         <source>reflected power</source>
-        <translation type="unfinished"></translation>
+        <translation>отразена мощност</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="388"/>
@@ -358,7 +358,7 @@
     <message>
         <location filename="../../core/book.cpp" line="389"/>
         <source>return loss</source>
-        <translation type="unfinished"></translation>
+        <translation>възвратни загуби</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="347"/>
@@ -369,12 +369,12 @@
     <message>
         <location filename="../../core/book.cpp" line="348"/>
         <source>outer conductor&apos;s inner diameter</source>
-        <translation type="unfinished"></translation>
+        <translation>outer conductor&apos;s inner diameter</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="349"/>
         <source>inner conductor&apos;s outer diameter</source>
-        <translation type="unfinished"></translation>
+        <translation>inner conductor&apos;s outer diameter</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="365"/>
@@ -389,12 +389,12 @@
     <message>
         <location filename="../../core/book.cpp" line="391"/>
         <source>standing wave ratio</source>
-        <translation type="unfinished"></translation>
+        <translation>коефициент на стоящата вълна</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="392"/>
         <source>normalized impedance</source>
-        <translation type="unfinished"></translation>
+        <translation>нормализиран импеданс</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="408"/>
@@ -495,12 +495,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="582"/>
         <source>Bohr-Procopiu Magneton</source>
-        <translation type="unfinished"></translation>
+        <translation>Bohr-Procopiu Magneton</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="583"/>
         <source>Conductance Quantum</source>
-        <translation type="unfinished"></translation>
+        <translation>Conductance Quantum</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="584"/>
@@ -515,92 +515,92 @@
     <message>
         <location filename="../../core/constants.cpp" line="586"/>
         <source>Conventional value of Josephson Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>Conventional value of Josephson Constant</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="587"/>
         <source>Josephson Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>Josephson Constant</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="588"/>
         <source>Magnetic Flux Quantum</source>
-        <translation type="unfinished"></translation>
+        <translation>Magnetic Flux Quantum</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="589"/>
         <source>Nuclear Magneton</source>
-        <translation type="unfinished"></translation>
+        <translation>Nuclear Magneton</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="590"/>
         <source>Resistance Quantum</source>
-        <translation type="unfinished"></translation>
+        <translation>Resistance Quantum</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="591"/>
         <source>Conventional value of von Klitzing Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>Conventional value of von Klitzing Constant</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="592"/>
         <source>von Klitzing Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>von Klitzing Constant</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="595"/>
         <source>Atomic &amp; Nuclear</source>
-        <translation type="unfinished"></translation>
+        <translation>Атомна и ядрена физика</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="597"/>
         <source>Bohr Radius</source>
-        <translation type="unfinished"></translation>
+        <translation>Bohr Radius</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="598"/>
         <source>Fermi Coupling Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>Fermi Coupling Constant</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="599"/>
         <source>Fine-structure Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>Fine-structure Constant</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="600"/>
         <source>Hartree Energy</source>
-        <translation type="unfinished"></translation>
+        <translation>Hartree Energy</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="601"/>
         <source>Hartree Energy in eV</source>
-        <translation type="unfinished"></translation>
+        <translation>Hartree Energy in eV</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="602"/>
         <source>Quantum of Circulation</source>
-        <translation type="unfinished"></translation>
+        <translation>Quantum of Circulation</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="603"/>
         <source>Quantum of Circulation times 2</source>
-        <translation type="unfinished"></translation>
+        <translation>Quantum of Circulation times 2</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="604"/>
         <source>Rydberg Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>Rydberg Constant</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="605"/>
         <source>Thomson Cross Section</source>
-        <translation type="unfinished"></translation>
+        <translation>Thomson Cross Section</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="606"/>
         <source>Weak Mixing Angle</source>
-        <translation type="unfinished"></translation>
+        <translation>Weak Mixing Angle</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="609"/>
@@ -630,7 +630,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="615"/>
         <source>Compton wavelength over 2 pi</source>
-        <translation type="unfinished"></translation>
+        <translation>Compton wavelength over 2 pi</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="616"/>
@@ -645,47 +645,47 @@
     <message>
         <location filename="../../core/constants.cpp" line="618"/>
         <source>First Radiation Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>First Radiation Constant</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="619"/>
         <source>First Radiation Constant for Spectral Radiance</source>
-        <translation type="unfinished"></translation>
+        <translation>First Radiation Constant for Spectral Radiance</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="620"/>
         <source>Gas Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>Gas Constant</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="621"/>
         <source>Loschmidt constant (273.15 K, 100 kPa)</source>
-        <translation type="unfinished"></translation>
+        <translation>Loschmidt constant (273.15 K, 100 kPa)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="622"/>
         <source>Loschmidt constant (273.15 K, 101.325 kPa)</source>
-        <translation type="unfinished"></translation>
+        <translation>Loschmidt constant (273.15 K, 101.325 kPa)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="623"/>
         <source>Molar Planck Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>Molar Planck Constant</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="624"/>
         <source>Second Radiation Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>Second Radiation Constant</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="625"/>
         <source>Stefan-Boltzmann Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>Stefan-Boltzmann Constant</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="626"/>
         <source>{220} Lattice Spacing of Silicon</source>
-        <translation type="unfinished"></translation>
+        <translation>{220} Lattice Spacing of Silicon</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="629"/>
@@ -725,7 +725,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="639"/>
         <source>Sidereal Year</source>
-        <translation type="unfinished"></translation>
+        <translation>Sidereal Year</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="640"/>
@@ -1200,47 +1200,47 @@
     <message>
         <location filename="../../core/constants.cpp" line="744"/>
         <source>Up-Quark Mass</source>
-        <translation type="unfinished"></translation>
+        <translation>Up-Quark Mass</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="745"/>
         <source>Down-Quark Mass</source>
-        <translation type="unfinished"></translation>
+        <translation>Down-Quark Mass</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="746"/>
         <source>Charm-Quark Mass</source>
-        <translation type="unfinished"></translation>
+        <translation>Charm-Quark Mass</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="747"/>
         <source>Strange-Quark Mass</source>
-        <translation type="unfinished"></translation>
+        <translation>Strange-Quark Mass</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="748"/>
         <source>Top-Quark Mass</source>
-        <translation type="unfinished"></translation>
+        <translation>Top-Quark Mass</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="749"/>
         <source>Bottom-Quark Mass</source>
-        <translation type="unfinished"></translation>
+        <translation>Bottom-Quark Mass</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="750"/>
         <source>W-Boson Mass</source>
-        <translation type="unfinished"></translation>
+        <translation>W-Boson Mass</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="751"/>
         <source>Z-Boson Mass</source>
-        <translation type="unfinished"></translation>
+        <translation>Z-Boson Mass</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="752"/>
         <source>Higgs-Boson Mass</source>
-        <translation type="unfinished"></translation>
+        <translation>Higgs-Boson Mass</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="753"/>
@@ -1255,17 +1255,17 @@
     <message>
         <location filename="../../core/constants.cpp" line="755"/>
         <source>Electron Mass (SI)</source>
-        <translation type="unfinished"></translation>
+        <translation>Electron Mass (SI)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="756"/>
         <source>Proton Mass (SI)</source>
-        <translation type="unfinished"></translation>
+        <translation>Proton Mass (SI)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="757"/>
         <source>Neutron Mass (SI)</source>
-        <translation type="unfinished"></translation>
+        <translation>Neutron Mass (SI)</translation>
     </message>
 </context>
 <context>
@@ -1337,7 +1337,7 @@
     <message>
         <location filename="../../gui/editor.cpp" line="628"/>
         <source>Selection result: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Резултат от избора: %1</translation>
     </message>
 </context>
 <context>
@@ -1490,7 +1490,7 @@
     <message>
         <location filename="../../core/evaluator.cpp" line="1954"/>
         <source>syntax error</source>
-        <translation type="unfinished"></translation>
+        <translation>синтактична грешка</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="2439"/>
@@ -1557,40 +1557,40 @@
         <location filename="../../core/functions.cpp" line="1201"/>
         <location filename="../../core/functions.cpp" line="1202"/>
         <source>x; exponent_bits; significand_bits [; exponent_bias]</source>
-        <translation type="unfinished"></translation>
+        <translation>x; битове_експонента; битове_мантиса [; отместване_експонента]</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1203"/>
         <source>base; x</source>
-        <translation type="unfinished"></translation>
+        <translation>основа; x</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1205"/>
         <location filename="../../core/functions.cpp" line="1206"/>
         <source>value; modulo</source>
-        <translation type="unfinished"></translation>
+        <translation>стойност; модул</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1207"/>
         <source>base; exponent; modulo</source>
-        <translation type="unfinished"></translation>
+        <translation>основа; експонента; модул</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1208"/>
         <location filename="../../core/functions.cpp" line="1210"/>
         <source>events; average_events</source>
-        <translation type="unfinished"></translation>
+        <translation>събития; средно_събития</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1209"/>
         <location filename="../../core/functions.cpp" line="1211"/>
         <source>average_events</source>
-        <translation type="unfinished"></translation>
+        <translation>средно_събития</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1212"/>
         <source>x [; precision]</source>
-        <translation type="unfinished"></translation>
+        <translation>x [; точност]</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1220"/>
@@ -1615,17 +1615,17 @@
     <message>
         <location filename="../../core/functions.cpp" line="1224"/>
         <source>Area Hyperbolic Cosine</source>
-        <translation type="unfinished"></translation>
+        <translation>Арккосинус хиперболичен</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1225"/>
         <source>Area Hyperbolic Sine</source>
-        <translation type="unfinished"></translation>
+        <translation>Арксинус хиперболичен</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1226"/>
         <source>Area Hyperbolic Tangent</source>
-        <translation type="unfinished"></translation>
+        <translation>Арктангенс хиперболичен</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1227"/>
@@ -1650,27 +1650,27 @@
     <message>
         <location filename="../../core/functions.cpp" line="1232"/>
         <source>Binomial Cumulative Distribution Function</source>
-        <translation type="unfinished"></translation>
+        <translation>Биномиална кумулативна функция на разпределение</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1233"/>
         <source>Binomial Distribution Mean</source>
-        <translation type="unfinished"></translation>
+        <translation>Средна стойност на биномиално разпределение</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1234"/>
         <source>Binomial Probability Mass Function</source>
-        <translation type="unfinished"></translation>
+        <translation>Биномиална функция на вероятностната маса</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1235"/>
         <source>Binomial Distribution Variance</source>
-        <translation type="unfinished"></translation>
+        <translation>Дисперсия на биномиално разпределение</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1236"/>
         <source>Convert to Cartesian Notation</source>
-        <translation type="unfinished"></translation>
+        <translation>Преобразуване в декартова форма</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1237"/>
@@ -1680,12 +1680,12 @@
     <message>
         <location filename="../../core/functions.cpp" line="1238"/>
         <source>Ceiling</source>
-        <translation type="unfinished"></translation>
+        <translation>Окръгляне нагоре</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1239"/>
         <source>Complex Conjugate</source>
-        <translation type="unfinished"></translation>
+        <translation>Комплексно спрегнато</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1240"/>
@@ -1710,7 +1710,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1244"/>
         <source>Convert Unix timestamp to Date</source>
-        <translation type="unfinished"></translation>
+        <translation>Преобразуване на Unix времеви отпечатък в дата</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1246"/>
@@ -1735,7 +1735,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1250"/>
         <source>Floor</source>
-        <translation type="unfinished"></translation>
+        <translation>Окръгляне надолу</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1251"/>
@@ -1745,7 +1745,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1252"/>
         <source>Extension of Factorials [= (x-1)!]</source>
-        <translation type="unfinished"></translation>
+        <translation>Разширение на факториелите [= (x-1)!]</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1253"/>
@@ -1755,7 +1755,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1254"/>
         <source>Geometric Mean</source>
-        <translation type="unfinished"></translation>
+        <translation>Геометрична средна</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1255"/>
@@ -1765,27 +1765,27 @@
     <message>
         <location filename="../../core/functions.cpp" line="1257"/>
         <source>Hypergeometric Cumulative Distribution Function</source>
-        <translation type="unfinished"></translation>
+        <translation>Хипергеометрична кумулативна функция на разпределение</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1258"/>
         <source>Hypergeometric Distribution Mean</source>
-        <translation type="unfinished"></translation>
+        <translation>Средна стойност на хипергеометрично разпределение</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1259"/>
         <source>Hypergeometric Probability Mass Function</source>
-        <translation type="unfinished"></translation>
+        <translation>Хипергеометрична функция на вероятностната маса</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1260"/>
         <source>Hypergeometric Distribution Variance</source>
-        <translation type="unfinished"></translation>
+        <translation>Дисперсия на хипергеометрично разпределение</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1261"/>
         <source>Integer Quotient</source>
-        <translation type="unfinished"></translation>
+        <translation>Целочислено частно</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1262"/>
@@ -1800,52 +1800,52 @@
     <message>
         <location filename="../../core/functions.cpp" line="1264"/>
         <source>Decode IEEE-754 Binary Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Декодиране на IEEE-754 двоична стойност</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1265"/>
         <source>Encode IEEE-754 Binary Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Кодиране на IEEE-754 двоична стойност</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1266"/>
         <source>Decode 16-bit Half-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Декодиране на 16-битова половин точност</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1267"/>
         <source>Encode 16-bit Half-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Кодиране на 16-битова половин точност</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1268"/>
         <source>Decode 32-bit Single-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Декодиране на 32-битова единична точност</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1269"/>
         <source>Encode 32-bit Single-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Кодиране на 32-битова единична точност</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1270"/>
         <source>Decode 64-bit Double-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Декодиране на 64-битова двойна точност</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1271"/>
         <source>Encode 64-bit Double-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Кодиране на 64-битова двойна точност</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1272"/>
         <source>Decode 128-bit Quad-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Декодиране на 128-битова четворна точност</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1273"/>
         <source>Encode 128-bit Quad-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Кодиране на 128-битова четворна точност</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1274"/>
@@ -1870,7 +1870,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1279"/>
         <source>Mask to a bit size</source>
-        <translation type="unfinished"></translation>
+        <translation>Маскиране до битова ширина</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1280"/>
@@ -1880,7 +1880,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1281"/>
         <source>Median Value (50th Percentile)</source>
-        <translation type="unfinished"></translation>
+        <translation>Медиана (50-и персентил)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1282"/>
@@ -1895,17 +1895,17 @@
     <message>
         <location filename="../../core/functions.cpp" line="1284"/>
         <source>Euclidean Modulo</source>
-        <translation type="unfinished"></translation>
+        <translation>Евклидов модул</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1285"/>
         <source>Modular Exponentiation</source>
-        <translation type="unfinished"></translation>
+        <translation>Модулно степенуване</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1286"/>
         <source>Combination (Binomial Coefficient)</source>
-        <translation type="unfinished"></translation>
+        <translation>Комбинация (биномиален коефициент)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1287"/>
@@ -1920,27 +1920,27 @@
     <message>
         <location filename="../../core/functions.cpp" line="1231"/>
         <source>Convert to Binary Representation</source>
-        <translation type="unfinished"></translation>
+        <translation>Преобразуване в двоично представяне</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1195"/>
         <source>unix_timestamp; x hours offset to GMT</source>
-        <translation type="unfinished"></translation>
+        <translation>unix_timestamp; отместване x часа спрямо GMT</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1245"/>
         <source>Convert to Decimal Representation</source>
-        <translation type="unfinished"></translation>
+        <translation>Преобразуване в десетично представяне</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1256"/>
         <source>Convert to Hexadecimal Representation</source>
-        <translation type="unfinished"></translation>
+        <translation>Преобразуване в шестнадесетично представяне</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1289"/>
         <source>Convert to Octal Representation</source>
-        <translation type="unfinished"></translation>
+        <translation>Преобразуване в осмично представяне</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1290"/>
@@ -1955,22 +1955,22 @@
     <message>
         <location filename="../../core/functions.cpp" line="1292"/>
         <source>Poissonian Cumulative Distribution Function</source>
-        <translation type="unfinished"></translation>
+        <translation>Поасонова кумулативна функция на разпределение</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1293"/>
         <source>Poissonian Distribution Mean</source>
-        <translation type="unfinished"></translation>
+        <translation>Средна стойност на Поасоново разпределение</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1294"/>
         <source>Poissonian Probability Mass Function</source>
-        <translation type="unfinished"></translation>
+        <translation>Поасонова функция на вероятностната маса</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1295"/>
         <source>Poissonian Distribution Variance</source>
-        <translation type="unfinished"></translation>
+        <translation>Дисперсия на Поасоново разпределение</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1296"/>
@@ -2005,22 +2005,22 @@
     <message>
         <location filename="../../core/functions.cpp" line="1302"/>
         <source>Arithmetic Shift Left</source>
-        <translation type="unfinished"></translation>
+        <translation>Аритметично изместване наляво</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1303"/>
         <source>Arithmetic Shift Right</source>
-        <translation type="unfinished"></translation>
+        <translation>Аритметично изместване надясно</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1304"/>
         <source>Signum</source>
-        <translation type="unfinished"></translation>
+        <translation>Сигнум</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1305"/>
         <source>Sigma Sum</source>
-        <translation type="unfinished"></translation>
+        <translation>Сигма сума</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1306"/>
@@ -2065,7 +2065,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1314"/>
         <source>Sign-extend a value</source>
-        <translation type="unfinished"></translation>
+        <translation>Разширяване на знак на стойност</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1315"/>
@@ -2204,43 +2204,43 @@
         <location filename="../../gui/mainwindow.cpp" line="287"/>
         <location filename="../../gui/mainwindow.cpp" line="2018"/>
         <source>Octal</source>
-        <translation type="unfinished"></translation>
+        <translation>Осмична</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="288"/>
         <location filename="../../gui/mainwindow.cpp" line="2010"/>
         <source>Hexadecimal</source>
-        <translation type="unfinished"></translation>
+        <translation>Шестнадесетична</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="289"/>
         <location filename="../../gui/mainwindow.cpp" line="2043"/>
         <source>Sexagesimal</source>
-        <translation type="unfinished"></translation>
+        <translation>Шейсетична</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="290"/>
         <location filename="../../gui/mainwindow.cpp" line="1995"/>
         <source>Fixed decimal</source>
-        <translation type="unfinished"></translation>
+        <translation>Фиксирана десетична</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="291"/>
         <location filename="../../gui/mainwindow.cpp" line="1987"/>
         <source>Engineering decimal</source>
-        <translation type="unfinished"></translation>
+        <translation>Инженерна десетична</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="292"/>
         <location filename="../../gui/mainwindow.cpp" line="2035"/>
         <source>Scientific decimal</source>
-        <translation type="unfinished"></translation>
+        <translation>Научна десетична</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="293"/>
         <location filename="../../gui/mainwindow.cpp" line="2002"/>
         <source>General decimal</source>
-        <translation type="unfinished"></translation>
+        <translation>Обща десетична</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="300"/>
@@ -2340,7 +2340,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="330"/>
         <source>Bitfield</source>
-        <translation type="unfinished"></translation>
+        <translation>Битово поле</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="331"/>
@@ -2400,7 +2400,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="348"/>
         <source>Leave &amp;Last Expression</source>
-        <translation type="unfinished"></translation>
+        <translation>Остави &amp;последния израз</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="349"/>
@@ -2440,22 +2440,22 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="363"/>
         <source>&amp;Fixed Decimal</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Фиксирана десетична</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="362"/>
         <source>&amp;General</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Обща</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="368"/>
         <source>&amp;Hexadecimal</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Шестнадесетична</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="367"/>
         <source>&amp;Octal</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Осмична</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="365"/>
@@ -2575,7 +2575,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="610"/>
         <source>Radix &amp;Character</source>
-        <translation type="unfinished"></translation>
+        <translation>Разряден &amp;символ</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="326"/>
@@ -2595,17 +2595,17 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="345"/>
         <source>Small Space</source>
-        <translation type="unfinished"></translation>
+        <translation>Малко разстояние</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="346"/>
         <source>Medium Space</source>
-        <translation type="unfinished"></translation>
+        <translation>Средно разстояние</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="347"/>
         <source>Large Space</source>
-        <translation type="unfinished"></translation>
+        <translation>Голямо разстояние</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="350"/>
@@ -2645,12 +2645,12 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="369"/>
         <source>&amp;Sexagesimal</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Шейсетична</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="376"/>
         <source>Context Help</source>
-        <translation type="unfinished"></translation>
+        <translation>Контекстна помощ</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="382"/>
@@ -2660,7 +2660,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="616"/>
         <source>&amp;Display</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Показване</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="618"/>
@@ -2737,7 +2737,7 @@ If no, current variables and display will be cleared.</source>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="1677"/>
         <source>Text file (*.txt);;Any file (*.*)</source>
-        <translation type="unfinished"></translation>
+        <translation>Текстов файл (*.txt);;Всеки файл (*.*)</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="1714"/>
@@ -2747,7 +2747,7 @@ If no, current variables and display will be cleared.</source>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="2457"/>
         <source>System Default</source>
-        <translation type="unfinished"></translation>
+        <translation>Системно по подразбиране</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="2461"/>
@@ -2777,32 +2777,32 @@ If no, current variables and display will be cleared.</source>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="308"/>
         <source>Plain &amp;text</source>
-        <translation type="unfinished"></translation>
+        <translation>Обикновен &amp;текст</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="327"/>
         <source>Formula &amp;Book</source>
-        <translation type="unfinished"></translation>
+        <translation>Книга с &amp;формули</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="377"/>
         <source>Check &amp;Updates</source>
-        <translation type="unfinished"></translation>
+        <translation>Провери за &amp;обновления</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="378"/>
         <source>Send &amp;Feedback</source>
-        <translation type="unfinished"></translation>
+        <translation>Изпрати &amp;обратна връзка</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="379"/>
         <source>Join &amp;Community</source>
-        <translation type="unfinished"></translation>
+        <translation>Присъедини се към &amp;общността</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="380"/>
         <source>&amp;News Feed</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Новинарски поток</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="604"/>
@@ -2818,7 +2818,7 @@ If no, current variables and display will be cleared.</source>
         <location filename="../../gui/mainwindow.cpp" line="1388"/>
         <location filename="../../gui/mainwindow.cpp" line="1433"/>
         <source>SpeedCrunch Sessions (*.json);;All Files (*)</source>
-        <translation type="unfinished"></translation>
+        <translation>Сесии на SpeedCrunch (*.json);;Всички файлове (*)</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="1406"/>
@@ -2829,7 +2829,7 @@ If no, current variables and display will be cleared.</source>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="1656"/>
         <source>Export session as HTML</source>
-        <translation type="unfinished"></translation>
+        <translation>Експортиране на сесията като HTML</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="1657"/>
@@ -2839,7 +2839,7 @@ If no, current variables and display will be cleared.</source>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="1676"/>
         <source>Export session as plain text</source>
-        <translation type="unfinished"></translation>
+        <translation>Експортиране на сесията като обикновен текст</translation>
     </message>
 </context>
 <context>
@@ -2860,7 +2860,7 @@ If no, current variables and display will be cleared.</source>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="220"/>
         <source>Remove This Calculation</source>
-        <translation type="unfinished"></translation>
+        <translation>Премахни това изчисление</translation>
     </message>
 </context>
 <context>

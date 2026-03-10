@@ -46,7 +46,7 @@
     <message>
         <location filename="../../gui/aboutbox.cpp" line="126"/>
         <source>Copyright (C) 2004-2026 The SpeedCrunch developers</source>
-        <translation type="unfinished"></translation>
+        <translation>Copyright (C) 2004-2026 SpeedCrunch-utvecklarna</translation>
     </message>
     <message>
         <location filename="../../gui/aboutbox.cpp" line="130"/>
@@ -198,7 +198,7 @@
         <location filename="../../core/book.cpp" line="107"/>
         <location filename="../../core/book.cpp" line="402"/>
         <source>Free Space Wavelength</source>
-        <translation type="unfinished"></translation>
+        <translation>Fri rymd-våglängd</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="142"/>
@@ -306,7 +306,7 @@
     <message>
         <location filename="../../core/book.cpp" line="245"/>
         <source>slant height</source>
-        <translation type="unfinished"></translation>
+        <translation>mantelhöjd</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="263"/>
@@ -369,12 +369,12 @@
     <message>
         <location filename="../../core/book.cpp" line="348"/>
         <source>outer conductor&apos;s inner diameter</source>
-        <translation type="unfinished"></translation>
+        <translation>outer conductor&apos;s inner diameter</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="349"/>
         <source>inner conductor&apos;s outer diameter</source>
-        <translation type="unfinished"></translation>
+        <translation>inner conductor&apos;s outer diameter</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="365"/>
@@ -450,7 +450,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="569"/>
         <source>Characteristic Impedance of Vacuum</source>
-        <translation type="unfinished"></translation>
+        <translation>Vakuums karakteristiska impedans</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="570"/>
@@ -495,12 +495,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="582"/>
         <source>Bohr-Procopiu Magneton</source>
-        <translation type="unfinished"></translation>
+        <translation>Bohr-Procopiu-magneton</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="583"/>
         <source>Conductance Quantum</source>
-        <translation type="unfinished"></translation>
+        <translation>Ledningskvantum</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="584"/>
@@ -510,42 +510,42 @@
     <message>
         <location filename="../../core/constants.cpp" line="585"/>
         <source>Elementary Charge</source>
-        <translation type="unfinished"></translation>
+        <translation>Elementarladdning</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="586"/>
         <source>Conventional value of Josephson Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>Konventionellt värde på Josephsonkonstanten</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="587"/>
         <source>Josephson Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>Josephsonkonstanten</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="588"/>
         <source>Magnetic Flux Quantum</source>
-        <translation type="unfinished"></translation>
+        <translation>Magnetiskt flödeskvantum</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="589"/>
         <source>Nuclear Magneton</source>
-        <translation type="unfinished"></translation>
+        <translation>Kärnmagneton</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="590"/>
         <source>Resistance Quantum</source>
-        <translation type="unfinished"></translation>
+        <translation>Motståndskvantum</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="591"/>
         <source>Conventional value of von Klitzing Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>Konventionellt värde på von Klitzing-konstanten</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="592"/>
         <source>von Klitzing Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>von Klitzing-konstanten</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="595"/>
@@ -560,12 +560,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="598"/>
         <source>Fermi Coupling Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>Fermis kopplingskonstant</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="599"/>
         <source>Fine-structure Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>Finstrukturkonstant</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="600"/>
@@ -580,12 +580,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="602"/>
         <source>Quantum of Circulation</source>
-        <translation type="unfinished"></translation>
+        <translation>Cirkulationskvantum</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="603"/>
         <source>Quantum of Circulation times 2</source>
-        <translation type="unfinished"></translation>
+        <translation>Cirkulationskvantum gånger 2</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="604"/>
@@ -595,12 +595,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="605"/>
         <source>Thomson Cross Section</source>
-        <translation type="unfinished"></translation>
+        <translation>Thomsons tvärsnitt</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="606"/>
         <source>Weak Mixing Angle</source>
-        <translation type="unfinished"></translation>
+        <translation>Svag blandningsvinkel</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="609"/>
@@ -670,22 +670,22 @@
     <message>
         <location filename="../../core/constants.cpp" line="623"/>
         <source>Molar Planck Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>Molär Planckkonstant</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="624"/>
         <source>Second Radiation Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>Andra strålningskonstanten</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="625"/>
         <source>Stefan-Boltzmann Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>Stefan–Boltzmanns konstant</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="626"/>
         <source>{220} Lattice Spacing of Silicon</source>
-        <translation type="unfinished"></translation>
+        <translation>{220} gitteravstånd för kisel</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="629"/>
@@ -695,7 +695,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="631"/>
         <source>Astronomical Unit</source>
-        <translation type="unfinished"></translation>
+        <translation>Astronomisk enhet</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="632"/>
@@ -725,12 +725,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="639"/>
         <source>Sidereal Year</source>
-        <translation type="unfinished"></translation>
+        <translation>Sideriskt år</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="640"/>
         <source>Tropical Year</source>
-        <translation type="unfinished"></translation>
+        <translation>Tropiskt år</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="642"/>
@@ -755,7 +755,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="646"/>
         <source>Sun Luminosity</source>
-        <translation type="unfinished"></translation>
+        <translation>Solens luminositet</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="650"/>
@@ -1110,22 +1110,22 @@
     <message>
         <location filename="../../core/constants.cpp" line="721"/>
         <source>Terbium</source>
-        <translation type="unfinished"></translation>
+        <translation>Terbium</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="722"/>
         <source>Thallium</source>
-        <translation type="unfinished"></translation>
+        <translation>Tallium</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="723"/>
         <source>Thorium</source>
-        <translation type="unfinished"></translation>
+        <translation>Torium</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="724"/>
         <source>Thulium</source>
-        <translation type="unfinished"></translation>
+        <translation>Tulium</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="725"/>
@@ -1140,7 +1140,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="727"/>
         <source>Tungsten</source>
-        <translation type="unfinished"></translation>
+        <translation>Volfram</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="728"/>
@@ -1150,7 +1150,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="729"/>
         <source>Vanadium</source>
-        <translation type="unfinished"></translation>
+        <translation>Vanadin</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="730"/>
@@ -1160,12 +1160,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="731"/>
         <source>Ytterbium</source>
-        <translation type="unfinished"></translation>
+        <translation>Ytterbium</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="732"/>
         <source>Yttrium</source>
-        <translation type="unfinished"></translation>
+        <translation>Yttrium</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="733"/>
@@ -1175,7 +1175,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="734"/>
         <source>Zirconium</source>
-        <translation type="unfinished"></translation>
+        <translation>Zirkonium</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="739"/>
@@ -1200,27 +1200,27 @@
     <message>
         <location filename="../../core/constants.cpp" line="744"/>
         <source>Up-Quark Mass</source>
-        <translation type="unfinished"></translation>
+        <translation>U-kvarkens massa</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="745"/>
         <source>Down-Quark Mass</source>
-        <translation type="unfinished"></translation>
+        <translation>D-kvarkens massa</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="746"/>
         <source>Charm-Quark Mass</source>
-        <translation type="unfinished"></translation>
+        <translation>Charmkvarkens massa</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="747"/>
         <source>Strange-Quark Mass</source>
-        <translation type="unfinished"></translation>
+        <translation>Strangekvarkens massa</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="748"/>
         <source>Top-Quark Mass</source>
-        <translation type="unfinished"></translation>
+        <translation>Toppkvarkens massa</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="749"/>
@@ -1317,7 +1317,7 @@
     <message>
         <location filename="../../gui/editor.cpp" line="460"/>
         <source>Argument</source>
-        <translation type="unfinished"></translation>
+        <translation>Argument</translation>
     </message>
     <message>
         <location filename="../../gui/editor.cpp" line="569"/>
@@ -1327,7 +1327,7 @@
     <message>
         <location filename="../../gui/editor.cpp" line="619"/>
         <source>Selection result: n/a</source>
-        <translation type="unfinished"></translation>
+        <translation>Markeringsresultat: ej tillgängligt</translation>
     </message>
     <message>
         <location filename="../../gui/editor.cpp" line="623"/>
@@ -1337,7 +1337,7 @@
     <message>
         <location filename="../../gui/editor.cpp" line="628"/>
         <source>Selection result: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Markeringsresultat: %1</translation>
     </message>
 </context>
 <context>
@@ -1480,7 +1480,7 @@
     <message>
         <location filename="../../core/evaluator.cpp" line="175"/>
         <source>computation too expensive</source>
-        <translation type="unfinished"></translation>
+        <translation>beräkningen är för resurskrävande</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="190"/>
@@ -1490,7 +1490,7 @@
     <message>
         <location filename="../../core/evaluator.cpp" line="1954"/>
         <source>syntax error</source>
-        <translation type="unfinished"></translation>
+        <translation>syntaxfel</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="2439"/>
@@ -1519,7 +1519,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1191"/>
         <source>max; trials; probability</source>
-        <translation type="unfinished"></translation>
+        <translation>max; försök; sannolikhet</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1192"/>
@@ -1530,23 +1530,23 @@
     <message>
         <location filename="../../core/functions.cpp" line="1193"/>
         <source>hits; trials; probability</source>
-        <translation type="unfinished"></translation>
+        <translation>träffar; försök; sannolikhet</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1196"/>
         <source>max; total; hits; trials</source>
-        <translation type="unfinished"></translation>
+        <translation>max; totalt; träffar; försök</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1197"/>
         <location filename="../../core/functions.cpp" line="1199"/>
         <source>total; hits; trials</source>
-        <translation type="unfinished"></translation>
+        <translation>totalt; träffar; försök</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1198"/>
         <source>count; total; hits; trials</source>
-        <translation type="unfinished"></translation>
+        <translation>antal; totalt; träffar; försök</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1200"/>
@@ -1557,7 +1557,7 @@
         <location filename="../../core/functions.cpp" line="1201"/>
         <location filename="../../core/functions.cpp" line="1202"/>
         <source>x; exponent_bits; significand_bits [; exponent_bias]</source>
-        <translation type="unfinished"></translation>
+        <translation>x; exponentbitar; signifikandbitar [; exponentbias]</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1203"/>
@@ -1568,24 +1568,24 @@
         <location filename="../../core/functions.cpp" line="1205"/>
         <location filename="../../core/functions.cpp" line="1206"/>
         <source>value; modulo</source>
-        <translation type="unfinished"></translation>
+        <translation>värde; modulo</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1207"/>
         <source>base; exponent; modulo</source>
-        <translation type="unfinished"></translation>
+        <translation>bas; exponent; modulo</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1208"/>
         <location filename="../../core/functions.cpp" line="1210"/>
         <source>events; average_events</source>
-        <translation type="unfinished"></translation>
+        <translation>händelser; genomsnitt_händelser</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1209"/>
         <location filename="../../core/functions.cpp" line="1211"/>
         <source>average_events</source>
-        <translation type="unfinished"></translation>
+        <translation>genomsnitt_händelser</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1212"/>
@@ -1600,7 +1600,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1221"/>
         <source>Absolute Deviation</source>
-        <translation type="unfinished"></translation>
+        <translation>Absolut avvikelse</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1222"/>
@@ -1620,12 +1620,12 @@
     <message>
         <location filename="../../core/functions.cpp" line="1225"/>
         <source>Area Hyperbolic Sine</source>
-        <translation type="unfinished"></translation>
+        <translation>Areasinus hyperbolicus</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1226"/>
         <source>Area Hyperbolic Tangent</source>
-        <translation type="unfinished"></translation>
+        <translation>Areatangens hyperbolicus</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1227"/>
@@ -1650,7 +1650,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1232"/>
         <source>Binomial Cumulative Distribution Function</source>
-        <translation type="unfinished"></translation>
+        <translation>Binomial kumulativ fördelningsfunktion</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1233"/>
@@ -1660,7 +1660,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1234"/>
         <source>Binomial Probability Mass Function</source>
-        <translation type="unfinished"></translation>
+        <translation>Binomial sannolikhetsmassfunktion</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1235"/>
@@ -1670,7 +1670,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1236"/>
         <source>Convert to Cartesian Notation</source>
-        <translation type="unfinished"></translation>
+        <translation>Konvertera till kartesisk notation</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1237"/>
@@ -1720,12 +1720,12 @@
     <message>
         <location filename="../../core/functions.cpp" line="1247"/>
         <source>Error Function</source>
-        <translation type="unfinished"></translation>
+        <translation>Felfunktion</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1248"/>
         <source>Complementary Error Function</source>
-        <translation type="unfinished"></translation>
+        <translation>Komplementär felfunktion</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1249"/>
@@ -1765,22 +1765,22 @@
     <message>
         <location filename="../../core/functions.cpp" line="1257"/>
         <source>Hypergeometric Cumulative Distribution Function</source>
-        <translation type="unfinished"></translation>
+        <translation>Hypergeometrisk kumulativ fördelningsfunktion</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1258"/>
         <source>Hypergeometric Distribution Mean</source>
-        <translation type="unfinished"></translation>
+        <translation>Hypergeometriskt medelvärde</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1259"/>
         <source>Hypergeometric Probability Mass Function</source>
-        <translation type="unfinished"></translation>
+        <translation>Hypergeometrisk sannolikhetsmassfunktion</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1260"/>
         <source>Hypergeometric Distribution Variance</source>
-        <translation type="unfinished"></translation>
+        <translation>Hypergeometrisk varians</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1261"/>
@@ -1800,52 +1800,52 @@
     <message>
         <location filename="../../core/functions.cpp" line="1264"/>
         <source>Decode IEEE-754 Binary Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Avkoda IEEE-754 binärt värde</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1265"/>
         <source>Encode IEEE-754 Binary Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Koda IEEE-754 binärt värde</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1266"/>
         <source>Decode 16-bit Half-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Avkoda 16-bitars halvprecision</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1267"/>
         <source>Encode 16-bit Half-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Koda 16-bitars halvprecision</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1268"/>
         <source>Decode 32-bit Single-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Avkoda 32-bitars enkelprecision</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1269"/>
         <source>Encode 32-bit Single-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Koda 32-bitars enkelprecision</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1270"/>
         <source>Decode 64-bit Double-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Avkoda 64-bitars dubbelprecision</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1271"/>
         <source>Encode 64-bit Double-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Koda 64-bitars dubbelprecision</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1272"/>
         <source>Decode 128-bit Quad-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Avkoda 128-bitars kvadrupelprecision</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1273"/>
         <source>Encode 128-bit Quad-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Koda 128-bitars kvadrupelprecision</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1274"/>
@@ -1870,7 +1870,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1279"/>
         <source>Mask to a bit size</source>
-        <translation type="unfinished"></translation>
+        <translation>Maska till en bitstorlek</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1280"/>
@@ -1895,17 +1895,17 @@
     <message>
         <location filename="../../core/functions.cpp" line="1284"/>
         <source>Euclidean Modulo</source>
-        <translation type="unfinished"></translation>
+        <translation>Euklidisk modulo</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1285"/>
         <source>Modular Exponentiation</source>
-        <translation type="unfinished"></translation>
+        <translation>Modulär exponentiering</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1286"/>
         <source>Combination (Binomial Coefficient)</source>
-        <translation type="unfinished"></translation>
+        <translation>Kombination (binomialkoefficient)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1287"/>
@@ -1915,12 +1915,12 @@
     <message>
         <location filename="../../core/functions.cpp" line="1288"/>
         <source>Permutation (Arrangement)</source>
-        <translation type="unfinished"></translation>
+        <translation>Permutation (arrangemang)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1231"/>
         <source>Convert to Binary Representation</source>
-        <translation type="unfinished"></translation>
+        <translation>Konvertera till binär representation</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1195"/>
@@ -1955,27 +1955,27 @@
     <message>
         <location filename="../../core/functions.cpp" line="1292"/>
         <source>Poissonian Cumulative Distribution Function</source>
-        <translation type="unfinished"></translation>
+        <translation>Poisson kumulativ fördelningsfunktion</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1293"/>
         <source>Poissonian Distribution Mean</source>
-        <translation type="unfinished"></translation>
+        <translation>Poisson medelvärde</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1294"/>
         <source>Poissonian Probability Mass Function</source>
-        <translation type="unfinished"></translation>
+        <translation>Poisson sannolikhetsmassfunktion</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1295"/>
         <source>Poissonian Distribution Variance</source>
-        <translation type="unfinished"></translation>
+        <translation>Poisson varians</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1296"/>
         <source>Convert to Polar Notation</source>
-        <translation type="unfinished"></translation>
+        <translation>Konvertera till polär notation</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1297"/>
@@ -2005,12 +2005,12 @@
     <message>
         <location filename="../../core/functions.cpp" line="1302"/>
         <source>Arithmetic Shift Left</source>
-        <translation type="unfinished"></translation>
+        <translation>Aritmetisk skiftning vänster</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1303"/>
         <source>Arithmetic Shift Right</source>
-        <translation type="unfinished"></translation>
+        <translation>Aritmetisk skiftning höger</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1304"/>
@@ -2020,7 +2020,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1305"/>
         <source>Sigma Sum</source>
-        <translation type="unfinished"></translation>
+        <translation>Sigmasumma</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1306"/>
@@ -2065,7 +2065,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1314"/>
         <source>Sign-extend a value</source>
-        <translation type="unfinished"></translation>
+        <translation>Teckenutöka ett värde</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1315"/>
@@ -2796,7 +2796,7 @@ If no, current variables and display will be cleared.</source>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="379"/>
         <source>Join &amp;Community</source>
-        <translation type="unfinished"></translation>
+        <translation>Gå med i &amp;gemenskapen</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="380"/>
@@ -2859,7 +2859,7 @@ If no, current variables and display will be cleared.</source>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="220"/>
         <source>Remove This Calculation</source>
-        <translation type="unfinished"></translation>
+        <translation>Ta bort denna beräkning</translation>
     </message>
 </context>
 <context>

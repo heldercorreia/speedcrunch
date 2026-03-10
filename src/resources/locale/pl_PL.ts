@@ -46,7 +46,7 @@
     <message>
         <location filename="../../gui/aboutbox.cpp" line="126"/>
         <source>Copyright (C) 2004-2026 The SpeedCrunch developers</source>
-        <translation type="unfinished"></translation>
+        <translation>Prawa autorskie (C) 2004-2026 Deweloperzy SpeedCrunch</translation>
     </message>
     <message>
         <location filename="../../gui/aboutbox.cpp" line="130"/>
@@ -1337,7 +1337,7 @@
     <message>
         <location filename="../../gui/editor.cpp" line="628"/>
         <source>Selection result: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Wynik zaznaczenia: %1</translation>
     </message>
 </context>
 <context>
@@ -1490,7 +1490,7 @@
     <message>
         <location filename="../../core/evaluator.cpp" line="1954"/>
         <source>syntax error</source>
-        <translation type="unfinished"></translation>
+        <translation>błąd składni</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="2439"/>
@@ -1573,7 +1573,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1207"/>
         <source>base; exponent; modulo</source>
-        <translation type="unfinished"></translation>
+        <translation>podstawa; wykładnik; modulo</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1208"/>
@@ -1895,12 +1895,12 @@
     <message>
         <location filename="../../core/functions.cpp" line="1284"/>
         <source>Euclidean Modulo</source>
-        <translation type="unfinished"></translation>
+        <translation>Modulo Euklidesowe</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1285"/>
         <source>Modular Exponentiation</source>
-        <translation type="unfinished"></translation>
+        <translation>Potęgowanie modularne</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1286"/>
@@ -2020,7 +2020,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1305"/>
         <source>Sigma Sum</source>
-        <translation type="unfinished"></translation>
+        <translation>Suma sigma</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1306"/>
@@ -2860,7 +2860,7 @@ Jeżeli nie, zmienne i wyświetlacz zostaną wyczyszczone.</translation>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="220"/>
         <source>Remove This Calculation</source>
-        <translation type="unfinished"></translation>
+        <translation>Usuń to obliczenie</translation>
     </message>
 </context>
 <context>

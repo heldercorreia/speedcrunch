@@ -12,12 +12,12 @@
     <message>
         <location filename="../../gui/aboutbox.cpp" line="46"/>
         <source>Maintainer</source>
-        <translation type="unfinished"></translation>
+        <translation>Maintainer</translation>
     </message>
     <message>
         <location filename="../../gui/aboutbox.cpp" line="48"/>
         <source>Core developers</source>
-        <translation type="unfinished"></translation>
+        <translation>Core developers</translation>
     </message>
     <message>
         <location filename="../../gui/aboutbox.cpp" line="56"/>
@@ -42,7 +42,7 @@
     <message>
         <location filename="../../gui/aboutbox.cpp" line="126"/>
         <source>Copyright (C) 2004-2026 The SpeedCrunch developers</source>
-        <translation type="unfinished"></translation>
+        <translation>Copyright (C) 2004-2026 The SpeedCrunch developers</translation>
     </message>
     <message>
         <location filename="../../gui/aboutbox.cpp" line="130"/>
@@ -339,17 +339,17 @@
     <message>
         <location filename="../../core/book.cpp" line="386"/>
         <source>input power</source>
-        <translation type="unfinished"></translation>
+        <translation>input power</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="387"/>
         <source>reflected power</source>
-        <translation type="unfinished"></translation>
+        <translation>reflected power</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="388"/>
         <source>transmitted power</source>
-        <translation type="unfinished"></translation>
+        <translation>transmitted power</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="389"/>
@@ -511,7 +511,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="586"/>
         <source>Conventional value of Josephson Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>Conventional value of Josephson Constant</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="587"/>
@@ -536,7 +536,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="591"/>
         <source>Conventional value of von Klitzing Constant</source>
-        <translation type="unfinished"></translation>
+        <translation>Conventional value of von Klitzing Constant</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="592"/>
@@ -581,7 +581,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="603"/>
         <source>Quantum of Circulation times 2</source>
-        <translation type="unfinished"></translation>
+        <translation>Quantum of Circulation times 2</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="604"/>
@@ -1236,7 +1236,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="752"/>
         <source>Higgs-Boson Mass</source>
-        <translation type="unfinished"></translation>
+        <translation>Higgs-Boson Mass</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="753"/>
@@ -1308,12 +1308,12 @@
     <message>
         <location filename="../../gui/editor.cpp" line="376"/>
         <source>User function</source>
-        <translation type="unfinished"></translation>
+        <translation>User function</translation>
     </message>
     <message>
         <location filename="../../gui/editor.cpp" line="460"/>
         <source>Argument</source>
-        <translation type="unfinished"></translation>
+        <translation>Argument</translation>
     </message>
     <message>
         <location filename="../../gui/editor.cpp" line="569"/>
@@ -1323,7 +1323,7 @@
     <message>
         <location filename="../../gui/editor.cpp" line="619"/>
         <source>Selection result: n/a</source>
-        <translation type="unfinished"></translation>
+        <translation>Selection result: n/a</translation>
     </message>
     <message>
         <location filename="../../gui/editor.cpp" line="623"/>
@@ -1333,7 +1333,7 @@
     <message>
         <location filename="../../gui/editor.cpp" line="628"/>
         <source>Selection result: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Selection result: %1</translation>
     </message>
 </context>
 <context>
@@ -1368,44 +1368,44 @@
     <message>
         <location filename="../../core/evaluator.cpp" line="109"/>
         <source>too time consuming - computation was rejected</source>
-        <translation type="unfinished"></translation>
+        <translation>too time consuming - computation was rejected</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="116"/>
         <location filename="../../core/evaluator.cpp" line="182"/>
         <source>dimension mismatch - quantities with different dimensions cannot be compared, added, etc.</source>
-        <translation type="unfinished"></translation>
+        <translation>dimension mismatch - quantities with different dimensions cannot be compared, added, etc.</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="121"/>
         <source>invalid dimension - operation might require dimensionless arguments</source>
-        <translation type="unfinished"></translation>
+        <translation>invalid dimension - operation might require dimensionless arguments</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="125"/>
         <location filename="../../core/evaluator.cpp" line="168"/>
         <source>Computation aborted - encountered numerical instability</source>
-        <translation type="unfinished"></translation>
+        <translation>Computation aborted - encountered numerical instability</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="178"/>
         <source>invalid dimension - function might require dimensionless arguments</source>
-        <translation type="unfinished"></translation>
+        <translation>invalid dimension - function might require dimensionless arguments</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="193"/>
         <source>error</source>
-        <translation type="unfinished"></translation>
+        <translation>error</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="2161"/>
         <source>unit must not be zero</source>
-        <translation type="unfinished"></translation>
+        <translation>unit must not be zero</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="2165"/>
         <source>Conversion failed - dimension mismatch</source>
-        <translation type="unfinished"></translation>
+        <translation>Conversion failed - dimension mismatch</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="2201"/>
@@ -1416,7 +1416,7 @@
     <message>
         <location filename="../../core/evaluator.cpp" line="2377"/>
         <source>recursion not supported</source>
-        <translation type="unfinished"></translation>
+        <translation>recursion not supported</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="87"/>
@@ -1482,7 +1482,7 @@
     <message>
         <location filename="../../core/evaluator.cpp" line="1954"/>
         <source>syntax error</source>
-        <translation type="unfinished"></translation>
+        <translation>syntax error</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="2439"/>
@@ -1493,17 +1493,17 @@
     <message>
         <location filename="../../core/evaluator.cpp" line="2447"/>
         <source>%1 is a variable name, please choose another or delete the variable</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 is a variable name, please choose another or delete the variable</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="2457"/>
         <source>argument %1 is used more than once</source>
-        <translation type="unfinished"></translation>
+        <translation>argument %1 is used more than once</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="2481"/>
         <source>%1 is a user function name, please choose another or delete the function</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 is a user function name, please choose another or delete the function</translation>
     </message>
 </context>
 <context>
@@ -1549,12 +1549,12 @@
         <location filename="../../core/functions.cpp" line="1201"/>
         <location filename="../../core/functions.cpp" line="1202"/>
         <source>x; exponent_bits; significand_bits [; exponent_bias]</source>
-        <translation type="unfinished"></translation>
+        <translation>x; exponent_bits; significand_bits [; exponent_bias]</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1203"/>
         <source>base; x</source>
-        <translation type="unfinished"></translation>
+        <translation>base; x</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1205"/>
@@ -1565,7 +1565,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1207"/>
         <source>base; exponent; modulo</source>
-        <translation type="unfinished"></translation>
+        <translation>base; exponent; modulo</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1208"/>
@@ -1582,7 +1582,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1212"/>
         <source>x [; precision]</source>
-        <translation type="unfinished"></translation>
+        <translation>x [; precision]</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1220"/>
@@ -1592,7 +1592,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1221"/>
         <source>Absolute Deviation</source>
-        <translation type="unfinished"></translation>
+        <translation>Absolute Deviation</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1222"/>
@@ -1602,7 +1602,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1223"/>
         <source>Logical AND</source>
-        <translation type="unfinished"></translation>
+        <translation>Logical AND</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1224"/>
@@ -1617,7 +1617,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1226"/>
         <source>Area Hyperbolic Tangent</source>
-        <translation type="unfinished"></translation>
+        <translation>Area Hyperbolic Tangent</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1227"/>
@@ -1627,12 +1627,12 @@
     <message>
         <location filename="../../core/functions.cpp" line="1228"/>
         <source>Arc Tangent</source>
-        <translation type="unfinished"></translation>
+        <translation>Arc Tangent</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1229"/>
         <source>Arc Tangent with two Arguments</source>
-        <translation type="unfinished"></translation>
+        <translation>Arc Tangent with two Arguments</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1230"/>
@@ -1642,12 +1642,12 @@
     <message>
         <location filename="../../core/functions.cpp" line="1232"/>
         <source>Binomial Cumulative Distribution Function</source>
-        <translation type="unfinished"></translation>
+        <translation>Binomial Cumulative Distribution Function</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1233"/>
         <source>Binomial Distribution Mean</source>
-        <translation type="unfinished"></translation>
+        <translation>Binomial Distribution Mean</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1234"/>
@@ -1657,12 +1657,12 @@
     <message>
         <location filename="../../core/functions.cpp" line="1235"/>
         <source>Binomial Distribution Variance</source>
-        <translation type="unfinished"></translation>
+        <translation>Binomial Distribution Variance</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1236"/>
         <source>Convert to Cartesian Notation</source>
-        <translation type="unfinished"></translation>
+        <translation>Convert to Cartesian Notation</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1237"/>
@@ -1672,12 +1672,12 @@
     <message>
         <location filename="../../core/functions.cpp" line="1238"/>
         <source>Ceiling</source>
-        <translation type="unfinished"></translation>
+        <translation>Ceiling</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1239"/>
         <source>Complex Conjugate</source>
-        <translation type="unfinished"></translation>
+        <translation>Complex Conjugate</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1240"/>
@@ -1702,7 +1702,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1244"/>
         <source>Convert Unix timestamp to Date</source>
-        <translation type="unfinished"></translation>
+        <translation>Convert Unix timestamp to Date</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1246"/>
@@ -1712,12 +1712,12 @@
     <message>
         <location filename="../../core/functions.cpp" line="1247"/>
         <source>Error Function</source>
-        <translation type="unfinished"></translation>
+        <translation>Error Function</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1248"/>
         <source>Complementary Error Function</source>
-        <translation type="unfinished"></translation>
+        <translation>Complementary Error Function</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1249"/>
@@ -1727,17 +1727,17 @@
     <message>
         <location filename="../../core/functions.cpp" line="1250"/>
         <source>Floor</source>
-        <translation type="unfinished"></translation>
+        <translation>Floor</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1251"/>
         <source>Fractional Part</source>
-        <translation type="unfinished"></translation>
+        <translation>Fractional Part</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1252"/>
         <source>Extension of Factorials [= (x-1)!]</source>
-        <translation type="unfinished"></translation>
+        <translation>Extension of Factorials [= (x-1)!]</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1253"/>
@@ -1752,17 +1752,17 @@
     <message>
         <location filename="../../core/functions.cpp" line="1255"/>
         <source>Gradians of arc</source>
-        <translation type="unfinished"></translation>
+        <translation>Gradians of arc</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1257"/>
         <source>Hypergeometric Cumulative Distribution Function</source>
-        <translation type="unfinished"></translation>
+        <translation>Hypergeometric Cumulative Distribution Function</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1258"/>
         <source>Hypergeometric Distribution Mean</source>
-        <translation type="unfinished"></translation>
+        <translation>Hypergeometric Distribution Mean</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1259"/>
@@ -1772,17 +1772,17 @@
     <message>
         <location filename="../../core/functions.cpp" line="1260"/>
         <source>Hypergeometric Distribution Variance</source>
-        <translation type="unfinished"></translation>
+        <translation>Hypergeometric Distribution Variance</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1261"/>
         <source>Integer Quotient</source>
-        <translation type="unfinished"></translation>
+        <translation>Integer Quotient</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1262"/>
         <source>Integer Part</source>
-        <translation type="unfinished"></translation>
+        <translation>Integer Part</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1263"/>
@@ -1792,52 +1792,52 @@
     <message>
         <location filename="../../core/functions.cpp" line="1264"/>
         <source>Decode IEEE-754 Binary Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Decode IEEE-754 Binary Value</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1265"/>
         <source>Encode IEEE-754 Binary Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Encode IEEE-754 Binary Value</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1266"/>
         <source>Decode 16-bit Half-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Decode 16-bit Half-Precision Value</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1267"/>
         <source>Encode 16-bit Half-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Encode 16-bit Half-Precision Value</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1268"/>
         <source>Decode 32-bit Single-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Decode 32-bit Single-Precision Value</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1269"/>
         <source>Encode 32-bit Single-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Encode 32-bit Single-Precision Value</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1270"/>
         <source>Decode 64-bit Double-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Decode 64-bit Double-Precision Value</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1271"/>
         <source>Encode 64-bit Double-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Encode 64-bit Double-Precision Value</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1272"/>
         <source>Decode 128-bit Quad-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Decode 128-bit Quad-Precision Value</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1273"/>
         <source>Encode 128-bit Quad-Precision Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Encode 128-bit Quad-Precision Value</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1274"/>
@@ -1857,12 +1857,12 @@
     <message>
         <location filename="../../core/functions.cpp" line="1278"/>
         <source>Logarithm to Arbitrary Base</source>
-        <translation type="unfinished"></translation>
+        <translation>Logarithm to Arbitrary Base</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1279"/>
         <source>Mask to a bit size</source>
-        <translation type="unfinished"></translation>
+        <translation>Mask to a bit size</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1280"/>
@@ -1872,7 +1872,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1281"/>
         <source>Median Value (50th Percentile)</source>
-        <translation type="unfinished"></translation>
+        <translation>Median Value (50th Percentile)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1282"/>
@@ -1882,32 +1882,32 @@
     <message>
         <location filename="../../core/functions.cpp" line="1283"/>
         <source>Modulo</source>
-        <translation type="unfinished"></translation>
+        <translation>Modulo</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1284"/>
         <source>Euclidean Modulo</source>
-        <translation type="unfinished"></translation>
+        <translation>Euclidean Modulo</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1285"/>
         <source>Modular Exponentiation</source>
-        <translation type="unfinished"></translation>
+        <translation>Modular Exponentiation</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1286"/>
         <source>Combination (Binomial Coefficient)</source>
-        <translation type="unfinished"></translation>
+        <translation>Combination (Binomial Coefficient)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1287"/>
         <source>Logical NOT</source>
-        <translation type="unfinished"></translation>
+        <translation>Logical NOT</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1288"/>
         <source>Permutation (Arrangement)</source>
-        <translation type="unfinished"></translation>
+        <translation>Permutation (Arrangement)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1231"/>
@@ -1917,7 +1917,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1195"/>
         <source>unix_timestamp; x hours offset to GMT</source>
-        <translation type="unfinished"></translation>
+        <translation>unix_timestamp; x hours offset to GMT</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1245"/>
@@ -1937,12 +1937,12 @@
     <message>
         <location filename="../../core/functions.cpp" line="1290"/>
         <source>Logical OR</source>
-        <translation type="unfinished"></translation>
+        <translation>Logical OR</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1291"/>
         <source>Phase of Complex Number</source>
-        <translation type="unfinished"></translation>
+        <translation>Phase of Complex Number</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1292"/>
@@ -1972,7 +1972,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1297"/>
         <source>Product</source>
-        <translation type="unfinished"></translation>
+        <translation>Product</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1298"/>
@@ -1987,7 +1987,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1300"/>
         <source>Rounding</source>
-        <translation type="unfinished"></translation>
+        <translation>Rounding</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1301"/>
@@ -2007,12 +2007,12 @@
     <message>
         <location filename="../../core/functions.cpp" line="1304"/>
         <source>Signum</source>
-        <translation type="unfinished"></translation>
+        <translation>Signum</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1305"/>
         <source>Sigma Sum</source>
-        <translation type="unfinished"></translation>
+        <translation>Sigma Sum</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1306"/>
@@ -2047,17 +2047,17 @@
     <message>
         <location filename="../../core/functions.cpp" line="1312"/>
         <source>Hyperbolic Tangent</source>
-        <translation type="unfinished"></translation>
+        <translation>Hyperbolic Tangent</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1313"/>
         <source>Truncation</source>
-        <translation type="unfinished"></translation>
+        <translation>Truncation</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1314"/>
         <source>Sign-extend a value</source>
-        <translation type="unfinished"></translation>
+        <translation>Sign-extend a value</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="1315"/>
@@ -2067,7 +2067,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="1316"/>
         <source>Logical XOR</source>
-        <translation type="unfinished"></translation>
+        <translation>Logical XOR</translation>
     </message>
 </context>
 <context>
@@ -2184,7 +2184,7 @@
         <location filename="../../gui/mainwindow.cpp" line="282"/>
         <location filename="../../gui/mainwindow.cpp" line="1643"/>
         <source>Gradian</source>
-        <translation type="unfinished"></translation>
+        <translation>Gradian</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="286"/>
@@ -2208,7 +2208,7 @@
         <location filename="../../gui/mainwindow.cpp" line="289"/>
         <location filename="../../gui/mainwindow.cpp" line="2043"/>
         <source>Sexagesimal</source>
-        <translation type="unfinished"></translation>
+        <translation>Sexagesimal</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="290"/>
@@ -2297,7 +2297,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="320"/>
         <source>&amp;Wrap Selection in Parentheses</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Wrap Selection in Parentheses</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="322"/>
@@ -2332,12 +2332,12 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="330"/>
         <source>Bitfield</source>
-        <translation type="unfinished"></translation>
+        <translation>Bitfield</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="331"/>
         <source>Use&amp;r Functions</source>
-        <translation type="unfinished"></translation>
+        <translation>Use&amp;r Functions</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="333"/>
@@ -2352,12 +2352,12 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="335"/>
         <source>&amp;Gradian</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Gradian</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="336"/>
         <source>&amp;Cycle Unit</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Cycle Unit</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="338"/>
@@ -2417,7 +2417,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="354"/>
         <source>Dot &amp;And Comma</source>
-        <translation type="unfinished"></translation>
+        <translation>Dot &amp;And Comma</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="366"/>
@@ -2457,7 +2457,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="370"/>
         <source>&amp;Cartesian</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Cartesian</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="371"/>
@@ -2467,7 +2467,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="375"/>
         <source>User &amp;Manual</source>
-        <translation type="unfinished"></translation>
+        <translation>User &amp;Manual</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="381"/>
@@ -2477,12 +2477,12 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="609"/>
         <source>&amp;Input Format</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Input Format</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="614"/>
         <source>Comple&amp;x Format</source>
-        <translation type="unfinished"></translation>
+        <translation>Comple&amp;x Format</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="729"/>
@@ -2507,7 +2507,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="794"/>
         <source>User Functions</source>
-        <translation type="unfinished"></translation>
+        <translation>User Functions</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="1117"/>
@@ -2637,12 +2637,12 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="369"/>
         <source>&amp;Sexagesimal</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Sexagesimal</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="376"/>
         <source>Context Help</source>
-        <translation type="unfinished"></translation>
+        <translation>Context Help</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="382"/>
@@ -2816,7 +2816,7 @@ If no, current variables and display will be cleared.</source>
         <location filename="../../gui/mainwindow.cpp" line="1406"/>
         <location filename="../../gui/mainwindow.cpp" line="1472"/>
         <source>Merge?</source>
-        <translation type="unfinished"></translation>
+        <translation>Merge?</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="1656"/>
@@ -2839,12 +2839,12 @@ If no, current variables and display will be cleared.</source>
     <message>
         <location filename="../../gui/manualwindow.cpp" line="65"/>
         <source>SpeedCrunch Manual</source>
-        <translation type="unfinished"></translation>
+        <translation>SpeedCrunch Manual</translation>
     </message>
     <message>
         <location filename="../../gui/manualwindow.cpp" line="67"/>
         <source>%1 - SpeedCrunch Manual</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 - SpeedCrunch Manual</translation>
     </message>
 </context>
 <context>
@@ -2852,7 +2852,7 @@ If no, current variables and display will be cleared.</source>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="220"/>
         <source>Remove This Calculation</source>
-        <translation type="unfinished"></translation>
+        <translation>Remove This Calculation</translation>
     </message>
 </context>
 <context>
@@ -2860,42 +2860,42 @@ If no, current variables and display will be cleared.</source>
     <message>
         <location filename="../../gui/userfunctionlistwidget.cpp" line="151"/>
         <source>Name</source>
-        <translation type="unfinished">名前</translation>
+        <translation>名前</translation>
     </message>
     <message>
         <location filename="../../gui/userfunctionlistwidget.cpp" line="151"/>
         <source>Value</source>
-        <translation type="unfinished">値</translation>
+        <translation>値</translation>
     </message>
     <message>
         <location filename="../../gui/userfunctionlistwidget.cpp" line="154"/>
         <source>Search</source>
-        <translation type="unfinished">検索</translation>
+        <translation>検索</translation>
     </message>
     <message>
         <location filename="../../gui/userfunctionlistwidget.cpp" line="155"/>
         <source>No match found</source>
-        <translation type="unfinished">見つかりませんでした</translation>
+        <translation>見つかりませんでした</translation>
     </message>
     <message>
         <location filename="../../gui/userfunctionlistwidget.cpp" line="157"/>
         <source>Insert</source>
-        <translation type="unfinished">挿入</translation>
+        <translation>挿入</translation>
     </message>
     <message>
         <location filename="../../gui/userfunctionlistwidget.cpp" line="158"/>
         <source>Edit</source>
-        <translation type="unfinished"></translation>
+        <translation>Edit</translation>
     </message>
     <message>
         <location filename="../../gui/userfunctionlistwidget.cpp" line="159"/>
         <source>Delete</source>
-        <translation type="unfinished">削除</translation>
+        <translation>削除</translation>
     </message>
     <message>
         <location filename="../../gui/userfunctionlistwidget.cpp" line="160"/>
         <source>Delete All</source>
-        <translation type="unfinished">全て削除</translation>
+        <translation>全て削除</translation>
     </message>
 </context>
 <context>
