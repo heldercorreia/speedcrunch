@@ -36,6 +36,17 @@ def _is_untranslated(tr_el: ET.Element | None) -> bool:
     return txt == ""
 
 
+def _is_inactive_message(msg_el: ET.Element) -> bool:
+    # Message-level inactive marker (less common).
+    if (msg_el.get("type") or "").strip().lower() in {"vanished", "obsolete"}:
+        return True
+    # Qt often stores inactive state on the <translation> node instead.
+    tr_el = msg_el.find("translation")
+    if tr_el is not None and (tr_el.get("type") or "").strip().lower() in {"vanished", "obsolete"}:
+        return True
+    return False
+
+
 def _ts_stats(ts_path: str) -> dict:
     tree = ET.parse(ts_path)
     root = tree.getroot()
@@ -50,8 +61,8 @@ def _ts_stats(ts_path: str) -> dict:
     for ctx in root.findall("context"):
         ctx_name = (ctx.findtext("name") or "").strip()
         for msg in ctx.findall("message"):
-            # Ignore vanished messages; they don't ship in compiled catalogs.
-            if (msg.get("type") or "").strip().lower() == "vanished":
+            # Ignore inactive messages; they don't ship in compiled catalogs.
+            if _is_inactive_message(msg):
                 continue
 
             total += 1
@@ -116,6 +127,8 @@ def main(argv: list[str]) -> int:
     for ts_name in ts_files:
         ts_path = os.path.join(root_dir, ts_name)
         lang = ts_name[:-3]
+        if lang == "en_US":
+            continue
         qm_name = lang + ".qm"
 
         st = _ts_stats(ts_path)
