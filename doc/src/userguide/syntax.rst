@@ -177,8 +177,11 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 |                               |   Computes the factorial of its                               |                         |
 |                               |   argument. See also :func:`gamma()`.                         |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
-| ``a ^ b``, ``a ** b``         | **Exponentiation**                                            |                         |
-|                               |   Both variants are equivalent. Note                          |                         |
+| ``a ^ b``, ``a ** b``, ``a²`` | **Exponentiation**                                            |                         |
+|                               |   ``a²`` is shorthand for ``a^2``;                            | ``3²⁰ = 3^20``          |
+|                               |   contiguous superscript digits are                           | ``2¹⁰ = 1024``          |
+|                               |   parsed as one integer exponent. Both                        |                         |
+|                               |   text-operator variants are equivalent. Note                 |                         |
 |                               |   that the power operation is                                 |                         |
 |                               |   *right-associative*, i.e. it is                             | ``2^2^3 = 2^8 = 256``   |
 |                               |   evaluated from right to left.                               |                         |

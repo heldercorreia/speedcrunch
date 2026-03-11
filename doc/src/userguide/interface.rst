@@ -178,6 +178,10 @@ This section contains several settings that allow you to further configure Speed
 * :menuselection:`Save History on Exit`
     Controls if the calculation history is automatically saved when SpeedCrunch exits
     and restored when it is launched again.
+* :menuselection:`History Size Limit...`
+    Sets the maximum number of stored history entries. By default, SpeedCrunch keeps
+    up to 100 entries and automatically removes the oldest ones when this limit is
+    exceeded. Set the value to ``0`` to disable the limit.
 * :menuselection:`Save Window Position on Exit`
     Controls if the window position is saved and restored.
 * :menuselection:`Partial Results`
