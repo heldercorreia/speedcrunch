@@ -68,6 +68,8 @@ void BitWidget::mouseReleaseEvent(QMouseEvent*)
 BitFieldWidget::BitFieldWidget(QWidget* parent) :
     QWidget(parent)
 {
+    setLayoutDirection(Qt::LeftToRight);
+
     // Build the CSS border color using 50% opacity (same result as previous method with painting)
     QPalette palette = QApplication::palette();
     auto borderColor = palette.color(QPalette::WindowText);
