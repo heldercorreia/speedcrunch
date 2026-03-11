@@ -167,6 +167,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorDigitGroupingTwoSpaces = new QAction(this);
     m_actions.settingsBehaviorDigitGroupingThreeSpaces = new QAction(this);
     m_actions.settingsBehaviorAutoResultToClipboard = new QAction(this);
+    m_actions.settingsBehaviorHistorySizeLimit = new QAction(this);
     m_actions.settingsBehaviorComplexNumbers = new QAction(this);
     m_actions.settingsDisplayFont = new QAction(this);
     m_actions.settingsLanguage = new QAction(this);
@@ -358,6 +359,7 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorDigitGroupingThreeSpaces->setText(MainWindow::tr("Large Space"));
     m_actions.settingsBehaviorLeaveLastExpression->setText(MainWindow::tr("Leave &Last Expression"));
     m_actions.settingsBehaviorAutoResultToClipboard->setText(MainWindow::tr("Automatic &Result to Clipboard"));
+    m_actions.settingsBehaviorHistorySizeLimit->setText(MainWindow::tr("History Size &Limit..."));
     m_actions.settingsBehaviorComplexNumbers->setText(MainWindow::tr("Enable Complex Numbers"));
     m_actions.settingsRadixCharComma->setText(MainWindow::tr("&Comma"));
     m_actions.settingsRadixCharDefault->setText(MainWindow::tr("&System Default"));
@@ -564,6 +566,7 @@ void MainWindow::createMenus()
 
     m_menus.behavior = m_menus.settings->addMenu("");
     m_menus.behavior->addAction(m_actions.settingsBehaviorSaveSessionOnExit);
+    m_menus.behavior->addAction(m_actions.settingsBehaviorHistorySizeLimit);
     m_menus.behavior->addAction(m_actions.settingsBehaviorSaveWindowPositionOnExit);
     m_menus.behavior->addSeparator();
     m_menus.behavior->addAction(m_actions.settingsBehaviorPartialResults);
@@ -885,6 +888,7 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsBehaviorAutoAns, SIGNAL(toggled(bool)), SLOT(setAutoAnsEnabled(bool)));
     connect(m_actions.settingsBehaviorPartialResults, SIGNAL(toggled(bool)), SLOT(setAutoCalcEnabled(bool)));
     connect(m_actions.settingsBehaviorSaveSessionOnExit, SIGNAL(toggled(bool)), SLOT(setSessionSaveEnabled(bool)));
+    connect(m_actions.settingsBehaviorHistorySizeLimit, SIGNAL(triggered()), SLOT(setHistorySizeLimit()));
     connect(m_actions.settingsBehaviorSaveWindowPositionOnExit, SIGNAL(toggled(bool)), SLOT(setWindowPositionSaveEnabled(bool)));
     connect(m_actions.settingsBehaviorSyntaxHighlighting, SIGNAL(toggled(bool)), SLOT(setSyntaxHighlightingEnabled(bool)));
     connect(m_actionGroups.digitGrouping, SIGNAL(triggered(QAction*)), SLOT(setDigitGrouping(QAction*)));
@@ -1566,6 +1570,29 @@ void MainWindow::setAutoCalcEnabled(bool b)
 void MainWindow::setSessionSaveEnabled(bool b)
 {
     m_settings->sessionSave = b;
+}
+
+void MainWindow::setHistorySizeLimit()
+{
+    bool ok = false;
+    const int current = m_settings->maxHistoryEntries;
+    const int value = QInputDialog::getInt(
+        this,
+        tr("History Size Limit"),
+        tr("Maximum number of history entries (0 = unlimited):"),
+        current,
+        0,
+        1000000,
+        100,
+        &ok);
+
+    if (!ok || value == current)
+        return;
+
+    m_settings->maxHistoryEntries = value;
+    m_session->applyHistoryLimit();
+    m_conditions.autoAns = !m_session->historyToList().empty();
+    emit historyChanged();
 }
 
 void MainWindow::setLeaveLastExpressionEnabled(bool b)

@@ -54,6 +54,7 @@ public:
     bool autoCalc;
     bool autoCompletion;
     int digitGrouping;
+    int maxHistoryEntries; // 0: unlimited.
     bool sessionSave;
     bool leaveLastExpression;
     bool syntaxHighlighting;

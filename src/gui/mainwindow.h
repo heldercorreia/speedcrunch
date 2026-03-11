@@ -130,6 +130,7 @@ private slots:
     void setAutoCalcEnabled(bool);
     void setAutoCompletionEnabled(bool);
     void setBitfieldVisible(bool);
+    void setHistorySizeLimit();
     void setConstantsDockVisible(bool, bool takeFocus = true);
     void setFormulaBookDockVisible(bool, bool takeFocus = true);
     void setFullScreenEnabled(bool);
@@ -296,6 +297,7 @@ private:
         QAction* settingsBehaviorLeaveLastExpression;
         QAction* settingsBehaviorAlwaysOnTop;
         QAction* settingsBehaviorAutoResultToClipboard;
+        QAction* settingsBehaviorHistorySizeLimit;
         QAction* settingsRadixCharBoth;
         QAction* settingsBehaviorComplexNumbers;
         QAction* settingsDisplayZoomIn;

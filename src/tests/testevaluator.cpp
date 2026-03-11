@@ -20,6 +20,7 @@
 #include "core/evaluator.h"
 #include "core/settings.h"
 #include "core/numberformatter.h"
+#include "core/session.h"
 #include "gui/editorutils.h"
 #include "tests/testcommon.h"
 
@@ -1343,6 +1344,74 @@ void test_expression_operator_normalization()
     }
 }
 
+void test_session_history_limit()
+{
+    Settings* settings = Settings::instance();
+    const int oldMaxHistoryEntries = settings->maxHistoryEntries;
+
+    settings->maxHistoryEntries = 3;
+    Session session;
+    session.addHistoryEntry(HistoryEntry("1+1", Quantity(2)));
+    session.addHistoryEntry(HistoryEntry("2+2", Quantity(4)));
+    session.addHistoryEntry(HistoryEntry("3+3", Quantity(6)));
+    session.addHistoryEntry(HistoryEntry("4+4", Quantity(8)));
+    session.addHistoryEntry(HistoryEntry("5+5", Quantity(10)));
+
+    ++eval_total_tests;
+    const QList<HistoryEntry> history = session.historyToList();
+    if (history.size() != 3 || history.at(0).expr() != "3+3" || history.at(2).expr() != "5+5") {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\thistory trim on add\t[NEW]" << endl;
+    }
+
+    settings->maxHistoryEntries = 2;
+    session.applyHistoryLimit();
+
+    ++eval_total_tests;
+    const QList<HistoryEntry> trimmedHistory = session.historyToList();
+    if (trimmedHistory.size() != 2 || trimmedHistory.at(0).expr() != "4+4" || trimmedHistory.at(1).expr() != "5+5") {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\thistory trim on apply limit\t[NEW]" << endl;
+    }
+
+    QJsonObject json;
+    QJsonArray histEntries;
+    for (int i = 1; i <= 4; ++i) {
+        QJsonObject entry;
+        HistoryEntry(QString::number(i), Quantity(i)).serialize(entry);
+        histEntries.append(entry);
+    }
+    json["version"] = QString(SPEEDCRUNCH_VERSION);
+    json["history"] = histEntries;
+
+    Session loaded;
+    loaded.deSerialize(json, false);
+
+    ++eval_total_tests;
+    const QList<HistoryEntry> loadedHistory = loaded.historyToList();
+    if (loadedHistory.size() != 2 || loadedHistory.at(0).expr() != "3" || loadedHistory.at(1).expr() != "4") {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\thistory trim on deserialize\t[NEW]" << endl;
+    }
+
+    settings->maxHistoryEntries = 0;
+    Session unlimited;
+    for (int i = 0; i < 4; ++i)
+        unlimited.addHistoryEntry(HistoryEntry(QString("u%1").arg(i), Quantity(i)));
+
+    ++eval_total_tests;
+    if (unlimited.historyToList().size() != 4) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\thistory unlimited mode\t[NEW]" << endl;
+    }
+
+    settings->maxHistoryEntries = oldMaxHistoryEntries;
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -1396,6 +1465,7 @@ int main(int argc, char* argv[])
     test_format();
     test_datetime();
     test_expression_operator_normalization();
+    test_session_history_limit();
 
     test_angle_mode(settings);
 

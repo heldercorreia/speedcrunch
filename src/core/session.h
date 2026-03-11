@@ -62,6 +62,7 @@ public:
     void removeHistoryEntryAt(const int index);
     HistoryEntry historyEntryAt(const int index) const;
     QList<HistoryEntry> historyToList() const {return m_history;}
+    void applyHistoryLimit();
     void clearHistory();
 
     void addUserFunction(const UserFunction & func);

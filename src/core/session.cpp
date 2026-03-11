@@ -20,10 +20,25 @@
 #include "sessionhistory.h"
 #include "variable.h"
 #include "evaluator.h"
+#include "settings.h"
 
 #include <QFile>
 #include <QJsonDocument>
 #include <functions.h>
+#include <algorithm>
+
+static int historyLimit()
+{
+    return std::max(0, Settings::instance()->maxHistoryEntries);
+}
+
+static void trimHistory(QList<HistoryEntry>& history)
+{
+    const int limit = historyLimit();
+    if (limit == 0 || history.size() <= limit)
+        return;
+    history.remove(0, history.size() - limit);
+}
 
 void Session::serialize(QJsonObject &json) const
 {
@@ -81,6 +96,7 @@ int Session::deSerialize(const QJsonObject &json, bool merge=false)
         for(int i=0; i<n; ++i) {
             m_history.append(HistoryEntry(hist_obj[i].toObject()));
         }
+        trimHistory(m_history);
     }
 
     if (json.contains("variables")) {
@@ -149,11 +165,13 @@ bool Session::isBuiltInVariable(const QString & id) const
 void Session::addHistoryEntry(const HistoryEntry &entry)
 {
     m_history.append(entry);
+    trimHistory(m_history);
 }
 
 void Session::insertHistoryEntry(const int index, const HistoryEntry &entry)
 {
     m_history.insert(index, entry);
+    trimHistory(m_history);
 }
 
 void Session::removeHistoryEntryAt(const int index)
@@ -164,6 +182,11 @@ void Session::removeHistoryEntryAt(const int index)
 HistoryEntry Session::historyEntryAt(const int index) const
 {
     return m_history.at(index);
+}
+
+void Session::applyHistoryLimit()
+{
+    trimHistory(m_history);
 }
 
 void Session::clearHistory()
