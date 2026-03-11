@@ -934,7 +934,7 @@ EditorCompletion::EditorCompletion(Editor* editor)
 
     m_popup = new QTreeWidget();
     m_popup->setFrameShape(QFrame::NoFrame);
-    m_popup->setColumnCount(2);
+    m_popup->setColumnCount(3);
     m_popup->setRootIsDecorated(false);
     m_popup->header()->hide();
     m_popup->header()->setStretchLastSection(false);
@@ -1005,7 +1005,7 @@ void EditorCompletion::doneCompletion()
     m_popup->hide();
     m_editor->setFocus();
     QTreeWidgetItem* item = m_popup->currentItem();
-    emit selectedCompletion(item ? item->text(0) : QString());
+    emit selectedCompletion(item ? item->text(1) : QString());
 }
 
 void EditorCompletion::showCompletion(const QStringList& choices)
@@ -1013,43 +1013,58 @@ void EditorCompletion::showCompletion(const QStringList& choices)
     if (!choices.count())
         return;
 
-    int maxIdentifierLength = 0;
-    int maxDescriptionLength = 0;
     QFontMetrics metrics(m_editor->font());
 
     m_popup->setUpdatesEnabled(false);
     m_popup->clear();
 
     for (int i = 0; i < choices.count(); ++i) {
-        QStringList pair = choices.at(i).split(':');
-        QTreeWidgetItem* item = new QTreeWidgetItem(m_popup, pair);
+        const auto pair = choices.at(i).split(':');
+        if (pair.count() < 2)
+            continue;
+
+        const auto identifier = pair.at(0);
+        const auto description = pair.mid(1).join(":");
+        QString typeSymbol = QString::fromUtf8("👤 𝑥");
+
+        if (FunctionRepo::instance()->find(identifier)) {
+            typeSymbol = QString::fromUtf8("📚 ƒ");
+        } else if (Evaluator::instance()->hasUserFunction(identifier)) {
+            typeSymbol = QString::fromUtf8("👤 ƒ");
+        } else if (Evaluator::instance()->hasVariable(identifier)) {
+            const auto variable = Evaluator::instance()->getVariable(identifier);
+            if (variable.type() == Variable::BuiltIn)
+                typeSymbol = QString::fromUtf8("📏 𝑘");
+        }
+
+        QStringList columns;
+        columns << typeSymbol << identifier << description;
+        QTreeWidgetItem* item = new QTreeWidgetItem(m_popup, columns);
 
         if (item && m_editor->layoutDirection() == Qt::RightToLeft)
-            item->setTextAlignment(0, Qt::AlignRight);
+            item->setTextAlignment(1, Qt::AlignRight);
 
-        int length = metrics.boundingRect(pair.at(0)).width();
-        if (length > maxIdentifierLength)
-            maxIdentifierLength = length;
-
-        length = metrics.boundingRect(pair.at(1)).width();
-        if (length > maxDescriptionLength)
-            maxDescriptionLength = length;
+        item->setTextAlignment(0, Qt::AlignCenter);
     }
 
+    m_popup->sortItems(2, Qt::AscendingOrder);
     m_popup->sortItems(1, Qt::AscendingOrder);
-    m_popup->sortItems(0, Qt::AscendingOrder);
     m_popup->setCurrentItem(m_popup->topLevelItem(0));
 
     // Size of the pop-up.
     m_popup->resizeColumnToContents(0);
-    m_popup->setColumnWidth(0, m_popup->columnWidth(0) + 25);
+    m_popup->setColumnWidth(0, m_popup->columnWidth(0) + 18);
     m_popup->resizeColumnToContents(1);
     m_popup->setColumnWidth(1, m_popup->columnWidth(1) + 25);
+    m_popup->resizeColumnToContents(2);
+    m_popup->setColumnWidth(2, m_popup->columnWidth(2) + 25);
 
     const int maxVisibleItems = 8;
     const int height =
         m_popup->sizeHintForRow(0) * qMin(maxVisibleItems, choices.count()) + 3;
-    const int width = m_popup->columnWidth(0) + m_popup->columnWidth(1) + 1;
+    const int width = m_popup->columnWidth(0)
+                      + m_popup->columnWidth(1)
+                      + m_popup->columnWidth(2) + 1;
 
     // Position, reference is editor's cursor position in global coord.
     auto cursor = m_editor->textCursor();
@@ -1078,7 +1093,7 @@ void EditorCompletion::selectItem(const QString& item)
         return;
     }
 
-    auto targets = m_popup->findItems(item, Qt::MatchExactly);
+    auto targets = m_popup->findItems(item, Qt::MatchExactly, 1);
     if (targets.count() > 0)
         m_popup->setCurrentItem(targets.at(0));
 }
