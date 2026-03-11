@@ -25,6 +25,7 @@
 class QListWidget;
 class QListWidgetItem;
 class HistoryEntry;
+class QPoint;
 
 class HistoryWidget : public QWidget
 {
@@ -38,9 +39,11 @@ public slots:
 
 signals:
     void expressionSelected(const QString &);
+    void removeHistoryEntryRequested(int index);
 
 protected slots:
     void handleItem(QListWidgetItem *);
+    void handleContextMenuRequested(const QPoint &position);
 
 protected:
     void changeEvent(QEvent *);
@@ -52,4 +55,3 @@ private:
 };
 
 #endif
-

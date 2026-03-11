@@ -22,8 +22,10 @@
 #include "core/evaluator.h"
 #include "core/session.h"
 
+#include <QAction>
 #include <QEvent>
 #include <QListWidget>
+#include <QMenu>
 #include <QVBoxLayout>
 
 
@@ -35,6 +37,7 @@ HistoryWidget::HistoryWidget(QWidget *parent)
     m_list->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     m_list->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
     m_list->setCursor(QCursor(Qt::PointingHandCursor));
+    m_list->setContextMenuPolicy(Qt::CustomContextMenu);
 
     QVBoxLayout *layout = new QVBoxLayout;
     layout->setContentsMargins(3, 3, 3, 3);
@@ -42,6 +45,8 @@ HistoryWidget::HistoryWidget(QWidget *parent)
     setLayout(layout);
 
     connect(m_list, SIGNAL(itemActivated(QListWidgetItem *)), SLOT(handleItem(QListWidgetItem *)));
+    connect(m_list, SIGNAL(customContextMenuRequested(const QPoint &)),
+            SLOT(handleContextMenuRequested(const QPoint &)));
 
     updateHistory();
 }
@@ -66,6 +71,20 @@ void HistoryWidget::handleItem(QListWidgetItem *item)
     emit expressionSelected(item->text());
 }
 
+void HistoryWidget::handleContextMenuRequested(const QPoint &position)
+{
+    const int historyIndex = m_list->indexAt(position).row();
+    if (historyIndex < 0)
+        return;
+
+    QMenu menu(m_list);
+    QAction *removeAction = menu.addAction(tr("Remove This Calculation"));
+    connect(removeAction, &QAction::triggered, this, [this, historyIndex]() {
+        emit removeHistoryEntryRequested(historyIndex);
+    });
+    menu.exec(m_list->viewport()->mapToGlobal(position));
+}
+
 void HistoryWidget::changeEvent(QEvent *e)
 {
     if (e->type() == QEvent::LanguageChange)
@@ -73,4 +92,3 @@ void HistoryWidget::changeEvent(QEvent *e)
     else
         QWidget::changeEvent(e);
 }
-

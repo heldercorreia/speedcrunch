@@ -773,6 +773,8 @@ void MainWindow::createHistoryDock(bool)
 
     connect(m_docks.history->widget(), &HistoryWidget::expressionSelected,
             this, &MainWindow::insertTextIntoEditor);
+    connect(m_docks.history->widget(), &HistoryWidget::removeHistoryEntryRequested,
+            this, &MainWindow::removeHistoryEntryAt);
     connect(this, &MainWindow::historyChanged,
             m_docks.history->widget(), &HistoryWidget::updateHistory);
 
