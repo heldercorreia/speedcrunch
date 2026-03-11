@@ -169,6 +169,7 @@ SOURCES += main.cpp \
 RESOURCES += resources/speedcrunch.qrc ../doc/build_html_embedded/manual.qrc
 TRANSLATIONS += resources/locale/ar.ts \
                 resources/locale/bg.ts \
+                resources/locale/bn.ts \
                 resources/locale/ca.ts \
                 resources/locale/cs.ts \
                 resources/locale/da.ts \
@@ -183,6 +184,7 @@ TRANSLATIONS += resources/locale/ar.ts \
                 resources/locale/fa.ts \
                 resources/locale/fi.ts \
                 resources/locale/fr.ts \
+                resources/locale/gl.ts \
                 resources/locale/he.ts \
                 resources/locale/hi.ts \
                 resources/locale/hu.ts \
@@ -192,6 +194,7 @@ TRANSLATIONS += resources/locale/ar.ts \
                 resources/locale/ko.ts \
                 resources/locale/lt.ts \
                 resources/locale/lv.ts \
+                resources/locale/ms.ts \
                 resources/locale/nb.ts \
                 resources/locale/nl.ts \
                 resources/locale/pl.ts \

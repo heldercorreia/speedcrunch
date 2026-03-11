@@ -86,12 +86,14 @@
     <lang>ko</lang>
     <lang>id</lang>
     <lang>he</lang>
+    <lang>bn</lang>
     <lang>lt</lang>
     <lang>nl</lang>
     <lang>it</lang>
     <lang>zh</lang>
     <lang>ja</lang>
     <lang>fr</lang>
+    <lang>gl</lang>
     <lang>ru</lang>
     <lang>et</lang>
     <lang>lv</lang>
@@ -113,6 +115,7 @@
     <lang>da</lang>
     <lang>cs</lang>
     <lang>vi</lang>
+    <lang>ms</lang>
     <lang>en</lang>
   </languages>
 </component>
