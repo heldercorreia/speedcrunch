@@ -229,8 +229,6 @@ Editing
     Save session.
 * :kbd:`Control+Q`
     Quit SpeedCrunch.
-* :kbd:`Escape`
-    Clear expression.
 * :kbd:`Control+N`
     Clear history.
 * :kbd:`Control+C`

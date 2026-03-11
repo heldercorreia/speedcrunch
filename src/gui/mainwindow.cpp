@@ -445,7 +445,6 @@ void MainWindow::createActionShortcuts()
     m_actions.sessionLoad->setShortcut(Qt::CTRL | Qt::Key_L);
     m_actions.sessionQuit->setShortcut(Qt::CTRL | Qt::Key_Q);
     m_actions.sessionSave->setShortcut(Qt::CTRL | Qt::Key_S);
-    m_actions.editClearExpression->setShortcut(Qt::Key_Escape);
     m_actions.editClearHistory->setShortcut(Qt::CTRL | Qt::Key_N);
     m_actions.editCopyLastResult->setShortcut(Qt::CTRL | Qt::Key_R);
     m_actions.editCopy->setShortcut(Qt::CTRL | Qt::Key_C);
