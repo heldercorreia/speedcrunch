@@ -43,6 +43,8 @@ Some characters cannot be used for digit grouping because they already have an a
 * ``#`` starts hexadecimal number notation (for example ``#FF``).
 * ``!`` is the factorial operator (for example ``5!``).
 * ``:`` is used in sexagecimal time/angle notation (for example ``12:34:56``).
+* ``°`` is used in sexagecimal angle notation (for example ``12°34'56``).
+* ``'`` is used in sexagecimal time/angle notation (for example ``12°34'56``).
 * ``&`` is the bitwise AND operator (for example ``6 & 3``).
 * ``?`` starts a comment (for example ``1+2 ? note``).
 
