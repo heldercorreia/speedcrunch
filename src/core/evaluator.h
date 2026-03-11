@@ -49,6 +49,7 @@ public:
         AssociationStart, AssociationEnd,
         ListSeparator, Factorial, Assignment, Modulo,
         ArithmeticLeftShift, ArithmeticRightShift,
+        BitwiseLogicalNOT,
         BitwiseLogicalAND, BitwiseLogicalOR,
         UnitConversion,
         Function // For managing shift/reduce conflicts.

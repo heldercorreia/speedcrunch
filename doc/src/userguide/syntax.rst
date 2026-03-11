@@ -188,7 +188,8 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 |                               |   The result is negative only when the reduced                | ``(-8)^(2/3) = 4``      |
 |                               |   rational exponent has an odd numerator.                     |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
-| ``+x``, ``-x``                | **Unary plus and minus**                                      | ``--5 = +5``            |
+| ``+x``, ``-x``, ``~x``        | **Unary plus, minus, and bitwise NOT**                        | ``~5 = -6``             |
+|                               |   ``~x`` is equivalent to :func:`not(x)`.                     | ``-~(-1) = -not(-1)``   |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
 | ``a \ b``                     | **Integer division**                                          | ``5\4 = 1``             |
 |                               |   Divides the operands and truncates                          |                         |

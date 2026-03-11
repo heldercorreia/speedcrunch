@@ -22,6 +22,18 @@ Bitwise Operations
 
     .. warning:: This function does *not* simply flip the bits!
 
+    The unary prefix operator ``~`` is equivalent to :func:`not`::
+
+        ~5
+        = -6
+        not(5)
+        = -6
+
+        -~(-1)
+        = 0
+        -not(-1)
+        = 0
+
 .. function:: shl(x; n)
 
     Performs an arithmetic left shift.

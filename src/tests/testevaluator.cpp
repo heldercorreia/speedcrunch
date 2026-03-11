@@ -284,6 +284,75 @@ void test_binary()
     CHECK_EVAL("1 (10 meter) -> meter", "10 meter");
 }
 
+void test_bitwise_complement_operator()
+{
+    CHECK_EVAL("~~~~1", "1");
+    CHECK_EVAL("~-~1", "-3");
+    CHECK_EVAL("-~-1", "0");
+    CHECK_EVAL("~~-1", "-1");
+    CHECK_EVAL("(~2)^3", "-27");
+    CHECK_EVAL("~(2^3)", "-9");
+    CHECK_EVAL("~2^3", "-9");
+    CHECK_EVAL("~(-5)", "4");
+    CHECK_EVAL("-~(-1)", "0");
+    CHECK_EVAL("-5 & 3", "3");
+    CHECK_EVAL("-5 | 3", "-5");
+    CHECK_EVAL("-5 ^ 3", "-125");
+    CHECK_EVAL("~0 >> 1", "-1");
+    CHECK_EVAL("~0 << 1", "-2");
+    CHECK_EVAL("-1 >> 1", "-1");
+    CHECK_EVAL("-8 >> 2", "-2");
+    CHECK_EVAL("-9 >> 2", "-3");
+    CHECK_EVAL("~1 & 1", "0");
+    CHECK_EVAL("~1 | 1", "-1");
+    CHECK_EVAL("1 | 2 & 3", "3");
+    CHECK_EVAL("(1 | 2) & 3", "3");
+    CHECK_EVAL("1 | (2 & 3)", "3");
+    CHECK_EVAL("2*~3", "-8");
+    CHECK_EVAL("~3*2", "-8");
+    CHECK_EVAL("~(3*2)", "-7");
+    CHECK_EVAL("~2^3&7", "7");
+    CHECK_EVAL("~(2^3&7)", "-1");
+    CHECK_EVAL("(~2^3)&7", "7");
+    CHECK_EVAL("~(~(~1))", "-2");
+    CHECK_EVAL("~(~(~(~1)))", "1");
+    CHECK_EVAL("~5", "-6");
+    CHECK_EVAL("~(~5)", "5");
+    CHECK_EVAL("~(~(~5))", "-6");
+    CHECK_EVAL("~(2^3) + ~3! * (~1 & 3) << 1", "-46");
+
+    // Regression: keep unary minus and bitwise complement/function-not consistent.
+    CHECK_EVAL("not(-1)", "0");
+    CHECK_EVAL("~(-1)", "0");
+    CHECK_EVAL("-not(-1)", "0");
+    CHECK_EVAL("-~(-1)", "0");
+
+    CHECK_EVAL("not(not(not(not(1))))", "1");
+    CHECK_EVAL("not(-not(1))", "-3");
+    CHECK_EVAL("-not(-1)", "0");
+    CHECK_EVAL("not(not(-1))", "-1");
+    CHECK_EVAL("(not(2))^3", "-27");
+    CHECK_EVAL("not(2^3)", "-9");
+    CHECK_EVAL("not(2^3)", "-9");
+    CHECK_EVAL("not(-5)", "4");
+    CHECK_EVAL("not(0) >> 1", "-1");
+    CHECK_EVAL("not(0) << 1", "-2");
+    CHECK_EVAL("not(1) & 1", "0");
+    CHECK_EVAL("not(1) | 1", "-1");
+    CHECK_EVAL("2*not(3)", "-8");
+    CHECK_EVAL("not(3)*2", "-8");
+    CHECK_EVAL("not(3*2)", "-7");
+    CHECK_EVAL("not(2^3&7)", "-1");
+    CHECK_EVAL("not(2^3&7)", "-1");
+    CHECK_EVAL("(not(2^3))&7", "7");
+    CHECK_EVAL("not(not(not(1)))", "-2");
+    CHECK_EVAL("not(not(not(not(1))))", "1");
+    CHECK_EVAL("not(5)", "-6");
+    CHECK_EVAL("not(not(5))", "5");
+    CHECK_EVAL("not(not(not(5)))", "-6");
+    CHECK_EVAL("not(2^3) + not(3!) * (not(1) & 3) << 1", "-46");
+}
+
 void test_divide_by_zero()
 {
     CHECK_DIV_BY_ZERO("1/0");
@@ -1216,6 +1285,7 @@ int main(int argc, char* argv[])
     test_exponentiation();
     test_unary();
     test_binary();
+    test_bitwise_complement_operator();
 
     test_divide_by_zero();
     test_radix_char();

@@ -264,6 +264,9 @@ static Token::Operator matchOperator(const QString& text)
         case '\\':
             result = Token::IntegerDivision;
             break;
+        case '~':
+            result = Token::BitwiseLogicalNOT;
+            break;
         case '&':
             result = Token::BitwiseLogicalAND;
             break;
@@ -318,6 +321,9 @@ static int opPrecedence(Token::Operator op)
     case Token::ArithmeticLeftShift:
     case Token::ArithmeticRightShift:
         prec = 200;
+        break;
+    case Token::BitwiseLogicalNOT:
+        prec = 150;
         break;
     case Token::BitwiseLogicalAND:
         prec = 100;
@@ -1082,6 +1088,10 @@ Tokens Evaluator::scan(const QString& expr) const
                 numberBase = 10;
                 state = InNumber;
                 ++i;
+            } else if (ch == '~') {
+                int tokenSize = ++i - tokenStart;
+                tokens.append(Token(Token::stxOperator, "~", tokenStart, tokenSize));
+                state = Init;
             } else if (isSeparatorChar(ch)) {
                 // Leading separator, probably a number
                 state = InNumberPrefix;
@@ -1567,12 +1577,15 @@ void Evaluator::compile(const Tokens& tokens)
                Token id = syntaxStack.top(2);
                if (x.isOperand() && isFunction(id)
                    && (op.asOperator() == Token::Addition
-                   || op.asOperator() == Token::Subtraction))
+                   || op.asOperator() == Token::Subtraction
+                   || op.asOperator() == Token::BitwiseLogicalNOT))
                {
                    ruleFound = true;
                    syntaxStack.reduce(2);
                    if (op.asOperator() == Token::Subtraction)
-                     m_codes.append(Opcode(Opcode::Neg));
+                        m_codes.append(Opcode(Opcode::Neg));
+                    else if (op.asOperator() == Token::BitwiseLogicalNOT)
+                        m_codes.append(Opcode(Opcode::BNot));
 #ifdef EVALUATOR_DEBUG
                      dbg << "\tRule for unary operator in simplified "
                             "function syntax; function " << id.text() << "\n";
@@ -1772,7 +1785,8 @@ void Evaluator::compile(const Tokens& tokens)
                Token op1 = syntaxStack.top(2);
                if (x.isOperand() && op1.isOperator()
                    && (op2.asOperator() == Token::Addition
-                       || op2.asOperator() == Token::Subtraction)
+                       || op2.asOperator() == Token::Subtraction
+                       || op2.asOperator() == Token::BitwiseLogicalNOT)
                    && (token.isOperand()
                        || opPrecedence(token.asOperator()) <=
                               opPrecedence(Token::Multiplication)))
@@ -1780,6 +1794,8 @@ void Evaluator::compile(const Tokens& tokens)
                    ruleFound = true;
                    if (op2.asOperator() == Token::Subtraction)
                        m_codes.append(Opcode(Opcode::Neg));
+                   else if (op2.asOperator() == Token::BitwiseLogicalNOT)
+                       m_codes.append(Opcode(Opcode::BNot));
 
                    syntaxStack.reduce(2);
 #ifdef EVALUATOR_DEBUG
@@ -1800,7 +1816,8 @@ void Evaluator::compile(const Tokens& tokens)
                Token op = syntaxStack.top(1);
                if (x.isOperand()
                    && (op.asOperator() == Token::Addition
-                       || op.asOperator() == Token::Subtraction)
+                       || op.asOperator() == Token::Subtraction
+                       || op.asOperator() == Token::BitwiseLogicalNOT)
                    && ((token.isOperator()
                            && opPrecedence(token.asOperator()) <=
                                   opPrecedence(Token::Multiplication))
@@ -1809,6 +1826,8 @@ void Evaluator::compile(const Tokens& tokens)
                    ruleFound = true;
                    if (op.asOperator() == Token::Subtraction)
                        m_codes.append(Opcode(Opcode::Neg));
+                   else if (op.asOperator() == Token::BitwiseLogicalNOT)
+                       m_codes.append(Opcode(Opcode::BNot));
 #ifdef EVALUATOR_DEBUG
                    dbg << "\tRule for unary operator (auxiliary)" << "\n";
 #endif
@@ -2014,6 +2033,16 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 }
                 val1 = stack.pop();
                 val1 = checkOperatorResultWithDeferredNoOperand(-val1);
+                stack.push(val1);
+                break;
+
+            case Opcode::BNot:
+                if (stack.count() < 1) {
+                    m_error = tr("invalid expression");
+                    return CMath::nan();
+                }
+                val1 = stack.pop();
+                val1 = checkOperatorResultWithDeferredNoOperand(~val1);
                 stack.push(val1);
                 break;
 
@@ -2754,6 +2783,9 @@ QString Evaluator::dump()
                 break;
             case Opcode::Neg:
                 code = "Neg";
+                break;
+            case Opcode::BNot:
+                code = "BNot";
                 break;
             case Opcode::Pow:
                 code = "Pow";
