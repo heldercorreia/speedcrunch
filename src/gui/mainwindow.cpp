@@ -88,6 +88,16 @@ QTranslator* MainWindow::createTranslator(const QString& langCode)
     QLocale locale(langCode == "C" ? QLocale().name() : langCode);
 
     if(!translator->load(locale, QString(":/locale/"))) {
+        // There are regional Portuguese translations only for Brazil and Portugal.
+        // Unsupported Portuguese variants (e.g. pt_AO) should fall back to pt_PT.
+        if (locale.language() == QLocale::Portuguese) {
+            const QLocale::Territory territory = locale.territory();
+            if (territory != QLocale::Brazil && territory != QLocale::Portugal) {
+                if (translator->load(QLocale(QLocale::Portuguese, QLocale::Portugal), QString(":/locale/")))
+                    return translator;
+            }
+        }
+
         // Strip the country and try to find a generic translation for this language
         locale = QLocale(locale.language());
         if (!translator->load(locale, QString(":/locale/"))) {
