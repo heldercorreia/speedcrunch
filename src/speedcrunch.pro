@@ -204,6 +204,7 @@ TRANSLATIONS += resources/locale/ar.ts \
                 resources/locale/ru.ts \
                 resources/locale/sk.ts \
                 resources/locale/sl.ts \
+                resources/locale/sw.ts \
                 resources/locale/sv.ts \
                 resources/locale/th.ts \
                 resources/locale/ta.ts \
