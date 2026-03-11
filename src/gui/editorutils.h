@@ -40,6 +40,33 @@ inline QString normalizeMultiplicationOperators(QString text)
     return text;
 }
 
+inline bool isDivisionOperatorAlias(const QChar& ch)
+{
+    switch (ch.unicode()) {
+    case 0x002F: // / SOLIDUS
+    case 0x00F7: // ÷ DIVISION SIGN
+        return true;
+    default:
+        return false;
+    }
+}
+
+inline QString normalizeDivisionOperators(QString text)
+{
+    for (QChar& ch : text) {
+        if (isDivisionOperatorAlias(ch))
+            ch = QChar(0x29F8); // ⧸ BIG SOLIDUS
+    }
+    return text;
+}
+
+inline QString normalizeExpressionOperators(QString text)
+{
+    text = normalizeMultiplicationOperators(text);
+    text = normalizeDivisionOperators(text);
+    return text;
+}
+
 inline QStringList parsePastedExpressions(const QString& text)
 {
     QStringList expressions;
@@ -49,7 +76,7 @@ inline QStringList parsePastedExpressions(const QString& text)
 
     for (const auto& candidate : candidates) {
         const auto expression =
-            normalizeMultiplicationOperators(candidate.trimmed());
+            normalizeExpressionOperators(candidate.trimmed());
         if (!expression.isEmpty())
             expressions.append(expression);
     }

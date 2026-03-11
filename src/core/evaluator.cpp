@@ -240,6 +240,7 @@ static Token::Operator matchOperator(const QString& text)
             result = Token::Multiplication;
             break;
         case 0x00F7: // ÷ DIVISION SIGN
+        case 0x29F8: // ⧸ BIG SOLIDUS
         case '/':
             result = Token::Division;
             break;
@@ -657,7 +658,7 @@ bool Evaluator::isSeparatorChar(const QChar& ch)
 {
     // Match everything that is not alphanumeric or an operator or NUL.
     static const QRegularExpression s_separatorRE(
-        R"([^a-zA-Z0-9\+\-\−\*\×⋅÷\/\^;\(\)%!=\\&\|<>\?#\x0000])"
+        R"([^a-zA-Z0-9\+\-\−\*\×⋅÷\/⧸\^;\(\)%!=\\&\|<>\?#\x0000])"
     );
 
     if (isRadixChar(ch))

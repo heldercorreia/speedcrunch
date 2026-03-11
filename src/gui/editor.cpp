@@ -108,12 +108,12 @@ QString Editor::text() const
 
 void Editor::setText(const QString& text)
 {
-    setPlainText(EditorUtils::normalizeMultiplicationOperators(text));
+    setPlainText(EditorUtils::normalizeExpressionOperators(text));
 }
 
 void Editor::insert(const QString& text)
 {
-    insertPlainText(EditorUtils::normalizeMultiplicationOperators(text));
+    insertPlainText(EditorUtils::normalizeExpressionOperators(text));
 }
 
 void Editor::doBackspace()
@@ -853,7 +853,7 @@ void Editor::keyPressEvent(QKeyEvent* event)
     }
 
     const QString normalizedText =
-        EditorUtils::normalizeMultiplicationOperators(event->text());
+        EditorUtils::normalizeExpressionOperators(event->text());
     if (!normalizedText.isEmpty() && normalizedText != event->text()) {
         insert(normalizedText);
         event->accept();

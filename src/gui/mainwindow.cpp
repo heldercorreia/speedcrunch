@@ -1497,7 +1497,7 @@ void MainWindow::showSessionImportDialog()
     bool ignoreAll = false;
     while (!exp.isNull()) {
         const QString normalizedExp =
-            EditorUtils::normalizeMultiplicationOperators(exp);
+            EditorUtils::normalizeExpressionOperators(exp);
         m_widgets.editor->setText(normalizedExp);
 
         QString str = m_evaluator->autoFix(normalizedExp);
