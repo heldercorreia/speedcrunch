@@ -20,6 +20,7 @@
 #include "core/evaluator.h"
 #include "core/settings.h"
 #include "core/numberformatter.h"
+#include "gui/editorutils.h"
 #include "tests/testcommon.h"
 
 #include <QtCore/QCoreApplication>
@@ -1266,6 +1267,33 @@ void test_datetime()
     CHECK_EVAL("datetime(1551464695; -3.5)", "20190301.145455");  // GMT -03:30
 }
 
+void test_multiplication_operator_normalization()
+{
+    const QString normalized = EditorUtils::normalizeMultiplicationOperators(
+        QString::fromUtf8("2∗3·4⋅5∙6*7⨉8⨯9✕10✖11"));
+    const std::string normalizedStd = normalized.toStdString();
+    ++eval_total_tests;
+    DisplayErrorOnMismatch(__FILE__, __LINE__, "normalizeMultiplicationOperators",
+                           normalizedStd, "2×3×4×5×6×7×8×9×10×11",
+                           eval_failed_tests, eval_new_failed_tests);
+
+    const QStringList parsed = EditorUtils::parsePastedExpressions(
+        QString::fromUtf8("2∗3\n4·5\n\n6✖7"));
+    if (parsed.size() != 3
+        || parsed.at(0) != QString::fromUtf8("2×3")
+        || parsed.at(1) != QString::fromUtf8("4×5")
+        || parsed.at(2) != QString::fromUtf8("6×7")) {
+        ++eval_total_tests;
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tparsePastedExpressions\t[NEW]" << endl
+             << "\tResult   : " << parsed.join("|").toUtf8().constData() << endl
+             << "\tExpected : 2×3|4×5|6×7" << endl;
+    } else {
+        ++eval_total_tests;
+    }
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -1318,6 +1346,7 @@ int main(int argc, char* argv[])
     test_complex();
     test_format();
     test_datetime();
+    test_multiplication_operator_normalization();
 
     test_angle_mode(settings);
 

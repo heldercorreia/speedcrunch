@@ -35,6 +35,7 @@
 #include "gui/bookdock.h"
 #include "gui/genericdock.h"
 #include "gui/constantswidget.h"
+#include "gui/editorutils.h"
 #include "gui/functionswidget.h"
 #include "gui/historywidget.h"
 #include "gui/userfunctionlistwidget.h"
@@ -1495,9 +1496,11 @@ void MainWindow::showSessionImportDialog()
     QString exp = stream.readLine();
     bool ignoreAll = false;
     while (!exp.isNull()) {
-        m_widgets.editor->setText(exp);
+        const QString normalizedExp =
+            EditorUtils::normalizeMultiplicationOperators(exp);
+        m_widgets.editor->setText(normalizedExp);
 
-        QString str = m_evaluator->autoFix(exp);
+        QString str = m_evaluator->autoFix(normalizedExp);
 
         m_evaluator->setExpression(str);
 
@@ -1515,7 +1518,7 @@ void MainWindow::showSessionImportDialog()
                     ignoreAll = true;
             }
         } else {
-            m_session->addHistoryEntry(HistoryEntry(exp, result));
+            m_session->addHistoryEntry(HistoryEntry(normalizedExp, result));
             m_widgets.editor->setText(str);
             m_widgets.editor->selectAll();
             m_widgets.editor->stopAutoCalc();

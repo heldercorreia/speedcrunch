@@ -195,11 +195,16 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 |                               |   Divides the operands and truncates                          |                         |
 |                               |   the result to an integer.                                   |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
-| ``a * b``, ``a b``, ``a / b`` | **Multiplication and division**                               | ``3 sqrt(2)``           |
+| ``a * b``, ``a × b``, ``a b``,| **Multiplication and division**                               | ``3 sqrt(2)``           |
+| ``a / b``                     |                                                               |                         |
 |                               |   In many situations, *implicit                               |                         |
 |                               |   multiplication* allows writing                              |                         |
 |                               |   multiplications without the ``*``                           |                         |
 |                               |   operator.                                                   |                         |
+|                               |   In the expression editor and Session Import,                |                         |
+|                               |   these symbols are normalized to ``×``:                      |                         |
+|                               |   ``∗``, ``·``, ``⋅``, ``∙``, ``*``,                          |                         |
+|                               |   ``⨉``, ``⨯``, ``✕``, ``✖``.                                 |                         |
 |                               |   Implicit multiplication has                                 | ``6/2(2+1)=9``          |
 |                               |   the same precedence as ``*`` and ``/``,                     |                         |
 |                               |   evaluated from left to right.                               |                         |
