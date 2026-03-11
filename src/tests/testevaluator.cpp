@@ -1272,27 +1272,28 @@ void test_datetime()
 void test_expression_operator_normalization()
 {
     const QString normalized = EditorUtils::normalizeExpressionOperators(
-        QString::fromUtf8("8/4÷2 2∗3·4⋅5∙6*7⨉8⨯9✕10✖11"));
+        QString::fromUtf8("1＋2 8/4÷2 2∗3·4⋅5∙6*7⨉8⨯9✕10✖11"));
     const std::string normalizedStd = normalized.toStdString();
     ++eval_total_tests;
     DisplayErrorOnMismatch(__FILE__, __LINE__, "normalizeExpressionOperators",
-                           normalizedStd, "8⧸4⧸2 2×3×4×5×6×7×8×9×10×11",
+                           normalizedStd, "1+2 8⧸4⧸2 2×3×4×5×6×7×8×9×10×11",
                            eval_failed_tests, eval_new_failed_tests);
 
     const QStringList parsed = EditorUtils::parsePastedExpressions(
-        QString::fromUtf8("8/4\n10÷2\n2∗3\n4·5\n\n6✖7"));
-    if (parsed.size() != 5
-        || parsed.at(0) != QString::fromUtf8("8⧸4")
-        || parsed.at(1) != QString::fromUtf8("10⧸2")
-        || parsed.at(2) != QString::fromUtf8("2×3")
-        || parsed.at(3) != QString::fromUtf8("4×5")
-        || parsed.at(4) != QString::fromUtf8("6×7")) {
+        QString::fromUtf8("1＋2\n8/4\n10÷2\n2∗3\n4·5\n\n6✖7"));
+    if (parsed.size() != 6
+        || parsed.at(0) != QString::fromUtf8("1+2")
+        || parsed.at(1) != QString::fromUtf8("8⧸4")
+        || parsed.at(2) != QString::fromUtf8("10⧸2")
+        || parsed.at(3) != QString::fromUtf8("2×3")
+        || parsed.at(4) != QString::fromUtf8("4×5")
+        || parsed.at(5) != QString::fromUtf8("6×7")) {
         ++eval_total_tests;
         ++eval_failed_tests;
         ++eval_new_failed_tests;
         cerr << __FILE__ << "[" << __LINE__ << "]\tparsePastedExpressions\t[NEW]" << endl
              << "\tResult   : " << parsed.join("|").toUtf8().constData() << endl
-             << "\tExpected : 8⧸4|10⧸2|2×3|4×5|6×7" << endl;
+             << "\tExpected : 1+2|8⧸4|10⧸2|2×3|4×5|6×7" << endl;
     } else {
         ++eval_total_tests;
     }

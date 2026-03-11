@@ -60,10 +60,30 @@ inline QString normalizeDivisionOperators(QString text)
     return text;
 }
 
+inline bool isAdditionOperatorAlias(const QChar& ch)
+{
+    switch (ch.unicode()) {
+    case 0xFF0B: // ＋ FULLWIDTH PLUS SIGN
+        return true;
+    default:
+        return false;
+    }
+}
+
+inline QString normalizeAdditionOperators(QString text)
+{
+    for (QChar& ch : text) {
+        if (isAdditionOperatorAlias(ch))
+            ch = QChar(0x002B); // + PLUS SIGN
+    }
+    return text;
+}
+
 inline QString normalizeExpressionOperators(QString text)
 {
     text = normalizeMultiplicationOperators(text);
     text = normalizeDivisionOperators(text);
+    text = normalizeAdditionOperators(text);
     return text;
 }
 

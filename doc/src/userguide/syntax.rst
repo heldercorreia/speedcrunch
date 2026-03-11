@@ -217,6 +217,8 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 |                               |    SpeedCrunch 0.12.                                          |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
 | ``a + b``, ``a - b``          | **Addition and subtraction**                                  |                         |
+|                               |   In the expression editor and Session Import,                |                         |
+|                               |   ``＋`` is normalized to ``+``.                              |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
 | ``a << n``, ``a >> n``        | **Left/right arithmetic shifts**                              | ``0b11<<1 = 0b110``     |
 |                               |   Shifts the first operand left/right                         |                         |
