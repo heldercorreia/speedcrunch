@@ -451,6 +451,7 @@ void test_radix_char()
 
 void test_thousand_sep()
 {
+    // Common separators.
     CHECK_EVAL("12_345.678_9", "12345.6789");
     CHECK_EVAL("1234_5.67_89", "12345.6789");
     CHECK_EVAL("1234_56", "123456");
@@ -467,12 +468,42 @@ void test_thousand_sep()
     CHECK_EVAL(QString::fromUtf8("12˙345.678˙9"), "12345.6789");
     CHECK_EVAL(QString::fromUtf8("12⎖345.678⎖9"), "12345.6789");
 
+    // Punctuation/symbol separators.
     CHECK_EVAL("12$345.678~9", "12345.6789");
     CHECK_EVAL("12`345.678@9", "12345.6789");
+    CHECK_EVAL(QString::fromUtf8("12€345.678€9"), "12345.6789");
+    CHECK_EVAL(QString::fromUtf8("12£345.678£9"), "12345.6789");
+    CHECK_EVAL(QString::fromUtf8("12¥345.678¥9"), "12345.6789");
+    CHECK_EVAL(QString::fromUtf8("12₩345.678₩9"), "12345.6789");
+
+    // Prefix/suffix separators are still accepted.
     CHECK_EVAL("$ 1234.567", "1234.567");
     CHECK_EVAL("1234.567 $", "1234.567");
+    CHECK_EVAL(QString::fromUtf8("€ 1234.567"), "1234.567");
+    CHECK_EVAL(QString::fromUtf8("1234.567 ¥"), "1234.567");
     CHECK_EVAL("$-10", "-10");
     CHECK_EVAL("$+10", "10");
+
+    // Unicode letters between digits must not be silently ignored.
+    CHECK_EVAL_FAIL(QString::fromUtf8("12天2"));
+    CHECK_EVAL_FAIL(QString::fromUtf8("12é2"));
+    CHECK_EVAL_FAIL(QString::fromUtf8("12ä2"));
+    CHECK_EVAL_FAIL(QString::fromUtf8("12ß2"));
+    CHECK_EVAL_FAIL(QString::fromUtf8("12Ж2"));
+    CHECK_EVAL_FAIL(QString::fromUtf8("12π2"));
+    CHECK_EVAL_FAIL(QString::fromUtf8("12Ω2"));
+    CHECK_EVAL_FAIL(QString::fromUtf8("12क2"));
+    CHECK_EVAL_FAIL(QString::fromUtf8("12م2"));
+    CHECK_EVAL_FAIL(QString::fromUtf8("12あ2"));
+    CHECK_EVAL_FAIL(QString::fromUtf8("12한2"));
+
+    CHECK_EVAL_FAIL(QString::fromUtf8("1天234"));
+    CHECK_EVAL_FAIL(QString::fromUtf8("12天345.67"));
+    CHECK_EVAL_FAIL(QString::fromUtf8("12.34天56"));
+    CHECK_EVAL_FAIL(QString::fromUtf8("12e3天4"));
+    CHECK_EVAL_FAIL(QString::fromUtf8("0x1天2"));
+    CHECK_EVAL_FAIL(QString::fromUtf8("0b10天01"));
+    CHECK_EVAL_FAIL(QString::fromUtf8("0o12天34"));
 }
 
 void test_sexagesimal()

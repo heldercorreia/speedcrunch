@@ -661,6 +661,11 @@ bool Evaluator::isSeparatorChar(const QChar& ch)
         R"([^a-zA-Z0-9\+\-\−\*\×⋅÷\/⧸\^;\(\)%!=\\&\|<>\?#\x0000])"
     );
 
+    // Never treat letters or digits from any script as grouping separators.
+    // This avoids silently collapsing expressions like "12天2" into "122".
+    if (ch.isLetterOrNumber())
+        return false;
+
     if (isRadixChar(ch))
         return false;
 

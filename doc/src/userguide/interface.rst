@@ -149,6 +149,8 @@ This section allows selecting the input format to use.
     the decimal separator is detected automatically in inputs and the system default is used
     in results. With that latter mode, mixing both dot and comma in a same number to express the
     decimal separator and digit group separators is supported, but might lead to unexpected results.
+    See :ref:`Digit Grouping Separators <digit_grouping_separators>` for allowed grouping characters
+    and examples.
 
 Angle Unit
 ++++++++++

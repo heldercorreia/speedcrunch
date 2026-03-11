@@ -17,6 +17,40 @@ behavior can be changed; see :ref:`Radix Character <radix_character>` for more i
 
 Trailing zeros after the decimal point (like in ``12.300``) or leading zeros before it (``0012.3``) are redundant and can be included or omitted to the user's preference. Expressions like ``.5`` as a shorthand notation for ``0.5`` are also permitted.
 
+.. _digit_grouping_separators:
+
+Digit Grouping Separators
++++++++++++++++++++++++++
+
+To improve readability, SpeedCrunch accepts grouping separators inside number literals. Grouping separators are optional and ignored during evaluation.
+
+Allowed grouping separators are characters that are **not** letters or digits and are **not** number operators. In practice, this includes many punctuation and symbol characters, for example:
+
+* ``_`` (underscore): ``12_345_678``
+* Space: ``12 345 678``
+* ``·`` or ``٬``: ``12·345·678`` and ``12٬345٬678``
+* Currency symbols: ``$12,345``, ``€12 345``, ``12¥345``
+
+Not allowed as grouping separators:
+
+* Letters from any language (for example ``天``, ``é``, ``Ж``)
+* Digits from any language
+* Radix characters (``.`` or ``,`` depending on settings) when they are used as decimal separators
+* Operator characters and other reserved syntax tokens
+
+Some characters cannot be used for digit grouping because they already have an assigned meaning in expressions:
+
+* ``#`` starts hexadecimal number notation (for example ``#FF``).
+* ``!`` is the factorial operator (for example ``5!``).
+* ``:`` is used in sexagecimal time/angle notation (for example ``12:34:56``).
+* ``&`` is the bitwise AND operator (for example ``6 & 3``).
+* ``?`` starts a comment (for example ``1+2 ? note``).
+
+Examples:
+
+* ``12$345.678$9`` evaluates as ``12345.6789``
+* ``12天2`` is rejected (it is **not** treated as ``122``)
+
 
 .. _scientific_notation:
 
