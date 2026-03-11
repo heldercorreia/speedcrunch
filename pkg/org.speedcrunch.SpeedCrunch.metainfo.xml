@@ -15,7 +15,6 @@
   <name xml:lang="de">SpeedCrunch</name>
   <name xml:lang="el">SpeedCrunch</name>
   <name xml:lang="en_GB">SpeedCrunch</name>
-  <name xml:lang="eo">SpeedCrunch</name>
   <name xml:lang="es">SpeedCrunch</name>
   <name xml:lang="es_AR">SpeedCrunch</name>
   <name xml:lang="et">SpeedCrunch</name>
@@ -56,7 +55,6 @@
   <summary xml:lang="de">Ein hochpräziser wissenschaftlicher Taschenrechner</summary>
   <summary xml:lang="el">Επιστημονική αριθμομηχανή υψηλής ακρίβειας</summary>
   <summary xml:lang="en_GB">A high-precision scientific calculator</summary>
-  <summary xml:lang="eo">Altpreciza scienca kalkulilo</summary>
   <summary xml:lang="es">Una calculadora científica de alta precisión</summary>
   <summary xml:lang="es_AR">Una calculadora científica de alta precisión</summary>
   <summary xml:lang="et">Kõrgtäpne teaduslik kalkulaator</summary>
@@ -97,7 +95,6 @@
     <p xml:lang="de">SpeedCrunch ist ein schneller, hochpräziser, wissenschaftlicher Taschenrechner. Es bietet eine scrollbare Anzeige mit Syntaxhervorhebung und ist auf vollständige Tastaturbedienung ausgelegt.</p>
     <p xml:lang="el">Το SpeedCrunch είναι μια γρήγορη επιστημονική αριθμομηχανή υψηλής ακρίβειας. Διαθέτει κυλιόμενη οθόνη με επισήμανση σύνταξης και έχει σχεδιαστεί ώστε να χρησιμοποιείται πλήρως από το πληκτρολόγιο.</p>
     <p xml:lang="en_GB">SpeedCrunch is a fast, high-precision scientific calculator. It features a syntax-highlighted scrollable display and is designed to be fully used via keyboard.SpeedCrunch is a fast, high-precision scientific calculator. It features a syntax-highlighted scrollable display and is designed to be fully used via keyboard.</p>
-    <p xml:lang="eo">SpeedCrunch estas rapida, altpreciza scienca kalkulilo. Ĝi havas rulumeblan ekranon kun sintaksemfazo kaj estas desegnita por esti uzata plene per klavaro.</p>
     <p xml:lang="es">SpeedCrunch es una calculadora científica rápida y de alta precisión. Cuenta con una pantalla desplazable con resaltado de sintaxis y está diseñada para usarse completamente con el teclado.</p>
     <p xml:lang="es_AR">SpeedCrunch es una calculadora científica rápida y de alta precisión. Cuenta con una pantalla desplazable con resaltado de sintaxis y está diseñada para usarse completamente con el teclado.</p>
     <p xml:lang="et">SpeedCrunch on kiire ja kõrgtäpne teaduslik kalkulaator. Sellel on süntaksi esiletõstuga keritav kuva ning see on loodud täielikult klaviatuuriga kasutamiseks.</p>
@@ -138,7 +135,6 @@
     <p xml:lang="de">Es enthält viele eingebaute Mathematikfunktionen und unterstützt fortgeschrittene Funktionen wie benutzerdefinierte Funktionen, komplexe Zahlen und Einheitenumwandlungen. Dies ist verbunden mit einer einfacher, aber leistungsfähigen Benutzeroberfläche mit dynamischer Ergebnisvorschau, Syntaxhervorhebung und automatischer Vervollständigung.</p>
     <p xml:lang="el">Περιλαμβάνει πολλές ενσωματωμένες μαθηματικές συναρτήσεις και υποστηρίζει προηγμένες δυνατότητες όπως συναρτήσεις ορισμένες από τον χρήστη, μιγαδικούς αριθμούς και μετατροπές μονάδων. Όλα αυτά συνδυάζονται με ένα απλό αλλά ισχυρό περιβάλλον χρήστη με προεπισκόπηση αποτελεσμάτων σε πραγματικό χρόνο, επισήμανση σύνταξης και αυτόματη συμπλήρωση.</p>
     <p xml:lang="en_GB">It includes many built-in maths functions and supports advanced features like user-defined functions, complex numbers, and unit conversions. This is combined with a simple yet powerful user interface featuring on-the-fly results preview, syntax highlighting, and autocompletion.It includes many built-in maths functions and supports advanced features like user-defined functions, complex numbers, and unit conversions. This is combined with a simple yet powerful user interface featuring on-the-fly results preview, syntax highlighting, and autocompletion.</p>
-    <p xml:lang="eo">Ĝi enhavas multajn enkonstruitajn matematikajn funkciojn kaj subtenas altnivelajn ecojn kiel uzantodifinitajn funkciojn, kompleksajn nombrojn kaj unuokonvertojn. Ĉio ĉi estas kombinita kun simpla sed potenca uzantinterfaco kun tuja antaŭrigardo de rezultoj, sintaksemfazo kaj aŭtomata kompletigo.</p>
     <p xml:lang="es">Incluye muchas funciones matemáticas integradas y admite funciones avanzadas como funciones definidas por el usuario, números complejos y conversiones de unidades. Todo ello se combina con una interfaz de usuario sencilla pero potente que ofrece vista previa de resultados al vuelo, resaltado de sintaxis y autocompletado.</p>
     <p xml:lang="es_AR">Incluye muchas funciones matemáticas integradas y admite funciones avanzadas como funciones definidas por el usuario, números complejos y conversiones de unidades. Todo ello se combina con una interfaz de usuario sencilla pero potente que ofrece vista previa de resultados al vuelo, resaltado de sintaxis y autocompletado.</p>
     <p xml:lang="et">See sisaldab palju sisseehitatud matemaatikafunktsioone ja toetab täiustatud võimalusi, nagu kasutaja määratud funktsioonid, kompleksarvud ja ühikute teisendused. Seda kõike ühendab lihtne, kuid võimas kasutajaliides, mis pakub tulemuste kohest eelvaadet, süntaksi esiletõstu ja automaatset lõpetamist.</p>
@@ -179,7 +175,6 @@
     <p xml:lang="de">SpeedCrunch ist für verschiedene Plattformen in einer Anzahl von Sprachen verfügbar.</p>
     <p xml:lang="el">Το SpeedCrunch είναι διαθέσιμο για διάφορες πλατφόρμες σε πολλές γλώσσες.</p>
     <p xml:lang="en_GB">SpeedCrunch is available for several platforms in a number of languages.SpeedCrunch is available for several platforms in a number of languages.</p>
-    <p xml:lang="eo">SpeedCrunch disponeblas por pluraj platformoj en kelkaj lingvoj.</p>
     <p xml:lang="es">SpeedCrunch está disponible para varias plataformas en varios idiomas.</p>
     <p xml:lang="es_AR">SpeedCrunch está disponible para varias plataformas en varios idiomas.</p>
     <p xml:lang="et">SpeedCrunch on saadaval mitmele platvormile mitmes keeles.</p>
@@ -237,7 +232,6 @@
       <caption xml:lang="de">Hauptfenster mit optionalem Nummernblock</caption>
       <caption xml:lang="el">Κύριο παράθυρο με προαιρετικό αριθμητικό πληκτρολόγιο</caption>
       <caption xml:lang="en_GB">Main window with optional keypad</caption>
-      <caption xml:lang="eo">Ĉefa fenestro kun nedeviga cifera klavaro</caption>
       <caption xml:lang="es">Ventana principal con teclado numérico opcional</caption>
       <caption xml:lang="es_AR">Ventana principal con teclado numérico opcional</caption>
       <caption xml:lang="et">Põhiaken valikulise numbriklahvistikuga</caption>
@@ -280,7 +274,6 @@
       <caption xml:lang="de">Die Konstantenliste und das Formelbuch</caption>
       <caption xml:lang="el">Η λίστα σταθερών και το βιβλίο τύπων</caption>
       <caption xml:lang="en_GB">The constants list and formula book</caption>
-      <caption xml:lang="eo">La listo de konstantoj kaj formularo</caption>
       <caption xml:lang="es">La lista de constantes y el libro de fórmulas</caption>
       <caption xml:lang="es_AR">La lista de constantes y el libro de fórmulas</caption>
       <caption xml:lang="et">Konstantide loend ja valemiraamat</caption>
@@ -323,7 +316,6 @@
       <caption xml:lang="de">Anpassbare Benutzeroberfläche</caption>
       <caption xml:lang="el">Προσαρμόσιμο περιβάλλον χρήστη</caption>
       <caption xml:lang="en_GB">Customizable user interface</caption>
-      <caption xml:lang="eo">Agordebla uzantinterfaco</caption>
       <caption xml:lang="es">Interfaz de usuario personalizable</caption>
       <caption xml:lang="es_AR">Interfaz de usuario personalizable</caption>
       <caption xml:lang="et">Kohandatav kasutajaliides</caption>
@@ -366,7 +358,6 @@
       <caption xml:lang="de">Das integrierte Benutzerhandbuch</caption>
       <caption xml:lang="el">Το ενσωματωμένο εγχειρίδιο χρήστη</caption>
       <caption xml:lang="en_GB">The built-in user manual</caption>
-      <caption xml:lang="eo">La enkonstruita uzantmanlibro</caption>
       <caption xml:lang="es">El manual de usuario integrado</caption>
       <caption xml:lang="es_AR">El manual de usuario integrado</caption>
       <caption xml:lang="et">Sisseehitatud kasutusjuhend</caption>

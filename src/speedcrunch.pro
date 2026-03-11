@@ -176,7 +176,6 @@ TRANSLATIONS += resources/locale/ar.ts \
                 resources/locale/el.ts \
                 resources/locale/en_GB.ts \
                 resources/locale/en_US.ts \
-                resources/locale/eo.ts \
                 resources/locale/es.ts \
                 resources/locale/es_ES.ts \
                 resources/locale/et.ts \
