@@ -196,7 +196,7 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 |                               |   the result to an integer.                                   |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
 | ``a * b``, ``a × b``, ``a b``,| **Multiplication and division**                               | ``3 sqrt(2)``           |
-| ``a / b``, ``a ⧸ b``         |                                                               |                         |
+| ``a / b``, ``a ⧸ b``          |                                                               |                         |
 |                               |   In many situations, *implicit                               |                         |
 |                               |   multiplication* allows writing                              |                         |
 |                               |   multiplications without the ``*``                           |                         |
@@ -219,6 +219,10 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 | ``a + b``, ``a - b``          | **Addition and subtraction**                                  |                         |
 |                               |   In the expression editor and Session Import,                |                         |
 |                               |   ``＋`` is normalized to ``+``.                              |                         |
+|                               |   In the expression editor and Session Import,                |                         |
+|                               |   these symbols are normalized to ``−``:                      |                         |
+|                               |   ``-``, ``－``, ``﹣``, ``‐``, ``‑``,                        |                         |
+|                               |   ``–``, ``—``, ``―``, ``⁃``.                                 |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
 | ``a << n``, ``a >> n``        | **Left/right arithmetic shifts**                              | ``0b11<<1 = 0b110``     |
 |                               |   Shifts the first operand left/right                         |                         |

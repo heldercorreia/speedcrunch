@@ -79,11 +79,39 @@ inline QString normalizeAdditionOperators(QString text)
     return text;
 }
 
+inline bool isSubtractionOperatorAlias(const QChar& ch)
+{
+    switch (ch.unicode()) {
+    case 0x002D: // - HYPHEN-MINUS
+    case 0x2010: // ‐ HYPHEN
+    case 0x2011: // ‑ NON-BREAKING HYPHEN
+    case 0x2013: // – EN DASH
+    case 0x2014: // — EM DASH
+    case 0x2015: // ― HORIZONTAL BAR
+    case 0x2043: // ⁃ HYPHEN BULLET
+    case 0xFE63: // ﹣ SMALL HYPHEN-MINUS
+    case 0xFF0D: // － FULLWIDTH HYPHEN-MINUS
+        return true;
+    default:
+        return false;
+    }
+}
+
+inline QString normalizeSubtractionOperators(QString text)
+{
+    for (QChar& ch : text) {
+        if (isSubtractionOperatorAlias(ch))
+            ch = QChar(0x2212); // − MINUS SIGN
+    }
+    return text;
+}
+
 inline QString normalizeExpressionOperators(QString text)
 {
     text = normalizeMultiplicationOperators(text);
     text = normalizeDivisionOperators(text);
     text = normalizeAdditionOperators(text);
+    text = normalizeSubtractionOperators(text);
     return text;
 }
 
