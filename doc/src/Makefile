@@ -14,16 +14,10 @@ update-translations: locale/pot
 	$(SPHINX_INTL) update-txconfig-resources
 
 build-html: \
-	_build-html/de_DE \
-	_build-html/en_US \
-	_build-html/es_ES \
-	_build-html/fr_FR
+	_build-html/en_US
 
 build-bundled: \
-	_build-bundled/de_DE \
 	_build-bundled/en_US \
-	_build-bundled/es_ES \
-	_build-bundled/fr_FR \
 	_build-bundled/manual.qrc
 
 _build-html/%:

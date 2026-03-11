@@ -17,10 +17,7 @@ import sys
 import os
 
 LANGUAGES = {
-    'en_US': 'English',
-    'de_DE': 'Deutsch',
-    'es_ES': 'Español',
-    'fr_FR': 'Français'
+    'en_US': 'English'
 }
 
 try:
