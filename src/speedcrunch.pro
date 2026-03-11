@@ -185,6 +185,7 @@ TRANSLATIONS += resources/locale/ar.ts \
                 resources/locale/fi.ts \
                 resources/locale/fr.ts \
                 resources/locale/he.ts \
+                resources/locale/hi.ts \
                 resources/locale/hu.ts \
                 resources/locale/id.ts \
                 resources/locale/it.ts \
