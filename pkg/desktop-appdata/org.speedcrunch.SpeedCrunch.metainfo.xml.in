@@ -79,43 +79,53 @@
        https://blogs.gnome.org/hughsie/2016/01/25/appdata-and-the-gettext-domain/#comment-5137
        TODO: Maybe autogenerate this. -->
   <languages>
-    <lang>hu</lang>
-    <lang>pt_PT</lang>
-    <lang>pt</lang>
-    <lang>de</lang>
-    <lang>ko</lang>
-    <lang>id</lang>
-    <lang>he</lang>
+    <lang>ar</lang>
+    <lang>bg</lang>
     <lang>bn</lang>
-    <lang>lt</lang>
-    <lang>nl</lang>
-    <lang>it</lang>
-    <lang>zh</lang>
-    <lang>ja</lang>
+    <lang>ca</lang>
+    <lang>cs</lang>
+    <lang>da</lang>
+    <lang>de</lang>
+    <lang>el</lang>
+    <lang>en_GB</lang>
+    <lang>en_US</lang>
+    <lang>es</lang>
+    <lang>es_ES</lang>
+    <lang>et</lang>
+    <lang>eu</lang>
+    <lang>fa</lang>
+    <lang>fi</lang>
     <lang>fr</lang>
     <lang>gl</lang>
-    <lang>ru</lang>
-    <lang>et</lang>
+    <lang>he</lang>
+    <lang>hi</lang>
+    <lang>hu</lang>
+    <lang>id</lang>
+    <lang>it</lang>
+    <lang>ja</lang>
+    <lang>ko</lang>
+    <lang>lt</lang>
     <lang>lv</lang>
-    <lang>eu</lang>
-    <lang>el</lang>
-    <lang>es_AR</lang>
-    <lang>en_GB</lang>
-    <lang>fi</lang>
-    <lang>ar</lang>
-    <lang>pl</lang>
-    <lang>uz@Latn</lang>
-    <lang>es</lang>
-    <lang>ca</lang>
-    <lang>sk</lang>
-    <lang>nb</lang>
-    <lang>tr</lang>
-    <lang>ro</lang>
-    <lang>sv</lang>
-    <lang>da</lang>
-    <lang>cs</lang>
-    <lang>vi</lang>
     <lang>ms</lang>
-    <lang>en</lang>
+    <lang>nb</lang>
+    <lang>nl</lang>
+    <lang>pl</lang>
+    <lang>pt_BR</lang>
+    <lang>pt_PT</lang>
+    <lang>ro</lang>
+    <lang>ru</lang>
+    <lang>sk</lang>
+    <lang>sl</lang>
+    <lang>sv</lang>
+    <lang>sw</lang>
+    <lang>ta</lang>
+    <lang>te</lang>
+    <lang>th</lang>
+    <lang>tr</lang>
+    <lang>uk</lang>
+    <lang>uz_Latn</lang>
+    <lang>vi</lang>
+    <lang>zh_CN</lang>
+    <lang>zh_TW</lang>
   </languages>
 </component>
