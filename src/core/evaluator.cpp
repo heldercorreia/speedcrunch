@@ -1788,6 +1788,7 @@ void Evaluator::compile(const Tokens& tokens)
                    && (op2.asOperator() == Token::Addition
                        || op2.asOperator() == Token::Subtraction
                        || op2.asOperator() == Token::BitwiseLogicalNOT)
+                   && !(token.isOperand() && isFunction(x))
                    && (token.isOperand()
                        || opPrecedence(token.asOperator()) <=
                               opPrecedence(Token::Multiplication)))
@@ -1819,6 +1820,7 @@ void Evaluator::compile(const Tokens& tokens)
                    && (op.asOperator() == Token::Addition
                        || op.asOperator() == Token::Subtraction
                        || op.asOperator() == Token::BitwiseLogicalNOT)
+                   && !(token.isOperand() && isFunction(x))
                    && ((token.isOperator()
                            && opPrecedence(token.asOperator()) <=
                                   opPrecedence(Token::Multiplication))

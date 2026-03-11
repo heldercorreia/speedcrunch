@@ -983,6 +983,20 @@ void test_function_simplified()
     /* Tests for priority management (issue #451) */
     CHECK_EVAL("lg 10^2", "2");
     CHECK_EVAL("frac 3!",  "0");
+    CHECK_EVAL("-lg 10", "-1");
+    CHECK_EVAL("2*-lg 10", "-2");
+    CHECK_EVAL("--lg 10", "1");
+    CHECK_EVAL("-ln 10", "-2.30258509299404568402");
+    CHECK_EVAL("-lb 8", "-3");
+    CHECK_EVAL("-sin 1", "-0.84147098480789650665");
+    CHECK_EVAL("-cos pi", "1");
+    CHECK_EVAL("-tan 1", "-1.55740772465490223051");
+    CHECK_EVAL("-arcsin 1", "-1.57079632679489661923");
+    CHECK_EVAL("-arccos 0", "-1.57079632679489661923");
+    CHECK_EVAL("-arctan 1", "-0.78539816339744830962");
+    CHECK_EVAL("2*-sin 1", "-1.68294196961579301331");
+    CHECK_EVAL("--sin 1", "0.84147098480789650665");
+    CHECK_EVAL("10 + -cos pi", "11");
 }
 
 void test_auto_fix_parentheses()
