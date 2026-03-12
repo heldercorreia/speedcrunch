@@ -65,6 +65,7 @@ public:
 
 signals:
     void angleUnitChanged();
+    void complexNumbersChanged();
     void colorSchemeChanged();
     void languageChanged();
     void radixCharacterChanged();

@@ -1018,8 +1018,10 @@ void MainWindow::createFixedConnections()
 
     connect(this, SIGNAL(radixCharacterChanged()), m_widgets.display, SLOT(refresh()));
     connect(this, SIGNAL(radixCharacterChanged()), m_widgets.editor, SLOT(refreshAutoCalc()));
-    connect(this, SIGNAL(angleUnitChanged()), m_widgets.display, SLOT(refresh()));
+    connect(this, SIGNAL(angleUnitChanged()), m_widgets.display, SLOT(refreshLastHistoryEntry()));
     connect(this, SIGNAL(angleUnitChanged()), m_widgets.editor, SLOT(refreshAutoCalc()));
+    connect(this, SIGNAL(complexNumbersChanged()), m_widgets.display, SLOT(refreshLastHistoryEntry()));
+    connect(this, SIGNAL(complexNumbersChanged()), m_widgets.editor, SLOT(refreshAutoCalc()));
     connect(this, SIGNAL(resultFormatChanged()), m_widgets.display, SLOT(refreshLastHistoryEntry()));
     connect(this, SIGNAL(resultFormatChanged()), m_widgets.editor, SLOT(refreshAutoCalc()));
     connect(this, SIGNAL(resultPrecisionChanged()), m_widgets.display, SLOT(refresh()));
@@ -1704,7 +1706,7 @@ void MainWindow::setComplexNumbers(bool b)
 {
     m_settings->complexNumbers = b;
     setStatusBarText();
-    emit radixCharacterChanged();   // FIXME ?
+    emit complexNumbersChanged();
     m_evaluator->initializeBuiltInVariables();
     DMath::complexMode = b;
 }
