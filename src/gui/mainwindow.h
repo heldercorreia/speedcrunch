@@ -235,6 +235,7 @@ private:
     QString statusBarAngleUnitValue() const;
     QString statusBarResultFormatValue() const;
     QString statusBarComplexNumbersValue() const;
+    QString statusBarComplexFormatValue() const;
 
     static QTranslator* createTranslator(const QString& langCode);
 
@@ -391,6 +392,9 @@ private:
         QWidget* complexNumbersSection;
         QLabel* complexNumbersLabel;
         QPushButton* complexNumbers;
+        QWidget* complexFormatSection;
+        QLabel* complexFormatLabel;
+        QPushButton* complexFormat;
     } m_status;
 
     Constants* m_constants;

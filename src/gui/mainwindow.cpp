@@ -293,13 +293,17 @@ void MainWindow::setStatusBarText()
         m_status.angleUnitLabel->setText(MainWindow::tr("Angle Unit:"));
         m_status.resultFormatLabel->setText(MainWindow::tr("Result Format:"));
         m_status.complexNumbersLabel->setText(MainWindow::tr("Complex Numbers:"));
+        m_status.complexFormatLabel->setText(MainWindow::tr("Complex Format:"));
         m_status.angleUnit->setText(statusBarAngleUnitValue());
         m_status.resultFormat->setText(statusBarResultFormatValue());
         m_status.complexNumbers->setText(statusBarComplexNumbersValue());
+        m_status.complexFormat->setText(statusBarComplexFormatValue());
 
         m_status.angleUnit->setToolTip(MainWindow::tr("Angle unit"));
         m_status.resultFormat->setToolTip(MainWindow::tr("Result format"));
         m_status.complexNumbers->setToolTip(MainWindow::tr("Complex numbers"));
+        m_status.complexFormat->setToolTip(MainWindow::tr("Complex format"));
+        m_status.complexFormatSection->setVisible(m_settings->complexNumbers);
     }
 }
 
@@ -327,6 +331,11 @@ QString MainWindow::statusBarResultFormatValue() const
 QString MainWindow::statusBarComplexNumbersValue() const
 {
     return m_settings->complexNumbers ? MainWindow::tr("On") : MainWindow::tr("Off");
+}
+
+QString MainWindow::statusBarComplexFormatValue() const
+{
+    return m_settings->resultFormatComplex == 'p' ? MainWindow::tr("Polar") : MainWindow::tr("Cartesian");
 }
 
 void MainWindow::setActionsText()
@@ -654,48 +663,60 @@ void MainWindow::createStatusBar()
     m_status.angleUnitSection = new QWidget(bar);
     m_status.resultFormatSection = new QWidget(bar);
     m_status.complexNumbersSection = new QWidget(bar);
+    m_status.complexFormatSection = new QWidget(bar);
 
     m_status.angleUnitLabel = new QLabel(m_status.angleUnitSection);
     m_status.resultFormatLabel = new QLabel(m_status.resultFormatSection);
     m_status.complexNumbersLabel = new QLabel(m_status.complexNumbersSection);
+    m_status.complexFormatLabel = new QLabel(m_status.complexFormatSection);
 
     m_status.angleUnit = new QPushButton(bar);
     m_status.resultFormat = new QPushButton(bar);
     m_status.complexNumbers = new QPushButton(bar);
+    m_status.complexFormat = new QPushButton(bar);
 
     m_status.angleUnit->setParent(m_status.angleUnitSection);
     m_status.resultFormat->setParent(m_status.resultFormatSection);
     m_status.complexNumbers->setParent(m_status.complexNumbersSection);
+    m_status.complexFormat->setParent(m_status.complexFormatSection);
 
     QHBoxLayout* angleLayout = new QHBoxLayout(m_status.angleUnitSection);
     QHBoxLayout* formatLayout = new QHBoxLayout(m_status.resultFormatSection);
     QHBoxLayout* complexLayout = new QHBoxLayout(m_status.complexNumbersSection);
+    QHBoxLayout* complexFormatLayout = new QHBoxLayout(m_status.complexFormatSection);
     angleLayout->setContentsMargins(0, 0, 0, 0);
     formatLayout->setContentsMargins(0, 0, 0, 0);
     complexLayout->setContentsMargins(0, 0, 0, 0);
+    complexFormatLayout->setContentsMargins(0, 0, 0, 0);
     angleLayout->setSpacing(2);
     formatLayout->setSpacing(2);
     complexLayout->setSpacing(2);
+    complexFormatLayout->setSpacing(2);
     angleLayout->addWidget(m_status.angleUnitLabel);
     angleLayout->addWidget(m_status.angleUnit);
     formatLayout->addWidget(m_status.resultFormatLabel);
     formatLayout->addWidget(m_status.resultFormat);
     complexLayout->addWidget(m_status.complexNumbersLabel);
     complexLayout->addWidget(m_status.complexNumbers);
+    complexFormatLayout->addWidget(m_status.complexFormatLabel);
+    complexFormatLayout->addWidget(m_status.complexFormat);
 
     QFont boldFont = m_status.angleUnitLabel->font();
     boldFont.setBold(true);
     m_status.angleUnitLabel->setFont(boldFont);
     m_status.resultFormatLabel->setFont(boldFont);
     m_status.complexNumbersLabel->setFont(boldFont);
+    m_status.complexFormatLabel->setFont(boldFont);
 
     m_status.angleUnit->setFocusPolicy(Qt::NoFocus);
     m_status.resultFormat->setFocusPolicy(Qt::NoFocus);
     m_status.complexNumbers->setFocusPolicy(Qt::NoFocus);
+    m_status.complexFormat->setFocusPolicy(Qt::NoFocus);
 
     m_status.angleUnit->setFlat(true);
     m_status.resultFormat->setFlat(true);
     m_status.complexNumbers->setFlat(true);
+    m_status.complexFormat->setFlat(true);
 
     m_status.angleUnit->setContextMenuPolicy(Qt::ActionsContextMenu);
     m_status.angleUnit->addAction(m_actions.settingsAngleUnitDegree);
@@ -707,14 +728,24 @@ void MainWindow::createStatusBar()
         SLOT(showResultFormatContextMenu(const QPoint&)));
     m_status.complexNumbers->setContextMenuPolicy(Qt::ActionsContextMenu);
     m_status.complexNumbers->addAction(m_actions.settingsBehaviorComplexNumbers);
+    m_status.complexFormat->setContextMenuPolicy(Qt::ActionsContextMenu);
+    m_status.complexFormat->addAction(m_actions.settingsResultFormatCartesian);
+    m_status.complexFormat->addAction(m_actions.settingsResultFormatPolar);
 
     connect(m_status.angleUnit, SIGNAL(clicked()), SLOT(cycleAngleUnits()));
     connect(m_status.resultFormat, SIGNAL(clicked()), SLOT(cycleResultFormats()));
     connect(m_status.complexNumbers, SIGNAL(clicked()), m_actions.settingsBehaviorComplexNumbers, SLOT(trigger()));
+    connect(m_status.complexFormat, &QPushButton::clicked, this, [this]() {
+        if (m_actions.settingsResultFormatCartesian->isChecked())
+            m_actions.settingsResultFormatPolar->trigger();
+        else
+            m_actions.settingsResultFormatCartesian->trigger();
+    });
 
     bar->addWidget(m_status.resultFormatSection);
     bar->addWidget(m_status.angleUnitSection);
     bar->addWidget(m_status.complexNumbersSection);
+    bar->addWidget(m_status.complexFormatSection);
 
     setStatusBarText();
 }
@@ -1306,6 +1337,9 @@ MainWindow::MainWindow()
     m_status.complexNumbers = 0;
     m_status.complexNumbersSection = 0;
     m_status.complexNumbersLabel = 0;
+    m_status.complexFormat = 0;
+    m_status.complexFormatSection = 0;
+    m_status.complexFormatLabel = 0;
 
     m_copyWidget = 0;
 
@@ -1940,6 +1974,11 @@ void MainWindow::deleteStatusBar()
     m_status.complexNumbersSection = 0;
     m_status.complexNumbersLabel = 0;
 
+    m_status.complexFormatSection->deleteLater();
+    m_status.complexFormat = 0;
+    m_status.complexFormatSection = 0;
+    m_status.complexFormatLabel = 0;
+
     setStatusBar(0);
 }
 
@@ -2087,6 +2126,7 @@ void MainWindow::setResultFormatCartesian()
         return;
 
     m_settings->resultFormatComplex = 'c';
+    setStatusBarText();
     emit resultFormatChanged();
 }
 
@@ -2125,6 +2165,7 @@ void MainWindow::setResultFormatPolar()
         return;
 
     m_settings->resultFormatComplex = 'p';
+    setStatusBarText();
     emit resultFormatChanged();
 }
 
