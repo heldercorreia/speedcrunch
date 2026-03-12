@@ -205,7 +205,8 @@ This section contains several settings that allow you to further configure Speed
     If selected, the entered expression remains in the editor after evaluating it.
 * :menuselection:`Enable Complex Numbers`
     Enable or disable support for :ref:`complex numbers <complex_numbers>`. If disabled, :const:`j` will be undefined
-    and expressions that would return complex results (like ``sqrt(-1)``) will fail.
+    and expressions that would return complex results (like ``sqrt(-1)``) will fail. This option can also be toggled
+    from the status bar using the ``Complex on`` / ``Complex off`` indicator.
 * :menuselection:`Always on Top`
     Keep the SpeedCrunch window on top of other windows.
 * :menuselection:`Automatic Result to Clipboard`

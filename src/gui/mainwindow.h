@@ -380,6 +380,7 @@ private:
     struct {
         QPushButton* angleUnit;
         QPushButton* resultFormat;
+        QPushButton* complexNumbers;
     } m_status;
 
     Constants* m_constants;

@@ -293,6 +293,8 @@ void MainWindow::setStatusBarText()
         QString angleUnit = (m_settings->angleUnit == 'r' ? MainWindow::tr("Radian")
             : ( m_settings->angleUnit == 'g') ? MainWindow::tr("Gradian") : MainWindow::tr("Degree"));
 
+        QString complexNumbers = m_settings->complexNumbers ? MainWindow::tr("Complex on")
+            : MainWindow::tr("Complex off");
         QString format;
         switch (m_settings->resultFormat) {
             case 'b': format = MainWindow::tr("Binary"); break;
@@ -308,9 +310,11 @@ void MainWindow::setStatusBarText()
 
         m_status.angleUnit->setText(angleUnit);
         m_status.resultFormat->setText(format);
+        m_status.complexNumbers->setText(complexNumbers);
 
         m_status.angleUnit->setToolTip(MainWindow::tr("Angle unit"));
         m_status.resultFormat->setToolTip(MainWindow::tr("Result format"));
+        m_status.complexNumbers->setToolTip(MainWindow::tr("Complex numbers"));
     }
 }
 
@@ -638,12 +642,15 @@ void MainWindow::createStatusBar()
 
     m_status.angleUnit = new QPushButton(bar);
     m_status.resultFormat = new QPushButton(bar);
+    m_status.complexNumbers = new QPushButton(bar);
 
     m_status.angleUnit->setFocusPolicy(Qt::NoFocus);
     m_status.resultFormat->setFocusPolicy(Qt::NoFocus);
+    m_status.complexNumbers->setFocusPolicy(Qt::NoFocus);
 
     m_status.angleUnit->setFlat(true);
     m_status.resultFormat->setFlat(true);
+    m_status.complexNumbers->setFlat(true);
 
     m_status.angleUnit->setContextMenuPolicy(Qt::ActionsContextMenu);
     m_status.angleUnit->addAction(m_actions.settingsAngleUnitDegree);
@@ -653,12 +660,16 @@ void MainWindow::createStatusBar()
     m_status.resultFormat->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(m_status.resultFormat, SIGNAL(customContextMenuRequested(const QPoint&)),
         SLOT(showResultFormatContextMenu(const QPoint&)));
+    m_status.complexNumbers->setContextMenuPolicy(Qt::ActionsContextMenu);
+    m_status.complexNumbers->addAction(m_actions.settingsBehaviorComplexNumbers);
 
     connect(m_status.angleUnit, SIGNAL(clicked()), SLOT(cycleAngleUnits()));
     connect(m_status.resultFormat, SIGNAL(clicked()), SLOT(cycleResultFormats()));
+    connect(m_status.complexNumbers, SIGNAL(clicked()), m_actions.settingsBehaviorComplexNumbers, SLOT(trigger()));
 
     bar->addWidget(m_status.angleUnit);
     bar->addWidget(m_status.resultFormat);
+    bar->addWidget(m_status.complexNumbers);
 
     setStatusBarText();
 }
@@ -1241,6 +1252,7 @@ MainWindow::MainWindow()
 
     m_status.angleUnit = 0;
     m_status.resultFormat = 0;
+    m_status.complexNumbers = 0;
 
     m_copyWidget = 0;
 
@@ -1640,6 +1652,7 @@ void MainWindow::setAutoResultToClipboardEnabled(bool b)
 void MainWindow::setComplexNumbers(bool b)
 {
     m_settings->complexNumbers = b;
+    setStatusBarText();
     emit radixCharacterChanged();   // FIXME ?
     m_evaluator->initializeBuiltInVariables();
     DMath::complexMode = b;
@@ -1867,6 +1880,9 @@ void MainWindow::deleteStatusBar()
 
     m_status.resultFormat->deleteLater();
     m_status.resultFormat = 0;
+
+    m_status.complexNumbers->deleteLater();
+    m_status.complexNumbers = 0;
 
     setStatusBar(0);
 }
