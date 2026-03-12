@@ -106,6 +106,50 @@ void ResultDisplay::refresh()
 
 }
 
+void ResultDisplay::refreshLastHistoryEntry()
+{
+    const QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
+    const int historyCount = history.count();
+    if (historyCount == 0) {
+        clear();
+        return;
+    }
+
+    if (m_count != historyCount || blockCount() <= 0) {
+        refresh();
+        return;
+    }
+
+    int lastExprBlock = 0;
+    for (int i = 0; i < historyCount - 1; ++i) {
+        ++lastExprBlock;
+        if (!history.at(i).result().isNan())
+            ++lastExprBlock;
+        ++lastExprBlock;
+    }
+
+    QTextBlock exprBlock = document()->findBlockByNumber(lastExprBlock);
+    if (!exprBlock.isValid()) {
+        refresh();
+        return;
+    }
+
+    const HistoryEntry& lastEntry = history.last();
+    if (lastEntry.result().isNan())
+        return;
+
+    QTextBlock resultBlock = exprBlock.next();
+    if (!resultBlock.isValid()) {
+        refresh();
+        return;
+    }
+
+    QTextCursor cursor(resultBlock);
+    cursor.setPosition(resultBlock.position());
+    cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+    cursor.insertText(QLatin1String("= ") + NumberFormatter::format(lastEntry.result()));
+}
+
 void ResultDisplay::scrollLines(int numberOfLines)
 {
     QScrollBar* bar = verticalScrollBar();

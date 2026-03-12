@@ -58,6 +58,7 @@ public slots:
     void increaseFontPointSize();
     void rehighlight();
     void refresh();
+    void refreshLastHistoryEntry();
     void scrollLines(int);
     void scrollLineUp();
     void scrollLineDown();
