@@ -231,6 +231,9 @@ private:
     void setActionsText();
     void setMenusText();
     void setStatusBarText();
+    QString statusBarAngleUnitValue() const;
+    QString statusBarResultFormatValue() const;
+    QString statusBarComplexNumbersValue() const;
 
     static QTranslator* createTranslator(const QString& langCode);
 
@@ -378,8 +381,14 @@ private:
     } m_conditions;
 
     struct {
+        QWidget* angleUnitSection;
+        QLabel* angleUnitLabel;
         QPushButton* angleUnit;
+        QWidget* resultFormatSection;
+        QLabel* resultFormatLabel;
         QPushButton* resultFormat;
+        QWidget* complexNumbersSection;
+        QLabel* complexNumbersLabel;
         QPushButton* complexNumbers;
     } m_status;
 

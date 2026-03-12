@@ -290,32 +290,43 @@ void MainWindow::retranslateText()
 void MainWindow::setStatusBarText()
 {
     if (m_status.angleUnit) {
-        QString angleUnit = (m_settings->angleUnit == 'r' ? MainWindow::tr("Radian")
-            : ( m_settings->angleUnit == 'g') ? MainWindow::tr("Gradian") : MainWindow::tr("Degree"));
-
-        QString complexNumbers = m_settings->complexNumbers ? MainWindow::tr("Complex on")
-            : MainWindow::tr("Complex off");
-        QString format;
-        switch (m_settings->resultFormat) {
-            case 'b': format = MainWindow::tr("Binary"); break;
-            case 'o': format = MainWindow::tr("Octal"); break;
-            case 'h': format = MainWindow::tr("Hexadecimal"); break;
-            case 's': format = MainWindow::tr("Sexagesimal"); break;
-            case 'f': format = MainWindow::tr("Fixed decimal"); break;
-            case 'n': format = MainWindow::tr("Engineering decimal"); break;
-            case 'e': format = MainWindow::tr("Scientific decimal"); break;
-            case 'g': format = MainWindow::tr("General decimal"); break;
-            default : break;
-        }
-
-        m_status.angleUnit->setText(angleUnit);
-        m_status.resultFormat->setText(format);
-        m_status.complexNumbers->setText(complexNumbers);
+        m_status.angleUnitLabel->setText(MainWindow::tr("Angle Unit:"));
+        m_status.resultFormatLabel->setText(MainWindow::tr("Result Format:"));
+        m_status.complexNumbersLabel->setText(MainWindow::tr("Complex Numbers:"));
+        m_status.angleUnit->setText(statusBarAngleUnitValue());
+        m_status.resultFormat->setText(statusBarResultFormatValue());
+        m_status.complexNumbers->setText(statusBarComplexNumbersValue());
 
         m_status.angleUnit->setToolTip(MainWindow::tr("Angle unit"));
         m_status.resultFormat->setToolTip(MainWindow::tr("Result format"));
         m_status.complexNumbers->setToolTip(MainWindow::tr("Complex numbers"));
     }
+}
+
+QString MainWindow::statusBarAngleUnitValue() const
+{
+    return (m_settings->angleUnit == 'r' ? MainWindow::tr("Radian")
+        : (m_settings->angleUnit == 'g') ? MainWindow::tr("Gradian") : MainWindow::tr("Degree"));
+}
+
+QString MainWindow::statusBarResultFormatValue() const
+{
+    switch (m_settings->resultFormat) {
+        case 'b': return MainWindow::tr("Binary");
+        case 'o': return MainWindow::tr("Octal");
+        case 'h': return MainWindow::tr("Hexadecimal");
+        case 's': return MainWindow::tr("Sexagesimal");
+        case 'f': return MainWindow::tr("Fixed decimal");
+        case 'n': return MainWindow::tr("Engineering decimal");
+        case 'e': return MainWindow::tr("Scientific decimal");
+        case 'g': return MainWindow::tr("General decimal");
+        default : return QString();
+    }
+}
+
+QString MainWindow::statusBarComplexNumbersValue() const
+{
+    return m_settings->complexNumbers ? MainWindow::tr("On") : MainWindow::tr("Off");
 }
 
 void MainWindow::setActionsText()
@@ -640,9 +651,43 @@ void MainWindow::createStatusBar()
 {
     QStatusBar* bar = statusBar();
 
+    m_status.angleUnitSection = new QWidget(bar);
+    m_status.resultFormatSection = new QWidget(bar);
+    m_status.complexNumbersSection = new QWidget(bar);
+
+    m_status.angleUnitLabel = new QLabel(m_status.angleUnitSection);
+    m_status.resultFormatLabel = new QLabel(m_status.resultFormatSection);
+    m_status.complexNumbersLabel = new QLabel(m_status.complexNumbersSection);
+
     m_status.angleUnit = new QPushButton(bar);
     m_status.resultFormat = new QPushButton(bar);
     m_status.complexNumbers = new QPushButton(bar);
+
+    m_status.angleUnit->setParent(m_status.angleUnitSection);
+    m_status.resultFormat->setParent(m_status.resultFormatSection);
+    m_status.complexNumbers->setParent(m_status.complexNumbersSection);
+
+    QHBoxLayout* angleLayout = new QHBoxLayout(m_status.angleUnitSection);
+    QHBoxLayout* formatLayout = new QHBoxLayout(m_status.resultFormatSection);
+    QHBoxLayout* complexLayout = new QHBoxLayout(m_status.complexNumbersSection);
+    angleLayout->setContentsMargins(0, 0, 0, 0);
+    formatLayout->setContentsMargins(0, 0, 0, 0);
+    complexLayout->setContentsMargins(0, 0, 0, 0);
+    angleLayout->setSpacing(2);
+    formatLayout->setSpacing(2);
+    complexLayout->setSpacing(2);
+    angleLayout->addWidget(m_status.angleUnitLabel);
+    angleLayout->addWidget(m_status.angleUnit);
+    formatLayout->addWidget(m_status.resultFormatLabel);
+    formatLayout->addWidget(m_status.resultFormat);
+    complexLayout->addWidget(m_status.complexNumbersLabel);
+    complexLayout->addWidget(m_status.complexNumbers);
+
+    QFont boldFont = m_status.angleUnitLabel->font();
+    boldFont.setBold(true);
+    m_status.angleUnitLabel->setFont(boldFont);
+    m_status.resultFormatLabel->setFont(boldFont);
+    m_status.complexNumbersLabel->setFont(boldFont);
 
     m_status.angleUnit->setFocusPolicy(Qt::NoFocus);
     m_status.resultFormat->setFocusPolicy(Qt::NoFocus);
@@ -667,9 +712,9 @@ void MainWindow::createStatusBar()
     connect(m_status.resultFormat, SIGNAL(clicked()), SLOT(cycleResultFormats()));
     connect(m_status.complexNumbers, SIGNAL(clicked()), m_actions.settingsBehaviorComplexNumbers, SLOT(trigger()));
 
-    bar->addWidget(m_status.angleUnit);
-    bar->addWidget(m_status.resultFormat);
-    bar->addWidget(m_status.complexNumbers);
+    bar->addWidget(m_status.resultFormatSection);
+    bar->addWidget(m_status.angleUnitSection);
+    bar->addWidget(m_status.complexNumbersSection);
 
     setStatusBarText();
 }
@@ -1251,8 +1296,14 @@ MainWindow::MainWindow()
     m_docks.userFunctions = 0;
 
     m_status.angleUnit = 0;
+    m_status.angleUnitSection = 0;
+    m_status.angleUnitLabel = 0;
     m_status.resultFormat = 0;
+    m_status.resultFormatSection = 0;
+    m_status.resultFormatLabel = 0;
     m_status.complexNumbers = 0;
+    m_status.complexNumbersSection = 0;
+    m_status.complexNumbersLabel = 0;
 
     m_copyWidget = 0;
 
@@ -1665,8 +1716,7 @@ void MainWindow::setAngleModeDegree()
 
     m_settings->angleUnit = 'd';
 
-    if (m_status.angleUnit)
-        m_status.angleUnit->setText(tr("Degree"));
+    setStatusBarText();
 
     m_evaluator->initializeAngleUnits();
     emit angleUnitChanged();
@@ -1679,8 +1729,7 @@ void MainWindow::setAngleModeRadian()
 
     m_settings->angleUnit = 'r';
 
-    if (m_status.angleUnit)
-        m_status.angleUnit->setText(tr("Radian"));
+    setStatusBarText();
 
     m_evaluator->initializeAngleUnits();
     emit angleUnitChanged();
@@ -1693,8 +1742,7 @@ void MainWindow::setAngleModeGradian()
 
     m_settings->angleUnit = 'g';
 
-    if (m_status.angleUnit)
-        m_status.angleUnit->setText(tr("Gradian"));
+    setStatusBarText();
 
     m_evaluator->initializeAngleUnits();
     emit angleUnitChanged();
@@ -1875,14 +1923,20 @@ void MainWindow::deleteKeypad()
 void MainWindow::deleteStatusBar()
 {
     statusBar()->hide();
-    m_status.angleUnit->deleteLater();
+    m_status.angleUnitSection->deleteLater();
     m_status.angleUnit = 0;
+    m_status.angleUnitSection = 0;
+    m_status.angleUnitLabel = 0;
 
-    m_status.resultFormat->deleteLater();
+    m_status.resultFormatSection->deleteLater();
     m_status.resultFormat = 0;
+    m_status.resultFormatSection = 0;
+    m_status.resultFormatLabel = 0;
 
-    m_status.complexNumbers->deleteLater();
+    m_status.complexNumbersSection->deleteLater();
     m_status.complexNumbers = 0;
+    m_status.complexNumbersSection = 0;
+    m_status.complexNumbersLabel = 0;
 
     setStatusBar(0);
 }
@@ -2022,9 +2076,7 @@ void MainWindow::setKeypadVisible(bool b)
 void MainWindow::setResultFormatBinary()
 {
     setResultFormat('b');
-
-    if (m_status.resultFormat)
-        m_status.resultFormat->setText(tr("Binary"));
+    setStatusBarText();
 }
 
 void MainWindow::setResultFormatCartesian()
@@ -2039,40 +2091,30 @@ void MainWindow::setResultFormatCartesian()
 void MainWindow::setResultFormatEngineering()
 {
     setResultFormat('n');
-
-    if (m_status.resultFormat)
-        m_status.resultFormat->setText(tr("Engineering decimal"));
+    setStatusBarText();
 }
 
 void MainWindow::setResultFormatFixed()
 {
     setResultFormat('f');
-
-    if (m_status.resultFormat)
-        m_status.resultFormat->setText(tr("Fixed decimal"));
+    setStatusBarText();
 }
 void MainWindow::setResultFormatGeneral()
 {
     setResultFormat('g');
-
-    if (m_status.resultFormat)
-        m_status.resultFormat->setText(tr("General decimal"));
+    setStatusBarText();
 }
 
 void MainWindow::setResultFormatHexadecimal()
 {
     setResultFormat('h');
-
-    if (m_status.resultFormat)
-        m_status.resultFormat->setText(tr("Hexadecimal"));
+    setStatusBarText();
 }
 
 void MainWindow::setResultFormatOctal()
 {
     setResultFormat('o');
-
-    if (m_status.resultFormat)
-        m_status.resultFormat->setText(tr("Octal"));
+    setStatusBarText();
 }
 
 void MainWindow::setResultFormatPolar()
@@ -2087,17 +2129,13 @@ void MainWindow::setResultFormatPolar()
 void MainWindow::setResultFormatScientific()
 {
     setResultFormat('e');
-
-    if (m_status.resultFormat)
-        m_status.resultFormat->setText(tr("Scientific decimal"));
+    setStatusBarText();
 }
 
 void MainWindow::setResultFormatSexagesimal()
 {
     setResultFormat('s');
-
-    if (m_status.resultFormat)
-        m_status.resultFormat->setText(tr("Sexagesimal"));
+    setStatusBarText();
 }
 
 void MainWindow::insertConstantIntoEditor(const QString& c)
