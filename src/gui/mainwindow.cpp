@@ -1224,7 +1224,7 @@ void MainWindow::createFixedConnections()
     connect(this, SIGNAL(complexNumbersChanged()), m_widgets.editor, SLOT(refreshAutoCalc()));
     connect(this, SIGNAL(resultFormatChanged()), m_widgets.display, SLOT(refreshLastHistoryEntry()));
     connect(this, SIGNAL(resultFormatChanged()), m_widgets.editor, SLOT(refreshAutoCalc()));
-    connect(this, SIGNAL(resultPrecisionChanged()), m_widgets.display, SLOT(refresh()));
+    connect(this, SIGNAL(resultPrecisionChanged()), m_widgets.display, SLOT(refreshLastHistoryEntry()));
     connect(this, SIGNAL(resultPrecisionChanged()), m_widgets.editor, SLOT(refreshAutoCalc()));
     connect(this, SIGNAL(colorSchemeChanged()), m_widgets.display, SLOT(rehighlight()));
     connect(this, SIGNAL(colorSchemeChanged()), m_widgets.editor, SLOT(rehighlight()));

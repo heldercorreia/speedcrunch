@@ -234,9 +234,44 @@ void ResultDisplay::refresh()
 
 void ResultDisplay::refreshLastHistoryEntry()
 {
-    // Result lines per entry are now dynamic (primary + optional secondary/tertiary),
-    // so a full refresh keeps indexes and layout consistent.
-    refresh();
+    const QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
+    const int historyCount = history.count();
+    if (historyCount == 0) {
+        clear();
+        return;
+    }
+
+    if (m_count != historyCount || blockCount() <= 0) {
+        refresh();
+        return;
+    }
+
+    QTextBlock endBlock = document()->lastBlock();
+    while (endBlock.isValid() && endBlock.text().isEmpty() && endBlock.previous().isValid())
+        endBlock = endBlock.previous();
+
+    if (!endBlock.isValid()) {
+        refresh();
+        return;
+    }
+
+    QTextBlock startBlock = endBlock;
+    while (startBlock.previous().isValid() && !startBlock.previous().text().isEmpty())
+        startBlock = startBlock.previous();
+
+    const HistoryEntry& lastEntry = history.last();
+    QStringList updatedLines;
+    updatedLines.append(lastEntry.expr());
+    if (!lastEntry.result().isNan())
+        updatedLines.append(formatResultLines(lastEntry.result()));
+    updatedLines.append(QLatin1String(""));
+
+    clearHoverFeedback();
+
+    QTextCursor cursor(document());
+    cursor.setPosition(startBlock.position());
+    cursor.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
+    cursor.insertText(updatedLines.join(QLatin1String("\n")));
 }
 
 void ResultDisplay::scrollLines(int numberOfLines)
