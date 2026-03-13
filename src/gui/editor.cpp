@@ -41,6 +41,7 @@
 #include <QPlainTextEdit>
 #include <QScreen>
 #include <QScrollBar>
+#include <QRegularExpression>
 #include <QStyle>
 #include <QTimeLine>
 #include <QTimer>
@@ -56,17 +57,110 @@ static void moveCursorToEnd(Editor* editor)
     editor->setTextCursor(cursor);
 }
 
+static QString groupedDigitsForTooltip(const QString& input)
+{
+    const Settings* settings = Settings::instance();
+    if (settings->digitGrouping <= 0)
+        return input;
+
+    const QString separator = QStringLiteral("&nbsp;").repeated(settings->digitGrouping);
+    static const QRegularExpression numberPattern(
+        QStringLiteral("(?<![\\p{L}\\p{N}])(?:0[xX][0-9A-Fa-f]+(?:[\\.,][0-9A-Fa-f]+)?|0[oO][0-7]+(?:[\\.,][0-7]+)?|0[bB][01]+(?:[\\.,][01]+)?|\\d+(?:[\\.,]\\d+)?(?:[eE][+\\-]?\\d+)?)(?![\\p{L}\\p{N}])"));
+
+    auto groupPart = [&separator](const QString& digits, int groupSize, bool fromRight) {
+        if (digits.size() <= groupSize)
+            return digits;
+
+        QString result;
+        if (fromRight) {
+            int first = digits.size() % groupSize;
+            if (first == 0)
+                first = groupSize;
+            result = digits.left(first);
+            for (int i = first; i < digits.size(); i += groupSize) {
+                result += separator;
+                result += digits.mid(i, groupSize);
+            }
+            return result;
+        }
+
+        for (int i = 0; i < digits.size(); i += groupSize) {
+            if (i > 0)
+                result += separator;
+            result += digits.mid(i, groupSize);
+        }
+        return result;
+    };
+
+    QString output;
+    int lastPos = 0;
+    auto it = numberPattern.globalMatch(input);
+    while (it.hasNext()) {
+        const auto match = it.next();
+        output += input.mid(lastPos, match.capturedStart() - lastPos);
+
+        QString token = match.captured(0);
+        int prefixLength = 0;
+        int groupSize = 3;
+        if (token.startsWith(QLatin1String("0x"), Qt::CaseInsensitive)) {
+            prefixLength = 2;
+            groupSize = 4;
+        } else if (token.startsWith(QLatin1String("0o"), Qt::CaseInsensitive)) {
+            prefixLength = 2;
+            groupSize = 3;
+        } else if (token.startsWith(QLatin1String("0b"), Qt::CaseInsensitive)) {
+            prefixLength = 2;
+            groupSize = 4;
+        }
+
+        const QString prefix = token.left(prefixLength);
+        QString body = token.mid(prefixLength);
+        QString exponent;
+
+        if (prefixLength == 0) {
+            const int exponentPos = body.indexOf(QRegularExpression(QStringLiteral("[eE][+\\-]?\\d+$")));
+            if (exponentPos >= 0) {
+                exponent = body.mid(exponentPos);
+                body = body.left(exponentPos);
+            }
+        }
+
+        const int radixPos = body.indexOf(QRegularExpression(QStringLiteral("[\\.,]")));
+        if (radixPos >= 0) {
+            const QString integral = body.left(radixPos);
+            const QString fractional = body.mid(radixPos + 1);
+            token = prefix
+                + groupPart(integral, groupSize, true)
+                + body.at(radixPos)
+                + groupPart(fractional, groupSize, false)
+                + exponent;
+        } else {
+            token = prefix + groupPart(body, groupSize, true) + exponent;
+        }
+
+        output += token;
+        lastPos = match.capturedEnd();
+    }
+    output += input.mid(lastPos);
+    return output;
+}
+
+static QString formattedLiveResult(const Quantity& quantity, char resultFormat = '\0')
+{
+    return groupedDigitsForTooltip(NumberFormatter::format(quantity, resultFormat));
+}
+
 static QString formattedLiveResultWithAlternatives(const Quantity& quantity)
 {
     const Settings* settings = Settings::instance();
-    QString formatted = QStringLiteral("<b>%1</b>").arg(NumberFormatter::format(quantity));
+    QString formatted = QStringLiteral("<b>%1</b>").arg(formattedLiveResult(quantity));
     if (settings->alternativeResultFormat != '\0') {
         formatted += QStringLiteral("<br/>%1")
-            .arg(NumberFormatter::format(quantity, settings->alternativeResultFormat));
+            .arg(formattedLiveResult(quantity, settings->alternativeResultFormat));
     }
     if (settings->tertiaryResultFormat != '\0') {
         formatted += QStringLiteral("<br/>%1")
-            .arg(NumberFormatter::format(quantity, settings->tertiaryResultFormat));
+            .arg(formattedLiveResult(quantity, settings->tertiaryResultFormat));
     }
     return formatted;
 }
