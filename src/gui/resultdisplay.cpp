@@ -369,13 +369,15 @@ void ResultDisplay::contextMenuEvent(QContextMenuEvent* event)
         connect(editAction, &QAction::triggered, this, [this, historyIndex]() {
             emit editHistoryEntryRequested(historyIndex);
         });
-        QAction* removeAboveAction = menu->addAction(tr("Remove All Calculations Above"));
-        connect(removeAboveAction, &QAction::triggered, this, [this, historyIndex]() {
-            emit removeHistoryEntriesAboveRequested(historyIndex);
-        });
+        menu->addSeparator();
         QAction* removeAction = menu->addAction(tr("Remove This Calculation"));
         connect(removeAction, &QAction::triggered, this, [this, historyIndex]() {
             emit removeHistoryEntryRequested(historyIndex);
+        });
+        menu->addSeparator();
+        QAction* removeAboveAction = menu->addAction(tr("Remove All Calculations Above"));
+        connect(removeAboveAction, &QAction::triggered, this, [this, historyIndex]() {
+            emit removeHistoryEntriesAboveRequested(historyIndex);
         });
         QAction* removeBelowAction = menu->addAction(tr("Remove All Calculations Below"));
         connect(removeBelowAction, &QAction::triggered, this, [this, historyIndex]() {
