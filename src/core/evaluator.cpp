@@ -1412,7 +1412,8 @@ void Evaluator::compile(const Tokens& tokens)
 {
 #ifdef EVALUATOR_DEBUG
     QFile debugFile("eval.log");
-    debugFile.open(QIODevice::WriteOnly);
+    if (!debugFile.open(QIODevice::WriteOnly))
+        qWarning() << "Could not open eval.log for writing:" << debugFile.errorString();
     QTextStream dbg(&debugFile);
 #endif
 
