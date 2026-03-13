@@ -375,7 +375,7 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorAlwaysOnTop->setText(MainWindow::tr("Always on &Top"));
     m_actions.settingsBehaviorAutoAns->setText(MainWindow::tr("Automatic Result &Reuse"));
     m_actions.settingsBehaviorAutoCompletion->setText(MainWindow::tr("Automatic &Completion"));
-    m_actions.settingsBehaviorPartialResults->setText(MainWindow::tr("&Partial Results"));
+    m_actions.settingsBehaviorPartialResults->setText(MainWindow::tr("Live Results &Tooltip"));
     m_actions.settingsBehaviorSaveSessionOnExit->setText(MainWindow::tr("Save &History on Exit"));
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setText(MainWindow::tr("Save &Window Positon on Exit"));
     m_actions.settingsBehaviorSyntaxHighlighting->setText(MainWindow::tr("Syntax &Highlighting"));

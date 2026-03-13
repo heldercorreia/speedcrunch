@@ -69,7 +69,7 @@ The expression editor provides some advanced features:
     usage information for a function. Pressing :kbd:`Escape` will dismiss the manual window again.
 
 * Selection results
-    If :menuselection:`Settings --> Behavior --> Partial Results` is enabled, selecting a partial expression in the expression editor will show
+    If :menuselection:`Settings --> Behavior --> Live Results Tooltip` is enabled, selecting a partial expression in the expression editor will show
     you the result of the selected expression.
 
 
@@ -186,7 +186,7 @@ This section contains several settings that allow you to further configure Speed
     exceeded. Set the value to ``0`` to disable the limit.
 * :menuselection:`Save Window Position on Exit`
     Controls if the window position is saved and restored.
-* :menuselection:`Partial Results`
+* :menuselection:`Live Results Tooltip`
     If set, SpeedCrunch will display partial results as you type your expression as well
     as results when selecting a partial expression in the editor.
 
