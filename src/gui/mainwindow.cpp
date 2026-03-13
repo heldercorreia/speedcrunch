@@ -2093,6 +2093,8 @@ void MainWindow::showFontDialog()
         return;
     m_widgets.display->setFont(f);
     m_widgets.editor->setFont(f);
+    if (m_widgets.state->isVisible())
+        showStateLabel(m_widgets.state->text());
 }
 
 void MainWindow::setStatusBarVisible(bool b)
@@ -2109,6 +2111,7 @@ void MainWindow::setMenuBarVisible(bool b)
 
 void MainWindow::showStateLabel(const QString& msg)
 {
+    m_widgets.state->setFont(m_widgets.editor->font());
     m_widgets.state->setText(msg);
     m_widgets.state->adjustSize();
     m_widgets.state->show();
@@ -3078,12 +3081,16 @@ void MainWindow::increaseDisplayFontPointSize()
 {
     m_widgets.display->increaseFontPointSize();
     m_widgets.editor->increaseFontPointSize();
+    if (m_widgets.state->isVisible())
+        showStateLabel(m_widgets.state->text());
 }
 
 void MainWindow::decreaseDisplayFontPointSize()
 {
     m_widgets.display->decreaseFontPointSize();
     m_widgets.editor->decreaseFontPointSize();
+    if (m_widgets.state->isVisible())
+        showStateLabel(m_widgets.state->text());
 }
 
 void MainWindow::showLanguageChooserDialog()
