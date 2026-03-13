@@ -147,6 +147,7 @@ void MainWindow::createActions()
     m_actions.viewKeypad = new QAction(this);
     m_actions.viewFormulaBook = new QAction(this);
     m_actions.viewStatusBar = new QAction(this);
+    m_actions.viewMenuBar = new QAction(this);
     m_actions.viewVariables = new QAction(this);
     m_actions.viewBitfield = new QAction(this);
     m_actions.viewUserFunctions = new QAction(this);
@@ -259,6 +260,7 @@ void MainWindow::createActions()
     m_actions.viewKeypad->setCheckable(true);
     m_actions.viewFormulaBook->setCheckable(true);
     m_actions.viewStatusBar->setCheckable(true);
+    m_actions.viewMenuBar->setCheckable(true);
     m_actions.viewVariables->setCheckable(true);
     m_actions.viewBitfield->setCheckable(true);
     m_actions.viewUserFunctions->setCheckable(true);
@@ -371,6 +373,7 @@ void MainWindow::setActionsText()
     m_actions.viewKeypad->setText(MainWindow::tr("&Keypad"));
     m_actions.viewFormulaBook->setText(MainWindow::tr("Formula &Book"));
     m_actions.viewStatusBar->setText(MainWindow::tr("&Status Bar"));
+    m_actions.viewMenuBar->setText(MainWindow::tr("Main &Menu"));
     m_actions.viewVariables->setText(MainWindow::tr("&Variables"));
     m_actions.viewBitfield->setText(MainWindow::tr("Bitfield"));
     m_actions.viewUserFunctions->setText(MainWindow::tr("Use&r Functions"));
@@ -556,6 +559,9 @@ void MainWindow::createMenus()
     m_menus.view->addAction(m_actions.viewHistory);
     m_menus.view->addSeparator();
     m_menus.view->addAction(m_actions.viewStatusBar);
+#if !defined(Q_OS_MACOS)
+    m_menus.view->addAction(m_actions.viewMenuBar);
+#endif
     m_menus.view->addSeparator();
     m_menus.view->addAction(m_actions.viewFullScreenMode);
 
@@ -982,6 +988,9 @@ void MainWindow::createFixedConnections()
     connect(m_actions.viewFullScreenMode, SIGNAL(toggled(bool)), SLOT(setFullScreenEnabled(bool)));
     connect(m_actions.viewKeypad, SIGNAL(toggled(bool)), SLOT(setKeypadVisible(bool)));
     connect(m_actions.viewStatusBar, SIGNAL(toggled(bool)), SLOT(setStatusBarVisible(bool)));
+#if !defined(Q_OS_MACOS)
+    connect(m_actions.viewMenuBar, SIGNAL(toggled(bool)), SLOT(setMenuBarVisible(bool)));
+#endif
     connect(m_actions.viewBitfield, SIGNAL(toggled(bool)), SLOT(setBitfieldVisible(bool)));
 
     connect(m_actions.viewConstants, SIGNAL(triggered(bool)), SLOT(setConstantsDockVisible(bool)));
@@ -1131,6 +1140,10 @@ void MainWindow::applySettings()
     m_actions.viewBitfield->setChecked(m_settings->bitfieldVisible);
     m_actions.viewKeypad->setChecked(m_settings->keypadVisible);
     m_actions.viewStatusBar->setChecked(m_settings->statusBarVisible);
+#if !defined(Q_OS_MACOS)
+    setMenuBarVisible(m_settings->menuBarVisible);
+    m_actions.viewMenuBar->setChecked(m_settings->menuBarVisible);
+#endif
 
     if (!restoreGeometry(m_settings->windowGeometry)) {
         // We couldn't restore the saved geometry; that means it was either empty
@@ -1926,6 +1939,12 @@ void MainWindow::setStatusBarVisible(bool b)
 {
     b ? createStatusBar() : deleteStatusBar();
     m_settings->statusBarVisible = b;
+}
+
+void MainWindow::setMenuBarVisible(bool b)
+{
+    menuBar()->setVisible(b);
+    m_settings->menuBarVisible = b;
 }
 
 void MainWindow::showStateLabel(const QString& msg)

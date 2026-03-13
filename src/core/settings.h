@@ -75,6 +75,7 @@ public:
     bool keypadVisible;
     bool formulaBookDockVisible;
     bool statusBarVisible;
+    bool menuBarVisible;
     bool variablesDockVisible;
     bool userFunctionsDockVisible;
     bool windowOnfullScreen;

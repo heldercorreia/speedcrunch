@@ -165,6 +165,7 @@ private slots:
     void setResultPrecision8Digits();
     void setResultPrecisionAutomatic();
     void setResultPrecision(int);
+    void setMenuBarVisible(bool);
     void setStatusBarVisible(bool);
     void setSyntaxHighlightingEnabled(bool);
     void setDigitGrouping(QAction*);
@@ -275,6 +276,7 @@ private:
         QAction* viewUserFunctions;
         QAction* viewHistory;
         QAction* viewStatusBar;
+        QAction* viewMenuBar;
         QAction* viewFullScreenMode;
         QAction* viewBitfield;
         QAction* settingsResultFormatGeneral;
