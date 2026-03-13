@@ -154,7 +154,7 @@ void Settings::load()
     radixCharStr = settings->value(key + QLatin1String("RadixCharacter"), "*").toString();
     setRadixCharacter(radixCharStr.at(0).toLatin1());
 
-    autoAns = settings->value(key + QLatin1String("AutoAns"), true).toBool();
+    autoAns = settings->value(key + QLatin1String("AutoAns"), false).toBool();
     autoCalc = settings->value(key + QLatin1String("AutoCalc"), true).toBool();
     autoCompletion = settings->value(key + QLatin1String("AutoCompletion"), true).toBool();
     sessionSave = settings->value(key + QLatin1String("SessionSave"), true).toBool();
