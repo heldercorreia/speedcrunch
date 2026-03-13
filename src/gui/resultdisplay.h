@@ -28,6 +28,8 @@ class HistoryEntry;
 class Session;
 class QContextMenuEvent;
 class QPoint;
+class QMouseEvent;
+class QEvent;
 
 class ResultDisplay : public QPlainTextEdit
 {
@@ -41,6 +43,7 @@ public:
     int count() const;
     bool isEmpty() const { return m_count==0; }
     QString exportHtml() const;
+    void setHoverHighlightEnabled(bool enabled);
 
 signals:
     void shiftWheelDown();
@@ -54,6 +57,7 @@ signals:
 
 public slots:
     void clear();
+    void clearHoverFeedback();
     void decreaseFontPointSize();
     void increaseFontPointSize();
     void rehighlight();
@@ -69,7 +73,9 @@ public slots:
 
 protected:
     virtual void contextMenuEvent(QContextMenuEvent*);
+    virtual void leaveEvent(QEvent*);
     virtual void mouseDoubleClickEvent(QMouseEvent*);
+    virtual void mouseMoveEvent(QMouseEvent*);
     virtual void wheelEvent(QWheelEvent*);
     virtual void timerEvent(QTimerEvent*);
     void fullContentScrollEvent();
@@ -79,6 +85,8 @@ protected:
     void stopActiveScrollingAnimation();
     void updateScrollBarStyleSheet();
     int historyIndexAtPosition(const QPoint& pos) const;
+    bool blockRangeForHistoryIndex(int historyIndex, int& startBlock, int& endBlock) const;
+    void updateHoverHighlightSelection();
 
 private:
     Q_DISABLE_COPY(ResultDisplay)
@@ -88,6 +96,8 @@ private:
     int m_scrolledLines;
     int m_scrollDirection;
     bool m_isScrollingPageOnly;
+    bool m_hoverHighlightEnabled;
+    int m_hoveredHistoryIndex;
     int m_count;
 };
 

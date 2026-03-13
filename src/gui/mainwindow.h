@@ -167,6 +167,7 @@ private slots:
     void setSyntaxHighlightingEnabled(bool);
     void setDigitGrouping(QAction*);
     void setAutoResultToClipboardEnabled(bool);
+    void setHoverHighlightResultsEnabled(bool);
     void setComplexNumbers(bool);
     void setVariablesDockVisible(bool, bool takeFocus = true);
     void setUserFunctionsDockVisible(bool, bool takeFocus = true);
@@ -294,6 +295,7 @@ private:
         QAction* settingsBehaviorPartialResults;
         QAction* settingsBehaviorAutoCompletion;
         QAction* settingsBehaviorSyntaxHighlighting;
+        QAction* settingsBehaviorHoverHighlightResults;
         QAction* settingsBehaviorDigitGroupingNone;
         QAction* settingsBehaviorDigitGroupingOneSpace;
         QAction* settingsBehaviorDigitGroupingTwoSpaces;

@@ -58,6 +58,7 @@ public:
     bool sessionSave;
     bool leaveLastExpression;
     bool syntaxHighlighting;
+    bool hoverHighlightResults;
     bool windowAlwaysOnTop;
     bool autoResultToClipboard;
     bool windowPositionSave;

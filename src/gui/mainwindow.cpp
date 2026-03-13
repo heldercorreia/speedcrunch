@@ -162,6 +162,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorSaveSessionOnExit = new QAction(this);
     m_actions.settingsBehaviorSaveWindowPositionOnExit = new QAction(this);
     m_actions.settingsBehaviorSyntaxHighlighting = new QAction(this);
+    m_actions.settingsBehaviorHoverHighlightResults = new QAction(this);
     m_actions.settingsBehaviorDigitGroupingNone = new QAction(this);
     m_actions.settingsBehaviorDigitGroupingOneSpace = new QAction(this);
     m_actions.settingsBehaviorDigitGroupingTwoSpaces = new QAction(this);
@@ -212,6 +213,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorSaveSessionOnExit->setCheckable(true);
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setCheckable(true);
     m_actions.settingsBehaviorSyntaxHighlighting->setCheckable(true);
+    m_actions.settingsBehaviorHoverHighlightResults->setCheckable(true);
     m_actions.settingsBehaviorDigitGroupingNone->setCheckable(true);
     m_actions.settingsBehaviorDigitGroupingNone->setData(0);
     m_actions.settingsBehaviorDigitGroupingOneSpace->setCheckable(true);
@@ -377,6 +379,7 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorSaveSessionOnExit->setText(MainWindow::tr("Save &History on Exit"));
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setText(MainWindow::tr("Save &Window Positon on Exit"));
     m_actions.settingsBehaviorSyntaxHighlighting->setText(MainWindow::tr("Syntax &Highlighting"));
+    m_actions.settingsBehaviorHoverHighlightResults->setText(MainWindow::tr("Hover Highlighting"));
     m_actions.settingsBehaviorDigitGroupingNone->setText(MainWindow::tr("Disabled"));
     m_actions.settingsBehaviorDigitGroupingOneSpace->setText(MainWindow::tr("Small Space"));
     m_actions.settingsBehaviorDigitGroupingTwoSpaces->setText(MainWindow::tr("Medium Space"));
@@ -597,6 +600,7 @@ void MainWindow::createMenus()
     m_menus.behavior->addAction(m_actions.settingsBehaviorAutoAns);
     m_menus.behavior->addAction(m_actions.settingsBehaviorAutoCompletion);
     m_menus.behavior->addAction(m_actions.settingsBehaviorSyntaxHighlighting);
+    m_menus.behavior->addAction(m_actions.settingsBehaviorHoverHighlightResults);
 
     m_menus.digitGrouping = m_menus.behavior->addMenu("");
     m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingNone);
@@ -978,6 +982,7 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsBehaviorHistorySizeLimit, SIGNAL(triggered()), SLOT(setHistorySizeLimit()));
     connect(m_actions.settingsBehaviorSaveWindowPositionOnExit, SIGNAL(toggled(bool)), SLOT(setWindowPositionSaveEnabled(bool)));
     connect(m_actions.settingsBehaviorSyntaxHighlighting, SIGNAL(toggled(bool)), SLOT(setSyntaxHighlightingEnabled(bool)));
+    connect(m_actions.settingsBehaviorHoverHighlightResults, SIGNAL(toggled(bool)), SLOT(setHoverHighlightResultsEnabled(bool)));
     connect(m_actionGroups.digitGrouping, SIGNAL(triggered(QAction*)), SLOT(setDigitGrouping(QAction*)));
     connect(m_actions.settingsBehaviorLeaveLastExpression, SIGNAL(toggled(bool)), SLOT(setLeaveLastExpressionEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoResultToClipboard, SIGNAL(toggled(bool)), SLOT(setAutoResultToClipboardEnabled(bool)));
@@ -1162,6 +1167,11 @@ void MainWindow::applySettings()
         m_actions.settingsBehaviorSyntaxHighlighting->setChecked(true);
     else
         setSyntaxHighlightingEnabled(false);
+
+    if (m_settings->hoverHighlightResults)
+        m_actions.settingsBehaviorHoverHighlightResults->setChecked(true);
+    else
+        setHoverHighlightResultsEnabled(false);
 
     if (m_settings->autoResultToClipboard)
         m_actions.settingsBehaviorAutoResultToClipboard->setChecked(true);
@@ -1734,6 +1744,12 @@ void MainWindow::setDigitGrouping(QAction *action)
 void MainWindow::setAutoResultToClipboardEnabled(bool b)
 {
     m_settings->autoResultToClipboard = b;
+}
+
+void MainWindow::setHoverHighlightResultsEnabled(bool b)
+{
+    m_settings->hoverHighlightResults = b;
+    m_widgets.display->setHoverHighlightEnabled(b);
 }
 
 void MainWindow::setComplexNumbers(bool b)
@@ -2446,6 +2462,7 @@ void MainWindow::handleBitsChanged(const QString& str)
 
 void MainWindow::handleEditorTextChange()
 {
+    m_widgets.display->clearHoverFeedback();
     clearTextEditSelection(m_widgets.display);
     if (m_widgets.editor->text().trimmed().isEmpty()) {
         hideStateLabel();

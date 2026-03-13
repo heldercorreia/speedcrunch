@@ -33,8 +33,26 @@
 #include <QClipboard>
 #include <QContextMenuEvent>
 #include <QMenu>
-#include <QPainter>
+#include <QMouseEvent>
 #include <QScrollBar>
+#include <QToolTip>
+
+namespace {
+QColor hoverColorForBackground(const QColor& background)
+{
+    const bool isLightBackground = background.lightnessF() >= 0.5;
+    const QColor target = isLightBackground ? QColor(Qt::black) : QColor(Qt::white);
+    const qreal blendFactor = 0.12; // subtle, but always visible even on pure black/white backgrounds
+
+    auto mixChannel = [blendFactor](int from, int to) {
+        return qBound(0, static_cast<int>(from + (to - from) * blendFactor), 255);
+    };
+
+    return QColor(mixChannel(background.red(), target.red()),
+                  mixChannel(background.green(), target.green()),
+                  mixChannel(background.blue(), target.blue()));
+}
+}
 
 ResultDisplay::ResultDisplay(QWidget* parent)
     : QPlainTextEdit(parent)
@@ -42,6 +60,8 @@ ResultDisplay::ResultDisplay(QWidget* parent)
     , m_scrolledLines(0)
     , m_scrollDirection(0)
     , m_isScrollingPageOnly(false)
+    , m_hoverHighlightEnabled(true)
+    , m_hoveredHistoryIndex(-1)
     , m_count(0)
 {
     setViewportMargins(0, 0, 0, 0);
@@ -51,6 +71,18 @@ ResultDisplay::ResultDisplay(QWidget* parent)
     setReadOnly(true);
     setFocusPolicy(Qt::NoFocus);
     setWordWrapMode(QTextOption::WrapAnywhere);
+    setMouseTracking(true);
+}
+
+void ResultDisplay::setHoverHighlightEnabled(bool enabled)
+{
+    if (m_hoverHighlightEnabled == enabled)
+        return;
+
+    m_hoverHighlightEnabled = enabled;
+    if (!m_hoverHighlightEnabled)
+        m_hoveredHistoryIndex = -1;
+    updateHoverHighlightSelection();
 }
 
 void ResultDisplay::append(const QString& expression, Quantity& value)
@@ -86,11 +118,20 @@ void ResultDisplay::clear()
 {
     m_count = 0;
     setPlainText(QLatin1String(""));
+    clearHoverFeedback();
+}
+
+void ResultDisplay::clearHoverFeedback()
+{
+    m_hoveredHistoryIndex = -1;
+    QToolTip::hideText();
+    setExtraSelections(QList<QTextEdit::ExtraSelection>());
 }
 
 
 void ResultDisplay::refresh()
 {
+    clearHoverFeedback();
     clear();
     QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
     m_count = history.count();
@@ -108,6 +149,7 @@ void ResultDisplay::refresh()
 
 void ResultDisplay::refreshLastHistoryEntry()
 {
+    clearHoverFeedback();
     const QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
     const int historyCount = history.count();
     if (historyCount == 0) {
@@ -271,6 +313,15 @@ void ResultDisplay::contextMenuEvent(QContextMenuEvent* event)
     delete menu;
 }
 
+void ResultDisplay::leaveEvent(QEvent* event)
+{
+    QPlainTextEdit::leaveEvent(event);
+    if (m_hoveredHistoryIndex >= 0) {
+        m_hoveredHistoryIndex = -1;
+        updateHoverHighlightSelection();
+    }
+}
+
 void ResultDisplay::timerEvent(QTimerEvent* event)
 {
     if (event->timerId() != m_scrollTimer.timerId()) {
@@ -334,6 +385,20 @@ void ResultDisplay::wheelEvent(QWheelEvent* event)
     event->accept();
 }
 
+void ResultDisplay::mouseMoveEvent(QMouseEvent* event)
+{
+    QPlainTextEdit::mouseMoveEvent(event);
+
+    if (!m_hoverHighlightEnabled)
+        return;
+
+    const int hoveredHistoryIndex = historyIndexAtPosition(event->pos());
+    if (hoveredHistoryIndex != m_hoveredHistoryIndex) {
+        m_hoveredHistoryIndex = hoveredHistoryIndex;
+        updateHoverHighlightSelection();
+    }
+}
+
 void ResultDisplay::stopActiveScrollingAnimation()
 {
     m_scrollTimer.stop();
@@ -395,4 +460,71 @@ int ResultDisplay::historyIndexAtPosition(const QPoint& pos) const
     }
 
     return -1;
+}
+
+bool ResultDisplay::blockRangeForHistoryIndex(int historyIndex, int& startBlock, int& endBlock) const
+{
+    startBlock = -1;
+    endBlock = -1;
+    if (historyIndex < 0)
+        return false;
+
+    const QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
+    if (historyIndex >= history.count())
+        return false;
+
+    int currentBlock = 0;
+    for (int i = 0; i < history.count(); ++i) {
+        const int entryStartBlock = currentBlock;
+        ++currentBlock; // expression/comment block
+
+        int entryEndBlock = entryStartBlock;
+        if (!history.at(i).result().isNan()) {
+            entryEndBlock = currentBlock; // result block
+            ++currentBlock;
+        }
+
+        ++currentBlock; // separator block
+
+        if (i == historyIndex) {
+            startBlock = entryStartBlock;
+            endBlock = entryEndBlock;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void ResultDisplay::updateHoverHighlightSelection()
+{
+    QList<QTextEdit::ExtraSelection> selections;
+    if (!m_hoverHighlightEnabled || m_hoveredHistoryIndex < 0) {
+        setExtraSelections(selections);
+        return;
+    }
+
+    int startBlock = -1;
+    int endBlock = -1;
+    if (!blockRangeForHistoryIndex(m_hoveredHistoryIndex, startBlock, endBlock)) {
+        setExtraSelections(selections);
+        return;
+    }
+
+    const QColor hoverColor = hoverColorForBackground(
+        m_highlighter->colorForRole(ColorScheme::Background));
+
+    for (int blockNumber = startBlock; blockNumber <= endBlock; ++blockNumber) {
+        QTextBlock block = document()->findBlockByNumber(blockNumber);
+        if (!block.isValid())
+            continue;
+
+        QTextEdit::ExtraSelection selection;
+        selection.cursor = QTextCursor(block);
+        selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+        selection.format.setBackground(hoverColor);
+        selections.append(selection);
+    }
+
+    setExtraSelections(selections);
 }

@@ -161,6 +161,7 @@ void Settings::load()
     leaveLastExpression = settings->value(key + QLatin1String("LeaveLastExpression"), false).toBool();
     language = settings->value(key + QLatin1String("Language"), "C").toString();
     syntaxHighlighting = settings->value(key + QLatin1String("SyntaxHighlighting"), true).toBool();
+    hoverHighlightResults = settings->value(key + QLatin1String("HoverHighlightResults"), true).toBool();
     autoResultToClipboard = settings->value(key + QLatin1String("AutoResultToClipboard"), false).toBool();
     windowPositionSave = settings->value(key + QLatin1String("WindowPositionSave"), true).toBool();
     complexNumbers = settings->value(key + QLatin1String("ComplexNumbers"), false).toBool();
@@ -232,6 +233,7 @@ void Settings::save()
     settings->setValue(key + QLatin1String("AutoAns"), autoAns);
     settings->setValue(key + QLatin1String("AutoCalc"), autoCalc);
     settings->setValue(key + QLatin1String("SyntaxHighlighting"), syntaxHighlighting);
+    settings->setValue(key + QLatin1String("HoverHighlightResults"), hoverHighlightResults);
     settings->setValue(key + QLatin1String("DigitGrouping"), digitGrouping);
     settings->setValue(key + QLatin1String("MaxHistoryEntries"), maxHistoryEntries);
     settings->setValue(key + QLatin1String("AutoResultToClipboard"), autoResultToClipboard);
