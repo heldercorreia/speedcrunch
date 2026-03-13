@@ -21,13 +21,104 @@
 #include "core/sessionhistory.h"
 #include "core/evaluator.h"
 #include "core/session.h"
+#include "core/settings.h"
 
 #include <QAction>
 #include <QEvent>
 #include <QListWidget>
+#include <QListWidgetItem>
 #include <QMenu>
+#include <QRegularExpression>
 #include <QVBoxLayout>
 
+namespace {
+QString groupedExpressionForHistory(const QString& input)
+{
+    const Settings* settings = Settings::instance();
+    if (settings->digitGrouping <= 0)
+        return input;
+
+    const QString separator = QStringLiteral(" ").repeated(settings->digitGrouping);
+    static const QRegularExpression numberPattern(
+        QStringLiteral("(?<![\\p{L}\\p{N}])(?:0[xX][0-9A-Fa-f]+(?:[\\.,][0-9A-Fa-f]+)?|0[oO][0-7]+(?:[\\.,][0-7]+)?|0[bB][01]+(?:[\\.,][01]+)?|\\d+(?:[\\.,]\\d+)?(?:[eE][+\\-]?\\d+)?)(?![\\p{L}\\p{N}])"));
+
+    auto groupPart = [&separator](const QString& digits, int groupSize, bool fromRight) {
+        if (digits.size() <= groupSize)
+            return digits;
+
+        QString result;
+        if (fromRight) {
+            int first = digits.size() % groupSize;
+            if (first == 0)
+                first = groupSize;
+            result = digits.left(first);
+            for (int i = first; i < digits.size(); i += groupSize) {
+                result += separator;
+                result += digits.mid(i, groupSize);
+            }
+            return result;
+        }
+
+        for (int i = 0; i < digits.size(); i += groupSize) {
+            if (i > 0)
+                result += separator;
+            result += digits.mid(i, groupSize);
+        }
+        return result;
+    };
+
+    QString output;
+    int lastPos = 0;
+    auto it = numberPattern.globalMatch(input);
+    while (it.hasNext()) {
+        const auto match = it.next();
+        output += input.mid(lastPos, match.capturedStart() - lastPos);
+
+        QString token = match.captured(0);
+        int prefixLength = 0;
+        int groupSize = 3;
+        if (token.startsWith(QLatin1String("0x"), Qt::CaseInsensitive)) {
+            prefixLength = 2;
+            groupSize = 4;
+        } else if (token.startsWith(QLatin1String("0o"), Qt::CaseInsensitive)) {
+            prefixLength = 2;
+            groupSize = 3;
+        } else if (token.startsWith(QLatin1String("0b"), Qt::CaseInsensitive)) {
+            prefixLength = 2;
+            groupSize = 4;
+        }
+
+        const QString prefix = token.left(prefixLength);
+        QString body = token.mid(prefixLength);
+        QString exponent;
+        if (prefixLength == 0) {
+            const int exponentPos = body.indexOf(QRegularExpression(QStringLiteral("[eE][+\\-]?\\d+$")));
+            if (exponentPos >= 0) {
+                exponent = body.mid(exponentPos);
+                body = body.left(exponentPos);
+            }
+        }
+
+        const int radixPos = body.indexOf(QRegularExpression(QStringLiteral("[\\.,]")));
+        if (radixPos >= 0) {
+            const QString integral = body.left(radixPos);
+            const QString fractional = body.mid(radixPos + 1);
+            token = prefix
+                + groupPart(integral, groupSize, true)
+                + body.at(radixPos)
+                + groupPart(fractional, groupSize, false)
+                + exponent;
+        } else {
+            token = prefix + groupPart(body, groupSize, true) + exponent;
+        }
+
+        output += token;
+        lastPos = match.capturedEnd();
+    }
+    output += input.mid(lastPos);
+    return output;
+}
+}
 
 HistoryWidget::HistoryWidget(QWidget *parent)
     : QWidget(parent)
@@ -56,19 +147,20 @@ void HistoryWidget::updateHistory()
     QList<HistoryEntry> hist = Evaluator::instance()->session()->historyToList();
     m_list->clear();
     m_list->clearSelection();
-    QStringList l;
 
-    for(int i=0; i<hist.size(); ++i)
-        l.append(hist[i].expr());
-
-    m_list->addItems(l);
+    for (int i = 0; i < hist.size(); ++i) {
+        const QString expression = hist[i].expr();
+        QListWidgetItem* item = new QListWidgetItem(groupedExpressionForHistory(expression));
+        item->setData(Qt::UserRole, expression);
+        m_list->addItem(item);
+    }
     m_list->scrollToBottom();
 }
 
 void HistoryWidget::handleItem(QListWidgetItem *item)
 {
     m_list->clearSelection();
-    emit expressionSelected(item->text());
+    emit expressionSelected(item->data(Qt::UserRole).toString());
 }
 
 void HistoryWidget::handleContextMenuRequested(const QPoint &position)
