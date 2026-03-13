@@ -32,7 +32,9 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QContextMenuEvent>
+#include <QMainWindow>
 #include <QMenu>
+#include <QMenuBar>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QScrollBar>
@@ -52,6 +54,27 @@ QColor hoverColorForBackground(const QColor& background)
     return QColor(mixChannel(background.red(), target.red()),
                   mixChannel(background.green(), target.green()),
                   mixChannel(background.blue(), target.blue()));
+}
+
+void cloneMenuActions(const QMenu* sourceMenu, QMenu* targetMenu)
+{
+    const QList<QAction*> sourceActions = sourceMenu->actions();
+    for (QAction* sourceAction : sourceActions) {
+        if (sourceAction->isSeparator()) {
+            targetMenu->addSeparator();
+            continue;
+        }
+
+        QMenu* sourceSubmenu = sourceAction->menu();
+        if (sourceSubmenu != 0) {
+            QMenu* clonedSubmenu = targetMenu->addMenu(sourceSubmenu->title());
+            clonedSubmenu->setEnabled(sourceAction->isEnabled());
+            cloneMenuActions(sourceSubmenu, clonedSubmenu);
+            continue;
+        }
+
+        targetMenu->addAction(sourceAction);
+    }
 }
 }
 
@@ -383,6 +406,26 @@ void ResultDisplay::contextMenuEvent(QContextMenuEvent* event)
         connect(removeBelowAction, &QAction::triggered, this, [this, historyIndex]() {
             emit removeHistoryEntriesBelowRequested(historyIndex);
         });
+    }
+
+    QMainWindow* mainWindow = qobject_cast<QMainWindow*>(window());
+    if (mainWindow != 0 && mainWindow->menuBar() != 0) {
+        menu->addSeparator();
+        QMenu* mainMenu = menu->addMenu(tr("Main Menu"));
+        const QList<QAction*> topLevelActions = mainWindow->menuBar()->actions();
+        for (QAction* topLevelAction : topLevelActions) {
+            if (topLevelAction->isSeparator()) {
+                mainMenu->addSeparator();
+                continue;
+            }
+
+            QMenu* sourceSubmenu = topLevelAction->menu();
+            if (sourceSubmenu != 0) {
+                QMenu* clonedTopLevelSubmenu = mainMenu->addMenu(sourceSubmenu->title());
+                clonedTopLevelSubmenu->setEnabled(topLevelAction->isEnabled());
+                cloneMenuActions(sourceSubmenu, clonedTopLevelSubmenu);
+            }
+        }
     }
 
     menu->exec(event->globalPos());
