@@ -198,6 +198,26 @@ void Settings::load()
     else
         resultFormat = format.at(0).toLatin1();
 
+    QString alternativeFormat = settings->value(key + QLatin1String("AlternativeType"), "").toString();
+    if (alternativeFormat.isEmpty())
+        alternativeResultFormat = '\0';
+    else if (alternativeFormat != "g" && alternativeFormat != "f" && alternativeFormat != "e"
+             && alternativeFormat != "n" && alternativeFormat != "h" && alternativeFormat != "o"
+             && alternativeFormat != "b" && alternativeFormat != "s")
+        alternativeResultFormat = '\0';
+    else
+        alternativeResultFormat = alternativeFormat.at(0).toLatin1();
+
+    QString tertiaryFormat = settings->value(key + QLatin1String("TertiaryType"), "").toString();
+    if (tertiaryFormat.isEmpty())
+        tertiaryResultFormat = '\0';
+    else if (tertiaryFormat != "g" && tertiaryFormat != "f" && tertiaryFormat != "e"
+             && tertiaryFormat != "n" && tertiaryFormat != "h" && tertiaryFormat != "o"
+             && tertiaryFormat != "b" && tertiaryFormat != "s")
+        tertiaryResultFormat = '\0';
+    else
+        tertiaryResultFormat = tertiaryFormat.at(0).toLatin1();
+
     // Complex format special case.
     QString cmplxFormat = settings->value(key + QLatin1String("ComplexForm"), 'c').toString();
     if (cmplxFormat != "c" && cmplxFormat != "p")
@@ -269,6 +289,10 @@ void Settings::save()
     key = KEY + QLatin1String("/Format/");
 
     settings->setValue(key + QLatin1String("Type"), QString(QChar(resultFormat)));
+    settings->setValue(key + QLatin1String("AlternativeType"),
+        alternativeResultFormat == '\0' ? QString() : QString(QChar(alternativeResultFormat)));
+    settings->setValue(key + QLatin1String("TertiaryType"),
+        tertiaryResultFormat == '\0' ? QString() : QString(QChar(tertiaryResultFormat)));
     settings->setValue(key + QLatin1String("ComplexForm"), QString(QChar(resultFormatComplex)));
     settings->setValue(key + QLatin1String("Precision"), resultPrecision);
 

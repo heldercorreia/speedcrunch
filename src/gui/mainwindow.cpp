@@ -196,6 +196,24 @@ void MainWindow::createActions()
     m_actions.settingsResultFormatCartesian= new QAction(this);
     m_actions.settingsResultFormatPolar = new QAction(this);
     m_actions.settingsResultFormatSexagesimal = new QAction(this);
+    m_actions.settingsAlternativeResultFormatDisabled = new QAction(this);
+    m_actions.settingsAlternativeResultFormatGeneral = new QAction(this);
+    m_actions.settingsAlternativeResultFormatFixed = new QAction(this);
+    m_actions.settingsAlternativeResultFormatEngineering = new QAction(this);
+    m_actions.settingsAlternativeResultFormatScientific = new QAction(this);
+    m_actions.settingsAlternativeResultFormatBinary = new QAction(this);
+    m_actions.settingsAlternativeResultFormatOctal = new QAction(this);
+    m_actions.settingsAlternativeResultFormatHexadecimal = new QAction(this);
+    m_actions.settingsAlternativeResultFormatSexagesimal = new QAction(this);
+    m_actions.settingsTertiaryResultFormatDisabled = new QAction(this);
+    m_actions.settingsTertiaryResultFormatGeneral = new QAction(this);
+    m_actions.settingsTertiaryResultFormatFixed = new QAction(this);
+    m_actions.settingsTertiaryResultFormatEngineering = new QAction(this);
+    m_actions.settingsTertiaryResultFormatScientific = new QAction(this);
+    m_actions.settingsTertiaryResultFormatBinary = new QAction(this);
+    m_actions.settingsTertiaryResultFormatOctal = new QAction(this);
+    m_actions.settingsTertiaryResultFormatHexadecimal = new QAction(this);
+    m_actions.settingsTertiaryResultFormatSexagesimal = new QAction(this);
     m_actions.helpManual = new QAction(this);
     m_actions.helpUpdates = new QAction(this);
     m_actions.helpFeedback = new QAction(this);
@@ -253,6 +271,24 @@ void MainWindow::createActions()
     m_actions.settingsResultFormatPolar->setCheckable(true);
     m_actions.settingsResultFormatScientific->setCheckable(true);
     m_actions.settingsResultFormatSexagesimal->setCheckable(true);
+    m_actions.settingsAlternativeResultFormatDisabled->setCheckable(true);
+    m_actions.settingsAlternativeResultFormatGeneral->setCheckable(true);
+    m_actions.settingsAlternativeResultFormatFixed->setCheckable(true);
+    m_actions.settingsAlternativeResultFormatEngineering->setCheckable(true);
+    m_actions.settingsAlternativeResultFormatScientific->setCheckable(true);
+    m_actions.settingsAlternativeResultFormatBinary->setCheckable(true);
+    m_actions.settingsAlternativeResultFormatOctal->setCheckable(true);
+    m_actions.settingsAlternativeResultFormatHexadecimal->setCheckable(true);
+    m_actions.settingsAlternativeResultFormatSexagesimal->setCheckable(true);
+    m_actions.settingsTertiaryResultFormatDisabled->setCheckable(true);
+    m_actions.settingsTertiaryResultFormatGeneral->setCheckable(true);
+    m_actions.settingsTertiaryResultFormatFixed->setCheckable(true);
+    m_actions.settingsTertiaryResultFormatEngineering->setCheckable(true);
+    m_actions.settingsTertiaryResultFormatScientific->setCheckable(true);
+    m_actions.settingsTertiaryResultFormatBinary->setCheckable(true);
+    m_actions.settingsTertiaryResultFormatOctal->setCheckable(true);
+    m_actions.settingsTertiaryResultFormatHexadecimal->setCheckable(true);
+    m_actions.settingsTertiaryResultFormatSexagesimal->setCheckable(true);
     m_actions.viewConstants->setCheckable(true);
     m_actions.viewFullScreenMode->setCheckable(true);
     m_actions.viewFunctions->setCheckable(true);
@@ -419,6 +455,24 @@ void MainWindow::setActionsText()
     m_actions.settingsResultFormatOctal->setText(MainWindow::tr("&Octal"));
     m_actions.settingsResultFormatHexadecimal->setText(MainWindow::tr("&Hexadecimal"));
     m_actions.settingsResultFormatSexagesimal->setText(MainWindow::tr("&Sexagesimal"));
+    m_actions.settingsAlternativeResultFormatDisabled->setText(MainWindow::tr("&Disabled"));
+    m_actions.settingsAlternativeResultFormatGeneral->setText(MainWindow::tr("&General"));
+    m_actions.settingsAlternativeResultFormatFixed->setText(MainWindow::tr("&Fixed Decimal"));
+    m_actions.settingsAlternativeResultFormatEngineering->setText(MainWindow::tr("&Engineering"));
+    m_actions.settingsAlternativeResultFormatScientific->setText(MainWindow::tr("&Scientific"));
+    m_actions.settingsAlternativeResultFormatBinary->setText(MainWindow::tr("&Binary"));
+    m_actions.settingsAlternativeResultFormatOctal->setText(MainWindow::tr("&Octal"));
+    m_actions.settingsAlternativeResultFormatHexadecimal->setText(MainWindow::tr("&Hexadecimal"));
+    m_actions.settingsAlternativeResultFormatSexagesimal->setText(MainWindow::tr("&Sexagesimal"));
+    m_actions.settingsTertiaryResultFormatDisabled->setText(MainWindow::tr("&Disabled"));
+    m_actions.settingsTertiaryResultFormatGeneral->setText(MainWindow::tr("&General"));
+    m_actions.settingsTertiaryResultFormatFixed->setText(MainWindow::tr("&Fixed Decimal"));
+    m_actions.settingsTertiaryResultFormatEngineering->setText(MainWindow::tr("&Engineering"));
+    m_actions.settingsTertiaryResultFormatScientific->setText(MainWindow::tr("&Scientific"));
+    m_actions.settingsTertiaryResultFormatBinary->setText(MainWindow::tr("&Binary"));
+    m_actions.settingsTertiaryResultFormatOctal->setText(MainWindow::tr("&Octal"));
+    m_actions.settingsTertiaryResultFormatHexadecimal->setText(MainWindow::tr("&Hexadecimal"));
+    m_actions.settingsTertiaryResultFormatSexagesimal->setText(MainWindow::tr("&Sexagesimal"));
     m_actions.settingsResultFormatCartesian->setText(MainWindow::tr("&Cartesian"));
     m_actions.settingsResultFormatPolar->setText(MainWindow::tr("&Polar"));
     m_actions.settingsDisplayFont->setText(MainWindow::tr("&Font..."));
@@ -445,6 +499,28 @@ void MainWindow::createActionGroups()
     m_actionGroups.resultFormat->addAction(m_actions.settingsResultFormatOctal);
     m_actionGroups.resultFormat->addAction(m_actions.settingsResultFormatHexadecimal);
     m_actionGroups.resultFormat->addAction(m_actions.settingsResultFormatSexagesimal);
+
+    m_actionGroups.alternativeResultFormat = new QActionGroup(this);
+    m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatDisabled);
+    m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatBinary);
+    m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatGeneral);
+    m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatFixed);
+    m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatEngineering);
+    m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatScientific);
+    m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatOctal);
+    m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatHexadecimal);
+    m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatSexagesimal);
+
+    m_actionGroups.tertiaryResultFormat = new QActionGroup(this);
+    m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatDisabled);
+    m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatBinary);
+    m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatGeneral);
+    m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatFixed);
+    m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatEngineering);
+    m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatScientific);
+    m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatOctal);
+    m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatHexadecimal);
+    m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatSexagesimal);
 
     m_actionGroups.complexFormat = new QActionGroup(this);
     m_actionGroups.complexFormat->addAction(m_actions.settingsResultFormatCartesian);
@@ -595,6 +671,36 @@ void MainWindow::createMenus()
     m_menus.complexFormat->addAction(m_actions.settingsResultFormatCartesian);
     m_menus.complexFormat->addAction(m_actions.settingsResultFormatPolar);
 
+    m_menus.settings->addSeparator();
+
+    m_menus.alternativeResultFormat = m_menus.settings->addMenu("");
+    m_menus.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatDisabled);
+    m_menus.alternativeResultFormat->addSeparator();
+    m_menus.alternativeDecimal = m_menus.alternativeResultFormat->addMenu("");
+    m_menus.alternativeDecimal->addAction(m_actions.settingsAlternativeResultFormatGeneral);
+    m_menus.alternativeDecimal->addAction(m_actions.settingsAlternativeResultFormatFixed);
+    m_menus.alternativeDecimal->addAction(m_actions.settingsAlternativeResultFormatEngineering);
+    m_menus.alternativeDecimal->addAction(m_actions.settingsAlternativeResultFormatScientific);
+    m_menus.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatBinary);
+    m_menus.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatOctal);
+    m_menus.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatHexadecimal);
+    m_menus.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatSexagesimal);
+
+    m_menus.tertiaryResultFormat = m_menus.settings->addMenu("");
+    m_menus.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatDisabled);
+    m_menus.tertiaryResultFormat->addSeparator();
+    m_menus.tertiaryDecimal = m_menus.tertiaryResultFormat->addMenu("");
+    m_menus.tertiaryDecimal->addAction(m_actions.settingsTertiaryResultFormatGeneral);
+    m_menus.tertiaryDecimal->addAction(m_actions.settingsTertiaryResultFormatFixed);
+    m_menus.tertiaryDecimal->addAction(m_actions.settingsTertiaryResultFormatEngineering);
+    m_menus.tertiaryDecimal->addAction(m_actions.settingsTertiaryResultFormatScientific);
+    m_menus.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatBinary);
+    m_menus.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatOctal);
+    m_menus.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatHexadecimal);
+    m_menus.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatSexagesimal);
+
+    m_menus.settings->addSeparator();
+
     m_menus.inputFormat = m_menus.settings->addMenu("");
 
     m_menus.radixChar = m_menus.inputFormat->addMenu("");
@@ -670,9 +776,13 @@ void MainWindow::setMenusText()
     m_menus.view->setTitle(MainWindow::tr("&View"));
     m_menus.settings->setTitle(MainWindow::tr("Se&ttings"));
     m_menus.resultFormat->setTitle(MainWindow::tr("Result &Format"));
+    m_menus.alternativeResultFormat->setTitle(MainWindow::tr("Secondary Result Format"));
+    m_menus.tertiaryResultFormat->setTitle(MainWindow::tr("Tertiary Result Format"));
     m_menus.inputFormat->setTitle(MainWindow::tr("&Input Format"));
     m_menus.radixChar->setTitle(MainWindow::tr("Radix &Character"));
     m_menus.decimal->setTitle(MainWindow::tr("&Decimal"));
+    m_menus.alternativeDecimal->setTitle(MainWindow::tr("&Decimal"));
+    m_menus.tertiaryDecimal->setTitle(MainWindow::tr("&Decimal"));
     m_menus.precision->setTitle(MainWindow::tr("&Precision"));
     m_menus.angleUnit->setTitle(MainWindow::tr("&Angle Unit"));
     m_menus.complexFormat->setTitle(MainWindow::tr("Comple&x Format"));
@@ -1041,6 +1151,24 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsResultFormatPolar, SIGNAL(triggered()), SLOT(setResultFormatPolar()));
     connect(m_actions.settingsResultFormatSexagesimal, SIGNAL(triggered()), SLOT(setResultFormatSexagesimal()));
     connect(m_actions.settingsResultFormatScientific, SIGNAL(triggered()), SLOT(setResultFormatScientific()));
+    connect(m_actions.settingsAlternativeResultFormatDisabled, SIGNAL(triggered()), SLOT(setAlternativeResultFormatDisabled()));
+    connect(m_actions.settingsAlternativeResultFormatGeneral, SIGNAL(triggered()), SLOT(setAlternativeResultFormatGeneral()));
+    connect(m_actions.settingsAlternativeResultFormatFixed, SIGNAL(triggered()), SLOT(setAlternativeResultFormatFixed()));
+    connect(m_actions.settingsAlternativeResultFormatEngineering, SIGNAL(triggered()), SLOT(setAlternativeResultFormatEngineering()));
+    connect(m_actions.settingsAlternativeResultFormatScientific, SIGNAL(triggered()), SLOT(setAlternativeResultFormatScientific()));
+    connect(m_actions.settingsAlternativeResultFormatBinary, SIGNAL(triggered()), SLOT(setAlternativeResultFormatBinary()));
+    connect(m_actions.settingsAlternativeResultFormatOctal, SIGNAL(triggered()), SLOT(setAlternativeResultFormatOctal()));
+    connect(m_actions.settingsAlternativeResultFormatHexadecimal, SIGNAL(triggered()), SLOT(setAlternativeResultFormatHexadecimal()));
+    connect(m_actions.settingsAlternativeResultFormatSexagesimal, SIGNAL(triggered()), SLOT(setAlternativeResultFormatSexagesimal()));
+    connect(m_actions.settingsTertiaryResultFormatDisabled, SIGNAL(triggered()), SLOT(setTertiaryResultFormatDisabled()));
+    connect(m_actions.settingsTertiaryResultFormatGeneral, SIGNAL(triggered()), SLOT(setTertiaryResultFormatGeneral()));
+    connect(m_actions.settingsTertiaryResultFormatFixed, SIGNAL(triggered()), SLOT(setTertiaryResultFormatFixed()));
+    connect(m_actions.settingsTertiaryResultFormatEngineering, SIGNAL(triggered()), SLOT(setTertiaryResultFormatEngineering()));
+    connect(m_actions.settingsTertiaryResultFormatScientific, SIGNAL(triggered()), SLOT(setTertiaryResultFormatScientific()));
+    connect(m_actions.settingsTertiaryResultFormatBinary, SIGNAL(triggered()), SLOT(setTertiaryResultFormatBinary()));
+    connect(m_actions.settingsTertiaryResultFormatOctal, SIGNAL(triggered()), SLOT(setTertiaryResultFormatOctal()));
+    connect(m_actions.settingsTertiaryResultFormatHexadecimal, SIGNAL(triggered()), SLOT(setTertiaryResultFormatHexadecimal()));
+    connect(m_actions.settingsTertiaryResultFormatSexagesimal, SIGNAL(triggered()), SLOT(setTertiaryResultFormatSexagesimal()));
 
     connect(m_actions.settingsLanguage, SIGNAL(triggered()), SLOT(showLanguageChooserDialog()));
 
@@ -1180,6 +1308,8 @@ void MainWindow::applySettings()
 
 
     checkInitialResultFormat();
+    checkInitialAlternativeResultFormat();
+    checkInitialTertiaryResultFormat();
     checkInitialResultPrecision();
     checkInitialComplexFormat();
 
@@ -1289,6 +1419,36 @@ void MainWindow::checkInitialResultFormat()
         case 'b': m_actions.settingsResultFormatBinary->setChecked(true); break;
         case 's': m_actions.settingsResultFormatSexagesimal->setChecked(true); break;
         default : m_actions.settingsResultFormatFixed->setChecked(true);
+    }
+}
+
+void MainWindow::checkInitialAlternativeResultFormat()
+{
+    switch (m_settings->alternativeResultFormat) {
+        case 'g': m_actions.settingsAlternativeResultFormatGeneral->setChecked(true); break;
+        case 'n': m_actions.settingsAlternativeResultFormatEngineering->setChecked(true); break;
+        case 'e': m_actions.settingsAlternativeResultFormatScientific->setChecked(true); break;
+        case 'h': m_actions.settingsAlternativeResultFormatHexadecimal->setChecked(true); break;
+        case 'o': m_actions.settingsAlternativeResultFormatOctal->setChecked(true); break;
+        case 'b': m_actions.settingsAlternativeResultFormatBinary->setChecked(true); break;
+        case 's': m_actions.settingsAlternativeResultFormatSexagesimal->setChecked(true); break;
+        case 'f': m_actions.settingsAlternativeResultFormatFixed->setChecked(true); break;
+        default : m_actions.settingsAlternativeResultFormatDisabled->setChecked(true);
+    }
+}
+
+void MainWindow::checkInitialTertiaryResultFormat()
+{
+    switch (m_settings->tertiaryResultFormat) {
+        case 'g': m_actions.settingsTertiaryResultFormatGeneral->setChecked(true); break;
+        case 'n': m_actions.settingsTertiaryResultFormatEngineering->setChecked(true); break;
+        case 'e': m_actions.settingsTertiaryResultFormatScientific->setChecked(true); break;
+        case 'h': m_actions.settingsTertiaryResultFormatHexadecimal->setChecked(true); break;
+        case 'o': m_actions.settingsTertiaryResultFormatOctal->setChecked(true); break;
+        case 'b': m_actions.settingsTertiaryResultFormatBinary->setChecked(true); break;
+        case 's': m_actions.settingsTertiaryResultFormatSexagesimal->setChecked(true); break;
+        case 'f': m_actions.settingsTertiaryResultFormatFixed->setChecked(true); break;
+        default : m_actions.settingsTertiaryResultFormatDisabled->setChecked(true);
     }
 }
 
@@ -2264,6 +2424,114 @@ void MainWindow::setResultFormatSexagesimal()
 {
     setResultFormat('s');
     setStatusBarText();
+}
+
+void MainWindow::setAlternativeResultFormat(char c)
+{
+    if (m_settings->alternativeResultFormat == c)
+        return;
+
+    m_settings->alternativeResultFormat = c;
+    emit resultFormatChanged();
+}
+
+void MainWindow::setAlternativeResultFormatDisabled()
+{
+    setAlternativeResultFormat('\0');
+}
+
+void MainWindow::setAlternativeResultFormatGeneral()
+{
+    setAlternativeResultFormat('g');
+}
+
+void MainWindow::setAlternativeResultFormatFixed()
+{
+    setAlternativeResultFormat('f');
+}
+
+void MainWindow::setAlternativeResultFormatEngineering()
+{
+    setAlternativeResultFormat('n');
+}
+
+void MainWindow::setAlternativeResultFormatScientific()
+{
+    setAlternativeResultFormat('e');
+}
+
+void MainWindow::setAlternativeResultFormatBinary()
+{
+    setAlternativeResultFormat('b');
+}
+
+void MainWindow::setAlternativeResultFormatOctal()
+{
+    setAlternativeResultFormat('o');
+}
+
+void MainWindow::setAlternativeResultFormatHexadecimal()
+{
+    setAlternativeResultFormat('h');
+}
+
+void MainWindow::setAlternativeResultFormatSexagesimal()
+{
+    setAlternativeResultFormat('s');
+}
+
+void MainWindow::setTertiaryResultFormat(char c)
+{
+    if (m_settings->tertiaryResultFormat == c)
+        return;
+
+    m_settings->tertiaryResultFormat = c;
+    emit resultFormatChanged();
+}
+
+void MainWindow::setTertiaryResultFormatDisabled()
+{
+    setTertiaryResultFormat('\0');
+}
+
+void MainWindow::setTertiaryResultFormatGeneral()
+{
+    setTertiaryResultFormat('g');
+}
+
+void MainWindow::setTertiaryResultFormatFixed()
+{
+    setTertiaryResultFormat('f');
+}
+
+void MainWindow::setTertiaryResultFormatEngineering()
+{
+    setTertiaryResultFormat('n');
+}
+
+void MainWindow::setTertiaryResultFormatScientific()
+{
+    setTertiaryResultFormat('e');
+}
+
+void MainWindow::setTertiaryResultFormatBinary()
+{
+    setTertiaryResultFormat('b');
+}
+
+void MainWindow::setTertiaryResultFormatOctal()
+{
+    setTertiaryResultFormat('o');
+}
+
+void MainWindow::setTertiaryResultFormatHexadecimal()
+{
+    setTertiaryResultFormat('h');
+}
+
+void MainWindow::setTertiaryResultFormatSexagesimal()
+{
+    setTertiaryResultFormat('s');
 }
 
 void MainWindow::insertConstantIntoEditor(const QString& c)

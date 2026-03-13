@@ -53,6 +53,8 @@ public:
     char angleUnit; // 'r': radian; 'd': degree; 'g': gradian.
 
     char resultFormat;
+    char alternativeResultFormat; // '\0': disabled.
+    char tertiaryResultFormat; // '\0': disabled.
     int resultPrecision; // See HMath documentation.
     char resultFormatComplex; // 'c' cartesian; 'p' polar.
 

@@ -56,6 +56,21 @@ static void moveCursorToEnd(Editor* editor)
     editor->setTextCursor(cursor);
 }
 
+static QString formattedLiveResultWithAlternatives(const Quantity& quantity)
+{
+    const Settings* settings = Settings::instance();
+    QString formatted = QStringLiteral("<b>%1</b>").arg(NumberFormatter::format(quantity));
+    if (settings->alternativeResultFormat != '\0') {
+        formatted += QStringLiteral("<br/>%1")
+            .arg(NumberFormatter::format(quantity, settings->alternativeResultFormat));
+    }
+    if (settings->tertiaryResultFormat != '\0') {
+        formatted += QStringLiteral("<br/>%1")
+            .arg(NumberFormatter::format(quantity, settings->tertiaryResultFormat));
+    }
+    return formatted;
+}
+
 Editor::Editor(QWidget* parent)
     : QPlainTextEdit(parent)
 {
@@ -565,8 +580,8 @@ void Editor::autoCalc()
             // comment-only expressions.
             emit autoCalcDisabled();
         } else {
-            auto formatted = NumberFormatter::format(quantity);
-            auto message = tr("Current result: <b>%1</b>").arg(formatted);
+            const auto formatted = formattedLiveResultWithAlternatives(quantity);
+            auto message = tr("Current result: %1").arg(formatted);
             emit autoCalcMessageAvailable(message);
             emit autoCalcQuantityAvailable(quantity);
         }
@@ -619,8 +634,8 @@ void Editor::autoCalcSelection(const QString& custom)
             auto message = tr("Selection result: n/a");
             emit autoCalcMessageAvailable(message);
         } else {
-            auto formatted = NumberFormatter::format(quantity);
-            auto message = tr("Selection result: <b>%1</b>").arg(formatted);
+            const auto formatted = formattedLiveResultWithAlternatives(quantity);
+            auto message = tr("Selection result: %1").arg(formatted);
             emit autoCalcMessageAvailable(message);
             emit autoCalcQuantityAvailable(quantity);
         }

@@ -27,11 +27,17 @@ static const QChar g_minusChar = QString::fromUtf8("−")[0];
 
 QString NumberFormatter::format(Quantity q)
 {
+    return format(q, '\0');
+}
+
+QString NumberFormatter::format(Quantity q, char resultFormatOverride)
+{
     Settings* settings = Settings::instance();
+    const char activeResultFormat = resultFormatOverride == '\0' ? settings->resultFormat : resultFormatOverride;
 
     Quantity::Format format = q.format();
     if (format.base == Quantity::Format::Base::Null) {
-        switch (settings->resultFormat) {
+        switch (activeResultFormat) {
         case 'b':
             format.base = Quantity::Format::Base::Binary;
             break;
@@ -54,7 +60,7 @@ QString NumberFormatter::format(Quantity q)
 
     if (format.mode == Quantity::Format::Mode::Null) {
         if (format.base == Quantity::Format::Base::Decimal) {
-          switch (settings->resultFormat) {
+          switch (activeResultFormat) {
           case 'n':
               format.mode = Quantity::Format::Mode::Engineering;
               break;
@@ -87,7 +93,7 @@ QString NumberFormatter::format(Quantity q)
     }
 
     bool time = false, arc = q.isDimensionless();
-    if (settings->resultFormat == 's' && q.hasDimension()) {
+    if (activeResultFormat == 's' && q.hasDimension()) {
         auto dimension = q.getDimension();
         if (dimension.count() == 1 && dimension.firstKey() == "time") {
             auto iterator = dimension.begin();
@@ -98,7 +104,7 @@ QString NumberFormatter::format(Quantity q)
         }
     }
 
-    if (arc && settings->resultFormat == 's') {     // convert to arcseconds
+    if (arc && activeResultFormat == 's') {     // convert to arcseconds
         if (settings->angleUnit == 'r')
             q /= Quantity(HMath::pi() / HNumber(180));
         else if (settings->angleUnit == 'g')
@@ -107,14 +113,14 @@ QString NumberFormatter::format(Quantity q)
     }
 
     bool negative = false;
-    if (settings->resultFormat == 's' && q.isNegative()) {
+    if (activeResultFormat == 's' && q.isNegative()) {
         q *= Quantity(HNumber(-1));
         negative = true;
     }
 
     QString result = DMath::format(q, format);
 
-    if (settings->resultFormat == 's' && (arc || time)) {   // sexagesimal
+    if (activeResultFormat == 's' && (arc || time)) {   // sexagesimal
         int dotPos = result.indexOf('.');
         HNumber seconds(dotPos > 0 ? result.left(dotPos).toStdString().c_str() : result.toStdString().c_str());
         HNumber mains = HMath::floor(seconds / HNumber(3600));

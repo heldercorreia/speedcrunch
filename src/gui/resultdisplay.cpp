@@ -76,6 +76,32 @@ void cloneMenuActions(const QMenu* sourceMenu, QMenu* targetMenu)
         targetMenu->addAction(sourceAction);
     }
 }
+
+QStringList formatResultLines(const Quantity& value)
+{
+    const Settings* settings = Settings::instance();
+    QStringList lines;
+    lines.append(QLatin1String("= ") + NumberFormatter::format(value));
+    if (settings->alternativeResultFormat != '\0') {
+        lines.append(QLatin1String("= ")
+            + NumberFormatter::format(value, settings->alternativeResultFormat));
+    }
+    if (settings->tertiaryResultFormat != '\0') {
+        lines.append(QLatin1String("= ")
+            + NumberFormatter::format(value, settings->tertiaryResultFormat));
+    }
+    return lines;
+}
+
+int resultLineCountForSettings(const Settings* settings)
+{
+    int count = 1; // Primary result format is always shown for non-NaN results.
+    if (settings->alternativeResultFormat != '\0')
+        ++count;
+    if (settings->tertiaryResultFormat != '\0')
+        ++count;
+    return count;
+}
 }
 
 ResultDisplay::ResultDisplay(QWidget* parent)
@@ -140,8 +166,11 @@ void ResultDisplay::append(const QString& expression, Quantity& value)
     ++m_count;
 
     appendPlainText(expression);
-    if (!value.isNan())
-        appendPlainText(QLatin1String("= ") + NumberFormatter::format(value));
+    if (!value.isNan()) {
+        const QStringList resultLines = formatResultLines(value);
+        for (const QString& line : resultLines)
+            appendPlainText(line);
+    }
     appendPlainText(QLatin1String(""));
 }
 
@@ -193,8 +222,11 @@ void ResultDisplay::refresh()
         QString expression = history[i].expr();
         Quantity value = history[i].result();
         appendPlainText(expression);
-        if (!value.isNan())
-            appendPlainText(QLatin1String("= ") + NumberFormatter::format(value));
+        if (!value.isNan()) {
+            const QStringList resultLines = formatResultLines(value);
+            for (const QString& line : resultLines)
+                appendPlainText(line);
+        }
         appendPlainText(QLatin1String(""));
     }
 
@@ -202,47 +234,9 @@ void ResultDisplay::refresh()
 
 void ResultDisplay::refreshLastHistoryEntry()
 {
-    clearHoverFeedback();
-    const QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
-    const int historyCount = history.count();
-    if (historyCount == 0) {
-        clear();
-        return;
-    }
-
-    if (m_count != historyCount || blockCount() <= 0) {
-        refresh();
-        return;
-    }
-
-    int lastExprBlock = 0;
-    for (int i = 0; i < historyCount - 1; ++i) {
-        ++lastExprBlock;
-        if (!history.at(i).result().isNan())
-            ++lastExprBlock;
-        ++lastExprBlock;
-    }
-
-    QTextBlock exprBlock = document()->findBlockByNumber(lastExprBlock);
-    if (!exprBlock.isValid()) {
-        refresh();
-        return;
-    }
-
-    const HistoryEntry& lastEntry = history.last();
-    if (lastEntry.result().isNan())
-        return;
-
-    QTextBlock resultBlock = exprBlock.next();
-    if (!resultBlock.isValid()) {
-        refresh();
-        return;
-    }
-
-    QTextCursor cursor(resultBlock);
-    cursor.setPosition(resultBlock.position());
-    cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
-    cursor.insertText(QLatin1String("= ") + NumberFormatter::format(lastEntry.result()));
+    // Result lines per entry are now dynamic (primary + optional secondary/tertiary),
+    // so a full refresh keeps indexes and layout consistent.
+    refresh();
 }
 
 void ResultDisplay::scrollLines(int numberOfLines)
@@ -665,6 +659,8 @@ int ResultDisplay::historyIndexAtPosition(const QPoint& pos) const
         return -1;
 
     const QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
+    const Settings* settings = Settings::instance();
+    const int resultLineCount = resultLineCountForSettings(settings);
     int currentBlock = 0;
     for (int i = 0; i < history.count(); ++i) {
         if (currentBlock == blockNumber)
@@ -672,9 +668,11 @@ int ResultDisplay::historyIndexAtPosition(const QPoint& pos) const
         ++currentBlock;
 
         if (!history.at(i).result().isNan()) {
-            if (currentBlock == blockNumber)
-                return i;
-            ++currentBlock;
+            for (int line = 0; line < resultLineCount; ++line) {
+                if (currentBlock == blockNumber)
+                    return i;
+                ++currentBlock;
+            }
         }
 
         if (currentBlock == blockNumber)
@@ -693,6 +691,8 @@ bool ResultDisplay::blockRangeForHistoryIndex(int historyIndex, int& startBlock,
         return false;
 
     const QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
+    const Settings* settings = Settings::instance();
+    const int resultLineCount = resultLineCountForSettings(settings);
     if (historyIndex >= history.count())
         return false;
 
@@ -703,8 +703,8 @@ bool ResultDisplay::blockRangeForHistoryIndex(int historyIndex, int& startBlock,
 
         int entryEndBlock = entryStartBlock;
         if (!history.at(i).result().isNan()) {
-            entryEndBlock = currentBlock; // result block
-            ++currentBlock;
+            entryEndBlock = currentBlock + resultLineCount - 1; // result block(s)
+            currentBlock += resultLineCount;
         }
 
         ++currentBlock; // separator block
