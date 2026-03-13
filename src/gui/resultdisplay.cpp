@@ -63,6 +63,7 @@ ResultDisplay::ResultDisplay(QWidget* parent)
     , m_isScrollingPageOnly(false)
     , m_hoverHighlightEnabled(true)
     , m_hoveredHistoryIndex(-1)
+    , m_editingHistoryIndex(-1)
     , m_count(0)
 {
     setViewportMargins(0, 0, 0, 0);
@@ -84,6 +85,31 @@ void ResultDisplay::setHoverHighlightEnabled(bool enabled)
     if (!m_hoverHighlightEnabled)
         m_hoveredHistoryIndex = -1;
     updateHoverHighlightSelection();
+}
+
+void ResultDisplay::setEditingHistoryIndex(int index)
+{
+    if (m_editingHistoryIndex == index)
+        return;
+
+    const int previousEditingHistoryIndex = m_editingHistoryIndex;
+    m_editingHistoryIndex = index;
+
+    if (m_editingHistoryIndex >= 0 && m_hoveredHistoryIndex >= 0) {
+        const int previousHoveredHistoryIndex = m_hoveredHistoryIndex;
+        m_hoveredHistoryIndex = -1;
+        updateHoverHighlightSelection();
+        viewport()->update(hoverActionRectForHistoryIndex(previousHoveredHistoryIndex));
+    }
+    if (m_editingHistoryIndex >= 0)
+        viewport()->unsetCursor();
+
+    updateHoverHighlightSelection();
+
+    if (previousEditingHistoryIndex >= 0)
+        viewport()->update(viewport()->rect());
+    if (m_editingHistoryIndex >= 0)
+        viewport()->update(viewport()->rect());
 }
 
 void ResultDisplay::append(const QString& expression, Quantity& value)
@@ -127,9 +153,9 @@ void ResultDisplay::clearHoverFeedback()
     const int previousHoveredHistoryIndex = m_hoveredHistoryIndex;
     m_hoveredHistoryIndex = -1;
     QToolTip::hideText();
-    setExtraSelections(QList<QTextEdit::ExtraSelection>());
+    updateHoverHighlightSelection();
     if (previousHoveredHistoryIndex >= 0)
-        viewport()->update(removeGlyphRectForHistoryIndex(previousHoveredHistoryIndex));
+        viewport()->update(hoverActionRectForHistoryIndex(previousHoveredHistoryIndex));
 }
 
 
@@ -303,7 +329,25 @@ void ResultDisplay::mouseDoubleClickEvent(QMouseEvent*)
 
 void ResultDisplay::mousePressEvent(QMouseEvent* event)
 {
+    if (m_editingHistoryIndex >= 0) {
+        const QRect cancelRect = cancelGlyphBadgeRectForEditingIndex();
+        if (event->button() == Qt::LeftButton && cancelRect.isValid() && cancelRect.contains(event->pos())) {
+            emit cancelHistoryEditRequested();
+            event->accept();
+            return;
+        }
+        QPlainTextEdit::mousePressEvent(event);
+        return;
+    }
+
     if (event->button() == Qt::LeftButton && m_hoverHighlightEnabled && m_hoveredHistoryIndex >= 0) {
+        const QRect editRect = editGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex);
+        if (editRect.contains(event->pos())) {
+            emit editHistoryEntryRequested(m_hoveredHistoryIndex);
+            event->accept();
+            return;
+        }
+
         const QRect removeRect = removeGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex);
         if (removeRect.contains(event->pos())) {
             emit removeHistoryEntryRequested(m_hoveredHistoryIndex);
@@ -321,6 +365,10 @@ void ResultDisplay::contextMenuEvent(QContextMenuEvent* event)
     const int historyIndex = historyIndexAtPosition(event->pos());
     if (historyIndex >= 0) {
         menu->addSeparator();
+        QAction* editAction = menu->addAction(tr("Edit This Calculation"));
+        connect(editAction, &QAction::triggered, this, [this, historyIndex]() {
+            emit editHistoryEntryRequested(historyIndex);
+        });
         QAction* removeAboveAction = menu->addAction(tr("Remove All Calculations Above"));
         connect(removeAboveAction, &QAction::triggered, this, [this, historyIndex]() {
             emit removeHistoryEntriesAboveRequested(historyIndex);
@@ -347,7 +395,7 @@ void ResultDisplay::leaveEvent(QEvent* event)
         const int previousHoveredHistoryIndex = m_hoveredHistoryIndex;
         m_hoveredHistoryIndex = -1;
         updateHoverHighlightSelection();
-        viewport()->update(removeGlyphRectForHistoryIndex(previousHoveredHistoryIndex));
+        viewport()->update(hoverActionRectForHistoryIndex(previousHoveredHistoryIndex));
     }
 }
 
@@ -418,8 +466,32 @@ void ResultDisplay::mouseMoveEvent(QMouseEvent* event)
 {
     QPlainTextEdit::mouseMoveEvent(event);
 
-    if (!m_hoverHighlightEnabled)
+    if (m_editingHistoryIndex >= 0) {
+        const QRect cancelRect = cancelGlyphBadgeRectForEditingIndex();
+        const bool overCancelGlyph = cancelRect.isValid() && cancelRect.contains(event->pos());
+        if (overCancelGlyph)
+            viewport()->setCursor(Qt::PointingHandCursor);
+        else
+            viewport()->unsetCursor();
+
+        if (overCancelGlyph)
+            QToolTip::showText(QCursor::pos(), tr("Cancel editing"), this);
+        else
+            QToolTip::hideText();
         return;
+    }
+
+    if (!m_hoverHighlightEnabled) {
+        if (m_hoveredHistoryIndex >= 0) {
+            const int previousHoveredHistoryIndex = m_hoveredHistoryIndex;
+            m_hoveredHistoryIndex = -1;
+            updateHoverHighlightSelection();
+            viewport()->update(hoverActionRectForHistoryIndex(previousHoveredHistoryIndex));
+        }
+        QToolTip::hideText();
+        viewport()->unsetCursor();
+        return;
+    }
 
     const int hoveredHistoryIndex = historyIndexAtPosition(event->pos());
     if (hoveredHistoryIndex != m_hoveredHistoryIndex) {
@@ -427,32 +499,72 @@ void ResultDisplay::mouseMoveEvent(QMouseEvent* event)
         m_hoveredHistoryIndex = hoveredHistoryIndex;
         updateHoverHighlightSelection();
         if (previousHoveredHistoryIndex >= 0)
-            viewport()->update(removeGlyphRectForHistoryIndex(previousHoveredHistoryIndex));
+            viewport()->update(hoverActionRectForHistoryIndex(previousHoveredHistoryIndex));
         if (m_hoveredHistoryIndex >= 0)
-            viewport()->update(removeGlyphRectForHistoryIndex(m_hoveredHistoryIndex));
+            viewport()->update(hoverActionRectForHistoryIndex(m_hoveredHistoryIndex));
     }
 
-    const bool overRemoveGlyph = m_hoveredHistoryIndex >= 0
-        && removeGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex).contains(event->pos());
-    if (overRemoveGlyph)
+    const bool overActionGlyph = m_hoveredHistoryIndex >= 0
+        && (removeGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex).contains(event->pos())
+            || editGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex).contains(event->pos()));
+    if (overActionGlyph)
         viewport()->setCursor(Qt::PointingHandCursor);
     else
         viewport()->unsetCursor();
+
+    if (m_hoveredHistoryIndex >= 0 && editGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex).contains(event->pos())) {
+        QToolTip::showText(QCursor::pos(), tr("Edit this expression"), this);
+    } else if (m_hoveredHistoryIndex >= 0 && removeGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex).contains(event->pos())) {
+        QToolTip::showText(QCursor::pos(), tr("Remove this calculation"), this);
+    } else {
+        QToolTip::hideText();
+    }
 }
 
 void ResultDisplay::paintEvent(QPaintEvent* event)
 {
     QPlainTextEdit::paintEvent(event);
 
+    if (m_editingHistoryIndex >= 0) {
+        const QRect cancelRect = cancelGlyphBadgeRectForEditingIndex();
+        if (!cancelRect.isValid())
+            return;
+
+        QPainter painter(viewport());
+        painter.setRenderHint(QPainter::Antialiasing, true);
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(Qt::white);
+        painter.drawEllipse(cancelRect);
+        painter.setPen(QPen(QColor(200, 50, 0, 255), 1.8, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        const QPointF center = cancelRect.center();
+        const qreal side = cancelRect.width() * 0.22;
+        painter.drawRect(QRectF(center.x() - side, center.y() - side, side * 2.0, side * 2.0));
+        return;
+    }
+
     if (!m_hoverHighlightEnabled || m_hoveredHistoryIndex < 0)
         return;
 
     const QRect removeRect = removeGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex);
-    if (!removeRect.isValid())
+    const QRect editRect = editGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex);
+    if (!removeRect.isValid() || !editRect.isValid())
         return;
 
     QPainter painter(viewport());
     painter.setRenderHint(QPainter::Antialiasing, true);
+
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(Qt::white);
+    painter.drawEllipse(editRect);
+    painter.setPen(QPen(QColor(40, 90, 180, 255), 1.6, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    const QPointF editCenter = editRect.center();
+    const qreal editHalf = editRect.width() * 0.20;
+    painter.drawLine(QPointF(editCenter.x() - editHalf, editCenter.y() + editHalf),
+                     QPointF(editCenter.x() + editHalf, editCenter.y() - editHalf));
+    painter.setPen(QPen(QColor(40, 90, 180, 255), 1.1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    painter.drawLine(QPointF(editCenter.x() + editHalf * 0.62, editCenter.y() - editHalf * 0.62),
+                     QPointF(editCenter.x() + editHalf * 1.08, editCenter.y() - editHalf * 1.08));
+
     painter.setPen(Qt::NoPen);
     painter.setBrush(Qt::white);
     painter.drawEllipse(removeRect);
@@ -582,9 +694,11 @@ QRect ResultDisplay::removeGlyphRectForHistoryIndex(int historyIndex) const
         return QRect();
 
     const int side = qMax(12, fontMetrics().height());
+    const int spacing = 4;
     const int rightPadding = 6;
     const int left = viewport()->width() - side - rightPadding;
-    if (left < 0)
+    const int minLeft = side + spacing;
+    if (left < minLeft)
         return QRect();
 
     return QRect(left, top, side, bottom - top);
@@ -602,17 +716,48 @@ QRect ResultDisplay::removeGlyphBadgeRectForHistoryIndex(int historyIndex) const
     return QRect(left, top, diameter, diameter);
 }
 
+QRect ResultDisplay::editGlyphRectForHistoryIndex(int historyIndex) const
+{
+    const QRect removeRect = removeGlyphRectForHistoryIndex(historyIndex);
+    if (!removeRect.isValid())
+        return QRect();
+
+    const int spacing = 4;
+    const int left = removeRect.left() - removeRect.width() - spacing;
+    if (left < 0)
+        return QRect();
+
+    return QRect(left, removeRect.top(), removeRect.width(), removeRect.height());
+}
+
+QRect ResultDisplay::editGlyphBadgeRectForHistoryIndex(int historyIndex) const
+{
+    const QRect editLaneRect = editGlyphRectForHistoryIndex(historyIndex);
+    if (!editLaneRect.isValid())
+        return QRect();
+
+    const int diameter = qMin(editLaneRect.width(), qMax(12, fontMetrics().height() - 2));
+    const int left = editLaneRect.left() + (editLaneRect.width() - diameter) / 2;
+    const int top = editLaneRect.top() + (editLaneRect.height() - diameter) / 2;
+    return QRect(left, top, diameter, diameter);
+}
+
+QRect ResultDisplay::hoverActionRectForHistoryIndex(int historyIndex) const
+{
+    return removeGlyphRectForHistoryIndex(historyIndex).united(editGlyphRectForHistoryIndex(historyIndex));
+}
+
+QRect ResultDisplay::cancelGlyphBadgeRectForEditingIndex() const
+{
+    if (m_editingHistoryIndex < 0)
+        return QRect();
+    return removeGlyphBadgeRectForHistoryIndex(m_editingHistoryIndex);
+}
+
 void ResultDisplay::updateHoverHighlightSelection()
 {
     QList<QTextEdit::ExtraSelection> selections;
-    if (!m_hoverHighlightEnabled || m_hoveredHistoryIndex < 0) {
-        setExtraSelections(selections);
-        return;
-    }
-
-    int startBlock = -1;
-    int endBlock = -1;
-    if (!blockRangeForHistoryIndex(m_hoveredHistoryIndex, startBlock, endBlock)) {
+    if (m_hoveredHistoryIndex < 0 && m_editingHistoryIndex < 0) {
         setExtraSelections(selections);
         return;
     }
@@ -620,30 +765,42 @@ void ResultDisplay::updateHoverHighlightSelection()
     const QColor hoverColor = hoverColorForBackground(
         m_highlighter->colorForRole(ColorScheme::Background));
 
-    for (int blockNumber = startBlock; blockNumber <= endBlock; ++blockNumber) {
-        QTextBlock block = document()->findBlockByNumber(blockNumber);
-        if (!block.isValid())
-            continue;
+    auto appendSelectionForHistoryIndex = [this, &selections, &hoverColor](int historyIndex) {
+        int startBlock = -1;
+        int endBlock = -1;
+        if (!blockRangeForHistoryIndex(historyIndex, startBlock, endBlock))
+            return;
 
-        QTextLayout* layout = block.layout();
-        if (layout == nullptr)
-            continue;
+        for (int blockNumber = startBlock; blockNumber <= endBlock; ++blockNumber) {
+            QTextBlock block = document()->findBlockByNumber(blockNumber);
+            if (!block.isValid())
+                continue;
 
-        const int lineCount = layout->lineCount();
-        if (lineCount <= 0)
-            continue;
+            QTextLayout* layout = block.layout();
+            if (layout == nullptr)
+                continue;
 
-        const int blockPosition = block.position();
-        for (int lineIndex = 0; lineIndex < lineCount; ++lineIndex) {
-            const QTextLine line = layout->lineAt(lineIndex);
-            QTextEdit::ExtraSelection selection;
-            selection.cursor = QTextCursor(document());
-            selection.cursor.setPosition(blockPosition + line.textStart());
-            selection.format.setProperty(QTextFormat::FullWidthSelection, true);
-            selection.format.setBackground(hoverColor);
-            selections.append(selection);
+            const int lineCount = layout->lineCount();
+            if (lineCount <= 0)
+                continue;
+
+            const int blockPosition = block.position();
+            for (int lineIndex = 0; lineIndex < lineCount; ++lineIndex) {
+                const QTextLine line = layout->lineAt(lineIndex);
+                QTextEdit::ExtraSelection selection;
+                selection.cursor = QTextCursor(document());
+                selection.cursor.setPosition(blockPosition + line.textStart());
+                selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+                selection.format.setBackground(hoverColor);
+                selections.append(selection);
+            }
         }
-    }
+    };
+
+    if (m_hoverHighlightEnabled && m_hoveredHistoryIndex >= 0)
+        appendSelectionForHistoryIndex(m_hoveredHistoryIndex);
+    if (m_editingHistoryIndex >= 0 && (!m_hoverHighlightEnabled || m_editingHistoryIndex != m_hoveredHistoryIndex))
+        appendSelectionForHistoryIndex(m_editingHistoryIndex);
 
     setExtraSelections(selections);
 }

@@ -25,6 +25,7 @@
 #include "math/quantity.h"
 
 #include <QMainWindow>
+#include <QStringList>
 
 class AutoHideLabel;
 class BitFieldWidget;
@@ -93,6 +94,7 @@ private slots:
     void deleteVariables();
     void deleteUserFunctions();
     void evaluateEditorExpression();
+    void cancelHistoryEntryEdit();
     void exportHtml();
     void exportPlainText();
     void handleAutoCalcMessageAvailable(const QString&);
@@ -184,6 +186,7 @@ private slots:
     void showSessionImportDialog();
     void showSessionLoadDialog();
     void wrapSelection();
+    void startHistoryEntryEdit(int index);
     void removeHistoryEntryAt(int index);
     void removeHistoryEntriesAbove(int index);
     void removeHistoryEntriesBelow(int index);
@@ -239,6 +242,8 @@ private:
     QString statusBarResultFormatValue() const;
     QString statusBarComplexNumbersValue() const;
     QString statusBarComplexFormatValue() const;
+    bool rebuildSessionFromExpressions(const QStringList& expressions, int* errorIndex = nullptr, QString* errorText = nullptr);
+    QStringList historyExpressions() const;
 
     static QTranslator* createTranslator(const QString& langCode);
 
@@ -410,6 +415,7 @@ private:
     QPlainTextEdit* m_copyWidget;
     ManualServer* m_manualServer;
     QString m_colorSchemeToRevert;
+    int m_pendingHistoryEditIndex;
 };
 
 #endif // GUI_MAINWINDOW_H

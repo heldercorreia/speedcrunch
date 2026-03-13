@@ -46,6 +46,7 @@ public:
     bool isEmpty() const { return m_count==0; }
     QString exportHtml() const;
     void setHoverHighlightEnabled(bool enabled);
+    void setEditingHistoryIndex(int index);
 
 signals:
     void shiftWheelDown();
@@ -55,6 +56,8 @@ signals:
     void controlWheelDown();
     void controlWheelUp();
     void expressionSelected(const QString&);
+    void editHistoryEntryRequested(int index);
+    void cancelHistoryEditRequested();
     void removeHistoryEntryRequested(int index);
     void removeHistoryEntriesAboveRequested(int index);
     void removeHistoryEntriesBelowRequested(int index);
@@ -94,6 +97,10 @@ protected:
     bool blockRangeForHistoryIndex(int historyIndex, int& startBlock, int& endBlock) const;
     QRect removeGlyphRectForHistoryIndex(int historyIndex) const;
     QRect removeGlyphBadgeRectForHistoryIndex(int historyIndex) const;
+    QRect editGlyphRectForHistoryIndex(int historyIndex) const;
+    QRect editGlyphBadgeRectForHistoryIndex(int historyIndex) const;
+    QRect hoverActionRectForHistoryIndex(int historyIndex) const;
+    QRect cancelGlyphBadgeRectForEditingIndex() const;
     void updateHoverHighlightSelection();
 
 private:
@@ -106,6 +113,7 @@ private:
     bool m_isScrollingPageOnly;
     bool m_hoverHighlightEnabled;
     int m_hoveredHistoryIndex;
+    int m_editingHistoryIndex;
     int m_count;
 };
 

@@ -73,6 +73,7 @@ signals:
     void pageDownPressed();
     void pageUpPressed();
     void returnPressed();
+    void escapePressed();
     void shiftDownPressed();
     void shiftUpPressed();
     void shiftPageDownPressed();

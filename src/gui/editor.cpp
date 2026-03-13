@@ -748,6 +748,11 @@ void Editor::keyPressEvent(QKeyEvent* event)
         event->accept();
         return;
 
+    case Qt::Key_Escape:
+        emit escapePressed();
+        event->accept();
+        return;
+
     case Qt::Key_Up:
         if (event->modifiers() & Qt::ShiftModifier)
             emit shiftUpPressed();

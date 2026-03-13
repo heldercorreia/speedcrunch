@@ -1030,6 +1030,7 @@ void MainWindow::createFixedConnections()
     connect(m_widgets.editor, SIGNAL(autoCalcMessageAvailable(const QString&)), SLOT(handleAutoCalcMessageAvailable(const QString&)));
     connect(m_widgets.editor, SIGNAL(autoCalcQuantityAvailable(const Quantity&)), SLOT(handleAutoCalcQuantityAvailable(const Quantity&)));
     connect(m_widgets.editor, SIGNAL(returnPressed()), SLOT(evaluateEditorExpression()));
+    connect(m_widgets.editor, SIGNAL(escapePressed()), SLOT(cancelHistoryEntryEdit()));
     connect(m_widgets.editor, SIGNAL(shiftDownPressed()), SLOT(decreaseDisplayFontPointSize()));
     connect(m_widgets.editor, SIGNAL(shiftUpPressed()), SLOT(increaseDisplayFontPointSize()));
     connect(m_widgets.editor, SIGNAL(controlPageUpPressed()), m_widgets.display, SLOT(scrollToTop()));
@@ -1046,6 +1047,8 @@ void MainWindow::createFixedConnections()
 
     connect(m_widgets.display, SIGNAL(copyAvailable(bool)), SLOT(handleCopyAvailable(bool)));
     connect(m_widgets.display, SIGNAL(expressionSelected(const QString&)), SLOT(insertTextIntoEditor(const QString&)));
+    connect(m_widgets.display, SIGNAL(editHistoryEntryRequested(int)), SLOT(startHistoryEntryEdit(int)));
+    connect(m_widgets.display, SIGNAL(cancelHistoryEditRequested()), SLOT(cancelHistoryEntryEdit()));
     connect(m_widgets.display, SIGNAL(removeHistoryEntryRequested(int)), SLOT(removeHistoryEntryAt(int)));
     connect(m_widgets.display, SIGNAL(removeHistoryEntriesAboveRequested(int)), SLOT(removeHistoryEntriesAbove(int)));
     connect(m_widgets.display, SIGNAL(removeHistoryEntriesBelowRequested(int)), SLOT(removeHistoryEntriesBelow(int)));
@@ -1358,6 +1361,7 @@ MainWindow::MainWindow()
     m_status.complexFormatLabel = 0;
 
     m_copyWidget = 0;
+    m_pendingHistoryEditIndex = -1;
 
     createUi();
     applySettings();
@@ -1393,6 +1397,8 @@ void MainWindow::showAboutDialog()
 void MainWindow::clearHistory()
 {
     m_session->clearHistory();
+    m_pendingHistoryEditIndex = -1;
+    m_widgets.display->setEditingHistoryIndex(-1);
     clearEditorAndBitfield();
     emit historyChanged();
 
@@ -2348,6 +2354,45 @@ void MainWindow::evaluateEditorExpression()
     if (expr.isEmpty())
         return;
 
+    if (m_pendingHistoryEditIndex >= 0) {
+        const int previousDisplayScrollValue = m_widgets.display->verticalScrollBar()->value();
+        const int historySize = m_session->historyToList().size();
+        if (m_pendingHistoryEditIndex >= historySize) {
+            m_pendingHistoryEditIndex = -1;
+            m_widgets.display->setEditingHistoryIndex(-1);
+            m_widgets.editor->clear();
+            m_widgets.display->verticalScrollBar()->setValue(previousDisplayScrollValue);
+        } else {
+            const QStringList previousExpressions = historyExpressions();
+            QStringList updatedExpressions = previousExpressions;
+            updatedExpressions[m_pendingHistoryEditIndex] = expr;
+
+            int errorIndex = -1;
+            QString errorText;
+            if (!rebuildSessionFromExpressions(updatedExpressions, &errorIndex, &errorText)) {
+                rebuildSessionFromExpressions(previousExpressions);
+                emit historyChanged();
+                emit variablesChanged();
+                emit functionsChanged();
+                m_widgets.display->verticalScrollBar()->setValue(previousDisplayScrollValue);
+                showStateLabel(tr("Could not recalculate from calculation %1: %2").arg(errorIndex + 1).arg(errorText));
+                return;
+            }
+
+            m_pendingHistoryEditIndex = -1;
+            m_widgets.display->setEditingHistoryIndex(-1);
+            emit historyChanged();
+            emit variablesChanged();
+            emit functionsChanged();
+            m_widgets.display->verticalScrollBar()->setValue(previousDisplayScrollValue);
+            m_widgets.editor->clear();
+
+            m_widgets.editor->stopAutoCalc();
+            m_widgets.editor->stopAutoComplete();
+            return;
+        }
+    }
+
     m_evaluator->setExpression(expr);
     Quantity result = m_evaluator->evalUpdateAns();
 
@@ -2383,6 +2428,83 @@ void MainWindow::evaluateEditorExpression()
         m_conditions.autoAns = true;
 }
 
+void MainWindow::startHistoryEntryEdit(int index)
+{
+    const int historySize = m_session->historyToList().size();
+    if (index < 0 || index >= historySize)
+        return;
+
+    m_pendingHistoryEditIndex = index;
+    m_widgets.display->setEditingHistoryIndex(index);
+    m_widgets.editor->setText(m_session->historyEntryAt(index).expr());
+    m_widgets.editor->setFocus();
+    m_widgets.editor->setCursorPosition(m_widgets.editor->text().size());
+    showStateLabel(tr("Editing calculation. Press Escape to cancel."));
+}
+
+void MainWindow::cancelHistoryEntryEdit()
+{
+    if (m_pendingHistoryEditIndex < 0)
+        return;
+
+    const int previousDisplayScrollValue = m_widgets.display->verticalScrollBar()->value();
+    m_pendingHistoryEditIndex = -1;
+    m_widgets.display->setEditingHistoryIndex(-1);
+    m_widgets.display->verticalScrollBar()->setValue(previousDisplayScrollValue);
+    m_widgets.editor->clear();
+    showReadyMessage();
+}
+
+QStringList MainWindow::historyExpressions() const
+{
+    QStringList expressions;
+    const QList<HistoryEntry> history = m_session->historyToList();
+    expressions.reserve(history.size());
+    for (int i = 0; i < history.size(); ++i)
+        expressions.append(history.at(i).expr());
+    return expressions;
+}
+
+bool MainWindow::rebuildSessionFromExpressions(const QStringList& expressions, int* errorIndex, QString* errorText)
+{
+    if (errorIndex)
+        *errorIndex = -1;
+    if (errorText)
+        *errorText = QString();
+
+    m_session->clearHistory();
+    m_session->clearVariables();
+    m_session->clearUserFunctions();
+    m_evaluator->initializeBuiltInVariables();
+    m_conditions.autoAns = false;
+
+    for (int i = 0; i < expressions.size(); ++i) {
+        const QString currentExpr = expressions.at(i);
+        const bool isCommentOnly = Evaluator::isCommentOnlyExpression(currentExpr);
+
+        m_evaluator->setExpression(currentExpr);
+        Quantity result = m_evaluator->evalUpdateAns();
+        if (!m_evaluator->error().isEmpty()) {
+            if (errorIndex)
+                *errorIndex = i;
+            if (errorText)
+                *errorText = m_evaluator->error();
+            return false;
+        }
+
+        if (m_evaluator->isUserFunctionAssign())
+            result = CMath::nan();
+        else if (result.isNan() && !isCommentOnly)
+            continue;
+
+        m_session->addHistoryEntry(HistoryEntry(currentExpr, result));
+        if (!result.isNan())
+            m_conditions.autoAns = true;
+    }
+
+    return true;
+}
+
 void MainWindow::removeHistoryEntryAt(int index)
 {
     const int historySize = m_session->historyToList().size();
@@ -2390,6 +2512,11 @@ void MainWindow::removeHistoryEntryAt(int index)
         return;
 
     m_session->removeHistoryEntryAt(index);
+    if (m_pendingHistoryEditIndex == index)
+        m_pendingHistoryEditIndex = -1;
+    else if (m_pendingHistoryEditIndex > index)
+        --m_pendingHistoryEditIndex;
+    m_widgets.display->setEditingHistoryIndex(m_pendingHistoryEditIndex);
     m_conditions.autoAns = !m_session->historyToList().empty();
     emit historyChanged();
 }
@@ -2403,6 +2530,13 @@ void MainWindow::removeHistoryEntriesAbove(int index)
     for (int i = 0; i < index; ++i)
         m_session->removeHistoryEntryAt(0);
 
+    if (m_pendingHistoryEditIndex >= 0) {
+        if (m_pendingHistoryEditIndex < index)
+            m_pendingHistoryEditIndex = -1;
+        else
+            m_pendingHistoryEditIndex -= index;
+    }
+    m_widgets.display->setEditingHistoryIndex(m_pendingHistoryEditIndex);
     m_conditions.autoAns = !m_session->historyToList().empty();
     emit historyChanged();
 }
@@ -2416,6 +2550,9 @@ void MainWindow::removeHistoryEntriesBelow(int index)
     for (int i = historySize - 1; i > index; --i)
         m_session->removeHistoryEntryAt(i);
 
+    if (m_pendingHistoryEditIndex > index)
+        m_pendingHistoryEditIndex = -1;
+    m_widgets.display->setEditingHistoryIndex(m_pendingHistoryEditIndex);
     m_conditions.autoAns = !m_session->historyToList().empty();
     emit historyChanged();
 }
