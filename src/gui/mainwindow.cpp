@@ -869,6 +869,10 @@ void MainWindow::createHistoryDock(bool)
             this, &MainWindow::insertTextIntoEditor);
     connect(m_docks.history->widget(), &HistoryWidget::removeHistoryEntryRequested,
             this, &MainWindow::removeHistoryEntryAt);
+    connect(m_docks.history->widget(), &HistoryWidget::removeHistoryEntriesAboveRequested,
+            this, &MainWindow::removeHistoryEntriesAbove);
+    connect(m_docks.history->widget(), &HistoryWidget::removeHistoryEntriesBelowRequested,
+            this, &MainWindow::removeHistoryEntriesBelow);
     connect(this, &MainWindow::historyChanged,
             m_docks.history->widget(), &HistoryWidget::updateHistory);
 
@@ -1043,6 +1047,8 @@ void MainWindow::createFixedConnections()
     connect(m_widgets.display, SIGNAL(copyAvailable(bool)), SLOT(handleCopyAvailable(bool)));
     connect(m_widgets.display, SIGNAL(expressionSelected(const QString&)), SLOT(insertTextIntoEditor(const QString&)));
     connect(m_widgets.display, SIGNAL(removeHistoryEntryRequested(int)), SLOT(removeHistoryEntryAt(int)));
+    connect(m_widgets.display, SIGNAL(removeHistoryEntriesAboveRequested(int)), SLOT(removeHistoryEntriesAbove(int)));
+    connect(m_widgets.display, SIGNAL(removeHistoryEntriesBelowRequested(int)), SLOT(removeHistoryEntriesBelow(int)));
     connect(m_widgets.display, SIGNAL(selectionChanged()), SLOT(handleDisplaySelectionChange()));
     connect(m_widgets.display, SIGNAL(shiftWheelUp()), SLOT(increaseDisplayFontPointSize()));
     connect(m_widgets.display, SIGNAL(shiftWheelDown()), SLOT(decreaseDisplayFontPointSize()));
@@ -2384,6 +2390,32 @@ void MainWindow::removeHistoryEntryAt(int index)
         return;
 
     m_session->removeHistoryEntryAt(index);
+    m_conditions.autoAns = !m_session->historyToList().empty();
+    emit historyChanged();
+}
+
+void MainWindow::removeHistoryEntriesAbove(int index)
+{
+    const int historySize = m_session->historyToList().size();
+    if (historySize == 0 || index <= 0 || index >= historySize)
+        return;
+
+    for (int i = 0; i < index; ++i)
+        m_session->removeHistoryEntryAt(0);
+
+    m_conditions.autoAns = !m_session->historyToList().empty();
+    emit historyChanged();
+}
+
+void MainWindow::removeHistoryEntriesBelow(int index)
+{
+    const int historySize = m_session->historyToList().size();
+    if (historySize == 0 || index < 0 || index >= historySize - 1)
+        return;
+
+    for (int i = historySize - 1; i > index; --i)
+        m_session->removeHistoryEntryAt(i);
+
     m_conditions.autoAns = !m_session->historyToList().empty();
     emit historyChanged();
 }

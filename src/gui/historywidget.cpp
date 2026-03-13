@@ -78,9 +78,17 @@ void HistoryWidget::handleContextMenuRequested(const QPoint &position)
         return;
 
     QMenu menu(m_list);
+    QAction *removeAboveAction = menu.addAction(tr("Remove All Calculations Above"));
+    connect(removeAboveAction, &QAction::triggered, this, [this, historyIndex]() {
+        emit removeHistoryEntriesAboveRequested(historyIndex);
+    });
     QAction *removeAction = menu.addAction(tr("Remove This Calculation"));
     connect(removeAction, &QAction::triggered, this, [this, historyIndex]() {
         emit removeHistoryEntryRequested(historyIndex);
+    });
+    QAction *removeBelowAction = menu.addAction(tr("Remove All Calculations Below"));
+    connect(removeBelowAction, &QAction::triggered, this, [this, historyIndex]() {
+        emit removeHistoryEntriesBelowRequested(historyIndex);
     });
     menu.exec(m_list->viewport()->mapToGlobal(position));
 }

@@ -54,6 +54,8 @@ signals:
     void controlWheelUp();
     void expressionSelected(const QString&);
     void removeHistoryEntryRequested(int index);
+    void removeHistoryEntriesAboveRequested(int index);
+    void removeHistoryEntriesBelowRequested(int index);
 
 public slots:
     void clear();

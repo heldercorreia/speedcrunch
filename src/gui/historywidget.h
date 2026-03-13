@@ -40,6 +40,8 @@ public slots:
 signals:
     void expressionSelected(const QString &);
     void removeHistoryEntryRequested(int index);
+    void removeHistoryEntriesAboveRequested(int index);
+    void removeHistoryEntriesBelowRequested(int index);
 
 protected slots:
     void handleItem(QListWidgetItem *);

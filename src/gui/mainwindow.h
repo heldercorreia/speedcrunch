@@ -185,6 +185,8 @@ private slots:
     void showSessionLoadDialog();
     void wrapSelection();
     void removeHistoryEntryAt(int index);
+    void removeHistoryEntriesAbove(int index);
+    void removeHistoryEntriesBelow(int index);
 
 protected:
     virtual void closeEvent(QCloseEvent*);
