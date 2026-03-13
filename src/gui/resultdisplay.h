@@ -30,6 +30,8 @@ class QContextMenuEvent;
 class QPoint;
 class QMouseEvent;
 class QEvent;
+class QPaintEvent;
+class QRect;
 
 class ResultDisplay : public QPlainTextEdit
 {
@@ -77,7 +79,9 @@ protected:
     virtual void contextMenuEvent(QContextMenuEvent*);
     virtual void leaveEvent(QEvent*);
     virtual void mouseDoubleClickEvent(QMouseEvent*);
+    virtual void mousePressEvent(QMouseEvent*);
     virtual void mouseMoveEvent(QMouseEvent*);
+    virtual void paintEvent(QPaintEvent*);
     virtual void wheelEvent(QWheelEvent*);
     virtual void timerEvent(QTimerEvent*);
     void fullContentScrollEvent();
@@ -88,6 +92,8 @@ protected:
     void updateScrollBarStyleSheet();
     int historyIndexAtPosition(const QPoint& pos) const;
     bool blockRangeForHistoryIndex(int historyIndex, int& startBlock, int& endBlock) const;
+    QRect removeGlyphRectForHistoryIndex(int historyIndex) const;
+    QRect removeGlyphBadgeRectForHistoryIndex(int historyIndex) const;
     void updateHoverHighlightSelection();
 
 private:

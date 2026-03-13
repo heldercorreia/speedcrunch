@@ -34,6 +34,7 @@
 #include <QContextMenuEvent>
 #include <QMenu>
 #include <QMouseEvent>
+#include <QPainter>
 #include <QScrollBar>
 #include <QToolTip>
 
@@ -123,9 +124,12 @@ void ResultDisplay::clear()
 
 void ResultDisplay::clearHoverFeedback()
 {
+    const int previousHoveredHistoryIndex = m_hoveredHistoryIndex;
     m_hoveredHistoryIndex = -1;
     QToolTip::hideText();
     setExtraSelections(QList<QTextEdit::ExtraSelection>());
+    if (previousHoveredHistoryIndex >= 0)
+        viewport()->update(removeGlyphRectForHistoryIndex(previousHoveredHistoryIndex));
 }
 
 
@@ -297,6 +301,20 @@ void ResultDisplay::mouseDoubleClickEvent(QMouseEvent*)
     emit expressionSelected(text);
 }
 
+void ResultDisplay::mousePressEvent(QMouseEvent* event)
+{
+    if (event->button() == Qt::LeftButton && m_hoverHighlightEnabled && m_hoveredHistoryIndex >= 0) {
+        const QRect removeRect = removeGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex);
+        if (removeRect.contains(event->pos())) {
+            emit removeHistoryEntryRequested(m_hoveredHistoryIndex);
+            event->accept();
+            return;
+        }
+    }
+
+    QPlainTextEdit::mousePressEvent(event);
+}
+
 void ResultDisplay::contextMenuEvent(QContextMenuEvent* event)
 {
     QMenu* menu = createStandardContextMenu();
@@ -324,9 +342,12 @@ void ResultDisplay::contextMenuEvent(QContextMenuEvent* event)
 void ResultDisplay::leaveEvent(QEvent* event)
 {
     QPlainTextEdit::leaveEvent(event);
+    viewport()->unsetCursor();
     if (m_hoveredHistoryIndex >= 0) {
+        const int previousHoveredHistoryIndex = m_hoveredHistoryIndex;
         m_hoveredHistoryIndex = -1;
         updateHoverHighlightSelection();
+        viewport()->update(removeGlyphRectForHistoryIndex(previousHoveredHistoryIndex));
     }
 }
 
@@ -402,9 +423,46 @@ void ResultDisplay::mouseMoveEvent(QMouseEvent* event)
 
     const int hoveredHistoryIndex = historyIndexAtPosition(event->pos());
     if (hoveredHistoryIndex != m_hoveredHistoryIndex) {
+        const int previousHoveredHistoryIndex = m_hoveredHistoryIndex;
         m_hoveredHistoryIndex = hoveredHistoryIndex;
         updateHoverHighlightSelection();
+        if (previousHoveredHistoryIndex >= 0)
+            viewport()->update(removeGlyphRectForHistoryIndex(previousHoveredHistoryIndex));
+        if (m_hoveredHistoryIndex >= 0)
+            viewport()->update(removeGlyphRectForHistoryIndex(m_hoveredHistoryIndex));
     }
+
+    const bool overRemoveGlyph = m_hoveredHistoryIndex >= 0
+        && removeGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex).contains(event->pos());
+    if (overRemoveGlyph)
+        viewport()->setCursor(Qt::PointingHandCursor);
+    else
+        viewport()->unsetCursor();
+}
+
+void ResultDisplay::paintEvent(QPaintEvent* event)
+{
+    QPlainTextEdit::paintEvent(event);
+
+    if (!m_hoverHighlightEnabled || m_hoveredHistoryIndex < 0)
+        return;
+
+    const QRect removeRect = removeGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex);
+    if (!removeRect.isValid())
+        return;
+
+    QPainter painter(viewport());
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(Qt::white);
+    painter.drawEllipse(removeRect);
+    painter.setPen(QPen(QColor(220, 0, 0, 255), 1.8, Qt::SolidLine, Qt::RoundCap));
+    const QPointF center = removeRect.center();
+    const qreal half = removeRect.width() * 0.22;
+    painter.drawLine(QPointF(center.x() - half, center.y() - half),
+                     QPointF(center.x() + half, center.y() + half));
+    painter.drawLine(QPointF(center.x() - half, center.y() + half),
+                     QPointF(center.x() + half, center.y() - half));
 }
 
 void ResultDisplay::stopActiveScrollingAnimation()
@@ -504,6 +562,46 @@ bool ResultDisplay::blockRangeForHistoryIndex(int historyIndex, int& startBlock,
     return false;
 }
 
+QRect ResultDisplay::removeGlyphRectForHistoryIndex(int historyIndex) const
+{
+    int startBlock = -1;
+    int endBlock = -1;
+    if (!blockRangeForHistoryIndex(historyIndex, startBlock, endBlock))
+        return QRect();
+
+    QTextBlock start = document()->findBlockByNumber(startBlock);
+    QTextBlock end = document()->findBlockByNumber(endBlock);
+    if (!start.isValid() || !end.isValid())
+        return QRect();
+
+    const QRectF startRect = blockBoundingGeometry(start).translated(contentOffset());
+    const QRectF endRect = blockBoundingGeometry(end).translated(contentOffset());
+    const int top = qRound(startRect.top());
+    const int bottom = qRound(endRect.bottom());
+    if (bottom <= top)
+        return QRect();
+
+    const int side = qMax(12, fontMetrics().height());
+    const int rightPadding = 6;
+    const int left = viewport()->width() - side - rightPadding;
+    if (left < 0)
+        return QRect();
+
+    return QRect(left, top, side, bottom - top);
+}
+
+QRect ResultDisplay::removeGlyphBadgeRectForHistoryIndex(int historyIndex) const
+{
+    const QRect removeLaneRect = removeGlyphRectForHistoryIndex(historyIndex);
+    if (!removeLaneRect.isValid())
+        return QRect();
+
+    const int diameter = qMin(removeLaneRect.width(), qMax(12, fontMetrics().height() - 2));
+    const int left = removeLaneRect.left() + (removeLaneRect.width() - diameter) / 2;
+    const int top = removeLaneRect.top() + (removeLaneRect.height() - diameter) / 2;
+    return QRect(left, top, diameter, diameter);
+}
+
 void ResultDisplay::updateHoverHighlightSelection()
 {
     QList<QTextEdit::ExtraSelection> selections;
@@ -527,11 +625,24 @@ void ResultDisplay::updateHoverHighlightSelection()
         if (!block.isValid())
             continue;
 
-        QTextEdit::ExtraSelection selection;
-        selection.cursor = QTextCursor(block);
-        selection.format.setProperty(QTextFormat::FullWidthSelection, true);
-        selection.format.setBackground(hoverColor);
-        selections.append(selection);
+        QTextLayout* layout = block.layout();
+        if (layout == nullptr)
+            continue;
+
+        const int lineCount = layout->lineCount();
+        if (lineCount <= 0)
+            continue;
+
+        const int blockPosition = block.position();
+        for (int lineIndex = 0; lineIndex < lineCount; ++lineIndex) {
+            const QTextLine line = layout->lineAt(lineIndex);
+            QTextEdit::ExtraSelection selection;
+            selection.cursor = QTextCursor(document());
+            selection.cursor.setPosition(blockPosition + line.textStart());
+            selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+            selection.format.setBackground(hoverColor);
+            selections.append(selection);
+        }
     }
 
     setExtraSelections(selections);
