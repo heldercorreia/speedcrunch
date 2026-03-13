@@ -1396,6 +1396,18 @@ void MainWindow::showAboutDialog()
 
 void MainWindow::clearHistory()
 {
+    if (m_session->historyToList().isEmpty())
+        return;
+
+    const QMessageBox::StandardButton confirmation = QMessageBox::question(
+        this,
+        tr("Clear History"),
+        tr("Are you sure you want to clear the calculation history?"),
+        QMessageBox::Yes | QMessageBox::No,
+        QMessageBox::No);
+    if (confirmation != QMessageBox::Yes)
+        return;
+
     m_session->clearHistory();
     m_pendingHistoryEditIndex = -1;
     m_widgets.display->setEditingHistoryIndex(-1);
