@@ -2531,7 +2531,8 @@ Quantity Evaluator::eval()
 Quantity Evaluator::evalUpdateAns()
 {
     auto result = eval();
-    if (m_error.isEmpty() && !m_assignFunc)
+    if (m_error.isEmpty() && !m_assignFunc
+        && !isCommentOnlyExpression(m_expression))
         setVariable(QLatin1String("ans"), result, Variable::BuiltIn);
     return result;
 }

@@ -1089,6 +1089,9 @@ void test_comments()
     CHECK_EVAL("ncr(3;3) ? this is because foo",  "1");
     CHECK_EVAL("? this is a comment-only line", "NaN");
     CHECK_EVAL("   ? this is an indented comment-only line", "NaN");
+    CHECK_EVAL("21", "21");
+    CHECK_EVAL("? foo", "NaN");
+    CHECK_EVAL("1+ans", "22");
 }
 
 void test_user_functions()
@@ -1426,6 +1429,32 @@ void test_session_history_limit()
         ++eval_failed_tests;
         ++eval_new_failed_tests;
         cerr << __FILE__ << "[" << __LINE__ << "]\thistory trim on deserialize\t[NEW]" << endl;
+    }
+
+    QJsonObject jsonWithCommentTail;
+    QJsonArray histWithCommentTail;
+    {
+        QJsonObject entry;
+        HistoryEntry("21", Quantity(21)).serialize(entry);
+        histWithCommentTail.append(entry);
+    }
+    {
+        QJsonObject entry;
+        HistoryEntry("? foo", CMath::nan()).serialize(entry);
+        histWithCommentTail.append(entry);
+    }
+    jsonWithCommentTail["version"] = QString(SPEEDCRUNCH_VERSION);
+    jsonWithCommentTail["history"] = histWithCommentTail;
+
+    Session loadedWithCommentTail;
+    loadedWithCommentTail.deSerialize(jsonWithCommentTail, false);
+
+    ++eval_total_tests;
+    if (!loadedWithCommentTail.hasVariable("ans")
+        || DMath::format(loadedWithCommentTail.getVariable("ans").value(), Format::Fixed()) != "21") {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tans recovery on deserialize with comment tail\t[NEW]" << endl;
     }
 
     settings->maxHistoryEntries = 0;

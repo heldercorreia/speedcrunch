@@ -117,6 +117,20 @@ int Session::deSerialize(const QJsonObject &json, bool merge=false)
         }
     }
 
+    // Recover ans from history when missing or NaN, e.g. older sessions where
+    // comment-only lines could overwrite ans with NaN.
+    const bool hasAns = hasVariable("ans");
+    const bool needsAnsRecovery = !hasAns || getVariable("ans").value().isNan();
+    if (needsAnsRecovery) {
+        for (int i = m_history.size() - 1; i >= 0; --i) {
+            const Quantity value = m_history.at(i).result();
+            if (!value.isNan()) {
+                addVariable(Variable("ans", value, Variable::BuiltIn));
+                break;
+            }
+        }
+    }
+
     return version==SPEEDCRUNCH_VERSION;
 }
 
