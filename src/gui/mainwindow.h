@@ -139,7 +139,7 @@ private slots:
     void setFullScreenEnabled(bool);
     void setFunctionsDockVisible(bool, bool takeFocus = true);
     void setHistoryDockVisible(bool, bool takeFocus = true);
-    void setSessionSaveEnabled(bool);
+    void setHistorySaving(QAction*);
     void setKeypadVisible(bool);
     void setLeaveLastExpressionEnabled(bool);
     void setRadixCharacterAutomatic();
@@ -234,6 +234,7 @@ private:
     void deleteVariablesDock();
     void deleteUserFunctionsDock();
     void saveSettings();
+    void saveSessionToDefaultPath();
     void saveSession(QString &fname);
     void setActionsText();
     void setMenusText();
@@ -297,7 +298,6 @@ private:
         QAction* settingsAngleUnitDegree;
         QAction* settingsAngleUnitGradian;
         QAction* settingsAngleUnitCycle;
-        QAction* settingsBehaviorSaveSessionOnExit;
         QAction* settingsBehaviorSaveWindowPositionOnExit;
         QAction* settingsBehaviorPartialResults;
         QAction* settingsBehaviorAutoCompletion;
@@ -311,6 +311,9 @@ private:
         QAction* settingsBehaviorLeaveLastExpression;
         QAction* settingsBehaviorAlwaysOnTop;
         QAction* settingsBehaviorAutoResultToClipboard;
+        QAction* settingsBehaviorHistorySavingNever;
+        QAction* settingsBehaviorHistorySavingOnExit;
+        QAction* settingsBehaviorHistorySavingContinuously;
         QAction* settingsBehaviorHistorySizeLimit;
         QAction* settingsRadixCharBoth;
         QAction* settingsBehaviorComplexNumbers;
@@ -340,11 +343,13 @@ private:
         QActionGroup* complexFormat;
         QActionGroup* radixChar;
         QActionGroup* digitGrouping;
+        QActionGroup* historySaving;
     } m_actionGroups;
 
     struct {
         QMenu* angleUnit;
         QMenu* behavior;
+        QMenu* historySaving;
         QMenu* colorScheme;
         QMenu* decimal;
         QMenu* digitGrouping;

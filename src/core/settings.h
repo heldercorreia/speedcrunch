@@ -29,6 +29,12 @@
 
 class Settings {
 public:
+    enum HistorySaving {
+        HistorySavingNever = 0,
+        HistorySavingOnExit = 1,
+        HistorySavingContinuously = 2
+    };
+
     static Settings* instance();
     static QString getConfigPath();
     static QString getDataPath();
@@ -55,7 +61,7 @@ public:
     bool autoCompletion;
     int digitGrouping;
     int maxHistoryEntries; // 0: unlimited.
-    bool sessionSave;
+    HistorySaving historySaving;
     bool leaveLastExpression;
     bool syntaxHighlighting;
     bool hoverHighlightResults;

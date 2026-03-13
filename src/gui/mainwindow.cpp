@@ -159,7 +159,9 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorAutoCompletion = new QAction(this);
     m_actions.settingsBehaviorLeaveLastExpression = new QAction(this);
     m_actions.settingsBehaviorPartialResults = new QAction(this);
-    m_actions.settingsBehaviorSaveSessionOnExit = new QAction(this);
+    m_actions.settingsBehaviorHistorySavingNever = new QAction(this);
+    m_actions.settingsBehaviorHistorySavingOnExit = new QAction(this);
+    m_actions.settingsBehaviorHistorySavingContinuously = new QAction(this);
     m_actions.settingsBehaviorSaveWindowPositionOnExit = new QAction(this);
     m_actions.settingsBehaviorSyntaxHighlighting = new QAction(this);
     m_actions.settingsBehaviorHoverHighlightResults = new QAction(this);
@@ -210,7 +212,12 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorAutoCompletion->setCheckable(true);
     m_actions.settingsBehaviorLeaveLastExpression->setCheckable(true);
     m_actions.settingsBehaviorPartialResults->setCheckable(true);
-    m_actions.settingsBehaviorSaveSessionOnExit->setCheckable(true);
+    m_actions.settingsBehaviorHistorySavingNever->setCheckable(true);
+    m_actions.settingsBehaviorHistorySavingNever->setData(Settings::HistorySavingNever);
+    m_actions.settingsBehaviorHistorySavingOnExit->setCheckable(true);
+    m_actions.settingsBehaviorHistorySavingOnExit->setData(Settings::HistorySavingOnExit);
+    m_actions.settingsBehaviorHistorySavingContinuously->setCheckable(true);
+    m_actions.settingsBehaviorHistorySavingContinuously->setData(Settings::HistorySavingContinuously);
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setCheckable(true);
     m_actions.settingsBehaviorSyntaxHighlighting->setCheckable(true);
     m_actions.settingsBehaviorHoverHighlightResults->setCheckable(true);
@@ -376,7 +383,9 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorAutoAns->setText(MainWindow::tr("Automatic Result &Reuse"));
     m_actions.settingsBehaviorAutoCompletion->setText(MainWindow::tr("Automatic &Completion"));
     m_actions.settingsBehaviorPartialResults->setText(MainWindow::tr("Live Results &Tooltip"));
-    m_actions.settingsBehaviorSaveSessionOnExit->setText(MainWindow::tr("Save &History on Exit"));
+    m_actions.settingsBehaviorHistorySavingNever->setText(MainWindow::tr("&Never"));
+    m_actions.settingsBehaviorHistorySavingOnExit->setText(MainWindow::tr("On &Exit"));
+    m_actions.settingsBehaviorHistorySavingContinuously->setText(MainWindow::tr("&Continuously"));
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setText(MainWindow::tr("Save &Window Positon on Exit"));
     m_actions.settingsBehaviorSyntaxHighlighting->setText(MainWindow::tr("Syntax &Highlighting"));
     m_actions.settingsBehaviorHoverHighlightResults->setText(MainWindow::tr("Hover Highlighting"));
@@ -468,6 +477,11 @@ void MainWindow::createActionGroups()
     m_actionGroups.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingOneSpace);
     m_actionGroups.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingTwoSpaces);
     m_actionGroups.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingThreeSpaces);
+
+    m_actionGroups.historySaving = new QActionGroup(this);
+    m_actionGroups.historySaving->addAction(m_actions.settingsBehaviorHistorySavingNever);
+    m_actionGroups.historySaving->addAction(m_actions.settingsBehaviorHistorySavingOnExit);
+    m_actionGroups.historySaving->addAction(m_actions.settingsBehaviorHistorySavingContinuously);
 }
 
 void MainWindow::createActionShortcuts()
@@ -592,7 +606,10 @@ void MainWindow::createMenus()
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitCycle);
 
     m_menus.behavior = m_menus.settings->addMenu("");
-    m_menus.behavior->addAction(m_actions.settingsBehaviorSaveSessionOnExit);
+    m_menus.historySaving = m_menus.behavior->addMenu("");
+    m_menus.historySaving->addAction(m_actions.settingsBehaviorHistorySavingNever);
+    m_menus.historySaving->addAction(m_actions.settingsBehaviorHistorySavingOnExit);
+    m_menus.historySaving->addAction(m_actions.settingsBehaviorHistorySavingContinuously);
     m_menus.behavior->addAction(m_actions.settingsBehaviorHistorySizeLimit);
     m_menus.behavior->addAction(m_actions.settingsBehaviorSaveWindowPositionOnExit);
     m_menus.behavior->addSeparator();
@@ -654,6 +671,7 @@ void MainWindow::setMenusText()
     m_menus.angleUnit->setTitle(MainWindow::tr("&Angle Unit"));
     m_menus.complexFormat->setTitle(MainWindow::tr("Comple&x Format"));
     m_menus.behavior->setTitle(MainWindow::tr("&Behavior"));
+    m_menus.historySaving->setTitle(MainWindow::tr("History &Saving"));
     m_menus.display->setTitle(MainWindow::tr("&Display"));
     m_menus.colorScheme->setTitle(MainWindow::tr("Color Scheme"));
     m_menus.help->setTitle(MainWindow::tr("&Help"));
@@ -982,7 +1000,7 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsBehaviorAutoCompletion, SIGNAL(toggled(bool)), SLOT(setAutoCompletionEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoAns, SIGNAL(toggled(bool)), SLOT(setAutoAnsEnabled(bool)));
     connect(m_actions.settingsBehaviorPartialResults, SIGNAL(toggled(bool)), SLOT(setAutoCalcEnabled(bool)));
-    connect(m_actions.settingsBehaviorSaveSessionOnExit, SIGNAL(toggled(bool)), SLOT(setSessionSaveEnabled(bool)));
+    connect(m_actionGroups.historySaving, SIGNAL(triggered(QAction*)), SLOT(setHistorySaving(QAction*)));
     connect(m_actions.settingsBehaviorHistorySizeLimit, SIGNAL(triggered()), SLOT(setHistorySizeLimit()));
     connect(m_actions.settingsBehaviorSaveWindowPositionOnExit, SIGNAL(toggled(bool)), SLOT(setWindowPositionSaveEnabled(bool)));
     connect(m_actions.settingsBehaviorSyntaxHighlighting, SIGNAL(toggled(bool)), SLOT(setSyntaxHighlightingEnabled(bool)));
@@ -1133,10 +1151,16 @@ void MainWindow::applySettings()
     else if (m_settings->angleUnit == 'g')
         m_actions.settingsAngleUnitGradian->setChecked(true);
 
-    if (m_settings->sessionSave) {
-        m_actions.settingsBehaviorSaveSessionOnExit->setChecked(true);
-        restoreSession();
+    if (m_settings->historySaving == Settings::HistorySavingNever) {
+        m_actions.settingsBehaviorHistorySavingNever->setChecked(true);
+    } else if (m_settings->historySaving == Settings::HistorySavingContinuously) {
+        m_actions.settingsBehaviorHistorySavingContinuously->setChecked(true);
+    } else {
+        m_actions.settingsBehaviorHistorySavingOnExit->setChecked(true);
     }
+
+    if (m_settings->historySaving != Settings::HistorySavingNever)
+        restoreSession();
 
     m_actions.settingsBehaviorLeaveLastExpression->setChecked(m_settings->leaveLastExpression);
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setChecked(m_settings->windowPositionSave);
@@ -1700,9 +1724,11 @@ void MainWindow::setAutoCalcEnabled(bool b)
     m_widgets.editor->setAutoCalcEnabled(b);
 }
 
-void MainWindow::setSessionSaveEnabled(bool b)
+void MainWindow::setHistorySaving(QAction* action)
 {
-    m_settings->sessionSave = b;
+    if (!action)
+        return;
+    m_settings->historySaving = static_cast<Settings::HistorySaving>(action->data().toInt());
 }
 
 void MainWindow::setHistorySizeLimit()
@@ -2420,6 +2446,8 @@ void MainWindow::evaluateEditorExpression()
         return;
 
     m_session->addHistoryEntry(HistoryEntry(expr, result));
+    if (m_settings->historySaving == Settings::HistorySavingContinuously)
+        saveSessionToDefaultPath();
     emit historyChanged();
     emit variablesChanged();
 
@@ -2721,14 +2749,18 @@ void MainWindow::closeEvent(QCloseEvent* e)
         m_widgets.manual->close();
     }
     saveSettings();
-    if(m_settings->sessionSave) {
-        QString data_path = Settings::getDataPath();
-        QDir qdir;
-        qdir.mkpath(data_path);
-        data_path.append("/history.json");
-        saveSession(data_path);
-    }
+    if (m_settings->historySaving == Settings::HistorySavingOnExit)
+        saveSessionToDefaultPath();
     e->accept();
+}
+
+void MainWindow::saveSessionToDefaultPath()
+{
+    QString data_path = Settings::getDataPath();
+    QDir qdir;
+    qdir.mkpath(data_path);
+    data_path.append("/history.json");
+    saveSession(data_path);
 }
 
 void MainWindow::setResultPrecision(int p)

@@ -157,7 +157,24 @@ void Settings::load()
     autoAns = settings->value(key + QLatin1String("AutoAns"), false).toBool();
     autoCalc = settings->value(key + QLatin1String("AutoCalc"), true).toBool();
     autoCompletion = settings->value(key + QLatin1String("AutoCompletion"), true).toBool();
-    sessionSave = settings->value(key + QLatin1String("SessionSave"), true).toBool();
+    const QString historySavingKey = key + QLatin1String("HistorySaving");
+    const QString historySavingLegacyKey = key + QLatin1String("HistorySavingPolicy");
+    if (settings->contains(historySavingKey)) {
+        historySaving = static_cast<HistorySaving>(settings->value(historySavingKey).toInt());
+    } else if (settings->contains(historySavingLegacyKey)) {
+        // Backward compatibility with previous key name.
+        historySaving = static_cast<HistorySaving>(settings->value(historySavingLegacyKey).toInt());
+    } else {
+        // Backward compatibility with previous boolean setting.
+        historySaving = settings->value(key + QLatin1String("SessionSave"), true).toBool()
+            ? HistorySavingOnExit
+            : HistorySavingNever;
+    }
+    if (historySaving != HistorySavingNever
+            && historySaving != HistorySavingOnExit
+            && historySaving != HistorySavingContinuously) {
+        historySaving = HistorySavingOnExit;
+    }
     leaveLastExpression = settings->value(key + QLatin1String("LeaveLastExpression"), false).toBool();
     language = settings->value(key + QLatin1String("Language"), "C").toString();
     syntaxHighlighting = settings->value(key + QLatin1String("SyntaxHighlighting"), true).toBool();
@@ -227,7 +244,7 @@ void Settings::save()
 
     QString key = KEY + QLatin1String("/General/");
 
-    settings->setValue(key + QLatin1String("SessionSave"), sessionSave);
+    settings->setValue(key + QLatin1String("HistorySaving"), static_cast<int>(historySaving));
     settings->setValue(key + QLatin1String("LeaveLastExpression"), leaveLastExpression);
     settings->setValue(key + QLatin1String("AutoCompletion"), autoCompletion);
     settings->setValue(key + QLatin1String("AutoAns"), autoAns);
