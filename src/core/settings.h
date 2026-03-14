@@ -66,6 +66,7 @@ public:
     int maxHistoryEntries; // 0: unlimited.
     HistorySaving historySaving;
     bool leaveLastExpression;
+    bool showEmptyHistoryHint;
     bool syntaxHighlighting;
     bool hoverHighlightResults;
     bool windowAlwaysOnTop;

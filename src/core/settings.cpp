@@ -177,6 +177,7 @@ void Settings::load()
         historySaving = HistorySavingOnExit;
     }
     leaveLastExpression = settings->value(key + QLatin1String("LeaveLastExpression"), false).toBool();
+    showEmptyHistoryHint = settings->value(key + QLatin1String("ShowEmptyHistoryHint"), true).toBool();
     language = settings->value(key + QLatin1String("Language"), "C").toString();
     syntaxHighlighting = settings->value(key + QLatin1String("SyntaxHighlighting"), true).toBool();
     hoverHighlightResults = settings->value(key + QLatin1String("HoverHighlightResults"), true).toBool();
@@ -269,6 +270,7 @@ void Settings::save()
 
     settings->setValue(key + QLatin1String("HistorySaving"), static_cast<int>(historySaving));
     settings->setValue(key + QLatin1String("LeaveLastExpression"), leaveLastExpression);
+    settings->setValue(key + QLatin1String("ShowEmptyHistoryHint"), showEmptyHistoryHint);
     settings->setValue(key + QLatin1String("AutoCompletion"), autoCompletion);
     settings->setValue(key + QLatin1String("AutoAns"), autoAns);
     settings->setValue(key + QLatin1String("AutoCalc"), autoCalc);

@@ -158,6 +158,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorAlwaysOnTop = new QAction(this);
     m_actions.settingsBehaviorAutoAns = new QAction(this);
     m_actions.settingsBehaviorAutoCompletion = new QAction(this);
+    m_actions.settingsBehaviorEmptyHistoryHint = new QAction(this);
     m_actions.settingsBehaviorLeaveLastExpression = new QAction(this);
     m_actions.settingsBehaviorPartialResults = new QAction(this);
     m_actions.settingsBehaviorHistorySavingNever = new QAction(this);
@@ -231,6 +232,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorAlwaysOnTop->setCheckable(true);
     m_actions.settingsBehaviorAutoAns->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletion->setCheckable(true);
+    m_actions.settingsBehaviorEmptyHistoryHint->setCheckable(true);
     m_actions.settingsBehaviorLeaveLastExpression->setCheckable(true);
     m_actions.settingsBehaviorPartialResults->setCheckable(true);
     m_actions.settingsBehaviorHistorySavingNever->setCheckable(true);
@@ -418,6 +420,9 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorAutoAns->setToolTip(MainWindow::tr("If a new expression starts with +, -, *, or /, SpeedCrunch inserts \"ans\" first."));
     m_actions.settingsBehaviorAutoAns->setStatusTip(MainWindow::tr("If a new expression starts with +, -, *, or /, SpeedCrunch inserts \"ans\" first."));
     m_actions.settingsBehaviorAutoCompletion->setText(MainWindow::tr("Automatic &Completion"));
+    m_actions.settingsBehaviorEmptyHistoryHint->setText(MainWindow::tr("Show Empty History &Hint"));
+    m_actions.settingsBehaviorEmptyHistoryHint->setToolTip(MainWindow::tr("When history is empty, show a hint in the status area."));
+    m_actions.settingsBehaviorEmptyHistoryHint->setStatusTip(MainWindow::tr("When history is empty, show a hint in the status area."));
     m_actions.settingsBehaviorPartialResults->setText(MainWindow::tr("Show Live Result &Preview"));
     m_actions.settingsBehaviorHistorySavingNever->setText(MainWindow::tr("&Never"));
     m_actions.settingsBehaviorHistorySavingOnExit->setText(MainWindow::tr("On &Exit"));
@@ -676,6 +681,7 @@ void MainWindow::createMenus()
     m_menus.editing->addSeparator();
     m_menus.editing->addAction(m_actions.settingsBehaviorAutoCompletion);
     m_menus.editing->addAction(m_actions.settingsBehaviorAutoAns);
+    m_menus.editing->addAction(m_actions.settingsBehaviorEmptyHistoryHint);
     m_menus.editing->addAction(m_actions.settingsBehaviorLeaveLastExpression);
 
     m_menus.results = m_menus.settings->addMenu("");
@@ -1104,6 +1110,7 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsBehaviorAlwaysOnTop, SIGNAL(toggled(bool)), SLOT(setAlwaysOnTopEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoCompletion, SIGNAL(toggled(bool)), SLOT(setAutoCompletionEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoAns, SIGNAL(toggled(bool)), SLOT(setAutoAnsEnabled(bool)));
+    connect(m_actions.settingsBehaviorEmptyHistoryHint, SIGNAL(toggled(bool)), SLOT(setEmptyHistoryHintEnabled(bool)));
     connect(m_actions.settingsBehaviorPartialResults, SIGNAL(toggled(bool)), SLOT(setAutoCalcEnabled(bool)));
     connect(m_actionGroups.historySaving, SIGNAL(triggered(QAction*)), SLOT(setHistorySaving(QAction*)));
     connect(m_actions.settingsBehaviorHistorySizeLimit, SIGNAL(triggered()), SLOT(setHistorySizeLimit()));
@@ -1292,6 +1299,7 @@ void MainWindow::applySettings()
         restoreSession();
 
     m_actions.settingsBehaviorLeaveLastExpression->setChecked(m_settings->leaveLastExpression);
+    m_actions.settingsBehaviorEmptyHistoryHint->setChecked(m_settings->showEmptyHistoryHint);
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setChecked(m_settings->windowPositionSave);
 
 
@@ -1396,6 +1404,8 @@ void MainWindow::showContextHelp()
 
 void MainWindow::showReadyMessage()
 {
+    if (!m_settings->showEmptyHistoryHint)
+        return;
     showStateLabel(tr("Type an expression here"));
 }
 
@@ -1938,6 +1948,15 @@ void MainWindow::setHistorySizeLimit()
 void MainWindow::setLeaveLastExpressionEnabled(bool b)
 {
     m_settings->leaveLastExpression = b;
+}
+
+void MainWindow::setEmptyHistoryHintEnabled(bool b)
+{
+    m_settings->showEmptyHistoryHint = b;
+    if (b && m_widgets.display->isEmpty())
+        showReadyMessage();
+    else if (!b)
+        hideStateLabel();
 }
 
 void MainWindow::setWindowPositionSaveEnabled(bool b)

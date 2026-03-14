@@ -142,6 +142,7 @@ private slots:
     void setHistorySaving(QAction*);
     void setKeypadVisible(bool);
     void setLeaveLastExpressionEnabled(bool);
+    void setEmptyHistoryHintEnabled(bool);
     void setRadixCharacterAutomatic();
     void setRadixCharacter(char);
     void setRadixCharacterComma();
@@ -347,6 +348,7 @@ private:
         QAction* settingsBehaviorAutoCompletion;
         QAction* settingsBehaviorSyntaxHighlighting;
         QAction* settingsBehaviorHoverHighlightResults;
+        QAction* settingsBehaviorEmptyHistoryHint;
         QAction* settingsBehaviorDigitGroupingNone;
         QAction* settingsBehaviorDigitGroupingOneSpace;
         QAction* settingsBehaviorDigitGroupingTwoSpaces;

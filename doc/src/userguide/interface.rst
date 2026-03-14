@@ -221,6 +221,8 @@ Editing
   .. _automatic_result_reuse:
 * :menuselection:`Auto-Insert "ans" When Starting with an Operator`
     If a new expression starts with ``+``, ``-``, ``*``, or ``/``, SpeedCrunch inserts ``ans`` first.
+* :menuselection:`Show Empty History Hint`
+    Show or hide the ``Type an expression here`` hint when there are no calculations in history.
 * :menuselection:`Keep Entered Expression After Evaluate`
     If selected, the entered expression remains in the editor after evaluating it.
 * :menuselection:`Radix Character`
