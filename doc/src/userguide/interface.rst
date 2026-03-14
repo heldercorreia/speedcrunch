@@ -171,6 +171,17 @@ determines the angle format of the arguments.
 * :menuselection:`Cycle Unit`
     Cycle unit selection between Radian, Degree and Gradian.
 
+Digit Grouping
+++++++++++++++
+
+Visually group digits in long numbers. Requires
+:menuselection:`Settings --> Behavior --> Syntax Highlighting` to be enabled.
+
+* :menuselection:`Digit Grouping`
+    Visually group digits in long numbers.
+* :menuselection:`Digit Grouping --> Group Integer Part Only`
+    Apply digit grouping only to the integer part of numbers. When enabled, fractional digits remain ungrouped.
+
 
 Behavior
 ++++++++
@@ -198,11 +209,6 @@ This section contains several settings that allow you to further configure Speed
     Completely enables or disables autocompletion.
 * :menuselection:`Syntax Highlighting`
     Enables or disables syntax highlighting.
-* :menuselection:`Digit Grouping`
-    Visually group digits in long numbers. Requires :menuselection:`Settings --> Behavior --> Syntax Highlighting` to be
-    enabled.
-* :menuselection:`Digit Grouping --> Group Integer Part Only`
-    Apply digit grouping only to the integer part of numbers. When enabled, fractional digits remain ungrouped.
 * :menuselection:`Leave Last Expression`
     If selected, the entered expression remains in the editor after evaluating it.
 * :menuselection:`Enable Complex Numbers`

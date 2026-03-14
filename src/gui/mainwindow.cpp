@@ -720,6 +720,15 @@ void MainWindow::createMenus()
     m_menus.angleUnit->addSeparator();
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitCycle);
 
+    m_menus.digitGrouping = m_menus.settings->addMenu("");
+    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingNone);
+    m_menus.digitGrouping->addSeparator();
+    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingOneSpace);
+    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingTwoSpaces);
+    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingThreeSpaces);
+    m_menus.digitGrouping->addSeparator();
+    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingIntegerPartOnly);
+
     m_menus.behavior = m_menus.settings->addMenu("");
     m_menus.historySaving = m_menus.behavior->addMenu("");
     m_menus.historySaving->addAction(m_actions.settingsBehaviorHistorySavingNever);
@@ -733,14 +742,6 @@ void MainWindow::createMenus()
     m_menus.behavior->addAction(m_actions.settingsBehaviorAutoCompletion);
     m_menus.behavior->addAction(m_actions.settingsBehaviorSyntaxHighlighting);
     m_menus.behavior->addAction(m_actions.settingsBehaviorHoverHighlightResults);
-
-    m_menus.digitGrouping = m_menus.behavior->addMenu("");
-    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingNone);
-    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingOneSpace);
-    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingTwoSpaces);
-    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingThreeSpaces);
-    m_menus.digitGrouping->addSeparator();
-    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingIntegerPartOnly);
 
     m_menus.behavior->addAction(m_actions.settingsBehaviorLeaveLastExpression);
     m_menus.behavior->addAction(m_actions.settingsBehaviorComplexNumbers);
