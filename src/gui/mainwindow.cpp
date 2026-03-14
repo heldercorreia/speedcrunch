@@ -2648,7 +2648,7 @@ void MainWindow::handleKeypadButtonPress(Keypad::Button b)
     case Keypad::KeyLeftPar: insertTextIntoEditor("("); break;
     case Keypad::KeyRightPar: insertTextIntoEditor(")"); break;
     case Keypad::KeyRaise: insertTextIntoEditor("^"); break;
-    case Keypad::KeyPercent: insertTextIntoEditor("%"); break;
+    case Keypad::KeyPercent: insertTextIntoEditor("idiv("); break;
     case Keypad::KeyFactorial: insertTextIntoEditor("!"); break;
 
     case Keypad::KeyX: insertTextIntoEditor("x"); break;

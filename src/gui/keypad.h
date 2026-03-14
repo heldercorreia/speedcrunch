@@ -22,7 +22,6 @@
 
 #include <QHash>
 #include <QWidget>
-#include <QSignalMapper>
 
 class QPushButton;
 
@@ -48,9 +47,6 @@ public slots:
     void handleRadixCharacterChange();
     void retranslateText();
 
-protected slots:
-    void emitButtonPressed(int button) const;
-
 protected:
     virtual void changeEvent(QEvent*);
 
@@ -73,9 +69,6 @@ private:
     } keyDescriptions[];
 
     QHash<Button, QPair<QPushButton*, const KeyDescription*> > keys;
-    QSignalMapper mapper;
-
 };
 
 #endif
-

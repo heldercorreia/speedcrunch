@@ -23,7 +23,6 @@
 
 #include <QLocale>
 #include <QHash>
-#include <QSignalMapper>
 #include <QApplication>
 #include <QGridLayout>
 #include <QPushButton>
@@ -62,7 +61,7 @@ const Keypad::KeyDescription Keypad::keyDescriptions[] = {
     {QString::fromLatin1("!"), KeyFactorial, false, 3, 5},
     {QString::fromLatin1("ln"), KeyLn, false, 0, 8},
     {QString::fromLatin1("("), KeyLeftPar, false, 2, 4},
-    {QString::fromLatin1("%"), KeyPercent, false, 3, 4},
+    {QString::fromLatin1("\\"), KeyPercent, false, 3, 4},
     {QString::fromLatin1("^"), KeyRaise, false, 1, 5},
     {QString::fromLatin1(")"), KeyRightPar, false, 2, 5},
     {QString::fromLatin1("sin"), KeySin, false, 1, 7},
@@ -82,7 +81,6 @@ Keypad::Keypad(QWidget* parent)
     setButtonTooltips();
     disableButtonFocus();
     setLayoutDirection(Qt::LeftToRight);
-    connect(&mapper, SIGNAL(mapped(int)), SLOT(emitButtonPressed(int)));
 }
 
 void Keypad::handleRadixCharacterChange()
@@ -94,11 +92,6 @@ void Keypad::retranslateText()
 {
     setButtonTooltips();
     handleRadixCharacterChange();
-}
-
-void Keypad::emitButtonPressed(int button) const
-{
-    emit buttonPressed(Button(button));
 }
 
 QPushButton* Keypad::key(Button button) const
@@ -124,8 +117,9 @@ void Keypad::createButtons()
         const QPair<QPushButton*, const KeyDescription*> hashValue(key, description);
         keys.insert(description->button, hashValue);
 
-        QObject::connect(key, SIGNAL(clicked()), &mapper, SLOT(map()));
-        mapper.setMapping(key, description->button);
+        QObject::connect(key, &QPushButton::clicked, this, [this, description]() {
+            emit buttonPressed(description->button);
+        });
     }
 
     handleRadixCharacterChange();
