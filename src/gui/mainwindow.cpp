@@ -427,7 +427,7 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorHistorySavingNever->setText(MainWindow::tr("&Never"));
     m_actions.settingsBehaviorHistorySavingOnExit->setText(MainWindow::tr("On &Exit"));
     m_actions.settingsBehaviorHistorySavingContinuously->setText(MainWindow::tr("&Continuously"));
-    m_actions.settingsBehaviorSaveWindowPositionOnExit->setText(MainWindow::tr("Save &Window Positon on Exit"));
+    m_actions.settingsBehaviorSaveWindowPositionOnExit->setText(MainWindow::tr("Save &Window Position on Exit"));
     m_actions.settingsBehaviorSyntaxHighlighting->setText(MainWindow::tr("Syntax &Highlighting"));
     m_actions.settingsBehaviorHoverHighlightResults->setText(MainWindow::tr("Hover Highlighting"));
     m_actions.settingsBehaviorDigitGroupingNone->setText(MainWindow::tr("Disabled"));
