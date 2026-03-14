@@ -62,6 +62,24 @@ General
 
     Compute the logarithm of base ``n`` . In *complex mode* the same rules apply as for :func:`ln`.
 
+.. function:: datetime(unix_timestamp [; offset])
+
+    Convert a Unix timestamp (seconds since 1970-01-01 00:00:00 UTC) into a
+    numeric date/time value formatted as ``YYYYMMDD.HHMMSS``.
+
+    If ``offset`` is omitted, the timestamp is converted using the local system
+    timezone. If ``offset`` is provided, it is interpreted as hours offset to
+    GMT/UTC (fractional offsets are supported), and conversion is performed in
+    UTC after applying that offset.
+
+    Example::
+
+        datetime(1514761200; 1)
+        = 20180101.000000
+
+        datetime(1551464695; -3.5)
+        = 20190301.145455
+
 
 .. _trigonometric:
 
