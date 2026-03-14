@@ -75,7 +75,7 @@ void Constants::Private::populate()
     // CODATA Internationally recommended values of the Fundamental Physical Constants
     // Constants not yet included, to be included in future releases (TODO)
     // From: http://physics.nist.gov/cuu/Constants/
-    // Date: 2016-03-28
+    // Date: 2026-03-14
 
     //   Quantity                                                       Value                 Uncertainty           Unit
     // -----------------------------------------------------------------------------------------------------------------------------
@@ -370,27 +370,27 @@ void Constants::Private::populate()
     PUSH_CONSTANT_NO_UNIT("φ (golden ratio)", "1.6180339887498948");
 
     // General Physics.
-    PUSH_CONSTANT_CODATA("Characteristic Impedance of Vacuum", "376.730313461", "Ω",          "exact",           "2016-03-28");
-    PUSH_CONSTANT_CODATA("Dirac's Constant",          "1.054571800e-34",        "J·s",        "0.000000013e-34", "2016-03-28");  // CODATA name: Planck constant over 2 pi
-    PUSH_CONSTANT_CODATA("Electric Constant",         "8.8541878188e-12",       "F/m",        "exact",           "2026-03-08");
-    PUSH_CONSTANT_CODATA("Gravitation Constant",      "6.67408e-11",            "m³/(kg·s²)", "0.00031e-11",     "2016-03-28");
-    PUSH_CONSTANT_CODATA("Magnetic Constant",         "12.566370614e-7",        "N/A²",       "exact",           "2016-03-28");  // TODO: Put more figures !
-    PUSH_CONSTANT_CODATA("Planck's Constant",         "6.626070040e-34",        "J·s",        "0.000000081e-34", "2016-03-28");
+    PUSH_CONSTANT_CODATA("Characteristic Impedance of Vacuum", "376.730313412", "Ω",          "0.000000059",     "2026-03-14");
+    PUSH_CONSTANT_CODATA("Dirac's Constant",          "1.054571817e-34",        "J·s",        "exact",           "2026-03-14");  // CODATA name: Planck constant over 2 pi
+    PUSH_CONSTANT_CODATA("Electric Constant",         "8.8541878188e-12",       "F/m",        "0.0000000014e-12","2026-03-14");
+    PUSH_CONSTANT_CODATA("Gravitation Constant",      "6.67430e-11",            "m³/(kg·s²)", "0.00015e-11",     "2026-03-14");
+    PUSH_CONSTANT_CODATA("Magnetic Constant",         "1.25663706127e-6",       "N/A²",       "0.00000000020e-6","2026-03-14");  // TODO: Put more figures !
+    PUSH_CONSTANT_CODATA("Planck's Constant",         "6.62607015e-34",         "J·s",        "exact",           "2026-03-14");
     PUSH_CONSTANT_CODATA("Speed of Light in Vacuum",  "299792458",              "m/s",        "exact",           "2016-03-28");
     PUSH_CONSTANT_CODATA("Standard Gravity",          "9.80665",                "m/s²",       "exact",           "2016-03-28");
 
     // Electromagnetic.
     PUSH_CONSTANT_CODATA("Bohr-Procopiu Magneton",                      "927.4009994e-26",     "J/T",    "0.0000057e-26",   "2016-03-28");
-    PUSH_CONSTANT_CODATA("Conductance Quantum",                         "7.7480917310e-5",     "S",      "0.0000000018e-5", "2016-03-28");
+    PUSH_CONSTANT_CODATA("Conductance Quantum",                         "7.748091729e-5",      "S",      "exact",            "2026-03-14");
     PUSH_CONSTANT("Coulomb's Constant",                                 "8.987742438e9",       "N·m²/C²");
-    PUSH_CONSTANT_CODATA("Elementary Charge",                           "1.602 176 6208 e-19", "C",      "0.0000000098e-19", "2016-03-28");
+    PUSH_CONSTANT_CODATA("Elementary Charge",                           "1.602176634e-19",     "C",      "exact",            "2026-03-14");
     PUSH_CONSTANT_CODATA("Conventional value of Josephson Constant",    "483597.9e9",          "Hz/V",   "exact",            "2016-03-28");
-    PUSH_CONSTANT_CODATA("Josephson Constant",                          "483597.8525e9",       "Hz/V",   "0.0030e9",         "2016-03-28");
-    PUSH_CONSTANT_CODATA("Magnetic Flux Quantum",                       "2.06783383e-15",      "Wb",     "0.000000013e-15",  "2016-03-28");
+    PUSH_CONSTANT_CODATA("Josephson Constant",                          "483597.8484e9",       "Hz/V",   "exact",            "2026-03-14");
+    PUSH_CONSTANT_CODATA("Magnetic Flux Quantum",                       "2.067833848e-15",     "Wb",     "exact",            "2026-03-14");
     PUSH_CONSTANT_CODATA("Nuclear Magneton",                            "5.050783699e-27",     "J/T",    "0.000000031e-27",  "2016-03-28");
-    PUSH_CONSTANT_CODATA("Resistance Quantum",                          "12906.4037278",       "Ω",      "0.0000029",        "2016-03-28");  // CODATA name: inverse of conductance quantum
+    PUSH_CONSTANT_CODATA("Resistance Quantum",                          "12906.40372",         "Ω",      "exact",            "2026-03-14");  // CODATA name: inverse of conductance quantum
     PUSH_CONSTANT_CODATA("Conventional value of von Klitzing Constant", "25812.807",           "Ω",      "exact",            "2016-03-28");
-    PUSH_CONSTANT_CODATA("von Klitzing Constant",                       "25812.8074555",       "Ω",      "0.0000059",        "2016-03-28");
+    PUSH_CONSTANT_CODATA("von Klitzing Constant",                       "25812.80745",         "Ω",      "exact",            "2026-03-14");
 
     // Atomic & Nuclear.
     PUSH_CONSTANT_CODATA("Bohr Radius",                    "0.52917721067e-10", "m",     "0.00000000012e-10", "2016-03-28");
@@ -406,21 +406,21 @@ void Constants::Private::populate()
 
     // Physico-chemical.
     PUSH_CONSTANT_CODATA("Atomic Mass Unit",                               "1.660539040e-27",  "kg",         "0.000000020e-27",  "2016-03-28");  // CODATA name: atomic mass constant
-    PUSH_CONSTANT_CODATA("Avogadro's Number",                              "6.022140857e23",   "1/mol",      "0.000000074e23",   "2016-03-28");  // CODATA name: Avogadro constant
-    PUSH_CONSTANT_CODATA("Boltzmann Constant",                             "1.38064852e-23",   "J/K",        "0.00000079e-23",   "2016-03-28");
+    PUSH_CONSTANT_CODATA("Avogadro's Number",                              "6.02214076e23",    "1/mol",      "exact",            "2026-03-14");  // CODATA name: Avogadro constant
+    PUSH_CONSTANT_CODATA("Boltzmann Constant",                             "1.380649e-23",     "J/K",        "exact",            "2026-03-14");
     PUSH_CONSTANT_CODATA("Compton wavelength",                             "2.4263102367e-12", "m",          "0.0000000011e-12", "2016-03-28");
     PUSH_CONSTANT_CODATA("Compton wavelength over 2 pi",                   "386.15926764e-15", "m",          "0.00000018e-15",   "2016-03-28");
-    PUSH_CONSTANT_CODATA("Electron-volt",                                  "1.6021766208e-19", "J",          "0.0000000098e-19", "2016-03-28");
-    PUSH_CONSTANT_CODATA("Faraday Constant",                               "96485.33289",      "C/mol",      "0.00059",          "2016-03-28");
+    PUSH_CONSTANT_CODATA("Electron-volt",                                  "1.602176634e-19",  "J",          "exact",            "2026-03-14");
+    PUSH_CONSTANT_CODATA("Faraday Constant",                               "96485.33212",      "C/mol",      "exact",            "2026-03-14");
     // PUSH_CONSTANT_CODATA("Faraday constant for conventional electric current", "96 485.3251", "C_90_mol^-1", "0.0012", "2016-03-28");       // TODO: Handle C_90_mol
-    PUSH_CONSTANT_CODATA("First Radiation Constant",                       "3.741771790e-16",  "W·m²",       "0.000000046e-16",  "2016-03-28");
-    PUSH_CONSTANT_CODATA("First Radiation Constant for Spectral Radiance", "1.191042953e-16",  "(W·m²)/sr",  "0.000000015e-16",  "2016-03-28");
-    PUSH_CONSTANT_CODATA("Gas Constant",                                   "8.3144598",        "J/(K·mol)",  "0.0000048",        "2016-03-28");
+    PUSH_CONSTANT_CODATA("First Radiation Constant",                       "3.741771852e-16",  "W·m²",       "exact",            "2026-03-14");
+    PUSH_CONSTANT_CODATA("First Radiation Constant for Spectral Radiance", "1.191042972e-16",  "(W·m²)/sr",  "exact",            "2026-03-14");
+    PUSH_CONSTANT_CODATA("Gas Constant",                                   "8.314462618",      "J/(K·mol)",  "exact",            "2026-03-14");
     PUSH_CONSTANT_CODATA("Loschmidt constant (273.15 K, 100 kPa)",         "2.6516467e25",     "1/m³",       "0.0000015e25",     "2016-03-28");
     PUSH_CONSTANT_CODATA("Loschmidt constant (273.15 K, 101.325 kPa)",     "2.6867811e25",     "1/m³",       "0.0000015e25",     "2016-03-28");
-    PUSH_CONSTANT_CODATA("Molar Planck Constant",                          "3.9903127110e-10", "J·s/mol",    "0.0000000018e-10", "2016-03-28");
-    PUSH_CONSTANT_CODATA("Second Radiation Constant",                      "1.43877736e-2",    "m·K",        "0.00000083e-2",    "2016-03-28");
-    PUSH_CONSTANT_CODATA("Stefan-Boltzmann Constant",                      "5.670367e-8",      "W/(m²·K⁴)",  "0.000013e-8",      "2016-03-28");
+    PUSH_CONSTANT_CODATA("Molar Planck Constant",                          "3.990312712e-10",  "J·s/mol",    "exact",            "2026-03-14");
+    PUSH_CONSTANT_CODATA("Second Radiation Constant",                      "1.438776877e-2",   "m·K",        "exact",            "2026-03-14");
+    PUSH_CONSTANT_CODATA("Stefan-Boltzmann Constant",                      "5.670374419e-8",   "W/(m²·K⁴)",  "exact",            "2026-03-14");
     PUSH_CONSTANT_CODATA("{220} Lattice Spacing of Silicon",               "192.0155714e-12",  "m",          "0.0000032e-12",    "2016-03-28");
 
     // Astronomy.
