@@ -182,11 +182,10 @@ Visually group digits in long numbers. Requires
 * :menuselection:`Digit Grouping --> Group Integer Part Only`
     Apply digit grouping only to the integer part of numbers. When enabled, fractional digits remain ungrouped.
 
+History
++++++++
 
-Behavior
-++++++++
-
-This section contains several settings that allow you to further configure SpeedCrunch's behavior.
+This section contains settings that control how calculation history is stored.
 
 * :menuselection:`Save History on Exit`
     Controls if the calculation history is automatically saved when SpeedCrunch exits
@@ -195,6 +194,13 @@ This section contains several settings that allow you to further configure Speed
     Sets the maximum number of stored history entries. By default, SpeedCrunch keeps
     up to 100 entries and automatically removes the oldest ones when this limit is
     exceeded. Set the value to ``0`` to disable the limit.
+
+
+Behavior
+++++++++
+
+This section contains several settings that allow you to further configure SpeedCrunch's behavior.
+
 * :menuselection:`Save Window Position on Exit`
     Controls if the window position is saved and restored.
 * :menuselection:`Live Results Tooltip`

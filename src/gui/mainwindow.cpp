@@ -729,12 +729,14 @@ void MainWindow::createMenus()
     m_menus.digitGrouping->addSeparator();
     m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingIntegerPartOnly);
 
-    m_menus.behavior = m_menus.settings->addMenu("");
-    m_menus.historySaving = m_menus.behavior->addMenu("");
+    m_menus.history = m_menus.settings->addMenu("");
+    m_menus.historySaving = m_menus.history->addMenu("");
     m_menus.historySaving->addAction(m_actions.settingsBehaviorHistorySavingNever);
     m_menus.historySaving->addAction(m_actions.settingsBehaviorHistorySavingOnExit);
     m_menus.historySaving->addAction(m_actions.settingsBehaviorHistorySavingContinuously);
-    m_menus.behavior->addAction(m_actions.settingsBehaviorHistorySizeLimit);
+    m_menus.history->addAction(m_actions.settingsBehaviorHistorySizeLimit);
+
+    m_menus.behavior = m_menus.settings->addMenu("");
     m_menus.behavior->addAction(m_actions.settingsBehaviorSaveWindowPositionOnExit);
     m_menus.behavior->addSeparator();
     m_menus.behavior->addAction(m_actions.settingsBehaviorPartialResults);
@@ -793,6 +795,7 @@ void MainWindow::setMenusText()
     m_menus.angleUnit->setTitle(MainWindow::tr("&Angle Unit"));
     m_menus.complexFormat->setTitle(MainWindow::tr("Comple&x Format"));
     m_menus.behavior->setTitle(MainWindow::tr("&Behavior"));
+    m_menus.history->setTitle(MainWindow::tr("&History"));
     m_menus.historySaving->setTitle(MainWindow::tr("History &Saving"));
     m_menus.display->setTitle(MainWindow::tr("&Display"));
     m_menus.colorScheme->setTitle(MainWindow::tr("Color Scheme"));

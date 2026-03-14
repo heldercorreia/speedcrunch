@@ -395,6 +395,7 @@ private:
     struct {
         QMenu* angleUnit;
         QMenu* behavior;
+        QMenu* history;
         QMenu* historySaving;
         QMenu* colorScheme;
         QMenu* decimal;
