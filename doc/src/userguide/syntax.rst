@@ -96,7 +96,7 @@ operations::
     0x2 * hex(12341)
     = 24682
 
-To change the base that is used for displaying results, select one of the corresponding settings in :menuselection:`Settings --> Result Format`.
+To change the base that is used for displaying results, select one of the corresponding settings in :menuselection:`Settings --> Results --> Result Format`.
 
 SpeedCrunch stores integers with a precision of up to 256 bits. Since this would be unwieldy,
 the binary representation of a negative number in SpeedCrunch is *not* its two's complement.
@@ -121,7 +121,7 @@ Sexagecimal Values
 
 Sexagecimal values in SpeedCrunch are angle degrees or time values represented with minutes and seconds.
 
-When sexagecimal mode is selected in :menuselection:`Settings --> Result Format`, dimensionless and time results are displayed as sexagecimal values. All other results are displayed as fixed decimal values. Actual sexagecimal math depends on the result. Dimensionless results are handled as degrees with minutes and seconds generated from the decimal part. With time dimension results, base unit is second and the integer part is divided to minutes and hours.
+When sexagecimal mode is selected in :menuselection:`Settings --> Results --> Result Format`, dimensionless and time results are displayed as sexagecimal values. All other results are displayed as fixed decimal values. Actual sexagecimal math depends on the result. Dimensionless results are handled as degrees with minutes and seconds generated from the decimal part. With time dimension results, base unit is second and the integer part is divided to minutes and hours.
 
 In input, characters ``°`` (degree), ``:`` (colon), ``'`` (single quote) and ``"`` (double quote) can be used for entering sexagecimal values. Degree sign ``°`` separates degrees and minutes. First colon character ``:`` separates hours and minutes. Single quote ``'`` or second colon character ``:`` separates minutes and seconds. Additionally, postfix double quote ``"`` can be used as an arc second unit. Because the degree sign is difficult to produce from keyboard, at sign ``@`` is automatically converted to it.
 

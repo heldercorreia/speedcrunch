@@ -87,7 +87,7 @@ Numeral Bases
 -------------
 
 The following functions only change the format for the current result. To change the base
-that is used for displaying results, select one of the corresponding settings in :menuselection:`Settings --> Result Format`.
+that is used for displaying results, select one of the corresponding settings in :menuselection:`Settings --> Results --> Result Format`.
 
 .. function:: bin(n)
 

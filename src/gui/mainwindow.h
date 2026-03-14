@@ -394,7 +394,8 @@ private:
 
     struct {
         QMenu* angleUnit;
-        QMenu* behavior;
+        QMenu* complexNumbers;
+        QMenu* editing;
         QMenu* history;
         QMenu* historySaving;
         QMenu* colorScheme;
@@ -402,6 +403,7 @@ private:
         QMenu* digitGrouping;
         QMenu* display;
         QMenu* edit;
+        QMenu* results;
         QMenu* resultFormat;
         QMenu* alternativeResultFormat;
         QMenu* alternativeDecimal;
@@ -416,6 +418,7 @@ private:
         QMenu* sessionExport;
         QMenu* settings;
         QMenu* view;
+        QMenu* window;
     } m_menus;
 
     struct {

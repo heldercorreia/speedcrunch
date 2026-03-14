@@ -342,7 +342,7 @@ void MainWindow::setStatusBarText()
         m_status.angleUnitLabel->setText(MainWindow::tr("Angle Unit:"));
         m_status.resultFormatLabel->setText(MainWindow::tr("Result Format:"));
         m_status.complexNumbersLabel->setText(MainWindow::tr("Complex Numbers:"));
-        m_status.complexFormatLabel->setText(MainWindow::tr("Complex Format:"));
+        m_status.complexFormatLabel->setText(MainWindow::tr("Complex Number Format:"));
         m_status.angleUnit->setText(statusBarAngleUnitValue());
         m_status.resultFormat->setText(statusBarResultFormatValue());
         m_status.complexNumbers->setText(statusBarComplexNumbersValue());
@@ -421,9 +421,11 @@ void MainWindow::setActionsText()
     m_actions.settingsAngleUnitGradian->setText(MainWindow::tr("&Gradian"));
     m_actions.settingsAngleUnitCycle->setText(MainWindow::tr("&Cycle Unit"));
     m_actions.settingsBehaviorAlwaysOnTop->setText(MainWindow::tr("Always on &Top"));
-    m_actions.settingsBehaviorAutoAns->setText(MainWindow::tr("Automatic Result &Reuse"));
+    m_actions.settingsBehaviorAutoAns->setText(MainWindow::tr("Auto-Insert \"ans\" When Starting with an Operator"));
+    m_actions.settingsBehaviorAutoAns->setToolTip(MainWindow::tr("If a new expression starts with +, -, *, or /, SpeedCrunch inserts \"ans\" first."));
+    m_actions.settingsBehaviorAutoAns->setStatusTip(MainWindow::tr("If a new expression starts with +, -, *, or /, SpeedCrunch inserts \"ans\" first."));
     m_actions.settingsBehaviorAutoCompletion->setText(MainWindow::tr("Automatic &Completion"));
-    m_actions.settingsBehaviorPartialResults->setText(MainWindow::tr("Live Results &Tooltip"));
+    m_actions.settingsBehaviorPartialResults->setText(MainWindow::tr("Show Live Result &Preview"));
     m_actions.settingsBehaviorHistorySavingNever->setText(MainWindow::tr("&Never"));
     m_actions.settingsBehaviorHistorySavingOnExit->setText(MainWindow::tr("On &Exit"));
     m_actions.settingsBehaviorHistorySavingContinuously->setText(MainWindow::tr("&Continuously"));
@@ -435,8 +437,10 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorDigitGroupingTwoSpaces->setText(MainWindow::tr("Medium Space"));
     m_actions.settingsBehaviorDigitGroupingThreeSpaces->setText(MainWindow::tr("Large Space"));
     m_actions.settingsBehaviorDigitGroupingIntegerPartOnly->setText(MainWindow::tr("Group Integer Part Only"));
-    m_actions.settingsBehaviorLeaveLastExpression->setText(MainWindow::tr("Leave &Last Expression"));
-    m_actions.settingsBehaviorAutoResultToClipboard->setText(MainWindow::tr("Automatic &Result to Clipboard"));
+    m_actions.settingsBehaviorLeaveLastExpression->setText(MainWindow::tr("Keep Entered Expression After Evaluate"));
+    m_actions.settingsBehaviorLeaveLastExpression->setToolTip(MainWindow::tr("After pressing Enter, keep the entered expression selected in the editor."));
+    m_actions.settingsBehaviorLeaveLastExpression->setStatusTip(MainWindow::tr("After pressing Enter, keep the entered expression selected in the editor."));
+    m_actions.settingsBehaviorAutoResultToClipboard->setText(MainWindow::tr("Automatically Copy New Results to Clipboard"));
     m_actions.settingsBehaviorHistorySizeLimit->setText(MainWindow::tr("History Size &Limit..."));
     m_actions.settingsBehaviorComplexNumbers->setText(MainWindow::tr("Enable Complex Numbers"));
     m_actions.settingsRadixCharComma->setText(MainWindow::tr("&Comma"));
@@ -647,21 +651,52 @@ void MainWindow::createMenus()
     m_menus.settings = new QMenu("", this);
     menuBar()->addMenu(m_menus.settings);
 
-    m_menus.resultFormat = m_menus.settings->addMenu("");
+    m_menus.display = m_menus.settings->addMenu("");
+    m_menus.colorScheme = m_menus.display->addMenu("");
+    const auto schemes = m_actions.settingsDisplayColorSchemes;
+    for (auto& action : schemes)
+        m_menus.colorScheme->addAction(action);
+    m_menus.display->addAction(m_actions.settingsDisplayFont);
+    m_menus.display->addSeparator();
+    m_menus.display->addAction(m_actions.settingsBehaviorSyntaxHighlighting);
+    m_menus.display->addAction(m_actions.settingsBehaviorHoverHighlightResults);
+    m_menus.display->addSeparator();
 
+    m_menus.digitGrouping = m_menus.display->addMenu("");
+    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingNone);
+    m_menus.digitGrouping->addSeparator();
+    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingOneSpace);
+    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingTwoSpaces);
+    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingThreeSpaces);
+    m_menus.digitGrouping->addSeparator();
+    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingIntegerPartOnly);
+
+    m_menus.editing = m_menus.settings->addMenu("");
+    m_menus.radixChar = m_menus.editing->addMenu("");
+    m_menus.radixChar->addAction(m_actions.settingsRadixCharDefault);
+    m_menus.radixChar->addSeparator();
+    m_menus.radixChar->addAction(m_actions.settingsRadixCharDot);
+    m_menus.radixChar->addAction(m_actions.settingsRadixCharComma);
+    m_menus.radixChar->addAction(m_actions.settingsRadixCharBoth);
+    m_menus.editing->addSeparator();
+    m_menus.editing->addAction(m_actions.settingsBehaviorAutoCompletion);
+    m_menus.editing->addAction(m_actions.settingsBehaviorAutoAns);
+    m_menus.editing->addAction(m_actions.settingsBehaviorLeaveLastExpression);
+
+    m_menus.results = m_menus.settings->addMenu("");
+
+    m_menus.resultFormat = m_menus.results->addMenu("");
     m_menus.decimal = m_menus.resultFormat->addMenu("");
     m_menus.decimal->addAction(m_actions.settingsResultFormatGeneral);
     m_menus.decimal->addAction(m_actions.settingsResultFormatFixed);
     m_menus.decimal->addAction(m_actions.settingsResultFormatEngineering);
     m_menus.decimal->addAction(m_actions.settingsResultFormatScientific);
-
     m_menus.resultFormat->addAction(m_actions.settingsResultFormatBinary);
     m_menus.resultFormat->addAction(m_actions.settingsResultFormatOctal);
     m_menus.resultFormat->addAction(m_actions.settingsResultFormatHexadecimal);
     m_menus.resultFormat->addAction(m_actions.settingsResultFormatSexagesimal);
-    m_menus.resultFormat->addSeparator();
 
-    m_menus.precision = m_menus.resultFormat->addMenu("");
+    m_menus.precision = m_menus.results->addMenu("");
     m_menus.precision->addAction(m_actions.settingsResultFormatAutoPrecision);
     m_menus.precision->addAction(m_actions.settingsResultFormat0Digits);
     m_menus.precision->addAction(m_actions.settingsResultFormat2Digits);
@@ -670,13 +705,13 @@ void MainWindow::createMenus()
     m_menus.precision->addAction(m_actions.settingsResultFormat15Digits);
     m_menus.precision->addAction(m_actions.settingsResultFormat50Digits);
 
-    m_menus.complexFormat = m_menus.resultFormat->addMenu("");
+    m_menus.complexNumbers = m_menus.results->addMenu("");
+    m_menus.complexNumbers->addAction(m_actions.settingsBehaviorComplexNumbers);
+    m_menus.complexFormat = m_menus.complexNumbers->addMenu("");
     m_menus.complexFormat->addAction(m_actions.settingsResultFormatCartesian);
     m_menus.complexFormat->addAction(m_actions.settingsResultFormatPolar);
 
-    m_menus.settings->addSeparator();
-
-    m_menus.alternativeResultFormat = m_menus.settings->addMenu("");
+    m_menus.alternativeResultFormat = m_menus.results->addMenu("");
     m_menus.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatDisabled);
     m_menus.alternativeResultFormat->addSeparator();
     m_menus.alternativeDecimal = m_menus.alternativeResultFormat->addMenu("");
@@ -689,7 +724,7 @@ void MainWindow::createMenus()
     m_menus.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatHexadecimal);
     m_menus.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatSexagesimal);
 
-    m_menus.tertiaryResultFormat = m_menus.settings->addMenu("");
+    m_menus.tertiaryResultFormat = m_menus.results->addMenu("");
     m_menus.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatDisabled);
     m_menus.tertiaryResultFormat->addSeparator();
     m_menus.tertiaryDecimal = m_menus.tertiaryResultFormat->addMenu("");
@@ -701,17 +736,9 @@ void MainWindow::createMenus()
     m_menus.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatOctal);
     m_menus.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatHexadecimal);
     m_menus.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatSexagesimal);
-
-    m_menus.settings->addSeparator();
-
-    m_menus.inputFormat = m_menus.settings->addMenu("");
-
-    m_menus.radixChar = m_menus.inputFormat->addMenu("");
-    m_menus.radixChar->addAction(m_actions.settingsRadixCharDefault);
-    m_menus.radixChar->addSeparator();
-    m_menus.radixChar->addAction(m_actions.settingsRadixCharDot);
-    m_menus.radixChar->addAction(m_actions.settingsRadixCharComma);
-    m_menus.radixChar->addAction(m_actions.settingsRadixCharBoth);
+    m_menus.results->addSeparator();
+    m_menus.results->addAction(m_actions.settingsBehaviorPartialResults);
+    m_menus.results->addAction(m_actions.settingsBehaviorAutoResultToClipboard);
 
     m_menus.angleUnit = m_menus.settings->addMenu("");
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitDegree);
@@ -720,15 +747,6 @@ void MainWindow::createMenus()
     m_menus.angleUnit->addSeparator();
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitCycle);
 
-    m_menus.digitGrouping = m_menus.settings->addMenu("");
-    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingNone);
-    m_menus.digitGrouping->addSeparator();
-    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingOneSpace);
-    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingTwoSpaces);
-    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingThreeSpaces);
-    m_menus.digitGrouping->addSeparator();
-    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingIntegerPartOnly);
-
     m_menus.history = m_menus.settings->addMenu("");
     m_menus.historySaving = m_menus.history->addMenu("");
     m_menus.historySaving->addAction(m_actions.settingsBehaviorHistorySavingNever);
@@ -736,27 +754,9 @@ void MainWindow::createMenus()
     m_menus.historySaving->addAction(m_actions.settingsBehaviorHistorySavingContinuously);
     m_menus.history->addAction(m_actions.settingsBehaviorHistorySizeLimit);
 
-    m_menus.behavior = m_menus.settings->addMenu("");
-    m_menus.behavior->addAction(m_actions.settingsBehaviorSaveWindowPositionOnExit);
-    m_menus.behavior->addSeparator();
-    m_menus.behavior->addAction(m_actions.settingsBehaviorPartialResults);
-    m_menus.behavior->addAction(m_actions.settingsBehaviorAutoAns);
-    m_menus.behavior->addAction(m_actions.settingsBehaviorAutoCompletion);
-    m_menus.behavior->addAction(m_actions.settingsBehaviorSyntaxHighlighting);
-    m_menus.behavior->addAction(m_actions.settingsBehaviorHoverHighlightResults);
-
-    m_menus.behavior->addAction(m_actions.settingsBehaviorLeaveLastExpression);
-    m_menus.behavior->addAction(m_actions.settingsBehaviorComplexNumbers);
-    m_menus.behavior->addSeparator();
-    m_menus.behavior->addAction(m_actions.settingsBehaviorAlwaysOnTop);
-    m_menus.behavior->addAction(m_actions.settingsBehaviorAutoResultToClipboard);
-
-    m_menus.display = m_menus.settings->addMenu("");
-    m_menus.colorScheme = m_menus.display->addMenu("");
-    const auto schemes = m_actions.settingsDisplayColorSchemes; // TODO: Qt 5.7's qAsConst().
-    for (auto& action : schemes)
-        m_menus.colorScheme->addAction(action);
-    m_menus.display->addAction(m_actions.settingsDisplayFont);
+    m_menus.window = m_menus.settings->addMenu("");
+    m_menus.window->addAction(m_actions.settingsBehaviorSaveWindowPositionOnExit);
+    m_menus.window->addAction(m_actions.settingsBehaviorAlwaysOnTop);
 
     m_menus.settings->addAction(m_actions.settingsLanguage);
 
@@ -783,18 +783,20 @@ void MainWindow::setMenusText()
     m_menus.edit->setTitle(MainWindow::tr("&Edit"));
     m_menus.view->setTitle(MainWindow::tr("&View"));
     m_menus.settings->setTitle(MainWindow::tr("Se&ttings"));
+    m_menus.results->setTitle(MainWindow::tr("&Results"));
     m_menus.resultFormat->setTitle(MainWindow::tr("Result &Format"));
     m_menus.alternativeResultFormat->setTitle(MainWindow::tr("Secondary Result Format"));
     m_menus.tertiaryResultFormat->setTitle(MainWindow::tr("Tertiary Result Format"));
-    m_menus.inputFormat->setTitle(MainWindow::tr("&Input Format"));
     m_menus.radixChar->setTitle(MainWindow::tr("Radix &Character"));
     m_menus.decimal->setTitle(MainWindow::tr("&Decimal"));
     m_menus.alternativeDecimal->setTitle(MainWindow::tr("&Decimal"));
     m_menus.tertiaryDecimal->setTitle(MainWindow::tr("&Decimal"));
     m_menus.precision->setTitle(MainWindow::tr("&Precision"));
     m_menus.angleUnit->setTitle(MainWindow::tr("&Angle Unit"));
-    m_menus.complexFormat->setTitle(MainWindow::tr("Comple&x Format"));
-    m_menus.behavior->setTitle(MainWindow::tr("&Behavior"));
+    m_menus.complexNumbers->setTitle(MainWindow::tr("Complex &Numbers"));
+    m_menus.complexFormat->setTitle(MainWindow::tr("Complex Number &Format"));
+    m_menus.window->setTitle(MainWindow::tr("&Window"));
+    m_menus.editing->setTitle(MainWindow::tr("&Editing"));
     m_menus.history->setTitle(MainWindow::tr("&History"));
     m_menus.historySaving->setTitle(MainWindow::tr("History &Saving"));
     m_menus.display->setTitle(MainWindow::tr("&Appearance"));
@@ -1367,6 +1369,7 @@ void MainWindow::applySettings()
     m_actions.settingsBehaviorDigitGroupingIntegerPartOnly->setChecked(m_settings->digitGroupingIntegerPartOnly);
 
     m_actions.settingsBehaviorComplexNumbers->setChecked(m_settings->complexNumbers);
+    m_menus.complexFormat->setEnabled(m_settings->complexNumbers);
 
     QFont font;
     font.fromString(m_settings->displayFont);
@@ -2000,6 +2003,7 @@ void MainWindow::setHoverHighlightResultsEnabled(bool b)
 void MainWindow::setComplexNumbers(bool b)
 {
     m_settings->complexNumbers = b;
+    m_menus.complexFormat->setEnabled(b);
     setStatusBarText();
     emit complexNumbersChanged();
     m_evaluator->initializeBuiltInVariables();

@@ -69,7 +69,7 @@ The expression editor provides some advanced features:
     usage information for a function. Pressing :kbd:`Escape` will dismiss the manual window again.
 
 * Selection results
-    If :menuselection:`Settings --> Behavior --> Live Results Tooltip` is enabled, selecting a partial expression in the expression editor will show
+    If :menuselection:`Settings --> Results --> Show Live Result Preview` is enabled, selecting a partial expression in the expression editor will show
     you the result of the selected expression.
 
 
@@ -127,30 +127,7 @@ formats:
 * :menuselection:`Sexagecimal`
     Display dimensionless and time results as :ref:`sexagecimal values <sexagecimal_values>`, i.e. with minutes and seconds. All other results are displayed in fixed decimal form.
 
-In addition to the main result format, some further options are available to customize
-the result output:
-
-* :menuselection:`Precision`
-    Select the number of fractional digits to display.
-    **Automatic** always displays as many digits as are necessary to represent the number
-    precisely. The other settings explicitly specify a certain number of digits and will
-    append additional zeroes to the fraction to reach that number of digits, if necessary.
-
-Input Format
-+++++++++++++
-
-This section allows selecting the input format to use.
-
 .. _radix_character:
-
-* :menuselection:`Radix Character`
-    Select the decimal separator to use in inputs and results. This can either be explicitly set
-    to dot (``.``), or comma (``,``), or both, or system default. When both dot and comma are used,
-    the decimal separator is detected automatically in inputs and the system default is used
-    in results. With that latter mode, mixing both dot and comma in a same number to express the
-    decimal separator and digit group separators is supported, but might lead to unexpected results.
-    See :ref:`Digit Grouping Separators <digit_grouping_separators>` for allowed grouping characters
-    and examples.
 
 Angle Unit
 ++++++++++
@@ -175,7 +152,7 @@ Digit Grouping
 ++++++++++++++
 
 Visually group digits in long numbers. Requires
-:menuselection:`Settings --> Behavior --> Syntax Highlighting` to be enabled.
+:menuselection:`Settings --> Appearance --> Syntax Highlighting` to be enabled.
 
 * :menuselection:`Digit Grouping`
     Visually group digits in long numbers.
@@ -196,35 +173,63 @@ This section contains settings that control how calculation history is stored.
     exceeded. Set the value to ``0`` to disable the limit.
 
 
-Behavior
-++++++++
+Window
+++++++
 
-This section contains several settings that allow you to further configure SpeedCrunch's behavior.
+This section contains settings that control the main window behavior.
 
 * :menuselection:`Save Window Position on Exit`
     Controls if the window position is saved and restored.
-* :menuselection:`Live Results Tooltip`
+* :menuselection:`Always on Top`
+    Keep the SpeedCrunch window on top of other windows.
+
+
+Results
++++++++
+
+This section contains settings that control result output and post-evaluation behavior.
+
+* :menuselection:`Show Live Result Preview`
     If set, SpeedCrunch will display partial results as you type your expression as well
     as results when selecting a partial expression in the editor.
 
-  .. _automatic_result_reuse:
-* :menuselection:`Automatic Result Reuse`
-    This setting allows you to quickly continue typing after evaluating an expression
-    by inserting `ans` into the editor if necessary.
-* :menuselection:`Automatic Completion`
-    Completely enables or disables autocompletion.
-* :menuselection:`Syntax Highlighting`
-    Enables or disables syntax highlighting.
-* :menuselection:`Leave Last Expression`
-    If selected, the entered expression remains in the editor after evaluating it.
-* :menuselection:`Enable Complex Numbers`
+* :menuselection:`Result Format`
+    Select the format used to display results.
+* :menuselection:`Precision`
+    Select the number of fractional digits to display.
+    **Automatic** always displays as many digits as are necessary to represent the number
+    precisely. The other settings explicitly specify a certain number of digits and will
+    append additional zeroes to the fraction to reach that number of digits, if necessary.
+* :menuselection:`Complex Numbers --> Enable Complex Numbers`
     Enable or disable support for :ref:`complex numbers <complex_numbers>`. If disabled, :const:`j` will be undefined
     and expressions that would return complex results (like ``sqrt(-1)``) will fail. This option can also be toggled
     from the status bar using the ``Complex on`` / ``Complex off`` indicator.
-* :menuselection:`Always on Top`
-    Keep the SpeedCrunch window on top of other windows.
-* :menuselection:`Automatic Result to Clipboard`
-    Automatically copy the result to the clipboard whenever an expression is evaluated.
+* :menuselection:`Complex Numbers --> Complex Number Format`
+    Select how complex results are displayed (Cartesian or Polar).
+* :menuselection:`Secondary Result Format` and :menuselection:`Tertiary Result Format`
+    Optional extra result displays in alternate formats, shown alongside the primary result.
+* :menuselection:`Automatically Copy New Results to Clipboard`
+    Automatically copy each newly evaluated result to the clipboard.
+
+
+Editing
++++++++
+
+* :menuselection:`Automatic Completion`
+    Completely enables or disables autocompletion.
+  .. _automatic_result_reuse:
+* :menuselection:`Auto-Insert "ans" When Starting with an Operator`
+    If a new expression starts with ``+``, ``-``, ``*``, or ``/``, SpeedCrunch inserts ``ans`` first.
+* :menuselection:`Keep Entered Expression After Evaluate`
+    If selected, the entered expression remains in the editor after evaluating it.
+* :menuselection:`Radix Character`
+    Select the decimal separator to use in inputs and results. This can either be explicitly set
+    to dot (``.``), or comma (``,``), or both, or system default. When both dot and comma are used,
+    the decimal separator is detected automatically in inputs and the system default is used
+    in results. With that latter mode, mixing both dot and comma in a same number to express the
+    decimal separator and digit group separators is supported, but might lead to unexpected results.
+    See :ref:`Digit Grouping Separators <digit_grouping_separators>` for allowed grouping characters
+    and examples.
 
 
 User Interface Settings
@@ -235,6 +240,10 @@ User Interface Settings
     additional themes so they are displayed in this menu.
 * :menuselection:`Settings --> Appearance --> Font`
     Select the font to use for the expression editor and result display.
+* :menuselection:`Settings --> Appearance --> Syntax Highlighting`
+    Enable or disable syntax highlighting.
+* :menuselection:`Settings --> Appearance --> Hover Highlighting`
+    Enable or disable hover highlighting.
 * :menuselection:`Settings --> Language`
     Select the user interface language.
 
