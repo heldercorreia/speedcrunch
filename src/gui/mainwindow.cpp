@@ -797,8 +797,8 @@ void MainWindow::setMenusText()
     m_menus.behavior->setTitle(MainWindow::tr("&Behavior"));
     m_menus.history->setTitle(MainWindow::tr("&History"));
     m_menus.historySaving->setTitle(MainWindow::tr("History &Saving"));
-    m_menus.display->setTitle(MainWindow::tr("&Display"));
-    m_menus.colorScheme->setTitle(MainWindow::tr("Color Scheme"));
+    m_menus.display->setTitle(MainWindow::tr("&Appearance"));
+    m_menus.colorScheme->setTitle(MainWindow::tr("Theme"));
     m_menus.help->setTitle(MainWindow::tr("&Help"));
     m_menus.digitGrouping->setTitle(MainWindow::tr("Digit Grouping"));
 }

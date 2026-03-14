@@ -230,10 +230,10 @@ This section contains several settings that allow you to further configure Speed
 User Interface Settings
 +++++++++++++++++++++++
 
-* :menuselection:`Settings --> Display --> Color Scheme`
-    Select a color scheme. See :ref:`color_schemes` for information on how to install
-    additional color schemes so they are displayed in this menu.
-* :menuselection:`Settings --> Display --> Font`
+* :menuselection:`Settings --> Appearance --> Theme`
+    Select a theme. See :ref:`color_schemes` for information on how to install
+    additional themes so they are displayed in this menu.
+* :menuselection:`Settings --> Appearance --> Font`
     Select the font to use for the expression editor and result display.
 * :menuselection:`Settings --> Language`
     Select the user interface language.
