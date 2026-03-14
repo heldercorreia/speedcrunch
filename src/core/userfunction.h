@@ -40,8 +40,13 @@ public:
     QStringList identifiers;
     QVector<Opcode> opcodes;
 
-    UserFunction(QString name, QStringList arguments, QString expression)
-        : m_name(name), m_arguments(arguments), m_expression(expression) {}
+    UserFunction(QString name, QStringList arguments, QString expression,
+                 QString description = QString())
+        : m_name(name)
+        , m_arguments(arguments)
+        , m_expression(expression)
+        , m_description(description)
+    {}
     UserFunction() {}
     UserFunction(const QJsonObject & json);
 

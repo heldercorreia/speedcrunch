@@ -47,7 +47,7 @@ UserFunctionListWidget::UserFunctionListWidget(QWidget* parent)
 
     m_userFunctions->setAlternatingRowColors(true);
     m_userFunctions->setAutoScroll(true);
-    m_userFunctions->setColumnCount(2);
+    m_userFunctions->setColumnCount(3);
     m_userFunctions->setEditTriggers(QTreeWidget::NoEditTriggers);
     m_userFunctions->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     m_userFunctions->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -118,20 +118,23 @@ void UserFunctionListWidget::updateList()
         QString fname = userFunctions.at(i).name() + "(" + userFunctions.at(i).arguments().join(";")  + ")";
 
         QStringList namesAndValues;
-        namesAndValues << fname << userFunctions.at(i).expression();
+        namesAndValues << fname << userFunctions.at(i).expression() << userFunctions.at(i).description();
 
         if (term.isEmpty()
             || namesAndValues.at(0).contains(term, Qt::CaseInsensitive)
-            || namesAndValues.at(1).contains(term, Qt::CaseInsensitive))
+            || namesAndValues.at(1).contains(term, Qt::CaseInsensitive)
+            || namesAndValues.at(2).contains(term, Qt::CaseInsensitive))
         {
             QTreeWidgetItem* item = new QTreeWidgetItem(m_userFunctions, namesAndValues);
             item->setTextAlignment(0, Qt::AlignLeft | Qt::AlignVCenter);
             item->setTextAlignment(1, Qt::AlignLeft | Qt::AlignVCenter);
+            item->setTextAlignment(2, Qt::AlignLeft | Qt::AlignVCenter);
         }
     }
 
     m_userFunctions->resizeColumnToContents(0);
     m_userFunctions->resizeColumnToContents(1);
+    m_userFunctions->resizeColumnToContents(2);
 
     if (m_userFunctions->topLevelItemCount() > 0) {
         m_noMatchLabel->hide();
@@ -148,7 +151,7 @@ void UserFunctionListWidget::updateList()
 void UserFunctionListWidget::retranslateText()
 {
     QStringList titles;
-    titles << tr("Name") << tr("Value");
+    titles << tr("Name") << tr("Value") << tr("Description");
     m_userFunctions->setHeaderLabels(titles);
 
     m_searchLabel->setText(tr("Search"));
@@ -183,7 +186,11 @@ void UserFunctionListWidget::editItem()
 {
     if (!currentItem() || m_userFunctions->selectedItems().isEmpty())
         return;
-    emit userFunctionEdited(currentItem()->text(0) + " = " + currentItem()->text(1));
+    QString editedExpression = currentItem()->text(0) + " = " + currentItem()->text(1);
+    const QString description = currentItem()->text(2).trimmed();
+    if (!description.isEmpty())
+        editedExpression += " ? " + description;
+    emit userFunctionEdited(editedExpression);
 }
 
 void UserFunctionListWidget::deleteItem()

@@ -212,7 +212,10 @@ void Session::addUserFunction(const UserFunction &func)
 {
     if(func.opcodes.isEmpty()) {
         // We need to compile the function, so pretend the user typed it.
-        Evaluator::instance()->setExpression(func.name() + "(" + func.arguments().join(";") + ")=" + func.expression());
+        QString expression = func.name() + "(" + func.arguments().join(";") + ")=" + func.expression();
+        if (!func.description().isEmpty())
+            expression += " ? " + func.description();
+        Evaluator::instance()->setExpression(expression);
         Evaluator::instance()->eval();
     } else {
         QString name = func.name();

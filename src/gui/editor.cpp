@@ -485,8 +485,11 @@ QStringList Editor::matchFragment(const QString& id) const
     auto userFunctions = m_evaluator->getUserFunctions();
     for (int i = 0; i < userFunctions.count(); ++i) {
         if (userFunctions.at(i).name().startsWith(id, Qt::CaseInsensitive)) {
-            ufchoices.append(QString("%1:" + tr("User function")).arg(
-                userFunctions.at(i).name()));
+            const QString description = userFunctions.at(i).description().trimmed().isEmpty()
+                ? tr("User function")
+                : userFunctions.at(i).description().trimmed();
+            ufchoices.append(QString("%1:%2").arg(
+                userFunctions.at(i).name(), description));
         }
     }
     ufchoices.sort();

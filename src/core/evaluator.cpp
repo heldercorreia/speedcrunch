@@ -56,6 +56,36 @@ static void s_deleteEvaluator()
     delete s_evaluatorInstance;
 }
 
+static bool splitUserFunctionDescription(const QString& expression,
+                                         QString* expressionWithoutDescription,
+                                         QString* description)
+{
+    const int equalsPos = expression.indexOf('=');
+    if (equalsPos < 0)
+        return false;
+
+    const QString leftSide = expression.left(equalsPos);
+    if (!leftSide.contains('(') || !leftSide.contains(')'))
+        return false;
+
+    int depth = 0;
+    const int n = expression.size();
+    for (int i = equalsPos + 1; i < n; ++i) {
+        const QChar ch = expression.at(i);
+        if (ch == '(') {
+            ++depth;
+        } else if (ch == ')' && depth > 0) {
+            --depth;
+        } else if (ch == '?' && depth == 0) {
+            *expressionWithoutDescription = expression.left(i).trimmed();
+            *description = expression.mid(i + 1).trimmed();
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool isMinus(const QChar& ch)
 {
     return ch == QLatin1Char('-') || ch == QChar(0x2212);
@@ -969,6 +999,8 @@ void Evaluator::reset()
     m_assignId = QString();
     m_assignFunc = false;
     m_assignArg.clear();
+    m_assignFuncExpr = QString();
+    m_assignFuncDescription = QString();
     m_session = nullptr;
     m_functionsInUse.clear();
 
@@ -1906,8 +1938,21 @@ Quantity Evaluator::evalNoAssign()
         m_assignId = QString();
         m_assignFunc = false;
         m_assignArg.clear();
-
-        Tokens tokens = scan(m_expression);
+        m_assignFuncExpr = QString();
+        m_assignFuncDescription = QString();
+        QString expressionToParse = m_expression;
+        if (m_expression.contains('?')) {
+            QString expressionWithoutDescription;
+            QString description;
+            if (splitUserFunctionDescription(m_expression,
+                                             &expressionWithoutDescription,
+                                             &description))
+            {
+                expressionToParse = expressionWithoutDescription;
+                m_assignFuncDescription = description;
+            }
+        }
+        Tokens tokens = scan(expressionToParse);
 
         // Invalid expression?
         if (!tokens.valid()) {
@@ -1970,6 +2015,7 @@ Quantity Evaluator::evalNoAssign()
 
             if (m_assignFunc) {
                 m_assignId = tokens.at(0).text();
+                m_assignFuncExpr = expressionToParse.section("=", 1, 1).trimmed();
                 for (; t >= 0; --t)
                     tokens.erase(tokens.begin());
             } else
@@ -2507,7 +2553,7 @@ Quantity Evaluator::eval()
             if (m_codes.isEmpty())
                 return CMath::nan();
             UserFunction userFunction(m_assignId, m_assignArg,
-                                      m_expression.section("=", 1, 1).trimmed());
+                                      m_assignFuncExpr, m_assignFuncDescription);
             userFunction.constants = m_constants;
             userFunction.identifiers = m_identifiers;
             userFunction.opcodes = m_codes;

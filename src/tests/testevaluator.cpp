@@ -48,6 +48,7 @@ static int eval_new_failed_tests = 0;
 #define CHECK_EVAL_FORMAT_FAIL(x) checkEval(__FILE__,__LINE__,#x,x,"",0,true,true)
 #define CHECK_USERFUNC_SET(x) checkEval(__FILE__,__LINE__,#x,x,"NaN")
 #define CHECK_USERFUNC_SET_FAIL(x) checkEval(__FILE__,__LINE__,#x,x,"",0,true)
+#define CHECK_USERFUNC_DESC(n,d) checkUserFunctionDescription(__FILE__,__LINE__,#n,n,d)
 
 static void checkAutoFix(const char* file, int line, const char* msg, const char* expr, const char* fixed)
 {
@@ -122,6 +123,32 @@ static void checkEvalPrecise(const char* file, int line, const char* msg, const 
     // to represent the result as an irrational number, e.g. PI.
     string result = DMath::format(rn, Format::Fixed() + Format::Precision(50)).toStdString();
     DisplayErrorOnMismatch(file, line, msg, result, expected, eval_failed_tests, eval_new_failed_tests, 0);
+}
+
+static void checkUserFunctionDescription(const char* file, int line, const char* msg,
+                                         const QString& functionName,
+                                         const QString& expectedDescription)
+{
+    ++eval_total_tests;
+
+    const auto userFunctions = eval->getUserFunctions();
+    for (const auto& function : userFunctions) {
+        if (function.name() == functionName) {
+            if (function.description() != expectedDescription) {
+                ++eval_failed_tests;
+                ++eval_new_failed_tests;
+                cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl;
+                cerr << "\tDescription: " << function.description().toLatin1().constData() << endl
+                     << "\tExpected   : " << expectedDescription.toLatin1().constData() << endl;
+            }
+            return;
+        }
+    }
+
+    ++eval_failed_tests;
+    ++eval_new_failed_tests;
+    cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl;
+    cerr << "\tError: user function not found: " << functionName.toLatin1().constData() << endl;
 }
 
 void test_constants()
@@ -1154,6 +1181,15 @@ void test_user_functions()
     //       contains at least one component whose value can not be known at definition time
     //       (e.g., reference to user function arguments or to user/builtin functions).
     CHECK_EVAL("func1()", "20");    // = 2 * 5
+
+    // Check optional descriptions on user function definitions.
+    CHECK_USERFUNC_SET("funcdesc(x) = x + 1 ? Calculate Foo");
+    CHECK_USERFUNC_DESC("funcdesc", "Calculate Foo");
+    CHECK_EVAL("funcdesc(2)", "3");
+
+    // Check redefining a function without description clears it.
+    CHECK_USERFUNC_SET("funcdesc(x) = x + 2");
+    CHECK_USERFUNC_DESC("funcdesc", "");
 }
 
 void test_complex()

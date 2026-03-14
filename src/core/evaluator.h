@@ -182,6 +182,8 @@ private:
     QString m_assignId;
     bool m_assignFunc;
     QStringList m_assignArg;
+    QString m_assignFuncExpr;
+    QString m_assignFuncDescription;
     QVector<Opcode> m_codes;
     QVector<Quantity> m_constants;
     QStringList m_identifiers;
