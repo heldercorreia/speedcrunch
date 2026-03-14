@@ -186,6 +186,7 @@ void MainWindow::createActions()
     m_actions.settingsResultFormat3Digits = new QAction(this);
     m_actions.settingsResultFormat50Digits = new QAction(this);
     m_actions.settingsResultFormat8Digits = new QAction(this);
+    m_actions.settingsResultFormatCustomDigits = new QAction(this);
     m_actions.settingsResultFormatAutoPrecision = new QAction(this);
     m_actions.settingsResultFormatBinary = new QAction(this);
     m_actions.settingsResultFormatEngineering = new QAction(this);
@@ -262,6 +263,7 @@ void MainWindow::createActions()
     m_actions.settingsResultFormat3Digits->setCheckable(true);
     m_actions.settingsResultFormat50Digits->setCheckable(true);
     m_actions.settingsResultFormat8Digits->setCheckable(true);
+    m_actions.settingsResultFormatCustomDigits->setCheckable(true);
     m_actions.settingsResultFormatAutoPrecision->setCheckable(true);
     m_actions.settingsResultFormatBinary->setCheckable(true);
     m_actions.settingsResultFormatCartesian->setCheckable(true);
@@ -453,6 +455,7 @@ void MainWindow::setActionsText()
     m_actions.settingsResultFormat3Digits->setText(MainWindow::tr("&3 Digits"));
     m_actions.settingsResultFormat50Digits->setText(MainWindow::tr("&50 Digits"));
     m_actions.settingsResultFormat8Digits->setText(MainWindow::tr("&8 Digits"));
+    m_actions.settingsResultFormatCustomDigits->setText(MainWindow::tr("&Custom..."));
     m_actions.settingsResultFormatAutoPrecision->setText(MainWindow::tr("&Automatic"));
     m_actions.settingsResultFormatGeneral->setText(MainWindow::tr("&General"));
     m_actions.settingsResultFormatFixed->setText(MainWindow::tr("&Fixed Decimal"));
@@ -547,6 +550,7 @@ void MainWindow::createActionGroups()
     m_actionGroups.digits->addAction(m_actions.settingsResultFormat8Digits);
     m_actionGroups.digits->addAction(m_actions.settingsResultFormat15Digits);
     m_actionGroups.digits->addAction(m_actions.settingsResultFormat50Digits);
+    m_actionGroups.digits->addAction(m_actions.settingsResultFormatCustomDigits);
 
     m_actionGroups.angle = new QActionGroup(this);
     m_actionGroups.angle->addAction(m_actions.settingsAngleUnitDegree);
@@ -704,6 +708,8 @@ void MainWindow::createMenus()
     m_menus.precision->addAction(m_actions.settingsResultFormat8Digits);
     m_menus.precision->addAction(m_actions.settingsResultFormat15Digits);
     m_menus.precision->addAction(m_actions.settingsResultFormat50Digits);
+    m_menus.precision->addSeparator();
+    m_menus.precision->addAction(m_actions.settingsResultFormatCustomDigits);
 
     m_menus.complexNumbers = m_menus.results->addMenu("");
     m_menus.complexNumbers->addAction(m_actions.settingsBehaviorComplexNumbers);
@@ -1152,6 +1158,7 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsResultFormat3Digits, SIGNAL(triggered()), SLOT(setResultPrecision3Digits()));
     connect(m_actions.settingsResultFormat50Digits, SIGNAL(triggered()), SLOT(setResultPrecision50Digits()));
     connect(m_actions.settingsResultFormat8Digits, SIGNAL(triggered()), SLOT(setResultPrecision8Digits()));
+    connect(m_actions.settingsResultFormatCustomDigits, SIGNAL(triggered()), SLOT(setResultPrecisionCustom()));
     connect(m_actions.settingsResultFormatAutoPrecision, SIGNAL(triggered()), SLOT(setResultPrecisionAutomatic()));
     connect(m_actions.settingsResultFormatBinary, SIGNAL(triggered()), SLOT(setResultFormatBinary()));
     connect(m_actions.settingsResultFormatCartesian, SIGNAL(triggered()), SLOT(setResultFormatCartesian()));
@@ -1488,7 +1495,8 @@ void MainWindow::checkInitialResultPrecision()
         case 8: m_actions.settingsResultFormat8Digits->setChecked(true); break;
         case 15: m_actions.settingsResultFormat15Digits->setChecked(true); break;
         case 50: m_actions.settingsResultFormat50Digits->setChecked(true); break;
-        default: m_actions.settingsResultFormatAutoPrecision->setChecked(true);
+        case -1: m_actions.settingsResultFormatAutoPrecision->setChecked(true); break;
+        default: m_actions.settingsResultFormatCustomDigits->setChecked(true); break;
     }
 }
 
@@ -1707,6 +1715,25 @@ void MainWindow::setResultPrecision50Digits()
 void MainWindow::setResultPrecisionAutomatic()
 {
     setResultPrecision(-1);
+}
+
+void MainWindow::setResultPrecisionCustom()
+{
+    bool ok = false;
+    const int current = (m_settings->resultPrecision >= 0) ? m_settings->resultPrecision : 8;
+    const int precision = QInputDialog::getInt(this,
+        tr("Custom Precision"),
+        tr("Fractional digits:"),
+        current,
+        0,
+        50,
+        1,
+        &ok);
+
+    if (ok)
+        setResultPrecision(precision);
+
+    checkInitialResultPrecision();
 }
 
 void MainWindow::applySelectedColorScheme()

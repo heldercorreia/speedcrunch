@@ -184,6 +184,7 @@ private slots:
     void setResultPrecision50Digits();
     void setResultPrecision8Digits();
     void setResultPrecisionAutomatic();
+    void setResultPrecisionCustom();
     void setResultPrecision(int);
     void setMenuBarVisible(bool);
     void setStatusBarVisible(bool);
@@ -313,6 +314,7 @@ private:
         QAction* settingsResultFormat8Digits;
         QAction* settingsResultFormat15Digits;
         QAction* settingsResultFormat50Digits;
+        QAction* settingsResultFormatCustomDigits;
         QAction* settingsResultFormatBinary;
         QAction* settingsResultFormatOctal;
         QAction* settingsResultFormatCartesian;

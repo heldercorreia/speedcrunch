@@ -198,8 +198,9 @@ This section contains settings that control result output and post-evaluation be
 * :menuselection:`Precision`
     Select the number of fractional digits to display.
     **Automatic** always displays as many digits as are necessary to represent the number
-    precisely. The other settings explicitly specify a certain number of digits and will
-    append additional zeroes to the fraction to reach that number of digits, if necessary.
+    precisely. The preset settings and :menuselection:`Custom...` explicitly specify a
+    certain number of digits (from 0 to 50) and will append additional zeroes to the
+    fraction to reach that number of digits, if necessary.
 * :menuselection:`Complex Numbers --> Enable Complex Numbers`
     Enable or disable support for :ref:`complex numbers <complex_numbers>`. If disabled, :const:`j` will be undefined
     and expressions that would return complex results (like ``sqrt(-1)``) will fail. This option can also be toggled
