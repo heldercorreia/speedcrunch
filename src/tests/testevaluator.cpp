@@ -1318,6 +1318,16 @@ void test_datetime()
     CHECK_EVAL("datetime(1551464695; -3.5)", "20190301.145455");  // GMT -03:30
 }
 
+void test_epoch()
+{
+    // NOTE We avoid testing epoch() with only 1 argument because it depends on local timezone (and DST).
+    CHECK_EVAL("epoch(20180929.174111; 0)", "1538242871");
+    CHECK_EVAL("epoch(20180101.000000; 1)", "1514761200");
+    CHECK_EVAL("epoch(20171231.230000; -1)", "1514764800");
+    CHECK_EVAL("epoch(20190302.080955; 13.75)", "1551464695");
+    CHECK_EVAL("epoch(20190301.145455; -3.5)", "1551464695");
+}
+
 void test_expression_operator_normalization()
 {
     const QString normalized = EditorUtils::normalizeExpressionOperators(
@@ -1524,6 +1534,7 @@ int main(int argc, char* argv[])
     test_complex();
     test_format();
     test_datetime();
+    test_epoch();
     test_expression_operator_normalization();
     test_session_history_limit();
 

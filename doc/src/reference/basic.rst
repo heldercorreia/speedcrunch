@@ -72,6 +72,8 @@ General
     GMT/UTC (fractional offsets are supported), and conversion is performed in
     UTC after applying that offset.
 
+    This function is the inverse of :func:`epoch` when using the same ``offset``.
+
     Example::
 
         datetime(1514761200; 1)
@@ -79,6 +81,25 @@ General
 
         datetime(1551464695; -3.5)
         = 20190301.145455
+
+.. function:: epoch(yyyymmdd.hhmmss [; offset])
+
+    Convert a numeric date/time value in ``YYYYMMDD.HHMMSS`` format to a Unix
+    timestamp (seconds since 1970-01-01 00:00:00 UTC).
+
+    If ``offset`` is omitted, the value is interpreted in the local system
+    timezone. If ``offset`` is provided, it is interpreted as hours offset to
+    GMT/UTC (fractional offsets are supported).
+
+    This function is the inverse of :func:`datetime` when using the same ``offset``.
+
+    Example::
+
+        epoch(20180101.000000; 1)
+        = 1514761200
+
+        epoch(20190301.145455; -3.5)
+        = 1551464695
 
 
 .. _trigonometric:

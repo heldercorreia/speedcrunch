@@ -27,7 +27,9 @@
 #include "math/cmath.h"
 
 #include <QCoreApplication>
+#include <QDateTime>
 #include <QHash>
+#include <QTimeZone>
 
 #include <algorithm>
 #include <functional>
@@ -957,6 +959,58 @@ Quantity function_datetime(Function* f, const Function::ArgumentList& args)
 
 }
 
+Quantity function_epoch(Function* f, const Function::ArgumentList& args)
+{
+    ENSURE_EITHER_ARGUMENT_COUNT(1, 2);
+    ENSURE_REAL_ARGUMENT(0);
+    if (args.count() == 2)
+        ENSURE_REAL_ARGUMENT(1);
+
+    const QString rawDateTime = HMath::format(
+        args.at(0).numericValue().real,
+        HNumber::Format::Fixed() + HNumber::Format::Point() + HNumber::Format::Precision(6));
+    const QStringList parts = rawDateTime.split(QLatin1Char('.'));
+    if (parts.count() != 2 || parts.at(0).size() != 8 || parts.at(1).size() != 6) {
+        f->setError(OutOfDomain);
+        return DMath::nan();
+    }
+
+    bool okYear = false, okMonth = false, okDay = false;
+    bool okHour = false, okMinute = false, okSecond = false;
+    const int year = parts.at(0).mid(0, 4).toInt(&okYear);
+    const int month = parts.at(0).mid(4, 2).toInt(&okMonth);
+    const int day = parts.at(0).mid(6, 2).toInt(&okDay);
+    const int hour = parts.at(1).mid(0, 2).toInt(&okHour);
+    const int minute = parts.at(1).mid(2, 2).toInt(&okMinute);
+    const int second = parts.at(1).mid(4, 2).toInt(&okSecond);
+    if (!okYear || !okMonth || !okDay || !okHour || !okMinute || !okSecond) {
+        f->setError(OutOfDomain);
+        return DMath::nan();
+    }
+
+    const QDate date(year, month, day);
+    const QTime time(hour, minute, second);
+    if (!date.isValid() || !time.isValid()) {
+        f->setError(OutOfDomain);
+        return DMath::nan();
+    }
+
+    QDateTime dateTime(date, time);
+    if (args.count() == 2) {
+        const int offsetSeconds = (args.at(1).numericValue() * 3600).toInt();
+        const QTimeZone zone(offsetSeconds);
+        if (!zone.isValid()) {
+            f->setError(OutOfDomain);
+            return DMath::nan();
+        }
+        dateTime = QDateTime(date, time, zone);
+    }
+
+    const qint64 epochSeconds = dateTime.toSecsSinceEpoch();
+    const QByteArray epochText = QByteArray::number(epochSeconds);
+    return Quantity(HNumber(epochText.constData()));
+}
+
 void FunctionRepo::createFunctions()
 {
     // Analysis.
@@ -1071,6 +1125,7 @@ void FunctionRepo::createFunctions()
 
     //Date convertion
     FUNCTION_INSERT(datetime);
+    FUNCTION_INSERT(epoch);
 }
 
 FunctionRepo* FunctionRepo::instance()
@@ -1193,6 +1248,7 @@ void FunctionRepo::setTranslatableFunctionUsages()
     FUNCTION_USAGE_TR(binompmf, tr("hits; trials; probability"));
     FUNCTION_USAGE_TR(binomvar, tr("trials; probability"));
     FUNCTION_USAGE_TR(datetime, tr("unix_timestamp; x hours offset to GMT"));
+    FUNCTION_USAGE_TR(epoch, tr("yyyymmdd.hhmmss; x hours offset to GMT"));
     FUNCTION_USAGE_TR(hypercdf, tr("max; total; hits; trials"));
     FUNCTION_USAGE_TR(hypermean, tr("total; hits; trials"));
     FUNCTION_USAGE_TR(hyperpmf, tr("count; total; hits; trials"));
@@ -1242,6 +1298,7 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(cot, tr("Cotangent"));
     FUNCTION_NAME(csc, tr("Cosecant"));
     FUNCTION_NAME(datetime, tr("Convert Unix timestamp to Date"));
+    FUNCTION_NAME(epoch, tr("Convert Date to Unix timestamp"));
     FUNCTION_NAME(dec, tr("Convert to Decimal Representation"));
     FUNCTION_NAME(degrees, tr("Degrees of Arc"));
     FUNCTION_NAME(erf, tr("Error Function"));
