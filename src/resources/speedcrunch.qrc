@@ -61,5 +61,7 @@
         <file>color-schemes/Sublime.json</file>
         <file>color-schemes/Breeze.json</file>
         <file>color-schemes/Breeze Dark.json</file>
+        <file>color-schemes/Black on White.json</file>
+        <file>color-schemes/White on Black.json</file>
     </qresource>
 </RCC>
