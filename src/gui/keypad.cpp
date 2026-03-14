@@ -54,7 +54,7 @@ const Keypad::KeyDescription Keypad::keyDescriptions[] = {
     {QString::fromLatin1("ans"), KeyAns, false, 1, 9},
     {QString::fromLatin1("arcsin"), KeyAsin, false, 1, 8},
     {QString::fromLatin1("arctan"), KeyAtan, false, 3, 8},
-    {QString::fromLatin1("C"), KeyClear, false, 0, 4},
+    {QString::fromUtf8("⌧"), KeyClear, false, 0, 4},
     {QString::fromLatin1("cos"), KeyCos, false, 2, 7},
     {QString::fromLatin1("E"), KeyEE, false, 1, 4},
     {QString::fromLatin1("exp"), KeyExp, false, 0, 7},
@@ -116,6 +116,20 @@ void Keypad::createButtons()
     for (int i = 0; i < keyDescriptionsCount; ++i) {
         const KeyDescription* description = keyDescriptions + i;
         QPushButton* key = new QPushButton(description->label);
+        key->setStyleSheet(QString::fromLatin1(
+            "QPushButton {"
+            " border: 1px solid palette(mid);"
+            " background-color: palette(button);"
+            "}"
+            "QPushButton:hover {"
+            " border: 1px solid palette(dark);"
+            " background-color: palette(light);"
+            "}"
+            "QPushButton:pressed {"
+            " border: 2px solid palette(shadow);"
+            " background-color: palette(mid);"
+            "}"
+        ));
         if (description->boldFont)
             key->setFont(boldFont);
         const QPair<QPushButton*, const KeyDescription*> hashValue(key, description);
@@ -140,7 +154,7 @@ void Keypad::disableButtonFocus()
 
 void Keypad::layoutButtons()
 {
-    int layoutSpacing = 3;
+    int layoutSpacing = 0;
 
 #if QT_VERSION >= 0x040400 && defined(Q_WS_MAC) && !defined(QT_NO_STYLE_MAC)
     // Workaround for a layouting bug in QMacStyle, Qt 4.4.0. Buttons would overlap.
@@ -149,7 +163,7 @@ void Keypad::layoutButtons()
 #endif
 
     QGridLayout* layout = new QGridLayout(this);
-    layout->setContentsMargins(3, 3, 3, 3);
+    layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(layoutSpacing);
 
     QHashIterator<Button, QPair<QPushButton*, const KeyDescription*> > i(keys);
@@ -168,18 +182,30 @@ void Keypad::setButtonTooltips()
     key(KeyAns)->setToolTip(Keypad::tr("The last result"));
     key(KeyAsin)->setToolTip(Keypad::tr("Inverse sine"));
     key(KeyAtan)->setToolTip(Keypad::tr("Inverse tangent"));
+    key(KeyEquals)->setToolTip(Keypad::tr("Evaluate expression"));
+    key(KeyDivide)->setToolTip(Keypad::tr("Division"));
+    key(KeyTimes)->setToolTip(Keypad::tr("Multiplication"));
+    key(KeyMinus)->setToolTip(Keypad::tr("Subtraction"));
+    key(KeyPlus)->setToolTip(Keypad::tr("Addition"));
     key(KeyClear)->setToolTip(Keypad::tr("Clear expression"));
     key(KeyCos)->setToolTip(Keypad::tr("Cosine"));
     key(KeyBackspace)->setToolTip(Keypad::tr("Backspace"));
     key(KeyEE)->setToolTip(Keypad::tr("Scientific notation"));
     key(KeyExp)->setToolTip(Keypad::tr("Exponential"));
+    key(KeyFactorial)->setToolTip(Keypad::tr("Factorial"));
     key(KeyLn)->setToolTip(Keypad::tr("Natural logarithm"));
+    key(KeyLeftPar)->setToolTip(Keypad::tr("Left parenthesis"));
     key(KeyCbrt)->setToolTip(Keypad::tr("Cube root"));
     key(KeyLg)->setToolTip(Keypad::tr("Common logarithm"));
     key(KeyMod)->setToolTip(Keypad::tr("Modulo"));
+    key(KeyPercent)->setToolTip(Keypad::tr("Integer division"));
+    key(KeyRaise)->setToolTip(Keypad::tr("Power"));
+    key(KeyRightPar)->setToolTip(Keypad::tr("Right parenthesis"));
     key(KeySin)->setToolTip(Keypad::tr("Sine"));
     key(KeySqrt)->setToolTip(Keypad::tr("Square root"));
     key(KeyTan)->setToolTip(Keypad::tr("Tangent"));
+    key(KeyPi)->setToolTip(Keypad::tr("Pi"));
+    key(KeyRadixChar)->setToolTip(Keypad::tr("Decimal separator"));
     key(KeyXEquals)->setToolTip(Keypad::tr("Assign variable x"));
     key(KeyX)->setToolTip(Keypad::tr("The variable x"));
 }
@@ -207,9 +233,11 @@ void Keypad::sizeButtons()
     // the hinted height, adjust the width ourselves (with our own margin).
     maxWidth += 6;
     int hh = size.height();
-    int ww = hh * 162 / 100; // Use golden ratio.
-    size = QSize(qMax(ww, maxWidth), hh);
+    size = QSize(qMax(hh, maxWidth), hh);
 #endif
+
+    const int side = qMax(size.width(), size.height());
+    size = QSize(side, side);
 
     // limit the size of the buttons
     QHashIterator<Button, QPair<QPushButton*, const KeyDescription*> > i(keys);
