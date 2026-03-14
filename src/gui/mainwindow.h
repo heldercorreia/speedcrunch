@@ -267,7 +267,6 @@ private:
     QString statusBarAngleUnitValue() const;
     QString statusBarResultFormatValue() const;
     QString statusBarComplexNumbersValue() const;
-    QString statusBarComplexFormatValue() const;
     bool rebuildSessionFromExpressions(const QStringList& expressions, int* errorIndex = nullptr, QString* errorText = nullptr);
     QStringList historyExpressions() const;
 
@@ -462,9 +461,6 @@ private:
         QWidget* complexNumbersSection;
         QLabel* complexNumbersLabel;
         QPushButton* complexNumbers;
-        QWidget* complexFormatSection;
-        QLabel* complexFormatLabel;
-        QPushButton* complexFormat;
     } m_status;
 
     Constants* m_constants;
