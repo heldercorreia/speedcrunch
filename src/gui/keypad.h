@@ -33,7 +33,7 @@ public:
         Key0, Key1, Key2, Key3, Key4, Key5, Key6, Key7, Key8, Key9,
         KeyEquals, KeyPlus, KeyMinus, KeyTimes, KeyDivide,
         KeyRadixChar, KeyClear, KeyEE, KeyLeftPar, KeyRightPar,
-        KeyRaise, KeySqrt, KeyPercent, KeyFactorial, KeyPi, KeyAns,
+        KeyRaise, KeySqrt, KeyCbrt, KeyLg, KeyMod, KeyBackspace, KeyPercent, KeyFactorial, KeyPi, KeyAns,
         KeyX, KeyXEquals, KeyExp, KeyLn, KeySin, KeyAsin, KeyCos,
         KeyAcos, KeyTan, KeyAtan
     };

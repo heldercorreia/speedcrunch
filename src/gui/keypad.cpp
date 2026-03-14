@@ -51,7 +51,7 @@ const Keypad::KeyDescription Keypad::keyDescriptions[] = {
     {QString::fromUtf8("−"), KeyMinus, true, 2, 3},
     {QString::fromUtf8("+"), KeyPlus, true, 3, 3},
     {QString::fromLatin1("arccos"), KeyAcos, false, 2, 8},
-    {QString::fromLatin1("ans"), KeyAns, false, 1, 6},
+    {QString::fromLatin1("ans"), KeyAns, false, 1, 9},
     {QString::fromLatin1("arcsin"), KeyAsin, false, 1, 8},
     {QString::fromLatin1("arctan"), KeyAtan, false, 3, 8},
     {QString::fromLatin1("C"), KeyClear, false, 0, 4},
@@ -61,15 +61,19 @@ const Keypad::KeyDescription Keypad::keyDescriptions[] = {
     {QString::fromLatin1("!"), KeyFactorial, false, 3, 5},
     {QString::fromLatin1("ln"), KeyLn, false, 0, 8},
     {QString::fromLatin1("("), KeyLeftPar, false, 2, 4},
+    {QString::fromUtf8("⌫"), KeyBackspace, false, 0, 5},
     {QString::fromLatin1("\\"), KeyPercent, false, 3, 4},
     {QString::fromLatin1("^"), KeyRaise, false, 1, 5},
     {QString::fromLatin1(")"), KeyRightPar, false, 2, 5},
     {QString::fromLatin1("sin"), KeySin, false, 1, 7},
     {QString::fromLatin1("tan"), KeyTan, false, 3, 7},
-    {QString::fromLatin1("x="), KeyXEquals, false, 3, 6},
-    {QString::fromLatin1("x"), KeyX, false, 2, 6},
-    {QString::fromUtf8("π"), KeyPi, false, 0, 6},
-    {QString::fromUtf8("√"), KeySqrt, false, 0, 5}
+    {QString::fromLatin1("x="), KeyXEquals, false, 3, 9},
+    {QString::fromLatin1("x"), KeyX, false, 2, 9},
+    {QString::fromUtf8("∛"), KeyCbrt, false, 1, 6},
+    {QString::fromLatin1("lg"), KeyLg, false, 2, 6},
+    {QString::fromLatin1("mod"), KeyMod, false, 3, 6},
+    {QString::fromUtf8("π"), KeyPi, false, 0, 9},
+    {QString::fromUtf8("√"), KeySqrt, false, 0, 6}
 };
 
 Keypad::Keypad(QWidget* parent)
@@ -166,9 +170,13 @@ void Keypad::setButtonTooltips()
     key(KeyAtan)->setToolTip(Keypad::tr("Inverse tangent"));
     key(KeyClear)->setToolTip(Keypad::tr("Clear expression"));
     key(KeyCos)->setToolTip(Keypad::tr("Cosine"));
+    key(KeyBackspace)->setToolTip(Keypad::tr("Backspace"));
     key(KeyEE)->setToolTip(Keypad::tr("Scientific notation"));
     key(KeyExp)->setToolTip(Keypad::tr("Exponential"));
     key(KeyLn)->setToolTip(Keypad::tr("Natural logarithm"));
+    key(KeyCbrt)->setToolTip(Keypad::tr("Cube root"));
+    key(KeyLg)->setToolTip(Keypad::tr("Common logarithm"));
+    key(KeyMod)->setToolTip(Keypad::tr("Modulo"));
     key(KeySin)->setToolTip(Keypad::tr("Sine"));
     key(KeySqrt)->setToolTip(Keypad::tr("Square root"));
     key(KeyTan)->setToolTip(Keypad::tr("Tangent"));

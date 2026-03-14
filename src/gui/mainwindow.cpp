@@ -2648,6 +2648,18 @@ void MainWindow::handleKeypadButtonPress(Keypad::Button b)
     case Keypad::KeyLeftPar: insertTextIntoEditor("("); break;
     case Keypad::KeyRightPar: insertTextIntoEditor(")"); break;
     case Keypad::KeyRaise: insertTextIntoEditor("^"); break;
+    case Keypad::KeyBackspace: {
+        QTextCursor cursor = m_widgets.editor->textCursor();
+        if (cursor.hasSelection())
+            cursor.removeSelectedText();
+        else
+            cursor.deletePreviousChar();
+        m_widgets.editor->setTextCursor(cursor);
+        if (!isActiveWindow())
+            activateWindow();
+        m_widgets.editor->setFocus();
+        break;
+    }
     case Keypad::KeyPercent: insertTextIntoEditor("idiv("); break;
     case Keypad::KeyFactorial: insertTextIntoEditor("!"); break;
 
@@ -2657,6 +2669,9 @@ void MainWindow::handleKeypadButtonPress(Keypad::Button b)
     case Keypad::KeyAns: insertTextIntoEditor("ans"); break;
 
     case Keypad::KeySqrt: insertTextIntoEditor("sqrt("); break;
+    case Keypad::KeyCbrt: insertTextIntoEditor("cbrt("); break;
+    case Keypad::KeyLg: insertTextIntoEditor("lg("); break;
+    case Keypad::KeyMod: insertTextIntoEditor("mod("); break;
     case Keypad::KeyLn: insertTextIntoEditor("ln("); break;
     case Keypad::KeyExp:insertTextIntoEditor("exp("); break;
     case Keypad::KeySin: insertTextIntoEditor("sin("); break;
