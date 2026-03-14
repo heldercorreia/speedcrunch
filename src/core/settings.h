@@ -62,6 +62,7 @@ public:
     bool autoCalc;
     bool autoCompletion;
     int digitGrouping;
+    bool digitGroupingIntegerPartOnly;
     int maxHistoryEntries; // 0: unlimited.
     HistorySaving historySaving;
     bool leaveLastExpression;

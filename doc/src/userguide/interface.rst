@@ -201,6 +201,8 @@ This section contains several settings that allow you to further configure Speed
 * :menuselection:`Digit Grouping`
     Visually group digits in long numbers. Requires :menuselection:`Settings --> Behavior --> Syntax Highlighting` to be
     enabled.
+* :menuselection:`Digit Grouping --> Group Integer Part Only`
+    Apply digit grouping only to the integer part of numbers. When enabled, fractional digits remain ungrouped.
 * :menuselection:`Leave Last Expression`
     If selected, the entered expression remains in the editor after evaluating it.
 * :menuselection:`Enable Complex Numbers`

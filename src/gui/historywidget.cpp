@@ -103,10 +103,13 @@ QString groupedExpressionForHistory(const QString& input)
         if (radixPos >= 0) {
             const QString integral = body.left(radixPos);
             const QString fractional = body.mid(radixPos + 1);
+            const QString groupedFractional = settings->digitGroupingIntegerPartOnly
+                ? fractional
+                : groupPart(fractional, groupSize, false);
             token = prefix
                 + groupPart(integral, groupSize, true)
                 + body.at(radixPos)
-                + groupPart(fractional, groupSize, false)
+                + groupedFractional
                 + exponent;
         } else {
             token = prefix + groupPart(body, groupSize, true) + exponent;

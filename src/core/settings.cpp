@@ -129,6 +129,7 @@ Settings* Settings::instance()
 
 Settings::Settings()
 {
+    digitGroupingIntegerPartOnly = false;
 }
 
 void Settings::load()
@@ -185,6 +186,7 @@ void Settings::load()
 
     digitGrouping = settings->value(key + QLatin1String("DigitGrouping"), 0).toInt();
     digitGrouping = std::min(3, std::max(0, digitGrouping));
+    digitGroupingIntegerPartOnly = settings->value(key + QLatin1String("DigitGroupingIntegerPartOnly"), false).toBool();
     maxHistoryEntries = settings->value(key + QLatin1String("MaxHistoryEntries"), 100).toInt();
     maxHistoryEntries = std::max(0, maxHistoryEntries);
 
@@ -273,6 +275,7 @@ void Settings::save()
     settings->setValue(key + QLatin1String("SyntaxHighlighting"), syntaxHighlighting);
     settings->setValue(key + QLatin1String("HoverHighlightResults"), hoverHighlightResults);
     settings->setValue(key + QLatin1String("DigitGrouping"), digitGrouping);
+    settings->setValue(key + QLatin1String("DigitGroupingIntegerPartOnly"), digitGroupingIntegerPartOnly);
     settings->setValue(key + QLatin1String("MaxHistoryEntries"), maxHistoryEntries);
     settings->setValue(key + QLatin1String("AutoResultToClipboard"), autoResultToClipboard);
     settings->setValue(key + QLatin1String("Language"), language);

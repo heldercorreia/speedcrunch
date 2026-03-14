@@ -170,6 +170,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorDigitGroupingOneSpace = new QAction(this);
     m_actions.settingsBehaviorDigitGroupingTwoSpaces = new QAction(this);
     m_actions.settingsBehaviorDigitGroupingThreeSpaces = new QAction(this);
+    m_actions.settingsBehaviorDigitGroupingIntegerPartOnly = new QAction(this);
     m_actions.settingsBehaviorAutoResultToClipboard = new QAction(this);
     m_actions.settingsBehaviorHistorySizeLimit = new QAction(this);
     m_actions.settingsBehaviorComplexNumbers = new QAction(this);
@@ -248,6 +249,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorDigitGroupingTwoSpaces->setData(2);
     m_actions.settingsBehaviorDigitGroupingThreeSpaces->setCheckable(true);
     m_actions.settingsBehaviorDigitGroupingThreeSpaces->setData(3);
+    m_actions.settingsBehaviorDigitGroupingIntegerPartOnly->setCheckable(true);
     m_actions.settingsBehaviorAutoResultToClipboard->setCheckable(true);
     m_actions.settingsBehaviorComplexNumbers->setCheckable(true);
     m_actions.settingsRadixCharComma->setCheckable(true);
@@ -432,6 +434,7 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorDigitGroupingOneSpace->setText(MainWindow::tr("Small Space"));
     m_actions.settingsBehaviorDigitGroupingTwoSpaces->setText(MainWindow::tr("Medium Space"));
     m_actions.settingsBehaviorDigitGroupingThreeSpaces->setText(MainWindow::tr("Large Space"));
+    m_actions.settingsBehaviorDigitGroupingIntegerPartOnly->setText(MainWindow::tr("Group Integer Part Only"));
     m_actions.settingsBehaviorLeaveLastExpression->setText(MainWindow::tr("Leave &Last Expression"));
     m_actions.settingsBehaviorAutoResultToClipboard->setText(MainWindow::tr("Automatic &Result to Clipboard"));
     m_actions.settingsBehaviorHistorySizeLimit->setText(MainWindow::tr("History Size &Limit..."));
@@ -736,6 +739,8 @@ void MainWindow::createMenus()
     m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingOneSpace);
     m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingTwoSpaces);
     m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingThreeSpaces);
+    m_menus.digitGrouping->addSeparator();
+    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingIntegerPartOnly);
 
     m_menus.behavior->addAction(m_actions.settingsBehaviorLeaveLastExpression);
     m_menus.behavior->addAction(m_actions.settingsBehaviorComplexNumbers);
@@ -1125,6 +1130,7 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsBehaviorSyntaxHighlighting, SIGNAL(toggled(bool)), SLOT(setSyntaxHighlightingEnabled(bool)));
     connect(m_actions.settingsBehaviorHoverHighlightResults, SIGNAL(toggled(bool)), SLOT(setHoverHighlightResultsEnabled(bool)));
     connect(m_actionGroups.digitGrouping, SIGNAL(triggered(QAction*)), SLOT(setDigitGrouping(QAction*)));
+    connect(m_actions.settingsBehaviorDigitGroupingIntegerPartOnly, SIGNAL(toggled(bool)), SLOT(setDigitGroupingIntegerPartOnlyEnabled(bool)));
     connect(m_actions.settingsBehaviorLeaveLastExpression, SIGNAL(toggled(bool)), SLOT(setLeaveLastExpressionEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoResultToClipboard, SIGNAL(toggled(bool)), SLOT(setAutoResultToClipboardEnabled(bool)));
     connect(m_actions.settingsBehaviorComplexNumbers, SIGNAL(toggled(bool)), SLOT(setComplexNumbers(bool)));
@@ -1353,6 +1359,8 @@ void MainWindow::applySettings()
         m_actions.settingsBehaviorAutoResultToClipboard->setChecked(true);
     else
         setAutoResultToClipboardEnabled(false);
+
+    m_actions.settingsBehaviorDigitGroupingIntegerPartOnly->setChecked(m_settings->digitGroupingIntegerPartOnly);
 
     m_actions.settingsBehaviorComplexNumbers->setChecked(m_settings->complexNumbers);
 
@@ -1961,6 +1969,16 @@ void MainWindow::setSyntaxHighlightingEnabled(bool b)
 void MainWindow::setDigitGrouping(QAction *action)
 {
     m_settings->digitGrouping = action->data().toInt();
+    emit historyChanged();
+    m_widgets.editor->refreshAutoCalc();
+    emit syntaxHighlightingChanged();
+}
+
+void MainWindow::setDigitGroupingIntegerPartOnlyEnabled(bool b)
+{
+    m_settings->digitGroupingIntegerPartOnly = b;
+    emit historyChanged();
+    m_widgets.editor->refreshAutoCalc();
     emit syntaxHighlightingChanged();
 }
 

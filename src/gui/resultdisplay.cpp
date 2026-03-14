@@ -37,6 +37,7 @@
 #include <QMenuBar>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QRegularExpression>
 #include <QScrollBar>
 #include <QToolTip>
 
@@ -80,15 +81,103 @@ void cloneMenuActions(const QMenu* sourceMenu, QMenu* targetMenu)
 QStringList formatResultLines(const Quantity& value)
 {
     const Settings* settings = Settings::instance();
+    auto groupedResultForDisplay = [settings](const QString& input) {
+        if (settings->digitGrouping <= 0)
+            return input;
+
+        const QString separator = QStringLiteral(" ").repeated(settings->digitGrouping);
+        static const QRegularExpression numberPattern(
+            QStringLiteral("(?<![\\p{L}\\p{N}])(?:0[xX][0-9A-Fa-f]+(?:[\\.,][0-9A-Fa-f]+)?|0[oO][0-7]+(?:[\\.,][0-7]+)?|0[bB][01]+(?:[\\.,][01]+)?|\\d+(?:[\\.,]\\d+)?(?:[eE][+\\-]?\\d+)?)(?![\\p{L}\\p{N}])"));
+
+        auto groupPart = [&separator](const QString& digits, int groupSize, bool fromRight) {
+            if (digits.size() <= groupSize)
+                return digits;
+
+            QString result;
+            if (fromRight) {
+                int first = digits.size() % groupSize;
+                if (first == 0)
+                    first = groupSize;
+                result = digits.left(first);
+                for (int i = first; i < digits.size(); i += groupSize) {
+                    result += separator;
+                    result += digits.mid(i, groupSize);
+                }
+                return result;
+            }
+
+            for (int i = 0; i < digits.size(); i += groupSize) {
+                if (i > 0)
+                    result += separator;
+                result += digits.mid(i, groupSize);
+            }
+            return result;
+        };
+
+        QString output;
+        int lastPos = 0;
+        auto it = numberPattern.globalMatch(input);
+        while (it.hasNext()) {
+            const auto match = it.next();
+            output += input.mid(lastPos, match.capturedStart() - lastPos);
+
+            QString token = match.captured(0);
+            int prefixLength = 0;
+            int groupSize = 3;
+            if (token.startsWith(QLatin1String("0x"), Qt::CaseInsensitive)) {
+                prefixLength = 2;
+                groupSize = 4;
+            } else if (token.startsWith(QLatin1String("0o"), Qt::CaseInsensitive)) {
+                prefixLength = 2;
+                groupSize = 3;
+            } else if (token.startsWith(QLatin1String("0b"), Qt::CaseInsensitive)) {
+                prefixLength = 2;
+                groupSize = 4;
+            }
+
+            const QString prefix = token.left(prefixLength);
+            QString body = token.mid(prefixLength);
+            QString exponent;
+            if (prefixLength == 0) {
+                const int exponentPos = body.indexOf(QRegularExpression(QStringLiteral("[eE][+\\-]?\\d+$")));
+                if (exponentPos >= 0) {
+                    exponent = body.mid(exponentPos);
+                    body = body.left(exponentPos);
+                }
+            }
+
+            const int radixPos = body.indexOf(QRegularExpression(QStringLiteral("[\\.,]")));
+            if (radixPos >= 0) {
+                const QString integral = body.left(radixPos);
+                const QString fractional = body.mid(radixPos + 1);
+                const QString groupedFractional = settings->digitGroupingIntegerPartOnly
+                    ? fractional
+                    : groupPart(fractional, groupSize, false);
+                token = prefix
+                    + groupPart(integral, groupSize, true)
+                    + body.at(radixPos)
+                    + groupedFractional
+                    + exponent;
+            } else {
+                token = prefix + groupPart(body, groupSize, true) + exponent;
+            }
+
+            output += token;
+            lastPos = match.capturedEnd();
+        }
+        output += input.mid(lastPos);
+        return output;
+    };
+
     QStringList lines;
-    lines.append(QLatin1String("= ") + NumberFormatter::format(value));
+    lines.append(QLatin1String("= ") + groupedResultForDisplay(NumberFormatter::format(value)));
     if (settings->alternativeResultFormat != '\0') {
         lines.append(QLatin1String("= ")
-            + NumberFormatter::format(value, settings->alternativeResultFormat));
+            + groupedResultForDisplay(NumberFormatter::format(value, settings->alternativeResultFormat)));
     }
     if (settings->tertiaryResultFormat != '\0') {
         lines.append(QLatin1String("= ")
-            + NumberFormatter::format(value, settings->tertiaryResultFormat));
+            + groupedResultForDisplay(NumberFormatter::format(value, settings->tertiaryResultFormat)));
     }
     return lines;
 }

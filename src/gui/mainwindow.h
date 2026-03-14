@@ -189,6 +189,7 @@ private slots:
     void setStatusBarVisible(bool);
     void setSyntaxHighlightingEnabled(bool);
     void setDigitGrouping(QAction*);
+    void setDigitGroupingIntegerPartOnlyEnabled(bool);
     void setAutoResultToClipboardEnabled(bool);
     void setHoverHighlightResultsEnabled(bool);
     void setComplexNumbers(bool);
@@ -349,6 +350,7 @@ private:
         QAction* settingsBehaviorDigitGroupingOneSpace;
         QAction* settingsBehaviorDigitGroupingTwoSpaces;
         QAction* settingsBehaviorDigitGroupingThreeSpaces;
+        QAction* settingsBehaviorDigitGroupingIntegerPartOnly;
         QAction* settingsBehaviorAutoAns;
         QAction* settingsBehaviorLeaveLastExpression;
         QAction* settingsBehaviorAlwaysOnTop;

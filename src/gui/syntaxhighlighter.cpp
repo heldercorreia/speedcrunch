@@ -161,8 +161,27 @@ void SyntaxHighlighter::highlightBlock(const QString& text)
     if (text.startsWith(QLatin1String("="))) {
         setFormat(0, 1, colorForRole(ColorScheme::Operator));
         setFormat(1, text.length(), colorForRole(ColorScheme::Result));
-        if (Settings::instance()->digitGrouping > 0)
-            groupDigits(text, 1, text.length() - 1);
+        if (Settings::instance()->digitGrouping > 0) {
+            // Use token-based grouping for result lines as well, so
+            // integer-only grouping works when lexer splits around radix chars.
+            const Tokens tokens = Evaluator::instance()->scan(text);
+            for (int i = 0; i < tokens.count(); ++i) {
+                const Token& token = tokens.at(i);
+                if (token.type() != Token::stxNumber)
+                    continue;
+
+                if (Settings::instance()->digitGroupingIntegerPartOnly
+                        && i > 0
+                        && !tokens.at(i - 1).text().isEmpty()
+                        && (tokens.at(i - 1).type() == Token::stxSep
+                            || tokens.at(i - 1).type() == Token::stxOperator)
+                        && Evaluator::isRadixChar(tokens.at(i - 1).text().at(0).unicode())) {
+                    continue;
+                }
+
+                groupDigits(text, token.pos(), token.size());
+            }
+        }
         return;
     }
 
@@ -210,8 +229,19 @@ void SyntaxHighlighter::highlightBlock(const QString& text)
         };
 
         setFormat(token.pos(), token.size(), color);
-        if (token.type() == Token::stxNumber && Settings::instance()->digitGrouping > 0)
+        if (token.type() == Token::stxNumber && Settings::instance()->digitGrouping > 0) {
+            // If the lexer split a decimal number around the radix character,
+            // avoid grouping the fractional token when integer-only grouping is enabled.
+            if (Settings::instance()->digitGroupingIntegerPartOnly
+                    && i > 0
+                    && !tokens.at(i - 1).text().isEmpty()
+                    && (tokens.at(i - 1).type() == Token::stxSep
+                        || tokens.at(i - 1).type() == Token::stxOperator)
+                    && Evaluator::isRadixChar(tokens.at(i - 1).text().at(0).unicode())) {
+                continue;
+            }
             groupDigits(text, token.pos(), token.size());
+        }
     }
 }
 
@@ -306,6 +336,7 @@ void SyntaxHighlighter::groupDigits(const QString& text, int pos, int length)
     }
 
     int s = -1; // Index of the first digit (most significant).
+    int radixPos = -1; // Index of radix char for the current number, if any.
     bool invertGroup = false; // If true, group digits from the most significant digit.
     int groupSize = 3; // Number of digits to group (depends on the radix).
     int allowedChars = DEC_CHAR; // Allowed characters for the radix of the current number being parsed.
@@ -320,6 +351,12 @@ void SyntaxHighlighter::groupDigits(const QString& text, int pos, int length)
         if (s >= 0) {
             if (!isDigit) {
                 bool endOfNumber = true;
+                if (Evaluator::isRadixChar(c) && i < endPos - 1) {
+                    // Radix characters keep integer and fractional digits in the same number.
+                    ushort nextC = text[i + 1].unicode();
+                    if (nextC < 128 && (charType[nextC] & allowedChars))
+                        endOfNumber = false;
+                }
                 // If this is a separator and next character is a digit or a separator,
                 // the next character is part of the same number expression
                 if (Evaluator::isSeparatorChar(c) && i<endPos-1) {
@@ -334,22 +371,31 @@ void SyntaxHighlighter::groupDigits(const QString& text, int pos, int length)
 
                 if (endOfNumber) {
                     // End of current number found, start grouping the digits.
-                    formatDigitsGroup(text, s, i, invertGroup, groupSize);
+                    if (radixPos >= 0 && Settings::instance()->digitGroupingIntegerPartOnly)
+                        formatDigitsGroup(text, s, radixPos, false, groupSize);
+                    else
+                        formatDigitsGroup(text, s, i, invertGroup, groupSize);
                     s = -1; // Reset.
+                    radixPos = -1; // Reset.
                 }
             }
         } else {
-            if (isDigit) // Start of number found.
+            if (isDigit) { // Start of number found.
                 s = i;
+                radixPos = -1;
+            }
         }
 
         if (!isDigit) {
             if (Evaluator::isRadixChar(c)) {
-                // Invert the grouping for the fractional part.
-                invertGroup = true;
+                if (Settings::instance()->digitGroupingIntegerPartOnly)
+                    radixPos = i;
+                else
+                    invertGroup = true; // Invert the grouping for the fractional part.
             } else if (!Evaluator::isSeparatorChar(c)){
                 // Look for a radix prefix.
                 invertGroup = false;
+                radixPos = -1;
                 if (i > 0 && text[i - 1] == '0') {
                     if (c == 'x') {
                         groupSize = 4;
@@ -374,7 +420,10 @@ void SyntaxHighlighter::groupDigits(const QString& text, int pos, int length)
 
     // Group the last digits if the string finishes with the number.
     if (s >= 0) {
-        formatDigitsGroup(text, s, endPos, invertGroup, groupSize);
+        if (radixPos >= 0 && Settings::instance()->digitGroupingIntegerPartOnly)
+            formatDigitsGroup(text, s, radixPos, false, groupSize);
+        else
+            formatDigitsGroup(text, s, endPos, invertGroup, groupSize);
     }
 }
 
