@@ -490,7 +490,7 @@ void Constants::Private::populate()
     PUSH_CONSTANT("Oxygen",       "15.9994",     "g/mol");
     PUSH_CONSTANT("Palladium",    "106.42",      "g/mol");
     PUSH_CONSTANT("Phosphorus",   "30.973762",   "g/mol");
-    PUSH_CONSTANT("Platinum",     "192.084",     "g/mol");
+    PUSH_CONSTANT("Platinum",     "195.084",     "g/mol");
     PUSH_CONSTANT("Potassium",    "39.0983",     "g/mol");
     PUSH_CONSTANT("Praseodymium", "140.90765",   "g/mol");
     PUSH_CONSTANT("Protactinium", "231.03588",   "g/mol");
@@ -798,4 +798,3 @@ void Constants::retranslateText()
 Constants::~Constants()
 {
 }
-
