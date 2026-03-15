@@ -1862,6 +1862,7 @@ void MainWindow::showSessionImportDialog()
         m_session->clearHistory();
         m_session->clearVariables();
         m_session->clearUserFunctions();
+        m_evaluator->initializeBuiltInVariables();
     }
 
     QTextStream stream(&file);
