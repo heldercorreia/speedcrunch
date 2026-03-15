@@ -65,7 +65,7 @@ Complex numbers
 ===============
 .. versionadded:: 0.12
 
-SpeedCrunch supports calculations involving complex numbers. To use them, make sure that the menu item :menuselection:`Settings --> Behaviour --> Enable Complex Numbers` is checked. The imaginary unit is now available under the name :const:`j`::
+SpeedCrunch supports calculations involving complex numbers. To use them, select :menuselection:`Settings --> Results --> Complex Numbers --> Cartesian` or :menuselection:`Polar`. The imaginary unit is now available under the name :const:`j`::
 
     j^2
     = -1

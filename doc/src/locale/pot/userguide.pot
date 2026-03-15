@@ -66,7 +66,7 @@ msgid "Complex numbers"
 msgstr ""
 
 #: ../../userguide/advanced.rst:68
-msgid "SpeedCrunch supports calculations involving complex numbers. To use them, make sure that the menu item :menuselection:`Settings --> Behaviour --> Enable Complex Numbers` is checked. The imaginary unit is now available under the name :const:`j`::"
+msgid "SpeedCrunch supports calculations involving complex numbers. To use them, select :menuselection:`Settings --> Results --> Complex Numbers --> Cartesian` or :menuselection:`Polar`. The imaginary unit is now available under the name :const:`j`::"
 msgstr ""
 
 #: ../../userguide/advanced.rst:76
@@ -707,11 +707,11 @@ msgid "If selected, the entered expression remains in the editor after evaluatin
 msgstr ""
 
 #: ../../userguide/interface.rst:201
-msgid ":menuselection:`Enable Complex Numbers`"
+msgid ":menuselection:`Complex Numbers --> Disabled`, :menuselection:`Complex Numbers --> Cartesian`, and :menuselection:`Complex Numbers --> Polar`"
 msgstr ""
 
 #: ../../userguide/interface.rst:201
-msgid "Enable or disable support for :ref:`complex numbers <complex_numbers>`. If disabled, :const:`j` will be undefined and expressions that would return complex results (like ``sqrt(-1)``) will fail."
+msgid "Select the complex-number mode. ``Disabled`` turns off support for :ref:`complex numbers <complex_numbers>` (so :const:`j` is undefined and expressions such as ``sqrt(-1)`` fail). ``Cartesian`` and ``Polar`` both enable complex-number support and choose how complex results are displayed. ``Disabled`` is the default."
 msgstr ""
 
 #: ../../userguide/interface.rst:203

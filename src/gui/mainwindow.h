@@ -149,6 +149,7 @@ private slots:
     void setRadixCharacterDot();
     void setRadixCharacterBoth();
     void setResultFormatBinary();
+    void setResultFormatComplexDisabled();
     void setResultFormatCartesian();
     void setResultFormat(char);
     void setResultFormatEngineering();
@@ -194,7 +195,6 @@ private slots:
     void setDigitGroupingIntegerPartOnlyEnabled(bool);
     void setAutoResultToClipboardEnabled(bool);
     void setHoverHighlightResultsEnabled(bool);
-    void setComplexNumbers(bool);
     void setVariablesDockVisible(bool, bool takeFocus = true);
     void setUserFunctionsDockVisible(bool, bool takeFocus = true);
     void setWindowPositionSaveEnabled(bool);
@@ -268,6 +268,7 @@ private:
     QString statusBarAngleUnitValue() const;
     QString statusBarResultFormatValue() const;
     QString statusBarComplexNumbersValue() const;
+    void cycleComplexNumbersMode();
     bool rebuildSessionFromExpressions(const QStringList& expressions, int* errorIndex = nullptr, QString* errorText = nullptr);
     QStringList historyExpressions() const;
 
@@ -363,7 +364,7 @@ private:
         QAction* settingsBehaviorHistorySavingContinuously;
         QAction* settingsBehaviorHistorySizeLimit;
         QAction* settingsRadixCharBoth;
-        QAction* settingsBehaviorComplexNumbers;
+        QAction* settingsResultFormatComplexDisabled;
         QAction* settingsDisplayZoomIn;
         QAction* settingsDisplayZoomOut;
         QAction* settingsDisplayFont;
@@ -413,7 +414,6 @@ private:
         QMenu* tertiaryResultFormat;
         QMenu* tertiaryDecimal;
         QMenu* inputFormat;
-        QMenu* complexFormat;
         QMenu* help;
         QMenu* precision;
         QMenu* radixChar;

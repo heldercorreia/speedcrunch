@@ -201,12 +201,10 @@ This section contains settings that control result output and post-evaluation be
     precisely. The preset settings and :menuselection:`Custom...` explicitly specify a
     certain number of digits (from 0 to 50) and will append additional zeroes to the
     fraction to reach that number of digits, if necessary.
-* :menuselection:`Complex Numbers --> Enable Complex Numbers`
-    Enable or disable support for :ref:`complex numbers <complex_numbers>`. If disabled, :const:`j` will be undefined
-    and expressions that would return complex results (like ``sqrt(-1)``) will fail. This option can also be toggled
-    from the status bar using the ``Complex on`` / ``Complex off`` indicator.
-* :menuselection:`Complex Numbers --> Complex Number Format`
-    Select how complex results are displayed (Cartesian or Polar).
+* :menuselection:`Complex Numbers --> Disabled`, :menuselection:`Complex Numbers --> Cartesian`, and :menuselection:`Complex Numbers --> Polar`
+    Select the complex-number mode. ``Disabled`` turns off support for :ref:`complex numbers <complex_numbers>` (so
+    :const:`j` is undefined and expressions such as ``sqrt(-1)`` fail). ``Cartesian`` and ``Polar`` both enable
+    complex-number support and choose how complex results are displayed. ``Disabled`` is the default.
 * :menuselection:`Secondary Result Format` and :menuselection:`Tertiary Result Format`
     Optional extra result displays in alternate formats, shown alongside the primary result.
 * :menuselection:`Automatically Copy New Results to Clipboard`

@@ -174,7 +174,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorDigitGroupingIntegerPartOnly = new QAction(this);
     m_actions.settingsBehaviorAutoResultToClipboard = new QAction(this);
     m_actions.settingsBehaviorHistorySizeLimit = new QAction(this);
-    m_actions.settingsBehaviorComplexNumbers = new QAction(this);
+    m_actions.settingsResultFormatComplexDisabled = new QAction(this);
     m_actions.settingsDisplayFont = new QAction(this);
     m_actions.settingsLanguage = new QAction(this);
     m_actions.settingsRadixCharComma = new QAction(this);
@@ -254,7 +254,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorDigitGroupingThreeSpaces->setData(3);
     m_actions.settingsBehaviorDigitGroupingIntegerPartOnly->setCheckable(true);
     m_actions.settingsBehaviorAutoResultToClipboard->setCheckable(true);
-    m_actions.settingsBehaviorComplexNumbers->setCheckable(true);
+    m_actions.settingsResultFormatComplexDisabled->setCheckable(true);
     m_actions.settingsRadixCharComma->setCheckable(true);
     m_actions.settingsRadixCharDefault->setCheckable(true);
     m_actions.settingsRadixCharDot->setCheckable(true);
@@ -379,7 +379,9 @@ QString MainWindow::statusBarResultFormatValue() const
 
 QString MainWindow::statusBarComplexNumbersValue() const
 {
-    return m_settings->complexNumbers ? MainWindow::tr("On") : MainWindow::tr("Off");
+    if (!m_settings->complexNumbers)
+        return MainWindow::tr("Disabled");
+    return m_settings->resultFormatComplex == 'p' ? MainWindow::tr("Polar") : MainWindow::tr("Cartesian");
 }
 
 void MainWindow::setActionsText()
@@ -440,7 +442,7 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorLeaveLastExpression->setStatusTip(MainWindow::tr("After pressing Enter, keep the entered expression selected in the editor."));
     m_actions.settingsBehaviorAutoResultToClipboard->setText(MainWindow::tr("Automatically Copy New Results to Clipboard"));
     m_actions.settingsBehaviorHistorySizeLimit->setText(MainWindow::tr("History Size &Limit..."));
-    m_actions.settingsBehaviorComplexNumbers->setText(MainWindow::tr("Enable Complex Numbers"));
+    m_actions.settingsResultFormatComplexDisabled->setText(MainWindow::tr("&Disabled"));
     m_actions.settingsRadixCharComma->setText(MainWindow::tr("&Comma"));
     m_actions.settingsRadixCharDefault->setText(MainWindow::tr("&System Default"));
     m_actions.settingsRadixCharDot->setText(MainWindow::tr("&Dot"));
@@ -529,6 +531,7 @@ void MainWindow::createActionGroups()
     m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatSexagesimal);
 
     m_actionGroups.complexFormat = new QActionGroup(this);
+    m_actionGroups.complexFormat->addAction(m_actions.settingsResultFormatComplexDisabled);
     m_actionGroups.complexFormat->addAction(m_actions.settingsResultFormatCartesian);
     m_actionGroups.complexFormat->addAction(m_actions.settingsResultFormatPolar);
 
@@ -709,10 +712,9 @@ void MainWindow::createMenus()
     m_menus.precision->addAction(m_actions.settingsResultFormatCustomDigits);
 
     m_menus.complexNumbers = m_menus.results->addMenu("");
-    m_menus.complexNumbers->addAction(m_actions.settingsBehaviorComplexNumbers);
-    m_menus.complexFormat = m_menus.complexNumbers->addMenu("");
-    m_menus.complexFormat->addAction(m_actions.settingsResultFormatCartesian);
-    m_menus.complexFormat->addAction(m_actions.settingsResultFormatPolar);
+    m_menus.complexNumbers->addAction(m_actions.settingsResultFormatComplexDisabled);
+    m_menus.complexNumbers->addAction(m_actions.settingsResultFormatCartesian);
+    m_menus.complexNumbers->addAction(m_actions.settingsResultFormatPolar);
 
     m_menus.alternativeResultFormat = m_menus.results->addMenu("");
     m_menus.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatDisabled);
@@ -797,7 +799,6 @@ void MainWindow::setMenusText()
     m_menus.precision->setTitle(MainWindow::tr("&Precision"));
     m_menus.angleUnit->setTitle(MainWindow::tr("&Angle Unit"));
     m_menus.complexNumbers->setTitle(MainWindow::tr("Complex &Numbers"));
-    m_menus.complexFormat->setTitle(MainWindow::tr("Complex Number &Format"));
     m_menus.window->setTitle(MainWindow::tr("&Window"));
     m_menus.editing->setTitle(MainWindow::tr("&Editing"));
     m_menus.history->setTitle(MainWindow::tr("&History"));
@@ -867,11 +868,13 @@ void MainWindow::createStatusBar()
     connect(m_status.resultFormat, SIGNAL(customContextMenuRequested(const QPoint&)),
         SLOT(showResultFormatContextMenu(const QPoint&)));
     m_status.complexNumbers->setContextMenuPolicy(Qt::ActionsContextMenu);
-    m_status.complexNumbers->addAction(m_actions.settingsBehaviorComplexNumbers);
+    m_status.complexNumbers->addAction(m_actions.settingsResultFormatComplexDisabled);
+    m_status.complexNumbers->addAction(m_actions.settingsResultFormatCartesian);
+    m_status.complexNumbers->addAction(m_actions.settingsResultFormatPolar);
 
     connect(m_status.angleUnit, SIGNAL(clicked()), SLOT(cycleAngleUnits()));
     connect(m_status.resultFormat, SIGNAL(clicked()), SLOT(cycleResultFormats()));
-    connect(m_status.complexNumbers, SIGNAL(clicked()), m_actions.settingsBehaviorComplexNumbers, SLOT(trigger()));
+    connect(m_status.complexNumbers, &QPushButton::clicked, this, &MainWindow::cycleComplexNumbersMode);
 
     bar->addWidget(m_status.resultFormatSection);
     bar->addWidget(m_status.angleUnitSection);
@@ -1121,8 +1124,6 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsBehaviorDigitGroupingIntegerPartOnly, SIGNAL(toggled(bool)), SLOT(setDigitGroupingIntegerPartOnlyEnabled(bool)));
     connect(m_actions.settingsBehaviorLeaveLastExpression, SIGNAL(toggled(bool)), SLOT(setLeaveLastExpressionEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoResultToClipboard, SIGNAL(toggled(bool)), SLOT(setAutoResultToClipboardEnabled(bool)));
-    connect(m_actions.settingsBehaviorComplexNumbers, SIGNAL(toggled(bool)), SLOT(setComplexNumbers(bool)));
-
     connect(m_actions.settingsRadixCharComma, SIGNAL(triggered()), SLOT(setRadixCharacterComma()));
     connect(m_actions.settingsRadixCharDefault, SIGNAL(triggered()), SLOT(setRadixCharacterAutomatic()));
     connect(m_actions.settingsRadixCharDot, SIGNAL(triggered()), SLOT(setRadixCharacterDot()));
@@ -1137,6 +1138,7 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsResultFormatCustomDigits, SIGNAL(triggered()), SLOT(setResultPrecisionCustom()));
     connect(m_actions.settingsResultFormatAutoPrecision, SIGNAL(triggered()), SLOT(setResultPrecisionAutomatic()));
     connect(m_actions.settingsResultFormatBinary, SIGNAL(triggered()), SLOT(setResultFormatBinary()));
+    connect(m_actions.settingsResultFormatComplexDisabled, SIGNAL(triggered()), SLOT(setResultFormatComplexDisabled()));
     connect(m_actions.settingsResultFormatCartesian, SIGNAL(triggered()), SLOT(setResultFormatCartesian()));
     connect(m_actions.settingsResultFormatEngineering, SIGNAL(triggered()), SLOT(setResultFormatEngineering()));
     connect(m_actions.settingsResultFormatFixed, SIGNAL(triggered()), SLOT(setResultFormatFixed()));
@@ -1352,9 +1354,6 @@ void MainWindow::applySettings()
 
     m_actions.settingsBehaviorDigitGroupingIntegerPartOnly->setChecked(m_settings->digitGroupingIntegerPartOnly);
 
-    m_actions.settingsBehaviorComplexNumbers->setChecked(m_settings->complexNumbers);
-    m_menus.complexFormat->setEnabled(m_settings->complexNumbers);
-
     QFont font;
     font.fromString(m_settings->displayFont);
     m_widgets.display->setFont(font);
@@ -1455,13 +1454,12 @@ void MainWindow::checkInitialTertiaryResultFormat()
 
 void MainWindow::checkInitialComplexFormat()
 {
-    switch (m_settings->resultFormatComplex) {
-    case 'c':
-        m_actions.settingsResultFormatCartesian->setChecked(true);
-        break;
-    case 'p':
+    if (!m_settings->complexNumbers) {
+        m_actions.settingsResultFormatComplexDisabled->setChecked(true);
+    } else if (m_settings->resultFormatComplex == 'p') {
         m_actions.settingsResultFormatPolar->setChecked(true);
-        break;
+    } else {
+        m_actions.settingsResultFormatCartesian->setChecked(true);
     }
 }
 
@@ -2012,16 +2010,6 @@ void MainWindow::setHoverHighlightResultsEnabled(bool b)
     m_widgets.display->setHoverHighlightEnabled(b);
 }
 
-void MainWindow::setComplexNumbers(bool b)
-{
-    m_settings->complexNumbers = b;
-    m_menus.complexFormat->setEnabled(b);
-    setStatusBarText();
-    emit complexNumbersChanged();
-    m_evaluator->initializeBuiltInVariables();
-    DMath::complexMode = b;
-}
-
 void MainWindow::setAngleModeDegree()
 {
     if (m_settings->angleUnit == 'd')
@@ -2401,13 +2389,34 @@ void MainWindow::setResultFormatBinary()
     setStatusBarText();
 }
 
-void MainWindow::setResultFormatCartesian()
+void MainWindow::setResultFormatComplexDisabled()
 {
-    if (m_settings->resultFormatComplex == 'c')
+    if (!m_settings->complexNumbers)
         return;
 
-    m_settings->resultFormatComplex = 'c';
+    m_settings->complexNumbers = false;
+    DMath::complexMode = false;
+    m_evaluator->initializeBuiltInVariables();
     setStatusBarText();
+    emit complexNumbersChanged();
+    emit resultFormatChanged();
+}
+
+void MainWindow::setResultFormatCartesian()
+{
+    if (m_settings->complexNumbers && m_settings->resultFormatComplex == 'c')
+        return;
+
+    const bool complexWasDisabled = !m_settings->complexNumbers;
+    m_settings->complexNumbers = true;
+    m_settings->resultFormatComplex = 'c';
+    if (complexWasDisabled) {
+        DMath::complexMode = true;
+        m_evaluator->initializeBuiltInVariables();
+    }
+    setStatusBarText();
+    if (complexWasDisabled)
+        emit complexNumbersChanged();
     emit resultFormatChanged();
 }
 
@@ -2442,12 +2451,31 @@ void MainWindow::setResultFormatOctal()
 
 void MainWindow::setResultFormatPolar()
 {
-    if (m_settings->resultFormatComplex == 'p')
+    if (m_settings->complexNumbers && m_settings->resultFormatComplex == 'p')
         return;
 
+    const bool complexWasDisabled = !m_settings->complexNumbers;
+    m_settings->complexNumbers = true;
     m_settings->resultFormatComplex = 'p';
+    if (complexWasDisabled) {
+        DMath::complexMode = true;
+        m_evaluator->initializeBuiltInVariables();
+    }
     setStatusBarText();
+    if (complexWasDisabled)
+        emit complexNumbersChanged();
     emit resultFormatChanged();
+}
+
+void MainWindow::cycleComplexNumbersMode()
+{
+    if (!m_settings->complexNumbers) {
+        m_actions.settingsResultFormatCartesian->trigger();
+    } else if (m_settings->resultFormatComplex == 'c') {
+        m_actions.settingsResultFormatPolar->trigger();
+    } else {
+        m_actions.settingsResultFormatComplexDisabled->trigger();
+    }
 }
 
 void MainWindow::setResultFormatScientific()
