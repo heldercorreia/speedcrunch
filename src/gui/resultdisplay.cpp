@@ -42,6 +42,11 @@
 #include <QToolTip>
 
 namespace {
+QPointF badgeCenter(const QRect& rect)
+{
+    return QPointF(rect.x() + rect.width() * 0.5, rect.y() + rect.height() * 0.5);
+}
+
 QColor hoverColorForBackground(const QColor& background)
 {
     const bool isLightBackground = background.lightnessF() >= 0.5;
@@ -699,7 +704,7 @@ void ResultDisplay::paintEvent(QPaintEvent* event)
         painter.setBrush(Qt::white);
         painter.drawEllipse(cancelRect);
         painter.setPen(QPen(QColor(200, 50, 0, 255), 1.8, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-        const QPointF center = cancelRect.center();
+        const QPointF center = badgeCenter(cancelRect);
         const qreal side = cancelRect.width() * 0.22;
         painter.drawRect(QRectF(center.x() - side, center.y() - side, side * 2.0, side * 2.0));
         return;
@@ -720,7 +725,7 @@ void ResultDisplay::paintEvent(QPaintEvent* event)
     painter.setBrush(Qt::white);
     painter.drawEllipse(editRect);
     painter.setPen(QPen(QColor(40, 90, 180, 255), 1.6, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-    const QPointF editCenter = editRect.center();
+    const QPointF editCenter = badgeCenter(editRect);
     const qreal editHalf = editRect.width() * 0.20;
     painter.drawLine(QPointF(editCenter.x() - editHalf, editCenter.y() + editHalf),
                      QPointF(editCenter.x() + editHalf, editCenter.y() - editHalf));
@@ -732,7 +737,7 @@ void ResultDisplay::paintEvent(QPaintEvent* event)
     painter.setBrush(Qt::white);
     painter.drawEllipse(removeRect);
     painter.setPen(QPen(QColor(220, 0, 0, 255), 1.8, Qt::SolidLine, Qt::RoundCap));
-    const QPointF center = removeRect.center();
+    const QPointF center = badgeCenter(removeRect);
     const qreal half = removeRect.width() * 0.22;
     painter.drawLine(QPointF(center.x() - half, center.y() - half),
                      QPointF(center.x() + half, center.y() + half));
