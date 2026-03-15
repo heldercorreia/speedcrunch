@@ -59,12 +59,14 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QCloseEvent>
+#include <QDateTime>
 #include <QDesktopServices>
 #include <QFileDialog>
 #include <QFont>
 #include <QFontDialog>
 #include <QInputDialog>
 #include <QLabel>
+#include <QLineEdit>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
@@ -1793,7 +1795,27 @@ void MainWindow::wrapSelection()
 void MainWindow::saveSessionDialog()
 {
     QString filters = tr("SpeedCrunch Sessions (*.json);;All Files (*)");
-    QString fname = QFileDialog::getSaveFileName(this, tr("Save Session"), QString(), filters);
+    const QString sessionBaseName =
+        QString(QLatin1String("session-%1"))
+        .arg(QDateTime::currentDateTime().toString(QLatin1String("yyyy_MM_dd-HH_mm_ss")));
+    const QString defaultFileName = sessionBaseName + QLatin1String(".json");
+
+    QFileDialog dialog(this, tr("Save Session"), QString(), filters);
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    dialog.selectFile(defaultFileName);
+    QTimer::singleShot(0, &dialog, [sessionBaseName, &dialog]() {
+        if (QLineEdit* fileNameEdit = dialog.findChild<QLineEdit*>())
+            fileNameEdit->setSelection(0, sessionBaseName.size());
+    });
+
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+
+    const QStringList selectedFiles = dialog.selectedFiles();
+    if (selectedFiles.isEmpty())
+        return;
+
+    QString fname = selectedFiles.constFirst();
     if (fname.isEmpty())
         return;
 
