@@ -101,17 +101,17 @@ SpeedCrunch's behavior can be customized to a large degree using the configurati
 
 .. _result_format:
 
-Result Format
+Format
 +++++++++++++
 
 This section allows selecting the result format to use. You can select one of the following
 formats:
 
-* :menuselection:`Decimal --> General`
-    Use fixed decimal form for most results; for very large (more than six integer places) or very small results (less than 0.0001),
+* :menuselection:`Decimal --> Automatic`
+    Use fixed-point decimal form for most results; for very large (more than six integer places) or very small results (less than 0.0001),
     scientific notation will be used.
-* :menuselection:`Decimal --> Fixed Decimal`
-    Display results in fixed decimal form. For excessively
+* :menuselection:`Decimal --> Fixed-Point`
+    Display results in fixed-point decimal form. For excessively
     large or small numbers, this format may still fall back to scientific notation.
 * :menuselection:`Decimal --> Engineering`
     Display results in engineering notation. This is a variant of :ref:`scientific notation <scientific_notation>` in which
@@ -125,7 +125,7 @@ formats:
 * :menuselection:`Hexadecimal`
     Display all results as hexadecimal numbers, i.e. in base-16.
 * :menuselection:`Sexagecimal`
-    Display dimensionless and time results as :ref:`sexagecimal values <sexagecimal_values>`, i.e. with minutes and seconds. All other results are displayed in fixed decimal form.
+    Display dimensionless and time results as :ref:`sexagecimal values <sexagecimal_values>`, i.e. with minutes and seconds. All other results are displayed in fixed-point decimal form.
 
 .. _radix_character:
 
@@ -193,7 +193,7 @@ This section contains settings that control result output and post-evaluation be
     If set, SpeedCrunch will display partial results as you type your expression as well
     as results when selecting a partial expression in the editor.
 
-* :menuselection:`Result Format`
+* :menuselection:`Format`
     Select the format used to display results.
 * :menuselection:`Precision`
     Select the number of fractional digits to display.
@@ -205,7 +205,7 @@ This section contains settings that control result output and post-evaluation be
     Select the complex-number mode. ``Disabled`` turns off support for :ref:`complex numbers <complex_numbers>` (so
     :const:`j` is undefined and expressions such as ``sqrt(-1)`` fail). ``Cartesian`` and ``Polar`` both enable
     complex-number support and choose how complex results are displayed. ``Disabled`` is the default.
-* :menuselection:`Secondary Result Format` and :menuselection:`Tertiary Result Format`
+* :menuselection:`Secondary Format` and :menuselection:`Tertiary Format`
     Optional extra result displays in alternate formats, shown alongside the primary result.
 * :menuselection:`Automatically Copy New Results to Clipboard`
     Automatically copy each newly evaluated result to the clipboard.
@@ -310,9 +310,9 @@ Format
 ++++++
 
 * :kbd:`F2`
-    Set result format to general decimal.
+    Set result format to automatic decimal.
 * :kbd:`F3`
-    Set result format to fixed decimal.
+    Set result format to fixed-point decimal.
 * :kbd:`F4`
     Set result format to engineering decimal.
 * :kbd:`F5`

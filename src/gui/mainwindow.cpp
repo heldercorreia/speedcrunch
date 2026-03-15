@@ -346,7 +346,7 @@ void MainWindow::setStatusBarText()
 {
     if (m_status.angleUnit) {
         m_status.angleUnitLabel->setText(MainWindow::tr("Angle Unit:"));
-        m_status.resultFormatLabel->setText(MainWindow::tr("Result Format:"));
+        m_status.resultFormatLabel->setText(MainWindow::tr("Format:"));
         m_status.complexNumbersLabel->setText(MainWindow::tr("Complex Numbers:"));
         m_status.angleUnit->setText(statusBarAngleUnitValue());
         m_status.resultFormat->setText(statusBarResultFormatValue());
@@ -371,10 +371,10 @@ QString MainWindow::statusBarResultFormatValue() const
         case 'o': return MainWindow::tr("Octal");
         case 'h': return MainWindow::tr("Hexadecimal");
         case 's': return MainWindow::tr("Sexagesimal");
-        case 'f': return MainWindow::tr("Fixed decimal");
+        case 'f': return MainWindow::tr("Fixed-point decimal");
         case 'n': return MainWindow::tr("Engineering decimal");
         case 'e': return MainWindow::tr("Scientific decimal");
-        case 'g': return MainWindow::tr("General decimal");
+        case 'g': return MainWindow::tr("Automatic decimal");
         default : return QString();
     }
 }
@@ -457,8 +457,8 @@ void MainWindow::setActionsText()
     m_actions.settingsResultFormat8Digits->setText(MainWindow::tr("&8 Digits"));
     m_actions.settingsResultFormatCustomDigits->setText(MainWindow::tr("&Custom..."));
     m_actions.settingsResultFormatAutoPrecision->setText(MainWindow::tr("&Automatic"));
-    m_actions.settingsResultFormatGeneral->setText(MainWindow::tr("&General"));
-    m_actions.settingsResultFormatFixed->setText(MainWindow::tr("&Fixed Decimal"));
+    m_actions.settingsResultFormatGeneral->setText(MainWindow::tr("&Automatic"));
+    m_actions.settingsResultFormatFixed->setText(MainWindow::tr("&Fixed-Point"));
     m_actions.settingsResultFormatEngineering->setText(MainWindow::tr("&Engineering"));
     m_actions.settingsResultFormatScientific->setText(MainWindow::tr("&Scientific"));
     m_actions.settingsResultFormatBinary->setText(MainWindow::tr("&Binary"));
@@ -466,8 +466,8 @@ void MainWindow::setActionsText()
     m_actions.settingsResultFormatHexadecimal->setText(MainWindow::tr("&Hexadecimal"));
     m_actions.settingsResultFormatSexagesimal->setText(MainWindow::tr("&Sexagesimal"));
     m_actions.settingsAlternativeResultFormatDisabled->setText(MainWindow::tr("&Disabled"));
-    m_actions.settingsAlternativeResultFormatGeneral->setText(MainWindow::tr("&General"));
-    m_actions.settingsAlternativeResultFormatFixed->setText(MainWindow::tr("&Fixed Decimal"));
+    m_actions.settingsAlternativeResultFormatGeneral->setText(MainWindow::tr("&Automatic"));
+    m_actions.settingsAlternativeResultFormatFixed->setText(MainWindow::tr("&Fixed-Point"));
     m_actions.settingsAlternativeResultFormatEngineering->setText(MainWindow::tr("&Engineering"));
     m_actions.settingsAlternativeResultFormatScientific->setText(MainWindow::tr("&Scientific"));
     m_actions.settingsAlternativeResultFormatBinary->setText(MainWindow::tr("&Binary"));
@@ -475,8 +475,8 @@ void MainWindow::setActionsText()
     m_actions.settingsAlternativeResultFormatHexadecimal->setText(MainWindow::tr("&Hexadecimal"));
     m_actions.settingsAlternativeResultFormatSexagesimal->setText(MainWindow::tr("&Sexagesimal"));
     m_actions.settingsTertiaryResultFormatDisabled->setText(MainWindow::tr("&Disabled"));
-    m_actions.settingsTertiaryResultFormatGeneral->setText(MainWindow::tr("&General"));
-    m_actions.settingsTertiaryResultFormatFixed->setText(MainWindow::tr("&Fixed Decimal"));
+    m_actions.settingsTertiaryResultFormatGeneral->setText(MainWindow::tr("&Automatic"));
+    m_actions.settingsTertiaryResultFormatFixed->setText(MainWindow::tr("&Fixed-Point"));
     m_actions.settingsTertiaryResultFormatEngineering->setText(MainWindow::tr("&Engineering"));
     m_actions.settingsTertiaryResultFormatScientific->setText(MainWindow::tr("&Scientific"));
     m_actions.settingsTertiaryResultFormatBinary->setText(MainWindow::tr("&Binary"));
@@ -717,6 +717,7 @@ void MainWindow::createMenus()
     m_menus.complexNumbers->addAction(m_actions.settingsResultFormatComplexDisabled);
     m_menus.complexNumbers->addAction(m_actions.settingsResultFormatCartesian);
     m_menus.complexNumbers->addAction(m_actions.settingsResultFormatPolar);
+    m_menus.results->addSeparator();
 
     m_menus.alternativeResultFormat = m_menus.results->addMenu("");
     m_menus.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatDisabled);
@@ -791,9 +792,9 @@ void MainWindow::setMenusText()
     m_menus.view->setTitle(MainWindow::tr("&View"));
     m_menus.settings->setTitle(MainWindow::tr("Se&ttings"));
     m_menus.results->setTitle(MainWindow::tr("&Results"));
-    m_menus.resultFormat->setTitle(MainWindow::tr("Result &Format"));
-    m_menus.alternativeResultFormat->setTitle(MainWindow::tr("Secondary Result Format"));
-    m_menus.tertiaryResultFormat->setTitle(MainWindow::tr("Tertiary Result Format"));
+    m_menus.resultFormat->setTitle(MainWindow::tr("&Format"));
+    m_menus.alternativeResultFormat->setTitle(MainWindow::tr("Secondary Format"));
+    m_menus.tertiaryResultFormat->setTitle(MainWindow::tr("Tertiary Format"));
     m_menus.radixChar->setTitle(MainWindow::tr("Radix &Character"));
     m_menus.decimal->setTitle(MainWindow::tr("&Decimal"));
     m_menus.alternativeDecimal->setTitle(MainWindow::tr("&Decimal"));
