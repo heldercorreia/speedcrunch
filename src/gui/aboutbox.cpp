@@ -43,7 +43,7 @@ AboutBox::AboutBox(QWidget* parent, Qt::WindowFlags f)
     msg += "</b><br>(Qt " + QLatin1String(QT_VERSION_STR) + ")<br>";
 
     const QString authors = "<p><b>%1</b><br>%2";
-    msg += authors.arg(tr("Maintainer"), "Helder Correia");
+    msg += authors.arg(tr("Main author | Logo | Maintainer"), "Helder Correia (@heldercorreia)");
 
     msg += "<p>" + QString("<b>%1</b><br>").arg(tr("Core developers"));
     msg +=
