@@ -40,13 +40,36 @@ public:
         KeypadModeBasicWide = 1,
         KeypadModeBasicNarrow = 2,
         KeypadModeScientificWide = 3,
-        KeypadModeScientificNarrow = 4
+        KeypadModeScientificNarrow = 4,
+        KeypadModeCustom = 5
+    };
+
+    enum CustomKeypadButtonAction {
+        CustomKeypadActionInsertText = 0,
+        CustomKeypadActionBackspace = 1,
+        CustomKeypadActionClearExpression = 2,
+        CustomKeypadActionEvaluateExpression = 3
+    };
+
+    struct CustomKeypadButton {
+        int row;
+        int column;
+        QString label;
+        QString text;
+        CustomKeypadButtonAction action;
+    };
+
+    struct CustomKeypad {
+        int rows;
+        int columns;
+        QList<CustomKeypadButton> buttons;
     };
 
     static Settings* instance();
     static QString getConfigPath();
     static QString getDataPath();
     static QString getCachePath();
+    static CustomKeypad defaultCustomKeypad();
 
     void load();
     void save();
@@ -86,6 +109,7 @@ public:
     bool historyDockVisible;
     bool keypadVisible;
     KeypadMode keypadMode;
+    CustomKeypad customKeypad;
     bool formulaBookDockVisible;
     bool statusBarVisible;
     bool menuBarVisible;

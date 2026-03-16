@@ -21,6 +21,7 @@
 #define GUI_KEYPAD_H
 
 #include <QHash>
+#include <QList>
 #include <QWidget>
 
 class QPushButton;
@@ -44,10 +45,20 @@ public:
         KeyAcos, KeyTan, KeyAtan
     };
 
+    struct CustomButtonDescription {
+        QString label;
+        QString text;
+        int action;
+        int row;
+        int column;
+    };
+
     explicit Keypad(LayoutMode layoutMode = LayoutModeScientificWide, QWidget* parent = 0);
+    explicit Keypad(const QList<CustomButtonDescription>& customButtons, QWidget* parent = 0);
 
 signals:
     void buttonPressed(Keypad::Button) const;
+    void customButtonPressed(int action, const QString& text) const;
 
 public slots:
     void handleRadixCharacterChange();
@@ -63,8 +74,11 @@ private:
     void createButtons();
     void disableButtonFocus();
     void layoutButtons();
+    void createCustomButtons();
+    void layoutCustomButtons();
     void setButtonTooltips();
     void sizeButtons();
+    void sizeCustomButtons();
 
     static const struct KeyDescription {
         QString label;
@@ -75,7 +89,10 @@ private:
     } keyDescriptions[];
 
     LayoutMode m_layoutMode;
+    bool m_isCustom;
     QHash<Button, QPair<QPushButton*, const KeyDescription*> > keys;
+    QList<CustomButtonDescription> m_customButtons;
+    QList<QPushButton*> m_customWidgets;
 };
 
 #endif

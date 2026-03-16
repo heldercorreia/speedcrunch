@@ -35,6 +35,7 @@
 #include "gui/bookdock.h"
 #include "gui/genericdock.h"
 #include "gui/constantswidget.h"
+#include "gui/customkeypaddialog.h"
 #include "gui/editorutils.h"
 #include "gui/functionswidget.h"
 #include "gui/historywidget.h"
@@ -116,7 +117,8 @@ static bool isVisibleKeypadMode(Settings::KeypadMode mode)
 {
     return mode == Settings::KeypadModeBasicWide
         || mode == Settings::KeypadModeScientificWide
-        || mode == Settings::KeypadModeScientificNarrow;
+        || mode == Settings::KeypadModeScientificNarrow
+        || mode == Settings::KeypadModeCustom;
 }
 
 void MainWindow::createUi()
@@ -157,6 +159,7 @@ void MainWindow::createActions()
     m_actions.viewKeypadBasicWide = new QAction(this);
     m_actions.viewKeypadScientificWide = new QAction(this);
     m_actions.viewKeypadScientificNarrow = new QAction(this);
+    m_actions.viewKeypadCustom = new QAction(this);
     m_actions.viewFormulaBook = new QAction(this);
     m_actions.viewStatusBar = new QAction(this);
     m_actions.viewMenuBar = new QAction(this);
@@ -319,6 +322,8 @@ void MainWindow::createActions()
     m_actions.viewKeypadScientificWide->setData(Settings::KeypadModeScientificWide);
     m_actions.viewKeypadScientificNarrow->setCheckable(true);
     m_actions.viewKeypadScientificNarrow->setData(Settings::KeypadModeScientificNarrow);
+    m_actions.viewKeypadCustom->setCheckable(true);
+    m_actions.viewKeypadCustom->setData(Settings::KeypadModeCustom);
     m_actions.viewFormulaBook->setCheckable(true);
     m_actions.viewStatusBar->setCheckable(true);
     m_actions.viewMenuBar->setCheckable(true);
@@ -428,6 +433,7 @@ void MainWindow::setActionsText()
     m_actions.viewKeypadBasicWide->setText(MainWindow::tr("&Basic"));
     m_actions.viewKeypadScientificWide->setText(MainWindow::tr("&Scientific (wide)"));
     m_actions.viewKeypadScientificNarrow->setText(MainWindow::tr("Scientific (narrow)"));
+    m_actions.viewKeypadCustom->setText(MainWindow::tr("&Custom..."));
     m_actions.viewFormulaBook->setText(MainWindow::tr("Formula &Book"));
     m_actions.viewStatusBar->setText(MainWindow::tr("&Status Bar"));
     m_actions.viewMenuBar->setText(MainWindow::tr("Main &Menu"));
@@ -599,6 +605,7 @@ void MainWindow::createActionGroups()
     m_actionGroups.keypad->addAction(m_actions.viewKeypadBasicWide);
     m_actionGroups.keypad->addAction(m_actions.viewKeypadScientificWide);
     m_actionGroups.keypad->addAction(m_actions.viewKeypadScientificNarrow);
+    m_actionGroups.keypad->addAction(m_actions.viewKeypadCustom);
 }
 
 void MainWindow::createActionShortcuts()
@@ -666,6 +673,7 @@ void MainWindow::createMenus()
     m_menus.keypad->addAction(m_actions.viewKeypadBasicWide);
     m_menus.keypad->addAction(m_actions.viewKeypadScientificWide);
     m_menus.keypad->addAction(m_actions.viewKeypadScientificNarrow);
+    m_menus.keypad->addAction(m_actions.viewKeypadCustom);
     m_menus.view->addSeparator();
     m_menus.view->addAction(m_actions.viewFormulaBook);
     m_menus.view->addAction(m_actions.viewConstants);
@@ -961,16 +969,35 @@ void MainWindow::createKeypad()
     if (m_widgets.keypad)
         return;
 
-    Keypad::LayoutMode layoutMode = Keypad::LayoutModeScientificWide;
-    if (m_settings->keypadMode == Settings::KeypadModeBasicWide)
-        layoutMode = Keypad::LayoutModeBasicWide;
-    else if (m_settings->keypadMode == Settings::KeypadModeScientificNarrow)
-        layoutMode = Keypad::LayoutModeScientificNarrow;
-    m_widgets.keypad = new Keypad(layoutMode, m_widgets.root);
+    if (m_settings->keypadMode == Settings::KeypadModeCustom) {
+        QList<Keypad::CustomButtonDescription> customButtons;
+        for (const auto& button : m_settings->customKeypad.buttons) {
+            if (button.row < 0 || button.row >= m_settings->customKeypad.rows
+                    || button.column < 0 || button.column >= m_settings->customKeypad.columns) {
+                continue;
+            }
+            Keypad::CustomButtonDescription description;
+            description.label = button.label;
+            description.text = button.text;
+            description.action = static_cast<int>(button.action);
+            description.row = button.row;
+            description.column = button.column;
+            customButtons.append(description);
+        }
+        m_widgets.keypad = new Keypad(customButtons, m_widgets.root);
+        connect(m_widgets.keypad, &Keypad::customButtonPressed,
+                this, &MainWindow::handleCustomKeypadButtonPress);
+    } else {
+        Keypad::LayoutMode layoutMode = Keypad::LayoutModeScientificWide;
+        if (m_settings->keypadMode == Settings::KeypadModeBasicWide)
+            layoutMode = Keypad::LayoutModeBasicWide;
+        else if (m_settings->keypadMode == Settings::KeypadModeScientificNarrow)
+            layoutMode = Keypad::LayoutModeScientificNarrow;
+        m_widgets.keypad = new Keypad(layoutMode, m_widgets.root);
+        connect(m_widgets.keypad, SIGNAL(buttonPressed(Keypad::Button)), SLOT(handleKeypadButtonPress(Keypad::Button)));
+        connect(this, SIGNAL(radixCharacterChanged()), m_widgets.keypad, SLOT(handleRadixCharacterChange()));
+    }
     m_widgets.keypad->setFocusPolicy(Qt::NoFocus);
-
-    connect(m_widgets.keypad, SIGNAL(buttonPressed(Keypad::Button)), SLOT(handleKeypadButtonPress(Keypad::Button)));
-    connect(this, SIGNAL(radixCharacterChanged()), m_widgets.keypad, SLOT(handleRadixCharacterChange()));
 
     m_layouts.keypad = new QHBoxLayout();
     m_layouts.keypad->addStretch();
@@ -1313,6 +1340,9 @@ void MainWindow::applySettings()
         break;
     case Settings::KeypadModeScientificNarrow:
         m_actions.viewKeypadScientificNarrow->setChecked(true);
+        break;
+    case Settings::KeypadModeCustom:
+        m_actions.viewKeypadCustom->setChecked(true);
         break;
     case Settings::KeypadModeDisabled:
     default:
@@ -2469,7 +2499,30 @@ void MainWindow::setKeypadMode(QAction* action)
         return;
 
     const Settings::KeypadMode mode = static_cast<Settings::KeypadMode>(action->data().toInt());
-    if (m_settings->keypadMode == mode)
+    const bool isCustomMode = (mode == Settings::KeypadModeCustom);
+    if (isCustomMode && !configureCustomKeypad()) {
+        switch (m_settings->keypadMode) {
+        case Settings::KeypadModeBasicWide:
+            m_actions.viewKeypadBasicWide->setChecked(true);
+            break;
+        case Settings::KeypadModeScientificWide:
+            m_actions.viewKeypadScientificWide->setChecked(true);
+            break;
+        case Settings::KeypadModeScientificNarrow:
+            m_actions.viewKeypadScientificNarrow->setChecked(true);
+            break;
+        case Settings::KeypadModeCustom:
+            m_actions.viewKeypadCustom->setChecked(true);
+            break;
+        case Settings::KeypadModeDisabled:
+        default:
+            m_actions.viewKeypadDisabled->setChecked(true);
+            break;
+        }
+        return;
+    }
+
+    if (m_settings->keypadMode == mode && !isCustomMode)
         return;
 
     const bool wasVisible = isVisibleKeypadMode(m_settings->keypadMode);
@@ -2483,6 +2536,16 @@ void MainWindow::setKeypadMode(QAction* action)
     }
 
     setKeypadVisible(nowVisible);
+}
+
+bool MainWindow::configureCustomKeypad()
+{
+    CustomKeypadDialog dialog(m_settings->customKeypad, this);
+    if (dialog.exec() != QDialog::Accepted)
+        return false;
+
+    m_settings->customKeypad = dialog.customKeypad();
+    return true;
 }
 
 void MainWindow::setResultFormatBinary()
@@ -2797,6 +2860,35 @@ void MainWindow::handleKeypadButtonPress(Keypad::Button b)
     case Keypad::KeyEquals: evaluateEditorExpression(); break;
 
     default: break;
+    }
+}
+
+void MainWindow::handleCustomKeypadButtonPress(int action, const QString& text)
+{
+    switch (static_cast<Settings::CustomKeypadButtonAction>(action)) {
+    case Settings::CustomKeypadActionInsertText:
+        insertTextIntoEditor(text);
+        break;
+    case Settings::CustomKeypadActionBackspace: {
+        QTextCursor cursor = m_widgets.editor->textCursor();
+        if (cursor.hasSelection())
+            cursor.removeSelectedText();
+        else
+            cursor.deletePreviousChar();
+        m_widgets.editor->setTextCursor(cursor);
+        if (!isActiveWindow())
+            activateWindow();
+        m_widgets.editor->setFocus();
+        break;
+    }
+    case Settings::CustomKeypadActionClearExpression:
+        clearEditor();
+        break;
+    case Settings::CustomKeypadActionEvaluateExpression:
+        evaluateEditorExpression();
+        break;
+    default:
+        break;
     }
 }
 

@@ -28,6 +28,9 @@
 #include <QSettings>
 #include <QApplication>
 #include <QFont>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QtCore/QStandardPaths>
 
 #ifdef Q_OS_WIN
@@ -50,6 +53,78 @@ static const int ConfigVersion = 1200;
 
 
 static const char* DefaultColorScheme = "Terminal";
+
+namespace {
+static const int MinCustomKeypadDimension = 1;
+static const int MaxCustomKeypadDimension = 20;
+
+bool isValidCustomAction(int action)
+{
+    return action >= static_cast<int>(Settings::CustomKeypadActionInsertText)
+        && action <= static_cast<int>(Settings::CustomKeypadActionEvaluateExpression);
+}
+
+QJsonObject serializeCustomKeypad(const Settings::CustomKeypad& keypad)
+{
+    QJsonObject json;
+    json.insert(QStringLiteral("rows"), keypad.rows);
+    json.insert(QStringLiteral("columns"), keypad.columns);
+
+    QJsonArray buttonsJson;
+    for (const auto& button : keypad.buttons) {
+        QJsonObject item;
+        item.insert(QStringLiteral("row"), button.row);
+        item.insert(QStringLiteral("column"), button.column);
+        item.insert(QStringLiteral("label"), button.label);
+        item.insert(QStringLiteral("text"), button.text);
+        item.insert(QStringLiteral("action"), static_cast<int>(button.action));
+        buttonsJson.push_back(item);
+    }
+    json.insert(QStringLiteral("buttons"), buttonsJson);
+    return json;
+}
+
+bool deserializeCustomKeypad(const QJsonObject& json, Settings::CustomKeypad* keypad)
+{
+    if (!keypad || !json.contains(QStringLiteral("rows")) || !json.contains(QStringLiteral("columns")))
+        return false;
+
+    const int rows = json.value(QStringLiteral("rows")).toInt(0);
+    const int columns = json.value(QStringLiteral("columns")).toInt(0);
+    if (rows < MinCustomKeypadDimension || rows > MaxCustomKeypadDimension
+            || columns < MinCustomKeypadDimension || columns > MaxCustomKeypadDimension) {
+        return false;
+    }
+
+    Settings::CustomKeypad parsed;
+    parsed.rows = rows;
+    parsed.columns = columns;
+
+    const QJsonArray buttonsJson = json.value(QStringLiteral("buttons")).toArray();
+    for (const auto& buttonValue : buttonsJson) {
+        if (!buttonValue.isObject())
+            continue;
+        const QJsonObject buttonJson = buttonValue.toObject();
+        const int row = buttonJson.value(QStringLiteral("row")).toInt(-1);
+        const int column = buttonJson.value(QStringLiteral("column")).toInt(-1);
+        const int action = buttonJson.value(QStringLiteral("action")).toInt(
+            static_cast<int>(Settings::CustomKeypadActionInsertText));
+        if (row < 0 || row >= rows || column < 0 || column >= columns || !isValidCustomAction(action))
+            continue;
+
+        Settings::CustomKeypadButton button;
+        button.row = row;
+        button.column = column;
+        button.label = buttonJson.value(QStringLiteral("label")).toString();
+        button.text = buttonJson.value(QStringLiteral("text")).toString();
+        button.action = static_cast<Settings::CustomKeypadButtonAction>(action);
+        parsed.buttons.append(button);
+    }
+
+    *keypad = parsed;
+    return true;
+}
+} // namespace
 
 QString Settings::getConfigPath()
 {
@@ -125,6 +200,55 @@ Settings* Settings::instance()
     }
 
     return s_settingsInstance;
+}
+
+Settings::CustomKeypad Settings::defaultCustomKeypad()
+{
+    Settings::CustomKeypad custom;
+    custom.rows = 4;
+    custom.columns = 5;
+
+    static const struct {
+        int row;
+        int column;
+        const char* label;
+        const char* text;
+        Settings::CustomKeypadButtonAction action;
+    } defaults[] = {
+        {0, 0, "7", "7", Settings::CustomKeypadActionInsertText},
+        {0, 1, "8", "8", Settings::CustomKeypadActionInsertText},
+        {0, 2, "9", "9", Settings::CustomKeypadActionInsertText},
+        {0, 3, "÷", "÷", Settings::CustomKeypadActionInsertText},
+        {0, 4, "⌧", "", Settings::CustomKeypadActionClearExpression},
+        {1, 0, "4", "4", Settings::CustomKeypadActionInsertText},
+        {1, 1, "5", "5", Settings::CustomKeypadActionInsertText},
+        {1, 2, "6", "6", Settings::CustomKeypadActionInsertText},
+        {1, 3, "×", "×", Settings::CustomKeypadActionInsertText},
+        {1, 4, "⌫", "", Settings::CustomKeypadActionBackspace},
+        {2, 0, "1", "1", Settings::CustomKeypadActionInsertText},
+        {2, 1, "2", "2", Settings::CustomKeypadActionInsertText},
+        {2, 2, "3", "3", Settings::CustomKeypadActionInsertText},
+        {2, 3, "−", "−", Settings::CustomKeypadActionInsertText},
+        {2, 4, "(", "(", Settings::CustomKeypadActionInsertText},
+        {3, 0, "0", "0", Settings::CustomKeypadActionInsertText},
+        {3, 1, ".", ".", Settings::CustomKeypadActionInsertText},
+        {3, 2, "=", "", Settings::CustomKeypadActionEvaluateExpression},
+        {3, 3, "+", "+", Settings::CustomKeypadActionInsertText},
+        {3, 4, ")", ")", Settings::CustomKeypadActionInsertText}
+    };
+
+    const int count = int(sizeof defaults / sizeof defaults[0]);
+    for (int i = 0; i < count; ++i) {
+        Settings::CustomKeypadButton button;
+        button.row = defaults[i].row;
+        button.column = defaults[i].column;
+        button.label = QString::fromUtf8(defaults[i].label);
+        button.text = QString::fromUtf8(defaults[i].text);
+        button.action = defaults[i].action;
+        custom.buttons.append(button);
+    }
+
+    return custom;
 }
 
 Settings::Settings()
@@ -234,6 +358,7 @@ void Settings::load()
         resultPrecision = DECPRECISION;
 
     key = KEY + QLatin1String("/Layout/");
+    customKeypad = defaultCustomKeypad();
     windowOnfullScreen = settings->value(key + QLatin1String("WindowOnFullScreen"), false).toBool();
     historyDockVisible = settings->value(key + QLatin1String("HistoryDockVisible"), false).toBool();
     int keypadModeValue = static_cast<int>(KeypadModeBasicWide);
@@ -246,7 +371,7 @@ void Settings::load()
             : static_cast<int>(KeypadModeDisabled);
     }
     if (keypadModeValue >= static_cast<int>(KeypadModeDisabled)
-            && keypadModeValue <= static_cast<int>(KeypadModeScientificNarrow)) {
+            && keypadModeValue <= static_cast<int>(KeypadModeCustom)) {
         keypadMode = static_cast<KeypadMode>(keypadModeValue);
     } else {
         keypadMode = KeypadModeBasicWide;
@@ -255,7 +380,14 @@ void Settings::load()
         keypadMode = KeypadModeBasicWide;
     keypadVisible = (keypadMode == KeypadModeBasicWide
         || keypadMode == KeypadModeScientificWide
-        || keypadMode == KeypadModeScientificNarrow);
+        || keypadMode == KeypadModeScientificNarrow
+        || keypadMode == KeypadModeCustom);
+    const QString customKeypadJson = settings->value(key + QLatin1String("CustomKeypad"), QString()).toString();
+    if (!customKeypadJson.isEmpty()) {
+        const QJsonDocument doc = QJsonDocument::fromJson(customKeypadJson.toUtf8());
+        if (doc.isObject())
+            deserializeCustomKeypad(doc.object(), &customKeypad);
+    }
     statusBarVisible = settings->value(key + QLatin1String("StatusBarVisible"), false).toBool();
     menuBarVisible = settings->value(key + QLatin1String("MenuBarVisible"), true).toBool();
     functionsDockVisible = settings->value(key + QLatin1String("FunctionsDockVisible"), false).toBool();
@@ -331,7 +463,10 @@ void Settings::save()
     settings->setValue(key + QLatin1String("KeypadVisible"),
         keypadMode == KeypadModeBasicWide
         || keypadMode == KeypadModeScientificWide
-        || keypadMode == KeypadModeScientificNarrow);
+        || keypadMode == KeypadModeScientificNarrow
+        || keypadMode == KeypadModeCustom);
+    settings->setValue(key + QLatin1String("CustomKeypad"),
+        QString::fromUtf8(QJsonDocument(serializeCustomKeypad(customKeypad)).toJson(QJsonDocument::Compact)));
     settings->setValue(key + QLatin1String("StatusBarVisible"), statusBarVisible);
     settings->setValue(key + QLatin1String("MenuBarVisible"), menuBarVisible);
     settings->setValue(key + QLatin1String("VariablesDockVisible"), variablesDockVisible);

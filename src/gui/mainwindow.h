@@ -103,6 +103,7 @@ private slots:
     void handleBitsChanged(const QString&);
     void handleKeypadButtonPress(Keypad::Button);
     void handleEditorTextChange();
+    void handleCustomKeypadButtonPress(int action, const QString& text);
     void handleDisplaySelectionChange();
     void handleEditorSelectionChange();
     void handleManualClosed();
@@ -263,6 +264,7 @@ private:
     void saveSettings();
     void saveSessionToDefaultPath();
     void saveSession(QString &fname);
+    bool configureCustomKeypad();
     void setActionsText();
     void setMenusText();
     void setStatusBarText();
@@ -298,6 +300,7 @@ private:
         QAction* viewKeypadBasicWide;
         QAction* viewKeypadScientificWide;
         QAction* viewKeypadScientificNarrow;
+        QAction* viewKeypadCustom;
         QAction* viewFormulaBook;
         QAction* viewConstants;
         QAction* viewFunctions;

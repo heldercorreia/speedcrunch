@@ -40,12 +40,22 @@ They can be enabled and disabled via the :menuselection:`View` menu.
     access to many of SpeedCrunch's more advanced features. For that reason, using SpeedCrunch's keyboard interface is recommended
     in place of using the keypad.
 
-    Available layouts in :menuselection:`View --> Keypad` are:
+    Available entries in :menuselection:`View --> Keypad` are:
 
     * ``Basic`` (**default**)
     * ``Scientific (wide)``
     * ``Scientific (narrow)``
+    * ``Custom...``
     * ``Disabled``
+
+    ``Custom...`` opens a dialog where you can define the keypad matrix size (rows and columns)
+    and configure each button individually. For each position in the matrix, you can set:
+
+    * The button label shown in the keypad
+    * The button behavior: ``Insert text``, ``Backspace``, ``Clear expression``, or ``Evaluate expression``
+    * The text to insert (for ``Insert text`` behavior)
+
+    Custom keypad settings are saved and restored automatically.
 
     .. versionchanged:: 0.11
        The keypad was removed in SpeedCrunch 0.11; however, it was added back in 0.12.

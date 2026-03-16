@@ -21,6 +21,7 @@ gui/aboutbox.h
 gui/bitfieldwidget.h
 gui/bookdock.h
 gui/constantswidget.h
+gui/customkeypaddialog.h
 gui/editor.h
 gui/functionswidget.h
 gui/historywidget.h
@@ -76,6 +77,7 @@ gui/aboutbox.cpp
 gui/bitfieldwidget.cpp
 gui/bookdock.cpp
 gui/constantswidget.cpp
+gui/customkeypaddialog.cpp
 gui/editor.cpp
 gui/functionswidget.cpp
 gui/historywidget.cpp

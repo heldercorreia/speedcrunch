@@ -143,6 +143,7 @@ QHash<Keypad::Button, QPoint> createLayoutMap(Keypad::LayoutMode layoutMode)
 Keypad::Keypad(LayoutMode layoutMode, QWidget* parent)
     : QWidget(parent)
     , m_layoutMode(layoutMode)
+    , m_isCustom(false)
 {
     createButtons();
     sizeButtons();
@@ -152,13 +153,30 @@ Keypad::Keypad(LayoutMode layoutMode, QWidget* parent)
     setLayoutDirection(Qt::LeftToRight);
 }
 
+Keypad::Keypad(const QList<CustomButtonDescription>& customButtons, QWidget* parent)
+    : QWidget(parent)
+    , m_layoutMode(LayoutModeScientificWide)
+    , m_isCustom(true)
+    , m_customButtons(customButtons)
+{
+    createCustomButtons();
+    sizeCustomButtons();
+    layoutCustomButtons();
+    disableButtonFocus();
+    setLayoutDirection(Qt::LeftToRight);
+}
+
 void Keypad::handleRadixCharacterChange()
 {
+    if (m_isCustom)
+        return;
     key(KeyRadixChar)->setText(QString(QChar(Settings::instance()->radixCharacter())));
 }
 
 void Keypad::retranslateText()
 {
+    if (m_isCustom)
+        return;
     setButtonTooltips();
     handleRadixCharacterChange();
 }
@@ -175,7 +193,8 @@ void Keypad::createButtons()
 
     QFont boldFont;
     boldFont.setBold(true);
-    boldFont.setPointSize(boldFont.pointSize() + 3);
+    QFont emphasizedBoldFont = boldFont;
+    emphasizedBoldFont.setPointSize(emphasizedBoldFont.pointSize() + 3);
 
     static const int keyDescriptionsCount = int(sizeof keyDescriptions / sizeof keyDescriptions[0]);
     for (int i = 0; i < keyDescriptionsCount; ++i) {
@@ -195,8 +214,7 @@ void Keypad::createButtons()
             " background-color: palette(mid);"
             "}"
         ));
-        if (description->boldFont)
-            key->setFont(boldFont);
+        key->setFont(description->boldFont ? emphasizedBoldFont : boldFont);
         const QPair<QPushButton*, const KeyDescription*> hashValue(key, description);
         keys.insert(description->button, hashValue);
 
@@ -215,10 +233,15 @@ void Keypad::disableButtonFocus()
         i.next();
         i.value().first->setFocusPolicy(Qt::NoFocus);
     }
+    for (auto* button : m_customWidgets)
+        button->setFocusPolicy(Qt::NoFocus);
 }
 
 void Keypad::layoutButtons()
 {
+    if (m_isCustom)
+        return;
+
     int layoutSpacing = 0;
 
 #if QT_VERSION >= 0x040400 && defined(Q_WS_MAC) && !defined(QT_NO_STYLE_MAC)
@@ -252,8 +275,55 @@ void Keypad::layoutButtons()
     }
 }
 
+void Keypad::createCustomButtons()
+{
+    QFont boldFont;
+    boldFont.setBold(true);
+
+    for (const auto& description : m_customButtons) {
+        QPushButton* key = new QPushButton(description.label, this);
+        key->setFont(boldFont);
+        key->setStyleSheet(QString::fromLatin1(
+            "QPushButton {"
+            " border: 1px solid palette(mid);"
+            " background-color: palette(button);"
+            "}"
+            "QPushButton:hover {"
+            " border: 1px solid palette(dark);"
+            " background-color: palette(light);"
+            "}"
+            "QPushButton:pressed {"
+            " border: 2px solid palette(shadow);"
+            " background-color: palette(mid);"
+            "}"
+        ));
+        QObject::connect(key, &QPushButton::clicked, this, [this, description]() {
+            emit customButtonPressed(description.action, description.text);
+        });
+        m_customWidgets.append(key);
+    }
+}
+
+void Keypad::layoutCustomButtons()
+{
+    if (!m_isCustom)
+        return;
+
+    int layoutSpacing = 0;
+    QGridLayout* layout = new QGridLayout(this);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(layoutSpacing);
+
+    const int count = qMin(m_customButtons.size(), m_customWidgets.size());
+    for (int i = 0; i < count; ++i)
+        layout->addWidget(m_customWidgets.at(i), m_customButtons.at(i).row, m_customButtons.at(i).column);
+}
+
 void Keypad::setButtonTooltips()
 {
+    if (m_isCustom)
+        return;
+
     key(KeyAcos)->setToolTip(Keypad::tr("Inverse cosine"));
     key(KeyAns)->setToolTip(Keypad::tr("The last result"));
     key(KeyAsin)->setToolTip(Keypad::tr("Inverse sine"));
@@ -288,6 +358,9 @@ void Keypad::setButtonTooltips()
 
 void Keypad::sizeButtons()
 {
+    if (m_isCustom)
+        return;
+
     // The same font in all buttons, so just pick one.
     QFontMetrics fm = key(Key0)->fontMetrics();
 
@@ -321,6 +394,39 @@ void Keypad::sizeButtons()
         i.next();
         i.value().first->setFixedSize(size);
     }
+}
+
+void Keypad::sizeCustomButtons()
+{
+    if (!m_isCustom || m_customWidgets.isEmpty())
+        return;
+
+    // Match preset keypad sizing baseline exactly (bold, larger numeric key font).
+    QFont boldFont = m_customWidgets.first()->font();
+    boldFont.setBold(true);
+    boldFont.setPointSize(boldFont.pointSize() + 3);
+    const QFontMetrics fm(boldFont);
+    const int maxWidth = fm.horizontalAdvance(QStringLiteral("arccos"));
+    const int textHeight = qMax(fm.lineSpacing(), 14);
+
+    QStyle::ContentsType type = QStyle::CT_ToolButton;
+    QStyleOptionButton option;
+    const QWidget* exampleWidget = m_customWidgets.first();
+    option.initFrom(exampleWidget);
+    QSize minSize = QSize(maxWidth, textHeight);
+    QSize size = exampleWidget->style()->sizeFromContents(type, &option, minSize, exampleWidget);
+
+#ifdef Q_WS_X11
+    maxWidth += 6;
+    int hh = size.height();
+    size = QSize(qMax(hh, maxWidth), hh);
+#endif
+
+    const int side = qMax(size.width(), size.height());
+    size = QSize(side, side);
+
+    for (auto* button : m_customWidgets)
+        button->setFixedSize(size);
 }
 
 void Keypad::changeEvent(QEvent* event)

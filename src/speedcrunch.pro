@@ -76,6 +76,7 @@ HEADERS += core/book.h \
            gui/bitfieldwidget.h \
            gui/bookdock.h \
            gui/constantswidget.h \
+           gui/customkeypaddialog.h \
            gui/resultdisplay.h \
            gui/editor.h \
            gui/functionswidget.h \
@@ -131,6 +132,7 @@ SOURCES += main.cpp \
            gui/bitfieldwidget.cpp \
            gui/bookdock.cpp \
            gui/constantswidget.cpp \
+           gui/customkeypaddialog.cpp \
            gui/resultdisplay.cpp \
            gui/editor.cpp \
            gui/functionswidget.cpp \
