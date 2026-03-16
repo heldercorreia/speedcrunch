@@ -35,6 +35,14 @@ public:
         HistorySavingContinuously = 2
     };
 
+    enum KeypadMode {
+        KeypadModeDisabled = 0,
+        KeypadModeBasicWide = 1,
+        KeypadModeBasicNarrow = 2,
+        KeypadModeScientificWide = 3,
+        KeypadModeScientificNarrow = 4
+    };
+
     static Settings* instance();
     static QString getConfigPath();
     static QString getDataPath();
@@ -77,6 +85,7 @@ public:
     bool functionsDockVisible;
     bool historyDockVisible;
     bool keypadVisible;
+    KeypadMode keypadMode;
     bool formulaBookDockVisible;
     bool statusBarVisible;
     bool menuBarVisible;

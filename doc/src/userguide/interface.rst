@@ -40,6 +40,13 @@ They can be enabled and disabled via the :menuselection:`View` menu.
     access to many of SpeedCrunch's more advanced features. For that reason, using SpeedCrunch's keyboard interface is recommended
     in place of using the keypad.
 
+    Available layouts in :menuselection:`View --> Keypad` are:
+
+    * ``Basic`` (**default**)
+    * ``Scientific (wide)``
+    * ``Scientific (narrow)``
+    * ``Disabled``
+
     .. versionchanged:: 0.11
        The keypad was removed in SpeedCrunch 0.11; however, it was added back in 0.12.
 
@@ -292,8 +299,6 @@ Widgets and Docks
     Show/hide history widget.
 * :kbd:`Control+B`
     Show/hide the status bar.
-* :kbd:`Control+K`
-    Show/hide the keypad.
 
 Scrolling
 +++++++++

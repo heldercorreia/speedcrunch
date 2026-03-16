@@ -140,6 +140,7 @@ private slots:
     void setFunctionsDockVisible(bool, bool takeFocus = true);
     void setHistoryDockVisible(bool, bool takeFocus = true);
     void setHistorySaving(QAction*);
+    void setKeypadMode(QAction*);
     void setKeypadVisible(bool);
     void setLeaveLastExpressionEnabled(bool);
     void setEmptyHistoryHintEnabled(bool);
@@ -293,7 +294,10 @@ private:
         QAction* editClearExpression;
         QAction* editClearHistory;
         QAction* editWrapSelection;
-        QAction* viewKeypad;
+        QAction* viewKeypadDisabled;
+        QAction* viewKeypadBasicWide;
+        QAction* viewKeypadScientificWide;
+        QAction* viewKeypadScientificNarrow;
         QAction* viewFormulaBook;
         QAction* viewConstants;
         QAction* viewFunctions;
@@ -394,6 +398,7 @@ private:
         QActionGroup* radixChar;
         QActionGroup* digitGrouping;
         QActionGroup* historySaving;
+        QActionGroup* keypad;
     } m_actionGroups;
 
     struct {
@@ -421,6 +426,7 @@ private:
         QMenu* sessionExport;
         QMenu* settings;
         QMenu* view;
+        QMenu* keypad;
         QMenu* window;
     } m_menus;
 

@@ -2,7 +2,7 @@ First Steps
 ===========
 
 SpeedCrunch is designed to be used via the keyboard. While an :ref:`on-screen keypad <keypad>` is available,
-it is disabled by default. The powerful keyboard interface is the recommended way to
+it defaults to the **Basic** layout. The powerful keyboard interface is the recommended way to
 use SpeedCrunch to get the most out of it. However, the keypad can be enabled from:
 :menuselection:`View --> Keypad`.
 

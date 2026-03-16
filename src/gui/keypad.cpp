@@ -25,6 +25,7 @@
 #include <QHash>
 #include <QApplication>
 #include <QGridLayout>
+#include <QPoint>
 #include <QPushButton>
 #include <QStyle>
 #include <QStyleOptionButton>
@@ -76,8 +77,72 @@ const Keypad::KeyDescription Keypad::keyDescriptions[] = {
     {QString::fromUtf8("√"), KeySqrt, false, 0, 6}
 };
 
-Keypad::Keypad(QWidget* parent)
+namespace {
+struct LayoutEntry {
+    Keypad::Button button;
+    int row;
+    int column;
+};
+
+const LayoutEntry s_basicWideLayout[] = {
+    {Keypad::Key7, 0, 0}, {Keypad::Key8, 0, 1}, {Keypad::Key9, 0, 2}, {Keypad::KeyDivide, 0, 3}, {Keypad::KeyClear, 0, 4},
+    {Keypad::Key4, 1, 0}, {Keypad::Key5, 1, 1}, {Keypad::Key6, 1, 2}, {Keypad::KeyTimes, 1, 3}, {Keypad::KeyBackspace, 1, 4},
+    {Keypad::Key1, 2, 0}, {Keypad::Key2, 2, 1}, {Keypad::Key3, 2, 2}, {Keypad::KeyMinus, 2, 3}, {Keypad::KeyLeftPar, 2, 4},
+    {Keypad::Key0, 3, 0}, {Keypad::KeyRadixChar, 3, 1}, {Keypad::KeyEquals, 3, 2}, {Keypad::KeyPlus, 3, 3}, {Keypad::KeyRightPar, 3, 4}
+};
+
+const LayoutEntry s_scientificWideLayout[] = {
+    {Keypad::Key7, 0, 0}, {Keypad::Key8, 0, 1}, {Keypad::Key9, 0, 2}, {Keypad::KeyDivide, 0, 3},
+    {Keypad::KeyClear, 0, 4}, {Keypad::KeyBackspace, 0, 5}, {Keypad::KeySqrt, 0, 6},
+    {Keypad::KeyExp, 0, 7}, {Keypad::KeyLn, 0, 8}, {Keypad::KeyPi, 0, 9},
+    {Keypad::Key4, 1, 0}, {Keypad::Key5, 1, 1}, {Keypad::Key6, 1, 2}, {Keypad::KeyTimes, 1, 3},
+    {Keypad::KeyEE, 1, 4}, {Keypad::KeyRaise, 1, 5}, {Keypad::KeyCbrt, 1, 6},
+    {Keypad::KeySin, 1, 7}, {Keypad::KeyAsin, 1, 8}, {Keypad::KeyAns, 1, 9},
+    {Keypad::Key1, 2, 0}, {Keypad::Key2, 2, 1}, {Keypad::Key3, 2, 2}, {Keypad::KeyMinus, 2, 3},
+    {Keypad::KeyLeftPar, 2, 4}, {Keypad::KeyRightPar, 2, 5}, {Keypad::KeyLg, 2, 6},
+    {Keypad::KeyCos, 2, 7}, {Keypad::KeyAcos, 2, 8}, {Keypad::KeyX, 2, 9},
+    {Keypad::Key0, 3, 0}, {Keypad::KeyRadixChar, 3, 1}, {Keypad::KeyEquals, 3, 2}, {Keypad::KeyPlus, 3, 3},
+    {Keypad::KeyPercent, 3, 4}, {Keypad::KeyFactorial, 3, 5}, {Keypad::KeyMod, 3, 6},
+    {Keypad::KeyTan, 3, 7}, {Keypad::KeyAtan, 3, 8}, {Keypad::KeyXEquals, 3, 9}
+};
+
+const LayoutEntry s_scientificNarrowLayout[] = {
+    {Keypad::Key7, 0, 0}, {Keypad::Key8, 0, 1}, {Keypad::Key9, 0, 2}, {Keypad::KeyDivide, 0, 3}, {Keypad::KeyClear, 0, 4},
+    {Keypad::Key4, 1, 0}, {Keypad::Key5, 1, 1}, {Keypad::Key6, 1, 2}, {Keypad::KeyTimes, 1, 3}, {Keypad::KeyBackspace, 1, 4},
+    {Keypad::Key1, 2, 0}, {Keypad::Key2, 2, 1}, {Keypad::Key3, 2, 2}, {Keypad::KeyMinus, 2, 3}, {Keypad::KeyLeftPar, 2, 4},
+    {Keypad::Key0, 3, 0}, {Keypad::KeyRadixChar, 3, 1}, {Keypad::KeyEquals, 3, 2}, {Keypad::KeyPlus, 3, 3}, {Keypad::KeyRightPar, 3, 4},
+    {Keypad::KeyEE, 4, 0}, {Keypad::KeySqrt, 4, 1}, {Keypad::KeyExp, 4, 2}, {Keypad::KeyLn, 4, 3}, {Keypad::KeyPi, 4, 4},
+    {Keypad::KeyRaise, 5, 0}, {Keypad::KeyCbrt, 5, 1}, {Keypad::KeySin, 5, 2}, {Keypad::KeyAsin, 5, 3}, {Keypad::KeyAns, 5, 4},
+    {Keypad::KeyPercent, 6, 0}, {Keypad::KeyLg, 6, 1}, {Keypad::KeyCos, 6, 2}, {Keypad::KeyAcos, 6, 3}, {Keypad::KeyX, 6, 4},
+    {Keypad::KeyFactorial, 7, 0}, {Keypad::KeyMod, 7, 1}, {Keypad::KeyTan, 7, 2}, {Keypad::KeyAtan, 7, 3}, {Keypad::KeyXEquals, 7, 4}
+};
+
+QHash<Keypad::Button, QPoint> createLayoutMap(Keypad::LayoutMode layoutMode)
+{
+    QHash<Keypad::Button, QPoint> map;
+
+    const LayoutEntry* entries = nullptr;
+    int count = 0;
+    if (layoutMode == Keypad::LayoutModeScientificWide) {
+        entries = s_scientificWideLayout;
+        count = int(sizeof s_scientificWideLayout / sizeof s_scientificWideLayout[0]);
+    } else if (layoutMode == Keypad::LayoutModeScientificNarrow) {
+        entries = s_scientificNarrowLayout;
+        count = int(sizeof s_scientificNarrowLayout / sizeof s_scientificNarrowLayout[0]);
+    } else if (layoutMode == Keypad::LayoutModeBasicWide) {
+        entries = s_basicWideLayout;
+        count = int(sizeof s_basicWideLayout / sizeof s_basicWideLayout[0]);
+    }
+
+    for (int i = 0; i < count; ++i)
+        map.insert(entries[i].button, QPoint(entries[i].column, entries[i].row));
+    return map;
+}
+} // namespace
+
+Keypad::Keypad(LayoutMode layoutMode, QWidget* parent)
     : QWidget(parent)
+    , m_layoutMode(layoutMode)
 {
     createButtons();
     sizeButtons();
@@ -115,7 +180,7 @@ void Keypad::createButtons()
     static const int keyDescriptionsCount = int(sizeof keyDescriptions / sizeof keyDescriptions[0]);
     for (int i = 0; i < keyDescriptionsCount; ++i) {
         const KeyDescription* description = keyDescriptions + i;
-        QPushButton* key = new QPushButton(description->label);
+        QPushButton* key = new QPushButton(description->label, this);
         key->setStyleSheet(QString::fromLatin1(
             "QPushButton {"
             " border: 1px solid palette(mid);"
@@ -166,13 +231,24 @@ void Keypad::layoutButtons()
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(layoutSpacing);
 
+    // Hide everything first; only buttons added to the active layout are shown.
+    QHashIterator<Button, QPair<QPushButton*, const KeyDescription*> > hideIter(keys);
+    while (hideIter.hasNext()) {
+        hideIter.next();
+        hideIter.value().first->hide();
+    }
+
+    const QHash<Button, QPoint> positions = createLayoutMap(m_layoutMode);
     QHashIterator<Button, QPair<QPushButton*, const KeyDescription*> > i(keys);
     while (i.hasNext()) {
         i.next();
+        if (!positions.contains(i.key()))
+            continue;
+
         QWidget* widget = i.value().first;
-        const int row = i.value().second->gridRow;
-        const int column = i.value().second->gridColumn;
-        layout->addWidget(widget, row, column);
+        const QPoint pos = positions.value(i.key());
+        layout->addWidget(widget, pos.y(), pos.x());
+        widget->show();
     }
 }
 

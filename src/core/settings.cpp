@@ -236,7 +236,26 @@ void Settings::load()
     key = KEY + QLatin1String("/Layout/");
     windowOnfullScreen = settings->value(key + QLatin1String("WindowOnFullScreen"), false).toBool();
     historyDockVisible = settings->value(key + QLatin1String("HistoryDockVisible"), false).toBool();
-    keypadVisible = settings->value(key + QLatin1String("KeypadVisible"), false).toBool();
+    int keypadModeValue = static_cast<int>(KeypadModeBasicWide);
+    if (settings->contains(key + QLatin1String("KeypadMode"))) {
+        keypadModeValue = settings->value(key + QLatin1String("KeypadMode")).toInt();
+    } else if (settings->contains(key + QLatin1String("KeypadVisible"))) {
+        // Legacy compatibility for pre-keypad-mode settings.
+        keypadModeValue = settings->value(key + QLatin1String("KeypadVisible"), false).toBool()
+            ? static_cast<int>(KeypadModeScientificWide)
+            : static_cast<int>(KeypadModeDisabled);
+    }
+    if (keypadModeValue >= static_cast<int>(KeypadModeDisabled)
+            && keypadModeValue <= static_cast<int>(KeypadModeScientificNarrow)) {
+        keypadMode = static_cast<KeypadMode>(keypadModeValue);
+    } else {
+        keypadMode = KeypadModeBasicWide;
+    }
+    if (keypadMode == KeypadModeBasicNarrow)
+        keypadMode = KeypadModeBasicWide;
+    keypadVisible = (keypadMode == KeypadModeBasicWide
+        || keypadMode == KeypadModeScientificWide
+        || keypadMode == KeypadModeScientificNarrow);
     statusBarVisible = settings->value(key + QLatin1String("StatusBarVisible"), false).toBool();
     menuBarVisible = settings->value(key + QLatin1String("MenuBarVisible"), true).toBool();
     functionsDockVisible = settings->value(key + QLatin1String("FunctionsDockVisible"), false).toBool();
@@ -307,8 +326,12 @@ void Settings::save()
     settings->setValue(key + QLatin1String("ConstantsDockVisible"), constantsDockVisible);
     settings->setValue(key + QLatin1String("FunctionsDockVisible"), functionsDockVisible);
     settings->setValue(key + QLatin1String("HistoryDockVisible"), historyDockVisible);
+    settings->setValue(key + QLatin1String("KeypadMode"), static_cast<int>(keypadMode));
     settings->setValue(key + QLatin1String("WindowOnFullScreen"), windowOnfullScreen);
-    settings->setValue(key + QLatin1String("KeypadVisible"), keypadVisible);
+    settings->setValue(key + QLatin1String("KeypadVisible"),
+        keypadMode == KeypadModeBasicWide
+        || keypadMode == KeypadModeScientificWide
+        || keypadMode == KeypadModeScientificNarrow);
     settings->setValue(key + QLatin1String("StatusBarVisible"), statusBarVisible);
     settings->setValue(key + QLatin1String("MenuBarVisible"), menuBarVisible);
     settings->setValue(key + QLatin1String("VariablesDockVisible"), variablesDockVisible);

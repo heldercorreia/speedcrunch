@@ -29,6 +29,12 @@ class Keypad : public QWidget {
     Q_OBJECT
 
 public:
+    enum LayoutMode {
+        LayoutModeScientificWide = 0,
+        LayoutModeBasicWide = 1,
+        LayoutModeScientificNarrow = 2
+    };
+
     enum Button {
         Key0, Key1, Key2, Key3, Key4, Key5, Key6, Key7, Key8, Key9,
         KeyEquals, KeyPlus, KeyMinus, KeyTimes, KeyDivide,
@@ -38,7 +44,7 @@ public:
         KeyAcos, KeyTan, KeyAtan
     };
 
-    explicit Keypad(QWidget* parent = 0);
+    explicit Keypad(LayoutMode layoutMode = LayoutModeScientificWide, QWidget* parent = 0);
 
 signals:
     void buttonPressed(Keypad::Button) const;
@@ -68,6 +74,7 @@ private:
         int gridColumn;
     } keyDescriptions[];
 
+    LayoutMode m_layoutMode;
     QHash<Button, QPair<QPushButton*, const KeyDescription*> > keys;
 };
 

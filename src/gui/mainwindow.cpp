@@ -112,6 +112,13 @@ QTranslator* MainWindow::createTranslator(const QString& langCode)
     return translator;
 }
 
+static bool isVisibleKeypadMode(Settings::KeypadMode mode)
+{
+    return mode == Settings::KeypadModeBasicWide
+        || mode == Settings::KeypadModeScientificWide
+        || mode == Settings::KeypadModeScientificNarrow;
+}
+
 void MainWindow::createUi()
 {
     createActions();
@@ -146,7 +153,10 @@ void MainWindow::createActions()
     m_actions.viewFullScreenMode = new QAction(this);
     m_actions.viewFunctions = new QAction(this);
     m_actions.viewHistory = new QAction(this);
-    m_actions.viewKeypad = new QAction(this);
+    m_actions.viewKeypadDisabled = new QAction(this);
+    m_actions.viewKeypadBasicWide = new QAction(this);
+    m_actions.viewKeypadScientificWide = new QAction(this);
+    m_actions.viewKeypadScientificNarrow = new QAction(this);
     m_actions.viewFormulaBook = new QAction(this);
     m_actions.viewStatusBar = new QAction(this);
     m_actions.viewMenuBar = new QAction(this);
@@ -301,7 +311,14 @@ void MainWindow::createActions()
     m_actions.viewFullScreenMode->setCheckable(true);
     m_actions.viewFunctions->setCheckable(true);
     m_actions.viewHistory->setCheckable(true);
-    m_actions.viewKeypad->setCheckable(true);
+    m_actions.viewKeypadDisabled->setCheckable(true);
+    m_actions.viewKeypadDisabled->setData(Settings::KeypadModeDisabled);
+    m_actions.viewKeypadBasicWide->setCheckable(true);
+    m_actions.viewKeypadBasicWide->setData(Settings::KeypadModeBasicWide);
+    m_actions.viewKeypadScientificWide->setCheckable(true);
+    m_actions.viewKeypadScientificWide->setData(Settings::KeypadModeScientificWide);
+    m_actions.viewKeypadScientificNarrow->setCheckable(true);
+    m_actions.viewKeypadScientificNarrow->setData(Settings::KeypadModeScientificNarrow);
     m_actions.viewFormulaBook->setCheckable(true);
     m_actions.viewStatusBar->setCheckable(true);
     m_actions.viewMenuBar->setCheckable(true);
@@ -407,7 +424,10 @@ void MainWindow::setActionsText()
     m_actions.viewFullScreenMode->setText(MainWindow::tr("F&ull Screen Mode"));
     m_actions.viewFunctions->setText(MainWindow::tr("&Functions"));
     m_actions.viewHistory->setText(MainWindow::tr("&History"));
-    m_actions.viewKeypad->setText(MainWindow::tr("&Keypad"));
+    m_actions.viewKeypadDisabled->setText(MainWindow::tr("&Disabled"));
+    m_actions.viewKeypadBasicWide->setText(MainWindow::tr("&Basic"));
+    m_actions.viewKeypadScientificWide->setText(MainWindow::tr("&Scientific (wide)"));
+    m_actions.viewKeypadScientificNarrow->setText(MainWindow::tr("Scientific (narrow)"));
     m_actions.viewFormulaBook->setText(MainWindow::tr("Formula &Book"));
     m_actions.viewStatusBar->setText(MainWindow::tr("&Status Bar"));
     m_actions.viewMenuBar->setText(MainWindow::tr("Main &Menu"));
@@ -573,6 +593,12 @@ void MainWindow::createActionGroups()
     m_actionGroups.historySaving->addAction(m_actions.settingsBehaviorHistorySavingNever);
     m_actionGroups.historySaving->addAction(m_actions.settingsBehaviorHistorySavingOnExit);
     m_actionGroups.historySaving->addAction(m_actions.settingsBehaviorHistorySavingContinuously);
+
+    m_actionGroups.keypad = new QActionGroup(this);
+    m_actionGroups.keypad->addAction(m_actions.viewKeypadDisabled);
+    m_actionGroups.keypad->addAction(m_actions.viewKeypadBasicWide);
+    m_actionGroups.keypad->addAction(m_actions.viewKeypadScientificWide);
+    m_actionGroups.keypad->addAction(m_actions.viewKeypadScientificNarrow);
 }
 
 void MainWindow::createActionShortcuts()
@@ -591,7 +617,6 @@ void MainWindow::createActionShortcuts()
     m_actions.viewFullScreenMode->setShortcut(Qt::Key_F11);
     m_actions.viewFunctions->setShortcut(Qt::CTRL | Qt::Key_3);
     m_actions.viewHistory->setShortcut(Qt::CTRL | Qt::Key_7);
-    m_actions.viewKeypad->setShortcut(Qt::CTRL | Qt::Key_K);
     m_actions.viewFormulaBook->setShortcut(Qt::CTRL | Qt::Key_1);
     m_actions.viewStatusBar->setShortcut(Qt::CTRL | Qt::Key_B);
     m_actions.viewVariables->setShortcut(Qt::CTRL | Qt::Key_4);
@@ -636,7 +661,11 @@ void MainWindow::createMenus()
 
     m_menus.view = new QMenu("", this);
     menuBar()->addMenu(m_menus.view);
-    m_menus.view->addAction(m_actions.viewKeypad);
+    m_menus.keypad = m_menus.view->addMenu("");
+    m_menus.keypad->addAction(m_actions.viewKeypadDisabled);
+    m_menus.keypad->addAction(m_actions.viewKeypadBasicWide);
+    m_menus.keypad->addAction(m_actions.viewKeypadScientificWide);
+    m_menus.keypad->addAction(m_actions.viewKeypadScientificNarrow);
     m_menus.view->addSeparator();
     m_menus.view->addAction(m_actions.viewFormulaBook);
     m_menus.view->addAction(m_actions.viewConstants);
@@ -790,6 +819,7 @@ void MainWindow::setMenusText()
     m_menus.sessionExport->setTitle(MainWindow::tr("&Export"));
     m_menus.edit->setTitle(MainWindow::tr("&Edit"));
     m_menus.view->setTitle(MainWindow::tr("&View"));
+    m_menus.keypad->setTitle(MainWindow::tr("&Keypad"));
     m_menus.settings->setTitle(MainWindow::tr("Se&ttings"));
     m_menus.results->setTitle(MainWindow::tr("&Results"));
     m_menus.resultFormat->setTitle(MainWindow::tr("&Format"));
@@ -928,7 +958,15 @@ void MainWindow::createBitField() {
 
 void MainWindow::createKeypad()
 {
-    m_widgets.keypad = new Keypad(m_widgets.root);
+    if (m_widgets.keypad)
+        return;
+
+    Keypad::LayoutMode layoutMode = Keypad::LayoutModeScientificWide;
+    if (m_settings->keypadMode == Settings::KeypadModeBasicWide)
+        layoutMode = Keypad::LayoutModeBasicWide;
+    else if (m_settings->keypadMode == Settings::KeypadModeScientificNarrow)
+        layoutMode = Keypad::LayoutModeScientificNarrow;
+    m_widgets.keypad = new Keypad(layoutMode, m_widgets.root);
     m_widgets.keypad->setFocusPolicy(Qt::NoFocus);
 
     connect(m_widgets.keypad, SIGNAL(buttonPressed(Keypad::Button)), SLOT(handleKeypadButtonPress(Keypad::Button)));
@@ -1094,7 +1132,7 @@ void MainWindow::createFixedConnections()
     connect(m_actions.editWrapSelection, SIGNAL(triggered()), SLOT(wrapSelection()));
 
     connect(m_actions.viewFullScreenMode, SIGNAL(toggled(bool)), SLOT(setFullScreenEnabled(bool)));
-    connect(m_actions.viewKeypad, SIGNAL(toggled(bool)), SLOT(setKeypadVisible(bool)));
+    connect(m_actionGroups.keypad, SIGNAL(triggered(QAction*)), SLOT(setKeypadMode(QAction*)));
     connect(m_actions.viewStatusBar, SIGNAL(toggled(bool)), SLOT(setStatusBarVisible(bool)));
 #if !defined(Q_OS_MACOS)
     connect(m_actions.viewMenuBar, SIGNAL(toggled(bool)), SLOT(setMenuBarVisible(bool)));
@@ -1266,7 +1304,22 @@ void MainWindow::applySettings()
     m_actions.viewUserFunctions->setChecked(m_settings->userFunctionsDockVisible);
 
     m_actions.viewBitfield->setChecked(m_settings->bitfieldVisible);
-    m_actions.viewKeypad->setChecked(m_settings->keypadVisible);
+    switch (m_settings->keypadMode) {
+    case Settings::KeypadModeBasicWide:
+        m_actions.viewKeypadBasicWide->setChecked(true);
+        break;
+    case Settings::KeypadModeScientificWide:
+        m_actions.viewKeypadScientificWide->setChecked(true);
+        break;
+    case Settings::KeypadModeScientificNarrow:
+        m_actions.viewKeypadScientificNarrow->setChecked(true);
+        break;
+    case Settings::KeypadModeDisabled:
+    default:
+        m_actions.viewKeypadDisabled->setChecked(true);
+        break;
+    }
+    setKeypadVisible(isVisibleKeypadMode(m_settings->keypadMode));
     m_actions.viewStatusBar->setChecked(m_settings->statusBarVisible);
 #if !defined(Q_OS_MACOS)
     setMenuBarVisible(m_settings->menuBarVisible);
@@ -2243,6 +2296,9 @@ bool MainWindow::eventFilter(QObject* o, QEvent* e)
 
 void MainWindow::deleteKeypad()
 {
+    if (!m_widgets.keypad)
+        return;
+
     disconnect(m_widgets.keypad);
     m_widgets.keypad->deleteLater();
     m_widgets.keypad = 0;
@@ -2401,10 +2457,32 @@ void MainWindow::setUserFunctionsDockVisible(bool b, bool takeFocus)
 
 void MainWindow::setKeypadVisible(bool b)
 {
-    if (b)
+    if (b && !m_widgets.keypad)
         createKeypad();
-    else
+    else if (!b && m_widgets.keypad)
         deleteKeypad();
+}
+
+void MainWindow::setKeypadMode(QAction* action)
+{
+    if (!action)
+        return;
+
+    const Settings::KeypadMode mode = static_cast<Settings::KeypadMode>(action->data().toInt());
+    if (m_settings->keypadMode == mode)
+        return;
+
+    const bool wasVisible = isVisibleKeypadMode(m_settings->keypadMode);
+    const bool nowVisible = isVisibleKeypadMode(mode);
+    m_settings->keypadMode = mode;
+
+    if (wasVisible && nowVisible) {
+        deleteKeypad();
+        createKeypad();
+        return;
+    }
+
+    setKeypadVisible(nowVisible);
 }
 
 void MainWindow::setResultFormatBinary()
