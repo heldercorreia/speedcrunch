@@ -29,6 +29,7 @@
 #include <QHeaderView>
 #include <QLabel>
 #include <QLineEdit>
+#include <QShortcut>
 #include <QTreeWidget>
 #include <QVBoxLayout>
 
@@ -79,6 +80,18 @@ ConstantsWidget::ConstantsWidget(QWidget* parent)
     m_list->setCursor(QCursor(Qt::PointingHandCursor));
 
     connect(m_list, SIGNAL(itemActivated(QTreeWidgetItem*, int)), SLOT(handleItem(QTreeWidgetItem*)));
+    QShortcut* returnShortcut = new QShortcut(QKeySequence(Qt::Key_Return), this);
+    returnShortcut->setContext(Qt::WidgetWithChildrenShortcut);
+    connect(returnShortcut, &QShortcut::activated, this, [this]() {
+        if (QTreeWidgetItem* current = m_list->currentItem())
+            handleItem(current);
+    });
+    QShortcut* enterShortcut = new QShortcut(QKeySequence(Qt::Key_Enter), this);
+    enterShortcut->setContext(Qt::WidgetWithChildrenShortcut);
+    connect(enterShortcut, &QShortcut::activated, this, [this]() {
+        if (QTreeWidgetItem* current = m_list->currentItem())
+            handleItem(current);
+    });
 
     QVBoxLayout* layout = new QVBoxLayout;
     setLayout(layout);
@@ -250,4 +263,3 @@ void ConstantsWidget::changeEvent(QEvent* e)
     else
         QWidget::changeEvent(e);
 }
-

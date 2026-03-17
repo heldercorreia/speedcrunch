@@ -28,6 +28,7 @@
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QMenu>
+#include <QShortcut>
 #include <QRegularExpression>
 #include <QVBoxLayout>
 
@@ -141,6 +142,18 @@ HistoryWidget::HistoryWidget(QWidget *parent)
     connect(m_list, SIGNAL(itemActivated(QListWidgetItem *)), SLOT(handleItem(QListWidgetItem *)));
     connect(m_list, SIGNAL(customContextMenuRequested(const QPoint &)),
             SLOT(handleContextMenuRequested(const QPoint &)));
+    QShortcut* returnShortcut = new QShortcut(QKeySequence(Qt::Key_Return), this);
+    returnShortcut->setContext(Qt::WidgetWithChildrenShortcut);
+    connect(returnShortcut, &QShortcut::activated, this, [this]() {
+        if (QListWidgetItem* current = m_list->currentItem())
+            handleItem(current);
+    });
+    QShortcut* enterShortcut = new QShortcut(QKeySequence(Qt::Key_Enter), this);
+    enterShortcut->setContext(Qt::WidgetWithChildrenShortcut);
+    connect(enterShortcut, &QShortcut::activated, this, [this]() {
+        if (QListWidgetItem* current = m_list->currentItem())
+            handleItem(current);
+    });
 
     updateHistory();
 }

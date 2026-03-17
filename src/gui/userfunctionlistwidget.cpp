@@ -30,6 +30,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QMenu>
+#include <QShortcut>
 #include <QTreeWidget>
 #include <QVBoxLayout>
 
@@ -96,6 +97,12 @@ UserFunctionListWidget::UserFunctionListWidget(QWidget* parent)
     connect(m_editAction, SIGNAL(triggered()), SLOT(editItem()));
     connect(m_deleteAction, SIGNAL(triggered()), SLOT(deleteItem()));
     connect(m_deleteAllAction, SIGNAL(triggered()), SLOT(deleteAllItems()));
+    QShortcut* returnShortcut = new QShortcut(QKeySequence(Qt::Key_Return), this);
+    returnShortcut->setContext(Qt::WidgetWithChildrenShortcut);
+    connect(returnShortcut, &QShortcut::activated, this, [this]() { activateItem(); });
+    QShortcut* enterShortcut = new QShortcut(QKeySequence(Qt::Key_Enter), this);
+    enterShortcut->setContext(Qt::WidgetWithChildrenShortcut);
+    connect(enterShortcut, &QShortcut::activated, this, [this]() { activateItem(); });
 
     updateList();
 }

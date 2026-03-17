@@ -28,6 +28,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QShortcut>
 #include <QTreeWidget>
 #include <QVBoxLayout>
 
@@ -79,6 +80,18 @@ FunctionsWidget::FunctionsWidget(QWidget* parent)
     connect(m_filterTimer, SIGNAL(timeout()), SLOT(updateList()));
     connect(m_functions, SIGNAL(itemActivated(QTreeWidgetItem*, int)), SLOT(handleItemActivated(QTreeWidgetItem*, int)));
     connect(m_searchFilter, SIGNAL(textChanged(const QString &)), SLOT(triggerFilter()));
+    QShortcut* returnShortcut = new QShortcut(QKeySequence(Qt::Key_Return), this);
+    returnShortcut->setContext(Qt::WidgetWithChildrenShortcut);
+    connect(returnShortcut, &QShortcut::activated, this, [this]() {
+        if (const QTreeWidgetItem* current = m_functions->currentItem())
+            emit functionSelected(current->text(0));
+    });
+    QShortcut* enterShortcut = new QShortcut(QKeySequence(Qt::Key_Enter), this);
+    enterShortcut->setContext(Qt::WidgetWithChildrenShortcut);
+    connect(enterShortcut, &QShortcut::activated, this, [this]() {
+        if (const QTreeWidgetItem* current = m_functions->currentItem())
+            emit functionSelected(current->text(0));
+    });
 
     updateList();
 }
