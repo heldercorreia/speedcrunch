@@ -34,6 +34,7 @@
 #include <QFont>
 #include <QFrame>
 #include <QHeaderView>
+#include <QInputMethodEvent>
 #include <QKeyEvent>
 #include <QLineEdit>
 #include <QMimeData>
@@ -148,6 +149,11 @@ static QString groupedDigitsForTooltip(const QString& input)
     return output;
 }
 
+static QString normalizeExpressionTypedInEditor(QString text)
+{
+    return EditorUtils::normalizeExpressionOperatorsForEditorInput(text);
+}
+
 static QString formattedLiveResult(const Quantity& quantity, char resultFormat = '\0')
 {
     return groupedDigitsForTooltip(NumberFormatter::format(quantity, resultFormat));
@@ -220,12 +226,12 @@ QString Editor::text() const
 
 void Editor::setText(const QString& text)
 {
-    setPlainText(EditorUtils::normalizeExpressionOperators(text));
+    setPlainText(normalizeExpressionTypedInEditor(text));
 }
 
 void Editor::insert(const QString& text)
 {
-    insertPlainText(EditorUtils::normalizeExpressionOperators(text));
+    insertPlainText(normalizeExpressionTypedInEditor(text));
 }
 
 void Editor::doBackspace()
@@ -645,7 +651,8 @@ void Editor::autoComplete(const QString& item)
 
 void Editor::insertFromMimeData(const QMimeData* source)
 {
-    const QStringList expressions = EditorUtils::parsePastedExpressions(source->text());
+    const QStringList expressions = EditorUtils::parsePastedExpressionsForEditorInput(source->text());
+
     if (expressions.isEmpty())
         return;
 
@@ -845,6 +852,19 @@ void Editor::focusOutEvent(QFocusEvent* event)
     QPlainTextEdit::focusOutEvent(event);
 }
 
+void Editor::inputMethodEvent(QInputMethodEvent* event)
+{
+    const QString normalizedCommit = normalizeExpressionTypedInEditor(event->commitString());
+    if (normalizedCommit == event->commitString()) {
+        QPlainTextEdit::inputMethodEvent(event);
+        return;
+    }
+
+    QInputMethodEvent normalizedEvent(event->preeditString(), event->attributes());
+    normalizedEvent.setCommitString(normalizedCommit, event->replacementStart(), event->replacementLength());
+    QPlainTextEdit::inputMethodEvent(&normalizedEvent);
+}
+
 void Editor::keyPressEvent(QKeyEvent* event)
 {
     int key = event->key();
@@ -972,8 +992,7 @@ void Editor::keyPressEvent(QKeyEvent* event)
         return;
     }
 
-    const QString normalizedText =
-        EditorUtils::normalizeExpressionOperators(event->text());
+    const QString normalizedText = normalizeExpressionTypedInEditor(event->text());
     if (!normalizedText.isEmpty() && normalizedText != event->text()) {
         insert(normalizedText);
         event->accept();

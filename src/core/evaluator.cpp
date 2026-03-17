@@ -379,6 +379,66 @@ static int opPrecedence(Token::Operator op)
     return prec;
 }
 
+static int opcodePrecedence(Opcode::Type opcodeType)
+{
+    switch (opcodeType) {
+    case Opcode::Add:
+    case Opcode::Sub:
+        return opPrecedence(Token::Addition);
+    case Opcode::Mul:
+    case Opcode::Div:
+        return opPrecedence(Token::Multiplication);
+    case Opcode::Pow:
+        return opPrecedence(Token::Exponentiation);
+    case Opcode::Fact:
+        return opPrecedence(Token::Factorial);
+    case Opcode::Modulo:
+    case Opcode::IntDiv:
+        return opPrecedence(Token::Modulo);
+    case Opcode::LSh:
+    case Opcode::RSh:
+        return opPrecedence(Token::ArithmeticLeftShift);
+    case Opcode::BAnd:
+        return opPrecedence(Token::BitwiseLogicalAND);
+    case Opcode::BOr:
+        return opPrecedence(Token::BitwiseLogicalOR);
+    case Opcode::Conv:
+        return opPrecedence(Token::UnitConversion);
+    case Opcode::Neg:
+    case Opcode::BNot:
+        return opPrecedence(Token::Multiplication);
+    default:
+        return MAX_PRECEDENCE;
+    }
+}
+
+static bool isRightAssociativeOpcode(Opcode::Type opcodeType)
+{
+    return opcodeType == Opcode::Pow;
+}
+
+static QString opcodeToInfixSymbol(Opcode::Type opcodeType, bool implicitMultiplication = false)
+{
+    switch (opcodeType) {
+    case Opcode::Add: return "+";
+    case Opcode::Sub: return "-";
+    case Opcode::Mul:
+        return implicitMultiplication
+            ? QString::fromUtf8("⋅")
+            : QString::fromUtf8("×");
+    case Opcode::Div: return "/";
+    case Opcode::Pow: return "^";
+    case Opcode::Modulo: return "mod";
+    case Opcode::IntDiv: return "\\";
+    case Opcode::LSh: return "<<";
+    case Opcode::RSh: return ">>";
+    case Opcode::BAnd: return "&";
+    case Opcode::BOr: return "|";
+    case Opcode::Conv: return "->";
+    default: return QString();
+    }
+}
+
 Token::Token(Type type, const QString& text, int pos, int size)
 {
     m_type = type;
@@ -463,6 +523,281 @@ QString Token::description() const
 static bool tokenPositionCompare(const Token& a, const Token& b)
 {
     return (a.pos() < b.pos());
+}
+
+static bool tokenCanEndOperandForDisplaySpacing(const Token& token)
+{
+    return token.isOperand()
+        || token.asOperator() == Token::AssociationEnd
+        || token.asOperator() == Token::Factorial;
+}
+
+static bool tokenCanStartOperandForDisplaySpacing(const Token& token)
+{
+    return token.isOperand()
+        || token.asOperator() == Token::AssociationStart
+        || token.asOperator() == Token::Addition
+        || token.asOperator() == Token::Subtraction
+        || token.asOperator() == Token::BitwiseLogicalNOT;
+}
+
+static bool isUnsignedDecimalIntegerText(const QString& text)
+{
+    static const QRegularExpression integerRE(QStringLiteral(R"(^\d+$)"));
+    return integerRE.match(text).hasMatch();
+}
+
+static bool normalizeUnsignedIntegerEquivalentDecimalText(QString& text)
+{
+    static const QRegularExpression decimalIntegerRE(
+        QStringLiteral(R"(^(\d+)\.(\d*)$)"));
+    const QRegularExpressionMatch match = decimalIntegerRE.match(text);
+    if (!match.hasMatch())
+        return false;
+
+    const QString fractionalPart = match.captured(2);
+    for (const QChar& ch : fractionalPart) {
+        if (ch != QLatin1Char('0'))
+            return false;
+    }
+
+    text = match.captured(1);
+    return true;
+}
+
+static QString renderIntegerPowersAsSuperscriptsForDisplay(const QString& expression)
+{
+    static const QRegularExpression powerRE(
+        QStringLiteral(R"(\^(?:\(([−-]?)(\d+)\)|(\d+))(?![\p{L}\p{N}\.,_!]))"));
+    static const QHash<QChar, QChar> superscriptDigits = {
+        {QChar('0'), QChar(0x2070)},
+        {QChar('1'), QChar(0x00B9)},
+        {QChar('2'), QChar(0x00B2)},
+        {QChar('3'), QChar(0x00B3)},
+        {QChar('4'), QChar(0x2074)},
+        {QChar('5'), QChar(0x2075)},
+        {QChar('6'), QChar(0x2076)},
+        {QChar('7'), QChar(0x2077)},
+        {QChar('8'), QChar(0x2078)},
+        {QChar('9'), QChar(0x2079)},
+    };
+
+    QString rendered;
+    rendered.reserve(expression.size());
+    int lastPos = 0;
+    auto it = powerRE.globalMatch(expression);
+    while (it.hasNext()) {
+        const QRegularExpressionMatch match = it.next();
+        rendered += expression.mid(lastPos, match.capturedStart() - lastPos);
+
+        const QString sign = match.captured(1);
+        QString digits = match.captured(2);
+        if (digits.isEmpty())
+            digits = match.captured(3);
+
+        QString superscript;
+        superscript.reserve(digits.size() + 1);
+        if (!sign.isEmpty())
+            superscript += QChar(0x207B); // ⁻ SUPERSCRIPT MINUS.
+        for (const QChar& digit : digits)
+            superscript += superscriptDigits.value(digit, digit);
+        rendered += superscript;
+
+        lastPos = match.capturedEnd();
+    }
+    rendered += expression.mid(lastPos);
+    return rendered;
+}
+
+static bool isWrappedInOuterParentheses(const QString& text)
+{
+    if (text.size() < 2 || text.front() != QLatin1Char('(') || text.back() != QLatin1Char(')'))
+        return false;
+
+    int depth = 0;
+    for (int i = 0; i < text.size(); ++i) {
+        const QChar ch = text.at(i);
+        if (ch == QLatin1Char('(')) {
+            ++depth;
+        } else if (ch == QLatin1Char(')')) {
+            --depth;
+            if (depth < 0)
+                return false;
+            if (depth == 0 && i != text.size() - 1)
+                return false;
+        }
+    }
+
+    return depth == 0;
+}
+
+static bool termNeedsGroupingForDisplay(const Tokens& tokens, int firstIndex, int lastIndex)
+{
+    if (firstIndex < 0 || lastIndex >= tokens.size() || firstIndex >= lastIndex)
+        return false;
+
+    const int additivePrecedence = opPrecedence(Token::Addition);
+    int depth = 0;
+    for (int i = firstIndex; i <= lastIndex; ++i) {
+        const Token& token = tokens.at(i);
+        const Token::Operator op = token.asOperator();
+        if (op == Token::AssociationStart) {
+            ++depth;
+            continue;
+        }
+        if (op == Token::AssociationEnd) {
+            if (depth > 0)
+                --depth;
+            continue;
+        }
+        if (depth != 0 || !token.isOperator())
+            continue;
+
+        const bool hasLeftOperand = i > firstIndex
+            && tokenCanEndOperandForDisplaySpacing(tokens.at(i - 1));
+        const bool hasRightOperand = i < lastIndex
+            && tokenCanStartOperandForDisplaySpacing(tokens.at(i + 1));
+        if (!hasLeftOperand || !hasRightOperand)
+            continue;
+
+        if (opPrecedence(op) > additivePrecedence) {
+            if (op == Token::Exponentiation)
+                continue;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static QString groupHighPrecedenceAdditiveTermsForDisplay(const QString& expression,
+                                                          const Tokens& tokens)
+{
+    if (tokens.isEmpty())
+        return expression;
+
+    QVector<int> topLevelBinaryAddSubTokenIndices;
+    int depth = 0;
+    for (int i = 0; i < tokens.size(); ++i) {
+        const Token& token = tokens.at(i);
+        const Token::Operator op = token.asOperator();
+        if (op == Token::AssociationStart) {
+            ++depth;
+            continue;
+        }
+        if (op == Token::AssociationEnd) {
+            if (depth > 0)
+                --depth;
+            continue;
+        }
+        if (depth != 0 || (op != Token::Addition && op != Token::Subtraction))
+            continue;
+
+        const bool hasLeftOperand = i > 0
+            && tokenCanEndOperandForDisplaySpacing(tokens.at(i - 1));
+        const bool hasRightOperand = i + 1 < tokens.size()
+            && tokenCanStartOperandForDisplaySpacing(tokens.at(i + 1));
+        if (hasLeftOperand && hasRightOperand)
+            topLevelBinaryAddSubTokenIndices.append(i);
+    }
+
+    if (topLevelBinaryAddSubTokenIndices.isEmpty())
+        return expression;
+
+    auto tokenRangeText = [&expression, &tokens](int startIndex, int endIndex) {
+        const int startPos = tokens.at(startIndex).pos();
+        const int endPos = tokens.at(endIndex).pos() + tokens.at(endIndex).size();
+        return expression.mid(startPos, endPos - startPos);
+    };
+
+    QString grouped;
+    grouped.reserve(expression.size() + topLevelBinaryAddSubTokenIndices.size() * 2);
+
+    int termStartIndex = 0;
+    for (int splitPos = 0; splitPos < topLevelBinaryAddSubTokenIndices.size(); ++splitPos) {
+        const int operatorIndex = topLevelBinaryAddSubTokenIndices.at(splitPos);
+        const int termEndIndex = operatorIndex - 1;
+        if (termEndIndex >= termStartIndex) {
+            QString termText = tokenRangeText(termStartIndex, termEndIndex);
+            if (termNeedsGroupingForDisplay(tokens, termStartIndex, termEndIndex)
+                && !isWrappedInOuterParentheses(termText))
+            {
+                termText = QStringLiteral("(%1)").arg(termText);
+            }
+            grouped += termText;
+        }
+
+        grouped += tokenRangeText(operatorIndex, operatorIndex);
+        termStartIndex = operatorIndex + 1;
+    }
+
+    if (termStartIndex < tokens.size()) {
+        QString lastTermText = tokenRangeText(termStartIndex, tokens.size() - 1);
+        if (termNeedsGroupingForDisplay(tokens, termStartIndex, tokens.size() - 1)
+            && !isWrappedInOuterParentheses(lastTermText))
+        {
+            lastTermText = QStringLiteral("(%1)").arg(lastTermText);
+        }
+        grouped += lastTermText;
+    }
+
+    return grouped;
+}
+
+QString Evaluator::formatInterpretedExpressionForDisplay(const QString& expression)
+{
+    if (expression.isEmpty())
+        return expression;
+
+    const Tokens scannedTokens = Evaluator::instance()->scan(expression);
+    if (scannedTokens.isEmpty())
+        return expression;
+
+    const QString groupedExpression =
+        groupHighPrecedenceAdditiveTermsForDisplay(expression, scannedTokens);
+    const Tokens tokens = Evaluator::instance()->scan(groupedExpression);
+    if (tokens.isEmpty())
+        return groupedExpression;
+
+    const QString operatorSpace(QChar(0x205F)); // MEDIUM MATHEMATICAL SPACE.
+    const QString unicodeMinusSign(QChar(0x2212)); // MINUS SIGN.
+    QString formatted;
+    formatted.reserve(groupedExpression.size() + tokens.size() * 2);
+
+    for (int i = 0; i < tokens.size(); ++i) {
+        const Token& token = tokens.at(i);
+        const Token::Operator op = token.asOperator();
+        const bool isSpacingOperator =
+            op == Token::Addition
+            || op == Token::Subtraction
+            || op == Token::Multiplication
+            || op == Token::Division
+            || op == Token::IntegerDivision;
+        const QString operatorText =
+            op == Token::Subtraction ? unicodeMinusSign : token.text();
+
+        if (!isSpacingOperator) {
+            formatted += operatorText;
+            continue;
+        }
+
+        const bool hasLeftOperand = i > 0
+            && tokenCanEndOperandForDisplaySpacing(tokens.at(i - 1));
+        const bool hasRightOperand = i + 1 < tokens.size()
+            && tokenCanStartOperandForDisplaySpacing(tokens.at(i + 1));
+        const bool isBinaryOperator = hasLeftOperand && hasRightOperand;
+        if (!isBinaryOperator) {
+            // Keep unary operators untouched (for example "−pi").
+            formatted += operatorText;
+            continue;
+        }
+
+        formatted += operatorSpace;
+        formatted += operatorText;
+        formatted += operatorSpace;
+    }
+
+    return renderIntegerPowersAsSuperscriptsForDisplay(formatted);
 }
 
 static QStringList splitTopLevelFunctionArguments(const QString& text)
@@ -968,6 +1303,8 @@ void Evaluator::setExpression(const QString& expr)
     m_dirty = true;
     m_valid = false;
     m_error = QString();
+    m_interpretedExpression = QString();
+    m_hasImplicitMultiplication = false;
 }
 
 QString Evaluator::expression() const
@@ -994,8 +1331,11 @@ void Evaluator::reset()
     m_dirty = true;
     m_valid = false;
     m_error = QString();
+    m_interpretedExpression = QString();
     m_constants.clear();
+    m_constantTexts.clear();
     m_codes.clear();
+    m_implicitMultiplicationOpcodeIndices.clear();
     m_assignId = QString();
     m_assignFunc = false;
     m_assignArg.clear();
@@ -1003,6 +1343,7 @@ void Evaluator::reset()
     m_assignFuncDescription = QString();
     m_session = nullptr;
     m_functionsInUse.clear();
+    m_hasImplicitMultiplication = false;
 
     initializeBuiltInVariables();
 }
@@ -1020,6 +1361,16 @@ const Session* Evaluator::session()
 QString Evaluator::error() const
 {
     return m_error;
+}
+
+QString Evaluator::interpretedExpression() const
+{
+    return m_interpretedExpression;
+}
+
+bool Evaluator::hasImplicitMultiplication() const
+{
+    return m_hasImplicitMultiplication;
 }
 
 // Returns list of token for the expression.
@@ -1453,9 +1804,13 @@ void Evaluator::compile(const Tokens& tokens)
     m_dirty = false;
     m_valid = false;
     m_codes.clear();
+    m_implicitMultiplicationOpcodeIndices.clear();
     m_constants.clear();
+    m_constantTexts.clear();
     m_identifiers.clear();
     m_error = QString();
+    m_interpretedExpression = QString();
+    m_hasImplicitMultiplication = false;
 
     // Sanity check.
     if (tokens.count() == 0)
@@ -1803,6 +2158,7 @@ void Evaluator::compile(const Tokens& tokens)
                {
                    ruleFound = true;
                    syntaxStack.reduce(2, opPrecedence(Token::Multiplication));
+                   m_implicitMultiplicationOpcodeIndices.insert(m_codes.count());
                    m_codes.append(Opcode::Mul);
 #ifdef EVALUATOR_DEBUG
                    dbg << "\tRule for implicit multiplication" << "\n";
@@ -1895,6 +2251,7 @@ void Evaluator::compile(const Tokens& tokens)
         // For constants, generate code to load from a constant.
         if (tokenType == Token::stxNumber) {
             m_constants.append(token.asNumber());
+            m_constantTexts.append(token.text());
             m_codes.append(Opcode(Opcode::Load, m_constants.count() - 1));
 #ifdef EVALUATOR_DEBUG
             dbg << "\tPush " << token.asNumber()
@@ -1914,6 +2271,10 @@ void Evaluator::compile(const Tokens& tokens)
              && !syntaxStack.top(1).isOperator())
     {
         m_valid = true;
+
+        m_hasImplicitMultiplication = !m_implicitMultiplicationOpcodeIndices.isEmpty();
+
+        m_interpretedExpression = buildInterpretedExpressionFromOpcodes();
     }
 
 #ifdef EVALUATOR_DEBUG
@@ -1924,9 +2285,286 @@ void Evaluator::compile(const Tokens& tokens)
     // Bad parsing? Clean-up everything.
     if (!m_valid) {
         m_constants.clear();
+        m_constantTexts.clear();
         m_codes.clear();
         m_identifiers.clear();
+        m_implicitMultiplicationOpcodeIndices.clear();
+        m_interpretedExpression = QString();
+        m_hasImplicitMultiplication = false;
     }
+}
+
+QString Evaluator::buildInterpretedExpressionFromOpcodes() const
+{
+    struct RenderNode {
+        QString text;
+        int precedence;
+        Opcode::Type rootOpcode;
+        bool isLiteralSymbol;
+        bool isNumericOnly;
+    };
+
+    QVector<RenderNode> stack;
+    QHash<int, QString> refs;
+
+    auto wrapInParentheses = [](const QString& text) {
+        return QStringLiteral("(%1)").arg(text);
+    };
+    auto makeUnaryNode = [&wrapInParentheses](const QString& symbol,
+                                              const RenderNode& operand,
+                                              int precedence) {
+        QString operandText = operand.text;
+        if (operand.precedence <= precedence)
+            operandText = wrapInParentheses(operandText);
+        return RenderNode{
+            symbol + operandText,
+            precedence,
+            Opcode::Nop,
+            operand.isLiteralSymbol,
+            operand.isNumericOnly
+        };
+    };
+    auto makeBinaryNode = [&wrapInParentheses, this](const RenderNode& left,
+                                                     const RenderNode& right,
+                                                     Opcode::Type opcodeType,
+                                                     int opcodeIndex) {
+        const int precedence = opcodePrecedence(opcodeType);
+        const bool isRightAssociative = isRightAssociativeOpcode(opcodeType);
+        const bool isImplicitMultiplication =
+            opcodeType == Opcode::Mul
+            && m_implicitMultiplicationOpcodeIndices.contains(opcodeIndex);
+        QString leftText = left.text;
+        if (left.precedence < precedence
+            || (isRightAssociative && left.precedence == precedence))
+        {
+            leftText = wrapInParentheses(leftText);
+        }
+        QString rightText = right.text;
+        if (right.precedence < precedence
+            || (!isRightAssociative && right.precedence == precedence))
+        {
+            rightText = wrapInParentheses(rightText);
+        }
+
+        // Make "a / b c" style parses explicit as "(a / b) * c".
+        if (opcodeType == Opcode::Mul
+            && isImplicitMultiplication
+            && (left.rootOpcode == Opcode::Div
+                || left.rootOpcode == Opcode::IntDiv
+                || left.rootOpcode == Opcode::Modulo))
+        {
+            leftText = wrapInParentheses(leftText);
+        }
+        if (opcodeType == Opcode::Mul
+            && isImplicitMultiplication
+            && (right.rootOpcode == Opcode::Div
+                || right.rootOpcode == Opcode::IntDiv
+                || right.rootOpcode == Opcode::Modulo))
+        {
+            rightText = wrapInParentheses(rightText);
+        }
+
+        // For explicit multiplications, isolate power terms to improve
+        // readability in compound products (for example "1⋅(2^3)⋅3").
+        if (opcodeType == Opcode::Mul && !isImplicitMultiplication) {
+            if (left.rootOpcode == Opcode::Pow
+                && !isWrappedInOuterParentheses(leftText))
+            {
+                leftText = wrapInParentheses(leftText);
+            }
+            if (right.rootOpcode == Opcode::Pow
+                && !isWrappedInOuterParentheses(rightText))
+            {
+                rightText = wrapInParentheses(rightText);
+            }
+        }
+
+        // Keep explicit grouping for denominator expressions with tighter
+        // precedence (for example "1/(2^3)" and "1/(2!)").
+        if (opcodeType == Opcode::Div
+            && (right.rootOpcode == Opcode::Pow
+                || right.rootOpcode == Opcode::Fact)
+            && !isWrappedInOuterParentheses(rightText))
+        {
+            rightText = wrapInParentheses(rightText);
+        }
+
+        // Keep non-integer numeric exponents explicit (for example
+        // "2^(12.5)" instead of "2^12.5").
+        if (opcodeType == Opcode::Pow
+            && !isWrappedInOuterParentheses(rightText))
+        {
+            normalizeUnsignedIntegerEquivalentDecimalText(rightText);
+            const bool isNonIntegerNumericExponent =
+                right.isNumericOnly
+                && right.rootOpcode == Opcode::Nop
+                && !isUnsignedDecimalIntegerText(rightText);
+            const bool isFactorialExponent =
+                right.rootOpcode == Opcode::Fact;
+            if (isNonIntegerNumericExponent || isFactorialExponent)
+                rightText = wrapInParentheses(rightText);
+        }
+
+        const bool leftIsAtomicNumeric =
+            left.isNumericOnly
+            && left.rootOpcode == Opcode::Nop
+            && !left.isLiteralSymbol;
+        const bool rightIsAtomicNumeric =
+            right.isNumericOnly
+            && right.rootOpcode == Opcode::Nop
+            && !right.isLiteralSymbol;
+        const bool isNumberTimesNumber =
+            opcodeType == Opcode::Mul
+            && leftIsAtomicNumeric
+            && rightIsAtomicNumeric;
+        static const QRegularExpression s_endsWithDigitRE(QStringLiteral(R"([0-9]$)"));
+        const bool isNumericBoundaryTimesNumber =
+            opcodeType == Opcode::Mul
+            && !isImplicitMultiplication
+            && rightIsAtomicNumeric
+            && s_endsWithDigitRE.match(leftText).hasMatch();
+        const bool isLiteralSymbolMultiplication =
+            opcodeType == Opcode::Mul
+            && !isNumberTimesNumber
+            && !isNumericBoundaryTimesNumber;
+
+        const QString infixSymbol =
+            opcodeToInfixSymbol(
+                opcodeType,
+                isImplicitMultiplication || isLiteralSymbolMultiplication
+            );
+        return RenderNode{
+            leftText + infixSymbol + rightText,
+            precedence,
+            opcodeType,
+            left.isLiteralSymbol || right.isLiteralSymbol,
+            left.isNumericOnly && right.isNumericOnly
+        };
+    };
+
+    for (int opcodeIndex = 0; opcodeIndex < m_codes.count(); ++opcodeIndex) {
+        const Opcode& opcode = m_codes.at(opcodeIndex);
+        switch (opcode.type) {
+        case Opcode::Nop:
+            break;
+        case Opcode::Load: {
+            QString constantText = m_constantTexts.value(opcode.index);
+            if (constantText.isEmpty()) {
+                constantText = DMath::format(m_constants.value(opcode.index),
+                                             Quantity::Format::Fixed());
+            }
+            stack.append({
+                constantText,
+                MAX_PRECEDENCE,
+                Opcode::Nop,
+                false,
+                true
+            });
+            break;
+        }
+        case Opcode::Ref: {
+            const QString identifier = m_identifiers.value(opcode.index);
+            stack.append({
+                identifier,
+                MAX_PRECEDENCE,
+                Opcode::Nop,
+                true,
+                false
+            });
+
+            if (m_assignArg.contains(identifier) || hasVariable(identifier))
+                break;
+
+            if (FunctionRepo::instance()->find(identifier)
+                || hasUserFunction(identifier)
+                || m_assignFunc)
+            {
+                refs.insert(stack.count(), identifier);
+            }
+            break;
+        }
+        case Opcode::Neg:
+        case Opcode::BNot: {
+            if (stack.isEmpty())
+                return QString();
+            const RenderNode operand = stack.takeLast();
+            const QString symbol = opcode.type == Opcode::Neg ? "-" : "~";
+            stack.append(makeUnaryNode(symbol, operand,
+                                       opcodePrecedence(opcode.type)));
+            break;
+        }
+        case Opcode::Fact: {
+            if (stack.isEmpty())
+                return QString();
+            const int precedence = opcodePrecedence(opcode.type);
+            RenderNode operand = stack.takeLast();
+            if (operand.precedence < precedence)
+                operand.text = wrapInParentheses(operand.text);
+            stack.append({
+                operand.text + "!",
+                precedence,
+                Opcode::Fact,
+                operand.isLiteralSymbol,
+                operand.isNumericOnly
+            });
+            break;
+        }
+        case Opcode::Add:
+        case Opcode::Sub:
+        case Opcode::Mul:
+        case Opcode::Div:
+        case Opcode::Pow:
+        case Opcode::Modulo:
+        case Opcode::IntDiv:
+        case Opcode::LSh:
+        case Opcode::RSh:
+        case Opcode::BAnd:
+        case Opcode::BOr:
+        case Opcode::Conv: {
+            if (stack.size() < 2)
+                return QString();
+            const RenderNode right = stack.takeLast();
+            const RenderNode left = stack.takeLast();
+            stack.append(makeBinaryNode(left, right, opcode.type, opcodeIndex));
+            break;
+        }
+        case Opcode::Function: {
+            const int argumentCount = static_cast<int>(opcode.index);
+            const int functionRefKey = stack.count() - argumentCount;
+            QString functionName = refs.take(functionRefKey);
+            if (functionName.isEmpty()
+                && functionRefKey > 0
+                && functionRefKey <= stack.count())
+            {
+                functionName = stack.at(functionRefKey - 1).text;
+            }
+
+            if (stack.count() < argumentCount + 1)
+                return QString();
+
+            QStringList arguments;
+            for (int i = 0; i < argumentCount; ++i)
+                arguments.prepend(stack.takeLast().text);
+
+            // Discard function reference placeholder.
+            stack.takeLast();
+
+            stack.append({
+                QStringLiteral("%1(%2)").arg(functionName, arguments.join("; ")),
+                MAX_PRECEDENCE,
+                Opcode::Nop,
+                true,
+                false
+            });
+            break;
+        }
+        }
+    }
+
+    if (stack.count() != 1)
+        return QString();
+
+    return stack.constLast().text;
 }
 
 Quantity Evaluator::evalNoAssign()
@@ -1940,6 +2578,8 @@ Quantity Evaluator::evalNoAssign()
         m_assignArg.clear();
         m_assignFuncExpr = QString();
         m_assignFuncDescription = QString();
+        m_interpretedExpression = QString();
+        m_hasImplicitMultiplication = false;
         QString expressionToParse = m_expression;
         if (m_expression.contains('?')) {
             QString expressionWithoutDescription;
@@ -1957,14 +2597,19 @@ Quantity Evaluator::evalNoAssign()
         // Invalid expression?
         if (!tokens.valid()) {
             m_error = tr("invalid expression");
+            m_interpretedExpression = QString();
+            m_hasImplicitMultiplication = false;
             return Quantity(0);
         }
 
         if (tokens.count() == 0 && isCommentOnlyExpression(m_expression)) {
             m_valid = true;
             m_constants.clear();
+            m_constantTexts.clear();
             m_codes.clear();
             m_identifiers.clear();
+            m_interpretedExpression = QString();
+            m_hasImplicitMultiplication = false;
             return CMath::nan();
         }
 
@@ -2026,7 +2671,23 @@ Quantity Evaluator::evalNoAssign()
         if (!m_valid) {
             if (m_error.isEmpty())
                 m_error = tr("syntax error");
+            m_interpretedExpression = QString();
+            m_hasImplicitMultiplication = false;
             return CNumber(0);
+        }
+
+        if (!m_assignId.isEmpty() && !m_interpretedExpression.isEmpty()) {
+            if (m_assignFunc) {
+                const QString leftSide = QStringLiteral("%1(%2)").arg(
+                    m_assignId,
+                    m_assignArg.join(";")
+                );
+                m_interpretedExpression =
+                    leftSide + QStringLiteral("=") + m_interpretedExpression;
+            } else {
+                m_interpretedExpression =
+                    m_assignId + QStringLiteral("=") + m_interpretedExpression;
+            }
         }
     }
 
@@ -2749,6 +3410,70 @@ QString Evaluator::autoFix(const QString& expr)
         result = result.left(result.length() - 1);
 
     replaceSuperscriptPowersWithCaretEquivalent(result);
+
+    // Normalize symbolic multiplication to a compact "⋅" form.
+    // Examples:
+    //   "2×pi" -> "2⋅pi"
+    //   "2   ×    pi   pi" -> "2⋅pi⋅pi"
+    {
+        const Tokens tokens = Evaluator::scan(result);
+        for (int i = tokens.count() - 2; i >= 1; --i) {
+            const Token& op = tokens.at(i);
+            if (op.asOperator() != Token::Multiplication)
+                continue;
+
+            const Token& left = tokens.at(i - 1);
+            const Token& right = tokens.at(i + 1);
+            const bool leftLooksMultiplicativeOperand =
+                left.isIdentifier()
+                || left.isNumber()
+                || left.asOperator() == Token::AssociationEnd
+                || left.asOperator() == Token::Factorial;
+            const bool rightLooksMultiplicativeOperand =
+                right.isIdentifier()
+                || right.isNumber()
+                || right.asOperator() == Token::AssociationStart;
+            if (!leftLooksMultiplicativeOperand || !rightLooksMultiplicativeOperand)
+                continue;
+
+            // Keep explicit multiplication sign for pure number×number.
+            if (left.isNumber() && right.isNumber())
+                continue;
+
+            result.replace(op.pos(), op.size(), QString::fromUtf8("⋅"));
+        }
+
+        // Remove extra spaces around explicit dot multiplications.
+        result.replace(QRegularExpression(QString::fromUtf8("\\s*⋅\\s*")),
+                       QString::fromUtf8("⋅"));
+
+        // Rewrite identifier adjacency to dot multiplication, except when
+        // the left identifier is a known function (e.g. keep "sin pi").
+        static const QRegularExpression s_adjacentIdentifiersRE(
+            QStringLiteral(R"(([A-Za-z_][A-Za-z_0-9]*)\s+([A-Za-z_][A-Za-z_0-9]*))")
+        );
+        int offset = 0;
+        while (true) {
+            const QRegularExpressionMatch match =
+                s_adjacentIdentifiersRE.match(result, offset);
+            if (!match.hasMatch())
+                break;
+
+            const QString left = match.captured(1);
+            const QString right = match.captured(2);
+            const bool keepAsFunctionCall =
+                FunctionRepo::instance()->find(left) || hasUserFunction(left);
+            if (keepAsFunctionCall) {
+                offset = match.capturedStart(2);
+                continue;
+            }
+
+            const int start = match.capturedStart();
+            result.replace(start, match.capturedLength(),
+                           left + QString::fromUtf8("⋅") + right);
+            offset = start + left.length() + 1 + right.length();
+        }
+    }
 
     // Automagically close all parenthesis.
     Tokens tokens = Evaluator::scan(result);

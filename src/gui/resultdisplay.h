@@ -40,7 +40,8 @@ class ResultDisplay : public QPlainTextEdit
 public:
     explicit ResultDisplay(QWidget* parent = 0);
 
-    void append(const QString& expr, Quantity& value);
+    void append(const QString& expr, Quantity& value,
+                const QString& interpretedExpression = QString());
     void appendHistory(const QStringList& expressions, const QStringList& results);
     int count() const;
     bool isEmpty() const { return m_count==0; }

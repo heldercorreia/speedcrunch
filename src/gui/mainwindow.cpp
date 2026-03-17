@@ -1975,7 +1975,8 @@ void MainWindow::showSessionImportDialog()
                     ignoreAll = true;
             }
         } else {
-            m_session->addHistoryEntry(HistoryEntry(normalizedExp, result));
+            const QString interpretedExpr = m_evaluator->interpretedExpression();
+            m_session->addHistoryEntry(HistoryEntry(normalizedExp, result, interpretedExpr));
             m_widgets.editor->setText(str);
             m_widgets.editor->selectAll();
             m_widgets.editor->stopAutoCalc();
@@ -3005,7 +3006,8 @@ void MainWindow::evaluateEditorExpression()
     } else if (result.isNan() && !isCommentOnly)
         return;
 
-    m_session->addHistoryEntry(HistoryEntry(expr, result));
+    const QString interpretedExpr = m_evaluator->interpretedExpression();
+    m_session->addHistoryEntry(HistoryEntry(expr, result, interpretedExpr));
     if (m_settings->historySaving == Settings::HistorySavingContinuously)
         saveSessionToDefaultPath();
     emit historyChanged();
@@ -3097,7 +3099,8 @@ bool MainWindow::rebuildSessionFromExpressions(const QStringList& expressions, i
         else if (result.isNan() && !isCommentOnly)
             continue;
 
-        m_session->addHistoryEntry(HistoryEntry(currentExpr, result));
+        const QString interpretedExpr = m_evaluator->interpretedExpression();
+        m_session->addHistoryEntry(HistoryEntry(currentExpr, result, interpretedExpr));
         if (!result.isNan())
             m_conditions.autoAns = true;
     }

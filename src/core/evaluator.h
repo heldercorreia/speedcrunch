@@ -133,16 +133,19 @@ public:
     static bool isSeparatorChar(const QChar&);
     static bool isRadixChar(const QChar&);
     static bool isCommentOnlyExpression(const QString&);
+    static QString formatInterpretedExpressionForDisplay(const QString&);
     static QString fixNumberRadix(const QString&);
     static QString fixSexagesimal(const QString&, QString& unit);
 
     QString autoFix(const QString&);
     QString dump();
     QString error() const;
+    QString interpretedExpression() const;
     Quantity eval();
     Quantity evalNoAssign();
     Quantity evalUpdateAns();
     QString expression() const;
+    bool hasImplicitMultiplication() const;
     bool isValid();
     Tokens scan(const QString&) const;
     void setExpression(const QString&);
@@ -178,6 +181,7 @@ private:
     bool m_dirty;
     QString m_error;
     QString m_expression;
+    QString m_interpretedExpression;
     bool m_valid;
     QString m_assignId;
     bool m_assignFunc;
@@ -186,15 +190,19 @@ private:
     QString m_assignFuncDescription;
     QVector<Opcode> m_codes;
     QVector<Quantity> m_constants;
+    QStringList m_constantTexts;
     QStringList m_identifiers;
+    QSet<int> m_implicitMultiplicationOpcodeIndices;
     Session* m_session;
     QSet<QString> m_functionsInUse;
+    bool m_hasImplicitMultiplication;
 
     const Quantity& checkOperatorResult(const Quantity&);
     static QString stringFromFunctionError(Function*);
     Quantity exec(const QVector<Opcode>& opcodes,
                   const QVector<Quantity>& constants,
                   const QStringList& identifiers);
+    QString buildInterpretedExpressionFromOpcodes() const;
     Quantity execUserFunction(const UserFunction* function,
                               QVector<Quantity>& arguments);
     const UserFunction* getUserFunction(const QString&) const;

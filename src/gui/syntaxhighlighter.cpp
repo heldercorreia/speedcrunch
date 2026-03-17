@@ -36,6 +36,30 @@
 
 static const constexpr auto COLOR_SCHEME_EXTENSION = "json";
 
+static QString textNormalizedForHighlighting(QString text)
+{
+    static const QHash<QChar, QChar> superscriptToAscii {
+        {QChar(0x207B), QLatin1Char('-')}, // ⁻ SUPERSCRIPT MINUS.
+        {QChar(0x2070), QLatin1Char('0')}, // ⁰
+        {QChar(0x00B9), QLatin1Char('1')}, // ¹
+        {QChar(0x00B2), QLatin1Char('2')}, // ²
+        {QChar(0x00B3), QLatin1Char('3')}, // ³
+        {QChar(0x2074), QLatin1Char('4')}, // ⁴
+        {QChar(0x2075), QLatin1Char('5')}, // ⁵
+        {QChar(0x2076), QLatin1Char('6')}, // ⁶
+        {QChar(0x2077), QLatin1Char('7')}, // ⁷
+        {QChar(0x2078), QLatin1Char('8')}, // ⁸
+        {QChar(0x2079), QLatin1Char('9')}, // ⁹
+    };
+
+    for (QChar& ch : text) {
+        const QChar replacement = superscriptToAscii.value(ch, QChar::Null);
+        if (!replacement.isNull())
+            ch = replacement;
+    }
+    return text;
+}
+
 static const QVector<QString> colorSchemeSearchPaths()
 {
     static QVector<QString> searchPaths;
@@ -189,7 +213,8 @@ void SyntaxHighlighter::highlightBlock(const QString& text)
     if (questionMarkIndex != -1)
         setFormat(questionMarkIndex, text.length(), colorForRole(ColorScheme::Comment));
 
-    Tokens tokens = Evaluator::instance()->scan(text);
+    const QString normalizedText = textNormalizedForHighlighting(text);
+    Tokens tokens = Evaluator::instance()->scan(normalizedText);
 
     for (int i = 0; i < tokens.count(); ++i) {
         const Token& token = tokens.at(i);

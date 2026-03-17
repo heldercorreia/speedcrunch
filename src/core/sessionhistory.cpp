@@ -34,9 +34,19 @@ Quantity HistoryEntry::result() const
     return m_result;
 }
 
+QString HistoryEntry::interpretedExpr() const
+{
+    return m_interpretedExpr;
+}
+
 void HistoryEntry::setExpr(const QString & e)
 {
     m_expr = e;
+}
+
+void HistoryEntry::setInterpretedExpr(const QString& e)
+{
+    m_interpretedExpr = e;
 }
 
 void HistoryEntry::setResult(const Quantity & n)
@@ -47,6 +57,8 @@ void HistoryEntry::setResult(const Quantity & n)
 void HistoryEntry::serialize(QJsonObject & json) const
 {
     json["expression"] = m_expr;
+    if (!m_interpretedExpr.isEmpty())
+        json["interpretedExpression"] = m_interpretedExpr;
     QJsonObject result;
     m_result.serialize(result);
     json["result"] = result;
@@ -59,6 +71,9 @@ void HistoryEntry::deSerialize(const QJsonObject & json)
 
     if (json.contains("expression"))
         m_expr = json["expression"].toString();
+
+    if (json.contains("interpretedExpression"))
+        m_interpretedExpr = json["interpretedExpression"].toString();
 
     if (json.contains("result"))
         m_result = Quantity(json["result"].toObject());

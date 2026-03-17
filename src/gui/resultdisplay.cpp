@@ -187,6 +187,26 @@ QStringList formatResultLines(const Quantity& value)
     return lines;
 }
 
+QString formattedExpressionForDisplay(const HistoryEntry& entry)
+{
+    if (!entry.interpretedExpr().isEmpty())
+        return Evaluator::formatInterpretedExpressionForDisplay(entry.interpretedExpr());
+    return entry.expr();
+}
+
+QString formattedExpressionForDisplay(const QString& expression,
+                                     const QString& interpretedExpression)
+{
+    if (!interpretedExpression.isEmpty())
+        return Evaluator::formatInterpretedExpressionForDisplay(interpretedExpression);
+    return expression;
+}
+
+int expressionLineCount(const HistoryEntry& entry)
+{
+    return formattedExpressionForDisplay(entry).count(QLatin1Char('\n')) + 1;
+}
+
 int resultLineCountForSettings(const Settings* settings)
 {
     int count = 1; // Primary result format is always shown for non-NaN results.
@@ -255,11 +275,12 @@ void ResultDisplay::setEditingHistoryIndex(int index)
         viewport()->update(viewport()->rect());
 }
 
-void ResultDisplay::append(const QString& expression, Quantity& value)
+void ResultDisplay::append(const QString& expression, Quantity& value,
+                           const QString& interpretedExpression)
 {
     ++m_count;
 
-    appendPlainText(expression);
+    appendPlainText(formattedExpressionForDisplay(expression, interpretedExpression));
     if (!value.isNan()) {
         const QStringList resultLines = formatResultLines(value);
         for (const QString& line : resultLines)
@@ -313,9 +334,9 @@ void ResultDisplay::refresh()
     m_count = history.count();
 
     for(int i=0; i<m_count; ++i) {
-        QString expression = history[i].expr();
+        const QString expressionLine = formattedExpressionForDisplay(history[i]);
         Quantity value = history[i].result();
-        appendPlainText(expression);
+        appendPlainText(expressionLine);
         if (!value.isNan()) {
             const QStringList resultLines = formatResultLines(value);
             for (const QString& line : resultLines)
@@ -355,7 +376,7 @@ void ResultDisplay::refreshLastHistoryEntry()
 
     const HistoryEntry& lastEntry = history.last();
     QStringList updatedLines;
-    updatedLines.append(lastEntry.expr());
+    updatedLines.append(formattedExpressionForDisplay(lastEntry));
     if (!lastEntry.result().isNan())
         updatedLines.append(formatResultLines(lastEntry.result()));
     updatedLines.append(QLatin1String(""));
@@ -792,9 +813,12 @@ int ResultDisplay::historyIndexAtPosition(const QPoint& pos) const
     const int resultLineCount = resultLineCountForSettings(settings);
     int currentBlock = 0;
     for (int i = 0; i < history.count(); ++i) {
-        if (currentBlock == blockNumber)
-            return i;
-        ++currentBlock;
+        const int entryExpressionLineCount = expressionLineCount(history.at(i));
+        for (int expressionLine = 0; expressionLine < entryExpressionLineCount; ++expressionLine) {
+            if (currentBlock == blockNumber)
+                return i;
+            ++currentBlock;
+        }
 
         if (!history.at(i).result().isNan()) {
             for (int line = 0; line < resultLineCount; ++line) {
@@ -828,9 +852,10 @@ bool ResultDisplay::blockRangeForHistoryIndex(int historyIndex, int& startBlock,
     int currentBlock = 0;
     for (int i = 0; i < history.count(); ++i) {
         const int entryStartBlock = currentBlock;
-        ++currentBlock; // expression/comment block
+        const int entryExpressionLineCount = expressionLineCount(history.at(i));
+        currentBlock += entryExpressionLineCount;
 
-        int entryEndBlock = entryStartBlock;
+        int entryEndBlock = entryStartBlock + entryExpressionLineCount - 1;
         if (!history.at(i).result().isNan()) {
             entryEndBlock = currentBlock + resultLineCount - 1; // result block(s)
             currentBlock += resultLineCount;

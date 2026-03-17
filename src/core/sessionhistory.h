@@ -31,18 +31,23 @@ class HistoryEntry
 {
 private:
     QString m_expr;
+    QString m_interpretedExpr;
     Quantity m_result;
 public:
     HistoryEntry() : m_expr(""), m_result(0) {}
     HistoryEntry(const QJsonObject & json);
-    HistoryEntry(const QString & expr, const Quantity & num) : m_expr(expr), m_result(num) {}
-    HistoryEntry(const HistoryEntry & other) :  m_expr(other.m_expr), m_result(other.m_result) {}
+    HistoryEntry(const QString & expr, const Quantity & num, const QString& interpretedExpr = QString())
+        : m_expr(expr), m_interpretedExpr(interpretedExpr), m_result(num) {}
+    HistoryEntry(const HistoryEntry & other)
+        : m_expr(other.m_expr), m_interpretedExpr(other.m_interpretedExpr), m_result(other.m_result) {}
     HistoryEntry& operator=(const HistoryEntry& other) = default;    
 
     void setExpr(const QString & e);
+    void setInterpretedExpr(const QString& e);
     void setResult(const Quantity & n);
 
     QString expr() const;
+    QString interpretedExpr() const;
     Quantity result() const;
 
     void serialize(QJsonObject & json) const;

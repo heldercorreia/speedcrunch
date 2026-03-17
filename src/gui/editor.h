@@ -33,6 +33,7 @@ class CNumber;
 class SyntaxHighlighter;
 
 class QEvent;
+class QInputMethodEvent;
 class QKeyEvent;
 class QMimeData;
 class QTimeLine;
@@ -110,6 +111,7 @@ protected slots:
 protected:
     void changeEvent(QEvent*) override;
     void focusOutEvent(QFocusEvent*) override;
+    void inputMethodEvent(QInputMethodEvent*) override;
     void keyPressEvent(QKeyEvent*) override;
     void paintEvent(QPaintEvent*) override;
     void scrollContentsBy(int, int) override;

@@ -28,6 +28,8 @@
 
 #include <string>
 #include <iostream>
+#include <iomanip>
+#include <sstream>
 
 using namespace std;
 
@@ -46,6 +48,8 @@ static int eval_new_failed_tests = 0;
 #define CHECK_EVAL_PRECISE(x,y) checkEvalPrecise(__FILE__,__LINE__,#x,x,y)
 #define CHECK_EVAL_FAIL(x) checkEval(__FILE__,__LINE__,#x,x,"",0,true)
 #define CHECK_EVAL_FORMAT_FAIL(x) checkEval(__FILE__,__LINE__,#x,x,"",0,true,true)
+#define CHECK_INTERPRETED(x,y) checkInterpreted(__FILE__,__LINE__,#x,x,y)
+#define CHECK_DISPLAY_INTERPRETED(x,y) checkDisplayInterpreted(__FILE__,__LINE__,#x,x,y)
 #define CHECK_USERFUNC_SET(x) checkEval(__FILE__,__LINE__,#x,x,"NaN")
 #define CHECK_USERFUNC_SET_FAIL(x) checkEval(__FILE__,__LINE__,#x,x,"",0,true)
 #define CHECK_USERFUNC_DESC(n,d) checkUserFunctionDescription(__FILE__,__LINE__,#n,n,d)
@@ -123,6 +127,73 @@ static void checkEvalPrecise(const char* file, int line, const char* msg, const 
     // to represent the result as an irrational number, e.g. PI.
     string result = DMath::format(rn, Format::Fixed() + Format::Precision(50)).toStdString();
     DisplayErrorOnMismatch(file, line, msg, result, expected, eval_failed_tests, eval_new_failed_tests, 0);
+}
+
+static void checkInterpreted(const char* file, int line, const char* msg, const QString& expr,
+                             const char* expected)
+{
+    ++eval_total_tests;
+
+    eval->setExpression(expr);
+    eval->evalUpdateAns();
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+        return;
+    }
+
+    const QString interpreted = eval->interpretedExpression();
+    if (interpreted != expected) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl
+             << "\tInterpreted: " << interpreted.toLatin1().constData() << endl
+             << "\tExpected   : " << expected << endl;
+    }
+}
+
+static string toCodePointList(const QString& text)
+{
+    const QVector<uint> cps = text.toUcs4();
+    std::ostringstream os;
+    for (int i = 0; i < cps.size(); ++i) {
+        if (i > 0)
+            os << " ";
+        os << "U+"
+           << std::uppercase << std::hex << std::setfill('0') << std::setw(4)
+           << cps.at(i);
+    }
+    return os.str();
+}
+
+static void checkDisplayInterpreted(const char* file, int line, const char* msg,
+                                    const QString& expr, const QString& expected)
+{
+    ++eval_total_tests;
+
+    eval->setExpression(expr);
+    eval->evalUpdateAns();
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+        return;
+    }
+
+    const QString interpreted = eval->interpretedExpression();
+    const QString displayed = Evaluator::formatInterpretedExpressionForDisplay(interpreted);
+    if (displayed != expected) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl
+             << "\tDisplayed : " << displayed.toUtf8().constData() << endl
+             << "\tExpected  : " << expected.toUtf8().constData() << endl
+             << "\tDisplayed code points: " << toCodePointList(displayed) << endl
+             << "\tExpected  code points: " << toCodePointList(expected) << endl;
+    }
 }
 
 static void checkUserFunctionDescription(const char* file, int line, const char* msg,
@@ -1109,6 +1180,14 @@ void test_auto_fix_powers()
     CHECK_AUTOFIX("3¹²³⁴⁵⁶⁷⁸⁹", "3^123456789");
     CHECK_AUTOFIX("3²⁰", "3^20");
     CHECK_AUTOFIX("7 + 3²⁰ * 4", "7 + 3^20 * 4");
+    CHECK_AUTOFIX("2×pi", "2⋅pi");
+    CHECK_AUTOFIX("2×a", "2⋅a");
+    CHECK_AUTOFIX("2   ×    pi   pi", "2⋅pi⋅pi");
+    CHECK_AUTOFIX("2          ×pi×  pi", "2⋅pi⋅pi");
+    CHECK_AUTOFIX("2×sin(33×3×sin(23)×cos(−pi))×sin(23234)×23⧸2−sin(−12) − 12−12",
+                  "2⋅sin(33×3⋅sin(23)⋅cos(−pi))⋅sin(23234)⋅23⧸2−sin(−12) − 12−12");
+    CHECK_AUTOFIX("2          ×pi×  pi + 2^12.000−2",
+                  "2⋅pi⋅pi + 2^12.000−2");
 }
 
 void test_comments()
@@ -1290,6 +1369,14 @@ void test_implicit_multiplication()
     CHECK_EVAL("f() = 123", "123");
     CHECK_EVAL("2f()", "246");
     CHECK_EVAL("5   5", "55");
+    CHECK_INTERPRETED("a*b", "a⋅b");
+    CHECK_INTERPRETED("a*(b)", "a⋅b");
+    CHECK_INTERPRETED("sin(pi)*cos(pi)", "sin(pi)⋅cos(pi)");
+    CHECK_INTERPRETED("f()*a", "f()⋅a");
+    CHECK_INTERPRETED("sqrt(4)*a", "sqrt(4)⋅a");
+    CHECK_INTERPRETED("a*2", "a⋅2");
+    CHECK_INTERPRETED("2*a", "2⋅a");
+    CHECK_INTERPRETED("2*3", "2×3");
 
     // Check implicit multiplication between numbers fails
     // CHECK_EVAL_FAIL("10.   0.2");
@@ -1310,19 +1397,60 @@ void test_implicit_multiplication()
     CHECK_EVAL("a sin(pi/2)", "5");
     CHECK_EVAL("a sqrt(4)",   "10");
     CHECK_EVAL("a sqrt(a^2)", "25");
+    CHECK_INTERPRETED("2×sin pi", "2⋅sin(pi)");
+    CHECK_INTERPRETED("a sin(pi/2)", "a⋅sin(pi/2)");
+    CHECK_INTERPRETED("a sqrt(4)", "a⋅sqrt(4)");
+    CHECK_INTERPRETED("a sqrt(a^2)", "a⋅sqrt(a^2)");
 
     /* Tests issue 538 */
     /* 3 sin (3 pi) was evaluated but not 3 sin (3) */
     CHECK_EVAL("3 sin (3 pi)", "0");
     CHECK_EVAL("3 sin (3)",    "0.4233600241796016663");
+    CHECK_INTERPRETED("3 sin (3 pi)", "3⋅sin(3⋅pi)");
+    CHECK_INTERPRETED("3 sin (3)", "3⋅sin(3)");
 
     CHECK_EVAL("2 (2 + 1)", "6");
     CHECK_EVAL("2 (a)", "10");
+    CHECK_INTERPRETED("2 (2 + 1)", "2⋅(2+1)");
+    CHECK_INTERPRETED("2 (a)", "2⋅a");
+    CHECK_INTERPRETED("(1+2)(3+4)", "(1+2)⋅(3+4)");
+    CHECK_INTERPRETED("(-1+2)(3-4)", "(-1+2)⋅(3-4)");
 
     /* Tests issue 598 */
     CHECK_EVAL("2(a)^3", "250");
+    CHECK_INTERPRETED("2(a)^3", "2⋅a^3");
 
     CHECK_EVAL("6/2(2+1)", "9");
+    CHECK_INTERPRETED("6/2(2+1)", "(6/2)⋅(2+1)");
+    CHECK_INTERPRETED("1/2 sqrt(3)", "(1/2)⋅sqrt(3)");
+    CHECK_INTERPRETED("1/2(2+3)", "(1/2)⋅(2+3)");
+    CHECK_INTERPRETED("2/3(4/5)", "(2/3)⋅((4/5))");
+    CHECK_INTERPRETED("10\\3(2)", "(10\\3)⋅2");
+    CHECK_INTERPRETED("-2(3+4)", "-(2⋅(3+4))");
+    CHECK_INTERPRETED("~2(3)", "~(2⋅3)");
+    CHECK_INTERPRETED("2^2(2)", "2^2⋅2");
+    CHECK_INTERPRETED("2^2(2)(2)", "2^2⋅(2⋅2)");
+    CHECK_INTERPRETED("2^2(2*2)", "2^2⋅(2×2)");
+    CHECK_INTERPRETED("2^2(2)+3", "2^2⋅2+3");
+    CHECK_INTERPRETED("1/2^3", "1/(2^3)");
+    CHECK_INTERPRETED("2^12!", "2^(12!)");
+    CHECK_INTERPRETED("2^12.1!", "2^(12.1!)");
+    CHECK_INTERPRETED("1/2!", "1/(2!)");
+    CHECK_INTERPRETED("2^12-2", "2^12-2");
+    CHECK_INTERPRETED("2^12.-2", "2^12-2");
+    CHECK_INTERPRETED("2^12.000-2", "2^12-2");
+    CHECK_INTERPRETED("2^12.12", "2^(12.12)");
+    CHECK_INTERPRETED("2^12.000-2+1/(1×2^3×3)-2^12!+2^12.1!",
+                      "2^12-2+1/(1⋅(2^3)⋅3)-2^(12!)+2^(12.1!)");
+    CHECK_INTERPRETED("1/(1×2^3×3)", "1/(1⋅(2^3)⋅3)");
+    CHECK_INTERPRETED("x=1/2 sqrt(3)", "x=(1/2)⋅sqrt(3)");
+    CHECK_INTERPRETED("g(t)=t/2 sqrt(3)", "g(t)=(t/2)⋅sqrt(3)");
+    CHECK_INTERPRETED("sin 23       cos 232323×pi×pi   2",
+                      "sin(23)⋅cos(232323)⋅pi⋅pi⋅2");
+    CHECK_INTERPRETED("sin 23       cos 232323×pi×pi   2×cos pi×pi×23",
+                      "sin(23)⋅cos(232323)⋅pi⋅pi⋅2⋅cos(pi)⋅pi⋅23");
+    CHECK_INTERPRETED("sin 23       cos 232323×pi×pi   2×cos pi×pi×23  23 × 323",
+                      "sin(23)⋅cos(232323)⋅pi⋅pi⋅2⋅cos(pi)⋅pi⋅2323×323");
     CHECK_EVAL("2^2(2)", "8");
     CHECK_EVAL("2^2(2)(2)", "16");
     CHECK_EVAL("2^2(2*2)", "16");
@@ -1331,6 +1459,131 @@ void test_implicit_multiplication()
 
     CHECK_EVAL_KNOWN_ISSUE("2(7.5−0.5)+4(12−0.75)", "59", 1155);
     CHECK_EVAL_KNOWN_ISSUE("2+2(5)", "12", 1155);
+}
+
+void test_display_interpreted_spacing()
+{
+    const QString mediumMathSpace(QChar(0x205F));
+    const QString unicodeMinusSign(QChar(0x2212));
+    CHECK_DISPLAY_INTERPRETED(
+        "sin(2⋅pi+3)-1+2×3⋅sin(pi)",
+        QString::fromUtf8("sin(2")
+            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + QStringLiteral("pi")
+            + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
+            + QStringLiteral("3)")
+            + mediumMathSpace + unicodeMinusSign + mediumMathSpace
+            + QStringLiteral("1")
+            + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
+            + QStringLiteral("(")
+            + QStringLiteral("2")
+            + mediumMathSpace + QString::fromUtf8("×") + mediumMathSpace
+            + QStringLiteral("3")
+            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + QStringLiteral("sin(pi)")
+            + QStringLiteral(")"));
+    CHECK_DISPLAY_INTERPRETED(
+        QString::fromUtf8("2×sin pi"),
+        QString::fromUtf8("2")
+            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + QStringLiteral("sin(pi)"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("23/2+10\\3"),
+        QStringLiteral("(23")
+            + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+            + QStringLiteral("2")
+            + QStringLiteral(")")
+            + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
+            + QStringLiteral("(10")
+            + mediumMathSpace + QStringLiteral("\\") + mediumMathSpace
+            + QStringLiteral("3)"));
+    CHECK_DISPLAY_INTERPRETED(
+        QString::fromUtf8("sin -12"),
+        QString::fromUtf8("sin(") + unicodeMinusSign + QStringLiteral("12)"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("1/2^3"),
+        QStringLiteral("1")
+            + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+            + QStringLiteral("(2³)"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("2^12!"),
+        QStringLiteral("2^(12!)"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("2^12.1!"),
+        QStringLiteral("2^(12.1!)"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("1/2!"),
+        QStringLiteral("1")
+            + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+            + QStringLiteral("(2!)"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("2^12-2"),
+        QString::fromUtf8("2¹²")
+            + mediumMathSpace + unicodeMinusSign + mediumMathSpace
+            + QStringLiteral("2"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("2^12.-2"),
+        QString::fromUtf8("2¹²")
+            + mediumMathSpace + unicodeMinusSign + mediumMathSpace
+            + QStringLiteral("2"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("2^12.000-2"),
+        QString::fromUtf8("2¹²")
+            + mediumMathSpace + unicodeMinusSign + mediumMathSpace
+            + QStringLiteral("2"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("2^12.000-2+1/(1×2^3×3)-2^12!+2^12.1!"),
+        QString::fromUtf8("2¹²")
+            + mediumMathSpace + unicodeMinusSign + mediumMathSpace
+            + QStringLiteral("2")
+            + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
+            + QStringLiteral("(1")
+            + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+            + QStringLiteral("(1")
+            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + QStringLiteral("(2³)")
+            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + QStringLiteral("3))")
+            + mediumMathSpace + unicodeMinusSign + mediumMathSpace
+            + QStringLiteral("2^(12!)")
+            + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
+            + QStringLiteral("2^(12.1!)"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("1/(1×2^3×3)"),
+        QStringLiteral("1")
+            + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+            + QStringLiteral("(1")
+            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + QStringLiteral("(2³)")
+            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + QStringLiteral("3)"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("2^123"),
+        QString::fromUtf8("2¹²³"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("2^12.12"),
+        QStringLiteral("2^(12.12)"));
+    CHECK_DISPLAY_INTERPRETED(
+        QString::fromUtf8("12×1/2/3/4×23+23−sin(2)+23 cos(23)"),
+        QStringLiteral("(12")
+            + mediumMathSpace + QString::fromUtf8("×") + mediumMathSpace
+            + QStringLiteral("1")
+            + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+            + QStringLiteral("2")
+            + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+            + QStringLiteral("3")
+            + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+            + QStringLiteral("4")
+            + mediumMathSpace + QString::fromUtf8("×") + mediumMathSpace
+            + QStringLiteral("23)")
+            + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
+            + QStringLiteral("23")
+            + mediumMathSpace + unicodeMinusSign + mediumMathSpace
+            + QStringLiteral("sin(2)")
+            + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
+            + QStringLiteral("(23")
+            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + QStringLiteral("cos(23))"));
 }
 
 void test_format()
@@ -1419,6 +1672,38 @@ void test_expression_operator_normalization()
              << "\tExpected : 1+2|8⧸4|10⧸2|"
                 "9−4|9−4|9−4|9−4|9−4|9−4|9−4|9−4|9−4|"
                 "2×3|4×5|6×7" << endl;
+    } else {
+        ++eval_total_tests;
+    }
+
+    const QString editorNormalized = EditorUtils::normalizeExpressionOperatorsForEditorInput(
+        QString::fromUtf8("2⋅3 4·5 6*7 8/4 10÷2 9⧸3"));
+    const std::string editorNormalizedStd = editorNormalized.toStdString();
+    ++eval_total_tests;
+    DisplayErrorOnMismatch(__FILE__, __LINE__, "normalizeExpressionOperatorsForEditorInput",
+                           editorNormalizedStd, "2⋅3 4×5 6×7 8/4 10/2 9/3",
+                           eval_failed_tests, eval_new_failed_tests);
+
+    const QStringList parsedForEditor = EditorUtils::parsePastedExpressionsForEditorInput(
+        QString::fromUtf8("2⋅3\n"
+                          "4·5\n"
+                          "6*7\n"
+                          "8/4\n"
+                          "10÷2\n"
+                          "9⧸3"));
+    if (parsedForEditor.size() != 6
+        || parsedForEditor.at(0) != QString::fromUtf8("2⋅3")
+        || parsedForEditor.at(1) != QString::fromUtf8("4×5")
+        || parsedForEditor.at(2) != QString::fromUtf8("6×7")
+        || parsedForEditor.at(3) != QString::fromUtf8("8/4")
+        || parsedForEditor.at(4) != QString::fromUtf8("10/2")
+        || parsedForEditor.at(5) != QString::fromUtf8("9/3")) {
+        ++eval_total_tests;
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tparsePastedExpressionsForEditorInput\t[NEW]" << endl
+             << "\tResult   : " << parsedForEditor.join("|").toUtf8().constData() << endl
+             << "\tExpected : 2⋅3|4×5|6×7|8/4|10/2|9/3" << endl;
     } else {
         ++eval_total_tests;
     }
@@ -1563,6 +1848,7 @@ int main(int argc, char* argv[])
     test_user_functions();
 
     test_implicit_multiplication();
+    test_display_interpreted_spacing();
 
     settings->complexNumbers = true;
     DMath::complexMode = true;

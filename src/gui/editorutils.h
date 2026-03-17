@@ -13,28 +13,29 @@
 
 namespace EditorUtils {
 
-inline bool isMultiplicationOperatorAlias(const QChar& ch)
+inline bool isMultiplicationOperatorAlias(const QChar& ch, bool keepDotOperator = false)
 {
     switch (ch.unicode()) {
     case 0x002A: // * ASTERISK
     case 0x00B7: // · MIDDLE DOT
     case 0x2217: // ∗ ASTERISK OPERATOR
     case 0x2219: // ∙ BULLET OPERATOR
-    case 0x22C5: // ⋅ DOT OPERATOR
     case 0x2715: // ✕ MULTIPLICATION X
     case 0x2716: // ✖ HEAVY MULTIPLICATION X
     case 0x2A09: // ⨉ N-ARY TIMES OPERATOR
     case 0x2A2F: // ⨯ VECTOR OR CROSS PRODUCT
         return true;
+    case 0x22C5: // ⋅ DOT OPERATOR
+        return !keepDotOperator;
     default:
         return false;
     }
 }
 
-inline QString normalizeMultiplicationOperators(QString text)
+inline QString normalizeMultiplicationOperators(QString text, bool keepDotOperator = false)
 {
     for (QChar& ch : text) {
-        if (isMultiplicationOperatorAlias(ch))
+        if (isMultiplicationOperatorAlias(ch, keepDotOperator))
             ch = QChar(0x00D7); // × MULTIPLICATION SIGN
     }
     return text;
@@ -56,6 +57,15 @@ inline QString normalizeDivisionOperators(QString text)
     for (QChar& ch : text) {
         if (isDivisionOperatorAlias(ch))
             ch = QChar(0x29F8); // ⧸ BIG SOLIDUS
+    }
+    return text;
+}
+
+inline QString normalizeDivisionOperatorsForEditorInput(QString text)
+{
+    for (QChar& ch : text) {
+        if (isDivisionOperatorAlias(ch) || ch.unicode() == 0x29F8)
+            ch = QChar(0x002F); // / SOLIDUS
     }
     return text;
 }
@@ -115,7 +125,17 @@ inline QString normalizeExpressionOperators(QString text)
     return text;
 }
 
-inline QStringList parsePastedExpressions(const QString& text)
+inline QString normalizeExpressionOperatorsForEditorInput(QString text)
+{
+    text = normalizeMultiplicationOperators(text, true);
+    text = normalizeDivisionOperatorsForEditorInput(text);
+    text = normalizeAdditionOperators(text);
+    text = normalizeSubtractionOperators(text);
+    return text;
+}
+
+template <typename NormalizeExpression>
+inline QStringList parsePastedExpressionsImpl(const QString& text, NormalizeExpression normalizeExpression)
 {
     QStringList expressions;
     const QStringList candidates =
@@ -123,13 +143,22 @@ inline QStringList parsePastedExpressions(const QString& text)
     expressions.reserve(candidates.size());
 
     for (const auto& candidate : candidates) {
-        const auto expression =
-            normalizeExpressionOperators(candidate.trimmed());
+        const auto expression = normalizeExpression(candidate.trimmed());
         if (!expression.isEmpty())
             expressions.append(expression);
     }
 
     return expressions;
+}
+
+inline QStringList parsePastedExpressions(const QString& text)
+{
+    return parsePastedExpressionsImpl(text, normalizeExpressionOperators);
+}
+
+inline QStringList parsePastedExpressionsForEditorInput(const QString& text)
+{
+    return parsePastedExpressionsImpl(text, normalizeExpressionOperatorsForEditorInput);
 }
 
 }
