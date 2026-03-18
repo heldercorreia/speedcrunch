@@ -27,11 +27,14 @@
 #include <QLocale>
 #include <QSettings>
 #include <QApplication>
+#include <QFileInfo>
 #include <QFont>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QtCore/QStandardPaths>
+
+#include <filesystem>
 
 #ifdef Q_OS_WIN
 # define WIN32_LEAN_AND_MEAN
@@ -123,6 +126,22 @@ bool deserializeCustomKeypad(const QJsonObject& json, Settings::CustomKeypad* ke
 
     *keypad = parsed;
     return true;
+}
+
+bool shouldUseNonAtomicSettingsSync(const QString& fileName)
+{
+    const QFileInfo fileInfo(fileName);
+    if (!fileInfo.exists())
+        return false;
+
+    // Renaming a temporary file over a linked target breaks the link.
+    if (fileInfo.isSymLink())
+        return true;
+
+    std::error_code error;
+    const auto linkCount = std::filesystem::hard_link_count(
+        std::filesystem::path(fileName.toStdU16String()), error);
+    return !error && linkCount > 1;
 }
 } // namespace
 
@@ -590,6 +609,7 @@ static void migrateSettings_legacyTo1200(QSettings* settings, const QString& KEY
 QSettings* createQSettings(const QString& KEY)
 {
     QSettings* settings = new QSettings(Settings::getConfigPath() + "/" + KEY + ".ini", QSettings::IniFormat);
+    settings->setAtomicSyncRequired(!shouldUseNonAtomicSettingsSync(settings->fileName()));
     int ver = settings->value("ConfigVersion", 0).toInt();
     switch (ver) {
     case 0:
