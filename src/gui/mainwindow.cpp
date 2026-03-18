@@ -1383,8 +1383,7 @@ void MainWindow::applySettings()
         m_actions.settingsBehaviorHistorySavingOnExit->setChecked(true);
     }
 
-    if (m_settings->historySaving != Settings::HistorySavingNever)
-        restoreSession();
+    restoreSession(m_settings->historySaving != Settings::HistorySavingNever);
 
     m_actions.settingsBehaviorLeaveLastExpression->setChecked(m_settings->leaveLastExpression);
     m_actions.settingsBehaviorEmptyHistoryHint->setChecked(m_settings->showEmptyHistoryHint);
@@ -1587,7 +1586,7 @@ void MainWindow::saveSettings()
     m_settings->save();
 }
 
-void MainWindow::saveSession(QString & fname)
+void MainWindow::saveSession(QString & fname, bool saveHistory)
 {
     QFile file(fname);
     if (!file.open(QIODevice::WriteOnly)) {
@@ -1597,6 +1596,8 @@ void MainWindow::saveSession(QString & fname)
 
     QJsonObject json;
     m_session->serialize(json);
+    if (!saveHistory)
+        json.remove(QLatin1String("history"));
     QJsonDocument doc(json);
     file.write(doc.toJson());
 
@@ -2923,7 +2924,7 @@ void MainWindow::copy()
     m_copyWidget->copy();
 }
 
-void MainWindow::restoreSession() {
+void MainWindow::restoreSession(bool restoreHistory) {
     QString data_path = Settings::getDataPath();
     QDir qdir;
     qdir.mkpath(data_path);
@@ -2935,14 +2936,17 @@ void MainWindow::restoreSession() {
 
     QByteArray data = file.readAll();
     QJsonDocument doc(QJsonDocument::fromJson(data));
-    m_session->deSerialize(doc.object(), true);
+    QJsonObject json = doc.object();
+    if (!restoreHistory)
+        json.remove(QLatin1String("history"));
+    m_session->deSerialize(json, true);
 
     file.close();
     emit historyChanged();
     emit variablesChanged();
     emit functionsChanged();
 
-    m_conditions.autoAns = !m_session->historyToList().empty();
+    m_conditions.autoAns = restoreHistory && !m_session->historyToList().empty();
 }
 
 void MainWindow::evaluateEditorExpression()
@@ -3312,18 +3316,17 @@ void MainWindow::closeEvent(QCloseEvent* e)
         m_widgets.manual->close();
     }
     saveSettings();
-    if (m_settings->historySaving == Settings::HistorySavingOnExit)
-        saveSessionToDefaultPath();
+    saveSessionToDefaultPath(m_settings->historySaving != Settings::HistorySavingNever);
     e->accept();
 }
 
-void MainWindow::saveSessionToDefaultPath()
+void MainWindow::saveSessionToDefaultPath(bool saveHistory)
 {
     QString data_path = Settings::getDataPath();
     QDir qdir;
     qdir.mkpath(data_path);
     data_path.append("/history.json");
-    saveSession(data_path);
+    saveSession(data_path, saveHistory);
 }
 
 void MainWindow::setResultPrecision(int p)

@@ -108,7 +108,7 @@ int Session::deSerialize(const QJsonObject &json, bool merge=false)
         }
     }
 
-    if (json.contains("history")) {
+    if (json.contains("functions")) {
         QJsonArray func_obj = json["functions"].toArray();
         int n = func_obj.size();
         for(int i=0; i<n; ++i) {

@@ -251,7 +251,7 @@ private:
     void checkInitialResultPrecision();
     void checkInitialLanguage();
     void checkInitialDigitGrouping();
-    void restoreSession();
+    void restoreSession(bool restoreHistory = true);
     void deleteKeypad();
     void deleteStatusBar();
     void deleteBitField();
@@ -262,8 +262,8 @@ private:
     void deleteVariablesDock();
     void deleteUserFunctionsDock();
     void saveSettings();
-    void saveSessionToDefaultPath();
-    void saveSession(QString &fname);
+    void saveSessionToDefaultPath(bool saveHistory = true);
+    void saveSession(QString &fname, bool saveHistory = true);
     bool configureCustomKeypad();
     void setActionsText();
     void setMenusText();

@@ -1817,6 +1817,42 @@ void test_session_history_limit()
     settings->maxHistoryEntries = oldMaxHistoryEntries;
 }
 
+void test_session_deserialize_without_history()
+{
+    Session source;
+    Session restored;
+    Session* const previousSession = const_cast<Session*>(Evaluator::instance()->session());
+
+    Evaluator::instance()->setSession(&source);
+    Evaluator::instance()->initializeBuiltInVariables();
+
+    source.addVariable(Variable("persistedVar", Quantity(42), Variable::UserDefined));
+    source.addUserFunction(UserFunction("persistedFunc", QStringList() << "x", "x+1"));
+    source.addHistoryEntry(HistoryEntry("1+1", Quantity(2)));
+
+    QJsonObject json;
+    source.serialize(json);
+    json.remove("history");
+
+    Evaluator::instance()->setSession(&restored);
+    restored.deSerialize(json, false);
+
+    ++eval_total_tests;
+    const bool hasVar = restored.hasVariable("persistedVar")
+        && DMath::format(restored.getVariable("persistedVar").value(), Format::Fixed()) == "42";
+    const bool hasFunc = restored.hasUserFunction("persistedFunc");
+    const bool hasNoHistory = restored.historyToList().isEmpty();
+    if (!hasVar || !hasFunc || !hasNoHistory) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tsession deserialize without history keeps vars/functions\t[NEW]" << endl;
+    }
+
+    Evaluator::instance()->setSession(previousSession);
+    if (previousSession)
+        Evaluator::instance()->initializeBuiltInVariables();
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -1873,6 +1909,7 @@ int main(int argc, char* argv[])
     test_epoch();
     test_expression_operator_normalization();
     test_session_history_limit();
+    test_session_deserialize_without_history();
 
     test_angle_mode(settings);
 

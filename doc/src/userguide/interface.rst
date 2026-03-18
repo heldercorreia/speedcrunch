@@ -181,9 +181,15 @@ History
 
 This section contains settings that control how calculation history is stored.
 
-* :menuselection:`Save History on Exit`
-    Controls if the calculation history is automatically saved when SpeedCrunch exits
-    and restored when it is launched again.
+* :menuselection:`History Saving --> Never`
+    Do not persist the calculation history between runs.
+* :menuselection:`History Saving --> On Exit`
+    Save the calculation history when SpeedCrunch exits and restore it on the next launch.
+* :menuselection:`History Saving --> Continuously`
+    Save calculation history after each new calculation and restore it on the next launch.
+* :menuselection:`History Saving`
+    This preference only affects calculation history. User-defined functions and user-defined
+    variables are always persisted.
 * :menuselection:`History Size Limit...`
     Sets the maximum number of stored history entries. By default, SpeedCrunch keeps
     up to 100 entries and automatically removes the oldest ones when this limit is
