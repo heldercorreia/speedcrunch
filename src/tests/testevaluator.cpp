@@ -1432,7 +1432,9 @@ void test_implicit_multiplication()
     CHECK_INTERPRETED("2^2(2)(2)", "2^2⋅(2⋅2)");
     CHECK_INTERPRETED("2^2(2*2)", "2^2⋅(2×2)");
     CHECK_INTERPRETED("2^2(2)+3", "2^2⋅2+3");
-    CHECK_INTERPRETED("1/2^3", "1/(2^3)");
+    CHECK_INTERPRETED("1 meter second^-1", "1⋅meter⋅second^(-1)");
+    CHECK_INTERPRETED("1/second^2", "1/second^2");
+    CHECK_INTERPRETED("1/2^3", "1/2^3");
     CHECK_INTERPRETED("2^12!", "2^(12!)");
     CHECK_INTERPRETED("2^12.1!", "2^(12.1!)");
     CHECK_INTERPRETED("1/2!", "1/(2!)");
@@ -1501,10 +1503,22 @@ void test_display_interpreted_spacing()
         QString::fromUtf8("sin -12"),
         QString::fromUtf8("sin(") + unicodeMinusSign + QStringLiteral("12)"));
     CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("1 meter second^-1"),
+        QStringLiteral("1")
+            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + QStringLiteral("meter")
+            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + QString::fromUtf8("second⁻¹"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("1/second^2"),
+        QStringLiteral("1")
+            + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+            + QString::fromUtf8("second²"));
+    CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("1/2^3"),
         QStringLiteral("1")
             + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
-            + QStringLiteral("(2³)"));
+            + QStringLiteral("2³"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("2^12!"),
         QStringLiteral("2^(12!)"));

@@ -2368,22 +2368,23 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
         // readability in compound products (for example "1⋅(2^3)⋅3").
         if (opcodeType == Opcode::Mul && !isImplicitMultiplication) {
             if (left.rootOpcode == Opcode::Pow
+                && !left.isLiteralSymbol
                 && !isWrappedInOuterParentheses(leftText))
             {
                 leftText = wrapInParentheses(leftText);
             }
             if (right.rootOpcode == Opcode::Pow
+                && !right.isLiteralSymbol
                 && !isWrappedInOuterParentheses(rightText))
             {
                 rightText = wrapInParentheses(rightText);
             }
         }
 
-        // Keep explicit grouping for denominator expressions with tighter
-        // precedence (for example "1/(2^3)" and "1/(2!)").
+        // Keep explicit grouping for factorial denominators
+        // (for example "1/(2!)").
         if (opcodeType == Opcode::Div
-            && (right.rootOpcode == Opcode::Pow
-                || right.rootOpcode == Opcode::Fact)
+            && right.rootOpcode == Opcode::Fact
             && !isWrappedInOuterParentheses(rightText))
         {
             rightText = wrapInParentheses(rightText);
