@@ -772,7 +772,9 @@ QString Evaluator::formatInterpretedExpressionForDisplay(const QString& expressi
             || op == Token::Subtraction
             || op == Token::Multiplication
             || op == Token::Division
-            || op == Token::IntegerDivision;
+            || op == Token::IntegerDivision
+            || op == Token::ArithmeticLeftShift
+            || op == Token::ArithmeticRightShift;
         const QString operatorText =
             op == Token::Subtraction ? unicodeMinusSign : token.text();
 
@@ -3474,6 +3476,54 @@ QString Evaluator::autoFix(const QString& expr)
                            left + QString::fromUtf8("⋅") + right);
             offset = start + left.length() + 1 + right.length();
         }
+    }
+
+    // Rewrite common shift-vs-add/sub ambiguity:
+    // "a<<b+c" -> "(a << b) + c" and "a>>b-c" -> "(a >> b) - c".
+    // This targets simple three-operand forms only.
+    while (true) {
+        const Tokens tokens = Evaluator::scan(result);
+        bool updated = false;
+
+        for (int i = 1; i + 3 < tokens.count(); ++i) {
+            const Token& left = tokens.at(i - 1);
+            const Token& shift = tokens.at(i);
+            const Token& right = tokens.at(i + 1);
+            const Token& addSub = tokens.at(i + 2);
+            const Token& tail = tokens.at(i + 3);
+
+            const Token::Operator shiftOp = shift.asOperator();
+            if (shiftOp != Token::ArithmeticLeftShift
+                && shiftOp != Token::ArithmeticRightShift)
+            {
+                continue;
+            }
+            if (!left.isOperand() || !right.isOperand() || !tail.isOperand())
+                continue;
+            if (addSub.asOperator() != Token::Addition
+                && addSub.asOperator() != Token::Subtraction)
+            {
+                continue;
+            }
+
+            const int startPos = left.pos();
+            const int endPos = tail.pos() + tail.size();
+            const QString leftText = result.mid(left.pos(), left.size()).trimmed();
+            const QString shiftText =
+                shiftOp == Token::ArithmeticLeftShift ? QStringLiteral("<<")
+                                                      : QStringLiteral(">>");
+            const QString rightText = result.mid(right.pos(), right.size()).trimmed();
+            const QString addSubText = result.mid(addSub.pos(), addSub.size()).trimmed();
+            const QString tailText = result.mid(tail.pos(), tail.size()).trimmed();
+            const QString replacement = QStringLiteral("(%1 %2 %3) %4 %5")
+                .arg(leftText, shiftText, rightText, addSubText, tailText);
+            result.replace(startPos, endPos - startPos, replacement);
+            updated = true;
+            break;
+        }
+
+        if (!updated)
+            break;
     }
 
     // Automagically close all parenthesis.

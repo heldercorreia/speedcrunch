@@ -1190,6 +1190,16 @@ void test_auto_fix_powers()
                   "2⋅pi⋅pi + 2^12.000−2");
 }
 
+void test_auto_fix_shift_add_sub()
+{
+    CHECK_AUTOFIX("0x4f<<8+0x4c", "(0x4f << 8) + 0x4c");
+    CHECK_AUTOFIX("0x4f >> 8 + 0x4c", "(0x4f >> 8) + 0x4c");
+    CHECK_AUTOFIX("0x4f<<8-0x4c", "(0x4f << 8) - 0x4c");
+
+    // Keep explicit RHS grouping untouched.
+    CHECK_AUTOFIX("0x4f<<(8+0x4c)", "0x4f<<(8+0x4c)");
+}
+
 void test_comments()
 {
     CHECK_EVAL("ncr(3;3) ? this is because foo",  "1");
@@ -1499,6 +1509,16 @@ void test_display_interpreted_spacing()
             + QStringLiteral("(10")
             + mediumMathSpace + QStringLiteral("\\") + mediumMathSpace
             + QStringLiteral("3)"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("1<<2"),
+        QStringLiteral("1")
+            + mediumMathSpace + QStringLiteral("<<") + mediumMathSpace
+            + QStringLiteral("2"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("1>>2"),
+        QStringLiteral("1")
+            + mediumMathSpace + QStringLiteral(">>") + mediumMathSpace
+            + QStringLiteral("2"));
     CHECK_DISPLAY_INTERPRETED(
         QString::fromUtf8("sin -12"),
         QString::fromUtf8("sin(") + unicodeMinusSign + QStringLiteral("12)"));
@@ -1891,6 +1911,7 @@ int main(int argc, char* argv[])
     test_auto_fix_ans();
     test_auto_fix_trailing_equal();
     test_auto_fix_powers();
+    test_auto_fix_shift_add_sub();
     test_auto_fix_untouch();
 
     test_comments();

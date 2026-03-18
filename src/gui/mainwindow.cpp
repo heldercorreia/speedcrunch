@@ -2964,7 +2964,8 @@ void MainWindow::restoreSession(bool restoreHistory) {
 
 void MainWindow::evaluateEditorExpression()
 {
-    QString expr = m_evaluator->autoFix(m_widgets.editor->text());
+    const QString enteredExpr = m_widgets.editor->text();
+    QString expr = m_evaluator->autoFix(enteredExpr);
     const bool isCommentOnly = Evaluator::isCommentOnlyExpression(expr);
 
     if (expr.isEmpty())
@@ -2981,7 +2982,7 @@ void MainWindow::evaluateEditorExpression()
         } else {
             const QStringList previousExpressions = historyExpressions();
             QStringList updatedExpressions = previousExpressions;
-            updatedExpressions[m_pendingHistoryEditIndex] = expr;
+            updatedExpressions[m_pendingHistoryEditIndex] = enteredExpr;
 
             int errorIndex = -1;
             QString errorText;
@@ -3024,7 +3025,7 @@ void MainWindow::evaluateEditorExpression()
         return;
 
     const QString interpretedExpr = m_evaluator->interpretedExpression();
-    m_session->addHistoryEntry(HistoryEntry(expr, result, interpretedExpr));
+    m_session->addHistoryEntry(HistoryEntry(enteredExpr, result, interpretedExpr));
     if (m_settings->historySaving == Settings::HistorySavingContinuously)
         saveSessionToDefaultPath();
     emit historyChanged();
@@ -3099,9 +3100,10 @@ bool MainWindow::rebuildSessionFromExpressions(const QStringList& expressions, i
 
     for (int i = 0; i < expressions.size(); ++i) {
         const QString currentExpr = expressions.at(i);
-        const bool isCommentOnly = Evaluator::isCommentOnlyExpression(currentExpr);
+        const QString evalExpr = m_evaluator->autoFix(currentExpr);
+        const bool isCommentOnly = Evaluator::isCommentOnlyExpression(evalExpr);
 
-        m_evaluator->setExpression(currentExpr);
+        m_evaluator->setExpression(evalExpr);
         Quantity result = m_evaluator->evalUpdateAns();
         if (!m_evaluator->error().isEmpty()) {
             if (errorIndex)
