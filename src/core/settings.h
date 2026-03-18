@@ -103,6 +103,7 @@ public:
     bool windowAlwaysOnTop;
     bool autoResultToClipboard;
     bool windowPositionSave;
+    bool singleInstance;
 
     bool constantsDockVisible;
     bool functionsDockVisible;

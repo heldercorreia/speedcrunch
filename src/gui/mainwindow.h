@@ -200,6 +200,7 @@ private slots:
     void setVariablesDockVisible(bool, bool takeFocus = true);
     void setUserFunctionsDockVisible(bool, bool takeFocus = true);
     void setWindowPositionSaveEnabled(bool);
+    void setSingleInstanceEnabled(bool);
     void setWidgetsDirection();
     void showAboutDialog();
     void showStateLabel(const QString&);
@@ -370,6 +371,7 @@ private:
         QAction* settingsBehaviorHistorySavingOnExit;
         QAction* settingsBehaviorHistorySavingContinuously;
         QAction* settingsBehaviorHistorySizeLimit;
+        QAction* settingsBehaviorSingleInstance;
         QAction* settingsRadixCharBoth;
         QAction* settingsResultFormatComplexDisabled;
         QAction* settingsDisplayZoomIn;

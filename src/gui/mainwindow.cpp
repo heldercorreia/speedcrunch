@@ -180,6 +180,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorHistorySavingOnExit = new QAction(this);
     m_actions.settingsBehaviorHistorySavingContinuously = new QAction(this);
     m_actions.settingsBehaviorSaveWindowPositionOnExit = new QAction(this);
+    m_actions.settingsBehaviorSingleInstance = new QAction(this);
     m_actions.settingsBehaviorSyntaxHighlighting = new QAction(this);
     m_actions.settingsBehaviorHoverHighlightResults = new QAction(this);
     m_actions.settingsBehaviorDigitGroupingNone = new QAction(this);
@@ -257,6 +258,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorHistorySavingContinuously->setCheckable(true);
     m_actions.settingsBehaviorHistorySavingContinuously->setData(Settings::HistorySavingContinuously);
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setCheckable(true);
+    m_actions.settingsBehaviorSingleInstance->setCheckable(true);
     m_actions.settingsBehaviorSyntaxHighlighting->setCheckable(true);
     m_actions.settingsBehaviorHoverHighlightResults->setCheckable(true);
     m_actions.settingsBehaviorDigitGroupingNone->setCheckable(true);
@@ -458,6 +460,9 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorHistorySavingOnExit->setText(MainWindow::tr("On &Exit"));
     m_actions.settingsBehaviorHistorySavingContinuously->setText(MainWindow::tr("&Continuously"));
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setText(MainWindow::tr("Save &Window Position on Exit"));
+    m_actions.settingsBehaviorSingleInstance->setText(MainWindow::tr("Single &Instance"));
+    m_actions.settingsBehaviorSingleInstance->setToolTip(MainWindow::tr("When enabled, launching SpeedCrunch again focuses the existing window instead of opening another instance."));
+    m_actions.settingsBehaviorSingleInstance->setStatusTip(MainWindow::tr("When enabled, launching SpeedCrunch again focuses the existing window instead of opening another instance."));
     m_actions.settingsBehaviorSyntaxHighlighting->setText(MainWindow::tr("Syntax &Highlighting"));
     m_actions.settingsBehaviorHoverHighlightResults->setText(MainWindow::tr("Hover Highlighting"));
     m_actions.settingsBehaviorDigitGroupingNone->setText(MainWindow::tr("Disabled"));
@@ -801,6 +806,7 @@ void MainWindow::createMenus()
 
     m_menus.window = m_menus.settings->addMenu("");
     m_menus.window->addAction(m_actions.settingsBehaviorSaveWindowPositionOnExit);
+    m_menus.window->addAction(m_actions.settingsBehaviorSingleInstance);
     m_menus.window->addAction(m_actions.settingsBehaviorAlwaysOnTop);
 
     m_menus.settings->addAction(m_actions.settingsLanguage);
@@ -1186,6 +1192,7 @@ void MainWindow::createFixedConnections()
     connect(m_actionGroups.historySaving, SIGNAL(triggered(QAction*)), SLOT(setHistorySaving(QAction*)));
     connect(m_actions.settingsBehaviorHistorySizeLimit, SIGNAL(triggered()), SLOT(setHistorySizeLimit()));
     connect(m_actions.settingsBehaviorSaveWindowPositionOnExit, SIGNAL(toggled(bool)), SLOT(setWindowPositionSaveEnabled(bool)));
+    connect(m_actions.settingsBehaviorSingleInstance, SIGNAL(toggled(bool)), SLOT(setSingleInstanceEnabled(bool)));
     connect(m_actions.settingsBehaviorSyntaxHighlighting, SIGNAL(toggled(bool)), SLOT(setSyntaxHighlightingEnabled(bool)));
     connect(m_actions.settingsBehaviorHoverHighlightResults, SIGNAL(toggled(bool)), SLOT(setHoverHighlightResultsEnabled(bool)));
     connect(m_actionGroups.digitGrouping, SIGNAL(triggered(QAction*)), SLOT(setDigitGrouping(QAction*)));
@@ -1388,6 +1395,7 @@ void MainWindow::applySettings()
     m_actions.settingsBehaviorLeaveLastExpression->setChecked(m_settings->leaveLastExpression);
     m_actions.settingsBehaviorEmptyHistoryHint->setChecked(m_settings->showEmptyHistoryHint);
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setChecked(m_settings->windowPositionSave);
+    m_actions.settingsBehaviorSingleInstance->setChecked(m_settings->singleInstance);
 
 
     checkInitialResultFormat();
@@ -2069,6 +2077,11 @@ void MainWindow::setEmptyHistoryHintEnabled(bool b)
 void MainWindow::setWindowPositionSaveEnabled(bool b)
 {
     m_settings->windowPositionSave = b;
+}
+
+void MainWindow::setSingleInstanceEnabled(bool b)
+{
+    m_settings->singleInstance = b;
 }
 
 void MainWindow::setAutoCompletionEnabled(bool b)

@@ -12,7 +12,7 @@ and Linux in a number of languages.
 To build SpeedCrunch, you need:
 
 - A C++17-capable compiler
-- [Qt](http://qt.io) 6.x (Core, Widgets, Help)
+- [Qt](http://qt.io) 6.x (Core, Widgets, Help, Network)
 - [CMake](http://cmake.org) 3.16 or later
 
 To build SpeedCrunch in a dedicated build directory and install it, run the following

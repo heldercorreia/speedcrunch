@@ -18,7 +18,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 message("Build type: ${CMAKE_BUILD_TYPE}")
 
-find_package(Qt6 COMPONENTS Core Widgets Help QUIET)
+find_package(Qt6 COMPONENTS Core Widgets Help Network QUIET)
 
 if (MSVC)
     add_definitions(-D_USE_MATH_DEFINES)
@@ -101,7 +101,7 @@ set_property(TARGET ${APPLICATION_NAME} PROPERTY CXX_STANDARD 11)
 
 add_custom_target(confclean COMMAND rm -rf Makefile CMakeFiles/ CMakeCache.txt cmake_install.cmake DartTestfile.txt install_manifest.txt)
 
-set(QT_LIBRARIES Qt6::Widgets Qt6::Help Qt6::Core)
+set(QT_LIBRARIES Qt6::Widgets Qt6::Help Qt6::Network Qt6::Core)
 target_link_libraries(${APPLICATION_NAME} ${QT_LIBRARIES})
 
 enable_testing()
@@ -171,7 +171,7 @@ endif()
 
 if(WIN32)
     include(QtWin32Deploy)
-    qtwin32_deploy_modules(${BIN_INSTALL_DIR} qtwin32_Qt6Widgets qtwin32_Qt6Help)
+    qtwin32_deploy_modules(${BIN_INSTALL_DIR} qtwin32_Qt6Widgets qtwin32_Qt6Help qtwin32_Qt6Network)
     qtwin32_deploy_default_qt_conf(${BIN_INSTALL_DIR})
 elseif(APPLE)
     include(MacdeployQt)

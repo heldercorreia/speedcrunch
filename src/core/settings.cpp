@@ -254,6 +254,7 @@ Settings::CustomKeypad Settings::defaultCustomKeypad()
 Settings::Settings()
 {
     digitGroupingIntegerPartOnly = false;
+    singleInstance = true;
 }
 
 void Settings::load()
@@ -307,6 +308,7 @@ void Settings::load()
     hoverHighlightResults = settings->value(key + QLatin1String("HoverHighlightResults"), true).toBool();
     autoResultToClipboard = settings->value(key + QLatin1String("AutoResultToClipboard"), false).toBool();
     windowPositionSave = settings->value(key + QLatin1String("WindowPositionSave"), true).toBool();
+    singleInstance = settings->value(key + QLatin1String("SingleInstance"), true).toBool();
     complexNumbers = settings->value(key + QLatin1String("ComplexNumbers"), false).toBool();
 
     digitGrouping = settings->value(key + QLatin1String("DigitGrouping"), 0).toInt();
@@ -433,6 +435,7 @@ void Settings::save()
     settings->setValue(key + QLatin1String("AutoResultToClipboard"), autoResultToClipboard);
     settings->setValue(key + QLatin1String("Language"), language);
     settings->setValue(key + QLatin1String("WindowPositionSave"), windowPositionSave);
+    settings->setValue(key + QLatin1String("SingleInstance"), singleInstance);
     settings->setValue(key + QLatin1String("ComplexNumbers"), complexNumbers);
 
     settings->setValue(key + QLatin1String("AngleMode"), QString(QChar(angleUnit)));

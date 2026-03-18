@@ -4,7 +4,7 @@ equals(QT_MAJOR_VERSION, 6) {
     }
 }
 
-QT += widgets
+QT += widgets network
 CONFIG += c++17
 QMAKE_CXXFLAGS += "-Wall -pedantic"
 

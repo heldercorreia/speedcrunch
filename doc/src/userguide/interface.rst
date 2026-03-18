@@ -203,6 +203,9 @@ This section contains settings that control the main window behavior.
 
 * :menuselection:`Save Window Position on Exit`
     Controls if the window position is saved and restored.
+* :menuselection:`Single Instance`
+    When enabled (default), launching SpeedCrunch while it is already running focuses
+    the existing window instead of starting a second instance.
 * :menuselection:`Always on Top`
     Keep the SpeedCrunch window on top of other windows.
 
@@ -239,7 +242,9 @@ Editing
 
 * :menuselection:`Automatic Completion`
     Completely enables or disables autocompletion.
-  .. _automatic_result_reuse:
+
+.. _automatic_result_reuse:
+
 * :menuselection:`Auto-Insert "ans" When Starting with an Operator`
     If a new expression starts with ``+``, ``-``, ``*``, or ``/``, SpeedCrunch inserts ``ans`` first.
 * :menuselection:`Show Empty History Hint`
