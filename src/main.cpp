@@ -28,6 +28,13 @@
 #include <QLocalServer>
 #include <QLocalSocket>
 
+#ifdef Q_OS_UNIX
+#include <QSocketNotifier>
+#include <signal.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#endif
+
 namespace {
 
 QString singletonServerName()
@@ -88,6 +95,44 @@ bool startSingletonServer(QLocalServer* server, const QString& serverName, bool*
     return false;
 }
 
+#ifdef Q_OS_UNIX
+int g_unixSignalFds[2] = { -1, -1 };
+
+void handleUnixSignal(int signalNumber)
+{
+    const char signalCode = static_cast<char>(signalNumber);
+    const ssize_t written = ::write(g_unixSignalFds[0], &signalCode, sizeof(signalCode));
+    Q_UNUSED(written);
+}
+
+bool installUnixSignalHandler(int signalNumber)
+{
+    struct sigaction action = {};
+    action.sa_handler = handleUnixSignal;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = 0;
+    return ::sigaction(signalNumber, &action, 0) == 0;
+}
+
+bool setupUnixTerminationSignalHandlers()
+{
+    if (::socketpair(AF_UNIX, SOCK_STREAM, 0, g_unixSignalFds) != 0)
+        return false;
+
+    const bool ok = installUnixSignalHandler(SIGTERM)
+        && installUnixSignalHandler(SIGINT)
+        && installUnixSignalHandler(SIGHUP);
+    if (!ok) {
+        ::close(g_unixSignalFds[0]);
+        ::close(g_unixSignalFds[1]);
+        g_unixSignalFds[0] = -1;
+        g_unixSignalFds[1] = -1;
+    }
+
+    return ok;
+}
+#endif
+
 }
 
 int main(int argc, char* argv[])
@@ -101,6 +146,36 @@ int main(int argc, char* argv[])
     QLocalServer singletonServer;
     MainWindow* mainWindow = 0;
     bool pendingActivation = false;
+
+    QObject::connect(&application, &QCoreApplication::aboutToQuit, &application, [&]() {
+        if (mainWindow)
+            mainWindow->persistSessionAndSettingsForShutdown();
+#ifdef Q_OS_UNIX
+        if (g_unixSignalFds[0] != -1) {
+            ::close(g_unixSignalFds[0]);
+            g_unixSignalFds[0] = -1;
+        }
+        if (g_unixSignalFds[1] != -1) {
+            ::close(g_unixSignalFds[1]);
+            g_unixSignalFds[1] = -1;
+        }
+#endif
+    });
+
+#ifdef Q_OS_UNIX
+    QSocketNotifier* unixSignalNotifier = 0;
+    if (setupUnixTerminationSignalHandlers()) {
+        unixSignalNotifier = new QSocketNotifier(g_unixSignalFds[1], QSocketNotifier::Read, &application);
+        QObject::connect(unixSignalNotifier, &QSocketNotifier::activated, &application, [&]() {
+            char signalCode = 0;
+            const ssize_t bytesRead = ::read(g_unixSignalFds[1], &signalCode, sizeof(signalCode));
+            if (bytesRead > 0)
+                application.quit();
+        });
+    } else {
+        qWarning() << "Could not install Unix termination signal handlers.";
+    }
+#endif
 
     if (settings->singleInstance) {
         const QString serverName = singletonServerName();

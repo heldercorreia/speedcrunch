@@ -63,6 +63,7 @@ class MainWindow : public QMainWindow {
 public:
     MainWindow();
     ~MainWindow();
+    void persistSessionAndSettingsForShutdown();
 
 signals:
     void angleUnitChanged();
@@ -486,6 +487,7 @@ private:
     ManualServer* m_manualServer;
     QString m_colorSchemeToRevert;
     int m_pendingHistoryEditIndex;
+    bool m_shutdownStateSaved;
 };
 
 #endif // GUI_MAINWINDOW_H

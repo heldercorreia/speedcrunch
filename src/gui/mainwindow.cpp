@@ -1651,6 +1651,7 @@ MainWindow::MainWindow()
 
     m_copyWidget = 0;
     m_pendingHistoryEditIndex = -1;
+    m_shutdownStateSaved = false;
 
     createUi();
     applySettings();
@@ -3327,12 +3328,21 @@ void MainWindow::setRadixCharacterBoth()
 
 void MainWindow::closeEvent(QCloseEvent* e)
 {
+    persistSessionAndSettingsForShutdown();
+    e->accept();
+}
+
+void MainWindow::persistSessionAndSettingsForShutdown()
+{
+    if (m_shutdownStateSaved)
+        return;
+
+    m_shutdownStateSaved = true;
     if (m_widgets.manual) {
         m_widgets.manual->close();
     }
     saveSettings();
     saveSessionToDefaultPath(m_settings->historySaving != Settings::HistorySavingNever);
-    e->accept();
 }
 
 void MainWindow::saveSessionToDefaultPath(bool saveHistory)
