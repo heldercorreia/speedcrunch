@@ -957,6 +957,26 @@ void test_function_stat()
     CHECK_EVAL("VARIANCE(1;-1)", "1");
     CHECK_EVAL("VARIANCE(5 meter; 13 meter)", "16 meter²");
     // for complex tests of VARIANCE see test_complex
+
+    CHECK_EVAL("int(rand())", "0");
+    CHECK_EVAL("rand(0)", "0");
+    CHECK_EVAL_FAIL("rand(1;2)");
+    CHECK_EVAL_FAIL("rand(-1)");
+    CHECK_EVAL_FAIL("rand(1.5)");
+    CHECK_EVAL_FAIL("rand(1 meter)");
+    CHECK_EVAL_FAIL("rand(1000)");
+
+    CHECK_EVAL("randint(0)", "0");
+    CHECK_EVAL("randint(5;5)", "5");
+    CHECK_EVAL("randint(-3;-3)", "-3");
+    CHECK_EVAL("int(randint(9)/10)", "0");
+    CHECK_EVAL("int(randint(-9)/10)", "0");
+    CHECK_EVAL("int(randint(3;1)/10)", "0");
+    CHECK_EVAL_FAIL("randint()");
+    CHECK_EVAL_FAIL("randint(1;2;3)");
+    CHECK_EVAL_FAIL("randint(1.5)");
+    CHECK_EVAL_FAIL("randint(1;2.5)");
+    CHECK_EVAL_FAIL("randint(1 meter)");
 }
 
 void test_function_logic()

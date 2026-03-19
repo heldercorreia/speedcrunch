@@ -2998,14 +2998,6 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                         );
                         return CMath::nan();
                     }
-                } else if (function) {
-                    if (!args.count()) {
-                        m_error = QString::fromLatin1("<b>%1</b>(%2)").arg(
-                            fname,
-                            function->usage()
-                        );
-                        return CMath::nan();
-                    }
                 }
 
                 if (m_assignFunc) {
@@ -3091,7 +3083,14 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 } else {
                     stack.push(function->exec(args));
                     if (function->error()) {
-                        m_error = stringFromFunctionError(function);
+                        if (!args.count() && function->error() == InvalidParamCount) {
+                            m_error = QString::fromLatin1("<b>%1</b>(%2)").arg(
+                                fname,
+                                function->usage()
+                            );
+                        } else {
+                            m_error = stringFromFunctionError(function);
+                        }
                         return CMath::nan();
                     }
                 }

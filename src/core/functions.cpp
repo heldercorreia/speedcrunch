@@ -38,6 +38,8 @@
 #include <cmath>
 #include <ctime>
 #include <numeric>
+#include <random>
+#include <string>
 
 #define FUNCTION_INSERT(ID) insert(new Function(#ID, function_ ## ID, this))
 #define FUNCTION_USAGE(ID, USAGE) find(#ID)->setUsage(QString::fromLatin1(USAGE));
@@ -104,11 +106,39 @@
         result = DMath::rad2gon(result);
 
 static FunctionRepo* s_FunctionRepoInstance = 0;
+static const int s_defaultRandomDigits = 16;
 
 // FIXME: destructor seems not to be called
 static void s_deleteFunctions()
 {
     delete s_FunctionRepoInstance;
+}
+
+// Shared pseudo-random engine for random built-ins.
+static std::mt19937_64& s_randomEngine()
+{
+    static std::mt19937_64 engine([] {
+        const auto now = static_cast<unsigned long long>(QDateTime::currentMSecsSinceEpoch());
+        std::seed_seq seed{
+            static_cast<unsigned int>(std::random_device{}()),
+            static_cast<unsigned int>(std::random_device{}()),
+            static_cast<unsigned int>(now & 0xFFFFFFFFULL),
+            static_cast<unsigned int>((now >> 32) & 0xFFFFFFFFULL)
+        };
+        return std::mt19937_64(seed);
+    }());
+    return engine;
+}
+
+static Quantity s_randomFraction(int digits)
+{
+    std::uniform_int_distribution<int> digitDistribution(0, 9);
+    std::string literal = "0.";
+    literal.reserve(2 + std::max(0, digits));
+    for (int i = 0; i < digits; ++i) {
+        literal.push_back(static_cast<char>('0' + digitDistribution(s_randomEngine())));
+    }
+    return Quantity(HNumber(literal.c_str()));
 }
 
 Quantity Function::exec(const Function::ArgumentList& args)
@@ -471,6 +501,59 @@ Quantity function_lngamma(Function* f, const Function::ArgumentList& args)
     ENSURE_ARGUMENT_COUNT(1);
     ENSURE_REAL_ARGUMENT(0);
     return DMath::lnGamma(args[0]);
+}
+
+Quantity function_rand(Function* f, const Function::ArgumentList& args)
+{
+    ENSURE_EITHER_ARGUMENT_COUNT(0, 1);
+
+    int digits = s_defaultRandomDigits;
+    if (args.count() == 1) {
+        if (args.at(0).isNan() && args.at(0).error() == NoOperand) {
+            return s_randomFraction(digits);
+        }
+        if (!args.at(0).isInteger() || args.at(0) < Quantity(0)) {
+            f->setError(OutOfDomain);
+            return DMath::nan(OutOfDomain);
+        }
+        if (args.at(0) > Quantity(DECPRECISION)) {
+            f->setError(InvalidPrecision);
+            return DMath::nan(InvalidPrecision);
+        }
+        digits = args.at(0).numericValue().toInt();
+    }
+
+    return s_randomFraction(digits);
+}
+
+Quantity function_randint(Function* f, const Function::ArgumentList& args)
+{
+    ENSURE_EITHER_ARGUMENT_COUNT(1, 2);
+
+    for (int i = 0; i < args.count(); ++i) {
+        if (!args.at(i).isInteger()) {
+            f->setError(OutOfDomain);
+            return DMath::nan(OutOfDomain);
+        }
+    }
+
+    Quantity lower = Quantity(0);
+    Quantity upper = args.at(0);
+    if (args.count() == 2) {
+        lower = std::min(args.at(0), args.at(1));
+        upper = std::max(args.at(0), args.at(1));
+    } else if (upper < Quantity(0)) {
+        lower = upper;
+        upper = Quantity(0);
+    }
+
+    const Quantity span = (upper - lower) + Quantity(1);
+    if (span.isNan()) {
+        return span;
+    }
+
+    const Quantity offset = DMath::floor(s_randomFraction(DECPRECISION) * span);
+    return lower + offset;
 }
 
 Quantity function_sgn(Function* f, const Function::ArgumentList& args)
@@ -1058,6 +1141,8 @@ void FunctionRepo::createFunctions()
     FUNCTION_INSERT(sqrt);
     FUNCTION_INSERT(stddev);
     FUNCTION_INSERT(sum);
+    FUNCTION_INSERT(rand);
+    FUNCTION_INSERT(randint);
     FUNCTION_INSERT(trunc);
     FUNCTION_INSERT(variance);
 
@@ -1279,6 +1364,8 @@ void FunctionRepo::setTranslatableFunctionUsages()
     FUNCTION_USAGE_TR(ieee754_decode, tr("x; exponent_bits; significand_bits [; exponent_bias]"));
     FUNCTION_USAGE_TR(ieee754_encode, tr("x; exponent_bits; significand_bits [; exponent_bias]"));
     FUNCTION_USAGE_TR(log, tr("base; x"));
+    FUNCTION_USAGE_TR(rand, tr("[digits]"));
+    FUNCTION_USAGE_TR(randint, tr("max [; min]"));
     FUNCTION_USAGE_TR(mask, "x; bits");
     FUNCTION_USAGE_TR(mod, tr("value; modulo"));
     FUNCTION_USAGE_TR(emod, tr("value; modulo"));
@@ -1359,6 +1446,8 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(max, tr("Maximum"));
     FUNCTION_NAME(median, tr("Median Value (50th Percentile)"));
     FUNCTION_NAME(min, tr("Minimum"));
+    FUNCTION_NAME(rand, tr("Random Decimal Number"));
+    FUNCTION_NAME(randint, tr("Random Integer Number"));
     FUNCTION_NAME(mod, tr("Modulo"));
     FUNCTION_NAME(emod, tr("Euclidean Modulo"));
     FUNCTION_NAME(powmod, tr("Modular Exponentiation"));

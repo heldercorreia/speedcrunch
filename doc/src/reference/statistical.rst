@@ -45,6 +45,30 @@ General
 
     Computes the product of all the given arguments.
 
+.. function:: rand([digits])
+
+    Generates a pseudo-random decimal in the range ``0 <= x < 1``.
+
+    If ``digits`` is omitted, 16 random decimal digits are generated internally. If supplied, ``digits`` must be an integer between 0 and 78.
+
+    Examples::
+
+        rand()
+        rand(6)
+
+.. function:: randint(max)
+.. function:: randint(min; max)
+
+    Generates a pseudo-random integer between two inclusive bounds.
+
+    With one argument, the range is from 0 to ``max`` (or from ``max`` to 0 if ``max`` is negative). With two arguments, both bounds are included and the argument order does not matter.
+
+    Examples::
+
+        randint(10)
+        randint(1; 6)
+        randint(6; 1)
+
 .. function:: variance(x1; x2; ...)
 
     Computes the population variance of the arguments. The variance is measure for the spreading of a set of numbers.
