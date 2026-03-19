@@ -50,7 +50,7 @@ VariableListWidget::VariableListWidget(QWidget* parent)
 
     m_variables->setAlternatingRowColors(true);
     m_variables->setAutoScroll(true);
-    m_variables->setColumnCount(2);
+    m_variables->setColumnCount(3);
     m_variables->setEditTriggers(QTreeWidget::NoEditTriggers);
     m_variables->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     m_variables->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -124,20 +124,24 @@ void VariableListWidget::updateList()
         QString varName = variables.at(i).identifier();
 
         QStringList namesAndValues;
-        namesAndValues << varName << formatValue(variables.at(i).value());
+        namesAndValues << varName << formatValue(variables.at(i).value())
+                       << variables.at(i).description();
 
         if (term.isEmpty()
             || namesAndValues.at(0).contains(term, Qt::CaseInsensitive)
-            || namesAndValues.at(1).contains(term, Qt::CaseInsensitive))
+            || namesAndValues.at(1).contains(term, Qt::CaseInsensitive)
+            || namesAndValues.at(2).contains(term, Qt::CaseInsensitive))
         {
             QTreeWidgetItem* item = new QTreeWidgetItem(m_variables, namesAndValues);
             item->setTextAlignment(0, Qt::AlignLeft | Qt::AlignVCenter);
             item->setTextAlignment(1, Qt::AlignLeft | Qt::AlignVCenter);
+            item->setTextAlignment(2, Qt::AlignLeft | Qt::AlignVCenter);
         }
     }
 
     m_variables->resizeColumnToContents(0);
     m_variables->resizeColumnToContents(1);
+    m_variables->resizeColumnToContents(2);
 
     if (m_variables->topLevelItemCount() > 0) {
         m_noMatchLabel->hide();
@@ -154,7 +158,7 @@ void VariableListWidget::updateList()
 void VariableListWidget::retranslateText()
 {
     QStringList titles;
-    titles << tr("Name") << tr("Value");
+    titles << tr("Name") << tr("Value") << tr("Description");
     m_variables->setHeaderLabels(titles);
 
     m_searchLabel->setText(tr("Search"));

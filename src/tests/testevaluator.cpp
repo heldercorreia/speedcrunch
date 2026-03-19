@@ -53,6 +53,7 @@ static int eval_new_failed_tests = 0;
 #define CHECK_USERFUNC_SET(x) checkEval(__FILE__,__LINE__,#x,x,"NaN")
 #define CHECK_USERFUNC_SET_FAIL(x) checkEval(__FILE__,__LINE__,#x,x,"",0,true)
 #define CHECK_USERFUNC_DESC(n,d) checkUserFunctionDescription(__FILE__,__LINE__,#n,n,d)
+#define CHECK_USERVAR_DESC(n,d) checkUserVariableDescription(__FILE__,__LINE__,#n,n,d)
 
 static void checkAutoFix(const char* file, int line, const char* msg, const char* expr, const char* fixed)
 {
@@ -220,6 +221,30 @@ static void checkUserFunctionDescription(const char* file, int line, const char*
     ++eval_new_failed_tests;
     cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl;
     cerr << "\tError: user function not found: " << functionName.toLatin1().constData() << endl;
+}
+
+static void checkUserVariableDescription(const char* file, int line, const char* msg,
+                                         const QString& variableName,
+                                         const QString& expectedDescription)
+{
+    ++eval_total_tests;
+
+    if (!eval->hasVariable(variableName)) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl;
+        cerr << "\tError: user variable not found: " << variableName.toLatin1().constData() << endl;
+        return;
+    }
+
+    const auto variable = eval->getVariable(variableName);
+    if (variable.description() != expectedDescription) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl;
+        cerr << "\tDescription: " << variable.description().toLatin1().constData() << endl
+             << "\tExpected   : " << expectedDescription.toLatin1().constData() << endl;
+    }
 }
 
 void test_constants()
@@ -1251,6 +1276,28 @@ void test_comments()
     CHECK_EVAL("1+ans", "22");
 }
 
+void test_comment_and_description_edge_cases()
+{
+    // Autofix should normalize spacing before comments while preserving comment text.
+    CHECK_AUTOFIX("x=1?foo", "x=1 ? foo");
+    CHECK_AUTOFIX("x=1    ?    foo bar", "x=1 ? foo bar");
+    CHECK_AUTOFIX("1+2 ? foo ? bar", "1+2 ? foo ? bar");
+
+    // Interpreted and display-interpreted output should preserve comment tails.
+    CHECK_INTERPRETED("2×pi ? calc area", "2⋅pi ? calc area");
+    CHECK_DISPLAY_INTERPRETED("2*3?c", "2 × 3 ? c");
+
+    // Explicit empty description should be stored as empty.
+    CHECK_EVAL("vardesc2 = 1 ? ", "1");
+    CHECK_USERVAR_DESC("vardesc2", "");
+    CHECK_USERFUNC_SET("funcdesc2(x) = x + 1 ? ");
+    CHECK_USERFUNC_DESC("funcdesc2", "");
+
+    // Description text should preserve punctuation and additional question marks.
+    CHECK_EVAL("vardesc3 = 3 ? unit m/s ? approx", "3");
+    CHECK_USERVAR_DESC("vardesc3", "unit m/s ? approx");
+}
+
 void test_user_functions()
 {
     // Check user functions can be defined and used
@@ -1320,6 +1367,15 @@ void test_user_functions()
     // Check redefining a function without description clears it.
     CHECK_USERFUNC_SET("funcdesc(x) = x + 2");
     CHECK_USERFUNC_DESC("funcdesc", "");
+
+    // Check optional descriptions on user variable definitions.
+    CHECK_EVAL("vardesc = 7 ? Lucky seven", "7");
+    CHECK_USERVAR_DESC("vardesc", "Lucky seven");
+    CHECK_EVAL("vardesc", "7");
+
+    // Check redefining a variable without description clears it.
+    CHECK_EVAL("vardesc = 8", "8");
+    CHECK_USERVAR_DESC("vardesc", "");
 }
 
 void test_complex()
@@ -1930,7 +1986,8 @@ void test_session_deserialize_without_history()
     Evaluator::instance()->setSession(&source);
     Evaluator::instance()->initializeBuiltInVariables();
 
-    source.addVariable(Variable("persistedVar", Quantity(42), Variable::UserDefined));
+    source.addVariable(Variable("persistedVar", Quantity(42), Variable::UserDefined,
+                                "Saved variable"));
     source.addUserFunction(UserFunction("persistedFunc", QStringList() << "x", "x+1"));
     source.addHistoryEntry(HistoryEntry("1+1", Quantity(2)));
 
@@ -1944,9 +2001,11 @@ void test_session_deserialize_without_history()
     ++eval_total_tests;
     const bool hasVar = restored.hasVariable("persistedVar")
         && DMath::format(restored.getVariable("persistedVar").value(), Format::Fixed()) == "42";
+    const bool hasVarDescription = restored.hasVariable("persistedVar")
+        && restored.getVariable("persistedVar").description() == "Saved variable";
     const bool hasFunc = restored.hasUserFunction("persistedFunc");
     const bool hasNoHistory = restored.historyToList().isEmpty();
-    if (!hasVar || !hasFunc || !hasNoHistory) {
+    if (!hasVar || !hasVarDescription || !hasFunc || !hasNoHistory) {
         ++eval_failed_tests;
         ++eval_new_failed_tests;
         cerr << __FILE__ << "[" << __LINE__ << "]\tsession deserialize without history keeps vars/functions\t[NEW]" << endl;
@@ -1999,6 +2058,7 @@ int main(int argc, char* argv[])
     test_auto_fix_untouch();
 
     test_comments();
+    test_comment_and_description_edge_cases();
 
     test_user_functions();
 

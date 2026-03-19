@@ -2235,7 +2235,8 @@ void MainWindow::importUserDefinitionsFromText(const QString& text, bool overwri
                 m_evaluator->setVariable(
                     previousVariable.identifier(),
                     previousVariable.value(),
-                    previousVariable.type());
+                    previousVariable.type(),
+                    previousVariable.description());
             }
             if (hasPreviousUserFunction)
                 m_evaluator->setUserFunction(previousFunction);

@@ -157,7 +157,8 @@ public:
     QList<Variable> getUserDefinedVariables() const;
     QList<Variable> getUserDefinedVariablesPlusAns() const;
     void setVariable(const QString&, Quantity,
-                     Variable::Type = Variable::UserDefined);
+                     Variable::Type = Variable::UserDefined,
+                     const QString& = QString());
     void unsetVariable(const QString&, ForceBuiltinVariableErasure = false);
     void unsetAllUserDefinedVariables();
     bool isBuiltInVariable(const QString&) const;
@@ -186,6 +187,7 @@ private:
     QString m_assignId;
     bool m_assignFunc;
     QStringList m_assignArg;
+    QString m_assignVarDescription;
     QString m_assignFuncExpr;
     QString m_assignFuncDescription;
     QVector<Opcode> m_codes;

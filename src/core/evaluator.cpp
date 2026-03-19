@@ -86,6 +86,36 @@ static bool splitUserFunctionDescription(const QString& expression,
     return false;
 }
 
+static bool splitVariableDescription(const QString& expression,
+                                     QString* expressionWithoutDescription,
+                                     QString* description)
+{
+    const int equalsPos = expression.indexOf('=');
+    if (equalsPos < 0)
+        return false;
+
+    const QString leftSide = expression.left(equalsPos).trimmed();
+    if (leftSide.contains('(') || leftSide.contains(')'))
+        return false;
+
+    int depth = 0;
+    const int n = expression.size();
+    for (int i = equalsPos + 1; i < n; ++i) {
+        const QChar ch = expression.at(i);
+        if (ch == '(') {
+            ++depth;
+        } else if (ch == ')' && depth > 0) {
+            --depth;
+        } else if (ch == '?' && depth == 0) {
+            *expressionWithoutDescription = expression.left(i).trimmed();
+            *description = expression.mid(i + 1).trimmed();
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool isMinus(const QChar& ch)
 {
     return ch == QLatin1Char('-') || ch == QChar(0x2212);
@@ -749,15 +779,27 @@ QString Evaluator::formatInterpretedExpressionForDisplay(const QString& expressi
     if (expression.isEmpty())
         return expression;
 
-    const Tokens scannedTokens = Evaluator::instance()->scan(expression);
+    const int commentPos = expression.indexOf('?');
+    const QString expressionPrefix = (commentPos >= 0)
+        ? expression.left(commentPos).trimmed()
+        : expression;
+    QString commentSuffix;
+    if (commentPos >= 0) {
+        const QString commentText = expression.mid(commentPos + 1).trimmed();
+        commentSuffix = QLatin1String(" ?");
+        if (!commentText.isEmpty())
+            commentSuffix += QLatin1String(" ") + commentText;
+    }
+
+    const Tokens scannedTokens = Evaluator::instance()->scan(expressionPrefix);
     if (scannedTokens.isEmpty())
-        return expression;
+        return expressionPrefix + commentSuffix;
 
     const QString groupedExpression =
-        groupHighPrecedenceAdditiveTermsForDisplay(expression, scannedTokens);
+        groupHighPrecedenceAdditiveTermsForDisplay(expressionPrefix, scannedTokens);
     const Tokens tokens = Evaluator::instance()->scan(groupedExpression);
     if (tokens.isEmpty())
-        return groupedExpression;
+        return groupedExpression + commentSuffix;
 
     const QString operatorSpace(QChar(0x205F)); // MEDIUM MATHEMATICAL SPACE.
     const QString unicodeMinusSign(QChar(0x2212)); // MINUS SIGN.
@@ -799,7 +841,7 @@ QString Evaluator::formatInterpretedExpressionForDisplay(const QString& expressi
         formatted += operatorSpace;
     }
 
-    return renderIntegerPowersAsSuperscriptsForDisplay(formatted);
+    return renderIntegerPowersAsSuperscriptsForDisplay(formatted) + commentSuffix;
 }
 
 static QStringList splitTopLevelFunctionArguments(const QString& text)
@@ -1341,6 +1383,7 @@ void Evaluator::reset()
     m_assignId = QString();
     m_assignFunc = false;
     m_assignArg.clear();
+    m_assignVarDescription = QString();
     m_assignFuncExpr = QString();
     m_assignFuncDescription = QString();
     m_session = nullptr;
@@ -2579,20 +2622,30 @@ Quantity Evaluator::evalNoAssign()
         m_assignId = QString();
         m_assignFunc = false;
         m_assignArg.clear();
+        m_assignVarDescription = QString();
         m_assignFuncExpr = QString();
         m_assignFuncDescription = QString();
         m_interpretedExpression = QString();
         m_hasImplicitMultiplication = false;
         QString expressionToParse = m_expression;
+        QString trailingComment;
+        const int commentPos = m_expression.indexOf('?');
+        if (commentPos >= 0)
+            trailingComment = m_expression.mid(commentPos + 1).trimmed();
         if (m_expression.contains('?')) {
             QString expressionWithoutDescription;
             QString description;
             if (splitUserFunctionDescription(m_expression,
                                              &expressionWithoutDescription,
-                                             &description))
-            {
+                                             &description)) {
                 expressionToParse = expressionWithoutDescription;
                 m_assignFuncDescription = description;
+            } else if (splitVariableDescription(m_expression,
+                                                &expressionWithoutDescription,
+                                                &description))
+            {
+                expressionToParse = expressionWithoutDescription;
+                m_assignVarDescription = description;
             }
         }
         Tokens tokens = scan(expressionToParse);
@@ -2692,6 +2745,9 @@ Quantity Evaluator::evalNoAssign()
                     m_assignId + QStringLiteral("=") + m_interpretedExpression;
             }
         }
+
+        if (!m_interpretedExpression.isEmpty() && !trailingComment.isEmpty())
+            m_interpretedExpression += QStringLiteral(" ? ") + trailingComment;
     }
 
     result = exec(m_codes, m_constants, m_identifiers);
@@ -3024,7 +3080,8 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                                                : Variable(QString(), Quantity(0));
                     auto restoreN = [this, hadN, oldN]() {
                         if (hadN) {
-                            setVariable("n", oldN.value(), oldN.type());
+                            setVariable("n", oldN.value(), oldN.type(),
+                                        oldN.description());
                         } else {
                             unsetVariable("n");
                         }
@@ -3230,7 +3287,8 @@ Quantity Evaluator::eval()
                 return CMath::nan();
             }
 
-            setVariable(m_assignId, result);
+            setVariable(m_assignId, result, Variable::UserDefined,
+                        m_assignVarDescription);
         }
     }
 
@@ -3247,11 +3305,12 @@ Quantity Evaluator::evalUpdateAns()
 }
 
 void Evaluator::setVariable(const QString& id, Quantity value,
-                            Variable::Type type)
+                            Variable::Type type,
+                            const QString& description)
 {
     if (!m_session)
         m_session = new Session;
-    m_session->addVariable(Variable(id, value, type));
+    m_session->addVariable(Variable(id, value, type, description));
 }
 
 Variable Evaluator::getVariable(const QString& id) const
@@ -3407,6 +3466,14 @@ QString Evaluator::autoFix(const QString& expr)
     // No extra whitespaces at the beginning and at the end.
     result = result.trimmed();
 
+    // Keep comments untouched by expression normalization.
+    QString commentText;
+    const int commentPos = result.indexOf('?');
+    if (commentPos >= 0) {
+        commentText = result.mid(commentPos + 1).trimmed();
+        result = result.left(commentPos).trimmed();
+    }
+
     // Strip trailing equal sign (=).
     while (result.endsWith("="))
         result = result.left(result.length() - 1);
@@ -3555,6 +3622,12 @@ QString Evaluator::autoFix(const QString& expr)
         {
             result.append("(ans)");
         }
+    }
+
+    if (commentPos >= 0) {
+        result += QLatin1String(" ?");
+        if (!commentText.isEmpty())
+            result += QLatin1String(" ") + commentText;
     }
 
     return result;
