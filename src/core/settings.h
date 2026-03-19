@@ -81,7 +81,7 @@ public:
 
     bool complexNumbers;
 
-    char angleUnit; // 'r': radian; 'd': degree; 'g': gradian.
+    char angleUnit; // 'r': radian; 'd': degree; 'g': gradian; 't': turn.
 
     char resultFormat;
     char alternativeResultFormat; // '\0': disabled.

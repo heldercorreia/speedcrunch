@@ -109,7 +109,7 @@ Trigonometric & Inverse Trigonometric
 
     Returns the sine of ``x``. The behavior depends on both the angle unit setting and on whether complex numbers are enabled.
 
-    In *degrees* or *gradians* modes, the argument is assumed to be expressed in such that :func:`sin` is periodic with a period of 360 degrees or 400 gradians, respectively: *sin(x) = sin(x+360)* or *sin(x) = sin(x+400)*. Complex arguments are allowed only in *radians* mode, regardless of the corresponding setting.
+    In *degrees*, *gradians*, or *turns* modes, the argument is assumed to be expressed in such that :func:`sin` is periodic with a period of 360 degrees, 400 gradians, or 1 turn, respectively: *sin(x) = sin(x+360)*, *sin(x) = sin(x+400)*, or *sin(x) = sin(x+1)*. Complex arguments are allowed only in *radians* mode, regardless of the corresponding setting.
 
     When *radians* are set as the angle unit, :func:`sin` will be 2π-periodic. The argument may be complex.
 
@@ -129,7 +129,7 @@ Trigonometric & Inverse Trigonometric
 
     Returns the cosine of ``x``. The behavior depends on both the angle unit setting and on whether complex numbers are enabled.
 
-    In *degrees* or *gradians* modes, the argument is assumed to be expressed in such that :func:`cos` is periodic with a period of 360 degrees or 400 gradians, respectively: *cos(x) = cos(x+360)* or *cos(x) = cos(x+400)*. Complex arguments are allowed only in *radians* mode, regardless of the corresponding setting.
+    In *degrees*, *gradians*, or *turns* modes, the argument is assumed to be expressed in such that :func:`cos` is periodic with a period of 360 degrees, 400 gradians, or 1 turn, respectively: *cos(x) = cos(x+360)*, *cos(x) = cos(x+400)*, or *cos(x) = cos(x+1)*. Complex arguments are allowed only in *radians* mode, regardless of the corresponding setting.
 
     When *radians* are set as the angle unit, :func:`cos` will be 2π-periodic. The argument may be complex.
 
@@ -150,7 +150,7 @@ Trigonometric & Inverse Trigonometric
 
     Returns the tangent of ``x``. The behavior depends on both the angle unit setting and on whether complex numbers are enabled.
 
-    In *degrees* or *gradians* modes, the argument is assumed to be expressed in such that :func:`tan` is periodic with a period of 360 degrees or 400 gradians, respectively: *tan(x) = tan(x+360)* or *tan(x) = tan(x+400)*. Complex arguments are allowed only in *radians* mode, regardless of the corresponding setting.
+    In *degrees*, *gradians*, or *turns* modes, the argument is assumed to be expressed in such that :func:`tan` is periodic with a period of 360 degrees, 400 gradians, or 1 turn, respectively: *tan(x) = tan(x+360)*, *tan(x) = tan(x+400)*, or *tan(x) = tan(x+1)*. Complex arguments are allowed only in *radians* mode, regardless of the corresponding setting.
 
     When *radians* are set as the angle unit, :func:`tan` will be π-periodic. The argument may be complex.
 
@@ -167,8 +167,7 @@ Trigonometric & Inverse Trigonometric
 
     Returns the cotangent of ``x``. The behavior depends on both the angle unit setting and on whether complex numbers are enabled.
 
-    In *degrees* or *gradians* modes, the argument is assumed to be expressed in such that :func:`cot` is periodic with a period of 360 degrees or 400 gradians, respectively: *cot(x) = cot(x+360)* or *cot(x) = cot(x+400)*. Complex arguments are allowed only in 
-    *radians* mode, regardless of the corresponding setting.
+    In *degrees*, *gradians*, or *turns* modes, the argument is assumed to be expressed in such that :func:`cot` is periodic with a period of 360 degrees, 400 gradians, or 1 turn, respectively: *cot(x) = cot(x+360)*, *cot(x) = cot(x+400)*, or *cot(x) = cot(x+1)*. Complex arguments are allowed only in *radians* mode, regardless of the corresponding setting.
 
     When *radians* are set as the angle unit, :func:`cot` will be π-periodic. The argument may be complex.
 
@@ -183,7 +182,7 @@ Trigonometric & Inverse Trigonometric
 
     Returns the secant of ``x``, defined as the reciprocal cosine of ``x``: *sec(x) = 1/cos(x)*. The behavior depends on both the angle unit setting and on whether complex numbers are enabled.
 
-    In *degrees* or *gradians* modes, the argument is assumed to be expressed in such that :func:`sec` is periodic with a period of 360 degrees or 400 gradians, respectively: *sec(x) = sec(x+360)* or *sec(x) = sec(x+400)*. Complex arguments are allowed only in *radians* mode, regardless of the corresponding setting.
+    In *degrees*, *gradians*, or *turns* modes, the argument is assumed to be expressed in such that :func:`sec` is periodic with a period of 360 degrees, 400 gradians, or 1 turn, respectively: *sec(x) = sec(x+360)*, *sec(x) = sec(x+400)*, or *sec(x) = sec(x+1)*. Complex arguments are allowed only in *radians* mode, regardless of the corresponding setting.
 
     When *radians* are set as the angle unit, :func:`sec` will be 2π-periodic. The argument may be complex.
 
@@ -195,7 +194,7 @@ Trigonometric & Inverse Trigonometric
 
     Returns the cosecant of ``x``, defined as the reciprocal sine of ``x``: *csc(x) = 1/sin(x)*. The behavior depends on both the angle unit setting and on whether complex numbers are enabled.
 
-    In *degrees* or *gradians* modes, the argument is assumed to be expressed in such that :func:`csc` is periodic with a period of 360 degrees or 400 gradians, respectively: *csc(x) = csc(x+360)* or *csc(x) = csc(x+400)*. Complex arguments are allowed only in *radians* mode, regardless of the corresponding setting.
+    In *degrees*, *gradians*, or *turns* modes, the argument is assumed to be expressed in such that :func:`csc` is periodic with a period of 360 degrees, 400 gradians, or 1 turn, respectively: *csc(x) = csc(x+360)*, *csc(x) = csc(x+400)*, or *csc(x) = csc(x+1)*. Complex arguments are allowed only in *radians* mode, regardless of the corresponding setting.
 
     When *radians* are set as the angle unit, :func:`csc` will be 2π-periodic. The argument may be complex.
 
@@ -208,7 +207,7 @@ Trigonometric & Inverse Trigonometric
 
     Returns the inverse cosine of ``x``, such that *cos(arccos(x)) = x*. The behavior of the function depends on both the angle unit setting and on whether complex numbers are enabled.
 
-    In *degrees* or *gradians* modes, :func:`arccos` takes a real argument from *[-1, 1]*, and the return value is in the range *[0, 180]* or *[0, 200]*, respectively. Real arguments outside *[-1, 1]* and complex numbers are allowed only in *radians* mode.
+    In *degrees*, *gradians*, or *turns* modes, :func:`arccos` takes a real argument from *[-1, 1]*, and the return value is in the range *[0, 180]*, *[0, 200]*, or *[0, 0.5]*, respectively. Real arguments outside *[-1, 1]* and complex numbers are allowed only in *radians* mode.
 
     When *radians* are set as the angle unit, :func:`arccos` maps an element from *[-1, 1]* to a value in *[0, π]*. When complex numbers are enabled in addition, :func:`arccos` may take any argument from the complex plane. In complex mode, *arccos(-1) = π* and *arccos(1) = 0* will yield the same result as in real mode.
 
@@ -220,7 +219,7 @@ Trigonometric & Inverse Trigonometric
 
     Returns the inverse sine of ``x``, such that *sin(arcsin(x)) = x*. The behavior of the function depends on both the angle unit setting and on whether complex numbers are enabled.
 
-    In *degrees* or *gradians* modes, :func:`arcsin` takes a real argument from *[-1, 1]*, and the return value is in the range *[0, 180]* or *[0, 200]*, respectively. Real arguments outside *[-1, 1]* and complex numbers are allowed only in *radians* mode.
+    In *degrees*, *gradians*, or *turns* modes, :func:`arcsin` takes a real argument from *[-1, 1]*, and the return value is in the range *[-90, 90]*, *[-100, 100]*, or *[-0.25, 0.25]*, respectively. Real arguments outside *[-1, 1]* and complex numbers are allowed only in *radians* mode.
 
     When *radians* are set as the angle unit, :func:`arcsin` maps an element from *[-1, 1]* to a value in *[-π/2, π/2]*. When complex numbers are enabled in addition, :func:`arcsin` may take any argument from the complex plane. In complex mode, *arcsin(-1) = π/2* and *arcsin(1) = π/2* will yield the same result as in real mode.
 
@@ -233,7 +232,7 @@ Trigonometric & Inverse Trigonometric
 
     Returns the inverse tangent of ``x``, such that *tan(arctan(x)) = x*. The behavior of the function depends on both the angle unit setting and on whether complex numbers are enabled.
 
-    In *degrees* or *gradians* modes, :func:`arctan` takes a real argument from *[-1, 1]*, and the return value is in the range *[0, 180]* or *[0, 200]*, respectively. Real arguments outside *[-1, 1]* and complex numbers are not allowed only in *radians* mode.
+    In *degrees*, *gradians*, or *turns* modes, :func:`arctan` takes a real argument from *[-1, 1]*, and the return value is in the range *[-90, 90]*, *[-100, 100]*, or *[-0.25, 0.25]*, respectively. Real arguments outside *[-1, 1]* and complex numbers are not allowed only in *radians* mode.
 
     When *radians* are set as the angle unit, :func:`arctan` maps a real number to a value in *[-π/2, π/2]*. When complex numbers are enabled in addition, :func:`arctan` may take any argument from the complex plane, except for *+j* and *-j*.
 
@@ -245,7 +244,7 @@ Trigonometric & Inverse Trigonometric
 
     Returns the angle formed by the vector *(x, y)* and the X axis. If the point *(x, y)* lies in the first quadrant (i.e. both *x > 0* and *y > 0* are true), it is given by *arctan(y/x)*. However, the function handles vectors in other quadrants as well.
 
-    The behavior of the function depends on the angle unit setting. In *degrees* or *gradians* modes, this function returns a value in the range *]-180, 180]* or *]-200, 200]*, respectively. When *radians* are set as the angle unit, the return value lies in the range *]-π, π]*.
+    The behavior of the function depends on the angle unit setting. In *degrees*, *gradians*, or *turns* modes, this function returns a value in the range *]-180, 180]*, *]-200, 200]*, or *]-0.5, 0.5]*, respectively. When *radians* are set as the angle unit, the return value lies in the range *]-π, π]*.
 
     Unlike :func:`arctan` this function only accepts real arguments.
 
@@ -400,6 +399,12 @@ Various
 .. function:: gradians(x)
 
     Convert the angle ``x`` into gradians. Independently of the angle unit setting, this function will assume that ``x`` is given in radians and return ``200*x/pi``.
+
+    The function only accepts real, dimensionless arguments.
+
+.. function:: turns(x)
+
+    Convert the angle ``x`` into turns. Independently of the angle unit setting, this function will assume that ``x`` is given in radians and return ``x/(2*pi)``.
 
     The function only accepts real, dimensionless arguments.
 

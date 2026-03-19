@@ -750,6 +750,13 @@ void test_sexagesimal()
     CHECK_EVAL_FORMAT("-pi", "-180°00'00.00");
     CHECK_EVAL_FORMAT("12.3 degree", "12°18'00.00");
 
+    settings->angleUnit = 't';
+    Evaluator::instance()->initializeAngleUnits();
+
+    CHECK_EVAL_FORMAT("0.25", "90°00'00.00");
+    CHECK_EVAL_FORMAT("-0.5", "-180°00'00.00");
+    CHECK_EVAL_FORMAT("12.3 degree", "12°18'00.00");
+
     settings->resultPrecision = 32;
 
     CHECK_EVAL_FORMAT("::56.78901234567890123456789012345678", "0:00:56.78901234567890123456789012345678");
@@ -892,6 +899,12 @@ void test_function_trig()
     CHECK_EVAL("gradians(pi)", "200");
     CHECK_EVAL("gradians(3*pi/2)", "300");
     CHECK_EVAL("gradians(2*pi)", "400");
+
+    CHECK_EVAL("turns(0)", "0");
+    CHECK_EVAL("turns(pi/2)", "0.25");
+    CHECK_EVAL("turns(pi)", "0.5");
+    CHECK_EVAL("turns(3*pi/2)", "0.75");
+    CHECK_EVAL("turns(2*pi)", "1");
 }
 
 void test_function_stat()
@@ -1427,6 +1440,7 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("degree","0.01745329251994329577");
     CHECK_EVAL("gradian","0.01570796326794896619");
     CHECK_EVAL("gon","0.01570796326794896619");
+    CHECK_EVAL("turn","6.28318530717958647693");
 
     settings->angleUnit = 'd';
     Evaluator::instance()->initializeAngleUnits();
@@ -1444,6 +1458,7 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("degree","1");
     CHECK_EVAL("gradian","0.9");
     CHECK_EVAL("gon","0.9");
+    CHECK_EVAL("turn","360");
     CHECK_EVAL_KNOWN_ISSUE("arcsin(0.25)", "14.47751218592992387877", 781);
 
     settings->angleUnit = 'g';
@@ -1462,6 +1477,25 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("degree","1.11111111111111111111");
     CHECK_EVAL("gradian","1");
     CHECK_EVAL("gon","1");
+    CHECK_EVAL("turn","400");
+
+    settings->angleUnit = 't';
+    Evaluator::instance()->initializeAngleUnits();
+    CHECK_EVAL("sin(0.5)", "0");
+    CHECK_EVAL("arcsin(-1)", "-0.25");
+    CHECK_EVAL("arccos(0)", "0.25");
+    CHECK_EVAL("arctan(1)", "0.125");
+    CHECK_EVAL("arctan2(1;1)", "0.125");
+    CHECK_EVAL("sin(arcsin(0.25))", "0.25");
+    CHECK_EVAL("cos(arccos(0.25))", "0.25");
+    CHECK_EVAL("tan(arctan(0.25))", "0.25");
+    CHECK_EVAL_FAIL("sin(1j)");
+    CHECK_EVAL("arcsin(-2)", "-0.25+0.20960035913949136668j");
+    CHECK_EVAL("radian","0.15915494309189533577");
+    CHECK_EVAL("degree","0.00277777777777777778");
+    CHECK_EVAL("gradian","0.0025");
+    CHECK_EVAL("gon","0.0025");
+    CHECK_EVAL("turn","1");
 }
 
 void test_implicit_multiplication()

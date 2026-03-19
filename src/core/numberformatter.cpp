@@ -109,6 +109,8 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride)
             q /= Quantity(HMath::pi() / HNumber(180));
         else if (settings->angleUnit == 'g')
             q /= Quantity(HNumber(200) / HNumber(180));
+        else if (settings->angleUnit == 't')
+            q *= Quantity(360);
         q *= Quantity(3600);
     }
 

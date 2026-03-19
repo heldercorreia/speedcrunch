@@ -189,9 +189,12 @@ determines the angle format of the arguments.
     Use gradians for angles. A full circle corresponds to an angle of 400 gradians.
 
     .. versionadded:: 1.0
+
+* :menuselection:`Turn`
+    Use turns for angles. A full circle corresponds to an angle of 1 turn.
     
 * :menuselection:`Cycle Unit`
-    Cycle unit selection between Radian, Degree and Gradian.
+    Cycle unit selection between Radian, Degree, Gradian, and Turn.
 
 Digit Grouping
 ++++++++++++++
@@ -383,7 +386,7 @@ Format
     .. versionadded:: 1.0
     
 * :kbd:`F10`
-    Cycle angle unit (Degree/Radian/Gradian).
+    Cycle angle unit (Degree/Radian/Gradian/Turn).
 * :kbd:`Control+.`
     Use a period as decimal separator.
 * :kbd:`Control+,`

@@ -1334,6 +1334,7 @@ void Evaluator::initializeAngleUnits()
         setVariable("degree", HMath::pi() / HNumber(180), Variable::BuiltIn);
         setVariable("gradian", HMath::pi() / HNumber(200), Variable::BuiltIn);
         setVariable("gon", HMath::pi() / HNumber(200), Variable::BuiltIn);
+        setVariable("turn", HNumber(2) * HMath::pi(), Variable::BuiltIn);
         setVariable("arcminute", HMath::pi() / HNumber(180) / HNumber(60), Variable::BuiltIn);
         setVariable("arcsecond", HMath::pi() / HNumber(180) / HNumber(3600), Variable::BuiltIn);
     } else if (Settings::instance()->angleUnit == 'g') {
@@ -1341,13 +1342,23 @@ void Evaluator::initializeAngleUnits()
         setVariable("degree", HNumber(200) / HNumber(180), Variable::BuiltIn);
         setVariable("gradian", 1, Variable::BuiltIn);
         setVariable("gon", 1, Variable::BuiltIn);
+        setVariable("turn", HNumber(400), Variable::BuiltIn);
         setVariable("arcminute", HNumber(200) / HNumber(180) / HNumber(60), Variable::BuiltIn);
         setVariable("arcsecond", HNumber(200) / HNumber(180) / HNumber(3600), Variable::BuiltIn);
+    } else if (Settings::instance()->angleUnit == 't') {
+        setVariable("radian", HNumber(1) / (HNumber(2) * HMath::pi()), Variable::BuiltIn);
+        setVariable("degree", HNumber(1) / HNumber(360), Variable::BuiltIn);
+        setVariable("gradian", HNumber(1) / HNumber(400), Variable::BuiltIn);
+        setVariable("gon", HNumber(1) / HNumber(400), Variable::BuiltIn);
+        setVariable("turn", 1, Variable::BuiltIn);
+        setVariable("arcminute", HNumber(1) / HNumber(21600), Variable::BuiltIn);
+        setVariable("arcsecond", HNumber(1) / HNumber(1296000), Variable::BuiltIn);
     } else {    // d
         setVariable("radian", HNumber(180) / HMath::pi(), Variable::BuiltIn);
         setVariable("degree", 1, Variable::BuiltIn);
         setVariable("gradian", HNumber(180) / HNumber(200), Variable::BuiltIn);
         setVariable("gon", HNumber(180) / HNumber(200), Variable::BuiltIn);
+        setVariable("turn", HNumber(360), Variable::BuiltIn);
         setVariable("arcminute", HNumber(1) / HNumber(60), Variable::BuiltIn);
         setVariable("arcsecond", HNumber(1) / HNumber(3600), Variable::BuiltIn);
     }

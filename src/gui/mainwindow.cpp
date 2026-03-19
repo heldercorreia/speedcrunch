@@ -290,6 +290,7 @@ void MainWindow::createActions()
     m_actions.settingsAngleUnitDegree = new QAction(this);
     m_actions.settingsAngleUnitRadian = new QAction(this);
     m_actions.settingsAngleUnitGradian = new QAction(this);
+    m_actions.settingsAngleUnitTurn = new QAction(this);
     m_actions.settingsAngleUnitCycle = new QAction(this);
     m_actions.settingsBehaviorAlwaysOnTop = new QAction(this);
     m_actions.settingsBehaviorAutoAns = new QAction(this);
@@ -366,6 +367,7 @@ void MainWindow::createActions()
     m_actions.settingsAngleUnitDegree->setCheckable(true);
     m_actions.settingsAngleUnitRadian->setCheckable(true);
     m_actions.settingsAngleUnitGradian->setCheckable(true);
+    m_actions.settingsAngleUnitTurn->setCheckable(true);
     m_actions.settingsBehaviorAlwaysOnTop->setCheckable(true);
     m_actions.settingsBehaviorAutoAns->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletion->setCheckable(true);
@@ -506,7 +508,9 @@ void MainWindow::setStatusBarText()
 QString MainWindow::statusBarAngleUnitValue() const
 {
     return (m_settings->angleUnit == 'r' ? MainWindow::tr("Radian")
-        : (m_settings->angleUnit == 'g') ? MainWindow::tr("Gradian") : MainWindow::tr("Degree"));
+        : (m_settings->angleUnit == 'g') ? MainWindow::tr("Gradian")
+        : (m_settings->angleUnit == 't') ? MainWindow::tr("Turn")
+        : MainWindow::tr("Degree"));
 }
 
 QString MainWindow::statusBarResultFormatValue() const
@@ -568,6 +572,7 @@ void MainWindow::setActionsText()
     m_actions.settingsAngleUnitDegree->setText(MainWindow::tr("&Degree"));
     m_actions.settingsAngleUnitRadian->setText(MainWindow::tr("&Radian"));
     m_actions.settingsAngleUnitGradian->setText(MainWindow::tr("&Gradian"));
+    m_actions.settingsAngleUnitTurn->setText(MainWindow::tr("&Turn"));
     m_actions.settingsAngleUnitCycle->setText(MainWindow::tr("&Cycle Unit"));
     m_actions.settingsBehaviorAlwaysOnTop->setText(MainWindow::tr("Always on &Top"));
     m_actions.settingsBehaviorAutoAns->setText(MainWindow::tr("Auto-Insert \"ans\" When Starting with an Operator"));
@@ -710,6 +715,7 @@ void MainWindow::createActionGroups()
     m_actionGroups.angle->addAction(m_actions.settingsAngleUnitDegree);
     m_actionGroups.angle->addAction(m_actions.settingsAngleUnitRadian);
     m_actionGroups.angle->addAction(m_actions.settingsAngleUnitGradian);
+    m_actionGroups.angle->addAction(m_actions.settingsAngleUnitTurn);
 
     m_actionGroups.colorScheme = new QActionGroup(this);
     const auto schemes = m_actions.settingsDisplayColorSchemes;
@@ -917,6 +923,7 @@ void MainWindow::createMenus()
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitDegree);
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitRadian);
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitGradian);
+    m_menus.angleUnit->addAction(m_actions.settingsAngleUnitTurn);
     m_menus.angleUnit->addSeparator();
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitCycle);
 
@@ -1033,6 +1040,7 @@ void MainWindow::createStatusBar()
     m_status.angleUnit->addAction(m_actions.settingsAngleUnitDegree);
     m_status.angleUnit->addAction(m_actions.settingsAngleUnitRadian);
     m_status.angleUnit->addAction(m_actions.settingsAngleUnitGradian);
+    m_status.angleUnit->addAction(m_actions.settingsAngleUnitTurn);
 
     m_status.resultFormat->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(m_status.resultFormat, SIGNAL(customContextMenuRequested(const QPoint&)),
@@ -1306,6 +1314,7 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsAngleUnitDegree, SIGNAL(triggered()), SLOT(setAngleModeDegree()));
     connect(m_actions.settingsAngleUnitRadian, SIGNAL(triggered()), SLOT(setAngleModeRadian()));
     connect(m_actions.settingsAngleUnitGradian, SIGNAL(triggered()), SLOT(setAngleModeGradian()));
+    connect(m_actions.settingsAngleUnitTurn, SIGNAL(triggered()), SLOT(setAngleModeTurn()));
     connect(m_actions.settingsAngleUnitCycle, SIGNAL(triggered()), SLOT(cycleAngleUnits()));
 
     connect(m_actions.settingsBehaviorAlwaysOnTop, SIGNAL(toggled(bool)), SLOT(setAlwaysOnTopEnabled(bool)));
@@ -1505,6 +1514,8 @@ void MainWindow::applySettings()
         m_actions.settingsAngleUnitDegree->setChecked(true);
     else if (m_settings->angleUnit == 'g')
         m_actions.settingsAngleUnitGradian->setChecked(true);
+    else if (m_settings->angleUnit == 't')
+        m_actions.settingsAngleUnitTurn->setChecked(true);
 
     if (m_settings->historySaving == Settings::HistorySavingNever) {
         m_actions.settingsBehaviorHistorySavingNever->setChecked(true);
@@ -2654,6 +2665,19 @@ void MainWindow::setAngleModeGradian()
         return;
 
     m_settings->angleUnit = 'g';
+
+    setStatusBarText();
+
+    m_evaluator->initializeAngleUnits();
+    emit angleUnitChanged();
+}
+
+void MainWindow::setAngleModeTurn()
+{
+    if (m_settings->angleUnit == 't')
+        return;
+
+    m_settings->angleUnit = 't';
 
     setStatusBarText();
 
@@ -3936,6 +3960,8 @@ void MainWindow::cycleAngleUnits()
     else if (m_actions.settingsAngleUnitRadian->isChecked())
         m_actions.settingsAngleUnitGradian->trigger();
     else if (m_actions.settingsAngleUnitGradian->isChecked())
+        m_actions.settingsAngleUnitTurn->trigger();
+    else if (m_actions.settingsAngleUnitTurn->isChecked())
         m_actions.settingsAngleUnitDegree->trigger();
 }
 

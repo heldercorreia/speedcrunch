@@ -97,13 +97,23 @@
             f->setError(OutOfDomain); \
             return DMath::nan(); \
         } \
+    } \
+    else if (Settings::instance()->angleUnit == 't') { \
+        if (angle.isReal()) \
+            angle *= Quantity(2) * DMath::pi(); \
+        else { \
+            f->setError(OutOfDomain); \
+            return DMath::nan(); \
+        } \
     }
 
 #define CONVERT_RESULT_ANGLE(result) \
     if (Settings::instance()->angleUnit == 'd') \
         result = DMath::rad2deg(result); \
     else if (Settings::instance()->angleUnit == 'g') \
-        result = DMath::rad2gon(result);
+        result = DMath::rad2gon(result); \
+    else if (Settings::instance()->angleUnit == 't') \
+        result /= Quantity(2) * DMath::pi();
 
 static FunctionRepo* s_FunctionRepoInstance = 0;
 static const int s_defaultRandomDigits = 16;
@@ -620,6 +630,12 @@ Quantity function_gradians(Function* f, const Function::ArgumentList& args)
 {
     ENSURE_ARGUMENT_COUNT(1);
     return DMath::rad2gon(args[0]);
+}
+
+Quantity function_turns(Function* f, const Function::ArgumentList& args)
+{
+    ENSURE_ARGUMENT_COUNT(1);
+    return args[0] / (Quantity(2) * DMath::pi());
 }
 
 Quantity function_max(Function* f, const Function::ArgumentList& args)
@@ -1246,6 +1262,7 @@ void FunctionRepo::createFunctions()
     FUNCTION_INSERT(sin);
     FUNCTION_INSERT(sinh);
     FUNCTION_INSERT(tan);
+    FUNCTION_INSERT(turns);
     FUNCTION_INSERT(tanh);
 
     // Logic.
@@ -1391,6 +1408,7 @@ void FunctionRepo::setNonTranslatableFunctionUsages()
     FUNCTION_USAGE(stddev, "x<sub>1</sub>; x<sub>2</sub>; ...");
     FUNCTION_USAGE(sum, "x<sub>1</sub>; x<sub>2</sub>; ...");
     FUNCTION_USAGE(tan, "x");
+    FUNCTION_USAGE(turns, "x");
     FUNCTION_USAGE(tanh, "x");
     FUNCTION_USAGE(trunc, "x");
     FUNCTION_USAGE(variance, "x<sub>1</sub>; x<sub>2</sub>; ...");
@@ -1530,6 +1548,7 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(stddev, tr("Standard Deviation (Square Root of Variance)"));
     FUNCTION_NAME(sum, tr("Sum"));
     FUNCTION_NAME(tan, tr("Tangent"));
+    FUNCTION_NAME(turns, tr("Turns"));
     FUNCTION_NAME(tanh, tr("Hyperbolic Tangent"));
     FUNCTION_NAME(trunc, tr("Truncation"));
     FUNCTION_NAME(unmask, tr("Sign-extend a value"));
