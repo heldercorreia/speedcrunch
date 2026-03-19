@@ -100,6 +100,8 @@ protected:
     QRect removeGlyphBadgeRectForHistoryIndex(int historyIndex) const;
     QRect editGlyphRectForHistoryIndex(int historyIndex) const;
     QRect editGlyphBadgeRectForHistoryIndex(int historyIndex) const;
+    QRect copyGlyphRectForHistoryIndex(int historyIndex) const;
+    QRect copyGlyphBadgeRectForHistoryIndex(int historyIndex) const;
     QRect hoverActionRectForHistoryIndex(int historyIndex) const;
     QRect cancelGlyphBadgeRectForEditingIndex() const;
     void updateHoverHighlightSelection();

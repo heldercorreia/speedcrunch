@@ -508,6 +508,21 @@ void ResultDisplay::mousePressEvent(QMouseEvent* event)
     }
 
     if (event->button() == Qt::LeftButton && m_hoverHighlightEnabled && m_hoveredHistoryIndex >= 0) {
+        const QRect copyRect = copyGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex);
+        if (copyRect.contains(event->pos())) {
+            const QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
+            if (m_hoveredHistoryIndex >= 0 && m_hoveredHistoryIndex < history.count()) {
+                const Quantity value = history.at(m_hoveredHistoryIndex).result();
+                if (!value.isNan()) {
+                    QString textToCopy = NumberFormatter::format(value);
+                    textToCopy.replace(QChar(0x2212), QChar('-'));
+                    QApplication::clipboard()->setText(textToCopy, QClipboard::Clipboard);
+                }
+            }
+            event->accept();
+            return;
+        }
+
         const QRect editRect = editGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex);
         if (editRect.contains(event->pos())) {
             emit editHistoryEntryRequested(m_hoveredHistoryIndex);
@@ -694,14 +709,17 @@ void ResultDisplay::mouseMoveEvent(QMouseEvent* event)
     }
 
     const bool overActionGlyph = m_hoveredHistoryIndex >= 0
-        && (removeGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex).contains(event->pos())
+        && (copyGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex).contains(event->pos())
+            || removeGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex).contains(event->pos())
             || editGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex).contains(event->pos()));
     if (overActionGlyph)
         viewport()->setCursor(Qt::PointingHandCursor);
     else
         viewport()->unsetCursor();
 
-    if (m_hoveredHistoryIndex >= 0 && editGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex).contains(event->pos())) {
+    if (m_hoveredHistoryIndex >= 0 && copyGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex).contains(event->pos())) {
+        QToolTip::showText(QCursor::pos(), tr("Copy this result"), this);
+    } else if (m_hoveredHistoryIndex >= 0 && editGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex).contains(event->pos())) {
         QToolTip::showText(QCursor::pos(), tr("Edit this expression"), this);
     } else if (m_hoveredHistoryIndex >= 0 && removeGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex).contains(event->pos())) {
         QToolTip::showText(QCursor::pos(), tr("Remove this calculation"), this);
@@ -734,13 +752,32 @@ void ResultDisplay::paintEvent(QPaintEvent* event)
     if (!m_hoverHighlightEnabled || m_hoveredHistoryIndex < 0)
         return;
 
+    const QRect copyRect = copyGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex);
     const QRect removeRect = removeGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex);
     const QRect editRect = editGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex);
-    if (!removeRect.isValid() || !editRect.isValid())
+    if (!copyRect.isValid() || !removeRect.isValid() || !editRect.isValid())
         return;
 
     QPainter painter(viewport());
     painter.setRenderHint(QPainter::Antialiasing, true);
+
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(Qt::white);
+    painter.drawEllipse(copyRect);
+    painter.setPen(QPen(QColor(80, 80, 80, 255), 1.3, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    const QPointF copyCenter = badgeCenter(copyRect);
+    const qreal pageSize = copyRect.width() * 0.33;
+    const QRectF backPage(copyCenter.x() - pageSize * 0.72,
+                          copyCenter.y() - pageSize * 0.72,
+                          pageSize,
+                          pageSize);
+    const QRectF frontPage(copyCenter.x() - pageSize * 0.28,
+                           copyCenter.y() - pageSize * 0.28,
+                           pageSize,
+                           pageSize);
+    const qreal radius = qMax(0.8, copyRect.width() * 0.07);
+    painter.drawRoundedRect(backPage, radius, radius);
+    painter.drawRoundedRect(frontPage, radius, radius);
 
     painter.setPen(Qt::NoPen);
     painter.setBrush(Qt::white);
@@ -941,9 +978,37 @@ QRect ResultDisplay::editGlyphBadgeRectForHistoryIndex(int historyIndex) const
     return QRect(left, top, diameter, diameter);
 }
 
+QRect ResultDisplay::copyGlyphRectForHistoryIndex(int historyIndex) const
+{
+    const QRect editRect = editGlyphRectForHistoryIndex(historyIndex);
+    if (!editRect.isValid())
+        return QRect();
+
+    const int spacing = 4;
+    const int left = editRect.left() - editRect.width() - spacing;
+    if (left < 0)
+        return QRect();
+
+    return QRect(left, editRect.top(), editRect.width(), editRect.height());
+}
+
+QRect ResultDisplay::copyGlyphBadgeRectForHistoryIndex(int historyIndex) const
+{
+    const QRect copyLaneRect = copyGlyphRectForHistoryIndex(historyIndex);
+    if (!copyLaneRect.isValid())
+        return QRect();
+
+    const int diameter = qMin(copyLaneRect.width(), qMax(12, fontMetrics().height() - 2));
+    const int left = copyLaneRect.left() + (copyLaneRect.width() - diameter) / 2;
+    const int top = copyLaneRect.top() + (copyLaneRect.height() - diameter) / 2;
+    return QRect(left, top, diameter, diameter);
+}
+
 QRect ResultDisplay::hoverActionRectForHistoryIndex(int historyIndex) const
 {
-    return removeGlyphRectForHistoryIndex(historyIndex).united(editGlyphRectForHistoryIndex(historyIndex));
+    return copyGlyphRectForHistoryIndex(historyIndex)
+        .united(editGlyphRectForHistoryIndex(historyIndex))
+        .united(removeGlyphRectForHistoryIndex(historyIndex));
 }
 
 QRect ResultDisplay::cancelGlyphBadgeRectForEditingIndex() const
