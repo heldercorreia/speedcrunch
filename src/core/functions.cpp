@@ -25,6 +25,7 @@
 #include "core/settings.h"
 #include "math/hmath.h"
 #include "math/cmath.h"
+#include "math/floatconfig.h"
 
 #include <QCoreApplication>
 #include <QDateTime>
@@ -758,6 +759,25 @@ Quantity function_xor(Function* f, const Function::ArgumentList& args)
         std::mem_fn(&Quantity::operator^));
 }
 
+Quantity function_popcount(Function* f, const Function::ArgumentList& args)
+{
+    /* TODO : complex mode switch for this function */
+    ENSURE_ARGUMENT_COUNT(1);
+
+    const Quantity value = args.at(0);
+    Quantity result(0);
+    for (int i = 0; i < LOGICRANGE; ++i) {
+        const Quantity bit = value & (Quantity(1) << Quantity(i));
+        if (bit.isNan()) {
+            return bit;
+        }
+        if (!bit.isZero()) {
+            result += Quantity(1);
+        }
+    }
+    return result;
+}
+
 Quantity function_shl(Function* f, const Function::ArgumentList& args)
 {
     /* TODO : complex mode switch for this function */
@@ -1104,6 +1124,7 @@ void FunctionRepo::createFunctions()
     FUNCTION_INSERT(and);
     FUNCTION_INSERT(or);
     FUNCTION_INSERT(xor);
+    FUNCTION_INSERT(popcount);
     FUNCTION_INSERT(shl);
     FUNCTION_INSERT(shr);
     FUNCTION_INSERT(idiv);
@@ -1221,6 +1242,7 @@ void FunctionRepo::setNonTranslatableFunctionUsages()
     FUNCTION_USAGE(npr, "x<sub>1</sub>; x<sub>2</sub>");
     FUNCTION_USAGE(oct, "n");
     FUNCTION_USAGE(or, "x<sub>1</sub>; x<sub>2</sub>; ...");
+    FUNCTION_USAGE(popcount, "n");
     FUNCTION_USAGE(polar, "x");
     FUNCTION_USAGE(product, "x<sub>1</sub>; x<sub>2</sub>; ...");
     FUNCTION_USAGE(phase, "x");
@@ -1345,6 +1367,7 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(npr, tr("Permutation (Arrangement)"));
     FUNCTION_NAME(oct, tr("Convert to Octal Representation"));
     FUNCTION_NAME(or, tr("Logical OR"));
+    FUNCTION_NAME(popcount, tr("Population Count (Hamming Weight)"));
     FUNCTION_NAME(phase, tr("Phase of Complex Number"));
     FUNCTION_NAME(poicdf, tr("Poissonian Cumulative Distribution Function"));
     FUNCTION_NAME(poimean, tr("Poissonian Distribution Mean"));

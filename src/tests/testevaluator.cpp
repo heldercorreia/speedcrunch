@@ -964,6 +964,10 @@ void test_function_logic()
     CHECK_EVAL_FAIL("and(1)");
     CHECK_EVAL_FAIL("or(2)");
     CHECK_EVAL_FAIL("xor(3)");
+    CHECK_EVAL_FAIL("popcount()");
+    CHECK_EVAL_FAIL("popcount(1;2)");
+    CHECK_EVAL_FAIL("popcount(1 meter)");
+    CHECK_EVAL_FAIL("popcount(2^300)");
 
     CHECK_EVAL("and(0;0)", "0");
     CHECK_EVAL("and(0;1)", "0");
@@ -979,6 +983,23 @@ void test_function_logic()
     CHECK_EVAL("xor(0;1)", "1");
     CHECK_EVAL("xor(1;0)", "1");
     CHECK_EVAL("xor(1;1)", "0");
+
+    CHECK_EVAL("popcount(0)", "0");
+    CHECK_EVAL("popcount(1)", "1");
+    CHECK_EVAL("popcount(2^254)", "1");
+    CHECK_EVAL("popcount(2^255-1)", "255");
+    CHECK_EVAL("popcount(-2^255)", "1");
+    CHECK_EVAL("popcount(15)", "4");
+    CHECK_EVAL("popcount(0xF0F0)", "8");
+    CHECK_EVAL("popcount(3.9)", "2");
+    CHECK_EVAL("popcount(-3.9)", "255");
+    CHECK_EVAL("popcount(0.9)", "0");
+    CHECK_EVAL("popcount(-0.9)", "256");
+    CHECK_EVAL("popcount(-1)", "256");
+    CHECK_EVAL("popcount(and(0x123456789ABCDEF0; not(0x123456789ABCDEF0)))", "0");
+    CHECK_EVAL("popcount(or(0x123456789ABCDEF0; not(0x123456789ABCDEF0)))", "256");
+    CHECK_EVAL("popcount(123456789) + popcount(not(123456789))", "256");
+    CHECK_EVAL("popcount(-123456789) + popcount(not(-123456789))", "256");
 }
 
 void test_function_discrete()

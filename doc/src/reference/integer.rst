@@ -16,6 +16,14 @@ Bitwise Operations
 
     Performs a bitwise logical XOR on the submitted parameters (at least two). All parameters have to be integers from the range -2\ :sup:`255` to +2\ :sup:`255`-1  (signed integer), non integer arguments are rounded toward zero.
 
+.. function:: popcount(n)
+
+    Returns the number of set bits (``1`` bits) in the 256-bit two's complement
+    representation of ``n``.
+
+    The argument must be real and dimensionless, in the logic range used by
+    the bitwise functions. Non-integer arguments are rounded toward zero.
+
 .. function:: not(n)
 
     The :func:`not` function is defined by ``not(x) = -x-1``, giving the same result as the one's complement operator ``~`` in C/C++.
