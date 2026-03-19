@@ -212,6 +212,7 @@ private slots:
     void showReadyMessage();
     void showResultFormatContextMenu(const QPoint&);
     void showSessionImportDialog();
+    void showUserDefinitionsImportDialog();
     void showSessionLoadDialog();
     void wrapSelection();
     void startHistoryEntryEdit(int index);
@@ -274,6 +275,13 @@ private:
     QString statusBarResultFormatValue() const;
     QString statusBarComplexNumbersValue() const;
     void cycleComplexNumbersMode();
+    void applyStartupUserDefinitions();
+    void importUserDefinitionsFromText(const QString& text, bool overwriteExisting,
+                                       int* importedVariables = nullptr,
+                                       int* importedFunctions = nullptr,
+                                       int* ignoredLines = nullptr,
+                                       QList<int>* ignoredLineNumbers = nullptr,
+                                       bool dryRun = false);
     bool rebuildSessionFromExpressions(const QStringList& expressions, int* errorIndex = nullptr, QString* errorText = nullptr);
     QStringList historyExpressions() const;
 
@@ -283,6 +291,7 @@ private:
         QAction* sessionLoad;
         QAction* sessionSave;
         QAction* sessionImport;
+        QAction* sessionImportUserDefinitions;
         QAction* sessionExportHtml;
         QAction* sessionExportPlainText;
         QAction* sessionQuit;

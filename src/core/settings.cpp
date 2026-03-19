@@ -274,6 +274,8 @@ Settings::Settings()
 {
     digitGroupingIntegerPartOnly = false;
     singleInstance = true;
+    startupUserDefinitionsOverwrite = false;
+    startupUserDefinitionsApplyBeforeRestore = false;
 }
 
 void Settings::load()
@@ -329,6 +331,12 @@ void Settings::load()
     windowPositionSave = settings->value(key + QLatin1String("WindowPositionSave"), true).toBool();
     singleInstance = settings->value(key + QLatin1String("SingleInstance"), true).toBool();
     complexNumbers = settings->value(key + QLatin1String("ComplexNumbers"), false).toBool();
+    startupUserDefinitions = settings->value(
+        key + QLatin1String("StartupUserDefinitions"), QString()).toString();
+    startupUserDefinitionsOverwrite = settings->value(
+        key + QLatin1String("StartupUserDefinitionsOverwrite"), false).toBool();
+    startupUserDefinitionsApplyBeforeRestore = settings->value(
+        key + QLatin1String("StartupUserDefinitionsApplyBeforeRestore"), false).toBool();
 
     digitGrouping = settings->value(key + QLatin1String("DigitGrouping"), 0).toInt();
     digitGrouping = std::min(3, std::max(0, digitGrouping));
@@ -456,6 +464,9 @@ void Settings::save()
     settings->setValue(key + QLatin1String("WindowPositionSave"), windowPositionSave);
     settings->setValue(key + QLatin1String("SingleInstance"), singleInstance);
     settings->setValue(key + QLatin1String("ComplexNumbers"), complexNumbers);
+    settings->setValue(key + QLatin1String("StartupUserDefinitions"), startupUserDefinitions);
+    settings->setValue(key + QLatin1String("StartupUserDefinitionsOverwrite"), startupUserDefinitionsOverwrite);
+    settings->setValue(key + QLatin1String("StartupUserDefinitionsApplyBeforeRestore"), startupUserDefinitionsApplyBeforeRestore);
 
     settings->setValue(key + QLatin1String("AngleMode"), QString(QChar(angleUnit)));
 

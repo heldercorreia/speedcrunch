@@ -104,6 +104,9 @@ public:
     bool autoResultToClipboard;
     bool windowPositionSave;
     bool singleInstance;
+    QString startupUserDefinitions;
+    bool startupUserDefinitionsOverwrite;
+    bool startupUserDefinitionsApplyBeforeRestore;
 
     bool constantsDockVisible;
     bool functionsDockVisible;
