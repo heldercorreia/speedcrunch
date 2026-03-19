@@ -495,6 +495,7 @@ void Constants::Private::populate()
     PUSH_CONSTANT("Praseodymium", "140.90765",   "g/mol");
     PUSH_CONSTANT("Protactinium", "231.03588",   "g/mol");
     PUSH_CONSTANT("Rhenium",      "186.207",     "g/mol");
+    PUSH_CONSTANT("Rhodium",      "102.90549",   "g/mol");
     PUSH_CONSTANT("Rubidium",     "85.4678",     "g/mol");
     PUSH_CONSTANT("Ruthenium",    "101.07",      "g/mol");
     PUSH_CONSTANT("Samarium",     "150.36",      "g/mol");
@@ -706,6 +707,7 @@ void Constants::Private::retranslateText()
     I18N_CONSTANT(Constants::tr("Praseodymium"));
     I18N_CONSTANT(Constants::tr("Protactinium"));
     I18N_CONSTANT(Constants::tr("Rhenium"));
+    I18N_CONSTANT(Constants::tr("Rhodium"));
     I18N_CONSTANT(Constants::tr("Rubidium"));
     I18N_CONSTANT(Constants::tr("Ruthenium"));
     I18N_CONSTANT(Constants::tr("Samarium"));
