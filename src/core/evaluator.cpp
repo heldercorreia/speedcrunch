@@ -691,8 +691,16 @@ static bool termNeedsGroupingForDisplay(const Tokens& tokens, int firstIndex, in
             continue;
 
         if (opPrecedence(op) > additivePrecedence) {
-            if (op == Token::Exponentiation)
+            // Additive precedence already disambiguates top-level arithmetic
+            // terms, so avoid injecting grouping parentheses for them.
+            if (op == Token::Exponentiation
+                || op == Token::Multiplication
+                || op == Token::Division
+                || op == Token::IntegerDivision
+                || op == Token::Modulo)
+            {
                 continue;
+            }
             return true;
         }
     }

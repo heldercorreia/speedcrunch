@@ -1541,6 +1541,7 @@ void test_implicit_multiplication()
     CHECK_INTERPRETED("2^2(2)(2)", "2^2⋅(2⋅2)");
     CHECK_INTERPRETED("2^2(2*2)", "2^2⋅(2×2)");
     CHECK_INTERPRETED("2^2(2)+3", "2^2⋅2+3");
+    CHECK_INTERPRETED("2 sin pi cos pi + 2", "2⋅sin(pi)⋅cos(pi)+2");
     CHECK_INTERPRETED("1 meter second^-1", "1⋅meter⋅second^(-1)");
     CHECK_INTERPRETED("1/second^2", "1/second^2");
     CHECK_INTERPRETED("1/2^3", "1/2^3");
@@ -1586,28 +1587,51 @@ void test_display_interpreted_spacing()
             + mediumMathSpace + unicodeMinusSign + mediumMathSpace
             + QStringLiteral("1")
             + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
-            + QStringLiteral("(")
             + QStringLiteral("2")
             + mediumMathSpace + QString::fromUtf8("×") + mediumMathSpace
             + QStringLiteral("3")
             + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
-            + QStringLiteral("sin(pi)")
-            + QStringLiteral(")"));
+            + QStringLiteral("sin(pi)"));
     CHECK_DISPLAY_INTERPRETED(
         QString::fromUtf8("2×sin pi"),
         QString::fromUtf8("2")
             + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
             + QStringLiteral("sin(pi)"));
     CHECK_DISPLAY_INTERPRETED(
+        QString::fromUtf8("2 sin pi cos pi + 2"),
+        QString::fromUtf8("2")
+            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + QStringLiteral("sin(pi)")
+            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + QStringLiteral("cos(pi)")
+            + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
+            + QStringLiteral("2"));
+    CHECK_DISPLAY_INTERPRETED(
+        QString::fromUtf8("2 sin pi cos pi + 2 × 23 / cos pi − sin −pi^2"),
+        QString::fromUtf8("2")
+            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + QStringLiteral("sin(pi)")
+            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + QStringLiteral("cos(pi)")
+            + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
+            + QStringLiteral("2")
+            + mediumMathSpace + QString::fromUtf8("×") + mediumMathSpace
+            + QStringLiteral("23")
+            + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+            + QStringLiteral("cos(pi)")
+            + mediumMathSpace + unicodeMinusSign + mediumMathSpace
+            + QStringLiteral("sin((")
+            + unicodeMinusSign
+            + QString::fromUtf8("pi)²)"));
+    CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("23/2+10\\3"),
-        QStringLiteral("(23")
+        QStringLiteral("23")
             + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
             + QStringLiteral("2")
-            + QStringLiteral(")")
             + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
-            + QStringLiteral("(10")
+            + QStringLiteral("10")
             + mediumMathSpace + QStringLiteral("\\") + mediumMathSpace
-            + QStringLiteral("3)"));
+            + QStringLiteral("3"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("1<<2"),
         QStringLiteral("1")
@@ -1670,13 +1694,13 @@ void test_display_interpreted_spacing()
             + mediumMathSpace + unicodeMinusSign + mediumMathSpace
             + QStringLiteral("2")
             + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
-            + QStringLiteral("(1")
+            + QStringLiteral("1")
             + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
             + QStringLiteral("(1")
             + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
             + QStringLiteral("(2³)")
             + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
-            + QStringLiteral("3))")
+            + QStringLiteral("3)")
             + mediumMathSpace + unicodeMinusSign + mediumMathSpace
             + QStringLiteral("2^(12!)")
             + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
@@ -1698,7 +1722,7 @@ void test_display_interpreted_spacing()
         QStringLiteral("2^(12.12)"));
     CHECK_DISPLAY_INTERPRETED(
         QString::fromUtf8("12×1/2/3/4×23+23−sin(2)+23 cos(23)"),
-        QStringLiteral("(12")
+        QStringLiteral("12")
             + mediumMathSpace + QString::fromUtf8("×") + mediumMathSpace
             + QStringLiteral("1")
             + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
@@ -1708,15 +1732,15 @@ void test_display_interpreted_spacing()
             + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
             + QStringLiteral("4")
             + mediumMathSpace + QString::fromUtf8("×") + mediumMathSpace
-            + QStringLiteral("23)")
+            + QStringLiteral("23")
             + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
             + QStringLiteral("23")
             + mediumMathSpace + unicodeMinusSign + mediumMathSpace
             + QStringLiteral("sin(2)")
             + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
-            + QStringLiteral("(23")
+            + QStringLiteral("23")
             + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
-            + QStringLiteral("cos(23))"));
+            + QStringLiteral("cos(23)"));
 }
 
 void test_format()
