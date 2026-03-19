@@ -251,6 +251,11 @@ static void checkUserVariableDescription(const char* file, int line, const char*
 void test_constants()
 {
     CHECK_EVAL("1", "1");
+    CHECK_EVAL_FAIL("pi()");
+    CHECK_EVAL_FAIL("e()");
+    CHECK_EVAL_FAIL("ans()");
+    CHECK_EVAL_FAIL("sqrt(pi())");
+    CHECK_EVAL_FAIL("cos(pi()");
 }
 
 void test_exponentiation()

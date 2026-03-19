@@ -3022,12 +3022,13 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
 
             // Calling function.
             case Opcode::Function:
-                // Must do this first to avoid crash
-                // when using vars like functions.
-                if (refs.isEmpty())
-                    break;
-
                 fname = refs.take(stack.count() - index);
+                // Identifiers followed by () must resolve to a callable.
+                // Do not silently accept constants/variables as nullary calls.
+                if (fname.isEmpty()) {
+                    m_error = tr("invalid expression");
+                    return CMath::nan();
+                }
                 function = FunctionRepo::instance()->find(fname);
 
                 userFunction = nullptr;
