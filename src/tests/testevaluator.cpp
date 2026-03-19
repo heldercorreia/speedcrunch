@@ -672,6 +672,8 @@ void test_sexagesimal()
     CHECK_EVAL_FORMAT("12:34:56", "12:34:56.00");
     CHECK_EVAL_FORMAT("12:34:56.", "12:34:56.00");
     CHECK_EVAL_FORMAT("12:34:56.78", "12:34:56.78");
+    CHECK_EVAL("1:30 / 4:00", "0.375");
+    CHECK_EVAL("(1:30) / (4:00)", "0.375");
 
     CHECK_EVAL_FORMAT("-0:", "0:00:00");
     CHECK_EVAL_FORMAT("-::56", "-0:00:56.00");

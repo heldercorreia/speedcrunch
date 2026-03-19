@@ -1513,6 +1513,7 @@ Tokens Evaluator::scan(const QString& expr) const
         case Init:
             tokenStart = i;
             tokenText = "";
+            tokenUnit = "";
             state = Start;
 
             // State variables reset
@@ -1826,12 +1827,19 @@ Tokens Evaluator::scan(const QString& expr) const
 
         case InNumberEnd: {
             int tokenSize = i - tokenStart;
-            tokens.append(Token(Token::stxNumber, tokenText,
-                                tokenStart, tokenSize));
-
-            if (!tokenUnit.isEmpty()) { // add unit token
+            if (!tokenUnit.isEmpty()) {
+                // Keep the sexagesimal number and its generated unit together:
+                // e.g. "1:30 / 4:00" should parse as
+                // "(90 minute) / (4 hour)", not "(90 minute / 4) hour".
+                tokens.append(Token(Token::stxOpenPar, "(", tokenStart, 0));
+                tokens.append(Token(Token::stxNumber, tokenText,
+                                    tokenStart, tokenSize));
                 tokens.append(Token(Token::stxIdentifier, tokenUnit,
                     tokenStart + tokenSize, 0));
+                tokens.append(Token(Token::stxClosePar, ")", tokenStart + tokenSize, 0));
+            } else {
+                tokens.append(Token(Token::stxNumber, tokenText,
+                                    tokenStart, tokenSize));
             }
 
             // Make sure a number cannot be followed by another number.
