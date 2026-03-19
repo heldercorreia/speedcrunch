@@ -635,6 +635,7 @@ HNumber::Format::Format()
     , radixChar(RadixChar::Null)
     , mode(Mode::Null)
     , precision(PrecisionNull)
+    , paddedBits(0)
 {
 }
 
@@ -643,6 +644,7 @@ HNumber::Format::Format(const HNumber::Format& other)
     , radixChar(other.radixChar)
     , mode(other.mode)
     , precision(other.precision)
+    , paddedBits(other.paddedBits)
 {
 }
 
@@ -653,6 +655,7 @@ HNumber::Format HNumber::Format::operator+(const HNumber::Format& other) const
     result.radixChar = (this->radixChar != RadixChar::Null) ? this->radixChar : other.radixChar;
     result.mode = (this->mode != Mode::Null) ? this->mode : other.mode;
     result.precision = (this->precision != PrecisionNull) ? this->precision : other.precision;
+    result.paddedBits = this->paddedBits != 0 ? this->paddedBits : other.paddedBits;
     return result;
 }
 
@@ -740,7 +743,73 @@ HNumber::Format HNumber::Format::Sexagesimal()
     return result;
 }
 
+HNumber::Format HNumber::Format::PadBits(int bits)
+{
+    Format result;
+    result.paddedBits = bits;
+    return result;
+}
+
+HNumber::Format HNumber::Format::PadToByteBoundary()
+{
+    Format result;
+    result.paddedBits = PaddedBitsAutoByte;
+    return result;
+}
+
 namespace {
+
+QString applyIntegerPadding(const QString& input, int base, int paddedBits)
+{
+    if (paddedBits == 0)
+        return input;
+
+    int bitsPerDigit = 0;
+    QString prefix;
+    switch (base) {
+    case 2:
+        bitsPerDigit = 1;
+        prefix = QStringLiteral("0b");
+        break;
+    case 8:
+        bitsPerDigit = 3;
+        prefix = QStringLiteral("0o");
+        break;
+    case 16:
+        bitsPerDigit = 4;
+        prefix = QStringLiteral("0x");
+        break;
+    default:
+        return input;
+    }
+
+    int pos = 0;
+    QString result(input);
+    if (result.startsWith(QLatin1Char('-')) || result.startsWith(QLatin1Char('+')))
+        ++pos;
+
+    if (!result.mid(pos).startsWith(prefix, Qt::CaseInsensitive))
+        return input;
+    pos += prefix.size();
+
+    const int dotPos = result.indexOf(QLatin1Char('.'), pos);
+    const int intEnd = dotPos >= 0 ? dotPos : result.size();
+    const int intDigits = intEnd - pos;
+    if (intDigits <= 0)
+        return input;
+
+    const int currentBits = intDigits * bitsPerDigit;
+    int targetBits = paddedBits;
+    if (paddedBits == HNumber::Format::PaddedBitsAutoByte)
+        targetBits = ((currentBits + 7) / 8) * 8;
+
+    if (targetBits <= currentBits)
+        return input;
+
+    const int targetDigits = (targetBits + bitsPerDigit - 1) / bitsPerDigit;
+    result.insert(pos, QString(targetDigits - intDigits, QLatin1Char('0')));
+    return result;
+}
 
 char* _doFormat(cfloatnum x, signed char base, signed char expbase, char outmode, int prec, unsigned flags)
 {
@@ -903,7 +972,7 @@ QString HMath::format(const HNumber& hn, HNumber::Format format)
 
     QString result(rs);
     free(rs);
-    return result;
+    return applyIntegerPadding(result, base, format.paddedBits);
 }
 
 /**

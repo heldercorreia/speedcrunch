@@ -1667,6 +1667,49 @@ void test_format()
     CHECK_EVAL("oct(123)", "0o173");
     CHECK_EVAL("hex(123)", "0x7B");
 
+    CHECK_EVAL("binpad(15)", "0b00001111");
+    CHECK_EVAL("hexpad(15)", "0x0F");
+    CHECK_EVAL("octpad(15)", "0o017");
+
+    CHECK_EVAL("binpad(1536)", "0b0000011000000000");
+    CHECK_EVAL("hexpad(1536)", "0x0600");
+    CHECK_EVAL("octpad(1536)", "0o003000");
+
+    CHECK_EVAL("binpad(1536; 32)", "0b00000000000000000000011000000000");
+    CHECK_EVAL("hexpad(1536; 32)", "0x00000600");
+    CHECK_EVAL("octpad(1536; 32)", "0o00000003000");
+
+    CHECK_EVAL("binpad(-5)", "-0b00000101");
+    CHECK_EVAL("hexpad(-255; 16)", "-0x00FF");
+    CHECK_EVAL("octpad(-9)", "-0o011");
+
+    // Explicit widths below current representation should not truncate.
+    CHECK_EVAL("binpad(255; 7)", "0b11111111");
+    CHECK_EVAL("hexpad(255; 4)", "0xFF");
+    CHECK_EVAL("octpad(511; 8)", "0o777");
+
+    // Width rounding per radix digit size.
+    CHECK_EVAL("binpad(5; 9)", "0b000000101");
+    CHECK_EVAL("hexpad(5; 9)", "0x005");
+    CHECK_EVAL("octpad(5; 9)", "0o005");
+    CHECK_EVAL("octpad(9; 10)", "0o0011");
+
+    // Zero and byte boundary transitions.
+    CHECK_EVAL("binpad(0)", "0");
+    CHECK_EVAL("hexpad(0)", "0");
+    CHECK_EVAL("octpad(0)", "0");
+    CHECK_EVAL("binpad(256)", "0b0000000100000000");
+    CHECK_EVAL("hexpad(256)", "0x0100");
+    CHECK_EVAL("octpad(256)", "0o000400");
+
+    CHECK_EVAL_FAIL("binpad(1.5)");
+    CHECK_EVAL_FAIL("binpad(1 meter)");
+    CHECK_EVAL_FAIL("hexpad(1+j)");
+    CHECK_EVAL_FAIL("hexpad(10; 0)");
+    CHECK_EVAL_FAIL("octpad(10; -8)");
+    CHECK_EVAL_FAIL("binpad(10; 3.5)");
+    CHECK_EVAL_FAIL("binpad(10; 1e1000)");
+
     CHECK_EVAL("polar(3+4j)", "5 * exp(j*0.92729521800161223243)");
 }
 

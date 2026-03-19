@@ -102,7 +102,11 @@ public:
         RadixChar radixChar;
         Mode mode;
         int precision;  // -1 means 'auto'
+        // 0 disables integer-part padding. Positive values pad to at least this many bits.
+        // -1 pads to the next multiple of 8 bits.
+        int paddedBits;
         static const int PrecisionNull = -1000;
+        static const int PaddedBitsAutoByte = -1;
 
         Format();
         Format(const Format&);
@@ -123,6 +127,8 @@ public:
         static Format Scientific();
         static Format Engineering();
         static Format Sexagesimal();
+        static Format PadBits(int bits);
+        static Format PadToByteBoundary();
     };
 };
 

@@ -96,6 +96,15 @@ operations::
     0x2 * hex(12341)
     = 24682
 
+For assembly-style fixed-width formatting, use :func:`binpad`, :func:`octpad`, or :func:`hexpad`.
+These functions only accept real, dimensionless integer arguments and also only affect the immediate result::
+
+    hexpad(15)
+    = 0x0F
+
+    binpad(1536; 32)
+    = 0b00000000000000000000011000000000
+
 To change the base that is used for displaying results, select one of the corresponding settings in :menuselection:`Settings --> Results --> Format`.
 
 SpeedCrunch stores integers with a precision of up to 256 bits. Since this would be unwieldy,

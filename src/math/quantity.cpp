@@ -629,6 +629,8 @@ void Quantity::Format::serialize(QJsonObject& json) const
 
     if (precision != PrecisionNull)
         json["precision"] = precision;
+    if (paddedBits != 0)
+        json["padded_bits"] = paddedBits;
 }
 
 Quantity::Format Quantity::Format::deSerialize(const QJsonObject& json)
@@ -679,12 +681,17 @@ Quantity::Format Quantity::Format::deSerialize(const QJsonObject& json)
 
 
     result.precision = json.contains("precision") ? json["precision"].toInt() : PrecisionNull;
+    result.paddedBits = json.contains("padded_bits") ? json["padded_bits"].toInt() : 0;
     return result;
 }
 
 bool Quantity::Format::isNull() const
 {
-    return (mode == Mode::Null && base == Base::Null && precision == PrecisionNull && notation == Notation::Null);
+    return (mode == Mode::Null
+        && base == Base::Null
+        && precision == PrecisionNull
+        && notation == Notation::Null
+        && paddedBits == 0);
 }
 
 // DMath

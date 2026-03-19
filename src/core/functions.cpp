@@ -141,6 +141,34 @@ static Quantity s_randomFraction(int digits)
     return Quantity(HNumber(literal.c_str()));
 }
 
+static Quantity s_nonDecimalPad(Function* f, const Function::ArgumentList& args, Quantity::Format format)
+{
+    ENSURE_EITHER_ARGUMENT_COUNT(1, 2);
+    const Quantity value = args.at(0);
+    if (!value.isInteger()) {
+        f->setError(OutOfDomain);
+        return DMath::nan();
+    }
+
+    Quantity::Format padding = Quantity::Format::PadToByteBoundary();
+    if (args.count() == 2) {
+        const Quantity bitsArg = args.at(1);
+        if (!bitsArg.isInteger()) {
+            f->setError(OutOfDomain);
+            return DMath::nan();
+        }
+
+        const int bits = bitsArg.numericValue().toInt();
+        if (bits <= 0) {
+            f->setError(OutOfDomain);
+            return DMath::nan();
+        }
+        padding = Quantity::Format::PadBits(bits);
+    }
+
+    return Quantity(value).setFormat(format + padding + value.format());
+}
+
 Quantity Function::exec(const Function::ArgumentList& args)
 {
     if (!m_ptr)
@@ -702,6 +730,21 @@ Quantity function_bin(Function* f, const Function::ArgumentList& args)
     return Quantity(args.at(0)).setFormat(Quantity::Format::Fixed() + Quantity::Format::Binary() + Quantity(args.at(0)).format());
 }
 
+Quantity function_binpad(Function* f, const Function::ArgumentList& args)
+{
+    return s_nonDecimalPad(f, args, Quantity::Format::Fixed() + Quantity::Format::Binary());
+}
+
+Quantity function_hexpad(Function* f, const Function::ArgumentList& args)
+{
+    return s_nonDecimalPad(f, args, Quantity::Format::Fixed() + Quantity::Format::Hexadecimal());
+}
+
+Quantity function_octpad(Function* f, const Function::ArgumentList& args)
+{
+    return s_nonDecimalPad(f, args, Quantity::Format::Fixed() + Quantity::Format::Octal());
+}
+
 Quantity function_cart(Function* f, const Function::ArgumentList& args)
 {
     ENSURE_ARGUMENT_COUNT(1);
@@ -1121,6 +1164,7 @@ void FunctionRepo::createFunctions()
     FUNCTION_INSERT(absdev);
     FUNCTION_INSERT(average);
     FUNCTION_INSERT(bin);
+    FUNCTION_INSERT(binpad);
     FUNCTION_INSERT(cbrt);
     FUNCTION_INSERT(ceil);
     FUNCTION_INSERT(dec);
@@ -1129,11 +1173,13 @@ void FunctionRepo::createFunctions()
     FUNCTION_INSERT(gamma);
     FUNCTION_INSERT(geomean);
     FUNCTION_INSERT(hex);
+    FUNCTION_INSERT(hexpad);
     FUNCTION_INSERT(int);
     FUNCTION_INSERT(lngamma);
     FUNCTION_INSERT(max);
     FUNCTION_INSERT(min);
     FUNCTION_INSERT(oct);
+    FUNCTION_INSERT(octpad);
     FUNCTION_INSERT(product);
     FUNCTION_INSERT(round);
     FUNCTION_INSERT(sgn);
@@ -1285,6 +1331,7 @@ void FunctionRepo::setNonTranslatableFunctionUsages()
     FUNCTION_USAGE(arctan2, "x; y");
     FUNCTION_USAGE(average, "x<sub>1</sub>; x<sub>2</sub>; ...");
     FUNCTION_USAGE(bin, "n");
+    FUNCTION_USAGE(binpad, "n [; bits]");
     FUNCTION_USAGE(cart, "x");
     FUNCTION_USAGE(cbrt, "x");
     FUNCTION_USAGE(ceil, "x");
@@ -1305,6 +1352,7 @@ void FunctionRepo::setNonTranslatableFunctionUsages()
     FUNCTION_USAGE(geomean, "x<sub>1</sub>; x<sub>2</sub>; ...");
     FUNCTION_USAGE(gradians, "x");
     FUNCTION_USAGE(hex, "n");
+    FUNCTION_USAGE(hexpad, "n [; bits]");
     FUNCTION_USAGE(ieee754_half_decode, "x");
     FUNCTION_USAGE(ieee754_half_encode, "x");
     FUNCTION_USAGE(ieee754_single_decode, "x");
@@ -1326,6 +1374,7 @@ void FunctionRepo::setNonTranslatableFunctionUsages()
     FUNCTION_USAGE(not, "n");
     FUNCTION_USAGE(npr, "x<sub>1</sub>; x<sub>2</sub>");
     FUNCTION_USAGE(oct, "n");
+    FUNCTION_USAGE(octpad, "n [; bits]");
     FUNCTION_USAGE(or, "x<sub>1</sub>; x<sub>2</sub>; ...");
     FUNCTION_USAGE(popcount, "n");
     FUNCTION_USAGE(polar, "x");
@@ -1394,6 +1443,7 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(arctan2, tr("Arc Tangent with two Arguments"));
     FUNCTION_NAME(average, tr("Average (Arithmetic Mean)"));
     FUNCTION_NAME(bin, tr("Convert to Binary Representation"));
+    FUNCTION_NAME(binpad, tr("Convert to Padded Binary Representation"));
     FUNCTION_NAME(binomcdf, tr("Binomial Cumulative Distribution Function"));
     FUNCTION_NAME(binommean, tr("Binomial Distribution Mean"));
     FUNCTION_NAME(binompmf, tr("Binomial Probability Mass Function"));
@@ -1420,6 +1470,7 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(geomean, tr("Geometric Mean"));
     FUNCTION_NAME(gradians, tr("Gradians of arc"));
     FUNCTION_NAME(hex, tr("Convert to Hexadecimal Representation"));
+    FUNCTION_NAME(hexpad, tr("Convert to Padded Hexadecimal Representation"));
     FUNCTION_NAME(hypercdf, tr("Hypergeometric Cumulative Distribution Function"));
     FUNCTION_NAME(hypermean, tr("Hypergeometric Distribution Mean"));
     FUNCTION_NAME(hyperpmf, tr("Hypergeometric Probability Mass Function"));
@@ -1455,6 +1506,7 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(not, tr("Logical NOT"));
     FUNCTION_NAME(npr, tr("Permutation (Arrangement)"));
     FUNCTION_NAME(oct, tr("Convert to Octal Representation"));
+    FUNCTION_NAME(octpad, tr("Convert to Padded Octal Representation"));
     FUNCTION_NAME(or, tr("Logical OR"));
     FUNCTION_NAME(popcount, tr("Population Count (Hamming Weight)"));
     FUNCTION_NAME(phase, tr("Phase of Complex Number"));

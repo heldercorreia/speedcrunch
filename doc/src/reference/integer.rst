@@ -113,6 +113,33 @@ that is used for displaying results, select one of the corresponding settings in
 
     Format ``n`` as hexadecimal (base-16).
 
+.. function:: binpad(n [; bits])
+
+    Format integer ``n`` as binary (base-2) and left-pad the integer part with zeros.
+
+    If ``bits`` is omitted, the width is padded to the next multiple of 8 bits (byte boundary).
+    If ``bits`` is provided, the width is padded to at least ``bits`` (it never truncates).
+
+    Only real, dimensionless integer arguments are allowed.
+
+.. function:: octpad(n [; bits])
+
+    Format integer ``n`` as octal (base-8) and left-pad the integer part with zeros.
+
+    If ``bits`` is omitted, the width is padded to the next multiple of 8 bits (byte boundary).
+    If ``bits`` is provided, the width is padded to at least ``bits`` (it never truncates).
+
+    Only real, dimensionless integer arguments are allowed.
+
+.. function:: hexpad(n [; bits])
+
+    Format integer ``n`` as hexadecimal (base-16) and left-pad the integer part with zeros.
+
+    If ``bits`` is omitted, the width is padded to the next multiple of 8 bits (byte boundary).
+    If ``bits`` is provided, the width is padded to at least ``bits`` (it never truncates).
+
+    Only real, dimensionless integer arguments are allowed.
+
 
 Rounding
 --------
