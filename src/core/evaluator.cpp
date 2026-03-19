@@ -3101,6 +3101,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                             const bool savedDirty = m_dirty;
                             const QString savedExpression = m_expression;
                             const bool savedValid = m_valid;
+                            const QString savedInterpretedExpression = m_interpretedExpression;
                             const QString savedAssignId = m_assignId;
                             const bool savedAssignFunc = m_assignFunc;
                             const QStringList savedAssignArg = m_assignArg;
@@ -3116,6 +3117,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                             m_dirty = savedDirty;
                             m_expression = savedExpression;
                             m_valid = savedValid;
+                            m_interpretedExpression = savedInterpretedExpression;
                             m_assignId = savedAssignId;
                             m_assignFunc = savedAssignFunc;
                             m_assignArg = savedAssignArg;
