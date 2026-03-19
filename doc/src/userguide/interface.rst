@@ -109,6 +109,30 @@ In contrast to the HTML export option, the syntax highlighting will be lost.
 SpeedCrunch also offers capabilities to *import* a session from a text file (:menuselection:`Session --> Import`).
 Select any plain text file and SpeedCrunch will try to evaluate each line of the file as if the user entered it directly.
 
+Startup User Definitions
+++++++++++++++++++++++++
+
+To define user variables and user functions that are loaded automatically at startup, use
+:menuselection:`Session --> Startup User Functions and Variables...`.
+
+This dialog provides:
+
+* A multi-line editor (one definition per line), with syntax highlighting and line numbers.
+* Merge/overwrite behavior selection for name collisions.
+* A warning banner when overwrite mode is selected.
+* :guilabel:`Apply Now` to apply definitions immediately.
+* :guilabel:`Test Now` to validate and preview results without applying.
+* :guilabel:`Import...` / :guilabel:`Export...` to share startup definitions as plain text (``.txt``).
+* An advanced option to apply definitions before session restore (instead of after restore).
+
+When applying or testing, SpeedCrunch reports:
+
+* Imported variable count
+* Imported function count
+* Line numbers with errors
+
+Invalid definitions are ignored. Variable definitions that evaluate to ``NaN`` are also ignored.
+
 
 Settings
 --------
