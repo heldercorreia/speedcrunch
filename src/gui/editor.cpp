@@ -174,6 +174,120 @@ static QString formattedLiveResultWithAlternatives(const Quantity& quantity)
     return formatted;
 }
 
+struct ActiveFunctionCallContext {
+    QString functionName;
+    int argumentIndex;
+};
+
+static bool activeFunctionCallContext(const Evaluator* evaluator,
+                                      const QString& expression,
+                                      int cursorPosition,
+                                      ActiveFunctionCallContext* context)
+{
+    if (!context)
+        return false;
+
+    const int safeCursorPosition = qBound(0, cursorPosition, expression.length());
+    const Tokens tokens = evaluator->scan(expression.left(safeCursorPosition));
+    if (!tokens.valid() || tokens.isEmpty())
+        return false;
+
+    struct Scope {
+        QString functionName;
+        int argumentIndex;
+    };
+    QVector<Scope> scopes;
+
+    Token previous = Token::null;
+    bool hasPrevious = false;
+
+    for (int i = 0; i < tokens.count(); ++i) {
+        const Token token = tokens.at(i);
+        const Token::Operator op = token.asOperator();
+
+        if (op == Token::AssociationStart) {
+            Scope scope;
+            scope.argumentIndex = 0;
+            if (hasPrevious && previous.isIdentifier())
+                scope.functionName = previous.text();
+            scopes.append(scope);
+        } else if (op == Token::AssociationEnd) {
+            if (!scopes.isEmpty())
+                scopes.removeLast();
+        } else if (op == Token::ListSeparator) {
+            if (!scopes.isEmpty() && !scopes.last().functionName.isEmpty())
+                ++scopes.last().argumentIndex;
+        }
+
+        previous = token;
+        hasPrevious = true;
+    }
+
+    for (int i = scopes.count() - 1; i >= 0; --i) {
+        if (!scopes.at(i).functionName.isEmpty()) {
+            context->functionName = scopes.at(i).functionName;
+            context->argumentIndex = scopes.at(i).argumentIndex;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static QString formatFunctionUsageTooltip(const QString& functionName,
+                                          const QStringList& parameters,
+                                          int argumentIndex)
+{
+    QStringList displayParameters;
+    displayParameters.reserve(parameters.count());
+
+    for (int i = 0; i < parameters.count(); ++i) {
+        QString parameter = parameters.at(i).toHtmlEscaped();
+        if (i == argumentIndex)
+            parameter = QStringLiteral("<b>%1</b>").arg(parameter);
+        displayParameters.append(parameter);
+    }
+
+    const QString escapedFunctionName = functionName.toHtmlEscaped();
+    return QStringLiteral("<b>%1</b>(%2)")
+        .arg(escapedFunctionName, displayParameters.join(";"));
+}
+
+static QString activeFunctionUsageTooltip(const Evaluator* evaluator,
+                                          const QString& expression,
+                                          int cursorPosition)
+{
+    ActiveFunctionCallContext context;
+    if (!activeFunctionCallContext(evaluator, expression, cursorPosition, &context))
+        return QString();
+
+    if (Function* function = FunctionRepo::instance()->find(context.functionName)) {
+        const QString usage = function->usage();
+        if (usage.isEmpty())
+            return QStringLiteral("<b>%1</b>()").arg(context.functionName.toHtmlEscaped());
+
+        return formatFunctionUsageTooltip(
+            context.functionName,
+            usage.split(';'),
+            context.argumentIndex
+        );
+    }
+
+    const auto userFunctions = evaluator->getUserFunctions();
+    for (const UserFunction& userFunction : userFunctions) {
+        if (userFunction.name().compare(context.functionName, Qt::CaseInsensitive) != 0)
+            continue;
+
+        return formatFunctionUsageTooltip(
+            userFunction.name(),
+            userFunction.arguments(),
+            context.argumentIndex
+        );
+    }
+
+    return QString();
+}
+
 Editor::Editor(QWidget* parent)
     : QPlainTextEdit(parent)
 {
@@ -695,8 +809,16 @@ void Editor::autoCalc()
             emit autoCalcMessageAvailable(message);
             emit autoCalcQuantityAvailable(quantity);
         }
-    } else
-        emit autoCalcMessageAvailable(m_evaluator->error());
+    } else {
+        const QString usageTooltip = activeFunctionUsageTooltip(
+            m_evaluator,
+            text(),
+            textCursor().position()
+        );
+        emit autoCalcMessageAvailable(
+            usageTooltip.isEmpty() ? m_evaluator->error() : usageTooltip
+        );
+    }
 }
 
 void Editor::increaseFontPointSize()
