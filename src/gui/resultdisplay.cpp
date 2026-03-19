@@ -83,6 +83,13 @@ void cloneMenuActions(const QMenu* sourceMenu, QMenu* targetMenu)
     }
 }
 
+QString formatResultForClipboard(const Quantity& value)
+{
+    QString textToCopy = NumberFormatter::format(value);
+    textToCopy.replace(QChar(0x2212), QChar('-'));
+    return textToCopy;
+}
+
 QStringList formatResultLines(const Quantity& value)
 {
     const Settings* settings = Settings::instance();
@@ -513,11 +520,8 @@ void ResultDisplay::mousePressEvent(QMouseEvent* event)
             const QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
             if (m_hoveredHistoryIndex >= 0 && m_hoveredHistoryIndex < history.count()) {
                 const Quantity value = history.at(m_hoveredHistoryIndex).result();
-                if (!value.isNan()) {
-                    QString textToCopy = NumberFormatter::format(value);
-                    textToCopy.replace(QChar(0x2212), QChar('-'));
-                    QApplication::clipboard()->setText(textToCopy, QClipboard::Clipboard);
-                }
+                if (!value.isNan())
+                    QApplication::clipboard()->setText(formatResultForClipboard(value), QClipboard::Clipboard);
             }
             event->accept();
             return;
@@ -546,12 +550,35 @@ void ResultDisplay::contextMenuEvent(QContextMenuEvent* event)
     QMenu* menu = createStandardContextMenu();
     const int historyIndex = historyIndexAtPosition(event->pos());
     if (historyIndex >= 0) {
+        const QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
+        menu->addSeparator();
+        QAction* copyExpressionAction = menu->addAction(tr("Copy Expression"));
+        connect(copyExpressionAction, &QAction::triggered, this, [history, historyIndex]() {
+            if (historyIndex < 0 || historyIndex >= history.count())
+                return;
+
+            QApplication::clipboard()->setText(history.at(historyIndex).expr(), QClipboard::Clipboard);
+        });
+        QAction* copyResultAction = menu->addAction(tr("Copy Result"));
+        const bool canCopyResult = historyIndex >= 0
+            && historyIndex < history.count()
+            && !history.at(historyIndex).result().isNan();
+        copyResultAction->setEnabled(canCopyResult);
+        connect(copyResultAction, &QAction::triggered, this, [history, historyIndex]() {
+            if (historyIndex < 0 || historyIndex >= history.count())
+                return;
+
+            const Quantity value = history.at(historyIndex).result();
+            if (value.isNan())
+                return;
+
+            QApplication::clipboard()->setText(formatResultForClipboard(value), QClipboard::Clipboard);
+        });
         menu->addSeparator();
         QAction* editAction = menu->addAction(tr("Edit This Calculation"));
         connect(editAction, &QAction::triggered, this, [this, historyIndex]() {
             emit editHistoryEntryRequested(historyIndex);
         });
-        menu->addSeparator();
         QAction* removeAction = menu->addAction(tr("Remove This Calculation"));
         connect(removeAction, &QAction::triggered, this, [this, historyIndex]() {
             emit removeHistoryEntryRequested(historyIndex);
