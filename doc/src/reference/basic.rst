@@ -41,8 +41,6 @@ General
 
     .. seealso::
        | :func:`ln` (natural logarithm)
-       | :func:`lg` (binary logarithm)
-       | :func:`log` (arbitrary base logarithm)
 
 .. function:: ln(x)
 

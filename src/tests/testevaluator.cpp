@@ -1365,6 +1365,8 @@ void test_user_functions()
     CHECK_USERFUNC_SET("funcdesc(x) = x + 1 ? Calculate Foo");
     CHECK_USERFUNC_DESC("funcdesc", "Calculate Foo");
     CHECK_EVAL("funcdesc(2)", "3");
+    CHECK_USERFUNC_SET(u8"testshift(x)=1 << x+0");
+    CHECK_EVAL("testshift(8)", "256");
 
     // Check redefining a function without description clears it.
     CHECK_USERFUNC_SET("funcdesc(x) = x + 2");

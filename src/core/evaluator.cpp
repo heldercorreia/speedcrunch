@@ -158,12 +158,16 @@ const Quantity& Evaluator::checkOperatorResult(const Quantity& n)
         m_error = Evaluator::tr("division by zero");
         break;
     case OutOfLogicRange:
-        m_error = Evaluator::tr("overflow - logic result exceeds "
-                                "maximum of 256 bits");
+        if (!(m_assignFunc && !m_assignArg.isEmpty())) {
+            m_error = Evaluator::tr("overflow - logic result exceeds "
+                                    "maximum of 256 bits");
+        }
         break;
     case OutOfIntegerRange:
-        m_error = Evaluator::tr("overflow - integer result exceeds "
-                                "maximum limit for integers");
+        if (!(m_assignFunc && !m_assignArg.isEmpty())) {
+            m_error = Evaluator::tr("overflow - integer result exceeds "
+                                    "maximum limit for integers");
+        }
         break;
     case TooExpensive:
         m_error = Evaluator::tr("too time consuming - "
