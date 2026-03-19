@@ -983,6 +983,35 @@ void Editor::keyPressEvent(QKeyEvent* event)
         insert(QString::fromUtf8("°")); // U+00B0 ° DEGREE SIGN
         event->accept();
         return;
+    case Qt::Key_ParenLeft:
+        if (!textCursor().hasSelection())
+        {
+            QTextCursor cursor = textCursor();
+            const int position = cursor.position();
+            const QString rightText = text().mid(position);
+            const bool isAtEndOfExpression = rightText.trimmed().isEmpty();
+
+            bool isBeforeOperator = false;
+            bool isBeforeClosingPar = false;
+            if (!isAtEndOfExpression) {
+                const int firstNonSpace = rightText.indexOf(QRegularExpression(QStringLiteral("\\S")));
+                if (firstNonSpace >= 0)
+                    isBeforeClosingPar = rightText.at(firstNonSpace) == QLatin1Char(')');
+
+                const Tokens rightTokens = m_evaluator->scan(rightText);
+                if (rightTokens.valid() && !rightTokens.isEmpty())
+                    isBeforeOperator = rightTokens.at(0).type() == Token::stxOperator;
+            }
+
+            if (isAtEndOfExpression || isBeforeOperator || isBeforeClosingPar) {
+                cursor.insertText(QStringLiteral("()"));
+                cursor.setPosition(position + 1);
+                setTextCursor(cursor);
+                event->accept();
+                return;
+            }
+        }
+        break;
     default:;
     }
 
