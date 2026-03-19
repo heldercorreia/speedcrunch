@@ -22,6 +22,7 @@
 #include "core/numberformatter.h"
 #include "core/session.h"
 #include "gui/editorutils.h"
+#include "gui/functiontooltiputils.h"
 #include "tests/testcommon.h"
 
 #include <QtCore/QCoreApplication>
@@ -2016,6 +2017,78 @@ void test_session_deserialize_without_history()
         Evaluator::instance()->initializeBuiltInVariables();
 }
 
+void test_function_usage_tooltip()
+{
+    auto checkTooltip = [](const QString& expression,
+                           int cursorPosition,
+                           const QString& expected,
+                           const char* label)
+    {
+        ++eval_total_tests;
+        const QString actual = FunctionTooltipUtils::activeFunctionUsageTooltip(
+            eval, expression, cursorPosition);
+        if (actual != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\t" << label << "\t[NEW]" << endl
+                 << "\tActual   : " << actual.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    };
+
+    checkTooltip(
+        "gcd(",
+        4,
+        "<b>gcd</b>(<b>n<sub>1</sub></b>; n<sub>2</sub>; ...)",
+        "tooltip shows built-in usage with HTML subscript"
+    );
+
+    checkTooltip(
+        "gcd(3;",
+        6,
+        "<b>gcd</b>(n<sub>1</sub>; <b>n<sub>2</sub></b>; ...)",
+        "tooltip highlights second parameter after first separator"
+    );
+
+    checkTooltip(
+        "gcd(3;4;",
+        8,
+        "<b>gcd</b>(n<sub>1</sub>; n<sub>2</sub>; <b>...</b>)",
+        "tooltip highlights variadic placeholder when typing further arguments"
+    );
+
+    checkTooltip(
+        "gcd(abs(3);",
+        11,
+        "<b>gcd</b>(n<sub>1</sub>; <b>n<sub>2</sub></b>; ...)",
+        "tooltip tracks outer function in nested calls"
+    );
+
+    checkTooltip(
+        "2+3",
+        3,
+        "",
+        "no tooltip outside function calls"
+    );
+
+    eval->setExpression("fff(pao;barro;gis)=pao+barro+gis");
+    eval->evalUpdateAns();
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tsetup user function for tooltip\t[NEW]" << endl
+             << "\tError: " << eval->error().toUtf8().constData() << endl;
+        return;
+    }
+
+    checkTooltip(
+        "fff(1;",
+        6,
+        "<b>fff</b>(pao;<b>barro</b>;gis)",
+        "tooltip highlights current user-function parameter"
+    );
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -2075,6 +2148,7 @@ int main(int argc, char* argv[])
     test_expression_operator_normalization();
     test_session_history_limit();
     test_session_deserialize_without_history();
+    test_function_usage_tooltip();
 
     test_angle_mode(settings);
 

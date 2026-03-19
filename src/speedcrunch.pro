@@ -79,6 +79,7 @@ HEADERS += core/book.h \
            gui/customkeypaddialog.h \
            gui/resultdisplay.h \
            gui/editor.h \
+           gui/functiontooltiputils.h \
            gui/functionswidget.h \
            gui/historywidget.h \
            gui/genericdock.h \
@@ -135,6 +136,7 @@ SOURCES += main.cpp \
            gui/customkeypaddialog.cpp \
            gui/resultdisplay.cpp \
            gui/editor.cpp \
+           gui/functiontooltiputils.cpp \
            gui/functionswidget.cpp \
            gui/historywidget.cpp \
            gui/keypad.cpp \

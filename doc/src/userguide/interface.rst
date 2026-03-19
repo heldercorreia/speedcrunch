@@ -76,6 +76,10 @@ The expression editor provides some advanced features:
     will automatically insert the first suggestion. Alternatively, you can use the arrow keys or the mouse to select a different suggestion, or continue
     typing to refine the list.
 
+* Function signature tooltip
+    While typing a function call, the live result area can show the function signature (parameter list). The parameter currently being edited is highlighted.
+    This also works for user-defined functions.
+
 * Quick constant insertion
     Press :kbd:`Control+Space` to open a list of constants that allows quick access to the same constants as the constants widget (see above).
     Use the arrow keys to navigate the list.

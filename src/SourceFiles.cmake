@@ -23,6 +23,7 @@ gui/bookdock.h
 gui/constantswidget.h
 gui/customkeypaddialog.h
 gui/editor.h
+gui/functiontooltiputils.h
 gui/functionswidget.h
 gui/historywidget.h
 gui/genericdock.h
@@ -79,6 +80,7 @@ gui/bookdock.cpp
 gui/constantswidget.cpp
 gui/customkeypaddialog.cpp
 gui/editor.cpp
+gui/functiontooltiputils.cpp
 gui/functionswidget.cpp
 gui/historywidget.cpp
 # added here explicitly so it shows up in QtCreator
@@ -157,6 +159,7 @@ core/session.cpp
 core/sessionhistory.cpp
 core/variable.cpp
 core/numberformatter.cpp
+gui/functiontooltiputils.cpp
 math/floatcommon.c
 math/floatconst.c
 math/floatconvert.c
