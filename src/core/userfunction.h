@@ -33,6 +33,7 @@ private:
     QString m_name;
     QStringList m_arguments;
     QString m_expression;
+    QString m_interpretedExpression;
     QString m_description;
 
 public:
@@ -41,10 +42,12 @@ public:
     QVector<Opcode> opcodes;
 
     UserFunction(QString name, QStringList arguments, QString expression,
-                 QString description = QString())
+                 QString description = QString(),
+                 QString interpretedExpression = QString())
         : m_name(name)
         , m_arguments(arguments)
         , m_expression(expression)
+        , m_interpretedExpression(interpretedExpression)
         , m_description(description)
     {}
     UserFunction() {}
@@ -53,11 +56,13 @@ public:
     QString name() const;
     QStringList arguments() const;
     QString expression() const;
+    QString interpretedExpression() const;
     QString description() const;
 
     void setName(const QString & str);
     void setArguments(const QStringList & args);
     void setExpression(const QString & expr);
+    void setInterpretedExpression(const QString& expr);
     void setDescription(const QString & expr);
 
     void serialize(QJsonObject & json) const;

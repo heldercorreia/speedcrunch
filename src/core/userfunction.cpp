@@ -41,6 +41,8 @@ UserFunction::UserFunction(const QJsonObject &json) : UserFunction()
 
     if (json.contains("expression"))
         m_expression = json["expression"].toString();
+    if (json.contains("interpretedExpression"))
+        m_interpretedExpression = json["interpretedExpression"].toString();
     if(json.contains("description"))
         m_description = json["description"].toString();
 
@@ -82,6 +84,11 @@ QString UserFunction::expression() const
     return m_expression;
 }
 
+QString UserFunction::interpretedExpression() const
+{
+    return m_interpretedExpression;
+}
+
 QString UserFunction::description() const
 {
     return m_description;
@@ -102,6 +109,11 @@ void UserFunction::setExpression(const QString &expr)
     m_expression = expr;
 }
 
+void UserFunction::setInterpretedExpression(const QString& expr)
+{
+    m_interpretedExpression = expr;
+}
+
 void UserFunction::setDescription(const QString &expr)
 {
     m_description = expr;
@@ -115,6 +127,8 @@ void UserFunction::serialize(QJsonObject &json) const
         args.append(m_arguments[i]);
     json["args"] = args;
     json["expression"] = m_expression;
+    if (m_interpretedExpression != "")
+        json["interpretedExpression"] = m_interpretedExpression;
     if(m_description!="")
         json["description"] = m_description;
 

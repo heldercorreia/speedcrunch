@@ -61,6 +61,7 @@ static const QString slash = space + QStringLiteral("/") + space;
 #define CHECK_USERFUNC_SET(x) checkEval(__FILE__,__LINE__,#x,x,"NaN")
 #define CHECK_USERFUNC_SET_FAIL(x) checkEval(__FILE__,__LINE__,#x,x,"",0,true)
 #define CHECK_USERFUNC_DESC(n,d) checkUserFunctionDescription(__FILE__,__LINE__,#n,n,d)
+#define CHECK_USERFUNC_INTERPRETED(n,e) checkUserFunctionInterpreted(__FILE__,__LINE__,#n,n,e)
 #define CHECK_USERVAR_DESC(n,d) checkUserVariableDescription(__FILE__,__LINE__,#n,n,d)
 
 static void checkAutoFix(const char* file, int line, const char* msg, const char* expr, const char* fixed)
@@ -303,6 +304,33 @@ static void checkUserFunctionDescription(const char* file, int line, const char*
                 cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl;
                 cerr << "\tDescription: " << function.description().toLatin1().constData() << endl
                      << "\tExpected   : " << expectedDescription.toLatin1().constData() << endl;
+            }
+            return;
+        }
+    }
+
+    ++eval_failed_tests;
+    ++eval_new_failed_tests;
+    cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl;
+    cerr << "\tError: user function not found: " << functionName.toLatin1().constData() << endl;
+}
+
+static void checkUserFunctionInterpreted(const char* file, int line, const char* msg,
+                                         const QString& functionName,
+                                         const QString& expectedInterpreted)
+{
+    ++eval_total_tests;
+
+    const auto userFunctions = eval->getUserFunctions();
+    for (const auto& function : userFunctions) {
+        if (function.name() == functionName) {
+            if (function.interpretedExpression() != expectedInterpreted) {
+                ++eval_failed_tests;
+                ++eval_new_failed_tests;
+                cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl;
+                cerr << "\tInterpreted: "
+                     << function.interpretedExpression().toUtf8().constData() << endl
+                     << "\tExpected   : " << expectedInterpreted.toUtf8().constData() << endl;
             }
             return;
         }
@@ -1569,6 +1597,8 @@ void test_user_functions()
 {
     // Check user functions can be defined and used
     CHECK_USERFUNC_SET("func1(a;b) = a * b + 10");
+    CHECK_USERFUNC_SET("g(x) = cos x^-pi");
+    CHECK_USERFUNC_INTERPRETED("g", "cos(x^(-pi))");
     CHECK_EVAL("func1(2;5)", "20"); // = 2 * 5 + 10
     // Check some expected error conditions
     CHECK_EVAL_FAIL("func1()");

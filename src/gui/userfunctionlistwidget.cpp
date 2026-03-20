@@ -22,6 +22,7 @@
 
 #include "core/evaluator.h"
 #include "core/settings.h"
+#include "core/unicodechars.h"
 
 #include <QtCore/QEvent>
 #include <QtCore/QTimer>
@@ -132,7 +133,16 @@ void UserFunctionListWidget::updateList()
             || namesAndValues.at(1).contains(term, Qt::CaseInsensitive)
             || namesAndValues.at(2).contains(term, Qt::CaseInsensitive))
         {
+            const UserFunction& userFunction = userFunctions.at(i);
+            const QString rawExpression = userFunction.expression();
+            const QString sourceExpression = userFunction.interpretedExpression().isEmpty()
+                ? rawExpression
+                : userFunction.interpretedExpression();
+            const QString formattedExpression = UnicodeChars::normalizePiForDisplay(
+                Evaluator::formatInterpretedExpressionForDisplay(sourceExpression));
+            namesAndValues[1] = formattedExpression;
             QTreeWidgetItem* item = new QTreeWidgetItem(m_userFunctions, namesAndValues);
+            item->setData(1, Qt::UserRole, rawExpression);
             item->setTextAlignment(0, Qt::AlignLeft | Qt::AlignVCenter);
             item->setTextAlignment(1, Qt::AlignLeft | Qt::AlignVCenter);
             item->setTextAlignment(2, Qt::AlignLeft | Qt::AlignVCenter);
@@ -193,7 +203,8 @@ void UserFunctionListWidget::editItem()
 {
     if (!currentItem() || m_userFunctions->selectedItems().isEmpty())
         return;
-    QString editedExpression = currentItem()->text(0) + " = " + currentItem()->text(1);
+    const QString rawExpression = currentItem()->data(1, Qt::UserRole).toString();
+    QString editedExpression = currentItem()->text(0) + " = " + rawExpression;
     const QString description = currentItem()->text(2).trimmed();
     if (!description.isEmpty())
         editedExpression += " ? " + description;

@@ -3310,6 +3310,24 @@ Quantity Evaluator::eval()
                 return CMath::nan();
             UserFunction userFunction(m_assignId, m_assignArg,
                                       m_assignFuncExpr, m_assignFuncDescription);
+            if (!m_interpretedExpression.isEmpty()) {
+                const QString leftSide = QStringLiteral("%1(%2)=").arg(
+                    m_assignId,
+                    m_assignArg.join(";")
+                );
+                QString interpretedBody = m_interpretedExpression;
+                if (interpretedBody.startsWith(leftSide))
+                    interpretedBody = interpretedBody.mid(leftSide.size());
+                else {
+                    const int assignmentPos = interpretedBody.indexOf('=');
+                    if (assignmentPos >= 0)
+                        interpretedBody = interpretedBody.mid(assignmentPos + 1);
+                }
+                const int commentPos = interpretedBody.indexOf('?');
+                if (commentPos >= 0)
+                    interpretedBody = interpretedBody.left(commentPos).trimmed();
+                userFunction.setInterpretedExpression(interpretedBody);
+            }
             userFunction.constants = m_constants;
             userFunction.identifiers = m_identifiers;
             userFunction.opcodes = m_codes;
