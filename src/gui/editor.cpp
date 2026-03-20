@@ -153,7 +153,7 @@ static QString groupedDigitsForTooltip(const QString& input)
         lastPos = match.capturedEnd();
     }
     output += input.mid(lastPos);
-    return output;
+    return UnicodeChars::normalizePiForDisplay(output);
 }
 
 static QString normalizeExpressionTypedInEditor(QString text)

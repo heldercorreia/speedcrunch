@@ -210,7 +210,7 @@ QStringList formatResultLines(const HistoryEntry& entry)
             lastPos = match.capturedEnd();
         }
         output += input.mid(lastPos);
-        return output;
+        return UnicodeChars::normalizePiForDisplay(output);
     };
 
     QStringList lines;
@@ -234,16 +234,18 @@ QStringList formatResultLines(const HistoryEntry& entry)
 QString formattedExpressionForDisplay(const HistoryEntry& entry)
 {
     if (!entry.interpretedExpr().isEmpty())
-        return Evaluator::formatInterpretedExpressionForDisplay(entry.interpretedExpr());
-    return entry.expr();
+        return UnicodeChars::normalizePiForDisplay(
+            Evaluator::formatInterpretedExpressionForDisplay(entry.interpretedExpr()));
+    return UnicodeChars::normalizePiForDisplay(entry.expr());
 }
 
 QString formattedExpressionForDisplay(const QString& expression,
                                      const QString& interpretedExpression)
 {
     if (!interpretedExpression.isEmpty())
-        return Evaluator::formatInterpretedExpressionForDisplay(interpretedExpression);
-    return expression;
+        return UnicodeChars::normalizePiForDisplay(
+            Evaluator::formatInterpretedExpressionForDisplay(interpretedExpression));
+    return UnicodeChars::normalizePiForDisplay(expression);
 }
 
 int expressionLineCount(const HistoryEntry& entry)

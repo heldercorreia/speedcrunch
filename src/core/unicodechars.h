@@ -20,6 +20,7 @@
 #define CORE_UNICODECHARS_H
 
 #include <QChar>
+#include <QString>
 
 namespace UnicodeChars {
 
@@ -35,6 +36,47 @@ inline constexpr QChar MultiplicationX(0x2715);
 inline constexpr QChar HeavyMultiplicationX(0x2716);
 inline constexpr QChar NAryTimesOperator(0x2A09);
 inline constexpr QChar VectorOrCrossProduct(0x2A2F);
+inline constexpr QChar Pi(0x03C0);
+inline constexpr char32_t MathematicalBoldSmallPiCodePoint = 0x1D6D1;
+inline constexpr char32_t MathematicalItalicSmallPiCodePoint = 0x1D70B;
+inline constexpr char32_t MathematicalSansSerifBoldSmallPiCodePoint = 0x1D745;
+inline constexpr char32_t MathematicalSansSerifBoldItalicSmallPiCodePoint = 0x1D7B9;
+
+inline QString normalizePiAliasesToPi(QString text)
+{
+    const QString piSymbol(Pi);
+    text.replace(QString::fromUcs4(&MathematicalBoldSmallPiCodePoint, 1), piSymbol);
+    text.replace(QString::fromUcs4(&MathematicalItalicSmallPiCodePoint, 1), piSymbol);
+    text.replace(QString::fromUcs4(&MathematicalSansSerifBoldSmallPiCodePoint, 1), piSymbol);
+    text.replace(QString::fromUcs4(&MathematicalSansSerifBoldItalicSmallPiCodePoint, 1), piSymbol);
+    return text;
+}
+
+inline QString normalizePiForDisplay(QString text)
+{
+    text = normalizePiAliasesToPi(text);
+
+    auto isIdentifierChar = [](QChar ch) {
+        return ch.isLetterOrNumber() || ch == QChar('_');
+    };
+
+    for (int i = 0; i + 1 < text.size();) {
+        if (text.at(i) == QChar('p') && text.at(i + 1) == QChar('i')) {
+            const bool hasLeft = i > 0;
+            const bool hasRight = i + 2 < text.size();
+            const bool leftIsIdentifier = hasLeft && isIdentifierChar(text.at(i - 1));
+            const bool rightIsIdentifier = hasRight && isIdentifierChar(text.at(i + 2));
+            if (!leftIsIdentifier && !rightIsIdentifier) {
+                text.replace(i, 2, QString(Pi));
+                ++i;
+                continue;
+            }
+        }
+        ++i;
+    }
+
+    return text;
+}
 
 } // namespace UnicodeChars
 

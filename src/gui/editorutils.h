@@ -129,6 +129,7 @@ inline QString normalizeExpressionOperators(QString text)
 
 inline QString normalizeExpressionOperatorsForEditorInput(QString text)
 {
+    text = UnicodeChars::normalizePiAliasesToPi(text);
     text = normalizeMultiplicationOperators(text, true);
     text = normalizeDivisionOperatorsForEditorInput(text);
     text = normalizeAdditionOperators(text);

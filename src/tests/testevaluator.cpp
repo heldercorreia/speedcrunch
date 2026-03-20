@@ -2177,11 +2177,11 @@ void test_expression_operator_normalization()
     }
 
     const QString editorNormalized = EditorUtils::normalizeExpressionOperatorsForEditorInput(
-        QString::fromUtf8("2⋅3 4·5 6*7 8/4 10÷2 9⧸3"));
+        QString::fromUtf8("2⋅3 4·5 6*7 8/4 10÷2 9⧸3 𝜋 𝝅 𝞹 𝛑"));
     const std::string editorNormalizedStd = editorNormalized.toStdString();
     ++eval_total_tests;
     DisplayErrorOnMismatch(__FILE__, __LINE__, "normalizeExpressionOperatorsForEditorInput",
-                           editorNormalizedStd, "2⋅3 4×5 6×7 8/4 10/2 9/3",
+                           editorNormalizedStd, "2⋅3 4×5 6×7 8/4 10/2 9/3 π π π π",
                            eval_failed_tests, eval_new_failed_tests);
 
     const QStringList parsedForEditor = EditorUtils::parsePastedExpressionsForEditorInput(
@@ -2190,23 +2190,39 @@ void test_expression_operator_normalization()
                           "6*7\n"
                           "8/4\n"
                           "10÷2\n"
-                          "9⧸3"));
-    if (parsedForEditor.size() != 6
+                          "9⧸3\n"
+                          "𝜋+1\n"
+                          "𝝅+1\n"
+                          "𝞹+1\n"
+                          "𝛑+1"));
+    if (parsedForEditor.size() != 10
         || parsedForEditor.at(0) != QString::fromUtf8("2⋅3")
         || parsedForEditor.at(1) != QString::fromUtf8("4×5")
         || parsedForEditor.at(2) != QString::fromUtf8("6×7")
         || parsedForEditor.at(3) != QString::fromUtf8("8/4")
         || parsedForEditor.at(4) != QString::fromUtf8("10/2")
-        || parsedForEditor.at(5) != QString::fromUtf8("9/3")) {
+        || parsedForEditor.at(5) != QString::fromUtf8("9/3")
+        || parsedForEditor.at(6) != QString::fromUtf8("π+1")
+        || parsedForEditor.at(7) != QString::fromUtf8("π+1")
+        || parsedForEditor.at(8) != QString::fromUtf8("π+1")
+        || parsedForEditor.at(9) != QString::fromUtf8("π+1")) {
         ++eval_total_tests;
         ++eval_failed_tests;
         ++eval_new_failed_tests;
         cerr << __FILE__ << "[" << __LINE__ << "]\tparsePastedExpressionsForEditorInput\t[NEW]" << endl
              << "\tResult   : " << parsedForEditor.join("|").toUtf8().constData() << endl
-             << "\tExpected : 2⋅3|4×5|6×7|8/4|10/2|9/3" << endl;
+             << "\tExpected : 2⋅3|4×5|6×7|8/4|10/2|9/3|π+1|π+1|π+1|π+1" << endl;
     } else {
         ++eval_total_tests;
     }
+
+    const QString piDisplay = UnicodeChars::normalizePiForDisplay(
+        QString::fromUtf8("pi 𝜋 𝝅 𝞹 𝛑 alpha_pi beta pi2 -pi +pi/pi"));
+    ++eval_total_tests;
+    DisplayErrorOnMismatch(__FILE__, __LINE__, "normalizePiForDisplay",
+                           piDisplay.toStdString(),
+                           "π π π π π alpha_pi beta pi2 -π +π/π",
+                           eval_failed_tests, eval_new_failed_tests);
 }
 
 void test_session_history_limit()
