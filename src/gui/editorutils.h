@@ -18,16 +18,16 @@ namespace EditorUtils {
 inline bool isMultiplicationOperatorAlias(const QChar& ch, bool keepDotOperator = false)
 {
     switch (ch.unicode()) {
-    case 0x002A: // * ASTERISK
-    case 0x00B7: // · MIDDLE DOT
-    case 0x2217: // ∗ ASTERISK OPERATOR
-    case 0x2219: // ∙ BULLET OPERATOR
-    case 0x2715: // ✕ MULTIPLICATION X
-    case 0x2716: // ✖ HEAVY MULTIPLICATION X
-    case 0x2A09: // ⨉ N-ARY TIMES OPERATOR
-    case 0x2A2F: // ⨯ VECTOR OR CROSS PRODUCT
+    case UnicodeChars::Asterisk.unicode():
+    case UnicodeChars::MiddleDot.unicode():
+    case UnicodeChars::AsteriskOperator.unicode():
+    case UnicodeChars::BulletOperator.unicode():
+    case UnicodeChars::MultiplicationX.unicode():
+    case UnicodeChars::HeavyMultiplicationX.unicode():
+    case UnicodeChars::NAryTimesOperator.unicode():
+    case UnicodeChars::VectorOrCrossProduct.unicode():
         return true;
-    case 0x22C5: // ⋅ DOT OPERATOR
+    case UnicodeChars::DotOperator.unicode():
         return !keepDotOperator;
     default:
         return false;

@@ -165,6 +165,19 @@ formats:
     Display results in :ref:`normalized scientific notation <scientific_notation>`.
 * :menuselection:`Rational`
     Try to display real results as fractions (for example, ``1/3``) using continued-fraction approximation with bounded denominator. If no close match is found, results are displayed in decimal form.
+    For common trigonometric and inverse-trigonometric results, SpeedCrunch prefers
+    symbolic exact forms such as ``pi/2``, ``7⋅pi/6``, ``sqrt(2)/2``, and
+    ``sqrt(3)/3``.
+    Example::
+
+        arcsin(1)
+        = pi/2
+
+        sin(45)    (angle unit = degree)
+        = sqrt(2)/2
+
+        arcsin(sqrt(3)/22)
+        = 0.07881114207211010205
 * :menuselection:`Binary`
     Display results as binary numbers, i.e. in base-2.
 * :menuselection:`Octal`
@@ -266,6 +279,10 @@ This section contains settings that control result output and post-evaluation be
     complex-number support and choose how complex results are displayed. ``Disabled`` is the default.
 * :menuselection:`Secondary Format` and :menuselection:`Tertiary Format`
     Optional extra result displays in alternate formats, shown alongside the primary result.
+    Also, when none of the selected result slots (primary, secondary, or tertiary)
+    is Rational, SpeedCrunch may still add one extra Rational line for trig expressions
+    if (and only if) the result is one of the recognized well-known exact values.
+    This extra line is not shown for non-qualifying trig results.
 * :menuselection:`Automatically Copy New Results to Clipboard`
     Automatically copy each newly evaluated result to the clipboard.
 

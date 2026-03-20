@@ -300,7 +300,7 @@ static Token::Operator matchOperator(const QString& text)
             result = Token::Subtraction;
             break;
         case 0x00D7: // × MULTIPLICATION SIGN
-        case 0x22C5: // ⋅ DOT OPERATOR
+        case UnicodeChars::DotOperator.unicode():
         case '*':
             result = Token::Multiplication;
             break;
@@ -459,7 +459,7 @@ static QString opcodeToInfixSymbol(Opcode::Type opcodeType, bool implicitMultipl
     case Opcode::Sub: return "-";
     case Opcode::Mul:
         return implicitMultiplication
-            ? QString::fromUtf8("⋅")
+            ? QString(UnicodeChars::DotOperator)
             : QString(UnicodeChars::MultiplicationSign);
     case Opcode::Div: return "/";
     case Opcode::Pow: return "^";
@@ -3520,6 +3520,7 @@ QString Evaluator::autoFix(const QString& expr)
     //   "2×pi" -> "2⋅pi"
     //   "2   ×    pi   pi" -> "2⋅pi⋅pi"
     {
+        const QString dotOperator(UnicodeChars::DotOperator);
         const Tokens tokens = Evaluator::scan(result);
         for (int i = tokens.count() - 2; i >= 1; --i) {
             const Token& op = tokens.at(i);
@@ -3544,12 +3545,12 @@ QString Evaluator::autoFix(const QString& expr)
             if (left.isNumber() && right.isNumber())
                 continue;
 
-            result.replace(op.pos(), op.size(), QString::fromUtf8("⋅"));
+            result.replace(op.pos(), op.size(), dotOperator);
         }
 
         // Remove extra spaces around explicit dot multiplications.
-        result.replace(QRegularExpression(QString::fromUtf8("\\s*⋅\\s*")),
-                       QString::fromUtf8("⋅"));
+        result.replace(QRegularExpression(QStringLiteral("\\s*%1\\s*").arg(dotOperator)),
+                       dotOperator);
 
         // Rewrite identifier adjacency to dot multiplication, except when
         // the left identifier is a known function (e.g. keep "sin pi").
@@ -3574,7 +3575,7 @@ QString Evaluator::autoFix(const QString& expr)
 
             const int start = match.capturedStart();
             result.replace(start, match.capturedLength(),
-                           left + QString::fromUtf8("⋅") + right);
+                           left + dotOperator + right);
             offset = start + left.length() + 1 + right.length();
         }
     }

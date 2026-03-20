@@ -29,6 +29,7 @@ struct NumberFormatter {
     static QString format(CNumber &num) { return format(Quantity(num)); }
     static QString format(Quantity);
     static QString format(Quantity, char resultFormatOverride);
+    static QString formatTrigSymbolic(Quantity);
 };
 
 #endif

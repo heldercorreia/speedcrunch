@@ -25,15 +25,127 @@
 #include "math/rational.h"
 #include "math/units.h"
 
-static const QChar g_dotChar = QString::fromUtf8("⋅")[0];
+static const QChar g_dotChar = UnicodeChars::DotOperator;
 static const QChar g_minusChar = QString::fromUtf8("−")[0];
 
 namespace {
 
 constexpr int RationalFormatMaxDenominator = 1000000;
+constexpr int TrigPiFormatMaxDenominator = 12;
 HNumber rationalFormatRelativeTolerance()
 {
     return HNumber("1e-60");
+}
+
+HNumber trigSymbolicRelativeTolerance()
+{
+    return HNumber("1e-30");
+}
+
+bool isCloseTo(const HNumber& value, const HNumber& reference)
+{
+    const HNumber diff = HMath::abs(value - reference);
+    const HNumber scale = HMath::max(HMath::abs(value), HMath::abs(reference));
+    const HNumber one(1);
+    return diff <= trigSymbolicRelativeTolerance() * (scale < one ? one : scale);
+}
+
+QString formatFraction(const QString& numerator, int denominator)
+{
+    const QChar slash = QChar('/');
+    const QString operatorSpace(UnicodeChars::MediumMathematicalSpace);
+    return numerator + operatorSpace + slash + operatorSpace + QString::number(denominator);
+}
+
+QString formatPiMultiple(const HNumber& value)
+{
+    const HNumber pi = HMath::pi();
+    if (HMath::abs(value) > HNumber(2) * pi)
+        return QString();
+
+    Rational ratio;
+    if (!Rational::approximate(value / pi, TrigPiFormatMaxDenominator,
+            trigSymbolicRelativeTolerance(), &ratio)) {
+        return QString();
+    }
+
+    const int numerator = ratio.numerator();
+    const int denominator = ratio.denominator();
+    if (numerator == 0)
+        return QString();
+    if (qAbs(numerator) > TrigPiFormatMaxDenominator)
+        return QString();
+
+    if (denominator != 1
+            && denominator != 2
+            && denominator != 3
+            && denominator != 4
+            && denominator != 6
+            && denominator != 8
+            && denominator != 12) {
+        return QString();
+    }
+
+    const HNumber expected = pi * HNumber(numerator) / HNumber(denominator);
+    if (!isCloseTo(value, expected))
+        return QString();
+
+    if (denominator == 1) {
+        if (numerator == 1)
+            return QStringLiteral("pi");
+        if (numerator == -1)
+            return QStringLiteral("-pi");
+        return QString::number(numerator) + UnicodeChars::DotOperator + QStringLiteral("pi");
+    }
+
+    QString numeratorText;
+    if (numerator == 1)
+        numeratorText = QStringLiteral("pi");
+    else if (numerator == -1)
+        numeratorText = QStringLiteral("-pi");
+    else
+        numeratorText = QString::number(numerator) + UnicodeChars::DotOperator + QStringLiteral("pi");
+
+    return formatFraction(numeratorText, denominator);
+}
+
+QString formatCommonTrigRadical(const HNumber& value)
+{
+    const bool negative = value.isNegative();
+    const HNumber absValue = negative ? -value : value;
+
+    const HNumber sqrt2 = HMath::sqrt(HNumber(2));
+    const HNumber sqrt3 = HMath::sqrt(HNumber(3));
+
+    QString symbol;
+    if (isCloseTo(absValue, sqrt2 / HNumber(2)))
+        symbol = formatFraction(QStringLiteral("sqrt(2)"), 2);
+    else if (isCloseTo(absValue, sqrt3 / HNumber(2)))
+        symbol = formatFraction(QStringLiteral("sqrt(3)"), 2);
+    else if (isCloseTo(absValue, sqrt3 / HNumber(3)))
+        symbol = formatFraction(QStringLiteral("sqrt(3)"), 3);
+    else if (isCloseTo(absValue, HNumber(2) * sqrt3 / HNumber(3)))
+        symbol = formatFraction(QStringLiteral("2 sqrt(3)"), 3);
+    else if (isCloseTo(absValue, sqrt2))
+        symbol = QStringLiteral("sqrt(2)");
+    else if (isCloseTo(absValue, sqrt3))
+        symbol = QStringLiteral("sqrt(3)");
+
+    if (symbol.isEmpty())
+        return QString();
+    return negative ? QStringLiteral("-") + symbol : symbol;
+}
+
+QString formatTrigSymbolicDisplay(const Quantity& q, const HNumber& value)
+{
+    if (!q.isDimensionless() || !q.unitName().isEmpty())
+        return QString();
+
+    QString symbolic = formatPiMultiple(value);
+    if (!symbolic.isEmpty())
+        return symbolic;
+
+    return formatCommonTrigRadical(value);
 }
 
 QString formatRationalDisplay(Quantity q)
@@ -51,6 +163,10 @@ QString formatRationalDisplay(Quantity q)
     if (!number.isNearReal())
         return QString();
 
+    QString symbolicTrig = formatTrigSymbolicDisplay(q, number.real);
+    if (!symbolicTrig.isEmpty())
+        return symbolicTrig;
+
     Rational rational;
     if (!Rational::approximate(number.real, RationalFormatMaxDenominator,
             rationalFormatRelativeTolerance(), &rational)) {
@@ -61,11 +177,7 @@ QString formatRationalDisplay(Quantity q)
     if (rational.denominator() == 1) {
         result = QString::number(rational.numerator());
     } else {
-        const QChar slash = QChar('/');
-        const QString operatorSpace(UnicodeChars::MediumMathematicalSpace);
-        result = QString::number(rational.numerator())
-            + operatorSpace + slash + operatorSpace
-            + QString::number(rational.denominator());
+        result = formatFraction(QString::number(rational.numerator()), rational.denominator());
     }
 
     const QString unitName = q.unitName();
@@ -79,6 +191,19 @@ QString formatRationalDisplay(Quantity q)
 QString NumberFormatter::format(Quantity q)
 {
     return format(q, '\0');
+}
+
+QString NumberFormatter::formatTrigSymbolic(Quantity q)
+{
+    if (q.isNan())
+        return QString();
+
+    CNumber number = q.numericValue();
+    number /= q.unit();
+    if (!number.isNearReal())
+        return QString();
+
+    return formatTrigSymbolicDisplay(q, number.real);
 }
 
 QString NumberFormatter::format(Quantity q, char resultFormatOverride)

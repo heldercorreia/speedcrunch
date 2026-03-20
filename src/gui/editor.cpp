@@ -166,7 +166,28 @@ static QString formattedLiveResult(const Quantity& quantity, char resultFormat =
     return groupedDigitsForTooltip(NumberFormatter::format(quantity, resultFormat));
 }
 
-static QString formattedLiveResultWithAlternatives(const Quantity& quantity)
+static bool shouldShowAdditionalRationalForTrig(const QString& expression,
+                                                const Quantity& quantity)
+{
+    static const QRegularExpression s_trigFunctionPattern(
+        QStringLiteral(R"(\b(?:sin|cos|tan|cot|sec|csc|arcsin|arccos|arctan|arctan2|radians|degrees|gradians)\s*\()"),
+        QRegularExpression::CaseInsensitiveOption);
+    if (!s_trigFunctionPattern.match(expression).hasMatch())
+        return false;
+
+    const Settings* settings = Settings::instance();
+    const bool hasRationalAlready =
+        settings->resultFormat == 'r'
+        || settings->alternativeResultFormat == 'r'
+        || settings->tertiaryResultFormat == 'r';
+    if (hasRationalAlready)
+        return false;
+
+    return !NumberFormatter::formatTrigSymbolic(quantity).isEmpty();
+}
+
+static QString formattedLiveResultWithAlternatives(const Quantity& quantity,
+                                                   const QString& expression)
 {
     const Settings* settings = Settings::instance();
     QString formatted = QStringLiteral("<b>%1</b>").arg(formattedLiveResult(quantity));
@@ -177,6 +198,11 @@ static QString formattedLiveResultWithAlternatives(const Quantity& quantity)
     if (settings->tertiaryResultFormat != '\0') {
         formatted += QStringLiteral("<br/>%1")
             .arg(formattedLiveResult(quantity, settings->tertiaryResultFormat));
+    }
+    const QString symbolicTrig = NumberFormatter::formatTrigSymbolic(quantity);
+    if (shouldShowAdditionalRationalForTrig(expression, quantity)) {
+        formatted += QStringLiteral("<br/>%1")
+            .arg(groupedDigitsForTooltip(symbolicTrig));
     }
     return formatted;
 }
@@ -700,7 +726,7 @@ void Editor::autoCalc()
             // comment-only expressions.
             emit autoCalcDisabled();
         } else {
-            const auto formatted = formattedLiveResultWithAlternatives(quantity);
+            const auto formatted = formattedLiveResultWithAlternatives(quantity, str);
             auto message = tr("Current result: %1").arg(formatted);
             emit autoCalcMessageAvailable(message);
             emit autoCalcQuantityAvailable(quantity);
@@ -762,7 +788,7 @@ void Editor::autoCalcSelection(const QString& custom)
             auto message = tr("Selection result: n/a");
             emit autoCalcMessageAvailable(message);
         } else {
-            const auto formatted = formattedLiveResultWithAlternatives(quantity);
+            const auto formatted = formattedLiveResultWithAlternatives(quantity, str);
             auto message = tr("Selection result: %1").arg(formatted);
             emit autoCalcMessageAvailable(message);
             emit autoCalcQuantityAvailable(quantity);

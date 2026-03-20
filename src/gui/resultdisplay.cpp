@@ -91,9 +91,40 @@ QString formatResultForClipboard(const Quantity& value)
     return textToCopy;
 }
 
-QStringList formatResultLines(const Quantity& value)
+bool expressionUsesTrigFunction(const QString& expression,
+                                const QString& interpretedExpression)
+{
+    static const QRegularExpression s_trigFunctionPattern(
+        QStringLiteral(R"(\b(?:sin|cos|tan|cot|sec|csc|arcsin|arccos|arctan|arctan2|radians|degrees|gradians)\s*\()"),
+        QRegularExpression::CaseInsensitiveOption);
+    const QString source = interpretedExpression.isEmpty()
+        ? expression
+        : interpretedExpression;
+    return s_trigFunctionPattern.match(source).hasMatch();
+}
+
+bool shouldShowAdditionalRationalForTrig(const Settings* settings,
+                                         const QString& expression,
+                                         const QString& interpretedExpression,
+                                         const Quantity& value)
+{
+    const bool hasRationalAlready =
+        settings->resultFormat == 'r'
+        || settings->alternativeResultFormat == 'r'
+        || settings->tertiaryResultFormat == 'r';
+    if (hasRationalAlready)
+        return false;
+
+    if (!expressionUsesTrigFunction(expression, interpretedExpression))
+        return false;
+
+    return !NumberFormatter::formatTrigSymbolic(value).isEmpty();
+}
+
+QStringList formatResultLines(const HistoryEntry& entry)
 {
     const Settings* settings = Settings::instance();
+    const Quantity value = entry.result();
     auto groupedResultForDisplay = [settings](const QString& input) {
         if (settings->digitGrouping <= 0)
             return input;
@@ -192,6 +223,11 @@ QStringList formatResultLines(const Quantity& value)
         lines.append(QLatin1String("= ")
             + groupedResultForDisplay(NumberFormatter::format(value, settings->tertiaryResultFormat)));
     }
+    const QString symbolicTrig = NumberFormatter::formatTrigSymbolic(value);
+    if (shouldShowAdditionalRationalForTrig(settings, entry.expr(), entry.interpretedExpr(), value)) {
+        lines.append(QLatin1String("= ")
+            + groupedResultForDisplay(symbolicTrig));
+    }
     return lines;
 }
 
@@ -215,12 +251,14 @@ int expressionLineCount(const HistoryEntry& entry)
     return formattedExpressionForDisplay(entry).count(QLatin1Char('\n')) + 1;
 }
 
-int resultLineCountForSettings(const Settings* settings)
+int resultLineCountForEntry(const Settings* settings, const HistoryEntry& entry)
 {
     int count = 1; // Primary result format is always shown for non-NaN results.
     if (settings->alternativeResultFormat != '\0')
         ++count;
     if (settings->tertiaryResultFormat != '\0')
+        ++count;
+    if (shouldShowAdditionalRationalForTrig(settings, entry.expr(), entry.interpretedExpr(), entry.result()))
         ++count;
     return count;
 }
@@ -290,7 +328,8 @@ void ResultDisplay::append(const QString& expression, Quantity& value,
 
     appendPlainText(formattedExpressionForDisplay(expression, interpretedExpression));
     if (!value.isNan()) {
-        const QStringList resultLines = formatResultLines(value);
+        const HistoryEntry entry(expression, value, interpretedExpression);
+        const QStringList resultLines = formatResultLines(entry);
         for (const QString& line : resultLines)
             appendPlainText(line);
     }
@@ -346,7 +385,7 @@ void ResultDisplay::refresh()
         Quantity value = history[i].result();
         appendPlainText(expressionLine);
         if (!value.isNan()) {
-            const QStringList resultLines = formatResultLines(value);
+            const QStringList resultLines = formatResultLines(history.at(i));
             for (const QString& line : resultLines)
                 appendPlainText(line);
         }
@@ -386,7 +425,7 @@ void ResultDisplay::refreshLastHistoryEntry()
     QStringList updatedLines;
     updatedLines.append(formattedExpressionForDisplay(lastEntry));
     if (!lastEntry.result().isNan())
-        updatedLines.append(formatResultLines(lastEntry.result()));
+        updatedLines.append(formatResultLines(lastEntry));
     updatedLines.append(QLatin1String(""));
 
     clearHoverFeedback();
@@ -875,7 +914,6 @@ int ResultDisplay::historyIndexAtPosition(const QPoint& pos) const
 
     const QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
     const Settings* settings = Settings::instance();
-    const int resultLineCount = resultLineCountForSettings(settings);
     int currentBlock = 0;
     for (int i = 0; i < history.count(); ++i) {
         const int entryExpressionLineCount = expressionLineCount(history.at(i));
@@ -886,6 +924,7 @@ int ResultDisplay::historyIndexAtPosition(const QPoint& pos) const
         }
 
         if (!history.at(i).result().isNan()) {
+            const int resultLineCount = resultLineCountForEntry(settings, history.at(i));
             for (int line = 0; line < resultLineCount; ++line) {
                 if (currentBlock == blockNumber)
                     return i;
@@ -910,7 +949,6 @@ bool ResultDisplay::blockRangeForHistoryIndex(int historyIndex, int& startBlock,
 
     const QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
     const Settings* settings = Settings::instance();
-    const int resultLineCount = resultLineCountForSettings(settings);
     if (historyIndex >= history.count())
         return false;
 
@@ -922,6 +960,7 @@ bool ResultDisplay::blockRangeForHistoryIndex(int historyIndex, int& startBlock,
 
         int entryEndBlock = entryStartBlock + entryExpressionLineCount - 1;
         if (!history.at(i).result().isNan()) {
+            const int resultLineCount = resultLineCountForEntry(settings, history.at(i));
             entryEndBlock = currentBlock + resultLineCount - 1; // result block(s)
             currentBlock += resultLineCount;
         }

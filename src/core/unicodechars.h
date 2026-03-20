@@ -26,6 +26,15 @@ namespace UnicodeChars {
 inline constexpr QChar MediumMathematicalSpace(0x205F);
 inline constexpr QChar MultiplicationSign(0x00D7);
 inline constexpr QChar MinusSign(0x2212);
+inline constexpr QChar DotOperator(0x22C5);
+inline constexpr QChar Asterisk(0x002A);
+inline constexpr QChar MiddleDot(0x00B7);
+inline constexpr QChar AsteriskOperator(0x2217);
+inline constexpr QChar BulletOperator(0x2219);
+inline constexpr QChar MultiplicationX(0x2715);
+inline constexpr QChar HeavyMultiplicationX(0x2716);
+inline constexpr QChar NAryTimesOperator(0x2A09);
+inline constexpr QChar VectorOrCrossProduct(0x2A2F);
 
 } // namespace UnicodeChars
 

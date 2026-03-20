@@ -51,6 +51,7 @@ static const QString slash = space + QStringLiteral("/") + space;
 #define CHECK_EVAL_FORMAT_HAS_SLASH(x) checkEvalFormatSlash(__FILE__, __LINE__, #x, x, true)
 #define CHECK_EVAL_FORMAT_NO_SLASH(x) checkEvalFormatSlash(__FILE__, __LINE__, #x, x, false)
 #define CHECK_EVAL_FORMAT_MEDIUM_SPACED_SLASH(x) checkEvalFormatMediumSpacedSlash(__FILE__, __LINE__, #x, x)
+#define CHECK_EVAL_FORMAT_EXACT(x,y) checkEvalFormatExact(__FILE__, __LINE__, #x, x, y)
 #define CHECK_EVAL_KNOWN_ISSUE(x,y,n) checkEval(__FILE__,__LINE__,#x,x,y,n)
 #define CHECK_EVAL_PRECISE(x,y) checkEvalPrecise(__FILE__,__LINE__,#x,x,y)
 #define CHECK_EVAL_FAIL(x) checkEval(__FILE__,__LINE__,#x,x,"",0,true)
@@ -177,6 +178,33 @@ static void checkEvalFormatMediumSpacedSlash(const char* file, int line, const c
         cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl
              << "\tResult                 : " << result.toLatin1().constData() << endl
              << "\tExpected medium slash  : " << mediumSlash.toLatin1().constData() << endl;
+    }
+}
+
+static void checkEvalFormatExact(const char* file, int line, const char* msg,
+                                 const QString& expr, const QString& expected)
+{
+    ++eval_total_tests;
+
+    eval->setExpression(expr);
+    Quantity rn = eval->evalUpdateAns();
+
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+        return;
+    }
+
+    QString result = NumberFormatter::format(rn);
+    result.replace(QString::fromUtf8("−"), "-");
+    if (result != expected) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl
+             << "\tResult   : " << result.toUtf8().constData() << endl
+             << "\tExpected : " << expected.toUtf8().constData() << endl;
     }
 }
 
@@ -844,6 +872,7 @@ void test_sexagesimal()
 void test_rational_format()
 {
     Settings* settings = Settings::instance();
+    const char angleUnit = settings->angleUnit;
     const char resultFormat = settings->resultFormat;
     const int resultPrecision = settings->resultPrecision;
     const bool complexNumbers = settings->complexNumbers;
@@ -855,6 +884,25 @@ void test_rational_format()
     settings->complexNumbers = false;
     DMath::complexMode = false;
     eval->initializeBuiltInVariables();
+    const QString dotOperator(UnicodeChars::DotOperator);
+    const QString piSymbol = QStringLiteral("pi");
+    const auto piOver = [&](int denominator) {
+        return piSymbol + slash + QString::number(denominator);
+    };
+    const auto nPiOver = [&](int numerator, int denominator) {
+        return QString::number(numerator) + dotOperator + piSymbol
+            + slash + QString::number(denominator);
+    };
+    const auto nPi = [&](int numerator) {
+        return QString::number(numerator) + dotOperator + piSymbol;
+    };
+    const auto signedPiOver = [&](int numerator, int denominator) -> QString {
+        if (numerator == 1)
+            return piOver(denominator);
+        if (numerator == -1)
+            return QStringLiteral("-") + piOver(denominator);
+        return nPiOver(numerator, denominator);
+    };
 
     ++eval_total_tests;
     QString direct = NumberFormatter::format(Quantity(HNumber("0.5")), 'r');
@@ -890,6 +938,69 @@ void test_rational_format()
     CHECK_EVAL_FORMAT_NO_SLASH("3000000000");
     CHECK_EVAL_FORMAT_NO_SLASH("exp(1)");
 
+    settings->angleUnit = 'r';
+    Evaluator::instance()->initializeAngleUnits();
+    CHECK_EVAL_FORMAT_EXACT("arcsin(-1)", signedPiOver(-1, 2));
+    CHECK_EVAL_FORMAT_EXACT("arcsin(-sqrt(3)/2)", signedPiOver(-1, 3));
+    CHECK_EVAL_FORMAT_EXACT("arcsin(-sqrt(2)/2)", signedPiOver(-1, 4));
+    CHECK_EVAL_FORMAT_EXACT("arcsin(-1/2)", signedPiOver(-1, 6));
+    CHECK_EVAL_FORMAT_EXACT("arcsin(0)", "0");
+    CHECK_EVAL_FORMAT_EXACT("arcsin(1/2)", piOver(6));
+    CHECK_EVAL_FORMAT_EXACT("arcsin(sqrt(2)/2)", piOver(4));
+    CHECK_EVAL_FORMAT_EXACT("arcsin(sqrt(3)/2)", piOver(3));
+    CHECK_EVAL_FORMAT_EXACT("arcsin(1)", piOver(2));
+    CHECK_EVAL_FORMAT_EXACT("arccos(-1)", piSymbol);
+    CHECK_EVAL_FORMAT_EXACT("arccos(-sqrt(3)/2)", nPiOver(5, 6));
+    CHECK_EVAL_FORMAT_EXACT("arccos(-sqrt(2)/2)", nPiOver(3, 4));
+    CHECK_EVAL_FORMAT_EXACT("arccos(-1/2)", nPiOver(2, 3));
+    CHECK_EVAL_FORMAT_EXACT("arccos(0)", piOver(2));
+    CHECK_EVAL_FORMAT_EXACT("arccos(1/2)", piOver(3));
+    CHECK_EVAL_FORMAT_EXACT("arccos(sqrt(2)/2)", piOver(4));
+    CHECK_EVAL_FORMAT_EXACT("arccos(sqrt(3)/2)", piOver(6));
+    CHECK_EVAL_FORMAT_EXACT("arccos(1)", "0");
+    CHECK_EVAL_FORMAT_EXACT("arctan(-sqrt(3))", signedPiOver(-1, 3));
+    CHECK_EVAL_FORMAT_EXACT("arctan(-1)", signedPiOver(-1, 4));
+    CHECK_EVAL_FORMAT_EXACT("arctan(-sqrt(3)/3)", signedPiOver(-1, 6));
+    CHECK_EVAL_FORMAT_EXACT("arctan(0)", "0");
+    CHECK_EVAL_FORMAT_EXACT("arctan(sqrt(3)/3)", piOver(6));
+    CHECK_EVAL_FORMAT_EXACT("arctan(1)", piOver(4));
+    CHECK_EVAL_FORMAT_EXACT("arctan(sqrt(3))", piOver(3));
+    CHECK_EVAL_FORMAT_NO_SLASH("sin(1)");
+    CHECK_EVAL_FORMAT_NO_SLASH("cos(1)");
+    CHECK_EVAL_FORMAT_NO_SLASH("tan(1)");
+    CHECK_EVAL_FORMAT_EXACT("arcsin(sqrt(3)/22)", "0.07881114207211010205");
+    CHECK_EVAL_FORMAT_NO_SLASH("arcsin(0.1)");
+    CHECK_EVAL_FORMAT_NO_SLASH("arccos(0.1)");
+    CHECK_EVAL_FORMAT_NO_SLASH("arctan(0.1)");
+    CHECK_EVAL_FORMAT_EXACT("sin(pi/4)", QStringLiteral("sqrt(2)") + slash + QStringLiteral("2"));
+    CHECK_EVAL_FORMAT_EXACT("cos(pi/6)", QStringLiteral("sqrt(3)") + slash + QStringLiteral("2"));
+    CHECK_EVAL_FORMAT_EXACT("tan(pi/3)", QStringLiteral("sqrt(3)"));
+    CHECK_EVAL_FORMAT_EXACT("tan(pi/6)", QStringLiteral("sqrt(3)") + slash + QStringLiteral("3"));
+
+    settings->angleUnit = 'd';
+    Evaluator::instance()->initializeAngleUnits();
+    CHECK_EVAL_FORMAT_EXACT("sin(45)", QStringLiteral("sqrt(2)") + slash + QStringLiteral("2"));
+    CHECK_EVAL_FORMAT_EXACT("cos(30)", QStringLiteral("sqrt(3)") + slash + QStringLiteral("2"));
+    CHECK_EVAL_FORMAT_EXACT("tan(60)", QStringLiteral("sqrt(3)"));
+    CHECK_EVAL_FORMAT_EXACT("tan(30)", QStringLiteral("sqrt(3)") + slash + QStringLiteral("3"));
+    CHECK_EVAL_FORMAT_EXACT("radians(0)", "0");
+    CHECK_EVAL_FORMAT_EXACT("radians(30)", piOver(6));
+    CHECK_EVAL_FORMAT_EXACT("radians(45)", piOver(4));
+    CHECK_EVAL_FORMAT_EXACT("radians(60)", piOver(3));
+    CHECK_EVAL_FORMAT_EXACT("radians(90)", piOver(2));
+    CHECK_EVAL_FORMAT_EXACT("radians(120)", nPiOver(2, 3));
+    CHECK_EVAL_FORMAT_EXACT("radians(135)", nPiOver(3, 4));
+    CHECK_EVAL_FORMAT_EXACT("radians(150)", nPiOver(5, 6));
+    CHECK_EVAL_FORMAT_EXACT("radians(180)", piSymbol);
+    CHECK_EVAL_FORMAT_EXACT("radians(210)", nPiOver(7, 6));
+    CHECK_EVAL_FORMAT_EXACT("radians(225)", nPiOver(5, 4));
+    CHECK_EVAL_FORMAT_EXACT("radians(240)", nPiOver(4, 3));
+    CHECK_EVAL_FORMAT_EXACT("radians(270)", nPiOver(3, 2));
+    CHECK_EVAL_FORMAT_EXACT("radians(300)", nPiOver(5, 3));
+    CHECK_EVAL_FORMAT_EXACT("radians(315)", nPiOver(7, 4));
+    CHECK_EVAL_FORMAT_EXACT("radians(330)", nPiOver(11, 6));
+    CHECK_EVAL_FORMAT_EXACT("radians(360)", nPi(2));
+
     settings->complexNumbers = true;
     settings->resultFormatComplex = 'c';
     DMath::complexMode = true;
@@ -900,12 +1011,14 @@ void test_rational_format()
     // Explicit non-decimal format should still take precedence.
     CHECK_EVAL_FORMAT("hex(31)", "0x1F");
 
+    settings->angleUnit = angleUnit;
     settings->resultFormat = resultFormat;
     settings->resultPrecision = resultPrecision;
     settings->complexNumbers = complexNumbers;
     settings->resultFormatComplex = resultFormatComplex;
     DMath::complexMode = complexMode;
     eval->initializeBuiltInVariables();
+    Evaluator::instance()->initializeAngleUnits();
 }
 
 void test_function_basic()
