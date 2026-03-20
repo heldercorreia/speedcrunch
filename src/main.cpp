@@ -22,6 +22,7 @@
 
 #include <QCoreApplication>
 #include <QApplication>
+#include <QGuiApplication>
 #include <QCryptographicHash>
 #include <QAbstractSocket>
 #include <QDebug>
@@ -141,6 +142,7 @@ int main(int argc, char* argv[])
 
     QCoreApplication::setApplicationName("SpeedCrunch");
     QCoreApplication::setOrganizationDomain("speedcrunch.org");
+    QGuiApplication::setDesktopFileName("org.speedcrunch.SpeedCrunch");
 
     Settings* settings = Settings::instance();
     QLocalServer singletonServer;
