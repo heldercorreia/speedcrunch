@@ -118,6 +118,15 @@ void test_format()
     CHECK_FORMAT(f + Format::Precision(8), CNumber("-0.001"), "-0.00100000");
     CHECK_FORMAT(f + Format::Precision(9), CNumber("-0.001"), "-0.001000000");
     CHECK_FORMAT(f + Format::Precision(-1), CNumber("4.000000000000000000000000000000000000000000001"), "4");
+    CHECK_FORMAT(f + Format::Precision(0), CNumber("1.19502868068833652008E-6"), "0");
+    CHECK_FORMAT(f + Format::Precision(1), CNumber("1.19502868068833652008E-6"), "0.0");
+    CHECK_FORMAT(f + Format::Precision(2), CNumber("1.19502868068833652008E-6"), "0.00");
+    CHECK_FORMAT(f + Format::Precision(3), CNumber("1.19502868068833652008E-6"), "0.000");
+    CHECK_FORMAT(f + Format::Precision(3), CNumber("1.195028680688336520083456938469843765E-6"), "0.000");
+    CHECK_FORMAT(f + Format::Precision(3), CNumber("-1.19502868068833652008E-6"), "0.000");
+    CHECK_FORMAT(f + Format::Precision(3), CNumber("0.0004999"), "0.000");
+    CHECK_FORMAT(f + Format::Precision(3), CNumber("0.0005"), "0.000");
+    CHECK_FORMAT(f + Format::Precision(6), CNumber("1.19502868068833652008E-6"), "0.000001");
 
     // Engineering notation.
     CHECK_FORMAT(n + Format::Precision(0), CNumber("NaN"), "NaN");

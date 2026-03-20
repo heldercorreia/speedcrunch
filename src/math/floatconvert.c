@@ -611,8 +611,13 @@ _outfixpdec(
 
   digits = float_getexponent(x) + scale + 1;
   if (digits <= 0)
-    /* underflow */
-    return IOConversionUnderflow;
+  {
+    /* In fixed mode, values below the selected decimal place round to zero. */
+    float_setzero(x);
+    n->prefix.sign = IO_SIGN_NONE;
+    _setfndesc(n, x);
+    return desc2str(tokens, n, scale);
+  }
   if (float_round(x, x, digits, TONEAREST) != TRUE)
     /* float_round() can err if the number contains too many digits */
     return float_geterror();

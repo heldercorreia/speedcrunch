@@ -94,6 +94,15 @@ void test_format()
     CHECK_FORMAT(f + Format::Precision(8), HNumber("-0.001"), "-0.00100000");
     CHECK_FORMAT(f + Format::Precision(9), HNumber("-0.001"), "-0.001000000");
     CHECK_FORMAT(f + Format::Precision(-1), HNumber("4.000000000000000000000000000000000000000000001"), "4");
+    CHECK_FORMAT(f + Format::Precision(0), HNumber("1.19502868068833652008E-6"), "0");
+    CHECK_FORMAT(f + Format::Precision(1), HNumber("1.19502868068833652008E-6"), "0.0");
+    CHECK_FORMAT(f + Format::Precision(2), HNumber("1.19502868068833652008E-6"), "0.00");
+    CHECK_FORMAT(f + Format::Precision(3), HNumber("1.19502868068833652008E-6"), "0.000");
+    CHECK_FORMAT(f + Format::Precision(3), HNumber("1.195028680688336520083456938469843765E-6"), "0.000");
+    CHECK_FORMAT(f + Format::Precision(3), HNumber("-1.19502868068833652008E-6"), "0.000");
+    CHECK_FORMAT(f + Format::Precision(3), HNumber("0.0004999"), "0.000");
+    CHECK_FORMAT(f + Format::Precision(3), HNumber("0.0005"), "0.000");
+    CHECK_FORMAT(f + Format::Precision(6), HNumber("1.19502868068833652008E-6"), "0.000001");
     CHECK_FORMAT(f + Format::Precision(-1) + Format::Hexadecimal(), HNumber("0.6"), "0x0.9999999999999999999A"); /* Issue 659 */
 
     // Engineering notation.
