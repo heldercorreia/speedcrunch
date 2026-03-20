@@ -11,6 +11,11 @@ QMAKE_CXXFLAGS += "-Wall -pedantic"
 CONFIG(debug, debug|release) {
     DEFINES += EVALUATOR_DEBUG
 }
+else {
+    DEFINES += QT_NO_DEBUG_OUTPUT
+    DEFINES += QT_NO_INFO_OUTPUT
+    DEFINES += QT_NO_WARNING_OUTPUT
+}
 
 win32-g++:QMAKE_LFLAGS += -static
 

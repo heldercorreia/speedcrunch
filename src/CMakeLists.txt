@@ -99,6 +99,13 @@ endif()
 
 set_property(TARGET ${APPLICATION_NAME} PROPERTY CXX_STANDARD 11)
 
+target_compile_definitions(${APPLICATION_NAME}
+    PRIVATE
+        $<$<NOT:$<CONFIG:Debug>>:QT_NO_DEBUG_OUTPUT>
+        $<$<NOT:$<CONFIG:Debug>>:QT_NO_INFO_OUTPUT>
+        $<$<NOT:$<CONFIG:Debug>>:QT_NO_WARNING_OUTPUT>
+)
+
 add_custom_target(confclean COMMAND rm -rf Makefile CMakeFiles/ CMakeCache.txt cmake_install.cmake DartTestfile.txt install_manifest.txt)
 
 set(QT_LIBRARIES Qt6::Widgets Qt6::Help Qt6::Network Qt6::Core)
