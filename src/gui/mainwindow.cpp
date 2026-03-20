@@ -27,6 +27,7 @@
 #include "core/numberformatter.h"
 #include "core/settings.h"
 #include "core/session.h"
+#include "core/unicodechars.h"
 #include "core/variable.h"
 #include "core/sessionhistory.h"
 #include "core/userfunction.h"
@@ -1921,7 +1922,7 @@ void MainWindow::copyResultToClipboard()
     QClipboard* cb = QApplication::clipboard();
     Quantity q = m_evaluator->getVariable(QLatin1String("ans")).value();
     QString strToCopy(NumberFormatter::format(q));
-    strToCopy.replace(QChar(0x2212), QChar('-'));
+    strToCopy.replace(UnicodeChars::MinusSign, QChar('-'));
     cb->setText(strToCopy, QClipboard::Clipboard);
 }
 

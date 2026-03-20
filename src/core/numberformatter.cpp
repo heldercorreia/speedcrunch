@@ -20,6 +20,7 @@
 #include "core/numberformatter.h"
 
 #include "core/settings.h"
+#include "core/unicodechars.h"
 #include "math/quantity.h"
 #include "math/rational.h"
 #include "math/units.h"
@@ -61,7 +62,7 @@ QString formatRationalDisplay(Quantity q)
         result = QString::number(rational.numerator());
     } else {
         const QChar slash = QChar('/');
-        const QString operatorSpace(QChar(0x205F)); // MEDIUM MATHEMATICAL SPACE.
+        const QString operatorSpace(UnicodeChars::MediumMathematicalSpace);
         result = QString::number(rational.numerator())
             + operatorSpace + slash + operatorSpace
             + QString::number(rational.denominator());

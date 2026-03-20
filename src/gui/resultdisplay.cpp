@@ -21,6 +21,7 @@
 #include "core/functions.h"
 #include "core/numberformatter.h"
 #include "core/settings.h"
+#include "core/unicodechars.h"
 #include "gui/syntaxhighlighter.h"
 #include "math/cmath.h"
 #include "math/floatconfig.h"
@@ -86,7 +87,7 @@ void cloneMenuActions(const QMenu* sourceMenu, QMenu* targetMenu)
 QString formatResultForClipboard(const Quantity& value)
 {
     QString textToCopy = NumberFormatter::format(value);
-    textToCopy.replace(QChar(0x2212), QChar('-'));
+    textToCopy.replace(UnicodeChars::MinusSign, QChar('-'));
     return textToCopy;
 }
 

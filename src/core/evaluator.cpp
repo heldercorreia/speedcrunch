@@ -25,6 +25,7 @@
 #include "core/evaluator.h"
 #include "core/session.h"
 #include "core/settings.h"
+#include "core/unicodechars.h"
 #include "math/rational.h"
 #include "math/units.h"
 
@@ -118,7 +119,7 @@ static bool splitVariableDescription(const QString& expression,
 
 bool isMinus(const QChar& ch)
 {
-    return ch == QLatin1Char('-') || ch == QChar(0x2212);
+    return ch == QLatin1Char('-') || ch == UnicodeChars::MinusSign;
 }
 
 bool isExponent(const QChar& ch, int base)
@@ -459,7 +460,7 @@ static QString opcodeToInfixSymbol(Opcode::Type opcodeType, bool implicitMultipl
     case Opcode::Mul:
         return implicitMultiplication
             ? QString::fromUtf8("⋅")
-            : QString::fromUtf8("×");
+            : QString(UnicodeChars::MultiplicationSign);
     case Opcode::Div: return "/";
     case Opcode::Pow: return "^";
     case Opcode::Modulo: return "mod";
@@ -813,8 +814,8 @@ QString Evaluator::formatInterpretedExpressionForDisplay(const QString& expressi
     if (tokens.isEmpty())
         return groupedExpression + commentSuffix;
 
-    const QString operatorSpace(QChar(0x205F)); // MEDIUM MATHEMATICAL SPACE.
-    const QString unicodeMinusSign(QChar(0x2212)); // MINUS SIGN.
+    const QString operatorSpace(UnicodeChars::MediumMathematicalSpace);
+    const QString unicodeMinusSign(UnicodeChars::MinusSign);
     QString formatted;
     formatted.reserve(groupedExpression.size() + tokens.size() * 2);
 
@@ -1746,7 +1747,7 @@ Tokens Evaluator::scan(const QString& expr) const
 
             if (expText.length() == 1 && (ch == '+' || isMinus(ch))) {
                 // Possible + or - right after E.
-                expText.append(ch == QChar(0x2212) ? '-' : ch);
+                expText.append(ch == UnicodeChars::MinusSign ? '-' : ch);
                 ++i;
             } else if (isDigit) {
                 if (ch == '0') {

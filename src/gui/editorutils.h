@@ -8,6 +8,8 @@
 #ifndef GUI_EDITORUTILS_H
 #define GUI_EDITORUTILS_H
 
+#include "core/unicodechars.h"
+
 #include <QString>
 #include <QStringList>
 
@@ -36,7 +38,7 @@ inline QString normalizeMultiplicationOperators(QString text, bool keepDotOperat
 {
     for (QChar& ch : text) {
         if (isMultiplicationOperatorAlias(ch, keepDotOperator))
-            ch = QChar(0x00D7); // × MULTIPLICATION SIGN
+            ch = UnicodeChars::MultiplicationSign;
     }
     return text;
 }
@@ -111,7 +113,7 @@ inline QString normalizeSubtractionOperators(QString text)
 {
     for (QChar& ch : text) {
         if (isSubtractionOperatorAlias(ch))
-            ch = QChar(0x2212); // − MINUS SIGN
+            ch = UnicodeChars::MinusSign;
     }
     return text;
 }

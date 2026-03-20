@@ -29,6 +29,7 @@
 #include "core/numberformatter.h"
 #include "core/settings.h"
 #include "core/session.h"
+#include "core/unicodechars.h"
 
 #include <QApplication>
 #include <QAbstractTextDocumentLayout>
@@ -1003,14 +1004,14 @@ void Editor::keyPressEvent(QKeyEvent* event)
           cursor.deletePreviousChar();
           insert(QString::fromUtf8("^"));
         } else {
-          insert(QString::fromUtf8("×")); // U+00D7 × MULTIPLICATION SIGN.
+          insert(QString(UnicodeChars::MultiplicationSign));
         }
         event->accept();
         return;
     }
 
     case Qt::Key_Minus:
-        insert(QString::fromUtf8("−")); // U+2212 − MINUS SIGN.
+        insert(QString(UnicodeChars::MinusSign));
         event->accept();
         return;
     case Qt::Key_At:

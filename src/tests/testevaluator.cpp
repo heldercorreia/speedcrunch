@@ -18,9 +18,10 @@
 // Boston, MA 02110-1301, USA.
 
 #include "core/evaluator.h"
-#include "core/settings.h"
 #include "core/numberformatter.h"
+#include "core/settings.h"
 #include "core/session.h"
+#include "core/unicodechars.h"
 #include "gui/editorutils.h"
 #include "gui/functiontooltiputils.h"
 #include "tests/testcommon.h"
@@ -40,6 +41,8 @@ static Evaluator* eval = 0;
 static int eval_total_tests = 0;
 static int eval_failed_tests = 0;
 static int eval_new_failed_tests = 0;
+static const QString space(UnicodeChars::MediumMathematicalSpace);
+static const QString slash = space + QStringLiteral("/") + space;
 
 #define CHECK_AUTOFIX(s,p) checkAutoFix(__FILE__,__LINE__,#s,s,p)
 #define CHECK_DIV_BY_ZERO(s) checkDivisionByZero(__FILE__,__LINE__,#s,s)
@@ -167,7 +170,7 @@ static void checkEvalFormatMediumSpacedSlash(const char* file, int line, const c
 
     QString result = NumberFormatter::format(rn);
     result.replace(QString::fromUtf8("−"), "-");
-    const QString mediumSlash = QString(QChar(0x205F)) + "/" + QString(QChar(0x205F));
+    const QString mediumSlash = slash;
     if (!result.contains(mediumSlash)) {
         ++eval_failed_tests;
         ++eval_new_failed_tests;
@@ -856,9 +859,8 @@ void test_rational_format()
     ++eval_total_tests;
     QString direct = NumberFormatter::format(Quantity(HNumber("0.5")), 'r');
     direct.replace(QString::fromUtf8("−"), "-");
-    const QString mediumMathSpace(QChar(0x205F));
     const QString expectedDirect = QStringLiteral("1")
-        + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+        + slash
         + QStringLiteral("2");
     if (direct != expectedDirect) {
         ++eval_failed_tests;
@@ -1434,7 +1436,10 @@ void test_comment_and_description_edge_cases()
 
     // Interpreted and display-interpreted output should preserve comment tails.
     CHECK_INTERPRETED("2×pi ? calc area", "2⋅pi ? calc area");
-    CHECK_DISPLAY_INTERPRETED("2*3?c", "2 × 3 ? c");
+    CHECK_DISPLAY_INTERPRETED(
+        "2*3?c",
+        QStringLiteral("2") + space + QString(UnicodeChars::MultiplicationSign)
+            + space + QStringLiteral("3 ? c"));
 
     // Explicit empty description should be stored as empty.
     CHECK_EVAL("vardesc2 = 1 ? ", "1");
@@ -1512,7 +1517,9 @@ void test_user_functions()
     CHECK_USERFUNC_SET("funcdesc(x) = x + 1 ? Calculate Foo");
     CHECK_USERFUNC_DESC("funcdesc", "Calculate Foo");
     CHECK_EVAL("funcdesc(2)", "3");
-    CHECK_USERFUNC_SET(u8"testshift(x)=1 << x+0");
+    CHECK_USERFUNC_SET(
+        QStringLiteral("testshift(x)=1") + space + QStringLiteral("<<")
+            + space + QStringLiteral("x+0"));
     CHECK_EVAL("testshift(8)", "256");
 
     // Check redefining a function without description clears it.
@@ -1745,72 +1752,82 @@ void test_implicit_multiplication()
 
 void test_display_interpreted_spacing()
 {
-    const QString mediumMathSpace(QChar(0x205F));
-    const QString unicodeMinusSign(QChar(0x2212));
+    const QString dot(QString::fromUtf8("⋅"));
+    const QString multiplication = QString(UnicodeChars::MultiplicationSign);
+    const QString unicodeMinusSign(UnicodeChars::MinusSign);
+    const QString dotSpaced = space + dot + space;
+    const QString plus = space + QStringLiteral("+") + space;
+    const QString minus = space + unicodeMinusSign + space;
+    const QString times = space + multiplication + space;
+    const QString divide = space + QStringLiteral("/") + space;
+    const QString integerDivide = space + QStringLiteral("\\") + space;
+    const QString shiftLeft = space + QStringLiteral("<<") + space;
+    const QString shiftRight = space + QStringLiteral(">>") + space;
+
     CHECK_DISPLAY_INTERPRETED(
         "sin(2⋅pi+3)-1+2×3⋅sin(pi)",
         QString::fromUtf8("sin(2")
-            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + dotSpaced
             + QStringLiteral("pi")
-            + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
+            + plus
             + QStringLiteral("3)")
-            + mediumMathSpace + unicodeMinusSign + mediumMathSpace
+            + minus
             + QStringLiteral("1")
-            + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
+            + plus
             + QStringLiteral("2")
-            + mediumMathSpace + QString::fromUtf8("×") + mediumMathSpace
+            + times
             + QStringLiteral("3")
-            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + dotSpaced
             + QStringLiteral("sin(pi)"));
     CHECK_DISPLAY_INTERPRETED(
         QString::fromUtf8("2×sin pi"),
         QString::fromUtf8("2")
-            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + dotSpaced
             + QStringLiteral("sin(pi)"));
     CHECK_DISPLAY_INTERPRETED(
         QString::fromUtf8("2 sin pi cos pi + 2"),
         QString::fromUtf8("2")
-            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + dotSpaced
             + QStringLiteral("sin(pi)")
-            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + dotSpaced
             + QStringLiteral("cos(pi)")
-            + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
+            + plus
             + QStringLiteral("2"));
     CHECK_DISPLAY_INTERPRETED(
         QString::fromUtf8("2 sin pi cos pi + 2 × 23 / cos pi − sin −pi^2"),
         QString::fromUtf8("2")
-            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + dotSpaced
             + QStringLiteral("sin(pi)")
-            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + dotSpaced
             + QStringLiteral("cos(pi)")
-            + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
+            + plus
             + QStringLiteral("2")
-            + mediumMathSpace + QString::fromUtf8("×") + mediumMathSpace
+            + times
             + QStringLiteral("23")
-            + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+            + divide
             + QStringLiteral("cos(pi)")
-            + mediumMathSpace + unicodeMinusSign + mediumMathSpace
+            + minus
             + QStringLiteral("sin((")
             + unicodeMinusSign
             + QString::fromUtf8("pi)²)"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("23/2+10\\3"),
         QStringLiteral("23")
-            + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+            + divide
             + QStringLiteral("2")
-            + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
+            + plus
             + QStringLiteral("10")
-            + mediumMathSpace + QStringLiteral("\\") + mediumMathSpace
+            + integerDivide
             + QStringLiteral("3"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("1<<2"),
         QStringLiteral("1")
-            + mediumMathSpace + QStringLiteral("<<") + mediumMathSpace
+            + shiftLeft
             + QStringLiteral("2"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("1>>2"),
         QStringLiteral("1")
-            + mediumMathSpace + QStringLiteral(">>") + mediumMathSpace
+            + shiftRight
             + QStringLiteral("2"));
     CHECK_DISPLAY_INTERPRETED(
         QString::fromUtf8("sin -12"),
@@ -1818,19 +1835,19 @@ void test_display_interpreted_spacing()
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("1 meter second^-1"),
         QStringLiteral("1")
-            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + dotSpaced
             + QStringLiteral("meter")
-            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + dotSpaced
             + QString::fromUtf8("second⁻¹"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("1/second^2"),
         QStringLiteral("1")
-            + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+            + divide
             + QString::fromUtf8("second²"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("1/2^3"),
         QStringLiteral("1")
-            + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+            + divide
             + QStringLiteral("2³"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("2^12!"),
@@ -1841,48 +1858,48 @@ void test_display_interpreted_spacing()
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("1/2!"),
         QStringLiteral("1")
-            + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+            + divide
             + QStringLiteral("(2!)"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("2^12-2"),
         QString::fromUtf8("2¹²")
-            + mediumMathSpace + unicodeMinusSign + mediumMathSpace
+            + minus
             + QStringLiteral("2"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("2^12.-2"),
         QString::fromUtf8("2¹²")
-            + mediumMathSpace + unicodeMinusSign + mediumMathSpace
+            + minus
             + QStringLiteral("2"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("2^12.000-2"),
         QString::fromUtf8("2¹²")
-            + mediumMathSpace + unicodeMinusSign + mediumMathSpace
+            + minus
             + QStringLiteral("2"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("2^12.000-2+1/(1×2^3×3)-2^12!+2^12.1!"),
         QString::fromUtf8("2¹²")
-            + mediumMathSpace + unicodeMinusSign + mediumMathSpace
+            + minus
             + QStringLiteral("2")
-            + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
+            + plus
             + QStringLiteral("1")
-            + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+            + divide
             + QStringLiteral("(1")
-            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + dotSpaced
             + QStringLiteral("(2³)")
-            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + dotSpaced
             + QStringLiteral("3)")
-            + mediumMathSpace + unicodeMinusSign + mediumMathSpace
+            + minus
             + QStringLiteral("2^(12!)")
-            + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
+            + plus
             + QStringLiteral("2^(12.1!)"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("1/(1×2^3×3)"),
         QStringLiteral("1")
-            + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+            + divide
             + QStringLiteral("(1")
-            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + dotSpaced
             + QStringLiteral("(2³)")
-            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + dotSpaced
             + QStringLiteral("3)"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("2^123"),
@@ -1893,23 +1910,23 @@ void test_display_interpreted_spacing()
     CHECK_DISPLAY_INTERPRETED(
         QString::fromUtf8("12×1/2/3/4×23+23−sin(2)+23 cos(23)"),
         QStringLiteral("12")
-            + mediumMathSpace + QString::fromUtf8("×") + mediumMathSpace
+            + times
             + QStringLiteral("1")
-            + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+            + divide
             + QStringLiteral("2")
-            + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+            + divide
             + QStringLiteral("3")
-            + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+            + divide
             + QStringLiteral("4")
-            + mediumMathSpace + QString::fromUtf8("×") + mediumMathSpace
+            + times
             + QStringLiteral("23")
-            + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
+            + plus
             + QStringLiteral("23")
-            + mediumMathSpace + unicodeMinusSign + mediumMathSpace
+            + minus
             + QStringLiteral("sin(2)")
-            + mediumMathSpace + QStringLiteral("+") + mediumMathSpace
+            + plus
             + QStringLiteral("23")
-            + mediumMathSpace + QString::fromUtf8("⋅") + mediumMathSpace
+            + dotSpaced
             + QStringLiteral("cos(23)"));
 }
 
