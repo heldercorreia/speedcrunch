@@ -19,6 +19,9 @@ import sys
 import xml.etree.ElementTree as ET
 
 
+MessageKey = tuple[str, str]
+
+
 def _pct(n: int, d: int) -> float:
     if d <= 0:
         return 100.0
@@ -47,16 +50,15 @@ def _is_inactive_message(msg_el: ET.Element) -> bool:
     return False
 
 
-def _ts_stats(ts_path: str) -> dict:
+def _message_key(msg_el: ET.Element, ctx_name: str) -> MessageKey:
+    src = (msg_el.findtext("source") or "").strip()
+    return (ctx_name, src)
+
+
+def _ts_messages(ts_path: str) -> dict[MessageKey, bool]:
     tree = ET.parse(ts_path)
     root = tree.getroot()
-
-    total = 0
-    translated = 0
-    unfinished = 0
-
-    # Keep some samples for optional debug output.
-    samples: list[tuple[str, str]] = []
+    messages: dict[MessageKey, bool] = {}
 
     for ctx in root.findall("context"):
         ctx_name = (ctx.findtext("name") or "").strip()
@@ -65,22 +67,10 @@ def _ts_stats(ts_path: str) -> dict:
             if _is_inactive_message(msg):
                 continue
 
-            total += 1
             tr_el = msg.find("translation")
-            if _is_untranslated(tr_el):
-                unfinished += 1
-                src = (msg.findtext("source") or "").strip()
-                if src:
-                    samples.append((ctx_name, src))
-            else:
-                translated += 1
+            messages[_message_key(msg, ctx_name)] = not _is_untranslated(tr_el)
 
-    return {
-        "total": total,
-        "translated": translated,
-        "unfinished": unfinished,
-        "samples": samples,
-    }
+    return messages
 
 
 def _qm_info(qm_path: str) -> dict:
@@ -124,6 +114,13 @@ def main(argv: list[str]) -> int:
     rows = []
     g_total = g_translated = g_unfinished = 0
 
+    template_path = os.path.join(root_dir, "en_US.ts")
+    if not os.path.isfile(template_path):
+        print(f"error: missing canonical template: {template_path}", file=sys.stderr)
+        return 2
+    template_messages = _ts_messages(template_path)
+    template_keys = set(template_messages.keys())
+
     for ts_name in ts_files:
         ts_path = os.path.join(root_dir, ts_name)
         lang = ts_name[:-3]
@@ -131,20 +128,32 @@ def main(argv: list[str]) -> int:
             continue
         qm_name = lang + ".qm"
 
-        st = _ts_stats(ts_path)
+        lang_messages = _ts_messages(ts_path)
+        translated = 0
 
-        g_total += st["total"]
-        g_translated += st["translated"]
-        g_unfinished += st["unfinished"]
+        # Keep some samples for optional debug output.
+        samples: list[tuple[str, str]] = []
+        for key in template_keys:
+            if lang_messages.get(key, False):
+                translated += 1
+            elif key[1]:
+                samples.append(key)
+
+        total = len(template_keys)
+        unfinished = total - translated
+
+        g_total += total
+        g_translated += translated
+        g_unfinished += unfinished
 
         rows.append(
             {
                 "lang": lang,
-                "total": st["total"],
-                "translated": st["translated"],
-                "unfinished": st["unfinished"],
-                "completion": _pct(st["translated"], st["total"]),
-                "samples": st["samples"],
+                "total": total,
+                "translated": translated,
+                "unfinished": unfinished,
+                "completion": _pct(translated, total),
+                "samples": samples,
             }
         )
 
