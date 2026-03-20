@@ -34,6 +34,7 @@ gui/resultdisplay.h
 gui/variablelistwidget.h
 gui/userfunctionlistwidget.h
 gui/syntaxhighlighter.h
+gui/versioncheck.h
 math/floatcommon.h
 math/floatconfig.h
 math/floatconst.h
@@ -92,6 +93,7 @@ gui/resultdisplay.cpp
 gui/syntaxhighlighter.cpp
 gui/variablelistwidget.cpp
 gui/userfunctionlistwidget.cpp
+gui/versioncheck.cpp
 math/floatcommon.c
 math/floatconst.c
 math/floatconvert.c

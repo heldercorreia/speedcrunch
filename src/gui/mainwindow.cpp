@@ -42,6 +42,7 @@
 #include "gui/historywidget.h"
 #include "gui/userfunctionlistwidget.h"
 #include "gui/variablelistwidget.h"
+#include "gui/versioncheck.h"
 #include "gui/editor.h"
 #include "gui/historywidget.h"
 #include "gui/manualwindow.h"
@@ -671,7 +672,7 @@ void MainWindow::setActionsText()
 
     m_actions.helpManual->setText(MainWindow::tr("User &Manual"));
     m_actions.contextHelp->setText(MainWindow::tr("Context Help"));
-    m_actions.helpUpdates->setText(MainWindow::tr("Check &Updates"));
+    m_actions.helpUpdates->setText(MainWindow::tr("Check for &Updates"));
     m_actions.helpFeedback->setText(MainWindow::tr("Send &Feedback"));
     m_actions.helpCommunity->setText(MainWindow::tr("Join &Community"));
     m_actions.helpNews->setText(MainWindow::tr("&News Feed"));
@@ -1422,7 +1423,7 @@ void MainWindow::createFixedConnections()
 
     connect(m_actions.helpManual, SIGNAL(triggered()), SLOT(showManualWindow()));
     connect(m_actions.contextHelp, SIGNAL(triggered()), SLOT(showContextHelp()));
-    connect(m_actions.helpUpdates, SIGNAL(triggered()), SLOT(openUpdatesURL()));
+    connect(m_actions.helpUpdates, SIGNAL(triggered()), SLOT(checkForUpdates()));
     connect(m_actions.helpFeedback, SIGNAL(triggered()), SLOT(openFeedbackURL()));
     connect(m_actions.helpCommunity, SIGNAL(triggered()), SLOT(openCommunityURL()));
     connect(m_actions.helpNews, SIGNAL(triggered()), SLOT(openNewsURL()));
@@ -1849,9 +1850,16 @@ MainWindow::MainWindow()
     m_copyWidget = 0;
     m_pendingHistoryEditIndex = -1;
     m_shutdownStateSaved = false;
+    m_versionCheck = 0;
 
     createUi();
     applySettings();
+
+    m_versionCheck = new VersionCheck(this, this);
+    QTimer::singleShot(0, this, [this]() {
+        if (m_versionCheck)
+            m_versionCheck->checkForUpdateIfDue();
+    });
 
     m_manualServer = ManualServer::instance();
     connect(this, SIGNAL(languageChanged()), m_manualServer, SLOT(ensureCorrectLanguage()));
@@ -3503,9 +3511,11 @@ void MainWindow::handleCustomKeypadButtonPress(int action, const QString& text)
     }
 }
 
-void MainWindow::openUpdatesURL()
+void MainWindow::checkForUpdates()
 {
-    QDesktopServices::openUrl(QUrl(QString::fromLatin1("https://heldercorreia.bitbucket.io/speedcrunch/")));
+    if (!m_versionCheck)
+        return;
+    m_versionCheck->checkForUpdateNow();
 }
 
 void MainWindow::openFeedbackURL()

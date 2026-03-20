@@ -208,6 +208,7 @@ int main(int argc, char* argv[])
     MainWindow window;
     mainWindow = &window;
     window.show();
+
     if (pendingActivation)
         activateMainWindow(mainWindow);
 

@@ -86,6 +86,7 @@ HEADERS += core/book.h \
            gui/keypad.h \
            gui/variablelistwidget.h \
            gui/userfunctionlistwidget.h \
+           gui/versioncheck.h \
            gui/manualwindow.h \
            gui/mainwindow.h \
            gui/syntaxhighlighter.h \
@@ -143,6 +144,7 @@ SOURCES += main.cpp \
            gui/syntaxhighlighter.cpp \
            gui/variablelistwidget.cpp \
            gui/userfunctionlistwidget.cpp \
+           gui/versioncheck.cpp \
            gui/mainwindow.cpp \
            gui/manualwindow.cpp \
            math/floatcommon.c \

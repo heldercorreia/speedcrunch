@@ -48,6 +48,7 @@ class Settings;
 class UserFunctionListWidget;
 class Variable;
 class VariableListWidget;
+class VersionCheck;
 
 class QActionGroup;
 class QHBoxLayout;
@@ -118,7 +119,7 @@ private slots:
     void insertTextIntoEditor(const QString&);
     void insertVariableIntoEditor(const QString&);
     void insertUserFunctionIntoEditor(const QString&);
-    void openUpdatesURL();
+    void checkForUpdates();
     void openFeedbackURL();
     void openCommunityURL();
     void openNewsURL();
@@ -510,6 +511,7 @@ private:
     QTranslator* m_translator;
     QPlainTextEdit* m_copyWidget;
     ManualServer* m_manualServer;
+    VersionCheck* m_versionCheck;
     QString m_colorSchemeToRevert;
     int m_pendingHistoryEditIndex;
     bool m_shutdownStateSaved;
