@@ -39,6 +39,8 @@ public:
     Rational(const HNumber &num);
     Rational(const double &num);
     Rational(const QString & str);
+    static bool approximate(const HNumber& num, int maxDenominator,
+        const HNumber& relativeTolerance, Rational* out);
     Rational(const int a, const int b) : m_num(a), m_denom(b), m_valid(true) {normalize();}
     Rational(const Rational& other) = default;
 

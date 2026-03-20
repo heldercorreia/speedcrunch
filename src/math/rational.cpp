@@ -24,6 +24,7 @@
 #include <QString>
 #include <QStringList>
 #include <limits.h>
+#include <limits>
 
 
 void Rational::normalize()
@@ -48,6 +49,83 @@ void Rational::normalize()
 int Rational::compare(const Rational &other) const
 {
     return m_num*other.m_denom - m_denom*other.m_num;
+}
+
+bool Rational::approximate(const HNumber& num, int maxDenominator,
+    const HNumber& relativeTolerance, Rational* out)
+{
+    if (out == nullptr || maxDenominator < 1 || relativeTolerance <= HNumber(0) || num.isNan())
+        return false;
+
+    if (num.isZero()) {
+        *out = Rational(0, 1);
+        return true;
+    }
+
+    const HNumber nearIntTol("1e-18");
+    const HNumber absNum = HMath::abs(num);
+
+    auto withinTolerance = [&](const Rational& candidate) {
+        const HNumber diff = HMath::abs(candidate.toHNumber() - num);
+        const HNumber scale = HMath::abs(num);
+        if (scale.isZero())
+            return diff <= relativeTolerance;
+        return diff <= relativeTolerance * scale;
+    };
+
+    long long pPrevPrev = 0;
+    long long qPrevPrev = 1;
+    long long pPrev = 1;
+    long long qPrev = 0;
+    HNumber val(absNum);
+
+    while (true) {
+        HNumber aNum = HMath::floor(val);
+        HNumber frac = val - aNum;
+
+        // Guard against rounding noise near integer boundaries.
+        if (HMath::abs(HNumber(1) - frac) < nearIntTol) {
+            aNum += 1;
+            frac = 0;
+        }
+
+        if (aNum > HNumber(INT_MAX))
+            break;
+        const long long a = static_cast<long long>(aNum.toInt());
+
+        if ((a != 0 && pPrev > (std::numeric_limits<long long>::max() - pPrevPrev) / a)
+                || (a != 0 && qPrev > (std::numeric_limits<long long>::max() - qPrevPrev) / a)) {
+            break;
+        }
+
+        const long long p = pPrevPrev + a * pPrev;
+        const long long q = qPrevPrev + a * qPrev;
+        if (q > maxDenominator)
+            break;
+        if (p > INT_MAX)
+            break;
+
+        Rational candidate(static_cast<int>(p), static_cast<int>(q));
+        if (num.isNegative())
+            candidate = Rational(-candidate.numerator(), candidate.denominator());
+
+        if (withinTolerance(candidate)) {
+            *out = candidate;
+            return true;
+        }
+
+        if (HMath::abs(frac) < nearIntTol)
+            break;
+
+        pPrevPrev = pPrev;
+        qPrevPrev = qPrev;
+        pPrev = p;
+        qPrev = q;
+
+        val = HNumber(1) / frac;
+    }
+
+    return false;
 }
 
 

@@ -21,9 +21,59 @@
 
 #include "core/settings.h"
 #include "math/quantity.h"
+#include "math/rational.h"
+#include "math/units.h"
 
 static const QChar g_dotChar = QString::fromUtf8("⋅")[0];
 static const QChar g_minusChar = QString::fromUtf8("−")[0];
+
+namespace {
+
+constexpr int RationalFormatMaxDenominator = 1000000;
+HNumber rationalFormatRelativeTolerance()
+{
+    return HNumber("1e-60");
+}
+
+QString formatRationalDisplay(Quantity q)
+{
+    if (q.isNan())
+        return QString();
+
+    if (!q.hasUnit() && !q.isDimensionless()) {
+        q.cleanDimension();
+        Units::findUnit(q);
+    }
+
+    CNumber number = q.numericValue();
+    number /= q.unit();
+    if (!number.isNearReal())
+        return QString();
+
+    Rational rational;
+    if (!Rational::approximate(number.real, RationalFormatMaxDenominator,
+            rationalFormatRelativeTolerance(), &rational)) {
+        return QString();
+    }
+
+    QString result;
+    if (rational.denominator() == 1) {
+        result = QString::number(rational.numerator());
+    } else {
+        const QChar slash = QChar('/');
+        const QString operatorSpace(QChar(0x205F)); // MEDIUM MATHEMATICAL SPACE.
+        result = QString::number(rational.numerator())
+            + operatorSpace + slash + operatorSpace
+            + QString::number(rational.denominator());
+    }
+
+    const QString unitName = q.unitName();
+    if (!unitName.isEmpty())
+        result += QStringLiteral(" ") + unitName;
+    return result;
+}
+
+} // namespace
 
 QString NumberFormatter::format(Quantity q)
 {
@@ -34,8 +84,17 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride)
 {
     Settings* settings = Settings::instance();
     const char activeResultFormat = resultFormatOverride == '\0' ? settings->resultFormat : resultFormatOverride;
+    QString result;
 
     Quantity::Format format = q.format();
+    if (activeResultFormat == 'r'
+            && format.base != Quantity::Format::Base::Binary
+            && format.base != Quantity::Format::Base::Octal
+            && format.base != Quantity::Format::Base::Hexadecimal
+            && format.mode != Quantity::Format::Mode::Sexagesimal) {
+        result = formatRationalDisplay(q);
+    }
+
     if (format.base == Quantity::Format::Base::Null) {
         switch (activeResultFormat) {
         case 'b':
@@ -50,6 +109,7 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride)
         case 'n':
         case 'f':
         case 'e':
+        case 'r':
         case 's':
         case 'g':
         default:
@@ -73,6 +133,7 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride)
           case 's':
               format.mode = Quantity::Format::Mode::Sexagesimal;
               break;
+          case 'r':
           case 'g':
           default:
               format.mode = Quantity::Format::Mode::General;
@@ -120,7 +181,8 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride)
         negative = true;
     }
 
-    QString result = DMath::format(q, format);
+    if (result.isEmpty())
+        result = DMath::format(q, format);
 
     if (activeResultFormat == 's' && (arc || time)) {   // sexagesimal
         int dotPos = result.indexOf('.');
@@ -153,6 +215,8 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride)
             ++emptySpaces;
             if (emptySpaces > 1)
                 ch = g_dotChar;
+        } else {
+            emptySpaces = 0;
         }
     }
 

@@ -163,6 +163,7 @@ private slots:
     void setResultFormatHexadecimal();
     void setResultFormatOctal();
     void setResultFormatPolar();
+    void setResultFormatRational();
     void setResultFormatScientific();
     void setResultFormatSexagesimal();
     void setAlternativeResultFormat(char);
@@ -171,6 +172,7 @@ private slots:
     void setAlternativeResultFormatFixed();
     void setAlternativeResultFormatEngineering();
     void setAlternativeResultFormatScientific();
+    void setAlternativeResultFormatRational();
     void setAlternativeResultFormatBinary();
     void setAlternativeResultFormatOctal();
     void setAlternativeResultFormatHexadecimal();
@@ -181,6 +183,7 @@ private slots:
     void setTertiaryResultFormatFixed();
     void setTertiaryResultFormatEngineering();
     void setTertiaryResultFormatScientific();
+    void setTertiaryResultFormatRational();
     void setTertiaryResultFormatBinary();
     void setTertiaryResultFormatOctal();
     void setTertiaryResultFormatHexadecimal();
@@ -328,6 +331,7 @@ private:
         QAction* settingsResultFormatFixed;
         QAction* settingsResultFormatEngineering;
         QAction* settingsResultFormatScientific;
+        QAction* settingsResultFormatRational;
         QAction* settingsResultFormatAutoPrecision;
         QAction* settingsResultFormat0Digits;
         QAction* settingsResultFormat2Digits;
@@ -347,6 +351,7 @@ private:
         QAction* settingsAlternativeResultFormatFixed;
         QAction* settingsAlternativeResultFormatEngineering;
         QAction* settingsAlternativeResultFormatScientific;
+        QAction* settingsAlternativeResultFormatRational;
         QAction* settingsAlternativeResultFormatBinary;
         QAction* settingsAlternativeResultFormatOctal;
         QAction* settingsAlternativeResultFormatHexadecimal;
@@ -356,6 +361,7 @@ private:
         QAction* settingsTertiaryResultFormatFixed;
         QAction* settingsTertiaryResultFormatEngineering;
         QAction* settingsTertiaryResultFormatScientific;
+        QAction* settingsTertiaryResultFormatRational;
         QAction* settingsTertiaryResultFormatBinary;
         QAction* settingsTertiaryResultFormatOctal;
         QAction* settingsTertiaryResultFormatHexadecimal;

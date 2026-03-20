@@ -366,7 +366,7 @@ void Settings::load()
 
     // Format special case.
     QString format = settings->value(key + QLatin1String("Type"), 'f').toString();
-    if (format != "g" && format != "f" && format != "e" && format != "n"&& format != "h"
+    if (format != "g" && format != "f" && format != "e" && format != "n" && format != "r" && format != "h"
         && format != "o" && format != "b" && format != "s")
         resultFormat = 'f';
     else
@@ -376,6 +376,7 @@ void Settings::load()
     if (alternativeFormat.isEmpty())
         alternativeResultFormat = '\0';
     else if (alternativeFormat != "g" && alternativeFormat != "f" && alternativeFormat != "e"
+             && alternativeFormat != "r"
              && alternativeFormat != "n" && alternativeFormat != "h" && alternativeFormat != "o"
              && alternativeFormat != "b" && alternativeFormat != "s")
         alternativeResultFormat = '\0';
@@ -386,6 +387,7 @@ void Settings::load()
     if (tertiaryFormat.isEmpty())
         tertiaryResultFormat = '\0';
     else if (tertiaryFormat != "g" && tertiaryFormat != "f" && tertiaryFormat != "e"
+             && tertiaryFormat != "r"
              && tertiaryFormat != "n" && tertiaryFormat != "h" && tertiaryFormat != "o"
              && tertiaryFormat != "b" && tertiaryFormat != "s")
         tertiaryResultFormat = '\0';

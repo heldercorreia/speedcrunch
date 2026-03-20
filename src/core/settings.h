@@ -89,6 +89,8 @@ public:
 
     char angleUnit; // 'r': radian; 'd': degree; 'g': gradian; 't': turn.
 
+    // 'g': general; 'f': fixed; 'n': engineering; 'e': scientific; 'r': rational;
+    // 'b': binary; 'o': octal; 'h': hexadecimal; 's': sexagesimal.
     char resultFormat;
     char alternativeResultFormat; // '\0': disabled.
     char tertiaryResultFormat; // '\0': disabled.

@@ -45,6 +45,9 @@ static int eval_new_failed_tests = 0;
 #define CHECK_DIV_BY_ZERO(s) checkDivisionByZero(__FILE__,__LINE__,#s,s)
 #define CHECK_EVAL(x,y) checkEval(__FILE__,__LINE__,#x,x,y)
 #define CHECK_EVAL_FORMAT(x,y) checkEval(__FILE__,__LINE__,#x,x,y,0,false,true)
+#define CHECK_EVAL_FORMAT_HAS_SLASH(x) checkEvalFormatSlash(__FILE__, __LINE__, #x, x, true)
+#define CHECK_EVAL_FORMAT_NO_SLASH(x) checkEvalFormatSlash(__FILE__, __LINE__, #x, x, false)
+#define CHECK_EVAL_FORMAT_MEDIUM_SPACED_SLASH(x) checkEvalFormatMediumSpacedSlash(__FILE__, __LINE__, #x, x)
 #define CHECK_EVAL_KNOWN_ISSUE(x,y,n) checkEval(__FILE__,__LINE__,#x,x,y,n)
 #define CHECK_EVAL_PRECISE(x,y) checkEvalPrecise(__FILE__,__LINE__,#x,x,y)
 #define CHECK_EVAL_FAIL(x) checkEval(__FILE__,__LINE__,#x,x,"",0,true)
@@ -115,6 +118,62 @@ static void checkEval(const char* file, int line, const char* msg, const QString
             cerr << "\tResult   : " << result.toLatin1().constData() << endl
                  << "\tExpected : " << (shouldFail ? "should fail" : expected) << endl;
         }
+    }
+}
+
+static void checkEvalFormatSlash(const char* file, int line, const char* msg,
+                                 const QString& expr, bool shouldHaveSlash)
+{
+    ++eval_total_tests;
+
+    eval->setExpression(expr);
+    Quantity rn = eval->evalUpdateAns();
+
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+        return;
+    }
+
+    QString result = NumberFormatter::format(rn);
+    result.replace(QString::fromUtf8("−"), "-");
+    const bool hasSlash = result.contains('/');
+    if (hasSlash != shouldHaveSlash) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl
+             << "\tResult      : " << result.toLatin1().constData() << endl
+             << "\tExpected '/' : " << (shouldHaveSlash ? "yes" : "no") << endl;
+    }
+}
+
+static void checkEvalFormatMediumSpacedSlash(const char* file, int line, const char* msg,
+                                             const QString& expr)
+{
+    ++eval_total_tests;
+
+    eval->setExpression(expr);
+    Quantity rn = eval->evalUpdateAns();
+
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+        return;
+    }
+
+    QString result = NumberFormatter::format(rn);
+    result.replace(QString::fromUtf8("−"), "-");
+    const QString mediumSlash = QString(QChar(0x205F)) + "/" + QString(QChar(0x205F));
+    if (!result.contains(mediumSlash)) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl
+             << "\tResult                 : " << result.toLatin1().constData() << endl
+             << "\tExpected medium slash  : " << mediumSlash.toLatin1().constData() << endl;
     }
 }
 
@@ -777,6 +836,74 @@ void test_sexagesimal()
     settings->resultFormat = resultFormat;
     settings->resultPrecision = resultPrecision;
     Evaluator::instance()->initializeAngleUnits();
+}
+
+void test_rational_format()
+{
+    Settings* settings = Settings::instance();
+    const char resultFormat = settings->resultFormat;
+    const int resultPrecision = settings->resultPrecision;
+    const bool complexNumbers = settings->complexNumbers;
+    const char resultFormatComplex = settings->resultFormatComplex;
+    const bool complexMode = DMath::complexMode;
+
+    settings->resultFormat = 'r';
+    settings->resultPrecision = -1;
+    settings->complexNumbers = false;
+    DMath::complexMode = false;
+    eval->initializeBuiltInVariables();
+
+    ++eval_total_tests;
+    QString direct = NumberFormatter::format(Quantity(HNumber("0.5")), 'r');
+    direct.replace(QString::fromUtf8("−"), "-");
+    const QString mediumMathSpace(QChar(0x205F));
+    const QString expectedDirect = QStringLiteral("1")
+        + mediumMathSpace + QStringLiteral("/") + mediumMathSpace
+        + QStringLiteral("2");
+    if (direct != expectedDirect) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tdirect NumberFormatter rational formatting\t[NEW]" << endl
+             << "\tResult   : " << direct.toLatin1().constData() << endl
+             << "\tExpected : " << expectedDirect.toLatin1().constData() << endl;
+    }
+
+    CHECK_EVAL_FORMAT_HAS_SLASH("1/3");
+    CHECK_EVAL_FORMAT_HAS_SLASH("2/4");
+    CHECK_EVAL_FORMAT_HAS_SLASH("-10/4");
+    CHECK_EVAL_FORMAT_MEDIUM_SPACED_SLASH("2/4");
+    CHECK_EVAL_FORMAT("0", "0");
+    CHECK_EVAL_FORMAT_HAS_SLASH("0.1");
+    CHECK_EVAL_FORMAT_HAS_SLASH("1000001/1000000");
+    CHECK_EVAL_FORMAT_HAS_SLASH("0.5 meter");
+    CHECK_EVAL_FORMAT_HAS_SLASH("-0.5 meter");
+    CHECK_EVAL_FORMAT_MEDIUM_SPACED_SLASH("0.5 meter");
+    CHECK_EVAL_FORMAT_HAS_SLASH("1/1000000");
+    CHECK_EVAL_FORMAT_HAS_SLASH("355/113");
+
+    // Must fall back to float for denominator overflow / non-rational / huge numerator.
+    CHECK_EVAL_FORMAT_NO_SLASH("1/1000001");
+    CHECK_EVAL_FORMAT_NO_SLASH("sqrt(2)");
+    CHECK_EVAL_FORMAT_NO_SLASH("0.333333333333333333333333333333");
+    CHECK_EVAL_FORMAT_NO_SLASH("3000000000");
+    CHECK_EVAL_FORMAT_NO_SLASH("exp(1)");
+
+    settings->complexNumbers = true;
+    settings->resultFormatComplex = 'c';
+    DMath::complexMode = true;
+    eval->initializeBuiltInVariables();
+    CHECK_EVAL_FORMAT("1+j", "1+1j");
+    CHECK_EVAL_FORMAT_NO_SLASH("1+j");
+
+    // Explicit non-decimal format should still take precedence.
+    CHECK_EVAL_FORMAT("hex(31)", "0x1F");
+
+    settings->resultFormat = resultFormat;
+    settings->resultPrecision = resultPrecision;
+    settings->complexNumbers = complexNumbers;
+    settings->resultFormatComplex = resultFormatComplex;
+    DMath::complexMode = complexMode;
+    eval->initializeBuiltInVariables();
 }
 
 void test_function_basic()
@@ -2183,6 +2310,7 @@ int main(int argc, char* argv[])
 
     test_thousand_sep();
     test_sexagesimal();
+    test_rational_format();
 
     test_function_basic();
     test_function_trig();

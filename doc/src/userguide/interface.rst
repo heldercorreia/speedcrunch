@@ -163,6 +163,8 @@ formats:
     the exponent is divisible by three.
 * :menuselection:`Decimal --> Scientific`
     Display results in :ref:`normalized scientific notation <scientific_notation>`.
+* :menuselection:`Rational`
+    Try to display real results as fractions (for example, ``1/3``) using continued-fraction approximation with bounded denominator. If no close match is found, results are displayed in decimal form.
 * :menuselection:`Binary`
     Display results as binary numbers, i.e. in base-2.
 * :menuselection:`Octal`

@@ -336,6 +336,7 @@ void MainWindow::createActions()
     m_actions.settingsResultFormatGeneral = new QAction(this);
     m_actions.settingsResultFormatHexadecimal = new QAction(this);
     m_actions.settingsResultFormatOctal = new QAction(this);
+    m_actions.settingsResultFormatRational = new QAction(this);
     m_actions.settingsResultFormatScientific = new QAction(this);
     m_actions.settingsResultFormatCartesian= new QAction(this);
     m_actions.settingsResultFormatPolar = new QAction(this);
@@ -345,6 +346,7 @@ void MainWindow::createActions()
     m_actions.settingsAlternativeResultFormatFixed = new QAction(this);
     m_actions.settingsAlternativeResultFormatEngineering = new QAction(this);
     m_actions.settingsAlternativeResultFormatScientific = new QAction(this);
+    m_actions.settingsAlternativeResultFormatRational = new QAction(this);
     m_actions.settingsAlternativeResultFormatBinary = new QAction(this);
     m_actions.settingsAlternativeResultFormatOctal = new QAction(this);
     m_actions.settingsAlternativeResultFormatHexadecimal = new QAction(this);
@@ -354,6 +356,7 @@ void MainWindow::createActions()
     m_actions.settingsTertiaryResultFormatFixed = new QAction(this);
     m_actions.settingsTertiaryResultFormatEngineering = new QAction(this);
     m_actions.settingsTertiaryResultFormatScientific = new QAction(this);
+    m_actions.settingsTertiaryResultFormatRational = new QAction(this);
     m_actions.settingsTertiaryResultFormatBinary = new QAction(this);
     m_actions.settingsTertiaryResultFormatOctal = new QAction(this);
     m_actions.settingsTertiaryResultFormatHexadecimal = new QAction(this);
@@ -424,6 +427,7 @@ void MainWindow::createActions()
     m_actions.settingsResultFormatHexadecimal->setCheckable(true);
     m_actions.settingsResultFormatOctal->setCheckable(true);
     m_actions.settingsResultFormatPolar->setCheckable(true);
+    m_actions.settingsResultFormatRational->setCheckable(true);
     m_actions.settingsResultFormatScientific->setCheckable(true);
     m_actions.settingsResultFormatSexagesimal->setCheckable(true);
     m_actions.settingsAlternativeResultFormatDisabled->setCheckable(true);
@@ -431,6 +435,7 @@ void MainWindow::createActions()
     m_actions.settingsAlternativeResultFormatFixed->setCheckable(true);
     m_actions.settingsAlternativeResultFormatEngineering->setCheckable(true);
     m_actions.settingsAlternativeResultFormatScientific->setCheckable(true);
+    m_actions.settingsAlternativeResultFormatRational->setCheckable(true);
     m_actions.settingsAlternativeResultFormatBinary->setCheckable(true);
     m_actions.settingsAlternativeResultFormatOctal->setCheckable(true);
     m_actions.settingsAlternativeResultFormatHexadecimal->setCheckable(true);
@@ -440,6 +445,7 @@ void MainWindow::createActions()
     m_actions.settingsTertiaryResultFormatFixed->setCheckable(true);
     m_actions.settingsTertiaryResultFormatEngineering->setCheckable(true);
     m_actions.settingsTertiaryResultFormatScientific->setCheckable(true);
+    m_actions.settingsTertiaryResultFormatRational->setCheckable(true);
     m_actions.settingsTertiaryResultFormatBinary->setCheckable(true);
     m_actions.settingsTertiaryResultFormatOctal->setCheckable(true);
     m_actions.settingsTertiaryResultFormatHexadecimal->setCheckable(true);
@@ -532,6 +538,7 @@ QString MainWindow::statusBarResultFormatValue() const
         case 'f': return MainWindow::tr("Fixed-point decimal");
         case 'n': return MainWindow::tr("Engineering decimal");
         case 'e': return MainWindow::tr("Scientific decimal");
+        case 'r': return MainWindow::tr("Rational");
         case 'g': return MainWindow::tr("Automatic decimal");
         default : return QString();
     }
@@ -631,6 +638,7 @@ void MainWindow::setActionsText()
     m_actions.settingsResultFormatFixed->setText(MainWindow::tr("&Fixed-Point"));
     m_actions.settingsResultFormatEngineering->setText(MainWindow::tr("&Engineering"));
     m_actions.settingsResultFormatScientific->setText(MainWindow::tr("&Scientific"));
+    m_actions.settingsResultFormatRational->setText(MainWindow::tr("&Rational"));
     m_actions.settingsResultFormatBinary->setText(MainWindow::tr("&Binary"));
     m_actions.settingsResultFormatOctal->setText(MainWindow::tr("&Octal"));
     m_actions.settingsResultFormatHexadecimal->setText(MainWindow::tr("&Hexadecimal"));
@@ -640,6 +648,7 @@ void MainWindow::setActionsText()
     m_actions.settingsAlternativeResultFormatFixed->setText(MainWindow::tr("&Fixed-Point"));
     m_actions.settingsAlternativeResultFormatEngineering->setText(MainWindow::tr("&Engineering"));
     m_actions.settingsAlternativeResultFormatScientific->setText(MainWindow::tr("&Scientific"));
+    m_actions.settingsAlternativeResultFormatRational->setText(MainWindow::tr("&Rational"));
     m_actions.settingsAlternativeResultFormatBinary->setText(MainWindow::tr("&Binary"));
     m_actions.settingsAlternativeResultFormatOctal->setText(MainWindow::tr("&Octal"));
     m_actions.settingsAlternativeResultFormatHexadecimal->setText(MainWindow::tr("&Hexadecimal"));
@@ -649,6 +658,7 @@ void MainWindow::setActionsText()
     m_actions.settingsTertiaryResultFormatFixed->setText(MainWindow::tr("&Fixed-Point"));
     m_actions.settingsTertiaryResultFormatEngineering->setText(MainWindow::tr("&Engineering"));
     m_actions.settingsTertiaryResultFormatScientific->setText(MainWindow::tr("&Scientific"));
+    m_actions.settingsTertiaryResultFormatRational->setText(MainWindow::tr("&Rational"));
     m_actions.settingsTertiaryResultFormatBinary->setText(MainWindow::tr("&Binary"));
     m_actions.settingsTertiaryResultFormatOctal->setText(MainWindow::tr("&Octal"));
     m_actions.settingsTertiaryResultFormatHexadecimal->setText(MainWindow::tr("&Hexadecimal"));
@@ -676,6 +686,7 @@ void MainWindow::createActionGroups()
     m_actionGroups.resultFormat->addAction(m_actions.settingsResultFormatFixed);
     m_actionGroups.resultFormat->addAction(m_actions.settingsResultFormatEngineering);
     m_actionGroups.resultFormat->addAction(m_actions.settingsResultFormatScientific);
+    m_actionGroups.resultFormat->addAction(m_actions.settingsResultFormatRational);
     m_actionGroups.resultFormat->addAction(m_actions.settingsResultFormatOctal);
     m_actionGroups.resultFormat->addAction(m_actions.settingsResultFormatHexadecimal);
     m_actionGroups.resultFormat->addAction(m_actions.settingsResultFormatSexagesimal);
@@ -687,6 +698,7 @@ void MainWindow::createActionGroups()
     m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatFixed);
     m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatEngineering);
     m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatScientific);
+    m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatRational);
     m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatOctal);
     m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatHexadecimal);
     m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatSexagesimal);
@@ -698,6 +710,7 @@ void MainWindow::createActionGroups()
     m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatFixed);
     m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatEngineering);
     m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatScientific);
+    m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatRational);
     m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatOctal);
     m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatHexadecimal);
     m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatSexagesimal);
@@ -889,6 +902,7 @@ void MainWindow::createMenus()
     m_menus.decimal->addAction(m_actions.settingsResultFormatFixed);
     m_menus.decimal->addAction(m_actions.settingsResultFormatEngineering);
     m_menus.decimal->addAction(m_actions.settingsResultFormatScientific);
+    m_menus.resultFormat->addAction(m_actions.settingsResultFormatRational);
     m_menus.resultFormat->addAction(m_actions.settingsResultFormatBinary);
     m_menus.resultFormat->addAction(m_actions.settingsResultFormatOctal);
     m_menus.resultFormat->addAction(m_actions.settingsResultFormatHexadecimal);
@@ -919,6 +933,7 @@ void MainWindow::createMenus()
     m_menus.alternativeDecimal->addAction(m_actions.settingsAlternativeResultFormatFixed);
     m_menus.alternativeDecimal->addAction(m_actions.settingsAlternativeResultFormatEngineering);
     m_menus.alternativeDecimal->addAction(m_actions.settingsAlternativeResultFormatScientific);
+    m_menus.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatRational);
     m_menus.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatBinary);
     m_menus.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatOctal);
     m_menus.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatHexadecimal);
@@ -932,6 +947,7 @@ void MainWindow::createMenus()
     m_menus.tertiaryDecimal->addAction(m_actions.settingsTertiaryResultFormatFixed);
     m_menus.tertiaryDecimal->addAction(m_actions.settingsTertiaryResultFormatEngineering);
     m_menus.tertiaryDecimal->addAction(m_actions.settingsTertiaryResultFormatScientific);
+    m_menus.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatRational);
     m_menus.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatBinary);
     m_menus.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatOctal);
     m_menus.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatHexadecimal);
@@ -1377,6 +1393,7 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsResultFormatHexadecimal, SIGNAL(triggered()), SLOT(setResultFormatHexadecimal()));
     connect(m_actions.settingsResultFormatOctal, SIGNAL(triggered()), SLOT(setResultFormatOctal()));
     connect(m_actions.settingsResultFormatPolar, SIGNAL(triggered()), SLOT(setResultFormatPolar()));
+    connect(m_actions.settingsResultFormatRational, SIGNAL(triggered()), SLOT(setResultFormatRational()));
     connect(m_actions.settingsResultFormatSexagesimal, SIGNAL(triggered()), SLOT(setResultFormatSexagesimal()));
     connect(m_actions.settingsResultFormatScientific, SIGNAL(triggered()), SLOT(setResultFormatScientific()));
     connect(m_actions.settingsAlternativeResultFormatDisabled, SIGNAL(triggered()), SLOT(setAlternativeResultFormatDisabled()));
@@ -1384,6 +1401,7 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsAlternativeResultFormatFixed, SIGNAL(triggered()), SLOT(setAlternativeResultFormatFixed()));
     connect(m_actions.settingsAlternativeResultFormatEngineering, SIGNAL(triggered()), SLOT(setAlternativeResultFormatEngineering()));
     connect(m_actions.settingsAlternativeResultFormatScientific, SIGNAL(triggered()), SLOT(setAlternativeResultFormatScientific()));
+    connect(m_actions.settingsAlternativeResultFormatRational, SIGNAL(triggered()), SLOT(setAlternativeResultFormatRational()));
     connect(m_actions.settingsAlternativeResultFormatBinary, SIGNAL(triggered()), SLOT(setAlternativeResultFormatBinary()));
     connect(m_actions.settingsAlternativeResultFormatOctal, SIGNAL(triggered()), SLOT(setAlternativeResultFormatOctal()));
     connect(m_actions.settingsAlternativeResultFormatHexadecimal, SIGNAL(triggered()), SLOT(setAlternativeResultFormatHexadecimal()));
@@ -1393,6 +1411,7 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsTertiaryResultFormatFixed, SIGNAL(triggered()), SLOT(setTertiaryResultFormatFixed()));
     connect(m_actions.settingsTertiaryResultFormatEngineering, SIGNAL(triggered()), SLOT(setTertiaryResultFormatEngineering()));
     connect(m_actions.settingsTertiaryResultFormatScientific, SIGNAL(triggered()), SLOT(setTertiaryResultFormatScientific()));
+    connect(m_actions.settingsTertiaryResultFormatRational, SIGNAL(triggered()), SLOT(setTertiaryResultFormatRational()));
     connect(m_actions.settingsTertiaryResultFormatBinary, SIGNAL(triggered()), SLOT(setTertiaryResultFormatBinary()));
     connect(m_actions.settingsTertiaryResultFormatOctal, SIGNAL(triggered()), SLOT(setTertiaryResultFormatOctal()));
     connect(m_actions.settingsTertiaryResultFormatHexadecimal, SIGNAL(triggered()), SLOT(setTertiaryResultFormatHexadecimal()));
@@ -1681,6 +1700,7 @@ void MainWindow::checkInitialResultFormat()
         case 'g': m_actions.settingsResultFormatGeneral->setChecked(true); break;
         case 'n': m_actions.settingsResultFormatEngineering->setChecked(true); break;
         case 'e': m_actions.settingsResultFormatScientific->setChecked(true); break;
+        case 'r': m_actions.settingsResultFormatRational->setChecked(true); break;
         case 'h': m_actions.settingsResultFormatHexadecimal->setChecked(true); break;
         case 'o': m_actions.settingsResultFormatOctal->setChecked(true); break;
         case 'b': m_actions.settingsResultFormatBinary->setChecked(true); break;
@@ -1695,6 +1715,7 @@ void MainWindow::checkInitialAlternativeResultFormat()
         case 'g': m_actions.settingsAlternativeResultFormatGeneral->setChecked(true); break;
         case 'n': m_actions.settingsAlternativeResultFormatEngineering->setChecked(true); break;
         case 'e': m_actions.settingsAlternativeResultFormatScientific->setChecked(true); break;
+        case 'r': m_actions.settingsAlternativeResultFormatRational->setChecked(true); break;
         case 'h': m_actions.settingsAlternativeResultFormatHexadecimal->setChecked(true); break;
         case 'o': m_actions.settingsAlternativeResultFormatOctal->setChecked(true); break;
         case 'b': m_actions.settingsAlternativeResultFormatBinary->setChecked(true); break;
@@ -1710,6 +1731,7 @@ void MainWindow::checkInitialTertiaryResultFormat()
         case 'g': m_actions.settingsTertiaryResultFormatGeneral->setChecked(true); break;
         case 'n': m_actions.settingsTertiaryResultFormatEngineering->setChecked(true); break;
         case 'e': m_actions.settingsTertiaryResultFormatScientific->setChecked(true); break;
+        case 'r': m_actions.settingsTertiaryResultFormatRational->setChecked(true); break;
         case 'h': m_actions.settingsTertiaryResultFormatHexadecimal->setChecked(true); break;
         case 'o': m_actions.settingsTertiaryResultFormatOctal->setChecked(true); break;
         case 'b': m_actions.settingsTertiaryResultFormatBinary->setChecked(true); break;
@@ -3221,6 +3243,12 @@ void MainWindow::setResultFormatScientific()
     setStatusBarText();
 }
 
+void MainWindow::setResultFormatRational()
+{
+    setResultFormat('r');
+    setStatusBarText();
+}
+
 void MainWindow::setResultFormatSexagesimal()
 {
     setResultFormat('s');
@@ -3259,6 +3287,11 @@ void MainWindow::setAlternativeResultFormatEngineering()
 void MainWindow::setAlternativeResultFormatScientific()
 {
     setAlternativeResultFormat('e');
+}
+
+void MainWindow::setAlternativeResultFormatRational()
+{
+    setAlternativeResultFormat('r');
 }
 
 void MainWindow::setAlternativeResultFormatBinary()
@@ -3313,6 +3346,11 @@ void MainWindow::setTertiaryResultFormatEngineering()
 void MainWindow::setTertiaryResultFormatScientific()
 {
     setTertiaryResultFormat('e');
+}
+
+void MainWindow::setTertiaryResultFormatRational()
+{
+    setTertiaryResultFormat('r');
 }
 
 void MainWindow::setTertiaryResultFormatBinary()
@@ -4017,6 +4055,8 @@ void MainWindow::cycleResultFormats()
   else if (m_actions.settingsResultFormatEngineering->isChecked())
       m_actions.settingsResultFormatScientific->trigger();
   else if (m_actions.settingsResultFormatScientific->isChecked())
+      m_actions.settingsResultFormatRational->trigger();
+  else if (m_actions.settingsResultFormatRational->isChecked())
       m_actions.settingsResultFormatBinary->trigger();
   else if (m_actions.settingsResultFormatBinary->isChecked())
       m_actions.settingsResultFormatOctal->trigger();

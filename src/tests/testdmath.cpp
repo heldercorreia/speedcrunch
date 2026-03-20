@@ -74,6 +74,11 @@ void test_rational()
     CHECK_STRING(Rational(HNumber("1")/HNumber("7")).toString().toStdString(), "1/7");
     CHECK_STRING(Rational(0.).toString().toStdString(), "0");
     CHECK_STRING(Rational(HNumber(0)).toString().toStdString(), "0");
+
+    Rational approx;
+    CHECK_STRING((Rational::approximate(HNumber("1") / HNumber("2"), 1000000, HNumber("1e-20"), &approx)
+            ? approx.toString()
+            : QString("invalid")).toStdString(), "1/2");
 }
 
 void test_create()
