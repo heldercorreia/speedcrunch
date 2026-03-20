@@ -297,6 +297,9 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorAutoCompletion = new QAction(this);
     m_actions.settingsBehaviorEmptyHistoryHint = new QAction(this);
     m_actions.settingsBehaviorLeaveLastExpression = new QAction(this);
+    m_actions.settingsBehaviorUpDownArrowNever = new QAction(this);
+    m_actions.settingsBehaviorUpDownArrowAlways = new QAction(this);
+    m_actions.settingsBehaviorUpDownArrowSingleLineOnly = new QAction(this);
     m_actions.settingsBehaviorPartialResults = new QAction(this);
     m_actions.settingsBehaviorHistorySavingNever = new QAction(this);
     m_actions.settingsBehaviorHistorySavingOnExit = new QAction(this);
@@ -373,6 +376,12 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorAutoCompletion->setCheckable(true);
     m_actions.settingsBehaviorEmptyHistoryHint->setCheckable(true);
     m_actions.settingsBehaviorLeaveLastExpression->setCheckable(true);
+    m_actions.settingsBehaviorUpDownArrowNever->setCheckable(true);
+    m_actions.settingsBehaviorUpDownArrowNever->setData(Settings::UpDownArrowBehaviorNever);
+    m_actions.settingsBehaviorUpDownArrowAlways->setCheckable(true);
+    m_actions.settingsBehaviorUpDownArrowAlways->setData(Settings::UpDownArrowBehaviorAlways);
+    m_actions.settingsBehaviorUpDownArrowSingleLineOnly->setCheckable(true);
+    m_actions.settingsBehaviorUpDownArrowSingleLineOnly->setData(Settings::UpDownArrowBehaviorSingleLineOnly);
     m_actions.settingsBehaviorPartialResults->setCheckable(true);
     m_actions.settingsBehaviorHistorySavingNever->setCheckable(true);
     m_actions.settingsBehaviorHistorySavingNever->setData(Settings::HistorySavingNever);
@@ -600,6 +609,9 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorLeaveLastExpression->setText(MainWindow::tr("Keep Entered Expression After Evaluate"));
     m_actions.settingsBehaviorLeaveLastExpression->setToolTip(MainWindow::tr("After pressing Enter, keep the entered expression selected in the editor."));
     m_actions.settingsBehaviorLeaveLastExpression->setStatusTip(MainWindow::tr("After pressing Enter, keep the entered expression selected in the editor."));
+    m_actions.settingsBehaviorUpDownArrowNever->setText(MainWindow::tr("Never"));
+    m_actions.settingsBehaviorUpDownArrowAlways->setText(MainWindow::tr("Always"));
+    m_actions.settingsBehaviorUpDownArrowSingleLineOnly->setText(MainWindow::tr("Only for Single-Line Expressions"));
     m_actions.settingsBehaviorAutoResultToClipboard->setText(MainWindow::tr("Automatically Copy New Results to Clipboard"));
     m_actions.settingsBehaviorHistorySizeLimit->setText(MainWindow::tr("History Size &Limit..."));
     m_actions.settingsResultFormatComplexDisabled->setText(MainWindow::tr("&Disabled"));
@@ -733,6 +745,11 @@ void MainWindow::createActionGroups()
     m_actionGroups.historySaving->addAction(m_actions.settingsBehaviorHistorySavingOnExit);
     m_actionGroups.historySaving->addAction(m_actions.settingsBehaviorHistorySavingContinuously);
 
+    m_actionGroups.upDownArrowBehavior = new QActionGroup(this);
+    m_actionGroups.upDownArrowBehavior->addAction(m_actions.settingsBehaviorUpDownArrowNever);
+    m_actionGroups.upDownArrowBehavior->addAction(m_actions.settingsBehaviorUpDownArrowAlways);
+    m_actionGroups.upDownArrowBehavior->addAction(m_actions.settingsBehaviorUpDownArrowSingleLineOnly);
+
     m_actionGroups.keypad = new QActionGroup(this);
     m_actionGroups.keypad->addAction(m_actions.viewKeypadDisabled);
     m_actionGroups.keypad->addAction(m_actions.viewKeypadBasicWide);
@@ -859,6 +876,10 @@ void MainWindow::createMenus()
     m_menus.editing->addAction(m_actions.settingsBehaviorAutoAns);
     m_menus.editing->addAction(m_actions.settingsBehaviorEmptyHistoryHint);
     m_menus.editing->addAction(m_actions.settingsBehaviorLeaveLastExpression);
+    m_menus.upDownArrowBehavior = m_menus.editing->addMenu("");
+    m_menus.upDownArrowBehavior->addAction(m_actions.settingsBehaviorUpDownArrowNever);
+    m_menus.upDownArrowBehavior->addAction(m_actions.settingsBehaviorUpDownArrowAlways);
+    m_menus.upDownArrowBehavior->addAction(m_actions.settingsBehaviorUpDownArrowSingleLineOnly);
 
     m_menus.results = m_menus.settings->addMenu("");
 
@@ -978,6 +999,7 @@ void MainWindow::setMenusText()
     m_menus.complexNumbers->setTitle(MainWindow::tr("Complex &Numbers"));
     m_menus.window->setTitle(MainWindow::tr("&Window"));
     m_menus.editing->setTitle(MainWindow::tr("&Editing"));
+    m_menus.upDownArrowBehavior->setTitle(MainWindow::tr("Up/Down Arrow History"));
     m_menus.history->setTitle(MainWindow::tr("&History"));
     m_menus.historySaving->setTitle(MainWindow::tr("History &Saving"));
     m_menus.display->setTitle(MainWindow::tr("&Appearance"));
@@ -1331,6 +1353,7 @@ void MainWindow::createFixedConnections()
     connect(m_actionGroups.digitGrouping, SIGNAL(triggered(QAction*)), SLOT(setDigitGrouping(QAction*)));
     connect(m_actions.settingsBehaviorDigitGroupingIntegerPartOnly, SIGNAL(toggled(bool)), SLOT(setDigitGroupingIntegerPartOnlyEnabled(bool)));
     connect(m_actions.settingsBehaviorLeaveLastExpression, SIGNAL(toggled(bool)), SLOT(setLeaveLastExpressionEnabled(bool)));
+    connect(m_actionGroups.upDownArrowBehavior, SIGNAL(triggered(QAction*)), SLOT(setUpDownArrowBehavior(QAction*)));
     connect(m_actions.settingsBehaviorAutoResultToClipboard, SIGNAL(toggled(bool)), SLOT(setAutoResultToClipboardEnabled(bool)));
     connect(m_actions.settingsRadixCharComma, SIGNAL(triggered()), SLOT(setRadixCharacterComma()));
     connect(m_actions.settingsRadixCharDefault, SIGNAL(triggered()), SLOT(setRadixCharacterAutomatic()));
@@ -1532,6 +1555,18 @@ void MainWindow::applySettings()
         applyStartupUserDefinitions();
 
     m_actions.settingsBehaviorLeaveLastExpression->setChecked(m_settings->leaveLastExpression);
+    switch (m_settings->upDownArrowBehavior) {
+    case Settings::UpDownArrowBehaviorNever:
+        m_actions.settingsBehaviorUpDownArrowNever->setChecked(true);
+        break;
+    case Settings::UpDownArrowBehaviorSingleLineOnly:
+        m_actions.settingsBehaviorUpDownArrowSingleLineOnly->setChecked(true);
+        break;
+    case Settings::UpDownArrowBehaviorAlways:
+    default:
+        m_actions.settingsBehaviorUpDownArrowAlways->setChecked(true);
+        break;
+    }
     m_actions.settingsBehaviorEmptyHistoryHint->setChecked(m_settings->showEmptyHistoryHint);
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setChecked(m_settings->windowPositionSave);
     m_actions.settingsBehaviorSingleInstance->setChecked(m_settings->singleInstance);
@@ -2564,6 +2599,14 @@ void MainWindow::setHistorySizeLimit()
 void MainWindow::setLeaveLastExpressionEnabled(bool b)
 {
     m_settings->leaveLastExpression = b;
+}
+
+void MainWindow::setUpDownArrowBehavior(QAction* action)
+{
+    if (!action)
+        return;
+    m_settings->upDownArrowBehavior =
+        static_cast<Settings::UpDownArrowBehavior>(action->data().toInt());
 }
 
 void MainWindow::setEmptyHistoryHintEnabled(bool b)

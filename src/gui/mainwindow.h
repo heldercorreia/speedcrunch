@@ -146,6 +146,7 @@ private slots:
     void setKeypadMode(QAction*);
     void setKeypadVisible(bool);
     void setLeaveLastExpressionEnabled(bool);
+    void setUpDownArrowBehavior(QAction*);
     void setEmptyHistoryHintEnabled(bool);
     void setRadixCharacterAutomatic();
     void setRadixCharacter(char);
@@ -377,6 +378,9 @@ private:
         QAction* settingsBehaviorDigitGroupingIntegerPartOnly;
         QAction* settingsBehaviorAutoAns;
         QAction* settingsBehaviorLeaveLastExpression;
+        QAction* settingsBehaviorUpDownArrowNever;
+        QAction* settingsBehaviorUpDownArrowAlways;
+        QAction* settingsBehaviorUpDownArrowSingleLineOnly;
         QAction* settingsBehaviorAlwaysOnTop;
         QAction* settingsBehaviorAutoResultToClipboard;
         QAction* settingsBehaviorHistorySavingNever;
@@ -415,6 +419,7 @@ private:
         QActionGroup* radixChar;
         QActionGroup* digitGrouping;
         QActionGroup* historySaving;
+        QActionGroup* upDownArrowBehavior;
         QActionGroup* keypad;
     } m_actionGroups;
 
@@ -439,6 +444,7 @@ private:
         QMenu* help;
         QMenu* precision;
         QMenu* radixChar;
+        QMenu* upDownArrowBehavior;
         QMenu* session;
         QMenu* sessionExport;
         QMenu* settings;

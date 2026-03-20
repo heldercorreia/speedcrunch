@@ -29,6 +29,12 @@
 
 class Settings {
 public:
+    enum UpDownArrowBehavior {
+        UpDownArrowBehaviorNever = 0,
+        UpDownArrowBehaviorAlways = 1,
+        UpDownArrowBehaviorSingleLineOnly = 2
+    };
+
     enum HistorySaving {
         HistorySavingNever = 0,
         HistorySavingOnExit = 1,
@@ -92,6 +98,7 @@ public:
     bool autoAns;
     bool autoCalc;
     bool autoCompletion;
+    UpDownArrowBehavior upDownArrowBehavior;
     int digitGrouping;
     bool digitGroupingIntegerPartOnly;
     int maxHistoryEntries; // 0: unlimited.

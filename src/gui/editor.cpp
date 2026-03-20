@@ -31,6 +31,7 @@
 #include "core/session.h"
 
 #include <QApplication>
+#include <QAbstractTextDocumentLayout>
 #include <QEvent>
 #include <QFont>
 #include <QFrame>
@@ -45,12 +46,16 @@
 #include <QScrollBar>
 #include <QRegularExpression>
 #include <QStyle>
+#include <QResizeEvent>
 #include <QTimeLine>
 #include <QTimer>
+#include <QTextBlock>
+#include <QTextLayout>
 #include <QTreeWidget>
 #include <QWheelEvent>
 
 #include <algorithm>
+#include <cmath>
 
 static void moveCursorToEnd(Editor* editor)
 {
@@ -192,7 +197,8 @@ Editor::Editor(QWidget* parent)
     setViewportMargins(0, 0, 0, 0);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
     setTabChangesFocus(true);
-    setWordWrapMode(QTextOption::NoWrap);
+    setLineWrapMode(QPlainTextEdit::WidgetWidth);
+    setWordWrapMode(QTextOption::WrapAnywhere);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setCursorWidth(0);
@@ -205,9 +211,11 @@ Editor::Editor(QWidget* parent)
     connect(this, &Editor::textChanged, this, &Editor::checkAutoCalc);
     connect(this, &Editor::textChanged, this, &Editor::checkAutoComplete);
     connect(this, &Editor::textChanged, this, &Editor::checkMatching);
+    connect(document()->documentLayout(), &QAbstractTextDocumentLayout::documentSizeChanged,
+            this, [this](const QSizeF&) { updateHeightForWrappedText(); });
 
     adjustSize();
-    setFixedHeight(sizeHint().height());
+    updateHeightForWrappedText();
 }
 
 void Editor::refreshAutoCalc()
@@ -854,8 +862,14 @@ void Editor::triggerEnter()
 void Editor::changeEvent(QEvent* event)
 {
     if (event->type() == QEvent::FontChange)
-        setFixedHeight(sizeHint().height());
+        updateHeightForWrappedText();
     QPlainTextEdit::changeEvent(event);
+}
+
+void Editor::resizeEvent(QResizeEvent* event)
+{
+    QPlainTextEdit::resizeEvent(event);
+    updateHeightForWrappedText();
 }
 
 void Editor::focusOutEvent(QFocusEvent* event)
@@ -903,16 +917,24 @@ void Editor::keyPressEvent(QKeyEvent* event)
     case Qt::Key_Up:
         if (event->modifiers() & Qt::ShiftModifier)
             emit shiftUpPressed();
-        else
+        else if (Settings::instance()->upDownArrowBehavior == Settings::UpDownArrowBehaviorAlways
+                 || (Settings::instance()->upDownArrowBehavior == Settings::UpDownArrowBehaviorSingleLineOnly
+                     && height() <= sizeHint().height()))
             historyBack();
+        else
+            QPlainTextEdit::keyPressEvent(event);
         event->accept();
         return;
 
     case Qt::Key_Down:
         if (event->modifiers() & Qt::ShiftModifier)
             emit shiftDownPressed();
-        else
+        else if (Settings::instance()->upDownArrowBehavior == Settings::UpDownArrowBehaviorAlways
+                 || (Settings::instance()->upDownArrowBehavior == Settings::UpDownArrowBehaviorSingleLineOnly
+                     && height() <= sizeHint().height()))
             historyForward();
+        else
+            QPlainTextEdit::keyPressEvent(event);
         event->accept();
         return;
 
@@ -1050,6 +1072,28 @@ void Editor::scrollContentsBy(int dx, int dy)
     QPlainTextEdit::scrollContentsBy(dx, dy);
     verticalScrollBar()->setMaximum(0);
     verticalScrollBar()->setMinimum(0);
+}
+
+void Editor::updateHeightForWrappedText()
+{
+    const int baseHeight = sizeHint().height();
+    int visualLineCount = 0;
+
+    for (QTextBlock block = document()->begin(); block.isValid(); block = block.next()) {
+        const QTextLayout* layout = block.layout();
+        if (!layout) {
+            visualLineCount += 1;
+            continue;
+        }
+
+        visualLineCount += std::max(1, layout->lineCount());
+    }
+
+    if (visualLineCount <= 0)
+        visualLineCount = 1;
+
+    const int clampedLines = std::max(1, std::min(5, visualLineCount));
+    setFixedHeight(baseHeight * clampedLines);
 }
 
 void Editor::wheelEvent(QWheelEvent* event)

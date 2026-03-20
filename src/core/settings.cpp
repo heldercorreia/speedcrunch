@@ -305,6 +305,23 @@ void Settings::load()
     autoAns = settings->value(key + QLatin1String("AutoAns"), false).toBool();
     autoCalc = settings->value(key + QLatin1String("AutoCalc"), true).toBool();
     autoCompletion = settings->value(key + QLatin1String("AutoCompletion"), true).toBool();
+    const QString upDownArrowBehaviorKey = key + QLatin1String("UpDownArrowBehavior");
+    if (settings->contains(upDownArrowBehaviorKey)) {
+        upDownArrowBehavior = static_cast<UpDownArrowBehavior>(
+            settings->value(upDownArrowBehaviorKey).toInt());
+    } else {
+        // Backward compatibility with old boolean key.
+        const bool historyNavigationWithUpDown = settings->value(
+            key + QLatin1String("HistoryNavigationWithUpDown"), true).toBool();
+        upDownArrowBehavior = historyNavigationWithUpDown
+            ? UpDownArrowBehaviorAlways
+            : UpDownArrowBehaviorNever;
+    }
+    if (upDownArrowBehavior != UpDownArrowBehaviorNever
+            && upDownArrowBehavior != UpDownArrowBehaviorAlways
+            && upDownArrowBehavior != UpDownArrowBehaviorSingleLineOnly) {
+        upDownArrowBehavior = UpDownArrowBehaviorAlways;
+    }
     const QString historySavingKey = key + QLatin1String("HistorySaving");
     const QString historySavingLegacyKey = key + QLatin1String("HistorySavingPolicy");
     if (settings->contains(historySavingKey)) {
@@ -455,6 +472,8 @@ void Settings::save()
     settings->setValue(key + QLatin1String("AutoCompletion"), autoCompletion);
     settings->setValue(key + QLatin1String("AutoAns"), autoAns);
     settings->setValue(key + QLatin1String("AutoCalc"), autoCalc);
+    settings->setValue(
+        key + QLatin1String("UpDownArrowBehavior"), static_cast<int>(upDownArrowBehavior));
     settings->setValue(key + QLatin1String("SyntaxHighlighting"), syntaxHighlighting);
     settings->setValue(key + QLatin1String("HoverHighlightResults"), hoverHighlightResults);
     settings->setValue(key + QLatin1String("DigitGrouping"), digitGrouping);

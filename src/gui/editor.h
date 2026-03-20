@@ -40,6 +40,7 @@ class QTimeLine;
 class QTreeWidget;
 class QWheelEvent;
 class QWidget;
+class QResizeEvent;
 
 class Editor : public QPlainTextEdit {
     Q_OBJECT
@@ -114,6 +115,7 @@ protected:
     void inputMethodEvent(QInputMethodEvent*) override;
     void keyPressEvent(QKeyEvent*) override;
     void paintEvent(QPaintEvent*) override;
+    void resizeEvent(QResizeEvent*) override;
     void scrollContentsBy(int, int) override;
     QSize sizeHint() const override;
     void wheelEvent(QWheelEvent*) override;
@@ -135,6 +137,8 @@ private:
     QTimer* m_matchingTimer;
     bool m_shouldPaintCustomCursor;
     const Session * m_session;
+
+    void updateHeightForWrappedText();
 };
 
 class EditorCompletion : public QObject {

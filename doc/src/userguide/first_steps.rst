@@ -36,7 +36,7 @@ Let's try this out. First, perform some more calculations so that more than one 
     54*(4.514 - 5.7)
     = -64.044
 
-Note how multiplication (``*``) takes precedence over addition (``+``) unless parentheses are used to specify a particular order of evaluation. If you now wish to continue working with one of the results, double-click e.g. the line ``= 300.756``. The input bar will be populated with this result. Similarly, you can also quickly recall previous input by double-clicking them in the result history. Alternatively, you can use the :kbd:`Up` and :kbd:`Down` arrow keys on your keyboard to recall previous expressions or use the mouse wheel for the same effect (the mouse cursor must be hovering over the editor for this to work, otherwise the result window will be scrolled).
+Note how multiplication (``*``) takes precedence over addition (``+``) unless parentheses are used to specify a particular order of evaluation. If you now wish to continue working with one of the results, double-click e.g. the line ``= 300.756``. The input bar will be populated with this result. Similarly, you can also quickly recall previous input by double-clicking them in the result history. Alternatively, depending on :menuselection:`Settings --> Editing --> Up/Down Arrow History`, you can use the :kbd:`Up` and :kbd:`Down` arrow keys on your keyboard to recall previous expressions, or use the mouse wheel for the same effect (the mouse cursor must be hovering over the editor for this to work, otherwise the result window will be scrolled).
 
 To continue the computation directly from the previous result, you can use the special variable ``ans`` which always holds the result of the last entry in the history. Try this::
 

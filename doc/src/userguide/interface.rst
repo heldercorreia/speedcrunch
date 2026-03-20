@@ -282,6 +282,13 @@ Editing
     Show or hide the ``Type an expression here`` hint when there are no calculations in history.
 * :menuselection:`Keep Entered Expression After Evaluate`
     If selected, the entered expression remains in the editor after evaluating it.
+* :menuselection:`Up/Down Arrow History`
+    Controls whether :kbd:`Up` and :kbd:`Down` in the editor navigate history:
+
+    * ``Never`` always moves the cursor inside the editor.
+    * ``Always`` (default) always navigates history.
+    * ``Only for Single-Line Expressions`` navigates history only when the
+      expression fits in one visual line; otherwise, it moves the cursor.
 * :menuselection:`Radix Character`
     Select the decimal separator to use in inputs and results. This can either be explicitly set
     to dot (``.``), or comma (``,``), or both, or system default. When both dot and comma are used,
