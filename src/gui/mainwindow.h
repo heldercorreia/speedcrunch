@@ -54,6 +54,7 @@ class QHBoxLayout;
 class QLabel;
 class QPlainTextEdit;
 class QPushButton;
+class QResizeEvent;
 class QTranslator;
 class QVBoxLayout;
 
@@ -226,8 +227,9 @@ private slots:
     void removeHistoryEntriesBelow(int index);
 
 protected:
-    virtual void closeEvent(QCloseEvent*);
-    virtual bool eventFilter(QObject*, QEvent*);
+    void closeEvent(QCloseEvent*) override;
+    void resizeEvent(QResizeEvent*) override;
+    bool eventFilter(QObject*, QEvent*) override;
 
 private:
     Q_DISABLE_COPY(MainWindow)

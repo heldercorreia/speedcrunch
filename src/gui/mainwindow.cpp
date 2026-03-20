@@ -3927,6 +3927,14 @@ void MainWindow::closeEvent(QCloseEvent* e)
     e->accept();
 }
 
+void MainWindow::resizeEvent(QResizeEvent* event)
+{
+    QMainWindow::resizeEvent(event);
+
+    if (m_widgets.state->isVisible())
+        showStateLabel(m_widgets.state->text());
+}
+
 void MainWindow::persistSessionAndSettingsForShutdown()
 {
     if (m_shutdownStateSaved)
