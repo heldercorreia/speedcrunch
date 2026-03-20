@@ -828,6 +828,7 @@ QString Evaluator::formatInterpretedExpressionForDisplay(const QString& expressi
             || op == Token::Multiplication
             || op == Token::Division
             || op == Token::IntegerDivision
+            || op == Token::Assignment
             || op == Token::ArithmeticLeftShift
             || op == Token::ArithmeticRightShift;
         const QString operatorText =

@@ -1874,6 +1874,7 @@ void test_display_interpreted_spacing()
     const QString times = space + multiplication + space;
     const QString divide = space + QStringLiteral("/") + space;
     const QString integerDivide = space + QStringLiteral("\\") + space;
+    const QString equals = space + QStringLiteral("=") + space;
     const QString shiftLeft = space + QStringLiteral("<<") + space;
     const QString shiftRight = space + QStringLiteral(">>") + space;
 
@@ -2041,6 +2042,24 @@ void test_display_interpreted_spacing()
             + QStringLiteral("23")
             + dotSpaced
             + QStringLiteral("cos(23)"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("x=1/2 sqrt(3)"),
+        QStringLiteral("x")
+            + equals
+            + QStringLiteral("(1")
+            + divide
+            + QStringLiteral("2)")
+            + dotSpaced
+            + QStringLiteral("sqrt(3)"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("g(t)=t/2 sqrt(3)"),
+        QStringLiteral("g(t)")
+            + equals
+            + QStringLiteral("(t")
+            + divide
+            + QStringLiteral("2)")
+            + dotSpaced
+            + QStringLiteral("sqrt(3)"));
 }
 
 void test_format()
