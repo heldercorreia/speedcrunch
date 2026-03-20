@@ -1386,6 +1386,10 @@ void test_function_discrete()
     CHECK_EVAL("gcd(12;18)", "6");
     CHECK_EVAL("gcd(36;56;210)", "2");
     CHECK_EVAL("gcd(28;120;126)", "2");
+    CHECK_EVAL("lcm(12;18)", "36");
+    CHECK_EVAL("lcm(36;56;210)", "2520");
+    CHECK_EVAL("lcm(0;5)", "0");
+    CHECK_EVAL("lcm(-9;27)", "27");
     CHECK_EVAL("round(5.5e-10;2)", "0");
     CHECK_EVAL("round(5.5*10^-10;2)", "0");
     CHECK_EVAL("round(0.00000000055;2)", "0");
@@ -2452,6 +2456,13 @@ void test_function_usage_tooltip()
         11,
         "<b>gcd</b>(n<sub>1</sub>; <b>n<sub>2</sub></b>; ...)",
         "tooltip tracks outer function in nested calls"
+    );
+
+    checkTooltip(
+        "lcm(",
+        4,
+        "<b>lcm</b>(<b>n<sub>1</sub></b>; n<sub>2</sub>; ...)",
+        "tooltip shows usage for lcm"
     );
 
     checkTooltip(

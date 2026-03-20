@@ -285,6 +285,16 @@ void test_functions()
     CHECK(HMath::gcd("99", "103"), "1");
     CHECK(HMath::gcd("-102", "306"), "102");
 
+    CHECK(HMath::lcm("NaN", "NaN"), "NaN");
+    CHECK(HMath::lcm("NaN", "5"), "NaN");
+    CHECK(HMath::lcm("5", "NaN"), "NaN");
+    CHECK(HMath::lcm("0", "0"), "0");
+    CHECK(HMath::lcm("0", "5"), "0");
+    CHECK(HMath::lcm("5", "0"), "0");
+    CHECK(HMath::lcm("9", "-27"), "27");
+    CHECK(HMath::lcm("99", "103"), "10197");
+    CHECK(HMath::lcm("-102", "306"), "306");
+
     CHECK(HMath::round("NaN"), "NaN");
     CHECK(HMath::round("3.14"), "3");
     CHECK(HMath::round("-1.77"), "-2");

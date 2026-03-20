@@ -277,6 +277,18 @@ Quantity function_gcd(Function* f, const Function::ArgumentList& args)
     return std::accumulate(args.begin() + 1, args.end(), args.at(0), DMath::gcd);
 }
 
+Quantity function_lcm(Function* f, const Function::ArgumentList& args)
+{
+    /* TODO : complex mode switch for this function */
+    ENSURE_MINIMUM_ARGUMENT_COUNT(2);
+    for (int i = 0; i < args.count(); ++i)
+        if (!args[i].isInteger()) {
+            f->setError(OutOfDomain);
+            return DMath::nan();
+        }
+    return std::accumulate(args.begin() + 1, args.end(), args.at(0), DMath::lcm);
+}
+
 Quantity function_round(Function* f, const Function::ArgumentList& args)
 {
     /* TODO : complex mode switch for this function */
@@ -1218,6 +1230,7 @@ void FunctionRepo::createFunctions()
 
     // Discrete.
     FUNCTION_INSERT(gcd);
+    FUNCTION_INSERT(lcm);
     FUNCTION_INSERT(ncr);
     FUNCTION_INSERT(npr);
 
@@ -1366,6 +1379,7 @@ void FunctionRepo::setNonTranslatableFunctionUsages()
     FUNCTION_USAGE(frac, "x");
     FUNCTION_USAGE(gamma, "x");
     FUNCTION_USAGE(gcd, "n<sub>1</sub>; n<sub>2</sub>; ...");
+    FUNCTION_USAGE(lcm, "n<sub>1</sub>; n<sub>2</sub>; ...");
     FUNCTION_USAGE(geomean, "x<sub>1</sub>; x<sub>2</sub>; ...");
     FUNCTION_USAGE(gradians, "x");
     FUNCTION_USAGE(hex, "n");
@@ -1485,6 +1499,7 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(frac, tr("Fractional Part"));
     FUNCTION_NAME(gamma, tr("Extension of Factorials [= (x-1)!]"));
     FUNCTION_NAME(gcd, tr("Greatest Common Divisor"));
+    FUNCTION_NAME(lcm, tr("Least Common Multiple"));
     FUNCTION_NAME(geomean, tr("Geometric Mean"));
     FUNCTION_NAME(gradians, tr("Gradians of arc"));
     FUNCTION_NAME(hex, tr("Convert to Hexadecimal Representation"));

@@ -156,6 +156,7 @@ public:
     static HNumber floor(const HNumber&);
     static HNumber ceil(const HNumber&);
     static HNumber gcd(const HNumber&, const HNumber&);
+    static HNumber lcm(const HNumber&, const HNumber&);
     static HNumber idiv(const HNumber&, const HNumber&);
     static HNumber round(const HNumber&, int prec = 0);
     static HNumber trunc(const HNumber&, int prec = 0);

@@ -139,6 +139,7 @@ public:
     static CNumber floor(const CNumber&);
     static CNumber ceil(const CNumber&);
     static CNumber gcd(const CNumber&, const CNumber&);
+    static CNumber lcm(const CNumber&, const CNumber&);
     static CNumber idiv(const CNumber&, const CNumber&);
     static CNumber round(const CNumber&, int prec = 0);
     static CNumber trunc(const CNumber&, int prec = 0);

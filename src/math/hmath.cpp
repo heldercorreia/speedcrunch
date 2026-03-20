@@ -1229,6 +1229,26 @@ HNumber HMath::gcd(const HNumber& n1, const HNumber& n2)
 }
 
 /**
+ * Returns the least common multiple of n1 and n2.
+ */
+HNumber HMath::lcm(const HNumber& n1, const HNumber& n2)
+{
+    if (!n1.isInteger() || !n2.isInteger()) {
+        Error error = checkNaNParam(*n1.d, n2.d);
+        if (error != Success)
+            return HMath::nan(error);
+        return HMath::nan(TypeMismatch);
+    }
+
+    HNumber a = abs(n1);
+    HNumber b = abs(n2);
+    if (a == 0 || b == 0)
+        return HNumber(0);
+
+    return abs((a / gcd(a, b)) * b);
+}
+
+/**
  * Performs an integer divide.
  */
 HNumber HMath::idiv(const HNumber& dividend, const HNumber& divisor)

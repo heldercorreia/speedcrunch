@@ -162,6 +162,7 @@ public:
     static Quantity floor(const Quantity&);
     static Quantity ceil(const Quantity&);
     static Quantity gcd(const Quantity&, const Quantity&);
+    static Quantity lcm(const Quantity&, const Quantity&);
     static Quantity idiv(const Quantity&, const Quantity&);
     static Quantity round(const Quantity&, int prec = 0);
     static Quantity trunc(const Quantity&, int prec = 0);

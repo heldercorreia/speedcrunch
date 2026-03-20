@@ -246,8 +246,16 @@ Integer Division
     Returns the greatest common divisor of the arguments (at least two must be given). You can use this function to reduce a rational number.
     If a rational number is given as ``p/q``, its reduced form is ``(p / gcd(p; q)) / (q / gcd(p; q))``.
 
-    A closely related function is ``lcm()`` (*least common multiple*). While ``lcm()`` is not defined by default
-    in SpeedCrunch, you can define it yourself as::
+    Only real, integer arguments are allowed.
+
+.. function:: lcm(n1; n2; ...)
+
+    Returns the least common multiple of the arguments (at least two must be given).
+    The result is always non-negative.
+
+    ``gcd()`` and ``lcm()`` are related by:
+
+    .. math::
 
         lcm(n1; n2) = n1 * n2 / gcd(n1; n2)
 

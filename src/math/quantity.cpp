@@ -807,6 +807,7 @@ WRAPPER_DMATH_1(erf)
 WRAPPER_DMATH_1(erfc)
 
 WRAPPER_DMATH_2(gcd)
+WRAPPER_DMATH_2(lcm)
 WRAPPER_DMATH_2(idiv)
 
 Quantity DMath::round(const Quantity& n, int prec)
