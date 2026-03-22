@@ -63,6 +63,11 @@ They can be enabled and disabled via the :menuselection:`View` menu.
 * History
     The history widget lists all previous inputs. Double-click a line to recall it. Note that the main result display also provides this functionality.
 
+* Main Menu
+    Toggle the main menu bar visibility via :menuselection:`View --> Main Menu`.
+    This option is available on Windows and Linux.
+    On macOS, this option is not available because the application menu is managed by the system menu bar (outside the window), so SpeedCrunch cannot hide it like on Windows and Linux.
+
 .. _tracker: https://bitbucket.org/heldercorreia/speedcrunch/issues
 
 
