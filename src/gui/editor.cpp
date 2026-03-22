@@ -1199,7 +1199,7 @@ EditorCompletion::EditorCompletion(Editor* editor)
             SLOT(doneCompletion()));
 
     m_popup->hide();
-    m_popup->setParent(0, Qt::Popup);
+    m_popup->setParent(editor->window(), Qt::Popup);
     m_popup->setFocusPolicy(Qt::NoFocus);
     m_popup->setFocusProxy(editor);
     m_popup->setFrameStyle(QFrame::Box | QFrame::Plain);
@@ -1355,7 +1355,7 @@ ConstantCompletion::ConstantCompletion(Editor* editor)
     m_editor = editor;
 
     m_popup = new QFrame;
-    m_popup->setParent(0, Qt::Popup);
+    m_popup->setParent(editor->window(), Qt::Popup);
     m_popup->setFocusPolicy(Qt::NoFocus);
     m_popup->setFocusProxy(editor);
     m_popup->setFrameStyle(QFrame::Box | QFrame::Plain);
