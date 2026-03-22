@@ -2270,11 +2270,21 @@ void test_expression_operator_normalization()
     }
 
     const QString piDisplay = UnicodeChars::normalizePiForDisplay(
-        QString::fromUtf8("pi 𝜋 𝝅 𝞹 𝛑 alpha_pi beta pi2 -pi +pi/pi"));
+        QString::fromUtf8("pi 𝜋 𝝅 𝞹 𝛑 alpha_pi beta pi2 pi² -pi +pi/pi"));
     ++eval_total_tests;
     DisplayErrorOnMismatch(__FILE__, __LINE__, "normalizePiForDisplay",
                            piDisplay.toStdString(),
-                           "π π π π π alpha_pi beta pi2 -π +π/π",
+                           "π π π π π alpha_pi beta pi2 π² -π +π/π",
+                           eval_failed_tests, eval_new_failed_tests);
+
+    ++eval_total_tests;
+    eval->setExpression(QString::fromUtf8("2pi pi^2"));
+    eval->evalUpdateAns();
+    const QString threadExpressionDisplay = UnicodeChars::normalizePiForDisplay(
+        Evaluator::formatInterpretedExpressionForDisplay(eval->interpretedExpression()));
+    DisplayErrorOnMismatch(__FILE__, __LINE__, "normalizePiForDisplay thread expression",
+                           threadExpressionDisplay.toStdString(),
+                           "2 ⋅ π ⋅ π²",
                            eval_failed_tests, eval_new_failed_tests);
 }
 

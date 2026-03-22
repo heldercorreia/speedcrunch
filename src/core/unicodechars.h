@@ -57,7 +57,7 @@ inline QString normalizePiForDisplay(QString text)
     text = normalizePiAliasesToPi(text);
 
     auto isIdentifierChar = [](QChar ch) {
-        return ch.isLetterOrNumber() || ch == QChar('_');
+        return ch.isLetter() || ch.isDigit() || ch == QChar('_');
     };
 
     for (int i = 0; i + 1 < text.size();) {
