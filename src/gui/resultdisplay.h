@@ -81,6 +81,7 @@ public slots:
 
 protected:
     virtual void contextMenuEvent(QContextMenuEvent*);
+    virtual bool eventFilter(QObject* watched, QEvent* event);
     virtual void leaveEvent(QEvent*);
     virtual void mouseDoubleClickEvent(QMouseEvent*);
     virtual void mousePressEvent(QMouseEvent*);
@@ -115,6 +116,7 @@ private:
     int m_scrollDirection;
     bool m_isScrollingPageOnly;
     bool m_hoverHighlightEnabled;
+    bool m_scrollBarHovered;
     int m_hoveredHistoryIndex;
     int m_editingHistoryIndex;
     int m_count;

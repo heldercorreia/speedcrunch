@@ -273,6 +273,7 @@ ResultDisplay::ResultDisplay(QWidget* parent)
     , m_scrollDirection(0)
     , m_isScrollingPageOnly(false)
     , m_hoverHighlightEnabled(true)
+    , m_scrollBarHovered(false)
     , m_hoveredHistoryIndex(-1)
     , m_editingHistoryIndex(-1)
     , m_count(0)
@@ -285,6 +286,30 @@ ResultDisplay::ResultDisplay(QWidget* parent)
     setFocusPolicy(Qt::NoFocus);
     setWordWrapMode(QTextOption::WrapAnywhere);
     setMouseTracking(true);
+
+    QScrollBar* bar = verticalScrollBar();
+    bar->setAttribute(Qt::WA_Hover, true);
+    bar->setMouseTracking(true);
+    bar->installEventFilter(this);
+}
+
+bool ResultDisplay::eventFilter(QObject* watched, QEvent* event)
+{
+    if (watched == verticalScrollBar()) {
+        if (event->type() == QEvent::Enter || event->type() == QEvent::HoverEnter) {
+            if (!m_scrollBarHovered) {
+                m_scrollBarHovered = true;
+                updateScrollBarStyleSheet();
+            }
+        } else if (event->type() == QEvent::Leave || event->type() == QEvent::HoverLeave) {
+            if (m_scrollBarHovered) {
+                m_scrollBarHovered = false;
+                updateScrollBarStyleSheet();
+            }
+        }
+    }
+
+    return QPlainTextEdit::eventFilter(watched, event);
 }
 
 void ResultDisplay::setHoverHighlightEnabled(bool enabled)
@@ -881,12 +906,21 @@ void ResultDisplay::stopActiveScrollingAnimation()
 
 void ResultDisplay::updateScrollBarStyleSheet()
 {
+    static const int kBaseScrollBarWidthAt96Dpi = 5;
+    static const qreal kReferenceDpi = 96.0;
+    const int baseScrollBarWidth = qMax(
+        1,
+        qRound(kBaseScrollBarWidthAt96Dpi * (logicalDpiX() / kReferenceDpi)));
+    const int scrollBarWidth = m_scrollBarHovered
+        ? baseScrollBarWidth * 2
+        : baseScrollBarWidth;
+
     verticalScrollBar()->setStyleSheet(QString(
         "QScrollBar:vertical {"
         "   border: 0;"
         "   margin: 0 0 0 0;"
         "   background: %1;"
-        "   width: 5px;"
+        "   width: %3px;"
         "}"
         "QScrollBar::handle:vertical {"
         "   background: %2;"
@@ -901,7 +935,8 @@ void ResultDisplay::updateScrollBarStyleSheet()
         "   background: %1;"
         "}"
     ).arg(m_highlighter->colorForRole(ColorScheme::Background).name(),
-          m_highlighter->colorForRole(ColorScheme::ScrollBar).name()));
+          m_highlighter->colorForRole(ColorScheme::ScrollBar).name())
+      .arg(scrollBarWidth));
 }
 
 int ResultDisplay::historyIndexAtPosition(const QPoint& pos) const
