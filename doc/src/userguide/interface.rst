@@ -253,7 +253,10 @@ This section contains settings that control the main window behavior.
     When enabled (default), launching SpeedCrunch while it is already running focuses
     the existing window instead of starting a second instance.
 * :menuselection:`Always on Top`
-    Keep the SpeedCrunch window on top of other windows.
+    Keep the SpeedCrunch window on top of other windows. This option is hidden on
+    Wayland (non-X11 Linux desktop sessions), because many Wayland compositors do
+    not honor it reliably. It remains available on Windows, macOS, and Linux X11
+    sessions.
 
 
 Results

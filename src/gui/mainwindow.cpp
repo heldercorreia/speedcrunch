@@ -128,6 +128,13 @@ static bool isVisibleKeypadMode(Settings::KeypadMode mode)
         || mode == Settings::KeypadModeCustom;
 }
 
+static bool isWaylandPlatform()
+{
+    const auto platform = QGuiApplication::platformName();
+    const bool isWayland = (platform == "wayland");
+    return isWayland;
+}
+
 namespace {
 
 struct AssignmentTarget {
@@ -976,7 +983,8 @@ void MainWindow::createMenus()
     m_menus.window = m_menus.settings->addMenu("");
     m_menus.window->addAction(m_actions.settingsBehaviorSaveWindowPositionOnExit);
     m_menus.window->addAction(m_actions.settingsBehaviorSingleInstance);
-    m_menus.window->addAction(m_actions.settingsBehaviorAlwaysOnTop);
+    if (!isWaylandPlatform())
+        m_menus.window->addAction(m_actions.settingsBehaviorAlwaysOnTop);
 
     m_menus.settings->addAction(m_actions.settingsLanguage);
 
@@ -1357,7 +1365,8 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsAngleUnitTurn, SIGNAL(triggered()), SLOT(setAngleModeTurn()));
     connect(m_actions.settingsAngleUnitCycle, SIGNAL(triggered()), SLOT(cycleAngleUnits()));
 
-    connect(m_actions.settingsBehaviorAlwaysOnTop, SIGNAL(toggled(bool)), SLOT(setAlwaysOnTopEnabled(bool)));
+    if (!isWaylandPlatform())
+        connect(m_actions.settingsBehaviorAlwaysOnTop, SIGNAL(toggled(bool)), SLOT(setAlwaysOnTopEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoCompletion, SIGNAL(toggled(bool)), SLOT(setAutoCompletionEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoAns, SIGNAL(toggled(bool)), SLOT(setAutoAnsEnabled(bool)));
     connect(m_actions.settingsBehaviorEmptyHistoryHint, SIGNAL(toggled(bool)), SLOT(setEmptyHistoryHintEnabled(bool)));
@@ -1550,7 +1559,8 @@ void MainWindow::applySettings()
     restoreState(m_settings->windowState);
 
     m_actions.viewFullScreenMode->setChecked(m_settings->windowOnfullScreen);
-    m_actions.settingsBehaviorAlwaysOnTop->setChecked(m_settings->windowAlwaysOnTop);
+    if (!isWaylandPlatform())
+        m_actions.settingsBehaviorAlwaysOnTop->setChecked(m_settings->windowAlwaysOnTop);
 
     if (m_settings->angleUnit == 'r')
         m_actions.settingsAngleUnitRadian->setChecked(true);
