@@ -457,6 +457,7 @@ void ResultDisplay::refresh()
         appendPlainText(QLatin1String(""));
         m_count = historyCount;
         markHistoryBlockIndexCacheDirty();
+        updateHoverHighlightSelection();
         return;
     }
 
@@ -478,6 +479,7 @@ void ResultDisplay::refresh()
     }
 
     markHistoryBlockIndexCacheDirty();
+    updateHoverHighlightSelection();
 }
 
 void ResultDisplay::refreshLastHistoryEntry()
@@ -521,6 +523,7 @@ void ResultDisplay::refreshLastHistoryEntry()
     cursor.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
     cursor.insertText(updatedLines.join(QLatin1String("\n")));
     markHistoryBlockIndexCacheDirty();
+    updateHoverHighlightSelection();
 }
 
 void ResultDisplay::scrollLines(int numberOfLines)

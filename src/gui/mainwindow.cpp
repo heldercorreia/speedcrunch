@@ -3627,6 +3627,7 @@ void MainWindow::restoreSession(bool restoreHistory) {
 
 void MainWindow::evaluateEditorExpression()
 {
+    const bool startedFromHistoryEdit = (m_pendingHistoryEditIndex >= 0);
     const QString enteredExpr = m_widgets.editor->text();
     QString expr = m_evaluator->autoFix(enteredExpr);
     const bool isCommentOnly = Evaluator::isCommentOnlyExpression(expr);
@@ -3635,11 +3636,14 @@ void MainWindow::evaluateEditorExpression()
         return;
 
     if (m_pendingHistoryEditIndex >= 0) {
-        const QPair<int, int> displayAnchor = m_widgets.display->viewportTopAnchor();
-        const auto restoreDisplayAnchor = [this, displayAnchor]() {
-            m_widgets.display->restoreViewportTopAnchor(displayAnchor);
-            QTimer::singleShot(0, this, [this, displayAnchor]() {
-                m_widgets.display->restoreViewportTopAnchor(displayAnchor);
+        const int previousDisplayScrollValue = m_widgets.display->verticalScrollBar()->value();
+        const auto restoreDisplayScroll = [this, previousDisplayScrollValue]() {
+            m_widgets.display->verticalScrollBar()->setValue(previousDisplayScrollValue);
+            QTimer::singleShot(0, this, [this, previousDisplayScrollValue]() {
+                m_widgets.display->verticalScrollBar()->setValue(previousDisplayScrollValue);
+                QTimer::singleShot(0, this, [this, previousDisplayScrollValue]() {
+                    m_widgets.display->verticalScrollBar()->setValue(previousDisplayScrollValue);
+                });
             });
         };
         const int historySize = m_session->historySize();
@@ -3647,7 +3651,7 @@ void MainWindow::evaluateEditorExpression()
             m_pendingHistoryEditIndex = -1;
             m_widgets.display->setEditingHistoryIndex(-1);
             m_widgets.editor->clear();
-            restoreDisplayAnchor();
+            restoreDisplayScroll();
         } else {
             const QStringList previousExpressions = historyExpressions();
             QStringList updatedExpressions = previousExpressions;
@@ -3657,10 +3661,8 @@ void MainWindow::evaluateEditorExpression()
             QString errorText;
             if (!rebuildSessionFromExpressions(updatedExpressions, &errorIndex, &errorText)) {
                 rebuildSessionFromExpressions(previousExpressions);
-                emit historyChanged();
-                emit variablesChanged();
-                emit functionsChanged();
-                restoreDisplayAnchor();
+                m_widgets.display->setEditingHistoryIndex(m_pendingHistoryEditIndex);
+                restoreDisplayScroll();
                 showStateLabel(tr("Could not recalculate from calculation %1: %2").arg(errorIndex + 1).arg(errorText));
                 return;
             }
@@ -3670,7 +3672,7 @@ void MainWindow::evaluateEditorExpression()
             emit historyChanged();
             emit variablesChanged();
             emit functionsChanged();
-            restoreDisplayAnchor();
+            restoreDisplayScroll();
             m_widgets.editor->clear();
 
             m_widgets.editor->stopAutoCalc();
@@ -3720,7 +3722,8 @@ void MainWindow::evaluateEditorExpression()
     if (m_settings->historySaving == Settings::HistorySavingContinuously)
         saveSessionToDefaultPath();
     emit historyChanged();
-    m_widgets.display->verticalScrollBar()->setValue(m_widgets.display->verticalScrollBar()->maximum());
+    if (!startedFromHistoryEdit)
+        m_widgets.display->verticalScrollBar()->setValue(m_widgets.display->verticalScrollBar()->maximum());
     emit variablesChanged();
 
     if (m_settings->bitfieldVisible)
