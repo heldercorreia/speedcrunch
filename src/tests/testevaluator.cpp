@@ -2635,6 +2635,334 @@ void test_expression_operator_normalization()
                            threadExpressionDisplay.toStdString(),
                            "2 ⋅ π ⋅ π²",
                            eval_failed_tests, eval_new_failed_tests);
+
+    ++eval_total_tests;
+    QString ignoredTrailing;
+    const bool ignoreTrailingPlus =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("1+2+"),
+                                                             &ignoredTrailing);
+    if (!ignoreTrailingPlus || ignoredTrailing != QString::fromUtf8("1+2")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken trailing plus\t[NEW]" << endl
+             << "\tResult   : " << (ignoreTrailingPlus ? ignoredTrailing : QString("<none>")).toUtf8().constData()
+             << endl
+             << "\tExpected : 1+2" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool ignoreTrailingMultiPlus =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("1++++"),
+                                                             &ignoredTrailing);
+    if (!ignoreTrailingMultiPlus || ignoredTrailing != QString::fromUtf8("1")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken multi plus\t[NEW]" << endl
+             << "\tResult   : " << (ignoreTrailingMultiPlus ? ignoredTrailing : QString("<none>")).toUtf8().constData()
+             << endl
+             << "\tExpected : 1" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool ignoreTrailingMultiMinus =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("2-------"),
+                                                             &ignoredTrailing);
+    if (!ignoreTrailingMultiMinus || ignoredTrailing != QString::fromUtf8("2")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken multi minus\t[NEW]" << endl
+             << "\tResult   : " << (ignoreTrailingMultiMinus ? ignoredTrailing : QString("<none>")).toUtf8().constData()
+             << endl
+             << "\tExpected : 2" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool ignoreTrailingSingleMinus =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("1-"),
+                                                             &ignoredTrailing);
+    if (!ignoreTrailingSingleMinus || ignoredTrailing != QString::fromUtf8("1")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken single minus\t[NEW]" << endl
+             << "\tResult   : " << (ignoreTrailingSingleMinus ? ignoredTrailing : QString("<none>")).toUtf8().constData()
+             << endl
+             << "\tExpected : 1" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool ignoreTrailingDoubleMinus =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("1--"),
+                                                             &ignoredTrailing);
+    if (!ignoreTrailingDoubleMinus || ignoredTrailing != QString::fromUtf8("1")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken double minus\t[NEW]" << endl
+             << "\tResult   : " << (ignoreTrailingDoubleMinus ? ignoredTrailing : QString("<none>")).toUtf8().constData()
+             << endl
+             << "\tExpected : 1" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool ignoreTrailingTripleMinus =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("1---"),
+                                                             &ignoredTrailing);
+    if (!ignoreTrailingTripleMinus || ignoredTrailing != QString::fromUtf8("1")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken triple minus\t[NEW]" << endl
+             << "\tResult   : " << (ignoreTrailingTripleMinus ? ignoredTrailing : QString("<none>")).toUtf8().constData()
+             << endl
+             << "\tExpected : 1" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool ignoreTrailingUnicodeMinus =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(
+            QString::fromUtf8("1−−−"),
+            &ignoredTrailing);
+    if (!ignoreTrailingUnicodeMinus || ignoredTrailing != QString::fromUtf8("1")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken unicode minus\t[NEW]" << endl
+             << "\tResult   : " << (ignoreTrailingUnicodeMinus ? ignoredTrailing : QString("<none>")).toUtf8().constData()
+             << endl
+             << "\tExpected : 1" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool ignoreTrailingMixedPlusMinusA =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("1++--++-"),
+                                                             &ignoredTrailing);
+    if (!ignoreTrailingMixedPlusMinusA || ignoredTrailing != QString::fromUtf8("1")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken mixed +/- A\t[NEW]" << endl
+             << "\tResult   : " << (ignoreTrailingMixedPlusMinusA ? ignoredTrailing : QString("<none>")).toUtf8().constData()
+             << endl
+             << "\tExpected : 1" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool ignoreTrailingMixedPlusMinusB =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("1--+++-"),
+                                                             &ignoredTrailing);
+    if (!ignoreTrailingMixedPlusMinusB || ignoredTrailing != QString::fromUtf8("1")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken mixed +/- B\t[NEW]" << endl
+             << "\tResult   : " << (ignoreTrailingMixedPlusMinusB ? ignoredTrailing : QString("<none>")).toUtf8().constData()
+             << endl
+             << "\tExpected : 1" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool ignoreTrailingSingleStar =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("1*"),
+                                                             &ignoredTrailing);
+    if (!ignoreTrailingSingleStar || ignoredTrailing != QString::fromUtf8("1")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken single star\t[NEW]" << endl
+             << "\tResult   : " << (ignoreTrailingSingleStar ? ignoredTrailing : QString("<none>")).toUtf8().constData()
+             << endl
+             << "\tExpected : 1" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool ignoreTrailingDoubleStar =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("1**"),
+                                                             &ignoredTrailing);
+    if (!ignoreTrailingDoubleStar || ignoredTrailing != QString::fromUtf8("1")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken double star\t[NEW]" << endl
+             << "\tResult   : " << (ignoreTrailingDoubleStar ? ignoredTrailing : QString("<none>")).toUtf8().constData()
+             << endl
+             << "\tExpected : 1" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool ignoreTrailingCaret =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("1^"),
+                                                             &ignoredTrailing);
+    if (!ignoreTrailingCaret || ignoredTrailing != QString::fromUtf8("1")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken caret\t[NEW]" << endl
+             << "\tResult   : " << (ignoreTrailingCaret ? ignoredTrailing : QString("<none>")).toUtf8().constData()
+             << endl
+             << "\tExpected : 1" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool ignoreTrailingBackslash =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("3\\"),
+                                                             &ignoredTrailing);
+    if (!ignoreTrailingBackslash || ignoredTrailing != QString::fromUtf8("3")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken trailing backslash\t[NEW]" << endl
+             << "\tResult   : " << (ignoreTrailingBackslash ? ignoredTrailing : QString("<none>")).toUtf8().constData()
+             << endl
+             << "\tExpected : 3" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool ignoreTrailingSinglePar =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("4("),
+                                                             &ignoredTrailing);
+    if (!ignoreTrailingSinglePar || ignoredTrailing != QString::fromUtf8("4")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken single parenthesis\t[NEW]" << endl
+             << "\tResult   : " << (ignoreTrailingSinglePar ? ignoredTrailing : QString("<none>")).toUtf8().constData()
+             << endl
+             << "\tExpected : 4" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool ignoreTrailingMultiPar =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("5(((("),
+                                                             &ignoredTrailing);
+    if (!ignoreTrailingMultiPar || ignoredTrailing != QString::fromUtf8("5")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken multi parenthesis\t[NEW]" << endl
+             << "\tResult   : " << (ignoreTrailingMultiPar ? ignoredTrailing : QString("<none>")).toUtf8().constData()
+             << endl
+             << "\tExpected : 5" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool ignoreTrailingDiv =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("3/"),
+                                                             &ignoredTrailing);
+    if (!ignoreTrailingDiv || ignoredTrailing != QString::fromUtf8("3")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken trailing slash\t[NEW]" << endl
+             << "\tResult   : " << (ignoreTrailingDiv ? ignoredTrailing : QString("<none>")).toUtf8().constData()
+             << endl
+             << "\tExpected : 3" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool ignoreTrailingPar =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("5+cos pi ("),
+                                                             &ignoredTrailing);
+    if (!ignoreTrailingPar || ignoredTrailing != QString::fromUtf8("5+cos pi")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken trailing open parenthesis\t[NEW]" << endl
+             << "\tResult   : " << (ignoreTrailingPar ? ignoredTrailing : QString("<none>")).toUtf8().constData()
+             << endl
+             << "\tExpected : 5+cos pi" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool rejectTrailingStar =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("1+2+*"),
+                                                             &ignoredTrailing);
+    if (rejectTrailingStar) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken reject +*\t[NEW]" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool rejectTrailingDoubleDiv =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("3//"),
+                                                             &ignoredTrailing);
+    if (rejectTrailingDoubleDiv) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken reject //\t[NEW]" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool rejectInvalidParen =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("5+cos pi ()"),
+                                                             &ignoredTrailing);
+    if (rejectInvalidParen) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken reject ()\t[NEW]" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool rejectTrailingTripleStar =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("1***"),
+                                                             &ignoredTrailing);
+    if (rejectTrailingTripleStar) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken reject ***\t[NEW]" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool rejectClosingParen =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("1)"),
+                                                             &ignoredTrailing);
+    if (rejectClosingParen) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken reject )\t[NEW]" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool rejectClosingParens =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("1)))"),
+                                                             &ignoredTrailing);
+    if (rejectClosingParens) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken reject )))\t[NEW]" << endl;
+    }
 }
 
 void test_session_history_limit()

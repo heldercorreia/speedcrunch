@@ -94,6 +94,7 @@ inline QString normalizeAdditionOperators(QString text)
 inline bool isSubtractionOperatorAlias(const QChar& ch)
 {
     switch (ch.unicode()) {
+    case UnicodeChars::MinusSign.unicode():
     case 0x002D: // - HYPHEN-MINUS
     case 0x2010: // ‐ HYPHEN
     case 0x2011: // ‑ NON-BREAKING HYPHEN
@@ -135,6 +136,118 @@ inline QString normalizeExpressionOperatorsForEditorInput(QString text)
     text = normalizeAdditionOperators(text);
     text = normalizeSubtractionOperators(text);
     return text;
+}
+
+inline bool isExpressionOperatorOrSeparator(const QChar& ch)
+{
+    return ch == QLatin1Char('+')
+           || ch == UnicodeChars::MinusSign
+           || ch == UnicodeChars::MultiplicationSign
+           || ch == UnicodeChars::DotOperator
+           || ch == QLatin1Char('/')
+           || ch == QLatin1Char('%')
+           || ch == QLatin1Char('^')
+           || ch == QLatin1Char('&')
+           || ch == QLatin1Char('|')
+           || ch == QLatin1Char('=')
+           || ch == QLatin1Char('>')
+           || ch == QLatin1Char('<')
+           || ch == QLatin1Char(';')
+           || ch == QLatin1Char(',');
+}
+
+inline bool endsWithIncompleteExpressionToken(const QString& text)
+{
+    const QString trimmed = text.trimmed();
+    if (trimmed.isEmpty())
+        return false;
+
+    const QChar last = trimmed.at(trimmed.size() - 1);
+    return last == QLatin1Char('(') || isExpressionOperatorOrSeparator(last);
+}
+
+inline bool expressionWithoutIgnorableTrailingToken(const QString& text, QString* out)
+{
+    if (!out)
+        return false;
+
+    const QString trimmed = text.trimmed();
+    if (trimmed.isEmpty())
+        return false;
+
+    int i = trimmed.size() - 1;
+    const QChar last = trimmed.at(i);
+    const bool isPlusMinusTail =
+        (last == QLatin1Char('+') || isSubtractionOperatorAlias(last));
+    const bool isMultiplicationTail =
+        (last == UnicodeChars::MultiplicationSign
+         || last == UnicodeChars::DotOperator
+         || isMultiplicationOperatorAlias(last, true));
+
+    if (last != QLatin1Char('(')
+        && !isPlusMinusTail
+        && !isMultiplicationTail
+        && last != QLatin1Char('/')
+        && last != QLatin1Char('^')
+        && last != QLatin1Char('\\'))
+        return false;
+
+    // Allow safe trailing suffixes:
+    // - one or more '+'
+    // - one or more '−'
+    // - one or more '('
+    // - one or more '\'
+    // - one '/' only
+    if (last == QLatin1Char('/')) {
+        --i;
+        if (i >= 0 && trimmed.at(i) == QLatin1Char('/'))
+            return false;
+    } else if (last == QLatin1Char('^')) {
+        --i;
+        if (i >= 0 && trimmed.at(i) == QLatin1Char('^'))
+            return false;
+    } else if (isPlusMinusTail) {
+        while (i >= 0 && (trimmed.at(i) == QLatin1Char('+')
+                          || isSubtractionOperatorAlias(trimmed.at(i))))
+            --i;
+    } else if (isMultiplicationTail) {
+        --i;
+        if (i >= 0) {
+            const QChar prev = trimmed.at(i);
+            const bool prevIsMultiplication =
+                (prev == UnicodeChars::MultiplicationSign
+                 || prev == UnicodeChars::DotOperator
+                 || isMultiplicationOperatorAlias(prev, true));
+            if (prevIsMultiplication) {
+                --i;
+                if (i >= 0) {
+                    const QChar prevPrev = trimmed.at(i);
+                    const bool prevPrevIsMultiplication =
+                        (prevPrev == UnicodeChars::MultiplicationSign
+                         || prevPrev == UnicodeChars::DotOperator
+                         || isMultiplicationOperatorAlias(prevPrev, true));
+                    if (prevPrevIsMultiplication)
+                        return false;
+                }
+            }
+        }
+    } else {
+        while (i >= 0 && trimmed.at(i) == last)
+            --i;
+    }
+
+    const QString prefix = trimmed.left(i + 1).trimmed();
+    if (prefix.isEmpty())
+        return false;
+
+    const QChar prefixLast = prefix.at(prefix.size() - 1);
+    if (prefixLast == QLatin1Char('(')
+        || isExpressionOperatorOrSeparator(prefixLast)
+        || prefixLast == QLatin1Char('\\'))
+        return false;
+
+    *out = prefix;
+    return true;
 }
 
 template <typename NormalizeExpression>
