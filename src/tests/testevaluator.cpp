@@ -2051,6 +2051,11 @@ void test_display_interpreted_spacing()
             + divide
             + QString::fromUtf8("second²"));
     CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("cos(pi)^2"),
+        QStringLiteral("cos")
+            + QString::fromUtf8("²")
+            + QStringLiteral("(pi)"));
+    CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("1/2^3"),
         QStringLiteral("1")
             + divide
@@ -2148,10 +2153,10 @@ void test_display_interpreted_spacing()
             + QStringLiteral("2"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("sin(pi)*sin(pi)"),
-        QString::fromUtf8("sin(pi)²"));
+        QString::fromUtf8("sin²(pi)"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("sin(pi)*2*sin(pi)^2"),
-        QString::fromUtf8("sin(pi)³")
+        QString::fromUtf8("sin³(pi)")
             + dotSpaced
             + QStringLiteral("2"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
@@ -2208,7 +2213,7 @@ void test_display_interpreted_spacing()
             + dotSpaced
             + QString::fromUtf8("pi²")
             + plus
-            + QString::fromUtf8("cos(pi)⁶")
+            + QString::fromUtf8("cos⁶(pi)")
             + plus
             + QStringLiteral("7"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
@@ -2221,7 +2226,7 @@ void test_display_interpreted_spacing()
             + minus
             + QStringLiteral("1")
             + divide
-            + QString::fromUtf8("cos(pi)²")
+            + QString::fromUtf8("cos²(pi)")
             + minus
             + QStringLiteral("20"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
@@ -2236,7 +2241,7 @@ void test_display_interpreted_spacing()
             + divide
             + QStringLiteral("(3")
             + dotSpaced
-            + QString::fromUtf8("cos(pi)²")
+            + QString::fromUtf8("cos²(pi)")
             + plus
             + QStringLiteral("7.5)")
             + minus
@@ -2253,7 +2258,7 @@ void test_display_interpreted_spacing()
             + divide
             + QStringLiteral("(4")
             + dotSpaced
-            + QString::fromUtf8("cos(pi)²")
+            + QString::fromUtf8("cos²(pi)")
             + plus
             + QStringLiteral("4.67)")
             + minus
@@ -2363,17 +2368,17 @@ void test_display_interpreted_spacing()
             + minus
             + QStringLiteral("5.38")
             + dotSpaced
-            + QStringLiteral("sin(")
+            + QStringLiteral("sin²(")
             + QString(UnicodeChars::MinusSign)
             + QString::fromUtf8("pi²")
             + plus
             + QStringLiteral("2.5")
             + slash
-            + QStringLiteral("cos(e))²")
+            + QStringLiteral("cos(e))")
             + plus
             + QStringLiteral("840")
             + dotSpaced
-            + QStringLiteral("tan(2)³")
+            + QStringLiteral("tan³(2)")
             + minus
             + QStringLiteral("1.23"));
     ++eval_total_tests;

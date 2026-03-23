@@ -686,6 +686,89 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(const QString& expres
         lastPos = match.capturedEnd();
     }
     rendered += expression.mid(lastPos);
+
+    auto isIdentifierChar = [](const QChar& ch) {
+        return ch == QLatin1Char('_') || ch.isLetterOrNumber();
+    };
+    auto isIdentifierStartChar = [](const QChar& ch) {
+        return ch == QLatin1Char('_') || ch.isLetter();
+    };
+    auto isSuperscriptPowerChar = [](const QChar& ch) {
+        switch (ch.unicode()) {
+            case 0x207B: // ⁻
+            case 0x2070: // ⁰
+            case 0x00B9: // ¹
+            case 0x00B2: // ²
+            case 0x00B3: // ³
+            case 0x2074: // ⁴
+            case 0x2075: // ⁵
+            case 0x2076: // ⁶
+            case 0x2077: // ⁷
+            case 0x2078: // ⁸
+            case 0x2079: // ⁹
+                return true;
+            default:
+                return false;
+        }
+    };
+
+    // Convert function-call powers from "f(x)²" to "f²(x)".
+    int i = 0;
+    while (i < rendered.size()) {
+        if (rendered.at(i) != QLatin1Char(')')) {
+            ++i;
+            continue;
+        }
+
+        int superscriptEnd = i + 1;
+        while (superscriptEnd < rendered.size() && isSuperscriptPowerChar(rendered.at(superscriptEnd)))
+            ++superscriptEnd;
+        if (superscriptEnd == i + 1) {
+            ++i;
+            continue;
+        }
+
+        int depth = 0;
+        int openParen = -1;
+        for (int j = i; j >= 0; --j) {
+            const QChar ch = rendered.at(j);
+            if (ch == QLatin1Char(')')) {
+                ++depth;
+            } else if (ch == QLatin1Char('(')) {
+                --depth;
+                if (depth == 0) {
+                    openParen = j;
+                    break;
+                }
+            }
+        }
+        if (openParen <= 0) {
+            i = superscriptEnd;
+            continue;
+        }
+
+        int nameStart = openParen - 1;
+        while (nameStart >= 0 && isIdentifierChar(rendered.at(nameStart)))
+            --nameStart;
+        ++nameStart;
+        if (nameStart >= openParen || !isIdentifierStartChar(rendered.at(nameStart))) {
+            i = superscriptEnd;
+            continue;
+        }
+
+        if (nameStart > 0 && isIdentifierChar(rendered.at(nameStart - 1))) {
+            i = superscriptEnd;
+            continue;
+        }
+
+        const QString funcName = rendered.mid(nameStart, openParen - nameStart);
+        const QString callArgs = rendered.mid(openParen, i - openParen + 1);
+        const QString superscript = rendered.mid(i + 1, superscriptEnd - (i + 1));
+        const QString replacement = funcName + superscript + callArgs;
+        rendered.replace(nameStart, superscriptEnd - nameStart, replacement);
+        i = nameStart + replacement.size();
+    }
+
     return rendered;
 }
 
