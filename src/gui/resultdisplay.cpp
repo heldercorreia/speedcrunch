@@ -214,6 +214,16 @@ QStringList formatResultLines(const HistoryEntry& entry)
     };
 
     QStringList lines;
+    if (settings->simplifyResultExpressions && !entry.interpretedExpr().isEmpty()) {
+        const QString interpreted =
+            UnicodeChars::normalizePiForDisplay(
+                Evaluator::formatInterpretedExpressionForDisplay(entry.interpretedExpr()));
+        const QString simplified =
+            UnicodeChars::normalizePiForDisplay(
+                Evaluator::formatInterpretedExpressionSimplifiedForDisplay(entry.interpretedExpr()));
+        if (!simplified.isEmpty() && simplified != interpreted)
+            lines.append(QLatin1String("= ") + simplified);
+    }
     lines.append(QLatin1String("= ") + groupedResultForDisplay(NumberFormatter::format(value)));
     if (settings->alternativeResultFormat != '\0') {
         lines.append(QLatin1String("= ")
@@ -256,6 +266,16 @@ int expressionLineCount(const HistoryEntry& entry)
 int resultLineCountForEntry(const Settings* settings, const HistoryEntry& entry)
 {
     int count = 1; // Primary result format is always shown for non-NaN results.
+    if (settings->simplifyResultExpressions && !entry.interpretedExpr().isEmpty()) {
+        const QString interpreted =
+            UnicodeChars::normalizePiForDisplay(
+                Evaluator::formatInterpretedExpressionForDisplay(entry.interpretedExpr()));
+        const QString simplified =
+            UnicodeChars::normalizePiForDisplay(
+                Evaluator::formatInterpretedExpressionSimplifiedForDisplay(entry.interpretedExpr()));
+        if (!simplified.isEmpty() && simplified != interpreted)
+            ++count;
+    }
     if (settings->alternativeResultFormat != '\0')
         ++count;
     if (settings->tertiaryResultFormat != '\0')

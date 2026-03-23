@@ -204,6 +204,7 @@ private slots:
     void setDigitGrouping(QAction*);
     void setDigitGroupingIntegerPartOnlyEnabled(bool);
     void setAutoResultToClipboardEnabled(bool);
+    void setSimplifyResultExpressionsEnabled(bool);
     void setHoverHighlightResultsEnabled(bool);
     void setVariablesDockVisible(bool, bool takeFocus = true);
     void setUserFunctionsDockVisible(bool, bool takeFocus = true);
@@ -392,6 +393,7 @@ private:
         QAction* settingsBehaviorUpDownArrowSingleLineOnly;
         QAction* settingsBehaviorAlwaysOnTop;
         QAction* settingsBehaviorAutoResultToClipboard;
+        QAction* settingsBehaviorSimplifyResultExpressions;
         QAction* settingsBehaviorHistorySavingNever;
         QAction* settingsBehaviorHistorySavingOnExit;
         QAction* settingsBehaviorHistorySavingContinuously;

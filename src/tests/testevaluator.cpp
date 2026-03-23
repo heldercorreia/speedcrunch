@@ -58,6 +58,7 @@ static const QString slash = space + QStringLiteral("/") + space;
 #define CHECK_EVAL_FORMAT_FAIL(x) checkEval(__FILE__,__LINE__,#x,x,"",0,true,true)
 #define CHECK_INTERPRETED(x,y) checkInterpreted(__FILE__,__LINE__,#x,x,y)
 #define CHECK_DISPLAY_INTERPRETED(x,y) checkDisplayInterpreted(__FILE__,__LINE__,#x,x,y)
+#define CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(x,y) checkDisplaySimplifiedInterpreted(__FILE__,__LINE__,#x,x,y)
 #define CHECK_USERFUNC_SET(x) checkEval(__FILE__,__LINE__,#x,x,"NaN")
 #define CHECK_USERFUNC_SET_FAIL(x) checkEval(__FILE__,__LINE__,#x,x,"",0,true)
 #define CHECK_USERFUNC_DESC(n,d) checkUserFunctionDescription(__FILE__,__LINE__,#n,n,d)
@@ -278,6 +279,34 @@ static void checkDisplayInterpreted(const char* file, int line, const char* msg,
 
     const QString interpreted = eval->interpretedExpression();
     const QString displayed = Evaluator::formatInterpretedExpressionForDisplay(interpreted);
+    if (displayed != expected) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl
+             << "\tDisplayed : " << displayed.toUtf8().constData() << endl
+             << "\tExpected  : " << expected.toUtf8().constData() << endl
+             << "\tDisplayed code points: " << toCodePointList(displayed) << endl
+             << "\tExpected  code points: " << toCodePointList(expected) << endl;
+    }
+}
+
+static void checkDisplaySimplifiedInterpreted(const char* file, int line, const char* msg,
+                                              const QString& expr, const QString& expected)
+{
+    ++eval_total_tests;
+
+    eval->setExpression(expr);
+    eval->evalUpdateAns();
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+        return;
+    }
+
+    const QString interpreted = eval->interpretedExpression();
+    const QString displayed = Evaluator::formatInterpretedExpressionSimplifiedForDisplay(interpreted);
     if (displayed != expected) {
         ++eval_failed_tests;
         ++eval_new_failed_tests;
@@ -1550,6 +1579,35 @@ void test_auto_fix_powers()
                   "2⋅sin(33×3⋅sin(23)⋅cos(−pi))⋅sin(23234)⋅23⧸2−sin(−12) − 12−12");
     CHECK_AUTOFIX("2          ×pi×  pi + 2^12.000−2",
                   "2⋅pi⋅pi + 2^12.000−2");
+
+    // Selection text copied from result display may contain medium spaces and
+    // paragraph separators; auto-fix should still produce a valid expression.
+    ++eval_total_tests;
+    const QString selectionText = QString::fromUtf8(
+        "−1 ⋅ (2²) ⋅ 69\u2029− 39 × 2⁵ − 828 ⋅ (2²) + 39");
+    const QString fixedSelectionText = eval->autoFix(selectionText);
+    eval->setExpression(fixedSelectionText);
+    Quantity selectionResult = eval->evalUpdateAns();
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\tautofix display selection text eval\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl
+             << "\tAutoFix: " << fixedSelectionText.toUtf8().constData() << endl;
+    } else {
+        QString formatted = DMath::format(selectionResult, Format::Fixed());
+        formatted.replace(QString::fromUtf8("−"), "-");
+        if (formatted != QStringLiteral("-4797")) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\tautofix display selection text eval\t[NEW]" << endl
+                 << "\tResult   : " << formatted.toLatin1().constData() << endl
+                 << "\tExpected : -4797" << endl
+                 << "\tAutoFix  : " << fixedSelectionText.toUtf8().constData() << endl;
+        }
+    }
 }
 
 void test_auto_fix_shift_add_sub()
@@ -2055,6 +2113,222 @@ void test_display_interpreted_spacing()
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("2^12.12"),
         QStringLiteral("2^(12.12)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("2*e*e-1"),
+        QStringLiteral("2")
+            + dotSpaced
+            + QString::fromUtf8("e²")
+            + minus
+            + QStringLiteral("1"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("1+2*2*2+pi*pi^2+average(2;3;4)"),
+        QString::fromUtf8("2³")
+            + plus
+            + QString::fromUtf8("pi³")
+            + plus
+            + QStringLiteral("average(2;3;4)")
+            + plus
+            + QStringLiteral("1"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QString::fromUtf8("1+2*2*2+π*π^2+average(2;3;4)"),
+        QString::fromUtf8("2³")
+            + plus
+            + QString::fromUtf8("π³")
+            + plus
+            + QStringLiteral("average(2;3;4)")
+            + plus
+            + QStringLiteral("1"));
+    CHECK_EVAL("foo1=2", "2");
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("foo1 foo1 + foo1 foo1 foo1 foo1 foo1 × 2 × foo1^4"),
+        QString::fromUtf8("foo1²")
+            + plus
+            + QString::fromUtf8("foo1⁹")
+            + times
+            + QStringLiteral("2"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("sin(pi)*sin(pi)"),
+        QString::fromUtf8("sin(pi)²"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("sin(pi)*2*sin(pi)^2"),
+        QString::fromUtf8("sin(pi)³")
+            + dotSpaced
+            + QStringLiteral("2"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("1+pi pi pi/2+3"),
+        QStringLiteral("0.5")
+            + dotSpaced
+            + QString::fromUtf8("pi³")
+            + plus
+            + QStringLiteral("4"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("1+2*3/pi*pi*pi/2+3"),
+        QStringLiteral("3")
+            + dotSpaced
+            + QStringLiteral("pi")
+            + plus
+            + QStringLiteral("4"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("1+2*3/pi*pi*pi*pi/2+3"),
+        QStringLiteral("3")
+            + dotSpaced
+            + QString::fromUtf8("pi²")
+            + plus
+            + QStringLiteral("4"));
+    CHECK_EVAL("abc()=2", "2");
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("1+(2*3/abc())*abc()*abc()/2+3*pi*pi*2+1"),
+        QStringLiteral("3")
+            + dotSpaced
+            + QStringLiteral("abc()")
+            + plus
+            + QStringLiteral("6")
+            + dotSpaced
+            + QString::fromUtf8("pi²")
+            + plus
+            + QStringLiteral("2"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("1+(2*3/abc())*4*abc()*abc()/2+3*pi*pi*2+1"),
+        QStringLiteral("12")
+            + dotSpaced
+            + QStringLiteral("abc()")
+            + plus
+            + QStringLiteral("6")
+            + dotSpaced
+            + QString::fromUtf8("pi²")
+            + plus
+            + QStringLiteral("2"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("2+3+1+2*3/e*4*e*e/2+3*pi*pi*2+1+cos(pi)^8/cos(pi)^2"),
+        QStringLiteral("12")
+            + dotSpaced
+            + QStringLiteral("e")
+            + plus
+            + QStringLiteral("6")
+            + dotSpaced
+            + QString::fromUtf8("pi²")
+            + plus
+            + QString::fromUtf8("cos(pi)⁶")
+            + plus
+            + QStringLiteral("7"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("2+3*pi*pi*pi/pi*pi*pi/pi+1+e^5/e^2-23-1/(cos(pi)*cos(pi))"),
+        QStringLiteral("3")
+            + dotSpaced
+            + QString::fromUtf8("pi³")
+            + plus
+            + QString::fromUtf8("e³")
+            + minus
+            + QStringLiteral("1")
+            + divide
+            + QString::fromUtf8("cos(pi)²")
+            + minus
+            + QStringLiteral("20"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("2+3*pi*pi*pi/pi*pi*pi/pi+1+e^5/e^2-23-1/(5.5+3*cos(pi)*cos(pi)+2)"),
+        QStringLiteral("3")
+            + dotSpaced
+            + QString::fromUtf8("pi³")
+            + plus
+            + QString::fromUtf8("e³")
+            + minus
+            + QStringLiteral("1")
+            + divide
+            + QStringLiteral("(3")
+            + dotSpaced
+            + QString::fromUtf8("cos(pi)²")
+            + plus
+            + QStringLiteral("7.5)")
+            + minus
+            + QStringLiteral("20"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("1-5.5*2+3*pi*pi*pi/pi/pi+1+e^5/e^2-23-1/(5.67+4*cos(pi)*cos(pi)+2-8/2+1)+9/3+2"),
+        QStringLiteral("3")
+            + dotSpaced
+            + QStringLiteral("pi")
+            + plus
+            + QString::fromUtf8("e³")
+            + minus
+            + QStringLiteral("1")
+            + divide
+            + QStringLiteral("(4")
+            + dotSpaced
+            + QString::fromUtf8("cos(pi)²")
+            + plus
+            + QStringLiteral("4.67)")
+            + minus
+            + QStringLiteral("27"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("2+cos(-pi^2)+pi+3+pi"),
+        QStringLiteral("cos(")
+            + QString(UnicodeChars::MinusSign)
+            + QString::fromUtf8("pi²)")
+            + plus
+            + QStringLiteral("2")
+            + dotSpaced
+            + QStringLiteral("pi")
+            + plus
+            + QStringLiteral("5"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-1+1e78+cos(pi)-1e78-1"),
+        QStringLiteral("cos(pi)")
+            + minus
+            + QStringLiteral("2"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-1-1e7+cos(pi)-1e7+1e7-1+1e7"),
+        QStringLiteral("cos(pi)")
+            + minus
+            + QStringLiteral("2"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-1-100+cos(pi)-100+100-1+100"),
+        QStringLiteral("cos(pi)")
+            + minus
+            + QStringLiteral("2"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-1-e+cos(pi)-e+e-1+e"),
+        QStringLiteral("cos(pi)")
+            + minus
+            + QStringLiteral("2"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-2*3*2"),
+        QString(UnicodeChars::MinusSign)
+            + QStringLiteral("2")
+            + times
+            + QStringLiteral("3")
+            + times
+            + QStringLiteral("2"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("2*3*(-2)"),
+        QStringLiteral("2")
+            + times
+            + QStringLiteral("3")
+            + times
+            + QStringLiteral("(")
+            + QString(UnicodeChars::MinusSign)
+            + QStringLiteral("2)"));
+    ++eval_total_tests;
+    eval->setExpression(QStringLiteral("-1+1e78+cos(pi)-1e78-1"));
+    Quantity largeCancellationBase = eval->evalUpdateAns();
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tlarge cancellation base eval\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+    } else {
+        const QString simplifiedLargeCancellationExpr =
+            Evaluator::simplifyInterpretedExpression(eval->interpretedExpression());
+        eval->setExpression(simplifiedLargeCancellationExpr);
+        Quantity largeCancellationSimplified = eval->evalNoAssign();
+        const QString simplifiedValue = DMath::format(largeCancellationSimplified, Format::Fixed());
+        if (!eval->error().isEmpty() || simplifiedValue != QLatin1String("-3")) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tlarge cancellation simplified eval\t[NEW]" << endl
+                 << "\tSimplified expression: " << simplifiedLargeCancellationExpr.toUtf8().constData() << endl
+                 << "\tResult   : " << simplifiedValue.toUtf8().constData() << endl
+                 << "\tExpected : -3" << endl;
+        }
+    }
     CHECK_DISPLAY_INTERPRETED(
         QString::fromUtf8("12×1/2/3/4×23+23−sin(2)+23 cos(23)"),
         QStringLiteral("12")

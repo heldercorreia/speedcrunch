@@ -248,6 +248,36 @@ bool findUserFunctionByName(const QList<UserFunction>& functions, const QString&
     return false;
 }
 
+QString normalizedDisplaySelectionForEvaluation(QString selected)
+{
+    selected.replace(QChar::ParagraphSeparator, QLatin1Char('\n'));
+
+    const QStringList rawLines = selected.split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+    QStringList candidateLines;
+    candidateLines.reserve(rawLines.size());
+    for (const QString& rawLine : rawLines) {
+        const QString line = rawLine.trimmed();
+        if (line.isEmpty())
+            continue;
+        if (line.startsWith(QLatin1String("=")))
+            continue;
+        candidateLines.append(line);
+    }
+
+    if (!candidateLines.isEmpty())
+        return candidateLines.join(QLatin1Char(' '));
+
+    for (const QString& rawLine : rawLines) {
+        QString line = rawLine.trimmed();
+        if (line.startsWith(QLatin1String("=")))
+            line = line.mid(1).trimmed();
+        if (!line.isEmpty())
+            return line;
+    }
+
+    return selected.trimmed();
+}
+
 } // namespace
 
 void MainWindow::createUi()
@@ -323,6 +353,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorDigitGroupingThreeSpaces = new QAction(this);
     m_actions.settingsBehaviorDigitGroupingIntegerPartOnly = new QAction(this);
     m_actions.settingsBehaviorAutoResultToClipboard = new QAction(this);
+    m_actions.settingsBehaviorSimplifyResultExpressions = new QAction(this);
     m_actions.settingsBehaviorHistorySizeLimit = new QAction(this);
     m_actions.settingsResultFormatComplexDisabled = new QAction(this);
     m_actions.settingsDisplayFont = new QAction(this);
@@ -415,6 +446,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorDigitGroupingThreeSpaces->setData(3);
     m_actions.settingsBehaviorDigitGroupingIntegerPartOnly->setCheckable(true);
     m_actions.settingsBehaviorAutoResultToClipboard->setCheckable(true);
+    m_actions.settingsBehaviorSimplifyResultExpressions->setCheckable(true);
     m_actions.settingsResultFormatComplexDisabled->setCheckable(true);
     m_actions.settingsRadixCharComma->setCheckable(true);
     m_actions.settingsRadixCharDefault->setCheckable(true);
@@ -629,6 +661,7 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorUpDownArrowAlways->setText(MainWindow::tr("Always"));
     m_actions.settingsBehaviorUpDownArrowSingleLineOnly->setText(MainWindow::tr("Only for Single-Line Expressions"));
     m_actions.settingsBehaviorAutoResultToClipboard->setText(MainWindow::tr("Automatically Copy New Results to Clipboard"));
+    m_actions.settingsBehaviorSimplifyResultExpressions->setText(MainWindow::tr("Simplify Displayed Expressions"));
     m_actions.settingsBehaviorHistorySizeLimit->setText(MainWindow::tr("History Size &Limit..."));
     m_actions.settingsResultFormatComplexDisabled->setText(MainWindow::tr("&Disabled"));
     m_actions.settingsRadixCharComma->setText(MainWindow::tr("&Comma"));
@@ -963,6 +996,7 @@ void MainWindow::createMenus()
     m_menus.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatSexagesimal);
     m_menus.results->addSeparator();
     m_menus.results->addAction(m_actions.settingsBehaviorPartialResults);
+    m_menus.results->addAction(m_actions.settingsBehaviorSimplifyResultExpressions);
     m_menus.results->addAction(m_actions.settingsBehaviorAutoResultToClipboard);
 
     m_menus.angleUnit = m_menus.settings->addMenu("");
@@ -1382,6 +1416,7 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsBehaviorLeaveLastExpression, SIGNAL(toggled(bool)), SLOT(setLeaveLastExpressionEnabled(bool)));
     connect(m_actionGroups.upDownArrowBehavior, SIGNAL(triggered(QAction*)), SLOT(setUpDownArrowBehavior(QAction*)));
     connect(m_actions.settingsBehaviorAutoResultToClipboard, SIGNAL(toggled(bool)), SLOT(setAutoResultToClipboardEnabled(bool)));
+    connect(m_actions.settingsBehaviorSimplifyResultExpressions, SIGNAL(toggled(bool)), SLOT(setSimplifyResultExpressionsEnabled(bool)));
     connect(m_actions.settingsRadixCharComma, SIGNAL(triggered()), SLOT(setRadixCharacterComma()));
     connect(m_actions.settingsRadixCharDefault, SIGNAL(triggered()), SLOT(setRadixCharacterAutomatic()));
     connect(m_actions.settingsRadixCharDot, SIGNAL(triggered()), SLOT(setRadixCharacterDot()));
@@ -1649,6 +1684,11 @@ void MainWindow::applySettings()
         m_actions.settingsBehaviorAutoResultToClipboard->setChecked(true);
     else
         setAutoResultToClipboardEnabled(false);
+
+    if (m_settings->simplifyResultExpressions)
+        m_actions.settingsBehaviorSimplifyResultExpressions->setChecked(true);
+    else
+        setSimplifyResultExpressionsEnabled(false);
 
     m_actions.settingsBehaviorDigitGroupingIntegerPartOnly->setChecked(m_settings->digitGroupingIntegerPartOnly);
 
@@ -2711,6 +2751,13 @@ void MainWindow::setAutoResultToClipboardEnabled(bool b)
     m_settings->autoResultToClipboard = b;
 }
 
+void MainWindow::setSimplifyResultExpressionsEnabled(bool b)
+{
+    m_settings->simplifyResultExpressions = b;
+    emit historyChanged();
+    m_widgets.editor->refreshAutoCalc();
+}
+
 void MainWindow::setHoverHighlightResultsEnabled(bool b)
 {
     m_settings->hoverHighlightResults = b;
@@ -3641,6 +3688,28 @@ void MainWindow::evaluateEditorExpression()
         return;
 
     const QString interpretedExpr = m_evaluator->interpretedExpression();
+    if (m_settings->simplifyResultExpressions
+        && !m_evaluator->isUserFunctionAssign()
+        && !result.isNan()
+        && !interpretedExpr.isEmpty()
+        && !interpretedExpr.contains(QLatin1Char('=')))
+    {
+        const QString simplifiedInterpretedExpr =
+            Evaluator::simplifyInterpretedExpression(interpretedExpr);
+        if (!simplifiedInterpretedExpr.isEmpty()
+            && simplifiedInterpretedExpr != interpretedExpr)
+        {
+            m_evaluator->setExpression(simplifiedInterpretedExpr);
+            Quantity simplifiedResult = m_evaluator->evalUpdateAns();
+            if (m_evaluator->error().isEmpty() && !simplifiedResult.isNan()) {
+                result = simplifiedResult;
+            } else {
+                m_evaluator->setExpression(expr);
+                result = m_evaluator->evalUpdateAns();
+            }
+        }
+    }
+
     m_session->addHistoryEntry(HistoryEntry(enteredExpr, result, interpretedExpr));
     if (m_settings->historySaving == Settings::HistorySavingContinuously)
         saveSessionToDefaultPath();
@@ -3817,7 +3886,8 @@ void MainWindow::handleDisplaySelectionChange()
     clearTextEditSelection(m_widgets.editor);
     const QTextCursor displayCursor = m_widgets.display->textCursor();
     if (displayCursor.hasSelection()) {
-        m_widgets.editor->autoCalcSelection(displayCursor.selectedText());
+        const QString selected = normalizedDisplaySelectionForEvaluation(displayCursor.selectedText());
+        m_widgets.editor->autoCalcSelection(selected);
         return;
     }
 

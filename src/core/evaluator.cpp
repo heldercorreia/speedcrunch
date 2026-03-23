@@ -32,6 +32,7 @@
 #include <QCoreApplication>
 #include <QRegularExpression>
 #include <QStack>
+#include <cmath>
 
 #define ALLOW_IMPLICIT_MULT
 
@@ -582,6 +583,50 @@ static bool isUnsignedDecimalIntegerText(const QString& text)
     return integerRE.match(text).hasMatch();
 }
 
+static bool isUnsignedDecimalNumberText(const QString& text)
+{
+    static const QRegularExpression numberRE(QStringLiteral(R"(^\d+(?:\.\d+)?$)"));
+    return numberRE.match(text).hasMatch();
+}
+
+static bool isSignedDecimalNumberText(const QString& text)
+{
+    static const QRegularExpression numberRE(QStringLiteral(R"(^[+\-]?\d+(?:\.\d+)?$)"));
+    return numberRE.match(text).hasMatch();
+}
+
+static bool isSafeForDoubleArithmetic(const QString& text)
+{
+    if (!isSignedDecimalNumberText(text))
+        return false;
+
+    int digitCount = 0;
+    for (const QChar& ch : text) {
+        if (ch.isDigit())
+            ++digitCount;
+    }
+
+    // Keep folding conservative to avoid precision regressions when using
+    // temporary C++ doubles in the display simplifier.
+    return digitCount <= 15;
+}
+
+static QString formatSimplifiedDecimal(double value)
+{
+    const double rounded = std::round(value);
+    if (std::abs(value - rounded) < 1e-12)
+        return QString::number(static_cast<long long>(rounded));
+
+    QString text = QString::number(value, 'g', 15);
+    if (text.contains(QLatin1Char('.'))) {
+        while (text.endsWith(QLatin1Char('0')))
+            text.chop(1);
+        if (text.endsWith(QLatin1Char('.')))
+            text.chop(1);
+    }
+    return text;
+}
+
 static bool normalizeUnsignedIntegerEquivalentDecimalText(QString& text)
 {
     static const QRegularExpression decimalIntegerRE(
@@ -787,7 +832,780 @@ static QString groupHighPrecedenceAdditiveTermsForDisplay(const QString& express
     return grouped;
 }
 
-QString Evaluator::formatInterpretedExpressionForDisplay(const QString& expression)
+static QString simplifyRepeatedMultiplicativeBasesForDisplay(const QString& expression,
+                                                             const Tokens& tokens);
+
+static bool parseSimplifiablePowerFactor(const QString& factorText,
+                                         QString* baseOut,
+                                         int* exponentOut)
+{
+    static const QRegularExpression identifierRE(
+        QStringLiteral(R"(^(?:[\p{L}_][\p{L}\p{N}_]*)$)"));
+    static const QRegularExpression numberRE(
+        QStringLiteral(R"(^(?:\d+(?:\.\d+)?)$)"));
+
+    auto isFunctionCallBase = [](const QString& text) {
+        const int firstParen = text.indexOf(QLatin1Char('('));
+        if (firstParen <= 0 || !text.endsWith(QLatin1Char(')')))
+            return false;
+
+        const QString functionName = text.left(firstParen);
+        if (!identifierRE.match(functionName).hasMatch())
+            return false;
+
+        int depth = 0;
+        for (int i = firstParen; i < text.size(); ++i) {
+            const QChar ch = text.at(i);
+            if (ch == QLatin1Char('(')) {
+                ++depth;
+            } else if (ch == QLatin1Char(')')) {
+                --depth;
+                if (depth < 0)
+                    return false;
+                if (depth == 0 && i != text.size() - 1)
+                    return false;
+            }
+        }
+        return depth == 0;
+    };
+
+    auto isSimplifiableBase = [&isFunctionCallBase](const QString& text) {
+        return identifierRE.match(text).hasMatch()
+            || numberRE.match(text).hasMatch()
+            || isFunctionCallBase(text);
+    };
+
+    QString base = factorText;
+    int exponent = 1;
+
+    int depth = 0;
+    int topLevelPowerPos = -1;
+    for (int i = 0; i < factorText.size(); ++i) {
+        const QChar ch = factorText.at(i);
+        if (ch == QLatin1Char('(')) {
+            ++depth;
+        } else if (ch == QLatin1Char(')')) {
+            if (depth > 0)
+                --depth;
+        } else if (ch == QLatin1Char('^') && depth == 0) {
+            topLevelPowerPos = i;
+            break;
+        }
+    }
+
+    if (topLevelPowerPos >= 0) {
+        base = factorText.left(topLevelPowerPos);
+        QString exponentText = factorText.mid(topLevelPowerPos + 1);
+        if (base.isEmpty() || exponentText.isEmpty())
+            return false;
+
+        if (exponentText.startsWith(QLatin1Char('('))
+            && exponentText.endsWith(QLatin1Char(')')))
+        {
+            exponentText = exponentText.mid(1, exponentText.size() - 2);
+        }
+
+        if (!normalizeUnsignedIntegerEquivalentDecimalText(exponentText)
+            && !isUnsignedDecimalIntegerText(exponentText))
+        {
+            return false;
+        }
+
+        bool ok = false;
+        exponent = exponentText.toInt(&ok);
+        if (!ok || exponent <= 0)
+            return false;
+    }
+
+    if (!isSimplifiableBase(base))
+        return false;
+
+    *baseOut = base;
+    *exponentOut = exponent;
+    return true;
+}
+
+static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString& termText)
+{
+    if (termText.isEmpty())
+        return termText;
+
+    auto simplifyMultiplicationOnlySegment = [](const QString& segmentText) {
+        if (segmentText.isEmpty())
+            return segmentText;
+
+        QVector<QString> factors;
+        QVector<QString> operators;
+        int depth = 0;
+        int partStart = 0;
+        for (int i = 0; i < segmentText.size(); ++i) {
+            const QChar ch = segmentText.at(i);
+            if (ch == QLatin1Char('(')) {
+                ++depth;
+                continue;
+            }
+            if (ch == QLatin1Char(')')) {
+                if (depth > 0)
+                    --depth;
+                continue;
+            }
+            if (depth == 0
+                && (ch == QLatin1Char('*')
+                    || ch == UnicodeChars::DotOperator
+                    || ch == UnicodeChars::MultiplicationSign))
+            {
+                factors.append(segmentText.mid(partStart, i - partStart));
+                operators.append(QString(ch));
+                partStart = i + 1;
+            }
+        }
+        factors.append(segmentText.mid(partStart));
+
+        if (factors.size() < 2)
+            return segmentText;
+
+        QHash<QString, int> totalExponentsByBase;
+        for (int i = 0; i < factors.size(); ++i) {
+            QString base;
+            int exponent = 0;
+            if (!parseSimplifiablePowerFactor(factors.at(i), &base, &exponent)) {
+                continue;
+            }
+            totalExponentsByBase[base] += exponent;
+        }
+
+        QString simplified;
+        QSet<QString> emittedBases;
+        bool hasOutput = false;
+        int i = 0;
+        while (i < factors.size()) {
+            QString base;
+            int exponent = 0;
+            const bool isSimplifiableFactor =
+                parseSimplifiablePowerFactor(factors.at(i), &base, &exponent);
+
+            if (!isSimplifiableFactor) {
+                if (hasOutput && i > 0)
+                    simplified += operators.at(i - 1);
+                simplified += factors.at(i);
+                hasOutput = true;
+                ++i;
+                continue;
+            }
+
+            if (emittedBases.contains(base)) {
+                ++i;
+                continue;
+            }
+            emittedBases.insert(base);
+
+            if (hasOutput && i > 0)
+                simplified += operators.at(i - 1);
+            const int totalExponent = totalExponentsByBase.value(base, 0);
+            if (totalExponent > 1) {
+                simplified += base;
+                simplified += QStringLiteral("^%1").arg(totalExponent);
+            } else {
+                simplified += factors.at(i);
+            }
+            hasOutput = true;
+            ++i;
+        }
+
+        QVector<QString> finalFactors;
+        QVector<QString> finalOperators;
+        int finalDepth = 0;
+        int finalStart = 0;
+        for (int i = 0; i < simplified.size(); ++i) {
+            const QChar ch = simplified.at(i);
+            if (ch == QLatin1Char('(')) {
+                ++finalDepth;
+                continue;
+            }
+            if (ch == QLatin1Char(')')) {
+                if (finalDepth > 0)
+                    --finalDepth;
+                continue;
+            }
+            if (finalDepth == 0
+                && (ch == QLatin1Char('*')
+                    || ch == UnicodeChars::DotOperator
+                    || ch == UnicodeChars::MultiplicationSign))
+            {
+                finalFactors.append(simplified.mid(finalStart, i - finalStart));
+                finalOperators.append(QString(ch));
+                finalStart = i + 1;
+            }
+        }
+        finalFactors.append(simplified.mid(finalStart));
+
+        int firstNumericIndex = -1;
+        double numericProduct = 1.0;
+        int numericCount = 0;
+        bool hasSignedNumericFactor = false;
+        auto isParenthesizedSignedDecimalFactor = [](const QString& factorText) {
+            QString text = factorText.trimmed();
+            if (!(text.startsWith(QLatin1Char('(')) && text.endsWith(QLatin1Char(')'))))
+                return false;
+            text = text.mid(1, text.size() - 2).trimmed();
+            return isSignedDecimalNumberText(text) && !isUnsignedDecimalNumberText(text);
+        };
+        for (int i = 0; i < finalFactors.size(); ++i) {
+            const QString factor = finalFactors.at(i);
+            if (isSignedDecimalNumberText(factor) && !isUnsignedDecimalNumberText(factor))
+                hasSignedNumericFactor = true;
+            if (isParenthesizedSignedDecimalFactor(factor))
+                hasSignedNumericFactor = true;
+            if (!isUnsignedDecimalNumberText(finalFactors.at(i))
+                || !isSafeForDoubleArithmetic(finalFactors.at(i)))
+                continue;
+            if (firstNumericIndex < 0)
+                firstNumericIndex = i;
+            bool ok = false;
+            const double value = finalFactors.at(i).toDouble(&ok);
+            if (!ok)
+                continue;
+            numericProduct *= value;
+            ++numericCount;
+        }
+        if (hasSignedNumericFactor)
+            return simplified;
+        if (numericCount > 1) {
+            finalFactors[firstNumericIndex] = formatSimplifiedDecimal(numericProduct);
+            for (int i = finalFactors.size() - 1; i >= 0; --i) {
+                if (i == firstNumericIndex
+                    || !isUnsignedDecimalNumberText(finalFactors.at(i))
+                    || !isSafeForDoubleArithmetic(finalFactors.at(i)))
+                    continue;
+                finalFactors.removeAt(i);
+                finalOperators.removeAt(i - 1);
+            }
+            QString rebuiltNumeric = finalFactors.at(0);
+            for (int i = 1; i < finalFactors.size(); ++i) {
+                rebuiltNumeric += finalOperators.at(i - 1);
+                rebuiltNumeric += finalFactors.at(i);
+            }
+            return rebuiltNumeric;
+        }
+
+        return simplified;
+    };
+    auto simplifyPostDivisionSegment = [&simplifyMultiplicationOnlySegment](const QString& segmentText) {
+        if (segmentText.isEmpty())
+            return segmentText;
+
+        QVector<QString> factors;
+        QVector<QString> operators;
+        int depth = 0;
+        int partStart = 0;
+        for (int i = 0; i < segmentText.size(); ++i) {
+            const QChar ch = segmentText.at(i);
+            if (ch == QLatin1Char('(')) {
+                ++depth;
+                continue;
+            }
+            if (ch == QLatin1Char(')')) {
+                if (depth > 0)
+                    --depth;
+                continue;
+            }
+            if (depth == 0
+                && (ch == QLatin1Char('*')
+                    || ch == UnicodeChars::DotOperator
+                    || ch == UnicodeChars::MultiplicationSign))
+            {
+                factors.append(segmentText.mid(partStart, i - partStart));
+                operators.append(QString(ch));
+                partStart = i + 1;
+            }
+        }
+        factors.append(segmentText.mid(partStart));
+
+        if (factors.size() <= 1)
+            return segmentText;
+
+        QString tail;
+        tail += factors.at(1);
+        for (int i = 2; i < factors.size(); ++i) {
+            tail += operators.at(i - 1);
+            tail += factors.at(i);
+        }
+        tail = simplifyMultiplicationOnlySegment(tail);
+
+        QString rebuilt = factors.at(0);
+        rebuilt += operators.at(0);
+        rebuilt += tail;
+        return rebuilt;
+    };
+
+    QVector<QString> divisionSegments;
+    QVector<QString> divisionOperators;
+    int depth = 0;
+    int segmentStart = 0;
+    for (int i = 0; i < termText.size(); ++i) {
+        const QChar ch = termText.at(i);
+        if (ch == QLatin1Char('(')) {
+            ++depth;
+            continue;
+        }
+        if (ch == QLatin1Char(')')) {
+            if (depth > 0)
+                --depth;
+            continue;
+        }
+        if (depth == 0 && (ch == QLatin1Char('/') || ch == QLatin1Char('\\'))) {
+            divisionSegments.append(termText.mid(segmentStart, i - segmentStart));
+            divisionOperators.append(QString(ch));
+            segmentStart = i + 1;
+        }
+    }
+    divisionSegments.append(termText.mid(segmentStart));
+
+    if (divisionOperators.isEmpty())
+        return simplifyMultiplicationOnlySegment(termText);
+
+    auto foldNumericDenominatorIntoPreviousSegment =
+        [](QString* previousSegment, const QString& denominatorText) {
+            if (!isUnsignedDecimalNumberText(denominatorText)
+                || !isSafeForDoubleArithmetic(denominatorText))
+                return false;
+
+            bool okDen = false;
+            const double den = denominatorText.toDouble(&okDen);
+            if (!okDen || den == 0.0)
+                return false;
+
+            QString prev = *previousSegment;
+            QVector<QString> factors;
+            QVector<QString> operators;
+            int depth = 0;
+            int partStart = 0;
+            for (int i = 0; i < prev.size(); ++i) {
+                const QChar ch = prev.at(i);
+                if (ch == QLatin1Char('(')) {
+                    ++depth;
+                    continue;
+                }
+                if (ch == QLatin1Char(')')) {
+                    if (depth > 0)
+                        --depth;
+                    continue;
+                }
+                if (depth == 0
+                    && (ch == QLatin1Char('*')
+                        || ch == UnicodeChars::DotOperator
+                        || ch == UnicodeChars::MultiplicationSign))
+                {
+                    factors.append(prev.mid(partStart, i - partStart));
+                    operators.append(QString(ch));
+                    partStart = i + 1;
+                }
+            }
+            factors.append(prev.mid(partStart));
+
+            if (factors.size() <= 1)
+                return false;
+
+            for (int i = 1; i < factors.size(); ++i) {
+                if (!isUnsignedDecimalNumberText(factors.at(i))
+                    || !isSafeForDoubleArithmetic(factors.at(i)))
+                    continue;
+
+                bool okNum = false;
+                const double num = factors.at(i).toDouble(&okNum);
+                if (!okNum)
+                    continue;
+
+                factors[i] = formatSimplifiedDecimal(num / den);
+                QString rebuilt = factors.at(0);
+                for (int j = 1; j < factors.size(); ++j) {
+                    rebuilt += operators.at(j - 1);
+                    rebuilt += factors.at(j);
+                }
+                *previousSegment = rebuilt;
+                return true;
+            }
+
+            return false;
+        };
+
+    QVector<QString> simplifiedSegments;
+    simplifiedSegments.reserve(divisionSegments.size());
+    for (int i = 0; i < divisionSegments.size(); ++i) {
+        const bool followsDivisionOperator =
+            i > 0 && (divisionOperators.at(i - 1) == QLatin1String("/")
+                      || divisionOperators.at(i - 1) == QLatin1String("\\"));
+        simplifiedSegments.append(followsDivisionOperator
+            ? simplifyPostDivisionSegment(divisionSegments.at(i))
+            : simplifyMultiplicationOnlySegment(divisionSegments.at(i)));
+    }
+
+    for (int i = 1; i < simplifiedSegments.size(); ++i) {
+        if (divisionOperators.at(i - 1) != QLatin1String("/"))
+            continue;
+        if (i <= 1 || divisionOperators.at(i - 2) != QLatin1String("/"))
+            continue;
+        QString previous = simplifiedSegments.at(i - 1);
+        if (!foldNumericDenominatorIntoPreviousSegment(&previous, simplifiedSegments.at(i)))
+            continue;
+        simplifiedSegments[i - 1] = previous;
+        simplifiedSegments.removeAt(i);
+        divisionOperators.removeAt(i - 1);
+        --i;
+    }
+
+    QString rebuilt;
+    for (int i = 0; i < simplifiedSegments.size(); ++i) {
+        rebuilt += simplifiedSegments.at(i);
+        if (i < divisionOperators.size())
+            rebuilt += divisionOperators.at(i);
+    }
+
+    auto simplifyParenthesizedDenominators = [&simplifyMultiplicationOnlySegment](const QString& text) {
+        QString out;
+        out.reserve(text.size());
+
+        for (int i = 0; i < text.size(); ++i) {
+            const QChar ch = text.at(i);
+            if (ch != QLatin1Char('/') || i + 1 >= text.size() || text.at(i + 1) != QLatin1Char('(')) {
+                out += ch;
+                continue;
+            }
+
+            int depth = 0;
+            int closePos = -1;
+            for (int j = i + 1; j < text.size(); ++j) {
+                const QChar inner = text.at(j);
+                if (inner == QLatin1Char('(')) {
+                    ++depth;
+                } else if (inner == QLatin1Char(')')) {
+                    --depth;
+                    if (depth == 0) {
+                        closePos = j;
+                        break;
+                    }
+                }
+            }
+
+            if (closePos < 0) {
+                out += ch;
+                continue;
+            }
+
+            const QString inside = text.mid(i + 2, closePos - (i + 2));
+            const Tokens insideTokens = Evaluator::instance()->scan(inside);
+            QString simplifiedInside = inside;
+            if (!insideTokens.isEmpty())
+                simplifiedInside = simplifyRepeatedMultiplicativeBasesForDisplay(inside, insideTokens);
+            else
+                simplifiedInside = simplifyMultiplicationOnlySegment(inside);
+
+            QString base;
+            int exponent = 0;
+            if (parseSimplifiablePowerFactor(simplifiedInside, &base, &exponent)) {
+                out += QLatin1Char('/');
+                out += simplifiedInside;
+            } else {
+                out += QLatin1Char('/');
+                out += QLatin1Char('(');
+                out += simplifiedInside;
+                out += QLatin1Char(')');
+            }
+
+            i = closePos;
+        }
+
+        return out;
+    };
+    rebuilt = simplifyParenthesizedDenominators(rebuilt);
+
+    auto simplifyAlgebraicMulDivChain = [](const QString& text) {
+        QVector<QString> factors;
+        QVector<QString> operators;
+        int depth = 0;
+        int partStart = 0;
+        for (int i = 0; i < text.size(); ++i) {
+            const QChar ch = text.at(i);
+            if (ch == QLatin1Char('(')) {
+                ++depth;
+                continue;
+            }
+            if (ch == QLatin1Char(')')) {
+                if (depth > 0)
+                    --depth;
+                continue;
+            }
+            if (depth == 0
+                && (ch == QLatin1Char('*')
+                    || ch == UnicodeChars::DotOperator
+                    || ch == UnicodeChars::MultiplicationSign
+                    || ch == QLatin1Char('/')))
+            {
+                factors.append(text.mid(partStart, i - partStart));
+                operators.append(QString(ch));
+                partStart = i + 1;
+            } else if (depth == 0 && ch == QLatin1Char('\\')) {
+                return text;
+            }
+        }
+        factors.append(text.mid(partStart));
+        if (factors.size() < 2)
+            return text;
+
+        QHash<QString, int> exponentByBase;
+        QVector<QString> baseOrder;
+        double numericCoefficient = 1.0;
+        bool hasNonNumericBase = false;
+
+        for (int i = 0; i < factors.size(); ++i) {
+            QString base;
+            int exponent = 0;
+            if (!parseSimplifiablePowerFactor(factors.at(i), &base, &exponent))
+                return text;
+
+            const QString op = (i == 0) ? QStringLiteral("*") : operators.at(i - 1);
+            const int sign = (op == QLatin1String("/")) ? -1 : 1;
+            if (isUnsignedDecimalNumberText(base) && isSafeForDoubleArithmetic(base)) {
+                bool ok = false;
+                const double value = base.toDouble(&ok);
+                if (!ok)
+                    return text;
+                numericCoefficient *= std::pow(value, sign * exponent);
+            } else if (!isUnsignedDecimalNumberText(base)) {
+                if (!exponentByBase.contains(base))
+                    baseOrder.append(base);
+                exponentByBase[base] += sign * exponent;
+                hasNonNumericBase = true;
+            } else {
+                return text;
+            }
+        }
+
+        if (!hasNonNumericBase)
+            return formatSimplifiedDecimal(numericCoefficient);
+
+        QStringList positiveFactors;
+        QStringList negativeFactors;
+        for (const QString& base : baseOrder) {
+            const int exponent = exponentByBase.value(base, 0);
+            if (exponent > 0) {
+                positiveFactors.append(exponent == 1
+                    ? base
+                    : QStringLiteral("%1^%2").arg(base).arg(exponent));
+            } else if (exponent < 0) {
+                const int denExp = -exponent;
+                negativeFactors.append(denExp == 1
+                    ? base
+                    : QStringLiteral("%1^%2").arg(base).arg(denExp));
+            }
+        }
+
+        QString result;
+        const bool coefficientIsOne = std::abs(numericCoefficient - 1.0) < 1e-12;
+        if (!coefficientIsOne || (positiveFactors.isEmpty() && !negativeFactors.isEmpty()))
+            result += formatSimplifiedDecimal(numericCoefficient);
+        if (!positiveFactors.isEmpty()) {
+            if (!result.isEmpty())
+                result += UnicodeChars::DotOperator;
+            result += positiveFactors.join(QString(UnicodeChars::DotOperator));
+        }
+        for (const QString& factor : negativeFactors) {
+            if (result.isEmpty())
+                result = QStringLiteral("1");
+            result += QLatin1Char('/');
+            result += factor;
+        }
+
+        return result.isEmpty() ? text : result;
+    };
+
+    return simplifyAlgebraicMulDivChain(rebuilt);
+
+}
+
+static QString simplifyRepeatedMultiplicativeBasesForDisplay(const QString& expression,
+                                                             const Tokens& tokens)
+{
+    if (tokens.isEmpty())
+        return expression;
+
+    QVector<int> topLevelBinaryAddSubTokenIndices;
+    int depth = 0;
+    for (int i = 0; i < tokens.size(); ++i) {
+        const Token& token = tokens.at(i);
+        const Token::Operator op = token.asOperator();
+        if (op == Token::AssociationStart) {
+            ++depth;
+            continue;
+        }
+        if (op == Token::AssociationEnd) {
+            if (depth > 0)
+                --depth;
+            continue;
+        }
+        if (depth != 0 || (op != Token::Addition && op != Token::Subtraction))
+            continue;
+
+        const bool hasLeftOperand = i > 0
+            && tokenCanEndOperandForDisplaySpacing(tokens.at(i - 1));
+        const bool hasRightOperand = i + 1 < tokens.size()
+            && tokenCanStartOperandForDisplaySpacing(tokens.at(i + 1));
+        if (hasLeftOperand && hasRightOperand)
+            topLevelBinaryAddSubTokenIndices.append(i);
+    }
+
+    auto tokenRangeText = [&expression, &tokens](int startIndex, int endIndex) {
+        const int startPos = tokens.at(startIndex).pos();
+        const int endPos = tokens.at(endIndex).pos() + tokens.at(endIndex).size();
+        return expression.mid(startPos, endPos - startPos);
+    };
+
+    if (topLevelBinaryAddSubTokenIndices.isEmpty())
+        return simplifyRepeatedBasesInMultiplicativeTermForDisplay(expression);
+
+    QVector<QString> simplifiedTerms;
+    QVector<QString> additiveOperators;
+    int termStartIndex = 0;
+    for (int splitPos = 0; splitPos < topLevelBinaryAddSubTokenIndices.size(); ++splitPos) {
+        const int operatorIndex = topLevelBinaryAddSubTokenIndices.at(splitPos);
+        const int termEndIndex = operatorIndex - 1;
+        if (termEndIndex >= termStartIndex) {
+            const QString termText = tokenRangeText(termStartIndex, termEndIndex);
+            simplifiedTerms.append(simplifyRepeatedBasesInMultiplicativeTermForDisplay(termText));
+        }
+        additiveOperators.append(tokenRangeText(operatorIndex, operatorIndex));
+        termStartIndex = operatorIndex + 1;
+    }
+
+    if (termStartIndex < tokens.size()) {
+        const QString lastTermText = tokenRangeText(termStartIndex, tokens.size() - 1);
+        simplifiedTerms.append(simplifyRepeatedBasesInMultiplicativeTermForDisplay(lastTermText));
+    }
+
+    QVector<double> constantValues;
+    QVector<QString> constantSigns;
+    QVector<QString> keptTerms;
+    QVector<QString> keptOperators;
+    const auto isMinusOperator = [](const QString& op) {
+        return op.size() == 1 && isMinus(op.at(0));
+    };
+    for (int i = 0; i < simplifiedTerms.size(); ++i) {
+        QString term = simplifiedTerms.at(i).trimmed();
+        const QString op = (i == 0) ? QStringLiteral("+") : additiveOperators.at(i - 1);
+        if (isSignedDecimalNumberText(term) && isSafeForDoubleArithmetic(term)) {
+            bool ok = false;
+            const double value = term.toDouble(&ok);
+            if (ok) {
+                constantValues.append(value);
+                constantSigns.append(op);
+                continue;
+            }
+        }
+
+        if (keptTerms.isEmpty()) {
+            if (isMinusOperator(op))
+                keptTerms.append(QStringLiteral("-") + term);
+            else
+                keptTerms.append(term);
+        } else {
+            keptOperators.append(op);
+            keptTerms.append(term);
+        }
+    }
+
+    double foldedConstant = 0.0;
+    for (int i = 0; i < constantValues.size(); ++i) {
+        const QString op = constantSigns.at(i);
+        foldedConstant += isMinusOperator(op) ? -constantValues.at(i) : constantValues.at(i);
+    }
+
+    if (!constantValues.isEmpty()) {
+        if (keptTerms.isEmpty()) {
+            keptTerms.append(formatSimplifiedDecimal(foldedConstant));
+        } else if (foldedConstant > 0.0) {
+            keptOperators.append(QStringLiteral("+"));
+            keptTerms.append(formatSimplifiedDecimal(foldedConstant));
+        } else if (foldedConstant < 0.0) {
+            keptOperators.append(QStringLiteral("-"));
+            keptTerms.append(formatSimplifiedDecimal(-foldedConstant));
+        }
+    }
+
+    if (!keptTerms.isEmpty()) {
+        QHash<QString, double> termCoefficients;
+        QVector<QString> termOrder;
+        for (int i = 0; i < keptTerms.size(); ++i) {
+            QString term = keptTerms.at(i).trimmed();
+            QString op = (i == 0) ? QStringLiteral("+") : keptOperators.at(i - 1);
+
+            if (!term.isEmpty()
+                && (term.at(0) == QLatin1Char('+')
+                    || term.at(0) == QLatin1Char('-')
+                    || term.at(0) == UnicodeChars::MinusSign))
+            {
+                const bool termNegative = (term.at(0) == QLatin1Char('-')
+                                           || term.at(0) == UnicodeChars::MinusSign);
+                term = term.mid(1).trimmed();
+                if (termNegative)
+                    op = isMinusOperator(op) ? QStringLiteral("+") : QStringLiteral("-");
+            }
+
+            if (term.isEmpty())
+                continue;
+
+            const double signedCoefficient = isMinusOperator(op) ? -1.0 : 1.0;
+            if (!termCoefficients.contains(term))
+                termOrder.append(term);
+            termCoefficients[term] += signedCoefficient;
+        }
+
+        QVector<QString> mergedTerms;
+        QVector<QString> mergedOperators;
+        for (const QString& term : termOrder) {
+            const double coefficient = termCoefficients.value(term, 0.0);
+            if (std::abs(coefficient) < 1e-12)
+                continue;
+
+            const bool isNegative = coefficient < 0.0;
+            const double magnitude = std::abs(coefficient);
+
+            QString mergedTerm;
+            if (std::abs(magnitude - 1.0) < 1e-12) {
+                mergedTerm = term;
+            } else {
+                mergedTerm = formatSimplifiedDecimal(magnitude)
+                    + QString(UnicodeChars::DotOperator)
+                    + term;
+            }
+
+            if (mergedTerms.isEmpty()) {
+                mergedTerms.append(isNegative ? QStringLiteral("-") + mergedTerm : mergedTerm);
+            } else {
+                mergedOperators.append(isNegative ? QStringLiteral("-") : QStringLiteral("+"));
+                mergedTerms.append(mergedTerm);
+            }
+        }
+
+        if (!mergedTerms.isEmpty()) {
+            keptTerms = mergedTerms;
+            keptOperators = mergedOperators;
+        }
+    }
+
+    QString simplified;
+    if (!keptTerms.isEmpty()) {
+        simplified += keptTerms.at(0);
+        for (int i = 1; i < keptTerms.size(); ++i) {
+            simplified += keptOperators.at(i - 1);
+            simplified += keptTerms.at(i);
+        }
+    }
+
+    return simplified.isEmpty() ? expression : simplified;
+}
+
+static QString formatInterpretedExpressionForDisplayImpl(const QString& expression,
+                                                         bool simplifyRepeatedMultiplicativeBases)
 {
     if (expression.isEmpty())
         return expression;
@@ -810,14 +1628,21 @@ QString Evaluator::formatInterpretedExpressionForDisplay(const QString& expressi
 
     const QString groupedExpression =
         groupHighPrecedenceAdditiveTermsForDisplay(expressionPrefix, scannedTokens);
-    const Tokens tokens = Evaluator::instance()->scan(groupedExpression);
-    if (tokens.isEmpty())
+    const Tokens groupedTokens = Evaluator::instance()->scan(groupedExpression);
+    if (groupedTokens.isEmpty())
         return groupedExpression + commentSuffix;
+
+    const QString displayExpression = simplifyRepeatedMultiplicativeBases
+        ? simplifyRepeatedMultiplicativeBasesForDisplay(groupedExpression, groupedTokens)
+        : groupedExpression;
+    const Tokens tokens = Evaluator::instance()->scan(displayExpression);
+    if (tokens.isEmpty())
+        return displayExpression + commentSuffix;
 
     const QString operatorSpace(UnicodeChars::MediumMathematicalSpace);
     const QString unicodeMinusSign(UnicodeChars::MinusSign);
     QString formatted;
-    formatted.reserve(groupedExpression.size() + tokens.size() * 2);
+    formatted.reserve(displayExpression.size() + tokens.size() * 2);
 
     for (int i = 0; i < tokens.size(); ++i) {
         const Token& token = tokens.at(i);
@@ -856,6 +1681,48 @@ QString Evaluator::formatInterpretedExpressionForDisplay(const QString& expressi
     }
 
     return renderIntegerPowersAsSuperscriptsForDisplay(formatted) + commentSuffix;
+}
+
+QString Evaluator::simplifyInterpretedExpression(const QString& expression)
+{
+    if (expression.isEmpty())
+        return expression;
+
+    const int commentPos = expression.indexOf('?');
+    const QString expressionPrefix = (commentPos >= 0)
+        ? expression.left(commentPos).trimmed()
+        : expression;
+    QString commentSuffix;
+    if (commentPos >= 0) {
+        const QString commentText = expression.mid(commentPos + 1).trimmed();
+        commentSuffix = QLatin1String(" ?");
+        if (!commentText.isEmpty())
+            commentSuffix += QLatin1String(" ") + commentText;
+    }
+
+    const Tokens scannedTokens = Evaluator::instance()->scan(expressionPrefix);
+    if (scannedTokens.isEmpty())
+        return expressionPrefix + commentSuffix;
+
+    const QString groupedExpression =
+        groupHighPrecedenceAdditiveTermsForDisplay(expressionPrefix, scannedTokens);
+    const Tokens groupedTokens = Evaluator::instance()->scan(groupedExpression);
+    if (groupedTokens.isEmpty())
+        return groupedExpression + commentSuffix;
+
+    const QString simplifiedExpression =
+        simplifyRepeatedMultiplicativeBasesForDisplay(groupedExpression, groupedTokens);
+    return simplifiedExpression + commentSuffix;
+}
+
+QString Evaluator::formatInterpretedExpressionForDisplay(const QString& expression)
+{
+    return formatInterpretedExpressionForDisplayImpl(expression, false);
+}
+
+QString Evaluator::formatInterpretedExpressionSimplifiedForDisplay(const QString& expression)
+{
+    return formatInterpretedExpressionForDisplayImpl(expression, true);
 }
 
 static QStringList splitTopLevelFunctionArguments(const QString& text)
@@ -3513,9 +4380,15 @@ QString Evaluator::autoFix(const QString& expr)
     QString result;
 
     // Strip off all funny characters.
-    for (int c = 0; c < expr.length(); ++c)
-        if (expr.at(c) >= QChar(32))
-            result.append(expr.at(c));
+    for (int c = 0; c < expr.length(); ++c) {
+        const QChar ch = expr.at(c);
+        if (ch.isSpace()) {
+            result.append(QLatin1Char(' '));
+            continue;
+        }
+        if (ch >= QChar(32))
+            result.append(ch);
+    }
 
     // No extra whitespaces at the beginning and at the end.
     result = result.trimmed();

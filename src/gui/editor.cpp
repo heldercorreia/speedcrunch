@@ -187,10 +187,15 @@ static bool shouldShowAdditionalRationalForTrig(const QString& expression,
 }
 
 static QString formattedLiveResultWithAlternatives(const Quantity& quantity,
-                                                   const QString& expression)
+                                                   const QString& expression,
+                                                   const QString& simplifiedExpression = QString())
 {
     const Settings* settings = Settings::instance();
     QString formatted = QStringLiteral("<b>%1</b>").arg(formattedLiveResult(quantity));
+    if (!simplifiedExpression.isEmpty()) {
+        formatted += QStringLiteral("<br/>%1")
+            .arg(QStringLiteral("= %1").arg(simplifiedExpression.toHtmlEscaped()));
+    }
     if (settings->alternativeResultFormat != '\0') {
         formatted += QStringLiteral("<br/>%1")
             .arg(formattedLiveResult(quantity, settings->alternativeResultFormat));
@@ -205,6 +210,21 @@ static QString formattedLiveResultWithAlternatives(const Quantity& quantity,
             .arg(groupedDigitsForTooltip(symbolicTrig));
     }
     return formatted;
+}
+
+static QString simplifiedExpressionLineForTooltip(const QString& interpretedExpression)
+{
+    const Settings* settings = Settings::instance();
+    if (!settings->simplifyResultExpressions || interpretedExpression.isEmpty())
+        return QString();
+
+    const QString interpretedDisplay = UnicodeChars::normalizePiForDisplay(
+        Evaluator::formatInterpretedExpressionForDisplay(interpretedExpression));
+    const QString simplifiedDisplay = UnicodeChars::normalizePiForDisplay(
+        Evaluator::formatInterpretedExpressionSimplifiedForDisplay(interpretedExpression));
+    if (simplifiedDisplay.isEmpty() || simplifiedDisplay == interpretedDisplay)
+        return QString();
+    return simplifiedDisplay;
 }
 
 Editor::Editor(QWidget* parent)
@@ -720,13 +740,36 @@ void Editor::autoCalc()
     auto quantity = m_evaluator->evalNoAssign();
 
     if (m_evaluator->error().isEmpty()) {
+        QString simplifiedLine;
+        if (!quantity.isNan() && !m_evaluator->isUserFunctionAssign()
+            && !Evaluator::isCommentOnlyExpression(str)) {
+            const QString interpretedExpr = m_evaluator->interpretedExpression();
+            simplifiedLine = simplifiedExpressionLineForTooltip(interpretedExpr);
+
+            const Settings* settings = Settings::instance();
+            if (settings->simplifyResultExpressions
+                && !simplifiedLine.isEmpty()
+                && !interpretedExpr.contains(QLatin1Char('='))) {
+                const QString simplifiedInterpretedExpr =
+                    Evaluator::simplifyInterpretedExpression(interpretedExpr);
+                m_evaluator->setExpression(simplifiedInterpretedExpr);
+                const Quantity simplifiedQuantity = m_evaluator->evalNoAssign();
+                if (m_evaluator->error().isEmpty() && !simplifiedQuantity.isNan()) {
+                    quantity = simplifiedQuantity;
+                } else {
+                    m_evaluator->setExpression(str);
+                    quantity = m_evaluator->evalNoAssign();
+                }
+            }
+        }
+
         if (quantity.isNan() && (m_evaluator->isUserFunctionAssign()
             || Evaluator::isCommentOnlyExpression(str))) {
             // Result is not available for user function assignment and
             // comment-only expressions.
             emit autoCalcDisabled();
         } else {
-            const auto formatted = formattedLiveResultWithAlternatives(quantity, str);
+            const auto formatted = formattedLiveResultWithAlternatives(quantity, str, simplifiedLine);
             auto message = tr("Current result: %1").arg(formatted);
             emit autoCalcMessageAvailable(message);
             emit autoCalcQuantityAvailable(quantity);
@@ -768,9 +811,8 @@ void Editor::autoCalcSelection(const QString& custom)
     if (!m_isAutoCalcEnabled)
         return;
 
-    auto str = custom.isNull() ?
-        m_evaluator->autoFix(textCursor().selectedText())
-        : custom;
+    auto str = custom.isNull() ? textCursor().selectedText() : custom;
+    str = m_evaluator->autoFix(str);
     if (str.isEmpty()) {
         emit autoCalcDisabled();
         return;
@@ -781,6 +823,10 @@ void Editor::autoCalcSelection(const QString& custom)
     auto quantity = m_evaluator->evalNoAssign();
 
     if (m_evaluator->error().isEmpty()) {
+        const QString simplifiedLine = (!quantity.isNan() && !m_evaluator->isUserFunctionAssign()
+            && !Evaluator::isCommentOnlyExpression(str))
+            ? simplifiedExpressionLineForTooltip(m_evaluator->interpretedExpression())
+            : QString();
         if (quantity.isNan() && (m_evaluator->isUserFunctionAssign()
             || Evaluator::isCommentOnlyExpression(str))) {
             // Result is not available for user function assignment and
@@ -788,7 +834,7 @@ void Editor::autoCalcSelection(const QString& custom)
             auto message = tr("Selection result: n/a");
             emit autoCalcMessageAvailable(message);
         } else {
-            const auto formatted = formattedLiveResultWithAlternatives(quantity, str);
+            const auto formatted = formattedLiveResultWithAlternatives(quantity, str, simplifiedLine);
             auto message = tr("Selection result: %1").arg(formatted);
             emit autoCalcMessageAvailable(message);
             emit autoCalcQuantityAvailable(quantity);

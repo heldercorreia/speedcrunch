@@ -273,6 +273,7 @@ Settings::CustomKeypad Settings::defaultCustomKeypad()
 Settings::Settings()
 {
     digitGroupingIntegerPartOnly = false;
+    simplifyResultExpressions = true;
     singleInstance = true;
     startupUserDefinitionsOverwrite = false;
     startupUserDefinitionsApplyBeforeRestore = false;
@@ -346,6 +347,7 @@ void Settings::load()
     syntaxHighlighting = settings->value(key + QLatin1String("SyntaxHighlighting"), true).toBool();
     hoverHighlightResults = settings->value(key + QLatin1String("HoverHighlightResults"), true).toBool();
     autoResultToClipboard = settings->value(key + QLatin1String("AutoResultToClipboard"), false).toBool();
+    simplifyResultExpressions = settings->value(key + QLatin1String("SimplifyResultExpressions"), true).toBool();
     windowPositionSave = settings->value(key + QLatin1String("WindowPositionSave"), true).toBool();
     singleInstance = settings->value(key + QLatin1String("SingleInstance"), true).toBool();
     complexNumbers = settings->value(key + QLatin1String("ComplexNumbers"), false).toBool();
@@ -482,6 +484,7 @@ void Settings::save()
     settings->setValue(key + QLatin1String("DigitGroupingIntegerPartOnly"), digitGroupingIntegerPartOnly);
     settings->setValue(key + QLatin1String("MaxHistoryEntries"), maxHistoryEntries);
     settings->setValue(key + QLatin1String("AutoResultToClipboard"), autoResultToClipboard);
+    settings->setValue(key + QLatin1String("SimplifyResultExpressions"), simplifyResultExpressions);
     settings->setValue(key + QLatin1String("Language"), language);
     settings->setValue(key + QLatin1String("WindowPositionSave"), windowPositionSave);
     settings->setValue(key + QLatin1String("SingleInstance"), singleInstance);

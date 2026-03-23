@@ -111,6 +111,7 @@ public:
     bool hoverHighlightResults;
     bool windowAlwaysOnTop;
     bool autoResultToClipboard;
+    bool simplifyResultExpressions;
     bool windowPositionSave;
     bool singleInstance;
     QString startupUserDefinitions;

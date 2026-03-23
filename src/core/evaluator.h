@@ -133,7 +133,9 @@ public:
     static bool isSeparatorChar(const QChar&);
     static bool isRadixChar(const QChar&);
     static bool isCommentOnlyExpression(const QString&);
+    static QString simplifyInterpretedExpression(const QString&);
     static QString formatInterpretedExpressionForDisplay(const QString&);
+    static QString formatInterpretedExpressionSimplifiedForDisplay(const QString&);
     static QString fixNumberRadix(const QString&);
     static QString fixSexagesimal(const QString&, QString& unit);
 

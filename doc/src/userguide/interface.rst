@@ -293,6 +293,12 @@ This section contains settings that control result output and post-evaluation be
     This extra line is not shown for non-qualifying trig results.
 * :menuselection:`Automatically Copy New Results to Clipboard`
     Automatically copy each newly evaluated result to the clipboard.
+* :menuselection:`Simplify Displayed Expressions`
+    When enabled (default), SpeedCrunch adds an extra symbolic line before
+    numeric results, simplifying the interpreted expression for readability
+    (for example, combining repeated factors into powers and folding simple
+    constant terms). Disable this option to keep only the unsimplified
+    interpreted expression and numeric results.
 
 
 Editing
