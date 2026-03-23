@@ -390,6 +390,35 @@ int ResultDisplay::count() const
     return m_count;
 }
 
+QPair<int, int> ResultDisplay::viewportTopAnchor() const
+{
+    const QPoint probe(0, 0);
+    const QTextCursor cursor = cursorForPosition(probe);
+    const QTextBlock block = cursor.block();
+    if (!block.isValid())
+        return qMakePair(-1, 0);
+
+    const QRectF blockRect = blockBoundingGeometry(block).translated(contentOffset());
+    const int offsetInBlock = qRound(probe.y() - blockRect.top());
+    return qMakePair(block.blockNumber(), offsetInBlock);
+}
+
+void ResultDisplay::restoreViewportTopAnchor(const QPair<int, int>& anchor)
+{
+    if (anchor.first < 0 || document()->blockCount() <= 0)
+        return;
+
+    const int blockNumber = qBound(0, anchor.first, document()->blockCount() - 1);
+    const QTextBlock block = document()->findBlockByNumber(blockNumber);
+    if (!block.isValid())
+        return;
+
+    const qreal blockTopInViewport = blockBoundingGeometry(block).translated(contentOffset()).top();
+    const int delta = qRound(blockTopInViewport + anchor.second);
+    QScrollBar* bar = verticalScrollBar();
+    bar->setValue(bar->value() + delta);
+}
+
 QString ResultDisplay::exportHtml() const
 {
     QString str;

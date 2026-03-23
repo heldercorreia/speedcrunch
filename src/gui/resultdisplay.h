@@ -50,6 +50,8 @@ public:
     QString exportHtml() const;
     void setHoverHighlightEnabled(bool enabled);
     void setEditingHistoryIndex(int index);
+    QPair<int, int> viewportTopAnchor() const;
+    void restoreViewportTopAnchor(const QPair<int, int>& anchor);
 
 signals:
     void shiftWheelDown();
