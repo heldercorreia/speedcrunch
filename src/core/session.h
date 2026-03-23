@@ -34,8 +34,11 @@ private:
     typedef QHash<QString, Variable> VariableContainer;
     typedef QHash<QString, UserFunction> FunctionContainer;
     History m_history;
+    int m_historyHead = 0; // Logical index 0 maps to physical m_historyHead.
     VariableContainer m_variables;
     FunctionContainer m_userFunctions;
+    int physicalHistoryIndex(int logicalIndex) const;
+    void normalizeHistoryOrder();
 
 public:
     Session() {}
@@ -60,8 +63,11 @@ public:
     void addHistoryEntry(const HistoryEntry & entry);
     void insertHistoryEntry(const int index, const HistoryEntry & entry);
     void removeHistoryEntryAt(const int index);
+    int historySize() const { return m_history.size(); }
+    bool historyIsEmpty() const { return m_history.isEmpty(); }
+    const HistoryEntry& historyEntryAtRef(const int index) const;
     HistoryEntry historyEntryAt(const int index) const;
-    QList<HistoryEntry> historyToList() const {return m_history;}
+    QList<HistoryEntry> historyToList() const;
     void applyHistoryLimit();
     void clearHistory();
 

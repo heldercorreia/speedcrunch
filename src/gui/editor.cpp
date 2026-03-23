@@ -1236,7 +1236,38 @@ void Editor::rehighlight()
 
 void Editor::updateHistory()
 {
-    m_history = Evaluator::instance()->session()->historyToList();
+    const Session* session = Evaluator::instance()->session();
+    const int sessionHistoryCount = session->historySize();
+
+    // Fast path for appending one new history entry.
+    if (sessionHistoryCount == m_history.count() + 1) {
+        m_history.append(session->historyEntryAtRef(sessionHistoryCount - 1));
+        m_currentHistoryIndex = m_history.count();
+        return;
+    }
+
+    // Fast path for history cap behavior: oldest entry dropped, newest appended.
+    if (sessionHistoryCount == m_history.count() && sessionHistoryCount > 0) {
+        const int count = sessionHistoryCount;
+        if (count == 1) {
+            m_history[0] = session->historyEntryAtRef(count - 1);
+            m_currentHistoryIndex = m_history.count();
+            return;
+        }
+        if (m_history.count() > 1
+            && session->historyEntryAtRef(0).expr() == m_history.at(1).expr())
+        {
+            m_history.removeFirst();
+            m_history.append(session->historyEntryAtRef(count - 1));
+            m_currentHistoryIndex = m_history.count();
+            return;
+        }
+    }
+
+    m_history.clear();
+    m_history.reserve(sessionHistoryCount);
+    for (int i = 0; i < sessionHistoryCount; ++i)
+        m_history.append(session->historyEntryAtRef(i));
     m_currentHistoryIndex = m_history.count();
 }
 

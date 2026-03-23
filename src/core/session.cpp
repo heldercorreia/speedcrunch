@@ -40,15 +40,37 @@ static void trimHistory(QList<HistoryEntry>& history)
     history.remove(0, history.size() - limit);
 }
 
+int Session::physicalHistoryIndex(int logicalIndex) const
+{
+    const int size = m_history.size();
+    if (size == 0)
+        return -1;
+    return (m_historyHead + logicalIndex) % size;
+}
+
+void Session::normalizeHistoryOrder()
+{
+    if (m_historyHead == 0 || m_history.isEmpty())
+        return;
+
+    History normalized;
+    normalized.reserve(m_history.size());
+    for (int i = 0; i < m_history.size(); ++i)
+        normalized.append(m_history.at(physicalHistoryIndex(i)));
+
+    m_history.swap(normalized);
+    m_historyHead = 0;
+}
+
 void Session::serialize(QJsonObject &json) const
 {
     json["version"] = QString(SPEEDCRUNCH_VERSION);
 
     // history
     QJsonArray hist_entries;
-    for(int i=0; i<m_history.size(); ++i) {
+    for (int i = 0; i < m_history.size(); ++i) {
         QJsonObject curr_entry_obj;
-        m_history.at(i).serialize(curr_entry_obj);
+        historyEntryAtRef(i).serialize(curr_entry_obj);
         hist_entries.append(curr_entry_obj);
     }
     json["history"] = hist_entries;
@@ -85,6 +107,7 @@ int Session::deSerialize(const QJsonObject &json, bool merge=false)
     QString version = json["version"].toString();
     if(!merge) {
         m_history.clear();
+        m_historyHead = 0;
         m_variables.clear();
     }
 
@@ -93,10 +116,8 @@ int Session::deSerialize(const QJsonObject &json, bool merge=false)
     if (json.contains("history")) {
         QJsonArray hist_obj = json["history"].toArray();
         int n = hist_obj.size();
-        for(int i=0; i<n; ++i) {
-            m_history.append(HistoryEntry(hist_obj[i].toObject()));
-        }
-        trimHistory(m_history);
+        for (int i = 0; i < n; ++i)
+            addHistoryEntry(HistoryEntry(hist_obj[i].toObject()));
     }
 
     if (json.contains("variables")) {
@@ -123,7 +144,7 @@ int Session::deSerialize(const QJsonObject &json, bool merge=false)
     const bool needsAnsRecovery = !hasAns || getVariable("ans").value().isNan();
     if (needsAnsRecovery) {
         for (int i = m_history.size() - 1; i >= 0; --i) {
-            const Quantity value = m_history.at(i).result();
+            const Quantity value = historyEntryAtRef(i).result();
             if (!value.isNan()) {
                 addVariable(Variable("ans", value, Variable::BuiltIn));
                 break;
@@ -178,34 +199,65 @@ bool Session::isBuiltInVariable(const QString & id) const
 
 void Session::addHistoryEntry(const HistoryEntry &entry)
 {
+    const int limit = historyLimit();
+    if (limit > 0) {
+        if (m_history.size() < limit) {
+            m_history.append(entry);
+        } else if (limit > 0) {
+            m_history[m_historyHead] = entry;
+            m_historyHead = (m_historyHead + 1) % limit;
+        }
+        return;
+    }
+
     m_history.append(entry);
-    trimHistory(m_history);
 }
 
 void Session::insertHistoryEntry(const int index, const HistoryEntry &entry)
 {
+    normalizeHistoryOrder();
     m_history.insert(index, entry);
     trimHistory(m_history);
 }
 
 void Session::removeHistoryEntryAt(const int index)
 {
+    normalizeHistoryOrder();
     m_history.removeAt(index);
+}
+
+const HistoryEntry& Session::historyEntryAtRef(const int index) const
+{
+    return m_history.at(physicalHistoryIndex(index));
 }
 
 HistoryEntry Session::historyEntryAt(const int index) const
 {
-    return m_history.at(index);
+    return historyEntryAtRef(index);
+}
+
+QList<HistoryEntry> Session::historyToList() const
+{
+    if (m_historyHead == 0)
+        return m_history;
+
+    QList<HistoryEntry> ordered;
+    ordered.reserve(m_history.size());
+    for (int i = 0; i < m_history.size(); ++i)
+        ordered.append(historyEntryAtRef(i));
+    return ordered;
 }
 
 void Session::applyHistoryLimit()
 {
+    normalizeHistoryOrder();
     trimHistory(m_history);
 }
 
 void Session::clearHistory()
 {
     m_history.clear();
+    m_historyHead = 0;
 }
 
 void Session::addUserFunction(const UserFunction &func)

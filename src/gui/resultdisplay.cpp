@@ -263,25 +263,11 @@ int expressionLineCount(const HistoryEntry& entry)
     return formattedExpressionForDisplay(entry).count(QLatin1Char('\n')) + 1;
 }
 
-int resultLineCountForEntry(const Settings* settings, const HistoryEntry& entry)
+int displayedBlockCountForLines(const QStringList& lines)
 {
-    int count = 1; // Primary result format is always shown for non-NaN results.
-    if (settings->simplifyResultExpressions && !entry.interpretedExpr().isEmpty()) {
-        const QString interpreted =
-            UnicodeChars::normalizePiForDisplay(
-                Evaluator::formatInterpretedExpressionForDisplay(entry.interpretedExpr()));
-        const QString simplified =
-            UnicodeChars::normalizePiForDisplay(
-                Evaluator::formatInterpretedExpressionSimplifiedForDisplay(entry.interpretedExpr()));
-        if (!simplified.isEmpty() && simplified != interpreted)
-            ++count;
-    }
-    if (settings->alternativeResultFormat != '\0')
-        ++count;
-    if (settings->tertiaryResultFormat != '\0')
-        ++count;
-    if (shouldShowAdditionalRationalForTrig(settings, entry.expr(), entry.interpretedExpr(), entry.result()))
-        ++count;
+    int count = 0;
+    for (const QString& line : lines)
+        count += line.count(QLatin1Char('\n')) + 1;
     return count;
 }
 }
@@ -454,17 +440,37 @@ void ResultDisplay::clearHoverFeedback()
 
 void ResultDisplay::refresh()
 {
+    const Session* session = Evaluator::instance()->session();
+    const int historyCount = session->historySize();
+
+    // Fast path for the common "new evaluation added one history entry" case.
+    if (historyCount == m_count + 1 && historyCount > 0) {
+        clearHoverFeedback();
+        const HistoryEntry& lastEntry = session->historyEntryAtRef(historyCount - 1);
+        const QString expressionLine = formattedExpressionForDisplay(lastEntry);
+        appendPlainText(expressionLine);
+        if (!lastEntry.result().isNan()) {
+            const QStringList resultLines = formatResultLines(lastEntry);
+            for (const QString& line : resultLines)
+                appendPlainText(line);
+        }
+        appendPlainText(QLatin1String(""));
+        m_count = historyCount;
+        markHistoryBlockIndexCacheDirty();
+        return;
+    }
+
     clearHoverFeedback();
     clear();
-    QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
-    m_count = history.count();
+    m_count = historyCount;
 
     for(int i=0; i<m_count; ++i) {
-        const QString expressionLine = formattedExpressionForDisplay(history[i]);
-        Quantity value = history[i].result();
+        const HistoryEntry& historyEntry = session->historyEntryAtRef(i);
+        const QString expressionLine = formattedExpressionForDisplay(historyEntry);
+        Quantity value = historyEntry.result();
         appendPlainText(expressionLine);
         if (!value.isNan()) {
-            const QStringList resultLines = formatResultLines(history.at(i));
+            const QStringList resultLines = formatResultLines(historyEntry);
             for (const QString& line : resultLines)
                 appendPlainText(line);
         }
@@ -476,8 +482,8 @@ void ResultDisplay::refresh()
 
 void ResultDisplay::refreshLastHistoryEntry()
 {
-    const QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
-    const int historyCount = history.count();
+    const Session* session = Evaluator::instance()->session();
+    const int historyCount = session->historySize();
     if (historyCount == 0) {
         clear();
         return;
@@ -501,7 +507,7 @@ void ResultDisplay::refreshLastHistoryEntry()
     while (startBlock.previous().isValid() && !startBlock.previous().text().isEmpty())
         startBlock = startBlock.previous();
 
-    const HistoryEntry& lastEntry = history.last();
+    const HistoryEntry& lastEntry = session->historyEntryAtRef(historyCount - 1);
     QStringList updatedLines;
     updatedLines.append(formattedExpressionForDisplay(lastEntry));
     if (!lastEntry.result().isNan())
@@ -638,9 +644,9 @@ void ResultDisplay::mousePressEvent(QMouseEvent* event)
     if (event->button() == Qt::LeftButton && m_hoverHighlightEnabled && m_hoveredHistoryIndex >= 0) {
         const QRect copyRect = copyGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex);
         if (copyRect.contains(event->pos())) {
-            const QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
-            if (m_hoveredHistoryIndex >= 0 && m_hoveredHistoryIndex < history.count()) {
-                const Quantity value = history.at(m_hoveredHistoryIndex).result();
+            const Session* session = Evaluator::instance()->session();
+            if (m_hoveredHistoryIndex >= 0 && m_hoveredHistoryIndex < session->historySize()) {
+                const Quantity value = session->historyEntryAtRef(m_hoveredHistoryIndex).result();
                 if (!value.isNan())
                     QApplication::clipboard()->setText(formatResultForClipboard(value), QClipboard::Clipboard);
             }
@@ -671,25 +677,25 @@ void ResultDisplay::contextMenuEvent(QContextMenuEvent* event)
     QMenu* menu = createStandardContextMenu();
     const int historyIndex = historyIndexAtPosition(event->pos());
     if (historyIndex >= 0) {
-        const QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
+        const Session* session = Evaluator::instance()->session();
         menu->addSeparator();
         QAction* copyExpressionAction = menu->addAction(tr("Copy Expression"));
-        connect(copyExpressionAction, &QAction::triggered, this, [history, historyIndex]() {
-            if (historyIndex < 0 || historyIndex >= history.count())
+        connect(copyExpressionAction, &QAction::triggered, this, [session, historyIndex]() {
+            if (historyIndex < 0 || historyIndex >= session->historySize())
                 return;
 
-            QApplication::clipboard()->setText(history.at(historyIndex).expr(), QClipboard::Clipboard);
+            QApplication::clipboard()->setText(session->historyEntryAtRef(historyIndex).expr(), QClipboard::Clipboard);
         });
         QAction* copyResultAction = menu->addAction(tr("Copy Result"));
         const bool canCopyResult = historyIndex >= 0
-            && historyIndex < history.count()
-            && !history.at(historyIndex).result().isNan();
+            && historyIndex < session->historySize()
+            && !session->historyEntryAtRef(historyIndex).result().isNan();
         copyResultAction->setEnabled(canCopyResult);
-        connect(copyResultAction, &QAction::triggered, this, [history, historyIndex]() {
-            if (historyIndex < 0 || historyIndex >= history.count())
+        connect(copyResultAction, &QAction::triggered, this, [session, historyIndex]() {
+            if (historyIndex < 0 || historyIndex >= session->historySize())
                 return;
 
-            const Quantity value = history.at(historyIndex).result();
+            const Quantity value = session->historyEntryAtRef(historyIndex).result();
             if (value.isNan())
                 return;
 
@@ -895,12 +901,13 @@ void ResultDisplay::paintEvent(QPaintEvent* event)
 {
     QPlainTextEdit::paintEvent(event);
 
+    QPainter painter(viewport());
+
     if (m_editingHistoryIndex >= 0) {
         const QRect cancelRect = cancelGlyphBadgeRectForEditingIndex();
         if (!cancelRect.isValid())
             return;
 
-        QPainter painter(viewport());
         painter.setRenderHint(QPainter::Antialiasing, true);
         painter.setPen(Qt::NoPen);
         painter.setBrush(Qt::white);
@@ -921,7 +928,6 @@ void ResultDisplay::paintEvent(QPaintEvent* event)
     if (!copyRect.isValid() || !removeRect.isValid() || !editRect.isValid())
         return;
 
-    QPainter painter(viewport());
     painter.setRenderHint(QPainter::Antialiasing, true);
 
     painter.setPen(Qt::NoPen);
@@ -1011,9 +1017,6 @@ void ResultDisplay::updateScrollBarStyleSheet()
 int ResultDisplay::historyIndexAtPosition(const QPoint& pos) const
 {
     const QTextCursor cursor = cursorForPosition(pos);
-    if (cursor.block().text().trimmed().isEmpty())
-        return -1;
-
     const int blockNumber = cursor.blockNumber();
     if (blockNumber < 0)
         return -1;
@@ -1022,7 +1025,17 @@ int ResultDisplay::historyIndexAtPosition(const QPoint& pos) const
     if (blockNumber >= m_blockToHistoryIndex.size())
         return -1;
 
-    return m_blockToHistoryIndex.at(blockNumber);
+    const int historyIndex = m_blockToHistoryIndex.at(blockNumber);
+    if (historyIndex < 0 || historyIndex >= m_historyBlockRanges.size())
+        return -1;
+
+    const QPair<int, int> range = m_historyBlockRanges.at(historyIndex);
+    // Separator blank lines are intentionally mapped in the cache; keep them
+    // non-interactive while still allowing genuine blank lines inside entries.
+    if (blockNumber < range.first || blockNumber > range.second)
+        return -1;
+
+    return historyIndex;
 }
 
 bool ResultDisplay::blockRangeForHistoryIndex(int historyIndex, int& startBlock, int& endBlock) const
@@ -1214,22 +1227,23 @@ void ResultDisplay::ensureHistoryBlockIndexCache() const
     m_blockToHistoryIndex.clear();
     m_historyBlockRanges.clear();
 
-    const QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
-    const Settings* settings = Settings::instance();
-    m_historyBlockRanges.reserve(history.size());
+    const Session* session = Evaluator::instance()->session();
+    const int historySize = session->historySize();
+    m_historyBlockRanges.reserve(historySize);
 
     int currentBlock = 0;
-    for (int i = 0; i < history.size(); ++i) {
+    for (int i = 0; i < historySize; ++i) {
+        const HistoryEntry& historyEntry = session->historyEntryAtRef(i);
         const int startBlock = currentBlock;
 
-        const int expressionLines = expressionLineCount(history.at(i));
+        const int expressionLines = expressionLineCount(historyEntry);
         for (int line = 0; line < expressionLines; ++line)
             m_blockToHistoryIndex.append(i);
         currentBlock += expressionLines;
 
         int endBlock = currentBlock - 1;
-        if (!history.at(i).result().isNan()) {
-            const int resultLines = resultLineCountForEntry(settings, history.at(i));
+        if (!historyEntry.result().isNan()) {
+            const int resultLines = displayedBlockCountForLines(formatResultLines(historyEntry));
             for (int line = 0; line < resultLines; ++line)
                 m_blockToHistoryIndex.append(i);
             currentBlock += resultLines;

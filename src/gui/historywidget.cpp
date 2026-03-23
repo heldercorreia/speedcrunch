@@ -160,12 +160,51 @@ HistoryWidget::HistoryWidget(QWidget *parent)
 
 void HistoryWidget::updateHistory()
 {
-    QList<HistoryEntry> hist = Evaluator::instance()->session()->historyToList();
+    const Session* session = Evaluator::instance()->session();
+    const int historySize = session->historySize();
+
+    // Fast path for the common "new evaluation added one history entry" case.
+    if (historySize == m_list->count() + 1) {
+        const QString expression = session->historyEntryAtRef(historySize - 1).expr();
+        QListWidgetItem* item = new QListWidgetItem(groupedExpressionForHistory(expression));
+        item->setData(Qt::UserRole, expression);
+        m_list->addItem(item);
+        m_list->scrollToBottom();
+        return;
+    }
+
+    // Fast path for history cap behavior: oldest entry dropped, newest appended.
+    if (historySize == m_list->count() && historySize > 0) {
+        if (historySize == 1) {
+            QListWidgetItem* item = m_list->item(0);
+            if (item) {
+                const QString expression = session->historyEntryAtRef(historySize - 1).expr();
+                item->setText(groupedExpressionForHistory(expression));
+                item->setData(Qt::UserRole, expression);
+            }
+            m_list->scrollToBottom();
+            return;
+        }
+
+        QListWidgetItem* secondItem = m_list->item(1);
+        if (secondItem
+            && secondItem->data(Qt::UserRole).toString() == session->historyEntryAtRef(0).expr())
+        {
+            delete m_list->takeItem(0);
+            const QString expression = session->historyEntryAtRef(historySize - 1).expr();
+            QListWidgetItem* item = new QListWidgetItem(groupedExpressionForHistory(expression));
+            item->setData(Qt::UserRole, expression);
+            m_list->addItem(item);
+            m_list->scrollToBottom();
+            return;
+        }
+    }
+
     m_list->clear();
     m_list->clearSelection();
 
-    for (int i = 0; i < hist.size(); ++i) {
-        const QString expression = hist[i].expr();
+    for (int i = 0; i < historySize; ++i) {
+        const QString expression = session->historyEntryAtRef(i).expr();
         QListWidgetItem* item = new QListWidgetItem(groupedExpressionForHistory(expression));
         item->setData(Qt::UserRole, expression);
         m_list->addItem(item);

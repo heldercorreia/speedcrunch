@@ -1941,7 +1941,7 @@ void MainWindow::showAboutDialog()
 
 void MainWindow::clearHistory()
 {
-    if (m_session->historyToList().isEmpty())
+    if (m_session->historyIsEmpty())
         return;
 
     const QMessageBox::StandardButton confirmation = QMessageBox::question(
@@ -2673,7 +2673,7 @@ void MainWindow::setHistorySizeLimit()
 
     m_settings->maxHistoryEntries = value;
     m_session->applyHistoryLimit();
-    m_conditions.autoAns = !m_session->historyToList().empty();
+    m_conditions.autoAns = !m_session->historyIsEmpty();
     emit historyChanged();
 }
 
@@ -3622,7 +3622,7 @@ void MainWindow::restoreSession(bool restoreHistory) {
     emit variablesChanged();
     emit functionsChanged();
 
-    m_conditions.autoAns = restoreHistory && !m_session->historyToList().empty();
+    m_conditions.autoAns = restoreHistory && !m_session->historyIsEmpty();
 }
 
 void MainWindow::evaluateEditorExpression()
@@ -3642,7 +3642,7 @@ void MainWindow::evaluateEditorExpression()
                 m_widgets.display->restoreViewportTopAnchor(displayAnchor);
             });
         };
-        const int historySize = m_session->historyToList().size();
+        const int historySize = m_session->historySize();
         if (m_pendingHistoryEditIndex >= historySize) {
             m_pendingHistoryEditIndex = -1;
             m_widgets.display->setEditingHistoryIndex(-1);
@@ -3720,6 +3720,7 @@ void MainWindow::evaluateEditorExpression()
     if (m_settings->historySaving == Settings::HistorySavingContinuously)
         saveSessionToDefaultPath();
     emit historyChanged();
+    m_widgets.display->verticalScrollBar()->setValue(m_widgets.display->verticalScrollBar()->maximum());
     emit variablesChanged();
 
     if (m_settings->bitfieldVisible)
@@ -3741,7 +3742,7 @@ void MainWindow::evaluateEditorExpression()
 
 void MainWindow::startHistoryEntryEdit(int index)
 {
-    const int historySize = m_session->historyToList().size();
+    const int historySize = m_session->historySize();
     if (index < 0 || index >= historySize)
         return;
 
@@ -3769,10 +3770,10 @@ void MainWindow::cancelHistoryEntryEdit()
 QStringList MainWindow::historyExpressions() const
 {
     QStringList expressions;
-    const QList<HistoryEntry> history = m_session->historyToList();
-    expressions.reserve(history.size());
-    for (int i = 0; i < history.size(); ++i)
-        expressions.append(history.at(i).expr());
+    const int historySize = m_session->historySize();
+    expressions.reserve(historySize);
+    for (int i = 0; i < historySize; ++i)
+        expressions.append(m_session->historyEntryAtRef(i).expr());
     return expressions;
 }
 
@@ -3820,7 +3821,7 @@ bool MainWindow::rebuildSessionFromExpressions(const QStringList& expressions, i
 
 void MainWindow::removeHistoryEntryAt(int index)
 {
-    const int historySize = m_session->historyToList().size();
+    const int historySize = m_session->historySize();
     if (index < 0 || index >= historySize)
         return;
 
@@ -3830,13 +3831,13 @@ void MainWindow::removeHistoryEntryAt(int index)
     else if (m_pendingHistoryEditIndex > index)
         --m_pendingHistoryEditIndex;
     m_widgets.display->setEditingHistoryIndex(m_pendingHistoryEditIndex);
-    m_conditions.autoAns = !m_session->historyToList().empty();
+    m_conditions.autoAns = !m_session->historyIsEmpty();
     emit historyChanged();
 }
 
 void MainWindow::removeHistoryEntriesAbove(int index)
 {
-    const int historySize = m_session->historyToList().size();
+    const int historySize = m_session->historySize();
     if (historySize == 0 || index <= 0 || index >= historySize)
         return;
 
@@ -3850,13 +3851,13 @@ void MainWindow::removeHistoryEntriesAbove(int index)
             m_pendingHistoryEditIndex -= index;
     }
     m_widgets.display->setEditingHistoryIndex(m_pendingHistoryEditIndex);
-    m_conditions.autoAns = !m_session->historyToList().empty();
+    m_conditions.autoAns = !m_session->historyIsEmpty();
     emit historyChanged();
 }
 
 void MainWindow::removeHistoryEntriesBelow(int index)
 {
-    const int historySize = m_session->historyToList().size();
+    const int historySize = m_session->historySize();
     if (historySize == 0 || index < 0 || index >= historySize - 1)
         return;
 
@@ -3866,7 +3867,7 @@ void MainWindow::removeHistoryEntriesBelow(int index)
     if (m_pendingHistoryEditIndex > index)
         m_pendingHistoryEditIndex = -1;
     m_widgets.display->setEditingHistoryIndex(m_pendingHistoryEditIndex);
-    m_conditions.autoAns = !m_session->historyToList().empty();
+    m_conditions.autoAns = !m_session->historyIsEmpty();
     emit historyChanged();
 }
 
