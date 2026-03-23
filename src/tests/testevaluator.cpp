@@ -2306,6 +2306,76 @@ void test_display_interpreted_spacing()
             + QStringLiteral("(")
             + QString(UnicodeChars::MinusSign)
             + QStringLiteral("2)"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("−1/2/cos pi −1.345 sin(−pi^2+2.5/cos(e))  × 4 sin(−pi^2+2.5/cos(e))+ 4 tan(2) ×5 tan(2) ×6 tan 2 ×7 −1.23"),
+        QString(UnicodeChars::MinusSign)
+            + QStringLiteral("1")
+            + slash
+            + QStringLiteral("2")
+            + slash
+            + QStringLiteral("cos(")
+            + QStringLiteral("pi)")
+            + minus
+            + QStringLiteral("1.345")
+            + dotSpaced
+            + QStringLiteral("sin(")
+            + QString(UnicodeChars::MinusSign)
+            + QString::fromUtf8("pi²")
+            + plus
+            + QStringLiteral("2.5")
+            + slash
+            + QStringLiteral("cos(e))")
+            + dotSpaced
+            + QStringLiteral("4")
+            + dotSpaced
+            + QStringLiteral("sin(")
+            + QString(UnicodeChars::MinusSign)
+            + QString::fromUtf8("pi²")
+            + plus
+            + QStringLiteral("2.5")
+            + slash
+            + QStringLiteral("cos(e))")
+            + plus
+            + QStringLiteral("4")
+            + dotSpaced
+            + QStringLiteral("tan(2)")
+            + dotSpaced
+            + QStringLiteral("5")
+            + dotSpaced
+            + QStringLiteral("tan(2)")
+            + dotSpaced
+            + QStringLiteral("6")
+            + dotSpaced
+            + QStringLiteral("tan(2)")
+            + dotSpaced
+            + QStringLiteral("7")
+            + minus
+            + QStringLiteral("1.23"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("−1/2/cos pi −1.345 sin(−pi^2+2.5/cos(e))  × 4 sin(−pi^2+2.5/cos(e))+ 4 tan(2) ×5 tan(2) ×6 tan 2 ×7 −1.23"),
+        QString(UnicodeChars::MinusSign)
+            + QStringLiteral("1")
+            + slash
+            + QStringLiteral("2")
+            + slash
+            + QStringLiteral("cos(")
+            + QStringLiteral("pi)")
+            + minus
+            + QStringLiteral("5.38")
+            + dotSpaced
+            + QStringLiteral("sin(")
+            + QString(UnicodeChars::MinusSign)
+            + QString::fromUtf8("pi²")
+            + plus
+            + QStringLiteral("2.5")
+            + slash
+            + QStringLiteral("cos(e))²")
+            + plus
+            + QStringLiteral("840")
+            + dotSpaced
+            + QStringLiteral("tan(2)³")
+            + minus
+            + QStringLiteral("1.23"));
     ++eval_total_tests;
     eval->setExpression(QStringLiteral("-1+1e78+cos(pi)-1e78-1"));
     Quantity largeCancellationBase = eval->evalUpdateAns();
