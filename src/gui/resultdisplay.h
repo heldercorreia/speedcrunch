@@ -21,6 +21,8 @@
 
 #include <QBasicTimer>
 #include <QPlainTextEdit>
+#include <QPair>
+#include <QVector>
 
 class Quantity;
 class SyntaxHighlighter;
@@ -106,6 +108,8 @@ protected:
     QRect hoverActionRectForHistoryIndex(int historyIndex) const;
     QRect cancelGlyphBadgeRectForEditingIndex() const;
     void updateHoverHighlightSelection();
+    void markHistoryBlockIndexCacheDirty();
+    void ensureHistoryBlockIndexCache() const;
 
 private:
     Q_DISABLE_COPY(ResultDisplay)
@@ -117,6 +121,9 @@ private:
     bool m_isScrollingPageOnly;
     bool m_hoverHighlightEnabled;
     bool m_scrollBarHovered;
+    mutable bool m_historyBlockIndexCacheDirty;
+    mutable QVector<int> m_blockToHistoryIndex;
+    mutable QVector<QPair<int, int>> m_historyBlockRanges;
     int m_hoveredHistoryIndex;
     int m_editingHistoryIndex;
     int m_count;

@@ -294,6 +294,7 @@ ResultDisplay::ResultDisplay(QWidget* parent)
     , m_isScrollingPageOnly(false)
     , m_hoverHighlightEnabled(true)
     , m_scrollBarHovered(false)
+    , m_historyBlockIndexCacheDirty(true)
     , m_hoveredHistoryIndex(-1)
     , m_editingHistoryIndex(-1)
     , m_count(0)
@@ -381,6 +382,7 @@ void ResultDisplay::append(const QString& expression, Quantity& value,
             appendPlainText(line);
     }
     appendPlainText(QLatin1String(""));
+    markHistoryBlockIndexCacheDirty();
 }
 
 int ResultDisplay::count() const
@@ -406,6 +408,7 @@ void ResultDisplay::clear()
 {
     m_count = 0;
     setPlainText(QLatin1String(""));
+    markHistoryBlockIndexCacheDirty();
     clearHoverFeedback();
 }
 
@@ -439,6 +442,7 @@ void ResultDisplay::refresh()
         appendPlainText(QLatin1String(""));
     }
 
+    markHistoryBlockIndexCacheDirty();
 }
 
 void ResultDisplay::refreshLastHistoryEntry()
@@ -481,6 +485,7 @@ void ResultDisplay::refreshLastHistoryEntry()
     cursor.setPosition(startBlock.position());
     cursor.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
     cursor.insertText(updatedLines.join(QLatin1String("\n")));
+    markHistoryBlockIndexCacheDirty();
 }
 
 void ResultDisplay::scrollLines(int numberOfLines)
@@ -784,6 +789,12 @@ void ResultDisplay::mouseMoveEvent(QMouseEvent* event)
 {
     QPlainTextEdit::mouseMoveEvent(event);
 
+    if (event->buttons() & Qt::LeftButton) {
+        QToolTip::hideText();
+        viewport()->unsetCursor();
+        return;
+    }
+
     if (m_editingHistoryIndex >= 0) {
         const QRect cancelRect = cancelGlyphBadgeRectForEditingIndex();
         const bool overCancelGlyph = cancelRect.isValid() && cancelRect.contains(event->pos());
@@ -822,20 +833,29 @@ void ResultDisplay::mouseMoveEvent(QMouseEvent* event)
             viewport()->update(hoverActionRectForHistoryIndex(m_hoveredHistoryIndex));
     }
 
-    const bool overActionGlyph = m_hoveredHistoryIndex >= 0
-        && (copyGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex).contains(event->pos())
-            || removeGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex).contains(event->pos())
-            || editGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex).contains(event->pos()));
+    QRect copyRect;
+    QRect editRect;
+    QRect removeRect;
+    if (m_hoveredHistoryIndex >= 0) {
+        copyRect = copyGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex);
+        editRect = editGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex);
+        removeRect = removeGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex);
+    }
+
+    const bool overCopyGlyph = copyRect.contains(event->pos());
+    const bool overEditGlyph = editRect.contains(event->pos());
+    const bool overRemoveGlyph = removeRect.contains(event->pos());
+    const bool overActionGlyph = overCopyGlyph || overEditGlyph || overRemoveGlyph;
     if (overActionGlyph)
         viewport()->setCursor(Qt::PointingHandCursor);
     else
         viewport()->unsetCursor();
 
-    if (m_hoveredHistoryIndex >= 0 && copyGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex).contains(event->pos())) {
+    if (overCopyGlyph) {
         QToolTip::showText(QCursor::pos(), tr("Copy this result"), this);
-    } else if (m_hoveredHistoryIndex >= 0 && editGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex).contains(event->pos())) {
+    } else if (overEditGlyph) {
         QToolTip::showText(QCursor::pos(), tr("Edit this expression"), this);
-    } else if (m_hoveredHistoryIndex >= 0 && removeGlyphBadgeRectForHistoryIndex(m_hoveredHistoryIndex).contains(event->pos())) {
+    } else if (overRemoveGlyph) {
         QToolTip::showText(QCursor::pos(), tr("Remove this calculation"), this);
     } else {
         QToolTip::hideText();
@@ -969,32 +989,11 @@ int ResultDisplay::historyIndexAtPosition(const QPoint& pos) const
     if (blockNumber < 0)
         return -1;
 
-    const QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
-    const Settings* settings = Settings::instance();
-    int currentBlock = 0;
-    for (int i = 0; i < history.count(); ++i) {
-        const int entryExpressionLineCount = expressionLineCount(history.at(i));
-        for (int expressionLine = 0; expressionLine < entryExpressionLineCount; ++expressionLine) {
-            if (currentBlock == blockNumber)
-                return i;
-            ++currentBlock;
-        }
+    ensureHistoryBlockIndexCache();
+    if (blockNumber >= m_blockToHistoryIndex.size())
+        return -1;
 
-        if (!history.at(i).result().isNan()) {
-            const int resultLineCount = resultLineCountForEntry(settings, history.at(i));
-            for (int line = 0; line < resultLineCount; ++line) {
-                if (currentBlock == blockNumber)
-                    return i;
-                ++currentBlock;
-            }
-        }
-
-        if (currentBlock == blockNumber)
-            return i;
-        ++currentBlock;
-    }
-
-    return -1;
+    return m_blockToHistoryIndex.at(blockNumber);
 }
 
 bool ResultDisplay::blockRangeForHistoryIndex(int historyIndex, int& startBlock, int& endBlock) const
@@ -1004,34 +1003,14 @@ bool ResultDisplay::blockRangeForHistoryIndex(int historyIndex, int& startBlock,
     if (historyIndex < 0)
         return false;
 
-    const QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
-    const Settings* settings = Settings::instance();
-    if (historyIndex >= history.count())
+    ensureHistoryBlockIndexCache();
+    if (historyIndex >= m_historyBlockRanges.size())
         return false;
 
-    int currentBlock = 0;
-    for (int i = 0; i < history.count(); ++i) {
-        const int entryStartBlock = currentBlock;
-        const int entryExpressionLineCount = expressionLineCount(history.at(i));
-        currentBlock += entryExpressionLineCount;
-
-        int entryEndBlock = entryStartBlock + entryExpressionLineCount - 1;
-        if (!history.at(i).result().isNan()) {
-            const int resultLineCount = resultLineCountForEntry(settings, history.at(i));
-            entryEndBlock = currentBlock + resultLineCount - 1; // result block(s)
-            currentBlock += resultLineCount;
-        }
-
-        ++currentBlock; // separator block
-
-        if (i == historyIndex) {
-            startBlock = entryStartBlock;
-            endBlock = entryEndBlock;
-            return true;
-        }
-    }
-
-    return false;
+    const QPair<int, int> range = m_historyBlockRanges.at(historyIndex);
+    startBlock = range.first;
+    endBlock = range.second;
+    return startBlock >= 0 && endBlock >= startBlock;
 }
 
 QRect ResultDisplay::removeGlyphRectForHistoryIndex(int historyIndex) const
@@ -1191,4 +1170,49 @@ void ResultDisplay::updateHoverHighlightSelection()
         appendSelectionForHistoryIndex(m_editingHistoryIndex);
 
     setExtraSelections(selections);
+}
+
+void ResultDisplay::markHistoryBlockIndexCacheDirty()
+{
+    m_historyBlockIndexCacheDirty = true;
+}
+
+void ResultDisplay::ensureHistoryBlockIndexCache() const
+{
+    if (!m_historyBlockIndexCacheDirty)
+        return;
+
+    m_blockToHistoryIndex.clear();
+    m_historyBlockRanges.clear();
+
+    const QList<HistoryEntry> history = Evaluator::instance()->session()->historyToList();
+    const Settings* settings = Settings::instance();
+    m_historyBlockRanges.reserve(history.size());
+
+    int currentBlock = 0;
+    for (int i = 0; i < history.size(); ++i) {
+        const int startBlock = currentBlock;
+
+        const int expressionLines = expressionLineCount(history.at(i));
+        for (int line = 0; line < expressionLines; ++line)
+            m_blockToHistoryIndex.append(i);
+        currentBlock += expressionLines;
+
+        int endBlock = currentBlock - 1;
+        if (!history.at(i).result().isNan()) {
+            const int resultLines = resultLineCountForEntry(settings, history.at(i));
+            for (int line = 0; line < resultLines; ++line)
+                m_blockToHistoryIndex.append(i);
+            currentBlock += resultLines;
+            endBlock = currentBlock - 1;
+        }
+
+        // Preserve existing behavior: separator blocks map to this history entry.
+        m_blockToHistoryIndex.append(i);
+        ++currentBlock;
+
+        m_historyBlockRanges.append(qMakePair(startBlock, endBlock));
+    }
+
+    m_historyBlockIndexCacheDirty = false;
 }
