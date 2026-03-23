@@ -30,6 +30,7 @@ struct NumberFormatter {
     static QString format(Quantity);
     static QString format(Quantity, char resultFormatOverride);
     static QString formatTrigSymbolic(Quantity);
+    static QString formatNumericLiteralForDisplay(const QString& input);
 };
 
 #endif

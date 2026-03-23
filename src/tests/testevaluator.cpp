@@ -3177,6 +3177,49 @@ void test_function_usage_tooltip()
     );
 }
 
+void test_grouped_numeric_literal_display_format()
+{
+    Settings* settings = Settings::instance();
+    const int oldDigitGrouping = settings->digitGrouping;
+    const bool oldDigitGroupingIntegerPartOnly = settings->digitGroupingIntegerPartOnly;
+
+    settings->digitGrouping = 1;
+    settings->digitGroupingIntegerPartOnly = false;
+
+    ++eval_total_tests;
+    const QString groupedLiteral = NumberFormatter::formatNumericLiteralForDisplay(QStringLiteral("234936"));
+    if (groupedLiteral != QStringLiteral("234 936")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tgroup numeric literal for display\t[NEW]" << endl
+             << "\tResult   : " << groupedLiteral.toUtf8().constData() << endl
+             << "\tExpected : 234 936" << endl;
+    }
+
+    eval->setExpression("234234+234+234+234");
+    const Quantity value = eval->evalUpdateAns();
+    ++eval_total_tests;
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tevaluate grouped dedup baseline\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+    } else {
+        const QString groupedResult =
+            NumberFormatter::formatNumericLiteralForDisplay(NumberFormatter::format(value));
+        if (groupedResult != groupedLiteral) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tgrouped literal matches formatted result\t[NEW]" << endl
+                 << "\tLiteral  : " << groupedLiteral.toUtf8().constData() << endl
+                 << "\tResult   : " << groupedResult.toUtf8().constData() << endl;
+        }
+    }
+
+    settings->digitGrouping = oldDigitGrouping;
+    settings->digitGroupingIntegerPartOnly = oldDigitGroupingIntegerPartOnly;
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -3238,6 +3281,7 @@ int main(int argc, char* argv[])
     test_session_history_limit();
     test_session_deserialize_without_history();
     test_function_usage_tooltip();
+    test_grouped_numeric_literal_display_format();
 
     test_angle_mode(settings);
 

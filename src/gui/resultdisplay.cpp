@@ -214,28 +214,43 @@ QStringList formatResultLines(const HistoryEntry& entry)
     };
 
     QStringList lines;
+    auto appendUniqueLine = [&lines](const QString& line) {
+        if (!lines.contains(line))
+            lines.append(line);
+    };
     if (settings->simplifyResultExpressions && !entry.interpretedExpr().isEmpty()) {
+        static const QRegularExpression trivialSingleFunctionPattern(
+            QStringLiteral("^\\s*[+\\-−]?\\s*[\\p{L}_][\\p{L}\\p{N}_]*\\s*\\(.*\\)\\s*$"));
+        static const QRegularExpression numericSimplifiedExpressionPattern(
+            QStringLiteral("^\\s*[+\\-−]?\\s*(?:0[xX][0-9A-Fa-f]+(?:[\\.,][0-9A-Fa-f]+)?|0[oO][0-7]+(?:[\\.,][0-7]+)?|0[bB][01]+(?:[\\.,][01]+)?|\\d+(?:[\\.,]\\d+)?(?:[eE][+\\-]?\\d+)?)\\s*$"));
         const QString interpreted =
             UnicodeChars::normalizePiForDisplay(
                 Evaluator::formatInterpretedExpressionForDisplay(entry.interpretedExpr()));
         const QString simplified =
             UnicodeChars::normalizePiForDisplay(
                 Evaluator::formatInterpretedExpressionSimplifiedForDisplay(entry.interpretedExpr()));
-        if (!simplified.isEmpty() && simplified != interpreted)
-            lines.append(QLatin1String("= ") + simplified);
+        if (!simplified.isEmpty()
+            && simplified != interpreted
+            && !trivialSingleFunctionPattern.match(simplified).hasMatch()) {
+            const QString simplifiedForDisplay =
+                numericSimplifiedExpressionPattern.match(simplified).hasMatch()
+                ? NumberFormatter::formatNumericLiteralForDisplay(simplified)
+                : simplified;
+            appendUniqueLine(QLatin1String("= ") + simplifiedForDisplay);
+        }
     }
-    lines.append(QLatin1String("= ") + groupedResultForDisplay(NumberFormatter::format(value)));
+    appendUniqueLine(QLatin1String("= ") + groupedResultForDisplay(NumberFormatter::format(value)));
     if (settings->alternativeResultFormat != '\0') {
-        lines.append(QLatin1String("= ")
+        appendUniqueLine(QLatin1String("= ")
             + groupedResultForDisplay(NumberFormatter::format(value, settings->alternativeResultFormat)));
     }
     if (settings->tertiaryResultFormat != '\0') {
-        lines.append(QLatin1String("= ")
+        appendUniqueLine(QLatin1String("= ")
             + groupedResultForDisplay(NumberFormatter::format(value, settings->tertiaryResultFormat)));
     }
     const QString symbolicTrig = NumberFormatter::formatTrigSymbolic(value);
     if (shouldShowAdditionalRationalForTrig(settings, entry.expr(), entry.interpretedExpr(), value)) {
-        lines.append(QLatin1String("= ")
+        appendUniqueLine(QLatin1String("= ")
             + groupedResultForDisplay(symbolicTrig));
     }
     return lines;
