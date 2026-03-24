@@ -65,7 +65,7 @@ master_doc = 'contents'
 
 # General information about the project.
 project = 'SpeedCrunch'
-copyright = '2004-2026, The SpeedCrunch Developers'
+copyright = '2026, The SpeedCrunch Developers'
 author = 'The SpeedCrunch Developers'
 
 # The version info for the project you're documenting, acts as replacement for
