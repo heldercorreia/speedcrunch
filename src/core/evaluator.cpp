@@ -4380,6 +4380,87 @@ void Evaluator::unsetAllUserDefinedVariables()
 
 static void replaceSuperscriptPowersWithCaretEquivalent(QString& expr)
 {
+    auto isIdentifierChar = [](const QChar& ch) {
+        return ch == QLatin1Char('_') || ch.isLetterOrNumber();
+    };
+    auto isIdentifierStartChar = [](const QChar& ch) {
+        return ch == QLatin1Char('_') || ch.isLetter();
+    };
+    auto isSuperscriptPowerChar = [](const QChar& ch) {
+        switch (ch.unicode()) {
+            case 0x207B: // ⁻
+            case 0x2070: // ⁰
+            case 0x00B9: // ¹
+            case 0x00B2: // ²
+            case 0x00B3: // ³
+            case 0x2074: // ⁴
+            case 0x2075: // ⁵
+            case 0x2076: // ⁶
+            case 0x2077: // ⁷
+            case 0x2078: // ⁸
+            case 0x2079: // ⁹
+                return true;
+            default:
+                return false;
+        }
+    };
+
+    // Convert function-call powers from "f²(x)" to "f(x)²" so later conversion
+    // can produce the parser-friendly "f(x)^2" form.
+    int i = 0;
+    while (i < expr.size()) {
+        if (!isSuperscriptPowerChar(expr.at(i))) {
+            ++i;
+            continue;
+        }
+
+        int superscriptEnd = i + 1;
+        while (superscriptEnd < expr.size() && isSuperscriptPowerChar(expr.at(superscriptEnd)))
+            ++superscriptEnd;
+
+        int nameStart = i - 1;
+        while (nameStart >= 0 && isIdentifierChar(expr.at(nameStart)))
+            --nameStart;
+        ++nameStart;
+        if (nameStart >= i || !isIdentifierStartChar(expr.at(nameStart))) {
+            i = superscriptEnd;
+            continue;
+        }
+
+        int argsStart = superscriptEnd;
+        while (argsStart < expr.size() && expr.at(argsStart).isSpace())
+            ++argsStart;
+        if (argsStart >= expr.size() || expr.at(argsStart) != QLatin1Char('(')) {
+            i = superscriptEnd;
+            continue;
+        }
+
+        int depth = 0;
+        int argsEnd = -1;
+        for (int j = argsStart; j < expr.size(); ++j) {
+            const QChar ch = expr.at(j);
+            if (ch == QLatin1Char('(')) {
+                ++depth;
+            } else if (ch == QLatin1Char(')')) {
+                --depth;
+                if (depth == 0) {
+                    argsEnd = j;
+                    break;
+                }
+            }
+        }
+        if (argsEnd < 0) {
+            i = superscriptEnd;
+            continue;
+        }
+
+        const QString superscript = expr.mid(i, superscriptEnd - i);
+        const QString callArgs = expr.mid(argsStart, argsEnd - argsStart + 1);
+        const QString replacement = callArgs + superscript;
+        expr.replace(i, argsEnd - i + 1, replacement);
+        i += replacement.size();
+    }
+
     static const QRegularExpression s_superscriptPowersRE(
         "(\\x{207B})?[\\x{2070}¹²³\\x{2074}-\\x{2079}]+"
     );

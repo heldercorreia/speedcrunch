@@ -1603,6 +1603,8 @@ void test_auto_fix_powers()
     CHECK_AUTOFIX("3⁻¹", "3^(-1)");
     CHECK_AUTOFIX("3¹²³⁴⁵⁶⁷⁸⁹", "3^123456789");
     CHECK_AUTOFIX("3²⁰", "3^20");
+    CHECK_AUTOFIX("cos²(pi)", "cos(pi)^2");
+    CHECK_AUTOFIX("cos² (pi)", "cos(pi)^2");
     CHECK_AUTOFIX("7 + 3²⁰ * 4", "7 + 3^20 * 4");
     CHECK_AUTOFIX("2×pi", "2⋅pi");
     CHECK_AUTOFIX("2×a", "2⋅a");
@@ -1639,6 +1641,32 @@ void test_auto_fix_powers()
                  << "\tResult   : " << formatted.toLatin1().constData() << endl
                  << "\tExpected : -4797" << endl
                  << "\tAutoFix  : " << fixedSelectionText.toUtf8().constData() << endl;
+        }
+    }
+
+    ++eval_total_tests;
+    const QString fixedFunctionPowerSelection =
+        eval->autoFix(QString::fromUtf8("1+cos²(pi)"));
+    eval->setExpression(fixedFunctionPowerSelection);
+    const Quantity fixedFunctionPowerResult = eval->evalUpdateAns();
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\tautofix function superscript eval\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl
+             << "\tAutoFix: " << fixedFunctionPowerSelection.toUtf8().constData() << endl;
+    } else {
+        QString formatted = DMath::format(fixedFunctionPowerResult, Format::Fixed());
+        formatted.replace(QString::fromUtf8("−"), "-");
+        if (formatted != QStringLiteral("2")) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\tautofix function superscript eval\t[NEW]" << endl
+                 << "\tResult   : " << formatted.toUtf8().constData() << endl
+                 << "\tExpected : 2" << endl
+                 << "\tAutoFix  : " << fixedFunctionPowerSelection.toUtf8().constData() << endl;
         }
     }
 }
