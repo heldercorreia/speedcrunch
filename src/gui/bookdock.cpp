@@ -35,6 +35,8 @@ BookDock::BookDock(QWidget* parent)
 
     m_browser = new TextBrowser(this);
     m_browser->setLineWrapMode(QTextEdit::NoWrap);
+    m_browser->setOpenLinks(false);
+    m_browser->setOpenExternalLinks(false);
 
     connect(m_browser, SIGNAL(anchorClicked(const QUrl&)), SLOT(handleAnchorClick(const QUrl&)));
 
