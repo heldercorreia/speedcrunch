@@ -191,8 +191,9 @@ static QString formattedLiveResultWithAlternatives(const Quantity& quantity,
                                                    const QString& simplifiedExpression = QString())
 {
     const Settings* settings = Settings::instance();
-    QString formatted = QStringLiteral("<b>%1</b>").arg(formattedLiveResult(quantity));
-    if (!simplifiedExpression.isEmpty()) {
+    const QString primaryFormattedResult = formattedLiveResult(quantity);
+    QString formatted = QStringLiteral("<b>%1</b>").arg(primaryFormattedResult);
+    if (!simplifiedExpression.isEmpty() && simplifiedExpression != primaryFormattedResult) {
         formatted += QStringLiteral("<br/>%1")
             .arg(QStringLiteral("= %1").arg(simplifiedExpression.toHtmlEscaped()));
     }
@@ -218,13 +219,24 @@ static QString simplifiedExpressionLineForTooltip(const QString& interpretedExpr
     if (!settings->simplifyResultExpressions || interpretedExpression.isEmpty())
         return QString();
 
+    static const QRegularExpression trivialSingleFunctionPattern(
+        QStringLiteral("^\\s*[+\\-−]?\\s*[\\p{L}_][\\p{L}\\p{N}_]*\\s*\\(.*\\)\\s*$"));
+    static const QRegularExpression numericSimplifiedExpressionPattern(
+        QStringLiteral("^\\s*[+\\-−]?\\s*(?:0[xX][0-9A-Fa-f]+(?:[\\.,][0-9A-Fa-f]+)?|0[oO][0-7]+(?:[\\.,][0-7]+)?|0[bB][01]+(?:[\\.,][01]+)?|\\d+(?:[\\.,]\\d+)?(?:[eE][+\\-]?\\d+)?)\\s*$"));
+
     const QString interpretedDisplay = UnicodeChars::normalizePiForDisplay(
         Evaluator::formatInterpretedExpressionForDisplay(interpretedExpression));
     const QString simplifiedDisplay = UnicodeChars::normalizePiForDisplay(
         Evaluator::formatInterpretedExpressionSimplifiedForDisplay(interpretedExpression));
-    if (simplifiedDisplay.isEmpty() || simplifiedDisplay == interpretedDisplay)
+    if (simplifiedDisplay.isEmpty()
+        || simplifiedDisplay == interpretedDisplay
+        || trivialSingleFunctionPattern.match(simplifiedDisplay).hasMatch()) {
         return QString();
-    return simplifiedDisplay;
+    }
+
+    return numericSimplifiedExpressionPattern.match(simplifiedDisplay).hasMatch()
+        ? NumberFormatter::formatNumericLiteralForDisplay(simplifiedDisplay)
+        : simplifiedDisplay;
 }
 
 Editor::Editor(QWidget* parent)
