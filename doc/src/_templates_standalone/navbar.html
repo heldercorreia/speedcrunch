@@ -9,7 +9,11 @@
         </button>
         <a class="navbar-brand"  href="{{ pathto('index') }}">
           {%- block sidebarlogo %}
-            {%- if logo %}<span class=""><img src="{{ pathto('_static/' + logo, 1) }}"></span>{%- endif %}
+            {%- if logo_url %}
+              <span class=""><img src="{{ logo_url|e }}" alt="{{ logo_alt|e }}"></span>
+            {%- elif logo %}
+              <span class=""><img src="{{ pathto('_static/' + logo, 1) }}"></span>
+            {%- endif %}
           {%- endblock %}
           {% if theme_navbar_title -%}{{ theme_navbar_title|e }}{%- else -%}{{ project|e }}{%- endif -%}
         </a>
