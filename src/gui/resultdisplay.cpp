@@ -22,6 +22,7 @@
 #include "core/numberformatter.h"
 #include "core/settings.h"
 #include "core/unicodechars.h"
+#include "gui/simplifiedexpressionutils.h"
 #include "gui/syntaxhighlighter.h"
 #include "math/cmath.h"
 #include "math/floatconfig.h"
@@ -221,8 +222,6 @@ QStringList formatResultLines(const HistoryEntry& entry)
     if (settings->simplifyResultExpressions && !entry.interpretedExpr().isEmpty()) {
         static const QRegularExpression trivialSingleFunctionPattern(
             QStringLiteral("^\\s*[+\\-−]?\\s*[\\p{L}_][\\p{L}\\p{N}_]*\\s*\\(.*\\)\\s*$"));
-        static const QRegularExpression numericSimplifiedExpressionPattern(
-            QStringLiteral("^\\s*[+\\-−]?\\s*(?:0[xX][0-9A-Fa-f]+(?:[\\.,][0-9A-Fa-f]+)?|0[oO][0-7]+(?:[\\.,][0-7]+)?|0[bB][01]+(?:[\\.,][01]+)?|\\d+(?:[\\.,]\\d+)?(?:[eE][+\\-]?\\d+)?)\\s*$"));
         const QString interpreted =
             UnicodeChars::normalizePiForDisplay(
                 Evaluator::formatInterpretedExpressionForDisplay(entry.interpretedExpr()));
@@ -232,11 +231,16 @@ QStringList formatResultLines(const HistoryEntry& entry)
         if (!simplified.isEmpty()
             && simplified != interpreted
             && !trivialSingleFunctionPattern.match(simplified).hasMatch()) {
-            const QString simplifiedForDisplay =
-                numericSimplifiedExpressionPattern.match(simplified).hasMatch()
-                ? NumberFormatter::formatNumericLiteralForDisplay(simplified)
-                : simplified;
-            appendUniqueLine(QLatin1String("= ") + simplifiedForDisplay);
+            if (SimplifiedExpressionUtils::shouldSuppressSimplifiedExpressionLine(
+                    interpreted, simplified)) {
+                // Hide non-informative simplification rows for plain numeric arithmetic.
+            } else {
+                const QString simplifiedForDisplay =
+                    SimplifiedExpressionUtils::isNumericSimplifiedExpression(simplified)
+                    ? NumberFormatter::formatNumericLiteralForDisplay(simplified)
+                    : simplified;
+                appendUniqueLine(QLatin1String("= ") + simplifiedForDisplay);
+            }
         }
     }
     appendUniqueLine(QLatin1String("= ") + groupedResultForDisplay(NumberFormatter::format(value)));

@@ -22,6 +22,7 @@
 #include "gui/editor.h"
 #include "gui/editorutils.h"
 #include "gui/functiontooltiputils.h"
+#include "gui/simplifiedexpressionutils.h"
 #include "gui/syntaxhighlighter.h"
 #include "core/constants.h"
 #include "core/evaluator.h"
@@ -221,8 +222,6 @@ static QString simplifiedExpressionLineForTooltip(const QString& interpretedExpr
 
     static const QRegularExpression trivialSingleFunctionPattern(
         QStringLiteral("^\\s*[+\\-−]?\\s*[\\p{L}_][\\p{L}\\p{N}_]*\\s*\\(.*\\)\\s*$"));
-    static const QRegularExpression numericSimplifiedExpressionPattern(
-        QStringLiteral("^\\s*[+\\-−]?\\s*(?:0[xX][0-9A-Fa-f]+(?:[\\.,][0-9A-Fa-f]+)?|0[oO][0-7]+(?:[\\.,][0-7]+)?|0[bB][01]+(?:[\\.,][01]+)?|\\d+(?:[\\.,]\\d+)?(?:[eE][+\\-]?\\d+)?)\\s*$"));
 
     const QString interpretedDisplay = UnicodeChars::normalizePiForDisplay(
         Evaluator::formatInterpretedExpressionForDisplay(interpretedExpression));
@@ -234,9 +233,15 @@ static QString simplifiedExpressionLineForTooltip(const QString& interpretedExpr
         return QString();
     }
 
-    return numericSimplifiedExpressionPattern.match(simplifiedDisplay).hasMatch()
-        ? NumberFormatter::formatNumericLiteralForDisplay(simplifiedDisplay)
-        : simplifiedDisplay;
+    if (SimplifiedExpressionUtils::shouldSuppressSimplifiedExpressionLine(
+            interpretedDisplay, simplifiedDisplay)) {
+        return QString();
+    }
+
+    if (SimplifiedExpressionUtils::isNumericSimplifiedExpression(simplifiedDisplay)) {
+        return NumberFormatter::formatNumericLiteralForDisplay(simplifiedDisplay);
+    }
+    return simplifiedDisplay;
 }
 
 Editor::Editor(QWidget* parent)

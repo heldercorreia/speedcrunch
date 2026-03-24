@@ -24,6 +24,7 @@
 #include "core/unicodechars.h"
 #include "gui/editorutils.h"
 #include "gui/functiontooltiputils.h"
+#include "gui/simplifiedexpressionutils.h"
 #include "tests/testcommon.h"
 
 #include <QtCore/QCoreApplication>
@@ -315,6 +316,38 @@ static void checkDisplaySimplifiedInterpreted(const char* file, int line, const 
              << "\tExpected  : " << expected.toUtf8().constData() << endl
              << "\tDisplayed code points: " << toCodePointList(displayed) << endl
              << "\tExpected  code points: " << toCodePointList(expected) << endl;
+    }
+}
+
+static void checkSuppressSimplifiedExpressionLine(const char* file, int line, const char* msg,
+                                                  const QString& expr, bool expectedSuppressed)
+{
+    ++eval_total_tests;
+
+    eval->setExpression(expr);
+    eval->evalUpdateAns();
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+        return;
+    }
+
+    const QString interpreted =
+        Evaluator::formatInterpretedExpressionForDisplay(eval->interpretedExpression());
+    const QString simplified =
+        Evaluator::formatInterpretedExpressionSimplifiedForDisplay(eval->interpretedExpression());
+    const bool suppressed = SimplifiedExpressionUtils::shouldSuppressSimplifiedExpressionLine(
+        interpreted, simplified);
+    if (suppressed != expectedSuppressed) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl
+             << "\tInterpreted: " << interpreted.toUtf8().constData() << endl
+             << "\tSimplified : " << simplified.toUtf8().constData() << endl
+             << "\tSuppressed : " << (suppressed ? "true" : "false") << endl
+             << "\tExpected   : " << (expectedSuppressed ? "true" : "false") << endl;
     }
 }
 
@@ -3220,6 +3253,19 @@ void test_grouped_numeric_literal_display_format()
     settings->digitGroupingIntegerPartOnly = oldDigitGroupingIntegerPartOnly;
 }
 
+void test_non_informative_numeric_simplified_row_suppression()
+{
+    checkSuppressSimplifiedExpressionLine(
+        __FILE__, __LINE__, "suppress simplified line for 1+2-3/2",
+        QStringLiteral("1+2-3/2"), true);
+    checkSuppressSimplifiedExpressionLine(
+        __FILE__, __LINE__, "suppress simplified line for 1+.5-1.5+3",
+        QStringLiteral("1+.5-1.5+3"), true);
+    checkSuppressSimplifiedExpressionLine(
+        __FILE__, __LINE__, "do not suppress symbolic simplification",
+        QStringLiteral("2*e*e-1"), false);
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -3282,6 +3328,7 @@ int main(int argc, char* argv[])
     test_session_deserialize_without_history();
     test_function_usage_tooltip();
     test_grouped_numeric_literal_display_format();
+    test_non_informative_numeric_simplified_row_suppression();
 
     test_angle_mode(settings);
 
