@@ -221,7 +221,9 @@ QStringList formatResultLines(const HistoryEntry& entry)
     };
     if (settings->simplifyResultExpressions && !entry.interpretedExpr().isEmpty()) {
         static const QRegularExpression trivialSingleFunctionPattern(
-            QStringLiteral("^\\s*[+\\-−]?\\s*[\\p{L}_][\\p{L}\\p{N}_]*\\s*\\(.*\\)\\s*$"));
+            // Keep this intentionally strict (ASCII identifier only) so we don't
+            // hide meaningful simplifications like "f²(x)".
+            QStringLiteral("^\\s*[+\\-−]?\\s*[A-Za-z_][A-Za-z0-9_]*\\s*\\(.*\\)\\s*$"));
         const QString interpreted =
             UnicodeChars::normalizePiForDisplay(
                 Evaluator::formatInterpretedExpressionForDisplay(entry.interpretedExpr()));

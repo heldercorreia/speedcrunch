@@ -520,6 +520,11 @@ void test_unary()
     CHECK_EVAL("−(2*3)", "-6");
     CHECK_EVAL("2*−1", "-2");
     CHECK_EVAL("2e−1", "0.2");
+
+    CHECK_INTERPRETED("−pi", "-pi");
+    CHECK_INTERPRETED("--pi", "pi");
+    CHECK_INTERPRETED("---pi", "-pi");
+    CHECK_INTERPRETED("----pi", "pi");
 }
 
 void test_binary()
@@ -2027,6 +2032,8 @@ void test_implicit_multiplication()
     CHECK_INTERPRETED("2^12.12", "2^(12.12)");
     CHECK_INTERPRETED("2^12.000-2+1/(1×2^3×3)-2^12!+2^12.1!",
                       "2^12-2+1/(1⋅(2^3)⋅3)-2^(12!)+2^(12.1!)");
+    CHECK_INTERPRETED(QString::fromUtf8("pi  −−−−−3"), "pi-3");
+    CHECK_INTERPRETED(QString::fromUtf8("pi  −−−−−−3"), "pi+3");
     CHECK_INTERPRETED("1/(1×2^3×3)", "1/(1⋅(2^3)⋅3)");
     CHECK_INTERPRETED("x=1/2 sqrt(3)", "x=(1/2)⋅sqrt(3)");
     CHECK_INTERPRETED("g(t)=t/2 sqrt(3)", "g(t)=(t/2)⋅sqrt(3)");
@@ -2245,6 +2252,16 @@ void test_display_interpreted_spacing()
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("sin(pi)*sin(pi)"),
         QString::fromUtf8("sin²(pi)"));
+    CHECK_USERFUNC_SET("f(x)=x");
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("f(pi)*f(pi)"),
+        QString::fromUtf8("f²(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QString::fromUtf8("f(pi)⋅f(pi)"),
+        QString::fromUtf8("f²(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QString::fromUtf8("f(pi) ⋅ f(pi)"),
+        QString::fromUtf8("f²(pi)"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("sin(pi)*2*sin(pi)^2"),
         QString::fromUtf8("sin³(pi)")

@@ -242,7 +242,9 @@ static QString simplifiedExpressionLineForTooltip(const QString& interpretedExpr
         return QString();
 
     static const QRegularExpression trivialSingleFunctionPattern(
-        QStringLiteral("^\\s*[+\\-−]?\\s*[\\p{L}_][\\p{L}\\p{N}_]*\\s*\\(.*\\)\\s*$"));
+        // Keep this intentionally strict (ASCII identifier only) so we don't
+        // hide meaningful simplifications like "f²(x)".
+        QStringLiteral("^\\s*[+\\-−]?\\s*[A-Za-z_][A-Za-z0-9_]*\\s*\\(.*\\)\\s*$"));
 
     const QString interpretedDisplay = UnicodeChars::normalizePiForDisplay(
         Evaluator::formatInterpretedExpressionForDisplay(interpretedExpression));

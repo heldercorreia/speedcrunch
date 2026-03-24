@@ -1067,13 +1067,14 @@ static bool parseSimplifiablePowerFactor(const QString& factorText,
             || isFunctionCallBase(text);
     };
 
-    QString base = factorText;
+    const QString factor = factorText.trimmed();
+    QString base = factor;
     int exponent = 1;
 
     int depth = 0;
     int topLevelPowerPos = -1;
-    for (int i = 0; i < factorText.size(); ++i) {
-        const QChar ch = factorText.at(i);
+    for (int i = 0; i < factor.size(); ++i) {
+        const QChar ch = factor.at(i);
         if (ch == QLatin1Char('(')) {
             ++depth;
         } else if (ch == QLatin1Char(')')) {
@@ -1086,8 +1087,8 @@ static bool parseSimplifiablePowerFactor(const QString& factorText,
     }
 
     if (topLevelPowerPos >= 0) {
-        base = factorText.left(topLevelPowerPos);
-        QString exponentText = factorText.mid(topLevelPowerPos + 1);
+        base = factor.left(topLevelPowerPos);
+        QString exponentText = factor.mid(topLevelPowerPos + 1);
         if (base.isEmpty() || exponentText.isEmpty())
             return false;
 
@@ -1109,6 +1110,7 @@ static bool parseSimplifiablePowerFactor(const QString& factorText,
             return false;
     }
 
+    base = base.trimmed();
     if (!isSimplifiableBase(base))
         return false;
 
@@ -3439,6 +3441,7 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
         Opcode::Type rootOpcode;
         bool isLiteralSymbol;
         bool isNumericOnly;
+        bool isUnaryNegation;
     };
 
     QVector<RenderNode> stack;
@@ -3458,14 +3461,24 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
             precedence,
             Opcode::Nop,
             operand.isLiteralSymbol,
-            operand.isNumericOnly
+            operand.isNumericOnly,
+            symbol == QLatin1String("-")
         };
     };
     auto makeBinaryNode = [&wrapInParentheses, this](const RenderNode& left,
                                                      const RenderNode& right,
                                                      Opcode::Type opcodeType,
                                                      int opcodeIndex) {
-        const int precedence = opcodePrecedence(opcodeType);
+        Opcode::Type renderedOpcodeType = opcodeType;
+        QString rightText = right.text;
+        if (opcodeType == Opcode::Sub && right.isUnaryNegation) {
+            // Prefer "a+b" over "a-(-b)" / "a--b" in interpreted output.
+            renderedOpcodeType = Opcode::Add;
+            if (rightText.startsWith(QLatin1Char('-')))
+                rightText.remove(0, 1);
+        }
+
+        const int precedence = opcodePrecedence(renderedOpcodeType);
         const bool isRightAssociative = isRightAssociativeOpcode(opcodeType);
         const bool isImplicitMultiplication =
             opcodeType == Opcode::Mul
@@ -3476,7 +3489,6 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
         {
             leftText = wrapInParentheses(leftText);
         }
-        QString rightText = right.text;
         if (right.precedence < precedence
             || (!isRightAssociative && right.precedence == precedence))
         {
@@ -3568,15 +3580,16 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
 
         const QString infixSymbol =
             opcodeToInfixSymbol(
-                opcodeType,
+                renderedOpcodeType,
                 isImplicitMultiplication || isLiteralSymbolMultiplication
             );
         return RenderNode{
             leftText + infixSymbol + rightText,
             precedence,
-            opcodeType,
+            renderedOpcodeType,
             left.isLiteralSymbol || right.isLiteralSymbol,
-            left.isNumericOnly && right.isNumericOnly
+            left.isNumericOnly && right.isNumericOnly,
+            false
         };
     };
 
@@ -3596,7 +3609,8 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
                 MAX_PRECEDENCE,
                 Opcode::Nop,
                 false,
-                true
+                true,
+                false
             });
             break;
         }
@@ -3607,6 +3621,7 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
                 MAX_PRECEDENCE,
                 Opcode::Nop,
                 true,
+                false,
                 false
             });
 
@@ -3626,6 +3641,20 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
             if (stack.isEmpty())
                 return QString();
             const RenderNode operand = stack.takeLast();
+            if (opcode.type == Opcode::Neg && operand.isUnaryNegation) {
+                QString text = operand.text;
+                if (text.startsWith(QLatin1Char('-')))
+                    text.remove(0, 1);
+                stack.append({
+                    text,
+                    MAX_PRECEDENCE,
+                    Opcode::Nop,
+                    operand.isLiteralSymbol,
+                    operand.isNumericOnly,
+                    false
+                });
+                break;
+            }
             const QString symbol = opcode.type == Opcode::Neg ? "-" : "~";
             stack.append(makeUnaryNode(symbol, operand,
                                        opcodePrecedence(opcode.type)));
@@ -3643,7 +3672,8 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
                 precedence,
                 Opcode::Fact,
                 operand.isLiteralSymbol,
-                operand.isNumericOnly
+                operand.isNumericOnly,
+                false
             });
             break;
         }
@@ -3692,6 +3722,7 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
                 MAX_PRECEDENCE,
                 Opcode::Nop,
                 true,
+                false,
                 false
             });
             break;
