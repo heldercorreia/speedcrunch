@@ -16,6 +16,10 @@
 import sys
 import os
 
+DOC_ROOT = os.path.abspath(os.path.dirname(__file__))
+EXTENSIONS_DIR = os.path.join(DOC_ROOT, 'extensions')
+VENDORED_QUARK_DIR = os.path.join(EXTENSIONS_DIR, 'quark-sphinx-theme-0.6.0')
+
 LANGUAGES = {
     'en_US': 'English'
 }
@@ -38,7 +42,8 @@ needs_sphinx = '3.0'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-sys.path.append(os.path.abspath('extensions'))
+sys.path.insert(0, VENDORED_QUARK_DIR)
+sys.path.insert(0, EXTENSIONS_DIR)
 
 extensions = ['speedcrunch_domain', 'sc_lexer']
 primary_domain = 'sc'
@@ -87,7 +92,7 @@ release = '1.0'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build']
+exclude_patterns = ['_build', 'extensions/**']
 
 highlight_language = 'speedcrunch'
 
