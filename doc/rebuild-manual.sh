@@ -47,6 +47,7 @@ if ! command -v qhelpgenerator >/dev/null 2>&1; then
 fi
 
 cd "$DOC_SRC_DIR"
+make build-bundled
 make update-prebuilt-manual
 
 echo "manual rebuilt and copied to: $ROOT_DIR/doc/build_html_embedded"
