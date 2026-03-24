@@ -26,6 +26,7 @@
                     <section title="Syntax" ref="userguide/syntax.html">
                         <section title="Number Notation" ref="userguide/syntax.html#number-notation">
                             <section title="Decimal Form" ref="userguide/syntax.html#decimal-form"/>
+                            <section title="Digit Grouping Separators" ref="userguide/syntax.html#digit-grouping-separators"/>
                             <section title="Scientific Notation" ref="userguide/syntax.html#scientific-notation"/>
                             <section title="Non-Decimal Bases" ref="userguide/syntax.html#non-decimal-bases"/>
                             <section title="Sexagecimal Values" ref="userguide/syntax.html#sexagecimal-values"/>
@@ -43,19 +44,24 @@
                     <section title="User Interface" ref="userguide/interface.html">
                         <section title="Widgets" ref="userguide/interface.html#widgets"/>
                         <section title="Expression Editor Features" ref="userguide/interface.html#expression-editor-features"/>
-                        <section title="Import/Export" ref="userguide/interface.html#import-export"/>
+                        <section title="Import/Export" ref="userguide/interface.html#import-export">
+                            <section title="Startup User Definitions" ref="userguide/interface.html#startup-user-definitions"/>
+                        </section>
                         <section title="Settings" ref="userguide/interface.html#settings">
-                            <section title="Result Format" ref="userguide/interface.html#result-format"/>
-                            <section title="Input Format" ref="userguide/interface.html#input-format"/>
+                            <section title="Format" ref="userguide/interface.html#format"/>
                             <section title="Angle Unit" ref="userguide/interface.html#angle-unit"/>
-                            <section title="Behavior" ref="userguide/interface.html#behavior"/>
+                            <section title="Digit Grouping" ref="userguide/interface.html#digit-grouping"/>
+                            <section title="History" ref="userguide/interface.html#history"/>
+                            <section title="Window" ref="userguide/interface.html#window"/>
+                            <section title="Results" ref="userguide/interface.html#results"/>
+                            <section title="Editing" ref="userguide/interface.html#editing"/>
                             <section title="User Interface Settings" ref="userguide/interface.html#user-interface-settings"/>
                         </section>
                         <section title="Keyboard Shortcuts" ref="userguide/interface.html#keyboard-shortcuts">
-                            <section title="Editing" ref="userguide/interface.html#editing"/>
+                            <section title="Editing" ref="userguide/interface.html#id2"/>
                             <section title="Widgets and Docks" ref="userguide/interface.html#widgets-and-docks"/>
                             <section title="Scrolling" ref="userguide/interface.html#scrolling"/>
-                            <section title="Format" ref="userguide/interface.html#format"/>
+                            <section title="Format" ref="userguide/interface.html#id3"/>
                             <section title="Various" ref="userguide/interface.html#various"/>
                         </section>
                     </section>
@@ -113,6 +119,7 @@
             <keyword name="binommean() (function)" id="function.binommean" ref="reference/statistical.html#sc.binommean"/>
             <keyword name="binompmf() (function)" id="function.binompmf" ref="reference/statistical.html#sc.binompmf"/>
             <keyword name="binomvar() (function)" id="function.binomvar" ref="reference/statistical.html#sc.binomvar"/>
+            <keyword name="binpad() (function)" id="function.binpad" ref="reference/integer.html#sc.binpad"/>
             <keyword name="cart() (function)" id="function.cart" ref="reference/basic.html#sc.cart"/>
             <keyword name="cbrt() (function)" id="function.cbrt" ref="reference/basic.html#sc.cbrt"/>
             <keyword name="ceil() (function)" id="function.ceil" ref="reference/integer.html#sc.ceil"/>
@@ -121,10 +128,12 @@
             <keyword name="cosh() (function)" id="function.cosh" ref="reference/basic.html#sc.cosh"/>
             <keyword name="cot() (function)" id="function.cot" ref="reference/basic.html#sc.cot"/>
             <keyword name="csc() (function)" id="function.csc" ref="reference/basic.html#sc.csc"/>
+            <keyword name="datetime() (function)" id="function.datetime" ref="reference/basic.html#sc.datetime"/>
             <keyword name="dec() (function)" id="function.dec" ref="reference/integer.html#sc.dec"/>
             <keyword name="degrees() (function)" id="function.degrees" ref="reference/basic.html#sc.degrees"/>
             <keyword name="e (constant)" id="constant.e" ref="reference/constants.html#sc.e"/>
             <keyword name="emod() (function)" id="function.emod" ref="reference/integer.html#sc.emod"/>
+            <keyword name="epoch() (function)" id="function.epoch" ref="reference/basic.html#sc.epoch"/>
             <keyword name="erf() (function)" id="function.erf" ref="reference/basic.html#sc.erf"/>
             <keyword name="erfc() (function)" id="function.erfc" ref="reference/basic.html#sc.erfc"/>
             <keyword name="exp() (function)" id="function.exp" ref="reference/basic.html#sc.exp"/>
@@ -135,6 +144,7 @@
             <keyword name="geomean() (function)" id="function.geomean" ref="reference/statistical.html#sc.geomean"/>
             <keyword name="gradians() (function)" id="function.gradians" ref="reference/basic.html#sc.gradians"/>
             <keyword name="hex() (function)" id="function.hex" ref="reference/integer.html#sc.hex"/>
+            <keyword name="hexpad() (function)" id="function.hexpad" ref="reference/integer.html#sc.hexpad"/>
             <keyword name="hypercdf() (function)" id="function.hypercdf" ref="reference/statistical.html#sc.hypercdf"/>
             <keyword name="hypermean() (function)" id="function.hypermean" ref="reference/statistical.html#sc.hypermean"/>
             <keyword name="hyperpmf() (function)" id="function.hyperpmf" ref="reference/statistical.html#sc.hyperpmf"/>
@@ -154,6 +164,7 @@
             <keyword name="int() (function)" id="function.int" ref="reference/basic.html#sc.int"/>
             <keyword name="j (constant)" id="constant.j" ref="reference/constants.html#sc.j"/>
             <keyword name="lb() (function)" id="function.lb" ref="reference/basic.html#sc.lb"/>
+            <keyword name="lcm() (function)" id="function.lcm" ref="reference/integer.html#sc.lcm"/>
             <keyword name="lg() (function)" id="function.lg" ref="reference/basic.html#sc.lg"/>
             <keyword name="ln() (function)" id="function.ln" ref="reference/basic.html#sc.ln"/>
             <keyword name="lngamma() (function)" id="function.lngamma" ref="reference/basic.html#sc.lngamma"/>
@@ -167,6 +178,7 @@
             <keyword name="not() (function)" id="function.not" ref="reference/integer.html#sc.not"/>
             <keyword name="npr() (function)" id="function.npr" ref="reference/statistical.html#sc.npr"/>
             <keyword name="oct() (function)" id="function.oct" ref="reference/integer.html#sc.oct"/>
+            <keyword name="octpad() (function)" id="function.octpad" ref="reference/integer.html#sc.octpad"/>
             <keyword name="or() (function)" id="function.or" ref="reference/integer.html#sc.or"/>
             <keyword name="phase() (function)" id="function.phase" ref="reference/basic.html#sc.phase"/>
             <keyword name="pi (constant)" id="constant.pi" ref="reference/constants.html#sc.pi"/>
@@ -175,9 +187,13 @@
             <keyword name="poipmf() (function)" id="function.poipmf" ref="reference/statistical.html#sc.poipmf"/>
             <keyword name="poivar() (function)" id="function.poivar" ref="reference/statistical.html#sc.poivar"/>
             <keyword name="polar() (function)" id="function.polar" ref="reference/basic.html#sc.polar"/>
+            <keyword name="popcount() (function)" id="function.popcount" ref="reference/integer.html#sc.popcount"/>
             <keyword name="powmod() (function)" id="function.powmod" ref="reference/integer.html#sc.powmod"/>
             <keyword name="product() (function)" id="function.product" ref="reference/statistical.html#sc.product"/>
             <keyword name="radians() (function)" id="function.radians" ref="reference/basic.html#sc.radians"/>
+            <keyword name="rand() (function)" id="function.rand" ref="reference/statistical.html#sc.rand"/>
+            <keyword name="randint() (function)" id="function.randint" ref="reference/statistical.html#sc.randint"/>
+            <keyword name="randint() (function)" id="function.randint" ref="reference/statistical.html#sc.randint"/>
             <keyword name="real() (function)" id="function.real" ref="reference/basic.html#sc.real"/>
             <keyword name="round() (function)" id="function.round" ref="reference/integer.html#sc.round"/>
             <keyword name="sec() (function)" id="function.sec" ref="reference/basic.html#sc.sec"/>
@@ -194,6 +210,7 @@
             <keyword name="tan() (function)" id="function.tan" ref="reference/basic.html#sc.tan"/>
             <keyword name="tanh() (function)" id="function.tanh" ref="reference/basic.html#sc.tanh"/>
             <keyword name="trunc() (function)" id="function.trunc" ref="reference/integer.html#sc.trunc"/>
+            <keyword name="turns() (function)" id="function.turns" ref="reference/basic.html#sc.turns"/>
             <keyword name="unmask() (function)" id="function.unmask" ref="reference/integer.html#sc.unmask"/>
             <keyword name="variance() (function)" id="function.variance" ref="reference/statistical.html#sc.variance"/>
             <keyword name="xor() (function)" id="function.xor" ref="reference/integer.html#sc.xor"/>

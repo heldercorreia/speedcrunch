@@ -104,8 +104,6 @@
 <p class="admonition-title">See also</p>
 <div class="line-block">
 <div class="line"><a class="reference internal" href="#sc.ln" title="ln"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">ln()</span></code></a> (natural logarithm)</div>
-<div class="line"><a class="reference internal" href="#sc.lg" title="lg"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">lg()</span></code></a> (binary logarithm)</div>
-<div class="line"><a class="reference internal" href="#sc.log" title="log"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">log()</span></code></a> (arbitrary base logarithm)</div>
 </div>
 </div>
 </td></tr></tbody></table></dd></dl>
@@ -135,6 +133,45 @@
 <dd><p>Compute the logarithm of base <code class="docutils literal notranslate"><span class="pre">n</span></code> . In <em>complex mode</em> the same rules apply as for <a class="reference internal" href="#sc.ln" title="ln"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">ln()</span></code></a>.</p>
 </dd></dl>
 
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.datetime">
+<span class="sig-name descname"><span class="pre">datetime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">unix_timestamp</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">offset</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
+<dd><p>Convert a Unix timestamp (seconds since 1970-01-01 00:00:00 UTC) into a
+numeric date/time value formatted as <code class="docutils literal notranslate"><span class="pre">YYYYMMDD.HHMMSS</span></code>.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">offset</span></code> is omitted, the timestamp is converted using the local system
+timezone. If <code class="docutils literal notranslate"><span class="pre">offset</span></code> is provided, it is interpreted as hours offset to
+GMT/UTC (fractional offsets are supported), and conversion is performed in
+UTC after applying that offset.</p>
+<p>This function is the inverse of <a class="reference internal" href="#sc.epoch" title="epoch"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">epoch()</span></code></a> when using the same <code class="docutils literal notranslate"><span class="pre">offset</span></code>.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">datetime</span><span class="p">(</span><span class="mi">1514761200</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="ge">= 20180101.000000</span>
+
+<span class="n">datetime</span><span class="p">(</span><span class="mi">1551464695</span><span class="p">;</span> <span class="o">-</span><span class="mf">3.5</span><span class="p">)</span>
+<span class="ge">= 20190301.145455</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.epoch">
+<span class="sig-name descname"><span class="pre">epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">yyyymmdd.hhmmss</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">offset</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
+<dd><p>Convert a numeric date/time value in <code class="docutils literal notranslate"><span class="pre">YYYYMMDD.HHMMSS</span></code> format to a Unix
+timestamp (seconds since 1970-01-01 00:00:00 UTC).</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">offset</span></code> is omitted, the value is interpreted in the local system
+timezone. If <code class="docutils literal notranslate"><span class="pre">offset</span></code> is provided, it is interpreted as hours offset to
+GMT/UTC (fractional offsets are supported).</p>
+<p>This function is the inverse of <a class="reference internal" href="#sc.datetime" title="datetime"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">datetime()</span></code></a> when using the same <code class="docutils literal notranslate"><span class="pre">offset</span></code>.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">epoch</span><span class="p">(</span><span class="mf">20180101.000000</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="ge">= 1514761200</span>
+
+<span class="n">epoch</span><span class="p">(</span><span class="mf">20190301.145455</span><span class="p">;</span> <span class="o">-</span><span class="mf">3.5</span><span class="p">)</span>
+<span class="ge">= 1551464695</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
 </section>
 <section id="trigonometric-inverse-trigonometric">
 <span id="trigonometric"></span><h2>Trigonometric &amp; Inverse Trigonometric</h2>
@@ -142,7 +179,7 @@
 <dt class="sig sig-object sc" id="sc.sin">
 <span class="sig-name descname"><span class="pre">sin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Returns the sine of <code class="docutils literal notranslate"><span class="pre">x</span></code>. The behavior depends on both the angle unit setting and on whether complex numbers are enabled.</p>
-<p>In <em>degrees</em> or <em>gradians</em> modes, the argument is assumed to be expressed in such that <a class="reference internal" href="#sc.sin" title="sin"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">sin()</span></code></a> is periodic with a period of 360 degrees or 400 gradians, respectively: <em>sin(x) = sin(x+360)</em> or <em>sin(x) = sin(x+400)</em>. Complex arguments are allowed only in <em>radians</em> mode, regardless of the corresponding setting.</p>
+<p>In <em>degrees</em>, <em>gradians</em>, or <em>turns</em> modes, the argument is assumed to be expressed in such that <a class="reference internal" href="#sc.sin" title="sin"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">sin()</span></code></a> is periodic with a period of 360 degrees, 400 gradians, or 1 turn, respectively: <em>sin(x) = sin(x+360)</em>, <em>sin(x) = sin(x+400)</em>, or <em>sin(x) = sin(x+1)</em>. Complex arguments are allowed only in <em>radians</em> mode, regardless of the corresponding setting.</p>
 <p>When <em>radians</em> are set as the angle unit, <a class="reference internal" href="#sc.sin" title="sin"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">sin()</span></code></a> will be 2π-periodic. The argument may be complex.</p>
 <p>For real arguments beyond approx. |x|&gt;10<sup>77</sup>, SpeedCrunch no longer recognizes the periodicity of the function and issues an error.</p>
 <p>The argument of <a class="reference internal" href="#sc.sin" title="sin"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">sin()</span></code></a> must be dimensionless.</p>
@@ -162,7 +199,7 @@
 <dt class="sig sig-object sc" id="sc.cos">
 <span class="sig-name descname"><span class="pre">cos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Returns the cosine of <code class="docutils literal notranslate"><span class="pre">x</span></code>. The behavior depends on both the angle unit setting and on whether complex numbers are enabled.</p>
-<p>In <em>degrees</em> or <em>gradians</em> modes, the argument is assumed to be expressed in such that <a class="reference internal" href="#sc.cos" title="cos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">cos()</span></code></a> is periodic with a period of 360 degrees or 400 gradians, respectively: <em>cos(x) = cos(x+360)</em> or <em>cos(x) = cos(x+400)</em>. Complex arguments are allowed only in <em>radians</em> mode, regardless of the corresponding setting.</p>
+<p>In <em>degrees</em>, <em>gradians</em>, or <em>turns</em> modes, the argument is assumed to be expressed in such that <a class="reference internal" href="#sc.cos" title="cos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">cos()</span></code></a> is periodic with a period of 360 degrees, 400 gradians, or 1 turn, respectively: <em>cos(x) = cos(x+360)</em>, <em>cos(x) = cos(x+400)</em>, or <em>cos(x) = cos(x+1)</em>. Complex arguments are allowed only in <em>radians</em> mode, regardless of the corresponding setting.</p>
 <p>When <em>radians</em> are set as the angle unit, <a class="reference internal" href="#sc.cos" title="cos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">cos()</span></code></a> will be 2π-periodic. The argument may be complex.</p>
 <p>For real arguments beyond approx. |x|&gt;10<sup>77</sup>, SpeedCrunch no longer recognizes the periodicity of the function and issues an error.</p>
 <p>The argument of <a class="reference internal" href="#sc.cos" title="cos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">cos()</span></code></a> must be dimensionless.</p>
@@ -183,7 +220,7 @@
 <dt class="sig sig-object sc" id="sc.tan">
 <span class="sig-name descname"><span class="pre">tan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Returns the tangent of <code class="docutils literal notranslate"><span class="pre">x</span></code>. The behavior depends on both the angle unit setting and on whether complex numbers are enabled.</p>
-<p>In <em>degrees</em> or <em>gradians</em> modes, the argument is assumed to be expressed in such that <a class="reference internal" href="#sc.tan" title="tan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">tan()</span></code></a> is periodic with a period of 360 degrees or 400 gradians, respectively: <em>tan(x) = tan(x+360)</em> or <em>tan(x) = tan(x+400)</em>. Complex arguments are allowed only in <em>radians</em> mode, regardless of the corresponding setting.</p>
+<p>In <em>degrees</em>, <em>gradians</em>, or <em>turns</em> modes, the argument is assumed to be expressed in such that <a class="reference internal" href="#sc.tan" title="tan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">tan()</span></code></a> is periodic with a period of 360 degrees, 400 gradians, or 1 turn, respectively: <em>tan(x) = tan(x+360)</em>, <em>tan(x) = tan(x+400)</em>, or <em>tan(x) = tan(x+1)</em>. Complex arguments are allowed only in <em>radians</em> mode, regardless of the corresponding setting.</p>
 <p>When <em>radians</em> are set as the angle unit, <a class="reference internal" href="#sc.tan" title="tan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">tan()</span></code></a> will be π-periodic. The argument may be complex.</p>
 <p>The argument of <a class="reference internal" href="#sc.tan" title="tan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">tan()</span></code></a> must be dimensionless.</p>
 <p>The inverse function is <a class="reference internal" href="#sc.arctan" title="arctan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arctan()</span></code></a>.</p>
@@ -201,8 +238,7 @@
 <dt class="sig sig-object sc" id="sc.cot">
 <span class="sig-name descname"><span class="pre">cot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Returns the cotangent of <code class="docutils literal notranslate"><span class="pre">x</span></code>. The behavior depends on both the angle unit setting and on whether complex numbers are enabled.</p>
-<p>In <em>degrees</em> or <em>gradians</em> modes, the argument is assumed to be expressed in such that <a class="reference internal" href="#sc.cot" title="cot"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">cot()</span></code></a> is periodic with a period of 360 degrees or 400 gradians, respectively: <em>cot(x) = cot(x+360)</em> or <em>cot(x) = cot(x+400)</em>. Complex arguments are allowed only in
-<em>radians</em> mode, regardless of the corresponding setting.</p>
+<p>In <em>degrees</em>, <em>gradians</em>, or <em>turns</em> modes, the argument is assumed to be expressed in such that <a class="reference internal" href="#sc.cot" title="cot"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">cot()</span></code></a> is periodic with a period of 360 degrees, 400 gradians, or 1 turn, respectively: <em>cot(x) = cot(x+360)</em>, <em>cot(x) = cot(x+400)</em>, or <em>cot(x) = cot(x+1)</em>. Complex arguments are allowed only in <em>radians</em> mode, regardless of the corresponding setting.</p>
 <p>When <em>radians</em> are set as the angle unit, <a class="reference internal" href="#sc.cot" title="cot"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">cot()</span></code></a> will be π-periodic. The argument may be complex.</p>
 <p>The argument of <a class="reference internal" href="#sc.cot" title="cot"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">cot()</span></code></a> must be dimensionless.</p>
 <table class="-x-quark-box -x-quark-admonition -x-quark-seealso"><tbody><tr><td width="100%" class="-x-quark-box-td"><div class="admonition seealso">
@@ -219,7 +255,7 @@
 <dt class="sig sig-object sc" id="sc.sec">
 <span class="sig-name descname"><span class="pre">sec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Returns the secant of <code class="docutils literal notranslate"><span class="pre">x</span></code>, defined as the reciprocal cosine of <code class="docutils literal notranslate"><span class="pre">x</span></code>: <em>sec(x) = 1/cos(x)</em>. The behavior depends on both the angle unit setting and on whether complex numbers are enabled.</p>
-<p>In <em>degrees</em> or <em>gradians</em> modes, the argument is assumed to be expressed in such that <a class="reference internal" href="#sc.sec" title="sec"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">sec()</span></code></a> is periodic with a period of 360 degrees or 400 gradians, respectively: <em>sec(x) = sec(x+360)</em> or <em>sec(x) = sec(x+400)</em>. Complex arguments are allowed only in <em>radians</em> mode, regardless of the corresponding setting.</p>
+<p>In <em>degrees</em>, <em>gradians</em>, or <em>turns</em> modes, the argument is assumed to be expressed in such that <a class="reference internal" href="#sc.sec" title="sec"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">sec()</span></code></a> is periodic with a period of 360 degrees, 400 gradians, or 1 turn, respectively: <em>sec(x) = sec(x+360)</em>, <em>sec(x) = sec(x+400)</em>, or <em>sec(x) = sec(x+1)</em>. Complex arguments are allowed only in <em>radians</em> mode, regardless of the corresponding setting.</p>
 <p>When <em>radians</em> are set as the angle unit, <a class="reference internal" href="#sc.sec" title="sec"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">sec()</span></code></a> will be 2π-periodic. The argument may be complex.</p>
 <p>For real arguments beyond approx. |x|&gt;10<sup>77</sup>, SpeedCrunch no longer recognizes the periodicity of the function and issues an error.</p>
 <p>The argument of <a class="reference internal" href="#sc.sec" title="sec"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">sec()</span></code></a> must be dimensionless.</p>
@@ -229,7 +265,7 @@
 <dt class="sig sig-object sc" id="sc.csc">
 <span class="sig-name descname"><span class="pre">csc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Returns the cosecant of <code class="docutils literal notranslate"><span class="pre">x</span></code>, defined as the reciprocal sine of <code class="docutils literal notranslate"><span class="pre">x</span></code>: <em>csc(x) = 1/sin(x)</em>. The behavior depends on both the angle unit setting and on whether complex numbers are enabled.</p>
-<p>In <em>degrees</em> or <em>gradians</em> modes, the argument is assumed to be expressed in such that <a class="reference internal" href="#sc.csc" title="csc"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">csc()</span></code></a> is periodic with a period of 360 degrees or 400 gradians, respectively: <em>csc(x) = csc(x+360)</em> or <em>csc(x) = csc(x+400)</em>. Complex arguments are allowed only in <em>radians</em> mode, regardless of the corresponding setting.</p>
+<p>In <em>degrees</em>, <em>gradians</em>, or <em>turns</em> modes, the argument is assumed to be expressed in such that <a class="reference internal" href="#sc.csc" title="csc"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">csc()</span></code></a> is periodic with a period of 360 degrees, 400 gradians, or 1 turn, respectively: <em>csc(x) = csc(x+360)</em>, <em>csc(x) = csc(x+400)</em>, or <em>csc(x) = csc(x+1)</em>. Complex arguments are allowed only in <em>radians</em> mode, regardless of the corresponding setting.</p>
 <p>When <em>radians</em> are set as the angle unit, <a class="reference internal" href="#sc.csc" title="csc"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">csc()</span></code></a> will be 2π-periodic. The argument may be complex.</p>
 <p>For real arguments beyond approx. |x|&gt;10<sup>77</sup>, SpeedCrunch no longer recognizes the periodicity of the function and issues an error.</p>
 <p>The argument of <a class="reference internal" href="#sc.csc" title="csc"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">csc()</span></code></a> must be dimensionless.</p>
@@ -239,7 +275,7 @@
 <dt class="sig sig-object sc" id="sc.arccos">
 <span class="sig-name descname"><span class="pre">arccos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Returns the inverse cosine of <code class="docutils literal notranslate"><span class="pre">x</span></code>, such that <em>cos(arccos(x)) = x</em>. The behavior of the function depends on both the angle unit setting and on whether complex numbers are enabled.</p>
-<p>In <em>degrees</em> or <em>gradians</em> modes, <a class="reference internal" href="#sc.arccos" title="arccos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arccos()</span></code></a> takes a real argument from <em>[-1, 1]</em>, and the return value is in the range <em>[0, 180]</em> or <em>[0, 200]</em>, respectively. Real arguments outside <em>[-1, 1]</em> and complex numbers are allowed only in <em>radians</em> mode.</p>
+<p>In <em>degrees</em>, <em>gradians</em>, or <em>turns</em> modes, <a class="reference internal" href="#sc.arccos" title="arccos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arccos()</span></code></a> takes a real argument from <em>[-1, 1]</em>, and the return value is in the range <em>[0, 180]</em>, <em>[0, 200]</em>, or <em>[0, 0.5]</em>, respectively. Real arguments outside <em>[-1, 1]</em> and complex numbers are allowed only in <em>radians</em> mode.</p>
 <p>When <em>radians</em> are set as the angle unit, <a class="reference internal" href="#sc.arccos" title="arccos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arccos()</span></code></a> maps an element from <em>[-1, 1]</em> to a value in <em>[0, π]</em>. When complex numbers are enabled in addition, <a class="reference internal" href="#sc.arccos" title="arccos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arccos()</span></code></a> may take any argument from the complex plane. In complex mode, <em>arccos(-1) = π</em> and <em>arccos(1) = 0</em> will yield the same result as in real mode.</p>
 <p>The argument of <a class="reference internal" href="#sc.arccos" title="arccos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arccos()</span></code></a> must be dimensionless.</p>
 <p>The inverse function is <a class="reference internal" href="#sc.cos" title="cos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">cos()</span></code></a>.</p>
@@ -249,7 +285,7 @@
 <dt class="sig sig-object sc" id="sc.arcsin">
 <span class="sig-name descname"><span class="pre">arcsin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Returns the inverse sine of <code class="docutils literal notranslate"><span class="pre">x</span></code>, such that <em>sin(arcsin(x)) = x</em>. The behavior of the function depends on both the angle unit setting and on whether complex numbers are enabled.</p>
-<p>In <em>degrees</em> or <em>gradians</em> modes, <a class="reference internal" href="#sc.arcsin" title="arcsin"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arcsin()</span></code></a> takes a real argument from <em>[-1, 1]</em>, and the return value is in the range <em>[0, 180]</em> or <em>[0, 200]</em>, respectively. Real arguments outside <em>[-1, 1]</em> and complex numbers are allowed only in <em>radians</em> mode.</p>
+<p>In <em>degrees</em>, <em>gradians</em>, or <em>turns</em> modes, <a class="reference internal" href="#sc.arcsin" title="arcsin"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arcsin()</span></code></a> takes a real argument from <em>[-1, 1]</em>, and the return value is in the range <em>[-90, 90]</em>, <em>[-100, 100]</em>, or <em>[-0.25, 0.25]</em>, respectively. Real arguments outside <em>[-1, 1]</em> and complex numbers are allowed only in <em>radians</em> mode.</p>
 <p>When <em>radians</em> are set as the angle unit, <a class="reference internal" href="#sc.arcsin" title="arcsin"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arcsin()</span></code></a> maps an element from <em>[-1, 1]</em> to a value in <em>[-π/2, π/2]</em>. When complex numbers are enabled in addition, <a class="reference internal" href="#sc.arcsin" title="arcsin"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arcsin()</span></code></a> may take any argument from the complex plane. In complex mode, <em>arcsin(-1) = π/2</em> and <em>arcsin(1) = π/2</em> will yield the same result as in real mode.</p>
 <p>The argument of <a class="reference internal" href="#sc.arccos" title="arccos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arccos()</span></code></a> must be dimensionless.</p>
 <p>The inverse function is <a class="reference internal" href="#sc.sin" title="sin"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">sin()</span></code></a>.</p>
@@ -259,7 +295,7 @@
 <dt class="sig sig-object sc" id="sc.arctan">
 <span class="sig-name descname"><span class="pre">arctan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Returns the inverse tangent of <code class="docutils literal notranslate"><span class="pre">x</span></code>, such that <em>tan(arctan(x)) = x</em>. The behavior of the function depends on both the angle unit setting and on whether complex numbers are enabled.</p>
-<p>In <em>degrees</em> or <em>gradians</em> modes, <a class="reference internal" href="#sc.arctan" title="arctan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arctan()</span></code></a> takes a real argument from <em>[-1, 1]</em>, and the return value is in the range <em>[0, 180]</em> or <em>[0, 200]</em>, respectively. Real arguments outside <em>[-1, 1]</em> and complex numbers are not allowed only in <em>radians</em> mode.</p>
+<p>In <em>degrees</em>, <em>gradians</em>, or <em>turns</em> modes, <a class="reference internal" href="#sc.arctan" title="arctan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arctan()</span></code></a> takes a real argument from <em>[-1, 1]</em>, and the return value is in the range <em>[-90, 90]</em>, <em>[-100, 100]</em>, or <em>[-0.25, 0.25]</em>, respectively. Real arguments outside <em>[-1, 1]</em> and complex numbers are not allowed only in <em>radians</em> mode.</p>
 <p>When <em>radians</em> are set as the angle unit, <a class="reference internal" href="#sc.arctan" title="arctan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arctan()</span></code></a> maps a real number to a value in <em>[-π/2, π/2]</em>. When complex numbers are enabled in addition, <a class="reference internal" href="#sc.arctan" title="arctan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arctan()</span></code></a> may take any argument from the complex plane, except for <em>+j</em> and <em>-j</em>.</p>
 <p>The argument of <a class="reference internal" href="#sc.arctan" title="arctan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arctan()</span></code></a> must be dimensionless.</p>
 <p>The inverse function is <a class="reference internal" href="#sc.tan" title="tan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">tan()</span></code></a>.</p>
@@ -269,7 +305,7 @@
 <dt class="sig sig-object sc" id="sc.arctan2">
 <span class="sig-name descname"><span class="pre">arctan2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x,</span> <span class="pre">y</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Returns the angle formed by the vector <em>(x, y)</em> and the X axis. If the point <em>(x, y)</em> lies in the first quadrant (i.e. both <em>x &gt; 0</em> and <em>y &gt; 0</em> are true), it is given by <em>arctan(y/x)</em>. However, the function handles vectors in other quadrants as well.</p>
-<p>The behavior of the function depends on the angle unit setting. In <em>degrees</em> or <em>gradians</em> modes, this function returns a value in the range <em>]-180, 180]</em> or <em>]-200, 200]</em>, respectively. When <em>radians</em> are set as the angle unit, the return value lies in the range <em>]-π, π]</em>.</p>
+<p>The behavior of the function depends on the angle unit setting. In <em>degrees</em>, <em>gradians</em>, or <em>turns</em> modes, this function returns a value in the range <em>]-180, 180]</em>, <em>]-200, 200]</em>, or <em>]-0.5, 0.5]</em>, respectively. When <em>radians</em> are set as the angle unit, the return value lies in the range <em>]-π, π]</em>.</p>
 <p>Unlike <a class="reference internal" href="#sc.arctan" title="arctan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arctan()</span></code></a> this function only accepts real arguments.</p>
 <p>The argument values must be dimensionless.</p>
 </dd></dl>
@@ -433,6 +469,13 @@
 <dt class="sig sig-object sc" id="sc.gradians">
 <span class="sig-name descname"><span class="pre">gradians</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Convert the angle <code class="docutils literal notranslate"><span class="pre">x</span></code> into gradians. Independently of the angle unit setting, this function will assume that <code class="docutils literal notranslate"><span class="pre">x</span></code> is given in radians and return <code class="docutils literal notranslate"><span class="pre">200*x/pi</span></code>.</p>
+<p>The function only accepts real, dimensionless arguments.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.turns">
+<span class="sig-name descname"><span class="pre">turns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Convert the angle <code class="docutils literal notranslate"><span class="pre">x</span></code> into turns. Independently of the angle unit setting, this function will assume that <code class="docutils literal notranslate"><span class="pre">x</span></code> is given in radians and return <code class="docutils literal notranslate"><span class="pre">x/(2*pi)</span></code>.</p>
 <p>The function only accepts real, dimensionless arguments.</p>
 </dd></dl>
 

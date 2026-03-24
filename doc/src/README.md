@@ -17,8 +17,8 @@ Building the docs requires additional dependencies:
 - [the Qt help builder extension](https://github.com/sphinx-doc/sphinxcontrib-qthelp) 1.0 or later
 
 Building the bundled docs requires:
-- [the Quark theme](https://pypi.python.org/pypi/quark-sphinx-theme) 0.2 or later
-- [qhelpgenerator](https://doc.qt.io/qt-5/qthelp-framework.html) matching the Qt version used to build SpeedCrunch
+- the Quark theme (already bundled as an extension for convenience)
+- [qhelpgenerator](https://doc.qt.io/qt-6/qthelp-framework.html) matching the Qt version used to build SpeedCrunch
 
 Building the website requires:
 - [the sphinx-bootstrap theme](https://pypi.org/project/sphinx-bootstrap-theme/)

@@ -336,15 +336,5 @@ so you may want to avoid them even if they're still supported in your version of
 |                               |    The reasons for its removal are discussed in more detail   |                         |
 |                               |    in `issue #239 <issue239_>`_.                              |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
-| ``f x``                       | **Simplified function syntax**                                | ``sqrt 2 = sqrt(2)``    |
-|                               |   Allows omitting the parentheses when                        |                         |
-|                               |   calling a function.                                         |                         |
-|                               |                                                               |                         |
-|                               | .. deprecated:: 0.12                                          |                         |
-|                               |    Use of this feature is                                     |                         |
-|                               |    discouraged because it allows                              |                         |
-|                               |    for very ambiguous expressions. It                         |                         |
-|                               |    will likely be removed in a future release.                |                         |
-+-------------------------------+---------------------------------------------------------------+-------------------------+
 
 .. _issue239: https://bitbucket.org/heldercorreia/speedcrunch/issues/239/more-intuitive-and-useful-percentage

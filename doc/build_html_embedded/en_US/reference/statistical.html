@@ -118,6 +118,36 @@
 </dd></dl>
 
 <dl class="sc function">
+<dt class="sig sig-object sc" id="sc.rand">
+<span class="sig-name descname"><span class="pre">rand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">[digits</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Generates a pseudo-random decimal in the range <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;=</span> <span class="pre">x</span> <span class="pre">&lt;</span> <span class="pre">1</span></code>.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">digits</span></code> is omitted, 16 random decimal digits are generated internally. If supplied, <code class="docutils literal notranslate"><span class="pre">digits</span></code> must be an integer between 0 and 78.</p>
+<p>Examples:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">rand</span><span class="p">()</span>
+<span class="n">rand</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.randint">
+<span class="sig-name descname"><span class="pre">randint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">max</span></em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc">
+<span class="sig-name descname"><span class="pre">randint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">min</span></em>; <em class="sig-param"><span class="pre">max</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Generates a pseudo-random integer between two inclusive bounds.</p>
+<p>With one argument, the range is from 0 to <code class="docutils literal notranslate"><span class="pre">max</span></code> (or from <code class="docutils literal notranslate"><span class="pre">max</span></code> to 0 if <code class="docutils literal notranslate"><span class="pre">max</span></code> is negative). With two arguments, both bounds are included and the argument order does not matter.</p>
+<p>Examples:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">randint</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">;</span> <span class="mi">6</span><span class="p">)</span>
+<span class="n">randint</span><span class="p">(</span><span class="mi">6</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
 <dt class="sig sig-object sc" id="sc.variance">
 <span class="sig-name descname"><span class="pre">variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x1</span></em>; <em class="sig-param"><span class="pre">x2</span></em>; <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Computes the population variance of the arguments. The variance is measure for the spreading of a set of numbers.</p>
