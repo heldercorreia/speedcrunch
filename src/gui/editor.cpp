@@ -66,6 +66,27 @@ static void moveCursorToEnd(Editor* editor)
     editor->setTextCursor(cursor);
 }
 
+static bool isOperatorOnlyIncompleteInput(const QString& expression)
+{
+    const QString trimmed = expression.trimmed();
+    if (trimmed.isEmpty())
+        return false;
+
+    bool sawOperator = false;
+    for (int i = 0; i < trimmed.size(); ++i) {
+        const QChar ch = trimmed.at(i);
+        if (ch.isSpace())
+            continue;
+        if (ch == QLatin1Char('+') || EditorUtils::isSubtractionOperatorAlias(ch)) {
+            sawOperator = true;
+            continue;
+        }
+        return false;
+    }
+
+    return sawOperator;
+}
+
 static QString groupedDigitsForTooltip(const QString& input)
 {
     const Settings* settings = Settings::instance();
@@ -792,6 +813,11 @@ void Editor::autoCalc()
             emit autoCalcQuantityAvailable(quantity);
         }
     } else {
+        if (isOperatorOnlyIncompleteInput(str)) {
+            emit autoCalcDisabled();
+            return;
+        }
+
         const QString usageTooltip = FunctionTooltipUtils::activeFunctionUsageTooltip(
             m_evaluator,
             text(),
@@ -882,6 +908,11 @@ void Editor::autoCalcSelection(const QString& custom)
             emit autoCalcQuantityAvailable(quantity);
         }
     } else {
+        if (isOperatorOnlyIncompleteInput(str)) {
+            emit autoCalcDisabled();
+            return;
+        }
+
         QString baseExpression;
         if (EditorUtils::expressionWithoutIgnorableTrailingToken(str, &baseExpression)) {
             m_evaluator->setExpression(baseExpression);

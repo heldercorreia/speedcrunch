@@ -118,6 +118,115 @@ static bool splitVariableDescription(const QString& expression,
     return false;
 }
 
+static bool s_isSubtractionOperatorAlias(const QChar& ch)
+{
+    return ch == QLatin1Char('-') || ch == UnicodeChars::MinusSign;
+}
+
+static bool s_isMultiplicationOperatorAlias(const QChar& ch, bool keepDotOperator = false)
+{
+    switch (ch.unicode()) {
+    case '*':
+    case 0x00D7: // × MULTIPLICATION SIGN
+        return true;
+    case UnicodeChars::DotOperator.unicode():
+        return !keepDotOperator;
+    default:
+        return false;
+    }
+}
+
+static bool s_isExpressionOperatorOrSeparator(const QChar& ch)
+{
+    return ch == QLatin1Char('+')
+           || ch == UnicodeChars::MinusSign
+           || ch == UnicodeChars::DotOperator
+           || ch == QLatin1Char('/')
+           || ch == QLatin1Char('%')
+           || ch == QLatin1Char('^')
+           || ch == QLatin1Char('&')
+           || ch == QLatin1Char('|')
+           || ch == QLatin1Char('=')
+           || ch == QLatin1Char('>')
+           || ch == QLatin1Char('<')
+           || ch == QLatin1Char(';')
+           || ch == QLatin1Char(',');
+}
+
+static bool s_expressionWithoutIgnorableTrailingToken(const QString& text, QString* out)
+{
+    if (!out)
+        return false;
+
+    const QString trimmed = text.trimmed();
+    if (trimmed.isEmpty())
+        return false;
+
+    int i = trimmed.size() - 1;
+    const QChar last = trimmed.at(i);
+    const bool isPlusMinusTail =
+        (last == QLatin1Char('+') || s_isSubtractionOperatorAlias(last));
+    const bool isMultiplicationTail =
+        (last == UnicodeChars::DotOperator || s_isMultiplicationOperatorAlias(last, true));
+
+    if (last != QLatin1Char('(')
+        && !isPlusMinusTail
+        && !isMultiplicationTail
+        && last != QLatin1Char('/')
+        && last != QLatin1Char('^')
+        && last != QLatin1Char('\\'))
+        return false;
+
+    if (last == QLatin1Char('/')) {
+        --i;
+        if (i >= 0 && trimmed.at(i) == QLatin1Char('/'))
+            return false;
+    } else if (last == QLatin1Char('^')) {
+        --i;
+        if (i >= 0 && trimmed.at(i) == QLatin1Char('^'))
+            return false;
+    } else if (isPlusMinusTail) {
+        while (i >= 0 && (trimmed.at(i) == QLatin1Char('+')
+                          || s_isSubtractionOperatorAlias(trimmed.at(i))))
+            --i;
+    } else if (isMultiplicationTail) {
+        --i;
+        if (i >= 0) {
+            const QChar prev = trimmed.at(i);
+            const bool prevIsMultiplication =
+                (prev == UnicodeChars::DotOperator
+                 || s_isMultiplicationOperatorAlias(prev, true));
+            if (prevIsMultiplication) {
+                --i;
+                if (i >= 0) {
+                    const QChar prevPrev = trimmed.at(i);
+                    const bool prevPrevIsMultiplication =
+                        (prevPrev == UnicodeChars::DotOperator
+                         || s_isMultiplicationOperatorAlias(prevPrev, true));
+                    if (prevPrevIsMultiplication)
+                        return false;
+                }
+            }
+        }
+    } else {
+        while (i >= 0 && trimmed.at(i) == last)
+            --i;
+    }
+
+    const QString prefix = trimmed.left(i + 1).trimmed();
+    if (prefix.isEmpty())
+        return false;
+
+    const QChar prefixLast = prefix.at(prefix.size() - 1);
+    if (prefixLast == QLatin1Char('(')
+        || s_isExpressionOperatorOrSeparator(prefixLast)
+        || prefixLast == QLatin1Char('\\'))
+        return false;
+
+    *out = prefix;
+    return true;
+}
+
 bool isMinus(const QChar& ch)
 {
     return ch == QLatin1Char('-') || ch == UnicodeChars::MinusSign;
@@ -4568,6 +4677,12 @@ QString Evaluator::autoFix(const QString& expr)
     // Strip trailing equal sign (=).
     while (result.endsWith("="))
         result = result.left(result.length() - 1);
+
+    // Make committed evaluation consistent with live/selection previews by
+    // swallowing safe trailing incomplete tokens (e.g. "1+2+").
+    QString withoutTrailingIncompleteToken;
+    if (s_expressionWithoutIgnorableTrailingToken(result, &withoutTrailingIncompleteToken))
+        result = withoutTrailingIncompleteToken;
 
     replaceSuperscriptPowersWithCaretEquivalent(result);
 

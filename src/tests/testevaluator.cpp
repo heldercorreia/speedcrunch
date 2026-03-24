@@ -1584,6 +1584,36 @@ void test_auto_fix_trailing_equal()
     CHECK_AUTOFIX("1==", "1");
     CHECK_AUTOFIX("1/3====", "1/3");
     CHECK_AUTOFIX("sin(x+y)=", "sin(x+y)");
+    CHECK_AUTOFIX("1+2+", "1+2");
+    CHECK_AUTOFIX("1++++", "1");
+    CHECK_AUTOFIX("2**", "2");
+    CHECK_AUTOFIX("3/", "3");
+    CHECK_AUTOFIX("5+cos pi (", "5+cos pi");
+
+    ++eval_total_tests;
+    const QString fixedTrailingPlus = eval->autoFix(QString::fromUtf8("1+2+"));
+    eval->setExpression(fixedTrailingPlus);
+    const Quantity trailingPlusResult = eval->evalUpdateAns();
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\tautofix trailing plus eval\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl
+             << "\tAutoFix: " << fixedTrailingPlus.toUtf8().constData() << endl;
+    } else {
+        QString formatted = DMath::format(trailingPlusResult, Format::Fixed());
+        formatted.replace(QString::fromUtf8("−"), "-");
+        if (formatted != QStringLiteral("3")) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\tautofix trailing plus eval\t[NEW]" << endl
+                 << "\tResult   : " << formatted.toLatin1().constData() << endl
+                 << "\tExpected : 3" << endl
+                 << "\tAutoFix  : " << fixedTrailingPlus.toUtf8().constData() << endl;
+        }
+    }
 }
 
 void test_auto_fix_untouch()
@@ -3023,6 +3053,30 @@ void test_expression_operator_normalization()
         ++eval_new_failed_tests;
         cerr << __FILE__ << "[" << __LINE__
              << "]\texpressionWithoutIgnorableTrailingToken reject )))\t[NEW]" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool rejectOnlyPlus =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("+"),
+                                                             &ignoredTrailing);
+    if (rejectOnlyPlus) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken reject +\t[NEW]" << endl;
+    }
+
+    ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool rejectOnlyMixedPlusMinus =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("-+-+-++--+"),
+                                                             &ignoredTrailing);
+    if (rejectOnlyMixedPlusMinus) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken reject mixed +/- only\t[NEW]" << endl;
     }
 }
 
