@@ -22,6 +22,8 @@ General
 
     Return the square root of ``x``. If complex numbers are disabled, this function is only defined for *x > 0*. In *complex mode*, any complex number may be specified, yielding the complex root in the upper half plane.
 
+    Alias: ``√(x)``.
+
     The argument may have a dimension.
 
 .. function:: cbrt(x)
@@ -32,6 +34,8 @@ General
         = -3
 
     In *complex mode*, this function accepts any complex input. The result will generally be the first complex root, i.e. the one with a phase between 0 and π/3. Real negative arguments however will still yield a real (negative) result, matching the function's behavior in *real mode*. Use ``x^(1/3)`` to get the first complex root.
+
+    Alias: ``∛(x)``.
 
 .. function:: exp(x)
 

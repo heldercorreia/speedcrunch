@@ -23,6 +23,7 @@
 #include "core/functions.h"
 
 #include "core/settings.h"
+#include "core/unicodechars.h"
 #include "math/hmath.h"
 #include "math/cmath.h"
 #include "math/floatconfig.h"
@@ -1308,6 +1309,10 @@ void FunctionRepo::createFunctions()
     //Date convertion
     FUNCTION_INSERT(datetime);
     FUNCTION_INSERT(epoch);
+
+    // Symbol aliases.
+    m_functions.insert(QString(UnicodeChars::SquareRoot).toUpper(), find(QStringLiteral("sqrt")));
+    m_functions.insert(QString(UnicodeChars::CubeRoot).toUpper(), find(QStringLiteral("cbrt")));
 }
 
 FunctionRepo* FunctionRepo::instance()

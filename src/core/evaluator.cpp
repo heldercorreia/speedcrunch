@@ -2117,7 +2117,11 @@ void Tokens::append(const Token& token)
 // Helper function: return true for valid identifier character.
 static bool isIdentifier(QChar ch)
 {
-    return ch.unicode() == '_' || ch.unicode() == '$' || ch.isLetter();
+    return ch.unicode() == '_'
+           || ch.unicode() == '$'
+           || ch.isLetter()
+           || ch == UnicodeChars::SquareRoot
+           || ch == UnicodeChars::CubeRoot;
 }
 
 // Helper function: return true for valid radix characters.
@@ -2148,6 +2152,9 @@ bool Evaluator::isSeparatorChar(const QChar& ch)
     // Never treat letters or digits from any script as grouping separators.
     // This avoids silently collapsing expressions like "12天2" into "122".
     if (ch.isLetterOrNumber())
+        return false;
+
+    if (ch == UnicodeChars::SquareRoot || ch == UnicodeChars::CubeRoot)
         return false;
 
     if (isRadixChar(ch))
@@ -3718,7 +3725,9 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
             stack.takeLast();
 
             stack.append({
-                QStringLiteral("%1(%2)").arg(functionName, arguments.join("; ")),
+                QStringLiteral("%1(%2)").arg(
+                    UnicodeChars::normalizeRootFunctionAliasesForDisplay(functionName),
+                    arguments.join("; ")),
                 MAX_PRECEDENCE,
                 Opcode::Nop,
                 true,
@@ -4716,6 +4725,7 @@ QString Evaluator::autoFix(const QString& expr)
         result = withoutTrailingIncompleteToken;
 
     replaceSuperscriptPowersWithCaretEquivalent(result);
+    result = UnicodeChars::normalizeRootFunctionAliasesForDisplay(result);
 
     // Normalize symbolic multiplication to a compact "⋅" form.
     // Examples:

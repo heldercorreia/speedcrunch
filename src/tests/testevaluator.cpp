@@ -1168,6 +1168,13 @@ void test_function_basic()
 
     CHECK_EVAL_PRECISE("exp((1)/2) + exp((1)/2)", "3.29744254140025629369730157562832714330755220142030");
 
+    CHECK_EVAL("√(81)", "9");
+    CHECK_EVAL("∛(-27)", "-3");
+    CHECK_INTERPRETED("sqrt(81)", "√(81)");
+    CHECK_INTERPRETED("cbrt(-27)", "∛(-27)");
+    CHECK_INTERPRETED("√(81)", "√(81)");
+    CHECK_INTERPRETED("∛(-27)", "∛(-27)");
+
     // Test functions composition
     CHECK_EVAL("log(10;log(10;1e100))", "2");
     CHECK_EVAL("log(10;abs(-100))", "2");
@@ -1581,6 +1588,8 @@ void test_auto_fix_ans()
     CHECK_AUTOFIX("abs", "abs(ans)");
     CHECK_AUTOFIX("exp", "exp(ans)");
     CHECK_AUTOFIX("lg", "lg(ans)");
+    CHECK_AUTOFIX("sqrt", "√(ans)");
+    CHECK_AUTOFIX("cbrt", "∛(ans)");
 }
 
 void test_auto_fix_trailing_equal()
@@ -1649,6 +1658,8 @@ void test_auto_fix_powers()
                   "2⋅sin(33×3⋅sin(23)⋅cos(−pi))⋅sin(23234)⋅23⧸2−sin(−12) − 12−12");
     CHECK_AUTOFIX("2          ×pi×  pi + 2^12.000−2",
                   "2⋅pi⋅pi + 2^12.000−2");
+    CHECK_AUTOFIX("sqrt(16)+cbrt(27)", "√(16)+∛(27)");
+    CHECK_AUTOFIX("asqrt(16)+cbrtfoo(27)", "asqrt(16)+cbrtfoo(27)");
 
     // Selection text copied from result display may contain medium spaces and
     // paragraph separators; auto-fix should still produce a valid expression.
@@ -1960,7 +1971,7 @@ void test_implicit_multiplication()
     CHECK_INTERPRETED("a*(b)", "a⋅b");
     CHECK_INTERPRETED("sin(pi)*cos(pi)", "sin(pi)⋅cos(pi)");
     CHECK_INTERPRETED("f()*a", "f()⋅a");
-    CHECK_INTERPRETED("sqrt(4)*a", "sqrt(4)⋅a");
+    CHECK_INTERPRETED("sqrt(4)*a", "√(4)⋅a");
     CHECK_INTERPRETED("a*2", "a⋅2");
     CHECK_INTERPRETED("2*a", "2⋅a");
     CHECK_INTERPRETED("2*3", "2×3");
@@ -1986,8 +1997,8 @@ void test_implicit_multiplication()
     CHECK_EVAL("a sqrt(a^2)", "25");
     CHECK_INTERPRETED("2×sin pi", "2⋅sin(pi)");
     CHECK_INTERPRETED("a sin(pi/2)", "a⋅sin(pi/2)");
-    CHECK_INTERPRETED("a sqrt(4)", "a⋅sqrt(4)");
-    CHECK_INTERPRETED("a sqrt(a^2)", "a⋅sqrt(a^2)");
+    CHECK_INTERPRETED("a sqrt(4)", "a⋅√(4)");
+    CHECK_INTERPRETED("a sqrt(a^2)", "a⋅√(a^2)");
 
     /* Tests issue 538 */
     /* 3 sin (3 pi) was evaluated but not 3 sin (3) */
@@ -2009,7 +2020,7 @@ void test_implicit_multiplication()
 
     CHECK_EVAL("6/2(2+1)", "9");
     CHECK_INTERPRETED("6/2(2+1)", "(6/2)⋅(2+1)");
-    CHECK_INTERPRETED("1/2 sqrt(3)", "(1/2)⋅sqrt(3)");
+    CHECK_INTERPRETED("1/2 sqrt(3)", "(1/2)⋅√(3)");
     CHECK_INTERPRETED("1/2(2+3)", "(1/2)⋅(2+3)");
     CHECK_INTERPRETED("2/3(4/5)", "(2/3)⋅((4/5))");
     CHECK_INTERPRETED("10\\3(2)", "(10\\3)⋅2");
@@ -2035,8 +2046,8 @@ void test_implicit_multiplication()
     CHECK_INTERPRETED(QString::fromUtf8("pi  −−−−−3"), "pi-3");
     CHECK_INTERPRETED(QString::fromUtf8("pi  −−−−−−3"), "pi+3");
     CHECK_INTERPRETED("1/(1×2^3×3)", "1/(1⋅(2^3)⋅3)");
-    CHECK_INTERPRETED("x=1/2 sqrt(3)", "x=(1/2)⋅sqrt(3)");
-    CHECK_INTERPRETED("g(t)=t/2 sqrt(3)", "g(t)=(t/2)⋅sqrt(3)");
+    CHECK_INTERPRETED("x=1/2 sqrt(3)", "x=(1/2)⋅√(3)");
+    CHECK_INTERPRETED("g(t)=t/2 sqrt(3)", "g(t)=(t/2)⋅√(3)");
     CHECK_INTERPRETED("sin 23       cos 232323×pi×pi   2",
                       "sin(23)⋅cos(232323)⋅pi⋅pi⋅2");
     CHECK_INTERPRETED("sin 23       cos 232323×pi×pi   2×cos pi×pi×23",
@@ -2541,7 +2552,7 @@ void test_display_interpreted_spacing()
             + divide
             + QStringLiteral("2)")
             + dotSpaced
-            + QStringLiteral("sqrt(3)"));
+            + QStringLiteral("√(3)"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("g(t)=t/2 sqrt(3)"),
         QStringLiteral("g(t)")
@@ -2550,7 +2561,7 @@ void test_display_interpreted_spacing()
             + divide
             + QStringLiteral("2)")
             + dotSpaced
-            + QStringLiteral("sqrt(3)"));
+            + QStringLiteral("√(3)"));
 }
 
 void test_format()
@@ -2687,11 +2698,12 @@ void test_expression_operator_normalization()
     }
 
     const QString editorNormalized = EditorUtils::normalizeExpressionOperatorsForEditorInput(
-        QString::fromUtf8("2⋅3 4·5 6*7 8/4 10÷2 9⧸3 𝜋 𝝅 𝞹 𝛑"));
+        QString::fromUtf8("2⋅3 4·5 6*7 8/4 10÷2 9⧸3 𝜋 𝝅 𝞹 𝛑 sqrt cbrt asqrt cbrtfoo"));
     const std::string editorNormalizedStd = editorNormalized.toStdString();
     ++eval_total_tests;
     DisplayErrorOnMismatch(__FILE__, __LINE__, "normalizeExpressionOperatorsForEditorInput",
-                           editorNormalizedStd, "2⋅3 4×5 6×7 8/4 10/2 9/3 π π π π",
+                           editorNormalizedStd,
+                           "2⋅3 4×5 6×7 8/4 10/2 9/3 π π π π √ ∛ asqrt cbrtfoo",
                            eval_failed_tests, eval_new_failed_tests);
 
     const QStringList parsedForEditor = EditorUtils::parsePastedExpressionsForEditorInput(
@@ -2704,8 +2716,11 @@ void test_expression_operator_normalization()
                           "𝜋+1\n"
                           "𝝅+1\n"
                           "𝞹+1\n"
-                          "𝛑+1"));
-    if (parsedForEditor.size() != 10
+                          "𝛑+1\n"
+                          "sqrt(4)\n"
+                          "cbrt(8)\n"
+                          "asqrt(4)"));
+    if (parsedForEditor.size() != 13
         || parsedForEditor.at(0) != QString::fromUtf8("2⋅3")
         || parsedForEditor.at(1) != QString::fromUtf8("4×5")
         || parsedForEditor.at(2) != QString::fromUtf8("6×7")
@@ -2715,13 +2730,16 @@ void test_expression_operator_normalization()
         || parsedForEditor.at(6) != QString::fromUtf8("π+1")
         || parsedForEditor.at(7) != QString::fromUtf8("π+1")
         || parsedForEditor.at(8) != QString::fromUtf8("π+1")
-        || parsedForEditor.at(9) != QString::fromUtf8("π+1")) {
+        || parsedForEditor.at(9) != QString::fromUtf8("π+1")
+        || parsedForEditor.at(10) != QString::fromUtf8("√(4)")
+        || parsedForEditor.at(11) != QString::fromUtf8("∛(8)")
+        || parsedForEditor.at(12) != QString::fromUtf8("asqrt(4)")) {
         ++eval_total_tests;
         ++eval_failed_tests;
         ++eval_new_failed_tests;
         cerr << __FILE__ << "[" << __LINE__ << "]\tparsePastedExpressionsForEditorInput\t[NEW]" << endl
              << "\tResult   : " << parsedForEditor.join("|").toUtf8().constData() << endl
-             << "\tExpected : 2⋅3|4×5|6×7|8/4|10/2|9/3|π+1|π+1|π+1|π+1" << endl;
+             << "\tExpected : 2⋅3|4×5|6×7|8/4|10/2|9/3|π+1|π+1|π+1|π+1|√(4)|∛(8)|asqrt(4)" << endl;
     } else {
         ++eval_total_tests;
     }

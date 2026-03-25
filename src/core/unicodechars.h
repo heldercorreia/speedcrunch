@@ -20,6 +20,7 @@
 #define CORE_UNICODECHARS_H
 
 #include <QChar>
+#include <QRegularExpression>
 #include <QString>
 
 namespace UnicodeChars {
@@ -37,6 +38,8 @@ inline constexpr QChar HeavyMultiplicationX(0x2716);
 inline constexpr QChar NAryTimesOperator(0x2A09);
 inline constexpr QChar VectorOrCrossProduct(0x2A2F);
 inline constexpr QChar Pi(0x03C0);
+inline constexpr QChar SquareRoot(0x221A);
+inline constexpr QChar CubeRoot(0x221B);
 inline constexpr char32_t MathematicalBoldSmallPiCodePoint = 0x1D6D1;
 inline constexpr char32_t MathematicalItalicSmallPiCodePoint = 0x1D70B;
 inline constexpr char32_t MathematicalSansSerifBoldSmallPiCodePoint = 0x1D745;
@@ -75,6 +78,20 @@ inline QString normalizePiForDisplay(QString text)
         ++i;
     }
 
+    return text;
+}
+
+inline QString normalizeRootFunctionAliasesForDisplay(QString text)
+{
+    static const QRegularExpression sqrtRE(
+        QStringLiteral(R"((?<![\p{L}\p{N}_$])sqrt(?![\p{L}\p{N}_$]))"),
+        QRegularExpression::CaseInsensitiveOption);
+    static const QRegularExpression cbrtRE(
+        QStringLiteral(R"((?<![\p{L}\p{N}_$])cbrt(?![\p{L}\p{N}_$]))"),
+        QRegularExpression::CaseInsensitiveOption);
+
+    text.replace(sqrtRE, QString(SquareRoot));
+    text.replace(cbrtRE, QString(CubeRoot));
     return text;
 }
 
