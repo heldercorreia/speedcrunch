@@ -461,7 +461,9 @@ static Token::Operator matchOperator(const QString& text)
           result = Token::ArithmeticLeftShift;
         else if (text == ">>")
           result = Token::ArithmeticRightShift;
-        else if (text == "->" || text == "in")
+        else if (text == "->"
+                 || (text.at(0).unicode() == 0x2212 && text.at(1) == QLatin1Char('>'))
+                 || text.compare(QStringLiteral("in"), Qt::CaseInsensitive) == 0)
             result = Token::UnitConversion;
     }
 
@@ -4774,9 +4776,12 @@ QString Evaluator::autoFix(const QString& expr)
 
             const QString left = match.captured(1);
             const QString right = match.captured(2);
+            const bool keepAsUnitConversionAlias =
+                left.compare(QStringLiteral("in"), Qt::CaseInsensitive) == 0
+                || right.compare(QStringLiteral("in"), Qt::CaseInsensitive) == 0;
             const bool keepAsFunctionCall =
                 FunctionRepo::instance()->find(left) || hasUserFunction(left);
-            if (keepAsFunctionCall) {
+            if (keepAsUnitConversionAlias || keepAsFunctionCall) {
                 offset = match.capturedStart(2);
                 continue;
             }

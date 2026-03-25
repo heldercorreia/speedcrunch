@@ -600,6 +600,11 @@ void test_binary()
     CHECK_EVAL("1 meter -> meter - 2meter", "-1 (meter - 2meter)");
     CHECK_EVAL("1 meter -> meter", "1 meter");
     CHECK_EVAL("1 (10 meter) -> meter", "10 meter");
+    CHECK_EVAL("1 meter in meter", "1 meter");
+    CHECK_EVAL("1 meter IN meter", "1 meter");
+    CHECK_EVAL("50 yard + 2 foot in centi meter", "4632.96 centi meter");
+    CHECK_EVAL("10 meter in (1 yard + 2 foot)", "6.56167979002624671916 (1 yard + 2 foot)");
+    CHECK_EVAL(QString::fromUtf8("1 meter −> centi meter"), "100 centi meter");
 }
 
 void test_bitwise_complement_operator()
@@ -1658,6 +1663,8 @@ void test_auto_fix_powers()
                   "2⋅sin(33×3⋅sin(23)⋅cos(−pi))⋅sin(23234)⋅23⧸2−sin(−12) − 12−12");
     CHECK_AUTOFIX("2          ×pi×  pi + 2^12.000−2",
                   "2⋅pi⋅pi + 2^12.000−2");
+    CHECK_AUTOFIX("1 meter in meter", "1 meter in meter");
+    CHECK_AUTOFIX("1 meter IN meter", "1 meter IN meter");
     CHECK_AUTOFIX("sqrt(16)+cbrt(27)", "√(16)+∛(27)");
     CHECK_AUTOFIX("asqrt(16)+cbrtfoo(27)", "asqrt(16)+cbrtfoo(27)");
 
