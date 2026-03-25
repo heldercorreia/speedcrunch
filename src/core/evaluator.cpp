@@ -450,6 +450,9 @@ static Token::Operator matchOperator(const QString& text)
         case '|':
             result = Token::BitwiseLogicalOR;
             break;
+        case UnicodeChars::RightwardsArrow.unicode():
+            result = Token::UnitConversion;
+            break;
         default:
             result = Token::Invalid;
         }
@@ -582,7 +585,7 @@ static QString opcodeToInfixSymbol(Opcode::Type opcodeType, bool implicitMultipl
     case Opcode::RSh: return ">>";
     case Opcode::BAnd: return "&";
     case Opcode::BOr: return "|";
-    case Opcode::Conv: return "->";
+    case Opcode::Conv: return QString(UnicodeChars::RightwardsArrow);
     default: return QString();
     }
 }
@@ -1845,6 +1848,7 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
             || op == Token::Multiplication
             || op == Token::Division
             || op == Token::IntegerDivision
+            || op == Token::UnitConversion
             || op == Token::Assignment
             || op == Token::ArithmeticLeftShift
             || op == Token::ArithmeticRightShift;
@@ -2142,11 +2146,6 @@ bool Evaluator::isRadixChar(const QChar& ch)
 // Helper function: return true for valid thousand separator characters.
 bool Evaluator::isSeparatorChar(const QChar& ch)
 {
-    // Match everything that is not alphanumeric or an operator or NUL.
-    static const QRegularExpression s_separatorRE(
-        R"([^a-zA-Z0-9\+\-\−\*\×⋅÷\/⧸\^;\(\)%!=\\&\|<>\?#\x0000])"
-    );
-
     // Never treat letters or digits from any script as grouping separators.
     // This avoids silently collapsing expressions like "12天2" into "122".
     if (ch.isLetterOrNumber())
@@ -2158,7 +2157,7 @@ bool Evaluator::isSeparatorChar(const QChar& ch)
     if (isRadixChar(ch))
         return false;
 
-    return s_separatorRE.match(ch).hasMatch();
+    return RegExpPatterns::separatorToken().match(ch).hasMatch();
 }
 
 bool Evaluator::isCommentOnlyExpression(const QString& expr)

@@ -605,6 +605,7 @@ void test_binary()
     CHECK_EVAL("50 yard + 2 foot in centi meter", "4632.96 centi meter");
     CHECK_EVAL("10 meter in (1 yard + 2 foot)", "6.56167979002624671916 (1 yard + 2 foot)");
     CHECK_EVAL(QString::fromUtf8("1 meter −> centi meter"), "100 centi meter");
+    CHECK_EVAL(QString::fromUtf8("1 meter → centi meter"), "100 centi meter");
 }
 
 void test_bitwise_complement_operator()
@@ -1757,6 +1758,19 @@ void test_comment_and_description_edge_cases()
         "2*3?c",
         QStringLiteral("2") + space + QString(UnicodeChars::MultiplicationSign)
             + space + QStringLiteral("3 ? c"));
+    CHECK_INTERPRETED("1 meter -> centi meter",
+                      u8"1⋅meter→centi⋅meter");
+    CHECK_INTERPRETED("1 meter in centi meter",
+                      u8"1⋅meter→centi⋅meter");
+    CHECK_DISPLAY_INTERPRETED("1 meter in centi meter",
+                              QStringLiteral("1") + space + QString(UnicodeChars::DotOperator)
+                                  + space + QStringLiteral("meter")
+                                  + space
+                                  + QString(UnicodeChars::RightwardsArrow)
+                                  + space
+                                  + QStringLiteral("centi")
+                                  + space + QString(UnicodeChars::DotOperator)
+                                  + space + QStringLiteral("meter"));
 
     // Explicit empty description should be stored as empty.
     CHECK_EVAL("vardesc2 = 1 ? ", "1");

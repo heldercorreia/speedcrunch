@@ -40,6 +40,7 @@ inline constexpr QChar VectorOrCrossProduct(0x2A2F);
 inline constexpr QChar Pi(0x03C0);
 inline constexpr QChar SquareRoot(0x221A);
 inline constexpr QChar CubeRoot(0x221B);
+inline constexpr QChar RightwardsArrow(0x2192);
 inline constexpr char32_t MathematicalBoldSmallPiCodePoint = 0x1D6D1;
 inline constexpr char32_t MathematicalItalicSmallPiCodePoint = 0x1D70B;
 inline constexpr char32_t MathematicalSansSerifBoldSmallPiCodePoint = 0x1D745;
