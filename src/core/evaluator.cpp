@@ -233,6 +233,16 @@ bool isMinus(const QChar& ch)
     return ch == QLatin1Char('-') || ch == UnicodeChars::MinusSign;
 }
 
+static bool isDegreeSign(const QChar& ch)
+{
+    // Accept both DEGREE SIGN (U+00B0) and MASCULINE ORDINAL INDICATOR
+    // (U+00BA), plus other degree-like symbols emitted by some layouts/IMEs.
+    return ch == QChar(0x00B0)  // ° DEGREE SIGN
+           || ch == QChar(0x00BA) // º MASCULINE ORDINAL INDICATOR
+           || ch == QChar(0x02DA) // ˚ RING ABOVE
+           || ch == QChar(0x2218); // ∘ RING OPERATOR
+}
+
 bool isExponent(const QChar& ch, int base)
 {
     switch (base) {
@@ -2242,7 +2252,7 @@ QString Evaluator::fixSexagesimal(const QString& number, QString& unit)
     int colonCount = 0, degreeCount = 0, minuteCount = 0, secondCount = 0, digitCount = 0;
     for (int i = 0 ; i < number.size() ; ++i) { // check order and amount
         QChar c = number[i];
-        if (c == QChar(0xB0)) {   // °
+        if (isDegreeSign(c)) {
             if (colonCount || minuteCount || secondCount)
                 return bad;
             if (++degreeCount > 1)
@@ -2278,7 +2288,8 @@ QString Evaluator::fixSexagesimal(const QString& number, QString& unit)
             return bad;
         HNumber::Format fixed = HNumber::Format::Fixed();
         HNumber mains(0), minutes(0), seconds(0), sign(1);
-        int minPos = number.indexOf(arc ? QChar(0xB0) : ':');
+        int minPos = number.indexOf(arc ? QRegularExpression("[\\x{00B0}\\x{00BA}\\x{02DA}\\x{2218}]")
+                                        : QRegularExpression(":"));
         if (minPos >= 0) {  // degree sign or first colon -> minutes
             mains = getNumber(number.left(minPos));    // hours or degrees
             if (mains.isNegative())
@@ -2303,7 +2314,7 @@ QString Evaluator::fixSexagesimal(const QString& number, QString& unit)
             }
             if (seconds.isZero() && minutes.isZero()) {  // postfix mains
                 result = HMath::format(mains, fixed);
-                unit = arc ? "" : "hour";
+                unit = arc ? "degree" : "hour";
             }
         }
         else if ( arc ) {
@@ -2518,7 +2529,7 @@ Tokens Evaluator::tokens() const
 }
 
 bool isArcTime(QChar ch) {
-    return (ch == QChar(0xB0) || ch == '\'' || ch == '"' || ch == ':');
+    return (isDegreeSign(ch) || ch == '\'' || ch == '"' || ch == ':');
 }
 
 Tokens Evaluator::scan(const QString& expr) const

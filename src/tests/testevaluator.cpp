@@ -901,12 +901,17 @@ void test_sexagesimal()
     CHECK_EVAL_FORMAT("34.5 arcminute", "0°34'30.00");
     CHECK_EVAL_FORMAT("34'56", "0°34'56.00");
     CHECK_EVAL_FORMAT("12°", "12°00'00.00");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("12º"), "12°00'00.00");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("12˚"), "12°00'00.00");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("12∘"), "12°00'00.00");
     CHECK_EVAL_FORMAT("12°'", "12°00'00.00");
     CHECK_EVAL_FORMAT("12°'\"", "12°00'00.00");
     CHECK_EVAL_FORMAT("12.3°", "12°18'00.00");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("12.3º"), "12°18'00.00");
     CHECK_EVAL_FORMAT("12.3°'", "12°18'00.00");
     CHECK_EVAL_FORMAT("12.3°'\"", "12°18'00.00");
     CHECK_EVAL_FORMAT("12°34", "12°34'00.00");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("12º34"), "12°34'00.00");
     CHECK_EVAL_FORMAT("12°34'", "12°34'00.00");
     CHECK_EVAL_FORMAT("12°34.", "12°34'00.00");
     CHECK_EVAL_FORMAT("12°34.5", "12°34'30.00");
@@ -934,6 +939,7 @@ void test_sexagesimal()
 
     CHECK_EVAL_FORMAT("100.5", "90°27'00.00");
     CHECK_EVAL_FORMAT("-200.3", "-180°16'12.00");
+    CHECK_EVAL_FORMAT("12°", "12°00'00.00");
     CHECK_EVAL_FORMAT("12.3 degree", "12°18'00.00");
 
     settings->angleUnit = 'r';
@@ -941,6 +947,7 @@ void test_sexagesimal()
 
     CHECK_EVAL_FORMAT("pi", "180°00'00.00");
     CHECK_EVAL_FORMAT("-pi", "-180°00'00.00");
+    CHECK_EVAL_FORMAT("12°", "12°00'00.00");
     CHECK_EVAL_FORMAT("12.3 degree", "12°18'00.00");
 
     settings->angleUnit = 't';
@@ -948,6 +955,7 @@ void test_sexagesimal()
 
     CHECK_EVAL_FORMAT("0.25", "90°00'00.00");
     CHECK_EVAL_FORMAT("-0.5", "-180°00'00.00");
+    CHECK_EVAL_FORMAT("12°", "12°00'00.00");
     CHECK_EVAL_FORMAT("12.3 degree", "12°18'00.00");
 
     settings->resultPrecision = 32;
