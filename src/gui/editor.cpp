@@ -28,6 +28,7 @@
 #include "core/evaluator.h"
 #include "core/functions.h"
 #include "core/numberformatter.h"
+#include "core/regexpatterns.h"
 #include "core/settings.h"
 #include "core/session.h"
 #include "core/unicodechars.h"
@@ -94,9 +95,6 @@ static QString groupedDigitsForTooltip(const QString& input)
         return input;
 
     const QString separator = QStringLiteral("&nbsp;").repeated(settings->digitGrouping);
-    static const QRegularExpression numberPattern(
-        QStringLiteral("(?<![\\p{L}\\p{N}])(?:0[xX][0-9A-Fa-f]+(?:[\\.,][0-9A-Fa-f]+)?|0[oO][0-7]+(?:[\\.,][0-7]+)?|0[bB][01]+(?:[\\.,][01]+)?|\\d+(?:[\\.,]\\d+)?(?:[eE][+\\-]?\\d+)?)(?![\\p{L}\\p{N}])"));
-
     auto groupPart = [&separator](const QString& digits, int groupSize, bool fromRight) {
         if (digits.size() <= groupSize)
             return digits;
@@ -124,7 +122,7 @@ static QString groupedDigitsForTooltip(const QString& input)
 
     QString output;
     int lastPos = 0;
-    auto it = numberPattern.globalMatch(input);
+    auto it = RegExpPatterns::numericToken().globalMatch(input);
     while (it.hasNext()) {
         const auto match = it.next();
         output += input.mid(lastPos, match.capturedStart() - lastPos);
@@ -148,14 +146,14 @@ static QString groupedDigitsForTooltip(const QString& input)
         QString exponent;
 
         if (prefixLength == 0) {
-            const int exponentPos = body.indexOf(QRegularExpression(QStringLiteral("[eE][+\\-]?\\d+$")));
+            const int exponentPos = body.indexOf(RegExpPatterns::decimalExponentSuffix());
             if (exponentPos >= 0) {
                 exponent = body.mid(exponentPos);
                 body = body.left(exponentPos);
             }
         }
 
-        const int radixPos = body.indexOf(QRegularExpression(QStringLiteral("[\\.,]")));
+        const int radixPos = body.indexOf(RegExpPatterns::radixSeparator());
         if (radixPos >= 0) {
             const QString integral = body.left(radixPos);
             const QString fractional = body.mid(radixPos + 1);
@@ -191,10 +189,7 @@ static QString formattedLiveResult(const Quantity& quantity, char resultFormat =
 static bool shouldShowAdditionalRationalForTrig(const QString& expression,
                                                 const Quantity& quantity)
 {
-    static const QRegularExpression s_trigFunctionPattern(
-        QStringLiteral(R"(\b(?:sin|cos|tan|cot|sec|csc|arcsin|arccos|arctan|arctan2|radians|degrees|gradians)\s*\()"),
-        QRegularExpression::CaseInsensitiveOption);
-    if (!s_trigFunctionPattern.match(expression).hasMatch())
+    if (!RegExpPatterns::trigFunctionCall().match(expression).hasMatch())
         return false;
 
     const Settings* settings = Settings::instance();
@@ -241,18 +236,13 @@ static QString simplifiedExpressionLineForTooltip(const QString& interpretedExpr
     if (!settings->simplifyResultExpressions || interpretedExpression.isEmpty())
         return QString();
 
-    static const QRegularExpression trivialSingleFunctionPattern(
-        // Keep this intentionally strict (ASCII identifier only) so we don't
-        // hide meaningful simplifications like "f²(x)".
-        QStringLiteral("^\\s*[+\\-−]?\\s*[A-Za-z_][A-Za-z0-9_]*\\s*\\(.*\\)\\s*$"));
-
     const QString interpretedDisplay = UnicodeChars::normalizePiForDisplay(
         Evaluator::formatInterpretedExpressionForDisplay(interpretedExpression));
     const QString simplifiedDisplay = UnicodeChars::normalizePiForDisplay(
         Evaluator::formatInterpretedExpressionSimplifiedForDisplay(interpretedExpression));
     if (simplifiedDisplay.isEmpty()
         || simplifiedDisplay == interpretedDisplay
-        || trivialSingleFunctionPattern.match(simplifiedDisplay).hasMatch()) {
+        || RegExpPatterns::trivialSingleFunctionCall().match(simplifiedDisplay).hasMatch()) {
         return QString();
     }
 

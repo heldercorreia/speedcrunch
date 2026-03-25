@@ -20,6 +20,7 @@
 
 #include "core/functions.h"
 #include "core/numberformatter.h"
+#include "core/regexpatterns.h"
 #include "core/settings.h"
 #include "core/unicodechars.h"
 #include "gui/simplifiedexpressionutils.h"
@@ -39,7 +40,6 @@
 #include <QMenuBar>
 #include <QMouseEvent>
 #include <QPainter>
-#include <QRegularExpression>
 #include <QScrollBar>
 #include <QToolTip>
 
@@ -95,13 +95,10 @@ QString formatResultForClipboard(const Quantity& value)
 bool expressionUsesTrigFunction(const QString& expression,
                                 const QString& interpretedExpression)
 {
-    static const QRegularExpression s_trigFunctionPattern(
-        QStringLiteral(R"(\b(?:sin|cos|tan|cot|sec|csc|arcsin|arccos|arctan|arctan2|radians|degrees|gradians)\s*\()"),
-        QRegularExpression::CaseInsensitiveOption);
     const QString source = interpretedExpression.isEmpty()
         ? expression
         : interpretedExpression;
-    return s_trigFunctionPattern.match(source).hasMatch();
+    return RegExpPatterns::trigFunctionCall().match(source).hasMatch();
 }
 
 bool shouldShowAdditionalRationalForTrig(const Settings* settings,
@@ -129,89 +126,7 @@ QStringList formatResultLines(const HistoryEntry& entry)
     auto groupedResultForDisplay = [settings](const QString& input) {
         if (settings->digitGrouping <= 0)
             return input;
-
-        const QString separator = QStringLiteral(" ").repeated(settings->digitGrouping);
-        static const QRegularExpression numberPattern(
-            QStringLiteral("(?<![\\p{L}\\p{N}])(?:0[xX][0-9A-Fa-f]+(?:[\\.,][0-9A-Fa-f]+)?|0[oO][0-7]+(?:[\\.,][0-7]+)?|0[bB][01]+(?:[\\.,][01]+)?|\\d+(?:[\\.,]\\d+)?(?:[eE][+\\-]?\\d+)?)(?![\\p{L}\\p{N}])"));
-
-        auto groupPart = [&separator](const QString& digits, int groupSize, bool fromRight) {
-            if (digits.size() <= groupSize)
-                return digits;
-
-            QString result;
-            if (fromRight) {
-                int first = digits.size() % groupSize;
-                if (first == 0)
-                    first = groupSize;
-                result = digits.left(first);
-                for (int i = first; i < digits.size(); i += groupSize) {
-                    result += separator;
-                    result += digits.mid(i, groupSize);
-                }
-                return result;
-            }
-
-            for (int i = 0; i < digits.size(); i += groupSize) {
-                if (i > 0)
-                    result += separator;
-                result += digits.mid(i, groupSize);
-            }
-            return result;
-        };
-
-        QString output;
-        int lastPos = 0;
-        auto it = numberPattern.globalMatch(input);
-        while (it.hasNext()) {
-            const auto match = it.next();
-            output += input.mid(lastPos, match.capturedStart() - lastPos);
-
-            QString token = match.captured(0);
-            int prefixLength = 0;
-            int groupSize = 3;
-            if (token.startsWith(QLatin1String("0x"), Qt::CaseInsensitive)) {
-                prefixLength = 2;
-                groupSize = 4;
-            } else if (token.startsWith(QLatin1String("0o"), Qt::CaseInsensitive)) {
-                prefixLength = 2;
-                groupSize = 3;
-            } else if (token.startsWith(QLatin1String("0b"), Qt::CaseInsensitive)) {
-                prefixLength = 2;
-                groupSize = 4;
-            }
-
-            const QString prefix = token.left(prefixLength);
-            QString body = token.mid(prefixLength);
-            QString exponent;
-            if (prefixLength == 0) {
-                const int exponentPos = body.indexOf(QRegularExpression(QStringLiteral("[eE][+\\-]?\\d+$")));
-                if (exponentPos >= 0) {
-                    exponent = body.mid(exponentPos);
-                    body = body.left(exponentPos);
-                }
-            }
-
-            const int radixPos = body.indexOf(QRegularExpression(QStringLiteral("[\\.,]")));
-            if (radixPos >= 0) {
-                const QString integral = body.left(radixPos);
-                const QString fractional = body.mid(radixPos + 1);
-                const QString groupedFractional = settings->digitGroupingIntegerPartOnly
-                    ? fractional
-                    : groupPart(fractional, groupSize, false);
-                token = prefix
-                    + groupPart(integral, groupSize, true)
-                    + body.at(radixPos)
-                    + groupedFractional
-                    + exponent;
-            } else {
-                token = prefix + groupPart(body, groupSize, true) + exponent;
-            }
-
-            output += token;
-            lastPos = match.capturedEnd();
-        }
-        output += input.mid(lastPos);
-        return UnicodeChars::normalizePiForDisplay(output);
+        return UnicodeChars::normalizePiForDisplay(NumberFormatter::formatNumericLiteralForDisplay(input));
     };
 
     QStringList lines;
@@ -220,10 +135,6 @@ QStringList formatResultLines(const HistoryEntry& entry)
             lines.append(line);
     };
     if (settings->simplifyResultExpressions && !entry.interpretedExpr().isEmpty()) {
-        static const QRegularExpression trivialSingleFunctionPattern(
-            // Keep this intentionally strict (ASCII identifier only) so we don't
-            // hide meaningful simplifications like "f²(x)".
-            QStringLiteral("^\\s*[+\\-−]?\\s*[A-Za-z_][A-Za-z0-9_]*\\s*\\(.*\\)\\s*$"));
         const QString interpreted =
             UnicodeChars::normalizePiForDisplay(
                 Evaluator::formatInterpretedExpressionForDisplay(entry.interpretedExpr()));
@@ -232,7 +143,7 @@ QStringList formatResultLines(const HistoryEntry& entry)
                 Evaluator::formatInterpretedExpressionSimplifiedForDisplay(entry.interpretedExpr()));
         if (!simplified.isEmpty()
             && simplified != interpreted
-            && !trivialSingleFunctionPattern.match(simplified).hasMatch()) {
+            && !RegExpPatterns::trivialSingleFunctionCall().match(simplified).hasMatch()) {
             if (SimplifiedExpressionUtils::shouldSuppressSimplifiedExpressionLine(
                     interpreted, simplified)) {
                 // Hide non-informative simplification rows for plain numeric arithmetic.

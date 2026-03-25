@@ -19,13 +19,13 @@
 
 #include "core/numberformatter.h"
 
+#include "core/regexpatterns.h"
 #include "core/settings.h"
 #include "core/unicodechars.h"
 #include "math/quantity.h"
 #include "math/rational.h"
 #include "math/units.h"
 
-#include <QRegularExpression>
 
 static const QChar g_dotChar = UnicodeChars::DotOperator;
 static const QChar g_minusChar = QString::fromUtf8("−")[0];
@@ -358,9 +358,6 @@ QString NumberFormatter::formatNumericLiteralForDisplay(const QString& input)
         return input;
 
     const QString separator = QStringLiteral(" ").repeated(settings->digitGrouping);
-    static const QRegularExpression numberPattern(
-        QStringLiteral("(?<![\\p{L}\\p{N}])(?:0[xX][0-9A-Fa-f]+(?:[\\.,][0-9A-Fa-f]+)?|0[oO][0-7]+(?:[\\.,][0-7]+)?|0[bB][01]+(?:[\\.,][01]+)?|\\d+(?:[\\.,]\\d+)?(?:[eE][+\\-]?\\d+)?)(?![\\p{L}\\p{N}])"));
-
     auto groupPart = [&separator](const QString& digits, int groupSize, bool fromRight) {
         if (digits.size() <= groupSize)
             return digits;
@@ -388,7 +385,7 @@ QString NumberFormatter::formatNumericLiteralForDisplay(const QString& input)
 
     QString output;
     int lastPos = 0;
-    auto it = numberPattern.globalMatch(input);
+    auto it = RegExpPatterns::numericToken().globalMatch(input);
     while (it.hasNext()) {
         const auto match = it.next();
         output += input.mid(lastPos, match.capturedStart() - lastPos);
@@ -411,14 +408,14 @@ QString NumberFormatter::formatNumericLiteralForDisplay(const QString& input)
         QString body = token.mid(prefixLength);
         QString exponent;
         if (prefixLength == 0) {
-            const int exponentPos = body.indexOf(QRegularExpression(QStringLiteral("[eE][+\\-]?\\d+$")));
+            const int exponentPos = body.indexOf(RegExpPatterns::decimalExponentSuffix());
             if (exponentPos >= 0) {
                 exponent = body.mid(exponentPos);
                 body = body.left(exponentPos);
             }
         }
 
-        const int radixPos = body.indexOf(QRegularExpression(QStringLiteral("[\\.,]")));
+        const int radixPos = body.indexOf(RegExpPatterns::radixSeparator());
         if (radixPos >= 0) {
             const QString integral = body.left(radixPos);
             const QString fractional = body.mid(radixPos + 1);

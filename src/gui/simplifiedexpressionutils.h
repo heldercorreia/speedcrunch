@@ -19,16 +19,15 @@
 #ifndef GUI_SIMPLIFIEDEXPRESSIONUTILS_H
 #define GUI_SIMPLIFIEDEXPRESSIONUTILS_H
 
-#include <QRegularExpression>
+#include "core/regexpatterns.h"
+
 #include <QString>
 
 namespace SimplifiedExpressionUtils {
 
 inline bool isNumericSimplifiedExpression(const QString& expression)
 {
-    static const QRegularExpression pattern(
-        QStringLiteral("^\\s*[+\\-−]?\\s*(?:0[xX][0-9A-Fa-f]+(?:[\\.,][0-9A-Fa-f]+)?|0[oO][0-7]+(?:[\\.,][0-7]+)?|0[bB][01]+(?:[\\.,][01]+)?|\\d+(?:[\\.,]\\d+)?(?:[eE][+\\-]?\\d+)?)\\s*$"));
-    return pattern.match(expression).hasMatch();
+    return RegExpPatterns::signedNumericLiteralWithSpaces().match(expression).hasMatch();
 }
 
 inline bool isPlainNumericArithmeticExpression(const QString& expression)

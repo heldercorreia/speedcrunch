@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301, USA.
 
 #include "core/evaluator.h"
+#include "core/regexpatterns.h"
 #include "core/session.h"
 #include "core/settings.h"
 #include "core/unicodechars.h"
@@ -688,20 +689,17 @@ static bool tokenCanStartOperandForDisplaySpacing(const Token& token)
 
 static bool isUnsignedDecimalIntegerText(const QString& text)
 {
-    static const QRegularExpression integerRE(QStringLiteral(R"(^\d+$)"));
-    return integerRE.match(text).hasMatch();
+    return RegExpPatterns::unsignedDecimalInteger().match(text).hasMatch();
 }
 
 static bool isUnsignedDecimalNumberText(const QString& text)
 {
-    static const QRegularExpression numberRE(QStringLiteral(R"(^\d+(?:\.\d+)?$)"));
-    return numberRE.match(text).hasMatch();
+    return RegExpPatterns::unsignedDecimalNumber().match(text).hasMatch();
 }
 
 static bool isSignedDecimalNumberText(const QString& text)
 {
-    static const QRegularExpression numberRE(QStringLiteral(R"(^[+\-]?\d+(?:\.\d+)?$)"));
-    return numberRE.match(text).hasMatch();
+    return RegExpPatterns::signedDecimalNumber().match(text).hasMatch();
 }
 
 static bool isSafeForDoubleArithmetic(const QString& text)
@@ -738,9 +736,7 @@ static QString formatSimplifiedDecimal(double value)
 
 static bool normalizeUnsignedIntegerEquivalentDecimalText(QString& text)
 {
-    static const QRegularExpression decimalIntegerRE(
-        QStringLiteral(R"(^(\d+)\.(\d*)$)"));
-    const QRegularExpressionMatch match = decimalIntegerRE.match(text);
+    const QRegularExpressionMatch match = RegExpPatterns::unsignedIntegerEquivalentDecimal().match(text);
     if (!match.hasMatch())
         return false;
 
