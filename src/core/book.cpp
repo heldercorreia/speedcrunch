@@ -77,7 +77,9 @@
 #define CAPTION(s) "<td class=\"caption\">"+(s)+"</td>"
 #define END "</body></html>"
 
-static QString makeIndexPage()
+namespace {
+
+const auto makeIndexPage = []() -> QString
 {
     return
         BEGIN
@@ -106,37 +108,38 @@ static QString makeIndexPage()
         LINK(rf/swr, Book::tr("Standing Wave Ratio & Return Loss")) BR
         LINK(rf/wavelength, Book::tr("Free Space Wavelength")) BR
         END;
-}
+};
 
-static QString makeAlgebraQuadraticEquationPage()
+const auto makeAlgebraQuadraticEquationPage = []() -> QString
 {
     return
         BEGIN
         INDEX_LINK
         TITLE(Book::tr("Quadratic Equation"))
-        SUBTITLE(a&sdot;x<sup>2</sup> + b&sdot;x + c = 0)
-        FORMULA(x1 = (-b + sqrt(b%5e2 - 4*a*c))/(2*a), x<sub>1</sub> = (-b + &radic;(b<sup>2</sup> - 4&sdot;a&sdot;c)) / (2&sdot;a))
-        FORMULA(x2 = (-b - sqrt(b%5e2 - 4*a*c))/(2*a), x<sub>2</sub> = (-b - &radic;(b<sup>2</sup> - 4&sdot;a&sdot;c)) / (2&sdot;a))
+        SUBTITLE(a&middot;x<sup>2</sup> + b&middot;x + c = 0)
+        FORMULA(x1 = (-b + sqrt(b%5e2 - 4*a*c))/(2*a), x<sub>1</sub> = (-b + &radic;(b<sup>2</sup> - 4&middot;a&middot;c)) / (2&middot;a))
+        FORMULA(x2 = (-b - sqrt(b%5e2 - 4*a*c))/(2*a), x<sub>2</sub> = (-b - &radic;(b<sup>2</sup> - 4&middot;a&middot;c)) / (2&middot;a))
         END;
-}
+};
 
-static QString makeAlgebraLogBaseConversionPage() {
+const auto makeAlgebraLogBaseConversionPage = []() -> QString
+{
     return
         BEGIN
         INDEX_LINK
         TITLE(Book::tr("Logarithmic Base Conversion"))
         FORMULA(y = log(x) / log(a), log<sub>a</sub>x = log(x) / log(a))
         END;
-}
+};
 
-static QString makeElectronicsOhmsLawPage()
+const auto makeElectronicsOhmsLawPage = []() -> QString
 {
     return
         BEGIN
         INDEX_LINK
         TITLE(Book::tr("Ohm's Law"))
         FORMULA_UNIT(R = V / I, R = V / I, &Omega;)
-        FORMULA_UNIT(V = I * R, V = I&sdot;R, V)
+        FORMULA_UNIT(V = I * R, V = I&middot;R, V)
         FORMULA_UNIT(I = V / R, I = V / R, A)
         TABLE
         VARIABLE(R) CAPTION(Book::tr("resistance")) ROW
@@ -144,21 +147,21 @@ static QString makeElectronicsOhmsLawPage()
         VARIABLE(I) CAPTION(Book::tr("current")) ROW
         _TABLE
         END;
-}
+};
 
-static QString makeElectronicsPowerPage()
+const auto makeElectronicsPowerPage = []() -> QString
 {
     return
         BEGIN
         INDEX_LINK
         TITLE(Book::tr("Power"))
-        FORMULA_UNIT(P = I * V, P = I&sdot;V, W)
-        FORMULA_UNIT(P = I%5e2 * R, P = I<sup>2</sup>&sdot;R, W)
+        FORMULA_UNIT(P = I * V, P = I&middot;V, W)
+        FORMULA_UNIT(P = I%5e2 * R, P = I<sup>2</sup>&middot;R, W)
         FORMULA_UNIT(P = V%5e2 / R, P = V<sup>2</sup> / R, W)
         FORMULA_UNIT(I = P / V, I = P / V, A)
         FORMULA_UNIT(I = sqrt(P / R), I = &radic;(P / R), A)
         FORMULA_UNIT(V = P / I, V = P / I, V)
-        FORMULA_UNIT(V = sqrt(P * R), V = &radic;(P&sdot;R), V)
+        FORMULA_UNIT(V = sqrt(P * R), V = &radic;(P&middot;R), V)
         FORMULA_UNIT(R = V%5e2 / P, R = V<sup>2</sup> / P, &Omega;)
         FORMULA_UNIT(R = P / I%5e2, R = P / I<sup>2</sup>, &Omega;)
         TABLE
@@ -168,20 +171,20 @@ static QString makeElectronicsPowerPage()
         VARIABLE(R) CAPTION(Book::tr("resistance")) ROW
         _TABLE
         END;
-}
+};
 
-static QString makeElectronicsReactancePage()
+const auto makeElectronicsReactancePage = []() -> QString
 {
     return
         BEGIN
         INDEX_LINK
         TITLE(Book::tr("Reactance"))
-        FORMULA_UNIT(Xl = 2 * pi * f * L, X<sub>L</sub> = 2&sdot;&pi;&sdot;f&sdot;L, &Omega;)
-        FORMULA_UNIT(Xc = 1 / (2 * pi * f * C), X<sub>C</sub> = 1 / (2&sdot;&pi;&sdot;f&sdot;C), &Omega;)
-        FORMULA_UNIT(L = Xl / (2 * pi * f), L = X<sub>L</sub> / (2&sdot;&pi;&sdot;f), H)
-        FORMULA_UNIT(C = 1 / (2 * pi * f * Xc), C = 1 / (2&sdot;&pi;&sdot;f&sdot;X<sub>C</sub>), F)
-        FORMULA_UNIT(f = Xl / (2 * pi * L), f = X<sub>L</sub> / (2&sdot;&pi;&sdot;L), Hz)
-        FORMULA_UNIT(f = 1 / (Xc * 2 * pi * C), f = 1 / (X<sub>C</sub>&sdot;2&sdot;&pi;&sdot;C), Hz)
+        FORMULA_UNIT(Xl = 2 * π * f * L, X<sub>L</sub> = 2&middot;π&middot;f&middot;L, &Omega;)
+        FORMULA_UNIT(Xc = 1 / (2 * π * f * C), X<sub>C</sub> = 1 / (2&middot;π&middot;f&middot;C), &Omega;)
+        FORMULA_UNIT(L = Xl / (2 * π * f), L = X<sub>L</sub> / (2&middot;π&middot;f), H)
+        FORMULA_UNIT(C = 1 / (2 * π * f * Xc), C = 1 / (2&middot;π&middot;f&middot;X<sub>C</sub>), F)
+        FORMULA_UNIT(f = Xl / (2 * π * L), f = X<sub>L</sub> / (2&middot;π&middot;L), Hz)
+        FORMULA_UNIT(f = 1 / (Xc * 2 * π * C), f = 1 / (X<sub>C</sub>&middot;2&middot;π&middot;C), Hz)
         TABLE
         VARIABLE(X<sub>L</sub>) CAPTION(Book::tr("inductive reactance")) ROW
         VARIABLE(X<sub>C</sub>) CAPTION(Book::tr("capacitive reactance")) ROW
@@ -190,35 +193,35 @@ static QString makeElectronicsReactancePage()
         VARIABLE(f) CAPTION(Book::tr("frequency")) ROW
         _TABLE
         END;
-}
+};
 
-static QString makeElectronicsResonancePage()
+const auto makeElectronicsResonancePage = []() -> QString
 {
     return
         BEGIN
         INDEX_LINK
         TITLE(Book::tr("Resonance"))
-        FORMULA_UNIT(f = 1 / (2 * pi * sqrt(L * C)), f = 1 / (2&sdot;&pi;&sdot;&radic;(L&sdot;C)), Hz)
-        FORMULA_UNIT(L = 1 / (4 * pi%5e2 * f%5e2 * C), L = 1 / (4&sdot;&pi;<sup>2</sup>&sdot;f<sup>2</sup>&sdot;C), H)
-        FORMULA_UNIT(C = 1 / (4 * pi%5e2 * f%5e2 * L), C = 1 / (4&sdot;&pi;<sup>2</sup>&sdot;f<sup>2</sup>&sdot;L), F)
+        FORMULA_UNIT(f = 1 / (2 * π * sqrt(L * C)), f = 1 / (2&middot;π&middot;&radic;(L&middot;C)), Hz)
+        FORMULA_UNIT(L = 1 / (4 * π%5e2 * f%5e2 * C), L = 1 / (4&middot;π<sup>2</sup>&middot;f<sup>2</sup>&middot;C), H)
+        FORMULA_UNIT(C = 1 / (4 * π%5e2 * f%5e2 * L), C = 1 / (4&middot;π<sup>2</sup>&middot;f<sup>2</sup>&middot;L), F)
         TABLE
         VARIABLE(f) CAPTION(Book::tr("resonance frequency")) ROW
         VARIABLE(L) CAPTION(Book::tr("inductance")) ROW
         VARIABLE(C) CAPTION(Book::tr("capacitance")) ROW
         _TABLE
         END;
-}
+};
 
-static QString makeGeometryCirclePage()
+const auto makeGeometryCirclePage = []() -> QString
 {
     return
         BEGIN
         INDEX_LINK
         TITLE(Book::tr("Circle"))
-        FORMULA(A = pi * r^2, A = &pi;&sdot;r<sup>2</sup>)
-        FORMULA(A = pi * (d/2)^2, A = &pi;&sdot;(d/2)<sup>2</sup>)
-        FORMULA(P = 2 * pi * r, P = 2&sdot;&pi;&sdot;r)
-        FORMULA(P = pi * d, P = &pi;&sdot;d)
+        FORMULA(A = π * r%5e2, A = π&middot;r<sup>2</sup>)
+        FORMULA(A = π * (d/2)%5e2, A = π&middot;(d/2)<sup>2</sup>)
+        FORMULA(P = 2 * π * r, P = 2&middot;π&middot;r)
+        FORMULA(P = π * d, P = π&middot;d)
         TABLE
         VARIABLE(A) CAPTION(Book::tr("area")) ROW
         VARIABLE(P) CAPTION(Book::tr("perimeter")) ROW
@@ -226,17 +229,17 @@ static QString makeGeometryCirclePage()
         VARIABLE(r) CAPTION(Book::tr("radius"))
         _TABLE
         END;
-}
+};
 
-static QString makeGeometryConePage()
+const auto makeGeometryConePage = []() -> QString
 {
     return
         BEGIN
         INDEX_LINK
         TITLE(Book::tr("Cone"))
-        FORMULA(V = 1/3 * pi * r%5e2 * h, V = (1/3)&sdot;pi&sdot;r<sup>2</sup>&sdot;h)
-        FORMULA(A = pi * r%5e2 + pi * r * s, A = &pi;&sdot;r<sup>2</sup> + &pi;&sdot;r&sdot;s)
-        FORMULA(A = pi * r%5e2 + pi * r * sqrt(r%5e2+h%5e2), A = &pi;&sdot;r<sup>2</sup> + &pi;&sdot;r&sdot;&radic;(r<sup>2</sup>+h<sup>2</sup>))
+        FORMULA(V = 1/3 * π * r%5e2 * h, V = (1/3)&middot;π&middot;r<sup>2</sup>&middot;h)
+        FORMULA(A = π * r%5e2 + π * r * s, A = π&middot;r<sup>2</sup> + π&middot;r&middot;s)
+        FORMULA(A = π * r%5e2 + π * r * sqrt(r%5e2+h%5e2), A = π&middot;r<sup>2</sup> + π&middot;r&middot;&radic;(r<sup>2</sup>+h<sup>2</sup>))
         TABLE
         VARIABLE(V) CAPTION(Book::tr("volume")) ROW
         VARIABLE(A) CAPTION(Book::tr("surface area")) ROW
@@ -245,18 +248,18 @@ static QString makeGeometryConePage()
         VARIABLE(s) CAPTION(Book::tr("slant height"))
         _TABLE
         END;
-}
+};
 
-static QString makeGeometryCubePage()
+const auto makeGeometryCubePage = []() -> QString
 {
     return
         BEGIN
         INDEX_LINK
         TITLE(Book::tr("Cube"))
         FORMULA(V = l%5e3, V = l<sup>3</sup>)
-        FORMULA(A = 6 * l%5e2, A = 6&sdot;l<sup>2</sup>)
-        FORMULA(Df = sqrt(2) * l, D<sub>f</sub> = &radic;2&sdot;l)
-        FORMULA(Ds = sqrt(3) * l, D<sub>s</sub> = &radic;3&sdot;l)
+        FORMULA(A = 6 * l%5e2, A = 6&middot;l<sup>2</sup>)
+        FORMULA(Df = sqrt(2) * l, D<sub>f</sub> = &radic;2&middot;l)
+        FORMULA(Ds = sqrt(3) * l, D<sub>s</sub> = &radic;3&middot;l)
         TABLE
         VARIABLE(V) CAPTION(Book::tr("volume")) ROW
         VARIABLE(A) CAPTION(Book::tr("surface area")) ROW
@@ -265,16 +268,16 @@ static QString makeGeometryCubePage()
         VARIABLE(l) CAPTION(Book::tr("edge length"))
         _TABLE
         END;
-}
+};
 
-static QString makeGeometryCylinderPage()
+const auto makeGeometryCylinderPage = []() -> QString
 {
     return
         BEGIN
         INDEX_LINK
         TITLE(Book::tr("Cylinder"))
-        FORMULA(V = pi * r%5e2 * h, V = &pi;&sdot;r<sup>2</sup>&sdot;h)
-        FORMULA(A = (2 * pi * r%5e2) + (2 * pi * r * h), A = 2&sdot;&pi;&sdot;r<sup>2</sup> + 2&sdot;&pi;&sdot;r&sdot;h)
+        FORMULA(V = π * r%5e2 * h, V = π&middot;r<sup>2</sup>&middot;h)
+        FORMULA(A = (2 * π * r%5e2) + (2 * π * r * h), A = 2&middot;π&middot;r<sup>2</sup> + 2&middot;π&middot;r&middot;h)
         TABLE
         VARIABLE(V) CAPTION(Book::tr("volume")) ROW
         VARIABLE(A) CAPTION(Book::tr("area")) ROW
@@ -282,17 +285,17 @@ static QString makeGeometryCylinderPage()
         VARIABLE(h) CAPTION(Book::tr("height"))
         _TABLE
         END;
-}
+};
 
-static QString makeGeometrySectorPage()
+const auto makeGeometrySectorPage = []() -> QString
 {
     return
         BEGIN
         INDEX_LINK
         TITLE(Book::tr("Sector"))
-        FORMULA(A = 1/2 * L * r, A = 1/2&sdot;L&sdot;r)
-        FORMULA(A = theta/360 * pi * r^2, A = &theta;/360&sdot;&pi;&sdot;r<sup>2</sup>)
-        FORMULA(L = theta/180 * pi * r, L = &theta;/180&sdot;&pi;&sdot;r)
+        FORMULA(A = 1/2 * L * r, A = 1/2&middot;L&middot;r)
+        FORMULA(A = theta/360 * π * r%5e2, A = &theta;/360&middot;π&middot;r<sup>2</sup>)
+        FORMULA(L = theta/180 * π * r, L = &theta;/180&middot;π&middot;r)
         TABLE
         VARIABLE(A) CAPTION(Book::tr("area")) ROW
         VARIABLE(L) CAPTION(Book::tr("arc length")) ROW
@@ -300,18 +303,18 @@ static QString makeGeometrySectorPage()
         VARIABLE(&theta;) CAPTION(Book::tr("central angle (degrees)"))
         _TABLE
         END;
-}
+};
 
-static QString makeGeometrySpherePage()
+const auto makeGeometrySpherePage = []() -> QString
 {
     return
         BEGIN
         INDEX_LINK
         TITLE(Book::tr("Sphere"))
-        FORMULA(A = 4 * pi * r^2, A = 4&sdot;&pi;&sdot;r<sup>2</sup>)
-        FORMULA(A = pi *d^2, A = &pi;&sdot;d<sup>2</sup>)
-        FORMULA(V = 4/3 * pi * r^3, V = 4/3&sdot;&pi;&sdot;r<sup>3</sup>)
-        FORMULA(V = 1/6 * pi * d^3, V = 1/6&sdot;&pi;&sdot;d<sup>3</sup>)
+        FORMULA(A = 4 * π * r%5e2, A = 4&middot;π&middot;r<sup>2</sup>)
+        FORMULA(A = π *d%5e2, A = π&middot;d<sup>2</sup>)
+        FORMULA(V = 4/3 * π * r%5e3, V = 4/3&middot;π&middot;r<sup>3</sup>)
+        FORMULA(V = 1/6 * π * d%5e3, V = 1/6&middot;π&middot;d<sup>3</sup>)
         TABLE
         VARIABLE(A) CAPTION(Book::tr("area")) ROW
         VARIABLE(V) CAPTION(Book::tr("volume")) ROW
@@ -319,56 +322,56 @@ static QString makeGeometrySpherePage()
         VARIABLE(d) CAPTION(Book::tr("diameter"))
         _TABLE
         END;
-}
+};
 
-static QString makeRFAntennasPage()
+const auto makeRFAntennasPage = []() -> QString
 {
     return
         BEGIN
         INDEX_LINK
         TITLE(Book::tr("Radio Frequency"))
-        FORMULA_UNIT(Pd = Pin / (4 * pi * r%5e2), Pd = P<sub>in</sub> / (4&sdot;&pi;&sdot;r<sup>2</sup>), W&sdot;m<sup>-2</sup>)
-        FORMULA_UNIT(E = sqrt(Pd * 120 * pi), E = &radic;(P<sub>d</sub>&sdot;120&sdot;&pi;), V&sdot;m<sup>-1</sup>)
-        FORMULA_UNIT(E = sqrt((Pin * 120 * pi) / (4 * pi * r%5e2)), E = &radic;[(P<sub>in</sub>&sdot;120&sdot;&pi;) / (4&sdot;&pi;&sdot;r<sup>2</sup>)], V&sdot;m<sup>-1</sup>)
-        FORMULA_UNIT(E = sqrt(30 * Pin) / r, E = &radic;(30&sdot;P<sub>in</sub>) / r, V&sdot;m<sup>-1</sup>)
-        FORMULA_UNIT(Ed = E * sqrt(D), Ed = E&sdot;&radic;D, V&sdot;m<sup>-1</sup>)
-        FORMULA_UNIT(Edp = E * sqrt(1.64), Edp = E&sdot;&radic;1.64, V&sdot;m<sup>-1</sup>)
+        FORMULA_UNIT(Pd = Pin / (4 * π * r%5e2), Pd = P<sub>in</sub> / (4&middot;π&middot;r<sup>2</sup>), W&middot;m<sup>-2</sup>)
+        FORMULA_UNIT(E = sqrt(Pd * 120 * π), E = &radic;(P<sub>d</sub>&middot;120&middot;π), V&middot;m<sup>-1</sup>)
+        FORMULA_UNIT(E = sqrt((Pin * 120 * π) / (4 * π * r%5e2)), E = &radic;[(P<sub>in</sub>&middot;120&middot;π) / (4&middot;π&middot;r<sup>2</sup>)], V&middot;m<sup>-1</sup>)
+        FORMULA_UNIT(E = sqrt(30 * Pin) / r, E = &radic;(30&middot;P<sub>in</sub>) / r, V&middot;m<sup>-1</sup>)
+        FORMULA_UNIT(Ed = E * sqrt(D), Ed = E&middot;&radic;D, V&middot;m<sup>-1</sup>)
+        FORMULA_UNIT(Edp = E * sqrt(1.64), Edp = E&middot;&radic;1.64, V&middot;m<sup>-1</sup>)
         END;
-}
+};
 
-static QString makeRFImpedancePage()
+const auto makeRFImpedancePage = []() -> QString
 {
     return
         BEGIN
         INDEX_LINK
         TITLE(Book::tr("Characteristic Impedance (coax)"))
-        FORMULA_UNIT(Zo = 59.959 / sqrt(er) * ln(d1/d2), Z<sub>0</sub> = 59.959 / &radic;e<sub>r</sub> &sdot; ln(d<sub>1</sub>/d<sub>2</sub>), &Omega;)
+        FORMULA_UNIT(Zo = 59.959 / sqrt(er) * ln(d1/d2), Z<sub>0</sub> = 59.959 / &radic;e<sub>r</sub> &middot; ln(d<sub>1</sub>/d<sub>2</sub>), &Omega;)
         TABLE
         VARIABLE(e<sub>r) CAPTION(Book::tr("dielectric constant")) ROW
         VARIABLE(d<sub>1) CAPTION(Book::tr("outer conductor's inner diameter")) ROW
         VARIABLE(d<sub>2</sub>) CAPTION(Book::tr("inner conductor's outer diameter"))
         _TABLE
         END;
-}
+};
 
-static QString makeRFPropagationPage()
+const auto makeRFPropagationPage = []() -> QString
 {
     return
         BEGIN
         INDEX_LINK
         TITLE(Book::tr("Velocity of Propagation (coax)"))
         SUBTITLE(V<sub>p</sub> = c / &radic;e<sub>r</sub>)
-        FORMULA_UNIT(Vp = 3e8 / sqrt(er), V<sub>p</sub> = 3e8 / &radic;e<sub>r</sub>, m&sdot;s<sup>-1</sup>)
-        FORMULA_UNIT(Vp = 299792458 / sqrt(er), V<sub>p</sub> = 299792458 / &radic;e<sub>r</sub>, m&sdot;s<sup>-1</sup>)
-        FORMULA_UNIT(Vp = 983571056.43045 / sqrt(er), V<sub>p</sub> = 983571056.43045 / &radic;e<sub>r</sub>, ft&sdot;s<sup>-1</sup>)
+        FORMULA_UNIT(Vp = 3e8 / sqrt(er), V<sub>p</sub> = 3e8 / &radic;e<sub>r</sub>, m&middot;s<sup>-1</sup>)
+        FORMULA_UNIT(Vp = 299792458 / sqrt(er), V<sub>p</sub> = 299792458 / &radic;e<sub>r</sub>, m&middot;s<sup>-1</sup>)
+        FORMULA_UNIT(Vp = 983571056.43045 / sqrt(er), V<sub>p</sub> = 983571056.43045 / &radic;e<sub>r</sub>, ft&middot;s<sup>-1</sup>)
         TABLE
         VARIABLE(c) CAPTION(Book::tr("speed of light")) ROW
         VARIABLE(e) CAPTION(Book::tr("dielectric constant")) ROW
         _TABLE
         END;
-}
+};
 
-static QString makeRFSWRPage()
+const auto makeRFSWRPage = []() -> QString
 {
     return
         BEGIN
@@ -378,10 +381,10 @@ static QString makeRFSWRPage()
         FORMULA(r = (SWR-1) / (SWR+1), &rho; = (SWR - 1) / (SWR + 1))
         FORMULA(r = (Z-1) / (Z+1), &rho; = (Z - 1) / (Z + 1))
         FORMULA_UNIT(Z = (1+r) / (1-r), Z = (1 + &rho;) / (1 - &rho;), &Omega;)
-        FORMULA_UNIT(RL = -20 * log(r), R<sub>L</sub> = -20&sdot;log(&rho;), dB)
-        FORMULA_UNIT(RL = -20 * log((SWR-1)/(SWR+1)), R<sub>L</sub> = -20&sdot;log[(SWR - 1) / (SWR + 1)], dB)
-        FORMULA_UNIT(Pr = Pin * r%5e2, P<sub>r</sub> = P<sub>in</sub>&sdot;&rho;<sup>2</sup>, W)
-        FORMULA_UNIT(Pt = Pin * (1-r%5e2), P<sub>t</sub> = P<sub>in</sub>&sdot;(1-&rho;<sup>2</sup>), W)
+        FORMULA_UNIT(RL = -20 * log(r), R<sub>L</sub> = -20&middot;log(&rho;), dB)
+        FORMULA_UNIT(RL = -20 * log((SWR-1)/(SWR+1)), R<sub>L</sub> = -20&middot;log[(SWR - 1) / (SWR + 1)], dB)
+        FORMULA_UNIT(Pr = Pin * r%5e2, P<sub>r</sub> = P<sub>in</sub>&middot;&rho;<sup>2</sup>, W)
+        FORMULA_UNIT(Pt = Pin * (1-r%5e2), P<sub>t</sub> = P<sub>in</sub>&middot;(1-&rho;<sup>2</sup>), W)
         TABLE
         VARIABLE(P<sub>in</sub>) CAPTION(Book::tr("input power") + " (W)") ROW
         VARIABLE(P<sub>r</sub>) CAPTION(Book::tr("reflected power") + " (W)") ROW
@@ -392,9 +395,9 @@ static QString makeRFSWRPage()
         VARIABLE(Z) CAPTION(Book::tr("normalized impedance")) ROW
         _TABLE
         END;
-}
+};
 
-static QString makeRFWavelengthPage()
+const auto makeRFWavelengthPage = []() -> QString
 {
     return
         BEGIN
@@ -408,9 +411,9 @@ static QString makeRFWavelengthPage()
         VARIABLE(f) CAPTION(Book::tr("frequency (Hz)")) ROW
         _TABLE
         END;
-}
+};
 
-static QString makeUnitsTemperaturePage()
+const auto makeUnitsTemperaturePage = []() -> QString
 {
     return
         BEGIN
@@ -426,27 +429,29 @@ static QString makeUnitsTemperaturePage()
         VARIABLE(T<sub>k</sub>) CAPTION(Book::tr("temperature") + " (K)")
         _TABLE
         END;
-}
+};
+
+} // namespace
 
 void Book::createPages()
 {
-    addPage("index", &makeIndexPage);
-    addPage("algebra/quadratic-equation", &makeAlgebraQuadraticEquationPage);
-    addPage("algebra/log-base-conversion", &makeAlgebraLogBaseConversionPage);
-    addPage("electronics/ohmslaw", &makeElectronicsOhmsLawPage);
-    addPage("electronics/power", &makeElectronicsPowerPage);
-    addPage("electronics/reactance", &makeElectronicsReactancePage);
-    addPage("electronics/resonance", &makeElectronicsResonancePage);
-    addPage("geometry/circle", &makeGeometryCirclePage);
-    addPage("geometry/cone", &makeGeometryConePage);
-    addPage("geometry/cube", &makeGeometryCubePage);
-    addPage("geometry/cylinder", &makeGeometryCylinderPage);
-    addPage("geometry/sector", &makeGeometrySectorPage);
-    addPage("geometry/sphere", &makeGeometrySpherePage);
-    addPage("rf/antennas", &makeRFAntennasPage);
-    addPage("rf/impedance", &makeRFImpedancePage);
-    addPage("rf/propagation", &makeRFPropagationPage);
-    addPage("rf/swr", &makeRFSWRPage);
-    addPage("rf/wavelength", &makeRFWavelengthPage);
-    addPage("units/temperature", &makeUnitsTemperaturePage);
+    addPage("index", +makeIndexPage);
+    addPage("algebra/quadratic-equation", +makeAlgebraQuadraticEquationPage);
+    addPage("algebra/log-base-conversion", +makeAlgebraLogBaseConversionPage);
+    addPage("electronics/ohmslaw", +makeElectronicsOhmsLawPage);
+    addPage("electronics/power", +makeElectronicsPowerPage);
+    addPage("electronics/reactance", +makeElectronicsReactancePage);
+    addPage("electronics/resonance", +makeElectronicsResonancePage);
+    addPage("geometry/circle", +makeGeometryCirclePage);
+    addPage("geometry/cone", +makeGeometryConePage);
+    addPage("geometry/cube", +makeGeometryCubePage);
+    addPage("geometry/cylinder", +makeGeometryCylinderPage);
+    addPage("geometry/sector", +makeGeometrySectorPage);
+    addPage("geometry/sphere", +makeGeometrySpherePage);
+    addPage("rf/antennas", +makeRFAntennasPage);
+    addPage("rf/impedance", +makeRFImpedancePage);
+    addPage("rf/propagation", +makeRFPropagationPage);
+    addPage("rf/swr", +makeRFSWRPage);
+    addPage("rf/wavelength", +makeRFWavelengthPage);
+    addPage("units/temperature", +makeUnitsTemperaturePage);
 }
