@@ -871,7 +871,13 @@ void Editor::autoCalcSelection(const QString& custom)
     if (!m_isAutoCalcEnabled)
         return;
 
-    auto str = custom.isNull() ? textCursor().selectedText() : custom;
+    const QString rawSelection = custom.isNull() ? textCursor().selectedText() : custom;
+    if (rawSelection.contains(RegExpPatterns::lineBreak())) {
+        emit autoCalcDisabled();
+        return;
+    }
+
+    auto str = rawSelection;
     str = m_evaluator->autoFix(str);
     if (str.isEmpty()) {
         emit autoCalcDisabled();

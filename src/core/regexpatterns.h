@@ -49,6 +49,14 @@ inline const QRegularExpression& radixSeparator()
     return pattern;
 }
 
+inline const QRegularExpression& lineBreak()
+{
+    static const QRegularExpression pattern(
+        QStringLiteral("[\\n\\r\\x{0085}\\x{2028}\\x{2029}]")
+    );
+    return pattern;
+}
+
 inline const QRegularExpression& trigFunctionCall()
 {
     static const QRegularExpression pattern(

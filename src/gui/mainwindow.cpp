@@ -25,6 +25,7 @@
 #include "core/evaluator.h"
 #include "core/functions.h"
 #include "core/numberformatter.h"
+#include "core/regexpatterns.h"
 #include "core/settings.h"
 #include "core/session.h"
 #include "core/unicodechars.h"
@@ -3896,7 +3897,13 @@ void MainWindow::handleDisplaySelectionChange()
     clearTextEditSelection(m_widgets.editor);
     const QTextCursor displayCursor = m_widgets.display->textCursor();
     if (displayCursor.hasSelection()) {
-        const QString selected = normalizedDisplaySelectionForEvaluation(displayCursor.selectedText());
+        const QString rawSelected = displayCursor.selectedText();
+        if (rawSelected.contains(RegExpPatterns::lineBreak())) {
+            m_widgets.editor->autoCalcSelection(rawSelected);
+            return;
+        }
+
+        const QString selected = normalizedDisplaySelectionForEvaluation(rawSelected);
         m_widgets.editor->autoCalcSelection(selected);
         return;
     }
