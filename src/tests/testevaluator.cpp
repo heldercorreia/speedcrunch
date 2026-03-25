@@ -900,6 +900,8 @@ void test_sexagesimal()
     CHECK_EVAL_FORMAT("34.5'\"", "0°34'30.00");
     CHECK_EVAL_FORMAT("34.5 arcminute", "0°34'30.00");
     CHECK_EVAL_FORMAT("34'56", "0°34'56.00");
+    CHECK_INTERPRETED("34'56", "");
+    CHECK_INTERPRETED("°34", "");
     CHECK_EVAL_FORMAT("12°", "12°00'00.00");
     CHECK_EVAL_FORMAT(QString::fromUtf8("12º"), "12°00'00.00");
     CHECK_EVAL_FORMAT(QString::fromUtf8("12˚"), "12°00'00.00");

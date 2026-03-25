@@ -2956,6 +2956,26 @@ void Evaluator::compile(const Tokens& tokens)
 
     // Initialize variables.
     m_dirty = false;
+    auto isGeneratedSexagesimalUnitToken = [](const Token& token) {
+        if (token.type() != Token::stxIdentifier || token.size() != 0)
+            return false;
+        const QString text = token.text();
+        return text == QLatin1String("hour")
+            || text == QLatin1String("minute")
+            || text == QLatin1String("second")
+            || text == QLatin1String("degree")
+            || text == QLatin1String("arcminute")
+            || text == QLatin1String("arcsecond");
+    };
+
+    bool hasGeneratedSexagesimalUnit = false;
+    for (int idx = 0; idx < tokens.size(); ++idx) {
+        if (isGeneratedSexagesimalUnitToken(tokens.at(idx))) {
+            hasGeneratedSexagesimalUnit = true;
+            break;
+        }
+    }
+
     m_valid = false;
     m_codes.clear();
     m_implicitMultiplicationOpcodeIndices.clear();
@@ -3428,7 +3448,9 @@ void Evaluator::compile(const Tokens& tokens)
 
         m_hasImplicitMultiplication = !m_implicitMultiplicationOpcodeIndices.isEmpty();
 
-        m_interpretedExpression = buildInterpretedExpressionFromOpcodes();
+        m_interpretedExpression = hasGeneratedSexagesimalUnit
+            ? QString()
+            : buildInterpretedExpressionFromOpcodes();
     }
 
 #ifdef EVALUATOR_DEBUG
