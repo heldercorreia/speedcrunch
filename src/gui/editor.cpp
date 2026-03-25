@@ -438,6 +438,7 @@ void Editor::doMatchingLeft()
 
     // Right par?
     if (lastToken.type() == Token::stxClosePar
+        && lastToken.size() > 0
         && (lastToken.pos() + lastToken.size()) == currentPosition) {
         // Find the matching left par.
         unsigned par = 1;
@@ -451,10 +452,11 @@ void Editor::doMatchingLeft()
                 case Token::stxClosePar: ++par; break;
                 default:;
             }
-            matchPosition = matchToken.pos() + matchToken.size() - 1;
+            if (matchToken.size() > 0)
+                matchPosition = matchToken.pos() + matchToken.size() - 1;
         }
 
-        if (par == 0) {
+        if (par == 0 && matchPosition >= 0 && closeParPos >= 0) {
             QTextEdit::ExtraSelection hilite1;
             hilite1.cursor = textCursor();
             hilite1.cursor.setPosition(matchPosition);
@@ -493,6 +495,7 @@ void Editor::doMatchingRight()
 
     // Left par?
     if (firstToken.type() == Token::stxOpenPar
+        && firstToken.size() > 0
         && (firstToken.pos() + firstToken.size()) == 1)
     {
         // Find the matching right par.
@@ -513,10 +516,11 @@ void Editor::doMatchingRight()
                 break;
             default:;
             }
-            matchPosition = matchToken.pos() + matchToken.size() - 1;
+            if (matchToken.size() > 0)
+                matchPosition = matchToken.pos() + matchToken.size() - 1;
         }
 
-        if (par == 0) {
+        if (par == 0 && matchPosition >= 0 && openParPos >= 0) {
             QTextEdit::ExtraSelection hilite1;
             hilite1.cursor = textCursor();
             hilite1.cursor.setPosition(currentPosition+matchPosition);
