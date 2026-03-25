@@ -1378,7 +1378,8 @@ EditorCompletion::EditorCompletion(Editor* editor)
 
 EditorCompletion::~EditorCompletion()
 {
-    delete m_popup;
+    // Popup ownership is handled by Qt parent-child deletion (its parent is
+    // the window). Deleting it manually here can double-delete during shutdown.
 }
 
 bool EditorCompletion::eventFilter(QObject* object, QEvent* event)
@@ -1610,7 +1611,8 @@ ConstantCompletion::ConstantCompletion(Editor* editor)
 
 ConstantCompletion::~ConstantCompletion()
 {
-    delete m_popup;
+    // Popup ownership is handled by Qt parent-child deletion (its parent is
+    // the window). Deleting it manually here can double-delete during shutdown.
     m_editor->setFocus();
 }
 
