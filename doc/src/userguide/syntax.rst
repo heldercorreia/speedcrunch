@@ -146,7 +146,8 @@ Dimensionless input values are automatically considered to be in current angle u
     
 Only last part of sexagecimal input value can contain decimals.
 
-Following tables show some possible input notations and their results in both fixed-point decimal and sexagecimal modes:
+Following tables show some possible input notations and their results in both fixed-point decimal and sexagecimal modes.
+In the first table, fixed-point decimal values assume angle unit is set to degrees:
 
 =================    ===================    =================
 Input                Fixed-Point Decimal    Sexagecimal

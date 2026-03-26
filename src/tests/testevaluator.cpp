@@ -839,6 +839,62 @@ void test_sexagesimal()
     settings->resultPrecision = 2;
     Evaluator::instance()->initializeAngleUnits();
 
+    // Coverage for the documentation tables in doc/src/userguide/syntax.rst
+    // ("Sexagecimal Values"): fixed-point decimal and sexagecimal columns.
+    CHECK_EVAL("0", "0");
+    CHECK_EVAL("°'56", "0.01555555555555555556");
+    CHECK_EVAL("56\"", "0.01555555555555555556");
+    CHECK_EVAL("56 arcsecond", "0.01555555555555555556");
+    CHECK_EVAL("56.78\"", "0.01577222222222222222");
+    CHECK_EVAL("°34", "0.56666666666666666667");
+    CHECK_EVAL("34'", "0.56666666666666666667");
+    CHECK_EVAL("34 arcminute", "0.56666666666666666667");
+    CHECK_EVAL("34'56", "0.58222222222222222222");
+    CHECK_EVAL("12°", "12");
+    CHECK_EVAL("12°34", "12.56666666666666666667");
+    CHECK_EVAL("12°34.5", "12.575");
+    CHECK_EVAL("12°34'56", "12.58222222222222222222");
+    CHECK_EVAL("12°34'56.78", "12.58243888888888888889");
+
+    CHECK_EVAL("0 second", "0 second");
+    CHECK_EVAL("::56", "56 second");
+    CHECK_EVAL("56 second", "56 second");
+    CHECK_EVAL(":34", "2040 second");
+    CHECK_EVAL("34 minute", "2040 second");
+    CHECK_EVAL("12:", "43200 second");
+    CHECK_EVAL("12 hour", "43200 second");
+    CHECK_EVAL("12:34", "45240 second");
+    CHECK_EVAL("12:34.5", "45270 second");
+    CHECK_EVAL("12:34:56", "45296 second");
+    CHECK_EVAL("12:34:56.78", "45296.78 second");
+
+    CHECK_EVAL_FORMAT("0", "0°00'00");
+    CHECK_EVAL_FORMAT("°'56", "0°00'56.00");
+    CHECK_EVAL_FORMAT("56\"", "0°00'56.00");
+    CHECK_EVAL_FORMAT("56 arcsecond", "0°00'56.00");
+    CHECK_EVAL_FORMAT("56.78\"", "0°00'56.78");
+    CHECK_EVAL_FORMAT("°34", "0°34'00.00");
+    CHECK_EVAL_FORMAT("34'", "0°34'00.00");
+    CHECK_EVAL_FORMAT("34 arcminute", "0°34'00.00");
+    CHECK_EVAL_FORMAT("34'56", "0°34'56.00");
+    CHECK_EVAL_FORMAT("12°", "12°00'00.00");
+    CHECK_EVAL_FORMAT("12°34", "12°34'00.00");
+    CHECK_EVAL_FORMAT("12°34.5", "12°34'30.00");
+    CHECK_EVAL_FORMAT("12°34'56", "12°34'56.00");
+    CHECK_EVAL_FORMAT("12°34'56.78", "12°34'56.78");
+
+    CHECK_EVAL_FORMAT("0 second", "0:00:00");
+    CHECK_EVAL_FORMAT("::56", "0:00:56.00");
+    CHECK_EVAL_FORMAT("56 second", "0:00:56.00");
+    CHECK_EVAL_FORMAT(":34", "0:34:00.00");
+    CHECK_EVAL_FORMAT("34 minute", "0:34:00.00");
+    CHECK_EVAL_FORMAT("12:", "12:00:00.00");
+    CHECK_EVAL_FORMAT("12 hour", "12:00:00.00");
+    CHECK_EVAL_FORMAT("12:34", "12:34:00.00");
+    CHECK_EVAL_FORMAT("12:34.5", "12:34:30.00");
+    CHECK_EVAL_FORMAT("12:34:56", "12:34:56.00");
+    CHECK_EVAL_FORMAT("12:34:56.78", "12:34:56.78");
+
     CHECK_EVAL_FORMAT_FAIL(":");
     CHECK_EVAL_FORMAT_FAIL("::");
     CHECK_EVAL_FORMAT_FAIL("0:::");
