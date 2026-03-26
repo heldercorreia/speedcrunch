@@ -92,9 +92,9 @@ behavior can be changed; see <a class="reference internal" href="interface.html#
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">#</span></code> starts hexadecimal number notation (for example <code class="docutils literal notranslate"><span class="pre">#FF</span></code>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">!</span></code> is the factorial operator (for example <code class="docutils literal notranslate"><span class="pre">5!</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">:</span></code> is used in sexagecimal time/angle notation (for example <code class="docutils literal notranslate"><span class="pre">12:34:56</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">°</span></code> is used in sexagecimal angle notation (for example <code class="docutils literal notranslate"><span class="pre">12°34'56</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">'</span></code> is used in sexagecimal time/angle notation (for example <code class="docutils literal notranslate"><span class="pre">12°34'56</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">:</span></code> is used in sexagesimal time/angle notation (for example <code class="docutils literal notranslate"><span class="pre">12:34:56</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">°</span></code> is used in sexagesimal angle notation (for example <code class="docutils literal notranslate"><span class="pre">12°34'56</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'</span></code> is used in sexagesimal time/angle notation (for example <code class="docutils literal notranslate"><span class="pre">12°34'56</span></code>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">&amp;</span></code> is the bitwise AND operator (for example <code class="docutils literal notranslate"><span class="pre">6</span> <span class="pre">&amp;</span> <span class="pre">3</span></code>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">?</span></code> starts a comment (for example <code class="docutils literal notranslate"><span class="pre">1+2</span> <span class="pre">?</span> <span class="pre">note</span></code>).</p></li>
 </ul>
@@ -162,16 +162,16 @@ Instead, like with other bases, the value and the sign are represented separatel
 To specify large integers, using the shift operators (<code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">&lt;&lt;</span> <span class="pre">n</span></code>) is preferable to exponentiation (<code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">^</span> <span class="pre">n</span></code>) as the latter are floating point
 calculations and thus susceptible to rounding errors.</p>
 </section>
-<section id="sexagecimal-values">
-<span id="id3"></span><h3>Sexagecimal Values</h3>
+<section id="sexagesimal-values">
+<span id="id3"></span><h3>Sexagesimal Values</h3>
 <blockquote>
 <div><div class="versionadded">
 <p><span class="versionmodified added">New in version 1.0.</span></p>
 </div>
 </div></blockquote>
-<p>Sexagecimal values in SpeedCrunch are angle degrees or time values represented with minutes and seconds.</p>
-<p>When sexagecimal mode is selected in <span class="menuselection">Settings ‣ Results ‣ Format</span>, dimensionless and time results are displayed as sexagecimal values. All other results are displayed as fixed-point decimal values. Actual sexagecimal math depends on the result. Dimensionless results are handled as degrees with minutes and seconds generated from the decimal part. With time dimension results, base unit is second and the integer part is divided to minutes and hours.</p>
-<p>In input, characters <code class="docutils literal notranslate"><span class="pre">°</span></code> (degree), <code class="docutils literal notranslate"><span class="pre">:</span></code> (colon), <code class="docutils literal notranslate"><span class="pre">'</span></code> (single quote) and <code class="docutils literal notranslate"><span class="pre">&quot;</span></code> (double quote) can be used for entering sexagecimal values. Degree sign <code class="docutils literal notranslate"><span class="pre">°</span></code> separates degrees and minutes. First colon character <code class="docutils literal notranslate"><span class="pre">:</span></code> separates hours and minutes. Single quote <code class="docutils literal notranslate"><span class="pre">'</span></code> or second colon character <code class="docutils literal notranslate"><span class="pre">:</span></code> separates minutes and seconds. Additionally, postfix double quote <code class="docutils literal notranslate"><span class="pre">&quot;</span></code> can be used as an arc second unit. Because the degree sign is difficult to produce from keyboard, at sign <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> is automatically converted to it.</p>
+<p>Sexagesimal values in SpeedCrunch are angle degrees or time values represented with minutes and seconds.</p>
+<p>When sexagesimal mode is selected in <span class="menuselection">Settings ‣ Results ‣ Format</span>, dimensionless and time results are displayed as sexagesimal values. All other results are displayed as fixed-point decimal values. Actual sexagesimal math depends on the result. Dimensionless results are handled as degrees with minutes and seconds generated from the decimal part. With time dimension results, base unit is second and the integer part is divided to minutes and hours.</p>
+<p>In input, characters <code class="docutils literal notranslate"><span class="pre">°</span></code> (degree), <code class="docutils literal notranslate"><span class="pre">:</span></code> (colon), <code class="docutils literal notranslate"><span class="pre">'</span></code> (single quote) and <code class="docutils literal notranslate"><span class="pre">&quot;</span></code> (double quote) can be used for entering sexagesimal values. Degree sign <code class="docutils literal notranslate"><span class="pre">°</span></code> separates degrees and minutes. First colon character <code class="docutils literal notranslate"><span class="pre">:</span></code> separates hours and minutes. Single quote <code class="docutils literal notranslate"><span class="pre">'</span></code> or second colon character <code class="docutils literal notranslate"><span class="pre">:</span></code> separates minutes and seconds. Additionally, postfix double quote <code class="docutils literal notranslate"><span class="pre">&quot;</span></code> can be used as an arc second unit. Because the degree sign is difficult to produce from keyboard, at sign <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> is automatically converted to it.</p>
 <p>Amount of minutes or seconds is not limited to values below 60. It is possible to input time 90 minutes after noon:</p>
 <table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="mi">12</span><span class="o">:</span><span class="mi">90</span>
 <span class="ge">= 13:30:00</span>
@@ -182,13 +182,14 @@ calculations and thus susceptible to rounding errors.</p>
 <span class="ge">= 180°00&#39;00</span>
 </pre></div>
 </div>
-</td></tr></tbody></table><p>Only last part of sexagecimal input value can contain decimals.</p>
-<p>Following tables show some possible input notations and their results in both fixed-point decimal and sexagecimal modes:</p>
+</td></tr></tbody></table><p>Only last part of sexagesimal input value can contain decimals.</p>
+<p>Following tables show some possible input notations and their results in both fixed-point decimal and sexagesimal modes.
+In the first table, fixed-point decimal values assume angle unit is set to degrees:</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Input</p></th>
 <th class="head"><p>Fixed-Point Decimal</p></th>
-<th class="head"><p>Sexagecimal</p></th>
+<th class="head"><p>Sexagesimal</p></th>
 </tr>
 </thead>
 <tbody>
@@ -254,7 +255,7 @@ calculations and thus susceptible to rounding errors.</p>
 <thead>
 <tr class="row-odd"><th class="head"><p>Input</p></th>
 <th class="head"><p>Fixed-Point Decimal</p></th>
-<th class="head"><p>Sexagecimal</p></th>
+<th class="head"><p>Sexagesimal</p></th>
 </tr>
 </thead>
 <tbody>
@@ -351,7 +352,30 @@ argument. See also <a class="reference internal" href="../reference/basic.html#s
 </td>
 <td><p><code class="docutils literal notranslate"><span class="pre">5!</span> <span class="pre">=</span> <span class="pre">120</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">^</span> <span class="pre">b</span></code>, <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">**</span> <span class="pre">b</span></code>, <code class="docutils literal notranslate"><span class="pre">a²</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">x%</span></code></p></td>
+<td><dl class="simple">
+<dt><strong>Percent</strong></dt><dd><p>Postfix operator equivalent to
+division by 100.
+In <code class="docutils literal notranslate"><span class="pre">a+b%</span></code> and <code class="docutils literal notranslate"><span class="pre">a-b%</span></code>, the percentage
+is applied relative to the
+entire left operand <code class="docutils literal notranslate"><span class="pre">a</span></code> (after normal precedence).
+So <code class="docutils literal notranslate"><span class="pre">1+(2+3)+10%</span></code> is interpreted as
+<code class="docutils literal notranslate"><span class="pre">(1+(2+3))+10%</span></code>.</p>
+</dd>
+</dl>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0: </span>Contextual percent semantics.</p>
+</div>
+</td>
+<td><p><code class="docutils literal notranslate"><span class="pre">50%</span> <span class="pre">=</span> <span class="pre">0.5</span></code>
+<code class="docutils literal notranslate"><span class="pre">1000+12%</span> <span class="pre">=</span> <span class="pre">1120</span></code>
+<code class="docutils literal notranslate"><span class="pre">1000-12%</span> <span class="pre">=</span> <span class="pre">880</span></code>
+<code class="docutils literal notranslate"><span class="pre">1000*12%</span> <span class="pre">=</span> <span class="pre">120</span></code>
+<code class="docutils literal notranslate"><span class="pre">1000/25%</span> <span class="pre">=</span> <span class="pre">4000</span></code>
+<code class="docutils literal notranslate"><span class="pre">1+2+3+10%</span> <span class="pre">=</span> <span class="pre">6.6</span></code>
+<code class="docutils literal notranslate"><span class="pre">1+(2+3)+10%</span> <span class="pre">=</span> <span class="pre">6.6</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">^</span> <span class="pre">b</span></code>, <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">**</span> <span class="pre">b</span></code>, <code class="docutils literal notranslate"><span class="pre">a²</span></code></p></td>
 <td><dl class="simple">
 <dt><strong>Exponentiation</strong></dt><dd><p><code class="docutils literal notranslate"><span class="pre">a²</span></code> is shorthand for <code class="docutils literal notranslate"><span class="pre">a^2</span></code>;
 contiguous superscript digits are
@@ -367,6 +391,9 @@ The result is negative only when the reduced
 rational exponent has an odd numerator.</p>
 </dd>
 </dl>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0: </span>Integer superscript powers.</p>
+</div>
 </td>
 <td><p><code class="docutils literal notranslate"><span class="pre">3²⁰</span> <span class="pre">=</span> <span class="pre">3^20</span></code>
 <code class="docutils literal notranslate"><span class="pre">2¹⁰</span> <span class="pre">=</span> <span class="pre">1024</span></code></p>
@@ -375,16 +402,19 @@ rational exponent has an odd numerator.</p>
 <p><code class="docutils literal notranslate"><span class="pre">(-8)^(2/3)</span> <span class="pre">=</span> <span class="pre">4</span></code></p>
 </td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">+x</span></code>, <code class="docutils literal notranslate"><span class="pre">-x</span></code>, <code class="docutils literal notranslate"><span class="pre">~x</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">+x</span></code>, <code class="docutils literal notranslate"><span class="pre">-x</span></code>, <code class="docutils literal notranslate"><span class="pre">~x</span></code></p></td>
 <td><dl class="simple">
 <dt><strong>Unary plus, minus, and bitwise NOT</strong></dt><dd><p><code class="docutils literal notranslate"><span class="pre">~x</span></code> is equivalent to <code class="xref sc sc-func docutils literal notranslate"><span class="pre">not(x)()</span></code>.</p>
 </dd>
 </dl>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
 </td>
 <td><p><code class="docutils literal notranslate"><span class="pre">~5</span> <span class="pre">=</span> <span class="pre">-6</span></code>
 <code class="docutils literal notranslate"><span class="pre">-~(-1)</span> <span class="pre">=</span> <span class="pre">-not(-1)</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">\</span> <span class="pre">b</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">\</span> <span class="pre">b</span></code></p></td>
 <td><dl class="simple">
 <dt><strong>Integer division</strong></dt><dd><p>Divides the operands and truncates
 the result to an integer.</p>
@@ -393,7 +423,7 @@ the result to an integer.</p>
 </td>
 <td><p><code class="docutils literal notranslate"><span class="pre">5\4</span> <span class="pre">=</span> <span class="pre">1</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">*</span> <span class="pre">b</span></code>, <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">×</span> <span class="pre">b</span></code>, <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">b</span></code>,
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">*</span> <span class="pre">b</span></code>, <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">×</span> <span class="pre">b</span></code>, <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">b</span></code>,
 <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">/</span> <span class="pre">b</span></code>, <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">⧸</span> <span class="pre">b</span></code></p></td>
 <td><p><strong>Multiplication and division</strong></p>
 <blockquote>
@@ -416,12 +446,15 @@ evaluated from left to right.</p>
 <p><span class="versionmodified added">New in version 0.12: </span>Implicit multiplication was added
 SpeedCrunch 0.12.</p>
 </div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0: </span>Multiplication and division symbol aliases.</p>
+</div>
 </td>
 <td><p><code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">sqrt(2)</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">6/2(2+1)=9</span></code></p>
 </td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">+</span> <span class="pre">b</span></code>, <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">-</span> <span class="pre">b</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">+</span> <span class="pre">b</span></code>, <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">-</span> <span class="pre">b</span></code></p></td>
 <td><dl class="simple">
 <dt><strong>Addition and subtraction</strong></dt><dd><p>In the expression editor and Session Import,
 <code class="docutils literal notranslate"><span class="pre">＋</span></code> is normalized to <code class="docutils literal notranslate"><span class="pre">+</span></code>.
@@ -431,10 +464,13 @@ these symbols are normalized to <code class="docutils literal notranslate"><span
 <code class="docutils literal notranslate"><span class="pre">–</span></code>, <code class="docutils literal notranslate"><span class="pre">—</span></code>, <code class="docutils literal notranslate"><span class="pre">―</span></code>, <code class="docutils literal notranslate"><span class="pre">⁃</span></code>.</p>
 </dd>
 </dl>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0: </span>Addition and subtraction symbol aliases.</p>
+</div>
 </td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">&lt;&lt;</span> <span class="pre">n</span></code>, <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">&gt;&gt;</span> <span class="pre">n</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">&lt;&lt;</span> <span class="pre">n</span></code>, <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">&gt;&gt;</span> <span class="pre">n</span></code></p></td>
 <td><dl class="simple">
 <dt><strong>Left/right arithmetic shifts</strong></dt><dd><p>Shifts the first operand left/right
 by <code class="docutils literal notranslate"><span class="pre">n</span></code> bits. See also <a class="reference internal" href="../reference/integer.html#sc.shl" title="shl"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">shl()</span></code></a>
@@ -446,7 +482,7 @@ and <a class="reference internal" href="../reference/integer.html#sc.shr" title=
 <p><code class="docutils literal notranslate"><span class="pre">0b100&gt;&gt;2</span> <span class="pre">=</span> <span class="pre">0b1</span></code></p>
 </td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">&amp;</span> <span class="pre">b</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">&amp;</span> <span class="pre">b</span></code></p></td>
 <td><dl class="simple">
 <dt><strong>Bitwise AND</strong></dt><dd><p>See also <a class="reference internal" href="../reference/integer.html#sc.and" title="and"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">and()</span></code></a>.</p>
 </dd>
@@ -454,7 +490,7 @@ and <a class="reference internal" href="../reference/integer.html#sc.shr" title=
 </td>
 <td><p><code class="docutils literal notranslate"><span class="pre">0b11</span> <span class="pre">&amp;</span> <span class="pre">0b10</span> <span class="pre">=</span> <span class="pre">0b10</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">|</span> <span class="pre">b</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">|</span> <span class="pre">b</span></code></p></td>
 <td><dl class="simple">
 <dt><strong>Bitwise OR</strong></dt><dd><p>See also <a class="reference internal" href="../reference/integer.html#sc.or" title="or"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">or()</span></code></a>.</p>
 </dd>
@@ -462,7 +498,7 @@ and <a class="reference internal" href="../reference/integer.html#sc.shr" title=
 </td>
 <td><p><code class="docutils literal notranslate"><span class="pre">0b10</span> <span class="pre">|</span> <span class="pre">0b01</span> <span class="pre">=</span> <span class="pre">0b11</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
 <td><dl class="simple">
 <dt><strong>Unit conversion</strong></dt><dd><p>Convert the operand into the given
 unit. Both forms are equivalent. See
@@ -492,37 +528,6 @@ odd <code class="docutils literal notranslate"><span class="pre">p</span></code>
 </pre></div>
 </div>
 </td></tr></tbody></table></section>
-<section id="deprecated-operators">
-<h2>Deprecated Operators</h2>
-<p>The following operators used to be supported, but were either removed from recent SpeedCrunch
-versions or are considered deprecated. Generally, these features were removed because of significant problems
-so you may want to avoid them even if they’re still supported in your version of SpeedCrunch.</p>
-<table class="docutils align-default">
-<thead>
-<tr class="row-odd"><th class="head"><p>Operator</p></th>
-<th class="head"><p>Description</p></th>
-<th class="head"><p>Examples</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">x%</span></code></p></td>
-<td><dl class="simple">
-<dt><strong>Percent operator</strong></dt><dd><p>Equivalent to multiplication with
-0.01.</p>
-</dd>
-</dl>
-<div class="deprecated">
-<p><span class="versionmodified deprecated">Deprecated since version 0.12: </span>This operator was <strong>removed</strong> in
-SpeedCrunch 0.12 as it was confusing and not very useful.
-The reasons for its removal are discussed in more detail
-in <a class="reference external" href="https://bitbucket.org/heldercorreia/speedcrunch/issues/239/more-intuitive-and-useful-percentage">issue #239</a>.</p>
-</div>
-</td>
-<td><p><code class="docutils literal notranslate"><span class="pre">10%</span> <span class="pre">=</span> <span class="pre">0.1</span></code></p></td>
-</tr>
-</tbody>
-</table>
-</section>
 </section>
 
 

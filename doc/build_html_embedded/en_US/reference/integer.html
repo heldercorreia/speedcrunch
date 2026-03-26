@@ -83,7 +83,10 @@
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.popcount">
 <span class="sig-name descname"><span class="pre">popcount</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Returns the number of set bits (<code class="docutils literal notranslate"><span class="pre">1</span></code> bits) in the 256-bit two’s complement
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Returns the number of set bits (<code class="docutils literal notranslate"><span class="pre">1</span></code> bits) in the 256-bit two’s complement
 representation of <code class="docutils literal notranslate"><span class="pre">n</span></code>.</p>
 <p>The argument must be real and dimensionless, in the logic range used by
 the bitwise functions. Non-integer arguments are rounded toward zero.</p>
@@ -109,7 +112,10 @@ the bitwise functions. Non-integer arguments are rounded toward zero.</p>
 <span class="ge">= 0</span>
 </pre></div>
 </div>
-</td></tr></tbody></table></dd></dl>
+</td></tr></tbody></table><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+</dd></dl>
 
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.shl">
@@ -201,7 +207,10 @@ that is used for displaying results, select one of the corresponding settings in
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.binpad">
 <span class="sig-name descname"><span class="pre">binpad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">bits</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
-<dd><p>Format integer <code class="docutils literal notranslate"><span class="pre">n</span></code> as binary (base-2) and left-pad the integer part with zeros.</p>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Format integer <code class="docutils literal notranslate"><span class="pre">n</span></code> as binary (base-2) and left-pad the integer part with zeros.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">bits</span></code> is omitted, the width is padded to the next multiple of 8 bits (byte boundary).
 If <code class="docutils literal notranslate"><span class="pre">bits</span></code> is provided, the width is padded to at least <code class="docutils literal notranslate"><span class="pre">bits</span></code> (it never truncates).</p>
 <p>Only real, dimensionless integer arguments are allowed.</p>
@@ -210,7 +219,10 @@ If <code class="docutils literal notranslate"><span class="pre">bits</span></cod
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.octpad">
 <span class="sig-name descname"><span class="pre">octpad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">bits</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
-<dd><p>Format integer <code class="docutils literal notranslate"><span class="pre">n</span></code> as octal (base-8) and left-pad the integer part with zeros.</p>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Format integer <code class="docutils literal notranslate"><span class="pre">n</span></code> as octal (base-8) and left-pad the integer part with zeros.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">bits</span></code> is omitted, the width is padded to the next multiple of 8 bits (byte boundary).
 If <code class="docutils literal notranslate"><span class="pre">bits</span></code> is provided, the width is padded to at least <code class="docutils literal notranslate"><span class="pre">bits</span></code> (it never truncates).</p>
 <p>Only real, dimensionless integer arguments are allowed.</p>
@@ -219,7 +231,10 @@ If <code class="docutils literal notranslate"><span class="pre">bits</span></cod
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.hexpad">
 <span class="sig-name descname"><span class="pre">hexpad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">bits</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
-<dd><p>Format integer <code class="docutils literal notranslate"><span class="pre">n</span></code> as hexadecimal (base-16) and left-pad the integer part with zeros.</p>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Format integer <code class="docutils literal notranslate"><span class="pre">n</span></code> as hexadecimal (base-16) and left-pad the integer part with zeros.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">bits</span></code> is omitted, the width is padded to the next multiple of 8 bits (byte boundary).
 If <code class="docutils literal notranslate"><span class="pre">bits</span></code> is provided, the width is padded to at least <code class="docutils literal notranslate"><span class="pre">bits</span></code> (it never truncates).</p>
 <p>Only real, dimensionless integer arguments are allowed.</p>
@@ -305,7 +320,10 @@ Use <a class="reference internal" href="#sc.powmod" title="powmod"><code class="
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.emod">
 <span class="sig-name descname"><span class="pre">emod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">a</span></em>; <em class="sig-param"><span class="pre">b</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Compute the Euclidean remainder of <code class="docutils literal notranslate"><span class="pre">a/b</span></code>. The divisor <code class="docutils literal notranslate"><span class="pre">b</span></code> must be non-zero.
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Compute the Euclidean remainder of <code class="docutils literal notranslate"><span class="pre">a/b</span></code>. The divisor <code class="docutils literal notranslate"><span class="pre">b</span></code> must be non-zero.
 The result has the sign of <code class="docutils literal notranslate"><span class="pre">b</span></code> (or is zero), and its absolute value is
 smaller than the absolute value of <code class="docutils literal notranslate"><span class="pre">b</span></code>.</p>
 <p>For positive <code class="docutils literal notranslate"><span class="pre">b</span></code>, this maps values to <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">b)</span></code>; for example,
@@ -318,7 +336,10 @@ smaller than the absolute value of <code class="docutils literal notranslate"><s
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.powmod">
 <span class="sig-name descname"><span class="pre">powmod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">base</span></em>; <em class="sig-param"><span class="pre">exponent</span></em>; <em class="sig-param"><span class="pre">modulo</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Compute <code class="docutils literal notranslate"><span class="pre">base^exponent</span></code> reduced by <code class="docutils literal notranslate"><span class="pre">modulo</span></code> using modular exponentiation.
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Compute <code class="docutils literal notranslate"><span class="pre">base^exponent</span></code> reduced by <code class="docutils literal notranslate"><span class="pre">modulo</span></code> using modular exponentiation.
 This avoids building huge intermediate powers and is therefore the recommended
 approach for large exponents (for example in cryptography).</p>
 <p>Arguments must be real, integer, and dimensionless.
@@ -338,7 +359,10 @@ If a rational number is given as <code class="docutils literal notranslate"><spa
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.lcm">
 <span class="sig-name descname"><span class="pre">lcm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n1</span></em>; <em class="sig-param"><span class="pre">n2</span></em>; <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Returns the least common multiple of the arguments (at least two must be given).
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Returns the least common multiple of the arguments (at least two must be given).
 The result is always non-negative.</p>
 <p><code class="docutils literal notranslate"><span class="pre">gcd()</span></code> and <code class="docutils literal notranslate"><span class="pre">lcm()</span></code> are related by:</p>
 <div class="math notranslate nohighlight">

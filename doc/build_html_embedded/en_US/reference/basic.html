@@ -82,6 +82,9 @@
 <span class="sig-name descname"><span class="pre">sqrt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Return the square root of <code class="docutils literal notranslate"><span class="pre">x</span></code>. If complex numbers are disabled, this function is only defined for <em>x &gt; 0</em>. In <em>complex mode</em>, any complex number may be specified, yielding the complex root in the upper half plane.</p>
 <p>Alias: <code class="docutils literal notranslate"><span class="pre">√(x)</span></code>.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
 <p>The argument may have a dimension.</p>
 </dd></dl>
 
@@ -95,6 +98,9 @@
 </div>
 </td></tr></tbody></table><p>In <em>complex mode</em>, this function accepts any complex input. The result will generally be the first complex root, i.e. the one with a phase between 0 and π/3. Real negative arguments however will still yield a real (negative) result, matching the function’s behavior in <em>real mode</em>. Use <code class="docutils literal notranslate"><span class="pre">x^(1/3)</span></code> to get the first complex root.</p>
 <p>Alias: <code class="docutils literal notranslate"><span class="pre">∛(x)</span></code>.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
 </dd></dl>
 
 <dl class="sc function">
@@ -138,7 +144,10 @@
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.datetime">
 <span class="sig-name descname"><span class="pre">datetime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">unix_timestamp</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">offset</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
-<dd><p>Convert a Unix timestamp (seconds since 1970-01-01 00:00:00 UTC) into a
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Convert a Unix timestamp (seconds since 1970-01-01 00:00:00 UTC) into a
 numeric date/time value formatted as <code class="docutils literal notranslate"><span class="pre">YYYYMMDD.HHMMSS</span></code>.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">offset</span></code> is omitted, the timestamp is converted using the local system
 timezone. If <code class="docutils literal notranslate"><span class="pre">offset</span></code> is provided, it is interpreted as hours offset to
@@ -158,7 +167,10 @@ UTC after applying that offset.</p>
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.epoch">
 <span class="sig-name descname"><span class="pre">epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">yyyymmdd.hhmmss</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">offset</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
-<dd><p>Convert a numeric date/time value in <code class="docutils literal notranslate"><span class="pre">YYYYMMDD.HHMMSS</span></code> format to a Unix
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Convert a numeric date/time value in <code class="docutils literal notranslate"><span class="pre">YYYYMMDD.HHMMSS</span></code> format to a Unix
 timestamp (seconds since 1970-01-01 00:00:00 UTC).</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">offset</span></code> is omitted, the value is interpreted in the local system
 timezone. If <code class="docutils literal notranslate"><span class="pre">offset</span></code> is provided, it is interpreted as hours offset to
@@ -415,7 +427,10 @@ GMT/UTC (fractional offsets are supported).</p>
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.conj">
 <span class="sig-name descname"><span class="pre">conj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Return the complex conjugate of a complex number <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Return the complex conjugate of a complex number <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p>
 <p>In <em>complex mode</em>, this function accepts any real or complex input. In <em>real mode</em>, the imaginary portion of <code class="docutils literal notranslate"><span class="pre">x</span></code> is stripped to ensure that the value returned is purely real.</p>
 </dd></dl>
 
@@ -470,14 +485,20 @@ GMT/UTC (fractional offsets are supported).</p>
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.gradians">
 <span class="sig-name descname"><span class="pre">gradians</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Convert the angle <code class="docutils literal notranslate"><span class="pre">x</span></code> into gradians. Independently of the angle unit setting, this function will assume that <code class="docutils literal notranslate"><span class="pre">x</span></code> is given in radians and return <code class="docutils literal notranslate"><span class="pre">200*x/pi</span></code>.</p>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Convert the angle <code class="docutils literal notranslate"><span class="pre">x</span></code> into gradians. Independently of the angle unit setting, this function will assume that <code class="docutils literal notranslate"><span class="pre">x</span></code> is given in radians and return <code class="docutils literal notranslate"><span class="pre">200*x/pi</span></code>.</p>
 <p>The function only accepts real, dimensionless arguments.</p>
 </dd></dl>
 
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.turns">
 <span class="sig-name descname"><span class="pre">turns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Convert the angle <code class="docutils literal notranslate"><span class="pre">x</span></code> into turns. Independently of the angle unit setting, this function will assume that <code class="docutils literal notranslate"><span class="pre">x</span></code> is given in radians and return <code class="docutils literal notranslate"><span class="pre">x/(2*pi)</span></code>.</p>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Convert the angle <code class="docutils literal notranslate"><span class="pre">x</span></code> into turns. Independently of the angle unit setting, this function will assume that <code class="docutils literal notranslate"><span class="pre">x</span></code> is given in radians and return <code class="docutils literal notranslate"><span class="pre">x/(2*pi)</span></code>.</p>
 <p>The function only accepts real, dimensionless arguments.</p>
 </dd></dl>
 

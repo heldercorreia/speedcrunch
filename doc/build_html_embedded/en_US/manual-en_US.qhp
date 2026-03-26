@@ -29,11 +29,10 @@
                             <section title="Digit Grouping Separators" ref="userguide/syntax.html#digit-grouping-separators"/>
                             <section title="Scientific Notation" ref="userguide/syntax.html#scientific-notation"/>
                             <section title="Non-Decimal Bases" ref="userguide/syntax.html#non-decimal-bases"/>
-                            <section title="Sexagecimal Values" ref="userguide/syntax.html#sexagecimal-values"/>
+                            <section title="Sexagesimal Values" ref="userguide/syntax.html#sexagesimal-values"/>
                         </section>
                         <section title="Comments" ref="userguide/syntax.html#comments"/>
                         <section title="Operators and Precedence" ref="userguide/syntax.html#operators-and-precedence"/>
-                        <section title="Deprecated Operators" ref="userguide/syntax.html#deprecated-operators"/>
                     </section>
                     <section title="User-Defined Variables and Functions" ref="userguide/advanced.html">
                         <section title="Variables" ref="userguide/advanced.html#variables"/>
@@ -48,6 +47,7 @@
                             <section title="Startup User Definitions" ref="userguide/interface.html#startup-user-definitions"/>
                         </section>
                         <section title="Settings" ref="userguide/interface.html#settings">
+                            <section title="Result Display Interactions" ref="userguide/interface.html#result-display-interactions"/>
                             <section title="Format" ref="userguide/interface.html#format"/>
                             <section title="Angle Unit" ref="userguide/interface.html#angle-unit"/>
                             <section title="Digit Grouping" ref="userguide/interface.html#digit-grouping"/>

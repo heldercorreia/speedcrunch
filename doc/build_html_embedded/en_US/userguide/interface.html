@@ -122,6 +122,9 @@ and configure each button individually. For each position in the matrix, you can
 <li><p>The text to insert (for <code class="docutils literal notranslate"><span class="pre">Insert</span> <span class="pre">text</span></code> behavior)</p></li>
 </ul>
 <p>Custom keypad settings are saved and restored automatically.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
 <div class="versionchanged">
 <p><span class="versionmodified changed">Changed in version 0.11: </span>The keypad was removed in SpeedCrunch 0.11; however, it was added back in 0.12.</p>
 </div>
@@ -133,10 +136,16 @@ and configure each button individually. For each position in the matrix, you can
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
+<li><dl>
 <dt>Main Menu</dt><dd><p>Toggle the main menu bar visibility via <span class="menuselection">View ‣ Main Menu</span>.
 This option is available on Windows and Linux.
-On macOS, this option is not available because the application menu is managed by the system menu bar (outside the window), so SpeedCrunch cannot hide it like on Windows and Linux.</p>
+On macOS, this option is not available because the application menu is managed by the system menu bar (outside the window), so SpeedCrunch cannot hide it like on Windows and Linux.
+On Windows and Linux, a navigable Main Menu (mirroring the top menu structure) is also available
+from the right-click context menu on the result-display. This is useful when you prefer to keep
+the top main menu hidden but still want quick access to menu actions.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
 </dd>
 </dl>
 </li>
@@ -195,6 +204,9 @@ In contrast to the HTML export option, the syntax highlighting will be lost.</p>
 Select any plain text file and SpeedCrunch will try to evaluate each line of the file as if the user entered it directly.</p>
 <section id="startup-user-definitions">
 <h3>Startup User Definitions</h3>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
 <p>To define user variables and user functions that are loaded automatically at startup, use
 <span class="menuselection">Session ‣ Startup User Functions and Variables…</span>.</p>
 <p>This dialog provides:</p>
@@ -220,6 +232,41 @@ Select any plain text file and SpeedCrunch will try to evaluate each line of the
 <h2>Settings</h2>
 <p>SpeedCrunch’s behavior can be customized to a large degree using the configuration options in the
 <span class="menuselection">Settings</span> menu. This section explains the settings that are available.</p>
+<section id="result-display-interactions">
+<h3>Result Display Interactions</h3>
+<p>The result display supports mouse-driven interactions for navigation and editing.</p>
+<ul>
+<li><dl>
+<dt>Right-click context menu</dt><dd><p>Right-clicking an expression/calculation block in the result display opens a context menu
+for that specific block.
+This menu includes an entry to toggle the main menu bar visibility.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>Hover highlighting of calculation blocks</dt><dd><p>When <span class="menuselection">Settings ‣ Appearance ‣ Hover Highlighting</span> is enabled, moving the mouse over
+the result display highlights the calculation block under the cursor.
+The highlighted block also shows quick-action icons for deleting, editing, and copying.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>History rewriting from highlighted blocks</dt><dd><p>From the hovered/highlighted calculation block, you can re-edit an earlier expression and apply it
+as a history rewrite. SpeedCrunch then recalculates all expressions below that edited entry.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
 <section id="format">
 <span id="result-format"></span><h3>Format</h3>
 <p>This section allows selecting the result format to use. You can select one of the following
@@ -264,7 +311,10 @@ Example:</p>
 <span class="ge">= 0.07881114207211010205</span>
 </pre></div>
 </div>
-</td></tr></tbody></table></dd>
+</td></tr></tbody></table><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+</dd>
 </dl>
 </li>
 <li><dl class="simple">
@@ -282,8 +332,11 @@ Example:</p>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
-<dt><span class="menuselection">Sexagecimal</span></dt><dd><p>Display dimensionless and time results as <a class="reference internal" href="syntax.html#sexagecimal-values"><span class="std std-ref">sexagecimal values</span></a>, i.e. with minutes and seconds. All other results are displayed in fixed-point decimal form.</p>
+<li><dl>
+<dt><span class="menuselection">Sexagesimal</span></dt><dd><p>Display dimensionless and time results as <a class="reference internal" href="syntax.html#sexagesimal-values"><span class="std std-ref">sexagesimal values</span></a>, i.e. with minutes and seconds. All other results are displayed in fixed-point decimal form.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
 </dd>
 </dl>
 </li>
@@ -313,8 +366,11 @@ determines the angle format of the arguments.</p>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
+<li><dl>
 <dt><span class="menuselection">Turn</span></dt><dd><p>Use turns for angles. A full circle corresponds to an angle of 1 turn.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
 </dd>
 </dl>
 </li>
@@ -345,7 +401,7 @@ determines the angle format of the arguments.</p>
 <section id="history">
 <h3>History</h3>
 <p>This section contains settings that control how calculation history is stored.</p>
-<ul class="simple">
+<ul>
 <li><dl class="simple">
 <dt><span class="menuselection">History Saving ‣ Never</span></dt><dd><p>Do not persist the calculation history between runs.</p>
 </dd>
@@ -361,16 +417,22 @@ determines the angle format of the arguments.</p>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
+<li><dl>
 <dt><span class="menuselection">History Saving</span></dt><dd><p>This preference only affects calculation history. User-defined functions and user-defined
 variables are always persisted.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
+<li><dl>
 <dt><span class="menuselection">History Size Limit…</span></dt><dd><p>Sets the maximum number of stored history entries. By default, SpeedCrunch keeps
 up to 100 entries and automatically removes the oldest ones when this limit is
 exceeded. Set the value to <code class="docutils literal notranslate"><span class="pre">0</span></code> to disable the limit.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
 </dd>
 </dl>
 </li>
@@ -404,40 +466,54 @@ sessions.</p>
 <section id="results">
 <h3>Results</h3>
 <p>This section contains settings that control result output and post-evaluation behavior.</p>
-<ul class="simple">
+<ul>
 <li><dl class="simple">
 <dt><span class="menuselection">Show Live Result Preview</span></dt><dd><p>If set, SpeedCrunch will display partial results as you type your expression as well
 as results when selecting a partial expression in the editor.</p>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
-<dt><span class="menuselection">Format</span></dt><dd><p>Select the format used to display results.</p>
+<li><dl>
+<dt><span class="menuselection">Format</span></dt><dd><p>Select the format used to display results.
+Changing the primary result format applies to the last expression only; it does not rewrite
+previously evaluated history entries.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
+<li><dl>
 <dt><span class="menuselection">Precision</span></dt><dd><p>Select the number of fractional digits to display.
 <strong>Automatic</strong> always displays as many digits as are necessary to represent the number
 precisely. The preset settings and <span class="menuselection">Custom…</span> explicitly specify a
 certain number of digits (from 0 to 50) and will append additional zeroes to the
 fraction to reach that number of digits, if necessary.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
+<li><dl>
 <dt><span class="menuselection">Complex Numbers ‣ Disabled</span>, <span class="menuselection">Complex Numbers ‣ Cartesian</span>, and <span class="menuselection">Complex Numbers ‣ Polar</span></dt><dd><p>Select the complex-number mode. <code class="docutils literal notranslate"><span class="pre">Disabled</span></code> turns off support for <a class="reference internal" href="advanced.html#complex-numbers"><span class="std std-ref">complex numbers</span></a> (so
 <a class="reference internal" href="../reference/constants.html#sc.j" title="j"><code class="xref sc sc-const docutils literal notranslate"><span class="pre">j</span></code></a> is undefined and expressions such as <code class="docutils literal notranslate"><span class="pre">sqrt(-1)</span></code> fail). <code class="docutils literal notranslate"><span class="pre">Cartesian</span></code> and <code class="docutils literal notranslate"><span class="pre">Polar</span></code> both enable
 complex-number support and choose how complex results are displayed. <code class="docutils literal notranslate"><span class="pre">Disabled</span></code> is the default.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
-<dt><span class="menuselection">Secondary Format</span> and <span class="menuselection">Tertiary Format</span></dt><dd><p>Optional extra result displays in alternate formats, shown alongside the primary result.
+<li><dl>
+<dt><span class="menuselection">Secondary Result Format</span> and <span class="menuselection">Tertiary Result Format</span></dt><dd><p>Optional extra result displays in alternate formats, shown alongside the primary result.
 Also, when none of the selected result slots (primary, secondary, or tertiary)
 is Rational, SpeedCrunch may still add one extra Rational line for trig expressions
 if (and only if) the result is one of the recognized well-known exact values.
 This extra line is not shown for non-qualifying trig results.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
 </dd>
 </dl>
 </li>
@@ -446,12 +522,15 @@ This extra line is not shown for non-qualifying trig results.</p>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
+<li><dl>
 <dt><span class="menuselection">Simplify Displayed Expressions</span></dt><dd><p>When enabled (default), SpeedCrunch adds an extra symbolic line before
 numeric results, simplifying the interpreted expression for readability
 (for example, combining repeated factors into powers and folding simple
 constant terms). Disable this option to keep only the unsimplified
 interpreted expression and numeric results.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
 </dd>
 </dl>
 </li>
@@ -459,14 +538,25 @@ interpreted expression and numeric results.</p>
 </section>
 <section id="editing">
 <h3>Editing</h3>
+<ul>
+<li><dl>
+<dt><span class="menuselection">Autocomplete</span></dt><dd><p>Controls which entities are included in editor autocompletion.
+All options are enabled by default.</p>
 <ul class="simple">
-<li><dl class="simple">
-<dt><span class="menuselection">Automatic Completion</span></dt><dd><p>Completely enables or disables autocompletion.</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">Built-in</span> <span class="pre">functions</span></code> includes built-in function names.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Units</span></code> includes unit names.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">User</span> <span class="pre">function</span></code> includes user-defined function names.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">User</span> <span class="pre">variables</span></code> includes user-defined variable names.</p></li>
+</ul>
+<p>The autocomplete popup also shows category icons for suggestions.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
 </dd>
 </dl>
 </li>
 </ul>
-<ul class="simple" id="automatic-result-reuse">
+<ul id="automatic-result-reuse">
 <li><dl class="simple">
 <dt><span class="menuselection">Auto-Insert “ans” When Starting with an Operator</span></dt><dd><p>If a new expression starts with <code class="docutils literal notranslate"><span class="pre">+</span></code>, <code class="docutils literal notranslate"><span class="pre">-</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span></code>, or <code class="docutils literal notranslate"><span class="pre">/</span></code>, SpeedCrunch inserts <code class="docutils literal notranslate"><span class="pre">ans</span></code> first.</p>
 </dd>
@@ -482,14 +572,17 @@ interpreted expression and numeric results.</p>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
+<li><dl>
 <dt><span class="menuselection">Up/Down Arrow History</span></dt><dd><p>Controls whether <kbd class="kbd docutils literal notranslate">Up</kbd> and <kbd class="kbd docutils literal notranslate">Down</kbd> in the editor navigate history:</p>
-<ul>
+<ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Never</span></code> always moves the cursor inside the editor.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Always</span></code> (default) always navigates history.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Only</span> <span class="pre">for</span> <span class="pre">Single-Line</span> <span class="pre">Expressions</span></code> navigates history only when the
 expression fits in one visual line; otherwise, it moves the cursor.</p></li>
 </ul>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
 </dd>
 </dl>
 </li>
@@ -508,7 +601,7 @@ and examples.</p>
 </section>
 <section id="user-interface-settings">
 <h3>User Interface Settings</h3>
-<ul class="simple">
+<ul>
 <li><dl class="simple">
 <dt><span class="menuselection">Settings ‣ Appearance ‣ Theme</span></dt><dd><p>Select a theme. See <a class="reference internal" href="../advanced/colorschemeformat.html#color-schemes"><span class="std std-ref">Color Scheme File Format</span></a> for information on how to install
 additional themes so they are displayed in this menu.</p>
@@ -532,6 +625,14 @@ additional themes so they are displayed in this menu.</p>
 </li>
 <li><dl class="simple">
 <dt><span class="menuselection">Settings ‣ Language</span></dt><dd><p>Select the user interface language.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><span class="menuselection">Settings ‣ Check for Updates</span></dt><dd><p>Trigger an update check and show information when a newer version is available.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
 </dd>
 </dl>
 </li>
@@ -694,7 +795,7 @@ additional themes so they are displayed in this menu.</p>
 </dl>
 </li>
 <li><dl>
-<dt><kbd class="kbd docutils literal notranslate">F9</kbd></dt><dd><p>Set result format to sexagecimal.</p>
+<dt><kbd class="kbd docutils literal notranslate">F9</kbd></dt><dd><p>Set result format to sexagesimal.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">New in version 1.0.</span></p>
 </div>
