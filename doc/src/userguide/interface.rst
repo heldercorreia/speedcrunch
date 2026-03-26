@@ -304,8 +304,14 @@ This section contains settings that control result output and post-evaluation be
 Editing
 +++++++
 
-* :menuselection:`Automatic Completion`
-    Completely enables or disables autocompletion.
+* :menuselection:`Autocomplete`
+    Controls which entities are included in editor autocompletion.
+    All options are enabled by default.
+
+    * ``Built-in functions`` includes built-in function names.
+    * ``Units`` includes unit names.
+    * ``User function`` includes user-defined function names.
+    * ``User variables`` includes user-defined variable names.
 
 .. _automatic_result_reuse:
 

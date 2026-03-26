@@ -32,6 +32,7 @@
 #include "core/settings.h"
 #include "core/session.h"
 #include "core/unicodechars.h"
+#include "math/units.h"
 
 #include <QApplication>
 #include <QAbstractTextDocumentLayout>
@@ -549,30 +550,48 @@ void Editor::doMatchingRight()
 // Matches a list of built-in functions and variables to a fragment of the name.
 QStringList Editor::matchFragment(const QString& id) const
 {
+    const Settings* settings = Settings::instance();
+
     // Find matches in function names.
-    const auto fnames = FunctionRepo::instance()->getIdentifiers();
     QStringList choices;
-    for (int i = 0; i < fnames.count(); ++i) {
-        if (fnames.at(i).startsWith(id, Qt::CaseInsensitive)) {
-            QString str = fnames.at(i);
-            Function* f = FunctionRepo::instance()->find(str);
-            if (f)
-                str.append(':').append(f->name());
-            choices.append(str);
+    if (settings->autoCompletionBuiltInFunctions) {
+        const auto fnames = FunctionRepo::instance()->getIdentifiers();
+        for (int i = 0; i < fnames.count(); ++i) {
+            if (fnames.at(i).startsWith(id, Qt::CaseInsensitive)) {
+                QString str = fnames.at(i);
+                Function* f = FunctionRepo::instance()->find(str);
+                if (f)
+                    str.append(':').append(f->name());
+                choices.append(str);
+            }
         }
+        choices.sort();
     }
-    choices.sort();
 
     // Find matches in variables names.
     QStringList vchoices;
+    const QList<Unit> allUnits = Units::getList();
+    QSet<QString> unitNames;
+    for (const Unit& unit : allUnits)
+        unitNames.insert(unit.name);
     QList<Variable> variables = m_evaluator->getVariables();
     for (int i = 0; i < variables.count(); ++i) {
-        if (variables.at(i).identifier().startsWith(id, Qt::CaseInsensitive)) {
-            const QString variableDescription = variables.at(i).description().trimmed().isEmpty()
-                ? NumberFormatter::format(variables.at(i).value())
-                : variables.at(i).description().trimmed();
+        const Variable variable = variables.at(i);
+        const bool isBuiltIn = variable.type() == Variable::BuiltIn;
+        const bool isUnit = isBuiltIn && unitNames.contains(variable.identifier());
+        const bool includeVariable =
+            (isUnit && settings->autoCompletionUnits)
+            || (!isUnit && isBuiltIn && settings->autoCompletionBuiltInFunctions)
+            || (!isBuiltIn && settings->autoCompletionUserVariables);
+        if (!includeVariable)
+            continue;
+
+        if (variable.identifier().startsWith(id, Qt::CaseInsensitive)) {
+            const QString variableDescription = variable.description().trimmed().isEmpty()
+                ? NumberFormatter::format(variable.value())
+                : variable.description().trimmed();
             vchoices.append(QString("%1:%2").arg(
-                variables.at(i).identifier(),
+                variable.identifier(),
                 variableDescription));
         }
     }
@@ -580,19 +599,21 @@ QStringList Editor::matchFragment(const QString& id) const
     choices += vchoices;
 
     // Find matches in user functions.
-    QStringList ufchoices;
-    auto userFunctions = m_evaluator->getUserFunctions();
-    for (int i = 0; i < userFunctions.count(); ++i) {
-        if (userFunctions.at(i).name().startsWith(id, Qt::CaseInsensitive)) {
-            const QString description = userFunctions.at(i).description().trimmed().isEmpty()
-                ? tr("User function")
-                : userFunctions.at(i).description().trimmed();
-            ufchoices.append(QString("%1:%2").arg(
-                userFunctions.at(i).name(), description));
+    if (settings->autoCompletionUserFunctions) {
+        QStringList ufchoices;
+        auto userFunctions = m_evaluator->getUserFunctions();
+        for (int i = 0; i < userFunctions.count(); ++i) {
+            if (userFunctions.at(i).name().startsWith(id, Qt::CaseInsensitive)) {
+                const QString description = userFunctions.at(i).description().trimmed().isEmpty()
+                    ? tr("User function")
+                    : userFunctions.at(i).description().trimmed();
+                ufchoices.append(QString("%1:%2").arg(
+                    userFunctions.at(i).name(), description));
+            }
         }
+        ufchoices.sort();
+        choices += ufchoices;
     }
-    ufchoices.sort();
-    choices += ufchoices;
 
     return choices;
 }

@@ -137,6 +137,10 @@ private slots:
     void setAutoAnsEnabled(bool);
     void setAutoCalcEnabled(bool);
     void setAutoCompletionEnabled(bool);
+    void setAutoCompletionBuiltInFunctionsEnabled(bool);
+    void setAutoCompletionUnitsEnabled(bool);
+    void setAutoCompletionUserFunctionsEnabled(bool);
+    void setAutoCompletionUserVariablesEnabled(bool);
     void setBitfieldVisible(bool);
     void setHistorySizeLimit();
     void setConstantsDockVisible(bool, bool takeFocus = true);
@@ -378,6 +382,10 @@ private:
         QAction* settingsBehaviorSaveWindowPositionOnExit;
         QAction* settingsBehaviorPartialResults;
         QAction* settingsBehaviorAutoCompletion;
+        QAction* settingsBehaviorAutoCompletionBuiltInFunctions;
+        QAction* settingsBehaviorAutoCompletionUnits;
+        QAction* settingsBehaviorAutoCompletionUserFunctions;
+        QAction* settingsBehaviorAutoCompletionUserVariables;
         QAction* settingsBehaviorSyntaxHighlighting;
         QAction* settingsBehaviorHoverHighlightResults;
         QAction* settingsBehaviorEmptyHistoryHint;
@@ -438,6 +446,7 @@ private:
         QMenu* angleUnit;
         QMenu* complexNumbers;
         QMenu* editing;
+        QMenu* autoCompletion;
         QMenu* history;
         QMenu* historySaving;
         QMenu* colorScheme;

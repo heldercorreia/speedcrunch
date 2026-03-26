@@ -335,6 +335,10 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorAlwaysOnTop = new QAction(this);
     m_actions.settingsBehaviorAutoAns = new QAction(this);
     m_actions.settingsBehaviorAutoCompletion = new QAction(this);
+    m_actions.settingsBehaviorAutoCompletionBuiltInFunctions = new QAction(this);
+    m_actions.settingsBehaviorAutoCompletionUnits = new QAction(this);
+    m_actions.settingsBehaviorAutoCompletionUserFunctions = new QAction(this);
+    m_actions.settingsBehaviorAutoCompletionUserVariables = new QAction(this);
     m_actions.settingsBehaviorEmptyHistoryHint = new QAction(this);
     m_actions.settingsBehaviorLeaveLastExpression = new QAction(this);
     m_actions.settingsBehaviorUpDownArrowNever = new QAction(this);
@@ -418,6 +422,10 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorAlwaysOnTop->setCheckable(true);
     m_actions.settingsBehaviorAutoAns->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletion->setCheckable(true);
+    m_actions.settingsBehaviorAutoCompletionBuiltInFunctions->setCheckable(true);
+    m_actions.settingsBehaviorAutoCompletionUnits->setCheckable(true);
+    m_actions.settingsBehaviorAutoCompletionUserFunctions->setCheckable(true);
+    m_actions.settingsBehaviorAutoCompletionUserVariables->setCheckable(true);
     m_actions.settingsBehaviorEmptyHistoryHint->setCheckable(true);
     m_actions.settingsBehaviorLeaveLastExpression->setCheckable(true);
     m_actions.settingsBehaviorUpDownArrowNever->setCheckable(true);
@@ -637,6 +645,10 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorAutoAns->setToolTip(MainWindow::tr("If a new expression starts with +, -, *, or /, SpeedCrunch inserts \"ans\" first."));
     m_actions.settingsBehaviorAutoAns->setStatusTip(MainWindow::tr("If a new expression starts with +, -, *, or /, SpeedCrunch inserts \"ans\" first."));
     m_actions.settingsBehaviorAutoCompletion->setText(MainWindow::tr("Automatic &Completion"));
+    m_actions.settingsBehaviorAutoCompletionBuiltInFunctions->setText(MainWindow::tr("Built-in &functions"));
+    m_actions.settingsBehaviorAutoCompletionUnits->setText(MainWindow::tr("&Units"));
+    m_actions.settingsBehaviorAutoCompletionUserFunctions->setText(MainWindow::tr("User &function"));
+    m_actions.settingsBehaviorAutoCompletionUserVariables->setText(MainWindow::tr("User &variables"));
     m_actions.settingsBehaviorEmptyHistoryHint->setText(MainWindow::tr("Show Empty History &Hint"));
     m_actions.settingsBehaviorEmptyHistoryHint->setToolTip(MainWindow::tr("When history is empty, show a hint in the status area."));
     m_actions.settingsBehaviorEmptyHistoryHint->setStatusTip(MainWindow::tr("When history is empty, show a hint in the status area."));
@@ -928,7 +940,11 @@ void MainWindow::createMenus()
     m_menus.radixChar->addAction(m_actions.settingsRadixCharComma);
     m_menus.radixChar->addAction(m_actions.settingsRadixCharBoth);
     m_menus.editing->addSeparator();
-    m_menus.editing->addAction(m_actions.settingsBehaviorAutoCompletion);
+    m_menus.autoCompletion = m_menus.editing->addMenu("");
+    m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionBuiltInFunctions);
+    m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionUnits);
+    m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionUserFunctions);
+    m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionUserVariables);
     m_menus.editing->addAction(m_actions.settingsBehaviorAutoAns);
     m_menus.editing->addAction(m_actions.settingsBehaviorEmptyHistoryHint);
     m_menus.editing->addAction(m_actions.settingsBehaviorLeaveLastExpression);
@@ -1060,6 +1076,7 @@ void MainWindow::setMenusText()
     m_menus.complexNumbers->setTitle(MainWindow::tr("Complex &Numbers"));
     m_menus.window->setTitle(MainWindow::tr("&Window"));
     m_menus.editing->setTitle(MainWindow::tr("&Editing"));
+    m_menus.autoCompletion->setTitle(MainWindow::tr("A&utocomplete"));
     m_menus.upDownArrowBehavior->setTitle(MainWindow::tr("Up/Down Arrow History"));
     m_menus.history->setTitle(MainWindow::tr("&History"));
     m_menus.historySaving->setTitle(MainWindow::tr("History &Saving"));
@@ -1403,6 +1420,10 @@ void MainWindow::createFixedConnections()
     if (!isWaylandPlatform())
         connect(m_actions.settingsBehaviorAlwaysOnTop, SIGNAL(toggled(bool)), SLOT(setAlwaysOnTopEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoCompletion, SIGNAL(toggled(bool)), SLOT(setAutoCompletionEnabled(bool)));
+    connect(m_actions.settingsBehaviorAutoCompletionBuiltInFunctions, SIGNAL(toggled(bool)), SLOT(setAutoCompletionBuiltInFunctionsEnabled(bool)));
+    connect(m_actions.settingsBehaviorAutoCompletionUnits, SIGNAL(toggled(bool)), SLOT(setAutoCompletionUnitsEnabled(bool)));
+    connect(m_actions.settingsBehaviorAutoCompletionUserFunctions, SIGNAL(toggled(bool)), SLOT(setAutoCompletionUserFunctionsEnabled(bool)));
+    connect(m_actions.settingsBehaviorAutoCompletionUserVariables, SIGNAL(toggled(bool)), SLOT(setAutoCompletionUserVariablesEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoAns, SIGNAL(toggled(bool)), SLOT(setAutoAnsEnabled(bool)));
     connect(m_actions.settingsBehaviorEmptyHistoryHint, SIGNAL(toggled(bool)), SLOT(setEmptyHistoryHintEnabled(bool)));
     connect(m_actions.settingsBehaviorPartialResults, SIGNAL(toggled(bool)), SLOT(setAutoCalcEnabled(bool)));
@@ -1668,6 +1689,14 @@ void MainWindow::applySettings()
         m_actions.settingsBehaviorAutoCompletion->setChecked(true);
     else
         setAutoCompletionEnabled(false);
+    m_actions.settingsBehaviorAutoCompletionBuiltInFunctions->setChecked(
+        m_settings->autoCompletionBuiltInFunctions);
+    m_actions.settingsBehaviorAutoCompletionUnits->setChecked(
+        m_settings->autoCompletionUnits);
+    m_actions.settingsBehaviorAutoCompletionUserFunctions->setChecked(
+        m_settings->autoCompletionUserFunctions);
+    m_actions.settingsBehaviorAutoCompletionUserVariables->setChecked(
+        m_settings->autoCompletionUserVariables);
 
     checkInitialDigitGrouping();
 
@@ -2714,6 +2743,26 @@ void MainWindow::setAutoCompletionEnabled(bool b)
 {
     m_settings->autoCompletion = b;
     m_widgets.editor->setAutoCompletionEnabled(b);
+}
+
+void MainWindow::setAutoCompletionBuiltInFunctionsEnabled(bool b)
+{
+    m_settings->autoCompletionBuiltInFunctions = b;
+}
+
+void MainWindow::setAutoCompletionUnitsEnabled(bool b)
+{
+    m_settings->autoCompletionUnits = b;
+}
+
+void MainWindow::setAutoCompletionUserFunctionsEnabled(bool b)
+{
+    m_settings->autoCompletionUserFunctions = b;
+}
+
+void MainWindow::setAutoCompletionUserVariablesEnabled(bool b)
+{
+    m_settings->autoCompletionUserVariables = b;
 }
 
 void MainWindow::setBitfieldVisible(bool b)

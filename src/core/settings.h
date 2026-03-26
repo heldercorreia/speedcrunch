@@ -100,6 +100,10 @@ public:
     bool autoAns;
     bool autoCalc;
     bool autoCompletion;
+    bool autoCompletionBuiltInFunctions;
+    bool autoCompletionUnits;
+    bool autoCompletionUserFunctions;
+    bool autoCompletionUserVariables;
     UpDownArrowBehavior upDownArrowBehavior;
     int digitGrouping;
     bool digitGroupingIntegerPartOnly;

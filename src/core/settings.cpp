@@ -277,6 +277,10 @@ Settings::Settings()
     singleInstance = true;
     startupUserDefinitionsOverwrite = false;
     startupUserDefinitionsApplyBeforeRestore = false;
+    autoCompletionBuiltInFunctions = true;
+    autoCompletionUnits = true;
+    autoCompletionUserFunctions = true;
+    autoCompletionUserVariables = true;
 }
 
 void Settings::load()
@@ -306,6 +310,14 @@ void Settings::load()
     autoAns = settings->value(key + QLatin1String("AutoAns"), false).toBool();
     autoCalc = settings->value(key + QLatin1String("AutoCalc"), true).toBool();
     autoCompletion = settings->value(key + QLatin1String("AutoCompletion"), true).toBool();
+    autoCompletionBuiltInFunctions = settings->value(
+        key + QLatin1String("AutoCompletionBuiltInFunctions"), true).toBool();
+    autoCompletionUnits = settings->value(
+        key + QLatin1String("AutoCompletionUnits"), true).toBool();
+    autoCompletionUserFunctions = settings->value(
+        key + QLatin1String("AutoCompletionUserFunctions"), true).toBool();
+    autoCompletionUserVariables = settings->value(
+        key + QLatin1String("AutoCompletionUserVariables"), true).toBool();
     const QString upDownArrowBehaviorKey = key + QLatin1String("UpDownArrowBehavior");
     if (settings->contains(upDownArrowBehaviorKey)) {
         upDownArrowBehavior = static_cast<UpDownArrowBehavior>(
@@ -474,6 +486,10 @@ void Settings::save()
     settings->setValue(key + QLatin1String("LeaveLastExpression"), leaveLastExpression);
     settings->setValue(key + QLatin1String("ShowEmptyHistoryHint"), showEmptyHistoryHint);
     settings->setValue(key + QLatin1String("AutoCompletion"), autoCompletion);
+    settings->setValue(key + QLatin1String("AutoCompletionBuiltInFunctions"), autoCompletionBuiltInFunctions);
+    settings->setValue(key + QLatin1String("AutoCompletionUnits"), autoCompletionUnits);
+    settings->setValue(key + QLatin1String("AutoCompletionUserFunctions"), autoCompletionUserFunctions);
+    settings->setValue(key + QLatin1String("AutoCompletionUserVariables"), autoCompletionUserVariables);
     settings->setValue(key + QLatin1String("AutoAns"), autoAns);
     settings->setValue(key + QLatin1String("AutoCalc"), autoCalc);
     settings->setValue(
