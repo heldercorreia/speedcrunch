@@ -445,6 +445,9 @@ static Token::Operator matchOperator(const QString& text)
         case '!':
             result = Token::Factorial;
             break;
+        case '%':
+            result = Token::Percent;
+            break;
         case '=':
             result = Token::Assignment;
             break;
@@ -489,6 +492,7 @@ static int opPrecedence(Token::Operator op)
     int prec;
     switch (op) {
     case Token::Factorial:
+    case Token::Percent:
         prec = 800;
         break;
     case Token::Exponentiation:
@@ -553,6 +557,8 @@ static int opcodePrecedence(Opcode::Type opcodeType)
         return opPrecedence(Token::Exponentiation);
     case Opcode::Fact:
         return opPrecedence(Token::Factorial);
+    case Opcode::Percent:
+        return opPrecedence(Token::Percent);
     case Opcode::Modulo:
     case Opcode::IntDiv:
         return opPrecedence(Token::Modulo);
@@ -589,6 +595,7 @@ static QString opcodeToInfixSymbol(Opcode::Type opcodeType, bool implicitMultipl
             : QString(UnicodeChars::MultiplicationSign);
     case Opcode::Div: return "/";
     case Opcode::Pow: return "^";
+    case Opcode::Percent: return "%";
     case Opcode::Modulo: return "mod";
     case Opcode::IntDiv: return "\\";
     case Opcode::LSh: return "<<";
@@ -690,7 +697,8 @@ static bool tokenCanEndOperandForDisplaySpacing(const Token& token)
 {
     return token.isOperand()
         || token.asOperator() == Token::AssociationEnd
-        || token.asOperator() == Token::Factorial;
+        || token.asOperator() == Token::Factorial
+        || token.asOperator() == Token::Percent;
 }
 
 static bool tokenCanStartOperandForDisplaySpacing(const Token& token)
@@ -1687,13 +1695,135 @@ static QString simplifyRepeatedMultiplicativeBasesForDisplay(const QString& expr
         simplifiedTerms.append(simplifyRepeatedBasesInMultiplicativeTermForDisplay(lastTermText));
     }
 
+    const auto isMinusOperator = [](const QString& op) {
+        return op.size() == 1 && isMinus(op.at(0));
+    };
+    const auto normalizeFoldableNumericTerm = [&isMinusOperator](const QString& termText, double* out) {
+        QString term = termText.trimmed();
+        if (isSignedDecimalNumberText(term) && isSafeForDoubleArithmetic(term)) {
+            bool ok = false;
+            const double value = term.toDouble(&ok);
+            if (ok) {
+                *out = value;
+                return true;
+            }
+        }
+        if (!(term.startsWith(QLatin1Char('(')) && term.endsWith(QLatin1Char(')'))))
+            return false;
+
+        const QString inner = term.mid(1, term.size() - 2).trimmed();
+        const Tokens innerTokens = Evaluator::instance()->scan(inner);
+        if (innerTokens.isEmpty())
+            return false;
+
+        double total = 0.0;
+        QString pendingOp = QStringLiteral("+");
+        bool expectValue = true;
+        for (const Token& token : innerTokens) {
+            if (expectValue) {
+                if (!token.isNumber())
+                    return false;
+                const QString numberText = token.text().trimmed();
+                if (!isSignedDecimalNumberText(numberText)
+                    || !isSafeForDoubleArithmetic(numberText))
+                {
+                    return false;
+                }
+                bool ok = false;
+                const double value = numberText.toDouble(&ok);
+                if (!ok)
+                    return false;
+                total += isMinusOperator(pendingOp) ? -value : value;
+                expectValue = false;
+                continue;
+            }
+
+            const Token::Operator op = token.asOperator();
+            if (op != Token::Addition && op != Token::Subtraction)
+                return false;
+            pendingOp = token.text();
+            expectValue = true;
+        }
+
+        if (expectValue)
+            return false;
+
+        *out = total;
+        return true;
+    };
+    const bool hasPercentTerm = std::any_of(
+        simplifiedTerms.constBegin(),
+        simplifiedTerms.constEnd(),
+        [](const QString& term) { return term.contains(QLatin1Char('%')); });
+    if (hasPercentTerm) {
+        if (simplifiedTerms.isEmpty())
+            return expression;
+
+        QVector<QString> normalizedTerms = simplifiedTerms;
+        for (int i = 0; i < normalizedTerms.size(); ++i) {
+            double value = 0.0;
+            QString term = normalizedTerms.at(i).trimmed();
+            if (term.contains(QLatin1Char('%')))
+                continue;
+            if (isWrappedInOuterParentheses(term)) {
+                const QString inner = term.mid(1, term.size() - 2);
+                const Tokens innerTokens = Evaluator::instance()->scan(inner);
+                if (!innerTokens.isEmpty()) {
+                    const QString simplifiedInner =
+                        simplifyRepeatedMultiplicativeBasesForDisplay(inner, innerTokens);
+                    term = QStringLiteral("(%1)").arg(simplifiedInner);
+                }
+            }
+            if (normalizeFoldableNumericTerm(term, &value))
+                term = formatSimplifiedDecimal(value);
+            normalizedTerms[i] = term;
+        }
+
+        QVector<QString> foldedTerms;
+        QVector<QString> foldedOperators;
+        QString currentTerm = normalizedTerms.at(0).trimmed();
+
+        for (int i = 1; i < normalizedTerms.size(); ++i) {
+            const QString op = additiveOperators.at(i - 1);
+            const QString nextTerm = normalizedTerms.at(i).trimmed();
+
+            double currentValue = 0.0;
+            double nextValue = 0.0;
+            const bool canFoldCurrent =
+                !currentTerm.contains(QLatin1Char('%'))
+                && normalizeFoldableNumericTerm(currentTerm, &currentValue);
+            const bool canFoldNext =
+                !nextTerm.contains(QLatin1Char('%'))
+                && normalizeFoldableNumericTerm(nextTerm, &nextValue);
+
+            if ((op == QLatin1String("+") || isMinusOperator(op))
+                && canFoldCurrent
+                && canFoldNext)
+            {
+                const double result = currentValue + (isMinusOperator(op) ? -nextValue : nextValue);
+                currentTerm = formatSimplifiedDecimal(result);
+                continue;
+            }
+
+            foldedTerms.append(currentTerm);
+            foldedOperators.append(op);
+            currentTerm = nextTerm;
+        }
+        foldedTerms.append(currentTerm);
+
+        QString simplifiedPercentAware;
+        simplifiedPercentAware += foldedTerms.at(0);
+        for (int i = 1; i < foldedTerms.size(); ++i) {
+            simplifiedPercentAware += foldedOperators.at(i - 1);
+            simplifiedPercentAware += foldedTerms.at(i);
+        }
+        return simplifiedPercentAware;
+    }
+
     QVector<double> constantValues;
     QVector<QString> constantSigns;
     QVector<QString> keptTerms;
     QVector<QString> keptOperators;
-    const auto isMinusOperator = [](const QString& op) {
-        return op.size() == 1 && isMinus(op.at(0));
-    };
     for (int i = 0; i < simplifiedTerms.size(); ++i) {
         QString term = simplifiedTerms.at(i).trimmed();
         const QString op = (i == 0) ? QStringLiteral("+") : additiveOperators.at(i - 1);
@@ -3087,6 +3217,11 @@ void Evaluator::compile(const Tokens& tokens)
                        syntaxStack.reduce(2);
                        m_codes.append(Opcode(Opcode::Fact));
                        break;
+                   case Token::Percent:
+                       ruleFound = true;
+                       syntaxStack.reduce(2);
+                       m_codes.append(Opcode(Opcode::Percent));
+                       break;
                    default:;
                    }
                }
@@ -3532,6 +3667,16 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
             rightText = wrapInParentheses(rightText);
         }
 
+        // In contextual percent expressions, make the additive base explicit:
+        // render "1+99+10%" as "(1+99)+10%".
+        if ((opcodeType == Opcode::Add || opcodeType == Opcode::Sub)
+            && right.rootOpcode == Opcode::Percent
+            && (left.rootOpcode == Opcode::Add || left.rootOpcode == Opcode::Sub)
+            && !isWrappedInOuterParentheses(leftText))
+        {
+            leftText = wrapInParentheses(leftText);
+        }
+
         // Make "a / b c" style parses explicit as "(a / b) * c".
         if (opcodeType == Opcode::Mul
             && isImplicitMultiplication
@@ -3697,17 +3842,21 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
                                        opcodePrecedence(opcode.type)));
             break;
         }
-        case Opcode::Fact: {
+        case Opcode::Fact:
+        case Opcode::Percent: {
             if (stack.isEmpty())
                 return QString();
             const int precedence = opcodePrecedence(opcode.type);
             RenderNode operand = stack.takeLast();
             if (operand.precedence < precedence)
                 operand.text = wrapInParentheses(operand.text);
+            const QString symbol = opcode.type == Opcode::Fact
+                ? QStringLiteral("!")
+                : QStringLiteral("%");
             stack.append({
-                operand.text + "!",
+                operand.text + symbol,
                 precedence,
-                Opcode::Fact,
+                opcode.type,
                 operand.isLiteralSymbol,
                 operand.isNumericOnly,
                 false
@@ -3920,14 +4069,29 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                          const QVector<Quantity>& constants,
                          const QStringList& identifiers)
 {
-    QStack<Quantity> stack;
+    struct StackEntry {
+        Quantity value;
+        bool isPercentValue;
+    };
+    QStack<StackEntry> stack;
     QHash<int, QString> refs;
     int index;
     Quantity val1, val2;
+    bool val1IsPercent = false;
+    bool rhsIsPercent = false;
     QVector<Quantity> args;
     QString fname;
     Function* function;
     const UserFunction* userFunction = nullptr;
+    auto pushStackValue = [&stack](const Quantity& value, bool isPercentValue = false) {
+        stack.push(StackEntry{value, isPercentValue});
+    };
+    auto popStackValue = [&stack](Quantity& value, bool* isPercentValue = nullptr) {
+        const StackEntry entry = stack.pop();
+        value = entry.value;
+        if (isPercentValue)
+            *isPercentValue = entry.isPercentValue;
+    };
     auto hasPendingDeferredOperandContext = [&refs](int stackSize) {
         QHash<int, QString>::const_iterator it = refs.constBegin();
         for (; it != refs.constEnd(); ++it) {
@@ -3959,7 +4123,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
             // Load a constant, push to stack.
             case Opcode::Load:
                 val1 = constants.at(index);
-                stack.push(val1);
+                pushStackValue(val1);
                 break;
 
             // Unary operation.
@@ -3968,9 +4132,10 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     m_error = tr("invalid expression");
                     return CMath::nan();
                 }
-                val1 = stack.pop();
+                val1IsPercent = false;
+                popStackValue(val1, &val1IsPercent);
                 val1 = checkOperatorResultWithDeferredNoOperand(-val1);
-                stack.push(val1);
+                pushStackValue(val1, val1IsPercent);
                 break;
 
             case Opcode::BNot:
@@ -3978,9 +4143,9 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     m_error = tr("invalid expression");
                     return CMath::nan();
                 }
-                val1 = stack.pop();
+                popStackValue(val1);
                 val1 = checkOperatorResultWithDeferredNoOperand(~val1);
-                stack.push(val1);
+                pushStackValue(val1);
                 break;
 
             // Binary operation: take two values from stack,
@@ -3990,10 +4155,13 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     m_error = tr("invalid expression");
                     return CMath::nan();
                 }
-                val1 = stack.pop();
-                val2 = stack.pop();
+                rhsIsPercent = false;
+                popStackValue(val1, &rhsIsPercent);
+                popStackValue(val2);
+                if (rhsIsPercent)
+                    val1 = checkOperatorResultWithDeferredNoOperand(val2 * val1);
                 val2 = checkOperatorResultWithDeferredNoOperand(val2 + val1);
-                stack.push(val2);
+                pushStackValue(val2);
                 break;
 
             case Opcode::Sub:
@@ -4001,10 +4169,13 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     m_error = tr("invalid expression");
                     return CMath::nan();
                 }
-                val1 = stack.pop();
-                val2 = stack.pop();
+                rhsIsPercent = false;
+                popStackValue(val1, &rhsIsPercent);
+                popStackValue(val2);
+                if (rhsIsPercent)
+                    val1 = checkOperatorResultWithDeferredNoOperand(val2 * val1);
                 val2 = checkOperatorResultWithDeferredNoOperand(val2 - val1);
-                stack.push(val2);
+                pushStackValue(val2);
                 break;
 
             case Opcode::Mul:
@@ -4012,10 +4183,10 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     m_error = tr("invalid expression");
                     return CMath::nan();
                 }
-                val1 = stack.pop();
-                val2 = stack.pop();
+                popStackValue(val1);
+                popStackValue(val2);
                 val2 = checkOperatorResultWithDeferredNoOperand(val2 * val1);
-                stack.push(val2);
+                pushStackValue(val2);
                 break;
 
             case Opcode::Div:
@@ -4023,10 +4194,10 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     m_error = tr("invalid expression");
                     return CMath::nan();
                 }
-                val1 = stack.pop();
-                val2 = stack.pop();
+                popStackValue(val1);
+                popStackValue(val2);
                 val2 = checkOperatorResultWithDeferredNoOperand(val2 / val1);
-                stack.push(val2);
+                pushStackValue(val2);
                 break;
 
             case Opcode::Pow:
@@ -4034,10 +4205,10 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     m_error = tr("invalid expression");
                     return CMath::nan();
                 }
-                val1 = stack.pop();
-                val2 = stack.pop();
+                popStackValue(val1);
+                popStackValue(val2);
                 val2 = checkOperatorResultWithDeferredNoOperand(DMath::raise(val2, val1));
-                stack.push(val2);
+                pushStackValue(val2);
                 break;
 
             case Opcode::Fact:
@@ -4045,9 +4216,19 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     m_error = tr("invalid expression");
                     return CMath::nan();
                 }
-                val1 = stack.pop();
+                popStackValue(val1);
                 val1 = checkOperatorResultWithDeferredNoOperand(DMath::factorial(val1));
-                stack.push(val1);
+                pushStackValue(val1);
+                break;
+
+            case Opcode::Percent:
+                if (stack.count() < 1) {
+                    m_error = tr("invalid expression");
+                    return CMath::nan();
+                }
+                popStackValue(val1);
+                val1 = checkOperatorResultWithDeferredNoOperand(val1 / Quantity(100));
+                pushStackValue(val1, true);
                 break;
 
             case Opcode::Modulo:
@@ -4055,10 +4236,10 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     m_error = tr("invalid expression");
                     return CMath::nan();
                 }
-                val1 = stack.pop();
-                val2 = stack.pop();
+                popStackValue(val1);
+                popStackValue(val2);
                 val2 = checkOperatorResultWithDeferredNoOperand(val2 % val1);
-                stack.push(val2);
+                pushStackValue(val2);
                 break;
 
             case Opcode::IntDiv:
@@ -4066,10 +4247,10 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     m_error = tr("invalid expression");
                     return CMath::nan();
                 }
-                val1 = stack.pop();
-                val2 = stack.pop();
+                popStackValue(val1);
+                popStackValue(val2);
                 val2 = checkOperatorResultWithDeferredNoOperand(val2 / val1);
-                stack.push(DMath::integer(val2));
+                pushStackValue(DMath::integer(val2));
                 break;
 
             case Opcode::LSh:
@@ -4077,10 +4258,10 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     m_error = tr("invalid expression");
                     return DMath::nan();
                 }
-                val1 = stack.pop();
-                val2 = stack.pop();
+                popStackValue(val1);
+                popStackValue(val2);
                 val2 = val2 << val1;
-                stack.push(val2);
+                pushStackValue(val2);
                 break;
 
             case Opcode::RSh:
@@ -4088,10 +4269,10 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     m_error = tr("invalid expression");
                     return DMath::nan();
                 }
-                val1 = stack.pop();
-                val2 = stack.pop();
+                popStackValue(val1);
+                popStackValue(val2);
                 val2 = val2 >> val1;
-                stack.push(val2);
+                pushStackValue(val2);
                 break;
 
             case Opcode::BAnd:
@@ -4099,10 +4280,10 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     m_error = tr("invalid expression");
                     return DMath::nan();
                 }
-                val1 = stack.pop();
-                val2 = stack.pop();
+                popStackValue(val1);
+                popStackValue(val2);
                 val2 &= val1;
-                stack.push(val2);
+                pushStackValue(val2);
                 break;
 
             case Opcode::BOr:
@@ -4110,10 +4291,10 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     m_error = tr("invalid expression");
                     return DMath::nan();
                 }
-                val1 = stack.pop();
-                val2 = stack.pop();
+                popStackValue(val1);
+                popStackValue(val2);
                 val2 |= val1;
-                stack.push(val2);
+                pushStackValue(val2);
                 break;
 
             case Opcode::Conv:
@@ -4121,8 +4302,8 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     m_error = tr("invalid expression");
                     return HMath::nan();
                 }
-                val1 = stack.pop();
-                val2 = stack.pop();
+                popStackValue(val1);
+                popStackValue(val2);
                 if (val1.isZero()) {
                     m_error = tr("unit must not be zero");
                     return HMath::nan();
@@ -4132,7 +4313,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     return HMath::nan();
                 }
                 val2.setDisplayUnit(val1.numericValue(), opcode.text);
-                stack.push(val2);
+                pushStackValue(val2);
                 break;
 
             // Reference.
@@ -4140,28 +4321,28 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 fname = identifiers.at(index);
                 if (m_assignArg.contains(fname)) {
                     // Argument.
-                    stack.push(CMath::nan());
+                    pushStackValue(CMath::nan());
                 } else if (hasVariable(fname)) {
                     // Variable.
-                    stack.push(getVariable(fname).value());
+                    pushStackValue(getVariable(fname).value());
                 } else {
                     // Function.
                     function = FunctionRepo::instance()->find(fname);
                     if (function) {
-                        stack.push(CMath::nan());
+                        pushStackValue(CMath::nan());
                         refs.insert(stack.count(), fname);
                     } else if (m_assignFunc) {
                         // Allow arbitrary identifiers
                         // when declaring user functions.
-                        stack.push(CMath::nan());
+                        pushStackValue(CMath::nan());
                         refs.insert(stack.count(), fname);
                     } else if (hasUserFunction(fname)) {
-                        stack.push(CMath::nan());
+                        pushStackValue(CMath::nan());
                         refs.insert(stack.count(), fname);
                     } else if (fname.compare("n", Qt::CaseInsensitive) == 0
                                && hasPendingDeferredOperandContext(stack.count()))
                     {
-                        stack.push(CMath::nan());
+                        pushStackValue(CMath::nan());
                     } else {
                         m_error = "<b>" + fname + "</b>: "
                                   + tr("unknown function or variable");
@@ -4200,7 +4381,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
 
                 args.clear();
                 for(; index; --index)
-                    args.insert(args.begin(), stack.pop());
+                    args.insert(args.begin(), stack.pop().value);
 
                 // Remove the NaN we put on the stack (needed to make the user
                 // functions declaration work with arbitrary identifiers).
@@ -4221,9 +4402,9 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
 
                 if (m_assignFunc) {
                     // Allow arbitrary identifiers for declaring user functions.
-                    stack.push(CMath::nan());
+                    pushStackValue(CMath::nan());
                 } else if (userFunction) {
-                    stack.push(execUserFunction(userFunction, args));
+                    pushStackValue(execUserFunction(userFunction, args));
                     if (!m_error.isEmpty())
                         return CMath::nan();
                 } else if (fname.compare("sigma", Qt::CaseInsensitive) == 0) {
@@ -4301,9 +4482,9 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     }
 
                     restoreN();
-                    stack.push(sigmaResult);
+                    pushStackValue(sigmaResult);
                 } else {
-                    stack.push(function->exec(args));
+                    pushStackValue(function->exec(args));
                     if (function->error()) {
                         if (!args.count() && function->error() == InvalidParamCount) {
                             m_error = QString::fromLatin1("<b>%1</b>(%2)").arg(
@@ -4328,7 +4509,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
         m_error = tr("invalid expression");
         return CMath::nan();
     }
-    return stack.pop();
+    return stack.pop().value;
 }
 
 Quantity Evaluator::execUserFunction(const UserFunction* function,
@@ -4775,7 +4956,8 @@ QString Evaluator::autoFix(const QString& expr)
                 left.isIdentifier()
                 || left.isNumber()
                 || left.asOperator() == Token::AssociationEnd
-                || left.asOperator() == Token::Factorial;
+                || left.asOperator() == Token::Factorial
+                || left.asOperator() == Token::Percent;
             const bool rightLooksMultiplicativeOperand =
                 right.isIdentifier()
                 || right.isNumber()
@@ -4978,6 +5160,15 @@ QString Evaluator::dump()
             case Opcode::Fact:
                 code = "Fact";
                 break;
+            case Opcode::Percent:
+                code = "Percent";
+                break;
+            case Opcode::Modulo:
+                code = "Modulo";
+                break;
+            case Opcode::IntDiv:
+                code = "IntDiv";
+                break;
             case Opcode::LSh:
                 code = "LSh";
                 break;
@@ -4989,6 +5180,9 @@ QString Evaluator::dump()
                 break;
             case Opcode::BOr:
                 code = "BOr";
+                break;
+            case Opcode::Conv:
+                code = "Conv";
                 break;
             default:
                 code = "Unknown";

@@ -47,7 +47,7 @@ public:
         Super0, Super1, Super2, Super3, Super4,
         Super5, Super6, Super7, Super8, Super9,
         AssociationStart, AssociationEnd,
-        ListSeparator, Factorial, Assignment, Modulo,
+        ListSeparator, Factorial, Assignment, Modulo, Percent,
         ArithmeticLeftShift, ArithmeticRightShift,
         BitwiseLogicalNOT,
         BitwiseLogicalAND, BitwiseLogicalOR,

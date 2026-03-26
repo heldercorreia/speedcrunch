@@ -608,6 +608,89 @@ void test_binary()
     CHECK_EVAL(QString::fromUtf8("1 meter → centi meter"), "100 centi meter");
 }
 
+void test_percent_operator()
+{
+    CHECK_EVAL("50%", "0.5");
+    CHECK_EVAL("(20+30)%", "0.5");
+    CHECK_EVAL("50%%", "0.005");
+    CHECK_EVAL("-50%", "-0.5");
+
+    CHECK_EVAL("1000+12%", "1120");
+    CHECK_EVAL(QString::fromUtf8("100\u205F+\u205F12%"), "112");
+    CHECK_EVAL("1000-12%", "880");
+    CHECK_EVAL("1000+125%", "2250");
+    CHECK_EVAL("1000+(12%)", "1120");
+    CHECK_EVAL("1000-(12%)", "880");
+    CHECK_EVAL("1000+(-12%)", "880");
+    CHECK_EVAL("1000-(-12%)", "1120");
+    CHECK_EVAL("1000+(10+2)%", "1120");
+    CHECK_EVAL("1000-(10+2)%", "880");
+
+    CHECK_EVAL("1000+10%+10%", "1210");
+    CHECK_EVAL("1000-10%-10%", "810");
+    CHECK_EVAL("1000+10%-10%", "990");
+    CHECK_EVAL("1000-10%+10%", "990");
+    CHECK_EVAL("100+10%+10%+10%", "133.1");
+
+    CHECK_EVAL("1000*12%", "120");
+    CHECK_EVAL("12%*1000", "120");
+    CHECK_EVAL("1000/25%", "4000");
+    CHECK_EVAL("200+(10%*2)", "200.2");
+    CHECK_EVAL("200+10%^2", "200.01");
+    CHECK_EVAL("100+(10%+10%)", "100.11");
+    CHECK_EVAL("100-(10%+10%)", "99.89");
+    CHECK_EVAL("100-(10%-5%)", "99.905");
+
+    CHECK_EVAL("1+2+3+10%", "6.6");
+    CHECK_EVAL("1+(2+3)+10%", "6.6");
+    CHECK_EVAL("(1+2+3)+10%", "6.6");
+    CHECK_EVAL("1+2+(3+10%)", "6.3");
+    CHECK_EVAL("1+99-10%", "90");
+    CHECK_EVAL("(1+99)-10%", "90");
+    CHECK_EVAL("1+(99-10%)", "90.1");
+
+    CHECK_EVAL("200 meter+10%", "220 meter");
+    CHECK_EVAL("200 meter-10%", "180 meter");
+    CHECK_EVAL("200 meter+10%+10%", "242 meter");
+
+    CHECK_EVAL_FAIL("%");
+    CHECK_EVAL_FAIL("100+%");
+
+    CHECK_INTERPRETED("1000+12%", "1000+12%");
+    CHECK_INTERPRETED("1+99+10%", "(1+99)+10%");
+    CHECK_INTERPRETED("1+2+3+10%", "(1+2+3)+10%");
+    CHECK_INTERPRETED("1+(2+3)+10%", "(1+(2+3))+10%");
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("1+99+10%"),
+        QStringLiteral("100")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("+")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("10%"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("cos pi cos pi + 10%"),
+        QString::fromUtf8("cos²(pi)")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("+")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("10%"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("1 + cos pi cos pi + 10%"),
+        QStringLiteral("(cos²(pi)")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("+")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("1)")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("+")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("10%"));
+    CHECK_EVAL(Evaluator::simplifyInterpretedExpression("100+12%"), "112");
+    CHECK_EVAL(Evaluator::simplifyInterpretedExpression("1+2+3+10%"), "6.6");
+    CHECK_EVAL(Evaluator::simplifyInterpretedExpression("1+(2+3)+10%"), "6.6");
+    CHECK_EVAL(Evaluator::simplifyInterpretedExpression("1+cos pi cos pi+10%"), "2.2");
+}
+
 void test_bitwise_complement_operator()
 {
     CHECK_EVAL("~~~~1", "1");
@@ -3489,6 +3572,7 @@ int main(int argc, char* argv[])
     test_exponentiation();
     test_unary();
     test_binary();
+    test_percent_operator();
     test_bitwise_complement_operator();
 
     test_divide_by_zero();

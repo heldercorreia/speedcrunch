@@ -223,6 +223,18 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 |                               |   Computes the factorial of its                               |                         |
 |                               |   argument. See also :func:`gamma()`.                         |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
+| ``x%``                        | **Percent**                                                   | ``50% = 0.5``           |
+|                               |   Postfix operator equivalent to                              | ``1000+12% = 1120``     |
+|                               |   division by 100.                                            | ``1000-12% = 880``      |
+|                               |   In ``a+b%`` and ``a-b%``, the percentage                    | ``1000*12% = 120``      |
+|                               |   is applied relative to the                                  | ``1000/25% = 4000``     |
+|                               |   entire left operand ``a`` (after normal precedence).        | ``1+2+3+10% = 6.6``     |
+|                               |   So ``1+(2+3)+10%`` is interpreted as                        | ``1+(2+3)+10% = 6.6``   |
+|                               |   ``(1+(2+3))+10%``.                                          |                         |
+|                               |                                                               |                         |
+|                               | .. versionadded:: 1.0                                         |                         |
+|                               |    Contextual percent semantics.                              |                         |
++-------------------------------+---------------------------------------------------------------+-------------------------+
 | ``a ^ b``, ``a ** b``, ``a²`` | **Exponentiation**                                            |                         |
 |                               |   ``a²`` is shorthand for ``a^2``;                            | ``3²⁰ = 3^20``          |
 |                               |   contiguous superscript digits are                           | ``2¹⁰ = 1024``          |
@@ -304,38 +316,3 @@ Examples::
     (-13)^(1/9.123) = 1.32465488702830785593
     (-13)^(1/2) = NaN
     (-13)^pi = NaN
-
-
-.. We want to keep the following heading, paragraph and table together. By forcing a page break
-.. here, we avoid LaTeX squeezing the paragraph onto the same page as the previous large table
-.. and then running out of space for the next table and moving it onto the next page.
-
-.. raw:: latex
-
-    \pagebreak
-
-
-Deprecated Operators
---------------------
-
-The following operators used to be supported, but were either removed from recent SpeedCrunch
-versions or are considered deprecated. Generally, these features were removed because of significant problems
-so you may want to avoid them even if they're still supported in your version of SpeedCrunch.
-
-.. tabularcolumns:: |p{0.2\linewidth}|p{0.5\linewidth}|p{0.25\linewidth}|
-
-+-------------------------------+---------------------------------------------------------------+-------------------------+
-| Operator                      | Description                                                   | Examples                |
-+===============================+===============================================================+=========================+
-| ``x%``                        | **Percent operator**                                          | ``10% = 0.1``           |
-|                               |   Equivalent to multiplication with                           |                         |
-|                               |   0.01.                                                       |                         |
-|                               |                                                               |                         |
-|                               | .. deprecated:: 0.12                                          |                         |
-|                               |    This operator was **removed** in                           |                         |
-|                               |    SpeedCrunch 0.12 as it was confusing and not very useful.  |                         |
-|                               |    The reasons for its removal are discussed in more detail   |                         |
-|                               |    in `issue #239 <issue239_>`_.                              |                         |
-+-------------------------------+---------------------------------------------------------------+-------------------------+
-
-.. _issue239: https://bitbucket.org/heldercorreia/speedcrunch/issues/239/more-intuitive-and-useful-percentage
