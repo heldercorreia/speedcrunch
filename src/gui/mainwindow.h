@@ -150,6 +150,7 @@ private slots:
     void setHistoryDockVisible(bool, bool takeFocus = true);
     void setHistorySaving(QAction*);
     void setKeypadMode(QAction*);
+    void setKeypadZoom(QAction*);
     void setKeypadVisible(bool);
     void setLeaveLastExpressionEnabled(bool);
     void setUpDownArrowBehavior(QAction*);
@@ -325,6 +326,9 @@ private:
         QAction* viewKeypadScientificWide;
         QAction* viewKeypadScientificNarrow;
         QAction* viewKeypadCustom;
+        QAction* viewKeypadZoom100;
+        QAction* viewKeypadZoom150;
+        QAction* viewKeypadZoom200;
         QAction* viewFormulaBook;
         QAction* viewConstants;
         QAction* viewFunctions;
@@ -440,6 +444,7 @@ private:
         QActionGroup* historySaving;
         QActionGroup* upDownArrowBehavior;
         QActionGroup* keypad;
+        QActionGroup* keypadZoom;
     } m_actionGroups;
 
     struct {
@@ -470,6 +475,7 @@ private:
         QMenu* settings;
         QMenu* view;
         QMenu* keypad;
+        QMenu* keypadZoom;
         QMenu* window;
     } m_menus;
 

@@ -139,12 +139,25 @@ QHash<Keypad::Button, QPoint> createLayoutMap(Keypad::LayoutMode layoutMode)
         map.insert(entries[i].button, QPoint(entries[i].column, entries[i].row));
     return map;
 }
+
+QFont scaledFont(const QFont& base, int scalePercent)
+{
+    const qreal scale = qreal(scalePercent) / 100.0;
+    QFont font(base);
+    if (font.pointSizeF() > 0.0) {
+        font.setPointSizeF(font.pointSizeF() * scale);
+    } else if (font.pixelSize() > 0) {
+        font.setPixelSize(qMax(1, qRound(font.pixelSize() * scale)));
+    }
+    return font;
+}
 } // namespace
 
-Keypad::Keypad(LayoutMode layoutMode, QWidget* parent)
+Keypad::Keypad(LayoutMode layoutMode, QWidget* parent, int scalePercent)
     : QWidget(parent)
     , m_layoutMode(layoutMode)
     , m_isCustom(false)
+    , m_scalePercent(scalePercent)
 {
     createButtons();
     sizeButtons();
@@ -154,10 +167,11 @@ Keypad::Keypad(LayoutMode layoutMode, QWidget* parent)
     setLayoutDirection(Qt::LeftToRight);
 }
 
-Keypad::Keypad(const QList<CustomButtonDescription>& customButtons, QWidget* parent)
+Keypad::Keypad(const QList<CustomButtonDescription>& customButtons, QWidget* parent, int scalePercent)
     : QWidget(parent)
     , m_layoutMode(LayoutModeScientificWide)
     , m_isCustom(true)
+    , m_scalePercent(scalePercent)
     , m_customButtons(customButtons)
 {
     createCustomButtons();
@@ -196,6 +210,8 @@ void Keypad::createButtons()
     boldFont.setBold(true);
     QFont emphasizedBoldFont = boldFont;
     emphasizedBoldFont.setPointSize(emphasizedBoldFont.pointSize() + 3);
+    boldFont = scaledFont(boldFont, m_scalePercent);
+    emphasizedBoldFont = scaledFont(emphasizedBoldFont, m_scalePercent);
 
     static const int keyDescriptionsCount = int(sizeof keyDescriptions / sizeof keyDescriptions[0]);
     for (int i = 0; i < keyDescriptionsCount; ++i) {
@@ -280,6 +296,7 @@ void Keypad::createCustomButtons()
 {
     QFont boldFont;
     boldFont.setBold(true);
+    boldFont = scaledFont(boldFont, m_scalePercent);
 
     for (const auto& description : m_customButtons) {
         QPushButton* key = new QPushButton(description.label, this);
@@ -406,6 +423,7 @@ void Keypad::sizeCustomButtons()
     QFont boldFont = m_customWidgets.first()->font();
     boldFont.setBold(true);
     boldFont.setPointSize(boldFont.pointSize() + 3);
+    boldFont = scaledFont(boldFont, m_scalePercent);
     const QFontMetrics fm(boldFont);
     const int maxWidth = fm.horizontalAdvance(QStringLiteral("arccos"));
     const int textHeight = qMax(fm.lineSpacing(), 14);

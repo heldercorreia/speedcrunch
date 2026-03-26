@@ -445,6 +445,9 @@ void Settings::load()
         || keypadMode == KeypadModeScientificWide
         || keypadMode == KeypadModeScientificNarrow
         || keypadMode == KeypadModeCustom);
+    keypadZoomPercent = settings->value(key + QLatin1String("KeypadZoomPercent"), 100).toInt();
+    if (keypadZoomPercent != 100 && keypadZoomPercent != 150 && keypadZoomPercent != 200)
+        keypadZoomPercent = 100;
     const QString customKeypadJson = settings->value(key + QLatin1String("CustomKeypad"), QString()).toString();
     if (!customKeypadJson.isEmpty()) {
         const QJsonDocument doc = QJsonDocument::fromJson(customKeypadJson.toUtf8());
@@ -539,6 +542,7 @@ void Settings::save()
         || keypadMode == KeypadModeScientificWide
         || keypadMode == KeypadModeScientificNarrow
         || keypadMode == KeypadModeCustom);
+    settings->setValue(key + QLatin1String("KeypadZoomPercent"), keypadZoomPercent);
     settings->setValue(key + QLatin1String("CustomKeypad"),
         QString::fromUtf8(QJsonDocument(serializeCustomKeypad(customKeypad)).toJson(QJsonDocument::Compact)));
     settings->setValue(key + QLatin1String("StatusBarVisible"), statusBarVisible);

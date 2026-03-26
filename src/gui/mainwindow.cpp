@@ -321,6 +321,9 @@ void MainWindow::createActions()
     m_actions.viewKeypadScientificWide = new QAction(this);
     m_actions.viewKeypadScientificNarrow = new QAction(this);
     m_actions.viewKeypadCustom = new QAction(this);
+    m_actions.viewKeypadZoom100 = new QAction(this);
+    m_actions.viewKeypadZoom150 = new QAction(this);
+    m_actions.viewKeypadZoom200 = new QAction(this);
     m_actions.viewFormulaBook = new QAction(this);
     m_actions.viewStatusBar = new QAction(this);
     m_actions.viewMenuBar = new QAction(this);
@@ -514,6 +517,12 @@ void MainWindow::createActions()
     m_actions.viewKeypadScientificNarrow->setData(Settings::KeypadModeScientificNarrow);
     m_actions.viewKeypadCustom->setCheckable(true);
     m_actions.viewKeypadCustom->setData(Settings::KeypadModeCustom);
+    m_actions.viewKeypadZoom100->setCheckable(true);
+    m_actions.viewKeypadZoom100->setData(100);
+    m_actions.viewKeypadZoom150->setCheckable(true);
+    m_actions.viewKeypadZoom150->setData(150);
+    m_actions.viewKeypadZoom200->setCheckable(true);
+    m_actions.viewKeypadZoom200->setData(200);
     m_actions.viewFormulaBook->setCheckable(true);
     m_actions.viewStatusBar->setCheckable(true);
     m_actions.viewMenuBar->setCheckable(true);
@@ -628,6 +637,9 @@ void MainWindow::setActionsText()
     m_actions.viewKeypadScientificWide->setText(MainWindow::tr("&Scientific (wide)"));
     m_actions.viewKeypadScientificNarrow->setText(MainWindow::tr("Scientific (narrow)"));
     m_actions.viewKeypadCustom->setText(MainWindow::tr("&Custom..."));
+    m_actions.viewKeypadZoom100->setText(MainWindow::tr("100%"));
+    m_actions.viewKeypadZoom150->setText(MainWindow::tr("150%"));
+    m_actions.viewKeypadZoom200->setText(MainWindow::tr("200%"));
     m_actions.viewFormulaBook->setText(MainWindow::tr("Formula &Book"));
     m_actions.viewStatusBar->setText(MainWindow::tr("&Status Bar"));
     m_actions.viewMenuBar->setText(MainWindow::tr("Main &Menu"));
@@ -824,6 +836,11 @@ void MainWindow::createActionGroups()
     m_actionGroups.keypad->addAction(m_actions.viewKeypadScientificWide);
     m_actionGroups.keypad->addAction(m_actions.viewKeypadScientificNarrow);
     m_actionGroups.keypad->addAction(m_actions.viewKeypadCustom);
+
+    m_actionGroups.keypadZoom = new QActionGroup(this);
+    m_actionGroups.keypadZoom->addAction(m_actions.viewKeypadZoom100);
+    m_actionGroups.keypadZoom->addAction(m_actions.viewKeypadZoom150);
+    m_actionGroups.keypadZoom->addAction(m_actions.viewKeypadZoom200);
 }
 
 void MainWindow::createActionShortcuts()
@@ -893,6 +910,11 @@ void MainWindow::createMenus()
     m_menus.keypad->addAction(m_actions.viewKeypadScientificWide);
     m_menus.keypad->addAction(m_actions.viewKeypadScientificNarrow);
     m_menus.keypad->addAction(m_actions.viewKeypadCustom);
+    m_menus.keypad->addSeparator();
+    m_menus.keypadZoom = m_menus.keypad->addMenu("");
+    m_menus.keypadZoom->addAction(m_actions.viewKeypadZoom100);
+    m_menus.keypadZoom->addAction(m_actions.viewKeypadZoom150);
+    m_menus.keypadZoom->addAction(m_actions.viewKeypadZoom200);
     m_menus.view->addSeparator();
     m_menus.view->addAction(m_actions.viewFormulaBook);
     m_menus.view->addAction(m_actions.viewConstants);
@@ -1062,6 +1084,7 @@ void MainWindow::setMenusText()
     m_menus.edit->setTitle(MainWindow::tr("&Edit"));
     m_menus.view->setTitle(MainWindow::tr("&View"));
     m_menus.keypad->setTitle(MainWindow::tr("&Keypad"));
+    m_menus.keypadZoom->setTitle(MainWindow::tr("&Zoom"));
     m_menus.settings->setTitle(MainWindow::tr("Se&ttings"));
     m_menus.results->setTitle(MainWindow::tr("&Results"));
     m_menus.resultFormat->setTitle(MainWindow::tr("&Format"));
@@ -1221,7 +1244,7 @@ void MainWindow::createKeypad()
             description.column = button.column;
             customButtons.append(description);
         }
-        m_widgets.keypad = new Keypad(customButtons, m_widgets.root);
+        m_widgets.keypad = new Keypad(customButtons, m_widgets.root, m_settings->keypadZoomPercent);
         connect(m_widgets.keypad, &Keypad::customButtonPressed,
                 this, &MainWindow::handleCustomKeypadButtonPress);
     } else {
@@ -1230,7 +1253,7 @@ void MainWindow::createKeypad()
             layoutMode = Keypad::LayoutModeBasicWide;
         else if (m_settings->keypadMode == Settings::KeypadModeScientificNarrow)
             layoutMode = Keypad::LayoutModeScientificNarrow;
-        m_widgets.keypad = new Keypad(layoutMode, m_widgets.root);
+        m_widgets.keypad = new Keypad(layoutMode, m_widgets.root, m_settings->keypadZoomPercent);
         connect(m_widgets.keypad, SIGNAL(buttonPressed(Keypad::Button)), SLOT(handleKeypadButtonPress(Keypad::Button)));
         connect(this, SIGNAL(radixCharacterChanged()), m_widgets.keypad, SLOT(handleRadixCharacterChange()));
     }
@@ -1398,6 +1421,7 @@ void MainWindow::createFixedConnections()
 
     connect(m_actions.viewFullScreenMode, SIGNAL(toggled(bool)), SLOT(setFullScreenEnabled(bool)));
     connect(m_actionGroups.keypad, SIGNAL(triggered(QAction*)), SLOT(setKeypadMode(QAction*)));
+    connect(m_actionGroups.keypadZoom, SIGNAL(triggered(QAction*)), SLOT(setKeypadZoom(QAction*)));
     connect(m_actions.viewStatusBar, SIGNAL(toggled(bool)), SLOT(setStatusBarVisible(bool)));
 #if !defined(Q_OS_MACOS)
     connect(m_actions.viewMenuBar, SIGNAL(toggled(bool)), SLOT(setMenuBarVisible(bool)));
@@ -1597,6 +1621,18 @@ void MainWindow::applySettings()
     case Settings::KeypadModeDisabled:
     default:
         m_actions.viewKeypadDisabled->setChecked(true);
+        break;
+    }
+    switch (m_settings->keypadZoomPercent) {
+    case 150:
+        m_actions.viewKeypadZoom150->setChecked(true);
+        break;
+    case 200:
+        m_actions.viewKeypadZoom200->setChecked(true);
+        break;
+    case 100:
+    default:
+        m_actions.viewKeypadZoom100->setChecked(true);
         break;
     }
     setKeypadVisible(isVisibleKeypadMode(m_settings->keypadMode));
@@ -3246,6 +3282,24 @@ void MainWindow::setKeypadMode(QAction* action)
     }
 
     setKeypadVisible(nowVisible);
+}
+
+void MainWindow::setKeypadZoom(QAction* action)
+{
+    if (!action)
+        return;
+
+    const int zoomPercent = action->data().toInt();
+    if (zoomPercent != 100 && zoomPercent != 150 && zoomPercent != 200)
+        return;
+    if (m_settings->keypadZoomPercent == zoomPercent)
+        return;
+
+    m_settings->keypadZoomPercent = zoomPercent;
+    if (m_widgets.keypad) {
+        deleteKeypad();
+        createKeypad();
+    }
 }
 
 bool MainWindow::configureCustomKeypad()

@@ -48,6 +48,14 @@ They can be enabled and disabled via the :menuselection:`View` menu.
     * ``Custom...``
     * ``Disabled``
 
+    Available entries in :menuselection:`View --> Keypad --> Zoom` are:
+
+    * ``100%`` (**default**)
+    * ``150%``
+    * ``200%``
+
+    The zoom level scales the keypad buttons, including their text.
+
     ``Custom...`` opens a dialog where you can define the keypad matrix size (rows and columns)
     and configure each button individually. For each position in the matrix, you can set:
 

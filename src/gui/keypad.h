@@ -53,8 +53,8 @@ public:
         int column;
     };
 
-    explicit Keypad(LayoutMode layoutMode = LayoutModeScientificWide, QWidget* parent = 0);
-    explicit Keypad(const QList<CustomButtonDescription>& customButtons, QWidget* parent = 0);
+    explicit Keypad(LayoutMode layoutMode = LayoutModeScientificWide, QWidget* parent = 0, int scalePercent = 100);
+    explicit Keypad(const QList<CustomButtonDescription>& customButtons, QWidget* parent = 0, int scalePercent = 100);
 
 signals:
     void buttonPressed(Keypad::Button) const;
@@ -90,6 +90,7 @@ private:
 
     LayoutMode m_layoutMode;
     bool m_isCustom;
+    int m_scalePercent;
     QHash<Button, QPair<QPushButton*, const KeyDescription*> > keys;
     QList<CustomButtonDescription> m_customButtons;
     QList<QPushButton*> m_customWidgets;

@@ -127,6 +127,7 @@ public:
     bool historyDockVisible;
     bool keypadVisible;
     KeypadMode keypadMode;
+    int keypadZoomPercent;
     CustomKeypad customKeypad;
     bool formulaBookDockVisible;
     bool statusBarVisible;
