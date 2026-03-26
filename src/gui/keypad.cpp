@@ -64,7 +64,7 @@ const Keypad::KeyDescription Keypad::keyDescriptions[] = {
     {QString::fromLatin1("ln"), KeyLn, false, 0, 8},
     {QString::fromLatin1("("), KeyLeftPar, false, 2, 4},
     {QString::fromUtf8("⌫"), KeyBackspace, false, 0, 5},
-    {QString::fromLatin1("\\"), KeyPercent, false, 3, 4},
+    {QString::fromLatin1("%"), KeyPercent, false, 3, 4},
     {QString::fromLatin1("^"), KeyRaise, false, 1, 5},
     {QString::fromLatin1(")"), KeyRightPar, false, 2, 5},
     {QString::fromLatin1("sin"), KeySin, false, 1, 7},
@@ -86,10 +86,10 @@ struct LayoutEntry {
 };
 
 const LayoutEntry s_basicWideLayout[] = {
-    {Keypad::Key7, 0, 0}, {Keypad::Key8, 0, 1}, {Keypad::Key9, 0, 2}, {Keypad::KeyDivide, 0, 3}, {Keypad::KeyClear, 0, 4},
-    {Keypad::Key4, 1, 0}, {Keypad::Key5, 1, 1}, {Keypad::Key6, 1, 2}, {Keypad::KeyTimes, 1, 3}, {Keypad::KeyBackspace, 1, 4},
-    {Keypad::Key1, 2, 0}, {Keypad::Key2, 2, 1}, {Keypad::Key3, 2, 2}, {Keypad::KeyMinus, 2, 3}, {Keypad::KeyLeftPar, 2, 4},
-    {Keypad::Key0, 3, 0}, {Keypad::KeyRadixChar, 3, 1}, {Keypad::KeyEquals, 3, 2}, {Keypad::KeyPlus, 3, 3}, {Keypad::KeyRightPar, 3, 4}
+    {Keypad::Key7, 0, 0}, {Keypad::Key8, 0, 1}, {Keypad::Key9, 0, 2}, {Keypad::KeyDivide, 0, 3}, {Keypad::KeyBackspace, 0, 4},
+    {Keypad::Key4, 1, 0}, {Keypad::Key5, 1, 1}, {Keypad::Key6, 1, 2}, {Keypad::KeyTimes, 1, 3}, {Keypad::KeyLeftPar, 1, 4},
+    {Keypad::Key1, 2, 0}, {Keypad::Key2, 2, 1}, {Keypad::Key3, 2, 2}, {Keypad::KeyMinus, 2, 3}, {Keypad::KeyRightPar, 2, 4},
+    {Keypad::Key0, 3, 0}, {Keypad::KeyRadixChar, 3, 1}, {Keypad::KeyEquals, 3, 2}, {Keypad::KeyPlus, 3, 3}, {Keypad::KeyPercent, 3, 4}
 };
 
 const LayoutEntry s_scientificWideLayout[] = {
@@ -345,7 +345,7 @@ void Keypad::setButtonTooltips()
     key(KeyCbrt)->setToolTip(Keypad::tr("Cube root"));
     key(KeyLg)->setToolTip(Keypad::tr("Common logarithm"));
     key(KeyMod)->setToolTip(Keypad::tr("Modulo"));
-    key(KeyPercent)->setToolTip(Keypad::tr("Integer division"));
+    key(KeyPercent)->setToolTip(Keypad::tr("Contextual percentage"));
     key(KeyRaise)->setToolTip(Keypad::tr("Power"));
     key(KeyRightPar)->setToolTip(Keypad::tr("Right parenthesis"));
     key(KeySin)->setToolTip(Keypad::tr("Sine"));

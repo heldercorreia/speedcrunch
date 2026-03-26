@@ -3559,7 +3559,7 @@ void MainWindow::handleKeypadButtonPress(Keypad::Button b)
         m_widgets.editor->setFocus();
         break;
     }
-    case Keypad::KeyPercent: insertTextIntoEditor("idiv("); break;
+    case Keypad::KeyPercent: insertTextIntoEditor("%"); break;
     case Keypad::KeyFactorial: insertTextIntoEditor("!"); break;
 
     case Keypad::KeyX: insertTextIntoEditor("x"); break;
