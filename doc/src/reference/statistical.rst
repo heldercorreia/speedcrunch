@@ -32,6 +32,8 @@ General
 
 .. function:: sigma(start; end; expression)
 
+    .. versionadded:: 1.0
+
     Computes a summation over integer values of ``n`` from ``start`` to ``end`` (inclusive), evaluating ``expression`` at each step.
 
     Inside ``expression``, the identifier ``n`` is bound to the current iteration value.
@@ -47,6 +49,8 @@ General
 
 .. function:: rand([digits])
 
+    .. versionadded:: 1.0
+
     Generates a pseudo-random decimal in the range ``0 <= x < 1``.
 
     If ``digits`` is omitted, 16 random decimal digits are generated internally. If supplied, ``digits`` must be an integer between 0 and 78.
@@ -58,6 +62,8 @@ General
 
 .. function:: randint(max)
 .. function:: randint(min; max)
+
+    .. versionadded:: 1.0
 
     Generates a pseudo-random integer between two inclusive bounds.
 

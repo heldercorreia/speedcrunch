@@ -18,6 +18,8 @@ Bitwise Operations
 
 .. function:: popcount(n)
 
+    .. versionadded:: 1.0
+
     Returns the number of set bits (``1`` bits) in the 256-bit two's complement
     representation of ``n``.
 
@@ -41,6 +43,8 @@ Bitwise Operations
         = 0
         -not(-1)
         = 0
+
+    .. versionadded:: 1.0
 
 .. function:: shl(x; n)
 
@@ -115,6 +119,8 @@ that is used for displaying results, select one of the corresponding settings in
 
 .. function:: binpad(n [; bits])
 
+    .. versionadded:: 1.0
+
     Format integer ``n`` as binary (base-2) and left-pad the integer part with zeros.
 
     If ``bits`` is omitted, the width is padded to the next multiple of 8 bits (byte boundary).
@@ -124,6 +130,8 @@ that is used for displaying results, select one of the corresponding settings in
 
 .. function:: octpad(n [; bits])
 
+    .. versionadded:: 1.0
+
     Format integer ``n`` as octal (base-8) and left-pad the integer part with zeros.
 
     If ``bits`` is omitted, the width is padded to the next multiple of 8 bits (byte boundary).
@@ -132,6 +140,8 @@ that is used for displaying results, select one of the corresponding settings in
     Only real, dimensionless integer arguments are allowed.
 
 .. function:: hexpad(n [; bits])
+
+    .. versionadded:: 1.0
 
     Format integer ``n`` as hexadecimal (base-16) and left-pad the integer part with zeros.
 
@@ -216,6 +226,8 @@ Integer Division
 
 .. function:: emod(a; b)
 
+    .. versionadded:: 1.0
+
     Compute the Euclidean remainder of ``a/b``. The divisor ``b`` must be non-zero.
     The result has the sign of ``b`` (or is zero), and its absolute value is
     smaller than the absolute value of ``b``.
@@ -230,6 +242,8 @@ Integer Division
     Only real, dimensionless arguments are allowed.
 
 .. function:: powmod(base; exponent; modulo)
+
+    .. versionadded:: 1.0
 
     Compute ``base^exponent`` reduced by ``modulo`` using modular exponentiation.
     This avoids building huge intermediate powers and is therefore the recommended
@@ -249,6 +263,8 @@ Integer Division
     Only real, integer arguments are allowed.
 
 .. function:: lcm(n1; n2; ...)
+
+    .. versionadded:: 1.0
 
     Returns the least common multiple of the arguments (at least two must be given).
     The result is always non-negative.

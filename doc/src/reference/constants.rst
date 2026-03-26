@@ -7,6 +7,8 @@ Constants
 .. constant:: pi
 .. constant:: π
 
+   .. versionadded:: 1.0
+
    The mathematical constant π. Since π is an irrational number, the value is an
    approximation with as much precision as SpeedCrunch allows. This constant may be
    referred to either as ``pi`` or as ``π`` (Unicode U+03C0 GREEK SMALL LETTER PI).

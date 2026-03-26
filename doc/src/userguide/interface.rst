@@ -57,6 +57,8 @@ They can be enabled and disabled via the :menuselection:`View` menu.
 
     Custom keypad settings are saved and restored automatically.
 
+    .. versionadded:: 1.0
+
     .. versionchanged:: 0.11
        The keypad was removed in SpeedCrunch 0.11; however, it was added back in 0.12.
 
@@ -67,6 +69,11 @@ They can be enabled and disabled via the :menuselection:`View` menu.
     Toggle the main menu bar visibility via :menuselection:`View --> Main Menu`.
     This option is available on Windows and Linux.
     On macOS, this option is not available because the application menu is managed by the system menu bar (outside the window), so SpeedCrunch cannot hide it like on Windows and Linux.
+    On Windows and Linux, a navigable Main Menu (mirroring the top menu structure) is also available
+    from the right-click context menu on the result-display. This is useful when you prefer to keep
+    the top main menu hidden but still want quick access to menu actions.
+
+    .. versionadded:: 1.0
 
 .. _tracker: https://bitbucket.org/heldercorreia/speedcrunch/issues
 
@@ -121,6 +128,8 @@ Select any plain text file and SpeedCrunch will try to evaluate each line of the
 Startup User Definitions
 ++++++++++++++++++++++++
 
+.. versionadded:: 1.0
+
 To define user variables and user functions that are loaded automatically at startup, use
 :menuselection:`Session --> Startup User Functions and Variables...`.
 
@@ -148,6 +157,31 @@ Settings
 
 SpeedCrunch's behavior can be customized to a large degree using the configuration options in the
 :menuselection:`Settings` menu. This section explains the settings that are available.
+
+Result Display Interactions
++++++++++++++++++++++++++++
+
+The result display supports mouse-driven interactions for navigation and editing.
+
+* Right-click context menu
+    Right-clicking an expression/calculation block in the result display opens a context menu
+    for that specific block.
+    This menu includes an entry to toggle the main menu bar visibility.
+
+    .. versionadded:: 1.0
+
+* Hover highlighting of calculation blocks
+    When :menuselection:`Settings --> Appearance --> Hover Highlighting` is enabled, moving the mouse over
+    the result display highlights the calculation block under the cursor.
+    The highlighted block also shows quick-action icons for deleting, editing, and copying.
+
+    .. versionadded:: 1.0
+
+* History rewriting from highlighted blocks
+    From the hovered/highlighted calculation block, you can re-edit an earlier expression and apply it
+    as a history rewrite. SpeedCrunch then recalculates all expressions below that edited entry.
+
+    .. versionadded:: 1.0
 
 .. _result_format:
 
@@ -183,6 +217,8 @@ formats:
 
         arcsin(sqrt(3)/22)
         = 0.07881114207211010205
+
+    .. versionadded:: 1.0
 * :menuselection:`Binary`
     Display results as binary numbers, i.e. in base-2.
 * :menuselection:`Octal`
@@ -191,6 +227,8 @@ formats:
     Display all results as hexadecimal numbers, i.e. in base-16.
 * :menuselection:`Sexagesimal`
     Display dimensionless and time results as :ref:`sexagesimal values <sexagesimal_values>`, i.e. with minutes and seconds. All other results are displayed in fixed-point decimal form.
+
+    .. versionadded:: 1.0
 
 .. _radix_character:
 
@@ -212,6 +250,8 @@ determines the angle format of the arguments.
 
 * :menuselection:`Turn`
     Use turns for angles. A full circle corresponds to an angle of 1 turn.
+
+    .. versionadded:: 1.0
     
 * :menuselection:`Cycle Unit`
     Cycle unit selection between Radian, Degree, Gradian, and Turn.
@@ -241,10 +281,14 @@ This section contains settings that control how calculation history is stored.
 * :menuselection:`History Saving`
     This preference only affects calculation history. User-defined functions and user-defined
     variables are always persisted.
+
+    .. versionadded:: 1.0
 * :menuselection:`History Size Limit...`
     Sets the maximum number of stored history entries. By default, SpeedCrunch keeps
     up to 100 entries and automatically removes the oldest ones when this limit is
     exceeded. Set the value to ``0`` to disable the limit.
+
+    .. versionadded:: 1.0
 
 
 Window
@@ -275,22 +319,32 @@ This section contains settings that control result output and post-evaluation be
 
 * :menuselection:`Format`
     Select the format used to display results.
+    Changing the primary result format applies to the last expression only; it does not rewrite
+    previously evaluated history entries.
+
+    .. versionadded:: 1.0
 * :menuselection:`Precision`
     Select the number of fractional digits to display.
     **Automatic** always displays as many digits as are necessary to represent the number
     precisely. The preset settings and :menuselection:`Custom...` explicitly specify a
     certain number of digits (from 0 to 50) and will append additional zeroes to the
     fraction to reach that number of digits, if necessary.
+
+    .. versionadded:: 1.0
 * :menuselection:`Complex Numbers --> Disabled`, :menuselection:`Complex Numbers --> Cartesian`, and :menuselection:`Complex Numbers --> Polar`
     Select the complex-number mode. ``Disabled`` turns off support for :ref:`complex numbers <complex_numbers>` (so
     :const:`j` is undefined and expressions such as ``sqrt(-1)`` fail). ``Cartesian`` and ``Polar`` both enable
     complex-number support and choose how complex results are displayed. ``Disabled`` is the default.
-* :menuselection:`Secondary Format` and :menuselection:`Tertiary Format`
+
+    .. versionadded:: 1.0
+* :menuselection:`Secondary Result Format` and :menuselection:`Tertiary Result Format`
     Optional extra result displays in alternate formats, shown alongside the primary result.
     Also, when none of the selected result slots (primary, secondary, or tertiary)
     is Rational, SpeedCrunch may still add one extra Rational line for trig expressions
     if (and only if) the result is one of the recognized well-known exact values.
     This extra line is not shown for non-qualifying trig results.
+
+    .. versionadded:: 1.0
 * :menuselection:`Automatically Copy New Results to Clipboard`
     Automatically copy each newly evaluated result to the clipboard.
 * :menuselection:`Simplify Displayed Expressions`
@@ -299,6 +353,8 @@ This section contains settings that control result output and post-evaluation be
     (for example, combining repeated factors into powers and folding simple
     constant terms). Disable this option to keep only the unsimplified
     interpreted expression and numeric results.
+
+    .. versionadded:: 1.0
 
 
 Editing
@@ -312,6 +368,10 @@ Editing
     * ``Units`` includes unit names.
     * ``User function`` includes user-defined function names.
     * ``User variables`` includes user-defined variable names.
+
+    The autocomplete popup also shows category icons for suggestions.
+
+    .. versionadded:: 1.0
 
 .. _automatic_result_reuse:
 
@@ -328,6 +388,8 @@ Editing
     * ``Always`` (default) always navigates history.
     * ``Only for Single-Line Expressions`` navigates history only when the
       expression fits in one visual line; otherwise, it moves the cursor.
+
+    .. versionadded:: 1.0
 * :menuselection:`Radix Character`
     Select the decimal separator to use in inputs and results. This can either be explicitly set
     to dot (``.``), or comma (``,``), or both, or system default. When both dot and comma are used,
@@ -352,6 +414,11 @@ User Interface Settings
     Enable or disable hover highlighting.
 * :menuselection:`Settings --> Language`
     Select the user interface language.
+
+* :menuselection:`Settings --> Check for Updates`
+    Trigger an update check and show information when a newer version is available.
+
+    .. versionadded:: 1.0
 
 
 Keyboard Shortcuts

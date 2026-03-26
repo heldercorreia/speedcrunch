@@ -248,9 +248,14 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 |                               |   rational exponents with odd denominators.                   |                         |
 |                               |   The result is negative only when the reduced                | ``(-8)^(2/3) = 4``      |
 |                               |   rational exponent has an odd numerator.                     |                         |
+|                               |                                                               |                         |
+|                               | .. versionadded:: 1.0                                         |                         |
+|                               |    Integer superscript powers.                                |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
 | ``+x``, ``-x``, ``~x``        | **Unary plus, minus, and bitwise NOT**                        | ``~5 = -6``             |
 |                               |   ``~x`` is equivalent to :func:`not(x)`.                     | ``-~(-1) = -not(-1)``   |
+|                               |                                                               |                         |
+|                               | .. versionadded:: 1.0                                         |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
 | ``a \ b``                     | **Integer division**                                          | ``5\4 = 1``             |
 |                               |   Divides the operands and truncates                          |                         |
@@ -276,6 +281,9 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 |                               | .. versionadded:: 0.12                                        |                         |
 |                               |    Implicit multiplication was added                          |                         |
 |                               |    SpeedCrunch 0.12.                                          |                         |
+|                               |                                                               |                         |
+|                               | .. versionadded:: 1.0                                         |                         |
+|                               |    Multiplication and division symbol aliases.                |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
 | ``a + b``, ``a - b``          | **Addition and subtraction**                                  |                         |
 |                               |   In the expression editor and Session Import,                |                         |
@@ -284,6 +292,9 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 |                               |   these symbols are normalized to ``−``:                      |                         |
 |                               |   ``-``, ``－``, ``﹣``, ``‐``, ``‑``,                        |                         |
 |                               |   ``–``, ``—``, ``―``, ``⁃``.                                 |                         |
+|                               |                                                               |                         |
+|                               | .. versionadded:: 1.0                                         |                         |
+|                               |    Addition and subtraction symbol aliases.                   |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
 | ``a << n``, ``a >> n``        | **Left/right arithmetic shifts**                              | ``0b11<<1 = 0b110``     |
 |                               |   Shifts the first operand left/right                         |                         |

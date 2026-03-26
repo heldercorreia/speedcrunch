@@ -24,6 +24,8 @@ General
 
     Alias: ``√(x)``.
 
+    .. versionadded:: 1.0
+
     The argument may have a dimension.
 
 .. function:: cbrt(x)
@@ -36,6 +38,8 @@ General
     In *complex mode*, this function accepts any complex input. The result will generally be the first complex root, i.e. the one with a phase between 0 and π/3. Real negative arguments however will still yield a real (negative) result, matching the function's behavior in *real mode*. Use ``x^(1/3)`` to get the first complex root.
 
     Alias: ``∛(x)``.
+
+    .. versionadded:: 1.0
 
 .. function:: exp(x)
 
@@ -66,6 +70,8 @@ General
 
 .. function:: datetime(unix_timestamp [; offset])
 
+    .. versionadded:: 1.0
+
     Convert a Unix timestamp (seconds since 1970-01-01 00:00:00 UTC) into a
     numeric date/time value formatted as ``YYYYMMDD.HHMMSS``.
 
@@ -85,6 +91,8 @@ General
         = 20190301.145455
 
 .. function:: epoch(yyyymmdd.hhmmss [; offset])
+
+    .. versionadded:: 1.0
 
     Convert a numeric date/time value in ``YYYYMMDD.HHMMSS`` format to a Unix
     timestamp (seconds since 1970-01-01 00:00:00 UTC).
@@ -359,6 +367,8 @@ Complex Numbers
 
 .. function:: conj(x)
 
+    .. versionadded:: 1.0
+
     Return the complex conjugate of a complex number ``x``.
 
     In *complex mode*, this function accepts any real or complex input. In *real mode*, the imaginary portion of ``x`` is stripped to ensure that the value returned is purely real.
@@ -402,11 +412,15 @@ Various
 
 .. function:: gradians(x)
 
+    .. versionadded:: 1.0
+
     Convert the angle ``x`` into gradians. Independently of the angle unit setting, this function will assume that ``x`` is given in radians and return ``200*x/pi``.
 
     The function only accepts real, dimensionless arguments.
 
 .. function:: turns(x)
+
+    .. versionadded:: 1.0
 
     Convert the angle ``x`` into turns. Independently of the angle unit setting, this function will assume that ``x`` is given in radians and return ``x/(2*pi)``.
 
