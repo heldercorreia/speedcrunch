@@ -277,6 +277,9 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 |                               |   Implicit multiplication has                                 | ``6/2(2+1)=9``          |
 |                               |   the same precedence as ``*`` and ``/``,                     |                         |
 |                               |   evaluated from left to right.                               |                         |
+|                               |   The result display makes this association explicit by       |                         |
+|                               |   showing the interpreted expression before the numeric       |                         |
+|                               |   result.                                                     |                         |
 |                               |                                                               |                         |
 |                               | .. versionadded:: 0.12                                        |                         |
 |                               |    Implicit multiplication was added                          |                         |
@@ -284,6 +287,7 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 |                               |                                                               |                         |
 |                               | .. versionadded:: 1.0                                         |                         |
 |                               |    Multiplication and division symbol aliases.                |                         |
+|                               |    Improved explicit interpretation/association in results.   |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
 | ``a + b``, ``a - b``          | **Addition and subtraction**                                  |                         |
 |                               |   In the expression editor and Session Import,                |                         |

@@ -351,7 +351,8 @@ This section contains settings that control result output and post-evaluation be
     When enabled (default), SpeedCrunch adds an extra symbolic line before
     numeric results, simplifying the interpreted expression for readability
     (for example, combining repeated factors into powers and folding simple
-    constant terms). Disable this option to keep only the unsimplified
+    constant terms). This interpreted line also makes implicit-multiplication
+    association explicit. Disable this option to keep only the unsimplified
     interpreted expression and numeric results.
 
     .. versionadded:: 1.0
