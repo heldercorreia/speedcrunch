@@ -840,7 +840,7 @@ void test_sexagesimal()
     Evaluator::instance()->initializeAngleUnits();
 
     // Coverage for the documentation tables in doc/src/userguide/syntax.rst
-    // ("Sexagecimal Values"): fixed-point decimal and sexagecimal columns.
+    // ("Sexagesimal Values"): fixed-point decimal and sexagesimal columns.
     CHECK_EVAL("0", "0");
     CHECK_EVAL("°'56", "0.01555555555555555556");
     CHECK_EVAL("56\"", "0.01555555555555555556");

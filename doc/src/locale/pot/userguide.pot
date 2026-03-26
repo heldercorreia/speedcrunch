@@ -559,11 +559,11 @@ msgid "Display all results as hexadecimal numbers, i.e. in base-16."
 msgstr ""
 
 #: ../../userguide/interface.rst:128
-msgid ":menuselection:`Sexagecimal`"
+msgid ":menuselection:`Sexagesimal`"
 msgstr ""
 
 #: ../../userguide/interface.rst:128
-msgid "Display dimensionless and time results as :ref:`sexagecimal values <sexagecimal_values>`, i.e. with minutes and seconds. All other results are displayed in fixed decimal form."
+msgid "Display dimensionless and time results as :ref:`sexagesimal values <sexagesimal_values>`, i.e. with minutes and seconds. All other results are displayed in fixed decimal form."
 msgstr ""
 
 #: ../../userguide/interface.rst:130
@@ -1015,7 +1015,7 @@ msgid ":kbd:`F9`"
 msgstr ""
 
 #: ../../userguide/interface.rst:298
-msgid "Set result format to sexagecimal."
+msgid "Set result format to sexagesimal."
 msgstr ""
 
 #: ../../userguide/interface.rst:302
@@ -1175,19 +1175,19 @@ msgid "Any integer larger than the 256-bit limit will be silently converted into
 msgstr ""
 
 #: ../../userguide/syntax.rst:82
-msgid "Sexagecimal Values"
+msgid "Sexagesimal Values"
 msgstr ""
 
 #: ../../userguide/syntax.rst:86
-msgid "Sexagecimal values in SpeedCrunch are angle degrees or time values represented with minutes and seconds."
+msgid "Sexagesimal values in SpeedCrunch are angle degrees or time values represented with minutes and seconds."
 msgstr ""
 
 #: ../../userguide/syntax.rst:88
-msgid "When sexagecimal mode is selected in :menuselection:`Settings --> Result Format`, dimensionless and time results are displayed as sexagecimal values. All other results are displayed as fixed decimal values. Actual sexagecimal math depends on the result. Dimensionless results are handled as degrees with minutes and seconds generated from the decimal part. With time dimension results, base unit is second and the integer part is divided to minutes and hours."
+msgid "When sexagesimal mode is selected in :menuselection:`Settings --> Result Format`, dimensionless and time results are displayed as sexagesimal values. All other results are displayed as fixed decimal values. Actual sexagesimal math depends on the result. Dimensionless results are handled as degrees with minutes and seconds generated from the decimal part. With time dimension results, base unit is second and the integer part is divided to minutes and hours."
 msgstr ""
 
 #: ../../userguide/syntax.rst:90
-msgid "In input, characters ``°`` (degree), ``:`` (colon), ``'`` (single quote) and ``\"`` (double quote) can be used for entering sexagecimal values. Degree sign ``°`` separates degrees and minutes. First colon character ``:`` separates hours and minutes. Single quote ``'`` or second colon character ``:`` separates minutes and seconds. Additionally, postfix double quote ``\"`` can be used as an arc second unit. Because the degree sign is difficult to produce from keyboard, at sign ``@`` is automatically converted to it."
+msgid "In input, characters ``°`` (degree), ``:`` (colon), ``'`` (single quote) and ``\"`` (double quote) can be used for entering sexagesimal values. Degree sign ``°`` separates degrees and minutes. First colon character ``:`` separates hours and minutes. Single quote ``'`` or second colon character ``:`` separates minutes and seconds. Additionally, postfix double quote ``\"`` can be used as an arc second unit. Because the degree sign is difficult to produce from keyboard, at sign ``@`` is automatically converted to it."
 msgstr ""
 
 #: ../../userguide/syntax.rst:92
@@ -1199,11 +1199,11 @@ msgid "Dimensionless input values are automatically considered to be in current 
 msgstr ""
 
 #: ../../userguide/syntax.rst:102
-msgid "Only last part of sexagecimal input value can contain decimals."
+msgid "Only last part of sexagesimal input value can contain decimals."
 msgstr ""
 
 #: ../../userguide/syntax.rst:104
-msgid "Following tables show some possible input notations and their results in both fixed decimal and sexagecimal modes:"
+msgid "Following tables show some possible input notations and their results in both fixed decimal and sexagesimal modes:"
 msgstr ""
 
 #: ../../userguide/syntax.rst:107
@@ -1218,7 +1218,7 @@ msgstr ""
 
 #: ../../userguide/syntax.rst:107
 #: ../../userguide/syntax.rst:126
-msgid "Sexagecimal"
+msgid "Sexagesimal"
 msgstr ""
 
 #: ../../userguide/syntax.rst:109

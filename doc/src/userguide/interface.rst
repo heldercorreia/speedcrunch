@@ -189,8 +189,8 @@ formats:
     Display all results as octal numbers, i.e. in base-8.
 * :menuselection:`Hexadecimal`
     Display all results as hexadecimal numbers, i.e. in base-16.
-* :menuselection:`Sexagecimal`
-    Display dimensionless and time results as :ref:`sexagecimal values <sexagecimal_values>`, i.e. with minutes and seconds. All other results are displayed in fixed-point decimal form.
+* :menuselection:`Sexagesimal`
+    Display dimensionless and time results as :ref:`sexagesimal values <sexagesimal_values>`, i.e. with minutes and seconds. All other results are displayed in fixed-point decimal form.
 
 .. _radix_character:
 
@@ -421,7 +421,7 @@ Format
 * :kbd:`F8`
     Set result format to hexadecimal.
 * :kbd:`F9`
-    Set result format to sexagecimal.
+    Set result format to sexagesimal.
 
     .. versionadded:: 1.0
     

@@ -42,9 +42,9 @@ Some characters cannot be used for digit grouping because they already have an a
 
 * ``#`` starts hexadecimal number notation (for example ``#FF``).
 * ``!`` is the factorial operator (for example ``5!``).
-* ``:`` is used in sexagecimal time/angle notation (for example ``12:34:56``).
-* ``°`` is used in sexagecimal angle notation (for example ``12°34'56``).
-* ``'`` is used in sexagecimal time/angle notation (for example ``12°34'56``).
+* ``:`` is used in sexagesimal time/angle notation (for example ``12:34:56``).
+* ``°`` is used in sexagesimal angle notation (for example ``12°34'56``).
+* ``'`` is used in sexagesimal time/angle notation (for example ``12°34'56``).
 * ``&`` is the bitwise AND operator (for example ``6 & 3``).
 * ``?`` starts a comment (for example ``1+2 ? note``).
 
@@ -121,18 +121,18 @@ To specify large integers, using the shift operators (``1 << n``) is preferable 
 calculations and thus susceptible to rounding errors.
 
 
-.. _sexagecimal_values:
+.. _sexagesimal_values:
 
-Sexagecimal Values
+Sexagesimal Values
 ++++++++++++++++++
 
     .. versionadded:: 1.0
 
-Sexagecimal values in SpeedCrunch are angle degrees or time values represented with minutes and seconds.
+Sexagesimal values in SpeedCrunch are angle degrees or time values represented with minutes and seconds.
 
-When sexagecimal mode is selected in :menuselection:`Settings --> Results --> Format`, dimensionless and time results are displayed as sexagecimal values. All other results are displayed as fixed-point decimal values. Actual sexagecimal math depends on the result. Dimensionless results are handled as degrees with minutes and seconds generated from the decimal part. With time dimension results, base unit is second and the integer part is divided to minutes and hours.
+When sexagesimal mode is selected in :menuselection:`Settings --> Results --> Format`, dimensionless and time results are displayed as sexagesimal values. All other results are displayed as fixed-point decimal values. Actual sexagesimal math depends on the result. Dimensionless results are handled as degrees with minutes and seconds generated from the decimal part. With time dimension results, base unit is second and the integer part is divided to minutes and hours.
 
-In input, characters ``°`` (degree), ``:`` (colon), ``'`` (single quote) and ``"`` (double quote) can be used for entering sexagecimal values. Degree sign ``°`` separates degrees and minutes. First colon character ``:`` separates hours and minutes. Single quote ``'`` or second colon character ``:`` separates minutes and seconds. Additionally, postfix double quote ``"`` can be used as an arc second unit. Because the degree sign is difficult to produce from keyboard, at sign ``@`` is automatically converted to it.
+In input, characters ``°`` (degree), ``:`` (colon), ``'`` (single quote) and ``"`` (double quote) can be used for entering sexagesimal values. Degree sign ``°`` separates degrees and minutes. First colon character ``:`` separates hours and minutes. Single quote ``'`` or second colon character ``:`` separates minutes and seconds. Additionally, postfix double quote ``"`` can be used as an arc second unit. Because the degree sign is difficult to produce from keyboard, at sign ``@`` is automatically converted to it.
 
 Amount of minutes or seconds is not limited to values below 60. It is possible to input time 90 minutes after noon::
 
@@ -144,13 +144,13 @@ Dimensionless input values are automatically considered to be in current angle u
     pi
     = 180°00'00
     
-Only last part of sexagecimal input value can contain decimals.
+Only last part of sexagesimal input value can contain decimals.
 
-Following tables show some possible input notations and their results in both fixed-point decimal and sexagecimal modes.
+Following tables show some possible input notations and their results in both fixed-point decimal and sexagesimal modes.
 In the first table, fixed-point decimal values assume angle unit is set to degrees:
 
 =================    ===================    =================
-Input                Fixed-Point Decimal    Sexagecimal
+Input                Fixed-Point Decimal    Sexagesimal
 =================    ===================    =================
 ``0``                ``0``                  ``0°00'00``
 ``°'56``             ``0.01555556``         ``0°00'56.00``
@@ -169,7 +169,7 @@ Input                Fixed-Point Decimal    Sexagecimal
 =================    ===================    =================
 
 =================    ===================    =================
-Input                Fixed-Point Decimal    Sexagecimal
+Input                Fixed-Point Decimal    Sexagesimal
 =================    ===================    =================
 ``0 second``         ``0 second``           ``0:00:00``
 ``::56``             ``56.00 second``       ``0:00:56.00``
