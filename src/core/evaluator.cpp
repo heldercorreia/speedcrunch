@@ -34,6 +34,7 @@
 #include <QRegularExpression>
 #include <QStack>
 #include <cmath>
+#include <limits>
 
 #define ALLOW_IMPLICIT_MULT
 
@@ -773,8 +774,263 @@ static bool normalizeUnsignedIntegerEquivalentDecimalText(QString& text)
     return true;
 }
 
-static QString renderIntegerPowersAsSuperscriptsForDisplay(const QString& expression)
+static QString renderIntegerPowersAsSuperscriptsForDisplay(
+    const QString& expression,
+    bool collapseRightAssociativeIntegerPowerChains = false)
 {
+    auto collapseRightAssociativeIntegerPowerChainsFn = [](QString text) {
+        auto checkedPow = [](long long base, long long exponent, long long* out) {
+            if (exponent < 0)
+                return false;
+            long long result = 1;
+            for (long long i = 0; i < exponent; ++i) {
+                if (base != 0 && result > std::numeric_limits<long long>::max() / base)
+                    return false;
+                result *= base;
+                if (result > 1000000)
+                    return false;
+            }
+            *out = result;
+            return true;
+        };
+
+        auto collapseIntegerExponentChainText = [&checkedPow](const QString& chain, long long* out) {
+            QVector<long long> exponents;
+            int pos = 0;
+            while (pos < chain.size()) {
+                bool negative = false;
+                if (chain.at(pos) == QLatin1Char('-') || chain.at(pos) == QChar(0x2212)) {
+                    negative = true;
+                    ++pos;
+                }
+                if (negative || pos >= chain.size() || !chain.at(pos).isDigit())
+                    return false;
+
+                long long value = 0;
+                while (pos < chain.size() && chain.at(pos).isDigit()) {
+                    const int digit = chain.at(pos).digitValue();
+                    if (value > 1000000)
+                        return false;
+                    value = value * 10 + digit;
+                    ++pos;
+                }
+                exponents.append(value);
+
+                if (pos >= chain.size())
+                    break;
+                if (chain.at(pos) != QLatin1Char('^'))
+                    return false;
+                ++pos;
+            }
+
+            if (exponents.size() < 2)
+                return false;
+
+            long long collapsed = exponents.last();
+            for (int idx = exponents.size() - 2; idx >= 0; --idx) {
+                if (!checkedPow(exponents.at(idx), collapsed, &collapsed))
+                    return false;
+            }
+            *out = collapsed;
+            return true;
+        };
+
+        auto parsePositiveIntegerToken = [](const QString& input, int start, long long* valueOut, int* endOut) {
+            int pos = start;
+            bool parenthesized = false;
+            if (pos < input.size() && input.at(pos) == QLatin1Char('(')) {
+                parenthesized = true;
+                ++pos;
+            }
+            if (pos >= input.size() || !input.at(pos).isDigit())
+                return false;
+            long long value = 0;
+            while (pos < input.size() && input.at(pos).isDigit()) {
+                const int digit = input.at(pos).digitValue();
+                if (value > 1000000)
+                    return false;
+                value = value * 10 + digit;
+                ++pos;
+            }
+            if (parenthesized) {
+                if (pos >= input.size() || input.at(pos) != QLatin1Char(')'))
+                    return false;
+                ++pos;
+            }
+            *valueOut = value;
+            *endOut = pos;
+            return true;
+        };
+
+        // Fold nested integer powers: (a^m)^n -> a^(m*n).
+        while (true) {
+            bool changed = false;
+            for (int i = 1; i < text.size(); ++i) {
+                if (text.at(i) != QLatin1Char('^') || text.at(i - 1) != QLatin1Char(')'))
+                    continue;
+
+                long long outerExp = 0;
+                int outerEnd = i + 1;
+                if (!parsePositiveIntegerToken(text, i + 1, &outerExp, &outerEnd))
+                    continue;
+
+                int depth = 0;
+                int open = -1;
+                for (int j = i - 1; j >= 0; --j) {
+                    const QChar ch = text.at(j);
+                    if (ch == QLatin1Char(')'))
+                        ++depth;
+                    else if (ch == QLatin1Char('(')) {
+                        --depth;
+                        if (depth == 0) {
+                            open = j;
+                            break;
+                        }
+                    }
+                }
+                if (open < 0)
+                    continue;
+
+                const QString inner = text.mid(open + 1, i - open - 2);
+                int innerDepth = 0;
+                int innerPowPos = -1;
+                for (int j = 0; j < inner.size(); ++j) {
+                    const QChar ch = inner.at(j);
+                    if (ch == QLatin1Char('('))
+                        ++innerDepth;
+                    else if (ch == QLatin1Char(')')) {
+                        if (innerDepth > 0)
+                            --innerDepth;
+                    } else if (ch == QLatin1Char('^') && innerDepth == 0) {
+                        innerPowPos = j;
+                    }
+                }
+                if (innerPowPos <= 0)
+                    continue;
+
+                long long innerExp = 0;
+                int innerExpEnd = innerPowPos + 1;
+                if (!parsePositiveIntegerToken(inner, innerPowPos + 1, &innerExp, &innerExpEnd))
+                    continue;
+                if (innerExpEnd != inner.size())
+                    continue;
+
+                const QString innerBase = inner.left(innerPowPos);
+                long long mergedExp = 0;
+                if (innerExp != 0 && outerExp > 1000000 / innerExp)
+                    continue;
+                mergedExp = innerExp * outerExp;
+                if (mergedExp > 1000000)
+                    continue;
+
+                text.replace(open, outerEnd - open, innerBase + QLatin1Char('^') + QString::number(mergedExp));
+                changed = true;
+                break;
+            }
+            if (!changed)
+                break;
+        }
+
+        auto parseIntegerExponentToken = [&text, &collapseIntegerExponentChainText](int start, long long* valueOut, int* endOut) {
+            int pos = start;
+            if (pos < text.size() && text.at(pos) == QLatin1Char('(')) {
+                int depth = 0;
+                int close = -1;
+                for (int i = pos; i < text.size(); ++i) {
+                    const QChar ch = text.at(i);
+                    if (ch == QLatin1Char('('))
+                        ++depth;
+                    else if (ch == QLatin1Char(')')) {
+                        --depth;
+                        if (depth == 0) {
+                            close = i;
+                            break;
+                        }
+                    }
+                }
+                if (close < 0)
+                    return false;
+                const QString inner = text.mid(pos + 1, close - pos - 1).trimmed();
+                long long collapsed = 0;
+                if (!collapseIntegerExponentChainText(inner, &collapsed))
+                    return false;
+                *valueOut = collapsed;
+                *endOut = close + 1;
+                return true;
+            }
+
+            bool negative = false;
+            if (pos < text.size() && (text.at(pos) == QLatin1Char('-') || text.at(pos) == QChar(0x2212))) {
+                negative = true;
+                ++pos;
+            }
+
+            if (pos >= text.size() || !text.at(pos).isDigit())
+                return false;
+
+            long long value = 0;
+            while (pos < text.size() && text.at(pos).isDigit()) {
+                const int digit = text.at(pos).digitValue();
+                if (value > 1000000) // avoid overflow-heavy chains in display-only rewrite
+                    return false;
+                value = value * 10 + digit;
+                ++pos;
+            }
+
+            *valueOut = negative ? -value : value;
+            *endOut = pos;
+            return true;
+        };
+
+        for (int i = 0; i < text.size(); ++i) {
+            if (text.at(i) != QLatin1Char('^'))
+                continue;
+
+            QVector<long long> exponents;
+            const bool startsWithParenthesizedExponentChain =
+                (i + 1 < text.size() && text.at(i + 1) == QLatin1Char('('));
+            int tokenPos = i + 1;
+            while (tokenPos < text.size()) {
+                long long value = 0;
+                int tokenEnd = tokenPos;
+                if (!parseIntegerExponentToken(tokenPos, &value, &tokenEnd))
+                    break;
+                exponents.append(value);
+                tokenPos = tokenEnd;
+                if (tokenPos >= text.size() || text.at(tokenPos) != QLatin1Char('^'))
+                    break;
+                ++tokenPos;
+            }
+
+            if (exponents.isEmpty())
+                continue;
+            if (exponents.size() < 2 && !startsWithParenthesizedExponentChain)
+                continue;
+            if (std::any_of(exponents.constBegin(), exponents.constEnd(),
+                    [](long long v) { return v < 0; })) {
+                continue;
+            }
+
+            long long collapsedExponent = exponents.last();
+            bool ok = true;
+            for (int idx = exponents.size() - 2; idx >= 0; --idx) {
+                if (!checkedPow(exponents.at(idx), collapsedExponent, &collapsedExponent)) {
+                    ok = false;
+                    break;
+                }
+            }
+            if (!ok)
+                continue;
+
+            text.replace(i + 1, tokenPos - (i + 1), QString::number(collapsedExponent));
+        }
+        return text;
+    };
+
+    QString normalizedExpression = expression;
+    if (collapseRightAssociativeIntegerPowerChains)
+        normalizedExpression = collapseRightAssociativeIntegerPowerChainsFn(expression);
+
     static const QRegularExpression powerRE(
         QStringLiteral(R"(\^(?:\(([−-]?)(\d+)\)|(\d+))(?![\p{L}\p{N}\.,_!]))"));
     static const QHash<QChar, QChar> superscriptDigits = {
@@ -791,12 +1047,12 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(const QString& expres
     };
 
     QString rendered;
-    rendered.reserve(expression.size());
+    rendered.reserve(normalizedExpression.size());
     int lastPos = 0;
-    auto it = powerRE.globalMatch(expression);
+    auto it = powerRE.globalMatch(normalizedExpression);
     while (it.hasNext()) {
         const QRegularExpressionMatch match = it.next();
-        rendered += expression.mid(lastPos, match.capturedStart() - lastPos);
+        rendered += normalizedExpression.mid(lastPos, match.capturedStart() - lastPos);
 
         const QString sign = match.captured(1);
         QString digits = match.captured(2);
@@ -813,7 +1069,7 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(const QString& expres
 
         lastPos = match.capturedEnd();
     }
-    rendered += expression.mid(lastPos);
+    rendered += normalizedExpression.mid(lastPos);
 
     auto isIdentifierChar = [](const QChar& ch) {
         return ch == QLatin1Char('_') || ch.isLetterOrNumber();
@@ -2266,7 +2522,9 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
         formatted += operatorSpace;
     }
 
-    return renderIntegerPowersAsSuperscriptsForDisplay(formatted) + commentSuffix;
+    return renderIntegerPowersAsSuperscriptsForDisplay(
+        formatted,
+        simplifyRepeatedMultiplicativeBases) + commentSuffix;
 }
 
 QString Evaluator::simplifyInterpretedExpression(const QString& expression)
@@ -4043,7 +4301,9 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
                 && !isUnsignedDecimalIntegerText(rightText);
             const bool isFactorialExponent =
                 right.rootOpcode == Opcode::Fact;
-            if (isNonIntegerNumericExponent || isFactorialExponent)
+            const bool isChainedExponent =
+                right.rootOpcode == Opcode::Pow;
+            if (isNonIntegerNumericExponent || isFactorialExponent || isChainedExponent)
                 rightText = wrapInParentheses(rightText);
         }
 
@@ -5092,6 +5352,8 @@ static void replaceSuperscriptPowersWithCaretEquivalent(QString& expr)
         while (nameStart >= 0 && isIdentifierChar(expr.at(nameStart)))
             --nameStart;
         ++nameStart;
+        while (nameStart < i && !isIdentifierStartChar(expr.at(nameStart)))
+            ++nameStart;
         if (nameStart >= i || !isIdentifierStartChar(expr.at(nameStart))) {
             i = superscriptEnd;
             continue;
@@ -5126,9 +5388,23 @@ static void replaceSuperscriptPowersWithCaretEquivalent(QString& expr)
 
         const QString superscript = expr.mid(i, superscriptEnd - i);
         const QString callArgs = expr.mid(argsStart, argsEnd - argsStart + 1);
-        const QString replacement = callArgs + superscript;
-        expr.replace(i, argsEnd - i + 1, replacement);
-        i += replacement.size();
+        int trailingPos = argsEnd + 1;
+        while (trailingPos < expr.size() && expr.at(trailingPos).isSpace())
+            ++trailingPos;
+        const bool followedByAnotherSuperscript =
+            trailingPos < expr.size() && isSuperscriptPowerChar(expr.at(trailingPos));
+
+        if (followedByAnotherSuperscript) {
+            const QString functionName = expr.mid(nameStart, i - nameStart);
+            const QString replacement = QStringLiteral("(%1%2%3)")
+                .arg(functionName, callArgs, superscript);
+            expr.replace(nameStart, argsEnd - nameStart + 1, replacement);
+            i = nameStart + replacement.size();
+        } else {
+            const QString replacement = callArgs + superscript;
+            expr.replace(i, argsEnd - i + 1, replacement);
+            i += replacement.size();
+        }
     }
 
     static const QRegularExpression s_superscriptPowersRE(

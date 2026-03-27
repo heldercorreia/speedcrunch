@@ -1872,6 +1872,58 @@ void test_auto_fix_powers()
                  << "\tAutoFix  : " << fixedFunctionPowerSelection.toUtf8().constData() << endl;
         }
     }
+
+    ++eval_total_tests;
+    const QString fixedImplicitMulFunctionPower =
+        eval->autoFix(QString::fromUtf8("2cos³(pi)"));
+    eval->setExpression(fixedImplicitMulFunctionPower);
+    const Quantity fixedImplicitMulFunctionPowerResult = eval->evalUpdateAns();
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\tautofix implicit mul function superscript eval\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl
+             << "\tAutoFix: " << fixedImplicitMulFunctionPower.toUtf8().constData() << endl;
+    } else {
+        QString formatted = DMath::format(fixedImplicitMulFunctionPowerResult, Format::Fixed());
+        formatted.replace(QString::fromUtf8("−"), "-");
+        if (formatted != QStringLiteral("-2")) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\tautofix implicit mul function superscript eval\t[NEW]" << endl
+                 << "\tResult   : " << formatted.toUtf8().constData() << endl
+                 << "\tExpected : -2" << endl
+                 << "\tAutoFix  : " << fixedImplicitMulFunctionPower.toUtf8().constData() << endl;
+        }
+    }
+
+    ++eval_total_tests;
+    const QString fixedImplicitMulFunctionPower2 =
+        eval->autoFix(QString::fromUtf8("2cos²(pi)"));
+    eval->setExpression(fixedImplicitMulFunctionPower2);
+    const Quantity fixedImplicitMulFunctionPowerResult2 = eval->evalUpdateAns();
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\tautofix implicit mul function superscript eval 2\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl
+             << "\tAutoFix: " << fixedImplicitMulFunctionPower2.toUtf8().constData() << endl;
+    } else {
+        QString formatted = DMath::format(fixedImplicitMulFunctionPowerResult2, Format::Fixed());
+        formatted.replace(QString::fromUtf8("−"), "-");
+        if (formatted != QStringLiteral("2")) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\tautofix implicit mul function superscript eval 2\t[NEW]" << endl
+                 << "\tResult   : " << formatted.toUtf8().constData() << endl
+                 << "\tExpected : 2" << endl
+                 << "\tAutoFix  : " << fixedImplicitMulFunctionPower2.toUtf8().constData() << endl;
+        }
+    }
 }
 
 void test_auto_fix_shift_add_sub()
@@ -3601,6 +3653,89 @@ void test_non_informative_numeric_simplified_row_suppression()
             + QString(UnicodeChars::DotOperator)
             + QString(UnicodeChars::MediumMathematicalSpace)
             + QStringLiteral("1"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("cos(pi/3)^2^3"),
+        QStringLiteral("cos(")
+            + QStringLiteral("pi")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("/")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("3)^(2")
+            + QString::fromUtf8("³)")
+            );
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("cos(pi/3)^2^3"),
+        QString::fromUtf8("cos⁸(pi")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("/")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("3)"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("(cos(pi/3))^2^3"),
+        QStringLiteral("cos(")
+            + QStringLiteral("pi")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("/")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("3)^(2")
+            + QString::fromUtf8("³)")
+            );
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("(cos(pi/3))^2^3"),
+        QString::fromUtf8("cos⁸(pi")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("/")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("3)"));
+    ++eval_total_tests;
+    {
+        const QString superscriptInput = QString::fromUtf8("cos²(pi/3)³");
+        const QString normalized = eval->autoFix(superscriptInput);
+        const QString expectedNormalized = QStringLiteral("(cos(pi/3)^2)^3");
+        if (normalized != expectedNormalized) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tcos²(pi/3)^3 autofix\t[NEW]" << endl
+                 << "\tNormalized: " << normalized.toUtf8().constData() << endl
+                 << "\tExpected  : " << expectedNormalized.toUtf8().constData() << endl;
+        } else {
+            eval->setExpression(normalized);
+            eval->evalUpdateAns();
+            if (!eval->error().isEmpty()) {
+                ++eval_failed_tests;
+                ++eval_new_failed_tests;
+                cerr << __FILE__ << "[" << __LINE__ << "]\tcos²(pi/3)^3 eval\t[NEW]" << endl
+                     << "\tError: " << qPrintable(eval->error()) << endl;
+            } else {
+                const QString displayed = Evaluator::formatInterpretedExpressionForDisplay(
+                    eval->interpretedExpression());
+                const QString expectedDisplayed =
+                    QString::fromUtf8("(cos²(pi")
+                    + QString(UnicodeChars::MediumMathematicalSpace)
+                    + QStringLiteral("/")
+                    + QString(UnicodeChars::MediumMathematicalSpace)
+                    + QStringLiteral("3))")
+                    + QString::fromUtf8("³");
+                const QString expectedSimplified =
+                    QString::fromUtf8("cos⁶(pi")
+                    + QString(UnicodeChars::MediumMathematicalSpace)
+                    + QStringLiteral("/")
+                    + QString(UnicodeChars::MediumMathematicalSpace)
+                    + QStringLiteral("3)");
+                const QString simplifiedDisplayed = Evaluator::formatInterpretedExpressionSimplifiedForDisplay(
+                    eval->interpretedExpression());
+                if (displayed != expectedDisplayed || simplifiedDisplayed != expectedSimplified) {
+                    ++eval_failed_tests;
+                    ++eval_new_failed_tests;
+                    cerr << __FILE__ << "[" << __LINE__ << "]\tcos²(pi/3)^3 display\t[NEW]" << endl
+                         << "\tDisplayed: " << displayed.toUtf8().constData() << endl
+                         << "\tExpected : " << expectedDisplayed.toUtf8().constData() << endl
+                         << "\tSimplif. : " << simplifiedDisplayed.toUtf8().constData() << endl
+                         << "\tExpected : " << expectedSimplified.toUtf8().constData() << endl;
+                }
+            }
+        }
+    }
     checkSuppressSimplifiedExpressionLine(
         __FILE__, __LINE__, "do not suppress symbolic reduction with -1 multiplier",
         QStringLiteral("-1*cos(pi)^2/cos(pi)+1"), false);
