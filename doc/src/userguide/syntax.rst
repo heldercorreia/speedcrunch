@@ -239,6 +239,8 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 |                               |   ``a²`` is shorthand for ``a^2``;                            | ``3²⁰ = 3^20``          |
 |                               |   contiguous superscript digits are                           | ``2¹⁰ = 1024``          |
 |                               |   parsed as one integer exponent. Both                        |                         |
+|                               |   function notations ``f^n(x)`` and ``fⁿ(x)``                 | ``cos^2(pi)=cos²(pi)``  |
+|                               |   are interpreted identically.                                |                         |
 |                               |   text-operator variants are equivalent. Note                 |                         |
 |                               |   that the power operation is                                 |                         |
 |                               |   *right-associative*, i.e. it is                             | ``2^2^3 = 2^8 = 256``   |

@@ -1804,6 +1804,9 @@ void test_auto_fix_powers()
     CHECK_AUTOFIX("3²⁰", "3^20");
     CHECK_AUTOFIX("cos²(pi)", "cos(pi)^2");
     CHECK_AUTOFIX("cos² (pi)", "cos(pi)^2");
+    CHECK_AUTOFIX("cos^2(pi)", "cos(pi)^2");
+    CHECK_AUTOFIX("cos^(-1)(pi)", "cos(pi)^(-1)");
+    CHECK_AUTOFIX("2cos^3(pi)", "2cos(pi)^3");
     CHECK_AUTOFIX("7 + 3²⁰ * 4", "7 + 3^20 * 4");
     CHECK_AUTOFIX("2×pi", "2⋅pi");
     CHECK_AUTOFIX("2×a", "2⋅a");
@@ -1922,6 +1925,31 @@ void test_auto_fix_powers()
                  << "\tResult   : " << formatted.toUtf8().constData() << endl
                  << "\tExpected : 2" << endl
                  << "\tAutoFix  : " << fixedImplicitMulFunctionPower2.toUtf8().constData() << endl;
+        }
+    }
+
+    ++eval_total_tests;
+    const QString fixedCaretFunctionPower = eval->autoFix(QString::fromUtf8("2cos^3(pi)"));
+    eval->setExpression(fixedCaretFunctionPower);
+    const Quantity fixedCaretFunctionPowerResult = eval->evalUpdateAns();
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\tautofix caret function power eval\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl
+             << "\tAutoFix: " << fixedCaretFunctionPower.toUtf8().constData() << endl;
+    } else {
+        QString formatted = DMath::format(fixedCaretFunctionPowerResult, Format::Fixed());
+        formatted.replace(QString::fromUtf8("−"), "-");
+        if (formatted != QStringLiteral("-2")) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\tautofix caret function power eval\t[NEW]" << endl
+                 << "\tResult   : " << formatted.toUtf8().constData() << endl
+                 << "\tExpected : -2" << endl
+                 << "\tAutoFix  : " << fixedCaretFunctionPower.toUtf8().constData() << endl;
         }
     }
 }
@@ -3787,6 +3815,18 @@ void test_non_informative_numeric_simplified_row_suppression()
         QStringLiteral("(-1) cos(pi)"),
         QString(UnicodeChars::MinusSign)
             + QStringLiteral("cos(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-1*cos(pi)^2*cos(pi)*cos(pi)/cos(pi)^2"),
+        QString::fromUtf8("−cos²(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-1*cos(pi)^2*cos(pi)*cos(pi)/-cos(pi)^2"),
+        QString::fromUtf8("cos²(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-1*cos(pi)^2*cos(pi)*cos(pi)/(-cos(pi)^2)"),
+        QString::fromUtf8("cos²(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("0-1*cos(pi)^2*cos(pi)*cos(pi)/(-cos(pi)^2)"),
+        QString::fromUtf8("cos²(pi)"));
 }
 
 

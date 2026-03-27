@@ -1837,7 +1837,60 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
     };
     rebuilt = simplifyParenthesizedDenominators(rebuilt);
 
-    auto simplifyAlgebraicMulDivChain = [](const QString& text) {
+    auto simplifyAlgebraicMulDivChain = [&negativeUnitFactorCount](const QString& text) {
+        auto isFullyWrappedByOuterParens = [](const QString& expr) {
+            if (expr.size() < 2 || expr.at(0) != QLatin1Char('(') || expr.at(expr.size() - 1) != QLatin1Char(')'))
+                return false;
+            int depth = 0;
+            for (int i = 0; i < expr.size(); ++i) {
+                const QChar ch = expr.at(i);
+                if (ch == QLatin1Char('('))
+                    ++depth;
+                else if (ch == QLatin1Char(')'))
+                    --depth;
+                if (depth == 0 && i < expr.size() - 1)
+                    return false;
+            }
+            return depth == 0;
+        };
+
+        auto normalizeSimplifiableSignedFactor = [&isFullyWrappedByOuterParens](const QString& factor,
+                                                                                 QString* unsignedFactor,
+                                                                                 int* signOut) {
+            QString normalized = factor.trimmed();
+            while (isFullyWrappedByOuterParens(normalized))
+                normalized = normalized.mid(1, normalized.size() - 2).trimmed();
+
+            int sign = 1;
+            bool consumedUnarySign = false;
+            while (!normalized.isEmpty()) {
+                const QChar ch = normalized.at(0);
+                if (ch == QLatin1Char('+')) {
+                    consumedUnarySign = true;
+                    normalized = normalized.mid(1).trimmed();
+                    continue;
+                }
+                if (isMinus(ch)) {
+                    consumedUnarySign = true;
+                    sign = -sign;
+                    normalized = normalized.mid(1).trimmed();
+                    continue;
+                }
+                break;
+            }
+
+            while (isFullyWrappedByOuterParens(normalized))
+                normalized = normalized.mid(1, normalized.size() - 2).trimmed();
+            if (normalized.isEmpty())
+                return false;
+            if (consumedUnarySign && isUnsignedDecimalNumberText(normalized))
+                return false;
+
+            *unsignedFactor = normalized;
+            *signOut = sign;
+            return true;
+        };
+
         QVector<QString> factors;
         QVector<QString> operators;
         int depth = 0;
@@ -1876,9 +1929,17 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
         bool hasNonNumericBase = false;
 
         for (int i = 0; i < factors.size(); ++i) {
+            QString unsignedFactor;
+            int factorSign = 1;
+            if (!normalizeSimplifiableSignedFactor(factors.at(i), &unsignedFactor, &factorSign))
+                return text;
+
+            if (factorSign < 0)
+                ++negativeUnitFactorCount;
+
             QString base;
             int exponent = 0;
-            if (!parseSimplifiablePowerFactor(factors.at(i), &base, &exponent))
+            if (!parseSimplifiablePowerFactor(unsignedFactor, &base, &exponent))
                 return text;
 
             const QString op = (i == 0) ? QStringLiteral("*") : operators.at(i - 1);
@@ -2184,16 +2245,27 @@ static QString simplifyRepeatedMultiplicativeBasesForDisplay(const QString& expr
             QString term = keptTerms.at(i).trimmed();
             QString op = (i == 0) ? QStringLiteral("+") : keptOperators.at(i - 1);
 
-            if (!term.isEmpty()
-                && (term.at(0) == QLatin1Char('+')
-                    || term.at(0) == QLatin1Char('-')
-                    || term.at(0) == UnicodeChars::MinusSign))
-            {
-                const bool termNegative = (term.at(0) == QLatin1Char('-')
-                                           || term.at(0) == UnicodeChars::MinusSign);
-                term = term.mid(1).trimmed();
-                if (termNegative)
-                    op = isMinusOperator(op) ? QStringLiteral("+") : QStringLiteral("-");
+            if (!term.isEmpty()) {
+                bool termNegative = false;
+                int signPos = 0;
+                while (signPos < term.size()) {
+                    const QChar signCh = term.at(signPos);
+                    if (signCh == QLatin1Char('+')) {
+                        ++signPos;
+                        continue;
+                    }
+                    if (signCh == QLatin1Char('-') || signCh == UnicodeChars::MinusSign) {
+                        termNegative = !termNegative;
+                        ++signPos;
+                        continue;
+                    }
+                    break;
+                }
+                if (signPos > 0) {
+                    term = term.mid(signPos).trimmed();
+                    if (termNegative)
+                        op = isMinusOperator(op) ? QStringLiteral("+") : QStringLiteral("-");
+                }
             }
 
             if (term.isEmpty())
@@ -5447,6 +5519,101 @@ static void replaceSuperscriptPowersWithCaretEquivalent(QString& expr)
     }
 }
 
+static void normalizeFunctionCaretPowers(QString& expr)
+{
+    auto isIdentifierChar = [](const QChar& ch) {
+        return ch == QLatin1Char('_') || ch.isLetterOrNumber();
+    };
+    auto isIdentifierStartChar = [](const QChar& ch) {
+        return ch == QLatin1Char('_') || ch.isLetter();
+    };
+    auto parseIntegerExponentToken = [](const QString& input, int start, int* endOut) {
+        int pos = start;
+        bool parenthesized = false;
+        if (pos < input.size() && input.at(pos) == QLatin1Char('(')) {
+            parenthesized = true;
+            ++pos;
+        }
+        if (pos < input.size() && (input.at(pos) == QLatin1Char('+') || input.at(pos) == QLatin1Char('-')))
+            ++pos;
+        const int digitsStart = pos;
+        while (pos < input.size() && input.at(pos).isDigit())
+            ++pos;
+        if (pos == digitsStart)
+            return false;
+        if (parenthesized) {
+            if (pos >= input.size() || input.at(pos) != QLatin1Char(')'))
+                return false;
+            ++pos;
+        }
+        *endOut = pos;
+        return true;
+    };
+
+    int i = 0;
+    while (i < expr.size()) {
+        if (!isIdentifierStartChar(expr.at(i))) {
+            ++i;
+            continue;
+        }
+
+        int nameEnd = i + 1;
+        while (nameEnd < expr.size() && isIdentifierChar(expr.at(nameEnd)))
+            ++nameEnd;
+
+        int afterName = nameEnd;
+        while (afterName < expr.size() && expr.at(afterName).isSpace())
+            ++afterName;
+        if (afterName >= expr.size() || expr.at(afterName) != QLatin1Char('^')) {
+            i = nameEnd;
+            continue;
+        }
+
+        int expStart = afterName + 1;
+        while (expStart < expr.size() && expr.at(expStart).isSpace())
+            ++expStart;
+
+        int expEnd = expStart;
+        if (!parseIntegerExponentToken(expr, expStart, &expEnd)) {
+            i = nameEnd;
+            continue;
+        }
+
+        int argsStart = expEnd;
+        while (argsStart < expr.size() && expr.at(argsStart).isSpace())
+            ++argsStart;
+        if (argsStart >= expr.size() || expr.at(argsStart) != QLatin1Char('(')) {
+            i = nameEnd;
+            continue;
+        }
+
+        int depth = 0;
+        int argsEnd = -1;
+        for (int j = argsStart; j < expr.size(); ++j) {
+            const QChar ch = expr.at(j);
+            if (ch == QLatin1Char('('))
+                ++depth;
+            else if (ch == QLatin1Char(')')) {
+                --depth;
+                if (depth == 0) {
+                    argsEnd = j;
+                    break;
+                }
+            }
+        }
+        if (argsEnd < 0) {
+            i = nameEnd;
+            continue;
+        }
+
+        const QString callArgs = expr.mid(argsStart, argsEnd - argsStart + 1);
+        const QString exponentToken = expr.mid(expStart, expEnd - expStart);
+        const QString replacement = callArgs + QLatin1Char('^') + exponentToken;
+        expr.replace(afterName, argsEnd - afterName + 1, replacement);
+        i = i + replacement.size();
+    }
+}
+
 QList<UserFunction> Evaluator::getUserFunctions() const
 {
         return m_session ? m_session->UserFunctionsToList()
@@ -5521,6 +5688,7 @@ QString Evaluator::autoFix(const QString& expr)
     if (s_expressionWithoutIgnorableTrailingToken(result, &withoutTrailingIncompleteToken))
         result = withoutTrailingIncompleteToken;
 
+    normalizeFunctionCaretPowers(result);
     replaceSuperscriptPowersWithCaretEquivalent(result);
     result = UnicodeChars::normalizeRootFunctionAliasesForDisplay(result);
 
