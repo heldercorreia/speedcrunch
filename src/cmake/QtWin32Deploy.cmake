@@ -1,5 +1,9 @@
 find_package(Qt6Core REQUIRED)
 
+if(POLICY CMP0177)
+  cmake_policy(SET CMP0177 NEW)
+endif()
+
 
 # Basic stuff; locate the Qt6Core DLL so we can determine the other directories from it.
 # TODO: This might need to be configurable.
@@ -15,7 +19,16 @@ set(qtwin32_QMLPLUGIN_SUFFIX_DEBUG "plugin${qtwin32_DLL_SUFFIX_DEBUG}")
 
 # Determine the Qt minor version (so '6.4' or '6.5') for version checking. There's unlikely to be enough changes in
 # patch releases to make it worth distinguishing based on those.
-string(REGEX MATCH "[0-9]+[.][0-9]+" qtwin32_QT_MINOR_VERSION ${Qt6Core_VERSION_STRING})
+if(DEFINED Qt6Core_VERSION_STRING AND NOT Qt6Core_VERSION_STRING STREQUAL "")
+  set(qtwin32_qt_version "${Qt6Core_VERSION_STRING}")
+elseif(DEFINED Qt6Core_VERSION AND NOT Qt6Core_VERSION STREQUAL "")
+  set(qtwin32_qt_version "${Qt6Core_VERSION}")
+elseif(DEFINED Qt6_VERSION AND NOT Qt6_VERSION STREQUAL "")
+  set(qtwin32_qt_version "${Qt6_VERSION}")
+else()
+  message(FATAL_ERROR "qtwin32: Could not determine Qt version")
+endif()
+string(REGEX MATCH "[0-9]+[.][0-9]+" qtwin32_QT_MINOR_VERSION "${qtwin32_qt_version}")
 
 
 # qtwin32_check_qt_version([STRICT] <version>...)
@@ -199,7 +212,7 @@ set(qtwin32_Qt6Widgets_DEPS qtwin32_Qt6Gui)
 set(qtwin32_Qt6Sql_LIBS Qt6Sql)
 set(qtwin32_Qt6Sql_DEPS qtwin32_Qt6Core)
 # qtwin32_Qt6Help - libraries and plugins for QtHelp
-set(qtwin32_Qt6Help_LIBS Qt6Help Qt6CLucene)
+set(qtwin32_Qt6Help_LIBS Qt6Help)
 set(qtwin32_Qt6Help_PLUGINS sqldrivers/qsqlite)
 set(qtwin32_Qt6Help_DEPS qtwin32_Qt6Core qtwin32_Qt6Network qtwin32_Qt6Sql qtwin32_Qt6Widgets)
 # qtwin32_Qt6Svg - libraries and plugins for QtSvg (does this really depend on Widgets?)
