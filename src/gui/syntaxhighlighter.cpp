@@ -60,6 +60,42 @@ static QString textNormalizedForHighlighting(QString text)
     return text;
 }
 
+static bool isSuperscriptExponentChar(QChar ch)
+{
+    switch (ch.unicode()) {
+    case 0x207B: // ⁻
+    case 0x2070: // ⁰
+    case 0x00B9: // ¹
+    case 0x00B2: // ²
+    case 0x00B3: // ³
+    case 0x2074: // ⁴
+    case 0x2075: // ⁵
+    case 0x2076: // ⁶
+    case 0x2077: // ⁷
+    case 0x2078: // ⁸
+    case 0x2079: // ⁹
+        return true;
+    default:
+        return false;
+    }
+}
+
+static bool hasSuperscriptExponent(const QString& tokenText)
+{
+    for (const QChar ch : tokenText) {
+        if (isSuperscriptExponentChar(ch))
+            return true;
+    }
+    return false;
+}
+
+static QString stripTrailingAsciiDigits(QString text)
+{
+    while (!text.isEmpty() && text.at(text.size() - 1).isDigit())
+        text.chop(1);
+    return text;
+}
+
 static const QVector<QString> colorSchemeSearchPaths()
 {
     static QVector<QString> searchPaths;
@@ -247,6 +283,19 @@ void SyntaxHighlighter::highlightBlock(const QString& text)
             if (Evaluator::instance()->hasUserFunction(token.text())
                 || functionNames.contains(tokenText, Qt::CaseInsensitive))
                 color = colorForRole(ColorScheme::Function);
+            else if (i + 1 < tokens.count()
+                     && tokens.at(i + 1).type() == Token::stxOpenPar
+                     && token.pos() >= 0
+                     && token.pos() + token.size() <= text.size()) {
+                const QString originalTokenText = text.mid(token.pos(), token.size());
+                if (hasSuperscriptExponent(originalTokenText)) {
+                    const QString baseName = stripTrailingAsciiDigits(token.text());
+                    if (Evaluator::instance()->hasUserFunction(baseName)
+                        || functionNames.contains(baseName.toLower(), Qt::CaseInsensitive)) {
+                        color = colorForRole(ColorScheme::Function);
+                    }
+                }
+            }
             break;
 
         default:
@@ -254,6 +303,16 @@ void SyntaxHighlighter::highlightBlock(const QString& text)
         };
 
         setFormat(token.pos(), token.size(), color);
+        if (token.type() == Token::stxIdentifier
+                && token.pos() >= 0
+                && token.pos() + token.size() <= text.size()) {
+            const QString originalTokenText = text.mid(token.pos(), token.size());
+            for (int j = 0; j < originalTokenText.size(); ++j) {
+                if (isSuperscriptExponentChar(originalTokenText.at(j)))
+                    setFormat(token.pos() + j, 1, colorForRole(ColorScheme::Number));
+            }
+        }
+
         if (token.type() == Token::stxNumber && Settings::instance()->digitGrouping > 0) {
             // If the lexer split a decimal number around the radix character,
             // avoid grouping the fractional token when integer-only grouping is enabled.
