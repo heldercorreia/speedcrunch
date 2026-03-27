@@ -143,7 +143,7 @@ QStringList formatResultLines(const HistoryEntry& entry)
                 Evaluator::formatInterpretedExpressionSimplifiedForDisplay(entry.interpretedExpr()));
         if (!simplified.isEmpty()
             && simplified != interpreted
-            && !RegExpPatterns::trivialSingleFunctionCall().match(simplified).hasMatch()) {
+            ) {
             if (SimplifiedExpressionUtils::shouldSuppressSimplifiedExpressionLine(
                     interpreted, simplified)) {
                 // Hide non-informative simplification rows for plain numeric arithmetic.

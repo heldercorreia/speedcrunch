@@ -211,22 +211,26 @@ static QString formattedLiveResultWithAlternatives(const Quantity& quantity,
     const Settings* settings = Settings::instance();
     const QString primaryFormattedResult = formattedLiveResult(quantity);
     QString formatted = QStringLiteral("<b>%1</b>").arg(primaryFormattedResult);
+    QStringList appendedPlainLines;
+    appendedPlainLines.append(primaryFormattedResult);
+    auto appendUniquePlainLine = [&formatted, &appendedPlainLines](const QString& line) {
+        if (line.isEmpty() || appendedPlainLines.contains(line))
+            return;
+        appendedPlainLines.append(line);
+        formatted += QStringLiteral("<br/>%1").arg(line);
+    };
     if (!simplifiedExpression.isEmpty() && simplifiedExpression != primaryFormattedResult) {
-        formatted += QStringLiteral("<br/>%1")
-            .arg(QStringLiteral("= %1").arg(simplifiedExpression.toHtmlEscaped()));
+        appendUniquePlainLine(QStringLiteral("= %1").arg(simplifiedExpression.toHtmlEscaped()));
     }
     if (settings->alternativeResultFormat != '\0') {
-        formatted += QStringLiteral("<br/>%1")
-            .arg(formattedLiveResult(quantity, settings->alternativeResultFormat));
+        appendUniquePlainLine(formattedLiveResult(quantity, settings->alternativeResultFormat));
     }
     if (settings->tertiaryResultFormat != '\0') {
-        formatted += QStringLiteral("<br/>%1")
-            .arg(formattedLiveResult(quantity, settings->tertiaryResultFormat));
+        appendUniquePlainLine(formattedLiveResult(quantity, settings->tertiaryResultFormat));
     }
     const QString symbolicTrig = NumberFormatter::formatTrigSymbolic(quantity);
     if (shouldShowAdditionalRationalForTrig(expression, quantity)) {
-        formatted += QStringLiteral("<br/>%1")
-            .arg(groupedDigitsForTooltip(symbolicTrig));
+        appendUniquePlainLine(groupedDigitsForTooltip(symbolicTrig));
     }
     return formatted;
 }
@@ -242,8 +246,7 @@ static QString simplifiedExpressionLineForTooltip(const QString& interpretedExpr
     const QString simplifiedDisplay = UnicodeChars::normalizePiForDisplay(
         Evaluator::formatInterpretedExpressionSimplifiedForDisplay(interpretedExpression));
     if (simplifiedDisplay.isEmpty()
-        || simplifiedDisplay == interpretedDisplay
-        || RegExpPatterns::trivialSingleFunctionCall().match(simplifiedDisplay).hasMatch()) {
+        || simplifiedDisplay == interpretedDisplay) {
         return QString();
     }
 

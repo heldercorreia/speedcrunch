@@ -3800,28 +3800,6 @@ void MainWindow::evaluateEditorExpression()
         return;
 
     const QString interpretedExpr = m_evaluator->interpretedExpression();
-    if (m_settings->simplifyResultExpressions
-        && !m_evaluator->isUserFunctionAssign()
-        && !result.isNan()
-        && !interpretedExpr.isEmpty()
-        && !interpretedExpr.contains(QLatin1Char('=')))
-    {
-        const QString simplifiedInterpretedExpr =
-            Evaluator::simplifyInterpretedExpression(interpretedExpr);
-        if (!simplifiedInterpretedExpr.isEmpty()
-            && simplifiedInterpretedExpr != interpretedExpr)
-        {
-            m_evaluator->setExpression(simplifiedInterpretedExpr);
-            Quantity simplifiedResult = m_evaluator->evalUpdateAns();
-            if (m_evaluator->error().isEmpty() && !simplifiedResult.isNan()) {
-                result = simplifiedResult;
-            } else {
-                m_evaluator->setExpression(expr);
-                result = m_evaluator->evalUpdateAns();
-            }
-        }
-    }
-
     m_session->addHistoryEntry(HistoryEntry(enteredExpr, result, interpretedExpr));
     if (m_settings->historySaving == Settings::HistorySavingContinuously)
         saveSessionToDefaultPath();

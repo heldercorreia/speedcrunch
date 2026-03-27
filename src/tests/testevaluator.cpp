@@ -3551,6 +3551,107 @@ void test_non_informative_numeric_simplified_row_suppression()
     checkSuppressSimplifiedExpressionLine(
         __FILE__, __LINE__, "do not suppress symbolic simplification",
         QStringLiteral("2*e*e-1"), false);
+    checkSuppressSimplifiedExpressionLine(
+        __FILE__, __LINE__, "suppress commutative swap for 1+cos(pi)",
+        QStringLiteral("1+cos(pi)"), true);
+    checkSuppressSimplifiedExpressionLine(
+        __FILE__, __LINE__, "do not suppress symbolic reduction with trailing 1 multiplier",
+        QStringLiteral("cos (pi)^2/ cos pi  1"), false);
+    checkSuppressSimplifiedExpressionLine(
+        __FILE__, __LINE__, "do not suppress symbolic reduction with explicit multiplication by 1",
+        QStringLiteral("1*cos(pi)^2/cos(pi)"), false);
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("cos (pi)^2/ cos pi  1"),
+        QStringLiteral("cos(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("1*cos(pi)^2/cos(pi)"),
+        QStringLiteral("cos(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("2*cos(pi)^2/cos(pi)"),
+        QStringLiteral("2")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(UnicodeChars::DotOperator)
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("cos(pi)"));
+    checkSuppressSimplifiedExpressionLine(
+        __FILE__, __LINE__, "do not suppress symbolic reduction when wrapped factor is multiplied",
+        QStringLiteral("(cos(pi)^2/cos(pi))*2"), false);
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("(cos(pi)^2/cos(pi))*2"),
+        QStringLiteral("2")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(UnicodeChars::DotOperator)
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("cos(pi)"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("cos(pi)^2/cos(pi)"),
+        QStringLiteral("cos²(pi)")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("/")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("cos(pi)"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("cos(pi)^2/cos(pi) 1"),
+        QStringLiteral("cos²(pi)")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("/")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("cos(pi)")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(UnicodeChars::DotOperator)
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("1"));
+    checkSuppressSimplifiedExpressionLine(
+        __FILE__, __LINE__, "do not suppress symbolic reduction with -1 multiplier",
+        QStringLiteral("-1*cos(pi)^2/cos(pi)+1"), false);
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-1*cos(pi)^2/cos(pi)+1"),
+        QString(UnicodeChars::MinusSign)
+            + QStringLiteral("cos(pi)")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("+")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("1"));
+    checkSuppressSimplifiedExpressionLine(
+        __FILE__, __LINE__, "do not suppress symbolic reduction with divide by -1",
+        QStringLiteral("-1*cos(pi)^2/cos(pi)/-1"), false);
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-1*cos(pi)^2/cos(pi)/-1"),
+        QStringLiteral("cos(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-1*cos(pi)^2/cos(pi)/(-1)"),
+        QStringLiteral("cos(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-1*cos(pi)^2/cos(pi)/1"),
+        QString(UnicodeChars::MinusSign)
+            + QStringLiteral("cos(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-1*cos(pi)^2/cos(pi)*1"),
+        QString(UnicodeChars::MinusSign)
+            + QStringLiteral("cos(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-1*cos(pi)^2/cos(pi)*(-1)"),
+        QStringLiteral("cos(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("cos(pi)*(-1)"),
+        QString(UnicodeChars::MinusSign)
+            + QStringLiteral("cos(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("cos(pi)*-1"),
+        QString(UnicodeChars::MinusSign)
+            + QStringLiteral("cos(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-1*cos(pi)"),
+        QString(UnicodeChars::MinusSign)
+            + QStringLiteral("cos(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("(-1)*cos(pi)"),
+        QString(UnicodeChars::MinusSign)
+            + QStringLiteral("cos(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("(-1) cos(pi)"),
+        QString(UnicodeChars::MinusSign)
+            + QStringLiteral("cos(pi)"));
 }
 
 

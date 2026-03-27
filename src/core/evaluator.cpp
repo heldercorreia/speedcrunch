@@ -1143,6 +1143,48 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
     if (termText.isEmpty())
         return termText;
 
+    QString workingTerm = termText;
+    int negativeUnitFactorCount = 0;
+    {
+        static const QRegularExpression s_leadingNegativeUnitMultiplier(
+            QStringLiteral(R"(^\s*[−-]1\s*(?:\*|⋅|×)\s*(.+)$)"));
+        const QRegularExpressionMatch match = s_leadingNegativeUnitMultiplier.match(workingTerm);
+        if (match.hasMatch()) {
+            workingTerm = match.captured(1);
+            ++negativeUnitFactorCount;
+        }
+
+        static const QRegularExpression s_trailingDivisionNegativeOne(
+            QStringLiteral(R"(\s*(?:/|÷|⧸)\s*(?:[−-]1|\([−-]1\))\s*$)"));
+        static const QRegularExpression s_trailingMultiplicationNegativeOne(
+            QStringLiteral(R"(\s*(?:\*|⋅|×)\s*(?:[−-]1|\([−-]1\))\s*$)"));
+        static const QRegularExpression s_trailingNeutralOne(
+            QStringLiteral(R"(\s*(?:/|÷|⧸|\*|⋅|×)\s*(?:\+?1|\(\+?1\))\s*$)"));
+        while (true) {
+            QString updated = workingTerm;
+            updated.replace(s_trailingDivisionNegativeOne, QString());
+            if (updated != workingTerm) {
+                workingTerm = updated;
+                ++negativeUnitFactorCount;
+                continue;
+            }
+
+            updated = workingTerm;
+            updated.replace(s_trailingMultiplicationNegativeOne, QString());
+            if (updated != workingTerm) {
+                workingTerm = updated;
+                ++negativeUnitFactorCount;
+                continue;
+            }
+
+            updated = workingTerm;
+            updated.replace(s_trailingNeutralOne, QString());
+            if (updated == workingTerm)
+                break;
+            workingTerm = updated;
+        }
+    }
+
     auto simplifyMultiplicationOnlySegment = [](const QString& segmentText) {
         if (segmentText.isEmpty())
             return segmentText;
@@ -1355,8 +1397,8 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
     QVector<QString> divisionOperators;
     int depth = 0;
     int segmentStart = 0;
-    for (int i = 0; i < termText.size(); ++i) {
-        const QChar ch = termText.at(i);
+    for (int i = 0; i < workingTerm.size(); ++i) {
+        const QChar ch = workingTerm.at(i);
         if (ch == QLatin1Char('(')) {
             ++depth;
             continue;
@@ -1367,15 +1409,12 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
             continue;
         }
         if (depth == 0 && (ch == QLatin1Char('/') || ch == QLatin1Char('\\'))) {
-            divisionSegments.append(termText.mid(segmentStart, i - segmentStart));
+            divisionSegments.append(workingTerm.mid(segmentStart, i - segmentStart));
             divisionOperators.append(QString(ch));
             segmentStart = i + 1;
         }
     }
-    divisionSegments.append(termText.mid(segmentStart));
-
-    if (divisionOperators.isEmpty())
-        return simplifyMultiplicationOnlySegment(termText);
+    divisionSegments.append(workingTerm.mid(segmentStart));
 
     auto foldNumericDenominatorIntoPreviousSegment =
         [](QString* previousSegment, const QString& denominatorText) {
@@ -1442,36 +1481,46 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
             return false;
         };
 
-    QVector<QString> simplifiedSegments;
-    simplifiedSegments.reserve(divisionSegments.size());
-    for (int i = 0; i < divisionSegments.size(); ++i) {
-        const bool followsDivisionOperator =
-            i > 0 && (divisionOperators.at(i - 1) == QLatin1String("/")
-                      || divisionOperators.at(i - 1) == QLatin1String("\\"));
-        simplifiedSegments.append(followsDivisionOperator
-            ? simplifyPostDivisionSegment(divisionSegments.at(i))
-            : simplifyMultiplicationOnlySegment(divisionSegments.at(i)));
-    }
-
-    for (int i = 1; i < simplifiedSegments.size(); ++i) {
-        if (divisionOperators.at(i - 1) != QLatin1String("/"))
-            continue;
-        if (i <= 1 || divisionOperators.at(i - 2) != QLatin1String("/"))
-            continue;
-        QString previous = simplifiedSegments.at(i - 1);
-        if (!foldNumericDenominatorIntoPreviousSegment(&previous, simplifiedSegments.at(i)))
-            continue;
-        simplifiedSegments[i - 1] = previous;
-        simplifiedSegments.removeAt(i);
-        divisionOperators.removeAt(i - 1);
-        --i;
-    }
-
     QString rebuilt;
-    for (int i = 0; i < simplifiedSegments.size(); ++i) {
-        rebuilt += simplifiedSegments.at(i);
-        if (i < divisionOperators.size())
-            rebuilt += divisionOperators.at(i);
+    if (divisionOperators.isEmpty()) {
+        QString simplified = simplifyMultiplicationOnlySegment(workingTerm);
+        if ((negativeUnitFactorCount % 2) != 0 && !simplified.isEmpty()) {
+            if (simplified == QLatin1String("1"))
+                return QStringLiteral("-1");
+            return QStringLiteral("-") + simplified;
+        }
+        return simplified;
+    } else {
+        QVector<QString> simplifiedSegments;
+        simplifiedSegments.reserve(divisionSegments.size());
+        for (int i = 0; i < divisionSegments.size(); ++i) {
+            const bool followsDivisionOperator =
+                i > 0 && (divisionOperators.at(i - 1) == QLatin1String("/")
+                          || divisionOperators.at(i - 1) == QLatin1String("\\"));
+            simplifiedSegments.append(followsDivisionOperator
+                ? simplifyPostDivisionSegment(divisionSegments.at(i))
+                : simplifyMultiplicationOnlySegment(divisionSegments.at(i)));
+        }
+
+        for (int i = 1; i < simplifiedSegments.size(); ++i) {
+            if (divisionOperators.at(i - 1) != QLatin1String("/"))
+                continue;
+            if (i <= 1 || divisionOperators.at(i - 2) != QLatin1String("/"))
+                continue;
+            QString previous = simplifiedSegments.at(i - 1);
+            if (!foldNumericDenominatorIntoPreviousSegment(&previous, simplifiedSegments.at(i)))
+                continue;
+            simplifiedSegments[i - 1] = previous;
+            simplifiedSegments.removeAt(i);
+            divisionOperators.removeAt(i - 1);
+            --i;
+        }
+
+        for (int i = 0; i < simplifiedSegments.size(); ++i) {
+            rebuilt += simplifiedSegments.at(i);
+            if (i < divisionOperators.size())
+                rebuilt += divisionOperators.at(i);
+        }
     }
 
     auto simplifyParenthesizedDenominators = [&simplifyMultiplicationOnlySegment](const QString& text) {
@@ -1632,7 +1681,13 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
         return result.isEmpty() ? text : result;
     };
 
-    return simplifyAlgebraicMulDivChain(rebuilt);
+    QString simplified = simplifyAlgebraicMulDivChain(rebuilt);
+    if ((negativeUnitFactorCount % 2) != 0 && !simplified.isEmpty()) {
+        if (simplified == QLatin1String("1"))
+            return QStringLiteral("-1");
+        return QStringLiteral("-") + simplified;
+    }
+    return simplified;
 
 }
 
@@ -1967,9 +2022,204 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
     if (groupedTokens.isEmpty())
         return groupedExpression + commentSuffix;
 
-    const QString displayExpression = simplifyRepeatedMultiplicativeBases
-        ? simplifyRepeatedMultiplicativeBasesForDisplay(groupedExpression, groupedTokens)
-        : groupedExpression;
+    auto normalizeNeutralMultiplicativeOnes = [](const QString& text) {
+        static const QRegularExpression s_trailingTimesOne(
+            QStringLiteral(R"(\s*(?:\*|⋅|×)\s*1(?:[.,]0+)?\s*$)"));
+        static const QRegularExpression s_leadingOneTimes(
+            QStringLiteral(R"(^\s*1(?:[.,]0+)?\s*(?:\*|⋅|×)\s*)"));
+        static const QRegularExpression s_trailingDivOne(
+            QStringLiteral(R"(\s*(?:/|÷|⧸)\s*1(?:[.,]0+)?\s*$)"));
+
+        QString normalized = text;
+        bool changed = false;
+        do {
+            changed = false;
+            QString updated = normalized;
+            updated.replace(s_trailingTimesOne, QString());
+            if (updated != normalized) {
+                normalized = updated;
+                changed = true;
+            }
+
+            updated = normalized;
+            updated.replace(s_leadingOneTimes, QString());
+            if (updated != normalized) {
+                normalized = updated;
+                changed = true;
+            }
+
+            updated = normalized;
+            updated.replace(s_trailingDivOne, QString());
+            if (updated != normalized) {
+                normalized = updated;
+                changed = true;
+            }
+        } while (changed);
+
+        auto isFullyWrappedByOuterParens = [](const QString& expr) {
+            if (expr.size() < 2 || expr.at(0) != QLatin1Char('(') || expr.at(expr.size() - 1) != QLatin1Char(')'))
+                return false;
+            int depth = 0;
+            for (int i = 0; i < expr.size(); ++i) {
+                const QChar ch = expr.at(i);
+                if (ch == QLatin1Char('('))
+                    ++depth;
+                else if (ch == QLatin1Char(')'))
+                    --depth;
+                if (depth == 0 && i < expr.size() - 1)
+                    return false;
+            }
+            return depth == 0;
+        };
+
+        while (isFullyWrappedByOuterParens(normalized))
+            normalized = normalized.mid(1, normalized.size() - 2).trimmed();
+
+        auto hasTopLevelLowPrecedenceOperator = [](const QString& expr) {
+            int depth = 0;
+            for (int i = 0; i < expr.size(); ++i) {
+                const QChar ch = expr.at(i);
+                if (ch == QLatin1Char('(')) {
+                    ++depth;
+                    continue;
+                }
+                if (ch == QLatin1Char(')')) {
+                    if (depth > 0)
+                        --depth;
+                    continue;
+                }
+                if (depth != 0)
+                    continue;
+
+                if (ch == QLatin1Char('+')
+                        || ch == QLatin1Char('&')
+                        || ch == QLatin1Char('|')
+                        || ch == QLatin1Char(';')
+                        || ch == QLatin1Char('=')
+                        || ch == QLatin1Char('?')
+                        || ch == QLatin1Char('<')
+                        || ch == QLatin1Char('>')) {
+                    return true;
+                }
+                if ((ch == QLatin1Char('-') || ch == QChar(0x2212)) && i > 0)
+                    return true;
+            }
+            return false;
+        };
+
+        auto isMulDivOp = [](QChar ch) {
+            return ch == QLatin1Char('*')
+                || ch == QChar(0x22C5) // ⋅
+                || ch == QChar(0x00D7) // ×
+                || ch == QLatin1Char('/')
+                || ch == QChar(0x00F7) // ÷
+                || ch == QChar(0x29F8); // ⧸
+        };
+
+        auto unwrapEdgeParenthesizedMulDivFactor = [&](QString* expr) {
+            QString t = expr->trimmed();
+            if (t.size() < 3)
+                return false;
+
+            // Unwrap "(factor) * rest" when factor has no top-level low-precedence ops.
+            if (t.at(0) == QLatin1Char('(')) {
+                int depth = 0;
+                int close = -1;
+                for (int i = 0; i < t.size(); ++i) {
+                    const QChar ch = t.at(i);
+                    if (ch == QLatin1Char('('))
+                        ++depth;
+                    else if (ch == QLatin1Char(')')) {
+                        --depth;
+                        if (depth == 0) {
+                            close = i;
+                            break;
+                        }
+                    }
+                }
+                if (close > 0 && close < t.size() - 1) {
+                    int next = close + 1;
+                    while (next < t.size() && t.at(next).isSpace())
+                        ++next;
+                    if (next < t.size() && isMulDivOp(t.at(next))) {
+                        const QString inner = t.mid(1, close - 1).trimmed();
+                        const bool startsWithUnarySign =
+                            !inner.isEmpty()
+                            && (inner.at(0) == QLatin1Char('-')
+                                || inner.at(0) == QChar(0x2212)
+                                || inner.at(0) == QLatin1Char('+'));
+                        if (!inner.isEmpty()
+                                && !startsWithUnarySign
+                                && !hasTopLevelLowPrecedenceOperator(inner)) {
+                            t = inner + t.mid(close + 1);
+                            *expr = t.trimmed();
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            // Unwrap "left * (factor)" when factor has no top-level low-precedence ops.
+            if (t.at(t.size() - 1) == QLatin1Char(')')) {
+                int depth = 0;
+                int open = -1;
+                for (int i = t.size() - 1; i >= 0; --i) {
+                    const QChar ch = t.at(i);
+                    if (ch == QLatin1Char(')'))
+                        ++depth;
+                    else if (ch == QLatin1Char('(')) {
+                        --depth;
+                        if (depth == 0) {
+                            open = i;
+                            break;
+                        }
+                    }
+                }
+                if (open > 0) {
+                    int prev = open - 1;
+                    while (prev >= 0 && t.at(prev).isSpace())
+                        --prev;
+                    if (prev >= 0 && isMulDivOp(t.at(prev))) {
+                        const QString inner = t.mid(open + 1, t.size() - open - 2).trimmed();
+                        const bool startsWithUnarySign =
+                            !inner.isEmpty()
+                            && (inner.at(0) == QLatin1Char('-')
+                                || inner.at(0) == QChar(0x2212)
+                                || inner.at(0) == QLatin1Char('+'));
+                        if (!inner.isEmpty()
+                                && !startsWithUnarySign
+                                && !hasTopLevelLowPrecedenceOperator(inner)) {
+                            t = t.left(open) + inner;
+                            *expr = t.trimmed();
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        };
+
+        while (unwrapEdgeParenthesizedMulDivFactor(&normalized)) {
+            // Keep unwrapping edge multiplicative wrappers until stable.
+        }
+
+        return normalized;
+    };
+
+    QString displayExpression;
+    if (simplifyRepeatedMultiplicativeBases) {
+        displayExpression =
+            simplifyRepeatedMultiplicativeBasesForDisplay(groupedExpression, groupedTokens);
+        const QString normalized = normalizeNeutralMultiplicativeOnes(displayExpression);
+        if (normalized != displayExpression) {
+            const Tokens normalizedTokens = Evaluator::instance()->scan(normalized);
+            displayExpression = normalizedTokens.isEmpty()
+                ? normalized
+                : simplifyRepeatedMultiplicativeBasesForDisplay(normalized, normalizedTokens);
+        }
+    } else {
+        displayExpression = groupedExpression;
+    }
     const Tokens tokens = Evaluator::instance()->scan(displayExpression);
     if (tokens.isEmpty())
         return displayExpression + commentSuffix;
@@ -2046,8 +2296,52 @@ QString Evaluator::simplifyInterpretedExpression(const QString& expression)
     if (groupedTokens.isEmpty())
         return groupedExpression + commentSuffix;
 
-    const QString simplifiedExpression =
+    QString simplifiedExpression =
         simplifyRepeatedMultiplicativeBasesForDisplay(groupedExpression, groupedTokens);
+
+    // Normalize neutral multiplicative factors that can block symbolic
+    // cancellations in the display simplifier (for example "(a/b)*1" -> "a/b").
+    static const QRegularExpression s_trailingTimesOne(
+        QStringLiteral(R"(\s*(?:\*|⋅|×)\s*1(?:[.,]0+)?\s*$)"));
+    static const QRegularExpression s_leadingOneTimes(
+        QStringLiteral(R"(^\s*1(?:[.,]0+)?\s*(?:\*|⋅|×)\s*)"));
+    static const QRegularExpression s_trailingDivOne(
+        QStringLiteral(R"(\s*(?:/|÷|⧸)\s*1(?:[.,]0+)?\s*$)"));
+
+    QString normalized = simplifiedExpression;
+    bool changed = false;
+    do {
+        changed = false;
+        QString updated = normalized;
+        updated.replace(s_trailingTimesOne, QString());
+        if (updated != normalized) {
+            normalized = updated;
+            changed = true;
+        }
+
+        updated = normalized;
+        updated.replace(s_leadingOneTimes, QString());
+        if (updated != normalized) {
+            normalized = updated;
+            changed = true;
+        }
+
+        updated = normalized;
+        updated.replace(s_trailingDivOne, QString());
+        if (updated != normalized) {
+            normalized = updated;
+            changed = true;
+        }
+    } while (changed);
+
+    if (normalized != simplifiedExpression) {
+        const Tokens normalizedTokens = Evaluator::instance()->scan(normalized);
+        if (!normalizedTokens.isEmpty())
+            simplifiedExpression = simplifyRepeatedMultiplicativeBasesForDisplay(normalized, normalizedTokens);
+        else
+            simplifiedExpression = normalized;
+    }
+
     return simplifiedExpression + commentSuffix;
 }
 
@@ -3677,14 +3971,27 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
             leftText = wrapInParentheses(leftText);
         }
 
-        // Make "a / b c" style parses explicit as "(a / b) * c".
+        const bool leftIsAtomicNumericForGrouping =
+            left.isNumericOnly
+            && left.rootOpcode == Opcode::Nop
+            && !left.isLiteralSymbol;
+        const bool rightIsAtomicNumericForGrouping =
+            right.isNumericOnly
+            && right.rootOpcode == Opcode::Nop
+            && !right.isLiteralSymbol;
+
+        // Make "a / b c" style parses explicit as "(a / b) * c", except
+        // for simple numeric factors where a flat mul/div chain is clearer.
         if (opcodeType == Opcode::Mul
             && isImplicitMultiplication
             && (left.rootOpcode == Opcode::Div
                 || left.rootOpcode == Opcode::IntDiv
                 || left.rootOpcode == Opcode::Modulo))
         {
-            leftText = wrapInParentheses(leftText);
+            const bool allowFlatChainForSimpleDivisorFactor =
+                left.rootOpcode == Opcode::Div && rightIsAtomicNumericForGrouping;
+            if (!allowFlatChainForSimpleDivisorFactor)
+                leftText = wrapInParentheses(leftText);
         }
         if (opcodeType == Opcode::Mul
             && isImplicitMultiplication
@@ -3692,7 +3999,10 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
                 || right.rootOpcode == Opcode::IntDiv
                 || right.rootOpcode == Opcode::Modulo))
         {
-            rightText = wrapInParentheses(rightText);
+            const bool allowFlatChainForSimpleDividendFactor =
+                right.rootOpcode == Opcode::Div && leftIsAtomicNumericForGrouping;
+            if (!allowFlatChainForSimpleDividendFactor)
+                rightText = wrapInParentheses(rightText);
         }
 
         // For explicit multiplications, isolate power terms to improve

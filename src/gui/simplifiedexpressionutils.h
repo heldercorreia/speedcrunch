@@ -20,6 +20,7 @@
 #define GUI_SIMPLIFIEDEXPRESSIONUTILS_H
 
 #include "core/regexpatterns.h"
+#include "core/unicodechars.h"
 
 #include <QString>
 
@@ -37,12 +38,80 @@ inline bool isPlainNumericArithmeticExpression(const QString& expression)
     return pattern.match(expression).hasMatch();
 }
 
+inline QString normalizedTokenForCommutativeComparison(const QString& token)
+{
+    QString normalized = token;
+    normalized.remove(QRegularExpression(QStringLiteral("[\\s\\p{Zs}]")));
+    return normalized;
+}
+
+inline bool splitSingleTopLevelBinary(const QString& expression, QChar op,
+                                      QString* leftOut, QString* rightOut)
+{
+    int depth = 0;
+    int splitPos = -1;
+    int splitCount = 0;
+    for (int i = 0; i < expression.size(); ++i) {
+        const QChar ch = expression.at(i);
+        if (ch == QLatin1Char('('))
+            ++depth;
+        else if (ch == QLatin1Char(')'))
+            --depth;
+        else if (depth == 0 && ch == op) {
+            // Keep only a single top-level operator (e.g. a+b, not a+b+c).
+            splitPos = i;
+            ++splitCount;
+            if (splitCount > 1)
+                return false;
+        }
+    }
+
+    if (splitCount != 1 || splitPos <= 0 || splitPos >= expression.size() - 1)
+        return false;
+
+    const QString left = expression.left(splitPos).trimmed();
+    const QString right = expression.mid(splitPos + 1).trimmed();
+    if (left.isEmpty() || right.isEmpty())
+        return false;
+
+    *leftOut = left;
+    *rightOut = right;
+    return true;
+}
+
+inline bool isCommutativeTopLevelSwap(const QString& interpretedDisplay,
+                                      const QString& simplifiedDisplay)
+{
+    const QChar commutativeOps[] = {
+        QLatin1Char('+'),
+        QLatin1Char('*'),
+        QChar(UnicodeChars::MultiplicationSign),
+        QChar(UnicodeChars::DotOperator)
+    };
+    for (const QChar op : commutativeOps) {
+        QString leftA, rightA, leftB, rightB;
+        if (!splitSingleTopLevelBinary(interpretedDisplay, op, &leftA, &rightA))
+            continue;
+        if (!splitSingleTopLevelBinary(simplifiedDisplay, op, &leftB, &rightB))
+            continue;
+
+        if (normalizedTokenForCommutativeComparison(leftA)
+                == normalizedTokenForCommutativeComparison(rightB)
+            && normalizedTokenForCommutativeComparison(rightA)
+                == normalizedTokenForCommutativeComparison(leftB)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 inline bool shouldSuppressSimplifiedExpressionLine(const QString& interpretedDisplay,
                                                    const QString& simplifiedDisplay)
 {
-    return isPlainNumericArithmeticExpression(interpretedDisplay)
+    return isCommutativeTopLevelSwap(interpretedDisplay, simplifiedDisplay)
+        || (isPlainNumericArithmeticExpression(interpretedDisplay)
         && (isPlainNumericArithmeticExpression(simplifiedDisplay)
-            || isNumericSimplifiedExpression(simplifiedDisplay));
+            || isNumericSimplifiedExpression(simplifiedDisplay)));
 }
 
 } // namespace SimplifiedExpressionUtils
