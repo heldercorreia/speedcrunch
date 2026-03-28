@@ -1656,6 +1656,7 @@ bool ConstantCompletion::eventFilter(QObject* object, QEvent* event)
 
             if (key != Qt::Key_Escape)
                 QApplication::sendEvent(m_editor, event);
+            m_popup->hide();
             emit canceledCompletion();
             return true;
         }
@@ -1684,6 +1685,7 @@ bool ConstantCompletion::eventFilter(QObject* object, QEvent* event)
 
             if (key != Qt::Key_Escape)
                 QApplication::sendEvent(m_editor, event);
+            m_popup->hide();
             emit canceledCompletion();
             return true;
         }
@@ -1694,6 +1696,7 @@ bool ConstantCompletion::eventFilter(QObject* object, QEvent* event)
 
 void ConstantCompletion::doneCompletion()
 {
+    m_popup->hide();
     m_editor->setFocus();
     const auto* item = m_constantWidget->currentItem();
     auto found = std::find_if(m_constantList.begin(), m_constantList.end(),
