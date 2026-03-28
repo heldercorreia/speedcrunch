@@ -252,7 +252,8 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 |                               |   rational exponent has an odd numerator.                     |                         |
 |                               |                                                               |                         |
 |                               | .. versionadded:: 1.0                                         |                         |
-|                               |    Integer superscript powers.                                |                         |
+|                               |    Integer superscript powers and ``f^n(x)`` function-power   |                         |
+|                               |    notation (equivalent to ``fⁿ(x)``).                        |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
 | ``+x``, ``-x``, ``~x``        | **Unary plus, minus, and bitwise NOT**                        | ``~5 = -6``             |
 |                               |   ``~x`` is equivalent to :func:`not(x)`.                     | ``-~(-1) = -not(-1)``   |

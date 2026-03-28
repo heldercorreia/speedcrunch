@@ -380,6 +380,8 @@ So <code class="docutils literal notranslate"><span class="pre">1+(2+3)+10%</spa
 <dt><strong>Exponentiation</strong></dt><dd><p><code class="docutils literal notranslate"><span class="pre">a²</span></code> is shorthand for <code class="docutils literal notranslate"><span class="pre">a^2</span></code>;
 contiguous superscript digits are
 parsed as one integer exponent. Both
+function notations <code class="docutils literal notranslate"><span class="pre">f^n(x)</span></code> and <code class="docutils literal notranslate"><span class="pre">fⁿ(x)</span></code>
+are interpreted identically.
 text-operator variants are equivalent. Note
 that the power operation is
 <em>right-associative</em>, i.e. it is
@@ -392,11 +394,13 @@ rational exponent has an odd numerator.</p>
 </dd>
 </dl>
 <div class="versionadded">
-<p><span class="versionmodified added">New in version 1.0: </span>Integer superscript powers.</p>
+<p><span class="versionmodified added">New in version 1.0: </span>Integer superscript powers and <code class="docutils literal notranslate"><span class="pre">f^n(x)</span></code> function-power
+notation (equivalent to <code class="docutils literal notranslate"><span class="pre">fⁿ(x)</span></code>).</p>
 </div>
 </td>
 <td><p><code class="docutils literal notranslate"><span class="pre">3²⁰</span> <span class="pre">=</span> <span class="pre">3^20</span></code>
 <code class="docutils literal notranslate"><span class="pre">2¹⁰</span> <span class="pre">=</span> <span class="pre">1024</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">cos^2(pi)=cos²(pi)</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">2^2^3</span> <span class="pre">=</span> <span class="pre">2^8</span> <span class="pre">=</span> <span class="pre">256</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">(-1)^(2/3)</span> <span class="pre">=</span> <span class="pre">1</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">(-8)^(2/3)</span> <span class="pre">=</span> <span class="pre">4</span></code></p>
