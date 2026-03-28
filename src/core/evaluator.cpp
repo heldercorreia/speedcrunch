@@ -716,6 +716,28 @@ static bool tokenCanStartOperandForDisplaySpacing(const Token& token)
         || token.asOperator() == Token::BitwiseLogicalNOT;
 }
 
+static bool isImaginaryUnitTokenForDisplay(const Token& token)
+{
+    return token.isIdentifier() && token.text() == QLatin1String("j");
+}
+
+static bool startsWithImaginaryLiteralForDisplay(const Tokens& tokens, int startIndex)
+{
+    if (startIndex < 0 || startIndex >= tokens.size())
+        return false;
+
+    if (isImaginaryUnitTokenForDisplay(tokens.at(startIndex)))
+        return true;
+
+    if (startIndex + 2 >= tokens.size())
+        return false;
+
+    const Token::Operator mulOp = tokens.at(startIndex + 1).asOperator();
+    return tokens.at(startIndex).isNumber()
+        && mulOp == Token::Multiplication
+        && isImaginaryUnitTokenForDisplay(tokens.at(startIndex + 2));
+}
+
 static bool isUnsignedDecimalIntegerText(const QString& text)
 {
     return RegExpPatterns::unsignedDecimalInteger().match(text).hasMatch();
@@ -2591,6 +2613,22 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
         if (!isBinaryOperator) {
             // Keep unary operators untouched (for example "−pi").
             formatted += operatorText;
+            continue;
+        }
+
+        if ((op == Token::Addition || op == Token::Subtraction)
+            && startsWithImaginaryLiteralForDisplay(tokens, i + 1)) {
+            // Keep "a+bj"/"a-bj" compact in complex-mode interpreted output.
+            formatted += operatorText;
+            continue;
+        }
+
+        if (op == Token::Multiplication
+            && i > 0
+            && i + 1 < tokens.size()
+            && tokens.at(i - 1).isNumber()
+            && isImaginaryUnitTokenForDisplay(tokens.at(i + 1))) {
+            // Render numeric imaginary literals as compact suffixes: "3j".
             continue;
         }
 

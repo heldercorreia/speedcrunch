@@ -2319,6 +2319,7 @@ void test_implicit_multiplication()
 
 void test_display_interpreted_spacing()
 {
+    Settings* settings = Settings::instance();
     const QString dot(QString::fromUtf8("⋅"));
     const QString multiplication = QString(UnicodeChars::MultiplicationSign);
     const QString unicodeMinusSign(UnicodeChars::MinusSign);
@@ -2387,6 +2388,20 @@ void test_display_interpreted_spacing()
             + QStringLiteral("10")
             + integerDivide
             + QStringLiteral("3"));
+    const bool complexNumbers = settings->complexNumbers;
+    const bool complexMode = DMath::complexMode;
+    settings->complexNumbers = true;
+    DMath::complexMode = true;
+    eval->initializeBuiltInVariables();
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("2+3j"),
+        QStringLiteral("2+3j"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("2-3j"),
+        QString::fromUtf8("2−3j"));
+    DMath::complexMode = complexMode;
+    settings->complexNumbers = complexNumbers;
+    eval->initializeBuiltInVariables();
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("1<<2"),
         QStringLiteral("1")
