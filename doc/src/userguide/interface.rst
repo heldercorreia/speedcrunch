@@ -36,9 +36,9 @@ They can be enabled and disabled via the :menuselection:`View` menu.
 
   .. _keypad:
 * Keypad
-    The on-screen keypad allows inputting numbers without using the keyboard. However, it is very limited and doesn't provide
-    access to many of SpeedCrunch's more advanced features. For that reason, using SpeedCrunch's keyboard interface is recommended
-    in place of using the keypad.
+    The on-screen keypad provides clickable input for common operations and symbols. It supports multiple presets
+    and a custom layout, so you can adapt it to your workflow. You can also adjust the keypad zoom level for better
+    readability or touch area on touchscreens. For fast and full-featured input, SpeedCrunch's keyboard interface is still recommended.
 
     Available entries in :menuselection:`View --> Keypad` are:
 
@@ -98,15 +98,15 @@ The expression editor provides some advanced features:
 * Autocompletion
     If you start typing a name (e.g. of a variable, function, or unit), a pop-up with matching names will appear. Pressing :kbd:`Tab` or :kbd:`Enter`
     will automatically insert the first suggestion. Alternatively, you can use the arrow keys or the mouse to select a different suggestion, or continue
-    typing to refine the list.
+    typing to refine the list. Pressing :kbd:`Escape` will dismiss the autocomplete popup.
 
 * Function signature tooltip
     While typing a function call, the live result area can show the function signature (parameter list). The parameter currently being edited is highlighted.
-    This also works for user-defined functions.
+    This also works for user-defined functions. Pressing :kbd:`Escape` will dismiss the tooltip.
 
 * Quick constant insertion
     Press :kbd:`Control+Space` to open a list of constants that allows quick access to the same constants as the constants widget (see above).
-    Use the arrow keys to navigate the list.
+    Use the arrow keys to navigate the list. Pressing :kbd:`Escape` will dismiss this popup.
 
   .. _context-help:
 * Context help
@@ -346,10 +346,12 @@ This section contains settings that control result output and post-evaluation be
     fraction to reach that number of digits, if necessary.
 
     .. versionadded:: 1.0
-* :menuselection:`Complex Numbers --> Disabled`, :menuselection:`Complex Numbers --> Cartesian`, and :menuselection:`Complex Numbers --> Polar`
-    Select the complex-number mode. ``Disabled`` turns off support for :ref:`complex numbers <complex_numbers>` (so
-    :const:`j` is undefined and expressions such as ``sqrt(-1)`` fail). ``Cartesian`` and ``Polar`` both enable
-    complex-number support and choose how complex results are displayed. ``Disabled`` is the default.
+* :menuselection:`Complex Numbers`
+    This submenu controls :ref:`complex-number support <complex_numbers>` and formatting. ``Disabled`` turns off complex
+    numbers (so :const:`i` and :const:`j` are undefined and expressions such as ``sqrt(-1)`` fail). ``Rectangular (Cartesian)``,
+    ``Polar (Exponential)``, and ``Polar (Angle)`` enable complex numbers and choose how results are displayed.
+    The same submenu also lets you choose the output imaginary-unit symbol: ``Imaginary Unit 'i'`` or ``Imaginary Unit 'j'``.
+    ``Disabled`` is the default mode.
 
     .. versionadded:: 1.0
 * :menuselection:`Secondary Result Format` and :menuselection:`Tertiary Result Format`
@@ -357,7 +359,8 @@ This section contains settings that control result output and post-evaluation be
     Also, when none of the selected result slots (primary, secondary, or tertiary)
     is Rational, SpeedCrunch may still add one extra Rational line for trig expressions
     if (and only if) the result is one of the recognized well-known exact values.
-    This extra line is not shown for non-qualifying trig results.
+    For example, ``sin(π / 3)`` qualifies and can show an extra Rational line ``sqrt(3) / 2``
+    even if Rational is not selected. This extra line is not shown for non-qualifying trig results.
 
     .. versionadded:: 1.0
 * :menuselection:`Automatically Copy New Results to Clipboard`
@@ -369,6 +372,15 @@ This section contains settings that control result output and post-evaluation be
     constant terms). This interpreted line also makes implicit-multiplication
     association explicit. Disable this option to keep only the unsimplified
     interpreted expression and numeric results.
+
+    Entering the expression ``2.1 − 1 cos(pi)^2 cos(pi) 5 cos pi  / −cos^2(pi) + 3.4``
+    gives the following interpretation and simplification:
+
+    .. code-block:: text
+
+      2.1 − 1 ⋅ cos²(π) ⋅ cos(π) ⋅ 5 ⋅ cos(π) / (−cos²(π)) + 3.4
+      = 5 ⋅ cos²(π) + 5.5
+      = 10.5
 
     .. versionadded:: 1.0
 

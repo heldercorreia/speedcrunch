@@ -33,7 +33,7 @@ Constants
    that ``i ^ 2 = -1`` and ``j ^ 2 = -1``.
 
    The displayed symbol used in formatted results can be selected in
-   ``Settings -> Results -> Complex Numbers`` as either ``i`` (default) or ``j``.
+   :menuselection:`Settings --> Results --> Complex Numbers` as either ``i`` (default) or ``j``.
 
    Using this constant, complex numbers are expressed as the sum of a real and an
    imaginary part::

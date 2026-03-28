@@ -14,6 +14,12 @@ you to store and recall any value, by assigning it a name. Variables are defined
 
     a = 5.123
 
+You can attach a comment to the definition by appending ``?`` and text::
+
+    a = 5.123 ? calibration value
+
+This comment is displayed in the Variables dock widget and in autocomplete suggestions.
+
 Now you can access this value via the name ``a`` much like you would use a built-in constant like :const:`pi`.
 
 Naturally, when assigning a value, the right-hand-side can be an arbitrarily complex expression::
@@ -46,6 +52,12 @@ Defining a custom function is similar to defining a variable::
 
     f(x) = 5*x+8
 
+Function definitions can also include a trailing comment::
+
+    f(x) = 5*x+8 ? affine transform
+
+Like variable comments, this comment is shown in the Functions dock widget and in autocomplete suggestions.
+
 You can now use the new function ``f`` just like any of the built-in ones::
 
     f(5)
@@ -65,7 +77,7 @@ Complex numbers
 ===============
 .. versionadded:: 0.12
 
-SpeedCrunch supports calculations involving complex numbers. To use them, select :menuselection:`Settings --> Results --> Complex Numbers --> Cartesian` or :menuselection:`Polar`. The imaginary unit is now available under the name :const:`j`::
+SpeedCrunch supports calculations involving complex numbers. To use them, select :menuselection:`Settings --> Results --> Complex Numbers --> Cartesian` or :menuselection:`Polar`. The imaginary unit can be entered as either ``i`` or ``j``::
 
     j^2
     = -1
@@ -74,9 +86,7 @@ SpeedCrunch supports calculations involving complex numbers. To use them, select
     = 0.5+0.5j
 
 A note on the syntax of complex numbers: ``5j`` denotes the number ``5*j`` while ``j5`` is a variable named 'j5'. If necessary, consider writing the multiplication explicitly, i.e. ``j*5``.
-
-Some users (especially mathematicians or physicists) may prefer to use the letter ``i`` for the imaginary unit. Although SpeedCrunch does not support this notation by default, it is added easily enough.
-Simply defining ``i=j`` allows you to use ``i`` as an alias for :const:`j`.
+The symbol used in displayed results can be selected via :menuselection:`Settings --> Results --> Complex Numbers --> Imaginary Unit 'i'` or :menuselection:`Imaginary Unit 'j'`.
 
 Not every function in SpeedCrunch supports complex arguments. Refer to a function's documentation for more information.
 
@@ -86,7 +96,7 @@ However, when given a real argument, :func:`cbrt` will *always* return the real 
 In *real mode*, ``x^y`` with negative real ``x`` is only defined when ``y`` can be reduced to a rational with an odd denominator;
 otherwise the result is ``NaN``.
 
-When complex numbers are disabled, the constant :const:`j` is not available. However, previously stored variables may still contain complex values.
+When complex numbers are disabled, the imaginary-unit constants :const:`i` and :const:`j` are not available. However, previously stored variables may still contain complex values.
 In that case, the imaginary part of these numbers is discarded when passing them as an argument to a built-in function.
 
 

@@ -103,9 +103,9 @@ While the mouse cursor is hovering over the bit field, scrolling the mouse wheel
 </dl>
 </li>
 <li id="keypad"><dl>
-<dt>Keypad</dt><dd><p>The on-screen keypad allows inputting numbers without using the keyboard. However, it is very limited and doesn’t provide
-access to many of SpeedCrunch’s more advanced features. For that reason, using SpeedCrunch’s keyboard interface is recommended
-in place of using the keypad.</p>
+<dt>Keypad</dt><dd><p>The on-screen keypad provides clickable input for common operations and symbols. It supports multiple presets
+and a custom layout, so you can adapt it to your workflow. You can also adjust the keypad zoom level for better
+readability or touch area on touchscreens. For fast and full-featured input, SpeedCrunch’s keyboard interface is still recommended.</p>
 <p>Available entries in <span class="menuselection">View ‣ Keypad</span> are:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Basic</span></code> (<strong>default</strong>)</p></li>
@@ -128,6 +128,9 @@ and configure each button individually. For each position in the matrix, you can
 <li><p>The button behavior: <code class="docutils literal notranslate"><span class="pre">Insert</span> <span class="pre">text</span></code>, <code class="docutils literal notranslate"><span class="pre">Backspace</span></code>, <code class="docutils literal notranslate"><span class="pre">Clear</span> <span class="pre">expression</span></code>, or <code class="docutils literal notranslate"><span class="pre">Evaluate</span> <span class="pre">expression</span></code></p></li>
 <li><p>The text to insert (for <code class="docutils literal notranslate"><span class="pre">Insert</span> <span class="pre">text</span></code> behavior)</p></li>
 </ul>
+<p>The dialog also includes a <code class="docutils literal notranslate"><span class="pre">Copy</span> <span class="pre">preset</span></code> selector with an <span class="guilabel">Apply</span> button,
+so you can start from the <code class="docutils literal notranslate"><span class="pre">Basic</span></code>, <code class="docutils literal notranslate"><span class="pre">Scientific</span> <span class="pre">(wide)</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">Scientific</span> <span class="pre">(narrow)</span></code> layout and then customize it.</p>
 <p>Custom keypad settings are saved and restored automatically.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">New in version 1.0.</span></p>
@@ -165,19 +168,19 @@ the top main menu hidden but still want quick access to menu actions.</p>
 <li><dl class="simple">
 <dt>Autocompletion</dt><dd><p>If you start typing a name (e.g. of a variable, function, or unit), a pop-up with matching names will appear. Pressing <kbd class="kbd docutils literal notranslate">Tab</kbd> or <kbd class="kbd docutils literal notranslate">Enter</kbd>
 will automatically insert the first suggestion. Alternatively, you can use the arrow keys or the mouse to select a different suggestion, or continue
-typing to refine the list.</p>
+typing to refine the list. Pressing <kbd class="kbd docutils literal notranslate">Escape</kbd> will dismiss the autocomplete popup.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
 <dt>Function signature tooltip</dt><dd><p>While typing a function call, the live result area can show the function signature (parameter list). The parameter currently being edited is highlighted.
-This also works for user-defined functions.</p>
+This also works for user-defined functions. Pressing <kbd class="kbd docutils literal notranslate">Escape</kbd> will dismiss the tooltip.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
 <dt>Quick constant insertion</dt><dd><p>Press <kbd class="kbd compound docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Control</kbd>+<kbd class="kbd docutils literal notranslate">Space</kbd></kbd> to open a list of constants that allows quick access to the same constants as the constants widget (see above).
-Use the arrow keys to navigate the list.</p>
+Use the arrow keys to navigate the list. Pressing <kbd class="kbd docutils literal notranslate">Escape</kbd> will dismiss this popup.</p>
 </dd>
 </dl>
 </li>
@@ -188,8 +191,8 @@ usage information for a function. Pressing <kbd class="kbd docutils literal notr
 </dl>
 </li>
 <li><dl class="simple">
-<dt>Selection results</dt><dd><p>If <span class="menuselection">Settings ‣ Results ‣ Show Live Result Preview</span> is enabled, selecting a partial expression in the expression editor will show
-you the result of the selected expression.</p>
+<dt>Selection results</dt><dd><p>If <span class="menuselection">Settings ‣ Results ‣ Show Live Result Preview</span> is enabled, selecting a partial expression in the expression editor or in the result display will show you the result of the selected expression.
+You can dismiss this preview by pressing <kbd class="kbd docutils literal notranslate">Escape</kbd> or by clicking the <span class="guilabel">×</span> button at the top-right corner of the preview.</p>
 </dd>
 </dl>
 </li>
@@ -394,12 +397,15 @@ determines the angle format of the arguments.</p>
 <span class="menuselection">Settings ‣ Appearance ‣ Syntax Highlighting</span> to be enabled.</p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><span class="menuselection">Digit Grouping</span></dt><dd><p>Visually group digits in long numbers.</p>
+<dt><span class="menuselection">Digit Grouping</span></dt><dd><p>Visually group digits in long numbers. Separator width options map to:
+Small Space = U+0020 once, Medium Space = U+0020 twice, Large Space =
+U+0020 three times.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><span class="menuselection">Digit Grouping ‣ Group Integer Part Only</span></dt><dd><p>Apply digit grouping only to the integer part of numbers. When enabled, fractional digits remain ungrouped.</p>
+<dt><span class="menuselection">Digit Grouping ‣ Group Integer Part Only</span></dt><dd><p>Apply digit grouping only to the integer part of numbers. This is enabled
+by default. When enabled, fractional digits remain ungrouped.</p>
 </dd>
 </dl>
 </li>
@@ -503,9 +509,11 @@ fraction to reach that number of digits, if necessary.</p>
 </dl>
 </li>
 <li><dl>
-<dt><span class="menuselection">Complex Numbers ‣ Disabled</span>, <span class="menuselection">Complex Numbers ‣ Cartesian</span>, and <span class="menuselection">Complex Numbers ‣ Polar</span></dt><dd><p>Select the complex-number mode. <code class="docutils literal notranslate"><span class="pre">Disabled</span></code> turns off support for <a class="reference internal" href="advanced.html#complex-numbers"><span class="std std-ref">complex numbers</span></a> (so
-<a class="reference internal" href="../reference/constants.html#sc.j" title="j"><code class="xref sc sc-const docutils literal notranslate"><span class="pre">j</span></code></a> is undefined and expressions such as <code class="docutils literal notranslate"><span class="pre">sqrt(-1)</span></code> fail). <code class="docutils literal notranslate"><span class="pre">Cartesian</span></code> and <code class="docutils literal notranslate"><span class="pre">Polar</span></code> both enable
-complex-number support and choose how complex results are displayed. <code class="docutils literal notranslate"><span class="pre">Disabled</span></code> is the default.</p>
+<dt><span class="menuselection">Complex Numbers</span></dt><dd><p>This submenu controls <a class="reference internal" href="advanced.html#complex-numbers"><span class="std std-ref">complex-number support</span></a> and formatting. <code class="docutils literal notranslate"><span class="pre">Disabled</span></code> turns off complex
+numbers (so <a class="reference internal" href="../reference/constants.html#sc.i" title="i"><code class="xref sc sc-const docutils literal notranslate"><span class="pre">i</span></code></a> and <a class="reference internal" href="../reference/constants.html#sc.j" title="j"><code class="xref sc sc-const docutils literal notranslate"><span class="pre">j</span></code></a> are undefined and expressions such as <code class="docutils literal notranslate"><span class="pre">sqrt(-1)</span></code> fail). <code class="docutils literal notranslate"><span class="pre">Rectangular</span> <span class="pre">(Cartesian)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Polar</span> <span class="pre">(Exponential)</span></code>, and <code class="docutils literal notranslate"><span class="pre">Polar</span> <span class="pre">(Angle)</span></code> enable complex numbers and choose how results are displayed.
+The same submenu also lets you choose the output imaginary-unit symbol: <code class="docutils literal notranslate"><span class="pre">Imaginary</span> <span class="pre">Unit</span> <span class="pre">'i'</span></code> or <code class="docutils literal notranslate"><span class="pre">Imaginary</span> <span class="pre">Unit</span> <span class="pre">'j'</span></code>.
+<code class="docutils literal notranslate"><span class="pre">Disabled</span></code> is the default mode.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">New in version 1.0.</span></p>
 </div>
@@ -517,7 +525,8 @@ complex-number support and choose how complex results are displayed. <code class
 Also, when none of the selected result slots (primary, secondary, or tertiary)
 is Rational, SpeedCrunch may still add one extra Rational line for trig expressions
 if (and only if) the result is one of the recognized well-known exact values.
-This extra line is not shown for non-qualifying trig results.</p>
+For example, <code class="docutils literal notranslate"><span class="pre">sin(π / 3)</span></code> qualifies and can show an extra Rational line <code class="docutils literal notranslate"><span class="pre">sqrt(3) / 2</span></code>
+even if Rational is not selected. This extra line is not shown for non-qualifying trig results.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">New in version 1.0.</span></p>
 </div>
@@ -536,7 +545,14 @@ numeric results, simplifying the interpreted expression for readability
 constant terms). This interpreted line also makes implicit-multiplication
 association explicit. Disable this option to keep only the unsimplified
 interpreted expression and numeric results.</p>
-<div class="versionadded">
+<p>Entering the expression <code class="docutils literal notranslate"><span class="pre">2.1</span> <span class="pre">−</span> <span class="pre">1</span> <span class="pre">cos(pi)^2</span> <span class="pre">cos(pi)</span> <span class="pre">5</span> <span class="pre">cos</span> <span class="pre">pi</span>&#160; <span class="pre">/</span> <span class="pre">−cos^2(pi)</span> <span class="pre">+</span> <span class="pre">3.4</span></code>
+gives the following interpretation and simplification:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2.1 − 1 ⋅ cos²(π) ⋅ cos(π) ⋅ 5 ⋅ cos(π) / (−cos²(π)) + 3.4
+= 5 ⋅ cos²(π) + 5.5
+= 10.5
+</pre></div>
+</div>
+</td></tr></tbody></table><div class="versionadded">
 <p><span class="versionmodified added">New in version 1.0.</span></p>
 </div>
 </dd>

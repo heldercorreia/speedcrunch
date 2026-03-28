@@ -19,7 +19,6 @@
                             <section title="Distribution Packages" ref="userguide/installation.html#distribution-packages"/>
                             <section title="Flatpak" ref="userguide/installation.html#flatpak"/>
                         </section>
-                        <section title="Development Builds" ref="userguide/installation.html#development-builds"/>
                         <section title="Building from Source" ref="userguide/installation.html#building-from-source"/>
                     </section>
                     <section title="First Steps" ref="userguide/first_steps.html"/>
@@ -149,6 +148,7 @@
             <keyword name="hypermean() (function)" id="function.hypermean" ref="reference/statistical.html#sc.hypermean"/>
             <keyword name="hyperpmf() (function)" id="function.hyperpmf" ref="reference/statistical.html#sc.hyperpmf"/>
             <keyword name="hypervar() (function)" id="function.hypervar" ref="reference/statistical.html#sc.hypervar"/>
+            <keyword name="i (constant)" id="constant.i" ref="reference/constants.html#sc.i"/>
             <keyword name="idiv() (function)" id="function.idiv" ref="reference/integer.html#sc.idiv"/>
             <keyword name="ieee754_decode() (function)" id="function.ieee754_decode" ref="reference/ieee754.html#sc.ieee754_decode"/>
             <keyword name="ieee754_double_decode() (function)" id="function.ieee754_double_decode" ref="reference/ieee754.html#sc.ieee754_double_decode"/>

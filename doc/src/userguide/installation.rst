@@ -68,26 +68,6 @@ Flatpak and Flathub. Then install SpeedCrunch from its `store page <flathub-sc_>
 .. _flathub-sc: https://flathub.org/apps/details/org.speedcrunch.SpeedCrunch
 
 
-Development Builds
-------------------
-
-.. warning::
-
-   Development builds of SpeedCrunch may not be as stable or well-tested as released versions
-   and may contain changes that break your session history. Use them at your own risk.
-
-Pre-built development versions of SpeedCrunch allow you to use newer features
-and bug-fixes before they become available in a release, without having to compile SpeedCrunch
-yourself. Currently, automatically updated
-development builds of SpeedCrunch are available for the following platforms:
-
-* `Windows <dev-win_>`_
-* `Ubuntu <dev-ubuntu_>`_ (16.04 and later)
-
-.. _dev-win: https://github.com/Tey/speedcrunch-nightlies/releases
-.. _dev-ubuntu: https://code.launchpad.net/~fkrull/+archive/ubuntu/speedcrunch-daily
-
-
 Building from Source
 --------------------
 

@@ -450,13 +450,20 @@ GMT/UTC (fractional offsets are supported).</p>
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.polar">
 <span class="sig-name descname"><span class="pre">polar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Converts the complex number <code class="docutils literal notranslate"><span class="pre">x</span></code> to polar form, i.e. the form <em>r e</em> <sup>jɸ</sup>. The angle ɸ is always given in radians.</p>
+<dd><p>Converts the complex number <code class="docutils literal notranslate"><span class="pre">x</span></code> to polar form.</p>
+<p>In the <code class="docutils literal notranslate"><span class="pre">Polar</span> <span class="pre">(Exponential)</span></code> complex-number display mode, values are
+shown as <em>r e</em> <sup>uɸ</sup>, where <code class="docutils literal notranslate"><span class="pre">u</span></code> is the selected imaginary-unit
+symbol (<code class="docutils literal notranslate"><span class="pre">i</span></code> or <code class="docutils literal notranslate"><span class="pre">j</span></code>), and ɸ is in radians.</p>
+<p>In the <code class="docutils literal notranslate"><span class="pre">Polar</span> <span class="pre">(Angle)</span></code> complex-number display mode, values are shown as
+<em>r ∠ ɸ</em>, and ɸ follows the global angle-unit setting.</p>
 </dd></dl>
 
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.cart">
 <span class="sig-name descname"><span class="pre">cart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Converts the complex number <code class="docutils literal notranslate"><span class="pre">x</span></code> to cartesian form, i.e. the form <em>a + j b</em>.</p>
+<dd><p>Converts the complex number <code class="docutils literal notranslate"><span class="pre">x</span></code> to cartesian form, i.e. the form
+<em>a + b u</em>, where <code class="docutils literal notranslate"><span class="pre">u</span></code> is the currently selected imaginary-unit
+symbol (<code class="docutils literal notranslate"><span class="pre">i</span></code> or <code class="docutils literal notranslate"><span class="pre">j</span></code>).</p>
 </dd></dl>
 
 </section>
