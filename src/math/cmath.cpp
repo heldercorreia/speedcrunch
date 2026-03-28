@@ -478,7 +478,10 @@ QString CMath::format(const CNumber& cn, CNumber::Format format)
             return strRadius;
         QString strPhase = HMath::format(phase, format);
         const QString imagUnit(CMath::imaginaryUnitSymbol());
-        return QStringLiteral("%1 * exp(%2*%3)").arg(strRadius, imagUnit, strPhase);
+        const QString operatorSpace(QChar(0x205F)); // MEDIUM MATHEMATICAL SPACE
+        const QString dotOperator(QChar(0x22C5)); // DOT OPERATOR
+        return QStringLiteral("%1%2%3%2exp(%4%2%3%2%5)")
+            .arg(strRadius, operatorSpace, dotOperator, imagUnit, strPhase);
     } else {
         QString real_part = cn.real.isZero()? "" : HMath::format(cn.real, format);
         QString imag_part = "";

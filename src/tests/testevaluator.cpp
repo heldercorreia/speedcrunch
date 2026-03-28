@@ -2907,7 +2907,7 @@ void test_format()
     CHECK_EVAL_FAIL("binpad(10; 3.5)");
     CHECK_EVAL_FAIL("binpad(10; 1e1000)");
 
-    CHECK_EVAL("polar(3+4j)", "5 * exp(i*0.92729521800161223243)");
+    CHECK_EVAL("polar(3+4j)", "5 ⋅ exp(i ⋅ 0.92729521800161223243)");
 }
 
 
