@@ -357,6 +357,10 @@ QString NumberFormatter::formatNumericLiteralForDisplay(const QString& input)
     if (settings->digitGrouping <= 0)
         return input;
 
+    // Digit Grouping menu mapping:
+    // Small Space  -> U+0020 once
+    // Medium Space -> U+0020 twice
+    // Large Space  -> U+0020 three times
     const QString separator = QStringLiteral(" ").repeated(settings->digitGrouping);
     auto groupPart = [&separator](const QString& digits, int groupSize, bool fromRight) {
         if (digits.size() <= groupSize)

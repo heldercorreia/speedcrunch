@@ -30,6 +30,7 @@ HEADERS += ../core/book.h \
            ../core/sessionhistory.h \
            ../core/variable.h \
            ../core/userfunction.h \
+           ../gui/displayformatutils.h \
            ../gui/functiontooltiputils.h \
            ../math/floatcommon.h \
            ../math/floatconfig.h \
@@ -68,6 +69,7 @@ SOURCES += ../core/book.cpp \
            ../core/sessionhistory.cpp \
            ../core/variable.cpp \
            ../core/userfunction.cpp \
+           ../gui/displayformatutils.cpp \
            ../core/opcode.cpp \
            ../gui/functiontooltiputils.cpp \
            ../math/floatcommon.c \

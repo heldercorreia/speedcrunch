@@ -27,7 +27,7 @@ To improve readability, SpeedCrunch accepts grouping separators inside number li
 Allowed grouping separators are characters that are **not** letters or digits and are **not** number operators. In practice, this includes many punctuation and symbol characters, for example:
 
 * ``_`` (underscore): ``12_345_678``
-* Space: ``12 345 678``
+* Space (U+0020): ``12 345 678``
 * ``·`` or ``٬``: ``12·345·678`` and ``12٬345٬678``
 * Currency symbols: ``$12,345``, ``€12 345``, ``12¥345``
 

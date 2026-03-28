@@ -271,7 +271,9 @@ Visually group digits in long numbers. Requires
 :menuselection:`Settings --> Appearance --> Syntax Highlighting` to be enabled.
 
 * :menuselection:`Digit Grouping`
-    Visually group digits in long numbers.
+    Visually group digits in long numbers. Separator width options map to:
+    Small Space = U+0020 once, Medium Space = U+0020 twice, Large Space =
+    U+0020 three times.
 * :menuselection:`Digit Grouping --> Group Integer Part Only`
     Apply digit grouping only to the integer part of numbers. This is enabled
     by default. When enabled, fractional digits remain ungrouped.

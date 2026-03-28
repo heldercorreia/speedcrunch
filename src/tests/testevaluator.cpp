@@ -23,6 +23,7 @@
 #include "core/session.h"
 #include "core/unicodechars.h"
 #include "gui/editorutils.h"
+#include "gui/displayformatutils.h"
 #include "gui/functiontooltiputils.h"
 #include "gui/simplifiedexpressionutils.h"
 #include "tests/testcommon.h"
@@ -3583,36 +3584,75 @@ void test_grouped_numeric_literal_display_format()
     const int oldDigitGrouping = settings->digitGrouping;
     const bool oldDigitGroupingIntegerPartOnly = settings->digitGroupingIntegerPartOnly;
 
-    settings->digitGrouping = 1;
-    settings->digitGroupingIntegerPartOnly = false;
+    for (int grouping = 1; grouping <= 3; ++grouping) {
+        settings->digitGrouping = grouping;
+        settings->digitGroupingIntegerPartOnly = false;
 
-    ++eval_total_tests;
-    const QString groupedLiteral = NumberFormatter::formatNumericLiteralForDisplay(QStringLiteral("234936"));
-    if (groupedLiteral != QStringLiteral("234 936")) {
-        ++eval_failed_tests;
-        ++eval_new_failed_tests;
-        cerr << __FILE__ << "[" << __LINE__ << "]\tgroup numeric literal for display\t[NEW]" << endl
-             << "\tResult   : " << groupedLiteral.toUtf8().constData() << endl
-             << "\tExpected : 234 936" << endl;
-    }
+        const QString separator = QStringLiteral(" ").repeated(grouping);
 
-    eval->setExpression("234234+234+234+234");
-    const Quantity value = eval->evalUpdateAns();
-    ++eval_total_tests;
-    if (!eval->error().isEmpty()) {
-        ++eval_failed_tests;
-        ++eval_new_failed_tests;
-        cerr << __FILE__ << "[" << __LINE__ << "]\tevaluate grouped dedup baseline\t[NEW]" << endl
-             << "\tError: " << qPrintable(eval->error()) << endl;
-    } else {
-        const QString groupedResult =
-            NumberFormatter::formatNumericLiteralForDisplay(NumberFormatter::format(value));
-        if (groupedResult != groupedLiteral) {
+        ++eval_total_tests;
+        const QString groupedLiteral =
+            DisplayFormatUtils::applyDigitGroupingForDisplay(QStringLiteral("234936"));
+        const QString expectedLiteral = QStringLiteral("234") + separator + QStringLiteral("936");
+        if (groupedLiteral != expectedLiteral) {
             ++eval_failed_tests;
             ++eval_new_failed_tests;
-            cerr << __FILE__ << "[" << __LINE__ << "]\tgrouped literal matches formatted result\t[NEW]" << endl
-                 << "\tLiteral  : " << groupedLiteral.toUtf8().constData() << endl
-                 << "\tResult   : " << groupedResult.toUtf8().constData() << endl;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tgroup numeric literal for display\t[NEW]" << endl
+                 << "\tGrouping : " << grouping << endl
+                 << "\tResult   : " << groupedLiteral.toUtf8().constData() << endl
+                 << "\tExpected : " << expectedLiteral.toUtf8().constData() << endl;
+        }
+
+        ++eval_total_tests;
+        const QString groupedFractional =
+            DisplayFormatUtils::applyDigitGroupingForDisplay(QStringLiteral("12345.6789"));
+        const QString expectedFractional =
+            QStringLiteral("12") + separator + QStringLiteral("345.")
+            + QStringLiteral("678") + separator + QStringLiteral("9");
+        if (groupedFractional != expectedFractional) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tgroup fractional when integer-only is off\t[NEW]" << endl
+                 << "\tGrouping : " << grouping << endl
+                 << "\tResult   : " << groupedFractional.toUtf8().constData() << endl
+                 << "\tExpected : " << expectedFractional.toUtf8().constData() << endl;
+        }
+
+        settings->digitGroupingIntegerPartOnly = true;
+        ++eval_total_tests;
+        const QString groupedIntegerOnly =
+            DisplayFormatUtils::applyDigitGroupingForDisplay(QStringLiteral("12345.6789"));
+        const QString expectedIntegerOnly = QStringLiteral("12") + separator + QStringLiteral("345.6789");
+        if (groupedIntegerOnly != expectedIntegerOnly) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tkeep fractional ungrouped when integer-only is on\t[NEW]" << endl
+                 << "\tGrouping : " << grouping << endl
+                 << "\tResult   : " << groupedIntegerOnly.toUtf8().constData() << endl
+                 << "\tExpected : " << expectedIntegerOnly.toUtf8().constData() << endl;
+        }
+
+        settings->digitGroupingIntegerPartOnly = false;
+        eval->setExpression("234234+234+234+234");
+        const Quantity value = eval->evalUpdateAns();
+        ++eval_total_tests;
+        if (!eval->error().isEmpty()) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tevaluate grouped dedup baseline\t[NEW]" << endl
+                 << "\tGrouping : " << grouping << endl
+                 << "\tError: " << qPrintable(eval->error()) << endl;
+        } else {
+            const QString groupedResult =
+                DisplayFormatUtils::applyDigitGroupingForDisplay(NumberFormatter::format(value));
+            if (groupedResult != expectedLiteral) {
+                ++eval_failed_tests;
+                ++eval_new_failed_tests;
+                cerr << __FILE__ << "[" << __LINE__ << "]\tgrouped literal matches formatted result\t[NEW]" << endl
+                     << "\tGrouping : " << grouping << endl
+                     << "\tLiteral  : " << expectedLiteral.toUtf8().constData() << endl
+                     << "\tResult   : " << groupedResult.toUtf8().constData() << endl;
+            }
         }
     }
 

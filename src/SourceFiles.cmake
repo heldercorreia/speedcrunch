@@ -163,6 +163,7 @@ core/session.cpp
 core/sessionhistory.cpp
 core/variable.cpp
 core/numberformatter.cpp
+gui/displayformatutils.cpp
 gui/functiontooltiputils.cpp
 math/floatcommon.c
 math/floatconst.c
