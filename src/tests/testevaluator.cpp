@@ -1226,6 +1226,7 @@ void test_rational_format()
     CHECK_EVAL_FORMAT_NO_SLASH("arccos(0.1)");
     CHECK_EVAL_FORMAT_NO_SLASH("arctan(0.1)");
     CHECK_EVAL_FORMAT_EXACT("sin(pi/4)", QStringLiteral("sqrt(2)") + slash + QStringLiteral("2"));
+    CHECK_EVAL_FORMAT_EXACT("sin(pi/3)", QStringLiteral("sqrt(3)") + slash + QStringLiteral("2"));
     CHECK_EVAL_FORMAT_EXACT("cos(pi/6)", QStringLiteral("sqrt(3)") + slash + QStringLiteral("2"));
     CHECK_EVAL_FORMAT_EXACT("tan(pi/3)", QStringLiteral("sqrt(3)"));
     CHECK_EVAL_FORMAT_EXACT("tan(pi/6)", QStringLiteral("sqrt(3)") + slash + QStringLiteral("3"));

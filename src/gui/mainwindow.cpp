@@ -626,7 +626,7 @@ void MainWindow::setActionsText()
     m_actions.sessionExportHtml->setText(MainWindow::tr("&HTML"));
     m_actions.sessionExportPlainText->setText(MainWindow::tr("Plain &text"));
     m_actions.sessionImport->setText(MainWindow::tr("&Import..."));
-    m_actions.sessionImportUserDefinitions->setText(MainWindow::tr("Startup User &Functions and Variables..."));
+    m_actions.sessionImportUserDefinitions->setText(MainWindow::tr("Startup &Definitions..."));
     m_actions.sessionLoad->setText(MainWindow::tr("&Load..."));
     m_actions.sessionQuit->setText(MainWindow::tr("&Quit"));
     m_actions.sessionSave->setText(MainWindow::tr("&Save..."));
@@ -2546,7 +2546,7 @@ void MainWindow::applyStartupUserDefinitions()
 void MainWindow::showUserDefinitionsImportDialog()
 {
     QDialog dialog(this);
-    dialog.setWindowTitle(tr("Startup User Functions and Variables"));
+    dialog.setWindowTitle(tr("Startup Definitions"));
     dialog.setMinimumSize(640, 420);
 
     QVBoxLayout* layout = new QVBoxLayout(&dialog);

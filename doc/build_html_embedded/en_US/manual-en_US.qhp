@@ -43,7 +43,7 @@
                         <section title="Widgets" ref="userguide/interface.html#widgets"/>
                         <section title="Expression Editor Features" ref="userguide/interface.html#expression-editor-features"/>
                         <section title="Import/Export" ref="userguide/interface.html#import-export">
-                            <section title="Startup User Definitions" ref="userguide/interface.html#startup-user-definitions"/>
+                            <section title="Startup Definitions" ref="userguide/interface.html#startup-definitions"/>
                         </section>
                         <section title="Settings" ref="userguide/interface.html#settings">
                             <section title="Result Display Interactions" ref="userguide/interface.html#result-display-interactions"/>
@@ -194,6 +194,9 @@
             <keyword name="rand() (function)" id="function.rand" ref="reference/statistical.html#sc.rand"/>
             <keyword name="randint() (function)" id="function.randint" ref="reference/statistical.html#sc.randint"/>
             <keyword name="randint() (function)" id="function.randint" ref="reference/statistical.html#sc.randint"/>
+            <keyword name="rat() (function)" id="function.rat" ref="reference/integer.html#sc.rat"/>
+            <keyword name="ratio() (function)" id="function.ratio" ref="reference/integer.html#sc.ratio"/>
+            <keyword name="rational() (function)" id="function.rational" ref="reference/integer.html#sc.rational"/>
             <keyword name="real() (function)" id="function.real" ref="reference/basic.html#sc.real"/>
             <keyword name="round() (function)" id="function.round" ref="reference/integer.html#sc.round"/>
             <keyword name="sec() (function)" id="function.sec" ref="reference/basic.html#sc.sec"/>
