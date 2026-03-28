@@ -718,7 +718,15 @@ static bool tokenCanStartOperandForDisplaySpacing(const Token& token)
 
 static bool isImaginaryUnitTokenForDisplay(const Token& token)
 {
-    return token.isIdentifier() && token.text() == QLatin1String("j");
+    if (!token.isIdentifier())
+        return false;
+
+    const QString text = token.text();
+    if (text == QLatin1String("i") || text == QLatin1String("j"))
+        return true;
+
+    const QChar configuredImaginaryUnit(Settings::instance()->imaginaryUnit);
+    return text.size() == 1 && text.at(0) == configuredImaginaryUnit;
 }
 
 static bool startsWithImaginaryLiteralForDisplay(const Tokens& tokens, int startIndex)
@@ -3188,10 +3196,13 @@ void Evaluator::initializeBuiltInVariables()
     setVariable(QString::fromUtf8("π"), DMath::pi(), Variable::BuiltIn);
 
     if (Settings::instance()->complexNumbers) {
+        setVariable(QLatin1String("i"), DMath::i(), Variable::BuiltIn);
         setVariable(QLatin1String("j"), DMath::i(), Variable::BuiltIn);
-    }
-    else if (hasVariable("j")) {
-        unsetVariable("j", ForceBuiltinVariableErasure(true));
+    } else {
+        if (hasVariable("i"))
+            unsetVariable("i", ForceBuiltinVariableErasure(true));
+        if (hasVariable("j"))
+            unsetVariable("j", ForceBuiltinVariableErasure(true));
     }
 
     QList<Unit> unitList(Units::getList());

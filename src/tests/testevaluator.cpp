@@ -26,6 +26,7 @@
 #include "gui/displayformatutils.h"
 #include "gui/functiontooltiputils.h"
 #include "gui/simplifiedexpressionutils.h"
+#include "math/cmath.h"
 #include "tests/testcommon.h"
 
 #include <QtCore/QCoreApplication>
@@ -1127,6 +1128,7 @@ void test_rational_format()
     const char resultFormat = settings->resultFormat;
     const int resultPrecision = settings->resultPrecision;
     const bool complexNumbers = settings->complexNumbers;
+    const char imaginaryUnit = settings->imaginaryUnit;
     const char resultFormatComplex = settings->resultFormatComplex;
     const bool complexMode = DMath::complexMode;
 
@@ -1253,8 +1255,16 @@ void test_rational_format()
     CHECK_EVAL_FORMAT_EXACT("radians(360)", nPi(2));
 
     settings->complexNumbers = true;
+    settings->imaginaryUnit = 'i';
+    CMath::setImaginaryUnitSymbol(QLatin1Char('i'));
     settings->resultFormatComplex = 'c';
     DMath::complexMode = true;
+    eval->initializeBuiltInVariables();
+    CHECK_EVAL_FORMAT("1+i", "1+1i");
+    CHECK_EVAL_FORMAT_NO_SLASH("1+i");
+
+    settings->imaginaryUnit = 'j';
+    CMath::setImaginaryUnitSymbol(QLatin1Char('j'));
     eval->initializeBuiltInVariables();
     CHECK_EVAL_FORMAT("1+j", "1+1j");
     CHECK_EVAL_FORMAT_NO_SLASH("1+j");
@@ -1266,6 +1276,8 @@ void test_rational_format()
     settings->resultFormat = resultFormat;
     settings->resultPrecision = resultPrecision;
     settings->complexNumbers = complexNumbers;
+    settings->imaginaryUnit = imaginaryUnit;
+    CMath::setImaginaryUnitSymbol(QChar(imaginaryUnit));
     settings->resultFormatComplex = resultFormatComplex;
     DMath::complexMode = complexMode;
     eval->initializeBuiltInVariables();
@@ -2104,18 +2116,18 @@ void test_user_functions()
 void test_complex()
 {
     // Check for basic complex number processing
-    CHECK_EVAL("1j", "1j");
-    CHECK_EVAL("0.1j", "0.1j");
-    CHECK_EVAL(".1j", "0.1j");
-    CHECK_EVAL("1E12j", "1000000000000j");
-    CHECK_EVAL("0.1E12j", "100000000000j");
-    CHECK_EVAL("1E-12j", "0.000000000001j");
-    CHECK_EVAL("0.1E-12j", "0.0000000000001j");
+    CHECK_EVAL("1j", "1i");
+    CHECK_EVAL("0.1j", "0.1i");
+    CHECK_EVAL(".1j", "0.1i");
+    CHECK_EVAL("1E12j", "1000000000000i");
+    CHECK_EVAL("0.1E12j", "100000000000i");
+    CHECK_EVAL("1E-12j", "0.000000000001i");
+    CHECK_EVAL("0.1E-12j", "0.0000000000001i");
     // Check for some bugs introduced by first versions of complex number processing
     CHECK_EVAL("0.1", "0.1");
     // Check for basic complex number evaluation
     CHECK_EVAL("(1+1j)*(1-1j)", "2");
-    CHECK_EVAL("(1+1j)*(1+1j)", "2j");
+    CHECK_EVAL("(1+1j)*(1+1j)", "2i");
 
 
     CHECK_EVAL("VARIANCE(1j;-1j)", "1");
@@ -2135,8 +2147,8 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("sin(arcsin(0.25))", "0.25");
     CHECK_EVAL("cos(arccos(0.25))", "0.25");
     CHECK_EVAL("tan(arctan(0.25))", "0.25");
-    CHECK_EVAL("sin(1j)", "1.17520119364380145688j");
-    CHECK_EVAL("arcsin(-2)", "-1.57079632679489661923+1.31695789692481670863j");
+    CHECK_EVAL("sin(1j)", "1.17520119364380145688i");
+    CHECK_EVAL("arcsin(-2)", "-1.57079632679489661923+1.31695789692481670863i");
     CHECK_EVAL("radian","1");
     CHECK_EVAL("degree","0.01745329251994329577");
     CHECK_EVAL("gradian","0.01570796326794896619");
@@ -2154,7 +2166,7 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("cos(arccos(0.25))", "0.25");
     CHECK_EVAL("tan(arctan(0.25))", "0.25");
     CHECK_EVAL_FAIL("sin(1j)");
-    CHECK_EVAL("arcsin(-2)", "-90+75.4561292902168920041j");
+    CHECK_EVAL("arcsin(-2)", "-90+75.4561292902168920041i");
     CHECK_EVAL("radian","57.2957795130823208768");
     CHECK_EVAL("degree","1");
     CHECK_EVAL("gradian","0.9");
@@ -2173,7 +2185,7 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("cos(arccos(0.25))", "0.25");
     CHECK_EVAL("tan(arctan(0.25))", "0.25");
     CHECK_EVAL_FAIL("sin(1j)");
-    CHECK_EVAL("arcsin(-2)", "-100+83.84014365579654667122j");
+    CHECK_EVAL("arcsin(-2)", "-100+83.84014365579654667122i");
     CHECK_EVAL("radian","63.66197723675813430755");
     CHECK_EVAL("degree","1.11111111111111111111");
     CHECK_EVAL("gradian","1");
@@ -2191,7 +2203,7 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("cos(arccos(0.25))", "0.25");
     CHECK_EVAL("tan(arctan(0.25))", "0.25");
     CHECK_EVAL_FAIL("sin(1j)");
-    CHECK_EVAL("arcsin(-2)", "-0.25+0.20960035913949136668j");
+    CHECK_EVAL("arcsin(-2)", "-0.25+0.20960035913949136668i");
     CHECK_EVAL("radian","0.15915494309189533577");
     CHECK_EVAL("degree","0.00277777777777777778");
     CHECK_EVAL("gradian","0.0025");
@@ -2389,9 +2401,21 @@ void test_display_interpreted_spacing()
             + integerDivide
             + QStringLiteral("3"));
     const bool complexNumbers = settings->complexNumbers;
+    const char imaginaryUnit = settings->imaginaryUnit;
     const bool complexMode = DMath::complexMode;
     settings->complexNumbers = true;
+    settings->imaginaryUnit = 'i';
+    CMath::setImaginaryUnitSymbol(QLatin1Char('i'));
     DMath::complexMode = true;
+    eval->initializeBuiltInVariables();
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("2+3i"),
+        QStringLiteral("2+3i"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("2-3i"),
+        QString::fromUtf8("2−3i"));
+    settings->imaginaryUnit = 'j';
+    CMath::setImaginaryUnitSymbol(QLatin1Char('j'));
     eval->initializeBuiltInVariables();
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("2+3j"),
@@ -2401,6 +2425,8 @@ void test_display_interpreted_spacing()
         QString::fromUtf8("2−3j"));
     DMath::complexMode = complexMode;
     settings->complexNumbers = complexNumbers;
+    settings->imaginaryUnit = imaginaryUnit;
+    CMath::setImaginaryUnitSymbol(QChar(imaginaryUnit));
     eval->initializeBuiltInVariables();
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("1<<2"),
@@ -2881,7 +2907,7 @@ void test_format()
     CHECK_EVAL_FAIL("binpad(10; 3.5)");
     CHECK_EVAL_FAIL("binpad(10; 1e1000)");
 
-    CHECK_EVAL("polar(3+4j)", "5 * exp(j*0.92729521800161223243)");
+    CHECK_EVAL("polar(3+4j)", "5 * exp(i*0.92729521800161223243)");
 }
 
 
@@ -3895,6 +3921,8 @@ int main(int argc, char* argv[])
     settings->angleUnit = 'r';
     settings->setRadixCharacter('.');
     settings->complexNumbers = false;
+    settings->imaginaryUnit = 'i';
+    CMath::setImaginaryUnitSymbol(QLatin1Char('i'));
     DMath::complexMode = false;
 
     eval = Evaluator::instance();

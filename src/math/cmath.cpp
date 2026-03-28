@@ -33,6 +33,21 @@
 #include <stdlib.h>
 #include <string.h>
 
+namespace {
+QChar s_imaginaryUnitSymbol = QLatin1Char('j');
+}
+
+void CMath::setImaginaryUnitSymbol(QChar symbol)
+{
+    const QChar lower = symbol.toLower();
+    s_imaginaryUnitSymbol = (lower == QLatin1Char('j')) ? QLatin1Char('j') : QLatin1Char('i');
+}
+
+QChar CMath::imaginaryUnitSymbol()
+{
+    return s_imaginaryUnitSymbol;
+}
+
 /**
  * Creates a new complex number.
  */
@@ -462,13 +477,13 @@ QString CMath::format(const CNumber& cn, CNumber::Format format)
         if (phase.isZero())
             return strRadius;
         QString strPhase = HMath::format(phase, format);
-        return QString("%1 * exp(j*%2)").arg(strRadius, strPhase);
+        const QString imagUnit(CMath::imaginaryUnitSymbol());
+        return QStringLiteral("%1 * exp(%2*%3)").arg(strRadius, imagUnit, strPhase);
     } else {
         QString real_part = cn.real.isZero()? "" : HMath::format(cn.real, format);
         QString imag_part = "";
         QString separator = "";
-        QString prefix    = ""; // TODO: Insert two modes, one for a+jb and one for a+bj.
-        QString postfix   = "j"; // TODO: Insert two modes, one for a+bi and one for a+bj.
+        QString postfix   = QString(CMath::imaginaryUnitSymbol());
 
         if (cn.imag.isPositive()) {
             separator = cn.real.isZero() ? "": "+";
@@ -477,7 +492,7 @@ QString CMath::format(const CNumber& cn, CNumber::Format format)
             separator = "-";
             imag_part = HMath::format(-cn.imag, format);
         }
-        return real_part + separator + prefix + imag_part + postfix;
+        return real_part + separator + imag_part + postfix;
     }
 }
 

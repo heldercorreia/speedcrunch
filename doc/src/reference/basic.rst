@@ -384,11 +384,15 @@ Complex Numbers
 
 .. function:: polar(x)
 
-    Converts the complex number ``x`` to polar form, i.e. the form *r e* :sup:`jɸ`. The angle ɸ is always given in radians.
+    Converts the complex number ``x`` to polar form, i.e. the form
+    *r e* :sup:`uɸ`, where ``u`` is the currently selected imaginary-unit
+    symbol (``i`` or ``j``). The angle ɸ is always given in radians.
 
 .. function:: cart(x)
 
-    Converts the complex number ``x`` to cartesian form, i.e. the form *a + j b*.
+    Converts the complex number ``x`` to cartesian form, i.e. the form
+    *a + b u*, where ``u`` is the currently selected imaginary-unit
+    symbol (``i`` or ``j``).
 
 
 Various

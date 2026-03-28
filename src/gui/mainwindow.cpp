@@ -50,6 +50,7 @@
 #include "core/manualserver.h"
 #include "gui/resultdisplay.h"
 #include "gui/syntaxhighlighter.h"
+#include "math/cmath.h"
 #include "math/floatconfig.h"
 
 #include <QLatin1String>
@@ -388,6 +389,8 @@ void MainWindow::createActions()
     m_actions.settingsResultFormatScientific = new QAction(this);
     m_actions.settingsResultFormatCartesian= new QAction(this);
     m_actions.settingsResultFormatPolar = new QAction(this);
+    m_actions.settingsImaginaryUnitI = new QAction(this);
+    m_actions.settingsImaginaryUnitJ = new QAction(this);
     m_actions.settingsResultFormatSexagesimal = new QAction(this);
     m_actions.settingsAlternativeResultFormatDisabled = new QAction(this);
     m_actions.settingsAlternativeResultFormatGeneral = new QAction(this);
@@ -480,6 +483,8 @@ void MainWindow::createActions()
     m_actions.settingsResultFormatHexadecimal->setCheckable(true);
     m_actions.settingsResultFormatOctal->setCheckable(true);
     m_actions.settingsResultFormatPolar->setCheckable(true);
+    m_actions.settingsImaginaryUnitI->setCheckable(true);
+    m_actions.settingsImaginaryUnitJ->setCheckable(true);
     m_actions.settingsResultFormatRational->setCheckable(true);
     m_actions.settingsResultFormatScientific->setCheckable(true);
     m_actions.settingsResultFormatSexagesimal->setCheckable(true);
@@ -732,6 +737,8 @@ void MainWindow::setActionsText()
     m_actions.settingsTertiaryResultFormatSexagesimal->setText(MainWindow::tr("&Sexagesimal"));
     m_actions.settingsResultFormatCartesian->setText(MainWindow::tr("&Cartesian"));
     m_actions.settingsResultFormatPolar->setText(MainWindow::tr("&Polar"));
+    m_actions.settingsImaginaryUnitI->setText(MainWindow::tr("Imaginary Unit '&i'"));
+    m_actions.settingsImaginaryUnitJ->setText(MainWindow::tr("Imaginary Unit '&j'"));
     m_actions.settingsDisplayFont->setText(MainWindow::tr("&Font..."));
     m_actions.settingsLanguage->setText(MainWindow::tr("&Language..."));
 
@@ -786,6 +793,10 @@ void MainWindow::createActionGroups()
     m_actionGroups.complexFormat->addAction(m_actions.settingsResultFormatComplexDisabled);
     m_actionGroups.complexFormat->addAction(m_actions.settingsResultFormatCartesian);
     m_actionGroups.complexFormat->addAction(m_actions.settingsResultFormatPolar);
+
+    m_actionGroups.imaginaryUnit = new QActionGroup(this);
+    m_actionGroups.imaginaryUnit->addAction(m_actions.settingsImaginaryUnitI);
+    m_actionGroups.imaginaryUnit->addAction(m_actions.settingsImaginaryUnitJ);
 
     m_actionGroups.radixChar = new QActionGroup(this);
     m_actionGroups.radixChar->addAction(m_actions.settingsRadixCharDefault);
@@ -1004,6 +1015,9 @@ void MainWindow::createMenus()
     m_menus.complexNumbers->addAction(m_actions.settingsResultFormatComplexDisabled);
     m_menus.complexNumbers->addAction(m_actions.settingsResultFormatCartesian);
     m_menus.complexNumbers->addAction(m_actions.settingsResultFormatPolar);
+    m_menus.complexNumbers->addSeparator();
+    m_menus.complexNumbers->addAction(m_actions.settingsImaginaryUnitI);
+    m_menus.complexNumbers->addAction(m_actions.settingsImaginaryUnitJ);
     m_menus.results->addSeparator();
 
     m_menus.alternativeResultFormat = m_menus.results->addMenu("");
@@ -1172,6 +1186,8 @@ void MainWindow::createStatusBar()
     m_status.complexNumbers->addAction(m_actions.settingsResultFormatComplexDisabled);
     m_status.complexNumbers->addAction(m_actions.settingsResultFormatCartesian);
     m_status.complexNumbers->addAction(m_actions.settingsResultFormatPolar);
+    m_status.complexNumbers->addAction(m_actions.settingsImaginaryUnitI);
+    m_status.complexNumbers->addAction(m_actions.settingsImaginaryUnitJ);
 
     connect(m_status.angleUnit, SIGNAL(clicked()), SLOT(cycleAngleUnits()));
     connect(m_status.resultFormat, SIGNAL(clicked()), SLOT(cycleResultFormats()));
@@ -1483,6 +1499,8 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsResultFormatFixed, SIGNAL(triggered()), SLOT(setResultFormatFixed()));
     connect(m_actions.settingsResultFormatGeneral, SIGNAL(triggered()), SLOT(setResultFormatGeneral()));
     connect(m_actions.settingsResultFormatHexadecimal, SIGNAL(triggered()), SLOT(setResultFormatHexadecimal()));
+    connect(m_actions.settingsImaginaryUnitI, SIGNAL(triggered()), SLOT(setImaginaryUnitI()));
+    connect(m_actions.settingsImaginaryUnitJ, SIGNAL(triggered()), SLOT(setImaginaryUnitJ()));
     connect(m_actions.settingsResultFormatOctal, SIGNAL(triggered()), SLOT(setResultFormatOctal()));
     connect(m_actions.settingsResultFormatPolar, SIGNAL(triggered()), SLOT(setResultFormatPolar()));
     connect(m_actions.settingsResultFormatRational, SIGNAL(triggered()), SLOT(setResultFormatRational()));
@@ -1701,6 +1719,7 @@ void MainWindow::applySettings()
     checkInitialTertiaryResultFormat();
     checkInitialResultPrecision();
     checkInitialComplexFormat();
+    checkInitialImaginaryUnit();
 
     if (m_settings->isRadixCharacterAuto())
         m_actions.settingsRadixCharDefault->setChecked(true);
@@ -1870,6 +1889,14 @@ void MainWindow::checkInitialComplexFormat()
     }
 }
 
+void MainWindow::checkInitialImaginaryUnit()
+{
+    if (m_settings->imaginaryUnit == 'j')
+        m_actions.settingsImaginaryUnitJ->setChecked(true);
+    else
+        m_actions.settingsImaginaryUnitI->setChecked(true);
+}
+
 void MainWindow::checkInitialResultPrecision()
 {
     switch (m_settings->resultPrecision) {
@@ -1940,6 +1967,7 @@ MainWindow::MainWindow()
     m_translator = 0;
     m_settings = Settings::instance();
     DMath::complexMode = m_settings->complexNumbers;
+    CMath::setImaginaryUnitSymbol(m_settings->imaginaryUnit);
 
     m_widgets.manual = 0;
     m_widgets.keypad  = 0;
@@ -3370,6 +3398,32 @@ void MainWindow::setResultFormatHexadecimal()
 {
     setResultFormat('h');
     setStatusBarText();
+}
+
+void MainWindow::setImaginaryUnitI()
+{
+    if (m_settings->imaginaryUnit == 'i')
+        return;
+
+    m_settings->imaginaryUnit = 'i';
+    CMath::setImaginaryUnitSymbol(QLatin1Char('i'));
+    m_evaluator->initializeBuiltInVariables();
+    setStatusBarText();
+    emit complexNumbersChanged();
+    emit resultFormatChanged();
+}
+
+void MainWindow::setImaginaryUnitJ()
+{
+    if (m_settings->imaginaryUnit == 'j')
+        return;
+
+    m_settings->imaginaryUnit = 'j';
+    CMath::setImaginaryUnitSymbol(QLatin1Char('j'));
+    m_evaluator->initializeBuiltInVariables();
+    setStatusBarText();
+    emit complexNumbersChanged();
+    emit resultFormatChanged();
 }
 
 void MainWindow::setResultFormatOctal()

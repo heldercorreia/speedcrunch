@@ -120,6 +120,8 @@ public:
 
 class CMath {
 public:
+    static void setImaginaryUnitSymbol(QChar symbol);
+    static QChar imaginaryUnitSymbol();
     // FORMAT
     static QString format(const CNumber&, CNumber::Format = CNumber::Format());
     // CONSTANTS

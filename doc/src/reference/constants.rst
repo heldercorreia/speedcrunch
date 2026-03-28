@@ -26,12 +26,18 @@ Constants
    ``ℯ`` (Unicode U+212F SCRIPT SMALL E).
 
 
+.. constant:: i
 .. constant:: j
 
-   When complex mode is enabled, this is the imaginary unit such that ``j ^ 2 = -1``.
+   When complex mode is enabled, these are aliases for the imaginary unit such
+   that ``i ^ 2 = -1`` and ``j ^ 2 = -1``.
+
+   The displayed symbol used in formatted results can be selected in
+   ``Settings -> Results -> Complex Numbers`` as either ``i`` (default) or ``j``.
+
    Using this constant, complex numbers are expressed as the sum of a real and an
    imaginary part::
 
-       c = 4 + 2j
+       c = 4 + 2i
 
 .. TODO: link to docs on complex number functionality.

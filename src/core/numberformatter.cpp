@@ -211,6 +211,7 @@ QString NumberFormatter::formatTrigSymbolic(Quantity q)
 QString NumberFormatter::format(Quantity q, char resultFormatOverride)
 {
     Settings* settings = Settings::instance();
+    CMath::setImaginaryUnitSymbol(settings->imaginaryUnit);
     const char activeResultFormat = resultFormatOverride == '\0' ? settings->resultFormat : resultFormatOverride;
     QString result;
 

@@ -275,6 +275,7 @@ Settings::Settings()
     digitGroupingIntegerPartOnly = true;
     simplifyResultExpressions = true;
     singleInstance = true;
+    imaginaryUnit = 'i';
     startupUserDefinitionsOverwrite = false;
     startupUserDefinitionsApplyBeforeRestore = false;
     autoCompletionBuiltInFunctions = true;
@@ -363,6 +364,11 @@ void Settings::load()
     windowPositionSave = settings->value(key + QLatin1String("WindowPositionSave"), true).toBool();
     singleInstance = settings->value(key + QLatin1String("SingleInstance"), true).toBool();
     complexNumbers = settings->value(key + QLatin1String("ComplexNumbers"), false).toBool();
+    QString imaginaryUnitStr = settings->value(key + QLatin1String("ImaginaryUnit"), 'i').toString();
+    if (imaginaryUnitStr != QLatin1String("i") && imaginaryUnitStr != QLatin1String("j"))
+        imaginaryUnit = 'i';
+    else
+        imaginaryUnit = imaginaryUnitStr.at(0).toLatin1();
     startupUserDefinitions = settings->value(
         key + QLatin1String("StartupUserDefinitions"), QString()).toString();
     startupUserDefinitionsOverwrite = settings->value(
@@ -509,6 +515,7 @@ void Settings::save()
     settings->setValue(key + QLatin1String("WindowPositionSave"), windowPositionSave);
     settings->setValue(key + QLatin1String("SingleInstance"), singleInstance);
     settings->setValue(key + QLatin1String("ComplexNumbers"), complexNumbers);
+    settings->setValue(key + QLatin1String("ImaginaryUnit"), QString(QChar(imaginaryUnit)));
     settings->setValue(key + QLatin1String("StartupUserDefinitions"), startupUserDefinitions);
     settings->setValue(key + QLatin1String("StartupUserDefinitionsOverwrite"), startupUserDefinitionsOverwrite);
     settings->setValue(key + QLatin1String("StartupUserDefinitionsApplyBeforeRestore"), startupUserDefinitionsApplyBeforeRestore);

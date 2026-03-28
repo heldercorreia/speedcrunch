@@ -168,6 +168,8 @@ private slots:
     void setResultFormatFixed();
     void setResultFormatGeneral();
     void setResultFormatHexadecimal();
+    void setImaginaryUnitI();
+    void setImaginaryUnitJ();
     void setResultFormatOctal();
     void setResultFormatPolar();
     void setResultFormatRational();
@@ -265,6 +267,7 @@ private:
     void checkInitialAlternativeResultFormat();
     void checkInitialTertiaryResultFormat();
     void checkInitialComplexFormat();
+    void checkInitialImaginaryUnit();
     void checkInitialResultPrecision();
     void checkInitialLanguage();
     void checkInitialDigitGrouping();
@@ -356,6 +359,8 @@ private:
         QAction* settingsResultFormatOctal;
         QAction* settingsResultFormatCartesian;
         QAction* settingsResultFormatPolar;
+        QAction* settingsImaginaryUnitI;
+        QAction* settingsImaginaryUnitJ;
         QAction* settingsResultFormatHexadecimal;
         QAction* settingsResultFormatSexagesimal;
         QAction* settingsAlternativeResultFormatDisabled;
@@ -439,6 +444,7 @@ private:
         QActionGroup* alternativeResultFormat;
         QActionGroup* tertiaryResultFormat;
         QActionGroup* complexFormat;
+        QActionGroup* imaginaryUnit;
         QActionGroup* radixChar;
         QActionGroup* digitGrouping;
         QActionGroup* historySaving;
