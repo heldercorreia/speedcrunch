@@ -110,8 +110,8 @@ The expression editor provides some advanced features:
     usage information for a function. Pressing :kbd:`Escape` will dismiss the manual window again.
 
 * Selection results
-    If :menuselection:`Settings --> Results --> Show Live Result Preview` is enabled, selecting a partial expression in the expression editor will show
-    you the result of the selected expression.
+    If :menuselection:`Settings --> Results --> Show Live Result Preview` is enabled, selecting a partial expression in the expression editor or in the result display will show you the result of the selected expression.
+    You can dismiss this preview by pressing :kbd:`Escape` or by clicking the :guilabel:`×` button at the top-right corner of the preview.
 
 
 Import/Export

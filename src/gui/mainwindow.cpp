@@ -1244,7 +1244,16 @@ void MainWindow::createFixedWidgets()
     m_widgets.state = new QLabel(this);
     m_widgets.state->setPalette(QToolTip::palette());
     m_widgets.state->setAutoFillBackground(true);
-    m_widgets.state->setFrameShape(QFrame::Box);
+    m_widgets.state->setFrameShape(QFrame::NoFrame);
+    m_widgets.stateCloseButton = new QPushButton(QStringLiteral("×"), m_widgets.state);
+    m_widgets.stateCloseButton->setFocusPolicy(Qt::NoFocus);
+    m_widgets.stateCloseButton->setFlat(true);
+    m_widgets.stateCloseButton->setToolTip(tr("Close preview"));
+    m_widgets.stateCloseButton->setStyleSheet(QStringLiteral(
+        "QPushButton{border:none;background:transparent;padding:0;margin:0;outline:none;}"
+        "QPushButton:hover{background:transparent;}"
+        "QPushButton:pressed{background:transparent;}"));
+    connect(m_widgets.stateCloseButton, &QPushButton::clicked, this, &MainWindow::hideStateLabel);
     m_widgets.state->hide();
 }
 
@@ -1560,7 +1569,7 @@ void MainWindow::createFixedConnections()
     connect(m_widgets.editor, SIGNAL(autoCalcMessageAvailable(const QString&)), SLOT(handleAutoCalcMessageAvailable(const QString&)));
     connect(m_widgets.editor, SIGNAL(autoCalcQuantityAvailable(const Quantity&)), SLOT(handleAutoCalcQuantityAvailable(const Quantity&)));
     connect(m_widgets.editor, SIGNAL(returnPressed()), SLOT(evaluateEditorExpression()));
-    connect(m_widgets.editor, SIGNAL(escapePressed()), SLOT(cancelHistoryEntryEdit()));
+    connect(m_widgets.editor, SIGNAL(escapePressed()), SLOT(handleEditorEscapePressed()));
     connect(m_widgets.editor, SIGNAL(shiftDownPressed()), SLOT(decreaseDisplayFontPointSize()));
     connect(m_widgets.editor, SIGNAL(shiftUpPressed()), SLOT(increaseDisplayFontPointSize()));
     connect(m_widgets.editor, SIGNAL(controlPageUpPressed()), m_widgets.display, SLOT(scrollToTop()));
@@ -2208,6 +2217,16 @@ void MainWindow::selectEditorExpression()
 void MainWindow::hideStateLabel()
 {
     m_widgets.state->hide();
+}
+
+void MainWindow::handleEditorEscapePressed()
+{
+    if (m_widgets.state->isVisible()) {
+        hideStateLabel();
+        return;
+    }
+
+    cancelHistoryEntryEdit();
 }
 
 void MainWindow::showSessionLoadDialog()
@@ -3038,9 +3057,20 @@ void MainWindow::setMenuBarVisible(bool b)
 
 void MainWindow::showStateLabel(const QString& msg)
 {
+    const int closeButtonSize = qMax(14, m_widgets.editor->fontMetrics().height() - 2);
+    const int closeButtonRightPadding = 2;
+    const int closeButtonTopPadding = 1;
+    const int closeButtonReservedWidth = closeButtonSize + closeButtonRightPadding + 2;
+    m_widgets.state->setContentsMargins(6, 3, closeButtonReservedWidth, 3);
     m_widgets.state->setFont(m_widgets.editor->font());
     m_widgets.state->setText(msg);
+    m_widgets.stateCloseButton->setFixedSize(closeButtonSize, closeButtonSize);
     m_widgets.state->adjustSize();
+    m_widgets.stateCloseButton->move(
+        m_widgets.state->width() - closeButtonSize - closeButtonRightPadding,
+        closeButtonTopPadding);
+    m_widgets.stateCloseButton->show();
+    m_widgets.stateCloseButton->raise();
     m_widgets.state->show();
     m_widgets.state->raise();
     const int height = m_widgets.state->height();

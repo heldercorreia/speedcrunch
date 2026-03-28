@@ -106,6 +106,7 @@ private slots:
     void handleBitsChanged(const QString&);
     void handleKeypadButtonPress(Keypad::Button);
     void handleEditorTextChange();
+    void handleEditorEscapePressed();
     void handleCustomKeypadButtonPress(int action, const QString& text);
     void handleDisplaySelectionChange();
     void handleEditorSelectionChange();
@@ -494,6 +495,7 @@ private:
 
     struct {
         QLabel* state;
+        QPushButton* stateCloseButton;
         ResultDisplay* display;
         Editor* editor;
         Keypad* keypad = nullptr;
