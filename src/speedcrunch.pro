@@ -82,6 +82,7 @@ HEADERS += core/book.h \
            gui/bookdock.h \
            gui/constantswidget.h \
            gui/customkeypaddialog.h \
+           gui/displayformatutils.h \
            gui/resultdisplay.h \
            gui/editor.h \
            gui/functiontooltiputils.h \
@@ -140,6 +141,7 @@ SOURCES += main.cpp \
            gui/bookdock.cpp \
            gui/constantswidget.cpp \
            gui/customkeypaddialog.cpp \
+           gui/displayformatutils.cpp \
            gui/resultdisplay.cpp \
            gui/editor.cpp \
            gui/functiontooltiputils.cpp \

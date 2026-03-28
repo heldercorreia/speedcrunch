@@ -273,7 +273,8 @@ Visually group digits in long numbers. Requires
 * :menuselection:`Digit Grouping`
     Visually group digits in long numbers.
 * :menuselection:`Digit Grouping --> Group Integer Part Only`
-    Apply digit grouping only to the integer part of numbers. When enabled, fractional digits remain ungrouped.
+    Apply digit grouping only to the integer part of numbers. This is enabled
+    by default. When enabled, fractional digits remain ungrouped.
 
 History
 +++++++

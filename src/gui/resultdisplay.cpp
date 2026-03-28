@@ -18,6 +18,7 @@
 
 #include "gui/resultdisplay.h"
 
+#include "gui/displayformatutils.h"
 #include "core/functions.h"
 #include "core/numberformatter.h"
 #include "core/regexpatterns.h"
@@ -123,11 +124,6 @@ QStringList formatResultLines(const HistoryEntry& entry)
 {
     const Settings* settings = Settings::instance();
     const Quantity value = entry.result();
-    auto groupedResultForDisplay = [settings](const QString& input) {
-        if (settings->digitGrouping <= 0)
-            return input;
-        return UnicodeChars::normalizePiForDisplay(NumberFormatter::formatNumericLiteralForDisplay(input));
-    };
 
     QStringList lines;
     auto appendUniqueLine = [&lines](const QString& line) {
@@ -149,26 +145,27 @@ QStringList formatResultLines(const HistoryEntry& entry)
                 // Hide non-informative simplification rows for plain numeric arithmetic.
             } else {
                 const QString simplifiedForDisplay =
-                    SimplifiedExpressionUtils::isNumericSimplifiedExpression(simplified)
-                    ? NumberFormatter::formatNumericLiteralForDisplay(simplified)
-                    : simplified;
+                    DisplayFormatUtils::applyDigitGroupingForDisplay(simplified);
                 appendUniqueLine(QLatin1String("= ") + simplifiedForDisplay);
             }
         }
     }
-    appendUniqueLine(QLatin1String("= ") + groupedResultForDisplay(NumberFormatter::format(value)));
+    appendUniqueLine(QLatin1String("= ")
+        + DisplayFormatUtils::applyDigitGroupingForDisplay(NumberFormatter::format(value)));
     if (settings->alternativeResultFormat != '\0') {
         appendUniqueLine(QLatin1String("= ")
-            + groupedResultForDisplay(NumberFormatter::format(value, settings->alternativeResultFormat)));
+            + DisplayFormatUtils::applyDigitGroupingForDisplay(
+                NumberFormatter::format(value, settings->alternativeResultFormat)));
     }
     if (settings->tertiaryResultFormat != '\0') {
         appendUniqueLine(QLatin1String("= ")
-            + groupedResultForDisplay(NumberFormatter::format(value, settings->tertiaryResultFormat)));
+            + DisplayFormatUtils::applyDigitGroupingForDisplay(
+                NumberFormatter::format(value, settings->tertiaryResultFormat)));
     }
     const QString symbolicTrig = NumberFormatter::formatTrigSymbolic(value);
     if (shouldShowAdditionalRationalForTrig(settings, entry.expr(), entry.interpretedExpr(), value)) {
         appendUniqueLine(QLatin1String("= ")
-            + groupedResultForDisplay(symbolicTrig));
+            + DisplayFormatUtils::applyDigitGroupingForDisplay(symbolicTrig));
     }
     return lines;
 }

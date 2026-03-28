@@ -272,7 +272,7 @@ Settings::CustomKeypad Settings::defaultCustomKeypad()
 
 Settings::Settings()
 {
-    digitGroupingIntegerPartOnly = false;
+    digitGroupingIntegerPartOnly = true;
     simplifyResultExpressions = true;
     singleInstance = true;
     startupUserDefinitionsOverwrite = false;
@@ -372,7 +372,8 @@ void Settings::load()
 
     digitGrouping = settings->value(key + QLatin1String("DigitGrouping"), 0).toInt();
     digitGrouping = std::min(3, std::max(0, digitGrouping));
-    digitGroupingIntegerPartOnly = settings->value(key + QLatin1String("DigitGroupingIntegerPartOnly"), false).toBool();
+    digitGroupingIntegerPartOnly = settings->value(
+        key + QLatin1String("DigitGroupingIntegerPartOnly"), true).toBool();
     maxHistoryEntries = settings->value(key + QLatin1String("MaxHistoryEntries"), 100).toInt();
     maxHistoryEntries = std::max(0, maxHistoryEntries);
 

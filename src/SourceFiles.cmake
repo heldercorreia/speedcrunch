@@ -22,6 +22,7 @@ gui/bitfieldwidget.h
 gui/bookdock.h
 gui/constantswidget.h
 gui/customkeypaddialog.h
+gui/displayformatutils.h
 gui/editor.h
 gui/functiontooltiputils.h
 gui/functionswidget.h
@@ -80,6 +81,7 @@ gui/bitfieldwidget.cpp
 gui/bookdock.cpp
 gui/constantswidget.cpp
 gui/customkeypaddialog.cpp
+gui/displayformatutils.cpp
 gui/editor.cpp
 gui/functiontooltiputils.cpp
 gui/functionswidget.cpp

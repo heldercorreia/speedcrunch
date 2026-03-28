@@ -20,6 +20,7 @@
 // Boston, MA 02110-1301, USA.
 
 #include "gui/editor.h"
+#include "gui/displayformatutils.h"
 #include "gui/editorutils.h"
 #include "gui/functiontooltiputils.h"
 #include "gui/simplifiedexpressionutils.h"
@@ -96,9 +97,8 @@ static QString normalizeExpressionTypedInEditor(QString text)
 
 static QString formattedLiveResult(const Quantity& quantity, char resultFormat = '\0')
 {
-    return UnicodeChars::normalizePiForDisplay(
-        NumberFormatter::formatNumericLiteralForDisplay(
-            NumberFormatter::format(quantity, resultFormat)));
+    return DisplayFormatUtils::applyDigitGroupingForDisplay(
+        NumberFormatter::format(quantity, resultFormat));
 }
 
 static bool shouldShowAdditionalRationalForTrig(const QString& expression,
@@ -137,7 +137,7 @@ static QString formattedLiveResultWithAlternatives(const Quantity& quantity,
     };
     QString interpretedForDisplay;
     if (!interpretedExpression.isEmpty()) {
-        interpretedForDisplay = UnicodeChars::normalizePiForDisplay(
+        interpretedForDisplay = DisplayFormatUtils::applyDigitGroupingForDisplay(
             Evaluator::formatInterpretedExpressionForDisplay(interpretedExpression));
         appendUniqueLine(interpretedForDisplay);
     }
@@ -156,8 +156,7 @@ static QString formattedLiveResultWithAlternatives(const Quantity& quantity,
     const QString symbolicTrig = NumberFormatter::formatTrigSymbolic(quantity);
     if (shouldShowAdditionalRationalForTrig(expression, interpretedExpression, quantity)) {
         appendUniqueLine(QStringLiteral("= %1").arg(
-            UnicodeChars::normalizePiForDisplay(
-                NumberFormatter::formatNumericLiteralForDisplay(symbolicTrig))));
+            DisplayFormatUtils::applyDigitGroupingForDisplay(symbolicTrig)));
     }
     QStringList escapedLines;
     for (const QString& line : lines)
@@ -185,10 +184,7 @@ static QString simplifiedExpressionLineForTooltip(const QString& interpretedExpr
         return QString();
     }
 
-    if (SimplifiedExpressionUtils::isNumericSimplifiedExpression(simplifiedDisplay)) {
-        return NumberFormatter::formatNumericLiteralForDisplay(simplifiedDisplay);
-    }
-    return simplifiedDisplay;
+    return DisplayFormatUtils::applyDigitGroupingForDisplay(simplifiedDisplay);
 }
 
 Editor::Editor(QWidget* parent)
