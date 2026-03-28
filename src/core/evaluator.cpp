@@ -60,6 +60,11 @@ static void s_deleteEvaluator()
     delete s_evaluatorInstance;
 }
 
+static bool s_isSigmaFunctionIdentifier(const QString& identifier)
+{
+    return FunctionRepo::instance()->isIdentifierAliasOf(identifier, QStringLiteral("sigma"));
+}
+
 static bool splitUserFunctionDescription(const QString& expression,
                                          QString* expressionWithoutDescription,
                                          QString* description)
@@ -3787,8 +3792,7 @@ void Evaluator::compile(const Tokens& tokens)
                     ruleFound = true;
                     syntaxStack.reduce(4, MAX_PRECEDENCE);
                     Opcode functionCall(Opcode::Function, argCount);
-                    if (id.text().compare("sigma", Qt::CaseInsensitive) == 0
-                        && argCount == 3)
+                    if (s_isSigmaFunctionIdentifier(id.text()) && argCount == 3)
                     {
                         const QString argText = m_expression.mid(arg.pos(), arg.size());
                         const QStringList argList = splitTopLevelFunctionArguments(argText);
@@ -4738,7 +4742,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
         QHash<int, QString>::const_iterator it = refs.constBegin();
         for (; it != refs.constEnd(); ++it) {
             if (it.key() <= stackSize
-                && it.value().compare("sigma", Qt::CaseInsensitive) == 0)
+                && s_isSigmaFunctionIdentifier(it.value()))
             {
                 return true;
             }
@@ -5049,7 +5053,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     pushStackValue(execUserFunction(userFunction, args));
                     if (!m_error.isEmpty())
                         return CMath::nan();
-                } else if (fname.compare("sigma", Qt::CaseInsensitive) == 0) {
+                } else if (s_isSigmaFunctionIdentifier(fname)) {
                     if (args.count() != 3) {
                         m_error = QString::fromLatin1("<b>%1</b>: ").arg(fname)
                                 + tr("wrong number of arguments");

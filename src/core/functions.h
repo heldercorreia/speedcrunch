@@ -71,6 +71,8 @@ public:
     void insert(Function*);
     QStringList getIdentifiers() const;
     Function* find(const QString& identifier) const;
+    bool isIdentifierAliasOf(const QString& identifier, const QString& canonicalIdentifier) const;
+    QString displayIdentifier(const QString& identifier) const;
 
 public slots:
     void retranslateText();

@@ -38,6 +38,8 @@ General
 
     Inside ``expression``, the identifier ``n`` is bound to the current iteration value.
 
+    Alias: ``Σ(start; end; expression)``.
+
     Example::
 
         sigma(1; 10; 2+n)

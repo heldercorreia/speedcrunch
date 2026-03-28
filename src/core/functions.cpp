@@ -1311,6 +1311,7 @@ void FunctionRepo::createFunctions()
     FUNCTION_INSERT(epoch);
 
     // Symbol aliases.
+    m_functions.insert(QString(UnicodeChars::Summation).toUpper(), find(QStringLiteral("sigma")));
     m_functions.insert(QString(UnicodeChars::SquareRoot).toUpper(), find(QStringLiteral("sqrt")));
     m_functions.insert(QString(UnicodeChars::CubeRoot).toUpper(), find(QStringLiteral("cbrt")));
 }
@@ -1345,10 +1346,39 @@ Function* FunctionRepo::find(const QString& identifier) const
     return m_functions.value(identifier.toUpper(), 0);
 }
 
+bool FunctionRepo::isIdentifierAliasOf(const QString& identifier, const QString& canonicalIdentifier) const
+{
+    Function* canonical = find(canonicalIdentifier);
+    if (!canonical)
+        return false;
+    return find(identifier) == canonical;
+}
+
+QString FunctionRepo::displayIdentifier(const QString& identifier) const
+{
+    Function* function = find(identifier);
+    if (!function)
+        return identifier;
+
+    const bool isAsciiWord = std::all_of(identifier.begin(), identifier.end(), [](QChar ch) {
+        return (ch >= QLatin1Char('A') && ch <= QLatin1Char('Z'))
+               || (ch >= QLatin1Char('a') && ch <= QLatin1Char('z'))
+               || (ch >= QLatin1Char('0') && ch <= QLatin1Char('9'))
+               || ch == QLatin1Char('_');
+    });
+    if (isAsciiWord)
+        return function->identifier();
+
+    return identifier;
+}
+
 QStringList FunctionRepo::getIdentifiers() const
 {
     QStringList result = m_functions.keys();
-    std::transform(result.begin(), result.end(), result.begin(), [](const QString& s) { return s.toLower(); });
+    std::transform(result.begin(), result.end(), result.begin(), [this](const QString& s) {
+        return displayIdentifier(s);
+    });
+    result.removeDuplicates();
     return result;
 }
 

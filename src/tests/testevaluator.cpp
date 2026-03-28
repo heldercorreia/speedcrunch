@@ -1450,13 +1450,15 @@ void test_function_stat()
     CHECK_EVAL("SIGMA(1;4;3)", "12");
     CHECK_EVAL("SIGMA(-2;2;n)", "0");
     CHECK_EVAL("SIGMA(1;10;2+n)", "75");
+    CHECK_EVAL("Σ(1;10;2+n)", "75");
     CHECK_EVAL("SIGMA(10;1;n)", "55");
     CHECK_EVAL("SIGMA(-1;-4;n)", "-10");
     CHECK_EVAL("SIGMA(1;4;n^2)", "30");
     CHECK_EVAL("SIGMA(1;4;1/n)", "2.08333333333333333333");
     CHECK_EVAL("SIGMA(1;3;n meter)", "NaN");
     CHECK_EVAL("SIGMA(1;3;n^2+n)", "20");
-    CHECK_INTERPRETED("sigma(1;10;n+1)", "sigma(1; 10; n+1)");
+    CHECK_INTERPRETED("sigma(1;10;n+1)", "Σ(1; 10; n+1)");
+    CHECK_INTERPRETED("Σ(1;10;n+1)", "Σ(1; 10; n+1)");
     CHECK_EVAL("SIGMA(1;3;SIGMA(1;2;1))", "6");
     CHECK_EVAL_FAIL("SIGMA(1;3;SIGMA(1;n;1))");
     CHECK_EVAL("f(k)=k^2", "NaN");

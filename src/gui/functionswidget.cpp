@@ -112,12 +112,13 @@ void FunctionsWidget::updateList()
     FunctionRepo::instance()->retranslateText();
 
     for (int k = 0; k < functionNames.count(); ++k) {
-        Function* f = FunctionRepo::instance()->find(functionNames.at(k));
+        const QString identifier = functionNames.at(k);
+        Function* f = FunctionRepo::instance()->find(identifier);
         if (!f)
             continue;
 
         QStringList str;
-        str << f->identifier() << f->name();
+        str << identifier << f->name();
 
         if (term.isEmpty()
             || str.at(0).contains(term, Qt::CaseInsensitive)
