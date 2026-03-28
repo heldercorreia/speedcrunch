@@ -212,6 +212,7 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride)
 {
     Settings* settings = Settings::instance();
     CMath::setImaginaryUnitSymbol(settings->imaginaryUnit);
+    CMath::setPolarAngleUnit(settings->angleUnit);
     const char activeResultFormat = resultFormatOverride == '\0' ? settings->resultFormat : resultFormatOverride;
     QString result;
 
@@ -280,6 +281,8 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride)
             format.notation = Quantity::Format::Notation::Cartesian;
         else if (settings->resultFormatComplex == 'p')
             format.notation = Quantity::Format::Notation::Polar;
+        else if (settings->resultFormatComplex == 'a')
+            format.notation = Quantity::Format::Notation::PolarAngle;
     }
 
     bool time = false, arc = q.isDimensionless();

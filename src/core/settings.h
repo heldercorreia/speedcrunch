@@ -96,7 +96,7 @@ public:
     char alternativeResultFormat; // '\0': disabled.
     char tertiaryResultFormat; // '\0': disabled.
     int resultPrecision; // See HMath documentation.
-    char resultFormatComplex; // 'c' cartesian; 'p' polar.
+    char resultFormatComplex; // 'c' cartesian; 'p' polar exponential; 'a' polar angle.
 
     bool autoAns;
     bool autoCalc;

@@ -105,7 +105,7 @@ public:
     // - real and imag have the same NaN error.
 
     struct Format : public HNumber::Format  {
-        enum class Notation {Null, Cartesian, Polar};
+        enum class Notation {Null, Cartesian, Polar, PolarAngle};
         Notation notation;
 
         Format();
@@ -114,6 +114,7 @@ public:
         Format operator+(const Format&) const;
 
         static Format Polar();
+        static Format PolarAngle();
         static Format Cartesian();
     };
 };
@@ -122,6 +123,8 @@ class CMath {
 public:
     static void setImaginaryUnitSymbol(QChar symbol);
     static QChar imaginaryUnitSymbol();
+    static void setPolarAngleUnit(char angleUnit);
+    static char polarAngleUnit();
     // FORMAT
     static QString format(const CNumber&, CNumber::Format = CNumber::Format());
     // CONSTANTS

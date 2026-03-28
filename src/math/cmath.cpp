@@ -23,6 +23,7 @@
 
 #include "cmath.h"
 
+#include "core/unicodechars.h"
 #include "cnumberparser.h"
 #include "floatconvert.h"
 #include "hmath.h"
@@ -35,6 +36,7 @@
 
 namespace {
 QChar s_imaginaryUnitSymbol = QLatin1Char('j');
+char s_polarAngleUnit = 'r';
 }
 
 void CMath::setImaginaryUnitSymbol(QChar symbol)
@@ -46,6 +48,16 @@ void CMath::setImaginaryUnitSymbol(QChar symbol)
 QChar CMath::imaginaryUnitSymbol()
 {
     return s_imaginaryUnitSymbol;
+}
+
+void CMath::setPolarAngleUnit(char angleUnit)
+{
+    s_polarAngleUnit = (angleUnit == 'd' || angleUnit == 'g' || angleUnit == 't') ? angleUnit : 'r';
+}
+
+char CMath::polarAngleUnit()
+{
+    return s_polarAngleUnit;
 }
 
 /**
@@ -421,6 +433,13 @@ CNumber::Format CNumber::Format::Polar()
     return result;
 }
 
+CNumber::Format CNumber::Format::PolarAngle()
+{
+    Format result;
+    result.notation = Format::Notation::PolarAngle;
+    return result;
+}
+
 CNumber::Format CNumber::Format::Cartesian()
 {
     Format result;
@@ -478,10 +497,26 @@ QString CMath::format(const CNumber& cn, CNumber::Format format)
             return strRadius;
         QString strPhase = HMath::format(phase, format);
         const QString imagUnit(CMath::imaginaryUnitSymbol());
-        const QString operatorSpace(QChar(0x205F)); // MEDIUM MATHEMATICAL SPACE
-        const QString dotOperator(QChar(0x22C5)); // DOT OPERATOR
+        const QString operatorSpace(UnicodeChars::MediumMathematicalSpace);
+        const QString dotOperator(UnicodeChars::DotOperator);
         return QStringLiteral("%1%2%3%2exp(%4%2%3%2%5)")
             .arg(strRadius, operatorSpace, dotOperator, imagUnit, strPhase);
+    } else if (format.notation == CNumber::Format::Notation::PolarAngle) {
+        QString strRadius = HMath::format(CMath::abs(cn).real, format);
+        HNumber phase = CMath::phase(cn).real;
+        if (phase.isZero())
+            return strRadius;
+
+        if (CMath::polarAngleUnit() == 'd')
+            phase = CMath::rad2deg(phase).real;
+        else if (CMath::polarAngleUnit() == 'g')
+            phase = CMath::rad2gon(phase).real;
+        else if (CMath::polarAngleUnit() == 't')
+            phase /= HNumber(2) * HMath::pi();
+
+        QString strPhase = HMath::format(phase, format);
+        const QString operatorSpace(UnicodeChars::MediumMathematicalSpace);
+        return QStringLiteral("%1%2∠%2%3").arg(strRadius, operatorSpace, strPhase);
     } else {
         QString real_part = cn.real.isZero()? "" : HMath::format(cn.real, format);
         QString imag_part = "";

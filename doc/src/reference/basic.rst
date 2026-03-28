@@ -384,9 +384,14 @@ Complex Numbers
 
 .. function:: polar(x)
 
-    Converts the complex number ``x`` to polar form, i.e. the form
-    *r e* :sup:`uɸ`, where ``u`` is the currently selected imaginary-unit
-    symbol (``i`` or ``j``). The angle ɸ is always given in radians.
+    Converts the complex number ``x`` to polar form.
+
+    In the ``Polar (Exponential)`` complex-number display mode, values are
+    shown as *r e* :sup:`uɸ`, where ``u`` is the selected imaginary-unit
+    symbol (``i`` or ``j``), and ɸ is in radians.
+
+    In the ``Polar (Angle)`` complex-number display mode, values are shown as
+    *r ∠ ɸ*, and ɸ follows the global angle-unit setting.
 
 .. function:: cart(x)
 

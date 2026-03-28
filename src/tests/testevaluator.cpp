@@ -2908,6 +2908,31 @@ void test_format()
     CHECK_EVAL_FAIL("binpad(10; 1e1000)");
 
     CHECK_EVAL("polar(3+4j)", "5 ⋅ exp(i ⋅ 0.92729521800161223243)");
+
+    Settings* settings = Settings::instance();
+    const char savedComplexForm = settings->resultFormatComplex;
+    const char savedAngleUnit = settings->angleUnit;
+
+    settings->resultFormatComplex = 'a';
+    settings->angleUnit = 'r';
+    Evaluator::instance()->initializeAngleUnits();
+    CHECK_EVAL_FORMAT_EXACT("1+1j", QString::fromUtf8("1.4142135623730950488 ∠ 0.78539816339744830962"));
+
+    settings->angleUnit = 'd';
+    Evaluator::instance()->initializeAngleUnits();
+    CHECK_EVAL_FORMAT_EXACT("1+1j", QString::fromUtf8("1.4142135623730950488 ∠ 45"));
+
+    settings->angleUnit = 'g';
+    Evaluator::instance()->initializeAngleUnits();
+    CHECK_EVAL_FORMAT_EXACT("1+1j", QString::fromUtf8("1.4142135623730950488 ∠ 50"));
+
+    settings->angleUnit = 't';
+    Evaluator::instance()->initializeAngleUnits();
+    CHECK_EVAL_FORMAT_EXACT("1+1j", QString::fromUtf8("1.4142135623730950488 ∠ 0.125"));
+
+    settings->resultFormatComplex = savedComplexForm;
+    settings->angleUnit = savedAngleUnit;
+    Evaluator::instance()->initializeAngleUnits();
 }
 
 

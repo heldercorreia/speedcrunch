@@ -417,7 +417,7 @@ void Settings::load()
 
     // Complex format special case.
     QString cmplxFormat = settings->value(key + QLatin1String("ComplexForm"), 'c').toString();
-    if (cmplxFormat != "c" && cmplxFormat != "p")
+    if (cmplxFormat != "c" && cmplxFormat != "p" && cmplxFormat != "a")
         resultFormatComplex = 'c';
     else
         resultFormatComplex = cmplxFormat.at(0).toLatin1();

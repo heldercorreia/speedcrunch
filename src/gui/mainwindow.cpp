@@ -389,6 +389,7 @@ void MainWindow::createActions()
     m_actions.settingsResultFormatScientific = new QAction(this);
     m_actions.settingsResultFormatCartesian= new QAction(this);
     m_actions.settingsResultFormatPolar = new QAction(this);
+    m_actions.settingsResultFormatPolarAngle = new QAction(this);
     m_actions.settingsImaginaryUnitI = new QAction(this);
     m_actions.settingsImaginaryUnitJ = new QAction(this);
     m_actions.settingsResultFormatSexagesimal = new QAction(this);
@@ -483,6 +484,7 @@ void MainWindow::createActions()
     m_actions.settingsResultFormatHexadecimal->setCheckable(true);
     m_actions.settingsResultFormatOctal->setCheckable(true);
     m_actions.settingsResultFormatPolar->setCheckable(true);
+    m_actions.settingsResultFormatPolarAngle->setCheckable(true);
     m_actions.settingsImaginaryUnitI->setCheckable(true);
     m_actions.settingsImaginaryUnitJ->setCheckable(true);
     m_actions.settingsResultFormatRational->setCheckable(true);
@@ -612,7 +614,11 @@ QString MainWindow::statusBarComplexNumbersValue() const
 {
     if (!m_settings->complexNumbers)
         return MainWindow::tr("Disabled");
-    return m_settings->resultFormatComplex == 'p' ? MainWindow::tr("Polar") : MainWindow::tr("Cartesian");
+    if (m_settings->resultFormatComplex == 'p')
+        return MainWindow::tr("Polar (Exponential)");
+    if (m_settings->resultFormatComplex == 'a')
+        return MainWindow::tr("Polar (Angle)");
+    return MainWindow::tr("Rectangular (Cartesian)");
 }
 
 void MainWindow::setActionsText()
@@ -735,8 +741,9 @@ void MainWindow::setActionsText()
     m_actions.settingsTertiaryResultFormatOctal->setText(MainWindow::tr("&Octal"));
     m_actions.settingsTertiaryResultFormatHexadecimal->setText(MainWindow::tr("&Hexadecimal"));
     m_actions.settingsTertiaryResultFormatSexagesimal->setText(MainWindow::tr("&Sexagesimal"));
-    m_actions.settingsResultFormatCartesian->setText(MainWindow::tr("&Cartesian"));
-    m_actions.settingsResultFormatPolar->setText(MainWindow::tr("&Polar"));
+    m_actions.settingsResultFormatCartesian->setText(MainWindow::tr("&Rectangular (Cartesian)"));
+    m_actions.settingsResultFormatPolar->setText(MainWindow::tr("Polar (&Exponential)"));
+    m_actions.settingsResultFormatPolarAngle->setText(MainWindow::tr("Polar (&Angle)"));
     m_actions.settingsImaginaryUnitI->setText(MainWindow::tr("Imaginary Unit '&i'"));
     m_actions.settingsImaginaryUnitJ->setText(MainWindow::tr("Imaginary Unit '&j'"));
     m_actions.settingsDisplayFont->setText(MainWindow::tr("&Font..."));
@@ -793,6 +800,7 @@ void MainWindow::createActionGroups()
     m_actionGroups.complexFormat->addAction(m_actions.settingsResultFormatComplexDisabled);
     m_actionGroups.complexFormat->addAction(m_actions.settingsResultFormatCartesian);
     m_actionGroups.complexFormat->addAction(m_actions.settingsResultFormatPolar);
+    m_actionGroups.complexFormat->addAction(m_actions.settingsResultFormatPolarAngle);
 
     m_actionGroups.imaginaryUnit = new QActionGroup(this);
     m_actionGroups.imaginaryUnit->addAction(m_actions.settingsImaginaryUnitI);
@@ -1013,8 +1021,10 @@ void MainWindow::createMenus()
 
     m_menus.complexNumbers = m_menus.results->addMenu("");
     m_menus.complexNumbers->addAction(m_actions.settingsResultFormatComplexDisabled);
+    m_menus.complexNumbers->addSeparator();
     m_menus.complexNumbers->addAction(m_actions.settingsResultFormatCartesian);
     m_menus.complexNumbers->addAction(m_actions.settingsResultFormatPolar);
+    m_menus.complexNumbers->addAction(m_actions.settingsResultFormatPolarAngle);
     m_menus.complexNumbers->addSeparator();
     m_menus.complexNumbers->addAction(m_actions.settingsImaginaryUnitI);
     m_menus.complexNumbers->addAction(m_actions.settingsImaginaryUnitJ);
@@ -1184,8 +1194,15 @@ void MainWindow::createStatusBar()
         SLOT(showResultFormatContextMenu(const QPoint&)));
     m_status.complexNumbers->setContextMenuPolicy(Qt::ActionsContextMenu);
     m_status.complexNumbers->addAction(m_actions.settingsResultFormatComplexDisabled);
+    QAction* complexSeparator1 = new QAction(m_status.complexNumbers);
+    complexSeparator1->setSeparator(true);
+    m_status.complexNumbers->addAction(complexSeparator1);
     m_status.complexNumbers->addAction(m_actions.settingsResultFormatCartesian);
     m_status.complexNumbers->addAction(m_actions.settingsResultFormatPolar);
+    m_status.complexNumbers->addAction(m_actions.settingsResultFormatPolarAngle);
+    QAction* complexSeparator2 = new QAction(m_status.complexNumbers);
+    complexSeparator2->setSeparator(true);
+    m_status.complexNumbers->addAction(complexSeparator2);
     m_status.complexNumbers->addAction(m_actions.settingsImaginaryUnitI);
     m_status.complexNumbers->addAction(m_actions.settingsImaginaryUnitJ);
 
@@ -1503,6 +1520,7 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsImaginaryUnitJ, SIGNAL(triggered()), SLOT(setImaginaryUnitJ()));
     connect(m_actions.settingsResultFormatOctal, SIGNAL(triggered()), SLOT(setResultFormatOctal()));
     connect(m_actions.settingsResultFormatPolar, SIGNAL(triggered()), SLOT(setResultFormatPolar()));
+    connect(m_actions.settingsResultFormatPolarAngle, SIGNAL(triggered()), SLOT(setResultFormatPolarAngle()));
     connect(m_actions.settingsResultFormatRational, SIGNAL(triggered()), SLOT(setResultFormatRational()));
     connect(m_actions.settingsResultFormatSexagesimal, SIGNAL(triggered()), SLOT(setResultFormatSexagesimal()));
     connect(m_actions.settingsResultFormatScientific, SIGNAL(triggered()), SLOT(setResultFormatScientific()));
@@ -1882,6 +1900,8 @@ void MainWindow::checkInitialComplexFormat()
 {
     if (!m_settings->complexNumbers) {
         m_actions.settingsResultFormatComplexDisabled->setChecked(true);
+    } else if (m_settings->resultFormatComplex == 'a') {
+        m_actions.settingsResultFormatPolarAngle->setChecked(true);
     } else if (m_settings->resultFormatComplex == 'p') {
         m_actions.settingsResultFormatPolar->setChecked(true);
     } else {
@@ -3450,12 +3470,32 @@ void MainWindow::setResultFormatPolar()
     emit resultFormatChanged();
 }
 
+void MainWindow::setResultFormatPolarAngle()
+{
+    if (m_settings->complexNumbers && m_settings->resultFormatComplex == 'a')
+        return;
+
+    const bool complexWasDisabled = !m_settings->complexNumbers;
+    m_settings->complexNumbers = true;
+    m_settings->resultFormatComplex = 'a';
+    if (complexWasDisabled) {
+        DMath::complexMode = true;
+        m_evaluator->initializeBuiltInVariables();
+    }
+    setStatusBarText();
+    if (complexWasDisabled)
+        emit complexNumbersChanged();
+    emit resultFormatChanged();
+}
+
 void MainWindow::cycleComplexNumbersMode()
 {
     if (!m_settings->complexNumbers) {
         m_actions.settingsResultFormatCartesian->trigger();
     } else if (m_settings->resultFormatComplex == 'c') {
         m_actions.settingsResultFormatPolar->trigger();
+    } else if (m_settings->resultFormatComplex == 'p') {
+        m_actions.settingsResultFormatPolarAngle->trigger();
     } else {
         m_actions.settingsResultFormatComplexDisabled->trigger();
     }
