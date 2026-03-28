@@ -118,22 +118,133 @@ const LayoutEntry s_scientificNarrowLayout[] = {
     {Keypad::KeyFactorial, 7, 0}, {Keypad::KeyMod, 7, 1}, {Keypad::KeyTan, 7, 2}, {Keypad::KeyAtan, 7, 3}, {Keypad::KeyXEquals, 7, 4}
 };
 
+void layoutEntries(Keypad::LayoutMode layoutMode, const LayoutEntry** entries, int* count)
+{
+    *entries = nullptr;
+    *count = 0;
+    if (layoutMode == Keypad::LayoutModeScientificWide) {
+        *entries = s_scientificWideLayout;
+        *count = int(sizeof s_scientificWideLayout / sizeof s_scientificWideLayout[0]);
+    } else if (layoutMode == Keypad::LayoutModeScientificNarrow) {
+        *entries = s_scientificNarrowLayout;
+        *count = int(sizeof s_scientificNarrowLayout / sizeof s_scientificNarrowLayout[0]);
+    } else if (layoutMode == Keypad::LayoutModeBasicWide) {
+        *entries = s_basicWideLayout;
+        *count = int(sizeof s_basicWideLayout / sizeof s_basicWideLayout[0]);
+    }
+}
+
+QString customButtonInsertText(Keypad::Button button, QChar radixCharacter)
+{
+    switch (button) {
+    case Keypad::Key0: return QString::fromLatin1("0");
+    case Keypad::Key1: return QString::fromLatin1("1");
+    case Keypad::Key2: return QString::fromLatin1("2");
+    case Keypad::Key3: return QString::fromLatin1("3");
+    case Keypad::Key4: return QString::fromLatin1("4");
+    case Keypad::Key5: return QString::fromLatin1("5");
+    case Keypad::Key6: return QString::fromLatin1("6");
+    case Keypad::Key7: return QString::fromLatin1("7");
+    case Keypad::Key8: return QString::fromLatin1("8");
+    case Keypad::Key9: return QString::fromLatin1("9");
+    case Keypad::KeyPlus: return QString::fromLatin1("+");
+    case Keypad::KeyMinus: return QString::fromUtf8("−");
+    case Keypad::KeyTimes: return QString::fromUtf8("×");
+    case Keypad::KeyDivide: return QString::fromUtf8("÷");
+    case Keypad::KeyEE: return QString::fromLatin1("e");
+    case Keypad::KeyLeftPar: return QString::fromLatin1("(");
+    case Keypad::KeyRightPar: return QString::fromLatin1(")");
+    case Keypad::KeyRaise: return QString::fromLatin1("^");
+    case Keypad::KeyPercent: return QString::fromLatin1("%");
+    case Keypad::KeyFactorial: return QString::fromLatin1("!");
+    case Keypad::KeyX: return QString::fromLatin1("x");
+    case Keypad::KeyXEquals: return QString::fromLatin1("x=");
+    case Keypad::KeyPi: return QString::fromLatin1("pi");
+    case Keypad::KeyAns: return QString::fromLatin1("ans");
+    case Keypad::KeySqrt: return QString::fromLatin1("sqrt(");
+    case Keypad::KeyCbrt: return QString::fromLatin1("cbrt(");
+    case Keypad::KeyLg: return QString::fromLatin1("lg(");
+    case Keypad::KeyMod: return QString::fromLatin1("mod(");
+    case Keypad::KeyLn: return QString::fromLatin1("ln(");
+    case Keypad::KeyExp: return QString::fromLatin1("exp(");
+    case Keypad::KeySin: return QString::fromLatin1("sin(");
+    case Keypad::KeyCos: return QString::fromLatin1("cos(");
+    case Keypad::KeyTan: return QString::fromLatin1("tan(");
+    case Keypad::KeyAcos: return QString::fromLatin1("arccos(");
+    case Keypad::KeyAtan: return QString::fromLatin1("arctan(");
+    case Keypad::KeyAsin: return QString::fromLatin1("arcsin(");
+    case Keypad::KeyRadixChar: return QString(radixCharacter);
+    default: break;
+    }
+    return QString();
+}
+
+QString customButtonLabel(Keypad::Button button, QChar radixCharacter)
+{
+    switch (button) {
+    case Keypad::Key0: return QString::fromLatin1("0");
+    case Keypad::Key1: return QString::fromLatin1("1");
+    case Keypad::Key2: return QString::fromLatin1("2");
+    case Keypad::Key3: return QString::fromLatin1("3");
+    case Keypad::Key4: return QString::fromLatin1("4");
+    case Keypad::Key5: return QString::fromLatin1("5");
+    case Keypad::Key6: return QString::fromLatin1("6");
+    case Keypad::Key7: return QString::fromLatin1("7");
+    case Keypad::Key8: return QString::fromLatin1("8");
+    case Keypad::Key9: return QString::fromLatin1("9");
+    case Keypad::KeyEquals: return QString::fromLatin1("=");
+    case Keypad::KeyPlus: return QString::fromLatin1("+");
+    case Keypad::KeyMinus: return QString::fromUtf8("−");
+    case Keypad::KeyTimes: return QString::fromUtf8("×");
+    case Keypad::KeyDivide: return QString::fromUtf8("÷");
+    case Keypad::KeyRadixChar: return QString(radixCharacter);
+    case Keypad::KeyClear: return QString::fromUtf8("⌧");
+    case Keypad::KeyEE: return QString::fromLatin1("E");
+    case Keypad::KeyLeftPar: return QString::fromLatin1("(");
+    case Keypad::KeyRightPar: return QString::fromLatin1(")");
+    case Keypad::KeyRaise: return QString::fromLatin1("^");
+    case Keypad::KeySqrt: return QString::fromUtf8("√");
+    case Keypad::KeyCbrt: return QString::fromUtf8("∛");
+    case Keypad::KeyLg: return QString::fromLatin1("lg");
+    case Keypad::KeyMod: return QString::fromLatin1("mod");
+    case Keypad::KeyBackspace: return QString::fromUtf8("⌫");
+    case Keypad::KeyPercent: return QString::fromLatin1("%");
+    case Keypad::KeyFactorial: return QString::fromLatin1("!");
+    case Keypad::KeyPi: return QString::fromUtf8("π");
+    case Keypad::KeyAns: return QString::fromLatin1("ans");
+    case Keypad::KeyX: return QString::fromLatin1("x");
+    case Keypad::KeyXEquals: return QString::fromLatin1("x=");
+    case Keypad::KeyExp: return QString::fromLatin1("exp");
+    case Keypad::KeyLn: return QString::fromLatin1("ln");
+    case Keypad::KeySin: return QString::fromLatin1("sin");
+    case Keypad::KeyAsin: return QString::fromLatin1("arcsin");
+    case Keypad::KeyCos: return QString::fromLatin1("cos");
+    case Keypad::KeyAcos: return QString::fromLatin1("arccos");
+    case Keypad::KeyTan: return QString::fromLatin1("tan");
+    case Keypad::KeyAtan: return QString::fromLatin1("arctan");
+    default: break;
+    }
+    return QString();
+}
+
+int customButtonAction(Keypad::Button button)
+{
+    switch (button) {
+    case Keypad::KeyBackspace: return Settings::CustomKeypadActionBackspace;
+    case Keypad::KeyClear: return Settings::CustomKeypadActionClearExpression;
+    case Keypad::KeyEquals: return Settings::CustomKeypadActionEvaluateExpression;
+    default: break;
+    }
+    return Settings::CustomKeypadActionInsertText;
+}
+
 QHash<Keypad::Button, QPoint> createLayoutMap(Keypad::LayoutMode layoutMode)
 {
     QHash<Keypad::Button, QPoint> map;
 
     const LayoutEntry* entries = nullptr;
     int count = 0;
-    if (layoutMode == Keypad::LayoutModeScientificWide) {
-        entries = s_scientificWideLayout;
-        count = int(sizeof s_scientificWideLayout / sizeof s_scientificWideLayout[0]);
-    } else if (layoutMode == Keypad::LayoutModeScientificNarrow) {
-        entries = s_scientificNarrowLayout;
-        count = int(sizeof s_scientificNarrowLayout / sizeof s_scientificNarrowLayout[0]);
-    } else if (layoutMode == Keypad::LayoutModeBasicWide) {
-        entries = s_basicWideLayout;
-        count = int(sizeof s_basicWideLayout / sizeof s_basicWideLayout[0]);
-    }
+    layoutEntries(layoutMode, &entries, &count);
 
     for (int i = 0; i < count; ++i)
         map.insert(entries[i].button, QPoint(entries[i].column, entries[i].row));
@@ -179,6 +290,51 @@ Keypad::Keypad(const QList<CustomButtonDescription>& customButtons, QWidget* par
     layoutCustomButtons();
     disableButtonFocus();
     setLayoutDirection(Qt::LeftToRight);
+}
+
+QList<Keypad::CustomButtonDescription> Keypad::presetCustomButtons(LayoutMode layoutMode,
+                                                                   QChar radixCharacter,
+                                                                   int* rows,
+                                                                   int* columns)
+{
+    QList<CustomButtonDescription> buttons;
+    const LayoutEntry* entries = nullptr;
+    int count = 0;
+    layoutEntries(layoutMode, &entries, &count);
+    if (!entries || count <= 0) {
+        if (rows)
+            *rows = 1;
+        if (columns)
+            *columns = 1;
+        return buttons;
+    }
+
+    int maxRow = 0;
+    int maxColumn = 0;
+    for (int i = 0; i < count; ++i) {
+        maxRow = qMax(maxRow, entries[i].row);
+        maxColumn = qMax(maxColumn, entries[i].column);
+
+        const QString label = customButtonLabel(entries[i].button, radixCharacter);
+        if (label.isEmpty())
+            continue;
+
+        CustomButtonDescription button;
+        button.row = entries[i].row;
+        button.column = entries[i].column;
+        button.label = label;
+        button.action = customButtonAction(entries[i].button);
+        button.text = (button.action == Settings::CustomKeypadActionInsertText)
+            ? customButtonInsertText(entries[i].button, radixCharacter)
+            : QString();
+        buttons.append(button);
+    }
+
+    if (rows)
+        *rows = maxRow + 1;
+    if (columns)
+        *columns = maxColumn + 1;
+    return buttons;
 }
 
 void Keypad::handleRadixCharacterChange()

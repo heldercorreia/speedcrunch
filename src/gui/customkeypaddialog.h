@@ -26,6 +26,12 @@ public:
     Settings::CustomKeypad customKeypad() const;
 
 private:
+    enum PresetLayout {
+        PresetLayoutBasicWide = 0,
+        PresetLayoutScientificWide = 1,
+        PresetLayoutScientificNarrow = 2
+    };
+
     struct Cell {
         QString label;
         QString text;
@@ -35,6 +41,7 @@ private:
     int cellIndex(int row, int column) const;
     void buildTableFromCells();
     void rebuildCellStorage(int rows, int columns);
+    void applyPresetLayout(PresetLayout presetLayout);
     QList<Cell> readCellsFromTable() const;
 
     QSpinBox* m_rowsSpin;

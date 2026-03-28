@@ -53,6 +53,11 @@ public:
         int column;
     };
 
+    static QList<CustomButtonDescription> presetCustomButtons(LayoutMode layoutMode,
+                                                              QChar radixCharacter,
+                                                              int* rows = nullptr,
+                                                              int* columns = nullptr);
+
     explicit Keypad(LayoutMode layoutMode = LayoutModeScientificWide, QWidget* parent = 0, int scalePercent = 100);
     explicit Keypad(const QList<CustomButtonDescription>& customButtons, QWidget* parent = 0, int scalePercent = 100);
 

@@ -63,6 +63,10 @@ They can be enabled and disabled via the :menuselection:`View` menu.
     * The button behavior: ``Insert text``, ``Backspace``, ``Clear expression``, or ``Evaluate expression``
     * The text to insert (for ``Insert text`` behavior)
 
+    The dialog also includes a ``Copy preset`` selector with an :guilabel:`Apply` button,
+    so you can start from the ``Basic``, ``Scientific (wide)``, or
+    ``Scientific (narrow)`` layout and then customize it.
+
     Custom keypad settings are saved and restored automatically.
 
     .. versionadded:: 1.0
