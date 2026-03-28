@@ -118,6 +118,9 @@
 
 static FunctionRepo* s_FunctionRepoInstance = 0;
 static const int s_defaultRandomDigits = 16;
+// Internal sentinel used to request per-expression rational display in NumberFormatter.
+// This piggybacks on precision because Quantity::Format has no dedicated rational-override flag.
+static const int s_forcedRationalPrecision = -999;
 
 // FIXME: destructor seems not to be called
 static void s_deleteFunctions()
@@ -741,6 +744,16 @@ Quantity function_dec(Function* f, const Function::ArgumentList& args)
     return Quantity(args.at(0)).setFormat(Quantity::Format::Decimal() + Quantity(args.at(0)).format());
 }
 
+Quantity function_rat(Function* f, const Function::ArgumentList& args)
+{
+    ENSURE_ARGUMENT_COUNT(1);
+    return Quantity(args.at(0)).setFormat(
+        Quantity::Format::Decimal()
+        + Quantity::Format::General()
+        + Quantity::Format::Precision(s_forcedRationalPrecision)
+        + Quantity(args.at(0)).format());
+}
+
 Quantity function_hex(Function* f, const Function::ArgumentList& args)
 {
     ENSURE_ARGUMENT_COUNT(1);
@@ -1218,6 +1231,7 @@ void FunctionRepo::createFunctions()
     FUNCTION_INSERT(sum);
     FUNCTION_INSERT(rand);
     FUNCTION_INSERT(randint);
+    FUNCTION_INSERT(rat);
     FUNCTION_INSERT(trunc);
     FUNCTION_INSERT(variance);
 
@@ -1314,6 +1328,8 @@ void FunctionRepo::createFunctions()
     m_functions.insert(QString(UnicodeChars::Summation).toUpper(), find(QStringLiteral("sigma")));
     m_functions.insert(QString(UnicodeChars::SquareRoot).toUpper(), find(QStringLiteral("sqrt")));
     m_functions.insert(QString(UnicodeChars::CubeRoot).toUpper(), find(QStringLiteral("cbrt")));
+    m_functions.insert(QStringLiteral("RATIO"), find(QStringLiteral("rat")));
+    m_functions.insert(QStringLiteral("RATIONAL"), find(QStringLiteral("rat")));
 }
 
 FunctionRepo* FunctionRepo::instance()
@@ -1448,6 +1464,7 @@ void FunctionRepo::setNonTranslatableFunctionUsages()
     FUNCTION_USAGE(phase, "x");
     FUNCTION_USAGE(radians, "x");
     FUNCTION_USAGE(real, "x");
+    FUNCTION_USAGE(rat, "x");
     FUNCTION_USAGE(sec, "x)");
     FUNCTION_USAGE(sgn, "x");
     FUNCTION_USAGE(sigma, "start; end; expression");
@@ -1567,6 +1584,7 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(min, tr("Minimum"));
     FUNCTION_NAME(rand, tr("Random Decimal Number"));
     FUNCTION_NAME(randint, tr("Random Integer Number"));
+    FUNCTION_NAME(rat, tr("Convert to Rational Representation"));
     FUNCTION_NAME(mod, tr("Modulo"));
     FUNCTION_NAME(emod, tr("Euclidean Modulo"));
     FUNCTION_NAME(powmod, tr("Modular Exponentiation"));

@@ -113,6 +113,13 @@ that is used for displaying results, select one of the corresponding settings in
 
     Format ``n`` as decimal (base-10).
 
+.. function:: rat(n)
+              ratio(n)
+              rational(n)
+
+    Format ``n`` in rational form when possible. If a suitable rational form is not found,
+    the result falls back to decimal automatic formatting.
+
 .. function:: hex(n)
 
     Format ``n`` as hexadecimal (base-16).

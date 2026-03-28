@@ -34,6 +34,9 @@ namespace {
 
 constexpr int RationalFormatMaxDenominator = 1000000;
 constexpr int TrigPiFormatMaxDenominator = 12;
+// Internal sentinel set by rat()/ratio()/rational() via Quantity::Format::precision.
+// It forces rational display for a single result, with automatic decimal fallback.
+constexpr int ForcedRationalPrecision = -999;
 HNumber rationalFormatRelativeTolerance()
 {
     return HNumber("1e-60");
@@ -217,7 +220,9 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride)
     QString result;
 
     Quantity::Format format = q.format();
-    if (activeResultFormat == 'r'
+    // Check per-expression rational-display override encoded in format precision.
+    const bool forceRationalDisplay = format.precision == ForcedRationalPrecision;
+    if ((activeResultFormat == 'r' || forceRationalDisplay)
             && format.base != Quantity::Format::Base::Binary
             && format.base != Quantity::Format::Base::Octal
             && format.base != Quantity::Format::Base::Hexadecimal

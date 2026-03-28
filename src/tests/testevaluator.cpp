@@ -2863,6 +2863,10 @@ void test_format()
     CHECK_EVAL("bin(123)", "0b1111011");
     CHECK_EVAL("oct(123)", "0o173");
     CHECK_EVAL("hex(123)", "0x7B");
+    CHECK_EVAL_FORMAT_EXACT("rat(0.5)", QStringLiteral("1") + slash + QStringLiteral("2"));
+    CHECK_EVAL_FORMAT_EXACT("ratio(0.5)", QStringLiteral("1") + slash + QStringLiteral("2"));
+    CHECK_EVAL_FORMAT_EXACT("rational(0.5)", QStringLiteral("1") + slash + QStringLiteral("2"));
+    CHECK_EVAL_FORMAT_NO_SLASH("rat(exp(1))");
 
     CHECK_EVAL("binpad(15)", "0b00001111");
     CHECK_EVAL("hexpad(15)", "0x0F");
