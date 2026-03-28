@@ -2678,6 +2678,21 @@ void test_display_interpreted_spacing()
             + minus
             + QStringLiteral("27"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("(12/68)*kilo"),
+        QStringLiteral("0.176470588235294")
+            + dotSpaced
+            + QStringLiteral("kilo"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("12/(68*kilo)"),
+        QStringLiteral("12")
+            + divide
+            + QStringLiteral("(68")
+            + dotSpaced
+            + QStringLiteral("kilo)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("12/68*1000"),
+        QStringLiteral("176.470588235294"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("2+cos(-pi^2)+pi+3+pi"),
         QStringLiteral("cos(")
             + QString(UnicodeChars::MinusSign)

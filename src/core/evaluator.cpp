@@ -125,6 +125,31 @@ static bool splitVariableDescription(const QString& expression,
     return false;
 }
 
+static int findTopLevelCommentDelimiterPos(const QString& text)
+{
+    int depth = 0;
+    for (int i = 0; i < text.size(); ++i) {
+        const QChar ch = text.at(i);
+        if (ch == QLatin1Char('(')) {
+            ++depth;
+            continue;
+        }
+        if (ch == QLatin1Char(')')) {
+            if (depth > 0)
+                --depth;
+            continue;
+        }
+        if (ch != QLatin1Char('?') || depth != 0)
+            continue;
+
+        const bool hasLeftWhitespace = i > 0 && text.at(i - 1).isSpace();
+        const bool hasRightWhitespace = i + 1 >= text.size() || text.at(i + 1).isSpace();
+        if (hasLeftWhitespace && hasRightWhitespace)
+            return i;
+    }
+    return -1;
+}
+
 static bool s_isSubtractionOperatorAlias(const QChar& ch)
 {
     return ch == QLatin1Char('-') || ch == UnicodeChars::MinusSign;
@@ -2363,7 +2388,7 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
     if (expression.isEmpty())
         return expression;
 
-    const int commentPos = expression.indexOf('?');
+    const int commentPos = findTopLevelCommentDelimiterPos(expression);
     const QString expressionPrefix = (commentPos >= 0)
         ? expression.left(commentPos).trimmed()
         : expression;
@@ -2470,13 +2495,10 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
             return false;
         };
 
-        auto isMulDivOp = [](QChar ch) {
+        auto isMulOp = [](QChar ch) {
             return ch == QLatin1Char('*')
                 || ch == QChar(0x22C5) // ⋅
-                || ch == QChar(0x00D7) // ×
-                || ch == QLatin1Char('/')
-                || ch == QChar(0x00F7) // ÷
-                || ch == QChar(0x29F8); // ⧸
+                || ch == QChar(0x00D7); // ×
         };
 
         auto unwrapEdgeParenthesizedMulDivFactor = [&](QString* expr) {
@@ -2504,7 +2526,7 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
                     int next = close + 1;
                     while (next < t.size() && t.at(next).isSpace())
                         ++next;
-                    if (next < t.size() && isMulDivOp(t.at(next))) {
+                    if (next < t.size() && isMulOp(t.at(next))) {
                         const QString inner = t.mid(1, close - 1).trimmed();
                         const bool startsWithUnarySign =
                             !inner.isEmpty()
@@ -2542,7 +2564,7 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
                     int prev = open - 1;
                     while (prev >= 0 && t.at(prev).isSpace())
                         --prev;
-                    if (prev >= 0 && isMulDivOp(t.at(prev))) {
+                    if (prev >= 0 && isMulOp(t.at(prev))) {
                         const QString inner = t.mid(open + 1, t.size() - open - 2).trimmed();
                         const bool startsWithUnarySign =
                             !inner.isEmpty()
@@ -2655,7 +2677,7 @@ QString Evaluator::simplifyInterpretedExpression(const QString& expression)
     if (expression.isEmpty())
         return expression;
 
-    const int commentPos = expression.indexOf('?');
+    const int commentPos = findTopLevelCommentDelimiterPos(expression);
     const QString expressionPrefix = (commentPos >= 0)
         ? expression.left(commentPos).trimmed()
         : expression;
@@ -5328,7 +5350,7 @@ Quantity Evaluator::eval()
                     if (assignmentPos >= 0)
                         interpretedBody = interpretedBody.mid(assignmentPos + 1);
                 }
-                const int commentPos = interpretedBody.indexOf('?');
+                const int commentPos = findTopLevelCommentDelimiterPos(interpretedBody);
                 if (commentPos >= 0)
                     interpretedBody = interpretedBody.left(commentPos).trimmed();
                 userFunction.setInterpretedExpression(interpretedBody);
