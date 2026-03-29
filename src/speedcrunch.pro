@@ -94,6 +94,8 @@ HEADERS += core/book.h \
            gui/userfunctionlistwidget.h \
            gui/versioncheck.h \
            gui/manualwindow.h \
+           gui/notationandprecisiondialog.h \
+           gui/numberformatdialog.h \
            gui/mainwindow.h \
            gui/syntaxhighlighter.h \
            math/cmath.h \
@@ -147,6 +149,7 @@ SOURCES += main.cpp \
            gui/functiontooltiputils.cpp \
            gui/functionswidget.cpp \
            gui/historywidget.cpp \
+           gui/genericdock.h \
            gui/keypad.cpp \
            gui/syntaxhighlighter.cpp \
            gui/variablelistwidget.cpp \
@@ -154,6 +157,8 @@ SOURCES += main.cpp \
            gui/versioncheck.cpp \
            gui/mainwindow.cpp \
            gui/manualwindow.cpp \
+           gui/notationandprecisiondialog.cpp \
+           gui/numberformatdialog.cpp \
            math/floatcommon.c \
            math/floatconst.c \
            math/floatconvert.c \

@@ -2400,13 +2400,35 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
             commentSuffix += QLatin1String(" ") + commentText;
     }
 
-    const Tokens scannedTokens = Evaluator::instance()->scan(expressionPrefix);
+    auto scanForDisplay = [](const QString& text) {
+        // Interpreted expressions are internally dot-based. For comma-based
+        // display styles, scanning with a strict single-radix setting can
+        // misclassify '.' as grouping separator and corrupt token structure.
+        // For display-only tokenization we temporarily enable "both radix
+        // chars accepted" mode, scan, then restore the previous setting.
+        // This keeps display formatting stable without changing evaluation
+        // behavior or persisted style.
+        Settings* settings = Settings::instance();
+        char previousRadix = 0;
+        if (settings->isRadixCharacterBoth()) {
+            previousRadix = '*';
+        } else if (!settings->isRadixCharacterAuto()) {
+            previousRadix = settings->radixCharacter();
+        }
+
+        settings->setRadixCharacter('*');
+        const Tokens tokens = Evaluator::instance()->scan(text);
+        settings->setRadixCharacter(previousRadix);
+        return tokens;
+    };
+
+    const Tokens scannedTokens = scanForDisplay(expressionPrefix);
     if (scannedTokens.isEmpty())
         return expressionPrefix + commentSuffix;
 
     const QString groupedExpression =
         groupHighPrecedenceAdditiveTermsForDisplay(expressionPrefix, scannedTokens);
-    const Tokens groupedTokens = Evaluator::instance()->scan(groupedExpression);
+    const Tokens groupedTokens = scanForDisplay(groupedExpression);
     if (groupedTokens.isEmpty())
         return groupedExpression + commentSuffix;
 
@@ -2605,7 +2627,7 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
     } else {
         displayExpression = groupedExpression;
     }
-    const Tokens tokens = Evaluator::instance()->scan(displayExpression);
+    const Tokens tokens = scanForDisplay(displayExpression);
     if (tokens.isEmpty())
         return displayExpression + commentSuffix;
 
@@ -2689,13 +2711,31 @@ QString Evaluator::simplifyInterpretedExpression(const QString& expression)
             commentSuffix += QLatin1String(" ") + commentText;
     }
 
-    const Tokens scannedTokens = Evaluator::instance()->scan(expressionPrefix);
+    auto scanForDisplay = [](const QString& text) {
+        // Same display-tokenization strategy as above:
+        // force temporary dual-radix scan mode so internal dot-decimal
+        // interpreted text is tokenized correctly under comma-style displays.
+        Settings* settings = Settings::instance();
+        char previousRadix = 0;
+        if (settings->isRadixCharacterBoth()) {
+            previousRadix = '*';
+        } else if (!settings->isRadixCharacterAuto()) {
+            previousRadix = settings->radixCharacter();
+        }
+
+        settings->setRadixCharacter('*');
+        const Tokens tokens = Evaluator::instance()->scan(text);
+        settings->setRadixCharacter(previousRadix);
+        return tokens;
+    };
+
+    const Tokens scannedTokens = scanForDisplay(expressionPrefix);
     if (scannedTokens.isEmpty())
         return expressionPrefix + commentSuffix;
 
     const QString groupedExpression =
         groupHighPrecedenceAdditiveTermsForDisplay(expressionPrefix, scannedTokens);
-    const Tokens groupedTokens = Evaluator::instance()->scan(groupedExpression);
+    const Tokens groupedTokens = scanForDisplay(groupedExpression);
     if (groupedTokens.isEmpty())
         return groupedExpression + commentSuffix;
 
@@ -2738,7 +2778,7 @@ QString Evaluator::simplifyInterpretedExpression(const QString& expression)
     } while (changed);
 
     if (normalized != simplifiedExpression) {
-        const Tokens normalizedTokens = Evaluator::instance()->scan(normalized);
+        const Tokens normalizedTokens = scanForDisplay(normalized);
         if (!normalizedTokens.isEmpty())
             simplifiedExpression = simplifyRepeatedMultiplicativeBasesForDisplay(normalized, normalizedTokens);
         else
@@ -2966,6 +3006,11 @@ static bool isIdentifier(QChar ch)
 // Helper function: return true for valid radix characters.
 bool Evaluator::isRadixChar(const QChar& ch)
 {
+    // Accept both '.' and ',' as potential radix markers at tokenization time.
+    // Final decimal/grouping disambiguation is done later in fixNumberRadix().
+    if (ch.unicode() == '.' || ch.unicode() == ',')
+        return true;
+
     if (Settings::instance()->isRadixCharacterBoth())
         return ch.unicode() == '.' || ch.unicode() == ',';
 
@@ -3014,18 +3059,18 @@ QString Evaluator::fixNumberRadix(const QString& number)
     int commaCount = 0;
     QChar lastRadixChar;
 
-    // First pass: count the number of dot and comma characters.
+    // First pass: count dot/comma occurrences independently of the selected
+    // radix setting. This keeps number parsing tolerant to copied values that
+    // use a different but obvious decimal/grouping convention than the active
+    // UI format (for example "1,56" while dot style is selected).
     for (int i = 0 ; i < number.size() ; ++i) {
         QChar c = number[i];
-        if (isRadixChar(c)) {
+        if (c == '.' || c == ',') {
             lastRadixChar = c;
-
             if (c == '.')
                 ++dotCount;
-            else if (c == ',')
-                ++commaCount;
             else
-                return QString(); // Should not happen.
+                ++commaCount;
         }
     }
 
@@ -3049,7 +3094,7 @@ QString Evaluator::fixNumberRadix(const QString& number)
     QString result = "";
     for (int i = 0 ; i < number.size() ; ++i) {
         QChar c = number[i];
-        if (isRadixChar(c)) {
+        if (c == '.' || c == ',') {
             if (c == radixChar)
                 result.append('.');
         } else

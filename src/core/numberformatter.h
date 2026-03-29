@@ -29,6 +29,8 @@ struct NumberFormatter {
     static QString format(CNumber &num) { return format(Quantity(num)); }
     static QString format(Quantity);
     static QString format(Quantity, char resultFormatOverride);
+    static QString format(Quantity, char resultFormatOverride, int precisionOverride,
+                          bool useComplexNotation, char complexNotationOverride);
     static QString formatTrigSymbolic(Quantity);
     static QString formatNumericLiteralForDisplay(const QString& input);
 };

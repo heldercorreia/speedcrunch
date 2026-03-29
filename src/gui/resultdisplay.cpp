@@ -109,8 +109,14 @@ bool shouldShowAdditionalRationalForTrig(const Settings* settings,
 {
     const bool hasRationalAlready =
         settings->resultFormat == 'r'
-        || settings->alternativeResultFormat == 'r'
-        || settings->tertiaryResultFormat == 'r';
+        || (settings->multipleResultLinesEnabled
+            && settings->secondaryResultEnabled && settings->alternativeResultFormat == 'r')
+        || (settings->multipleResultLinesEnabled
+            && settings->tertiaryResultEnabled && settings->tertiaryResultFormat == 'r')
+        || (settings->multipleResultLinesEnabled
+            && settings->quaternaryResultEnabled && settings->quaternaryResultFormat == 'r')
+        || (settings->multipleResultLinesEnabled
+            && settings->quinaryResultEnabled && settings->quinaryResultFormat == 'r');
     if (hasRationalAlready)
         return false;
 
@@ -123,6 +129,7 @@ bool shouldShowAdditionalRationalForTrig(const Settings* settings,
 QStringList formatResultLines(const HistoryEntry& entry)
 {
     const Settings* settings = Settings::instance();
+    const bool useExtraResultLines = settings->multipleResultLinesEnabled;
     const Quantity value = entry.result();
 
     QStringList lines;
@@ -152,15 +159,41 @@ QStringList formatResultLines(const HistoryEntry& entry)
     }
     appendUniqueLine(QLatin1String("= ")
         + DisplayFormatUtils::applyDigitGroupingForDisplay(NumberFormatter::format(value)));
-    if (settings->alternativeResultFormat != '\0') {
+    if (useExtraResultLines && settings->secondaryResultEnabled && settings->alternativeResultFormat != '\0') {
         appendUniqueLine(QLatin1String("= ")
             + DisplayFormatUtils::applyDigitGroupingForDisplay(
-                NumberFormatter::format(value, settings->alternativeResultFormat)));
+                NumberFormatter::format(value,
+                                        settings->alternativeResultFormat,
+                                        settings->secondaryResultPrecision,
+                                        settings->complexNumbers && settings->secondaryComplexNumbers,
+                                        settings->secondaryResultFormatComplex)));
     }
-    if (settings->tertiaryResultFormat != '\0') {
+    if (useExtraResultLines && settings->tertiaryResultEnabled && settings->tertiaryResultFormat != '\0') {
         appendUniqueLine(QLatin1String("= ")
             + DisplayFormatUtils::applyDigitGroupingForDisplay(
-                NumberFormatter::format(value, settings->tertiaryResultFormat)));
+                NumberFormatter::format(value,
+                                        settings->tertiaryResultFormat,
+                                        settings->tertiaryResultPrecision,
+                                        settings->complexNumbers && settings->tertiaryComplexNumbers,
+                                        settings->tertiaryResultFormatComplex)));
+    }
+    if (useExtraResultLines && settings->quaternaryResultEnabled && settings->quaternaryResultFormat != '\0') {
+        appendUniqueLine(QLatin1String("= ")
+            + DisplayFormatUtils::applyDigitGroupingForDisplay(
+                NumberFormatter::format(value,
+                                        settings->quaternaryResultFormat,
+                                        settings->quaternaryResultPrecision,
+                                        settings->complexNumbers && settings->quaternaryComplexNumbers,
+                                        settings->quaternaryResultFormatComplex)));
+    }
+    if (useExtraResultLines && settings->quinaryResultEnabled && settings->quinaryResultFormat != '\0') {
+        appendUniqueLine(QLatin1String("= ")
+            + DisplayFormatUtils::applyDigitGroupingForDisplay(
+                NumberFormatter::format(value,
+                                        settings->quinaryResultFormat,
+                                        settings->quinaryResultPrecision,
+                                        settings->complexNumbers && settings->quinaryComplexNumbers,
+                                        settings->quinaryResultFormatComplex)));
     }
     const QString symbolicTrig = NumberFormatter::formatTrigSymbolic(value);
     if (shouldShowAdditionalRationalForTrig(settings, entry.expr(), entry.interpretedExpr(), value)) {
@@ -173,18 +206,22 @@ QStringList formatResultLines(const HistoryEntry& entry)
 QString formattedExpressionForDisplay(const HistoryEntry& entry)
 {
     if (!entry.interpretedExpr().isEmpty())
-        return UnicodeChars::normalizePiForDisplay(
-            Evaluator::formatInterpretedExpressionForDisplay(entry.interpretedExpr()));
-    return UnicodeChars::normalizePiForDisplay(entry.expr());
+        return DisplayFormatUtils::applyDigitGroupingForDisplay(
+            UnicodeChars::normalizePiForDisplay(
+                Evaluator::formatInterpretedExpressionForDisplay(entry.interpretedExpr())));
+    return DisplayFormatUtils::applyDigitGroupingForDisplay(
+        UnicodeChars::normalizePiForDisplay(entry.expr()));
 }
 
 QString formattedExpressionForDisplay(const QString& expression,
                                      const QString& interpretedExpression)
 {
     if (!interpretedExpression.isEmpty())
-        return UnicodeChars::normalizePiForDisplay(
-            Evaluator::formatInterpretedExpressionForDisplay(interpretedExpression));
-    return UnicodeChars::normalizePiForDisplay(expression);
+        return DisplayFormatUtils::applyDigitGroupingForDisplay(
+            UnicodeChars::normalizePiForDisplay(
+                Evaluator::formatInterpretedExpressionForDisplay(interpretedExpression)));
+    return DisplayFormatUtils::applyDigitGroupingForDisplay(
+        UnicodeChars::normalizePiForDisplay(expression));
 }
 
 int expressionLineCount(const HistoryEntry& entry)

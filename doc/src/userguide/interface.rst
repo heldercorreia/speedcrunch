@@ -197,11 +197,11 @@ The result display supports mouse-driven interactions for navigation and editing
 
 .. _result_format:
 
-Format
+Notation
 +++++++++++++
 
-This section allows selecting the result format to use. You can select one of the following
-formats:
+This section allows selecting the result notation to use. You can select one
+of the following notations:
 
 * :menuselection:`Decimal --> Automatic`
     Use fixed-point decimal form for most results; for very large (more than six integer places) or very small results (less than 0.0001),
@@ -242,8 +242,6 @@ formats:
 
     .. versionadded:: 1.0
 
-.. _radix_character:
-
 Angle Unit
 ++++++++++
 
@@ -268,19 +266,58 @@ determines the angle format of the arguments.
 * :menuselection:`Cycle Unit`
     Cycle unit selection between Radian, Degree, Gradian, and Turn.
 
-Digit Grouping
+Complex Numbers
 ++++++++++++++
 
-Visually group digits in long numbers. Requires
-:menuselection:`Settings --> Appearance --> Syntax Highlighting` to be enabled.
+Configure global complex-number behavior via
+:menuselection:`Settings --> Complex Numbers`.
+On first launch, complex numbers are disabled by default.
 
-* :menuselection:`Digit Grouping`
-    Visually group digits in long numbers. Separator width options map to:
-    Small Space = U+0020 once, Medium Space = U+0020 twice, Large Space =
-    U+0020 three times.
-* :menuselection:`Digit Grouping --> Group Integer Part Only`
-    Apply digit grouping only to the integer part of numbers. This is enabled
-    by default. When enabled, fractional digits remain ungrouped.
+* :menuselection:`Disabled`
+    Disable complex-number output globally.
+* :menuselection:`Imaginary Unit i`
+    Use ``i`` as the imaginary unit symbol.
+* :menuselection:`Imaginary Unit j`
+    Use ``j`` as the imaginary unit symbol.
+
+Complex output form (Rectangular/Polar) is selected per result line in
+:menuselection:`Settings --> Results --> Notation & Precision...`.
+
+.. _radix_character:
+
+Number Format
++++++++++++++
+
+Choose how decimal numbers are displayed and interpreted via
+:menuselection:`Settings --> Results --> Number Format...`.
+
+.. versionadded:: 1.0
+
+This dialog replaces the older separate Radix Character and Digit Grouping
+menus with a single combined Number Format selection.
+
+The default option is no digit grouping with dot decimal separator
+(``1234567.12345``).
+
+Additional options let you choose:
+
+* no digit grouping with dot or comma decimal separator
+* SI grouping with space separators (integer and fractional grouped in 3s)
+* 3-digit grouping with comma, dot, space, or underscore
+* Indian/South Asian 3-2-2 grouping with comma separators
+
+Some options include grouped fractional digits; those are separate explicit
+choices.
+
+The apostrophe (``'``), commonly used as a thousands separator in some
+locales and contexts (for example Switzerland, Liechtenstein, and some
+technical writing in Austria/Germany), is intentionally not offered because
+SpeedCrunch reserves it for :ref:`sexagesimal notation <sexagesimal_values>`.
+
+For input, SpeedCrunch remains permissive across styles to support
+copy/paste from other applications. In clear mixed-separator cases, it
+accepts the number and normalizes it by ignoring non-digit grouping
+characters as needed.
 
 History
 +++++++
@@ -332,37 +369,24 @@ This section contains settings that control result output and post-evaluation be
     If set, SpeedCrunch will display partial results as you type your expression as well
     as results when selecting a partial expression in the editor.
 
-* :menuselection:`Format`
-    Select the format used to display results.
-    Changing the primary result format applies to the last expression only; it does not rewrite
-    previously evaluated history entries.
+* :menuselection:`Number Format...`
+    Open the number-format dialog and pick one combined setting for decimal
+    separator and digit grouping. See :ref:`radix_character`.
 
-    .. versionadded:: 1.0
-* :menuselection:`Precision`
-    Select the number of fractional digits to display.
-    **Automatic** always displays as many digits as are necessary to represent the number
-    precisely. The preset settings and :menuselection:`Custom...` explicitly specify a
-    certain number of digits (from 0 to 50) and will append additional zeroes to the
-    fraction to reach that number of digits, if necessary.
+* :menuselection:`Notation & Precision...`
+    Open a unified dialog to configure notation, precision, and complex form.
+    The precision row label changes by notation: ``Decimal places`` for
+    decimal notations, otherwise ``Fractional digits``.
+    By default, the dialog shows only ``Main Line`` settings. Enable
+    ``Advanced mode: show multiple result lines`` to configure
+    ``Extra Line #1`` through ``Extra Line #4``.
 
-    .. versionadded:: 1.0
-* :menuselection:`Complex Numbers`
-    This submenu controls :ref:`complex-number support <complex_numbers>` and formatting. ``Disabled`` turns off complex
-    numbers (so :const:`i` and :const:`j` are undefined and expressions such as ``sqrt(-1)`` fail). ``Rectangular (Cartesian)``,
-    ``Polar (Exponential)``, and ``Polar (Angle)`` enable complex numbers and choose how results are displayed.
-    The same submenu also lets you choose the output imaginary-unit symbol: ``Imaginary Unit 'i'`` or ``Imaginary Unit 'j'``.
-    ``Disabled`` is the default mode.
+    When advanced mode is disabled, configured extra lines are preserved but
+    ignored in output.
 
-    .. versionadded:: 1.0
-* :menuselection:`Secondary Result Format` and :menuselection:`Tertiary Result Format`
-    Optional extra result displays in alternate formats, shown alongside the primary result.
-    Also, when none of the selected result slots (primary, secondary, or tertiary)
-    is Rational, SpeedCrunch may still add one extra Rational line for trig expressions
-    if (and only if) the result is one of the recognized well-known exact values.
-    For example, ``sin(π / 3)`` qualifies and can show an extra Rational line ``sqrt(3) / 2``
-    even if Rational is not selected. This extra line is not shown for non-qualifying trig results.
-
-    .. versionadded:: 1.0
+    Applying changes from this dialog updates only the current editor previews
+    immediately (live/selection) without rewriting already displayed
+    calculation history.
 * :menuselection:`Automatically Copy New Results to Clipboard`
     Automatically copy each newly evaluated result to the clipboard.
 * :menuselection:`Simplify Displayed Expressions`
@@ -418,16 +442,6 @@ Editing
       expression fits in one visual line; otherwise, it moves the cursor.
 
     .. versionadded:: 1.0
-* :menuselection:`Radix Character`
-    Select the decimal separator to use in inputs and results. This can either be explicitly set
-    to dot (``.``), or comma (``,``), or both, or system default. When both dot and comma are used,
-    the decimal separator is detected automatically in inputs and the system default is used
-    in results. With that latter mode, mixing both dot and comma in a same number to express the
-    decimal separator and digit group separators is supported, but might lead to unexpected results.
-    See :ref:`Digit Grouping Separators <digit_grouping_separators>` for allowed grouping characters
-    and examples.
-
-
 User Interface Settings
 +++++++++++++++++++++++
 
@@ -504,34 +518,30 @@ Scrolling
     Scroll to the top or bottom of the result window.
 
 
-Format
+Notation
 ++++++
 
 * :kbd:`F2`
-    Set result format to automatic decimal.
+    Set result notation to automatic decimal.
 * :kbd:`F3`
-    Set result format to fixed-point decimal.
+    Set result notation to fixed-point decimal.
 * :kbd:`F4`
-    Set result format to engineering decimal.
+    Set result notation to engineering decimal.
 * :kbd:`F5`
-    Set result format to scientific decimal.
+    Set result notation to scientific decimal.
 * :kbd:`F6`
-    Set result format to binary.
+    Set result notation to binary.
 * :kbd:`F7`
-    Set result format to octal.
+    Set result notation to octal.
 * :kbd:`F8`
-    Set result format to hexadecimal.
+    Set result notation to hexadecimal.
 * :kbd:`F9`
-    Set result format to sexagesimal.
+    Set result notation to sexagesimal.
 
     .. versionadded:: 1.0
     
 * :kbd:`F10`
     Cycle angle unit (Degree/Radian/Gradian/Turn).
-* :kbd:`Control+.`
-    Use a period as decimal separator.
-* :kbd:`Control+,`
-    Use a comma as decimal separator.
 
 Various
 +++++++

@@ -31,6 +31,8 @@ gui/genericdock.h
 gui/keypad.h
 gui/mainwindow.h
 gui/manualwindow.h
+gui/numberformatdialog.h
+    gui/notationandprecisiondialog.h
 gui/resultdisplay.h
 gui/variablelistwidget.h
 gui/userfunctionlistwidget.h
@@ -91,6 +93,8 @@ gui/genericdock.h
 gui/keypad.cpp
 gui/mainwindow.cpp
 gui/manualwindow.cpp
+gui/numberformatdialog.cpp
+    gui/notationandprecisiondialog.cpp
 gui/resultdisplay.cpp
 gui/syntaxhighlighter.cpp
 gui/variablelistwidget.cpp

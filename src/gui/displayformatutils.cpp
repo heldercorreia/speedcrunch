@@ -23,17 +23,18 @@
 
 #include "core/numberformatter.h"
 #include "core/regexpatterns.h"
-#include "core/settings.h"
 #include "core/unicodechars.h"
 
 namespace DisplayFormatUtils {
 
 QString applyDigitGroupingForDisplay(const QString& input)
 {
-    const Settings* settings = Settings::instance();
-    if (settings->digitGrouping <= 0)
-        return UnicodeChars::normalizePiForDisplay(input);
-
+    // Even when grouping is disabled we still pass numeric tokens through
+    // NumberFormatter::formatNumericLiteralForDisplay(), because that helper
+    // also normalizes decimal separator display according to the selected
+    // number-format style (for example dot-internal -> comma-display).
+    // Grouping can be a no-op there while decimal-separator conversion still
+    // needs to happen.
     QString output;
     int lastPos = 0;
     auto it = RegExpPatterns::numericToken().globalMatch(input);

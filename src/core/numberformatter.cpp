@@ -214,6 +214,18 @@ QString NumberFormatter::formatTrigSymbolic(Quantity q)
 QString NumberFormatter::format(Quantity q, char resultFormatOverride)
 {
     Settings* settings = Settings::instance();
+    return format(q,
+                  resultFormatOverride,
+                  settings->resultPrecision,
+                  settings->complexNumbers,
+                  settings->resultFormatComplex);
+}
+
+QString NumberFormatter::format(Quantity q, char resultFormatOverride,
+                                int precisionOverride, bool useComplexNotation,
+                                char complexNotationOverride)
+{
+    Settings* settings = Settings::instance();
     CMath::setImaginaryUnitSymbol(settings->imaginaryUnit);
     CMath::setPolarAngleUnit(settings->angleUnit);
     const char activeResultFormat = resultFormatOverride == '\0' ? settings->resultFormat : resultFormatOverride;
@@ -280,14 +292,16 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride)
     }
 
     if (format.precision == Quantity::Format::PrecisionNull)
-        format.precision = settings->resultPrecision;
+        format.precision = precisionOverride;
     if (format.notation == Quantity::Format::Notation::Null) {
-        if (settings->resultFormatComplex == 'c')
-            format.notation = Quantity::Format::Notation::Cartesian;
-        else if (settings->resultFormatComplex == 'p')
-            format.notation = Quantity::Format::Notation::Polar;
-        else if (settings->resultFormatComplex == 'a')
-            format.notation = Quantity::Format::Notation::PolarAngle;
+        if (useComplexNotation) {
+            if (complexNotationOverride == 'c')
+                format.notation = Quantity::Format::Notation::Cartesian;
+            else if (complexNotationOverride == 'p')
+                format.notation = Quantity::Format::Notation::Polar;
+            else if (complexNotationOverride == 'a')
+                format.notation = Quantity::Format::Notation::PolarAngle;
+        }
     }
 
     bool time = false, arc = q.isDimensionless();
@@ -340,7 +354,7 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride)
     if (negative)
         result.insert(0, '-');
 
-    if (settings->radixCharacter() == ',')
+    if (settings->decimalSeparator() == ',')
         result.replace('.', ',');
 
     result.replace('-', g_minusChar);
@@ -363,14 +377,12 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride)
 QString NumberFormatter::formatNumericLiteralForDisplay(const QString& input)
 {
     const Settings* settings = Settings::instance();
-    if (settings->digitGrouping <= 0)
-        return input;
+    const QString separator = settings->digitGroupingSeparator();
+    const bool groupingEnabled = settings->isDigitGroupingEnabled() && !separator.isEmpty();
+    const QChar decimalSep = QChar(settings->decimalSeparator());
+    const QChar altDecimalSep = (decimalSep == QChar('.')) ? QChar(',') : QChar('.');
 
-    // Digit Grouping menu mapping:
-    // Small Space  -> U+0020 once
-    // Medium Space -> U+0020 twice
-    // Large Space  -> U+0020 three times
-    const QString separator = QStringLiteral(" ").repeated(settings->digitGrouping);
+    const bool indianGrouping = settings->isIndianDigitGrouping();
     auto groupPart = [&separator](const QString& digits, int groupSize, bool fromRight) {
         if (digits.size() <= groupSize)
             return digits;
@@ -394,6 +406,15 @@ QString NumberFormatter::formatNumericLiteralForDisplay(const QString& input)
             result += digits.mid(i, groupSize);
         }
         return result;
+    };
+    auto groupIntegral = [&](const QString& integral, int standardSize) -> QString {
+        if (!indianGrouping || standardSize != 3 || integral.size() <= 3)
+            return groupPart(integral, standardSize, true);
+
+        const int leadingLength = integral.size() - 3;
+        const QString leading = integral.left(leadingLength);
+        const QString tail = integral.right(3);
+        return groupPart(leading, 2, true) + separator + tail;
     };
 
     QString output;
@@ -428,20 +449,34 @@ QString NumberFormatter::formatNumericLiteralForDisplay(const QString& input)
             }
         }
 
-        const int radixPos = body.indexOf(RegExpPatterns::radixSeparator());
+        int radixPos = body.lastIndexOf(decimalSep);
+        if (radixPos < 0)
+            radixPos = body.lastIndexOf(altDecimalSep);
+
+        auto stripGroupingChars = [&](const QString& part) {
+            QString stripped;
+            stripped.reserve(part.size());
+            for (const QChar c : part) {
+                if (c.isDigit() || c.isLetter())
+                    stripped.append(c);
+            }
+            return stripped;
+        };
+
         if (radixPos >= 0) {
-            const QString integral = body.left(radixPos);
-            const QString fractional = body.mid(radixPos + 1);
-            const QString groupedFractional = settings->digitGroupingIntegerPartOnly
-                ? fractional
-                : groupPart(fractional, groupSize, false);
+            const QString integral = stripGroupingChars(body.left(radixPos));
+            const QString fractional = stripGroupingChars(body.mid(radixPos + 1));
+            QString groupedFractional = fractional;
+            if (groupingEnabled && !settings->digitGroupingIntegerPartOnly)
+                groupedFractional = groupPart(fractional, groupSize, false);
             token = prefix
-                + groupPart(integral, groupSize, true)
-                + body.at(radixPos)
+                + (groupingEnabled ? groupIntegral(integral, groupSize) : integral)
+                + decimalSep
                 + groupedFractional
                 + exponent;
         } else {
-            token = prefix + groupPart(body, groupSize, true) + exponent;
+            const QString integral = stripGroupingChars(body);
+            token = prefix + (groupingEnabled ? groupIntegral(integral, groupSize) : integral) + exponent;
         }
 
         output += token;

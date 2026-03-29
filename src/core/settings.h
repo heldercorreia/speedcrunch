@@ -57,6 +57,25 @@ public:
         CustomKeypadActionEvaluateExpression = 3
     };
 
+    enum NumberFormatStyle {
+        NumberFormatSystem = 0, // Legacy value kept for migration compatibility.
+        NumberFormatNoGroupingDot = 1,
+        NumberFormatNoGroupingComma = 2,
+        NumberFormatSIDot = 3,
+        NumberFormatSIComma = 4,
+        NumberFormatThreeDigitCommaDot = 5,
+        NumberFormatThreeDigitCommaDotFraction = 6,
+        NumberFormatThreeDigitDotComma = 7,
+        NumberFormatThreeDigitDotCommaFraction = 8,
+        NumberFormatThreeDigitSpaceDot = 9,
+        NumberFormatThreeDigitSpaceComma = 10,
+        NumberFormatThreeDigitUnderscoreDot = 11,
+        NumberFormatThreeDigitUnderscoreDotFraction = 12,
+        NumberFormatThreeDigitUnderscoreComma = 13,
+        NumberFormatThreeDigitUnderscoreCommaFraction = 14,
+        NumberFormatIndianCommaDot = 15
+    };
+
     struct CustomKeypadButton {
         int row;
         int column;
@@ -84,6 +103,11 @@ public:
     void setRadixCharacter(char c = 0);
     bool isRadixCharacterAuto() const;
     bool isRadixCharacterBoth() const;
+    bool isDigitGroupingEnabled() const;
+    bool isIndianDigitGrouping() const;
+    QString digitGroupingSeparator() const;
+    char decimalSeparator() const;
+    void applyNumberFormatStyle();
 
     bool complexNumbers;
     char imaginaryUnit; // 'i' or 'j'.
@@ -92,11 +116,30 @@ public:
 
     // 'g': general; 'f': fixed; 'n': engineering; 'e': scientific; 'r': rational;
     // 'b': binary; 'o': octal; 'h': hexadecimal; 's': sexagesimal.
-    char resultFormat;
-    char alternativeResultFormat; // '\0': disabled.
-    char tertiaryResultFormat; // '\0': disabled.
-    int resultPrecision; // See HMath documentation.
-    char resultFormatComplex; // 'c' cartesian; 'p' polar exponential; 'a' polar angle.
+    char resultFormat; // Main notation.
+    char alternativeResultFormat; // Secondary notation; '\0': disabled.
+    char tertiaryResultFormat; // Tertiary notation; '\0': disabled.
+    char quaternaryResultFormat; // Extra line #3 notation; '\0': disabled.
+    char quinaryResultFormat; // Extra line #4 notation; '\0': disabled.
+    bool secondaryResultEnabled;
+    bool tertiaryResultEnabled;
+    bool quaternaryResultEnabled;
+    bool quinaryResultEnabled;
+    bool multipleResultLinesEnabled; // UI toggle: show/use extra result lines.
+    int resultPrecision; // Main precision. See HMath documentation.
+    int secondaryResultPrecision; // Secondary precision.
+    int tertiaryResultPrecision; // Tertiary precision.
+    int quaternaryResultPrecision; // Extra line #3 precision.
+    int quinaryResultPrecision; // Extra line #4 precision.
+    char resultFormatComplex; // Main complex form: 'c' cartesian; 'p' polar exponential; 'a' polar angle.
+    bool secondaryComplexNumbers;
+    char secondaryResultFormatComplex; // Secondary complex form.
+    bool tertiaryComplexNumbers;
+    char tertiaryResultFormatComplex; // Tertiary complex form.
+    bool quaternaryComplexNumbers;
+    char quaternaryResultFormatComplex; // Extra line #3 complex form.
+    bool quinaryComplexNumbers;
+    char quinaryResultFormatComplex; // Extra line #4 complex form.
 
     bool autoAns;
     bool autoCalc;
@@ -108,6 +151,7 @@ public:
     UpDownArrowBehavior upDownArrowBehavior;
     int digitGrouping;
     bool digitGroupingIntegerPartOnly;
+    NumberFormatStyle numberFormatStyle;
     int maxHistoryEntries; // 0: unlimited.
     HistorySaving historySaving;
     bool leaveLastExpression;

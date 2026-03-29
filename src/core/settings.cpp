@@ -273,8 +273,10 @@ Settings::CustomKeypad Settings::defaultCustomKeypad()
 Settings::Settings()
 {
     digitGroupingIntegerPartOnly = true;
+    numberFormatStyle = NumberFormatNoGroupingDot;
     simplifyResultExpressions = true;
     singleInstance = true;
+    complexNumbers = false;
     imaginaryUnit = 'i';
     startupUserDefinitionsOverwrite = false;
     startupUserDefinitionsApplyBeforeRestore = false;
@@ -282,6 +284,23 @@ Settings::Settings()
     autoCompletionUnits = true;
     autoCompletionUserFunctions = true;
     autoCompletionUserVariables = true;
+    secondaryResultPrecision = -1;
+    tertiaryResultPrecision = -1;
+    quaternaryResultPrecision = -1;
+    quinaryResultPrecision = -1;
+    secondaryResultEnabled = false;
+    tertiaryResultEnabled = false;
+    quaternaryResultEnabled = false;
+    quinaryResultEnabled = false;
+    multipleResultLinesEnabled = false;
+    secondaryComplexNumbers = false;
+    secondaryResultFormatComplex = 'c';
+    tertiaryComplexNumbers = false;
+    tertiaryResultFormatComplex = 'c';
+    quaternaryComplexNumbers = false;
+    quaternaryResultFormatComplex = 'c';
+    quinaryComplexNumbers = false;
+    quinaryResultFormatComplex = 'c';
 }
 
 void Settings::load()
@@ -380,20 +399,32 @@ void Settings::load()
     digitGrouping = std::min(3, std::max(0, digitGrouping));
     digitGroupingIntegerPartOnly = settings->value(
         key + QLatin1String("DigitGroupingIntegerPartOnly"), true).toBool();
+    const int numberFormatStyleValue = settings->value(
+        key + QLatin1String("NumberFormatStyle"), -1).toInt();
+    if (numberFormatStyleValue >= static_cast<int>(NumberFormatSystem)
+            && numberFormatStyleValue <= static_cast<int>(NumberFormatIndianCommaDot)) {
+        numberFormatStyle = static_cast<NumberFormatStyle>(numberFormatStyleValue);
+    } else {
+        // Deterministic default when style is not set.
+        numberFormatStyle = NumberFormatNoGroupingDot;
+    }
+    if (numberFormatStyle == NumberFormatSystem)
+        numberFormatStyle = NumberFormatNoGroupingDot;
+    applyNumberFormatStyle();
     maxHistoryEntries = settings->value(key + QLatin1String("MaxHistoryEntries"), 100).toInt();
     maxHistoryEntries = std::max(0, maxHistoryEntries);
 
     key = KEY + QLatin1String("/Format/");
 
     // Format special case.
-    QString format = settings->value(key + QLatin1String("Type"), 'f').toString();
+    QString format = settings->value(key + QLatin1String("MainType"), 'f').toString();
     if (format != "g" && format != "f" && format != "e" && format != "n" && format != "r" && format != "h"
         && format != "o" && format != "b" && format != "s")
         resultFormat = 'f';
     else
         resultFormat = format.at(0).toLatin1();
 
-    QString alternativeFormat = settings->value(key + QLatin1String("AlternativeType"), "").toString();
+    QString alternativeFormat = settings->value(key + QLatin1String("SecondaryType"), "").toString();
     if (alternativeFormat.isEmpty())
         alternativeResultFormat = '\0';
     else if (alternativeFormat != "g" && alternativeFormat != "f" && alternativeFormat != "e"
@@ -403,6 +434,8 @@ void Settings::load()
         alternativeResultFormat = '\0';
     else
         alternativeResultFormat = alternativeFormat.at(0).toLatin1();
+    secondaryResultEnabled = settings->value(
+        key + QLatin1String("SecondaryEnabled"), alternativeResultFormat != '\0').toBool();
 
     QString tertiaryFormat = settings->value(key + QLatin1String("TertiaryType"), "").toString();
     if (tertiaryFormat.isEmpty())
@@ -414,18 +447,92 @@ void Settings::load()
         tertiaryResultFormat = '\0';
     else
         tertiaryResultFormat = tertiaryFormat.at(0).toLatin1();
+    tertiaryResultEnabled = settings->value(
+        key + QLatin1String("TertiaryEnabled"), tertiaryResultFormat != '\0').toBool();
+
+    QString quaternaryFormat = settings->value(key + QLatin1String("QuaternaryType"), "").toString();
+    if (quaternaryFormat.isEmpty())
+        quaternaryResultFormat = '\0';
+    else if (quaternaryFormat != "g" && quaternaryFormat != "f" && quaternaryFormat != "e"
+             && quaternaryFormat != "r"
+             && quaternaryFormat != "n" && quaternaryFormat != "h" && quaternaryFormat != "o"
+             && quaternaryFormat != "b" && quaternaryFormat != "s")
+        quaternaryResultFormat = '\0';
+    else
+        quaternaryResultFormat = quaternaryFormat.at(0).toLatin1();
+    quaternaryResultEnabled = settings->value(
+        key + QLatin1String("QuaternaryEnabled"), quaternaryResultFormat != '\0').toBool();
+
+    QString quinaryFormat = settings->value(key + QLatin1String("QuinaryType"), "").toString();
+    if (quinaryFormat.isEmpty())
+        quinaryResultFormat = '\0';
+    else if (quinaryFormat != "g" && quinaryFormat != "f" && quinaryFormat != "e"
+             && quinaryFormat != "r"
+             && quinaryFormat != "n" && quinaryFormat != "h" && quinaryFormat != "o"
+             && quinaryFormat != "b" && quinaryFormat != "s")
+        quinaryResultFormat = '\0';
+    else
+        quinaryResultFormat = quinaryFormat.at(0).toLatin1();
+    quinaryResultEnabled = settings->value(
+        key + QLatin1String("QuinaryEnabled"), quinaryResultFormat != '\0').toBool();
+    multipleResultLinesEnabled = settings->value(
+        key + QLatin1String("MultipleLinesEnabled"), false).toBool();
 
     // Complex format special case.
-    QString cmplxFormat = settings->value(key + QLatin1String("ComplexForm"), 'c').toString();
+    QString cmplxFormat = settings->value(key + QLatin1String("MainComplexForm"), 'c').toString();
+    if (cmplxFormat.isEmpty()) {
+        // Backward compatibility with legacy key.
+        cmplxFormat = settings->value(key + QLatin1String("ComplexForm"), 'c').toString();
+    }
     if (cmplxFormat != "c" && cmplxFormat != "p" && cmplxFormat != "a")
         resultFormatComplex = 'c';
     else
         resultFormatComplex = cmplxFormat.at(0).toLatin1();
 
-    resultPrecision = settings->value(key + QLatin1String("Precision"), -1).toInt();
+    resultPrecision = settings->value(key + QLatin1String("MainPrecision"), -1).toInt();
+    if (!settings->contains(key + QLatin1String("MainPrecision"))) {
+        // Backward compatibility with legacy key.
+        resultPrecision = settings->value(key + QLatin1String("Precision"), -1).toInt();
+    }
+    secondaryResultPrecision = settings->value(key + QLatin1String("SecondaryPrecision"), -1).toInt();
+    tertiaryResultPrecision = settings->value(key + QLatin1String("TertiaryPrecision"), -1).toInt();
+    quaternaryResultPrecision = settings->value(key + QLatin1String("QuaternaryPrecision"), -1).toInt();
+    quinaryResultPrecision = settings->value(key + QLatin1String("QuinaryPrecision"), -1).toInt();
+    secondaryComplexNumbers = settings->value(key + QLatin1String("SecondaryComplexEnabled"), false).toBool();
+    tertiaryComplexNumbers = settings->value(key + QLatin1String("TertiaryComplexEnabled"), false).toBool();
+    quaternaryComplexNumbers = settings->value(key + QLatin1String("QuaternaryComplexEnabled"), false).toBool();
+    quinaryComplexNumbers = settings->value(key + QLatin1String("QuinaryComplexEnabled"), false).toBool();
+    QString secondaryComplexForm = settings->value(key + QLatin1String("SecondaryComplexForm"), "c").toString();
+    QString tertiaryComplexForm = settings->value(key + QLatin1String("TertiaryComplexForm"), "c").toString();
+    QString quaternaryComplexForm = settings->value(key + QLatin1String("QuaternaryComplexForm"), "c").toString();
+    QString quinaryComplexForm = settings->value(key + QLatin1String("QuinaryComplexForm"), "c").toString();
+    if (secondaryComplexForm != "c" && secondaryComplexForm != "p" && secondaryComplexForm != "a")
+        secondaryResultFormatComplex = 'c';
+    else
+        secondaryResultFormatComplex = secondaryComplexForm.at(0).toLatin1();
+    if (tertiaryComplexForm != "c" && tertiaryComplexForm != "p" && tertiaryComplexForm != "a")
+        tertiaryResultFormatComplex = 'c';
+    else
+        tertiaryResultFormatComplex = tertiaryComplexForm.at(0).toLatin1();
+    if (quaternaryComplexForm != "c" && quaternaryComplexForm != "p" && quaternaryComplexForm != "a")
+        quaternaryResultFormatComplex = 'c';
+    else
+        quaternaryResultFormatComplex = quaternaryComplexForm.at(0).toLatin1();
+    if (quinaryComplexForm != "c" && quinaryComplexForm != "p" && quinaryComplexForm != "a")
+        quinaryResultFormatComplex = 'c';
+    else
+        quinaryResultFormatComplex = quinaryComplexForm.at(0).toLatin1();
 
     if (resultPrecision > DECPRECISION)
         resultPrecision = DECPRECISION;
+    if (secondaryResultPrecision > DECPRECISION)
+        secondaryResultPrecision = DECPRECISION;
+    if (tertiaryResultPrecision > DECPRECISION)
+        tertiaryResultPrecision = DECPRECISION;
+    if (quaternaryResultPrecision > DECPRECISION)
+        quaternaryResultPrecision = DECPRECISION;
+    if (quinaryResultPrecision > DECPRECISION)
+        quinaryResultPrecision = DECPRECISION;
 
     key = KEY + QLatin1String("/Layout/");
     customKeypad = defaultCustomKeypad();
@@ -508,6 +615,7 @@ void Settings::save()
     settings->setValue(key + QLatin1String("HoverHighlightResults"), hoverHighlightResults);
     settings->setValue(key + QLatin1String("DigitGrouping"), digitGrouping);
     settings->setValue(key + QLatin1String("DigitGroupingIntegerPartOnly"), digitGroupingIntegerPartOnly);
+    settings->setValue(key + QLatin1String("NumberFormatStyle"), static_cast<int>(numberFormatStyle));
     settings->setValue(key + QLatin1String("MaxHistoryEntries"), maxHistoryEntries);
     settings->setValue(key + QLatin1String("AutoResultToClipboard"), autoResultToClipboard);
     settings->setValue(key + QLatin1String("SimplifyResultExpressions"), simplifyResultExpressions);
@@ -522,20 +630,36 @@ void Settings::save()
 
     settings->setValue(key + QLatin1String("AngleMode"), QString(QChar(angleUnit)));
 
-    char c = 'C';
-    if (s_radixCharacter != 0)
-        c = s_radixCharacter;
-    settings->setValue(key + QLatin1String("RadixCharacter"), QString(QChar(c)));
-
     key = KEY + QLatin1String("/Format/");
 
-    settings->setValue(key + QLatin1String("Type"), QString(QChar(resultFormat)));
-    settings->setValue(key + QLatin1String("AlternativeType"),
+    settings->setValue(key + QLatin1String("MainType"), QString(QChar(resultFormat)));
+    settings->setValue(key + QLatin1String("SecondaryType"),
         alternativeResultFormat == '\0' ? QString() : QString(QChar(alternativeResultFormat)));
     settings->setValue(key + QLatin1String("TertiaryType"),
         tertiaryResultFormat == '\0' ? QString() : QString(QChar(tertiaryResultFormat)));
-    settings->setValue(key + QLatin1String("ComplexForm"), QString(QChar(resultFormatComplex)));
-    settings->setValue(key + QLatin1String("Precision"), resultPrecision);
+    settings->setValue(key + QLatin1String("QuaternaryType"),
+        quaternaryResultFormat == '\0' ? QString() : QString(QChar(quaternaryResultFormat)));
+    settings->setValue(key + QLatin1String("QuinaryType"),
+        quinaryResultFormat == '\0' ? QString() : QString(QChar(quinaryResultFormat)));
+    settings->setValue(key + QLatin1String("SecondaryEnabled"), secondaryResultEnabled);
+    settings->setValue(key + QLatin1String("TertiaryEnabled"), tertiaryResultEnabled);
+    settings->setValue(key + QLatin1String("QuaternaryEnabled"), quaternaryResultEnabled);
+    settings->setValue(key + QLatin1String("QuinaryEnabled"), quinaryResultEnabled);
+    settings->setValue(key + QLatin1String("MultipleLinesEnabled"), multipleResultLinesEnabled);
+    settings->setValue(key + QLatin1String("MainComplexForm"), QString(QChar(resultFormatComplex)));
+    settings->setValue(key + QLatin1String("MainPrecision"), resultPrecision);
+    settings->setValue(key + QLatin1String("SecondaryPrecision"), secondaryResultPrecision);
+    settings->setValue(key + QLatin1String("TertiaryPrecision"), tertiaryResultPrecision);
+    settings->setValue(key + QLatin1String("QuaternaryPrecision"), quaternaryResultPrecision);
+    settings->setValue(key + QLatin1String("QuinaryPrecision"), quinaryResultPrecision);
+    settings->setValue(key + QLatin1String("SecondaryComplexEnabled"), secondaryComplexNumbers);
+    settings->setValue(key + QLatin1String("SecondaryComplexForm"), QString(QChar(secondaryResultFormatComplex)));
+    settings->setValue(key + QLatin1String("TertiaryComplexEnabled"), tertiaryComplexNumbers);
+    settings->setValue(key + QLatin1String("TertiaryComplexForm"), QString(QChar(tertiaryResultFormatComplex)));
+    settings->setValue(key + QLatin1String("QuaternaryComplexEnabled"), quaternaryComplexNumbers);
+    settings->setValue(key + QLatin1String("QuaternaryComplexForm"), QString(QChar(quaternaryResultFormatComplex)));
+    settings->setValue(key + QLatin1String("QuinaryComplexEnabled"), quinaryComplexNumbers);
+    settings->setValue(key + QLatin1String("QuinaryComplexForm"), QString(QChar(quinaryResultFormatComplex)));
 
     key = KEY + QLatin1String("/Layout/");
 
@@ -588,6 +712,30 @@ char Settings::radixCharacter() const
     return s_radixCharacter;
 }
 
+char Settings::decimalSeparator() const
+{
+    switch (numberFormatStyle) {
+    case NumberFormatNoGroupingComma:
+    case NumberFormatThreeDigitDotComma:
+    case NumberFormatThreeDigitSpaceComma:
+    case NumberFormatSIComma:
+    case NumberFormatThreeDigitUnderscoreComma:
+    case NumberFormatThreeDigitDotCommaFraction:
+    case NumberFormatThreeDigitUnderscoreCommaFraction:
+        return ',';
+    case NumberFormatSIDot:
+    case NumberFormatNoGroupingDot:
+    case NumberFormatThreeDigitCommaDot:
+    case NumberFormatThreeDigitCommaDotFraction:
+    case NumberFormatThreeDigitSpaceDot:
+    case NumberFormatThreeDigitUnderscoreDot:
+    case NumberFormatThreeDigitUnderscoreDotFraction:
+    case NumberFormatIndianCommaDot:
+    default:
+        return '.';
+    }
+}
+
 bool Settings::isRadixCharacterAuto() const
 {
     return s_radixCharacter == 0;
@@ -603,6 +751,90 @@ void Settings::setRadixCharacter(char c)
     s_radixCharacter = (c != ',' && c != '.' && c != '*') ? 0 : c;
 }
 
+void Settings::applyNumberFormatStyle()
+{
+    switch (numberFormatStyle) {
+    case NumberFormatNoGroupingDot:
+    case NumberFormatSIDot:
+    case NumberFormatThreeDigitCommaDot:
+    case NumberFormatThreeDigitCommaDotFraction:
+    case NumberFormatThreeDigitSpaceDot:
+    case NumberFormatThreeDigitUnderscoreDot:
+    case NumberFormatThreeDigitUnderscoreDotFraction:
+    case NumberFormatIndianCommaDot:
+        setRadixCharacter('.');
+        break;
+    case NumberFormatNoGroupingComma:
+    case NumberFormatSIComma:
+    case NumberFormatThreeDigitDotComma:
+    case NumberFormatThreeDigitDotCommaFraction:
+    case NumberFormatThreeDigitSpaceComma:
+    case NumberFormatThreeDigitUnderscoreComma:
+    case NumberFormatThreeDigitUnderscoreCommaFraction:
+        setRadixCharacter(',');
+        break;
+    case NumberFormatSystem:
+    default:
+        setRadixCharacter('.');
+        break;
+    }
+
+    // Legacy syntax-highlighter spacing should stay disabled; grouping is now
+    // represented explicitly by concrete separators in formatted text.
+    digitGrouping = 0;
+    switch (numberFormatStyle) {
+    case NumberFormatSIDot:
+    case NumberFormatSIComma:
+    case NumberFormatThreeDigitCommaDotFraction:
+    case NumberFormatThreeDigitDotCommaFraction:
+    case NumberFormatThreeDigitUnderscoreDotFraction:
+    case NumberFormatThreeDigitUnderscoreCommaFraction:
+        digitGroupingIntegerPartOnly = false;
+        break;
+    default:
+        digitGroupingIntegerPartOnly = true;
+        break;
+    }
+}
+
+bool Settings::isDigitGroupingEnabled() const
+{
+    return numberFormatStyle != NumberFormatNoGroupingDot
+        && numberFormatStyle != NumberFormatNoGroupingComma;
+}
+
+bool Settings::isIndianDigitGrouping() const
+{
+    return numberFormatStyle == NumberFormatIndianCommaDot;
+}
+
+QString Settings::digitGroupingSeparator() const
+{
+    if (!isDigitGroupingEnabled())
+        return QString();
+
+    switch (numberFormatStyle) {
+    case NumberFormatSIDot:
+    case NumberFormatSIComma:
+    case NumberFormatThreeDigitSpaceDot:
+    case NumberFormatThreeDigitSpaceComma:
+        return QStringLiteral(" ");
+    case NumberFormatThreeDigitCommaDot:
+    case NumberFormatThreeDigitCommaDotFraction:
+    case NumberFormatIndianCommaDot:
+        return QStringLiteral(",");
+    case NumberFormatThreeDigitDotComma:
+    case NumberFormatThreeDigitDotCommaFraction:
+        return QStringLiteral(".");
+    case NumberFormatThreeDigitUnderscoreDot:
+    case NumberFormatThreeDigitUnderscoreDotFraction:
+    case NumberFormatThreeDigitUnderscoreComma:
+    case NumberFormatThreeDigitUnderscoreCommaFraction:
+        return QStringLiteral("_");
+    default:
+        return QString();
+    }
+}
 
 // Settings migration from legacy (0.11 and before) to 0.12 (ConfigVersion 1200).
 static void migrateSettings_legacyTo1200(QSettings* settings, const QString& KEY)

@@ -101,6 +101,13 @@ static QString formattedLiveResult(const Quantity& quantity, char resultFormat =
         NumberFormatter::format(quantity, resultFormat));
 }
 
+static QString formattedLiveResultForSlot(const Quantity& quantity, char resultFormat,
+                                          int precision, bool complexEnabled, char complexForm)
+{
+    return DisplayFormatUtils::applyDigitGroupingForDisplay(
+        NumberFormatter::format(quantity, resultFormat, precision, complexEnabled, complexForm));
+}
+
 static bool shouldShowAdditionalRationalForTrig(const QString& expression,
                                                 const QString& interpretedExpression,
                                                 const Quantity& quantity)
@@ -112,10 +119,13 @@ static bool shouldShowAdditionalRationalForTrig(const QString& expression,
         return false;
 
     const Settings* settings = Settings::instance();
+    const bool useExtraResultLines = settings->multipleResultLinesEnabled;
     const bool hasRationalAlready =
         settings->resultFormat == 'r'
-        || settings->alternativeResultFormat == 'r'
-        || settings->tertiaryResultFormat == 'r';
+        || (useExtraResultLines && settings->secondaryResultEnabled && settings->alternativeResultFormat == 'r')
+        || (useExtraResultLines && settings->tertiaryResultEnabled && settings->tertiaryResultFormat == 'r')
+        || (useExtraResultLines && settings->quaternaryResultEnabled && settings->quaternaryResultFormat == 'r')
+        || (useExtraResultLines && settings->quinaryResultEnabled && settings->quinaryResultFormat == 'r');
     if (hasRationalAlready)
         return false;
 
@@ -128,6 +138,7 @@ static QString formattedLiveResultWithAlternatives(const Quantity& quantity,
                                                    const QString& simplifiedExpression = QString())
 {
     const Settings* settings = Settings::instance();
+    const bool useExtraResultLines = settings->multipleResultLinesEnabled;
     const QString primaryFormattedResult = formattedLiveResult(quantity);
     QStringList lines;
     auto appendUniqueLine = [&lines](const QString& line) {
@@ -145,13 +156,37 @@ static QString formattedLiveResultWithAlternatives(const Quantity& quantity,
         appendUniqueLine(QStringLiteral("= %1").arg(simplifiedExpression));
     }
     appendUniqueLine(QStringLiteral("= %1").arg(primaryFormattedResult));
-    if (settings->alternativeResultFormat != '\0') {
+    if (useExtraResultLines && settings->secondaryResultEnabled && settings->alternativeResultFormat != '\0') {
         appendUniqueLine(QStringLiteral("= %1").arg(
-            formattedLiveResult(quantity, settings->alternativeResultFormat)));
+            formattedLiveResultForSlot(quantity,
+                                       settings->alternativeResultFormat,
+                                       settings->secondaryResultPrecision,
+                                       settings->complexNumbers && settings->secondaryComplexNumbers,
+                                       settings->secondaryResultFormatComplex)));
     }
-    if (settings->tertiaryResultFormat != '\0') {
+    if (useExtraResultLines && settings->tertiaryResultEnabled && settings->tertiaryResultFormat != '\0') {
         appendUniqueLine(QStringLiteral("= %1").arg(
-            formattedLiveResult(quantity, settings->tertiaryResultFormat)));
+            formattedLiveResultForSlot(quantity,
+                                       settings->tertiaryResultFormat,
+                                       settings->tertiaryResultPrecision,
+                                       settings->complexNumbers && settings->tertiaryComplexNumbers,
+                                       settings->tertiaryResultFormatComplex)));
+    }
+    if (useExtraResultLines && settings->quaternaryResultEnabled && settings->quaternaryResultFormat != '\0') {
+        appendUniqueLine(QStringLiteral("= %1").arg(
+            formattedLiveResultForSlot(quantity,
+                                       settings->quaternaryResultFormat,
+                                       settings->quaternaryResultPrecision,
+                                       settings->complexNumbers && settings->quaternaryComplexNumbers,
+                                       settings->quaternaryResultFormatComplex)));
+    }
+    if (useExtraResultLines && settings->quinaryResultEnabled && settings->quinaryResultFormat != '\0') {
+        appendUniqueLine(QStringLiteral("= %1").arg(
+            formattedLiveResultForSlot(quantity,
+                                       settings->quinaryResultFormat,
+                                       settings->quinaryResultPrecision,
+                                       settings->complexNumbers && settings->quinaryComplexNumbers,
+                                       settings->quinaryResultFormatComplex)));
     }
     const QString symbolicTrig = NumberFormatter::formatTrigSymbolic(quantity);
     if (shouldShowAdditionalRationalForTrig(expression, interpretedExpression, quantity)) {

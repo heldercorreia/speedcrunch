@@ -823,31 +823,31 @@ void test_radix_char()
     settings->setRadixCharacter('.');
 
     CHECK_EVAL("1+0.5", "1.5");
-    CHECK_EVAL("1+0,5", "6");
-    CHECK_EVAL("1/.1", "10");
-    CHECK_EVAL("1/,1", "1");
-    CHECK_EVAL("1,234.567", "1234.567");
-    CHECK_EVAL("1.234,567", "1.234567");
-    CHECK_EVAL("1,2,3", "123");
-    CHECK_EVAL("1.2.3", "123");
-    CHECK_EVAL("1,234,567.89", "1234567.89");
-    CHECK_EVAL("1.234.567,89", "123456789");
-    CHECK_EVAL("1,234.567,89", "1234.56789");
-    CHECK_EVAL("1.234,567.89", "123456789");
-
-    settings->setRadixCharacter(',');
-
-    CHECK_EVAL("1+0.5", "6");
     CHECK_EVAL("1+0,5", "1.5");
-    CHECK_EVAL("1/.1", "1");
+    CHECK_EVAL("1/.1", "10");
     CHECK_EVAL("1/,1", "10");
-    CHECK_EVAL("1,234.567", "1.234567");
+    CHECK_EVAL("1,234.567", "1234.567");
     CHECK_EVAL("1.234,567", "1234.567");
     CHECK_EVAL("1,2,3", "123");
     CHECK_EVAL("1.2.3", "123");
-    CHECK_EVAL("1,234,567.89", "123456789");
+    CHECK_EVAL("1,234,567.89", "1234567.89");
     CHECK_EVAL("1.234.567,89", "1234567.89");
-    CHECK_EVAL("1,234.567,89", "123456789");
+    CHECK_EVAL("1,234.567,89", "1234.56789");
+    CHECK_EVAL("1.234,567.89", "1234.56789");
+
+    settings->setRadixCharacter(',');
+
+    CHECK_EVAL("1+0.5", "1.5");
+    CHECK_EVAL("1+0,5", "1.5");
+    CHECK_EVAL("1/.1", "10");
+    CHECK_EVAL("1/,1", "10");
+    CHECK_EVAL("1,234.567", "1234.567");
+    CHECK_EVAL("1.234,567", "1234.567");
+    CHECK_EVAL("1,2,3", "123");
+    CHECK_EVAL("1.2.3", "123");
+    CHECK_EVAL("1,234,567.89", "1234567.89");
+    CHECK_EVAL("1.234.567,89", "1234567.89");
+    CHECK_EVAL("1,234.567,89", "1234.56789");
     CHECK_EVAL("1.234,567.89", "1234.56789");
 
     // Restore old settings
@@ -909,6 +909,432 @@ void test_thousand_sep()
     CHECK_EVAL_FAIL(QString::fromUtf8("0x1天2"));
     CHECK_EVAL_FAIL(QString::fromUtf8("0b10天01"));
     CHECK_EVAL_FAIL(QString::fromUtf8("0o12天34"));
+}
+
+void test_number_format_decimal_separator()
+{
+    Settings* settings = Settings::instance();
+    const Settings::NumberFormatStyle oldNumberFormatStyle = settings->numberFormatStyle;
+
+    settings->numberFormatStyle = Settings::NumberFormatNoGroupingDot;
+    settings->applyNumberFormatStyle();
+    CHECK_EVAL_FORMAT_EXACT("1/2", QStringLiteral("0.5"));
+
+    settings->numberFormatStyle = Settings::NumberFormatNoGroupingComma;
+    settings->applyNumberFormatStyle();
+    CHECK_EVAL_FORMAT_EXACT("1/2", QStringLiteral("0,5"));
+
+    settings->numberFormatStyle = oldNumberFormatStyle;
+    settings->applyNumberFormatStyle();
+}
+
+void test_number_format_styles_matrix()
+{
+    struct NumberFormatCase {
+        Settings::NumberFormatStyle style;
+        QString base;
+        QString shortValue;
+        QString negative;
+        QString integerOnly;
+    };
+
+    const NumberFormatCase cases[] = {
+        {Settings::NumberFormatNoGroupingDot, QStringLiteral("1234567.1234567"),
+            QStringLiteral("1234.56"), QStringLiteral("-1234567.1234567"), QStringLiteral("1234567")},
+        {Settings::NumberFormatNoGroupingComma, QStringLiteral("1234567,1234567"),
+            QStringLiteral("1234,56"), QStringLiteral("-1234567,1234567"), QStringLiteral("1234567")},
+        {Settings::NumberFormatSIDot, QStringLiteral("1 234 567.123 456 7"),
+            QStringLiteral("1 234.56"), QStringLiteral("-1 234 567.123 456 7"), QStringLiteral("1 234 567")},
+        {Settings::NumberFormatSIComma, QStringLiteral("1 234 567,123 456 7"),
+            QStringLiteral("1 234,56"), QStringLiteral("-1 234 567,123 456 7"), QStringLiteral("1 234 567")},
+        {Settings::NumberFormatThreeDigitCommaDot, QStringLiteral("1,234,567.1234567"),
+            QStringLiteral("1,234.56"), QStringLiteral("-1,234,567.1234567"), QStringLiteral("1,234,567")},
+        {Settings::NumberFormatThreeDigitCommaDotFraction, QStringLiteral("1,234,567.123,456,7"),
+            QStringLiteral("1,234.56"), QStringLiteral("-1,234,567.123,456,7"), QStringLiteral("1,234,567")},
+        {Settings::NumberFormatThreeDigitDotComma, QStringLiteral("1.234.567,1234567"),
+            QStringLiteral("1.234,56"), QStringLiteral("-1.234.567,1234567"), QStringLiteral("1.234.567")},
+        {Settings::NumberFormatThreeDigitDotCommaFraction, QStringLiteral("1.234.567,123.456.7"),
+            QStringLiteral("1.234,56"), QStringLiteral("-1.234.567,123.456.7"), QStringLiteral("1.234.567")},
+        {Settings::NumberFormatThreeDigitSpaceDot, QStringLiteral("1 234 567.1234567"),
+            QStringLiteral("1 234.56"), QStringLiteral("-1 234 567.1234567"), QStringLiteral("1 234 567")},
+        {Settings::NumberFormatThreeDigitSpaceComma, QStringLiteral("1 234 567,1234567"),
+            QStringLiteral("1 234,56"), QStringLiteral("-1 234 567,1234567"), QStringLiteral("1 234 567")},
+        {Settings::NumberFormatThreeDigitUnderscoreDot, QStringLiteral("1_234_567.1234567"),
+            QStringLiteral("1_234.56"), QStringLiteral("-1_234_567.1234567"), QStringLiteral("1_234_567")},
+        {Settings::NumberFormatThreeDigitUnderscoreDotFraction, QStringLiteral("1_234_567.123_456_7"),
+            QStringLiteral("1_234.56"), QStringLiteral("-1_234_567.123_456_7"), QStringLiteral("1_234_567")},
+        {Settings::NumberFormatThreeDigitUnderscoreComma, QStringLiteral("1_234_567,1234567"),
+            QStringLiteral("1_234,56"), QStringLiteral("-1_234_567,1234567"), QStringLiteral("1_234_567")},
+        {Settings::NumberFormatThreeDigitUnderscoreCommaFraction, QStringLiteral("1_234_567,123_456_7"),
+            QStringLiteral("1_234,56"), QStringLiteral("-1_234_567,123_456_7"), QStringLiteral("1_234_567")},
+        {Settings::NumberFormatIndianCommaDot, QStringLiteral("12,34,567.1234567"),
+            QStringLiteral("1,234.56"), QStringLiteral("-12,34,567.1234567"), QStringLiteral("12,34,567")}
+    };
+
+    Settings* settings = Settings::instance();
+    const Settings::NumberFormatStyle oldNumberFormatStyle = settings->numberFormatStyle;
+    const bool oldDigitGroupingIntegerPartOnly = settings->digitGroupingIntegerPartOnly;
+
+    auto checkValue = [&](const QString& label, const QString& actual, const QString& expected, int style) {
+        ++eval_total_tests;
+        if (actual != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\t" << label.toUtf8().constData() << "\t[NEW]" << endl
+                 << "\tStyle    : " << style << endl
+                 << "\tResult   : " << actual.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    };
+
+    for (const auto& item : cases) {
+        settings->numberFormatStyle = item.style;
+        settings->applyNumberFormatStyle();
+
+        checkValue(
+            QStringLiteral("base literal formatting"),
+            DisplayFormatUtils::applyDigitGroupingForDisplay(QStringLiteral("1234567.1234567")),
+            item.base,
+            static_cast<int>(item.style));
+
+        checkValue(
+            QStringLiteral("short literal formatting"),
+            DisplayFormatUtils::applyDigitGroupingForDisplay(QStringLiteral("1234.56")),
+            item.shortValue,
+            static_cast<int>(item.style));
+
+        checkValue(
+            QStringLiteral("negative literal formatting"),
+            DisplayFormatUtils::applyDigitGroupingForDisplay(QStringLiteral("-1234567.1234567")),
+            item.negative,
+            static_cast<int>(item.style));
+
+        checkValue(
+            QStringLiteral("integer literal formatting"),
+            DisplayFormatUtils::applyDigitGroupingForDisplay(QStringLiteral("1234567")),
+            item.integerOnly,
+            static_cast<int>(item.style));
+    }
+
+    settings->numberFormatStyle = oldNumberFormatStyle;
+    settings->applyNumberFormatStyle();
+    settings->digitGroupingIntegerPartOnly = oldDigitGroupingIntegerPartOnly;
+}
+
+void test_tolerant_number_input_with_dot_style()
+{
+    Settings* settings = Settings::instance();
+    const Settings::NumberFormatStyle oldNumberFormatStyle = settings->numberFormatStyle;
+    settings->numberFormatStyle = Settings::NumberFormatNoGroupingDot;
+    settings->applyNumberFormatStyle();
+
+    CHECK_EVAL("1,56", "1.56");
+    CHECK_EVAL("12,56", "12.56");
+    CHECK_EVAL("123,56", "123.56");
+    CHECK_EVAL("1234,56", "1234.56");
+    CHECK_EVAL("1,234.56", "1234.56");
+    CHECK_EVAL("1.234,56", "1234.56");
+    CHECK_EVAL("1,23456", "1.23456");
+    CHECK_EVAL("1.23456", "1.23456");
+    CHECK_EVAL("1,234,566.789,012", "1234566.789012");
+    CHECK_EVAL("1.234.566,789.012", "1234566.789012");
+
+    settings->numberFormatStyle = oldNumberFormatStyle;
+    settings->applyNumberFormatStyle();
+}
+
+void test_tolerant_number_input_all_styles()
+{
+    Settings* settings = Settings::instance();
+    const Settings::NumberFormatStyle oldNumberFormatStyle = settings->numberFormatStyle;
+
+    const Settings::NumberFormatStyle styles[] = {
+        Settings::NumberFormatNoGroupingDot,
+        Settings::NumberFormatNoGroupingComma,
+        Settings::NumberFormatSIDot,
+        Settings::NumberFormatSIComma,
+        Settings::NumberFormatThreeDigitCommaDot,
+        Settings::NumberFormatThreeDigitCommaDotFraction,
+        Settings::NumberFormatThreeDigitDotComma,
+        Settings::NumberFormatThreeDigitDotCommaFraction,
+        Settings::NumberFormatThreeDigitSpaceDot,
+        Settings::NumberFormatThreeDigitSpaceComma,
+        Settings::NumberFormatThreeDigitUnderscoreDot,
+        Settings::NumberFormatThreeDigitUnderscoreDotFraction,
+        Settings::NumberFormatThreeDigitUnderscoreComma,
+        Settings::NumberFormatThreeDigitUnderscoreCommaFraction,
+        Settings::NumberFormatIndianCommaDot
+    };
+
+    const struct {
+        const char* expr;
+        const char* expected;
+    } cases[] = {
+        {"1,56", "1.56"},
+        {"12,56", "12.56"},
+        {"123,56", "123.56"},
+        {"1234,56", "1234.56"},
+        {"1,234.56", "1234.56"},
+        {"1.234,56", "1234.56"},
+        {"1,23456", "1.23456"},
+        {"1.23456", "1.23456"},
+        {"1,234,566.789,012", "1234566.789012"},
+        {"1.234.566,789.012", "1234566.789012"},
+        // Ambiguous mixed separators: keep parsing permissive for copy/paste.
+        {"1.123123,123123,32", "1.12312312312332"},
+        {"1,234,566.564,454545,45.23", "12345665644545454523"},
+        {"1.23.23,42342 242.4", "12323.423422424"},
+        {"12,3.23,42342 242.4", "12323423422424"}
+    };
+
+    for (const auto style : styles) {
+        settings->numberFormatStyle = style;
+        settings->applyNumberFormatStyle();
+        for (const auto& c : cases)
+            CHECK_EVAL(c.expr, c.expected);
+    }
+
+    settings->numberFormatStyle = oldNumberFormatStyle;
+    settings->applyNumberFormatStyle();
+}
+
+void test_settings_default_result_line_behavior()
+{
+    Settings* settings = Settings::instance();
+
+    const bool oldComplexNumbers = settings->complexNumbers;
+    const bool oldMultipleLinesEnabled = settings->multipleResultLinesEnabled;
+    const bool oldSecondaryEnabled = settings->secondaryResultEnabled;
+    const bool oldTertiaryEnabled = settings->tertiaryResultEnabled;
+    const bool oldQuaternaryEnabled = settings->quaternaryResultEnabled;
+    const bool oldQuinaryEnabled = settings->quinaryResultEnabled;
+    const char oldImaginaryUnit = settings->imaginaryUnit;
+    const Settings::NumberFormatStyle oldNumberFormatStyle = settings->numberFormatStyle;
+
+    // Emulate first-launch defaults for this behavior check.
+    settings->complexNumbers = false;
+    settings->multipleResultLinesEnabled = false;
+    settings->secondaryResultEnabled = false;
+    settings->tertiaryResultEnabled = false;
+    settings->quaternaryResultEnabled = false;
+    settings->quinaryResultEnabled = false;
+    settings->imaginaryUnit = 'i';
+    settings->numberFormatStyle = Settings::NumberFormatNoGroupingDot;
+    settings->applyNumberFormatStyle();
+
+    auto checkBool = [](const char* file, int line, const char* label, bool actual, bool expected) {
+        ++eval_total_tests;
+        if (actual != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << file << "[" << line << "]\t" << label << "\t[NEW]" << endl
+                 << "\tResult   : " << (actual ? "true" : "false") << endl
+                 << "\tExpected : " << (expected ? "true" : "false") << endl;
+        }
+    };
+
+    auto checkChar = [](const char* file, int line, const char* label, char actual, char expected) {
+        ++eval_total_tests;
+        if (actual != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << file << "[" << line << "]\t" << label << "\t[NEW]" << endl
+                 << "\tResult   : " << actual << endl
+                 << "\tExpected : " << expected << endl;
+        }
+    };
+
+    auto checkInt = [](const char* file, int line, const char* label, int actual, int expected) {
+        ++eval_total_tests;
+        if (actual != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << file << "[" << line << "]\t" << label << "\t[NEW]" << endl
+                 << "\tResult   : " << actual << endl
+                 << "\tExpected : " << expected << endl;
+        }
+    };
+
+    checkBool(__FILE__, __LINE__, "complex numbers default disabled", settings->complexNumbers, false);
+    checkBool(__FILE__, __LINE__, "multiple result lines default disabled",
+              settings->multipleResultLinesEnabled, false);
+    checkBool(__FILE__, __LINE__, "secondary line default disabled", settings->secondaryResultEnabled, false);
+    checkBool(__FILE__, __LINE__, "tertiary line default disabled", settings->tertiaryResultEnabled, false);
+    checkBool(__FILE__, __LINE__, "quaternary line default disabled", settings->quaternaryResultEnabled, false);
+    checkBool(__FILE__, __LINE__, "quinary line default disabled", settings->quinaryResultEnabled, false);
+    checkChar(__FILE__, __LINE__, "default imaginary unit", settings->imaginaryUnit, 'i');
+    checkInt(__FILE__, __LINE__, "default number format style",
+             static_cast<int>(settings->numberFormatStyle),
+             static_cast<int>(Settings::NumberFormatNoGroupingDot));
+
+    settings->complexNumbers = oldComplexNumbers;
+    settings->multipleResultLinesEnabled = oldMultipleLinesEnabled;
+    settings->secondaryResultEnabled = oldSecondaryEnabled;
+    settings->tertiaryResultEnabled = oldTertiaryEnabled;
+    settings->quaternaryResultEnabled = oldQuaternaryEnabled;
+    settings->quinaryResultEnabled = oldQuinaryEnabled;
+    settings->imaginaryUnit = oldImaginaryUnit;
+    settings->numberFormatStyle = oldNumberFormatStyle;
+    settings->applyNumberFormatStyle();
+}
+
+void test_extra_result_lines_profile_formatting()
+{
+    Settings* settings = Settings::instance();
+    const bool oldMultipleResultLinesEnabled = settings->multipleResultLinesEnabled;
+    const bool oldSecondaryResultEnabled = settings->secondaryResultEnabled;
+    const bool oldTertiaryResultEnabled = settings->tertiaryResultEnabled;
+    const bool oldQuaternaryResultEnabled = settings->quaternaryResultEnabled;
+    const bool oldQuinaryResultEnabled = settings->quinaryResultEnabled;
+    const char oldAlternativeResultFormat = settings->alternativeResultFormat;
+    const char oldTertiaryResultFormat = settings->tertiaryResultFormat;
+    const char oldQuaternaryResultFormat = settings->quaternaryResultFormat;
+    const char oldQuinaryResultFormat = settings->quinaryResultFormat;
+    const int oldSecondaryResultPrecision = settings->secondaryResultPrecision;
+    const int oldTertiaryResultPrecision = settings->tertiaryResultPrecision;
+    const int oldQuaternaryResultPrecision = settings->quaternaryResultPrecision;
+    const int oldQuinaryResultPrecision = settings->quinaryResultPrecision;
+    const bool oldComplexNumbers = settings->complexNumbers;
+    const bool oldSecondaryComplexNumbers = settings->secondaryComplexNumbers;
+    const bool oldTertiaryComplexNumbers = settings->tertiaryComplexNumbers;
+    const bool oldQuaternaryComplexNumbers = settings->quaternaryComplexNumbers;
+    const bool oldQuinaryComplexNumbers = settings->quinaryComplexNumbers;
+    const char oldSecondaryResultFormatComplex = settings->secondaryResultFormatComplex;
+    const char oldTertiaryResultFormatComplex = settings->tertiaryResultFormatComplex;
+    const char oldQuaternaryResultFormatComplex = settings->quaternaryResultFormatComplex;
+    const char oldQuinaryResultFormatComplex = settings->quinaryResultFormatComplex;
+    const char oldImaginaryUnit = settings->imaginaryUnit;
+    const Settings::NumberFormatStyle oldNumberFormatStyle = settings->numberFormatStyle;
+
+    settings->numberFormatStyle = Settings::NumberFormatNoGroupingDot;
+    settings->applyNumberFormatStyle();
+    settings->multipleResultLinesEnabled = true;
+    settings->secondaryResultEnabled = true;
+    settings->tertiaryResultEnabled = true;
+    settings->quaternaryResultEnabled = true;
+    settings->quinaryResultEnabled = true;
+    settings->alternativeResultFormat = 'f';
+    settings->tertiaryResultFormat = 'e';
+    settings->quaternaryResultFormat = 'b';
+    settings->quinaryResultFormat = 'r';
+    settings->secondaryResultPrecision = 2;
+    settings->tertiaryResultPrecision = 4;
+    settings->quaternaryResultPrecision = -1;
+    settings->quinaryResultPrecision = -1;
+    settings->complexNumbers = true;
+    settings->secondaryComplexNumbers = true;
+    settings->tertiaryComplexNumbers = true;
+    settings->quaternaryComplexNumbers = true;
+    settings->quinaryComplexNumbers = true;
+    settings->secondaryResultFormatComplex = 'c';
+    settings->tertiaryResultFormatComplex = 'p';
+    settings->quaternaryResultFormatComplex = 'a';
+    settings->quinaryResultFormatComplex = 'c';
+    settings->imaginaryUnit = 'j';
+    CMath::setImaginaryUnitSymbol(QLatin1Char('j'));
+    DMath::complexMode = true;
+    eval->initializeBuiltInVariables();
+
+    auto checkCondition = [](const char* file, int line, const char* label, bool condition,
+                             const QString& result, const QString& expectedHint) {
+        ++eval_total_tests;
+        if (!condition) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << file << "[" << line << "]\t" << label << "\t[NEW]" << endl
+                 << "\tResult   : " << result.toUtf8().constData() << endl
+                 << "\tExpected : " << expectedHint.toUtf8().constData() << endl;
+        }
+    };
+
+    eval->setExpression(QStringLiteral("1234.56789"));
+    const Quantity realValue = eval->evalUpdateAns();
+    if (!eval->error().isEmpty()) {
+        ++eval_total_tests;
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\treal value eval for extra line profiles\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+    } else {
+        const QString line2 = NumberFormatter::format(realValue,
+                                                      settings->alternativeResultFormat,
+                                                      settings->secondaryResultPrecision,
+                                                      settings->complexNumbers && settings->secondaryComplexNumbers,
+                                                      settings->secondaryResultFormatComplex);
+        const QString line3 = NumberFormatter::format(realValue,
+                                                      settings->tertiaryResultFormat,
+                                                      settings->tertiaryResultPrecision,
+                                                      settings->complexNumbers && settings->tertiaryComplexNumbers,
+                                                      settings->tertiaryResultFormatComplex);
+        const QString line4 = NumberFormatter::format(realValue,
+                                                      settings->quaternaryResultFormat,
+                                                      settings->quaternaryResultPrecision,
+                                                      settings->complexNumbers && settings->quaternaryComplexNumbers,
+                                                      settings->quaternaryResultFormatComplex);
+        const QString line5 = NumberFormatter::format(realValue,
+                                                      settings->quinaryResultFormat,
+                                                      settings->quinaryResultPrecision,
+                                                      settings->complexNumbers && settings->quinaryComplexNumbers,
+                                                      settings->quinaryResultFormatComplex);
+
+        checkCondition(__FILE__, __LINE__, "line2 fixed precision", line2 == QStringLiteral("1234.57"),
+                       line2, QStringLiteral("1234.57"));
+        checkCondition(__FILE__, __LINE__, "line3 scientific notation", line3.contains(QLatin1Char('e')),
+                       line3, QStringLiteral("contains 'e'"));
+        checkCondition(__FILE__, __LINE__, "line4 binary notation", line4.startsWith(QStringLiteral("0b")),
+                       line4, QStringLiteral("starts with 0b"));
+        checkCondition(__FILE__, __LINE__, "line5 rational notation", line5.contains(QLatin1Char('/')),
+                       line5, QStringLiteral("contains '/'"));
+    }
+
+    eval->setExpression(QStringLiteral("1+1j"));
+    const Quantity complexValue = eval->evalUpdateAns();
+    if (!eval->error().isEmpty()) {
+        ++eval_total_tests;
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tcomplex value eval for extra line profiles\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+    } else {
+        const QString cartesian = NumberFormatter::format(complexValue, 'f', 3, true, 'c');
+        const QString polarExp = NumberFormatter::format(complexValue, 'f', 3, true, 'p');
+        const QString polarAngle = NumberFormatter::format(complexValue, 'f', 3, true, 'a');
+        checkCondition(__FILE__, __LINE__, "cartesian complex form", cartesian.contains(QLatin1Char('j')),
+                       cartesian, QStringLiteral("contains imaginary unit j"));
+        checkCondition(__FILE__, __LINE__, "polar exponential complex form", polarExp.contains(QStringLiteral("exp(")),
+                       polarExp, QStringLiteral("contains exp("));
+        checkCondition(__FILE__, __LINE__, "polar angle complex form", polarAngle.contains(QString::fromUtf8("∠")),
+                       polarAngle, QString::fromUtf8("contains ∠"));
+    }
+
+    settings->multipleResultLinesEnabled = oldMultipleResultLinesEnabled;
+    settings->secondaryResultEnabled = oldSecondaryResultEnabled;
+    settings->tertiaryResultEnabled = oldTertiaryResultEnabled;
+    settings->quaternaryResultEnabled = oldQuaternaryResultEnabled;
+    settings->quinaryResultEnabled = oldQuinaryResultEnabled;
+    settings->alternativeResultFormat = oldAlternativeResultFormat;
+    settings->tertiaryResultFormat = oldTertiaryResultFormat;
+    settings->quaternaryResultFormat = oldQuaternaryResultFormat;
+    settings->quinaryResultFormat = oldQuinaryResultFormat;
+    settings->secondaryResultPrecision = oldSecondaryResultPrecision;
+    settings->tertiaryResultPrecision = oldTertiaryResultPrecision;
+    settings->quaternaryResultPrecision = oldQuaternaryResultPrecision;
+    settings->quinaryResultPrecision = oldQuinaryResultPrecision;
+    settings->complexNumbers = oldComplexNumbers;
+    settings->secondaryComplexNumbers = oldSecondaryComplexNumbers;
+    settings->tertiaryComplexNumbers = oldTertiaryComplexNumbers;
+    settings->quaternaryComplexNumbers = oldQuaternaryComplexNumbers;
+    settings->quinaryComplexNumbers = oldQuinaryComplexNumbers;
+    settings->secondaryResultFormatComplex = oldSecondaryResultFormatComplex;
+    settings->tertiaryResultFormatComplex = oldTertiaryResultFormatComplex;
+    settings->quaternaryResultFormatComplex = oldQuaternaryResultFormatComplex;
+    settings->quinaryResultFormatComplex = oldQuinaryResultFormatComplex;
+    settings->imaginaryUnit = oldImaginaryUnit;
+    CMath::setImaginaryUnitSymbol(QChar(oldImaginaryUnit));
+    DMath::complexMode = oldComplexNumbers;
+    eval->initializeBuiltInVariables();
+    settings->numberFormatStyle = oldNumberFormatStyle;
+    settings->applyNumberFormatStyle();
 }
 
 void test_sexagesimal()
@@ -3669,24 +4095,37 @@ void test_function_usage_tooltip()
 void test_grouped_numeric_literal_display_format()
 {
     Settings* settings = Settings::instance();
-    const int oldDigitGrouping = settings->digitGrouping;
+    const Settings::NumberFormatStyle oldNumberFormatStyle = settings->numberFormatStyle;
     const bool oldDigitGroupingIntegerPartOnly = settings->digitGroupingIntegerPartOnly;
+    struct GroupingCase {
+        Settings::NumberFormatStyle style;
+        QString separator;
+        bool indian;
+    };
+    const GroupingCase cases[] = {
+        {Settings::NumberFormatThreeDigitCommaDot, QStringLiteral(","), false},
+        {Settings::NumberFormatThreeDigitUnderscoreDot, QStringLiteral("_"), false},
+        {Settings::NumberFormatIndianCommaDot, QStringLiteral(","), true}
+    };
 
-    for (int grouping = 1; grouping <= 3; ++grouping) {
-        settings->digitGrouping = grouping;
+    for (const auto& groupingCase : cases) {
+        settings->numberFormatStyle = groupingCase.style;
+        settings->applyNumberFormatStyle();
         settings->digitGroupingIntegerPartOnly = false;
-
-        const QString separator = QStringLiteral(" ").repeated(grouping);
 
         ++eval_total_tests;
         const QString groupedLiteral =
             DisplayFormatUtils::applyDigitGroupingForDisplay(QStringLiteral("234936"));
-        const QString expectedLiteral = QStringLiteral("234") + separator + QStringLiteral("936");
+        const QString expectedLiteral = groupingCase.indian
+            ? QString(QStringLiteral("2") + groupingCase.separator
+                      + QStringLiteral("34") + groupingCase.separator
+                      + QStringLiteral("936"))
+            : QString(QStringLiteral("234") + groupingCase.separator + QStringLiteral("936"));
         if (groupedLiteral != expectedLiteral) {
             ++eval_failed_tests;
             ++eval_new_failed_tests;
             cerr << __FILE__ << "[" << __LINE__ << "]\tgroup numeric literal for display\t[NEW]" << endl
-                 << "\tGrouping : " << grouping << endl
+                 << "\tStyle    : " << static_cast<int>(groupingCase.style) << endl
                  << "\tResult   : " << groupedLiteral.toUtf8().constData() << endl
                  << "\tExpected : " << expectedLiteral.toUtf8().constData() << endl;
         }
@@ -3695,13 +4134,15 @@ void test_grouped_numeric_literal_display_format()
         const QString groupedFractional =
             DisplayFormatUtils::applyDigitGroupingForDisplay(QStringLiteral("12345.6789"));
         const QString expectedFractional =
-            QStringLiteral("12") + separator + QStringLiteral("345.")
-            + QStringLiteral("678") + separator + QStringLiteral("9");
+            (groupingCase.indian
+                ? QStringLiteral("12") + groupingCase.separator + QStringLiteral("345.")
+                : QStringLiteral("12") + groupingCase.separator + QStringLiteral("345."))
+            + QStringLiteral("678") + groupingCase.separator + QStringLiteral("9");
         if (groupedFractional != expectedFractional) {
             ++eval_failed_tests;
             ++eval_new_failed_tests;
             cerr << __FILE__ << "[" << __LINE__ << "]\tgroup fractional when integer-only is off\t[NEW]" << endl
-                 << "\tGrouping : " << grouping << endl
+                 << "\tStyle    : " << static_cast<int>(groupingCase.style) << endl
                  << "\tResult   : " << groupedFractional.toUtf8().constData() << endl
                  << "\tExpected : " << expectedFractional.toUtf8().constData() << endl;
         }
@@ -3710,12 +4151,12 @@ void test_grouped_numeric_literal_display_format()
         ++eval_total_tests;
         const QString groupedIntegerOnly =
             DisplayFormatUtils::applyDigitGroupingForDisplay(QStringLiteral("12345.6789"));
-        const QString expectedIntegerOnly = QStringLiteral("12") + separator + QStringLiteral("345.6789");
+        const QString expectedIntegerOnly = QStringLiteral("12") + groupingCase.separator + QStringLiteral("345.6789");
         if (groupedIntegerOnly != expectedIntegerOnly) {
             ++eval_failed_tests;
             ++eval_new_failed_tests;
             cerr << __FILE__ << "[" << __LINE__ << "]\tkeep fractional ungrouped when integer-only is on\t[NEW]" << endl
-                 << "\tGrouping : " << grouping << endl
+                 << "\tStyle    : " << static_cast<int>(groupingCase.style) << endl
                  << "\tResult   : " << groupedIntegerOnly.toUtf8().constData() << endl
                  << "\tExpected : " << expectedIntegerOnly.toUtf8().constData() << endl;
         }
@@ -3728,7 +4169,7 @@ void test_grouped_numeric_literal_display_format()
             ++eval_failed_tests;
             ++eval_new_failed_tests;
             cerr << __FILE__ << "[" << __LINE__ << "]\tevaluate grouped dedup baseline\t[NEW]" << endl
-                 << "\tGrouping : " << grouping << endl
+                 << "\tStyle    : " << static_cast<int>(groupingCase.style) << endl
                  << "\tError: " << qPrintable(eval->error()) << endl;
         } else {
             const QString groupedResult =
@@ -3737,14 +4178,15 @@ void test_grouped_numeric_literal_display_format()
                 ++eval_failed_tests;
                 ++eval_new_failed_tests;
                 cerr << __FILE__ << "[" << __LINE__ << "]\tgrouped literal matches formatted result\t[NEW]" << endl
-                     << "\tGrouping : " << grouping << endl
+                     << "\tStyle    : " << static_cast<int>(groupingCase.style) << endl
                      << "\tLiteral  : " << expectedLiteral.toUtf8().constData() << endl
                      << "\tResult   : " << groupedResult.toUtf8().constData() << endl;
             }
         }
     }
 
-    settings->digitGrouping = oldDigitGrouping;
+    settings->numberFormatStyle = oldNumberFormatStyle;
+    settings->applyNumberFormatStyle();
     settings->digitGroupingIntegerPartOnly = oldDigitGroupingIntegerPartOnly;
 }
 
@@ -3964,7 +4406,8 @@ int main(int argc, char* argv[])
 
     Settings* settings = Settings::instance();
     settings->angleUnit = 'r';
-    settings->setRadixCharacter('.');
+    settings->numberFormatStyle = Settings::NumberFormatNoGroupingDot;
+    settings->applyNumberFormatStyle();
     settings->complexNumbers = false;
     settings->imaginaryUnit = 'i';
     CMath::setImaginaryUnitSymbol(QLatin1Char('i'));
@@ -3985,6 +4428,12 @@ int main(int argc, char* argv[])
     test_radix_char();
 
     test_thousand_sep();
+    test_number_format_decimal_separator();
+    test_number_format_styles_matrix();
+    test_tolerant_number_input_with_dot_style();
+    test_tolerant_number_input_all_styles();
+    test_settings_default_result_line_behavior();
+    test_extra_result_lines_profile_formatting();
     test_sexagesimal();
     test_rational_format();
 

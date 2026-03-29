@@ -11,9 +11,9 @@ Decimal Form
 ++++++++++++
 
 When you would like to specify a non-integer value, simply enter the number as you would write it on paper,
-with either a period (``.``) or a comma (``,``) as the decimal separator. By default, these can be
-used interchangeably, i.e. both ``1.234`` and ``1,234`` represent the same number. However, this
-behavior can be changed; see :ref:`Radix Character <radix_character>` for more information.
+with either a period (``.``) or a comma (``,``) as the decimal separator.
+Accepted decimal separator and grouping conventions depend on the selected
+:ref:`Number Format <radix_character>`.
 
 Trailing zeros after the decimal point (like in ``12.300``) or leading zeros before it (``0012.3``) are redundant and can be included or omitted to the user's preference. Expressions like ``.5`` as a shorthand notation for ``0.5`` are also permitted.
 
@@ -105,7 +105,7 @@ These functions only accept real, dimensionless integer arguments and also only 
     binpad(1536; 32)
     = 0b00000000000000000000011000000000
 
-To change the base that is used for displaying results, select one of the corresponding settings in :menuselection:`Settings --> Results --> Format`.
+To change the base that is used for displaying results, select one of the corresponding settings in :menuselection:`Settings --> Results --> Notation`.
 
 SpeedCrunch stores integers with a precision of up to 256 bits. Since this would be unwieldy,
 the binary representation of a negative number in SpeedCrunch is *not* its two's complement.
@@ -130,7 +130,7 @@ Sexagesimal Values
 
 Sexagesimal values in SpeedCrunch are angle degrees or time values represented with minutes and seconds.
 
-When sexagesimal mode is selected in :menuselection:`Settings --> Results --> Format`, dimensionless and time results are displayed as sexagesimal values. All other results are displayed as fixed-point decimal values. Actual sexagesimal math depends on the result. Dimensionless results are handled as degrees with minutes and seconds generated from the decimal part. With time dimension results, base unit is second and the integer part is divided to minutes and hours.
+When sexagesimal mode is selected in :menuselection:`Settings --> Results --> Notation`, dimensionless and time results are displayed as sexagesimal values. All other results are displayed as fixed-point decimal values. Actual sexagesimal math depends on the result. Dimensionless results are handled as degrees with minutes and seconds generated from the decimal part. With time dimension results, base unit is second and the integer part is divided to minutes and hours.
 
 In input, characters ``°`` (degree), ``:`` (colon), ``'`` (single quote) and ``"`` (double quote) can be used for entering sexagesimal values. Degree sign ``°`` separates degrees and minutes. First colon character ``:`` separates hours and minutes. Single quote ``'`` or second colon character ``:`` separates minutes and seconds. Additionally, postfix double quote ``"`` can be used as an arc second unit. Because the degree sign is difficult to produce from keyboard, at sign ``@`` is automatically converted to it.
 

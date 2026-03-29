@@ -47,6 +47,8 @@
 #include "gui/editor.h"
 #include "gui/historywidget.h"
 #include "gui/manualwindow.h"
+#include "gui/numberformatdialog.h"
+#include "gui/notationandprecisiondialog.h"
 #include "core/manualserver.h"
 #include "gui/resultdisplay.h"
 #include "gui/syntaxhighlighter.h"
@@ -345,6 +347,8 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorAutoCompletionUserVariables = new QAction(this);
     m_actions.settingsBehaviorEmptyHistoryHint = new QAction(this);
     m_actions.settingsBehaviorLeaveLastExpression = new QAction(this);
+    m_actions.settingsBehaviorNumberFormat = new QAction(this);
+    m_actions.settingsBehaviorResultSlots = new QAction(this);
     m_actions.settingsBehaviorUpDownArrowNever = new QAction(this);
     m_actions.settingsBehaviorUpDownArrowAlways = new QAction(this);
     m_actions.settingsBehaviorUpDownArrowSingleLineOnly = new QAction(this);
@@ -393,26 +397,6 @@ void MainWindow::createActions()
     m_actions.settingsImaginaryUnitI = new QAction(this);
     m_actions.settingsImaginaryUnitJ = new QAction(this);
     m_actions.settingsResultFormatSexagesimal = new QAction(this);
-    m_actions.settingsAlternativeResultFormatDisabled = new QAction(this);
-    m_actions.settingsAlternativeResultFormatGeneral = new QAction(this);
-    m_actions.settingsAlternativeResultFormatFixed = new QAction(this);
-    m_actions.settingsAlternativeResultFormatEngineering = new QAction(this);
-    m_actions.settingsAlternativeResultFormatScientific = new QAction(this);
-    m_actions.settingsAlternativeResultFormatRational = new QAction(this);
-    m_actions.settingsAlternativeResultFormatBinary = new QAction(this);
-    m_actions.settingsAlternativeResultFormatOctal = new QAction(this);
-    m_actions.settingsAlternativeResultFormatHexadecimal = new QAction(this);
-    m_actions.settingsAlternativeResultFormatSexagesimal = new QAction(this);
-    m_actions.settingsTertiaryResultFormatDisabled = new QAction(this);
-    m_actions.settingsTertiaryResultFormatGeneral = new QAction(this);
-    m_actions.settingsTertiaryResultFormatFixed = new QAction(this);
-    m_actions.settingsTertiaryResultFormatEngineering = new QAction(this);
-    m_actions.settingsTertiaryResultFormatScientific = new QAction(this);
-    m_actions.settingsTertiaryResultFormatRational = new QAction(this);
-    m_actions.settingsTertiaryResultFormatBinary = new QAction(this);
-    m_actions.settingsTertiaryResultFormatOctal = new QAction(this);
-    m_actions.settingsTertiaryResultFormatHexadecimal = new QAction(this);
-    m_actions.settingsTertiaryResultFormatSexagesimal = new QAction(this);
     m_actions.helpManual = new QAction(this);
     m_actions.helpUpdates = new QAction(this);
     m_actions.helpFeedback = new QAction(this);
@@ -490,26 +474,6 @@ void MainWindow::createActions()
     m_actions.settingsResultFormatRational->setCheckable(true);
     m_actions.settingsResultFormatScientific->setCheckable(true);
     m_actions.settingsResultFormatSexagesimal->setCheckable(true);
-    m_actions.settingsAlternativeResultFormatDisabled->setCheckable(true);
-    m_actions.settingsAlternativeResultFormatGeneral->setCheckable(true);
-    m_actions.settingsAlternativeResultFormatFixed->setCheckable(true);
-    m_actions.settingsAlternativeResultFormatEngineering->setCheckable(true);
-    m_actions.settingsAlternativeResultFormatScientific->setCheckable(true);
-    m_actions.settingsAlternativeResultFormatRational->setCheckable(true);
-    m_actions.settingsAlternativeResultFormatBinary->setCheckable(true);
-    m_actions.settingsAlternativeResultFormatOctal->setCheckable(true);
-    m_actions.settingsAlternativeResultFormatHexadecimal->setCheckable(true);
-    m_actions.settingsAlternativeResultFormatSexagesimal->setCheckable(true);
-    m_actions.settingsTertiaryResultFormatDisabled->setCheckable(true);
-    m_actions.settingsTertiaryResultFormatGeneral->setCheckable(true);
-    m_actions.settingsTertiaryResultFormatFixed->setCheckable(true);
-    m_actions.settingsTertiaryResultFormatEngineering->setCheckable(true);
-    m_actions.settingsTertiaryResultFormatScientific->setCheckable(true);
-    m_actions.settingsTertiaryResultFormatRational->setCheckable(true);
-    m_actions.settingsTertiaryResultFormatBinary->setCheckable(true);
-    m_actions.settingsTertiaryResultFormatOctal->setCheckable(true);
-    m_actions.settingsTertiaryResultFormatHexadecimal->setCheckable(true);
-    m_actions.settingsTertiaryResultFormatSexagesimal->setCheckable(true);
     m_actions.viewConstants->setCheckable(true);
     m_actions.viewFullScreenMode->setCheckable(true);
     m_actions.viewFunctions->setCheckable(true);
@@ -574,14 +538,14 @@ void MainWindow::setStatusBarText()
 {
     if (m_status.angleUnit) {
         m_status.angleUnitLabel->setText(MainWindow::tr("Angle Unit:"));
-        m_status.resultFormatLabel->setText(MainWindow::tr("Format:"));
+        m_status.resultFormatLabel->setText(MainWindow::tr("Notation:"));
         m_status.complexNumbersLabel->setText(MainWindow::tr("Complex Numbers:"));
         m_status.angleUnit->setText(statusBarAngleUnitValue());
         m_status.resultFormat->setText(statusBarResultFormatValue());
         m_status.complexNumbers->setText(statusBarComplexNumbersValue());
 
         m_status.angleUnit->setToolTip(MainWindow::tr("Angle unit"));
-        m_status.resultFormat->setToolTip(MainWindow::tr("Result format"));
+        m_status.resultFormat->setToolTip(MainWindow::tr("Result notation"));
         m_status.complexNumbers->setToolTip(MainWindow::tr("Complex numbers"));
     }
 }
@@ -691,6 +655,8 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorDigitGroupingThreeSpaces->setText(MainWindow::tr("Large Space"));
     m_actions.settingsBehaviorDigitGroupingIntegerPartOnly->setText(MainWindow::tr("Group Integer Part Only"));
     m_actions.settingsBehaviorLeaveLastExpression->setText(MainWindow::tr("Keep Entered Expression After Evaluate"));
+    m_actions.settingsBehaviorNumberFormat->setText(MainWindow::tr("Number Format..."));
+    m_actions.settingsBehaviorResultSlots->setText(MainWindow::tr("Notation && Precision..."));
     m_actions.settingsBehaviorLeaveLastExpression->setToolTip(MainWindow::tr("After pressing Enter, keep the entered expression selected in the editor."));
     m_actions.settingsBehaviorLeaveLastExpression->setStatusTip(MainWindow::tr("After pressing Enter, keep the entered expression selected in the editor."));
     m_actions.settingsBehaviorUpDownArrowNever->setText(MainWindow::tr("Never"));
@@ -699,7 +665,7 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorAutoResultToClipboard->setText(MainWindow::tr("Automatically Copy New Results to Clipboard"));
     m_actions.settingsBehaviorSimplifyResultExpressions->setText(MainWindow::tr("Simplify Displayed Expressions"));
     m_actions.settingsBehaviorHistorySizeLimit->setText(MainWindow::tr("History Size &Limit..."));
-    m_actions.settingsResultFormatComplexDisabled->setText(MainWindow::tr("&Disabled"));
+    updateComplexDisabledActionText();
     m_actions.settingsRadixCharComma->setText(MainWindow::tr("&Comma"));
     m_actions.settingsRadixCharDefault->setText(MainWindow::tr("&System Default"));
     m_actions.settingsRadixCharDot->setText(MainWindow::tr("&Dot"));
@@ -721,31 +687,11 @@ void MainWindow::setActionsText()
     m_actions.settingsResultFormatOctal->setText(MainWindow::tr("&Octal"));
     m_actions.settingsResultFormatHexadecimal->setText(MainWindow::tr("&Hexadecimal"));
     m_actions.settingsResultFormatSexagesimal->setText(MainWindow::tr("&Sexagesimal"));
-    m_actions.settingsAlternativeResultFormatDisabled->setText(MainWindow::tr("&Disabled"));
-    m_actions.settingsAlternativeResultFormatGeneral->setText(MainWindow::tr("&Automatic"));
-    m_actions.settingsAlternativeResultFormatFixed->setText(MainWindow::tr("&Fixed-Point"));
-    m_actions.settingsAlternativeResultFormatEngineering->setText(MainWindow::tr("&Engineering"));
-    m_actions.settingsAlternativeResultFormatScientific->setText(MainWindow::tr("&Scientific"));
-    m_actions.settingsAlternativeResultFormatRational->setText(MainWindow::tr("&Rational"));
-    m_actions.settingsAlternativeResultFormatBinary->setText(MainWindow::tr("&Binary"));
-    m_actions.settingsAlternativeResultFormatOctal->setText(MainWindow::tr("&Octal"));
-    m_actions.settingsAlternativeResultFormatHexadecimal->setText(MainWindow::tr("&Hexadecimal"));
-    m_actions.settingsAlternativeResultFormatSexagesimal->setText(MainWindow::tr("&Sexagesimal"));
-    m_actions.settingsTertiaryResultFormatDisabled->setText(MainWindow::tr("&Disabled"));
-    m_actions.settingsTertiaryResultFormatGeneral->setText(MainWindow::tr("&Automatic"));
-    m_actions.settingsTertiaryResultFormatFixed->setText(MainWindow::tr("&Fixed-Point"));
-    m_actions.settingsTertiaryResultFormatEngineering->setText(MainWindow::tr("&Engineering"));
-    m_actions.settingsTertiaryResultFormatScientific->setText(MainWindow::tr("&Scientific"));
-    m_actions.settingsTertiaryResultFormatRational->setText(MainWindow::tr("&Rational"));
-    m_actions.settingsTertiaryResultFormatBinary->setText(MainWindow::tr("&Binary"));
-    m_actions.settingsTertiaryResultFormatOctal->setText(MainWindow::tr("&Octal"));
-    m_actions.settingsTertiaryResultFormatHexadecimal->setText(MainWindow::tr("&Hexadecimal"));
-    m_actions.settingsTertiaryResultFormatSexagesimal->setText(MainWindow::tr("&Sexagesimal"));
     m_actions.settingsResultFormatCartesian->setText(MainWindow::tr("&Rectangular (Cartesian)"));
     m_actions.settingsResultFormatPolar->setText(MainWindow::tr("Polar (&Exponential)"));
     m_actions.settingsResultFormatPolarAngle->setText(MainWindow::tr("Polar (&Angle)"));
-    m_actions.settingsImaginaryUnitI->setText(MainWindow::tr("Imaginary Unit '&i'"));
-    m_actions.settingsImaginaryUnitJ->setText(MainWindow::tr("Imaginary Unit '&j'"));
+    m_actions.settingsImaginaryUnitI->setText(MainWindow::tr("Imaginary Unit &i"));
+    m_actions.settingsImaginaryUnitJ->setText(MainWindow::tr("Imaginary Unit &j"));
     m_actions.settingsDisplayFont->setText(MainWindow::tr("&Font..."));
     m_actions.settingsLanguage->setText(MainWindow::tr("&Language..."));
 
@@ -772,37 +718,14 @@ void MainWindow::createActionGroups()
     m_actionGroups.resultFormat->addAction(m_actions.settingsResultFormatHexadecimal);
     m_actionGroups.resultFormat->addAction(m_actions.settingsResultFormatSexagesimal);
 
-    m_actionGroups.alternativeResultFormat = new QActionGroup(this);
-    m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatDisabled);
-    m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatBinary);
-    m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatGeneral);
-    m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatFixed);
-    m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatEngineering);
-    m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatScientific);
-    m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatRational);
-    m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatOctal);
-    m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatHexadecimal);
-    m_actionGroups.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatSexagesimal);
-
-    m_actionGroups.tertiaryResultFormat = new QActionGroup(this);
-    m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatDisabled);
-    m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatBinary);
-    m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatGeneral);
-    m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatFixed);
-    m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatEngineering);
-    m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatScientific);
-    m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatRational);
-    m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatOctal);
-    m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatHexadecimal);
-    m_actionGroups.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatSexagesimal);
 
     m_actionGroups.complexFormat = new QActionGroup(this);
-    m_actionGroups.complexFormat->addAction(m_actions.settingsResultFormatComplexDisabled);
     m_actionGroups.complexFormat->addAction(m_actions.settingsResultFormatCartesian);
     m_actionGroups.complexFormat->addAction(m_actions.settingsResultFormatPolar);
     m_actionGroups.complexFormat->addAction(m_actions.settingsResultFormatPolarAngle);
 
     m_actionGroups.imaginaryUnit = new QActionGroup(this);
+    m_actionGroups.imaginaryUnit->addAction(m_actions.settingsResultFormatComplexDisabled);
     m_actionGroups.imaginaryUnit->addAction(m_actions.settingsImaginaryUnitI);
     m_actionGroups.imaginaryUnit->addAction(m_actions.settingsImaginaryUnitJ);
 
@@ -891,8 +814,6 @@ void MainWindow::createActionShortcuts()
     m_actions.settingsResultFormatHexadecimal->setShortcut(Qt::Key_F8);
     m_actions.settingsResultFormatSexagesimal->setShortcut(Qt::Key_F9);
     m_actions.settingsAngleUnitCycle->setShortcut(Qt::Key_F10);
-    m_actions.settingsRadixCharDot->setShortcut(Qt::CTRL | Qt::Key_Period);
-    m_actions.settingsRadixCharComma->setShortcut(Qt::CTRL | Qt::Key_Comma);
     m_actions.contextHelp->setShortcut(Qt::Key_F1);
 }
 
@@ -962,25 +883,7 @@ void MainWindow::createMenus()
     m_menus.display->addSeparator();
     m_menus.display->addAction(m_actions.settingsBehaviorSyntaxHighlighting);
     m_menus.display->addAction(m_actions.settingsBehaviorHoverHighlightResults);
-    m_menus.display->addSeparator();
-
-    m_menus.digitGrouping = m_menus.display->addMenu("");
-    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingNone);
-    m_menus.digitGrouping->addSeparator();
-    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingOneSpace);
-    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingTwoSpaces);
-    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingThreeSpaces);
-    m_menus.digitGrouping->addSeparator();
-    m_menus.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingIntegerPartOnly);
-
     m_menus.editing = m_menus.settings->addMenu("");
-    m_menus.radixChar = m_menus.editing->addMenu("");
-    m_menus.radixChar->addAction(m_actions.settingsRadixCharDefault);
-    m_menus.radixChar->addSeparator();
-    m_menus.radixChar->addAction(m_actions.settingsRadixCharDot);
-    m_menus.radixChar->addAction(m_actions.settingsRadixCharComma);
-    m_menus.radixChar->addAction(m_actions.settingsRadixCharBoth);
-    m_menus.editing->addSeparator();
     m_menus.autoCompletion = m_menus.editing->addMenu("");
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionBuiltInFunctions);
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionUnits);
@@ -995,8 +898,13 @@ void MainWindow::createMenus()
     m_menus.upDownArrowBehavior->addAction(m_actions.settingsBehaviorUpDownArrowSingleLineOnly);
 
     m_menus.results = m_menus.settings->addMenu("");
+    m_menus.results->addAction(m_actions.settingsBehaviorNumberFormat);
+    m_menus.results->addAction(m_actions.settingsBehaviorResultSlots);
+    m_menus.results->addSeparator();
 
-    m_menus.resultFormat = m_menus.results->addMenu("");
+    // Deprecated direct menus kept as internal context menus only; users should
+    // configure these via "Notation & Precision...".
+    m_menus.resultFormat = new QMenu("", this);
     m_menus.decimal = m_menus.resultFormat->addMenu("");
     m_menus.decimal->addAction(m_actions.settingsResultFormatGeneral);
     m_menus.decimal->addAction(m_actions.settingsResultFormatFixed);
@@ -1008,7 +916,7 @@ void MainWindow::createMenus()
     m_menus.resultFormat->addAction(m_actions.settingsResultFormatHexadecimal);
     m_menus.resultFormat->addAction(m_actions.settingsResultFormatSexagesimal);
 
-    m_menus.precision = m_menus.results->addMenu("");
+    m_menus.precision = new QMenu("", this);
     m_menus.precision->addAction(m_actions.settingsResultFormatAutoPrecision);
     m_menus.precision->addAction(m_actions.settingsResultFormat0Digits);
     m_menus.precision->addAction(m_actions.settingsResultFormat2Digits);
@@ -1019,45 +927,11 @@ void MainWindow::createMenus()
     m_menus.precision->addSeparator();
     m_menus.precision->addAction(m_actions.settingsResultFormatCustomDigits);
 
-    m_menus.complexNumbers = m_menus.results->addMenu("");
+    m_menus.complexNumbers = new QMenu("", this);
     m_menus.complexNumbers->addAction(m_actions.settingsResultFormatComplexDisabled);
-    m_menus.complexNumbers->addSeparator();
-    m_menus.complexNumbers->addAction(m_actions.settingsResultFormatCartesian);
-    m_menus.complexNumbers->addAction(m_actions.settingsResultFormatPolar);
-    m_menus.complexNumbers->addAction(m_actions.settingsResultFormatPolarAngle);
-    m_menus.complexNumbers->addSeparator();
     m_menus.complexNumbers->addAction(m_actions.settingsImaginaryUnitI);
     m_menus.complexNumbers->addAction(m_actions.settingsImaginaryUnitJ);
-    m_menus.results->addSeparator();
 
-    m_menus.alternativeResultFormat = m_menus.results->addMenu("");
-    m_menus.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatDisabled);
-    m_menus.alternativeResultFormat->addSeparator();
-    m_menus.alternativeDecimal = m_menus.alternativeResultFormat->addMenu("");
-    m_menus.alternativeDecimal->addAction(m_actions.settingsAlternativeResultFormatGeneral);
-    m_menus.alternativeDecimal->addAction(m_actions.settingsAlternativeResultFormatFixed);
-    m_menus.alternativeDecimal->addAction(m_actions.settingsAlternativeResultFormatEngineering);
-    m_menus.alternativeDecimal->addAction(m_actions.settingsAlternativeResultFormatScientific);
-    m_menus.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatRational);
-    m_menus.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatBinary);
-    m_menus.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatOctal);
-    m_menus.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatHexadecimal);
-    m_menus.alternativeResultFormat->addAction(m_actions.settingsAlternativeResultFormatSexagesimal);
-
-    m_menus.tertiaryResultFormat = m_menus.results->addMenu("");
-    m_menus.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatDisabled);
-    m_menus.tertiaryResultFormat->addSeparator();
-    m_menus.tertiaryDecimal = m_menus.tertiaryResultFormat->addMenu("");
-    m_menus.tertiaryDecimal->addAction(m_actions.settingsTertiaryResultFormatGeneral);
-    m_menus.tertiaryDecimal->addAction(m_actions.settingsTertiaryResultFormatFixed);
-    m_menus.tertiaryDecimal->addAction(m_actions.settingsTertiaryResultFormatEngineering);
-    m_menus.tertiaryDecimal->addAction(m_actions.settingsTertiaryResultFormatScientific);
-    m_menus.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatRational);
-    m_menus.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatBinary);
-    m_menus.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatOctal);
-    m_menus.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatHexadecimal);
-    m_menus.tertiaryResultFormat->addAction(m_actions.settingsTertiaryResultFormatSexagesimal);
-    m_menus.results->addSeparator();
     m_menus.results->addAction(m_actions.settingsBehaviorPartialResults);
     m_menus.results->addAction(m_actions.settingsBehaviorSimplifyResultExpressions);
     m_menus.results->addAction(m_actions.settingsBehaviorAutoResultToClipboard);
@@ -1069,6 +943,8 @@ void MainWindow::createMenus()
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitTurn);
     m_menus.angleUnit->addSeparator();
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitCycle);
+
+    m_menus.settings->addMenu(m_menus.complexNumbers);
 
     m_menus.history = m_menus.settings->addMenu("");
     m_menus.historySaving = m_menus.history->addMenu("");
@@ -1111,13 +987,8 @@ void MainWindow::setMenusText()
     m_menus.keypadZoom->setTitle(MainWindow::tr("&Zoom"));
     m_menus.settings->setTitle(MainWindow::tr("Se&ttings"));
     m_menus.results->setTitle(MainWindow::tr("&Results"));
-    m_menus.resultFormat->setTitle(MainWindow::tr("&Format"));
-    m_menus.alternativeResultFormat->setTitle(MainWindow::tr("Secondary Format"));
-    m_menus.tertiaryResultFormat->setTitle(MainWindow::tr("Tertiary Format"));
-    m_menus.radixChar->setTitle(MainWindow::tr("Radix &Character"));
+    m_menus.resultFormat->setTitle(MainWindow::tr("&Notation"));
     m_menus.decimal->setTitle(MainWindow::tr("&Decimal"));
-    m_menus.alternativeDecimal->setTitle(MainWindow::tr("&Decimal"));
-    m_menus.tertiaryDecimal->setTitle(MainWindow::tr("&Decimal"));
     m_menus.precision->setTitle(MainWindow::tr("&Precision"));
     m_menus.angleUnit->setTitle(MainWindow::tr("&Angle Unit"));
     m_menus.complexNumbers->setTitle(MainWindow::tr("Complex &Numbers"));
@@ -1130,7 +1001,14 @@ void MainWindow::setMenusText()
     m_menus.display->setTitle(MainWindow::tr("&Appearance"));
     m_menus.colorScheme->setTitle(MainWindow::tr("Theme"));
     m_menus.help->setTitle(MainWindow::tr("&Help"));
-    m_menus.digitGrouping->setTitle(MainWindow::tr("Digit Grouping"));
+}
+
+void MainWindow::updateComplexDisabledActionText()
+{
+    if (m_actions.settingsResultFormatComplexDisabled->isChecked())
+        m_actions.settingsResultFormatComplexDisabled->setText(MainWindow::tr("&Disabled"));
+    else
+        m_actions.settingsResultFormatComplexDisabled->setText(MainWindow::tr("&Disable"));
 }
 
 void MainWindow::createStatusBar()
@@ -1194,15 +1072,6 @@ void MainWindow::createStatusBar()
         SLOT(showResultFormatContextMenu(const QPoint&)));
     m_status.complexNumbers->setContextMenuPolicy(Qt::ActionsContextMenu);
     m_status.complexNumbers->addAction(m_actions.settingsResultFormatComplexDisabled);
-    QAction* complexSeparator1 = new QAction(m_status.complexNumbers);
-    complexSeparator1->setSeparator(true);
-    m_status.complexNumbers->addAction(complexSeparator1);
-    m_status.complexNumbers->addAction(m_actions.settingsResultFormatCartesian);
-    m_status.complexNumbers->addAction(m_actions.settingsResultFormatPolar);
-    m_status.complexNumbers->addAction(m_actions.settingsResultFormatPolarAngle);
-    QAction* complexSeparator2 = new QAction(m_status.complexNumbers);
-    complexSeparator2->setSeparator(true);
-    m_status.complexNumbers->addAction(complexSeparator2);
     m_status.complexNumbers->addAction(m_actions.settingsImaginaryUnitI);
     m_status.complexNumbers->addAction(m_actions.settingsImaginaryUnitJ);
 
@@ -1502,6 +1371,8 @@ void MainWindow::createFixedConnections()
     connect(m_actionGroups.digitGrouping, SIGNAL(triggered(QAction*)), SLOT(setDigitGrouping(QAction*)));
     connect(m_actions.settingsBehaviorDigitGroupingIntegerPartOnly, SIGNAL(toggled(bool)), SLOT(setDigitGroupingIntegerPartOnlyEnabled(bool)));
     connect(m_actions.settingsBehaviorLeaveLastExpression, SIGNAL(toggled(bool)), SLOT(setLeaveLastExpressionEnabled(bool)));
+    connect(m_actions.settingsBehaviorNumberFormat, SIGNAL(triggered()), SLOT(showNumberFormatDialog()));
+    connect(m_actions.settingsBehaviorResultSlots, SIGNAL(triggered()), SLOT(showResultSlotsDialog()));
     connect(m_actionGroups.upDownArrowBehavior, SIGNAL(triggered(QAction*)), SLOT(setUpDownArrowBehavior(QAction*)));
     connect(m_actions.settingsBehaviorAutoResultToClipboard, SIGNAL(toggled(bool)), SLOT(setAutoResultToClipboardEnabled(bool)));
     connect(m_actions.settingsBehaviorSimplifyResultExpressions, SIGNAL(toggled(bool)), SLOT(setSimplifyResultExpressionsEnabled(bool)));
@@ -1519,7 +1390,11 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsResultFormatCustomDigits, SIGNAL(triggered()), SLOT(setResultPrecisionCustom()));
     connect(m_actions.settingsResultFormatAutoPrecision, SIGNAL(triggered()), SLOT(setResultPrecisionAutomatic()));
     connect(m_actions.settingsResultFormatBinary, SIGNAL(triggered()), SLOT(setResultFormatBinary()));
-    connect(m_actions.settingsResultFormatComplexDisabled, SIGNAL(triggered()), SLOT(setResultFormatComplexDisabled()));
+    connect(m_actions.settingsResultFormatComplexDisabled, &QAction::toggled,
+            this, [this](bool) {
+                updateComplexDisabledActionText();
+                setResultFormatComplexDisabled();
+            });
     connect(m_actions.settingsResultFormatCartesian, SIGNAL(triggered()), SLOT(setResultFormatCartesian()));
     connect(m_actions.settingsResultFormatEngineering, SIGNAL(triggered()), SLOT(setResultFormatEngineering()));
     connect(m_actions.settingsResultFormatFixed, SIGNAL(triggered()), SLOT(setResultFormatFixed()));
@@ -1533,26 +1408,6 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsResultFormatRational, SIGNAL(triggered()), SLOT(setResultFormatRational()));
     connect(m_actions.settingsResultFormatSexagesimal, SIGNAL(triggered()), SLOT(setResultFormatSexagesimal()));
     connect(m_actions.settingsResultFormatScientific, SIGNAL(triggered()), SLOT(setResultFormatScientific()));
-    connect(m_actions.settingsAlternativeResultFormatDisabled, SIGNAL(triggered()), SLOT(setAlternativeResultFormatDisabled()));
-    connect(m_actions.settingsAlternativeResultFormatGeneral, SIGNAL(triggered()), SLOT(setAlternativeResultFormatGeneral()));
-    connect(m_actions.settingsAlternativeResultFormatFixed, SIGNAL(triggered()), SLOT(setAlternativeResultFormatFixed()));
-    connect(m_actions.settingsAlternativeResultFormatEngineering, SIGNAL(triggered()), SLOT(setAlternativeResultFormatEngineering()));
-    connect(m_actions.settingsAlternativeResultFormatScientific, SIGNAL(triggered()), SLOT(setAlternativeResultFormatScientific()));
-    connect(m_actions.settingsAlternativeResultFormatRational, SIGNAL(triggered()), SLOT(setAlternativeResultFormatRational()));
-    connect(m_actions.settingsAlternativeResultFormatBinary, SIGNAL(triggered()), SLOT(setAlternativeResultFormatBinary()));
-    connect(m_actions.settingsAlternativeResultFormatOctal, SIGNAL(triggered()), SLOT(setAlternativeResultFormatOctal()));
-    connect(m_actions.settingsAlternativeResultFormatHexadecimal, SIGNAL(triggered()), SLOT(setAlternativeResultFormatHexadecimal()));
-    connect(m_actions.settingsAlternativeResultFormatSexagesimal, SIGNAL(triggered()), SLOT(setAlternativeResultFormatSexagesimal()));
-    connect(m_actions.settingsTertiaryResultFormatDisabled, SIGNAL(triggered()), SLOT(setTertiaryResultFormatDisabled()));
-    connect(m_actions.settingsTertiaryResultFormatGeneral, SIGNAL(triggered()), SLOT(setTertiaryResultFormatGeneral()));
-    connect(m_actions.settingsTertiaryResultFormatFixed, SIGNAL(triggered()), SLOT(setTertiaryResultFormatFixed()));
-    connect(m_actions.settingsTertiaryResultFormatEngineering, SIGNAL(triggered()), SLOT(setTertiaryResultFormatEngineering()));
-    connect(m_actions.settingsTertiaryResultFormatScientific, SIGNAL(triggered()), SLOT(setTertiaryResultFormatScientific()));
-    connect(m_actions.settingsTertiaryResultFormatRational, SIGNAL(triggered()), SLOT(setTertiaryResultFormatRational()));
-    connect(m_actions.settingsTertiaryResultFormatBinary, SIGNAL(triggered()), SLOT(setTertiaryResultFormatBinary()));
-    connect(m_actions.settingsTertiaryResultFormatOctal, SIGNAL(triggered()), SLOT(setTertiaryResultFormatOctal()));
-    connect(m_actions.settingsTertiaryResultFormatHexadecimal, SIGNAL(triggered()), SLOT(setTertiaryResultFormatHexadecimal()));
-    connect(m_actions.settingsTertiaryResultFormatSexagesimal, SIGNAL(triggered()), SLOT(setTertiaryResultFormatSexagesimal()));
 
     connect(m_actions.settingsLanguage, SIGNAL(triggered()), SLOT(showLanguageChooserDialog()));
 
@@ -1742,20 +1597,9 @@ void MainWindow::applySettings()
 
 
     checkInitialResultFormat();
-    checkInitialAlternativeResultFormat();
-    checkInitialTertiaryResultFormat();
     checkInitialResultPrecision();
     checkInitialComplexFormat();
     checkInitialImaginaryUnit();
-
-    if (m_settings->isRadixCharacterAuto())
-        m_actions.settingsRadixCharDefault->setChecked(true);
-    else if (m_settings->isRadixCharacterBoth())
-        m_actions.settingsRadixCharBoth->setChecked(true);
-    else if (m_settings->radixCharacter() == '.')
-        m_actions.settingsRadixCharDot->setChecked(true);
-    else if (m_settings->radixCharacter() == ',')
-        m_actions.settingsRadixCharComma->setChecked(true);
 
     if (m_settings->autoAns)
         m_actions.settingsBehaviorAutoAns->setChecked(true);
@@ -1780,8 +1624,6 @@ void MainWindow::applySettings()
     m_actions.settingsBehaviorAutoCompletionUserVariables->setChecked(
         m_settings->autoCompletionUserVariables);
 
-    checkInitialDigitGrouping();
-
     if (m_settings->syntaxHighlighting)
         m_actions.settingsBehaviorSyntaxHighlighting->setChecked(true);
     else
@@ -1801,8 +1643,6 @@ void MainWindow::applySettings()
         m_actions.settingsBehaviorSimplifyResultExpressions->setChecked(true);
     else
         setSimplifyResultExpressionsEnabled(false);
-
-    m_actions.settingsBehaviorDigitGroupingIntegerPartOnly->setChecked(m_settings->digitGroupingIntegerPartOnly);
 
     QFont font;
     font.fromString(m_settings->displayFont);
@@ -1873,53 +1713,17 @@ void MainWindow::checkInitialResultFormat()
     }
 }
 
-void MainWindow::checkInitialAlternativeResultFormat()
-{
-    switch (m_settings->alternativeResultFormat) {
-        case 'g': m_actions.settingsAlternativeResultFormatGeneral->setChecked(true); break;
-        case 'n': m_actions.settingsAlternativeResultFormatEngineering->setChecked(true); break;
-        case 'e': m_actions.settingsAlternativeResultFormatScientific->setChecked(true); break;
-        case 'r': m_actions.settingsAlternativeResultFormatRational->setChecked(true); break;
-        case 'h': m_actions.settingsAlternativeResultFormatHexadecimal->setChecked(true); break;
-        case 'o': m_actions.settingsAlternativeResultFormatOctal->setChecked(true); break;
-        case 'b': m_actions.settingsAlternativeResultFormatBinary->setChecked(true); break;
-        case 's': m_actions.settingsAlternativeResultFormatSexagesimal->setChecked(true); break;
-        case 'f': m_actions.settingsAlternativeResultFormatFixed->setChecked(true); break;
-        default : m_actions.settingsAlternativeResultFormatDisabled->setChecked(true);
-    }
-}
-
-void MainWindow::checkInitialTertiaryResultFormat()
-{
-    switch (m_settings->tertiaryResultFormat) {
-        case 'g': m_actions.settingsTertiaryResultFormatGeneral->setChecked(true); break;
-        case 'n': m_actions.settingsTertiaryResultFormatEngineering->setChecked(true); break;
-        case 'e': m_actions.settingsTertiaryResultFormatScientific->setChecked(true); break;
-        case 'r': m_actions.settingsTertiaryResultFormatRational->setChecked(true); break;
-        case 'h': m_actions.settingsTertiaryResultFormatHexadecimal->setChecked(true); break;
-        case 'o': m_actions.settingsTertiaryResultFormatOctal->setChecked(true); break;
-        case 'b': m_actions.settingsTertiaryResultFormatBinary->setChecked(true); break;
-        case 's': m_actions.settingsTertiaryResultFormatSexagesimal->setChecked(true); break;
-        case 'f': m_actions.settingsTertiaryResultFormatFixed->setChecked(true); break;
-        default : m_actions.settingsTertiaryResultFormatDisabled->setChecked(true);
-    }
-}
-
 void MainWindow::checkInitialComplexFormat()
 {
-    if (!m_settings->complexNumbers) {
-        m_actions.settingsResultFormatComplexDisabled->setChecked(true);
-    } else if (m_settings->resultFormatComplex == 'a') {
-        m_actions.settingsResultFormatPolarAngle->setChecked(true);
-    } else if (m_settings->resultFormatComplex == 'p') {
-        m_actions.settingsResultFormatPolar->setChecked(true);
-    } else {
-        m_actions.settingsResultFormatCartesian->setChecked(true);
-    }
+    m_actions.settingsResultFormatComplexDisabled->setChecked(!m_settings->complexNumbers);
+    updateComplexDisabledActionText();
 }
 
 void MainWindow::checkInitialImaginaryUnit()
 {
+    if (!m_settings->complexNumbers)
+        return;
+
     if (m_settings->imaginaryUnit == 'j')
         m_actions.settingsImaginaryUnitJ->setChecked(true);
     else
@@ -2879,7 +2683,6 @@ void MainWindow::setBitfieldVisible(bool b)
 void MainWindow::setSyntaxHighlightingEnabled(bool b)
 {
     m_settings->syntaxHighlighting = b;
-    m_menus.digitGrouping->setEnabled(b);
     emit syntaxHighlightingChanged();
 }
 
@@ -3398,11 +3201,13 @@ void MainWindow::setResultFormatBinary()
 
 void MainWindow::setResultFormatComplexDisabled()
 {
-    if (!m_settings->complexNumbers)
+    const bool shouldDisable = m_actions.settingsResultFormatComplexDisabled->isChecked();
+    const bool isDisabled = !m_settings->complexNumbers;
+    if (shouldDisable == isDisabled)
         return;
 
-    m_settings->complexNumbers = false;
-    DMath::complexMode = false;
+    m_settings->complexNumbers = !shouldDisable;
+    DMath::complexMode = !shouldDisable;
     m_evaluator->initializeBuiltInVariables();
     setStatusBarText();
     emit complexNumbersChanged();
@@ -3452,9 +3257,11 @@ void MainWindow::setResultFormatHexadecimal()
 
 void MainWindow::setImaginaryUnitI()
 {
-    if (m_settings->imaginaryUnit == 'i')
+    if (m_settings->complexNumbers && m_settings->imaginaryUnit == 'i')
         return;
 
+    m_settings->complexNumbers = true;
+    DMath::complexMode = true;
     m_settings->imaginaryUnit = 'i';
     CMath::setImaginaryUnitSymbol(QLatin1Char('i'));
     m_evaluator->initializeBuiltInVariables();
@@ -3465,9 +3272,11 @@ void MainWindow::setImaginaryUnitI()
 
 void MainWindow::setImaginaryUnitJ()
 {
-    if (m_settings->imaginaryUnit == 'j')
+    if (m_settings->complexNumbers && m_settings->imaginaryUnit == 'j')
         return;
 
+    m_settings->complexNumbers = true;
+    DMath::complexMode = true;
     m_settings->imaginaryUnit = 'j';
     CMath::setImaginaryUnitSymbol(QLatin1Char('j'));
     m_evaluator->initializeBuiltInVariables();
@@ -3520,15 +3329,8 @@ void MainWindow::setResultFormatPolarAngle()
 
 void MainWindow::cycleComplexNumbersMode()
 {
-    if (!m_settings->complexNumbers) {
-        m_actions.settingsResultFormatCartesian->trigger();
-    } else if (m_settings->resultFormatComplex == 'c') {
-        m_actions.settingsResultFormatPolar->trigger();
-    } else if (m_settings->resultFormatComplex == 'p') {
-        m_actions.settingsResultFormatPolarAngle->trigger();
-    } else {
-        m_actions.settingsResultFormatComplexDisabled->trigger();
-    }
+    m_actions.settingsResultFormatComplexDisabled->setChecked(
+        !m_actions.settingsResultFormatComplexDisabled->isChecked());
 }
 
 void MainWindow::setResultFormatScientific()
@@ -3547,124 +3349,6 @@ void MainWindow::setResultFormatSexagesimal()
 {
     setResultFormat('s');
     setStatusBarText();
-}
-
-void MainWindow::setAlternativeResultFormat(char c)
-{
-    if (m_settings->alternativeResultFormat == c)
-        return;
-
-    m_settings->alternativeResultFormat = c;
-    emit resultFormatChanged();
-}
-
-void MainWindow::setAlternativeResultFormatDisabled()
-{
-    setAlternativeResultFormat('\0');
-}
-
-void MainWindow::setAlternativeResultFormatGeneral()
-{
-    setAlternativeResultFormat('g');
-}
-
-void MainWindow::setAlternativeResultFormatFixed()
-{
-    setAlternativeResultFormat('f');
-}
-
-void MainWindow::setAlternativeResultFormatEngineering()
-{
-    setAlternativeResultFormat('n');
-}
-
-void MainWindow::setAlternativeResultFormatScientific()
-{
-    setAlternativeResultFormat('e');
-}
-
-void MainWindow::setAlternativeResultFormatRational()
-{
-    setAlternativeResultFormat('r');
-}
-
-void MainWindow::setAlternativeResultFormatBinary()
-{
-    setAlternativeResultFormat('b');
-}
-
-void MainWindow::setAlternativeResultFormatOctal()
-{
-    setAlternativeResultFormat('o');
-}
-
-void MainWindow::setAlternativeResultFormatHexadecimal()
-{
-    setAlternativeResultFormat('h');
-}
-
-void MainWindow::setAlternativeResultFormatSexagesimal()
-{
-    setAlternativeResultFormat('s');
-}
-
-void MainWindow::setTertiaryResultFormat(char c)
-{
-    if (m_settings->tertiaryResultFormat == c)
-        return;
-
-    m_settings->tertiaryResultFormat = c;
-    emit resultFormatChanged();
-}
-
-void MainWindow::setTertiaryResultFormatDisabled()
-{
-    setTertiaryResultFormat('\0');
-}
-
-void MainWindow::setTertiaryResultFormatGeneral()
-{
-    setTertiaryResultFormat('g');
-}
-
-void MainWindow::setTertiaryResultFormatFixed()
-{
-    setTertiaryResultFormat('f');
-}
-
-void MainWindow::setTertiaryResultFormatEngineering()
-{
-    setTertiaryResultFormat('n');
-}
-
-void MainWindow::setTertiaryResultFormatScientific()
-{
-    setTertiaryResultFormat('e');
-}
-
-void MainWindow::setTertiaryResultFormatRational()
-{
-    setTertiaryResultFormat('r');
-}
-
-void MainWindow::setTertiaryResultFormatBinary()
-{
-    setTertiaryResultFormat('b');
-}
-
-void MainWindow::setTertiaryResultFormatOctal()
-{
-    setTertiaryResultFormat('o');
-}
-
-void MainWindow::setTertiaryResultFormatHexadecimal()
-{
-    setTertiaryResultFormat('h');
-}
-
-void MainWindow::setTertiaryResultFormatSexagesimal()
-{
-    setTertiaryResultFormat('s');
 }
 
 void MainWindow::insertConstantIntoEditor(const QString& c)
@@ -4309,6 +3993,48 @@ void MainWindow::setRadixCharacter(char c)
 {
     m_settings->setRadixCharacter(c);
     emit radixCharacterChanged();
+}
+
+void MainWindow::showNumberFormatDialog()
+{
+    NumberFormatDialog dialog(this);
+    const Settings::NumberFormatStyle originalStyle = m_settings->numberFormatStyle;
+    auto applyStyle = [this](Settings::NumberFormatStyle style) {
+        m_settings->numberFormatStyle = style;
+        m_settings->applyNumberFormatStyle();
+        emit historyChanged();
+        m_widgets.editor->refreshAutoCalc();
+        emit syntaxHighlightingChanged();
+        emit radixCharacterChanged();
+    };
+
+    dialog.setSelection(originalStyle);
+    connect(&dialog, &NumberFormatDialog::selectionChanged,
+            this, [applyStyle](Settings::NumberFormatStyle style) {
+        applyStyle(style);
+    });
+
+    if (dialog.exec() == QDialog::Accepted) {
+        applyStyle(dialog.selectedStyle());
+    } else {
+        applyStyle(originalStyle);
+    }
+}
+
+void MainWindow::showResultSlotsDialog()
+{
+    ResultSlotsDialog dialog(this);
+    connect(&dialog, &ResultSlotsDialog::settingsApplied, this, [this]() {
+        DMath::complexMode = m_settings->complexNumbers;
+        if (m_settings->complexNumbers)
+            m_evaluator->initializeBuiltInVariables();
+        setStatusBarText();
+        // Notation/precision changes from this dialog must not rewrite
+        // previously displayed history lines. Only refresh the active editor
+        // previews (live result and selection tooltip).
+        m_widgets.editor->refreshAutoCalc();
+    });
+    dialog.exec();
 }
 
 void MainWindow::increaseDisplayFontPointSize()
