@@ -90,6 +90,7 @@
 #include <QStandardPaths>
 #include <QScrollBar>
 #include <QStatusBar>
+#include <QStyle>
 #include <QToolTip>
 #include <QVBoxLayout>
 #include <QJsonDocument>
@@ -550,7 +551,47 @@ void MainWindow::setStatusBarText()
         m_status.angleUnit->setToolTip(MainWindow::tr("Angle unit"));
         m_status.resultFormat->setToolTip(MainWindow::tr("Result notation"));
         m_status.complexForm->setToolTip(MainWindow::tr("Complex form"));
-        m_status.complexFormSection->setVisible(m_settings->complexNumbers);
+        updateStatusBarSectionVisibility();
+    }
+}
+
+void MainWindow::updateStatusBarSectionVisibility()
+{
+    if (!m_status.angleUnit)
+        return;
+
+    QStatusBar* bar = statusBar();
+    const int availableWidth = bar->contentsRect().width();
+    const int spacing = qMax(0, bar->style()->pixelMetric(QStyle::PM_LayoutHorizontalSpacing, nullptr, bar));
+
+    struct Section {
+        QWidget* widget;
+        bool enabled;
+    };
+
+    const Section sections[] = {
+        { m_status.resultFormatSection, true },
+        { m_status.angleUnitSection, true },
+        { m_status.complexFormSection, m_settings->complexNumbers }
+    };
+
+    int usedWidth = 0;
+    bool hasVisibleSection = false;
+    for (const Section& section : sections) {
+        if (!section.enabled) {
+            section.widget->setVisible(false);
+            continue;
+        }
+
+        const int sectionWidth = section.widget->sizeHint().width();
+        const int gap = hasVisibleSection ? spacing : 0;
+        if (usedWidth + gap + sectionWidth <= availableWidth) {
+            section.widget->setVisible(true);
+            usedWidth += gap + sectionWidth;
+            hasVisibleSection = true;
+        } else {
+            section.widget->setVisible(false);
+        }
     }
 }
 
@@ -4003,6 +4044,7 @@ void MainWindow::closeEvent(QCloseEvent* e)
 void MainWindow::resizeEvent(QResizeEvent* event)
 {
     QMainWindow::resizeEvent(event);
+    updateStatusBarSectionVisibility();
 
     if (m_widgets.state->isVisible())
         showStateLabel(m_widgets.state->text());

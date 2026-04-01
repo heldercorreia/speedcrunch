@@ -508,7 +508,8 @@ Widgets and Docks
     and :menuselection:`Results --> Notation`. When
     :menuselection:`Settings --> Complex Numbers` is enabled, it also shows
     a :menuselection:`Complex Form` selector with the same options as
-    :menuselection:`Notation & Precision...`.
+    :menuselection:`Notation & Precision...`. On narrow windows, selectors
+    that do not fully fit are hidden automatically.
 
 Scrolling
 +++++++++

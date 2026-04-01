@@ -270,6 +270,7 @@ private:
     void updateComplexDisabledActionText();
     void setMenusText();
     void setStatusBarText();
+    void updateStatusBarSectionVisibility();
     QString statusBarAngleUnitValue() const;
     QString statusBarComplexFormValue() const;
     QString statusBarResultFormatValue() const;
