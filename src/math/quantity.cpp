@@ -388,6 +388,7 @@ Quantity Quantity::operator+(const Quantity& other) const
     if (!this->sameDimension(other))
         return DMath::nan(DimensionMismatch);
     Quantity result(*this);
+    result.m_format = Quantity::Format();
     result.m_numericValue += other.m_numericValue;
     return result;
 }
@@ -409,6 +410,7 @@ Quantity& Quantity::operator-=(const Quantity& other)
 Quantity Quantity::operator*(const Quantity& other) const
 {
     Quantity result(*this);
+    result.m_format = Quantity::Format();
     result.m_numericValue *= other.m_numericValue;
     if (!other.isDimensionless()) {
         result.stripUnits();
@@ -429,6 +431,7 @@ Quantity Quantity::operator*(const Quantity& other) const
 Quantity Quantity::operator*(const CNumber& other) const
 {
     Quantity result(*this);
+    result.m_format = Quantity::Format();
     result.m_numericValue *= other;
     return result;
 }
@@ -446,6 +449,7 @@ Quantity &Quantity::operator*=(const Quantity& other)
 Quantity Quantity::operator/(const Quantity& other) const
 {
     Quantity result(*this);
+    result.m_format = Quantity::Format();
     result.m_numericValue /= other.m_numericValue;
     if (!other.isDimensionless()) {
         result.stripUnits();
@@ -471,6 +475,7 @@ Quantity Quantity::operator/(const HNumber& other) const
 Quantity Quantity::operator/(const CNumber& other) const
 {
     Quantity result(*this);
+    result.m_format = Quantity::Format();
     result.m_numericValue /= other;
     result.cleanDimension();
     return result;
@@ -484,6 +489,7 @@ Quantity &Quantity::operator/=(const Quantity& other)
 Quantity Quantity::operator%(const Quantity& other) const
 {
     Quantity result(*this);
+    result.m_format = Quantity::Format();
     result.m_numericValue = result.m_numericValue % other.m_numericValue;
     return result;
 }
@@ -493,6 +499,7 @@ Quantity Quantity::operator&(const Quantity& other) const
     ENSURE_DIMENSIONLESS(*this);
     ENSURE_DIMENSIONLESS(other);
     Quantity result(*this);
+    result.m_format = Quantity::Format();
     result.m_numericValue &= other.m_numericValue;
     return result;
 }
@@ -507,6 +514,7 @@ Quantity Quantity::operator|(const Quantity& other) const
     ENSURE_DIMENSIONLESS(*this);
     ENSURE_DIMENSIONLESS(other);
     Quantity result(*this);
+    result.m_format = Quantity::Format();
     result.m_numericValue |= other.m_numericValue;
     return result;
 }
@@ -521,6 +529,7 @@ Quantity Quantity::operator^(const Quantity& other) const
     ENSURE_DIMENSIONLESS(*this);
     ENSURE_DIMENSIONLESS(other);
     Quantity result(*this);
+    result.m_format = Quantity::Format();
     result.m_numericValue ^= other.m_numericValue;
     return result;
 }
@@ -543,6 +552,7 @@ Quantity Quantity::operator>>(const Quantity& other) const
     ENSURE_DIMENSIONLESS(*this);
     ENSURE_DIMENSIONLESS(other);
     Quantity result(*this);
+    result.m_format = Quantity::Format();
     result.m_numericValue = result.m_numericValue >> other.m_numericValue;
     return result;
 }
@@ -552,6 +562,7 @@ Quantity Quantity::operator<<(const Quantity& other) const
     ENSURE_DIMENSIONLESS(*this);
     ENSURE_DIMENSIONLESS(other);
     Quantity result(*this);
+    result.m_format = Quantity::Format();
     result.m_numericValue = result.m_numericValue << other.m_numericValue;
     return result;
 }
@@ -634,6 +645,8 @@ void Quantity::Format::serialize(QJsonObject& json) const
         json["precision"] = precision;
     if (paddedBits != 0)
         json["padded_bits"] = paddedBits;
+    if (forcedExponent != ForcedExponentNull)
+        json["forced_exponent"] = forcedExponent;
 }
 
 Quantity::Format Quantity::Format::deSerialize(const QJsonObject& json)
@@ -687,6 +700,9 @@ Quantity::Format Quantity::Format::deSerialize(const QJsonObject& json)
 
     result.precision = json.contains("precision") ? json["precision"].toInt() : PrecisionNull;
     result.paddedBits = json.contains("padded_bits") ? json["padded_bits"].toInt() : 0;
+    result.forcedExponent = json.contains("forced_exponent")
+        ? json["forced_exponent"].toInt()
+        : ForcedExponentNull;
     return result;
 }
 
@@ -696,7 +712,8 @@ bool Quantity::Format::isNull() const
         && base == Base::Null
         && precision == PrecisionNull
         && notation == Notation::Null
-        && paddedBits == 0);
+        && paddedBits == 0
+        && forcedExponent == ForcedExponentNull);
 }
 
 // DMath

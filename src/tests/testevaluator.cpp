@@ -3305,6 +3305,22 @@ void test_format()
     CHECK_EVAL("bin(123)", "0b1111011");
     CHECK_EVAL("oct(123)", "0o173");
     CHECK_EVAL("hex(123)", "0x7B");
+    CHECK_EVAL("sci(123)", "1.23e2");
+    CHECK_EVAL("eng(123)", "123e0");
+    CHECK_EVAL("sci(12341)", "1.2341e4");
+    CHECK_EVAL("eng(12341)", "12.341e3");
+    CHECK_EVAL("1+sci(123456.789)", "123457.789");
+    CHECK_EVAL("sci(123456.789)+1", "123457.789");
+    CHECK_EVAL("1+eng(123456.789)", "123457.789");
+    CHECK_EVAL("eng(123456.789)+1", "123457.789");
+    CHECK_EVAL("eng(0.000123456)", "123.456e-6");
+    CHECK_EVAL("eng(0.000123456; milli)", "0.123456e-3");
+    CHECK_EVAL("eng(0.000123456; micro)", "123.456e-6");
+    CHECK_EVAL("eng(0.000123456; 0)", "0.000123456");
+    CHECK_EVAL("eng(0.000123456; kilo)", "0.000000123456e3");
+    CHECK_EVAL("eng(0.000123456; mega)", "0.000000000123456e6");
+    CHECK_EVAL("eng(0.000123456; -3)", "0.123456e-3");
+    CHECK_EVAL("eng(0.000123456; pico)", "123456000e-12");
     CHECK_EVAL_FORMAT_EXACT("rat(0.5)", QStringLiteral("1") + slash + QStringLiteral("2"));
     CHECK_EVAL_FORMAT_EXACT("ratio(0.5)", QStringLiteral("1") + slash + QStringLiteral("2"));
     CHECK_EVAL_FORMAT_EXACT("rational(0.5)", QStringLiteral("1") + slash + QStringLiteral("2"));
@@ -3352,6 +3368,12 @@ void test_format()
     CHECK_EVAL_FAIL("octpad(10; -8)");
     CHECK_EVAL_FAIL("binpad(10; 3.5)");
     CHECK_EVAL_FAIL("binpad(10; 1e1000)");
+    CHECK_EVAL_FAIL("eng(1; meter)");
+    CHECK_EVAL_FAIL("eng(1; 3.14)");
+    CHECK_EVAL_FAIL("eng(0.000123456; -1)");
+    CHECK_EVAL_FAIL("eng(0.000123456; -2)");
+    CHECK_EVAL_FAIL("eng(0.000123456; -4)");
+    CHECK_EVAL_FAIL("eng(0.000123456; 2)");
 
     CHECK_EVAL("polar(3+4j)", "5 ⋅ exp(i ⋅ 0.92729521800161223243)");
 

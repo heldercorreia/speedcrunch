@@ -113,6 +113,21 @@ that is used for displaying results, select one of the corresponding settings in
 
     Format ``n`` as decimal (base-10).
 
+.. function:: sci(n)
+
+    Format ``n`` in scientific notation.
+
+.. function:: eng(n [; exponent])
+
+    Format ``n`` in engineering notation.
+
+    If ``exponent`` is provided, force the ``e`` exponent suffix to that value. ``exponent`` can be:
+
+    * an integer exponent that is a multiple of 3 (for example, ``-3`` or ``6``), or
+    * a power of ten with exponent a multiple of 3 (for example, ``milli``, ``micro``, ``kilo``, ``mega``, ``pico``).
+
+    ``eng(0.000123456; milli)`` is equivalent to ``eng(0.000123456; -3)``.
+
 .. function:: rat(n)
               ratio(n)
               rational(n)

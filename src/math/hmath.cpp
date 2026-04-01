@@ -636,6 +636,7 @@ HNumber::Format::Format()
     , mode(Mode::Null)
     , precision(PrecisionNull)
     , paddedBits(0)
+    , forcedExponent(ForcedExponentNull)
 {
 }
 
@@ -645,6 +646,7 @@ HNumber::Format::Format(const HNumber::Format& other)
     , mode(other.mode)
     , precision(other.precision)
     , paddedBits(other.paddedBits)
+    , forcedExponent(other.forcedExponent)
 {
 }
 
@@ -656,6 +658,7 @@ HNumber::Format HNumber::Format::operator+(const HNumber::Format& other) const
     result.mode = (this->mode != Mode::Null) ? this->mode : other.mode;
     result.precision = (this->precision != PrecisionNull) ? this->precision : other.precision;
     result.paddedBits = this->paddedBits != 0 ? this->paddedBits : other.paddedBits;
+    result.forcedExponent = this->forcedExponent != ForcedExponentNull ? this->forcedExponent : other.forcedExponent;
     return result;
 }
 
@@ -733,6 +736,13 @@ HNumber::Format HNumber::Format::Engineering()
 {
     Format result;
     result.mode = Mode::Engineering;
+    return result;
+}
+
+HNumber::Format HNumber::Format::ForcedExponent(int exponent)
+{
+    Format result;
+    result.forcedExponent = exponent;
     return result;
 }
 
@@ -929,6 +939,24 @@ char* formatGeneral(cfloatnum x, int prec, int base = 10)
  */
 QString HMath::format(const HNumber& hn, HNumber::Format format)
 {
+    if (format.mode == HNumber::Format::Mode::Engineering
+            && format.base != HNumber::Format::Base::Binary
+            && format.base != HNumber::Format::Base::Octal
+            && format.base != HNumber::Format::Base::Hexadecimal
+            && format.forcedExponent != HNumber::Format::ForcedExponentNull) {
+        const int forcedExponent = format.forcedExponent;
+        const HNumber scale = HMath::raise(HNumber(10), forcedExponent);
+        const HNumber mantissa = hn / scale;
+        HNumber::Format mantissaFormat(format);
+        mantissaFormat.mode = HNumber::Format::Mode::Fixed;
+        mantissaFormat.base = HNumber::Format::Base::Decimal;
+        mantissaFormat.forcedExponent = HNumber::Format::ForcedExponentNull;
+        QString result = HMath::format(mantissa, mantissaFormat);
+        if (forcedExponent != 0)
+            result += QStringLiteral("e%1").arg(forcedExponent);
+        return result;
+    }
+
     char* rs = 0;
 
     if (format.precision < 0)  // This includes PrecisionNull

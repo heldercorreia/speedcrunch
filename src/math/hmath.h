@@ -105,8 +105,11 @@ public:
         // 0 disables integer-part padding. Positive values pad to at least this many bits.
         // -1 pads to the next multiple of 8 bits.
         int paddedBits;
+        // Keeps exponent selection automatic when set to ForcedExponentNull.
+        int forcedExponent;
         static const int PrecisionNull = -1000;
         static const int PaddedBitsAutoByte = -1;
+        static const int ForcedExponentNull = -2147483647 - 1;
 
         Format();
         Format(const Format&);
@@ -126,6 +129,7 @@ public:
         static Format Fixed();
         static Format Scientific();
         static Format Engineering();
+        static Format ForcedExponent(int exponent);
         static Format Sexagesimal();
         static Format PadBits(int bits);
         static Format PadToByteBoundary();

@@ -38,6 +38,7 @@
 #include <cfloat>
 #include <cmath>
 #include <ctime>
+#include <limits>
 #include <numeric>
 #include <random>
 #include <string>
@@ -181,6 +182,50 @@ static Quantity s_nonDecimalPad(Function* f, const Function::ArgumentList& args,
     }
 
     return Quantity(value).setFormat(format + padding + value.format());
+}
+
+static bool s_tryExtractForcedExponent(const Quantity& value, int* out)
+{
+    if (!value.isReal() || !value.isDimensionless())
+        return false;
+
+    const HNumber numeric = value.numericValue().real;
+    if (numeric.isZero()) {
+        *out = 0;
+        return true;
+    }
+
+    if (numeric.isPositive()) {
+        const QString scientific = HMath::format(
+            numeric,
+            HNumber::Format::Scientific()
+            + HNumber::Format::Decimal()
+            + HNumber::Format::Precision(-1));
+        const int exponentPos = scientific.indexOf(QLatin1Char('e'));
+        if (exponentPos > 0 && scientific.left(exponentPos) == QStringLiteral("1")) {
+            bool ok = false;
+            const int prefixExponent = scientific.mid(exponentPos + 1).toInt(&ok);
+            if (ok && prefixExponent % 3 == 0) {
+                *out = prefixExponent;
+                return true;
+            }
+        }
+    }
+
+    if (!value.isInteger())
+        return false;
+
+    const HNumber intMax(std::numeric_limits<int>::max());
+    const HNumber intMin(std::numeric_limits<int>::min());
+    if (numeric > intMax || numeric < intMin)
+        return false;
+
+    const int exponent = numeric.toInt();
+    if (exponent % 3 != 0)
+        return false;
+
+    *out = exponent;
+    return true;
 }
 
 Quantity Function::exec(const Function::ArgumentList& args)
@@ -772,6 +817,27 @@ Quantity function_bin(Function* f, const Function::ArgumentList& args)
     return Quantity(args.at(0)).setFormat(Quantity::Format::Fixed() + Quantity::Format::Binary() + Quantity(args.at(0)).format());
 }
 
+Quantity function_sci(Function* f, const Function::ArgumentList& args)
+{
+    ENSURE_ARGUMENT_COUNT(1);
+    return Quantity(args.at(0)).setFormat(Quantity::Format::Scientific() + Quantity::Format::Decimal() + Quantity(args.at(0)).format());
+}
+
+Quantity function_eng(Function* f, const Function::ArgumentList& args)
+{
+    ENSURE_EITHER_ARGUMENT_COUNT(1, 2);
+    Quantity::Format format = Quantity::Format::Engineering() + Quantity::Format::Decimal() + Quantity(args.at(0)).format();
+    if (args.count() == 2) {
+        int forcedExponent = 0;
+        if (!s_tryExtractForcedExponent(args.at(1), &forcedExponent)) {
+            f->setError(OutOfDomain);
+            return DMath::nan();
+        }
+        format = format + Quantity::Format::ForcedExponent(forcedExponent);
+    }
+    return Quantity(args.at(0)).setFormat(format);
+}
+
 Quantity function_binpad(Function* f, const Function::ArgumentList& args)
 {
     return s_nonDecimalPad(f, args, Quantity::Format::Fixed() + Quantity::Format::Binary());
@@ -1214,6 +1280,7 @@ void FunctionRepo::createFunctions()
     FUNCTION_INSERT(frac);
     FUNCTION_INSERT(gamma);
     FUNCTION_INSERT(geomean);
+    FUNCTION_INSERT(eng);
     FUNCTION_INSERT(hex);
     FUNCTION_INSERT(hexpad);
     FUNCTION_INSERT(int);
@@ -1224,6 +1291,7 @@ void FunctionRepo::createFunctions()
     FUNCTION_INSERT(octpad);
     FUNCTION_INSERT(product);
     FUNCTION_INSERT(round);
+    FUNCTION_INSERT(sci);
     FUNCTION_INSERT(sgn);
     FUNCTION_INSERT(sigma);
     FUNCTION_INSERT(sqrt);
@@ -1423,6 +1491,7 @@ void FunctionRepo::setNonTranslatableFunctionUsages()
     FUNCTION_USAGE(csc, "x");
     FUNCTION_USAGE(dec, "x");
     FUNCTION_USAGE(degrees, "x");
+    FUNCTION_USAGE(eng, "x [; exponent]");
     FUNCTION_USAGE(erf, "x");
     FUNCTION_USAGE(erfc, "x");
     FUNCTION_USAGE(exp, "x");
@@ -1465,6 +1534,7 @@ void FunctionRepo::setNonTranslatableFunctionUsages()
     FUNCTION_USAGE(radians, "x");
     FUNCTION_USAGE(real, "x");
     FUNCTION_USAGE(rat, "x");
+    FUNCTION_USAGE(sci, "x");
     FUNCTION_USAGE(sec, "x)");
     FUNCTION_USAGE(sgn, "x");
     FUNCTION_USAGE(sigma, "start; end; expression");
@@ -1544,6 +1614,7 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(epoch, tr("Convert Date to Unix timestamp"));
     FUNCTION_NAME(dec, tr("Convert to Decimal Representation"));
     FUNCTION_NAME(degrees, tr("Degrees of Arc"));
+    FUNCTION_NAME(eng, tr("Convert to Engineering Notation"));
     FUNCTION_NAME(erf, tr("Error Function"));
     FUNCTION_NAME(erfc, tr("Complementary Error Function"));
     FUNCTION_NAME(exp, tr("Exponential"));
@@ -1605,6 +1676,7 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(radians, tr("Radians"));
     FUNCTION_NAME(real, tr("Real Part"));
     FUNCTION_NAME(round, tr("Rounding"));
+    FUNCTION_NAME(sci, tr("Convert to Scientific Notation"));
     FUNCTION_NAME(sec, tr("Secant"));
     FUNCTION_NAME(shl, tr("Arithmetic Shift Left"));
     FUNCTION_NAME(shr, tr("Arithmetic Shift Right"));

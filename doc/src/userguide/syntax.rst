@@ -96,6 +96,30 @@ operations::
     0x2 * hex(12341)
     = 24682
 
+The same applies to :func:`sci` and :func:`eng`: they only affect the formatted display of the immediate value, not the numeric value used in later arithmetic. In particular, operand order does not matter::
+
+    1 + sci(123456.789)
+    = 123457.789
+
+    sci(123456.789) + 1
+    = 123457.789
+
+For explicit decimal exponent notations, use :func:`sci` (scientific notation) or :func:`eng` (engineering notation)::
+
+    sci(12341)
+    = 1.2341e4
+
+    eng(12341)
+    = 12.341e3
+
+To force the exponent used by :func:`eng`, pass an optional second argument. It accepts either a direct exponent that is a multiple of 3, or a matching power of ten (including SI prefixes)::
+
+    eng(0.000123456; milli)
+    = 0.123456e-3
+
+    eng(0.000123456; -4)
+    = 1.23456e-4
+
 For assembly-style fixed-width formatting, use :func:`binpad`, :func:`octpad`, or :func:`hexpad`.
 These functions only accept real, dimensionless integer arguments and also only affect the immediate result::
 
