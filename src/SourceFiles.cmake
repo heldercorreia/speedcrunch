@@ -156,6 +156,8 @@ tests/testhmath.cpp
 set(testevaluator_HEADERS
 core/evaluator.h
 core/functions.h
+gui/resultdisplay.h
+gui/syntaxhighlighter.h
 )
 
 set(testevaluator_SOURCES
@@ -169,6 +171,8 @@ core/variable.cpp
 core/numberformatter.cpp
 gui/displayformatutils.cpp
 gui/functiontooltiputils.cpp
+gui/resultdisplay.cpp
+gui/syntaxhighlighter.cpp
 math/floatcommon.c
 math/floatconst.c
 math/floatconvert.c

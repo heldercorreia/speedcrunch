@@ -25,11 +25,13 @@
 #include "gui/editorutils.h"
 #include "gui/displayformatutils.h"
 #include "gui/functiontooltiputils.h"
+#include "gui/resultdisplay.h"
 #include "gui/simplifiedexpressionutils.h"
 #include "math/cmath.h"
 #include "tests/testcommon.h"
 
-#include <QtCore/QCoreApplication>
+#include <QApplication>
+#include <QTextBlock>
 
 #include <string>
 #include <iostream>
@@ -291,6 +293,114 @@ static void checkDisplayInterpreted(const char* file, int line, const char* msg,
              << "\tDisplayed code points: " << toCodePointList(displayed) << endl
              << "\tExpected  code points: " << toCodePointList(expected) << endl;
     }
+}
+
+class TestableResultDisplay : public ResultDisplay
+{
+public:
+    explicit TestableResultDisplay(QWidget* parent = 0)
+        : ResultDisplay(parent)
+    {
+    }
+
+    using ResultDisplay::blockRangeForHistoryIndex;
+    using ResultDisplay::historyIndexAtPosition;
+    using ResultDisplay::markHistoryBlockIndexCacheDirty;
+
+    QPoint pointForBlockStart(int blockNumber) const
+    {
+        QTextBlock block = document()->findBlockByNumber(blockNumber);
+        if (!block.isValid())
+            return QPoint(-1, -1);
+
+        QTextCursor cursor(block);
+        const QRect rect = cursorRect(cursor);
+        if (!rect.isValid())
+            return QPoint(-1, -1);
+
+        return rect.center();
+    }
+};
+
+void test_result_display_history_mapping_after_multiple_lines_toggle_with_comment_only_entry()
+{
+    Settings* settings = Settings::instance();
+    Session* session = const_cast<Session*>(eval->session());
+
+    const bool oldMultipleResultLinesEnabled = settings->multipleResultLinesEnabled;
+    const bool oldSecondaryResultEnabled = settings->secondaryResultEnabled;
+    const char oldAlternativeResultFormat = settings->alternativeResultFormat;
+    const int oldSecondaryResultPrecision = settings->secondaryResultPrecision;
+    const bool oldComplexNumbers = settings->complexNumbers;
+    const bool oldSecondaryComplexNumbers = settings->secondaryComplexNumbers;
+    const char oldSecondaryResultFormatComplex = settings->secondaryResultFormatComplex;
+
+    settings->multipleResultLinesEnabled = true;
+    settings->secondaryResultEnabled = true;
+    settings->alternativeResultFormat = 'r';
+    settings->secondaryResultPrecision = -1;
+    settings->complexNumbers = false;
+    settings->secondaryComplexNumbers = false;
+    settings->secondaryResultFormatComplex = 'c';
+
+    session->clearHistory();
+    session->addHistoryEntry(HistoryEntry(QStringLiteral("2/3"), Quantity(2) / Quantity(3)));
+    session->addHistoryEntry(HistoryEntry(QStringLiteral("? comment-only history entry"), CMath::nan()));
+    session->addHistoryEntry(HistoryEntry(QStringLiteral("1+1"), Quantity(2)));
+
+    auto checkMapping = [](const char* file, int line, const char* label, TestableResultDisplay& display, int expectedHistorySize) {
+        ++eval_total_tests;
+        if (expectedHistorySize <= 0) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << file << "[" << line << "]\t" << label << "\t[NEW]" << endl
+                 << "\tError: expectedHistorySize <= 0" << endl;
+            return;
+        }
+
+        for (int historyIndex = 0; historyIndex < expectedHistorySize; ++historyIndex) {
+            int startBlock = -1;
+            int endBlock = -1;
+            const bool hasRange = display.blockRangeForHistoryIndex(historyIndex, startBlock, endBlock);
+            if (!hasRange || startBlock < 0 || endBlock < startBlock) {
+                ++eval_failed_tests;
+                ++eval_new_failed_tests;
+                cerr << file << "[" << line << "]\t" << label << "\t[NEW]" << endl
+                     << "\tInvalid range for history index " << historyIndex << endl;
+                continue;
+            }
+
+            const QPoint probe = display.pointForBlockStart(startBlock);
+            const int mappedIndex = display.historyIndexAtPosition(probe);
+            if (mappedIndex != historyIndex) {
+                ++eval_failed_tests;
+                ++eval_new_failed_tests;
+                cerr << file << "[" << line << "]\t" << label << "\t[NEW]" << endl
+                     << "\tHistory index: " << historyIndex << endl
+                     << "\tMapped index : " << mappedIndex << endl
+                     << "\tBlock range  : [" << startBlock << ", " << endBlock << "]" << endl;
+            }
+        }
+    };
+
+    TestableResultDisplay display;
+    display.resize(800, 600);
+    display.refresh();
+    const int historySize = session->historySize();
+
+    checkMapping(__FILE__, __LINE__, "result display mapping before toggle", display, historySize);
+
+    settings->multipleResultLinesEnabled = false;
+    display.markHistoryBlockIndexCacheDirty();
+    checkMapping(__FILE__, __LINE__, "result display mapping after toggle with stale blocks", display, historySize);
+
+    settings->multipleResultLinesEnabled = oldMultipleResultLinesEnabled;
+    settings->secondaryResultEnabled = oldSecondaryResultEnabled;
+    settings->alternativeResultFormat = oldAlternativeResultFormat;
+    settings->secondaryResultPrecision = oldSecondaryResultPrecision;
+    settings->complexNumbers = oldComplexNumbers;
+    settings->secondaryComplexNumbers = oldSecondaryComplexNumbers;
+    settings->secondaryResultFormatComplex = oldSecondaryResultFormatComplex;
 }
 
 static void checkDisplaySimplifiedInterpreted(const char* file, int line, const char* msg,
@@ -4532,7 +4642,9 @@ void test_non_informative_numeric_simplified_row_suppression()
 
 int main(int argc, char* argv[])
 {
-    QCoreApplication app(argc, argv);
+    if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM"))
+        qputenv("QT_QPA_PLATFORM", "offscreen");
+    QApplication app(argc, argv);
 
     Settings* settings = Settings::instance();
     settings->angleUnit = 'r';
@@ -4583,6 +4695,7 @@ int main(int argc, char* argv[])
 
     test_comments();
     test_comment_and_description_edge_cases();
+    test_result_display_history_mapping_after_multiple_lines_toggle_with_comment_only_entry();
 
     test_user_functions();
 

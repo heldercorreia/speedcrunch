@@ -224,18 +224,6 @@ QString formattedExpressionForDisplay(const QString& expression,
         UnicodeChars::normalizePiForDisplay(expression));
 }
 
-int expressionLineCount(const HistoryEntry& entry)
-{
-    return formattedExpressionForDisplay(entry).count(QLatin1Char('\n')) + 1;
-}
-
-int displayedBlockCountForLines(const QStringList& lines)
-{
-    int count = 0;
-    for (const QString& line : lines)
-        count += line.count(QLatin1Char('\n')) + 1;
-    return count;
-}
 }
 
 ResultDisplay::ResultDisplay(QWidget* parent)
@@ -1196,30 +1184,37 @@ void ResultDisplay::ensureHistoryBlockIndexCache() const
     const int historySize = session->historySize();
     m_historyBlockRanges.reserve(historySize);
 
-    int currentBlock = 0;
+    QTextBlock block = document()->firstBlock();
     for (int i = 0; i < historySize; ++i) {
-        const HistoryEntry& historyEntry = session->historyEntryAtRef(i);
-        const int startBlock = currentBlock;
+        const int startBlock = block.isValid() ? block.blockNumber() : -1;
+        int endBlock = -1;
 
-        const int expressionLines = expressionLineCount(historyEntry);
-        for (int line = 0; line < expressionLines; ++line)
-            m_blockToHistoryIndex.append(i);
-        currentBlock += expressionLines;
-
-        int endBlock = currentBlock - 1;
-        if (!historyEntry.result().isNan()) {
-            const int resultLines = displayedBlockCountForLines(formatResultLines(historyEntry));
-            for (int line = 0; line < resultLines; ++line)
+        // Reconstruct ranges from the currently displayed text blocks so hover
+        // hit-testing always matches what is visible, even after format mode
+        // changes that intentionally do not rewrite history lines.
+        while (block.isValid()) {
+            const int blockNumber = block.blockNumber();
+            if (block.text().isEmpty()) {
+                // Preserve existing behavior: separator blocks map to this
+                // history entry, but are excluded from highlight ranges.
                 m_blockToHistoryIndex.append(i);
-            currentBlock += resultLines;
-            endBlock = currentBlock - 1;
+                block = block.next();
+                break;
+            }
+
+            m_blockToHistoryIndex.append(i);
+            endBlock = blockNumber;
+            block = block.next();
         }
 
-        // Preserve existing behavior: separator blocks map to this history entry.
-        m_blockToHistoryIndex.append(i);
-        ++currentBlock;
-
         m_historyBlockRanges.append(qMakePair(startBlock, endBlock));
+    }
+
+    // Keep the cache shape aligned with the rendered document even if there
+    // are stale trailing blocks.
+    while (block.isValid()) {
+        m_blockToHistoryIndex.append(historySize > 0 ? historySize - 1 : -1);
+        block = block.next();
     }
 
     m_historyBlockIndexCacheDirty = false;
