@@ -1224,6 +1224,9 @@ void MainWindow::createKeypad()
         connect(this, SIGNAL(radixCharacterChanged()), m_widgets.keypad, SLOT(handleRadixCharacterChange()));
     }
     m_widgets.keypad->setFocusPolicy(Qt::NoFocus);
+    m_widgets.keypad->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_widgets.keypad, SIGNAL(customContextMenuRequested(const QPoint&)),
+            SLOT(showKeypadContextMenu(const QPoint&)));
 
     m_layouts.keypad = new QHBoxLayout();
     m_layouts.keypad->addStretch();
@@ -4200,4 +4203,11 @@ void MainWindow::showResultFormatContextMenu(const QPoint& point)
 void MainWindow::showComplexFormContextMenu(const QPoint& point)
 {
     m_menus.complexForm->popup(m_status.complexForm->mapToGlobal(point));
+}
+
+void MainWindow::showKeypadContextMenu(const QPoint& point)
+{
+    if (!m_widgets.keypad)
+        return;
+    m_menus.keypad->popup(m_widgets.keypad->mapToGlobal(point));
 }
