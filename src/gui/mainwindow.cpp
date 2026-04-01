@@ -542,14 +542,11 @@ void MainWindow::setStatusBarText()
     if (m_status.angleUnit) {
         m_status.angleUnitLabel->setText(MainWindow::tr("Angle Mode:"));
         m_status.resultFormatLabel->setText(MainWindow::tr("Notation:"));
-        m_status.complexNumbersLabel->setText(MainWindow::tr("Complex Numbers:"));
         m_status.angleUnit->setText(statusBarAngleUnitValue());
         m_status.resultFormat->setText(statusBarResultFormatValue());
-        m_status.complexNumbers->setText(statusBarComplexNumbersValue());
 
         m_status.angleUnit->setToolTip(MainWindow::tr("Angle unit"));
         m_status.resultFormat->setToolTip(MainWindow::tr("Result notation"));
-        m_status.complexNumbers->setToolTip(MainWindow::tr("Complex numbers"));
     }
 }
 
@@ -575,17 +572,6 @@ QString MainWindow::statusBarResultFormatValue() const
         case 'g': return MainWindow::tr("Automatic decimal");
         default : return QString();
     }
-}
-
-QString MainWindow::statusBarComplexNumbersValue() const
-{
-    if (!m_settings->complexNumbers)
-        return MainWindow::tr("Disabled");
-    if (m_settings->resultFormatComplex == 'p')
-        return MainWindow::tr("Polar (Exponential)");
-    if (m_settings->resultFormatComplex == 'a')
-        return MainWindow::tr("Polar (Angle)");
-    return MainWindow::tr("Rectangular (Cartesian)");
 }
 
 void MainWindow::setActionsText()
@@ -1018,55 +1004,41 @@ void MainWindow::createStatusBar()
 
     m_status.angleUnitSection = new QWidget(bar);
     m_status.resultFormatSection = new QWidget(bar);
-    m_status.complexNumbersSection = new QWidget(bar);
 
     m_status.angleUnitLabel = new QLabel(m_status.angleUnitSection);
     m_status.resultFormatLabel = new QLabel(m_status.resultFormatSection);
-    m_status.complexNumbersLabel = new QLabel(m_status.complexNumbersSection);
 
     m_status.angleUnit = new QPushButton(bar);
     m_status.resultFormat = new QPushButton(bar);
-    m_status.complexNumbers = new QPushButton(bar);
 
     m_status.angleUnit->setParent(m_status.angleUnitSection);
     m_status.resultFormat->setParent(m_status.resultFormatSection);
-    m_status.complexNumbers->setParent(m_status.complexNumbersSection);
 
     QHBoxLayout* angleLayout = new QHBoxLayout(m_status.angleUnitSection);
     QHBoxLayout* formatLayout = new QHBoxLayout(m_status.resultFormatSection);
-    QHBoxLayout* complexLayout = new QHBoxLayout(m_status.complexNumbersSection);
     angleLayout->setContentsMargins(0, 0, 0, 0);
     formatLayout->setContentsMargins(0, 0, 0, 0);
-    complexLayout->setContentsMargins(0, 0, 0, 0);
     angleLayout->setSpacing(2);
     formatLayout->setSpacing(2);
-    complexLayout->setSpacing(2);
     angleLayout->addWidget(m_status.angleUnitLabel);
     angleLayout->addWidget(m_status.angleUnit);
     formatLayout->addWidget(m_status.resultFormatLabel);
     formatLayout->addWidget(m_status.resultFormat);
-    complexLayout->addWidget(m_status.complexNumbersLabel);
-    complexLayout->addWidget(m_status.complexNumbers);
 
     QFont boldFont = m_status.angleUnitLabel->font();
     boldFont.setBold(true);
     m_status.angleUnitLabel->setFont(boldFont);
     m_status.resultFormatLabel->setFont(boldFont);
-    m_status.complexNumbersLabel->setFont(boldFont);
     m_status.angleUnitLabel->setCursor(Qt::PointingHandCursor);
     m_status.resultFormatLabel->setCursor(Qt::PointingHandCursor);
-    m_status.complexNumbersLabel->setCursor(Qt::PointingHandCursor);
     m_status.angleUnitLabel->installEventFilter(this);
     m_status.resultFormatLabel->installEventFilter(this);
-    m_status.complexNumbersLabel->installEventFilter(this);
 
     m_status.angleUnit->setFocusPolicy(Qt::NoFocus);
     m_status.resultFormat->setFocusPolicy(Qt::NoFocus);
-    m_status.complexNumbers->setFocusPolicy(Qt::NoFocus);
 
     m_status.angleUnit->setFlat(true);
     m_status.resultFormat->setFlat(true);
-    m_status.complexNumbers->setFlat(true);
 
     m_status.angleUnit->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(m_status.angleUnit, SIGNAL(customContextMenuRequested(const QPoint&)),
@@ -1075,9 +1047,6 @@ void MainWindow::createStatusBar()
     m_status.resultFormat->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(m_status.resultFormat, SIGNAL(customContextMenuRequested(const QPoint&)),
         SLOT(showResultFormatContextMenu(const QPoint&)));
-    m_status.complexNumbers->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(m_status.complexNumbers, SIGNAL(customContextMenuRequested(const QPoint&)),
-        SLOT(showComplexNumbersContextMenu(const QPoint&)));
 
     connect(m_status.angleUnit, &QPushButton::clicked, this, [this]() {
         showAngleModeContextMenu(QPoint(0, m_status.angleUnit->height()));
@@ -1085,13 +1054,9 @@ void MainWindow::createStatusBar()
     connect(m_status.resultFormat, &QPushButton::clicked, this, [this]() {
         showResultFormatContextMenu(QPoint(0, m_status.resultFormat->height()));
     });
-    connect(m_status.complexNumbers, &QPushButton::clicked, this, [this]() {
-        showComplexNumbersContextMenu(QPoint(0, m_status.complexNumbers->height()));
-    });
 
     bar->addWidget(m_status.resultFormatSection);
     bar->addWidget(m_status.angleUnitSection);
-    bar->addWidget(m_status.complexNumbersSection);
 
     setStatusBarText();
 }
@@ -1832,9 +1797,6 @@ MainWindow::MainWindow()
     m_status.resultFormat = 0;
     m_status.resultFormatSection = 0;
     m_status.resultFormatLabel = 0;
-    m_status.complexNumbers = 0;
-    m_status.complexNumbersSection = 0;
-    m_status.complexNumbersLabel = 0;
 
     m_copyWidget = 0;
     m_pendingHistoryEditIndex = -1;
@@ -2920,27 +2882,23 @@ void MainWindow::setFullScreenEnabled(bool b)
 
 bool MainWindow::eventFilter(QObject* o, QEvent* e)
 {
-    if (o == m_status.angleUnitLabel || o == m_status.resultFormatLabel || o == m_status.complexNumbersLabel) {
+    if (o == m_status.angleUnitLabel || o == m_status.resultFormatLabel) {
         if (e->type() == QEvent::MouseButtonPress) {
             QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(e);
             if (mouseEvent->button() == Qt::LeftButton) {
                 const QPoint popupPoint(0, static_cast<QWidget*>(o)->height());
                 if (o == m_status.angleUnitLabel)
                     showAngleModeContextMenu(m_status.angleUnit->mapFromGlobal(static_cast<QWidget*>(o)->mapToGlobal(popupPoint)));
-                else if (o == m_status.resultFormatLabel)
-                    showResultFormatContextMenu(m_status.resultFormat->mapFromGlobal(static_cast<QWidget*>(o)->mapToGlobal(popupPoint)));
                 else
-                    showComplexNumbersContextMenu(m_status.complexNumbers->mapFromGlobal(static_cast<QWidget*>(o)->mapToGlobal(popupPoint)));
+                    showResultFormatContextMenu(m_status.resultFormat->mapFromGlobal(static_cast<QWidget*>(o)->mapToGlobal(popupPoint)));
                 return true;
             }
             if (mouseEvent->button() == Qt::RightButton) {
                 const QPoint globalPoint = static_cast<QWidget*>(o)->mapToGlobal(mouseEvent->pos());
                 if (o == m_status.angleUnitLabel)
                     showAngleModeContextMenu(m_status.angleUnit->mapFromGlobal(globalPoint));
-                else if (o == m_status.resultFormatLabel)
-                    showResultFormatContextMenu(m_status.resultFormat->mapFromGlobal(globalPoint));
                 else
-                    showComplexNumbersContextMenu(m_status.complexNumbers->mapFromGlobal(globalPoint));
+                    showResultFormatContextMenu(m_status.resultFormat->mapFromGlobal(globalPoint));
                 return true;
             }
         }
@@ -2949,10 +2907,8 @@ bool MainWindow::eventFilter(QObject* o, QEvent* e)
             const QPoint globalPoint = contextMenuEvent->globalPos();
             if (o == m_status.angleUnitLabel)
                 showAngleModeContextMenu(m_status.angleUnit->mapFromGlobal(globalPoint));
-            else if (o == m_status.resultFormatLabel)
-                showResultFormatContextMenu(m_status.resultFormat->mapFromGlobal(globalPoint));
             else
-                showComplexNumbersContextMenu(m_status.complexNumbers->mapFromGlobal(globalPoint));
+                showResultFormatContextMenu(m_status.resultFormat->mapFromGlobal(globalPoint));
             return true;
         }
     }
@@ -3036,11 +2992,6 @@ void MainWindow::deleteStatusBar()
     m_status.resultFormat = 0;
     m_status.resultFormatSection = 0;
     m_status.resultFormatLabel = 0;
-
-    m_status.complexNumbersSection->deleteLater();
-    m_status.complexNumbers = 0;
-    m_status.complexNumbersSection = 0;
-    m_status.complexNumbersLabel = 0;
 
     setStatusBar(0);
 }
@@ -4147,9 +4098,4 @@ void MainWindow::showLanguageChooserDialog()
 void MainWindow::showResultFormatContextMenu(const QPoint& point)
 {
     m_menus.resultFormat->popup(m_status.resultFormat->mapToGlobal(point));
-}
-
-void MainWindow::showComplexNumbersContextMenu(const QPoint& point)
-{
-    m_menus.complexNumbers->popup(m_status.complexNumbers->mapToGlobal(point));
 }

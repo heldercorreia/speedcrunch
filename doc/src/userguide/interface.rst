@@ -504,6 +504,8 @@ Widgets and Docks
     Show/hide history widget.
 * :kbd:`Control+B`
     Show/hide the status bar.
+    The status bar provides quick selectors for :menuselection:`Angle Mode`
+    and :menuselection:`Results --> Notation`.
 
 Scrolling
 +++++++++

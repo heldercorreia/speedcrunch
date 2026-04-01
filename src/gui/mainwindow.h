@@ -207,7 +207,6 @@ private slots:
     void showContextHelp();
     void showReadyMessage();
     void showAngleModeContextMenu(const QPoint&);
-    void showComplexNumbersContextMenu(const QPoint&);
     void showResultFormatContextMenu(const QPoint&);
     void showSessionImportDialog();
     void showUserDefinitionsImportDialog();
@@ -272,7 +271,6 @@ private:
     void setStatusBarText();
     QString statusBarAngleUnitValue() const;
     QString statusBarResultFormatValue() const;
-    QString statusBarComplexNumbersValue() const;
     void applyStartupUserDefinitions();
     void importUserDefinitionsFromText(const QString& text, bool overwriteExisting,
                                        int* importedVariables = nullptr,
@@ -480,9 +478,6 @@ private:
         QWidget* resultFormatSection;
         QLabel* resultFormatLabel;
         QPushButton* resultFormat;
-        QWidget* complexNumbersSection;
-        QLabel* complexNumbersLabel;
-        QPushButton* complexNumbers;
     } m_status;
 
     Constants* m_constants;
