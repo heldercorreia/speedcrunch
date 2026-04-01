@@ -1177,6 +1177,7 @@ void MainWindow::createFixedWidgets()
     m_widgets.state->setPalette(QToolTip::palette());
     m_widgets.state->setAutoFillBackground(true);
     m_widgets.state->setFrameShape(QFrame::NoFrame);
+    m_widgets.state->installEventFilter(this);
     m_widgets.stateCloseButton = new QPushButton(QStringLiteral("×"), m_widgets.state);
     m_widgets.stateCloseButton->setFocusPolicy(Qt::NoFocus);
     m_widgets.stateCloseButton->setFlat(true);
@@ -2984,6 +2985,14 @@ void MainWindow::setFullScreenEnabled(bool b)
 
 bool MainWindow::eventFilter(QObject* o, QEvent* e)
 {
+    if (o == m_widgets.state && e->type() == QEvent::MouseButtonPress) {
+        QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(e);
+        if (mouseEvent->button() == Qt::LeftButton) {
+            hideStateLabel();
+            return true;
+        }
+    }
+
     if (o == m_status.angleUnitLabel || o == m_status.resultFormatLabel || o == m_status.complexFormLabel) {
         if (e->type() == QEvent::MouseButtonPress) {
             QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(e);
