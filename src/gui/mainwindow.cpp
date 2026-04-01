@@ -1832,6 +1832,9 @@ MainWindow::MainWindow()
     createUi();
     applySettings();
 
+    if (!m_settings->hasNumberFormatStyleSetting)
+        QTimer::singleShot(0, this, SLOT(showNumberFormatDialog()));
+
     m_versionCheck = new VersionCheck(this, this);
     QTimer::singleShot(0, this, [this]() {
         if (m_versionCheck)

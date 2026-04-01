@@ -274,6 +274,7 @@ Settings::Settings()
 {
     digitGroupingIntegerPartOnly = true;
     numberFormatStyle = NumberFormatNoGroupingDot;
+    hasNumberFormatStyleSetting = false;
     simplifyResultExpressions = true;
     singleInstance = true;
     complexNumbers = false;
@@ -401,6 +402,7 @@ void Settings::load()
         key + QLatin1String("DigitGroupingIntegerPartOnly"), true).toBool();
     const int numberFormatStyleValue = settings->value(
         key + QLatin1String("NumberFormatStyle"), -1).toInt();
+    hasNumberFormatStyleSetting = settings->contains(key + QLatin1String("NumberFormatStyle"));
     if (numberFormatStyleValue >= static_cast<int>(NumberFormatSystem)
             && numberFormatStyleValue <= static_cast<int>(NumberFormatIndianCommaDot)) {
         numberFormatStyle = static_cast<NumberFormatStyle>(numberFormatStyleValue);
