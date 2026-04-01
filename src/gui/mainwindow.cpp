@@ -4001,27 +4001,21 @@ void MainWindow::setRadixCharacter(char c)
 void MainWindow::showNumberFormatDialog()
 {
     NumberFormatDialog dialog(this);
-    const Settings::NumberFormatStyle originalStyle = m_settings->numberFormatStyle;
-    auto applyStyle = [this](Settings::NumberFormatStyle style) {
-        m_settings->numberFormatStyle = style;
-        m_settings->applyNumberFormatStyle();
-        emit historyChanged();
-        m_widgets.editor->refreshAutoCalc();
-        emit syntaxHighlightingChanged();
-        emit radixCharacterChanged();
-    };
+    dialog.setSelection(m_settings->numberFormatStyle);
 
-    dialog.setSelection(originalStyle);
-    connect(&dialog, &NumberFormatDialog::selectionChanged,
-            this, [applyStyle](Settings::NumberFormatStyle style) {
-        applyStyle(style);
-    });
+    if (dialog.exec() != QDialog::Accepted)
+        return;
 
-    if (dialog.exec() == QDialog::Accepted) {
-        applyStyle(dialog.selectedStyle());
-    } else {
-        applyStyle(originalStyle);
-    }
+    const Settings::NumberFormatStyle selectedStyle = dialog.selectedStyle();
+    if (m_settings->numberFormatStyle == selectedStyle)
+        return;
+
+    m_settings->numberFormatStyle = selectedStyle;
+    m_settings->applyNumberFormatStyle();
+    emit syntaxHighlightingChanged();
+    // Number format changes from this dialog should not rewrite previous
+    // history entries in Result Display. Only refresh live editor previews.
+    m_widgets.editor->refreshAutoCalc();
 }
 
 void MainWindow::showResultSlotsDialog()
