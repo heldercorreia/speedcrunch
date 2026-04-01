@@ -634,7 +634,7 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorAutoCompletion->setText(MainWindow::tr("Automatic &Completion"));
     m_actions.settingsBehaviorAutoCompletionBuiltInFunctions->setText(MainWindow::tr("Built-in &functions"));
     m_actions.settingsBehaviorAutoCompletionUnits->setText(MainWindow::tr("&Units"));
-    m_actions.settingsBehaviorAutoCompletionUserFunctions->setText(MainWindow::tr("User &function"));
+    m_actions.settingsBehaviorAutoCompletionUserFunctions->setText(MainWindow::tr("User &functions"));
     m_actions.settingsBehaviorAutoCompletionUserVariables->setText(MainWindow::tr("User &variables"));
     m_actions.settingsBehaviorEmptyHistoryHint->setText(MainWindow::tr("Show Empty History &Hint"));
     m_actions.settingsBehaviorEmptyHistoryHint->setToolTip(MainWindow::tr("When history is empty, show a hint in the status area."));

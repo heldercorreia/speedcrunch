@@ -418,7 +418,7 @@ Editing
 
     * ``Built-in functions`` includes built-in function names.
     * ``Units`` includes unit names.
-    * ``User function`` includes user-defined function names.
+    * ``User functions`` includes user-defined function names.
     * ``User variables`` includes user-defined variable names.
 
     The autocomplete popup also shows category icons for suggestions.
