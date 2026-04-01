@@ -344,14 +344,12 @@ int ResultDisplay::count() const
 
 QPair<int, int> ResultDisplay::viewportTopAnchor() const
 {
-    const QPoint probe(0, 0);
-    const QTextCursor cursor = cursorForPosition(probe);
-    const QTextBlock block = cursor.block();
+    const QTextBlock block = firstVisibleBlock();
     if (!block.isValid())
         return qMakePair(-1, 0);
 
     const QRectF blockRect = blockBoundingGeometry(block).translated(contentOffset());
-    const int offsetInBlock = qRound(probe.y() - blockRect.top());
+    const int offsetInBlock = qMax(0, qRound(-blockRect.top()));
     return qMakePair(block.blockNumber(), offsetInBlock);
 }
 
@@ -365,10 +363,9 @@ void ResultDisplay::restoreViewportTopAnchor(const QPair<int, int>& anchor)
     if (!block.isValid())
         return;
 
-    const qreal blockTopInViewport = blockBoundingGeometry(block).translated(contentOffset()).top();
-    const int delta = qRound(blockTopInViewport + anchor.second);
     QScrollBar* bar = verticalScrollBar();
-    bar->setValue(bar->value() + delta);
+    const int targetValue = qRound(blockBoundingGeometry(block).top()) + anchor.second;
+    bar->setValue(qBound(bar->minimum(), targetValue, bar->maximum()));
 }
 
 QString ResultDisplay::exportHtml() const
@@ -428,21 +425,20 @@ void ResultDisplay::refresh()
     }
 
     clearHoverFeedback();
-    clear();
     m_count = historyCount;
 
-    for(int i=0; i<m_count; ++i) {
+    QStringList allLines;
+    allLines.reserve(qMax(1, m_count * 3));
+    for (int i = 0; i < m_count; ++i) {
         const HistoryEntry& historyEntry = session->historyEntryAtRef(i);
-        const QString expressionLine = formattedExpressionForDisplay(historyEntry);
-        Quantity value = historyEntry.result();
-        appendPlainText(expressionLine);
-        if (!value.isNan()) {
-            const QStringList resultLines = formatResultLines(historyEntry);
-            for (const QString& line : resultLines)
-                appendPlainText(line);
-        }
-        appendPlainText(QLatin1String(""));
+        allLines.append(formattedExpressionForDisplay(historyEntry));
+        const Quantity value = historyEntry.result();
+        if (!value.isNan())
+            allLines.append(formatResultLines(historyEntry));
+        allLines.append(QLatin1String(""));
     }
+
+    setPlainText(allLines.join(QLatin1String("\n")));
 
     markHistoryBlockIndexCacheDirty();
     updateHoverHighlightSelection();

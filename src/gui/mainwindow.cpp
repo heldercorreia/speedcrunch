@@ -1193,7 +1193,7 @@ void MainWindow::createBitField() {
     m_widgets.bitField = new BitFieldWidget(m_widgets.root);
     m_layouts.root->addWidget(m_widgets.bitField);
     m_widgets.bitField->show();
-    m_widgets.display->scrollToBottom();
+    m_widgets.display->verticalScrollBar()->setValue(m_widgets.display->verticalScrollBar()->maximum());
     connect(m_widgets.bitField, SIGNAL(bitsChanged(const QString&)), SLOT(handleBitsChanged(const QString&)));
     m_settings->bitfieldVisible = true;
 }
@@ -1724,7 +1724,7 @@ void MainWindow::applySettings()
     m_widgets.display->setFont(font);
     m_widgets.editor->setFont(font);
 
-    m_widgets.display->scrollToBottom();
+    m_widgets.display->verticalScrollBar()->setValue(m_widgets.display->verticalScrollBar()->maximum());
 
     const auto schemes = m_actions.settingsDisplayColorSchemes;
     for (auto& action : schemes) {
@@ -3686,12 +3686,15 @@ void MainWindow::evaluateEditorExpression()
     if (m_pendingHistoryEditIndex >= 0) {
         const int previousDisplayScrollValue = m_widgets.display->verticalScrollBar()->value();
         const auto restoreDisplayScroll = [this, previousDisplayScrollValue]() {
-            m_widgets.display->verticalScrollBar()->setValue(previousDisplayScrollValue);
+            QScrollBar* bar = m_widgets.display->verticalScrollBar();
+            const int clamped = qBound(bar->minimum(), previousDisplayScrollValue, bar->maximum());
+            bar->setValue(clamped);
             QTimer::singleShot(0, this, [this, previousDisplayScrollValue]() {
-                m_widgets.display->verticalScrollBar()->setValue(previousDisplayScrollValue);
-                QTimer::singleShot(0, this, [this, previousDisplayScrollValue]() {
-                    m_widgets.display->verticalScrollBar()->setValue(previousDisplayScrollValue);
-                });
+                QScrollBar* deferredBar = m_widgets.display->verticalScrollBar();
+                const int deferredClamped = qBound(deferredBar->minimum(),
+                                                   previousDisplayScrollValue,
+                                                   deferredBar->maximum());
+                deferredBar->setValue(deferredClamped);
             });
         };
         const int historySize = m_session->historySize();
