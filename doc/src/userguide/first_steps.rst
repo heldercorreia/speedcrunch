@@ -79,6 +79,7 @@ Let us finish this short introduction with a word about functions. SpeedCrunch c
     = 12
 
 The function :func:`sqrt` calculates the square root of its argument. Some functions require or accept more than one argument. In that case, separate them with a semicolon (``;``).
+If you leave a trailing semicolon while typing, SpeedCrunch treats it as an incomplete final argument and still evaluates the expression (for example ``average(2;3;4;)`` and ``average(2;3;4;``).
 
 .. warning::
 

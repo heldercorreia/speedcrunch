@@ -204,6 +204,7 @@ static bool s_expressionWithoutIgnorableTrailingToken(const QString& text, QStri
     if (last != QLatin1Char('(')
         && !isPlusMinusTail
         && !isMultiplicationTail
+        && last != QLatin1Char(';')
         && last != QLatin1Char('/')
         && last != QLatin1Char('^')
         && last != QLatin1Char('\\'))
@@ -4066,6 +4067,34 @@ void Evaluator::compile(const Tokens& tokens)
 #ifdef EVALUATOR_DEBUG
                    dbg << "\tRule for function argument "
                        << argCount << " \n";
+#endif
+               }
+           }
+
+           // Rule for trailing function argument separator:
+           // id (arg ; ) -> id (arg )
+           // id (arg ;   -> id (arg   (end-of-expression)
+           // This keeps the already parsed argument list and discards
+           // an empty trailing argument.
+           if (!ruleFound && syntaxStack.itemCount() >= 4
+               && token.isOperator()
+               && (token.asOperator() == Token::AssociationEnd
+                   || token.asOperator() == Token::Invalid))
+           {
+               Token sep = syntaxStack.top();
+               Token arg = syntaxStack.top(1);
+               Token par = syntaxStack.top(2);
+               Token id = syntaxStack.top(3);
+               if (sep.asOperator() == Token::ListSeparator
+                   && arg.isOperand()
+                   && par.asOperator() == Token::AssociationStart
+                   && id.isIdentifier())
+               {
+                   ruleFound = true;
+                   argHandled = true;
+                   syntaxStack.reduce(2, std::move(arg), MAX_PRECEDENCE);
+#ifdef EVALUATOR_DEBUG
+                   dbg << "\tRule for trailing function argument separator\n";
 #endif
                }
            }

@@ -1930,6 +1930,7 @@ void test_function_stat()
     CHECK_EVAL("AVERAGE(0.25;0.75)", "0.5");
     CHECK_EVAL("AVERAGE(2.25;4.75)", "3.5");
     CHECK_EVAL("AVERAGE(1/3;2/3)", "0.5");
+    CHECK_EVAL("123 + average(2;3;4;)", "126");
 
     CHECK_EVAL_FAIL("GEOMEAN(-1e20;0;-1)");
     CHECK_EVAL_FAIL("GEOMEAN(5)");
@@ -2200,6 +2201,7 @@ void test_auto_fix_trailing_equal()
     CHECK_AUTOFIX("2**", "2");
     CHECK_AUTOFIX("3/", "3");
     CHECK_AUTOFIX("5+cos pi (", "5+cos pi");
+    CHECK_AUTOFIX("123 + average(2;3;4;", "123 + average(2;3;4)");
 
     ++eval_total_tests;
     const QString fixedTrailingPlus = eval->autoFix(QString::fromUtf8("1+2+"));
@@ -2223,6 +2225,32 @@ void test_auto_fix_trailing_equal()
                  << "\tResult   : " << formatted.toLatin1().constData() << endl
                  << "\tExpected : 3" << endl
                  << "\tAutoFix  : " << fixedTrailingPlus.toUtf8().constData() << endl;
+        }
+    }
+
+    ++eval_total_tests;
+    const QString fixedTrailingFunctionSep =
+        eval->autoFix(QString::fromUtf8("123 + average(2;3;4;"));
+    eval->setExpression(fixedTrailingFunctionSep);
+    const Quantity trailingFunctionSepResult = eval->evalUpdateAns();
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\tautofix trailing function separator eval\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl
+             << "\tAutoFix: " << fixedTrailingFunctionSep.toUtf8().constData() << endl;
+    } else {
+        QString formatted = DMath::format(trailingFunctionSepResult, Format::Fixed());
+        formatted.replace(QString::fromUtf8("−"), "-");
+        if (formatted != QStringLiteral("126")) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\tautofix trailing function separator eval\t[NEW]" << endl
+                 << "\tResult   : " << formatted.toLatin1().constData() << endl
+                 << "\tExpected : 126" << endl
+                 << "\tAutoFix  : " << fixedTrailingFunctionSep.toUtf8().constData() << endl;
         }
     }
 }
@@ -3686,6 +3714,20 @@ void test_expression_operator_normalization()
     }
 
     ++eval_total_tests;
+    ignoredTrailing.clear();
+    const bool ignoreTrailingSemicolon =
+        EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("average(2;3;4;"),
+                                                             &ignoredTrailing);
+    if (!ignoreTrailingSemicolon || ignoredTrailing != QString::fromUtf8("average(2;3;4")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\texpressionWithoutIgnorableTrailingToken trailing semicolon\t[NEW]" << endl
+             << "\tResult   : " << (ignoreTrailingSemicolon ? ignoredTrailing : QString("<none>")).toUtf8().constData()
+             << endl
+             << "\tExpected : average(2;3;4" << endl;
+    }
+
     ignoredTrailing.clear();
     const bool ignoreTrailingSingleStar =
         EditorUtils::expressionWithoutIgnorableTrailingToken(QString::fromUtf8("1*"),

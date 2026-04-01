@@ -188,6 +188,7 @@ inline bool expressionWithoutIgnorableTrailingToken(const QString& text, QString
     if (last != QLatin1Char('(')
         && !isPlusMinusTail
         && !isMultiplicationTail
+        && last != QLatin1Char(';')
         && last != QLatin1Char('/')
         && last != QLatin1Char('^')
         && last != QLatin1Char('\\'))
