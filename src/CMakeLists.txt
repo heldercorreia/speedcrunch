@@ -19,6 +19,9 @@ endif()
 message("Build type: ${CMAKE_BUILD_TYPE}")
 
 find_package(Qt6 COMPONENTS Core Widgets Help Network QUIET)
+if(Qt6_FOUND)
+    message(STATUS "Found Qt version: ${Qt6_VERSION}")
+endif()
 
 if (MSVC)
     add_definitions(-D_USE_MATH_DEFINES)
