@@ -3783,7 +3783,7 @@ void MainWindow::startHistoryEntryEdit(int index)
     m_widgets.editor->setText(m_session->historyEntryAt(index).expr());
     m_widgets.editor->setFocus();
     m_widgets.editor->setCursorPosition(m_widgets.editor->text().size());
-    showStateLabel(tr("Editing calculation. Press Escape to cancel."));
+    showStateLabel(tr("Editing calculation. Press Esc twice to cancel."));
 }
 
 void MainWindow::cancelHistoryEntryEdit()
