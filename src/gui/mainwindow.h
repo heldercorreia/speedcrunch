@@ -90,8 +90,6 @@ private slots:
     void clearEditorAndBitfield();
     void clearHistory();
     void copyResultToClipboard();
-    void cycleAngleUnits();
-    void cycleResultFormats();
     void decreaseDisplayFontPointSize();
     void decreaseOpacity();
     void deleteVariables();
@@ -208,6 +206,8 @@ private slots:
     void showResultSlotsDialog();
     void showContextHelp();
     void showReadyMessage();
+    void showAngleModeContextMenu(const QPoint&);
+    void showComplexNumbersContextMenu(const QPoint&);
     void showResultFormatContextMenu(const QPoint&);
     void showSessionImportDialog();
     void showUserDefinitionsImportDialog();
@@ -273,7 +273,6 @@ private:
     QString statusBarAngleUnitValue() const;
     QString statusBarResultFormatValue() const;
     QString statusBarComplexNumbersValue() const;
-    void cycleComplexNumbersMode();
     void applyStartupUserDefinitions();
     void importUserDefinitionsFromText(const QString& text, bool overwriteExisting,
                                        int* importedVariables = nullptr,

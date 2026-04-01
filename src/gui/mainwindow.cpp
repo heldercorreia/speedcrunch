@@ -67,6 +67,7 @@
 #include <QClipboard>
 #include <QCloseEvent>
 #include <QCheckBox>
+#include <QContextMenuEvent>
 #include <QDateTime>
 #include <QDesktopServices>
 #include <QDialog>
@@ -81,6 +82,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QMouseEvent>
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QScreen>
@@ -1051,6 +1053,12 @@ void MainWindow::createStatusBar()
     m_status.angleUnitLabel->setFont(boldFont);
     m_status.resultFormatLabel->setFont(boldFont);
     m_status.complexNumbersLabel->setFont(boldFont);
+    m_status.angleUnitLabel->setCursor(Qt::PointingHandCursor);
+    m_status.resultFormatLabel->setCursor(Qt::PointingHandCursor);
+    m_status.complexNumbersLabel->setCursor(Qt::PointingHandCursor);
+    m_status.angleUnitLabel->installEventFilter(this);
+    m_status.resultFormatLabel->installEventFilter(this);
+    m_status.complexNumbersLabel->installEventFilter(this);
 
     m_status.angleUnit->setFocusPolicy(Qt::NoFocus);
     m_status.resultFormat->setFocusPolicy(Qt::NoFocus);
@@ -1060,23 +1068,26 @@ void MainWindow::createStatusBar()
     m_status.resultFormat->setFlat(true);
     m_status.complexNumbers->setFlat(true);
 
-    m_status.angleUnit->setContextMenuPolicy(Qt::ActionsContextMenu);
-    m_status.angleUnit->addAction(m_actions.settingsAngleUnitDegree);
-    m_status.angleUnit->addAction(m_actions.settingsAngleUnitRadian);
-    m_status.angleUnit->addAction(m_actions.settingsAngleUnitGradian);
-    m_status.angleUnit->addAction(m_actions.settingsAngleUnitTurn);
+    m_status.angleUnit->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_status.angleUnit, SIGNAL(customContextMenuRequested(const QPoint&)),
+        SLOT(showAngleModeContextMenu(const QPoint&)));
 
     m_status.resultFormat->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(m_status.resultFormat, SIGNAL(customContextMenuRequested(const QPoint&)),
         SLOT(showResultFormatContextMenu(const QPoint&)));
-    m_status.complexNumbers->setContextMenuPolicy(Qt::ActionsContextMenu);
-    m_status.complexNumbers->addAction(m_actions.settingsResultFormatComplexDisabled);
-    m_status.complexNumbers->addAction(m_actions.settingsImaginaryUnitI);
-    m_status.complexNumbers->addAction(m_actions.settingsImaginaryUnitJ);
+    m_status.complexNumbers->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_status.complexNumbers, SIGNAL(customContextMenuRequested(const QPoint&)),
+        SLOT(showComplexNumbersContextMenu(const QPoint&)));
 
-    connect(m_status.angleUnit, SIGNAL(clicked()), SLOT(cycleAngleUnits()));
-    connect(m_status.resultFormat, SIGNAL(clicked()), SLOT(cycleResultFormats()));
-    connect(m_status.complexNumbers, &QPushButton::clicked, this, &MainWindow::cycleComplexNumbersMode);
+    connect(m_status.angleUnit, &QPushButton::clicked, this, [this]() {
+        showAngleModeContextMenu(QPoint(0, m_status.angleUnit->height()));
+    });
+    connect(m_status.resultFormat, &QPushButton::clicked, this, [this]() {
+        showResultFormatContextMenu(QPoint(0, m_status.resultFormat->height()));
+    });
+    connect(m_status.complexNumbers, &QPushButton::clicked, this, [this]() {
+        showComplexNumbersContextMenu(QPoint(0, m_status.complexNumbers->height()));
+    });
 
     bar->addWidget(m_status.resultFormatSection);
     bar->addWidget(m_status.angleUnitSection);
@@ -2909,6 +2920,43 @@ void MainWindow::setFullScreenEnabled(bool b)
 
 bool MainWindow::eventFilter(QObject* o, QEvent* e)
 {
+    if (o == m_status.angleUnitLabel || o == m_status.resultFormatLabel || o == m_status.complexNumbersLabel) {
+        if (e->type() == QEvent::MouseButtonPress) {
+            QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(e);
+            if (mouseEvent->button() == Qt::LeftButton) {
+                const QPoint popupPoint(0, static_cast<QWidget*>(o)->height());
+                if (o == m_status.angleUnitLabel)
+                    showAngleModeContextMenu(m_status.angleUnit->mapFromGlobal(static_cast<QWidget*>(o)->mapToGlobal(popupPoint)));
+                else if (o == m_status.resultFormatLabel)
+                    showResultFormatContextMenu(m_status.resultFormat->mapFromGlobal(static_cast<QWidget*>(o)->mapToGlobal(popupPoint)));
+                else
+                    showComplexNumbersContextMenu(m_status.complexNumbers->mapFromGlobal(static_cast<QWidget*>(o)->mapToGlobal(popupPoint)));
+                return true;
+            }
+            if (mouseEvent->button() == Qt::RightButton) {
+                const QPoint globalPoint = static_cast<QWidget*>(o)->mapToGlobal(mouseEvent->pos());
+                if (o == m_status.angleUnitLabel)
+                    showAngleModeContextMenu(m_status.angleUnit->mapFromGlobal(globalPoint));
+                else if (o == m_status.resultFormatLabel)
+                    showResultFormatContextMenu(m_status.resultFormat->mapFromGlobal(globalPoint));
+                else
+                    showComplexNumbersContextMenu(m_status.complexNumbers->mapFromGlobal(globalPoint));
+                return true;
+            }
+        }
+        if (e->type() == QEvent::ContextMenu) {
+            QContextMenuEvent* contextMenuEvent = static_cast<QContextMenuEvent*>(e);
+            const QPoint globalPoint = contextMenuEvent->globalPos();
+            if (o == m_status.angleUnitLabel)
+                showAngleModeContextMenu(m_status.angleUnit->mapFromGlobal(globalPoint));
+            else if (o == m_status.resultFormatLabel)
+                showResultFormatContextMenu(m_status.resultFormat->mapFromGlobal(globalPoint));
+            else
+                showComplexNumbersContextMenu(m_status.complexNumbers->mapFromGlobal(globalPoint));
+            return true;
+        }
+    }
+
     if (o == m_docks.book) {
         if (e->type() == QEvent::Close) {
             deleteBookDock();
@@ -3336,10 +3384,9 @@ void MainWindow::setResultFormatPolarAngle()
     emit resultFormatChanged();
 }
 
-void MainWindow::cycleComplexNumbersMode()
+void MainWindow::showAngleModeContextMenu(const QPoint& point)
 {
-    m_actions.settingsResultFormatComplexDisabled->setChecked(
-        !m_actions.settingsResultFormatComplexDisabled->isChecked());
+    m_menus.angleUnit->popup(m_status.angleUnit->mapToGlobal(point));
 }
 
 void MainWindow::setResultFormatScientific()
@@ -4102,36 +4149,7 @@ void MainWindow::showResultFormatContextMenu(const QPoint& point)
     m_menus.resultFormat->popup(m_status.resultFormat->mapToGlobal(point));
 }
 
-void MainWindow::cycleAngleUnits()
+void MainWindow::showComplexNumbersContextMenu(const QPoint& point)
 {
-    if (m_actions.settingsAngleUnitDegree->isChecked())
-        m_actions.settingsAngleUnitRadian->trigger();
-    else if (m_actions.settingsAngleUnitRadian->isChecked())
-        m_actions.settingsAngleUnitGradian->trigger();
-    else if (m_actions.settingsAngleUnitGradian->isChecked())
-        m_actions.settingsAngleUnitTurn->trigger();
-    else if (m_actions.settingsAngleUnitTurn->isChecked())
-        m_actions.settingsAngleUnitDegree->trigger();
-}
-
-void MainWindow::cycleResultFormats()
-{
-  if (m_actions.settingsResultFormatGeneral->isChecked())
-      m_actions.settingsResultFormatFixed->trigger();
-  else if (m_actions.settingsResultFormatFixed->isChecked())
-      m_actions.settingsResultFormatEngineering->trigger();
-  else if (m_actions.settingsResultFormatEngineering->isChecked())
-      m_actions.settingsResultFormatScientific->trigger();
-  else if (m_actions.settingsResultFormatScientific->isChecked())
-      m_actions.settingsResultFormatRational->trigger();
-  else if (m_actions.settingsResultFormatRational->isChecked())
-      m_actions.settingsResultFormatBinary->trigger();
-  else if (m_actions.settingsResultFormatBinary->isChecked())
-      m_actions.settingsResultFormatOctal->trigger();
-  else if (m_actions.settingsResultFormatOctal->isChecked())
-      m_actions.settingsResultFormatHexadecimal->trigger();
-  else if (m_actions.settingsResultFormatHexadecimal->isChecked())
-      m_actions.settingsResultFormatSexagesimal->trigger();
-  else if (m_actions.settingsResultFormatSexagesimal->isChecked())
-      m_actions.settingsResultFormatGeneral->trigger();
+    m_menus.complexNumbers->popup(m_status.complexNumbers->mapToGlobal(point));
 }
