@@ -600,7 +600,16 @@ QString Editor::getKeyword() const
         if (token.pos() > currentPosition)
             continue;
         if (token.isIdentifier()) {
-            auto matches = matchFragment(token.text());
+            const QString tokenText = token.text();
+            const auto matches = matchFragment(tokenText);
+
+            // Prefer an exact identifier match under cursor; prefix matches
+            // are only a fallback for partial identifiers.
+            for (const auto& match : matches) {
+                const QString identifier = match.split(":").first();
+                if (identifier.compare(tokenText, Qt::CaseInsensitive) == 0)
+                    return identifier;
+            }
             if (!matches.empty())
                 return matches.first().split(":").first();
         }
