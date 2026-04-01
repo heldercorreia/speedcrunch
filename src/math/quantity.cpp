@@ -48,6 +48,7 @@ Quantity operator-(const Quantity& q)
 Quantity operator-(const Quantity& a, const Quantity& b)
 {
     Quantity res(a);
+    res.m_format = Quantity::Format();
     if (!a.sameDimension(b))
         return DMath::nan(DimensionMismatch);
     res.m_numericValue -= b.m_numericValue;
@@ -410,7 +411,6 @@ Quantity& Quantity::operator-=(const Quantity& other)
 Quantity Quantity::operator*(const Quantity& other) const
 {
     Quantity result(*this);
-    result.m_format = Quantity::Format();
     result.m_numericValue *= other.m_numericValue;
     if (!other.isDimensionless()) {
         result.stripUnits();
@@ -431,7 +431,6 @@ Quantity Quantity::operator*(const Quantity& other) const
 Quantity Quantity::operator*(const CNumber& other) const
 {
     Quantity result(*this);
-    result.m_format = Quantity::Format();
     result.m_numericValue *= other;
     return result;
 }
@@ -449,7 +448,6 @@ Quantity &Quantity::operator*=(const Quantity& other)
 Quantity Quantity::operator/(const Quantity& other) const
 {
     Quantity result(*this);
-    result.m_format = Quantity::Format();
     result.m_numericValue /= other.m_numericValue;
     if (!other.isDimensionless()) {
         result.stripUnits();
@@ -475,7 +473,6 @@ Quantity Quantity::operator/(const HNumber& other) const
 Quantity Quantity::operator/(const CNumber& other) const
 {
     Quantity result(*this);
-    result.m_format = Quantity::Format();
     result.m_numericValue /= other;
     result.cleanDimension();
     return result;
@@ -489,7 +486,6 @@ Quantity &Quantity::operator/=(const Quantity& other)
 Quantity Quantity::operator%(const Quantity& other) const
 {
     Quantity result(*this);
-    result.m_format = Quantity::Format();
     result.m_numericValue = result.m_numericValue % other.m_numericValue;
     return result;
 }
@@ -499,7 +495,6 @@ Quantity Quantity::operator&(const Quantity& other) const
     ENSURE_DIMENSIONLESS(*this);
     ENSURE_DIMENSIONLESS(other);
     Quantity result(*this);
-    result.m_format = Quantity::Format();
     result.m_numericValue &= other.m_numericValue;
     return result;
 }
@@ -514,7 +509,6 @@ Quantity Quantity::operator|(const Quantity& other) const
     ENSURE_DIMENSIONLESS(*this);
     ENSURE_DIMENSIONLESS(other);
     Quantity result(*this);
-    result.m_format = Quantity::Format();
     result.m_numericValue |= other.m_numericValue;
     return result;
 }
@@ -529,7 +523,6 @@ Quantity Quantity::operator^(const Quantity& other) const
     ENSURE_DIMENSIONLESS(*this);
     ENSURE_DIMENSIONLESS(other);
     Quantity result(*this);
-    result.m_format = Quantity::Format();
     result.m_numericValue ^= other.m_numericValue;
     return result;
 }
@@ -552,7 +545,6 @@ Quantity Quantity::operator>>(const Quantity& other) const
     ENSURE_DIMENSIONLESS(*this);
     ENSURE_DIMENSIONLESS(other);
     Quantity result(*this);
-    result.m_format = Quantity::Format();
     result.m_numericValue = result.m_numericValue >> other.m_numericValue;
     return result;
 }
@@ -562,7 +554,6 @@ Quantity Quantity::operator<<(const Quantity& other) const
     ENSURE_DIMENSIONLESS(*this);
     ENSURE_DIMENSIONLESS(other);
     Quantity result(*this);
-    result.m_format = Quantity::Format();
     result.m_numericValue = result.m_numericValue << other.m_numericValue;
     return result;
 }
