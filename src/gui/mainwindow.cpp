@@ -342,6 +342,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorAutoAns = new QAction(this);
     m_actions.settingsBehaviorAutoCompletion = new QAction(this);
     m_actions.settingsBehaviorAutoCompletionBuiltInFunctions = new QAction(this);
+    m_actions.settingsBehaviorAutoCompletionBuiltInVariables = new QAction(this);
     m_actions.settingsBehaviorAutoCompletionUnits = new QAction(this);
     m_actions.settingsBehaviorAutoCompletionUserFunctions = new QAction(this);
     m_actions.settingsBehaviorAutoCompletionUserVariables = new QAction(this);
@@ -414,6 +415,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorAutoAns->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletion->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletionBuiltInFunctions->setCheckable(true);
+    m_actions.settingsBehaviorAutoCompletionBuiltInVariables->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletionUnits->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletionUserFunctions->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletionUserVariables->setCheckable(true);
@@ -633,6 +635,7 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorAutoAns->setStatusTip(MainWindow::tr("If a new expression starts with +, -, *, or /, SpeedCrunch inserts \"ans\" first."));
     m_actions.settingsBehaviorAutoCompletion->setText(MainWindow::tr("Automatic &Completion"));
     m_actions.settingsBehaviorAutoCompletionBuiltInFunctions->setText(MainWindow::tr("Built-in &functions"));
+    m_actions.settingsBehaviorAutoCompletionBuiltInVariables->setText(MainWindow::tr("Built-in &variables"));
     m_actions.settingsBehaviorAutoCompletionUnits->setText(MainWindow::tr("&Units"));
     m_actions.settingsBehaviorAutoCompletionUserFunctions->setText(MainWindow::tr("User &functions"));
     m_actions.settingsBehaviorAutoCompletionUserVariables->setText(MainWindow::tr("User &variables"));
@@ -886,6 +889,7 @@ void MainWindow::createMenus()
     m_menus.editing = m_menus.settings->addMenu("");
     m_menus.autoCompletion = m_menus.editing->addMenu("");
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionBuiltInFunctions);
+    m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionBuiltInVariables);
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionUnits);
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionUserFunctions);
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionUserVariables);
@@ -1356,6 +1360,7 @@ void MainWindow::createFixedConnections()
         connect(m_actions.settingsBehaviorAlwaysOnTop, SIGNAL(toggled(bool)), SLOT(setAlwaysOnTopEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoCompletion, SIGNAL(toggled(bool)), SLOT(setAutoCompletionEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoCompletionBuiltInFunctions, SIGNAL(toggled(bool)), SLOT(setAutoCompletionBuiltInFunctionsEnabled(bool)));
+    connect(m_actions.settingsBehaviorAutoCompletionBuiltInVariables, SIGNAL(toggled(bool)), SLOT(setAutoCompletionBuiltInVariablesEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoCompletionUnits, SIGNAL(toggled(bool)), SLOT(setAutoCompletionUnitsEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoCompletionUserFunctions, SIGNAL(toggled(bool)), SLOT(setAutoCompletionUserFunctionsEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoCompletionUserVariables, SIGNAL(toggled(bool)), SLOT(setAutoCompletionUserVariablesEnabled(bool)));
@@ -1617,6 +1622,8 @@ void MainWindow::applySettings()
         setAutoCompletionEnabled(false);
     m_actions.settingsBehaviorAutoCompletionBuiltInFunctions->setChecked(
         m_settings->autoCompletionBuiltInFunctions);
+    m_actions.settingsBehaviorAutoCompletionBuiltInVariables->setChecked(
+        m_settings->autoCompletionBuiltInVariables);
     m_actions.settingsBehaviorAutoCompletionUnits->setChecked(
         m_settings->autoCompletionUnits);
     m_actions.settingsBehaviorAutoCompletionUserFunctions->setChecked(
@@ -2658,6 +2665,11 @@ void MainWindow::setAutoCompletionEnabled(bool b)
 void MainWindow::setAutoCompletionBuiltInFunctionsEnabled(bool b)
 {
     m_settings->autoCompletionBuiltInFunctions = b;
+}
+
+void MainWindow::setAutoCompletionBuiltInVariablesEnabled(bool b)
+{
+    m_settings->autoCompletionBuiltInVariables = b;
 }
 
 void MainWindow::setAutoCompletionUnitsEnabled(bool b)

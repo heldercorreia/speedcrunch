@@ -145,6 +145,7 @@ public:
     bool autoCalc;
     bool autoCompletion;
     bool autoCompletionBuiltInFunctions;
+    bool autoCompletionBuiltInVariables;
     bool autoCompletionUnits;
     bool autoCompletionUserFunctions;
     bool autoCompletionUserVariables;

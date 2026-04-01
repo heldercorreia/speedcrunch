@@ -139,6 +139,7 @@ private slots:
     void setAutoCalcEnabled(bool);
     void setAutoCompletionEnabled(bool);
     void setAutoCompletionBuiltInFunctionsEnabled(bool);
+    void setAutoCompletionBuiltInVariablesEnabled(bool);
     void setAutoCompletionUnitsEnabled(bool);
     void setAutoCompletionUserFunctionsEnabled(bool);
     void setAutoCompletionUserVariablesEnabled(bool);
@@ -354,6 +355,7 @@ private:
         QAction* settingsBehaviorPartialResults;
         QAction* settingsBehaviorAutoCompletion;
         QAction* settingsBehaviorAutoCompletionBuiltInFunctions;
+        QAction* settingsBehaviorAutoCompletionBuiltInVariables;
         QAction* settingsBehaviorAutoCompletionUnits;
         QAction* settingsBehaviorAutoCompletionUserFunctions;
         QAction* settingsBehaviorAutoCompletionUserVariables;

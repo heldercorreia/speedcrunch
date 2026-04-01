@@ -282,6 +282,7 @@ Settings::Settings()
     startupUserDefinitionsOverwrite = false;
     startupUserDefinitionsApplyBeforeRestore = false;
     autoCompletionBuiltInFunctions = true;
+    autoCompletionBuiltInVariables = true;
     autoCompletionUnits = true;
     autoCompletionUserFunctions = true;
     autoCompletionUserVariables = true;
@@ -333,6 +334,9 @@ void Settings::load()
     autoCompletion = settings->value(key + QLatin1String("AutoCompletion"), true).toBool();
     autoCompletionBuiltInFunctions = settings->value(
         key + QLatin1String("AutoCompletionBuiltInFunctions"), true).toBool();
+    autoCompletionBuiltInVariables = settings->value(
+        key + QLatin1String("AutoCompletionBuiltInVariables"),
+        autoCompletionBuiltInFunctions).toBool();
     autoCompletionUnits = settings->value(
         key + QLatin1String("AutoCompletionUnits"), true).toBool();
     autoCompletionUserFunctions = settings->value(
@@ -606,6 +610,7 @@ void Settings::save()
     settings->setValue(key + QLatin1String("ShowEmptyHistoryHint"), showEmptyHistoryHint);
     settings->setValue(key + QLatin1String("AutoCompletion"), autoCompletion);
     settings->setValue(key + QLatin1String("AutoCompletionBuiltInFunctions"), autoCompletionBuiltInFunctions);
+    settings->setValue(key + QLatin1String("AutoCompletionBuiltInVariables"), autoCompletionBuiltInVariables);
     settings->setValue(key + QLatin1String("AutoCompletionUnits"), autoCompletionUnits);
     settings->setValue(key + QLatin1String("AutoCompletionUserFunctions"), autoCompletionUserFunctions);
     settings->setValue(key + QLatin1String("AutoCompletionUserVariables"), autoCompletionUserVariables);

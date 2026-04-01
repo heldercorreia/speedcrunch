@@ -417,6 +417,7 @@ Editing
     All options are enabled by default.
 
     * ``Built-in functions`` includes built-in function names.
+    * ``Built-in variables`` includes built-in constant names.
     * ``Units`` includes unit names.
     * ``User functions`` includes user-defined function names.
     * ``User variables`` includes user-defined variable names.

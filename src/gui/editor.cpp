@@ -545,7 +545,7 @@ QStringList Editor::matchFragment(const QString& id) const
         const bool isUnit = isBuiltIn && unitNames.contains(variable.identifier());
         const bool includeVariable =
             (isUnit && settings->autoCompletionUnits)
-            || (!isUnit && isBuiltIn && settings->autoCompletionBuiltInFunctions)
+            || (!isUnit && isBuiltIn && settings->autoCompletionBuiltInVariables)
             || (!isBuiltIn && settings->autoCompletionUserVariables);
         if (!includeVariable)
             continue;
