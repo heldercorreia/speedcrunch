@@ -21,7 +21,7 @@ They can be enabled and disabled via the :menuselection:`View` menu.
        As of version 0.12, the constants have not yet been adapted to make use of the new unit system.
        All the inserted values thus lack a unit. This is likely to change in a future version.
 
-* Variables
+* User Variables
     The variables widget lists all :ref:`user-defined variables <variables>`. Any of them can be inserted into the editor by double-clicking it.
     Additionally, it is possible to delete a variable by selecting it and pressing the :kbd:`Delete` key on your keyboard.
 

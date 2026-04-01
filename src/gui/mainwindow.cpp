@@ -618,7 +618,7 @@ void MainWindow::setActionsText()
     m_actions.viewFormulaBook->setText(MainWindow::tr("Formula &Book"));
     m_actions.viewStatusBar->setText(MainWindow::tr("&Status Bar"));
     m_actions.viewMenuBar->setText(MainWindow::tr("Main &Menu"));
-    m_actions.viewVariables->setText(MainWindow::tr("&Variables"));
+    m_actions.viewVariables->setText(MainWindow::tr("User &Variables"));
     m_actions.viewBitfield->setText(MainWindow::tr("Bitfield"));
     m_actions.viewUserFunctions->setText(MainWindow::tr("Use&r Functions"));
 
@@ -1251,7 +1251,7 @@ void MainWindow::createHistoryDock(bool)
 
 void MainWindow::createVariablesDock(bool takeFocus)
 {
-    m_docks.variables = new GenericDock<VariableListWidget>("MainWindow", QT_TR_NOOP("Variables"), this);
+    m_docks.variables = new GenericDock<VariableListWidget>("MainWindow", QT_TR_NOOP("User Variables"), this);
     m_docks.variables->setObjectName("VariablesDock");
     m_docks.variables->installEventFilter(this);
     m_docks.variables->setAllowedAreas(Qt::AllDockWidgetAreas);

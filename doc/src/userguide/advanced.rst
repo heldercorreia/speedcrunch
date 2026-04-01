@@ -18,7 +18,7 @@ You can attach a comment to the definition by appending ``?`` and text::
 
     a = 5.123 ? calibration value
 
-This comment is displayed in the Variables dock widget and in autocomplete suggestions.
+This comment is displayed in the User Variables dock widget and in autocomplete suggestions.
 
 Now you can access this value via the name ``a`` much like you would use a built-in constant like :const:`pi`.
 
