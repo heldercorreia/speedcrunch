@@ -505,7 +505,10 @@ Widgets and Docks
 * :kbd:`Control+B`
     Show/hide the status bar.
     The status bar provides quick selectors for :menuselection:`Angle Mode`
-    and :menuselection:`Results --> Notation`.
+    and :menuselection:`Results --> Notation`. When
+    :menuselection:`Settings --> Complex Numbers` is enabled, it also shows
+    a :menuselection:`Complex Form` selector with the same options as
+    :menuselection:`Notation & Precision...`.
 
 Scrolling
 +++++++++

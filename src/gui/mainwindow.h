@@ -207,6 +207,7 @@ private slots:
     void showContextHelp();
     void showReadyMessage();
     void showAngleModeContextMenu(const QPoint&);
+    void showComplexFormContextMenu(const QPoint&);
     void showResultFormatContextMenu(const QPoint&);
     void showSessionImportDialog();
     void showUserDefinitionsImportDialog();
@@ -270,6 +271,7 @@ private:
     void setMenusText();
     void setStatusBarText();
     QString statusBarAngleUnitValue() const;
+    QString statusBarComplexFormValue() const;
     QString statusBarResultFormatValue() const;
     void applyStartupUserDefinitions();
     void importUserDefinitionsFromText(const QString& text, bool overwriteExisting,
@@ -415,6 +417,7 @@ private:
 
     struct {
         QMenu* angleUnit;
+        QMenu* complexForm;
         QMenu* complexNumbers;
         QMenu* editing;
         QMenu* autoCompletion;
@@ -478,6 +481,9 @@ private:
         QWidget* resultFormatSection;
         QLabel* resultFormatLabel;
         QPushButton* resultFormat;
+        QWidget* complexFormSection;
+        QLabel* complexFormLabel;
+        QPushButton* complexForm;
     } m_status;
 
     Constants* m_constants;
