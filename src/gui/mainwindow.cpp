@@ -1600,7 +1600,10 @@ void MainWindow::applySettings()
     if (!restoreGeometry(m_settings->windowGeometry)) {
         // We couldn't restore the saved geometry; that means it was either empty
         // or just isn't valid anymore so we use default size and position.
-        resize(640, 480);
+        int defaultWidth = 640;
+        if (m_settings->windowGeometry.isEmpty() && m_widgets.keypad)
+            defaultWidth = m_widgets.keypad->sizeHint().width();
+        resize(defaultWidth, 480);
         QRect screenGeometry = QGuiApplication::primaryScreen()->availableGeometry();
         move(screenGeometry.center() - rect().center());
     }
