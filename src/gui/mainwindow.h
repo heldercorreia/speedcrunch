@@ -350,7 +350,6 @@ private:
         QAction* settingsAngleUnitDegree;
         QAction* settingsAngleUnitGradian;
         QAction* settingsAngleUnitTurn;
-        QAction* settingsAngleUnitCycle;
         QAction* settingsBehaviorSaveWindowPositionOnExit;
         QAction* settingsBehaviorPartialResults;
         QAction* settingsBehaviorAutoCompletion;

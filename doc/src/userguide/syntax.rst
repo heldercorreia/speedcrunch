@@ -163,7 +163,7 @@ Amount of minutes or seconds is not limited to values below 60. It is possible t
     12:90
     = 13:30:00
     
-Dimensionless input values are automatically considered to be in current angle units. For example, in radian mode::
+Dimensionless input values are automatically considered to be in current angle mode. For example, in radian mode::
 
     pi
     = 180°00'00
@@ -171,7 +171,7 @@ Dimensionless input values are automatically considered to be in current angle u
 Only last part of sexagesimal input value can contain decimals.
 
 Following tables show some possible input notations and their results in both fixed-point decimal and sexagesimal modes.
-In the first table, fixed-point decimal values assume angle unit is set to degrees:
+In the first table, fixed-point decimal values assume angle mode is set to degrees:
 
 =================    ===================    =================
 Input                Fixed-Point Decimal    Sexagesimal

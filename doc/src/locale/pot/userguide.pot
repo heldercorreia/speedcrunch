@@ -595,7 +595,7 @@ msgid "Select the decimal separator to use in inputs and results. This can eithe
 msgstr ""
 
 #: ../../userguide/interface.rst:154
-msgid "Angle Unit"
+msgid "Angle Mode"
 msgstr ""
 
 #: ../../userguide/interface.rst:156
@@ -627,14 +627,6 @@ msgid "Use gradians for angles. A full circle corresponds to an angle of 400 gra
 msgstr ""
 
 #: ../../userguide/interface.rst:171
-msgid ":menuselection:`Cycle Unit`"
-msgstr ""
-
-#: ../../userguide/interface.rst:170
-msgid "Cycle unit selection between Radian, Degree and Gradian."
-msgstr ""
-
-#: ../../userguide/interface.rst:174
 msgid "Behavior"
 msgstr ""
 
@@ -1018,14 +1010,6 @@ msgstr ""
 msgid "Set result format to sexagesimal."
 msgstr ""
 
-#: ../../userguide/interface.rst:302
-msgid ":kbd:`F10`"
-msgstr ""
-
-#: ../../userguide/interface.rst:303
-msgid "Cycle angle unit (Degree/Radian/Gradian)."
-msgstr ""
-
 #: ../../userguide/interface.rst:304
 msgid ":kbd:`Control+.`"
 msgstr ""
@@ -1195,7 +1179,7 @@ msgid "Amount of minutes or seconds is not limited to values below 60. It is pos
 msgstr ""
 
 #: ../../userguide/syntax.rst:97
-msgid "Dimensionless input values are automatically considered to be in current angle units. For example, in radian mode::"
+msgid "Dimensionless input values are automatically considered to be in current angle mode. For example, in radian mode::"
 msgstr ""
 
 #: ../../userguide/syntax.rst:102

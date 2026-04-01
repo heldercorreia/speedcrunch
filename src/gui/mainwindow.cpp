@@ -337,7 +337,6 @@ void MainWindow::createActions()
     m_actions.settingsAngleUnitRadian = new QAction(this);
     m_actions.settingsAngleUnitGradian = new QAction(this);
     m_actions.settingsAngleUnitTurn = new QAction(this);
-    m_actions.settingsAngleUnitCycle = new QAction(this);
     m_actions.settingsBehaviorAlwaysOnTop = new QAction(this);
     m_actions.settingsBehaviorAutoAns = new QAction(this);
     m_actions.settingsBehaviorAutoCompletion = new QAction(this);
@@ -539,7 +538,7 @@ void MainWindow::retranslateText()
 void MainWindow::setStatusBarText()
 {
     if (m_status.angleUnit) {
-        m_status.angleUnitLabel->setText(MainWindow::tr("Angle Unit:"));
+        m_status.angleUnitLabel->setText(MainWindow::tr("Angle Mode:"));
         m_status.resultFormatLabel->setText(MainWindow::tr("Notation:"));
         m_status.complexNumbersLabel->setText(MainWindow::tr("Complex Numbers:"));
         m_status.angleUnit->setText(statusBarAngleUnitValue());
@@ -628,7 +627,6 @@ void MainWindow::setActionsText()
     m_actions.settingsAngleUnitRadian->setText(MainWindow::tr("&Radian"));
     m_actions.settingsAngleUnitGradian->setText(MainWindow::tr("&Gradian"));
     m_actions.settingsAngleUnitTurn->setText(MainWindow::tr("&Turn"));
-    m_actions.settingsAngleUnitCycle->setText(MainWindow::tr("&Cycle Unit"));
     m_actions.settingsBehaviorAlwaysOnTop->setText(MainWindow::tr("Always on &Top"));
     m_actions.settingsBehaviorAutoAns->setText(MainWindow::tr("Auto-Insert \"ans\" When Starting with an Operator"));
     m_actions.settingsBehaviorAutoAns->setToolTip(MainWindow::tr("If a new expression starts with +, -, *, or /, SpeedCrunch inserts \"ans\" first."));
@@ -816,7 +814,6 @@ void MainWindow::createActionShortcuts()
     m_actions.settingsResultFormatOctal->setShortcut(Qt::Key_F7);
     m_actions.settingsResultFormatHexadecimal->setShortcut(Qt::Key_F8);
     m_actions.settingsResultFormatSexagesimal->setShortcut(Qt::Key_F9);
-    m_actions.settingsAngleUnitCycle->setShortcut(Qt::Key_F10);
     m_actions.contextHelp->setShortcut(Qt::Key_F1);
 }
 
@@ -945,8 +942,6 @@ void MainWindow::createMenus()
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitRadian);
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitGradian);
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitTurn);
-    m_menus.angleUnit->addSeparator();
-    m_menus.angleUnit->addAction(m_actions.settingsAngleUnitCycle);
 
     m_menus.settings->addMenu(m_menus.complexNumbers);
 
@@ -994,7 +989,7 @@ void MainWindow::setMenusText()
     m_menus.resultFormat->setTitle(MainWindow::tr("&Notation"));
     m_menus.decimal->setTitle(MainWindow::tr("&Decimal"));
     m_menus.precision->setTitle(MainWindow::tr("&Precision"));
-    m_menus.angleUnit->setTitle(MainWindow::tr("&Angle Unit"));
+    m_menus.angleUnit->setTitle(MainWindow::tr("&Angle Mode"));
     m_menus.complexNumbers->setTitle(MainWindow::tr("Complex &Numbers"));
     m_menus.window->setTitle(MainWindow::tr("&Window"));
     m_menus.editing->setTitle(MainWindow::tr("&Editing"));
@@ -1354,7 +1349,6 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsAngleUnitRadian, SIGNAL(triggered()), SLOT(setAngleModeRadian()));
     connect(m_actions.settingsAngleUnitGradian, SIGNAL(triggered()), SLOT(setAngleModeGradian()));
     connect(m_actions.settingsAngleUnitTurn, SIGNAL(triggered()), SLOT(setAngleModeTurn()));
-    connect(m_actions.settingsAngleUnitCycle, SIGNAL(triggered()), SLOT(cycleAngleUnits()));
 
     if (!isWaylandPlatform())
         connect(m_actions.settingsBehaviorAlwaysOnTop, SIGNAL(toggled(bool)), SLOT(setAlwaysOnTopEnabled(bool)));

@@ -224,7 +224,7 @@ of the following notations:
         arcsin(1)
         = pi/2
 
-        sin(45)    (angle unit = degree)
+        sin(45)    (angle mode = degree)
         = √(2)/2
 
         arcsin(sqrt(3)/22)
@@ -242,7 +242,7 @@ of the following notations:
 
     .. versionadded:: 1.0
 
-Angle Unit
+Angle Mode
 ++++++++++
 
 Select the angular unit to be used in calculations. For functions that operate on angles, notably the
@@ -263,9 +263,6 @@ determines the angle format of the arguments.
 
     .. versionadded:: 1.0
     
-* :menuselection:`Cycle Unit`
-    Cycle unit selection between Radian, Degree, Gradian, and Turn.
-
 Complex Numbers
 ++++++++++++++
 
@@ -541,9 +538,6 @@ Notation
 
     .. versionadded:: 1.0
     
-* :kbd:`F10`
-    Cycle angle unit (Degree/Radian/Gradian/Turn).
-
 Various
 +++++++
 
