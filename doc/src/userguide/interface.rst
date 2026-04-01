@@ -217,15 +217,15 @@ of the following notations:
 * :menuselection:`Rational`
     Try to display real results as fractions (for example, ``1/3``) using continued-fraction approximation with bounded denominator. If no close match is found, results are displayed in decimal form.
     For common trigonometric and inverse-trigonometric results, SpeedCrunch prefers
-    symbolic exact forms such as ``pi/2``, ``7⋅pi/6``, ``sqrt(2)/2``, and
-    ``sqrt(3)/3``.
+    symbolic exact forms such as ``pi/2``, ``7⋅pi/6``, ``1/2``, ``sqrt(2)/2``,
+    and ``sqrt(3)/3``.
     Example::
 
         arcsin(1)
         = pi/2
 
         sin(45)    (angle unit = degree)
-        = sqrt(2)/2
+        = √(2)/2
 
         arcsin(sqrt(3)/22)
         = 0.07881114207211010205

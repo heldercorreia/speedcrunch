@@ -4190,6 +4190,72 @@ void test_grouped_numeric_literal_display_format()
     settings->digitGroupingIntegerPartOnly = oldDigitGroupingIntegerPartOnly;
 }
 
+void test_display_root_aliases_for_result_lines()
+{
+    ++eval_total_tests;
+    const QString sqrtDisplay =
+        DisplayFormatUtils::applyDigitGroupingForDisplay(QStringLiteral("sqrt(2)/2"));
+    if (sqrtDisplay != QString::fromUtf8("√(2)/2")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tformat sqrt alias for display\t[NEW]" << endl
+             << "\tResult   : " << sqrtDisplay.toUtf8().constData() << endl
+             << "\tExpected : √(2)/2" << endl;
+    }
+
+    ++eval_total_tests;
+    const QString cbrtDisplay =
+        DisplayFormatUtils::applyDigitGroupingForDisplay(QStringLiteral("cbrt(8)"));
+    if (cbrtDisplay != QString::fromUtf8("∛(8)")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tformat cbrt alias for display\t[NEW]" << endl
+             << "\tResult   : " << cbrtDisplay.toUtf8().constData() << endl
+             << "\tExpected : ∛(8)" << endl;
+    }
+
+    ++eval_total_tests;
+    const QString untouchedIdentifier =
+        DisplayFormatUtils::applyDigitGroupingForDisplay(QStringLiteral("asqrt(2)+cbrtfoo(8)"));
+    if (untouchedIdentifier != QStringLiteral("asqrt(2)+cbrtfoo(8)")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tdo not rewrite root-like identifiers\t[NEW]" << endl
+             << "\tResult   : " << untouchedIdentifier.toUtf8().constData() << endl
+             << "\tExpected : asqrt(2)+cbrtfoo(8)" << endl;
+    }
+}
+
+void test_trig_symbolic_fraction_half()
+{
+    eval->setExpression(QStringLiteral("cos(pi/3)"));
+    const Quantity value = eval->evalUpdateAns();
+
+    ++eval_total_tests;
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tevaluate cos(pi/3) for trig symbolic fraction\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+        return;
+    }
+
+    const QString expected = QStringLiteral("1")
+        + QString(UnicodeChars::MediumMathematicalSpace)
+        + QStringLiteral("/")
+        + QString(UnicodeChars::MediumMathematicalSpace)
+        + QStringLiteral("2");
+    const QString symbolic = NumberFormatter::formatTrigSymbolic(value);
+    ++eval_total_tests;
+    if (symbolic != expected) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tformat trig symbolic half\t[NEW]" << endl
+             << "\tResult   : " << symbolic.toUtf8().constData() << endl
+             << "\tExpected : " << expected.toUtf8().constData() << endl;
+    }
+}
+
 void test_non_informative_numeric_simplified_row_suppression()
 {
     checkSuppressSimplifiedExpressionLine(
@@ -4471,6 +4537,8 @@ int main(int argc, char* argv[])
     test_session_deserialize_without_history();
     test_function_usage_tooltip();
     test_grouped_numeric_literal_display_format();
+    test_display_root_aliases_for_result_lines();
+    test_trig_symbolic_fraction_half();
     test_non_informative_numeric_simplified_row_suppression();
 
     test_angle_mode(settings);

@@ -141,12 +141,30 @@ QString formatCommonTrigRadical(const HNumber& value)
     return negative ? QStringLiteral("-") + symbol : symbol;
 }
 
+QString formatCommonTrigFraction(const HNumber& value)
+{
+    const bool negative = value.isNegative();
+    const HNumber absValue = negative ? -value : value;
+
+    QString symbol;
+    if (isCloseTo(absValue, HNumber(1) / HNumber(2)))
+        symbol = formatFraction(QStringLiteral("1"), 2);
+
+    if (symbol.isEmpty())
+        return QString();
+    return negative ? QStringLiteral("-") + symbol : symbol;
+}
+
 QString formatTrigSymbolicDisplay(const Quantity& q, const HNumber& value)
 {
     if (!q.isDimensionless() || !q.unitName().isEmpty())
         return QString();
 
     QString symbolic = formatPiMultiple(value);
+    if (!symbolic.isEmpty())
+        return symbolic;
+
+    symbolic = formatCommonTrigFraction(value);
     if (!symbolic.isEmpty())
         return symbolic;
 

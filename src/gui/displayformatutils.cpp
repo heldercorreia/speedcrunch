@@ -45,7 +45,8 @@ QString applyDigitGroupingForDisplay(const QString& input)
         lastPos = match.capturedEnd();
     }
     output += input.mid(lastPos);
-    return UnicodeChars::normalizePiForDisplay(output);
+    output = UnicodeChars::normalizePiForDisplay(output);
+    return UnicodeChars::normalizeRootFunctionAliasesForDisplay(output);
 }
 
 } // namespace DisplayFormatUtils
