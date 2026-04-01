@@ -269,6 +269,7 @@ private:
     bool configureCustomKeypad();
     void setActionsText();
     void updateComplexDisabledActionText();
+    void updateKeypadDisabledActionText();
     void setMenusText();
     void setStatusBarText();
     void updateStatusBarSectionVisibility();

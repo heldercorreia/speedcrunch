@@ -46,7 +46,7 @@ They can be enabled and disabled via the :menuselection:`View` menu.
     * ``Scientific (wide)``
     * ``Scientific (narrow)``
     * ``Custom...``
-    * ``Disabled``
+    * ``Disable`` (shown as ``Disabled`` when selected)
 
     Available entries in :menuselection:`View --> Keypad --> Zoom` are:
 
@@ -68,6 +68,9 @@ They can be enabled and disabled via the :menuselection:`View` menu.
     ``Scientific (narrow)`` layout and then customize it.
 
     Custom keypad settings are saved and restored automatically.
+
+    You can also right-click directly on the keypad to open the same menu as
+    :menuselection:`View --> Keypad`.
 
     .. versionadded:: 1.0
 
@@ -270,7 +273,7 @@ Configure global complex-number behavior via
 :menuselection:`Settings --> Complex Numbers`.
 On first launch, complex numbers are disabled by default.
 
-* :menuselection:`Disabled`
+* :menuselection:`Disable` (shown as ``Disabled`` when selected)
     Disable complex-number output globally.
 * :menuselection:`Imaginary Unit i`
     Use ``i`` as the imaginary unit symbol.

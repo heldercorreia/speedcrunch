@@ -650,7 +650,7 @@ void MainWindow::setActionsText()
     m_actions.viewFullScreenMode->setText(MainWindow::tr("F&ull Screen Mode"));
     m_actions.viewFunctions->setText(MainWindow::tr("&Functions"));
     m_actions.viewHistory->setText(MainWindow::tr("&History"));
-    m_actions.viewKeypadDisabled->setText(MainWindow::tr("&Disabled"));
+    updateKeypadDisabledActionText();
     m_actions.viewKeypadBasicWide->setText(MainWindow::tr("&Basic"));
     m_actions.viewKeypadScientificWide->setText(MainWindow::tr("&Scientific (wide)"));
     m_actions.viewKeypadScientificNarrow->setText(MainWindow::tr("Scientific (narrow)"));
@@ -1057,6 +1057,14 @@ void MainWindow::updateComplexDisabledActionText()
         m_actions.settingsResultFormatComplexDisabled->setText(MainWindow::tr("&Disable"));
 }
 
+void MainWindow::updateKeypadDisabledActionText()
+{
+    if (m_actions.viewKeypadDisabled->isChecked())
+        m_actions.viewKeypadDisabled->setText(MainWindow::tr("&Disabled"));
+    else
+        m_actions.viewKeypadDisabled->setText(MainWindow::tr("&Disable"));
+}
+
 void MainWindow::createStatusBar()
 {
     QStatusBar* bar = statusBar();
@@ -1390,6 +1398,10 @@ void MainWindow::createFixedConnections()
 
     connect(m_actions.viewFullScreenMode, SIGNAL(toggled(bool)), SLOT(setFullScreenEnabled(bool)));
     connect(m_actionGroups.keypad, SIGNAL(triggered(QAction*)), SLOT(setKeypadMode(QAction*)));
+    connect(m_actions.viewKeypadDisabled, &QAction::toggled,
+            this, [this](bool) {
+                updateKeypadDisabledActionText();
+            });
     connect(m_actionGroups.keypadZoom, SIGNAL(triggered(QAction*)), SLOT(setKeypadZoom(QAction*)));
     connect(m_actions.viewStatusBar, SIGNAL(toggled(bool)), SLOT(setStatusBarVisible(bool)));
 #if !defined(Q_OS_MACOS)
