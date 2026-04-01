@@ -119,12 +119,12 @@ void Constants::Private::populate()
     // atomic unit of permittivity                                 1.112 650 056... e-10    (exact)                  F m^-1
     // atomic unit of time                                         2.418 884 326 509 e-17   0.000 000 000 014 e-17   s
     // atomic unit of velocity                                     2.187 691 262 77 e6      0.000 000 000 50 e6      m s^-1
-    // Bohr magneton in eV/T                                       5.788 381 8012 e-5       0.000 000 0026 e-5       eV T^-1
-    // Bohr magneton in Hz/T                                       13.996 245 042 e9        0.000 000 086 e9         Hz T^-1
+    // Bohr magneton in eV·T⁻¹                                       5.788 381 8012 e-5       0.000 000 0026 e-5       eV T⁻¹
+    // Bohr magneton in Hz·T⁻¹                                       13.996 245 042 e9        0.000 000 086 e9         Hz T⁻¹
     // Bohr magneton in inverse meters per tesla                   46.686 448 14            0.000 000 29             m^-1 T^-1
-    // Bohr magneton in K/T                                        0.671 714 05             0.000 000 39             K T^-1
-    // Boltzmann constant in eV/K                                  8.617 3303 e-5           0.000 0050 e-5           eV K^-1
-    // Boltzmann constant in Hz/K                                  2.083 6612 e10           0.000 0012 e10           Hz K^-1
+    // Bohr magneton in K·T⁻¹                                        0.671 714 05             0.000 000 39             K T⁻¹
+    // Boltzmann constant in eV·K⁻¹                                  8.617 3303 e-5           0.000 0050 e-5           eV K⁻¹
+    // Boltzmann constant in Hz·K⁻¹                                  2.083 6612 e10           0.000 0012 e10           Hz K⁻¹
     // Boltzmann constant in inverse meters per kelvin             69.503 457               0.000 040                m^-1 K^-1
     // classical electron radius                                   2.817 940 3227 e-15      0.000 000 0019 e-15      m
     // Cu x unit                                                   1.002 076 97 e-13        0.000 000 28 e-13        m
@@ -289,10 +289,10 @@ void Constants::Private::populate()
     // neutron-tau mass ratio                                      0.528 790                0.000 048
     // neutron to shielded proton mag. mom. ratio                  -0.684 996 94            0.000 000 16
     // Newtonian constant of gravitation over h-bar c              6.708 61 e-39            0.000 31 e-39            (GeV/c^2)^-2
-    // nuclear magneton in eV/T                                    3.152 451 2550 e-8       0.000 000 0015 e-8       eV T^-1
+    // nuclear magneton in eV·T⁻¹                                    3.152 451 2550 e-8       0.000 000 0015 e-8       eV T⁻¹
     // nuclear magneton in inverse meters per tesla                2.542 623 432 e-2        0.000 000 016 e-2        m^-1 T^-1
-    // nuclear magneton in K/T                                     3.658 2690 e-4           0.000 0021 e-4           K T^-1
-    // nuclear magneton in MHz/T                                   7.622 593 285            0.000 000 047            MHz T^-1
+    // nuclear magneton in K·T⁻¹                                     3.658 2690 e-4           0.000 0021 e-4           K T⁻¹
+    // nuclear magneton in MHz·T⁻¹                                   7.622 593 285            0.000 000 047            MHz T⁻¹
     // Planck constant in eV s                                     4.135 667 662 e-15       0.000 000 025 e-15       eV s
     // Planck constant over 2 pi in eV s                           6.582 119 514 e-16       0.000 000 040 e-16       eV s
     // Planck constant over 2 pi times c in MeV fm                 197.326 9788             0.000 0012               MeV fm
@@ -373,56 +373,55 @@ void Constants::Private::populate()
     // General Physics.
     PUSH_CONSTANT_CODATA("Characteristic Impedance of Vacuum", "376.730313412", "Ω",          "0.000000059",     "2026-03-14");
     PUSH_CONSTANT_CODATA("Dirac's Constant",          "1.054571817e-34",        "J·s",        "exact",           "2026-03-14");  // CODATA name: Planck constant over 2 pi
-    PUSH_CONSTANT_CODATA("Electric Constant",         "8.8541878188e-12",       "F/m",        "0.0000000014e-12","2026-03-14");
-    PUSH_CONSTANT_CODATA("Gravitation Constant",      "6.67430e-11",            "m³/(kg·s²)", "0.00015e-11",     "2026-03-14");
-    PUSH_CONSTANT_CODATA("Magnetic Constant",         "1.25663706127e-6",       "N/A²",       "0.00000000020e-6","2026-03-14");  // TODO: Put more figures !
+    PUSH_CONSTANT_CODATA("Electric Constant",         "8.8541878188e-12",       "F·m⁻¹",        "0.0000000014e-12","2026-03-14");
+    PUSH_CONSTANT_CODATA("Gravitation Constant",      "6.67430e-11",            "m³·kg⁻¹·s⁻²", "0.00015e-11",     "2026-03-14");
+    PUSH_CONSTANT_CODATA("Magnetic Constant",         "1.25663706127e-6",       "N·A⁻²",       "0.00000000020e-6","2026-03-14");  // TODO: Put more figures !
     PUSH_CONSTANT_CODATA("Planck's Constant",         "6.62607015e-34",         "J·s",        "exact",           "2026-03-14");
-    PUSH_CONSTANT_CODATA("Speed of Light in Vacuum",  "299792458",              "m/s",        "exact",           "2016-03-28");
-    PUSH_CONSTANT_CODATA("Standard Gravity",          "9.80665",                "m/s²",       "exact",           "2016-03-28");
+    PUSH_CONSTANT_CODATA("Speed of Light in Vacuum",  "299792458",              "m·s⁻¹",        "exact",           "2016-03-28");
+    PUSH_CONSTANT_CODATA("Standard Gravity",          "9.80665",                "m·s⁻²",       "exact",           "2016-03-28");
 
     // Electromagnetic.
-    PUSH_CONSTANT_CODATA("Bohr-Procopiu Magneton",                      "927.4009994e-26",     "J/T",    "0.0000057e-26",   "2016-03-28");
+    PUSH_CONSTANT_CODATA("Bohr-Procopiu Magneton",                      "927.4009994e-26",     "J·T⁻¹",    "0.0000057e-26",   "2016-03-28");
     PUSH_CONSTANT_CODATA("Conductance Quantum",                         "7.748091729e-5",      "S",      "exact",            "2026-03-14");
-    PUSH_CONSTANT("Coulomb's Constant",                                 "8.987742438e9",       "N·m²/C²");
+    PUSH_CONSTANT("Coulomb's Constant",                                 "8.987742438e9",       "N·m²·C⁻²");
     PUSH_CONSTANT_CODATA("Elementary Charge",                           "1.602176634e-19",     "C",      "exact",            "2026-03-14");
-    PUSH_CONSTANT_CODATA("Conventional value of Josephson Constant",    "483597.9e9",          "Hz/V",   "exact",            "2016-03-28");
-    PUSH_CONSTANT_CODATA("Josephson Constant",                          "483597.8484e9",       "Hz/V",   "exact",            "2026-03-14");
+    PUSH_CONSTANT_CODATA("Conventional value of Josephson Constant",    "483597.9e9",          "Hz·V⁻¹",   "exact",            "2016-03-28");
+    PUSH_CONSTANT_CODATA("Josephson Constant",                          "483597.8484e9",       "Hz·V⁻¹",   "exact",            "2026-03-14");
     PUSH_CONSTANT_CODATA("Magnetic Flux Quantum",                       "2.067833848e-15",     "Wb",     "exact",            "2026-03-14");
-    PUSH_CONSTANT_CODATA("Nuclear Magneton",                            "5.050783699e-27",     "J/T",    "0.000000031e-27",  "2016-03-28");
+    PUSH_CONSTANT_CODATA("Nuclear Magneton",                            "5.050783699e-27",     "J·T⁻¹",    "0.000000031e-27",  "2016-03-28");
     PUSH_CONSTANT_CODATA("Resistance Quantum",                          "12906.40372",         "Ω",      "exact",            "2026-03-14");  // CODATA name: inverse of conductance quantum
     PUSH_CONSTANT_CODATA("Conventional value of von Klitzing Constant", "25812.807",           "Ω",      "exact",            "2016-03-28");
     PUSH_CONSTANT_CODATA("von Klitzing Constant",                       "25812.80745",         "Ω",      "exact",            "2026-03-14");
 
     // Atomic & Nuclear.
-    PUSH_CONSTANT_CODATA("Bohr Radius",                    "0.52917721067e-10", "m",     "0.00000000012e-10", "2016-03-28");
-    PUSH_CONSTANT_CODATA("Fermi Coupling Constant",        "1.1663787e-5",      "Ge/V²", "0.0000006e-5",      "2016-03-28");
-    PUSH_CONSTANT_CODATA("Fine-structure Constant",        "7.2973525664e-3",   "",      "0.0000000017e-3",   "2016-03-28");
-    PUSH_CONSTANT_CODATA("Hartree Energy",                 "4.359744650e-18",   "J",     "0.000000054e-18",   "2016-03-28");
-    PUSH_CONSTANT_CODATA("Hartree Energy in eV",           "27.21138602",       "eV",    "0.00000017",        "2016-03-28");
-    PUSH_CONSTANT_CODATA("Quantum of Circulation",         "3.6369475486e-4",   "m²/s",  "0.0000000017e-4",   "2016-03-28");
-    PUSH_CONSTANT_CODATA("Quantum of Circulation times 2", "7.2738950972e-4",   "m²/s",  "0.0000000033e-4",   "2016-03-28");  // I don't know why it is usefull, but it is present in CODATA constants, so I added it  -- Hadrien Theveneau, 2016-03-28
-    PUSH_CONSTANT_CODATA("Rydberg Constant",               "10973731.568508",   "1/m",   "0.000065",          "2016-03-28");
-    PUSH_CONSTANT_CODATA("Thomson Cross Section",          "0.66524587158e-28", "m²",    "0.00000000091e-28", "2016-03-28");
-    PUSH_CONSTANT_CODATA("Weak Mixing Angle",              "0.2223",            "",      "0.0021",            "2016-03-28");
+    PUSH_CONSTANT_CODATA("Bohr Radius",                    "0.52917721067e-10", "m",      "0.00000000012e-10", "2016-03-28");
+    PUSH_CONSTANT_CODATA("Fermi Coupling Constant",        "1.1663787e-5",      "Ge·V⁻²", "0.0000006e-5",      "2016-03-28");
+    PUSH_CONSTANT_CODATA("Fine-structure Constant",        "7.2973525664e-3",   "",       "0.0000000017e-3",   "2016-03-28");
+    PUSH_CONSTANT_CODATA("Hartree Energy",                 "4.359744650e-18",   "J",      "0.000000054e-18",   "2016-03-28");
+    PUSH_CONSTANT_CODATA("Hartree Energy in eV",           "27.21138602",       "eV",     "0.00000017",        "2016-03-28");
+    PUSH_CONSTANT_CODATA("Quantum of Circulation",         "3.6369475486e-4",   "m²·s⁻¹", "0.0000000017e-4",   "2016-03-28");
+    PUSH_CONSTANT_CODATA("Quantum of Circulation times 2", "7.2738950972e-4",   "m²·s⁻¹", "0.0000000033e-4",   "2016-03-28");  // I don't know why it is usefull, but it is present in CODATA constants, so I added it  -- Hadrien Theveneau, 2016-03-28
+    PUSH_CONSTANT_CODATA("Rydberg Constant",               "10973731.568508",   "m⁻¹",    "0.000065",          "2016-03-28");
+    PUSH_CONSTANT_CODATA("Thomson Cross Section",          "0.66524587158e-28", "m²",     "0.00000000091e-28", "2016-03-28");
+    PUSH_CONSTANT_CODATA("Weak Mixing Angle",              "0.2223",            "",       "0.0021",            "2016-03-28");
 
     // Physico-chemical.
-    PUSH_CONSTANT_CODATA("Atomic Mass Unit",                               "1.660539040e-27",  "kg",         "0.000000020e-27",  "2016-03-28");  // CODATA name: atomic mass constant
-    PUSH_CONSTANT_CODATA("Avogadro's Number",                              "6.02214076e23",    "1/mol",      "exact",            "2026-03-14");  // CODATA name: Avogadro constant
-    PUSH_CONSTANT_CODATA("Boltzmann Constant",                             "1.380649e-23",     "J/K",        "exact",            "2026-03-14");
-    PUSH_CONSTANT_CODATA("Compton wavelength",                             "2.4263102367e-12", "m",          "0.0000000011e-12", "2016-03-28");
-    PUSH_CONSTANT_CODATA("Compton wavelength over 2 pi",                   "386.15926764e-15", "m",          "0.00000018e-15",   "2016-03-28");
-    PUSH_CONSTANT_CODATA("Electron-volt",                                  "1.602176634e-19",  "J",          "exact",            "2026-03-14");
-    PUSH_CONSTANT_CODATA("Faraday Constant",                               "96485.33212",      "C/mol",      "exact",            "2026-03-14");
-    // PUSH_CONSTANT_CODATA("Faraday constant for conventional electric current", "96 485.3251", "C_90_mol^-1", "0.0012", "2016-03-28");       // TODO: Handle C_90_mol
-    PUSH_CONSTANT_CODATA("First Radiation Constant",                       "3.741771852e-16",  "W·m²",       "exact",            "2026-03-14");
-    PUSH_CONSTANT_CODATA("First Radiation Constant for Spectral Radiance", "1.191042972e-16",  "(W·m²)/sr",  "exact",            "2026-03-14");
-    PUSH_CONSTANT_CODATA("Gas Constant",                                   "8.314462618",      "J/(K·mol)",  "exact",            "2026-03-14");
-    PUSH_CONSTANT_CODATA("Loschmidt constant (273.15 K, 100 kPa)",         "2.6516467e25",     "1/m³",       "0.0000015e25",     "2016-03-28");
-    PUSH_CONSTANT_CODATA("Loschmidt constant (273.15 K, 101.325 kPa)",     "2.6867811e25",     "1/m³",       "0.0000015e25",     "2016-03-28");
-    PUSH_CONSTANT_CODATA("Molar Planck Constant",                          "3.990312712e-10",  "J·s/mol",    "exact",            "2026-03-14");
-    PUSH_CONSTANT_CODATA("Second Radiation Constant",                      "1.438776877e-2",   "m·K",        "exact",            "2026-03-14");
-    PUSH_CONSTANT_CODATA("Stefan-Boltzmann Constant",                      "5.670374419e-8",   "W/(m²·K⁴)",  "exact",            "2026-03-14");
-    PUSH_CONSTANT_CODATA("{220} Lattice Spacing of Silicon",               "192.0155714e-12",  "m",          "0.0000032e-12",    "2016-03-28");
+    PUSH_CONSTANT_CODATA("Atomic Mass Unit",                               "1.660539040e-27",  "kg",          "0.000000020e-27",  "2016-03-28");  // CODATA name: atomic mass constant
+    PUSH_CONSTANT_CODATA("Avogadro's Number",                              "6.02214076e23",    "mol⁻¹",       "exact",            "2026-03-14");  // CODATA name: Avogadro constant
+    PUSH_CONSTANT_CODATA("Boltzmann Constant",                             "1.380649e-23",     "J·K⁻¹",       "exact",            "2026-03-14");
+    PUSH_CONSTANT_CODATA("Compton wavelength",                             "2.4263102367e-12", "m",           "0.0000000011e-12", "2016-03-28");
+    PUSH_CONSTANT_CODATA("Compton wavelength over 2 pi",                   "386.15926764e-15", "m",           "0.00000018e-15",   "2016-03-28");
+    PUSH_CONSTANT_CODATA("Electron-volt",                                  "1.602176634e-19",  "J",           "exact",            "2026-03-14");
+    PUSH_CONSTANT_CODATA("Faraday Constant",                               "96485.33212",      "C·mol⁻¹",     "exact",            "2026-03-14");
+    PUSH_CONSTANT_CODATA("First Radiation Constant",                       "3.741771852e-16",  "W·m²",        "exact",            "2026-03-14");
+    PUSH_CONSTANT_CODATA("First Radiation Constant for Spectral Radiance", "1.191042972e-16",  "W·m²·sr⁻¹",   "exact",            "2026-03-14");
+    PUSH_CONSTANT_CODATA("Gas Constant",                                   "8.314462618",      "J·K⁻¹·mol⁻¹", "exact",            "2026-03-14");
+    PUSH_CONSTANT_CODATA("Loschmidt constant (273.15 K, 100 kPa)",         "2.6516467e25",     "m⁻³",         "0.0000015e25",     "2016-03-28");
+    PUSH_CONSTANT_CODATA("Loschmidt constant (273.15 K, 101.325 kPa)",     "2.6867811e25",     "m⁻³",         "0.0000015e25",     "2016-03-28");
+    PUSH_CONSTANT_CODATA("Molar Planck Constant",                          "3.990312712e-10",  "J·s·mol⁻¹",   "exact",            "2026-03-14");
+    PUSH_CONSTANT_CODATA("Second Radiation Constant",                      "1.438776877e-2",   "m·K",         "exact",            "2026-03-14");
+    PUSH_CONSTANT_CODATA("Stefan-Boltzmann Constant",                      "5.670374419e-8",   "W·m⁻²·K⁻⁴",   "exact",            "2026-03-14");
+    PUSH_CONSTANT_CODATA("{220} Lattice Spacing of Silicon",               "192.0155714e-12",  "m",           "0.0000032e-12",    "2016-03-28");
 
     // Astronomy.
     PUSH_CONSTANT("Astronomical Unit",      "149597870691",       "m");
@@ -432,120 +431,120 @@ void Constants::Private::populate()
     PUSH_CONSTANT_NO_UNIT("Julian Year",    "365.25");
     PUSH_CONSTANT_NO_UNIT("Sidereal Year",  "365.2564");
     PUSH_CONSTANT_NO_UNIT("Tropical Year",  "365.2422");
-    PUSH_CONSTANT("Earth Mass",             "5.9736e24", "kg");
-    PUSH_CONSTANT("Mean Earth Radius",      "6371000",   "m");
-    PUSH_CONSTANT("Sun Mass",               "1.9891e30", "kg");
-    PUSH_CONSTANT("Sun Radius",             "6.96265e8", "m");
-    PUSH_CONSTANT("Sun Luminosity",         "3.827e26",  "W");
+    PUSH_CONSTANT("Earth Mass",             "5.9736e24",          "kg");
+    PUSH_CONSTANT("Mean Earth Radius",      "6371000",            "m");
+    PUSH_CONSTANT("Sun Mass",               "1.9891e30",          "kg");
+    PUSH_CONSTANT("Sun Radius",             "6.96265e8",          "m");
+    PUSH_CONSTANT("Sun Luminosity",         "3.827e26",           "W");
 
     // Molar Masses
-    PUSH_CONSTANT("Aluminium",    "26.9815386",  "g/mol");
-    PUSH_CONSTANT("Antimony",     "121.760",     "g/mol");
-    PUSH_CONSTANT("Argon",        "39.948",      "g/mol");
-    PUSH_CONSTANT("Arsenic",      "74.92160",    "g/mol");
-    PUSH_CONSTANT("Barium",       "137.327",     "g/mol");
-    PUSH_CONSTANT("Beryllium",    "9.012182",    "g/mol");
-    PUSH_CONSTANT("Bismuth",      "208.98040",   "g/mol");
-    PUSH_CONSTANT("Boron",        "10.811",      "g/mol");
-    PUSH_CONSTANT("Bromine",      "79.904",      "g/mol");
-    PUSH_CONSTANT("Cadmium",      "112.411",     "g/mol");
-    PUSH_CONSTANT("Caesium",      "132.9054519", "g/mol");
-    PUSH_CONSTANT("Calcium",      "40.078",      "g/mol");
-    PUSH_CONSTANT("Carbon",       "12.0107",     "g/mol");
-    PUSH_CONSTANT("Cerium",       "140.116",     "g/mol");
-    PUSH_CONSTANT("Chlorine",     "35.453",      "g/mol");
-    PUSH_CONSTANT("Chromium",     "51.9961",     "g/mol");
-    PUSH_CONSTANT("Cobalt",       "58.933195",   "g/mol");
-    PUSH_CONSTANT("Copper",       "63.546",      "g/mol");
-    PUSH_CONSTANT("Dysprosium",   "162.500",     "g/mol");
-    PUSH_CONSTANT("Erbium",       "167.259",     "g/mol");
-    PUSH_CONSTANT("Europium",     "151.964",     "g/mol");
-    PUSH_CONSTANT("Fluorine",     "18.9984032",  "g/mol");
-    PUSH_CONSTANT("Gadolinium",   "157.25",      "g/mol");
-    PUSH_CONSTANT("Gallium",      "69.723",      "g/mol");
-    PUSH_CONSTANT("Germanium",    "72.64",       "g/mol");
-    PUSH_CONSTANT("Gold",         "196.966569",  "g/mol");
-    PUSH_CONSTANT("Hafnium",      "178.49",      "g/mol");
-    PUSH_CONSTANT("Helium",       "4.002602",    "g/mol");
-    PUSH_CONSTANT("Holmium",      "164.93032",   "g/mol");
-    PUSH_CONSTANT("Hydrogen",     "1.00794",     "g/mol");
-    PUSH_CONSTANT("Indium",       "114.818",     "g/mol");
-    PUSH_CONSTANT("Iodine",       "126.90447",   "g/mol");
-    PUSH_CONSTANT("Iridium",      "192.217",     "g/mol");
-    PUSH_CONSTANT("Iron",         "55.845",      "g/mol");
-    PUSH_CONSTANT("Krypton",      "83.798",      "g/mol");
-    PUSH_CONSTANT("Lanthanum",    "138.90547",   "g/mol");
-    PUSH_CONSTANT("Lead",         "207.2",       "g/mol");
-    PUSH_CONSTANT("Lithium",      "6.941",       "g/mol");
-    PUSH_CONSTANT("Lutetium",     "174.9668",    "g/mol");
-    PUSH_CONSTANT("Magnesium",    "24.3050",     "g/mol");
-    PUSH_CONSTANT("Manganese",    "54.938045",   "g/mol");
-    PUSH_CONSTANT("Mercury",      "200.59",      "g/mol");
-    PUSH_CONSTANT("Molybdenum",   "95.96",       "g/mol");
-    PUSH_CONSTANT("Neodymium",    "144.242",     "g/mol");
-    PUSH_CONSTANT("Neon",         "20.1797",     "g/mol");
-    PUSH_CONSTANT("Nickel",       "58.6934",     "g/mol");
-    PUSH_CONSTANT("Niobium",      "92.90638",    "g/mol");
-    PUSH_CONSTANT("Nitrogen",     "14.0067",     "g/mol");
-    PUSH_CONSTANT("Osmium",       "190.23",      "g/mol");
-    PUSH_CONSTANT("Oxygen",       "15.9994",     "g/mol");
-    PUSH_CONSTANT("Palladium",    "106.42",      "g/mol");
-    PUSH_CONSTANT("Phosphorus",   "30.973762",   "g/mol");
-    PUSH_CONSTANT("Platinum",     "195.084",     "g/mol");
-    PUSH_CONSTANT("Potassium",    "39.0983",     "g/mol");
-    PUSH_CONSTANT("Praseodymium", "140.90765",   "g/mol");
-    PUSH_CONSTANT("Protactinium", "231.03588",   "g/mol");
-    PUSH_CONSTANT("Rhenium",      "186.207",     "g/mol");
-    PUSH_CONSTANT("Rhodium",      "102.90549",   "g/mol");
-    PUSH_CONSTANT("Rubidium",     "85.4678",     "g/mol");
-    PUSH_CONSTANT("Ruthenium",    "101.07",      "g/mol");
-    PUSH_CONSTANT("Samarium",     "150.36",      "g/mol");
-    PUSH_CONSTANT("Scandium",     "44.955912",   "g/mol");
-    PUSH_CONSTANT("Selenium",     "78.96",       "g/mol");
-    PUSH_CONSTANT("Silicon",      "28.0855",     "g/mol");
-    PUSH_CONSTANT("Silver",       "107.8682",    "g/mol");
-    PUSH_CONSTANT("Sodium",       "22.98976928", "g/mol");
-    PUSH_CONSTANT("Strontium",    "87.62",       "g/mol");
-    PUSH_CONSTANT("Sulfur",       "32.065",      "g/mol");
-    PUSH_CONSTANT("Tantalum",     "180.94788",   "g/mol");
-    PUSH_CONSTANT("Tellurium",    "127.60",      "g/mol");
-    PUSH_CONSTANT("Terbium",      "158.92535",   "g/mol");
-    PUSH_CONSTANT("Thallium",     "204.3833",    "g/mol");
-    PUSH_CONSTANT("Thorium",      "232.03806",   "g/mol");
-    PUSH_CONSTANT("Thulium",      "168.93421",   "g/mol");
-    PUSH_CONSTANT("Tin",          "118.710",     "g/mol");
-    PUSH_CONSTANT("Titanium",     "47.867",      "g/mol");
-    PUSH_CONSTANT("Tungsten",     "183.84",      "g/mol");
-    PUSH_CONSTANT("Uranium",      "238.02891",   "g/mol");
-    PUSH_CONSTANT("Vanadium",     "51.9961",     "g/mol");
-    PUSH_CONSTANT("Xenon",        "131.293",     "g/mol");
-    PUSH_CONSTANT("Ytterbium",    "173.054",     "g/mol");
-    PUSH_CONSTANT("Yttrium",      "88.90585",    "g/mol");
-    PUSH_CONSTANT("Zinc",         "65.38",       "g/mol");
-    PUSH_CONSTANT("Zirconium",    "91.224",      "g/mol");
+    PUSH_CONSTANT("Aluminium",    "26.9815386",  "g·mol⁻¹");
+    PUSH_CONSTANT("Antimony",     "121.760",     "g·mol⁻¹");
+    PUSH_CONSTANT("Argon",        "39.948",      "g·mol⁻¹");
+    PUSH_CONSTANT("Arsenic",      "74.92160",    "g·mol⁻¹");
+    PUSH_CONSTANT("Barium",       "137.327",     "g·mol⁻¹");
+    PUSH_CONSTANT("Beryllium",    "9.012182",    "g·mol⁻¹");
+    PUSH_CONSTANT("Bismuth",      "208.98040",   "g·mol⁻¹");
+    PUSH_CONSTANT("Boron",        "10.811",      "g·mol⁻¹");
+    PUSH_CONSTANT("Bromine",      "79.904",      "g·mol⁻¹");
+    PUSH_CONSTANT("Cadmium",      "112.411",     "g·mol⁻¹");
+    PUSH_CONSTANT("Caesium",      "132.9054519", "g·mol⁻¹");
+    PUSH_CONSTANT("Calcium",      "40.078",      "g·mol⁻¹");
+    PUSH_CONSTANT("Carbon",       "12.0107",     "g·mol⁻¹");
+    PUSH_CONSTANT("Cerium",       "140.116",     "g·mol⁻¹");
+    PUSH_CONSTANT("Chlorine",     "35.453",      "g·mol⁻¹");
+    PUSH_CONSTANT("Chromium",     "51.9961",     "g·mol⁻¹");
+    PUSH_CONSTANT("Cobalt",       "58.933195",   "g·mol⁻¹");
+    PUSH_CONSTANT("Copper",       "63.546",      "g·mol⁻¹");
+    PUSH_CONSTANT("Dysprosium",   "162.500",     "g·mol⁻¹");
+    PUSH_CONSTANT("Erbium",       "167.259",     "g·mol⁻¹");
+    PUSH_CONSTANT("Europium",     "151.964",     "g·mol⁻¹");
+    PUSH_CONSTANT("Fluorine",     "18.9984032",  "g·mol⁻¹");
+    PUSH_CONSTANT("Gadolinium",   "157.25",      "g·mol⁻¹");
+    PUSH_CONSTANT("Gallium",      "69.723",      "g·mol⁻¹");
+    PUSH_CONSTANT("Germanium",    "72.64",       "g·mol⁻¹");
+    PUSH_CONSTANT("Gold",         "196.966569",  "g·mol⁻¹");
+    PUSH_CONSTANT("Hafnium",      "178.49",      "g·mol⁻¹");
+    PUSH_CONSTANT("Helium",       "4.002602",    "g·mol⁻¹");
+    PUSH_CONSTANT("Holmium",      "164.93032",   "g·mol⁻¹");
+    PUSH_CONSTANT("Hydrogen",     "1.00794",     "g·mol⁻¹");
+    PUSH_CONSTANT("Indium",       "114.818",     "g·mol⁻¹");
+    PUSH_CONSTANT("Iodine",       "126.90447",   "g·mol⁻¹");
+    PUSH_CONSTANT("Iridium",      "192.217",     "g·mol⁻¹");
+    PUSH_CONSTANT("Iron",         "55.845",      "g·mol⁻¹");
+    PUSH_CONSTANT("Krypton",      "83.798",      "g·mol⁻¹");
+    PUSH_CONSTANT("Lanthanum",    "138.90547",   "g·mol⁻¹");
+    PUSH_CONSTANT("Lead",         "207.2",       "g·mol⁻¹");
+    PUSH_CONSTANT("Lithium",      "6.941",       "g·mol⁻¹");
+    PUSH_CONSTANT("Lutetium",     "174.9668",    "g·mol⁻¹");
+    PUSH_CONSTANT("Magnesium",    "24.3050",     "g·mol⁻¹");
+    PUSH_CONSTANT("Manganese",    "54.938045",   "g·mol⁻¹");
+    PUSH_CONSTANT("Mercury",      "200.59",      "g·mol⁻¹");
+    PUSH_CONSTANT("Molybdenum",   "95.96",       "g·mol⁻¹");
+    PUSH_CONSTANT("Neodymium",    "144.242",     "g·mol⁻¹");
+    PUSH_CONSTANT("Neon",         "20.1797",     "g·mol⁻¹");
+    PUSH_CONSTANT("Nickel",       "58.6934",     "g·mol⁻¹");
+    PUSH_CONSTANT("Niobium",      "92.90638",    "g·mol⁻¹");
+    PUSH_CONSTANT("Nitrogen",     "14.0067",     "g·mol⁻¹");
+    PUSH_CONSTANT("Osmium",       "190.23",      "g·mol⁻¹");
+    PUSH_CONSTANT("Oxygen",       "15.9994",     "g·mol⁻¹");
+    PUSH_CONSTANT("Palladium",    "106.42",      "g·mol⁻¹");
+    PUSH_CONSTANT("Phosphorus",   "30.973762",   "g·mol⁻¹");
+    PUSH_CONSTANT("Platinum",     "195.084",     "g·mol⁻¹");
+    PUSH_CONSTANT("Potassium",    "39.0983",     "g·mol⁻¹");
+    PUSH_CONSTANT("Praseodymium", "140.90765",   "g·mol⁻¹");
+    PUSH_CONSTANT("Protactinium", "231.03588",   "g·mol⁻¹");
+    PUSH_CONSTANT("Rhenium",      "186.207",     "g·mol⁻¹");
+    PUSH_CONSTANT("Rhodium",      "102.90549",   "g·mol⁻¹");
+    PUSH_CONSTANT("Rubidium",     "85.4678",     "g·mol⁻¹");
+    PUSH_CONSTANT("Ruthenium",    "101.07",      "g·mol⁻¹");
+    PUSH_CONSTANT("Samarium",     "150.36",      "g·mol⁻¹");
+    PUSH_CONSTANT("Scandium",     "44.955912",   "g·mol⁻¹");
+    PUSH_CONSTANT("Selenium",     "78.96",       "g·mol⁻¹");
+    PUSH_CONSTANT("Silicon",      "28.0855",     "g·mol⁻¹");
+    PUSH_CONSTANT("Silver",       "107.8682",    "g·mol⁻¹");
+    PUSH_CONSTANT("Sodium",       "22.98976928", "g·mol⁻¹");
+    PUSH_CONSTANT("Strontium",    "87.62",       "g·mol⁻¹");
+    PUSH_CONSTANT("Sulfur",       "32.065",      "g·mol⁻¹");
+    PUSH_CONSTANT("Tantalum",     "180.94788",   "g·mol⁻¹");
+    PUSH_CONSTANT("Tellurium",    "127.60",      "g·mol⁻¹");
+    PUSH_CONSTANT("Terbium",      "158.92535",   "g·mol⁻¹");
+    PUSH_CONSTANT("Thallium",     "204.3833",    "g·mol⁻¹");
+    PUSH_CONSTANT("Thorium",      "232.03806",   "g·mol⁻¹");
+    PUSH_CONSTANT("Thulium",      "168.93421",   "g·mol⁻¹");
+    PUSH_CONSTANT("Tin",          "118.710",     "g·mol⁻¹");
+    PUSH_CONSTANT("Titanium",     "47.867",      "g·mol⁻¹");
+    PUSH_CONSTANT("Tungsten",     "183.84",      "g·mol⁻¹");
+    PUSH_CONSTANT("Uranium",      "238.02891",   "g·mol⁻¹");
+    PUSH_CONSTANT("Vanadium",     "51.9961",     "g·mol⁻¹");
+    PUSH_CONSTANT("Xenon",        "131.293",     "g·mol⁻¹");
+    PUSH_CONSTANT("Ytterbium",    "173.054",     "g·mol⁻¹");
+    PUSH_CONSTANT("Yttrium",      "88.90585",    "g·mol⁻¹");
+    PUSH_CONSTANT("Zinc",         "65.38",       "g·mol⁻¹");
+    PUSH_CONSTANT("Zirconium",    "91.224",      "g·mol⁻¹");
 
     // Particle Masses
     // Leptons
-    PUSH_CONSTANT_CODATA("Electron Mass", "0.5109989461", "MeV/c²", "0.0000000031", "2016-03-28");
-    PUSH_CONSTANT_CODATA("Muon Mass",     "105.6583745",  "MeV/c²", "0.0000024",    "2016-03-28");
-    PUSH_CONSTANT_CODATA("Tau Mass",      "1776.82",      "MeV/c²", "0.16",         "2016-03-28");
+    PUSH_CONSTANT_CODATA("Electron Mass", "0.5109989461", "MeV·c⁻²", "0.0000000031", "2016-03-28");
+    PUSH_CONSTANT_CODATA("Muon Mass",     "105.6583745",  "MeV·c⁻²", "0.0000024",    "2016-03-28");
+    PUSH_CONSTANT_CODATA("Tau Mass",      "1776.82",      "MeV·c⁻²", "0.16",         "2016-03-28");
 
     // Quarks
-    PUSH_CONSTANT("Up-Quark Mass",      "2.3",    "MeV/c²");
-    PUSH_CONSTANT("Down-Quark Mass",    "4.8",    "MeV/c²");
-    PUSH_CONSTANT("Charm-Quark Mass",   "1.275",  "GeV/c²");
-    PUSH_CONSTANT("Strange-Quark Mass", "95",     "MeV/c²");
-    PUSH_CONSTANT("Top-Quark Mass",     "173.21", "GeV/c²");
-    PUSH_CONSTANT("Bottom-Quark Mass",  "4.18",   "GeV/c²");
+    PUSH_CONSTANT("Up-Quark Mass",      "2.3",    "MeV·c⁻²");
+    PUSH_CONSTANT("Down-Quark Mass",    "4.8",    "MeV·c⁻²");
+    PUSH_CONSTANT("Charm-Quark Mass",   "1.275",  "GeV·c⁻²");
+    PUSH_CONSTANT("Strange-Quark Mass", "95",     "MeV·c⁻²");
+    PUSH_CONSTANT("Top-Quark Mass",     "173.21", "GeV·c⁻²");
+    PUSH_CONSTANT("Bottom-Quark Mass",  "4.18",   "GeV·c⁻²");
 
     // Bosons
-    PUSH_CONSTANT("W-Boson Mass",     "80.385" , "GeV/c²");
-    PUSH_CONSTANT("Z-Boson Mass",     "91.1876", "GeV/c²");
-    PUSH_CONSTANT("Higgs-Boson Mass", "125.7",   "GeV/c²");
+    PUSH_CONSTANT("W-Boson Mass",     "80.385" , "GeV·c⁻²");
+    PUSH_CONSTANT("Z-Boson Mass",     "91.1876", "GeV·c⁻²");
+    PUSH_CONSTANT("Higgs-Boson Mass", "125.7",   "GeV·c⁻²");
 
     // Hadrons
-    PUSH_CONSTANT_CODATA("Proton Mass",  "938.2720813", "MeV/c²", "0.0000058", "2016-03-28");
-    PUSH_CONSTANT_CODATA("Neutron Mass", "939.5654133", "MeV/c²", "0.0000058", "2016-03-28");
+    PUSH_CONSTANT_CODATA("Proton Mass",  "938.2720813", "MeV·c⁻²", "0.0000058", "2016-03-28");
+    PUSH_CONSTANT_CODATA("Neutron Mass", "939.5654133", "MeV·c⁻²", "0.0000058", "2016-03-28");
 
     // SI-Units
     PUSH_CONSTANT_CODATA("Electron Mass (SI)", "9.10938356e-31",  "kg", "0.00000011e-31",  "2016-03-28");
