@@ -235,6 +235,7 @@ Editor::Editor(QWidget* parent)
     m_highlighter = new SyntaxHighlighter(this);
     m_matchingTimer = new QTimer(this);
     m_shouldPaintCustomCursor = true;
+    m_historyArrowNavigationEnabled = true;
 
     setViewportMargins(0, 0, 0, 0);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
@@ -342,6 +343,11 @@ bool Editor::isAutoCalcEnabled() const
 void Editor::setAutoCalcEnabled(bool enable)
 {
     m_isAutoCalcEnabled = enable;
+}
+
+void Editor::setHistoryArrowNavigationEnabled(bool enabled)
+{
+    m_historyArrowNavigationEnabled = enabled;
 }
 
 void Editor::checkAutoComplete()
@@ -1079,6 +1085,11 @@ void Editor::keyPressEvent(QKeyEvent* event)
         return;
 
     case Qt::Key_Up:
+        if (!m_historyArrowNavigationEnabled) {
+            QPlainTextEdit::keyPressEvent(event);
+            event->accept();
+            return;
+        }
         if (event->modifiers() & Qt::ShiftModifier)
             emit shiftUpPressed();
         else if (Settings::instance()->upDownArrowBehavior == Settings::UpDownArrowBehaviorAlways
@@ -1091,6 +1102,11 @@ void Editor::keyPressEvent(QKeyEvent* event)
         return;
 
     case Qt::Key_Down:
+        if (!m_historyArrowNavigationEnabled) {
+            QPlainTextEdit::keyPressEvent(event);
+            event->accept();
+            return;
+        }
         if (event->modifiers() & Qt::ShiftModifier)
             emit shiftDownPressed();
         else if (Settings::instance()->upDownArrowBehavior == Settings::UpDownArrowBehaviorAlways

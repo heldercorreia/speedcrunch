@@ -1961,6 +1961,7 @@ void MainWindow::clearHistory()
     m_session->clearHistory();
     m_pendingHistoryEditIndex = -1;
     m_widgets.display->setEditingHistoryIndex(-1);
+    m_widgets.editor->setHistoryArrowNavigationEnabled(true);
     clearEditorAndBitfield();
     emit historyChanged();
 
@@ -3701,6 +3702,7 @@ void MainWindow::evaluateEditorExpression()
         if (m_pendingHistoryEditIndex >= historySize) {
             m_pendingHistoryEditIndex = -1;
             m_widgets.display->setEditingHistoryIndex(-1);
+            m_widgets.editor->setHistoryArrowNavigationEnabled(true);
             m_widgets.editor->clear();
             restoreDisplayScroll();
         } else {
@@ -3720,6 +3722,7 @@ void MainWindow::evaluateEditorExpression()
 
             m_pendingHistoryEditIndex = -1;
             m_widgets.display->setEditingHistoryIndex(-1);
+            m_widgets.editor->setHistoryArrowNavigationEnabled(true);
             emit historyChanged();
             emit variablesChanged();
             emit functionsChanged();
@@ -3780,6 +3783,7 @@ void MainWindow::startHistoryEntryEdit(int index)
 
     m_pendingHistoryEditIndex = index;
     m_widgets.display->setEditingHistoryIndex(index);
+    m_widgets.editor->setHistoryArrowNavigationEnabled(false);
     m_widgets.editor->setText(m_session->historyEntryAt(index).expr());
     m_widgets.editor->setFocus();
     m_widgets.editor->setCursorPosition(m_widgets.editor->text().size());
@@ -3794,6 +3798,7 @@ void MainWindow::cancelHistoryEntryEdit()
     const int previousDisplayScrollValue = m_widgets.display->verticalScrollBar()->value();
     m_pendingHistoryEditIndex = -1;
     m_widgets.display->setEditingHistoryIndex(-1);
+    m_widgets.editor->setHistoryArrowNavigationEnabled(true);
     m_widgets.display->verticalScrollBar()->setValue(previousDisplayScrollValue);
     m_widgets.editor->clear();
     showReadyMessage();
@@ -3863,6 +3868,7 @@ void MainWindow::removeHistoryEntryAt(int index)
     else if (m_pendingHistoryEditIndex > index)
         --m_pendingHistoryEditIndex;
     m_widgets.display->setEditingHistoryIndex(m_pendingHistoryEditIndex);
+    m_widgets.editor->setHistoryArrowNavigationEnabled(m_pendingHistoryEditIndex < 0);
     m_conditions.autoAns = !m_session->historyIsEmpty();
     emit historyChanged();
 }
@@ -3883,6 +3889,7 @@ void MainWindow::removeHistoryEntriesAbove(int index)
             m_pendingHistoryEditIndex -= index;
     }
     m_widgets.display->setEditingHistoryIndex(m_pendingHistoryEditIndex);
+    m_widgets.editor->setHistoryArrowNavigationEnabled(m_pendingHistoryEditIndex < 0);
     m_conditions.autoAns = !m_session->historyIsEmpty();
     emit historyChanged();
 }
@@ -3899,6 +3906,7 @@ void MainWindow::removeHistoryEntriesBelow(int index)
     if (m_pendingHistoryEditIndex > index)
         m_pendingHistoryEditIndex = -1;
     m_widgets.display->setEditingHistoryIndex(m_pendingHistoryEditIndex);
+    m_widgets.editor->setHistoryArrowNavigationEnabled(m_pendingHistoryEditIndex < 0);
     m_conditions.autoAns = !m_session->historyIsEmpty();
     emit historyChanged();
 }

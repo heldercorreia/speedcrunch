@@ -56,6 +56,7 @@ public:
     char radixChar() const;
     void setAutoCalcEnabled(bool);
     void setAutoCompletionEnabled(bool);
+    void setHistoryArrowNavigationEnabled(bool enabled);
     void setCursorPosition(int pos);
     void setText(const QString&);
     void stopAutoCalc();
@@ -136,6 +137,7 @@ private:
     int m_currentHistoryIndex;
     QTimer* m_matchingTimer;
     bool m_shouldPaintCustomCursor;
+    bool m_historyArrowNavigationEnabled;
     const Session * m_session;
 
     void updateHeightForWrappedText();
