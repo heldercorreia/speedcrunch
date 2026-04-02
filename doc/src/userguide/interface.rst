@@ -14,12 +14,21 @@ They can be enabled and disabled via the :menuselection:`View` menu.
     You can help expanding the formula book by posting your requests to the `issue tracker <tracker_>`_.
 
 * Constants
-    The constants widget shows a list of over 150 scientific constants. Just double-click on an entry
-    to paste it into the editor.
+    The constants widget shows a large list of scientific constants (including CODATA-based entries),
+    grouped by category and subcategory.
 
-    .. note::
-       As of version 0.12, the constants have not yet been adapted to make use of the new unit system.
-       All the inserted values thus lack a unit. This is likely to change in a future version.
+    The list columns are:
+
+    * ``Name``
+    * ``Symbol`` (when available)
+    * ``Value``
+    * ``Unit`` (when available)
+    * ``Identifier`` (built-in constant key, typically ``k_*``)
+
+    Use the ``Category`` and ``Subcategory`` selectors to narrow the list.
+    The search field matches by name, symbol, and identifier.
+
+    Double-clicking an entry inserts its ``Identifier`` into the editor.
 
 * User Variables
     The variables widget lists all :ref:`user-defined variables <variables>`. Any of them can be inserted into the editor by double-clicking it.
@@ -110,6 +119,7 @@ The expression editor provides some advanced features:
 * Quick constant insertion
     Press :kbd:`Control+Space` to open a list of constants that allows quick access to the same constants as the constants widget (see above).
     Use the arrow keys to navigate the list. Pressing :kbd:`Escape` will dismiss this popup.
+    Selecting an entry inserts its identifier (for example ``k_speed_of_light_in_vacuum``).
 
   .. _context-help:
 * Context help
@@ -267,7 +277,7 @@ determines the angle format of the arguments.
     .. versionadded:: 1.0
     
 Complex Numbers
-++++++++++++++
++++++++++++++++
 
 Configure global complex-number behavior via
 :menuselection:`Settings --> Complex Numbers`.
@@ -443,6 +453,7 @@ Editing
       expression fits in one visual line; otherwise, it moves the cursor.
 
     .. versionadded:: 1.0
+
 User Interface Settings
 +++++++++++++++++++++++
 
@@ -526,7 +537,7 @@ Scrolling
 
 
 Notation
-++++++
+++++++++
 
 * :kbd:`F2`
     Set result notation to automatic decimal.

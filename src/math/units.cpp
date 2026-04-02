@@ -19,11 +19,81 @@
 
 #include "units.h"
 
+#include "core/unicodechars.h"
 #include "quantity.h"
 #include "rational.h"
 
 #include <QString>
 #include <QStringList>
+#include <QSet>
+
+namespace {
+
+const QMap<QString, QString>& s_unitShortNames()
+{
+    static const QMap<QString, QString> names = {
+        {"meter", "m"},
+        {"second", "s"},
+        {"kilogram", "kg"},
+        {"ampere", "A"},
+        {"mole", "mol"},
+        {"candela", "cd"},
+        {"kelvin", "K"},
+        {"bit", "b"},
+        {"byte", "B"},
+        {"sqmeter", "m2"},
+        {"cbmeter", "m3"},
+        {"newton", "N"},
+        {"hertz", "Hz"},
+        {"joule", "J"},
+        {"watt", "W"},
+        {"pascal", "Pa"},
+        {"coulomb", "C"},
+        {"volt", "V"},
+        {"ohm", QString::fromUtf8("Ω")},
+        {"farad", "F"},
+        {"tesla", "T"},
+        {"weber", "Wb"},
+        {"henry", "H"},
+        {"siemens", "S"},
+        {"becquerel", "Bq"},
+        {"gray", "Gy"},
+        {"sievert", "Sv"},
+        {"katal", "kat"},
+        {"steradian", "sr"},
+        {"lumen", "lm"},
+        {"lux", "lx"},
+        {"metric_ton", "t"},
+        {"gram", "g"},
+        {"liter", "L"},
+        {"electronvolt", "eV"},
+        {"degree", QString(UnicodeChars::DegreeSign)},
+        {"deg", QString(UnicodeChars::DegreeSign)}
+    };
+    return names;
+}
+
+const QList<QPair<QString, QString>>& s_siPrefixSymbols()
+{
+    static const QList<QPair<QString, QString>> prefixes = {
+        {"quecto", "q"}, {"ronto", "r"}, {"yocto", "y"}, {"zepto", "z"},
+        {"atto", "a"}, {"femto", "f"}, {"pico", "p"}, {"nano", "n"},
+        {"micro", QString::fromUtf8("µ")}, {"milli", "m"}, {"centi", "c"}, {"deci", "d"},
+        {"deca", "da"}, {"hecto", "h"}, {"kilo", "k"}, {"mega", "M"},
+        {"giga", "G"}, {"tera", "T"}, {"peta", "P"}, {"exa", "E"},
+        {"zetta", "Z"}, {"yotta", "Y"}, {"ronna", "R"}, {"quetta", "Q"}
+    };
+    return prefixes;
+}
+
+bool isUnitIdentifierChar(const QChar& ch)
+{
+    return ch.isLetterOrNumber() || ch == QChar('_')
+           || ch == QChar(0x00B5) // µ
+           || ch == QChar(0x03A9); // Ω
+}
+
+} // namespace
 
 #define UNIT_CACHE(name, value) \
     const Quantity Units::name() \
@@ -61,36 +131,41 @@ void Units::pushUnit(Quantity q, QString name)
 void Units::initTable()
 {
     m_matchLookup.clear();
-    pushUnit(joule(), "newton meter");                          // energy or torque
+    pushUnit(joule(), "joule");                                 // energy
     pushUnit(newton(), "newton");                               // force
     pushUnit(watt(), "watt");                                   // power
     pushUnit(pascal(), "pascal");                               // pressure or energy density
     pushUnit(coulomb(), "coulomb");                             // charge
     pushUnit(volt(), "volt");                                   // electrical potential
+    pushUnit(volt()*volt()*ampere(), "volt² ampere");           // canonical mixed electrical-power form
+    pushUnit(volt()*volt()/ampere(), "volt² ampere⁻¹");         // canonical electrical mixed form
     pushUnit(ohm(), "ohm");                                     // el. resistance
     pushUnit(siemens(), "siemens");                             // el. conductance
     pushUnit(ohm()*meter(), "ohm meter");                       // el. resistivity
-    pushUnit(siemens()/meter(), "siemens/meter");               // el. conductivity
-    pushUnit(siemens()/meter()/mole(), "siemens/(meter mole)"); // molar conductivity
+    pushUnit(siemens()/meter(), "siemens meter⁻¹");             // el. conductivity
+    pushUnit(siemens()/meter()/mole(), "siemens meter⁻¹ mole⁻¹"); // molar conductivity
     pushUnit(farad(), "farad");                                 // capacitance
     pushUnit(tesla(), "tesla");                                 // magnetic flux density
     pushUnit(weber(), "weber");                                 // magnetic flux
     pushUnit(henry(), "henry");                                 // inductance
-    pushUnit(coulomb()/cbmeter(), "coulomb/meter³");            // electric charge density
-    pushUnit(coulomb()/sqmeter(), "coulomb/meter²");            // surface charge density or el. flux
-    pushUnit(coulomb()/kilogram(), "coulomb/kilogram");         // exposure
-    pushUnit(farad()/meter(), "farad/meter");                   // permittivity
-    pushUnit(henry()/meter(), "henry/meter");                   // permeability
-    pushUnit(joule()/kilogram()/kelvin(),"joule/(kilogram kelvin)");    // specific heat capacity
-    pushUnit(joule()/mole()/kelvin(), "joule/(mole kelvin");            // molar heat capacity
-    pushUnit(mole()/second()/cbmeter(), "mole/(second meter³)");        // catalytic activity
-    pushUnit(newton()/meter(), "newton/meter");                 // surface tension
+    pushUnit(coulomb()/cbmeter(), "coulomb meter⁻³");           // electric charge density
+    pushUnit(coulomb()/sqmeter(), "coulomb meter⁻²");           // surface charge density or el. flux
+    pushUnit(coulomb()/kilogram(), "coulomb kilogram⁻¹");       // exposure
+    pushUnit(farad()/meter(), "farad meter⁻¹");                 // permittivity
+    pushUnit(henry()/meter(), "henry meter⁻¹");                 // permeability
+    pushUnit(Quantity(1)/meter()/tesla(), "meter⁻¹ tesla⁻¹");   // inverse meter per tesla
+    pushUnit(joule()/kilogram()/kelvin(), "joule kilogram⁻¹ kelvin⁻¹"); // specific heat capacity
+    pushUnit(joule()/mole()/kelvin(), "joule mole⁻¹ kelvin⁻¹");         // molar heat capacity
+    pushUnit(mole()/second()/cbmeter(), "mole second⁻¹ meter⁻³");       // catalytic activity
+    pushUnit(newton()/meter(), "newton meter⁻¹");               // surface tension
     pushUnit(pascal()*second(), "pascal second");               // dynamic viscosity
-    pushUnit(volt()/meter(), "volt/meter");                     // el. field
-    pushUnit(watt()/meter()/kelvin(), "watt/(meter kelvin)");   // thermal conductivity
+    pushUnit(volt()/meter(), "volt meter⁻¹");                   // el. field
+    pushUnit(watt()/meter()/kelvin(), "watt meter⁻¹ kelvin⁻¹"); // thermal conductivity
     pushUnit(watt()/sqmeter(), "watt/meter²");                  // heat flux
     pushUnit(joule()/kelvin(), "joule/kelvin");                 // entropy or heat capacity
     pushUnit(joule()/kilogram(), "joule/kilogram");             // specific energy
+    pushUnit(kilogram()*sqmeter()*volt()/(second()*second()*second()*second()),
+             "kilogram meter² volt second⁻⁴");                  // canonical mixed base+derived form
 }
 
 void Units::findUnit(Quantity& q)
@@ -102,16 +177,49 @@ void Units::findUnit(Quantity& q)
     if (m_matchLookup.isEmpty())
         initTable();
 
-    // Match derived units.
-    if (m_matchLookup.contains(q.getDimension())) {
-        Unit temp(m_matchLookup[q.getDimension()]);
-        q.setDisplayUnit(temp.value.numericValue(), temp.name);
+    const QMap<QString, Rational> dim = q.getDimension();
+    // Policy: only auto-canonicalize dimensions that map to a single,
+    // overwhelmingly standard named unit without major semantic collision.
+    // Example: N·m is intentionally kept explicit in multiplication code
+    // (see Quantity::operator*) and only becomes J on explicit conversion.
+    // These denylist entries intentionally keep expressions expanded to
+    // avoid silently choosing one meaning among multiple valid ones.
+    const auto denyAutoCanonicalization = [&](const QString& candidateName,
+                                              const QMap<QString, Rational>& candidateDim) {
+        auto makeDim = [](std::initializer_list<std::pair<const char*, int>> items) {
+            QMap<QString, Rational> d;
+            for (const auto& item : items)
+                d.insert(QString::fromLatin1(item.first), Rational(item.second));
+            return d;
+        };
+
+        static const QMap<QString, Rational> perSecondDim =
+            makeDim({{"time", -1}});
+        static const QMap<QString, Rational> specificEnergyDim =
+            makeDim({{"length", 2}, {"time", -2}});
+
+        const QString name = candidateName.toLower();
+        if ((name == QLatin1String("hertz") || name == QLatin1String("becquerel"))
+            && candidateDim == perSecondDim)
+        {
+            return true;
+        }
+        if ((name == QLatin1String("gray") || name == QLatin1String("sievert"))
+            && candidateDim == specificEnergyDim)
+        {
+            return true;
+        }
+        return false;
+    };
+    if (m_matchLookup.contains(dim)) {
+        Unit temp(m_matchLookup[dim]);
+        // For denylisted dimensions, keep base/compound form instead of forcing
+        // a potentially ambiguous derived-unit name.
+        if (!denyAutoCanonicalization(temp.name, dim))
+            q.setDisplayUnit(temp.value.numericValue(), temp.name);
     } else {
-        // Autogenerate unit name (product of base units).
-        auto dimension = q.getDimension();
-        auto i = dimension.constBegin();
-        while (i != dimension.constEnd()) {
-            auto exponent = i.value().toString();
+        const auto superscriptFromExponent = [](const Rational& value) {
+            QString exponent = value.toString();
             if (exponent.contains('/'))
                 exponent = "^(" + exponent+')';
             else if (exponent == "1")
@@ -119,208 +227,582 @@ void Units::findUnit(Quantity& q)
             else
                 exponent = '^' + exponent;
 
-            if (exponent == QLatin1String("^0")) exponent = QString::fromUtf8("⁰");
-            else if (exponent == QLatin1String("^2")) exponent = QString::fromUtf8("²");
-            else if (exponent == QLatin1String("^3")) exponent = QString::fromUtf8("³");
-            else if (exponent == QLatin1String("^4")) exponent = QString::fromUtf8("⁴") ;
-            else if (exponent == QLatin1String("^5")) exponent = QString::fromUtf8("⁵") ;
-            else if (exponent == QLatin1String("^6")) exponent = QString::fromUtf8("⁶") ;
-            else if (exponent == QLatin1String("^7")) exponent = QString::fromUtf8("⁷") ;
-            else if (exponent == QLatin1String("^8")) exponent = QString::fromUtf8("⁸") ;
-            else if (exponent == QLatin1String("^9")) exponent = QString::fromUtf8("⁹") ;
-            else if (exponent == QLatin1String("^-1")) exponent = QString::fromUtf8("⁻¹");
-            else if (exponent == QLatin1String("^-2")) exponent = QString::fromUtf8("⁻²");
-            else if (exponent == QLatin1String("^-3")) exponent = QString::fromUtf8("⁻³");
-            else if (exponent == QLatin1String("^-4")) exponent = QString::fromUtf8("⁻⁴") ;
-            else if (exponent == QLatin1String("^-5")) exponent = QString::fromUtf8("⁻⁵") ;
-            else if (exponent == QLatin1String("^-6")) exponent = QString::fromUtf8("⁻⁶") ;
-            else if (exponent == QLatin1String("^-7")) exponent = QString::fromUtf8("⁻⁷") ;
-            else if (exponent == QLatin1String("^-8")) exponent = QString::fromUtf8("⁻⁸") ;
-            else if (exponent == QLatin1String("^-9")) exponent = QString::fromUtf8("⁻⁹") ;
+            if (exponent == QLatin1String("^0")) return QString::fromUtf8("⁰");
+            if (exponent == QLatin1String("^2")) return QString::fromUtf8("²");
+            if (exponent == QLatin1String("^3")) return QString::fromUtf8("³");
+            if (exponent == QLatin1String("^4")) return QString::fromUtf8("⁴");
+            if (exponent == QLatin1String("^5")) return QString::fromUtf8("⁵");
+            if (exponent == QLatin1String("^6")) return QString::fromUtf8("⁶");
+            if (exponent == QLatin1String("^7")) return QString::fromUtf8("⁷");
+            if (exponent == QLatin1String("^8")) return QString::fromUtf8("⁸");
+            if (exponent == QLatin1String("^9")) return QString::fromUtf8("⁹");
+            if (exponent == QLatin1String("^-1")) return QString::fromUtf8("⁻¹");
+            if (exponent == QLatin1String("^-2")) return QString::fromUtf8("⁻²");
+            if (exponent == QLatin1String("^-3")) return QString::fromUtf8("⁻³");
+            if (exponent == QLatin1String("^-4")) return QString::fromUtf8("⁻⁴");
+            if (exponent == QLatin1String("^-5")) return QString::fromUtf8("⁻⁵");
+            if (exponent == QLatin1String("^-6")) return QString::fromUtf8("⁻⁶");
+            if (exponent == QLatin1String("^-7")) return QString::fromUtf8("⁻⁷");
+            if (exponent == QLatin1String("^-8")) return QString::fromUtf8("⁻⁸");
+            if (exponent == QLatin1String("^-9")) return QString::fromUtf8("⁻⁹");
+            return exponent;
+        };
 
-            // TODO: Replace this with a lookup to a repository.
-            if (i.key() == "length")
-                unit_name += " meter";
-            else if (i.key() == "time")
-                unit_name += " second";
-            else if (i.key() == "mass")
-                unit_name += " kilogram";
-            else if (i.key() == "el. current")
-                unit_name += " ampere";
-            else if (i.key() == "amount")
-                unit_name += " mole";
-            else if (i.key() == "luminous intensity")
-                unit_name += " candela";
-            else if (i.key() == "temperature")
-                unit_name += " kelvin";
-            else if (i.key() == "information")
-                unit_name += " bit";
-            else
-                unit_name += " " + i.key(); // fall back to the dimension name
-            unit_name += exponent;
-            ++i;
+        struct UnitFactor {
+            QString name;
+            Rational exponent;
+        };
+
+        QList<UnitFactor> factors;
+        const auto appendFactor = [&](const QString& name, const Rational& exponent) {
+            factors.append(UnitFactor{name, exponent});
+        };
+
+        // Prefer recognizable derived SI units before base-unit fallback.
+        QMap<QString, Rational> remaining = q.getDimension();
+        static const QList<Unit> derivedCandidates = {
+            Unit("tesla", tesla()),
+            Unit("weber", weber()),
+            Unit("henry", henry()),
+            Unit("farad", farad()),
+            Unit("ohm", ohm()),
+            Unit("siemens", siemens()),
+            Unit("volt", volt()),
+            Unit("coulomb", coulomb()),
+            Unit("joule", joule()),
+            Unit("newton", newton()),
+            Unit("pascal", pascal()),
+            Unit("watt", watt()),
+            Unit("hertz", hertz()),
+            Unit("becquerel", becquerel()),
+            Unit("gray", gray()),
+            Unit("sievert", sievert()),
+            Unit("katal", katal()),
+            Unit("lumen", lumen()),
+            Unit("lux", lux()),
+            Unit("steradian", steradian())
+        };
+
+        bool progress = true;
+        while (progress) {
+            progress = false;
+            for (const Unit& candidate : derivedCandidates) {
+                Quantity qc(candidate.value);
+                qc.cleanDimension();
+                const auto cdim = qc.getDimension();
+                if (cdim.isEmpty() || cdim.size() < 2)
+                    continue;
+
+                bool firstRatio = true;
+                Rational ratio;
+                bool fits = true;
+                for (auto it = cdim.constBegin(); it != cdim.constEnd(); ++it) {
+                    if (!remaining.contains(it.key())) {
+                        fits = false;
+                        break;
+                    }
+                    const Rational rv = remaining.value(it.key());
+                    const Rational cv = it.value();
+                    Rational r(rv.numerator() * cv.denominator(),
+                               rv.denominator() * cv.numerator());
+                    if (firstRatio) {
+                        ratio = r;
+                        firstRatio = false;
+                    } else if (r != ratio) {
+                        fits = false;
+                        break;
+                    }
+                }
+
+                if (!fits || firstRatio || ratio.isZero() || ratio.denominator() != 1)
+                    continue;
+
+                const Rational ratioInt(ratio.numerator(), 1);
+                for (auto it = cdim.constBegin(); it != cdim.constEnd(); ++it) {
+                    const QString key = it.key();
+                    remaining[key] -= ratioInt * it.value();
+                    if (remaining[key].isZero())
+                        remaining.remove(key);
+                }
+                if (!denyAutoCanonicalization(candidate.name, qc.getDimension()))
+                    appendFactor(candidate.name, ratioInt);
+                else {
+                    // Keep base-unit expansion for denied automatic canonicalizations.
+                    // Revert the tentative reduction and continue searching.
+                    for (auto it = cdim.constBegin(); it != cdim.constEnd(); ++it) {
+                        const QString key = it.key();
+                        remaining[key] += ratioInt * it.value();
+                        if (remaining[key].isZero())
+                            remaining.remove(key);
+                    }
+                    continue;
+                }
+                progress = true;
+                break;
+            }
         }
+
+        // Keep auto-generated base-unit products in canonical output order:
+        // kilogram, meter, second, ampere, kelvin, mole, candela, information.
+        // (Angle units such as radian/steradian are represented explicitly when used.)
+        const QStringList preferredOrder = {
+            "mass",
+            "length",
+            "time",
+            "el. current",
+            "temperature",
+            "amount",
+            "luminous intensity",
+            "information"
+        };
+
+        auto appendDimension = [&](const QString& key, const Rational& value) {
+            if (key == "length")
+                appendFactor("meter", value);
+            else if (key == "time")
+                appendFactor("second", value);
+            else if (key == "mass")
+                appendFactor("kilogram", value);
+            else if (key == "el. current")
+                appendFactor("ampere", value);
+            else if (key == "amount")
+                appendFactor("mole", value);
+            else if (key == "luminous intensity")
+                appendFactor("candela", value);
+            else if (key == "temperature")
+                appendFactor("kelvin", value);
+            else if (key == "information")
+                appendFactor("byte", value);
+            else
+                appendFactor(key, value);
+        };
+
+        for (const QString& key : preferredOrder) {
+            if (remaining.contains(key))
+                appendDimension(key, remaining.value(key));
+        }
+        for (auto i = remaining.constBegin(); i != remaining.constEnd(); ++i) {
+            if (!preferredOrder.contains(i.key()))
+                appendDimension(i.key(), i.value());
+        }
+        // Rendering policy for auto-generated unit products:
+        // 1) If there is at least one positive exponent, render negative exponents
+        //    in the denominator (for readability and textbook familiarity).
+        //    Example: kilogram⋅meter⋅second⁻¹ -> kilogram⋅meter / second.
+        // 2) If there are no positive exponents, keep pure inverse form with
+        //    negative superscripts to avoid "1 / ..." noise.
+        //    Example: second⁻¹ (not 1 / second).
+        //
+        // This policy only changes presentation. It does not affect dimensions.
+        QStringList numeratorTerms;
+        QStringList denominatorTerms;
+        const Rational zero(0);
+
+        for (const UnitFactor& factor : factors) {
+            if (factor.exponent > zero) {
+                numeratorTerms << (factor.name + superscriptFromExponent(factor.exponent));
+            } else if (factor.exponent < zero) {
+                const Rational absExponent(-factor.exponent.numerator(),
+                                           factor.exponent.denominator());
+                denominatorTerms << (factor.name + superscriptFromExponent(absExponent));
+            }
+        }
+
+        const QString numeratorText = numeratorTerms.join(QString::fromUtf8("⋅"));
+        const QString denominatorText = denominatorTerms.join(QString::fromUtf8("⋅"));
+        if (!numeratorTerms.isEmpty() && !denominatorTerms.isEmpty()) {
+            unit_name = ' ' + numeratorText + " / ";
+            if (denominatorTerms.size() > 1)
+                unit_name += '(' + denominatorText + ')';
+            else
+                unit_name += denominatorText;
+        } else if (!numeratorTerms.isEmpty()) {
+            unit_name = ' ' + numeratorText;
+        } else if (!denominatorTerms.isEmpty()) {
+            // Keep inverse-only units in exponent form (s⁻¹, m⁻¹⋅s⁻², ...).
+            QStringList inverseTerms;
+            for (const UnitFactor& factor : factors) {
+                if (factor.exponent < zero)
+                    inverseTerms << (factor.name + superscriptFromExponent(factor.exponent));
+            }
+            unit_name = ' ' + inverseTerms.join(QString::fromUtf8("⋅"));
+        }
+
         q.setDisplayUnit(unit, unit_name.trimmed());
     }
 }
 
-#define ADD_UNIT(name) result.append(Unit(#name, name()))
-#define ADD_UNIT_ALIAS(name, alias) result.append(Unit(#alias, name()))
-
 // This list contains the units that wil be set as builtin variables by the evaluator.
 const QList<Unit> Units::getList()
 {
+    enum SiPrefixPolicy {
+        NoSiPrefixes = 0,
+        PositiveSiPrefixes = 1 << 0,
+        NegativeSiPrefixes = 1 << 1
+    };
+    struct UnitAliasSpec {
+        QString longName;
+        Quantity value;
+        QString shortName;
+        QString alternateShortName;
+        SiPrefixPolicy siPrefixPolicy;
+    };
+    struct PrefixSpec {
+        QString longName;
+        QString symbol;
+        int power;
+        Quantity value;
+    };
+
     QList<Unit> result;
+    QSet<QString> seenNames;
+    QList<UnitAliasSpec> unitAliasSpecs;
 
-    ADD_UNIT(meter);
-    ADD_UNIT(second);
-    ADD_UNIT(kilogram);
-    ADD_UNIT(ampere);
-    ADD_UNIT(mole);
-    ADD_UNIT(candela);
-    ADD_UNIT(kelvin);
-    ADD_UNIT(bit);
+    const auto addUnique = [&](const QString& name, const Quantity& value) {
+        if (name.isEmpty() || seenNames.contains(name))
+            return;
+        result.append(Unit(name, value));
+        seenNames.insert(name);
+    };
+    const auto addBareUnit = [&](const QString& name, const Quantity& value) {
+        addUnique(name, value);
+    };
+    const auto addUnitWithAliasesImpl = [&](const QString& name,
+                                            const Quantity& value,
+                                            const QString& shortName,
+                                            const QString& alternateShortName,
+                                            SiPrefixPolicy siPrefixPolicy = static_cast<SiPrefixPolicy>(
+                                                PositiveSiPrefixes | NegativeSiPrefixes)) {
+        addUnique(name, value);
+        if (!shortName.isEmpty())
+            addUnique(shortName, value);
+        if (!alternateShortName.isEmpty())
+            addUnique(alternateShortName, value);
 
-    ADD_UNIT(yocto);
-    ADD_UNIT(zepto);
-    ADD_UNIT(atto);
-    ADD_UNIT(femto);
-    ADD_UNIT(pico);
-    ADD_UNIT(nano);
-    ADD_UNIT(micro);
-    ADD_UNIT(milli);
-    ADD_UNIT(centi);
-    ADD_UNIT(deci);
-    ADD_UNIT(deca);
-    ADD_UNIT(hecto);
-    ADD_UNIT(kilo);
-    ADD_UNIT(mega);
-    ADD_UNIT(giga);
-    ADD_UNIT(tera);
-    ADD_UNIT(peta);
-    ADD_UNIT(exa);
-    ADD_UNIT(zetta);
-    ADD_UNIT(yotta);
-    ADD_UNIT(kibi);
-    ADD_UNIT(mebi);
-    ADD_UNIT(gibi);
-    ADD_UNIT(tebi);
-    ADD_UNIT(pebi);
-    ADD_UNIT(exbi);
-    ADD_UNIT(zebi);
-    ADD_UNIT(yobi);
+        UnitAliasSpec unitSpec = {
+            name, value, shortName, alternateShortName, siPrefixPolicy
+        };
+        unitAliasSpecs.append(unitSpec);
+    };
+    const auto addUnit = [&](const QString& name,
+                             const Quantity& value,
+                             const QString& shortName = QString(),
+                             SiPrefixPolicy siPrefixPolicy = static_cast<SiPrefixPolicy>(
+                                 PositiveSiPrefixes | NegativeSiPrefixes)) {
+        addUnitWithAliasesImpl(name, value, shortName, QString(), siPrefixPolicy);
+    };
+    const auto addUnitWithAliases = [&](const QString& name,
+                                        const Quantity& value,
+                                        const QString& shortName,
+                                        const QString& alternateShortName) {
+        addUnitWithAliasesImpl(name,
+                               value,
+                               shortName,
+                               alternateShortName,
+                               static_cast<SiPrefixPolicy>(PositiveSiPrefixes | NegativeSiPrefixes));
+    };
 
-    ADD_UNIT(sqmeter);
-    ADD_UNIT(cbmeter);
-    ADD_UNIT(newton);
-    ADD_UNIT(hertz);
-    ADD_UNIT(joule);
-    ADD_UNIT(watt);
-    ADD_UNIT(pascal);
-    ADD_UNIT(coulomb);
-    ADD_UNIT(volt);
-    ADD_UNIT(ohm);
-    ADD_UNIT(farad);
-    ADD_UNIT(tesla);
-    ADD_UNIT(weber);
-    ADD_UNIT(henry);
-    ADD_UNIT(siemens);
-    ADD_UNIT(becquerel);
-    ADD_UNIT(gray);
-    ADD_UNIT(sievert);
-    ADD_UNIT(katal);
-    ADD_UNIT(steradian);
-    ADD_UNIT(lumen);
-    ADD_UNIT(lux);
+    // Dimension primitives used by the unit system:
+    // SI base units plus one internal primitive for information quantities.
+    addUnit("meter", meter(), "m");
+    addUnit("second", second(), "s");
+    addUnit("kilogram", kilogram(), "kg");
+    addUnit("ampere", ampere(), "A");
+    addUnit("mole", mole(), "mol");
+    addUnit("candela", candela(), "cd");
+    addUnit("kelvin", kelvin(), "K");
+    addUnit("bit", bit(), "b", PositiveSiPrefixes);
 
-    ADD_UNIT(metric_ton);
-    ADD_UNIT(short_ton);
-    ADD_UNIT(long_ton);
-    ADD_UNIT(pound);
-    ADD_UNIT(ounce);
-    ADD_UNIT(grain);
-    ADD_UNIT(gram);
-    ADD_UNIT(atomic_mass_unit);
-    ADD_UNIT(carat);
+    // SI decimal prefixes (long-form names and selected symbol aliases).
+    addBareUnit("quecto", quecto());
+    addBareUnit("ronto", ronto());
+    addBareUnit("yocto", yocto());
+    addBareUnit("zepto", zepto());
+    addBareUnit("atto", atto());
+    addBareUnit("femto", femto());
+    addBareUnit("pico", pico());
+    addBareUnit("nano", nano());
+    addBareUnit("micro", micro());
+    addBareUnit("milli", milli());
+    addBareUnit("centi", centi());
+    addBareUnit("deci", deci());
+    addBareUnit("deca", deca());
+    addBareUnit("hecto", hecto());
+    addBareUnit("kilo", kilo());
+    addBareUnit("mega", mega());
+    addBareUnit("giga", giga());
+    addBareUnit("tera", tera());
+    addBareUnit("peta", peta());
+    addBareUnit("exa", exa());
+    addBareUnit("zetta", zetta());
+    addBareUnit("yotta", yotta());
+    addBareUnit("ronna", ronna());
+    addBareUnit("quetta", quetta());
+    addBareUnit("µ", micro());
+    addBareUnit("μ", micro());
 
-    ADD_UNIT(micron);
-    ADD_UNIT(angstrom);
-    ADD_UNIT(astronomical_unit);
-    ADD_UNIT(lightyear);
-    ADD_UNIT(lightsecond);
-    ADD_UNIT(lightminute);
-    ADD_UNIT(parsec);
-    ADD_UNIT(inch);
-    ADD_UNIT(foot);
-    ADD_UNIT(yard);
-    ADD_UNIT(mile);
-    ADD_UNIT(rod);
-    ADD_UNIT(furlong);
-    ADD_UNIT(fathom);
-    ADD_UNIT(nautical_mile);
-    ADD_UNIT(cable);
+    // Binary prefixes (IEC).
+    addBareUnit("kibi", kibi());
+    addBareUnit("mebi", mebi());
+    addBareUnit("gibi", gibi());
+    addBareUnit("tebi", tebi());
+    addBareUnit("pebi", pebi());
+    addBareUnit("exbi", exbi());
+    addBareUnit("zebi", zebi());
+    addBareUnit("yobi", yobi());
 
-    ADD_UNIT(UK_gallon);
-    ADD_UNIT(US_gallon);
-    ADD_UNIT_ALIAS(US_gallon, gallon_US);
-    ADD_UNIT_ALIAS(UK_gallon, gallon_UK);
-    ADD_UNIT_ALIAS(UK_gallon, imperial_gallon);
-    ADD_UNIT(UK_quart);
-    ADD_UNIT(US_quart);
-    ADD_UNIT_ALIAS(US_quart, quart_US);
-    ADD_UNIT_ALIAS(UK_quart, quart_UK);
-    ADD_UNIT(UK_pint);
-    ADD_UNIT(US_pint);
-    ADD_UNIT_ALIAS(US_pint, pint_US);
-    ADD_UNIT_ALIAS(UK_pint, pint_UK);
-    ADD_UNIT(UK_fluid_ounce);
-    ADD_UNIT(US_fluid_ounce);
-    ADD_UNIT_ALIAS(US_fluid_ounce, fluid_ounce_US);
-    ADD_UNIT_ALIAS(UK_fluid_ounce, fluid_ounce_UK);
-    ADD_UNIT(liter);
+    // SI-derived and geometric units.
+    addUnit("sqmeter", sqmeter(), "m2");
+    addUnit("cbmeter", cbmeter(), "m3");
+    addUnit("newton", newton(), "N");
+    addUnit("hertz", hertz(), "Hz");
+    addUnit("joule", joule(), "J");
+    addUnit("watt", watt(), "W");
+    addUnit("pascal", pascal(), "Pa");
+    addUnit("coulomb", coulomb(), "C");
+    addUnit("volt", volt(), "V");
+    addUnit("ohm", ohm(), QString::fromUtf8("Ω"));
+    addUnit("farad", farad(), "F");
+    addUnit("tesla", tesla(), "T");
+    addUnit("weber", weber(), "Wb");
+    addUnit("henry", henry(), "H");
+    addUnit("siemens", siemens(), "S");
+    addUnit("becquerel", becquerel(), "Bq");
+    addUnit("gray", gray(), "Gy");
+    addUnit("sievert", sievert(), "Sv");
+    addUnit("katal", katal(), "kat");
+    addUnit("steradian", steradian(), "sr");
+    addUnit("lumen", lumen(), "lm");
+    addUnit("lux", lux(), "lx");
 
-    ADD_UNIT(minute);
-    ADD_UNIT(hour);
-    ADD_UNIT(day);
-    ADD_UNIT(week);
-    ADD_UNIT(julian_year);
-    ADD_UNIT(tropical_year);
-    ADD_UNIT(sidereal_year);
-    ADD_UNIT_ALIAS(julian_year, year_julian);
-    ADD_UNIT_ALIAS(tropical_year, year_tropical);
-    ADD_UNIT_ALIAS(sidereal_year, year_sidereal);
+    // Mass units.
+    addUnit("metric_ton", metric_ton(), "t");
+    addUnit("short_ton", short_ton(), QString(), NoSiPrefixes);
+    addUnit("long_ton", long_ton(), QString(), NoSiPrefixes);
+    addUnit("pound", pound(), "lb", NoSiPrefixes);
+    addUnit("ounce", ounce(), "oz", NoSiPrefixes);
+    addUnit("grain", grain(), "gr", NoSiPrefixes);
+    addUnit("gram", gram(), "g");
+    addUnit("atomic_mass_unit", atomic_mass_unit(), "u", NoSiPrefixes);
+    addUnit("dalton", atomic_mass_unit(), "Da", NoSiPrefixes);
+    addUnit("carat", carat(), "ct", NoSiPrefixes);
 
-    ADD_UNIT(percent);
-    ADD_UNIT(ppm);
-    ADD_UNIT(ppb);
-    ADD_UNIT(karat);
+    // Length units.
+    addUnit("micron", micron(), QString::fromUtf8("µm"), NoSiPrefixes);
+    addUnit("angstrom", angstrom(), QString::fromUtf8("Å"), NoSiPrefixes);
+    addUnit("astronomical_unit", astronomical_unit(), "au", NoSiPrefixes);
+    addUnit("lightyear", lightyear(), "ly", NoSiPrefixes);
+    addUnit("lightsecond", lightsecond(), "ls", NoSiPrefixes);
+    addUnit("lightminute", lightminute(), "lmin", NoSiPrefixes);
+    addUnit("parsec", parsec(), "pc", PositiveSiPrefixes);
+    addUnit("inch", inch(), QString(), NoSiPrefixes);
+    addUnit("foot", foot(), "ft", NoSiPrefixes);
+    addUnit("yard", yard(), "yd", NoSiPrefixes);
+    addUnit("mile", mile(), "mi", NoSiPrefixes);
+    addUnit("rod", rod(), "rd", NoSiPrefixes);
+    addUnit("furlong", furlong(), "fur", NoSiPrefixes);
+    addUnit("fathom", fathom(), "fth", NoSiPrefixes);
+    addUnit("nautical_mile", nautical_mile(), "nmi", NoSiPrefixes);
+    addUnit("cable", cable(), "cab", NoSiPrefixes);
 
-    ADD_UNIT(bar);
-    ADD_UNIT(atmosphere);
-    ADD_UNIT(torr);
-    ADD_UNIT(pounds_per_sqinch);
+    // Volume units.
+    addUnit("UK_gallon", UK_gallon(), QString(), NoSiPrefixes);
+    addUnit("US_gallon", US_gallon(), "gal", NoSiPrefixes);
+    addBareUnit("gallon_US", US_gallon());
+    addBareUnit("gallon_UK", UK_gallon());
+    addBareUnit("imperial_gallon", UK_gallon());
+    addUnit("UK_quart", UK_quart(), QString(), NoSiPrefixes);
+    addUnit("US_quart", US_quart(), "qt", NoSiPrefixes);
+    addBareUnit("quart_US", US_quart());
+    addBareUnit("quart_UK", UK_quart());
+    addUnit("UK_pint", UK_pint(), QString(), NoSiPrefixes);
+    addUnit("US_pint", US_pint(), "pt", NoSiPrefixes);
+    addBareUnit("pint_US", US_pint());
+    addBareUnit("pint_UK", UK_pint());
+    addUnit("UK_fluid_ounce", UK_fluid_ounce(), QString(), NoSiPrefixes);
+    addUnit("US_fluid_ounce", US_fluid_ounce(), "fl_oz", NoSiPrefixes);
+    addBareUnit("fluid_ounce_US", US_fluid_ounce());
+    addBareUnit("fluid_ounce_UK", UK_fluid_ounce());
+    addUnitWithAliases("liter", liter(), "L", "l");
 
-    ADD_UNIT(electron_volt);
-    ADD_UNIT(calorie);
-    ADD_UNIT(british_thermal_unit);
+    // Time units.
+    addUnit("minute", minute(), "min", NoSiPrefixes);
+    addUnit("hour", hour(), "h", NoSiPrefixes);
+    addUnit("day", day(), "d", NoSiPrefixes);
+    addUnit("week", week(), "wk", NoSiPrefixes);
+    addUnit("century", century(), "cy", NoSiPrefixes);
+    addUnit("julian_year", julian_year(), QString(), NoSiPrefixes);
+    addUnit("tropical_year", tropical_year(), QString(), NoSiPrefixes);
+    addUnit("sidereal_year", sidereal_year(), QString(), NoSiPrefixes);
+    addBareUnit("year_julian", julian_year());
+    addBareUnit("year_tropical", tropical_year());
+    addBareUnit("year_sidereal", sidereal_year());
 
-    ADD_UNIT(nat);
-    ADD_UNIT(hartley);
-    ADD_UNIT(byte);
+    // Fractional / concentration-like units.
+    addUnit("percent", percent(), QString(), NoSiPrefixes);
+    addUnit("ppm", ppm(), QString(), NoSiPrefixes);
+    addUnit("ppb", ppb(), QString(), NoSiPrefixes);
+    addUnit("karat", karat(), "Kt", NoSiPrefixes);
 
-    ADD_UNIT(tablespoon);
-    ADD_UNIT(teaspoon);
-    ADD_UNIT(cup);
+    // Pressure units.
+    addUnit("bar", bar(), "bar");
+    addUnit("atmosphere", atmosphere(), "atm", NoSiPrefixes);
+    addUnit("torr", torr(), "Torr", NoSiPrefixes);
+    addUnit("pounds_per_sqinch", pounds_per_sqinch(), "psi", NoSiPrefixes);
 
-    ADD_UNIT(gravity);
-    ADD_UNIT_ALIAS(gravity, force);
-    ADD_UNIT(speed_of_light);
-    ADD_UNIT(speed_of_sound_STP);
-    ADD_UNIT(elementary_charge);
-    ADD_UNIT(knot);
-    ADD_UNIT(horsepower);
+    // Energy units.
+    addUnit("electronvolt", electronvolt(), "eV");
+    addUnit("electron_volt", electronvolt());
+    addUnit("calorie", calorie(), "cal", NoSiPrefixes);
+    addUnit("british_thermal_unit", british_thermal_unit(), "BTU", NoSiPrefixes);
+    Quantity hartreeEnergy = HNumber("4.3597447222060e-18") * joule();
+    hartreeEnergy.setDisplayUnit(joule().numericValue(), "joule");
+    addUnit("hartree_energy_unit", hartreeEnergy, "Eh", NoSiPrefixes);
+
+    // Information units.
+    addUnit("nat", nat(), "nat", NoSiPrefixes);
+    addUnit("hartley", hartley(), "Hart", NoSiPrefixes);
+    addUnit("byte", byte(), "B", PositiveSiPrefixes);
+
+    // Cooking units.
+    addUnit("tablespoon", tablespoon(), "tbsp", NoSiPrefixes);
+    addUnit("teaspoon", teaspoon(), "tsp", NoSiPrefixes);
+    addUnit("cup", cup(), "cup", NoSiPrefixes);
+
+    // Miscellaneous derived constants/units.
+    addBareUnit("gravity", gravity());
+    addBareUnit("force", gravity());
+    addBareUnit("speed_of_light", speed_of_light());
+    addBareUnit("speed_of_sound_STP", speed_of_sound_STP());
+    addBareUnit("elementary_charge", elementary_charge());
+    addUnit("knot", knot(), "kn", NoSiPrefixes);
+    addUnit("horsepower", horsepower(), "hp", NoSiPrefixes);
+
+    // Automatic SI-prefixed aliases for every prefixable unit.
+    const QList<PrefixSpec> siPrefixes = {
+        {"quecto", "q", -30, quecto()},
+        {"ronto", "r", -27, ronto()},
+        {"yocto", "y", -24, yocto()},
+        {"zepto", "z", -21, zepto()},
+        {"atto", "a", -18, atto()},
+        {"femto", "f", -15, femto()},
+        {"pico", "p", -12, pico()},
+        {"nano", "n", -9, nano()},
+        {"micro", QString::fromUtf8("µ"), -6, micro()},
+        {"milli", "m", -3, milli()},
+        {"centi", "c", -2, centi()},
+        {"deci", "d", -1, deci()},
+        {"deca", "da", 1, deca()},
+        {"hecto", "h", 2, hecto()},
+        {"kilo", "k", 3, kilo()},
+        {"mega", "M", 6, mega()},
+        {"giga", "G", 9, giga()},
+        {"tera", "T", 12, tera()},
+        {"peta", "P", 15, peta()},
+        {"exa", "E", 18, exa()},
+        {"zetta", "Z", 21, zetta()},
+        {"yotta", "Y", 24, yotta()},
+        {"ronna", "R", 27, ronna()},
+        {"quetta", "Q", 30, quetta()}
+    };
+
+    for (const PrefixSpec& prefix : siPrefixes) {
+        for (const UnitAliasSpec& unit : unitAliasSpecs) {
+            if (prefix.power > 0 && !(unit.siPrefixPolicy & PositiveSiPrefixes))
+                continue;
+            if (prefix.power < 0 && !(unit.siPrefixPolicy & NegativeSiPrefixes))
+                continue;
+            const Quantity prefixedValue = prefix.value * unit.value;
+            addUnique(prefix.longName + unit.longName, prefixedValue);
+            if (!unit.shortName.isEmpty())
+                addUnique(prefix.symbol + unit.shortName, prefixedValue);
+            if (!unit.alternateShortName.isEmpty())
+                addUnique(prefix.symbol + unit.alternateShortName, prefixedValue);
+        }
+    }
 
     return result;
+}
+
+QString Units::shortDisplayName(const QString& name)
+{
+    const QString trimmed = name.trimmed();
+    if (trimmed.isEmpty())
+        return trimmed;
+
+    int suffixStart = trimmed.size();
+    while (suffixStart > 0) {
+        const QChar ch = trimmed.at(suffixStart - 1);
+        const bool isSuperscriptDigit =
+            ch == QChar(0x00B2) || ch == QChar(0x00B3)
+            || (ch.unicode() >= 0x2070 && ch.unicode() <= 0x2079);
+        const bool isSuperscriptSign = ch == QChar(0x207B) || ch == QChar(0x207A);
+        if (!isSuperscriptDigit && !isSuperscriptSign)
+            break;
+        --suffixStart;
+    }
+    const QString baseName = trimmed.left(suffixStart);
+    const QString exponentSuffix = trimmed.mid(suffixStart);
+
+    const auto& shortNames = s_unitShortNames();
+    if (shortNames.contains(baseName))
+        return shortNames.value(baseName) + exponentSuffix;
+
+    // Collapse long SI-prefixed unit names (e.g. millivolt -> mV).
+    const auto& prefixes = s_siPrefixSymbols();
+    for (const auto& prefix : prefixes) {
+        const QString& prefixLong = prefix.first;
+        if (!baseName.startsWith(prefixLong))
+            continue;
+
+        const QString base = baseName.mid(prefixLong.size());
+        if (shortNames.contains(base))
+            return prefix.second + shortNames.value(base) + exponentSuffix;
+    }
+
+    return trimmed;
+}
+
+QString Units::formatUnitTokenForDisplay(const QString& token)
+{
+    QString display = shortDisplayName(token);
+    if (display.size() >= 2) {
+        const QChar last = display.at(display.size() - 1);
+        if ((last == QLatin1Char('2') || last == QLatin1Char('3'))
+            && display.at(display.size() - 2).isLetter()) {
+            display.chop(1);
+            display += (last == QLatin1Char('2')) ? QChar(0x00B2) : QChar(0x00B3);
+        }
+    }
+    return display;
+}
+
+QString Units::normalizeUnitTextForDisplay(const QString& text)
+{
+    if (text.isEmpty())
+        return text;
+
+    QString normalized;
+    normalized.reserve(text.size());
+
+    for (int i = 0; i < text.size();) {
+        const QChar ch = text.at(i);
+        if (!isUnitIdentifierChar(ch)) {
+            normalized.append(ch);
+            ++i;
+            continue;
+        }
+
+        int j = i + 1;
+        while (j < text.size() && isUnitIdentifierChar(text.at(j)))
+            ++j;
+
+        const QString token = text.mid(i, j - i);
+        normalized.append(formatUnitTokenForDisplay(token));
+        i = j;
+    }
+
+    return normalized;
 }
 
 BASE_UNIT_CACHE(meter, "length")
@@ -330,8 +812,11 @@ BASE_UNIT_CACHE(ampere, "el. current")
 BASE_UNIT_CACHE(mole, "amount")
 BASE_UNIT_CACHE(kelvin, "temperature")
 BASE_UNIT_CACHE(candela, "luminous intensity")
-BASE_UNIT_CACHE(bit, "information")
+// Internal primitive for the information dimension (not an SI base unit).
+BASE_UNIT_CACHE(byte, "information")
 
+UNIT_CACHE(quecto, HNumber("1e-30"))
+UNIT_CACHE(ronto, HNumber("1e-27"))
 UNIT_CACHE(yocto, HNumber("1e-24"))
 UNIT_CACHE(zepto, HNumber("1e-21"))
 UNIT_CACHE(atto, HNumber("1e-18"))
@@ -353,6 +838,8 @@ UNIT_CACHE(peta, HNumber("1e15"))
 UNIT_CACHE(exa, HNumber("1e18"))
 UNIT_CACHE(zetta, HNumber("1e21"))
 UNIT_CACHE(yotta, HNumber("1e24"))
+UNIT_CACHE(ronna, HNumber("1e27"))
+UNIT_CACHE(quetta, HNumber("1e30"))
 
 UNIT_CACHE(kibi, HNumber("1024"))
 UNIT_CACHE(mebi, kibi()*kibi())
@@ -394,7 +881,7 @@ UNIT_CACHE(ounce,               pound() / HNumber(16))
 UNIT_CACHE(grain,               pound() / HNumber(7000))
 UNIT_CACHE(short_ton,           HNumber(2000) * pound())
 UNIT_CACHE(long_ton,            HNumber(2240) * pound())
-UNIT_CACHE(atomic_mass_unit,    HNumber("1.660539040e-27") * kilogram()) // http://physics.nist.gov/cgi-bin/cuu/Value?tukg
+UNIT_CACHE(atomic_mass_unit,    HNumber("1.66053906892e-27") * kilogram()) // CODATA 2022: https://physics.nist.gov/cgi-bin/cuu/Value?ukg
 UNIT_CACHE(carat,               HNumber(200) * milli()*gram()) // Do not confuse with karat below.
 
 UNIT_CACHE(micron,              micro()*meter())
@@ -433,9 +920,10 @@ UNIT_CACHE(minute,              HNumber(60) * second())
 UNIT_CACHE(hour,                HNumber(60) * minute())
 UNIT_CACHE(day,                 HNumber(24) * hour())
 UNIT_CACHE(week,                HNumber(7) * day())
+UNIT_CACHE(century,             HNumber(100) * julian_year())
 UNIT_CACHE(julian_year,         HNumber("365.25") * day())
-UNIT_CACHE(tropical_year,       HNumber("365.24219") * day()) // Approx.: changes over time due to Earth's precession.
-UNIT_CACHE(sidereal_year,       HNumber("365.25636") * day()) // http://hpiers.obspm.fr/eop-pc/models/constants.html
+UNIT_CACHE(tropical_year,       HNumber("365.242190402") * day()) // Approx.: changes over time due to Earth's precession.
+UNIT_CACHE(sidereal_year,       HNumber("365.256363004") * day()) // http://hpiers.obspm.fr/eop-pc/models/constants.html
 
 UNIT_CACHE(percent,             HNumber("0.01"))
 UNIT_CACHE(ppm,                 HNumber("1e-6"))
@@ -447,13 +935,13 @@ UNIT_CACHE(atmosphere,          HNumber("1.01325") * bar())
 UNIT_CACHE(torr,                atmosphere() / HNumber(760))
 UNIT_CACHE(pounds_per_sqinch,   pound() * gravity() / (inch()*inch()))
 
-UNIT_CACHE(electron_volt,       elementary_charge() * volt())
-UNIT_CACHE(calorie,             HNumber("4.1868") * joule()) // International Table calorie.
+UNIT_CACHE(electronvolt,        elementary_charge() * volt())
+UNIT_CACHE(calorie,             HNumber("4.184") * joule()) // International Table calorie.
 UNIT_CACHE(british_thermal_unit, HNumber("1055.056") * joule()) // International standard ISO 31-4.
 
 UNIT_CACHE(nat,                 bit() / HMath::ln(2))
 UNIT_CACHE(hartley,             HMath::ln(10) * nat())
-UNIT_CACHE(byte,                HNumber(8) * bit())
+UNIT_CACHE(bit,                 byte() / HNumber(8))
 
 UNIT_CACHE(tablespoon,          HNumber(15) * milli()*liter())
 UNIT_CACHE(teaspoon,            HNumber(5) * milli()*liter())
@@ -461,7 +949,7 @@ UNIT_CACHE(cup,                 HNumber(240) * milli()*liter())
 
 UNIT_CACHE(gravity,             HNumber("9.80665") * newton() / kilogram()) // 3rd CGPM (1901, CR 70).
 UNIT_CACHE(speed_of_light,      HNumber(299792458) * meter() / second())
-UNIT_CACHE(elementary_charge,   HNumber("1.6021766208e-19") * coulomb()) // http://physics.nist.gov/cgi-bin/cuu/Value?e
+UNIT_CACHE(elementary_charge,   HNumber("1.602176634e-19") * coulomb()) // CODATA 2022: https://physics.nist.gov/cgi-bin/cuu/Value?e
 UNIT_CACHE(speed_of_sound_STP,  HNumber(331) * meter()/second())
 UNIT_CACHE(knot,                nautical_mile()/hour())
 UNIT_CACHE(horsepower,          HNumber(550) * foot() * pound() * gravity() / second()) // Imperial horsepower.

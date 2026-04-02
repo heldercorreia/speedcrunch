@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301, USA.
 
 #include "core/evaluator.h"
+#include "core/constants.h"
 #include "core/regexpatterns.h"
 #include "core/session.h"
 #include "core/settings.h"
@@ -31,6 +32,7 @@
 #include "math/units.h"
 
 #include <QCoreApplication>
+#include <QHash>
 #include <QRegularExpression>
 #include <QStack>
 #include <cmath>
@@ -40,6 +42,13 @@
 
 static constexpr int MAX_PRECEDENCE = INT_MAX;
 static constexpr int INVALID_PRECEDENCE = INT_MIN;
+
+static bool isSubscriptDigit(QChar ch);
+static bool isSubscriptLetter(QChar ch);
+static bool isIdentifierStart(QChar ch);
+static bool isIdentifierContinue(QChar ch);
+static bool isSuperscriptDigit(QChar ch);
+static QString superscriptDigitsToAscii(const QString& text);
 
 #ifdef EVALUATOR_DEBUG
 #include <QDebug>
@@ -63,6 +72,58 @@ static void s_deleteEvaluator()
 static bool s_isSigmaFunctionIdentifier(const QString& identifier)
 {
     return FunctionRepo::instance()->isIdentifierAliasOf(identifier, QStringLiteral("sigma"));
+}
+
+static QString s_toSuperscriptExponent(int exponent)
+{
+    static const QHash<QChar, QChar> superscriptDigits = {
+        { QLatin1Char('0'), QChar(0x2070) }, // ⁰
+        { QLatin1Char('1'), QChar(0x00B9) }, // ¹
+        { QLatin1Char('2'), QChar(0x00B2) }, // ²
+        { QLatin1Char('3'), QChar(0x00B3) }, // ³
+        { QLatin1Char('4'), QChar(0x2074) }, // ⁴
+        { QLatin1Char('5'), QChar(0x2075) }, // ⁵
+        { QLatin1Char('6'), QChar(0x2076) }, // ⁶
+        { QLatin1Char('7'), QChar(0x2077) }, // ⁷
+        { QLatin1Char('8'), QChar(0x2078) }, // ⁸
+        { QLatin1Char('9'), QChar(0x2079) }  // ⁹
+    };
+
+    QString result;
+    if (exponent < 0)
+        result += QChar(0x207B); // ⁻
+    for (const QChar& digit : QString::number(qAbs(exponent)))
+        result += superscriptDigits.value(digit, digit);
+    return result;
+}
+
+static QString s_renderUnitExponentsAsSuperscripts(QString text)
+{
+    static const QRegularExpression caretExponentRe(
+        QStringLiteral(R"(\^\(([−-]?\d+)\)|\^([−-]?\d+))"));
+
+    int offset = 0;
+    while (true) {
+        const QRegularExpressionMatch match = caretExponentRe.match(text, offset);
+        if (!match.hasMatch())
+            break;
+
+        QString expText = match.captured(1);
+        if (expText.isEmpty())
+            expText = match.captured(2);
+        expText.replace(QChar(0x2212), QLatin1Char('-')); // Unicode minus.
+        bool ok = false;
+        const int exponent = expText.toInt(&ok);
+        if (!ok) {
+            offset = match.capturedEnd();
+            continue;
+        }
+
+        text.replace(match.capturedStart(), match.capturedLength(),
+                     s_toSuperscriptExponent(exponent));
+        offset = match.capturedStart() + 1;
+    }
+    return text;
 }
 
 static bool splitUserFunctionDescription(const QString& expression,
@@ -269,7 +330,7 @@ static bool isDegreeSign(const QChar& ch)
 {
     // Accept both DEGREE SIGN (U+00B0) and MASCULINE ORDINAL INDICATOR
     // (U+00BA), plus other degree-like symbols emitted by some layouts/IMEs.
-    return ch == QChar(0x00B0)  // ° DEGREE SIGN
+    return ch == UnicodeChars::DegreeSign  // ° DEGREE SIGN
            || ch == QChar(0x00BA) // º MASCULINE ORDINAL INDICATOR
            || ch == QChar(0x02DA) // ˚ RING ABOVE
            || ch == QChar(0x2218); // ∘ RING OPERATOR
@@ -1133,10 +1194,10 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
     rendered += normalizedExpression.mid(lastPos);
 
     auto isIdentifierChar = [](const QChar& ch) {
-        return ch == QLatin1Char('_') || ch.isLetterOrNumber();
+        return isIdentifierContinue(ch);
     };
     auto isIdentifierStartChar = [](const QChar& ch) {
-        return ch == QLatin1Char('_') || ch.isLetter();
+        return isIdentifierStart(ch);
     };
     auto isSuperscriptPowerChar = [](const QChar& ch) {
         switch (ch.unicode()) {
@@ -2634,6 +2695,13 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
 
     const QString operatorSpace(UnicodeChars::MediumMathematicalSpace);
     const QString unicodeMinusSign(UnicodeChars::MinusSign);
+    static const QSet<QString> s_unitIdentifiers = []() {
+        QSet<QString> names;
+        const QList<Unit> units = Units::getList();
+        for (const Unit& unit : units)
+            names.insert(unit.name);
+        return names;
+    }();
     QString formatted;
     formatted.reserve(displayExpression.size() + tokens.size() * 2);
 
@@ -2652,9 +2720,12 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
             || op == Token::ArithmeticRightShift;
         const QString operatorText =
             op == Token::Subtraction ? unicodeMinusSign : token.text();
+        const QString displayTokenText = (token.isIdentifier() && s_unitIdentifiers.contains(operatorText))
+            ? Units::formatUnitTokenForDisplay(operatorText)
+            : operatorText;
 
         if (!isSpacingOperator) {
-            formatted += operatorText;
+            formatted += displayTokenText;
             continue;
         }
 
@@ -2665,7 +2736,7 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
         const bool isBinaryOperator = hasLeftOperand && hasRightOperand;
         if (!isBinaryOperator) {
             // Keep unary operators untouched (for example "−pi").
-            formatted += operatorText;
+            formatted += displayTokenText;
             continue;
         }
 
@@ -2686,7 +2757,7 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
         }
 
         formatted += operatorSpace;
-        formatted += operatorText;
+        formatted += displayTokenText;
         formatted += operatorSpace;
     }
 
@@ -2994,14 +3065,98 @@ void Tokens::append(const Token& token)
 }
 #endif // EVALUATOR_DEBUG
 
-// Helper function: return true for valid identifier character.
-static bool isIdentifier(QChar ch)
+static bool isSubscriptDigit(QChar ch)
+{
+    return ch.unicode() >= 0x2080 && ch.unicode() <= 0x2089;
+}
+
+static bool isSuperscriptDigit(QChar ch)
+{
+    switch (ch.unicode()) {
+    case 0x2070: // ⁰
+    case 0x00B9: // ¹
+    case 0x00B2: // ²
+    case 0x00B3: // ³
+    case 0x2074: // ⁴
+    case 0x2075: // ⁵
+    case 0x2076: // ⁶
+    case 0x2077: // ⁷
+    case 0x2078: // ⁸
+    case 0x2079: // ⁹
+        return true;
+    default:
+        return false;
+    }
+}
+
+static QString superscriptDigitsToAscii(const QString& text)
+{
+    QString converted;
+    converted.reserve(text.size());
+    for (const QChar& ch : text) {
+        switch (ch.unicode()) {
+        case 0x2070: converted.append(QLatin1Char('0')); break; // ⁰
+        case 0x00B9: converted.append(QLatin1Char('1')); break; // ¹
+        case 0x00B2: converted.append(QLatin1Char('2')); break; // ²
+        case 0x00B3: converted.append(QLatin1Char('3')); break; // ³
+        case 0x2074: converted.append(QLatin1Char('4')); break; // ⁴
+        case 0x2075: converted.append(QLatin1Char('5')); break; // ⁵
+        case 0x2076: converted.append(QLatin1Char('6')); break; // ⁶
+        case 0x2077: converted.append(QLatin1Char('7')); break; // ⁷
+        case 0x2078: converted.append(QLatin1Char('8')); break; // ⁸
+        case 0x2079: converted.append(QLatin1Char('9')); break; // ⁹
+        default: converted.append(ch); break;
+        }
+    }
+    return converted;
+}
+
+static bool isSubscriptLetter(QChar ch)
+{
+    switch (ch.unicode()) {
+    case 0x2090: // ₐ
+    case 0x2091: // ₑ
+    case 0x2092: // ₒ
+    case 0x2093: // ₓ
+    case 0x2094: // ₔ
+    case 0x2095: // ₕ
+    case 0x2096: // ₖ
+    case 0x2097: // ₗ
+    case 0x2098: // ₘ
+    case 0x2099: // ₙ
+    case 0x209A: // ₚ
+    case 0x209B: // ₛ
+    case 0x209C: // ₜ
+    case 0x1D62: // ᵢ
+    case 0x1D63: // ᵣ
+    case 0x1D64: // ᵤ
+    case 0x1D65: // ᵥ
+    case 0x1D66: // ᵦ
+    case 0x1D67: // ᵧ
+    case 0x1D68: // ᵨ
+    case 0x1D69: // ᵩ
+    case 0x1D6A: // ᵪ
+        return true;
+    default:
+        return false;
+    }
+}
+
+// Helper function: return true for valid identifier start character.
+static bool isIdentifierStart(QChar ch)
 {
     return ch.unicode() == '_'
            || ch.unicode() == '$'
            || ch.isLetter()
+           || isSubscriptLetter(ch)
            || ch == UnicodeChars::SquareRoot
            || ch == UnicodeChars::CubeRoot;
+}
+
+// Helper function: return true for valid identifier continuation character.
+static bool isIdentifierContinue(QChar ch)
+{
+    return isIdentifierStart(ch) || ch.isDigit() || isSubscriptDigit(ch);
 }
 
 // Helper function: return true for valid radix characters.
@@ -3108,7 +3263,9 @@ QString Evaluator::fixNumberRadix(const QString& number)
 HNumber getNumber(const QString& number) {
     if (number.isEmpty())
         return HNumber(0);
-    int endPos = number.indexOf(QRegularExpression("['\":]"));
+    const QString sexagesimalStopChars =
+        QStringLiteral("['\":") + UnicodeChars::Prime + UnicodeChars::DoublePrime + QLatin1Char(']');
+    int endPos = number.indexOf(QRegularExpression(sexagesimalStopChars)); // Stop at sexagesimal separators/markers.
     if (endPos == 0)
         return HNumber(0);
     if (endPos > 0)
@@ -3120,6 +3277,14 @@ QString Evaluator::fixSexagesimal(const QString& number, QString& unit)
 {
     unit.clear();
     QString bad, result = number;
+    const QString minuteMarkClass = QStringLiteral("['") + UnicodeChars::Prime + QLatin1Char(']');
+    const QString secondMarkClass = QStringLiteral("[\"") + UnicodeChars::DoublePrime + QLatin1Char(']');
+    const auto isMinuteMark = [](QChar c) {
+        return c == QChar('\'') || c == UnicodeChars::Prime;
+    };
+    const auto isSecondMark = [](QChar c) {
+        return c == QChar('"') || c == UnicodeChars::DoublePrime;
+    };
 
     bool arc = false;
     int colonCount = 0, degreeCount = 0, minuteCount = 0, secondCount = 0, digitCount = 0;
@@ -3138,14 +3303,14 @@ QString Evaluator::fixSexagesimal(const QString& number, QString& unit)
             if (++colonCount > 2)
                 return bad;
         }
-        else if (c == '\'') {
+        else if (isMinuteMark(c)) {
             if (secondCount)
                 return bad;
             if (++minuteCount > 1)
                 return bad;
             arc = true;
         }
-        else if (c == '"') {
+        else if (isSecondMark(c)) {
             if (degreeCount && !minuteCount)
                 return bad;
             if (++secondCount > 1)
@@ -3167,7 +3332,9 @@ QString Evaluator::fixSexagesimal(const QString& number, QString& unit)
             mains = getNumber(number.left(minPos));    // hours or degrees
             if (mains.isNegative())
                 sign = HNumber(-1);
-            int secPos = number.indexOf(arc ? '\'' : ':', minPos + 1);
+            int secPos = number.indexOf(arc ? QRegularExpression(minuteMarkClass)
+                                            : QRegularExpression(":"),
+                                        minPos + 1);
             if (secPos >= 0) {  // single quote or second colon -> seconds
                 minutes = getNumber(number.mid(minPos + 1));
                 seconds = getNumber(number.mid(secPos + 1));
@@ -3191,7 +3358,7 @@ QString Evaluator::fixSexagesimal(const QString& number, QString& unit)
             }
         }
         else if ( arc ) {
-            int secPos = number.indexOf('\'');
+            int secPos = number.indexOf(QRegularExpression(minuteMarkClass));
             if (secPos >= 0) {  // single quote -> seconds
                 minutes = getNumber(number.left(secPos));
                 if (minutes.isNegative())
@@ -3207,7 +3374,7 @@ QString Evaluator::fixSexagesimal(const QString& number, QString& unit)
                 }
             }
             else {
-                int unitPos = number.indexOf('"');
+                int unitPos = number.indexOf(QRegularExpression(secondMarkClass));
                 if (unitPos >= 0) {  // postfix seconds
                     seconds = getNumber(number.left(unitPos));
                     result = HMath::format(seconds, fixed);
@@ -3215,16 +3382,19 @@ QString Evaluator::fixSexagesimal(const QString& number, QString& unit)
                 }
             }
         }
-        int unitPos = number.indexOf('"');  // check digits after seconds unit
+        int unitPos = number.indexOf(QRegularExpression(secondMarkClass));  // check digits after seconds unit
         if (unitPos >= 0 && !getNumber(number.mid(unitPos + 1)).isZero())
             return bad;
         if (!seconds.isZero() && (!minutes.isInteger() || !mains.isInteger()))
             return bad;
         if (!minutes.isZero() && !mains.isInteger())
             return bad;
+        const bool hasScientificExponent =
+            number.contains(QLatin1Char('e'), Qt::CaseInsensitive);
         int dotNumber = number.lastIndexOf(QRegularExpression("[.,]"));
-        if (dotNumber >= 0) {  // append decimals, remove possible postfix units
-            int minPos = number.indexOf('\''), secPos = number.indexOf('"');
+        if (dotNumber >= 0 && !hasScientificExponent) {  // append decimals, remove possible postfix units
+            int minPos = number.indexOf(QRegularExpression(minuteMarkClass));
+            int secPos = number.indexOf(QRegularExpression(secondMarkClass));
             int unitPos = (secPos >= 0 && secPos < minPos) ? secPos : minPos;
             int dotResult = result.lastIndexOf('.');
             if (dotResult >= 0)  // replace decimals with original ones for accuracy
@@ -3275,7 +3445,35 @@ void Evaluator::initializeBuiltInVariables()
 
     QList<Unit> unitList(Units::getList());
     for (Unit& u : unitList) {
-        setVariable(u.name, u.value, Variable::BuiltIn);
+        Quantity unitValue = u.value;
+        // Preserve display names for units where alias identity or semantic
+        // context matters during expression propagation/canonicalization.
+        const bool isInformationUnit =
+            unitValue.getDimension().contains(QLatin1String("information"));
+        const bool keepDisplayUnit =
+            u.name == QLatin1String("hertz")
+            || u.name == QLatin1String("becquerel")
+            || u.name == QLatin1String("gray")
+            || u.name == QLatin1String("sievert")
+            || u.name == QLatin1String("steradian")
+            || u.name == QLatin1String("sr")
+            || u.name == QLatin1String("pascal")
+            || u.name == QLatin1String("newton")
+            || u.name == QLatin1String("meter")
+            || isInformationUnit;
+        if (keepDisplayUnit)
+            unitValue.setDisplayUnit(u.value.numericValue(), u.name);
+        setVariable(u.name, unitValue, Variable::BuiltIn);
+    }
+    {
+        Quantity hz = Units::hertz();
+        hz.setDisplayUnit(Units::hertz().numericValue(), "hertz");
+        setVariable("Hz", hz, Variable::BuiltIn);
+    }
+    {
+        Quantity bq = Units::becquerel();
+        bq.setDisplayUnit(Units::becquerel().numericValue(), "becquerel");
+        setVariable("Bq", bq, Variable::BuiltIn);
     }
 
     initializeAngleUnits();
@@ -3283,38 +3481,55 @@ void Evaluator::initializeBuiltInVariables()
 
 void Evaluator::initializeAngleUnits()
 {
+    // Explicit radian units are absolute and independent of the selected
+    // global angle mode.
+    {
+        Quantity displayRad(1);
+        displayRad.setDisplayUnit(Quantity(1).numericValue(), "rad");
+        setVariable("radian", displayRad, Variable::BuiltIn);
+        setVariable("rad", displayRad, Variable::BuiltIn);
+    }
+
     if (Settings::instance()->angleUnit == 'r') {
-        setVariable("radian", 1, Variable::BuiltIn);
         setVariable("degree", HMath::pi() / HNumber(180), Variable::BuiltIn);
+        setVariable("deg", HMath::pi() / HNumber(180), Variable::BuiltIn);
         setVariable("gradian", HMath::pi() / HNumber(200), Variable::BuiltIn);
         setVariable("gon", HMath::pi() / HNumber(200), Variable::BuiltIn);
         setVariable("turn", HNumber(2) * HMath::pi(), Variable::BuiltIn);
         setVariable("arcminute", HMath::pi() / HNumber(180) / HNumber(60), Variable::BuiltIn);
         setVariable("arcsecond", HMath::pi() / HNumber(180) / HNumber(3600), Variable::BuiltIn);
+        setVariable("arcmin", HMath::pi() / HNumber(180) / HNumber(60), Variable::BuiltIn);
+        setVariable("arcsec", HMath::pi() / HNumber(180) / HNumber(3600), Variable::BuiltIn);
     } else if (Settings::instance()->angleUnit == 'g') {
-        setVariable("radian", HNumber(200) / HMath::pi(), Variable::BuiltIn);
         setVariable("degree", HNumber(200) / HNumber(180), Variable::BuiltIn);
+        setVariable("deg", HNumber(200) / HNumber(180), Variable::BuiltIn);
         setVariable("gradian", 1, Variable::BuiltIn);
         setVariable("gon", 1, Variable::BuiltIn);
         setVariable("turn", HNumber(400), Variable::BuiltIn);
         setVariable("arcminute", HNumber(200) / HNumber(180) / HNumber(60), Variable::BuiltIn);
         setVariable("arcsecond", HNumber(200) / HNumber(180) / HNumber(3600), Variable::BuiltIn);
+        setVariable("arcmin", HNumber(200) / HNumber(180) / HNumber(60), Variable::BuiltIn);
+        setVariable("arcsec", HNumber(200) / HNumber(180) / HNumber(3600), Variable::BuiltIn);
     } else if (Settings::instance()->angleUnit == 't') {
-        setVariable("radian", HNumber(1) / (HNumber(2) * HMath::pi()), Variable::BuiltIn);
         setVariable("degree", HNumber(1) / HNumber(360), Variable::BuiltIn);
+        setVariable("deg", HNumber(1) / HNumber(360), Variable::BuiltIn);
         setVariable("gradian", HNumber(1) / HNumber(400), Variable::BuiltIn);
         setVariable("gon", HNumber(1) / HNumber(400), Variable::BuiltIn);
         setVariable("turn", 1, Variable::BuiltIn);
         setVariable("arcminute", HNumber(1) / HNumber(21600), Variable::BuiltIn);
         setVariable("arcsecond", HNumber(1) / HNumber(1296000), Variable::BuiltIn);
+        setVariable("arcmin", HNumber(1) / HNumber(21600), Variable::BuiltIn);
+        setVariable("arcsec", HNumber(1) / HNumber(1296000), Variable::BuiltIn);
     } else {    // d
-        setVariable("radian", HNumber(180) / HMath::pi(), Variable::BuiltIn);
         setVariable("degree", 1, Variable::BuiltIn);
+        setVariable("deg", 1, Variable::BuiltIn);
         setVariable("gradian", HNumber(180) / HNumber(200), Variable::BuiltIn);
         setVariable("gon", HNumber(180) / HNumber(200), Variable::BuiltIn);
         setVariable("turn", HNumber(360), Variable::BuiltIn);
         setVariable("arcminute", HNumber(1) / HNumber(60), Variable::BuiltIn);
         setVariable("arcsecond", HNumber(1) / HNumber(3600), Variable::BuiltIn);
+        setVariable("arcmin", HNumber(1) / HNumber(60), Variable::BuiltIn);
+        setVariable("arcsec", HNumber(1) / HNumber(3600), Variable::BuiltIn);
     }
 }
 
@@ -3405,7 +3620,12 @@ Tokens Evaluator::tokens() const
 }
 
 bool isArcTime(QChar ch) {
-    return (isDegreeSign(ch) || ch == '\'' || ch == '"' || ch == ':');
+    return (isDegreeSign(ch)
+            || ch == '\''
+            || ch == '"'
+            || ch == UnicodeChars::Prime
+            || ch == UnicodeChars::DoublePrime
+            || ch == ':');
 }
 
 Tokens Evaluator::scan(const QString& expr) const
@@ -3438,7 +3658,41 @@ Tokens Evaluator::scan(const QString& expr) const
     // Initialize variables.
     state = Init;
     int i = 0;
-    QString ex = expr;
+    QString ex = UnicodeChars::normalizeUnitSymbolAliases(expr);
+    ex.replace(UnicodeChars::Prime, QChar('\''));
+    ex.replace(UnicodeChars::DoublePrime, QChar('"'));
+    // Accept superscript shorthand aliases for unit symbols (m², mm³, etc.)
+    // by rewriting to ASCII aliases (m2, mm3) when the target exists as a
+    // built-in unit variable.
+    for (int p = 0; p < ex.size();) {
+        if (!isIdentifierStart(ex.at(p))) {
+            ++p;
+            continue;
+        }
+
+        int identEnd = p + 1;
+        while (identEnd < ex.size() && isIdentifierContinue(ex.at(identEnd)))
+            ++identEnd;
+
+        int superscriptEnd = identEnd;
+        while (superscriptEnd < ex.size() && isSuperscriptDigit(ex.at(superscriptEnd)))
+            ++superscriptEnd;
+
+        if (superscriptEnd == identEnd) {
+            p = identEnd;
+            continue;
+        }
+
+        const QString identifier = ex.mid(p, identEnd - p);
+        const QString superscript = ex.mid(identEnd, superscriptEnd - identEnd);
+        const QString candidate = identifier + superscriptDigitsToAscii(superscript);
+        if (isBuiltInVariable(candidate)) {
+            ex.replace(p, superscriptEnd - p, candidate);
+            p += candidate.size();
+        } else {
+            p = superscriptEnd;
+        }
+    }
     QString tokenText, tokenUnit;
     int tokenStart = 0; // Includes leading spaces.
     Token::Type type;
@@ -3509,7 +3763,7 @@ Tokens Evaluator::scan(const QString& expr) const
                 state = InNumberPrefix;
             } else if (ch.isNull()) // Terminator character.
                 state = Finish;
-            else if (isIdentifier(ch)) // Identifier or alphanumeric operator
+            else if (isIdentifierStart(ch)) // Identifier or alphanumeric operator
                 state = InIdentifier;
             else { // Look for operator match.
                 int op;
@@ -3550,16 +3804,23 @@ Tokens Evaluator::scan(const QString& expr) const
         // Manage both identifier and alphanumeric operators.
         case InIdentifier:
             // Consume as long as alpha, dollar sign, underscore, or digit.
-            if (isIdentifier(ch) || ch.isDigit())
+            if (isIdentifierContinue(ch))
                 tokenText.append(ex.at(i++));
             else { // We're done with identifier.
+                QString identifier = tokenText;
+                if (identifier.startsWith(QLatin1Char('u')) && identifier.size() > 1) {
+                    QString microIdentifier(identifier);
+                    microIdentifier[0] = UnicodeChars::MicroSign;
+                    if (isBuiltInVariable(microIdentifier))
+                        identifier = microIdentifier;
+                }
                 int tokenSize = i - tokenStart;
-                if (matchOperator(tokenText)) {
-                    tokens.append(Token(Token::stxOperator, tokenText,
+                if (matchOperator(identifier)) {
+                    tokens.append(Token(Token::stxOperator, identifier,
                                         tokenStart, tokenSize));
                 } else {
                     // Normal identifier.
-                    tokens.append(Token(Token::stxIdentifier, tokenText,
+                    tokens.append(Token(Token::stxIdentifier, identifier,
                                         tokenStart, tokenSize));
                 }
                 state = Init;
@@ -3768,6 +4029,11 @@ Tokens Evaluator::scan(const QString& expr) const
             if (isDigit) {
                 // Consume as long as it's a digit.
                 tokenText.append(ex.at(i++));
+            } else if (isArcTime(ch)) {
+                // Allow sexagesimal markers right after scientific notation,
+                // e.g. "8.4381406e4\"" or "8.4381406e4″".
+                tokenText.append(ex.at(i++));
+                state = InNumber;
             } else if (isSeparatorChar(ch)) {
                 // Ignore thousand separators.
                 ++i;
@@ -5088,7 +5354,22 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 pushStackValue(val2);
                 break;
 
-            case Opcode::Conv:
+            case Opcode::Conv: {
+                auto isFullyWrappedByOuterParens = [](const QString& expr) {
+                    if (expr.size() < 2 || expr.at(0) != QLatin1Char('(') || expr.at(expr.size() - 1) != QLatin1Char(')'))
+                        return false;
+                    int depth = 0;
+                    for (int i = 0; i < expr.size(); ++i) {
+                        const QChar ch = expr.at(i);
+                        if (ch == QLatin1Char('('))
+                            ++depth;
+                        else if (ch == QLatin1Char(')'))
+                            --depth;
+                        if (depth == 0 && i < expr.size() - 1)
+                            return false;
+                    }
+                    return depth == 0;
+                };
                 if (stack.count() < 2) {
                     m_error = tr("invalid expression");
                     return HMath::nan();
@@ -5103,9 +5384,37 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     m_error = tr("Conversion failed - dimension mismatch");
                     return HMath::nan();
                 }
-                val2.setDisplayUnit(val1.numericValue(), opcode.text);
+                CNumber displayUnitValue = val1.numericValue();
+                QString displayUnitName = opcode.text.trimmed();
+                if (displayUnitName.startsWith(QStringLiteral("(("))
+                    && isFullyWrappedByOuterParens(displayUnitName))
+                {
+                    const QString onceUnwrapped = displayUnitName.mid(1, displayUnitName.size() - 2).trimmed();
+                    displayUnitName = onceUnwrapped;
+                }
+                if (isFullyWrappedByOuterParens(displayUnitName)) {
+                    const QString inner = displayUnitName.mid(1, displayUnitName.size() - 2).trimmed();
+                    if (RegExpPatterns::simpleUnitIdentifier().match(inner).hasMatch())
+                        displayUnitName = inner;
+                }
+                const bool nestedConversionTarget =
+                    opcode.text.contains(QLatin1String("->"))
+                    || opcode.text.contains(QChar(0x2192));
+                if (nestedConversionTarget) {
+                    Quantity canonicalTarget(val1);
+                    canonicalTarget.stripUnits();
+                    if (!canonicalTarget.isDimensionless())
+                        Units::findUnit(canonicalTarget);
+                    if (canonicalTarget.hasUnit()) {
+                        displayUnitValue = canonicalTarget.unit();
+                        displayUnitName = canonicalTarget.unitName();
+                    }
+                }
+                displayUnitName = s_renderUnitExponentsAsSuperscripts(displayUnitName);
+                val2.setDisplayUnit(displayUnitValue, displayUnitName);
                 pushStackValue(val2);
                 break;
+            }
 
             // Reference.
             case Opcode::Ref:
@@ -5532,10 +5841,10 @@ void Evaluator::unsetAllUserDefinedVariables()
 static void replaceSuperscriptPowersWithCaretEquivalent(QString& expr)
 {
     auto isIdentifierChar = [](const QChar& ch) {
-        return ch == QLatin1Char('_') || ch.isLetterOrNumber();
+        return isIdentifierContinue(ch);
     };
     auto isIdentifierStartChar = [](const QChar& ch) {
-        return ch == QLatin1Char('_') || ch.isLetter();
+        return isIdentifierStart(ch);
     };
     auto isSuperscriptPowerChar = [](const QChar& ch) {
         switch (ch.unicode()) {
@@ -5671,10 +5980,10 @@ static void replaceSuperscriptPowersWithCaretEquivalent(QString& expr)
 static void normalizeFunctionCaretPowers(QString& expr)
 {
     auto isIdentifierChar = [](const QChar& ch) {
-        return ch == QLatin1Char('_') || ch.isLetterOrNumber();
+        return isIdentifierContinue(ch);
     };
     auto isIdentifierStartChar = [](const QChar& ch) {
-        return ch == QLatin1Char('_') || ch.isLetter();
+        return isIdentifierStart(ch);
     };
     auto parseIntegerExponentToken = [](const QString& input, int start, int* endOut) {
         int pos = start;
@@ -5839,6 +6148,7 @@ QString Evaluator::autoFix(const QString& expr)
 
     normalizeFunctionCaretPowers(result);
     replaceSuperscriptPowersWithCaretEquivalent(result);
+    result = UnicodeChars::normalizeUnitSymbolAliases(result);
     result = UnicodeChars::normalizeRootFunctionAliasesForDisplay(result);
 
     // Normalize symbolic multiplication to a compact "⋅" form.
@@ -5873,6 +6183,27 @@ QString Evaluator::autoFix(const QString& expr)
                 continue;
 
             result.replace(op.pos(), op.size(), dotOperator);
+        }
+
+        // Accept ASCII 'u' as a typing-friendly micro prefix for units:
+        // normalize identifiers to 'µ*' only when such builtin unit exists.
+        for (int i = tokens.count() - 1; i >= 0; --i) {
+            const Token& token = tokens.at(i);
+            if (!token.isIdentifier())
+                continue;
+
+            const QString sourceText = result.mid(token.pos(), token.size()).trimmed();
+            if (!sourceText.startsWith(QLatin1Char('u')) || sourceText.size() <= 1)
+                continue;
+
+            const QString normalizedText = token.text();
+            if (!normalizedText.startsWith(UnicodeChars::MicroSign))
+                continue;
+
+            if (!isBuiltInVariable(normalizedText))
+                continue;
+
+            result.replace(token.pos(), token.size(), normalizedText);
         }
 
         // Remove extra spaces around explicit dot multiplications.

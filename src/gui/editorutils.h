@@ -19,7 +19,6 @@ inline bool isMultiplicationOperatorAlias(const QChar& ch, bool keepDotOperator 
 {
     switch (ch.unicode()) {
     case UnicodeChars::Asterisk.unicode():
-    case UnicodeChars::MiddleDot.unicode():
     case UnicodeChars::AsteriskOperator.unicode():
     case UnicodeChars::BulletOperator.unicode():
     case UnicodeChars::MultiplicationX.unicode():
@@ -121,6 +120,8 @@ inline QString normalizeSubtractionOperators(QString text)
 
 inline QString normalizeExpressionOperators(QString text)
 {
+    text = UnicodeChars::normalizeUnitSymbolAliases(text);
+    text = UnicodeChars::normalizeSexagesimalSymbolAliases(text);
     text = normalizeMultiplicationOperators(text);
     text = normalizeDivisionOperators(text);
     text = normalizeAdditionOperators(text);
@@ -130,6 +131,8 @@ inline QString normalizeExpressionOperators(QString text)
 
 inline QString normalizeExpressionOperatorsForEditorInput(QString text)
 {
+    text = UnicodeChars::normalizeUnitSymbolAliases(text);
+    text = UnicodeChars::normalizeSexagesimalSymbolAliases(text);
     text = UnicodeChars::normalizePiAliasesToPi(text);
     text = UnicodeChars::normalizeRootFunctionAliasesForDisplay(text);
     text = normalizeMultiplicationOperators(text, true);

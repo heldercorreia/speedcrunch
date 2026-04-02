@@ -3,6 +3,19 @@
 Constants
 =========
 
+SpeedCrunch provides a large collection of built-in scientific constants.
+In the Constants widget, each entry has:
+
+* a translated display ``Name``
+* an optional ``Symbol``
+* a numeric ``Value``
+* an optional ``Unit``
+
+Double-clicking a constant entry inserts its value into the editor
+(followed by unit, when present).
+
+Constants in the widget can be filtered by category and subcategory.
+
 
 .. constant:: pi
 .. constant:: π

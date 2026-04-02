@@ -161,6 +161,7 @@ gui/syntaxhighlighter.h
 )
 
 set(testevaluator_SOURCES
+core/constants.cpp
 core/evaluator.cpp
 core/functions.cpp
 core/settings.cpp

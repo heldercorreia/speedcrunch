@@ -37,11 +37,18 @@ inline constexpr QChar MultiplicationX(0x2715);
 inline constexpr QChar HeavyMultiplicationX(0x2716);
 inline constexpr QChar NAryTimesOperator(0x2A09);
 inline constexpr QChar VectorOrCrossProduct(0x2A2F);
+inline constexpr QChar GreekCapitalOmega(0x03A9);
+inline constexpr QChar OhmSign(0x2126);
+inline constexpr QChar MicroSign(0x00B5);
+inline constexpr QChar GreekSmallLetterMu(0x03BC);
 inline constexpr QChar Pi(0x03C0);
 inline constexpr QChar Summation(0x03A3);
 inline constexpr QChar SquareRoot(0x221A);
 inline constexpr QChar CubeRoot(0x221B);
 inline constexpr QChar RightwardsArrow(0x2192);
+inline constexpr QChar Prime(0x2032);
+inline constexpr QChar DoublePrime(0x2033);
+inline constexpr QChar DegreeSign(0x00B0);
 inline constexpr char32_t MathematicalBoldSmallPiCodePoint = 0x1D6D1;
 inline constexpr char32_t MathematicalItalicSmallPiCodePoint = 0x1D70B;
 inline constexpr char32_t MathematicalSansSerifBoldSmallPiCodePoint = 0x1D745;
@@ -54,6 +61,20 @@ inline QString normalizePiAliasesToPi(QString text)
     text.replace(QString::fromUcs4(&MathematicalItalicSmallPiCodePoint, 1), piSymbol);
     text.replace(QString::fromUcs4(&MathematicalSansSerifBoldSmallPiCodePoint, 1), piSymbol);
     text.replace(QString::fromUcs4(&MathematicalSansSerifBoldItalicSmallPiCodePoint, 1), piSymbol);
+    return text;
+}
+
+inline QString normalizeUnitSymbolAliases(QString text)
+{
+    text.replace(OhmSign, GreekCapitalOmega);
+    text.replace(GreekSmallLetterMu, MicroSign);
+    return text;
+}
+
+inline QString normalizeSexagesimalSymbolAliases(QString text)
+{
+    text.replace(QChar('\''), Prime);
+    text.replace(QChar('"'), DoublePrime);
     return text;
 }
 

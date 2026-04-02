@@ -195,7 +195,7 @@ private:
     QTreeWidget* m_categoryWidget;
     QList<Constant> m_constantList;
     Editor* m_editor;
-    QString m_lastCategory;
+    QString m_lastDomain;
     QTreeWidget* m_constantWidget;
     QFrame* m_popup;
     QTimeLine* m_slider;

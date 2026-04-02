@@ -21,6 +21,7 @@
 
 #include "core/constants.h"
 #include "core/settings.h"
+#include "core/unicodechars.h"
 
 #include <QEvent>
 #include <QTimer>
@@ -35,22 +36,38 @@
 
 #include <algorithm>
 
+static QString constantExpression(const Constant& constant)
+{
+    QString unit = constant.unit;
+    unit.replace(UnicodeChars::MiddleDot, UnicodeChars::DotOperator);
+    return constant.unit.isEmpty()
+        ? constant.value
+        : QStringLiteral("%1 %2").arg(constant.value, unit);
+}
+
 ConstantsWidget::ConstantsWidget(QWidget* parent)
     : QWidget(parent)
 {
-    m_categoryLabel = new QLabel(this);
-    m_category = new QComboBox(this);
-    m_category->setEditable(false);
-    m_category->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    m_domainLabel = new QLabel(this);
+    m_domain = new QComboBox(this);
+    m_domain->setEditable(false);
+    m_domain->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    m_subdomainLabel = new QLabel(this);
+    m_subdomain = new QComboBox(this);
+    m_subdomain->setEditable(false);
+    m_subdomain->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
-    connect(m_category, SIGNAL(activated(int)), SLOT(filter()));
+    connect(m_domain, SIGNAL(activated(int)), SLOT(handleDomainChanged()));
+    connect(m_subdomain, SIGNAL(activated(int)), SLOT(filter()));
 
-    QWidget* categoryBox = new QWidget(this);
-    QHBoxLayout* categoryLayout = new QHBoxLayout;
-    categoryBox->setLayout(categoryLayout);
-    categoryLayout->addWidget(m_categoryLabel);
-    categoryLayout->addWidget(m_category);
-    categoryLayout->setContentsMargins(0, 0, 0, 0);
+    QWidget* domainBox = new QWidget(this);
+    QHBoxLayout* domainLayout = new QHBoxLayout;
+    domainBox->setLayout(domainLayout);
+    domainLayout->addWidget(m_domainLabel);
+    domainLayout->addWidget(m_domain);
+    domainLayout->addWidget(m_subdomainLabel);
+    domainLayout->addWidget(m_subdomain);
+    domainLayout->setContentsMargins(0, 0, 0, 0);
 
     m_label = new QLabel(this);
 
@@ -96,7 +113,7 @@ ConstantsWidget::ConstantsWidget(QWidget* parent)
     QVBoxLayout* layout = new QVBoxLayout;
     setLayout(layout);
     layout->setContentsMargins(3, 3, 3, 3);
-    layout->addWidget(categoryBox);
+    layout->addWidget(domainBox);
     layout->addWidget(searchBox);
     layout->addWidget(m_list);
 
@@ -129,7 +146,8 @@ void ConstantsWidget::handleRadixCharacterChange()
 
 void ConstantsWidget::retranslateText()
 {
-    m_categoryLabel->setText(tr("Category"));
+    m_domainLabel->setText(tr("Domain"));
+    m_subdomainLabel->setText(tr("Subdomain"));
     m_label->setText(tr("Search"));
     m_noMatchLabel->setText(tr("No match found"));
 
@@ -155,30 +173,33 @@ void ConstantsWidget::filter()
     m_filterTimer->stop();
     setUpdatesEnabled(false);
 
-    QString chosenCategory = m_category->currentText();
+    const QString chosenDomain = m_domain->currentText();
+    const QString chosenSubdomain = m_subdomain->currentText();
 
     m_list->clear();
     for (int k = 0; k < clist.count(); ++k) {
         QStringList str;
         str << clist.at(k).name;
-
         QString radCh = (radixChar != '.') ?
             QString(clist.at(k).value).replace('.', radixChar)
             : clist.at(k).value;
 
         if (layoutDirection() == Qt::RightToLeft) {
-            str << clist.at(k).unit + QChar(0x200e); // Unicode LRM
+            QString normalizedUnit = clist.at(k).unit;
+            normalizedUnit.replace(UnicodeChars::MiddleDot, UnicodeChars::DotOperator);
+            str << normalizedUnit + QChar(0x200e); // Unicode LRM
             str << radCh;
         } else {
             str << radCh;
-            str << clist.at(k).unit;
+            QString normalizedUnit = clist.at(k).unit;
+            normalizedUnit.replace(UnicodeChars::MiddleDot, UnicodeChars::DotOperator);
+            str << normalizedUnit;
         }
 
-        str << clist.at(k).name.toUpper();
-        str << QString("");
-
-        bool include = (chosenCategory == tr("All")) ?
-            true : (clist.at(k).category == chosenCategory);
+        bool include = (chosenDomain == tr("All")) ?
+            true : (clist.at(k).domain == chosenDomain);
+        if (include && chosenSubdomain != tr("All"))
+            include = (clist.at(k).subdomain == chosenSubdomain);
 
         if (!include)
             continue;
@@ -186,16 +207,19 @@ void ConstantsWidget::filter()
         QTreeWidgetItem* item = nullptr;
         if (term.isEmpty())
             item = new QTreeWidgetItem(m_list, str);
-        else
-            if (str.at(0).contains(term, Qt::CaseInsensitive))
-                item = new QTreeWidgetItem(m_list, str);
+        else if (clist.at(k).name.contains(term, Qt::CaseInsensitive))
+            item = new QTreeWidgetItem(m_list, str);
         if (item) {
+            item->setData(0, Qt::UserRole, constantExpression(clist.at(k)));
+
             QString tip;
             tip += QString(QChar(0x200E));
-            tip += QString("<b>%1</b><br>%2").arg( clist.at(k).name, clist.at(k).value);
+            tip += QString("<b>%1</b><br>%2")
+                .arg(clist.at(k).name, clist.at(k).value);
             tip += QString(QChar(0x200E));
             if (!clist.at(k).unit.isEmpty())
-                tip.append(" ").append(clist.at(k).unit);
+                tip.append(" ").append(QString(clist.at(k).unit).replace(
+                    UnicodeChars::MiddleDot, UnicodeChars::DotOperator));
             if (radixChar != '.')
                 tip.replace('.', radixChar);
             tip += QString(QChar(0x200E));
@@ -231,11 +255,7 @@ void ConstantsWidget::filter()
 
 void ConstantsWidget::handleItem(QTreeWidgetItem* item)
 {
-    const auto& l = Constants::instance()->list();
-    auto found = std::find_if(l.begin(), l.end(), [&](const Constant& c) {
-        return item->text(0) == c.name;
-    });
-    emit constantSelected(found->value);
+    emit constantSelected(item->data(0, Qt::UserRole).toString());
 }
 
 void ConstantsWidget::triggerFilter()
@@ -246,12 +266,63 @@ void ConstantsWidget::triggerFilter()
 
 void ConstantsWidget::updateList()
 {
-    m_category->clear();
+    const int chosenDomainIndex = m_domain->currentIndex();
+    const QString chosenDomain = m_domain->currentText();
+    const int chosenSubdomainIndex = m_subdomain->currentIndex();
+    const QString chosenSubdomain = m_subdomain->currentText();
+
+    m_domain->clear();
     Constants::instance()->retranslateText();
-    m_category->addItems(Constants::instance()->categories());
-    m_category->insertItem(0, tr("All"));
-    m_category->setCurrentIndex(0);
+    m_domain->addItems(Constants::instance()->domains());
+    m_domain->insertItem(0, tr("All"));
+
+    int domainIndex = m_domain->findText(chosenDomain);
+    if (domainIndex < 0
+        && chosenDomainIndex >= 0
+        && chosenDomainIndex < m_domain->count()) {
+        domainIndex = chosenDomainIndex;
+    }
+    if (domainIndex < 0) {
+        const QString defaultDomain = Constants::instance()->domains().value(0);
+        domainIndex = m_domain->findText(defaultDomain);
+    }
+    if (domainIndex < 0)
+        domainIndex = 0;
+    m_domain->setCurrentIndex(domainIndex);
+
+    refreshSubdomains();
+
+    int subdomainIndex = m_subdomain->findText(chosenSubdomain);
+    if (subdomainIndex < 0
+        && chosenSubdomainIndex >= 0
+        && chosenSubdomainIndex < m_subdomain->count()) {
+        subdomainIndex = chosenSubdomainIndex;
+    }
+    if (subdomainIndex >= 0)
+        m_subdomain->setCurrentIndex(subdomainIndex);
+
     filter();
+}
+
+void ConstantsWidget::handleDomainChanged()
+{
+    refreshSubdomains();
+    filter();
+}
+
+void ConstantsWidget::refreshSubdomains()
+{
+    m_subdomain->clear();
+    const QString chosenDomain = m_domain->currentText();
+    if (chosenDomain == tr("All")) {
+        m_subdomain->insertItem(0, tr("All"));
+        m_subdomain->setCurrentIndex(0);
+        return;
+    }
+
+    m_subdomain->addItems(Constants::instance()->subdomains(chosenDomain));
+    m_subdomain->insertItem(0, tr("All"));
+    m_subdomain->setCurrentIndex(0);
 }
 
 void ConstantsWidget::changeEvent(QEvent* e)

@@ -107,6 +107,13 @@ inline const QRegularExpression& unsignedIntegerEquivalentDecimal()
     return pattern;
 }
 
+inline const QRegularExpression& simpleUnitIdentifier()
+{
+    static const QRegularExpression pattern(
+        QStringLiteral("^[A-Za-z_µμΩ][A-Za-z0-9_µμΩ]*$"));
+    return pattern;
+}
+
 } // namespace RegExpPatterns
 
 #endif

@@ -118,21 +118,47 @@ often be omitted (using implicit multiplication), as shown by the previous examp
 By default SpeedCrunch converts the quantity into SI units::
 
     60 mile/hour
-    = 26.8224 meter second⁻¹
+    = 26.8224 meter⋅second⁻¹
 
 This alone would not be terribly useful. However, it is possible to convert the value to a different unit using the conversion operator ``->``
 (``in`` can be used as an alias)::
 
     50 yard + 2 foot in centi meter
-    = 4632.96 centi meter
+    = 4632.96 centi⋅meter
 
     10 knot -> kilo meter / hour
-    = 18.52 (kilo meter/hour)
+    = 18.52 kilo⋅meter / hour
 
 Note that all built-in unit names are singular and use American English spelling. This is independent of the language selected for SpeedCrunch's interface.
 
 As seen in the example above, you can use any SI prefix like ``kilo`` or ``centi``.
 They are treated like any other unit, so separate them with a space from the base unit they refer to.
+For astronomical distances, ``parsec`` also supports positive SI-prefixed short forms such as ``kpc`` and ``Mpc``.
+
+Information units (bit/byte)
+----------------------------
+
+For the information dimension, SpeedCrunch supports both ``bit`` (short form ``b``)
+and ``byte`` (short form ``B``).
+
+Positive SI prefixes are accepted for both families (for example ``kB``, ``MB``,
+``kb``, ``Mb``), while negative SI prefixes are rejected.
+
+When adding/subtracting information quantities, SpeedCrunch does not implicitly mix
+bit-family and byte-family values. Use an explicit conversion if you want to switch
+family::
+
+    1 B + 8 b
+    = error
+
+    1 B + (8 b -> B)
+    = 2 B
+
+For sums inside the same family, the displayed result keeps the coarsest unit used
+in the expression::
+
+    2 MB + 3 PB + 4 TB
+    = 3.004000002 PB
 
 .. warning::
 
@@ -170,12 +196,15 @@ that any variable or even expression can be used as the right-hand side of a con
     10 meter in (1 yard + 2 foot)
     = 6.56167979002624671916 (1 yard+2 foot)
 
-As mentioned above, the built-in units are spelled out to avoid ambiguity. However, this also means that longer
-expressions can become tedious to input and hard to read. If you find yourself using a particular set of units frequently,
-consider defining shorter aliases::
+Although full built-in unit names are always accepted, many units also support short
+forms (for example ``m``, ``s``, ``B``, ``b``). If you frequently use a particular
+set of units, consider defining additional aliases::
 
     m = meter
     cm = centi meter
     ft = foot
 
 Some of the built-in functions are able to handle arguments with a dimension. Refer to the documentation of a particular function for more information.
+
+For long time intervals, SpeedCrunch also provides ``century`` (short form ``cy``),
+defined as exactly ``100 year_julian`` (that is, ``36525 day``).

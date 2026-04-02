@@ -363,9 +363,11 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride,
         HNumber::Format fixed = HNumber::Format::Fixed();
         QString sexa = HMath::format(mains, fixed);
         sexa.append(time ? QChar(':') : QChar(0xB0)).append(minutes < 10 ? "0" : "").append(HMath::format(minutes, fixed));
-        sexa.append(time ? ':' : '\'').append(seconds < 10 ? "0" : "").append(HMath::format(seconds, fixed));
+        sexa.append(time ? ':' : UnicodeChars::Prime).append(seconds < 10 ? "0" : "").append(HMath::format(seconds, fixed));
         if (dotPos > 0)     // append decimals
             sexa.append(result.mid(dotPos));
+        if (!time)
+            sexa.append(UnicodeChars::DoublePrime);
         result = sexa;
     }
 
@@ -374,6 +376,14 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride,
 
     if (settings->decimalSeparator() == ',')
         result.replace('.', ',');
+
+    if (q.hasUnit() || !q.isDimensionless()) {
+        const int firstSpace = result.indexOf(QLatin1Char(' '));
+        if (firstSpace >= 0 && firstSpace + 1 < result.size()) {
+            result = result.left(firstSpace + 1)
+                + Units::normalizeUnitTextForDisplay(result.mid(firstSpace + 1));
+        }
+    }
 
     result.replace('-', g_minusChar);
 

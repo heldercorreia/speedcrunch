@@ -23,9 +23,11 @@
 
 #include "quantity.h"
 
+#include "core/unicodechars.h"
 #include "rational.h"
 #include "units.h"
 
+#include <QRegularExpression>
 #include <QStringList>
 
 #define RATIONAL_TOL HNumber("1e-20")
@@ -37,6 +39,179 @@
 #define ENSURE_SAME_DIMENSION(x, y) \
     if ((!(x).sameDimension(y))) \
         return DMath::nan(DimensionMismatch);
+
+namespace {
+
+enum class SemanticUnitKind {
+    None,
+    Frequency,
+    Activity,
+    AbsorbedDose,
+    EquivalentDose
+};
+
+enum class InformationUnitFamily {
+    None,
+    Bit,
+    Byte
+};
+
+QString normalizeUnitName(const QString& name)
+{
+    QString normalized = name.trimmed();
+    if (normalized.startsWith('(') && normalized.endsWith(')') && normalized.size() > 2)
+        normalized = normalized.mid(1, normalized.size() - 2).trimmed();
+    return normalized.toLower();
+}
+
+SemanticUnitKind semanticUnitKind(const QString& unitName)
+{
+    const QString n = normalizeUnitName(unitName);
+    if (n == QLatin1String("hertz") || n == QLatin1String("hz"))
+        return SemanticUnitKind::Frequency;
+    if (n == QLatin1String("becquerel") || n == QLatin1String("bq"))
+        return SemanticUnitKind::Activity;
+    if (n == QLatin1String("gray"))
+        return SemanticUnitKind::AbsorbedDose;
+    if (n == QLatin1String("sievert"))
+        return SemanticUnitKind::EquivalentDose;
+    return SemanticUnitKind::None;
+}
+
+bool isStickyDisplayUnit(const QString& unitName)
+{
+    const QString n = normalizeUnitName(unitName);
+    return n == QLatin1String("hertz")
+           || n == QLatin1String("hz")
+           || n == QLatin1String("becquerel")
+           || n == QLatin1String("bq")
+           || n == QLatin1String("gray")
+           || n == QLatin1String("sievert");
+}
+
+InformationUnitFamily informationUnitFamily(const QString& unitName)
+{
+    QString n = unitName.trimmed();
+    if (n.startsWith('(') && n.endsWith(')') && n.size() > 2)
+        n = n.mid(1, n.size() - 2).trimmed();
+    if (n.isEmpty())
+        return InformationUnitFamily::None;
+
+    if (n.endsWith(QLatin1String("byte"), Qt::CaseInsensitive)
+        || n.endsWith(QLatin1Char('B')))
+        return InformationUnitFamily::Byte;
+    if (n.endsWith(QLatin1String("bit"), Qt::CaseInsensitive)
+        || n.endsWith(QLatin1Char('b')))
+        return InformationUnitFamily::Bit;
+    return InformationUnitFamily::None;
+}
+
+bool isSteradianUnitName(const QString& unitName)
+{
+    const QString n = normalizeUnitName(unitName);
+    return n == QLatin1String("steradian") || n == QLatin1String("sr");
+}
+
+bool isExactDimension(const Quantity& q, const QMap<QString, Rational>& expected)
+{
+    return q.getDimension() == expected;
+}
+
+QString normalizeDisplayUnitNameForOutput(const QString& unitName)
+{
+    QString normalized = unitName.trimmed();
+    if (normalized.isEmpty())
+        return normalized;
+
+    if (normalized == QLatin1String("degree")
+        || normalized == QLatin1String("deg")) {
+        return QString(UnicodeChars::DegreeSign);
+    }
+
+    // Keep explicit conversion-expression targets unchanged; they are meant
+    // to mirror user-entered structure (operators and grouping).
+    if (normalized.contains(QLatin1Char('*'))
+        || normalized.contains(QChar(0x22C5)) // ⋅
+        || normalized.contains(QChar(0x00D7)) // ×
+        || normalized.contains(QLatin1Char('/'))
+        || normalized.contains(QLatin1Char('+'))
+        || normalized.contains(QLatin1Char('-'))
+        || normalized.contains(QLatin1Char('('))
+        || normalized.contains(QLatin1Char(')'))
+        || normalized.contains(QLatin1String("->"))
+        || normalized.contains(QChar(0x2192)))
+    {
+        return normalized;
+    }
+
+    normalized.replace(QRegularExpression(QStringLiteral("\\s+")),
+                       QString(QChar(0x22C5))); // ⋅
+    return normalized;
+}
+
+QMap<QString, Rational> dimensionCandela()
+{
+    QMap<QString, Rational> dim;
+    dim.insert("luminous intensity", Rational(1));
+    return dim;
+}
+
+QMap<QString, Rational> dimensionMeter()
+{
+    QMap<QString, Rational> dim;
+    dim.insert("length", Rational(1));
+    return dim;
+}
+
+QMap<QString, Rational> dimensionSecond()
+{
+    QMap<QString, Rational> dim;
+    dim.insert("time", Rational(1));
+    return dim;
+}
+
+QMap<QString, Rational> dimensionCubicMeter()
+{
+    QMap<QString, Rational> dim;
+    dim.insert("length", Rational(3));
+    return dim;
+}
+
+QMap<QString, Rational> dimensionSquareMeter()
+{
+    QMap<QString, Rational> dim;
+    dim.insert("length", Rational(2));
+    return dim;
+}
+
+QMap<QString, Rational> dimensionNewton()
+{
+    QMap<QString, Rational> dim;
+    dim.insert("mass", Rational(1));
+    dim.insert("length", Rational(1));
+    dim.insert("time", Rational(-2));
+    return dim;
+}
+
+QMap<QString, Rational> dimensionJoule()
+{
+    QMap<QString, Rational> dim;
+    dim.insert("mass", Rational(1));
+    dim.insert("length", Rational(2));
+    dim.insert("time", Rational(-2));
+    return dim;
+}
+
+QMap<QString, Rational> dimensionWatt()
+{
+    QMap<QString, Rational> dim;
+    dim.insert("mass", Rational(1));
+    dim.insert("length", Rational(2));
+    dim.insert("time", Rational(-3));
+    return dim;
+}
+
+}
 
 Quantity operator-(const Quantity& q)
 {
@@ -51,6 +226,14 @@ Quantity operator-(const Quantity& a, const Quantity& b)
     res.m_format = Quantity::Format();
     if (!a.sameDimension(b))
         return DMath::nan(DimensionMismatch);
+    const SemanticUnitKind k1 = semanticUnitKind(a.unitName());
+    const SemanticUnitKind k2 = semanticUnitKind(b.unitName());
+    if (k1 != SemanticUnitKind::None
+        && k2 != SemanticUnitKind::None
+        && k1 != k2)
+    {
+        return DMath::nan(DimensionMismatch);
+    }
     res.m_numericValue -= b.m_numericValue;
     return res;
 }
@@ -388,9 +571,35 @@ Quantity Quantity::operator+(const Quantity& other) const
 {
     if (!this->sameDimension(other))
         return DMath::nan(DimensionMismatch);
+    const InformationUnitFamily info1 = informationUnitFamily(this->unitName());
+    const InformationUnitFamily info2 = informationUnitFamily(other.unitName());
+    if (info1 != InformationUnitFamily::None
+        && info2 != InformationUnitFamily::None
+        && info1 != info2)
+    {
+        // Do not mix byte-family and bit-family implicitly.
+        return DMath::nan(DimensionMismatch);
+    }
+    const SemanticUnitKind k1 = semanticUnitKind(this->unitName());
+    const SemanticUnitKind k2 = semanticUnitKind(other.unitName());
+    if (k1 != SemanticUnitKind::None
+        && k2 != SemanticUnitKind::None
+        && k1 != k2)
+    {
+        return DMath::nan(DimensionMismatch);
+    }
     Quantity result(*this);
     result.m_format = Quantity::Format();
     result.m_numericValue += other.m_numericValue;
+    if (info1 != InformationUnitFamily::None && info1 == info2
+        && this->hasUnit() && other.hasUnit())
+    {
+        // For storage-style math keep the coarsest explicit unit from operands.
+        if (this->unit().real >= other.unit().real)
+            result.setDisplayUnit(this->unit(), this->unitName());
+        else
+            result.setDisplayUnit(other.unit(), other.unitName());
+    }
     return result;
 }
 
@@ -398,8 +607,33 @@ Quantity& Quantity::operator+=(const Quantity& other)
 {
     if (!this->sameDimension(other))
         *this = DMath::nan(DimensionMismatch);
-    else
+    else {
+        const InformationUnitFamily info1 = informationUnitFamily(this->unitName());
+        const InformationUnitFamily info2 = informationUnitFamily(other.unitName());
+        if (info1 != InformationUnitFamily::None
+            && info2 != InformationUnitFamily::None
+            && info1 != info2)
+        {
+            *this = DMath::nan(DimensionMismatch);
+            return *this;
+        }
+        const SemanticUnitKind k1 = semanticUnitKind(this->unitName());
+        const SemanticUnitKind k2 = semanticUnitKind(other.unitName());
+        if (k1 != SemanticUnitKind::None
+            && k2 != SemanticUnitKind::None
+            && k1 != k2)
+        {
+            *this = DMath::nan(DimensionMismatch);
+            return *this;
+        }
         this->m_numericValue += other.m_numericValue;
+        if (info1 != InformationUnitFamily::None && info1 == info2
+            && this->hasUnit() && other.hasUnit())
+        {
+            if (this->unit().real < other.unit().real)
+                this->setDisplayUnit(other.unit(), other.unitName());
+        }
+    }
     return *this;
 }
 
@@ -412,6 +646,11 @@ Quantity Quantity::operator*(const Quantity& other) const
 {
     Quantity result(*this);
     result.m_numericValue *= other.m_numericValue;
+    const auto copyDisplayUnit = [&](const Quantity& source) {
+        result.stripUnits();
+        result.m_unit = new CNumber(source.unit());
+        result.m_unitName = source.unitName();
+    };
     if (!other.isDimensionless()) {
         result.stripUnits();
         auto i = other.m_dimension.constBegin();
@@ -424,6 +663,74 @@ Quantity Quantity::operator*(const Quantity& other) const
             ++i;
         }
         result.cleanDimension();
+
+        // Preserve preferred display unit when multiplying a dimensionless
+        // value by a quantity with an explicit display unit.
+        if (this->isDimensionless() && other.hasUnit()) {
+            result.m_unit = new CNumber(*other.m_unit);
+            result.m_unitName = other.m_unitName;
+        }
+    }
+
+    if (!result.hasUnit()) {
+        const QString n1 = normalizeUnitName(this->unitName());
+        const QString n2 = normalizeUnitName(other.unitName());
+        const bool isNewtonMeterPair =
+            (n1 == QLatin1String("newton") && n2 == QLatin1String("meter"))
+            || (n1 == QLatin1String("meter") && n2 == QLatin1String("newton"))
+            || (isExactDimension(*this, dimensionNewton()) && isExactDimension(other, dimensionMeter()))
+            || (isExactDimension(*this, dimensionMeter()) && isExactDimension(other, dimensionNewton()));
+        if (isNewtonMeterPair) {
+            // Keep N·m explicit by default because it is semantically ambiguous:
+            // energy is expressed in J, while torque is commonly expressed as N·m.
+            // Users can still request an explicit conversion target ("-> joule").
+            result.setDisplayUnit(this->unit() * other.unit(), "newton meter");
+        } else if ((n1 == QLatin1String("pascal")
+                    && isExactDimension(other, dimensionCubicMeter()))
+                   || (n2 == QLatin1String("pascal")
+                       && isExactDimension(*this, dimensionCubicMeter())))
+        {
+            result.setDisplayUnit(this->unit() * other.unit(), "joule");
+        } else if ((n1 == QLatin1String("watt") && n2 == QLatin1String("second"))
+                   || (n2 == QLatin1String("watt") && n1 == QLatin1String("second"))
+                   || (isExactDimension(*this, dimensionWatt()) && isExactDimension(other, dimensionSecond()))
+                   || (isExactDimension(*this, dimensionSecond()) && isExactDimension(other, dimensionWatt())))
+        {
+            // Keep W·s explicit by default: although dimensionally equal to J,
+            // it often conveys time-integration context (power over time).
+            // Auto-collapsing to J can hide that intent unless user requests
+            // an explicit conversion ("-> joule").
+            result.setDisplayUnit(this->unit() * other.unit(), "watt second");
+        } else if ((n1 == QLatin1String("coulomb") && n2 == QLatin1String("volt"))
+                   || (n2 == QLatin1String("coulomb") && n1 == QLatin1String("volt")))
+        {
+            result.setDisplayUnit(this->unit() * other.unit(), "joule");
+        } else if ((isSteradianUnitName(n1)
+                    && isExactDimension(other, dimensionCandela()))
+                   || (isSteradianUnitName(n2)
+                       && isExactDimension(*this, dimensionCandela())))
+        {
+            // This mapping is unambiguous in this context: cd·sr is luminous flux.
+            result.setDisplayUnit(this->unit() * other.unit(), "lumen");
+        }
+    }
+
+    if (!result.hasUnit()) {
+        if (this->isDimensionless() && other.hasUnit()) {
+            copyDisplayUnit(other);
+        } else if (other.isDimensionless() && this->hasUnit()) {
+            copyDisplayUnit(*this);
+        } else if (!this->hasUnit()
+                   && other.hasUnit()
+                   && isStickyDisplayUnit(other.unitName()))
+        {
+            copyDisplayUnit(other);
+        } else if (this->hasUnit()
+                   && !other.hasUnit()
+                   && isStickyDisplayUnit(this->unitName()))
+        {
+            copyDisplayUnit(*this);
+        }
     }
     return result;
 }
@@ -449,6 +756,11 @@ Quantity Quantity::operator/(const Quantity& other) const
 {
     Quantity result(*this);
     result.m_numericValue /= other.m_numericValue;
+    const auto copyDisplayUnit = [&](const Quantity& source) {
+        result.stripUnits();
+        result.m_unit = new CNumber(source.unit());
+        result.m_unitName = source.unitName();
+    };
     if (!other.isDimensionless()) {
         result.stripUnits();
         auto i = other.m_dimension.constBegin();
@@ -461,6 +773,39 @@ Quantity Quantity::operator/(const Quantity& other) const
             ++i;
         }
         result.cleanDimension();
+
+        const QString n1 = normalizeUnitName(this->unitName());
+        // Keep user-intended energy-per-geometry forms in their original domain
+        // unless conversion is explicitly requested, to avoid context loss:
+        // J/m² (energy/area) vs N/m (force/length), and
+        // J/m³ (energy density) vs Pa (pressure).
+        if (((this->hasUnit()
+              && (n1 == QLatin1String("joule") || n1 == QLatin1String("j")))
+             || isExactDimension(*this, dimensionJoule()))
+            && isExactDimension(other, dimensionSquareMeter()))
+        {
+            result.setDisplayUnit(this->unit() / other.unit(),
+                                  QString::fromUtf8("joule / meter²"));
+            return result;
+        }
+        if (((this->hasUnit()
+              && (n1 == QLatin1String("joule") || n1 == QLatin1String("j")))
+             || isExactDimension(*this, dimensionJoule()))
+            && isExactDimension(other, dimensionCubicMeter()))
+        {
+            result.setDisplayUnit(this->unit() / other.unit(),
+                                  QString::fromUtf8("joule / meter³"));
+            return result;
+        }
+
+        if (this->hasUnit()
+            && !other.hasUnit()
+            && isStickyDisplayUnit(this->unitName()))
+        {
+            copyDisplayUnit(*this);
+        }
+    } else if (this->hasUnit()) {
+        copyDisplayUnit(*this);
     }
     return result;
 }
@@ -872,7 +1217,7 @@ QString DMath::format(Quantity q, Quantity::Format format)
         q.cleanDimension();
         Units::findUnit(q);
     }
-    QString unit_name = ' ' + q.unitName();
+    QString unit_name = ' ' + normalizeDisplayUnitNameForOutput(q.unitName());
     CNumber unit = q.unit();
     CNumber number = q.m_numericValue;
 

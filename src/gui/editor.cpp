@@ -527,7 +527,7 @@ QStringList Editor::matchFragment(const QString& id) const
     if (settings->autoCompletionBuiltInFunctions) {
         const auto fnames = FunctionRepo::instance()->getIdentifiers();
         for (int i = 0; i < fnames.count(); ++i) {
-            if (fnames.at(i).startsWith(id, Qt::CaseInsensitive)) {
+            if (fnames.at(i).startsWith(id, Qt::CaseSensitive)) {
                 QString str = fnames.at(i);
                 Function* f = FunctionRepo::instance()->find(str);
                 if (f)
@@ -540,6 +540,7 @@ QStringList Editor::matchFragment(const QString& id) const
 
     // Find matches in variables names.
     QStringList vchoices;
+    QSet<QString> seenVariableCompletionIds;
     const QList<Unit> allUnits = Units::getList();
     QSet<QString> unitNames;
     for (const Unit& unit : allUnits)
@@ -556,12 +557,19 @@ QStringList Editor::matchFragment(const QString& id) const
         if (!includeVariable)
             continue;
 
-        if (variable.identifier().startsWith(id, Qt::CaseInsensitive)) {
+        if (variable.identifier().startsWith(id, Qt::CaseSensitive)) {
+            const QString completionIdentifier =
+                isUnit
+                    ? Units::formatUnitTokenForDisplay(variable.identifier())
+                    : variable.identifier();
+            if (seenVariableCompletionIds.contains(completionIdentifier))
+                continue;
+            seenVariableCompletionIds.insert(completionIdentifier);
             const QString variableDescription = variable.description().trimmed().isEmpty()
                 ? NumberFormatter::format(variable.value())
                 : variable.description().trimmed();
             vchoices.append(QString("%1:%2").arg(
-                variable.identifier(),
+                completionIdentifier,
                 variableDescription));
         }
     }
@@ -573,7 +581,7 @@ QStringList Editor::matchFragment(const QString& id) const
         QStringList ufchoices;
         auto userFunctions = m_evaluator->getUserFunctions();
         for (int i = 0; i < userFunctions.count(); ++i) {
-            if (userFunctions.at(i).name().startsWith(id, Qt::CaseInsensitive)) {
+            if (userFunctions.at(i).name().startsWith(id, Qt::CaseSensitive)) {
                 const QString description = userFunctions.at(i).description().trimmed().isEmpty()
                     ? tr("User function")
                     : userFunctions.at(i).description().trimmed();
@@ -607,7 +615,7 @@ QString Editor::getKeyword() const
             // are only a fallback for partial identifiers.
             for (const auto& match : matches) {
                 const QString identifier = match.split(":").first();
-                if (identifier.compare(tokenText, Qt::CaseInsensitive) == 0)
+                if (identifier.compare(tokenText, Qt::CaseSensitive) == 0)
                     return identifier;
             }
             if (!matches.empty())
@@ -663,7 +671,7 @@ void Editor::triggerAutoComplete()
                 break;
             if (tokens[i].isIdentifier()) {
                 auto arg = tokens[i].text();
-                if (!arg.startsWith(id, Qt::CaseInsensitive))
+                if (!arg.startsWith(id, Qt::CaseSensitive))
                     continue;
                 for (int j = 0; j < choices.size(); ++j) {
                     if (choices[j].split(":")[0] == arg) {
@@ -682,7 +690,7 @@ void Editor::triggerAutoComplete()
 
     // Single perfect match, no need to give choices.
     if (choices.count() == 1)
-        if (choices.at(0).toLower() == id.toLower())
+        if (choices.at(0).split(":").first() == id)
             return;
 
     // Present the user with completion choices.
@@ -708,6 +716,19 @@ void Editor::autoComplete(const QString& item)
 
     // Add leading space characters if any.
     auto newTokenText = str.at(0);
+    static const QSet<QString> s_unitIdentifiers = []() {
+        QSet<QString> names;
+        const QList<Unit> units = Units::getList();
+        for (const Unit& unit : units)
+            names.insert(unit.name);
+        return names;
+    }();
+    if (s_unitIdentifiers.contains(newTokenText))
+        newTokenText = Units::formatUnitTokenForDisplay(newTokenText);
+    if (newTokenText == QLatin1String("degree")
+        || newTokenText == QLatin1String("deg")) {
+        newTokenText = QString(UnicodeChars::DegreeSign);
+    }
     const int leadingSpaces = lastToken.size() - lastToken.text().length();
     if (leadingSpaces > 0)
         newTokenText = newTokenText.rightJustified(
@@ -1203,7 +1224,7 @@ void Editor::keyPressEvent(QKeyEvent* event)
         event->accept();
         return;
     case Qt::Key_At:
-        insert(QString::fromUtf8("°")); // U+00B0 ° DEGREE SIGN
+        insert(QString(UnicodeChars::DegreeSign)); // U+00B0 ° DEGREE SIGN
         event->accept();
         return;
     case Qt::Key_ParenLeft:
@@ -1592,18 +1613,18 @@ ConstantCompletion::ConstantCompletion(Editor* editor)
     m_constantList = constants->list();
 
     // Populate categories.
-    QStringList categoryList;
-    categoryList << tr("All");
-    QTreeWidgetItem* all = new QTreeWidgetItem(m_categoryWidget, categoryList);
-    for (int i = 0; i < constants->categories().count(); ++i) {
-        categoryList.clear();
-        categoryList << constants->categories().at(i);
-        new QTreeWidgetItem(m_categoryWidget, categoryList);
+    QStringList domainList;
+    domainList << tr("All");
+    QTreeWidgetItem* all = new QTreeWidgetItem(m_categoryWidget, domainList);
+    for (int i = 0; i < constants->domains().count(); ++i) {
+        domainList.clear();
+        domainList << constants->domains().at(i);
+        new QTreeWidgetItem(m_categoryWidget, domainList);
     }
     m_categoryWidget->setCurrentItem(all);
 
     // Populate constants.
-    m_lastCategory = tr("All");
+    m_lastDomain = tr("All");
     for (int i = 0; i < constants->list().count(); ++i) {
         QStringList names;
         names << constants->list().at(i).name;
@@ -1619,10 +1640,10 @@ ConstantCompletion::ConstantCompletion(Editor* editor)
     const int constantsHeight =
         m_constantWidget->sizeHintForRow(0)
             * qMin(7, m_constantList.count()) + 3;
-    const int categoriesHeight =
+    const int domainsHeight =
         m_categoryWidget->sizeHintForRow(0)
-            * qMin(7, constants->categories().count()) + 3;
-    const int height = qMax(constantsHeight, categoriesHeight);
+            * qMin(7, constants->domains().count()) + 3;
+    const int height = qMax(constantsHeight, domainsHeight);
     width += 200; // Extra space (FIXME: scrollbar size?).
 
     // Adjust dimensions.
@@ -1653,11 +1674,11 @@ void ConstantCompletion::showConstants()
     m_slider->start();
     m_constantWidget->setFocus();
 
-    QString chosenCategory;
+    QString chosenDomain;
     if (m_categoryWidget->currentItem())
-        chosenCategory = m_categoryWidget->currentItem()->text(0);
+        chosenDomain = m_categoryWidget->currentItem()->text(0);
 
-    if (m_lastCategory == chosenCategory)
+    if (m_lastDomain == chosenDomain)
         return;
 
     m_constantWidget->clear();
@@ -1667,8 +1688,8 @@ void ConstantCompletion::showConstants()
         names << m_constantList.at(i).name;
         names << m_constantList.at(i).name.toUpper();
 
-        const bool include = (chosenCategory == tr("All")) ?
-            true : (m_constantList.at(i).category == chosenCategory);
+        const bool include = (chosenDomain == tr("All")) ?
+            true : (m_constantList.at(i).domain == chosenDomain);
 
         if (!include)
             continue;
@@ -1678,7 +1699,7 @@ void ConstantCompletion::showConstants()
 
     m_constantWidget->sortItems(0, Qt::AscendingOrder);
     m_constantWidget->setCurrentItem(m_constantWidget->itemAt(0, 0));
-    m_lastCategory = chosenCategory;
+    m_lastDomain = chosenDomain;
 }
 
 bool ConstantCompletion::eventFilter(QObject* object, QEvent* event)
@@ -1759,13 +1780,25 @@ void ConstantCompletion::doneCompletion()
     m_popup->hide();
     m_editor->setFocus();
     const auto* item = m_constantWidget->currentItem();
+    if (!item) {
+        emit selectedCompletion(QString());
+        return;
+    }
+
     auto found = std::find_if(m_constantList.begin(), m_constantList.end(),
         [&](const Constant& c) { return item->text(0) == c.name; }
     );
-    emit selectedCompletion(
-        (item && found != m_constantList.end()) ?
-            found->value : QString()
-    );
+    if (found == m_constantList.end()) {
+        emit selectedCompletion(QString());
+        return;
+    }
+
+    QString normalizedUnit = found->unit;
+    normalizedUnit.replace(UnicodeChars::MiddleDot, UnicodeChars::DotOperator);
+    const QString expression = found->unit.isEmpty()
+        ? found->value
+        : QStringLiteral("%1 %2").arg(found->value, normalizedUnit);
+    emit selectedCompletion(expression);
 }
 
 void ConstantCompletion::showCompletion()

@@ -43,7 +43,9 @@ public slots:
 
 protected slots:
     void filter();
+    void handleDomainChanged();
     void handleItem(QTreeWidgetItem*);
+    void refreshSubdomains();
     void retranslateText();
     void triggerFilter();
     void updateList();
@@ -54,8 +56,10 @@ protected:
 private:
     Q_DISABLE_COPY(ConstantsWidget)
 
-    QComboBox* m_category;
-    QLabel* m_categoryLabel;
+    QComboBox* m_domain;
+    QLabel* m_domainLabel;
+    QComboBox* m_subdomain;
+    QLabel* m_subdomainLabel;
     QLineEdit* m_filter;
     QTimer* m_filterTimer;
     QLabel* m_label;
@@ -64,4 +68,3 @@ private:
 };
 
 #endif
-

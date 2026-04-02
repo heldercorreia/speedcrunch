@@ -111,7 +111,7 @@ static void checkEval(const char* file, int line, const char* msg, const QString
                 ++eval_new_failed_tests;
             }
             cerr << endl;
-            cerr << "\tError: " << qPrintable(eval->error()) << endl;
+            cerr << "\tError: " << eval->error().toUtf8().constData() << endl;
         }
     } else {
         QString result = (format ? NumberFormatter::format(rn) : DMath::format(rn, Format::Fixed()));
@@ -126,8 +126,9 @@ static void checkEval(const char* file, int line, const char* msg, const QString
                 ++eval_new_failed_tests;
             }
             cerr << endl;
-            cerr << "\tResult   : " << result.toLatin1().constData() << endl
-                 << "\tExpected : " << (shouldFail ? "should fail" : expected) << endl;
+            cerr << "\tResult   : " << result.toUtf8().constData() << endl
+                 << "\tExpected : "
+                 << (shouldFail ? "should fail" : QString::fromUtf8(expected).toUtf8().constData()) << endl;
         }
     }
 }
@@ -155,7 +156,7 @@ static void checkEvalFormatSlash(const char* file, int line, const char* msg,
         ++eval_failed_tests;
         ++eval_new_failed_tests;
         cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl
-             << "\tResult      : " << result.toLatin1().constData() << endl
+             << "\tResult      : " << result.toUtf8().constData() << endl
              << "\tExpected '/' : " << (shouldHaveSlash ? "yes" : "no") << endl;
     }
 }
@@ -183,8 +184,8 @@ static void checkEvalFormatMediumSpacedSlash(const char* file, int line, const c
         ++eval_failed_tests;
         ++eval_new_failed_tests;
         cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl
-             << "\tResult                 : " << result.toLatin1().constData() << endl
-             << "\tExpected medium slash  : " << mediumSlash.toLatin1().constData() << endl;
+             << "\tResult                 : " << result.toUtf8().constData() << endl
+             << "\tExpected medium slash  : " << mediumSlash.toUtf8().constData() << endl;
     }
 }
 
@@ -248,7 +249,7 @@ static void checkInterpreted(const char* file, int line, const char* msg, const 
         ++eval_failed_tests;
         ++eval_new_failed_tests;
         cerr << file << "[" << line << "]\t" << msg << "\t[NEW]" << endl
-             << "\tInterpreted: " << interpreted.toLatin1().constData() << endl
+             << "\tInterpreted: " << interpreted.toUtf8().constData() << endl
              << "\tExpected   : " << expected << endl;
     }
 }
@@ -548,6 +549,14 @@ void test_constants()
     CHECK_EVAL_FAIL("ans()");
     CHECK_EVAL_FAIL("sqrt(pi())");
     CHECK_EVAL_FAIL("cos(pi()");
+
+    // Subscript Unicode letters/digits are accepted in identifiers.
+    CHECK_EVAL(QString::fromUtf8("foo₀=2"), "2");
+    CHECK_EVAL(QString::fromUtf8("foo₀+1"), "3");
+    CHECK_USERFUNC_SET(QString::fromUtf8("f₀(x)=x+1"));
+    CHECK_EVAL(QString::fromUtf8("f₀(2)"), "3");
+    CHECK_EVAL(QString::fromUtf8("xᵢ=4"), "4");
+    CHECK_EVAL(QString::fromUtf8("xᵢ*3"), "12");
 }
 
 void test_exponentiation()
@@ -639,7 +648,7 @@ void test_unary()
     CHECK_INTERPRETED("----pi", "pi");
 }
 
-void test_binary()
+void test_binary_power_operator()
 {
     // See http://en.wikipedia.org/wiki/Empty_product.
     CHECK_EVAL("0^0", "NaN");
@@ -666,7 +675,10 @@ void test_binary()
     CHECK_EVAL("(-13)^(1/3.123)", "2.27347485100383238372");
     CHECK_EVAL("(-13)^(1/9.123)", "1.32465488702830785593");
     CHECK_EVAL("(-13)^(1/27.123)", "1.09918315510346486963");
+}
 
+void test_binary_arithmetic_operator_variants()
+{
     CHECK_EVAL("0+0", "0");
     CHECK_EVAL("1+0", "1");
     CHECK_EVAL("0+1", "1");
@@ -699,14 +711,17 @@ void test_binary()
     CHECK_EVAL("1/(1/(1/(2425/10000)-4)-8)-12", "0");
     CHECK_EVAL("1/(1/(1/(1/(1/(1/0.25636-3)-1)-9)-12)-1)-48", "0");
     CHECK_EVAL("1/(1/(1/(1/(1/(1/(25636/100000)-3)-1)-9)-12)-1)-48", "0");
+}
 
-    // Check that parentheses are added in unit conversion results when needed
+void test_units_conversion_parentheses()
+{
+    // Check that parentheses are added in unit conversion results when needed.
     CHECK_EVAL("1 meter -> 10 meter", "0.1 (10 meter)");
     CHECK_EVAL("1 meter -> .1 meter", "10 (.1 meter)");
     CHECK_EVAL("1 meter -> -1 meter", "-1 (-1 meter)");
     CHECK_EVAL("1 meter -> 0xa meter", "0.1 (0xa meter)");
     CHECK_EVAL("1 meter second -> 10 meter second", "0.1 (10 meter second)");
-    CHECK_EVAL("1 meter second -> meter 10 second", "0.1 meter 10 second");
+    CHECK_EVAL("1 meter second -> meter 10 second", "0.1 meter⋅10⋅second");
     CHECK_EVAL("1 meter second -> meter second 10", "0.1 (meter second 10)");
     CHECK_EVAL("1 meter -> meter + meter", "0.5 (meter + meter)");
     CHECK_EVAL("1 meter -> meter - 2meter", "-1 (meter - 2meter)");
@@ -714,10 +729,414 @@ void test_binary()
     CHECK_EVAL("1 (10 meter) -> meter", "10 meter");
     CHECK_EVAL("1 meter in meter", "1 meter");
     CHECK_EVAL("1 meter IN meter", "1 meter");
-    CHECK_EVAL("50 yard + 2 foot in centi meter", "4632.96 centi meter");
+    CHECK_EVAL("50 yard + 2 foot in centi meter", "4632.96 centi⋅meter");
     CHECK_EVAL("10 meter in (1 yard + 2 foot)", "6.56167979002624671916 (1 yard + 2 foot)");
-    CHECK_EVAL(QString::fromUtf8("1 meter −> centi meter"), "100 centi meter");
-    CHECK_EVAL(QString::fromUtf8("1 meter → centi meter"), "100 centi meter");
+    CHECK_EVAL(QString::fromUtf8("1 meter −> centi meter"), "100 centi⋅meter");
+    CHECK_EVAL(QString::fromUtf8("1 meter → centi meter"), "100 centi⋅meter");
+}
+
+void test_units_display_propagation()
+{
+    // Display-unit propagation should be symmetric for scalar multiplication.
+    CHECK_EVAL("3 * 2 meter", "6 meter");
+    CHECK_EVAL("2 meter * 3", "6 meter");
+}
+
+void test_units_short_aliases_and_si_prefixes()
+{
+    CHECK_EVAL("m", "1 meter");
+    CHECK_EVAL("kg", "1 kilogram");
+    CHECK_EVAL("cy", "3155760000 second");
+    CHECK_EVAL("F", "1 farad");
+    CHECK_EVAL("V", "1 volt");
+    CHECK_EVAL("Eh", "0.00000000000000000436 joule");
+    CHECK_EVAL("mol", "1 mole");
+    CHECK_EVAL(QString::fromUtf8("Ω"), "1 ohm");
+
+    CHECK_EVAL("kilometer -> meter", "1000 meter");
+    CHECK_EVAL("km -> meter", "1000 meter");
+    CHECK_EVAL("milligram -> gram", "0.001 gram");
+    CHECK_EVAL("mg -> gram", "0.001 gram");
+    CHECK_EVAL("megaelectronvolt -> electronvolt", "1000000 electronvolt");
+    CHECK_EVAL("MeV -> eV", "1000000 eV");
+    CHECK_EVAL("picovolt -> volt", "0.000000000001 volt");
+    CHECK_EVAL("pV -> volt", "0.000000000001 volt");
+
+    CHECK_EVAL("mV -> volt", "0.001 volt");
+    CHECK_EVAL("MV -> volt", "1000000 volt");
+    CHECK_EVAL_FAIL("Mv -> volt");
+    CHECK_EVAL("m² -> m2", "1 m2");
+    CHECK_EVAL("m³ -> m3", "1 m3");
+    CHECK_EVAL("mm² -> m2", "0.001 m2");
+    CHECK_EVAL("mm³ -> m3", "0.001 m3");
+    CHECK_DISPLAY_INTERPRETED("2 m2 + 3 mm2",
+                              QStringLiteral("2") + space + QString(UnicodeChars::DotOperator)
+                                  + space + QString::fromUtf8("m²")
+                                  + space + QStringLiteral("+")
+                                  + space + QStringLiteral("3")
+                                  + space + QString(UnicodeChars::DotOperator)
+                                  + space + QString::fromUtf8("mm²"));
+
+    CHECK_EVAL(QString::fromUtf8("µV -> volt"), "0.000001 volt");
+    CHECK_EVAL(QString::fromUtf8("μV -> volt"), "0.000001 volt");
+    CHECK_EVAL("uV -> volt", "0.000001 volt");
+    CHECK_EVAL("um -> meter", "0.000001 meter");
+    CHECK_EVAL_FAIL("uB -> byte");
+    CHECK_EVAL("kB -> byte", "1000 byte");
+    CHECK_EVAL("MB -> byte", "1000000 byte");
+    CHECK_EVAL_FAIL("mb -> b");
+    CHECK_EVAL_FAIL(QString::fromUtf8("µb -> b"));
+    CHECK_EVAL_FAIL("nb -> b");
+    CHECK_EVAL("kb -> b", "1000 b");
+    CHECK_EVAL("Mb -> b", "1000000 b");
+    CHECK_EVAL("Gb -> b", "1000000000 b");
+    CHECK_EVAL_FORMAT("1 byte + 2 byte", "3 B");
+    CHECK_EVAL_FORMAT("1 bit + 2 bit", "3 b");
+    CHECK_EVAL_FORMAT("2 MB + 3 PB + 4 TB", "3.004000002 PB");
+    CHECK_EVAL_FAIL("1 B + 8 b");
+    CHECK_EVAL_FAIL("mnat -> nat");
+    CHECK_EVAL_FAIL("knat -> nat");
+    CHECK_EVAL_FAIL("mEh -> Eh");
+    CHECK_EVAL_FAIL("kEh -> Eh");
+    CHECK_EVAL_FAIL("mHart -> Hart");
+    CHECK_EVAL_FAIL("kHart -> Hart");
+    CHECK_EVAL("mm -> meter", "0.001 meter");
+    CHECK_EVAL("km -> meter", "1000 meter");
+    CHECK_EVAL("kpc -> parsec", "1000 parsec");
+    CHECK_EVAL("Mpc -> parsec", "1000000 parsec");
+    CHECK_EVAL("1 century -> year_julian", "100 year_julian");
+    CHECK_EVAL("1 cy -> year_julian", "100 year_julian");
+    CHECK_EVAL("1 cy -> day", "36525 day");
+    CHECK_EVAL(QString::fromUtf8("kΩ -> ohm"), "1000 ohm");
+    CHECK_EVAL_FORMAT("2 coulomb +3 mC", "2.003 C");
+    CHECK_DISPLAY_INTERPRETED("2 coulomb +3 mC",
+                              QStringLiteral("2") + space + QString::fromUtf8("⋅")
+                                  + space + QStringLiteral("C")
+                                  + space + QStringLiteral("+")
+                                  + space + QStringLiteral("3")
+                                  + space + QString::fromUtf8("⋅")
+                                  + space + QStringLiteral("mC"));
+    CHECK_EVAL_FORMAT("C^3*m^3*J^(-2)", u8"1 s⁷⋅A³ / (kg²⋅m)");
+    CHECK_EVAL_FORMAT("1081.20238677 C*m^(-3)", u8"1081.20238677 C⋅m⁻³");
+    CHECK_EVAL_FORMAT("J/(K*mol)", u8"1 J⋅mol⁻¹⋅K⁻¹");
+}
+
+void test_units_named_derived_canonicalization()
+{
+    CHECK_EVAL_FORMAT("kg*m^2/s^2", "1 J");
+    CHECK_EVAL_FORMAT("Pa*m^3", "1 J");
+    CHECK_EVAL_FORMAT("C*V", "1 J");
+    CHECK_EVAL_FORMAT("N*m/s", "1 W");
+
+    CHECK_EVAL_FORMAT("C/s", "1 A");
+    CHECK_EVAL_FORMAT("A*s", "1 C");
+
+    CHECK_EVAL_FORMAT("J/s", "1 W");
+    CHECK_EVAL_FORMAT("kg*m^2/s^3", "1 W");
+    CHECK_EVAL_FORMAT("V*A", "1 W");
+
+    CHECK_EVAL_FORMAT("W/A", "1 V");
+    CHECK_EVAL_FORMAT("J/C", "1 V");
+    CHECK_EVAL_FORMAT("kg*m^2/(s^3*A)", "1 V");
+
+    CHECK_EVAL_FORMAT("V/A", u8"1 Ω");
+    CHECK_EVAL_FORMAT("kg*m^2/(s^3*A^2)", u8"1 Ω");
+
+    CHECK_EVAL_FORMAT("A/V", "1 S");
+    CHECK_EVAL_FORMAT("1/ohm", "1 S");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("1/Ω"), "1 S");
+
+    CHECK_EVAL_FORMAT("C/V", "1 F");
+    CHECK_EVAL_FORMAT("A*s/V", "1 F");
+    CHECK_EVAL_FORMAT("s^4*A^2/(kg*m^2)", "1 F");
+
+    CHECK_EVAL_FORMAT("V*s", "1 Wb");
+    CHECK_EVAL_FORMAT("kg*m^2/(s^2*A)", "1 Wb");
+
+    CHECK_EVAL_FORMAT("Wb/m^2", "1 T");
+    CHECK_EVAL_FORMAT("N/(A*m)", "1 T");
+    CHECK_EVAL_FORMAT("kg/(s^2*A)", "1 T");
+
+    CHECK_EVAL_FORMAT("Wb/A", "1 H");
+    CHECK_EVAL_FORMAT("V*s/A", "1 H");
+    CHECK_EVAL_FORMAT("kg*m^2/(s^2*A^2)", "1 H");
+
+    CHECK_EVAL_FORMAT("kg*m/s^2", "1 N");
+    CHECK_EVAL_FORMAT("N/m^2", "1 Pa");
+    CHECK_EVAL_FORMAT("kg/(m*s^2)", "1 Pa");
+
+    CHECK_EVAL_FORMAT("cd*sr", "1 lm");
+    CHECK_EVAL_FORMAT("lm/m^2", "1 lx");
+    CHECK_EVAL_FORMAT("cd*sr/m^2", "1 lx");
+
+    CHECK_EVAL_FORMAT("mol/s", "1 kat");
+}
+
+void test_units_derived_si_recognition_and_disambiguation()
+{
+    // Derived SI unit recognition and semantic disambiguation.
+    CHECK_EVAL("meter", "1 meter");
+    CHECK_EVAL("kilogram", "1 kilogram");
+    CHECK_EVAL("second", "1 second");
+
+    CHECK_EVAL("coulomb / second", "1 ampere");
+    CHECK_EVAL("second^-1 * coulomb", "1 ampere");
+    CHECK_EVAL("watt / volt", "1 ampere");
+    CHECK_EVAL("siemens * volt", "1 ampere");
+    CHECK_EVAL("volt / ohm", "1 ampere");
+    CHECK_EVAL("( kilogram * meter^2 / second^3 ) / ( kilogram * meter^2 / ( second^3 * ampere ) )", "1 ampere");
+
+    CHECK_EVAL("kelvin", "1 kelvin");
+    CHECK_EVAL("mole", "1 mole");
+
+    CHECK_EVAL("lumen / steradian", "1 candela");
+    CHECK_EVAL("lux * meter^2 / steradian", "1 candela");
+
+    CHECK_EVAL("1 / second", "1 second⁻¹");
+    CHECK_EVAL("second^-1", "1 second⁻¹");
+
+    // Unsafe/context-sensitive substitutions should keep user intent by default.
+    // N·m can mean torque or energy; do not auto-collapse to J.
+    CHECK_EVAL("newton * meter", "1 newton⋅meter");
+    CHECK_EVAL("( kilogram * meter / second^2 ) * meter", "1 newton⋅meter");
+    CHECK_EVAL("( kilogram * meter / second^2 ) * meter -> joule", "1 joule");
+    // J/m² can be energy/area or force/length; preserve the entered domain form.
+    CHECK_EVAL("joule / meter^2", "1 joule / meter²");
+    CHECK_EVAL("joule / meter^2 -> newton / meter", "1 newton / meter");
+    // J/m³ can mean energy density or pressure; keep J/m³ unless explicitly converted.
+    CHECK_EVAL("joule / meter^3", "1 joule / meter³");
+    CHECK_EVAL("joule / meter^3 -> pascal", "1 pascal");
+    // W·s carries time-integration context; do not auto-collapse to J.
+    CHECK_EVAL("watt * second", "1 watt⋅second");
+    CHECK_EVAL("watt * second -> joule", "1 joule");
+
+    CHECK_EVAL("watt * volt", "1 volt²⋅ampere");
+    CHECK_EVAL("volt * watt", "1 volt²⋅ampere");
+    CHECK_EVAL("( volt * ampere ) * volt", "1 volt²⋅ampere");
+    CHECK_EVAL("volt^2 * ampere", "1 volt²⋅ampere");
+    CHECK_EVAL("( joule / second ) * volt", "1 volt²⋅ampere");
+    CHECK_EVAL("( joule / coulomb ) * watt", "1 volt²⋅ampere");
+    CHECK_EVAL("( watt / ampere ) * watt", "1 volt²⋅ampere");
+    CHECK_EVAL("( volt * ampere ) * ( watt / ampere )", "1 volt²⋅ampere");
+    CHECK_EVAL("( joule / second ) * ( joule / coulomb )", "1 volt²⋅ampere");
+    CHECK_EVAL("( kilogram * meter^2 / second^3 ) * ( kilogram * meter^2 / ( second^3 * ampere ) )", "1 volt²⋅ampere");
+    CHECK_EVAL("( volt * second / second ) * watt", "1 volt²⋅ampere");
+    CHECK_EVAL("( watt * second / coulomb ) * watt", "1 volt²⋅ampere");
+    CHECK_EVAL("( siemens * volt ) * volt^2", "1 volt²⋅ampere");
+    CHECK_EVAL("( coulomb / second ) * volt^2", "1 volt²⋅ampere");
+    CHECK_EVAL("( ohm * ampere )^2 * ampere", "1 volt²⋅ampere");
+    CHECK_EVAL("watt * volt / second * second", "1 volt²⋅ampere");
+    CHECK_EVAL("watt * volt / joule * joule", "1 volt²⋅ampere");
+    CHECK_EVAL("( watt / volt ) * volt^2", "1 volt²⋅ampere");
+    CHECK_EVAL("watt^2 / ampere", "1 volt²⋅ampere");
+
+    CHECK_EVAL("watt", "1 watt");
+    CHECK_EVAL("joule / second", "1 watt");
+    CHECK_EVAL("( joule / coulomb ) * ampere", "1 watt");
+    CHECK_EVAL("( kilogram * meter^2 / second^3 )", "1 watt");
+    CHECK_EVAL("( tesla * meter^2 / second ) * ampere", "1 watt");
+    CHECK_EVAL("( henry * ampere / second ) * ampere", "1 watt");
+    CHECK_EVAL("( farad * volt / second ) * volt", "1 watt");
+
+    CHECK_EVAL("volt", "1 volt");
+    CHECK_EVAL("joule / coulomb", "1 volt");
+    CHECK_EVAL("ohm * ampere", "1 volt");
+    CHECK_EVAL("watt / ampere", "1 volt");
+    CHECK_EVAL("volt / second * second", "1 volt");
+    CHECK_EVAL("weber / second", "1 volt");
+    CHECK_EVAL("tesla * meter^2 / second", "1 volt");
+    CHECK_EVAL("henry * ampere / second", "1 volt");
+
+    CHECK_EVAL("volt * second / meter^2", "1 tesla");
+    CHECK_EVAL("weber / meter^2", "1 tesla");
+    CHECK_EVAL("newton / ( ampere * meter )", "1 tesla");
+    CHECK_EVAL("kilogram / ( second^2 * ampere )", "1 tesla");
+
+    CHECK_EVAL("watt / volt", "1 ampere");
+    CHECK_EVAL("volt / ohm", "1 ampere");
+    CHECK_EVAL("siemens * volt", "1 ampere");
+    CHECK_EVAL("coulomb / second", "1 ampere");
+    CHECK_EVAL("ampere", "1 ampere");
+    CHECK_EVAL("farad * volt / second", "1 ampere");
+
+    CHECK_EVAL("volt^2", "1 volt²");
+    CHECK_EVAL("( joule / coulomb ) * volt", "1 volt²");
+    CHECK_EVAL("( ohm * ampere ) * volt", "1 volt²");
+    CHECK_EVAL("( watt / ampere ) * volt", "1 volt²");
+    CHECK_EVAL("( weber / second ) * watt / ampere", "1 volt²");
+    CHECK_EVAL("( tesla * meter^2 / second ) * volt", "1 volt²");
+    CHECK_EVAL("( henry * ampere / second ) * volt", "1 volt²");
+    CHECK_EVAL("( weber / second ) * volt", "1 volt²");
+
+    CHECK_EVAL("watt * ampere", "1 watt⋅ampere");
+    CHECK_EVAL("ampere * watt", "1 watt⋅ampere");
+    CHECK_EVAL("volt * ampere^2", "1 watt⋅ampere");
+    CHECK_EVAL("( joule / second ) * ( coulomb / second )", "1 watt⋅ampere");
+    CHECK_EVAL("( volt * ampere ) * ampere", "1 watt⋅ampere");
+
+    CHECK_EVAL("farad * volt / second", "1 ampere");
+    CHECK_EVAL("ohm * ampere", "1 volt");
+    CHECK_EVAL("volt^2 / ampere", "1 volt²⋅ampere⁻¹");
+    CHECK_EVAL("watt^2", "1 watt²");
+    CHECK_EVAL("ampere * volt", "1 watt");
+    CHECK_EVAL("( volt * ampere ) / volt * volt", "1 watt");
+    CHECK_EVAL("( coulomb / second ) * volt", "1 watt");
+    CHECK_EVAL("( weber / second ) * volt", "1 volt²");
+    CHECK_EVAL("( tesla * meter^2 / second ) * ampere", "1 watt");
+    CHECK_EVAL("( henry * ampere / second ) * ampere", "1 watt");
+    CHECK_EVAL("( farad * volt / second ) * volt", "1 watt");
+    CHECK_EVAL("( ohm * ampere )^2", "1 volt²");
+    CHECK_EVAL("( kilogram * meter^2 / second^3 ) * volt / second", "1 kilogram⋅meter²⋅volt⋅second⁻⁴");
+
+    CHECK_EVAL("becquerel", "1 becquerel");
+    CHECK_EVAL("becquerel * second / second", "1 becquerel");
+    CHECK_EVAL("2 becquerel + 3 becquerel", "5 becquerel");
+
+    CHECK_EVAL("sievert", "1 sievert");
+    CHECK_EVAL("sievert / second * second", "1 sievert");
+    CHECK_EVAL("2 sievert + 3 sievert", "5 sievert");
+
+    CHECK_EVAL_FAIL("1 hertz + 1 becquerel");
+    CHECK_EVAL_FAIL("1 gray + 1 sievert");
+    CHECK_EVAL_FAIL("volt^2 ampere + watt");
+    CHECK_EVAL_FAIL("volt^2 ampere + volt^2");
+    CHECK_EVAL_FAIL("volt^2 ampere + ampere");
+}
+
+void test_units_conversion_compatibility_and_canonicalization()
+{
+    // Conversion compatibility and canonicalization regressions.
+    CHECK_EVAL("volt -> joule / coulomb", "1 joule / coulomb");
+    CHECK_EVAL("joule / coulomb -> volt", "1 volt");
+    CHECK_EVAL("watt -> joule / second", "1 joule / second");
+    CHECK_EVAL("joule / second -> watt", "1 watt");
+    CHECK_EVAL("ampere -> coulomb / second", "1 coulomb / second");
+    CHECK_EVAL("coulomb / second -> ampere", "1 ampere");
+    CHECK_EVAL("volt -> ohm * ampere", "1 (ohm * ampere)");
+    CHECK_EVAL("ohm * ampere -> volt", "1 volt");
+    CHECK_EVAL("watt -> volt * ampere", "1 (volt * ampere)");
+    CHECK_EVAL("volt * ampere -> watt", "1 watt");
+    CHECK_EVAL("ampere -> watt / volt", "1 watt / volt");
+    CHECK_EVAL("watt / volt -> ampere", "1 ampere");
+    CHECK_EVAL("volt -> watt / ampere", "1 (watt / ampere)");
+    CHECK_EVAL("watt / ampere -> volt", "1 volt");
+    CHECK_EVAL("ampere -> siemens * volt", "1 siemens * volt");
+    CHECK_EVAL("siemens * volt -> ampere", "1 ampere");
+    CHECK_EVAL("ampere -> farad * volt / second", "1 farad * volt / second");
+    CHECK_EVAL("farad * volt / second -> ampere", "1 ampere");
+    CHECK_EVAL("volt -> weber / second", "1 weber / second");
+    CHECK_EVAL("weber / second -> volt", "1 volt");
+    CHECK_EVAL("volt -> tesla * meter^2 / second", "1 tesla * meter² / second");
+    CHECK_EVAL("tesla * meter^2 / second -> volt", "1 volt");
+    CHECK_EVAL("volt -> henry * ampere / second", "1 henry * ampere / second");
+    CHECK_EVAL("henry * ampere / second -> volt", "1 volt");
+    CHECK_EVAL("watt -> ( tesla * meter^2 / second ) * ampere", "1 ( tesla * meter² / second ) * ampere");
+    CHECK_EVAL("( tesla * meter^2 / second ) * ampere -> watt", "1 watt");
+    CHECK_EVAL("watt -> ( henry * ampere / second ) * ampere", "1 ( henry * ampere / second ) * ampere");
+    CHECK_EVAL("( henry * ampere / second ) * ampere -> watt", "1 watt");
+    CHECK_EVAL("watt -> ( farad * volt / second ) * volt", "1 ( farad * volt / second ) * volt");
+    CHECK_EVAL("( farad * volt / second ) * volt -> watt", "1 watt");
+    CHECK_EVAL("volt^2 -> ( weber / second ) * volt", "1 ( weber / second ) * volt");
+    CHECK_EVAL("( weber / second ) * volt -> volt^2", "1 (volt²)");
+    CHECK_EVAL("volt^2 -> ( ohm * ampere )^2", "1 ( ohm * ampere )²");
+    CHECK_EVAL("( ohm * ampere )^2 -> volt^2", "1 (volt²)");
+    CHECK_EVAL("volt^2 / ampere -> volt^2 / ampere", "1 (volt² / ampere)");
+    CHECK_EVAL("ohm * ampere -> volt", "1 volt");
+    CHECK_EVAL("volt -> ohm * ampere", "1 (ohm * ampere)");
+    CHECK_EVAL("( kilogram * meter^2 / second^3 ) -> watt", "1 watt");
+    CHECK_EVAL("watt -> ( kilogram * meter^2 / second^3 )", "1 ( kilogram * meter² / second³ )");
+    CHECK_EVAL("( kilogram * meter^2 / second^3 ) * volt / second -> kilogram meter^2 volt / second^4",
+               "1 (kilogram meter² volt / second⁴)");
+    CHECK_EVAL("kilogram meter^2 volt / second^4 -> ( kilogram * meter^2 / second^3 ) * volt / second",
+               "1 ( kilogram * meter² / second³ ) * volt / second");
+
+    CHECK_EVAL_FAIL("volt -> watt");
+    CHECK_EVAL_FAIL("watt -> volt");
+    CHECK_EVAL_FAIL("volt -> ampere");
+    CHECK_EVAL_FAIL("ampere -> volt");
+    CHECK_EVAL_FAIL("watt -> ampere");
+    CHECK_EVAL_FAIL("ampere -> watt");
+    CHECK_EVAL_FAIL("joule / second -> volt");
+    CHECK_EVAL_FAIL("volt -> joule / second");
+    CHECK_EVAL_FAIL("ohm * ampere -> watt");
+    CHECK_EVAL_FAIL("watt -> ohm * ampere");
+    CHECK_EVAL_FAIL("volt^2 -> volt");
+    CHECK_EVAL_FAIL("volt -> volt^2");
+    CHECK_EVAL_FAIL("volt^2 -> ampere");
+    CHECK_EVAL_FAIL("ampere -> volt^2");
+    CHECK_EVAL_FAIL("volt^2 / ampere -> watt");
+    CHECK_EVAL_FAIL("watt -> volt^2 / ampere");
+    CHECK_EVAL_FAIL("( weber / second ) * volt -> watt");
+    CHECK_EVAL_FAIL("watt -> ( weber / second ) * volt");
+    CHECK_EVAL_FAIL("( tesla * meter^2 / second ) * ampere -> volt");
+    CHECK_EVAL_FAIL("volt -> ( tesla * meter^2 / second ) * ampere");
+    CHECK_EVAL_FAIL("( henry * ampere / second ) * ampere -> volt");
+    CHECK_EVAL_FAIL("volt -> ( henry * ampere / second ) * ampere");
+    CHECK_EVAL_FAIL("( farad * volt / second ) * volt -> volt");
+    CHECK_EVAL_FAIL("volt -> ( farad * volt / second ) * volt");
+    CHECK_EVAL_FAIL("( ohm * ampere )^2 -> watt");
+    CHECK_EVAL_FAIL("watt -> ( ohm * ampere )^2");
+    CHECK_EVAL_FAIL("( kilogram * meter^2 / second^3 ) * volt / second -> watt");
+    CHECK_EVAL_FAIL("watt -> ( kilogram * meter^2 / second^3 ) * volt / second");
+    CHECK_EVAL_FAIL("volt^2 ampere -> watt");
+    CHECK_EVAL_FAIL("watt -> volt^2 ampere");
+    CHECK_EVAL_FAIL("volt^2 ampere -> volt^2");
+    CHECK_EVAL_FAIL("volt^2 -> volt^2 ampere");
+    CHECK_EVAL_FAIL("volt^2 ampere -> ampere");
+    CHECK_EVAL_FAIL("ampere -> volt^2 ampere");
+
+    CHECK_EVAL("volt -> volt", "1 volt");
+    CHECK_EVAL("watt -> watt", "1 watt");
+    CHECK_EVAL("ampere -> ampere", "1 ampere");
+    CHECK_EVAL("volt^2 -> volt^2", "1 (volt²)");
+    CHECK_EVAL("( ohm * ampere )^2 -> ( ohm * ampere )^2", "1 ( ohm * ampere )²");
+    CHECK_EVAL("( volt * ampere ) / volt * volt -> watt", "1 watt");
+    CHECK_EVAL("watt -> ( volt * ampere ) / volt * volt", "1 ( volt * ampere ) / volt * volt");
+    CHECK_EVAL("( coulomb / second ) * volt -> watt", "1 watt");
+    CHECK_EVAL("watt -> ( coulomb / second ) * volt", "1 ( coulomb / second ) * volt");
+    CHECK_EVAL("1 * volt -> volt", "1 volt");
+    CHECK_EVAL("volt -> 1 * volt", "1 (1 * volt)");
+    CHECK_EVAL("1 * ( ohm * ampere )^2 -> volt^2", "1 (volt²)");
+    CHECK_EVAL("volt^2 -> 1 * ( ohm * ampere )^2", "1 (1 * ( ohm * ampere )²)");
+    CHECK_EVAL("volt^2 -> ((ohm * ampere)^2 -> (ohm * ampere)^2)", "1 volt²");
+    CHECK_EVAL("volt^2 -> (ohm * ampere)^2 -> (ohm * ampere)^2", "1 (ohm * ampere)²");
+    CHECK_EVAL("volt^2 -> 1 * (ohm * ampere)^2", "1 (1 * (ohm * ampere)²)");
+}
+
+void test_units_grouping_and_inverse_presentation()
+{
+    // If there is at least one positive exponent, render negative exponents
+    // in denominator form for readability.
+    CHECK_EVAL_FORMAT("m*kg*s^-1", u8"1 kg⋅m / s");
+    CHECK_EVAL_FORMAT("kg*m^-1*s^-1", u8"1 Pa⋅s");
+    CHECK_EVAL_FORMAT("m^2*s^-1", u8"1 m² / s");
+    CHECK_EVAL_FORMAT("kg*m^2*s^-1", u8"1 kg⋅m² / s");
+    CHECK_EVAL_FORMAT("m*s^-1", u8"1 m / s");
+    CHECK_EVAL_FORMAT("m/s", u8"1 m / s");
+
+    // If all exponents are negative, keep inverse-only exponent notation.
+    CHECK_EVAL_FORMAT("1/s", u8"1 s⁻¹");
+    CHECK_EVAL_FORMAT("s^-1", u8"1 s⁻¹");
+    CHECK_EVAL_FORMAT("1/(m*s^2)", u8"1 m⁻¹⋅s⁻²");
+    CHECK_EVAL_FORMAT("m^-1*s^-2", u8"1 m⁻¹⋅s⁻²");
+    CHECK_EVAL_FORMAT("m^-1/s^2", u8"1 m⁻¹⋅s⁻²");
+}
+
+void test_binary()
+{
+    test_binary_power_operator();
+    test_binary_arithmetic_operator_variants();
+}
+
+void test_units()
+{
+    test_units_conversion_parentheses();
+    test_units_display_propagation();
+    test_units_short_aliases_and_si_prefixes();
+    test_units_named_derived_canonicalization();
+    test_units_derived_si_recognition_and_disambiguation();
+    test_units_conversion_compatibility_and_canonicalization();
+    test_units_grouping_and_inverse_presentation();
 }
 
 void test_percent_operator()
@@ -1466,11 +1885,18 @@ void test_sexagesimal()
     CHECK_EVAL("°'56", "0.01555555555555555556");
     CHECK_EVAL("56\"", "0.01555555555555555556");
     CHECK_EVAL("56 arcsecond", "0.01555555555555555556");
+    CHECK_EVAL("56 arcsec", "0.01555555555555555556");
     CHECK_EVAL("56.78\"", "0.01577222222222222222");
+    CHECK_EVAL("8.4381406e4\"", "23.43927944444444444444");
+    CHECK_EVAL(QString::fromUtf8("8.4381406e4″"), "23.43927944444444444444");
+    CHECK_EVAL(QString::fromUtf8("8.4381406e4 ″"), "23.43927944444444444444");
     CHECK_EVAL("°34", "0.56666666666666666667");
     CHECK_EVAL("34'", "0.56666666666666666667");
+    CHECK_EVAL(QString::fromUtf8("34′"), "0.56666666666666666667");
     CHECK_EVAL("34 arcminute", "0.56666666666666666667");
+    CHECK_EVAL("34 arcmin", "0.56666666666666666667");
     CHECK_EVAL("34'56", "0.58222222222222222222");
+    CHECK_EVAL(QString::fromUtf8("34′56″"), "0.58222222222222222222");
     CHECK_EVAL("12°", "12");
     CHECK_EVAL("12°34", "12.56666666666666666667");
     CHECK_EVAL("12°34.5", "12.575");
@@ -1489,20 +1915,20 @@ void test_sexagesimal()
     CHECK_EVAL("12:34:56", "45296 second");
     CHECK_EVAL("12:34:56.78", "45296.78 second");
 
-    CHECK_EVAL_FORMAT("0", "0°00'00");
-    CHECK_EVAL_FORMAT("°'56", "0°00'56.00");
-    CHECK_EVAL_FORMAT("56\"", "0°00'56.00");
-    CHECK_EVAL_FORMAT("56 arcsecond", "0°00'56.00");
-    CHECK_EVAL_FORMAT("56.78\"", "0°00'56.78");
-    CHECK_EVAL_FORMAT("°34", "0°34'00.00");
-    CHECK_EVAL_FORMAT("34'", "0°34'00.00");
-    CHECK_EVAL_FORMAT("34 arcminute", "0°34'00.00");
-    CHECK_EVAL_FORMAT("34'56", "0°34'56.00");
-    CHECK_EVAL_FORMAT("12°", "12°00'00.00");
-    CHECK_EVAL_FORMAT("12°34", "12°34'00.00");
-    CHECK_EVAL_FORMAT("12°34.5", "12°34'30.00");
-    CHECK_EVAL_FORMAT("12°34'56", "12°34'56.00");
-    CHECK_EVAL_FORMAT("12°34'56.78", "12°34'56.78");
+    CHECK_EVAL_FORMAT("0", "0°00′00″");
+    CHECK_EVAL_FORMAT("°'56", "0°00′56.00″");
+    CHECK_EVAL_FORMAT("56\"", "0°00′56.00″");
+    CHECK_EVAL_FORMAT("56 arcsecond", "0°00′56.00″");
+    CHECK_EVAL_FORMAT("56.78\"", "0°00′56.78″");
+    CHECK_EVAL_FORMAT("°34", "0°34′00.00″");
+    CHECK_EVAL_FORMAT("34'", "0°34′00.00″");
+    CHECK_EVAL_FORMAT("34 arcminute", "0°34′00.00″");
+    CHECK_EVAL_FORMAT("34'56", "0°34′56.00″");
+    CHECK_EVAL_FORMAT("12°", "12°00′00.00″");
+    CHECK_EVAL_FORMAT("12°34", "12°34′00.00″");
+    CHECK_EVAL_FORMAT("12°34.5", "12°34′30.00″");
+    CHECK_EVAL_FORMAT("12°34'56", "12°34′56.00″");
+    CHECK_EVAL_FORMAT("12°34'56.78", "12°34′56.78″");
 
     CHECK_EVAL_FORMAT("0 second", "0:00:00");
     CHECK_EVAL_FORMAT("::56", "0:00:56.00");
@@ -1564,78 +1990,78 @@ void test_sexagesimal()
     CHECK_EVAL_FORMAT_FAIL("12°'\"3");
     CHECK_EVAL_FORMAT_FAIL("12°34'56.78\"9");
 
-    CHECK_EVAL_FORMAT("0", "0°00'00");
-    CHECK_EVAL_FORMAT("°'56", "0°00'56.00");
-    CHECK_EVAL_FORMAT("'56", "0°00'56.00");
-    CHECK_EVAL_FORMAT("56\"", "0°00'56.00");
-    CHECK_EVAL_FORMAT("56 arcsecond", "0°00'56.00");
-    CHECK_EVAL_FORMAT("56.78\"", "0°00'56.78");
-    CHECK_EVAL_FORMAT("°34", "0°34'00.00");
-    CHECK_EVAL_FORMAT("34'", "0°34'00.00");
-    CHECK_EVAL_FORMAT("34.5'", "0°34'30.00");
-    CHECK_EVAL_FORMAT("34'\"", "0°34'00.00");
-    CHECK_EVAL_FORMAT("34.5'\"", "0°34'30.00");
-    CHECK_EVAL_FORMAT("34.5 arcminute", "0°34'30.00");
-    CHECK_EVAL_FORMAT("34'56", "0°34'56.00");
+    CHECK_EVAL_FORMAT("0", "0°00′00″");
+    CHECK_EVAL_FORMAT("°'56", "0°00′56.00″");
+    CHECK_EVAL_FORMAT("'56", "0°00′56.00″");
+    CHECK_EVAL_FORMAT("56\"", "0°00′56.00″");
+    CHECK_EVAL_FORMAT("56 arcsecond", "0°00′56.00″");
+    CHECK_EVAL_FORMAT("56.78\"", "0°00′56.78″");
+    CHECK_EVAL_FORMAT("°34", "0°34′00.00″");
+    CHECK_EVAL_FORMAT("34'", "0°34′00.00″");
+    CHECK_EVAL_FORMAT("34.5'", "0°34′30.00″");
+    CHECK_EVAL_FORMAT("34'\"", "0°34′00.00″");
+    CHECK_EVAL_FORMAT("34.5'\"", "0°34′30.00″");
+    CHECK_EVAL_FORMAT("34.5 arcminute", "0°34′30.00″");
+    CHECK_EVAL_FORMAT("34'56", "0°34′56.00″");
     CHECK_INTERPRETED("34'56", "");
     CHECK_INTERPRETED("°34", "");
-    CHECK_EVAL_FORMAT("12°", "12°00'00.00");
-    CHECK_EVAL_FORMAT(QString::fromUtf8("12º"), "12°00'00.00");
-    CHECK_EVAL_FORMAT(QString::fromUtf8("12˚"), "12°00'00.00");
-    CHECK_EVAL_FORMAT(QString::fromUtf8("12∘"), "12°00'00.00");
-    CHECK_EVAL_FORMAT("12°'", "12°00'00.00");
-    CHECK_EVAL_FORMAT("12°'\"", "12°00'00.00");
-    CHECK_EVAL_FORMAT("12.3°", "12°18'00.00");
-    CHECK_EVAL_FORMAT(QString::fromUtf8("12.3º"), "12°18'00.00");
-    CHECK_EVAL_FORMAT("12.3°'", "12°18'00.00");
-    CHECK_EVAL_FORMAT("12.3°'\"", "12°18'00.00");
-    CHECK_EVAL_FORMAT("12°34", "12°34'00.00");
-    CHECK_EVAL_FORMAT(QString::fromUtf8("12º34"), "12°34'00.00");
-    CHECK_EVAL_FORMAT("12°34'", "12°34'00.00");
-    CHECK_EVAL_FORMAT("12°34.", "12°34'00.00");
-    CHECK_EVAL_FORMAT("12°34.5", "12°34'30.00");
-    CHECK_EVAL_FORMAT("12°34.5'", "12°34'30.00");
-    CHECK_EVAL_FORMAT("12°34'56", "12°34'56.00");
-    CHECK_EVAL_FORMAT("12°34'56.", "12°34'56.00");
-    CHECK_EVAL_FORMAT("12°34'56.78", "12°34'56.78");
-    CHECK_EVAL_FORMAT("12°34'56.78\"", "12°34'56.78");
+    CHECK_EVAL_FORMAT("12°", "12°00′00.00″");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("12º"), "12°00′00.00″");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("12˚"), "12°00′00.00″");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("12∘"), "12°00′00.00″");
+    CHECK_EVAL_FORMAT("12°'", "12°00′00.00″");
+    CHECK_EVAL_FORMAT("12°'\"", "12°00′00.00″");
+    CHECK_EVAL_FORMAT("12.3°", "12°18′00.00″");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("12.3º"), "12°18′00.00″");
+    CHECK_EVAL_FORMAT("12.3°'", "12°18′00.00″");
+    CHECK_EVAL_FORMAT("12.3°'\"", "12°18′00.00″");
+    CHECK_EVAL_FORMAT("12°34", "12°34′00.00″");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("12º34"), "12°34′00.00″");
+    CHECK_EVAL_FORMAT("12°34'", "12°34′00.00″");
+    CHECK_EVAL_FORMAT("12°34.", "12°34′00.00″");
+    CHECK_EVAL_FORMAT("12°34.5", "12°34′30.00″");
+    CHECK_EVAL_FORMAT("12°34.5'", "12°34′30.00″");
+    CHECK_EVAL_FORMAT("12°34'56", "12°34′56.00″");
+    CHECK_EVAL_FORMAT("12°34'56.", "12°34′56.00″");
+    CHECK_EVAL_FORMAT("12°34'56.78", "12°34′56.78″");
+    CHECK_EVAL_FORMAT("12°34'56.78\"", "12°34′56.78″");
 
-    CHECK_EVAL_FORMAT("-0", "0°00'00");
-    CHECK_EVAL_FORMAT("-°'56", "-0°00'56.00");
-    CHECK_EVAL_FORMAT("-56\"", "-0°00'56.00");
-    CHECK_EVAL_FORMAT("-°34", "-0°34'00.00");
-    CHECK_EVAL_FORMAT("-34'", "-0°34'00.00");
-    CHECK_EVAL_FORMAT("-12°", "-12°00'00.00");
-    CHECK_EVAL_FORMAT("-12.3°", "-12°18'00.00");
-    CHECK_EVAL_FORMAT("-12°34", "-12°34'00.00");
-    CHECK_EVAL_FORMAT("-12°34.5", "-12°34'30.00");
-    CHECK_EVAL_FORMAT("-12°34'56", "-12°34'56.00");
-    CHECK_EVAL_FORMAT("-12°34'56.78", "-12°34'56.78");
-    CHECK_EVAL_FORMAT("-12°34'56.78\"", "-12°34'56.78");
+    CHECK_EVAL_FORMAT("-0", "0°00′00″");
+    CHECK_EVAL_FORMAT("-°'56", "-0°00′56.00″");
+    CHECK_EVAL_FORMAT("-56\"", "-0°00′56.00″");
+    CHECK_EVAL_FORMAT("-°34", "-0°34′00.00″");
+    CHECK_EVAL_FORMAT("-34'", "-0°34′00.00″");
+    CHECK_EVAL_FORMAT("-12°", "-12°00′00.00″");
+    CHECK_EVAL_FORMAT("-12.3°", "-12°18′00.00″");
+    CHECK_EVAL_FORMAT("-12°34", "-12°34′00.00″");
+    CHECK_EVAL_FORMAT("-12°34.5", "-12°34′30.00″");
+    CHECK_EVAL_FORMAT("-12°34'56", "-12°34′56.00″");
+    CHECK_EVAL_FORMAT("-12°34'56.78", "-12°34′56.78″");
+    CHECK_EVAL_FORMAT("-12°34'56.78\"", "-12°34′56.78″");
 
     settings->angleUnit = 'g';
     Evaluator::instance()->initializeAngleUnits();
 
-    CHECK_EVAL_FORMAT("100.5", "90°27'00.00");
-    CHECK_EVAL_FORMAT("-200.3", "-180°16'12.00");
-    CHECK_EVAL_FORMAT("12°", "12°00'00.00");
-    CHECK_EVAL_FORMAT("12.3 degree", "12°18'00.00");
+    CHECK_EVAL_FORMAT("100.5", "90°27′00.00″");
+    CHECK_EVAL_FORMAT("-200.3", "-180°16′12.00″");
+    CHECK_EVAL_FORMAT("12°", "12°00′00.00″");
+    CHECK_EVAL_FORMAT("12.3 degree", "12°18′00.00″");
 
     settings->angleUnit = 'r';
     Evaluator::instance()->initializeAngleUnits();
 
-    CHECK_EVAL_FORMAT("pi", "180°00'00.00");
-    CHECK_EVAL_FORMAT("-pi", "-180°00'00.00");
-    CHECK_EVAL_FORMAT("12°", "12°00'00.00");
-    CHECK_EVAL_FORMAT("12.3 degree", "12°18'00.00");
+    CHECK_EVAL_FORMAT("pi", "180°00′00.00″");
+    CHECK_EVAL_FORMAT("-pi", "-180°00′00.00″");
+    CHECK_EVAL_FORMAT("12°", "12°00′00.00″");
+    CHECK_EVAL_FORMAT("12.3 degree", "12°18′00.00″");
 
     settings->angleUnit = 't';
     Evaluator::instance()->initializeAngleUnits();
 
-    CHECK_EVAL_FORMAT("0.25", "90°00'00.00");
-    CHECK_EVAL_FORMAT("-0.5", "-180°00'00.00");
-    CHECK_EVAL_FORMAT("12°", "12°00'00.00");
-    CHECK_EVAL_FORMAT("12.3 degree", "12°18'00.00");
+    CHECK_EVAL_FORMAT("0.25", "90°00′00.00″");
+    CHECK_EVAL_FORMAT("-0.5", "-180°00′00.00″");
+    CHECK_EVAL_FORMAT("12°", "12°00′00.00″");
+    CHECK_EVAL_FORMAT("12.3 degree", "12°18′00.00″");
 
     settings->resultPrecision = 32;
 
@@ -1646,9 +2072,17 @@ void test_sexagesimal()
     settings->angleUnit = 'd';
     Evaluator::instance()->initializeAngleUnits();
 
-    CHECK_EVAL_FORMAT("56.78901234567890123456789012345678\"", "0°00'56.78901234567890123456789012345678");
-    CHECK_EVAL_FORMAT("34.56789012345678901234567890123456'", "0°34'34.07340740740734074074073407407360");
-    CHECK_EVAL_FORMAT("12.34567890123456789012345678901234°", "12°20'44.44404444444440444444444044442400");
+    CHECK_EVAL_FORMAT("56.78901234567890123456789012345678\"", "0°00′56.78901234567890123456789012345678″");
+    CHECK_EVAL_FORMAT("34.56789012345678901234567890123456'", "0°34′34.07340740740734074074073407407360″");
+    CHECK_EVAL_FORMAT("12.34567890123456789012345678901234°", "12°20′44.44404444444440444444444044442400″");
+
+    // Round-trip drift checks: arcsec ⇄ DMS ⇄ radians and radians ⇄ arcsec.
+    CHECK_EVAL(
+        "((((12°34′56.7890123456″ -> radian) -> arcsecond) -> radian) - (12°34′56.7890123456″ -> radian)) -> radian",
+        "0 radian");
+    CHECK_EVAL(
+        "((((1.234567890123456e-4 radian -> arcsecond) -> radian) - (1.234567890123456e-4 radian)) -> radian)",
+        "0 radian");
 
     // Restore old settings
     settings->angleUnit = angleUnit;
@@ -1847,10 +2281,10 @@ void test_function_basic()
     CHECK_EVAL("INT(-3.4)", "-3");
 
     CHECK_EVAL("log(0.123; 0.1234)", "0.99845065797473594741");
-    CHECK_EVAL("lg(0.00000000001)", "-11");
-    CHECK_EVAL("lg(1e-3)", "-3");
-    CHECK_EVAL("lb(0.00000000001)", "-36.54120904376098582657");
-    CHECK_EVAL("lb(32)", "5");
+    CHECK_EVAL("log10(0.00000000001)", "-11");
+    CHECK_EVAL("log10(1e-3)", "-3");
+    CHECK_EVAL("log2(0.00000000001)", "-36.54120904376098582657");
+    CHECK_EVAL("log2(32)", "5");
     CHECK_EVAL("ln(100)", "4.60517018598809136804");
     CHECK_EVAL("ln(4.0)", "1.38629436111989061883");
 
@@ -2255,13 +2689,13 @@ void test_function_simplified()
     CHECK_EVAL("f(2 meter)", "7 meter");      /* (issue #656)  */
     CHECK_EVAL_FAIL("f(2)");                  /* (issue #656)  */
     /* Tests for priority management (issue #451) */
-    CHECK_EVAL("lg 10^2", "2");
+    CHECK_EVAL("log10 10^2", "2");
     CHECK_EVAL("frac 3!",  "0");
-    CHECK_EVAL("-lg 10", "-1");
-    CHECK_EVAL("2*-lg 10", "-2");
-    CHECK_EVAL("--lg 10", "1");
+    CHECK_EVAL("-log10 10", "-1");
+    CHECK_EVAL("2*-log10 10", "-2");
+    CHECK_EVAL("--log10 10", "1");
     CHECK_EVAL("-ln 10", "-2.30258509299404568402");
-    CHECK_EVAL("-lb 8", "-3");
+    CHECK_EVAL("-log2 8", "-3");
     CHECK_EVAL("-sin 1", "-0.84147098480789650665");
     CHECK_EVAL("-cos pi", "1");
     CHECK_EVAL("-tan 1", "-1.55740772465490223051");
@@ -2295,7 +2729,7 @@ void test_auto_fix_ans()
     CHECK_AUTOFIX("tan", "tan(ans)");
     CHECK_AUTOFIX("abs", "abs(ans)");
     CHECK_AUTOFIX("exp", "exp(ans)");
-    CHECK_AUTOFIX("lg", "lg(ans)");
+    CHECK_AUTOFIX("log10", "log10(ans)");
     CHECK_AUTOFIX("sqrt", "√(ans)");
     CHECK_AUTOFIX("cbrt", "∛(ans)");
 }
@@ -2390,8 +2824,11 @@ void test_auto_fix_powers()
     CHECK_AUTOFIX("7 + 3²⁰ * 4", "7 + 3^20 * 4");
     CHECK_AUTOFIX("2×pi", "2⋅pi");
     CHECK_AUTOFIX("2×a", "2⋅a");
+    CHECK_AUTOFIX("4·5", "4·5");
     CHECK_AUTOFIX("2   ×    pi   pi", "2⋅pi⋅pi");
     CHECK_AUTOFIX("2          ×pi×  pi", "2⋅pi⋅pi");
+    CHECK_AUTOFIX("Ω+μ", "Ω+µ");
+    CHECK_AUTOFIX("uV+uA", u8"µV+µA");
     CHECK_AUTOFIX("2×sin(33×3×sin(23)×cos(−pi))×sin(23234)×23⧸2−sin(−12) − 12−12",
                   "2⋅sin(33×3⋅sin(23)⋅cos(−pi))⋅sin(23234)⋅23⧸2−sin(−12) − 12−12");
     CHECK_AUTOFIX("2          ×pi×  pi + 2^12.000−2",
@@ -2573,13 +3010,13 @@ void test_comment_and_description_edge_cases()
                       u8"1⋅meter→centi⋅meter");
     CHECK_DISPLAY_INTERPRETED("1 meter in centi meter",
                               QStringLiteral("1") + space + QString(UnicodeChars::DotOperator)
-                                  + space + QStringLiteral("meter")
+                                  + space + QStringLiteral("m")
                                   + space
                                   + QString(UnicodeChars::RightwardsArrow)
                                   + space
                                   + QStringLiteral("centi")
                                   + space + QString(UnicodeChars::DotOperator)
-                                  + space + QStringLiteral("meter"));
+                                  + space + QStringLiteral("m"));
 
     // Explicit empty description should be stored as empty.
     CHECK_EVAL("vardesc2 = 1 ? ", "1");
@@ -2596,8 +3033,8 @@ void test_user_functions()
 {
     // Check user functions can be defined and used
     CHECK_USERFUNC_SET("func1(a;b) = a * b + 10");
-    CHECK_USERFUNC_SET("g(x) = cos x^-pi");
-    CHECK_USERFUNC_INTERPRETED("g", "cos(x^(-pi))");
+    CHECK_USERFUNC_SET("gf(x) = cos x^-pi");
+    CHECK_USERFUNC_INTERPRETED("gf", "cos(x^(-pi))");
     CHECK_EVAL("func1(2;5)", "20"); // = 2 * 5 + 10
     // Check some expected error conditions
     CHECK_EVAL_FAIL("func1()");
@@ -2714,8 +3151,15 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("tan(arctan(0.25))", "0.25");
     CHECK_EVAL("sin(1j)", "1.17520119364380145688i");
     CHECK_EVAL("arcsin(-2)", "-1.57079632679489661923+1.31695789692481670863i");
-    CHECK_EVAL("radian","1");
+    CHECK_EVAL("radian","1 rad");
+    CHECK_EVAL("rad","1 rad");
+    CHECK_EVAL("cos(pi*rad)", "-1");
+    CHECK_EVAL("cos(180*degree)", "-1");
+    CHECK_EVAL("cos(200*gradian)", "-1");
+    CHECK_EVAL("cos(200*gon)", "-1");
+    CHECK_EVAL("cos(0.5*turn)", "-1");
     CHECK_EVAL("degree","0.01745329251994329577");
+    CHECK_EVAL("deg","0.01745329251994329577");
     CHECK_EVAL("gradian","0.01570796326794896619");
     CHECK_EVAL("gon","0.01570796326794896619");
     CHECK_EVAL("turn","6.28318530717958647693");
@@ -2732,8 +3176,17 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("tan(arctan(0.25))", "0.25");
     CHECK_EVAL_FAIL("sin(1j)");
     CHECK_EVAL("arcsin(-2)", "-90+75.4561292902168920041i");
-    CHECK_EVAL("radian","57.2957795130823208768");
+    CHECK_EVAL("radian","1 rad");
+    CHECK_EVAL("rad","1 rad");
+    CHECK_EVAL("cos(pi*rad)", "-1");
+    CHECK_EVAL("cos(180*degree)", "-1");
+    CHECK_EVAL("cos(200*gradian)", "-1");
+    CHECK_EVAL("cos(200*gon)", "-1");
+    CHECK_EVAL("cos(0.5*turn)", "-1");
     CHECK_EVAL("degree","1");
+    CHECK_EVAL("deg","1");
+    CHECK_EVAL("1 -> degree", "1 °");
+    CHECK_EVAL("1 -> deg", "1 °");
     CHECK_EVAL("gradian","0.9");
     CHECK_EVAL("gon","0.9");
     CHECK_EVAL("turn","360");
@@ -2751,8 +3204,15 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("tan(arctan(0.25))", "0.25");
     CHECK_EVAL_FAIL("sin(1j)");
     CHECK_EVAL("arcsin(-2)", "-100+83.84014365579654667122i");
-    CHECK_EVAL("radian","63.66197723675813430755");
+    CHECK_EVAL("radian","1 rad");
+    CHECK_EVAL("rad","1 rad");
+    CHECK_EVAL("cos(pi*rad)", "-1");
+    CHECK_EVAL("cos(180*degree)", "-1");
+    CHECK_EVAL("cos(200*gradian)", "-1");
+    CHECK_EVAL("cos(200*gon)", "-1");
+    CHECK_EVAL("cos(0.5*turn)", "-1");
     CHECK_EVAL("degree","1.11111111111111111111");
+    CHECK_EVAL("deg","1.11111111111111111111");
     CHECK_EVAL("gradian","1");
     CHECK_EVAL("gon","1");
     CHECK_EVAL("turn","400");
@@ -2769,8 +3229,15 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("tan(arctan(0.25))", "0.25");
     CHECK_EVAL_FAIL("sin(1j)");
     CHECK_EVAL("arcsin(-2)", "-0.25+0.20960035913949136668i");
-    CHECK_EVAL("radian","0.15915494309189533577");
+    CHECK_EVAL("radian","1 rad");
+    CHECK_EVAL("rad","1 rad");
+    CHECK_EVAL("cos(pi*rad)", "-1");
+    CHECK_EVAL("cos(180*degree)", "-1");
+    CHECK_EVAL("cos(200*gradian)", "-1");
+    CHECK_EVAL("cos(200*gon)", "-1");
+    CHECK_EVAL("cos(0.5*turn)", "-1");
     CHECK_EVAL("degree","0.00277777777777777778");
+    CHECK_EVAL("deg","0.00277777777777777778");
     CHECK_EVAL("gradian","0.0025");
     CHECK_EVAL("gon","0.0025");
     CHECK_EVAL("turn","1");
@@ -2786,9 +3253,9 @@ void test_implicit_multiplication()
     CHECK_EVAL_FAIL("a5");
     CHECK_EVAL("a 5", "25");
     CHECK_EVAL("2a^3", "250");
-    CHECK_EVAL("b=2", "2");
+    CHECK_EVAL("bb=2", "2");
     CHECK_EVAL_FAIL("ab");
-    CHECK_EVAL("a b", "10");
+    CHECK_EVAL("a b", "5 b");
     CHECK_EVAL("eps = 10", "10");
     CHECK_EVAL("5 eps", "50");
     CHECK_EVAL("Eren = 1001", "1001");
@@ -2877,7 +3344,7 @@ void test_implicit_multiplication()
     CHECK_INTERPRETED(QString::fromUtf8("pi  −−−−−−3"), "pi+3");
     CHECK_INTERPRETED("1/(1×2^3×3)", "1/(1⋅(2^3)⋅3)");
     CHECK_INTERPRETED("x=1/2 sqrt(3)", "x=(1/2)⋅√(3)");
-    CHECK_INTERPRETED("g(t)=t/2 sqrt(3)", "g(t)=(t/2)⋅√(3)");
+    CHECK_INTERPRETED("gf(t)=t/2 sqrt(3)", "gf(t)=(t/2)⋅√(3)");
     CHECK_INTERPRETED("sin 23       cos 232323×pi×pi   2",
                       "sin(23)⋅cos(232323)⋅pi⋅pi⋅2");
     CHECK_INTERPRETED("sin 23       cos 232323×pi×pi   2×cos pi×pi×23",
@@ -3010,14 +3477,14 @@ void test_display_interpreted_spacing()
         QStringLiteral("1 meter second^-1"),
         QStringLiteral("1")
             + dotSpaced
-            + QStringLiteral("meter")
+            + QStringLiteral("m")
             + dotSpaced
-            + QString::fromUtf8("second⁻¹"));
+            + QString::fromUtf8("s⁻¹"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("1/second^2"),
         QStringLiteral("1")
             + divide
-            + QString::fromUtf8("second²"));
+            + QString::fromUtf8("s²"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("cos(pi)^2"),
         QStringLiteral("cos")
@@ -3428,8 +3895,8 @@ void test_display_interpreted_spacing()
             + dotSpaced
             + QStringLiteral("√(3)"));
     CHECK_DISPLAY_INTERPRETED(
-        QStringLiteral("g(t)=t/2 sqrt(3)"),
-        QStringLiteral("g(t)")
+        QStringLiteral("gf(t)=t/2 sqrt(3)"),
+        QStringLiteral("gf(t)")
             + equals
             + QStringLiteral("(t")
             + divide
@@ -3575,7 +4042,7 @@ void test_expression_operator_normalization()
                            normalizedStd,
                            "1+2 8⧸4⧸2 "
                            "9−4 9−4 9−4 9−4 9−4 9−4 9−4 9−4 9−4 "
-                           "2×3×4×5×6×7×8×9×10×11",
+                           "2×3·4×5×6×7×8×9×10×11",
                            eval_failed_tests, eval_new_failed_tests);
 
     const QStringList parsed = EditorUtils::parsePastedExpressions(
@@ -3608,7 +4075,7 @@ void test_expression_operator_normalization()
         || parsed.at(10) != QString::fromUtf8("9−4")
         || parsed.at(11) != QString::fromUtf8("9−4")
         || parsed.at(12) != QString::fromUtf8("2×3")
-        || parsed.at(13) != QString::fromUtf8("4×5")
+        || parsed.at(13) != QString::fromUtf8("4·5")
         || parsed.at(14) != QString::fromUtf8("6×7")) {
         ++eval_total_tests;
         ++eval_failed_tests;
@@ -3617,18 +4084,18 @@ void test_expression_operator_normalization()
              << "\tResult   : " << parsed.join("|").toUtf8().constData() << endl
              << "\tExpected : 1+2|8⧸4|10⧸2|"
                 "9−4|9−4|9−4|9−4|9−4|9−4|9−4|9−4|9−4|"
-                "2×3|4×5|6×7" << endl;
+                "2×3|4·5|6×7" << endl;
     } else {
         ++eval_total_tests;
     }
 
     const QString editorNormalized = EditorUtils::normalizeExpressionOperatorsForEditorInput(
-        QString::fromUtf8("2⋅3 4·5 6*7 8/4 10÷2 9⧸3 𝜋 𝝅 𝞹 𝛑 sqrt cbrt asqrt cbrtfoo"));
+        QString::fromUtf8("2⋅3 4·5 6*7 8/4 10÷2 9⧸3 𝜋 𝝅 𝞹 𝛑 Ω μ sqrt cbrt asqrt cbrtfoo"));
     const std::string editorNormalizedStd = editorNormalized.toStdString();
     ++eval_total_tests;
     DisplayErrorOnMismatch(__FILE__, __LINE__, "normalizeExpressionOperatorsForEditorInput",
                            editorNormalizedStd,
-                           "2⋅3 4×5 6×7 8/4 10/2 9/3 π π π π √ ∛ asqrt cbrtfoo",
+                           "2⋅3 4·5 6×7 8/4 10/2 9/3 π π π π Ω µ √ ∛ asqrt cbrtfoo",
                            eval_failed_tests, eval_new_failed_tests);
 
     const QStringList parsedForEditor = EditorUtils::parsePastedExpressionsForEditorInput(
@@ -3647,7 +4114,7 @@ void test_expression_operator_normalization()
                           "asqrt(4)"));
     if (parsedForEditor.size() != 13
         || parsedForEditor.at(0) != QString::fromUtf8("2⋅3")
-        || parsedForEditor.at(1) != QString::fromUtf8("4×5")
+        || parsedForEditor.at(1) != QString::fromUtf8("4·5")
         || parsedForEditor.at(2) != QString::fromUtf8("6×7")
         || parsedForEditor.at(3) != QString::fromUtf8("8/4")
         || parsedForEditor.at(4) != QString::fromUtf8("10/2")
@@ -3664,7 +4131,7 @@ void test_expression_operator_normalization()
         ++eval_new_failed_tests;
         cerr << __FILE__ << "[" << __LINE__ << "]\tparsePastedExpressionsForEditorInput\t[NEW]" << endl
              << "\tResult   : " << parsedForEditor.join("|").toUtf8().constData() << endl
-             << "\tExpected : 2⋅3|4×5|6×7|8/4|10/2|9/3|π+1|π+1|π+1|π+1|√(4)|∛(8)|asqrt(4)" << endl;
+             << "\tExpected : 2⋅3|4·5|6×7|8/4|10/2|9/3|π+1|π+1|π+1|π+1|√(4)|∛(8)|asqrt(4)" << endl;
     } else {
         ++eval_total_tests;
     }
@@ -4663,6 +5130,7 @@ int main(int argc, char* argv[])
     test_exponentiation();
     test_unary();
     test_binary();
+    test_units();
     test_percent_operator();
     test_bitwise_complement_operator();
 

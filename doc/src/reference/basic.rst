@@ -117,6 +117,12 @@ General
 Trigonometric & Inverse Trigonometric
 -------------------------------------
 
+For direct trigonometric input (:func:`sin`, :func:`cos`, :func:`tan`,
+:func:`cot`, :func:`sec`, :func:`csc`), explicit angle units
+(``rad``, ``degree``, ``gradian``/``gon``, ``turn``, ``arcminute``,
+``arcsecond``) override the global angle mode. Unitless values follow the
+current angle mode.
+
 .. function:: sin(x)
 
     Returns the sine of ``x``. The behavior depends on both the angle mode setting and on whether complex numbers are enabled.

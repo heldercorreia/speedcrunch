@@ -83,8 +83,35 @@
         ENSURE_REAL_ARGUMENT(i); \
     }
 
+#define IS_EXPLICIT_ANGLE_UNIT(unitName) \
+    ((unitName) == QLatin1String("rad") \
+     || (unitName) == QLatin1String("radian") \
+     || (unitName) == QLatin1String("degree") \
+     || (unitName) == QLatin1String("deg") \
+     || (unitName) == QLatin1String("gradian") \
+     || (unitName) == QLatin1String("gon") \
+     || (unitName) == QLatin1String("turn") \
+     || (unitName) == QLatin1String("arcminute") \
+     || (unitName) == QLatin1String("arcmin") \
+     || (unitName) == QLatin1String("arcsecond") \
+     || (unitName) == QLatin1String("arcsec"))
+
 #define CONVERT_ARGUMENT_ANGLE(angle) \
-    if (Settings::instance()->angleUnit == 'd') { \
+    { \
+    const QString explicitUnitName = (angle).unitName().trimmed().toLower(); \
+    if ((angle).hasUnit() && IS_EXPLICIT_ANGLE_UNIT(explicitUnitName)) { \
+        if (explicitUnitName == QLatin1String("degree") || explicitUnitName == QLatin1String("deg")) \
+            (angle) = DMath::deg2rad(angle); \
+        else if (explicitUnitName == QLatin1String("gradian") || explicitUnitName == QLatin1String("gon")) \
+            (angle) = DMath::gon2rad(angle); \
+        else if (explicitUnitName == QLatin1String("turn")) \
+            (angle) *= Quantity(2) * DMath::pi(); \
+        else if (explicitUnitName == QLatin1String("arcminute") || explicitUnitName == QLatin1String("arcmin")) \
+            (angle) = DMath::deg2rad((angle) / Quantity(60)); \
+        else if (explicitUnitName == QLatin1String("arcsecond") || explicitUnitName == QLatin1String("arcsec")) \
+            (angle) = DMath::deg2rad((angle) / Quantity(3600)); \
+        (angle).stripUnits(); \
+    } else if (Settings::instance()->angleUnit == 'd') { \
         if (angle.isReal()) \
             angle = DMath::deg2rad(angle); \
         else { \
@@ -107,6 +134,7 @@
             f->setError(OutOfDomain); \
             return DMath::nan(); \
         } \
+    } \
     }
 
 #define CONVERT_RESULT_ANGLE(result) \
@@ -421,6 +449,16 @@ Quantity function_lb(Function* f, const Function::ArgumentList& args)
 {
     ENSURE_ARGUMENT_COUNT(1);
     return DMath::lb(args[0]);
+}
+
+Quantity function_log10(Function* f, const Function::ArgumentList& args)
+{
+    return function_lg(f, args);
+}
+
+Quantity function_log2(Function* f, const Function::ArgumentList& args)
+{
+    return function_lb(f, args);
 }
 
 Quantity function_log(Function* f, const Function::ArgumentList& args)
@@ -1349,8 +1387,8 @@ void FunctionRepo::createFunctions()
     FUNCTION_INSERT(degrees);
     FUNCTION_INSERT(exp);
     FUNCTION_INSERT(gradians);
-    FUNCTION_INSERT(lb);
-    FUNCTION_INSERT(lg);
+    FUNCTION_INSERT(log2);
+    FUNCTION_INSERT(log10);
     FUNCTION_INSERT(ln);
     FUNCTION_INSERT(log);
     FUNCTION_INSERT(radians);
@@ -1514,8 +1552,8 @@ void FunctionRepo::setNonTranslatableFunctionUsages()
     FUNCTION_USAGE(ieee754_quad_encode, "x");
     FUNCTION_USAGE(int, "x");
     FUNCTION_USAGE(imag, "x");
-    FUNCTION_USAGE(lb, "x");
-    FUNCTION_USAGE(lg, "x");
+    FUNCTION_USAGE(log2, "x");
+    FUNCTION_USAGE(log10, "x");
     FUNCTION_USAGE(ln, "x");
     FUNCTION_USAGE(lngamma, "x");
     FUNCTION_USAGE(max, "x<sub>1</sub>; x<sub>2</sub>; ...");
@@ -1644,8 +1682,8 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(ieee754_double_encode, tr("Encode 64-bit Double-Precision Value"));
     FUNCTION_NAME(ieee754_quad_decode, tr("Decode 128-bit Quad-Precision Value"));
     FUNCTION_NAME(ieee754_quad_encode, tr("Encode 128-bit Quad-Precision Value"));
-    FUNCTION_NAME(lb, tr("Binary Logarithm"));
-    FUNCTION_NAME(lg, tr("Common Logarithm"));
+    FUNCTION_NAME(log2, tr("Binary Logarithm"));
+    FUNCTION_NAME(log10, tr("Common Logarithm"));
     FUNCTION_NAME(ln, tr("Natural Logarithm"));
     FUNCTION_NAME(lngamma, "ln(abs(Gamma))");
     FUNCTION_NAME(log, tr("Logarithm to Arbitrary Base"));

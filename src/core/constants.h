@@ -26,8 +26,50 @@
 
 #include <memory>
 
+enum class ConstantDomain {
+    Uncategorized,
+    Mathematics,
+    PhysicsCodata2022,
+    ChemistryIupacCiaaw2021,
+    Astronomy
+};
+
+enum class ConstantSubdomain {
+    None,
+    Universal,
+    Electromagnetic,
+    Physicochemical,
+    AtomicNuclearGeneral,
+    AtomicNuclearElectroweak,
+    AtomicNuclearElectron,
+    AtomicNuclearMuon,
+    AtomicNuclearTau,
+    AtomicNuclearProton,
+    AtomicNuclearNeutron,
+    AtomicNuclearDeuteron,
+    AtomicNuclearTriton,
+    AtomicNuclearHelion,
+    AtomicNuclearAlphaParticle,
+    AtomicNuclearAtomicUnits,
+    AtomicNuclearEnergyConversionRelationships,
+    AtomicNuclearXrayUnits,
+    AtomicNuclearMagneticShieldingCorrections,
+    Masses,
+    Lifetimes,
+    MolarMasses,
+    Electronegativity,
+    IonizationEnergy,
+    AstronomyGeneral,
+    AstronomyEarthRotationTimeIersConventions,
+    AstronomyNominalIau2015,
+    AstronomyCurrentBestEstimatesIauNsfa202604
+};
+
 struct Constant {
-    QString category;
+    ConstantDomain domainType = ConstantDomain::Uncategorized;
+    ConstantSubdomain subdomainType = ConstantSubdomain::None;
+    QString domain;
+    QString subdomain;
     QString name;
     QString unit;
     QString value;
@@ -39,7 +81,8 @@ class Constants : public QObject {
 public:
     ~Constants(); //  For unique_ptr, define after Private is complete.
     static Constants* instance();
-    const QStringList& categories() const;
+    const QStringList& domains() const;
+    QStringList subdomains(const QString& domain) const;
     const QList<Constant>& list() const;
 
 public slots:
@@ -54,4 +97,3 @@ private:
 };
 
 #endif
-

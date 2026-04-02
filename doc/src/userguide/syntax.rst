@@ -44,7 +44,7 @@ Some characters cannot be used for digit grouping because they already have an a
 * ``!`` is the factorial operator (for example ``5!``).
 * ``:`` is used in sexagesimal time/angle notation (for example ``12:34:56``).
 * ``°`` is used in sexagesimal angle notation (for example ``12°34'56``).
-* ``'`` is used in sexagesimal time/angle notation (for example ``12°34'56``).
+* ``′`` is used in sexagesimal angle notation (for example ``12°34′56″``).
 * ``&`` is the bitwise AND operator (for example ``6 & 3``).
 * ``?`` starts a comment (for example ``1+2 ? note``).
 
@@ -156,7 +156,7 @@ Sexagesimal values in SpeedCrunch are angle degrees or time values represented w
 
 When sexagesimal mode is selected in :menuselection:`Settings --> Results --> Notation`, dimensionless and time results are displayed as sexagesimal values. All other results are displayed as fixed-point decimal values. Actual sexagesimal math depends on the result. Dimensionless results are handled as degrees with minutes and seconds generated from the decimal part. With time dimension results, base unit is second and the integer part is divided to minutes and hours.
 
-In input, characters ``°`` (degree), ``:`` (colon), ``'`` (single quote) and ``"`` (double quote) can be used for entering sexagesimal values. Degree sign ``°`` separates degrees and minutes. First colon character ``:`` separates hours and minutes. Single quote ``'`` or second colon character ``:`` separates minutes and seconds. Additionally, postfix double quote ``"`` can be used as an arc second unit. Because the degree sign is difficult to produce from keyboard, at sign ``@`` is automatically converted to it.
+In input, characters ``°`` (degree), ``:`` (colon), ``′`` (prime) and ``″`` (double prime) can be used for entering sexagesimal values. Degree sign ``°`` separates degrees and minutes. First colon character ``:`` separates hours and minutes. Prime ``′`` or second colon character ``:`` separates minutes and seconds. Additionally, postfix double prime ``″`` can be used as an arc second unit. ASCII single quote ``'`` and double quote ``"`` are accepted as aliases and are normalized to ``′`` and ``″`` on editor insertion/paste. Because the degree sign is difficult to produce from keyboard, at sign ``@`` is automatically converted to it.
 
 Amount of minutes or seconds is not limited to values below 60. It is possible to input time 90 minutes after noon::
 
@@ -167,10 +167,17 @@ Dimensionless input values are automatically considered to be in current angle m
 
     pi
     = 180°00'00
+
+For trigonometric input, explicit angle units override angle mode. For example,
+``cos(pi*rad)``, ``cos(180*degree)``, ``cos(200*gradian)`` and
+``cos(0.5*turn)`` all evaluate to ``-1`` regardless of the global angle mode.
+The alias ``deg`` is supported for ``degree`` and is normalized to ``°`` in
+autocomplete insertion and displayed result units.
     
 Only last part of sexagesimal input value can contain decimals.
 
 Following tables show some possible input notations and their results in both fixed-point decimal and sexagesimal modes.
+Sexagesimal round-trips (for example arcsecond → DMS → radians) are designed to keep precision drift negligible.
 In the first table, fixed-point decimal values assume angle mode is set to degrees:
 
 =================    ===================    =================
@@ -191,6 +198,9 @@ Input                Fixed-Point Decimal    Sexagesimal
 ``12°34'56``         ``12.58222222``        ``12°34'56.00``
 ``12°34'56.78``      ``12.58243889``        ``12°34'56.78``
 =================    ===================    =================
+
+The long-form units ``arcminute`` and ``arcsecond`` also accept the aliases
+``arcmin`` and ``arcsec``.
 
 =================    ===================    =================
 Input                Fixed-Point Decimal    Sexagesimal

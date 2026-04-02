@@ -49,6 +49,9 @@ public:
     static void findUnit(Quantity& q);
     static void clearCache() { m_cache.clear(); }
     static const QList<Unit> getList();
+    static QString shortDisplayName(const QString& name);
+    static QString formatUnitTokenForDisplay(const QString& token);
+    static QString normalizeUnitTextForDisplay(const QString& text);
 
     // Base SI units.
     static const Quantity meter();
@@ -63,6 +66,8 @@ public:
     static const Quantity bit();
 
     // SI prefixes.
+    static const Quantity quecto();
+    static const Quantity ronto();
     static const Quantity yocto();
     static const Quantity zepto();
     static const Quantity atto();
@@ -84,6 +89,8 @@ public:
     static const Quantity exa();
     static const Quantity zetta();
     static const Quantity yotta();
+    static const Quantity ronna();
+    static const Quantity quetta();
 
     // Binary prefixes.
     static const Quantity kibi();
@@ -174,6 +181,7 @@ public:
     static const Quantity hour();
     static const Quantity day();
     static const Quantity week();
+    static const Quantity century();
     static const Quantity julian_year();
     static const Quantity tropical_year();
     static const Quantity sidereal_year();
@@ -191,7 +199,7 @@ public:
     static const Quantity pounds_per_sqinch();
 
     // Energy.
-    static const Quantity electron_volt();
+    static const Quantity electronvolt();
     static const Quantity calorie();
     static const Quantity british_thermal_unit();
 
