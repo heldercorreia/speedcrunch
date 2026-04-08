@@ -127,6 +127,14 @@ static bool isRightOfOpeningSquareBracketWithOnlySpaces(const QString& text, int
     return i >= 0 && text.at(i) == QLatin1Char('[');
 }
 
+static bool isRightOfCaretWithOnlySpaces(const QString& text, int cursorPosition)
+{
+    int i = qBound(0, cursorPosition, text.size()) - 1;
+    while (i >= 0 && text.at(i).isSpace())
+        --i;
+    return i >= 0 && text.at(i) == QLatin1Char('^');
+}
+
 static QString normalizeTypedTextForSquareBracketContext(QString text)
 {
     for (QChar& ch : text) {
@@ -1320,6 +1328,9 @@ void Editor::keyPressEvent(QKeyEvent* event)
         }
         if (event->modifiers() == Qt::NoModifier && squareBracketContext) {
             if (isRightOfOpeningSquareBracketWithOnlySpaces(
+                    text(),
+                    textCursor().position())
+                || isRightOfCaretWithOnlySpaces(
                     text(),
                     textCursor().position())) {
                 insert(QStringLiteral(" "));
