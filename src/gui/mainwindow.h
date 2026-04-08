@@ -176,6 +176,7 @@ private slots:
     void setResultFormatRational();
     void setResultFormatScientific();
     void setResultFormatSexagesimal();
+    void setUnitNegativeExponentStyle(QAction*);
     void setResultPrecision15Digits();
     void setResultPrecision2Digits();
     void setResultPrecision3Digits();
@@ -348,6 +349,8 @@ private:
         QAction* settingsImaginaryUnitJ;
         QAction* settingsResultFormatHexadecimal;
         QAction* settingsResultFormatSexagesimal;
+        QAction* settingsUnitNegativeExponentSuperscript;
+        QAction* settingsUnitNegativeExponentFraction;
         QAction* settingsAngleUnitRadian;
         QAction* settingsAngleUnitDegree;
         QAction* settingsAngleUnitGradian;
@@ -416,6 +419,7 @@ private:
         QActionGroup* upDownArrowBehavior;
         QActionGroup* keypad;
         QActionGroup* keypadZoom;
+        QActionGroup* unitNegativeExponentStyle;
     } m_actionGroups;
 
     struct {
@@ -432,6 +436,7 @@ private:
         QMenu* display;
         QMenu* edit;
         QMenu* results;
+        QMenu* unitNegativeExponentStyle;
         QMenu* resultFormat;
         QMenu* inputFormat;
         QMenu* help;

@@ -94,7 +94,7 @@ void test_basic()
     CHECK(Quantity(5) * Units::meter(), "5 meter");
     CHECK(Units::candela() + Units::second(), "NaN");
     CHECK(Quantity(3)*Units::mole() - Quantity(HNumber("2.5"))*Units::mole(), "0.5 mole");
-    CHECK(Units::kilogram()/Units::second(), "1 kilogram / second");
+    CHECK(Units::kilogram()/Units::second(), "1 kilogram⋅second⁻¹");
     CHECK(Units::meter()*Units::meter(), "1 meter²");
     CHECK(-Quantity(5)*Units::meter(), "-5 meter");
     CNumber foot = CNumber("0.3");
@@ -102,7 +102,7 @@ void test_basic()
     a.setDisplayUnit(foot, "foot");
     CHECK(a, "410 foot");
     CHECK(a*Units::second(), "123 meter⋅second");       // Issue 615
-    CHECK(a/Units::second(), "123 meter / second");    //
+    CHECK(a/Units::second(), "123 meter⋅second⁻¹");    //
     CHECK(a*HNumber(5), "2050 foot");                   //
     CHECK(a/HNumber(5), "82 foot");                     //
 

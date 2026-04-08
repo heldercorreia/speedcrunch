@@ -40,14 +40,15 @@ struct Unit {
 };
 
 class Units {
-    static void pushUnit(Quantity q, QString name);
-    static QHash<QMap<QString, Rational>, Unit> m_matchLookup;
-    static QMap<QString, Quantity> m_cache;
-    static void initTable();
-
 public:
+    enum NegativeExponentStyle {
+        NegativeExponentSuperscript = 0,
+        NegativeExponentFraction = 1
+    };
+
     static void findUnit(Quantity& q);
-    static void clearCache() { m_cache.clear(); }
+    static void setNegativeExponentStyle(NegativeExponentStyle style);
+    static NegativeExponentStyle negativeExponentStyle();
     static const QList<Unit> getList();
     static QString shortDisplayName(const QString& name);
     static QString formatUnitTokenForDisplay(const QString& token);
@@ -229,6 +230,14 @@ public:
     static const Quantity speed_of_sound_STP();
     static const Quantity knot();
     static const Quantity horsepower();
+
+private:
+    static void pushUnit(Quantity q, QString name);
+    static void clearCache() { m_cache.clear(); }
+    static QHash<QMap<QString, Rational>, Unit> m_matchLookup;
+    static QMap<QString, Quantity> m_cache;
+    static NegativeExponentStyle m_negativeExponentStyle;
+    static void initTable();
 };
 
 #endif // UNITS_H

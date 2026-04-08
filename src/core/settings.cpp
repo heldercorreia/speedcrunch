@@ -287,6 +287,7 @@ Settings::Settings()
     autoCompletionUserFunctions = true;
     autoCompletionUserVariables = true;
     secondaryResultPrecision = -1;
+    unitNegativeExponentStyle = UnitNegativeExponentSuperscript;
     tertiaryResultPrecision = -1;
     quaternaryResultPrecision = -1;
     quinaryResultPrecision = -1;
@@ -503,6 +504,13 @@ void Settings::load()
         resultPrecision = settings->value(key + QLatin1String("Precision"), -1).toInt();
     }
     secondaryResultPrecision = settings->value(key + QLatin1String("SecondaryPrecision"), -1).toInt();
+    unitNegativeExponentStyle = static_cast<UnitNegativeExponentStyle>(
+        settings->value(key + QLatin1String("UnitNegativeExponentStyle"),
+                        static_cast<int>(UnitNegativeExponentSuperscript)).toInt());
+    if (unitNegativeExponentStyle != UnitNegativeExponentSuperscript
+            && unitNegativeExponentStyle != UnitNegativeExponentFraction) {
+        unitNegativeExponentStyle = UnitNegativeExponentSuperscript;
+    }
     tertiaryResultPrecision = settings->value(key + QLatin1String("TertiaryPrecision"), -1).toInt();
     quaternaryResultPrecision = settings->value(key + QLatin1String("QuaternaryPrecision"), -1).toInt();
     quinaryResultPrecision = settings->value(key + QLatin1String("QuinaryPrecision"), -1).toInt();
@@ -657,6 +665,8 @@ void Settings::save()
     settings->setValue(key + QLatin1String("MultipleLinesEnabled"), multipleResultLinesEnabled);
     settings->setValue(key + QLatin1String("MainComplexForm"), QString(QChar(resultFormatComplex)));
     settings->setValue(key + QLatin1String("MainPrecision"), resultPrecision);
+    settings->setValue(key + QLatin1String("UnitNegativeExponentStyle"),
+        static_cast<int>(unitNegativeExponentStyle));
     settings->setValue(key + QLatin1String("SecondaryPrecision"), secondaryResultPrecision);
     settings->setValue(key + QLatin1String("TertiaryPrecision"), tertiaryResultPrecision);
     settings->setValue(key + QLatin1String("QuaternaryPrecision"), quaternaryResultPrecision);

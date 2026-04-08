@@ -130,6 +130,20 @@ bool isUnitIdentifierChar(const QChar& ch)
 
 QHash<QMap<QString, Rational>, Unit> Units::m_matchLookup;
 QMap<QString, Quantity> Units::m_cache;
+Units::NegativeExponentStyle Units::m_negativeExponentStyle =
+    Units::NegativeExponentSuperscript;
+
+void Units::setNegativeExponentStyle(NegativeExponentStyle style)
+{
+    if (style != NegativeExponentSuperscript && style != NegativeExponentFraction)
+        return;
+    m_negativeExponentStyle = style;
+}
+
+Units::NegativeExponentStyle Units::negativeExponentStyle()
+{
+    return m_negativeExponentStyle;
+}
 
 
 void Units::pushUnit(Quantity q, QString name)
@@ -530,45 +544,43 @@ void Units::findUnit(Quantity& q)
             }
         }
 
-        // Rendering policy for auto-generated unit products:
-        // 1) If there is at least one positive exponent, render negative exponents
-        //    in the denominator (for readability and textbook familiarity).
-        //    Example: kilogram⋅meter⋅second⁻¹ -> kilogram⋅meter / second.
-        // 2) If there are no positive exponents, keep pure inverse form with
-        //    negative superscripts to avoid "1 / ..." noise.
-        //    Example: second⁻¹ (not 1 / second).
-        //
-        // This policy only changes presentation. It does not affect dimensions.
-        QStringList numeratorTerms;
-        QStringList denominatorTerms;
-        for (const UnitFactor& factor : factors) {
-            if (factor.exponent > zero) {
-                numeratorTerms << (factor.name + superscriptFromExponent(factor.exponent));
-            } else if (factor.exponent < zero) {
-                const Rational absExponent(-factor.exponent.numerator(),
-                                           factor.exponent.denominator());
-                denominatorTerms << (factor.name + superscriptFromExponent(absExponent));
-            }
-        }
-
-        const QString numeratorText = numeratorTerms.join(QString::fromUtf8("⋅"));
-        const QString denominatorText = denominatorTerms.join(QString::fromUtf8("⋅"));
-        if (!numeratorTerms.isEmpty() && !denominatorTerms.isEmpty()) {
-            unit_name = ' ' + numeratorText + " / ";
-            if (denominatorTerms.size() > 1)
-                unit_name += '(' + denominatorText + ')';
-            else
-                unit_name += denominatorText;
-        } else if (!numeratorTerms.isEmpty()) {
-            unit_name = ' ' + numeratorText;
-        } else if (!denominatorTerms.isEmpty()) {
-            // Keep inverse-only units in exponent form (s⁻¹, m⁻¹⋅s⁻², ...).
-            QStringList inverseTerms;
+        if (Units::negativeExponentStyle() == Units::NegativeExponentSuperscript) {
+            QStringList terms;
+            for (const UnitFactor& factor : factors)
+                terms << (factor.name + superscriptFromExponent(factor.exponent));
+            unit_name = ' ' + terms.join(QString::fromUtf8("⋅"));
+        } else {
+            QStringList numeratorTerms;
+            QStringList denominatorTerms;
             for (const UnitFactor& factor : factors) {
-                if (factor.exponent < zero)
-                    inverseTerms << (factor.name + superscriptFromExponent(factor.exponent));
+                if (factor.exponent > zero) {
+                    numeratorTerms << (factor.name + superscriptFromExponent(factor.exponent));
+                } else if (factor.exponent < zero) {
+                    const Rational absExponent(-factor.exponent.numerator(),
+                                               factor.exponent.denominator());
+                    denominatorTerms << (factor.name + superscriptFromExponent(absExponent));
+                }
             }
-            unit_name = ' ' + inverseTerms.join(QString::fromUtf8("⋅"));
+
+            const QString numeratorText = numeratorTerms.join(QString::fromUtf8("⋅"));
+            const QString denominatorText = denominatorTerms.join(QString::fromUtf8("⋅"));
+            if (!numeratorTerms.isEmpty() && !denominatorTerms.isEmpty()) {
+                unit_name = ' ' + numeratorText + " / ";
+                if (denominatorTerms.size() > 1)
+                    unit_name += '(' + denominatorText + ')';
+                else
+                    unit_name += denominatorText;
+            } else if (!numeratorTerms.isEmpty()) {
+                unit_name = ' ' + numeratorText;
+            } else if (!denominatorTerms.isEmpty()) {
+                // Keep inverse-only units in exponent form (s⁻¹, m⁻¹⋅s⁻², ...).
+                QStringList inverseTerms;
+                for (const UnitFactor& factor : factors) {
+                    if (factor.exponent < zero)
+                        inverseTerms << (factor.name + superscriptFromExponent(factor.exponent));
+                }
+                unit_name = ' ' + inverseTerms.join(QString::fromUtf8("⋅"));
+            }
         }
 
         q.setDisplayUnit(unit, unit_name.trimmed());

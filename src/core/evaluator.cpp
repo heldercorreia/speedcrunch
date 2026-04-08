@@ -127,6 +127,124 @@ static QString s_renderUnitExponentsAsSuperscripts(QString text)
     return text;
 }
 
+static int s_parseSuperscriptExponent(const QString& exponentText, bool* ok)
+{
+    *ok = false;
+    if (exponentText.isEmpty())
+        return 0;
+
+    bool negative = false;
+    int pos = 0;
+    if (exponentText.at(0) == QChar(0x207B) || exponentText.at(0) == QChar(0x207A)) {
+        negative = exponentText.at(0) == QChar(0x207B);
+        pos = 1;
+    }
+    if (pos >= exponentText.size())
+        return 0;
+
+    static const QHash<QChar, QChar> superscriptDigits = {
+        { QChar(0x2070), QLatin1Char('0') }, // ⁰
+        { QChar(0x00B9), QLatin1Char('1') }, // ¹
+        { QChar(0x00B2), QLatin1Char('2') }, // ²
+        { QChar(0x00B3), QLatin1Char('3') }, // ³
+        { QChar(0x2074), QLatin1Char('4') }, // ⁴
+        { QChar(0x2075), QLatin1Char('5') }, // ⁵
+        { QChar(0x2076), QLatin1Char('6') }, // ⁶
+        { QChar(0x2077), QLatin1Char('7') }, // ⁷
+        { QChar(0x2078), QLatin1Char('8') }, // ⁸
+        { QChar(0x2079), QLatin1Char('9') }  // ⁹
+    };
+
+    QString ascii;
+    ascii.reserve(exponentText.size() - pos);
+    for (; pos < exponentText.size(); ++pos) {
+        const QChar ch = exponentText.at(pos);
+        if (!superscriptDigits.contains(ch))
+            return 0;
+        ascii += superscriptDigits.value(ch);
+    }
+
+    bool intOk = false;
+    const int value = ascii.toInt(&intOk);
+    if (!intOk)
+        return 0;
+    *ok = true;
+    return negative ? -value : value;
+}
+
+static QString s_negateUnitFactorExponent(QString factor)
+{
+    factor = factor.trimmed();
+    if (factor.isEmpty())
+        return factor;
+
+    static const QRegularExpression caretExponentRe(
+        QStringLiteral(R"(^(.*?)(?:\^\(([−-]?\d+)\)|\^([−-]?\d+))$)"));
+    const QRegularExpressionMatch caretMatch = caretExponentRe.match(factor);
+    if (caretMatch.hasMatch()) {
+        QString expText = caretMatch.captured(2);
+        if (expText.isEmpty())
+            expText = caretMatch.captured(3);
+        expText.replace(QChar(0x2212), QLatin1Char('-'));
+        bool ok = false;
+        const int exponent = expText.toInt(&ok);
+        if (ok)
+            return caretMatch.captured(1) + QLatin1Char('^') + QString::number(-exponent);
+    }
+
+    int suffixStart = factor.size();
+    while (suffixStart > 0) {
+        const QChar ch = factor.at(suffixStart - 1);
+        const bool isSuperscriptDigit =
+            ch == QChar(0x00B9) || ch == QChar(0x00B2) || ch == QChar(0x00B3)
+            || (ch.unicode() >= 0x2070 && ch.unicode() <= 0x2079);
+        const bool isSuperscriptSign = ch == QChar(0x207B) || ch == QChar(0x207A);
+        if (!isSuperscriptDigit && !isSuperscriptSign)
+            break;
+        --suffixStart;
+    }
+    if (suffixStart < factor.size()) {
+        bool ok = false;
+        const int exponent = s_parseSuperscriptExponent(factor.mid(suffixStart), &ok);
+        if (ok)
+            return factor.left(suffixStart) + QLatin1Char('^') + QString::number(-exponent);
+    }
+
+    return factor + QLatin1String("^-1");
+}
+
+static QString s_applySuperscriptStyleToExplicitUnitText(QString unitText)
+{
+    if (!unitText.contains(QLatin1Char('/')))
+        return s_renderUnitExponentsAsSuperscripts(unitText);
+
+    QStringList parts = unitText.split(QLatin1Char('/'));
+    if (parts.isEmpty())
+        return s_renderUnitExponentsAsSuperscripts(unitText);
+
+    QString normalized = parts.takeFirst().trimmed();
+    for (QString denominator : parts) {
+        denominator = denominator.trimmed();
+        if (denominator.startsWith(QLatin1Char('(')) && denominator.endsWith(QLatin1Char(')')))
+            denominator = denominator.mid(1, denominator.size() - 2).trimmed();
+        denominator.replace(QChar(0x22C5), QLatin1Char('*'));
+
+        const QStringList factors = denominator.split(QLatin1Char('*'), Qt::SkipEmptyParts);
+        for (const QString& rawFactor : factors) {
+            const QString negated = s_negateUnitFactorExponent(rawFactor);
+            if (negated.isEmpty())
+                continue;
+            if (!normalized.isEmpty())
+                normalized += QLatin1Char('*');
+            normalized += negated;
+        }
+    }
+
+    QString rendered = s_renderUnitExponentsAsSuperscripts(normalized);
+    rendered.replace(QLatin1Char('*'), QChar(0x22C5)); // ⋅
+    return rendered;
+}
+
 static bool s_isOpeningUnitBracketToken(const Token& token)
 {
     return token.asOperator() == Token::AssociationStart
@@ -5808,7 +5926,10 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                         displayUnitName = canonicalTarget.unitName();
                     }
                 }
-                displayUnitName = s_renderUnitExponentsAsSuperscripts(displayUnitName);
+                if (Units::negativeExponentStyle() == Units::NegativeExponentSuperscript)
+                    displayUnitName = s_applySuperscriptStyleToExplicitUnitText(displayUnitName);
+                else
+                    displayUnitName = s_renderUnitExponentsAsSuperscripts(displayUnitName);
                 val2.setDisplayUnit(displayUnitValue, displayUnitName);
                 pushStackValue(val2);
                 break;

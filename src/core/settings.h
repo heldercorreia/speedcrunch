@@ -76,6 +76,11 @@ public:
         NumberFormatIndianCommaDot = 15
     };
 
+    enum UnitNegativeExponentStyle {
+        UnitNegativeExponentSuperscript = 0,
+        UnitNegativeExponentFraction = 1
+    };
+
     struct CustomKeypadButton {
         int row;
         int column;
@@ -127,6 +132,7 @@ public:
     bool quinaryResultEnabled;
     bool multipleResultLinesEnabled; // UI toggle: show/use extra result lines.
     int resultPrecision; // Main precision. See HMath documentation.
+    UnitNegativeExponentStyle unitNegativeExponentStyle;
     int secondaryResultPrecision; // Secondary precision.
     int tertiaryResultPrecision; // Tertiary precision.
     int quaternaryResultPrecision; // Extra line #3 precision.

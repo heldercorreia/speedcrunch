@@ -54,6 +54,7 @@
 #include "gui/syntaxhighlighter.h"
 #include "math/cmath.h"
 #include "math/floatconfig.h"
+#include "math/units.h"
 
 #include <QLatin1String>
 #include <QLocale>
@@ -403,6 +404,8 @@ void MainWindow::createActions()
     m_actions.settingsImaginaryUnitI = new QAction(this);
     m_actions.settingsImaginaryUnitJ = new QAction(this);
     m_actions.settingsResultFormatSexagesimal = new QAction(this);
+    m_actions.settingsUnitNegativeExponentSuperscript = new QAction(this);
+    m_actions.settingsUnitNegativeExponentFraction = new QAction(this);
     m_actions.helpManual = new QAction(this);
     m_actions.helpUpdates = new QAction(this);
     m_actions.helpFeedback = new QAction(this);
@@ -481,6 +484,12 @@ void MainWindow::createActions()
     m_actions.settingsResultFormatRational->setCheckable(true);
     m_actions.settingsResultFormatScientific->setCheckable(true);
     m_actions.settingsResultFormatSexagesimal->setCheckable(true);
+    m_actions.settingsUnitNegativeExponentSuperscript->setCheckable(true);
+    m_actions.settingsUnitNegativeExponentSuperscript->setData(
+        static_cast<int>(Settings::UnitNegativeExponentSuperscript));
+    m_actions.settingsUnitNegativeExponentFraction->setCheckable(true);
+    m_actions.settingsUnitNegativeExponentFraction->setData(
+        static_cast<int>(Settings::UnitNegativeExponentFraction));
     m_actions.viewConstants->setCheckable(true);
     m_actions.viewFullScreenMode->setCheckable(true);
     m_actions.viewFunctions->setCheckable(true);
@@ -733,6 +742,10 @@ void MainWindow::setActionsText()
     m_actions.settingsResultFormatOctal->setText(MainWindow::tr("&Octal"));
     m_actions.settingsResultFormatHexadecimal->setText(MainWindow::tr("&Hexadecimal"));
     m_actions.settingsResultFormatSexagesimal->setText(MainWindow::tr("&Sexagesimal"));
+    m_actions.settingsUnitNegativeExponentSuperscript->setText(
+        MainWindow::tr("Superscript &Exponents"));
+    m_actions.settingsUnitNegativeExponentFraction->setText(
+        MainWindow::tr("&Fraction Form"));
     m_actions.settingsResultFormatCartesian->setText(MainWindow::tr("&Rectangular (Cartesian)"));
     m_actions.settingsResultFormatPolar->setText(MainWindow::tr("Polar (&Exponential)"));
     m_actions.settingsResultFormatPolarAngle->setText(MainWindow::tr("Polar (&Angle)"));
@@ -829,6 +842,12 @@ void MainWindow::createActionGroups()
     m_actionGroups.keypadZoom->addAction(m_actions.viewKeypadZoom100);
     m_actionGroups.keypadZoom->addAction(m_actions.viewKeypadZoom150);
     m_actionGroups.keypadZoom->addAction(m_actions.viewKeypadZoom200);
+
+    m_actionGroups.unitNegativeExponentStyle = new QActionGroup(this);
+    m_actionGroups.unitNegativeExponentStyle->addAction(
+        m_actions.settingsUnitNegativeExponentSuperscript);
+    m_actionGroups.unitNegativeExponentStyle->addAction(
+        m_actions.settingsUnitNegativeExponentFraction);
 }
 
 void MainWindow::createActionShortcuts()
@@ -947,6 +966,12 @@ void MainWindow::createMenus()
     m_menus.results->addAction(m_actions.settingsBehaviorNumberFormat);
     m_menus.results->addAction(m_actions.settingsBehaviorResultSlots);
     m_menus.results->addSeparator();
+    m_menus.unitNegativeExponentStyle = m_menus.results->addMenu("");
+    m_menus.unitNegativeExponentStyle->addAction(
+        m_actions.settingsUnitNegativeExponentSuperscript);
+    m_menus.unitNegativeExponentStyle->addAction(
+        m_actions.settingsUnitNegativeExponentFraction);
+    m_menus.results->addSeparator();
 
     // Deprecated direct menus kept as internal context menus only; users should
     // configure these via "Notation & Precision...".
@@ -1036,6 +1061,7 @@ void MainWindow::setMenusText()
     m_menus.keypadZoom->setTitle(MainWindow::tr("&Zoom"));
     m_menus.settings->setTitle(MainWindow::tr("Se&ttings"));
     m_menus.results->setTitle(MainWindow::tr("&Results"));
+    m_menus.unitNegativeExponentStyle->setTitle(MainWindow::tr("Unit Exponent Style"));
     m_menus.resultFormat->setTitle(MainWindow::tr("&Notation"));
     m_menus.decimal->setTitle(MainWindow::tr("&Decimal"));
     m_menus.precision->setTitle(MainWindow::tr("&Precision"));
@@ -1482,6 +1508,8 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsResultFormatRational, SIGNAL(triggered()), SLOT(setResultFormatRational()));
     connect(m_actions.settingsResultFormatSexagesimal, SIGNAL(triggered()), SLOT(setResultFormatSexagesimal()));
     connect(m_actions.settingsResultFormatScientific, SIGNAL(triggered()), SLOT(setResultFormatScientific()));
+    connect(m_actionGroups.unitNegativeExponentStyle, SIGNAL(triggered(QAction*)),
+            SLOT(setUnitNegativeExponentStyle(QAction*)));
 
     connect(m_actions.settingsLanguage, SIGNAL(triggered()), SLOT(showLanguageChooserDialog()));
 
@@ -1677,6 +1705,14 @@ void MainWindow::applySettings()
     checkInitialResultPrecision();
     checkInitialComplexFormat();
     checkInitialImaginaryUnit();
+    if (m_settings->unitNegativeExponentStyle == Settings::UnitNegativeExponentFraction)
+        m_actions.settingsUnitNegativeExponentFraction->setChecked(true);
+    else
+        m_actions.settingsUnitNegativeExponentSuperscript->setChecked(true);
+    Units::setNegativeExponentStyle(
+        m_settings->unitNegativeExponentStyle == Settings::UnitNegativeExponentFraction
+            ? Units::NegativeExponentFraction
+            : Units::NegativeExponentSuperscript);
 
     if (m_settings->autoAns)
         m_actions.settingsBehaviorAutoAns->setChecked(true);
@@ -4128,6 +4164,25 @@ void MainWindow::setResultFormat(char c)
         return;
 
     m_settings->resultFormat = c;
+    emit resultFormatChanged();
+}
+
+void MainWindow::setUnitNegativeExponentStyle(QAction* action)
+{
+    const Settings::UnitNegativeExponentStyle style =
+        static_cast<Settings::UnitNegativeExponentStyle>(action->data().toInt());
+    if (style != Settings::UnitNegativeExponentSuperscript
+            && style != Settings::UnitNegativeExponentFraction) {
+        return;
+    }
+    if (m_settings->unitNegativeExponentStyle == style)
+        return;
+
+    m_settings->unitNegativeExponentStyle = style;
+    Units::setNegativeExponentStyle(
+        style == Settings::UnitNegativeExponentFraction
+            ? Units::NegativeExponentFraction
+            : Units::NegativeExponentSuperscript);
     emit resultFormatChanged();
 }
 

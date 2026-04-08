@@ -29,6 +29,7 @@
 #include "gui/simplifiedexpressionutils.h"
 #include "math/cmath.h"
 #include "math/operatorchars.h"
+#include "math/units.h"
 #include "tests/testcommon.h"
 
 #include <QApplication>
@@ -821,9 +822,9 @@ void test_units_short_aliases_and_si_prefixes()
     CHECK_EVAL("[1 cy] -> [day]", "36525 day");
     CHECK_EVAL(QString::fromUtf8("[kΩ] -> [ohm]"), "1000 ohm");
     CHECK_EVAL_FORMAT("2[coulomb]+3[mC]", "2.003[C]");
-    CHECK_EVAL_FORMAT("[C^3*m^3*J^(-2)]", u8"1[C³⋅m³ / J²]");
-    CHECK_EVAL_FORMAT("[C^4*m^4*J^(-3)]", u8"1[C⁴⋅m⁴ / J³]");
-    CHECK_EVAL_FORMAT("[A^4*s^10/(kg^3*m^2)]", u8"1[C⁴⋅m⁴ / J³]");
+    CHECK_EVAL_FORMAT("[C^3*m^3*J^(-2)]", u8"1[C³⋅J⁻²⋅m³]");
+    CHECK_EVAL_FORMAT("[C^4*m^4*J^(-3)]", u8"1[C⁴⋅J⁻³⋅m⁴]");
+    CHECK_EVAL_FORMAT("[A^4*s^10/(kg^3*m^2)]", u8"1[C⁴⋅J⁻³⋅m⁴]");
     CHECK_EVAL_FORMAT("1081.20238677[C*m^(-3)]", u8"1081.20238677[C⋅m⁻³]");
     CHECK_EVAL_FORMAT("[J/(K*mol)]", u8"1[J⋅mol⁻¹⋅K⁻¹]");
 }
@@ -895,11 +896,11 @@ void test_units_derived_si_recognition_and_disambiguation()
 void test_units_conversion_compatibility_and_canonicalization()
 {
     // Conversion compatibility and canonicalization regressions.
-    CHECK_EVAL("[volt] -> [joule/coulomb]", "1 joule/coulomb");
+    CHECK_EVAL("[volt] -> [joule/coulomb]", u8"1 joule⋅coulomb⁻¹");
     CHECK_EVAL("[joule/coulomb] -> [volt]", "1 volt");
-    CHECK_EVAL("[watt] -> [joule/second]", "1 joule/second");
+    CHECK_EVAL("[watt] -> [joule/second]", u8"1 joule⋅second⁻¹");
     CHECK_EVAL("[joule/second] -> [watt]", "1 watt");
-    CHECK_EVAL("[ampere] -> [coulomb/second]", "1 coulomb/second");
+    CHECK_EVAL("[ampere] -> [coulomb/second]", u8"1 coulomb⋅second⁻¹");
     CHECK_EVAL("[coulomb/second] -> [ampere]", "1 ampere");
     CHECK_EVAL("[volt] -> [ohm*ampere]", "1 ohm*ampere");
     CHECK_EVAL("[ohm*ampere] -> [volt]", "1 volt");
@@ -914,12 +915,18 @@ void test_units_conversion_compatibility_and_canonicalization()
     CHECK_EVAL("[volt] -> [volt]", "1 volt");
     CHECK_EVAL("[watt] -> [watt]", "1 watt");
     CHECK_EVAL("[ampere] -> [ampere]", "1 ampere");
+    CHECK_EVAL("[kg*m^2/s^4] -> [kg*m^2/s^4]", u8"1 kg⋅m²⋅s⁻⁴");
     CHECK_EVAL("[volt^2] -> [volt^2]", "1 volt²");
     CHECK_EVAL("[volt^2] -> [1 * (ohm * ampere)^2]", "1 1 * (ohm * ampere)²");
 }
 
 void test_units_grouping_and_inverse_presentation()
 {
+    Settings* settings = Settings::instance();
+    const Settings::UnitNegativeExponentStyle oldStyle = settings->unitNegativeExponentStyle;
+    settings->unitNegativeExponentStyle = Settings::UnitNegativeExponentFraction;
+    Units::setNegativeExponentStyle(Units::NegativeExponentFraction);
+
     // If there is at least one positive exponent, render negative exponents
     // in denominator form for readability.
     CHECK_EVAL_FORMAT("[m*kg*s^-1]", u8"1[kg⋅m / s]");
@@ -935,6 +942,12 @@ void test_units_grouping_and_inverse_presentation()
     CHECK_EVAL_FORMAT("[1/(m*s^2)]", u8"1[m⁻¹⋅s⁻²]");
     CHECK_EVAL_FORMAT("[m^-1*s^-2]", u8"1[m⁻¹⋅s⁻²]");
     CHECK_EVAL_FORMAT("[m^-1/s^2]", u8"1[m⁻¹⋅s⁻²]");
+
+    settings->unitNegativeExponentStyle = oldStyle;
+    Units::setNegativeExponentStyle(
+        oldStyle == Settings::UnitNegativeExponentFraction
+            ? Units::NegativeExponentFraction
+            : Units::NegativeExponentSuperscript);
 }
 
 void test_units_preferred_derived_forms_regressions()
