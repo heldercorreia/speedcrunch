@@ -1300,7 +1300,16 @@ void Editor::keyPressEvent(QKeyEvent* event)
             return;
         }
         if (event->modifiers() == Qt::NoModifier && squareBracketContext) {
-            insert(QString(OperatorChars::MulDotSign));
+            const auto position = textCursor().position();
+            if (position > 0
+                && text().at(position - 1) == OperatorChars::MulDotSign) {
+                auto cursor = textCursor();
+                cursor.removeSelectedText();
+                cursor.deletePreviousChar();
+                insert(QString::fromUtf8("^"));
+            } else {
+                insert(QString(OperatorChars::MulDotSign));
+            }
             event->accept();
             return;
         }
