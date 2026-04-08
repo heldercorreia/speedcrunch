@@ -543,25 +543,43 @@ QStringList Editor::matchFragment(const QString& id) const
     QSet<QString> seenVariableCompletionIds;
     const QList<Unit> allUnits = Units::getList();
     QSet<QString> unitNames;
+    QSet<QString> longFormUnitNames;
     for (const Unit& unit : allUnits)
         unitNames.insert(unit.name);
+    for (const Unit& unit : allUnits) {
+        const QString displayName = Units::formatUnitTokenForDisplay(unit.name);
+        if (displayName != unit.name)
+            longFormUnitNames.insert(unit.name);
+    }
+
+    const auto isLikelyLongFormUnitName = [&](const QString& unitName) {
+        if (longFormUnitNames.contains(unitName))
+            return true;
+        if (unitName.contains(QLatin1Char('_')))
+            return true;
+        if (unitName.size() < 4 || unitName != unitName.toLower())
+            return false;
+        for (int i = 0; i < unitName.size(); ++i) {
+            if (!unitName.at(i).isLetter())
+                return false;
+        }
+        return true;
+    };
     QList<Variable> variables = m_evaluator->getVariables();
     for (int i = 0; i < variables.count(); ++i) {
         const Variable variable = variables.at(i);
         const bool isBuiltIn = variable.type() == Variable::BuiltIn;
         const bool isUnit = isBuiltIn && unitNames.contains(variable.identifier());
+        const bool isLongFormUnit = isUnit && isLikelyLongFormUnitName(variable.identifier());
         const bool includeVariable =
-            (isUnit && settings->autoCompletionUnits)
+            (isUnit && isLongFormUnit && settings->autoCompletionLongFormUnits)
             || (!isUnit && isBuiltIn && settings->autoCompletionBuiltInVariables)
             || (!isBuiltIn && settings->autoCompletionUserVariables);
         if (!includeVariable)
             continue;
 
         if (variable.identifier().startsWith(id, Qt::CaseSensitive)) {
-            const QString completionIdentifier =
-                isUnit
-                    ? Units::formatUnitTokenForDisplay(variable.identifier())
-                    : variable.identifier();
+            const QString completionIdentifier = variable.identifier();
             if (seenVariableCompletionIds.contains(completionIdentifier))
                 continue;
             seenVariableCompletionIds.insert(completionIdentifier);

@@ -146,7 +146,7 @@ public:
     bool autoCompletion;
     bool autoCompletionBuiltInFunctions;
     bool autoCompletionBuiltInVariables;
-    bool autoCompletionUnits;
+    bool autoCompletionLongFormUnits;
     bool autoCompletionUserFunctions;
     bool autoCompletionUserVariables;
     UpDownArrowBehavior upDownArrowBehavior;

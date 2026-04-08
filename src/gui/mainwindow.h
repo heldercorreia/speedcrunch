@@ -138,7 +138,7 @@ private slots:
     void setAutoCompletionEnabled(bool);
     void setAutoCompletionBuiltInFunctionsEnabled(bool);
     void setAutoCompletionBuiltInVariablesEnabled(bool);
-    void setAutoCompletionUnitsEnabled(bool);
+    void setAutoCompletionLongFormUnitsEnabled(bool);
     void setAutoCompletionUserFunctionsEnabled(bool);
     void setAutoCompletionUserVariablesEnabled(bool);
     void setBitfieldVisible(bool);
@@ -357,7 +357,7 @@ private:
         QAction* settingsBehaviorAutoCompletion;
         QAction* settingsBehaviorAutoCompletionBuiltInFunctions;
         QAction* settingsBehaviorAutoCompletionBuiltInVariables;
-        QAction* settingsBehaviorAutoCompletionUnits;
+        QAction* settingsBehaviorAutoCompletionLongFormUnits;
         QAction* settingsBehaviorAutoCompletionUserFunctions;
         QAction* settingsBehaviorAutoCompletionUserVariables;
         QAction* settingsBehaviorSyntaxHighlighting;

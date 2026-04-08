@@ -428,7 +428,7 @@ Editing
 
     * ``Built-in functions`` includes built-in function names.
     * ``Built-in variables`` includes built-in constant names.
-    * ``Units`` includes unit names.
+    * ``Units`` includes spelled-out unit names (for example, ``meter``).
     * ``User functions`` includes user-defined function names.
     * ``User variables`` includes user-defined variable names.
 

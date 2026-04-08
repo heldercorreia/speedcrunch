@@ -345,7 +345,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorAutoCompletion = new QAction(this);
     m_actions.settingsBehaviorAutoCompletionBuiltInFunctions = new QAction(this);
     m_actions.settingsBehaviorAutoCompletionBuiltInVariables = new QAction(this);
-    m_actions.settingsBehaviorAutoCompletionUnits = new QAction(this);
+    m_actions.settingsBehaviorAutoCompletionLongFormUnits = new QAction(this);
     m_actions.settingsBehaviorAutoCompletionUserFunctions = new QAction(this);
     m_actions.settingsBehaviorAutoCompletionUserVariables = new QAction(this);
     m_actions.settingsBehaviorEmptyHistoryHint = new QAction(this);
@@ -418,7 +418,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorAutoCompletion->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletionBuiltInFunctions->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletionBuiltInVariables->setCheckable(true);
-    m_actions.settingsBehaviorAutoCompletionUnits->setCheckable(true);
+    m_actions.settingsBehaviorAutoCompletionLongFormUnits->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletionUserFunctions->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletionUserVariables->setCheckable(true);
     m_actions.settingsBehaviorEmptyHistoryHint->setCheckable(true);
@@ -676,7 +676,7 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorAutoCompletion->setText(MainWindow::tr("Automatic &Completion"));
     m_actions.settingsBehaviorAutoCompletionBuiltInFunctions->setText(MainWindow::tr("Built-in &functions"));
     m_actions.settingsBehaviorAutoCompletionBuiltInVariables->setText(MainWindow::tr("Built-in &variables"));
-    m_actions.settingsBehaviorAutoCompletionUnits->setText(MainWindow::tr("&Units"));
+    m_actions.settingsBehaviorAutoCompletionLongFormUnits->setText(MainWindow::tr("&Units"));
     m_actions.settingsBehaviorAutoCompletionUserFunctions->setText(MainWindow::tr("User &functions"));
     m_actions.settingsBehaviorAutoCompletionUserVariables->setText(MainWindow::tr("User &variables"));
     m_actions.settingsBehaviorEmptyHistoryHint->setText(MainWindow::tr("Show Empty History &Hint"));
@@ -929,7 +929,7 @@ void MainWindow::createMenus()
     m_menus.autoCompletion = m_menus.editing->addMenu("");
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionBuiltInFunctions);
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionBuiltInVariables);
-    m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionUnits);
+    m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionLongFormUnits);
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionUserFunctions);
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionUserVariables);
     m_menus.editing->addAction(m_actions.settingsBehaviorAutoAns);
@@ -1427,7 +1427,7 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsBehaviorAutoCompletion, SIGNAL(toggled(bool)), SLOT(setAutoCompletionEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoCompletionBuiltInFunctions, SIGNAL(toggled(bool)), SLOT(setAutoCompletionBuiltInFunctionsEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoCompletionBuiltInVariables, SIGNAL(toggled(bool)), SLOT(setAutoCompletionBuiltInVariablesEnabled(bool)));
-    connect(m_actions.settingsBehaviorAutoCompletionUnits, SIGNAL(toggled(bool)), SLOT(setAutoCompletionUnitsEnabled(bool)));
+    connect(m_actions.settingsBehaviorAutoCompletionLongFormUnits, SIGNAL(toggled(bool)), SLOT(setAutoCompletionLongFormUnitsEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoCompletionUserFunctions, SIGNAL(toggled(bool)), SLOT(setAutoCompletionUserFunctionsEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoCompletionUserVariables, SIGNAL(toggled(bool)), SLOT(setAutoCompletionUserVariablesEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoAns, SIGNAL(toggled(bool)), SLOT(setAutoAnsEnabled(bool)));
@@ -1693,8 +1693,8 @@ void MainWindow::applySettings()
         m_settings->autoCompletionBuiltInFunctions);
     m_actions.settingsBehaviorAutoCompletionBuiltInVariables->setChecked(
         m_settings->autoCompletionBuiltInVariables);
-    m_actions.settingsBehaviorAutoCompletionUnits->setChecked(
-        m_settings->autoCompletionUnits);
+    m_actions.settingsBehaviorAutoCompletionLongFormUnits->setChecked(
+        m_settings->autoCompletionLongFormUnits);
     m_actions.settingsBehaviorAutoCompletionUserFunctions->setChecked(
         m_settings->autoCompletionUserFunctions);
     m_actions.settingsBehaviorAutoCompletionUserVariables->setChecked(
@@ -2742,9 +2742,9 @@ void MainWindow::setAutoCompletionBuiltInVariablesEnabled(bool b)
     m_settings->autoCompletionBuiltInVariables = b;
 }
 
-void MainWindow::setAutoCompletionUnitsEnabled(bool b)
+void MainWindow::setAutoCompletionLongFormUnitsEnabled(bool b)
 {
-    m_settings->autoCompletionUnits = b;
+    m_settings->autoCompletionLongFormUnits = b;
 }
 
 void MainWindow::setAutoCompletionUserFunctionsEnabled(bool b)
