@@ -550,6 +550,8 @@ const QList<Unit> Units::getList()
     addBareUnit("exbi", exbi());
     addBareUnit("zebi", zebi());
     addBareUnit("yobi", yobi());
+    addBareUnit("robi", robi());
+    addBareUnit("quebi", quebi());
 
     // SI-derived and geometric units.
     addUnit("sqmeter", sqmeter(), "m2");
@@ -721,6 +723,33 @@ const QList<Unit> Units::getList()
         }
     }
 
+    // Automatic binary-prefixed aliases are intentionally scoped to
+    // information units only (bit/byte).
+    const QList<PrefixSpec> binaryPrefixes = {
+        {"kibi", "Ki", 10, kibi()},
+        {"mebi", "Mi", 20, mebi()},
+        {"gibi", "Gi", 30, gibi()},
+        {"tebi", "Ti", 40, tebi()},
+        {"pebi", "Pi", 50, pebi()},
+        {"exbi", "Ei", 60, exbi()},
+        {"zebi", "Zi", 70, zebi()},
+        {"yobi", "Yi", 80, yobi()},
+        {"robi", "Ri", 90, robi()},
+        {"quebi", "Qi", 100, quebi()}
+    };
+    const QList<UnitAliasSpec> binaryPrefixUnits = {
+        {"bit", bit(), "b", QString(), NoSiPrefixes},
+        {"byte", byte(), "B", QString(), NoSiPrefixes}
+    };
+    for (const PrefixSpec& prefix : binaryPrefixes) {
+        for (const UnitAliasSpec& unit : binaryPrefixUnits) {
+            const Quantity prefixedValue = prefix.value * unit.value;
+            addUnique(prefix.longName + unit.longName, prefixedValue);
+            if (!unit.shortName.isEmpty())
+                addUnique(prefix.symbol + unit.shortName, prefixedValue);
+        }
+    }
+
     return result;
 }
 
@@ -849,6 +878,8 @@ UNIT_CACHE(pebi, kibi()*tebi())
 UNIT_CACHE(exbi, kibi()*pebi())
 UNIT_CACHE(zebi, kibi()*exbi())
 UNIT_CACHE(yobi, kibi()*zebi())
+UNIT_CACHE(robi, kibi()*yobi())
+UNIT_CACHE(quebi, kibi()*robi())
 
 UNIT_CACHE(newton,              meter() * kilogram() / (second()*second()))
 UNIT_CACHE(hertz,               Quantity(1) / second())

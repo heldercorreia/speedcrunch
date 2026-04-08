@@ -204,7 +204,17 @@ set of units, consider defining additional aliases::
     cm = centi meter
     ft = foot
 
-Some of the built-in functions are able to handle arguments with a dimension. Refer to the documentation of a particular function for more information.
+Built-in short forms include:
 
-For long time intervals, SpeedCrunch also provides ``century`` (short form ``cy``),
-defined as exactly ``100 year_julian`` (that is, ``36525 day``).
+* Length/astronomy: ``au`` (``astronomical_unit``), ``ly`` (``lightyear``),
+  ``ls`` (``lightsecond``), ``lmin`` (``lightminute``), ``pc`` (``parsec``).
+* Time: ``min`` (``minute``), ``h`` (``hour``), ``cy`` (``century``).
+* Information: ``b`` (``bit``), ``B`` (``byte``).
+* Other common aliases: ``u``/``Da`` (``atomic_mass_unit``), ``nmi`` (``nautical_mile``).
+
+For units that allow prefixes, the same short forms can be used in prefixed
+form as well (for example ``kpc``, ``Mpc``, ``MB``, ``kb``).
+Common examples include ``mm``, ``cm``, ``km``, ``mg``, ``kg``, ``mV``,
+``kW``, ``MeV``, ``dL`` and ``dl``.
+
+Some of the built-in functions are able to handle arguments with a dimension. Refer to the documentation of a particular function for more information.

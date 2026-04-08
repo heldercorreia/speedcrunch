@@ -101,6 +101,8 @@ public:
     static const Quantity exbi();
     static const Quantity zebi();
     static const Quantity yobi();
+    static const Quantity robi();
+    static const Quantity quebi();
 
     // Derived SI units.
     static const Quantity sqmeter();
