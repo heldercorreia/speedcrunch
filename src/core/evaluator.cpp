@@ -4730,6 +4730,36 @@ void Evaluator::compile(const Tokens& tokens)
                }
            }
 
+           // Rule for parenthesized explicit unit attachment:
+           // X * ([U]) -> X.
+           if (!ruleFound && syntaxStack.itemCount() >= 5) {
+               Token rightPar = syntaxStack.top();
+               Token innerExpr = syntaxStack.top(1);
+               Token leftPar = syntaxStack.top(2);
+               Token op = syntaxStack.top(3);
+               Token lhs = syntaxStack.top(4);
+               if (lhs.isOperand()
+                   && innerExpr.isOperand()
+                   && op.asOperator() == Token::Multiplication
+                   && rightPar.asOperator() == Token::AssociationEnd
+                   && rightPar.text() == QLatin1String(")")
+                   && leftPar.asOperator() == Token::AssociationStart
+                   && leftPar.text() == QLatin1String("("))
+               {
+                   const QString innerSource = m_expression.mid(innerExpr.pos(), innerExpr.size()).trimmed();
+                   if (innerSource.startsWith(QLatin1Char('['))
+                       && innerSource.endsWith(QLatin1Char(']')))
+                   {
+                       ruleFound = true;
+                       syntaxStack.reduce(5, std::move(lhs), MAX_PRECEDENCE);
+                       m_codes.append(Opcode(Opcode::Unit));
+#ifdef EVALUATOR_DEBUG
+                       dbg << "\tRule for parenthesized unit attachment X*([U]) -> X\n";
+#endif
+                   }
+               }
+           }
+
            // Rule for parenthesis: (Y) -> Y.
            if (!ruleFound && syntaxStack.itemCount() >= 3) {
                Token right = syntaxStack.top();
@@ -6679,7 +6709,6 @@ const UserFunction* Evaluator::getUserFunction(const QString& fname) const
 
 QString Evaluator::autoFix(const QString& expr)
 {
-    int par = 0;
     QString result;
 
     // Strip off all funny characters.
@@ -6718,6 +6747,104 @@ QString Evaluator::autoFix(const QString& expr)
     replaceSuperscriptPowersWithCaretEquivalent(result);
     result = UnicodeChars::normalizeUnitSymbolAliases(result);
     result = UnicodeChars::normalizeRootFunctionAliasesForDisplay(result);
+
+    // Normalize parenthesized unit attachment shorthand:
+    // X([U]) -> X[U], including extra outer parentheses around [U].
+    auto canEndOperandBeforeParen = [](QChar ch) {
+        return ch.isLetterOrNumber()
+               || ch == QLatin1Char('_')
+               || ch == QLatin1Char(')')
+               || ch == QLatin1Char(']')
+               || ch == QLatin1Char('[')
+               || ch == QLatin1Char('!')
+               || ch == QLatin1Char('%');
+    };
+    auto isIdentifierChar = [](QChar ch) {
+        return ch.isLetterOrNumber() || ch == QLatin1Char('_');
+    };
+    auto isBalancedBracketExpression = [](const QString& text) {
+        if (text.isEmpty() || text.at(0) != QLatin1Char('[') || text.at(text.size() - 1) != QLatin1Char(']'))
+            return false;
+        int depth = 0;
+        for (int i = 0; i < text.size(); ++i) {
+            const QChar ch = text.at(i);
+            if (ch == QLatin1Char('[')) {
+                ++depth;
+            } else if (ch == QLatin1Char(']')) {
+                --depth;
+                if (depth < 0)
+                    return false;
+            }
+        }
+        return depth == 0;
+    };
+    auto isWrappedByOuterParens = [](const QString& text) {
+        if (text.size() < 2 || text.at(0) != QLatin1Char('(') || text.at(text.size() - 1) != QLatin1Char(')'))
+            return false;
+        int depth = 0;
+        for (int i = 0; i < text.size(); ++i) {
+            const QChar ch = text.at(i);
+            if (ch == QLatin1Char('(')) {
+                ++depth;
+            } else if (ch == QLatin1Char(')')) {
+                --depth;
+                if (depth == 0 && i != text.size() - 1)
+                    return false;
+                if (depth < 0)
+                    return false;
+            }
+        }
+        return depth == 0;
+    };
+    auto normalizeParenthesizedUnitAttachment = [&]() {
+        for (int i = 0; i < result.size(); ++i) {
+            if (result.at(i) != QLatin1Char('('))
+                continue;
+
+            int prev = i - 1;
+            while (prev >= 0 && result.at(prev).isSpace())
+                --prev;
+            if (prev < 0 || !canEndOperandBeforeParen(result.at(prev)))
+                continue;
+
+            // Do not rewrite actual function-call parentheses, e.g. "sin([m])".
+            if (isIdentifierChar(result.at(prev))) {
+                int nameStart = prev;
+                while (nameStart > 0 && isIdentifierChar(result.at(nameStart - 1)))
+                    --nameStart;
+                const QString name = result.mid(nameStart, prev - nameStart + 1);
+                if (FunctionRepo::instance()->find(name) || hasUserFunction(name))
+                    continue;
+            }
+
+            int depth = 0;
+            int closeParenPos = -1;
+            for (int p = i; p < result.size(); ++p) {
+                const QChar ch = result.at(p);
+                if (ch == QLatin1Char('(')) {
+                    ++depth;
+                } else if (ch == QLatin1Char(')')) {
+                    --depth;
+                    if (depth == 0) {
+                        closeParenPos = p;
+                        break;
+                    }
+                }
+            }
+            if (closeParenPos < 0)
+                continue;
+
+            QString inner = result.mid(i + 1, closeParenPos - i - 1).trimmed();
+            while (isWrappedByOuterParens(inner))
+                inner = inner.mid(1, inner.size() - 2).trimmed();
+            if (!isBalancedBracketExpression(inner))
+                continue;
+
+            result.replace(i, closeParenPos - i + 1, inner);
+            i += inner.size() - 1;
+        }
+    };
+    normalizeParenthesizedUnitAttachment();
 
     // Normalize symbolic multiplication to a compact "·" form.
     // Examples:
@@ -6859,26 +6986,45 @@ QString Evaluator::autoFix(const QString& expr)
             break;
     }
 
-    // Automagically close all parenthesis.
+    // Automagically close unmatched grouping delimiters.
+    //
+    // We do this for both parentheses and unit brackets to mirror the tolerant
+    // typing behavior used elsewhere in the editor (e.g. "sin(1" -> "sin(1)",
+    // "2[m3" -> "2[m3]"). The stack keeps expected closing delimiters in
+    // nesting order, so mixed groups close correctly ("([..." -> "...])").
+    // The fix is only applied when scanning reaches the end of the expression,
+    // avoiding synthetic closers when parsing already stopped earlier.
     Tokens tokens = Evaluator::scan(result);
     if (tokens.count()) {
-        for (int i = 0; i < tokens.count(); ++i)
-            if (tokens.at(i).asOperator() == Token::AssociationStart
-                && tokens.at(i).text() == QLatin1String("("))
-                ++par;
-            else if (tokens.at(i).asOperator() == Token::AssociationEnd
-                     && tokens.at(i).text() == QLatin1String(")"))
-                --par;
-
-        if (par < 0)
-            par = 0;
+        QString closingStack;
+        for (int i = 0; i < tokens.count(); ++i) {
+            if (tokens.at(i).asOperator() == Token::AssociationStart) {
+                if (tokens.at(i).text() == QLatin1String("("))
+                    closingStack.append(QLatin1Char(')'));
+                else if (tokens.at(i).text() == QLatin1String("["))
+                    closingStack.append(QLatin1Char(']'));
+                continue;
+            }
+            if (tokens.at(i).asOperator() != Token::AssociationEnd)
+                continue;
+            if (closingStack.isEmpty())
+                continue;
+            const QChar closing = tokens.at(i).text().isEmpty()
+                ? QChar()
+                : tokens.at(i).text().at(0);
+            if (closingStack.at(closingStack.size() - 1) == closing)
+                closingStack.chop(1);
+        }
 
         // If the scanner stops in the middle, do not bother to apply fix.
         const Token& lastToken = tokens.at(tokens.count() - 1);
         if (lastToken.pos() + lastToken.size() >= result.length())
-            while (par--)
-                result.append(')');
+            while (!closingStack.isEmpty()) {
+                result.append(closingStack.at(closingStack.size() - 1));
+                closingStack.chop(1);
+            }
     }
+    normalizeParenthesizedUnitAttachment();
 
     // Special treatment for simple function
     // e.g. "cos" is regarded as "cos(ans)".

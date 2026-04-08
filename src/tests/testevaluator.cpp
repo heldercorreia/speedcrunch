@@ -2643,6 +2643,16 @@ void test_auto_fix_parentheses()
     CHECK_AUTOFIX("x+(8-(2*1))", "x+(8-(2*1))");
 
     CHECK_AUTOFIX("x + sin (pi", "x + sin (pi)");
+
+    CHECK_AUTOFIX("2[m3", "2[m3]");
+    CHECK_AUTOFIX("3([m])", "3[m]");
+    CHECK_AUTOFIX("3(([[[m]]]))", "3[[[m]]]");
+    CHECK_AUTOFIX("3(((([[[m]]])))", "3[[[m]]]");
+    CHECK_AUTOFIX("3(((((((([[([m])]]))))", "3[[[m]]]");
+    CHECK_AUTOFIX("4[L] -> [dL", "4[L] -> [dL]");
+    CHECK_AUTOFIX("3[[m]]", "3[[m]]");
+    CHECK_AUTOFIX("3[[m]", "3[[m]]");
+    CHECK_AUTOFIX("3[[m", "3[[m]]");
 }
 
 void test_auto_fix_ans()
