@@ -26,6 +26,7 @@
 #include <QString>
 #include <QStringList>
 #include <QSet>
+#include <algorithm>
 
 namespace {
 
@@ -428,6 +429,107 @@ void Units::findUnit(Quantity& q)
             if (!preferredOrder.contains(i.key()))
                 appendDimension(i.key(), i.value());
         }
+
+        // Readability optimization for mixed electro-mechanical dimensions:
+        // when both electrical current and mass are present, prefer a compact
+        // representation in terms of C and J (plus minimal base leftovers)
+        // when that is clearly shorter than base-heavy decomposition.
+        const auto exponentComplexity = [](const Rational& exponent) {
+            const int n = qAbs(exponent.numerator());
+            const int d = exponent.denominator();
+            return d == 1 ? n : (n + d);
+        };
+        const auto factorPenalty = [exponentComplexity](const UnitFactor& factor) {
+            static const QSet<QString> baseNames = {
+                "meter", "second", "kilogram", "ampere",
+                "kelvin", "mole", "candela", "byte"
+            };
+            const int unitWeight = baseNames.contains(factor.name) ? 6 : 2;
+            return unitWeight * exponentComplexity(factor.exponent);
+        };
+        const auto scoreFactors = [&](const QList<UnitFactor>& candidateFactors) {
+            int score = 0;
+            for (const UnitFactor& factor : candidateFactors)
+                score += factorPenalty(factor);
+            score += candidateFactors.size() * 2;
+            return score;
+        };
+
+        const Rational zero(0);
+        const Rational two(2);
+        const Rational currentExp = dim.value("el. current", zero);
+        const Rational massExp = dim.value("mass", zero);
+        if (!currentExp.isZero()
+            && !massExp.isZero()
+            && currentExp.denominator() == 1
+            && massExp.denominator() == 1)
+        {
+            const Rational lengthExp = dim.value("length", zero);
+            const Rational timeExp = dim.value("time", zero);
+            if (lengthExp.denominator() == 1 && timeExp.denominator() == 1) {
+                QList<UnitFactor> compactFactors;
+                compactFactors.reserve(factors.size());
+
+                compactFactors.append(UnitFactor{"coulomb", currentExp});
+                compactFactors.append(UnitFactor{"joule", massExp});
+
+                const Rational residualLength = lengthExp - (two * massExp);
+                const Rational residualTime = timeExp - currentExp + (two * massExp);
+                if (!residualLength.isZero())
+                    compactFactors.append(UnitFactor{"meter", residualLength});
+                if (!residualTime.isZero())
+                    compactFactors.append(UnitFactor{"second", residualTime});
+
+                for (auto it = dim.constBegin(); it != dim.constEnd(); ++it) {
+                    const QString key = it.key();
+                    if (key == "el. current"
+                        || key == "mass"
+                        || key == "length"
+                        || key == "time")
+                        continue;
+                    if (!it.value().isZero()) {
+                        if (key == "amount")
+                            compactFactors.append(UnitFactor{"mole", it.value()});
+                        else if (key == "luminous intensity")
+                            compactFactors.append(UnitFactor{"candela", it.value()});
+                        else if (key == "temperature")
+                            compactFactors.append(UnitFactor{"kelvin", it.value()});
+                        else if (key == "information")
+                            compactFactors.append(UnitFactor{"byte", it.value()});
+                        else
+                            compactFactors.append(UnitFactor{key, it.value()});
+                    }
+                }
+
+                // Keep deterministic order: C, J, then leftovers in canonical
+                // base-dimension order and finally unknown dimensions.
+                const auto orderIndex = [](const QString& name) {
+                    if (name == "coulomb") return 0;
+                    if (name == "joule") return 1;
+                    if (name == "kilogram") return 2;
+                    if (name == "meter") return 3;
+                    if (name == "second") return 4;
+                    if (name == "ampere") return 5;
+                    if (name == "kelvin") return 6;
+                    if (name == "mole") return 7;
+                    if (name == "candela") return 8;
+                    if (name == "byte") return 9;
+                    return 100;
+                };
+                std::sort(compactFactors.begin(), compactFactors.end(),
+                          [&](const UnitFactor& a, const UnitFactor& b) {
+                              const int ao = orderIndex(a.name);
+                              const int bo = orderIndex(b.name);
+                              if (ao != bo)
+                                  return ao < bo;
+                              return a.name < b.name;
+                          });
+
+                if (scoreFactors(compactFactors) < scoreFactors(factors))
+                    factors = compactFactors;
+            }
+        }
+
         // Rendering policy for auto-generated unit products:
         // 1) If there is at least one positive exponent, render negative exponents
         //    in the denominator (for readability and textbook familiarity).
@@ -439,8 +541,6 @@ void Units::findUnit(Quantity& q)
         // This policy only changes presentation. It does not affect dimensions.
         QStringList numeratorTerms;
         QStringList denominatorTerms;
-        const Rational zero(0);
-
         for (const UnitFactor& factor : factors) {
             if (factor.exponent > zero) {
                 numeratorTerms << (factor.name + superscriptFromExponent(factor.exponent));

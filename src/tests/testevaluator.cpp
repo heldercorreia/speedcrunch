@@ -821,8 +821,9 @@ void test_units_short_aliases_and_si_prefixes()
     CHECK_EVAL("[1 cy] -> [day]", "36525 day");
     CHECK_EVAL(QString::fromUtf8("[kΩ] -> [ohm]"), "1000 ohm");
     CHECK_EVAL_FORMAT("2[coulomb]+3[mC]", "2.003[C]");
-    CHECK_EVAL_FORMAT("[C^3*m^3*J^(-2)]", u8"1[s⁷⋅A³ / (kg²⋅m)]");
-    CHECK_EVAL_FORMAT("[C^4*m^4*J^(-3)]", u8"1[s¹⁰⋅A⁴ / (kg³⋅m²)]");
+    CHECK_EVAL_FORMAT("[C^3*m^3*J^(-2)]", u8"1[C³⋅m³ / J²]");
+    CHECK_EVAL_FORMAT("[C^4*m^4*J^(-3)]", u8"1[C⁴⋅m⁴ / J³]");
+    CHECK_EVAL_FORMAT("[A^4*s^10/(kg^3*m^2)]", u8"1[C⁴⋅m⁴ / J³]");
     CHECK_EVAL_FORMAT("1081.20238677[C*m^(-3)]", u8"1081.20238677[C⋅m⁻³]");
     CHECK_EVAL_FORMAT("[J/(K*mol)]", u8"1[J⋅mol⁻¹⋅K⁻¹]");
 }
