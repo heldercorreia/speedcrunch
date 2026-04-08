@@ -1201,6 +1201,17 @@ void Editor::keyPressEvent(QKeyEvent* event)
         text(),
         textCursor().position());
 
+    if (event->text() == QLatin1String("[")
+        && !textCursor().hasSelection()) {
+        QTextCursor cursor = textCursor();
+        const int position = cursor.position();
+        cursor.insertText(QStringLiteral("[]"));
+        cursor.setPosition(position + 1);
+        setTextCursor(cursor);
+        event->accept();
+        return;
+    }
+
     switch (key) {
     case Qt::Key_Tab:
         // setTabChangesFocus() still allows entering a Tab character when
