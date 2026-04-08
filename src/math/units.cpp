@@ -620,6 +620,12 @@ const QList<Unit> Units::getList()
     addUnit("nautical_mile", nautical_mile(), "nmi", NoSiPrefixes);
     addUnit("cable", cable(), "cab", NoSiPrefixes);
 
+    // Area units.
+    addUnit("are", are(), "a", NoSiPrefixes);
+    addUnit("hectare", hectare(), "ha", NoSiPrefixes);
+    addUnit("decare", decare(), "daa", NoSiPrefixes);
+    addUnit("acre", acre(), "ac", NoSiPrefixes);
+
     // Volume units.
     addUnit("UK_gallon", UK_gallon(), QString(), NoSiPrefixes);
     addUnit("US_gallon", US_gallon(), "gal", NoSiPrefixes);
@@ -949,6 +955,7 @@ UNIT_CACHE(cable,               HNumber("0.1") * nautical_mile())
 
 UNIT_CACHE(are,                 HNumber(100) * sqmeter())
 UNIT_CACHE(hectare,             HNumber(100) * are())
+UNIT_CACHE(decare,              HNumber(10) * are())
 UNIT_CACHE(acre,                mile()*mile() / HNumber(640))
 
 UNIT_CACHE(US_gallon,           HNumber("3.785411784") * liter())

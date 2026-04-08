@@ -733,6 +733,8 @@ void test_units_conversion_parentheses()
     CHECK_EVAL("10 meter in (1 yard + 2 foot)", "6.56167979002624671916 (1 yard + 2 foot)");
     CHECK_EVAL(QString::fromUtf8("1 meter −> centi meter"), "100 centi⋅meter");
     CHECK_EVAL(QString::fromUtf8("1 meter → centi meter"), "100 centi⋅meter");
+    CHECK_EVAL(QString::fromUtf8("hectare → m² → are → decare → daa → a → hectare"),
+               "1 hectare");
 }
 
 void test_units_display_propagation()
@@ -752,6 +754,9 @@ void test_units_short_aliases_and_si_prefixes()
     CHECK_EVAL("Eh", "0.00000000000000000436 joule");
     CHECK_EVAL("mol", "1 mole");
     CHECK_EVAL(QString::fromUtf8("Ω"), "1 ohm");
+    CHECK_EVAL("a", u8"100 meter²");
+    CHECK_EVAL("ha", u8"10000 meter²");
+    CHECK_EVAL("daa", u8"1000 meter²");
 
     CHECK_EVAL("kilometer -> meter", "1000 meter");
     CHECK_EVAL("km -> meter", "1000 meter");
@@ -761,6 +766,10 @@ void test_units_short_aliases_and_si_prefixes()
     CHECK_EVAL("MeV -> eV", "1000000 eV");
     CHECK_EVAL("picovolt -> volt", "0.000000000001 volt");
     CHECK_EVAL("pV -> volt", "0.000000000001 volt");
+    CHECK_EVAL("a -> m2", "100 m2");
+    CHECK_EVAL("ha -> m2", "10000 m2");
+    CHECK_EVAL("daa -> m2", "1000 m2");
+    CHECK_EVAL("ac -> acre", "1 acre");
 
     CHECK_EVAL("mV -> volt", "0.001 volt");
     CHECK_EVAL("MV -> volt", "1000000 volt");
@@ -3062,7 +3071,7 @@ void test_comment_and_description_edge_cases()
 void test_user_functions()
 {
     // Check user functions can be defined and used
-    CHECK_USERFUNC_SET("func1(a;b) = a * b + 10");
+    CHECK_USERFUNC_SET("func1(x;b) = x * b + 10");
     CHECK_USERFUNC_SET("gf(x) = cos x^-pi");
     CHECK_USERFUNC_INTERPRETED("gf", "cos(x^(-pi))");
     CHECK_EVAL("func1(2;5)", "20"); // = 2 * 5 + 10
@@ -3072,32 +3081,32 @@ void test_user_functions()
     CHECK_EVAL_FAIL("func1(2;5;1)");
 
     // Check user functions can call other user functions
-    CHECK_USERFUNC_SET("func2(a;b) = func1(a;b) - 10");
+    CHECK_USERFUNC_SET("func2(x;b) = func1(x;b) - 10");
     CHECK_EVAL("func2(2;5)", "10"); // = (2 * 5 + 10) - 10
 
     // Check user functions can be redefined
-    CHECK_USERFUNC_SET("func2(a;b) = 10 + func1(a;b)");
+    CHECK_USERFUNC_SET("func2(x;b) = 10 + func1(x;b)");
     CHECK_EVAL("func2(2;5)", "30"); // = 10 + (2 * 5 + 10)
 
     // Check user functions can refer to other user functions not defined
-    CHECK_USERFUNC_SET("func2(a;b) = 10 * a + func3(a;b)");
+    CHECK_USERFUNC_SET("func2(x;b) = 10 * x + func3(x;b)");
     CHECK_EVAL_FAIL("func2(2;5)");
-    CHECK_USERFUNC_SET("func3(a;b) = a - b");
+    CHECK_USERFUNC_SET("func3(x;b) = x - b");
     CHECK_EVAL("func2(2;5)", "17"); // = 10 * 2 + (2 - 5)
 
     // Check user functions can call builtin functions
-    CHECK_USERFUNC_SET("func2(a;b) = sum(func1(a;b);5)");
+    CHECK_USERFUNC_SET("func2(x;b) = sum(func1(x;b);5)");
     CHECK_EVAL("func2(2;5)", "25"); // = sum((2 * 5 + 10);5)
 
     // Check recursive user functions are not allowed
-    CHECK_USERFUNC_SET("func_r(a) = a * func_r(a)");
+    CHECK_USERFUNC_SET("func_r(x) = x * func_r(x)");
     CHECK_EVAL_FAIL("func_r(1)");
-    CHECK_USERFUNC_SET("func_r1(a) = a * func_r2(a)");
-    CHECK_USERFUNC_SET("func_r2(a) = a + func_r1(a)");
+    CHECK_USERFUNC_SET("func_r1(x) = x * func_r2(x)");
+    CHECK_USERFUNC_SET("func_r2(x) = x + func_r1(x)");
     CHECK_EVAL_FAIL("func_r1(1)");
 
     // Check user functions can refer to user variables
-    CHECK_USERFUNC_SET("func1(a;b) = a * b - var1");
+    CHECK_USERFUNC_SET("func1(x;b) = x * b - var1");
     CHECK_EVAL_FAIL("func1(2;5)");
     CHECK_EVAL("var1 = 5", "5");
     CHECK_EVAL("func1(2;5)", "5");  // = 2 * 5 - 5
@@ -3108,11 +3117,11 @@ void test_user_functions()
     CHECK_EVAL("func1(2;5)", "10"); // = 2 * 5 (not 10 * 5)
 
     // Check user functions names can not mask builtin functions
-    CHECK_USERFUNC_SET_FAIL("sum(a;b) = a * b");
+    CHECK_USERFUNC_SET_FAIL("sum(x;b) = x * b");
 
     // Check user functions names can not mask user variables
     CHECK_EVAL("var1 = 5", "5");
-    CHECK_USERFUNC_SET_FAIL("var1(a;b) = a * b");
+    CHECK_USERFUNC_SET_FAIL("var1(x;b) = x * b");
 
     // Check user functions can take no argument
     CHECK_EVAL("func1() = 2 * 10", "20");
@@ -3275,17 +3284,17 @@ void test_angle_mode(Settings* settings)
 
 void test_implicit_multiplication()
 {
-    CHECK_EVAL("a = 5", "5");
-    CHECK_EVAL("5a", "25");
-    CHECK_EVAL("5.a", "25");
-    CHECK_EVAL("5.0a", "25");
-    CHECK_EVAL("5e2a", "2500");
+    CHECK_EVAL("av = 5", "5");
+    CHECK_EVAL("5av", "25");
+    CHECK_EVAL("5.av", "25");
+    CHECK_EVAL("5.0av", "25");
+    CHECK_EVAL("5e2av", "2500");
     CHECK_EVAL_FAIL("a5");
-    CHECK_EVAL("a 5", "25");
-    CHECK_EVAL("2a^3", "250");
+    CHECK_EVAL("av 5", "25");
+    CHECK_EVAL("2av^3", "250");
     CHECK_EVAL("bb=2", "2");
     CHECK_EVAL_FAIL("ab");
-    CHECK_EVAL("a b", "5 b");
+    CHECK_EVAL("av b", "5 b");
     CHECK_EVAL("eps = 10", "10");
     CHECK_EVAL("5 eps", "50");
     CHECK_EVAL("Eren = 1001", "1001");
@@ -3294,13 +3303,13 @@ void test_implicit_multiplication()
     CHECK_EVAL("f() = 123", "123");
     CHECK_EVAL("2f()", "246");
     CHECK_EVAL("5   5", "55");
-    CHECK_INTERPRETED("a*b", "a⋅b");
-    CHECK_INTERPRETED("a*(b)", "a⋅b");
+    CHECK_INTERPRETED("av*b", "av⋅b");
+    CHECK_INTERPRETED("av*(b)", "av⋅b");
     CHECK_INTERPRETED("sin(pi)*cos(pi)", "sin(pi)⋅cos(pi)");
-    CHECK_INTERPRETED("f()*a", "f()⋅a");
-    CHECK_INTERPRETED("sqrt(4)*a", "√(4)⋅a");
-    CHECK_INTERPRETED("a*2", "a⋅2");
-    CHECK_INTERPRETED("2*a", "2⋅a");
+    CHECK_INTERPRETED("f()*av", "f()⋅av");
+    CHECK_INTERPRETED("sqrt(4)*av", "√(4)⋅av");
+    CHECK_INTERPRETED("av*2", "av⋅2");
+    CHECK_INTERPRETED("2*av", "2⋅av");
     CHECK_INTERPRETED("2*3", "2×3");
 
     // Check implicit multiplication between numbers fails
@@ -3315,17 +3324,17 @@ void test_implicit_multiplication()
     CHECK_EVAL_FAIL("0o10 0x9");
     // CHECK_EVAL_FAIL("12.12.12");
     CHECK_EVAL_FAIL("12e12.12");
-    CHECK_EVAL("0b10a", "10");
-    CHECK_EVAL("0o2a", "10");
+    CHECK_EVAL("0b10av", "10");
+    CHECK_EVAL("0o2av", "10");
     CHECK_EVAL("5(5)", "25");
 
-    CHECK_EVAL("a sin(pi/2)", "5");
-    CHECK_EVAL("a sqrt(4)",   "10");
-    CHECK_EVAL("a sqrt(a^2)", "25");
+    CHECK_EVAL("av sin(pi/2)", "5");
+    CHECK_EVAL("av sqrt(4)",   "10");
+    CHECK_EVAL("av sqrt(av^2)", "25");
     CHECK_INTERPRETED("2×sin pi", "2⋅sin(pi)");
-    CHECK_INTERPRETED("a sin(pi/2)", "a⋅sin(pi/2)");
-    CHECK_INTERPRETED("a sqrt(4)", "a⋅√(4)");
-    CHECK_INTERPRETED("a sqrt(a^2)", "a⋅√(a^2)");
+    CHECK_INTERPRETED("av sin(pi/2)", "av⋅sin(pi/2)");
+    CHECK_INTERPRETED("av sqrt(4)", "av⋅√(4)");
+    CHECK_INTERPRETED("av sqrt(av^2)", "av⋅√(av^2)");
 
     /* Tests issue 538 */
     /* 3 sin (3 pi) was evaluated but not 3 sin (3) */
@@ -3335,15 +3344,15 @@ void test_implicit_multiplication()
     CHECK_INTERPRETED("3 sin (3)", "3⋅sin(3)");
 
     CHECK_EVAL("2 (2 + 1)", "6");
-    CHECK_EVAL("2 (a)", "10");
+    CHECK_EVAL("2 (av)", "10");
     CHECK_INTERPRETED("2 (2 + 1)", "2⋅(2+1)");
-    CHECK_INTERPRETED("2 (a)", "2⋅a");
+    CHECK_INTERPRETED("2 (av)", "2⋅av");
     CHECK_INTERPRETED("(1+2)(3+4)", "(1+2)⋅(3+4)");
     CHECK_INTERPRETED("(-1+2)(3-4)", "(-1+2)⋅(3-4)");
 
     /* Tests issue 598 */
-    CHECK_EVAL("2(a)^3", "250");
-    CHECK_INTERPRETED("2(a)^3", "2⋅a^3");
+    CHECK_EVAL("2(av)^3", "250");
+    CHECK_INTERPRETED("2(av)^3", "2⋅av^3");
 
     CHECK_EVAL("6/2(2+1)", "9");
     CHECK_INTERPRETED("6/2(2+1)", "(6/2)⋅(2+1)");

@@ -165,6 +165,7 @@ public:
     // Area.
     static const Quantity are();
     static const Quantity hectare();
+    static const Quantity decare();
     static const Quantity acre();
 
     // Volume.
