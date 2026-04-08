@@ -55,7 +55,7 @@ public:
         Function // For managing shift/reduce conflicts.
     };
     enum Type {
-        stxUnknown, stxNumber, stxIdentifier, stxAbstract, // isOperand
+        stxUnknown, stxNumber, stxIdentifier, stxUnitIdentifier, stxAbstract, // isOperand
         stxOperator, stxOpenPar, stxClosePar, stxSep // isOperator
     };
 
@@ -71,9 +71,10 @@ public:
     bool isNumber() const { return m_type == stxNumber; }
     bool isOperator() const { return m_type >= stxOperator; }
     bool isIdentifier() const { return m_type == stxIdentifier; }
+    bool isUnitIdentifier() const { return m_type == stxUnitIdentifier; }
     bool isAbstract() const { return m_type == stxAbstract; }
     bool isOperand() const { return isNumber() || isIdentifier()
-                                    || isAbstract(); }
+                                    || isUnitIdentifier() || isAbstract(); }
     int pos() const { return m_pos; }
     void setPos(int pos) { m_pos = pos; }
     int size() const { return m_size; }

@@ -108,32 +108,42 @@ Units
 
 SpeedCrunch includes a powerful system for units and unit conversions. It provides an extensive list of built-in units and easily allows you to define your own.
 
-Just as in common textbook notation, you specify a value's unit by multiplication::
+Units are attached to the term on their left using square brackets::
 
-    5 foot
-    = 1.524 meter
+    5[foot]
+    = 1.524 [meter]
 
-Note that this is an actual multiplication internally. However, the ``*`` operator can
-often be omitted (using implicit multiplication), as shown by the previous example.
+If the left-hand side is parenthesized, the bracket applies to the whole parenthesized expression::
+
+    (5+6)[lightyear]
+    = 11 [lightyear]
+
 By default SpeedCrunch converts the quantity into SI units::
 
-    60 mile/hour
-    = 26.8224 meter⋅second⁻¹
+    60[mile/hour]
+    = 26.8224 [meter⋅second⁻¹]
 
 This alone would not be terribly useful. However, it is possible to convert the value to a different unit using the conversion operator ``->``
 (``in`` can be used as an alias)::
 
-    50 yard + 2 foot in centi meter
-    = 4632.96 centi⋅meter
+    50[yard] + 2[foot] in [centi meter]
+    = 4632.96 [centi⋅meter]
 
-    10 knot -> kilo meter / hour
-    = 18.52 kilo⋅meter / hour
+    10[knot] -> [kilo meter / hour]
+    = 18.52 [kilo⋅meter / hour]
+
+Displayed value-unit formatting uses a narrow no-break space (U+202F) between
+the numeric value and the unit block, for example ``1.23 [meter]``. Input
+accepts unit attachment with or without that separator (for example both
+``1[meter]`` and ``1 [meter]``).
 
 Note that all built-in unit names are singular and use American English spelling. This is independent of the language selected for SpeedCrunch's interface.
 
 As seen in the example above, you can use any SI prefix like ``kilo`` or ``centi``.
-They are treated like any other unit, so separate them with a space from the base unit they refer to.
+They are treated like any other unit, so separate them with a space from the base unit they refer to inside brackets.
 For astronomical distances, ``parsec`` also supports positive SI-prefixed short forms such as ``kpc`` and ``Mpc``.
+
+Since units are now explicit in brackets, short identifiers such as ``a``, ``mg`` and ``l`` are free to use as variable names without conflicting with units.
 
 Information units (bit/byte)
 ----------------------------
@@ -148,28 +158,24 @@ When adding/subtracting information quantities, SpeedCrunch does not implicitly 
 bit-family and byte-family values. Use an explicit conversion if you want to switch
 family::
 
-    1 B + 8 b
+    1[B] + 8[b]
     = error
 
-    1 B + (8 b -> B)
-    = 2 B
+    1[B] + (8[b] -> [B])
+    = 2 [B]
 
 For sums inside the same family, the displayed result keeps the coarsest unit used
 in the expression::
 
-    2 MB + 3 PB + 4 TB
-    = 3.004000002 PB
+    2[MB] + 3[PB] + 4[TB]
+    = 3.004000002 [PB]
 
 .. warning::
 
-   In SpeedCrunch (unlike in textbook notation), prefixes can be used on their own. This limitation (or feature, depending on your point of view)
-   means that their use follows the same rules of precedence as any other mathematical operation. For instance, if you intend to express the unit
-   'newtons per centimeter', don't simply type ``newton / centi meter`` -- this will be interpreted as ``(newton / centi) meter``! Instead, make
-   the order explicit by using ``newton / (centi meter)``.
+   In SpeedCrunch (unlike in textbook notation), prefixes can be used on their own (for example ``[kilo]``). Their use follows the same rules of precedence as any other mathematical operation.
+   For instance, if you intend to express the unit 'newtons per centimeter', do not type ``[newton / centi meter]``. Make the order explicit with ``[newton / (centi meter)]``.
 
-   For the same reasons, expressions like ``500 gram / 20 gram`` and ``(500 gram) / (20 gram)`` yield different results.
-
-An important feature of SpeedCrunch's unit system is *dimensional checking*. Simply put, it prevents comparing apples and pears: If you try to convert seconds to meters, SpeedCrunch will complain, stating that the dimensions of ``second`` and ``meter`` do not match. Indeed, the dimension of ``second`` is *time*, while ``meter`` denotes a *length*, thus they cannot be compared, added, etc. When adding, multiplying, or otherwise manipulating units, SpeedCrunch will track the dimension and raise an error if it detects an invalid operation. For instance if you type ``meter^2``, the result will be a quantity with the dimension *length*\ :sup:`2` which can only be compared to other quantities with the same dimension. Currently, the available dimensions and their associated primitive units are:
+An important feature of SpeedCrunch's unit system is *dimensional checking*. Simply put, it prevents comparing apples and pears: if you try to convert ``[second]`` to ``[meter]``, SpeedCrunch will complain, stating that the dimensions do not match. Indeed, the dimension of ``second`` is *time*, while ``meter`` denotes a *length*, thus they cannot be compared, added, etc. When adding, multiplying, or otherwise manipulating units, SpeedCrunch will track the dimension and raise an error if it detects an invalid operation. For instance, if you type ``[meter^2]``, the result will be a quantity with the dimension *length*\ :sup:`2` which can only be compared to other quantities with the same dimension. Currently, the available dimensions and their associated primitive units are:
 
 * *Length*: ``meter``
 * *Mass*: ``kilogram``
@@ -185,24 +191,23 @@ This might change in a future version of SpeedCrunch.
 
 Defining a custom unit works exactly like defining a variable::
 
-    earth_radius = 6730 kilo meter
+    earth_radius = 6730[kilo meter]
 
-    3.5 astronomical_unit in earth_radius
-    = 77799.78416790490341753343 earth_radius
+    3.5[astronomical_unit] in [earth_radius]
+    = 77799.78416790490341753343 [earth_radius]
 
-In fact, any unit is simply a user-defined variable or a built-in constant. This also means
-that any variable or even expression can be used as the right-hand side of a conversion expression::
+Any variable or expression can be used as the right-hand side of a conversion expression::
 
-    10 meter in (1 yard + 2 foot)
-    = 6.56167979002624671916 (1 yard+2 foot)
+    10[meter] in (1[yard] + 2[foot])
+    = 6.56167979002624671916 (1[yard] + 2[foot])
 
 Although full built-in unit names are always accepted, many units also support short
 forms (for example ``m``, ``s``, ``B``, ``b``). If you frequently use a particular
 set of units, consider defining additional aliases::
 
-    m = meter
-    cm = centi meter
-    ft = foot
+    m = [meter]
+    cm = [centi meter]
+    ft = [foot]
 
 Built-in short forms include:
 

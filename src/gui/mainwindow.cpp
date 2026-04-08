@@ -202,13 +202,15 @@ AssignmentTarget assignmentTargetFromExpression(Evaluator* evaluator, const QStr
 
     if (tokens.count() > 2
         && tokens.at(0).isIdentifier()
-        && tokens.at(1).asOperator() == Token::AssociationStart)
+        && tokens.at(1).asOperator() == Token::AssociationStart
+        && tokens.at(1).text() == QLatin1String("("))
     {
         bool assignFunc = false;
         int t = 0;
 
         if (tokens.count() > 4
-            && tokens.at(2).asOperator() == Token::AssociationEnd)
+            && tokens.at(2).asOperator() == Token::AssociationEnd
+            && tokens.at(2).text() == QLatin1String(")"))
         {
             t = 3;
             if (tokens.at(3).asOperator() == Token::Assignment)
@@ -218,7 +220,8 @@ AssignmentTarget assignmentTargetFromExpression(Evaluator* evaluator, const QStr
                 if (!tokens.at(t).isIdentifier())
                     break;
 
-                if (tokens.at(t + 1).asOperator() == Token::AssociationEnd) {
+                if (tokens.at(t + 1).asOperator() == Token::AssociationEnd
+                    && tokens.at(t + 1).text() == QLatin1String(")")) {
                     t += 2;
                     if (t < tokens.count()
                         && tokens.at(t).asOperator() == Token::Assignment)

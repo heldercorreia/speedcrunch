@@ -251,26 +251,34 @@ void SyntaxHighlighter::highlightBlock(const QString& text)
 
     const QString normalizedText = textNormalizedForHighlighting(text);
     Tokens tokens = Evaluator::instance()->scan(normalizedText);
+    int unitBracketDepth = 0;
 
     for (int i = 0; i < tokens.count(); ++i) {
         const Token& token = tokens.at(i);
         const QString tokenText = token.text().toLower();
         QStringList functionNames = FunctionRepo::instance()->getIdentifiers();
         QColor color;
+        const bool insideUnitBrackets = unitBracketDepth > 0;
 
         switch (token.type()) {
         case Token::stxNumber:
         case Token::stxUnknown:
             color = colorForRole(ColorScheme::Number);
+            if (insideUnitBrackets)
+                color = colorForRole(ColorScheme::Parens);
             // TODO: color thousand separators differently? It might help troubleshooting issues
             break;
 
         case Token::stxOperator:
             color = colorForRole(ColorScheme::Operator);
+            if (insideUnitBrackets)
+                color = colorForRole(ColorScheme::Parens);
             break;
 
         case Token::stxSep:
             color = colorForRole(ColorScheme::Separator);
+            if (insideUnitBrackets)
+                color = colorForRole(ColorScheme::Parens);
             break;
 
         case Token::stxOpenPar:
@@ -298,20 +306,32 @@ void SyntaxHighlighter::highlightBlock(const QString& text)
             }
             break;
 
+        case Token::stxUnitIdentifier:
+            color = colorForRole(ColorScheme::Parens);
+            break;
+
         default:
             break;
         };
 
         setFormat(token.pos(), token.size(), color);
-        if (token.type() == Token::stxIdentifier
+        if ((token.type() == Token::stxIdentifier
+             || token.type() == Token::stxUnitIdentifier)
                 && token.pos() >= 0
                 && token.pos() + token.size() <= text.size()) {
             const QString originalTokenText = text.mid(token.pos(), token.size());
             for (int j = 0; j < originalTokenText.size(); ++j) {
                 if (isSuperscriptExponentChar(originalTokenText.at(j)))
-                    setFormat(token.pos() + j, 1, colorForRole(ColorScheme::Number));
+                    setFormat(token.pos() + j, 1, token.type() == Token::stxUnitIdentifier
+                        ? colorForRole(ColorScheme::Parens)
+                        : colorForRole(ColorScheme::Number));
             }
         }
+
+        if (token.type() == Token::stxOpenPar && token.text() == QLatin1String("["))
+            ++unitBracketDepth;
+        else if (token.type() == Token::stxClosePar && token.text() == QLatin1String("]"))
+            unitBracketDepth = qMax(0, unitBracketDepth - 1);
 
         if (token.type() == Token::stxNumber && Settings::instance()->digitGrouping > 0) {
             // If the lexer split a decimal number around the radix character,

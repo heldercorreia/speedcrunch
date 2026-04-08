@@ -205,7 +205,7 @@ QString formatRationalDisplay(Quantity q)
 
     const QString unitName = q.unitName();
     if (!unitName.isEmpty())
-        result += QStringLiteral(" ") + unitName;
+        result += QStringLiteral("[%1]").arg(unitName);
     return result;
 }
 
@@ -378,10 +378,32 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride,
         result.replace('.', ',');
 
     if (q.hasUnit() || !q.isDimensionless()) {
-        const int firstSpace = result.indexOf(QLatin1Char(' '));
-        if (firstSpace >= 0 && firstSpace + 1 < result.size()) {
-            result = result.left(firstSpace + 1)
-                + Units::normalizeUnitTextForDisplay(result.mid(firstSpace + 1));
+        bool unitNormalized = false;
+        const int openBracket = result.lastIndexOf(QLatin1Char('['));
+        const int closeBracket = result.lastIndexOf(QLatin1Char(']'));
+        if (openBracket >= 0
+            && closeBracket > openBracket
+            && closeBracket == result.size() - 1)
+        {
+            const QString normalizedUnit =
+                Units::normalizeUnitTextForDisplay(
+                    result.mid(openBracket + 1, closeBracket - openBracket - 1));
+            result = result.left(openBracket + 1)
+                + normalizedUnit
+                + QLatin1Char(']');
+            unitNormalized = true;
+        }
+
+        if (!unitNormalized) {
+            const int firstSpace = result.indexOf(QLatin1Char(' '));
+            if (firstSpace >= 0 && firstSpace + 1 < result.size()) {
+                const QString normalizedUnit =
+                    Units::normalizeUnitTextForDisplay(result.mid(firstSpace + 1));
+                result = result.left(firstSpace)
+                    + QLatin1Char('[')
+                    + normalizedUnit
+                    + QLatin1Char(']');
+            }
         }
     }
 

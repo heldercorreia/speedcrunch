@@ -34,6 +34,7 @@
 #include "core/session.h"
 #include "core/unicodechars.h"
 #include "math/units.h"
+#include "math/operatorchars.h"
 
 #include <QApplication>
 #include <QAbstractTextDocumentLayout>
@@ -517,14 +518,14 @@ void Editor::doMatchingRight()
 }
 
 
-// Matches a list of built-in functions and variables to a fragment of the name.
-QStringList Editor::matchFragment(const QString& id) const
+// Matches a list of built-in functions, units and variables to a fragment.
+QStringList Editor::matchFragment(const QString& id, bool unitContext) const
 {
     const Settings* settings = Settings::instance();
 
-    // Find matches in function names.
     QStringList choices;
-    if (settings->autoCompletionBuiltInFunctions) {
+
+    if (!unitContext && settings->autoCompletionBuiltInFunctions) {
         const auto fnames = FunctionRepo::instance()->getIdentifiers();
         for (int i = 0; i < fnames.count(); ++i) {
             if (fnames.at(i).startsWith(id, Qt::CaseSensitive)) {
@@ -538,23 +539,8 @@ QStringList Editor::matchFragment(const QString& id) const
         choices.sort();
     }
 
-    // Find matches in variables names.
-    QStringList vchoices;
-    QSet<QString> seenVariableCompletionIds;
     const QList<Unit> allUnits = Units::getList();
-    QSet<QString> unitNames;
-    QSet<QString> longFormUnitNames;
-    for (const Unit& unit : allUnits)
-        unitNames.insert(unit.name);
-    for (const Unit& unit : allUnits) {
-        const QString displayName = Units::formatUnitTokenForDisplay(unit.name);
-        if (displayName != unit.name)
-            longFormUnitNames.insert(unit.name);
-    }
-
     const auto isLikelyLongFormUnitName = [&](const QString& unitName) {
-        if (longFormUnitNames.contains(unitName))
-            return true;
         if (unitName.contains(QLatin1Char('_')))
             return true;
         if (unitName.size() < 4 || unitName != unitName.toLower())
@@ -565,16 +551,38 @@ QStringList Editor::matchFragment(const QString& id) const
         }
         return true;
     };
+
+    if (unitContext) {
+        QStringList unitChoices;
+        QSet<QString> seenUnitNames;
+        for (const Unit& unit : allUnits) {
+            const bool includeUnit =
+                settings->autoCompletionLongFormUnits
+                || !isLikelyLongFormUnitName(unit.name);
+            if (!includeUnit)
+                continue;
+            if (!unit.name.startsWith(id, Qt::CaseSensitive))
+                continue;
+            if (seenUnitNames.contains(unit.name))
+                continue;
+            seenUnitNames.insert(unit.name);
+            unitChoices.append(unit.name + QStringLiteral(":") + tr("Unit"));
+        }
+        unitChoices.sort();
+        choices += unitChoices;
+    }
+
+    // Find matches in variable names.
+    QStringList variableChoices;
+    QSet<QString> seenVariableCompletionIds;
     QList<Variable> variables = m_evaluator->getVariables();
     for (int i = 0; i < variables.count(); ++i) {
         const Variable variable = variables.at(i);
         const bool isBuiltIn = variable.type() == Variable::BuiltIn;
-        const bool isUnit = isBuiltIn && unitNames.contains(variable.identifier());
-        const bool isLongFormUnit = isUnit && isLikelyLongFormUnitName(variable.identifier());
-        const bool includeVariable =
-            (isUnit && isLongFormUnit && settings->autoCompletionLongFormUnits)
-            || (!isUnit && isBuiltIn && settings->autoCompletionBuiltInVariables)
-            || (!isBuiltIn && settings->autoCompletionUserVariables);
+        const bool includeVariable = unitContext
+            ? (!isBuiltIn && settings->autoCompletionUserVariables)
+            : ((isBuiltIn && settings->autoCompletionBuiltInVariables)
+               || (!isBuiltIn && settings->autoCompletionUserVariables));
         if (!includeVariable)
             continue;
 
@@ -586,16 +594,15 @@ QStringList Editor::matchFragment(const QString& id) const
             const QString variableDescription = variable.description().trimmed().isEmpty()
                 ? NumberFormatter::format(variable.value())
                 : variable.description().trimmed();
-            vchoices.append(QString("%1:%2").arg(
+            variableChoices.append(QString("%1:%2").arg(
                 completionIdentifier,
                 variableDescription));
         }
     }
-    vchoices.sort();
-    choices += vchoices;
+    variableChoices.sort();
+    choices += variableChoices;
 
-    // Find matches in user functions.
-    if (settings->autoCompletionUserFunctions) {
+    if (!unitContext && settings->autoCompletionUserFunctions) {
         QStringList ufchoices;
         auto userFunctions = m_evaluator->getUserFunctions();
         for (int i = 0; i < userFunctions.count(); ++i) {
@@ -625,9 +632,9 @@ QString Editor::getKeyword() const
         const auto& token = tokens[i];
         if (token.pos() > currentPosition)
             continue;
-        if (token.isIdentifier()) {
+        if (token.isIdentifier() || token.isUnitIdentifier()) {
             const QString tokenText = token.text();
-            const auto matches = matchFragment(tokenText);
+            const auto matches = matchFragment(tokenText, token.isUnitIdentifier());
 
             // Prefer an exact identifier match under cursor; prefix matches
             // are only a fallback for partial identifiers.
@@ -664,8 +671,8 @@ void Editor::triggerAutoComplete()
 
     auto lastToken = tokens.at(tokens.count()-1);
 
-    // Last token must be an identifier.
-    if (!lastToken.isIdentifier())
+    // Last token must be an identifier-like token.
+    if (!lastToken.isIdentifier() && !lastToken.isUnitIdentifier())
         return;
     if (!lastToken.size())  // Invisible unit token
         return;
@@ -677,7 +684,8 @@ void Editor::triggerAutoComplete()
     if (lastToken.pos() + lastToken.size() < subtext.length())
         return;
 
-    QStringList choices(matchFragment(id));
+    const bool unitContext = lastToken.isUnitIdentifier();
+    QStringList choices(matchFragment(id, unitContext));
 
     // If we are assigning a user function, find matches in its arguments names
     // and replace variables names that collide.
@@ -685,7 +693,8 @@ void Editor::triggerAutoComplete()
         for (int i=2; i<tokens.size(); ++i) {
             if (tokens[i].asOperator() == Token::ListSeparator)
                 continue;
-            if (tokens[i].asOperator() == Token::AssociationEnd)
+            if (tokens[i].asOperator() == Token::AssociationEnd
+                && tokens[i].text() == QLatin1String(")"))
                 break;
             if (tokens[i].isIdentifier()) {
                 auto arg = tokens[i].text();
@@ -727,21 +736,15 @@ void Editor::autoComplete(const QString& item)
         return;
 
     const auto lastToken = tokens.at(tokens.count() - 1);
-    if (!lastToken.isIdentifier())
+    if (!lastToken.isIdentifier() && !lastToken.isUnitIdentifier())
         return;
 
     const auto str = item.split(':');
+    const bool unitContext = lastToken.isUnitIdentifier();
 
     // Add leading space characters if any.
     auto newTokenText = str.at(0);
-    static const QSet<QString> s_unitIdentifiers = []() {
-        QSet<QString> names;
-        const QList<Unit> units = Units::getList();
-        for (const Unit& unit : units)
-            names.insert(unit.name);
-        return names;
-    }();
-    if (s_unitIdentifiers.contains(newTokenText))
+    if (unitContext)
         newTokenText = Units::formatUnitTokenForDisplay(newTokenText);
     if (newTokenText == QLatin1String("degree")
         || newTokenText == QLatin1String("deg")) {
@@ -768,8 +771,9 @@ void Editor::autoComplete(const QString& item)
         auto nextChar = cursor.selectedText();
         hasParensAlready = (nextChar == "(");
     }
-    bool isFunction = FunctionRepo::instance()->find(str.at(0))
-                      || m_evaluator->hasUserFunction(str.at(0));
+    bool isFunction = !unitContext
+                      && (FunctionRepo::instance()->find(str.at(0))
+                          || m_evaluator->hasUserFunction(str.at(0)));
     bool shouldAutoInsertParens = isFunction && !hasParensAlready;
     if (shouldAutoInsertParens) {
         insert(QString::fromLatin1("()"));
@@ -995,6 +999,7 @@ void Editor::insertConstant(const QString& constant)
     auto formattedConstant = constant;
     if (radixChar() == ',')
         formattedConstant.replace('.', ',');
+    formattedConstant = DisplayFormatUtils::applyValueUnitSpacingForDisplay(formattedConstant);
     if (!constant.isNull())
         insert(formattedConstant);
     if (m_constantCompletion) {
@@ -1815,7 +1820,8 @@ void ConstantCompletion::doneCompletion()
     normalizedUnit.replace(UnicodeChars::MiddleDot, UnicodeChars::DotOperator);
     const QString expression = found->unit.isEmpty()
         ? found->value
-        : QStringLiteral("%1 %2").arg(found->value, normalizedUnit);
+        : QStringLiteral("%1%2[%3]")
+            .arg(found->value, QString(OperatorChars::ValueUnitSeparator), normalizedUnit);
     emit selectedCompletion(expression);
 }
 

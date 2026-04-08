@@ -24,8 +24,32 @@
 #include "core/numberformatter.h"
 #include "core/regexpatterns.h"
 #include "core/unicodechars.h"
+#include "math/operatorchars.h"
 
 namespace DisplayFormatUtils {
+
+QString applyValueUnitSpacingForDisplay(const QString& input)
+{
+    QString output;
+    output.reserve(input.size() + 8);
+    for (const QChar ch : input) {
+        if (ch == QLatin1Char('[') && !output.isEmpty()) {
+            if (output.back().isSpace()) {
+                int i = output.size() - 1;
+                while (i >= 0 && output.at(i).isSpace())
+                    --i;
+                if (i >= 0 && output.at(i).isDigit()) {
+                    output.truncate(i + 1);
+                    output += OperatorChars::ValueUnitSeparator;
+                }
+            } else if (output.back().isDigit()) {
+                output += OperatorChars::ValueUnitSeparator;
+            }
+        }
+        output += ch;
+    }
+    return output;
+}
 
 QString applyDigitGroupingForDisplay(const QString& input)
 {
@@ -46,7 +70,8 @@ QString applyDigitGroupingForDisplay(const QString& input)
     }
     output += input.mid(lastPos);
     output = UnicodeChars::normalizePiForDisplay(output);
-    return UnicodeChars::normalizeRootFunctionAliasesForDisplay(output);
+    output = UnicodeChars::normalizeRootFunctionAliasesForDisplay(output);
+    return applyValueUnitSpacingForDisplay(output);
 }
 
 } // namespace DisplayFormatUtils

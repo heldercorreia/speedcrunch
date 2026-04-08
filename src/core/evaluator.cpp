@@ -28,6 +28,7 @@
 #include "core/session.h"
 #include "core/settings.h"
 #include "core/unicodechars.h"
+#include "math/operatorchars.h"
 #include "math/rational.h"
 #include "math/units.h"
 
@@ -124,6 +125,135 @@ static QString s_renderUnitExponentsAsSuperscripts(QString text)
         offset = match.capturedStart() + 1;
     }
     return text;
+}
+
+static bool s_isOpeningUnitBracketToken(const Token& token)
+{
+    return token.asOperator() == Token::AssociationStart
+           && token.text() == QLatin1String("[");
+}
+
+static bool s_isClosingUnitBracketToken(const Token& token)
+{
+    return token.asOperator() == Token::AssociationEnd
+           && token.text() == QLatin1String("]");
+}
+
+static QHash<QString, Quantity> s_buildBuiltInUnitLookup(char angleMode)
+{
+    QHash<QString, Quantity> lookup;
+
+    const QList<Unit> unitList = Units::getList();
+    for (const Unit& u : unitList) {
+        Quantity unitValue = u.value;
+        const bool isInformationUnit =
+            unitValue.getDimension().contains(QLatin1String("information"));
+        const bool keepDisplayUnit =
+            u.name == QLatin1String("hertz")
+            || u.name == QLatin1String("becquerel")
+            || u.name == QLatin1String("gray")
+            || u.name == QLatin1String("sievert")
+            || u.name == QLatin1String("steradian")
+            || u.name == QLatin1String("sr")
+            || u.name == QLatin1String("pascal")
+            || u.name == QLatin1String("newton")
+            || u.name == QLatin1String("meter")
+            || isInformationUnit;
+        if (keepDisplayUnit)
+            unitValue.setDisplayUnit(u.value.numericValue(), u.name);
+        lookup.insert(u.name, unitValue);
+    }
+
+    {
+        Quantity hz = Units::hertz();
+        hz.setDisplayUnit(Units::hertz().numericValue(), "hertz");
+        lookup.insert(QStringLiteral("Hz"), hz);
+    }
+    {
+        Quantity bq = Units::becquerel();
+        bq.setDisplayUnit(Units::becquerel().numericValue(), "becquerel");
+        lookup.insert(QStringLiteral("Bq"), bq);
+    }
+
+    {
+        Quantity displayRad(1);
+        displayRad.setDisplayUnit(Quantity(1).numericValue(), "rad");
+        lookup.insert(QStringLiteral("radian"), displayRad);
+        lookup.insert(QStringLiteral("rad"), displayRad);
+    }
+
+    Quantity degree;
+    Quantity gradian;
+    Quantity turn;
+    Quantity arcminute;
+    Quantity arcsecond;
+    if (angleMode == 'r') {
+        degree = HMath::pi() / HNumber(180);
+        gradian = HMath::pi() / HNumber(200);
+        turn = HNumber(2) * HMath::pi();
+        arcminute = HMath::pi() / HNumber(180) / HNumber(60);
+        arcsecond = HMath::pi() / HNumber(180) / HNumber(3600);
+    } else if (angleMode == 'g') {
+        degree = HNumber(200) / HNumber(180);
+        gradian = 1;
+        turn = HNumber(400);
+        arcminute = HNumber(200) / HNumber(180) / HNumber(60);
+        arcsecond = HNumber(200) / HNumber(180) / HNumber(3600);
+    } else if (angleMode == 't') {
+        degree = HNumber(1) / HNumber(360);
+        gradian = HNumber(1) / HNumber(400);
+        turn = 1;
+        arcminute = HNumber(1) / HNumber(21600);
+        arcsecond = HNumber(1) / HNumber(1296000);
+    } else {
+        degree = 1;
+        gradian = HNumber(180) / HNumber(200);
+        turn = HNumber(360);
+        arcminute = HNumber(1) / HNumber(60);
+        arcsecond = HNumber(1) / HNumber(3600);
+    }
+
+    lookup.insert(QStringLiteral("degree"), degree);
+    lookup.insert(QStringLiteral("deg"), degree);
+    lookup.insert(QStringLiteral("gradian"), gradian);
+    lookup.insert(QStringLiteral("gon"), gradian);
+    lookup.insert(QStringLiteral("turn"), turn);
+    lookup.insert(QStringLiteral("arcminute"), arcminute);
+    lookup.insert(QStringLiteral("arcsecond"), arcsecond);
+    lookup.insert(QStringLiteral("arcmin"), arcminute);
+    lookup.insert(QStringLiteral("arcsec"), arcsecond);
+
+    return lookup;
+}
+
+static const QHash<QString, Quantity>& s_builtInUnitLookup()
+{
+    static char cachedAngleMode = '\0';
+    static QHash<QString, Quantity> cache;
+
+    const char angleMode = Settings::instance()->angleUnit;
+    if (cache.isEmpty() || cachedAngleMode != angleMode) {
+        cache = s_buildBuiltInUnitLookup(angleMode);
+        cachedAngleMode = angleMode;
+    }
+
+    return cache;
+}
+
+static bool s_tryGetBuiltInUnitQuantity(const QString& identifier, Quantity* valueOut)
+{
+    const auto& lookup = s_builtInUnitLookup();
+    const auto it = lookup.constFind(identifier);
+    if (it == lookup.constEnd())
+        return false;
+    if (valueOut)
+        *valueOut = it.value();
+    return true;
+}
+
+static bool s_isBuiltInUnitIdentifier(const QString& identifier)
+{
+    return s_builtInUnitLookup().contains(identifier);
 }
 
 static bool splitUserFunctionDescription(const QString& expression,
@@ -242,6 +372,8 @@ static bool s_isExpressionOperatorOrSeparator(const QChar& ch)
            || ch == QLatin1Char('=')
            || ch == QLatin1Char('>')
            || ch == QLatin1Char('<')
+           || ch == QLatin1Char('[')
+           || ch == QLatin1Char(']')
            || ch == QLatin1Char(';')
            || ch == QLatin1Char(',');
 }
@@ -263,6 +395,7 @@ static bool s_expressionWithoutIgnorableTrailingToken(const QString& text, QStri
         (last == UnicodeChars::DotOperator || s_isMultiplicationOperatorAlias(last, true));
 
     if (last != QLatin1Char('(')
+        && last != QLatin1Char('[')
         && !isPlusMinusTail
         && !isMultiplicationTail
         && last != QLatin1Char(';')
@@ -313,6 +446,7 @@ static bool s_expressionWithoutIgnorableTrailingToken(const QString& text, QStri
 
     const QChar prefixLast = prefix.at(prefix.size() - 1);
     if (prefixLast == QLatin1Char('(')
+        || prefixLast == QLatin1Char('[')
         || s_isExpressionOperatorOrSeparator(prefixLast)
         || prefixLast == QLatin1Char('\\'))
         return false;
@@ -535,6 +669,12 @@ static Token::Operator matchOperator(const QString& text)
         case ')':
             result = Token::AssociationEnd;
             break;
+        case '[':
+            result = Token::AssociationStart;
+            break;
+        case ']':
+            result = Token::AssociationEnd;
+            break;
         case '!':
             result = Token::Factorial;
             break;
@@ -646,6 +786,8 @@ static int opcodePrecedence(Opcode::Type opcodeType)
     case Opcode::Mul:
     case Opcode::Div:
         return opPrecedence(Token::Multiplication);
+    case Opcode::Unit:
+        return opPrecedence(Token::Factorial) + 1;
     case Opcode::Pow:
         return opPrecedence(Token::Exponentiation);
     case Opcode::Fact:
@@ -686,6 +828,7 @@ static QString opcodeToInfixSymbol(Opcode::Type opcodeType, bool implicitMultipl
         return implicitMultiplication
             ? QString(UnicodeChars::DotOperator)
             : QString(UnicodeChars::MultiplicationSign);
+    case Opcode::Unit: return QString();
     case Opcode::Div: return "/";
     case Opcode::Pow: return "^";
     case Opcode::Percent: return "%";
@@ -750,6 +893,9 @@ QString Token::description() const
         break;
     case stxIdentifier:
         desc = "Identifier";
+        break;
+    case stxUnitIdentifier:
+        desc = "Unit Identifier";
         break;
     case stxOpenPar:
     case stxClosePar:
@@ -2636,6 +2782,10 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
         if (!commentText.isEmpty())
             commentSuffix += QLatin1String(" ") + commentText;
     }
+    const bool allowAggressiveSimplification =
+        simplifyRepeatedMultiplicativeBases
+        && !expressionPrefix.contains(QLatin1Char('['))
+        && !expressionPrefix.contains(QLatin1Char(']'));
 
     auto scanForDisplay = [](const QString& text) {
         // Interpreted expressions are internally dot-based. For comma-based
@@ -2851,7 +3001,7 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
     };
 
     QString displayExpression;
-    if (simplifyRepeatedMultiplicativeBases) {
+    if (allowAggressiveSimplification) {
         displayExpression =
             simplifyRepeatedMultiplicativeBasesForDisplay(groupedExpression, groupedTokens);
         const QString normalized = normalizeNeutralMultiplicativeOnes(displayExpression);
@@ -2870,13 +3020,6 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
 
     const QString operatorSpace(UnicodeChars::MediumMathematicalSpace);
     const QString unicodeMinusSign(UnicodeChars::MinusSign);
-    static const QSet<QString> s_unitIdentifiers = []() {
-        QSet<QString> names;
-        const QList<Unit> units = Units::getList();
-        for (const Unit& unit : units)
-            names.insert(unit.name);
-        return names;
-    }();
     QString formatted;
     formatted.reserve(displayExpression.size() + tokens.size() * 2);
 
@@ -2895,9 +3038,16 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
             || op == Token::ArithmeticRightShift;
         const QString operatorText =
             op == Token::Subtraction ? unicodeMinusSign : token.text();
-        const QString displayTokenText = (token.isIdentifier() && s_unitIdentifiers.contains(operatorText))
+        const bool shouldFormatAsUnitToken = token.isUnitIdentifier();
+        const QString displayTokenText = shouldFormatAsUnitToken
             ? Units::formatUnitTokenForDisplay(operatorText)
             : operatorText;
+
+        if (token.text() == QLatin1String("[")
+            && !formatted.isEmpty()
+            && formatted.back().isDigit()) {
+            formatted += OperatorChars::ValueUnitSeparator;
+        }
 
         if (!isSpacingOperator) {
             formatted += displayTokenText;
@@ -2938,7 +3088,7 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
 
     return renderIntegerPowersAsSuperscriptsForDisplay(
         formatted,
-        simplifyRepeatedMultiplicativeBases) + commentSuffix;
+        allowAggressiveSimplification) + commentSuffix;
 }
 
 QString Evaluator::simplifyInterpretedExpression(const QString& expression)
@@ -2956,6 +3106,12 @@ QString Evaluator::simplifyInterpretedExpression(const QString& expression)
         commentSuffix = QLatin1String(" ?");
         if (!commentText.isEmpty())
             commentSuffix += QLatin1String(" ") + commentText;
+    }
+
+    if (expressionPrefix.contains(QLatin1Char('['))
+        || expressionPrefix.contains(QLatin1Char(']')))
+    {
+        return expressionPrefix + commentSuffix;
     }
 
     auto scanForDisplay = [](const QString& text) {
@@ -3597,9 +3753,6 @@ Evaluator::Evaluator()
     reset();
 }
 
-#define ADD_UNIT(name) \
-    setVariable(QString::fromUtf8(#name), Units::name(), Variable::BuiltIn)
-
 void Evaluator::initializeBuiltInVariables()
 {
     setVariable(QLatin1String("e"), DMath::e(), Variable::BuiltIn);
@@ -3617,95 +3770,14 @@ void Evaluator::initializeBuiltInVariables()
         if (hasVariable("j"))
             unsetVariable("j", ForceBuiltinVariableErasure(true));
     }
-
-    QList<Unit> unitList(Units::getList());
-    for (Unit& u : unitList) {
-        Quantity unitValue = u.value;
-        // Preserve display names for units where alias identity or semantic
-        // context matters during expression propagation/canonicalization.
-        const bool isInformationUnit =
-            unitValue.getDimension().contains(QLatin1String("information"));
-        const bool keepDisplayUnit =
-            u.name == QLatin1String("hertz")
-            || u.name == QLatin1String("becquerel")
-            || u.name == QLatin1String("gray")
-            || u.name == QLatin1String("sievert")
-            || u.name == QLatin1String("steradian")
-            || u.name == QLatin1String("sr")
-            || u.name == QLatin1String("pascal")
-            || u.name == QLatin1String("newton")
-            || u.name == QLatin1String("meter")
-            || isInformationUnit;
-        if (keepDisplayUnit)
-            unitValue.setDisplayUnit(u.value.numericValue(), u.name);
-        setVariable(u.name, unitValue, Variable::BuiltIn);
-    }
-    {
-        Quantity hz = Units::hertz();
-        hz.setDisplayUnit(Units::hertz().numericValue(), "hertz");
-        setVariable("Hz", hz, Variable::BuiltIn);
-    }
-    {
-        Quantity bq = Units::becquerel();
-        bq.setDisplayUnit(Units::becquerel().numericValue(), "becquerel");
-        setVariable("Bq", bq, Variable::BuiltIn);
-    }
-
     initializeAngleUnits();
 }
 
 void Evaluator::initializeAngleUnits()
 {
-    // Explicit radian units are absolute and independent of the selected
-    // global angle mode.
-    {
-        Quantity displayRad(1);
-        displayRad.setDisplayUnit(Quantity(1).numericValue(), "rad");
-        setVariable("radian", displayRad, Variable::BuiltIn);
-        setVariable("rad", displayRad, Variable::BuiltIn);
-    }
-
-    if (Settings::instance()->angleUnit == 'r') {
-        setVariable("degree", HMath::pi() / HNumber(180), Variable::BuiltIn);
-        setVariable("deg", HMath::pi() / HNumber(180), Variable::BuiltIn);
-        setVariable("gradian", HMath::pi() / HNumber(200), Variable::BuiltIn);
-        setVariable("gon", HMath::pi() / HNumber(200), Variable::BuiltIn);
-        setVariable("turn", HNumber(2) * HMath::pi(), Variable::BuiltIn);
-        setVariable("arcminute", HMath::pi() / HNumber(180) / HNumber(60), Variable::BuiltIn);
-        setVariable("arcsecond", HMath::pi() / HNumber(180) / HNumber(3600), Variable::BuiltIn);
-        setVariable("arcmin", HMath::pi() / HNumber(180) / HNumber(60), Variable::BuiltIn);
-        setVariable("arcsec", HMath::pi() / HNumber(180) / HNumber(3600), Variable::BuiltIn);
-    } else if (Settings::instance()->angleUnit == 'g') {
-        setVariable("degree", HNumber(200) / HNumber(180), Variable::BuiltIn);
-        setVariable("deg", HNumber(200) / HNumber(180), Variable::BuiltIn);
-        setVariable("gradian", 1, Variable::BuiltIn);
-        setVariable("gon", 1, Variable::BuiltIn);
-        setVariable("turn", HNumber(400), Variable::BuiltIn);
-        setVariable("arcminute", HNumber(200) / HNumber(180) / HNumber(60), Variable::BuiltIn);
-        setVariable("arcsecond", HNumber(200) / HNumber(180) / HNumber(3600), Variable::BuiltIn);
-        setVariable("arcmin", HNumber(200) / HNumber(180) / HNumber(60), Variable::BuiltIn);
-        setVariable("arcsec", HNumber(200) / HNumber(180) / HNumber(3600), Variable::BuiltIn);
-    } else if (Settings::instance()->angleUnit == 't') {
-        setVariable("degree", HNumber(1) / HNumber(360), Variable::BuiltIn);
-        setVariable("deg", HNumber(1) / HNumber(360), Variable::BuiltIn);
-        setVariable("gradian", HNumber(1) / HNumber(400), Variable::BuiltIn);
-        setVariable("gon", HNumber(1) / HNumber(400), Variable::BuiltIn);
-        setVariable("turn", 1, Variable::BuiltIn);
-        setVariable("arcminute", HNumber(1) / HNumber(21600), Variable::BuiltIn);
-        setVariable("arcsecond", HNumber(1) / HNumber(1296000), Variable::BuiltIn);
-        setVariable("arcmin", HNumber(1) / HNumber(21600), Variable::BuiltIn);
-        setVariable("arcsec", HNumber(1) / HNumber(1296000), Variable::BuiltIn);
-    } else {    // d
-        setVariable("degree", 1, Variable::BuiltIn);
-        setVariable("deg", 1, Variable::BuiltIn);
-        setVariable("gradian", HNumber(180) / HNumber(200), Variable::BuiltIn);
-        setVariable("gon", HNumber(180) / HNumber(200), Variable::BuiltIn);
-        setVariable("turn", HNumber(360), Variable::BuiltIn);
-        setVariable("arcminute", HNumber(1) / HNumber(60), Variable::BuiltIn);
-        setVariable("arcsecond", HNumber(1) / HNumber(3600), Variable::BuiltIn);
-        setVariable("arcmin", HNumber(1) / HNumber(60), Variable::BuiltIn);
-        setVariable("arcsec", HNumber(1) / HNumber(3600), Variable::BuiltIn);
-    }
+    // Angle-dependent built-in unit values are resolved from the dedicated
+    // unit lookup table (not from reserved variable names).
+    s_builtInUnitLookup();
 }
 
 void Evaluator::setExpression(const QString& expr)
@@ -3837,10 +3909,22 @@ Tokens Evaluator::scan(const QString& expr) const
     ex.replace(UnicodeChars::Prime, QChar('\''));
     ex.replace(UnicodeChars::DoublePrime, QChar('"'));
     // Accept superscript shorthand aliases for unit symbols (m², mm³, etc.)
-    // by rewriting to ASCII aliases (m2, mm3) when the target exists as a
-    // built-in unit variable.
+    // only inside explicit unit brackets.
+    int superscriptUnitBracketDepth = 0;
     for (int p = 0; p < ex.size();) {
-        if (!isIdentifierStart(ex.at(p))) {
+        const QChar current = ex.at(p);
+        if (current == QLatin1Char('[')) {
+            ++superscriptUnitBracketDepth;
+            ++p;
+            continue;
+        }
+        if (current == QLatin1Char(']')) {
+            if (superscriptUnitBracketDepth > 0)
+                --superscriptUnitBracketDepth;
+            ++p;
+            continue;
+        }
+        if (superscriptUnitBracketDepth == 0 || !isIdentifierStart(current)) {
             ++p;
             continue;
         }
@@ -3860,13 +3944,10 @@ Tokens Evaluator::scan(const QString& expr) const
 
         const QString identifier = ex.mid(p, identEnd - p);
         const QString superscript = ex.mid(identEnd, superscriptEnd - identEnd);
-        const QString candidate = identifier + superscriptDigitsToAscii(superscript);
-        if (isBuiltInVariable(candidate)) {
-            ex.replace(p, superscriptEnd - p, candidate);
-            p += candidate.size();
-        } else {
-            p = superscriptEnd;
-        }
+        const QString replacement =
+            identifier + QLatin1Char('^') + superscriptDigitsToAscii(superscript);
+        ex.replace(p, superscriptEnd - p, replacement);
+        p += replacement.size();
     }
     QString tokenText, tokenUnit;
     int tokenStart = 0; // Includes leading spaces.
@@ -3875,6 +3956,7 @@ Tokens Evaluator::scan(const QString& expr) const
     int expBase = 0;
     int expStart = -1;  // Index of the exponent part in the expression.
     QString expText;    // Start of the exponent text matching /E[\+\-]*/
+    int unitBracketDepth = 0;
 
     // Force a terminator.
     ex.append(QChar());
@@ -3967,8 +4049,17 @@ Tokens Evaluator::scan(const QString& expr) const
                     int len = s.length();
                     i += len;
                     int tokenSize = i - tokenStart;
-                    tokens.append(Token(type, s.left(len),
-                                        tokenStart, tokenSize));
+                    const QString opText = s.left(len);
+                    tokens.append(Token(type, opText, tokenStart, tokenSize));
+                    if (opText == QLatin1String("[")) {
+                        ++unitBracketDepth;
+                    } else if (opText == QLatin1String("]")) {
+                        if (unitBracketDepth == 0) {
+                            state = Bad;
+                            break;
+                        }
+                        --unitBracketDepth;
+                    }
                     state = Init;
                 }
                 else
@@ -3983,20 +4074,25 @@ Tokens Evaluator::scan(const QString& expr) const
                 tokenText.append(ex.at(i++));
             else { // We're done with identifier.
                 QString identifier = tokenText;
-                if (identifier.startsWith(QLatin1Char('u')) && identifier.size() > 1) {
+                const bool isUnitContextIdentifier = unitBracketDepth > 0;
+                if (isUnitContextIdentifier
+                    && identifier.startsWith(QLatin1Char('u'))
+                    && identifier.size() > 1)
+                {
                     QString microIdentifier(identifier);
                     microIdentifier[0] = UnicodeChars::MicroSign;
-                    if (isBuiltInVariable(microIdentifier))
+                    if (s_isBuiltInUnitIdentifier(microIdentifier))
                         identifier = microIdentifier;
                 }
                 int tokenSize = i - tokenStart;
-                if (matchOperator(identifier)) {
+                if (!isUnitContextIdentifier && matchOperator(identifier)) {
                     tokens.append(Token(Token::stxOperator, identifier,
                                         tokenStart, tokenSize));
                 } else {
-                    // Normal identifier.
-                    tokens.append(Token(Token::stxIdentifier, identifier,
-                                        tokenStart, tokenSize));
+                    const Token::Type identifierType = isUnitContextIdentifier
+                        ? Token::stxUnitIdentifier
+                        : Token::stxIdentifier;
+                    tokens.append(Token(identifierType, identifier, tokenStart, tokenSize));
                 }
                 state = Init;
             }
@@ -4225,13 +4321,13 @@ Tokens Evaluator::scan(const QString& expr) const
             if (!tokenUnit.isEmpty()) {
                 // Keep the sexagesimal number and its generated unit together:
                 // e.g. "1:30 / 4:00" should parse as
-                // "(90 minute) / (4 hour)", not "(90 minute / 4) hour".
-                tokens.append(Token(Token::stxOpenPar, "(", tokenStart, 0));
+                // "90[minute] / 4[hour]", not "(90 minute / 4) hour".
                 tokens.append(Token(Token::stxNumber, tokenText,
                                     tokenStart, tokenSize));
-                tokens.append(Token(Token::stxIdentifier, tokenUnit,
+                tokens.append(Token(Token::stxOpenPar, "[", tokenStart + tokenSize, 0));
+                tokens.append(Token(Token::stxUnitIdentifier, tokenUnit,
                     tokenStart + tokenSize, 0));
-                tokens.append(Token(Token::stxClosePar, ")", tokenStart + tokenSize, 0));
+                tokens.append(Token(Token::stxClosePar, "]", tokenStart + tokenSize, 0));
             } else {
                 tokens.append(Token(Token::stxNumber, tokenText,
                                     tokenStart, tokenSize));
@@ -4254,6 +4350,9 @@ Tokens Evaluator::scan(const QString& expr) const
         };
     }
 
+    if (unitBracketDepth != 0)
+        state = Bad;
+
     if (state == Bad)
         // Invalidating here too, because usually when we set state to Bad,
         // the case Bad won't be run.
@@ -4274,7 +4373,7 @@ void Evaluator::compile(const Tokens& tokens)
     // Initialize variables.
     m_dirty = false;
     auto isGeneratedSexagesimalUnitToken = [](const Token& token) {
-        if (token.type() != Token::stxIdentifier || token.size() != 0)
+        if (token.type() != Token::stxUnitIdentifier || token.size() != 0)
             return false;
         const QString text = token.text();
         return text == QLatin1String("hour")
@@ -4345,6 +4444,8 @@ void Evaluator::compile(const Tokens& tokens)
                 if (par2.asOperator() == Token::AssociationEnd
                     && arg.isOperand()
                     && par1.asOperator() == Token::AssociationStart
+                    && par1.text() == QLatin1String("(")
+                    && par2.text() == QLatin1String(")")
                     && id.isIdentifier())
                 {
                     ruleFound = true;
@@ -4376,6 +4477,7 @@ void Evaluator::compile(const Tokens& tokens)
                 Token id = syntaxStack.top(2);
                 if (arg.isOperand()
                     && par.asOperator() == Token::AssociationStart
+                    && par.text() == QLatin1String("(")
                     && id.isIdentifier())
                 {
                     ruleFound = true;
@@ -4417,6 +4519,43 @@ void Evaluator::compile(const Tokens& tokens)
                        << postfix.text() << "\n";
                }
 #endif
+           }
+
+           // Rule for explicit unit attachment: X [U] -> X.
+           if (!ruleFound && syntaxStack.itemCount() >= 3) {
+               Token right = syntaxStack.top();
+               Token left = syntaxStack.top(1);
+               Token lhs = syntaxStack.top(2);
+               if (lhs.isOperand()
+                   && s_isClosingUnitBracketToken(right)
+                   && s_isOpeningUnitBracketToken(left))
+               {
+                   ruleFound = true;
+                   syntaxStack.reduce(3, std::move(lhs), MAX_PRECEDENCE);
+#ifdef EVALUATOR_DEBUG
+                   dbg << "\tRule for empty unit attachment X[] -> X\n";
+#endif
+               }
+           }
+
+           // Rule for explicit unit attachment: X [U] -> X.
+           if (!ruleFound && syntaxStack.itemCount() >= 4) {
+               Token right = syntaxStack.top();
+               Token unitExpr = syntaxStack.top(1);
+               Token left = syntaxStack.top(2);
+               Token lhs = syntaxStack.top(3);
+               if (lhs.isOperand()
+                   && unitExpr.isOperand()
+                   && s_isClosingUnitBracketToken(right)
+                   && s_isOpeningUnitBracketToken(left))
+               {
+                   ruleFound = true;
+                   syntaxStack.reduce(4, std::move(lhs), MAX_PRECEDENCE);
+                   m_codes.append(Opcode(Opcode::Unit));
+#ifdef EVALUATOR_DEBUG
+                   dbg << "\tRule for unit attachment X[U] -> X\n";
+#endif
+               }
            }
 
            // Rule for parenthesis: (Y) -> Y.
@@ -4499,6 +4638,7 @@ void Evaluator::compile(const Tokens& tokens)
                    && sep.asOperator() == Token::ListSeparator
                    && arg1.isOperand()
                    && par.asOperator() == Token::AssociationStart
+                   && par.text() == QLatin1String("(")
                    && id.isIdentifier())
                {
                    ruleFound = true;
@@ -4529,6 +4669,7 @@ void Evaluator::compile(const Tokens& tokens)
                if (sep.asOperator() == Token::ListSeparator
                    && arg.isOperand()
                    && par.asOperator() == Token::AssociationStart
+                   && par.text() == QLatin1String("(")
                    && id.isIdentifier())
                {
                    ruleFound = true;
@@ -4548,6 +4689,8 @@ void Evaluator::compile(const Tokens& tokens)
                Token id = syntaxStack.top(2);
                if (par2.asOperator() == Token::AssociationEnd
                    && par1.asOperator() == Token::AssociationStart
+                   && par1.text() == QLatin1String("(")
+                   && par2.text() == QLatin1String(")")
                    && id.isIdentifier())
                {
                    ruleFound = true;
@@ -4576,6 +4719,7 @@ void Evaluator::compile(const Tokens& tokens)
                if (a.isOperand() && b.isOperand() && op.isOperator()
                    && ( // Normal operator.
                        (token.isOperator()
+                           && !s_isOpeningUnitBracketToken(token)
                            && opPrecedence(op.asOperator()) >=
                                opPrecedence(token.asOperator())
 #ifdef ALLOW_IMPLICIT_MULT
@@ -4674,6 +4818,7 @@ void Evaluator::compile(const Tokens& tokens)
                    && token.asOperator() != Token::AssociationStart
                    && ( // Token is normal operator.
                         (token.isOperator()
+                            && !s_isOpeningUnitBracketToken(token)
                             && opPrecedence(Token::Multiplication) >=
                                    opPrecedence(token.asOperator()))
                         || token.isOperand()) // Implicit multiplication.
@@ -4762,10 +4907,16 @@ void Evaluator::compile(const Tokens& tokens)
         // Can't apply rules anymore, push the token.
         syntaxStack.push(token);
 
-        // For identifier, generate code to load from reference.
-        if (tokenType == Token::stxIdentifier) {
+        // For identifiers, generate code to load from references.
+        if (tokenType == Token::stxIdentifier
+            || tokenType == Token::stxUnitIdentifier)
+        {
             m_identifiers.append(token.text());
-            m_codes.append(Opcode(Opcode::Ref, m_identifiers.count() - 1));
+            const Opcode::Type refOpcodeType =
+                tokenType == Token::stxUnitIdentifier
+                ? Opcode::UnitRef
+                : Opcode::Ref;
+            m_codes.append(Opcode(refOpcodeType, m_identifiers.count() - 1));
 #ifdef EVALUATOR_DEBUG
             dbg << "\tPush " << token.text() << " to identifier pools" << "\n";
 #endif
@@ -4855,6 +5006,21 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
                                                      const RenderNode& right,
                                                      Opcode::Type opcodeType,
                                                      int opcodeIndex) {
+        if (opcodeType == Opcode::Unit) {
+            const int precedence = opcodePrecedence(opcodeType);
+            QString leftText = left.text;
+            if (left.precedence < precedence)
+                leftText = wrapInParentheses(leftText);
+            return RenderNode{
+                leftText + QLatin1Char('[') + right.text + QLatin1Char(']'),
+                precedence,
+                opcodeType,
+                left.isLiteralSymbol || right.isLiteralSymbol,
+                left.isNumericOnly && right.isNumericOnly,
+                false
+            };
+        }
+
         Opcode::Type renderedOpcodeType = opcodeType;
         QString rightText = right.text;
         if (opcodeType == Opcode::Sub && right.isUnaryNegation) {
@@ -5028,8 +5194,10 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
             });
             break;
         }
-        case Opcode::Ref: {
+        case Opcode::Ref:
+        case Opcode::UnitRef: {
             const QString identifier = m_identifiers.value(opcode.index);
+            const bool isUnitReference = opcode.type == Opcode::UnitRef;
             stack.append({
                 identifier,
                 MAX_PRECEDENCE,
@@ -5038,6 +5206,9 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
                 false,
                 false
             });
+
+            if (isUnitReference)
+                break;
 
             if (m_assignArg.contains(identifier) || hasVariable(identifier))
                 break;
@@ -5106,7 +5277,8 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
         case Opcode::RSh:
         case Opcode::BAnd:
         case Opcode::BOr:
-        case Opcode::Conv: {
+        case Opcode::Conv:
+        case Opcode::Unit: {
             if (stack.size() < 2)
                 return QString();
             const RenderNode right = stack.takeLast();
@@ -5222,7 +5394,8 @@ Quantity Evaluator::evalNoAssign()
             tokens.erase(tokens.begin());
         } else if (tokens.count() > 2
                    && tokens.at(0).isIdentifier()
-                   && tokens.at(1).asOperator() == Token::AssociationStart)
+                   && tokens.at(1).asOperator() == Token::AssociationStart
+                   && tokens.at(1).text() == QLatin1String("("))
         {
             // Check for function assignment.
             // Syntax:
@@ -5421,6 +5594,17 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 pushStackValue(val2);
                 break;
 
+            case Opcode::Unit:
+                if (stack.count() < 2) {
+                    m_error = tr("invalid expression");
+                    return CMath::nan();
+                }
+                popStackValue(val1);
+                popStackValue(val2);
+                val2 = checkOperatorResultWithDeferredNoOperand(val2 * val1);
+                pushStackValue(val2);
+                break;
+
             case Opcode::Div:
                 if (stack.count() < 2) {
                     m_error = tr("invalid expression");
@@ -5545,6 +5729,21 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     }
                     return depth == 0;
                 };
+                auto isFullyWrappedByOuterBrackets = [](const QString& expr) {
+                    if (expr.size() < 2 || expr.at(0) != QLatin1Char('[') || expr.at(expr.size() - 1) != QLatin1Char(']'))
+                        return false;
+                    int depth = 0;
+                    for (int i = 0; i < expr.size(); ++i) {
+                        const QChar ch = expr.at(i);
+                        if (ch == QLatin1Char('['))
+                            ++depth;
+                        else if (ch == QLatin1Char(']'))
+                            --depth;
+                        if (depth == 0 && i < expr.size() - 1)
+                            return false;
+                    }
+                    return depth == 0;
+                };
                 if (stack.count() < 2) {
                     m_error = tr("invalid expression");
                     return HMath::nan();
@@ -5561,6 +5760,8 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 }
                 CNumber displayUnitValue = val1.numericValue();
                 QString displayUnitName = opcode.text.trimmed();
+                if (isFullyWrappedByOuterBrackets(displayUnitName))
+                    displayUnitName = displayUnitName.mid(1, displayUnitName.size() - 2).trimmed();
                 if (displayUnitName.startsWith(QStringLiteral("(("))
                     && isFullyWrappedByOuterParens(displayUnitName))
                 {
@@ -5625,6 +5826,23 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     }
                 }
                 break;
+
+            case Opcode::UnitRef:
+                fname = identifiers.at(index);
+                if (m_assignArg.contains(fname)) {
+                    pushStackValue(CMath::nan());
+                    break;
+                }
+                if (s_tryGetBuiltInUnitQuantity(fname, &val1)) {
+                    pushStackValue(val1);
+                    break;
+                }
+                if (hasVariable(fname)) {
+                    pushStackValue(getVariable(fname).value());
+                    break;
+                }
+                m_error = "<b>" + fname + "</b>: " + tr("unknown unit");
+                return CMath::nan();
 
             // Calling function.
             case Opcode::Function:
@@ -6342,12 +6560,14 @@ QString Evaluator::autoFix(const QString& expr)
             const Token& right = tokens.at(i + 1);
             const bool leftLooksMultiplicativeOperand =
                 left.isIdentifier()
+                || left.isUnitIdentifier()
                 || left.isNumber()
                 || left.asOperator() == Token::AssociationEnd
                 || left.asOperator() == Token::Factorial
                 || left.asOperator() == Token::Percent;
             const bool rightLooksMultiplicativeOperand =
                 right.isIdentifier()
+                || right.isUnitIdentifier()
                 || right.isNumber()
                 || right.asOperator() == Token::AssociationStart;
             if (!leftLooksMultiplicativeOperand || !rightLooksMultiplicativeOperand)
@@ -6361,10 +6581,10 @@ QString Evaluator::autoFix(const QString& expr)
         }
 
         // Accept ASCII 'u' as a typing-friendly micro prefix for units:
-        // normalize identifiers to 'µ*' only when such builtin unit exists.
+        // normalize identifiers to 'µ*' only inside explicit unit brackets.
         for (int i = tokens.count() - 1; i >= 0; --i) {
             const Token& token = tokens.at(i);
-            if (!token.isIdentifier())
+            if (!token.isUnitIdentifier())
                 continue;
 
             const QString sourceText = result.mid(token.pos(), token.size()).trimmed();
@@ -6375,7 +6595,7 @@ QString Evaluator::autoFix(const QString& expr)
             if (!normalizedText.startsWith(UnicodeChars::MicroSign))
                 continue;
 
-            if (!isBuiltInVariable(normalizedText))
+            if (!s_isBuiltInUnitIdentifier(normalizedText))
                 continue;
 
             result.replace(token.pos(), token.size(), normalizedText);
@@ -6468,9 +6688,11 @@ QString Evaluator::autoFix(const QString& expr)
     Tokens tokens = Evaluator::scan(result);
     if (tokens.count()) {
         for (int i = 0; i < tokens.count(); ++i)
-            if (tokens.at(i).asOperator() == Token::AssociationStart)
+            if (tokens.at(i).asOperator() == Token::AssociationStart
+                && tokens.at(i).text() == QLatin1String("("))
                 ++par;
-            else if (tokens.at(i).asOperator() == Token::AssociationEnd)
+            else if (tokens.at(i).asOperator() == Token::AssociationEnd
+                     && tokens.at(i).text() == QLatin1String(")"))
                 --par;
 
         if (par < 0)
@@ -6542,6 +6764,9 @@ QString Evaluator::dump()
             case Opcode::Ref:
                 code = QString("Ref #%1").arg(m_codes.at(i).index);
                 break;
+            case Opcode::UnitRef:
+                code = QString("UnitRef #%1").arg(m_codes.at(i).index);
+                break;
             case Opcode::Function:
                 code = QString("Function (%1)").arg(m_codes.at(i).index);
                 break;
@@ -6553,6 +6778,9 @@ QString Evaluator::dump()
                 break;
             case Opcode::Mul:
                 code = "Mul";
+                break;
+            case Opcode::Unit:
+                code = "Unit";
                 break;
             case Opcode::Div:
                 code = "Div";

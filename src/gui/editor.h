@@ -63,7 +63,7 @@ public:
     void stopAutoComplete();
     void wrapSelection();
     QString text() const;
-    QStringList matchFragment(const QString&) const;
+    QStringList matchFragment(const QString&, bool unitContext = false) const;
     QString getKeyword() const;
 
 signals:

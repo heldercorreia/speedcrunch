@@ -114,7 +114,7 @@ For explicit decimal exponent notations, use :func:`sci` (scientific notation) o
 
 To force the exponent used by :func:`eng`, pass an optional second argument. It accepts either a direct exponent that is a multiple of 3, or a matching power of ten (including SI prefixes)::
 
-    eng(0.000123456; milli)
+    eng(0.000123456; [milli])
     = 0.123456e-3
 
     eng(0.000123456; -4)
@@ -169,8 +169,8 @@ Dimensionless input values are automatically considered to be in current angle m
     = 180°00'00
 
 For trigonometric input, explicit angle units override angle mode. For example,
-``cos(pi*rad)``, ``cos(180*degree)``, ``cos(200*gradian)`` and
-``cos(0.5*turn)`` all evaluate to ``-1`` regardless of the global angle mode.
+``cos(pi*[rad])``, ``cos(180*[degree])``, ``cos(200*[gradian])`` and
+``cos(0.5*[turn])`` all evaluate to ``-1`` regardless of the global angle mode.
 The alias ``deg`` is supported for ``degree`` and is normalized to ``°`` in
 autocomplete insertion and displayed result units.
     
@@ -186,11 +186,11 @@ Input                Fixed-Point Decimal    Sexagesimal
 ``0``                ``0``                  ``0°00'00``
 ``°'56``             ``0.01555556``         ``0°00'56.00``
 ``56"``              ``0.01555556``         ``0°00'56.00``
-``56 arcsecond``     ``0.01555556``         ``0°00'56.00``
+``56[arcsecond]``   ``0.01555556``         ``0°00'56.00``
 ``56.78"``           ``0.01577222``         ``0°00'56.78``
 ``°34``              ``0.56666667``         ``0°34'00.00``
 ``34'``              ``0.56666667``         ``0°34'00.00``
-``34 arcminute``     ``0.56666667``         ``0°34'00.00``
+``34[arcminute]``   ``0.56666667``         ``0°34'00.00``
 ``34'56``            ``0.58222222``         ``0°34'56.00``
 ``12°``              ``12.00000000``        ``12°00'00.00``
 ``12°34``            ``12.56666667``        ``12°34'00.00``
@@ -205,17 +205,17 @@ The long-form units ``arcminute`` and ``arcsecond`` also accept the aliases
 =================    ===================    =================
 Input                Fixed-Point Decimal    Sexagesimal
 =================    ===================    =================
-``0 second``         ``0 second``           ``0:00:00``
-``::56``             ``56.00 second``       ``0:00:56.00``
-``56 second``        ``56.00 second``       ``0:00:56.00``
-``:34``              ``2040.00 second``     ``0:34:00.00``
-``34 minute``        ``2040.00 second``     ``0:34:00.00``
-``12:``              ``43200.00 second``    ``12:00:00.00``
-``12 hour``          ``43200.00 second``    ``12:00:00.00``
-``12:34``            ``45240.00 second``    ``12:34:00.00``
-``12:34.5``          ``45270.00 second``    ``12:34:30.00``
-``12:34:56``         ``45296.00 second``    ``12:34:56.00``
-``12:34:56.78``      ``45296.78 second``    ``12:34:56.78``
+``0[second]``       ``0 [second]``          ``0:00:00``
+``::56``             ``56.00 [second]``      ``0:00:56.00``
+``56[second]``      ``56.00 [second]``      ``0:00:56.00``
+``:34``              ``2040.00 [second]``    ``0:34:00.00``
+``34[minute]``      ``2040.00 [second]``    ``0:34:00.00``
+``12:``              ``43200.00 [second]``   ``12:00:00.00``
+``12[hour]``        ``43200.00 [second]``   ``12:00:00.00``
+``12:34``            ``45240.00 [second]``   ``12:34:00.00``
+``12:34.5``          ``45270.00 [second]``   ``12:34:30.00``
+``12:34:56``         ``45296.00 [second]``   ``12:34:56.00``
+``12:34:56.78``      ``45296.78 [second]``   ``12:34:56.78``
 =================    ===================    =================
 
 Note that when entering time values with colons, no additional dimension units are needed. Formatting itself works as an unit.
@@ -348,9 +348,9 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 | ``a | b``                     | **Bitwise OR**                                                | ``0b10 | 0b01 = 0b11``  |
 |                               |   See also :func:`or`.                                        |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
-| ``->``, ``in``                | **Unit conversion**                                           | ``1000 meter in mile``  |
+| ``->``, ``in``                | **Unit conversion**                                           | ``10[meter] in [mile]`` |
 |                               |   Convert the operand into the given                          |                         |
-|                               |   unit. Both forms are equivalent. See                        | ``1000 meter -> mile``  |
+|                               |   unit. Both forms are equivalent. See                        | ``10[meter] -> [mile]`` |
 |                               |   :ref:`units` for more information.                          |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
 

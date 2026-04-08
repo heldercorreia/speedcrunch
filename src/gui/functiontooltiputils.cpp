@@ -46,13 +46,13 @@ bool activeFunctionCallContext(const Evaluator* evaluator,
         const Token token = tokens.at(i);
         const Token::Operator op = token.asOperator();
 
-        if (op == Token::AssociationStart) {
+        if (op == Token::AssociationStart && token.text() == QLatin1String("(")) {
             Scope scope;
             scope.argumentIndex = 0;
             if (hasPrevious && previous.isIdentifier())
                 scope.functionName = previous.text();
             scopes.append(scope);
-        } else if (op == Token::AssociationEnd) {
+        } else if (op == Token::AssociationEnd && token.text() == QLatin1String(")")) {
             if (!scopes.isEmpty())
                 scopes.removeLast();
         } else if (op == Token::ListSeparator) {

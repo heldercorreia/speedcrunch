@@ -22,6 +22,7 @@
 #include "core/constants.h"
 #include "core/settings.h"
 #include "core/unicodechars.h"
+#include "math/operatorchars.h"
 
 #include <QEvent>
 #include <QTimer>
@@ -42,7 +43,8 @@ static QString constantExpression(const Constant& constant)
     unit.replace(UnicodeChars::MiddleDot, UnicodeChars::DotOperator);
     return constant.unit.isEmpty()
         ? constant.value
-        : QStringLiteral("%1 %2").arg(constant.value, unit);
+        : QStringLiteral("%1%2[%3]")
+            .arg(constant.value, QString(OperatorChars::ValueUnitSeparator), unit);
 }
 
 ConstantsWidget::ConstantsWidget(QWidget* parent)

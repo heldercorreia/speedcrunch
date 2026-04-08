@@ -1,8 +1,5 @@
 // This file is part of the SpeedCrunch project
-// Copyright (C) 2007 Ariya Hidayat <ariya@kde.org>
-// Copyright (C) 2004, 2005 Ariya Hidayat <ariya@kde.org>
-// Copyright (C) 2005, 2006 Johan Thelin <e8johan@gmail.com>
-// Copyright (C) 2007-2026 @heldercorreia
+// Copyright (C) 2026 @heldercorreia
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -19,16 +16,17 @@
 // the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 // Boston, MA 02110-1301, USA.
 
-#ifndef DISPLAYFORMATUTILS_H
-#define DISPLAYFORMATUTILS_H
+#ifndef MATH_OPERATORCHARS_H
+#define MATH_OPERATORCHARS_H
 
-#include <QString>
+#include "core/unicodechars.h"
 
-namespace DisplayFormatUtils {
+#include <QChar>
 
-QString applyDigitGroupingForDisplay(const QString& input);
-QString applyValueUnitSpacingForDisplay(const QString& input);
+namespace OperatorChars {
 
-}
+inline constexpr QChar ValueUnitSeparator = UnicodeChars::NarrowNoBreakSpace;
 
-#endif // DISPLAYFORMATUTILS_H
+} // namespace OperatorChars
+
+#endif // MATH_OPERATORCHARS_H
