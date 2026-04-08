@@ -273,7 +273,7 @@ static void checkDisplayInterpreted(const char* file, int line, const char* msg,
 {
     ++eval_total_tests;
 
-    eval->setExpression(expr);
+    eval->setExpression(eval->autoFix(expr));
     eval->evalUpdateAns();
     if (!eval->error().isEmpty()) {
         ++eval_failed_tests;
@@ -409,7 +409,7 @@ static void checkDisplaySimplifiedInterpreted(const char* file, int line, const 
 {
     ++eval_total_tests;
 
-    eval->setExpression(expr);
+    eval->setExpression(eval->autoFix(expr));
     eval->evalUpdateAns();
     if (!eval->error().isEmpty()) {
         ++eval_failed_tests;
@@ -3605,8 +3605,115 @@ void test_display_interpreted_spacing()
             + dotSpaced
             + QStringLiteral("2"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("2*cos(pi)^2*cos(pi)^2/(3*cos(pi))"),
+        QStringLiteral("2")
+            + slash
+            + QStringLiteral("3")
+            + dotSpaced
+            + QString::fromUtf8("cos³(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("1*cos(pi)^2*cos(pi)^2/(2*cos(pi))"),
+        QStringLiteral("1")
+            + slash
+            + QStringLiteral("2")
+            + dotSpaced
+            + QString::fromUtf8("cos³(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("1*cos(pi)^2*cos(pi)^2/(13*cos(pi))"),
+        QStringLiteral("1")
+            + slash
+            + QStringLiteral("13")
+            + dotSpaced
+            + QString::fromUtf8("cos³(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-1024*cos(pi)^2*cos(pi)^2/(64*cos(pi))"),
+        QString(UnicodeChars::MinusSign)
+            + QStringLiteral("16")
+            + dotSpaced
+            + QString::fromUtf8("cos³(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("1024*cos(pi)^2*cos(pi)^2/(-64*cos(pi))"),
+        QString(UnicodeChars::MinusSign)
+            + QStringLiteral("16")
+            + dotSpaced
+            + QString::fromUtf8("cos³(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-1024*cos(pi)^2*cos(pi)^2/(-64*cos(pi))"),
+        QStringLiteral("16")
+            + dotSpaced
+            + QString::fromUtf8("cos³(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("5*cos(pi)^4/(10*cos(pi))"),
+        QStringLiteral("1")
+            + slash
+            + QStringLiteral("2")
+            + dotSpaced
+            + QString::fromUtf8("cos³(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("6*cos(pi)^4/(3*cos(pi))"),
+        QStringLiteral("2")
+            + dotSpaced
+            + QString::fromUtf8("cos³(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-6*cos(pi)^4/(3*cos(pi))"),
+        QString(UnicodeChars::MinusSign)
+            + QStringLiteral("2")
+            + dotSpaced
+            + QString::fromUtf8("cos³(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("6*cos(pi)^4/(-3*cos(pi))"),
+        QString(UnicodeChars::MinusSign)
+            + QStringLiteral("2")
+            + dotSpaced
+            + QString::fromUtf8("cos³(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-6*cos(pi)^4/(-3*cos(pi))"),
+        QStringLiteral("2")
+            + dotSpaced
+            + QString::fromUtf8("cos³(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("14*cos(pi)^7/(21*cos(pi)^2)"),
+        QStringLiteral("2")
+            + slash
+            + QStringLiteral("3")
+            + dotSpaced
+            + QString::fromUtf8("cos⁵(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("14*cos(pi)^7/(7*cos(pi)^2)"),
+        QStringLiteral("2")
+            + dotSpaced
+            + QString::fromUtf8("cos⁵(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("(2*cos(pi)/(3*pi*4))*(343+4343)"),
+        QStringLiteral("781")
+            + dotSpaced
+            + QStringLiteral("cos(pi)")
+            + slash
+            + QStringLiteral("pi"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("(2*cos(pi)/(3*pi*4))*(343+4343)+2*e"),
+        QStringLiteral("781")
+            + dotSpaced
+            + QStringLiteral("cos(pi)")
+            + slash
+            + QStringLiteral("pi")
+            + plus
+            + QStringLiteral("2")
+            + dotSpaced
+            + QStringLiteral("e"));
+    CHECK_EVAL("(-1024*cos(pi)^2*cos(pi)^2/(64*cos(pi)))", "16");
+    CHECK_EVAL("(1024*cos(pi)^2*cos(pi)^2/(-64*cos(pi)))", "16");
+    CHECK_EVAL("(-1024*cos(pi)^2*cos(pi)^2/(-64*cos(pi)))", "-16");
+    CHECK_EVAL("(1*cos(pi)^2*cos(pi)^2/(13*cos(pi)))", "-0.07692307692307692308");
+    CHECK_EVAL("(1*cos(pi)^2*cos(pi)^2/(2*cos(pi)))", "-0.5");
+    CHECK_EVAL("(2*cos(pi)^2*cos(pi)^2/(3*cos(pi)))", "-0.66666666666666666667");
+    CHECK_AUTOFIX("2*cos(pi)^2*cos^2(pi)/(3*cos(pi))",
+                  "2⋅cos(pi)^2⋅cos(pi)^2/(3⋅cos(pi))");
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("1+pi pi pi/2+3"),
-        QStringLiteral("0.5")
+        QStringLiteral("1")
+            + slash
+            + QStringLiteral("2")
             + dotSpaced
             + QString::fromUtf8("pi³")
             + plus
@@ -3626,6 +3733,39 @@ void test_display_interpreted_spacing()
             + plus
             + QStringLiteral("4"));
     CHECK_EVAL("abc()=2", "2");
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("abc()*abc()^3/abc()"),
+        QString::fromUtf8("abc³()"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("2*abc()^4/(8*abc())"),
+        QStringLiteral("1")
+            + slash
+            + QStringLiteral("4")
+            + dotSpaced
+            + QString::fromUtf8("abc³()"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-2*abc()^4/(8*abc())"),
+        QString(UnicodeChars::MinusSign)
+            + QStringLiteral("1")
+            + slash
+            + QStringLiteral("4")
+            + dotSpaced
+            + QString::fromUtf8("abc³()"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("2*abc()^4/(-8*abc())"),
+        QString(UnicodeChars::MinusSign)
+            + QStringLiteral("1")
+            + slash
+            + QStringLiteral("4")
+            + dotSpaced
+            + QString::fromUtf8("abc³()"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("-2*abc()^4/(-8*abc())"),
+        QStringLiteral("1")
+            + slash
+            + QStringLiteral("4")
+            + dotSpaced
+            + QString::fromUtf8("abc³()"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("1+(2*3/abc())*abc()*abc()/2+3*pi*pi*2+1"),
         QStringLiteral("3")
@@ -3710,7 +3850,9 @@ void test_display_interpreted_spacing()
             + QStringLiteral("27"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("(12/68)*kilo"),
-        QStringLiteral("0.176470588235294")
+        QStringLiteral("3")
+            + slash
+            + QStringLiteral("17")
             + dotSpaced
             + QStringLiteral("kilo"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
@@ -4940,6 +5082,25 @@ void test_non_informative_numeric_simplified_row_suppression()
             + QString(UnicodeChars::DotOperator)
             + QString(UnicodeChars::MediumMathematicalSpace)
             + QStringLiteral("cos(pi)"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("(2*cos(pi)/(3*pi*4))*(343+4343)-2*e"),
+        QStringLiteral("781")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(UnicodeChars::DotOperator)
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("cos(pi)")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("/")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("pi")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(UnicodeChars::MinusSign)
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("2")
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(UnicodeChars::DotOperator)
+            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QStringLiteral("e"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("cos(pi)^2/cos(pi)"),
         QStringLiteral("cos²(pi)")

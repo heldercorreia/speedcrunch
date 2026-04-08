@@ -1423,6 +1423,8 @@ static QString groupHighPrecedenceAdditiveTermsForDisplay(const QString& express
 
 static QString simplifyRepeatedMultiplicativeBasesForDisplay(const QString& expression,
                                                              const Tokens& tokens);
+static bool approximateRationalFromDouble(double value, int maxDenominator,
+                                          qint64* outNumerator, qint64* outDenominator);
 
 static bool parseSimplifiablePowerFactor(const QString& factorText,
                                          QString* baseOut,
@@ -1513,6 +1515,46 @@ static bool parseSimplifiablePowerFactor(const QString& factorText,
 
     *baseOut = base;
     *exponentOut = exponent;
+    return true;
+}
+
+static bool approximateRationalFromDouble(double value, int maxDenominator,
+                                          qint64* outNumerator, qint64* outDenominator)
+{
+    if (!outNumerator || !outDenominator || maxDenominator <= 0 || !std::isfinite(value))
+        return false;
+
+    const double absValue = std::abs(value);
+    qint64 n0 = 0, d0 = 1;
+    qint64 n1 = 1, d1 = 0;
+    double x = absValue;
+
+    for (int iter = 0; iter < 64; ++iter) {
+        const qint64 a = static_cast<qint64>(std::floor(x));
+        const qint64 n2 = a * n1 + n0;
+        const qint64 d2 = a * d1 + d0;
+        if (d2 > maxDenominator || d2 <= 0)
+            break;
+
+        n0 = n1; d0 = d1;
+        n1 = n2; d1 = d2;
+
+        const double frac = x - static_cast<double>(a);
+        if (std::abs(frac) < 1e-15)
+            break;
+        x = 1.0 / frac;
+    }
+
+    if (d1 <= 0)
+        return false;
+
+    const qint64 signedNumerator = (value < 0.0) ? -n1 : n1;
+    const double reconstructed = static_cast<double>(signedNumerator) / static_cast<double>(d1);
+    if (std::abs(reconstructed - value) > 1e-12)
+        return false;
+
+    *outNumerator = signedNumerator;
+    *outDenominator = d1;
     return true;
 }
 
@@ -1960,6 +2002,9 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
     rebuilt = simplifyParenthesizedDenominators(rebuilt);
 
     auto simplifyAlgebraicMulDivChain = [&negativeUnitFactorCount](const QString& text) {
+        if (RegExpPatterns::simpleParenthesizedDenominatorQuotient().match(text).hasMatch())
+            return text;
+
         auto isFullyWrappedByOuterParens = [](const QString& expr) {
             if (expr.size() < 2 || expr.at(0) != QLatin1Char('(') || expr.at(expr.size() - 1) != QLatin1Char(')'))
                 return false;
@@ -1984,16 +2029,13 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
                 normalized = normalized.mid(1, normalized.size() - 2).trimmed();
 
             int sign = 1;
-            bool consumedUnarySign = false;
             while (!normalized.isEmpty()) {
                 const QChar ch = normalized.at(0);
                 if (ch == QLatin1Char('+')) {
-                    consumedUnarySign = true;
                     normalized = normalized.mid(1).trimmed();
                     continue;
                 }
                 if (isMinus(ch)) {
-                    consumedUnarySign = true;
                     sign = -sign;
                     normalized = normalized.mid(1).trimmed();
                     continue;
@@ -2005,12 +2047,101 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
                 normalized = normalized.mid(1, normalized.size() - 2).trimmed();
             if (normalized.isEmpty())
                 return false;
-            if (consumedUnarySign && isUnsignedDecimalNumberText(normalized))
-                return false;
 
             *unsignedFactor = normalized;
             *signOut = sign;
             return true;
+        };
+        auto tryFoldParenthesizedNumericAddSubFactor = [](const QString& factor,
+                                                          QString* foldedUnsignedFactor) {
+            QString normalized = factor.trimmed();
+            QString inner = normalized;
+            if (normalized.startsWith(QLatin1Char('(')) && normalized.endsWith(QLatin1Char(')')))
+                inner = normalized.mid(1, normalized.size() - 2).trimmed();
+            if (inner.isEmpty())
+                return false;
+
+            const Tokens innerTokens = Evaluator::instance()->scan(inner);
+            if (innerTokens.isEmpty())
+                return false;
+
+            double total = 0.0;
+            QString pendingOp = QStringLiteral("+");
+            bool expectValue = true;
+            for (const Token& token : innerTokens) {
+                if (expectValue) {
+                    if (!token.isNumber())
+                        return false;
+                    const QString numberText = token.text().trimmed();
+                    if (!isSignedDecimalNumberText(numberText)
+                        || !isSafeForDoubleArithmetic(numberText))
+                    {
+                        return false;
+                    }
+                    bool ok = false;
+                    const double value = numberText.toDouble(&ok);
+                    if (!ok)
+                        return false;
+                    total += (pendingOp == QLatin1String("-")) ? -value : value;
+                    expectValue = false;
+                    continue;
+                }
+
+                const Token::Operator op = token.asOperator();
+                if (op != Token::Addition && op != Token::Subtraction)
+                    return false;
+                pendingOp = token.text();
+                expectValue = true;
+            }
+
+            if (expectValue)
+                return false;
+
+            *foldedUnsignedFactor = formatSimplifiedDecimal(total);
+            return true;
+        };
+        auto splitTopLevelMulDivChain = [](const QString& expr,
+                                           QVector<QString>* outFactors,
+                                           QVector<QString>* outOperators) {
+            outFactors->clear();
+            outOperators->clear();
+
+            int depth = 0;
+            int partStart = 0;
+            for (int i = 0; i < expr.size(); ++i) {
+                const QChar ch = expr.at(i);
+                if (ch == QLatin1Char('(')) {
+                    ++depth;
+                    continue;
+                }
+                if (ch == QLatin1Char(')')) {
+                    if (depth > 0)
+                        --depth;
+                    continue;
+                }
+                if (depth == 0
+                    && (ch == QLatin1Char('*')
+                        || ch == UnicodeChars::DotOperator
+                        || ch == UnicodeChars::MultiplicationSign
+                        || ch == QLatin1Char('/')
+                        || ch == QChar(0x00F7) // ÷
+                        || ch == QChar(0x29F8) // ⧸
+                        || ch == QChar(0x2215) // ∕
+                        || ch == QLatin1Char('\\')))
+                {
+                    outFactors->append(expr.mid(partStart, i - partStart));
+                    outOperators->append(QString(ch));
+                    partStart = i + 1;
+                } else if (depth == 0
+                           && (ch == QLatin1Char('+')
+                               || ch == QLatin1Char('-')
+                               || ch == UnicodeChars::MinusSign))
+                {
+                    return false;
+                }
+            }
+            outFactors->append(expr.mid(partStart));
+            return outFactors->size() > 1;
         };
 
         QVector<QString> factors;
@@ -2049,6 +2180,22 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
         QVector<QString> baseOrder;
         double numericCoefficient = 1.0;
         bool hasNonNumericBase = false;
+        auto combineMulDivOps = [](const QString& outerOp, const QString& innerOp) {
+            auto isDivisionOp = [](const QString& opText) {
+                return opText == QLatin1String("/")
+                    || opText == QLatin1String("\\")
+                    || opText == QString(QChar(0x00F7)) // ÷
+                    || opText == QString(QChar(0x29F8)) // ⧸
+                    || opText == QString(QChar(0x2215)); // ∕
+            };
+            const bool outerIsDiv =
+                isDivisionOp(outerOp);
+            const bool innerIsDiv =
+                isDivisionOp(innerOp);
+            if (outerIsDiv)
+                return innerIsDiv ? QStringLiteral("*") : QStringLiteral("/");
+            return innerOp;
+        };
 
         for (int i = 0; i < factors.size(); ++i) {
             QString unsignedFactor;
@@ -2056,29 +2203,48 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
             if (!normalizeSimplifiableSignedFactor(factors.at(i), &unsignedFactor, &factorSign))
                 return text;
 
+            QString foldedNumericFactor;
+            if (tryFoldParenthesizedNumericAddSubFactor(unsignedFactor, &foldedNumericFactor))
+                unsignedFactor = foldedNumericFactor;
+
             if (factorSign < 0)
                 ++negativeUnitFactorCount;
 
-            QString base;
-            int exponent = 0;
-            if (!parseSimplifiablePowerFactor(unsignedFactor, &base, &exponent))
-                return text;
-
             const QString op = (i == 0) ? QStringLiteral("*") : operators.at(i - 1);
-            const int sign = (op == QLatin1String("/")) ? -1 : 1;
-            if (isUnsignedDecimalNumberText(base) && isSafeForDoubleArithmetic(base)) {
-                bool ok = false;
-                const double value = base.toDouble(&ok);
-                if (!ok)
+            QVector<QString> chainFactors;
+            QVector<QString> chainOperators;
+            if (!splitTopLevelMulDivChain(unsignedFactor, &chainFactors, &chainOperators)) {
+                chainFactors = { unsignedFactor };
+            }
+
+            for (int j = 0; j < chainFactors.size(); ++j) {
+                QString chainFactor = chainFactors.at(j).trimmed();
+                QString foldedChainFactor;
+                if (tryFoldParenthesizedNumericAddSubFactor(chainFactor, &foldedChainFactor))
+                    chainFactor = foldedChainFactor;
+
+                QString base;
+                int exponent = 0;
+                if (!parseSimplifiablePowerFactor(chainFactor, &base, &exponent))
                     return text;
-                numericCoefficient *= std::pow(value, sign * exponent);
-            } else if (!isUnsignedDecimalNumberText(base)) {
-                if (!exponentByBase.contains(base))
-                    baseOrder.append(base);
-                exponentByBase[base] += sign * exponent;
-                hasNonNumericBase = true;
-            } else {
-                return text;
+
+                const QString innerOp = (j == 0) ? QStringLiteral("*") : chainOperators.at(j - 1);
+                const QString effectiveOp = combineMulDivOps(op, innerOp);
+                const int sign = (effectiveOp == QLatin1String("/")) ? -1 : 1;
+                if (isUnsignedDecimalNumberText(base) && isSafeForDoubleArithmetic(base)) {
+                    bool ok = false;
+                    const double value = base.toDouble(&ok);
+                    if (!ok)
+                        return text;
+                    numericCoefficient *= std::pow(value, sign * exponent);
+                } else if (!isUnsignedDecimalNumberText(base)) {
+                    if (!exponentByBase.contains(base))
+                        baseOrder.append(base);
+                    exponentByBase[base] += sign * exponent;
+                    hasNonNumericBase = true;
+                } else {
+                    return text;
+                }
             }
         }
 
@@ -2103,8 +2269,17 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
 
         QString result;
         const bool coefficientIsOne = std::abs(numericCoefficient - 1.0) < 1e-12;
-        if (!coefficientIsOne || (positiveFactors.isEmpty() && !negativeFactors.isEmpty()))
-            result += formatSimplifiedDecimal(numericCoefficient);
+        if (!coefficientIsOne || (positiveFactors.isEmpty() && !negativeFactors.isEmpty())) {
+            QString coefficientText = formatSimplifiedDecimal(numericCoefficient);
+            qint64 num = 0;
+            qint64 den = 0;
+            if (approximateRationalFromDouble(numericCoefficient, 1000000, &num, &den)
+                && den != 1)
+            {
+                coefficientText = QStringLiteral("%1/%2").arg(num).arg(den);
+            }
+            result += coefficientText;
+        }
         if (!positiveFactors.isEmpty()) {
             if (!result.isEmpty())
                 result += UnicodeChars::DotOperator;

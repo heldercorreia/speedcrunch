@@ -114,6 +114,13 @@ inline const QRegularExpression& simpleUnitIdentifier()
     return pattern;
 }
 
+inline const QRegularExpression& simpleParenthesizedDenominatorQuotient()
+{
+    static const QRegularExpression pattern(
+        QStringLiteral(R"(^\s*[+\-−]?\d+(?:\.\d+)?\s*/\s*\([^()]+\)\s*$)"));
+    return pattern;
+}
+
 } // namespace RegExpPatterns
 
 #endif
