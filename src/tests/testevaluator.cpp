@@ -3441,6 +3441,56 @@ void test_display_interpreted_spacing()
                  << "\tResult     : " << resultDisplayed.toUtf8().constData() << endl;
         }
     }
+    ++eval_total_tests;
+    eval->setExpression(QStringLiteral("x=0.5"));
+    eval->evalUpdateAns();
+    eval->setExpression(QStringLiteral("x[m]"));
+    eval->evalUpdateAns();
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tvalue-unit spacing for variable attachment\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+    } else {
+        const QString interpretedDisplayed =
+            Evaluator::formatInterpretedExpressionForDisplay(eval->interpretedExpression());
+        const QString expected =
+            QStringLiteral("x")
+            + QString(OperatorChars::ValueUnitSpace)
+            + QStringLiteral("[m]");
+        if (interpretedDisplayed != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tvalue-unit spacing for variable attachment\t[NEW]" << endl
+                 << "\tDisplayed: " << interpretedDisplayed.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+    ++eval_total_tests;
+    eval->setExpression(QStringLiteral("ffff()=1"));
+    eval->evalUpdateAns();
+    eval->setExpression(QStringLiteral("ffff()[m]"));
+    eval->evalUpdateAns();
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tvalue-unit spacing for function attachment\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+    } else {
+        const QString interpretedDisplayed =
+            Evaluator::formatInterpretedExpressionForDisplay(eval->interpretedExpression());
+        const QString expected =
+            QStringLiteral("ffff()")
+            + QString(OperatorChars::ValueUnitSpace)
+            + QStringLiteral("[m]");
+        if (interpretedDisplayed != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tvalue-unit spacing for function attachment\t[NEW]" << endl
+                 << "\tDisplayed: " << interpretedDisplayed.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("cos(pi)^2"),
         QStringLiteral("cos")

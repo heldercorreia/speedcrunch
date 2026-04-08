@@ -3160,6 +3160,29 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
 
     QString formatted;
     formatted.reserve(displayExpression.size() + tokens.size() * 2);
+    auto isFunctionCallCloseParen = [&tokens](int closeIndex) {
+        if (closeIndex < 0 || closeIndex >= tokens.size())
+            return false;
+        if (tokens.at(closeIndex).asOperator() != Token::AssociationEnd
+            || tokens.at(closeIndex).text() != QLatin1String(")"))
+            return false;
+
+        int depth = 0;
+        for (int i = closeIndex; i >= 0; --i) {
+            const Token::Operator op = tokens.at(i).asOperator();
+            if (op == Token::AssociationEnd && tokens.at(i).text() == QLatin1String(")")) {
+                ++depth;
+                continue;
+            }
+            if (op == Token::AssociationStart && tokens.at(i).text() == QLatin1String("(")) {
+                --depth;
+                if (depth == 0) {
+                    return i > 0 && tokens.at(i - 1).isIdentifier();
+                }
+            }
+        }
+        return false;
+    };
 
     for (int i = 0; i < tokens.size(); ++i) {
         const Token& token = tokens.at(i);
@@ -3181,10 +3204,15 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
             ? Units::formatUnitTokenForDisplay(operatorText)
             : operatorText;
 
-        if (token.text() == QLatin1String("[")
-            && !formatted.isEmpty()
-            && formatted.back().isDigit()) {
-            formatted += OperatorChars::ValueUnitSpace;
+        if (token.text() == QLatin1String("[") && i > 0) {
+            const Token& previousToken = tokens.at(i - 1);
+            const bool shouldAddValueUnitSpace =
+                previousToken.isNumber()
+                || previousToken.isIdentifier()
+                || previousToken.isUnitIdentifier()
+                || isFunctionCallCloseParen(i - 1);
+            if (shouldAddValueUnitSpace)
+                formatted += OperatorChars::ValueUnitSpace;
         }
 
         if (!isSpacingOperator) {
