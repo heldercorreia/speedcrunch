@@ -22,12 +22,13 @@
 #include "core/regexpatterns.h"
 #include "core/settings.h"
 #include "core/unicodechars.h"
+#include "math/operatorchars.h"
 #include "math/quantity.h"
 #include "math/rational.h"
 #include "math/units.h"
 
 
-static const QChar g_dotChar = UnicodeChars::DotOperator;
+static const QChar g_dotChar = OperatorChars::MulDotSign;
 static const QChar g_minusChar = QString::fromUtf8("−")[0];
 
 namespace {
@@ -57,9 +58,9 @@ bool isCloseTo(const HNumber& value, const HNumber& reference)
 
 QString formatFraction(const QString& numerator, int denominator)
 {
-    const QChar slash = QChar('/');
-    const QString operatorSpace(UnicodeChars::MediumMathematicalSpace);
-    return numerator + operatorSpace + slash + operatorSpace + QString::number(denominator);
+    const QString operatorSpace(OperatorChars::DivisionSpace);
+    return numerator + operatorSpace + OperatorChars::DivisionSign
+           + operatorSpace + QString::number(denominator);
 }
 
 QString formatPiMultiple(const HNumber& value)
@@ -95,12 +96,14 @@ QString formatPiMultiple(const HNumber& value)
     if (!isCloseTo(value, expected))
         return QString();
 
+    const QString mulSpace(OperatorChars::MulDotSpace);
     if (denominator == 1) {
         if (numerator == 1)
             return QStringLiteral("pi");
         if (numerator == -1)
             return QStringLiteral("-pi");
-        return QString::number(numerator) + UnicodeChars::DotOperator + QStringLiteral("pi");
+        return QString::number(numerator) + mulSpace + OperatorChars::MulDotSign
+               + mulSpace + QStringLiteral("pi");
     }
 
     QString numeratorText;
@@ -109,7 +112,8 @@ QString formatPiMultiple(const HNumber& value)
     else if (numerator == -1)
         numeratorText = QStringLiteral("-pi");
     else
-        numeratorText = QString::number(numerator) + UnicodeChars::DotOperator + QStringLiteral("pi");
+        numeratorText = QString::number(numerator) + mulSpace + OperatorChars::MulDotSign
+                        + mulSpace + QStringLiteral("pi");
 
     return formatFraction(numeratorText, denominator);
 }

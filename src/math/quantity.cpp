@@ -24,6 +24,7 @@
 #include "quantity.h"
 
 #include "core/unicodechars.h"
+#include "math/operatorchars.h"
 #include "rational.h"
 #include "units.h"
 
@@ -120,8 +121,8 @@ QString normalizeDisplayUnitNameForOutput(const QString& unitName)
     // Keep explicit conversion-expression targets unchanged; they are meant
     // to mirror user-entered structure (operators and grouping).
     if (normalized.contains(QLatin1Char('*'))
-        || normalized.contains(QChar(0x22C5)) // ⋅
-        || normalized.contains(QChar(0x00D7)) // ×
+        || normalized.contains(OperatorChars::MulDotSign)
+        || normalized.contains(OperatorChars::MulCrossSign)
         || normalized.contains(QLatin1Char('/'))
         || normalized.contains(QLatin1Char('+'))
         || normalized.contains(QLatin1Char('-'))
@@ -134,7 +135,7 @@ QString normalizeDisplayUnitNameForOutput(const QString& unitName)
     }
 
     normalized.replace(QRegularExpression(QStringLiteral("\\s+")),
-                       QString(QChar(0x22C5))); // ⋅
+                       QString(OperatorChars::MulDotSign));
     return normalized;
 }
 
@@ -154,8 +155,8 @@ bool needsGroupingInQuotient(const QString& unitName)
     const QString n = unitName.trimmed();
     return n.contains(QLatin1Char(' '))
            || n.contains(QLatin1Char('*'))
-           || n.contains(QChar(0x22C5)) // ⋅
-           || n.contains(QChar(0x00D7)) // ×
+           || n.contains(OperatorChars::MulDotSign)
+           || n.contains(OperatorChars::MulCrossSign)
            || n.contains(QLatin1Char('/'));
 }
 

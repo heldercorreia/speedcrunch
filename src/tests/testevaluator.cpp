@@ -48,8 +48,8 @@ static Evaluator* eval = 0;
 static int eval_total_tests = 0;
 static int eval_failed_tests = 0;
 static int eval_new_failed_tests = 0;
-static const QString space(UnicodeChars::MediumMathematicalSpace);
-static const QString slash = space + QStringLiteral("/") + space;
+static const QString space(OperatorChars::AdditionSpace);
+static const QString slash = space + QString(OperatorChars::DivisionSign) + space;
 
 #define CHECK_AUTOFIX(s,p) checkAutoFix(__FILE__,__LINE__,#s,s,p)
 #define CHECK_DIV_BY_ZERO(s) checkDivisionByZero(__FILE__,__LINE__,#s,s)
@@ -269,6 +269,30 @@ static string toCodePointList(const QString& text)
            << cps.at(i);
     }
     return os.str();
+}
+
+static bool hasSpacedOperatorsInsideUnitBrackets(const QString& text)
+{
+    int pos = 0;
+    while (true) {
+        const int open = text.indexOf(QLatin1Char('['), pos);
+        if (open < 0)
+            return false;
+        const int close = text.indexOf(QLatin1Char(']'), open + 1);
+        if (close < 0)
+            return false;
+
+        const QString segment = text.mid(open + 1, close - open - 1);
+        if (segment.contains(QStringLiteral(" ·"))
+            || segment.contains(QStringLiteral("· "))
+            || segment.contains(QStringLiteral(" ×"))
+            || segment.contains(QStringLiteral("× "))
+            || segment.contains(QStringLiteral(" /"))
+            || segment.contains(QStringLiteral("/ "))) {
+            return true;
+        }
+        pos = close + 1;
+    }
 }
 
 static void checkDisplayInterpreted(const char* file, int line, const char* msg,
@@ -699,10 +723,10 @@ void test_binary_arithmetic_operator_variants()
 
     CHECK_EVAL("2*3", "6");
     CHECK_EVAL("2×3", "6");
-    CHECK_EVAL("2⋅3", "6"); // U+22C5 Dot operator.
+    CHECK_EVAL("2·3", "6"); // U+22C5 Dot operator.
     CHECK_EVAL("3*2", "6");
     CHECK_EVAL("3×2", "6");
-    CHECK_EVAL("3⋅2", "6");
+    CHECK_EVAL("3·2", "6");
 
     CHECK_EVAL("10/2", "5");
     CHECK_EVAL("10÷2", "5");
@@ -719,22 +743,22 @@ void test_binary_arithmetic_operator_variants()
 void test_units_conversion_parentheses()
 {
     // Check that parentheses are added in unit conversion results when needed.
-    CHECK_EVAL("1[meter] -> [10 meter]", "0.1 10⋅meter");
-    CHECK_EVAL("1[meter] -> [.1 meter]", "10 .1⋅meter");
+    CHECK_EVAL("1[meter] -> [10 meter]", "0.1 10·meter");
+    CHECK_EVAL("1[meter] -> [.1 meter]", "10 .1·meter");
     CHECK_EVAL("1[meter] -> [-1 meter]", "-1 -1 meter");
-    CHECK_EVAL("1[meter] -> [0xa meter]", "0.1 0xa⋅meter");
-    CHECK_EVAL("1[meter second] -> [10 meter second]", "0.1 10⋅meter⋅second");
+    CHECK_EVAL("1[meter] -> [0xa meter]", "0.1 0xa·meter");
+    CHECK_EVAL("1[meter second] -> [10 meter second]", "0.1 10·meter·second");
     CHECK_EVAL("1[meter] -> [meter + meter]", "0.5 meter + meter");
     CHECK_EVAL("1[meter] -> [meter - 2meter]", "-1 meter - 2meter");
     CHECK_EVAL("1[meter] -> [meter]", "1 meter");
     CHECK_EVAL("1[10 meter] -> [meter]", "10 meter");
     CHECK_EVAL("1[meter] in [meter]", "1 meter");
     CHECK_EVAL("1[meter] IN [meter]", "1 meter");
-    CHECK_EVAL("50[yard] + 2[foot] in [centi meter]", "4632.96 centi⋅meter");
+    CHECK_EVAL("50[yard] + 2[foot] in [centi meter]", "4632.96 centi·meter");
     CHECK_EVAL("10[meter] in (1[yard] + 2[foot])", "6.56167979002624671916 (1[yard] + 2[foot])");
-    CHECK_EVAL(QString::fromUtf8("1[meter] −> [centi meter]"), "100 centi⋅meter");
-    CHECK_EVAL(QString::fromUtf8("1[meter] → [centi meter]"), "100 centi⋅meter");
-    CHECK_EVAL(QString::fromUtf8("[hectare] → [m²] → [are] → [decare] → [daa] → [a] → [hectare]"),
+    CHECK_EVAL(QString::fromUtf8("1[meter] −> [centi meter]"), "100 centi·meter");
+    CHECK_EVAL(QString::fromUtf8("1[meter] → [centi meter]"), "100 centi·meter");
+    CHECK_EVAL(QString::fromUtf8("[hectare] → [m²] → [are] → [decare] → [daa] → [a] → [hectare]"),
                "1 hectare");
 }
 
@@ -822,11 +846,11 @@ void test_units_short_aliases_and_si_prefixes()
     CHECK_EVAL("[1 cy] -> [day]", "36525 day");
     CHECK_EVAL(QString::fromUtf8("[kΩ] -> [ohm]"), "1000 ohm");
     CHECK_EVAL_FORMAT("2[coulomb]+3[mC]", "2.003[C]");
-    CHECK_EVAL_FORMAT("[C^3*m^3*J^(-2)]", u8"1[C³⋅J⁻²⋅m³]");
-    CHECK_EVAL_FORMAT("[C^4*m^4*J^(-3)]", u8"1[C⁴⋅J⁻³⋅m⁴]");
-    CHECK_EVAL_FORMAT("[A^4*s^10/(kg^3*m^2)]", u8"1[C⁴⋅J⁻³⋅m⁴]");
-    CHECK_EVAL_FORMAT("1081.20238677[C*m^(-3)]", u8"1081.20238677[C⋅m⁻³]");
-    CHECK_EVAL_FORMAT("[J/(K*mol)]", u8"1[J⋅mol⁻¹⋅K⁻¹]");
+    CHECK_EVAL_FORMAT("[C^3*m^3*J^(-2)]", u8"1[C³·J⁻²·m³]");
+    CHECK_EVAL_FORMAT("[C^4*m^4*J^(-3)]", u8"1[C⁴·J⁻³·m⁴]");
+    CHECK_EVAL_FORMAT("[A^4*s^10/(kg^3*m^2)]", u8"1[C⁴·J⁻³·m⁴]");
+    CHECK_EVAL_FORMAT("1081.20238677[C*m^(-3)]", u8"1081.20238677[C·m⁻³]");
+    CHECK_EVAL_FORMAT("[J/(K*mol)]", u8"1[J·mol⁻¹·K⁻¹]");
 }
 
 void test_units_named_derived_canonicalization()
@@ -869,11 +893,11 @@ void test_units_derived_si_recognition_and_disambiguation()
     CHECK_EVAL("[coulomb/second]", "1 ampere");
     CHECK_EVAL("[lumen/steradian]", "1 candela");
     CHECK_EVAL("[1/second]", "1 second⁻¹");
-    CHECK_EVAL("[newton*meter]", "1 newton⋅meter");
+    CHECK_EVAL("[newton*meter]", "1 newton·meter");
     CHECK_EVAL("[newton*meter] -> [joule]", "1 joule");
     CHECK_EVAL("[joule/meter^3] -> [pascal]", "1 pascal");
     CHECK_EVAL("[watt*second] -> [joule]", "1 joule");
-    CHECK_EVAL("[watt*volt]", "1 volt²⋅ampere");
+    CHECK_EVAL("[watt*volt]", "1 volt²·ampere");
     CHECK_EVAL("[volt*ampere]", "1 watt");
     CHECK_EVAL("[volt*second/meter^2]", "1 tesla");
     CHECK_EVAL("[becquerel]", "1 becquerel");
@@ -896,11 +920,11 @@ void test_units_derived_si_recognition_and_disambiguation()
 void test_units_conversion_compatibility_and_canonicalization()
 {
     // Conversion compatibility and canonicalization regressions.
-    CHECK_EVAL("[volt] -> [joule/coulomb]", u8"1 joule⋅coulomb⁻¹");
+    CHECK_EVAL("[volt] -> [joule/coulomb]", u8"1 joule·coulomb⁻¹");
     CHECK_EVAL("[joule/coulomb] -> [volt]", "1 volt");
-    CHECK_EVAL("[watt] -> [joule/second]", u8"1 joule⋅second⁻¹");
+    CHECK_EVAL("[watt] -> [joule/second]", u8"1 joule·second⁻¹");
     CHECK_EVAL("[joule/second] -> [watt]", "1 watt");
-    CHECK_EVAL("[ampere] -> [coulomb/second]", u8"1 coulomb⋅second⁻¹");
+    CHECK_EVAL("[ampere] -> [coulomb/second]", u8"1 coulomb·second⁻¹");
     CHECK_EVAL("[coulomb/second] -> [ampere]", "1 ampere");
     CHECK_EVAL("[volt] -> [ohm*ampere]", "1 ohm*ampere");
     CHECK_EVAL("[ohm*ampere] -> [volt]", "1 volt");
@@ -915,7 +939,7 @@ void test_units_conversion_compatibility_and_canonicalization()
     CHECK_EVAL("[volt] -> [volt]", "1 volt");
     CHECK_EVAL("[watt] -> [watt]", "1 watt");
     CHECK_EVAL("[ampere] -> [ampere]", "1 ampere");
-    CHECK_EVAL("[kg*m^2/s^4] -> [kg*m^2/s^4]", u8"1 kg⋅m²⋅s⁻⁴");
+    CHECK_EVAL("[kg*m^2/s^4] -> [kg*m^2/s^4]", u8"1 kg·m²·s⁻⁴");
     CHECK_EVAL("[volt^2] -> [volt^2]", "1 volt²");
     CHECK_EVAL("[volt^2] -> [1 * (ohm * ampere)^2]", "1 1 * (ohm * ampere)²");
 }
@@ -929,19 +953,19 @@ void test_units_grouping_and_inverse_presentation()
 
     // If there is at least one positive exponent, render negative exponents
     // in denominator form for readability.
-    CHECK_EVAL_FORMAT("[m*kg*s^-1]", u8"1[kg⋅m / s]");
-    CHECK_EVAL_FORMAT("[kg*m^-1*s^-1]", u8"1[Pa⋅s]");
-    CHECK_EVAL_FORMAT("[m^2*s^-1]", u8"1[m² / s]");
-    CHECK_EVAL_FORMAT("[kg*m^2*s^-1]", u8"1[kg⋅m² / s]");
-    CHECK_EVAL_FORMAT("[m*s^-1]", u8"1[m / s]");
-    CHECK_EVAL_FORMAT("[m/s]", u8"1[m / s]");
+    CHECK_EVAL_FORMAT("[m*kg*s^-1]", u8"1[kg·m/s]");
+    CHECK_EVAL_FORMAT("[kg*m^-1*s^-1]", u8"1[Pa·s]");
+    CHECK_EVAL_FORMAT("[m^2*s^-1]", u8"1[m²/s]");
+    CHECK_EVAL_FORMAT("[kg*m^2*s^-1]", u8"1[kg·m²/s]");
+    CHECK_EVAL_FORMAT("[m*s^-1]", u8"1[m/s]");
+    CHECK_EVAL_FORMAT("[m/s]", u8"1[m/s]");
 
     // If all exponents are negative, keep inverse-only exponent notation.
     CHECK_EVAL_FORMAT("[1/s]", u8"1[s⁻¹]");
     CHECK_EVAL_FORMAT("[s^-1]", u8"1[s⁻¹]");
-    CHECK_EVAL_FORMAT("[1/(m*s^2)]", u8"1[m⁻¹⋅s⁻²]");
-    CHECK_EVAL_FORMAT("[m^-1*s^-2]", u8"1[m⁻¹⋅s⁻²]");
-    CHECK_EVAL_FORMAT("[m^-1/s^2]", u8"1[m⁻¹⋅s⁻²]");
+    CHECK_EVAL_FORMAT("[1/(m*s^2)]", u8"1[m⁻¹·s⁻²]");
+    CHECK_EVAL_FORMAT("[m^-1*s^-2]", u8"1[m⁻¹·s⁻²]");
+    CHECK_EVAL_FORMAT("[m^-1/s^2]", u8"1[m⁻¹·s⁻²]");
 
     settings->unitNegativeExponentStyle = oldStyle;
     Units::setNegativeExponentStyle(
@@ -965,12 +989,12 @@ void test_units_preferred_derived_forms_regressions()
     CHECK_EVAL_FORMAT("1[Hz]", "1[Hz]");
 
     // Combinations of derived units.
-    CHECK_EVAL_FORMAT("3[N*m]", u8"3[N⋅m]");
-    CHECK_EVAL_FORMAT("10[J*s]", u8"10[J⋅s]");
-    CHECK_EVAL_FORMAT("2[W*h]", u8"2[W⋅h]");
-    CHECK_EVAL_FORMAT("5[Pa*s]", u8"5[Pa⋅s]");
+    CHECK_EVAL_FORMAT("3[N*m]", u8"3[N·m]");
+    CHECK_EVAL_FORMAT("10[J*s]", u8"10[J·s]");
+    CHECK_EVAL_FORMAT("2[W*h]", u8"2[W·h]");
+    CHECK_EVAL_FORMAT("5[Pa*s]", u8"5[Pa·s]");
     CHECK_EVAL_FORMAT("7[V*A]", "7[W]");
-    CHECK_EVAL_FORMAT("4[ohm*m]", u8"4[Ω⋅m]");
+    CHECK_EVAL_FORMAT("4[ohm*m]", u8"4[Ω·m]");
     CHECK_EVAL_FORMAT("6[F*V]", "6[C]");
     CHECK_EVAL_FORMAT("8[H*A]", "8[Wb]");
     CHECK_EVAL_FORMAT("9[T*m^2]", "9[Wb]");
@@ -984,15 +1008,15 @@ void test_units_preferred_derived_forms_regressions()
     CHECK_EVAL_FORMAT("5[ohm^2]", u8"5[Ω²]");
 
     // Mixed derived units should keep derived components.
-    CHECK_EVAL_FORMAT("5[J*Pa]", u8"5[J⋅Pa]");
-    CHECK_EVAL_FORMAT("7[N*W]", u8"7[N⋅W]");
-    CHECK_EVAL_FORMAT("3[V*Hz]", u8"3[V⋅Hz]");
-    CHECK_EVAL_FORMAT("9[ohm*F]", u8"9[Ω⋅F]");
-    CHECK_EVAL_FORMAT("2[T*H]", u8"2[T⋅H]");
+    CHECK_EVAL_FORMAT("5[J*Pa]", u8"5[J·Pa]");
+    CHECK_EVAL_FORMAT("7[N*W]", u8"7[N·W]");
+    CHECK_EVAL_FORMAT("3[V*Hz]", u8"3[V·Hz]");
+    CHECK_EVAL_FORMAT("9[ohm*F]", u8"9[Ω·F]");
+    CHECK_EVAL_FORMAT("2[T*H]", u8"2[T·H]");
 
     // Expressions combining values should preserve derived units.
     CHECK_EVAL_FORMAT("2[J] + 3[J]", "5[J]");
-    CHECK_EVAL_FORMAT("4[N] * 5[m]", u8"20[N⋅m]");
+    CHECK_EVAL_FORMAT("4[N] * 5[m]", u8"20[N·m]");
     CHECK_EVAL_FORMAT("6[W] / 2[s]", u8"3[W / s]");
     CHECK_EVAL_FORMAT("3[V] * 2[A]", "6[W]");
     CHECK_EVAL_FORMAT("8[Pa] * 4[m^2]", "32[N]");
@@ -1008,9 +1032,9 @@ void test_units_preferred_derived_forms_regressions()
     CHECK_EVAL_FORMAT("7[kg*m^(-1)*s^(-2)]", "7[Pa]");
 
     // Avoid expanding when already in preferred derived form.
-    CHECK_EVAL_FORMAT("2[N*m]", u8"2[N⋅m]");
+    CHECK_EVAL_FORMAT("2[N*m]", u8"2[N·m]");
     CHECK_EVAL_FORMAT("4[J/s]", "4[W]");
-    CHECK_EVAL_FORMAT("6[W*s]", u8"6[W⋅s]");
+    CHECK_EVAL_FORMAT("6[W*s]", u8"6[W·s]");
 
     // Edge cases.
     CHECK_EVAL_FORMAT("1[N*m/m]", "1[N]");
@@ -1092,27 +1116,27 @@ void test_percent_operator()
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("1+99+10%"),
         QStringLiteral("100")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("+")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("10%"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("cos pi cos pi + 10%"),
         QString::fromUtf8("cos²(pi)")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("+")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("10%"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("1 + cos pi cos pi + 10%"),
         QStringLiteral("(cos²(pi)")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("+")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("1)")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("+")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("10%"));
     CHECK_EVAL(Evaluator::simplifyInterpretedExpression("100+12%"), "112");
     CHECK_EVAL(Evaluator::simplifyInterpretedExpression("1+2+3+10%"), "6.6");
@@ -1294,7 +1318,7 @@ void test_thousand_sep()
 
     CHECK_EVAL("12 345.678 9", "12345.6789");
 //    CHECK_EVAL("12'345.678'9", "12345.6789");
-    CHECK_EVAL(QString::fromUtf8("12·345.678·9"), "12345.6789");
+    CHECK_EVAL(QString::fromUtf8("12·345.678·9"), "37333.224");
     CHECK_EVAL(QString::fromUtf8("12٫345.678٫9"), "12345.6789");
     CHECK_EVAL(QString::fromUtf8("12٬345.678٬9"), "12345.6789");
     CHECK_EVAL(QString::fromUtf8("12˙345.678˙9"), "12345.6789");
@@ -2005,17 +2029,18 @@ void test_rational_format()
     settings->complexNumbers = false;
     DMath::complexMode = false;
     eval->initializeBuiltInVariables();
-    const QString dotOperator(UnicodeChars::DotOperator);
+    const QString dotOperator(OperatorChars::MulDotSign);
+    const QString dotSpacing = QString(OperatorChars::MulDotSpace);
     const QString piSymbol = QStringLiteral("pi");
     const auto piOver = [&](int denominator) {
         return piSymbol + slash + QString::number(denominator);
     };
     const auto nPiOver = [&](int numerator, int denominator) {
-        return QString::number(numerator) + dotOperator + piSymbol
+        return QString::number(numerator) + dotSpacing + dotOperator + dotSpacing + piSymbol
             + slash + QString::number(denominator);
     };
     const auto nPi = [&](int numerator) {
-        return QString::number(numerator) + dotOperator + piSymbol;
+        return QString::number(numerator) + dotSpacing + dotOperator + dotSpacing + piSymbol;
     };
     const auto signedPiOver = [&](int numerator, int denominator) -> QString {
         if (numerator == 1)
@@ -2720,17 +2745,17 @@ void test_auto_fix_powers()
     CHECK_AUTOFIX("cos^(-1)(pi)", "cos(pi)^(-1)");
     CHECK_AUTOFIX("2cos^3(pi)", "2cos(pi)^3");
     CHECK_AUTOFIX("7 + 3²⁰ * 4", "7 + 3^20 * 4");
-    CHECK_AUTOFIX("2×pi", "2⋅pi");
-    CHECK_AUTOFIX("2×a", "2⋅a");
+    CHECK_AUTOFIX("2×pi", "2·pi");
+    CHECK_AUTOFIX("2×a", "2·a");
     CHECK_AUTOFIX("4·5", "4·5");
-    CHECK_AUTOFIX("2   ×    pi   pi", "2⋅pi⋅pi");
-    CHECK_AUTOFIX("2          ×pi×  pi", "2⋅pi⋅pi");
+    CHECK_AUTOFIX("2   ×    pi   pi", "2·pi·pi");
+    CHECK_AUTOFIX("2          ×pi×  pi", "2·pi·pi");
     CHECK_AUTOFIX("Ω+μ", "Ω+µ");
     CHECK_AUTOFIX("uV+uA", "uV+uA");
     CHECK_AUTOFIX("2×sin(33×3×sin(23)×cos(−pi))×sin(23234)×23⧸2−sin(−12) − 12−12",
-                  "2⋅sin(33×3⋅sin(23)⋅cos(−pi))⋅sin(23234)⋅23⧸2−sin(−12) − 12−12");
+                  "2·sin(33×3·sin(23)·cos(−pi))·sin(23234)·23⧸2−sin(−12) − 12−12");
     CHECK_AUTOFIX("2          ×pi×  pi + 2^12.000−2",
-                  "2⋅pi⋅pi + 2^12.000−2");
+                  "2·pi·pi + 2^12.000−2");
     CHECK_AUTOFIX("1[meter] in [meter]", "1[meter] in [meter]");
     CHECK_AUTOFIX("1[meter] IN [meter]", "1[meter] IN [meter]");
     CHECK_AUTOFIX("sqrt(16)+cbrt(27)", "√(16)+∛(27)");
@@ -2740,7 +2765,7 @@ void test_auto_fix_powers()
     // paragraph separators; auto-fix should still produce a valid expression.
     ++eval_total_tests;
     const QString selectionText = QString::fromUtf8(
-        "−1 ⋅ (2²) ⋅ 69\u2029− 39 × 2⁵ − 828 ⋅ (2²) + 39");
+        "−1 · (2²) · 69\u2029− 39 × 2⁵ − 828 · (2²) + 39");
     const QString fixedSelectionText = eval->autoFix(selectionText);
     eval->setExpression(fixedSelectionText);
     Quantity selectionResult = eval->evalUpdateAns();
@@ -2897,15 +2922,15 @@ void test_comment_and_description_edge_cases()
     CHECK_AUTOFIX("1+2 ? foo ? bar", "1+2 ? foo ? bar");
 
     // Interpreted and display-interpreted output should preserve comment tails.
-    CHECK_INTERPRETED("2×pi ? calc area", "2⋅pi ? calc area");
+    CHECK_INTERPRETED("2×pi ? calc area", "2·pi ? calc area");
     CHECK_DISPLAY_INTERPRETED(
         "2*3?c",
-        QStringLiteral("2") + space + QString(UnicodeChars::MultiplicationSign)
+        QStringLiteral("2") + space + QString(OperatorChars::MulCrossSign)
             + space + QStringLiteral("3 ? c"));
     CHECK_INTERPRETED("1[meter] -> [centi meter]",
-                      u8"1[meter]→centi⋅meter");
+                      u8"1[meter]→centi·meter");
     CHECK_INTERPRETED("1[meter] in [centi meter]",
-                      u8"1[meter]→centi⋅meter");
+                      u8"1[meter]→centi·meter");
 
     // Explicit empty description should be stored as empty.
     CHECK_EVAL("vardesc2 = 1 ? ", "1");
@@ -3155,13 +3180,13 @@ void test_implicit_multiplication()
     CHECK_EVAL("f() = 123", "123");
     CHECK_EVAL("2f()", "246");
     CHECK_EVAL("5   5", "55");
-    CHECK_INTERPRETED("av*b", "av⋅b");
-    CHECK_INTERPRETED("av*(b)", "av⋅b");
-    CHECK_INTERPRETED("sin(pi)*cos(pi)", "sin(pi)⋅cos(pi)");
-    CHECK_INTERPRETED("f()*av", "f()⋅av");
-    CHECK_INTERPRETED("sqrt(4)*av", "√(4)⋅av");
-    CHECK_INTERPRETED("av*2", "av⋅2");
-    CHECK_INTERPRETED("2*av", "2⋅av");
+    CHECK_INTERPRETED("av*b", "av·b");
+    CHECK_INTERPRETED("av*(b)", "av·b");
+    CHECK_INTERPRETED("sin(pi)*cos(pi)", "sin(pi)·cos(pi)");
+    CHECK_INTERPRETED("f()*av", "f()·av");
+    CHECK_INTERPRETED("sqrt(4)*av", "√(4)·av");
+    CHECK_INTERPRETED("av*2", "av·2");
+    CHECK_INTERPRETED("2*av", "2·av");
     CHECK_INTERPRETED("2*3", "2×3");
 
     // Check implicit multiplication between numbers fails
@@ -3183,43 +3208,43 @@ void test_implicit_multiplication()
     CHECK_EVAL("av sin(pi/2)", "5");
     CHECK_EVAL("av sqrt(4)",   "10");
     CHECK_EVAL("av sqrt(av^2)", "25");
-    CHECK_INTERPRETED("2×sin pi", "2⋅sin(pi)");
-    CHECK_INTERPRETED("av sin(pi/2)", "av⋅sin(pi/2)");
-    CHECK_INTERPRETED("av sqrt(4)", "av⋅√(4)");
-    CHECK_INTERPRETED("av sqrt(av^2)", "av⋅√(av^2)");
+    CHECK_INTERPRETED("2×sin pi", "2·sin(pi)");
+    CHECK_INTERPRETED("av sin(pi/2)", "av·sin(pi/2)");
+    CHECK_INTERPRETED("av sqrt(4)", "av·√(4)");
+    CHECK_INTERPRETED("av sqrt(av^2)", "av·√(av^2)");
 
     /* Tests issue 538 */
     /* 3 sin (3 pi) was evaluated but not 3 sin (3) */
     CHECK_EVAL("3 sin (3 pi)", "0");
     CHECK_EVAL("3 sin (3)",    "0.4233600241796016663");
-    CHECK_INTERPRETED("3 sin (3 pi)", "3⋅sin(3⋅pi)");
-    CHECK_INTERPRETED("3 sin (3)", "3⋅sin(3)");
+    CHECK_INTERPRETED("3 sin (3 pi)", "3·sin(3·pi)");
+    CHECK_INTERPRETED("3 sin (3)", "3·sin(3)");
 
     CHECK_EVAL("2 (2 + 1)", "6");
     CHECK_EVAL("2 (av)", "10");
-    CHECK_INTERPRETED("2 (2 + 1)", "2⋅(2+1)");
-    CHECK_INTERPRETED("2 (av)", "2⋅av");
-    CHECK_INTERPRETED("(1+2)(3+4)", "(1+2)⋅(3+4)");
-    CHECK_INTERPRETED("(-1+2)(3-4)", "(-1+2)⋅(3-4)");
+    CHECK_INTERPRETED("2 (2 + 1)", "2·(2+1)");
+    CHECK_INTERPRETED("2 (av)", "2·av");
+    CHECK_INTERPRETED("(1+2)(3+4)", "(1+2)·(3+4)");
+    CHECK_INTERPRETED("(-1+2)(3-4)", "(-1+2)·(3-4)");
 
     /* Tests issue 598 */
     CHECK_EVAL("2(av)^3", "250");
-    CHECK_INTERPRETED("2(av)^3", "2⋅av^3");
+    CHECK_INTERPRETED("2(av)^3", "2·av^3");
 
     CHECK_EVAL("6/2(2+1)", "9");
-    CHECK_INTERPRETED("6/2(2+1)", "(6/2)⋅(2+1)");
-    CHECK_INTERPRETED("1/2 sqrt(3)", "(1/2)⋅√(3)");
-    CHECK_INTERPRETED("1/2(2+3)", "(1/2)⋅(2+3)");
-    CHECK_INTERPRETED("2/3(4/5)", "(2/3)⋅((4/5))");
-    CHECK_INTERPRETED("10\\3(2)", "(10\\3)⋅2");
-    CHECK_INTERPRETED("-2(3+4)", "-(2⋅(3+4))");
-    CHECK_INTERPRETED("~2(3)", "~(2⋅3)");
-    CHECK_INTERPRETED("2^2(2)", "2^2⋅2");
-    CHECK_INTERPRETED("2^2(2)(2)", "2^2⋅(2⋅2)");
-    CHECK_INTERPRETED("2^2(2*2)", "2^2⋅(2×2)");
-    CHECK_INTERPRETED("2^2(2)+3", "2^2⋅2+3");
-    CHECK_INTERPRETED("2 sin pi cos pi + 2", "2⋅sin(pi)⋅cos(pi)+2");
-    CHECK_INTERPRETED("1[meter second^-1]", "1[meter⋅second^(-1)]");
+    CHECK_INTERPRETED("6/2(2+1)", "(6/2)·(2+1)");
+    CHECK_INTERPRETED("1/2 sqrt(3)", "(1/2)·√(3)");
+    CHECK_INTERPRETED("1/2(2+3)", "(1/2)·(2+3)");
+    CHECK_INTERPRETED("2/3(4/5)", "(2/3)·((4/5))");
+    CHECK_INTERPRETED("10\\3(2)", "(10\\3)·2");
+    CHECK_INTERPRETED("-2(3+4)", "-(2·(3+4))");
+    CHECK_INTERPRETED("~2(3)", "~(2·3)");
+    CHECK_INTERPRETED("2^2(2)", "2^2·2");
+    CHECK_INTERPRETED("2^2(2)(2)", "2^2·(2·2)");
+    CHECK_INTERPRETED("2^2(2*2)", "2^2·(2×2)");
+    CHECK_INTERPRETED("2^2(2)+3", "2^2·2+3");
+    CHECK_INTERPRETED("2 sin pi cos pi + 2", "2·sin(pi)·cos(pi)+2");
+    CHECK_INTERPRETED("1[meter second^-1]", "1[meter·second^(-1)]");
     CHECK_INTERPRETED("1[second^-2]", "1[second^(-2)]");
     CHECK_INTERPRETED("1/2^3", "1/2^3");
     CHECK_INTERPRETED("2^12!", "2^(12!)");
@@ -3230,18 +3255,18 @@ void test_implicit_multiplication()
     CHECK_INTERPRETED("2^12.000-2", "2^12-2");
     CHECK_INTERPRETED("2^12.12", "2^(12.12)");
     CHECK_INTERPRETED("2^12.000-2+1/(1×2^3×3)-2^12!+2^12.1!",
-                      "2^12-2+1/(1⋅(2^3)⋅3)-2^(12!)+2^(12.1!)");
+                      "2^12-2+1/(1·(2^3)·3)-2^(12!)+2^(12.1!)");
     CHECK_INTERPRETED(QString::fromUtf8("pi  −−−−−3"), "pi-3");
     CHECK_INTERPRETED(QString::fromUtf8("pi  −−−−−−3"), "pi+3");
-    CHECK_INTERPRETED("1/(1×2^3×3)", "1/(1⋅(2^3)⋅3)");
-    CHECK_INTERPRETED("x=1/2 sqrt(3)", "x=(1/2)⋅√(3)");
-    CHECK_INTERPRETED("gf(t)=t/2 sqrt(3)", "gf(t)=(t/2)⋅√(3)");
+    CHECK_INTERPRETED("1/(1×2^3×3)", "1/(1·(2^3)·3)");
+    CHECK_INTERPRETED("x=1/2 sqrt(3)", "x=(1/2)·√(3)");
+    CHECK_INTERPRETED("gf(t)=t/2 sqrt(3)", "gf(t)=(t/2)·√(3)");
     CHECK_INTERPRETED("sin 23       cos 232323×pi×pi   2",
-                      "sin(23)⋅cos(232323)⋅pi⋅pi⋅2");
+                      "sin(23)·cos(232323)·pi·pi·2");
     CHECK_INTERPRETED("sin 23       cos 232323×pi×pi   2×cos pi×pi×23",
-                      "sin(23)⋅cos(232323)⋅pi⋅pi⋅2⋅cos(pi)⋅pi⋅23");
+                      "sin(23)·cos(232323)·pi·pi·2·cos(pi)·pi·23");
     CHECK_INTERPRETED("sin 23       cos 232323×pi×pi   2×cos pi×pi×23  23 × 323",
-                      "sin(23)⋅cos(232323)⋅pi⋅pi⋅2⋅cos(pi)⋅pi⋅2323×323");
+                      "sin(23)·cos(232323)·pi·pi·2·cos(pi)·pi·2323×323");
     CHECK_EVAL("2^2(2)", "8");
     CHECK_EVAL("2^2(2)(2)", "16");
     CHECK_EVAL("2^2(2*2)", "16");
@@ -3255,8 +3280,8 @@ void test_implicit_multiplication()
 void test_display_interpreted_spacing()
 {
     Settings* settings = Settings::instance();
-    const QString dot(QString::fromUtf8("⋅"));
-    const QString multiplication = QString(UnicodeChars::MultiplicationSign);
+    const QString dot(OperatorChars::MulDotSign);
+    const QString multiplication = QString(OperatorChars::MulCrossSign);
     const QString unicodeMinusSign(UnicodeChars::MinusSign);
     const QString dotSpaced = space + dot + space;
     const QString plus = space + QStringLiteral("+") + space;
@@ -3269,7 +3294,7 @@ void test_display_interpreted_spacing()
     const QString shiftRight = space + QStringLiteral(">>") + space;
 
     CHECK_DISPLAY_INTERPRETED(
-        "sin(2⋅pi+3)-1+2×3⋅sin(pi)",
+        "sin(2·pi+3)-1+2×3·sin(pi)",
         QString::fromUtf8("sin(2")
             + dotSpaced
             + QStringLiteral("pi")
@@ -3367,7 +3392,7 @@ void test_display_interpreted_spacing()
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("1[meter second^-1]"),
         QStringLiteral("1")
-            + QString(OperatorChars::ValueUnitSeparator)
+            + QString(OperatorChars::ValueUnitSpace)
             + QStringLiteral("[")
             + QStringLiteral("m")
             + dotSpaced
@@ -3376,7 +3401,7 @@ void test_display_interpreted_spacing()
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("1[second^-2]"),
         QStringLiteral("1")
-            + QString(OperatorChars::ValueUnitSeparator)
+            + QString(OperatorChars::ValueUnitSpace)
             + QStringLiteral("[")
             + QString::fromUtf8("s⁻²]"));
     ++eval_total_tests;
@@ -3388,7 +3413,7 @@ void test_display_interpreted_spacing()
         cerr << __FILE__ << "[" << __LINE__ << "]\tunit spacing with narrow no-break space\t[NEW]" << endl
              << "\tError: " << qPrintable(eval->error()) << endl;
     } else {
-        const QString unitJoin = QString(OperatorChars::ValueUnitSeparator) + QStringLiteral("[");
+        const QString unitJoin = QString(OperatorChars::ValueUnitSpace) + QStringLiteral("[");
         const QString interpretedDisplayed =
             Evaluator::formatInterpretedExpressionForDisplay(eval->interpretedExpression());
         const QString simplifiedDisplayed = DisplayFormatUtils::applyDigitGroupingForDisplay(
@@ -3515,10 +3540,10 @@ void test_display_interpreted_spacing()
         QStringLiteral("f(pi)*f(pi)"),
         QString::fromUtf8("f²(pi)"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
-        QString::fromUtf8("f(pi)⋅f(pi)"),
+        QString::fromUtf8("f(pi)·f(pi)"),
         QString::fromUtf8("f²(pi)"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
-        QString::fromUtf8("f(pi) ⋅ f(pi)"),
+        QString::fromUtf8("f(pi) · f(pi)"),
         QString::fromUtf8("f²(pi)"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("sin(pi)*2*sin(pi)^2"),
@@ -3629,7 +3654,7 @@ void test_display_interpreted_spacing()
     CHECK_EVAL("(1*cos(pi)^2*cos(pi)^2/(2*cos(pi)))", "-0.5");
     CHECK_EVAL("(2*cos(pi)^2*cos(pi)^2/(3*cos(pi)))", "-0.66666666666666666667");
     CHECK_AUTOFIX("2*cos(pi)^2*cos^2(pi)/(3*cos(pi))",
-                  "2⋅cos(pi)^2⋅cos(pi)^2/(3⋅cos(pi))");
+                  "2·cos(pi)^2·cos(pi)^2/(3·cos(pi))");
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("1+pi pi pi/2+3"),
         QStringLiteral("1")
@@ -3780,7 +3805,7 @@ void test_display_interpreted_spacing()
         QStringLiteral("12")
             + divide
             + QStringLiteral("68")
-            + QString(OperatorChars::ValueUnitSeparator)
+            + QString(OperatorChars::ValueUnitSpace)
             + QStringLiteral("[kilo]"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("12/68*1000"),
@@ -4042,7 +4067,7 @@ void test_format()
     CHECK_EVAL_FAIL("eng(0.000123456; -4)");
     CHECK_EVAL_FAIL("eng(0.000123456; 2)");
 
-    CHECK_EVAL("polar(3+4j)", "5 ⋅ exp(i ⋅ 0.92729521800161223243)");
+    CHECK_EVAL("polar(3+4j)", "5 · exp(i · 0.92729521800161223243)");
 
     Settings* settings = Settings::instance();
     const char savedComplexForm = settings->resultFormatComplex;
@@ -4051,19 +4076,19 @@ void test_format()
     settings->resultFormatComplex = 'a';
     settings->angleUnit = 'r';
     Evaluator::instance()->initializeAngleUnits();
-    CHECK_EVAL_FORMAT_EXACT("1+1j", QString::fromUtf8("1.4142135623730950488 ∠ 0.78539816339744830962"));
+    CHECK_EVAL_FORMAT_EXACT("1+1j", QString::fromUtf8("1.4142135623730950488 ∠ 0.78539816339744830962"));
 
     settings->angleUnit = 'd';
     Evaluator::instance()->initializeAngleUnits();
-    CHECK_EVAL_FORMAT_EXACT("1+1j", QString::fromUtf8("1.4142135623730950488 ∠ 45"));
+    CHECK_EVAL_FORMAT_EXACT("1+1j", QString::fromUtf8("1.4142135623730950488 ∠ 45"));
 
     settings->angleUnit = 'g';
     Evaluator::instance()->initializeAngleUnits();
-    CHECK_EVAL_FORMAT_EXACT("1+1j", QString::fromUtf8("1.4142135623730950488 ∠ 50"));
+    CHECK_EVAL_FORMAT_EXACT("1+1j", QString::fromUtf8("1.4142135623730950488 ∠ 50"));
 
     settings->angleUnit = 't';
     Evaluator::instance()->initializeAngleUnits();
-    CHECK_EVAL_FORMAT_EXACT("1+1j", QString::fromUtf8("1.4142135623730950488 ∠ 0.125"));
+    CHECK_EVAL_FORMAT_EXACT("1+1j", QString::fromUtf8("1.4142135623730950488 ∠ 0.125"));
 
     settings->resultFormatComplex = savedComplexForm;
     settings->angleUnit = savedAngleUnit;
@@ -4097,14 +4122,14 @@ void test_expression_operator_normalization()
     const QString normalized = EditorUtils::normalizeExpressionOperators(
         QString::fromUtf8("1＋2 8/4÷2 "
                           "9-4 9－4 9﹣4 9‐4 9‑4 9–4 9—4 9―4 9⁃4 "
-                          "2∗3·4⋅5∙6*7⨉8⨯9✕10✖11"));
+                          "2∗3·4·5∙6*7⨉8⨯9✕10✖11"));
     const std::string normalizedStd = normalized.toStdString();
     ++eval_total_tests;
     DisplayErrorOnMismatch(__FILE__, __LINE__, "normalizeExpressionOperators",
                            normalizedStd,
                            "1+2 8⧸4⧸2 "
                            "9−4 9−4 9−4 9−4 9−4 9−4 9−4 9−4 9−4 "
-                           "2×3·4×5×6×7×8×9×10×11",
+                           "2×3×4×5×6×7×8×9×10×11",
                            eval_failed_tests, eval_new_failed_tests);
 
     const QStringList parsed = EditorUtils::parsePastedExpressions(
@@ -4137,7 +4162,7 @@ void test_expression_operator_normalization()
         || parsed.at(10) != QString::fromUtf8("9−4")
         || parsed.at(11) != QString::fromUtf8("9−4")
         || parsed.at(12) != QString::fromUtf8("2×3")
-        || parsed.at(13) != QString::fromUtf8("4·5")
+        || parsed.at(13) != QString::fromUtf8("4×5")
         || parsed.at(14) != QString::fromUtf8("6×7")) {
         ++eval_total_tests;
         ++eval_failed_tests;
@@ -4146,22 +4171,22 @@ void test_expression_operator_normalization()
              << "\tResult   : " << parsed.join("|").toUtf8().constData() << endl
              << "\tExpected : 1+2|8⧸4|10⧸2|"
                 "9−4|9−4|9−4|9−4|9−4|9−4|9−4|9−4|9−4|"
-                "2×3|4·5|6×7" << endl;
+                "2×3|4×5|6×7" << endl;
     } else {
         ++eval_total_tests;
     }
 
     const QString editorNormalized = EditorUtils::normalizeExpressionOperatorsForEditorInput(
-        QString::fromUtf8("2⋅3 4·5 6*7 8/4 10÷2 9⧸3 𝜋 𝝅 𝞹 𝛑 Ω μ sqrt cbrt asqrt cbrtfoo"));
+        QString::fromUtf8("2·3 4·5 6*7 8/4 10÷2 9⧸3 𝜋 𝝅 𝞹 𝛑 Ω μ sqrt cbrt asqrt cbrtfoo"));
     const std::string editorNormalizedStd = editorNormalized.toStdString();
     ++eval_total_tests;
     DisplayErrorOnMismatch(__FILE__, __LINE__, "normalizeExpressionOperatorsForEditorInput",
                            editorNormalizedStd,
-                           "2⋅3 4·5 6×7 8/4 10/2 9/3 π π π π Ω µ √ ∛ asqrt cbrtfoo",
+                           "2·3 4·5 6×7 8/4 10/2 9/3 π π π π Ω µ √ ∛ asqrt cbrtfoo",
                            eval_failed_tests, eval_new_failed_tests);
 
     const QStringList parsedForEditor = EditorUtils::parsePastedExpressionsForEditorInput(
-        QString::fromUtf8("2⋅3\n"
+        QString::fromUtf8("2·3\n"
                           "4·5\n"
                           "6*7\n"
                           "8/4\n"
@@ -4175,7 +4200,7 @@ void test_expression_operator_normalization()
                           "cbrt(8)\n"
                           "asqrt(4)"));
     if (parsedForEditor.size() != 13
-        || parsedForEditor.at(0) != QString::fromUtf8("2⋅3")
+        || parsedForEditor.at(0) != QString::fromUtf8("2·3")
         || parsedForEditor.at(1) != QString::fromUtf8("4·5")
         || parsedForEditor.at(2) != QString::fromUtf8("6×7")
         || parsedForEditor.at(3) != QString::fromUtf8("8/4")
@@ -4193,7 +4218,7 @@ void test_expression_operator_normalization()
         ++eval_new_failed_tests;
         cerr << __FILE__ << "[" << __LINE__ << "]\tparsePastedExpressionsForEditorInput\t[NEW]" << endl
              << "\tResult   : " << parsedForEditor.join("|").toUtf8().constData() << endl
-             << "\tExpected : 2⋅3|4·5|6×7|8/4|10/2|9/3|π+1|π+1|π+1|π+1|√(4)|∛(8)|asqrt(4)" << endl;
+             << "\tExpected : 2·3|4·5|6×7|8/4|10/2|9/3|π+1|π+1|π+1|π+1|√(4)|∛(8)|asqrt(4)" << endl;
     } else {
         ++eval_total_tests;
     }
@@ -4213,7 +4238,7 @@ void test_expression_operator_normalization()
         Evaluator::formatInterpretedExpressionForDisplay(eval->interpretedExpression()));
     DisplayErrorOnMismatch(__FILE__, __LINE__, "normalizePiForDisplay thread expression",
                            threadExpressionDisplay.toStdString(),
-                           "2 ⋅ π ⋅ π²",
+                           "2 · π · π²",
                            eval_failed_tests, eval_new_failed_tests);
 
     ++eval_total_tests;
@@ -4898,12 +4923,12 @@ void test_display_root_aliases_for_result_lines()
     ++eval_total_tests;
     const QString sqrtDisplay =
         DisplayFormatUtils::applyDigitGroupingForDisplay(QStringLiteral("sqrt(2)/2"));
-    if (sqrtDisplay != QString::fromUtf8("√(2)/2")) {
+    if (sqrtDisplay != QString::fromUtf8("√(2) / 2")) {
         ++eval_failed_tests;
         ++eval_new_failed_tests;
         cerr << __FILE__ << "[" << __LINE__ << "]\tformat sqrt alias for display\t[NEW]" << endl
              << "\tResult   : " << sqrtDisplay.toUtf8().constData() << endl
-             << "\tExpected : √(2)/2" << endl;
+             << "\tExpected : √(2) / 2" << endl;
     }
 
     ++eval_total_tests;
@@ -4920,19 +4945,156 @@ void test_display_root_aliases_for_result_lines()
     ++eval_total_tests;
     const QString untouchedIdentifier =
         DisplayFormatUtils::applyDigitGroupingForDisplay(QStringLiteral("asqrt(2)+cbrtfoo(8)"));
-    if (untouchedIdentifier != QStringLiteral("asqrt(2)+cbrtfoo(8)")) {
+    if (untouchedIdentifier != QStringLiteral("asqrt(2) + cbrtfoo(8)")) {
         ++eval_failed_tests;
         ++eval_new_failed_tests;
         cerr << __FILE__ << "[" << __LINE__ << "]\tdo not rewrite root-like identifiers\t[NEW]" << endl
              << "\tResult   : " << untouchedIdentifier.toUtf8().constData() << endl
-             << "\tExpected : asqrt(2)+cbrtfoo(8)" << endl;
+             << "\tExpected : asqrt(2) + cbrtfoo(8)" << endl;
     }
+}
+
+void test_display_spacing_stability_for_unit_conversion()
+{
+    ++eval_total_tests;
+    const QString input =
+        QStringLiteral("3")
+        + QString(OperatorChars::ValueUnitSpace)
+        + QString::fromUtf8("[kg·m²/s⁴] → [kg·m²/s⁴]");
+    const QString output = DisplayFormatUtils::applyDigitGroupingForDisplay(input);
+    if (output != input) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tunit conversion display stability\t[NEW]" << endl
+             << "\tResult   : " << output.toUtf8().constData() << endl
+             << "\tExpected : " << input.toUtf8().constData() << endl;
+    }
+}
+
+void test_display_conversion_with_unicode_spaces_and_cross_units()
+{
+    ++eval_total_tests;
+    const QString expr = QString::fromUtf8("3 [kg×m²/s⁴] → [kg×m²/s⁴]");
+
+    eval->setExpression(eval->autoFix(expr));
+    eval->evalUpdateAns();
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tunicode conversion display\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+        return;
+    }
+
+    const QString interpreted = eval->interpretedExpression();
+    const QString displayed = DisplayFormatUtils::applyDigitGroupingForDisplay(
+        Evaluator::formatInterpretedExpressionForDisplay(interpreted));
+    const QString expected = QStringLiteral("3")
+        + QString(OperatorChars::ValueUnitSpace)
+        + QString::fromUtf8("[kg·m²/s⁴] → kg·m²/s⁴");
+
+    if (displayed != expected) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tunicode conversion display\t[NEW]" << endl
+             << "\tDisplayed : " << displayed.toUtf8().constData() << endl
+             << "\tExpected  : " << expected.toUtf8().constData() << endl
+             << "\tDisplayed code points: " << toCodePointList(displayed) << endl
+             << "\tExpected  code points: " << toCodePointList(expected) << endl;
+    }
+
+    ++eval_total_tests;
+    const QString simplifiedDisplayed = DisplayFormatUtils::applyDigitGroupingForDisplay(
+        Evaluator::formatInterpretedExpressionSimplifiedForDisplay(interpreted));
+    const bool corrupted = simplifiedDisplayed.contains(QStringLiteral("//"))
+        || simplifiedDisplayed.contains(QStringLiteral("··"))
+        || hasSpacedOperatorsInsideUnitBrackets(simplifiedDisplayed);
+    if (corrupted) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tunicode conversion simplified display\t[NEW]" << endl
+             << "\tSimplified: " << simplifiedDisplayed.toUtf8().constData() << endl
+             << "\tSimplified code points: " << toCodePointList(simplifiedDisplayed) << endl;
+    }
+}
+
+void test_preserve_brackets_for_displayed_conversion_target()
+{
+    ++eval_total_tests;
+    const QString source = QString::fromUtf8("3[kg·m²/s⁴] -> [kg·m²/s⁴]");
+    const QString interpretedDisplayed = QStringLiteral("3")
+        + QString(OperatorChars::ValueUnitSpace)
+        + QString::fromUtf8("[kg·m²/s⁴] → kg·m²/s⁴");
+    const QString expected = QStringLiteral("3")
+        + QString(OperatorChars::ValueUnitSpace)
+        + QString::fromUtf8("[kg·m²/s⁴] → [kg·m²/s⁴]");
+
+    const QString preserved = DisplayFormatUtils::preserveConversionTargetBracketsForDisplay(
+        interpretedDisplayed, source);
+    if (preserved != expected) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tpreserve conversion target brackets\t[NEW]" << endl
+             << "\tResult   : " << preserved.toUtf8().constData() << endl
+             << "\tExpected : " << expected.toUtf8().constData() << endl;
+    }
+}
+
+void test_preserve_brackets_for_displayed_conversion_target_without_source_hint()
+{
+    ++eval_total_tests;
+    const QString source = QString::fromUtf8("3[m] -> km");
+    const QString interpretedDisplayed = QStringLiteral("3")
+        + QString(OperatorChars::ValueUnitSpace)
+        + QString::fromUtf8("[m] → km");
+    const QString expected = QStringLiteral("3")
+        + QString(OperatorChars::ValueUnitSpace)
+        + QString::fromUtf8("[m] → [km]");
+
+    const QString preserved = DisplayFormatUtils::preserveConversionTargetBracketsForDisplay(
+        interpretedDisplayed, source);
+    if (preserved != expected) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tpreserve conversion target brackets without source hint\t[NEW]" << endl
+             << "\tResult   : " << preserved.toUtf8().constData() << endl
+             << "\tExpected : " << expected.toUtf8().constData() << endl;
+    }
+}
+
+void test_result_display_preserves_conversion_target_brackets()
+{
+    Session* session = const_cast<Session*>(eval->session());
+    session->clearHistory();
+    session->addHistoryEntry(HistoryEntry(
+        QString::fromUtf8("3 [m] → [km]"),
+        Quantity(3) / Quantity(1000),
+        QString::fromUtf8("3[m]→km")));
+
+    TestableResultDisplay display;
+    display.resize(800, 600);
+    display.refresh();
+
+    ++eval_total_tests;
+    const QString displayed = display.document()->findBlockByNumber(0).text();
+    const QString expected = QStringLiteral("3")
+        + QString(OperatorChars::ValueUnitSpace)
+        + QString::fromUtf8("[m] → [km]");
+    if (displayed != expected) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tresult display preserve conversion target brackets\t[NEW]" << endl
+             << "\tDisplayed: " << displayed.toUtf8().constData() << endl
+             << "\tExpected : " << expected.toUtf8().constData() << endl;
+    }
+
+    session->clearHistory();
 }
 
 void test_value_unit_separator_normalization()
 {
     const QString expectedWithSeparator = QStringLiteral("1")
-        + QString(OperatorChars::ValueUnitSeparator)
+        + QString(OperatorChars::ValueUnitSpace)
         + QStringLiteral("[kg]");
 
     ++eval_total_tests;
@@ -4973,9 +5135,9 @@ void test_trig_symbolic_fraction_half()
     }
 
     const QString expected = QStringLiteral("1")
-        + QString(UnicodeChars::MediumMathematicalSpace)
+        + QString(OperatorChars::AdditionSpace)
         + QStringLiteral("/")
-        + QString(UnicodeChars::MediumMathematicalSpace)
+        + QString(OperatorChars::AdditionSpace)
         + QStringLiteral("2");
     const QString symbolic = NumberFormatter::formatTrigSymbolic(value);
     ++eval_total_tests;
@@ -5017,9 +5179,9 @@ void test_non_informative_numeric_simplified_row_suppression()
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("2*cos(pi)^2/cos(pi)"),
         QStringLiteral("2")
-            + QString(UnicodeChars::MediumMathematicalSpace)
-            + QString(UnicodeChars::DotOperator)
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
+            + QString(OperatorChars::MulDotSign)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("cos(pi)"));
     checkSuppressSimplifiedExpressionLine(
         __FILE__, __LINE__, "do not suppress symbolic reduction when wrapped factor is multiplied",
@@ -5027,80 +5189,80 @@ void test_non_informative_numeric_simplified_row_suppression()
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("(cos(pi)^2/cos(pi))*2"),
         QStringLiteral("2")
-            + QString(UnicodeChars::MediumMathematicalSpace)
-            + QString(UnicodeChars::DotOperator)
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
+            + QString(OperatorChars::MulDotSign)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("cos(pi)"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("(2*cos(pi)/(3*pi*4))*(343+4343)-2*e"),
         QStringLiteral("781")
-            + QString(UnicodeChars::MediumMathematicalSpace)
-            + QString(UnicodeChars::DotOperator)
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
+            + QString(OperatorChars::MulDotSign)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("cos(pi)")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("/")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("pi")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QString(UnicodeChars::MinusSign)
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("2")
-            + QString(UnicodeChars::MediumMathematicalSpace)
-            + QString(UnicodeChars::DotOperator)
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
+            + QString(OperatorChars::MulDotSign)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("e"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("cos(pi)^2/cos(pi)"),
         QStringLiteral("cos²(pi)")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("/")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("cos(pi)"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("cos(pi)^2/cos(pi) 1"),
         QStringLiteral("cos²(pi)")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("/")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("cos(pi)")
-            + QString(UnicodeChars::MediumMathematicalSpace)
-            + QString(UnicodeChars::DotOperator)
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
+            + QString(OperatorChars::MulDotSign)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("1"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("cos(pi/3)^2^3"),
         QStringLiteral("cos(")
             + QStringLiteral("pi")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("/")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("3)^(2")
             + QString::fromUtf8("³)")
             );
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("cos(pi/3)^2^3"),
         QString::fromUtf8("cos⁸(pi")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("/")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("3)"));
     CHECK_DISPLAY_INTERPRETED(
         QStringLiteral("(cos(pi/3))^2^3"),
         QStringLiteral("cos(")
             + QStringLiteral("pi")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("/")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("3)^(2")
             + QString::fromUtf8("³)")
             );
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("(cos(pi/3))^2^3"),
         QString::fromUtf8("cos⁸(pi")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("/")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("3)"));
     ++eval_total_tests;
     {
@@ -5126,16 +5288,16 @@ void test_non_informative_numeric_simplified_row_suppression()
                     eval->interpretedExpression());
                 const QString expectedDisplayed =
                     QString::fromUtf8("(cos²(pi")
-                    + QString(UnicodeChars::MediumMathematicalSpace)
+                    + QString(OperatorChars::AdditionSpace)
                     + QStringLiteral("/")
-                    + QString(UnicodeChars::MediumMathematicalSpace)
+                    + QString(OperatorChars::AdditionSpace)
                     + QStringLiteral("3))")
                     + QString::fromUtf8("³");
                 const QString expectedSimplified =
                     QString::fromUtf8("cos⁶(pi")
-                    + QString(UnicodeChars::MediumMathematicalSpace)
+                    + QString(OperatorChars::AdditionSpace)
                     + QStringLiteral("/")
-                    + QString(UnicodeChars::MediumMathematicalSpace)
+                    + QString(OperatorChars::AdditionSpace)
                     + QStringLiteral("3)");
                 const QString simplifiedDisplayed = Evaluator::formatInterpretedExpressionSimplifiedForDisplay(
                     eval->interpretedExpression());
@@ -5158,9 +5320,9 @@ void test_non_informative_numeric_simplified_row_suppression()
         QStringLiteral("-1*cos(pi)^2/cos(pi)+1"),
         QString(UnicodeChars::MinusSign)
             + QStringLiteral("cos(pi)")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("+")
-            + QString(UnicodeChars::MediumMathematicalSpace)
+            + QString(OperatorChars::AdditionSpace)
             + QStringLiteral("1"));
     checkSuppressSimplifiedExpressionLine(
         __FILE__, __LINE__, "do not suppress symbolic reduction with divide by -1",
@@ -5293,6 +5455,11 @@ int main(int argc, char* argv[])
     test_function_usage_tooltip();
     test_grouped_numeric_literal_display_format();
     test_display_root_aliases_for_result_lines();
+    test_display_spacing_stability_for_unit_conversion();
+    test_display_conversion_with_unicode_spaces_and_cross_units();
+    test_preserve_brackets_for_displayed_conversion_target();
+    test_preserve_brackets_for_displayed_conversion_target_without_source_hint();
+    test_result_display_preserves_conversion_target_brackets();
     test_value_unit_separator_normalization();
     test_trig_symbolic_fraction_half();
     test_non_informative_numeric_simplified_row_suppression();

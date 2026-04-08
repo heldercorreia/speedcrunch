@@ -140,7 +140,7 @@ int main(int, char**)
     CHECK_DESER_CNUMBER("{\"format\": \"g\",\"value\": \"0.0+1.0j\"}", "1j");
     /* Quantity deserialization tests */
     CHECK_DESER_QUANTITY(q_json_blob, "0b1010 foot");
-    CHECK_DESER_QUANTITY(q_json_blob2, "1.4142135623730950488 ⋅ exp(j ⋅ 0.78539816339744830962)");
+    CHECK_DESER_QUANTITY(q_json_blob2, "1.4142135623730950488 · exp(j · 0.78539816339744830962)");
 
     /* Serialization + deserialization tests */
     CHECK_SER_DESER_HNUMBER(HNumber("3"), "3.00000000000000000000000000000000000000000000000000");

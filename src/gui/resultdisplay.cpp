@@ -138,12 +138,14 @@ QStringList formatResultLines(const HistoryEntry& entry)
             lines.append(line);
     };
     if (settings->simplifyResultExpressions && !entry.interpretedExpr().isEmpty()) {
-        const QString interpreted =
-            UnicodeChars::normalizePiForDisplay(
-                Evaluator::formatInterpretedExpressionForDisplay(entry.interpretedExpr()));
-        const QString simplified =
-            UnicodeChars::normalizePiForDisplay(
-                Evaluator::formatInterpretedExpressionSimplifiedForDisplay(entry.interpretedExpr()));
+        QString interpreted = DisplayFormatUtils::applyDigitGroupingForDisplay(
+            Evaluator::formatInterpretedExpressionForDisplay(entry.interpretedExpr()));
+        QString simplified = DisplayFormatUtils::applyDigitGroupingForDisplay(
+            Evaluator::formatInterpretedExpressionSimplifiedForDisplay(entry.interpretedExpr()));
+        interpreted = DisplayFormatUtils::preserveConversionTargetBracketsForDisplay(
+            interpreted, entry.expr());
+        simplified = DisplayFormatUtils::preserveConversionTargetBracketsForDisplay(
+            simplified, entry.expr());
         if (!simplified.isEmpty()
             && simplified != interpreted
             ) {
@@ -151,9 +153,7 @@ QStringList formatResultLines(const HistoryEntry& entry)
                     interpreted, simplified)) {
                 // Hide non-informative simplification rows for plain numeric arithmetic.
             } else {
-                const QString simplifiedForDisplay =
-                    DisplayFormatUtils::applyDigitGroupingForDisplay(simplified);
-                appendUniqueLine(QLatin1String("= ") + simplifiedForDisplay);
+                appendUniqueLine(QLatin1String("= ") + simplified);
             }
         }
     }
@@ -205,10 +205,13 @@ QStringList formatResultLines(const HistoryEntry& entry)
 
 QString formattedExpressionForDisplay(const HistoryEntry& entry)
 {
-    if (!entry.interpretedExpr().isEmpty())
-        return DisplayFormatUtils::applyDigitGroupingForDisplay(
+    if (!entry.interpretedExpr().isEmpty()) {
+        const QString displayed = DisplayFormatUtils::applyDigitGroupingForDisplay(
             UnicodeChars::normalizePiForDisplay(
                 Evaluator::formatInterpretedExpressionForDisplay(entry.interpretedExpr())));
+        return DisplayFormatUtils::preserveConversionTargetBracketsForDisplay(
+            displayed, entry.expr());
+    }
     return DisplayFormatUtils::applyDigitGroupingForDisplay(
         UnicodeChars::normalizePiForDisplay(entry.expr()));
 }
@@ -216,10 +219,13 @@ QString formattedExpressionForDisplay(const HistoryEntry& entry)
 QString formattedExpressionForDisplay(const QString& expression,
                                      const QString& interpretedExpression)
 {
-    if (!interpretedExpression.isEmpty())
-        return DisplayFormatUtils::applyDigitGroupingForDisplay(
+    if (!interpretedExpression.isEmpty()) {
+        const QString displayed = DisplayFormatUtils::applyDigitGroupingForDisplay(
             UnicodeChars::normalizePiForDisplay(
                 Evaluator::formatInterpretedExpressionForDisplay(interpretedExpression)));
+        return DisplayFormatUtils::preserveConversionTargetBracketsForDisplay(
+            displayed, expression);
+    }
     return DisplayFormatUtils::applyDigitGroupingForDisplay(
         UnicodeChars::normalizePiForDisplay(expression));
 }

@@ -227,7 +227,7 @@ static QString s_applySuperscriptStyleToExplicitUnitText(QString unitText)
         denominator = denominator.trimmed();
         if (denominator.startsWith(QLatin1Char('(')) && denominator.endsWith(QLatin1Char(')')))
             denominator = denominator.mid(1, denominator.size() - 2).trimmed();
-        denominator.replace(QChar(0x22C5), QLatin1Char('*'));
+        denominator.replace(OperatorChars::MulDotSign, QLatin1Char('*'));
 
         const QStringList factors = denominator.split(QLatin1Char('*'), Qt::SkipEmptyParts);
         for (const QString& rawFactor : factors) {
@@ -241,7 +241,7 @@ static QString s_applySuperscriptStyleToExplicitUnitText(QString unitText)
     }
 
     QString rendered = s_renderUnitExponentsAsSuperscripts(normalized);
-    rendered.replace(QLatin1Char('*'), QChar(0x22C5)); // ⋅
+    rendered.replace(QLatin1Char('*'), OperatorChars::MulDotSign);
     return rendered;
 }
 
@@ -490,9 +490,9 @@ static bool s_isMultiplicationOperatorAlias(const QChar& ch, bool keepDotOperato
 {
     switch (ch.unicode()) {
     case '*':
-    case 0x00D7: // × MULTIPLICATION SIGN
+    case OperatorChars::MulCrossSign.unicode():
         return true;
-    case UnicodeChars::DotOperator.unicode():
+    case OperatorChars::MulDotSign.unicode():
         return !keepDotOperator;
     default:
         return false;
@@ -503,7 +503,7 @@ static bool s_isExpressionOperatorOrSeparator(const QChar& ch)
 {
     return ch == QLatin1Char('+')
            || ch == UnicodeChars::MinusSign
-           || ch == UnicodeChars::DotOperator
+           || ch == OperatorChars::MulDotSign
            || ch == QLatin1Char('/')
            || ch == QLatin1Char('%')
            || ch == QLatin1Char('^')
@@ -532,7 +532,7 @@ static bool s_expressionWithoutIgnorableTrailingToken(const QString& text, QStri
     const bool isPlusMinusTail =
         (last == QLatin1Char('+') || s_isSubtractionOperatorAlias(last));
     const bool isMultiplicationTail =
-        (last == UnicodeChars::DotOperator || s_isMultiplicationOperatorAlias(last, true));
+        (last == OperatorChars::MulDotSign || s_isMultiplicationOperatorAlias(last, true));
 
     if (last != QLatin1Char('(')
         && last != QLatin1Char('[')
@@ -561,14 +561,14 @@ static bool s_expressionWithoutIgnorableTrailingToken(const QString& text, QStri
         if (i >= 0) {
             const QChar prev = trimmed.at(i);
             const bool prevIsMultiplication =
-                (prev == UnicodeChars::DotOperator
+                (prev == OperatorChars::MulDotSign
                  || s_isMultiplicationOperatorAlias(prev, true));
             if (prevIsMultiplication) {
                 --i;
                 if (i >= 0) {
                     const QChar prevPrev = trimmed.at(i);
                     const bool prevPrevIsMultiplication =
-                        (prevPrev == UnicodeChars::DotOperator
+                        (prevPrev == OperatorChars::MulDotSign
                          || s_isMultiplicationOperatorAlias(prevPrev, true));
                     if (prevPrevIsMultiplication)
                         return false;
@@ -787,8 +787,8 @@ static Token::Operator matchOperator(const QString& text)
         case '-':
             result = Token::Subtraction;
             break;
-        case 0x00D7: // × MULTIPLICATION SIGN
-        case UnicodeChars::DotOperator.unicode():
+        case OperatorChars::MulCrossSign.unicode():
+        case OperatorChars::MulDotSign.unicode():
         case '*':
             result = Token::Multiplication;
             break;
@@ -966,8 +966,8 @@ static QString opcodeToInfixSymbol(Opcode::Type opcodeType, bool implicitMultipl
     case Opcode::Sub: return "-";
     case Opcode::Mul:
         return implicitMultiplication
-            ? QString(UnicodeChars::DotOperator)
-            : QString(UnicodeChars::MultiplicationSign);
+            ? QString(OperatorChars::MulDotSign)
+            : QString(OperatorChars::MulCrossSign);
     case Opcode::Unit: return QString();
     case Opcode::Div: return "/";
     case Opcode::Pow: return "^";
@@ -1853,7 +1853,7 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
     int negativeUnitFactorCount = 0;
     {
         static const QRegularExpression s_leadingNegativeUnitMultiplier(
-            QStringLiteral(R"(^\s*[−-]1\s*(?:\*|⋅|×)\s*(.+)$)"));
+            QStringLiteral(R"(^\s*[−-]1\s*(?:\*|·|×)\s*(.+)$)"));
         const QRegularExpressionMatch match = s_leadingNegativeUnitMultiplier.match(workingTerm);
         if (match.hasMatch()) {
             workingTerm = match.captured(1);
@@ -1863,9 +1863,9 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
         static const QRegularExpression s_trailingDivisionNegativeOne(
             QStringLiteral(R"(\s*(?:/|÷|⧸)\s*(?:[−-]1|\([−-]1\))\s*$)"));
         static const QRegularExpression s_trailingMultiplicationNegativeOne(
-            QStringLiteral(R"(\s*(?:\*|⋅|×)\s*(?:[−-]1|\([−-]1\))\s*$)"));
+            QStringLiteral(R"(\s*(?:\*|·|×)\s*(?:[−-]1|\([−-]1\))\s*$)"));
         static const QRegularExpression s_trailingNeutralOne(
-            QStringLiteral(R"(\s*(?:/|÷|⧸|\*|⋅|×)\s*(?:\+?1|\(\+?1\))\s*$)"));
+            QStringLiteral(R"(\s*(?:/|÷|⧸|\*|·|×)\s*(?:\+?1|\(\+?1\))\s*$)"));
         while (true) {
             QString updated = workingTerm;
             updated.replace(s_trailingDivisionNegativeOne, QString());
@@ -1912,8 +1912,8 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
             }
             if (depth == 0
                 && (ch == QLatin1Char('*')
-                    || ch == UnicodeChars::DotOperator
-                    || ch == UnicodeChars::MultiplicationSign))
+                    || ch == OperatorChars::MulDotSign
+                    || ch == OperatorChars::MulCrossSign))
             {
                 factors.append(segmentText.mid(partStart, i - partStart));
                 operators.append(QString(ch));
@@ -1990,8 +1990,8 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
             }
             if (finalDepth == 0
                 && (ch == QLatin1Char('*')
-                    || ch == UnicodeChars::DotOperator
-                    || ch == UnicodeChars::MultiplicationSign))
+                    || ch == OperatorChars::MulDotSign
+                    || ch == OperatorChars::MulCrossSign))
             {
                 finalFactors.append(simplified.mid(finalStart, i - finalStart));
                 finalOperators.append(QString(ch));
@@ -2072,8 +2072,8 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
             }
             if (depth == 0
                 && (ch == QLatin1Char('*')
-                    || ch == UnicodeChars::DotOperator
-                    || ch == UnicodeChars::MultiplicationSign))
+                    || ch == OperatorChars::MulDotSign
+                    || ch == OperatorChars::MulCrossSign))
             {
                 factors.append(segmentText.mid(partStart, i - partStart));
                 operators.append(QString(ch));
@@ -2151,8 +2151,8 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
                 }
                 if (depth == 0
                     && (ch == QLatin1Char('*')
-                        || ch == UnicodeChars::DotOperator
-                        || ch == UnicodeChars::MultiplicationSign))
+                        || ch == OperatorChars::MulDotSign
+                        || ch == OperatorChars::MulCrossSign))
                 {
                     factors.append(prev.mid(partStart, i - partStart));
                     operators.append(QString(ch));
@@ -2407,8 +2407,8 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
                 }
                 if (depth == 0
                     && (ch == QLatin1Char('*')
-                        || ch == UnicodeChars::DotOperator
-                        || ch == UnicodeChars::MultiplicationSign
+                        || ch == OperatorChars::MulDotSign
+                        || ch == OperatorChars::MulCrossSign
                         || ch == QLatin1Char('/')
                         || ch == QChar(0x00F7) // ÷
                         || ch == QChar(0x29F8) // ⧸
@@ -2447,8 +2447,8 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
             }
             if (depth == 0
                 && (ch == QLatin1Char('*')
-                    || ch == UnicodeChars::DotOperator
-                    || ch == UnicodeChars::MultiplicationSign
+                    || ch == OperatorChars::MulDotSign
+                    || ch == OperatorChars::MulCrossSign
                     || ch == QLatin1Char('/')))
             {
                 factors.append(text.mid(partStart, i - partStart));
@@ -2568,8 +2568,8 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
         }
         if (!positiveFactors.isEmpty()) {
             if (!result.isEmpty())
-                result += UnicodeChars::DotOperator;
-            result += positiveFactors.join(QString(UnicodeChars::DotOperator));
+                result += OperatorChars::MulDotSign;
+            result += positiveFactors.join(QString(OperatorChars::MulDotSign));
         }
         for (const QString& factor : negativeFactors) {
             if (result.isEmpty())
@@ -2875,7 +2875,7 @@ static QString simplifyRepeatedMultiplicativeBasesForDisplay(const QString& expr
                 mergedTerm = term;
             } else {
                 mergedTerm = formatSimplifiedDecimal(magnitude)
-                    + QString(UnicodeChars::DotOperator)
+                    + QString(OperatorChars::MulDotSign)
                     + term;
             }
 
@@ -2961,9 +2961,9 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
 
     auto normalizeNeutralMultiplicativeOnes = [](const QString& text) {
         static const QRegularExpression s_trailingTimesOne(
-            QStringLiteral(R"(\s*(?:\*|⋅|×)\s*1(?:[.,]0+)?\s*$)"));
+            QStringLiteral(R"(\s*(?:\*|·|×)\s*1(?:[.,]0+)?\s*$)"));
         static const QRegularExpression s_leadingOneTimes(
-            QStringLiteral(R"(^\s*1(?:[.,]0+)?\s*(?:\*|⋅|×)\s*)"));
+            QStringLiteral(R"(^\s*1(?:[.,]0+)?\s*(?:\*|·|×)\s*)"));
         static const QRegularExpression s_trailingDivOne(
             QStringLiteral(R"(\s*(?:/|÷|⧸)\s*1(?:[.,]0+)?\s*$)"));
 
@@ -3046,8 +3046,8 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
 
         auto isMulOp = [](QChar ch) {
             return ch == QLatin1Char('*')
-                || ch == QChar(0x22C5) // ⋅
-                || ch == QChar(0x00D7); // ×
+                || ch == OperatorChars::MulDotSign
+                || ch == OperatorChars::MulCrossSign;
         };
 
         auto unwrapEdgeParenthesizedMulDivFactor = [&](QString* expr) {
@@ -3158,8 +3158,6 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
     if (tokens.isEmpty())
         return displayExpression + commentSuffix;
 
-    const QString operatorSpace(UnicodeChars::MediumMathematicalSpace);
-    const QString unicodeMinusSign(UnicodeChars::MinusSign);
     QString formatted;
     formatted.reserve(displayExpression.size() + tokens.size() * 2);
 
@@ -3177,7 +3175,7 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
             || op == Token::ArithmeticLeftShift
             || op == Token::ArithmeticRightShift;
         const QString operatorText =
-            op == Token::Subtraction ? unicodeMinusSign : token.text();
+            op == Token::Subtraction ? QString(OperatorChars::SubtractionSign) : token.text();
         const bool shouldFormatAsUnitToken = token.isUnitIdentifier();
         const QString displayTokenText = shouldFormatAsUnitToken
             ? Units::formatUnitTokenForDisplay(operatorText)
@@ -3186,7 +3184,7 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
         if (token.text() == QLatin1String("[")
             && !formatted.isEmpty()
             && formatted.back().isDigit()) {
-            formatted += OperatorChars::ValueUnitSeparator;
+            formatted += OperatorChars::ValueUnitSpace;
         }
 
         if (!isSpacingOperator) {
@@ -3221,9 +3219,43 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
             continue;
         }
 
-        formatted += operatorSpace;
+        if (op == Token::Addition) {
+            formatted += OperatorChars::AdditionSpace;
+            formatted += OperatorChars::AdditionSign;
+            formatted += OperatorChars::AdditionSpace;
+            continue;
+        }
+
+        if (op == Token::Subtraction) {
+            formatted += OperatorChars::SubtractionSpace;
+            formatted += OperatorChars::SubtractionSign;
+            formatted += OperatorChars::SubtractionSpace;
+            continue;
+        }
+
+        if (op == Token::Division) {
+            formatted += OperatorChars::DivisionSpace;
+            formatted += OperatorChars::DivisionSign;
+            formatted += OperatorChars::DivisionSpace;
+            continue;
+        }
+
+        if (op == Token::Multiplication) {
+            const QChar mulSign = displayTokenText == QString(OperatorChars::MulCrossSign)
+                ? OperatorChars::MulCrossSign
+                : OperatorChars::MulDotSign;
+            const QChar mulSpace = mulSign == OperatorChars::MulCrossSign
+                ? OperatorChars::MulCrossSpace
+                : OperatorChars::MulDotSpace;
+            formatted += mulSpace;
+            formatted += mulSign;
+            formatted += mulSpace;
+            continue;
+        }
+
+        formatted += OperatorChars::AdditionSpace;
         formatted += displayTokenText;
-        formatted += operatorSpace;
+        formatted += OperatorChars::AdditionSpace;
     }
 
     return renderIntegerPowersAsSuperscriptsForDisplay(
@@ -3288,9 +3320,9 @@ QString Evaluator::simplifyInterpretedExpression(const QString& expression)
     // Normalize neutral multiplicative factors that can block symbolic
     // cancellations in the display simplifier (for example "(a/b)*1" -> "a/b").
     static const QRegularExpression s_trailingTimesOne(
-        QStringLiteral(R"(\s*(?:\*|⋅|×)\s*1(?:[.,]0+)?\s*$)"));
+        QStringLiteral(R"(\s*(?:\*|·|×)\s*1(?:[.,]0+)?\s*$)"));
     static const QRegularExpression s_leadingOneTimes(
-        QStringLiteral(R"(^\s*1(?:[.,]0+)?\s*(?:\*|⋅|×)\s*)"));
+        QStringLiteral(R"(^\s*1(?:[.,]0+)?\s*(?:\*|·|×)\s*)"));
     static const QRegularExpression s_trailingDivOne(
         QStringLiteral(R"(\s*(?:/|÷|⧸)\s*1(?:[.,]0+)?\s*$)"));
 
@@ -5232,7 +5264,7 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
         }
 
         // For explicit multiplications, isolate power terms to improve
-        // readability in compound products (for example "1⋅(2^3)⋅3").
+        // readability in compound products (for example "1·(2^3)·3").
         if (opcodeType == Opcode::Mul && !isImplicitMultiplication) {
             if (left.rootOpcode == Opcode::Pow
                 && !left.isLiteralSymbol
@@ -6687,12 +6719,12 @@ QString Evaluator::autoFix(const QString& expr)
     result = UnicodeChars::normalizeUnitSymbolAliases(result);
     result = UnicodeChars::normalizeRootFunctionAliasesForDisplay(result);
 
-    // Normalize symbolic multiplication to a compact "⋅" form.
+    // Normalize symbolic multiplication to a compact "·" form.
     // Examples:
-    //   "2×pi" -> "2⋅pi"
-    //   "2   ×    pi   pi" -> "2⋅pi⋅pi"
+    //   "2×pi" -> "2·pi"
+    //   "2   ×    pi   pi" -> "2·pi·pi"
     {
-        const QString dotOperator(UnicodeChars::DotOperator);
+        const QString dotOperator(OperatorChars::MulDotSign);
         const Tokens tokens = Evaluator::scan(result);
         for (int i = tokens.count() - 2; i >= 1; --i) {
             const Token& op = tokens.at(i);

@@ -25,7 +25,19 @@
 
 namespace OperatorChars {
 
-inline constexpr QChar ValueUnitSeparator = UnicodeChars::NarrowNoBreakSpace;
+// Display/operator symbol constants consumed by DisplayFormatUtils.
+// Spacing behavior is defined in gui/displayformatutils.h.
+inline constexpr QChar MulDotSign = UnicodeChars::MiddleDot;
+inline constexpr QChar MulCrossSign = UnicodeChars::MultiplicationSign;
+inline constexpr QChar DivisionSign = UnicodeChars::Solidus;
+inline constexpr QChar AdditionSign = UnicodeChars::PlusSign;
+inline constexpr QChar SubtractionSign = UnicodeChars::MinusSign;
+inline constexpr QChar SubtractionSpace = UnicodeChars::Space;
+inline constexpr QChar AdditionSpace = UnicodeChars::Space;
+inline constexpr QChar DivisionSpace = UnicodeChars::Space;
+inline constexpr QChar MulDotSpace = UnicodeChars::Space;
+inline constexpr QChar MulCrossSpace = UnicodeChars::Space;
+inline constexpr QChar ValueUnitSpace = UnicodeChars::NoBreakSpace;
 
 } // namespace OperatorChars
 

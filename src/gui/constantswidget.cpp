@@ -40,11 +40,11 @@
 static QString constantExpression(const Constant& constant)
 {
     QString unit = constant.unit;
-    unit.replace(UnicodeChars::MiddleDot, UnicodeChars::DotOperator);
+    unit.replace(UnicodeChars::MiddleDot, OperatorChars::MulDotSign);
     return constant.unit.isEmpty()
         ? constant.value
         : QStringLiteral("%1%2[%3]")
-            .arg(constant.value, QString(OperatorChars::ValueUnitSeparator), unit);
+            .arg(constant.value, QString(OperatorChars::ValueUnitSpace), unit);
 }
 
 ConstantsWidget::ConstantsWidget(QWidget* parent)
@@ -188,13 +188,13 @@ void ConstantsWidget::filter()
 
         if (layoutDirection() == Qt::RightToLeft) {
             QString normalizedUnit = clist.at(k).unit;
-            normalizedUnit.replace(UnicodeChars::MiddleDot, UnicodeChars::DotOperator);
+            normalizedUnit.replace(UnicodeChars::MiddleDot, OperatorChars::MulDotSign);
             str << normalizedUnit + QChar(0x200e); // Unicode LRM
             str << radCh;
         } else {
             str << radCh;
             QString normalizedUnit = clist.at(k).unit;
-            normalizedUnit.replace(UnicodeChars::MiddleDot, UnicodeChars::DotOperator);
+            normalizedUnit.replace(UnicodeChars::MiddleDot, OperatorChars::MulDotSign);
             str << normalizedUnit;
         }
 
@@ -221,7 +221,7 @@ void ConstantsWidget::filter()
             tip += QString(QChar(0x200E));
             if (!clist.at(k).unit.isEmpty())
                 tip.append(" ").append(QString(clist.at(k).unit).replace(
-                    UnicodeChars::MiddleDot, UnicodeChars::DotOperator));
+                    UnicodeChars::MiddleDot, OperatorChars::MulDotSign));
             if (radixChar != '.')
                 tip.replace('.', radixChar);
             tip += QString(QChar(0x200E));

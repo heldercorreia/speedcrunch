@@ -20,6 +20,7 @@
 #include "units.h"
 
 #include "core/unicodechars.h"
+#include "math/operatorchars.h"
 #include "quantity.h"
 #include "rational.h"
 
@@ -548,7 +549,7 @@ void Units::findUnit(Quantity& q)
             QStringList terms;
             for (const UnitFactor& factor : factors)
                 terms << (factor.name + superscriptFromExponent(factor.exponent));
-            unit_name = ' ' + terms.join(QString::fromUtf8("⋅"));
+            unit_name = ' ' + terms.join(QString(OperatorChars::MulDotSign));
         } else {
             QStringList numeratorTerms;
             QStringList denominatorTerms;
@@ -562,10 +563,10 @@ void Units::findUnit(Quantity& q)
                 }
             }
 
-            const QString numeratorText = numeratorTerms.join(QString::fromUtf8("⋅"));
-            const QString denominatorText = denominatorTerms.join(QString::fromUtf8("⋅"));
+            const QString numeratorText = numeratorTerms.join(QString(OperatorChars::MulDotSign));
+            const QString denominatorText = denominatorTerms.join(QString(OperatorChars::MulDotSign));
             if (!numeratorTerms.isEmpty() && !denominatorTerms.isEmpty()) {
-                unit_name = ' ' + numeratorText + " / ";
+                unit_name = ' ' + numeratorText + OperatorChars::DivisionSign;
                 if (denominatorTerms.size() > 1)
                     unit_name += '(' + denominatorText + ')';
                 else
@@ -579,7 +580,7 @@ void Units::findUnit(Quantity& q)
                     if (factor.exponent < zero)
                         inverseTerms << (factor.name + superscriptFromExponent(factor.exponent));
                 }
-                unit_name = ' ' + inverseTerms.join(QString::fromUtf8("⋅"));
+                unit_name = ' ' + inverseTerms.join(QString(OperatorChars::MulDotSign));
             }
         }
 

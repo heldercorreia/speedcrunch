@@ -54,6 +54,7 @@
 #include "gui/syntaxhighlighter.h"
 #include "math/cmath.h"
 #include "math/floatconfig.h"
+#include "math/operatorchars.h"
 #include "math/units.h"
 
 #include <QLatin1String>
@@ -3587,7 +3588,7 @@ void MainWindow::handleKeypadButtonPress(Keypad::Button b)
 
     case Keypad::KeyPlus: insertTextIntoEditor("+"); break;
     case Keypad::KeyMinus: insertTextIntoEditor("−"); break;
-    case Keypad::KeyTimes: insertTextIntoEditor("×"); break;
+    case Keypad::KeyTimes: insertTextIntoEditor(QString(OperatorChars::MulCrossSign)); break;
     case Keypad::KeyDivide: insertTextIntoEditor("÷"); break;
 
     case Keypad::KeyEE: insertTextIntoEditor("e"); break;

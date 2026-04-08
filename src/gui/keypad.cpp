@@ -21,6 +21,7 @@
 
 #include "core/settings.h"
 #include "core/unicodechars.h"
+#include "math/operatorchars.h"
 
 #include <QLocale>
 #include <QHash>
@@ -49,7 +50,7 @@ const Keypad::KeyDescription Keypad::keyDescriptions[] = {
     {QString::fromLatin1(","), KeyRadixChar, true, 3, 1},
     {QString::fromUtf8("="), KeyEquals, true, 3, 2},
     {QString::fromUtf8("÷"), KeyDivide, true, 0, 3},
-    {QString(UnicodeChars::MultiplicationSign), KeyTimes, true, 1, 3},
+    {QString(OperatorChars::MulCrossSign), KeyTimes, true, 1, 3},
     {QString(UnicodeChars::MinusSign), KeyMinus, true, 2, 3},
     {QString::fromUtf8("+"), KeyPlus, true, 3, 3},
     {QString::fromLatin1("arccos"), KeyAcos, false, 2, 8},
@@ -149,7 +150,7 @@ QString customButtonInsertText(Keypad::Button button, QChar radixCharacter)
     case Keypad::Key9: return QString::fromLatin1("9");
     case Keypad::KeyPlus: return QString::fromLatin1("+");
     case Keypad::KeyMinus: return QString::fromUtf8("−");
-    case Keypad::KeyTimes: return QString::fromUtf8("×");
+    case Keypad::KeyTimes: return QString(OperatorChars::MulCrossSign);
     case Keypad::KeyDivide: return QString::fromUtf8("÷");
     case Keypad::KeyEE: return QString::fromLatin1("e");
     case Keypad::KeyLeftPar: return QString::fromLatin1("(");
@@ -195,7 +196,7 @@ QString customButtonLabel(Keypad::Button button, QChar radixCharacter)
     case Keypad::KeyEquals: return QString::fromLatin1("=");
     case Keypad::KeyPlus: return QString::fromLatin1("+");
     case Keypad::KeyMinus: return QString::fromUtf8("−");
-    case Keypad::KeyTimes: return QString::fromUtf8("×");
+    case Keypad::KeyTimes: return QString(OperatorChars::MulCrossSign);
     case Keypad::KeyDivide: return QString::fromUtf8("÷");
     case Keypad::KeyRadixChar: return QString(radixCharacter);
     case Keypad::KeyClear: return QString::fromUtf8("⌧");

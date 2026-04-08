@@ -24,6 +24,7 @@
 #include "cmath.h"
 
 #include "core/unicodechars.h"
+#include "math/operatorchars.h"
 #include "cnumberparser.h"
 #include "floatconvert.h"
 #include "hmath.h"
@@ -497,8 +498,8 @@ QString CMath::format(const CNumber& cn, CNumber::Format format)
             return strRadius;
         QString strPhase = HMath::format(phase, format);
         const QString imagUnit(CMath::imaginaryUnitSymbol());
-        const QString operatorSpace(UnicodeChars::MediumMathematicalSpace);
-        const QString dotOperator(UnicodeChars::DotOperator);
+        const QString operatorSpace(OperatorChars::MulDotSpace);
+        const QString dotOperator(OperatorChars::MulDotSign);
         return QStringLiteral("%1%2%3%2exp(%4%2%3%2%5)")
             .arg(strRadius, operatorSpace, dotOperator, imagUnit, strPhase);
     } else if (format.notation == CNumber::Format::Notation::PolarAngle) {
@@ -515,7 +516,7 @@ QString CMath::format(const CNumber& cn, CNumber::Format format)
             phase /= HNumber(2) * HMath::pi();
 
         QString strPhase = HMath::format(phase, format);
-        const QString operatorSpace(UnicodeChars::MediumMathematicalSpace);
+        const QString operatorSpace(OperatorChars::AdditionSpace);
         return QStringLiteral("%1%2∠%2%3").arg(strRadius, operatorSpace, strPhase);
     } else {
         QString real_part = cn.real.isZero()? "" : HMath::format(cn.real, format);

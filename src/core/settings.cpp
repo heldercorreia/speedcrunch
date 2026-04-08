@@ -22,6 +22,7 @@
 #include "core/settings.h"
 
 #include "math/floatconfig.h"
+#include "math/operatorchars.h"
 
 #include <QDir>
 #include <QLocale>
@@ -230,30 +231,30 @@ Settings::CustomKeypad Settings::defaultCustomKeypad()
     static const struct {
         int row;
         int column;
-        const char* label;
-        const char* text;
+        QString label;
+        QString text;
         Settings::CustomKeypadButtonAction action;
     } defaults[] = {
-        {0, 0, "7", "7", Settings::CustomKeypadActionInsertText},
-        {0, 1, "8", "8", Settings::CustomKeypadActionInsertText},
-        {0, 2, "9", "9", Settings::CustomKeypadActionInsertText},
-        {0, 3, "÷", "÷", Settings::CustomKeypadActionInsertText},
-        {0, 4, "⌧", "", Settings::CustomKeypadActionClearExpression},
-        {1, 0, "4", "4", Settings::CustomKeypadActionInsertText},
-        {1, 1, "5", "5", Settings::CustomKeypadActionInsertText},
-        {1, 2, "6", "6", Settings::CustomKeypadActionInsertText},
-        {1, 3, "×", "×", Settings::CustomKeypadActionInsertText},
-        {1, 4, "⌫", "", Settings::CustomKeypadActionBackspace},
-        {2, 0, "1", "1", Settings::CustomKeypadActionInsertText},
-        {2, 1, "2", "2", Settings::CustomKeypadActionInsertText},
-        {2, 2, "3", "3", Settings::CustomKeypadActionInsertText},
-        {2, 3, "−", "−", Settings::CustomKeypadActionInsertText},
-        {2, 4, "(", "(", Settings::CustomKeypadActionInsertText},
-        {3, 0, "0", "0", Settings::CustomKeypadActionInsertText},
-        {3, 1, ".", ".", Settings::CustomKeypadActionInsertText},
-        {3, 2, "=", "", Settings::CustomKeypadActionEvaluateExpression},
-        {3, 3, "+", "+", Settings::CustomKeypadActionInsertText},
-        {3, 4, ")", ")", Settings::CustomKeypadActionInsertText}
+        {0, 0, QStringLiteral("7"), QStringLiteral("7"), Settings::CustomKeypadActionInsertText},
+        {0, 1, QStringLiteral("8"), QStringLiteral("8"), Settings::CustomKeypadActionInsertText},
+        {0, 2, QStringLiteral("9"), QStringLiteral("9"), Settings::CustomKeypadActionInsertText},
+        {0, 3, QStringLiteral("÷"), QStringLiteral("÷"), Settings::CustomKeypadActionInsertText},
+        {0, 4, QStringLiteral("⌧"), QString(), Settings::CustomKeypadActionClearExpression},
+        {1, 0, QStringLiteral("4"), QStringLiteral("4"), Settings::CustomKeypadActionInsertText},
+        {1, 1, QStringLiteral("5"), QStringLiteral("5"), Settings::CustomKeypadActionInsertText},
+        {1, 2, QStringLiteral("6"), QStringLiteral("6"), Settings::CustomKeypadActionInsertText},
+        {1, 3, QString(OperatorChars::MulCrossSign), QString(OperatorChars::MulCrossSign), Settings::CustomKeypadActionInsertText},
+        {1, 4, QStringLiteral("⌫"), QString(), Settings::CustomKeypadActionBackspace},
+        {2, 0, QStringLiteral("1"), QStringLiteral("1"), Settings::CustomKeypadActionInsertText},
+        {2, 1, QStringLiteral("2"), QStringLiteral("2"), Settings::CustomKeypadActionInsertText},
+        {2, 2, QStringLiteral("3"), QStringLiteral("3"), Settings::CustomKeypadActionInsertText},
+        {2, 3, QStringLiteral("−"), QStringLiteral("−"), Settings::CustomKeypadActionInsertText},
+        {2, 4, QStringLiteral("("), QStringLiteral("("), Settings::CustomKeypadActionInsertText},
+        {3, 0, QStringLiteral("0"), QStringLiteral("0"), Settings::CustomKeypadActionInsertText},
+        {3, 1, QStringLiteral("."), QStringLiteral("."), Settings::CustomKeypadActionInsertText},
+        {3, 2, QStringLiteral("="), QString(), Settings::CustomKeypadActionEvaluateExpression},
+        {3, 3, QStringLiteral("+"), QStringLiteral("+"), Settings::CustomKeypadActionInsertText},
+        {3, 4, QStringLiteral(")"), QStringLiteral(")"), Settings::CustomKeypadActionInsertText}
     };
 
     const int count = int(sizeof defaults / sizeof defaults[0]);
@@ -261,8 +262,8 @@ Settings::CustomKeypad Settings::defaultCustomKeypad()
         Settings::CustomKeypadButton button;
         button.row = defaults[i].row;
         button.column = defaults[i].column;
-        button.label = QString::fromUtf8(defaults[i].label);
-        button.text = QString::fromUtf8(defaults[i].text);
+        button.label = defaults[i].label;
+        button.text = defaults[i].text;
         button.action = defaults[i].action;
         custom.buttons.append(button);
     }

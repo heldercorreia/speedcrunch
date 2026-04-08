@@ -23,6 +23,7 @@
 #include "core/evaluator.h"
 #include "core/settings.h"
 #include "gui/editorutils.h"
+#include "math/operatorchars.h"
 
 #include <QEvent>
 #include <QRegularExpression>
@@ -75,12 +76,11 @@ QString formatFormulaForEditorInsertion(const QString& text)
         offset += superscript.size() - length;
     }
 
-    // Use medium mathematical spaces around the main binary operators.
-    const QChar mathSpace(0x205F); //  
-    const QString ms(mathSpace);
+    // Use regular spaces around the main binary operators.
+    const QString ms(OperatorChars::AdditionSpace);
     const QString replacement = ms + QStringLiteral("\\1") + ms;
     static const QRegularExpression s_binaryOps(
-        QStringLiteral(R"(\s*([=+\-−⋅/*])\s*)"));
+        QStringLiteral(R"(\s*([=+\-−·×/*])\s*)"));
     formatted.replace(s_binaryOps, replacement);
 
     return formatted;
@@ -127,7 +127,7 @@ void BookDock::handleAnchorClick(const QUrl& url)
                 expression = Evaluator::formatInterpretedExpressionForDisplay(interpreted);
         }
 
-        expression.replace(UnicodeChars::MultiplicationSign, UnicodeChars::DotOperator);
+        expression.replace(OperatorChars::MulCrossSign, OperatorChars::MulDotSign);
         expression = formatFormulaForEditorInsertion(expression);
         emit expressionSelected(expression);
     } else

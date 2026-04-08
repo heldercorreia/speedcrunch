@@ -25,8 +25,12 @@
 
 namespace UnicodeChars {
 
+inline constexpr QChar Space(0x0020);
+inline constexpr QChar NoBreakSpace(0x00A0);
 inline constexpr QChar MediumMathematicalSpace(0x205F);
 inline constexpr QChar NarrowNoBreakSpace(0x202F);
+inline constexpr QChar PlusSign(0x002B);
+inline constexpr QChar Solidus(0x002F);
 inline constexpr QChar MultiplicationSign(0x00D7);
 inline constexpr QChar MinusSign(0x2212);
 inline constexpr QChar DotOperator(0x22C5);

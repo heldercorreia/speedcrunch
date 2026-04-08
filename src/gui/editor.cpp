@@ -136,7 +136,8 @@ static bool shouldShowAdditionalRationalForTrig(const QString& expression,
 static QString formattedLiveResultWithAlternatives(const Quantity& quantity,
                                                    const QString& expression,
                                                    const QString& interpretedExpression,
-                                                   const QString& simplifiedExpression = QString())
+                                                   const QString& simplifiedExpression = QString(),
+                                                   const QString& sourceExpression = QString())
 {
     const Settings* settings = Settings::instance();
     const bool useExtraResultLines = settings->multipleResultLinesEnabled;
@@ -151,6 +152,9 @@ static QString formattedLiveResultWithAlternatives(const Quantity& quantity,
     if (!interpretedExpression.isEmpty()) {
         interpretedForDisplay = DisplayFormatUtils::applyDigitGroupingForDisplay(
             Evaluator::formatInterpretedExpressionForDisplay(interpretedExpression));
+        interpretedForDisplay = DisplayFormatUtils::preserveConversionTargetBracketsForDisplay(
+            interpretedForDisplay,
+            sourceExpression.isEmpty() ? expression : sourceExpression);
         appendUniqueLine(interpretedForDisplay);
     }
     if (!simplifiedExpression.isEmpty() && simplifiedExpression != primaryFormattedResult) {
@@ -200,16 +204,23 @@ static QString formattedLiveResultWithAlternatives(const Quantity& quantity,
     return escapedLines.join(QStringLiteral("<br/>"));
 }
 
-static QString simplifiedExpressionLineForTooltip(const QString& interpretedExpression)
+static QString simplifiedExpressionLineForTooltip(const QString& interpretedExpression,
+                                                  const QString& sourceExpression)
 {
     const Settings* settings = Settings::instance();
     if (!settings->simplifyResultExpressions || interpretedExpression.isEmpty())
         return QString();
 
-    const QString interpretedDisplay = UnicodeChars::normalizePiForDisplay(
+    QString interpretedDisplay = DisplayFormatUtils::applyDigitGroupingForDisplay(
         Evaluator::formatInterpretedExpressionForDisplay(interpretedExpression));
-    const QString simplifiedDisplay = UnicodeChars::normalizePiForDisplay(
+    QString simplifiedDisplay = DisplayFormatUtils::applyDigitGroupingForDisplay(
         Evaluator::formatInterpretedExpressionSimplifiedForDisplay(interpretedExpression));
+    if (!sourceExpression.isEmpty()) {
+        interpretedDisplay = DisplayFormatUtils::preserveConversionTargetBracketsForDisplay(
+            interpretedDisplay, sourceExpression);
+        simplifiedDisplay = DisplayFormatUtils::preserveConversionTargetBracketsForDisplay(
+            simplifiedDisplay, sourceExpression);
+    }
     if (simplifiedDisplay.isEmpty()
         || simplifiedDisplay == interpretedDisplay) {
         return QString();
@@ -220,7 +231,7 @@ static QString simplifiedExpressionLineForTooltip(const QString& interpretedExpr
         return QString();
     }
 
-    return DisplayFormatUtils::applyDigitGroupingForDisplay(simplifiedDisplay);
+    return simplifiedDisplay;
 }
 
 Editor::Editor(QWidget* parent)
@@ -821,7 +832,7 @@ void Editor::autoCalc()
         QString simplifiedLine;
         if (!quantity.isNan() && !m_evaluator->isUserFunctionAssign()
             && !Evaluator::isCommentOnlyExpression(str)) {
-            simplifiedLine = simplifiedExpressionLineForTooltip(interpretedExpr);
+            simplifiedLine = simplifiedExpressionLineForTooltip(interpretedExpr, text());
 
             const Settings* settings = Settings::instance();
             if (settings->simplifyResultExpressions
@@ -848,7 +859,8 @@ void Editor::autoCalc()
             emit autoCalcDisabled();
         } else {
             const auto formatted =
-                formattedLiveResultWithAlternatives(quantity, str, interpretedExpr, simplifiedLine);
+                formattedLiveResultWithAlternatives(
+                    quantity, str, interpretedExpr, simplifiedLine, text());
             auto message = tr("Current result:<br/>%1").arg(formatted);
             emit autoCalcMessageAvailable(message);
             emit autoCalcQuantityAvailable(quantity);
@@ -874,7 +886,7 @@ void Editor::autoCalc()
                     const QString simplifiedLine = (!baseQuantity.isNan()
                         && !m_evaluator->isUserFunctionAssign()
                         && !Evaluator::isCommentOnlyExpression(baseExpression))
-                        ? simplifiedExpressionLineForTooltip(interpretedExpr)
+                        ? simplifiedExpressionLineForTooltip(interpretedExpr, text())
                         : QString();
                     if (baseQuantity.isNan() && (m_evaluator->isUserFunctionAssign()
                         || Evaluator::isCommentOnlyExpression(baseExpression))) {
@@ -882,7 +894,7 @@ void Editor::autoCalc()
                     } else {
                         const auto formatted =
                             formattedLiveResultWithAlternatives(
-                                baseQuantity, baseExpression, interpretedExpr, simplifiedLine);
+                                baseQuantity, baseExpression, interpretedExpr, simplifiedLine, text());
                         auto message = tr("Current result:<br/>%1").arg(formatted);
                         emit autoCalcMessageAvailable(message);
                         emit autoCalcQuantityAvailable(baseQuantity);
@@ -943,7 +955,7 @@ void Editor::autoCalcSelection(const QString& custom)
         const QString interpretedExpr = m_evaluator->interpretedExpression();
         const QString simplifiedLine = (!quantity.isNan() && !m_evaluator->isUserFunctionAssign()
             && !Evaluator::isCommentOnlyExpression(str))
-            ? simplifiedExpressionLineForTooltip(interpretedExpr)
+            ? simplifiedExpressionLineForTooltip(interpretedExpr, rawSelection)
             : QString();
         if (quantity.isNan() && (m_evaluator->isUserFunctionAssign()
             || Evaluator::isCommentOnlyExpression(str))) {
@@ -953,7 +965,8 @@ void Editor::autoCalcSelection(const QString& custom)
             emit autoCalcMessageAvailable(message);
         } else {
             const auto formatted =
-                formattedLiveResultWithAlternatives(quantity, str, interpretedExpr, simplifiedLine);
+                formattedLiveResultWithAlternatives(
+                    quantity, str, interpretedExpr, simplifiedLine, rawSelection);
             auto message = tr("Selection result:<br/>%1").arg(formatted);
             emit autoCalcMessageAvailable(message);
             emit autoCalcQuantityAvailable(quantity);
@@ -972,7 +985,7 @@ void Editor::autoCalcSelection(const QString& custom)
                 const QString interpretedExpr = m_evaluator->interpretedExpression();
                 const QString simplifiedLine = (!baseQuantity.isNan() && !m_evaluator->isUserFunctionAssign()
                     && !Evaluator::isCommentOnlyExpression(baseExpression))
-                    ? simplifiedExpressionLineForTooltip(interpretedExpr)
+                    ? simplifiedExpressionLineForTooltip(interpretedExpr, rawSelection)
                     : QString();
                 if (baseQuantity.isNan() && (m_evaluator->isUserFunctionAssign()
                     || Evaluator::isCommentOnlyExpression(baseExpression))) {
@@ -981,7 +994,7 @@ void Editor::autoCalcSelection(const QString& custom)
                 } else {
                     const auto formatted =
                         formattedLiveResultWithAlternatives(
-                            baseQuantity, baseExpression, interpretedExpr, simplifiedLine);
+                            baseQuantity, baseExpression, interpretedExpr, simplifiedLine, rawSelection);
                     auto message = tr("Selection result:<br/>%1").arg(formatted);
                     emit autoCalcMessageAvailable(message);
                     emit autoCalcQuantityAvailable(baseQuantity);
@@ -1229,14 +1242,16 @@ void Editor::keyPressEvent(QKeyEvent* event)
 
     case Qt::Key_Asterisk: {
         auto position = textCursor().position();
-        if (position > 0 && QString("*×").contains(text().at(position - 1))) {
+        if (position > 0
+            && (text().at(position - 1) == QLatin1Char('*')
+                || text().at(position - 1) == OperatorChars::MulCrossSign)) {
           // Replace ×* by ^ operator
           auto cursor = textCursor();
           cursor.removeSelectedText();  // just in case some text is selected
           cursor.deletePreviousChar();
           insert(QString::fromUtf8("^"));
         } else {
-          insert(QString(UnicodeChars::MultiplicationSign));
+          insert(QString(OperatorChars::MulCrossSign));
         }
         event->accept();
         return;
@@ -1817,11 +1832,11 @@ void ConstantCompletion::doneCompletion()
     }
 
     QString normalizedUnit = found->unit;
-    normalizedUnit.replace(UnicodeChars::MiddleDot, UnicodeChars::DotOperator);
+    normalizedUnit.replace(UnicodeChars::MiddleDot, OperatorChars::MulDotSign);
     const QString expression = found->unit.isEmpty()
         ? found->value
         : QStringLiteral("%1%2[%3]")
-            .arg(found->value, QString(OperatorChars::ValueUnitSeparator), normalizedUnit);
+            .arg(found->value, QString(OperatorChars::ValueUnitSpace), normalizedUnit);
     emit selectedCompletion(expression);
 }
 

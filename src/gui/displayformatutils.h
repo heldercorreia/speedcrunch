@@ -1,8 +1,5 @@
 // This file is part of the SpeedCrunch project
-// Copyright (C) 2007 Ariya Hidayat <ariya@kde.org>
-// Copyright (C) 2004, 2005 Ariya Hidayat <ariya@kde.org>
-// Copyright (C) 2005, 2006 Johan Thelin <e8johan@gmail.com>
-// Copyright (C) 2007-2026 @heldercorreia
+// Copyright (C) 2026 @heldercorreia
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -26,8 +23,43 @@
 
 namespace DisplayFormatUtils {
 
+/*
+   Display spacing rules (single source of truth)
+   ----------------------------------------------
+   Operator sign constants come from OperatorChars.
+
+   1) Arithmetic expression operators
+      - use OperatorChars::AdditionSpace around AdditionSign
+      - use OperatorChars::SubtractionSpace around SubtractionSign
+      - use OperatorChars::DivisionSpace around DivisionSign
+      - use OperatorChars::MulDotSpace around MulDotSign
+      - use OperatorChars::MulCrossSpace around MulCrossSign
+
+      Examples:
+      - 2 + 3 + 4
+      - 2 − 3 − 4
+      - 2 / 3 / 4
+      - 2 · cos(45) · sin(90)
+      - 2 × 3 × 4
+
+   2) Number + unit pair
+      - Between numeric value and unit bracket use OperatorChars::ValueUnitSpace.
+      - Example: 2 [kg]
+
+   3) Composite units
+      - Inside unit expressions there are no surrounding spaces around unit
+        multiplication/division operators, regardless of operator sign.
+      - Example: [kg·m/s²]
+
+   4) Conversion target display
+      - Preserve explicit source RHS unit brackets for display, e.g.
+        `3 [m] -> [km]` displays as `3 [m] → [km]`.
+ */
 QString applyDigitGroupingForDisplay(const QString& input);
+QString applyOperatorSpacingForDisplay(const QString& input);
 QString applyValueUnitSpacingForDisplay(const QString& input);
+QString preserveConversionTargetBracketsForDisplay(const QString& displayedInterpreted,
+                                                   const QString& sourceExpression);
 
 }
 

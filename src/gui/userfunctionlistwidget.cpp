@@ -21,6 +21,7 @@
 #include "gui/userfunctionlistwidget.h"
 
 #include "core/evaluator.h"
+#include "gui/displayformatutils.h"
 #include "core/settings.h"
 #include "core/unicodechars.h"
 
@@ -138,8 +139,9 @@ void UserFunctionListWidget::updateList()
             const QString sourceExpression = userFunction.interpretedExpression().isEmpty()
                 ? rawExpression
                 : userFunction.interpretedExpression();
-            const QString formattedExpression = UnicodeChars::normalizePiForDisplay(
-                Evaluator::formatInterpretedExpressionForDisplay(sourceExpression));
+            const QString formattedExpression = DisplayFormatUtils::applyDigitGroupingForDisplay(
+                UnicodeChars::normalizePiForDisplay(
+                    Evaluator::formatInterpretedExpressionForDisplay(sourceExpression)));
             namesAndValues[1] = formattedExpression;
             QTreeWidgetItem* item = new QTreeWidgetItem(m_userFunctions, namesAndValues);
             item->setData(1, Qt::UserRole, rawExpression);

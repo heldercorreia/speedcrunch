@@ -61,7 +61,7 @@ inline const QRegularExpression& separatorToken()
 {
     static const QRegularExpression pattern(
         // Match everything that is not alphanumeric or an expression operator.
-        QStringLiteral(R"([^a-zA-Z0-9\+\-\−\*\×⋅÷\/⧸\^;\(\)\[\]%!=\\&\|<>\?#→\x0000])")
+        QStringLiteral(R"([^a-zA-Z0-9\+\-\−\*\×·÷\/⧸\^;\(\)\[\]%!=\\&\|<>\?#→\x0000])")
     );
     return pattern;
 }

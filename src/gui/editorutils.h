@@ -9,6 +9,7 @@
 #define GUI_EDITORUTILS_H
 
 #include "core/unicodechars.h"
+#include "math/operatorchars.h"
 
 #include <QString>
 #include <QStringList>
@@ -26,7 +27,7 @@ inline bool isMultiplicationOperatorAlias(const QChar& ch, bool keepDotOperator 
     case UnicodeChars::NAryTimesOperator.unicode():
     case UnicodeChars::VectorOrCrossProduct.unicode():
         return true;
-    case UnicodeChars::DotOperator.unicode():
+    case OperatorChars::MulDotSign.unicode():
         return !keepDotOperator;
     default:
         return false;
@@ -37,7 +38,7 @@ inline QString normalizeMultiplicationOperators(QString text, bool keepDotOperat
 {
     for (QChar& ch : text) {
         if (isMultiplicationOperatorAlias(ch, keepDotOperator))
-            ch = UnicodeChars::MultiplicationSign;
+            ch = OperatorChars::MulCrossSign;
     }
     return text;
 }
@@ -146,8 +147,8 @@ inline bool isExpressionOperatorOrSeparator(const QChar& ch)
 {
     return ch == QLatin1Char('+')
            || ch == UnicodeChars::MinusSign
-           || ch == UnicodeChars::MultiplicationSign
-           || ch == UnicodeChars::DotOperator
+           || ch == OperatorChars::MulCrossSign
+           || ch == OperatorChars::MulDotSign
            || ch == QLatin1Char('/')
            || ch == QLatin1Char('%')
            || ch == QLatin1Char('^')
@@ -184,8 +185,8 @@ inline bool expressionWithoutIgnorableTrailingToken(const QString& text, QString
     const bool isPlusMinusTail =
         (last == QLatin1Char('+') || isSubtractionOperatorAlias(last));
     const bool isMultiplicationTail =
-        (last == UnicodeChars::MultiplicationSign
-         || last == UnicodeChars::DotOperator
+        (last == OperatorChars::MulCrossSign
+         || last == OperatorChars::MulDotSign
          || isMultiplicationOperatorAlias(last, true));
 
     if (last != QLatin1Char('(')
@@ -220,16 +221,16 @@ inline bool expressionWithoutIgnorableTrailingToken(const QString& text, QString
         if (i >= 0) {
             const QChar prev = trimmed.at(i);
             const bool prevIsMultiplication =
-                (prev == UnicodeChars::MultiplicationSign
-                 || prev == UnicodeChars::DotOperator
+                (prev == OperatorChars::MulCrossSign
+                 || prev == OperatorChars::MulDotSign
                  || isMultiplicationOperatorAlias(prev, true));
             if (prevIsMultiplication) {
                 --i;
                 if (i >= 0) {
                     const QChar prevPrev = trimmed.at(i);
                     const bool prevPrevIsMultiplication =
-                        (prevPrev == UnicodeChars::MultiplicationSign
-                         || prevPrev == UnicodeChars::DotOperator
+                        (prevPrev == OperatorChars::MulCrossSign
+                         || prevPrev == OperatorChars::MulDotSign
                          || isMultiplicationOperatorAlias(prevPrev, true));
                     if (prevPrevIsMultiplication)
                         return false;
