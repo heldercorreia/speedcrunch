@@ -816,7 +816,6 @@ const QList<Unit> Units::getList()
 
     // Energy units.
     addUnit("electronvolt", electronvolt(), "eV");
-    addUnit("electron_volt", electronvolt());
     addUnit("calorie", calorie(), "cal", NoSiPrefixes);
     addUnit("british_thermal_unit", british_thermal_unit(), "BTU", NoSiPrefixes);
     Quantity hartreeEnergy = HNumber("4.3597447222060e-18") * joule();

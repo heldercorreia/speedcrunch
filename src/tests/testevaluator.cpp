@@ -792,6 +792,8 @@ void test_units_short_aliases_and_si_prefixes()
     CHECK_EVAL("[mg] -> [gram]", "0.001 gram");
     CHECK_EVAL("[megaelectronvolt] -> [electronvolt]", "1000000 electronvolt");
     CHECK_EVAL("[MeV] -> [eV]", "1000000 eV");
+    CHECK_EVAL_FAIL("[electron_volt]");
+    CHECK_EVAL_FAIL("[megaelectron_volt]");
     CHECK_EVAL("[picovolt] -> [volt]", "0.000000000001 volt");
     CHECK_EVAL("[pV] -> [volt]", "0.000000000001 volt");
     CHECK_EVAL("[a] -> [m2]", "100 m2");
