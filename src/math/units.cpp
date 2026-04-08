@@ -258,6 +258,36 @@ void Units::findUnit(Quantity& q)
             if (exponent == QLatin1String("^-7")) return QString::fromUtf8("⁻⁷");
             if (exponent == QLatin1String("^-8")) return QString::fromUtf8("⁻⁸");
             if (exponent == QLatin1String("^-9")) return QString::fromUtf8("⁻⁹");
+            if (exponent.startsWith(QLatin1Char('^'))
+                && !exponent.contains(QLatin1Char('(')))
+            {
+                QString superscript;
+                superscript.reserve(exponent.size());
+                for (int i = 1; i < exponent.size(); ++i) {
+                    const QChar ch = exponent.at(i);
+                    if (ch == QLatin1Char('-')) {
+                        superscript += QChar(0x207B); // ⁻
+                    } else if (ch >= QLatin1Char('0') && ch <= QLatin1Char('9')) {
+                        static const QChar superscriptDigits[] = {
+                            QChar(0x2070), // 0
+                            QChar(0x00B9), // 1
+                            QChar(0x00B2), // 2
+                            QChar(0x00B3), // 3
+                            QChar(0x2074), // 4
+                            QChar(0x2075), // 5
+                            QChar(0x2076), // 6
+                            QChar(0x2077), // 7
+                            QChar(0x2078), // 8
+                            QChar(0x2079)  // 9
+                        };
+                        superscript += superscriptDigits[ch.unicode() - '0'];
+                    } else {
+                        return exponent;
+                    }
+                }
+                if (!superscript.isEmpty())
+                    return superscript;
+            }
             return exponent;
         };
 
@@ -784,7 +814,7 @@ QString Units::shortDisplayName(const QString& name)
     while (suffixStart > 0) {
         const QChar ch = trimmed.at(suffixStart - 1);
         const bool isSuperscriptDigit =
-            ch == QChar(0x00B2) || ch == QChar(0x00B3)
+            ch == QChar(0x00B9) || ch == QChar(0x00B2) || ch == QChar(0x00B3)
             || (ch.unicode() >= 0x2070 && ch.unicode() <= 0x2079);
         const bool isSuperscriptSign = ch == QChar(0x207B) || ch == QChar(0x207A);
         if (!isSuperscriptDigit && !isSuperscriptSign)
