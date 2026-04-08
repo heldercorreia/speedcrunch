@@ -128,6 +128,16 @@ static QString normalizeTypedTextForSquareBracketContext(QString text)
     return text;
 }
 
+static Tokens scanForCompletionContext(Evaluator* evaluator,
+                                       const QString& text,
+                                       bool squareBracketContext)
+{
+    Tokens tokens = evaluator->scan(text);
+    if (!tokens.valid() && squareBracketContext)
+        tokens = evaluator->scan(text + QLatin1Char(']'));
+    return tokens;
+}
+
 static QString formattedLiveResult(const Quantity& quantity, char resultFormat = '\0')
 {
     return DisplayFormatUtils::applyDigitGroupingForDisplay(
@@ -668,7 +678,11 @@ QString Editor::getKeyword() const
 {
     // Tokenize the expression.
     const int currentPosition = textCursor().position();
-    const Tokens tokens = m_evaluator->scan(text());
+    const bool unitContextAtCursor = isInsideUnmatchedSquareBracketContext(text(), currentPosition);
+    const Tokens tokens = scanForCompletionContext(
+        m_evaluator,
+        text(),
+        unitContextAtCursor);
 
     // Find the token at the cursor.
     for (int i = tokens.size() - 1; i >= 0; --i) {
@@ -677,7 +691,7 @@ QString Editor::getKeyword() const
             continue;
         if (token.isIdentifier() || token.isUnitIdentifier()) {
             const QString tokenText = token.text();
-            const auto matches = matchFragment(tokenText, token.isUnitIdentifier());
+            const auto matches = matchFragment(tokenText, unitContextAtCursor);
 
             // Prefer an exact identifier match under cursor; prefix matches
             // are only a fallback for partial identifiers.
@@ -708,16 +722,26 @@ void Editor::triggerAutoComplete()
     // Tokenize the expression (this is very fast).
     const int currentPosition = textCursor().position();
     auto subtext = text().left(currentPosition);
-    const auto tokens = m_evaluator->scan(subtext);
+    const bool unitContext = isInsideUnmatchedSquareBracketContext(text(), currentPosition);
+    const auto tokens = scanForCompletionContext(m_evaluator, subtext, unitContext);
     if (!tokens.valid() || tokens.count() < 1)
         return;
 
-    auto lastToken = tokens.at(tokens.count()-1);
-
-    // Last token must be an identifier-like token.
-    if (!lastToken.isIdentifier() && !lastToken.isUnitIdentifier())
-        return;
-    if (!lastToken.size())  // Invisible unit token
+    Token lastToken;
+    bool foundIdentifierToken = false;
+    for (int i = tokens.count() - 1; i >= 0; --i) {
+        const Token candidate = tokens.at(i);
+        if (!candidate.isIdentifier() && !candidate.isUnitIdentifier())
+            continue;
+        if (!candidate.size())
+            continue;
+        if (candidate.pos() > subtext.length())
+            continue;
+        lastToken = candidate;
+        foundIdentifierToken = true;
+        break;
+    }
+    if (!foundIdentifierToken)
         return;
     const auto id = lastToken.text();
     if (id.length() < 1)
@@ -727,7 +751,6 @@ void Editor::triggerAutoComplete()
     if (lastToken.pos() + lastToken.size() < subtext.length())
         return;
 
-    const bool unitContext = lastToken.isUnitIdentifier();
     QStringList choices(matchFragment(id, unitContext));
 
     // If we are assigning a user function, find matches in its arguments names
@@ -773,18 +796,30 @@ void Editor::autoComplete(const QString& item)
         return;
 
     const int currentPosition = textCursor().position();
+    const bool unitContext = isInsideUnmatchedSquareBracketContext(text(), currentPosition);
     const auto subtext = text().left(currentPosition);
-    const auto tokens = m_evaluator->scan(subtext);
+    const auto tokens = scanForCompletionContext(m_evaluator, subtext, unitContext);
     if (!tokens.valid() || tokens.count() < 1)
         return;
 
-    const auto lastToken = tokens.at(tokens.count() - 1);
-    if (!lastToken.isIdentifier() && !lastToken.isUnitIdentifier())
+    Token lastToken;
+    bool foundIdentifierToken = false;
+    for (int i = tokens.count() - 1; i >= 0; --i) {
+        const Token candidate = tokens.at(i);
+        if (!candidate.isIdentifier() && !candidate.isUnitIdentifier())
+            continue;
+        if (!candidate.size())
+            continue;
+        if (candidate.pos() > subtext.length())
+            continue;
+        lastToken = candidate;
+        foundIdentifierToken = true;
+        break;
+    }
+    if (!foundIdentifierToken)
         return;
 
     const auto str = item.split(':');
-    const bool unitContext = lastToken.isUnitIdentifier();
-
     // Add leading space characters if any.
     auto newTokenText = str.at(0);
     if (unitContext)
