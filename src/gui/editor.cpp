@@ -96,6 +96,38 @@ static QString normalizeExpressionTypedInEditor(QString text)
     return EditorUtils::normalizeExpressionOperatorsForEditorInput(text);
 }
 
+static bool isInsideUnmatchedSquareBracketContext(const QString& text, int cursorPosition)
+{
+    int squareBracketDepth = 0;
+    const int safeCursorPosition = qBound(0, cursorPosition, text.size());
+    for (int i = 0; i < safeCursorPosition; ++i) {
+        const QChar ch = text.at(i);
+        if (ch == QLatin1Char('[')) {
+            ++squareBracketDepth;
+            continue;
+        }
+        if (ch == QLatin1Char(']') && squareBracketDepth > 0)
+            --squareBracketDepth;
+    }
+    return squareBracketDepth > 0;
+}
+
+static bool isTypedMultiplicationCharacter(const QChar& ch)
+{
+    return ch == OperatorChars::MulCrossSign
+           || ch == OperatorChars::MulDotSign
+           || EditorUtils::isMultiplicationOperatorAlias(ch, true);
+}
+
+static QString normalizeTypedTextForSquareBracketContext(QString text)
+{
+    for (QChar& ch : text) {
+        if (ch == QLatin1Char(' ') || isTypedMultiplicationCharacter(ch))
+            ch = OperatorChars::MulDotSign;
+    }
+    return text;
+}
+
 static QString formattedLiveResult(const Quantity& quantity, char resultFormat = '\0')
 {
     return DisplayFormatUtils::applyDigitGroupingForDisplay(
@@ -1130,6 +1162,9 @@ void Editor::inputMethodEvent(QInputMethodEvent* event)
 void Editor::keyPressEvent(QKeyEvent* event)
 {
     int key = event->key();
+    const bool squareBracketContext = isInsideUnmatchedSquareBracketContext(
+        text(),
+        textCursor().position());
 
     switch (key) {
     case Qt::Key_Tab:
@@ -1229,6 +1264,11 @@ void Editor::keyPressEvent(QKeyEvent* event)
             event->accept();
             return;
         }
+        if (event->modifiers() == Qt::NoModifier && squareBracketContext) {
+            insert(QString(OperatorChars::MulDotSign));
+            event->accept();
+            return;
+        }
         break;
 
     case Qt::Key_Period:
@@ -1241,6 +1281,22 @@ void Editor::keyPressEvent(QKeyEvent* event)
         break;
 
     case Qt::Key_Asterisk: {
+        if (squareBracketContext) {
+            auto position = textCursor().position();
+            if (position > 0
+                && (text().at(position - 1) == QLatin1Char('*')
+                    || text().at(position - 1) == OperatorChars::MulCrossSign
+                    || text().at(position - 1) == OperatorChars::MulDotSign)) {
+                auto cursor = textCursor();
+                cursor.removeSelectedText();
+                cursor.deletePreviousChar();
+                insert(QString::fromUtf8("^"));
+            } else {
+                insert(QString(OperatorChars::MulDotSign));
+            }
+            event->accept();
+            return;
+        }
         auto position = textCursor().position();
         if (position > 0
             && (text().at(position - 1) == QLatin1Char('*')
@@ -1304,8 +1360,11 @@ void Editor::keyPressEvent(QKeyEvent* event)
     }
 
     const QString normalizedText = normalizeExpressionTypedInEditor(event->text());
-    if (!normalizedText.isEmpty() && normalizedText != event->text()) {
-        insert(normalizedText);
+    const QString contextAdjustedText = squareBracketContext
+        ? normalizeTypedTextForSquareBracketContext(normalizedText)
+        : normalizedText;
+    if (!contextAdjustedText.isEmpty() && contextAdjustedText != event->text()) {
+        insert(contextAdjustedText);
         event->accept();
         return;
     }
