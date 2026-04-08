@@ -937,6 +937,75 @@ void test_units_grouping_and_inverse_presentation()
     CHECK_EVAL_FORMAT("[m^-1/s^2]", u8"1[m⁻¹⋅s⁻²]");
 }
 
+void test_units_preferred_derived_forms_regressions()
+{
+    // Derived units should remain intact (no base expansion).
+    CHECK_EVAL_FORMAT("5[N]", "5[N]");
+    CHECK_EVAL_FORMAT("12[J]", "12[J]");
+    CHECK_EVAL_FORMAT("3[W]", "3[W]");
+    CHECK_EVAL_FORMAT("9[Pa]", "9[Pa]");
+    CHECK_EVAL_FORMAT("2[V]", "2[V]");
+    CHECK_EVAL_FORMAT("7[ohm]", u8"7[Ω]");
+    CHECK_EVAL_FORMAT("4[F]", "4[F]");
+    CHECK_EVAL_FORMAT("6[H]", "6[H]");
+    CHECK_EVAL_FORMAT("8[T]", "8[T]");
+    CHECK_EVAL_FORMAT("1[Hz]", "1[Hz]");
+
+    // Combinations of derived units.
+    CHECK_EVAL_FORMAT("3[N*m]", u8"3[N⋅m]");
+    CHECK_EVAL_FORMAT("10[J*s]", u8"10[J⋅s]");
+    CHECK_EVAL_FORMAT("2[W*h]", u8"2[W⋅h]");
+    CHECK_EVAL_FORMAT("5[Pa*s]", u8"5[Pa⋅s]");
+    CHECK_EVAL_FORMAT("7[V*A]", "7[W]");
+    CHECK_EVAL_FORMAT("4[ohm*m]", u8"4[Ω⋅m]");
+    CHECK_EVAL_FORMAT("6[F*V]", "6[C]");
+    CHECK_EVAL_FORMAT("8[H*A]", "8[Wb]");
+    CHECK_EVAL_FORMAT("9[T*m^2]", "9[Wb]");
+
+    // Powers of derived units.
+    CHECK_EVAL_FORMAT("2[J^2]", u8"2[J²]");
+    CHECK_EVAL_FORMAT("4[N^3]", u8"4[N³]");
+    CHECK_EVAL_FORMAT("6[Pa^(-1)]", u8"6[Pa⁻¹]");
+    CHECK_EVAL_FORMAT("8[W^2]", u8"8[W²]");
+    CHECK_EVAL_FORMAT("3[V^3]", u8"3[V³]");
+    CHECK_EVAL_FORMAT("5[ohm^2]", u8"5[Ω²]");
+
+    // Mixed derived units should keep derived components.
+    CHECK_EVAL_FORMAT("5[J*Pa]", u8"5[J⋅Pa]");
+    CHECK_EVAL_FORMAT("7[N*W]", u8"7[N⋅W]");
+    CHECK_EVAL_FORMAT("3[V*Hz]", u8"3[V⋅Hz]");
+    CHECK_EVAL_FORMAT("9[ohm*F]", u8"9[Ω⋅F]");
+    CHECK_EVAL_FORMAT("2[T*H]", u8"2[T⋅H]");
+
+    // Expressions combining values should preserve derived units.
+    CHECK_EVAL_FORMAT("2[J] + 3[J]", "5[J]");
+    CHECK_EVAL_FORMAT("4[N] * 5[m]", u8"20[N⋅m]");
+    CHECK_EVAL_FORMAT("6[W] / 2[s]", u8"3[W / s]");
+    CHECK_EVAL_FORMAT("3[V] * 2[A]", "6[W]");
+    CHECK_EVAL_FORMAT("8[Pa] * 4[m^2]", "32[N]");
+
+    // Unit cancellation.
+    CHECK_EVAL("10[N] / 2[N]", "5");
+    CHECK_EVAL("6[J] / 3[J]", "2");
+    CHECK_EVAL("8[W] / 4[W]", "2");
+
+    // Prefer derived units over base expansion.
+    CHECK_EVAL_FORMAT("3[kg*m*s^(-2)]", "3[N]");
+    CHECK_EVAL_FORMAT("5[kg*m^2*s^(-2)]", "5[J]");
+    CHECK_EVAL_FORMAT("7[kg*m^(-1)*s^(-2)]", "7[Pa]");
+
+    // Avoid expanding when already in preferred derived form.
+    CHECK_EVAL_FORMAT("2[N*m]", u8"2[N⋅m]");
+    CHECK_EVAL_FORMAT("4[J/s]", "4[W]");
+    CHECK_EVAL_FORMAT("6[W*s]", u8"6[W⋅s]");
+
+    // Edge cases.
+    CHECK_EVAL_FORMAT("1[N*m/m]", "1[N]");
+    CHECK_EVAL_FORMAT("2[J/s]", "2[W]");
+    CHECK_EVAL_FORMAT("3[W*s/s]", "3[W]");
+    CHECK_EVAL_FORMAT("4[V*A/A]", "4[V]");
+}
+
 void test_binary()
 {
     test_binary_power_operator();
@@ -952,6 +1021,7 @@ void test_units()
     test_units_derived_si_recognition_and_disambiguation();
     test_units_conversion_compatibility_and_canonicalization();
     test_units_grouping_and_inverse_presentation();
+    test_units_preferred_derived_forms_regressions();
 }
 
 void test_percent_operator()

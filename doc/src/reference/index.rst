@@ -27,5 +27,10 @@ Constants
 
    constants
 
+Units
+-----
 
-.. TODO: What else needs to be documented? Units, I guess?
+.. toctree::
+   :maxdepth: 2
+
+   units

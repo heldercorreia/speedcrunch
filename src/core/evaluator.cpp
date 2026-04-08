@@ -164,6 +164,28 @@ static QHash<QString, Quantity> s_buildBuiltInUnitLookup(char angleMode)
         lookup.insert(u.name, unitValue);
     }
 
+    const auto insertDisplayed = [&](const QString& key,
+                                     const Quantity& value,
+                                     const QString& displayName) {
+        Quantity q(value);
+        q.setDisplayUnit(value.numericValue(), displayName);
+        lookup.insert(key, q);
+    };
+
+    // Preserve authored derived-unit symbols/aliases for readability.
+    insertDisplayed(QStringLiteral("J"), Units::joule(), QStringLiteral("joule"));
+    insertDisplayed(QStringLiteral("W"), Units::watt(), QStringLiteral("watt"));
+    insertDisplayed(QStringLiteral("V"), Units::volt(), QStringLiteral("volt"));
+    insertDisplayed(QStringLiteral("F"), Units::farad(), QStringLiteral("farad"));
+    insertDisplayed(QStringLiteral("H"), Units::henry(), QStringLiteral("henry"));
+    insertDisplayed(QStringLiteral("T"), Units::tesla(), QStringLiteral("tesla"));
+    insertDisplayed(QStringLiteral("N"), Units::newton(), QStringLiteral("newton"));
+    insertDisplayed(QStringLiteral("Pa"), Units::pascal(), QStringLiteral("pascal"));
+    insertDisplayed(QStringLiteral("ohm"), Units::ohm(), QStringLiteral("ohm"));
+    insertDisplayed(QString::fromUtf8("Ω"), Units::ohm(), QStringLiteral("ohm"));
+    insertDisplayed(QStringLiteral("s"), Units::second(), QStringLiteral("second"));
+    insertDisplayed(QStringLiteral("h"), Units::hour(), QStringLiteral("h"));
+
     {
         Quantity hz = Units::hertz();
         hz.setDisplayUnit(Units::hertz().numericValue(), "hertz");

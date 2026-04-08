@@ -78,17 +78,6 @@ SemanticUnitKind semanticUnitKind(const QString& unitName)
     return SemanticUnitKind::None;
 }
 
-bool isStickyDisplayUnit(const QString& unitName)
-{
-    const QString n = normalizeUnitName(unitName);
-    return n == QLatin1String("hertz")
-           || n == QLatin1String("hz")
-           || n == QLatin1String("becquerel")
-           || n == QLatin1String("bq")
-           || n == QLatin1String("gray")
-           || n == QLatin1String("sievert");
-}
-
 InformationUnitFamily informationUnitFamily(const QString& unitName)
 {
     QString n = unitName.trimmed();
@@ -149,6 +138,40 @@ QString normalizeDisplayUnitNameForOutput(const QString& unitName)
     return normalized;
 }
 
+QString composeProductUnitName(const QString& left, const QString& right)
+{
+    const QString l = left.trimmed();
+    const QString r = right.trimmed();
+    if (l.isEmpty())
+        return r;
+    if (r.isEmpty())
+        return l;
+    return l + QLatin1Char(' ') + r;
+}
+
+bool needsGroupingInQuotient(const QString& unitName)
+{
+    const QString n = unitName.trimmed();
+    return n.contains(QLatin1Char(' '))
+           || n.contains(QLatin1Char('*'))
+           || n.contains(QChar(0x22C5)) // ⋅
+           || n.contains(QChar(0x00D7)) // ×
+           || n.contains(QLatin1Char('/'));
+}
+
+QString composeQuotientUnitName(const QString& numerator, const QString& denominator)
+{
+    const QString n = numerator.trimmed();
+    QString d = denominator.trimmed();
+    if (n.isEmpty())
+        return d;
+    if (d.isEmpty())
+        return n;
+    if (needsGroupingInQuotient(d))
+        d = QLatin1Char('(') + d + QLatin1Char(')');
+    return n + QStringLiteral(" / ") + d;
+}
+
 QMap<QString, Rational> dimensionCandela()
 {
     QMap<QString, Rational> dim;
@@ -170,6 +193,13 @@ QMap<QString, Rational> dimensionSecond()
     return dim;
 }
 
+QMap<QString, Rational> dimensionAmpere()
+{
+    QMap<QString, Rational> dim;
+    dim.insert("el. current", Rational(1));
+    return dim;
+}
+
 QMap<QString, Rational> dimensionCubicMeter()
 {
     QMap<QString, Rational> dim;
@@ -181,6 +211,15 @@ QMap<QString, Rational> dimensionSquareMeter()
 {
     QMap<QString, Rational> dim;
     dim.insert("length", Rational(2));
+    return dim;
+}
+
+QMap<QString, Rational> dimensionPascal()
+{
+    QMap<QString, Rational> dim;
+    dim.insert("mass", Rational(1));
+    dim.insert("length", Rational(-1));
+    dim.insert("time", Rational(-2));
     return dim;
 }
 
@@ -208,6 +247,35 @@ QMap<QString, Rational> dimensionWatt()
     dim.insert("mass", Rational(1));
     dim.insert("length", Rational(2));
     dim.insert("time", Rational(-3));
+    return dim;
+}
+
+QMap<QString, Rational> dimensionVolt()
+{
+    QMap<QString, Rational> dim;
+    dim.insert("mass", Rational(1));
+    dim.insert("length", Rational(2));
+    dim.insert("time", Rational(-3));
+    dim.insert("el. current", Rational(-1));
+    return dim;
+}
+
+QMap<QString, Rational> dimensionFarad()
+{
+    QMap<QString, Rational> dim;
+    dim.insert("mass", Rational(-1));
+    dim.insert("length", Rational(-2));
+    dim.insert("time", Rational(4));
+    dim.insert("el. current", Rational(2));
+    return dim;
+}
+
+QMap<QString, Rational> dimensionTesla()
+{
+    QMap<QString, Rational> dim;
+    dim.insert("mass", Rational(1));
+    dim.insert("time", Rational(-2));
+    dim.insert("el. current", Rational(-1));
     return dim;
 }
 
@@ -691,10 +759,16 @@ Quantity Quantity::operator*(const Quantity& other) const
                        && isExactDimension(*this, dimensionCubicMeter())))
         {
             result.setDisplayUnit(this->unit() * other.unit(), "joule");
-        } else if ((n1 == QLatin1String("watt") && n2 == QLatin1String("second"))
-                   || (n2 == QLatin1String("watt") && n1 == QLatin1String("second"))
-                   || (isExactDimension(*this, dimensionWatt()) && isExactDimension(other, dimensionSecond()))
-                   || (isExactDimension(*this, dimensionSecond()) && isExactDimension(other, dimensionWatt())))
+        } else if ((n1 == QLatin1String("watt")
+                    && (n2 == QLatin1String("second") || n2 == QLatin1String("s")))
+                   || (n2 == QLatin1String("watt")
+                       && (n1 == QLatin1String("second") || n1 == QLatin1String("s")))
+                   || (isExactDimension(*this, dimensionWatt())
+                       && isExactDimension(other, dimensionSecond())
+                       && !other.hasUnit())
+                   || (isExactDimension(*this, dimensionSecond())
+                       && isExactDimension(other, dimensionWatt())
+                       && !this->hasUnit()))
         {
             // Keep W·s explicit by default: although dimensionally equal to J,
             // it often conveys time-integration context (power over time).
@@ -705,6 +779,50 @@ Quantity Quantity::operator*(const Quantity& other) const
                    || (n2 == QLatin1String("coulomb") && n1 == QLatin1String("volt")))
         {
             result.setDisplayUnit(this->unit() * other.unit(), "joule");
+        } else if ((isExactDimension(*this, dimensionVolt())
+                    && isExactDimension(other, dimensionSecond()))
+                   || (isExactDimension(other, dimensionVolt())
+                       && isExactDimension(*this, dimensionSecond())))
+        {
+            result.setDisplayUnit(this->unit() * other.unit(), "weber");
+        } else if ((isExactDimension(*this, dimensionVolt())
+                    && isExactDimension(other, dimensionAmpere()))
+                   || (isExactDimension(other, dimensionVolt())
+                       && isExactDimension(*this, dimensionAmpere())))
+        {
+            result.setDisplayUnit(this->unit() * other.unit(), "watt");
+        } else if ((isExactDimension(*this, dimensionWatt())
+                    && isExactDimension(other, dimensionVolt()))
+                   || (isExactDimension(other, dimensionWatt())
+                       && isExactDimension(*this, dimensionVolt())))
+        {
+            result.setDisplayUnit(this->unit() * other.unit(),
+                                  QString::fromUtf8("volt² ampere"));
+        } else if ((isExactDimension(*this, dimensionFarad())
+                    && isExactDimension(other, dimensionVolt()))
+                   || (isExactDimension(other, dimensionFarad())
+                       && isExactDimension(*this, dimensionVolt())))
+        {
+            result.setDisplayUnit(this->unit() * other.unit(), "coulomb");
+        } else if ((isExactDimension(*this, dimensionTesla())
+                    && isExactDimension(other, dimensionSquareMeter()))
+                   || (isExactDimension(other, dimensionTesla())
+                       && isExactDimension(*this, dimensionSquareMeter())))
+        {
+            result.setDisplayUnit(this->unit() * other.unit(), "weber");
+        } else if ((isExactDimension(*this, dimensionPascal())
+                    && isExactDimension(other, dimensionSquareMeter()))
+                   || (isExactDimension(other, dimensionPascal())
+                       && isExactDimension(*this, dimensionSquareMeter())))
+        {
+            result.setDisplayUnit(this->unit() * other.unit(), "newton");
+        } else if (this->hasUnit()
+                   && other.hasUnit()
+                   && !result.isDimensionless()
+                   && !(isExactDimension(*this, dimensionMeter())
+                        && isExactDimension(other, dimensionMeter()))) {
+            result.setDisplayUnit(this->unit() * other.unit(),
+                                  composeProductUnitName(this->unitName(), other.unitName()));
         } else if ((isSteradianUnitName(n1)
                     && isExactDimension(other, dimensionCandela()))
                    || (isSteradianUnitName(n2)
@@ -719,16 +837,6 @@ Quantity Quantity::operator*(const Quantity& other) const
         if (this->isDimensionless() && other.hasUnit()) {
             copyDisplayUnit(other);
         } else if (other.isDimensionless() && this->hasUnit()) {
-            copyDisplayUnit(*this);
-        } else if (!this->hasUnit()
-                   && other.hasUnit()
-                   && isStickyDisplayUnit(other.unitName()))
-        {
-            copyDisplayUnit(other);
-        } else if (this->hasUnit()
-                   && !other.hasUnit()
-                   && isStickyDisplayUnit(this->unitName()))
-        {
             copyDisplayUnit(*this);
         }
     }
@@ -798,11 +906,44 @@ Quantity Quantity::operator/(const Quantity& other) const
             return result;
         }
 
-        if (this->hasUnit()
-            && !other.hasUnit()
-            && isStickyDisplayUnit(this->unitName()))
+        if (isExactDimension(*this, dimensionJoule())
+            && isExactDimension(other, dimensionSecond()))
         {
-            copyDisplayUnit(*this);
+            result.setDisplayUnit(this->unit() / other.unit(), "watt");
+            return result;
+        }
+
+        if (this->hasUnit() && other.hasUnit() && !result.isDimensionless()) {
+            Quantity canonical(result);
+            canonical.cleanDimension();
+            Units::findUnit(canonical);
+            const QString canonicalName = normalizeUnitName(canonical.unitName());
+            if (canonicalName == QLatin1String("newton")
+                || canonicalName == QLatin1String("joule")
+                || canonicalName == QLatin1String("watt")
+                || canonicalName == QLatin1String("pascal")
+                || canonicalName == QLatin1String("coulomb")
+                || canonicalName == QLatin1String("volt")
+                || canonicalName == QLatin1String("ohm")
+                || canonicalName == QLatin1String("siemens")
+                || canonicalName == QLatin1String("farad")
+                || canonicalName == QLatin1String("weber")
+                || canonicalName == QLatin1String("tesla")
+                || canonicalName == QLatin1String("henry")
+                || canonicalName == QLatin1String("hertz")
+                || canonicalName == QLatin1String("becquerel")
+                || canonicalName == QLatin1String("gray")
+                || canonicalName == QLatin1String("sievert")
+                || canonicalName == QLatin1String("katal")
+                || canonicalName == QLatin1String("lumen")
+                || canonicalName == QLatin1String("lux"))
+            {
+                result.setDisplayUnit(canonical.unit(), canonical.unitName());
+            } else {
+                result.setDisplayUnit(this->unit() / other.unit(),
+                                      composeQuotientUnitName(this->unitName(), other.unitName()));
+            }
+            return result;
         }
     } else if (this->hasUnit()) {
         copyDisplayUnit(*this);
