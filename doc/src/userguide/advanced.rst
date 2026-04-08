@@ -212,7 +212,8 @@ set of units, consider defining additional aliases::
 Built-in short forms include:
 
 * Length/astronomy: ``au`` (``astronomical_unit``), ``ly`` (``lightyear``),
-  ``ls`` (``lightsecond``), ``lmin`` (``lightminute``), ``pc`` (``parsec``).
+  ``ls`` (``lightsecond``), ``lmin`` (``lightminute``), ``pc`` (``parsec``),
+  ``in`` (``inch``), ``ft`` (``foot``).
 * Time: ``min`` (``minute``), ``h`` (``hour``), ``cy`` (``century``).
 * Information: ``b`` (``bit``), ``B`` (``byte``).
 * Other common aliases: ``u``/``Da`` (``atomic_mass_unit``), ``nmi`` (``nautical_mile``).

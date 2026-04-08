@@ -753,7 +753,7 @@ const QList<Unit> Units::getList()
     addUnit("lightsecond", lightsecond(), "ls", NoSiPrefixes);
     addUnit("lightminute", lightminute(), "lmin", NoSiPrefixes);
     addUnit("parsec", parsec(), "pc", PositiveSiPrefixes);
-    addUnit("inch", inch(), QString(), NoSiPrefixes);
+    addUnit("inch", inch(), "in", NoSiPrefixes);
     addUnit("foot", foot(), "ft", NoSiPrefixes);
     addUnit("yard", yard(), "yd", NoSiPrefixes);
     addUnit("mile", mile(), "mi", NoSiPrefixes);

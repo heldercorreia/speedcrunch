@@ -782,6 +782,9 @@ void test_units_short_aliases_and_si_prefixes()
     CHECK_EVAL("[a]", u8"100 meter²");
     CHECK_EVAL("[ha]", u8"10000 meter²");
     CHECK_EVAL("[daa]", u8"1000 meter²");
+    CHECK_EVAL("[in]", "0.0254 meter");
+    CHECK_EVAL("[foot] -> [in]", "12 in");
+    CHECK_EVAL("[in] -> [inch]", "1 inch");
 
     CHECK_EVAL("[kilometer] -> [meter]", "1000 meter");
     CHECK_EVAL("[km] -> [meter]", "1000 meter");
