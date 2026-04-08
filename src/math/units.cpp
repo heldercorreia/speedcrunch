@@ -86,6 +86,19 @@ const QList<QPair<QString, QString>>& s_siPrefixSymbols()
     return prefixes;
 }
 
+bool shouldAddSiPrefixedShortAlias(const QString& prefixSymbol, const QString& unitShortName)
+{
+    if (prefixSymbol != QLatin1String("da") && prefixSymbol != QLatin1String("h"))
+        return true;
+
+    const QString alias = prefixSymbol + unitShortName;
+    return alias == QLatin1String("hPa")
+           || alias == QLatin1String("hm")
+           || alias == QLatin1String("hL")
+           || alias == QLatin1String("hl")
+           || alias == QLatin1String("dag");
+}
+
 bool isUnitIdentifierChar(const QChar& ch)
 {
     return ch.isLetterOrNumber() || ch == QChar('_')
@@ -716,9 +729,11 @@ const QList<Unit> Units::getList()
                 continue;
             const Quantity prefixedValue = prefix.value * unit.value;
             addUnique(prefix.longName + unit.longName, prefixedValue);
-            if (!unit.shortName.isEmpty())
+            if (!unit.shortName.isEmpty()
+                && shouldAddSiPrefixedShortAlias(prefix.symbol, unit.shortName))
                 addUnique(prefix.symbol + unit.shortName, prefixedValue);
-            if (!unit.alternateShortName.isEmpty())
+            if (!unit.alternateShortName.isEmpty()
+                && shouldAddSiPrefixedShortAlias(prefix.symbol, unit.alternateShortName))
                 addUnique(prefix.symbol + unit.alternateShortName, prefixedValue);
         }
     }

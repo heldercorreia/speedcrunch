@@ -784,6 +784,14 @@ void test_units_short_aliases_and_si_prefixes()
     CHECK_EVAL_FAIL("uB -> byte");
     CHECK_EVAL("kB -> byte", "1000 byte");
     CHECK_EVAL("MB -> byte", "1000000 byte");
+    CHECK_EVAL_FAIL("daB -> byte");
+    CHECK_EVAL_FAIL("dab -> bit");
+    CHECK_EVAL_FAIL("hB -> byte");
+    CHECK_EVAL_FAIL("hb -> bit");
+    CHECK_EVAL("hl -> liter", "100 liter");
+    CHECK_EVAL("hL -> liter", "100 liter");
+    CHECK_EVAL("dag -> gram", "10 gram");
+    CHECK_EVAL("dag -> kilogram", "0.01 kilogram");
     CHECK_EVAL("KiB -> byte", "1024 byte");
     CHECK_EVAL("MiB -> byte", "1048576 byte");
     CHECK_EVAL("GiB -> byte", "1073741824 byte");
@@ -823,6 +831,9 @@ void test_units_short_aliases_and_si_prefixes()
     CHECK_EVAL("km -> meter", "1000 meter");
     CHECK_EVAL("kpc -> parsec", "1000 parsec");
     CHECK_EVAL("Mpc -> parsec", "1000000 parsec");
+    CHECK_EVAL("hm -> meter", "100 meter");
+    CHECK_EVAL_FAIL("hV -> volt");
+    CHECK_EVAL("hPa -> pascal", "100 pascal");
     CHECK_EVAL("1 century -> year_julian", "100 year_julian");
     CHECK_EVAL("1 cy -> year_julian", "100 year_julian");
     CHECK_EVAL("1 cy -> day", "36525 day");
