@@ -135,6 +135,52 @@ static bool isRightOfCaretWithOnlySpaces(const QString& text, int cursorPosition
     return i >= 0 && text.at(i) == QLatin1Char('^');
 }
 
+static QChar previousNonSpaceChar(const QString& text, int cursorPosition)
+{
+    int i = qBound(0, cursorPosition, text.size()) - 1;
+    while (i >= 0 && text.at(i).isSpace())
+        --i;
+    return i >= 0 ? text.at(i) : QChar();
+}
+
+static bool isRightOfBlockedSpaceOperatorsWithOnlySpaces(const QString& text, int cursorPosition)
+{
+    const QChar ch = previousNonSpaceChar(text, cursorPosition);
+    return ch == QLatin1Char('^')
+           || ch == OperatorChars::AdditionSign
+           || ch == OperatorChars::SubtractionSign
+           || ch == QLatin1Char('(')
+           || ch == QLatin1Char(')')
+           || ch == QLatin1Char('[')
+           || ch == QLatin1Char(']')
+           || ch == OperatorChars::DivisionSign
+           || ch == OperatorChars::MulDotSign
+           || ch == OperatorChars::MulCrossSign;
+}
+
+static bool isInsideCommentFromQuestionMark(const QString& text, int cursorPosition)
+{
+    const int safeCursorPosition = qBound(0, cursorPosition, text.size());
+    for (int i = safeCursorPosition - 1; i >= 0; --i) {
+        const QChar ch = text.at(i);
+        if (ch == QLatin1Char('?'))
+            return true;
+        if (ch == QLatin1Char('\n') || ch == QLatin1Char('\r'))
+            return false;
+    }
+    return false;
+}
+
+static bool hasOnlyWhitespaceToLeft(const QString& text, int cursorPosition)
+{
+    const int safeCursorPosition = qBound(0, cursorPosition, text.size());
+    for (int i = 0; i < safeCursorPosition; ++i) {
+        if (!text.at(i).isSpace())
+            return false;
+    }
+    return true;
+}
+
 static QString normalizeTypedTextForSquareBracketContext(QString text)
 {
     for (QChar& ch : text) {
@@ -1323,6 +1369,17 @@ void Editor::keyPressEvent(QKeyEvent* event)
                     &ConstantCompletion::canceledCompletion,
                     this, &Editor::cancelConstantCompletion);
             m_constantCompletion->showCompletion();
+            event->accept();
+            return;
+        }
+        if (event->modifiers() == Qt::NoModifier
+            && hasOnlyWhitespaceToLeft(text(), textCursor().position())) {
+            event->accept();
+            return;
+        }
+        if (event->modifiers() == Qt::NoModifier
+            && !isInsideCommentFromQuestionMark(text(), textCursor().position())
+            && isRightOfBlockedSpaceOperatorsWithOnlySpaces(text(), textCursor().position())) {
             event->accept();
             return;
         }
