@@ -4376,6 +4376,111 @@ void test_expression_operator_normalization()
         }
     }
 
+    const QString implicitMulWithOpeningParAfterDigit =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QStringLiteral("2"), 1, QStringLiteral("("));
+    {
+        const QString expected = QString(OperatorChars::MulDotSpace)
+            + QString(OperatorChars::MulDotSign)
+            + QString(OperatorChars::MulDotSpace)
+            + QStringLiteral("(");
+        ++eval_total_tests;
+        if (implicitMulWithOpeningParAfterDigit != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped implicit multiplication before opening par after digit\t[NEW]" << endl
+                 << "\tResult   : " << implicitMulWithOpeningParAfterDigit.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString implicitMulWithOpeningBracketAfterLetterAndSpaces =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QString::fromUtf8("β   "), 4, QStringLiteral("["));
+    {
+        const QString expected = QString(OperatorChars::MulDotSpace)
+            + QString(OperatorChars::MulDotSign)
+            + QString(OperatorChars::MulDotSpace)
+            + QStringLiteral("[");
+        ++eval_total_tests;
+        if (implicitMulWithOpeningBracketAfterLetterAndSpaces != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped implicit multiplication before opening bracket after non-latin letter and spaces\t[NEW]" << endl
+                 << "\tResult   : " << implicitMulWithOpeningBracketAfterLetterAndSpaces.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString implicitMulWithOpeningParAfterSuperscriptAndSpaces =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QString::fromUtf8("2³   "), 5, QStringLiteral("("));
+    {
+        const QString expected = QString(OperatorChars::MulDotSpace)
+            + QString(OperatorChars::MulDotSign)
+            + QString(OperatorChars::MulDotSpace)
+            + QStringLiteral("(");
+        ++eval_total_tests;
+        if (implicitMulWithOpeningParAfterSuperscriptAndSpaces != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped implicit multiplication before opening par after superscript and spaces\t[NEW]" << endl
+                 << "\tResult   : " << implicitMulWithOpeningParAfterSuperscriptAndSpaces.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString noImplicitMulWithOpeningParAfterOperator =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QStringLiteral("2+"), 2, QStringLiteral("("));
+    {
+        const QString expected = QStringLiteral("(");
+        ++eval_total_tests;
+        if (noImplicitMulWithOpeningParAfterOperator != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\tno implicit multiplication before opening par after operator\t[NEW]" << endl
+                 << "\tResult   : " << noImplicitMulWithOpeningParAfterOperator.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString noImplicitMulWithLetterAfterLetter =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QStringLiteral("ab"), 2, QStringLiteral("c"));
+    {
+        const QString expected = QStringLiteral("c");
+        ++eval_total_tests;
+        if (noImplicitMulWithLetterAfterLetter != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\tno implicit multiplication with letter typed after letter\t[NEW]" << endl
+                 << "\tResult   : " << noImplicitMulWithLetterAfterLetter.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString noImplicitMulWithDigitAfterLetter =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QStringLiteral("a"), 1, QStringLiteral("2"));
+    {
+        const QString expected = QStringLiteral("2");
+        ++eval_total_tests;
+        if (noImplicitMulWithDigitAfterLetter != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\tno implicit multiplication with digit typed after letter\t[NEW]" << endl
+                 << "\tResult   : " << noImplicitMulWithDigitAfterLetter.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
     const QString scientificNotationWithLowerE =
         EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
             QStringLiteral("2"), 1, QStringLiteral("e"));

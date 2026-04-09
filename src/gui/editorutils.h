@@ -161,14 +161,28 @@ inline QString adjustedTypedTextForImplicitMultiplicationAfterDigit(
         return typedText;
 
     const QChar typed = typedText.at(0);
-    if (!typed.isLetter())
-        return typedText;
-    if (typed == QLatin1Char('e') || typed == QLatin1Char('E'))
-        return typedText;
+    if (typed.isLetter()) {
+        if (typed == QLatin1Char('e') || typed == QLatin1Char('E'))
+            return typedText;
+        const QChar prev = text.at(cursorPosition - 1);
+        if (!prev.isDigit() && !OperatorChars::isSuperscriptDigit(prev))
+            return typedText;
+    } else if (typed == QLatin1Char('(') || typed == QLatin1Char('[')) {
+        int i = cursorPosition - 1;
+        while (i >= 0 && text.at(i).isSpace())
+            --i;
+        if (i < 0)
+            return typedText;
 
-    const QChar prev = text.at(cursorPosition - 1);
-    if (!prev.isDigit() && !OperatorChars::isSuperscriptDigit(prev))
+        const QChar prevNonSpace = text.at(i);
+        if (!prevNonSpace.isDigit()
+            && !OperatorChars::isSuperscriptDigit(prevNonSpace)
+            && !prevNonSpace.isLetter()) {
+            return typedText;
+        }
+    } else {
         return typedText;
+    }
 
     return QString(OperatorChars::MulDotSpace)
            + QString(OperatorChars::MulDotSign)

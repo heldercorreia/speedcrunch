@@ -182,6 +182,36 @@ static bool isRightOfBlockedSpaceOperatorsWithOnlySpaces(const QString& text, in
            || ch == OperatorChars::MulCrossSign;
 }
 
+static bool isAfterFunctionIdentifierWithOnlySpaces(Evaluator* evaluator,
+                                                     const QString& text,
+                                                     int cursorPosition)
+{
+    if (!evaluator)
+        return false;
+
+    const int safeCursorPosition = qBound(0, cursorPosition, text.size());
+    int i = safeCursorPosition - 1;
+    while (i >= 0 && text.at(i).isSpace())
+        --i;
+    if (i < 0)
+        return false;
+
+    const QString leftText = text.left(i + 1);
+    const Tokens leftTokens = evaluator->scan(leftText);
+    if (!leftTokens.valid() || leftTokens.isEmpty())
+        return false;
+
+    const Token lastToken = leftTokens.at(leftTokens.size() - 1);
+    if (!lastToken.isIdentifier())
+        return false;
+    if (lastToken.pos() + lastToken.size() != leftText.size())
+        return false;
+
+    const QString identifier = lastToken.text();
+    return FunctionRepo::instance()->find(identifier)
+           || evaluator->hasUserFunction(identifier);
+}
+
 static bool isInsideCommentFromQuestionMark(const QString& text, int cursorPosition)
 {
     const int safeCursorPosition = qBound(0, cursorPosition, text.size());
@@ -1303,12 +1333,29 @@ void Editor::keyPressEvent(QKeyEvent* event)
         text(),
         textCursor().position());
 
-    if (event->text() == QLatin1String("[")
+    const auto implicitMulPrefixForTypedChar = [this](QChar typedChar) {
+        const QString typedText(typedChar);
+        const QString adjusted =
+            EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+                text(),
+                textCursor().position(),
+                typedText);
+        if (adjusted.size() > typedText.size() && adjusted.endsWith(typedText))
+            return adjusted.left(adjusted.size() - typedText.size());
+        return QString();
+    };
+
+    if ((event->text() == QLatin1String("[") || key == Qt::Key_BracketLeft)
         && !textCursor().hasSelection()) {
         QTextCursor cursor = textCursor();
         const int position = cursor.position();
-        cursor.insertText(QStringLiteral("[]"));
-        cursor.setPosition(position + 1);
+        const bool shouldInsertValueUnitSpace =
+            !implicitMulPrefixForTypedChar(QLatin1Char('[')).isEmpty();
+        const QString prefix = shouldInsertValueUnitSpace
+            ? QString(OperatorChars::ValueUnitSpace)
+            : QString();
+        cursor.insertText(prefix + QStringLiteral("[]"));
+        cursor.setPosition(position + prefix.size() + 1);
         setTextCursor(cursor);
         event->accept();
         return;
@@ -1527,6 +1574,17 @@ void Editor::keyPressEvent(QKeyEvent* event)
         {
             QTextCursor cursor = textCursor();
             const int position = cursor.position();
+            if (isAfterFunctionIdentifierWithOnlySpaces(
+                    m_evaluator,
+                    text(),
+                    position)) {
+                cursor.insertText(QStringLiteral("()"));
+                cursor.setPosition(position + 1);
+                setTextCursor(cursor);
+                event->accept();
+                return;
+            }
+            const QString implicitMulPrefix = implicitMulPrefixForTypedChar(QLatin1Char('('));
             const QString rightText = text().mid(position);
             const bool isAtEndOfExpression = rightText.trimmed().isEmpty();
 
@@ -1543,8 +1601,15 @@ void Editor::keyPressEvent(QKeyEvent* event)
             }
 
             if (isAtEndOfExpression || isBeforeOperator || isBeforeClosingPar) {
-                cursor.insertText(QStringLiteral("()"));
-                cursor.setPosition(position + 1);
+                cursor.insertText(implicitMulPrefix + QStringLiteral("()"));
+                cursor.setPosition(position + implicitMulPrefix.size() + 1);
+                setTextCursor(cursor);
+                event->accept();
+                return;
+            }
+
+            if (!implicitMulPrefix.isEmpty()) {
+                cursor.insertText(implicitMulPrefix + QStringLiteral("("));
                 setTextCursor(cursor);
                 event->accept();
                 return;
