@@ -38,14 +38,14 @@ NumberFormatDialog::NumberFormatDialog(QWidget* parent)
     addStyle(Settings::NumberFormatThreeDigitCommaDot, QStringLiteral("1,234,567.12345"));
     addStyle(Settings::NumberFormatThreeDigitDotComma, QStringLiteral("1.234.567,12345"));
     addStyle(Settings::NumberFormatThreeDigitSpaceDot, QStringLiteral("1 234 567.12345"));
-    addStyle(Settings::NumberFormatSIDot, QStringLiteral("1 234 567.123 45"));
     addStyle(Settings::NumberFormatThreeDigitSpaceComma, QStringLiteral("1 234 567,12345"));
+    addStyle(Settings::NumberFormatSIDot, QStringLiteral("1 234 567.123 45"));
     addStyle(Settings::NumberFormatSIComma, QStringLiteral("1 234 567,123 45"));
     addStyle(Settings::NumberFormatThreeDigitCommaDotFraction, QStringLiteral("1,234,567.123,45"));
-    addStyle(Settings::NumberFormatThreeDigitDotCommaFraction, QStringLiteral("1.234.567,123,45"));
+    addStyle(Settings::NumberFormatThreeDigitDotCommaFraction, QStringLiteral("1.234.567,123.45"));
     addStyle(Settings::NumberFormatThreeDigitUnderscoreDot, QStringLiteral("1_234_567.12345"));
-    addStyle(Settings::NumberFormatThreeDigitUnderscoreDotFraction, QStringLiteral("1_234_567.123_45"));
     addStyle(Settings::NumberFormatThreeDigitUnderscoreComma, QStringLiteral("1_234_567,12345"));
+    addStyle(Settings::NumberFormatThreeDigitUnderscoreDotFraction, QStringLiteral("1_234_567.123_45"));
     addStyle(Settings::NumberFormatThreeDigitUnderscoreCommaFraction, QStringLiteral("1_234_567,123_45"));
     addStyle(Settings::NumberFormatIndianCommaDot, QStringLiteral("12,34,567.12345"));
     layout->addWidget(m_styles);

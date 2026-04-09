@@ -1499,6 +1499,75 @@ void test_tolerant_number_input_with_dot_style()
     settings->applyNumberFormatStyle();
 }
 
+void test_number_format_style_behavior_all_supported_styles()
+{
+    struct NumberFormatBehaviorCase {
+        Settings::NumberFormatStyle style;
+        QString displayExpected;
+    };
+
+    const NumberFormatBehaviorCase cases[] = {
+        {Settings::NumberFormatNoGroupingDot, QStringLiteral("1234567.12345")},
+        {Settings::NumberFormatNoGroupingComma, QStringLiteral("1234567,12345")},
+        {Settings::NumberFormatThreeDigitCommaDot, QStringLiteral("1,234,567.12345")},
+        {Settings::NumberFormatThreeDigitDotComma, QStringLiteral("1.234.567,12345")},
+        {Settings::NumberFormatThreeDigitSpaceDot, QStringLiteral("1 234 567.12345")},
+        {Settings::NumberFormatSIDot, QStringLiteral("1 234 567.123 45")},
+        {Settings::NumberFormatThreeDigitSpaceComma, QStringLiteral("1 234 567,12345")},
+        {Settings::NumberFormatSIComma, QStringLiteral("1 234 567,123 45")},
+        {Settings::NumberFormatThreeDigitCommaDotFraction, QStringLiteral("1,234,567.123,45")},
+        {Settings::NumberFormatThreeDigitDotCommaFraction, QStringLiteral("1.234.567,123.45")},
+        {Settings::NumberFormatThreeDigitUnderscoreDot, QStringLiteral("1_234_567.12345")},
+        {Settings::NumberFormatThreeDigitUnderscoreDotFraction, QStringLiteral("1_234_567.123_45")},
+        {Settings::NumberFormatThreeDigitUnderscoreComma, QStringLiteral("1_234_567,12345")},
+        {Settings::NumberFormatThreeDigitUnderscoreCommaFraction, QStringLiteral("1_234_567,123_45")},
+        {Settings::NumberFormatIndianCommaDot, QStringLiteral("12,34,567.12345")}
+    };
+
+    Settings* settings = Settings::instance();
+    const Settings::NumberFormatStyle oldNumberFormatStyle = settings->numberFormatStyle;
+
+    auto checkValue = [&](const QString& label, const QString& actual, const QString& expected, int style) {
+        ++eval_total_tests;
+        if (actual != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\t" << label.toUtf8().constData() << "\t[NEW]" << endl
+                 << "\tStyle    : " << style << endl
+                 << "\tResult   : " << actual.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    };
+
+    for (const auto& item : cases) {
+        settings->numberFormatStyle = item.style;
+        settings->applyNumberFormatStyle();
+
+        checkValue(
+            QStringLiteral("style display sample formatting"),
+            DisplayFormatUtils::applyDigitGroupingForDisplay(QStringLiteral("1234567.12345")),
+            item.displayExpected,
+            static_cast<int>(item.style));
+
+        eval->setExpression(QStringLiteral("1234567.12345"));
+        Quantity evaluated = eval->evalUpdateAns();
+        QString exact = NumberFormatter::format(evaluated);
+        exact.replace(QString::fromUtf8("−"), "-");
+
+        QString exactExpected = QStringLiteral("1234567");
+        exactExpected += QChar(settings->decimalSeparator());
+        exactExpected += QStringLiteral("12345");
+        checkValue(
+            QStringLiteral("style selected exact evaluation formatting"),
+            exact,
+            exactExpected,
+            static_cast<int>(item.style));
+    }
+
+    settings->numberFormatStyle = oldNumberFormatStyle;
+    settings->applyNumberFormatStyle();
+}
+
 void test_tolerant_number_input_all_styles()
 {
     Settings* settings = Settings::instance();
@@ -5534,6 +5603,7 @@ int main(int argc, char* argv[])
     test_number_format_decimal_separator();
     test_number_format_styles_matrix();
     test_tolerant_number_input_with_dot_style();
+    test_number_format_style_behavior_all_supported_styles();
     test_tolerant_number_input_all_styles();
     test_settings_default_result_line_behavior();
     test_extra_result_lines_profile_formatting();
