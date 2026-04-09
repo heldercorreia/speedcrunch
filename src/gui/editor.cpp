@@ -489,6 +489,22 @@ void Editor::doBackspace()
     setTextCursor(cursor);
 }
 
+void Editor::doDelete()
+{
+    QTextCursor cursor = textCursor();
+
+    if (!cursor.hasSelection()
+        && isBeforeGroupedSpacedOperator(toPlainText(), cursor.position())) {
+        cursor.setPosition(cursor.position() + 3, QTextCursor::KeepAnchor);
+        cursor.removeSelectedText();
+        setTextCursor(cursor);
+        return;
+    }
+
+    cursor.deleteChar();
+    setTextCursor(cursor);
+}
+
 char Editor::radixChar() const
 {
     return Settings::instance()->radixCharacter();
@@ -1503,6 +1519,23 @@ void Editor::keyPressEvent(QKeyEvent* event)
             return;
         }
         doBackspace();
+        event->accept();
+        return;
+    case Qt::Key_Delete:
+        if (event->matches(QKeySequence::DeleteEndOfWord)) {
+            // Preserve word-delete shortcuts (platform-dependent Alt/Ctrl+Del),
+            // but still treat grouped spaced operators as a single unit.
+            if (!textCursor().hasSelection()
+                && isBeforeGroupedSpacedOperator(text(), textCursor().position())) {
+                doDelete();
+                event->accept();
+                return;
+            }
+            QPlainTextEdit::keyPressEvent(event);
+            event->accept();
+            return;
+        }
+        doDelete();
         event->accept();
         return;
 

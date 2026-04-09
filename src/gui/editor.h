@@ -53,6 +53,7 @@ public:
     void clearHistory();
     int cursorPosition() const;
     void doBackspace();
+    void doDelete();
     char radixChar() const;
     void setAutoCalcEnabled(bool);
     void setAutoCompletionEnabled(bool);
