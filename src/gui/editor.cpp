@@ -119,6 +119,30 @@ static bool isTypedMultiplicationCharacter(const QChar& ch)
            || EditorUtils::isMultiplicationOperatorAlias(ch, true);
 }
 
+static bool isAfterGroupedSpacedOperator(const QString& text, int cursorPosition)
+{
+    if (cursorPosition < 3 || cursorPosition > text.size())
+        return false;
+
+    const QChar leftSpace = text.at(cursorPosition - 3);
+    const QChar sign = text.at(cursorPosition - 2);
+    const QChar rightSpace = text.at(cursorPosition - 1);
+
+    const auto matches = [leftSpace, sign, rightSpace](QChar expectedSpace, QChar expectedSign) {
+        return leftSpace == expectedSpace
+               && sign == expectedSign
+               && rightSpace == expectedSpace;
+    };
+
+    // Keep display-formatted binary operators atomic for Backspace when the
+    // cursor is exactly after "<space><operator><space>".
+    return matches(OperatorChars::MulDotSpace, OperatorChars::MulDotSign)
+           || matches(OperatorChars::MulCrossSpace, OperatorChars::MulCrossSign)
+           || matches(OperatorChars::AdditionSpace, OperatorChars::AdditionSign)
+           || matches(OperatorChars::SubtractionSpace, OperatorChars::SubtractionSign)
+           || matches(OperatorChars::DivisionSpace, OperatorChars::DivisionSign);
+}
+
 static bool isRightOfOpeningSquareBracketWithOnlySpaces(const QString& text, int cursorPosition)
 {
     int i = qBound(0, cursorPosition, text.size()) - 1;
@@ -405,6 +429,15 @@ void Editor::insert(const QString& text)
 void Editor::doBackspace()
 {
     QTextCursor cursor = textCursor();
+
+    if (!cursor.hasSelection()
+        && isAfterGroupedSpacedOperator(toPlainText(), cursor.position())) {
+        cursor.setPosition(cursor.position() - 3, QTextCursor::KeepAnchor);
+        cursor.removeSelectedText();
+        setTextCursor(cursor);
+        return;
+    }
+
     cursor.deletePreviousChar();
     setTextCursor(cursor);
 }
@@ -1361,6 +1394,24 @@ void Editor::keyPressEvent(QKeyEvent* event)
         checkMatching();
         checkAutoCalc();
         QPlainTextEdit::keyPressEvent(event);
+        event->accept();
+        return;
+
+    case Qt::Key_Backspace:
+        if (event->matches(QKeySequence::DeleteStartOfWord)) {
+            // Preserve word-delete shortcuts (platform-dependent Alt/Ctrl+BS),
+            // but still treat grouped spaced operators as a single unit.
+            if (!textCursor().hasSelection()
+                && isAfterGroupedSpacedOperator(text(), textCursor().position())) {
+                doBackspace();
+                event->accept();
+                return;
+            }
+            QPlainTextEdit::keyPressEvent(event);
+            event->accept();
+            return;
+        }
+        doBackspace();
         event->accept();
         return;
 

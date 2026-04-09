@@ -3596,12 +3596,7 @@ void MainWindow::handleKeypadButtonPress(Keypad::Button b)
     case Keypad::KeyRightPar: insertTextIntoEditor(")"); break;
     case Keypad::KeyRaise: insertTextIntoEditor("^"); break;
     case Keypad::KeyBackspace: {
-        QTextCursor cursor = m_widgets.editor->textCursor();
-        if (cursor.hasSelection())
-            cursor.removeSelectedText();
-        else
-            cursor.deletePreviousChar();
-        m_widgets.editor->setTextCursor(cursor);
+        m_widgets.editor->doBackspace();
         if (!isActiveWindow())
             activateWindow();
         m_widgets.editor->setFocus();
@@ -3644,12 +3639,7 @@ void MainWindow::handleCustomKeypadButtonPress(int action, const QString& text)
         insertTextIntoEditor(text);
         break;
     case Settings::CustomKeypadActionBackspace: {
-        QTextCursor cursor = m_widgets.editor->textCursor();
-        if (cursor.hasSelection())
-            cursor.removeSelectedText();
-        else
-            cursor.deletePreviousChar();
-        m_widgets.editor->setTextCursor(cursor);
+        m_widgets.editor->doBackspace();
         if (!isActiveWindow())
             activateWindow();
         m_widgets.editor->setFocus();
