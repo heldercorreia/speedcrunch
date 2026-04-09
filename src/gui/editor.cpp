@@ -160,6 +160,21 @@ static bool isBeforeGroupedSpacedOperator(const QString& text, int cursorPositio
     return isGroupedSpacedOperator(leftSpace, sign, rightSpace);
 }
 
+static int groupedSpacedOperatorStartAround(const QString& text, int cursorPosition)
+{
+    // Detect whether the cursor is currently at/inside a grouped
+    // "<space><operator><space>" triplet and return its first index.
+    // We probe up to two chars to the left so positions on the sign or
+    // right-space are still recognized as belonging to the same group.
+    if (isBeforeGroupedSpacedOperator(text, cursorPosition))
+        return cursorPosition;
+    if (cursorPosition > 0 && isBeforeGroupedSpacedOperator(text, cursorPosition - 1))
+        return cursorPosition - 1;
+    if (cursorPosition > 1 && isBeforeGroupedSpacedOperator(text, cursorPosition - 2))
+        return cursorPosition - 2;
+    return -1;
+}
+
 static bool isRightOfOpeningSquareBracketWithOnlySpaces(const QString& text, int cursorPosition)
 {
     int i = qBound(0, cursorPosition, text.size()) - 1;
@@ -1469,16 +1484,28 @@ void Editor::keyPressEvent(QKeyEvent* event)
 
     case Qt::Key_Left:
     case Qt::Key_Right:
-        if (!(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))) {
-            QTextCursor cursor = textCursor();
+        {
+            const bool isModifiedNavigation =
+                event->modifiers() & (Qt::AltModifier | Qt::ControlModifier | Qt::MetaModifier);
             const bool keepAnchor = event->modifiers() & Qt::ShiftModifier;
-            if (keepAnchor || !cursor.hasSelection()) {
+            QTextCursor cursor = textCursor();
+            if (!isModifiedNavigation && (keepAnchor || !cursor.hasSelection())) {
+                // Plain left/right movement should keep grouped spaced
+                // operators atomic, so single-step arrows do not stop
+                // inside "<space><operator><space>".
                 const int position = cursor.position();
                 int newPosition = -1;
-                if (key == Qt::Key_Left && isAfterGroupedSpacedOperator(text(), position))
-                    newPosition = position - 3;
-                else if (key == Qt::Key_Right && isBeforeGroupedSpacedOperator(text(), position))
-                    newPosition = position + 3;
+                if (key == Qt::Key_Left) {
+                    if (isAfterGroupedSpacedOperator(text(), position))
+                        newPosition = position - 3;
+                    else if (isAfterGroupedSpacedOperator(text(), position + 1))
+                        newPosition = position - 2;
+                } else if (key == Qt::Key_Right) {
+                    if (isBeforeGroupedSpacedOperator(text(), position))
+                        newPosition = position + 3;
+                    else if (position > 0 && isBeforeGroupedSpacedOperator(text(), position - 1))
+                        newPosition = position + 2;
+                }
 
                 if (newPosition >= 0) {
                     cursor.setPosition(newPosition, keepAnchor ? QTextCursor::KeepAnchor : QTextCursor::MoveAnchor);
@@ -1489,10 +1516,39 @@ void Editor::keyPressEvent(QKeyEvent* event)
                     return;
                 }
             }
+            const int oldPosition = textCursor().position();
+            QPlainTextEdit::keyPressEvent(event);
+            cursor = textCursor();
+            int newPosition = cursor.position();
+            if (isModifiedNavigation && newPosition != oldPosition) {
+                // Alt/Ctrl/Meta navigation uses native Qt word movement first.
+                // Then, if that move lands at/inside a grouped spaced operator,
+                // snap to the nearest valid side of the triplet to keep it
+                // atomic without changing normal word-jump semantics.
+                const int groupStart = groupedSpacedOperatorStartAround(text(), newPosition);
+                if (groupStart >= 0) {
+                    if (key == Qt::Key_Right && newPosition > oldPosition) {
+                        // Use strict-side comparison so repeated Alt+Right does
+                        // not get stuck at the same boundary.
+                        newPosition = (oldPosition < groupStart)
+                            ? groupStart
+                            : groupStart + 3;
+                    } else if (key == Qt::Key_Left && newPosition < oldPosition) {
+                        // Use strict-side comparison so repeated Alt+Left keeps
+                        // progressing past grouped operators.
+                        newPosition = (oldPosition > groupStart + 3)
+                            ? groupStart + 3
+                            : groupStart;
+                    }
+                }
+                if (newPosition != cursor.position()) {
+                    cursor.setPosition(newPosition, keepAnchor ? QTextCursor::KeepAnchor : QTextCursor::MoveAnchor);
+                    setTextCursor(cursor);
+                }
+            }
         }
         checkMatching();
         checkAutoCalc();
-        QPlainTextEdit::keyPressEvent(event);
         event->accept();
         return;
 
