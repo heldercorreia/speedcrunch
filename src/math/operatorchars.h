@@ -38,6 +38,54 @@ inline constexpr QChar DivisionSpace = UnicodeChars::Space;
 inline constexpr QChar MulDotSpace = UnicodeChars::Space;
 inline constexpr QChar MulCrossSpace = UnicodeChars::Space;
 inline constexpr QChar ValueUnitSpace = UnicodeChars::NoBreakSpace;
+inline constexpr QChar SuperscriptPlus(0x207A);
+inline constexpr QChar SuperscriptMinus(0x207B);
+
+inline bool isSuperscriptDigit(const QChar& ch)
+{
+    switch (ch.unicode()) {
+    case 0x00B9: // ¹
+    case 0x00B2: // ²
+    case 0x00B3: // ³
+    case 0x2070: // ⁰
+    case 0x2074: // ⁴
+    case 0x2075: // ⁵
+    case 0x2076: // ⁶
+    case 0x2077: // ⁷
+    case 0x2078: // ⁸
+    case 0x2079: // ⁹
+        return true;
+    default:
+        return false;
+    }
+}
+
+inline bool isSuperscriptSign(const QChar& ch)
+{
+    return ch == SuperscriptMinus || ch == SuperscriptPlus;
+}
+
+inline bool isSuperscriptPowerChar(const QChar& ch)
+{
+    return isSuperscriptDigit(ch) || isSuperscriptSign(ch);
+}
+
+inline QChar superscriptDigitToAscii(const QChar& ch)
+{
+    switch (ch.unicode()) {
+    case 0x2070: return QLatin1Char('0'); // ⁰
+    case 0x00B9: return QLatin1Char('1'); // ¹
+    case 0x00B2: return QLatin1Char('2'); // ²
+    case 0x00B3: return QLatin1Char('3'); // ³
+    case 0x2074: return QLatin1Char('4'); // ⁴
+    case 0x2075: return QLatin1Char('5'); // ⁵
+    case 0x2076: return QLatin1Char('6'); // ⁶
+    case 0x2077: return QLatin1Char('7'); // ⁷
+    case 0x2078: return QLatin1Char('8'); // ⁸
+    case 0x2079: return QLatin1Char('9'); // ⁹
+    default: return QChar();
+    }
+}
 
 } // namespace OperatorChars
 

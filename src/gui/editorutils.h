@@ -143,6 +143,39 @@ inline QString normalizeExpressionOperatorsForEditorInput(QString text)
     return text;
 }
 
+inline bool shouldIgnoreTypedSpaceAfterDigit(const QString& text, int cursorPosition)
+{
+    if (cursorPosition <= 0 || cursorPosition > text.size())
+        return false;
+
+    const QChar prev = text.at(cursorPosition - 1);
+    return prev.isDigit() || OperatorChars::isSuperscriptDigit(prev);
+}
+
+inline QString adjustedTypedTextForImplicitMultiplicationAfterDigit(
+    const QString& text, int cursorPosition, const QString& typedText)
+{
+    if (typedText.size() != 1)
+        return typedText;
+    if (cursorPosition <= 0 || cursorPosition > text.size())
+        return typedText;
+
+    const QChar typed = typedText.at(0);
+    if (!typed.isLetter())
+        return typedText;
+    if (typed == QLatin1Char('e') || typed == QLatin1Char('E'))
+        return typedText;
+
+    const QChar prev = text.at(cursorPosition - 1);
+    if (!prev.isDigit() && !OperatorChars::isSuperscriptDigit(prev))
+        return typedText;
+
+    return QString(OperatorChars::MulDotSpace)
+           + QString(OperatorChars::MulDotSign)
+           + QString(OperatorChars::MulDotSpace)
+           + typedText;
+}
+
 inline bool isExpressionOperatorOrSeparator(const QChar& ch)
 {
     return ch == QLatin1Char('+')

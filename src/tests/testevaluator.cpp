@@ -4319,6 +4319,106 @@ void test_expression_operator_normalization()
                            "2·3 4·5 6×7 8/4 10/2 9/3 π π π π Ω µ √ ∛ asqrt cbrtfoo",
                            eval_failed_tests, eval_new_failed_tests);
 
+    const QString implicitMulWithLatinLetter =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QStringLiteral("2"), 1, QStringLiteral("a"));
+    {
+        const QString expected = QString(OperatorChars::MulDotSpace)
+            + QString(OperatorChars::MulDotSign)
+            + QString(OperatorChars::MulDotSpace)
+            + QStringLiteral("a");
+        ++eval_total_tests;
+        if (implicitMulWithLatinLetter != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped implicit multiplication after digit (latin)\t[NEW]" << endl
+                 << "\tResult   : " << implicitMulWithLatinLetter.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString implicitMulWithNonLatinLetter =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QString::fromUtf8("2"), 1, QString::fromUtf8("β"));
+    {
+        const QString expected = QString(OperatorChars::MulDotSpace)
+            + QString(OperatorChars::MulDotSign)
+            + QString(OperatorChars::MulDotSpace)
+            + QString::fromUtf8("β");
+        ++eval_total_tests;
+        if (implicitMulWithNonLatinLetter != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped implicit multiplication after digit (non-latin)\t[NEW]" << endl
+                 << "\tResult   : " << implicitMulWithNonLatinLetter.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString implicitMulWithSuperscriptDigit =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QString::fromUtf8("2³"), 2, QStringLiteral("x"));
+    {
+        const QString expected = QString(OperatorChars::MulDotSpace)
+            + QString(OperatorChars::MulDotSign)
+            + QString(OperatorChars::MulDotSpace)
+            + QStringLiteral("x");
+        ++eval_total_tests;
+        if (implicitMulWithSuperscriptDigit != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped implicit multiplication after superscript digit\t[NEW]" << endl
+                 << "\tResult   : " << implicitMulWithSuperscriptDigit.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString scientificNotationWithLowerE =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QStringLiteral("2"), 1, QStringLiteral("e"));
+    {
+        const QString expected = QStringLiteral("e");
+        ++eval_total_tests;
+        if (scientificNotationWithLowerE != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped scientific notation lower e exception\t[NEW]" << endl
+                 << "\tResult   : " << scientificNotationWithLowerE.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString scientificNotationWithUpperE =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QStringLiteral("2"), 1, QStringLiteral("E"));
+    {
+        const QString expected = QStringLiteral("E");
+        ++eval_total_tests;
+        if (scientificNotationWithUpperE != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped scientific notation upper E exception\t[NEW]" << endl
+                 << "\tResult   : " << scientificNotationWithUpperE.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    ++eval_total_tests;
+    if (!EditorUtils::shouldIgnoreTypedSpaceAfterDigit(QStringLiteral("2"), 1)
+        || !EditorUtils::shouldIgnoreTypedSpaceAfterDigit(QString::fromUtf8("2³"), 2)
+        || EditorUtils::shouldIgnoreTypedSpaceAfterDigit(QStringLiteral("2+"), 2)) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tignore typed space after digit/superscript\t[NEW]" << endl
+             << "\tResult   : mismatch" << endl
+             << "\tExpected : true,true,false" << endl;
+    }
+
     const QStringList parsedForEditor = EditorUtils::parsePastedExpressionsForEditorInput(
         QString::fromUtf8("2·3\n"
                           "4·5\n"

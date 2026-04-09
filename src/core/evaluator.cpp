@@ -48,7 +48,6 @@ static bool isSubscriptDigit(QChar ch);
 static bool isSubscriptLetter(QChar ch);
 static bool isIdentifierStart(QChar ch);
 static bool isIdentifierContinue(QChar ch);
-static bool isSuperscriptDigit(QChar ch);
 static QString superscriptDigitsToAscii(const QString& text);
 
 #ifdef EVALUATOR_DEBUG
@@ -195,10 +194,8 @@ static QString s_negateUnitFactorExponent(QString factor)
     int suffixStart = factor.size();
     while (suffixStart > 0) {
         const QChar ch = factor.at(suffixStart - 1);
-        const bool isSuperscriptDigit =
-            ch == QChar(0x00B9) || ch == QChar(0x00B2) || ch == QChar(0x00B3)
-            || (ch.unicode() >= 0x2070 && ch.unicode() <= 0x2079);
-        const bool isSuperscriptSign = ch == QChar(0x207B) || ch == QChar(0x207A);
+        const bool isSuperscriptDigit = OperatorChars::isSuperscriptDigit(ch);
+        const bool isSuperscriptSign = OperatorChars::isSuperscriptSign(ch);
         if (!isSuperscriptDigit && !isSuperscriptSign)
             break;
         --suffixStart;
@@ -1486,22 +1483,7 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
         return isIdentifierStart(ch);
     };
     auto isSuperscriptPowerChar = [](const QChar& ch) {
-        switch (ch.unicode()) {
-            case 0x207B: // ⁻
-            case 0x2070: // ⁰
-            case 0x00B9: // ¹
-            case 0x00B2: // ²
-            case 0x00B3: // ³
-            case 0x2074: // ⁴
-            case 0x2075: // ⁵
-            case 0x2076: // ⁶
-            case 0x2077: // ⁷
-            case 0x2078: // ⁸
-            case 0x2079: // ⁹
-                return true;
-            default:
-                return false;
-        }
+        return OperatorChars::isSuperscriptPowerChar(ch);
     };
 
     // Convert function-call powers from "f(x)²" to "f²(x)".
@@ -3601,43 +3583,13 @@ static bool isSubscriptDigit(QChar ch)
     return ch.unicode() >= 0x2080 && ch.unicode() <= 0x2089;
 }
 
-static bool isSuperscriptDigit(QChar ch)
-{
-    switch (ch.unicode()) {
-    case 0x2070: // ⁰
-    case 0x00B9: // ¹
-    case 0x00B2: // ²
-    case 0x00B3: // ³
-    case 0x2074: // ⁴
-    case 0x2075: // ⁵
-    case 0x2076: // ⁶
-    case 0x2077: // ⁷
-    case 0x2078: // ⁸
-    case 0x2079: // ⁹
-        return true;
-    default:
-        return false;
-    }
-}
-
 static QString superscriptDigitsToAscii(const QString& text)
 {
     QString converted;
     converted.reserve(text.size());
     for (const QChar& ch : text) {
-        switch (ch.unicode()) {
-        case 0x2070: converted.append(QLatin1Char('0')); break; // ⁰
-        case 0x00B9: converted.append(QLatin1Char('1')); break; // ¹
-        case 0x00B2: converted.append(QLatin1Char('2')); break; // ²
-        case 0x00B3: converted.append(QLatin1Char('3')); break; // ³
-        case 0x2074: converted.append(QLatin1Char('4')); break; // ⁴
-        case 0x2075: converted.append(QLatin1Char('5')); break; // ⁵
-        case 0x2076: converted.append(QLatin1Char('6')); break; // ⁶
-        case 0x2077: converted.append(QLatin1Char('7')); break; // ⁷
-        case 0x2078: converted.append(QLatin1Char('8')); break; // ⁸
-        case 0x2079: converted.append(QLatin1Char('9')); break; // ⁹
-        default: converted.append(ch); break;
-        }
+        const QChar asciiDigit = OperatorChars::superscriptDigitToAscii(ch);
+        converted.append(asciiDigit.isNull() ? ch : asciiDigit);
     }
     return converted;
 }
@@ -4134,7 +4086,7 @@ Tokens Evaluator::scan(const QString& expr) const
             ++identEnd;
 
         int superscriptEnd = identEnd;
-        while (superscriptEnd < ex.size() && isSuperscriptDigit(ex.at(superscriptEnd)))
+        while (superscriptEnd < ex.size() && OperatorChars::isSuperscriptDigit(ex.at(superscriptEnd)))
             ++superscriptEnd;
 
         if (superscriptEnd == identEnd) {
@@ -6473,22 +6425,7 @@ static void replaceSuperscriptPowersWithCaretEquivalent(QString& expr)
         return isIdentifierStart(ch);
     };
     auto isSuperscriptPowerChar = [](const QChar& ch) {
-        switch (ch.unicode()) {
-            case 0x207B: // ⁻
-            case 0x2070: // ⁰
-            case 0x00B9: // ¹
-            case 0x00B2: // ²
-            case 0x00B3: // ³
-            case 0x2074: // ⁴
-            case 0x2075: // ⁵
-            case 0x2076: // ⁶
-            case 0x2077: // ⁷
-            case 0x2078: // ⁸
-            case 0x2079: // ⁹
-                return true;
-            default:
-                return false;
-        }
+        return OperatorChars::isSuperscriptPowerChar(ch);
     };
 
     // Convert function-call powers from "f²(x)" to "f(x)²" so later conversion

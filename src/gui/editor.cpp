@@ -1390,6 +1390,11 @@ void Editor::keyPressEvent(QKeyEvent* event)
             event->accept();
             return;
         }
+        if (event->modifiers() == Qt::NoModifier
+            && EditorUtils::shouldIgnoreTypedSpaceAfterDigit(text(), textCursor().position())) {
+            event->accept();
+            return;
+        }
         if (event->modifiers() == Qt::NoModifier && squareBracketContext) {
             if (isRightOfOpeningSquareBracketWithOnlySpaces(
                     text(),
@@ -1505,9 +1510,14 @@ void Editor::keyPressEvent(QKeyEvent* event)
     }
 
     const QString normalizedText = normalizeExpressionTypedInEditor(event->text());
+    const QString implicitMulAdjustedText =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            text(),
+            textCursor().position(),
+            normalizedText);
     const QString contextAdjustedText = squareBracketContext
-        ? normalizeTypedTextForSquareBracketContext(normalizedText)
-        : normalizedText;
+        ? normalizeTypedTextForSquareBracketContext(implicitMulAdjustedText)
+        : implicitMulAdjustedText;
     if (!contextAdjustedText.isEmpty() && contextAdjustedText != event->text()) {
         insert(contextAdjustedText);
         event->accept();
