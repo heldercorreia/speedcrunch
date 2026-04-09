@@ -76,24 +76,11 @@ static bool s_isSigmaFunctionIdentifier(const QString& identifier)
 
 static QString s_toSuperscriptExponent(int exponent)
 {
-    static const QHash<QChar, QChar> superscriptDigits = {
-        { QLatin1Char('0'), QChar(0x2070) }, // ⁰
-        { QLatin1Char('1'), QChar(0x00B9) }, // ¹
-        { QLatin1Char('2'), QChar(0x00B2) }, // ²
-        { QLatin1Char('3'), QChar(0x00B3) }, // ³
-        { QLatin1Char('4'), QChar(0x2074) }, // ⁴
-        { QLatin1Char('5'), QChar(0x2075) }, // ⁵
-        { QLatin1Char('6'), QChar(0x2076) }, // ⁶
-        { QLatin1Char('7'), QChar(0x2077) }, // ⁷
-        { QLatin1Char('8'), QChar(0x2078) }, // ⁸
-        { QLatin1Char('9'), QChar(0x2079) }  // ⁹
-    };
-
     QString result;
     if (exponent < 0)
         result += QChar(0x207B); // ⁻
     for (const QChar& digit : QString::number(qAbs(exponent)))
-        result += superscriptDigits.value(digit, digit);
+        result += OperatorChars::asciiDigitToSuperscript(digit);
     return result;
 }
 
@@ -1438,19 +1425,6 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
 
     static const QRegularExpression powerRE(
         QStringLiteral(R"(\^(?:\(([−-]?)(\d+)\)|(\d+))(?![\p{L}\p{N}\.,_!]))"));
-    static const QHash<QChar, QChar> superscriptDigits = {
-        {QChar('0'), QChar(0x2070)},
-        {QChar('1'), QChar(0x00B9)},
-        {QChar('2'), QChar(0x00B2)},
-        {QChar('3'), QChar(0x00B3)},
-        {QChar('4'), QChar(0x2074)},
-        {QChar('5'), QChar(0x2075)},
-        {QChar('6'), QChar(0x2076)},
-        {QChar('7'), QChar(0x2077)},
-        {QChar('8'), QChar(0x2078)},
-        {QChar('9'), QChar(0x2079)},
-    };
-
     QString rendered;
     rendered.reserve(normalizedExpression.size());
     int lastPos = 0;
@@ -1469,7 +1443,7 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
         if (!sign.isEmpty())
             superscript += QChar(0x207B); // ⁻ SUPERSCRIPT MINUS.
         for (const QChar& digit : digits)
-            superscript += superscriptDigits.value(digit, digit);
+            superscript += OperatorChars::asciiDigitToSuperscript(digit);
         rendered += superscript;
 
         lastPos = match.capturedEnd();
@@ -4060,6 +4034,11 @@ Tokens Evaluator::scan(const QString& expr) const
     QString ex = UnicodeChars::normalizeUnitSymbolAliases(expr);
     ex.replace(UnicodeChars::Prime, QChar('\''));
     ex.replace(UnicodeChars::DoublePrime, QChar('"'));
+    // Accept editor-produced spacing in unit conversion aliases:
+    // "− >" or "- >" should tokenize as "->".
+    ex.replace(
+        QRegularExpression(QStringLiteral("([\\-−])\\s+>")),
+        QStringLiteral("->"));
     // Accept superscript shorthand aliases for unit symbols (m², mm³, etc.)
     // only inside explicit unit brackets.
     int superscriptUnitBracketDepth = 0;
@@ -6022,10 +6001,6 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     pushStackValue(val1);
                     break;
                 }
-                if (hasVariable(fname)) {
-                    pushStackValue(getVariable(fname).value());
-                    break;
-                }
                 m_error = "<b>" + fname + "</b>: " + tr("unknown unit");
                 return CMath::nan();
 
@@ -6710,6 +6685,10 @@ QString Evaluator::autoFix(const QString& expr)
 
     normalizeFunctionCaretPowers(result);
     replaceSuperscriptPowersWithCaretEquivalent(result);
+    // Treat an empty parenthesized exponent as a no-op, so expressions like
+    // "3^()" keep evaluating as "3" instead of raising a syntax error.
+    result.replace(QRegularExpression(QStringLiteral(R"(\^\s*\(\s*\))")),
+                   QString());
     result = UnicodeChars::normalizeUnitSymbolAliases(result);
     result = UnicodeChars::normalizeRootFunctionAliasesForDisplay(result);
 

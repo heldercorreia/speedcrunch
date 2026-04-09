@@ -131,7 +131,9 @@ static bool isGroupedSpacedOperator(QChar leftSpace, QChar sign, QChar rightSpac
            || matches(OperatorChars::MulCrossSpace, OperatorChars::MulCrossSign)
            || matches(OperatorChars::AdditionSpace, OperatorChars::AdditionSign)
            || matches(OperatorChars::SubtractionSpace, OperatorChars::SubtractionSign)
-           || matches(OperatorChars::DivisionSpace, OperatorChars::DivisionSign);
+           || matches(OperatorChars::DivisionSpace, OperatorChars::DivisionSign)
+           || matches(OperatorChars::SubtractionSpace, UnicodeChars::RightwardsArrow)
+           || matches(QLatin1Char(' '), QLatin1Char('?'));
 }
 
 static bool isAfterGroupedSpacedOperator(const QString& text, int cursorPosition)
@@ -172,6 +174,55 @@ static int groupedSpacedOperatorStartAround(const QString& text, int cursorPosit
         return cursorPosition - 1;
     if (cursorPosition > 1 && isBeforeGroupedSpacedOperator(text, cursorPosition - 2))
         return cursorPosition - 2;
+    return -1;
+}
+
+static bool isLeadingQuestionCommentToken(const QString& text)
+{
+    return text.size() >= 2
+           && text.at(0) == QLatin1Char('?')
+           && text.at(1) == QLatin1Char(' ');
+}
+
+static int groupedTokenLengthBefore(const QString& text, int cursorPosition)
+{
+    if (isAfterGroupedSpacedOperator(text, cursorPosition))
+        return 3;
+    if (cursorPosition >= 2
+        && cursorPosition <= text.size()
+        && cursorPosition - 2 == 0
+        && isLeadingQuestionCommentToken(text)) {
+        return 2;
+    }
+    return 0;
+}
+
+static int groupedTokenLengthAfter(const QString& text, int cursorPosition)
+{
+    if (isBeforeGroupedSpacedOperator(text, cursorPosition))
+        return 3;
+    if (cursorPosition == 0 && isLeadingQuestionCommentToken(text))
+        return 2;
+    return 0;
+}
+
+static int groupedTokenStartAround(const QString& text, int cursorPosition, int* tokenLength)
+{
+    const int tripletStart = groupedSpacedOperatorStartAround(text, cursorPosition);
+    if (tripletStart >= 0) {
+        if (tokenLength)
+            *tokenLength = 3;
+        return tripletStart;
+    }
+
+    if (isLeadingQuestionCommentToken(text)
+        && cursorPosition >= 0
+        && cursorPosition <= 2) {
+        if (tokenLength)
+            *tokenLength = 2;
+        return 0;
+    }
+
     return -1;
 }
 
@@ -273,6 +324,57 @@ static void replacePreviousOperatorAtCursorWithCaret(Editor* editor)
     editor->setTextCursor(cursor);
 }
 
+static void replacePreviousSubtractionAtCursorWithUnitConversion(Editor* editor)
+{
+    QTextCursor cursor = editor->textCursor();
+    const QString text = editor->text();
+    const int pos = cursor.position();
+    if (pos <= 0)
+        return;
+
+    int signPos = pos - 1;
+    while (signPos >= 0 && text.at(signPos).isSpace())
+        --signPos;
+    if (signPos < 0 || !EditorUtils::isSubtractionOperatorAlias(text.at(signPos)))
+        return;
+
+    int start = signPos;
+    int end = signPos + 1;
+
+    if (signPos > 0 && text.at(signPos - 1).isSpace())
+        start = signPos - 1;
+    if (signPos + 1 < pos && text.at(signPos + 1).isSpace())
+        end = signPos + 2;
+
+    cursor.setPosition(start);
+    cursor.setPosition(end, QTextCursor::KeepAnchor);
+    cursor.removeSelectedText();
+    const QString insertion =
+        QString(OperatorChars::SubtractionSpace)
+        + QString(UnicodeChars::RightwardsArrow)
+        + QString(OperatorChars::SubtractionSpace)
+        + QStringLiteral("[]");
+    cursor.insertText(insertion);
+    cursor.setPosition(start + insertion.size() - 1);
+    editor->setTextCursor(cursor);
+}
+
+static void insertUnitConversionAtCursorWithUnitPlaceholder(Editor* editor)
+{
+    QTextCursor cursor = editor->textCursor();
+    const int start = cursor.position();
+    QString insertion =
+        QString(OperatorChars::SubtractionSpace)
+        + QString(UnicodeChars::RightwardsArrow)
+        + QString(OperatorChars::SubtractionSpace)
+        + QStringLiteral("[]");
+    if (start > 0 && editor->text().at(start - 1).isSpace() && insertion.at(0).isSpace())
+        insertion.remove(0, 1);
+    cursor.insertText(insertion);
+    cursor.setPosition(start + insertion.size() - 1);
+    editor->setTextCursor(cursor);
+}
+
 static bool textContainsOnlyAdditionAliases(const QString& text)
 {
     if (text.isEmpty())
@@ -310,12 +412,32 @@ static bool textContainsOnlyCaretOperators(const QString& text)
     return true;
 }
 
-static bool isRightOfCaretWithOnlySpaces(const QString& text, int cursorPosition)
+static bool textContainsOnlyDivisionAliases(const QString& text)
 {
-    int i = qBound(0, cursorPosition, text.size()) - 1;
-    while (i >= 0 && text.at(i).isSpace())
-        --i;
-    return i >= 0 && text.at(i) == QLatin1Char('^');
+    if (text.isEmpty())
+        return false;
+    for (const QChar ch : text) {
+        if (!EditorUtils::isDivisionOperatorAlias(ch))
+            return false;
+    }
+    return true;
+}
+
+static bool textContainsOnlySubtractionAliases(const QString& text)
+{
+    const QString trimmed = text.trimmed();
+    if (trimmed.isEmpty())
+        return false;
+    for (const QChar ch : trimmed) {
+        if (!EditorUtils::isSubtractionOperatorAlias(ch))
+            return false;
+    }
+    return true;
+}
+
+static bool isDeadKey(int key)
+{
+    return key >= Qt::Key_Dead_Grave && key <= Qt::Key_Dead_Small_Schwa;
 }
 
 static QChar previousNonSpaceChar(const QString& text, int cursorPosition)
@@ -326,19 +448,41 @@ static QChar previousNonSpaceChar(const QString& text, int cursorPosition)
     return i >= 0 ? text.at(i) : QChar();
 }
 
-static bool isRightOfBlockedSpaceOperatorsWithOnlySpaces(const QString& text, int cursorPosition)
+static int previousNonSpaceIndex(const QString& text, int cursorPosition)
 {
-    const QChar ch = previousNonSpaceChar(text, cursorPosition);
-    return ch == QLatin1Char('^')
-           || ch == OperatorChars::AdditionSign
-           || ch == OperatorChars::SubtractionSign
-           || ch == QLatin1Char('(')
+    int i = qBound(0, cursorPosition, text.size()) - 1;
+    while (i >= 0 && text.at(i).isSpace())
+        --i;
+    return i;
+}
+
+static bool isExponentTailBeforeIndex(const QString& text, int index)
+{
+    if (index < 0 || index >= text.size())
+        return false;
+
+    const QChar ch = text.at(index);
+    if (OperatorChars::isSuperscriptPowerChar(ch))
+        return true;
+
+    if (!ch.isDigit())
+        return false;
+
+    int start = index;
+    while (start >= 0 && text.at(start).isDigit())
+        --start;
+    const int beforeDigits = previousNonSpaceIndex(text, start + 1);
+    if (beforeDigits < 0)
+        return false;
+    const QChar before = text.at(beforeDigits);
+    return isCaretOperatorAlias(before) || before == OperatorChars::SuperscriptMinus;
+}
+
+static bool isValidUnitExponentBase(const QChar& ch)
+{
+    return ch.isLetterOrNumber()
            || ch == QLatin1Char(')')
-           || ch == QLatin1Char('[')
-           || ch == QLatin1Char(']')
-           || ch == OperatorChars::DivisionSign
-           || ch == OperatorChars::MulDotSign
-           || ch == OperatorChars::MulCrossSign;
+           || ch == QLatin1Char(']');
 }
 
 static bool isAfterFunctionIdentifierWithOnlySpaces(Evaluator* evaluator,
@@ -355,7 +499,16 @@ static bool isAfterFunctionIdentifierWithOnlySpaces(Evaluator* evaluator,
     if (i < 0)
         return false;
 
-    const QString leftText = text.left(i + 1);
+    int identifierEnd = i + 1;
+    while (i >= 0 && OperatorChars::isSuperscriptPowerChar(text.at(i)))
+        --i;
+    if (i + 1 != identifierEnd) {
+        // Accept function-call notation with trailing superscript powers:
+        // cos³( -> cos³(), but keep non-functions (e.g. pi³) in implicit-mul mode.
+        identifierEnd = i + 1;
+    }
+
+    const QString leftText = text.left(identifierEnd);
     const Tokens leftTokens = evaluator->scan(leftText);
     if (!leftTokens.valid() || leftTokens.isEmpty())
         return false;
@@ -394,14 +547,209 @@ static bool hasOnlyWhitespaceToLeft(const QString& text, int cursorPosition)
     return true;
 }
 
+static bool hasAnyNonWhitespace(const QString& text)
+{
+    for (const QChar ch : text) {
+        if (!ch.isSpace())
+            return true;
+    }
+    return false;
+}
+
 static bool isAllowedUnitBracketChar(const QChar& ch)
 {
     return ch.isLetterOrNumber()
            || ch == QLatin1Char('(')
            || ch == QLatin1Char(')')
+           || ch == QLatin1Char(']')
            || ch == QLatin1Char('^')
+           || ch == OperatorChars::DivisionSign
            || ch == OperatorChars::MulDotSign
            || ch == OperatorChars::MulCrossSign;
+}
+
+static QString superscriptFromAsciiExponent(const QString& asciiExponent)
+{
+    QString superscript;
+    superscript.reserve(asciiExponent.size());
+    for (const QChar ch : asciiExponent) {
+        if (ch == QLatin1Char('+')) {
+            superscript += OperatorChars::SuperscriptPlus;
+            continue;
+        }
+        if (EditorUtils::isSubtractionOperatorAlias(ch)) {
+            superscript += OperatorChars::SuperscriptMinus;
+            continue;
+        }
+        const QChar superscriptDigit = OperatorChars::asciiDigitToSuperscript(ch);
+        if (superscriptDigit.isNull())
+            return QString();
+        superscript += superscriptDigit;
+    }
+    return superscript;
+}
+
+static bool rewriteTrailingAsciiUnitExponentToSuperscript(Editor* editor, const QString& suffix)
+{
+    QTextCursor cursor = editor->textCursor();
+    const QString current = editor->text();
+    const int cursorPos = cursor.position();
+    int pos = qBound(0, cursorPos, current.size()) - 1;
+    while (pos >= 0 && current.at(pos).isSpace())
+        --pos;
+    if (pos < 0 || !current.at(pos).isDigit())
+        return false;
+
+    int exponentStart = pos;
+    while (exponentStart >= 0 && current.at(exponentStart).isDigit())
+        --exponentStart;
+    ++exponentStart;
+
+    int caretPos = exponentStart - 1;
+    if (caretPos >= 1 && EditorUtils::isSubtractionOperatorAlias(current.at(caretPos))
+        && current.at(caretPos - 1) == QLatin1Char('^')) {
+        --caretPos;
+    }
+    if (caretPos < 0 || current.at(caretPos) != QLatin1Char('^'))
+        return false;
+
+    const QString asciiExponent = current.mid(caretPos + 1, pos - caretPos);
+    const QString superscript = superscriptFromAsciiExponent(asciiExponent);
+    if (superscript.isEmpty())
+        return false;
+
+    cursor.setPosition(caretPos);
+    cursor.setPosition(pos + 1, QTextCursor::KeepAnchor);
+    cursor.insertText(superscript + suffix);
+    editor->setTextCursor(cursor);
+    return true;
+}
+
+static bool appendSuffixAfterTrailingSuperscriptExponent(Editor* editor,
+                                                         const QString& suffix,
+                                                         const QString& numericBaseSuffix = QString())
+{
+    QTextCursor cursor = editor->textCursor();
+    const QString current = editor->text();
+    const int cursorPos = cursor.position();
+    int pos = qBound(0, cursorPos, current.size()) - 1;
+    while (pos >= 0 && current.at(pos).isSpace())
+        --pos;
+    if (pos < 0 || !OperatorChars::isSuperscriptPowerChar(current.at(pos)))
+        return false;
+
+    const int exponentEnd = pos;
+    while (pos >= 0 && OperatorChars::isSuperscriptPowerChar(current.at(pos)))
+        --pos;
+    if (pos < 0)
+        return false;
+
+    const QChar base = current.at(pos);
+    if (!base.isLetterOrNumber() && base != QLatin1Char(')') && base != QLatin1Char(']'))
+        return false;
+
+    const int insertPos = exponentEnd + 1;
+    cursor.setPosition(insertPos);
+    // Keep numeric-exponent products visually distinct: use the caller-provided
+    // numeric suffix (typically " × ") when the exponent base is numeric.
+    const QString chosenSuffix = (!numericBaseSuffix.isEmpty() && base.isDigit())
+        ? numericBaseSuffix
+        : suffix;
+    cursor.insertText(chosenSuffix);
+    editor->setTextCursor(cursor);
+    return true;
+}
+
+static bool rewriteTrailingSuperscriptExponentToParenthesizedAscii(Editor* editor, const QString& suffix)
+{
+    QTextCursor cursor = editor->textCursor();
+    const QString current = editor->text();
+    const int cursorPos = cursor.position();
+    int pos = qBound(0, cursorPos, current.size()) - 1;
+    while (pos >= 0 && current.at(pos).isSpace())
+        --pos;
+    if (pos < 0 || !OperatorChars::isSuperscriptPowerChar(current.at(pos)))
+        return false;
+
+    const int exponentEnd = pos;
+    while (pos >= 0 && OperatorChars::isSuperscriptPowerChar(current.at(pos)))
+        --pos;
+    if (pos < 0)
+        return false;
+
+    const QChar base = current.at(pos);
+    if (!base.isLetterOrNumber() && base != QLatin1Char(')') && base != QLatin1Char(']'))
+        return false;
+
+    const int exponentStart = pos + 1;
+    QString asciiExponent;
+    asciiExponent.reserve(exponentEnd - exponentStart + 1);
+    for (int i = exponentStart; i <= exponentEnd; ++i) {
+        const QChar ch = current.at(i);
+        if (OperatorChars::isSuperscriptDigit(ch)) {
+            const QChar asciiDigit = OperatorChars::superscriptDigitToAscii(ch);
+            if (asciiDigit.isNull())
+                return false;
+            asciiExponent += asciiDigit;
+            continue;
+        }
+        if (ch == OperatorChars::SuperscriptMinus) {
+            asciiExponent += QLatin1Char('-');
+            continue;
+        }
+        if (ch == OperatorChars::SuperscriptPlus) {
+            asciiExponent += QLatin1Char('+');
+            continue;
+        }
+        return false;
+    }
+    if (asciiExponent.isEmpty())
+        return false;
+
+    const QString replacement = QStringLiteral("^(%1%2)").arg(asciiExponent, suffix);
+    cursor.setPosition(exponentStart);
+    cursor.setPosition(exponentEnd + 1, QTextCursor::KeepAnchor);
+    cursor.insertText(replacement);
+    cursor.setPosition(exponentStart + replacement.size() - 1);
+    editor->setTextCursor(cursor);
+    return true;
+}
+
+static QString renderUnitAsciiExponentsAsSuperscripts(const QString& unitText)
+{
+    static const QRegularExpression exponentPattern(
+        QStringLiteral(R"(\^(?:\(([−-]?)(\d+)\)|([−-]?)(\d+)))"));
+
+    QString output;
+    output.reserve(unitText.size());
+    int lastPos = 0;
+    auto it = exponentPattern.globalMatch(unitText);
+    while (it.hasNext()) {
+        const QRegularExpressionMatch match = it.next();
+        output += unitText.mid(lastPos, match.capturedStart() - lastPos);
+
+        QString sign = match.captured(1);
+        QString digits = match.captured(2);
+        if (digits.isEmpty()) {
+            sign = match.captured(3);
+            digits = match.captured(4);
+        }
+
+        if (!sign.isEmpty() && sign != QLatin1String("-") && sign != QString(QChar(0x2212))) {
+            output += match.captured(0);
+        } else {
+            if (!sign.isEmpty())
+                output += OperatorChars::SuperscriptMinus;
+            for (const QChar ch : digits) {
+                const QChar superscript = OperatorChars::asciiDigitToSuperscript(ch);
+                output += superscript.isNull() ? ch : superscript;
+            }
+        }
+
+        lastPos = match.capturedEnd();
+    }
+    output += unitText.mid(lastPos);
+    return output;
 }
 
 static QString normalizeTypedTextForSquareBracketContext(const QString& surroundingText,
@@ -410,20 +758,156 @@ static QString normalizeTypedTextForSquareBracketContext(const QString& surround
 {
     QString normalized;
     normalized.reserve(text.size());
-    QChar previous = previousNonSpaceChar(surroundingText, cursorPosition);
+    const auto previousNonSpaceBefore = [](const QString& source, int fromExclusive) {
+        int i = qBound(0, fromExclusive, source.size()) - 1;
+        while (i >= 0 && source.at(i).isSpace())
+            --i;
+        return i >= 0 ? source.at(i) : QChar();
+    };
+
+    const int cursor = qBound(0, cursorPosition, surroundingText.size());
+    QChar previous = previousNonSpaceBefore(surroundingText, cursor);
+    int previousIndex = cursor - 1;
+    while (previousIndex >= 0 && surroundingText.at(previousIndex).isSpace())
+        --previousIndex;
+    QChar previousPrevious = previousNonSpaceBefore(surroundingText, previousIndex);
+    int previousPreviousIndex = previousIndex - 1;
+    while (previousPreviousIndex >= 0 && surroundingText.at(previousPreviousIndex).isSpace())
+        --previousPreviousIndex;
+    QChar previousThird = previousNonSpaceBefore(surroundingText, previousPreviousIndex);
+    const auto initialParenthesizedExponentDepth = [&]() {
+        int depth = 0;
+        const int end = qBound(0, cursorPosition, surroundingText.size());
+        for (int idx = 0; idx < end; ++idx) {
+            const QChar current = surroundingText.at(idx);
+            if (current == QLatin1Char('(')) {
+                const QChar beforeOpen = previousNonSpaceBefore(surroundingText, idx);
+                if (beforeOpen == QLatin1Char('^')) {
+                    ++depth;
+                } else if (depth > 0) {
+                    ++depth;
+                }
+            } else if (current == QLatin1Char(')') && depth > 0) {
+                --depth;
+            }
+        }
+        return depth;
+    };
+    int parenthesizedExponentDepth = initialParenthesizedExponentDepth();
 
     for (int i = 0; i < text.size(); ++i) {
         QChar ch = text.at(i);
 
-        if (EditorUtils::isAdditionOperatorAlias(ch)
-            || EditorUtils::isDivisionOperatorAlias(ch)) {
+        if (EditorUtils::isAdditionOperatorAlias(ch)) {
             return QString();
         }
 
+        if (EditorUtils::isDivisionOperatorAlias(ch))
+            ch = OperatorChars::DivisionSign;
+
         if (EditorUtils::isSubtractionOperatorAlias(ch)) {
-            if (previous != QLatin1Char('^'))
+            const bool afterExponentStart =
+                previous == QLatin1Char('^')
+                || previous == OperatorChars::SuperscriptMinus
+                || (previous == QLatin1Char('(') && previousPrevious == QLatin1Char('^'));
+            if (!afterExponentStart)
                 return QString();
             ch = OperatorChars::SubtractionSign;
+        }
+
+        if (ch.isLetter()) {
+            if (ch == QLatin1Char('e') || ch == QLatin1Char('E')) {
+                const bool inExponentTypingPosition =
+                    previous == QLatin1Char('^')
+                    || parenthesizedExponentDepth > 0
+                    || previousPrevious == QLatin1Char('^');
+                if (inExponentTypingPosition)
+                    return QString();
+            }
+
+            const bool rightAfterExponentStart =
+                previous == QLatin1Char('^')
+                || (previous == QLatin1Char('(') && previousPrevious == QLatin1Char('^'));
+            if (rightAfterExponentStart)
+                return QString();
+        }
+
+        if (previous == OperatorChars::DivisionSign) {
+            if (parenthesizedExponentDepth > 0) {
+                const bool isValidExponentDenominatorDigit = ch.isDigit();
+                if (!isValidExponentDenominatorDigit)
+                    return QString();
+            } else {
+                const bool isValidUnitDenominator =
+                    ch.isLetter() || ch == QLatin1Char('(');
+                if (!isValidUnitDenominator)
+                    return QString();
+            }
+        }
+
+        if (ch.isDigit()) {
+            const bool afterExponentStart =
+                previous == QLatin1Char('^')
+                || previous == OperatorChars::SuperscriptMinus
+                || (previous == QLatin1Char('(') && previousPrevious == QLatin1Char('^'));
+            const bool afterSignedExponentStart =
+                EditorUtils::isSubtractionOperatorAlias(previous)
+                && (previousPrevious == QLatin1Char('^')
+                    || (previousPrevious == QLatin1Char('(') && previousThird == QLatin1Char('^')));
+            const bool afterFractionSlashInParenthesizedExponent =
+                previous == OperatorChars::DivisionSign
+                && parenthesizedExponentDepth > 0;
+            const bool afterRadixInParenthesizedExponent =
+                previous == QLatin1Char('.')
+                && parenthesizedExponentDepth > 0;
+            if (!previous.isDigit()
+                && !afterExponentStart
+                && !afterSignedExponentStart
+                && !afterFractionSlashInParenthesizedExponent
+                && !afterRadixInParenthesizedExponent) {
+                return QString();
+            }
+        }
+
+        if (ch == QLatin1Char('.') || ch == QLatin1Char(',')) {
+            if (parenthesizedExponentDepth <= 0 || !previous.isDigit())
+                return QString();
+
+            int idx = normalized.size() - 1;
+            while (idx >= 0 && normalized.at(idx).isDigit())
+                --idx;
+            if (idx >= 0 && normalized.at(idx) == QLatin1Char('.'))
+                return QString();
+
+            ch = QLatin1Char('.');
+        }
+
+        if (ch == OperatorChars::DivisionSign) {
+            if (previous == OperatorChars::DivisionSign)
+                return QString();
+            if (previous == OperatorChars::MulDotSign
+                || previous == OperatorChars::MulCrossSign) {
+                return QString();
+            }
+            const bool afterExponentStart =
+                previous == QLatin1Char('^')
+                || previous == OperatorChars::SuperscriptMinus
+                || (previous == QLatin1Char('(') && previousPrevious == QLatin1Char('^'));
+            const bool afterSignedExponentStart =
+                EditorUtils::isSubtractionOperatorAlias(previous)
+                && (previousPrevious == QLatin1Char('^')
+                    || (previousPrevious == QLatin1Char('(') && previousThird == QLatin1Char('^')));
+            if (afterExponentStart || afterSignedExponentStart)
+                return QString();
+        }
+
+        if (ch == QLatin1Char('^')) {
+            const bool validExponentBase =
+                previous.isLetterOrNumber()
+                || previous == QLatin1Char(')')
+                || previous == QLatin1Char(']');
+            if (!validExponentBase)
+                return QString();
         }
 
         if (ch == QLatin1Char(' ')) {
@@ -444,8 +928,19 @@ static QString normalizeTypedTextForSquareBracketContext(const QString& surround
             return QString();
 
         normalized += ch;
-        if (!ch.isSpace())
+        if (!ch.isSpace()) {
+            if (ch == QLatin1Char('(')) {
+                if (previous == QLatin1Char('^'))
+                    ++parenthesizedExponentDepth;
+                else if (parenthesizedExponentDepth > 0)
+                    ++parenthesizedExponentDepth;
+            } else if (ch == QLatin1Char(')') && parenthesizedExponentDepth > 0) {
+                --parenthesizedExponentDepth;
+            }
+            previousThird = previousPrevious;
+            previousPrevious = previous;
             previous = ch;
+        }
     }
 
     return normalized;
@@ -663,6 +1158,19 @@ void Editor::insert(const QString& text)
     QString normalized = normalizeExpressionTypedInEditor(text);
     const QString normalizedTrimmed = normalized.trimmed();
     const int pos = textCursor().position();
+    const QString surroundingText = this->text();
+    const bool squareBracketContext = isInsideUnmatchedSquareBracketContext(
+        surroundingText,
+        pos);
+
+    if (squareBracketContext) {
+        normalized = normalizeTypedTextForSquareBracketContext(
+            surroundingText,
+            pos,
+            normalized);
+        if (normalized.isEmpty())
+            return;
+    }
 
     // Reject repeated exponent operators when the nearest left non-space is
     // already a caret operator, regardless of how caret is encoded.
@@ -698,9 +1206,11 @@ void Editor::doBackspace()
 {
     QTextCursor cursor = textCursor();
 
-    if (!cursor.hasSelection()
-        && isAfterGroupedSpacedOperator(toPlainText(), cursor.position())) {
-        cursor.setPosition(cursor.position() - 3, QTextCursor::KeepAnchor);
+    const int groupedLength = !cursor.hasSelection()
+        ? groupedTokenLengthBefore(toPlainText(), cursor.position())
+        : 0;
+    if (groupedLength > 0) {
+        cursor.setPosition(cursor.position() - groupedLength, QTextCursor::KeepAnchor);
         cursor.removeSelectedText();
         setTextCursor(cursor);
         return;
@@ -714,9 +1224,11 @@ void Editor::doDelete()
 {
     QTextCursor cursor = textCursor();
 
-    if (!cursor.hasSelection()
-        && isBeforeGroupedSpacedOperator(toPlainText(), cursor.position())) {
-        cursor.setPosition(cursor.position() + 3, QTextCursor::KeepAnchor);
+    const int groupedLength = !cursor.hasSelection()
+        ? groupedTokenLengthAfter(toPlainText(), cursor.position())
+        : 0;
+    if (groupedLength > 0) {
+        cursor.setPosition(cursor.position() + groupedLength, QTextCursor::KeepAnchor);
         cursor.removeSelectedText();
         setTextCursor(cursor);
         return;
@@ -1572,27 +2084,164 @@ void Editor::inputMethodEvent(QInputMethodEvent* event)
     const QString normalizedCommit = normalizeExpressionTypedInEditor(event->commitString());
     const QString normalizedPreedit = normalizeExpressionTypedInEditor(event->preeditString());
     const int cursorPosition = textCursor().position();
+    const bool squareBracketContext = isInsideUnmatchedSquareBracketContext(
+        text(),
+        cursorPosition);
     const QChar prev = previousNonSpaceChar(text(), cursorPosition);
+    const bool autoAnsEnabled = Settings::instance()->autoAns;
+    const bool atExpressionStart =
+        !textCursor().hasSelection()
+        && hasOnlyWhitespaceToLeft(text(), cursorPosition);
 
-    if (event->commitString().isEmpty()
-        && textContainsOnlyCaretOperators(normalizedPreedit)
-        && isCaretOperatorAlias(prev)) {
-        // Block dead-key/preedit caret echoes after an existing caret.
-        // Send an empty IME update so any pending preedit is cleared.
+    if (atExpressionStart) {
+        // Mirror keyPressEvent start-of-expression filtering for IME/dead-key
+        // commits and preedit text; otherwise composed symbols can still appear.
+        if (!normalizedCommit.isEmpty()) {
+            const bool allAllowed = std::all_of(
+                normalizedCommit.cbegin(),
+                normalizedCommit.cend(),
+                [autoAnsEnabled](const QChar& ch) {
+                    return EditorUtils::isAllowedLeadingCharAtExpressionStart(ch, autoAnsEnabled);
+                });
+            if (!allAllowed) {
+                event->accept();
+                return;
+            }
+        }
+        if (normalizedCommit.isEmpty() && !normalizedPreedit.isEmpty()) {
+            const bool allAllowedPreedit = std::all_of(
+                normalizedPreedit.cbegin(),
+                normalizedPreedit.cend(),
+                [autoAnsEnabled](const QChar& ch) {
+                    return EditorUtils::isAllowedLeadingCharAtExpressionStart(ch, autoAnsEnabled);
+                });
+            if (!allAllowedPreedit) {
+                QInputMethodEvent clearEvent;
+                QPlainTextEdit::inputMethodEvent(&clearEvent);
+                event->accept();
+                return;
+            }
+        }
+    }
+
+    if (squareBracketContext
+        && event->commitString().isEmpty()
+        && !normalizedPreedit.isEmpty()
+        && !textContainsOnlyCaretOperators(normalizedPreedit)) {
+        // Block dead-key/preedit compositions in unit blocks, except caret
+        // which has dedicated handling for exponent superscripts.
         QInputMethodEvent clearEvent;
         QPlainTextEdit::inputMethodEvent(&clearEvent);
         event->accept();
         return;
     }
 
-    if (textContainsOnlyCaretOperators(normalizedCommit)) {
+    if (event->commitString().isEmpty()
+        && textContainsOnlyCaretOperators(normalizedPreedit)) {
         if (isCaretOperatorAlias(prev)) {
+            // Block dead-key/preedit caret echoes after an existing caret.
+            // Send an empty IME update so any pending preedit is cleared.
+            QInputMethodEvent clearEvent;
+            QPlainTextEdit::inputMethodEvent(&clearEvent);
+            event->accept();
+            return;
+        }
+        // On layouts that use dead-caret preedit (e.g. PT), remember this
+        // so the next committed digit/minus can be converted to superscript
+        // even if preedit is not carried over to the commit event.
+        if (squareBracketContext) {
+            const bool validExponentBase =
+                prev.isLetterOrNumber()
+                || prev == QLatin1Char(')')
+                || prev == QLatin1Char(']');
+            m_pendingDeadCaretPreedit = validExponentBase;
+        } else {
+            m_pendingDeadCaretPreedit = true;
+        }
+        event->accept();
+        return;
+    }
+
+    if (textContainsOnlyCaretOperators(normalizedCommit)) {
+        if (squareBracketContext && !isValidUnitExponentBase(prev)) {
+            event->accept();
+            return;
+        }
+        const bool prevIsBlockingOperator =
+            isAnyAdditionOperator(prev)
+            || EditorUtils::isSubtractionOperatorAlias(prev)
+            || EditorUtils::isDivisionOperatorAlias(prev)
+            || isAnyMultiplicationOperator(prev);
+        if (prevIsBlockingOperator) {
+            event->accept();
+            return;
+        }
+        if (isCaretOperatorAlias(prev)
+            || OperatorChars::isSuperscriptPowerChar(prev)) {
             event->accept();
             return;
         }
     }
 
+    if (normalizedCommit.size() == 1
+        && !textCursor().hasSelection()
+        && !(QApplication::keyboardModifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))) {
+        const QChar typed = normalizedCommit.at(0);
+        const bool isTypedDigit = typed.isDigit();
+        const bool isTypedMinus = EditorUtils::isSubtractionOperatorAlias(typed);
+        if (isTypedDigit || isTypedMinus) {
+            const int cursorPos = textCursor().position();
+            const int prevIndex = previousNonSpaceIndex(text(), cursorPos);
+            const QChar prevChar = prevIndex >= 0 ? text().at(prevIndex) : QChar();
+            const bool preeditCarriesCaret = textContainsOnlyCaretOperators(normalizedPreedit);
+            const bool afterCaretRaw = isCaretOperatorAlias(prevChar);
+            const bool afterCaretFromIme = preeditCarriesCaret || m_pendingDeadCaretPreedit;
+            const bool afterCaret = afterCaretRaw || afterCaretFromIme;
+            const bool continuingSuperscript =
+                prevChar == OperatorChars::SuperscriptMinus
+                || OperatorChars::isSuperscriptDigit(prevChar);
+
+            if (squareBracketContext && afterCaretFromIme && !afterCaretRaw) {
+                const bool validExponentBase =
+                    prevChar.isLetterOrNumber()
+                    || prevChar == QLatin1Char(')')
+                    || prevChar == QLatin1Char(']');
+                if (!validExponentBase) {
+                    event->accept();
+                    return;
+                }
+            }
+
+            if ((afterCaret || continuingSuperscript) && !(isTypedMinus && !afterCaret)) {
+                const QChar superscript = isTypedDigit
+                    ? OperatorChars::asciiDigitToSuperscript(typed)
+                    : OperatorChars::SuperscriptMinus;
+                if (!superscript.isNull()) {
+                    QTextCursor cursor = textCursor();
+                    if (isCaretOperatorAlias(prevChar)) {
+                        cursor.setPosition(prevIndex);
+                        cursor.setPosition(prevIndex + 1, QTextCursor::KeepAnchor);
+                        cursor.insertText(QString(superscript));
+                    } else {
+                        cursor.insertText(QString(superscript));
+                    }
+                    setTextCursor(cursor);
+                    m_pendingDeadCaretPreedit = false;
+                    event->accept();
+                    return;
+                }
+            }
+        }
+    }
+    if (!normalizedCommit.isEmpty())
+        m_pendingDeadCaretPreedit = false;
+
     if (textContainsOnlyAdditionAliases(normalizedCommit)) {
+        if (squareBracketContext) {
+            event->accept();
+            return;
+        }
+
         const bool prevIsBlockingOperator =
             isAnyAdditionOperator(prev)
             || EditorUtils::isSubtractionOperatorAlias(prev)
@@ -1623,6 +2272,45 @@ void Editor::inputMethodEvent(QInputMethodEvent* event)
         return;
     }
 
+    if (normalizedCommit.size() == 1
+        && EditorUtils::isSubtractionOperatorAlias(normalizedCommit.at(0))
+        && !squareBracketContext) {
+        if (!Settings::instance()->autoAns
+            && textContainsOnlySubtractionAliases(text())) {
+            event->accept();
+            return;
+        }
+        const bool prevIsBlockingOperator =
+            isAnyAdditionOperator(prev)
+            || EditorUtils::isSubtractionOperatorAlias(prev)
+            || EditorUtils::isDivisionOperatorAlias(prev)
+            || isAnyMultiplicationOperator(prev)
+            || prev == QLatin1Char('^');
+        if (prevIsBlockingOperator) {
+            event->accept();
+            return;
+        }
+    }
+
+    if (squareBracketContext && !normalizedCommit.isEmpty()) {
+        const QString adjusted = normalizeTypedTextForSquareBracketContext(
+            text(),
+            cursorPosition,
+            normalizedCommit);
+        if (adjusted.isEmpty()) {
+            event->accept();
+            return;
+        }
+        if (adjusted != event->commitString()) {
+            QInputMethodEvent normalizedEvent(event->preeditString(), event->attributes());
+            normalizedEvent.setCommitString(adjusted,
+                                            event->replacementStart(),
+                                            event->replacementLength());
+            QPlainTextEdit::inputMethodEvent(&normalizedEvent);
+            return;
+        }
+    }
+
     if (normalizedCommit == event->commitString()) {
         QPlainTextEdit::inputMethodEvent(event);
         return;
@@ -1643,6 +2331,13 @@ void Editor::keyPressEvent(QKeyEvent* event)
     const bool rightOfOpeningSquareBracket = squareBracketContext
         && isRightOfOpeningSquareBracketWithOnlySpaces(text(), cursorPosition);
 
+    if (squareBracketContext
+        && isDeadKey(key)
+        && key != Qt::Key_Dead_Circumflex) {
+        event->accept();
+        return;
+    }
+
     const auto implicitMulPrefixForTypedChar = [this](QChar typedChar) {
         const QString typedText(typedChar);
         const QString adjusted =
@@ -1656,20 +2351,198 @@ void Editor::keyPressEvent(QKeyEvent* event)
     };
 
     const QString normalizedEventText = normalizeExpressionTypedInEditor(event->text());
+    const bool hasPrintableTextPayload =
+        !event->text().isEmpty()
+        && key < Qt::Key_Escape
+        && std::all_of(event->text().cbegin(), event->text().cend(),
+                       [](const QChar& ch) { return ch.isPrint(); });
+    if (isInsideCommentFromQuestionMark(text(), cursorPosition)
+        && !(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))
+        && hasPrintableTextPayload) {
+        QPlainTextEdit::keyPressEvent(event);
+        return;
+    }
+    if (!textCursor().hasSelection()
+        && hasOnlyWhitespaceToLeft(text(), cursorPosition)) {
+        const bool autoAnsEnabledForStart = Settings::instance()->autoAns;
+        // When "Auto-insert ans..." is off, treat expression start as a strict
+        // allowlist gate. This blocks layout-specific AltGr/dead-key symbols
+        // from bypassing leading-operator restrictions.
+        //
+        // When it is on, apply the same gate but allow +/*//^ starters too so
+        // main-window auto-ans rewrite can still trigger.
+        const QString typedCandidate =
+            !normalizedEventText.isEmpty() ? normalizedEventText : event->text();
+        if (!typedCandidate.isEmpty()) {
+            const bool allAllowed = std::all_of(
+                typedCandidate.cbegin(),
+                typedCandidate.cend(),
+                [autoAnsEnabledForStart](const QChar& ch) {
+                    return ch.isSpace()
+                           || EditorUtils::isAllowedLeadingCharAtExpressionStart(ch, autoAnsEnabledForStart);
+                });
+            if (!allAllowed) {
+                event->accept();
+                return;
+            }
+        } else if (isDeadKey(key)
+                   && key != Qt::Key_Dead_Tilde
+                   && (key != Qt::Key_Dead_Circumflex || !autoAnsEnabledForStart)) {
+            event->accept();
+            return;
+        }
+    }
+
+    const auto tryHandleSuperscriptExponentTyping = [&]() -> bool {
+        if ((event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))
+            || textCursor().hasSelection()
+            || normalizedEventText.size() != 1) {
+            return false;
+        }
+
+        const QChar typed = normalizedEventText.at(0);
+        const bool isTypedDigit = typed.isDigit();
+        const bool isTypedMinus = EditorUtils::isSubtractionOperatorAlias(typed);
+        if (!isTypedDigit && !isTypedMinus)
+            return false;
+
+        const int cursorPos = textCursor().position();
+        const int prevIndex = previousNonSpaceIndex(text(), cursorPos);
+        if (prevIndex < 0)
+            return false;
+        const QChar prev = text().at(prevIndex);
+        const bool afterCaret = isCaretOperatorAlias(prev);
+        const bool continuingSuperscript = prev == OperatorChars::SuperscriptMinus
+                                           || OperatorChars::isSuperscriptDigit(prev);
+
+        if (!afterCaret && !continuingSuperscript)
+            return false;
+        if (isTypedMinus && !afterCaret)
+            return false;
+
+        const QChar superscript = isTypedDigit
+            ? OperatorChars::asciiDigitToSuperscript(typed)
+            : OperatorChars::SuperscriptMinus;
+        if (superscript.isNull())
+            return false;
+
+        QTextCursor cursor = textCursor();
+        if (afterCaret) {
+            cursor.setPosition(prevIndex);
+            cursor.setPosition(prevIndex + 1, QTextCursor::KeepAnchor);
+            cursor.insertText(QString(superscript));
+        } else {
+            cursor.insertText(QString(superscript));
+        }
+        setTextCursor(cursor);
+        event->accept();
+        return true;
+    };
+    if (tryHandleSuperscriptExponentTyping())
+        return;
+
+    const auto tryHandleTypedOpenParen = [&]() -> bool {
+        if (textCursor().hasSelection())
+            return false;
+
+        QTextCursor cursor = textCursor();
+        const int position = cursor.position();
+        const bool afterFunctionIdentifier = isAfterFunctionIdentifierWithOnlySpaces(
+            m_evaluator,
+            text(),
+            position);
+        QString implicitMulPrefix;
+        if (!afterFunctionIdentifier) {
+            if (squareBracketContext) {
+                const QChar prev = previousNonSpaceChar(text(), position);
+                const bool needsImplicitUnitMul =
+                    prev.isLetterOrNumber()
+                    || prev == QLatin1Char(')')
+                    || OperatorChars::isSuperscriptPowerChar(prev);
+                if (needsImplicitUnitMul)
+                    implicitMulPrefix = QString(OperatorChars::MulDotSign);
+            } else {
+                const QChar prev = previousNonSpaceChar(text(), position);
+                if (prev == QLatin1Char(']') || prev == QLatin1Char(')')) {
+                    implicitMulPrefix =
+                        QString(OperatorChars::MulDotSpace)
+                        + QString(OperatorChars::MulDotSign)
+                        + QString(OperatorChars::MulDotSpace);
+                } else {
+                    implicitMulPrefix = implicitMulPrefixForTypedChar(QLatin1Char('('));
+                }
+            }
+        }
+
+        cursor.insertText(implicitMulPrefix + QStringLiteral("()"));
+        cursor.setPosition(position + implicitMulPrefix.size() + 1);
+        setTextCursor(cursor);
+        event->accept();
+        return true;
+    };
 
     if (key == Qt::Key_Dead_Circumflex) {
         // PT and similar layouts emit a dead-circumflex key before commit.
         // Consume it when a caret is already on the left to avoid a second
         // pending caret from composition.
         const QChar prev = previousNonSpaceChar(text(), cursorPosition);
+        if (squareBracketContext && !isValidUnitExponentBase(prev)) {
+            event->accept();
+            return;
+        }
         if (isCaretOperatorAlias(prev)) {
             event->accept();
             return;
         }
+        const bool prevIsBlockingOperator =
+            isAnyAdditionOperator(prev)
+            || EditorUtils::isSubtractionOperatorAlias(prev)
+            || EditorUtils::isDivisionOperatorAlias(prev)
+            || isAnyMultiplicationOperator(prev);
+        if (prevIsBlockingOperator) {
+            event->accept();
+            return;
+        }
+        insert(QStringLiteral("^"));
+        event->accept();
+        return;
+    }
+
+    const bool isTypedTilde =
+        key == Qt::Key_Dead_Tilde
+        || key == Qt::Key_AsciiTilde
+        || event->text() == QLatin1String("~")
+        || normalizedEventText == QLatin1String("~");
+    if (isTypedTilde) {
+        if (squareBracketContext) {
+            event->accept();
+            return;
+        }
+
+        const QChar prev = previousNonSpaceChar(text(), cursorPosition);
+        const bool prevAllowsUnaryTilde =
+            prev.isNull()
+            || prev == QLatin1Char('(')
+            || prev == QLatin1Char('[')
+            || isAnyAdditionOperator(prev)
+            || EditorUtils::isSubtractionOperatorAlias(prev)
+            || EditorUtils::isDivisionOperatorAlias(prev)
+            || isAnyMultiplicationOperator(prev)
+            || isCaretOperatorAlias(prev);
+        if (prevAllowsUnaryTilde) {
+            insert(QStringLiteral("~"));
+        }
+        event->accept();
+        return;
     }
 
     if (textContainsOnlyAdditionAliases(event->text())
         || textContainsOnlyAdditionAliases(normalizedEventText)) {
+        if (squareBracketContext) {
+            event->accept();
+            return;
+        }
+
         const QChar prev = previousNonSpaceChar(text(), cursorPosition);
         const bool prevIsBlockingOperator =
             isAnyAdditionOperator(prev)
@@ -1699,6 +2572,11 @@ void Editor::keyPressEvent(QKeyEvent* event)
         || textContainsOnlyAdditionAliases(event->text())
         || textContainsOnlyAdditionAliases(normalizedEventText);
     if (isTypedPlus) {
+        if (squareBracketContext) {
+            event->accept();
+            return;
+        }
+
         const QChar prev = previousNonSpaceChar(text(), cursorPosition);
         if (isAnyAdditionOperator(prev)
             || EditorUtils::isSubtractionOperatorAlias(prev)
@@ -1716,11 +2594,85 @@ void Editor::keyPressEvent(QKeyEvent* event)
         || textContainsOnlyCaretOperators(normalizedEventText);
     if (isTypedCaret) {
         const QChar prev = previousNonSpaceChar(text(), cursorPosition);
-        if (isCaretOperatorAlias(prev)) {
+        if (squareBracketContext && !isValidUnitExponentBase(prev)) {
+            event->accept();
+            return;
+        }
+        const bool prevIsBlockingOperator =
+            isAnyAdditionOperator(prev)
+            || EditorUtils::isSubtractionOperatorAlias(prev)
+            || EditorUtils::isDivisionOperatorAlias(prev)
+            || isAnyMultiplicationOperator(prev);
+        if (prevIsBlockingOperator) {
+            event->accept();
+            return;
+        }
+        if (isCaretOperatorAlias(prev)
+            || OperatorChars::isSuperscriptPowerChar(prev)) {
             event->accept();
             return;
         }
     }
+
+    if (squareBracketContext
+        && (textContainsOnlyDivisionAliases(event->text())
+            || textContainsOnlyDivisionAliases(normalizedEventText))) {
+        rewriteTrailingAsciiUnitExponentToSuperscript(this, QString());
+        const int cursorPos = textCursor().position();
+        const QChar previous = previousNonSpaceChar(text(), cursorPos);
+        if (EditorUtils::isDivisionOperatorAlias(previous)) {
+            int previousIndex = qBound(0, cursorPos, text().size()) - 1;
+            while (previousIndex >= 0 && text().at(previousIndex).isSpace())
+                --previousIndex;
+            if (previousIndex >= 1 && text().at(previousIndex - 1) == QLatin1Char('^')) {
+                auto cursor = textCursor();
+                cursor.setPosition(previousIndex + 1);
+                cursor.deletePreviousChar();
+                setTextCursor(cursor);
+                event->accept();
+                return;
+            }
+        }
+        const QString adjusted = normalizeTypedTextForSquareBracketContext(
+            text(),
+            textCursor().position(),
+            QString(OperatorChars::DivisionSign));
+        if (!adjusted.isEmpty())
+            insert(adjusted);
+        event->accept();
+        return;
+    }
+    if (squareBracketContext
+        && (event->text() == QLatin1String("]") || key == Qt::Key_BracketRight)
+        && !textCursor().hasSelection()) {
+        const QString currentText = text();
+        const int cursorPos = textCursor().position();
+        const int openPos = currentText.lastIndexOf(QLatin1Char('['), cursorPos - 1);
+        if (openPos >= 0) {
+            QTextCursor cursor = textCursor();
+            const QString unitBody = currentText.mid(openPos + 1, cursorPos - (openPos + 1));
+            const QString normalizedBody = renderUnitAsciiExponentsAsSuperscripts(unitBody);
+            cursor.setPosition(openPos + 1);
+            cursor.setPosition(cursorPos, QTextCursor::KeepAnchor);
+            cursor.insertText(normalizedBody);
+            cursor.insertText(QStringLiteral("]"));
+            setTextCursor(cursor);
+            event->accept();
+            return;
+        }
+    }
+    if (squareBracketContext
+        && !normalizedEventText.isEmpty()
+        && std::all_of(normalizedEventText.cbegin(), normalizedEventText.cend(), isTypedMultiplicationCharacter)) {
+        rewriteTrailingAsciiUnitExponentToSuperscript(this, QString());
+    }
+
+    const bool isTypedOpenParen =
+        key == Qt::Key_ParenLeft
+        || event->text() == QLatin1String("(")
+        || normalizedEventText == QLatin1String("(");
+    if (isTypedOpenParen && tryHandleTypedOpenParen())
+        return;
 
     const QChar typedForRules = normalizedTypedCharFromEvent(event, normalizedEventText);
     if (!(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))
@@ -1731,10 +2683,26 @@ void Editor::keyPressEvent(QKeyEvent* event)
             return ch == QLatin1Char('(') || ch.isLetter() || ch.isDigit();
         };
 
+        if (typedForRules == QLatin1Char('>')
+            && EditorUtils::isSubtractionOperatorAlias(prev)) {
+            replacePreviousSubtractionAtCursorWithUnitConversion(this);
+            event->accept();
+            return;
+        }
+        if (typedForRules == UnicodeChars::RightwardsArrow && !squareBracketContext) {
+            insertUnitConversionAtCursorWithUnitPlaceholder(this);
+            event->accept();
+            return;
+        }
+
         if (EditorUtils::isSubtractionOperatorAlias(prev)
             || isAnyAdditionOperator(prev)
             || EditorUtils::isDivisionOperatorAlias(prev)) {
-            if (!isOpenParenLetterOrDigit(typedForRules)) {
+            const bool isUnitConversionTail =
+                EditorUtils::isSubtractionOperatorAlias(prev)
+                && typedForRules == QLatin1Char('>');
+            if (!isOpenParenLetterOrDigit(typedForRules)
+                && !isUnitConversionTail) {
                 event->accept();
                 return;
             }
@@ -1747,9 +2715,17 @@ void Editor::keyPressEvent(QKeyEvent* event)
                 return;
             }
         } else if (isAnyMultiplicationOperator(prev)) {
-            if (typedForRules == QLatin1Char('(')) {
+            if (typedForRules == QLatin1Char('(')
+                || typedForRules.isLetter()
+                || (typedForRules.isDigit() && !squareBracketContext)) {
                 // Allowed as-is.
             } else if (isAnyMultiplicationOperator(typedForRules)) {
+                const int prevIndex = previousNonSpaceIndex(text(), cursorPosition);
+                const int beforePrevIndex = previousNonSpaceIndex(text(), prevIndex);
+                if (beforePrevIndex >= 0 && isExponentTailBeforeIndex(text(), beforePrevIndex)) {
+                    event->accept();
+                    return;
+                }
                 replacePreviousOperatorAtCursorWithCaret(this);
                 event->accept();
                 return;
@@ -1772,10 +2748,20 @@ void Editor::keyPressEvent(QKeyEvent* event)
 
     if ((event->text() == QLatin1String("[") || key == Qt::Key_BracketLeft)
         && !textCursor().hasSelection()) {
+        if (squareBracketContext) {
+            event->accept();
+            return;
+        }
+        const QChar previous = previousNonSpaceChar(text(), textCursor().position());
+        if (previous == QLatin1Char(']')) {
+            event->accept();
+            return;
+        }
         QTextCursor cursor = textCursor();
         const int position = cursor.position();
         const bool shouldInsertValueUnitSpace =
-            !implicitMulPrefixForTypedChar(QLatin1Char('[')).isEmpty();
+            previous == QLatin1Char(')')
+            || !implicitMulPrefixForTypedChar(QLatin1Char('[')).isEmpty();
         const QString prefix = shouldInsertValueUnitSpace
             ? QString(OperatorChars::ValueUnitSpace)
             : QString();
@@ -1873,15 +2859,23 @@ void Editor::keyPressEvent(QKeyEvent* event)
                 const int position = cursor.position();
                 int newPosition = -1;
                 if (key == Qt::Key_Left) {
-                    if (isAfterGroupedSpacedOperator(text(), position))
-                        newPosition = position - 3;
-                    else if (isAfterGroupedSpacedOperator(text(), position + 1))
-                        newPosition = position - 2;
+                    const int groupedLength = groupedTokenLengthBefore(text(), position);
+                    if (groupedLength > 0)
+                        newPosition = position - groupedLength;
+                    else {
+                        const int groupedLengthAtNext = groupedTokenLengthBefore(text(), position + 1);
+                        if (groupedLengthAtNext > 0)
+                            newPosition = position - (groupedLengthAtNext - 1);
+                    }
                 } else if (key == Qt::Key_Right) {
-                    if (isBeforeGroupedSpacedOperator(text(), position))
-                        newPosition = position + 3;
-                    else if (position > 0 && isBeforeGroupedSpacedOperator(text(), position - 1))
-                        newPosition = position + 2;
+                    const int groupedLength = groupedTokenLengthAfter(text(), position);
+                    if (groupedLength > 0)
+                        newPosition = position + groupedLength;
+                    else if (position > 0) {
+                        const int groupedLengthAtPrev = groupedTokenLengthAfter(text(), position - 1);
+                        if (groupedLengthAtPrev > 0)
+                            newPosition = position + (groupedLengthAtPrev - 1);
+                    }
                 }
 
                 if (newPosition >= 0) {
@@ -1897,24 +2891,47 @@ void Editor::keyPressEvent(QKeyEvent* event)
             QPlainTextEdit::keyPressEvent(event);
             cursor = textCursor();
             int newPosition = cursor.position();
+            if (isModifiedNavigation && newPosition == oldPosition) {
+                // Some platforms/layouts may not move with Alt/Ctrl/Meta+arrows.
+                // Still keep grouped spaced operators atomic when the cursor is
+                // immediately before/after one.
+                if (key == Qt::Key_Left) {
+                    const int groupedLength = groupedTokenLengthBefore(text(), oldPosition);
+                    if (groupedLength > 0)
+                        newPosition = oldPosition - groupedLength;
+                } else if (key == Qt::Key_Right) {
+                    const int groupedLength = groupedTokenLengthAfter(text(), oldPosition);
+                    if (groupedLength > 0)
+                        newPosition = oldPosition + groupedLength;
+                }
+                if (newPosition != oldPosition) {
+                    cursor.setPosition(newPosition, keepAnchor ? QTextCursor::KeepAnchor : QTextCursor::MoveAnchor);
+                    setTextCursor(cursor);
+                    checkMatching();
+                    checkAutoCalc();
+                    event->accept();
+                    return;
+                }
+            }
             if (isModifiedNavigation && newPosition != oldPosition) {
                 // Alt/Ctrl/Meta navigation uses native Qt word movement first.
                 // Then, if that move lands at/inside a grouped spaced operator,
                 // snap to the nearest valid side of the triplet to keep it
                 // atomic without changing normal word-jump semantics.
-                const int groupStart = groupedSpacedOperatorStartAround(text(), newPosition);
+                int groupLength = 0;
+                const int groupStart = groupedTokenStartAround(text(), newPosition, &groupLength);
                 if (groupStart >= 0) {
                     if (key == Qt::Key_Right && newPosition > oldPosition) {
                         // Use strict-side comparison so repeated Alt+Right does
                         // not get stuck at the same boundary.
                         newPosition = (oldPosition < groupStart)
                             ? groupStart
-                            : groupStart + 3;
+                            : groupStart + groupLength;
                     } else if (key == Qt::Key_Left && newPosition < oldPosition) {
                         // Use strict-side comparison so repeated Alt+Left keeps
                         // progressing past grouped operators.
-                        newPosition = (oldPosition > groupStart + 3)
-                            ? groupStart + 3
+                        newPosition = (oldPosition > groupStart + groupLength)
+                            ? groupStart + groupLength
                             : groupStart;
                     }
                 }
@@ -1987,21 +3004,23 @@ void Editor::keyPressEvent(QKeyEvent* event)
             event->accept();
             return;
         }
-        if (event->modifiers() == Qt::NoModifier
-            && hasOnlyWhitespaceToLeft(text(), textCursor().position())) {
-            event->accept();
-            return;
+        if (event->modifiers() == Qt::NoModifier) {
+            const int pos = textCursor().position();
+            if (pos > 0 && text().at(pos - 1).isSpace()) {
+                event->accept();
+                return;
+            }
         }
         if (event->modifiers() == Qt::NoModifier
-            && !isInsideCommentFromQuestionMark(text(), textCursor().position())
-            && isRightOfBlockedSpaceOperatorsWithOnlySpaces(text(), textCursor().position())) {
-            event->accept();
-            return;
-        }
-        if (event->modifiers() == Qt::NoModifier
-            && EditorUtils::shouldIgnoreTypedSpaceAfterDigit(text(), textCursor().position())) {
-            event->accept();
-            return;
+            && squareBracketContext) {
+            if (appendSuffixAfterTrailingSuperscriptExponent(this, QString(OperatorChars::MulDotSign))) {
+                event->accept();
+                return;
+            }
+            if (rewriteTrailingAsciiUnitExponentToSuperscript(this, QString(OperatorChars::MulDotSign))) {
+                event->accept();
+                return;
+            }
         }
         if (event->modifiers() == Qt::NoModifier && squareBracketContext) {
             const QString adjusted = normalizeTypedTextForSquareBracketContext(
@@ -2017,6 +3036,18 @@ void Editor::keyPressEvent(QKeyEvent* event)
 
     case Qt::Key_Period:
     case Qt::Key_Comma:
+        if (event->modifiers() == Qt::NoModifier) {
+            const QString radix = QString(QChar(this->radixChar()));
+            if (rewriteTrailingSuperscriptExponentToParenthesizedAscii(this, radix)) {
+                event->accept();
+                return;
+            }
+            const QChar prev = previousNonSpaceChar(text(), textCursor().position());
+            if (!prev.isNull() && !prev.isDigit()) {
+                event->accept();
+                return;
+            }
+        }
         if (event->modifiers() == Qt::KeypadModifier) {
             insert(QChar(this->radixChar()));
             event->accept();
@@ -2026,11 +3057,26 @@ void Editor::keyPressEvent(QKeyEvent* event)
 
     case Qt::Key_Asterisk: {
         if (squareBracketContext) {
+            rewriteTrailingAsciiUnitExponentToSuperscript(this, QString());
             auto position = textCursor().position();
-            if (position > 0
-                && (text().at(position - 1) == QLatin1Char('*')
-                    || text().at(position - 1) == OperatorChars::MulCrossSign
-                    || text().at(position - 1) == OperatorChars::MulDotSign)) {
+            const QChar prev = previousNonSpaceChar(text(), position);
+            if (OperatorChars::isSuperscriptPowerChar(prev)) {
+                insert(QString(OperatorChars::MulDotSign));
+                event->accept();
+                return;
+            }
+            const int opIndex = previousNonSpaceIndex(text(), position);
+            const QChar op = opIndex >= 0 ? text().at(opIndex) : QChar();
+            if (op == QLatin1Char('*')
+                || op == OperatorChars::MulCrossSign
+                || op == OperatorChars::MulDotSign) {
+                const int beforeOpIndex = previousNonSpaceIndex(text(), opIndex);
+                if (beforeOpIndex >= 0
+                    && isExponentTailBeforeIndex(text(), beforeOpIndex)) {
+                    // Do not allow "**" to become "^" after superscript exponents.
+                    event->accept();
+                    return;
+                }
                 auto cursor = textCursor();
                 cursor.removeSelectedText();
                 cursor.deletePreviousChar();
@@ -2042,9 +3088,33 @@ void Editor::keyPressEvent(QKeyEvent* event)
             return;
         }
         auto position = textCursor().position();
-        if (position > 0
-            && (text().at(position - 1) == QLatin1Char('*')
-                || text().at(position - 1) == OperatorChars::MulCrossSign)) {
+        const QChar prev = previousNonSpaceChar(text(), position);
+        if (OperatorChars::isSuperscriptPowerChar(prev)) {
+            insert(QString(OperatorChars::MulDotSpace)
+                   + QString(OperatorChars::MulDotSign)
+                   + QString(OperatorChars::MulDotSpace));
+            event->accept();
+            return;
+        }
+        const int opIndex = previousNonSpaceIndex(text(), position);
+        const QChar op = opIndex >= 0 ? text().at(opIndex) : QChar();
+        if (op == QLatin1Char('*')
+            || op == OperatorChars::MulCrossSign
+            || op == OperatorChars::MulDotSign) {
+          const int beforeOpIndex = previousNonSpaceIndex(text(), opIndex);
+          if (beforeOpIndex >= 0
+              && isExponentTailBeforeIndex(text(), beforeOpIndex)) {
+              event->accept();
+              return;
+          }
+        }
+        if (op == QLatin1Char('*') || op == OperatorChars::MulCrossSign) {
+          const int beforeOpIndex = previousNonSpaceIndex(text(), opIndex);
+          if (beforeOpIndex >= 0
+              && OperatorChars::isSuperscriptPowerChar(text().at(beforeOpIndex))) {
+              event->accept();
+              return;
+          }
           // Replace ×* by ^ operator
           auto cursor = textCursor();
           cursor.removeSelectedText();  // just in case some text is selected
@@ -2093,62 +3163,45 @@ void Editor::keyPressEvent(QKeyEvent* event)
             event->accept();
             return;
         }
+        if (!Settings::instance()->autoAns
+            && textContainsOnlySubtractionAliases(text())) {
+            event->accept();
+            return;
+        }
+        {
+            const QChar prev = previousNonSpaceChar(text(), textCursor().position());
+            if (EditorUtils::isSubtractionOperatorAlias(prev)
+                || isAnyAdditionOperator(prev)
+                || EditorUtils::isDivisionOperatorAlias(prev)
+                || isAnyMultiplicationOperator(prev)
+                || prev == QLatin1Char('^')) {
+                event->accept();
+                return;
+            }
+        }
         insert(EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
             text(),
             textCursor().position(),
             QString(UnicodeChars::MinusSign)));
         event->accept();
         return;
+    case Qt::Key_Slash:
+        if (squareBracketContext) {
+            const QString adjusted = normalizeTypedTextForSquareBracketContext(
+                text(),
+                textCursor().position(),
+                QString(OperatorChars::DivisionSign));
+            if (!adjusted.isEmpty())
+                insert(adjusted);
+            event->accept();
+            return;
+        }
+        break;
     case Qt::Key_At:
         insert(QString(UnicodeChars::DegreeSign)); // U+00B0 ° DEGREE SIGN
         event->accept();
         return;
     case Qt::Key_ParenLeft:
-        if (!textCursor().hasSelection())
-        {
-            QTextCursor cursor = textCursor();
-            const int position = cursor.position();
-            if (isAfterFunctionIdentifierWithOnlySpaces(
-                    m_evaluator,
-                    text(),
-                    position)) {
-                cursor.insertText(QStringLiteral("()"));
-                cursor.setPosition(position + 1);
-                setTextCursor(cursor);
-                event->accept();
-                return;
-            }
-            const QString implicitMulPrefix = implicitMulPrefixForTypedChar(QLatin1Char('('));
-            const QString rightText = text().mid(position);
-            const bool isAtEndOfExpression = rightText.trimmed().isEmpty();
-
-            bool isBeforeOperator = false;
-            bool isBeforeClosingPar = false;
-            if (!isAtEndOfExpression) {
-                const int firstNonSpace = rightText.indexOf(QRegularExpression(QStringLiteral("\\S")));
-                if (firstNonSpace >= 0)
-                    isBeforeClosingPar = rightText.at(firstNonSpace) == QLatin1Char(')');
-
-                const Tokens rightTokens = m_evaluator->scan(rightText);
-                if (rightTokens.valid() && !rightTokens.isEmpty())
-                    isBeforeOperator = rightTokens.at(0).type() == Token::stxOperator;
-            }
-
-            if (isAtEndOfExpression || isBeforeOperator || isBeforeClosingPar) {
-                cursor.insertText(implicitMulPrefix + QStringLiteral("()"));
-                cursor.setPosition(position + implicitMulPrefix.size() + 1);
-                setTextCursor(cursor);
-                event->accept();
-                return;
-            }
-
-            if (!implicitMulPrefix.isEmpty()) {
-                cursor.insertText(implicitMulPrefix + QStringLiteral("("));
-                setTextCursor(cursor);
-                event->accept();
-                return;
-            }
-        }
         break;
     default:;
     }
@@ -2159,7 +3212,24 @@ void Editor::keyPressEvent(QKeyEvent* event)
         return;
     }
 
-    const QString normalizedText = normalizedEventText;
+    QString normalizedText = normalizedEventText;
+    if (!(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))
+        && normalizedText == QLatin1String("?")
+        && !isInsideCommentFromQuestionMark(text(), textCursor().position())) {
+        const int cursorPos = textCursor().position();
+        const int prevIndex = cursorPos - 1;
+        const bool needsLeftSpace = hasAnyNonWhitespace(text())
+                                    && prevIndex >= 0
+                                    && !text().at(prevIndex).isSpace();
+        const bool needsRightSpace = cursorPos >= text().size() || !text().at(cursorPos).isSpace();
+
+        normalizedText = QString();
+        if (needsLeftSpace)
+            normalizedText += QLatin1Char(' ');
+        normalizedText += QLatin1Char('?');
+        if (needsRightSpace)
+            normalizedText += QLatin1Char(' ');
+    }
     const QString implicitMulAdjustedText =
         EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
             text(),

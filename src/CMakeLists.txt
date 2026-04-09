@@ -18,7 +18,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 message("Build type: ${CMAKE_BUILD_TYPE}")
 
-find_package(Qt6 COMPONENTS Core Widgets Help Network QUIET)
+find_package(Qt6 COMPONENTS Core Widgets Help Network Test QUIET)
 if(Qt6_FOUND)
     message(STATUS "Found Qt version: ${Qt6_VERSION}")
 endif()
@@ -141,6 +141,10 @@ add_test(testdmath testdmath)
 add_executable(testser ${testser_SOURCES})
 target_link_libraries(testser ${QT_LIBRARIES})
 add_test(testser testser)
+
+add_executable(testeditorui ${testeditorui_SOURCES})
+target_link_libraries(testeditorui ${QT_LIBRARIES} Qt6::Test)
+add_test(NAME testeditorui COMMAND testeditorui)
 
 set_property(TARGET ${APPLICATION_NAME} APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>:EVALUATOR_DEBUG>)
 

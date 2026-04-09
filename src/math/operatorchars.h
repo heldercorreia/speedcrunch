@@ -87,6 +87,23 @@ inline QChar superscriptDigitToAscii(const QChar& ch)
     }
 }
 
+inline QChar asciiDigitToSuperscript(const QChar& ch)
+{
+    switch (ch.unicode()) {
+    case '0': return QChar(0x2070); // ⁰
+    case '1': return QChar(0x00B9); // ¹
+    case '2': return QChar(0x00B2); // ²
+    case '3': return QChar(0x00B3); // ³
+    case '4': return QChar(0x2074); // ⁴
+    case '5': return QChar(0x2075); // ⁵
+    case '6': return QChar(0x2076); // ⁶
+    case '7': return QChar(0x2077); // ⁷
+    case '8': return QChar(0x2078); // ⁸
+    case '9': return QChar(0x2079); // ⁹
+    default: return QChar();
+    }
+}
+
 } // namespace OperatorChars
 
 #endif // MATH_OPERATORCHARS_H

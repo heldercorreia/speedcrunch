@@ -97,6 +97,8 @@
 #include <QVBoxLayout>
 #include <QJsonDocument>
 
+#include <algorithm>
+
 #ifdef Q_OS_WIN32
 #include "windows.h"
 #include <shlobj.h>
@@ -142,6 +144,38 @@ static bool isWaylandPlatform()
     const auto platform = QGuiApplication::platformName();
     const bool isWayland = (platform == "wayland");
     return isWayland;
+}
+
+static void typeTextThroughEditorInputRules(Editor* editor, const QString& text)
+{
+    if (!editor || text.isEmpty())
+        return;
+
+    const auto keyForChar = [](QChar ch) -> int {
+        switch (ch.unicode()) {
+        case '.': return Qt::Key_Period;
+        case ',': return Qt::Key_Comma;
+        case '+': return Qt::Key_Plus;
+        case '-': return Qt::Key_Minus;
+        case '/': return Qt::Key_Slash;
+        case '*': return Qt::Key_Asterisk;
+        case '^': return Qt::Key_AsciiCircum;
+        case '(': return Qt::Key_ParenLeft;
+        case ')': return Qt::Key_ParenRight;
+        case '%': return Qt::Key_Percent;
+        case '!': return Qt::Key_Exclam;
+        default: break;
+        }
+        if (ch.isDigit())
+            return Qt::Key_0 + (ch.unicode() - '0');
+        return Qt::Key_unknown;
+    };
+
+    for (const QChar ch : text) {
+        const int key = keyForChar(ch);
+        QKeyEvent keyEvent(QEvent::KeyPress, key, Qt::NoModifier, QString(ch));
+        QApplication::sendEvent(editor, &keyEvent);
+    }
 }
 
 namespace {
@@ -3534,6 +3568,25 @@ void MainWindow::insertTextIntoEditor(const QString& s)
     if (s.isEmpty())
         return;
 
+    const QString normalized = EditorUtils::normalizeExpressionOperatorsForEditorInput(s);
+    const bool atExpressionStart = [&]() {
+        const QString text = m_widgets.editor->text();
+        int i = m_widgets.editor->textCursor().position() - 1;
+        while (i >= 0 && text.at(i).isSpace())
+            --i;
+        return i < 0;
+    }();
+    if (atExpressionStart && !normalized.isEmpty()) {
+        const bool allAllowed = std::all_of(
+            normalized.cbegin(),
+            normalized.cend(),
+            [this](const QChar& ch) {
+                return EditorUtils::isAllowedLeadingCharAtExpressionStart(ch, m_settings->autoAns);
+            });
+        if (!allAllowed)
+            return;
+    }
+
     bool shouldAutoComplete = m_widgets.editor->isAutoCompletionEnabled();
     m_widgets.editor->setAutoCompletionEnabled(false);
     m_widgets.editor->insert(s);
@@ -3574,27 +3627,34 @@ void MainWindow::insertFunctionIntoEditor(const QString& f)
 
 void MainWindow::handleKeypadButtonPress(Keypad::Button b)
 {
-    switch (b) {
-    case Keypad::Key0: insertTextIntoEditor("0"); break;
-    case Keypad::Key1: insertTextIntoEditor("1"); break;
-    case Keypad::Key2: insertTextIntoEditor("2"); break;
-    case Keypad::Key3: insertTextIntoEditor("3"); break;
-    case Keypad::Key4: insertTextIntoEditor("4"); break;
-    case Keypad::Key5: insertTextIntoEditor("5"); break;
-    case Keypad::Key6: insertTextIntoEditor("6"); break;
-    case Keypad::Key7: insertTextIntoEditor("7"); break;
-    case Keypad::Key8: insertTextIntoEditor("8"); break;
-    case Keypad::Key9: insertTextIntoEditor("9"); break;
+    const auto typeWithRules = [this](const QString& s) {
+        typeTextThroughEditorInputRules(m_widgets.editor, s);
+        if (!isActiveWindow())
+            activateWindow();
+        m_widgets.editor->setFocus();
+    };
 
-    case Keypad::KeyPlus: insertTextIntoEditor("+"); break;
-    case Keypad::KeyMinus: insertTextIntoEditor("−"); break;
-    case Keypad::KeyTimes: insertTextIntoEditor(QString(OperatorChars::MulCrossSign)); break;
-    case Keypad::KeyDivide: insertTextIntoEditor("÷"); break;
+    switch (b) {
+    case Keypad::Key0: typeWithRules("0"); break;
+    case Keypad::Key1: typeWithRules("1"); break;
+    case Keypad::Key2: typeWithRules("2"); break;
+    case Keypad::Key3: typeWithRules("3"); break;
+    case Keypad::Key4: typeWithRules("4"); break;
+    case Keypad::Key5: typeWithRules("5"); break;
+    case Keypad::Key6: typeWithRules("6"); break;
+    case Keypad::Key7: typeWithRules("7"); break;
+    case Keypad::Key8: typeWithRules("8"); break;
+    case Keypad::Key9: typeWithRules("9"); break;
+
+    case Keypad::KeyPlus: typeWithRules("+"); break;
+    case Keypad::KeyMinus: typeWithRules("−"); break;
+    case Keypad::KeyTimes: typeWithRules(QString(OperatorChars::MulCrossSign)); break;
+    case Keypad::KeyDivide: typeWithRules("÷"); break;
 
     case Keypad::KeyEE: insertTextIntoEditor("e"); break;
-    case Keypad::KeyLeftPar: insertTextIntoEditor("("); break;
-    case Keypad::KeyRightPar: insertTextIntoEditor(")"); break;
-    case Keypad::KeyRaise: insertTextIntoEditor("^"); break;
+    case Keypad::KeyLeftPar: typeWithRules("("); break;
+    case Keypad::KeyRightPar: typeWithRules(")"); break;
+    case Keypad::KeyRaise: typeWithRules("^"); break;
     case Keypad::KeyBackspace: {
         m_widgets.editor->doBackspace();
         if (!isActiveWindow())
@@ -3602,8 +3662,8 @@ void MainWindow::handleKeypadButtonPress(Keypad::Button b)
         m_widgets.editor->setFocus();
         break;
     }
-    case Keypad::KeyPercent: insertTextIntoEditor("%"); break;
-    case Keypad::KeyFactorial: insertTextIntoEditor("!"); break;
+    case Keypad::KeyPercent: typeWithRules("%"); break;
+    case Keypad::KeyFactorial: typeWithRules("!"); break;
 
     case Keypad::KeyX: insertTextIntoEditor("x"); break;
     case Keypad::KeyXEquals: insertTextIntoEditor("x="); break;
@@ -3623,7 +3683,7 @@ void MainWindow::handleKeypadButtonPress(Keypad::Button b)
     case Keypad::KeyAtan: insertTextIntoEditor("arctan("); break;
     case Keypad::KeyAsin: insertTextIntoEditor("arcsin("); break;
 
-    case Keypad::KeyRadixChar: insertTextIntoEditor(QString(m_settings->radixCharacter())); break;
+    case Keypad::KeyRadixChar: typeWithRules(QString(m_settings->radixCharacter())); break;
 
     case Keypad::KeyClear: clearEditor(); break;
     case Keypad::KeyEquals: evaluateEditorExpression(); break;
@@ -3634,9 +3694,16 @@ void MainWindow::handleKeypadButtonPress(Keypad::Button b)
 
 void MainWindow::handleCustomKeypadButtonPress(int action, const QString& text)
 {
+    const auto typeWithRules = [this](const QString& s) {
+        typeTextThroughEditorInputRules(m_widgets.editor, s);
+        if (!isActiveWindow())
+            activateWindow();
+        m_widgets.editor->setFocus();
+    };
+
     switch (static_cast<Settings::CustomKeypadButtonAction>(action)) {
     case Settings::CustomKeypadActionInsertText:
-        insertTextIntoEditor(text);
+        typeWithRules(text);
         break;
     case Settings::CustomKeypadActionBackspace: {
         m_widgets.editor->doBackspace();
@@ -4045,15 +4112,10 @@ void MainWindow::handleEditorTextChange()
 
         Tokens tokens = m_evaluator->scan(expr);
         if (tokens.count() == 1) {
-            bool operatorCondition =
-                tokens.at(0).asOperator() == Token::Addition
-                || tokens.at(0).asOperator() == Token::Subtraction
-                || tokens.at(0).asOperator() == Token::Multiplication
-                || tokens.at(0).asOperator() == Token::Division
-                || tokens.at(0).asOperator() == Token::Exponentiation;
-            if (operatorCondition) {
+            const auto mode = EditorUtils::autoAnsRewriteModeForLeadingOperator(tokens.at(0).text());
+            if (mode != EditorUtils::AutoAnsNoRewrite) {
                 m_conditions.autoAns = false;
-                expr.prepend("ans");
+                expr = EditorUtils::applyAutoAnsRewrite(expr, mode);
                 m_widgets.editor->setText(expr);
                 m_widgets.editor->setCursorPosition(expr.length());
             }

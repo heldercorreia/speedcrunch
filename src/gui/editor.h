@@ -139,6 +139,7 @@ private:
     QTimer* m_matchingTimer;
     bool m_shouldPaintCustomCursor;
     bool m_historyArrowNavigationEnabled;
+    bool m_pendingDeadCaretPreedit = false;
     const Session * m_session;
 
     void updateHeightForWrappedText();

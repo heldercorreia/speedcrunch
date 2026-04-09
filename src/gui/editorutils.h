@@ -16,6 +16,14 @@
 
 namespace EditorUtils {
 
+enum AutoAnsRewriteMode {
+    AutoAnsNoRewrite = 0,
+    AutoAnsPrependAns = 1,
+    AutoAnsAppendAns = 2
+};
+
+inline bool isExpressionOperatorOrSeparator(const QChar& ch);
+
 inline bool isMultiplicationOperatorAlias(const QChar& ch, bool keepDotOperator = false)
 {
     switch (ch.unicode()) {
@@ -148,8 +156,18 @@ inline bool shouldIgnoreTypedSpaceAfterDigit(const QString& text, int cursorPosi
     if (cursorPosition <= 0 || cursorPosition > text.size())
         return false;
 
-    const QChar prev = text.at(cursorPosition - 1);
-    return prev.isDigit() || OperatorChars::isSuperscriptDigit(prev);
+    int i = cursorPosition - 1;
+    while (i >= 0 && text.at(i).isSpace())
+        --i;
+    if (i < 0)
+        return false;
+
+    const QChar prevNonSpace = text.at(i);
+    return prevNonSpace.isDigit()
+           || prevNonSpace.isLetter()
+           || OperatorChars::isSuperscriptDigit(prevNonSpace)
+           || prevNonSpace == QLatin1Char(')')
+           || prevNonSpace == QLatin1Char(']');
 }
 
 inline QString adjustedTypedTextForImplicitMultiplicationAfterDigit(
@@ -161,6 +179,22 @@ inline QString adjustedTypedTextForImplicitMultiplicationAfterDigit(
         return typedText;
 
     const QChar typed = typedText.at(0);
+    const auto isSingleZeroTermToLeft = [&]() {
+        int i = cursorPosition - 1;
+        while (i >= 0 && text.at(i).isSpace())
+            --i;
+        if (i < 0 || text.at(i) != QLatin1Char('0'))
+            return false;
+        --i;
+        while (i >= 0 && text.at(i).isSpace())
+            --i;
+        if (i < 0)
+            return true;
+        const QChar left = text.at(i);
+        return isExpressionOperatorOrSeparator(left)
+               || left == QLatin1Char('(')
+               || left == QLatin1Char('[');
+    };
     QString operatorPrefix;
     const auto leftNonSpaceSupportsOperatorInsertion = [&]() {
         int i = cursorPosition - 1;
@@ -178,6 +212,28 @@ inline QString adjustedTypedTextForImplicitMultiplicationAfterDigit(
     if (typed.isLetter()) {
         if (typed == QLatin1Char('e') || typed == QLatin1Char('E'))
             return typedText;
+        if (typed == QLatin1Char('i') || typed == QLatin1Char('I')) {
+            int i = cursorPosition - 1;
+            while (i >= 0 && text.at(i).isSpace())
+                --i;
+            if (i < 0)
+                return typedText;
+            const QChar prevNonSpace = text.at(i);
+            const bool shouldExpandToIn =
+                prevNonSpace.isDigit()
+                || OperatorChars::isSuperscriptDigit(prevNonSpace)
+                || prevNonSpace == QLatin1Char(')')
+                || prevNonSpace == QLatin1Char(']');
+            if (!shouldExpandToIn)
+                return typedText;
+            return (i == cursorPosition - 1) ? (QStringLiteral(" ") + typedText) : typedText;
+        }
+        if ((typed == QLatin1Char('b') || typed == QLatin1Char('B')
+             || typed == QLatin1Char('o') || typed == QLatin1Char('O')
+             || typed == QLatin1Char('x') || typed == QLatin1Char('X'))
+            && isSingleZeroTermToLeft()) {
+            return typedText;
+        }
         const QChar prev = text.at(cursorPosition - 1);
         if (!prev.isDigit() && !OperatorChars::isSuperscriptDigit(prev))
             return typedText;
@@ -225,8 +281,39 @@ inline QString adjustedTypedTextForImplicitMultiplicationAfterDigit(
         return typedText;
     }
 
-    if (!operatorPrefix.isEmpty())
+    if (!operatorPrefix.isEmpty()) {
+        // Avoid producing double spaces when the cursor is already after a
+        // space and we are about to insert a grouped " <op> " sequence.
+        if (cursorPosition > 0 && text.at(cursorPosition - 1).isSpace()
+            && operatorPrefix.size() >= 3
+            && operatorPrefix.at(0).isSpace()) {
+            return operatorPrefix.mid(1);
+        }
         return operatorPrefix;
+    }
+
+    if (typed == QLatin1Char('(')) {
+        int i = cursorPosition - 1;
+        while (i >= 0 && text.at(i).isSpace())
+            --i;
+        if (i >= 0) {
+            const QChar prevNonSpace = text.at(i);
+            bool numericLeftTerm = prevNonSpace.isDigit()
+                                   && !OperatorChars::isSuperscriptDigit(prevNonSpace);
+            if (!numericLeftTerm && OperatorChars::isSuperscriptDigit(prevNonSpace)) {
+                int baseIndex = i;
+                while (baseIndex >= 0 && OperatorChars::isSuperscriptPowerChar(text.at(baseIndex)))
+                    --baseIndex;
+                numericLeftTerm = baseIndex >= 0 && text.at(baseIndex).isDigit();
+            }
+            if (numericLeftTerm) {
+                return QString(OperatorChars::MulCrossSpace)
+                       + QString(OperatorChars::MulCrossSign)
+                       + QString(OperatorChars::MulCrossSpace)
+                       + typedText;
+            }
+        }
+    }
 
     return QString(OperatorChars::MulDotSpace)
            + QString(OperatorChars::MulDotSign)
@@ -391,6 +478,72 @@ inline QStringList parsePastedExpressions(const QString& text)
 inline QStringList parsePastedExpressionsForEditorInput(const QString& text)
 {
     return parsePastedExpressionsImpl(text, normalizeExpressionOperatorsForEditorInput);
+}
+
+inline AutoAnsRewriteMode autoAnsRewriteModeForLeadingOperator(const QString& operatorText)
+{
+    if (operatorText.size() != 1)
+        return AutoAnsNoRewrite;
+
+    const QChar op = normalizeExpressionOperatorsForEditorInput(operatorText).at(0);
+    if (op == QLatin1Char('~'))
+        return AutoAnsAppendAns;
+    if (op == OperatorChars::AdditionSign
+        || isSubtractionOperatorAlias(op)
+        || op == OperatorChars::MulCrossSign
+        || op == OperatorChars::MulDotSign
+        || op == OperatorChars::DivisionSign
+        || op == QLatin1Char('^')
+        || op == QLatin1Char('!')) {
+        return AutoAnsPrependAns;
+    }
+    return AutoAnsNoRewrite;
+}
+
+inline QString applyAutoAnsRewrite(const QString& expression, AutoAnsRewriteMode mode)
+{
+    if (mode == AutoAnsAppendAns)
+        return expression + QStringLiteral("ans");
+    if (mode == AutoAnsPrependAns)
+        return QStringLiteral("ans") + expression;
+    return expression;
+}
+
+inline bool isAllowedLeadingCharAtExpressionStart(const QChar& ch, bool autoAnsEnabled)
+{
+    if (ch.isDigit())
+        return true;
+    if (ch.isLetter()) {
+        // Exclude ordinal indicators that behave like symbols on PT/US layouts
+        // and are not intended to be valid leading tokens.
+        if (ch == QChar(0x00AA) || ch == QChar(0x00BA))
+            return false;
+        return true;
+    }
+    if (ch.category() == QChar::Symbol_Currency)
+        return true;
+    if (isSubtractionOperatorAlias(ch))
+        return true;
+    if (ch == QLatin1Char('~')
+        || ch == QLatin1Char('(')
+        || ch == QLatin1Char('#')
+        || ch == QLatin1Char('?')) {
+        return true;
+    }
+    if (!autoAnsEnabled)
+        return false;
+
+    // When auto-ans is enabled, allow leading operator starts that can be
+    // rewritten as "ans <op> ..." or "~ans".
+    return ch == OperatorChars::AdditionSign
+           || ch == OperatorChars::DivisionSign
+           || ch == OperatorChars::MulCrossSign
+           || ch == OperatorChars::MulDotSign
+           || ch == QLatin1Char('!')
+           || isAdditionOperatorAlias(ch)
+           || isDivisionOperatorAlias(ch)
+           || isMultiplicationOperatorAlias(ch, true)
+           || ch == QLatin1Char('^');
 }
 
 }

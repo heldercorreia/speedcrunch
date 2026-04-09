@@ -2844,6 +2844,33 @@ void test_auto_fix_powers()
     CHECK_AUTOFIX("1[meter] IN [meter]", "1[meter] IN [meter]");
     CHECK_AUTOFIX("sqrt(16)+cbrt(27)", "√(16)+∛(27)");
     CHECK_AUTOFIX("asqrt(16)+cbrtfoo(27)", "asqrt(16)+cbrtfoo(27)");
+    CHECK_AUTOFIX("2 + 3^() + 4", "2 + 3 + 4");
+    CHECK_AUTOFIX("2 + 3 ^ (   ) + 4", "2 + 3  + 4");
+
+    ++eval_total_tests;
+    const QString fixedNoOpPower = eval->autoFix(QString::fromUtf8("2 + 3^() + 4"));
+    eval->setExpression(fixedNoOpPower);
+    const Quantity fixedNoOpPowerResult = eval->evalUpdateAns();
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\tautofix empty parenthesized power eval\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl
+             << "\tAutoFix: " << fixedNoOpPower.toUtf8().constData() << endl;
+    } else {
+        QString formatted = DMath::format(fixedNoOpPowerResult, Format::Fixed());
+        formatted.replace(QString::fromUtf8("−"), "-");
+        if (formatted != QStringLiteral("9")) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\tautofix empty parenthesized power eval\t[NEW]" << endl
+                 << "\tResult   : " << formatted.toLatin1().constData() << endl
+                 << "\tExpected : 9" << endl
+                 << "\tAutoFix  : " << fixedNoOpPower.toUtf8().constData() << endl;
+        }
+    }
 
     // Selection text copied from result display may contain medium spaces and
     // paragraph separators; auto-fix should still produce a valid expression.
@@ -4380,9 +4407,9 @@ void test_expression_operator_normalization()
         EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
             QStringLiteral("2"), 1, QStringLiteral("("));
     {
-        const QString expected = QString(OperatorChars::MulDotSpace)
-            + QString(OperatorChars::MulDotSign)
-            + QString(OperatorChars::MulDotSpace)
+        const QString expected = QString(OperatorChars::MulCrossSpace)
+            + QString(OperatorChars::MulCrossSign)
+            + QString(OperatorChars::MulCrossSpace)
             + QStringLiteral("(");
         ++eval_total_tests;
         if (implicitMulWithOpeningParAfterDigit != expected) {
@@ -4418,9 +4445,9 @@ void test_expression_operator_normalization()
         EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
             QString::fromUtf8("2³   "), 5, QStringLiteral("("));
     {
-        const QString expected = QString(OperatorChars::MulDotSpace)
-            + QString(OperatorChars::MulDotSign)
-            + QString(OperatorChars::MulDotSpace)
+        const QString expected = QString(OperatorChars::MulCrossSpace)
+            + QString(OperatorChars::MulCrossSign)
+            + QString(OperatorChars::MulCrossSpace)
             + QStringLiteral("(");
         ++eval_total_tests;
         if (implicitMulWithOpeningParAfterSuperscriptAndSpaces != expected) {
@@ -4429,6 +4456,25 @@ void test_expression_operator_normalization()
             cerr << __FILE__ << "[" << __LINE__
                  << "]\ttyped implicit multiplication before opening par after superscript and spaces\t[NEW]" << endl
                  << "\tResult   : " << implicitMulWithOpeningParAfterSuperscriptAndSpaces.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString implicitMulWithOpeningParAfterVariableSuperscript =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QString::fromUtf8("pi³"), 3, QStringLiteral("("));
+    {
+        const QString expected = QString(OperatorChars::MulDotSpace)
+            + QString(OperatorChars::MulDotSign)
+            + QString(OperatorChars::MulDotSpace)
+            + QStringLiteral("(");
+        ++eval_total_tests;
+        if (implicitMulWithOpeningParAfterVariableSuperscript != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped implicit multiplication before opening par after variable superscript\t[NEW]" << endl
+                 << "\tResult   : " << implicitMulWithOpeningParAfterVariableSuperscript.toUtf8().constData() << endl
                  << "\tExpected : " << expected.toUtf8().constData() << endl;
         }
     }
@@ -4557,8 +4603,7 @@ void test_expression_operator_normalization()
         EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
             QString::fromUtf8("β   "), 4, QStringLiteral("+"));
     {
-        const QString expected = QString(OperatorChars::AdditionSpace)
-            + QString(OperatorChars::AdditionSign)
+        const QString expected = QString(OperatorChars::AdditionSign)
             + QString(OperatorChars::AdditionSpace);
         ++eval_total_tests;
         if (typedAdditionAfterNonLatinLetterAndSpaces != expected) {
@@ -4575,8 +4620,7 @@ void test_expression_operator_normalization()
         EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
             QString::fromUtf8("2³   "), 5, QStringLiteral("/"));
     {
-        const QString expected = QString(OperatorChars::DivisionSpace)
-            + QString(OperatorChars::DivisionSign)
+        const QString expected = QString(OperatorChars::DivisionSign)
             + QString(OperatorChars::DivisionSpace);
         ++eval_total_tests;
         if (typedDivisionAfterSuperscriptAndSpaces != expected) {
@@ -4593,8 +4637,7 @@ void test_expression_operator_normalization()
         EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
             QStringLiteral("(2)   "), 5, QString::fromUtf8("−"));
     {
-        const QString expected = QString(OperatorChars::SubtractionSpace)
-            + QString(OperatorChars::SubtractionSign)
+        const QString expected = QString(OperatorChars::SubtractionSign)
             + QString(OperatorChars::SubtractionSpace);
         ++eval_total_tests;
         if (typedSubtractionAfterClosingParenAndSpaces != expected) {
@@ -4643,6 +4686,23 @@ void test_expression_operator_normalization()
         }
     }
 
+    const QString typedAdditionAfterTrailingSpace =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QStringLiteral("2 "), 2, QStringLiteral("+"));
+    {
+        const QString expected = QString(OperatorChars::AdditionSign)
+            + QString(OperatorChars::AdditionSpace);
+        ++eval_total_tests;
+        if (typedAdditionAfterTrailingSpace != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped addition after trailing space avoids duplicate left space\t[NEW]" << endl
+                 << "\tResult   : " << typedAdditionAfterTrailingSpace.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
     const QString scientificNotationWithLowerE =
         EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
             QStringLiteral("2"), 1, QStringLiteral("e"));
@@ -4675,15 +4735,81 @@ void test_expression_operator_normalization()
         }
     }
 
+    const QString inOperatorPrefixWithLowerI =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QStringLiteral("2"), 1, QStringLiteral("i"));
+    {
+        const QString expected = QStringLiteral(" i");
+        ++eval_total_tests;
+        if (inOperatorPrefixWithLowerI != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped in-operator prefix lower i exception\t[NEW]" << endl
+                 << "\tResult   : " << inOperatorPrefixWithLowerI.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString inOperatorPrefixWithUpperI =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QStringLiteral("2"), 1, QStringLiteral("I"));
+    {
+        const QString expected = QStringLiteral(" I");
+        ++eval_total_tests;
+        if (inOperatorPrefixWithUpperI != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped in-operator prefix upper I exception\t[NEW]" << endl
+                 << "\tResult   : " << inOperatorPrefixWithUpperI.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString inOperatorPrefixWithExistingSpace =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QStringLiteral("2 "), 2, QStringLiteral("i"));
+    {
+        const QString expected = QStringLiteral("i");
+        ++eval_total_tests;
+        if (inOperatorPrefixWithExistingSpace != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped in-operator prefix keeps existing spacing\t[NEW]" << endl
+                 << "\tResult   : " << inOperatorPrefixWithExistingSpace.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString plainIdentifierContinuationWithI =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QStringLiteral("p"), 1, QStringLiteral("i"));
+    {
+        const QString expected = QStringLiteral("i");
+        ++eval_total_tests;
+        if (plainIdentifierContinuationWithI != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped i after identifier keeps plain identifier continuation\t[NEW]" << endl
+                 << "\tResult   : " << plainIdentifierContinuationWithI.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
     ++eval_total_tests;
     if (!EditorUtils::shouldIgnoreTypedSpaceAfterDigit(QStringLiteral("2"), 1)
+        || !EditorUtils::shouldIgnoreTypedSpaceAfterDigit(QStringLiteral("pi"), 2)
+        || !EditorUtils::shouldIgnoreTypedSpaceAfterDigit(QStringLiteral("cos(3)"), 6)
         || !EditorUtils::shouldIgnoreTypedSpaceAfterDigit(QString::fromUtf8("2³"), 2)
         || EditorUtils::shouldIgnoreTypedSpaceAfterDigit(QStringLiteral("2+"), 2)) {
         ++eval_failed_tests;
         ++eval_new_failed_tests;
         cerr << __FILE__ << "[" << __LINE__ << "]\tignore typed space after digit/superscript\t[NEW]" << endl
              << "\tResult   : mismatch" << endl
-             << "\tExpected : true,true,false" << endl;
+             << "\tExpected : true,true,true,true,false" << endl;
     }
 
     const QStringList parsedForEditor = EditorUtils::parsePastedExpressionsForEditorInput(

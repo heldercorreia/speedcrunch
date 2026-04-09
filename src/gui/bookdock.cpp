@@ -37,19 +37,8 @@ QString toSuperscriptDigits(const QString& text)
     out.reserve(text.size());
 
     for (const QChar ch : text) {
-        switch (ch.unicode()) {
-        case '0': out += QChar(0x2070); break; // ⁰
-        case '1': out += QChar(0x00B9); break; // ¹
-        case '2': out += QChar(0x00B2); break; // ²
-        case '3': out += QChar(0x00B3); break; // ³
-        case '4': out += QChar(0x2074); break; // ⁴
-        case '5': out += QChar(0x2075); break; // ⁵
-        case '6': out += QChar(0x2076); break; // ⁶
-        case '7': out += QChar(0x2077); break; // ⁷
-        case '8': out += QChar(0x2078); break; // ⁸
-        case '9': out += QChar(0x2079); break; // ⁹
-        default: out += ch; break;
-        }
+        const QChar superscript = OperatorChars::asciiDigitToSuperscript(ch);
+        out += superscript.isNull() ? ch : superscript;
     }
 
     return out;
