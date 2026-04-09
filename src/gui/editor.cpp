@@ -119,6 +119,21 @@ static bool isTypedMultiplicationCharacter(const QChar& ch)
            || EditorUtils::isMultiplicationOperatorAlias(ch, true);
 }
 
+static bool isGroupedSpacedOperator(QChar leftSpace, QChar sign, QChar rightSpace)
+{
+    const auto matches = [leftSpace, sign, rightSpace](QChar expectedSpace, QChar expectedSign) {
+        return leftSpace == expectedSpace
+               && sign == expectedSign
+               && rightSpace == expectedSpace;
+    };
+
+    return matches(OperatorChars::MulDotSpace, OperatorChars::MulDotSign)
+           || matches(OperatorChars::MulCrossSpace, OperatorChars::MulCrossSign)
+           || matches(OperatorChars::AdditionSpace, OperatorChars::AdditionSign)
+           || matches(OperatorChars::SubtractionSpace, OperatorChars::SubtractionSign)
+           || matches(OperatorChars::DivisionSpace, OperatorChars::DivisionSign);
+}
+
 static bool isAfterGroupedSpacedOperator(const QString& text, int cursorPosition)
 {
     if (cursorPosition < 3 || cursorPosition > text.size())
@@ -128,19 +143,21 @@ static bool isAfterGroupedSpacedOperator(const QString& text, int cursorPosition
     const QChar sign = text.at(cursorPosition - 2);
     const QChar rightSpace = text.at(cursorPosition - 1);
 
-    const auto matches = [leftSpace, sign, rightSpace](QChar expectedSpace, QChar expectedSign) {
-        return leftSpace == expectedSpace
-               && sign == expectedSign
-               && rightSpace == expectedSpace;
-    };
-
     // Keep display-formatted binary operators atomic for Backspace when the
     // cursor is exactly after "<space><operator><space>".
-    return matches(OperatorChars::MulDotSpace, OperatorChars::MulDotSign)
-           || matches(OperatorChars::MulCrossSpace, OperatorChars::MulCrossSign)
-           || matches(OperatorChars::AdditionSpace, OperatorChars::AdditionSign)
-           || matches(OperatorChars::SubtractionSpace, OperatorChars::SubtractionSign)
-           || matches(OperatorChars::DivisionSpace, OperatorChars::DivisionSign);
+    return isGroupedSpacedOperator(leftSpace, sign, rightSpace);
+}
+
+static bool isBeforeGroupedSpacedOperator(const QString& text, int cursorPosition)
+{
+    if (cursorPosition < 0 || cursorPosition + 3 > text.size())
+        return false;
+
+    const QChar leftSpace = text.at(cursorPosition);
+    const QChar sign = text.at(cursorPosition + 1);
+    const QChar rightSpace = text.at(cursorPosition + 2);
+
+    return isGroupedSpacedOperator(leftSpace, sign, rightSpace);
 }
 
 static bool isRightOfOpeningSquareBracketWithOnlySpaces(const QString& text, int cursorPosition)
@@ -1436,6 +1453,33 @@ void Editor::keyPressEvent(QKeyEvent* event)
 
     case Qt::Key_Left:
     case Qt::Key_Right:
+        if (!(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))) {
+            QTextCursor cursor = textCursor();
+            const bool keepAnchor = event->modifiers() & Qt::ShiftModifier;
+            if (keepAnchor || !cursor.hasSelection()) {
+                const int position = cursor.position();
+                int newPosition = -1;
+                if (key == Qt::Key_Left && isAfterGroupedSpacedOperator(text(), position))
+                    newPosition = position - 3;
+                else if (key == Qt::Key_Right && isBeforeGroupedSpacedOperator(text(), position))
+                    newPosition = position + 3;
+
+                if (newPosition >= 0) {
+                    cursor.setPosition(newPosition, keepAnchor ? QTextCursor::KeepAnchor : QTextCursor::MoveAnchor);
+                    setTextCursor(cursor);
+                    checkMatching();
+                    checkAutoCalc();
+                    event->accept();
+                    return;
+                }
+            }
+        }
+        checkMatching();
+        checkAutoCalc();
+        QPlainTextEdit::keyPressEvent(event);
+        event->accept();
+        return;
+
     case Qt::Key_Home:
     case Qt::Key_End:
         checkMatching();
