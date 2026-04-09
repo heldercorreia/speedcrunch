@@ -33,6 +33,7 @@ struct NumberFormatter {
                           bool useComplexNotation, char complexNotationOverride);
     static QString formatTrigSymbolic(Quantity);
     static QString formatNumericLiteralForDisplay(const QString& input);
+    static bool tryFormatStandaloneNumericLiteralForDisplay(const QString& input, QString* output);
 };
 
 #endif

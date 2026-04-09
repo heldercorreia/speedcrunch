@@ -27,6 +27,8 @@
 #include "math/rational.h"
 #include "math/units.h"
 
+#include <algorithm>
+
 
 static const QChar g_dotChar = OperatorChars::MulDotSign;
 static const QChar g_minusChar = QString::fromUtf8("−")[0];
@@ -211,6 +213,215 @@ QString formatRationalDisplay(Quantity q)
     if (!unitName.isEmpty())
         result += QStringLiteral("[%1]").arg(unitName);
     return result;
+}
+
+bool isValidDigitForBase(const QChar ch, int base)
+{
+    if (base <= 10)
+        return ch >= QLatin1Char('0') && ch < QLatin1Char('0' + base);
+
+    if (ch >= QLatin1Char('0') && ch <= QLatin1Char('9'))
+        return true;
+
+    const QChar lower = ch.toLower();
+    return lower >= QLatin1Char('a') && lower < QLatin1Char('a' + (base - 10));
+}
+
+bool isValidGroupedIntegerPart(const QString& part, QChar separator, int base, int groupSize)
+{
+    const QStringList groups = part.split(separator, Qt::KeepEmptyParts);
+    if (groups.isEmpty())
+        return false;
+
+    for (int i = 0; i < groups.size(); ++i) {
+        const QString& group = groups.at(i);
+        if (group.isEmpty())
+            return false;
+        const int expectedSize = (i == 0) ? -1 : groupSize;
+        if (expectedSize > 0 && group.size() != expectedSize)
+            return false;
+        if (i == 0 && group.size() > groupSize)
+            return false;
+        for (const QChar ch : group) {
+            if (!isValidDigitForBase(ch, base))
+                return false;
+        }
+    }
+
+    return true;
+}
+
+bool canonicalizeLiteralMantissa(const QString& input, int base, int groupingSize,
+                                 bool allowGroupingHeuristic, QString* output)
+{
+    const int dotCount = input.count(QLatin1Char('.'));
+    const int commaCount = input.count(QLatin1Char(','));
+
+    if (dotCount == 0 && commaCount == 0) {
+        if (input.isEmpty())
+            return false;
+        for (const QChar ch : input) {
+            if (!isValidDigitForBase(ch, base))
+                return false;
+        }
+        *output = input;
+        return true;
+    }
+
+    QChar radixSep;
+    QChar groupingSep;
+    bool hasRadix = false;
+    if (dotCount > 0 && commaCount > 0) {
+        const int lastDot = input.lastIndexOf(QLatin1Char('.'));
+        const int lastComma = input.lastIndexOf(QLatin1Char(','));
+        hasRadix = true;
+        radixSep = (lastDot > lastComma) ? QLatin1Char('.') : QLatin1Char(',');
+        groupingSep = (radixSep == QLatin1Char('.')) ? QLatin1Char(',') : QLatin1Char('.');
+        if (input.count(radixSep) > 1)
+            return false;
+    } else {
+        const QChar sep = (dotCount > 0) ? QLatin1Char('.') : QLatin1Char(',');
+        const int sepCount = input.count(sep);
+        if (sepCount == 1) {
+            const int sepPos = input.indexOf(sep);
+            const QString left = input.left(sepPos);
+            const QString right = input.mid(sepPos + 1);
+            const bool looksGroupedInteger = allowGroupingHeuristic
+                && !left.isEmpty()
+                && right.size() == groupingSize
+                && std::all_of(left.cbegin(), left.cend(),
+                               [base](QChar ch) { return isValidDigitForBase(ch, base); })
+                && std::all_of(right.cbegin(), right.cend(),
+                               [base](QChar ch) { return isValidDigitForBase(ch, base); });
+            if (looksGroupedInteger) {
+                hasRadix = false;
+                groupingSep = sep;
+            } else {
+                hasRadix = true;
+                radixSep = sep;
+            }
+        } else {
+            hasRadix = false;
+            groupingSep = sep;
+            if (!isValidGroupedIntegerPart(input, groupingSep, base, groupingSize))
+                return false;
+        }
+    }
+
+    if (!hasRadix) {
+        QString integral = input;
+        if (!groupingSep.isNull())
+            integral.remove(groupingSep);
+        if (integral.isEmpty())
+            return false;
+        for (const QChar ch : integral) {
+            if (!isValidDigitForBase(ch, base))
+                return false;
+        }
+        *output = integral;
+        return true;
+    }
+
+    const int radixPos = input.lastIndexOf(radixSep);
+    if (radixPos <= 0 || radixPos >= input.size() - 1)
+        return false;
+
+    QString integral = input.left(radixPos);
+    QString fractional = input.mid(radixPos + 1);
+    if (integral.isEmpty() || fractional.isEmpty())
+        return false;
+
+    if (!groupingSep.isNull()) {
+        if (!isValidGroupedIntegerPart(integral, groupingSep, base, groupingSize))
+            return false;
+        integral.remove(groupingSep);
+        fractional.remove(groupingSep);
+    }
+
+    for (const QChar ch : integral) {
+        if (!isValidDigitForBase(ch, base))
+            return false;
+    }
+    for (const QChar ch : fractional) {
+        if (!isValidDigitForBase(ch, base))
+            return false;
+    }
+
+    *output = integral + QLatin1Char('.') + fractional;
+    return true;
+}
+
+bool canonicalizeStandaloneNumericLiteral(const QString& input, QString* output)
+{
+    QString trimmed = input.trimmed();
+    if (trimmed.isEmpty())
+        return false;
+
+    QString sign;
+    if (trimmed.startsWith(QLatin1Char('+'))) {
+        trimmed.remove(0, 1);
+    } else if (trimmed.startsWith(QLatin1Char('-'))
+               || trimmed.startsWith(g_minusChar)) {
+        sign = QStringLiteral("-");
+        trimmed.remove(0, 1);
+    }
+    if (trimmed.isEmpty())
+        return false;
+
+    QString mantissa = trimmed;
+    QString exponent;
+    int base = 10;
+    int groupingSize = 3;
+    bool allowGroupingHeuristic = true;
+
+    QString prefix;
+    if (trimmed.startsWith(QLatin1String("0x"), Qt::CaseInsensitive)) {
+        base = 16;
+        groupingSize = 4;
+        allowGroupingHeuristic = false;
+        prefix = trimmed.left(2);
+        mantissa = trimmed.mid(2);
+    } else if (trimmed.startsWith(QLatin1String("0o"), Qt::CaseInsensitive)) {
+        base = 8;
+        groupingSize = 3;
+        allowGroupingHeuristic = false;
+        prefix = trimmed.left(2);
+        mantissa = trimmed.mid(2);
+    } else if (trimmed.startsWith(QLatin1String("0b"), Qt::CaseInsensitive)) {
+        base = 2;
+        groupingSize = 4;
+        allowGroupingHeuristic = false;
+        prefix = trimmed.left(2);
+        mantissa = trimmed.mid(2);
+    } else {
+        const int exponentPos = mantissa.indexOf(RegExpPatterns::decimalExponentSuffix());
+        if (exponentPos >= 0) {
+            exponent = mantissa.mid(exponentPos);
+            mantissa = mantissa.left(exponentPos);
+            allowGroupingHeuristic = false;
+        }
+    }
+
+    if (mantissa.isEmpty())
+        return false;
+
+    QString canonicalMantissa;
+    if (!canonicalizeLiteralMantissa(mantissa, base, groupingSize,
+                                     allowGroupingHeuristic, &canonicalMantissa)) {
+        return false;
+    }
+
+    QString canonical = sign + prefix + canonicalMantissa + exponent;
+    if (base == 10) {
+        const QByteArray bytes = canonical.toLatin1();
+        const char* rest = nullptr;
+        const HNumber parsed = HMath::parse_str(bytes.constData(), &rest);
+        if (parsed.isNan() || !rest || *rest != '\0')
+            return false;
+    }
+
+    *output = canonical;
+    return true;
 }
 
 } // namespace
@@ -538,4 +749,17 @@ QString NumberFormatter::formatNumericLiteralForDisplay(const QString& input)
     }
     output += input.mid(lastPos);
     return output;
+}
+
+bool NumberFormatter::tryFormatStandaloneNumericLiteralForDisplay(const QString& input, QString* output)
+{
+    if (!output)
+        return false;
+
+    QString canonical;
+    if (!canonicalizeStandaloneNumericLiteral(input, &canonical))
+        return false;
+
+    *output = formatNumericLiteralForDisplay(canonical);
+    return true;
 }

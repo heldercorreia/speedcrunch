@@ -932,13 +932,20 @@ void Editor::insertFromMimeData(const QMimeData* source)
     if (expressions.isEmpty())
         return;
 
+    auto normalizedPastedExpression = [](const QString& expression) {
+        QString formattedNumericLiteral;
+        if (NumberFormatter::tryFormatStandaloneNumericLiteralForDisplay(expression, &formattedNumericLiteral))
+            return normalizeExpressionTypedInEditor(formattedNumericLiteral);
+        return expression;
+    };
+
     if (expressions.size() == 1) {
         // Insert text manually to make sure expression does not contain new line characters
-        insert(expressions.at(0));
+        insert(normalizedPastedExpression(expressions.at(0)));
         return;
     }
     for (int i = 0; i < expressions.size(); ++i) {
-        insert(expressions.at(i));
+        insert(normalizedPastedExpression(expressions.at(i)));
         evaluate();
     }
 }

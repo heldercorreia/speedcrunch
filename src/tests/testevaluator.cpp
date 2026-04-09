@@ -4983,6 +4983,62 @@ void test_grouped_numeric_literal_display_format()
     settings->digitGroupingIntegerPartOnly = oldDigitGroupingIntegerPartOnly;
 }
 
+void test_pasted_standalone_numeric_literal_reformatting()
+{
+    Settings* settings = Settings::instance();
+    const Settings::NumberFormatStyle oldStyle = settings->numberFormatStyle;
+    const bool oldIntegerOnly = settings->digitGroupingIntegerPartOnly;
+
+    settings->numberFormatStyle = Settings::NumberFormatThreeDigitDotComma;
+    settings->applyNumberFormatStyle();
+    settings->digitGroupingIntegerPartOnly = true;
+
+    QString formatted;
+
+    ++eval_total_tests;
+    const bool okUsGrouped =
+        NumberFormatter::tryFormatStandaloneNumericLiteralForDisplay(
+            QStringLiteral("1,234,567.890123"), &formatted);
+    if (!okUsGrouped || formatted != QStringLiteral("1.234.567,890123")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\tformat pasted standalone grouped decimal\t[NEW]" << endl
+             << "\tResult   : " << (okUsGrouped ? formatted : QString("<invalid>")).toUtf8().constData() << endl
+             << "\tExpected : 1.234.567,890123" << endl;
+    }
+
+    ++eval_total_tests;
+    const bool okPlain =
+        NumberFormatter::tryFormatStandaloneNumericLiteralForDisplay(
+            QStringLiteral("-1234567.890123"), &formatted);
+    if (!okPlain || formatted != QStringLiteral("-1.234.567,890123")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\tformat pasted standalone plain decimal\t[NEW]" << endl
+             << "\tResult   : " << (okPlain ? formatted : QString("<invalid>")).toUtf8().constData() << endl
+             << "\tExpected : -1.234.567,890123" << endl;
+    }
+
+    ++eval_total_tests;
+    const bool okExpression =
+        NumberFormatter::tryFormatStandaloneNumericLiteralForDisplay(
+            QStringLiteral("1,234+5"), &formatted);
+    if (okExpression) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\tdo not treat expressions as standalone numeric literal\t[NEW]" << endl
+             << "\tResult   : " << formatted.toUtf8().constData() << endl
+             << "\tExpected : <invalid>" << endl;
+    }
+
+    settings->numberFormatStyle = oldStyle;
+    settings->applyNumberFormatStyle();
+    settings->digitGroupingIntegerPartOnly = oldIntegerOnly;
+}
+
 void test_display_root_aliases_for_result_lines()
 {
     ++eval_total_tests;
@@ -5519,6 +5575,7 @@ int main(int argc, char* argv[])
     test_session_deserialize_without_history();
     test_function_usage_tooltip();
     test_grouped_numeric_literal_display_format();
+    test_pasted_standalone_numeric_literal_reformatting();
     test_display_root_aliases_for_result_lines();
     test_display_spacing_stability_for_unit_conversion();
     test_display_conversion_with_unicode_spaces_and_cross_units();
