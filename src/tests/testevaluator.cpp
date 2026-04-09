@@ -4481,6 +4481,168 @@ void test_expression_operator_normalization()
         }
     }
 
+    const QString typedAdditionAfterDigit =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QStringLiteral("2"), 1, QStringLiteral("+"));
+    {
+        const QString expected = QString(OperatorChars::AdditionSpace)
+            + QString(OperatorChars::AdditionSign)
+            + QString(OperatorChars::AdditionSpace);
+        ++eval_total_tests;
+        if (typedAdditionAfterDigit != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped addition after digit uses configured spacing\t[NEW]" << endl
+                 << "\tResult   : " << typedAdditionAfterDigit.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString typedSubtractionAfterSuperscriptDigit =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QString::fromUtf8("2³"), 2, QString::fromUtf8("−"));
+    {
+        const QString expected = QString(OperatorChars::SubtractionSpace)
+            + QString(OperatorChars::SubtractionSign)
+            + QString(OperatorChars::SubtractionSpace);
+        ++eval_total_tests;
+        if (typedSubtractionAfterSuperscriptDigit != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped subtraction after superscript uses configured spacing\t[NEW]" << endl
+                 << "\tResult   : " << typedSubtractionAfterSuperscriptDigit.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString typedDivisionAfterDigit =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QStringLiteral("2"), 1, QStringLiteral("/"));
+    {
+        const QString expected = QString(OperatorChars::DivisionSpace)
+            + QString(OperatorChars::DivisionSign)
+            + QString(OperatorChars::DivisionSpace);
+        ++eval_total_tests;
+        if (typedDivisionAfterDigit != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped division after digit uses configured spacing\t[NEW]" << endl
+                 << "\tResult   : " << typedDivisionAfterDigit.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString typedMultiplicationAfterDigit =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QStringLiteral("2"), 1, QString::fromUtf8("×"));
+    {
+        const QString expected = QString(OperatorChars::MulCrossSpace)
+            + QString(OperatorChars::MulCrossSign)
+            + QString(OperatorChars::MulCrossSpace);
+        ++eval_total_tests;
+        if (typedMultiplicationAfterDigit != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped multiplication after digit uses configured spacing\t[NEW]" << endl
+                 << "\tResult   : " << typedMultiplicationAfterDigit.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString typedAdditionAfterNonLatinLetterAndSpaces =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QString::fromUtf8("β   "), 4, QStringLiteral("+"));
+    {
+        const QString expected = QString(OperatorChars::AdditionSpace)
+            + QString(OperatorChars::AdditionSign)
+            + QString(OperatorChars::AdditionSpace);
+        ++eval_total_tests;
+        if (typedAdditionAfterNonLatinLetterAndSpaces != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped addition after non-latin letter and spaces uses configured spacing\t[NEW]" << endl
+                 << "\tResult   : " << typedAdditionAfterNonLatinLetterAndSpaces.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString typedDivisionAfterSuperscriptAndSpaces =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QString::fromUtf8("2³   "), 5, QStringLiteral("/"));
+    {
+        const QString expected = QString(OperatorChars::DivisionSpace)
+            + QString(OperatorChars::DivisionSign)
+            + QString(OperatorChars::DivisionSpace);
+        ++eval_total_tests;
+        if (typedDivisionAfterSuperscriptAndSpaces != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped division after superscript and spaces uses configured spacing\t[NEW]" << endl
+                 << "\tResult   : " << typedDivisionAfterSuperscriptAndSpaces.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString typedSubtractionAfterClosingParenAndSpaces =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QStringLiteral("(2)   "), 5, QString::fromUtf8("−"));
+    {
+        const QString expected = QString(OperatorChars::SubtractionSpace)
+            + QString(OperatorChars::SubtractionSign)
+            + QString(OperatorChars::SubtractionSpace);
+        ++eval_total_tests;
+        if (typedSubtractionAfterClosingParenAndSpaces != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped subtraction after closing paren and spaces uses configured spacing\t[NEW]" << endl
+                 << "\tResult   : " << typedSubtractionAfterClosingParenAndSpaces.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString typedAdditionAfterClosingBracket =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QStringLiteral("[2]"), 3, QStringLiteral("+"));
+    {
+        const QString expected = QString(OperatorChars::AdditionSpace)
+            + QString(OperatorChars::AdditionSign)
+            + QString(OperatorChars::AdditionSpace);
+        ++eval_total_tests;
+        if (typedAdditionAfterClosingBracket != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped addition after closing bracket uses configured spacing\t[NEW]" << endl
+                 << "\tResult   : " << typedAdditionAfterClosingBracket.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
+    const QString typedAdditionAfterLetter =
+        EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            QStringLiteral("a"), 1, QStringLiteral("+"));
+    {
+        const QString expected = QString(OperatorChars::AdditionSpace)
+            + QString(OperatorChars::AdditionSign)
+            + QString(OperatorChars::AdditionSpace);
+        ++eval_total_tests;
+        if (typedAdditionAfterLetter != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__
+                 << "]\ttyped addition after letter uses configured spacing\t[NEW]" << endl
+                 << "\tResult   : " << typedAdditionAfterLetter.toUtf8().constData() << endl
+                 << "\tExpected : " << expected.toUtf8().constData() << endl;
+        }
+    }
+
     const QString scientificNotationWithLowerE =
         EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
             QStringLiteral("2"), 1, QStringLiteral("e"));

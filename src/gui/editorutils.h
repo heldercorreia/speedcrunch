@@ -161,6 +161,20 @@ inline QString adjustedTypedTextForImplicitMultiplicationAfterDigit(
         return typedText;
 
     const QChar typed = typedText.at(0);
+    QString operatorPrefix;
+    const auto leftNonSpaceSupportsOperatorInsertion = [&]() {
+        int i = cursorPosition - 1;
+        while (i >= 0 && text.at(i).isSpace())
+            --i;
+        if (i < 0)
+            return false;
+        const QChar prevNonSpace = text.at(i);
+        return prevNonSpace.isDigit()
+            || prevNonSpace.isLetter()
+            || OperatorChars::isSuperscriptDigit(prevNonSpace)
+            || prevNonSpace == QLatin1Char(')')
+            || prevNonSpace == QLatin1Char(']');
+    };
     if (typed.isLetter()) {
         if (typed == QLatin1Char('e') || typed == QLatin1Char('E'))
             return typedText;
@@ -180,9 +194,39 @@ inline QString adjustedTypedTextForImplicitMultiplicationAfterDigit(
             && !prevNonSpace.isLetter()) {
             return typedText;
         }
+    } else if (typed == OperatorChars::AdditionSign || isAdditionOperatorAlias(typed)) {
+        if (!leftNonSpaceSupportsOperatorInsertion())
+            return typedText;
+        operatorPrefix = QString(OperatorChars::AdditionSpace)
+            + QString(OperatorChars::AdditionSign)
+            + QString(OperatorChars::AdditionSpace);
+    } else if (isSubtractionOperatorAlias(typed)) {
+        if (!leftNonSpaceSupportsOperatorInsertion())
+            return typedText;
+        operatorPrefix = QString(OperatorChars::SubtractionSpace)
+            + QString(OperatorChars::SubtractionSign)
+            + QString(OperatorChars::SubtractionSpace);
+    } else if (typed == OperatorChars::DivisionSign || isDivisionOperatorAlias(typed)) {
+        if (!leftNonSpaceSupportsOperatorInsertion())
+            return typedText;
+        operatorPrefix = QString(OperatorChars::DivisionSpace)
+            + QString(OperatorChars::DivisionSign)
+            + QString(OperatorChars::DivisionSpace);
+    } else if (typed == OperatorChars::MulCrossSign
+               || typed == OperatorChars::MulDotSign
+               || isMultiplicationOperatorAlias(typed, true)) {
+        if (!leftNonSpaceSupportsOperatorInsertion())
+            return typedText;
+        const bool useDotSign = typed == OperatorChars::MulDotSign;
+        const QChar sign = useDotSign ? OperatorChars::MulDotSign : OperatorChars::MulCrossSign;
+        const QChar space = useDotSign ? OperatorChars::MulDotSpace : OperatorChars::MulCrossSpace;
+        operatorPrefix = QString(space) + QString(sign) + QString(space);
     } else {
         return typedText;
     }
+
+    if (!operatorPrefix.isEmpty())
+        return operatorPrefix;
 
     return QString(OperatorChars::MulDotSpace)
            + QString(OperatorChars::MulDotSign)

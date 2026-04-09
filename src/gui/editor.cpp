@@ -1599,14 +1599,20 @@ void Editor::keyPressEvent(QKeyEvent* event)
           cursor.deletePreviousChar();
           insert(QString::fromUtf8("^"));
         } else {
-          insert(QString(OperatorChars::MulCrossSign));
+          insert(EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+              text(),
+              textCursor().position(),
+              QString(OperatorChars::MulCrossSign)));
         }
         event->accept();
         return;
     }
 
     case Qt::Key_Minus:
-        insert(QString(UnicodeChars::MinusSign));
+        insert(EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+            text(),
+            textCursor().position(),
+            QString(UnicodeChars::MinusSign)));
         event->accept();
         return;
     case Qt::Key_At:
