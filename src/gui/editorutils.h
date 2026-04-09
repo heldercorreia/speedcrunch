@@ -252,6 +252,25 @@ inline bool isExpressionOperatorOrSeparator(const QChar& ch)
            || ch == QLatin1Char(',');
 }
 
+inline bool isAnyOperator(const QChar& ch)
+{
+    return ch == QLatin1Char('+')
+           || ch == QLatin1Char('-')
+           || ch == QLatin1Char('*')
+           || ch == QLatin1Char('/')
+           || ch == QLatin1Char('%')
+           || ch == QLatin1Char('^')
+           || ch == QLatin1Char('&')
+           || ch == QLatin1Char('|')
+           || ch == QLatin1Char('=')
+           || ch == QLatin1Char('<')
+           || ch == QLatin1Char('>')
+           || isAdditionOperatorAlias(ch)
+           || isSubtractionOperatorAlias(ch)
+           || isDivisionOperatorAlias(ch)
+           || isMultiplicationOperatorAlias(ch, true);
+}
+
 inline bool endsWithIncompleteExpressionToken(const QString& text)
 {
     const QString trimmed = text.trimmed();
