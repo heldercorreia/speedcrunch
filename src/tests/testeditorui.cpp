@@ -58,6 +58,7 @@ private slots:
     void blocks_ime_commit_caret_after_multiplication_operator();
     void finds_completion_keyword_after_superscript_power();
     void completes_replacing_trailing_identifier_after_superscript_power();
+    void completes_pi_identifier_as_pi_symbol();
 };
 
 void TestEditorUi::blocks_consecutive_plus()
@@ -1537,6 +1538,25 @@ void TestEditorUi::completes_replacing_trailing_identifier_after_superscript_pow
         QString::fromUtf8("pi²")
             + QString(OperatorChars::MulDotSign)
             + QStringLiteral("cos()"));
+}
+
+void TestEditorUi::completes_pi_identifier_as_pi_symbol()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    editor.setText(QStringLiteral("p"));
+    editor.setCursorPosition(editor.text().size());
+
+    QVERIFY(QMetaObject::invokeMethod(
+        &editor,
+        "autoComplete",
+        Qt::DirectConnection,
+        Q_ARG(QString, QStringLiteral("pi: Archimedes' constant Pi"))));
+
+    QCOMPARE(editor.text(), QString::fromUtf8("π"));
 }
 
 QTEST_MAIN(TestEditorUi)

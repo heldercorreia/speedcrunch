@@ -1820,6 +1820,8 @@ void Editor::autoComplete(const QString& item)
     auto newTokenText = str.at(0);
     if (unitContext)
         newTokenText = Units::formatUnitTokenForDisplay(newTokenText);
+    if (newTokenText == QLatin1String("pi"))
+        newTokenText = QString(UnicodeChars::Pi);
     if (newTokenText == QLatin1String("degree")
         || newTokenText == QLatin1String("deg")) {
         newTokenText = QString(UnicodeChars::DegreeSign);
