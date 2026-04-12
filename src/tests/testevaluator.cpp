@@ -5596,6 +5596,19 @@ void test_pasted_standalone_numeric_literal_reformatting()
              << "\tExpected : <invalid>" << endl;
     }
 
+    ++eval_total_tests;
+    const bool okUpperExponent =
+        NumberFormatter::tryFormatStandaloneNumericLiteralForDisplay(
+            QStringLiteral("1.23E+45"), &formatted);
+    if (!okUpperExponent || formatted != QStringLiteral("1,23e+45")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__
+             << "]\tnormalize standalone numeric exponent marker to lower e\t[NEW]" << endl
+             << "\tResult   : " << (okUpperExponent ? formatted : QString("<invalid>")).toUtf8().constData() << endl
+             << "\tExpected : 1,23e+45" << endl;
+    }
+
     settings->numberFormatStyle = oldStyle;
     settings->applyNumberFormatStyle();
     settings->digitGroupingIntegerPartOnly = oldIntegerOnly;

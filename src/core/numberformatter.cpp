@@ -710,6 +710,7 @@ QString NumberFormatter::formatNumericLiteralForDisplay(const QString& input)
             const int exponentPos = body.indexOf(RegExpPatterns::decimalExponentSuffix());
             if (exponentPos >= 0) {
                 exponent = body.mid(exponentPos);
+                exponent[0] = QLatin1Char('e');
                 body = body.left(exponentPos);
             }
         }
