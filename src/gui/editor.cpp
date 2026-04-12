@@ -970,10 +970,88 @@ static Tokens scanForCompletionContext(Evaluator* evaluator,
                                        const QString& text,
                                        bool squareBracketContext)
 {
+    const auto normalizeSuperscriptPowers = [&](QString source) {
+        for (int i = 0; i < source.size(); ++i) {
+            if (!OperatorChars::isSuperscriptPowerChar(source.at(i)))
+                continue;
+
+            int j = i;
+            while (j < source.size() && OperatorChars::isSuperscriptPowerChar(source.at(j)))
+                ++j;
+
+            QString power;
+            power.reserve(j - i + 3);
+            bool negative = false;
+            for (int k = i; k < j; ++k) {
+                const QChar ch = source.at(k);
+                if (OperatorChars::isSuperscriptDigit(ch)) {
+                    const QChar asciiDigit = OperatorChars::superscriptDigitToAscii(ch);
+                    if (!asciiDigit.isNull())
+                        power += asciiDigit;
+                    continue;
+                }
+                if (ch == OperatorChars::SuperscriptMinus) {
+                    if (power.isEmpty()) {
+                        negative = true;
+                        continue;
+                    }
+                    power += QLatin1Char('-');
+                    continue;
+                }
+                if (ch == OperatorChars::SuperscriptPlus) {
+                    if (power.isEmpty())
+                        continue;
+                    power += QLatin1Char('+');
+                }
+            }
+
+            if (power.isEmpty())
+                continue;
+            if (negative)
+                power = QStringLiteral("^(") + QLatin1Char('-') + power + QLatin1Char(')');
+            else
+                power.prepend(QLatin1Char('^'));
+
+            source.replace(i, j - i, power);
+            i += power.size() - 1;
+        }
+        return source;
+    };
+
     Tokens tokens = evaluator->scan(text);
-    if (!tokens.valid() && squareBracketContext)
+    if (tokens.valid())
+        return tokens;
+
+    const QString normalized = normalizeSuperscriptPowers(text);
+    if (normalized != text)
+        tokens = evaluator->scan(normalized);
+    if (tokens.valid())
+        return tokens;
+
+    if (squareBracketContext) {
         tokens = evaluator->scan(text + QLatin1Char(']'));
+        if (!tokens.valid() && normalized != text)
+            tokens = evaluator->scan(normalized + QLatin1Char(']'));
+    }
     return tokens;
+}
+
+static int trailingIdentifierStart(const QString& text, int endPosition)
+{
+    const int safeEnd = qBound(0, endPosition, text.size());
+    if (safeEnd <= 0)
+        return -1;
+
+    auto isIdentifierChar = [](const QChar& ch) {
+        return ch.isLetterOrNumber() || ch == QLatin1Char('_');
+    };
+
+    int start = safeEnd;
+    while (start > 0 && isIdentifierChar(text.at(start - 1)))
+        --start;
+    if (start == safeEnd)
+        return -1;
+    return start;
 }
 
 static QString formattedLiveResult(const Quantity& quantity, char resultFormat = '\0')
@@ -1654,12 +1732,16 @@ void Editor::triggerAutoComplete()
     }
     if (!foundIdentifierToken)
         return;
-    const auto id = lastToken.text();
+    const int rawIdStart = trailingIdentifierStart(subtext, subtext.length());
+    const QString id = rawIdStart >= 0
+        ? subtext.mid(rawIdStart)
+        : lastToken.text();
     if (id.length() < 1)
         return;
 
     // No space after identifier.
-    if (lastToken.pos() + lastToken.size() < subtext.length())
+    const int rawIdEnd = rawIdStart >= 0 ? subtext.length() : (lastToken.pos() + lastToken.size());
+    if (rawIdEnd < subtext.length())
         return;
 
     QStringList choices(matchFragment(id, unitContext));
@@ -1705,6 +1787,9 @@ void Editor::autoComplete(const QString& item)
 {
     if (!m_isAutoCompletionEnabled || item.isEmpty())
         return;
+    // Accepting a completion edits text (and often inserts "()" for functions),
+    // which emits textChanged and would immediately reopen completion.
+    m_shouldBlockAutoCompletionOnce = true;
 
     const int currentPosition = textCursor().position();
     const bool unitContext = isInsideUnmatchedSquareBracketContext(text(), currentPosition);
@@ -1739,15 +1824,20 @@ void Editor::autoComplete(const QString& item)
         || newTokenText == QLatin1String("deg")) {
         newTokenText = QString(UnicodeChars::DegreeSign);
     }
-    const int leadingSpaces = lastToken.size() - lastToken.text().length();
+    const int rawIdStart = trailingIdentifierStart(subtext, subtext.length());
+    const int replaceStart = rawIdStart >= 0 ? rawIdStart : lastToken.pos();
+    const int replaceSize = rawIdStart >= 0 ? (subtext.length() - rawIdStart) : lastToken.size();
+    const int leadingSpaces = rawIdStart >= 0
+        ? 0
+        : (lastToken.size() - lastToken.text().length());
     if (leadingSpaces > 0)
         newTokenText = newTokenText.rightJustified(
             leadingSpaces + newTokenText.length(), ' ');
 
     blockSignals(true);
     QTextCursor cursor = textCursor();
-    cursor.setPosition(lastToken.pos());
-    cursor.setPosition(lastToken.pos() + lastToken.size(),
+    cursor.setPosition(replaceStart);
+    cursor.setPosition(replaceStart + replaceSize,
                        QTextCursor::KeepAnchor);
     setTextCursor(cursor);
     insert(newTokenText);

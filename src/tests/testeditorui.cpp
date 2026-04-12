@@ -56,6 +56,8 @@ private slots:
     void blocks_ime_preedit_caret_echo_after_existing_caret();
     void blocks_ime_commit_caret_after_existing_caret();
     void blocks_ime_commit_caret_after_multiplication_operator();
+    void finds_completion_keyword_after_superscript_power();
+    void completes_replacing_trailing_identifier_after_superscript_power();
 };
 
 void TestEditorUi::blocks_consecutive_plus()
@@ -1497,6 +1499,44 @@ void TestEditorUi::blocks_ime_commit_caret_after_multiplication_operator()
              QStringLiteral("3")
                  + QString(OperatorChars::MulCrossSign)
                  + QStringLiteral(" "));
+}
+
+void TestEditorUi::finds_completion_keyword_after_superscript_power()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    editor.setText(QString::fromUtf8("pi²c"));
+    editor.setCursorPosition(editor.text().size());
+
+    const QString keyword = editor.getKeyword();
+    QVERIFY(!keyword.isEmpty());
+    QVERIFY(keyword.startsWith(QLatin1Char('c')));
+}
+
+void TestEditorUi::completes_replacing_trailing_identifier_after_superscript_power()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    editor.setText(QString::fromUtf8("pi²") + QString(OperatorChars::MulDotSign) + QStringLiteral("c"));
+    editor.setCursorPosition(editor.text().size());
+
+    QVERIFY(QMetaObject::invokeMethod(
+        &editor,
+        "autoComplete",
+        Qt::DirectConnection,
+        Q_ARG(QString, QStringLiteral("cos: Built-in function"))));
+
+    QCOMPARE(
+        editor.text(),
+        QString::fromUtf8("pi²")
+            + QString(OperatorChars::MulDotSign)
+            + QStringLiteral("cos()"));
 }
 
 QTEST_MAIN(TestEditorUi)
