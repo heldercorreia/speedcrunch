@@ -510,18 +510,33 @@ static bool isAfterFunctionIdentifierWithOnlySpaces(Evaluator* evaluator,
 
     const QString leftText = text.left(identifierEnd);
     const Tokens leftTokens = evaluator->scan(leftText);
-    if (!leftTokens.valid() || leftTokens.isEmpty())
+    if (leftTokens.valid() && !leftTokens.isEmpty()) {
+        const Token lastToken = leftTokens.at(leftTokens.size() - 1);
+        if (lastToken.isIdentifier()
+            && lastToken.pos() + lastToken.size() == leftText.size()) {
+            const QString identifier = lastToken.text();
+            if (FunctionRepo::instance()->find(identifier)
+                || evaluator->hasUserFunction(identifier)) {
+                return true;
+            }
+        }
+    }
+
+    // Fallback for valid trailing identifier even when the full left side
+    // does not tokenize cleanly (e.g. complex superscript tails earlier).
+    int identifierStart = identifierEnd - 1;
+    const auto isIdentifierChar = [](QChar ch) {
+        return ch.isLetterOrNumber() || ch == QLatin1Char('_');
+    };
+    while (identifierStart >= 0 && isIdentifierChar(text.at(identifierStart)))
+        --identifierStart;
+    ++identifierStart;
+    if (identifierStart >= identifierEnd)
         return false;
 
-    const Token lastToken = leftTokens.at(leftTokens.size() - 1);
-    if (!lastToken.isIdentifier())
-        return false;
-    if (lastToken.pos() + lastToken.size() != leftText.size())
-        return false;
-
-    const QString identifier = lastToken.text();
-    return FunctionRepo::instance()->find(identifier)
-           || evaluator->hasUserFunction(identifier);
+    const QString trailingIdentifier = text.mid(identifierStart, identifierEnd - identifierStart);
+    return FunctionRepo::instance()->find(trailingIdentifier)
+           || evaluator->hasUserFunction(trailingIdentifier);
 }
 
 static bool isInsideCommentFromQuestionMark(const QString& text, int cursorPosition)
@@ -554,6 +569,11 @@ static bool hasAnyNonWhitespace(const QString& text)
             return true;
     }
     return false;
+}
+
+static bool isCurrencySymbolChar(const QChar& ch)
+{
+    return ch.category() == QChar::Symbol_Currency;
 }
 
 static bool isAllowedUnitBracketChar(const QChar& ch)
@@ -2679,8 +2699,8 @@ void Editor::keyPressEvent(QKeyEvent* event)
         && !textCursor().hasSelection()
         && !typedForRules.isNull()) {
         const QChar prev = previousNonSpaceChar(text(), cursorPosition);
-        const auto isOpenParenLetterOrDigit = [](const QChar& ch) {
-            return ch == QLatin1Char('(') || ch.isLetter() || ch.isDigit();
+        const auto isOpenParenLetterDigitOrCurrency = [](const QChar& ch) {
+            return ch == QLatin1Char('(') || ch.isLetter() || ch.isDigit() || isCurrencySymbolChar(ch);
         };
 
         if (typedForRules == QLatin1Char('>')
@@ -2701,7 +2721,7 @@ void Editor::keyPressEvent(QKeyEvent* event)
             const bool isUnitConversionTail =
                 EditorUtils::isSubtractionOperatorAlias(prev)
                 && typedForRules == QLatin1Char('>');
-            if (!isOpenParenLetterOrDigit(typedForRules)
+            if (!isOpenParenLetterDigitOrCurrency(typedForRules)
                 && !isUnitConversionTail) {
                 event->accept();
                 return;
@@ -2710,13 +2730,15 @@ void Editor::keyPressEvent(QKeyEvent* event)
             if (!(EditorUtils::isSubtractionOperatorAlias(typedForRules)
                   || typedForRules == QLatin1Char('(')
                   || typedForRules.isLetter()
-                  || typedForRules.isDigit())) {
+                  || typedForRules.isDigit()
+                  || isCurrencySymbolChar(typedForRules))) {
                 event->accept();
                 return;
             }
         } else if (isAnyMultiplicationOperator(prev)) {
             if (typedForRules == QLatin1Char('(')
                 || typedForRules.isLetter()
+                || isCurrencySymbolChar(typedForRules)
                 || (typedForRules.isDigit() && !squareBracketContext)) {
                 // Allowed as-is.
             } else if (isAnyMultiplicationOperator(typedForRules)) {

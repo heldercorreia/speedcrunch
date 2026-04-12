@@ -49,6 +49,7 @@ private slots:
     void rewrites_superscript_exponent_for_radix_and_inserts_mul_space_globally();
     void ignores_dot_and_comma_after_non_numerical_char();
     void allows_unrestricted_typing_inside_question_comment_context();
+    void allows_currency_symbols_after_operators();
     void blocks_dead_circumflex_key_after_existing_caret();
     void blocks_dead_circumflex_key_after_multiplication_operator();
     void blocks_regular_caret_after_multiplication_operator();
@@ -471,6 +472,13 @@ void TestEditorUi::inserts_parenthesis_pair_and_places_cursor_inside()
     QApplication::sendEvent(&editor, &openParenByTextForFunction);
     QCOMPARE(editor.document()->toRawText(), QString::fromUtf8("cos³()"));
     QCOMPARE(editor.textCursor().position(), 5);
+
+    editor.setText(QString::fromUtf8("2 pi⁻²³ · cos"));
+    editor.setCursorPosition(editor.text().size());
+    QApplication::sendEvent(&editor, &openParenByTextForFunction);
+    QCOMPARE(editor.document()->toRawText(), QString::fromUtf8("2 pi⁻²³ · cos()"));
+    QCOMPARE(editor.textCursor().position(),
+             QString::fromUtf8("2 pi⁻²³ · cos(").size());
 
     editor.setText(QStringLiteral("3"));
     editor.setCursorPosition(editor.text().size());
@@ -1343,6 +1351,19 @@ void TestEditorUi::allows_unrestricted_typing_inside_question_comment_context()
     QTest::keyClick(&editor, Qt::Key_Space, Qt::NoModifier);
 
     QCOMPARE(editor.document()->toRawText(), QStringLiteral("1 ? pi.,  "));
+}
+
+void TestEditorUi::allows_currency_symbols_after_operators()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    editor.setText(QStringLiteral("$123 + "));
+    editor.setCursorPosition(editor.text().size());
+    QTest::keyClick(&editor, Qt::Key_Dollar, Qt::NoModifier);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("$123 + $"));
 }
 
 void TestEditorUi::blocks_dead_circumflex_key_after_existing_caret()
