@@ -30,7 +30,7 @@ General
 
     Computes the sum of all the given arguments. These must share the same dimension.
 
-.. function:: sigma(start; end; expression)
+.. function:: summation(start; end; expression)
 
     .. versionadded:: 1.0
 
@@ -38,11 +38,11 @@ General
 
     Inside ``expression``, the identifier ``n`` is bound to the current iteration value.
 
-    Alias: ``Σ(start; end; expression)``.
+    Alias: ``∑(start; end; expression)``.
 
     Example::
 
-        sigma(1; 10; 2+n)
+        summation(1; 10; 2+n)
         = 75
 
 .. function:: product(x1; x2; ...)

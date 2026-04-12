@@ -47,7 +47,7 @@ inline constexpr QChar OhmSign(0x2126);
 inline constexpr QChar MicroSign(0x00B5);
 inline constexpr QChar GreekSmallLetterMu(0x03BC);
 inline constexpr QChar Pi(0x03C0);
-inline constexpr QChar Summation(0x03A3);
+inline constexpr QChar Summation(0x2211);
 inline constexpr QChar SquareRoot(0x221A);
 inline constexpr QChar CubeRoot(0x221B);
 inline constexpr QChar RightwardsArrow(0x2192);
@@ -111,8 +111,8 @@ inline QString normalizePiForDisplay(QString text)
 
 inline QString normalizeRootFunctionAliasesForDisplay(QString text)
 {
-    static const QRegularExpression sigmaRE(
-        QStringLiteral(R"((?<![\p{L}\p{N}_$])sigma(?![\p{L}\p{N}_$]))"),
+    static const QRegularExpression summationRE(
+        QStringLiteral(R"((?<![\p{L}\p{N}_$])summation(?![\p{L}\p{N}_$]))"),
         QRegularExpression::CaseInsensitiveOption);
     static const QRegularExpression sqrtRE(
         QStringLiteral(R"((?<![\p{L}\p{N}_$])sqrt(?![\p{L}\p{N}_$]))"),
@@ -121,7 +121,7 @@ inline QString normalizeRootFunctionAliasesForDisplay(QString text)
         QStringLiteral(R"((?<![\p{L}\p{N}_$])cbrt(?![\p{L}\p{N}_$]))"),
         QRegularExpression::CaseInsensitiveOption);
 
-    text.replace(sigmaRE, QString(Summation));
+    text.replace(summationRE, QString(Summation));
     text.replace(sqrtRE, QString(SquareRoot));
     text.replace(cbrtRE, QString(CubeRoot));
     return text;

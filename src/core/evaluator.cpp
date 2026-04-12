@@ -69,9 +69,9 @@ static void s_deleteEvaluator()
     delete s_evaluatorInstance;
 }
 
-static bool s_isSigmaFunctionIdentifier(const QString& identifier)
+static bool s_isSummationFunctionIdentifier(const QString& identifier)
 {
-    return FunctionRepo::instance()->isIdentifierAliasOf(identifier, QStringLiteral("sigma"));
+    return FunctionRepo::instance()->isIdentifierAliasOf(identifier, QStringLiteral("summation"));
 }
 
 static QString s_toSuperscriptExponent(int exponent)
@@ -3606,6 +3606,7 @@ static bool isIdentifierStart(QChar ch)
            || ch.unicode() == '$'
            || ch.isLetter()
            || isSubscriptLetter(ch)
+           || ch == UnicodeChars::Summation
            || ch == UnicodeChars::SquareRoot
            || ch == UnicodeChars::CubeRoot;
 }
@@ -3646,7 +3647,9 @@ bool Evaluator::isSeparatorChar(const QChar& ch)
     if (ch.isLetterOrNumber())
         return false;
 
-    if (ch == UnicodeChars::SquareRoot || ch == UnicodeChars::CubeRoot)
+    if (ch == UnicodeChars::Summation
+        || ch == UnicodeChars::SquareRoot
+        || ch == UnicodeChars::CubeRoot)
         return false;
 
     if (isRadixChar(ch))
@@ -4582,7 +4585,7 @@ void Evaluator::compile(const Tokens& tokens)
                     ruleFound = true;
                     syntaxStack.reduce(4, MAX_PRECEDENCE);
                     Opcode functionCall(Opcode::Function, argCount);
-                    if (s_isSigmaFunctionIdentifier(id.text()) && argCount == 3)
+                    if (s_isSummationFunctionIdentifier(id.text()) && argCount == 3)
                     {
                         const QString argText = m_expression.mid(arg.pos(), arg.size());
                         const QStringList argList = splitTopLevelFunctionArguments(argText);
@@ -5662,7 +5665,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
         QHash<int, QString>::const_iterator it = refs.constBegin();
         for (; it != refs.constEnd(); ++it) {
             if (it.key() <= stackSize
-                && s_isSigmaFunctionIdentifier(it.value()))
+                && s_isSummationFunctionIdentifier(it.value()))
             {
                 return true;
             }
@@ -6060,7 +6063,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     pushStackValue(execUserFunction(userFunction, args));
                     if (!m_error.isEmpty())
                         return CMath::nan();
-                } else if (s_isSigmaFunctionIdentifier(fname)) {
+                } else if (s_isSummationFunctionIdentifier(fname)) {
                     if (args.count() != 3) {
                         m_error = QString::fromLatin1("<b>%1</b>: ").arg(fname)
                                 + tr("wrong number of arguments");

@@ -775,7 +775,7 @@ Quantity function_sum(Function* f, const Function::ArgumentList& args)
     return std::accumulate(args.begin(), args.end(), Quantity(0));
 }
 
-Quantity function_sigma(Function* f, const Function::ArgumentList& args)
+Quantity function_summation(Function* f, const Function::ArgumentList& args)
 {
     ENSURE_ARGUMENT_COUNT(3);
     if (!args.at(0).isInteger() || !args.at(1).isInteger()) {
@@ -1331,7 +1331,7 @@ void FunctionRepo::createFunctions()
     FUNCTION_INSERT(round);
     FUNCTION_INSERT(sci);
     FUNCTION_INSERT(sgn);
-    FUNCTION_INSERT(sigma);
+    FUNCTION_INSERT(summation);
     FUNCTION_INSERT(sqrt);
     FUNCTION_INSERT(stddev);
     FUNCTION_INSERT(sum);
@@ -1431,7 +1431,7 @@ void FunctionRepo::createFunctions()
     FUNCTION_INSERT(epoch);
 
     // Symbol aliases.
-    m_functions.insert(QString(UnicodeChars::Summation).toUpper(), find(QStringLiteral("sigma")));
+    m_functions.insert(QString(UnicodeChars::Summation).toUpper(), find(QStringLiteral("summation")));
     m_functions.insert(QString(UnicodeChars::SquareRoot).toUpper(), find(QStringLiteral("sqrt")));
     m_functions.insert(QString(UnicodeChars::CubeRoot).toUpper(), find(QStringLiteral("cbrt")));
     m_functions.insert(QStringLiteral("RATIO"), find(QStringLiteral("rat")));
@@ -1575,7 +1575,7 @@ void FunctionRepo::setNonTranslatableFunctionUsages()
     FUNCTION_USAGE(sci, "x");
     FUNCTION_USAGE(sec, "x)");
     FUNCTION_USAGE(sgn, "x");
-    FUNCTION_USAGE(sigma, "start; end; expression");
+    FUNCTION_USAGE(summation, "start; end; expression");
     FUNCTION_USAGE(sin, "x");
     FUNCTION_USAGE(sinh, "x");
     FUNCTION_USAGE(sqrt, "x");
@@ -1719,7 +1719,7 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(shl, tr("Arithmetic Shift Left"));
     FUNCTION_NAME(shr, tr("Arithmetic Shift Right"));
     FUNCTION_NAME(sgn, tr("Signum"));
-    FUNCTION_NAME(sigma, tr("Sigma Sum"));
+    FUNCTION_NAME(summation, tr("Summation"));
     FUNCTION_NAME(sin, tr("Sine"));
     FUNCTION_NAME(sinh, tr("Hyperbolic Sine"));
     FUNCTION_NAME(sqrt, tr("Square Root"));
