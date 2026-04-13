@@ -43,8 +43,8 @@ const QMap<QString, QString>& s_unitShortNames()
         {"kelvin", "K"},
         {"bit", "b"},
         {"byte", "B"},
-        {"sqmeter", "m2"},
-        {"cbmeter", "m3"},
+        {"sqmeter", QString::fromUtf8("m²")},
+        {"cbmeter", QString::fromUtf8("m³")},
         {"newton", "N"},
         {"hertz", "Hz"},
         {"joule", "J"},
@@ -710,8 +710,8 @@ const QList<Unit> Units::getList()
     addBareUnit("quebi", quebi());
 
     // SI-derived and geometric units.
-    addUnit("sqmeter", sqmeter(), "m2");
-    addUnit("cbmeter", cbmeter(), "m3");
+    addUnit("sqmeter", sqmeter(), QString::fromUtf8("m²"));
+    addUnit("cbmeter", cbmeter(), QString::fromUtf8("m³"));
     addUnit("newton", newton(), "N");
     addUnit("hertz", hertz(), "Hz");
     addUnit("joule", joule(), "J");

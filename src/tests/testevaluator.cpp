@@ -796,19 +796,19 @@ void test_units_short_aliases_and_si_prefixes()
     CHECK_EVAL_FAIL("[megaelectron_volt]");
     CHECK_EVAL("[picovolt] -> [volt]", "0.000000000001 volt");
     CHECK_EVAL("[pV] -> [volt]", "0.000000000001 volt");
-    CHECK_EVAL("[a] -> [m2]", "100 m2");
-    CHECK_EVAL("[ha] -> [m2]", "10000 m2");
-    CHECK_EVAL("[daa] -> [m2]", "1000 m2");
+    CHECK_EVAL(QString::fromUtf8("[a] -> [m²]"), u8"100 m²");
+    CHECK_EVAL(QString::fromUtf8("[ha] -> [m²]"), u8"10000 m²");
+    CHECK_EVAL(QString::fromUtf8("[daa] -> [m²]"), u8"1000 m²");
     CHECK_EVAL("[ac] -> [acre]", "1 acre");
 
     CHECK_EVAL("[mV] -> [volt]", "0.001 volt");
     CHECK_EVAL("[MV] -> [volt]", "1000000 volt");
     CHECK_EVAL_FAIL("[Mv] -> [volt]");
-    CHECK_EVAL("[m²] -> [m2]", "1 m2");
-    CHECK_EVAL("[m³] -> [m3]", "1 m3");
-    CHECK_EVAL("[mm²] -> [m2]", "0.000001 m2");
-    CHECK_EVAL("[mm³] -> [m3]", "0.000000001 m3");
-    CHECK_INTERPRETED("2[m2]+3[mm2]", "2[m2]+3[mm2]");
+    CHECK_EVAL(QString::fromUtf8("[m²] -> [m²]"), u8"1 m²");
+    CHECK_EVAL(QString::fromUtf8("[m³] -> [m³]"), u8"1 m³");
+    CHECK_EVAL(QString::fromUtf8("[mm²] -> [m²]"), u8"0.000001 m²");
+    CHECK_EVAL(QString::fromUtf8("[mm³] -> [m³]"), u8"0.000000001 m³");
+    CHECK_INTERPRETED(QString::fromUtf8("2[m²]+3[mm²]"), "2[m^2]+3[mm^2]");
     CHECK_EVAL("2[]", "2");
     CHECK_INTERPRETED("2[]", "2");
     CHECK_DISPLAY_INTERPRETED("2[]", "2");
@@ -916,7 +916,7 @@ void test_units_derived_si_recognition_and_disambiguation()
     CHECK_EVAL("mg=3", "3");
     CHECK_EVAL("l=2", "2");
     CHECK_EVAL("a+mg+l", "15");
-    CHECK_EVAL("[a] -> [m2]", "100 m2");
+    CHECK_EVAL(QString::fromUtf8("[a] -> [m²]"), u8"100 m²");
     eval->unsetVariable("a");
     eval->unsetVariable("mg");
     eval->unsetVariable("l");
