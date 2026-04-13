@@ -149,11 +149,11 @@ AffineTemperatureUnit affineTemperatureUnitFromName(QString unitName)
 {
     QString normalized = unitName.trimmed().toLower();
     normalized.replace(QChar(0x00BA), QChar(0x00B0)); // º -> °
-    if (normalized == QLatin1String("celsius")
+    if (normalized == QLatin1String("degree_celsius")
         || normalized == QString::fromUtf8("°c")) {
         return AffineTemperatureUnit::Celsius;
     }
-    if (normalized == QLatin1String("fahrenheit")
+    if (normalized == QLatin1String("degree_fahrenheit")
         || normalized == QString::fromUtf8("°f")) {
         return AffineTemperatureUnit::Fahrenheit;
     }

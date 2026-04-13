@@ -1739,7 +1739,7 @@ void TestEditorUi::completes_affine_temperature_units_in_unit_context()
         &editor,
         "autoComplete",
         Qt::DirectConnection,
-        Q_ARG(QString, QStringLiteral("celsius:Unit"))));
+        Q_ARG(QString, QStringLiteral("degree_celsius:Unit"))));
     QCOMPARE(editor.text(), QString::fromUtf8("100 [°C"));
 
     editor.setText(QStringLiteral("100 [f"));
@@ -1748,7 +1748,7 @@ void TestEditorUi::completes_affine_temperature_units_in_unit_context()
         &editor,
         "autoComplete",
         Qt::DirectConnection,
-        Q_ARG(QString, QStringLiteral("fahrenheit:Unit"))));
+        Q_ARG(QString, QStringLiteral("degree_fahrenheit:Unit"))));
     QCOMPARE(editor.text(), QString::fromUtf8("100 [°F"));
 
     editor.setText(QString::fromUtf8("100 [º"));

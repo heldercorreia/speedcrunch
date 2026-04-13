@@ -41,8 +41,8 @@ const QMap<QString, QString>& s_unitShortNames()
         {"mole", "mol"},
         {"candela", "cd"},
         {"kelvin", "K"},
-        {"celsius", QString::fromUtf8("°C")},
-        {"fahrenheit", QString::fromUtf8("°F")},
+        {"degree_celsius", QString::fromUtf8("°C")},
+        {"degree_fahrenheit", QString::fromUtf8("°F")},
         {"bit", "b"},
         {"byte", "B"},
         {"sqmeter", QString::fromUtf8("m²")},
@@ -678,12 +678,12 @@ const QList<Unit> Units::getList()
     addUnit("mole", mole(), "mol");
     addUnit("candela", candela(), "cd");
     addUnit("kelvin", kelvin(), "K");
-    addUnitWithAliasesImpl("celsius",
+    addUnitWithAliasesImpl("degree_celsius",
                            kelvin(),
                            QString::fromUtf8("°C"),
                            QString::fromUtf8("ºC"),
                            NoSiPrefixes);
-    addUnitWithAliasesImpl("fahrenheit",
+    addUnitWithAliasesImpl("degree_fahrenheit",
                            kelvin(),
                            QString::fromUtf8("°F"),
                            QString::fromUtf8("ºF"),

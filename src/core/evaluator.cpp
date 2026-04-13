@@ -287,8 +287,8 @@ static QHash<QString, Quantity> s_buildBuiltInUnitLookup(char angleMode)
     insertDisplayed(QString::fromUtf8("Ω"), Units::ohm(), QStringLiteral("ohm"));
     insertDisplayed(QStringLiteral("s"), Units::second(), QStringLiteral("second"));
     insertDisplayed(QStringLiteral("h"), Units::hour(), QStringLiteral("h"));
-    insertDisplayed(QStringLiteral("celsius"), Units::kelvin(), QStringLiteral("celsius"));
-    insertDisplayed(QStringLiteral("fahrenheit"), Units::kelvin(), QStringLiteral("fahrenheit"));
+    insertDisplayed(QStringLiteral("degree_celsius"), Units::kelvin(), QStringLiteral("degree_celsius"));
+    insertDisplayed(QStringLiteral("degree_fahrenheit"), Units::kelvin(), QStringLiteral("degree_fahrenheit"));
     insertDisplayed(QString::fromUtf8("°C"), Units::kelvin(), QString::fromUtf8("°C"));
     insertDisplayed(QString::fromUtf8("°F"), Units::kelvin(), QString::fromUtf8("°F"));
     insertDisplayed(QString::fromUtf8("ºC"), Units::kelvin(), QString::fromUtf8("°C"));
@@ -399,11 +399,11 @@ static AffineTemperatureUnit s_affineTemperatureUnitFromName(QString name)
 {
     name = name.trimmed().toLower();
     name.replace(QChar(0x00BA), QChar(0x00B0)); // º -> °
-    if (name == QLatin1String("celsius")
+    if (name == QLatin1String("degree_celsius")
         || name == QString::fromUtf8("°c")) {
         return AffineTemperatureUnit::Celsius;
     }
-    if (name == QLatin1String("fahrenheit")
+    if (name == QLatin1String("degree_fahrenheit")
         || name == QString::fromUtf8("°f")) {
         return AffineTemperatureUnit::Fahrenheit;
     }

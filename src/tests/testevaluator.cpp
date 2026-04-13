@@ -983,11 +983,11 @@ void test_units_conversion_compatibility_and_canonicalization()
 
 void test_units_temperature_affine_conversions()
 {
-    CHECK_EVAL("25[celsius] -> [kelvin]", "298.15 kelvin");
-    CHECK_EVAL("0[celsius] -> [fahrenheit]", "32 fahrenheit");
-    CHECK_EVAL("32[fahrenheit] -> [celsius]", "0 celsius");
-    CHECK_EVAL("77[fahrenheit] -> [kelvin]", "298.15 kelvin");
-    CHECK_EVAL("298.15[kelvin] -> [fahrenheit]", "77 fahrenheit");
+    CHECK_EVAL("25[degree_celsius] -> [kelvin]", "298.15 kelvin");
+    CHECK_EVAL("0[degree_celsius] -> [degree_fahrenheit]", "32 degree_fahrenheit");
+    CHECK_EVAL("32[degree_fahrenheit] -> [degree_celsius]", "0 degree_celsius");
+    CHECK_EVAL("77[degree_fahrenheit] -> [kelvin]", "298.15 kelvin");
+    CHECK_EVAL("298.15[kelvin] -> [degree_fahrenheit]", "77 degree_fahrenheit");
     CHECK_EVAL(QString::fromUtf8("0[°C] -> [kelvin]"), "273.15 kelvin");
     CHECK_EVAL(QString::fromUtf8("32[°F] -> [°C]"), "0 °C");
     CHECK_EVAL(QString::fromUtf8("77[°F] -> [°C]"), "25 °C");

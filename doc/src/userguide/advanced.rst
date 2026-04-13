@@ -186,21 +186,21 @@ An important feature of SpeedCrunch's unit system is *dimensional checking*. Sim
 * *Temperature*: ``kelvin``
 * *Information*: ``bit``
 
-Temperature conversions also support the affine scales ``celsius`` (short form
-``°C``) and ``fahrenheit`` (short form ``°F``). The input aliases ``ºC`` and
+Temperature conversions also support the affine scales ``degree_celsius`` (short form
+``°C``) and ``degree_fahrenheit`` (short form ``°F``). The input aliases ``ºC`` and
 ``ºF`` are accepted and normalized to ``°C`` and ``°F``::
 
     77 [°F] -> [°C]
     = 25 [°C]
 
-    25 [celsius] -> [K]
+    25 [degree_celsius] -> [K]
     = 298.15 [K]
 
-    298.15 [K] -> [celsius]
-    = 25 [celsius]
+    298.15 [K] -> [degree_celsius]
+    = 25 [degree_celsius]
 
-    77 [fahrenheit] -> [celsius]
-    = 25 [celsius]
+    77 [degree_fahrenheit] -> [degree_celsius]
+    = 25 [degree_celsius]
 
 Defining a custom unit works exactly like defining a variable::
 
