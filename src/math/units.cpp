@@ -47,6 +47,8 @@ const QMap<QString, QString>& s_unitShortNames()
         {"byte", "B"},
         {"sqmeter", QString::fromUtf8("m²")},
         {"cbmeter", QString::fromUtf8("m³")},
+        {"square_meter", QString::fromUtf8("m²")},
+        {"cubic_meter", QString::fromUtf8("m³")},
         {"newton", "N"},
         {"hertz", "Hz"},
         {"joule", "J"},
@@ -74,6 +76,8 @@ const QMap<QString, QString>& s_unitShortNames()
         {"are", "a"},
         {"day", "d"},
         {"hour", "h"},
+        {"parts_per_million", "ppm"},
+        {"parts_per_billion", "ppb"},
         {"degree", QString(UnicodeChars::DegreeSign)},
         {"deg", QString(UnicodeChars::DegreeSign)}
     };
@@ -727,8 +731,8 @@ const QList<Unit> Units::getList()
     addBareUnit("quebi", quebi());
 
     // SI-derived and geometric units.
-    addUnit("sqmeter", sqmeter(), QString::fromUtf8("m²"));
-    addUnit("cbmeter", cbmeter(), QString::fromUtf8("m³"));
+    addUnit("square_meter", sqmeter(), QString::fromUtf8("m²"));
+    addUnit("cubic_meter", cbmeter(), QString::fromUtf8("m³"));
     addUnit("newton", newton(), "N");
     addUnit("hertz", hertz(), "Hz");
     addUnit("joule", joule(), "J");
@@ -787,22 +791,18 @@ const QList<Unit> Units::getList()
     addUnit("acre", acre(), "ac", NoSiPrefixes);
 
     // Volume units.
-    addUnit("UK_gallon", UK_gallon(), QString(), NoSiPrefixes);
-    addUnit("US_gallon", US_gallon(), "gal", NoSiPrefixes);
-    addBareUnit("gallon_US", US_gallon());
+    addUnit("gallon_UK", UK_gallon(), QString(), NoSiPrefixes);
+    addUnit("gallon_US", US_gallon(), "gal", NoSiPrefixes);
     addBareUnit("gallon_UK", UK_gallon());
     addBareUnit("imperial_gallon", UK_gallon());
-    addUnit("UK_quart", UK_quart(), QString(), NoSiPrefixes);
-    addUnit("US_quart", US_quart(), "qt", NoSiPrefixes);
-    addBareUnit("quart_US", US_quart());
+    addUnit("quart_UK", UK_quart(), QString(), NoSiPrefixes);
+    addUnit("quart_US", US_quart(), "qt", NoSiPrefixes);
     addBareUnit("quart_UK", UK_quart());
-    addUnit("UK_pint", UK_pint(), QString(), NoSiPrefixes);
-    addUnit("US_pint", US_pint(), "pt", NoSiPrefixes);
-    addBareUnit("pint_US", US_pint());
+    addUnit("pint_UK", UK_pint(), QString(), NoSiPrefixes);
+    addUnit("pint_US", US_pint(), "pt", NoSiPrefixes);
     addBareUnit("pint_UK", UK_pint());
-    addUnit("UK_fluid_ounce", UK_fluid_ounce(), QString(), NoSiPrefixes);
-    addUnit("US_fluid_ounce", US_fluid_ounce(), "fl_oz", NoSiPrefixes);
-    addBareUnit("fluid_ounce_US", US_fluid_ounce());
+    addUnit("fluid_ounce_UK", UK_fluid_ounce(), QString(), NoSiPrefixes);
+    addUnit("fluid_ounce_US", US_fluid_ounce(), "fl_oz", NoSiPrefixes);
     addBareUnit("fluid_ounce_UK", UK_fluid_ounce());
     addUnitWithAliases("liter", liter(), "L", "l");
 
@@ -821,8 +821,8 @@ const QList<Unit> Units::getList()
 
     // Fractional / concentration-like units.
     addUnit("percent", percent(), QString(), NoSiPrefixes);
-    addUnit("ppm", ppm(), QString(), NoSiPrefixes);
-    addUnit("ppb", ppb(), QString(), NoSiPrefixes);
+    addUnit("parts_per_million", ppm(), QString(), NoSiPrefixes);
+    addUnit("parts_per_billion", ppb(), QString(), NoSiPrefixes);
     addUnit("karat", karat(), "Kt", NoSiPrefixes);
 
     // Pressure units.
