@@ -199,6 +199,24 @@ that is used for displaying results, select one of the corresponding settings in
 </dd></dl>
 
 <dl class="sc function">
+<dt class="sig sig-object sc" id="sc.sci">
+<span class="sig-name descname"><span class="pre">sci</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Format <code class="docutils literal notranslate"><span class="pre">n</span></code> in scientific notation.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.eng">
+<span class="sig-name descname"><span class="pre">eng</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">exponent</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
+<dd><p>Format <code class="docutils literal notranslate"><span class="pre">n</span></code> in engineering notation.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">exponent</span></code> is provided, force the <code class="docutils literal notranslate"><span class="pre">e</span></code> exponent suffix to that value. <code class="docutils literal notranslate"><span class="pre">exponent</span></code> can be:</p>
+<ul class="simple">
+<li><p>an integer exponent that is a multiple of 3 (for example, <code class="docutils literal notranslate"><span class="pre">-3</span></code> or <code class="docutils literal notranslate"><span class="pre">6</span></code>), or</p></li>
+<li><p>a power of ten with exponent a multiple of 3 (for example, <code class="docutils literal notranslate"><span class="pre">milli</span></code>, <code class="docutils literal notranslate"><span class="pre">micro</span></code>, <code class="docutils literal notranslate"><span class="pre">kilo</span></code>, <code class="docutils literal notranslate"><span class="pre">mega</span></code>, <code class="docutils literal notranslate"><span class="pre">pico</span></code>).</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">eng(0.000123456;</span> <span class="pre">milli)</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">eng(0.000123456;</span> <span class="pre">-3)</span></code>.</p>
+</dd></dl>
+
+<dl class="sc function">
 <dt class="sig sig-object sc" id="sc.rat">
 <span class="sig-name descname"><span class="pre">rat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em><span class="sig-paren">)</span></dt>
 <dt class="sig sig-object sc" id="sc.ratio">

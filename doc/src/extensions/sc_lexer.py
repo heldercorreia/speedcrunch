@@ -63,18 +63,18 @@ class SpeedCrunchLexer(RegexLexer):
             (r'[?].*\n', Comment),
 
             # regular operators
-            (r'(\*\*|<<|>>|->|[+\-*/%=^!~\\&|:\'"°])', Operator),
+            (r'(\*\*|<<|>>|->|[+\-*/%=^!~\\&|:\'"°⋅⁻])', Operator),
             # keyword operators
             (words(['in']), Operator.Word),
             # additional punctuation
-            (r'[();]', Punctuation),
+            (r'[\[\]();]', Punctuation),
 
             # built-in constants
             (words(CONSTANTS), Name.Constant),
             # built-in functions
             # (words(FUNCTIONS), Name.Builtin),
             # any other identifiers
-            (r'([^\W\d]|\$)(\w|\$)*', Name),
+            (r'([^\W\d]|\$)([\w$⁻⁰¹²³⁴⁵⁶⁷⁸⁹])*', Name),
 
             # binary numbers
             (numprefix('0b') + floatform('01'), Number.Bin),
@@ -94,6 +94,8 @@ class SpeedCrunchLexer(RegexLexer):
 
             # any remaining whitespace
             (r'\s+', Text),
+            # keep docs builds resilient when examples contain newer symbols.
+            (r'.', Text),
         ],
     }
 

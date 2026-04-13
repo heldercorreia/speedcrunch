@@ -100,16 +100,16 @@
 </dd></dl>
 
 <dl class="sc function">
-<dt class="sig sig-object sc" id="sc.sigma">
-<span class="sig-name descname"><span class="pre">sigma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">start</span></em>; <em class="sig-param"><span class="pre">end</span></em>; <em class="sig-param"><span class="pre">expression</span></em><span class="sig-paren">)</span></dt>
+<dt class="sig sig-object sc" id="sc.summation">
+<span class="sig-name descname"><span class="pre">summation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">start</span></em>; <em class="sig-param"><span class="pre">end</span></em>; <em class="sig-param"><span class="pre">expression</span></em><span class="sig-paren">)</span></dt>
 <dd><div class="versionadded">
 <p><span class="versionmodified added">New in version 1.0.</span></p>
 </div>
 <p>Computes a summation over integer values of <code class="docutils literal notranslate"><span class="pre">n</span></code> from <code class="docutils literal notranslate"><span class="pre">start</span></code> to <code class="docutils literal notranslate"><span class="pre">end</span></code> (inclusive), evaluating <code class="docutils literal notranslate"><span class="pre">expression</span></code> at each step.</p>
 <p>Inside <code class="docutils literal notranslate"><span class="pre">expression</span></code>, the identifier <code class="docutils literal notranslate"><span class="pre">n</span></code> is bound to the current iteration value.</p>
-<p>Alias: <code class="docutils literal notranslate"><span class="pre">Σ(start;</span> <span class="pre">end;</span> <span class="pre">expression)</span></code>.</p>
+<p>Alias: <code class="docutils literal notranslate"><span class="pre">∑(start;</span> <span class="pre">end;</span> <span class="pre">expression)</span></code>.</p>
 <p>Example:</p>
-<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">sigma</span><span class="p">(</span><span class="mi">1</span><span class="p">;</span> <span class="mi">10</span><span class="p">;</span> <span class="mi">2</span><span class="o">+</span><span class="n">n</span><span class="p">)</span>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">summation</span><span class="p">(</span><span class="mi">1</span><span class="p">;</span> <span class="mi">10</span><span class="p">;</span> <span class="mi">2</span><span class="o">+</span><span class="n">n</span><span class="p">)</span>
 <span class="ge">= 75</span>
 </pre></div>
 </div>
@@ -178,7 +178,7 @@
 <dt class="sig sig-object sc" id="sc.absdev">
 <span class="sig-name descname"><span class="pre">absdev</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x1</span></em>; <em class="sig-param"><span class="pre">x2</span></em>; <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Computes the average absolute deviation of the arguments from their mean. This means that, with <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">average(x1;</span> <span class="pre">x2;</span> <span class="pre">...)</span></code>, we have:</p>
-<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">absdev</span><span class="p">(</span><span class="n">x1</span><span class="p">;</span> <span class="n">x2</span><span class="p">;</span> <span class="p">...</span> <span class="p">)</span> <span class="o">=</span> <span class="n">abs</span><span class="p">(</span><span class="n">x1</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">abs</span><span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="p">...</span>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">absdev</span><span class="p">(</span><span class="n">x1</span><span class="p">;</span> <span class="n">x2</span><span class="p">;</span> ... <span class="p">)</span> <span class="o">=</span> <span class="n">abs</span><span class="p">(</span><span class="n">x1</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">abs</span><span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> ...
 </pre></div>
 </div>
 </td></tr></tbody></table></dd></dl>

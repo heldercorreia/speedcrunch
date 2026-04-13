@@ -38,7 +38,9 @@
                         <section title="User Functions" ref="userguide/advanced.html#user-functions"/>
                     </section>
                     <section title="Complex numbers" ref="userguide/advanced.html#complex-numbers"/>
-                    <section title="Units" ref="userguide/advanced.html#units"/>
+                    <section title="Units" ref="userguide/advanced.html#units">
+                        <section title="Information units (bit/byte)" ref="userguide/advanced.html#information-units-bit-byte"/>
+                    </section>
                     <section title="User Interface" ref="userguide/interface.html">
                         <section title="Widgets" ref="userguide/interface.html#widgets"/>
                         <section title="Expression Editor Features" ref="userguide/interface.html#expression-editor-features"/>
@@ -47,9 +49,10 @@
                         </section>
                         <section title="Settings" ref="userguide/interface.html#settings">
                             <section title="Result Display Interactions" ref="userguide/interface.html#result-display-interactions"/>
-                            <section title="Format" ref="userguide/interface.html#format"/>
-                            <section title="Angle Unit" ref="userguide/interface.html#angle-unit"/>
-                            <section title="Digit Grouping" ref="userguide/interface.html#digit-grouping"/>
+                            <section title="Notation" ref="userguide/interface.html#notation"/>
+                            <section title="Angle Mode" ref="userguide/interface.html#angle-mode"/>
+                            <section title="Complex Numbers" ref="userguide/interface.html#complex-numbers"/>
+                            <section title="Number Format" ref="userguide/interface.html#number-format"/>
                             <section title="History" ref="userguide/interface.html#history"/>
                             <section title="Window" ref="userguide/interface.html#window"/>
                             <section title="Results" ref="userguide/interface.html#results"/>
@@ -60,7 +63,7 @@
                             <section title="Editing" ref="userguide/interface.html#id2"/>
                             <section title="Widgets and Docks" ref="userguide/interface.html#widgets-and-docks"/>
                             <section title="Scrolling" ref="userguide/interface.html#scrolling"/>
-                            <section title="Format" ref="userguide/interface.html#id3"/>
+                            <section title="Notation" ref="userguide/interface.html#id3"/>
                             <section title="Various" ref="userguide/interface.html#various"/>
                         </section>
                     </section>
@@ -91,6 +94,14 @@
                     </section>
                     <section title="Constants" ref="reference/index.html#constants">
                         <section title="Constants" ref="reference/constants.html"/>
+                    </section>
+                    <section title="Units" ref="reference/index.html#units">
+                        <section title="Units and Canonicalization" ref="reference/units.html">
+                            <section title="Display Policy" ref="reference/units.html#display-policy"/>
+                            <section title="Unit Exponent Style" ref="reference/units.html#unit-exponent-style"/>
+                            <section title="Composed Units" ref="reference/units.html#composed-units"/>
+                            <section title="Conversions" ref="reference/units.html#conversions"/>
+                        </section>
                     </section>
                 </section>
                 <section title="Advanced Topics" ref="advanced/index.html">
@@ -132,6 +143,7 @@
             <keyword name="degrees() (function)" id="function.degrees" ref="reference/basic.html#sc.degrees"/>
             <keyword name="e (constant)" id="constant.e" ref="reference/constants.html#sc.e"/>
             <keyword name="emod() (function)" id="function.emod" ref="reference/integer.html#sc.emod"/>
+            <keyword name="eng() (function)" id="function.eng" ref="reference/integer.html#sc.eng"/>
             <keyword name="epoch() (function)" id="function.epoch" ref="reference/basic.html#sc.epoch"/>
             <keyword name="erf() (function)" id="function.erf" ref="reference/basic.html#sc.erf"/>
             <keyword name="erfc() (function)" id="function.erfc" ref="reference/basic.html#sc.erfc"/>
@@ -199,17 +211,18 @@
             <keyword name="rational() (function)" id="function.rational" ref="reference/integer.html#sc.rational"/>
             <keyword name="real() (function)" id="function.real" ref="reference/basic.html#sc.real"/>
             <keyword name="round() (function)" id="function.round" ref="reference/integer.html#sc.round"/>
+            <keyword name="sci() (function)" id="function.sci" ref="reference/integer.html#sc.sci"/>
             <keyword name="sec() (function)" id="function.sec" ref="reference/basic.html#sc.sec"/>
             <keyword name="sgn() (function)" id="function.sgn" ref="reference/basic.html#sc.sgn"/>
             <keyword name="shl() (function)" id="function.shl" ref="reference/integer.html#sc.shl"/>
             <keyword name="shr() (function)" id="function.shr" ref="reference/integer.html#sc.shr"/>
-            <keyword name="sigma() (function)" id="function.sigma" ref="reference/statistical.html#sc.sigma"/>
             <keyword name="sin() (function)" id="function.sin" ref="reference/basic.html#sc.sin"/>
             <keyword name="sinh() (function)" id="function.sinh" ref="reference/basic.html#sc.sinh"/>
             <keyword name="SpeedCrunch" ref="introduction.html#index-0"/>
             <keyword name="sqrt() (function)" id="function.sqrt" ref="reference/basic.html#sc.sqrt"/>
             <keyword name="stddev() (function)" id="function.stddev" ref="reference/statistical.html#sc.stddev"/>
             <keyword name="sum() (function)" id="function.sum" ref="reference/statistical.html#sc.sum"/>
+            <keyword name="summation() (function)" id="function.summation" ref="reference/statistical.html#sc.summation"/>
             <keyword name="tan() (function)" id="function.tan" ref="reference/basic.html#sc.tan"/>
             <keyword name="tanh() (function)" id="function.tanh" ref="reference/basic.html#sc.tanh"/>
             <keyword name="trunc() (function)" id="function.trunc" ref="reference/integer.html#sc.trunc"/>
@@ -245,6 +258,7 @@
             <file>reference/index.html</file>
             <file>reference/integer.html</file>
             <file>reference/statistical.html</file>
+            <file>reference/units.html</file>
         </files>
     </filterSection>
 </QtHelpProject>
