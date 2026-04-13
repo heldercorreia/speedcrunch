@@ -355,6 +355,14 @@ void TestEditorUi::inserts_value_unit_space_brackets_after_number_or_symbol()
                  + QStringLiteral("(pi)")
                  + QString(OperatorChars::ValueUnitSpace)
                  + QStringLiteral("[]"));
+
+    editor.setText(QStringLiteral("2 [K] in "));
+    editor.setCursorPosition(editor.text().size());
+    QApplication::sendEvent(&editor, &bracketByText);
+    QCOMPARE(editor.document()->toRawText(),
+             QStringLiteral("2 [K] in")
+                 + QString(OperatorChars::ValueUnitSpace)
+                 + QStringLiteral("[]"));
 }
 
 void TestEditorUi::ignores_space_on_empty_or_all_space_editor()

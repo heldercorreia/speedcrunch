@@ -2880,8 +2880,19 @@ void Editor::keyPressEvent(QKeyEvent* event)
         const QString prefix = shouldInsertValueUnitSpace
             ? QString(OperatorChars::ValueUnitSpace)
             : QString();
+        if (shouldInsertValueUnitSpace) {
+            int left = position;
+            while (left > 0 && text().at(left - 1).isSpace())
+                --left;
+            if (left < position) {
+                cursor.setPosition(left);
+                cursor.setPosition(position, QTextCursor::KeepAnchor);
+                cursor.removeSelectedText();
+            }
+        }
+        const int insertionPosition = cursor.position();
         cursor.insertText(prefix + QStringLiteral("[]"));
-        cursor.setPosition(position + prefix.size() + 1);
+        cursor.setPosition(insertionPosition + prefix.size() + 1);
         setTextCursor(cursor);
         event->accept();
         return;
