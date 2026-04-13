@@ -170,8 +170,9 @@ Dimensionless input values are automatically considered to be in current angle m
 For trigonometric input, explicit angle units override angle mode. For example,
 ``cos(pi*[rad])``, ``cos(180*[degree])``, ``cos(200*[gradian])`` and
 ``cos(0.5*[turn])`` all evaluate to ``-1`` regardless of the global angle mode.
-The alias ``deg`` is supported for ``degree`` and is normalized to ``°`` in
-autocomplete insertion and displayed result units.
+The aliases ``deg`` for ``degree`` and ``grad`` for ``gradian`` are supported.
+``deg`` is normalized to ``°`` in autocomplete insertion and displayed result
+units.
     
 Only last part of sexagesimal input value can contain decimals.
 

@@ -413,6 +413,17 @@ static bool textContainsOnlyCaretOperators(const QString& text)
     return true;
 }
 
+static bool textContainsOnlyDegreeOperators(const QString& text)
+{
+    if (text.isEmpty())
+        return false;
+    for (const QChar ch : text) {
+        if (ch != UnicodeChars::DegreeSign && ch != QChar(0x00BA))
+            return false;
+    }
+    return true;
+}
+
 static bool textContainsOnlyDivisionAliases(const QString& text)
 {
     if (text.isEmpty())
@@ -1603,34 +1614,17 @@ QStringList Editor::matchFragment(const QString& id, bool unitContext) const
         choices.sort();
     }
 
-    const QList<Unit> allUnits = Units::getList();
-    const auto isLikelyLongFormUnitName = [&](const QString& unitName) {
-        if (unitName.contains(QLatin1Char('_')))
-            return true;
-        if (unitName.size() < 4 || unitName != unitName.toLower())
-            return false;
-        for (int i = 0; i < unitName.size(); ++i) {
-            if (!unitName.at(i).isLetter())
-                return false;
-        }
-        return true;
-    };
-
     if (unitContext) {
         QStringList unitChoices;
         QSet<QString> seenUnitNames;
-        for (const Unit& unit : allUnits) {
-            const bool includeUnit =
-                settings->autoCompletionLongFormUnits
-                || !isLikelyLongFormUnitName(unit.name);
-            if (!includeUnit)
+        const QStringList allUnits = Evaluator::builtInUnitIdentifiers();
+        for (const QString& unitName : allUnits) {
+            if (!unitName.startsWith(id, Qt::CaseSensitive))
                 continue;
-            if (!unit.name.startsWith(id, Qt::CaseSensitive))
+            if (seenUnitNames.contains(unitName))
                 continue;
-            if (seenUnitNames.contains(unit.name))
-                continue;
-            seenUnitNames.insert(unit.name);
-            unitChoices.append(unit.name + QStringLiteral(":") + tr("Unit"));
+            seenUnitNames.insert(unitName);
+            unitChoices.append(unitName + QStringLiteral(":") + tr("Unit"));
         }
         unitChoices.sort();
         choices += unitChoices;
@@ -2263,9 +2257,10 @@ void Editor::inputMethodEvent(QInputMethodEvent* event)
     if (squareBracketContext
         && event->commitString().isEmpty()
         && !normalizedPreedit.isEmpty()
-        && !textContainsOnlyCaretOperators(normalizedPreedit)) {
+        && !textContainsOnlyCaretOperators(normalizedPreedit)
+        && !textContainsOnlyDegreeOperators(normalizedPreedit)) {
         // Block dead-key/preedit compositions in unit blocks, except caret
-        // which has dedicated handling for exponent superscripts.
+        // (handled for exponent superscripts) and degree signs (unit alias).
         QInputMethodEvent clearEvent;
         QPlainTextEdit::inputMethodEvent(&clearEvent);
         event->accept();

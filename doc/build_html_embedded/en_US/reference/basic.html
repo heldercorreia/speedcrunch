@@ -191,7 +191,7 @@ GMT/UTC (fractional offsets are supported).</p>
 <span id="trigonometric"></span><h2>Trigonometric &amp; Inverse Trigonometric</h2>
 <p>For direct trigonometric input (<a class="reference internal" href="#sc.sin" title="sin"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">sin()</span></code></a>, <a class="reference internal" href="#sc.cos" title="cos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">cos()</span></code></a>, <a class="reference internal" href="#sc.tan" title="tan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">tan()</span></code></a>,
 <a class="reference internal" href="#sc.cot" title="cot"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">cot()</span></code></a>, <a class="reference internal" href="#sc.sec" title="sec"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">sec()</span></code></a>, <a class="reference internal" href="#sc.csc" title="csc"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">csc()</span></code></a>), explicit angle units
-(<code class="docutils literal notranslate"><span class="pre">rad</span></code>, <code class="docutils literal notranslate"><span class="pre">degree</span></code>, <code class="docutils literal notranslate"><span class="pre">gradian</span></code>/<code class="docutils literal notranslate"><span class="pre">gon</span></code>, <code class="docutils literal notranslate"><span class="pre">turn</span></code>, <code class="docutils literal notranslate"><span class="pre">arcminute</span></code>,
+(<code class="docutils literal notranslate"><span class="pre">rad</span></code>, <code class="docutils literal notranslate"><span class="pre">degree</span></code>, <code class="docutils literal notranslate"><span class="pre">gradian</span></code>/<code class="docutils literal notranslate"><span class="pre">grad</span></code>/<code class="docutils literal notranslate"><span class="pre">gon</span></code>, <code class="docutils literal notranslate"><span class="pre">turn</span></code>, <code class="docutils literal notranslate"><span class="pre">arcminute</span></code>,
 <code class="docutils literal notranslate"><span class="pre">arcsecond</span></code>) override the global angle mode. Unitless values follow the
 current angle mode.</p>
 <dl class="sc function">
@@ -484,14 +484,20 @@ symbol (<code class="docutils literal notranslate"><span class="pre">i</span></c
 <dt class="sig sig-object sc" id="sc.radians">
 <span class="sig-name descname"><span class="pre">radians</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Convert the angle <code class="docutils literal notranslate"><span class="pre">x</span></code> into radians. Independently of the angle mode setting, this function will assume that <code class="docutils literal notranslate"><span class="pre">x</span></code> is given in degrees and return <code class="docutils literal notranslate"><span class="pre">pi*x/180</span></code>.</p>
-<p>The function only accepts real, dimensionless arguments.</p>
+<p>The function accepts real arguments that are either dimensionless (interpreted
+as degrees) or explicitly tagged with an angle unit in <code class="docutils literal notranslate"><span class="pre">[]</span></code> (for example
+<code class="docutils literal notranslate"><span class="pre">[rad]</span></code>, <code class="docutils literal notranslate"><span class="pre">[degree]</span></code>, <code class="docutils literal notranslate"><span class="pre">[gradian]</span></code>, <code class="docutils literal notranslate"><span class="pre">[turn]</span></code>, <code class="docutils literal notranslate"><span class="pre">[arcminute]</span></code>,
+<code class="docutils literal notranslate"><span class="pre">[arcsecond]</span></code>).</p>
+<p>With explicit unit blocks, the equivalent conversion is <code class="docutils literal notranslate"><span class="pre">x[deg]</span> <span class="pre">-&gt;</span> <span class="pre">[rad]</span></code>.</p>
 </dd></dl>
 
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.degrees">
 <span class="sig-name descname"><span class="pre">degrees</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Convert the angle <code class="docutils literal notranslate"><span class="pre">x</span></code> into degrees. Independently of the angle mode setting, this function will assume that <code class="docutils literal notranslate"><span class="pre">x</span></code> is given in radians and return <code class="docutils literal notranslate"><span class="pre">180*x/pi</span></code>.</p>
-<p>The function only accepts real, dimensionless arguments.</p>
+<p>The function accepts real arguments that are either dimensionless (interpreted
+as radians) or explicitly tagged with an angle unit in <code class="docutils literal notranslate"><span class="pre">[]</span></code>.</p>
+<p>With explicit unit blocks, the equivalent conversion is <code class="docutils literal notranslate"><span class="pre">x[rad]</span> <span class="pre">-&gt;</span> <span class="pre">[deg]</span></code>.</p>
 </dd></dl>
 
 <dl class="sc function">
@@ -501,7 +507,9 @@ symbol (<code class="docutils literal notranslate"><span class="pre">i</span></c
 <p><span class="versionmodified added">New in version 1.0.</span></p>
 </div>
 <p>Convert the angle <code class="docutils literal notranslate"><span class="pre">x</span></code> into gradians. Independently of the angle mode setting, this function will assume that <code class="docutils literal notranslate"><span class="pre">x</span></code> is given in radians and return <code class="docutils literal notranslate"><span class="pre">200*x/pi</span></code>.</p>
-<p>The function only accepts real, dimensionless arguments.</p>
+<p>The function accepts real arguments that are either dimensionless (interpreted
+as radians) or explicitly tagged with an angle unit in <code class="docutils literal notranslate"><span class="pre">[]</span></code>.</p>
+<p>With explicit unit blocks, the equivalent conversion is <code class="docutils literal notranslate"><span class="pre">x[rad]</span> <span class="pre">-&gt;</span> <span class="pre">[grad]</span></code>.</p>
 </dd></dl>
 
 <dl class="sc function">
@@ -511,7 +519,9 @@ symbol (<code class="docutils literal notranslate"><span class="pre">i</span></c
 <p><span class="versionmodified added">New in version 1.0.</span></p>
 </div>
 <p>Convert the angle <code class="docutils literal notranslate"><span class="pre">x</span></code> into turns. Independently of the angle mode setting, this function will assume that <code class="docutils literal notranslate"><span class="pre">x</span></code> is given in radians and return <code class="docutils literal notranslate"><span class="pre">x/(2*pi)</span></code>.</p>
-<p>The function only accepts real, dimensionless arguments.</p>
+<p>The function accepts real arguments that are either dimensionless (interpreted
+as radians) or explicitly tagged with an angle unit in <code class="docutils literal notranslate"><span class="pre">[]</span></code>.</p>
+<p>With explicit unit blocks, the equivalent conversion is <code class="docutils literal notranslate"><span class="pre">x[rad]</span> <span class="pre">-&gt;</span> <span class="pre">[turn]</span></code>.</p>
 </dd></dl>
 
 <dl class="sc function">

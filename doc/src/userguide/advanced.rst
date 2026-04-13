@@ -228,6 +228,7 @@ Built-in short forms include:
   ``ls`` (``lightsecond``), ``lmin`` (``lightminute``), ``pc`` (``parsec``),
   ``in`` (``inch``), ``ft`` (``foot``).
 * Time: ``min`` (``minute``), ``h`` (``hour``), ``cy`` (``century``).
+* Angle: ``deg`` (``degree``), ``grad``/``gon`` (``gradian``).
 * Information: ``b`` (``bit``), ``B`` (``byte``).
 * Other common aliases: ``u``/``Da`` (``atomic_mass_unit``), ``nmi`` (``nautical_mile``).
 

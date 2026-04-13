@@ -89,6 +89,7 @@
      || (unitName) == QLatin1String("degree") \
      || (unitName) == QLatin1String("deg") \
      || (unitName) == QLatin1String("gradian") \
+     || (unitName) == QLatin1String("grad") \
      || (unitName) == QLatin1String("gon") \
      || (unitName) == QLatin1String("turn") \
      || (unitName) == QLatin1String("arcminute") \
@@ -102,7 +103,7 @@
     if ((angle).hasUnit() && IS_EXPLICIT_ANGLE_UNIT(explicitUnitName)) { \
         if (explicitUnitName == QLatin1String("degree") || explicitUnitName == QLatin1String("deg")) \
             (angle) = DMath::deg2rad(angle); \
-        else if (explicitUnitName == QLatin1String("gradian") || explicitUnitName == QLatin1String("gon")) \
+        else if (explicitUnitName == QLatin1String("gradian") || explicitUnitName == QLatin1String("grad") || explicitUnitName == QLatin1String("gon")) \
             (angle) = DMath::gon2rad(angle); \
         else if (explicitUnitName == QLatin1String("turn")) \
             (angle) *= Quantity(2) * DMath::pi(); \

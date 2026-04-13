@@ -345,7 +345,10 @@ static QHash<QString, Quantity> s_buildBuiltInUnitLookup(char angleMode)
 
     lookup.insert(QStringLiteral("degree"), degree);
     lookup.insert(QStringLiteral("deg"), degree);
+    lookup.insert(QString::fromUtf8("°"), degree);
+    lookup.insert(QString::fromUtf8("º"), degree);
     lookup.insert(QStringLiteral("gradian"), gradian);
+    lookup.insert(QStringLiteral("grad"), gradian);
     lookup.insert(QStringLiteral("gon"), gradian);
     lookup.insert(QStringLiteral("turn"), turn);
     lookup.insert(QStringLiteral("arcminute"), arcminute);
@@ -4028,6 +4031,13 @@ Evaluator* Evaluator::instance()
         qAddPostRoutine(s_deleteEvaluator);
     }
     return s_evaluatorInstance;
+}
+
+QStringList Evaluator::builtInUnitIdentifiers()
+{
+    QStringList identifiers = s_builtInUnitLookup().keys();
+    identifiers.sort();
+    return identifiers;
 }
 
 Evaluator::Evaluator()

@@ -208,8 +208,9 @@ calculations and thus susceptible to rounding errors.</p>
 </td></tr></tbody></table><p>For trigonometric input, explicit angle units override angle mode. For example,
 <code class="docutils literal notranslate"><span class="pre">cos(pi*[rad])</span></code>, <code class="docutils literal notranslate"><span class="pre">cos(180*[degree])</span></code>, <code class="docutils literal notranslate"><span class="pre">cos(200*[gradian])</span></code> and
 <code class="docutils literal notranslate"><span class="pre">cos(0.5*[turn])</span></code> all evaluate to <code class="docutils literal notranslate"><span class="pre">-1</span></code> regardless of the global angle mode.
-The alias <code class="docutils literal notranslate"><span class="pre">deg</span></code> is supported for <code class="docutils literal notranslate"><span class="pre">degree</span></code> and is normalized to <code class="docutils literal notranslate"><span class="pre">°</span></code> in
-autocomplete insertion and displayed result units.</p>
+The aliases <code class="docutils literal notranslate"><span class="pre">deg</span></code> for <code class="docutils literal notranslate"><span class="pre">degree</span></code> and <code class="docutils literal notranslate"><span class="pre">grad</span></code> for <code class="docutils literal notranslate"><span class="pre">gradian</span></code> are supported.
+<code class="docutils literal notranslate"><span class="pre">deg</span></code> is normalized to <code class="docutils literal notranslate"><span class="pre">°</span></code> in autocomplete insertion and displayed result
+units.</p>
 <p>Only last part of sexagesimal input value can contain decimals.</p>
 <p>Following tables show some possible input notations and their results in both fixed-point decimal and sexagesimal modes.
 Sexagesimal round-trips (for example arcsecond → DMS → radians) are designed to keep precision drift negligible.

@@ -119,7 +119,7 @@ Trigonometric & Inverse Trigonometric
 
 For direct trigonometric input (:func:`sin`, :func:`cos`, :func:`tan`,
 :func:`cot`, :func:`sec`, :func:`csc`), explicit angle units
-(``rad``, ``degree``, ``gradian``/``gon``, ``turn``, ``arcminute``,
+(``rad``, ``degree``, ``gradian``/``grad``/``gon``, ``turn``, ``arcminute``,
 ``arcsecond``) override the global angle mode. Unitless values follow the
 current angle mode.
 
@@ -417,13 +417,21 @@ Various
 
     Convert the angle ``x`` into radians. Independently of the angle mode setting, this function will assume that ``x`` is given in degrees and return ``pi*x/180``.
 
-    The function only accepts real, dimensionless arguments.
+    The function accepts real arguments that are either dimensionless (interpreted
+    as degrees) or explicitly tagged with an angle unit in ``[]`` (for example
+    ``[rad]``, ``[degree]``, ``[gradian]``, ``[turn]``, ``[arcminute]``,
+    ``[arcsecond]``).
+
+    With explicit unit blocks, the equivalent conversion is ``x[deg] -> [rad]``.
 
 .. function:: degrees(x)
 
     Convert the angle ``x`` into degrees. Independently of the angle mode setting, this function will assume that ``x`` is given in radians and return ``180*x/pi``.
 
-    The function only accepts real, dimensionless arguments.
+    The function accepts real arguments that are either dimensionless (interpreted
+    as radians) or explicitly tagged with an angle unit in ``[]``.
+
+    With explicit unit blocks, the equivalent conversion is ``x[rad] -> [deg]``.
 
 .. function:: gradians(x)
 
@@ -431,7 +439,10 @@ Various
 
     Convert the angle ``x`` into gradians. Independently of the angle mode setting, this function will assume that ``x`` is given in radians and return ``200*x/pi``.
 
-    The function only accepts real, dimensionless arguments.
+    The function accepts real arguments that are either dimensionless (interpreted
+    as radians) or explicitly tagged with an angle unit in ``[]``.
+
+    With explicit unit blocks, the equivalent conversion is ``x[rad] -> [grad]``.
 
 .. function:: turns(x)
 
@@ -439,7 +450,10 @@ Various
 
     Convert the angle ``x`` into turns. Independently of the angle mode setting, this function will assume that ``x`` is given in radians and return ``x/(2*pi)``.
 
-    The function only accepts real, dimensionless arguments.
+    The function accepts real arguments that are either dimensionless (interpreted
+    as radians) or explicitly tagged with an angle unit in ``[]``.
+
+    With explicit unit blocks, the equivalent conversion is ``x[rad] -> [turn]``.
 
 .. function:: int(x)
 

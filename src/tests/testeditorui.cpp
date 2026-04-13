@@ -63,6 +63,8 @@ private slots:
     void completes_replacing_trailing_identifier_after_superscript_power();
     void completes_pi_identifier_as_pi_symbol();
     void accepts_degree_alias_in_unit_brackets_and_normalizes_to_degree_sign();
+    void offers_unit_completion_for_degree_symbol_in_unit_context();
+    void unit_context_completion_includes_angle_units_and_long_forms();
     void completes_affine_temperature_units_in_unit_context();
     void enter_evaluates_when_completion_popup_has_no_explicit_interaction();
 };
@@ -1622,6 +1624,52 @@ void TestEditorUi::accepts_degree_alias_in_unit_brackets_and_normalizes_to_degre
 
     QTest::keyClicks(&editor, QString::fromUtf8("ºC"));
     QCOMPARE(editor.text(), QString::fromUtf8("100 [°C"));
+}
+
+void TestEditorUi::offers_unit_completion_for_degree_symbol_in_unit_context()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    editor.setText(QString::fromUtf8("100 [°"));
+    editor.setCursorPosition(editor.text().size());
+
+    const QStringList degreeChoices = editor.matchFragment(QString::fromUtf8("°"), true);
+    QVERIFY(!degreeChoices.isEmpty());
+    QVERIFY(degreeChoices.contains(QString::fromUtf8("°:Unit")));
+    QVERIFY(degreeChoices.contains(QString::fromUtf8("°C:Unit")));
+
+    QVERIFY(QMetaObject::invokeMethod(
+        &editor,
+        "autoComplete",
+        Qt::DirectConnection,
+        Q_ARG(QString, QStringLiteral("u:Unit"))));
+    QCOMPARE(editor.text(), QString::fromUtf8("100 [u"));
+}
+
+void TestEditorUi::unit_context_completion_includes_angle_units_and_long_forms()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    const QStringList radChoices = editor.matchFragment(QStringLiteral("rad"), true);
+    QVERIFY(radChoices.contains(QStringLiteral("rad:Unit")));
+    QVERIFY(radChoices.contains(QStringLiteral("radian:Unit")));
+
+    const QStringList arcChoices = editor.matchFragment(QStringLiteral("arc"), true);
+    QVERIFY(arcChoices.contains(QStringLiteral("arcminute:Unit")));
+    QVERIFY(arcChoices.contains(QStringLiteral("arcsecond:Unit")));
+
+    const QStringList turnChoices = editor.matchFragment(QStringLiteral("turn"), true);
+    QVERIFY(turnChoices.contains(QStringLiteral("turn:Unit")));
+
+    const QStringList gradChoices = editor.matchFragment(QStringLiteral("grad"), true);
+    QVERIFY(gradChoices.contains(QStringLiteral("grad:Unit")));
+    QVERIFY(gradChoices.contains(QStringLiteral("gradian:Unit")));
 }
 
 void TestEditorUi::completes_affine_temperature_units_in_unit_context()

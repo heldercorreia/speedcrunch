@@ -139,6 +139,7 @@ public:
     static QString formatInterpretedExpressionSimplifiedForDisplay(const QString&);
     static QString fixNumberRadix(const QString&);
     static QString fixSexagesimal(const QString&, QString& unit);
+    static QStringList builtInUnitIdentifiers();
 
     QString autoFix(const QString&);
     QString dump();
