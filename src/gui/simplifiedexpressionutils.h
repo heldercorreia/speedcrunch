@@ -39,6 +39,49 @@ inline bool isPlainNumericArithmeticExpression(const QString& expression)
     return pattern.match(expression).hasMatch();
 }
 
+inline bool isStandaloneSexagesimalTimeLiteral(const QString& expression)
+{
+    static const QRegularExpression allowedPattern(
+        QStringLiteral("^[\\s\\p{Zs}+\\-−0-9\\.,:]+$"));
+    if (!allowedPattern.match(expression).hasMatch())
+        return false;
+
+    const QString compact = expression.simplified().remove(QChar(' '));
+    const int colonCount = compact.count(QLatin1Char(':'));
+    if (colonCount < 1 || colonCount > 2)
+        return false;
+    if (!compact.contains(QRegularExpression(QStringLiteral("\\d"))))
+        return false;
+
+    const QString withoutSign =
+        (compact.startsWith(QLatin1Char('+'))
+         || compact.startsWith(QLatin1Char('-'))
+         || compact.startsWith(QChar(UnicodeChars::MinusSign)))
+        ? compact.mid(1)
+        : compact;
+    if (withoutSign.isEmpty() || withoutSign == QLatin1String(":") || withoutSign == QLatin1String("::"))
+        return false;
+
+    if (withoutSign.contains(QLatin1String(":::")))
+        return false;
+
+    return true;
+}
+
+inline bool containsSexagesimalTimeLiteral(const QString& expression)
+{
+    // Detect colon-based sexagesimal tokens inside larger expressions
+    // (e.g. "23:50:40 + 5:20:50"), while avoiding obvious identifier/decimal
+    // neighbors that are not time literals.
+    static const QRegularExpression tokenPattern(
+        QStringLiteral(R"((?:^|[^0-9A-Za-z_\.])(?:[+\-−]?\d*:\d*(?::\d*)?)(?:$|[^0-9A-Za-z_\.]))"));
+    if (!tokenPattern.match(expression).hasMatch())
+        return false;
+
+    static const QRegularExpression hasDigitPattern(QStringLiteral("\\d"));
+    return hasDigitPattern.match(expression).hasMatch();
+}
+
 inline QString normalizedTokenForCommutativeComparison(const QString& token)
 {
     QString normalized = token;

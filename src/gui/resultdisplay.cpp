@@ -126,11 +126,67 @@ bool shouldShowAdditionalRationalForTrig(const Settings* settings,
     return !NumberFormatter::formatTrigSymbolic(value).isEmpty();
 }
 
+QString trimTrailingFractionZeros(QString text)
+{
+    // Keep meaningful fractional precision while avoiding noisy ".00...".
+    static const QRegularExpression trailingZerosAfterNonZero(
+        QStringLiteral("([\\.,]\\d*?[1-9])0+$"));
+    static const QRegularExpression onlyZeroFraction(
+        QStringLiteral("[\\.,]0+$"));
+
+    text.replace(trailingZerosAfterNonZero, QStringLiteral("\\1"));
+    text.replace(onlyZeroFraction, QString());
+    return text;
+}
+
+bool isPureTimeQuantity(const Quantity& value)
+{
+    if (!value.hasDimension())
+        return false;
+
+    const auto dimension = value.getDimension();
+    if (dimension.count() != 1 || !dimension.contains(QStringLiteral("time")))
+        return false;
+
+    const auto it = dimension.constFind(QStringLiteral("time"));
+    return it != dimension.constEnd()
+        && it->numerator() == 1
+        && it->denominator() == 1;
+}
+
+QString conversionTargetSuffixForDisplay(const QString& expression)
+{
+    // Preserve an explicit conversion target (e.g. "-> [ms]") so the
+    // normalized sexagesimal line keeps the same target context as input.
+    const int asciiArrowPos = expression.lastIndexOf(QStringLiteral("->"));
+    const int unicodeArrowPos = expression.lastIndexOf(QChar(0x2192)); // →
+
+    int arrowPos = -1;
+    int arrowWidth = 0;
+    if (asciiArrowPos >= 0 && asciiArrowPos >= unicodeArrowPos) {
+        arrowPos = asciiArrowPos;
+        arrowWidth = 2;
+    } else if (unicodeArrowPos >= 0) {
+        arrowPos = unicodeArrowPos;
+        arrowWidth = 1;
+    }
+
+    if (arrowPos < 0)
+        return QString();
+
+    const QString target = expression.mid(arrowPos + arrowWidth).trimmed();
+    if (target.isEmpty())
+        return QString();
+
+    return QStringLiteral(" \u2192 ") + target;
+}
+
 QStringList formatResultLines(const HistoryEntry& entry)
 {
     const Settings* settings = Settings::instance();
     const bool useExtraResultLines = settings->multipleResultLinesEnabled;
     const Quantity value = entry.result();
+    bool emittedSimplifiedLine = false;
 
     QStringList lines;
     auto appendUniqueLine = [&lines](const QString& line) {
@@ -154,8 +210,32 @@ QStringList formatResultLines(const HistoryEntry& entry)
                 // Hide non-informative simplification rows for plain numeric arithmetic.
             } else {
                 appendUniqueLine(QLatin1String("= ") + simplified);
+                emittedSimplifiedLine = true;
             }
         }
+    }
+    if (!emittedSimplifiedLine
+        && settings->simplifyResultExpressions
+        && isPureTimeQuantity(value)
+        && (SimplifiedExpressionUtils::isStandaloneSexagesimalTimeLiteral(entry.expr())
+            || SimplifiedExpressionUtils::containsSexagesimalTimeLiteral(entry.expr()))) {
+        Quantity sexagesimalValue(value);
+        // Sexagesimal formatting expects a time quantity in base seconds.
+        // Drop any explicit display target unit (e.g. "[ms]") to avoid
+        // formatting artifacts in the normalized h:mm:ss line.
+        sexagesimalValue.stripUnits();
+        const QString normalizedSexagesimal = DisplayFormatUtils::applyDigitGroupingForDisplay(
+            trimTrailingFractionZeros(
+            NumberFormatter::format(sexagesimalValue,
+                                    's',
+                                    settings->resultPrecision,
+                                    settings->complexNumbers,
+                                    settings->resultFormatComplex)));
+        // Keep the conversion target visible in the normalized line when the
+        // original expression ends with a conversion request.
+        appendUniqueLine(QLatin1String("= ")
+            + normalizedSexagesimal
+            + conversionTargetSuffixForDisplay(entry.expr()));
     }
     appendUniqueLine(QLatin1String("= ")
         + DisplayFormatUtils::applyDigitGroupingForDisplay(NumberFormatter::format(value)));

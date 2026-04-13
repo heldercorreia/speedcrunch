@@ -5065,12 +5065,18 @@ void Evaluator::compile(const Tokens& tokens)
                Token b = syntaxStack.top();
                Token op = syntaxStack.top(1);
                Token a = syntaxStack.top(2);
+               const bool forceReduceCompletedConversionBeforeAddSub =
+                   op.asOperator() == Token::UnitConversion
+                   && token.isOperator()
+                   && (token.asOperator() == Token::Addition
+                       || token.asOperator() == Token::Subtraction);
                if (a.isOperand() && b.isOperand() && op.isOperator()
                    && ( // Normal operator.
                        (token.isOperator()
                            && !s_isOpeningUnitBracketToken(token)
-                           && opPrecedence(op.asOperator()) >=
-                               opPrecedence(token.asOperator())
+                           && (forceReduceCompletedConversionBeforeAddSub
+                               || opPrecedence(op.asOperator()) >=
+                                   opPrecedence(token.asOperator()))
 #ifdef ALLOW_IMPLICIT_MULT
                            && (token.asOperator() != Token::AssociationStart
                                || opPrecedence(op.asOperator()) >= opPrecedence(Token::Multiplication))
