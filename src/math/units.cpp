@@ -71,6 +71,9 @@ const QMap<QString, QString>& s_unitShortNames()
         {"gram", "g"},
         {"liter", "L"},
         {"electronvolt", "eV"},
+        {"are", "a"},
+        {"day", "d"},
+        {"hour", "h"},
         {"degree", QString(UnicodeChars::DegreeSign)},
         {"deg", QString(UnicodeChars::DegreeSign)}
     };

@@ -65,6 +65,9 @@ private slots:
     void accepts_degree_alias_in_unit_brackets_and_normalizes_to_degree_sign();
     void offers_unit_completion_for_degree_symbol_in_unit_context();
     void unit_context_completion_includes_angle_units_and_long_forms();
+    void completes_are_unit_to_short_form_in_unit_context();
+    void completes_day_unit_to_short_form_in_unit_context();
+    void completes_hour_unit_to_short_form_in_unit_context();
     void completes_affine_temperature_units_in_unit_context();
     void enter_evaluates_when_completion_popup_has_no_explicit_interaction();
 };
@@ -1670,6 +1673,57 @@ void TestEditorUi::unit_context_completion_includes_angle_units_and_long_forms()
     const QStringList gradChoices = editor.matchFragment(QStringLiteral("grad"), true);
     QVERIFY(gradChoices.contains(QStringLiteral("grad:Unit")));
     QVERIFY(gradChoices.contains(QStringLiteral("gradian:Unit")));
+}
+
+void TestEditorUi::completes_are_unit_to_short_form_in_unit_context()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    editor.setText(QStringLiteral("1 [a"));
+    editor.setCursorPosition(editor.text().size());
+    QVERIFY(QMetaObject::invokeMethod(
+        &editor,
+        "autoComplete",
+        Qt::DirectConnection,
+        Q_ARG(QString, QStringLiteral("are:Unit"))));
+    QCOMPARE(editor.text(), QStringLiteral("1 [a"));
+}
+
+void TestEditorUi::completes_day_unit_to_short_form_in_unit_context()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    editor.setText(QStringLiteral("1 [d"));
+    editor.setCursorPosition(editor.text().size());
+    QVERIFY(QMetaObject::invokeMethod(
+        &editor,
+        "autoComplete",
+        Qt::DirectConnection,
+        Q_ARG(QString, QStringLiteral("day:Unit"))));
+    QCOMPARE(editor.text(), QStringLiteral("1 [d"));
+}
+
+void TestEditorUi::completes_hour_unit_to_short_form_in_unit_context()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    editor.setText(QStringLiteral("1 [h"));
+    editor.setCursorPosition(editor.text().size());
+    QVERIFY(QMetaObject::invokeMethod(
+        &editor,
+        "autoComplete",
+        Qt::DirectConnection,
+        Q_ARG(QString, QStringLiteral("hour:Unit"))));
+    QCOMPARE(editor.text(), QStringLiteral("1 [h"));
 }
 
 void TestEditorUi::completes_affine_temperature_units_in_unit_context()
