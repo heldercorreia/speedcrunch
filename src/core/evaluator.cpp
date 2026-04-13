@@ -2422,6 +2422,7 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
         QVector<QString> baseOrder;
         double numericCoefficient = 1.0;
         bool hasNonNumericBase = false;
+        bool hasOnlyUnitBases = true;
         auto combineMulDivOps = [](const QString& outerOp, const QString& innerOp) {
             auto isDivisionOp = [](const QString& opText) {
                 return opText == QLatin1String("/")
@@ -2437,6 +2438,33 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
             if (outerIsDiv)
                 return innerIsDiv ? QStringLiteral("*") : QStringLiteral("/");
             return innerOp;
+        };
+        auto isUnitOnlyBase = [](const QString& baseText) {
+            const Tokens baseTokens = Evaluator::instance()->scan(baseText);
+            if (!baseTokens.valid() || baseTokens.isEmpty())
+                return false;
+            bool hasUnitIdentifier = false;
+            for (const Token& token : baseTokens) {
+                if (token.isUnitIdentifier()) {
+                    hasUnitIdentifier = true;
+                    continue;
+                }
+                if (token.isNumber())
+                    continue;
+                const Token::Operator op = token.asOperator();
+                if (op == Token::AssociationStart
+                    || op == Token::AssociationEnd
+                    || op == Token::Exponentiation
+                    || op == Token::Multiplication
+                    || op == Token::Division
+                    || op == Token::Addition
+                    || op == Token::Subtraction)
+                {
+                    continue;
+                }
+                return false;
+            }
+            return hasUnitIdentifier;
         };
 
         for (int i = 0; i < factors.size(); ++i) {
@@ -2484,6 +2512,8 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
                         baseOrder.append(base);
                     exponentByBase[base] += sign * exponent;
                     hasNonNumericBase = true;
+                    if (hasOnlyUnitBases && !isUnitOnlyBase(base))
+                        hasOnlyUnitBases = false;
                 } else {
                     return text;
                 }
@@ -2511,7 +2541,13 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
 
         QString result;
         const bool coefficientIsOne = std::abs(numericCoefficient - 1.0) < 1e-12;
-        if (!coefficientIsOne || (positiveFactors.isEmpty() && !negativeFactors.isEmpty())) {
+        const bool shouldShowUnitCoefficientOne =
+            coefficientIsOne
+            && hasOnlyUnitBases
+            && (!positiveFactors.isEmpty() || !negativeFactors.isEmpty());
+        if (!coefficientIsOne
+            || shouldShowUnitCoefficientOne
+            || (positiveFactors.isEmpty() && !negativeFactors.isEmpty())) {
             QString coefficientText = formatSimplifiedDecimal(numericCoefficient);
             qint64 num = 0;
             qint64 den = 0;
@@ -2908,6 +2944,25 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
     const Tokens scannedTokens = scanForDisplay(expressionPrefix);
     if (scannedTokens.isEmpty())
         return expressionPrefix + commentSuffix;
+    auto isKnownUnitIdentifier = [](const QString& tokenText) {
+        static QSet<QString> knownUnits;
+        if (knownUnits.isEmpty()) {
+            const QList<Unit> units = Units::getList();
+            for (const Unit& unit : units) {
+                if (!unit.name.isEmpty())
+                    knownUnits.insert(unit.name);
+            }
+        }
+        return knownUnits.contains(tokenText);
+    };
+    bool hasUnitIdentifierToken = false;
+    for (const Token& token : scannedTokens) {
+        if (token.isUnitIdentifier()
+            || (token.isIdentifier() && isKnownUnitIdentifier(token.text()))) {
+            hasUnitIdentifierToken = true;
+            break;
+        }
+    }
 
     const QString groupedExpression =
         groupHighPrecedenceAdditiveTermsForDisplay(expressionPrefix, scannedTokens);
@@ -3097,7 +3152,7 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
     };
 
     QString displayExpression;
-    if (allowAggressiveSimplification) {
+    if (allowAggressiveSimplification && !hasUnitIdentifierToken) {
         displayExpression =
             simplifyRepeatedMultiplicativeBasesForDisplay(groupedExpression, groupedTokens);
         const QString normalized = normalizeNeutralMultiplicativeOnes(displayExpression);
@@ -3113,6 +3168,24 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
     const Tokens tokens = scanForDisplay(displayExpression);
     if (tokens.isEmpty())
         return displayExpression + commentSuffix;
+    bool hasUnitIdentifierTokenInDisplay = false;
+    bool unitOnlyAddSubExpression = true;
+    for (const Token& token : tokens) {
+        if (token.isUnitIdentifier()) {
+            hasUnitIdentifierTokenInDisplay = true;
+            continue;
+        }
+        if (token.isIdentifier() && isKnownUnitIdentifier(token.text())) {
+            hasUnitIdentifierTokenInDisplay = true;
+            continue;
+        }
+        const Token::Operator op = token.asOperator();
+        if (op == Token::Addition || op == Token::Subtraction)
+            continue;
+        unitOnlyAddSubExpression = false;
+        break;
+    }
+    unitOnlyAddSubExpression = unitOnlyAddSubExpression && hasUnitIdentifierTokenInDisplay;
 
     QString formatted;
     formatted.reserve(displayExpression.size() + tokens.size() * 2);
@@ -3155,20 +3228,51 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
             || op == Token::ArithmeticRightShift;
         const QString operatorText =
             op == Token::Subtraction ? QString(OperatorChars::SubtractionSign) : token.text();
-        const bool shouldFormatAsUnitToken = token.isUnitIdentifier();
-        const QString displayTokenText = shouldFormatAsUnitToken
+        const bool shouldTreatIdentifierAsUnit =
+            token.isIdentifier()
+            && unitOnlyAddSubExpression
+            && isKnownUnitIdentifier(operatorText);
+        const bool isDisplayUnitToken =
+            token.isUnitIdentifier() || shouldTreatIdentifierAsUnit;
+        QString displayTokenText = isDisplayUnitToken
             ? Units::formatUnitTokenForDisplay(operatorText)
             : operatorText;
+        if (isDisplayUnitToken && unitOnlyAddSubExpression) {
+            displayTokenText = QStringLiteral("1")
+                + QString(OperatorChars::ValueUnitSpace)
+                + QStringLiteral("[%1]").arg(displayTokenText);
+        }
 
-        if (token.text() == QLatin1String("[") && i > 0) {
-            const Token& previousToken = tokens.at(i - 1);
+        if (token.text() == QLatin1String("[")) {
+            const bool hasPreviousToken = i > 0;
+            const Token previousToken = hasPreviousToken ? tokens.at(i - 1) : Token::null;
+            const bool followsConversionArrow =
+                hasPreviousToken && previousToken.asOperator() == Token::UnitConversion;
             const bool shouldAddValueUnitSpace =
-                previousToken.isNumber()
-                || previousToken.isIdentifier()
-                || previousToken.isUnitIdentifier()
-                || isFunctionCallCloseParen(i - 1);
-            if (shouldAddValueUnitSpace)
+                hasPreviousToken
+                && (previousToken.isNumber()
+                    || previousToken.isIdentifier()
+                    || previousToken.isUnitIdentifier()
+                    || isFunctionCallCloseParen(i - 1));
+            const bool shouldInsertImplicitUnitOne =
+                (!hasPreviousToken
+                    || previousToken.asOperator() == Token::Addition
+                    || previousToken.asOperator() == Token::Subtraction
+                    || previousToken.asOperator() == Token::Assignment
+                    || previousToken.asOperator() == Token::ListSeparator
+                    || previousToken.asOperator() == Token::AssociationStart)
+                &&
+                !followsConversionArrow
+                && !shouldAddValueUnitSpace
+                && i + 1 < tokens.size()
+                && tokens.at(i + 1).isUnitIdentifier();
+
+            if (shouldInsertImplicitUnitOne) {
+                formatted += QStringLiteral("1");
                 formatted += OperatorChars::ValueUnitSpace;
+            } else if (shouldAddValueUnitSpace) {
+                formatted += OperatorChars::ValueUnitSpace;
+            }
         }
 
         if (!isSpacingOperator) {

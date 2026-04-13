@@ -808,6 +808,38 @@ void test_units_short_aliases_and_si_prefixes()
     CHECK_EVAL(QString::fromUtf8("[m³] -> [m³]"), u8"1 m³");
     CHECK_EVAL(QString::fromUtf8("[mm²] -> [m²]"), u8"0.000001 m²");
     CHECK_EVAL(QString::fromUtf8("[mm³] -> [m³]"), u8"0.000000001 m³");
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("[m]"),
+        QStringLiteral("1")
+            + QString(OperatorChars::ValueUnitSpace)
+            + QStringLiteral("[m]"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("[m]"),
+        QStringLiteral("1")
+            + QString(OperatorChars::ValueUnitSpace)
+            + QStringLiteral("[m]"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("[m] + [m]"),
+        QStringLiteral("1")
+            + QString(OperatorChars::ValueUnitSpace)
+            + QStringLiteral("[m]")
+            + QString(OperatorChars::AdditionSpace)
+            + QStringLiteral("+")
+            + QString(OperatorChars::AdditionSpace)
+            + QStringLiteral("1")
+            + QString(OperatorChars::ValueUnitSpace)
+            + QStringLiteral("[m]"));
+    CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
+        QStringLiteral("[m] + [m]"),
+        QStringLiteral("1")
+            + QString(OperatorChars::ValueUnitSpace)
+            + QStringLiteral("[m]")
+            + QString(OperatorChars::AdditionSpace)
+            + QStringLiteral("+")
+            + QString(OperatorChars::AdditionSpace)
+            + QStringLiteral("1")
+            + QString(OperatorChars::ValueUnitSpace)
+            + QStringLiteral("[m]"));
     CHECK_INTERPRETED(QString::fromUtf8("2[m²]+3[mm²]"), "2[m^2]+3[mm^2]");
     CHECK_EVAL("2[]", "2");
     CHECK_INTERPRETED("2[]", "2");
