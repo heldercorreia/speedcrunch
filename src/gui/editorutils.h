@@ -277,6 +277,10 @@ inline QString adjustedTypedTextForImplicitMultiplicationAfterDigit(
         const QChar sign = useDotSign ? OperatorChars::MulDotSign : OperatorChars::MulCrossSign;
         const QChar space = useDotSign ? OperatorChars::MulDotSpace : OperatorChars::MulCrossSpace;
         operatorPrefix = QString(space) + QString(sign) + QString(space);
+    } else if (typed == QLatin1Char('=')) {
+        if (!leftNonSpaceSupportsOperatorInsertion())
+            return typedText;
+        operatorPrefix = QStringLiteral(" = ");
     } else {
         return typedText;
     }

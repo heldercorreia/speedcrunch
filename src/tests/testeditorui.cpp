@@ -40,6 +40,7 @@ private slots:
     void inserts_unit_conversion_with_placeholder_when_typing_arrow_symbol();
     void treats_spaced_unit_conversion_as_atomic_navigation_and_edit_token();
     void treats_spaced_question_comment_as_atomic_navigation_and_edit_token();
+    void treats_spaced_equal_as_atomic_navigation_and_edit_token();
     void treats_leading_question_comment_as_atomic_navigation_and_edit_token();
     void ignores_space_right_after_spaced_unit_conversion_operator();
     void unit_bracket_context_accepts_div_mul_and_rejects_addition();
@@ -704,6 +705,43 @@ void TestEditorUi::treats_spaced_question_comment_as_atomic_navigation_and_edit_
     QCOMPARE(editor.textCursor().position(), 4);
 
     editor.setText(expression);
+    editor.setCursorPosition(4); // immediately after grouped token
+    QTest::keyClick(&editor, Qt::Key_Backspace, Qt::NoModifier);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("12"));
+
+    editor.setText(expression);
+    editor.setCursorPosition(1); // immediately before grouped token
+    QTest::keyClick(&editor, Qt::Key_Delete, Qt::NoModifier);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("12"));
+}
+
+void TestEditorUi::treats_spaced_equal_as_atomic_navigation_and_edit_token()
+{
+    // State: "1", then type '=' with editor insertion rules.
+    // Action: navigate/edit around grouped token.
+    // Expected: grouped " = " behaves as one atomic token.
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    editor.setText(QStringLiteral("1"));
+    editor.setCursorPosition(editor.text().size());
+    QTest::keyClick(&editor, Qt::Key_Equal, Qt::NoModifier);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("1 = "));
+
+    editor.insert(QStringLiteral("2"));
+    const QString expression = editor.document()->toRawText();
+    QCOMPARE(expression, QStringLiteral("1 = 2"));
+
+    editor.setCursorPosition(4); // right after grouped token
+    QTest::keyClick(&editor, Qt::Key_Left, Qt::NoModifier);
+    QCOMPARE(editor.textCursor().position(), 1);
+
+    editor.setCursorPosition(1); // right before grouped token
+    QTest::keyClick(&editor, Qt::Key_Right, Qt::NoModifier);
+    QCOMPARE(editor.textCursor().position(), 4);
+
     editor.setCursorPosition(4); // immediately after grouped token
     QTest::keyClick(&editor, Qt::Key_Backspace, Qt::NoModifier);
     QCOMPARE(editor.document()->toRawText(), QStringLiteral("12"));

@@ -132,6 +132,7 @@ static bool isGroupedSpacedOperator(QChar leftSpace, QChar sign, QChar rightSpac
            || matches(OperatorChars::AdditionSpace, OperatorChars::AdditionSign)
            || matches(OperatorChars::SubtractionSpace, OperatorChars::SubtractionSign)
            || matches(OperatorChars::DivisionSpace, OperatorChars::DivisionSign)
+           || matches(QLatin1Char(' '), QLatin1Char('='))
            || matches(OperatorChars::SubtractionSpace, UnicodeChars::RightwardsArrow)
            || matches(QLatin1Char(' '), QLatin1Char('?'));
 }
@@ -3246,8 +3247,24 @@ void Editor::keyPressEvent(QKeyEvent* event)
 
     case Qt::Key_Plus:
     case Qt::Key_Equal:
-        if (key == Qt::Key_Equal && !(event->modifiers() & Qt::ShiftModifier))
-            break;
+        if (key == Qt::Key_Equal && !(event->modifiers() & Qt::ShiftModifier)) {
+            const QChar prev = previousNonSpaceChar(text(), textCursor().position());
+            if (isAnyAdditionOperator(prev)
+                || EditorUtils::isSubtractionOperatorAlias(prev)
+                || EditorUtils::isDivisionOperatorAlias(prev)
+                || isAnyMultiplicationOperator(prev)
+                || prev == QLatin1Char('^')
+                || prev == QLatin1Char('=')) {
+                event->accept();
+                return;
+            }
+            insert(EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
+                text(),
+                textCursor().position(),
+                QStringLiteral("=")));
+            event->accept();
+            return;
+        }
         {
             const QChar prev = previousNonSpaceChar(text(), textCursor().position());
             if (isAnyAdditionOperator(prev)
