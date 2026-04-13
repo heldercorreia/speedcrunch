@@ -287,6 +287,12 @@ static QHash<QString, Quantity> s_buildBuiltInUnitLookup(char angleMode)
     insertDisplayed(QString::fromUtf8("Ω"), Units::ohm(), QStringLiteral("ohm"));
     insertDisplayed(QStringLiteral("s"), Units::second(), QStringLiteral("second"));
     insertDisplayed(QStringLiteral("h"), Units::hour(), QStringLiteral("h"));
+    insertDisplayed(QStringLiteral("celsius"), Units::kelvin(), QStringLiteral("celsius"));
+    insertDisplayed(QStringLiteral("fahrenheit"), Units::kelvin(), QStringLiteral("fahrenheit"));
+    insertDisplayed(QString::fromUtf8("°C"), Units::kelvin(), QString::fromUtf8("°C"));
+    insertDisplayed(QString::fromUtf8("°F"), Units::kelvin(), QString::fromUtf8("°F"));
+    insertDisplayed(QString::fromUtf8("ºC"), Units::kelvin(), QString::fromUtf8("°C"));
+    insertDisplayed(QString::fromUtf8("ºF"), Units::kelvin(), QString::fromUtf8("°F"));
 
     {
         Quantity hz = Units::hertz();
@@ -378,6 +384,36 @@ static bool s_tryGetBuiltInUnitQuantity(const QString& identifier, Quantity* val
 static bool s_isBuiltInUnitIdentifier(const QString& identifier)
 {
     return s_builtInUnitLookup().contains(identifier);
+}
+
+enum class AffineTemperatureUnit {
+    None,
+    Celsius,
+    Fahrenheit
+};
+
+static AffineTemperatureUnit s_affineTemperatureUnitFromName(QString name)
+{
+    name = name.trimmed().toLower();
+    name.replace(QChar(0x00BA), QChar(0x00B0)); // º -> °
+    if (name == QLatin1String("celsius")
+        || name == QString::fromUtf8("°c")) {
+        return AffineTemperatureUnit::Celsius;
+    }
+    if (name == QLatin1String("fahrenheit")
+        || name == QString::fromUtf8("°f")) {
+        return AffineTemperatureUnit::Fahrenheit;
+    }
+    return AffineTemperatureUnit::None;
+}
+
+static HNumber s_affineTemperatureToKelvin(const HNumber& value, AffineTemperatureUnit unit)
+{
+    if (unit == AffineTemperatureUnit::Celsius)
+        return value + HNumber("273.15");
+    if (unit == AffineTemperatureUnit::Fahrenheit)
+        return (value + HNumber("459.67")) * HNumber("5") / HNumber("9");
+    return value;
 }
 
 static bool splitUserFunctionDescription(const QString& expression,
@@ -2942,7 +2978,7 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
     };
 
     const Tokens scannedTokens = scanForDisplay(expressionPrefix);
-    if (scannedTokens.isEmpty())
+    if (!scannedTokens.valid() || scannedTokens.isEmpty())
         return expressionPrefix + commentSuffix;
     auto isKnownUnitIdentifier = [](const QString& tokenText) {
         static QSet<QString> knownUnits;
@@ -2967,7 +3003,7 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
     const QString groupedExpression =
         groupHighPrecedenceAdditiveTermsForDisplay(expressionPrefix, scannedTokens);
     const Tokens groupedTokens = scanForDisplay(groupedExpression);
-    if (groupedTokens.isEmpty())
+    if (!groupedTokens.valid() || groupedTokens.isEmpty())
         return groupedExpression + commentSuffix;
 
     auto normalizeNeutralMultiplicativeOnes = [](const QString& text) {
@@ -3166,7 +3202,7 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
         displayExpression = groupedExpression;
     }
     const Tokens tokens = scanForDisplay(displayExpression);
-    if (tokens.isEmpty())
+    if (!tokens.valid() || tokens.isEmpty())
         return displayExpression + commentSuffix;
     bool hasUnitIdentifierTokenInDisplay = false;
     bool unitOnlyAddSubExpression = true;
@@ -3232,11 +3268,23 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
             token.isIdentifier()
             && unitOnlyAddSubExpression
             && isKnownUnitIdentifier(operatorText);
+        const bool isUnitConversionTargetIdentifier =
+            token.isIdentifier()
+            && isKnownUnitIdentifier(operatorText)
+            && i > 0
+            && tokens.at(i - 1).asOperator() == Token::UnitConversion;
+        const bool isTemperatureConversionTargetIdentifier =
+            isUnitConversionTargetIdentifier
+            && s_affineTemperatureUnitFromName(operatorText) != AffineTemperatureUnit::None;
         const bool isDisplayUnitToken =
             token.isUnitIdentifier() || shouldTreatIdentifierAsUnit;
         QString displayTokenText = isDisplayUnitToken
             ? Units::formatUnitTokenForDisplay(operatorText)
             : operatorText;
+        if (isTemperatureConversionTargetIdentifier) {
+            displayTokenText = QStringLiteral("[%1]").arg(
+                Units::formatUnitTokenForDisplay(operatorText));
+        }
         if (isDisplayUnitToken && unitOnlyAddSubExpression) {
             displayTokenText = QStringLiteral("1")
                 + QString(OperatorChars::ValueUnitSpace)
@@ -3393,13 +3441,13 @@ QString Evaluator::simplifyInterpretedExpression(const QString& expression)
     };
 
     const Tokens scannedTokens = scanForDisplay(expressionPrefix);
-    if (scannedTokens.isEmpty())
+    if (!scannedTokens.valid() || scannedTokens.isEmpty())
         return expressionPrefix + commentSuffix;
 
     const QString groupedExpression =
         groupHighPrecedenceAdditiveTermsForDisplay(expressionPrefix, scannedTokens);
     const Tokens groupedTokens = scanForDisplay(groupedExpression);
-    if (groupedTokens.isEmpty())
+    if (!groupedTokens.valid() || groupedTokens.isEmpty())
         return groupedExpression + commentSuffix;
 
     QString simplifiedExpression =
@@ -3442,7 +3490,7 @@ QString Evaluator::simplifyInterpretedExpression(const QString& expression)
 
     if (normalized != simplifiedExpression) {
         const Tokens normalizedTokens = scanForDisplay(normalized);
-        if (!normalizedTokens.isEmpty())
+        if (normalizedTokens.valid() && !normalizedTokens.isEmpty())
             simplifiedExpression = simplifyRepeatedMultiplicativeBasesForDisplay(normalized, normalizedTokens);
         else
             simplifiedExpression = normalized;
@@ -3753,7 +3801,8 @@ bool Evaluator::isSeparatorChar(const QChar& ch)
 
     if (ch == UnicodeChars::Summation
         || ch == UnicodeChars::SquareRoot
-        || ch == UnicodeChars::CubeRoot)
+        || ch == UnicodeChars::CubeRoot
+        || isDegreeSign(ch))
         return false;
 
     if (isRadixChar(ch))
@@ -4249,6 +4298,26 @@ Tokens Evaluator::scan(const QString& expr) const
                 numberBase = 10;
                 state = InNumber;
                 ++i;
+            } else if (unitBracketDepth == 0 && isDegreeSign(ch)) {
+                // Outside explicit unit brackets, distinguish sexagesimal
+                // degree starts from temperature/unit identifiers:
+                // - "°34", "°'56" -> number
+                // - "°C", "°F"    -> identifier
+                const QChar next = ex.at(i + 1);
+                if (next.isLetter()
+                    || next == UnicodeChars::MicroSign
+                    || next == UnicodeChars::GreekCapitalOmega) {
+                    // Seed identifier token with the degree sign to avoid
+                    // stalling on the same character in InIdentifier state.
+                    tokenText.append(ex.at(i++));
+                    state = InIdentifier;
+                } else {
+                    state = InNumberPrefix;
+                }
+            } else if (unitBracketDepth == 0 && isArcTime(ch)) {
+                // Sexagesimal/time notation can start with degree markers,
+                // e.g. "°34" or "°'56".
+                state = InNumberPrefix;
             } else if (ch == '~') {
                 int tokenSize = ++i - tokenStart;
                 tokens.append(Token(Token::stxOperator, "~", tokenStart, tokenSize));
@@ -4258,7 +4327,8 @@ Tokens Evaluator::scan(const QString& expr) const
                 state = InNumberPrefix;
             } else if (ch.isNull()) // Terminator character.
                 state = Finish;
-            else if (isIdentifierStart(ch)) // Identifier or alphanumeric operator
+            else if (isIdentifierStart(ch)
+                     || (unitBracketDepth > 0 && isDegreeSign(ch))) // Identifier or alphanumeric operator
                 state = InIdentifier;
             else { // Look for operator match.
                 int op;
@@ -4308,7 +4378,8 @@ Tokens Evaluator::scan(const QString& expr) const
         // Manage both identifier and alphanumeric operators.
         case InIdentifier:
             // Consume as long as alpha, dollar sign, underscore, or digit.
-            if (isIdentifierContinue(ch))
+            if (isIdentifierContinue(ch)
+                || (unitBracketDepth > 0 && isDegreeSign(ch)))
                 tokenText.append(ex.at(i++));
             else { // We're done with identifier.
                 QString identifier = tokenText;
@@ -5869,7 +5940,22 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 }
                 popStackValue(val1);
                 popStackValue(val2);
-                val2 = checkOperatorResultWithDeferredNoOperand(val2 * val1);
+                {
+                    const AffineTemperatureUnit affineUnit =
+                        s_affineTemperatureUnitFromName(val1.unitName());
+                    if (affineUnit != AffineTemperatureUnit::None
+                        && val2.isDimensionless()
+                        && val2.numericValue().isNearReal())
+                    {
+                        const HNumber kelvin =
+                            s_affineTemperatureToKelvin(val2.numericValue().real, affineUnit);
+                        Quantity absolute = Quantity(kelvin) * Units::kelvin();
+                        absolute.setDisplayUnit(CNumber(1), val1.unitName());
+                        val2 = checkOperatorResultWithDeferredNoOperand(absolute);
+                    } else {
+                        val2 = checkOperatorResultWithDeferredNoOperand(val2 * val1);
+                    }
+                }
                 pushStackValue(val2);
                 break;
 
@@ -6026,7 +6112,12 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     m_error = tr("Conversion failed - dimension mismatch");
                     return HMath::nan();
                 }
-                CNumber displayUnitValue = val1.numericValue();
+                const AffineTemperatureUnit targetAffineUnit =
+                    s_affineTemperatureUnitFromName(val1.unitName());
+                CNumber displayUnitValue =
+                    targetAffineUnit == AffineTemperatureUnit::None
+                    ? val1.numericValue()
+                    : CNumber(1);
                 QString displayUnitName = opcode.text.trimmed();
                 if (isFullyWrappedByOuterBrackets(displayUnitName))
                     displayUnitName = displayUnitName.mid(1, displayUnitName.size() - 2).trimmed();
@@ -6041,6 +6132,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     if (RegExpPatterns::simpleUnitIdentifier().match(inner).hasMatch())
                         displayUnitName = inner;
                 }
+                displayUnitName = UnicodeChars::normalizeUnitSymbolAliases(displayUnitName);
                 const bool nestedConversionTarget =
                     opcode.text.contains(QLatin1String("->"))
                     || opcode.text.contains(QChar(0x2192));
@@ -6053,6 +6145,11 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                         displayUnitValue = canonicalTarget.unit();
                         displayUnitName = canonicalTarget.unitName();
                     }
+                }
+                if (targetAffineUnit != AffineTemperatureUnit::None
+                    && displayUnitName.isEmpty())
+                {
+                    displayUnitName = val1.unitName();
                 }
                 if (Units::negativeExponentStyle() == Units::NegativeExponentSuperscript)
                     displayUnitName = s_applySuperscriptStyleToExplicitUnitText(displayUnitName);

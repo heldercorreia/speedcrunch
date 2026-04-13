@@ -577,9 +577,21 @@ static bool isCurrencySymbolChar(const QChar& ch)
     return ch.category() == QChar::Symbol_Currency;
 }
 
-static bool isAllowedUnitBracketChar(const QChar& ch)
+static bool isUnitIdentifierCharInEditor(const QChar& ch)
 {
     return ch.isLetterOrNumber()
+           || ch == QLatin1Char('_')
+           || ch == UnicodeChars::MicroSign
+           || ch == UnicodeChars::GreekSmallLetterMu
+           || ch == UnicodeChars::GreekCapitalOmega
+           || ch == UnicodeChars::OhmSign
+           || ch == UnicodeChars::DegreeSign
+           || ch == QChar(0x00BA);
+}
+
+static bool isAllowedUnitBracketChar(const QChar& ch)
+{
+    return isUnitIdentifierCharInEditor(ch)
            || ch == QLatin1Char('(')
            || ch == QLatin1Char(')')
            || ch == QLatin1Char(']')
@@ -826,6 +838,14 @@ static QString normalizeTypedTextForSquareBracketContext(const QString& surround
         if (EditorUtils::isDivisionOperatorAlias(ch))
             ch = OperatorChars::DivisionSign;
 
+        // Keep unit-symbol aliases normalized as users type inside [].
+        if (ch == UnicodeChars::OhmSign)
+            ch = UnicodeChars::GreekCapitalOmega;
+        else if (ch == UnicodeChars::GreekSmallLetterMu)
+            ch = UnicodeChars::MicroSign;
+        else if (ch == QChar(0x00BA))
+            ch = UnicodeChars::DegreeSign;
+
         if (EditorUtils::isSubtractionOperatorAlias(ch)) {
             const bool afterExponentStart =
                 previous == QLatin1Char('^')
@@ -836,7 +856,7 @@ static QString normalizeTypedTextForSquareBracketContext(const QString& surround
             ch = OperatorChars::SubtractionSign;
         }
 
-        if (ch.isLetter()) {
+        if (isUnitIdentifierCharInEditor(ch) && !ch.isDigit()) {
             if (ch == QLatin1Char('e') || ch == QLatin1Char('E')) {
                 const bool inExponentTypingPosition =
                     previous == QLatin1Char('^')
@@ -860,7 +880,8 @@ static QString normalizeTypedTextForSquareBracketContext(const QString& surround
                     return QString();
             } else {
                 const bool isValidUnitDenominator =
-                    ch.isLetter() || ch == QLatin1Char('(');
+                    (isUnitIdentifierCharInEditor(ch) && !ch.isDigit())
+                    || ch == QLatin1Char('(');
                 if (!isValidUnitDenominator)
                     return QString();
             }
@@ -1044,7 +1065,7 @@ static int trailingIdentifierStart(const QString& text, int endPosition)
         return -1;
 
     auto isIdentifierChar = [](const QChar& ch) {
-        return ch.isLetterOrNumber() || ch == QLatin1Char('_');
+        return isUnitIdentifierCharInEditor(ch);
     };
 
     int start = safeEnd;
@@ -1819,8 +1840,10 @@ void Editor::autoComplete(const QString& item)
     const auto str = item.split(':');
     // Add leading space characters if any.
     auto newTokenText = str.at(0);
-    if (unitContext)
+    if (unitContext) {
+        newTokenText = UnicodeChars::normalizeUnitSymbolAliases(newTokenText);
         newTokenText = Units::formatUnitTokenForDisplay(newTokenText);
+    }
     if (newTokenText == QLatin1String("pi"))
         newTokenText = QString(UnicodeChars::Pi);
     if (newTokenText == QLatin1String("degree")

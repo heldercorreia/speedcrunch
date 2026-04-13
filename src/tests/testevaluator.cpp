@@ -981,6 +981,30 @@ void test_units_conversion_compatibility_and_canonicalization()
     CHECK_EVAL("[volt^2] -> [1 * (ohm * ampere)^2]", "1 1 * (ohm * ampere)²");
 }
 
+void test_units_temperature_affine_conversions()
+{
+    CHECK_EVAL("25[celsius] -> [kelvin]", "298.15 kelvin");
+    CHECK_EVAL("0[celsius] -> [fahrenheit]", "32 fahrenheit");
+    CHECK_EVAL("32[fahrenheit] -> [celsius]", "0 celsius");
+    CHECK_EVAL("77[fahrenheit] -> [kelvin]", "298.15 kelvin");
+    CHECK_EVAL("298.15[kelvin] -> [fahrenheit]", "77 fahrenheit");
+    CHECK_EVAL(QString::fromUtf8("0[°C] -> [kelvin]"), "273.15 kelvin");
+    CHECK_EVAL(QString::fromUtf8("32[°F] -> [°C]"), "0 °C");
+    CHECK_EVAL(QString::fromUtf8("77[°F] -> [°C]"), "25 °C");
+    CHECK_EVAL(QString::fromUtf8("273.15[kelvin] -> [°C]"), "0 °C");
+    CHECK_EVAL(QString::fromUtf8("0[°C] -> [°F]"), "32 °F");
+    CHECK_EVAL(QString::fromUtf8("32[ºF] -> [ºC]"), "0 °C");
+    CHECK_DISPLAY_INTERPRETED(
+        QString::fromUtf8("100 [K] → [°C]"),
+        QString::fromUtf8("100")
+            + QString(OperatorChars::ValueUnitSpace)
+            + QString::fromUtf8("[K]")
+            + QString(OperatorChars::AdditionSpace)
+            + QString::fromUtf8("→")
+            + QString(OperatorChars::AdditionSpace)
+            + QString::fromUtf8("[°C]"));
+}
+
 void test_units_grouping_and_inverse_presentation()
 {
     Settings* settings = Settings::instance();
@@ -1094,6 +1118,7 @@ void test_units()
     test_units_named_derived_canonicalization();
     test_units_derived_si_recognition_and_disambiguation();
     test_units_conversion_compatibility_and_canonicalization();
+    test_units_temperature_affine_conversions();
     test_units_grouping_and_inverse_presentation();
     test_units_preferred_derived_forms_regressions();
 }

@@ -41,6 +41,8 @@ const QMap<QString, QString>& s_unitShortNames()
         {"mole", "mol"},
         {"candela", "cd"},
         {"kelvin", "K"},
+        {"celsius", QString::fromUtf8("°C")},
+        {"fahrenheit", QString::fromUtf8("°F")},
         {"bit", "b"},
         {"byte", "B"},
         {"sqmeter", QString::fromUtf8("m²")},
@@ -105,7 +107,9 @@ bool isUnitIdentifierChar(const QChar& ch)
 {
     return ch.isLetterOrNumber() || ch == QChar('_')
            || ch == QChar(0x00B5) // µ
-           || ch == QChar(0x03A9); // Ω
+           || ch == QChar(0x03A9) // Ω
+           || ch == QChar(0x00B0) // °
+           || ch == QChar(0x00BA); // º
 }
 
 } // namespace
@@ -667,6 +671,16 @@ const QList<Unit> Units::getList()
     addUnit("mole", mole(), "mol");
     addUnit("candela", candela(), "cd");
     addUnit("kelvin", kelvin(), "K");
+    addUnitWithAliasesImpl("celsius",
+                           kelvin(),
+                           QString::fromUtf8("°C"),
+                           QString::fromUtf8("ºC"),
+                           NoSiPrefixes);
+    addUnitWithAliasesImpl("fahrenheit",
+                           kelvin(),
+                           QString::fromUtf8("°F"),
+                           QString::fromUtf8("ºF"),
+                           NoSiPrefixes);
     addUnit("bit", bit(), "b", PositiveSiPrefixes);
 
     // SI decimal prefixes (long-form names and selected symbol aliases).

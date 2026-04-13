@@ -73,6 +73,7 @@ inline QString normalizeUnitSymbolAliases(QString text)
 {
     text.replace(OhmSign, GreekCapitalOmega);
     text.replace(GreekSmallLetterMu, MicroSign);
+    text.replace(QChar(0x00BA), DegreeSign); // º -> °
     return text;
 }
 

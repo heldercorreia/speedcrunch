@@ -110,7 +110,7 @@ inline const QRegularExpression& unsignedIntegerEquivalentDecimal()
 inline const QRegularExpression& simpleUnitIdentifier()
 {
     static const QRegularExpression pattern(
-        QStringLiteral("^[A-Za-z_µμΩ][A-Za-z0-9_µμΩ]*$"));
+        QStringLiteral("^[A-Za-z_µμΩ°º][A-Za-z0-9_µμΩ°º]*$"));
     return pattern;
 }
 

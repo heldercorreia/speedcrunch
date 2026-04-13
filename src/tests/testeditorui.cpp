@@ -10,6 +10,7 @@
 #include "gui/editorutils.h"
 #include "core/evaluator.h"
 #include "core/settings.h"
+#include "core/unicodechars.h"
 #include "math/operatorchars.h"
 
 #include <QApplication>
@@ -61,6 +62,8 @@ private slots:
     void finds_completion_keyword_after_superscript_power();
     void completes_replacing_trailing_identifier_after_superscript_power();
     void completes_pi_identifier_as_pi_symbol();
+    void accepts_degree_alias_in_unit_brackets_and_normalizes_to_degree_sign();
+    void completes_affine_temperature_units_in_unit_context();
     void enter_evaluates_when_completion_popup_has_no_explicit_interaction();
 };
 
@@ -1605,6 +1608,55 @@ void TestEditorUi::completes_pi_identifier_as_pi_symbol()
         Q_ARG(QString, QStringLiteral("pi: Archimedes' constant Pi"))));
 
     QCOMPARE(editor.text(), QString::fromUtf8("π"));
+}
+
+void TestEditorUi::accepts_degree_alias_in_unit_brackets_and_normalizes_to_degree_sign()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    editor.setText(QStringLiteral("100 ["));
+    editor.setCursorPosition(editor.text().size());
+
+    QTest::keyClicks(&editor, QString::fromUtf8("ºC"));
+    QCOMPARE(editor.text(), QString::fromUtf8("100 [°C"));
+}
+
+void TestEditorUi::completes_affine_temperature_units_in_unit_context()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    editor.setText(QStringLiteral("100 [c"));
+    editor.setCursorPosition(editor.text().size());
+    QVERIFY(QMetaObject::invokeMethod(
+        &editor,
+        "autoComplete",
+        Qt::DirectConnection,
+        Q_ARG(QString, QStringLiteral("celsius:Unit"))));
+    QCOMPARE(editor.text(), QString::fromUtf8("100 [°C"));
+
+    editor.setText(QStringLiteral("100 [f"));
+    editor.setCursorPosition(editor.text().size());
+    QVERIFY(QMetaObject::invokeMethod(
+        &editor,
+        "autoComplete",
+        Qt::DirectConnection,
+        Q_ARG(QString, QStringLiteral("fahrenheit:Unit"))));
+    QCOMPARE(editor.text(), QString::fromUtf8("100 [°F"));
+
+    editor.setText(QString::fromUtf8("100 [º"));
+    editor.setCursorPosition(editor.text().size());
+    QVERIFY(QMetaObject::invokeMethod(
+        &editor,
+        "autoComplete",
+        Qt::DirectConnection,
+        Q_ARG(QString, QString::fromUtf8("ºC:Unit"))));
+    QCOMPARE(editor.text(), QString::fromUtf8("100 [°C"));
 }
 
 void TestEditorUi::enter_evaluates_when_completion_popup_has_no_explicit_interaction()

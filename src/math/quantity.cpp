@@ -139,6 +139,36 @@ QString normalizeDisplayUnitNameForOutput(const QString& unitName)
     return normalized;
 }
 
+enum class AffineTemperatureUnit {
+    None,
+    Celsius,
+    Fahrenheit
+};
+
+AffineTemperatureUnit affineTemperatureUnitFromName(QString unitName)
+{
+    QString normalized = unitName.trimmed().toLower();
+    normalized.replace(QChar(0x00BA), QChar(0x00B0)); // º -> °
+    if (normalized == QLatin1String("celsius")
+        || normalized == QString::fromUtf8("°c")) {
+        return AffineTemperatureUnit::Celsius;
+    }
+    if (normalized == QLatin1String("fahrenheit")
+        || normalized == QString::fromUtf8("°f")) {
+        return AffineTemperatureUnit::Fahrenheit;
+    }
+    return AffineTemperatureUnit::None;
+}
+
+HNumber kelvinToAffineTemperature(const HNumber& kelvin, AffineTemperatureUnit unit)
+{
+    if (unit == AffineTemperatureUnit::Celsius)
+        return kelvin - HNumber("273.15");
+    if (unit == AffineTemperatureUnit::Fahrenheit)
+        return kelvin * HNumber("9") / HNumber("5") - HNumber("459.67");
+    return kelvin;
+}
+
 QString composeProductUnitName(const QString& left, const QString& right)
 {
     const QString l = left.trimmed();
@@ -1364,6 +1394,9 @@ QString DMath::format(Quantity q, Quantity::Format format)
     CNumber number = q.m_numericValue;
 
     number /= unit;
+    const AffineTemperatureUnit affineUnit = affineTemperatureUnitFromName(q.unitName());
+    if (affineUnit != AffineTemperatureUnit::None && number.isNearReal())
+        number.real = kelvinToAffineTemperature(number.real, affineUnit);
 
     QString result = CMath::format(number, format);
 
