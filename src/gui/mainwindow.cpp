@@ -3747,7 +3747,7 @@ void MainWindow::openNewsURL()
 
 void MainWindow::openDonateURL()
 {
-    QDesktopServices::openUrl(QUrl(QString::fromLatin1("https://heldercorreia.bitbucket.io/speedcrunch/donate.html")));
+    QDesktopServices::openUrl(QUrl(QString::fromLatin1("https://www.speedcrunch.org/donate.html")));
 }
 
 void MainWindow::copy()
