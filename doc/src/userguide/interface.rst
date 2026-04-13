@@ -108,9 +108,9 @@ Expression Editor Features
 The expression editor provides some advanced features:
 
 * Autocompletion
-    If you start typing a name (e.g. of a variable, function, or unit), a pop-up with matching names will appear. Pressing :kbd:`Tab` or :kbd:`Enter`
-    will automatically insert the first suggestion. Alternatively, you can use the arrow keys or the mouse to select a different suggestion, or continue
-    typing to refine the list. Pressing :kbd:`Escape` will dismiss the autocomplete popup.
+    If you start typing a name (e.g. of a variable, function, or unit), a pop-up with matching names will appear. Press :kbd:`Tab` to insert the current
+    suggestion. Pressing :kbd:`Enter` evaluates the expression by default. If you explicitly navigate the popup with arrow/page/home/end keys or click a
+    suggestion with the mouse, then :kbd:`Enter` accepts that selected suggestion. Pressing :kbd:`Escape` dismisses the autocomplete popup.
 
 * Function signature tooltip
     While typing a function call, the live result area can show the function signature (parameter list). The parameter currently being edited is highlighted.

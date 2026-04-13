@@ -3536,6 +3536,16 @@ bool EditorCompletion::eventFilter(QObject* object, QEvent* event)
         switch (key) {
         case Qt::Key_Enter:
         case Qt::Key_Return:
+            if (m_popupInteracted) {
+                doneCompletion();
+                return true;
+            }
+
+            m_popup->hide();
+            m_editor->setFocus();
+            QMetaObject::invokeMethod(m_editor, "triggerEnter", Qt::QueuedConnection);
+            return true;
+
         case Qt::Key_Tab:
             doneCompletion();
             return true;
@@ -3546,6 +3556,7 @@ bool EditorCompletion::eventFilter(QObject* object, QEvent* event)
         case Qt::Key_End:
         case Qt::Key_PageUp:
         case Qt::Key_PageDown:
+            m_popupInteracted = true;
             return false;
 
         default:
@@ -3578,6 +3589,7 @@ void EditorCompletion::showCompletion(const QStringList& choices)
 {
     if (!choices.count())
         return;
+    m_popupInteracted = false;
 
     QFontMetrics metrics(m_editor->font());
 

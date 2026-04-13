@@ -167,6 +167,7 @@ private:
 
     Editor* m_editor;
     QTreeWidget* m_popup;
+    bool m_popupInteracted = false;
 };
 
 class ConstantCompletion : public QObject {

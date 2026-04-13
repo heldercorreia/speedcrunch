@@ -15,6 +15,7 @@
 #include <QApplication>
 #include <QInputMethodEvent>
 #include <QKeyEvent>
+#include <QSignalSpy>
 #include <QTest>
 
 class TestEditorUi : public QObject {
@@ -59,6 +60,7 @@ private slots:
     void finds_completion_keyword_after_superscript_power();
     void completes_replacing_trailing_identifier_after_superscript_power();
     void completes_pi_identifier_as_pi_symbol();
+    void enter_evaluates_when_completion_popup_has_no_explicit_interaction();
 };
 
 void TestEditorUi::blocks_consecutive_plus()
@@ -1557,6 +1559,34 @@ void TestEditorUi::completes_pi_identifier_as_pi_symbol()
         Q_ARG(QString, QStringLiteral("pi: Archimedes' constant Pi"))));
 
     QCOMPARE(editor.text(), QString::fromUtf8("π"));
+}
+
+void TestEditorUi::enter_evaluates_when_completion_popup_has_no_explicit_interaction()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    const QString input = QString::fromUtf8("∑(1;10;n");
+    editor.setText(input);
+    editor.setCursorPosition(input.size());
+
+    QSignalSpy returnPressedSpy(&editor, SIGNAL(returnPressed()));
+
+    QVERIFY(QMetaObject::invokeMethod(
+        &editor,
+        "triggerAutoComplete",
+        Qt::DirectConnection));
+
+    QWidget* popup = QApplication::activePopupWidget();
+    QVERIFY(popup);
+
+    QTest::keyClick(popup, Qt::Key_Return, Qt::NoModifier);
+    QCoreApplication::processEvents();
+
+    QCOMPARE(returnPressedSpy.count(), 1);
+    QCOMPARE(editor.text(), input);
 }
 
 QTEST_MAIN(TestEditorUi)
