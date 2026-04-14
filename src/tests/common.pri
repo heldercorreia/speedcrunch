@@ -54,7 +54,8 @@ HEADERS += ../core/book.h \
            ../math/number.h \
            ../math/quantity.cpp \
            ../math/rational.h \
-           ../math/units.h \
+           ../core/units.h \
+           ../core/unitdisplayformat.h \
            ../gui/manualwindow.h
 
 SOURCES += ../core/book.cpp \
@@ -95,5 +96,6 @@ SOURCES += ../core/book.cpp \
            ../math/cnumberparser.cpp \
            ../math/quantity.cpp \
            ../math/rational.cpp \
-           ../math/units.cpp \
+           ../core/units.cpp \
+           ../core/unitdisplayformat.cpp \
            ../gui/manualwindow.cpp

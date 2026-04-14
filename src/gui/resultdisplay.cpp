@@ -23,7 +23,9 @@
 #include "core/numberformatter.h"
 #include "core/regexpatterns.h"
 #include "core/settings.h"
+#include "core/units.h"
 #include "core/unicodechars.h"
+#include "core/mathdsl.h"
 #include "gui/simplifiedexpressionutils.h"
 #include "gui/syntaxhighlighter.h"
 #include "math/cmath.h"
@@ -89,7 +91,7 @@ void cloneMenuActions(const QMenu* sourceMenu, QMenu* targetMenu)
 QString formatResultForClipboard(const Quantity& value)
 {
     QString textToCopy = NumberFormatter::format(value);
-    textToCopy.replace(UnicodeChars::MinusSign, QChar('-'));
+    textToCopy.replace(UnicodeChars::MinusSign, MathDsl::SubOpAlt1);
     return textToCopy;
 }
 
@@ -144,11 +146,11 @@ bool isPureTimeQuantity(const Quantity& value)
     if (!value.hasDimension())
         return false;
 
-    const auto dimension = value.getDimension();
-    if (dimension.count() != 1 || !dimension.contains(QStringLiteral("time")))
+    const auto dimension = value.getDimensionByQuantity();
+    if (dimension.count() != 1 || !dimension.contains(UnitQuantity::Time))
         return false;
 
-    const auto it = dimension.constFind(QStringLiteral("time"));
+    const auto it = dimension.constFind(UnitQuantity::Time);
     return it != dimension.constEnd()
         && it->numerator() == 1
         && it->denominator() == 1;
@@ -159,7 +161,7 @@ QString conversionTargetSuffixForDisplay(const QString& expression)
     // Preserve an explicit conversion target (e.g. "-> [ms]") so the
     // normalized sexagesimal line keeps the same target context as input.
     const int asciiArrowPos = expression.lastIndexOf(QStringLiteral("->"));
-    const int unicodeArrowPos = expression.lastIndexOf(QChar(0x2192)); // →
+    const int unicodeArrowPos = expression.lastIndexOf(MathDsl::TransOp);
 
     int arrowPos = -1;
     int arrowWidth = 0;

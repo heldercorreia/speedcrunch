@@ -23,6 +23,7 @@
 #include "core/functions.h"
 
 #include "core/settings.h"
+#include "core/units.h"
 #include "core/unicodechars.h"
 #include "math/hmath.h"
 #include "math/cmath.h"
@@ -83,36 +84,10 @@
         ENSURE_REAL_ARGUMENT(i); \
     }
 
-#define IS_EXPLICIT_ANGLE_UNIT(unitName) \
-    ((unitName) == QLatin1String("rad") \
-     || (unitName) == QLatin1String("radian") \
-     || (unitName) == QLatin1String("degree") \
-     || (unitName) == QLatin1String("deg") \
-     || (unitName) == QLatin1String("gradian") \
-     || (unitName) == QLatin1String("grad") \
-     || (unitName) == QLatin1String("gon") \
-     || (unitName) == QLatin1String("turn") \
-     || (unitName) == QLatin1String("arcminute") \
-     || (unitName) == QLatin1String("arcmin") \
-     || (unitName) == QLatin1String("arcsecond") \
-     || (unitName) == QLatin1String("arcsec"))
-
 #define CONVERT_ARGUMENT_ANGLE(angle) \
     { \
-    const QString explicitUnitName = (angle).unitName().trimmed().toLower(); \
-    if ((angle).hasUnit() && IS_EXPLICIT_ANGLE_UNIT(explicitUnitName)) { \
-        if (explicitUnitName == QLatin1String("degree") || explicitUnitName == QLatin1String("deg")) \
-            (angle) = DMath::deg2rad(angle); \
-        else if (explicitUnitName == QLatin1String("gradian") || explicitUnitName == QLatin1String("grad") || explicitUnitName == QLatin1String("gon")) \
-            (angle) = DMath::gon2rad(angle); \
-        else if (explicitUnitName == QLatin1String("turn")) \
-            (angle) *= Quantity(2) * DMath::pi(); \
-        else if (explicitUnitName == QLatin1String("arcminute") || explicitUnitName == QLatin1String("arcmin")) \
-            (angle) = DMath::deg2rad((angle) / Quantity(60)); \
-        else if (explicitUnitName == QLatin1String("arcsecond") || explicitUnitName == QLatin1String("arcsec")) \
-            (angle) = DMath::deg2rad((angle) / Quantity(3600)); \
-        (angle).stripUnits(); \
-    } else if (Settings::instance()->angleUnit == 'd') { \
+    const bool convertedExplicitAngleUnit = Units::tryConvertExplicitAngleToRadians(&(angle)); \
+    if (!convertedExplicitAngleUnit && Settings::instance()->angleUnit == 'd') { \
         if (angle.isReal()) \
             angle = DMath::deg2rad(angle); \
         else { \
@@ -120,7 +95,7 @@
             return DMath::nan(); \
         } \
     } \
-    else if (Settings::instance()->angleUnit == 'g') { \
+    else if (!convertedExplicitAngleUnit && Settings::instance()->angleUnit == 'g') { \
         if (angle.isReal()) \
             angle = DMath::gon2rad(angle); \
         else { \
@@ -128,7 +103,7 @@
             return DMath::nan(); \
         } \
     } \
-    else if (Settings::instance()->angleUnit == 't') { \
+    else if (!convertedExplicitAngleUnit && Settings::instance()->angleUnit == 't') { \
         if (angle.isReal()) \
             angle *= Quantity(2) * DMath::pi(); \
         else { \

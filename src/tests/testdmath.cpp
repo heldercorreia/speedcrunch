@@ -19,7 +19,7 @@
 
 #include "math/quantity.h"
 #include "math/rational.h"
-#include "math/units.h"
+#include "core/units.h"
 #include "tests/testcommon.h"
 
 #include <QtCore/QCoreApplication>
@@ -83,40 +83,40 @@ void test_rational()
 
 void test_create()
 {
-    CHECK(Units::meter(), "1 meter");
+    CHECK(Units::metre(), "1 metre");
     CHECK(Quantity(CNumber("123.45+654j")), "123.45+654j");
     CHECK(Quantity(HNumber("123.45")), "123.45");
 }
 
 void test_basic()
 {
-    CHECK(Units::meter(), "1 meter");
-    CHECK(Quantity(5) * Units::meter(), "5 meter");
+    CHECK(Units::metre(), "1 metre");
+    CHECK(Quantity(5) * Units::metre(), "5 metre");
     CHECK(Units::candela() + Units::second(), "NaN");
     CHECK(Quantity(3)*Units::mole() - Quantity(HNumber("2.5"))*Units::mole(), "0.5 mole");
     CHECK(Units::kilogram()/Units::second(), "1 kilogram·second⁻¹");
-    CHECK(Units::meter()*Units::meter(), "1 meter²");
-    CHECK(-Quantity(5)*Units::meter(), "-5 meter");
+    CHECK(Units::metre()*Units::metre(), "1 metre²");
+    CHECK(-Quantity(5)*Units::metre(), "-5 metre");
     CNumber foot = CNumber("0.3");
-    Quantity a(Quantity(123)*Units::meter());
+    Quantity a(Quantity(123)*Units::metre());
     a.setDisplayUnit(foot, "foot");
     CHECK(a, "410 foot");
-    CHECK(a*Units::second(), "123 meter·second");       // Issue 615
-    CHECK(a/Units::second(), "123 meter·second⁻¹");    //
+    CHECK(a*Units::second(), "123 metre·second");       // Issue 615
+    CHECK(a/Units::second(), "123 metre·second⁻¹");    //
     CHECK(a*HNumber(5), "2050 foot");                   //
     CHECK(a/HNumber(5), "82 foot");                     //
 
-    CHECK(DMath::raise(Units::meter(), 0),"1");
-    CHECK(DMath::raise(Units::meter(), Quantity(0)),"1");
-    CHECK(DMath::raise(Units::meter(), 0) + DMath::raise(Units::second(), 0),"2");
-    CHECK(DMath::raise(Units::meter(), Quantity(0)) + DMath::raise(Units::second(), Quantity(0)),"2");
+    CHECK(DMath::raise(Units::metre(), 0),"1");
+    CHECK(DMath::raise(Units::metre(), Quantity(0)),"1");
+    CHECK(DMath::raise(Units::metre(), 0) + DMath::raise(Units::second(), 0),"2");
+    CHECK(DMath::raise(Units::metre(), Quantity(0)) + DMath::raise(Units::second(), Quantity(0)),"2");
 }
 
 void test_functions()
 {
     Quantity tmp1;
 
-    CHECK(DMath::abs(Quantity(CNumber("3+4j"))*Units::meter()), "5 meter");
+    CHECK(DMath::abs(Quantity(CNumber("3+4j"))*Units::metre()), "5 metre");
     CHECK(DMath::round(CNumber("1.234"), 1), "1.2");
     CHECK(DMath::round(Quantity(CNumber("1.234"))*Units::joule(), 0), "NaN");
 
@@ -134,8 +134,8 @@ void test_functions()
     CHECK(DMath::trunc(CNumber("1.274"), 1), "1.2");
     CHECK(DMath::trunc(Quantity(CNumber("1.234"))*Units::joule(), 0), "NaN");
 
-    CHECK(DMath::real(Quantity(CNumber("3+4j"))*Units::meter()), "3 meter");
-    CHECK(DMath::imag(Quantity(CNumber("3+4j"))*Units::meter()), "4 meter");
+    CHECK(DMath::real(Quantity(CNumber("3+4j"))*Units::metre()), "3 metre");
+    CHECK(DMath::imag(Quantity(CNumber("3+4j"))*Units::metre()), "4 metre");
 
     CHECK(DMath::sqrt(Quantity(CNumber("36"))*Units::second()), "6 second^(1/2)");
     CHECK(DMath::cbrt(Quantity(CNumber("125"))*Units::second()), "5 second^(1/3)");
@@ -153,7 +153,7 @@ void test_functions()
 
     // this should do it for all wrapped functions that do not accept dimensional arguments...
     CHECK(DMath::sin(Quantity(DMath::pi())), "0");
-    CHECK(DMath::sin(Units::meter()), "NaN");
+    CHECK(DMath::sin(Units::metre()), "NaN");
 }
 
 void test_format()

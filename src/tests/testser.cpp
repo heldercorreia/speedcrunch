@@ -19,7 +19,7 @@
 
 #include "math/hmath.h"
 #include "math/cmath.h"
-#include "math/units.h"
+#include "core/units.h"
 #include "math/quantity.h"
 #include "tests/testcommon.h"
 
@@ -121,7 +121,7 @@ int main(int, char**)
 
     Quantity a(CNumber("3"));
     a.setFormat(Format::Binary() + Format::Fixed());
-    a *= Units::meter();
+    a *= Units::metre();
     a.setDisplayUnit(CNumber("0.3"), QString("foot"));
     const char q_json_blob[] = "{\"dimension\":{\"length\":\"1\"},\"format\":{\"base\":\"Binary\",\"mode\":\"Fixed\"},\"numeric_value\":{\"value\":\"3.000000000000000000000000000000000000000000000000000000000000000000000000000000\"},\"unit\":{\"value\":\"0.300000000000000000000000000000000000000000000000000000000000000000000000000000\"},\"unit_name\":\"foot\"}";
     CHECK_SER(a, q_json_blob);

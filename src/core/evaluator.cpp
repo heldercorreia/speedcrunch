@@ -27,10 +27,11 @@
 #include "core/regexpatterns.h"
 #include "core/session.h"
 #include "core/settings.h"
+#include "core/unitdisplayformat.h"
 #include "core/unicodechars.h"
-#include "math/operatorchars.h"
+#include "core/mathdsl.h"
 #include "math/rational.h"
-#include "math/units.h"
+#include "core/units.h"
 
 #include <QCoreApplication>
 #include <QHash>
@@ -78,9 +79,9 @@ static QString s_toSuperscriptExponent(int exponent)
 {
     QString result;
     if (exponent < 0)
-        result += QChar(0x207B); // ⁻
+        result += MathDsl::PowNeg;
     for (const QChar& digit : QString::number(qAbs(exponent)))
-        result += OperatorChars::asciiDigitToSuperscript(digit);
+        result += MathDsl::asciiDigitToSuperscript(digit);
     return result;
 }
 
@@ -98,7 +99,7 @@ static QString s_renderUnitExponentsAsSuperscripts(QString text)
         QString expText = match.captured(1);
         if (expText.isEmpty())
             expText = match.captured(2);
-        expText.replace(QChar(0x2212), QLatin1Char('-')); // Unicode minus.
+        expText.replace(MathDsl::SubOp, MathDsl::SubOpAlt1); // Unicode minus.
         bool ok = false;
         const int exponent = expText.toInt(&ok);
         if (!ok) {
@@ -121,33 +122,21 @@ static int s_parseSuperscriptExponent(const QString& exponentText, bool* ok)
 
     bool negative = false;
     int pos = 0;
-    if (exponentText.at(0) == QChar(0x207B) || exponentText.at(0) == QChar(0x207A)) {
-        negative = exponentText.at(0) == QChar(0x207B);
+    if (exponentText.at(0) == MathDsl::PowNeg || exponentText.at(0) == MathDsl::PowPos) {
+        negative = exponentText.at(0) == MathDsl::PowNeg;
         pos = 1;
     }
     if (pos >= exponentText.size())
         return 0;
 
-    static const QHash<QChar, QChar> superscriptDigits = {
-        { QChar(0x2070), QLatin1Char('0') }, // ⁰
-        { QChar(0x00B9), QLatin1Char('1') }, // ¹
-        { QChar(0x00B2), QLatin1Char('2') }, // ²
-        { QChar(0x00B3), QLatin1Char('3') }, // ³
-        { QChar(0x2074), QLatin1Char('4') }, // ⁴
-        { QChar(0x2075), QLatin1Char('5') }, // ⁵
-        { QChar(0x2076), QLatin1Char('6') }, // ⁶
-        { QChar(0x2077), QLatin1Char('7') }, // ⁷
-        { QChar(0x2078), QLatin1Char('8') }, // ⁸
-        { QChar(0x2079), QLatin1Char('9') }  // ⁹
-    };
-
     QString ascii;
     ascii.reserve(exponentText.size() - pos);
     for (; pos < exponentText.size(); ++pos) {
         const QChar ch = exponentText.at(pos);
-        if (!superscriptDigits.contains(ch))
+        const QChar asciiDigit = MathDsl::superscriptDigitToAscii(ch);
+        if (asciiDigit.isNull())
             return 0;
-        ascii += superscriptDigits.value(ch);
+        ascii += asciiDigit;
     }
 
     bool intOk = false;
@@ -171,18 +160,18 @@ static QString s_negateUnitFactorExponent(QString factor)
         QString expText = caretMatch.captured(2);
         if (expText.isEmpty())
             expText = caretMatch.captured(3);
-        expText.replace(QChar(0x2212), QLatin1Char('-'));
+        expText.replace(MathDsl::SubOp, MathDsl::SubOpAlt1);
         bool ok = false;
         const int exponent = expText.toInt(&ok);
         if (ok)
-            return caretMatch.captured(1) + QLatin1Char('^') + QString::number(-exponent);
+            return caretMatch.captured(1) + MathDsl::PowOp + QString::number(-exponent);
     }
 
     int suffixStart = factor.size();
     while (suffixStart > 0) {
         const QChar ch = factor.at(suffixStart - 1);
-        const bool isSuperscriptDigit = OperatorChars::isSuperscriptDigit(ch);
-        const bool isSuperscriptSign = OperatorChars::isSuperscriptSign(ch);
+        const bool isSuperscriptDigit = MathDsl::isSuperscriptDigit(ch);
+        const bool isSuperscriptSign = MathDsl::isSuperscriptSign(ch);
         if (!isSuperscriptDigit && !isSuperscriptSign)
             break;
         --suffixStart;
@@ -191,7 +180,7 @@ static QString s_negateUnitFactorExponent(QString factor)
         bool ok = false;
         const int exponent = s_parseSuperscriptExponent(factor.mid(suffixStart), &ok);
         if (ok)
-            return factor.left(suffixStart) + QLatin1Char('^') + QString::number(-exponent);
+            return factor.left(suffixStart) + MathDsl::PowOp + QString::number(-exponent);
     }
 
     return factor + QLatin1String("^-1");
@@ -199,19 +188,19 @@ static QString s_negateUnitFactorExponent(QString factor)
 
 static QString s_applySuperscriptStyleToExplicitUnitText(QString unitText)
 {
-    if (!unitText.contains(QLatin1Char('/')))
+    if (!unitText.contains(MathDsl::DivOp))
         return s_renderUnitExponentsAsSuperscripts(unitText);
 
-    QStringList parts = unitText.split(QLatin1Char('/'));
+    QStringList parts = unitText.split(MathDsl::DivOp);
     if (parts.isEmpty())
         return s_renderUnitExponentsAsSuperscripts(unitText);
 
     QString normalized = parts.takeFirst().trimmed();
     for (QString denominator : parts) {
         denominator = denominator.trimmed();
-        if (denominator.startsWith(QLatin1Char('(')) && denominator.endsWith(QLatin1Char(')')))
+        if (denominator.startsWith(MathDsl::OpenParen) && denominator.endsWith(MathDsl::CloseParen))
             denominator = denominator.mid(1, denominator.size() - 2).trimmed();
-        denominator.replace(OperatorChars::MulDotSign, QLatin1Char('*'));
+        denominator.replace(MathDsl::MulDotOp, QLatin1Char('*'));
 
         const QStringList factors = denominator.split(QLatin1Char('*'), Qt::SkipEmptyParts);
         for (const QString& rawFactor : factors) {
@@ -225,7 +214,7 @@ static QString s_applySuperscriptStyleToExplicitUnitText(QString unitText)
     }
 
     QString rendered = s_renderUnitExponentsAsSuperscripts(normalized);
-    rendered.replace(QLatin1Char('*'), OperatorChars::MulDotSign);
+    rendered.replace(QLatin1Char('*'), MathDsl::MulDotOp);
     return rendered;
 }
 
@@ -243,120 +232,7 @@ static bool s_isClosingUnitBracketToken(const Token& token)
 
 static QHash<QString, Quantity> s_buildBuiltInUnitLookup(char angleMode)
 {
-    QHash<QString, Quantity> lookup;
-
-    const QList<Unit> unitList = Units::getList();
-    for (const Unit& u : unitList) {
-        Quantity unitValue = u.value;
-        const bool isInformationUnit =
-            unitValue.getDimension().contains(QLatin1String("information"));
-        const bool keepDisplayUnit =
-            u.name == QLatin1String("hertz")
-            || u.name == QLatin1String("becquerel")
-            || u.name == QLatin1String("gray")
-            || u.name == QLatin1String("sievert")
-            || u.name == QLatin1String("steradian")
-            || u.name == QLatin1String("sr")
-            || u.name == QLatin1String("pascal")
-            || u.name == QLatin1String("newton")
-            || u.name == QLatin1String("meter")
-            || isInformationUnit;
-        if (keepDisplayUnit)
-            unitValue.setDisplayUnit(u.value.numericValue(), u.name);
-        lookup.insert(u.name, unitValue);
-    }
-
-    const auto insertDisplayed = [&](const QString& key,
-                                     const Quantity& value,
-                                     const QString& displayName) {
-        Quantity q(value);
-        q.setDisplayUnit(value.numericValue(), displayName);
-        lookup.insert(key, q);
-    };
-
-    // Preserve authored derived-unit symbols/aliases for readability.
-    insertDisplayed(QStringLiteral("J"), Units::joule(), QStringLiteral("joule"));
-    insertDisplayed(QStringLiteral("W"), Units::watt(), QStringLiteral("watt"));
-    insertDisplayed(QStringLiteral("V"), Units::volt(), QStringLiteral("volt"));
-    insertDisplayed(QStringLiteral("F"), Units::farad(), QStringLiteral("farad"));
-    insertDisplayed(QStringLiteral("H"), Units::henry(), QStringLiteral("henry"));
-    insertDisplayed(QStringLiteral("T"), Units::tesla(), QStringLiteral("tesla"));
-    insertDisplayed(QStringLiteral("N"), Units::newton(), QStringLiteral("newton"));
-    insertDisplayed(QStringLiteral("Pa"), Units::pascal(), QStringLiteral("pascal"));
-    insertDisplayed(QStringLiteral("ohm"), Units::ohm(), QStringLiteral("ohm"));
-    insertDisplayed(QString::fromUtf8("Ω"), Units::ohm(), QStringLiteral("ohm"));
-    insertDisplayed(QStringLiteral("s"), Units::second(), QStringLiteral("second"));
-    insertDisplayed(QStringLiteral("h"), Units::hour(), QStringLiteral("h"));
-    insertDisplayed(QStringLiteral("degree_celsius"), Units::kelvin(), QStringLiteral("degree_celsius"));
-    insertDisplayed(QStringLiteral("degree_fahrenheit"), Units::kelvin(), QStringLiteral("degree_fahrenheit"));
-    insertDisplayed(QString::fromUtf8("°C"), Units::kelvin(), QString::fromUtf8("°C"));
-    insertDisplayed(QString::fromUtf8("°F"), Units::kelvin(), QString::fromUtf8("°F"));
-    insertDisplayed(QString::fromUtf8("ºC"), Units::kelvin(), QString::fromUtf8("°C"));
-    insertDisplayed(QString::fromUtf8("ºF"), Units::kelvin(), QString::fromUtf8("°F"));
-
-    {
-        Quantity hz = Units::hertz();
-        hz.setDisplayUnit(Units::hertz().numericValue(), "hertz");
-        lookup.insert(QStringLiteral("Hz"), hz);
-    }
-    {
-        Quantity bq = Units::becquerel();
-        bq.setDisplayUnit(Units::becquerel().numericValue(), "becquerel");
-        lookup.insert(QStringLiteral("Bq"), bq);
-    }
-
-    {
-        Quantity displayRad(1);
-        displayRad.setDisplayUnit(Quantity(1).numericValue(), "rad");
-        lookup.insert(QStringLiteral("radian"), displayRad);
-        lookup.insert(QStringLiteral("rad"), displayRad);
-    }
-
-    Quantity degree;
-    Quantity gradian;
-    Quantity turn;
-    Quantity arcminute;
-    Quantity arcsecond;
-    if (angleMode == 'r') {
-        degree = HMath::pi() / HNumber(180);
-        gradian = HMath::pi() / HNumber(200);
-        turn = HNumber(2) * HMath::pi();
-        arcminute = HMath::pi() / HNumber(180) / HNumber(60);
-        arcsecond = HMath::pi() / HNumber(180) / HNumber(3600);
-    } else if (angleMode == 'g') {
-        degree = HNumber(200) / HNumber(180);
-        gradian = 1;
-        turn = HNumber(400);
-        arcminute = HNumber(200) / HNumber(180) / HNumber(60);
-        arcsecond = HNumber(200) / HNumber(180) / HNumber(3600);
-    } else if (angleMode == 't') {
-        degree = HNumber(1) / HNumber(360);
-        gradian = HNumber(1) / HNumber(400);
-        turn = 1;
-        arcminute = HNumber(1) / HNumber(21600);
-        arcsecond = HNumber(1) / HNumber(1296000);
-    } else {
-        degree = 1;
-        gradian = HNumber(180) / HNumber(200);
-        turn = HNumber(360);
-        arcminute = HNumber(1) / HNumber(60);
-        arcsecond = HNumber(1) / HNumber(3600);
-    }
-
-    lookup.insert(QStringLiteral("degree"), degree);
-    lookup.insert(QStringLiteral("deg"), degree);
-    lookup.insert(QString::fromUtf8("°"), degree);
-    lookup.insert(QString::fromUtf8("º"), degree);
-    lookup.insert(QStringLiteral("gradian"), gradian);
-    lookup.insert(QStringLiteral("grad"), gradian);
-    lookup.insert(QStringLiteral("gon"), gradian);
-    lookup.insert(QStringLiteral("turn"), turn);
-    lookup.insert(QStringLiteral("arcminute"), arcminute);
-    lookup.insert(QStringLiteral("arcsecond"), arcsecond);
-    lookup.insert(QStringLiteral("arcmin"), arcminute);
-    lookup.insert(QStringLiteral("arcsec"), arcsecond);
-
-    return lookup;
+    return Units::builtInUnitLookup(angleMode);
 }
 
 static const QHash<QString, Quantity>& s_builtInUnitLookup()
@@ -389,41 +265,11 @@ static bool s_isBuiltInUnitIdentifier(const QString& identifier)
     return s_builtInUnitLookup().contains(identifier);
 }
 
-enum class AffineTemperatureUnit {
-    None,
-    Celsius,
-    Fahrenheit
-};
-
-static AffineTemperatureUnit s_affineTemperatureUnitFromName(QString name)
-{
-    name = name.trimmed().toLower();
-    name.replace(QChar(0x00BA), QChar(0x00B0)); // º -> °
-    if (name == QLatin1String("degree_celsius")
-        || name == QString::fromUtf8("°c")) {
-        return AffineTemperatureUnit::Celsius;
-    }
-    if (name == QLatin1String("degree_fahrenheit")
-        || name == QString::fromUtf8("°f")) {
-        return AffineTemperatureUnit::Fahrenheit;
-    }
-    return AffineTemperatureUnit::None;
-}
-
-static HNumber s_affineTemperatureToKelvin(const HNumber& value, AffineTemperatureUnit unit)
-{
-    if (unit == AffineTemperatureUnit::Celsius)
-        return value + HNumber("273.15");
-    if (unit == AffineTemperatureUnit::Fahrenheit)
-        return (value + HNumber("459.67")) * HNumber("5") / HNumber("9");
-    return value;
-}
-
 static bool splitUserFunctionDescription(const QString& expression,
                                          QString* expressionWithoutDescription,
                                          QString* description)
 {
-    const int equalsPos = expression.indexOf('=');
+    const int equalsPos = expression.indexOf(MathDsl::Equals);
     if (equalsPos < 0)
         return false;
 
@@ -453,7 +299,7 @@ static bool splitVariableDescription(const QString& expression,
                                      QString* expressionWithoutDescription,
                                      QString* description)
 {
-    const int equalsPos = expression.indexOf('=');
+    const int equalsPos = expression.indexOf(MathDsl::Equals);
     if (equalsPos < 0)
         return false;
 
@@ -484,11 +330,11 @@ static int findTopLevelCommentDelimiterPos(const QString& text)
     int depth = 0;
     for (int i = 0; i < text.size(); ++i) {
         const QChar ch = text.at(i);
-        if (ch == QLatin1Char('(')) {
+        if (ch == MathDsl::OpenParen) {
             ++depth;
             continue;
         }
-        if (ch == QLatin1Char(')')) {
+        if (ch == MathDsl::CloseParen) {
             if (depth > 0)
                 --depth;
             continue;
@@ -506,16 +352,16 @@ static int findTopLevelCommentDelimiterPos(const QString& text)
 
 static bool s_isSubtractionOperatorAlias(const QChar& ch)
 {
-    return ch == QLatin1Char('-') || ch == UnicodeChars::MinusSign;
+    return ch == MathDsl::SubOpAlt1 || ch == MathDsl::SubOp;
 }
 
 static bool s_isMultiplicationOperatorAlias(const QChar& ch, bool keepDotOperator = false)
 {
     switch (ch.unicode()) {
     case '*':
-    case OperatorChars::MulCrossSign.unicode():
+    case MathDsl::MulCrossOp.unicode():
         return true;
-    case OperatorChars::MulDotSign.unicode():
+    case MathDsl::MulDotOp.unicode():
         return !keepDotOperator;
     default:
         return false;
@@ -524,19 +370,19 @@ static bool s_isMultiplicationOperatorAlias(const QChar& ch, bool keepDotOperato
 
 static bool s_isExpressionOperatorOrSeparator(const QChar& ch)
 {
-    return ch == QLatin1Char('+')
-           || ch == UnicodeChars::MinusSign
-           || ch == OperatorChars::MulDotSign
-           || ch == QLatin1Char('/')
+    return ch == MathDsl::AddOp
+           || ch == MathDsl::SubOp
+           || ch == MathDsl::MulDotOp
+           || ch == MathDsl::DivOp
            || ch == QLatin1Char('%')
-           || ch == QLatin1Char('^')
+           || ch == MathDsl::PowOp
            || ch == QLatin1Char('&')
            || ch == QLatin1Char('|')
-           || ch == QLatin1Char('=')
-           || ch == QLatin1Char('>')
+           || ch == MathDsl::Equals
+           || ch == UnicodeChars::GreaterThanSign
            || ch == QLatin1Char('<')
-           || ch == QLatin1Char('[')
-           || ch == QLatin1Char(']')
+           || ch == MathDsl::OpenUnit
+           || ch == MathDsl::CloseUnit
            || ch == QLatin1Char(';')
            || ch == QLatin1Char(',');
 }
@@ -553,30 +399,30 @@ static bool s_expressionWithoutIgnorableTrailingToken(const QString& text, QStri
     int i = trimmed.size() - 1;
     const QChar last = trimmed.at(i);
     const bool isPlusMinusTail =
-        (last == QLatin1Char('+') || s_isSubtractionOperatorAlias(last));
+        (last == MathDsl::AddOp || s_isSubtractionOperatorAlias(last));
     const bool isMultiplicationTail =
-        (last == OperatorChars::MulDotSign || s_isMultiplicationOperatorAlias(last, true));
+        (last == MathDsl::MulDotOp || s_isMultiplicationOperatorAlias(last, true));
 
-    if (last != QLatin1Char('(')
-        && last != QLatin1Char('[')
+    if (last != MathDsl::OpenParen
+        && last != MathDsl::OpenUnit
         && !isPlusMinusTail
         && !isMultiplicationTail
         && last != QLatin1Char(';')
-        && last != QLatin1Char('/')
-        && last != QLatin1Char('^')
+        && last != MathDsl::DivOp
+        && last != MathDsl::PowOp
         && last != QLatin1Char('\\'))
         return false;
 
-    if (last == QLatin1Char('/')) {
+    if (last == MathDsl::DivOp) {
         --i;
-        if (i >= 0 && trimmed.at(i) == QLatin1Char('/'))
+        if (i >= 0 && trimmed.at(i) == MathDsl::DivOp)
             return false;
-    } else if (last == QLatin1Char('^')) {
+    } else if (last == MathDsl::PowOp) {
         --i;
-        if (i >= 0 && trimmed.at(i) == QLatin1Char('^'))
+        if (i >= 0 && trimmed.at(i) == MathDsl::PowOp)
             return false;
     } else if (isPlusMinusTail) {
-        while (i >= 0 && (trimmed.at(i) == QLatin1Char('+')
+        while (i >= 0 && (trimmed.at(i) == MathDsl::AddOp
                           || s_isSubtractionOperatorAlias(trimmed.at(i))))
             --i;
     } else if (isMultiplicationTail) {
@@ -584,14 +430,14 @@ static bool s_expressionWithoutIgnorableTrailingToken(const QString& text, QStri
         if (i >= 0) {
             const QChar prev = trimmed.at(i);
             const bool prevIsMultiplication =
-                (prev == OperatorChars::MulDotSign
+                (prev == MathDsl::MulDotOp
                  || s_isMultiplicationOperatorAlias(prev, true));
             if (prevIsMultiplication) {
                 --i;
                 if (i >= 0) {
                     const QChar prevPrev = trimmed.at(i);
                     const bool prevPrevIsMultiplication =
-                        (prevPrev == OperatorChars::MulDotSign
+                        (prevPrev == MathDsl::MulDotOp
                          || s_isMultiplicationOperatorAlias(prevPrev, true));
                     if (prevPrevIsMultiplication)
                         return false;
@@ -608,8 +454,8 @@ static bool s_expressionWithoutIgnorableTrailingToken(const QString& text, QStri
         return false;
 
     const QChar prefixLast = prefix.at(prefix.size() - 1);
-    if (prefixLast == QLatin1Char('(')
-        || prefixLast == QLatin1Char('[')
+    if (prefixLast == MathDsl::OpenParen
+        || prefixLast == MathDsl::OpenUnit
         || s_isExpressionOperatorOrSeparator(prefixLast)
         || prefixLast == QLatin1Char('\\'))
         return false;
@@ -620,17 +466,17 @@ static bool s_expressionWithoutIgnorableTrailingToken(const QString& text, QStri
 
 bool isMinus(const QChar& ch)
 {
-    return ch == QLatin1Char('-') || ch == UnicodeChars::MinusSign;
+    return ch == MathDsl::SubOpAlt1 || ch == MathDsl::SubOp;
 }
 
 static bool isDegreeSign(const QChar& ch)
 {
     // Accept both DEGREE SIGN (U+00B0) and MASCULINE ORDINAL INDICATOR
     // (U+00BA), plus other degree-like symbols emitted by some layouts/IMEs.
-    return ch == UnicodeChars::DegreeSign  // ° DEGREE SIGN
-           || ch == QChar(0x00BA) // º MASCULINE ORDINAL INDICATOR
-           || ch == QChar(0x02DA) // ˚ RING ABOVE
-           || ch == QChar(0x2218); // ∘ RING OPERATOR
+    return ch == MathDsl::Deg  // ° DEGREE SIGN
+           || ch == UnicodeChars::MasculineOrdinalIndicator // º MASCULINE ORDINAL INDICATOR
+           || ch == UnicodeChars::RingAbove // ˚ RING ABOVE
+           || ch == UnicodeChars::RingOperator; // ∘ RING OPERATOR
 }
 
 bool isExponent(const QChar& ch, int base)
@@ -806,17 +652,17 @@ static Token::Operator matchOperator(const QString& text)
         case '+':
             result = Token::Addition;
             break;
-        case 0x2212: // − MINUS SIGN
-        case '-':
+        case MathDsl::SubOp.unicode():
+        case MathDsl::SubOpAlt1.unicode():
             result = Token::Subtraction;
             break;
-        case OperatorChars::MulCrossSign.unicode():
-        case OperatorChars::MulDotSign.unicode():
+        case MathDsl::MulCrossOp.unicode():
+        case MathDsl::MulDotOp.unicode():
         case '*':
             result = Token::Multiplication;
             break;
-        case 0x00F7: // ÷ DIVISION SIGN
-        case 0x29F8: // ⧸ BIG SOLIDUS
+        case UnicodeChars::DivisionSign.unicode():
+        case UnicodeChars::BigSolidus.unicode():
         case '/':
             result = Token::Division;
             break;
@@ -844,7 +690,7 @@ static Token::Operator matchOperator(const QString& text)
         case '%':
             result = Token::Percent;
             break;
-        case '=':
+        case MathDsl::Equals.unicode():
             result = Token::Assignment;
             break;
         case '\\':
@@ -859,7 +705,7 @@ static Token::Operator matchOperator(const QString& text)
         case '|':
             result = Token::BitwiseLogicalOR;
             break;
-        case UnicodeChars::RightwardsArrow.unicode():
+        case MathDsl::TransOp.unicode():
             result = Token::UnitConversion;
             break;
         default:
@@ -874,8 +720,8 @@ static Token::Operator matchOperator(const QString& text)
         else if (text == ">>")
           result = Token::ArithmeticRightShift;
         else if (text == "->"
-                 || (text.at(0).unicode() == 0x2212 && text.at(1) == QLatin1Char('>'))
-                 || text.compare(QStringLiteral("in"), Qt::CaseInsensitive) == 0)
+                 || (text.at(0) == MathDsl::SubOp && text.at(1) == UnicodeChars::GreaterThanSign)
+                 || text.compare(MathDsl::TransOpAlt1, Qt::CaseInsensitive) == 0)
             result = Token::UnitConversion;
     }
 
@@ -989,8 +835,8 @@ static QString opcodeToInfixSymbol(Opcode::Type opcodeType, bool implicitMultipl
     case Opcode::Sub: return "-";
     case Opcode::Mul:
         return implicitMultiplication
-            ? QString(OperatorChars::MulDotSign)
-            : QString(OperatorChars::MulCrossSign);
+            ? QString(MathDsl::MulDotOp)
+            : QString(MathDsl::MulCrossOp);
     case Opcode::Unit: return QString();
     case Opcode::Div: return "/";
     case Opcode::Pow: return "^";
@@ -1001,7 +847,7 @@ static QString opcodeToInfixSymbol(Opcode::Type opcodeType, bool implicitMultipl
     case Opcode::RSh: return ">>";
     case Opcode::BAnd: return "&";
     case Opcode::BOr: return "|";
-    case Opcode::Conv: return QString(UnicodeChars::RightwardsArrow);
+    case Opcode::Conv: return QString(MathDsl::TransOp);
     default: return QString();
     }
 }
@@ -1230,7 +1076,7 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
             int pos = 0;
             while (pos < chain.size()) {
                 bool negative = false;
-                if (chain.at(pos) == QLatin1Char('-') || chain.at(pos) == QChar(0x2212)) {
+                if (chain.at(pos) == MathDsl::SubOpAlt1 || chain.at(pos) == MathDsl::SubOp) {
                     negative = true;
                     ++pos;
                 }
@@ -1249,7 +1095,7 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
 
                 if (pos >= chain.size())
                     break;
-                if (chain.at(pos) != QLatin1Char('^'))
+                if (chain.at(pos) != MathDsl::PowOp)
                     return false;
                 ++pos;
             }
@@ -1269,7 +1115,7 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
         auto parsePositiveIntegerToken = [](const QString& input, int start, long long* valueOut, int* endOut) {
             int pos = start;
             bool parenthesized = false;
-            if (pos < input.size() && input.at(pos) == QLatin1Char('(')) {
+            if (pos < input.size() && input.at(pos) == MathDsl::OpenParen) {
                 parenthesized = true;
                 ++pos;
             }
@@ -1284,7 +1130,7 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
                 ++pos;
             }
             if (parenthesized) {
-                if (pos >= input.size() || input.at(pos) != QLatin1Char(')'))
+                if (pos >= input.size() || input.at(pos) != MathDsl::CloseParen)
                     return false;
                 ++pos;
             }
@@ -1297,7 +1143,7 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
         while (true) {
             bool changed = false;
             for (int i = 1; i < text.size(); ++i) {
-                if (text.at(i) != QLatin1Char('^') || text.at(i - 1) != QLatin1Char(')'))
+                if (text.at(i) != MathDsl::PowOp || text.at(i - 1) != MathDsl::CloseParen)
                     continue;
 
                 long long outerExp = 0;
@@ -1309,9 +1155,9 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
                 int open = -1;
                 for (int j = i - 1; j >= 0; --j) {
                     const QChar ch = text.at(j);
-                    if (ch == QLatin1Char(')'))
+                    if (ch == MathDsl::CloseParen)
                         ++depth;
-                    else if (ch == QLatin1Char('(')) {
+                    else if (ch == MathDsl::OpenParen) {
                         --depth;
                         if (depth == 0) {
                             open = j;
@@ -1327,12 +1173,12 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
                 int innerPowPos = -1;
                 for (int j = 0; j < inner.size(); ++j) {
                     const QChar ch = inner.at(j);
-                    if (ch == QLatin1Char('('))
+                    if (ch == MathDsl::OpenParen)
                         ++innerDepth;
-                    else if (ch == QLatin1Char(')')) {
+                    else if (ch == MathDsl::CloseParen) {
                         if (innerDepth > 0)
                             --innerDepth;
-                    } else if (ch == QLatin1Char('^') && innerDepth == 0) {
+                    } else if (ch == MathDsl::PowOp && innerDepth == 0) {
                         innerPowPos = j;
                     }
                 }
@@ -1354,7 +1200,7 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
                 if (mergedExp > 1000000)
                     continue;
 
-                text.replace(open, outerEnd - open, innerBase + QLatin1Char('^') + QString::number(mergedExp));
+                text.replace(open, outerEnd - open, innerBase + MathDsl::PowOp + QString::number(mergedExp));
                 changed = true;
                 break;
             }
@@ -1364,14 +1210,14 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
 
         auto parseIntegerExponentToken = [&text, &collapseIntegerExponentChainText](int start, long long* valueOut, int* endOut) {
             int pos = start;
-            if (pos < text.size() && text.at(pos) == QLatin1Char('(')) {
+            if (pos < text.size() && text.at(pos) == MathDsl::OpenParen) {
                 int depth = 0;
                 int close = -1;
                 for (int i = pos; i < text.size(); ++i) {
                     const QChar ch = text.at(i);
-                    if (ch == QLatin1Char('('))
+                    if (ch == MathDsl::OpenParen)
                         ++depth;
-                    else if (ch == QLatin1Char(')')) {
+                    else if (ch == MathDsl::CloseParen) {
                         --depth;
                         if (depth == 0) {
                             close = i;
@@ -1391,7 +1237,7 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
             }
 
             bool negative = false;
-            if (pos < text.size() && (text.at(pos) == QLatin1Char('-') || text.at(pos) == QChar(0x2212))) {
+            if (pos < text.size() && (text.at(pos) == MathDsl::SubOpAlt1 || text.at(pos) == MathDsl::SubOp)) {
                 negative = true;
                 ++pos;
             }
@@ -1414,12 +1260,12 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
         };
 
         for (int i = 0; i < text.size(); ++i) {
-            if (text.at(i) != QLatin1Char('^'))
+            if (text.at(i) != MathDsl::PowOp)
                 continue;
 
             QVector<long long> exponents;
             const bool startsWithParenthesizedExponentChain =
-                (i + 1 < text.size() && text.at(i + 1) == QLatin1Char('('));
+                (i + 1 < text.size() && text.at(i + 1) == MathDsl::OpenParen);
             int tokenPos = i + 1;
             while (tokenPos < text.size()) {
                 long long value = 0;
@@ -1428,7 +1274,7 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
                     break;
                 exponents.append(value);
                 tokenPos = tokenEnd;
-                if (tokenPos >= text.size() || text.at(tokenPos) != QLatin1Char('^'))
+                if (tokenPos >= text.size() || text.at(tokenPos) != MathDsl::PowOp)
                     break;
                 ++tokenPos;
             }
@@ -1480,9 +1326,9 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
         QString superscript;
         superscript.reserve(digits.size() + 1);
         if (!sign.isEmpty())
-            superscript += QChar(0x207B); // ⁻ SUPERSCRIPT MINUS.
+            superscript += MathDsl::PowNeg;
         for (const QChar& digit : digits)
-            superscript += OperatorChars::asciiDigitToSuperscript(digit);
+            superscript += MathDsl::asciiDigitToSuperscript(digit);
         rendered += superscript;
 
         lastPos = match.capturedEnd();
@@ -1496,13 +1342,13 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
         return isIdentifierStart(ch);
     };
     auto isSuperscriptPowerChar = [](const QChar& ch) {
-        return OperatorChars::isSuperscriptPowerChar(ch);
+        return MathDsl::isSuperscriptPowerChar(ch);
     };
 
     // Convert function-call powers from "f(x)²" to "f²(x)".
     int i = 0;
     while (i < rendered.size()) {
-        if (rendered.at(i) != QLatin1Char(')')) {
+        if (rendered.at(i) != MathDsl::CloseParen) {
             ++i;
             continue;
         }
@@ -1519,9 +1365,9 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
         int openParen = -1;
         for (int j = i; j >= 0; --j) {
             const QChar ch = rendered.at(j);
-            if (ch == QLatin1Char(')')) {
+            if (ch == MathDsl::CloseParen) {
                 ++depth;
-            } else if (ch == QLatin1Char('(')) {
+            } else if (ch == MathDsl::OpenParen) {
                 --depth;
                 if (depth == 0) {
                     openParen = j;
@@ -1561,15 +1407,15 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
 
 static bool isWrappedInOuterParentheses(const QString& text)
 {
-    if (text.size() < 2 || text.front() != QLatin1Char('(') || text.back() != QLatin1Char(')'))
+    if (text.size() < 2 || text.front() != MathDsl::OpenParen || text.back() != MathDsl::CloseParen)
         return false;
 
     int depth = 0;
     for (int i = 0; i < text.size(); ++i) {
         const QChar ch = text.at(i);
-        if (ch == QLatin1Char('(')) {
+        if (ch == MathDsl::OpenParen) {
             ++depth;
-        } else if (ch == QLatin1Char(')')) {
+        } else if (ch == MathDsl::CloseParen) {
             --depth;
             if (depth < 0)
                 return false;
@@ -1717,8 +1563,8 @@ static bool parseSimplifiablePowerFactor(const QString& factorText,
         QStringLiteral(R"(^(?:\d+(?:\.\d+)?)$)"));
 
     auto isFunctionCallBase = [](const QString& text) {
-        const int firstParen = text.indexOf(QLatin1Char('('));
-        if (firstParen <= 0 || !text.endsWith(QLatin1Char(')')))
+        const int firstParen = text.indexOf(MathDsl::OpenParen);
+        if (firstParen <= 0 || !text.endsWith(MathDsl::CloseParen))
             return false;
 
         const QString functionName = text.left(firstParen);
@@ -1728,9 +1574,9 @@ static bool parseSimplifiablePowerFactor(const QString& factorText,
         int depth = 0;
         for (int i = firstParen; i < text.size(); ++i) {
             const QChar ch = text.at(i);
-            if (ch == QLatin1Char('(')) {
+            if (ch == MathDsl::OpenParen) {
                 ++depth;
-            } else if (ch == QLatin1Char(')')) {
+            } else if (ch == MathDsl::CloseParen) {
                 --depth;
                 if (depth < 0)
                     return false;
@@ -1755,12 +1601,12 @@ static bool parseSimplifiablePowerFactor(const QString& factorText,
     int topLevelPowerPos = -1;
     for (int i = 0; i < factor.size(); ++i) {
         const QChar ch = factor.at(i);
-        if (ch == QLatin1Char('(')) {
+        if (ch == MathDsl::OpenParen) {
             ++depth;
-        } else if (ch == QLatin1Char(')')) {
+        } else if (ch == MathDsl::CloseParen) {
             if (depth > 0)
                 --depth;
-        } else if (ch == QLatin1Char('^') && depth == 0) {
+        } else if (ch == MathDsl::PowOp && depth == 0) {
             topLevelPowerPos = i;
             break;
         }
@@ -1772,8 +1618,8 @@ static bool parseSimplifiablePowerFactor(const QString& factorText,
         if (base.isEmpty() || exponentText.isEmpty())
             return false;
 
-        if (exponentText.startsWith(QLatin1Char('('))
-            && exponentText.endsWith(QLatin1Char(')')))
+        if (exponentText.startsWith(MathDsl::OpenParen)
+            && exponentText.endsWith(MathDsl::CloseParen))
         {
             exponentText = exponentText.mid(1, exponentText.size() - 2);
         }
@@ -1896,19 +1742,19 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
         int partStart = 0;
         for (int i = 0; i < segmentText.size(); ++i) {
             const QChar ch = segmentText.at(i);
-            if (ch == QLatin1Char('(')) {
+            if (ch == MathDsl::OpenParen) {
                 ++depth;
                 continue;
             }
-            if (ch == QLatin1Char(')')) {
+            if (ch == MathDsl::CloseParen) {
                 if (depth > 0)
                     --depth;
                 continue;
             }
             if (depth == 0
                 && (ch == QLatin1Char('*')
-                    || ch == OperatorChars::MulDotSign
-                    || ch == OperatorChars::MulCrossSign))
+                    || ch == MathDsl::MulDotOp
+                    || ch == MathDsl::MulCrossOp))
             {
                 factors.append(segmentText.mid(partStart, i - partStart));
                 operators.append(QString(ch));
@@ -1974,19 +1820,19 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
         int finalStart = 0;
         for (int i = 0; i < simplified.size(); ++i) {
             const QChar ch = simplified.at(i);
-            if (ch == QLatin1Char('(')) {
+            if (ch == MathDsl::OpenParen) {
                 ++finalDepth;
                 continue;
             }
-            if (ch == QLatin1Char(')')) {
+            if (ch == MathDsl::CloseParen) {
                 if (finalDepth > 0)
                     --finalDepth;
                 continue;
             }
             if (finalDepth == 0
                 && (ch == QLatin1Char('*')
-                    || ch == OperatorChars::MulDotSign
-                    || ch == OperatorChars::MulCrossSign))
+                    || ch == MathDsl::MulDotOp
+                    || ch == MathDsl::MulCrossOp))
             {
                 finalFactors.append(simplified.mid(finalStart, i - finalStart));
                 finalOperators.append(QString(ch));
@@ -2001,7 +1847,7 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
         bool hasSignedNumericFactor = false;
         auto isParenthesizedSignedDecimalFactor = [](const QString& factorText) {
             QString text = factorText.trimmed();
-            if (!(text.startsWith(QLatin1Char('(')) && text.endsWith(QLatin1Char(')'))))
+            if (!(text.startsWith(MathDsl::OpenParen) && text.endsWith(MathDsl::CloseParen)))
                 return false;
             text = text.mid(1, text.size() - 2).trimmed();
             return isSignedDecimalNumberText(text) && !isUnsignedDecimalNumberText(text);
@@ -2056,19 +1902,19 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
         int partStart = 0;
         for (int i = 0; i < segmentText.size(); ++i) {
             const QChar ch = segmentText.at(i);
-            if (ch == QLatin1Char('(')) {
+            if (ch == MathDsl::OpenParen) {
                 ++depth;
                 continue;
             }
-            if (ch == QLatin1Char(')')) {
+            if (ch == MathDsl::CloseParen) {
                 if (depth > 0)
                     --depth;
                 continue;
             }
             if (depth == 0
                 && (ch == QLatin1Char('*')
-                    || ch == OperatorChars::MulDotSign
-                    || ch == OperatorChars::MulCrossSign))
+                    || ch == MathDsl::MulDotOp
+                    || ch == MathDsl::MulCrossOp))
             {
                 factors.append(segmentText.mid(partStart, i - partStart));
                 operators.append(QString(ch));
@@ -2100,16 +1946,16 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
     int segmentStart = 0;
     for (int i = 0; i < workingTerm.size(); ++i) {
         const QChar ch = workingTerm.at(i);
-        if (ch == QLatin1Char('(')) {
+        if (ch == MathDsl::OpenParen) {
             ++depth;
             continue;
         }
-        if (ch == QLatin1Char(')')) {
+        if (ch == MathDsl::CloseParen) {
             if (depth > 0)
                 --depth;
             continue;
         }
-        if (depth == 0 && (ch == QLatin1Char('/') || ch == QLatin1Char('\\'))) {
+        if (depth == 0 && (ch == MathDsl::DivOp || ch == QLatin1Char('\\'))) {
             divisionSegments.append(workingTerm.mid(segmentStart, i - segmentStart));
             divisionOperators.append(QString(ch));
             segmentStart = i + 1;
@@ -2135,19 +1981,19 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
             int partStart = 0;
             for (int i = 0; i < prev.size(); ++i) {
                 const QChar ch = prev.at(i);
-                if (ch == QLatin1Char('(')) {
+                if (ch == MathDsl::OpenParen) {
                     ++depth;
                     continue;
                 }
-                if (ch == QLatin1Char(')')) {
+                if (ch == MathDsl::CloseParen) {
                     if (depth > 0)
                         --depth;
                     continue;
                 }
                 if (depth == 0
                     && (ch == QLatin1Char('*')
-                        || ch == OperatorChars::MulDotSign
-                        || ch == OperatorChars::MulCrossSign))
+                        || ch == MathDsl::MulDotOp
+                        || ch == MathDsl::MulCrossOp))
                 {
                     factors.append(prev.mid(partStart, i - partStart));
                     operators.append(QString(ch));
@@ -2230,7 +2076,7 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
 
         for (int i = 0; i < text.size(); ++i) {
             const QChar ch = text.at(i);
-            if (ch != QLatin1Char('/') || i + 1 >= text.size() || text.at(i + 1) != QLatin1Char('(')) {
+            if (ch != MathDsl::DivOp || i + 1 >= text.size() || text.at(i + 1) != MathDsl::OpenParen) {
                 out += ch;
                 continue;
             }
@@ -2239,9 +2085,9 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
             int closePos = -1;
             for (int j = i + 1; j < text.size(); ++j) {
                 const QChar inner = text.at(j);
-                if (inner == QLatin1Char('(')) {
+                if (inner == MathDsl::OpenParen) {
                     ++depth;
-                } else if (inner == QLatin1Char(')')) {
+                } else if (inner == MathDsl::CloseParen) {
                     --depth;
                     if (depth == 0) {
                         closePos = j;
@@ -2266,13 +2112,13 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
             QString base;
             int exponent = 0;
             if (parseSimplifiablePowerFactor(simplifiedInside, &base, &exponent)) {
-                out += QLatin1Char('/');
+                out += MathDsl::DivOp;
                 out += simplifiedInside;
             } else {
-                out += QLatin1Char('/');
-                out += QLatin1Char('(');
+                out += MathDsl::DivOp;
+                out += MathDsl::OpenParen;
                 out += simplifiedInside;
-                out += QLatin1Char(')');
+                out += MathDsl::CloseParen;
             }
 
             i = closePos;
@@ -2287,14 +2133,14 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
             return text;
 
         auto isFullyWrappedByOuterParens = [](const QString& expr) {
-            if (expr.size() < 2 || expr.at(0) != QLatin1Char('(') || expr.at(expr.size() - 1) != QLatin1Char(')'))
+            if (expr.size() < 2 || expr.at(0) != MathDsl::OpenParen || expr.at(expr.size() - 1) != MathDsl::CloseParen)
                 return false;
             int depth = 0;
             for (int i = 0; i < expr.size(); ++i) {
                 const QChar ch = expr.at(i);
-                if (ch == QLatin1Char('('))
+                if (ch == MathDsl::OpenParen)
                     ++depth;
-                else if (ch == QLatin1Char(')'))
+                else if (ch == MathDsl::CloseParen)
                     --depth;
                 if (depth == 0 && i < expr.size() - 1)
                     return false;
@@ -2312,7 +2158,7 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
             int sign = 1;
             while (!normalized.isEmpty()) {
                 const QChar ch = normalized.at(0);
-                if (ch == QLatin1Char('+')) {
+                if (ch == MathDsl::AddOp) {
                     normalized = normalized.mid(1).trimmed();
                     continue;
                 }
@@ -2337,7 +2183,7 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
                                                           QString* foldedUnsignedFactor) {
             QString normalized = factor.trimmed();
             QString inner = normalized;
-            if (normalized.startsWith(QLatin1Char('(')) && normalized.endsWith(QLatin1Char(')')))
+            if (normalized.startsWith(MathDsl::OpenParen) && normalized.endsWith(MathDsl::CloseParen))
                 inner = normalized.mid(1, normalized.size() - 2).trimmed();
             if (inner.isEmpty())
                 return false;
@@ -2391,32 +2237,32 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
             int partStart = 0;
             for (int i = 0; i < expr.size(); ++i) {
                 const QChar ch = expr.at(i);
-                if (ch == QLatin1Char('(')) {
+                if (ch == MathDsl::OpenParen) {
                     ++depth;
                     continue;
                 }
-                if (ch == QLatin1Char(')')) {
+                if (ch == MathDsl::CloseParen) {
                     if (depth > 0)
                         --depth;
                     continue;
                 }
                 if (depth == 0
                     && (ch == QLatin1Char('*')
-                        || ch == OperatorChars::MulDotSign
-                        || ch == OperatorChars::MulCrossSign
-                        || ch == QLatin1Char('/')
-                        || ch == QChar(0x00F7) // ÷
-                        || ch == QChar(0x29F8) // ⧸
-                        || ch == QChar(0x2215) // ∕
+                        || ch == MathDsl::MulDotOp
+                        || ch == MathDsl::MulCrossOp
+                        || ch == MathDsl::DivOp
+                        || ch == UnicodeChars::DivisionSign // ÷
+                        || ch == UnicodeChars::BigSolidus // ⧸
+                        || ch == UnicodeChars::DivisionSlash // ∕
                         || ch == QLatin1Char('\\')))
                 {
                     outFactors->append(expr.mid(partStart, i - partStart));
                     outOperators->append(QString(ch));
                     partStart = i + 1;
                 } else if (depth == 0
-                           && (ch == QLatin1Char('+')
-                               || ch == QLatin1Char('-')
-                               || ch == UnicodeChars::MinusSign))
+                           && (ch == MathDsl::AddOp
+                               || ch == MathDsl::SubOpAlt1
+                               || ch == MathDsl::SubOp))
                 {
                     return false;
                 }
@@ -2431,20 +2277,20 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
         int partStart = 0;
         for (int i = 0; i < text.size(); ++i) {
             const QChar ch = text.at(i);
-            if (ch == QLatin1Char('(')) {
+            if (ch == MathDsl::OpenParen) {
                 ++depth;
                 continue;
             }
-            if (ch == QLatin1Char(')')) {
+            if (ch == MathDsl::CloseParen) {
                 if (depth > 0)
                     --depth;
                 continue;
             }
             if (depth == 0
                 && (ch == QLatin1Char('*')
-                    || ch == OperatorChars::MulDotSign
-                    || ch == OperatorChars::MulCrossSign
-                    || ch == QLatin1Char('/')))
+                    || ch == MathDsl::MulDotOp
+                    || ch == MathDsl::MulCrossOp
+                    || ch == MathDsl::DivOp))
             {
                 factors.append(text.mid(partStart, i - partStart));
                 operators.append(QString(ch));
@@ -2466,9 +2312,9 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
             auto isDivisionOp = [](const QString& opText) {
                 return opText == QLatin1String("/")
                     || opText == QLatin1String("\\")
-                    || opText == QString(QChar(0x00F7)) // ÷
-                    || opText == QString(QChar(0x29F8)) // ⧸
-                    || opText == QString(QChar(0x2215)); // ∕
+                    || opText == QString(UnicodeChars::DivisionSign) // ÷
+                    || opText == QString(UnicodeChars::BigSolidus) // ⧸
+                    || opText == QString(UnicodeChars::DivisionSlash); // ∕
             };
             const bool outerIsDiv =
                 isDivisionOp(outerOp);
@@ -2599,13 +2445,13 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
         }
         if (!positiveFactors.isEmpty()) {
             if (!result.isEmpty())
-                result += OperatorChars::MulDotSign;
-            result += positiveFactors.join(QString(OperatorChars::MulDotSign));
+                result += MathDsl::MulDotOp;
+            result += positiveFactors.join(QString(MathDsl::MulDotOp));
         }
         for (const QString& factor : negativeFactors) {
             if (result.isEmpty())
                 result = QStringLiteral("1");
-            result += QLatin1Char('/');
+            result += MathDsl::DivOp;
             result += factor;
         }
 
@@ -2694,7 +2540,7 @@ static QString simplifyRepeatedMultiplicativeBasesForDisplay(const QString& expr
                 return true;
             }
         }
-        if (!(term.startsWith(QLatin1Char('(')) && term.endsWith(QLatin1Char(')'))))
+        if (!(term.startsWith(MathDsl::OpenParen) && term.endsWith(MathDsl::CloseParen)))
             return false;
 
         const QString inner = term.mid(1, term.size() - 2).trimmed();
@@ -2864,11 +2710,11 @@ static QString simplifyRepeatedMultiplicativeBasesForDisplay(const QString& expr
                 int signPos = 0;
                 while (signPos < term.size()) {
                     const QChar signCh = term.at(signPos);
-                    if (signCh == QLatin1Char('+')) {
+                    if (signCh == MathDsl::AddOp) {
                         ++signPos;
                         continue;
                     }
-                    if (signCh == QLatin1Char('-') || signCh == UnicodeChars::MinusSign) {
+                    if (signCh == MathDsl::SubOpAlt1 || signCh == MathDsl::SubOp) {
                         termNegative = !termNegative;
                         ++signPos;
                         continue;
@@ -2906,7 +2752,7 @@ static QString simplifyRepeatedMultiplicativeBasesForDisplay(const QString& expr
                 mergedTerm = term;
             } else {
                 mergedTerm = formatSimplifiedDecimal(magnitude)
-                    + QString(OperatorChars::MulDotSign)
+                    + QString(MathDsl::MulDotOp)
                     + term;
             }
 
@@ -2955,8 +2801,8 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
     }
     const bool allowAggressiveSimplification =
         simplifyRepeatedMultiplicativeBases
-        && !expressionPrefix.contains(QLatin1Char('['))
-        && !expressionPrefix.contains(QLatin1Char(']'));
+        && !expressionPrefix.contains(MathDsl::OpenUnit)
+        && !expressionPrefix.contains(MathDsl::CloseUnit);
 
     auto scanForDisplay = [](const QString& text) {
         // Interpreted expressions are internally dot-based. For comma-based
@@ -2984,13 +2830,15 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
     if (!scannedTokens.valid() || scannedTokens.isEmpty())
         return expressionPrefix + commentSuffix;
     auto isKnownUnitIdentifier = [](const QString& tokenText) {
+        static char cachedAngleMode = '\0';
         static QSet<QString> knownUnits;
-        if (knownUnits.isEmpty()) {
-            const QList<Unit> units = Units::getList();
-            for (const Unit& unit : units) {
-                if (!unit.name.isEmpty())
-                    knownUnits.insert(unit.name);
-            }
+        const char angleMode = Settings::instance()->angleUnit;
+        if (knownUnits.isEmpty() || cachedAngleMode != angleMode) {
+            knownUnits = QSet<QString>();
+            const auto lookup = Units::builtInUnitLookup(angleMode);
+            for (auto it = lookup.constBegin(); it != lookup.constEnd(); ++it)
+                knownUnits.insert(it.key());
+            cachedAngleMode = angleMode;
         }
         return knownUnits.contains(tokenText);
     };
@@ -3044,14 +2892,14 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
         } while (changed);
 
         auto isFullyWrappedByOuterParens = [](const QString& expr) {
-            if (expr.size() < 2 || expr.at(0) != QLatin1Char('(') || expr.at(expr.size() - 1) != QLatin1Char(')'))
+            if (expr.size() < 2 || expr.at(0) != MathDsl::OpenParen || expr.at(expr.size() - 1) != MathDsl::CloseParen)
                 return false;
             int depth = 0;
             for (int i = 0; i < expr.size(); ++i) {
                 const QChar ch = expr.at(i);
-                if (ch == QLatin1Char('('))
+                if (ch == MathDsl::OpenParen)
                     ++depth;
-                else if (ch == QLatin1Char(')'))
+                else if (ch == MathDsl::CloseParen)
                     --depth;
                 if (depth == 0 && i < expr.size() - 1)
                     return false;
@@ -3066,11 +2914,11 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
             int depth = 0;
             for (int i = 0; i < expr.size(); ++i) {
                 const QChar ch = expr.at(i);
-                if (ch == QLatin1Char('(')) {
+                if (ch == MathDsl::OpenParen) {
                     ++depth;
                     continue;
                 }
-                if (ch == QLatin1Char(')')) {
+                if (ch == MathDsl::CloseParen) {
                     if (depth > 0)
                         --depth;
                     continue;
@@ -3078,17 +2926,17 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
                 if (depth != 0)
                     continue;
 
-                if (ch == QLatin1Char('+')
+                if (ch == MathDsl::AddOp
                         || ch == QLatin1Char('&')
                         || ch == QLatin1Char('|')
                         || ch == QLatin1Char(';')
-                        || ch == QLatin1Char('=')
+                        || ch == MathDsl::Equals
                         || ch == QLatin1Char('?')
                         || ch == QLatin1Char('<')
-                        || ch == QLatin1Char('>')) {
+                        || ch == UnicodeChars::GreaterThanSign) {
                     return true;
                 }
-                if ((ch == QLatin1Char('-') || ch == QChar(0x2212)) && i > 0)
+                if ((ch == MathDsl::SubOpAlt1 || ch == MathDsl::SubOp) && i > 0)
                     return true;
             }
             return false;
@@ -3096,8 +2944,8 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
 
         auto isMulOp = [](QChar ch) {
             return ch == QLatin1Char('*')
-                || ch == OperatorChars::MulDotSign
-                || ch == OperatorChars::MulCrossSign;
+                || ch == MathDsl::MulDotOp
+                || ch == MathDsl::MulCrossOp;
         };
 
         auto unwrapEdgeParenthesizedMulDivFactor = [&](QString* expr) {
@@ -3106,14 +2954,14 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
                 return false;
 
             // Unwrap "(factor) * rest" when factor has no top-level low-precedence ops.
-            if (t.at(0) == QLatin1Char('(')) {
+            if (t.at(0) == MathDsl::OpenParen) {
                 int depth = 0;
                 int close = -1;
                 for (int i = 0; i < t.size(); ++i) {
                     const QChar ch = t.at(i);
-                    if (ch == QLatin1Char('('))
+                    if (ch == MathDsl::OpenParen)
                         ++depth;
-                    else if (ch == QLatin1Char(')')) {
+                    else if (ch == MathDsl::CloseParen) {
                         --depth;
                         if (depth == 0) {
                             close = i;
@@ -3129,9 +2977,9 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
                         const QString inner = t.mid(1, close - 1).trimmed();
                         const bool startsWithUnarySign =
                             !inner.isEmpty()
-                            && (inner.at(0) == QLatin1Char('-')
-                                || inner.at(0) == QChar(0x2212)
-                                || inner.at(0) == QLatin1Char('+'));
+                            && (inner.at(0) == MathDsl::SubOpAlt1
+                                || inner.at(0) == MathDsl::SubOp
+                                || inner.at(0) == MathDsl::AddOp);
                         if (!inner.isEmpty()
                                 && !startsWithUnarySign
                                 && !hasTopLevelLowPrecedenceOperator(inner)) {
@@ -3144,14 +2992,14 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
             }
 
             // Unwrap "left * (factor)" when factor has no top-level low-precedence ops.
-            if (t.at(t.size() - 1) == QLatin1Char(')')) {
+            if (t.at(t.size() - 1) == MathDsl::CloseParen) {
                 int depth = 0;
                 int open = -1;
                 for (int i = t.size() - 1; i >= 0; --i) {
                     const QChar ch = t.at(i);
-                    if (ch == QLatin1Char(')'))
+                    if (ch == MathDsl::CloseParen)
                         ++depth;
-                    else if (ch == QLatin1Char('(')) {
+                    else if (ch == MathDsl::OpenParen) {
                         --depth;
                         if (depth == 0) {
                             open = i;
@@ -3167,9 +3015,9 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
                         const QString inner = t.mid(open + 1, t.size() - open - 2).trimmed();
                         const bool startsWithUnarySign =
                             !inner.isEmpty()
-                            && (inner.at(0) == QLatin1Char('-')
-                                || inner.at(0) == QChar(0x2212)
-                                || inner.at(0) == QLatin1Char('+'));
+                            && (inner.at(0) == MathDsl::SubOpAlt1
+                                || inner.at(0) == MathDsl::SubOp
+                                || inner.at(0) == MathDsl::AddOp);
                         if (!inner.isEmpty()
                                 && !startsWithUnarySign
                                 && !hasTopLevelLowPrecedenceOperator(inner)) {
@@ -3266,7 +3114,7 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
             || op == Token::ArithmeticLeftShift
             || op == Token::ArithmeticRightShift;
         const QString operatorText =
-            op == Token::Subtraction ? QString(OperatorChars::SubtractionSign) : token.text();
+            op == Token::Subtraction ? QString(MathDsl::SubOp) : token.text();
         const bool shouldTreatIdentifierAsUnit =
             token.isIdentifier()
             && unitOnlyAddSubExpression
@@ -3278,19 +3126,19 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
             && tokens.at(i - 1).asOperator() == Token::UnitConversion;
         const bool isTemperatureConversionTargetIdentifier =
             isUnitConversionTargetIdentifier
-            && s_affineTemperatureUnitFromName(operatorText) != AffineTemperatureUnit::None;
+            && Units::isAffineUnitName(operatorText);
         const bool isDisplayUnitToken =
             token.isUnitIdentifier() || shouldTreatIdentifierAsUnit;
         QString displayTokenText = isDisplayUnitToken
-            ? Units::formatUnitTokenForDisplay(operatorText)
+            ? UnitDisplayFormat::shortDisplayName(operatorText)
             : operatorText;
         if (isTemperatureConversionTargetIdentifier) {
             displayTokenText = QStringLiteral("[%1]").arg(
-                Units::formatUnitTokenForDisplay(operatorText));
+                UnitDisplayFormat::shortDisplayName(operatorText));
         }
         if (isDisplayUnitToken && unitOnlyAddSubExpression) {
             displayTokenText = QStringLiteral("1")
-                + QString(OperatorChars::ValueUnitSpace)
+                + QString(MathDsl::QuantitySpace)
                 + QStringLiteral("[%1]").arg(displayTokenText);
         }
 
@@ -3320,9 +3168,9 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
 
             if (shouldInsertImplicitUnitOne) {
                 formatted += QStringLiteral("1");
-                formatted += OperatorChars::ValueUnitSpace;
+                formatted += MathDsl::QuantitySpace;
             } else if (shouldAddValueUnitSpace) {
-                formatted += OperatorChars::ValueUnitSpace;
+                formatted += MathDsl::QuantitySpace;
             }
         }
 
@@ -3359,42 +3207,42 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
         }
 
         if (op == Token::Addition) {
-            formatted += OperatorChars::AdditionSpace;
-            formatted += OperatorChars::AdditionSign;
-            formatted += OperatorChars::AdditionSpace;
+            formatted += MathDsl::AddWrap;
+            formatted += MathDsl::AddOp;
+            formatted += MathDsl::AddWrap;
             continue;
         }
 
         if (op == Token::Subtraction) {
-            formatted += OperatorChars::SubtractionSpace;
-            formatted += OperatorChars::SubtractionSign;
-            formatted += OperatorChars::SubtractionSpace;
+            formatted += MathDsl::SubWrap;
+            formatted += MathDsl::SubOp;
+            formatted += MathDsl::SubWrap;
             continue;
         }
 
         if (op == Token::Division) {
-            formatted += OperatorChars::DivisionSpace;
-            formatted += OperatorChars::DivisionSign;
-            formatted += OperatorChars::DivisionSpace;
+            formatted += MathDsl::DivWrap;
+            formatted += MathDsl::DivOp;
+            formatted += MathDsl::DivWrap;
             continue;
         }
 
         if (op == Token::Multiplication) {
-            const QChar mulSign = displayTokenText == QString(OperatorChars::MulCrossSign)
-                ? OperatorChars::MulCrossSign
-                : OperatorChars::MulDotSign;
-            const QChar mulSpace = mulSign == OperatorChars::MulCrossSign
-                ? OperatorChars::MulCrossSpace
-                : OperatorChars::MulDotSpace;
+            const QChar mulSign = displayTokenText == QString(MathDsl::MulCrossOp)
+                ? MathDsl::MulCrossOp
+                : MathDsl::MulDotOp;
+            const QChar mulSpace = mulSign == MathDsl::MulCrossOp
+                ? MathDsl::MulCrossWrap
+                : MathDsl::MulDotWrap;
             formatted += mulSpace;
             formatted += mulSign;
             formatted += mulSpace;
             continue;
         }
 
-        formatted += OperatorChars::AdditionSpace;
+        formatted += MathDsl::AddWrap;
         formatted += displayTokenText;
-        formatted += OperatorChars::AdditionSpace;
+        formatted += MathDsl::AddWrap;
     }
 
     return renderIntegerPowersAsSuperscriptsForDisplay(
@@ -3419,8 +3267,8 @@ QString Evaluator::simplifyInterpretedExpression(const QString& expression)
             commentSuffix += QLatin1String(" ") + commentText;
     }
 
-    if (expressionPrefix.contains(QLatin1Char('['))
-        || expressionPrefix.contains(QLatin1Char(']')))
+    if (expressionPrefix.contains(MathDsl::OpenUnit)
+        || expressionPrefix.contains(MathDsl::CloseUnit))
     {
         return expressionPrefix + commentSuffix;
     }
@@ -3709,7 +3557,8 @@ void Tokens::append(const Token& token)
 
 static bool isSubscriptDigit(QChar ch)
 {
-    return ch.unicode() >= 0x2080 && ch.unicode() <= 0x2089;
+    return ch.unicode() >= UnicodeChars::SubscriptZero.unicode()
+        && ch.unicode() <= UnicodeChars::SubscriptNine.unicode();
 }
 
 static QString superscriptDigitsToAscii(const QString& text)
@@ -3717,7 +3566,7 @@ static QString superscriptDigitsToAscii(const QString& text)
     QString converted;
     converted.reserve(text.size());
     for (const QChar& ch : text) {
-        const QChar asciiDigit = OperatorChars::superscriptDigitToAscii(ch);
+        const QChar asciiDigit = MathDsl::superscriptDigitToAscii(ch);
         converted.append(asciiDigit.isNull() ? ch : asciiDigit);
     }
     return converted;
@@ -3726,28 +3575,28 @@ static QString superscriptDigitsToAscii(const QString& text)
 static bool isSubscriptLetter(QChar ch)
 {
     switch (ch.unicode()) {
-    case 0x2090: // ₐ
-    case 0x2091: // ₑ
-    case 0x2092: // ₒ
-    case 0x2093: // ₓ
-    case 0x2094: // ₔ
-    case 0x2095: // ₕ
-    case 0x2096: // ₖ
-    case 0x2097: // ₗ
-    case 0x2098: // ₘ
-    case 0x2099: // ₙ
-    case 0x209A: // ₚ
-    case 0x209B: // ₛ
-    case 0x209C: // ₜ
-    case 0x1D62: // ᵢ
-    case 0x1D63: // ᵣ
-    case 0x1D64: // ᵤ
-    case 0x1D65: // ᵥ
-    case 0x1D66: // ᵦ
-    case 0x1D67: // ᵧ
-    case 0x1D68: // ᵨ
-    case 0x1D69: // ᵩ
-    case 0x1D6A: // ᵪ
+    case UnicodeChars::LatinSubscriptSmallLetterA.unicode():
+    case UnicodeChars::LatinSubscriptSmallLetterE.unicode():
+    case UnicodeChars::LatinSubscriptSmallLetterO.unicode():
+    case UnicodeChars::LatinSubscriptSmallLetterX.unicode():
+    case UnicodeChars::LatinSubscriptSmallLetterSchwa.unicode():
+    case UnicodeChars::LatinSubscriptSmallLetterH.unicode():
+    case UnicodeChars::LatinSubscriptSmallLetterK.unicode():
+    case UnicodeChars::LatinSubscriptSmallLetterL.unicode():
+    case UnicodeChars::LatinSubscriptSmallLetterM.unicode():
+    case UnicodeChars::LatinSubscriptSmallLetterN.unicode():
+    case UnicodeChars::LatinSubscriptSmallLetterP.unicode():
+    case UnicodeChars::LatinSubscriptSmallLetterS.unicode():
+    case UnicodeChars::LatinSubscriptSmallLetterT.unicode():
+    case UnicodeChars::LatinSubscriptSmallLetterI.unicode():
+    case UnicodeChars::LatinSubscriptSmallLetterR.unicode():
+    case UnicodeChars::LatinSubscriptSmallLetterU.unicode():
+    case UnicodeChars::LatinSubscriptSmallLetterV.unicode():
+    case UnicodeChars::GreekSubscriptSmallLetterBeta.unicode():
+    case UnicodeChars::GreekSubscriptSmallLetterGamma.unicode():
+    case UnicodeChars::GreekSubscriptSmallLetterRho.unicode():
+    case UnicodeChars::GreekSubscriptSmallLetterPhi.unicode():
+    case UnicodeChars::GreekSubscriptSmallLetterChi.unicode():
         return true;
     default:
         return false;
@@ -3782,14 +3631,6 @@ bool Evaluator::isRadixChar(const QChar& ch)
 
     if (Settings::instance()->isRadixCharacterBoth())
         return ch.unicode() == '.' || ch.unicode() == ',';
-
-    // There are more than 2 radix characters, actually:
-    //     U+0027 ' apostrophe
-    //     U+002C , comma
-    //     U+002E . full stop
-    //     U+00B7 · middle dot
-    //     U+066B ٫ arabic decimal separator
-    //     U+2396 ⎖ decimal separator key symbol
 
     return ch.unicode() == Settings::instance()->radixCharacter();
 }
@@ -3880,7 +3721,7 @@ HNumber getNumber(const QString& number) {
     if (number.isEmpty())
         return HNumber(0);
     const QString sexagesimalStopChars =
-        QStringLiteral("['\":") + UnicodeChars::Prime + UnicodeChars::DoublePrime + QLatin1Char(']');
+        QStringLiteral("['\":") + MathDsl::MinOp + MathDsl::SecOp + MathDsl::CloseUnit;
     int endPos = number.indexOf(QRegularExpression(sexagesimalStopChars)); // Stop at sexagesimal separators/markers.
     if (endPos == 0)
         return HNumber(0);
@@ -3893,13 +3734,13 @@ QString Evaluator::fixSexagesimal(const QString& number, QString& unit)
 {
     unit.clear();
     QString bad, result = number;
-    const QString minuteMarkClass = QStringLiteral("['") + UnicodeChars::Prime + QLatin1Char(']');
-    const QString secondMarkClass = QStringLiteral("[\"") + UnicodeChars::DoublePrime + QLatin1Char(']');
+    const QString minuteMarkClass = QStringLiteral("['") + MathDsl::MinOp + MathDsl::CloseUnit;
+    const QString secondMarkClass = QStringLiteral("[\"") + MathDsl::SecOp + MathDsl::CloseUnit;
     const auto isMinuteMark = [](QChar c) {
-        return c == QChar('\'') || c == UnicodeChars::Prime;
+        return c == MathDsl::MinOpAlt1 || c == MathDsl::MinOp;
     };
     const auto isSecondMark = [](QChar c) {
-        return c == QChar('"') || c == UnicodeChars::DoublePrime;
+        return c == MathDsl::SecOpAlt1 || c == MathDsl::SecOp;
     };
 
     bool arc = false;
@@ -3956,21 +3797,25 @@ QString Evaluator::fixSexagesimal(const QString& number, QString& unit)
                 seconds = getNumber(number.mid(secPos + 1));
                 if (seconds.isZero()) {  // postfix minutes
                     result = HMath::format(mains * HNumber(60) + minutes * sign, fixed);
-                    unit = arc ? "arcminute" : "minute";
+                    unit = arc ? unitName(UnitId::Arcminute)
+                               : unitName(UnitId::Minute);
                 }
                 else {  // minutes and seconds
                     result = HMath::format(mains * HNumber(3600) + minutes * HNumber(60) * sign + seconds * sign, fixed);
-                    unit = arc ? "arcsecond" : "second";
+                    unit = arc ? unitName(UnitId::Arcsecond)
+                               : unitName(UnitId::Second);
                 }
             }
             else {  // just minutes
                 minutes = getNumber(number.mid(minPos + 1));
                 result = HMath::format(mains * HNumber(60) + minutes * sign, fixed);
-                unit = arc ? "arcminute" : "minute";
+                unit = arc ? unitName(UnitId::Arcminute)
+                           : unitName(UnitId::Minute);
             }
             if (seconds.isZero() && minutes.isZero()) {  // postfix mains
                 result = HMath::format(mains, fixed);
-                unit = arc ? "degree" : "hour";
+                unit = arc ? unitName(UnitId::Degree)
+                           : unitName(UnitId::Hour);
             }
         }
         else if ( arc ) {
@@ -3982,11 +3827,11 @@ QString Evaluator::fixSexagesimal(const QString& number, QString& unit)
                 seconds = getNumber(number.mid(secPos + 1));
                 if (seconds.isZero()) {  // postfix minutes
                     result = HMath::format(minutes, fixed);
-                    unit = "arcminute";
+                    unit = unitName(UnitId::Arcminute);
                 }
                 else {
                     result = HMath::format(minutes * HNumber(60) + seconds * sign, fixed);
-                    unit = "arcsecond";
+                    unit = unitName(UnitId::Arcsecond);
                 }
             }
             else {
@@ -3994,7 +3839,7 @@ QString Evaluator::fixSexagesimal(const QString& number, QString& unit)
                 if (unitPos >= 0) {  // postfix seconds
                     seconds = getNumber(number.left(unitPos));
                     result = HMath::format(seconds, fixed);
-                    unit = "arcsecond";
+                    unit = unitName(UnitId::Arcsecond);
                 }
             }
         }
@@ -4162,8 +4007,8 @@ bool isArcTime(QChar ch) {
     return (isDegreeSign(ch)
             || ch == '\''
             || ch == '"'
-            || ch == UnicodeChars::Prime
-            || ch == UnicodeChars::DoublePrime
+            || ch == MathDsl::MinOp
+            || ch == MathDsl::SecOp
             || ch == ':');
 }
 
@@ -4198,8 +4043,8 @@ Tokens Evaluator::scan(const QString& expr) const
     state = Init;
     int i = 0;
     QString ex = UnicodeChars::normalizeUnitSymbolAliases(expr);
-    ex.replace(UnicodeChars::Prime, QChar('\''));
-    ex.replace(UnicodeChars::DoublePrime, QChar('"'));
+    ex.replace(MathDsl::MinOp, MathDsl::MinOpAlt1);
+    ex.replace(MathDsl::SecOp, MathDsl::SecOpAlt1);
     // Accept editor-produced spacing in unit conversion aliases:
     // "− >" or "- >" should tokenize as "->".
     ex.replace(
@@ -4210,12 +4055,12 @@ Tokens Evaluator::scan(const QString& expr) const
     int superscriptUnitBracketDepth = 0;
     for (int p = 0; p < ex.size();) {
         const QChar current = ex.at(p);
-        if (current == QLatin1Char('[')) {
+        if (current == MathDsl::OpenUnit) {
             ++superscriptUnitBracketDepth;
             ++p;
             continue;
         }
-        if (current == QLatin1Char(']')) {
+        if (current == MathDsl::CloseUnit) {
             if (superscriptUnitBracketDepth > 0)
                 --superscriptUnitBracketDepth;
             ++p;
@@ -4231,7 +4076,7 @@ Tokens Evaluator::scan(const QString& expr) const
             ++identEnd;
 
         int superscriptEnd = identEnd;
-        while (superscriptEnd < ex.size() && OperatorChars::isSuperscriptDigit(ex.at(superscriptEnd)))
+        while (superscriptEnd < ex.size() && MathDsl::isSuperscriptDigit(ex.at(superscriptEnd)))
             ++superscriptEnd;
 
         if (superscriptEnd == identEnd) {
@@ -4242,7 +4087,7 @@ Tokens Evaluator::scan(const QString& expr) const
         const QString identifier = ex.mid(p, identEnd - p);
         const QString superscript = ex.mid(identEnd, superscriptEnd - identEnd);
         const QString replacement =
-            identifier + QLatin1Char('^') + superscriptDigitsToAscii(superscript);
+            identifier + MathDsl::PowOp + superscriptDigitsToAscii(superscript);
         ex.replace(p, superscriptEnd - p, replacement);
         p += replacement.size();
     }
@@ -4296,9 +4141,9 @@ Tokens Evaluator::scan(const QString& expr) const
             else if (ch.isDigit()) {
                 // Check for number
                 state = InNumberPrefix;
-            } else if (ch == '#') {
+            } else if (ch == MathDsl::HexPrefixAlt1) {
                 // Simple hexadecimal notation
-                tokenText.append("0x");
+                tokenText.append(MathDsl::HexPrefix);
                 numberBase = 16;
                 state = InNumber;
                 ++i;
@@ -4481,7 +4326,7 @@ Tokens Evaluator::scan(const QString& expr) const
             } else if (tokenText.isEmpty() && (ch == '+' || isMinus(ch))) {
                 // Allow expressions like "$-10" or "$+10".
                 if (isMinus(ch))
-                    tokenText.append('-');
+                    tokenText.append(MathDsl::SubOpAlt1);
                 ++i;
             } else {
                 if (tokenText.endsWith("0")) {
@@ -4551,7 +4396,7 @@ Tokens Evaluator::scan(const QString& expr) const
 
             if (expText.length() == 1 && (ch == '+' || isMinus(ch))) {
                 // Possible + or - right after E.
-                expText.append(ch == UnicodeChars::MinusSign ? '-' : ch);
+                expText.append(ch == MathDsl::SubOp ? MathDsl::SubOpAlt1 : ch);
                 ++i;
             } else if (isDigit) {
                 if (ch == '0') {
@@ -4653,7 +4498,7 @@ Tokens Evaluator::scan(const QString& expr) const
             }
 
             // Make sure a number cannot be followed by another number.
-            if (ch.isDigit() || isRadixChar(ch) || ch == '#')
+            if (ch.isDigit() || isRadixChar(ch) || ch == MathDsl::HexPrefixAlt1)
                 state = Bad;
             else
                 state = Init;
@@ -4695,12 +4540,12 @@ void Evaluator::compile(const Tokens& tokens)
         if (token.type() != Token::stxUnitIdentifier || token.size() != 0)
             return false;
         const QString text = token.text();
-        return text == QLatin1String("hour")
-            || text == QLatin1String("minute")
-            || text == QLatin1String("second")
-            || text == QLatin1String("degree")
-            || text == QLatin1String("arcminute")
-            || text == QLatin1String("arcsecond");
+        return text == unitName(UnitId::Hour)
+            || text == unitName(UnitId::Minute)
+            || text == unitName(UnitId::Second)
+            || text == unitName(UnitId::Degree)
+            || text == unitName(UnitId::Arcminute)
+            || text == unitName(UnitId::Arcsecond);
     };
 
     bool hasGeneratedSexagesimalUnit = false;
@@ -4894,8 +4739,8 @@ void Evaluator::compile(const Tokens& tokens)
                    && leftPar.text() == QLatin1String("("))
                {
                    const QString innerSource = m_expression.mid(innerExpr.pos(), innerExpr.size()).trimmed();
-                   if (innerSource.startsWith(QLatin1Char('['))
-                       && innerSource.endsWith(QLatin1Char(']')))
+                   if (innerSource.startsWith(MathDsl::OpenUnit)
+                       && innerSource.endsWith(MathDsl::CloseUnit))
                    {
                        ruleFound = true;
                        syntaxStack.reduce(5, std::move(lhs), MAX_PRECEDENCE);
@@ -5367,7 +5212,7 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
             if (left.precedence < precedence)
                 leftText = wrapInParentheses(leftText);
             return RenderNode{
-                leftText + QLatin1Char('[') + right.text + QLatin1Char(']'),
+                leftText + MathDsl::OpenUnit + right.text + MathDsl::CloseUnit,
                 precedence,
                 opcodeType,
                 left.isLiteralSymbol || right.isLiteralSymbol,
@@ -5381,7 +5226,7 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
         if (opcodeType == Opcode::Sub && right.isUnaryNegation) {
             // Prefer "a+b" over "a-(-b)" / "a--b" in interpreted output.
             renderedOpcodeType = Opcode::Add;
-            if (rightText.startsWith(QLatin1Char('-')))
+            if (rightText.startsWith(MathDsl::SubOpAlt1))
                 rightText.remove(0, 1);
         }
 
@@ -5583,7 +5428,7 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
             const RenderNode operand = stack.takeLast();
             if (opcode.type == Opcode::Neg && operand.isUnaryNegation) {
                 QString text = operand.text;
-                if (text.startsWith(QLatin1Char('-')))
+                if (text.startsWith(MathDsl::SubOpAlt1))
                     text.remove(0, 1);
                 stack.append({
                     text,
@@ -5957,15 +5802,13 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 popStackValue(val1);
                 popStackValue(val2);
                 {
-                    const AffineTemperatureUnit affineUnit =
-                        s_affineTemperatureUnitFromName(val1.unitName());
-                    if (affineUnit != AffineTemperatureUnit::None
-                        && val2.isDimensionless()
-                        && val2.numericValue().isNearReal())
+                    HNumber affineBaseValue;
+                    if (val2.isDimensionless()
+                        && val2.numericValue().isNearReal()
+                        && Units::tryConvertAffineToBase(
+                            val1.unitName(), val2.numericValue().real, &affineBaseValue))
                     {
-                        const HNumber kelvin =
-                            s_affineTemperatureToKelvin(val2.numericValue().real, affineUnit);
-                        Quantity absolute = Quantity(kelvin) * Units::kelvin();
+                        Quantity absolute = Quantity(affineBaseValue) * Units::kelvin();
                         absolute.setDisplayUnit(CNumber(1), val1.unitName());
                         val2 = checkOperatorResultWithDeferredNoOperand(absolute);
                     } else {
@@ -6085,14 +5928,14 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
 
             case Opcode::Conv: {
                 auto isFullyWrappedByOuterParens = [](const QString& expr) {
-                    if (expr.size() < 2 || expr.at(0) != QLatin1Char('(') || expr.at(expr.size() - 1) != QLatin1Char(')'))
+                    if (expr.size() < 2 || expr.at(0) != MathDsl::OpenParen || expr.at(expr.size() - 1) != MathDsl::CloseParen)
                         return false;
                     int depth = 0;
                     for (int i = 0; i < expr.size(); ++i) {
                         const QChar ch = expr.at(i);
-                        if (ch == QLatin1Char('('))
+                        if (ch == MathDsl::OpenParen)
                             ++depth;
-                        else if (ch == QLatin1Char(')'))
+                        else if (ch == MathDsl::CloseParen)
                             --depth;
                         if (depth == 0 && i < expr.size() - 1)
                             return false;
@@ -6100,14 +5943,14 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     return depth == 0;
                 };
                 auto isFullyWrappedByOuterBrackets = [](const QString& expr) {
-                    if (expr.size() < 2 || expr.at(0) != QLatin1Char('[') || expr.at(expr.size() - 1) != QLatin1Char(']'))
+                    if (expr.size() < 2 || expr.at(0) != MathDsl::OpenUnit || expr.at(expr.size() - 1) != MathDsl::CloseUnit)
                         return false;
                     int depth = 0;
                     for (int i = 0; i < expr.size(); ++i) {
                         const QChar ch = expr.at(i);
-                        if (ch == QLatin1Char('['))
+                        if (ch == MathDsl::OpenUnit)
                             ++depth;
-                        else if (ch == QLatin1Char(']'))
+                        else if (ch == MathDsl::CloseUnit)
                             --depth;
                         if (depth == 0 && i < expr.size() - 1)
                             return false;
@@ -6128,12 +5971,11 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     m_error = tr("Conversion failed - dimension mismatch");
                     return HMath::nan();
                 }
-                const AffineTemperatureUnit targetAffineUnit =
-                    s_affineTemperatureUnitFromName(val1.unitName());
+                const bool targetIsAffineUnit = Units::isAffineUnitName(val1.unitName());
                 CNumber displayUnitValue =
-                    targetAffineUnit == AffineTemperatureUnit::None
-                    ? val1.numericValue()
-                    : CNumber(1);
+                    targetIsAffineUnit
+                    ? CNumber(1)
+                    : val1.numericValue();
                 QString displayUnitName = opcode.text.trimmed();
                 if (isFullyWrappedByOuterBrackets(displayUnitName))
                     displayUnitName = displayUnitName.mid(1, displayUnitName.size() - 2).trimmed();
@@ -6151,7 +5993,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 displayUnitName = UnicodeChars::normalizeUnitSymbolAliases(displayUnitName);
                 const bool nestedConversionTarget =
                     opcode.text.contains(QLatin1String("->"))
-                    || opcode.text.contains(QChar(0x2192));
+                    || opcode.text.contains(MathDsl::TransOp);
                 if (nestedConversionTarget) {
                     Quantity canonicalTarget(val1);
                     canonicalTarget.stripUnits();
@@ -6162,12 +6004,12 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                         displayUnitName = canonicalTarget.unitName();
                     }
                 }
-                if (targetAffineUnit != AffineTemperatureUnit::None
+                if (targetIsAffineUnit
                     && displayUnitName.isEmpty())
                 {
                     displayUnitName = val1.unitName();
                 }
-                if (Units::negativeExponentStyle() == Units::NegativeExponentSuperscript)
+                if (runtimeUnitNegativeExponentStyle() == Settings::UnitNegativeExponentSuperscript)
                     displayUnitName = s_applySuperscriptStyleToExplicitUnitText(displayUnitName);
                 else
                     displayUnitName = s_renderUnitExponentsAsSuperscripts(displayUnitName);
@@ -6502,7 +6344,7 @@ Quantity Evaluator::eval()
                 if (interpretedBody.startsWith(leftSide))
                     interpretedBody = interpretedBody.mid(leftSide.size());
                 else {
-                    const int assignmentPos = interpretedBody.indexOf('=');
+                    const int assignmentPos = interpretedBody.indexOf(MathDsl::Equals);
                     if (assignmentPos >= 0)
                         interpretedBody = interpretedBody.mid(assignmentPos + 1);
                 }
@@ -6620,7 +6462,7 @@ static void replaceSuperscriptPowersWithCaretEquivalent(QString& expr)
         return isIdentifierStart(ch);
     };
     auto isSuperscriptPowerChar = [](const QChar& ch) {
-        return OperatorChars::isSuperscriptPowerChar(ch);
+        return MathDsl::isSuperscriptPowerChar(ch);
     };
 
     // Convert function-call powers from "f²(x)" to "f(x)²" so later conversion
@@ -6650,7 +6492,7 @@ static void replaceSuperscriptPowersWithCaretEquivalent(QString& expr)
         int argsStart = superscriptEnd;
         while (argsStart < expr.size() && expr.at(argsStart).isSpace())
             ++argsStart;
-        if (argsStart >= expr.size() || expr.at(argsStart) != QLatin1Char('(')) {
+        if (argsStart >= expr.size() || expr.at(argsStart) != MathDsl::OpenParen) {
             i = superscriptEnd;
             continue;
         }
@@ -6659,9 +6501,9 @@ static void replaceSuperscriptPowersWithCaretEquivalent(QString& expr)
         int argsEnd = -1;
         for (int j = argsStart; j < expr.size(); ++j) {
             const QChar ch = expr.at(j);
-            if (ch == QLatin1Char('(')) {
+            if (ch == MathDsl::OpenParen) {
                 ++depth;
-            } else if (ch == QLatin1Char(')')) {
+            } else if (ch == MathDsl::CloseParen) {
                 --depth;
                 if (depth == 0) {
                     argsEnd = j;
@@ -6696,21 +6538,21 @@ static void replaceSuperscriptPowersWithCaretEquivalent(QString& expr)
     }
 
     static const QRegularExpression s_superscriptPowersRE(
-        "(\\x{207B})?[\\x{2070}¹²³\\x{2074}-\\x{2079}]+"
+        QStringLiteral("(")
+        + QString(MathDsl::PowNeg)
+        + QStringLiteral(")?[")
+        + QString(MathDsl::Pow0)
+        + QString(MathDsl::Pow1)
+        + QString(MathDsl::Pow2)
+        + QString(MathDsl::Pow3)
+        + QString(MathDsl::Pow4)
+        + QString(MathDsl::Pow5)
+        + QString(MathDsl::Pow6)
+        + QString(MathDsl::Pow7)
+        + QString(MathDsl::Pow8)
+        + QString(MathDsl::Pow9)
+        + QStringLiteral("]+")
     );
-    static const QHash<QChar, QChar> s_superscriptPowersHash {
-        {QChar(0x207B), '-'},
-        {QChar(0x2070), '0'},
-        {QChar(0x00B9), '1'},
-        {QChar(0x00B2), '2'},
-        {QChar(0x00B3), '3'},
-        {QChar(0x2074), '4'},
-        {QChar(0x2075), '5'},
-        {QChar(0x2076), '6'},
-        {QChar(0x2077), '7'},
-        {QChar(0x2078), '8'},
-        {QChar(0x2079), '9'},
-    };
 
     int offset = 0;
     while (true) {
@@ -6720,8 +6562,15 @@ static void replaceSuperscriptPowersWithCaretEquivalent(QString& expr)
 
       QString power = match.captured();
       for (int pos = power.size() - 1; pos >= 0; --pos) {
-        QChar c = power.at(pos);
-        power.replace(pos, 1, s_superscriptPowersHash.value(c, c));
+          const QChar c = power.at(pos);
+          if (c == MathDsl::PowNeg) {
+              power.replace(pos, 1, MathDsl::SubOpAlt1);
+              continue;
+          }
+
+          const QChar asciiDigit = MathDsl::superscriptDigitToAscii(c);
+          if (!asciiDigit.isNull())
+              power.replace(pos, 1, asciiDigit);
       }
 
       bool isNegative = match.capturedStart(1) != -1;
@@ -6746,11 +6595,11 @@ static void normalizeFunctionCaretPowers(QString& expr)
     auto parseIntegerExponentToken = [](const QString& input, int start, int* endOut) {
         int pos = start;
         bool parenthesized = false;
-        if (pos < input.size() && input.at(pos) == QLatin1Char('(')) {
+        if (pos < input.size() && input.at(pos) == MathDsl::OpenParen) {
             parenthesized = true;
             ++pos;
         }
-        if (pos < input.size() && (input.at(pos) == QLatin1Char('+') || input.at(pos) == QLatin1Char('-')))
+        if (pos < input.size() && (input.at(pos) == MathDsl::AddOp || input.at(pos) == MathDsl::SubOpAlt1))
             ++pos;
         const int digitsStart = pos;
         while (pos < input.size() && input.at(pos).isDigit())
@@ -6758,7 +6607,7 @@ static void normalizeFunctionCaretPowers(QString& expr)
         if (pos == digitsStart)
             return false;
         if (parenthesized) {
-            if (pos >= input.size() || input.at(pos) != QLatin1Char(')'))
+            if (pos >= input.size() || input.at(pos) != MathDsl::CloseParen)
                 return false;
             ++pos;
         }
@@ -6780,7 +6629,7 @@ static void normalizeFunctionCaretPowers(QString& expr)
         int afterName = nameEnd;
         while (afterName < expr.size() && expr.at(afterName).isSpace())
             ++afterName;
-        if (afterName >= expr.size() || expr.at(afterName) != QLatin1Char('^')) {
+        if (afterName >= expr.size() || expr.at(afterName) != MathDsl::PowOp) {
             i = nameEnd;
             continue;
         }
@@ -6798,7 +6647,7 @@ static void normalizeFunctionCaretPowers(QString& expr)
         int argsStart = expEnd;
         while (argsStart < expr.size() && expr.at(argsStart).isSpace())
             ++argsStart;
-        if (argsStart >= expr.size() || expr.at(argsStart) != QLatin1Char('(')) {
+        if (argsStart >= expr.size() || expr.at(argsStart) != MathDsl::OpenParen) {
             i = nameEnd;
             continue;
         }
@@ -6807,9 +6656,9 @@ static void normalizeFunctionCaretPowers(QString& expr)
         int argsEnd = -1;
         for (int j = argsStart; j < expr.size(); ++j) {
             const QChar ch = expr.at(j);
-            if (ch == QLatin1Char('('))
+            if (ch == MathDsl::OpenParen)
                 ++depth;
-            else if (ch == QLatin1Char(')')) {
+            else if (ch == MathDsl::CloseParen) {
                 --depth;
                 if (depth == 0) {
                     argsEnd = j;
@@ -6824,7 +6673,7 @@ static void normalizeFunctionCaretPowers(QString& expr)
 
         const QString callArgs = expr.mid(argsStart, argsEnd - argsStart + 1);
         const QString exponentToken = expr.mid(expStart, expEnd - expStart);
-        const QString replacement = callArgs + QLatin1Char('^') + exponentToken;
+        const QString replacement = callArgs + MathDsl::PowOp + exponentToken;
         expr.replace(afterName, argsEnd - afterName + 1, replacement);
         i = i + replacement.size();
     }
@@ -6917,9 +6766,9 @@ QString Evaluator::autoFix(const QString& expr)
     auto canEndOperandBeforeParen = [](QChar ch) {
         return ch.isLetterOrNumber()
                || ch == QLatin1Char('_')
-               || ch == QLatin1Char(')')
-               || ch == QLatin1Char(']')
-               || ch == QLatin1Char('[')
+               || ch == MathDsl::CloseParen
+               || ch == MathDsl::CloseUnit
+               || ch == MathDsl::OpenUnit
                || ch == QLatin1Char('!')
                || ch == QLatin1Char('%');
     };
@@ -6927,14 +6776,14 @@ QString Evaluator::autoFix(const QString& expr)
         return ch.isLetterOrNumber() || ch == QLatin1Char('_');
     };
     auto isBalancedBracketExpression = [](const QString& text) {
-        if (text.isEmpty() || text.at(0) != QLatin1Char('[') || text.at(text.size() - 1) != QLatin1Char(']'))
+        if (text.isEmpty() || text.at(0) != MathDsl::OpenUnit || text.at(text.size() - 1) != MathDsl::CloseUnit)
             return false;
         int depth = 0;
         for (int i = 0; i < text.size(); ++i) {
             const QChar ch = text.at(i);
-            if (ch == QLatin1Char('[')) {
+            if (ch == MathDsl::OpenUnit) {
                 ++depth;
-            } else if (ch == QLatin1Char(']')) {
+            } else if (ch == MathDsl::CloseUnit) {
                 --depth;
                 if (depth < 0)
                     return false;
@@ -6943,14 +6792,14 @@ QString Evaluator::autoFix(const QString& expr)
         return depth == 0;
     };
     auto isWrappedByOuterParens = [](const QString& text) {
-        if (text.size() < 2 || text.at(0) != QLatin1Char('(') || text.at(text.size() - 1) != QLatin1Char(')'))
+        if (text.size() < 2 || text.at(0) != MathDsl::OpenParen || text.at(text.size() - 1) != MathDsl::CloseParen)
             return false;
         int depth = 0;
         for (int i = 0; i < text.size(); ++i) {
             const QChar ch = text.at(i);
-            if (ch == QLatin1Char('(')) {
+            if (ch == MathDsl::OpenParen) {
                 ++depth;
-            } else if (ch == QLatin1Char(')')) {
+            } else if (ch == MathDsl::CloseParen) {
                 --depth;
                 if (depth == 0 && i != text.size() - 1)
                     return false;
@@ -6962,7 +6811,7 @@ QString Evaluator::autoFix(const QString& expr)
     };
     auto normalizeParenthesizedUnitAttachment = [&]() {
         for (int i = 0; i < result.size(); ++i) {
-            if (result.at(i) != QLatin1Char('('))
+            if (result.at(i) != MathDsl::OpenParen)
                 continue;
 
             int prev = i - 1;
@@ -6985,9 +6834,9 @@ QString Evaluator::autoFix(const QString& expr)
             int closeParenPos = -1;
             for (int p = i; p < result.size(); ++p) {
                 const QChar ch = result.at(p);
-                if (ch == QLatin1Char('(')) {
+                if (ch == MathDsl::OpenParen) {
                     ++depth;
-                } else if (ch == QLatin1Char(')')) {
+                } else if (ch == MathDsl::CloseParen) {
                     --depth;
                     if (depth == 0) {
                         closeParenPos = p;
@@ -7015,7 +6864,7 @@ QString Evaluator::autoFix(const QString& expr)
     //   "2×pi" -> "2·pi"
     //   "2   ×    pi   pi" -> "2·pi·pi"
     {
-        const QString dotOperator(OperatorChars::MulDotSign);
+        const QString dotOperator(MathDsl::MulDotOp);
         const Tokens tokens = Evaluator::scan(result);
         for (int i = tokens.count() - 2; i >= 1; --i) {
             const Token& op = tokens.at(i);
@@ -7086,8 +6935,8 @@ QString Evaluator::autoFix(const QString& expr)
             const QString left = match.captured(1);
             const QString right = match.captured(2);
             const bool keepAsUnitConversionAlias =
-                left.compare(QStringLiteral("in"), Qt::CaseInsensitive) == 0
-                || right.compare(QStringLiteral("in"), Qt::CaseInsensitive) == 0;
+                left.compare(MathDsl::TransOpAlt1, Qt::CaseInsensitive) == 0
+                || right.compare(MathDsl::TransOpAlt1, Qt::CaseInsensitive) == 0;
             const bool keepAsFunctionCall =
                 FunctionRepo::instance()->find(left) || hasUserFunction(left);
             if (keepAsUnitConversionAlias || keepAsFunctionCall) {
@@ -7164,9 +7013,9 @@ QString Evaluator::autoFix(const QString& expr)
         for (int i = 0; i < tokens.count(); ++i) {
             if (tokens.at(i).asOperator() == Token::AssociationStart) {
                 if (tokens.at(i).text() == QLatin1String("("))
-                    closingStack.append(QLatin1Char(')'));
+                    closingStack.append(MathDsl::CloseParen);
                 else if (tokens.at(i).text() == QLatin1String("["))
-                    closingStack.append(QLatin1Char(']'));
+                    closingStack.append(MathDsl::CloseUnit);
                 continue;
             }
             if (tokens.at(i).asOperator() != Token::AssociationEnd)

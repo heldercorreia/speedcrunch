@@ -204,4 +204,21 @@ private:
     Q_DISABLE_COPY(Settings)
 };
 
+inline Settings::UnitNegativeExponentStyle g_runtimeUnitNegativeExponentStyle =
+    Settings::UnitNegativeExponentSuperscript;
+
+inline void setRuntimeUnitNegativeExponentStyle(Settings::UnitNegativeExponentStyle style)
+{
+    if (style != Settings::UnitNegativeExponentSuperscript
+        && style != Settings::UnitNegativeExponentFraction) {
+        return;
+    }
+    g_runtimeUnitNegativeExponentStyle = style;
+}
+
+inline Settings::UnitNegativeExponentStyle runtimeUnitNegativeExponentStyle()
+{
+    return g_runtimeUnitNegativeExponentStyle;
+}
+
 #endif

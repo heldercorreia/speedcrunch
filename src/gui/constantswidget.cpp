@@ -22,7 +22,7 @@
 #include "core/constants.h"
 #include "core/settings.h"
 #include "core/unicodechars.h"
-#include "math/operatorchars.h"
+#include "core/mathdsl.h"
 
 #include <QEvent>
 #include <QTimer>
@@ -40,11 +40,11 @@
 static QString constantExpression(const Constant& constant)
 {
     QString unit = constant.unit;
-    unit.replace(UnicodeChars::MiddleDot, OperatorChars::MulDotSign);
+    unit.replace(UnicodeChars::MiddleDot, MathDsl::MulDotOp);
     return constant.unit.isEmpty()
         ? constant.value
         : QStringLiteral("%1%2[%3]")
-            .arg(constant.value, QString(OperatorChars::ValueUnitSpace), unit);
+            .arg(constant.value, QString(MathDsl::QuantitySpace), unit);
 }
 
 ConstantsWidget::ConstantsWidget(QWidget* parent)
@@ -188,13 +188,13 @@ void ConstantsWidget::filter()
 
         if (layoutDirection() == Qt::RightToLeft) {
             QString normalizedUnit = clist.at(k).unit;
-            normalizedUnit.replace(UnicodeChars::MiddleDot, OperatorChars::MulDotSign);
-            str << normalizedUnit + QChar(0x200e); // Unicode LRM
+            normalizedUnit.replace(UnicodeChars::MiddleDot, MathDsl::MulDotOp);
+            str << normalizedUnit + UnicodeChars::LeftToRightMark;
             str << radCh;
         } else {
             str << radCh;
             QString normalizedUnit = clist.at(k).unit;
-            normalizedUnit.replace(UnicodeChars::MiddleDot, OperatorChars::MulDotSign);
+            normalizedUnit.replace(UnicodeChars::MiddleDot, MathDsl::MulDotOp);
             str << normalizedUnit;
         }
 
@@ -215,16 +215,16 @@ void ConstantsWidget::filter()
             item->setData(0, Qt::UserRole, constantExpression(clist.at(k)));
 
             QString tip;
-            tip += QString(QChar(0x200E));
+            tip += QString(UnicodeChars::LeftToRightMark);
             tip += QString("<b>%1</b><br>%2")
                 .arg(clist.at(k).name, clist.at(k).value);
-            tip += QString(QChar(0x200E));
+            tip += QString(UnicodeChars::LeftToRightMark);
             if (!clist.at(k).unit.isEmpty())
                 tip.append(" ").append(QString(clist.at(k).unit).replace(
-                    UnicodeChars::MiddleDot, OperatorChars::MulDotSign));
+                    UnicodeChars::MiddleDot, MathDsl::MulDotOp));
             if (radixChar != '.')
                 tip.replace('.', radixChar);
-            tip += QString(QChar(0x200E));
+            tip += QString(UnicodeChars::LeftToRightMark);
             item->setToolTip(0, tip);
             item->setToolTip(1, tip);
             item->setToolTip(2, tip);

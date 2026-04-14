@@ -25,7 +25,7 @@
 #include "core/numberformatter.h"
 #include "core/regexpatterns.h"
 #include "core/unicodechars.h"
-#include "math/operatorchars.h"
+#include "core/mathdsl.h"
 
 namespace DisplayFormatUtils {
 
@@ -39,7 +39,7 @@ struct ArrowRange
 
 ArrowRange findConversionArrow(const QString& text)
 {
-    const int unicodeArrowPos = text.indexOf(UnicodeChars::RightwardsArrow);
+    const int unicodeArrowPos = text.indexOf(MathDsl::TransOp);
     if (unicodeArrowPos >= 0)
         return {unicodeArrowPos, 1};
 
@@ -91,22 +91,22 @@ QString spacingForBinaryOperator(const Token& token, const QString& operatorText
     const Token::Operator op = token.asOperator();
     switch (op) {
     case Token::Addition:
-        return QString(OperatorChars::AdditionSpace)
-            + OperatorChars::AdditionSign
-            + OperatorChars::AdditionSpace;
+        return QString(MathDsl::AddWrap)
+            + MathDsl::AddOp
+            + MathDsl::AddWrap;
     case Token::Subtraction:
-        return QString(OperatorChars::SubtractionSpace)
-            + OperatorChars::SubtractionSign
-            + OperatorChars::SubtractionSpace;
+        return QString(MathDsl::SubWrap)
+            + MathDsl::SubOp
+            + MathDsl::SubWrap;
     case Token::Division:
-        return QString(OperatorChars::DivisionSpace)
-            + OperatorChars::DivisionSign
-            + OperatorChars::DivisionSpace;
+        return QString(MathDsl::DivWrap)
+            + MathDsl::DivOp
+            + MathDsl::DivWrap;
     case Token::Multiplication: {
-        const bool useCrossSign = operatorText == QString(OperatorChars::MulCrossSign)
+        const bool useCrossSign = operatorText == QString(MathDsl::MulCrossOp)
             || operatorText == QStringLiteral("*");
-        const QChar sign = useCrossSign ? OperatorChars::MulCrossSign : OperatorChars::MulDotSign;
-        const QChar space = useCrossSign ? OperatorChars::MulCrossSpace : OperatorChars::MulDotSpace;
+        const QChar sign = useCrossSign ? MathDsl::MulCrossOp : MathDsl::MulDotOp;
+        const QChar space = useCrossSign ? MathDsl::MulCrossWrap : MathDsl::MulDotWrap;
         return QString(space) + sign + space;
     }
     default:
@@ -119,15 +119,15 @@ QString signForUnitOperator(const Token& token, const QString& operatorText)
     const Token::Operator op = token.asOperator();
     switch (op) {
     case Token::Addition:
-        return QString(OperatorChars::AdditionSign);
+        return QString(MathDsl::AddOp);
     case Token::Subtraction:
-        return QString(OperatorChars::SubtractionSign);
+        return QString(MathDsl::SubOp);
     case Token::Division:
-        return QString(OperatorChars::DivisionSign);
+        return QString(MathDsl::DivOp);
     case Token::Multiplication:
-        return operatorText == QString(OperatorChars::MulCrossSign)
-            ? QString(OperatorChars::MulCrossSign)
-            : QString(OperatorChars::MulDotSign);
+        return operatorText == QString(MathDsl::MulCrossOp)
+            ? QString(MathDsl::MulCrossOp)
+            : QString(MathDsl::MulDotOp);
     default:
         return token.text();
     }
@@ -153,7 +153,7 @@ QString compactCompositeUnitSpacing(QString text)
         pos = open + segment.size() + 2;
     }
 
-    const int arrow = text.indexOf(UnicodeChars::RightwardsArrow);
+    const int arrow = text.indexOf(MathDsl::TransOp);
     if (arrow >= 0) {
         int rhsStart = arrow + 1;
         while (rhsStart < text.size() && text.at(rhsStart).isSpace())
@@ -243,18 +243,18 @@ QString applyOperatorSpacingForDisplay(const QString& input)
     output += input.mid(lastPos);
 
     auto isUnitOp = [](QChar ch) {
-        return ch == OperatorChars::MulDotSign
-            || ch == OperatorChars::MulCrossSign
-            || ch == OperatorChars::DivisionSign;
+        return ch == MathDsl::MulDotOp
+            || ch == MathDsl::MulCrossOp
+            || ch == MathDsl::DivOp;
     };
     auto isUnitLike = [](QChar ch) {
         return ch.isLetter()
             || ch == QLatin1Char('_')
             || ch == UnicodeChars::MicroSign
             || ch == UnicodeChars::GreekCapitalOmega
-            || ch == QChar(0x00B0) // °
-            || ch == QChar(0x207B) // ⁻
-            || (ch.unicode() >= 0x2070 && ch.unicode() <= 0x2079) // ⁰..⁹
+            || ch == UnicodeChars::DegreeSign // °
+            || ch == MathDsl::PowNeg // ⁻
+            || MathDsl::isSuperscriptDigit(ch)
             || ch == QLatin1Char('(')
             || ch == QLatin1Char(')')
             || ch == QLatin1Char('[')
@@ -314,10 +314,10 @@ QString applyValueUnitSpacingForDisplay(const QString& input)
                     --i;
                 if (i >= 0 && output.at(i).isDigit()) {
                     output.truncate(i + 1);
-                    output += OperatorChars::ValueUnitSpace;
+                    output += MathDsl::QuantitySpace;
                 }
             } else if (output.back().isDigit()) {
-                output += OperatorChars::ValueUnitSpace;
+                output += MathDsl::QuantitySpace;
             }
         }
         output += ch;

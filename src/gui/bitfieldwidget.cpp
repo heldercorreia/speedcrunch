@@ -19,6 +19,7 @@
 
 #include "bitfieldwidget.h"
 
+#include "core/mathdsl.h"
 #include "math/quantity.h"
 
 #include <cmath>
@@ -304,7 +305,7 @@ void BitFieldWidget::onBitChanged()
 
     QRegularExpression leadingZerosPattern(QString("^0{,%1}").arg(NumberOfBits - 1));
     expression.remove(leadingZerosPattern);
-    expression.prepend("0b");
+    expression.prepend(MathDsl::BinPrefix);
 
     emit bitsChanged(expression);
 }

@@ -23,6 +23,8 @@
 
 namespace RegExpPatterns {
 
+// Matches one standalone numeric token (decimal, hex, octal, or binary).
+// Example input/output: "x = 0xFF" -> match "0xFF"; "abc123def" -> no standalone match.
 inline const QRegularExpression& numericToken()
 {
     static const QRegularExpression pattern(
@@ -30,6 +32,8 @@ inline const QRegularExpression& numericToken()
     return pattern;
 }
 
+// Matches a full string that is a signed numeric literal with optional spaces.
+// Example input/output: "  - 1.23e4  " -> match; "1 + 2" -> no match.
 inline const QRegularExpression& signedNumericLiteralWithSpaces()
 {
     static const QRegularExpression pattern(
@@ -37,18 +41,24 @@ inline const QRegularExpression& signedNumericLiteralWithSpaces()
     return pattern;
 }
 
+// Matches an exponent suffix at the end of a decimal literal.
+// Example input/output: "1.2e-3" -> match "e-3"; "1.2e" -> no match.
 inline const QRegularExpression& decimalExponentSuffix()
 {
     static const QRegularExpression pattern(QStringLiteral("[eE][+\\-]?\\d+$"));
     return pattern;
 }
 
+// Matches radix separators accepted by parser helpers ('.' or ',').
+// Example input/output: "12,34" -> match ","; "1234" -> no match.
 inline const QRegularExpression& radixSeparator()
 {
     static const QRegularExpression pattern(QStringLiteral("[\\.,]"));
     return pattern;
 }
 
+// Matches any Unicode line-break character handled by the editor/parser.
+// Example input/output: "a\nb" -> match "\n"; "ab" -> no match.
 inline const QRegularExpression& lineBreak()
 {
     static const QRegularExpression pattern(
@@ -57,6 +67,8 @@ inline const QRegularExpression& lineBreak()
     return pattern;
 }
 
+// Matches a token separator (characters not allowed in expression tokens).
+// Example input/output: "a@b" -> match "@"; "a+b" -> no match.
 inline const QRegularExpression& separatorToken()
 {
     static const QRegularExpression pattern(
@@ -66,6 +78,8 @@ inline const QRegularExpression& separatorToken()
     return pattern;
 }
 
+// Matches a trigonometric function call start, case-insensitive.
+// Example input/output: "Sin (x)" -> match "Sin ("; "sinh(x)" -> no match.
 inline const QRegularExpression& trigFunctionCall()
 {
     static const QRegularExpression pattern(
@@ -74,6 +88,8 @@ inline const QRegularExpression& trigFunctionCall()
     return pattern;
 }
 
+// Matches a full expression that is one plain function call.
+// Example input/output: " f(x+1) " -> match; "f(x)+g(x)" -> no match.
 inline const QRegularExpression& trivialSingleFunctionCall()
 {
     static const QRegularExpression pattern(
@@ -83,30 +99,40 @@ inline const QRegularExpression& trivialSingleFunctionCall()
     return pattern;
 }
 
+// Matches a full unsigned decimal integer.
+// Example input/output: "12345" -> match; "-123" -> no match.
 inline const QRegularExpression& unsignedDecimalInteger()
 {
     static const QRegularExpression pattern(QStringLiteral(R"(^\d+$)"));
     return pattern;
 }
 
+// Matches a full unsigned decimal number (integer or fixed-point).
+// Example input/output: "12.34" -> match; "+12.34" -> no match.
 inline const QRegularExpression& unsignedDecimalNumber()
 {
     static const QRegularExpression pattern(QStringLiteral(R"(^\d+(?:\.\d+)?$)"));
     return pattern;
 }
 
+// Matches a full signed decimal number.
+// Example input/output: "-12.34" -> match; "12e3" -> no match.
 inline const QRegularExpression& signedDecimalNumber()
 {
     static const QRegularExpression pattern(QStringLiteral(R"(^[+\-]?\d+(?:\.\d+)?$)"));
     return pattern;
 }
 
+// Matches decimals equivalent to integers, capturing whole and fractional parts.
+// Example input/output: "42.000" -> match groups ("42","000"); "42.01" -> match but not integer-equivalent by itself.
 inline const QRegularExpression& unsignedIntegerEquivalentDecimal()
 {
     static const QRegularExpression pattern(QStringLiteral(R"(^(\d+)\.(\d*)$)"));
     return pattern;
 }
 
+// Matches a simple unit identifier used by unit-token parsing.
+// Example input/output: "m2" -> match; "m/s" -> no match.
 inline const QRegularExpression& simpleUnitIdentifier()
 {
     static const QRegularExpression pattern(
@@ -114,10 +140,42 @@ inline const QRegularExpression& simpleUnitIdentifier()
     return pattern;
 }
 
+// Matches a simple quotient whose denominator is a parenthesized expression.
+// Example input/output: "2/(m s^-1)" -> match; "2/m/s" -> no match.
 inline const QRegularExpression& simpleParenthesizedDenominatorQuotient()
 {
     static const QRegularExpression pattern(
         QStringLiteral(R"(^\s*[+\-−]?\d+(?:\.\d+)?\s*/\s*\([^()]+\)\s*$)"));
+    return pattern;
+}
+
+// Matches the standalone word "summation", case-insensitive.
+// Example input/output: "summation(k)" -> match; "presummation" -> no match.
+inline const QRegularExpression& summationWord()
+{
+    static const QRegularExpression pattern(
+        QStringLiteral(R"((?<![\p{L}\p{N}_$])summation(?![\p{L}\p{N}_$]))"),
+        QRegularExpression::CaseInsensitiveOption);
+    return pattern;
+}
+
+// Matches the standalone word "sqrt", case-insensitive.
+// Example input/output: "sqrt(x)" -> match; "asqrtb" -> no match.
+inline const QRegularExpression& sqrtWord()
+{
+    static const QRegularExpression pattern(
+        QStringLiteral(R"((?<![\p{L}\p{N}_$])sqrt(?![\p{L}\p{N}_$]))"),
+        QRegularExpression::CaseInsensitiveOption);
+    return pattern;
+}
+
+// Matches the standalone word "cbrt", case-insensitive.
+// Example input/output: "cbrt(x)" -> match; "mycbrtfn" -> no match.
+inline const QRegularExpression& cbrtWord()
+{
+    static const QRegularExpression pattern(
+        QStringLiteral(R"((?<![\p{L}\p{N}_$])cbrt(?![\p{L}\p{N}_$]))"),
+        QRegularExpression::CaseInsensitiveOption);
     return pattern;
 }
 

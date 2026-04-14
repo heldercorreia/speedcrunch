@@ -26,14 +26,14 @@ namespace DisplayFormatUtils {
 /*
    Display spacing rules (single source of truth)
    ----------------------------------------------
-   Operator sign constants come from OperatorChars.
+   Operator sign constants come from MathDsl.
 
    1) Arithmetic expression operators
-      - use OperatorChars::AdditionSpace around AdditionSign
-      - use OperatorChars::SubtractionSpace around SubtractionSign
-      - use OperatorChars::DivisionSpace around DivisionSign
-      - use OperatorChars::MulDotSpace around MulDotSign
-      - use OperatorChars::MulCrossSpace around MulCrossSign
+      - use MathDsl::AddWrap around AdditionSign
+      - use MathDsl::SubtractionSpace around SubtractionSign
+      - use MathDsl::DivWrap around DivisionSign
+      - use MathDsl::MulDotWrap around MulDotSign
+      - use MathDsl::MulCrossWrap around MulCrossSign
 
       Examples:
       - 2 + 3 + 4
@@ -43,7 +43,7 @@ namespace DisplayFormatUtils {
       - 2 × 3 × 4
 
    2) Number + unit pair
-      - Between numeric value and unit bracket use OperatorChars::ValueUnitSpace.
+      - Between numeric value and unit bracket use MathDsl::QuantitySpace.
       - Example: 2 [kg]
 
    3) Composite units

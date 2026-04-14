@@ -1,6 +1,6 @@
 // This file is part of the SpeedCrunch project
 // Copyright (C) 2015 Pol Welter <polwelter@gmail.com>
-// Copyright (C) 2016 @heldercorreia
+// Copyright (C) 2016-2026 @heldercorreia
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -21,10 +21,224 @@
 #define UNITS_H
 
 #include <QHash>
+#include <QList>
 #include <QMap>
-
 #include "math/quantity.h"
 #include "math/rational.h"
+
+class QString;
+class QStringView;
+class Rational;
+
+enum class UnitQuantity {
+    Unspecified,
+    Length,
+    Time,
+    Mass,
+    ElectricCurrent,
+    ThermodynamicTemperature,
+    AmountOfSubstance,
+    LuminousIntensity,
+    Information,
+    PlaneAngle,
+    SolidAngle,
+    Frequency,
+    Force,
+    Pressure,
+    Stress,
+    Energy,
+    Work,
+    AmountOfHeat,
+    Power,
+    RadiantFlux,
+    ElectricCharge,
+    ElectricPotentialDifference,
+    Capacitance,
+    ElectricResistance,
+    ElectricConductance,
+    MagneticFlux,
+    MagneticFluxDensity,
+    Inductance,
+    CelsiusTemperature,
+    LuminousFlux,
+    Illuminance,
+    ActivityReferredToARadionuclide,
+    AbsorbedDose,
+    Kerma,
+    DoseEquivalent,
+    CatalyticActivity,
+    Area,
+    Volume,
+    Speed,
+    Velocity,
+    DimensionlessRatio
+};
+
+enum class UnitId {
+    Unknown,
+    Second,
+    Metre,
+    Kilogram,
+    Ampere,
+    Kelvin,
+    Mole,
+    Candela,
+    Radian,
+    Steradian,
+    Hertz,
+    Newton,
+    Pascal,
+    Joule,
+    Watt,
+    Coulomb,
+    Volt,
+    Farad,
+    Ohm,
+    Siemens,
+    Weber,
+    Tesla,
+    Henry,
+    DegreeCelsius,
+    Lumen,
+    Lux,
+    Becquerel,
+    Gray,
+    Sievert,
+    Katal,
+    CubicMetre,
+    SquareMetre,
+    Minute,
+    Hour,
+    Day,
+    AstronomicalUnit,
+    Degree,
+    Arcminute,
+    Arcsecond,
+    Hectare,
+    Litre,
+    Tonne,
+    Dalton,
+    Electronvolt,
+    Acre,
+    Angstrom,
+    Atmosphere,
+    AtomicMassUnit,
+    Bar,
+    Bit,
+    BritishThermalUnit,
+    Byte,
+    Calorie,
+    Carat,
+    Cup,
+    DegreeFahrenheit,
+    ElementaryCharge,
+    Fathom,
+    FluidOunceUk,
+    FluidOunceUs,
+    Foot,
+    Furlong,
+    GallonUk,
+    GallonUs,
+    Gradian,
+    Grain,
+    Gram,
+    Hartley,
+    HartreeEnergyUnit,
+    Horsepower,
+    Inch,
+    Karat,
+    Knot,
+    Lightminute,
+    Lightsecond,
+    Lightyear,
+    LongTon,
+    Mile,
+    Nat,
+    NauticalMile,
+    Ounce,
+    Parsec,
+    PartsPerBillion,
+    PartsPerMillion,
+    PintUk,
+    PintUs,
+    Pound,
+    PoundsPerSqinch,
+    QuartUk,
+    QuartUs,
+    Rod,
+    ShortTon,
+    Tablespoon,
+    Teaspoon,
+    Torr,
+    Turn,
+    Week,
+    Yard,
+    YearJulian,
+    YearSidereal,
+    YearTropical
+};
+
+enum class UnitPhraseId {
+    NewtonMetre,
+    WattSecond,
+    VoltSquaredAmpere,
+    JoulePerSquareMetre,
+    JoulePerCubicMetre
+};
+
+enum class PrefixId {
+    Quecto,
+    Ronto,
+    Yocto,
+    Zepto,
+    Atto,
+    Femto,
+    Pico,
+    Nano,
+    Micro,
+    Milli,
+    Centi,
+    Deci,
+    Deca,
+    Hecto,
+    Kilo,
+    Mega,
+    Giga,
+    Tera,
+    Peta,
+    Exa,
+    Zetta,
+    Yotta,
+    Ronna,
+    Quetta,
+    Kibi,
+    Mebi,
+    Gibi,
+    Tebi,
+    Pebi,
+    Exbi,
+    Zebi,
+    Yobi,
+    Robi,
+    Quebi,
+    Unknown
+};
+
+using UnitDimension = QMap<UnitQuantity, Rational>;
+
+QString unitQuantityDimensionKey(UnitQuantity quantity);
+bool unitQuantityFromDimensionKey(const QString& key, UnitQuantity* out);
+QString normalizeUnitName(const QString& name);
+UnitId unitId(const QString& normalizedName);
+QString unitName(UnitId id);
+QString unitSymbol(UnitId id);
+bool isPreferredCanonicalDisplayUnit(UnitId id);
+QStringView unitPhrase(UnitPhraseId key);
+PrefixId prefixId(const QString& normalizedName);
+QString prefixName(PrefixId id);
+QString prefixSymbol(PrefixId id);
+const QList<PrefixId>& siPrefixIds();
+const QList<PrefixId>& binaryPrefixIds();
 
 struct Unit {
     QString name;
@@ -41,21 +255,18 @@ struct Unit {
 
 class Units {
 public:
-    enum NegativeExponentStyle {
-        NegativeExponentSuperscript = 0,
-        NegativeExponentFraction = 1
-    };
-
     static void findUnit(Quantity& q);
-    static void setNegativeExponentStyle(NegativeExponentStyle style);
-    static NegativeExponentStyle negativeExponentStyle();
-    static const QList<Unit> getList();
-    static QString shortDisplayName(const QString& name);
-    static QString formatUnitTokenForDisplay(const QString& token);
-    static QString normalizeUnitTextForDisplay(const QString& text);
+    static const QHash<QString, Quantity>& builtInUnitValues();
+    static QHash<QString, Quantity> builtInUnitLookup(char angleMode);
+    static bool isAffineUnitName(const QString& unitName);
+    static bool tryConvertAffineToBase(const QString& unitName,
+                                       const HNumber& value,
+                                       HNumber* baseValueOut);
+    static bool isExplicitAngleUnitName(const QString& unitName);
+    static bool tryConvertExplicitAngleToRadians(Quantity* angle);
 
     // Base SI units.
-    static const Quantity meter();
+    static const Quantity metre();
     static const Quantity second();
     static const Quantity kilogram();
     static const Quantity ampere();
@@ -106,10 +317,16 @@ public:
     static const Quantity quebi();
 
     // Derived SI units.
-    static const Quantity sqmeter();
-    static const Quantity cbmeter();
+    static const Quantity square_metre();
+    static const Quantity cubic_metre();
     static const Quantity newton();
     static const Quantity hertz();
+    static const Quantity radian();
+    static const Quantity degree();
+    static const Quantity gradian();
+    static const Quantity turn();
+    static const Quantity arcminute();
+    static const Quantity arcsecond();
     static const Quantity steradian();
     static const Quantity pascal();
     static const Quantity joule();
@@ -130,9 +347,8 @@ public:
     static const Quantity katal();
 
     // Derived from SI units.
-
     // Mass.
-    static const Quantity metric_ton();
+    static const Quantity tonne();
     static const Quantity short_ton();
     static const Quantity long_ton();
     static const Quantity pound();
@@ -141,8 +357,6 @@ public:
     static const Quantity gram();
     static const Quantity atomic_mass_unit();
     static const Quantity carat();
-
-
     // Distance/length.
     static const Quantity micron();
     static const Quantity angstrom();
@@ -162,13 +376,11 @@ public:
     static const Quantity fathom();
     static const Quantity nautical_mile();
     static const Quantity cable();
-
     // Area.
     static const Quantity are();
     static const Quantity hectare();
     static const Quantity decare();
     static const Quantity acre();
-
     // Volume.
     static const Quantity US_gallon();
     static const Quantity UK_gallon();
@@ -178,8 +390,7 @@ public:
     static const Quantity UK_pint();
     static const Quantity US_fluid_ounce();
     static const Quantity UK_fluid_ounce();
-    static const Quantity liter();
-
+    static const Quantity litre();
     // Time.
     static const Quantity minute();
     static const Quantity hour();
@@ -189,31 +400,24 @@ public:
     static const Quantity julian_year();
     static const Quantity tropical_year();
     static const Quantity sidereal_year();
-
     // Concentration.
     static const Quantity percent();
     static const Quantity ppm();
     static const Quantity ppb();
     static const Quantity karat();
-
     // Pressure.
     static const Quantity bar();
     static const Quantity atmosphere();
     static const Quantity torr();
     static const Quantity pounds_per_sqinch();
-
     // Energy.
     static const Quantity electronvolt();
     static const Quantity calorie();
     static const Quantity british_thermal_unit();
-
-
     // Information.
     static const Quantity nat();
     static const Quantity hartley();
     static const Quantity byte();
-
-
     // Cooking.
     // Note: these again differ from US to UK, Australia, Japan, ...
     // Since for cooking generally not that high a precision is
@@ -221,9 +425,7 @@ public:
     static const Quantity tablespoon();
     static const Quantity teaspoon();
     static const Quantity cup();
-
     // Various others.
-    // TODO: Some of these are constants that should be moved once constants are also accessible via builtin names.
     static const Quantity gravity();
     static const Quantity speed_of_light();
     static const Quantity elementary_charge();
@@ -234,9 +436,8 @@ public:
 private:
     static void pushUnit(Quantity q, QString name);
     static void clearCache() { m_cache.clear(); }
-    static QHash<QMap<QString, Rational>, Unit> m_matchLookup;
+    static QHash<QMap<UnitQuantity, Rational>, Unit> m_matchLookup;
     static QMap<QString, Quantity> m_cache;
-    static NegativeExponentStyle m_negativeExponentStyle;
     static void initTable();
 };
 

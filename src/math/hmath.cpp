@@ -25,6 +25,7 @@
 #include "floatconvert.h"
 #include "floathmath.h"
 #include "rational.h"
+#include "core/mathdsl.h"
 
 #include <QMap>
 #include <QString>
@@ -779,15 +780,15 @@ QString applyIntegerPadding(const QString& input, int base, int paddedBits)
     switch (base) {
     case 2:
         bitsPerDigit = 1;
-        prefix = QStringLiteral("0b");
+        prefix = MathDsl::BinPrefix;
         break;
     case 8:
         bitsPerDigit = 3;
-        prefix = QStringLiteral("0o");
+        prefix = MathDsl::OctPrefix;
         break;
     case 16:
         bitsPerDigit = 4;
-        prefix = QStringLiteral("0x");
+        prefix = MathDsl::HexPrefix;
         break;
     default:
         return input;

@@ -11,7 +11,7 @@
 #include "core/evaluator.h"
 #include "core/settings.h"
 #include "core/unicodechars.h"
-#include "math/operatorchars.h"
+#include "core/mathdsl.h"
 
 #include <QApplication>
 #include <QInputMethodEvent>
@@ -65,7 +65,7 @@ private slots:
     void accepts_degree_alias_in_unit_brackets_and_normalizes_to_degree_sign();
     void offers_unit_completion_for_degree_symbol_in_unit_context();
     void unit_context_completion_includes_angle_units_and_long_forms();
-    void completes_are_unit_to_short_form_in_unit_context();
+    void completes_binary_prefixed_information_unit_to_short_form_in_unit_context();
     void completes_day_unit_to_short_form_in_unit_context();
     void completes_hour_unit_to_short_form_in_unit_context();
     void completes_affine_temperature_units_in_unit_context();
@@ -87,7 +87,7 @@ void TestEditorUi::blocks_consecutive_plus()
 
     QTest::keyClick(&editor, Qt::Key_Plus, Qt::NoModifier);
     const QString afterFirstPlus = editor.text();
-    QVERIFY(afterFirstPlus.contains(OperatorChars::AdditionSign));
+    QVERIFY(afterFirstPlus.contains(MathDsl::AddOp));
 
     QTest::keyClick(&editor, Qt::Key_Plus, Qt::NoModifier);
     QCOMPARE(editor.text(), afterFirstPlus);
@@ -161,24 +161,24 @@ void TestEditorUi::blocks_leading_operators_when_auto_ans_is_off_except_configur
     QTest::keyClick(&editor, Qt::Key_Plus, Qt::NoModifier);
     QCOMPARE(editor.document()->toRawText(), QString());
     resetEmpty();
-    sendTextKey(QString(OperatorChars::AdditionSign));
+    sendTextKey(QString(MathDsl::AddOp));
     QCOMPARE(editor.document()->toRawText(), QString());
 
     resetEmpty();
     QTest::keyClick(&editor, Qt::Key_Asterisk, Qt::NoModifier);
     QCOMPARE(editor.document()->toRawText(), QString());
     resetEmpty();
-    sendTextKey(QString(OperatorChars::MulCrossSign));
+    sendTextKey(QString(MathDsl::MulCrossOp));
     QCOMPARE(editor.document()->toRawText(), QString());
     resetEmpty();
-    sendTextKey(QString(OperatorChars::MulDotSign));
+    sendTextKey(QString(MathDsl::MulDotOp));
     QCOMPARE(editor.document()->toRawText(), QString());
 
     resetEmpty();
     QTest::keyClick(&editor, Qt::Key_Slash, Qt::NoModifier);
     QCOMPARE(editor.document()->toRawText(), QString());
     resetEmpty();
-    sendTextKey(QString(OperatorChars::DivisionSign));
+    sendTextKey(QString(MathDsl::DivOp));
     QCOMPARE(editor.document()->toRawText(), QString());
 
     resetEmpty();
@@ -204,10 +204,10 @@ void TestEditorUi::blocks_leading_operators_when_auto_ans_is_off_except_configur
     QTest::keyClick(&editor, Qt::Key_Minus, Qt::NoModifier);
     QCOMPARE(editor.document()->toRawText(), afterFirstLeadingMinus);
     resetEmpty();
-    sendTextKey(QString(OperatorChars::SubtractionSign));
+    sendTextKey(QString(MathDsl::SubOp));
     QVERIFY(!editor.document()->toRawText().isEmpty());
     const QString afterFirstLeadingMinusByImeBase = editor.document()->toRawText();
-    sendImeCommit(QString(OperatorChars::SubtractionSign));
+    sendImeCommit(QString(MathDsl::SubOp));
     QCOMPARE(editor.document()->toRawText(), afterFirstLeadingMinusByImeBase);
 
     resetEmpty();
@@ -334,7 +334,7 @@ void TestEditorUi::inserts_value_unit_space_brackets_after_number_or_symbol()
     QApplication::sendEvent(&editor, &bracketByText);
 
     const QString actualAfterNumber = editor.document()->toRawText();
-    QCOMPARE(actualAfterNumber, QStringLiteral("2") + QString(OperatorChars::ValueUnitSpace) + QStringLiteral("[]"));
+    QCOMPARE(actualAfterNumber, QStringLiteral("2") + QString(MathDsl::QuantitySpace) + QStringLiteral("[]"));
 
     editor.setText(QString::fromUtf8("π"));
     editor.setCursorPosition(editor.text().size());
@@ -342,26 +342,26 @@ void TestEditorUi::inserts_value_unit_space_brackets_after_number_or_symbol()
     QApplication::sendEvent(&editor, &bracketByText);
 
     const QString actualAfterSymbol = editor.document()->toRawText();
-    QCOMPARE(actualAfterSymbol, QString::fromUtf8("π") + QString(OperatorChars::ValueUnitSpace) + QStringLiteral("[]"));
+    QCOMPARE(actualAfterSymbol, QString::fromUtf8("π") + QString(MathDsl::QuantitySpace) + QStringLiteral("[]"));
 
     editor.setText(QStringLiteral("2")
-                   + QString(OperatorChars::ValueUnitSpace)
+                   + QString(MathDsl::QuantitySpace)
                    + QStringLiteral("[m]")
-                   + QString(OperatorChars::MulDotSpace)
-                   + QString(OperatorChars::MulDotSign)
-                   + QString(OperatorChars::MulDotSpace)
+                   + QString(MathDsl::MulDotWrap)
+                   + QString(MathDsl::MulDotOp)
+                   + QString(MathDsl::MulDotWrap)
                    + QStringLiteral("(pi)"));
     editor.setCursorPosition(editor.text().size());
     QApplication::sendEvent(&editor, &bracketByText);
     QCOMPARE(editor.document()->toRawText(),
              QStringLiteral("2")
-                 + QString(OperatorChars::ValueUnitSpace)
+                 + QString(MathDsl::QuantitySpace)
                  + QStringLiteral("[m]")
-                 + QString(OperatorChars::MulDotSpace)
-                 + QString(OperatorChars::MulDotSign)
-                 + QString(OperatorChars::MulDotSpace)
+                 + QString(MathDsl::MulDotWrap)
+                 + QString(MathDsl::MulDotOp)
+                 + QString(MathDsl::MulDotWrap)
                  + QStringLiteral("(pi)")
-                 + QString(OperatorChars::ValueUnitSpace)
+                 + QString(MathDsl::QuantitySpace)
                  + QStringLiteral("[]"));
 
     editor.setText(QStringLiteral("2 [K] in "));
@@ -369,7 +369,7 @@ void TestEditorUi::inserts_value_unit_space_brackets_after_number_or_symbol()
     QApplication::sendEvent(&editor, &bracketByText);
     QCOMPARE(editor.document()->toRawText(),
              QStringLiteral("2 [K] in")
-                 + QString(OperatorChars::ValueUnitSpace)
+                 + QString(MathDsl::QuantitySpace)
                  + QStringLiteral("[]"));
 }
 
@@ -390,7 +390,7 @@ void TestEditorUi::ignores_space_on_empty_or_all_space_editor()
 
     const QString allSpaces =
         QStringLiteral(" ")
-        + QString(OperatorChars::ValueUnitSpace)
+        + QString(MathDsl::QuantitySpace)
         + QStringLiteral(" ");
     editor.setText(allSpaces);
     editor.setCursorPosition(editor.text().size());
@@ -524,13 +524,13 @@ void TestEditorUi::inserts_implicit_mul_sequence_before_open_paren_after_number_
     editor.setFocus();
 
     const QString mulDotSequence =
-        QString(OperatorChars::MulDotSpace)
-        + QString(OperatorChars::MulDotSign)
-        + QString(OperatorChars::MulDotSpace);
+        QString(MathDsl::MulDotWrap)
+        + QString(MathDsl::MulDotOp)
+        + QString(MathDsl::MulDotWrap);
     const QString mulCrossSequence =
-        QString(OperatorChars::MulCrossSpace)
-        + QString(OperatorChars::MulCrossSign)
-        + QString(OperatorChars::MulCrossSpace);
+        QString(MathDsl::MulCrossWrap)
+        + QString(MathDsl::MulCrossOp)
+        + QString(MathDsl::MulCrossWrap);
 
     auto typeOpenParenByText = [&editor]() {
         QKeyEvent openParenByText(
@@ -585,7 +585,7 @@ void TestEditorUi::does_not_insert_implicit_mul_for_zero_radix_prefix_letters()
 void TestEditorUi::allows_unit_conversion_tail_after_spaced_subtraction_operator()
 {
     // State: "1", then subtraction operator formatting.
-    // Action: type '>' via text-based key event.
+    // Action: type GreaterThanSign via text-based key event.
     // Expected: convert to spaced "→ []", cursor inside brackets, parser sees UnitConversion.
     Editor editor;
     editor.show();
@@ -597,19 +597,20 @@ void TestEditorUi::allows_unit_conversion_tail_after_spaced_subtraction_operator
     QTest::keyClick(&editor, Qt::Key_Minus, Qt::NoModifier);
 
     const QString afterMinus = editor.document()->toRawText();
-    QVERIFY(afterMinus.contains(OperatorChars::SubtractionSign));
+    QVERIFY(afterMinus.contains(MathDsl::SubOp));
 
-    QKeyEvent greaterByText(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QStringLiteral(">"));
+    QKeyEvent greaterByText(
+        QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QString(UnicodeChars::GreaterThanSign));
     QApplication::sendEvent(&editor, &greaterByText);
 
     const QString afterGreater = editor.document()->toRawText();
     const QString arrowSequence =
-        QString(OperatorChars::SubtractionSpace)
-        + QString(UnicodeChars::RightwardsArrow)
-        + QString(OperatorChars::SubtractionSpace)
+        QString(MathDsl::SubWrap)
+        + QString(MathDsl::TransOp)
+        + QString(MathDsl::SubWrap)
         + QStringLiteral("[]");
     QVERIFY(afterGreater.contains(arrowSequence));
-    QVERIFY(!afterGreater.contains(QLatin1Char('>')));
+    QVERIFY(!afterGreater.contains(UnicodeChars::GreaterThanSign));
     QCOMPARE(editor.textCursor().position(), afterGreater.size() - 1);
 
     const Tokens tokens = Evaluator::instance()->scan(afterGreater);
@@ -637,14 +638,14 @@ void TestEditorUi::inserts_unit_conversion_with_placeholder_when_typing_arrow_sy
     editor.setCursorPosition(editor.text().size());
 
     QKeyEvent rightArrowByText(
-        QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QString(UnicodeChars::RightwardsArrow));
+        QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QString(MathDsl::TransOp));
     QApplication::sendEvent(&editor, &rightArrowByText);
 
     const QString expected =
         QStringLiteral("1")
-        + QString(OperatorChars::SubtractionSpace)
-        + QString(UnicodeChars::RightwardsArrow)
-        + QString(OperatorChars::SubtractionSpace)
+        + QString(MathDsl::SubWrap)
+        + QString(MathDsl::TransOp)
+        + QString(MathDsl::SubWrap)
         + QStringLiteral("[]");
     QCOMPARE(editor.document()->toRawText(), expected);
     QCOMPARE(editor.textCursor().position(), expected.size() - 1);
@@ -661,9 +662,9 @@ void TestEditorUi::treats_spaced_unit_conversion_as_atomic_navigation_and_edit_t
     editor.setFocus();
 
     const QString arrowToken =
-        QString(OperatorChars::SubtractionSpace)
-        + QString(UnicodeChars::RightwardsArrow)
-        + QString(OperatorChars::SubtractionSpace);
+        QString(MathDsl::SubWrap)
+        + QString(MathDsl::TransOp)
+        + QString(MathDsl::SubWrap);
     const QString expression = QStringLiteral("1") + arrowToken + QStringLiteral("2");
 
     editor.setText(expression);
@@ -826,7 +827,7 @@ void TestEditorUi::ignores_space_right_after_spaced_unit_conversion_operator()
     QTest::keyClick(&editor, Qt::Key_Space, Qt::NoModifier);
     QCOMPARE(editor.document()->toRawText(),
              beforeSpace.left(beforeSpace.size() - 1)
-                 + QString(OperatorChars::MulDotSign)
+                 + QString(MathDsl::MulDotOp)
                  + QStringLiteral("]"));
 }
 
@@ -849,14 +850,14 @@ void TestEditorUi::unit_bracket_context_accepts_div_mul_and_rejects_addition()
 
     QTest::keyClick(&editor, Qt::Key_Slash, Qt::NoModifier);
     const QString afterSlash = editor.document()->toRawText();
-    QVERIFY(afterSlash.contains(OperatorChars::DivisionSign));
+    QVERIFY(afterSlash.contains(MathDsl::DivOp));
 
     editor.setText(QStringLiteral("[m"));
     editor.setCursorPosition(editor.text().size());
     QTest::keyClick(&editor, Qt::Key_Asterisk, Qt::NoModifier);
     const QString afterMul = editor.document()->toRawText();
-    QVERIFY(afterMul.contains(OperatorChars::MulCrossSign)
-            || afterMul.contains(OperatorChars::MulDotSign));
+    QVERIFY(afterMul.contains(MathDsl::MulCrossOp)
+            || afterMul.contains(MathDsl::MulDotOp));
 }
 
 void TestEditorUi::unit_bracket_context_allows_letter_after_middle_dot()
@@ -921,7 +922,7 @@ void TestEditorUi::unit_bracket_context_allows_digits_and_minus_only_in_exponent
     editor.setText(QStringLiteral("[m^"));
     editor.setCursorPosition(editor.text().size());
     QTest::keyClicks(&editor, QStringLiteral("2"));
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m") + QChar(0x00B2));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m") + MathDsl::Pow2);
 
     editor.setText(QStringLiteral("[m^"));
     editor.setCursorPosition(editor.text().size());
@@ -950,26 +951,26 @@ void TestEditorUi::unit_bracket_context_allows_digits_and_minus_only_in_exponent
     editor.setCursorPosition(editor.text().size());
     QTest::keyClick(&editor, Qt::Key_Space, Qt::NoModifier);
     QCOMPARE(editor.document()->toRawText(),
-             QStringLiteral("[m") + QChar(0x00B2) + QString(OperatorChars::MulDotSign));
+             QStringLiteral("[m") + MathDsl::Pow2 + QString(MathDsl::MulDotOp));
 
-    editor.setText(QStringLiteral("[s") + QChar(0x00B2));
+    editor.setText(QStringLiteral("[s") + MathDsl::Pow2);
     editor.setCursorPosition(editor.text().size());
     QTest::keyClick(&editor, Qt::Key_Space, Qt::NoModifier);
     QCOMPARE(editor.document()->toRawText(),
-             QStringLiteral("[s") + QChar(0x00B2) + QString(OperatorChars::MulDotSign));
+             QStringLiteral("[s") + MathDsl::Pow2 + QString(MathDsl::MulDotOp));
 
     editor.setText(QStringLiteral("[m^2"));
     editor.setCursorPosition(editor.text().size());
     QKeyEvent slashAfterPlainExponent(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QStringLiteral("/"));
     QApplication::sendEvent(&editor, &slashAfterPlainExponent);
     QCOMPARE(editor.document()->toRawText(),
-             QStringLiteral("[m") + QChar(0x00B2) + QString(OperatorChars::DivisionSign));
+             QStringLiteral("[m") + MathDsl::Pow2 + QString(MathDsl::DivOp));
 
     editor.setText(QStringLiteral("[m^2"));
     editor.setCursorPosition(editor.text().size());
     QTest::keyClick(&editor, Qt::Key_Asterisk, Qt::NoModifier);
     QCOMPARE(editor.document()->toRawText(),
-             QStringLiteral("[m") + QChar(0x00B2) + QString(OperatorChars::MulDotSign));
+             QStringLiteral("[m") + MathDsl::Pow2 + QString(MathDsl::MulDotOp));
 
     editor.setText(QStringLiteral("[m^2"));
     editor.setCursorPosition(editor.text().size());
@@ -985,7 +986,7 @@ void TestEditorUi::unit_bracket_context_allows_digits_and_minus_only_in_exponent
     editor.setCursorPosition(editor.text().size());
     QTest::keyClick(&editor, Qt::Key_ParenLeft, Qt::NoModifier);
     QCOMPARE(editor.document()->toRawText(),
-             QStringLiteral("[m") + QString(OperatorChars::MulDotSign) + QStringLiteral("()"));
+             QStringLiteral("[m") + QString(MathDsl::MulDotOp) + QStringLiteral("()"));
 
     editor.setText(QStringLiteral("[m"));
     editor.setCursorPosition(editor.text().size());
@@ -1003,7 +1004,7 @@ void TestEditorUi::unit_bracket_context_allows_digits_and_minus_only_in_exponent
     editor.setCursorPosition(editor.text().size());
     QKeyEvent closeBracketAfterExponent(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QStringLiteral("]"));
     QApplication::sendEvent(&editor, &closeBracketAfterExponent);
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[s") + QChar(0x00B2) + QChar(0x00B2) + QChar(0x00B2) + QStringLiteral("]"));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[s") + MathDsl::Pow2 + MathDsl::Pow2 + MathDsl::Pow2 + QStringLiteral("]"));
 
     editor.setText(QStringLiteral("[m]"));
     editor.setCursorPosition(editor.text().size());
@@ -1016,27 +1017,27 @@ void TestEditorUi::unit_bracket_context_allows_digits_and_minus_only_in_exponent
     QTest::keyClick(&editor, Qt::Key_ParenLeft, Qt::NoModifier);
     QCOMPARE(editor.document()->toRawText(),
              QStringLiteral("[m]")
-                 + QString(OperatorChars::MulDotSpace)
-                 + QString(OperatorChars::MulDotSign)
-                 + QString(OperatorChars::MulDotSpace)
+                 + QString(MathDsl::MulDotWrap)
+                 + QString(MathDsl::MulDotOp)
+                 + QString(MathDsl::MulDotWrap)
                  + QStringLiteral("()"));
 
     editor.setText(QStringLiteral("[]")
-                   + QString(OperatorChars::MulDotSpace)
-                   + QString(OperatorChars::MulDotSign)
-                   + QString(OperatorChars::MulDotSpace)
+                   + QString(MathDsl::MulDotWrap)
+                   + QString(MathDsl::MulDotOp)
+                   + QString(MathDsl::MulDotWrap)
                    + QStringLiteral("()"));
     editor.setCursorPosition(editor.text().size());
     QTest::keyClick(&editor, Qt::Key_ParenLeft, Qt::NoModifier);
     QCOMPARE(editor.document()->toRawText(),
              QStringLiteral("[]")
-                 + QString(OperatorChars::MulDotSpace)
-                 + QString(OperatorChars::MulDotSign)
-                 + QString(OperatorChars::MulDotSpace)
+                 + QString(MathDsl::MulDotWrap)
+                 + QString(MathDsl::MulDotOp)
+                 + QString(MathDsl::MulDotWrap)
                  + QStringLiteral("()")
-                 + QString(OperatorChars::MulDotSpace)
-                 + QString(OperatorChars::MulDotSign)
-                 + QString(OperatorChars::MulDotSpace)
+                 + QString(MathDsl::MulDotWrap)
+                 + QString(MathDsl::MulDotOp)
+                 + QString(MathDsl::MulDotWrap)
                  + QStringLiteral("()"));
 
     editor.setText(QStringLiteral("[m^(2"));
@@ -1052,24 +1053,24 @@ void TestEditorUi::unit_bracket_context_allows_digits_and_minus_only_in_exponent
     editor.setText(QStringLiteral("[m^"));
     editor.setCursorPosition(editor.text().size());
     QTest::keyClick(&editor, Qt::Key_Minus, Qt::NoModifier);
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m") + QChar(0x207B));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m") + MathDsl::PowNeg);
 
     editor.setText(QStringLiteral("[m^("));
     editor.setCursorPosition(editor.text().size());
     QTest::keyClick(&editor, Qt::Key_Minus, Qt::NoModifier);
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m^(") + QString(OperatorChars::SubtractionSign));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m^(") + QString(MathDsl::SubOp));
 
-    editor.setText(QStringLiteral("[m") + QChar(0x207B));
+    editor.setText(QStringLiteral("[m") + MathDsl::PowNeg);
     editor.setCursorPosition(editor.text().size());
     QTest::keyClicks(&editor, QStringLiteral("2"));
     QCOMPARE(editor.document()->toRawText(),
-             QStringLiteral("[m") + QChar(0x207B) + QChar(0x00B2));
+             QStringLiteral("[m") + MathDsl::PowNeg + MathDsl::Pow2);
 
-    editor.setText(QStringLiteral("[m^(") + QString(OperatorChars::SubtractionSign));
+    editor.setText(QStringLiteral("[m^(") + QString(MathDsl::SubOp));
     editor.setCursorPosition(editor.text().size());
     QTest::keyClicks(&editor, QStringLiteral("2"));
     QCOMPARE(editor.document()->toRawText(),
-             QStringLiteral("[m^(") + QString(OperatorChars::SubtractionSign) + QStringLiteral("2"));
+             QStringLiteral("[m^(") + QString(MathDsl::SubOp) + QStringLiteral("2"));
 
     editor.setText(QStringLiteral("[m^(1"));
     editor.setCursorPosition(editor.text().size());
@@ -1085,55 +1086,55 @@ void TestEditorUi::unit_bracket_context_allows_digits_and_minus_only_in_exponent
     QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m^"));
 
     // m⁻/ -> reject slash right after signed exponent start.
-    editor.setText(QStringLiteral("[m") + QChar(0x207B));
+    editor.setText(QStringLiteral("[m") + MathDsl::PowNeg);
     editor.setCursorPosition(editor.text().size());
     QKeyEvent slashAfterSignedExponentStart(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QStringLiteral("/"));
     QApplication::sendEvent(&editor, &slashAfterSignedExponentStart);
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m") + QChar(0x207B));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m") + MathDsl::PowNeg);
 
-    editor.setText(QStringLiteral("[m^(") + QString(OperatorChars::SubtractionSign) + QStringLiteral("1"));
+    editor.setText(QStringLiteral("[m^(") + QString(MathDsl::SubOp) + QStringLiteral("1"));
     editor.setCursorPosition(editor.text().size());
     QKeyEvent slashByText2(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QStringLiteral("/"));
     QApplication::sendEvent(&editor, &slashByText2);
     QCOMPARE(editor.document()->toRawText(),
-             QStringLiteral("[m^(") + QString(OperatorChars::SubtractionSign) + QStringLiteral("1/"));
+             QStringLiteral("[m^(") + QString(MathDsl::SubOp) + QStringLiteral("1/"));
     QKeyEvent slashByText3(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QStringLiteral("/"));
     QApplication::sendEvent(&editor, &slashByText3);
     QCOMPARE(editor.document()->toRawText(),
-             QStringLiteral("[m^(") + QString(OperatorChars::SubtractionSign) + QStringLiteral("1/"));
+             QStringLiteral("[m^(") + QString(MathDsl::SubOp) + QStringLiteral("1/"));
 
     // m^2/3 -> reject digit after slash (non-parenthesized exponent).
     editor.setText(QStringLiteral("[m^2"));
     editor.setCursorPosition(editor.text().size());
     QKeyEvent slashByText4(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QStringLiteral("/"));
     QApplication::sendEvent(&editor, &slashByText4);
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m") + QChar(0x00B2) + QStringLiteral("/"));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m") + MathDsl::Pow2 + QStringLiteral("/"));
     QTest::keyClicks(&editor, QStringLiteral("s"));
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m") + QChar(0x00B2) + QStringLiteral("/s"));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m") + MathDsl::Pow2 + QStringLiteral("/s"));
 
     editor.setText(QStringLiteral("[m^3"));
     editor.setCursorPosition(editor.text().size());
     QKeyEvent slashByText4b(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QStringLiteral("/"));
     QApplication::sendEvent(&editor, &slashByText4b);
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m") + QChar(0x00B3) + QStringLiteral("/"));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m") + MathDsl::Pow3 + QStringLiteral("/"));
     QTest::keyClicks(&editor, QStringLiteral("s"));
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m") + QChar(0x00B3) + QStringLiteral("/s"));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m") + MathDsl::Pow3 + QStringLiteral("/s"));
 
     // m²·/ -> reject slash right after multiplication separator.
-    editor.setText(QStringLiteral("[m") + QChar(0x00B2) + QString(OperatorChars::MulDotSign));
+    editor.setText(QStringLiteral("[m") + MathDsl::Pow2 + QString(MathDsl::MulDotOp));
     editor.setCursorPosition(editor.text().size());
     QKeyEvent slashAfterMulDot(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QStringLiteral("/"));
     QApplication::sendEvent(&editor, &slashAfterMulDot);
     QCOMPARE(editor.document()->toRawText(),
-             QStringLiteral("[m") + QChar(0x00B2) + QString(OperatorChars::MulDotSign));
+             QStringLiteral("[m") + MathDsl::Pow2 + QString(MathDsl::MulDotOp));
 
     editor.setText(QStringLiteral("[m^2"));
     editor.setCursorPosition(editor.text().size());
     QKeyEvent slashByText4c(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QStringLiteral("/"));
     QApplication::sendEvent(&editor, &slashByText4c);
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m") + QChar(0x00B2) + QStringLiteral("/"));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m") + MathDsl::Pow2 + QStringLiteral("/"));
     QTest::keyClicks(&editor, QStringLiteral("3"));
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m") + QChar(0x00B2) + QStringLiteral("/"));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m") + MathDsl::Pow2 + QStringLiteral("/"));
 
     // m^/ + "/" -> trim invalid slash after exponent start.
     editor.setText(QStringLiteral("[m^/"));
@@ -1143,15 +1144,15 @@ void TestEditorUi::unit_bracket_context_allows_digits_and_minus_only_in_exponent
     QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m^"));
 
     // m^-2/3 -> reject digit after slash (non-parenthesized signed exponent).
-    editor.setText(QStringLiteral("[m^") + QString(OperatorChars::SubtractionSign) + QStringLiteral("2"));
+    editor.setText(QStringLiteral("[m^") + QString(MathDsl::SubOp) + QStringLiteral("2"));
     editor.setCursorPosition(editor.text().size());
     QKeyEvent slashByText5(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QStringLiteral("/"));
     QApplication::sendEvent(&editor, &slashByText5);
     QCOMPARE(editor.document()->toRawText(),
-             QStringLiteral("[m") + QChar(0x207B) + QChar(0x00B2) + QStringLiteral("/"));
+             QStringLiteral("[m") + MathDsl::PowNeg + MathDsl::Pow2 + QStringLiteral("/"));
     QTest::keyClicks(&editor, QStringLiteral("3"));
     QCOMPARE(editor.document()->toRawText(),
-             QStringLiteral("[m") + QChar(0x207B) + QChar(0x00B2) + QStringLiteral("/"));
+             QStringLiteral("[m") + MathDsl::PowNeg + MathDsl::Pow2 + QStringLiteral("/"));
 
     // m^(2/3 -> accept digit after slash (parenthesized exponent).
     editor.setText(QStringLiteral("[m^(2"));
@@ -1165,7 +1166,7 @@ void TestEditorUi::unit_bracket_context_allows_digits_and_minus_only_in_exponent
     QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m^(2/3"));
 
     // m².3 -> allow radix and following digits inside parenthesized exponent rewrite.
-    editor.setText(QStringLiteral("[m") + QChar(0x00B2));
+    editor.setText(QStringLiteral("[m") + MathDsl::Pow2);
     editor.setCursorPosition(editor.text().size());
     QTest::keyClick(&editor, Qt::Key_Period, Qt::NoModifier);
     QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m^(2.)"));
@@ -1177,24 +1178,24 @@ void TestEditorUi::unit_bracket_context_allows_digits_and_minus_only_in_exponent
              editor.document()->toRawText().size() - 1);
 
     // m^(-2/3 -> accept digit after slash (parenthesized signed exponent).
-    editor.setText(QStringLiteral("[m^(") + QString(OperatorChars::SubtractionSign) + QStringLiteral("2"));
+    editor.setText(QStringLiteral("[m^(") + QString(MathDsl::SubOp) + QStringLiteral("2"));
     editor.setCursorPosition(editor.text().size());
     QKeyEvent slashByText7(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QStringLiteral("/"));
     QApplication::sendEvent(&editor, &slashByText7);
     QCOMPARE(editor.document()->toRawText(),
-             QStringLiteral("[m^(") + QString(OperatorChars::SubtractionSign) + QStringLiteral("2/"));
+             QStringLiteral("[m^(") + QString(MathDsl::SubOp) + QStringLiteral("2/"));
     QTest::keyClicks(&editor, QStringLiteral("s"));
     QCOMPARE(editor.document()->toRawText(),
-             QStringLiteral("[m^(") + QString(OperatorChars::SubtractionSign) + QStringLiteral("2/"));
+             QStringLiteral("[m^(") + QString(MathDsl::SubOp) + QStringLiteral("2/"));
     QTest::keyClicks(&editor, QStringLiteral("3"));
     QCOMPARE(editor.document()->toRawText(),
-             QStringLiteral("[m^(") + QString(OperatorChars::SubtractionSign) + QStringLiteral("2/3"));
+             QStringLiteral("[m^(") + QString(MathDsl::SubOp) + QStringLiteral("2/3"));
 
     editor.setText(QStringLiteral("[m^(-2"));
     editor.setCursorPosition(editor.text().size());
     QTest::keyClicks(&editor, QStringLiteral("3"));
     QCOMPARE(editor.document()->toRawText(),
-             QStringLiteral("[m^(") + QString(OperatorChars::SubtractionSign) + QStringLiteral("23"));
+             QStringLiteral("[m^(") + QString(MathDsl::SubOp) + QStringLiteral("23"));
 
     editor.setText(QStringLiteral("[m"));
     editor.setCursorPosition(editor.text().size());
@@ -1222,23 +1223,23 @@ void TestEditorUi::unit_bracket_context_allows_digits_and_minus_only_in_exponent
     QApplication::sendEvent(&editor, &deadTildePreedit);
     QCOMPARE(editor.document()->toRawText(), QStringLiteral("[m"));
 
-    editor.setText(QStringLiteral("[s") + QChar(0x00B2));
+    editor.setText(QStringLiteral("[s") + MathDsl::Pow2);
     editor.setCursorPosition(editor.text().size());
     QTest::keyClicks(&editor, QStringLiteral("^"));
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[s") + QChar(0x00B2));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[s") + MathDsl::Pow2);
 
     editor.setText(QStringLiteral("2")
-                   + QString(OperatorChars::ValueUnitSpace)
+                   + QString(MathDsl::QuantitySpace)
                    + QStringLiteral("[m/s")
-                   + QString(OperatorChars::MulDotSign));
+                   + QString(MathDsl::MulDotOp));
     editor.setCursorPosition(editor.text().size());
     QKeyEvent deadCircumflexInUnitAfterDot(QEvent::KeyPress, Qt::Key_Dead_Circumflex, Qt::NoModifier);
     QApplication::sendEvent(&editor, &deadCircumflexInUnitAfterDot);
     QCOMPARE(editor.document()->toRawText(),
              QStringLiteral("2")
-                 + QString(OperatorChars::ValueUnitSpace)
+                 + QString(MathDsl::QuantitySpace)
                  + QStringLiteral("[m/s")
-                 + QString(OperatorChars::MulDotSign));
+                 + QString(MathDsl::MulDotOp));
 
     QList<QInputMethodEvent::Attribute> caretImeAttrs;
     QInputMethodEvent caretCommitAfterDot(QString(), caretImeAttrs);
@@ -1246,9 +1247,9 @@ void TestEditorUi::unit_bracket_context_allows_digits_and_minus_only_in_exponent
     QApplication::sendEvent(&editor, &caretCommitAfterDot);
     QCOMPARE(editor.document()->toRawText(),
              QStringLiteral("2")
-                 + QString(OperatorChars::ValueUnitSpace)
+                 + QString(MathDsl::QuantitySpace)
                  + QStringLiteral("[m/s")
-                 + QString(OperatorChars::MulDotSign));
+                 + QString(MathDsl::MulDotOp));
 
     QInputMethodEvent caretPreeditAfterDot(QString::fromUtf8("ˆ"), caretImeAttrs);
     QApplication::sendEvent(&editor, &caretPreeditAfterDot);
@@ -1257,23 +1258,23 @@ void TestEditorUi::unit_bracket_context_allows_digits_and_minus_only_in_exponent
     QApplication::sendEvent(&editor, &digitCommitAfterCaretPreedit);
     QCOMPARE(editor.document()->toRawText(),
              QStringLiteral("2")
-                 + QString(OperatorChars::ValueUnitSpace)
+                 + QString(MathDsl::QuantitySpace)
                  + QStringLiteral("[m/s")
-                 + QString(OperatorChars::MulDotSign));
+                 + QString(MathDsl::MulDotOp));
 
     editor.setText(QStringLiteral("2")
-                   + QString(OperatorChars::ValueUnitSpace)
+                   + QString(MathDsl::QuantitySpace)
                    + QStringLiteral("[m")
-                   + QChar(0x00B2)
+                   + MathDsl::Pow2
                    + QStringLiteral("/s"));
     editor.setCursorPosition(editor.text().size());
     QTest::keyClick(&editor, Qt::Key_Asterisk, Qt::NoModifier);
     QTest::keyClick(&editor, Qt::Key_Asterisk, Qt::NoModifier);
     QCOMPARE(editor.document()->toRawText(),
              QStringLiteral("2")
-                 + QString(OperatorChars::ValueUnitSpace)
+                 + QString(MathDsl::QuantitySpace)
                  + QStringLiteral("[m")
-                 + QChar(0x00B2)
+                 + MathDsl::Pow2
                  + QStringLiteral("/s^"));
 }
 
@@ -1287,26 +1288,26 @@ void TestEditorUi::converts_caret_exponents_to_superscripts_globally()
     editor.setText(QStringLiteral("s^"));
     editor.setCursorPosition(editor.text().size());
     QTest::keyClicks(&editor, QStringLiteral("2"));
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("s") + QChar(0x00B2));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("s") + MathDsl::Pow2);
 
     editor.setText(QStringLiteral("s^"));
     editor.setCursorPosition(editor.text().size());
     QTest::keyClick(&editor, Qt::Key_Minus, Qt::NoModifier);
     QTest::keyClicks(&editor, QStringLiteral("2"));
     QCOMPARE(editor.document()->toRawText(),
-             QStringLiteral("s") + QChar(0x207B) + QChar(0x00B2));
+             QStringLiteral("s") + MathDsl::PowNeg + MathDsl::Pow2);
 
     editor.setText(QStringLiteral("[s^"));
     editor.setCursorPosition(editor.text().size());
     QTest::keyClicks(&editor, QStringLiteral("2"));
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[s") + QChar(0x00B2));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[s") + MathDsl::Pow2);
 
     editor.setText(QStringLiteral("s"));
     editor.setCursorPosition(editor.text().size());
     QKeyEvent deadCircumflex(QEvent::KeyPress, Qt::Key_Dead_Circumflex, Qt::NoModifier);
     QApplication::sendEvent(&editor, &deadCircumflex);
     QTest::keyClicks(&editor, QStringLiteral("2"));
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("s") + QChar(0x00B2));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("s") + MathDsl::Pow2);
 
     editor.setText(QStringLiteral("s"));
     editor.setCursorPosition(editor.text().size());
@@ -1316,14 +1317,14 @@ void TestEditorUi::converts_caret_exponents_to_superscripts_globally()
     QInputMethodEvent imeDigitCommit(QString(), imeAttrs);
     imeDigitCommit.setCommitString(QStringLiteral("2"));
     QApplication::sendEvent(&editor, &imeDigitCommit);
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("s") + QChar(0x00B2));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("s") + MathDsl::Pow2);
 
-    editor.setText(QStringLiteral("s") + QChar(0x00B2));
+    editor.setText(QStringLiteral("s") + MathDsl::Pow2);
     editor.setCursorPosition(editor.text().size());
     QInputMethodEvent imeCaretCommit(QString(), imeAttrs);
     imeCaretCommit.setCommitString(QStringLiteral("^"));
     QApplication::sendEvent(&editor, &imeCaretCommit);
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("s") + QChar(0x00B2));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("s") + MathDsl::Pow2);
 }
 
 void TestEditorUi::rewrites_superscript_exponent_for_radix_and_inserts_mul_space_globally()
@@ -1455,7 +1456,7 @@ void TestEditorUi::blocks_dead_circumflex_key_after_multiplication_operator()
     editor.setFocus();
 
     editor.setText(QStringLiteral("3")
-                   + QString(OperatorChars::MulCrossSign)
+                   + QString(MathDsl::MulCrossOp)
                    + QStringLiteral(" "));
     editor.setCursorPosition(editor.text().size());
 
@@ -1464,7 +1465,7 @@ void TestEditorUi::blocks_dead_circumflex_key_after_multiplication_operator()
 
     QCOMPARE(editor.text(),
              QStringLiteral("3")
-                 + QString(OperatorChars::MulCrossSign)
+                 + QString(MathDsl::MulCrossOp)
                  + QStringLiteral(" "));
 }
 
@@ -1479,7 +1480,7 @@ void TestEditorUi::blocks_regular_caret_after_multiplication_operator()
     editor.setFocus();
 
     editor.setText(QStringLiteral("3")
-                   + QString(OperatorChars::MulCrossSign)
+                   + QString(MathDsl::MulCrossOp)
                    + QStringLiteral(" "));
     editor.setCursorPosition(editor.text().size());
 
@@ -1487,7 +1488,7 @@ void TestEditorUi::blocks_regular_caret_after_multiplication_operator()
 
     QCOMPARE(editor.text(),
              QStringLiteral("3")
-                 + QString(OperatorChars::MulCrossSign)
+                 + QString(MathDsl::MulCrossOp)
                  + QStringLiteral(" "));
 }
 
@@ -1543,7 +1544,7 @@ void TestEditorUi::blocks_ime_commit_caret_after_multiplication_operator()
     editor.setFocus();
 
     editor.setText(QStringLiteral("3")
-                   + QString(OperatorChars::MulCrossSign)
+                   + QString(MathDsl::MulCrossOp)
                    + QStringLiteral(" "));
     editor.setCursorPosition(editor.text().size());
 
@@ -1554,7 +1555,7 @@ void TestEditorUi::blocks_ime_commit_caret_after_multiplication_operator()
 
     QCOMPARE(editor.text(),
              QStringLiteral("3")
-                 + QString(OperatorChars::MulCrossSign)
+                 + QString(MathDsl::MulCrossOp)
                  + QStringLiteral(" "));
 }
 
@@ -1580,7 +1581,7 @@ void TestEditorUi::completes_replacing_trailing_identifier_after_superscript_pow
     QVERIFY(QTest::qWaitForWindowExposed(&editor));
     editor.setFocus();
 
-    editor.setText(QString::fromUtf8("pi²") + QString(OperatorChars::MulDotSign) + QStringLiteral("c"));
+    editor.setText(QString::fromUtf8("pi²") + QString(MathDsl::MulDotOp) + QStringLiteral("c"));
     editor.setCursorPosition(editor.text().size());
 
     QVERIFY(QMetaObject::invokeMethod(
@@ -1592,7 +1593,7 @@ void TestEditorUi::completes_replacing_trailing_identifier_after_superscript_pow
     QCOMPARE(
         editor.text(),
         QString::fromUtf8("pi²")
-            + QString(OperatorChars::MulDotSign)
+            + QString(MathDsl::MulDotOp)
             + QStringLiteral("cos()"));
 }
 
@@ -1671,25 +1672,31 @@ void TestEditorUi::unit_context_completion_includes_angle_units_and_long_forms()
     QVERIFY(turnChoices.contains(QStringLiteral("turn:Unit")));
 
     const QStringList gradChoices = editor.matchFragment(QStringLiteral("grad"), true);
-    QVERIFY(gradChoices.contains(QStringLiteral("grad:Unit")));
     QVERIFY(gradChoices.contains(QStringLiteral("gradian:Unit")));
+
+    const QStringList gonChoices = editor.matchFragment(QStringLiteral("gon"), true);
+    QVERIFY(gonChoices.contains(QStringLiteral("gon:Unit")));
 }
 
-void TestEditorUi::completes_are_unit_to_short_form_in_unit_context()
+void TestEditorUi::completes_binary_prefixed_information_unit_to_short_form_in_unit_context()
 {
     Editor editor;
     editor.show();
     QVERIFY(QTest::qWaitForWindowExposed(&editor));
     editor.setFocus();
 
-    editor.setText(QStringLiteral("1 [a"));
+    editor.setText(QStringLiteral("1 [meb"));
     editor.setCursorPosition(editor.text().size());
+
+    const QStringList mebChoices = editor.matchFragment(QStringLiteral("meb"), true);
+    QVERIFY(mebChoices.contains(QStringLiteral("mebibyte:Unit")));
+
     QVERIFY(QMetaObject::invokeMethod(
         &editor,
         "autoComplete",
         Qt::DirectConnection,
-        Q_ARG(QString, QStringLiteral("are:Unit"))));
-    QCOMPARE(editor.text(), QStringLiteral("1 [a"));
+        Q_ARG(QString, QStringLiteral("mebibyte:Unit"))));
+    QCOMPARE(editor.text(), QStringLiteral("1 [MiB"));
 }
 
 void TestEditorUi::completes_day_unit_to_short_form_in_unit_context()

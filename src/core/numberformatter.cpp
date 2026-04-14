@@ -20,18 +20,19 @@
 #include "core/numberformatter.h"
 
 #include "core/regexpatterns.h"
+#include "core/unitdisplayformat.h"
 #include "core/settings.h"
 #include "core/unicodechars.h"
-#include "math/operatorchars.h"
+#include "core/mathdsl.h"
 #include "math/quantity.h"
 #include "math/rational.h"
-#include "math/units.h"
+#include "core/units.h"
 
 #include <algorithm>
 
 
-static const QChar g_dotChar = OperatorChars::MulDotSign;
-static const QChar g_minusChar = QString::fromUtf8("−")[0];
+static const QChar g_dotChar = MathDsl::MulDotOp;
+static const QChar g_minusChar = MathDsl::SubOp;
 
 namespace {
 
@@ -60,8 +61,8 @@ bool isCloseTo(const HNumber& value, const HNumber& reference)
 
 QString formatFraction(const QString& numerator, int denominator)
 {
-    const QString operatorSpace(OperatorChars::DivisionSpace);
-    return numerator + operatorSpace + OperatorChars::DivisionSign
+    const QString operatorSpace(MathDsl::DivWrap);
+    return numerator + operatorSpace + MathDsl::DivOp
            + operatorSpace + QString::number(denominator);
 }
 
@@ -98,13 +99,13 @@ QString formatPiMultiple(const HNumber& value)
     if (!isCloseTo(value, expected))
         return QString();
 
-    const QString mulSpace(OperatorChars::MulDotSpace);
+    const QString mulSpace(MathDsl::MulDotWrap);
     if (denominator == 1) {
         if (numerator == 1)
             return QStringLiteral("pi");
         if (numerator == -1)
             return QStringLiteral("-pi");
-        return QString::number(numerator) + mulSpace + OperatorChars::MulDotSign
+        return QString::number(numerator) + mulSpace + MathDsl::MulDotOp
                + mulSpace + QStringLiteral("pi");
     }
 
@@ -114,7 +115,7 @@ QString formatPiMultiple(const HNumber& value)
     else if (numerator == -1)
         numeratorText = QStringLiteral("-pi");
     else
-        numeratorText = QString::number(numerator) + mulSpace + OperatorChars::MulDotSign
+        numeratorText = QString::number(numerator) + mulSpace + MathDsl::MulDotOp
                         + mulSpace + QStringLiteral("pi");
 
     return formatFraction(numeratorText, denominator);
@@ -254,8 +255,8 @@ bool isValidGroupedIntegerPart(const QString& part, QChar separator, int base, i
 bool canonicalizeLiteralMantissa(const QString& input, int base, int groupingSize,
                                  bool allowGroupingHeuristic, QString* output)
 {
-    const int dotCount = input.count(QLatin1Char('.'));
-    const int commaCount = input.count(QLatin1Char(','));
+    const int dotCount = input.count(MathDsl::DotSep);
+    const int commaCount = input.count(MathDsl::CommaSep);
 
     if (dotCount == 0 && commaCount == 0) {
         if (input.isEmpty())
@@ -272,15 +273,15 @@ bool canonicalizeLiteralMantissa(const QString& input, int base, int groupingSiz
     QChar groupingSep;
     bool hasRadix = false;
     if (dotCount > 0 && commaCount > 0) {
-        const int lastDot = input.lastIndexOf(QLatin1Char('.'));
-        const int lastComma = input.lastIndexOf(QLatin1Char(','));
+        const int lastDot = input.lastIndexOf(MathDsl::DotSep);
+        const int lastComma = input.lastIndexOf(MathDsl::CommaSep);
         hasRadix = true;
-        radixSep = (lastDot > lastComma) ? QLatin1Char('.') : QLatin1Char(',');
-        groupingSep = (radixSep == QLatin1Char('.')) ? QLatin1Char(',') : QLatin1Char('.');
+        radixSep = (lastDot > lastComma) ? MathDsl::DotSep : MathDsl::CommaSep;
+        groupingSep = (radixSep == MathDsl::DotSep) ? MathDsl::CommaSep : MathDsl::DotSep;
         if (input.count(radixSep) > 1)
             return false;
     } else {
-        const QChar sep = (dotCount > 0) ? QLatin1Char('.') : QLatin1Char(',');
+        const QChar sep = (dotCount > 0) ? MathDsl::DotSep : MathDsl::CommaSep;
         const int sepCount = input.count(sep);
         if (sepCount == 1) {
             const int sepPos = input.indexOf(sep);
@@ -347,7 +348,7 @@ bool canonicalizeLiteralMantissa(const QString& input, int base, int groupingSiz
             return false;
     }
 
-    *output = integral + QLatin1Char('.') + fractional;
+    *output = integral + MathDsl::DotSep + fractional;
     return true;
 }
 
@@ -358,9 +359,9 @@ bool canonicalizeStandaloneNumericLiteral(const QString& input, QString* output)
         return false;
 
     QString sign;
-    if (trimmed.startsWith(QLatin1Char('+'))) {
+    if (trimmed.startsWith(MathDsl::AddOp)) {
         trimmed.remove(0, 1);
-    } else if (trimmed.startsWith(QLatin1Char('-'))
+    } else if (trimmed.startsWith(MathDsl::SubOpAlt1)
                || trimmed.startsWith(g_minusChar)) {
         sign = QStringLiteral("-");
         trimmed.remove(0, 1);
@@ -375,19 +376,19 @@ bool canonicalizeStandaloneNumericLiteral(const QString& input, QString* output)
     bool allowGroupingHeuristic = true;
 
     QString prefix;
-    if (trimmed.startsWith(QLatin1String("0x"), Qt::CaseInsensitive)) {
+    if (trimmed.startsWith(MathDsl::HexPrefix, Qt::CaseInsensitive)) {
         base = 16;
         groupingSize = 4;
         allowGroupingHeuristic = false;
         prefix = trimmed.left(2);
         mantissa = trimmed.mid(2);
-    } else if (trimmed.startsWith(QLatin1String("0o"), Qt::CaseInsensitive)) {
+    } else if (trimmed.startsWith(MathDsl::OctPrefix, Qt::CaseInsensitive)) {
         base = 8;
         groupingSize = 3;
         allowGroupingHeuristic = false;
         prefix = trimmed.left(2);
         mantissa = trimmed.mid(2);
-    } else if (trimmed.startsWith(QLatin1String("0b"), Qt::CaseInsensitive)) {
+    } else if (trimmed.startsWith(MathDsl::BinPrefix, Qt::CaseInsensitive)) {
         base = 2;
         groupingSize = 4;
         allowGroupingHeuristic = false;
@@ -539,8 +540,8 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride,
 
     bool time = false, arc = q.isDimensionless();
     if (activeResultFormat == 's' && q.hasDimension()) {
-        auto dimension = q.getDimension();
-        if (dimension.count() == 1 && dimension.firstKey() == "time") {
+        auto dimension = q.getDimensionByQuantity();
+        if (dimension.count() == 1 && dimension.firstKey() == UnitQuantity::Time) {
             auto iterator = dimension.begin();
             if ( iterator->numerator() == 1 && iterator->denominator() == 1) {
                 q.clearDimension(); // remove unit, formatting itself is unit
@@ -569,7 +570,7 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride,
         result = DMath::format(q, format);
 
     if (activeResultFormat == 's' && (arc || time)) {   // sexagesimal
-        int dotPos = result.indexOf('.');
+        int dotPos = result.indexOf(MathDsl::DotSep);
         HNumber seconds(dotPos > 0 ? result.left(dotPos).toStdString().c_str() : result.toStdString().c_str());
         HNumber mains = HMath::floor(seconds / HNumber(3600));
         seconds -= (mains * HNumber(3600));
@@ -577,35 +578,35 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride,
         seconds -= (minutes * HNumber(60));
         HNumber::Format fixed = HNumber::Format::Fixed();
         QString sexa = HMath::format(mains, fixed);
-        sexa.append(time ? QChar(':') : QChar(0xB0)).append(minutes < 10 ? "0" : "").append(HMath::format(minutes, fixed));
-        sexa.append(time ? ':' : UnicodeChars::Prime).append(seconds < 10 ? "0" : "").append(HMath::format(seconds, fixed));
+        sexa.append(time ? MathDsl::TimeSep : MathDsl::Deg).append(minutes < 10 ? "0" : "").append(HMath::format(minutes, fixed));
+        sexa.append(time ? MathDsl::TimeSep : MathDsl::MinOp).append(seconds < 10 ? "0" : "").append(HMath::format(seconds, fixed));
         if (dotPos > 0)     // append decimals
             sexa.append(result.mid(dotPos));
         if (!time)
-            sexa.append(UnicodeChars::DoublePrime);
+            sexa.append(MathDsl::SecOp);
         result = sexa;
     }
 
     if (negative)
-        result.insert(0, '-');
+        result.insert(0, MathDsl::SubOpAlt1);
 
-    if (settings->decimalSeparator() == ',')
-        result.replace('.', ',');
+    if (settings->decimalSeparator() == MathDsl::CommaSep.toLatin1())
+        result.replace(MathDsl::DotSep, MathDsl::CommaSep);
 
     if (q.hasUnit() || !q.isDimensionless()) {
         bool unitNormalized = false;
-        const int openBracket = result.lastIndexOf(QLatin1Char('['));
-        const int closeBracket = result.lastIndexOf(QLatin1Char(']'));
+        const int openBracket = result.lastIndexOf(MathDsl::OpenUnit);
+        const int closeBracket = result.lastIndexOf(MathDsl::CloseUnit);
         if (openBracket >= 0
             && closeBracket > openBracket
             && closeBracket == result.size() - 1)
         {
             const QString normalizedUnit =
-                Units::normalizeUnitTextForDisplay(
+                UnitDisplayFormat::normalizeUnitTextForDisplay(
                     result.mid(openBracket + 1, closeBracket - openBracket - 1));
             result = result.left(openBracket + 1)
                 + normalizedUnit
-                + QLatin1Char(']');
+                + MathDsl::CloseUnit;
             unitNormalized = true;
         }
 
@@ -613,16 +614,16 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride,
             const int firstSpace = result.indexOf(QLatin1Char(' '));
             if (firstSpace >= 0 && firstSpace + 1 < result.size()) {
                 const QString normalizedUnit =
-                    Units::normalizeUnitTextForDisplay(result.mid(firstSpace + 1));
+                    UnitDisplayFormat::normalizeUnitTextForDisplay(result.mid(firstSpace + 1));
                 result = result.left(firstSpace)
-                    + QLatin1Char('[')
+                    + MathDsl::OpenUnit
                     + normalizedUnit
-                    + QLatin1Char(']');
+                    + MathDsl::CloseUnit;
             }
         }
     }
 
-    result.replace('-', g_minusChar);
+    result.replace(MathDsl::SubOpAlt1, g_minusChar);
 
     // Replace all spaces between units with dot operator.
     int emptySpaces = 0;
@@ -645,7 +646,7 @@ QString NumberFormatter::formatNumericLiteralForDisplay(const QString& input)
     const QString separator = settings->digitGroupingSeparator();
     const bool groupingEnabled = settings->isDigitGroupingEnabled() && !separator.isEmpty();
     const QChar decimalSep = QChar(settings->decimalSeparator());
-    const QChar altDecimalSep = (decimalSep == QChar('.')) ? QChar(',') : QChar('.');
+    const QChar altDecimalSep = (decimalSep == MathDsl::DotSep) ? MathDsl::CommaSep : MathDsl::DotSep;
 
     const bool indianGrouping = settings->isIndianDigitGrouping();
     auto groupPart = [&separator](const QString& digits, int groupSize, bool fromRight) {
@@ -692,13 +693,13 @@ QString NumberFormatter::formatNumericLiteralForDisplay(const QString& input)
         QString token = match.captured(0);
         int prefixLength = 0;
         int groupSize = 3;
-        if (token.startsWith(QLatin1String("0x"), Qt::CaseInsensitive)) {
+        if (token.startsWith(MathDsl::HexPrefix, Qt::CaseInsensitive)) {
             prefixLength = 2;
             groupSize = 4;
-        } else if (token.startsWith(QLatin1String("0o"), Qt::CaseInsensitive)) {
+        } else if (token.startsWith(MathDsl::OctPrefix, Qt::CaseInsensitive)) {
             prefixLength = 2;
             groupSize = 3;
-        } else if (token.startsWith(QLatin1String("0b"), Qt::CaseInsensitive)) {
+        } else if (token.startsWith(MathDsl::BinPrefix, Qt::CaseInsensitive)) {
             prefixLength = 2;
             groupSize = 4;
         }

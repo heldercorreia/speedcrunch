@@ -23,6 +23,7 @@
 
 #include "core/evaluator.h"
 #include "core/functions.h"
+#include "core/mathdsl.h"
 #include "core/settings.h"
 
 #include <QtCore/QDir>
@@ -39,17 +40,17 @@ static const constexpr auto COLOR_SCHEME_EXTENSION = "json";
 static QString textNormalizedForHighlighting(QString text)
 {
     static const QHash<QChar, QChar> superscriptToAscii {
-        {QChar(0x207B), QLatin1Char('-')}, // ⁻ SUPERSCRIPT MINUS.
-        {QChar(0x2070), QLatin1Char('0')}, // ⁰
-        {QChar(0x00B9), QLatin1Char('1')}, // ¹
-        {QChar(0x00B2), QLatin1Char('2')}, // ²
-        {QChar(0x00B3), QLatin1Char('3')}, // ³
-        {QChar(0x2074), QLatin1Char('4')}, // ⁴
-        {QChar(0x2075), QLatin1Char('5')}, // ⁵
-        {QChar(0x2076), QLatin1Char('6')}, // ⁶
-        {QChar(0x2077), QLatin1Char('7')}, // ⁷
-        {QChar(0x2078), QLatin1Char('8')}, // ⁸
-        {QChar(0x2079), QLatin1Char('9')}, // ⁹
+        {MathDsl::PowNeg, MathDsl::SubOpAlt1}, // ⁻ SUPERSCRIPT MINUS.
+        {MathDsl::Pow0, QLatin1Char('0')}, // ⁰
+        {MathDsl::Pow1, QLatin1Char('1')}, // ¹
+        {MathDsl::Pow2, QLatin1Char('2')}, // ²
+        {MathDsl::Pow3, QLatin1Char('3')}, // ³
+        {MathDsl::Pow4, QLatin1Char('4')}, // ⁴
+        {MathDsl::Pow5, QLatin1Char('5')}, // ⁵
+        {MathDsl::Pow6, QLatin1Char('6')}, // ⁶
+        {MathDsl::Pow7, QLatin1Char('7')}, // ⁷
+        {MathDsl::Pow8, QLatin1Char('8')}, // ⁸
+        {MathDsl::Pow9, QLatin1Char('9')}, // ⁹
     };
 
     for (QChar& ch : text) {
@@ -62,22 +63,7 @@ static QString textNormalizedForHighlighting(QString text)
 
 static bool isSuperscriptExponentChar(QChar ch)
 {
-    switch (ch.unicode()) {
-    case 0x207B: // ⁻
-    case 0x2070: // ⁰
-    case 0x00B9: // ¹
-    case 0x00B2: // ²
-    case 0x00B3: // ³
-    case 0x2074: // ⁴
-    case 0x2075: // ⁵
-    case 0x2076: // ⁶
-    case 0x2077: // ⁷
-    case 0x2078: // ⁸
-    case 0x2079: // ⁹
-        return true;
-    default:
-        return false;
-    }
+    return ch == MathDsl::PowNeg || MathDsl::isSuperscriptDigit(ch);
 }
 
 static bool hasSuperscriptExponent(const QString& tokenText)
@@ -470,7 +456,8 @@ void SyntaxHighlighter::groupDigits(const QString& text, int pos, int length)
                         endOfNumber = false;
                 }
 
-                if (c == ':' || c == 0xB0 || c == '\'' || c == '"')
+                if (c == MathDsl::TimeSep || c == MathDsl::Deg
+                        || c == MathDsl::MinOpAlt1 || c == MathDsl::SecOpAlt1)
                     endOfNumber = true;
 
                 if (endOfNumber) {

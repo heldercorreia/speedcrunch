@@ -21,7 +21,7 @@
 
 #include "core/regexpatterns.h"
 #include "core/unicodechars.h"
-#include "math/operatorchars.h"
+#include "core/mathdsl.h"
 
 #include <QString>
 
@@ -46,7 +46,7 @@ inline bool isStandaloneSexagesimalTimeLiteral(const QString& expression)
     if (!allowedPattern.match(expression).hasMatch())
         return false;
 
-    const QString compact = expression.simplified().remove(QChar(' '));
+    const QString compact = expression.simplified().remove(UnicodeChars::Space);
     const int colonCount = compact.count(QLatin1Char(':'));
     if (colonCount < 1 || colonCount > 2)
         return false;
@@ -55,7 +55,7 @@ inline bool isStandaloneSexagesimalTimeLiteral(const QString& expression)
 
     const QString withoutSign =
         (compact.startsWith(QLatin1Char('+'))
-         || compact.startsWith(QLatin1Char('-'))
+         || compact.startsWith(MathDsl::SubOpAlt1)
          || compact.startsWith(QChar(UnicodeChars::MinusSign)))
         ? compact.mid(1)
         : compact;
@@ -129,8 +129,8 @@ inline bool isCommutativeTopLevelSwap(const QString& interpretedDisplay,
     const QChar commutativeOps[] = {
         QLatin1Char('+'),
         QLatin1Char('*'),
-        QChar(OperatorChars::MulCrossSign),
-        QChar(OperatorChars::MulDotSign)
+        QChar(MathDsl::MulCrossOp),
+        QChar(MathDsl::MulDotOp)
     };
     for (const QChar op : commutativeOps) {
         QString leftA, rightA, leftB, rightB;

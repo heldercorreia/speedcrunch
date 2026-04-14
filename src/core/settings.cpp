@@ -22,7 +22,7 @@
 #include "core/settings.h"
 
 #include "math/floatconfig.h"
-#include "math/operatorchars.h"
+#include "core/mathdsl.h"
 
 #include <QDir>
 #include <QLocale>
@@ -243,7 +243,7 @@ Settings::CustomKeypad Settings::defaultCustomKeypad()
         {1, 0, QStringLiteral("4"), QStringLiteral("4"), Settings::CustomKeypadActionInsertText},
         {1, 1, QStringLiteral("5"), QStringLiteral("5"), Settings::CustomKeypadActionInsertText},
         {1, 2, QStringLiteral("6"), QStringLiteral("6"), Settings::CustomKeypadActionInsertText},
-        {1, 3, QString(OperatorChars::MulCrossSign), QString(OperatorChars::MulCrossSign), Settings::CustomKeypadActionInsertText},
+        {1, 3, QString(MathDsl::MulCrossOp), QString(MathDsl::MulCrossOp), Settings::CustomKeypadActionInsertText},
         {1, 4, QStringLiteral("⌫"), QString(), Settings::CustomKeypadActionBackspace},
         {2, 0, QStringLiteral("1"), QStringLiteral("1"), Settings::CustomKeypadActionInsertText},
         {2, 1, QStringLiteral("2"), QStringLiteral("2"), Settings::CustomKeypadActionInsertText},
@@ -305,6 +305,8 @@ Settings::Settings()
     quaternaryResultFormatComplex = 'c';
     quinaryComplexNumbers = false;
     quinaryResultFormatComplex = 'c';
+
+    setRuntimeUnitNegativeExponentStyle(unitNegativeExponentStyle);
 }
 
 void Settings::load()
@@ -512,6 +514,7 @@ void Settings::load()
             && unitNegativeExponentStyle != UnitNegativeExponentFraction) {
         unitNegativeExponentStyle = UnitNegativeExponentSuperscript;
     }
+    setRuntimeUnitNegativeExponentStyle(unitNegativeExponentStyle);
     tertiaryResultPrecision = settings->value(key + QLatin1String("TertiaryPrecision"), -1).toInt();
     quaternaryResultPrecision = settings->value(key + QLatin1String("QuaternaryPrecision"), -1).toInt();
     quinaryResultPrecision = settings->value(key + QLatin1String("QuinaryPrecision"), -1).toInt();

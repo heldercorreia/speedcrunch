@@ -121,7 +121,8 @@ HEADERS += core/book.h \
            math/number.h \
            math/quantity.h \
            math/rational.h \
-           math/units.h
+           core/units.h \
+           core/unitdisplayformat.h
 
 
 SOURCES += main.cpp \
@@ -182,7 +183,8 @@ SOURCES += main.cpp \
            math/cnumberparser.cpp \
            math/quantity.cpp \
            math/rational.cpp \
-           math/units.cpp
+           core/units.cpp \
+           core/unitdisplayformat.cpp
 
 RESOURCES += resources/speedcrunch.qrc ../doc/build_html_embedded/manual.qrc
 TRANSLATIONS += resources/locale/ar.ts \

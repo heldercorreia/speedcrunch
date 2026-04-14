@@ -3,7 +3,7 @@
 //
 // This file is part of the SpeedCrunch project
 // Copyright (C) 2016 Pol Welter.
-// Copyright (C) 2016 @heldercorreia
+// Copyright (C) 2016-2026 @heldercorreia
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -19,6 +19,12 @@
 // along with this program; see the file COPYING.  If not, write to
 // the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 // Boston, MA 02110-1301, USA.
+//
+// Module scope:
+// - Defines Quantity, the runtime numeric+unit value type used by evaluation.
+// - Owns quantity arithmetic behavior and dimension-carrying operations.
+// - Uses UnitQuantity-based dimensions, but does not
+//   define dimension vocabulary or canonical dimension metadata itself.
 
 #ifndef QUANTITY_H
 #define QUANTITY_H
@@ -34,6 +40,7 @@ class HNumber;
 class QJsonObject;
 class QString;
 class Rational;
+enum class UnitQuantity;
 
 class DMath;
 class Quantity;
@@ -79,7 +86,9 @@ public:
     bool hasDimension() const;
     bool isDimensionless() const;
     QMap<QString, Rational> getDimension() const;
+    QMap<UnitQuantity, Rational> getDimensionByQuantity() const;
     void modifyDimension(const QString& key, const Rational& exponent);
+    void modifyDimension(UnitQuantity key, const Rational& exponent);
     void copyDimension(const Quantity&);
     void clearDimension();
     bool sameDimension(const Quantity& other) const;
@@ -130,7 +139,7 @@ public:
 
 private:
     CNumber m_numericValue;
-    QMap<QString, Rational> m_dimension;
+    QMap<UnitQuantity, Rational> m_dimension;
     CNumber* m_unit;
     QString m_unitName;
     Format m_format;

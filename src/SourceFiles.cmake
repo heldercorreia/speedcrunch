@@ -60,7 +60,8 @@ math/hmath.h
 math/number.h
 math/rational.h
 math/quantity.h
-math/units.h
+core/units.h
+core/unitdisplayformat.h
 )
 
 set(speedcrunch_SOURCES
@@ -123,7 +124,8 @@ math/cmath.cpp
 math/cnumberparser.cpp
 math/rational.cpp
 math/quantity.cpp
-math/units.cpp
+core/units.cpp
+core/unitdisplayformat.cpp
 )
 
 set(testhmath_SOURCES
@@ -148,7 +150,8 @@ math/number.c
 math/rational.cpp
 math/quantity.cpp
 math/cmath.cpp
-math/units.cpp
+core/units.cpp
+core/unitdisplayformat.cpp
 math/cnumberparser.cpp
 tests/testhmath.cpp
 )
@@ -196,7 +199,8 @@ math/cmath.cpp
 math/cnumberparser.cpp
 math/rational.cpp
 math/quantity.cpp
-math/units.cpp
+core/units.cpp
+core/unitdisplayformat.cpp
 tests/testevaluator.cpp
 )
 
@@ -244,7 +248,8 @@ math/cmath.cpp
 math/cnumberparser.cpp
 math/rational.cpp
 math/quantity.cpp
-math/units.cpp
+core/units.cpp
+core/unitdisplayformat.cpp
 tests/testcmath.cpp
 )
 
@@ -271,7 +276,8 @@ math/cmath.cpp
 math/cnumberparser.cpp
 math/rational.cpp
 math/quantity.cpp
-math/units.cpp
+core/units.cpp
+core/unitdisplayformat.cpp
 tests/testdmath.cpp
 )
 
@@ -312,7 +318,8 @@ math/cmath.cpp
 math/cnumberparser.cpp
 math/rational.cpp
 math/quantity.cpp
-math/units.cpp
+core/units.cpp
+core/unitdisplayformat.cpp
 tests/testeditorui.cpp
 )
 
@@ -341,6 +348,7 @@ math/cmath.cpp
 math/cnumberparser.cpp
 math/rational.cpp
 math/quantity.cpp
-math/units.cpp
+core/units.cpp
+core/unitdisplayformat.cpp
 tests/testser.cpp
 )
