@@ -917,6 +917,12 @@ void test_units_derived_si_recognition_and_disambiguation()
 {
     CHECK_EVAL("[metre]", "1 metre");
     CHECK_EVAL("[kilogram]", "1 kilogram");
+    CHECK_EVAL("[tonne]", "1000 kilogram");
+    CHECK_EVAL("[t]", "1000 kilogram");
+    CHECK_EVAL("1[tonne] -> [kilogram]", "1000 kilogram");
+    CHECK_EVAL("1[t] -> [kilogram]", "1000 kilogram");
+    CHECK_EVAL("1000[kilogram] -> [tonne]", "1 tonne");
+    CHECK_EVAL("2.51 [t] + 3.2 [kg] + 2342.7 [g]", "2515.5427 kilogram");
     CHECK_EVAL("[second]", "1 second");
     CHECK_EVAL("[coulomb/second]", "1 ampere");
     CHECK_EVAL("[lumen/steradian]", "1 candela");

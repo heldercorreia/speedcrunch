@@ -237,4 +237,13 @@ form as well (for example ``kpc``, ``Mpc``, ``MB``, ``kb``).
 Common examples include ``mm``, ``cm``, ``km``, ``mg``, ``kg``, ``mV``,
 ``kW``, ``MeV``, ``dL`` and ``dl``.
 
+SI-accepted mass unit ``tonne`` (short form ``t``) is available and equals
+``1000[kilogram]``::
+
+    1[tonne] -> [kilogram]
+    = 1000 [kilogram]
+
+    1000[kilogram] -> [t]
+    = 1 [t]
+
 Some of the built-in functions are able to handle arguments with a dimension. Refer to the documentation of a particular function for more information.

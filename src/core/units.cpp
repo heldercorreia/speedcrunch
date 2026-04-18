@@ -544,6 +544,11 @@ const QHash<UnitId, UnitSpec>& s_unitSpecs()
                 https://doi.org/10.59161/AUEZ1291
 
             - Source #2:
+                SI Reference Point
+                Bureau International des Poids et Mesures
+                https://si-digital-framework.org/SI/units
+
+            - Source #3:
                 The Unified Code for Units of Measure
                 Regenstrief Institute, Inc. and the UCUM Organization
                 Version: 2.2 | Revision: N/A | Date: 2024-06-17
