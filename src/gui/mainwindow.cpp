@@ -3574,14 +3574,15 @@ void MainWindow::insertTextIntoEditor(const QString& s)
         return i < 0;
     }();
     if (atExpressionStart && !normalized.isEmpty()) {
-        const bool allAllowed = std::all_of(
-            normalized.cbegin(),
-            normalized.cend(),
-            [this](const QChar& ch) {
-                return EditorUtils::isAllowedLeadingCharAtExpressionStart(ch, m_settings->autoAns);
-            });
-        if (!allAllowed)
-            return;
+        int firstNonSpace = 0;
+        while (firstNonSpace < normalized.size() && normalized.at(firstNonSpace).isSpace())
+            ++firstNonSpace;
+
+        if (firstNonSpace < normalized.size()) {
+            const QChar leadingChar = normalized.at(firstNonSpace);
+            if (!EditorUtils::isAllowedLeadingCharAtExpressionStart(leadingChar, m_settings->autoAns))
+                return;
+        }
     }
 
     bool shouldAutoComplete = m_widgets.editor->isAutoCompletionEnabled();

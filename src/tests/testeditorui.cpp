@@ -28,6 +28,7 @@ private slots:
     void blocks_plus_after_caret();
     void blocks_leading_operators_when_auto_ans_is_off_except_configured_exceptions();
     void keeps_disallowed_start_chars_blocked_when_auto_ans_is_on();
+    void allows_special_function_symbols_as_leading_chars();
     void auto_ans_rewrite_helper_handles_tilde_and_factorial();
     void blocks_operator_right_after_open_square_bracket();
     void inserts_value_unit_space_brackets_after_number_or_symbol();
@@ -285,6 +286,28 @@ void TestEditorUi::keeps_disallowed_start_chars_blocked_when_auto_ans_is_on()
     QCOMPARE(editor.document()->toRawText(), QString());
 
     settings->autoAns = autoAnsBackup;
+}
+
+void TestEditorUi::allows_special_function_symbols_as_leading_chars()
+{
+    const bool autoAnsOff = false;
+    const bool autoAnsOn = true;
+    const QList<QChar> allowedStarters = {
+        UnicodeChars::Summation,
+        UnicodeChars::SquareRoot,
+        UnicodeChars::CubeRoot,
+        UnicodeChars::LowLine,
+        UnicodeChars::DollarSign,
+        QChar(0x0436), // Ж
+        QChar(0x03C0)  // π
+    };
+    for (const QChar ch : allowedStarters) {
+        QVERIFY(EditorUtils::isAllowedLeadingCharAtExpressionStart(ch, autoAnsOff));
+        QVERIFY(EditorUtils::isAllowedLeadingCharAtExpressionStart(ch, autoAnsOn));
+    }
+
+    QVERIFY(!EditorUtils::isAllowedLeadingCharAtExpressionStart(QChar(0x00A7), autoAnsOff)); // §
+    QVERIFY(!EditorUtils::isAllowedLeadingCharAtExpressionStart(QChar(0x00A7), autoAnsOn)); // §
 }
 
 void TestEditorUi::auto_ans_rewrite_helper_handles_tilde_and_factorial()

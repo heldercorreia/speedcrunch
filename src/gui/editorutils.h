@@ -424,6 +424,13 @@ inline bool isAllowedLeadingCharAtExpressionStart(const QChar& ch, bool autoAnsE
 {
     if (ch.isDigit())
         return true;
+    if (ch == UnicodeChars::LowLine
+        || ch == MathDsl::DollarSign
+        || ch == UnicodeChars::Summation
+        || ch == UnicodeChars::SquareRoot
+        || ch == UnicodeChars::CubeRoot) {
+        return true;
+    }
     if (ch.isLetter()) {
         // Exclude ordinal indicators that behave like symbols on PT/US layouts
         // and are not intended to be valid leading tokens.
