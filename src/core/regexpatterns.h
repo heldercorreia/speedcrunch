@@ -149,6 +149,24 @@ inline const QRegularExpression& simpleParenthesizedDenominatorQuotient()
     return pattern;
 }
 
+// Matches one bracketed unit block like "[kg]" and captures inner text.
+// Example input/output: "1[kg]" -> match "[kg]" with group "kg".
+inline const QRegularExpression& unitBrackets()
+{
+    static const QRegularExpression pattern(
+        QStringLiteral(R"(\[([^\[\]]+)\])"));
+    return pattern;
+}
+
+// Matches a missing quantity-space before unit bracket.
+// Example input/output: "1[kg]" -> match "1[" with group "1".
+inline const QRegularExpression& missingQuantSpBeforeUnit()
+{
+    static const QRegularExpression pattern(
+        QStringLiteral(R"((\S)\[)"));
+    return pattern;
+}
+
 // Matches the standalone word "summation", case-insensitive.
 // Example input/output: "summation(k)" -> match; "presummation" -> no match.
 inline const QRegularExpression& summationWord()

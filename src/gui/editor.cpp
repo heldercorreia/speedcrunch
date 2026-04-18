@@ -1082,15 +1082,19 @@ static int trailingIdentifierStart(const QString& text, int endPosition)
 
 static QString formattedLiveResult(const Quantity& quantity, char resultFormat = '\0')
 {
-    return DisplayFormatUtils::applyDigitGroupingForDisplay(
+    QString formatted = DisplayFormatUtils::applyDigitGroupingForDisplay(
         NumberFormatter::format(quantity, resultFormat));
+    formatted.replace(RegExpPatterns::unitBrackets(), QStringLiteral("\\1"));
+    return formatted;
 }
 
 static QString formattedLiveResultForSlot(const Quantity& quantity, char resultFormat,
                                           int precision, bool complexEnabled, char complexForm)
 {
-    return DisplayFormatUtils::applyDigitGroupingForDisplay(
+    QString formatted = DisplayFormatUtils::applyDigitGroupingForDisplay(
         NumberFormatter::format(quantity, resultFormat, precision, complexEnabled, complexForm));
+    formatted.replace(RegExpPatterns::unitBrackets(), QStringLiteral("\\1"));
+    return formatted;
 }
 
 static bool shouldShowAdditionalRationalForTrig(const QString& expression,

@@ -3609,7 +3609,7 @@ void MainWindow::insertTextIntoEditor(const QString& s)
 
     bool shouldAutoComplete = m_widgets.editor->isAutoCompletionEnabled();
     m_widgets.editor->setAutoCompletionEnabled(false);
-    m_widgets.editor->insert(s);
+    m_widgets.editor->insert(normalized);
     m_widgets.editor->setAutoCompletionEnabled(shouldAutoComplete);
 
     if (!isActiveWindow())

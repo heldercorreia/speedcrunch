@@ -91,6 +91,9 @@ void cloneMenuActions(const QMenu* sourceMenu, QMenu* targetMenu)
 QString formatResultForClipboard(const Quantity& value)
 {
     QString textToCopy = NumberFormatter::format(value);
+    textToCopy.replace(
+        RegExpPatterns::missingQuantSpBeforeUnit(),
+        QStringLiteral("\\1") + QString(MathDsl::QuantSp) + QString(MathDsl::UnitStart));
     textToCopy.replace(UnicodeChars::MinusSign, MathDsl::SubOpAl1);
     return textToCopy;
 }
@@ -138,6 +141,12 @@ QString trimTrailingFractionZeros(QString text)
 
     text.replace(trailingZerosAfterNonZero, QStringLiteral("\\1"));
     text.replace(onlyZeroFraction, QString());
+    return text;
+}
+
+QString stripDisplayedUnitBrackets(QString text)
+{
+    text.replace(RegExpPatterns::unitBrackets(), QStringLiteral("\\1"));
     return text;
 }
 
@@ -191,9 +200,29 @@ QStringList formatResultLines(const HistoryEntry& entry)
     bool emittedSimplifiedLine = false;
 
     QStringList lines;
-    auto appendUniqueLine = [&lines](const QString& line) {
-        if (!lines.contains(line))
-            lines.append(line);
+    auto formatNumericResultLine = [&value](char resultFormat,
+                                            int precision,
+                                            bool complexNumbers,
+                                            char complexFormat) {
+        Quantity formattedValue = value;
+        if (resultFormat == 's' && isPureTimeQuantity(formattedValue)) {
+            // Sexagesimal formatting operates in h:mm:ss and should not keep
+            // an explicit target unit suffix (e.g. "[ms]") in final value lines.
+            formattedValue.stripUnits();
+        }
+        return DisplayFormatUtils::applyDigitGroupingForDisplay(
+            NumberFormatter::format(formattedValue,
+                                    resultFormat,
+                                    precision,
+                                    complexNumbers,
+                                    complexFormat));
+    };
+    auto appendUniqueLine = [&lines](const QString& line, bool stripUnitBrackets = false) {
+        QString displayLine = line;
+        if (stripUnitBrackets)
+            displayLine = stripDisplayedUnitBrackets(displayLine);
+        if (!lines.contains(displayLine))
+            lines.append(displayLine);
     };
     if (settings->simplifyResultExpressions && !entry.interpretedExpr().isEmpty()) {
         QString interpreted = DisplayFormatUtils::applyDigitGroupingForDisplay(
@@ -240,42 +269,42 @@ QStringList formatResultLines(const HistoryEntry& entry)
             + conversionTargetSuffixForDisplay(entry.expr()));
     }
     appendUniqueLine(QLatin1String("= ")
-        + DisplayFormatUtils::applyDigitGroupingForDisplay(NumberFormatter::format(value)));
+        + formatNumericResultLine(settings->resultFormat,
+                                  settings->resultPrecision,
+                                  settings->complexNumbers,
+                                  settings->resultFormatComplex),
+        true);
     if (useExtraResultLines && settings->secondaryResultEnabled && settings->alternativeResultFormat != '\0') {
         appendUniqueLine(QLatin1String("= ")
-            + DisplayFormatUtils::applyDigitGroupingForDisplay(
-                NumberFormatter::format(value,
-                                        settings->alternativeResultFormat,
-                                        settings->secondaryResultPrecision,
-                                        settings->complexNumbers && settings->secondaryComplexNumbers,
-                                        settings->secondaryResultFormatComplex)));
+            + formatNumericResultLine(settings->alternativeResultFormat,
+                                      settings->secondaryResultPrecision,
+                                      settings->complexNumbers && settings->secondaryComplexNumbers,
+                                      settings->secondaryResultFormatComplex),
+            true);
     }
     if (useExtraResultLines && settings->tertiaryResultEnabled && settings->tertiaryResultFormat != '\0') {
         appendUniqueLine(QLatin1String("= ")
-            + DisplayFormatUtils::applyDigitGroupingForDisplay(
-                NumberFormatter::format(value,
-                                        settings->tertiaryResultFormat,
-                                        settings->tertiaryResultPrecision,
-                                        settings->complexNumbers && settings->tertiaryComplexNumbers,
-                                        settings->tertiaryResultFormatComplex)));
+            + formatNumericResultLine(settings->tertiaryResultFormat,
+                                      settings->tertiaryResultPrecision,
+                                      settings->complexNumbers && settings->tertiaryComplexNumbers,
+                                      settings->tertiaryResultFormatComplex),
+            true);
     }
     if (useExtraResultLines && settings->quaternaryResultEnabled && settings->quaternaryResultFormat != '\0') {
         appendUniqueLine(QLatin1String("= ")
-            + DisplayFormatUtils::applyDigitGroupingForDisplay(
-                NumberFormatter::format(value,
-                                        settings->quaternaryResultFormat,
-                                        settings->quaternaryResultPrecision,
-                                        settings->complexNumbers && settings->quaternaryComplexNumbers,
-                                        settings->quaternaryResultFormatComplex)));
+            + formatNumericResultLine(settings->quaternaryResultFormat,
+                                      settings->quaternaryResultPrecision,
+                                      settings->complexNumbers && settings->quaternaryComplexNumbers,
+                                      settings->quaternaryResultFormatComplex),
+            true);
     }
     if (useExtraResultLines && settings->quinaryResultEnabled && settings->quinaryResultFormat != '\0') {
         appendUniqueLine(QLatin1String("= ")
-            + DisplayFormatUtils::applyDigitGroupingForDisplay(
-                NumberFormatter::format(value,
-                                        settings->quinaryResultFormat,
-                                        settings->quinaryResultPrecision,
-                                        settings->complexNumbers && settings->quinaryComplexNumbers,
-                                        settings->quinaryResultFormatComplex)));
+            + formatNumericResultLine(settings->quinaryResultFormat,
+                                      settings->quinaryResultPrecision,
+                                      settings->complexNumbers && settings->quinaryComplexNumbers,
+                                      settings->quinaryResultFormatComplex),
+            true);
     }
     const QString symbolicTrig = NumberFormatter::formatTrigSymbolic(value);
     if (shouldShowAdditionalRationalForTrig(settings, entry.expr(), entry.interpretedExpr(), value)) {
@@ -656,7 +685,7 @@ void ResultDisplay::decreaseFontPointSize()
     setFont(newFont);
 }
 
-void ResultDisplay::mouseDoubleClickEvent(QMouseEvent*)
+void ResultDisplay::mouseDoubleClickEvent(QMouseEvent* event)
 {
     QTextCursor cursor = textCursor();
     cursor.movePosition(QTextCursor::StartOfBlock);
@@ -664,8 +693,31 @@ void ResultDisplay::mouseDoubleClickEvent(QMouseEvent*)
     setTextCursor(cursor);
     QString text = cursor.selectedText();
     QString resultMarker = QLatin1String("= ");
-    if (text.startsWith(resultMarker))
+    if (text.startsWith(resultMarker)) {
+        // Display lines strip unit brackets for readability, but editor input
+        // requires canonical expression syntax ("value[unit]") with QuantSp.
+        // For result lines (all blocks after the expression block in the same
+        // history entry), rehydrate from the underlying Quantity instead of
+        // copying the visually simplified text.
+        const int historyIndex = historyIndexAtPosition(event->pos());
+        if (historyIndex >= 0) {
+            int startBlock = -1;
+            int endBlock = -1;
+            if (blockRangeForHistoryIndex(historyIndex, startBlock, endBlock)
+                && cursor.blockNumber() > startBlock)
+            {
+                const Session* session = Evaluator::instance()->session();
+                if (historyIndex < session->historySize()) {
+                    const Quantity value = session->historyEntryAtRef(historyIndex).result();
+                    if (!value.isNan()) {
+                        emit expressionSelected(formatResultForClipboard(value));
+                        return;
+                    }
+                }
+            }
+        }
         text.remove(resultMarker);
+    }
     emit expressionSelected(text);
 }
 

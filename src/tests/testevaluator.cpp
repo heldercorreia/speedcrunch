@@ -33,6 +33,7 @@
 #include "tests/testcommon.h"
 
 #include <QApplication>
+#include <QMouseEvent>
 #include <QTextBlock>
 
 #include <string>
@@ -334,6 +335,7 @@ public:
     using ResultDisplay::blockRangeForHistoryIndex;
     using ResultDisplay::historyIndexAtPosition;
     using ResultDisplay::markHistoryBlockIndexCacheDirty;
+    using ResultDisplay::mouseDoubleClickEvent;
 
     QPoint pointForBlockStart(int blockNumber) const
     {
@@ -5940,12 +5942,14 @@ void test_result_display_adds_normalized_sexagesimal_simplification_line()
 
     ++eval_total_tests;
     const QString scalarLine = display.document()->findBlockByNumber(2).text();
-    if (!scalarLine.contains(QStringLiteral("[s]"))) {
+    if (!scalarLine.contains(QStringLiteral("s"))
+        || scalarLine.contains(QString(MathDsl::UnitStart))
+        || scalarLine.contains(QString(MathDsl::UnitEnd))) {
         ++eval_failed_tests;
         ++eval_new_failed_tests;
         cerr << __FILE__ << "[" << __LINE__ << "]\tscalar seconds line keeps unit\t[NEW]" << endl
              << "\tLine     : " << scalarLine.toUtf8().constData() << endl
-             << "\tExpected : contains [s]" << endl;
+             << "\tExpected : contains s without []" << endl;
     }
 
     session->clearHistory();
@@ -5994,12 +5998,14 @@ void test_result_display_adds_normalized_sexagesimal_simplification_line_for_ari
 
     ++eval_total_tests;
     const QString scalarLine = display.document()->findBlockByNumber(2).text();
-    if (!scalarLine.contains(QStringLiteral("[s]"))) {
+    if (!scalarLine.contains(QStringLiteral("s"))
+        || scalarLine.contains(QString(MathDsl::UnitStart))
+        || scalarLine.contains(QString(MathDsl::UnitEnd))) {
         ++eval_failed_tests;
         ++eval_new_failed_tests;
         cerr << __FILE__ << "[" << __LINE__ << "]\tscalar seconds arithmetic line keeps unit\t[NEW]" << endl
              << "\tLine     : " << scalarLine.toUtf8().constData() << endl
-             << "\tExpected : contains [s]" << endl;
+             << "\tExpected : contains s without []" << endl;
     }
 
     session->clearHistory();
@@ -6049,12 +6055,14 @@ void test_result_display_preserves_fractional_seconds_in_normalized_sexagesimal_
     ++eval_total_tests;
     const QString scalarLine = display.document()->findBlockByNumber(2).text();
     if (!scalarLine.contains(QStringLiteral("50427.25"))
-        || !scalarLine.contains(QStringLiteral("[s]"))) {
+        || !scalarLine.contains(QStringLiteral("s"))
+        || scalarLine.contains(QString(MathDsl::UnitStart))
+        || scalarLine.contains(QString(MathDsl::UnitEnd))) {
         ++eval_failed_tests;
         ++eval_new_failed_tests;
         cerr << __FILE__ << "[" << __LINE__ << "]\tscalar seconds fractional arithmetic line keeps value and unit\t[NEW]" << endl
              << "\tLine     : " << scalarLine.toUtf8().constData() << endl
-             << "\tExpected : contains 50427.25 and [s]" << endl;
+             << "\tExpected : contains 50427.25 and s without []" << endl;
     }
 
     session->clearHistory();
@@ -6104,12 +6112,14 @@ void test_result_display_normalized_sexagesimal_line_with_time_conversion_target
     ++eval_total_tests;
     const QString scalarLine = display.document()->findBlockByNumber(2).text();
     if (!scalarLine.contains(QStringLiteral("21600125"))
-        || !scalarLine.contains(QStringLiteral("[ms]"))) {
+        || !scalarLine.contains(QStringLiteral("ms"))
+        || scalarLine.contains(QString(MathDsl::UnitStart))
+        || scalarLine.contains(QString(MathDsl::UnitEnd))) {
         ++eval_failed_tests;
         ++eval_new_failed_tests;
         cerr << __FILE__ << "[" << __LINE__ << "]\tscalar milliseconds conversion line keeps value and unit\t[NEW]" << endl
              << "\tLine     : " << scalarLine.toUtf8().constData() << endl
-             << "\tExpected : contains 21600125 and [ms]" << endl;
+             << "\tExpected : contains 21600125 and ms without []" << endl;
     }
 
     session->clearHistory();
@@ -6188,17 +6198,149 @@ void test_result_display_mixed_per_term_time_conversions()
     ++eval_total_tests;
     const QString scalarLine = display.document()->findBlockByNumber(2).text();
     if (!scalarLine.contains(QStringLiteral("57599625"))
-        || !scalarLine.contains(QStringLiteral("[ms]"))
+        || !scalarLine.contains(QStringLiteral("ms"))
+        || scalarLine.contains(QString(MathDsl::UnitStart))
+        || scalarLine.contains(QString(MathDsl::UnitEnd))
         || !scalarLine.contains(QString(UnicodeChars::MinusSign))) {
         ++eval_failed_tests;
         ++eval_new_failed_tests;
         cerr << __FILE__ << "[" << __LINE__ << "]\tmixed per-term time conversions scalar line\t[NEW]" << endl
              << "\tLine     : " << scalarLine.toUtf8().constData() << endl
-             << "\tExpected : contains −57599625 and [ms]" << endl;
+             << "\tExpected : contains −57599625 and ms without []" << endl;
     }
 
     session->clearHistory();
     settings->simplifyResultExpressions = oldSimplifyResultExpressions;
+}
+
+void test_result_display_mixed_per_term_time_conversions_in_sexagesimal_notation()
+{
+    Settings* settings = Settings::instance();
+    const bool oldSimplifyResultExpressions = settings->simplifyResultExpressions;
+    const char oldResultFormat = settings->resultFormat;
+    settings->simplifyResultExpressions = true;
+    settings->resultFormat = 's';
+
+    eval->setExpression(QString::fromUtf8("−5:59:59.875 → [h] + 0:00:00.250 → [s] − 10:0:0 → [ms]"));
+    const Quantity value = eval->evalUpdateAns();
+
+    ++eval_total_tests;
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tevaluate mixed per-term time conversions in sexagesimal notation\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+        settings->simplifyResultExpressions = oldSimplifyResultExpressions;
+        settings->resultFormat = oldResultFormat;
+        return;
+    }
+
+    Session* session = const_cast<Session*>(eval->session());
+    session->clearHistory();
+    session->addHistoryEntry(HistoryEntry(
+        QString::fromUtf8("−5:59:59.875 → [h] + 0:00:00.250 → [s] − 10:0:0 → [ms]"),
+        value,
+        eval->interpretedExpression()));
+
+    TestableResultDisplay display;
+    display.resize(800, 600);
+    display.refresh();
+
+    ++eval_total_tests;
+    const QString simplifiedLine = display.document()->findBlockByNumber(1).text();
+    if (simplifiedLine != QString::fromUtf8("= −15:59:59.625 → [ms]")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tmixed per-term sexagesimal normalized line keeps conversion target brackets\t[NEW]" << endl
+             << "\tLine     : " << simplifiedLine.toUtf8().constData() << endl
+             << "\tExpected : = −15:59:59.625 → [ms]" << endl;
+    }
+
+    ++eval_total_tests;
+    const QString scalarLine = display.document()->findBlockByNumber(2).text();
+    if (scalarLine != QString::fromUtf8("= −15:59:59.625")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tmixed per-term sexagesimal final value line\t[NEW]" << endl
+             << "\tLine     : " << scalarLine.toUtf8().constData() << endl
+             << "\tExpected : = −15:59:59.625" << endl;
+    }
+
+    session->clearHistory();
+    settings->simplifyResultExpressions = oldSimplifyResultExpressions;
+    settings->resultFormat = oldResultFormat;
+}
+
+void test_result_display_strips_unit_brackets_and_double_click_restores_canonical_unit_expression()
+{
+    Session* session = const_cast<Session*>(eval->session());
+    session->clearHistory();
+    eval->setExpression(QStringLiteral("2[s]"));
+    const Quantity value = eval->evalUpdateAns();
+    ++eval_total_tests;
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tevaluate result display unit strip case\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+        session->clearHistory();
+        return;
+    }
+    session->addHistoryEntry(HistoryEntry(
+        QStringLiteral("2[s]"),
+        value,
+        eval->interpretedExpression()));
+
+    TestableResultDisplay display;
+    display.resize(800, 600);
+    display.refresh();
+
+    ++eval_total_tests;
+    const QString displayedResultLine = display.document()->findBlockByNumber(1).text();
+    if (!displayedResultLine.contains(QStringLiteral("s"))
+        || displayedResultLine.contains(QString(MathDsl::UnitStart))
+        || displayedResultLine.contains(QString(MathDsl::UnitEnd))) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tresult display strips unit brackets\t[NEW]" << endl
+             << "\tDisplayed: " << displayedResultLine.toUtf8().constData() << endl
+             << "\tExpected : contains s and no []" << endl;
+    }
+
+    QString selectedExpression;
+    QObject::connect(&display, &ResultDisplay::expressionSelected,
+                     [&selectedExpression](const QString& text) {
+                         selectedExpression = text;
+                     });
+
+    QTextCursor cursor(display.document()->findBlockByNumber(1));
+    display.setTextCursor(cursor);
+    const QPoint eventPos = display.pointForBlockStart(1);
+    QMouseEvent event(
+        QEvent::MouseButtonDblClick,
+        QPointF(eventPos),
+        QPointF(display.mapToGlobal(eventPos)),
+        Qt::LeftButton,
+        Qt::LeftButton,
+        Qt::NoModifier);
+    display.mouseDoubleClickEvent(&event);
+
+    const QString expectedSelectedExpression = QStringLiteral("2")
+        + QString(MathDsl::QuantSp)
+        + QString(MathDsl::UnitStart)
+        + QStringLiteral("s")
+        + QString(MathDsl::UnitEnd);
+
+    ++eval_total_tests;
+    if (selectedExpression != expectedSelectedExpression) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tdouble-click restores canonical unit expression\t[NEW]" << endl
+             << "\tSelected: " << selectedExpression.toUtf8().constData() << endl
+             << "\tExpected: " << expectedSelectedExpression.toUtf8().constData() << endl;
+    }
+
+    session->clearHistory();
 }
 
 void test_value_unit_separator_normalization()
@@ -6581,6 +6723,8 @@ int main(int argc, char* argv[])
     test_result_display_normalized_sexagesimal_line_with_time_conversion_target();
     test_sexagesimal_arithmetic_with_per_term_conversion_targets();
     test_result_display_mixed_per_term_time_conversions();
+    test_result_display_mixed_per_term_time_conversions_in_sexagesimal_notation();
+    test_result_display_strips_unit_brackets_and_double_click_restores_canonical_unit_expression();
     test_value_unit_separator_normalization();
     test_trig_symbolic_fraction_half();
     test_non_informative_numeric_simplified_row_suppression();

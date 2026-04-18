@@ -137,6 +137,13 @@ the numeric value and the unit block, for example ``1.23 [meter]``. Input
 accepts unit attachment with or without that separator (for example both
 ``1[meter]`` and ``1 [meter]``).
 
+In the result display, final value-with-unit result lines are shown without
+unit brackets (for example ``1.23 m``) to improve readability. Interpreted
+and simplified expression lines keep bracketed units (for example ``→ [meter]``)
+so conversion targets remain explicit. When a result is inserted back into the
+editor (for example by double-clicking), SpeedCrunch uses canonical bracketed
+unit syntax again.
+
 Note that all built-in unit names are singular and use American English spelling. This is independent of the language selected for SpeedCrunch's interface.
 
 As seen in the example above, you can use any SI prefix like ``kilo`` or ``centi``.
