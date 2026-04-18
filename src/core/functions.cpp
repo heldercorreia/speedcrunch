@@ -104,7 +104,8 @@
             return DMath::nan(); \
         } \
     } \
-    else if (!convertedExplicitAngleUnit && Settings::instance()->angleUnit == 't') { \
+    else if (!convertedExplicitAngleUnit && (Settings::instance()->angleUnit == 't' \
+            || Settings::instance()->angleUnit == 'v')) { \
         if (angle.isReal()) \
             angle *= Quantity(2) * DMath::pi(); \
         else { \
@@ -119,7 +120,8 @@
         result = DMath::rad2deg(result); \
     else if (Settings::instance()->angleUnit == 'g') \
         result = DMath::rad2gon(result); \
-    else if (Settings::instance()->angleUnit == 't') \
+    else if (Settings::instance()->angleUnit == 't' \
+            || Settings::instance()->angleUnit == 'v') \
         result /= Quantity(2) * DMath::pi();
 
 static FunctionRepo* s_FunctionRepoInstance = 0;

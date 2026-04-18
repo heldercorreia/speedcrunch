@@ -555,7 +555,7 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride,
             q /= Quantity(HMath::pi() / HNumber(180));
         else if (settings->angleUnit == 'g')
             q /= Quantity(HNumber(200) / HNumber(180));
-        else if (settings->angleUnit == 't')
+        else if (settings->angleUnit == 't' || settings->angleUnit == 'v')
             q *= Quantity(360);
         q *= Quantity(3600);
     }

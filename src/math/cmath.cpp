@@ -53,7 +53,9 @@ QChar CMath::imaginaryUnitSymbol()
 
 void CMath::setPolarAngleUnit(char angleUnit)
 {
-    s_polarAngleUnit = (angleUnit == 'd' || angleUnit == 'g' || angleUnit == 't') ? angleUnit : 'r';
+    s_polarAngleUnit = (angleUnit == 'd' || angleUnit == 'g' || angleUnit == 't' || angleUnit == 'v')
+        ? angleUnit
+        : 'r';
 }
 
 char CMath::polarAngleUnit()
@@ -512,7 +514,7 @@ QString CMath::format(const CNumber& cn, CNumber::Format format)
             phase = CMath::rad2deg(phase).real;
         else if (CMath::polarAngleUnit() == 'g')
             phase = CMath::rad2gon(phase).real;
-        else if (CMath::polarAngleUnit() == 't')
+        else if (CMath::polarAngleUnit() == 't' || CMath::polarAngleUnit() == 'v')
             phase /= HNumber(2) * HMath::pi();
 
         QString strPhase = HMath::format(phase, format);

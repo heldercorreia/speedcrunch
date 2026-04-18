@@ -379,6 +379,7 @@ void MainWindow::createActions()
     m_actions.settingsAngleUnitRadian = new QAction(this);
     m_actions.settingsAngleUnitGradian = new QAction(this);
     m_actions.settingsAngleUnitTurn = new QAction(this);
+    m_actions.settingsAngleUnitRevolution = new QAction(this);
     m_actions.settingsBehaviorAlwaysOnTop = new QAction(this);
     m_actions.settingsBehaviorAutoAns = new QAction(this);
     m_actions.settingsBehaviorAutoCompletion = new QAction(this);
@@ -454,6 +455,7 @@ void MainWindow::createActions()
     m_actions.settingsAngleUnitRadian->setCheckable(true);
     m_actions.settingsAngleUnitGradian->setCheckable(true);
     m_actions.settingsAngleUnitTurn->setCheckable(true);
+    m_actions.settingsAngleUnitRevolution->setCheckable(true);
     m_actions.settingsBehaviorAlwaysOnTop->setCheckable(true);
     m_actions.settingsBehaviorAutoAns->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletion->setCheckable(true);
@@ -647,6 +649,7 @@ QString MainWindow::statusBarAngleUnitValue() const
     return (m_settings->angleUnit == 'r' ? MainWindow::tr("Radian")
         : (m_settings->angleUnit == 'g') ? MainWindow::tr("Gradian")
         : (m_settings->angleUnit == 't') ? MainWindow::tr("Turn")
+        : (m_settings->angleUnit == 'v') ? MainWindow::tr("Revolution")
         : MainWindow::tr("Degree"));
 }
 
@@ -716,6 +719,7 @@ void MainWindow::setActionsText()
     m_actions.settingsAngleUnitRadian->setText(MainWindow::tr("&Radian"));
     m_actions.settingsAngleUnitGradian->setText(MainWindow::tr("&Gradian"));
     m_actions.settingsAngleUnitTurn->setText(MainWindow::tr("&Turn"));
+    m_actions.settingsAngleUnitRevolution->setText(MainWindow::tr("&Revolution"));
     m_actions.settingsBehaviorAlwaysOnTop->setText(MainWindow::tr("Always on &Top"));
     m_actions.settingsBehaviorAutoAns->setText(MainWindow::tr("Auto-Insert \"ans\" When Starting with an Operator"));
     m_actions.settingsBehaviorAutoAns->setToolTip(MainWindow::tr("If a new expression starts with +, -, *, or /, SpeedCrunch inserts \"ans\" first."));
@@ -844,6 +848,7 @@ void MainWindow::createActionGroups()
     m_actionGroups.angle->addAction(m_actions.settingsAngleUnitRadian);
     m_actionGroups.angle->addAction(m_actions.settingsAngleUnitGradian);
     m_actionGroups.angle->addAction(m_actions.settingsAngleUnitTurn);
+    m_actionGroups.angle->addAction(m_actions.settingsAngleUnitRevolution);
 
     m_actionGroups.colorScheme = new QActionGroup(this);
     const auto schemes = m_actions.settingsDisplayColorSchemes;
@@ -1052,6 +1057,7 @@ void MainWindow::createMenus()
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitRadian);
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitGradian);
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitTurn);
+    m_menus.angleUnit->addAction(m_actions.settingsAngleUnitRevolution);
 
     m_menus.settings->addMenu(m_menus.complexNumbers);
 
@@ -1485,6 +1491,7 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsAngleUnitRadian, SIGNAL(triggered()), SLOT(setAngleModeRadian()));
     connect(m_actions.settingsAngleUnitGradian, SIGNAL(triggered()), SLOT(setAngleModeGradian()));
     connect(m_actions.settingsAngleUnitTurn, SIGNAL(triggered()), SLOT(setAngleModeTurn()));
+    connect(m_actions.settingsAngleUnitRevolution, SIGNAL(triggered()), SLOT(setAngleModeRevolution()));
 
     if (!isWaylandPlatform())
         connect(m_actions.settingsBehaviorAlwaysOnTop, SIGNAL(toggled(bool)), SLOT(setAlwaysOnTopEnabled(bool)));
@@ -1703,6 +1710,8 @@ void MainWindow::applySettings()
         m_actions.settingsAngleUnitGradian->setChecked(true);
     else if (m_settings->angleUnit == 't')
         m_actions.settingsAngleUnitTurn->setChecked(true);
+    else if (m_settings->angleUnit == 'v')
+        m_actions.settingsAngleUnitRevolution->setChecked(true);
 
     if (m_settings->historySaving == Settings::HistorySavingNever) {
         m_actions.settingsBehaviorHistorySavingNever->setChecked(true);
@@ -2921,6 +2930,19 @@ void MainWindow::setAngleModeTurn()
         return;
 
     m_settings->angleUnit = 't';
+
+    setStatusBarText();
+
+    m_evaluator->initializeAngleUnits();
+    emit angleUnitChanged();
+}
+
+void MainWindow::setAngleModeRevolution()
+{
+    if (m_settings->angleUnit == 'v')
+        return;
+
+    m_settings->angleUnit = 'v';
 
     setStatusBarText();
 

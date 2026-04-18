@@ -117,7 +117,7 @@ public:
     bool complexNumbers;
     char imaginaryUnit; // 'i' or 'j'.
 
-    char angleUnit; // 'r': radian; 'd': degree; 'g': gradian; 't': turn.
+    char angleUnit; // 'r': radian; 'd': degree; 'g': gradian; 't': turn; 'v': revolution.
 
     // 'g': general; 'f': fixed; 'n': engineering; 'e': scientific; 'r': rational;
     // 'b': binary; 'o': octal; 'h': hexadecimal; 's': sexagesimal.

@@ -3228,11 +3228,17 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("cos(200*[gradian])", "-1");
     CHECK_EVAL("cos(200*[gon])", "-1");
     CHECK_EVAL("cos(0.5*[turn])", "-1");
+    CHECK_EVAL("cos(0.5*[revolution])", "-1");
+    CHECK_EVAL("cos(0.5*[rev])", "-1");
     CHECK_EVAL("[degree]","0.01745329251994329577");
     CHECK_EVAL("[deg]","0.01745329251994329577");
     CHECK_EVAL("[gradian]","0.01570796326794896619");
     CHECK_EVAL("[gon]","0.01570796326794896619");
-    CHECK_EVAL("[turn]","6.28318530717958647693");
+    CHECK_EVAL("[turn]","6.28318530717958647693 rad");
+    CHECK_EVAL("[tr]","6.28318530717958647693 rad");
+    CHECK_EVAL("[revolution]","6.28318530717958647693 rad");
+    CHECK_EVAL("[rev]","6.28318530717958647693 rad");
+    CHECK_EVAL("1 [tr]", "6.28318530717958647693 rad");
 
     settings->angleUnit = 'd';
     Evaluator::instance()->initializeAngleUnits();
@@ -3246,20 +3252,28 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("tan(arctan(0.25))", "0.25");
     CHECK_EVAL_FAIL("sin(1j)");
     CHECK_EVAL("arcsin(-2)", "-90+75.4561292902168920041i");
-    CHECK_EVAL("[radian]","1 rad");
-    CHECK_EVAL("[rad]","1 rad");
+    CHECK_EVAL("[radian]","57.2957795130823208768 °");
+    CHECK_EVAL("[rad]","57.2957795130823208768 °");
     CHECK_EVAL("cos(pi*[rad])", "-1");
     CHECK_EVAL("cos(180*[degree])", "-1");
     CHECK_EVAL("cos(200*[gradian])", "-1");
     CHECK_EVAL("cos(200*[gon])", "-1");
     CHECK_EVAL("cos(0.5*[turn])", "-1");
+    CHECK_EVAL("cos(0.5*[revolution])", "-1");
+    CHECK_EVAL("cos(0.5*[rev])", "-1");
+    CHECK_EVAL("pi [rad]", "180 °");
+    CHECK_EVAL("pi[rad] -> [°]", "180 °");
     CHECK_EVAL("[degree]","1");
     CHECK_EVAL("[deg]","1");
     CHECK_EVAL("1 -> [degree]", "1 °");
     CHECK_EVAL("1 -> [deg]", "1 °");
     CHECK_EVAL("[gradian]","0.9");
     CHECK_EVAL("[gon]","0.9");
-    CHECK_EVAL("[turn]","360");
+    CHECK_EVAL("[turn]","360 °");
+    CHECK_EVAL("[tr]","360 °");
+    CHECK_EVAL("[revolution]","360 °");
+    CHECK_EVAL("[rev]","360 °");
+    CHECK_EVAL("1 [tr]", "360 °");
     CHECK_EVAL_KNOWN_ISSUE("arcsin(0.25)", "14.47751218592992387877", 781);
 
     settings->angleUnit = 'g';
@@ -3274,18 +3288,24 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("tan(arctan(0.25))", "0.25");
     CHECK_EVAL_FAIL("sin(1j)");
     CHECK_EVAL("arcsin(-2)", "-100+83.84014365579654667122i");
-    CHECK_EVAL("[radian]","1 rad");
-    CHECK_EVAL("[rad]","1 rad");
+    CHECK_EVAL("[radian]","63.66197723675813430755 gon");
+    CHECK_EVAL("[rad]","63.66197723675813430755 gon");
     CHECK_EVAL("cos(pi*[rad])", "-1");
     CHECK_EVAL("cos(180*[degree])", "-1");
     CHECK_EVAL("cos(200*[gradian])", "-1");
     CHECK_EVAL("cos(200*[gon])", "-1");
     CHECK_EVAL("cos(0.5*[turn])", "-1");
+    CHECK_EVAL("cos(0.5*[revolution])", "-1");
+    CHECK_EVAL("cos(0.5*[rev])", "-1");
     CHECK_EVAL("[degree]","1.11111111111111111111");
     CHECK_EVAL("[deg]","1.11111111111111111111");
     CHECK_EVAL("[gradian]","1");
     CHECK_EVAL("[gon]","1");
-    CHECK_EVAL("[turn]","400");
+    CHECK_EVAL("[turn]","400 gon");
+    CHECK_EVAL("[tr]","400 gon");
+    CHECK_EVAL("[revolution]","400 gon");
+    CHECK_EVAL("[rev]","400 gon");
+    CHECK_EVAL("1 [tr]", "400 gon");
 
     settings->angleUnit = 't';
     Evaluator::instance()->initializeAngleUnits();
@@ -3299,18 +3319,55 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("tan(arctan(0.25))", "0.25");
     CHECK_EVAL_FAIL("sin(1j)");
     CHECK_EVAL("arcsin(-2)", "-0.25+0.20960035913949136668i");
-    CHECK_EVAL("[radian]","1 rad");
-    CHECK_EVAL("[rad]","1 rad");
+    CHECK_EVAL("[radian]","0.15915494309189533577 tr");
+    CHECK_EVAL("[rad]","0.15915494309189533577 tr");
     CHECK_EVAL("cos(pi*[rad])", "-1");
     CHECK_EVAL("cos(180*[degree])", "-1");
     CHECK_EVAL("cos(200*[gradian])", "-1");
     CHECK_EVAL("cos(200*[gon])", "-1");
     CHECK_EVAL("cos(0.5*[turn])", "-1");
+    CHECK_EVAL("cos(0.5*[revolution])", "-1");
+    CHECK_EVAL("cos(0.5*[rev])", "-1");
     CHECK_EVAL("[degree]","0.00277777777777777778");
     CHECK_EVAL("[deg]","0.00277777777777777778");
     CHECK_EVAL("[gradian]","0.0025");
     CHECK_EVAL("[gon]","0.0025");
-    CHECK_EVAL("[turn]","1");
+    CHECK_EVAL("[turn]","1 tr");
+    CHECK_EVAL("[tr]","1 tr");
+    CHECK_EVAL("[revolution]","1 tr");
+    CHECK_EVAL("[rev]","1 tr");
+    CHECK_EVAL("1 [tr]", "1 tr");
+
+    settings->angleUnit = 'v';
+    Evaluator::instance()->initializeAngleUnits();
+    CHECK_EVAL("sin(0.5)", "0");
+    CHECK_EVAL("arcsin(-1)", "-0.25");
+    CHECK_EVAL("arccos(0)", "0.25");
+    CHECK_EVAL("arctan(1)", "0.125");
+    CHECK_EVAL("arctan2(1;1)", "0.125");
+    CHECK_EVAL("sin(arcsin(0.25))", "0.25");
+    CHECK_EVAL("cos(arccos(0.25))", "0.25");
+    CHECK_EVAL("tan(arctan(0.25))", "0.25");
+    CHECK_EVAL_FAIL("sin(1j)");
+    CHECK_EVAL("arcsin(-2)", "-0.25+0.20960035913949136668i");
+    CHECK_EVAL("[radian]","0.15915494309189533577 rev");
+    CHECK_EVAL("[rad]","0.15915494309189533577 rev");
+    CHECK_EVAL("cos(pi*[rad])", "-1");
+    CHECK_EVAL("cos(180*[degree])", "-1");
+    CHECK_EVAL("cos(200*[gradian])", "-1");
+    CHECK_EVAL("cos(200*[gon])", "-1");
+    CHECK_EVAL("cos(0.5*[turn])", "-1");
+    CHECK_EVAL("cos(0.5*[revolution])", "-1");
+    CHECK_EVAL("cos(0.5*[rev])", "-1");
+    CHECK_EVAL("[degree]","0.00277777777777777778");
+    CHECK_EVAL("[deg]","0.00277777777777777778");
+    CHECK_EVAL("[gradian]","0.0025");
+    CHECK_EVAL("[gon]","0.0025");
+    CHECK_EVAL("[turn]","1 rev");
+    CHECK_EVAL("[tr]","1 rev");
+    CHECK_EVAL("[revolution]","1 rev");
+    CHECK_EVAL("[rev]","1 rev");
+    CHECK_EVAL("1 [tr]", "1 rev");
 }
 
 void test_implicit_multiplication()
@@ -4293,6 +4350,9 @@ void test_format()
     CHECK_EVAL_FORMAT_EXACT("1+1j", QString::fromUtf8("1.4142135623730950488 ∠ 50"));
 
     settings->angleUnit = 't';
+    Evaluator::instance()->initializeAngleUnits();
+    CHECK_EVAL_FORMAT_EXACT("1+1j", QString::fromUtf8("1.4142135623730950488 ∠ 0.125"));
+    settings->angleUnit = 'v';
     Evaluator::instance()->initializeAngleUnits();
     CHECK_EVAL_FORMAT_EXACT("1+1j", QString::fromUtf8("1.4142135623730950488 ∠ 0.125"));
 

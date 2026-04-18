@@ -171,6 +171,7 @@ enum class UnitId {
     Teaspoon,
     Torr,
     Turn,
+    Revolution,
     Week,
     Yard,
     YearJulian,
@@ -325,6 +326,7 @@ public:
     static const Quantity degree();
     static const Quantity gradian();
     static const Quantity turn();
+    static const Quantity revolution();
     static const Quantity arcminute();
     static const Quantity arcsecond();
     static const Quantity steradian();

@@ -133,6 +133,7 @@ private slots:
     void setAngleModeRadian();
     void setAngleModeGradian();
     void setAngleModeTurn();
+    void setAngleModeRevolution();
     void setAutoAnsEnabled(bool);
     void setAutoCalcEnabled(bool);
     void setAutoCompletionEnabled(bool);
@@ -355,6 +356,7 @@ private:
         QAction* settingsAngleUnitDegree;
         QAction* settingsAngleUnitGradian;
         QAction* settingsAngleUnitTurn;
+        QAction* settingsAngleUnitRevolution;
         QAction* settingsBehaviorSaveWindowPositionOnExit;
         QAction* settingsBehaviorPartialResults;
         QAction* settingsBehaviorAutoCompletion;

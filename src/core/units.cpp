@@ -142,6 +142,7 @@ namespace UnitName {
     inline const QString Tonne = QStringLiteral("tonne");
     inline const QString Torr = QStringLiteral("torr");
     inline const QString Turn = QStringLiteral("turn");
+    inline const QString Revolution = QStringLiteral("revolution");
     inline const QString Volt = QStringLiteral("volt");
     inline const QString Watt = QStringLiteral("watt");
     inline const QString Weber = QStringLiteral("weber");
@@ -245,6 +246,7 @@ namespace UnitSymbol {
     inline const QString Tonne = QStringLiteral("t");
     inline const QString Torr = QStringLiteral("Torr");
     inline const QString Turn = QStringLiteral("tr");
+    inline const QString Revolution = QStringLiteral("rev");
     inline const QString Volt = QStringLiteral("V");
     inline const QString Watt = QStringLiteral("W");
     inline const QString Weber = QStringLiteral("Wb");
@@ -647,6 +649,7 @@ const QHash<UnitId, UnitSpec>& s_unitSpecs()
         {UnitId::Teaspoon, UnitSpec{UnitName::Teaspoon, UnitSymbol::Teaspoon, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::teaspoon}},
         {UnitId::Torr, UnitSpec{UnitName::Torr, UnitSymbol::Torr, {}, UnitFamily::Other, {UnitQuantity::Pressure}, NoSiPrefixes, &Units::torr}},
         {UnitId::Turn, UnitSpec{UnitName::Turn, UnitSymbol::Turn, {UnitAltSymbol::Turn}, UnitFamily::Other, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::turn}},
+        {UnitId::Revolution, UnitSpec{UnitName::Revolution, UnitSymbol::Revolution, {}, UnitFamily::Other, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::revolution}},
         {UnitId::Week, UnitSpec{UnitName::Week, UnitSymbol::Week, {}, UnitFamily::Other, {UnitQuantity::Time}, NoSiPrefixes, &Units::week}},
         {UnitId::Yard, UnitSpec{UnitName::Yard, UnitSymbol::Yard, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::yard}},
         {UnitId::YearJulian, UnitSpec{UnitName::YearJulian, UnitSymbol::YearJulian, {}, UnitFamily::Other, {UnitQuantity::Time}, NoSiPrefixes, &Units::julian_year}},
@@ -775,7 +778,10 @@ AngleUnitKind angleUnitKindFromName(const QString& name)
     if (normalized == UnitName::Gradian
         || normalized == UnitSymbol::Gradian)
         return AngleUnitKind::Gradian;
-    if (normalized == UnitName::Turn)
+    if (normalized == UnitName::Turn
+        || normalized == UnitSymbol::Turn
+        || normalized == UnitName::Revolution
+        || normalized == UnitSymbol::Revolution)
         return AngleUnitKind::Turn;
     if (normalized == unitName(UnitId::Arcminute)
         || normalized == UnitAltSymbol::Arcminute)
@@ -788,19 +794,31 @@ AngleUnitKind angleUnitKindFromName(const QString& name)
 
 Quantity angleUnitValueForMode(AngleUnitKind angleUnit, char angleMode)
 {
-    if (angleUnit == AngleUnitKind::Radian) {
-        Quantity rad = Units::radian();
-        rad.setDisplayUnit(Units::radian().numericValue(), "rad");
-        return rad;
-    }
+    auto modeSymbol = [angleMode]() -> QString {
+        if (angleMode == 'd')
+            return UnitSymbol::Degree;
+        if (angleMode == 'g')
+            return UnitSymbol::Gradian;
+        if (angleMode == 'v')
+            return UnitSymbol::Revolution;
+        if (angleMode == 't')
+            return UnitSymbol::Turn;
+        return UnitSymbol::Radian;
+    };
 
     Quantity modeReference = Units::radian();
     if (angleMode == 'd')
         modeReference = Units::degree();
     else if (angleMode == 'g')
         modeReference = Units::gradian();
-    else if (angleMode == 't')
+    else if (angleMode == 't' || angleMode == 'v')
         modeReference = Units::turn();
+
+    if (angleUnit == AngleUnitKind::Radian) {
+        Quantity rad = Units::radian() / modeReference;
+        rad.setDisplayUnit(Quantity(1).numericValue(), modeSymbol());
+        return rad;
+    }
 
     if (angleUnit == AngleUnitKind::Degree) {
         return Units::degree() / modeReference;
@@ -809,7 +827,9 @@ Quantity angleUnitValueForMode(AngleUnitKind angleUnit, char angleMode)
         return Units::gradian() / modeReference;
     }
     if (angleUnit == AngleUnitKind::Turn) {
-        return Units::turn() / modeReference;
+        Quantity turn = Units::turn() / modeReference;
+        turn.setDisplayUnit(Quantity(1).numericValue(), modeSymbol());
+        return turn;
     }
     if (angleUnit == AngleUnitKind::Arcminute) {
         return Units::arcminute() / modeReference;
@@ -1630,6 +1650,9 @@ QHash<QString, Quantity> Units::builtInUnitLookup(char angleMode)
     lookup.insert(UnitName::Gradian, angleUnitValueForMode(AngleUnitKind::Gradian, angleMode));
     lookup.insert(UnitSymbol::Gradian, angleUnitValueForMode(AngleUnitKind::Gradian, angleMode));
     lookup.insert(UnitName::Turn, angleUnitValueForMode(AngleUnitKind::Turn, angleMode));
+    lookup.insert(UnitSymbol::Turn, angleUnitValueForMode(AngleUnitKind::Turn, angleMode));
+    lookup.insert(UnitName::Revolution, angleUnitValueForMode(AngleUnitKind::Turn, angleMode));
+    lookup.insert(UnitSymbol::Revolution, angleUnitValueForMode(AngleUnitKind::Turn, angleMode));
     lookup.insert(unitName(UnitId::Arcminute), angleUnitValueForMode(AngleUnitKind::Arcminute, angleMode));
     lookup.insert(unitName(UnitId::Arcsecond), angleUnitValueForMode(AngleUnitKind::Arcsecond, angleMode));
     lookup.insert(UnitAltSymbol::Arcminute, angleUnitValueForMode(AngleUnitKind::Arcminute, angleMode));
@@ -1704,6 +1727,7 @@ DEFINE_DERIVED_UNIT(radian, Quantity(1))
 DEFINE_DERIVED_UNIT(degree, HMath::pi() * Units::radian() / HNumber(180))
 DEFINE_DERIVED_UNIT(gradian, HMath::pi() / HNumber(200))
 DEFINE_DERIVED_UNIT(turn, HNumber(2) * HMath::pi() * Units::radian())
+DEFINE_DERIVED_UNIT(revolution, HNumber(2) * HMath::pi() * Units::radian())
 DEFINE_DERIVED_UNIT(arcminute, Units::degree() / HNumber(60))
 DEFINE_DERIVED_UNIT(arcsecond, Units::arcminute() / HNumber(60))
 DEFINE_DERIVED_UNIT(pascal, Units::newton() / Units::square_metre())

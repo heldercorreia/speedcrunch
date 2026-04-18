@@ -273,6 +273,9 @@ determines the angle format of the arguments.
 
 * :menuselection:`Turn`
     Use turns for angles. A full circle corresponds to an angle of 1 turn.
+* :menuselection:`Revolution`
+    Use revolutions for angles. A full circle corresponds to an angle of
+    1 revolution.
 
     .. versionadded:: 1.0
     

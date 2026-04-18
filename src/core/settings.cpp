@@ -323,7 +323,8 @@ void Settings::load()
     QString angleUnitStr;
     angleUnitStr = settings->value(key + QLatin1String("AngleMode"), "r").toString();
     if (angleUnitStr != QLatin1String("r") && angleUnitStr != QLatin1String("d")
-            && angleUnitStr != QLatin1String("g") && angleUnitStr != QLatin1String("t"))
+            && angleUnitStr != QLatin1String("g") && angleUnitStr != QLatin1String("t")
+            && angleUnitStr != QLatin1String("v"))
         angleUnit = 'r';
     else
         angleUnit = angleUnitStr.at(0).toLatin1();
