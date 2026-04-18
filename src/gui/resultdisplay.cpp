@@ -147,6 +147,20 @@ QString trimTrailingFractionZeros(QString text)
 QString stripDisplayedUnitBrackets(QString text)
 {
     text.replace(RegExpPatterns::unitBrackets(), QStringLiteral("\\1"));
+    auto collapseTrailingCompactSuffix = [&text](const QChar suffix) {
+        const QString quantSpVariant = QString(MathDsl::QuantSp) + suffix;
+        const QString asciiSpVariant = QStringLiteral(" ") + suffix;
+        if (text.endsWith(quantSpVariant)) {
+            text.chop(quantSpVariant.size());
+            text += suffix;
+        } else if (text.endsWith(asciiSpVariant)) {
+            text.chop(asciiSpVariant.size());
+            text += suffix;
+        }
+    };
+    collapseTrailingCompactSuffix(UnicodeChars::DegreeSign);
+    collapseTrailingCompactSuffix(UnicodeChars::Prime);
+    collapseTrailingCompactSuffix(UnicodeChars::DoublePrime);
     return text;
 }
 
@@ -192,6 +206,62 @@ QString conversionTargetSuffixForDisplay(const QString& expression)
     return QStringLiteral(" \u2192 ") + target;
 }
 
+bool expressionContainsExplicitBracketedAngleUnit(const QString& expression)
+{
+    QRegularExpressionMatchIterator matches =
+        RegExpPatterns::unitBrackets().globalMatch(expression);
+    while (matches.hasNext()) {
+        const QRegularExpressionMatch match = matches.next();
+        if (Units::isExplicitAngleUnitName(match.captured(1)))
+            return true;
+    }
+    return false;
+}
+
+bool expressionContainsExplicitSexagesimalAngleMarkers(const QString& expression)
+{
+    for (const QChar ch : expression) {
+        if (ch == UnicodeChars::DegreeSign
+            || ch == UnicodeChars::MasculineOrdinalIndicator
+            || ch == UnicodeChars::RingOperator
+            || ch == UnicodeChars::Prime
+            || ch == UnicodeChars::DoublePrime
+            || ch == UnicodeChars::Apostrophe
+            || ch == UnicodeChars::QuotationMark) {
+            return true;
+        }
+    }
+    return false;
+}
+
+QString appendAngleModeSuffixForDisplayIfNeeded(const QString& formattedText,
+                                                const HistoryEntry& entry,
+                                                const Quantity& value,
+                                                const Settings* settings,
+                                                char resultFormat)
+{
+    if (resultFormat == 's')
+        return formattedText;
+    if (!value.isDimensionless())
+        return formattedText;
+    if (formattedText.contains(MathDsl::UnitStart) || formattedText.contains(MathDsl::UnitEnd))
+        return formattedText;
+    const bool hasExplicitBracketedAngleUnit =
+        expressionContainsExplicitBracketedAngleUnit(entry.expr())
+        || expressionContainsExplicitBracketedAngleUnit(entry.interpretedExpr());
+    const bool hasExplicitSexagesimalAngleMarkers =
+        expressionContainsExplicitSexagesimalAngleMarkers(entry.expr())
+        || expressionContainsExplicitSexagesimalAngleMarkers(entry.interpretedExpr());
+    if (!hasExplicitBracketedAngleUnit && !hasExplicitSexagesimalAngleMarkers) {
+        return formattedText;
+    }
+
+    const QString symbol = Units::angleModeUnitSymbol(settings->angleUnit);
+    if (settings->angleUnit == 'd')
+        return formattedText + symbol;
+    return formattedText + QString(MathDsl::QuantSp) + symbol;
+}
+
 QStringList formatResultLines(const HistoryEntry& entry)
 {
     const Settings* settings = Settings::instance();
@@ -200,22 +270,25 @@ QStringList formatResultLines(const HistoryEntry& entry)
     bool emittedSimplifiedLine = false;
 
     QStringList lines;
-    auto formatNumericResultLine = [&value](char resultFormat,
-                                            int precision,
-                                            bool complexNumbers,
-                                            char complexFormat) {
+    auto formatNumericResultLine = [&entry, &value, settings](char resultFormat,
+                                                              int precision,
+                                                              bool complexNumbers,
+                                                              char complexFormat) {
         Quantity formattedValue = value;
         if (resultFormat == 's' && isPureTimeQuantity(formattedValue)) {
             // Sexagesimal formatting operates in h:mm:ss and should not keep
             // an explicit target unit suffix (e.g. "[ms]") in final value lines.
             formattedValue.stripUnits();
         }
-        return DisplayFormatUtils::applyDigitGroupingForDisplay(
+        QString formattedText = DisplayFormatUtils::applyDigitGroupingForDisplay(
             NumberFormatter::format(formattedValue,
                                     resultFormat,
                                     precision,
                                     complexNumbers,
                                     complexFormat));
+        formattedText = appendAngleModeSuffixForDisplayIfNeeded(
+            formattedText, entry, value, settings, resultFormat);
+        return formattedText;
     };
     auto appendUniqueLine = [&lines](const QString& line, bool stripUnitBrackets = false) {
         QString displayLine = line;
@@ -710,7 +783,20 @@ void ResultDisplay::mouseDoubleClickEvent(QMouseEvent* event)
                 if (historyIndex < session->historySize()) {
                     const Quantity value = session->historyEntryAtRef(historyIndex).result();
                     if (!value.isNan()) {
-                        emit expressionSelected(formatResultForClipboard(value));
+                        QString clipboardText = formatResultForClipboard(value);
+                        const QString displayedResultLine = text.mid(resultMarker.size());
+                        if (!clipboardText.contains(MathDsl::UnitStart)
+                            && !clipboardText.endsWith(MathDsl::Deg)
+                            && !clipboardText.endsWith(UnicodeChars::Prime)
+                            && !clipboardText.endsWith(UnicodeChars::DoublePrime)) {
+                            if (displayedResultLine.endsWith(MathDsl::Deg))
+                                clipboardText += MathDsl::Deg;
+                            else if (displayedResultLine.endsWith(UnicodeChars::Prime))
+                                clipboardText += UnicodeChars::Prime;
+                            else if (displayedResultLine.endsWith(UnicodeChars::DoublePrime))
+                                clipboardText += UnicodeChars::DoublePrime;
+                        }
+                        emit expressionSelected(clipboardText);
                         return;
                     }
                 }

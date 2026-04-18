@@ -12,6 +12,7 @@
 #include "core/settings.h"
 #include "core/unicodechars.h"
 #include "core/mathdsl.h"
+#include "core/units.h"
 
 #include <QApplication>
 #include <QInputMethodEvent>
@@ -70,6 +71,11 @@ private slots:
     void completes_day_unit_to_short_form_in_unit_context();
     void completes_hour_unit_to_short_form_in_unit_context();
     void completes_affine_temperature_units_in_unit_context();
+    void completes_arc_units_in_unit_context();
+    void tooltip_does_not_duplicate_degree_symbol_for_explicit_angle_conversion();
+    void tooltip_does_not_append_angle_mode_symbol_after_explicit_arcsecond_unit();
+    void tooltip_shows_radian_suffix_for_negative_sexagesimal_literal();
+    void tooltip_keeps_quantsp_before_degree_celsius();
     void enter_evaluates_when_completion_popup_has_no_explicit_interaction();
 };
 
@@ -1789,6 +1795,150 @@ void TestEditorUi::completes_affine_temperature_units_in_unit_context()
         Qt::DirectConnection,
         Q_ARG(QString, QString::fromUtf8("ºC:Unit"))));
     QCOMPARE(editor.text(), QString::fromUtf8("100 [°C"));
+}
+
+void TestEditorUi::completes_arc_units_in_unit_context()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    editor.setText(QStringLiteral("1 [arc"));
+    editor.setCursorPosition(editor.text().size());
+    QVERIFY(QMetaObject::invokeMethod(
+        &editor,
+        "autoComplete",
+        Qt::DirectConnection,
+        Q_ARG(QString, QStringLiteral("arcminute:Unit"))));
+    QVERIFY(editor.text() != QStringLiteral("1 [arc"));
+
+    editor.setText(QStringLiteral("1 [arc"));
+    editor.setCursorPosition(editor.text().size());
+    QVERIFY(QMetaObject::invokeMethod(
+        &editor,
+        "autoComplete",
+        Qt::DirectConnection,
+        Q_ARG(QString, QStringLiteral("arcsecond:Unit"))));
+    QVERIFY(editor.text() != QStringLiteral("1 [arc"));
+}
+
+void TestEditorUi::tooltip_does_not_duplicate_degree_symbol_for_explicit_angle_conversion()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    Settings* settings = Settings::instance();
+    const char oldAngleUnit = settings->angleUnit;
+    const char oldResultFormat = settings->resultFormat;
+    settings->angleUnit = 'd';
+    settings->resultFormat = 'f';
+    Evaluator::instance()->initializeAngleUnits();
+
+    QSignalSpy spy(&editor, SIGNAL(autoCalcMessageAvailable(const QString&)));
+
+    editor.setText(QStringLiteral("1 [rev] -> [°]"));
+    editor.setCursorPosition(editor.text().size());
+    editor.refreshAutoCalc();
+    QCoreApplication::processEvents();
+
+    QVERIFY(!spy.isEmpty());
+    const QString message = spy.takeLast().at(0).toString();
+    QVERIFY(message.contains(QString::fromUtf8("= 360°")));
+    QVERIFY(!message.contains(QString::fromUtf8("= 360°°")));
+
+    settings->angleUnit = oldAngleUnit;
+    settings->resultFormat = oldResultFormat;
+    Evaluator::instance()->initializeAngleUnits();
+}
+
+void TestEditorUi::tooltip_does_not_append_angle_mode_symbol_after_explicit_arcsecond_unit()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    Settings* settings = Settings::instance();
+    const char oldAngleUnit = settings->angleUnit;
+    const char oldResultFormat = settings->resultFormat;
+    settings->angleUnit = 'd';
+    settings->resultFormat = 'f';
+    Evaluator::instance()->initializeAngleUnits();
+
+    QSignalSpy spy(&editor, SIGNAL(autoCalcMessageAvailable(const QString&)));
+
+    editor.setText(QStringLiteral("1 [rev] -> [arcsec]"));
+    editor.setCursorPosition(editor.text().size());
+    editor.refreshAutoCalc();
+    QCoreApplication::processEvents();
+
+    QVERIFY(!spy.isEmpty());
+    const QString message = spy.takeLast().at(0).toString();
+    QVERIFY(message.contains(QString(UnicodeChars::DoublePrime)));
+    QVERIFY(!message.contains(QString(UnicodeChars::DoublePrime) + UnicodeChars::DegreeSign));
+
+    settings->angleUnit = oldAngleUnit;
+    settings->resultFormat = oldResultFormat;
+    Evaluator::instance()->initializeAngleUnits();
+}
+
+void TestEditorUi::tooltip_shows_radian_suffix_for_negative_sexagesimal_literal()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    Settings* settings = Settings::instance();
+    const char oldAngleUnit = settings->angleUnit;
+    const char oldResultFormat = settings->resultFormat;
+    settings->angleUnit = 'r';
+    settings->resultFormat = 'f';
+    Evaluator::instance()->initializeAngleUnits();
+
+    QSignalSpy spy(&editor, SIGNAL(autoCalcMessageAvailable(const QString&)));
+
+    editor.setText(QString::fromUtf8("−57°17′44.80624709635515647336″"));
+    editor.setCursorPosition(editor.text().size());
+    editor.refreshAutoCalc();
+    QCoreApplication::processEvents();
+
+    QVERIFY(!spy.isEmpty());
+    const QString message = spy.takeLast().at(0).toString();
+    QVERIFY(message.contains(QString(MathDsl::QuantSp) + Units::angleModeUnitSymbol('r')));
+
+    settings->angleUnit = oldAngleUnit;
+    settings->resultFormat = oldResultFormat;
+    Evaluator::instance()->initializeAngleUnits();
+}
+
+void TestEditorUi::tooltip_keeps_quantsp_before_degree_celsius()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    Settings* settings = Settings::instance();
+    const char oldResultFormat = settings->resultFormat;
+    settings->resultFormat = 'f';
+
+    QSignalSpy spy(&editor, SIGNAL(autoCalcMessageAvailable(const QString&)));
+
+    editor.setText(QString::fromUtf8("77 [°F] -> [°C]"));
+    editor.setCursorPosition(editor.text().size());
+    editor.refreshAutoCalc();
+    QCoreApplication::processEvents();
+
+    QVERIFY(!spy.isEmpty());
+    const QString message = spy.takeLast().at(0).toString();
+    const QString expected = QStringLiteral("= 25") + QString(MathDsl::QuantSp) + QString::fromUtf8("°C");
+    QVERIFY(message.contains(expected));
+
+    settings->resultFormat = oldResultFormat;
 }
 
 void TestEditorUi::enter_evaluates_when_completion_popup_has_no_explicit_interaction()

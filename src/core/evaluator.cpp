@@ -3721,7 +3721,7 @@ HNumber getNumber(const QString& number) {
     if (number.isEmpty())
         return HNumber(0);
     const QString sexagesimalStopChars =
-        QStringLiteral("['\":") + MathDsl::MinOp + MathDsl::SecOp + MathDsl::UnitEnd;
+        QStringLiteral("['\":") + MathDsl::ArcminOp + MathDsl::ArcsecOp + MathDsl::UnitEnd;
     int endPos = number.indexOf(QRegularExpression(sexagesimalStopChars)); // Stop at sexagesimal separators/markers.
     if (endPos == 0)
         return HNumber(0);
@@ -3734,13 +3734,13 @@ QString Evaluator::fixSexagesimal(const QString& number, QString& unit)
 {
     unit.clear();
     QString bad, result = number;
-    const QString minuteMarkClass = QStringLiteral("['") + MathDsl::MinOp + MathDsl::UnitEnd;
-    const QString secondMarkClass = QStringLiteral("[\"") + MathDsl::SecOp + MathDsl::UnitEnd;
+    const QString minuteMarkClass = QStringLiteral("['") + MathDsl::ArcminOp + MathDsl::UnitEnd;
+    const QString secondMarkClass = QStringLiteral("[\"") + MathDsl::ArcsecOp + MathDsl::UnitEnd;
     const auto isMinuteMark = [](QChar c) {
-        return c == MathDsl::MinOpAl1 || c == MathDsl::MinOp;
+        return c == MathDsl::ArcminOpAl1 || c == MathDsl::ArcminOp;
     };
     const auto isSecondMark = [](QChar c) {
-        return c == MathDsl::SecOpAl1 || c == MathDsl::SecOp;
+        return c == MathDsl::ArcsecOpAl1 || c == MathDsl::ArcsecOp;
     };
 
     bool arc = false;
@@ -4007,8 +4007,8 @@ bool isArcTime(QChar ch) {
     return (isDegreeSign(ch)
             || ch == '\''
             || ch == '"'
-            || ch == MathDsl::MinOp
-            || ch == MathDsl::SecOp
+            || ch == MathDsl::ArcminOp
+            || ch == MathDsl::ArcsecOp
             || ch == ':');
 }
 
@@ -4043,8 +4043,8 @@ Tokens Evaluator::scan(const QString& expr) const
     state = Init;
     int i = 0;
     QString ex = UnicodeChars::normalizeUnitSymbolAliases(expr);
-    ex.replace(MathDsl::MinOp, MathDsl::MinOpAl1);
-    ex.replace(MathDsl::SecOp, MathDsl::SecOpAl1);
+    ex.replace(MathDsl::ArcminOp, MathDsl::ArcminOpAl1);
+    ex.replace(MathDsl::ArcsecOp, MathDsl::ArcsecOpAl1);
     // Accept editor-produced spacing in unit conversion aliases:
     // "− >" or "- >" should tokenize as "->".
     ex.replace(

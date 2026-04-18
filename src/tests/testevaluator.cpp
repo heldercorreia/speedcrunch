@@ -2100,6 +2100,7 @@ void test_sexagesimal()
 
     CHECK_EVAL_FORMAT("pi", "180°00′00.00″");
     CHECK_EVAL_FORMAT("-pi", "-180°00′00.00″");
+    CHECK_EVAL_FORMAT("2*pi [rad]", "360°00′00.00″");
     CHECK_EVAL_FORMAT("12°", "12°00′00.00″");
     CHECK_EVAL_FORMAT("12.3[degree]", "12°18′00.00″");
 
@@ -6343,6 +6344,322 @@ void test_result_display_strips_unit_brackets_and_double_click_restores_canonica
     session->clearHistory();
 }
 
+void test_result_display_double_click_preserves_compact_angle_suffix()
+{
+    Session* session = const_cast<Session*>(eval->session());
+    Settings* settings = Settings::instance();
+    const char oldAngleUnit = settings->angleUnit;
+    settings->angleUnit = 'd';
+    Evaluator::instance()->initializeAngleUnits();
+    session->clearHistory();
+
+    eval->setExpression(QStringLiteral("(21600 / 2)[arcminute]"));
+    const Quantity value = eval->evalUpdateAns();
+    ++eval_total_tests;
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tevaluate compact angle suffix paste case\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+        settings->angleUnit = oldAngleUnit;
+        Evaluator::instance()->initializeAngleUnits();
+        session->clearHistory();
+        return;
+    }
+
+    session->addHistoryEntry(HistoryEntry(
+        QStringLiteral("(21600 / 2)[arcminute]"),
+        value,
+        eval->interpretedExpression()));
+
+    TestableResultDisplay display;
+    display.resize(800, 600);
+    display.refresh();
+
+    QString selectedExpression;
+    QObject::connect(&display, &ResultDisplay::expressionSelected,
+                     [&selectedExpression](const QString& text) {
+                         selectedExpression = text;
+                     });
+
+    QTextCursor cursor(display.document()->findBlockByNumber(1));
+    display.setTextCursor(cursor);
+    const QPoint eventPos = display.pointForBlockStart(1);
+    QMouseEvent event(
+        QEvent::MouseButtonDblClick,
+        QPointF(eventPos),
+        QPointF(display.mapToGlobal(eventPos)),
+        Qt::LeftButton,
+        Qt::LeftButton,
+        Qt::NoModifier);
+    display.mouseDoubleClickEvent(&event);
+
+    ++eval_total_tests;
+    if (selectedExpression != QString::fromUtf8("180°")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tdouble-click preserves compact angle suffix\t[NEW]" << endl
+             << "\tSelected: " << selectedExpression.toUtf8().constData() << endl
+             << "\tExpected: 180°" << endl;
+    }
+
+    settings->angleUnit = oldAngleUnit;
+    Evaluator::instance()->initializeAngleUnits();
+    session->clearHistory();
+}
+
+void test_result_display_keeps_quantsp_before_degree_celsius_and_fahrenheit()
+{
+    Session* session = const_cast<Session*>(eval->session());
+    session->clearHistory();
+
+    eval->setExpression(QString::fromUtf8("77 [°F] -> [°C]"));
+    const Quantity value = eval->evalUpdateAns();
+    ++eval_total_tests;
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tevaluate fahrenheit to celsius display spacing case\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+        session->clearHistory();
+        return;
+    }
+
+    session->addHistoryEntry(HistoryEntry(
+        QString::fromUtf8("77 [°F] -> [°C]"),
+        value,
+        eval->interpretedExpression()));
+
+    TestableResultDisplay display;
+    display.resize(800, 600);
+    display.refresh();
+
+    ++eval_total_tests;
+    const QString resultLine = display.document()->findBlockByNumber(1).text();
+    const QString expectedSuffix = QString(MathDsl::QuantSp) + QString::fromUtf8("°C");
+    if (!resultLine.endsWith(expectedSuffix)) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tresult display keeps QuantSp before °C\t[NEW]" << endl
+             << "\tLine     : " << resultLine.toUtf8().constData() << endl
+             << "\tExpected : ends with "
+             << expectedSuffix.toUtf8().constData() << endl;
+    }
+
+    session->clearHistory();
+}
+
+void test_result_display_shows_angle_mode_unit_suffix_for_explicit_angle_input()
+{
+    Settings* settings = Settings::instance();
+    const char oldAngleUnit = settings->angleUnit;
+    Session* session = const_cast<Session*>(eval->session());
+    session->clearHistory();
+    auto checkAngleModeSuffix = [&](char angleUnit,
+                                    const QString& expectedSuffix,
+                                    bool expectNoSpaceBeforeUnit,
+                                    const char* label) {
+        settings->angleUnit = angleUnit;
+        Evaluator::instance()->initializeAngleUnits();
+        session->clearHistory();
+        eval->setExpression(QStringLiteral("2 [arcsecond]"));
+        const Quantity value = eval->evalUpdateAns();
+
+        ++eval_total_tests;
+        if (!eval->error().isEmpty()) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\t" << label << "\t[NEW]" << endl
+                 << "\tError: " << qPrintable(eval->error()) << endl;
+            return;
+        }
+
+        session->addHistoryEntry(HistoryEntry(
+            QStringLiteral("2 [arcsecond]"),
+            value,
+            eval->interpretedExpression()));
+
+        TestableResultDisplay display;
+        display.resize(800, 600);
+        display.refresh();
+
+        ++eval_total_tests;
+        const QString resultLine = display.document()->findBlockByNumber(1).text();
+        const QString expectedEnding = expectNoSpaceBeforeUnit
+            ? expectedSuffix
+            : (QString(MathDsl::QuantSp) + expectedSuffix);
+        const bool degreeSpacingOk = !expectNoSpaceBeforeUnit
+            || (!resultLine.endsWith(QString(MathDsl::QuantSp) + expectedSuffix)
+                && !resultLine.endsWith(QStringLiteral(" ") + expectedSuffix));
+        if (!resultLine.endsWith(expectedEnding)
+            || resultLine.contains(QString(MathDsl::UnitStart))
+            || resultLine.contains(QString(MathDsl::UnitEnd))
+            || !degreeSpacingOk)
+        {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\t" << label << "\t[NEW]" << endl
+                 << "\tLine     : " << resultLine.toUtf8().constData() << endl
+                 << "\tExpected : ends with "
+                 << expectedEnding.toUtf8().constData()
+                 << " and has no []" << endl;
+        }
+    };
+
+    checkAngleModeSuffix('r', Units::angleModeUnitSymbol('r'), false,
+                         "result display angle suffix in radian mode");
+    checkAngleModeSuffix('d', Units::angleModeUnitSymbol('d'), true,
+                         "result display angle suffix in degree mode");
+    checkAngleModeSuffix('g', Units::angleModeUnitSymbol('g'), false,
+                         "result display angle suffix in gradian mode");
+    checkAngleModeSuffix('t', Units::angleModeUnitSymbol('t'), false,
+                         "result display angle suffix in turn mode");
+    checkAngleModeSuffix('v', Units::angleModeUnitSymbol('v'), false,
+                         "result display angle suffix in revolution mode");
+
+    settings->angleUnit = 'r';
+    Evaluator::instance()->initializeAngleUnits();
+    session->clearHistory();
+    eval->setExpression(QString::fromUtf8("1°2′3″"));
+    const Quantity sexagesimalValue = eval->evalUpdateAns();
+    ++eval_total_tests;
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tresult display angle suffix for sexagesimal literal\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+    } else {
+        session->addHistoryEntry(HistoryEntry(
+            QString::fromUtf8("1°2′3″"),
+            sexagesimalValue,
+            eval->interpretedExpression()));
+
+        TestableResultDisplay display;
+        display.resize(800, 600);
+        display.refresh();
+
+        ++eval_total_tests;
+        const QString resultLine = display.document()->findBlockByNumber(1).text();
+        const QString expectedEnding = QString(MathDsl::QuantSp) + Units::angleModeUnitSymbol('r');
+        if (!resultLine.endsWith(expectedEnding)
+            || resultLine.contains(QString(MathDsl::UnitStart))
+            || resultLine.contains(QString(MathDsl::UnitEnd))) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tresult display angle suffix for sexagesimal literal\t[NEW]" << endl
+                 << "\tLine     : " << resultLine.toUtf8().constData() << endl
+                 << "\tExpected : ends with "
+                 << expectedEnding.toUtf8().constData()
+                 << " and has no []" << endl;
+        }
+    }
+
+    settings->angleUnit = 'r';
+    Evaluator::instance()->initializeAngleUnits();
+    session->clearHistory();
+    eval->setExpression(QString::fromUtf8("−57°17′44.80624709635515647336″"));
+    const Quantity negativeSexagesimalValue = eval->evalUpdateAns();
+    ++eval_total_tests;
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tresult display angle suffix for negative sexagesimal literal\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+    } else {
+        session->addHistoryEntry(HistoryEntry(
+            QString::fromUtf8("−57°17′44.80624709635515647336″"),
+            negativeSexagesimalValue,
+            eval->interpretedExpression()));
+
+        TestableResultDisplay display;
+        display.resize(800, 600);
+        display.refresh();
+
+        ++eval_total_tests;
+        const QString resultLine = display.document()->findBlockByNumber(1).text();
+        const QString expectedEnding = QString(MathDsl::QuantSp) + Units::angleModeUnitSymbol('r');
+        if (!resultLine.endsWith(expectedEnding)
+            || resultLine.contains(QString(MathDsl::UnitStart))
+            || resultLine.contains(QString(MathDsl::UnitEnd))) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tresult display angle suffix for negative sexagesimal literal\t[NEW]" << endl
+                 << "\tLine     : " << resultLine.toUtf8().constData() << endl
+                 << "\tExpected : ends with "
+                 << expectedEnding.toUtf8().constData()
+                 << " and has no []" << endl;
+        }
+    }
+
+    settings->angleUnit = 'd';
+    Evaluator::instance()->initializeAngleUnits();
+    session->clearHistory();
+    eval->setExpression(QStringLiteral("1 [rev]→[°]"));
+    const Quantity degreeConversionValue = eval->evalUpdateAns();
+    ++eval_total_tests;
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tresult display spacing for degree conversion target\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+    } else {
+        session->addHistoryEntry(HistoryEntry(
+            QStringLiteral("1 [rev]→[°]"),
+            degreeConversionValue,
+            eval->interpretedExpression()));
+
+        TestableResultDisplay display;
+        display.resize(800, 600);
+        display.refresh();
+
+        ++eval_total_tests;
+        const QString resultLine = display.document()->findBlockByNumber(1).text();
+        if (!resultLine.endsWith(QStringLiteral("360°"))) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tresult display spacing for degree conversion target\t[NEW]" << endl
+                 << "\tLine     : " << resultLine.toUtf8().constData() << endl
+                 << "\tExpected : ends with 360°" << endl;
+        }
+    }
+
+    settings->angleUnit = 'd';
+    Evaluator::instance()->initializeAngleUnits();
+    session->clearHistory();
+    eval->setExpression(QStringLiteral("1 [rev] -> [arcmin]"));
+    const Quantity arcminuteConversionValue = eval->evalUpdateAns();
+    ++eval_total_tests;
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tresult display spacing for arcminute conversion target\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+    } else {
+        session->addHistoryEntry(HistoryEntry(
+            QStringLiteral("1 [rev] -> [arcmin]"),
+            arcminuteConversionValue,
+            eval->interpretedExpression()));
+
+        TestableResultDisplay display;
+        display.resize(800, 600);
+        display.refresh();
+
+        ++eval_total_tests;
+        const QString resultLine = display.document()->findBlockByNumber(1).text();
+        if (!resultLine.endsWith(QString::fromUtf8("21600′"))) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tresult display spacing for arcminute conversion target\t[NEW]" << endl
+                 << "\tLine     : " << resultLine.toUtf8().constData() << endl
+                 << "\tExpected : ends with 21600′" << endl;
+        }
+    }
+
+    settings->angleUnit = oldAngleUnit;
+    Evaluator::instance()->initializeAngleUnits();
+    session->clearHistory();
+}
+
 void test_value_unit_separator_normalization()
 {
     const QString expectedWithSeparator = QStringLiteral("1")
@@ -6725,6 +7042,9 @@ int main(int argc, char* argv[])
     test_result_display_mixed_per_term_time_conversions();
     test_result_display_mixed_per_term_time_conversions_in_sexagesimal_notation();
     test_result_display_strips_unit_brackets_and_double_click_restores_canonical_unit_expression();
+    test_result_display_double_click_preserves_compact_angle_suffix();
+    test_result_display_shows_angle_mode_unit_suffix_for_explicit_angle_input();
+    test_result_display_keeps_quantsp_before_degree_celsius_and_fahrenheit();
     test_value_unit_separator_normalization();
     test_trig_symbolic_fraction_half();
     test_non_informative_numeric_simplified_row_suppression();

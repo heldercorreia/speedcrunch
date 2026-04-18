@@ -799,18 +799,6 @@ AngleUnitKind angleUnitKindFromName(const QString& name)
 
 Quantity angleUnitValueForMode(AngleUnitKind angleUnit, char angleMode)
 {
-    auto modeSymbol = [angleMode]() -> QString {
-        if (angleMode == 'd')
-            return UnitSymbol::Degree;
-        if (angleMode == 'g')
-            return UnitSymbol::Gradian;
-        if (angleMode == 'v')
-            return UnitSymbol::Revolution;
-        if (angleMode == 't')
-            return UnitSymbol::Turn;
-        return UnitSymbol::Radian;
-    };
-
     Quantity modeReference = Units::radian();
     if (angleMode == 'd')
         modeReference = Units::degree();
@@ -821,7 +809,7 @@ Quantity angleUnitValueForMode(AngleUnitKind angleUnit, char angleMode)
 
     if (angleUnit == AngleUnitKind::Radian) {
         Quantity rad = Units::radian() / modeReference;
-        rad.setDisplayUnit(Quantity(1).numericValue(), modeSymbol());
+        rad.setDisplayUnit(Quantity(1).numericValue(), Units::angleModeUnitSymbol(angleMode));
         return rad;
     }
 
@@ -833,7 +821,7 @@ Quantity angleUnitValueForMode(AngleUnitKind angleUnit, char angleMode)
     }
     if (angleUnit == AngleUnitKind::Turn) {
         Quantity turn = Units::turn() / modeReference;
-        turn.setDisplayUnit(Quantity(1).numericValue(), modeSymbol());
+        turn.setDisplayUnit(Quantity(1).numericValue(), Units::angleModeUnitSymbol(angleMode));
         return turn;
     }
     if (angleUnit == AngleUnitKind::Arcminute) {
@@ -857,6 +845,19 @@ QString unitName(UnitId id)
 QString unitSymbol(UnitId id)
 {
     return s_unitSpecs().value(id).symbol;
+}
+
+QString Units::angleModeUnitSymbol(char angleMode)
+{
+    if (angleMode == 'd')
+        return UnitSymbol::Degree;
+    if (angleMode == 'g')
+        return UnitSymbol::Gradian;
+    if (angleMode == 't')
+        return UnitSymbol::Turn;
+    if (angleMode == 'v')
+        return UnitSymbol::Revolution;
+    return UnitSymbol::Radian;
 }
 
 QString prefixName(PrefixId id)

@@ -457,7 +457,7 @@ void SyntaxHighlighter::groupDigits(const QString& text, int pos, int length)
                 }
 
                 if (c == MathDsl::TimeSep || c == MathDsl::Deg
-                        || c == MathDsl::MinOpAl1 || c == MathDsl::SecOpAl1)
+                        || c == MathDsl::ArcminOpAl1 || c == MathDsl::ArcsecOpAl1)
                     endOfNumber = true;
 
                 if (endOfNumber) {

@@ -551,6 +551,11 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride,
     }
 
     if (arc && activeResultFormat == 's') {     // convert to arcseconds
+        // Sexagesimal angle formatting is unitless "D°M′S″" output. If the
+        // value carries an explicit angle display unit (e.g. [rad]), drop it
+        // before numeric formatting/parsing to avoid contaminating the
+        // intermediate scalar with unit text.
+        q.stripUnits();
         if (settings->angleUnit == 'r')
             q /= Quantity(HMath::pi() / HNumber(180));
         else if (settings->angleUnit == 'g')
@@ -579,11 +584,11 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride,
         HNumber::Format fixed = HNumber::Format::Fixed();
         QString sexa = HMath::format(mains, fixed);
         sexa.append(time ? MathDsl::TimeSep : MathDsl::Deg).append(minutes < 10 ? "0" : "").append(HMath::format(minutes, fixed));
-        sexa.append(time ? MathDsl::TimeSep : MathDsl::MinOp).append(seconds < 10 ? "0" : "").append(HMath::format(seconds, fixed));
+        sexa.append(time ? MathDsl::TimeSep : MathDsl::ArcminOp).append(seconds < 10 ? "0" : "").append(HMath::format(seconds, fixed));
         if (dotPos > 0)     // append decimals
             sexa.append(result.mid(dotPos));
         if (!time)
-            sexa.append(MathDsl::SecOp);
+            sexa.append(MathDsl::ArcsecOp);
         result = sexa;
     }
 

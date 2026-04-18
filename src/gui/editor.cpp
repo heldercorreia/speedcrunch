@@ -1085,6 +1085,20 @@ static QString formattedLiveResult(const Quantity& quantity, char resultFormat =
     QString formatted = DisplayFormatUtils::applyDigitGroupingForDisplay(
         NumberFormatter::format(quantity, resultFormat));
     formatted.replace(RegExpPatterns::unitBrackets(), QStringLiteral("\\1"));
+    auto collapseTrailingCompactSuffix = [&formatted](const QChar suffix) {
+        const QString quantSpVariant = QString(MathDsl::QuantSp) + suffix;
+        const QString asciiSpVariant = QStringLiteral(" ") + suffix;
+        if (formatted.endsWith(quantSpVariant)) {
+            formatted.chop(quantSpVariant.size());
+            formatted += suffix;
+        } else if (formatted.endsWith(asciiSpVariant)) {
+            formatted.chop(asciiSpVariant.size());
+            formatted += suffix;
+        }
+    };
+    collapseTrailingCompactSuffix(MathDsl::Deg);
+    collapseTrailingCompactSuffix(MathDsl::ArcminOp);
+    collapseTrailingCompactSuffix(MathDsl::ArcsecOp);
     return formatted;
 }
 
@@ -1094,7 +1108,97 @@ static QString formattedLiveResultForSlot(const Quantity& quantity, char resultF
     QString formatted = DisplayFormatUtils::applyDigitGroupingForDisplay(
         NumberFormatter::format(quantity, resultFormat, precision, complexEnabled, complexForm));
     formatted.replace(RegExpPatterns::unitBrackets(), QStringLiteral("\\1"));
+    auto collapseTrailingCompactSuffix = [&formatted](const QChar suffix) {
+        const QString quantSpVariant = QString(MathDsl::QuantSp) + suffix;
+        const QString asciiSpVariant = QStringLiteral(" ") + suffix;
+        if (formatted.endsWith(quantSpVariant)) {
+            formatted.chop(quantSpVariant.size());
+            formatted += suffix;
+        } else if (formatted.endsWith(asciiSpVariant)) {
+            formatted.chop(asciiSpVariant.size());
+            formatted += suffix;
+        }
+    };
+    collapseTrailingCompactSuffix(MathDsl::Deg);
+    collapseTrailingCompactSuffix(MathDsl::ArcminOp);
+    collapseTrailingCompactSuffix(MathDsl::ArcsecOp);
     return formatted;
+}
+
+static bool expressionContainsExplicitBracketedAngleUnit(const QString& expression)
+{
+    QRegularExpressionMatchIterator matches =
+        RegExpPatterns::unitBrackets().globalMatch(expression);
+    while (matches.hasNext()) {
+        const QRegularExpressionMatch match = matches.next();
+        if (Units::isExplicitAngleUnitName(match.captured(1)))
+            return true;
+    }
+    return false;
+}
+
+static bool expressionContainsExplicitSexagesimalAngleMarkers(const QString& expression)
+{
+    for (const QChar ch : expression) {
+        if (ch == MathDsl::Deg
+            || ch == UnicodeChars::MasculineOrdinalIndicator
+            || ch == UnicodeChars::RingOperator
+            || ch == MathDsl::ArcminOp
+            || ch == MathDsl::ArcsecOp
+            || ch == MathDsl::ArcminOpAl1
+            || ch == MathDsl::ArcsecOpAl1) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static QString appendAngleModeSuffixForLiveResultIfNeeded(const QString& formattedText,
+                                                          const QString& expression,
+                                                          const QString& interpretedExpression,
+                                                          const Quantity& quantity,
+                                                          char resultFormat)
+{
+    if (resultFormat == 's')
+        return formattedText;
+    if (!quantity.isDimensionless())
+        return formattedText;
+    if (formattedText.contains(MathDsl::UnitStart) || formattedText.contains(MathDsl::UnitEnd))
+        return formattedText;
+
+    const bool hasExplicitBracketedAngleUnit =
+        expressionContainsExplicitBracketedAngleUnit(expression)
+        || expressionContainsExplicitBracketedAngleUnit(interpretedExpression);
+    const bool hasExplicitSexagesimalAngleMarkers =
+        expressionContainsExplicitSexagesimalAngleMarkers(expression)
+        || expressionContainsExplicitSexagesimalAngleMarkers(interpretedExpression);
+    if (!hasExplicitBracketedAngleUnit && !hasExplicitSexagesimalAngleMarkers)
+        return formattedText;
+
+    auto endsWithUnitToken = [&formattedText](const QString& token) {
+        return formattedText.endsWith(token)
+            || formattedText.endsWith(QString(MathDsl::QuantSp) + token)
+            || formattedText.endsWith(QStringLiteral(" ") + token);
+    };
+    if (endsWithUnitToken(Units::angleModeUnitSymbol('r'))
+        || endsWithUnitToken(Units::angleModeUnitSymbol('d'))
+        || endsWithUnitToken(Units::angleModeUnitSymbol('g'))
+        || endsWithUnitToken(Units::angleModeUnitSymbol('t'))
+        || endsWithUnitToken(Units::angleModeUnitSymbol('v'))
+        || formattedText.endsWith(MathDsl::ArcminOp)
+        || formattedText.endsWith(MathDsl::ArcsecOp)) {
+        return formattedText;
+    }
+
+    const QString symbol = Units::angleModeUnitSymbol(Settings::instance()->angleUnit);
+    if (formattedText.endsWith(symbol)
+        || formattedText.endsWith(QString(MathDsl::QuantSp) + symbol)
+        || formattedText.endsWith(QStringLiteral(" ") + symbol)) {
+        return formattedText;
+    }
+    if (Settings::instance()->angleUnit == 'd')
+        return formattedText + symbol;
+    return formattedText + QString(MathDsl::QuantSp) + symbol;
 }
 
 static bool shouldShowAdditionalRationalForTrig(const QString& expression,
@@ -1129,7 +1233,12 @@ static QString formattedLiveResultWithAlternatives(const Quantity& quantity,
 {
     const Settings* settings = Settings::instance();
     const bool useExtraResultLines = settings->multipleResultLinesEnabled;
-    const QString primaryFormattedResult = formattedLiveResult(quantity);
+    const QString primaryFormattedResult = appendAngleModeSuffixForLiveResultIfNeeded(
+        formattedLiveResult(quantity),
+        sourceExpression.isEmpty() ? expression : sourceExpression,
+        interpretedExpression,
+        quantity,
+        settings->resultFormat);
     QStringList lines;
     auto appendUniqueLine = [&lines](const QString& line) {
         if (line.isEmpty() || lines.contains(line))
@@ -1151,35 +1260,55 @@ static QString formattedLiveResultWithAlternatives(const Quantity& quantity,
     appendUniqueLine(QStringLiteral("= %1").arg(primaryFormattedResult));
     if (useExtraResultLines && settings->secondaryResultEnabled && settings->alternativeResultFormat != '\0') {
         appendUniqueLine(QStringLiteral("= %1").arg(
-            formattedLiveResultForSlot(quantity,
-                                       settings->alternativeResultFormat,
-                                       settings->secondaryResultPrecision,
-                                       settings->complexNumbers && settings->secondaryComplexNumbers,
-                                       settings->secondaryResultFormatComplex)));
+            appendAngleModeSuffixForLiveResultIfNeeded(
+                formattedLiveResultForSlot(quantity,
+                                           settings->alternativeResultFormat,
+                                           settings->secondaryResultPrecision,
+                                           settings->complexNumbers && settings->secondaryComplexNumbers,
+                                           settings->secondaryResultFormatComplex),
+                sourceExpression.isEmpty() ? expression : sourceExpression,
+                interpretedExpression,
+                quantity,
+                settings->alternativeResultFormat)));
     }
     if (useExtraResultLines && settings->tertiaryResultEnabled && settings->tertiaryResultFormat != '\0') {
         appendUniqueLine(QStringLiteral("= %1").arg(
-            formattedLiveResultForSlot(quantity,
-                                       settings->tertiaryResultFormat,
-                                       settings->tertiaryResultPrecision,
-                                       settings->complexNumbers && settings->tertiaryComplexNumbers,
-                                       settings->tertiaryResultFormatComplex)));
+            appendAngleModeSuffixForLiveResultIfNeeded(
+                formattedLiveResultForSlot(quantity,
+                                           settings->tertiaryResultFormat,
+                                           settings->tertiaryResultPrecision,
+                                           settings->complexNumbers && settings->tertiaryComplexNumbers,
+                                           settings->tertiaryResultFormatComplex),
+                sourceExpression.isEmpty() ? expression : sourceExpression,
+                interpretedExpression,
+                quantity,
+                settings->tertiaryResultFormat)));
     }
     if (useExtraResultLines && settings->quaternaryResultEnabled && settings->quaternaryResultFormat != '\0') {
         appendUniqueLine(QStringLiteral("= %1").arg(
-            formattedLiveResultForSlot(quantity,
-                                       settings->quaternaryResultFormat,
-                                       settings->quaternaryResultPrecision,
-                                       settings->complexNumbers && settings->quaternaryComplexNumbers,
-                                       settings->quaternaryResultFormatComplex)));
+            appendAngleModeSuffixForLiveResultIfNeeded(
+                formattedLiveResultForSlot(quantity,
+                                           settings->quaternaryResultFormat,
+                                           settings->quaternaryResultPrecision,
+                                           settings->complexNumbers && settings->quaternaryComplexNumbers,
+                                           settings->quaternaryResultFormatComplex),
+                sourceExpression.isEmpty() ? expression : sourceExpression,
+                interpretedExpression,
+                quantity,
+                settings->quaternaryResultFormat)));
     }
     if (useExtraResultLines && settings->quinaryResultEnabled && settings->quinaryResultFormat != '\0') {
         appendUniqueLine(QStringLiteral("= %1").arg(
-            formattedLiveResultForSlot(quantity,
-                                       settings->quinaryResultFormat,
-                                       settings->quinaryResultPrecision,
-                                       settings->complexNumbers && settings->quinaryComplexNumbers,
-                                       settings->quinaryResultFormatComplex)));
+            appendAngleModeSuffixForLiveResultIfNeeded(
+                formattedLiveResultForSlot(quantity,
+                                           settings->quinaryResultFormat,
+                                           settings->quinaryResultPrecision,
+                                           settings->complexNumbers && settings->quinaryComplexNumbers,
+                                           settings->quinaryResultFormatComplex),
+                sourceExpression.isEmpty() ? expression : sourceExpression,
+                interpretedExpression,
+                quantity,
+                settings->quinaryResultFormat)));
     }
     const QString symbolicTrig = NumberFormatter::formatTrigSymbolic(quantity);
     if (shouldShowAdditionalRationalForTrig(expression, interpretedExpression, quantity)) {
@@ -1833,7 +1962,20 @@ void Editor::autoComplete(const QString& item)
     auto newTokenText = str.at(0);
     if (unitContext) {
         newTokenText = UnicodeChars::normalizeUnitSymbolAliases(newTokenText);
-        newTokenText = UnitDisplayFormat::shortDisplayName(newTokenText);
+        const QString preferredShortUnitText = UnitDisplayFormat::shortDisplayName(newTokenText);
+        if (preferredShortUnitText != newTokenText) {
+            // Some short unit symbols are not accepted by unit-context typing
+            // normalization. Fall back to the long identifier so completion
+            // still inserts a valid unit token instead of becoming a no-op.
+            const QString normalizedShortUnitText = normalizeTypedTextForSquareBracketContext(
+                text(),
+                currentPosition,
+                preferredShortUnitText);
+            if (!normalizedShortUnitText.isEmpty())
+                newTokenText = preferredShortUnitText;
+        } else {
+            newTokenText = preferredShortUnitText;
+        }
     }
     if (newTokenText == QLatin1String("pi"))
         newTokenText = QString(UnicodeChars::Pi);
