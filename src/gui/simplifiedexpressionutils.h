@@ -24,6 +24,7 @@
 #include "core/mathdsl.h"
 
 #include <QString>
+#include <QStringList>
 
 namespace SimplifiedExpressionUtils {
 
@@ -55,7 +56,7 @@ inline bool isStandaloneSexagesimalTimeLiteral(const QString& expression)
 
     const QString withoutSign =
         (compact.startsWith(QLatin1Char('+'))
-         || compact.startsWith(MathDsl::SubOpAlt1)
+         || compact.startsWith(MathDsl::SubOpAl1)
          || compact.startsWith(QChar(UnicodeChars::MinusSign)))
         ? compact.mid(1)
         : compact;
@@ -97,9 +98,9 @@ inline bool splitSingleTopLevelBinary(const QString& expression, QChar op,
     int splitCount = 0;
     for (int i = 0; i < expression.size(); ++i) {
         const QChar ch = expression.at(i);
-        if (ch == QLatin1Char('('))
+        if (ch == MathDsl::GroupStart)
             ++depth;
-        else if (ch == QLatin1Char(')'))
+        else if (ch == MathDsl::GroupEnd)
             --depth;
         else if (depth == 0 && ch == op) {
             // Keep only a single top-level operator (e.g. a+b, not a+b+c).
@@ -127,8 +128,8 @@ inline bool isCommutativeTopLevelSwap(const QString& interpretedDisplay,
                                       const QString& simplifiedDisplay)
 {
     const QChar commutativeOps[] = {
-        QLatin1Char('+'),
-        QLatin1Char('*'),
+        MathDsl::AddOp,
+        MathDsl::MulOpAl1,
         QChar(MathDsl::MulCrossOp),
         QChar(MathDsl::MulDotOp)
     };
@@ -149,10 +150,93 @@ inline bool isCommutativeTopLevelSwap(const QString& interpretedDisplay,
     return false;
 }
 
+inline bool parseTopLevelAdditiveTerms(const QString& expression, QStringList* signedTermsOut)
+{
+    signedTermsOut->clear();
+
+    int depth = 0;
+    int tokenStart = 0;
+    int currentSign = +1;
+    bool sawTopLevelAdditiveOperator = false;
+
+    while (tokenStart < expression.size() && expression.at(tokenStart).isSpace())
+        ++tokenStart;
+    if (tokenStart < expression.size()) {
+        const QChar first = expression.at(tokenStart);
+        if (MathDsl::isAdditionOperator(first)) {
+            ++tokenStart;
+        } else if (MathDsl::isSubtractionOperator(first)) {
+            currentSign = -1;
+            ++tokenStart;
+        }
+    }
+
+    auto appendTerm = [&](int endPos) {
+        const QString term = expression.mid(tokenStart, endPos - tokenStart).trimmed();
+        if (term.isEmpty())
+            return false;
+        const QString normalized = normalizedTokenForCommutativeComparison(term);
+        if (normalized.isEmpty())
+            return false;
+        signedTermsOut->append((currentSign < 0 ? QStringLiteral("-") : QStringLiteral("+"))
+                               + normalized);
+        return true;
+    };
+
+    for (int i = tokenStart; i < expression.size(); ++i) {
+        const QChar ch = expression.at(i);
+        if (ch == MathDsl::GroupStart) {
+            ++depth;
+            continue;
+        }
+        if (ch == MathDsl::GroupEnd) {
+            --depth;
+            continue;
+        }
+        if (depth != 0 || (!MathDsl::isAdditionOperator(ch) && !MathDsl::isSubtractionOperator(ch)))
+            continue;
+
+        const QString candidate = expression.mid(tokenStart, i - tokenStart).trimmed();
+        if (candidate.isEmpty()) {
+            if (MathDsl::isSubtractionOperator(ch))
+                currentSign = -currentSign;
+            tokenStart = i + 1;
+            continue;
+        }
+
+        if (!appendTerm(i))
+            return false;
+        sawTopLevelAdditiveOperator = true;
+        currentSign = MathDsl::isSubtractionOperator(ch) ? -1 : +1;
+        tokenStart = i + 1;
+    }
+
+    if (!appendTerm(expression.size()))
+        return false;
+
+    return sawTopLevelAdditiveOperator && signedTermsOut->size() > 1;
+}
+
+inline bool isTopLevelAdditiveTermReorder(const QString& interpretedDisplay,
+                                          const QString& simplifiedDisplay)
+{
+    QStringList interpretedTerms;
+    QStringList simplifiedTerms;
+    if (!parseTopLevelAdditiveTerms(interpretedDisplay, &interpretedTerms))
+        return false;
+    if (!parseTopLevelAdditiveTerms(simplifiedDisplay, &simplifiedTerms))
+        return false;
+
+    interpretedTerms.sort();
+    simplifiedTerms.sort();
+    return interpretedTerms == simplifiedTerms;
+}
+
 inline bool shouldSuppressSimplifiedExpressionLine(const QString& interpretedDisplay,
                                                    const QString& simplifiedDisplay)
 {
     return isCommutativeTopLevelSwap(interpretedDisplay, simplifiedDisplay)
+        || isTopLevelAdditiveTermReorder(interpretedDisplay, simplifiedDisplay)
         || (isPlainNumericArithmeticExpression(interpretedDisplay)
         && (isPlainNumericArithmeticExpression(simplifiedDisplay)
             || isNumericSimplifiedExpression(simplifiedDisplay)));

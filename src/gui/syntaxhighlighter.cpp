@@ -40,7 +40,7 @@ static const constexpr auto COLOR_SCHEME_EXTENSION = "json";
 static QString textNormalizedForHighlighting(QString text)
 {
     static const QHash<QChar, QChar> superscriptToAscii {
-        {MathDsl::PowNeg, MathDsl::SubOpAlt1}, // ⁻ SUPERSCRIPT MINUS.
+        {MathDsl::PowNeg, MathDsl::SubOpAl1}, // ⁻ SUPERSCRIPT MINUS.
         {MathDsl::Pow0, QLatin1Char('0')}, // ⁰
         {MathDsl::Pow1, QLatin1Char('1')}, // ¹
         {MathDsl::Pow2, QLatin1Char('2')}, // ²
@@ -231,7 +231,7 @@ void SyntaxHighlighter::highlightBlock(const QString& text)
         return;
     }
 
-    int questionMarkIndex = text.indexOf('?');
+    int questionMarkIndex = text.indexOf(MathDsl::CommentSep);
     if (questionMarkIndex != -1)
         setFormat(questionMarkIndex, text.length(), colorForRole(ColorScheme::Comment));
 
@@ -457,7 +457,7 @@ void SyntaxHighlighter::groupDigits(const QString& text, int pos, int length)
                 }
 
                 if (c == MathDsl::TimeSep || c == MathDsl::Deg
-                        || c == MathDsl::MinOpAlt1 || c == MathDsl::SecOpAlt1)
+                        || c == MathDsl::MinOpAl1 || c == MathDsl::SecOpAl1)
                     endOfNumber = true;
 
                 if (endOfNumber) {

@@ -130,6 +130,7 @@ SOURCES += main.cpp \
            core/constants.cpp \
            core/evaluator.cpp \
            core/functions.cpp \
+           core/mathdsl.cpp \
            core/numberformatter.cpp \
            core/manualserver.cpp\
            core/pageserver.cpp \

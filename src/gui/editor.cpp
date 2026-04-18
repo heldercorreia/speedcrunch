@@ -82,7 +82,7 @@ static bool isOperatorOnlyIncompleteInput(const QString& expression)
         const QChar ch = trimmed.at(i);
         if (ch.isSpace())
             continue;
-        if (ch == QLatin1Char('+') || EditorUtils::isSubtractionOperatorAlias(ch)) {
+        if (ch == MathDsl::AddOp || MathDsl::isSubtractionOperatorAlias(ch)) {
             sawOperator = true;
             continue;
         }
@@ -115,9 +115,8 @@ static bool isInsideUnmatchedSquareBracketContext(const QString& text, int curso
 
 static bool isTypedMultiplicationCharacter(const QChar& ch)
 {
-    return ch == MathDsl::MulCrossOp
-           || ch == MathDsl::MulDotOp
-           || EditorUtils::isMultiplicationOperatorAlias(ch, true);
+    return MathDsl::isMultiplicationOperator(ch)
+           || MathDsl::isMultiplicationOperatorAlias(ch, true);
 }
 
 static bool isGroupedSpacedOperator(QChar leftSpace, QChar sign, QChar rightSpace)
@@ -128,14 +127,14 @@ static bool isGroupedSpacedOperator(QChar leftSpace, QChar sign, QChar rightSpac
                && rightSpace == expectedSpace;
     };
 
-    return matches(MathDsl::MulDotWrap, MathDsl::MulDotOp)
-           || matches(MathDsl::MulCrossWrap, MathDsl::MulCrossOp)
+    return matches(MathDsl::MulDotWrapSp, MathDsl::MulDotOp)
+           || matches(MathDsl::MulCrossWrapSp, MathDsl::MulCrossOp)
            || matches(MathDsl::AddWrap, MathDsl::AddOp)
-           || matches(MathDsl::SubWrap, MathDsl::SubOp)
+           || matches(MathDsl::SubWrapSp, MathDsl::SubOp)
            || matches(MathDsl::DivWrap, MathDsl::DivOp)
            || matches(QLatin1Char(' '), MathDsl::Equals)
-           || matches(MathDsl::SubWrap, MathDsl::TransOp)
-           || matches(QLatin1Char(' '), QLatin1Char('?'));
+           || matches(MathDsl::SubWrapSp, MathDsl::TransOp)
+           || matches(QLatin1Char(' '), MathDsl::CommentSep);
 }
 
 static bool isAfterGroupedSpacedOperator(const QString& text, int cursorPosition)
@@ -182,7 +181,7 @@ static int groupedSpacedOperatorStartAround(const QString& text, int cursorPosit
 static bool isLeadingQuestionCommentToken(const QString& text)
 {
     return text.size() >= 2
-           && text.at(0) == QLatin1Char('?')
+           && text.at(0) == MathDsl::CommentSep
            && text.at(1) == QLatin1Char(' ');
 }
 
@@ -255,7 +254,7 @@ static bool isAnyMultiplicationOperator(const QChar& ch)
 {
     return ch == MathDsl::MulDotOp
            || ch == MathDsl::MulCrossOp
-           || EditorUtils::isMultiplicationOperatorAlias(ch, true);
+           || MathDsl::isMultiplicationOperatorAlias(ch, true);
 }
 
 static bool isAnyAdditionOperator(const QChar& ch)
@@ -263,7 +262,7 @@ static bool isAnyAdditionOperator(const QChar& ch)
     // Treat both normalized '+' and accepted plus aliases as one operator
     // class for insertion guards (prevents consecutive plus insertion).
     return ch == MathDsl::AddOp
-           || EditorUtils::isAdditionOperatorAlias(ch);
+           || MathDsl::isAdditionOperatorAlias(ch);
 }
 
 static QChar normalizedTypedCharFromEvent(const QKeyEvent* event, const QString& normalizedEventText)
@@ -273,13 +272,13 @@ static QChar normalizedTypedCharFromEvent(const QKeyEvent* event, const QString&
 
     if (event->text().size() == 1) {
         const QChar raw = event->text().at(0);
-        if (EditorUtils::isAdditionOperatorAlias(raw))
+        if (MathDsl::isAdditionOperatorAlias(raw))
             return MathDsl::AddOp;
-        if (EditorUtils::isSubtractionOperatorAlias(raw))
+        if (MathDsl::isSubtractionOperatorAlias(raw))
             return MathDsl::SubOp;
-        if (EditorUtils::isDivisionOperatorAlias(raw))
+        if (MathDsl::isDivisionOperatorAlias(raw))
             return MathDsl::DivOp;
-        if (EditorUtils::isMultiplicationOperatorAlias(raw, true))
+        if (MathDsl::isMultiplicationOperatorAlias(raw, true))
             return raw == MathDsl::MulDotOp ? MathDsl::MulDotOp : MathDsl::MulCrossOp;
         return raw;
     }
@@ -291,8 +290,8 @@ static QChar normalizedTypedCharFromEvent(const QKeyEvent* event, const QString&
     case Qt::Key_Minus: return MathDsl::SubOp;
     case Qt::Key_Slash: return MathDsl::DivOp;
     case Qt::Key_Asterisk: return MathDsl::MulCrossOp;
-    case Qt::Key_AsciiCircum: return QLatin1Char('^');
-    case Qt::Key_ParenLeft: return QLatin1Char('(');
+    case Qt::Key_AsciiCircum: return MathDsl::PowOp;
+    case Qt::Key_ParenLeft: return MathDsl::GroupStart;
     default: return QChar();
     }
 }
@@ -337,7 +336,7 @@ static void replacePreviousSubtractionAtCursorWithUnitConversion(Editor* editor)
     int signPos = pos - 1;
     while (signPos >= 0 && text.at(signPos).isSpace())
         --signPos;
-    if (signPos < 0 || !EditorUtils::isSubtractionOperatorAlias(text.at(signPos)))
+    if (signPos < 0 || !MathDsl::isSubtractionOperatorAlias(text.at(signPos)))
         return;
 
     int start = signPos;
@@ -352,9 +351,7 @@ static void replacePreviousSubtractionAtCursorWithUnitConversion(Editor* editor)
     cursor.setPosition(end, QTextCursor::KeepAnchor);
     cursor.removeSelectedText();
     const QString insertion =
-        QString(MathDsl::SubWrap)
-        + QString(MathDsl::TransOp)
-        + QString(MathDsl::SubWrap)
+        MathDsl::buildWrappedToken(MathDsl::TransOp, MathDsl::SubWrapSp)
         + QStringLiteral("[]");
     cursor.insertText(insertion);
     cursor.setPosition(start + insertion.size() - 1);
@@ -366,9 +363,7 @@ static void insertUnitConversionAtCursorWithUnitPlaceholder(Editor* editor)
     QTextCursor cursor = editor->textCursor();
     const int start = cursor.position();
     QString insertion =
-        QString(MathDsl::SubWrap)
-        + QString(MathDsl::TransOp)
-        + QString(MathDsl::SubWrap)
+        MathDsl::buildWrappedToken(MathDsl::TransOp, MathDsl::SubWrapSp)
         + QStringLiteral("[]");
     if (start > 0 && editor->text().at(start - 1).isSpace() && insertion.at(0).isSpace())
         insertion.remove(0, 1);
@@ -382,7 +377,7 @@ static bool textContainsOnlyAdditionAliases(const QString& text)
     if (text.isEmpty())
         return false;
     for (const QChar ch : text) {
-        if (!EditorUtils::isAdditionOperatorAlias(ch))
+        if (!MathDsl::isAdditionOperatorAlias(ch))
             return false;
     }
     return true;
@@ -430,7 +425,7 @@ static bool textContainsOnlyDivisionAliases(const QString& text)
     if (text.isEmpty())
         return false;
     for (const QChar ch : text) {
-        if (!EditorUtils::isDivisionOperatorAlias(ch))
+        if (!MathDsl::isDivisionOperatorAlias(ch))
             return false;
     }
     return true;
@@ -442,7 +437,7 @@ static bool textContainsOnlySubtractionAliases(const QString& text)
     if (trimmed.isEmpty())
         return false;
     for (const QChar ch : trimmed) {
-        if (!EditorUtils::isSubtractionOperatorAlias(ch))
+        if (!MathDsl::isSubtractionOperatorAlias(ch))
             return false;
     }
     return true;
@@ -557,7 +552,7 @@ static bool isInsideCommentFromQuestionMark(const QString& text, int cursorPosit
     const int safeCursorPosition = qBound(0, cursorPosition, text.size());
     for (int i = safeCursorPosition - 1; i >= 0; --i) {
         const QChar ch = text.at(i);
-        if (ch == QLatin1Char('?'))
+        if (ch == MathDsl::CommentSep)
             return true;
         if (ch == QLatin1Char('\n') || ch == QLatin1Char('\r'))
             return false;
@@ -607,10 +602,9 @@ static bool isAllowedUnitBracketChar(const QChar& ch)
            || ch == QLatin1Char('(')
            || ch == QLatin1Char(')')
            || ch == QLatin1Char(']')
-           || ch == QLatin1Char('^')
-           || ch == MathDsl::DivOp
-           || ch == MathDsl::MulDotOp
-           || ch == MathDsl::MulCrossOp;
+           || ch == MathDsl::PowOp
+           || MathDsl::isDivisionOperator(ch)
+           || MathDsl::isMultiplicationOperator(ch);
 }
 
 static QString superscriptFromAsciiExponent(const QString& asciiExponent)
@@ -618,11 +612,11 @@ static QString superscriptFromAsciiExponent(const QString& asciiExponent)
     QString superscript;
     superscript.reserve(asciiExponent.size());
     for (const QChar ch : asciiExponent) {
-        if (ch == QLatin1Char('+')) {
+        if (ch == MathDsl::AddOp) {
             superscript += MathDsl::PowPos;
             continue;
         }
-        if (EditorUtils::isSubtractionOperatorAlias(ch)) {
+        if (MathDsl::isSubtractionOperatorAlias(ch)) {
             superscript += MathDsl::PowNeg;
             continue;
         }
@@ -651,11 +645,11 @@ static bool rewriteTrailingAsciiUnitExponentToSuperscript(Editor* editor, const 
     ++exponentStart;
 
     int caretPos = exponentStart - 1;
-    if (caretPos >= 1 && EditorUtils::isSubtractionOperatorAlias(current.at(caretPos))
-        && current.at(caretPos - 1) == QLatin1Char('^')) {
+    if (caretPos >= 1 && MathDsl::isSubtractionOperatorAlias(current.at(caretPos))
+        && current.at(caretPos - 1) == MathDsl::PowOp) {
         --caretPos;
     }
-    if (caretPos < 0 || current.at(caretPos) != QLatin1Char('^'))
+    if (caretPos < 0 || current.at(caretPos) != MathDsl::PowOp)
         return false;
 
     const QString asciiExponent = current.mid(caretPos + 1, pos - caretPos);
@@ -739,7 +733,7 @@ static bool rewriteTrailingSuperscriptExponentToParenthesizedAscii(Editor* edito
             continue;
         }
         if (ch == MathDsl::PowNeg) {
-            asciiExponent += MathDsl::SubOpAlt1;
+            asciiExponent += MathDsl::SubOpAl1;
             continue;
         }
         if (ch == MathDsl::PowPos) {
@@ -827,7 +821,7 @@ static QString normalizeTypedTextForSquareBracketContext(const QString& surround
             const QChar current = surroundingText.at(idx);
             if (current == QLatin1Char('(')) {
                 const QChar beforeOpen = previousNonSpaceBefore(surroundingText, idx);
-                if (beforeOpen == QLatin1Char('^')) {
+                if (beforeOpen == MathDsl::PowOp) {
                     ++depth;
                 } else if (depth > 0) {
                     ++depth;
@@ -843,11 +837,11 @@ static QString normalizeTypedTextForSquareBracketContext(const QString& surround
     for (int i = 0; i < text.size(); ++i) {
         QChar ch = text.at(i);
 
-        if (EditorUtils::isAdditionOperatorAlias(ch)) {
+        if (MathDsl::isAdditionOperatorAlias(ch)) {
             return QString();
         }
 
-        if (EditorUtils::isDivisionOperatorAlias(ch))
+        if (MathDsl::isDivisionOperatorAlias(ch))
             ch = MathDsl::DivOp;
 
         // Keep unit-symbol aliases normalized as users type inside [].
@@ -858,11 +852,11 @@ static QString normalizeTypedTextForSquareBracketContext(const QString& surround
         else if (ch == UnicodeChars::MasculineOrdinalIndicator)
             ch = UnicodeChars::DegreeSign;
 
-        if (EditorUtils::isSubtractionOperatorAlias(ch)) {
+        if (MathDsl::isSubtractionOperatorAlias(ch)) {
             const bool afterExponentStart =
-                previous == QLatin1Char('^')
+                previous == MathDsl::PowOp
                 || previous == MathDsl::PowNeg
-                || (previous == QLatin1Char('(') && previousPrevious == QLatin1Char('^'));
+                || (previous == QLatin1Char('(') && previousPrevious == MathDsl::PowOp);
             if (!afterExponentStart)
                 return QString();
             ch = MathDsl::SubOp;
@@ -871,16 +865,16 @@ static QString normalizeTypedTextForSquareBracketContext(const QString& surround
         if (isUnitIdentifierCharInEditor(ch) && !ch.isDigit()) {
             if (ch == QLatin1Char('e') || ch == QLatin1Char('E')) {
                 const bool inExponentTypingPosition =
-                    previous == QLatin1Char('^')
+                    previous == MathDsl::PowOp
                     || parenthesizedExponentDepth > 0
-                    || previousPrevious == QLatin1Char('^');
+                    || previousPrevious == MathDsl::PowOp;
                 if (inExponentTypingPosition)
                     return QString();
             }
 
             const bool rightAfterExponentStart =
-                previous == QLatin1Char('^')
-                || (previous == QLatin1Char('(') && previousPrevious == QLatin1Char('^'));
+                previous == MathDsl::PowOp
+                || (previous == QLatin1Char('(') && previousPrevious == MathDsl::PowOp);
             if (rightAfterExponentStart)
                 return QString();
         }
@@ -901,18 +895,18 @@ static QString normalizeTypedTextForSquareBracketContext(const QString& surround
 
         if (ch.isDigit()) {
             const bool afterExponentStart =
-                previous == QLatin1Char('^')
+                previous == MathDsl::PowOp
                 || previous == MathDsl::PowNeg
-                || (previous == QLatin1Char('(') && previousPrevious == QLatin1Char('^'));
+                || (previous == QLatin1Char('(') && previousPrevious == MathDsl::PowOp);
             const bool afterSignedExponentStart =
-                EditorUtils::isSubtractionOperatorAlias(previous)
-                && (previousPrevious == QLatin1Char('^')
-                    || (previousPrevious == QLatin1Char('(') && previousThird == QLatin1Char('^')));
+                MathDsl::isSubtractionOperatorAlias(previous)
+                && (previousPrevious == MathDsl::PowOp
+                    || (previousPrevious == QLatin1Char('(') && previousThird == MathDsl::PowOp));
             const bool afterFractionSlashInParenthesizedExponent =
                 previous == MathDsl::DivOp
                 && parenthesizedExponentDepth > 0;
             const bool afterRadixInParenthesizedExponent =
-                previous == QLatin1Char('.')
+                previous == MathDsl::DotSep
                 && parenthesizedExponentDepth > 0;
             if (!previous.isDigit()
                 && !afterExponentStart
@@ -923,39 +917,38 @@ static QString normalizeTypedTextForSquareBracketContext(const QString& surround
             }
         }
 
-        if (ch == QLatin1Char('.') || ch == QLatin1Char(',')) {
+        if (ch == MathDsl::DotSep || ch == MathDsl::CommaSep) {
             if (parenthesizedExponentDepth <= 0 || !previous.isDigit())
                 return QString();
 
             int idx = normalized.size() - 1;
             while (idx >= 0 && normalized.at(idx).isDigit())
                 --idx;
-            if (idx >= 0 && normalized.at(idx) == QLatin1Char('.'))
+            if (idx >= 0 && normalized.at(idx) == MathDsl::DotSep)
                 return QString();
 
-            ch = QLatin1Char('.');
+            ch = MathDsl::DotSep;
         }
 
-        if (ch == MathDsl::DivOp) {
-            if (previous == MathDsl::DivOp)
+        if (MathDsl::isDivisionOperator(ch)) {
+            if (MathDsl::isDivisionOperator(previous))
                 return QString();
-            if (previous == MathDsl::MulDotOp
-                || previous == MathDsl::MulCrossOp) {
+            if (MathDsl::isMultiplicationOperator(previous)) {
                 return QString();
             }
             const bool afterExponentStart =
-                previous == QLatin1Char('^')
+                previous == MathDsl::PowOp
                 || previous == MathDsl::PowNeg
-                || (previous == QLatin1Char('(') && previousPrevious == QLatin1Char('^'));
+                || (previous == QLatin1Char('(') && previousPrevious == MathDsl::PowOp);
             const bool afterSignedExponentStart =
-                EditorUtils::isSubtractionOperatorAlias(previous)
-                && (previousPrevious == QLatin1Char('^')
-                    || (previousPrevious == QLatin1Char('(') && previousThird == QLatin1Char('^')));
+                MathDsl::isSubtractionOperatorAlias(previous)
+                && (previousPrevious == MathDsl::PowOp
+                    || (previousPrevious == QLatin1Char('(') && previousThird == MathDsl::PowOp));
             if (afterExponentStart || afterSignedExponentStart)
                 return QString();
         }
 
-        if (ch == QLatin1Char('^')) {
+        if (ch == MathDsl::PowOp) {
             const bool validExponentBase =
                 previous.isLetterOrNumber()
                 || previous == QLatin1Char(')')
@@ -966,15 +959,14 @@ static QString normalizeTypedTextForSquareBracketContext(const QString& surround
 
         if (ch == QLatin1Char(' ')) {
             if (previous.isNull()
-                || previous == QLatin1Char('^')
+                || previous == MathDsl::PowOp
                 || previous == QLatin1Char('(')
-                || previous == MathDsl::MulDotOp
-                || previous == MathDsl::MulCrossOp) {
+                || MathDsl::isMultiplicationOperator(previous)) {
                 return QString();
             }
             ch = MathDsl::MulDotOp;
-        } else if (EditorUtils::isMultiplicationOperatorAlias(ch, true)) {
-            if (ch != MathDsl::MulDotOp && ch != MathDsl::MulCrossOp)
+        } else if (MathDsl::isMultiplicationOperatorAlias(ch, true)) {
+            if (!MathDsl::isMultiplicationOperator(ch))
                 ch = MathDsl::MulCrossOp;
         }
 
@@ -984,7 +976,7 @@ static QString normalizeTypedTextForSquareBracketContext(const QString& surround
         normalized += ch;
         if (!ch.isSpace()) {
             if (ch == QLatin1Char('(')) {
-                if (previous == QLatin1Char('^'))
+                if (previous == MathDsl::PowOp)
                     ++parenthesizedExponentDepth;
                 else if (parenthesizedExponentDepth > 0)
                     ++parenthesizedExponentDepth;
@@ -1029,7 +1021,7 @@ static Tokens scanForCompletionContext(Evaluator* evaluator,
                         negative = true;
                         continue;
                     }
-                    power += MathDsl::SubOpAlt1;
+                    power += MathDsl::SubOpAl1;
                     continue;
                 }
                 if (ch == MathDsl::PowPos) {
@@ -1042,7 +1034,7 @@ static Tokens scanForCompletionContext(Evaluator* evaluator,
             if (power.isEmpty())
                 continue;
             if (negative)
-                power = QString(MathDsl::PowOp) + MathDsl::OpenParen + MathDsl::SubOpAlt1 + power + MathDsl::CloseParen;
+                power = QString(MathDsl::PowOp) + MathDsl::GroupStart + MathDsl::SubOpAl1 + power + MathDsl::GroupEnd;
             else
                 power.prepend(MathDsl::PowOp);
 
@@ -1318,10 +1310,10 @@ void Editor::insert(const QString& text)
         const QChar prev = previousNonSpaceChar(this->text(), pos);
         const bool prevIsBlockingOperator =
             isAnyAdditionOperator(prev)
-            || EditorUtils::isSubtractionOperatorAlias(prev)
-            || EditorUtils::isDivisionOperatorAlias(prev)
+            || MathDsl::isSubtractionOperatorAlias(prev)
+            || MathDsl::isDivisionOperatorAlias(prev)
             || isAnyMultiplicationOperator(prev)
-            || prev == QLatin1Char('^');
+            || prev == MathDsl::PowOp;
         if (prevIsBlockingOperator)
             return;
 
@@ -2102,8 +2094,8 @@ void Editor::autoCalcSelection(const QString& custom)
 void Editor::insertConstant(const QString& constant)
 {
     auto formattedConstant = constant;
-    if (radixChar() == ',')
-        formattedConstant.replace('.', ',');
+    if (radixChar() == MathDsl::CommaSep)
+        formattedConstant.replace(MathDsl::DotSep, MathDsl::CommaSep);
     formattedConstant = DisplayFormatUtils::applyValueUnitSpacingForDisplay(formattedConstant);
     if (!constant.isNull())
         insert(formattedConstant);
@@ -2297,8 +2289,8 @@ void Editor::inputMethodEvent(QInputMethodEvent* event)
         }
         const bool prevIsBlockingOperator =
             isAnyAdditionOperator(prev)
-            || EditorUtils::isSubtractionOperatorAlias(prev)
-            || EditorUtils::isDivisionOperatorAlias(prev)
+            || MathDsl::isSubtractionOperatorAlias(prev)
+            || MathDsl::isDivisionOperatorAlias(prev)
             || isAnyMultiplicationOperator(prev);
         if (prevIsBlockingOperator) {
             event->accept();
@@ -2316,7 +2308,7 @@ void Editor::inputMethodEvent(QInputMethodEvent* event)
         && !(QApplication::keyboardModifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))) {
         const QChar typed = normalizedCommit.at(0);
         const bool isTypedDigit = typed.isDigit();
-        const bool isTypedMinus = EditorUtils::isSubtractionOperatorAlias(typed);
+        const bool isTypedMinus = MathDsl::isSubtractionOperatorAlias(typed);
         if (isTypedDigit || isTypedMinus) {
             const int cursorPos = textCursor().position();
             const int prevIndex = previousNonSpaceIndex(text(), cursorPos);
@@ -2372,10 +2364,10 @@ void Editor::inputMethodEvent(QInputMethodEvent* event)
 
         const bool prevIsBlockingOperator =
             isAnyAdditionOperator(prev)
-            || EditorUtils::isSubtractionOperatorAlias(prev)
-            || EditorUtils::isDivisionOperatorAlias(prev)
+            || MathDsl::isSubtractionOperatorAlias(prev)
+            || MathDsl::isDivisionOperatorAlias(prev)
             || isAnyMultiplicationOperator(prev)
-            || prev == QLatin1Char('^');
+            || prev == MathDsl::PowOp;
 
         if (prevIsBlockingOperator) {
             event->accept();
@@ -2401,7 +2393,7 @@ void Editor::inputMethodEvent(QInputMethodEvent* event)
     }
 
     if (normalizedCommit.size() == 1
-        && EditorUtils::isSubtractionOperatorAlias(normalizedCommit.at(0))
+        && MathDsl::isSubtractionOperatorAlias(normalizedCommit.at(0))
         && !squareBracketContext) {
         if (!Settings::instance()->autoAns
             && textContainsOnlySubtractionAliases(text())) {
@@ -2410,10 +2402,10 @@ void Editor::inputMethodEvent(QInputMethodEvent* event)
         }
         const bool prevIsBlockingOperator =
             isAnyAdditionOperator(prev)
-            || EditorUtils::isSubtractionOperatorAlias(prev)
-            || EditorUtils::isDivisionOperatorAlias(prev)
+            || MathDsl::isSubtractionOperatorAlias(prev)
+            || MathDsl::isDivisionOperatorAlias(prev)
             || isAnyMultiplicationOperator(prev)
-            || prev == QLatin1Char('^');
+            || prev == MathDsl::PowOp;
         if (prevIsBlockingOperator) {
             event->accept();
             return;
@@ -2530,7 +2522,7 @@ void Editor::keyPressEvent(QKeyEvent* event)
 
         const QChar typed = normalizedEventText.at(0);
         const bool isTypedDigit = typed.isDigit();
-        const bool isTypedMinus = EditorUtils::isSubtractionOperatorAlias(typed);
+        const bool isTypedMinus = MathDsl::isSubtractionOperatorAlias(typed);
         if (!isTypedDigit && !isTypedMinus)
             return false;
 
@@ -2569,7 +2561,7 @@ void Editor::keyPressEvent(QKeyEvent* event)
     if (tryHandleSuperscriptExponentTyping())
         return;
 
-    const auto tryHandleTypedOpenParen = [&]() -> bool {
+    const auto tryHandleTypedGroupStart = [&]() -> bool {
         if (textCursor().hasSelection())
             return false;
 
@@ -2592,10 +2584,7 @@ void Editor::keyPressEvent(QKeyEvent* event)
             } else {
                 const QChar prev = previousNonSpaceChar(text(), position);
                 if (prev == QLatin1Char(']') || prev == QLatin1Char(')')) {
-                    implicitMulPrefix =
-                        QString(MathDsl::MulDotWrap)
-                        + QString(MathDsl::MulDotOp)
-                        + QString(MathDsl::MulDotWrap);
+                    implicitMulPrefix = MathDsl::buildWrappedToken(MathDsl::MulDotOp, MathDsl::MulDotWrapSp);
                 } else {
                     implicitMulPrefix = implicitMulPrefixForTypedChar(QLatin1Char('('));
                 }
@@ -2624,8 +2613,8 @@ void Editor::keyPressEvent(QKeyEvent* event)
         }
         const bool prevIsBlockingOperator =
             isAnyAdditionOperator(prev)
-            || EditorUtils::isSubtractionOperatorAlias(prev)
-            || EditorUtils::isDivisionOperatorAlias(prev)
+            || MathDsl::isSubtractionOperatorAlias(prev)
+            || MathDsl::isDivisionOperatorAlias(prev)
             || isAnyMultiplicationOperator(prev);
         if (prevIsBlockingOperator) {
             event->accept();
@@ -2653,8 +2642,8 @@ void Editor::keyPressEvent(QKeyEvent* event)
             || prev == QLatin1Char('(')
             || prev == QLatin1Char('[')
             || isAnyAdditionOperator(prev)
-            || EditorUtils::isSubtractionOperatorAlias(prev)
-            || EditorUtils::isDivisionOperatorAlias(prev)
+            || MathDsl::isSubtractionOperatorAlias(prev)
+            || MathDsl::isDivisionOperatorAlias(prev)
             || isAnyMultiplicationOperator(prev)
             || isCaretOperatorAlias(prev);
         if (prevAllowsUnaryTilde) {
@@ -2674,10 +2663,10 @@ void Editor::keyPressEvent(QKeyEvent* event)
         const QChar prev = previousNonSpaceChar(text(), cursorPosition);
         const bool prevIsBlockingOperator =
             isAnyAdditionOperator(prev)
-            || EditorUtils::isSubtractionOperatorAlias(prev)
-            || EditorUtils::isDivisionOperatorAlias(prev)
+            || MathDsl::isSubtractionOperatorAlias(prev)
+            || MathDsl::isDivisionOperatorAlias(prev)
             || isAnyMultiplicationOperator(prev)
-            || prev == QLatin1Char('^');
+            || prev == MathDsl::PowOp;
         if (prevIsBlockingOperator) {
             event->accept();
             return;
@@ -2707,10 +2696,10 @@ void Editor::keyPressEvent(QKeyEvent* event)
 
         const QChar prev = previousNonSpaceChar(text(), cursorPosition);
         if (isAnyAdditionOperator(prev)
-            || EditorUtils::isSubtractionOperatorAlias(prev)
-            || EditorUtils::isDivisionOperatorAlias(prev)
+            || MathDsl::isSubtractionOperatorAlias(prev)
+            || MathDsl::isDivisionOperatorAlias(prev)
             || isAnyMultiplicationOperator(prev)
-            || prev == QLatin1Char('^')) {
+            || prev == MathDsl::PowOp) {
             event->accept();
             return;
         }
@@ -2728,8 +2717,8 @@ void Editor::keyPressEvent(QKeyEvent* event)
         }
         const bool prevIsBlockingOperator =
             isAnyAdditionOperator(prev)
-            || EditorUtils::isSubtractionOperatorAlias(prev)
-            || EditorUtils::isDivisionOperatorAlias(prev)
+            || MathDsl::isSubtractionOperatorAlias(prev)
+            || MathDsl::isDivisionOperatorAlias(prev)
             || isAnyMultiplicationOperator(prev);
         if (prevIsBlockingOperator) {
             event->accept();
@@ -2748,11 +2737,11 @@ void Editor::keyPressEvent(QKeyEvent* event)
         rewriteTrailingAsciiUnitExponentToSuperscript(this, QString());
         const int cursorPos = textCursor().position();
         const QChar previous = previousNonSpaceChar(text(), cursorPos);
-        if (EditorUtils::isDivisionOperatorAlias(previous)) {
+        if (MathDsl::isDivisionOperatorAlias(previous)) {
             int previousIndex = qBound(0, cursorPos, text().size()) - 1;
             while (previousIndex >= 0 && text().at(previousIndex).isSpace())
                 --previousIndex;
-            if (previousIndex >= 1 && text().at(previousIndex - 1) == QLatin1Char('^')) {
+            if (previousIndex >= 1 && text().at(previousIndex - 1) == MathDsl::PowOp) {
                 auto cursor = textCursor();
                 cursor.setPosition(previousIndex + 1);
                 cursor.deletePreviousChar();
@@ -2795,11 +2784,11 @@ void Editor::keyPressEvent(QKeyEvent* event)
         rewriteTrailingAsciiUnitExponentToSuperscript(this, QString());
     }
 
-    const bool isTypedOpenParen =
+    const bool isTypedGroupStart =
         key == Qt::Key_ParenLeft
         || event->text() == QLatin1String("(")
         || normalizedEventText == QLatin1String("(");
-    if (isTypedOpenParen && tryHandleTypedOpenParen())
+    if (isTypedGroupStart && tryHandleTypedGroupStart())
         return;
 
     const QChar typedForRules = normalizedTypedCharFromEvent(event, normalizedEventText);
@@ -2807,12 +2796,12 @@ void Editor::keyPressEvent(QKeyEvent* event)
         && !textCursor().hasSelection()
         && !typedForRules.isNull()) {
         const QChar prev = previousNonSpaceChar(text(), cursorPosition);
-        const auto isOpenParenLetterDigitOrCurrency = [](const QChar& ch) {
+        const auto isGroupStartLetterDigitOrCurrency = [](const QChar& ch) {
             return ch == QLatin1Char('(') || ch.isLetter() || ch.isDigit() || isCurrencySymbolChar(ch);
         };
 
         if (typedForRules == UnicodeChars::GreaterThanSign
-            && EditorUtils::isSubtractionOperatorAlias(prev)) {
+            && MathDsl::isSubtractionOperatorAlias(prev)) {
             replacePreviousSubtractionAtCursorWithUnitConversion(this);
             event->accept();
             return;
@@ -2823,19 +2812,19 @@ void Editor::keyPressEvent(QKeyEvent* event)
             return;
         }
 
-        if (EditorUtils::isSubtractionOperatorAlias(prev)
+        if (MathDsl::isSubtractionOperatorAlias(prev)
             || isAnyAdditionOperator(prev)
-            || EditorUtils::isDivisionOperatorAlias(prev)) {
+            || MathDsl::isDivisionOperatorAlias(prev)) {
             const bool isUnitConversionTail =
-                EditorUtils::isSubtractionOperatorAlias(prev)
+                MathDsl::isSubtractionOperatorAlias(prev)
                 && typedForRules == UnicodeChars::GreaterThanSign;
-            if (!isOpenParenLetterDigitOrCurrency(typedForRules)
+            if (!isGroupStartLetterDigitOrCurrency(typedForRules)
                 && !isUnitConversionTail) {
                 event->accept();
                 return;
             }
         } else if (isCaretOperatorAlias(prev)) {
-            if (!(EditorUtils::isSubtractionOperatorAlias(typedForRules)
+            if (!(MathDsl::isSubtractionOperatorAlias(typedForRules)
                   || typedForRules == QLatin1Char('(')
                   || typedForRules.isLetter()
                   || typedForRules.isDigit()
@@ -2893,7 +2882,7 @@ void Editor::keyPressEvent(QKeyEvent* event)
             previous == QLatin1Char(')')
             || !implicitMulPrefixForTypedChar(QLatin1Char('[')).isEmpty();
         const QString prefix = shouldInsertValueUnitSpace
-            ? QString(MathDsl::QuantitySpace)
+            ? QString(MathDsl::QuantSp)
             : QString();
         if (shouldInsertValueUnitSpace) {
             int left = position;
@@ -3208,7 +3197,7 @@ void Editor::keyPressEvent(QKeyEvent* event)
             }
             const int opIndex = previousNonSpaceIndex(text(), position);
             const QChar op = opIndex >= 0 ? text().at(opIndex) : QChar();
-            if (op == QLatin1Char('*')
+            if (op == MathDsl::MulOpAl1
                 || op == MathDsl::MulCrossOp
                 || op == MathDsl::MulDotOp) {
                 const int beforeOpIndex = previousNonSpaceIndex(text(), opIndex);
@@ -3231,15 +3220,13 @@ void Editor::keyPressEvent(QKeyEvent* event)
         auto position = textCursor().position();
         const QChar prev = previousNonSpaceChar(text(), position);
         if (MathDsl::isSuperscriptPowerChar(prev)) {
-            insert(QString(MathDsl::MulDotWrap)
-                   + QString(MathDsl::MulDotOp)
-                   + QString(MathDsl::MulDotWrap));
+            insert(MathDsl::buildWrappedToken(MathDsl::MulDotOp, MathDsl::MulDotWrapSp));
             event->accept();
             return;
         }
         const int opIndex = previousNonSpaceIndex(text(), position);
         const QChar op = opIndex >= 0 ? text().at(opIndex) : QChar();
-        if (op == QLatin1Char('*')
+        if (op == MathDsl::MulOpAl1
             || op == MathDsl::MulCrossOp
             || op == MathDsl::MulDotOp) {
           const int beforeOpIndex = previousNonSpaceIndex(text(), opIndex);
@@ -3249,7 +3236,7 @@ void Editor::keyPressEvent(QKeyEvent* event)
               return;
           }
         }
-        if (op == QLatin1Char('*') || op == MathDsl::MulCrossOp) {
+        if (op == MathDsl::MulOpAl1 || op == MathDsl::MulCrossOp) {
           const int beforeOpIndex = previousNonSpaceIndex(text(), opIndex);
           if (beforeOpIndex >= 0
               && MathDsl::isSuperscriptPowerChar(text().at(beforeOpIndex))) {
@@ -3276,10 +3263,10 @@ void Editor::keyPressEvent(QKeyEvent* event)
         if (key == Qt::Key_Equal && !(event->modifiers() & Qt::ShiftModifier)) {
             const QChar prev = previousNonSpaceChar(text(), textCursor().position());
             if (isAnyAdditionOperator(prev)
-                || EditorUtils::isSubtractionOperatorAlias(prev)
-                || EditorUtils::isDivisionOperatorAlias(prev)
+                || MathDsl::isSubtractionOperatorAlias(prev)
+                || MathDsl::isDivisionOperatorAlias(prev)
                 || isAnyMultiplicationOperator(prev)
-                || prev == QLatin1Char('^')
+                || prev == MathDsl::PowOp
                 || prev == MathDsl::Equals) {
                 event->accept();
                 return;
@@ -3294,10 +3281,10 @@ void Editor::keyPressEvent(QKeyEvent* event)
         {
             const QChar prev = previousNonSpaceChar(text(), textCursor().position());
             if (isAnyAdditionOperator(prev)
-                || EditorUtils::isSubtractionOperatorAlias(prev)
-                || EditorUtils::isDivisionOperatorAlias(prev)
+                || MathDsl::isSubtractionOperatorAlias(prev)
+                || MathDsl::isDivisionOperatorAlias(prev)
                 || isAnyMultiplicationOperator(prev)
-                || prev == QLatin1Char('^')) {
+                || prev == MathDsl::PowOp) {
                 event->accept();
                 return;
             }
@@ -3327,11 +3314,11 @@ void Editor::keyPressEvent(QKeyEvent* event)
         }
         {
             const QChar prev = previousNonSpaceChar(text(), textCursor().position());
-            if (EditorUtils::isSubtractionOperatorAlias(prev)
+            if (MathDsl::isSubtractionOperatorAlias(prev)
                 || isAnyAdditionOperator(prev)
-                || EditorUtils::isDivisionOperatorAlias(prev)
+                || MathDsl::isDivisionOperatorAlias(prev)
                 || isAnyMultiplicationOperator(prev)
-                || prev == QLatin1Char('^')) {
+                || prev == MathDsl::PowOp) {
                 event->accept();
                 return;
             }
@@ -3383,7 +3370,7 @@ void Editor::keyPressEvent(QKeyEvent* event)
         normalizedText = QString();
         if (needsLeftSpace)
             normalizedText += QLatin1Char(' ');
-        normalizedText += QLatin1Char('?');
+        normalizedText += MathDsl::CommentSep;
         if (needsRightSpace)
             normalizedText += QLatin1Char(' ');
     }
@@ -3953,7 +3940,7 @@ void ConstantCompletion::doneCompletion()
     const QString expression = found->unit.isEmpty()
         ? found->value
         : QStringLiteral("%1%2[%3]")
-            .arg(found->value, QString(MathDsl::QuantitySpace), normalizedUnit);
+            .arg(found->value, QString(MathDsl::QuantSp), normalizedUnit);
     emit selectedCompletion(expression);
 }
 

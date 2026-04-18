@@ -66,7 +66,7 @@ bool sourceHasBracketedConversionTarget(const QString& sourceExpression)
     }
 
     return sourceTargetStart < sourceExpression.size()
-        && sourceExpression.at(sourceTargetStart) == QLatin1Char('[');
+        && sourceExpression.at(sourceTargetStart) == MathDsl::UnitStart;
 }
 
 bool tokenCanEndOperandForSpacing(const Token& token)
@@ -91,23 +91,17 @@ QString spacingForBinaryOperator(const Token& token, const QString& operatorText
     const Token::Operator op = token.asOperator();
     switch (op) {
     case Token::Addition:
-        return QString(MathDsl::AddWrap)
-            + MathDsl::AddOp
-            + MathDsl::AddWrap;
+        return MathDsl::buildWrappedToken(MathDsl::AddOp, MathDsl::AddWrap);
     case Token::Subtraction:
-        return QString(MathDsl::SubWrap)
-            + MathDsl::SubOp
-            + MathDsl::SubWrap;
+        return MathDsl::buildWrappedToken(MathDsl::SubOp, MathDsl::SubWrapSp);
     case Token::Division:
-        return QString(MathDsl::DivWrap)
-            + MathDsl::DivOp
-            + MathDsl::DivWrap;
+        return MathDsl::buildWrappedToken(MathDsl::DivOp, MathDsl::DivWrap);
     case Token::Multiplication: {
         const bool useCrossSign = operatorText == QString(MathDsl::MulCrossOp)
             || operatorText == QStringLiteral("*");
         const QChar sign = useCrossSign ? MathDsl::MulCrossOp : MathDsl::MulDotOp;
-        const QChar space = useCrossSign ? MathDsl::MulCrossWrap : MathDsl::MulDotWrap;
-        return QString(space) + sign + space;
+        const QChar space = useCrossSign ? MathDsl::MulCrossWrapSp : MathDsl::MulDotWrapSp;
+        return MathDsl::buildWrappedToken(sign, space);
     }
     default:
         return token.text();
@@ -140,10 +134,10 @@ QString compactCompositeUnitSpacing(QString text)
 
     int pos = 0;
     while (true) {
-        const int open = text.indexOf(QLatin1Char('['), pos);
+        const int open = text.indexOf(MathDsl::UnitStart, pos);
         if (open < 0)
             break;
-        const int close = text.indexOf(QLatin1Char(']'), open + 1);
+        const int close = text.indexOf(MathDsl::UnitEnd, open + 1);
         if (close < 0)
             break;
 
@@ -159,7 +153,7 @@ QString compactCompositeUnitSpacing(QString text)
         while (rhsStart < text.size() && text.at(rhsStart).isSpace())
             ++rhsStart;
 
-        int rhsEnd = text.indexOf(QLatin1Char('?'), rhsStart);
+        int rhsEnd = text.indexOf(MathDsl::CommentSep, rhsStart);
         if (rhsEnd < 0)
             rhsEnd = text.size();
 
@@ -243,9 +237,8 @@ QString applyOperatorSpacingForDisplay(const QString& input)
     output += input.mid(lastPos);
 
     auto isUnitOp = [](QChar ch) {
-        return ch == MathDsl::MulDotOp
-            || ch == MathDsl::MulCrossOp
-            || ch == MathDsl::DivOp;
+        return MathDsl::isMultiplicationOperator(ch)
+            || MathDsl::isDivisionOperator(ch);
     };
     auto isUnitLike = [](QChar ch) {
         return ch.isLetter()
@@ -255,10 +248,10 @@ QString applyOperatorSpacingForDisplay(const QString& input)
             || ch == UnicodeChars::DegreeSign // °
             || ch == MathDsl::PowNeg // ⁻
             || MathDsl::isSuperscriptDigit(ch)
-            || ch == QLatin1Char('(')
-            || ch == QLatin1Char(')')
-            || ch == QLatin1Char('[')
-            || ch == QLatin1Char(']');
+            || ch == MathDsl::GroupStart
+            || ch == MathDsl::GroupEnd
+            || ch == MathDsl::UnitStart
+            || ch == MathDsl::UnitEnd;
     };
 
     int i = 0;
@@ -307,17 +300,17 @@ QString applyValueUnitSpacingForDisplay(const QString& input)
     QString output;
     output.reserve(input.size() + 8);
     for (const QChar ch : input) {
-        if (ch == QLatin1Char('[') && !output.isEmpty()) {
+        if (ch == MathDsl::UnitStart && !output.isEmpty()) {
             if (output.back().isSpace()) {
                 int i = output.size() - 1;
                 while (i >= 0 && output.at(i).isSpace())
                     --i;
                 if (i >= 0 && output.at(i).isDigit()) {
                     output.truncate(i + 1);
-                    output += MathDsl::QuantitySpace;
+                    output += MathDsl::QuantSp;
                 }
             } else if (output.back().isDigit()) {
-                output += MathDsl::QuantitySpace;
+                output += MathDsl::QuantSp;
             }
         }
         output += ch;
@@ -367,14 +360,14 @@ QString preserveConversionTargetBracketsForDisplay(const QString& displayedInter
         ++targetStart;
     if (targetStart >= displayedInterpreted.size())
         return displayedInterpreted;
-    if (displayedInterpreted.at(targetStart) == QLatin1Char('['))
+    if (displayedInterpreted.at(targetStart) == MathDsl::UnitStart)
         return displayedInterpreted;
 
     bool shouldWrapTarget = hasSourceBracketedTarget;
     if (!shouldWrapTarget) {
         const QString lhs = displayedInterpreted.left(arrow.pos);
-        const bool hasBracketedSourceUnit = lhs.contains(QLatin1Char('['))
-            && lhs.contains(QLatin1Char(']'));
+        const bool hasBracketedSourceUnit = lhs.contains(MathDsl::UnitStart)
+            && lhs.contains(MathDsl::UnitEnd);
         shouldWrapTarget = hasBracketedSourceUnit;
     }
     if (!shouldWrapTarget)
@@ -389,9 +382,9 @@ QString preserveConversionTargetBracketsForDisplay(const QString& displayedInter
         return displayedInterpreted;
 
     return displayedInterpreted.left(targetStart)
-        + QLatin1Char('[')
+        + MathDsl::UnitStart
         + target
-        + QLatin1Char(']')
+        + MathDsl::UnitEnd
         + displayedInterpreted.mid(targetEnd);
 }
 

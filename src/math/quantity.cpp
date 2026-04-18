@@ -82,7 +82,7 @@ SemanticUnitKind semanticUnitKind(const QString& unitName)
 InformationUnitFamily informationUnitFamily(const QString& unitName)
 {
     QString n = unitName.trimmed();
-    if (n.startsWith('(') && n.endsWith(')') && n.size() > 2)
+    if (n.startsWith(MathDsl::GroupStart) && n.endsWith(MathDsl::GroupEnd) && n.size() > 2)
         n = n.mid(1, n.size() - 2).trimmed();
     if (n.isEmpty())
         return InformationUnitFamily::None;
@@ -118,14 +118,14 @@ QString normalizeDisplayUnitNameForOutput(const QString& unitName)
 
     // Keep explicit conversion-expression targets unchanged; they are meant
     // to mirror user-entered structure (operators and grouping).
-    if (normalized.contains(UnicodeChars::Asterisk)
+    if (normalized.contains(MathDsl::MulOpAl1)
         || normalized.contains(MathDsl::MulDotOp)
         || normalized.contains(MathDsl::MulCrossOp)
         || normalized.contains(MathDsl::DivOp)
         || normalized.contains(MathDsl::AddOp)
-        || normalized.contains(MathDsl::SubOpAlt1)
-        || normalized.contains(MathDsl::OpenParen)
-        || normalized.contains(MathDsl::CloseParen)
+        || normalized.contains(MathDsl::SubOpAl1)
+        || normalized.contains(MathDsl::GroupStart)
+        || normalized.contains(MathDsl::GroupEnd)
         || normalized.contains(QLatin1String("->"))
         || normalized.contains(MathDsl::TransOp))
     {
@@ -180,7 +180,7 @@ bool needsGroupingInQuotient(const QString& unitName)
 {
     const QString n = unitName.trimmed();
     return n.contains(QLatin1Char(' '))
-           || n.contains(QLatin1Char('*'))
+           || n.contains(MathDsl::MulOpAl1)
            || n.contains(MathDsl::MulDotOp)
            || n.contains(MathDsl::MulCrossOp)
            || n.contains(QLatin1Char('/'));
@@ -195,7 +195,7 @@ QString composeQuotientUnitName(const QString& numerator, const QString& denomin
     if (d.isEmpty())
         return n;
     if (needsGroupingInQuotient(d))
-        d = QLatin1Char('(') + d + QLatin1Char(')');
+        d = QString(MathDsl::GroupStart) + d + QString(MathDsl::GroupEnd);
     return n + QStringLiteral(" / ") + d;
 }
 

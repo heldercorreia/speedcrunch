@@ -153,21 +153,21 @@ static void typeTextThroughEditorInputRules(Editor* editor, const QString& text)
 
     const auto keyForChar = [](QChar ch) -> int {
         switch (ch.unicode()) {
-        case '.': return Qt::Key_Period;
-        case ',': return Qt::Key_Comma;
-        case '+': return Qt::Key_Plus;
-        case MathDsl::SubOpAlt1.unicode(): return Qt::Key_Minus;
-        case '/': return Qt::Key_Slash;
-        case '*': return Qt::Key_Asterisk;
-        case '^': return Qt::Key_AsciiCircum;
-        case '(': return Qt::Key_ParenLeft;
-        case ')': return Qt::Key_ParenRight;
-        case '%': return Qt::Key_Percent;
-        case '!': return Qt::Key_Exclam;
+        case MathDsl::DotSep.unicode(): return Qt::Key_Period;
+        case MathDsl::CommaSep.unicode(): return Qt::Key_Comma;
+        case MathDsl::AddOp.unicode(): return Qt::Key_Plus;
+        case MathDsl::SubOpAl1.unicode(): return Qt::Key_Minus;
+        case MathDsl::DivOp.unicode(): return Qt::Key_Slash;
+        case MathDsl::MulOpAl1.unicode(): return Qt::Key_Asterisk;
+        case MathDsl::PowOp.unicode(): return Qt::Key_AsciiCircum;
+        case MathDsl::GroupStart.unicode(): return Qt::Key_ParenLeft;
+        case MathDsl::GroupEnd.unicode(): return Qt::Key_ParenRight;
+        case MathDsl::PercentOp.unicode(): return Qt::Key_Percent;
+        case MathDsl::FactorOp.unicode(): return Qt::Key_Exclam;
         default: break;
         }
         if (ch.isDigit())
-            return Qt::Key_0 + (ch.unicode() - '0');
+            return Qt::Key_0 + (ch.unicode() - MathDsl::Dig0.unicode());
         return Qt::Key_unknown;
     };
 
@@ -194,18 +194,18 @@ bool splitUserFunctionDescriptionForImport(const QString& expression,
         return false;
 
     const QString leftSide = expression.left(equalsPos);
-    if (!leftSide.contains('(') || !leftSide.contains(')'))
+    if (!leftSide.contains(MathDsl::GroupStart) || !leftSide.contains(MathDsl::GroupEnd))
         return false;
 
     int depth = 0;
     const int n = expression.size();
     for (int i = equalsPos + 1; i < n; ++i) {
         const QChar ch = expression.at(i);
-        if (ch == '(') {
+        if (ch == MathDsl::GroupStart) {
             ++depth;
-        } else if (ch == ')' && depth > 0) {
+        } else if (ch == MathDsl::GroupEnd && depth > 0) {
             --depth;
-        } else if (ch == '?' && depth == 0) {
+        } else if (ch == UnicodeChars::QuestionMark && depth == 0) {
             *expressionWithoutDescription = expression.left(i).trimmed();
             return true;
         }
@@ -2058,7 +2058,7 @@ void MainWindow::copyResultToClipboard()
     QClipboard* cb = QApplication::clipboard();
     Quantity q = m_evaluator->getVariable(QLatin1String("ans")).value();
     QString strToCopy(NumberFormatter::format(q));
-    strToCopy.replace(UnicodeChars::MinusSign, MathDsl::SubOpAlt1);
+    strToCopy.replace(UnicodeChars::MinusSign, MathDsl::SubOpAl1);
     cb->setText(strToCopy, QClipboard::Clipboard);
 }
 
@@ -3556,7 +3556,7 @@ void MainWindow::insertConstantIntoEditor(const QString& c)
         return;
 
     QString s = c;
-    s.replace('.', m_settings->radixCharacter());
+    s.replace(MathDsl::DotSep, m_settings->radixCharacter());
     insertTextIntoEditor(s);
 }
 
@@ -4149,17 +4149,17 @@ void MainWindow::setRadixCharacterAutomatic()
 
 void MainWindow::setRadixCharacterDot()
 {
-    setRadixCharacter('.');
+    setRadixCharacter(MathDsl::DotSep.toLatin1());
 }
 
 void MainWindow::setRadixCharacterComma()
 {
-    setRadixCharacter(',');
+    setRadixCharacter(MathDsl::CommaSep.toLatin1());
 }
 
 void MainWindow::setRadixCharacterBoth()
 {
-    setRadixCharacter('*');
+    setRadixCharacter(MathDsl::MulOpAl1.toLatin1());
 }
 
 void MainWindow::closeEvent(QCloseEvent* e)

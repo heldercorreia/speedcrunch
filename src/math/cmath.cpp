@@ -498,7 +498,7 @@ QString CMath::format(const CNumber& cn, CNumber::Format format)
             return strRadius;
         QString strPhase = HMath::format(phase, format);
         const QString imagUnit(CMath::imaginaryUnitSymbol());
-        const QString operatorSpace(MathDsl::MulDotWrap);
+        const QString operatorSpace(MathDsl::MulDotWrapSp);
         const QString dotOperator(MathDsl::MulDotOp);
         return QStringLiteral("%1%2%3%2exp(%4%2%3%2%5)")
             .arg(strRadius, operatorSpace, dotOperator, imagUnit, strPhase);

@@ -745,7 +745,7 @@ char Settings::decimalSeparator() const
     case NumberFormatThreeDigitUnderscoreComma:
     case NumberFormatThreeDigitDotCommaFraction:
     case NumberFormatThreeDigitUnderscoreCommaFraction:
-        return ',';
+        return MathDsl::CommaSep.toLatin1();
     case NumberFormatSIDot:
     case NumberFormatNoGroupingDot:
     case NumberFormatThreeDigitCommaDot:
@@ -755,7 +755,7 @@ char Settings::decimalSeparator() const
     case NumberFormatThreeDigitUnderscoreDotFraction:
     case NumberFormatIndianCommaDot:
     default:
-        return '.';
+        return MathDsl::DotSep.toLatin1();
     }
 }
 
@@ -766,12 +766,16 @@ bool Settings::isRadixCharacterAuto() const
 
 bool Settings::isRadixCharacterBoth() const
 {
-    return s_radixCharacter == '*';
+    return s_radixCharacter == MathDsl::MulOpAl1.toLatin1();
 }
 
 void Settings::setRadixCharacter(char c)
 {
-    s_radixCharacter = (c != ',' && c != '.' && c != '*') ? 0 : c;
+    s_radixCharacter = (c != MathDsl::CommaSep.toLatin1()
+                        && c != MathDsl::DotSep.toLatin1()
+                        && c != MathDsl::MulOpAl1.toLatin1())
+        ? 0
+        : c;
 }
 
 void Settings::applyNumberFormatStyle()
@@ -785,7 +789,7 @@ void Settings::applyNumberFormatStyle()
     case NumberFormatThreeDigitUnderscoreDot:
     case NumberFormatThreeDigitUnderscoreDotFraction:
     case NumberFormatIndianCommaDot:
-        setRadixCharacter('.');
+        setRadixCharacter(MathDsl::DotSep.toLatin1());
         break;
     case NumberFormatNoGroupingComma:
     case NumberFormatSIComma:
@@ -794,11 +798,11 @@ void Settings::applyNumberFormatStyle()
     case NumberFormatThreeDigitSpaceComma:
     case NumberFormatThreeDigitUnderscoreComma:
     case NumberFormatThreeDigitUnderscoreCommaFraction:
-        setRadixCharacter(',');
+        setRadixCharacter(MathDsl::CommaSep.toLatin1());
         break;
     case NumberFormatSystem:
     default:
-        setRadixCharacter('.');
+        setRadixCharacter(MathDsl::DotSep.toLatin1());
         break;
     }
 

@@ -198,7 +198,7 @@ namespace UnitSymbol {
     inline const QString Hertz = QStringLiteral("Hz");
     inline const QString Horsepower = QStringLiteral("hp");
     inline const QString Hour = QStringLiteral("h");
-    inline const QString Inch = MathDsl::TransOpAlt1;
+    inline const QString Inch = MathDsl::TransOpAl1;
     inline const QString Joule = QStringLiteral("J");
     inline const QString Karat = QStringLiteral("Kt");
     inline const QString Katal = QStringLiteral("kat");
@@ -311,7 +311,9 @@ bool unitQuantityFromDimensionKey(const QString& key, UnitQuantity* out)
 QString normalizeUnitName(const QString& name)
 {
     QString normalized = name.trimmed();
-    if (normalized.startsWith('(') && normalized.endsWith(')') && normalized.size() > 2)
+    if (normalized.startsWith(MathDsl::GroupStart)
+        && normalized.endsWith(MathDsl::GroupEnd)
+        && normalized.size() > 2)
         normalized = normalized.mid(1, normalized.size() - 2).trimmed();
     return normalized.toLower();
 }
@@ -1117,20 +1119,20 @@ void Units::findUnit(Quantity& q)
         const auto superscriptFromExponent = [](const Rational& value) {
             QString exponent = value.toString();
             if (exponent.contains('/'))
-                exponent = "^(" + exponent+')';
+                exponent = QString(MathDsl::PowOp) + QString(MathDsl::GroupStart) + exponent + MathDsl::GroupEnd;
             else if (exponent == "1")
                 exponent = "";
             else
-                exponent = '^' + exponent;
+                exponent = QString(MathDsl::PowOp) + exponent;
 
-            if (exponent.startsWith(QLatin1Char('^'))
-                && !exponent.contains(QLatin1Char('(')))
+            if (exponent.startsWith(MathDsl::PowOp)
+                && !exponent.contains(MathDsl::GroupStart))
             {
                 QString superscript;
                 superscript.reserve(exponent.size());
                 for (int i = 1; i < exponent.size(); ++i) {
                     const QChar ch = exponent.at(i);
-                    if (ch == MathDsl::SubOpAlt1) {
+                    if (ch == MathDsl::SubOpAl1) {
                         superscript += MathDsl::PowNeg;
                     } else if (ch == QLatin1Char('+')) {
                         superscript += MathDsl::PowPos;
@@ -1367,7 +1369,7 @@ void Units::findUnit(Quantity& q)
             QStringList terms;
             for (const UnitFactor& factor : factors)
                 terms << (factor.name + superscriptFromExponent(factor.exponent));
-            unit_name = MathDsl::QuantitySpace + terms.join(QString(MathDsl::MulDotOp));
+            unit_name = MathDsl::QuantSp + terms.join(QString(MathDsl::MulDotOp));
         } else {
             QStringList numeratorTerms;
             QStringList denominatorTerms;
@@ -1384,13 +1386,13 @@ void Units::findUnit(Quantity& q)
             const QString numeratorText = numeratorTerms.join(QString(MathDsl::MulDotOp));
             const QString denominatorText = denominatorTerms.join(QString(MathDsl::MulDotOp));
             if (!numeratorTerms.isEmpty() && !denominatorTerms.isEmpty()) {
-                unit_name = MathDsl::QuantitySpace + numeratorText + MathDsl::DivOp;
+                unit_name = MathDsl::QuantSp + numeratorText + MathDsl::DivOp;
                 if (denominatorTerms.size() > 1)
-                    unit_name += MathDsl::OpenParen + denominatorText + MathDsl::CloseParen;
+                    unit_name += MathDsl::GroupStart + denominatorText + MathDsl::GroupEnd;
                 else
                     unit_name += denominatorText;
             } else if (!numeratorTerms.isEmpty()) {
-                unit_name = MathDsl::QuantitySpace + numeratorText;
+                unit_name = MathDsl::QuantSp + numeratorText;
             } else if (!denominatorTerms.isEmpty()) {
                 // Keep inverse-only units in exponent form (s⁻¹, m⁻¹⋅s⁻², ...).
                 QStringList inverseTerms;
@@ -1398,7 +1400,7 @@ void Units::findUnit(Quantity& q)
                     if (factor.exponent < zero)
                         inverseTerms << (factor.name + superscriptFromExponent(factor.exponent));
                 }
-                unit_name = MathDsl::QuantitySpace + inverseTerms.join(QString(MathDsl::MulDotOp));
+                unit_name = MathDsl::QuantSp + inverseTerms.join(QString(MathDsl::MulDotOp));
             }
         }
 

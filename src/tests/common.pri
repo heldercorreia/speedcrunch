@@ -62,6 +62,7 @@ SOURCES += ../core/book.cpp \
            ../core/constants.cpp \
            ../core/evaluator.cpp \
            ../core/functions.cpp \
+           ../core/mathdsl.cpp \
            ../core/manualserver.cpp \
            ../core/numberformatter.cpp \
            ../core/pageserver.cpp \

@@ -44,7 +44,7 @@ static QString constantExpression(const Constant& constant)
     return constant.unit.isEmpty()
         ? constant.value
         : QStringLiteral("%1%2[%3]")
-            .arg(constant.value, QString(MathDsl::QuantitySpace), unit);
+            .arg(constant.value, QString(MathDsl::QuantSp), unit);
 }
 
 ConstantsWidget::ConstantsWidget(QWidget* parent)
@@ -182,8 +182,8 @@ void ConstantsWidget::filter()
     for (int k = 0; k < clist.count(); ++k) {
         QStringList str;
         str << clist.at(k).name;
-        QString radCh = (radixChar != '.') ?
-            QString(clist.at(k).value).replace('.', radixChar)
+        QString radCh = (radixChar != MathDsl::DotSep) ?
+            QString(clist.at(k).value).replace(MathDsl::DotSep, radixChar)
             : clist.at(k).value;
 
         if (layoutDirection() == Qt::RightToLeft) {
@@ -222,8 +222,8 @@ void ConstantsWidget::filter()
             if (!clist.at(k).unit.isEmpty())
                 tip.append(" ").append(QString(clist.at(k).unit).replace(
                     UnicodeChars::MiddleDot, MathDsl::MulDotOp));
-            if (radixChar != '.')
-                tip.replace('.', radixChar);
+            if (radixChar != MathDsl::DotSep)
+                tip.replace(MathDsl::DotSep, radixChar);
             tip += QString(UnicodeChars::LeftToRightMark);
             item->setToolTip(0, tip);
             item->setToolTip(1, tip);

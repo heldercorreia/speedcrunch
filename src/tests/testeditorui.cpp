@@ -334,7 +334,7 @@ void TestEditorUi::inserts_value_unit_space_brackets_after_number_or_symbol()
     QApplication::sendEvent(&editor, &bracketByText);
 
     const QString actualAfterNumber = editor.document()->toRawText();
-    QCOMPARE(actualAfterNumber, QStringLiteral("2") + QString(MathDsl::QuantitySpace) + QStringLiteral("[]"));
+    QCOMPARE(actualAfterNumber, QStringLiteral("2") + QString(MathDsl::QuantSp) + QStringLiteral("[]"));
 
     editor.setText(QString::fromUtf8("π"));
     editor.setCursorPosition(editor.text().size());
@@ -342,26 +342,26 @@ void TestEditorUi::inserts_value_unit_space_brackets_after_number_or_symbol()
     QApplication::sendEvent(&editor, &bracketByText);
 
     const QString actualAfterSymbol = editor.document()->toRawText();
-    QCOMPARE(actualAfterSymbol, QString::fromUtf8("π") + QString(MathDsl::QuantitySpace) + QStringLiteral("[]"));
+    QCOMPARE(actualAfterSymbol, QString::fromUtf8("π") + QString(MathDsl::QuantSp) + QStringLiteral("[]"));
 
     editor.setText(QStringLiteral("2")
-                   + QString(MathDsl::QuantitySpace)
+                   + QString(MathDsl::QuantSp)
                    + QStringLiteral("[m]")
-                   + QString(MathDsl::MulDotWrap)
+                   + QString(MathDsl::MulDotWrapSp)
                    + QString(MathDsl::MulDotOp)
-                   + QString(MathDsl::MulDotWrap)
+                   + QString(MathDsl::MulDotWrapSp)
                    + QStringLiteral("(pi)"));
     editor.setCursorPosition(editor.text().size());
     QApplication::sendEvent(&editor, &bracketByText);
     QCOMPARE(editor.document()->toRawText(),
              QStringLiteral("2")
-                 + QString(MathDsl::QuantitySpace)
+                 + QString(MathDsl::QuantSp)
                  + QStringLiteral("[m]")
-                 + QString(MathDsl::MulDotWrap)
+                 + QString(MathDsl::MulDotWrapSp)
                  + QString(MathDsl::MulDotOp)
-                 + QString(MathDsl::MulDotWrap)
+                 + QString(MathDsl::MulDotWrapSp)
                  + QStringLiteral("(pi)")
-                 + QString(MathDsl::QuantitySpace)
+                 + QString(MathDsl::QuantSp)
                  + QStringLiteral("[]"));
 
     editor.setText(QStringLiteral("2 [K] in "));
@@ -369,7 +369,7 @@ void TestEditorUi::inserts_value_unit_space_brackets_after_number_or_symbol()
     QApplication::sendEvent(&editor, &bracketByText);
     QCOMPARE(editor.document()->toRawText(),
              QStringLiteral("2 [K] in")
-                 + QString(MathDsl::QuantitySpace)
+                 + QString(MathDsl::QuantSp)
                  + QStringLiteral("[]"));
 }
 
@@ -390,7 +390,7 @@ void TestEditorUi::ignores_space_on_empty_or_all_space_editor()
 
     const QString allSpaces =
         QStringLiteral(" ")
-        + QString(MathDsl::QuantitySpace)
+        + QString(MathDsl::QuantSp)
         + QStringLiteral(" ");
     editor.setText(allSpaces);
     editor.setCursorPosition(editor.text().size());
@@ -524,15 +524,15 @@ void TestEditorUi::inserts_implicit_mul_sequence_before_open_paren_after_number_
     editor.setFocus();
 
     const QString mulDotSequence =
-        QString(MathDsl::MulDotWrap)
+        QString(MathDsl::MulDotWrapSp)
         + QString(MathDsl::MulDotOp)
-        + QString(MathDsl::MulDotWrap);
+        + QString(MathDsl::MulDotWrapSp);
     const QString mulCrossSequence =
-        QString(MathDsl::MulCrossWrap)
+        QString(MathDsl::MulCrossWrapSp)
         + QString(MathDsl::MulCrossOp)
-        + QString(MathDsl::MulCrossWrap);
+        + QString(MathDsl::MulCrossWrapSp);
 
-    auto typeOpenParenByText = [&editor]() {
+    auto typeGroupStartByText = [&editor]() {
         QKeyEvent openParenByText(
             QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QStringLiteral("("));
         QApplication::sendEvent(&editor, &openParenByText);
@@ -540,22 +540,22 @@ void TestEditorUi::inserts_implicit_mul_sequence_before_open_paren_after_number_
 
     editor.setText(QStringLiteral("2"));
     editor.setCursorPosition(editor.text().size());
-    typeOpenParenByText();
+    typeGroupStartByText();
     QCOMPARE(editor.document()->toRawText(), QStringLiteral("2") + mulCrossSequence + QStringLiteral("()"));
 
     editor.setText(QString::fromUtf8("2³"));
     editor.setCursorPosition(editor.text().size());
-    typeOpenParenByText();
+    typeGroupStartByText();
     QCOMPARE(editor.document()->toRawText(), QString::fromUtf8("2³") + mulCrossSequence + QStringLiteral("()"));
 
     editor.setText(QString::fromUtf8("π"));
     editor.setCursorPosition(editor.text().size());
-    typeOpenParenByText();
+    typeGroupStartByText();
     QCOMPARE(editor.document()->toRawText(), QString::fromUtf8("π") + mulDotSequence + QStringLiteral("()"));
 
     editor.setText(QString::fromUtf8("pi³"));
     editor.setCursorPosition(editor.text().size());
-    typeOpenParenByText();
+    typeGroupStartByText();
     QCOMPARE(editor.document()->toRawText(), QString::fromUtf8("pi³") + mulDotSequence + QStringLiteral("()"));
 }
 
@@ -605,9 +605,9 @@ void TestEditorUi::allows_unit_conversion_tail_after_spaced_subtraction_operator
 
     const QString afterGreater = editor.document()->toRawText();
     const QString arrowSequence =
-        QString(MathDsl::SubWrap)
+        QString(MathDsl::SubWrapSp)
         + QString(MathDsl::TransOp)
-        + QString(MathDsl::SubWrap)
+        + QString(MathDsl::SubWrapSp)
         + QStringLiteral("[]");
     QVERIFY(afterGreater.contains(arrowSequence));
     QVERIFY(!afterGreater.contains(UnicodeChars::GreaterThanSign));
@@ -643,9 +643,9 @@ void TestEditorUi::inserts_unit_conversion_with_placeholder_when_typing_arrow_sy
 
     const QString expected =
         QStringLiteral("1")
-        + QString(MathDsl::SubWrap)
+        + QString(MathDsl::SubWrapSp)
         + QString(MathDsl::TransOp)
-        + QString(MathDsl::SubWrap)
+        + QString(MathDsl::SubWrapSp)
         + QStringLiteral("[]");
     QCOMPARE(editor.document()->toRawText(), expected);
     QCOMPARE(editor.textCursor().position(), expected.size() - 1);
@@ -662,9 +662,9 @@ void TestEditorUi::treats_spaced_unit_conversion_as_atomic_navigation_and_edit_t
     editor.setFocus();
 
     const QString arrowToken =
-        QString(MathDsl::SubWrap)
+        QString(MathDsl::SubWrapSp)
         + QString(MathDsl::TransOp)
-        + QString(MathDsl::SubWrap);
+        + QString(MathDsl::SubWrapSp);
     const QString expression = QStringLiteral("1") + arrowToken + QStringLiteral("2");
 
     editor.setText(expression);
@@ -1017,27 +1017,27 @@ void TestEditorUi::unit_bracket_context_allows_digits_and_minus_only_in_exponent
     QTest::keyClick(&editor, Qt::Key_ParenLeft, Qt::NoModifier);
     QCOMPARE(editor.document()->toRawText(),
              QStringLiteral("[m]")
-                 + QString(MathDsl::MulDotWrap)
+                 + QString(MathDsl::MulDotWrapSp)
                  + QString(MathDsl::MulDotOp)
-                 + QString(MathDsl::MulDotWrap)
+                 + QString(MathDsl::MulDotWrapSp)
                  + QStringLiteral("()"));
 
     editor.setText(QStringLiteral("[]")
-                   + QString(MathDsl::MulDotWrap)
+                   + QString(MathDsl::MulDotWrapSp)
                    + QString(MathDsl::MulDotOp)
-                   + QString(MathDsl::MulDotWrap)
+                   + QString(MathDsl::MulDotWrapSp)
                    + QStringLiteral("()"));
     editor.setCursorPosition(editor.text().size());
     QTest::keyClick(&editor, Qt::Key_ParenLeft, Qt::NoModifier);
     QCOMPARE(editor.document()->toRawText(),
              QStringLiteral("[]")
-                 + QString(MathDsl::MulDotWrap)
+                 + QString(MathDsl::MulDotWrapSp)
                  + QString(MathDsl::MulDotOp)
-                 + QString(MathDsl::MulDotWrap)
+                 + QString(MathDsl::MulDotWrapSp)
                  + QStringLiteral("()")
-                 + QString(MathDsl::MulDotWrap)
+                 + QString(MathDsl::MulDotWrapSp)
                  + QString(MathDsl::MulDotOp)
-                 + QString(MathDsl::MulDotWrap)
+                 + QString(MathDsl::MulDotWrapSp)
                  + QStringLiteral("()"));
 
     editor.setText(QStringLiteral("[m^(2"));
@@ -1229,7 +1229,7 @@ void TestEditorUi::unit_bracket_context_allows_digits_and_minus_only_in_exponent
     QCOMPARE(editor.document()->toRawText(), QStringLiteral("[s") + MathDsl::Pow2);
 
     editor.setText(QStringLiteral("2")
-                   + QString(MathDsl::QuantitySpace)
+                   + QString(MathDsl::QuantSp)
                    + QStringLiteral("[m/s")
                    + QString(MathDsl::MulDotOp));
     editor.setCursorPosition(editor.text().size());
@@ -1237,7 +1237,7 @@ void TestEditorUi::unit_bracket_context_allows_digits_and_minus_only_in_exponent
     QApplication::sendEvent(&editor, &deadCircumflexInUnitAfterDot);
     QCOMPARE(editor.document()->toRawText(),
              QStringLiteral("2")
-                 + QString(MathDsl::QuantitySpace)
+                 + QString(MathDsl::QuantSp)
                  + QStringLiteral("[m/s")
                  + QString(MathDsl::MulDotOp));
 
@@ -1247,7 +1247,7 @@ void TestEditorUi::unit_bracket_context_allows_digits_and_minus_only_in_exponent
     QApplication::sendEvent(&editor, &caretCommitAfterDot);
     QCOMPARE(editor.document()->toRawText(),
              QStringLiteral("2")
-                 + QString(MathDsl::QuantitySpace)
+                 + QString(MathDsl::QuantSp)
                  + QStringLiteral("[m/s")
                  + QString(MathDsl::MulDotOp));
 
@@ -1258,12 +1258,12 @@ void TestEditorUi::unit_bracket_context_allows_digits_and_minus_only_in_exponent
     QApplication::sendEvent(&editor, &digitCommitAfterCaretPreedit);
     QCOMPARE(editor.document()->toRawText(),
              QStringLiteral("2")
-                 + QString(MathDsl::QuantitySpace)
+                 + QString(MathDsl::QuantSp)
                  + QStringLiteral("[m/s")
                  + QString(MathDsl::MulDotOp));
 
     editor.setText(QStringLiteral("2")
-                   + QString(MathDsl::QuantitySpace)
+                   + QString(MathDsl::QuantSp)
                    + QStringLiteral("[m")
                    + MathDsl::Pow2
                    + QStringLiteral("/s"));
@@ -1272,7 +1272,7 @@ void TestEditorUi::unit_bracket_context_allows_digits_and_minus_only_in_exponent
     QTest::keyClick(&editor, Qt::Key_Asterisk, Qt::NoModifier);
     QCOMPARE(editor.document()->toRawText(),
              QStringLiteral("2")
-                 + QString(MathDsl::QuantitySpace)
+                 + QString(MathDsl::QuantSp)
                  + QStringLiteral("[m")
                  + MathDsl::Pow2
                  + QStringLiteral("/s^"));

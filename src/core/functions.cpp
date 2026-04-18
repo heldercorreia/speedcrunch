@@ -22,6 +22,7 @@
 
 #include "core/functions.h"
 
+#include "core/mathdsl.h"
 #include "core/settings.h"
 #include "core/units.h"
 #include "core/unicodechars.h"
@@ -1237,7 +1238,7 @@ Quantity function_epoch(Function* f, const Function::ArgumentList& args)
     const QString rawDateTime = HMath::format(
         args.at(0).numericValue().real,
         HNumber::Format::Fixed() + HNumber::Format::Point() + HNumber::Format::Precision(6));
-    const QStringList parts = rawDateTime.split(QLatin1Char('.'));
+    const QStringList parts = rawDateTime.split(MathDsl::DotSep);
     if (parts.count() != 2 || parts.at(0).size() != 8 || parts.at(1).size() != 6) {
         f->setError(OutOfDomain);
         return DMath::nan();

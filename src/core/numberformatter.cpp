@@ -99,7 +99,7 @@ QString formatPiMultiple(const HNumber& value)
     if (!isCloseTo(value, expected))
         return QString();
 
-    const QString mulSpace(MathDsl::MulDotWrap);
+    const QString mulSpace(MathDsl::MulDotWrapSp);
     if (denominator == 1) {
         if (numerator == 1)
             return QStringLiteral("pi");
@@ -361,7 +361,7 @@ bool canonicalizeStandaloneNumericLiteral(const QString& input, QString* output)
     QString sign;
     if (trimmed.startsWith(MathDsl::AddOp)) {
         trimmed.remove(0, 1);
-    } else if (trimmed.startsWith(MathDsl::SubOpAlt1)
+    } else if (trimmed.startsWith(MathDsl::SubOpAl1)
                || trimmed.startsWith(g_minusChar)) {
         sign = QStringLiteral("-");
         trimmed.remove(0, 1);
@@ -588,15 +588,15 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride,
     }
 
     if (negative)
-        result.insert(0, MathDsl::SubOpAlt1);
+        result.insert(0, MathDsl::SubOpAl1);
 
     if (settings->decimalSeparator() == MathDsl::CommaSep.toLatin1())
         result.replace(MathDsl::DotSep, MathDsl::CommaSep);
 
     if (q.hasUnit() || !q.isDimensionless()) {
         bool unitNormalized = false;
-        const int openBracket = result.lastIndexOf(MathDsl::OpenUnit);
-        const int closeBracket = result.lastIndexOf(MathDsl::CloseUnit);
+        const int openBracket = result.lastIndexOf(MathDsl::UnitStart);
+        const int closeBracket = result.lastIndexOf(MathDsl::UnitEnd);
         if (openBracket >= 0
             && closeBracket > openBracket
             && closeBracket == result.size() - 1)
@@ -606,7 +606,7 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride,
                     result.mid(openBracket + 1, closeBracket - openBracket - 1));
             result = result.left(openBracket + 1)
                 + normalizedUnit
-                + MathDsl::CloseUnit;
+                + MathDsl::UnitEnd;
             unitNormalized = true;
         }
 
@@ -616,14 +616,14 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride,
                 const QString normalizedUnit =
                     UnitDisplayFormat::normalizeUnitTextForDisplay(result.mid(firstSpace + 1));
                 result = result.left(firstSpace)
-                    + MathDsl::OpenUnit
+                    + MathDsl::UnitStart
                     + normalizedUnit
-                    + MathDsl::CloseUnit;
+                    + MathDsl::UnitEnd;
             }
         }
     }
 
-    result.replace(MathDsl::SubOpAlt1, g_minusChar);
+    result.replace(MathDsl::SubOpAl1, g_minusChar);
 
     // Replace all spaces between units with dot operator.
     int emptySpaces = 0;

@@ -70,6 +70,7 @@ core/book.cpp
 core/constants.cpp
 core/evaluator.cpp
 core/functions.cpp
+core/mathdsl.cpp
 core/manualserver.cpp
 core/numberformatter.cpp
 core/pageserver.cpp
@@ -167,6 +168,7 @@ set(testevaluator_SOURCES
 core/constants.cpp
 core/evaluator.cpp
 core/functions.cpp
+core/mathdsl.cpp
 core/settings.cpp
 core/userfunction.cpp
 core/session.cpp
@@ -285,6 +287,7 @@ set(testeditorui_SOURCES
 core/constants.cpp
 core/evaluator.cpp
 core/functions.cpp
+core/mathdsl.cpp
 core/settings.cpp
 core/userfunction.cpp
 core/session.cpp

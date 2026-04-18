@@ -32,8 +32,8 @@ namespace DisplayFormatUtils {
       - use MathDsl::AddWrap around AdditionSign
       - use MathDsl::SubtractionSpace around SubtractionSign
       - use MathDsl::DivWrap around DivisionSign
-      - use MathDsl::MulDotWrap around MulDotSign
-      - use MathDsl::MulCrossWrap around MulCrossSign
+      - use MathDsl::MulDotWrapSp around MulDotSign
+      - use MathDsl::MulCrossWrapSp around MulCrossSign
 
       Examples:
       - 2 + 3 + 4
@@ -43,7 +43,7 @@ namespace DisplayFormatUtils {
       - 2 × 3 × 4
 
    2) Number + unit pair
-      - Between numeric value and unit bracket use MathDsl::QuantitySpace.
+      - Between numeric value and unit bracket use MathDsl::QuantSp.
       - Example: 2 [kg]
 
    3) Composite units
