@@ -264,6 +264,9 @@ public:
     static bool tryConvertAffineToBase(const QString& unitName,
                                        const HNumber& value,
                                        HNumber* baseValueOut);
+    static bool tryConvertAffineFromBase(const QString& unitName,
+                                         const HNumber& baseValue,
+                                         HNumber* valueOut);
     static bool isExplicitAngleUnitName(const QString& unitName);
     static bool tryConvertExplicitAngleToRadians(Quantity* angle);
 

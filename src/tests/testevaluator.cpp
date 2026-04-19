@@ -992,6 +992,38 @@ void test_units_temperature_affine_conversions()
     CHECK_EVAL(QString::fromUtf8("273.15[kelvin] -> [°C]"), "0 °C");
     CHECK_EVAL(QString::fromUtf8("0[°C] -> [°F]"), "32 °F");
     CHECK_EVAL(QString::fromUtf8("32[ºF] -> [ºC]"), "0 °C");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("1[°C]"), u8"274.15[K]");
+    CHECK_EVAL_FORMAT(QStringLiteral("1[ºC]"), u8"274.15[K]");
+    CHECK_EVAL_FORMAT(QStringLiteral("1[degree_celsius]"), u8"274.15[K]");
+    CHECK_EVAL_FORMAT(QStringLiteral("1[degC]"), u8"274.15[K]");
+    CHECK_EVAL_FORMAT(QStringLiteral("1[Cel]"), u8"274.15[K]");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("203[°F]"), u8"368.15[K]");
+    CHECK_EVAL_FORMAT(QStringLiteral("203[ºF]"), u8"368.15[K]");
+    CHECK_EVAL_FORMAT(QStringLiteral("203[degree_fahrenheit]"), u8"368.15[K]");
+    CHECK_EVAL_FORMAT(QStringLiteral("203[degF]"), u8"368.15[K]");
+    CHECK_EVAL_FORMAT(QStringLiteral("203[Fah]"), u8"368.15[K]");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("1 [°C]"), u8"274.15[K]");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("203 [°F]"), u8"368.15[K]");
+    CHECK_EVAL_FORMAT(QStringLiteral("1[oC]"), u8"274.15[K]");
+    CHECK_EVAL_FORMAT(QStringLiteral("203[oF]"), u8"368.15[K]");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("1[°C] -> [°F]"), u8"33.8[°F]");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("1[°F] -> [°C]"), u8"-17.22222222222222222222[°C]");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("100[°C] -> [°C]"), u8"100[°C]");
+    CHECK_EVAL_FORMAT(QStringLiteral("100[ºC] -> [ºC]"), u8"100[°C]");
+    CHECK_EVAL_FORMAT(QStringLiteral("100[degree_celsius] -> [degree_celsius]"), u8"100[°C]");
+    CHECK_EVAL_FORMAT(QStringLiteral("100[degC] -> [degC]"), u8"100[°C]");
+    CHECK_EVAL_FORMAT(QStringLiteral("100[Cel] -> [Cel]"), u8"100[°C]");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("203[°F] -> [°F]"), u8"203[°F]");
+    CHECK_EVAL_FORMAT(QStringLiteral("203[ºF] -> [ºF]"), u8"203[°F]");
+    CHECK_EVAL_FORMAT(QStringLiteral("203[degree_fahrenheit] -> [degree_fahrenheit]"), u8"203[°F]");
+    CHECK_EVAL_FORMAT(QStringLiteral("203[degF] -> [degF]"), u8"203[°F]");
+    CHECK_EVAL_FORMAT(QStringLiteral("203[Fah] -> [Fah]"), u8"203[°F]");
+    CHECK_EVAL_FORMAT(QStringLiteral("100[oC] -> [oC]"), u8"100[°C]");
+    CHECK_EVAL_FORMAT(QStringLiteral("203[oF] -> [oF]"), u8"203[°F]");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("1 [°C] → [°F]"), u8"33.8[°F]");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("1 [°F] → [°C]"), u8"-17.22222222222222222222[°C]");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("1[K] -> [°C]"), u8"-272.15[°C]");
+    CHECK_EVAL_FORMAT(QString::fromUtf8("1[K] -> [°F]"), u8"-457.87[°F]");
     CHECK_DISPLAY_INTERPRETED(
         QString::fromUtf8("100 [K] → [°C]"),
         QString::fromUtf8("100")

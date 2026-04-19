@@ -258,16 +258,18 @@ namespace UnitSymbol {
 } // namespace UnitSymbol
 
 namespace UnitAltSymbol {
-    inline const QString DegreeCelsius1 = QStringLiteral("°C");
-    inline const QString DegreeCelsius2 = QStringLiteral("ºC");
-    inline const QString DegreeCelsius3 = QStringLiteral("oC");
+    inline const QString DegreeCelsius1 = QStringLiteral("ºC");
+    inline const QString DegreeCelsius2 = QStringLiteral("oC");
+    inline const QString DegreeCelsius3 = QStringLiteral("degC");
+    inline const QString DegreeCelsius4 = QStringLiteral("Cel");
     inline const QString Degree = QStringLiteral("deg");
     inline const QString Arcminute = QStringLiteral("arcmin");
     inline const QString Arcsecond = QStringLiteral("arcsec");
     inline const QString Litre = QStringLiteral("l");
-    inline const QString DegreeFahrenheit1 = QStringLiteral("°F");
-    inline const QString DegreeFahrenheit2 = QStringLiteral("ºF");
-    inline const QString DegreeFahrenheit3 = QStringLiteral("oF");
+    inline const QString DegreeFahrenheit1 = QStringLiteral("ºF");
+    inline const QString DegreeFahrenheit2 = QStringLiteral("oF");
+    inline const QString DegreeFahrenheit3 = QStringLiteral("degF");
+    inline const QString DegreeFahrenheit4 = QStringLiteral("Fah");
     inline const QString Turn = QStringLiteral("pla");
 } // namespace UnitAltSymbol
 
@@ -579,7 +581,7 @@ const QHash<UnitId, UnitSpec>& s_unitSpecs()
         {UnitId::Weber, UnitSpec{UnitName::Weber, UnitSymbol::Weber, {}, UnitFamily::SiDerived, {UnitQuantity::MagneticFlux}, AllSiPrefixes, &Units::weber}},
         {UnitId::Tesla, UnitSpec{UnitName::Tesla, UnitSymbol::Tesla, {}, UnitFamily::SiDerived, {UnitQuantity::MagneticFluxDensity}, AllSiPrefixes, &Units::tesla}},
         {UnitId::Henry, UnitSpec{UnitName::Henry, UnitSymbol::Henry, {}, UnitFamily::SiDerived, {UnitQuantity::Inductance}, AllSiPrefixes, &Units::henry}},
-        {UnitId::DegreeCelsius, UnitSpec{UnitName::DegreeCelsius, UnitSymbol::DegreeCelsius, {UnitAltSymbol::DegreeCelsius1, UnitAltSymbol::DegreeCelsius2, UnitAltSymbol::DegreeCelsius3}, UnitFamily::SiAccepted, {UnitQuantity::CelsiusTemperature}, NoSiPrefixes, &Units::kelvin, {&s_celsiusToKelvin, &s_kelvinToCelsius}}},
+        {UnitId::DegreeCelsius, UnitSpec{UnitName::DegreeCelsius, UnitSymbol::DegreeCelsius, {UnitAltSymbol::DegreeCelsius1, UnitAltSymbol::DegreeCelsius2, UnitAltSymbol::DegreeCelsius3, UnitAltSymbol::DegreeCelsius4}, UnitFamily::SiAccepted, {UnitQuantity::CelsiusTemperature}, NoSiPrefixes, &Units::kelvin, {&s_celsiusToKelvin, &s_kelvinToCelsius}}},
         {UnitId::Lumen, UnitSpec{UnitName::Lumen, UnitSymbol::Lumen, {}, UnitFamily::SiDerived, {UnitQuantity::LuminousFlux}, AllSiPrefixes, &Units::lumen}},
         {UnitId::Lux, UnitSpec{UnitName::Lux, UnitSymbol::Lux, {}, UnitFamily::SiDerived, {UnitQuantity::Illuminance}, AllSiPrefixes, &Units::lux}},
         {UnitId::Becquerel, UnitSpec{UnitName::Becquerel, UnitSymbol::Becquerel, {}, UnitFamily::SiDerived, {UnitQuantity::ActivityReferredToARadionuclide}, AllSiPrefixes, &Units::becquerel}},
@@ -613,7 +615,7 @@ const QHash<UnitId, UnitSpec>& s_unitSpecs()
         {UnitId::Calorie, UnitSpec{UnitName::Calorie, UnitSymbol::Calorie, {}, UnitFamily::Other, {UnitQuantity::AmountOfHeat}, NoSiPrefixes, &Units::calorie}},
         {UnitId::Carat, UnitSpec{UnitName::Carat, UnitSymbol::Carat, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::carat}},
         {UnitId::Cup, UnitSpec{UnitName::Cup, UnitSymbol::Cup, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::cup}},
-        {UnitId::DegreeFahrenheit, UnitSpec{UnitName::DegreeFahrenheit, UnitSymbol::DegreeFahrenheit, {UnitAltSymbol::DegreeFahrenheit1, UnitAltSymbol::DegreeFahrenheit2, UnitAltSymbol::DegreeFahrenheit3}, UnitFamily::Other, {UnitQuantity::CelsiusTemperature}, NoSiPrefixes, &Units::kelvin, {&s_fahrenheitToKelvin, &s_kelvinToFahrenheit}}},
+        {UnitId::DegreeFahrenheit, UnitSpec{UnitName::DegreeFahrenheit, UnitSymbol::DegreeFahrenheit, {UnitAltSymbol::DegreeFahrenheit1, UnitAltSymbol::DegreeFahrenheit2, UnitAltSymbol::DegreeFahrenheit3, UnitAltSymbol::DegreeFahrenheit4}, UnitFamily::Other, {UnitQuantity::CelsiusTemperature}, NoSiPrefixes, &Units::kelvin, {&s_fahrenheitToKelvin, &s_kelvinToFahrenheit}}},
         {UnitId::ElementaryCharge, UnitSpec{UnitName::ElementaryCharge, UnitSymbol::ElementaryCharge, {}, UnitFamily::Other, {UnitQuantity::ElectricCharge}, NoSiPrefixes, &Units::elementary_charge}},
         {UnitId::Fathom, UnitSpec{UnitName::Fathom, UnitSymbol::Fathom, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::fathom}},
         {UnitId::FluidOunceUk, UnitSpec{UnitName::FluidOunceUk, UnitSymbol::FluidOunceUk, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::UK_fluid_ounce}},
@@ -1629,12 +1631,26 @@ QHash<QString, Quantity> Units::builtInUnitLookup(char angleMode)
     insertDisplayed(UnitSymbol::Ohm, unitValue(UnitId::Ohm), unitName(UnitId::Ohm));
     insertDisplayed(UnitSymbol::Second, unitValue(UnitId::Second), unitName(UnitId::Second));
     insertDisplayed(UnitSymbol::Hour, unitValue(UnitId::Hour), UnitSymbol::Hour);
-    insertDisplayed(unitName(UnitId::DegreeCelsius), unitValue(UnitId::Kelvin), unitName(UnitId::DegreeCelsius));
-    insertDisplayed(unitName(UnitId::DegreeFahrenheit), unitValue(UnitId::Kelvin), unitName(UnitId::DegreeFahrenheit));
-    insertDisplayed(UnitSymbol::DegreeCelsius, Units::kelvin(), UnitSymbol::DegreeCelsius);
-    insertDisplayed(UnitSymbol::DegreeFahrenheit, Units::kelvin(), UnitSymbol::DegreeFahrenheit);
-    insertDisplayed(UnitAltSymbol::DegreeCelsius2, Units::kelvin(), UnitSymbol::DegreeCelsius);
-    insertDisplayed(UnitAltSymbol::DegreeFahrenheit2, Units::kelvin(), UnitSymbol::DegreeFahrenheit);
+    const auto insertAffineDisplayAliases = [&](UnitId id) {
+        const auto specIt = s_unitSpecs().constFind(id);
+        if (specIt == s_unitSpecs().constEnd())
+            return;
+        const UnitSpec& spec = specIt.value();
+        if (!(spec.affine.toBase && spec.affine.fromBase))
+            return;
+
+        insertDisplayed(spec.name, unitValue(UnitId::Kelvin), spec.name);
+        if (!spec.symbol.isEmpty())
+            insertDisplayed(spec.symbol, Units::kelvin(), spec.symbol);
+        for (const QString& alias : spec.aliases) {
+            if (alias.isEmpty())
+                continue;
+            insertDisplayed(alias, Units::kelvin(),
+                            spec.symbol.isEmpty() ? spec.name : spec.symbol);
+        }
+    };
+    insertAffineDisplayAliases(UnitId::DegreeCelsius);
+    insertAffineDisplayAliases(UnitId::DegreeFahrenheit);
 
     {
         Quantity hz = unitValue(UnitId::Hertz);
@@ -1652,7 +1668,7 @@ QHash<QString, Quantity> Units::builtInUnitLookup(char angleMode)
     lookup.insert(unitName(UnitId::Degree), angleUnitValueForMode(AngleUnitKind::Degree, angleMode));
     lookup.insert(UnitAltSymbol::Degree, angleUnitValueForMode(AngleUnitKind::Degree, angleMode));
     lookup.insert(UnitSymbol::Degree, angleUnitValueForMode(AngleUnitKind::Degree, angleMode));
-    lookup.insert(UnitAltSymbol::DegreeCelsius2, angleUnitValueForMode(AngleUnitKind::Degree, angleMode));
+    lookup.insert(UnitAltSymbol::DegreeCelsius1, angleUnitValueForMode(AngleUnitKind::Degree, angleMode));
     lookup.insert(UnitName::Gradian, angleUnitValueForMode(AngleUnitKind::Gradian, angleMode));
     lookup.insert(UnitSymbol::Gradian, angleUnitValueForMode(AngleUnitKind::Gradian, angleMode));
     lookup.insert(UnitName::Turn, angleUnitValueForMode(AngleUnitKind::Turn, angleMode));
@@ -1690,6 +1706,21 @@ bool Units::tryConvertAffineToBase(const QString& unitName,
     if (it == s_unitRegistry().affineByIdentifier.constEnd() || !it.value().toBase)
         return false;
     *baseValueOut = it.value().toBase(value);
+    return true;
+}
+
+bool Units::tryConvertAffineFromBase(const QString& unitName,
+                                     const HNumber& baseValue,
+                                     HNumber* valueOut)
+{
+    if (!valueOut)
+        return false;
+
+    const QString normalized = UnicodeChars::normalizeUnitSymbolAliases(unitName.trimmed());
+    const auto it = s_unitRegistry().affineByIdentifier.constFind(normalized);
+    if (it == s_unitRegistry().affineByIdentifier.constEnd() || !it.value().fromBase)
+        return false;
+    *valueOut = it.value().fromBase(baseValue);
     return true;
 }
 

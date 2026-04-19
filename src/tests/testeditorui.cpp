@@ -76,6 +76,7 @@ private slots:
     void tooltip_does_not_append_angle_mode_symbol_after_explicit_arcsecond_unit();
     void tooltip_shows_radian_suffix_for_negative_sexagesimal_literal();
     void tooltip_keeps_quantsp_before_degree_celsius();
+    void tooltip_handles_affine_temperature_units_without_arrow_and_with_conversion();
     void enter_evaluates_when_completion_popup_has_no_explicit_interaction();
 };
 
@@ -1937,6 +1938,59 @@ void TestEditorUi::tooltip_keeps_quantsp_before_degree_celsius()
     const QString message = spy.takeLast().at(0).toString();
     const QString expected = QStringLiteral("= 25") + QString(MathDsl::QuantSp) + QString::fromUtf8("°C");
     QVERIFY(message.contains(expected));
+
+    settings->resultFormat = oldResultFormat;
+}
+
+void TestEditorUi::tooltip_handles_affine_temperature_units_without_arrow_and_with_conversion()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    Settings* settings = Settings::instance();
+    const char oldResultFormat = settings->resultFormat;
+    settings->resultFormat = 'f';
+
+    struct Case {
+        QString expression;
+        QString expected;
+    };
+    const QList<Case> cases = {
+        {QString::fromUtf8("100 [°C]"),
+         QStringLiteral("= 373.15") + QString(MathDsl::QuantSp) + QString::fromUtf8("K")},
+        {QString::fromUtf8("203 [°F]"),
+         QStringLiteral("= 368.15") + QString(MathDsl::QuantSp) + QString::fromUtf8("K")},
+        {QString::fromUtf8("1 [K] -> [°C]"),
+         QString(MathDsl::Equals)
+             + QStringLiteral(" ")
+             + QString(MathDsl::SubOp)
+             + QStringLiteral("272.15")
+             + QString(MathDsl::QuantSp)
+             + QString::fromUtf8("°C")},
+        {QString::fromUtf8("1 [K] -> [°F]"),
+         QString(MathDsl::Equals)
+             + QStringLiteral(" ")
+             + QString(MathDsl::SubOp)
+             + QStringLiteral("457.87")
+             + QString(MathDsl::QuantSp)
+             + QString::fromUtf8("°F")}
+    };
+
+    for (const Case& c : cases) {
+        QSignalSpy spy(&editor, SIGNAL(autoCalcMessageAvailable(const QString&)));
+        editor.setText(c.expression);
+        editor.setCursorPosition(editor.text().size());
+        editor.refreshAutoCalc();
+        QCoreApplication::processEvents();
+
+        QVERIFY(!spy.isEmpty());
+        const QString message = spy.takeLast().at(0).toString();
+        QVERIFY2(message.contains(c.expected),
+                 qPrintable(QStringLiteral("Expression: %1\nMessage: %2\nExpected fragment: %3")
+                                .arg(c.expression, message, c.expected)));
+    }
 
     settings->resultFormat = oldResultFormat;
 }
