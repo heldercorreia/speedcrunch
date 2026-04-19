@@ -153,6 +153,7 @@ enum class UnitId {
     Lightyear,
     LongTon,
     Mile,
+    MilePerHour,
     Nat,
     NauticalMile,
     Ounce,
@@ -167,12 +168,18 @@ enum class UnitId {
     QuartUs,
     Rod,
     ShortTon,
+    Stone,
     Tablespoon,
+    DessertSpoon,
     Teaspoon,
     Torr,
     Turn,
     Revolution,
+    RevolutionPerMinute,
     Week,
+    KilowattHour,
+    MillimetreOfMercury,
+    Quad,
     Yard,
     YearJulian,
     YearSidereal,
@@ -437,7 +444,14 @@ public:
     static const Quantity elementary_charge();
     static const Quantity speed_of_sound_STP();
     static const Quantity knot();
+    static const Quantity mile_per_hour();
+    static const Quantity revolution_per_minute();
     static const Quantity horsepower();
+    static const Quantity kilowatt_hour();
+    static const Quantity millimetre_of_mercury();
+    static const Quantity stone();
+    static const Quantity dessert_spoon();
+    static const Quantity quad();
 
 private:
     static void pushUnit(Quantity q, QString name);

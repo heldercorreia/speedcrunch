@@ -796,6 +796,14 @@ void test_units_short_aliases_and_si_prefixes()
     CHECK_EVAL("[pV] -> [volt]", "0.000000000001 volt");
     CHECK_EVAL(QString::fromUtf8("[ha] -> [m²]"), u8"10000 m²");
     CHECK_EVAL("[ac] -> [acre]", "1 acre");
+    CHECK_EVAL("[rpm] -> [revolution_per_minute]", "1 revolution_per_minute");
+    CHECK_EVAL("[mph] -> [mile_per_hour]", "1 mile_per_hour");
+    CHECK_EVAL("[kWh] -> [kilowatt_hour]", "1 kilowatt_hour");
+    CHECK_EVAL("[mmHg] -> [millimetre_of_mercury]", "1 millimetre_of_mercury");
+    CHECK_EVAL("[st] -> [stone]", "1 stone");
+    CHECK_EVAL("[dsp] -> [dessert_spoon]", "1 dessert_spoon");
+    CHECK_EVAL("[quad] -> [quad]", "1 quad");
+    CHECK_EVAL("1e15[Btu] -> [quad]", "1 quad");
 
     CHECK_EVAL("[mV] -> [volt]", "0.001 volt");
     CHECK_EVAL("[MV] -> [volt]", "1000000 volt");
@@ -933,6 +941,12 @@ void test_units_derived_si_recognition_and_disambiguation()
     CHECK_EVAL("[newton*metre] -> [joule]", "1 joule");
     CHECK_EVAL("[joule/metre^3] -> [pascal]", "1 pascal");
     CHECK_EVAL("[watt*second] -> [joule]", "1 joule");
+    CHECK_EVAL("[revolution/minute] -> [revolution_per_minute]", "1 revolution_per_minute");
+    CHECK_EVAL("[1609.344 metre/hour] -> [mile_per_hour]", "1 mile_per_hour");
+    CHECK_EVAL("[kilowatt*hour] -> [kilowatt_hour]", "1 kilowatt_hour");
+    CHECK_EVAL("[133.322387415*pascal] -> [millimetre_of_mercury]", "1 millimetre_of_mercury");
+    CHECK_EVAL("[14*pound] -> [stone]", "1 stone");
+    CHECK_EVAL("[10*millilitre] -> [dessert_spoon]", "1 dessert_spoon");
     CHECK_EVAL("[watt*volt]", "1 volt²·ampere");
     CHECK_EVAL("[volt*ampere]", "1 watt");
     CHECK_EVAL("[volt*second/metre^2]", "1 tesla");

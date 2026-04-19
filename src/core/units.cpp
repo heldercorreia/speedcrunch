@@ -33,6 +33,31 @@
 #include <algorithm>
 #include <array>
 
+/*
+    - Source #1:
+        The International System of Units - 9th edition (2019)
+        Bureau International des Poids et Mesures
+        Published in May 2019 - Revised in August 2025
+        https://doi.org/10.59161/AUEZ1291
+
+    - Source #2:
+        SI Reference Point
+        Bureau International des Poids et Mesures
+        https://si-digital-framework.org/SI/units
+
+    - Source #3:
+        The Unified Code for Units of Measure
+        Regenstrief Institute, Inc. and the UCUM Organization
+        Version: 2.2 | Revision: N/A | Date: 2024-06-17
+        https://ucum.org/ucum
+
+    - Source #4:
+        https://www.nist.gov/system/files/documents/2025/12/30/appc-26-HB44-20251222.pdf
+
+    - Source #5:
+        https://qudt.org/vocab/unit/
+*/
+
 namespace UnitText {
 inline constexpr QStringView NewtonMetre{u"newton metre", 12};
 inline constexpr QStringView WattSecond{u"watt second", 11};
@@ -67,7 +92,6 @@ namespace UnitName {
     inline const QString DegreeCelsius = QStringLiteral("degree_celsius");
     inline const QString DegreeFahrenheit = QStringLiteral("degree_fahrenheit");
     inline const QString Electronvolt = QStringLiteral("electronvolt");
-    inline const QString ElementaryCharge = QStringLiteral("elementary_charge");
     inline const QString Farad = QStringLiteral("farad");
     inline const QString Fathom = QStringLiteral("fathom");
     inline const QString FluidOunceUk = QStringLiteral("fluid_ounce_UK");
@@ -103,6 +127,7 @@ namespace UnitName {
     inline const QString Lux = QStringLiteral("lux");
     inline const QString Metre = QStringLiteral("metre");
     inline const QString Mile = QStringLiteral("mile");
+    inline const QString MilePerHour = QStringLiteral("mile_per_hour");
     inline const QString Minute = QStringLiteral("minute");
     inline const QString Mole = QStringLiteral("mole");
     inline const QString Nat = QStringLiteral("nat");
@@ -111,8 +136,6 @@ namespace UnitName {
     inline const QString Ohm = QStringLiteral("ohm");
     inline const QString Ounce = QStringLiteral("ounce");
     inline const QString Parsec = QStringLiteral("parsec");
-    inline const QString PartsPerBillion = QStringLiteral("parts_per_billion");
-    inline const QString PartsPerMillion = QStringLiteral("parts_per_million");
     inline const QString Pascal = QStringLiteral("pascal");
     inline const QString PintUk = QStringLiteral("pint_UK");
     inline const QString PintUs = QStringLiteral("pint_US");
@@ -124,19 +147,25 @@ namespace UnitName {
     inline const QString Rod = QStringLiteral("rod");
     inline const QString Second = QStringLiteral("second");
     inline const QString ShortTon = QStringLiteral("short_ton");
+    inline const QString Stone = QStringLiteral("stone");
     inline const QString Siemens = QStringLiteral("siemens");
     inline const QString Sievert = QStringLiteral("sievert");
     inline const QString SquareMetre = QStringLiteral("square_metre");
     inline const QString Steradian = QStringLiteral("steradian");
     inline const QString Tablespoon = QStringLiteral("tablespoon");
+    inline const QString DessertSpoon = QStringLiteral("dessert_spoon");
     inline const QString Teaspoon = QStringLiteral("teaspoon");
     inline const QString Tesla = QStringLiteral("tesla");
     inline const QString Tonne = QStringLiteral("tonne");
     inline const QString Torr = QStringLiteral("torr");
     inline const QString Turn = QStringLiteral("turn");
     inline const QString Revolution = QStringLiteral("revolution");
+    inline const QString RevolutionPerMinute = QStringLiteral("revolution_per_minute");
     inline const QString Volt = QStringLiteral("volt");
     inline const QString Watt = QStringLiteral("watt");
+    inline const QString KilowattHour = QStringLiteral("kilowatt_hour");
+    inline const QString MillimetreOfMercury = QStringLiteral("millimetre_of_mercury");
+    inline const QString Quad = QStringLiteral("quad");
     inline const QString Weber = QStringLiteral("weber");
     inline const QString Week = QStringLiteral("week");
     inline const QString Yard = QStringLiteral("yard");
@@ -154,7 +183,7 @@ namespace UnitSymbol {
     inline const QString AstronomicalUnit = QStringLiteral("au");
     inline const QString Atmosphere = QStringLiteral("atm");
     inline const QString AtomicMassUnit = QStringLiteral("u");
-    inline const QString Bar = QStringLiteral("");
+    inline const QString Bar = QStringLiteral("bar");
     inline const QString Becquerel = QStringLiteral("Bq");
     inline const QString Bit = QStringLiteral("b");
     inline const QString BritishThermalUnit = QStringLiteral("Btu");
@@ -164,20 +193,19 @@ namespace UnitSymbol {
     inline const QString Carat = QStringLiteral("ct");
     inline const QString Coulomb = QStringLiteral("C");
     inline const QString CubicMetre = QStringLiteral("m³");
-    inline const QString Cup = QStringLiteral("");
+    inline const QString Cup = QStringLiteral("cup");
     inline const QString Dalton = QStringLiteral("Da");
     inline const QString Day = QStringLiteral("d");
     inline const QString Degree = QStringLiteral("°");
     inline const QString DegreeCelsius = QStringLiteral("°C");
     inline const QString DegreeFahrenheit = QStringLiteral("°F");
     inline const QString Electronvolt = QStringLiteral("eV");
-    inline const QString ElementaryCharge = QStringLiteral("");
     inline const QString Farad = QStringLiteral("F");
-    inline const QString Fathom = QStringLiteral("fth");
+    inline const QString Fathom = QStringLiteral("fathom"); // Source #5
     inline const QString FluidOunceUk = QStringLiteral("floz_UK");
     inline const QString FluidOunceUs = QStringLiteral("floz_US");
     inline const QString Foot = QStringLiteral("ft");
-    inline const QString Furlong = QStringLiteral("fur");
+    inline const QString Furlong = QStringLiteral("fur"); // Source #4
     inline const QString GallonUk = QStringLiteral("gal_UK");
     inline const QString GallonUs = QStringLiteral("gal_US");
     inline const QString Gradian = QStringLiteral("gon");
@@ -202,11 +230,12 @@ namespace UnitSymbol {
     inline const QString Lightsecond = QStringLiteral("ls");
     inline const QString Lightyear = QStringLiteral("ly");
     inline const QString Litre = QStringLiteral("L");
-    inline const QString LongTon = QStringLiteral("");
+    inline const QString LongTon = QStringLiteral("long_ton");
     inline const QString Lumen = QStringLiteral("lm");
     inline const QString Lux = QStringLiteral("lx");
     inline const QString Metre = QStringLiteral("m");
     inline const QString Mile = QStringLiteral("mi");
+    inline const QString MilePerHour = QStringLiteral("mph");
     inline const QString Minute = QStringLiteral("min");
     inline const QString Mole = QStringLiteral("mol");
     inline const QString Nat = QStringLiteral("nat");
@@ -215,8 +244,6 @@ namespace UnitSymbol {
     inline const QString Ohm = QStringLiteral("Ω");
     inline const QString Ounce = QStringLiteral("oz");
     inline const QString Parsec = QStringLiteral("pc");
-    inline const QString PartsPerBillion = QStringLiteral("ppb");
-    inline const QString PartsPerMillion = QStringLiteral("ppm");
     inline const QString Pascal = QStringLiteral("Pa");
     inline const QString PintUk = QStringLiteral("pt_UK");
     inline const QString PintUs = QStringLiteral("pt_US");
@@ -225,22 +252,28 @@ namespace UnitSymbol {
     inline const QString QuartUk = QStringLiteral("qt_UK");
     inline const QString QuartUs = QStringLiteral("qt_US");
     inline const QString Radian = QStringLiteral("rad");
-    inline const QString Rod = QStringLiteral("rd");
+    inline const QString Rod = QStringLiteral("rd");  // Source #4
     inline const QString Second = QStringLiteral("s");
-    inline const QString ShortTon = QStringLiteral("");
+    inline const QString ShortTon = QStringLiteral("tn"); // Source #4
+    inline const QString Stone = QStringLiteral("st");
     inline const QString Siemens = QStringLiteral("S");
     inline const QString Sievert = QStringLiteral("Sv");
     inline const QString SquareMetre = QStringLiteral("m²");
     inline const QString Steradian = QStringLiteral("sr");
     inline const QString Tablespoon = QStringLiteral("tbsp");
+    inline const QString DessertSpoon = QStringLiteral("dsp");
     inline const QString Teaspoon = QStringLiteral("tsp");
     inline const QString Tesla = QStringLiteral("T");
     inline const QString Tonne = QStringLiteral("t");
     inline const QString Torr = QStringLiteral("Torr");
     inline const QString Turn = QStringLiteral("tr");
     inline const QString Revolution = QStringLiteral("rev");
+    inline const QString RevolutionPerMinute = QStringLiteral("rpm");
     inline const QString Volt = QStringLiteral("V");
     inline const QString Watt = QStringLiteral("W");
+    inline const QString KilowattHour = QStringLiteral("kWh");
+    inline const QString MillimetreOfMercury = QStringLiteral("mmHg");
+    inline const QString Quad = QStringLiteral("quad");
     inline const QString Weber = QStringLiteral("Wb");
     inline const QString Week = QStringLiteral("wk");
     inline const QString Yard = QStringLiteral("yd");
@@ -265,6 +298,186 @@ namespace UnitAltSymbol {
     inline const QString Turn = QStringLiteral("pla");
 } // namespace UnitAltSymbol
 
+struct UnitRegistry;
+
+namespace {
+    const UnitRegistry& s_unitRegistry();
+
+    enum SiPrefixPolicy {
+        NoSiPrefixes = 0,
+        PositiveSiPrefixes = 1 << 0,
+        NegativeSiPrefixes = 1 << 1,
+        BinaryPrefixes = 1 << 2
+    };
+    static constexpr SiPrefixPolicy AllSiPrefixes =
+        static_cast<SiPrefixPolicy>(PositiveSiPrefixes | NegativeSiPrefixes);
+
+    enum class UnitFamily {
+        SiBase,
+        SiDerived,
+        SiAccepted,
+        Other
+    };
+
+    struct UnitAliasSpec {
+        QString longName;
+        Quantity value;
+        QString shortName;
+        QString alternateShortName;
+        SiPrefixPolicy siPrefixPolicy;
+    };
+
+    struct AffineDefinition {
+        // Affine conversion handlers only transform numeric offsets/scales.
+        // Unit dimensions for identifiers still come from UnitSpec::linearValue
+        // (e.g. degree_celsius/degree_fahrenheit use Units::kelvin).
+        HNumber (*toBase)(const HNumber&) = nullptr;
+        HNumber (*fromBase)(const HNumber&) = nullptr;
+    };
+
+    struct UnitSpec {
+        QString name;
+        QString symbol;
+        QList<QString> aliases;
+        UnitFamily family;
+        QList<UnitQuantity> quantities;
+        SiPrefixPolicy siPrefixPolicy;
+        const Quantity (*linearValue)();
+        AffineDefinition affine = {};
+    };
+
+    struct PrefixSpec {
+        PrefixId id;
+        QString longName;
+        QString symbol;
+        int power;
+        Quantity value;
+    };
+} // namespace
+
+HNumber s_celsiusToKelvin(const HNumber& c);
+HNumber s_kelvinToCelsius(const HNumber& k);
+HNumber s_fahrenheitToKelvin(const HNumber& f);
+HNumber s_kelvinToFahrenheit(const HNumber& k);
+const Quantity s_hartreeEnergyUnit();
+
+const QHash<UnitId, UnitSpec>& s_unitSpecs()
+{
+    // Single source of truth for built-in units.
+    // See Sources at top of this file.
+    static const QHash<UnitId, UnitSpec> specs = {
+        // SI base units
+        {UnitId::Second, UnitSpec{UnitName::Second, UnitSymbol::Second, {}, UnitFamily::SiBase, {UnitQuantity::Time}, AllSiPrefixes, &Units::second}},
+        {UnitId::Metre, UnitSpec{UnitName::Metre, UnitSymbol::Metre, {}, UnitFamily::SiBase, {UnitQuantity::Length}, AllSiPrefixes, &Units::metre}},
+        {UnitId::Kilogram, UnitSpec{UnitName::Kilogram, UnitSymbol::Kilogram, {}, UnitFamily::SiBase, {UnitQuantity::Mass}, AllSiPrefixes, &Units::kilogram}},
+        {UnitId::Ampere, UnitSpec{UnitName::Ampere, UnitSymbol::Ampere, {}, UnitFamily::SiBase, {UnitQuantity::ElectricCurrent}, AllSiPrefixes, &Units::ampere}},
+        {UnitId::Kelvin, UnitSpec{UnitName::Kelvin, UnitSymbol::Kelvin, {}, UnitFamily::SiBase, {UnitQuantity::ThermodynamicTemperature}, AllSiPrefixes, &Units::kelvin}},
+        {UnitId::Mole, UnitSpec{UnitName::Mole, UnitSymbol::Mole, {}, UnitFamily::SiBase, {UnitQuantity::AmountOfSubstance}, AllSiPrefixes, &Units::mole}},
+        {UnitId::Candela, UnitSpec{UnitName::Candela, UnitSymbol::Candela, {}, UnitFamily::SiBase, {UnitQuantity::LuminousIntensity}, AllSiPrefixes, &Units::candela}},
+        // SI derived units
+        {UnitId::Radian, UnitSpec{UnitName::Radian, UnitSymbol::Radian, {}, UnitFamily::SiDerived, {UnitQuantity::PlaneAngle}, AllSiPrefixes, &Units::radian}},
+        {UnitId::Steradian, UnitSpec{UnitName::Steradian, UnitSymbol::Steradian, {}, UnitFamily::SiDerived, {UnitQuantity::SolidAngle}, AllSiPrefixes, &Units::steradian}},
+        {UnitId::Hertz, UnitSpec{UnitName::Hertz, UnitSymbol::Hertz, {}, UnitFamily::SiDerived, {UnitQuantity::Frequency}, AllSiPrefixes, &Units::hertz}},
+        {UnitId::Newton, UnitSpec{UnitName::Newton, UnitSymbol::Newton, {}, UnitFamily::SiDerived, {UnitQuantity::Force}, AllSiPrefixes, &Units::newton}},
+        {UnitId::Pascal, UnitSpec{UnitName::Pascal, UnitSymbol::Pascal, {}, UnitFamily::SiDerived, {UnitQuantity::Pressure, UnitQuantity::Stress}, AllSiPrefixes, &Units::pascal}},
+        {UnitId::Joule, UnitSpec{UnitName::Joule, UnitSymbol::Joule, {}, UnitFamily::SiDerived, {UnitQuantity::Energy, UnitQuantity::Work, UnitQuantity::AmountOfHeat}, AllSiPrefixes, &Units::joule}},
+        {UnitId::Watt, UnitSpec{UnitName::Watt, UnitSymbol::Watt, {}, UnitFamily::SiDerived, {UnitQuantity::Power, UnitQuantity::RadiantFlux}, AllSiPrefixes, &Units::watt}},
+        {UnitId::Coulomb, UnitSpec{UnitName::Coulomb, UnitSymbol::Coulomb, {}, UnitFamily::SiDerived, {UnitQuantity::ElectricCharge}, AllSiPrefixes, &Units::coulomb}},
+        {UnitId::Volt, UnitSpec{UnitName::Volt, UnitSymbol::Volt, {}, UnitFamily::SiDerived, {UnitQuantity::ElectricPotentialDifference}, AllSiPrefixes, &Units::volt}},
+        {UnitId::Farad, UnitSpec{UnitName::Farad, UnitSymbol::Farad, {}, UnitFamily::SiDerived, {UnitQuantity::Capacitance}, AllSiPrefixes, &Units::farad}},
+        {UnitId::Ohm, UnitSpec{UnitName::Ohm, UnitSymbol::Ohm, {}, UnitFamily::SiDerived, {UnitQuantity::ElectricResistance}, AllSiPrefixes, &Units::ohm}},
+        {UnitId::Siemens, UnitSpec{UnitName::Siemens, UnitSymbol::Siemens, {}, UnitFamily::SiDerived, {UnitQuantity::ElectricConductance}, AllSiPrefixes, &Units::siemens}},
+        {UnitId::Weber, UnitSpec{UnitName::Weber, UnitSymbol::Weber, {}, UnitFamily::SiDerived, {UnitQuantity::MagneticFlux}, AllSiPrefixes, &Units::weber}},
+        {UnitId::Tesla, UnitSpec{UnitName::Tesla, UnitSymbol::Tesla, {}, UnitFamily::SiDerived, {UnitQuantity::MagneticFluxDensity}, AllSiPrefixes, &Units::tesla}},
+        {UnitId::Henry, UnitSpec{UnitName::Henry, UnitSymbol::Henry, {}, UnitFamily::SiDerived, {UnitQuantity::Inductance}, AllSiPrefixes, &Units::henry}},
+        {UnitId::DegreeCelsius, UnitSpec{UnitName::DegreeCelsius, UnitSymbol::DegreeCelsius, {UnitAltSymbol::DegreeCelsius1, UnitAltSymbol::DegreeCelsius2, UnitAltSymbol::DegreeCelsius3, UnitAltSymbol::DegreeCelsius4}, UnitFamily::SiAccepted, {UnitQuantity::CelsiusTemperature}, NoSiPrefixes, &Units::kelvin, {&s_celsiusToKelvin, &s_kelvinToCelsius}}},
+        {UnitId::Lumen, UnitSpec{UnitName::Lumen, UnitSymbol::Lumen, {}, UnitFamily::SiDerived, {UnitQuantity::LuminousFlux}, AllSiPrefixes, &Units::lumen}},
+        {UnitId::Lux, UnitSpec{UnitName::Lux, UnitSymbol::Lux, {}, UnitFamily::SiDerived, {UnitQuantity::Illuminance}, AllSiPrefixes, &Units::lux}},
+        {UnitId::Becquerel, UnitSpec{UnitName::Becquerel, UnitSymbol::Becquerel, {}, UnitFamily::SiDerived, {UnitQuantity::ActivityReferredToARadionuclide}, AllSiPrefixes, &Units::becquerel}},
+        {UnitId::Gray, UnitSpec{UnitName::Gray, UnitSymbol::Gray, {}, UnitFamily::SiDerived, {UnitQuantity::AbsorbedDose, UnitQuantity::Kerma}, AllSiPrefixes, &Units::gray}},
+        {UnitId::Sievert, UnitSpec{UnitName::Sievert, UnitSymbol::Sievert, {}, UnitFamily::SiDerived, {UnitQuantity::DoseEquivalent}, AllSiPrefixes, &Units::sievert}},
+        {UnitId::Katal, UnitSpec{UnitName::Katal, UnitSymbol::Katal, {}, UnitFamily::SiDerived, {UnitQuantity::CatalyticActivity}, AllSiPrefixes, &Units::katal}},
+        {UnitId::CubicMetre, UnitSpec{UnitName::CubicMetre, UnitSymbol::CubicMetre, {}, UnitFamily::SiDerived, {UnitQuantity::Volume}, AllSiPrefixes, &Units::cubic_metre}},
+        {UnitId::SquareMetre, UnitSpec{UnitName::SquareMetre, UnitSymbol::SquareMetre, {}, UnitFamily::SiDerived, {UnitQuantity::Area}, AllSiPrefixes, &Units::square_metre}},
+        // SI-accepted units
+        {UnitId::Minute, UnitSpec{UnitName::Minute, UnitSymbol::Minute, {}, UnitFamily::SiAccepted, {UnitQuantity::Time}, NoSiPrefixes, &Units::minute}},
+        {UnitId::Hour, UnitSpec{UnitName::Hour, UnitSymbol::Hour, {}, UnitFamily::SiAccepted, {UnitQuantity::Time}, NoSiPrefixes, &Units::hour}},
+        {UnitId::Day, UnitSpec{UnitName::Day, UnitSymbol::Day, {}, UnitFamily::SiAccepted, {UnitQuantity::Time}, NoSiPrefixes, &Units::day}},
+        {UnitId::AstronomicalUnit, UnitSpec{UnitName::AstronomicalUnit, UnitSymbol::AstronomicalUnit, {}, UnitFamily::SiAccepted, {UnitQuantity::Length}, NoSiPrefixes, &Units::astronomical_unit}},
+        {UnitId::Degree, UnitSpec{UnitName::Degree, UnitSymbol::Degree, {UnitAltSymbol::Degree}, UnitFamily::SiAccepted, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::degree}},
+        {UnitId::Arcminute, UnitSpec{UnitName::Arcminute, UnitSymbol::Arcminute, {UnitAltSymbol::Arcminute}, UnitFamily::SiAccepted, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::arcminute}},
+        {UnitId::Arcsecond, UnitSpec{UnitName::Arcsecond, UnitSymbol::Arcsecond, {UnitAltSymbol::Arcsecond}, UnitFamily::SiAccepted, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::arcsecond}},
+        {UnitId::Hectare, UnitSpec{UnitName::Hectare, UnitSymbol::Hectare, {}, UnitFamily::SiAccepted, {UnitQuantity::Area}, NoSiPrefixes, &Units::hectare}},
+        {UnitId::Litre, UnitSpec{UnitName::Litre, UnitSymbol::Litre, {UnitAltSymbol::Litre}, UnitFamily::SiAccepted, {UnitQuantity::Volume}, AllSiPrefixes, &Units::litre}},
+        {UnitId::Tonne, UnitSpec{UnitName::Tonne, UnitSymbol::Tonne, {}, UnitFamily::SiAccepted, {UnitQuantity::Mass}, AllSiPrefixes, &Units::tonne}},
+        {UnitId::Dalton, UnitSpec{UnitName::Dalton, UnitSymbol::Dalton, {}, UnitFamily::SiAccepted, {UnitQuantity::Mass}, NoSiPrefixes, &Units::atomic_mass_unit}},
+        {UnitId::Electronvolt, UnitSpec{UnitName::Electronvolt, UnitSymbol::Electronvolt, {}, UnitFamily::SiAccepted, {UnitQuantity::Energy}, AllSiPrefixes, &Units::electronvolt}},
+
+        {UnitId::Acre, UnitSpec{UnitName::Acre, UnitSymbol::Acre, {}, UnitFamily::Other, {UnitQuantity::Area}, NoSiPrefixes, &Units::acre}},
+        {UnitId::Angstrom, UnitSpec{UnitName::Angstrom, UnitSymbol::Angstrom, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::angstrom}},
+        {UnitId::Atmosphere, UnitSpec{UnitName::Atmosphere, UnitSymbol::Atmosphere, {}, UnitFamily::Other, {UnitQuantity::Pressure}, NoSiPrefixes, &Units::atmosphere}},
+        {UnitId::AtomicMassUnit, UnitSpec{UnitName::AtomicMassUnit, UnitSymbol::AtomicMassUnit, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::atomic_mass_unit}},
+        {UnitId::Bar, UnitSpec{UnitName::Bar, UnitSymbol::Bar, {}, UnitFamily::Other, {UnitQuantity::Pressure}, AllSiPrefixes, &Units::bar}},
+        {UnitId::Bit, UnitSpec{UnitName::Bit, UnitSymbol::Bit, {}, UnitFamily::Other, {UnitQuantity::Information}, static_cast<SiPrefixPolicy>(PositiveSiPrefixes | BinaryPrefixes), &Units::bit}},
+        {UnitId::BritishThermalUnit, UnitSpec{UnitName::BritishThermalUnit, UnitSymbol::BritishThermalUnit, {}, UnitFamily::Other, {UnitQuantity::AmountOfHeat}, NoSiPrefixes, &Units::british_thermal_unit}},
+        {UnitId::Byte, UnitSpec{UnitName::Byte, UnitSymbol::Byte, {}, UnitFamily::Other, {UnitQuantity::Information}, static_cast<SiPrefixPolicy>(PositiveSiPrefixes | BinaryPrefixes), &Units::byte}},
+        {UnitId::Calorie, UnitSpec{UnitName::Calorie, UnitSymbol::Calorie, {}, UnitFamily::Other, {UnitQuantity::AmountOfHeat}, NoSiPrefixes, &Units::calorie}},
+        {UnitId::Carat, UnitSpec{UnitName::Carat, UnitSymbol::Carat, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::carat}},
+        {UnitId::Cup, UnitSpec{UnitName::Cup, UnitSymbol::Cup, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::cup}},
+        {UnitId::DegreeFahrenheit, UnitSpec{UnitName::DegreeFahrenheit, UnitSymbol::DegreeFahrenheit, {UnitAltSymbol::DegreeFahrenheit1, UnitAltSymbol::DegreeFahrenheit2, UnitAltSymbol::DegreeFahrenheit3, UnitAltSymbol::DegreeFahrenheit4}, UnitFamily::Other, {UnitQuantity::CelsiusTemperature}, NoSiPrefixes, &Units::kelvin, {&s_fahrenheitToKelvin, &s_kelvinToFahrenheit}}},
+        {UnitId::Fathom, UnitSpec{UnitName::Fathom, UnitSymbol::Fathom, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::fathom}},
+        {UnitId::FluidOunceUk, UnitSpec{UnitName::FluidOunceUk, UnitSymbol::FluidOunceUk, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::UK_fluid_ounce}},
+        {UnitId::FluidOunceUs, UnitSpec{UnitName::FluidOunceUs, UnitSymbol::FluidOunceUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::US_fluid_ounce}},
+        {UnitId::Foot, UnitSpec{UnitName::Foot, UnitSymbol::Foot, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::foot}},
+        {UnitId::Furlong, UnitSpec{UnitName::Furlong, UnitSymbol::Furlong, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::furlong}},
+        {UnitId::GallonUk, UnitSpec{UnitName::GallonUk, UnitSymbol::GallonUk, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::UK_gallon}},
+        {UnitId::GallonUs, UnitSpec{UnitName::GallonUs, UnitSymbol::GallonUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::US_gallon}},
+        {UnitId::Gradian, UnitSpec{UnitName::Gradian, UnitSymbol::Gradian, {}, UnitFamily::Other, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::gradian}},
+        {UnitId::Grain, UnitSpec{UnitName::Grain, UnitSymbol::Grain, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::grain}},
+        {UnitId::Gram, UnitSpec{UnitName::Gram, UnitSymbol::Gram, {}, UnitFamily::Other, {UnitQuantity::Mass}, AllSiPrefixes, &Units::gram}},
+        {UnitId::Hartley, UnitSpec{UnitName::Hartley, UnitSymbol::Hartley, {}, UnitFamily::Other, {UnitQuantity::Information}, NoSiPrefixes, &Units::hartley}},
+        {UnitId::HartreeEnergyUnit, UnitSpec{UnitName::HartreeEnergyUnit, UnitSymbol::HartreeEnergyUnit, {}, UnitFamily::Other, {UnitQuantity::Energy}, NoSiPrefixes, &s_hartreeEnergyUnit}},
+        {UnitId::Horsepower, UnitSpec{UnitName::Horsepower, UnitSymbol::Horsepower, {}, UnitFamily::Other, {UnitQuantity::Power}, NoSiPrefixes, &Units::horsepower}},
+        {UnitId::Inch, UnitSpec{UnitName::Inch, UnitSymbol::Inch, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::inch}},
+        {UnitId::Karat, UnitSpec{UnitName::Karat, UnitSymbol::Karat, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::karat}},
+        {UnitId::Knot, UnitSpec{UnitName::Knot, UnitSymbol::Knot, {}, UnitFamily::Other, {UnitQuantity::Speed, UnitQuantity::Velocity}, NoSiPrefixes, &Units::knot}},
+        {UnitId::Lightminute, UnitSpec{UnitName::Lightminute, UnitSymbol::Lightminute, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::lightminute}},
+        {UnitId::Lightsecond, UnitSpec{UnitName::Lightsecond, UnitSymbol::Lightsecond, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::lightsecond}},
+        {UnitId::Lightyear, UnitSpec{UnitName::Lightyear, UnitSymbol::Lightyear, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::lightyear}},
+        {UnitId::LongTon, UnitSpec{UnitName::LongTon, UnitSymbol::LongTon, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::long_ton}},
+        {UnitId::Mile, UnitSpec{UnitName::Mile, UnitSymbol::Mile, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::mile}},
+        {UnitId::MilePerHour, UnitSpec{UnitName::MilePerHour, UnitSymbol::MilePerHour, {}, UnitFamily::Other, {UnitQuantity::Speed, UnitQuantity::Velocity}, NoSiPrefixes, &Units::mile_per_hour}},
+        {UnitId::Nat, UnitSpec{UnitName::Nat, UnitSymbol::Nat, {}, UnitFamily::Other, {UnitQuantity::Information}, NoSiPrefixes, &Units::nat}},
+        {UnitId::NauticalMile, UnitSpec{UnitName::NauticalMile, UnitSymbol::NauticalMile, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::nautical_mile}},
+        {UnitId::Ounce, UnitSpec{UnitName::Ounce, UnitSymbol::Ounce, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::ounce}},
+        {UnitId::Parsec, UnitSpec{UnitName::Parsec, UnitSymbol::Parsec, {}, UnitFamily::Other, {UnitQuantity::Length}, PositiveSiPrefixes, &Units::parsec}},
+        {UnitId::PintUk, UnitSpec{UnitName::PintUk, UnitSymbol::PintUk, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::UK_pint}},
+        {UnitId::PintUs, UnitSpec{UnitName::PintUs, UnitSymbol::PintUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::US_pint}},
+        {UnitId::Pound, UnitSpec{UnitName::Pound, UnitSymbol::Pound, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::pound}},
+        {UnitId::PoundsPerSqinch, UnitSpec{UnitName::PoundsPerSqinch, UnitSymbol::PoundsPerSqinch, {}, UnitFamily::Other, {UnitQuantity::Pressure}, NoSiPrefixes, &Units::pounds_per_sqinch}},
+        {UnitId::QuartUk, UnitSpec{UnitName::QuartUk, UnitSymbol::QuartUk, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::UK_quart}},
+        {UnitId::QuartUs, UnitSpec{UnitName::QuartUs, UnitSymbol::QuartUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::US_quart}},
+        {UnitId::Rod, UnitSpec{UnitName::Rod, UnitSymbol::Rod, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::rod}},
+        {UnitId::ShortTon, UnitSpec{UnitName::ShortTon, UnitSymbol::ShortTon, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::short_ton}},
+        {UnitId::Stone, UnitSpec{UnitName::Stone, UnitSymbol::Stone, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::stone}},
+        {UnitId::Tablespoon, UnitSpec{UnitName::Tablespoon, UnitSymbol::Tablespoon, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::tablespoon}},
+        {UnitId::DessertSpoon, UnitSpec{UnitName::DessertSpoon, UnitSymbol::DessertSpoon, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::dessert_spoon}},
+        {UnitId::Teaspoon, UnitSpec{UnitName::Teaspoon, UnitSymbol::Teaspoon, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::teaspoon}},
+        {UnitId::Torr, UnitSpec{UnitName::Torr, UnitSymbol::Torr, {}, UnitFamily::Other, {UnitQuantity::Pressure}, NoSiPrefixes, &Units::torr}},
+        {UnitId::Turn, UnitSpec{UnitName::Turn, UnitSymbol::Turn, {UnitAltSymbol::Turn}, UnitFamily::Other, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::turn}},
+        {UnitId::Revolution, UnitSpec{UnitName::Revolution, UnitSymbol::Revolution, {}, UnitFamily::Other, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::revolution}},
+        {UnitId::RevolutionPerMinute, UnitSpec{UnitName::RevolutionPerMinute, UnitSymbol::RevolutionPerMinute, {}, UnitFamily::Other, {UnitQuantity::Frequency}, NoSiPrefixes, &Units::revolution_per_minute}},
+        {UnitId::Week, UnitSpec{UnitName::Week, UnitSymbol::Week, {}, UnitFamily::Other, {UnitQuantity::Time}, NoSiPrefixes, &Units::week}},
+        {UnitId::KilowattHour, UnitSpec{UnitName::KilowattHour, UnitSymbol::KilowattHour, {}, UnitFamily::Other, {UnitQuantity::Energy, UnitQuantity::Work, UnitQuantity::AmountOfHeat}, NoSiPrefixes, &Units::kilowatt_hour}},
+        {UnitId::MillimetreOfMercury, UnitSpec{UnitName::MillimetreOfMercury, UnitSymbol::MillimetreOfMercury, {}, UnitFamily::Other, {UnitQuantity::Pressure}, NoSiPrefixes, &Units::millimetre_of_mercury}},
+        {UnitId::Quad, UnitSpec{UnitName::Quad, UnitSymbol::Quad, {}, UnitFamily::Other, {UnitQuantity::AmountOfHeat}, NoSiPrefixes, &Units::quad}},
+        {UnitId::Yard, UnitSpec{UnitName::Yard, UnitSymbol::Yard, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::yard}},
+        {UnitId::YearJulian, UnitSpec{UnitName::YearJulian, UnitSymbol::YearJulian, {}, UnitFamily::Other, {UnitQuantity::Time}, NoSiPrefixes, &Units::julian_year}},
+        {UnitId::YearSidereal, UnitSpec{UnitName::YearSidereal, UnitSymbol::YearSidereal, {}, UnitFamily::Other, {UnitQuantity::Time}, NoSiPrefixes, &Units::sidereal_year}},
+        {UnitId::YearTropical, UnitSpec{UnitName::YearTropical, UnitSymbol::YearTropical, {}, UnitFamily::Other, {UnitQuantity::Time}, NoSiPrefixes, &Units::tropical_year}},
+    };
+    return specs;
+}
 
 // Stable textual keys for base dimensions used in expression rendering/parsing.
 // Canonical base-unit names are derived from unit specs (see helpers below).
@@ -273,7 +486,84 @@ struct DimensionKeyEntry {
     QString dimensionKey;
 };
 
-const std::array<DimensionKeyEntry, 8>& s_dimensionKeyEntries();
+const std::array<DimensionKeyEntry, 8>& s_dimensionKeyEntries()
+{
+    // Keep these keys stable: they are consumed by
+    // unitQuantityDimensionKey()/unitQuantityFromDimensionKey().
+    static const std::array<DimensionKeyEntry, 8> entries = {{
+        {UnitQuantity::Mass, QStringLiteral("mass")},
+        {UnitQuantity::Length, QStringLiteral("length")},
+        {UnitQuantity::Time, QStringLiteral("time")},
+        {UnitQuantity::ElectricCurrent, QStringLiteral("electric current")},
+        {UnitQuantity::ThermodynamicTemperature, QStringLiteral("temperature")},
+        {UnitQuantity::AmountOfSubstance, QStringLiteral("amount")},
+        {UnitQuantity::LuminousIntensity, QStringLiteral("luminous intensity")},
+        {UnitQuantity::Information, QStringLiteral("information")}
+    }};
+    return entries;
+}
+
+#define SI_PREFIX_TABLE(X) \
+    X(Quecto, quecto, "quecto", "q", -30) \
+    X(Ronto, ronto, "ronto", "r", -27) \
+    X(Yocto, yocto, "yocto", "y", -24) \
+    X(Zepto, zepto, "zepto", "z", -21) \
+    X(Atto, atto, "atto", "a", -18) \
+    X(Femto, femto, "femto", "f", -15) \
+    X(Pico, pico, "pico", "p", -12) \
+    X(Nano, nano, "nano", "n", -9) \
+    X(Micro, micro, "micro", QString(UnicodeChars::MicroSign), -6) \
+    X(Milli, milli, "milli", "m", -3) \
+    X(Centi, centi, "centi", "c", -2) \
+    X(Deci, deci, "deci", "d", -1) \
+    X(Deca, deca, "deca", "da", 1) \
+    X(Hecto, hecto, "hecto", "h", 2) \
+    X(Kilo, kilo, "kilo", "k", 3) \
+    X(Mega, mega, "mega", "M", 6) \
+    X(Giga, giga, "giga", "G", 9) \
+    X(Tera, tera, "tera", "T", 12) \
+    X(Peta, peta, "peta", "P", 15) \
+    X(Exa, exa, "exa", "E", 18) \
+    X(Zetta, zetta, "zetta", "Z", 21) \
+    X(Yotta, yotta, "yotta", "Y", 24) \
+    X(Ronna, ronna, "ronna", "R", 27) \
+    X(Quetta, quetta, "quetta", "Q", 30)
+
+#define BINARY_PREFIX_TABLE(X) \
+    X(Kibi, kibi, "kibi", "Ki", 10) \
+    X(Mebi, mebi, "mebi", "Mi", 20) \
+    X(Gibi, gibi, "gibi", "Gi", 30) \
+    X(Tebi, tebi, "tebi", "Ti", 40) \
+    X(Pebi, pebi, "pebi", "Pi", 50) \
+    X(Exbi, exbi, "exbi", "Ei", 60) \
+    X(Zebi, zebi, "zebi", "Zi", 70) \
+    X(Yobi, yobi, "yobi", "Yi", 80) \
+    X(Robi, robi, "robi", "Ri", 90) \
+    X(Quebi, quebi, "quebi", "Qi", 100)
+
+struct UnitRegistry {
+    /*
+        - valuesByIdentifier:
+            Flat identifier->value map consumed by evaluator/unit lookup clients
+            via Units::builtInUnitValues() and Units::builtInUnitLookup().
+
+        - displaySymbolsByIdentifier:
+            Maps canonical/alias identifiers to preferred short display symbols
+            (e.g. "ohm" -> "Ω"), consumed by unit display-format helpers.
+
+        - affineByIdentifier:
+            Affine conversion metadata for identifiers like degree_celsius and
+            degree_fahrenheit, used by affine conversion helpers.
+
+        - canonicalMatchLookup:
+            Dimension-to-canonical-unit map used by Units::findUnit() to select
+            preferred display units for computed dimensions.
+     */
+    QHash<QString, Quantity> valuesByIdentifier;
+    QHash<QString, QString> displaySymbolsByIdentifier;
+    QHash<QString, AffineDefinition> affineByIdentifier;
+    QHash<QMap<UnitQuantity, Rational>, Unit> canonicalMatchLookup;
+};
 
 // Returns the stable textual key for a base dimension quantity.
 // Used by formatting/parsing fallback paths for unnamed dimensions.
@@ -343,139 +633,6 @@ QStringView unitPhrase(UnitPhraseId key)
     }
 }
 
-const std::array<DimensionKeyEntry, 8>& s_dimensionKeyEntries()
-{
-    // Keep these keys stable: they are consumed by
-    // unitQuantityDimensionKey()/unitQuantityFromDimensionKey().
-    static const std::array<DimensionKeyEntry, 8> entries = {{
-        {UnitQuantity::Mass, QStringLiteral("mass")},
-        {UnitQuantity::Length, QStringLiteral("length")},
-        {UnitQuantity::Time, QStringLiteral("time")},
-        {UnitQuantity::ElectricCurrent, QStringLiteral("electric current")},
-        {UnitQuantity::ThermodynamicTemperature, QStringLiteral("temperature")},
-        {UnitQuantity::AmountOfSubstance, QStringLiteral("amount")},
-        {UnitQuantity::LuminousIntensity, QStringLiteral("luminous intensity")},
-        {UnitQuantity::Information, QStringLiteral("information")}
-    }};
-    return entries;
-}
-
-namespace {
-
-enum SiPrefixPolicy {
-    NoSiPrefixes = 0,
-    PositiveSiPrefixes = 1 << 0,
-    NegativeSiPrefixes = 1 << 1,
-    BinaryPrefixes = 1 << 2
-};
-static constexpr SiPrefixPolicy AllSiPrefixes =
-    static_cast<SiPrefixPolicy>(PositiveSiPrefixes | NegativeSiPrefixes);
-
-enum class UnitFamily {
-    SiBase,
-    SiDerived,
-    SiAccepted,
-    Other
-};
-
-struct UnitAliasSpec {
-    QString longName;
-    Quantity value;
-    QString shortName;
-    QString alternateShortName;
-    SiPrefixPolicy siPrefixPolicy;
-};
-
-struct AffineDefinition {
-    // Affine conversion handlers only transform numeric offsets/scales.
-    // Unit dimensions for identifiers still come from UnitSpec::linearValue
-    // (e.g. degree_celsius/degree_fahrenheit use Units::kelvin).
-    HNumber (*toBase)(const HNumber&) = nullptr;
-    HNumber (*fromBase)(const HNumber&) = nullptr;
-};
-
-struct UnitSpec {
-    QString name;
-    QString symbol;
-    QList<QString> aliases;
-    UnitFamily family;
-    QList<UnitQuantity> quantities;
-    SiPrefixPolicy siPrefixPolicy;
-    const Quantity (*linearValue)();
-    AffineDefinition affine = {};
-};
-
-
-struct PrefixSpec {
-    PrefixId id;
-    QString longName;
-    QString symbol;
-    int power;
-    Quantity value;
-};
-
-#define SI_PREFIX_TABLE(X) \
-    X(Quecto, quecto, "quecto", "q", -30) \
-    X(Ronto, ronto, "ronto", "r", -27) \
-    X(Yocto, yocto, "yocto", "y", -24) \
-    X(Zepto, zepto, "zepto", "z", -21) \
-    X(Atto, atto, "atto", "a", -18) \
-    X(Femto, femto, "femto", "f", -15) \
-    X(Pico, pico, "pico", "p", -12) \
-    X(Nano, nano, "nano", "n", -9) \
-    X(Micro, micro, "micro", QString(UnicodeChars::MicroSign), -6) \
-    X(Milli, milli, "milli", "m", -3) \
-    X(Centi, centi, "centi", "c", -2) \
-    X(Deci, deci, "deci", "d", -1) \
-    X(Deca, deca, "deca", "da", 1) \
-    X(Hecto, hecto, "hecto", "h", 2) \
-    X(Kilo, kilo, "kilo", "k", 3) \
-    X(Mega, mega, "mega", "M", 6) \
-    X(Giga, giga, "giga", "G", 9) \
-    X(Tera, tera, "tera", "T", 12) \
-    X(Peta, peta, "peta", "P", 15) \
-    X(Exa, exa, "exa", "E", 18) \
-    X(Zetta, zetta, "zetta", "Z", 21) \
-    X(Yotta, yotta, "yotta", "Y", 24) \
-    X(Ronna, ronna, "ronna", "R", 27) \
-    X(Quetta, quetta, "quetta", "Q", 30)
-
-#define BINARY_PREFIX_TABLE(X) \
-    X(Kibi, kibi, "kibi", "Ki", 10) \
-    X(Mebi, mebi, "mebi", "Mi", 20) \
-    X(Gibi, gibi, "gibi", "Gi", 30) \
-    X(Tebi, tebi, "tebi", "Ti", 40) \
-    X(Pebi, pebi, "pebi", "Pi", 50) \
-    X(Exbi, exbi, "exbi", "Ei", 60) \
-    X(Zebi, zebi, "zebi", "Zi", 70) \
-    X(Yobi, yobi, "yobi", "Yi", 80) \
-    X(Robi, robi, "robi", "Ri", 90) \
-    X(Quebi, quebi, "quebi", "Qi", 100)
-
-struct UnitRegistry {
-    /*
-        - valuesByIdentifier:
-            Flat identifier->value map consumed by evaluator/unit lookup clients
-            via Units::builtInUnitValues() and Units::builtInUnitLookup().
-
-        - displaySymbolsByIdentifier:
-            Maps canonical/alias identifiers to preferred short display symbols
-            (e.g. "ohm" -> "Ω"), consumed by unit display-format helpers.
-
-        - affineByIdentifier:
-            Affine conversion metadata for identifiers like degree_celsius and
-            degree_fahrenheit, used by affine conversion helpers.
-
-        - canonicalMatchLookup:
-            Dimension-to-canonical-unit map used by Units::findUnit() to select
-            preferred display units for computed dimensions.
-     */
-    QHash<QString, Quantity> valuesByIdentifier;
-    QHash<QString, QString> displaySymbolsByIdentifier;
-    QHash<QString, AffineDefinition> affineByIdentifier;
-    QHash<QMap<UnitQuantity, Rational>, Unit> canonicalMatchLookup;
-};
-
 HNumber s_celsiusToKelvin(const HNumber& c)
 {
     return c + HNumber("273.15");
@@ -524,138 +681,6 @@ const Quantity s_hartreeEnergyUnit()
     Quantity hartreeEnergy = HNumber("4.3597447222060e-18") * Units::joule();
     hartreeEnergy.setDisplayUnit(Units::joule().numericValue(), unitName(UnitId::Joule));
     return hartreeEnergy;
-}
-
-const QHash<UnitId, UnitSpec>& s_unitSpecs()
-{
-    /*
-        Single source of truth for built-in units.
-
-            - Source #1:
-                The International System of Units - 9th edition (2019)
-                Bureau International des Poids et Mesures
-                Published in May 2019 - Revised in August 2025
-                https://doi.org/10.59161/AUEZ1291
-
-            - Source #2:
-                SI Reference Point
-                Bureau International des Poids et Mesures
-                https://si-digital-framework.org/SI/units
-
-            - Source #3:
-                The Unified Code for Units of Measure
-                Regenstrief Institute, Inc. and the UCUM Organization
-                Version: 2.2 | Revision: N/A | Date: 2024-06-17
-                https://ucum.org/ucum
-      */
-    static const QHash<UnitId, UnitSpec> specs = {
-        // SI base units
-        {UnitId::Second, UnitSpec{UnitName::Second, UnitSymbol::Second, {}, UnitFamily::SiBase, {UnitQuantity::Time}, AllSiPrefixes, &Units::second}},
-        {UnitId::Metre, UnitSpec{UnitName::Metre, UnitSymbol::Metre, {}, UnitFamily::SiBase, {UnitQuantity::Length}, AllSiPrefixes, &Units::metre}},
-        {UnitId::Kilogram, UnitSpec{UnitName::Kilogram, UnitSymbol::Kilogram, {}, UnitFamily::SiBase, {UnitQuantity::Mass}, AllSiPrefixes, &Units::kilogram}},
-        {UnitId::Ampere, UnitSpec{UnitName::Ampere, UnitSymbol::Ampere, {}, UnitFamily::SiBase, {UnitQuantity::ElectricCurrent}, AllSiPrefixes, &Units::ampere}},
-        {UnitId::Kelvin, UnitSpec{UnitName::Kelvin, UnitSymbol::Kelvin, {}, UnitFamily::SiBase, {UnitQuantity::ThermodynamicTemperature}, AllSiPrefixes, &Units::kelvin}},
-        {UnitId::Mole, UnitSpec{UnitName::Mole, UnitSymbol::Mole, {}, UnitFamily::SiBase, {UnitQuantity::AmountOfSubstance}, AllSiPrefixes, &Units::mole}},
-        {UnitId::Candela, UnitSpec{UnitName::Candela, UnitSymbol::Candela, {}, UnitFamily::SiBase, {UnitQuantity::LuminousIntensity}, AllSiPrefixes, &Units::candela}},
-        // SI derived units
-        {UnitId::Radian, UnitSpec{UnitName::Radian, UnitSymbol::Radian, {}, UnitFamily::SiDerived, {UnitQuantity::PlaneAngle}, AllSiPrefixes, &Units::radian}},
-        {UnitId::Steradian, UnitSpec{UnitName::Steradian, UnitSymbol::Steradian, {}, UnitFamily::SiDerived, {UnitQuantity::SolidAngle}, AllSiPrefixes, &Units::steradian}},
-        {UnitId::Hertz, UnitSpec{UnitName::Hertz, UnitSymbol::Hertz, {}, UnitFamily::SiDerived, {UnitQuantity::Frequency}, AllSiPrefixes, &Units::hertz}},
-        {UnitId::Newton, UnitSpec{UnitName::Newton, UnitSymbol::Newton, {}, UnitFamily::SiDerived, {UnitQuantity::Force}, AllSiPrefixes, &Units::newton}},
-        {UnitId::Pascal, UnitSpec{UnitName::Pascal, UnitSymbol::Pascal, {}, UnitFamily::SiDerived, {UnitQuantity::Pressure, UnitQuantity::Stress}, AllSiPrefixes, &Units::pascal}},
-        {UnitId::Joule, UnitSpec{UnitName::Joule, UnitSymbol::Joule, {}, UnitFamily::SiDerived, {UnitQuantity::Energy, UnitQuantity::Work, UnitQuantity::AmountOfHeat}, AllSiPrefixes, &Units::joule}},
-        {UnitId::Watt, UnitSpec{UnitName::Watt, UnitSymbol::Watt, {}, UnitFamily::SiDerived, {UnitQuantity::Power, UnitQuantity::RadiantFlux}, AllSiPrefixes, &Units::watt}},
-        {UnitId::Coulomb, UnitSpec{UnitName::Coulomb, UnitSymbol::Coulomb, {}, UnitFamily::SiDerived, {UnitQuantity::ElectricCharge}, AllSiPrefixes, &Units::coulomb}},
-        {UnitId::Volt, UnitSpec{UnitName::Volt, UnitSymbol::Volt, {}, UnitFamily::SiDerived, {UnitQuantity::ElectricPotentialDifference}, AllSiPrefixes, &Units::volt}},
-        {UnitId::Farad, UnitSpec{UnitName::Farad, UnitSymbol::Farad, {}, UnitFamily::SiDerived, {UnitQuantity::Capacitance}, AllSiPrefixes, &Units::farad}},
-        {UnitId::Ohm, UnitSpec{UnitName::Ohm, UnitSymbol::Ohm, {}, UnitFamily::SiDerived, {UnitQuantity::ElectricResistance}, AllSiPrefixes, &Units::ohm}},
-        {UnitId::Siemens, UnitSpec{UnitName::Siemens, UnitSymbol::Siemens, {}, UnitFamily::SiDerived, {UnitQuantity::ElectricConductance}, AllSiPrefixes, &Units::siemens}},
-        {UnitId::Weber, UnitSpec{UnitName::Weber, UnitSymbol::Weber, {}, UnitFamily::SiDerived, {UnitQuantity::MagneticFlux}, AllSiPrefixes, &Units::weber}},
-        {UnitId::Tesla, UnitSpec{UnitName::Tesla, UnitSymbol::Tesla, {}, UnitFamily::SiDerived, {UnitQuantity::MagneticFluxDensity}, AllSiPrefixes, &Units::tesla}},
-        {UnitId::Henry, UnitSpec{UnitName::Henry, UnitSymbol::Henry, {}, UnitFamily::SiDerived, {UnitQuantity::Inductance}, AllSiPrefixes, &Units::henry}},
-        {UnitId::DegreeCelsius, UnitSpec{UnitName::DegreeCelsius, UnitSymbol::DegreeCelsius, {UnitAltSymbol::DegreeCelsius1, UnitAltSymbol::DegreeCelsius2, UnitAltSymbol::DegreeCelsius3, UnitAltSymbol::DegreeCelsius4}, UnitFamily::SiAccepted, {UnitQuantity::CelsiusTemperature}, NoSiPrefixes, &Units::kelvin, {&s_celsiusToKelvin, &s_kelvinToCelsius}}},
-        {UnitId::Lumen, UnitSpec{UnitName::Lumen, UnitSymbol::Lumen, {}, UnitFamily::SiDerived, {UnitQuantity::LuminousFlux}, AllSiPrefixes, &Units::lumen}},
-        {UnitId::Lux, UnitSpec{UnitName::Lux, UnitSymbol::Lux, {}, UnitFamily::SiDerived, {UnitQuantity::Illuminance}, AllSiPrefixes, &Units::lux}},
-        {UnitId::Becquerel, UnitSpec{UnitName::Becquerel, UnitSymbol::Becquerel, {}, UnitFamily::SiDerived, {UnitQuantity::ActivityReferredToARadionuclide}, AllSiPrefixes, &Units::becquerel}},
-        {UnitId::Gray, UnitSpec{UnitName::Gray, UnitSymbol::Gray, {}, UnitFamily::SiDerived, {UnitQuantity::AbsorbedDose, UnitQuantity::Kerma}, AllSiPrefixes, &Units::gray}},
-        {UnitId::Sievert, UnitSpec{UnitName::Sievert, UnitSymbol::Sievert, {}, UnitFamily::SiDerived, {UnitQuantity::DoseEquivalent}, AllSiPrefixes, &Units::sievert}},
-        {UnitId::Katal, UnitSpec{UnitName::Katal, UnitSymbol::Katal, {}, UnitFamily::SiDerived, {UnitQuantity::CatalyticActivity}, AllSiPrefixes, &Units::katal}},
-        {UnitId::CubicMetre, UnitSpec{UnitName::CubicMetre, UnitSymbol::CubicMetre, {}, UnitFamily::SiDerived, {UnitQuantity::Volume}, AllSiPrefixes, &Units::cubic_metre}},
-        {UnitId::SquareMetre, UnitSpec{UnitName::SquareMetre, UnitSymbol::SquareMetre, {}, UnitFamily::SiDerived, {UnitQuantity::Area}, AllSiPrefixes, &Units::square_metre}},
-        // SI-accepted units
-        {UnitId::Minute, UnitSpec{UnitName::Minute, UnitSymbol::Minute, {}, UnitFamily::SiAccepted, {UnitQuantity::Time}, NoSiPrefixes, &Units::minute}},
-        {UnitId::Hour, UnitSpec{UnitName::Hour, UnitSymbol::Hour, {}, UnitFamily::SiAccepted, {UnitQuantity::Time}, NoSiPrefixes, &Units::hour}},
-        {UnitId::Day, UnitSpec{UnitName::Day, UnitSymbol::Day, {}, UnitFamily::SiAccepted, {UnitQuantity::Time}, NoSiPrefixes, &Units::day}},
-        {UnitId::AstronomicalUnit, UnitSpec{UnitName::AstronomicalUnit, UnitSymbol::AstronomicalUnit, {}, UnitFamily::SiAccepted, {UnitQuantity::Length}, NoSiPrefixes, &Units::astronomical_unit}},
-        {UnitId::Degree, UnitSpec{UnitName::Degree, UnitSymbol::Degree, {UnitAltSymbol::Degree}, UnitFamily::SiAccepted, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::degree}},
-        {UnitId::Arcminute, UnitSpec{UnitName::Arcminute, UnitSymbol::Arcminute, {UnitAltSymbol::Arcminute}, UnitFamily::SiAccepted, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::arcminute}},
-        {UnitId::Arcsecond, UnitSpec{UnitName::Arcsecond, UnitSymbol::Arcsecond, {UnitAltSymbol::Arcsecond}, UnitFamily::SiAccepted, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::arcsecond}},
-        {UnitId::Hectare, UnitSpec{UnitName::Hectare, UnitSymbol::Hectare, {}, UnitFamily::SiAccepted, {UnitQuantity::Area}, NoSiPrefixes, &Units::hectare}},
-        {UnitId::Litre, UnitSpec{UnitName::Litre, UnitSymbol::Litre, {UnitAltSymbol::Litre}, UnitFamily::SiAccepted, {UnitQuantity::Volume}, AllSiPrefixes, &Units::litre}},
-        {UnitId::Tonne, UnitSpec{UnitName::Tonne, UnitSymbol::Tonne, {}, UnitFamily::SiAccepted, {UnitQuantity::Mass}, AllSiPrefixes, &Units::tonne}},
-        {UnitId::Dalton, UnitSpec{UnitName::Dalton, UnitSymbol::Dalton, {}, UnitFamily::SiAccepted, {UnitQuantity::Mass}, NoSiPrefixes, &Units::atomic_mass_unit}},
-        {UnitId::Electronvolt, UnitSpec{UnitName::Electronvolt, UnitSymbol::Electronvolt, {}, UnitFamily::SiAccepted, {UnitQuantity::Energy}, AllSiPrefixes, &Units::electronvolt}},
-
-        {UnitId::Acre, UnitSpec{UnitName::Acre, UnitSymbol::Acre, {}, UnitFamily::Other, {UnitQuantity::Area}, NoSiPrefixes, &Units::acre}},
-        {UnitId::Angstrom, UnitSpec{UnitName::Angstrom, UnitSymbol::Angstrom, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::angstrom}},
-        {UnitId::Atmosphere, UnitSpec{UnitName::Atmosphere, UnitSymbol::Atmosphere, {}, UnitFamily::Other, {UnitQuantity::Pressure}, NoSiPrefixes, &Units::atmosphere}},
-        {UnitId::AtomicMassUnit, UnitSpec{UnitName::AtomicMassUnit, UnitSymbol::AtomicMassUnit, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::atomic_mass_unit}},
-        {UnitId::Bar, UnitSpec{UnitName::Bar, UnitSymbol::Bar, {}, UnitFamily::Other, {UnitQuantity::Pressure}, AllSiPrefixes, &Units::bar}},
-        {UnitId::Bit, UnitSpec{UnitName::Bit, UnitSymbol::Bit, {}, UnitFamily::Other, {UnitQuantity::Information}, static_cast<SiPrefixPolicy>(PositiveSiPrefixes | BinaryPrefixes), &Units::bit}},
-        {UnitId::BritishThermalUnit, UnitSpec{UnitName::BritishThermalUnit, UnitSymbol::BritishThermalUnit, {}, UnitFamily::Other, {UnitQuantity::AmountOfHeat}, NoSiPrefixes, &Units::british_thermal_unit}},
-        {UnitId::Byte, UnitSpec{UnitName::Byte, UnitSymbol::Byte, {}, UnitFamily::Other, {UnitQuantity::Information}, static_cast<SiPrefixPolicy>(PositiveSiPrefixes | BinaryPrefixes), &Units::byte}},
-        {UnitId::Calorie, UnitSpec{UnitName::Calorie, UnitSymbol::Calorie, {}, UnitFamily::Other, {UnitQuantity::AmountOfHeat}, NoSiPrefixes, &Units::calorie}},
-        {UnitId::Carat, UnitSpec{UnitName::Carat, UnitSymbol::Carat, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::carat}},
-        {UnitId::Cup, UnitSpec{UnitName::Cup, UnitSymbol::Cup, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::cup}},
-        {UnitId::DegreeFahrenheit, UnitSpec{UnitName::DegreeFahrenheit, UnitSymbol::DegreeFahrenheit, {UnitAltSymbol::DegreeFahrenheit1, UnitAltSymbol::DegreeFahrenheit2, UnitAltSymbol::DegreeFahrenheit3, UnitAltSymbol::DegreeFahrenheit4}, UnitFamily::Other, {UnitQuantity::CelsiusTemperature}, NoSiPrefixes, &Units::kelvin, {&s_fahrenheitToKelvin, &s_kelvinToFahrenheit}}},
-        {UnitId::ElementaryCharge, UnitSpec{UnitName::ElementaryCharge, UnitSymbol::ElementaryCharge, {}, UnitFamily::Other, {UnitQuantity::ElectricCharge}, NoSiPrefixes, &Units::elementary_charge}},
-        {UnitId::Fathom, UnitSpec{UnitName::Fathom, UnitSymbol::Fathom, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::fathom}},
-        {UnitId::FluidOunceUk, UnitSpec{UnitName::FluidOunceUk, UnitSymbol::FluidOunceUk, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::UK_fluid_ounce}},
-        {UnitId::FluidOunceUs, UnitSpec{UnitName::FluidOunceUs, UnitSymbol::FluidOunceUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::US_fluid_ounce}},
-        {UnitId::Foot, UnitSpec{UnitName::Foot, UnitSymbol::Foot, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::foot}},
-        {UnitId::Furlong, UnitSpec{UnitName::Furlong, UnitSymbol::Furlong, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::furlong}},
-        {UnitId::GallonUk, UnitSpec{UnitName::GallonUk, UnitSymbol::GallonUk, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::UK_gallon}},
-        {UnitId::GallonUs, UnitSpec{UnitName::GallonUs, UnitSymbol::GallonUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::US_gallon}},
-        {UnitId::Gradian, UnitSpec{UnitName::Gradian, UnitSymbol::Gradian, {}, UnitFamily::Other, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::gradian}},
-        {UnitId::Grain, UnitSpec{UnitName::Grain, UnitSymbol::Grain, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::grain}},
-        {UnitId::Gram, UnitSpec{UnitName::Gram, UnitSymbol::Gram, {}, UnitFamily::Other, {UnitQuantity::Mass}, AllSiPrefixes, &Units::gram}},
-        {UnitId::Hartley, UnitSpec{UnitName::Hartley, UnitSymbol::Hartley, {}, UnitFamily::Other, {UnitQuantity::Information}, NoSiPrefixes, &Units::hartley}},
-        {UnitId::HartreeEnergyUnit, UnitSpec{UnitName::HartreeEnergyUnit, UnitSymbol::HartreeEnergyUnit, {}, UnitFamily::Other, {UnitQuantity::Energy}, NoSiPrefixes, &s_hartreeEnergyUnit}},
-        {UnitId::Horsepower, UnitSpec{UnitName::Horsepower, UnitSymbol::Horsepower, {}, UnitFamily::Other, {UnitQuantity::Power}, NoSiPrefixes, &Units::horsepower}},
-        {UnitId::Inch, UnitSpec{UnitName::Inch, UnitSymbol::Inch, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::inch}},
-        {UnitId::Karat, UnitSpec{UnitName::Karat, UnitSymbol::Karat, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::karat}},
-        {UnitId::Knot, UnitSpec{UnitName::Knot, UnitSymbol::Knot, {}, UnitFamily::Other, {UnitQuantity::Speed, UnitQuantity::Velocity}, NoSiPrefixes, &Units::knot}},
-        {UnitId::Lightminute, UnitSpec{UnitName::Lightminute, UnitSymbol::Lightminute, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::lightminute}},
-        {UnitId::Lightsecond, UnitSpec{UnitName::Lightsecond, UnitSymbol::Lightsecond, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::lightsecond}},
-        {UnitId::Lightyear, UnitSpec{UnitName::Lightyear, UnitSymbol::Lightyear, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::lightyear}},
-        {UnitId::LongTon, UnitSpec{UnitName::LongTon, UnitSymbol::LongTon, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::long_ton}},
-        {UnitId::Mile, UnitSpec{UnitName::Mile, UnitSymbol::Mile, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::mile}},
-        {UnitId::Nat, UnitSpec{UnitName::Nat, UnitSymbol::Nat, {}, UnitFamily::Other, {UnitQuantity::Information}, NoSiPrefixes, &Units::nat}},
-        {UnitId::NauticalMile, UnitSpec{UnitName::NauticalMile, UnitSymbol::NauticalMile, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::nautical_mile}},
-        {UnitId::Ounce, UnitSpec{UnitName::Ounce, UnitSymbol::Ounce, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::ounce}},
-        {UnitId::Parsec, UnitSpec{UnitName::Parsec, UnitSymbol::Parsec, {}, UnitFamily::Other, {UnitQuantity::Length}, PositiveSiPrefixes, &Units::parsec}},
-        {UnitId::PartsPerBillion, UnitSpec{UnitName::PartsPerBillion, UnitSymbol::PartsPerBillion, {}, UnitFamily::Other, {UnitQuantity::DimensionlessRatio}, NoSiPrefixes, &Units::ppb}},
-        {UnitId::PartsPerMillion, UnitSpec{UnitName::PartsPerMillion, UnitSymbol::PartsPerMillion, {}, UnitFamily::Other, {UnitQuantity::DimensionlessRatio}, NoSiPrefixes, &Units::ppm}},
-        {UnitId::PintUk, UnitSpec{UnitName::PintUk, UnitSymbol::PintUk, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::UK_pint}},
-        {UnitId::PintUs, UnitSpec{UnitName::PintUs, UnitSymbol::PintUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::US_pint}},
-        {UnitId::Pound, UnitSpec{UnitName::Pound, UnitSymbol::Pound, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::pound}},
-        {UnitId::PoundsPerSqinch, UnitSpec{UnitName::PoundsPerSqinch, UnitSymbol::PoundsPerSqinch, {}, UnitFamily::Other, {UnitQuantity::Pressure}, NoSiPrefixes, &Units::pounds_per_sqinch}},
-        {UnitId::QuartUk, UnitSpec{UnitName::QuartUk, UnitSymbol::QuartUk, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::UK_quart}},
-        {UnitId::QuartUs, UnitSpec{UnitName::QuartUs, UnitSymbol::QuartUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::US_quart}},
-        {UnitId::Rod, UnitSpec{UnitName::Rod, UnitSymbol::Rod, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::rod}},
-        {UnitId::ShortTon, UnitSpec{UnitName::ShortTon, UnitSymbol::ShortTon, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::short_ton}},
-        {UnitId::Tablespoon, UnitSpec{UnitName::Tablespoon, UnitSymbol::Tablespoon, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::tablespoon}},
-        {UnitId::Teaspoon, UnitSpec{UnitName::Teaspoon, UnitSymbol::Teaspoon, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::teaspoon}},
-        {UnitId::Torr, UnitSpec{UnitName::Torr, UnitSymbol::Torr, {}, UnitFamily::Other, {UnitQuantity::Pressure}, NoSiPrefixes, &Units::torr}},
-        {UnitId::Turn, UnitSpec{UnitName::Turn, UnitSymbol::Turn, {UnitAltSymbol::Turn}, UnitFamily::Other, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::turn}},
-        {UnitId::Revolution, UnitSpec{UnitName::Revolution, UnitSymbol::Revolution, {}, UnitFamily::Other, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::revolution}},
-        {UnitId::Week, UnitSpec{UnitName::Week, UnitSymbol::Week, {}, UnitFamily::Other, {UnitQuantity::Time}, NoSiPrefixes, &Units::week}},
-        {UnitId::Yard, UnitSpec{UnitName::Yard, UnitSymbol::Yard, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::yard}},
-        {UnitId::YearJulian, UnitSpec{UnitName::YearJulian, UnitSymbol::YearJulian, {}, UnitFamily::Other, {UnitQuantity::Time}, NoSiPrefixes, &Units::julian_year}},
-        {UnitId::YearSidereal, UnitSpec{UnitName::YearSidereal, UnitSymbol::YearSidereal, {}, UnitFamily::Other, {UnitQuantity::Time}, NoSiPrefixes, &Units::sidereal_year}},
-        {UnitId::YearTropical, UnitSpec{UnitName::YearTropical, UnitSymbol::YearTropical, {}, UnitFamily::Other, {UnitQuantity::Time}, NoSiPrefixes, &Units::tropical_year}},
-    };
-    return specs;
 }
 
 const QList<UnitId>& s_unitSpecOrder()
@@ -826,10 +851,6 @@ Quantity angleUnitValueForMode(AngleUnitKind angleUnit, char angleMode)
     }
     return Quantity(0);
 }
-
-const UnitRegistry& s_unitRegistry();
-
-} // namespace
 
 QString unitName(UnitId id)
 {
@@ -1792,6 +1813,7 @@ DEFINE_DERIVED_UNIT(katal, Units::mole() / Units::second())
 DEFINE_DERIVED_UNIT(steradian, Quantity(1))
 DEFINE_DERIVED_UNIT(lumen, Units::candela()*Units::steradian())
 DEFINE_DERIVED_UNIT(lux, Units::lumen()/Units::square_metre())
+DEFINE_DERIVED_UNIT(electronvolt, HNumber("1.602176634e-19") * Units::joule())
 
 DEFINE_DERIVED_UNIT(square_metre, Units::metre() * Units::metre())
 DEFINE_DERIVED_UNIT(cubic_metre, Units::square_metre() * Units::metre())
@@ -1803,15 +1825,17 @@ DEFINE_DERIVED_UNIT(ounce, Units::pound() / HNumber(16))
 DEFINE_DERIVED_UNIT(grain, Units::pound() / HNumber(7000))
 DEFINE_DERIVED_UNIT(short_ton, HNumber(2000) * Units::pound())
 DEFINE_DERIVED_UNIT(long_ton, HNumber(2240) * Units::pound())
+
 DEFINE_DERIVED_UNIT(atomic_mass_unit, HNumber("1.66053906892e-27") * Units::kilogram()) // CODATA 2022: https://physics.nist.gov/cgi-bin/cuu/Value?ukg
 DEFINE_DERIVED_UNIT(carat, HNumber(200) * Units::milli()*Units::gram()) // Do not confuse with karat below.
-
 DEFINE_DERIVED_UNIT(angstrom, HNumber("1e-10") * Units::metre() )
+
 DEFINE_DERIVED_UNIT(astronomical_unit, HNumber("149597870700") * Units::metre()) // IAU 2012 Resolution B2.
 DEFINE_DERIVED_UNIT(lightyear, Units::speed_of_light() * Units::julian_year())
 DEFINE_DERIVED_UNIT(lightminute, Units::speed_of_light() * Units::minute())
 DEFINE_DERIVED_UNIT(lightsecond, Units::speed_of_light() * Units::second())
 DEFINE_DERIVED_UNIT(parsec, HNumber(648000)/HMath::pi() * Units::astronomical_unit()) // IAU 2015 Resolution B2.
+
 DEFINE_DERIVED_UNIT(inch, HNumber("0.0254") * Units::metre()) // International inch.
 DEFINE_DERIVED_UNIT(foot, HNumber(12) * Units::inch())
 DEFINE_DERIVED_UNIT(yard, HNumber(36) * Units::inch())
@@ -1842,8 +1866,6 @@ DEFINE_DERIVED_UNIT(julian_year, HNumber("365.25") * Units::day())
 DEFINE_DERIVED_UNIT(tropical_year, HNumber("365.242190402") * Units::day()) // Approx.: changes over time due to Earth's precession.
 DEFINE_DERIVED_UNIT(sidereal_year, HNumber("365.256363004") * Units::day()) // http://hpiers.obspm.fr/eop-pc/models/constants.html
 
-DEFINE_DERIVED_UNIT(ppm, HNumber("1e-6"))
-DEFINE_DERIVED_UNIT(ppb, HNumber("1e-9"))
 DEFINE_DERIVED_UNIT(karat, Rational(1,24).toHNumber()) // Do not confuse with carat above.
 
 DEFINE_DERIVED_UNIT(bar, HNumber("1e5") * Units::pascal())
@@ -1851,7 +1873,6 @@ DEFINE_DERIVED_UNIT(atmosphere, HNumber("1.01325") * Units::bar())
 DEFINE_DERIVED_UNIT(torr, Units::atmosphere() / HNumber(760))
 DEFINE_DERIVED_UNIT(pounds_per_sqinch, Units::pound() * Units::gravity() / (Units::inch()*Units::inch()))
 
-DEFINE_DERIVED_UNIT(electronvolt, Units::elementary_charge() * Units::volt())
 DEFINE_DERIVED_UNIT(calorie, HNumber("4.184") * Units::joule()) // International Table calorie.
 DEFINE_DERIVED_UNIT(british_thermal_unit, HNumber("1055.05585262") * Units::joule()) // International standard ISO 31-4
 
@@ -1865,10 +1886,16 @@ DEFINE_DERIVED_UNIT(cup, HNumber(240) * Units::milli()*Units::litre())
 
 DEFINE_DERIVED_UNIT(gravity, HNumber("9.80665") * Units::newton() / Units::kilogram()) // 3rd CGPM (1901, CR 70).
 DEFINE_DERIVED_UNIT(speed_of_light, HNumber(299792458) * Units::metre() / Units::second())
-DEFINE_DERIVED_UNIT(elementary_charge, HNumber("1.602176634e-19") * Units::coulomb()) // CODATA 2022: https://physics.nist.gov/cgi-bin/cuu/Value?e
 DEFINE_DERIVED_UNIT(speed_of_sound_STP, HNumber(331) * Units::metre()/Units::second())
 DEFINE_DERIVED_UNIT(knot, Units::nautical_mile()/Units::hour())
+DEFINE_DERIVED_UNIT(mile_per_hour, HNumber("1609.344") * Units::metre() / Units::hour())
+DEFINE_DERIVED_UNIT(revolution_per_minute, Units::revolution() / Units::minute())
 DEFINE_DERIVED_UNIT(horsepower, HNumber(550) * Units::foot() * Units::pound() * Units::gravity() / Units::second()) // Imperial horsepower.
+DEFINE_DERIVED_UNIT(kilowatt_hour, Units::kilo() * Units::watt() * Units::hour())
+DEFINE_DERIVED_UNIT(millimetre_of_mercury, HNumber("133.322387415") * Units::pascal())
+DEFINE_DERIVED_UNIT(stone, HNumber(14) * Units::pound())
+DEFINE_DERIVED_UNIT(dessert_spoon, HNumber(10) * Units::milli()*Units::litre())
+DEFINE_DERIVED_UNIT(quad, Units::peta() * Units::british_thermal_unit())
 
 #define SI_PREFIX_CACHE(id, func, name, symbol, exponent) \
     DEFINE_DERIVED_UNIT(func, s_powerOfTen(exponent))
