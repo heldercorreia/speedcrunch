@@ -1976,6 +1976,13 @@ void Editor::autoComplete(const QString& item)
         } else {
             newTokenText = preferredShortUnitText;
         }
+        const UnitId completedUnitId =
+            unitId(normalizeUnitName(UnicodeChars::normalizeUnitSymbolAliases(newTokenText)));
+        if (completedUnitId != UnitId::Unknown) {
+            const QString symbol = unitSymbol(completedUnitId);
+            if (!symbol.isEmpty())
+                newTokenText = symbol;
+        }
     }
     if (newTokenText == QLatin1String("pi"))
         newTokenText = QString(UnicodeChars::Pi);
@@ -1995,7 +2002,7 @@ void Editor::autoComplete(const QString& item)
     cursor.setPosition(replaceStart + replaceSize,
                        QTextCursor::KeepAnchor);
     setTextCursor(cursor);
-    insert(newTokenText);
+    QPlainTextEdit::insertPlainText(newTokenText);
     blockSignals(false);
 
     cursor = textCursor();

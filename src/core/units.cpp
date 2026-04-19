@@ -34,14 +34,6 @@
 #include <array>
 
 namespace UnitText {
-inline constexpr QStringView HertzSymbol{u"hz", 2};
-inline constexpr QStringView BecquerelSymbol{u"bq", 2};
-inline constexpr QStringView SteradianSymbol{u"sr", 2};
-inline constexpr QStringView DegreeSymbolAscii{u"deg", 3};
-inline constexpr QStringView DegreeCelsiusSymbol{u"°c", 2};
-inline constexpr QStringView DegreeFahrenheitSymbol{u"°f", 2};
-inline constexpr QStringView JouleSymbol{u"j", 1};
-inline constexpr QStringView SecondSymbol{u"s", 1};
 inline constexpr QStringView NewtonMetre{u"newton metre", 12};
 inline constexpr QStringView WattSecond{u"watt second", 11};
 inline constexpr QStringView VoltSquaredAmpere{u"volt² ampere", 12};
@@ -944,31 +936,44 @@ Quantity unitValue(UnitId id)
    Optimization:
    - Uses a function-local static QHash<QString, UnitId> built once on first
      call, then reused for all subsequent lookups.
-   - Canonical names/aliases are inferred from unit specs (single source
-     of truth) plus symbol-only aliases from UnitText.
+   - Canonical names/symbols/aliases are inferred from unit specs
+     (single source of truth).
  */
 UnitId unitId(const QString& name)
 {
     static const QHash<QString, UnitId> byName = [] {
         QHash<QString, UnitId> map;
+        QHash<QString, int> normalizedSymbolUseCount;
         const QHash<UnitId, UnitSpec>& specs = s_unitSpecs();
         for (const UnitId id : s_unitSpecOrder()) {
             const UnitSpec& spec = specs.value(id);
-            map.insert(spec.name, id);
+            if (!spec.symbol.isEmpty()) {
+                const QString normalizedSymbol = normalizeUnitName(spec.symbol);
+                normalizedSymbolUseCount.insert(
+                    normalizedSymbol,
+                    normalizedSymbolUseCount.value(normalizedSymbol, 0) + 1);
+            }
+        }
+
+        const auto insertIfMissing = [&](const QString& key, UnitId id) {
+            if (key.isEmpty() || map.contains(key))
+                return;
+            map.insert(key, id);
+        };
+        for (const UnitId id : s_unitSpecOrder()) {
+            const UnitSpec& spec = specs.value(id);
+            insertIfMissing(normalizeUnitName(spec.name), id);
+            if (!spec.symbol.isEmpty()) {
+                const QString normalizedSymbol = normalizeUnitName(spec.symbol);
+                if (normalizedSymbolUseCount.value(normalizedSymbol) == 1)
+                    insertIfMissing(normalizedSymbol, id);
+            }
             for (const QString& alias : spec.aliases) {
                 if (alias.isEmpty())
                     continue;
-                map.insert(alias, id);
+                insertIfMissing(normalizeUnitName(alias), id);
             }
         }
-        map.insert(QString(UnitText::HertzSymbol), UnitId::Hertz);
-        map.insert(QString(UnitText::BecquerelSymbol), UnitId::Becquerel);
-        map.insert(QString(UnitText::SteradianSymbol), UnitId::Steradian);
-        map.insert(QString(UnitText::DegreeSymbolAscii), UnitId::Degree);
-        map.insert(QString(UnitText::DegreeCelsiusSymbol), UnitId::DegreeCelsius);
-        map.insert(QString(UnitText::DegreeFahrenheitSymbol), UnitId::DegreeFahrenheit);
-        map.insert(QString(UnitText::JouleSymbol), UnitId::Joule);
-        map.insert(QString(UnitText::SecondSymbol), UnitId::Second);
         return map;
     }();
     return byName.value(name, UnitId::Unknown);
@@ -1593,15 +1598,18 @@ QHash<QString, Quantity> Units::builtInUnitLookup(char angleMode)
         const bool isInformationUnit =
             unitValue.getDimensionByQuantity().contains(UnitQuantity::Information);
         const UnitId id = unitId(normalizeUnitName(identifier));
+        const bool isCanonicalIdentifier =
+            id != UnitId::Unknown && identifier == unitName(id);
         const bool keepDisplayUnit =
-            id == UnitId::Hertz
-            || id == UnitId::Becquerel
-            || id == UnitId::Gray
-            || id == UnitId::Sievert
-            || id == UnitId::Steradian
-            || id == UnitId::Pascal
-            || id == UnitId::Newton
-            || id == UnitId::Metre
+            (id == UnitId::Steradian)
+            || ((id == UnitId::Hertz
+              || id == UnitId::Becquerel
+              || id == UnitId::Gray
+              || id == UnitId::Sievert
+              || id == UnitId::Pascal
+              || id == UnitId::Newton
+              || id == UnitId::Metre)
+             && isCanonicalIdentifier)
             || isInformationUnit;
         if (keepDisplayUnit)
             unitValue.setDisplayUnit(value.numericValue(), identifier);
@@ -1668,7 +1676,6 @@ QHash<QString, Quantity> Units::builtInUnitLookup(char angleMode)
     lookup.insert(unitName(UnitId::Degree), angleUnitValueForMode(AngleUnitKind::Degree, angleMode));
     lookup.insert(UnitAltSymbol::Degree, angleUnitValueForMode(AngleUnitKind::Degree, angleMode));
     lookup.insert(UnitSymbol::Degree, angleUnitValueForMode(AngleUnitKind::Degree, angleMode));
-    lookup.insert(UnitAltSymbol::DegreeCelsius1, angleUnitValueForMode(AngleUnitKind::Degree, angleMode));
     lookup.insert(UnitName::Gradian, angleUnitValueForMode(AngleUnitKind::Gradian, angleMode));
     lookup.insert(UnitSymbol::Gradian, angleUnitValueForMode(AngleUnitKind::Gradian, angleMode));
     lookup.insert(UnitName::Turn, angleUnitValueForMode(AngleUnitKind::Turn, angleMode));

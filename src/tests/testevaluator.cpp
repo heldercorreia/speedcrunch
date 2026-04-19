@@ -1025,6 +1025,16 @@ void test_units_temperature_affine_conversions()
     CHECK_EVAL_FORMAT(QString::fromUtf8("1[K] -> [°C]"), u8"-272.15[°C]");
     CHECK_EVAL_FORMAT(QString::fromUtf8("1[K] -> [°F]"), u8"-457.87[°F]");
     CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("100 [degC]"),
+        QString::fromUtf8("100")
+            + QString(MathDsl::QuantSp)
+            + QString::fromUtf8("[°C]"));
+    CHECK_DISPLAY_INTERPRETED(
+        QStringLiteral("100 [Cel]"),
+        QString::fromUtf8("100")
+            + QString(MathDsl::QuantSp)
+            + QString::fromUtf8("[°C]"));
+    CHECK_DISPLAY_INTERPRETED(
         QString::fromUtf8("100 [K] → [°C]"),
         QString::fromUtf8("100")
             + QString(MathDsl::QuantSp)

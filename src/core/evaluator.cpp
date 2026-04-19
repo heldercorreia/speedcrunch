@@ -3132,9 +3132,23 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
         QString displayTokenText = isDisplayUnitToken
             ? UnitDisplayFormat::shortDisplayName(operatorText)
             : operatorText;
+        if (isDisplayUnitToken) {
+            const UnitId id = unitId(normalizeUnitName(operatorText));
+            if (id != UnitId::Unknown) {
+                const QString symbol = unitSymbol(id);
+                if (!symbol.isEmpty())
+                    displayTokenText = symbol;
+            }
+        }
         if (isTemperatureConversionTargetIdentifier) {
-            displayTokenText = QStringLiteral("[%1]").arg(
-                UnitDisplayFormat::shortDisplayName(operatorText));
+            const UnitId id = unitId(normalizeUnitName(operatorText));
+            QString symbol = UnitDisplayFormat::shortDisplayName(operatorText);
+            if (id != UnitId::Unknown) {
+                const QString candidate = unitSymbol(id);
+                if (!candidate.isEmpty())
+                    symbol = candidate;
+            }
+            displayTokenText = QStringLiteral("[%1]").arg(symbol);
         }
         if (isDisplayUnitToken && unitOnlyAddSubExpression) {
             displayTokenText = QStringLiteral("1")
@@ -6003,9 +6017,9 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                         displayUnitName = canonicalTarget.unitName();
                     }
                 }
-                if (targetIsAffineUnit
-                    && displayUnitName.isEmpty())
-                {
+                if (targetIsAffineUnit) {
+                    // Affine temperatures keep canonical symbol output (°C/°F)
+                    // even when the authored target uses an alternate alias.
                     displayUnitName = val1.unitName();
                 }
                 if (runtimeUnitNegativeExponentStyle() == Settings::UnitNegativeExponentSuperscript)

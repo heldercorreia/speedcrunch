@@ -1796,6 +1796,42 @@ void TestEditorUi::completes_affine_temperature_units_in_unit_context()
         Qt::DirectConnection,
         Q_ARG(QString, QString::fromUtf8("ºC:Unit"))));
     QCOMPARE(editor.text(), QString::fromUtf8("100 [°C"));
+
+    editor.setText(QStringLiteral("100 [deg"));
+    editor.setCursorPosition(editor.text().size());
+    QVERIFY(QMetaObject::invokeMethod(
+        &editor,
+        "autoComplete",
+        Qt::DirectConnection,
+        Q_ARG(QString, QStringLiteral("degC:Unit"))));
+    QCOMPARE(editor.text(), QString::fromUtf8("100 [°C"));
+
+    editor.setText(QStringLiteral("100 [ce"));
+    editor.setCursorPosition(editor.text().size());
+    QVERIFY(QMetaObject::invokeMethod(
+        &editor,
+        "autoComplete",
+        Qt::DirectConnection,
+        Q_ARG(QString, QStringLiteral("Cel:Unit"))));
+    QCOMPARE(editor.text(), QString::fromUtf8("100 [°C"));
+
+    editor.setText(QStringLiteral("100 [deg"));
+    editor.setCursorPosition(editor.text().size());
+    QVERIFY(QMetaObject::invokeMethod(
+        &editor,
+        "autoComplete",
+        Qt::DirectConnection,
+        Q_ARG(QString, QStringLiteral("degF:Unit"))));
+    QCOMPARE(editor.text(), QString::fromUtf8("100 [°F"));
+
+    editor.setText(QStringLiteral("100 [fa"));
+    editor.setCursorPosition(editor.text().size());
+    QVERIFY(QMetaObject::invokeMethod(
+        &editor,
+        "autoComplete",
+        Qt::DirectConnection,
+        Q_ARG(QString, QStringLiteral("Fah:Unit"))));
+    QCOMPARE(editor.text(), QString::fromUtf8("100 [°F"));
 }
 
 void TestEditorUi::completes_arc_units_in_unit_context()
