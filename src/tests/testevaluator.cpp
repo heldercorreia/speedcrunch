@@ -3430,6 +3430,36 @@ void test_complex()
 
 void test_angle_mode(Settings* settings)
 {
+    const Settings::UnitNegativeExponentStyle savedExponentStyle =
+        settings->unitNegativeExponentStyle;
+    settings->unitNegativeExponentStyle = Settings::UnitNegativeExponentSuperscript;
+    setRuntimeUnitNegativeExponentStyle(Settings::UnitNegativeExponentSuperscript);
+
+    const auto checkAngularRateDisplayContains = [&](const QString& expression,
+                                                     char angleUnit,
+                                                     const QString& angleSymbol) {
+        settings->angleUnit = angleUnit;
+        Evaluator::instance()->initializeAngleUnits();
+        ++eval_total_tests;
+        eval->setExpression(expression);
+        const QString display = NumberFormatter::format(eval->evalUpdateAns());
+        const bool hasAngleSymbol = display.contains(angleSymbol);
+        const bool hasSuperscriptPerSecond = display.contains(QString::fromUtf8("s⁻¹"));
+        const bool hasSlashPerSecond = display.contains(QStringLiteral("/s"))
+                                       || display.contains(QStringLiteral("/ s"));
+        if (!eval->error().isEmpty()
+            || !hasAngleSymbol
+            || !hasSuperscriptPerSecond
+            || hasSlashPerSecond) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tangle mode angular-rate display unit\t[NEW]" << endl
+                 << "\tExpression: " << expression.toUtf8().constData() << endl
+                 << "\tResult: " << display.toUtf8().constData() << endl
+                 << "\tError: " << qPrintable(eval->error()) << endl;
+        }
+    };
+
     settings->angleUnit = 'r';
     Evaluator::instance()->initializeAngleUnits();
     CHECK_EVAL("sin(pi)", "0");
@@ -3460,6 +3490,9 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("[revolution]","6.28318530717958647693 rad");
     CHECK_EVAL("[rev]","6.28318530717958647693 rad");
     CHECK_EVAL("1 [tr]", "6.28318530717958647693 rad");
+    checkAngularRateDisplayContains(QStringLiteral("1 [rev/min]"), 'r', Units::angleModeUnitSymbol('r'));
+    checkAngularRateDisplayContains(QStringLiteral("1 [rev*min^-1]"), 'r', Units::angleModeUnitSymbol('r'));
+    checkAngularRateDisplayContains(QStringLiteral("1 [rpm]"), 'r', Units::angleModeUnitSymbol('r'));
 
     settings->angleUnit = 'd';
     Evaluator::instance()->initializeAngleUnits();
@@ -3495,6 +3528,9 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("[revolution]","360 °");
     CHECK_EVAL("[rev]","360 °");
     CHECK_EVAL("1 [tr]", "360 °");
+    checkAngularRateDisplayContains(QStringLiteral("1 [rev/min]"), 'd', Units::angleModeUnitSymbol('d'));
+    checkAngularRateDisplayContains(QStringLiteral("1 [rev*min^-1]"), 'd', Units::angleModeUnitSymbol('d'));
+    checkAngularRateDisplayContains(QStringLiteral("1 [rpm]"), 'd', Units::angleModeUnitSymbol('d'));
     CHECK_EVAL_KNOWN_ISSUE("arcsin(0.25)", "14.47751218592992387877", 781);
 
     settings->angleUnit = 'g';
@@ -3527,6 +3563,9 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("[revolution]","400 gon");
     CHECK_EVAL("[rev]","400 gon");
     CHECK_EVAL("1 [tr]", "400 gon");
+    checkAngularRateDisplayContains(QStringLiteral("1 [rev/min]"), 'g', Units::angleModeUnitSymbol('g'));
+    checkAngularRateDisplayContains(QStringLiteral("1 [rev*min^-1]"), 'g', Units::angleModeUnitSymbol('g'));
+    checkAngularRateDisplayContains(QStringLiteral("1 [rpm]"), 'g', Units::angleModeUnitSymbol('g'));
 
     settings->angleUnit = 't';
     Evaluator::instance()->initializeAngleUnits();
@@ -3558,6 +3597,9 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("[revolution]","1 tr");
     CHECK_EVAL("[rev]","1 tr");
     CHECK_EVAL("1 [tr]", "1 tr");
+    checkAngularRateDisplayContains(QStringLiteral("1 [rev/min]"), 't', Units::angleModeUnitSymbol('t'));
+    checkAngularRateDisplayContains(QStringLiteral("1 [rev*min^-1]"), 't', Units::angleModeUnitSymbol('t'));
+    checkAngularRateDisplayContains(QStringLiteral("1 [rpm]"), 't', Units::angleModeUnitSymbol('t'));
 
     settings->angleUnit = 'v';
     Evaluator::instance()->initializeAngleUnits();
@@ -3589,6 +3631,12 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("[revolution]","1 rev");
     CHECK_EVAL("[rev]","1 rev");
     CHECK_EVAL("1 [tr]", "1 rev");
+    checkAngularRateDisplayContains(QStringLiteral("1 [rev/min]"), 'v', Units::angleModeUnitSymbol('v'));
+    checkAngularRateDisplayContains(QStringLiteral("1 [rev*min^-1]"), 'v', Units::angleModeUnitSymbol('v'));
+    checkAngularRateDisplayContains(QStringLiteral("1 [rpm]"), 'v', Units::angleModeUnitSymbol('v'));
+
+    settings->unitNegativeExponentStyle = savedExponentStyle;
+    setRuntimeUnitNegativeExponentStyle(savedExponentStyle);
 }
 
 void test_implicit_multiplication()

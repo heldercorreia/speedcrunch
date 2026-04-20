@@ -358,6 +358,18 @@ namespace UnitAltSymbol {
 struct UnitRegistry;
 
 namespace {
+
+QString composeAnglePerSecondUnitName(const QString& angleUnitName)
+{
+    const QString secondName = unitName(UnitId::Second);
+    if (runtimeUnitNegativeExponentStyle() == Settings::UnitNegativeExponentSuperscript) {
+        return angleUnitName + QLatin1Char(' ')
+               + secondName
+               + QString(MathDsl::PowNeg)
+               + QString(MathDsl::Pow1);
+    }
+    return angleUnitName + QStringLiteral(" / ") + secondName;
+}
     const UnitRegistry& s_unitRegistry();
 
     enum SiPrefixPolicy {
@@ -1788,6 +1800,14 @@ QHash<QString, Quantity> Units::builtInUnitLookup(char angleMode)
     lookup.insert(UnitSymbol::Turn, angleUnitValueForMode(AngleUnitKind::Turn, angleMode));
     lookup.insert(UnitName::Revolution, angleUnitValueForMode(AngleUnitKind::Turn, angleMode));
     lookup.insert(UnitSymbol::Revolution, angleUnitValueForMode(AngleUnitKind::Turn, angleMode));
+    {
+        Quantity rpm = angleUnitValueForMode(AngleUnitKind::Turn, angleMode) / Units::minute();
+        const QString rpmDisplayName =
+            composeAnglePerSecondUnitName(Units::angleModeUnitSymbol(angleMode));
+        rpm.setDisplayUnit(rpm.unit(), rpmDisplayName);
+        lookup.insert(unitName(UnitId::RevolutionPerMinute), rpm);
+        lookup.insert(UnitSymbol::RevolutionPerMinute, rpm);
+    }
     lookup.insert(unitName(UnitId::Arcminute), angleUnitValueForMode(AngleUnitKind::Arcminute, angleMode));
     lookup.insert(unitName(UnitId::Arcsecond), angleUnitValueForMode(AngleUnitKind::Arcsecond, angleMode));
     lookup.insert(UnitAltSymbol::Arcminute, angleUnitValueForMode(AngleUnitKind::Arcminute, angleMode));

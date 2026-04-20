@@ -31,6 +31,7 @@
 
 #include "core/unicodechars.h"
 #include "core/mathdsl.h"
+#include "core/settings.h"
 #include "rational.h"
 #include "core/units.h"
 
@@ -169,6 +170,17 @@ QString composeQuotientUnitName(const QString& numerator, const QString& denomin
     if (needsGroupingInQuotient(d))
         d = QString(MathDsl::GroupStart) + d + QString(MathDsl::GroupEnd);
     return n + QStringLiteral(" / ") + d;
+}
+
+QString composeAnglePerSecondUnitName(const QString& angleUnitName)
+{
+    const QString secondName = ::unitName(UnitId::Second);
+    if (runtimeUnitNegativeExponentStyle() == Settings::UnitNegativeExponentSuperscript) {
+        return composeProductUnitName(
+            angleUnitName,
+            secondName + QString(MathDsl::PowNeg) + QString(MathDsl::Pow1));
+    }
+    return composeQuotientUnitName(angleUnitName, secondName);
 }
 
 QMap<UnitQuantity, Rational> dimensionCandela()
@@ -738,6 +750,12 @@ Quantity Quantity::operator*(const Quantity& other) const
 {
     Quantity result(*this);
     result.m_numericValue *= other.m_numericValue;
+    const auto isPureInverseTimeQuantity = [](const Quantity& quantity) {
+        QMap<UnitQuantity, Rational> dimension = quantity.getDimensionByQuantity();
+        return dimension.size() == 1
+               && dimension.contains(UnitQuantity::Time)
+               && dimension.value(UnitQuantity::Time) == Rational(-1);
+    };
     const auto copyDisplayUnit = [&](const Quantity& source) {
         result.stripUnits();
         result.m_unit = new CNumber(source.unit());
@@ -840,6 +858,17 @@ Quantity Quantity::operator*(const Quantity& other) const
                        && isExactDimension(*this, dimensionSquareMetre())))
         {
             result.setDisplayUnit(this->unit() * other.unit(), QString(::unitName(UnitId::Newton)));
+        } else if (((this->hasUnit() && Units::isExplicitAngleUnitName(this->unitName())
+                     && isPureInverseTimeQuantity(other))
+                    || (other.hasUnit() && Units::isExplicitAngleUnitName(other.unitName())
+                        && isPureInverseTimeQuantity(*this))))
+        {
+            const QString angleUnitName =
+                this->hasUnit() && Units::isExplicitAngleUnitName(this->unitName())
+                ? this->unitName()
+                : other.unitName();
+            result.setDisplayUnit(this->unit() * other.unit(),
+                                  composeAnglePerSecondUnitName(angleUnitName));
         } else if (this->hasUnit()
                    && other.hasUnit()
                    && !result.isDimensionless()
@@ -888,6 +917,12 @@ Quantity Quantity::operator/(const Quantity& other) const
 {
     Quantity result(*this);
     result.m_numericValue /= other.m_numericValue;
+    const auto isPureTimeQuantity = [](const Quantity& quantity) {
+        QMap<UnitQuantity, Rational> dimension = quantity.getDimensionByQuantity();
+        return dimension.size() == 1
+               && dimension.contains(UnitQuantity::Time)
+               && dimension.value(UnitQuantity::Time) == Rational(1);
+    };
     const auto copyDisplayUnit = [&](const Quantity& source) {
         result.stripUnits();
         result.m_unit = new CNumber(source.unit());
@@ -933,6 +968,17 @@ Quantity Quantity::operator/(const Quantity& other) const
             && isExactDimension(other, dimensionSecond()))
         {
             result.setDisplayUnit(this->unit() / other.unit(), QString(::unitName(UnitId::Watt)));
+            return result;
+        }
+
+        // Preserve explicit angle-unit intent for angular-rate expressions,
+        // even when the denominator unit has no own display token (e.g. minute).
+        if (this->hasUnit()
+            && Units::isExplicitAngleUnitName(this->unitName())
+            && isPureTimeQuantity(other))
+        {
+            result.setDisplayUnit(this->unit() / other.unit(),
+                                  composeAnglePerSecondUnitName(this->unitName()));
             return result;
         }
 
