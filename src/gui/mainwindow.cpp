@@ -1217,6 +1217,12 @@ void MainWindow::createStatusBar()
     bar->addWidget(m_status.complexFormSection);
 
     setStatusBarText();
+    // When the status bar is recreated via View > Status Bar, geometry might not
+    // be updated yet and width can be 0, which hides all sections. Recompute
+    // once the event loop lays out the status bar.
+    QTimer::singleShot(0, this, [this]() {
+        updateStatusBarSectionVisibility();
+    });
 }
 
 void MainWindow::createFixedWidgets()
