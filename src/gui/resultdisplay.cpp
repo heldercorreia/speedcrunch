@@ -286,6 +286,7 @@ QStringList formatResultLines(const HistoryEntry& entry)
                                     precision,
                                     complexNumbers,
                                     complexFormat));
+        formattedText = NumberFormatter::rewriteScientificNotationForDisplay(formattedText);
         formattedText = appendAngleModeSuffixForDisplayIfNeeded(
             formattedText, entry, value, settings, resultFormat);
         return formattedText;

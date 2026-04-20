@@ -6604,6 +6604,60 @@ void test_result_display_strips_unit_brackets_and_double_click_restores_canonica
     session->clearHistory();
 }
 
+void test_result_display_uses_base10_exponent_notation()
+{
+    Session* session = const_cast<Session*>(eval->session());
+    Settings* settings = Settings::instance();
+    const bool oldSimplifyResultExpressions = settings->simplifyResultExpressions;
+    const char oldResultFormat = settings->resultFormat;
+    const int oldResultPrecision = settings->resultPrecision;
+
+    settings->simplifyResultExpressions = false;
+    settings->resultFormat = 'g';
+    settings->resultPrecision = -1;
+    session->clearHistory();
+
+    eval->setExpression(QStringLiteral("1.23e45"));
+    const Quantity value = eval->evalUpdateAns();
+    ++eval_total_tests;
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tevaluate scientific result display case\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+        settings->simplifyResultExpressions = oldSimplifyResultExpressions;
+        settings->resultFormat = oldResultFormat;
+        settings->resultPrecision = oldResultPrecision;
+        session->clearHistory();
+        return;
+    }
+
+    session->addHistoryEntry(HistoryEntry(
+        QStringLiteral("1.23e45"),
+        value,
+        eval->interpretedExpression()));
+
+    TestableResultDisplay display;
+    display.resize(800, 600);
+    display.refresh();
+
+    ++eval_total_tests;
+    const QString resultLine = display.document()->findBlockByNumber(1).text();
+    const QString expected = QString::fromUtf8("= 1.23 × 10⁴⁵");
+    if (resultLine != expected) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tresult display uses base-10 exponent notation\t[NEW]" << endl
+             << "\tResult   : " << resultLine.toUtf8().constData() << endl
+             << "\tExpected : " << expected.toUtf8().constData() << endl;
+    }
+
+    settings->simplifyResultExpressions = oldSimplifyResultExpressions;
+    settings->resultFormat = oldResultFormat;
+    settings->resultPrecision = oldResultPrecision;
+    session->clearHistory();
+}
+
 void test_result_display_double_click_preserves_compact_angle_suffix()
 {
     Session* session = const_cast<Session*>(eval->session());
@@ -7302,6 +7356,7 @@ int main(int argc, char* argv[])
     test_result_display_mixed_per_term_time_conversions();
     test_result_display_mixed_per_term_time_conversions_in_sexagesimal_notation();
     test_result_display_strips_unit_brackets_and_double_click_restores_canonical_unit_expression();
+    test_result_display_uses_base10_exponent_notation();
     test_result_display_double_click_preserves_compact_angle_suffix();
     test_result_display_shows_angle_mode_unit_suffix_for_explicit_angle_input();
     test_result_display_keeps_quantsp_before_degree_celsius_and_fahrenheit();

@@ -1091,6 +1091,7 @@ static QString formattedLiveResult(const Quantity& quantity, char resultFormat =
 {
     QString formatted = DisplayFormatUtils::applyDigitGroupingForDisplay(
         NumberFormatter::format(quantity, resultFormat));
+    formatted = NumberFormatter::rewriteScientificNotationForDisplay(formatted);
     formatted.replace(RegExpPatterns::unitBrackets(), QStringLiteral("\\1"));
     auto collapseTrailingCompactSuffix = [&formatted](const QChar suffix) {
         const QString quantSpVariant = QString(MathDsl::QuantSp) + suffix;
@@ -1114,6 +1115,7 @@ static QString formattedLiveResultForSlot(const Quantity& quantity, char resultF
 {
     QString formatted = DisplayFormatUtils::applyDigitGroupingForDisplay(
         NumberFormatter::format(quantity, resultFormat, precision, complexEnabled, complexForm));
+    formatted = NumberFormatter::rewriteScientificNotationForDisplay(formatted);
     formatted.replace(RegExpPatterns::unitBrackets(), QStringLiteral("\\1"));
     auto collapseTrailingCompactSuffix = [&formatted](const QChar suffix) {
         const QString quantSpVariant = QString(MathDsl::QuantSp) + suffix;

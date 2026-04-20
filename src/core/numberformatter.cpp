@@ -758,6 +758,66 @@ QString NumberFormatter::formatNumericLiteralForDisplay(const QString& input)
     return output;
 }
 
+QString NumberFormatter::rewriteScientificNotationForDisplay(const QString& input)
+{
+    QString output;
+    int lastPos = 0;
+    auto it = RegExpPatterns::numericToken().globalMatch(input);
+    while (it.hasNext()) {
+        const QRegularExpressionMatch match = it.next();
+        output += input.mid(lastPos, match.capturedStart() - lastPos);
+
+        const QString token = match.captured(0);
+        QString rewritten = token;
+        if (!token.startsWith(MathDsl::HexPrefix, Qt::CaseInsensitive)
+            && !token.startsWith(MathDsl::OctPrefix, Qt::CaseInsensitive)
+            && !token.startsWith(MathDsl::BinPrefix, Qt::CaseInsensitive)) {
+            const int exponentPos = token.indexOf(RegExpPatterns::decimalExponentSuffix());
+            if (exponentPos > 0) {
+                const QString mantissa = token.left(exponentPos);
+                QString exponent = token.mid(exponentPos + 1);
+
+                bool negativeExponent = false;
+                if (!exponent.isEmpty()) {
+                    if (exponent.at(0) == MathDsl::AddOp) {
+                        exponent.remove(0, 1);
+                    } else if (exponent.at(0) == MathDsl::SubOpAl1
+                               || exponent.at(0) == UnicodeChars::MinusSign) {
+                        negativeExponent = true;
+                        exponent.remove(0, 1);
+                    }
+                }
+
+                QString superscript;
+                if (negativeExponent)
+                    superscript += MathDsl::PowNeg;
+                for (const QChar ch : exponent) {
+                    const QChar superscriptDigit = MathDsl::asciiDigitToSuperscript(ch);
+                    if (superscriptDigit.isNull()) {
+                        superscript.clear();
+                        break;
+                    }
+                    superscript += superscriptDigit;
+                }
+
+                if (!superscript.isEmpty()) {
+                    rewritten = mantissa
+                        + QString(MathDsl::MulCrossWrapSp)
+                        + MathDsl::MulCrossOp
+                        + QString(MathDsl::MulCrossWrapSp)
+                        + QStringLiteral("10")
+                        + superscript;
+                }
+            }
+        }
+
+        output += rewritten;
+        lastPos = match.capturedEnd();
+    }
+    output += input.mid(lastPos);
+    return output;
+}
+
 bool NumberFormatter::tryFormatStandaloneNumericLiteralForDisplay(const QString& input, QString* output)
 {
     if (!output)
