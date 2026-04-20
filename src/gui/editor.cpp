@@ -358,6 +358,13 @@ static void replacePreviousSubtractionAtCursorWithUnitConversion(Editor* editor)
     editor->setTextCursor(cursor);
 }
 
+static bool canEndUnitConversionLeftOperand(const QChar& ch)
+{
+    return ch.isLetterOrNumber()
+        || ch == MathDsl::GroupEnd
+        || ch == MathDsl::UnitEnd;
+}
+
 static void insertUnitConversionAtCursorWithUnitPlaceholder(Editor* editor)
 {
     QTextCursor cursor = editor->textCursor();
@@ -2955,6 +2962,18 @@ void Editor::keyPressEvent(QKeyEvent* event)
 
         if (typedForRules == UnicodeChars::GreaterThanSign
             && MathDsl::isSubtractionOperatorAlias(prev)) {
+            replacePreviousSubtractionAtCursorWithUnitConversion(this);
+            event->accept();
+            return;
+        }
+        if (typedForRules == MathDsl::SubOp
+            && MathDsl::isSubtractionOperatorAlias(prev)) {
+            const int prevIndex = previousNonSpaceIndex(text(), cursorPosition);
+            const int beforePrevIndex = previousNonSpaceIndex(text(), prevIndex);
+            if (beforePrevIndex < 0 || !canEndUnitConversionLeftOperand(text().at(beforePrevIndex))) {
+                event->accept();
+                return;
+            }
             replacePreviousSubtractionAtCursorWithUnitConversion(this);
             event->accept();
             return;

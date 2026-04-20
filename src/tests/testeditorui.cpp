@@ -40,6 +40,7 @@ private slots:
     void inserts_implicit_mul_sequence_before_open_paren_after_number_or_symbol();
     void does_not_insert_implicit_mul_for_zero_radix_prefix_letters();
     void allows_unit_conversion_tail_after_spaced_subtraction_operator();
+    void converts_double_minus_sequence_to_unit_conversion_with_placeholder();
     void inserts_unit_conversion_with_placeholder_when_typing_arrow_symbol();
     void treats_spaced_unit_conversion_as_atomic_navigation_and_edit_token();
     void treats_spaced_question_comment_as_atomic_navigation_and_edit_token();
@@ -644,6 +645,41 @@ void TestEditorUi::allows_unit_conversion_tail_after_spaced_subtraction_operator
     QCOMPARE(editor.textCursor().position(), afterGreater.size() - 1);
 
     const Tokens tokens = Evaluator::instance()->scan(afterGreater);
+    bool hasUnitConversion = false;
+    for (const Token& token : tokens) {
+        if (token.isOperator() && token.asOperator() == Token::UnitConversion) {
+            hasUnitConversion = true;
+            break;
+        }
+    }
+    QVERIFY(hasUnitConversion);
+}
+
+void TestEditorUi::converts_double_minus_sequence_to_unit_conversion_with_placeholder()
+{
+    // State: "1".
+    // Action: type '--'.
+    // Expected: convert to spaced "→ []", cursor inside brackets, parser sees UnitConversion.
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    editor.setText(QStringLiteral("1"));
+    editor.setCursorPosition(editor.text().size());
+    QTest::keyClick(&editor, Qt::Key_Minus, Qt::NoModifier);
+    QTest::keyClick(&editor, Qt::Key_Minus, Qt::NoModifier);
+
+    const QString afterDoubleMinus = editor.document()->toRawText();
+    const QString arrowSequence =
+        QString(MathDsl::SubWrapSp)
+        + QString(MathDsl::TransOp)
+        + QString(MathDsl::SubWrapSp)
+        + QStringLiteral("[]");
+    QVERIFY(afterDoubleMinus.contains(arrowSequence));
+    QCOMPARE(editor.textCursor().position(), afterDoubleMinus.size() - 1);
+
+    const Tokens tokens = Evaluator::instance()->scan(afterDoubleMinus);
     bool hasUnitConversion = false;
     for (const Token& token : tokens) {
         if (token.isOperator() && token.asOperator() == Token::UnitConversion) {
