@@ -85,7 +85,16 @@ namespace UnitName {
     inline const QString Carat = QStringLiteral("carat");
     inline const QString Coulomb = QStringLiteral("coulomb");
     inline const QString CubicMetre = QStringLiteral("cubic_metre");
+    inline const QString CubicMillimetre = QStringLiteral("cubic_millimetre");
+    inline const QString CubicCentimetre = QStringLiteral("cubic_centimetre");
+    inline const QString CubicDecimetre = QStringLiteral("cubic_decimetre");
+    inline const QString CubicKilometre = QStringLiteral("cubic_kilometre");
+    inline const QString SquareMillimetre = QStringLiteral("square_millimetre");
+    inline const QString SquareKilometre = QStringLiteral("square_kilometre");
     inline const QString Cup = QStringLiteral("cup");
+    inline const QString CupImp = QStringLiteral("cup_imp");
+    inline const QString CupJp = QStringLiteral("cup_jp");
+    inline const QString CupUs = QStringLiteral("cup_us");
     inline const QString Dalton = QStringLiteral("dalton");
     inline const QString Day = QStringLiteral("day");
     inline const QString Degree = QStringLiteral("degree");
@@ -94,12 +103,18 @@ namespace UnitName {
     inline const QString Electronvolt = QStringLiteral("electronvolt");
     inline const QString Farad = QStringLiteral("farad");
     inline const QString Fathom = QStringLiteral("fathom");
-    inline const QString FluidOunceUk = QStringLiteral("fluid_ounce_UK");
-    inline const QString FluidOunceUs = QStringLiteral("fluid_ounce_US");
+    inline const QString FluidOunceImp = QStringLiteral("fluid_ounce_imp");
+    inline const QString FluidOunceUs = QStringLiteral("fluid_ounce_us");
+    inline const QString FluidDramImp = QStringLiteral("fluid_dram_imp");
+    inline const QString FluidDramUs = QStringLiteral("fluid_dram_us");
     inline const QString Foot = QStringLiteral("foot");
+    inline const QString SquareFoot = QStringLiteral("square_foot");
+    inline const QString CubicFoot = QStringLiteral("cubic_foot");
     inline const QString Furlong = QStringLiteral("furlong");
-    inline const QString GallonUk = QStringLiteral("gallon_UK");
-    inline const QString GallonUs = QStringLiteral("gallon_US");
+    inline const QString GallonImp = QStringLiteral("gallon_imp");
+    inline const QString GallonUs = QStringLiteral("gallon_us");
+    inline const QString GillImp = QStringLiteral("gill_imp");
+    inline const QString GillUs = QStringLiteral("gill_us");
     inline const QString Gradian = QStringLiteral("gradian");
     inline const QString Grain = QStringLiteral("grain");
     inline const QString Gram = QStringLiteral("gram");
@@ -112,6 +127,8 @@ namespace UnitName {
     inline const QString Horsepower = QStringLiteral("horsepower");
     inline const QString Hour = QStringLiteral("hour");
     inline const QString Inch = QStringLiteral("inch");
+    inline const QString SquareInch = QStringLiteral("square_inch");
+    inline const QString CubicInch = QStringLiteral("cubic_inch");
     inline const QString Joule = QStringLiteral("joule");
     inline const QString Karat = QStringLiteral("karat");
     inline const QString Katal = QStringLiteral("katal");
@@ -127,6 +144,8 @@ namespace UnitName {
     inline const QString Lux = QStringLiteral("lux");
     inline const QString Metre = QStringLiteral("metre");
     inline const QString Mile = QStringLiteral("mile");
+    inline const QString SquareMile = QStringLiteral("square_mile");
+    inline const QString CubicMile = QStringLiteral("cubic_mile");
     inline const QString MilePerHour = QStringLiteral("mile_per_hour");
     inline const QString Minute = QStringLiteral("minute");
     inline const QString Mole = QStringLiteral("mole");
@@ -137,14 +156,18 @@ namespace UnitName {
     inline const QString Ounce = QStringLiteral("ounce");
     inline const QString Parsec = QStringLiteral("parsec");
     inline const QString Pascal = QStringLiteral("pascal");
-    inline const QString PintUk = QStringLiteral("pint_UK");
-    inline const QString PintUs = QStringLiteral("pint_US");
+    inline const QString PintImp = QStringLiteral("pint_imp");
+    inline const QString PintUs = QStringLiteral("pint_us");
     inline const QString Pound = QStringLiteral("pound");
     inline const QString PoundsPerSqinch = QStringLiteral("pounds_per_sqinch");
-    inline const QString QuartUk = QStringLiteral("quart_UK");
-    inline const QString QuartUs = QStringLiteral("quart_US");
+    inline const QString QuartImp = QStringLiteral("quart_imp");
+    inline const QString QuartUs = QStringLiteral("quart_us");
+    inline const QString BarrelOil = QStringLiteral("barrel_oil");
+    inline const QString BarrelBeerUs = QStringLiteral("barrel_beer_us");
     inline const QString Radian = QStringLiteral("radian");
     inline const QString Rod = QStringLiteral("rod");
+    inline const QString SquareYard = QStringLiteral("square_yard");
+    inline const QString CubicYard = QStringLiteral("cubic_yard");
     inline const QString Second = QStringLiteral("second");
     inline const QString ShortTon = QStringLiteral("short_ton");
     inline const QString Stone = QStringLiteral("stone");
@@ -153,8 +176,13 @@ namespace UnitName {
     inline const QString SquareMetre = QStringLiteral("square_metre");
     inline const QString Steradian = QStringLiteral("steradian");
     inline const QString Tablespoon = QStringLiteral("tablespoon");
+    inline const QString TablespoonAu = QStringLiteral("tablespoon_au");
+    inline const QString TablespoonImp = QStringLiteral("tablespoon_imp");
+    inline const QString TablespoonUs = QStringLiteral("tablespoon_us");
     inline const QString DessertSpoon = QStringLiteral("dessert_spoon");
     inline const QString Teaspoon = QStringLiteral("teaspoon");
+    inline const QString TeaspoonImp = QStringLiteral("teaspoon_imp");
+    inline const QString TeaspoonUs = QStringLiteral("teaspoon_us");
     inline const QString Tesla = QStringLiteral("tesla");
     inline const QString Tonne = QStringLiteral("tonne");
     inline const QString Torr = QStringLiteral("torr");
@@ -193,7 +221,16 @@ namespace UnitSymbol {
     inline const QString Carat = QStringLiteral("ct");
     inline const QString Coulomb = QStringLiteral("C");
     inline const QString CubicMetre = QStringLiteral("m³");
+    inline const QString CubicMillimetre = QStringLiteral("mm³");
+    inline const QString CubicCentimetre = QStringLiteral("cm³");
+    inline const QString CubicDecimetre = QStringLiteral("dm³");
+    inline const QString CubicKilometre = QStringLiteral("km³");
+    inline const QString SquareMillimetre = QStringLiteral("mm²");
+    inline const QString SquareKilometre = QStringLiteral("km²");
     inline const QString Cup = QStringLiteral("cup");
+    inline const QString CupImp = QStringLiteral("cup_imp");
+    inline const QString CupJp = QStringLiteral("cup_jp");
+    inline const QString CupUs = QStringLiteral("cup_us");
     inline const QString Dalton = QStringLiteral("Da");
     inline const QString Day = QStringLiteral("d");
     inline const QString Degree = QStringLiteral("°");
@@ -202,12 +239,18 @@ namespace UnitSymbol {
     inline const QString Electronvolt = QStringLiteral("eV");
     inline const QString Farad = QStringLiteral("F");
     inline const QString Fathom = QStringLiteral("fathom"); // Source #5
-    inline const QString FluidOunceUk = QStringLiteral("floz_UK");
-    inline const QString FluidOunceUs = QStringLiteral("floz_US");
+    inline const QString FluidOunceImp = QStringLiteral("floz_imp");
+    inline const QString FluidOunceUs = QStringLiteral("floz_us");
+    inline const QString FluidDramImp = QStringLiteral("fldr_imp");
+    inline const QString FluidDramUs = QStringLiteral("fldr_us");
     inline const QString Foot = QStringLiteral("ft");
+    inline const QString SquareFoot = QStringLiteral("ft²");
+    inline const QString CubicFoot = QStringLiteral("ft³");
     inline const QString Furlong = QStringLiteral("fur"); // Source #4
-    inline const QString GallonUk = QStringLiteral("gal_UK");
-    inline const QString GallonUs = QStringLiteral("gal_US");
+    inline const QString GallonImp = QStringLiteral("gal_imp");
+    inline const QString GallonUs = QStringLiteral("gal_us");
+    inline const QString GillImp = QStringLiteral("gill_imp");
+    inline const QString GillUs = QStringLiteral("gill_us");
     inline const QString Gradian = QStringLiteral("gon");
     inline const QString Grain = QStringLiteral("gr");
     inline const QString Gram = QStringLiteral("g");
@@ -220,6 +263,8 @@ namespace UnitSymbol {
     inline const QString Horsepower = QStringLiteral("hp");
     inline const QString Hour = QStringLiteral("h");
     inline const QString Inch = MathDsl::TransOpAl1;
+    inline const QString SquareInch = QStringLiteral("in²");
+    inline const QString CubicInch = QStringLiteral("in³");
     inline const QString Joule = QStringLiteral("J");
     inline const QString Karat = QStringLiteral("Kt");
     inline const QString Katal = QStringLiteral("kat");
@@ -235,6 +280,8 @@ namespace UnitSymbol {
     inline const QString Lux = QStringLiteral("lx");
     inline const QString Metre = QStringLiteral("m");
     inline const QString Mile = QStringLiteral("mi");
+    inline const QString SquareMile = QStringLiteral("mi²");
+    inline const QString CubicMile = QStringLiteral("mi³");
     inline const QString MilePerHour = QStringLiteral("mph");
     inline const QString Minute = QStringLiteral("min");
     inline const QString Mole = QStringLiteral("mol");
@@ -245,14 +292,18 @@ namespace UnitSymbol {
     inline const QString Ounce = QStringLiteral("oz");
     inline const QString Parsec = QStringLiteral("pc");
     inline const QString Pascal = QStringLiteral("Pa");
-    inline const QString PintUk = QStringLiteral("pt_UK");
-    inline const QString PintUs = QStringLiteral("pt_US");
+    inline const QString PintImp = QStringLiteral("pt_imp");
+    inline const QString PintUs = QStringLiteral("pt_us");
     inline const QString Pound = QStringLiteral("lb");
     inline const QString PoundsPerSqinch = QStringLiteral("psi");
-    inline const QString QuartUk = QStringLiteral("qt_UK");
-    inline const QString QuartUs = QStringLiteral("qt_US");
+    inline const QString QuartImp = QStringLiteral("qt_imp");
+    inline const QString QuartUs = QStringLiteral("qt_us");
+    inline const QString BarrelOil = QStringLiteral("bbl_oil");
+    inline const QString BarrelBeerUs = QStringLiteral("bbl_beer");
     inline const QString Radian = QStringLiteral("rad");
     inline const QString Rod = QStringLiteral("rd");  // Source #4
+    inline const QString SquareYard = QStringLiteral("yd²");
+    inline const QString CubicYard = QStringLiteral("yd³");
     inline const QString Second = QStringLiteral("s");
     inline const QString ShortTon = QStringLiteral("tn"); // Source #4
     inline const QString Stone = QStringLiteral("st");
@@ -261,8 +312,13 @@ namespace UnitSymbol {
     inline const QString SquareMetre = QStringLiteral("m²");
     inline const QString Steradian = QStringLiteral("sr");
     inline const QString Tablespoon = QStringLiteral("tbsp");
+    inline const QString TablespoonAu = QStringLiteral("tbsp_au");
+    inline const QString TablespoonImp = QStringLiteral("tbsp_imp");
+    inline const QString TablespoonUs = QStringLiteral("tbsp_us");
     inline const QString DessertSpoon = QStringLiteral("dsp");
     inline const QString Teaspoon = QStringLiteral("tsp");
+    inline const QString TeaspoonImp = QStringLiteral("tsp_imp");
+    inline const QString TeaspoonUs = QStringLiteral("tsp_us");
     inline const QString Tesla = QStringLiteral("T");
     inline const QString Tonne = QStringLiteral("t");
     inline const QString Torr = QStringLiteral("Torr");
@@ -290,6 +346,7 @@ namespace UnitAltSymbol {
     inline const QString Degree = QStringLiteral("deg");
     inline const QString Arcminute = QStringLiteral("arcmin");
     inline const QString Arcsecond = QStringLiteral("arcsec");
+    inline const QString CubicCentimetre = QStringLiteral("cc");
     inline const QString Litre = QStringLiteral("l");
     inline const QString DegreeFahrenheit1 = QStringLiteral("ºF");
     inline const QString DegreeFahrenheit2 = QStringLiteral("oF");
@@ -398,6 +455,12 @@ const QHash<UnitId, UnitSpec>& s_unitSpecs()
         {UnitId::Sievert, UnitSpec{UnitName::Sievert, UnitSymbol::Sievert, {}, UnitFamily::SiDerived, {UnitQuantity::DoseEquivalent}, AllSiPrefixes, &Units::sievert}},
         {UnitId::Katal, UnitSpec{UnitName::Katal, UnitSymbol::Katal, {}, UnitFamily::SiDerived, {UnitQuantity::CatalyticActivity}, AllSiPrefixes, &Units::katal}},
         {UnitId::CubicMetre, UnitSpec{UnitName::CubicMetre, UnitSymbol::CubicMetre, {}, UnitFamily::SiDerived, {UnitQuantity::Volume}, AllSiPrefixes, &Units::cubic_metre}},
+        {UnitId::CubicMillimetre, UnitSpec{UnitName::CubicMillimetre, UnitSymbol::CubicMillimetre, {}, UnitFamily::SiDerived, {UnitQuantity::Volume}, NoSiPrefixes, &Units::cubic_millimetre}},
+        {UnitId::CubicCentimetre, UnitSpec{UnitName::CubicCentimetre, UnitSymbol::CubicCentimetre, {UnitAltSymbol::CubicCentimetre}, UnitFamily::SiDerived, {UnitQuantity::Volume}, NoSiPrefixes, &Units::cubic_centimetre}},
+        {UnitId::CubicDecimetre, UnitSpec{UnitName::CubicDecimetre, UnitSymbol::CubicDecimetre, {}, UnitFamily::SiDerived, {UnitQuantity::Volume}, NoSiPrefixes, &Units::cubic_decimetre}},
+        {UnitId::CubicKilometre, UnitSpec{UnitName::CubicKilometre, UnitSymbol::CubicKilometre, {}, UnitFamily::SiDerived, {UnitQuantity::Volume}, NoSiPrefixes, &Units::cubic_kilometre}},
+        {UnitId::SquareMillimetre, UnitSpec{UnitName::SquareMillimetre, UnitSymbol::SquareMillimetre, {}, UnitFamily::SiDerived, {UnitQuantity::Area}, NoSiPrefixes, &Units::square_millimetre}},
+        {UnitId::SquareKilometre, UnitSpec{UnitName::SquareKilometre, UnitSymbol::SquareKilometre, {}, UnitFamily::SiDerived, {UnitQuantity::Area}, NoSiPrefixes, &Units::square_kilometre}},
         {UnitId::SquareMetre, UnitSpec{UnitName::SquareMetre, UnitSymbol::SquareMetre, {}, UnitFamily::SiDerived, {UnitQuantity::Area}, AllSiPrefixes, &Units::square_metre}},
         // SI-accepted units
         {UnitId::Minute, UnitSpec{UnitName::Minute, UnitSymbol::Minute, {}, UnitFamily::SiAccepted, {UnitQuantity::Time}, NoSiPrefixes, &Units::minute}},
@@ -424,14 +487,23 @@ const QHash<UnitId, UnitSpec>& s_unitSpecs()
         {UnitId::Calorie, UnitSpec{UnitName::Calorie, UnitSymbol::Calorie, {}, UnitFamily::Other, {UnitQuantity::AmountOfHeat}, NoSiPrefixes, &Units::calorie}},
         {UnitId::Carat, UnitSpec{UnitName::Carat, UnitSymbol::Carat, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::carat}},
         {UnitId::Cup, UnitSpec{UnitName::Cup, UnitSymbol::Cup, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::cup}},
+        {UnitId::CupImp, UnitSpec{UnitName::CupImp, UnitSymbol::CupImp, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::cup_imp}},
+        {UnitId::CupJp, UnitSpec{UnitName::CupJp, UnitSymbol::CupJp, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::cup_jp}},
+        {UnitId::CupUs, UnitSpec{UnitName::CupUs, UnitSymbol::CupUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::cup_us}},
         {UnitId::DegreeFahrenheit, UnitSpec{UnitName::DegreeFahrenheit, UnitSymbol::DegreeFahrenheit, {UnitAltSymbol::DegreeFahrenheit1, UnitAltSymbol::DegreeFahrenheit2, UnitAltSymbol::DegreeFahrenheit3, UnitAltSymbol::DegreeFahrenheit4}, UnitFamily::Other, {UnitQuantity::CelsiusTemperature}, NoSiPrefixes, &Units::kelvin, {&s_fahrenheitToKelvin, &s_kelvinToFahrenheit}}},
         {UnitId::Fathom, UnitSpec{UnitName::Fathom, UnitSymbol::Fathom, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::fathom}},
-        {UnitId::FluidOunceUk, UnitSpec{UnitName::FluidOunceUk, UnitSymbol::FluidOunceUk, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::UK_fluid_ounce}},
-        {UnitId::FluidOunceUs, UnitSpec{UnitName::FluidOunceUs, UnitSymbol::FluidOunceUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::US_fluid_ounce}},
+        {UnitId::FluidOunceImp, UnitSpec{UnitName::FluidOunceImp, UnitSymbol::FluidOunceImp, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::fluid_ounce_imp}},
+        {UnitId::FluidOunceUs, UnitSpec{UnitName::FluidOunceUs, UnitSymbol::FluidOunceUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::fluid_ounce_us}},
+        {UnitId::FluidDramImp, UnitSpec{UnitName::FluidDramImp, UnitSymbol::FluidDramImp, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::fluid_dram_imp}},
+        {UnitId::FluidDramUs, UnitSpec{UnitName::FluidDramUs, UnitSymbol::FluidDramUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::fluid_dram_us}},
         {UnitId::Foot, UnitSpec{UnitName::Foot, UnitSymbol::Foot, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::foot}},
+        {UnitId::SquareFoot, UnitSpec{UnitName::SquareFoot, UnitSymbol::SquareFoot, {}, UnitFamily::Other, {UnitQuantity::Area}, NoSiPrefixes, &Units::square_foot}},
+        {UnitId::CubicFoot, UnitSpec{UnitName::CubicFoot, UnitSymbol::CubicFoot, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::cubic_foot}},
         {UnitId::Furlong, UnitSpec{UnitName::Furlong, UnitSymbol::Furlong, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::furlong}},
-        {UnitId::GallonUk, UnitSpec{UnitName::GallonUk, UnitSymbol::GallonUk, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::UK_gallon}},
-        {UnitId::GallonUs, UnitSpec{UnitName::GallonUs, UnitSymbol::GallonUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::US_gallon}},
+        {UnitId::GallonImp, UnitSpec{UnitName::GallonImp, UnitSymbol::GallonImp, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::gallon_imp}},
+        {UnitId::GallonUs, UnitSpec{UnitName::GallonUs, UnitSymbol::GallonUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::gallon_us}},
+        {UnitId::GillImp, UnitSpec{UnitName::GillImp, UnitSymbol::GillImp, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::gill_imp}},
+        {UnitId::GillUs, UnitSpec{UnitName::GillUs, UnitSymbol::GillUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::gill_us}},
         {UnitId::Gradian, UnitSpec{UnitName::Gradian, UnitSymbol::Gradian, {}, UnitFamily::Other, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::gradian}},
         {UnitId::Grain, UnitSpec{UnitName::Grain, UnitSymbol::Grain, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::grain}},
         {UnitId::Gram, UnitSpec{UnitName::Gram, UnitSymbol::Gram, {}, UnitFamily::Other, {UnitQuantity::Mass}, AllSiPrefixes, &Units::gram}},
@@ -439,6 +511,8 @@ const QHash<UnitId, UnitSpec>& s_unitSpecs()
         {UnitId::HartreeEnergyUnit, UnitSpec{UnitName::HartreeEnergyUnit, UnitSymbol::HartreeEnergyUnit, {}, UnitFamily::Other, {UnitQuantity::Energy}, NoSiPrefixes, &s_hartreeEnergyUnit}},
         {UnitId::Horsepower, UnitSpec{UnitName::Horsepower, UnitSymbol::Horsepower, {}, UnitFamily::Other, {UnitQuantity::Power}, NoSiPrefixes, &Units::horsepower}},
         {UnitId::Inch, UnitSpec{UnitName::Inch, UnitSymbol::Inch, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::inch}},
+        {UnitId::SquareInch, UnitSpec{UnitName::SquareInch, UnitSymbol::SquareInch, {}, UnitFamily::Other, {UnitQuantity::Area}, NoSiPrefixes, &Units::square_inch}},
+        {UnitId::CubicInch, UnitSpec{UnitName::CubicInch, UnitSymbol::CubicInch, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::cubic_inch}},
         {UnitId::Karat, UnitSpec{UnitName::Karat, UnitSymbol::Karat, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::karat}},
         {UnitId::Knot, UnitSpec{UnitName::Knot, UnitSymbol::Knot, {}, UnitFamily::Other, {UnitQuantity::Speed, UnitQuantity::Velocity}, NoSiPrefixes, &Units::knot}},
         {UnitId::Lightminute, UnitSpec{UnitName::Lightminute, UnitSymbol::Lightminute, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::lightminute}},
@@ -446,23 +520,34 @@ const QHash<UnitId, UnitSpec>& s_unitSpecs()
         {UnitId::Lightyear, UnitSpec{UnitName::Lightyear, UnitSymbol::Lightyear, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::lightyear}},
         {UnitId::LongTon, UnitSpec{UnitName::LongTon, UnitSymbol::LongTon, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::long_ton}},
         {UnitId::Mile, UnitSpec{UnitName::Mile, UnitSymbol::Mile, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::mile}},
+        {UnitId::SquareMile, UnitSpec{UnitName::SquareMile, UnitSymbol::SquareMile, {}, UnitFamily::Other, {UnitQuantity::Area}, NoSiPrefixes, &Units::square_mile}},
+        {UnitId::CubicMile, UnitSpec{UnitName::CubicMile, UnitSymbol::CubicMile, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::cubic_mile}},
         {UnitId::MilePerHour, UnitSpec{UnitName::MilePerHour, UnitSymbol::MilePerHour, {}, UnitFamily::Other, {UnitQuantity::Speed, UnitQuantity::Velocity}, NoSiPrefixes, &Units::mile_per_hour}},
         {UnitId::Nat, UnitSpec{UnitName::Nat, UnitSymbol::Nat, {}, UnitFamily::Other, {UnitQuantity::Information}, NoSiPrefixes, &Units::nat}},
         {UnitId::NauticalMile, UnitSpec{UnitName::NauticalMile, UnitSymbol::NauticalMile, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::nautical_mile}},
         {UnitId::Ounce, UnitSpec{UnitName::Ounce, UnitSymbol::Ounce, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::ounce}},
         {UnitId::Parsec, UnitSpec{UnitName::Parsec, UnitSymbol::Parsec, {}, UnitFamily::Other, {UnitQuantity::Length}, PositiveSiPrefixes, &Units::parsec}},
-        {UnitId::PintUk, UnitSpec{UnitName::PintUk, UnitSymbol::PintUk, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::UK_pint}},
-        {UnitId::PintUs, UnitSpec{UnitName::PintUs, UnitSymbol::PintUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::US_pint}},
+        {UnitId::PintImp, UnitSpec{UnitName::PintImp, UnitSymbol::PintImp, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::pint_imp}},
+        {UnitId::PintUs, UnitSpec{UnitName::PintUs, UnitSymbol::PintUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::pint_us}},
         {UnitId::Pound, UnitSpec{UnitName::Pound, UnitSymbol::Pound, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::pound}},
         {UnitId::PoundsPerSqinch, UnitSpec{UnitName::PoundsPerSqinch, UnitSymbol::PoundsPerSqinch, {}, UnitFamily::Other, {UnitQuantity::Pressure}, NoSiPrefixes, &Units::pounds_per_sqinch}},
-        {UnitId::QuartUk, UnitSpec{UnitName::QuartUk, UnitSymbol::QuartUk, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::UK_quart}},
-        {UnitId::QuartUs, UnitSpec{UnitName::QuartUs, UnitSymbol::QuartUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::US_quart}},
+        {UnitId::QuartImp, UnitSpec{UnitName::QuartImp, UnitSymbol::QuartImp, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::quart_imp}},
+        {UnitId::QuartUs, UnitSpec{UnitName::QuartUs, UnitSymbol::QuartUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::quart_us}},
+        {UnitId::BarrelOil, UnitSpec{UnitName::BarrelOil, UnitSymbol::BarrelOil, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::barrel_oil}},
+        {UnitId::BarrelBeerUs, UnitSpec{UnitName::BarrelBeerUs, UnitSymbol::BarrelBeerUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::barrel_beer_us}},
         {UnitId::Rod, UnitSpec{UnitName::Rod, UnitSymbol::Rod, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::rod}},
+        {UnitId::SquareYard, UnitSpec{UnitName::SquareYard, UnitSymbol::SquareYard, {}, UnitFamily::Other, {UnitQuantity::Area}, NoSiPrefixes, &Units::square_yard}},
+        {UnitId::CubicYard, UnitSpec{UnitName::CubicYard, UnitSymbol::CubicYard, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::cubic_yard}},
         {UnitId::ShortTon, UnitSpec{UnitName::ShortTon, UnitSymbol::ShortTon, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::short_ton}},
         {UnitId::Stone, UnitSpec{UnitName::Stone, UnitSymbol::Stone, {}, UnitFamily::Other, {UnitQuantity::Mass}, NoSiPrefixes, &Units::stone}},
         {UnitId::Tablespoon, UnitSpec{UnitName::Tablespoon, UnitSymbol::Tablespoon, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::tablespoon}},
+        {UnitId::TablespoonAu, UnitSpec{UnitName::TablespoonAu, UnitSymbol::TablespoonAu, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::tablespoon_au}},
+        {UnitId::TablespoonImp, UnitSpec{UnitName::TablespoonImp, UnitSymbol::TablespoonImp, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::tablespoon_imp}},
+        {UnitId::TablespoonUs, UnitSpec{UnitName::TablespoonUs, UnitSymbol::TablespoonUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::tablespoon_us}},
         {UnitId::DessertSpoon, UnitSpec{UnitName::DessertSpoon, UnitSymbol::DessertSpoon, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::dessert_spoon}},
         {UnitId::Teaspoon, UnitSpec{UnitName::Teaspoon, UnitSymbol::Teaspoon, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::teaspoon}},
+        {UnitId::TeaspoonImp, UnitSpec{UnitName::TeaspoonImp, UnitSymbol::TeaspoonImp, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::teaspoon_imp}},
+        {UnitId::TeaspoonUs, UnitSpec{UnitName::TeaspoonUs, UnitSymbol::TeaspoonUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::teaspoon_us}},
         {UnitId::Torr, UnitSpec{UnitName::Torr, UnitSymbol::Torr, {}, UnitFamily::Other, {UnitQuantity::Pressure}, NoSiPrefixes, &Units::torr}},
         {UnitId::Turn, UnitSpec{UnitName::Turn, UnitSymbol::Turn, {UnitAltSymbol::Turn}, UnitFamily::Other, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::turn}},
         {UnitId::Revolution, UnitSpec{UnitName::Revolution, UnitSymbol::Revolution, {}, UnitFamily::Other, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::revolution}},
@@ -1815,12 +1900,10 @@ DEFINE_DERIVED_UNIT(lumen, Units::candela()*Units::steradian())
 DEFINE_DERIVED_UNIT(lux, Units::lumen()/Units::square_metre())
 DEFINE_DERIVED_UNIT(electronvolt, HNumber("1.602176634e-19") * Units::joule())
 
-DEFINE_DERIVED_UNIT(square_metre, Units::metre() * Units::metre())
-DEFINE_DERIVED_UNIT(cubic_metre, Units::square_metre() * Units::metre())
-
 DEFINE_DERIVED_UNIT(tonne, Units::mega() * Units::gram())
 DEFINE_DERIVED_UNIT(gram, Units::milli() * Units::kilogram())
-DEFINE_DERIVED_UNIT(pound, HNumber("0.45359237") * Units::kilogram())
+DEFINE_DERIVED_UNIT(pound, HNumber("0.45359237") * Units::kilogram()) // International avoirdupois.
+DEFINE_DERIVED_UNIT(stone, HNumber(14) * Units::pound())
 DEFINE_DERIVED_UNIT(ounce, Units::pound() / HNumber(16))
 DEFINE_DERIVED_UNIT(grain, Units::pound() / HNumber(7000))
 DEFINE_DERIVED_UNIT(short_ton, HNumber(2000) * Units::pound())
@@ -1837,26 +1920,60 @@ DEFINE_DERIVED_UNIT(lightsecond, Units::speed_of_light() * Units::second())
 DEFINE_DERIVED_UNIT(parsec, HNumber(648000)/HMath::pi() * Units::astronomical_unit()) // IAU 2015 Resolution B2.
 
 DEFINE_DERIVED_UNIT(inch, HNumber("0.0254") * Units::metre()) // International inch.
+DEFINE_DERIVED_UNIT(square_inch, Units::inch() * Units::inch())
+DEFINE_DERIVED_UNIT(cubic_inch, Units::inch() * Units::inch() * Units::inch())
 DEFINE_DERIVED_UNIT(foot, HNumber(12) * Units::inch())
+DEFINE_DERIVED_UNIT(square_foot, Units::foot() * Units::foot())
+DEFINE_DERIVED_UNIT(cubic_foot, Units::foot() * Units::foot() * Units::foot())
 DEFINE_DERIVED_UNIT(yard, HNumber(36) * Units::inch())
+DEFINE_DERIVED_UNIT(square_yard, Units::yard() * Units::yard())
+DEFINE_DERIVED_UNIT(cubic_yard, Units::yard() * Units::yard() * Units::yard())
 DEFINE_DERIVED_UNIT(mile, HNumber(1760) * Units::yard())
+DEFINE_DERIVED_UNIT(square_mile, Units::mile() * Units::mile())
+DEFINE_DERIVED_UNIT(cubic_mile, Units::mile() * Units::mile() * Units::mile())
 DEFINE_DERIVED_UNIT(rod, HNumber("5.5") * Units::yard())
 DEFINE_DERIVED_UNIT(furlong, HNumber(40) * Units::rod())
 DEFINE_DERIVED_UNIT(fathom, HNumber(6) * Units::foot())
 DEFINE_DERIVED_UNIT(nautical_mile, HNumber("1852") * Units::metre()) // UCUM: [nmi_i]
 
+DEFINE_DERIVED_UNIT(square_metre, Units::metre() * Units::metre())
 DEFINE_DERIVED_UNIT(hectare, HNumber(10000) * Units::square_metre())
 DEFINE_DERIVED_UNIT(acre, Units::mile() * Units::mile() / HNumber(640))
 
-DEFINE_DERIVED_UNIT(US_gallon, HNumber("3.785411784") * Units::litre())
-DEFINE_DERIVED_UNIT(UK_gallon, HNumber("4.54609") * Units::litre())
-DEFINE_DERIVED_UNIT(US_quart, Units::US_gallon() / HNumber(4))
-DEFINE_DERIVED_UNIT(UK_quart, Units::UK_gallon() / HNumber(4))
-DEFINE_DERIVED_UNIT(US_pint, Units::US_gallon() / HNumber(8))
-DEFINE_DERIVED_UNIT(UK_pint, Units::UK_gallon() / HNumber(8))
-DEFINE_DERIVED_UNIT(US_fluid_ounce, Units::US_gallon() / HNumber(128))
-DEFINE_DERIVED_UNIT(UK_fluid_ounce, Units::UK_gallon() / HNumber(160))
+DEFINE_DERIVED_UNIT(cubic_metre, Units::square_metre() * Units::metre())
+DEFINE_DERIVED_UNIT(cubic_millimetre, Units::milli() * Units::milli() * Units::milli() * Units::cubic_metre())
+DEFINE_DERIVED_UNIT(cubic_centimetre, Units::centi() * Units::centi() * Units::centi() * Units::cubic_metre())
+DEFINE_DERIVED_UNIT(cubic_decimetre, Units::deci() * Units::deci() * Units::deci() * Units::cubic_metre())
+DEFINE_DERIVED_UNIT(cubic_kilometre, Units::kilo() * Units::kilo() * Units::kilo() * Units::cubic_metre())
+DEFINE_DERIVED_UNIT(square_millimetre, Units::milli() * Units::milli() * Units::square_metre())
+DEFINE_DERIVED_UNIT(square_kilometre, Units::kilo() * Units::kilo() * Units::square_metre())
 DEFINE_DERIVED_UNIT(litre, Units::milli() * Units::cubic_metre())
+DEFINE_DERIVED_UNIT(gallon_us, HNumber("3.785411784") * Units::litre())
+DEFINE_DERIVED_UNIT(gallon_imp, HNumber("4.54609") * Units::litre())
+DEFINE_DERIVED_UNIT(quart_us, Units::gallon_us() / HNumber(4))
+DEFINE_DERIVED_UNIT(quart_imp, Units::gallon_imp() / HNumber(4))
+DEFINE_DERIVED_UNIT(pint_us, Units::gallon_us() / HNumber(8))
+DEFINE_DERIVED_UNIT(pint_imp, Units::gallon_imp() / HNumber(8))
+DEFINE_DERIVED_UNIT(gill_us, Units::pint_us() / HNumber(4))
+DEFINE_DERIVED_UNIT(gill_imp, Units::pint_imp() / HNumber(4))
+DEFINE_DERIVED_UNIT(fluid_ounce_us, Units::gallon_us() / HNumber(128))
+DEFINE_DERIVED_UNIT(fluid_ounce_imp, Units::gallon_imp() / HNumber(160))
+DEFINE_DERIVED_UNIT(fluid_dram_us, Units::fluid_ounce_us() / HNumber(8))
+DEFINE_DERIVED_UNIT(fluid_dram_imp, Units::fluid_ounce_imp() / HNumber(8))
+DEFINE_DERIVED_UNIT(barrel_oil, HNumber(42) * Units::gallon_us())
+DEFINE_DERIVED_UNIT(barrel_beer_us, HNumber("31.5") * Units::gallon_us())
+DEFINE_DERIVED_UNIT(teaspoon, HNumber(5) * Units::milli()*Units::litre())
+DEFINE_DERIVED_UNIT(teaspoon_imp, Units::gallon_imp() / HNumber(768))
+DEFINE_DERIVED_UNIT(teaspoon_us, Units::gallon_us() / HNumber(768))
+DEFINE_DERIVED_UNIT(dessert_spoon, HNumber(10) * Units::milli()*Units::litre())
+DEFINE_DERIVED_UNIT(tablespoon, HNumber(15) * Units::milli()*Units::litre())
+DEFINE_DERIVED_UNIT(tablespoon_au, HNumber("0.02") * Units::litre())
+DEFINE_DERIVED_UNIT(tablespoon_imp, Units::gallon_imp() / HNumber(256))
+DEFINE_DERIVED_UNIT(tablespoon_us, Units::gallon_us() / HNumber(256))
+DEFINE_DERIVED_UNIT(cup, HNumber(240) * Units::milli()*Units::litre())
+DEFINE_DERIVED_UNIT(cup_imp, Units::gallon_imp() / HNumber(16))
+DEFINE_DERIVED_UNIT(cup_jp, HNumber("0.2") * Units::litre())
+DEFINE_DERIVED_UNIT(cup_us, Units::gallon_us() / HNumber(16))
 
 DEFINE_DERIVED_UNIT(minute, HNumber(60) * Units::second())
 DEFINE_DERIVED_UNIT(hour, HNumber(60) * Units::minute())
@@ -1875,14 +1992,11 @@ DEFINE_DERIVED_UNIT(pounds_per_sqinch, Units::pound() * Units::gravity() / (Unit
 
 DEFINE_DERIVED_UNIT(calorie, HNumber("4.184") * Units::joule()) // International Table calorie.
 DEFINE_DERIVED_UNIT(british_thermal_unit, HNumber("1055.05585262") * Units::joule()) // International standard ISO 31-4
+DEFINE_DERIVED_UNIT(quad, Units::peta() * Units::british_thermal_unit())
 
 DEFINE_DERIVED_UNIT(nat, Units::bit() / HMath::ln(2))
 DEFINE_DERIVED_UNIT(hartley, HMath::ln(10) * Units::nat())
 DEFINE_DERIVED_UNIT(bit, Units::byte() / HNumber(8))
-
-DEFINE_DERIVED_UNIT(tablespoon, HNumber(15) * Units::milli()*Units::litre())
-DEFINE_DERIVED_UNIT(teaspoon, HNumber(5) * Units::milli()*Units::litre())
-DEFINE_DERIVED_UNIT(cup, HNumber(240) * Units::milli()*Units::litre())
 
 DEFINE_DERIVED_UNIT(gravity, HNumber("9.80665") * Units::newton() / Units::kilogram()) // 3rd CGPM (1901, CR 70).
 DEFINE_DERIVED_UNIT(speed_of_light, HNumber(299792458) * Units::metre() / Units::second())
@@ -1890,12 +2004,10 @@ DEFINE_DERIVED_UNIT(speed_of_sound_STP, HNumber(331) * Units::metre()/Units::sec
 DEFINE_DERIVED_UNIT(knot, Units::nautical_mile()/Units::hour())
 DEFINE_DERIVED_UNIT(mile_per_hour, HNumber("1609.344") * Units::metre() / Units::hour())
 DEFINE_DERIVED_UNIT(revolution_per_minute, Units::revolution() / Units::minute())
+
 DEFINE_DERIVED_UNIT(horsepower, HNumber(550) * Units::foot() * Units::pound() * Units::gravity() / Units::second()) // Imperial horsepower.
 DEFINE_DERIVED_UNIT(kilowatt_hour, Units::kilo() * Units::watt() * Units::hour())
 DEFINE_DERIVED_UNIT(millimetre_of_mercury, HNumber("133.322387415") * Units::pascal())
-DEFINE_DERIVED_UNIT(stone, HNumber(14) * Units::pound())
-DEFINE_DERIVED_UNIT(dessert_spoon, HNumber(10) * Units::milli()*Units::litre())
-DEFINE_DERIVED_UNIT(quad, Units::peta() * Units::british_thermal_unit())
 
 #define SI_PREFIX_CACHE(id, func, name, symbol, exponent) \
     DEFINE_DERIVED_UNIT(func, s_powerOfTen(exponent))

@@ -106,6 +106,12 @@ enum class UnitId {
     Sievert,
     Katal,
     CubicMetre,
+    CubicMillimetre,
+    CubicCentimetre,
+    CubicDecimetre,
+    CubicKilometre,
+    SquareMillimetre,
+    SquareKilometre,
     SquareMetre,
     Minute,
     Hour,
@@ -130,15 +136,24 @@ enum class UnitId {
     Calorie,
     Carat,
     Cup,
+    CupImp,
+    CupJp,
+    CupUs,
     DegreeFahrenheit,
     ElementaryCharge,
     Fathom,
-    FluidOunceUk,
+    FluidOunceImp,
     FluidOunceUs,
+    FluidDramImp,
+    FluidDramUs,
     Foot,
+    SquareFoot,
+    CubicFoot,
     Furlong,
-    GallonUk,
+    GallonImp,
     GallonUs,
+    GillImp,
+    GillUs,
     Gradian,
     Grain,
     Gram,
@@ -146,6 +161,8 @@ enum class UnitId {
     HartreeEnergyUnit,
     Horsepower,
     Inch,
+    SquareInch,
+    CubicInch,
     Karat,
     Knot,
     Lightminute,
@@ -153,6 +170,8 @@ enum class UnitId {
     Lightyear,
     LongTon,
     Mile,
+    SquareMile,
+    CubicMile,
     MilePerHour,
     Nat,
     NauticalMile,
@@ -160,18 +179,27 @@ enum class UnitId {
     Parsec,
     PartsPerBillion,
     PartsPerMillion,
-    PintUk,
+    PintImp,
     PintUs,
     Pound,
     PoundsPerSqinch,
-    QuartUk,
+    QuartImp,
     QuartUs,
+    BarrelOil,
+    BarrelBeerUs,
     Rod,
+    SquareYard,
+    CubicYard,
     ShortTon,
     Stone,
     Tablespoon,
+    TablespoonAu,
+    TablespoonImp,
+    TablespoonUs,
     DessertSpoon,
     Teaspoon,
+    TeaspoonImp,
+    TeaspoonUs,
     Torr,
     Turn,
     Revolution,
@@ -331,6 +359,12 @@ public:
     // Derived SI units.
     static const Quantity square_metre();
     static const Quantity cubic_metre();
+    static const Quantity cubic_millimetre();
+    static const Quantity cubic_centimetre();
+    static const Quantity cubic_decimetre();
+    static const Quantity cubic_kilometre();
+    static const Quantity square_millimetre();
+    static const Quantity square_kilometre();
     static const Quantity newton();
     static const Quantity hertz();
     static const Quantity radian();
@@ -380,9 +414,15 @@ public:
     static const Quantity parsec();
     // US measures.
     static const Quantity inch();
+    static const Quantity square_inch();
     static const Quantity foot();
+    static const Quantity square_foot();
     static const Quantity yard();
+    static const Quantity square_yard();
+    static const Quantity cubic_yard();
     static const Quantity mile();
+    static const Quantity square_mile();
+    static const Quantity cubic_mile();
     static const Quantity rod();
     static const Quantity furlong();
     // Nautical (US).
@@ -395,14 +435,22 @@ public:
     static const Quantity decare();
     static const Quantity acre();
     // Volume.
-    static const Quantity US_gallon();
-    static const Quantity UK_gallon();
-    static const Quantity US_quart();
-    static const Quantity UK_quart();
-    static const Quantity US_pint();
-    static const Quantity UK_pint();
-    static const Quantity US_fluid_ounce();
-    static const Quantity UK_fluid_ounce();
+    static const Quantity gallon_us();
+    static const Quantity gallon_imp();
+    static const Quantity quart_us();
+    static const Quantity quart_imp();
+    static const Quantity pint_us();
+    static const Quantity pint_imp();
+    static const Quantity fluid_ounce_us();
+    static const Quantity fluid_ounce_imp();
+    static const Quantity fluid_dram_us();
+    static const Quantity fluid_dram_imp();
+    static const Quantity gill_us();
+    static const Quantity gill_imp();
+    static const Quantity barrel_oil();
+    static const Quantity barrel_beer_us();
+    static const Quantity cubic_inch();
+    static const Quantity cubic_foot();
     static const Quantity litre();
     // Time.
     static const Quantity minute();
@@ -436,8 +484,16 @@ public:
     // Since for cooking generally not that high a precision is
     // required, let's just stick with the so called 'legal' variant.
     static const Quantity tablespoon();
+    static const Quantity tablespoon_au();
+    static const Quantity tablespoon_imp();
+    static const Quantity tablespoon_us();
     static const Quantity teaspoon();
+    static const Quantity teaspoon_imp();
+    static const Quantity teaspoon_us();
     static const Quantity cup();
+    static const Quantity cup_imp();
+    static const Quantity cup_jp();
+    static const Quantity cup_us();
     // Various others.
     static const Quantity gravity();
     static const Quantity speed_of_light();
