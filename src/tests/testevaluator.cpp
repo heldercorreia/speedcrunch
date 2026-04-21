@@ -1219,6 +1219,11 @@ void test_units_grouping_and_inverse_presentation()
 {
     Settings* settings = Settings::instance();
     const Settings::UnitNegativeExponentStyle oldStyle = settings->unitNegativeExponentStyle;
+
+    settings->unitNegativeExponentStyle = Settings::UnitNegativeExponentSuperscript;
+    setRuntimeUnitNegativeExponentStyle(Settings::UnitNegativeExponentSuperscript);
+    CHECK_EVAL_FORMAT("[m^2*s^-2]", u8"1[J·kg⁻¹]");
+
     settings->unitNegativeExponentStyle = Settings::UnitNegativeExponentFraction;
     setRuntimeUnitNegativeExponentStyle(Settings::UnitNegativeExponentFraction);
 

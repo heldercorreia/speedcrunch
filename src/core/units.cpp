@@ -29,6 +29,7 @@
 #include <QString>
 #include <QStringList>
 #include <QStringView>
+#include <QRegularExpression>
 #include <QSet>
 #include <algorithm>
 #include <array>
@@ -369,6 +370,119 @@ QString composeAnglePerSecondUnitName(const QString& angleUnitName)
                + QString(MathDsl::Pow1);
     }
     return angleUnitName + QStringLiteral(" / ") + secondName;
+}
+
+QString toSuperscriptExponent(int exponent)
+{
+    QString result;
+    if (exponent < 0)
+        result += MathDsl::PowNeg;
+    for (const QChar& digit : QString::number(qAbs(exponent)))
+        result += MathDsl::asciiDigitToSuperscript(digit);
+    return result;
+}
+
+int parseTrailingExponent(const QString& factor, int* exponentStart, bool* ok)
+{
+    *ok = false;
+    *exponentStart = factor.size();
+    if (factor.isEmpty())
+        return 0;
+
+    int suffixStart = factor.size();
+    while (suffixStart > 0) {
+        const QChar ch = factor.at(suffixStart - 1);
+        if (!MathDsl::isSuperscriptDigit(ch) && !MathDsl::isSuperscriptSign(ch))
+            break;
+        --suffixStart;
+    }
+    if (suffixStart < factor.size()) {
+        bool negative = false;
+        int pos = suffixStart;
+        if (factor.at(pos) == MathDsl::PowNeg || factor.at(pos) == MathDsl::PowPos) {
+            negative = factor.at(pos) == MathDsl::PowNeg;
+            ++pos;
+        }
+        if (pos >= factor.size())
+            return 0;
+
+        QString asciiDigits;
+        for (; pos < factor.size(); ++pos) {
+            const QChar ascii = MathDsl::superscriptDigitToAscii(factor.at(pos));
+            if (ascii.isNull())
+                return 0;
+            asciiDigits += ascii;
+        }
+        bool intOk = false;
+        const int value = asciiDigits.toInt(&intOk);
+        if (!intOk)
+            return 0;
+        *ok = true;
+        *exponentStart = suffixStart;
+        return negative ? -value : value;
+    }
+
+    const int caret = factor.lastIndexOf(MathDsl::PowOp);
+    if (caret >= 0 && caret + 1 < factor.size()) {
+        const QString expText = factor.mid(caret + 1).trimmed();
+        bool intOk = false;
+        const int value = expText.toInt(&intOk);
+        if (intOk) {
+            *ok = true;
+            *exponentStart = caret;
+            return value;
+        }
+    }
+
+    return 0;
+}
+
+QString negateUnitFactorExponent(const QString& factor)
+{
+    const QString trimmed = factor.trimmed();
+    if (trimmed.isEmpty())
+        return trimmed;
+
+    int exponentStart = trimmed.size();
+    bool hasExponent = false;
+    const int exponent = parseTrailingExponent(trimmed, &exponentStart, &hasExponent);
+    if (hasExponent)
+        return trimmed.left(exponentStart) + toSuperscriptExponent(-exponent);
+    return trimmed + toSuperscriptExponent(-1);
+}
+
+QString applySuperscriptStyleToUnitName(QString unitName)
+{
+    if (!unitName.contains(MathDsl::DivOp))
+        return unitName;
+
+    QStringList parts = unitName.split(MathDsl::DivOp);
+    if (parts.isEmpty())
+        return unitName;
+
+    QString normalized = parts.takeFirst().trimmed();
+    for (QString denominator : parts) {
+        denominator = denominator.trimmed();
+        if (denominator.startsWith(MathDsl::GroupStart)
+            && denominator.endsWith(MathDsl::GroupEnd)
+            && denominator.size() > 2)
+        {
+            denominator = denominator.mid(1, denominator.size() - 2).trimmed();
+        }
+
+        const QStringList factors = denominator.split(
+            QRegularExpression(QStringLiteral("\\s+")), Qt::SkipEmptyParts);
+        for (const QString& rawFactor : factors) {
+            const QString negated = negateUnitFactorExponent(rawFactor);
+            if (negated.isEmpty())
+                continue;
+            if (!normalized.isEmpty())
+                normalized += QLatin1Char(' ');
+            normalized += negated;
+        }
+    }
+
+    return normalized;
 }
     const UnitRegistry& s_unitRegistry();
 
@@ -1262,6 +1376,8 @@ void Units::findUnit(Quantity& q)
     };
     if (m_matchLookup.contains(dim)) {
         Unit temp(m_matchLookup[dim]);
+        if (runtimeUnitNegativeExponentStyle() == Settings::UnitNegativeExponentSuperscript)
+            temp.name = applySuperscriptStyleToUnitName(temp.name);
         // For denylisted dimensions, keep base/compound form instead of forcing
         // a potentially ambiguous derived-unit name.
         if (!denyAutoCanonicalization(temp.name, dim))
