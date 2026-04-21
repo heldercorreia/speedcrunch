@@ -25,6 +25,8 @@ class TestEditorUi : public QObject {
 
 private slots:
     void blocks_consecutive_plus();
+    void wraps_left_shift_operator_and_blocks_immediate_duplicate_less_than();
+    void wraps_right_shift_operator_and_blocks_immediate_duplicate_greater_than();
     void blocks_consecutive_caret();
     void blocks_plus_after_caret();
     void blocks_leading_operators_when_auto_ans_is_off_except_configured_exceptions();
@@ -43,6 +45,7 @@ private slots:
     void converts_double_minus_sequence_to_unit_conversion_with_placeholder();
     void inserts_unit_conversion_with_placeholder_when_typing_arrow_symbol();
     void treats_spaced_unit_conversion_as_atomic_navigation_and_edit_token();
+    void treats_spaced_shift_operators_as_atomic_navigation_and_edit_tokens();
     void treats_spaced_question_comment_as_atomic_navigation_and_edit_token();
     void treats_spaced_equal_as_atomic_navigation_and_edit_token();
     void treats_leading_question_comment_as_atomic_navigation_and_edit_token();
@@ -53,6 +56,7 @@ private slots:
     void unit_bracket_context_allows_digits_and_minus_only_in_exponent_positions();
     void converts_caret_exponents_to_superscripts_globally();
     void keeps_scientific_notation_exponent_minus_unwrapped();
+    void blocks_shift_operator_tail_after_non_plus_operator();
     void rewrites_superscript_exponent_for_radix_and_inserts_mul_space_globally();
     void auto_inserts_zero_before_dot_in_configured_contexts();
     void allows_unrestricted_typing_inside_question_comment_context();
@@ -103,6 +107,44 @@ void TestEditorUi::blocks_consecutive_plus()
 
     QTest::keyClick(&editor, Qt::Key_Plus, Qt::NoModifier);
     QCOMPARE(editor.text(), afterFirstPlus);
+}
+
+void TestEditorUi::wraps_left_shift_operator_and_blocks_immediate_duplicate_less_than()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    editor.setText(QStringLiteral("foo"));
+    editor.setCursorPosition(editor.text().size());
+
+    QKeyEvent lessByText(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QStringLiteral("<"));
+    QApplication::sendEvent(&editor, &lessByText);
+    const QString afterFirstLess = editor.text();
+    QCOMPARE(afterFirstLess, QStringLiteral("foo") + MathDsl::buildWrappedToken(MathDsl::ShiftLeftOp));
+
+    QApplication::sendEvent(&editor, &lessByText);
+    QCOMPARE(editor.text(), afterFirstLess);
+}
+
+void TestEditorUi::wraps_right_shift_operator_and_blocks_immediate_duplicate_greater_than()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    editor.setText(QStringLiteral("foo"));
+    editor.setCursorPosition(editor.text().size());
+
+    QKeyEvent greaterByText(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QStringLiteral(">"));
+    QApplication::sendEvent(&editor, &greaterByText);
+    const QString afterFirstGreater = editor.text();
+    QCOMPARE(afterFirstGreater, QStringLiteral("foo") + MathDsl::buildWrappedToken(MathDsl::ShiftRightOp));
+
+    QApplication::sendEvent(&editor, &greaterByText);
+    QCOMPARE(editor.text(), afterFirstGreater);
 }
 
 void TestEditorUi::blocks_consecutive_caret()
@@ -762,6 +804,47 @@ void TestEditorUi::treats_spaced_unit_conversion_as_atomic_navigation_and_edit_t
     QCOMPARE(editor.document()->toRawText(), QStringLiteral("12"));
 }
 
+void TestEditorUi::treats_spaced_shift_operators_as_atomic_navigation_and_edit_tokens()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    const QString leftShift = MathDsl::buildWrappedToken(MathDsl::ShiftLeftOp);
+    const QString rightShift = MathDsl::buildWrappedToken(MathDsl::ShiftRightOp);
+    const QString leftExpression = QStringLiteral("1") + leftShift + QStringLiteral("2");
+    const QString rightExpression = QStringLiteral("1") + rightShift + QStringLiteral("2");
+
+    editor.setText(leftExpression);
+    editor.setCursorPosition(5); // right after grouped token
+    QTest::keyClick(&editor, Qt::Key_Left, Qt::NoModifier);
+    QCOMPARE(editor.textCursor().position(), 1);
+    QTest::keyClick(&editor, Qt::Key_Right, Qt::NoModifier);
+    QCOMPARE(editor.textCursor().position(), 5);
+    QTest::keyClick(&editor, Qt::Key_Backspace, Qt::NoModifier);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("12"));
+
+    editor.setText(leftExpression);
+    editor.setCursorPosition(1); // right before grouped token
+    QTest::keyClick(&editor, Qt::Key_Delete, Qt::NoModifier);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("12"));
+
+    editor.setText(rightExpression);
+    editor.setCursorPosition(5); // right after grouped token
+    QTest::keyClick(&editor, Qt::Key_Left, Qt::NoModifier);
+    QCOMPARE(editor.textCursor().position(), 1);
+    QTest::keyClick(&editor, Qt::Key_Right, Qt::NoModifier);
+    QCOMPARE(editor.textCursor().position(), 5);
+    QTest::keyClick(&editor, Qt::Key_Backspace, Qt::NoModifier);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("12"));
+
+    editor.setText(rightExpression);
+    editor.setCursorPosition(1); // right before grouped token
+    QTest::keyClick(&editor, Qt::Key_Delete, Qt::NoModifier);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("12"));
+}
+
 void TestEditorUi::treats_spaced_question_comment_as_atomic_navigation_and_edit_token()
 {
     // State: "1 ? 2".
@@ -1410,6 +1493,26 @@ void TestEditorUi::keeps_scientific_notation_exponent_minus_unwrapped()
 
     QTest::keyClicks(&editor, QStringLiteral("2"));
     QCOMPARE(editor.document()->toRawText(), QStringLiteral("1e") + QString(MathDsl::SubOp) + QStringLiteral("2"));
+}
+
+void TestEditorUi::blocks_shift_operator_tail_after_non_plus_operator()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    editor.setText(QStringLiteral("foo -"));
+    editor.setCursorPosition(editor.text().size());
+    QKeyEvent lessByText(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QStringLiteral("<"));
+    QApplication::sendEvent(&editor, &lessByText);
+    QCOMPARE(editor.text(), QStringLiteral("foo ") + QString(MathDsl::SubOp));
+
+    editor.setText(QStringLiteral("foo /"));
+    editor.setCursorPosition(editor.text().size());
+    QKeyEvent greaterByText(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QStringLiteral(">"));
+    QApplication::sendEvent(&editor, &greaterByText);
+    QCOMPARE(editor.text(), QStringLiteral("foo /"));
 }
 
 void TestEditorUi::rewrites_superscript_exponent_for_radix_and_inserts_mul_space_globally()

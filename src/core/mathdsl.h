@@ -132,6 +132,8 @@ bool isAdditionOperatorAlias(const QChar& ch);
 bool isSubtractionOperatorAlias(const QChar& ch);
 QString buildWrappedToken(const QChar& op, const QChar& wrap = UnicodeChars::Space);
 QString buildWrappedToken(const QChar& op, const QChar& leftWrap, const QChar& rightWrap);
+QString buildWrappedToken(const QString& op, const QChar& wrap = UnicodeChars::Space);
+QString buildWrappedToken(const QString& op, const QChar& leftWrap, const QChar& rightWrap);
 
 inline bool isSuperscriptDigit(const QChar& ch)
 {

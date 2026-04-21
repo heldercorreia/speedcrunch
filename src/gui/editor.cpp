@@ -137,9 +137,31 @@ static bool isGroupedSpacedOperator(QChar leftSpace, QChar sign, QChar rightSpac
            || matches(QLatin1Char(' '), MathDsl::CommentSep);
 }
 
+static QString wrappedShiftLeftToken()
+{
+    return MathDsl::buildWrappedToken(MathDsl::ShiftLeftOp);
+}
+
+static QString wrappedShiftRightToken()
+{
+    return MathDsl::buildWrappedToken(MathDsl::ShiftRightOp);
+}
+
 static bool isAfterGroupedSpacedOperator(const QString& text, int cursorPosition)
 {
-    if (cursorPosition < 3 || cursorPosition > text.size())
+    if (cursorPosition > text.size())
+        return false;
+    const QString shiftLeft = wrappedShiftLeftToken();
+    const QString shiftRight = wrappedShiftRightToken();
+    if (cursorPosition >= shiftLeft.size()
+        && text.mid(cursorPosition - shiftLeft.size(), shiftLeft.size()) == shiftLeft) {
+        return true;
+    }
+    if (cursorPosition >= shiftRight.size()
+        && text.mid(cursorPosition - shiftRight.size(), shiftRight.size()) == shiftRight) {
+        return true;
+    }
+    if (cursorPosition < 3)
         return false;
 
     const QChar leftSpace = text.at(cursorPosition - 3);
@@ -153,7 +175,19 @@ static bool isAfterGroupedSpacedOperator(const QString& text, int cursorPosition
 
 static bool isBeforeGroupedSpacedOperator(const QString& text, int cursorPosition)
 {
-    if (cursorPosition < 0 || cursorPosition + 3 > text.size())
+    if (cursorPosition < 0 || cursorPosition > text.size())
+        return false;
+    const QString shiftLeft = wrappedShiftLeftToken();
+    const QString shiftRight = wrappedShiftRightToken();
+    if (cursorPosition + shiftLeft.size() <= text.size()
+        && text.mid(cursorPosition, shiftLeft.size()) == shiftLeft) {
+        return true;
+    }
+    if (cursorPosition + shiftRight.size() <= text.size()
+        && text.mid(cursorPosition, shiftRight.size()) == shiftRight) {
+        return true;
+    }
+    if (cursorPosition + 3 > text.size())
         return false;
 
     const QChar leftSpace = text.at(cursorPosition);
@@ -175,6 +209,8 @@ static int groupedSpacedOperatorStartAround(const QString& text, int cursorPosit
         return cursorPosition - 1;
     if (cursorPosition > 1 && isBeforeGroupedSpacedOperator(text, cursorPosition - 2))
         return cursorPosition - 2;
+    if (cursorPosition > 2 && isBeforeGroupedSpacedOperator(text, cursorPosition - 3))
+        return cursorPosition - 3;
     return -1;
 }
 
@@ -187,6 +223,18 @@ static bool isLeadingQuestionCommentToken(const QString& text)
 
 static int groupedTokenLengthBefore(const QString& text, int cursorPosition)
 {
+    const QString shiftLeft = wrappedShiftLeftToken();
+    const QString shiftRight = wrappedShiftRightToken();
+    if (cursorPosition >= shiftLeft.size()
+        && cursorPosition <= text.size()
+        && text.mid(cursorPosition - shiftLeft.size(), shiftLeft.size()) == shiftLeft) {
+        return shiftLeft.size();
+    }
+    if (cursorPosition >= shiftRight.size()
+        && cursorPosition <= text.size()
+        && text.mid(cursorPosition - shiftRight.size(), shiftRight.size()) == shiftRight) {
+        return shiftRight.size();
+    }
     if (isAfterGroupedSpacedOperator(text, cursorPosition))
         return 3;
     if (cursorPosition >= 2
@@ -200,6 +248,18 @@ static int groupedTokenLengthBefore(const QString& text, int cursorPosition)
 
 static int groupedTokenLengthAfter(const QString& text, int cursorPosition)
 {
+    const QString shiftLeft = wrappedShiftLeftToken();
+    const QString shiftRight = wrappedShiftRightToken();
+    if (cursorPosition >= 0
+        && cursorPosition + shiftLeft.size() <= text.size()
+        && text.mid(cursorPosition, shiftLeft.size()) == shiftLeft) {
+        return shiftLeft.size();
+    }
+    if (cursorPosition >= 0
+        && cursorPosition + shiftRight.size() <= text.size()
+        && text.mid(cursorPosition, shiftRight.size()) == shiftRight) {
+        return shiftRight.size();
+    }
     if (isBeforeGroupedSpacedOperator(text, cursorPosition))
         return 3;
     if (cursorPosition == 0 && isLeadingQuestionCommentToken(text))
@@ -209,6 +269,26 @@ static int groupedTokenLengthAfter(const QString& text, int cursorPosition)
 
 static int groupedTokenStartAround(const QString& text, int cursorPosition, int* tokenLength)
 {
+    const QString shiftLeft = wrappedShiftLeftToken();
+    const QString shiftRight = wrappedShiftRightToken();
+    for (int delta = 0; delta <= 3; ++delta) {
+        const int start = cursorPosition - delta;
+        if (start < 0)
+            continue;
+        if (start + shiftLeft.size() <= text.size()
+            && text.mid(start, shiftLeft.size()) == shiftLeft) {
+            if (tokenLength)
+                *tokenLength = shiftLeft.size();
+            return start;
+        }
+        if (start + shiftRight.size() <= text.size()
+            && text.mid(start, shiftRight.size()) == shiftRight) {
+            if (tokenLength)
+                *tokenLength = shiftRight.size();
+            return start;
+        }
+    }
+
     const int tripletStart = groupedSpacedOperatorStartAround(text, cursorPosition);
     if (tripletStart >= 0) {
         if (tokenLength)
@@ -363,6 +443,21 @@ static bool canEndUnitConversionLeftOperand(const QChar& ch)
     return ch.isLetterOrNumber()
         || ch == MathDsl::GroupEnd
         || ch == MathDsl::UnitEnd;
+}
+
+static bool isBlockingBinaryOperator(const QChar& ch)
+{
+    return isAnyAdditionOperator(ch)
+        || MathDsl::isSubtractionOperatorAlias(ch)
+        || MathDsl::isDivisionOperatorAlias(ch)
+        || isAnyMultiplicationOperator(ch)
+        || ch == MathDsl::PowOp
+        || ch == MathDsl::PercentOp
+        || ch == MathDsl::BitAndOp
+        || ch == MathDsl::BitOrOp
+        || ch == MathDsl::Equals
+        || ch == MathDsl::LessThanOp
+        || ch == MathDsl::GreaterThanOp;
 }
 
 static void insertUnitConversionAtCursorWithUnitPlaceholder(Editor* editor)
@@ -3052,6 +3147,21 @@ void Editor::keyPressEvent(QKeyEvent* event)
             insertUnitConversionAtCursorWithUnitPlaceholder(this);
             event->accept();
             return;
+        }
+        if (typedForRules == MathDsl::LessThanOp || typedForRules == MathDsl::GreaterThanOp) {
+            const int pos = textCursor().position();
+            const QString wrappedShift =
+                typedForRules == MathDsl::LessThanOp ? wrappedShiftLeftToken()
+                                                     : wrappedShiftRightToken();
+            if (pos >= wrappedShift.size()
+                && text().mid(pos - wrappedShift.size(), wrappedShift.size()) == wrappedShift) {
+                event->accept();
+                return;
+            }
+            if (isBlockingBinaryOperator(prev)) {
+                event->accept();
+                return;
+            }
         }
 
         if (MathDsl::isSubtractionOperatorAlias(prev)

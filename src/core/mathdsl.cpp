@@ -100,4 +100,19 @@ QString buildWrappedToken(const QChar& op, const QChar& leftWrap, const QChar& r
     return out;
 }
 
+QString buildWrappedToken(const QString& op, const QChar& wrap)
+{
+    return buildWrappedToken(op, wrap, wrap);
+}
+
+QString buildWrappedToken(const QString& op, const QChar& leftWrap, const QChar& rightWrap)
+{
+    QString out;
+    out.reserve(op.size() + 2);
+    out += leftWrap;
+    out += op;
+    out += rightWrap;
+    return out;
+}
+
 } // namespace MathDsl

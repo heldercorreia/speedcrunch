@@ -262,6 +262,14 @@ inline QString adjustedTypedTextForImplicitMultiplicationAfterDigit(
         if (!leftNonSpaceSupportsOperatorInsertion())
             return typedText;
         operatorPrefix = MathDsl::buildWrappedToken(MathDsl::Equals, UnicodeChars::Space);
+    } else if (typed == MathDsl::LessThanOp) {
+        if (!leftNonSpaceSupportsOperatorInsertion())
+            return typedText;
+        operatorPrefix = MathDsl::buildWrappedToken(MathDsl::ShiftLeftOp);
+    } else if (typed == MathDsl::GreaterThanOp) {
+        if (!leftNonSpaceSupportsOperatorInsertion())
+            return typedText;
+        operatorPrefix = MathDsl::buildWrappedToken(MathDsl::ShiftRightOp);
     } else {
         return typedText;
     }
