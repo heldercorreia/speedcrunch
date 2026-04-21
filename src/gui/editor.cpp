@@ -3186,7 +3186,10 @@ void Editor::keyPressEvent(QKeyEvent* event)
                     cursor.setPosition(newPosition, keepAnchor ? QTextCursor::KeepAnchor : QTextCursor::MoveAnchor);
                     setTextCursor(cursor);
                     checkMatching();
-                    checkAutoCalc();
+                    if (textCursor().hasSelection())
+                        checkSelectionAutoCalc();
+                    else
+                        checkAutoCalc();
                     event->accept();
                     return;
                 }
@@ -3212,7 +3215,10 @@ void Editor::keyPressEvent(QKeyEvent* event)
                     cursor.setPosition(newPosition, keepAnchor ? QTextCursor::KeepAnchor : QTextCursor::MoveAnchor);
                     setTextCursor(cursor);
                     checkMatching();
-                    checkAutoCalc();
+                    if (textCursor().hasSelection())
+                        checkSelectionAutoCalc();
+                    else
+                        checkAutoCalc();
                     event->accept();
                     return;
                 }
@@ -3246,15 +3252,21 @@ void Editor::keyPressEvent(QKeyEvent* event)
             }
         }
         checkMatching();
-        checkAutoCalc();
+        if (textCursor().hasSelection())
+            checkSelectionAutoCalc();
+        else
+            checkAutoCalc();
         event->accept();
         return;
 
     case Qt::Key_Home:
     case Qt::Key_End:
-        checkMatching();
-        checkAutoCalc();
         QPlainTextEdit::keyPressEvent(event);
+        checkMatching();
+        if (textCursor().hasSelection())
+            checkSelectionAutoCalc();
+        else
+            checkAutoCalc();
         event->accept();
         return;
 

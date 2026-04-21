@@ -78,6 +78,7 @@ private slots:
     void tooltip_shows_radian_suffix_for_negative_sexagesimal_literal();
     void tooltip_keeps_quantsp_before_degree_celsius();
     void tooltip_handles_affine_temperature_units_without_arrow_and_with_conversion();
+    void tooltip_shows_selection_result_when_selecting_with_shift_arrows();
     void enter_evaluates_when_completion_popup_has_no_explicit_interaction();
 };
 
@@ -2065,6 +2066,30 @@ void TestEditorUi::tooltip_handles_affine_temperature_units_without_arrow_and_wi
     }
 
     settings->resultFormat = oldResultFormat;
+}
+
+void TestEditorUi::tooltip_shows_selection_result_when_selecting_with_shift_arrows()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    QSignalSpy spy(&editor, SIGNAL(autoCalcMessageAvailable(const QString&)));
+
+    editor.setText(QStringLiteral("1+24"));
+    editor.setCursorPosition(editor.text().size());
+    QCoreApplication::processEvents();
+
+    QTest::keyClick(&editor, Qt::Key_Left, Qt::ShiftModifier);
+    QCoreApplication::processEvents();
+
+    QVERIFY(!spy.isEmpty());
+    const QString message = spy.takeLast().at(0).toString();
+    QVERIFY2(message.contains(QStringLiteral("Selection result:")),
+             qPrintable(QStringLiteral("Expected selection result message, got: %1").arg(message)));
+    QVERIFY2(message.contains(QStringLiteral("= 4")),
+             qPrintable(QStringLiteral("Expected selected value 4 in message, got: %1").arg(message)));
 }
 
 void TestEditorUi::enter_evaluates_when_completion_popup_has_no_explicit_interaction()
