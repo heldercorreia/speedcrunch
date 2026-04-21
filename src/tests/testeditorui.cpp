@@ -82,6 +82,7 @@ private slots:
     void tooltip_does_not_duplicate_degree_symbol_for_explicit_angle_conversion();
     void tooltip_does_not_append_angle_mode_symbol_after_explicit_arcsecond_unit();
     void tooltip_shows_radian_suffix_for_negative_sexagesimal_literal();
+    void tooltip_trig_output_does_not_append_angle_mode_suffix();
     void tooltip_keeps_quantsp_before_degree_celsius();
     void tooltip_handles_affine_temperature_units_without_arrow_and_with_conversion();
     void tooltip_shows_selection_result_when_selecting_with_shift_arrows();
@@ -2178,6 +2179,55 @@ void TestEditorUi::tooltip_shows_radian_suffix_for_negative_sexagesimal_literal(
     QVERIFY(!spy.isEmpty());
     const QString message = spy.takeLast().at(0).toString();
     QVERIFY(message.contains(QString(MathDsl::QuantSp) + Units::angleModeUnitSymbol('r')));
+
+    settings->angleUnit = oldAngleUnit;
+    settings->resultFormat = oldResultFormat;
+    Evaluator::instance()->initializeAngleUnits();
+}
+
+void TestEditorUi::tooltip_trig_output_does_not_append_angle_mode_suffix()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    Settings* settings = Settings::instance();
+    const char oldAngleUnit = settings->angleUnit;
+    const char oldResultFormat = settings->resultFormat;
+    settings->resultFormat = 'f';
+
+    struct Case {
+        char angleUnit;
+        QString forbiddenSuffix;
+    };
+    const QList<Case> cases = {
+        {'r', QString(MathDsl::QuantSp) + Units::angleModeUnitSymbol('r')},
+        {'d', Units::angleModeUnitSymbol('d')}
+    };
+
+    for (const Case& c : cases) {
+        settings->angleUnit = c.angleUnit;
+        Evaluator::instance()->initializeAngleUnits();
+
+        QSignalSpy spy(&editor, SIGNAL(autoCalcMessageAvailable(const QString&)));
+
+        editor.setText(QString::fromUtf8("cos(180°)"));
+        editor.setCursorPosition(editor.text().size());
+        editor.refreshAutoCalc();
+        QCoreApplication::processEvents();
+
+        QVERIFY(!spy.isEmpty());
+        const QString message = spy.takeLast().at(0).toString();
+        QString normalizedMessage = message;
+        normalizedMessage.replace(QString(MathDsl::SubOp), QString(MathDsl::SubOpAl1));
+        QVERIFY2(normalizedMessage.contains(QStringLiteral("= -1")),
+                 qPrintable(QStringLiteral("Expected scalar trig result, got: %1").arg(message)));
+        QVERIFY2(!message.contains(c.forbiddenSuffix),
+                 qPrintable(QStringLiteral("Unexpected angle suffix in tooltip: %1").arg(message)));
+        QVERIFY(!message.contains(QString(MathDsl::UnitStart)));
+        QVERIFY(!message.contains(QString(MathDsl::UnitEnd)));
+    }
 
     settings->angleUnit = oldAngleUnit;
     settings->resultFormat = oldResultFormat;

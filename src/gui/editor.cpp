@@ -1269,6 +1269,12 @@ static QString appendAngleModeSuffixForLiveResultIfNeeded(const QString& formatt
         return formattedText;
     if (formattedText.contains(MathDsl::UnitStart) || formattedText.contains(MathDsl::UnitEnd))
         return formattedText;
+    const bool usesTrigInExpression =
+        RegExpPatterns::trigFunctionCall().match(expression).hasMatch();
+    const bool usesTrigInInterpreted =
+        RegExpPatterns::trigFunctionCall().match(interpretedExpression).hasMatch();
+    if (usesTrigInExpression || usesTrigInInterpreted)
+        return formattedText;
 
     const bool hasExplicitBracketedAngleUnit =
         expressionContainsExplicitBracketedAngleUnit(expression)

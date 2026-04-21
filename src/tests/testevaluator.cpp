@@ -3481,6 +3481,7 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("[radian]","1 rad");
     CHECK_EVAL("[rad]","1 rad");
     CHECK_EVAL("cos(pi*[rad])", "-1");
+    CHECK_EVAL(QString::fromUtf8("cos(180°)"), "-1");
     CHECK_EVAL("cos(180*[degree])", "-1");
     CHECK_EVAL("cos(200*[gradian])", "-1");
     CHECK_EVAL("cos(200*[gon])", "-1");
@@ -3515,6 +3516,7 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("[radian]","57.2957795130823208768 °");
     CHECK_EVAL("[rad]","57.2957795130823208768 °");
     CHECK_EVAL("cos(pi*[rad])", "-1");
+    CHECK_EVAL("cos(180[rad])", "-0.59846006905785813897");
     CHECK_EVAL("cos(180*[degree])", "-1");
     CHECK_EVAL("cos(200*[gradian])", "-1");
     CHECK_EVAL("cos(200*[gon])", "-1");
@@ -6837,6 +6839,46 @@ void test_result_display_shows_angle_mode_unit_suffix_for_explicit_angle_input()
                  << " and has no []" << endl;
         }
     };
+    auto checkTrigOutputHasNoAngleSuffix = [&](char angleUnit, const char* label) {
+        settings->angleUnit = angleUnit;
+        Evaluator::instance()->initializeAngleUnits();
+        session->clearHistory();
+        eval->setExpression(QString::fromUtf8("cos(180°)"));
+        const Quantity value = eval->evalUpdateAns();
+
+        ++eval_total_tests;
+        if (!eval->error().isEmpty()) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\t" << label << "\t[NEW]" << endl
+                 << "\tError: " << qPrintable(eval->error()) << endl;
+            return;
+        }
+
+        session->addHistoryEntry(HistoryEntry(
+            QString::fromUtf8("cos(180°)"),
+            value,
+            eval->interpretedExpression()));
+
+        TestableResultDisplay display;
+        display.resize(800, 600);
+        display.refresh();
+
+        ++eval_total_tests;
+        const QString resultLine = display.document()->findBlockByNumber(1).text();
+        const QString angleSuffixSpaced = QString(MathDsl::QuantSp) + Units::angleModeUnitSymbol(angleUnit);
+        const QString angleSuffixCompact = Units::angleModeUnitSymbol(angleUnit);
+        if (resultLine.endsWith(angleSuffixSpaced)
+            || resultLine.endsWith(angleSuffixCompact)
+            || resultLine.contains(QString(MathDsl::UnitStart))
+            || resultLine.contains(QString(MathDsl::UnitEnd))) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\t" << label << "\t[NEW]" << endl
+                 << "\tLine     : " << resultLine.toUtf8().constData() << endl
+                 << "\tExpected : scalar trig result with no angle suffix or []" << endl;
+        }
+    };
 
     checkAngleModeSuffix('r', Units::angleModeUnitSymbol('r'), false,
                          "result display angle suffix in radian mode");
@@ -6848,6 +6890,10 @@ void test_result_display_shows_angle_mode_unit_suffix_for_explicit_angle_input()
                          "result display angle suffix in turn mode");
     checkAngleModeSuffix('v', Units::angleModeUnitSymbol('v'), false,
                          "result display angle suffix in revolution mode");
+    checkTrigOutputHasNoAngleSuffix('r',
+                                    "result display trig output has no radian suffix");
+    checkTrigOutputHasNoAngleSuffix('d',
+                                    "result display trig output has no degree suffix");
 
     settings->angleUnit = 'r';
     Evaluator::instance()->initializeAngleUnits();

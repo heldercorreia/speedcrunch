@@ -479,7 +479,9 @@ Quantity function_sin(Function* f, const Function::ArgumentList& args)
     ENSURE_ARGUMENT_COUNT(1);
     Quantity angle = args.at(0);
     CONVERT_ARGUMENT_ANGLE(angle);
-    return DMath::sin(angle);
+    Quantity result = DMath::sin(angle);
+    result.stripUnits();
+    return result;
 }
 
 Quantity function_cos(Function* f, const Function::ArgumentList& args)
@@ -487,7 +489,9 @@ Quantity function_cos(Function* f, const Function::ArgumentList& args)
     ENSURE_ARGUMENT_COUNT(1);
     Quantity angle = args.at(0);
     CONVERT_ARGUMENT_ANGLE(angle);
-    return DMath::cos(angle);
+    Quantity result = DMath::cos(angle);
+    result.stripUnits();
+    return result;
 }
 
 Quantity function_tan(Function* f, const Function::ArgumentList& args)
@@ -495,7 +499,9 @@ Quantity function_tan(Function* f, const Function::ArgumentList& args)
     ENSURE_ARGUMENT_COUNT(1);
     Quantity angle = args.at(0);
     CONVERT_ARGUMENT_ANGLE(angle);
-    return DMath::tan(angle);
+    Quantity result = DMath::tan(angle);
+    result.stripUnits();
+    return result;
 }
 
 Quantity function_cot(Function* f, const Function::ArgumentList& args)
@@ -503,7 +509,9 @@ Quantity function_cot(Function* f, const Function::ArgumentList& args)
     ENSURE_ARGUMENT_COUNT(1);
     Quantity angle = args.at(0);
     CONVERT_ARGUMENT_ANGLE(angle);
-    return DMath::cot(angle);
+    Quantity result = DMath::cot(angle);
+    result.stripUnits();
+    return result;
 }
 
 Quantity function_sec(Function* f, const Function::ArgumentList& args)
@@ -511,7 +519,9 @@ Quantity function_sec(Function* f, const Function::ArgumentList& args)
     ENSURE_ARGUMENT_COUNT(1);
     Quantity angle = args.at(0);
     CONVERT_ARGUMENT_ANGLE(angle);
-    return DMath::sec(angle);
+    Quantity result = DMath::sec(angle);
+    result.stripUnits();
+    return result;
 }
 
 Quantity function_csc(Function* f, const Function::ArgumentList& args)
@@ -519,7 +529,9 @@ Quantity function_csc(Function* f, const Function::ArgumentList& args)
     ENSURE_ARGUMENT_COUNT(1);
     Quantity angle = args.at(0);
     CONVERT_ARGUMENT_ANGLE(angle);
-    return DMath::csc(angle);
+    Quantity result = DMath::csc(angle);
+    result.stripUnits();
+    return result;
 }
 
 Quantity function_arcsin(Function* f, const Function::ArgumentList& args)

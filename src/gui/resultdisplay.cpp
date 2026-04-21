@@ -246,6 +246,8 @@ QString appendAngleModeSuffixForDisplayIfNeeded(const QString& formattedText,
         return formattedText;
     if (formattedText.contains(MathDsl::UnitStart) || formattedText.contains(MathDsl::UnitEnd))
         return formattedText;
+    if (expressionUsesTrigFunction(entry.expr(), entry.interpretedExpr()))
+        return formattedText;
     const bool hasExplicitBracketedAngleUnit =
         expressionContainsExplicitBracketedAngleUnit(entry.expr())
         || expressionContainsExplicitBracketedAngleUnit(entry.interpretedExpr());
