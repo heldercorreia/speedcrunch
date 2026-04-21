@@ -6617,39 +6617,51 @@ void test_result_display_uses_base10_exponent_notation()
     settings->resultPrecision = -1;
     session->clearHistory();
 
-    eval->setExpression(QStringLiteral("1.23e45"));
-    const Quantity value = eval->evalUpdateAns();
-    ++eval_total_tests;
-    if (!eval->error().isEmpty()) {
-        ++eval_failed_tests;
-        ++eval_new_failed_tests;
-        cerr << __FILE__ << "[" << __LINE__ << "]\tevaluate scientific result display case\t[NEW]" << endl
-             << "\tError: " << qPrintable(eval->error()) << endl;
-        settings->simplifyResultExpressions = oldSimplifyResultExpressions;
-        settings->resultFormat = oldResultFormat;
-        settings->resultPrecision = oldResultPrecision;
+    const struct {
+        const char* expr;
+        QString expectedResultLine;
+    } cases[] = {
+        { "1.23e45", QString::fromUtf8("= 1.23 × 10⁴⁵") },
+        { "123e-45", QString::fromUtf8("= 1.23 × 10⁻⁴³") }
+    };
+
+    for (const auto& tc : cases) {
+        eval->setExpression(QString::fromLatin1(tc.expr));
+        const Quantity value = eval->evalUpdateAns();
+        ++eval_total_tests;
+        if (!eval->error().isEmpty()) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tevaluate scientific result display case\t[NEW]" << endl
+                 << "\tExpression: " << tc.expr << endl
+                 << "\tError: " << qPrintable(eval->error()) << endl;
+            settings->simplifyResultExpressions = oldSimplifyResultExpressions;
+            settings->resultFormat = oldResultFormat;
+            settings->resultPrecision = oldResultPrecision;
+            session->clearHistory();
+            return;
+        }
+
         session->clearHistory();
-        return;
-    }
+        session->addHistoryEntry(HistoryEntry(
+            QString::fromLatin1(tc.expr),
+            value,
+            eval->interpretedExpression()));
 
-    session->addHistoryEntry(HistoryEntry(
-        QStringLiteral("1.23e45"),
-        value,
-        eval->interpretedExpression()));
+        TestableResultDisplay display;
+        display.resize(800, 600);
+        display.refresh();
 
-    TestableResultDisplay display;
-    display.resize(800, 600);
-    display.refresh();
-
-    ++eval_total_tests;
-    const QString resultLine = display.document()->findBlockByNumber(1).text();
-    const QString expected = QString::fromUtf8("= 1.23 × 10⁴⁵");
-    if (resultLine != expected) {
-        ++eval_failed_tests;
-        ++eval_new_failed_tests;
-        cerr << __FILE__ << "[" << __LINE__ << "]\tresult display uses base-10 exponent notation\t[NEW]" << endl
-             << "\tResult   : " << resultLine.toUtf8().constData() << endl
-             << "\tExpected : " << expected.toUtf8().constData() << endl;
+        ++eval_total_tests;
+        const QString resultLine = display.document()->findBlockByNumber(1).text();
+        if (resultLine != tc.expectedResultLine) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tresult display uses base-10 exponent notation\t[NEW]" << endl
+                 << "\tExpression: " << tc.expr << endl
+                 << "\tResult   : " << resultLine.toUtf8().constData() << endl
+                 << "\tExpected : " << tc.expectedResultLine.toUtf8().constData() << endl;
+        }
     }
 
     settings->simplifyResultExpressions = oldSimplifyResultExpressions;

@@ -28,7 +28,7 @@ namespace RegExpPatterns {
 inline const QRegularExpression& numericToken()
 {
     static const QRegularExpression pattern(
-        QStringLiteral("(?<![\\p{L}\\p{N}])(?:0[xX][0-9A-Fa-f]+(?:[\\.,][0-9A-Fa-f]+)?|0[oO][0-7]+(?:[\\.,][0-7]+)?|0[bB][01]+(?:[\\.,][01]+)?|\\d+(?:[\\.,]\\d+)?(?:[eE][+\\-]?\\d+)?)(?![\\p{L}\\p{N}])"));
+        QStringLiteral("(?<![\\p{L}\\p{N}])(?:0[xX][0-9A-Fa-f]+(?:[\\.,][0-9A-Fa-f]+)?|0[oO][0-7]+(?:[\\.,][0-7]+)?|0[bB][01]+(?:[\\.,][01]+)?|\\d+(?:[\\.,]\\d+)?(?:[eE][+\\-−]?\\d+)?)(?![\\p{L}\\p{N}])"));
     return pattern;
 }
 
@@ -37,7 +37,7 @@ inline const QRegularExpression& numericToken()
 inline const QRegularExpression& signedNumericLiteralWithSpaces()
 {
     static const QRegularExpression pattern(
-        QStringLiteral("^\\s*[+\\-−]?\\s*(?:0[xX][0-9A-Fa-f]+(?:[\\.,][0-9A-Fa-f]+)?|0[oO][0-7]+(?:[\\.,][0-7]+)?|0[bB][01]+(?:[\\.,][01]+)?|\\d+(?:[\\.,]\\d+)?(?:[eE][+\\-]?\\d+)?)\\s*$"));
+        QStringLiteral("^\\s*[+\\-−]?\\s*(?:0[xX][0-9A-Fa-f]+(?:[\\.,][0-9A-Fa-f]+)?|0[oO][0-7]+(?:[\\.,][0-7]+)?|0[bB][01]+(?:[\\.,][01]+)?|\\d+(?:[\\.,]\\d+)?(?:[eE][+\\-−]?\\d+)?)\\s*$"));
     return pattern;
 }
 
@@ -45,7 +45,7 @@ inline const QRegularExpression& signedNumericLiteralWithSpaces()
 // Example input/output: "1.2e-3" -> match "e-3"; "1.2e" -> no match.
 inline const QRegularExpression& decimalExponentSuffix()
 {
-    static const QRegularExpression pattern(QStringLiteral("[eE][+\\-]?\\d+$"));
+    static const QRegularExpression pattern(QStringLiteral("[eE][+\\-−]?\\d+$"));
     return pattern;
 }
 
