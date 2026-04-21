@@ -72,6 +72,7 @@ private slots:
     void completes_pi_identifier_as_pi_symbol();
     void accepts_degree_alias_in_unit_brackets_and_normalizes_to_degree_sign();
     void offers_unit_completion_for_degree_symbol_in_unit_context();
+    void matches_micro_units_when_typing_u_in_unit_context();
     void unit_context_completion_includes_angle_units_and_long_forms();
     void completes_binary_prefixed_information_unit_to_short_form_in_unit_context();
     void completes_day_unit_to_short_form_in_unit_context();
@@ -1898,6 +1899,18 @@ void TestEditorUi::offers_unit_completion_for_degree_symbol_in_unit_context()
         Qt::DirectConnection,
         Q_ARG(QString, QStringLiteral("u:Unit"))));
     QCOMPARE(editor.text(), QString::fromUtf8("100 [u"));
+}
+
+void TestEditorUi::matches_micro_units_when_typing_u_in_unit_context()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    const QStringList uChoices = editor.matchFragment(QStringLiteral("u"), true);
+    QVERIFY(uChoices.contains(QString::fromUtf8("µm:Unit")));
+    QVERIFY(uChoices.contains(QString::fromUtf8("µs:Unit")));
 }
 
 void TestEditorUi::unit_context_completion_includes_angle_units_and_long_forms()

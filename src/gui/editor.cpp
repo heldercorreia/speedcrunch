@@ -1845,11 +1845,24 @@ QStringList Editor::matchFragment(const QString& id, bool unitContext) const
     }
 
     if (unitContext) {
+        const auto unitNameMatchesFragment = [&id](const QString& unitName) -> bool {
+            if (unitName.startsWith(id, Qt::CaseSensitive))
+                return true;
+
+            // Treat ASCII 'u' as a typing-friendly alias for leading micro sign.
+            if (id.isEmpty()
+                || id.at(0) != QLatin1Char('u')
+                || !unitName.startsWith(UnicodeChars::MicroSign))
+                return false;
+
+            return unitName.mid(1).startsWith(id.mid(1), Qt::CaseSensitive);
+        };
+
         QStringList unitChoices;
         QSet<QString> seenUnitNames;
         const QStringList allUnits = Evaluator::builtInUnitIdentifiers();
         for (const QString& unitName : allUnits) {
-            if (!unitName.startsWith(id, Qt::CaseSensitive))
+            if (!unitNameMatchesFragment(unitName))
                 continue;
             if (seenUnitNames.contains(unitName))
                 continue;
