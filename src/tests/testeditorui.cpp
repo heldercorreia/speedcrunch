@@ -80,6 +80,7 @@ private slots:
     void tooltip_handles_affine_temperature_units_without_arrow_and_with_conversion();
     void tooltip_shows_selection_result_when_selecting_with_shift_arrows();
     void enter_evaluates_when_completion_popup_has_no_explicit_interaction();
+    void enter_evaluates_when_cursor_is_immediately_after_operator();
 };
 
 void TestEditorUi::blocks_consecutive_plus()
@@ -2118,6 +2119,43 @@ void TestEditorUi::enter_evaluates_when_completion_popup_has_no_explicit_interac
 
     QCOMPARE(returnPressedSpy.count(), 1);
     QCOMPARE(editor.text(), input);
+}
+
+void TestEditorUi::enter_evaluates_when_cursor_is_immediately_after_operator()
+{
+    struct Case {
+        QString expression;
+        QChar op;
+    };
+
+    const QList<Case> cases = {
+        { QStringLiteral("2 + 3"), QLatin1Char('+') },
+        { QString::fromUtf8("2 − 3"), QChar(MathDsl::SubOp) },
+        { QStringLiteral("2 / 3"), QLatin1Char('/') },
+        { QString::fromUtf8("2 × 3"), QChar(MathDsl::MulCrossOp) },
+        { QString::fromUtf8("2 [rad·s⁻¹]"), QChar(MathDsl::MulDotOp) },
+        { QStringLiteral("2 [rad/s]"), QLatin1Char('/') },
+    };
+
+    for (const Case& c : cases) {
+        Editor editor;
+        editor.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&editor));
+        editor.setFocus();
+
+        editor.setText(c.expression);
+        const int opPos = c.expression.indexOf(c.op);
+        QVERIFY2(opPos >= 0, qPrintable(QStringLiteral("Operator not found in expression: %1").arg(c.expression)));
+        editor.setCursorPosition(opPos + 1);
+
+        QSignalSpy returnPressedSpy(&editor, SIGNAL(returnPressed()));
+
+        QTest::keyClick(&editor, Qt::Key_Return, Qt::NoModifier);
+        QCoreApplication::processEvents();
+
+        QCOMPARE(returnPressedSpy.count(), 1);
+        QCOMPARE(editor.text(), c.expression);
+    }
 }
 
 QTEST_MAIN(TestEditorUi)

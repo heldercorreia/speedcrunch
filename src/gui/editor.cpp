@@ -2954,7 +2954,9 @@ void Editor::keyPressEvent(QKeyEvent* event)
         return;
 
     const QChar typedForRules = normalizedTypedCharFromEvent(event, normalizedEventText);
-    if (!(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))
+    if (key != Qt::Key_Enter
+        && key != Qt::Key_Return
+        && !(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))
         && !textCursor().hasSelection()
         && !typedForRules.isNull()) {
         const QChar prev = previousNonSpaceChar(text(), cursorPosition);
