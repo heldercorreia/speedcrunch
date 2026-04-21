@@ -4261,7 +4261,9 @@ void MainWindow::setUnitNegativeExponentStyle(QAction* action)
 
     m_settings->unitNegativeExponentStyle = style;
     setRuntimeUnitNegativeExponentStyle(style);
-    emit resultFormatChanged();
+    // Unit exponent style changes should affect only future evaluations and
+    // live editor previews, not previously displayed history entries.
+    m_widgets.editor->refreshAutoCalc();
 }
 
 void MainWindow::setRadixCharacter(char c)
