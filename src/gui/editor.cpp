@@ -3869,14 +3869,14 @@ void Editor::wrapSelection()
         const int selectionStart = cursor.selectionStart();
         const int selectionEnd = cursor.selectionEnd();
         cursor.setPosition(selectionStart);
-        cursor.insertText("(");
+        cursor.insertText(QString(MathDsl::GroupStart));
         cursor.setPosition(selectionEnd + 1);
-        cursor.insertText(")");
+        cursor.insertText(QString(MathDsl::GroupEnd));
     } else {
         cursor.movePosition(QTextCursor::Start);
-        cursor.insertText("(");
+        cursor.insertText(QString(MathDsl::GroupStart));
         cursor.movePosition(QTextCursor::End);
-        cursor.insertText(")");
+        cursor.insertText(QString(MathDsl::GroupEnd));
     }
     setTextCursor(cursor);
 }

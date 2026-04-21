@@ -499,7 +499,7 @@ Editing
     Paste from clipboard.
 * :kbd:`Control+A`
     Select entire expression.
-* :kbd:`Control+P`
+* :kbd:`Control+(` or :kbd:`Control+)`
     Wrap the current selection in parentheses. If no text is selected, the entire expression is wrapped.
 
 Widgets and Docks

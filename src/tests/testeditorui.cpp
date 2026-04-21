@@ -87,6 +87,8 @@ private slots:
     void tooltip_shows_selection_result_when_selecting_with_shift_arrows();
     void enter_evaluates_when_completion_popup_has_no_explicit_interaction();
     void enter_evaluates_when_cursor_is_immediately_after_operator();
+    void wrap_selection_method_wraps_selected_text();
+    void wrap_selection_method_wraps_whole_expression_without_selection();
 };
 
 void TestEditorUi::blocks_consecutive_plus()
@@ -2348,6 +2350,37 @@ void TestEditorUi::enter_evaluates_when_cursor_is_immediately_after_operator()
         QCOMPARE(returnPressedSpy.count(), 1);
         QCOMPARE(editor.text(), c.expression);
     }
+}
+
+void TestEditorUi::wrap_selection_method_wraps_selected_text()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    editor.setText(QStringLiteral("1+2"));
+    QTextCursor cursor = editor.textCursor();
+    cursor.setPosition(0);
+    cursor.setPosition(1, QTextCursor::KeepAnchor);
+    editor.setTextCursor(cursor);
+
+    editor.wrapSelection();
+    QCOMPARE(editor.text(), QStringLiteral("(1)+2"));
+}
+
+void TestEditorUi::wrap_selection_method_wraps_whole_expression_without_selection()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    editor.setText(QStringLiteral("1+2"));
+    editor.setCursorPosition(0);
+
+    editor.wrapSelection();
+    QCOMPARE(editor.text(), QStringLiteral("(1+2)"));
 }
 
 QTEST_MAIN(TestEditorUi)

@@ -900,7 +900,10 @@ void MainWindow::createActionShortcuts()
     m_actions.editCopy->setShortcut(Qt::CTRL | Qt::Key_C);
     m_actions.editPaste->setShortcut(Qt::CTRL | Qt::Key_V);
     m_actions.editSelectExpression->setShortcut(Qt::CTRL | Qt::Key_A);
-    m_actions.editWrapSelection->setShortcut(Qt::CTRL | Qt::Key_P);
+    m_actions.editWrapSelection->setShortcuts({
+        QKeySequence(Qt::CTRL | Qt::Key_ParenLeft),
+        QKeySequence(Qt::CTRL | Qt::Key_ParenRight)
+    });
     m_actions.viewBitfield->setShortcut(Qt::CTRL | Qt::Key_6);
     m_actions.viewConstants->setShortcut(Qt::CTRL | Qt::Key_2);
     m_actions.viewFullScreenMode->setShortcut(Qt::Key_F11);
