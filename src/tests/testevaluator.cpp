@@ -1075,6 +1075,7 @@ void test_units_named_derived_canonicalization()
     CHECK_EVAL_FORMAT("[kg*m/s^2]", "1[N]");
     CHECK_EVAL_FORMAT("[N/m^2]", "1[Pa]");
     CHECK_EVAL_FORMAT("[cd*sr]", "1[lm]");
+    CHECK_EVAL_FORMAT("[cd*sr*m^2]", u8"1[lm·m²]");
     CHECK_EVAL_FORMAT("[lm/m^2]", "1[lx]");
     CHECK_EVAL_FORMAT("[mol/s]", "1[kat]");
 }

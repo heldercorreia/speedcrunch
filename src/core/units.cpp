@@ -1449,6 +1449,7 @@ void Units::findUnit(Quantity& q)
             Unit(unitName(UnitId::Lux), unitValue(UnitId::Lux)),
             Unit(unitName(UnitId::Steradian), unitValue(UnitId::Steradian))
         };
+        const QString lumenName = unitName(UnitId::Lumen);
 
         bool progress = true;
         while (progress) {
@@ -1457,7 +1458,8 @@ void Units::findUnit(Quantity& q)
                 Quantity qc(candidate.value);
                 qc.cleanDimension();
                 const auto cdim = qc.getDimensionByQuantity();
-                if (cdim.isEmpty() || cdim.size() < 2)
+                if (cdim.isEmpty()
+                    || (cdim.size() < 2 && candidate.name != lumenName))
                     continue;
 
                 bool firstRatio = true;
