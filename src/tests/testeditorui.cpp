@@ -52,6 +52,7 @@ private slots:
     void unit_bracket_context_disallows_variables_and_constants();
     void unit_bracket_context_allows_digits_and_minus_only_in_exponent_positions();
     void converts_caret_exponents_to_superscripts_globally();
+    void keeps_scientific_notation_exponent_minus_unwrapped();
     void rewrites_superscript_exponent_for_radix_and_inserts_mul_space_globally();
     void ignores_dot_and_comma_after_non_numerical_char();
     void allows_unrestricted_typing_inside_question_comment_context();
@@ -1393,6 +1394,22 @@ void TestEditorUi::converts_caret_exponents_to_superscripts_globally()
     imeCaretCommit.setCommitString(QStringLiteral("^"));
     QApplication::sendEvent(&editor, &imeCaretCommit);
     QCOMPARE(editor.document()->toRawText(), QStringLiteral("s") + MathDsl::Pow2);
+}
+
+void TestEditorUi::keeps_scientific_notation_exponent_minus_unwrapped()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    editor.setText(QStringLiteral("1e"));
+    editor.setCursorPosition(editor.text().size());
+    QTest::keyClick(&editor, Qt::Key_Minus, Qt::NoModifier);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("1e") + QString(MathDsl::SubOp));
+
+    QTest::keyClicks(&editor, QStringLiteral("2"));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("1e") + QString(MathDsl::SubOp) + QStringLiteral("2"));
 }
 
 void TestEditorUi::rewrites_superscript_exponent_for_radix_and_inserts_mul_space_globally()

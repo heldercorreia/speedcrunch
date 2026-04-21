@@ -119,6 +119,52 @@ inline QString adjustedTypedTextForImplicitMultiplicationAfterDigit(
         return typedText;
 
     const QChar typed = typedText.at(0);
+    const auto isScientificExponentSignContext = [&]() {
+        int i = cursorPosition - 1;
+        while (i >= 0 && text.at(i).isSpace())
+            --i;
+        if (i < 0)
+            return false;
+        const QChar marker = text.at(i);
+        if (marker != QLatin1Char('e') && marker != QLatin1Char('E'))
+            return false;
+
+        --i;
+        if (i < 0)
+            return false;
+
+        bool sawDigit = false;
+        while (i >= 0) {
+            const QChar ch = text.at(i);
+            if (ch.isDigit()) {
+                sawDigit = true;
+                --i;
+                continue;
+            }
+            if (ch == MathDsl::DotSep || ch == MathDsl::CommaSep) {
+                --i;
+                continue;
+            }
+            if (MathDsl::isSubtractionOperatorAlias(ch)
+                || MathDsl::isAdditionOperatorAlias(ch)) {
+                const int boundaryIndex = i - 1;
+                if (boundaryIndex < 0)
+                    return sawDigit;
+                const QChar boundary = text.at(boundaryIndex);
+                return sawDigit
+                       && (boundary.isSpace()
+                           || MathDsl::isExpressionBoundaryOperatorOrSeparator(boundary)
+                           || boundary == MathDsl::GroupStart
+                           || boundary == MathDsl::UnitStart);
+            }
+            return sawDigit
+                   && (ch.isSpace()
+                       || MathDsl::isExpressionBoundaryOperatorOrSeparator(ch)
+                       || ch == MathDsl::GroupStart
+                       || ch == MathDsl::UnitStart);
+        }
+        return sawDigit;
+    };
     const auto isSingleZeroTermToLeft = [&]() {
         int i = cursorPosition - 1;
         while (i >= 0 && text.at(i).isSpace())
@@ -195,6 +241,8 @@ inline QString adjustedTypedTextForImplicitMultiplicationAfterDigit(
             return typedText;
         operatorPrefix = MathDsl::buildWrappedToken(MathDsl::AddOp, MathDsl::AddWrap);
     } else if (MathDsl::isSubtractionOperatorAlias(typed)) {
+        if (isScientificExponentSignContext())
+            return typedText;
         if (!leftNonSpaceSupportsOperatorInsertion())
             return typedText;
         operatorPrefix = MathDsl::buildWrappedToken(MathDsl::SubOp, MathDsl::SubWrapSp);
