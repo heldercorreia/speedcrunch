@@ -480,6 +480,8 @@ Quantity function_sin(Function* f, const Function::ArgumentList& args)
     Quantity angle = args.at(0);
     CONVERT_ARGUMENT_ANGLE(angle);
     Quantity result = DMath::sin(angle);
+    // Trig outputs are always pure scalars; explicit input-angle display units
+    // (e.g. °/rad) must not leak into the function result.
     result.stripUnits();
     return result;
 }
@@ -490,6 +492,8 @@ Quantity function_cos(Function* f, const Function::ArgumentList& args)
     Quantity angle = args.at(0);
     CONVERT_ARGUMENT_ANGLE(angle);
     Quantity result = DMath::cos(angle);
+    // Trig outputs are always pure scalars; explicit input-angle display units
+    // (e.g. °/rad) must not leak into the function result.
     result.stripUnits();
     return result;
 }
@@ -500,6 +504,8 @@ Quantity function_tan(Function* f, const Function::ArgumentList& args)
     Quantity angle = args.at(0);
     CONVERT_ARGUMENT_ANGLE(angle);
     Quantity result = DMath::tan(angle);
+    // Trig outputs are always pure scalars; explicit input-angle display units
+    // (e.g. °/rad) must not leak into the function result.
     result.stripUnits();
     return result;
 }
@@ -510,6 +516,8 @@ Quantity function_cot(Function* f, const Function::ArgumentList& args)
     Quantity angle = args.at(0);
     CONVERT_ARGUMENT_ANGLE(angle);
     Quantity result = DMath::cot(angle);
+    // Trig outputs are always pure scalars; explicit input-angle display units
+    // (e.g. °/rad) must not leak into the function result.
     result.stripUnits();
     return result;
 }
@@ -520,6 +528,8 @@ Quantity function_sec(Function* f, const Function::ArgumentList& args)
     Quantity angle = args.at(0);
     CONVERT_ARGUMENT_ANGLE(angle);
     Quantity result = DMath::sec(angle);
+    // Trig outputs are always pure scalars; explicit input-angle display units
+    // (e.g. °/rad) must not leak into the function result.
     result.stripUnits();
     return result;
 }
@@ -530,6 +540,8 @@ Quantity function_csc(Function* f, const Function::ArgumentList& args)
     Quantity angle = args.at(0);
     CONVERT_ARGUMENT_ANGLE(angle);
     Quantity result = DMath::csc(angle);
+    // Trig outputs are always pure scalars; explicit input-angle display units
+    // (e.g. °/rad) must not leak into the function result.
     result.stripUnits();
     return result;
 }

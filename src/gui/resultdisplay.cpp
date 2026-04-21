@@ -246,6 +246,8 @@ QString appendAngleModeSuffixForDisplayIfNeeded(const QString& formattedText,
         return formattedText;
     if (formattedText.contains(MathDsl::UnitStart) || formattedText.contains(MathDsl::UnitEnd))
         return formattedText;
+    // Explicit angle markers in trig arguments are input semantics only.
+    // The displayed trig result itself remains dimensionless.
     if (expressionUsesTrigFunction(entry.expr(), entry.interpretedExpr()))
         return formattedText;
     const bool hasExplicitBracketedAngleUnit =

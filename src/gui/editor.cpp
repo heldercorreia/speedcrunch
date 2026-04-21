@@ -1269,6 +1269,8 @@ static QString appendAngleModeSuffixForLiveResultIfNeeded(const QString& formatt
         return formattedText;
     if (formattedText.contains(MathDsl::UnitStart) || formattedText.contains(MathDsl::UnitEnd))
         return formattedText;
+    // Live/selection tooltips follow the same rule as committed results:
+    // trig outputs are scalar even when arguments include explicit angle units.
     const bool usesTrigInExpression =
         RegExpPatterns::trigFunctionCall().match(expression).hasMatch();
     const bool usesTrigInInterpreted =

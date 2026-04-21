@@ -2799,10 +2799,16 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
         if (!commentText.isEmpty())
             commentSuffix += QLatin1String(" ") + commentText;
     }
+    const bool hasTrigFunction =
+        RegExpPatterns::trigFunctionCall().match(expressionPrefix).hasMatch();
     const bool allowAggressiveSimplification =
         simplifyRepeatedMultiplicativeBases
-        && !expressionPrefix.contains(MathDsl::UnitStart)
-        && !expressionPrefix.contains(MathDsl::UnitEnd);
+        // Keep unit-aware simplification conservative in general, but allow
+        // trig-only expressions with explicit angle units (e.g. cos(pi[rad]))
+        // to participate in symbolic folding.
+        && ((!expressionPrefix.contains(MathDsl::UnitStart)
+             && !expressionPrefix.contains(MathDsl::UnitEnd))
+            || hasTrigFunction);
 
     auto scanForDisplay = [](const QString& text) {
         // Interpreted expressions are internally dot-based. For comma-based
@@ -3039,7 +3045,7 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
     };
 
     QString displayExpression;
-    if (allowAggressiveSimplification && !hasUnitIdentifierToken) {
+    if (allowAggressiveSimplification && (!hasUnitIdentifierToken || hasTrigFunction)) {
         displayExpression =
             simplifyRepeatedMultiplicativeBasesForDisplay(groupedExpression, groupedTokens);
         const QString normalized = normalizeNeutralMultiplicativeOnes(displayExpression);
@@ -3284,7 +3290,14 @@ QString Evaluator::simplifyInterpretedExpression(const QString& expression)
     if (expressionPrefix.contains(MathDsl::UnitStart)
         || expressionPrefix.contains(MathDsl::UnitEnd))
     {
-        return expressionPrefix + commentSuffix;
+        // Most unit-bearing interpreted expressions skip symbolic simplification
+        // to avoid invalid rewrites across dimensions. Trig expressions are a
+        // safe exception because explicit angle units are consumed by the trig
+        // call and do not dimension the scalar result.
+        const bool hasTrigFunction =
+            RegExpPatterns::trigFunctionCall().match(expressionPrefix).hasMatch();
+        if (!hasTrigFunction)
+            return expressionPrefix + commentSuffix;
     }
 
     auto scanForDisplay = [](const QString& text) {

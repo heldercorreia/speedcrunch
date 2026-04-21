@@ -7326,6 +7326,75 @@ void test_non_informative_numeric_simplified_row_suppression()
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("0-1*cos(pi)^2*cos(pi)*cos(pi)/(-cos(pi)^2)"),
         QString::fromUtf8("cos²(pi)"));
+
+    {
+        Settings* settings = Settings::instance();
+        const char oldAngleUnit = settings->angleUnit;
+        settings->angleUnit = 'd';
+        Evaluator::instance()->initializeAngleUnits();
+
+        eval->setExpression(QStringLiteral("cos(pi)*cos(pi)*cos(pi)+cos(pi[rad])+cos(pi[rad])"));
+        eval->evalUpdateAns();
+        const QString interpreted = eval->interpretedExpression();
+        const QString simplified = Evaluator::simplifyInterpretedExpression(interpreted);
+
+        ++eval_total_tests;
+        if (eval->error().isEmpty() && simplified == interpreted) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tsimplify trig expression with explicit angle unit\t[NEW]" << endl
+                 << "\tInterpreted: " << interpreted.toUtf8().constData() << endl
+                 << "\tSimplified : " << simplified.toUtf8().constData() << endl;
+        }
+        const QString interpretedDisplay =
+            Evaluator::formatInterpretedExpressionForDisplay(interpreted);
+        const QString simplifiedDisplay =
+            Evaluator::formatInterpretedExpressionSimplifiedForDisplay(interpreted);
+        ++eval_total_tests;
+        if (eval->error().isEmpty() && simplifiedDisplay == interpretedDisplay) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tshow simplified display line for trig with explicit angle unit\t[NEW]" << endl
+                 << "\tInterpreted: " << interpretedDisplay.toUtf8().constData() << endl
+                 << "\tSimplified : " << simplifiedDisplay.toUtf8().constData() << endl;
+        }
+
+        settings->angleUnit = oldAngleUnit;
+        Evaluator::instance()->initializeAngleUnits();
+    }
+
+    {
+        Settings* settings = Settings::instance();
+        const char oldAngleUnit = settings->angleUnit;
+        settings->angleUnit = 'd';
+        Evaluator::instance()->initializeAngleUnits();
+
+        const QString expr = QString::fromUtf8(
+            "cos(pi)*cos(pi)*cos(pi)+cos(pi[rad])+cos(pi[°])+cos(pi[rad])");
+        CHECK_EVAL(expr, "-0.00600462826322460879");
+
+        eval->setExpression(expr);
+        eval->evalUpdateAns();
+        const QString interpreted = eval->interpretedExpression();
+        const QString simplified = Evaluator::simplifyInterpretedExpression(interpreted);
+
+        ++eval_total_tests;
+        const QString expectedSimplified =
+            QStringLiteral("cos(pi)^3+2")
+            + QString(MathDsl::MulDotOp)
+            + QString::fromUtf8("cos(pi[rad])+cos(pi[°])");
+        if (eval->error().isEmpty() && simplified != expectedSimplified) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tsimplify mixed explicit angle units in degree mode\t[NEW]" << endl
+                 << "\tInterpreted: " << interpreted.toUtf8().constData() << endl
+                 << "\tSimplified : " << simplified.toUtf8().constData() << endl
+                 << "\tExpected   : " << expectedSimplified.toUtf8().constData() << endl;
+        }
+
+        settings->angleUnit = oldAngleUnit;
+        Evaluator::instance()->initializeAngleUnits();
+    }
 }
 
 
