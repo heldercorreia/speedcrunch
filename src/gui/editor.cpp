@@ -2661,6 +2661,8 @@ void Editor::keyPressEvent(QKeyEvent* event)
                 typedCandidate.cend(),
                 [autoAnsEnabledForStart](const QChar& ch) {
                     return ch.isSpace()
+                           || ch == MathDsl::DotSep
+                           || ch == MathDsl::CommaSep
                            || EditorUtils::isAllowedLeadingCharAtExpressionStart(ch, autoAnsEnabledForStart);
                 });
             if (!allAllowed) {
@@ -2953,6 +2955,70 @@ void Editor::keyPressEvent(QKeyEvent* event)
     if (isTypedGroupStart && tryHandleTypedGroupStart())
         return;
 
+    const bool isTypedRadixSeparator =
+        key == Qt::Key_Period
+        || key == Qt::Key_Comma
+        || event->text() == QLatin1String(".")
+        || event->text() == QLatin1String(",")
+        || normalizedEventText == QLatin1String(".")
+        || normalizedEventText == QLatin1String(",");
+    if (isTypedRadixSeparator) {
+        if (!(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))) {
+            const QString radix = QString(QChar(this->radixChar()));
+            if (rewriteTrailingSuperscriptExponentToParenthesizedAscii(this, radix)) {
+                event->accept();
+                return;
+            }
+            const QChar prev = previousNonSpaceChar(text(), textCursor().position());
+            if (prev == QChar(this->radixChar())
+                || prev == MathDsl::DotSep
+                || prev == MathDsl::CommaSep) {
+                event->accept();
+                return;
+            }
+            const bool startsNewDecimalAfterOperator =
+                prev.isNull()
+                || prev == MathDsl::AddOp
+                || MathDsl::isSubtractionOperatorAlias(prev)
+                || MathDsl::isMultiplicationOperator(prev)
+                || MathDsl::isMultiplicationOperatorAlias(prev, true)
+                || MathDsl::isDivisionOperator(prev)
+                || MathDsl::isDivisionOperatorAlias(prev)
+                || prev == MathDsl::PercentOp
+                || prev == MathDsl::PowOp
+                || prev == MathDsl::BitAndOp
+                || prev == MathDsl::BitOrOp
+                || prev == MathDsl::Equals
+                || prev == MathDsl::LessThanOp
+                || prev == MathDsl::GreaterThanOp;
+            if (startsNewDecimalAfterOperator) {
+                insert(QStringLiteral("0") + radix);
+                event->accept();
+                return;
+            }
+            if (prev == MathDsl::GroupEnd
+                || prev == MathDsl::UnitEnd
+                || prev.isLetter()) {
+                QString prefix = MathDsl::buildWrappedToken(MathDsl::MulCrossOp, MathDsl::MulCrossWrapSp);
+                const int pos = textCursor().position();
+                if (pos > 0 && text().at(pos - 1).isSpace() && !prefix.isEmpty() && prefix.at(0).isSpace())
+                    prefix.remove(0, 1);
+                insert(prefix + QStringLiteral("0") + radix);
+                event->accept();
+                return;
+            }
+            if (!prev.isDigit()) {
+                event->accept();
+                return;
+            }
+        }
+        if (event->modifiers() == Qt::KeypadModifier) {
+            insert(QChar(this->radixChar()));
+            event->accept();
+            return;
+        }
+    }
+
     const QChar typedForRules = normalizedTypedCharFromEvent(event, normalizedEventText);
     if (key != Qt::Key_Enter
         && key != Qt::Key_Return
@@ -2991,10 +3057,13 @@ void Editor::keyPressEvent(QKeyEvent* event)
         if (MathDsl::isSubtractionOperatorAlias(prev)
             || isAnyAdditionOperator(prev)
             || MathDsl::isDivisionOperatorAlias(prev)) {
+            const bool isRadixSeparator =
+                typedForRules == MathDsl::DotSep || typedForRules == MathDsl::CommaSep;
             const bool isUnitConversionTail =
                 MathDsl::isSubtractionOperatorAlias(prev)
                 && typedForRules == UnicodeChars::GreaterThanSign;
             if (!isGroupStartLetterDigitOrCurrency(typedForRules)
+                && !isRadixSeparator
                 && !isUnitConversionTail) {
                 event->accept();
                 return;
@@ -3347,27 +3416,6 @@ void Editor::keyPressEvent(QKeyEvent* event)
                 QStringLiteral(" "));
             if (!adjusted.isEmpty())
                 insert(adjusted);
-            event->accept();
-            return;
-        }
-        break;
-
-    case Qt::Key_Period:
-    case Qt::Key_Comma:
-        if (event->modifiers() == Qt::NoModifier) {
-            const QString radix = QString(QChar(this->radixChar()));
-            if (rewriteTrailingSuperscriptExponentToParenthesizedAscii(this, radix)) {
-                event->accept();
-                return;
-            }
-            const QChar prev = previousNonSpaceChar(text(), textCursor().position());
-            if (!prev.isNull() && !prev.isDigit()) {
-                event->accept();
-                return;
-            }
-        }
-        if (event->modifiers() == Qt::KeypadModifier) {
-            insert(QChar(this->radixChar()));
             event->accept();
             return;
         }

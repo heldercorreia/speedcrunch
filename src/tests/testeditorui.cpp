@@ -54,7 +54,7 @@ private slots:
     void converts_caret_exponents_to_superscripts_globally();
     void keeps_scientific_notation_exponent_minus_unwrapped();
     void rewrites_superscript_exponent_for_radix_and_inserts_mul_space_globally();
-    void ignores_dot_and_comma_after_non_numerical_char();
+    void auto_inserts_zero_before_dot_in_configured_contexts();
     void allows_unrestricted_typing_inside_question_comment_context();
     void allows_currency_symbols_after_operators();
     void blocks_dead_circumflex_key_after_existing_caret();
@@ -1458,27 +1458,86 @@ void TestEditorUi::rewrites_superscript_exponent_for_radix_and_inserts_mul_space
              qPrintable(editor.document()->toRawText()));
 }
 
-void TestEditorUi::ignores_dot_and_comma_after_non_numerical_char()
+void TestEditorUi::auto_inserts_zero_before_dot_in_configured_contexts()
 {
     Editor editor;
     editor.show();
     QVERIFY(QTest::qWaitForWindowExposed(&editor));
     editor.setFocus();
+    const auto sendTextKey = [&editor](const QString& s) {
+        QKeyEvent byText(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, s);
+        QApplication::sendEvent(&editor, &byText);
+    };
+
+    editor.setText(QString());
+    editor.setCursorPosition(editor.text().size());
+    QTest::keyClick(&editor, Qt::Key_Period, Qt::NoModifier);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("0."));
+
+    editor.setText(QString());
+    editor.setCursorPosition(editor.text().size());
+    sendTextKey(QStringLiteral("."));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("0."));
+
+    editor.setText(QStringLiteral("1 + "));
+    editor.setCursorPosition(editor.text().size());
+    QTest::keyClick(&editor, Qt::Key_Period, Qt::NoModifier);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("1 + 0."));
+
+    editor.setText(QStringLiteral("1 + "));
+    editor.setCursorPosition(editor.text().size());
+    sendTextKey(QStringLiteral("."));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("1 + 0."));
+
+    editor.setText(QStringLiteral("   "));
+    editor.setCursorPosition(editor.text().size());
+    QTest::keyClick(&editor, Qt::Key_Period, Qt::NoModifier);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("   0."));
+
+    editor.setText(QStringLiteral("1 × "));
+    editor.setCursorPosition(editor.text().size());
+    QTest::keyClick(&editor, Qt::Key_Period, Qt::NoModifier);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("1 × 0."));
+
+    editor.setText(QStringLiteral("1 − "));
+    editor.setCursorPosition(editor.text().size());
+    QTest::keyClick(&editor, Qt::Key_Period, Qt::NoModifier);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("1 − 0."));
+
+    editor.setText(QStringLiteral("1 / "));
+    editor.setCursorPosition(editor.text().size());
+    QTest::keyClick(&editor, Qt::Key_Period, Qt::NoModifier);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("1 / 0."));
+
+    editor.setText(QStringLiteral(" (  ) "));
+    editor.setCursorPosition(editor.text().size());
+    QTest::keyClick(&editor, Qt::Key_Period, Qt::NoModifier);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral(" (  ) × 0."));
+
+    editor.setText(QStringLiteral("[x]   "));
+    editor.setCursorPosition(editor.text().size());
+    QTest::keyClick(&editor, Qt::Key_Period, Qt::NoModifier);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("[x]   × 0."));
 
     editor.setText(QStringLiteral("pi"));
     editor.setCursorPosition(editor.text().size());
     QTest::keyClick(&editor, Qt::Key_Period, Qt::NoModifier);
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("pi"));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("pi × 0."));
 
-    editor.setText(QStringLiteral("pi"));
+    editor.setText(QStringLiteral("pi  "));
     editor.setCursorPosition(editor.text().size());
     QTest::keyClick(&editor, Qt::Key_Comma, Qt::NoModifier);
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("pi"));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("pi  × 0."));
 
     editor.setText(QStringLiteral("12"));
     editor.setCursorPosition(editor.text().size());
     QTest::keyClick(&editor, Qt::Key_Period, Qt::NoModifier);
     QCOMPARE(editor.document()->toRawText(), QStringLiteral("12."));
+
+    editor.setText(QStringLiteral("0,"));
+    editor.setCursorPosition(editor.text().size());
+    QTest::keyClick(&editor, Qt::Key_Comma, Qt::NoModifier);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("0,"));
 }
 
 void TestEditorUi::allows_unrestricted_typing_inside_question_comment_context()
