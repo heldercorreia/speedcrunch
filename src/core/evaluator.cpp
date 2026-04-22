@@ -5704,6 +5704,89 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
     return stack.constLast().text;
 }
 
+bool hasMixedStandaloneExplicitAngleTermAddSub(const Tokens& tokens)
+{
+    if (tokens.isEmpty())
+        return false;
+
+    auto isTopLevelAddSub = [](const Token& token) {
+        const Token::Operator op = token.asOperator();
+        return op == Token::Addition || op == Token::Subtraction;
+    };
+
+    int parenDepth = 0;
+    int unitDepth = 0;
+    QVector<int> splitOps;
+    for (int i = 0; i < tokens.size(); ++i) {
+        const Token& token = tokens.at(i);
+        const QString text = token.text();
+        if (text == QString(MathDsl::GroupStart)) {
+            ++parenDepth;
+            continue;
+        }
+        if (text == QString(MathDsl::GroupEnd)) {
+            if (parenDepth > 0)
+                --parenDepth;
+            continue;
+        }
+        if (text == QString(MathDsl::UnitStart)) {
+            ++unitDepth;
+            continue;
+        }
+        if (text == QString(MathDsl::UnitEnd)) {
+            if (unitDepth > 0)
+                --unitDepth;
+            continue;
+        }
+        if (parenDepth == 0 && unitDepth == 0 && isTopLevelAddSub(token))
+            splitOps.append(i);
+    }
+    if (splitOps.isEmpty())
+        return false;
+
+    auto termHasFunctionCall = [&tokens](int start, int end) {
+        for (int i = start; i < end; ++i) {
+            if (!tokens.at(i).isIdentifier())
+                continue;
+            if (i + 1 < end && tokens.at(i + 1).text() == QString(MathDsl::GroupStart))
+                return true;
+        }
+        return false;
+    };
+
+    auto termHasExplicitAngleUnit = [&tokens](int start, int end) {
+        for (int i = start; i < end; ++i) {
+            if (!tokens.at(i).isUnitIdentifier())
+                continue;
+            if (Units::isExplicitAngleUnitName(tokens.at(i).text()))
+                return true;
+        }
+        return false;
+    };
+
+    bool hasStandaloneExplicitAngleTerm = false;
+    bool hasNonStandaloneExplicitAngleTerm = false;
+    int termStart = 0;
+    for (int part = 0; part <= splitOps.size(); ++part) {
+        const int termEnd = (part < splitOps.size()) ? splitOps.at(part) : tokens.size();
+        if (termStart >= termEnd) {
+            termStart = termEnd + 1;
+            continue;
+        }
+
+        const bool hasAngleUnit = termHasExplicitAngleUnit(termStart, termEnd);
+        const bool hasFunction = termHasFunctionCall(termStart, termEnd);
+        if (hasAngleUnit && !hasFunction)
+            hasStandaloneExplicitAngleTerm = true;
+        else
+            hasNonStandaloneExplicitAngleTerm = true;
+
+        termStart = termEnd + 1;
+    }
+
+    return hasStandaloneExplicitAngleTerm && hasNonStandaloneExplicitAngleTerm;
+}
+
 Quantity Evaluator::evalNoAssign()
 {
     Quantity result;
@@ -5813,6 +5896,15 @@ Quantity Evaluator::evalNoAssign()
                     tokens.erase(tokens.begin());
             } else
                 m_assignArg.clear();
+        }
+
+        if (hasMixedStandaloneExplicitAngleTermAddSub(tokens)) {
+            m_error = tr("dimension mismatch - quantities with "
+                         "different dimensions cannot be compared, "
+                         "added, etc.");
+            m_interpretedExpression = QString();
+            m_hasImplicitMultiplication = false;
+            return CNumber(0);
         }
 
         compile(tokens);

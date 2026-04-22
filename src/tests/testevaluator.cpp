@@ -1334,6 +1334,22 @@ void test_units()
     test_units_temperature_affine_conversions();
     test_units_grouping_and_inverse_presentation();
     test_units_preferred_derived_forms_regressions();
+
+    // Add/subtract must not mix a plain scalar with an explicitly unit-tagged
+    // quantity, even when the unit dimension is mathematically dimensionless.
+    CHECK_EVAL_FAIL("2 + 358 [deg]");
+    CHECK_EVAL_FAIL("2 - 358 [deg]");
+
+    // Multiplication remains valid with explicit angle units.
+    ++eval_total_tests;
+    eval->setExpression(QStringLiteral("2 * 358 [deg]"));
+    eval->evalUpdateAns();
+    if (!eval->error().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tmultiply scalar by explicit angle unit\t[NEW]" << endl
+             << "\tError: " << qPrintable(eval->error()) << endl;
+    }
 }
 
 void test_percent_operator()
