@@ -6942,6 +6942,54 @@ void test_result_display_shows_angle_mode_unit_suffix_for_explicit_angle_input()
                  << "\tExpected : simplified trig line and final = -4 line" << endl;
         }
     };
+    auto checkSimplifiedLineForMixedDegreeAliasesInResultDisplay = [&]() {
+        settings->angleUnit = 'd';
+        settings->simplifyResultExpressions = true;
+        Evaluator::instance()->initializeAngleUnits();
+        session->clearHistory();
+        const QString expr = QString::fromUtf8(
+            "cos(180[deg]) + cos(180[degree]) + cos(180 [°])+ cos(180 [deg])");
+        eval->setExpression(expr);
+        const Quantity value = eval->evalUpdateAns();
+
+        ++eval_total_tests;
+        if (!eval->error().isEmpty()) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tresult display simplified line for mixed degree aliases\t[NEW]" << endl
+                 << "\tError: " << qPrintable(eval->error()) << endl;
+            return;
+        }
+
+        session->addHistoryEntry(HistoryEntry(
+            expr,
+            value,
+            eval->interpretedExpression()));
+
+        TestableResultDisplay display;
+        display.resize(800, 600);
+        display.refresh();
+
+        const QString line1 = display.document()->findBlockByNumber(1).text();
+        QString line2 = display.document()->findBlockByNumber(2).text();
+        line2.replace(QString(MathDsl::SubOp), QString(MathDsl::SubOpAl1));
+        const bool hasSimplifiedTrigLine =
+            line1.startsWith(QStringLiteral("= "))
+            && line1.contains(QString::fromUtf8("4"))
+            && line1.contains(QString::fromUtf8("cos(180"))
+            && line1.contains(QString::fromUtf8("[°])"));
+        const bool hasFinalResultLine = line2.startsWith(QStringLiteral("= "))
+            && line2.contains(QStringLiteral("-4"));
+
+        ++eval_total_tests;
+        if (!hasSimplifiedTrigLine || !hasFinalResultLine) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tresult display simplified line for mixed degree aliases\t[NEW]" << endl
+                 << "\tText     : " << display.document()->toPlainText().toUtf8().constData() << endl
+                 << "\tExpected : simplified trig line with coefficient 4 and final = -4 line" << endl;
+        }
+    };
 
     checkAngleModeSuffix('r', Units::angleModeUnitSymbol('r'), false,
                          "result display angle suffix in radian mode");
@@ -6958,6 +7006,7 @@ void test_result_display_shows_angle_mode_unit_suffix_for_explicit_angle_input()
     checkTrigOutputHasNoAngleSuffix('d',
                                     "result display trig output has no degree suffix");
     checkSimplifiedLineForRepeatedTrigWithDegreeSignInResultDisplay();
+    checkSimplifiedLineForMixedDegreeAliasesInResultDisplay();
 
     settings->angleUnit = 'r';
     Evaluator::instance()->initializeAngleUnits();

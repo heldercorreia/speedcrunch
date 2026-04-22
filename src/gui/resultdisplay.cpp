@@ -19,6 +19,7 @@
 #include "gui/resultdisplay.h"
 
 #include "gui/displayformatutils.h"
+#include "gui/resultlineformatutils.h"
 #include "core/functions.h"
 #include "core/numberformatter.h"
 #include "core/regexpatterns.h"
@@ -315,24 +316,14 @@ QStringList formatResultLines(const HistoryEntry& entry)
     }
 
     if (settings->simplifyResultExpressions && !interpretedForSimplification.isEmpty()) {
-        QString interpreted = DisplayFormatUtils::applyDigitGroupingForDisplay(
-            Evaluator::formatInterpretedExpressionForDisplay(interpretedForSimplification));
-        QString simplified = DisplayFormatUtils::applyDigitGroupingForDisplay(
-            Evaluator::formatInterpretedExpressionSimplifiedForDisplay(interpretedForSimplification));
-        interpreted = DisplayFormatUtils::preserveConversionTargetBracketsForDisplay(
-            interpreted, entry.expr());
-        simplified = DisplayFormatUtils::preserveConversionTargetBracketsForDisplay(
-            simplified, entry.expr());
-        if (!simplified.isEmpty()
-            && simplified != interpreted
-            ) {
-            if (SimplifiedExpressionUtils::shouldSuppressSimplifiedExpressionLine(
-                    interpreted, simplified)) {
-                // Hide non-informative simplification rows for plain numeric arithmetic.
-            } else {
-                appendUniqueLine(QLatin1String("= ") + simplified);
-                emittedSimplifiedLine = true;
-            }
+        const QString simplifiedLine =
+            ResultLineFormatUtils::simplifiedExpressionLineForDisplay(
+                interpretedForSimplification,
+                entry.expr(),
+                settings->simplifyResultExpressions);
+        if (!simplifiedLine.isEmpty()) {
+            appendUniqueLine(QLatin1String("= ") + simplifiedLine);
+            emittedSimplifiedLine = true;
         }
     }
     if (!emittedSimplifiedLine
