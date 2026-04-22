@@ -1063,6 +1063,45 @@ Quantity angleUnitValueForMode(AngleUnitKind angleUnit, char angleMode)
     return Quantity(0);
 }
 
+bool tryGetPrefixedExplicitAngleUnitValueForMode(const QString& identifier,
+                                                 char angleMode,
+                                                 Quantity* out)
+{
+    if (!out)
+        return false;
+
+    const QString normalized = UnicodeChars::normalizeUnitSymbolAliases(identifier.trimmed());
+    if (normalized.isEmpty())
+        return false;
+
+    const auto tryMatchPrefix = [&](const QString& prefixText,
+                                    const Quantity& prefixValue,
+                                    Qt::CaseSensitivity caseSensitivity) {
+        if (!normalized.startsWith(prefixText, caseSensitivity))
+            return false;
+        const QString base = normalized.mid(prefixText.size());
+        const AngleUnitKind baseUnitKind = angleUnitKindFromName(base);
+        if (baseUnitKind == AngleUnitKind::None)
+            return false;
+        *out = prefixValue * angleUnitValueForMode(baseUnitKind, angleMode);
+        return true;
+    };
+
+    for (const PrefixSpec& prefix : s_siPrefixes()) {
+        if (tryMatchPrefix(prefix.longName, prefix.value, Qt::CaseInsensitive))
+            return true;
+        if (tryMatchPrefix(prefix.symbol, prefix.value, Qt::CaseSensitive))
+            return true;
+        if (prefix.id == PrefixId::Micro
+            && tryMatchPrefix(QStringLiteral("u"), prefix.value, Qt::CaseSensitive))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 QString unitName(UnitId id)
 {
     return s_unitSpecs().value(id).name;
@@ -1930,6 +1969,12 @@ QHash<QString, Quantity> Units::builtInUnitLookup(char angleMode)
     lookup.insert(unitName(UnitId::Arcsecond), angleUnitValueForMode(AngleUnitKind::Arcsecond, angleMode));
     lookup.insert(UnitAltSymbol::Arcminute, angleUnitValueForMode(AngleUnitKind::Arcminute, angleMode));
     lookup.insert(UnitAltSymbol::Arcsecond, angleUnitValueForMode(AngleUnitKind::Arcsecond, angleMode));
+
+    for (auto it = lookup.begin(); it != lookup.end(); ++it) {
+        Quantity prefixedAngleValue;
+        if (tryGetPrefixedExplicitAngleUnitValueForMode(it.key(), angleMode, &prefixedAngleValue))
+            it.value() = prefixedAngleValue;
+    }
 
     return lookup;
 }

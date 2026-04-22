@@ -3529,6 +3529,7 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("[revolution]","6.28318530717958647693 rad");
     CHECK_EVAL("[rev]","6.28318530717958647693 rad");
     CHECK_EVAL("1 [tr]", "6.28318530717958647693 rad");
+    CHECK_EVAL(QString::fromUtf8("2 [µrad]"), "0.000002 rad");
     checkAngularRateDisplayContains(QStringLiteral("1 [rev/min]"), 'r', Units::angleModeUnitSymbol('r'));
     checkAngularRateDisplayContains(QStringLiteral("1 [rev*min^-1]"), 'r', Units::angleModeUnitSymbol('r'));
     checkAngularRateDisplayContains(QStringLiteral("1 [rpm]"), 'r', Units::angleModeUnitSymbol('r'));
@@ -3568,6 +3569,7 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("[revolution]","360 °");
     CHECK_EVAL("[rev]","360 °");
     CHECK_EVAL("1 [tr]", "360 °");
+    CHECK_EVAL(QString::fromUtf8("2 [µrad]"), "0.00011459155902616464 °");
     checkAngularRateDisplayContains(QStringLiteral("1 [rev/min]"), 'd', Units::angleModeUnitSymbol('d'));
     checkAngularRateDisplayContains(QStringLiteral("1 [rev*min^-1]"), 'd', Units::angleModeUnitSymbol('d'));
     checkAngularRateDisplayContains(QStringLiteral("1 [rpm]"), 'd', Units::angleModeUnitSymbol('d'));
