@@ -43,6 +43,7 @@ private slots:
     void does_not_insert_implicit_mul_for_zero_radix_prefix_letters();
     void allows_unit_conversion_tail_after_spaced_subtraction_operator();
     void converts_double_minus_sequence_to_unit_conversion_with_placeholder();
+    void converts_double_minus_sequence_to_unit_conversion_after_masculine_ordinal_degree();
     void inserts_unit_conversion_with_placeholder_when_typing_arrow_symbol();
     void treats_spaced_unit_conversion_as_atomic_navigation_and_edit_token();
     void treats_spaced_shift_operators_as_atomic_navigation_and_edit_tokens();
@@ -740,6 +741,29 @@ void TestEditorUi::converts_double_minus_sequence_to_unit_conversion_with_placeh
         }
     }
     QVERIFY(hasUnitConversion);
+}
+
+void TestEditorUi::converts_double_minus_sequence_to_unit_conversion_after_masculine_ordinal_degree()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    editor.setText(QString::fromUtf8("12º"));
+    editor.setCursorPosition(editor.text().size());
+    QTest::keyClick(&editor, Qt::Key_Minus, Qt::NoModifier);
+    QTest::keyClick(&editor, Qt::Key_Minus, Qt::NoModifier);
+
+    const QString actual = editor.document()->toRawText();
+    const QString expected =
+        QString::fromUtf8("12°")
+        + QString(MathDsl::SubWrapSp)
+        + QString(MathDsl::TransOp)
+        + QString(MathDsl::SubWrapSp)
+        + QStringLiteral("[]");
+    QCOMPARE(actual, expected);
+    QCOMPARE(editor.textCursor().position(), actual.size() - 1);
 }
 
 void TestEditorUi::inserts_unit_conversion_with_placeholder_when_typing_arrow_symbol()

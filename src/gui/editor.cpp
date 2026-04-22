@@ -442,7 +442,9 @@ static bool canEndUnitConversionLeftOperand(const QChar& ch)
 {
     return ch.isLetterOrNumber()
         || ch == MathDsl::GroupEnd
-        || ch == MathDsl::UnitEnd;
+        || ch == MathDsl::UnitEnd
+        || ch == UnicodeChars::DegreeSign
+        || ch == UnicodeChars::MasculineOrdinalIndicator;
 }
 
 static bool isBlockingBinaryOperator(const QChar& ch)
