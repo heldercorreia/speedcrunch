@@ -83,6 +83,9 @@ private slots:
     void tooltip_does_not_append_angle_mode_symbol_after_explicit_arcsecond_unit();
     void tooltip_shows_radian_suffix_for_negative_sexagesimal_literal();
     void tooltip_trig_output_does_not_append_angle_mode_suffix();
+    void tooltip_shows_interpreted_expression_for_non_trig_sexagesimal_expression();
+    void tooltip_shows_simplified_line_for_repeated_trig_with_degree_sign();
+    void tooltip_shows_simplified_line_for_mixed_revolution_aliases();
     void tooltip_keeps_quantsp_before_degree_celsius();
     void tooltip_handles_affine_temperature_units_without_arrow_and_with_conversion();
     void tooltip_shows_selection_result_when_selecting_with_shift_arrows();
@@ -2223,14 +2226,138 @@ void TestEditorUi::tooltip_trig_output_does_not_append_angle_mode_suffix()
         normalizedMessage.replace(QString(MathDsl::SubOp), QString(MathDsl::SubOpAl1));
         QVERIFY2(normalizedMessage.contains(QStringLiteral("= -1")),
                  qPrintable(QStringLiteral("Expected scalar trig result, got: %1").arg(message)));
-        QVERIFY2(!message.contains(c.forbiddenSuffix),
-                 qPrintable(QStringLiteral("Unexpected angle suffix in tooltip: %1").arg(message)));
+        QVERIFY2(message.contains(QString::fromUtf8("cos(180°)")),
+                 qPrintable(QStringLiteral("Expected interpreted expression line, got: %1").arg(message)));
+        const QStringList lines = normalizedMessage.split(QStringLiteral("<br/>"));
+        QVERIFY2(!lines.isEmpty(),
+                 qPrintable(QStringLiteral("Unexpected empty tooltip message: %1").arg(message)));
+        const QString resultLine = lines.last();
+        QVERIFY2(!resultLine.contains(c.forbiddenSuffix),
+                 qPrintable(QStringLiteral("Unexpected angle suffix in tooltip result line: %1").arg(message)));
         QVERIFY(!message.contains(QString(MathDsl::UnitStart)));
         QVERIFY(!message.contains(QString(MathDsl::UnitEnd)));
     }
 
     settings->angleUnit = oldAngleUnit;
     settings->resultFormat = oldResultFormat;
+    Evaluator::instance()->initializeAngleUnits();
+}
+
+void TestEditorUi::tooltip_shows_interpreted_expression_for_non_trig_sexagesimal_expression()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    Settings* settings = Settings::instance();
+    const char oldAngleUnit = settings->angleUnit;
+    const char oldResultFormat = settings->resultFormat;
+    settings->angleUnit = 'd';
+    settings->resultFormat = 'f';
+    Evaluator::instance()->initializeAngleUnits();
+
+    QSignalSpy spy(&editor, SIGNAL(autoCalcMessageAvailable(const QString&)));
+
+    const QString expression =
+        QString::fromUtf8("round(2.8°) + round(2.8°) + round(2.8°)");
+    editor.setText(expression);
+    editor.setCursorPosition(editor.text().size());
+    editor.refreshAutoCalc();
+    QCoreApplication::processEvents();
+
+    QVERIFY(!spy.isEmpty());
+    const QString message = spy.takeLast().at(0).toString();
+    QVERIFY2(message.contains(QString::fromUtf8("round(2.8°)")),
+             qPrintable(QStringLiteral("Expected interpreted expression line, got: %1").arg(message)));
+    QVERIFY2(message.contains(QString::fromUtf8("= 9°")),
+             qPrintable(QStringLiteral("Expected degree result line, got: %1").arg(message)));
+
+    settings->angleUnit = oldAngleUnit;
+    settings->resultFormat = oldResultFormat;
+    Evaluator::instance()->initializeAngleUnits();
+}
+
+void TestEditorUi::tooltip_shows_simplified_line_for_repeated_trig_with_degree_sign()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    Settings* settings = Settings::instance();
+    const char oldAngleUnit = settings->angleUnit;
+    const char oldResultFormat = settings->resultFormat;
+    const bool oldSimplify = settings->simplifyResultExpressions;
+    settings->angleUnit = 'd';
+    settings->resultFormat = 'f';
+    settings->simplifyResultExpressions = true;
+    Evaluator::instance()->initializeAngleUnits();
+
+    QSignalSpy spy(&editor, SIGNAL(autoCalcMessageAvailable(const QString&)));
+
+    const QString expression = QString::fromUtf8(
+        "cos(180°) + cos(180°) + cos(180°) + cos(180°)");
+    editor.setText(expression);
+    editor.setCursorPosition(editor.text().size());
+    editor.refreshAutoCalc();
+    QCoreApplication::processEvents();
+
+    QVERIFY(!spy.isEmpty());
+    const QString message = spy.takeLast().at(0).toString();
+    QString normalizedMessage = message;
+    normalizedMessage.replace(QString(MathDsl::SubOp), QString(MathDsl::SubOpAl1));
+    QVERIFY2(message.contains(QString::fromUtf8("= 4 · cos(180"))
+             && message.contains(QString::fromUtf8("[°])")),
+             qPrintable(QStringLiteral("Expected simplified line, got: %1").arg(message)));
+    QVERIFY2(normalizedMessage.contains(QStringLiteral("= -4")),
+             qPrintable(QStringLiteral("Expected result line, got: %1").arg(message)));
+
+    settings->angleUnit = oldAngleUnit;
+    settings->resultFormat = oldResultFormat;
+    settings->simplifyResultExpressions = oldSimplify;
+    Evaluator::instance()->initializeAngleUnits();
+}
+
+void TestEditorUi::tooltip_shows_simplified_line_for_mixed_revolution_aliases()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    Settings* settings = Settings::instance();
+    const char oldAngleUnit = settings->angleUnit;
+    const char oldResultFormat = settings->resultFormat;
+    const bool oldSimplify = settings->simplifyResultExpressions;
+    settings->angleUnit = 'd';
+    settings->resultFormat = 'f';
+    settings->simplifyResultExpressions = true;
+    Evaluator::instance()->initializeAngleUnits();
+
+    QSignalSpy spy(&editor, SIGNAL(autoCalcMessageAvailable(const QString&)));
+
+    const QString expression = QString::fromUtf8(
+        "cos(180[rev]) + cos(180[rev]) + cos(180[rev]) + cos(180 [revolution])");
+    editor.setText(expression);
+    editor.setCursorPosition(editor.text().size());
+    editor.refreshAutoCalc();
+    QCoreApplication::processEvents();
+
+    QVERIFY(!spy.isEmpty());
+    const QString message = spy.takeLast().at(0).toString();
+    QString compactMessage = message;
+    compactMessage.remove(QRegularExpression(QStringLiteral("\\s+")));
+    compactMessage.remove(MathDsl::QuantSp);
+    compactMessage.remove(UnicodeChars::NoBreakSpace);
+    QVERIFY2(!message.contains(QString::fromUtf8("3 · cos(180")),
+             qPrintable(QStringLiteral("Expected folded repeated term, got: %1").arg(message)));
+    QVERIFY2(compactMessage.contains(QString::fromUtf8("=4·cos(180[rev])")),
+             qPrintable(QStringLiteral("Expected unified simplified line, got: %1").arg(message)));
+
+    settings->angleUnit = oldAngleUnit;
+    settings->resultFormat = oldResultFormat;
+    settings->simplifyResultExpressions = oldSimplify;
     Evaluator::instance()->initializeAngleUnits();
 }
 

@@ -2699,11 +2699,150 @@ static QString simplifyRepeatedMultiplicativeBasesForDisplay(const QString& expr
     }
 
     if (!keptTerms.isEmpty()) {
+        auto canonicalizeBuiltInUnitAliases = [](const QString& termText) {
+            const Tokens termTokens = Evaluator::instance()->scan(termText);
+            if (!termTokens.valid() || termTokens.isEmpty())
+                return termText;
+
+            QString canonical = termText;
+            int offset = 0;
+            for (const Token& token : termTokens) {
+                const bool isBuiltInUnitToken =
+                    token.isUnitIdentifier()
+                    || (token.isIdentifier() && s_isBuiltInUnitIdentifier(token.text()));
+                if (!isBuiltInUnitToken)
+                    continue;
+
+                const QString normalizedUnit = normalizeUnitName(token.text());
+                if (normalizedUnit.isEmpty() || normalizedUnit == token.text())
+                    continue;
+
+                const int start = token.pos() + offset;
+                if (start < 0 || start + token.size() > canonical.size())
+                    continue;
+                canonical.replace(start, token.size(), normalizedUnit);
+                offset += normalizedUnit.size() - token.size();
+            }
+
+            // Normalize bracketed aliases too ("[rev]" vs "[revolution]")
+            // so additive term merging can treat them as the same base.
+            int searchPos = 0;
+            while (true) {
+                const QRegularExpressionMatch m =
+                    RegExpPatterns::bracketedSimpleUnitIdentifier().match(canonical, searchPos);
+                if (!m.hasMatch())
+                    break;
+                const QString rawIdentifier = m.captured(1);
+                if (!s_isBuiltInUnitIdentifier(rawIdentifier)) {
+                    searchPos = m.capturedEnd();
+                    continue;
+                }
+                const QString normalizedUnit = normalizeUnitName(rawIdentifier);
+                if (!normalizedUnit.isEmpty()) {
+                    const QString replacement = QStringLiteral("[%1]").arg(normalizedUnit);
+                    canonical.replace(m.capturedStart(), m.capturedLength(), replacement);
+                    searchPos = m.capturedStart() + replacement.size();
+                } else {
+                    searchPos = m.capturedEnd();
+                }
+            }
+            canonical.remove(QRegularExpression(QStringLiteral("\\s+")));
+            return canonical;
+        };
+
         QHash<QString, double> termCoefficients;
         QVector<QString> termOrder;
+        QHash<QString, QString> termDisplayByKey;
+        auto splitLeadingNumericCoefficient = [](const QString& termText,
+                                                 QString* baseOut,
+                                                 double* coefficientOut) {
+            const Tokens t = Evaluator::instance()->scan(termText);
+            if (t.valid() && t.size() >= 3
+                && t.at(0).isNumber()
+                && t.at(1).asOperator() == Token::Multiplication) {
+                const QString coeffText = t.at(0).text().trimmed();
+                if (isSignedDecimalNumberText(coeffText) && isSafeForDoubleArithmetic(coeffText)) {
+                    bool ok = false;
+                    const double coefficient = coeffText.toDouble(&ok);
+                    if (ok) {
+                        const int baseStart = t.at(2).pos();
+                        const int baseEnd = t.at(t.size() - 1).pos() + t.at(t.size() - 1).size();
+                        if (baseStart >= 0 && baseEnd > baseStart && baseEnd <= termText.size()) {
+                            const QString base = termText.mid(baseStart, baseEnd - baseStart).trimmed();
+                            if (!base.isEmpty()) {
+                                *baseOut = base;
+                                *coefficientOut = coefficient;
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            const QString trimmed = termText.trimmed();
+            int i = 0;
+            bool hasNegativePrefix = false;
+            if (i < trimmed.size() && (trimmed.at(i) == MathDsl::AddOp || isMinus(trimmed.at(i)))) {
+                hasNegativePrefix = isMinus(trimmed.at(i));
+                ++i;
+            }
+            int numberStart = i;
+            bool seenDigit = false;
+            bool seenDot = false;
+            while (i < trimmed.size()) {
+                const QChar ch = trimmed.at(i);
+                if (ch.isDigit()) {
+                    seenDigit = true;
+                    ++i;
+                    continue;
+                }
+                if (!seenDot && ch == QLatin1Char('.')) {
+                    seenDot = true;
+                    ++i;
+                    continue;
+                }
+                break;
+            }
+            if (!seenDigit)
+                return false;
+            QString coeffText = trimmed.mid(numberStart, i - numberStart);
+            if (hasNegativePrefix)
+                coeffText.prepend(MathDsl::SubOpAl1);
+            while (i < trimmed.size() && trimmed.at(i).isSpace())
+                ++i;
+            if (i >= trimmed.size())
+                return false;
+            const QChar op = trimmed.at(i);
+            // Fallback path for formatted text where scanner token kinds can
+            // vary; keep operator matching on MathDsl multiplication symbols.
+            const bool isMulOp =
+                op == MathDsl::MulOpAl1
+                || op == MathDsl::MulDotOp
+                || op == MathDsl::MulCrossOp;
+            if (!isMulOp)
+                return false;
+            ++i;
+            while (i < trimmed.size() && trimmed.at(i).isSpace())
+                ++i;
+            if (i >= trimmed.size())
+                return false;
+            const QString base = trimmed.mid(i).trimmed();
+            if (base.isEmpty())
+                return false;
+
+            if (!isSignedDecimalNumberText(coeffText) || !isSafeForDoubleArithmetic(coeffText))
+                return false;
+            bool ok = false;
+            const double coefficient = coeffText.toDouble(&ok);
+            if (!ok)
+                return false;
+            *baseOut = base;
+            *coefficientOut = coefficient;
+            return true;
+        };
         for (int i = 0; i < keptTerms.size(); ++i) {
             QString term = keptTerms.at(i).trimmed();
-            QString op = (i == 0) ? QStringLiteral("+") : keptOperators.at(i - 1);
+            QString op = (i == 0) ? QString(MathDsl::AddOp) : keptOperators.at(i - 1);
 
             if (!term.isEmpty()) {
                 bool termNegative = false;
@@ -2724,25 +2863,35 @@ static QString simplifyRepeatedMultiplicativeBasesForDisplay(const QString& expr
                 if (signPos > 0) {
                     term = term.mid(signPos).trimmed();
                     if (termNegative)
-                        op = isMinusOperator(op) ? QStringLiteral("+") : QStringLiteral("-");
+                        op = isMinusOperator(op) ? QString(MathDsl::AddOp) : QString(MathDsl::SubOpAl1);
                 }
             }
 
             if (term.isEmpty())
                 continue;
 
-            const double signedCoefficient = isMinusOperator(op) ? -1.0 : 1.0;
-            if (!termCoefficients.contains(term))
-                termOrder.append(term);
-            termCoefficients[term] += signedCoefficient;
+            double numericFactor = 1.0;
+            QString baseTerm = term;
+            if (splitLeadingNumericCoefficient(term, &baseTerm, &numericFactor))
+                term = baseTerm;
+
+            const double signedCoefficient =
+                (isMinusOperator(op) ? -1.0 : 1.0) * numericFactor;
+            const QString termKey = canonicalizeBuiltInUnitAliases(term);
+            if (!termCoefficients.contains(termKey)) {
+                termOrder.append(termKey);
+                termDisplayByKey.insert(termKey, term);
+            }
+            termCoefficients[termKey] += signedCoefficient;
         }
 
         QVector<QString> mergedTerms;
         QVector<QString> mergedOperators;
-        for (const QString& term : termOrder) {
-            const double coefficient = termCoefficients.value(term, 0.0);
+        for (const QString& termKey : termOrder) {
+            const double coefficient = termCoefficients.value(termKey, 0.0);
             if (std::abs(coefficient) < 1e-12)
                 continue;
+            const QString term = termDisplayByKey.value(termKey, termKey);
 
             const bool isNegative = coefficient < 0.0;
             const double magnitude = std::abs(coefficient);
@@ -2757,9 +2906,9 @@ static QString simplifyRepeatedMultiplicativeBasesForDisplay(const QString& expr
             }
 
             if (mergedTerms.isEmpty()) {
-                mergedTerms.append(isNegative ? QStringLiteral("-") + mergedTerm : mergedTerm);
+                mergedTerms.append(isNegative ? QString(MathDsl::SubOpAl1) + mergedTerm : mergedTerm);
             } else {
-                mergedOperators.append(isNegative ? QStringLiteral("-") : QStringLiteral("+"));
+                mergedOperators.append(isNegative ? QString(MathDsl::SubOpAl1) : QString(MathDsl::AddOp));
                 mergedTerms.append(mergedTerm);
             }
         }

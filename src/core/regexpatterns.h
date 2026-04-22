@@ -158,6 +158,15 @@ inline const QRegularExpression& unitBrackets()
     return pattern;
 }
 
+// Matches one bracketed simple unit identifier and captures the identifier.
+// Example input/output: "[rev]" -> match with group "rev"; "[kg·m]" -> no match.
+inline const QRegularExpression& bracketedSimpleUnitIdentifier()
+{
+    static const QRegularExpression pattern(
+        QStringLiteral(R"(\[\s*([A-Za-z_µμΩ°º][A-Za-z0-9_µμΩ°º]*)\s*\])"));
+    return pattern;
+}
+
 // Matches a missing quantity-space before unit bracket.
 // Example input/output: "1[kg]" -> match "1[" with group "1".
 inline const QRegularExpression& missingQuantSpBeforeUnit()

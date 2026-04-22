@@ -302,11 +302,23 @@ QStringList formatResultLines(const HistoryEntry& entry)
         if (!lines.contains(displayLine))
             lines.append(displayLine);
     };
-    if (settings->simplifyResultExpressions && !entry.interpretedExpr().isEmpty()) {
+    QString interpretedForSimplification = entry.interpretedExpr();
+    if (interpretedForSimplification.isEmpty()) {
+        // Keep committed-result behavior aligned with tooltip behavior:
+        // explicit angle markers can leave interpretedExpr empty even though
+        // the source expression is simplifiable.
+        const bool sourceHasExplicitAngles =
+            expressionContainsExplicitBracketedAngleUnit(entry.expr())
+            || expressionContainsExplicitSexagesimalAngleMarkers(entry.expr());
+        if (sourceHasExplicitAngles)
+            interpretedForSimplification = entry.expr();
+    }
+
+    if (settings->simplifyResultExpressions && !interpretedForSimplification.isEmpty()) {
         QString interpreted = DisplayFormatUtils::applyDigitGroupingForDisplay(
-            Evaluator::formatInterpretedExpressionForDisplay(entry.interpretedExpr()));
+            Evaluator::formatInterpretedExpressionForDisplay(interpretedForSimplification));
         QString simplified = DisplayFormatUtils::applyDigitGroupingForDisplay(
-            Evaluator::formatInterpretedExpressionSimplifiedForDisplay(entry.interpretedExpr()));
+            Evaluator::formatInterpretedExpressionSimplifiedForDisplay(interpretedForSimplification));
         interpreted = DisplayFormatUtils::preserveConversionTargetBracketsForDisplay(
             interpreted, entry.expr());
         simplified = DisplayFormatUtils::preserveConversionTargetBracketsForDisplay(
