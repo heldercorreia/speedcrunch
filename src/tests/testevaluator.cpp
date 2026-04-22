@@ -3836,6 +3836,25 @@ void test_display_interpreted_spacing()
             + dotSpaced
             + QStringLiteral("sin(pi)"));
     CHECK_DISPLAY_INTERPRETED(
+        QString::fromUtf8("2 * 358 [deg]"),
+        QString::fromUtf8("2")
+            + times
+            + QStringLiteral("358")
+            + QString(MathDsl::QuantSp)
+            + QString::fromUtf8("[°]"));
+    CHECK_DISPLAY_INTERPRETED(
+        QString::fromUtf8("2 [deg] * 3"),
+        QStringLiteral("2")
+            + QString(MathDsl::QuantSp)
+            + QString::fromUtf8("[°]")
+            + times
+            + QStringLiteral("3"));
+    CHECK_DISPLAY_INTERPRETED(
+        QString::fromUtf8("2 * x"),
+        QString::fromUtf8("2")
+            + dotSpaced
+            + QStringLiteral("x"));
+    CHECK_DISPLAY_INTERPRETED(
         QString::fromUtf8("2 sin pi cos pi + 2"),
         QString::fromUtf8("2")
             + dotSpaced
@@ -4102,7 +4121,7 @@ void test_display_interpreted_spacing()
         QString::fromUtf8("foo1²")
             + plus
             + QString::fromUtf8("foo1⁹")
-            + times
+            + dotSpaced
             + QStringLiteral("2"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("sin(pi)*sin(pi)"),

@@ -988,6 +988,228 @@ static bool startsWithImaginaryLiteralForDisplay(const Tokens& tokens, int start
         && isImaginaryUnitTokenForDisplay(tokens.at(startIndex + 2));
 }
 
+static bool isStandaloneNumericLiteralOperandForDisplay(const Tokens& tokens,
+                                                        int startIndex,
+                                                        int endIndex)
+{
+    if (startIndex < 0 || endIndex >= tokens.size() || startIndex > endIndex)
+        return false;
+
+    int start = startIndex;
+    int end = endIndex;
+
+    while (start <= end) {
+        const Token::Operator op = tokens.at(start).asOperator();
+        if (op == Token::Addition
+            || op == Token::Subtraction
+            || op == Token::BitwiseLogicalNOT) {
+            ++start;
+            continue;
+        }
+        break;
+    }
+    while (start <= end) {
+        const Token::Operator op = tokens.at(end).asOperator();
+        if (op == Token::Percent || op == Token::Factorial) {
+            --end;
+            continue;
+        }
+        break;
+    }
+    if (start > end)
+        return false;
+
+    if (tokens.at(end).text() == QString(MathDsl::UnitEnd)) {
+        int depth = 0;
+        int unitStart = -1;
+        for (int i = end; i >= start; --i) {
+            const QString text = tokens.at(i).text();
+            if (text == QString(MathDsl::UnitEnd)) {
+                ++depth;
+                continue;
+            }
+            if (text == QString(MathDsl::UnitStart)) {
+                --depth;
+                if (depth == 0) {
+                    unitStart = i;
+                    break;
+                }
+            }
+        }
+        if (unitStart < 0)
+            return false;
+        end = unitStart - 1;
+        if (start > end)
+            return false;
+    }
+
+    if (start == end && tokens.at(start).isNumber())
+        return true;
+
+    if (tokens.at(start).asOperator() == Token::AssociationStart
+        && tokens.at(end).asOperator() == Token::AssociationEnd) {
+        int depth = 0;
+        for (int i = start; i <= end; ++i) {
+            const Token::Operator op = tokens.at(i).asOperator();
+            if (op == Token::AssociationStart)
+                ++depth;
+            else if (op == Token::AssociationEnd)
+                --depth;
+            if (depth == 0 && i < end)
+                return false;
+        }
+        return isStandaloneNumericLiteralOperandForDisplay(tokens, start + 1, end - 1);
+    }
+
+    return false;
+}
+
+static bool isHardcodedNumericOperandOnLeftOfMultiplicationForDisplay(const Tokens& tokens,
+                                                                      int mulIndex)
+{
+    if (mulIndex <= 0 || mulIndex >= tokens.size())
+        return false;
+
+    int end = mulIndex - 1;
+    int start = end;
+
+    if (tokens.at(end).text() == QString(MathDsl::UnitEnd)) {
+        int depth = 0;
+        int unitStart = -1;
+        for (int i = end; i >= 0; --i) {
+            const QString text = tokens.at(i).text();
+            if (text == QString(MathDsl::UnitEnd)) {
+                ++depth;
+                continue;
+            }
+            if (text == QString(MathDsl::UnitStart)) {
+                --depth;
+                if (depth == 0) {
+                    unitStart = i;
+                    break;
+                }
+            }
+        }
+        if (unitStart < 1)
+            return false;
+        start = unitStart - 1;
+    }
+
+    if (tokens.at(start).asOperator() == Token::AssociationEnd) {
+        int depth = 0;
+        int groupStart = -1;
+        for (int i = start; i >= 0; --i) {
+            const Token::Operator op = tokens.at(i).asOperator();
+            if (op == Token::AssociationEnd) {
+                ++depth;
+                continue;
+            }
+            if (op == Token::AssociationStart) {
+                --depth;
+                if (depth == 0) {
+                    groupStart = i;
+                    break;
+                }
+            }
+        }
+        if (groupStart < 0)
+            return false;
+        // "(...)" immediately preceded by an identifier is a function call
+        // operand (e.g. "sin(...)"), not a hardcoded numeric literal.
+        if (groupStart > 0 && tokens.at(groupStart - 1).isIdentifier())
+            return false;
+        start = groupStart;
+    }
+
+    if (start > 0) {
+        const Token& previous = tokens.at(start - 1);
+        const Token::Operator previousOp = previous.asOperator();
+        if (tokenCanEndOperandForDisplaySpacing(previous)
+            || previousOp == Token::Exponentiation) {
+            return false;
+        }
+    }
+
+    return isStandaloneNumericLiteralOperandForDisplay(tokens, start, end);
+}
+
+static bool isHardcodedNumericOperandOnRightOfMultiplicationForDisplay(const Tokens& tokens,
+                                                                       int mulIndex)
+{
+    if (mulIndex < 0 || mulIndex >= tokens.size() - 1)
+        return false;
+
+    int start = mulIndex + 1;
+    int end = start;
+
+    const Token::Operator leadingOp = tokens.at(start).asOperator();
+    if (leadingOp == Token::Addition
+        || leadingOp == Token::Subtraction
+        || leadingOp == Token::BitwiseLogicalNOT) {
+        ++end;
+        if (end >= tokens.size())
+            return false;
+    }
+
+    if (tokens.at(end).asOperator() == Token::AssociationStart) {
+        int depth = 0;
+        int groupEnd = -1;
+        for (int i = end; i < tokens.size(); ++i) {
+            const Token::Operator op = tokens.at(i).asOperator();
+            if (op == Token::AssociationStart) {
+                ++depth;
+                continue;
+            }
+            if (op == Token::AssociationEnd) {
+                --depth;
+                if (depth == 0) {
+                    groupEnd = i;
+                    break;
+                }
+            }
+        }
+        if (groupEnd < 0)
+            return false;
+        end = groupEnd;
+    } else if (tokens.at(end).isNumber()) {
+        if (end + 1 < tokens.size() && tokens.at(end + 1).text() == QString(MathDsl::UnitStart)) {
+            int depth = 0;
+            int unitEnd = -1;
+            for (int i = end + 1; i < tokens.size(); ++i) {
+                const QString text = tokens.at(i).text();
+                if (text == QString(MathDsl::UnitStart)) {
+                    ++depth;
+                    continue;
+                }
+                if (text == QString(MathDsl::UnitEnd)) {
+                    --depth;
+                    if (depth == 0) {
+                        unitEnd = i;
+                        break;
+                    }
+                }
+            }
+            if (unitEnd < 0)
+                return false;
+            end = unitEnd;
+        }
+    }
+
+    while (end + 1 < tokens.size()) {
+        const Token::Operator op = tokens.at(end + 1).asOperator();
+        if (op == Token::Percent || op == Token::Factorial) {
+            ++end;
+            continue;
+        }
+        break;
+    }
+
+    if (end + 1 < tokens.size() && tokens.at(end + 1).asOperator() == Token::Exponentiation)
+        return false;
+
+    return isStandaloneNumericLiteralOperandForDisplay(tokens, start, end);
+}
+
 static bool isUnsignedDecimalIntegerText(const QString& text)
 {
     return RegExpPatterns::unsignedDecimalInteger().match(text).hasMatch();
@@ -3397,7 +3619,11 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
         }
 
         if (op == Token::Multiplication) {
-            const QChar mulSign = displayTokenText == QString(MathDsl::MulCrossOp)
+            const bool hasNumericLiteralLhs =
+                isHardcodedNumericOperandOnLeftOfMultiplicationForDisplay(tokens, i);
+            const bool hasNumericLiteralRhs =
+                isHardcodedNumericOperandOnRightOfMultiplicationForDisplay(tokens, i);
+            const QChar mulSign = (hasNumericLiteralLhs && hasNumericLiteralRhs)
                 ? MathDsl::MulCrossOp
                 : MathDsl::MulDotOp;
             const QChar mulSpace = mulSign == MathDsl::MulCrossOp
