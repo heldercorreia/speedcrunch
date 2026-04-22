@@ -2269,8 +2269,24 @@ void test_sexagesimal()
     CHECK_EVAL_FORMAT("34.5'\"", "0°34′30.00″");
     CHECK_EVAL_FORMAT("34.5[arcminute]", "0°34′30.00″");
     CHECK_EVAL_FORMAT("34'56", "0°34′56.00″");
-    CHECK_INTERPRETED("34'56", "");
-    CHECK_INTERPRETED("°34", "");
+    eval->setExpression(QStringLiteral("34'56"));
+    eval->evalUpdateAns();
+    ++eval_total_tests;
+    if (eval->error().isEmpty() && eval->interpretedExpression().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tsexagesimal interpreted expression is not empty\t[NEW]" << endl
+             << "\tExpression: 34'56" << endl;
+    }
+    eval->setExpression(QString::fromUtf8("°34"));
+    eval->evalUpdateAns();
+    ++eval_total_tests;
+    if (eval->error().isEmpty() && eval->interpretedExpression().isEmpty()) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tsexagesimal interpreted expression is not empty\t[NEW]" << endl
+             << "\tExpression: °34" << endl;
+    }
     CHECK_EVAL_FORMAT("12°", "12°00′00.00″");
     CHECK_EVAL_FORMAT(QString::fromUtf8("12º"), "12°00′00.00″");
     CHECK_EVAL_FORMAT(QString::fromUtf8("12˚"), "12°00′00.00″");

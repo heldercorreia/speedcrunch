@@ -406,29 +406,27 @@ QStringList formatResultLines(const HistoryEntry& entry)
 
 QString formattedExpressionForDisplay(const HistoryEntry& entry)
 {
-    if (!entry.interpretedExpr().isEmpty()) {
-        const QString displayed = DisplayFormatUtils::applyDigitGroupingForDisplay(
-            UnicodeChars::normalizePiForDisplay(
-                Evaluator::formatInterpretedExpressionForDisplay(entry.interpretedExpr())));
-        return DisplayFormatUtils::preserveConversionTargetBracketsForDisplay(
-            displayed, entry.expr());
-    }
-    return DisplayFormatUtils::applyDigitGroupingForDisplay(
-        UnicodeChars::normalizePiForDisplay(entry.expr()));
+    const QString interpretedSource = entry.interpretedExpr().isEmpty()
+        ? entry.expr()
+        : entry.interpretedExpr();
+    const QString displayed = DisplayFormatUtils::applyDigitGroupingForDisplay(
+        UnicodeChars::normalizePiForDisplay(
+            Evaluator::formatInterpretedExpressionForDisplay(interpretedSource)));
+    return DisplayFormatUtils::preserveConversionTargetBracketsForDisplay(
+        displayed, entry.expr());
 }
 
 QString formattedExpressionForDisplay(const QString& expression,
                                      const QString& interpretedExpression)
 {
-    if (!interpretedExpression.isEmpty()) {
-        const QString displayed = DisplayFormatUtils::applyDigitGroupingForDisplay(
-            UnicodeChars::normalizePiForDisplay(
-                Evaluator::formatInterpretedExpressionForDisplay(interpretedExpression)));
-        return DisplayFormatUtils::preserveConversionTargetBracketsForDisplay(
-            displayed, expression);
-    }
-    return DisplayFormatUtils::applyDigitGroupingForDisplay(
-        UnicodeChars::normalizePiForDisplay(expression));
+    const QString interpretedSource = interpretedExpression.isEmpty()
+        ? expression
+        : interpretedExpression;
+    const QString displayed = DisplayFormatUtils::applyDigitGroupingForDisplay(
+        UnicodeChars::normalizePiForDisplay(
+            Evaluator::formatInterpretedExpressionForDisplay(interpretedSource)));
+    return DisplayFormatUtils::preserveConversionTargetBracketsForDisplay(
+        displayed, expression);
 }
 
 }

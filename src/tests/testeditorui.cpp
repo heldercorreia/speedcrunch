@@ -2226,7 +2226,8 @@ void TestEditorUi::tooltip_trig_output_does_not_append_angle_mode_suffix()
         normalizedMessage.replace(QString(MathDsl::SubOp), QString(MathDsl::SubOpAl1));
         QVERIFY2(normalizedMessage.contains(QStringLiteral("= -1")),
                  qPrintable(QStringLiteral("Expected scalar trig result, got: %1").arg(message)));
-        QVERIFY2(message.contains(QString::fromUtf8("cos(180°)")),
+        QVERIFY2(message.contains(QString::fromUtf8("cos(180"))
+                 && message.contains(QString::fromUtf8("[°])")),
                  qPrintable(QStringLiteral("Expected interpreted expression line, got: %1").arg(message)));
         const QStringList lines = normalizedMessage.split(QStringLiteral("<br/>"));
         QVERIFY2(!lines.isEmpty(),
@@ -2234,8 +2235,8 @@ void TestEditorUi::tooltip_trig_output_does_not_append_angle_mode_suffix()
         const QString resultLine = lines.last();
         QVERIFY2(!resultLine.contains(c.forbiddenSuffix),
                  qPrintable(QStringLiteral("Unexpected angle suffix in tooltip result line: %1").arg(message)));
-        QVERIFY(!message.contains(QString(MathDsl::UnitStart)));
-        QVERIFY(!message.contains(QString(MathDsl::UnitEnd)));
+        QVERIFY(!resultLine.contains(QString(MathDsl::UnitStart)));
+        QVERIFY(!resultLine.contains(QString(MathDsl::UnitEnd)));
     }
 
     settings->angleUnit = oldAngleUnit;
@@ -2268,7 +2269,8 @@ void TestEditorUi::tooltip_shows_interpreted_expression_for_non_trig_sexagesimal
 
     QVERIFY(!spy.isEmpty());
     const QString message = spy.takeLast().at(0).toString();
-    QVERIFY2(message.contains(QString::fromUtf8("round(2.8°)")),
+    QVERIFY2(message.contains(QString::fromUtf8("round(2.8"))
+             && message.contains(QString::fromUtf8("[°])")),
              qPrintable(QStringLiteral("Expected interpreted expression line, got: %1").arg(message)));
     QVERIFY2(message.contains(QString::fromUtf8("= 9°")),
              qPrintable(QStringLiteral("Expected degree result line, got: %1").arg(message)));

@@ -5824,6 +5824,9 @@ Quantity Evaluator::evalNoAssign()
             return CNumber(0);
         }
 
+        if (m_interpretedExpression.isEmpty() && !tokens.isEmpty())
+            m_interpretedExpression = expressionToParse.trimmed();
+
         if (!m_assignId.isEmpty() && !m_interpretedExpression.isEmpty()) {
             if (m_assignFunc) {
                 const QString leftSide = QStringLiteral("%1(%2)").arg(
