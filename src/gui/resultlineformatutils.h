@@ -11,6 +11,7 @@
 
 #include "core/evaluator.h"
 #include "core/mathdsl.h"
+#include "core/numberformatter.h"
 #include "core/regexpatterns.h"
 #include "core/settings.h"
 #include "core/unicodechars.h"
@@ -220,6 +221,306 @@ inline QString simplifiedExpressionLineForDisplay(const QString& interpretedExpr
         return QString();
 
     return foldRepeatedAdditiveTermsForDisplay(simplifiedDisplay);
+}
+
+inline QString formattedExpressionLineForDisplay(const QString& sourceExpression,
+                                                 const QString& interpretedExpression)
+{
+    const QString interpretedSource = interpretedExpression.isEmpty()
+        ? sourceExpression
+        : interpretedExpression;
+    const QString displayed = DisplayFormatUtils::applyDigitGroupingForDisplay(
+        UnicodeChars::normalizePiForDisplay(
+            Evaluator::formatInterpretedExpressionForDisplay(interpretedSource)));
+    return DisplayFormatUtils::preserveConversionTargetBracketsForDisplay(
+        displayed, sourceExpression);
+}
+
+inline QString trimTrailingFractionZeros(QString text)
+{
+    static const QRegularExpression trailingZerosAfterNonZero(
+        QStringLiteral("([\\.,]\\d*?[1-9])0+$"));
+    static const QRegularExpression onlyZeroFraction(
+        QStringLiteral("[\\.,]0+$"));
+
+    text.replace(trailingZerosAfterNonZero, QStringLiteral("\\1"));
+    text.replace(onlyZeroFraction, QString());
+    return text;
+}
+
+inline QString stripDisplayedUnitBrackets(QString text)
+{
+    text.replace(RegExpPatterns::unitBrackets(), QStringLiteral("\\1"));
+    auto collapseTrailingCompactSuffix = [&text](const QChar suffix) {
+        const QString quantSpVariant = QString(MathDsl::QuantSp) + suffix;
+        const QString asciiSpVariant = QStringLiteral(" ") + suffix;
+        if (text.endsWith(quantSpVariant)) {
+            text.chop(quantSpVariant.size());
+            text += suffix;
+        } else if (text.endsWith(asciiSpVariant)) {
+            text.chop(asciiSpVariant.size());
+            text += suffix;
+        }
+    };
+    collapseTrailingCompactSuffix(UnicodeChars::DegreeSign);
+    collapseTrailingCompactSuffix(UnicodeChars::Prime);
+    collapseTrailingCompactSuffix(UnicodeChars::DoublePrime);
+    return text;
+}
+
+inline bool isPureTimeQuantity(const Quantity& value)
+{
+    if (!value.hasDimension())
+        return false;
+
+    const auto dimension = value.getDimensionByQuantity();
+    if (dimension.count() != 1 || !dimension.contains(UnitQuantity::Time))
+        return false;
+
+    const auto it = dimension.constFind(UnitQuantity::Time);
+    return it != dimension.constEnd()
+        && it->numerator() == 1
+        && it->denominator() == 1;
+}
+
+inline QString conversionTargetSuffixForDisplay(const QString& expression)
+{
+    const int asciiArrowPos = expression.lastIndexOf(QStringLiteral("->"));
+    const int unicodeArrowPos = expression.lastIndexOf(MathDsl::TransOp);
+
+    int arrowPos = -1;
+    int arrowWidth = 0;
+    if (asciiArrowPos >= 0 && asciiArrowPos >= unicodeArrowPos) {
+        arrowPos = asciiArrowPos;
+        arrowWidth = 2;
+    } else if (unicodeArrowPos >= 0) {
+        arrowPos = unicodeArrowPos;
+        arrowWidth = 1;
+    }
+
+    if (arrowPos < 0)
+        return QString();
+
+    const QString target = expression.mid(arrowPos + arrowWidth).trimmed();
+    if (target.isEmpty())
+        return QString();
+
+    return QStringLiteral(" \u2192 ") + target;
+}
+
+inline bool expressionUsesTrigFunction(const QString& sourceExpression,
+                                       const QString& interpretedExpression)
+{
+    const QString source = interpretedExpression.isEmpty()
+        ? sourceExpression
+        : interpretedExpression;
+    return RegExpPatterns::trigFunctionCall().match(source).hasMatch();
+}
+
+inline bool shouldShowAdditionalRationalForTrig(const Settings* settings,
+                                                 const QString& sourceExpression,
+                                                 const QString& interpretedExpression,
+                                                 const Quantity& value)
+{
+    const bool hasRationalAlready =
+        settings->resultFormat == 'r'
+        || (settings->multipleResultLinesEnabled
+            && settings->secondaryResultEnabled && settings->alternativeResultFormat == 'r')
+        || (settings->multipleResultLinesEnabled
+            && settings->tertiaryResultEnabled && settings->tertiaryResultFormat == 'r')
+        || (settings->multipleResultLinesEnabled
+            && settings->quaternaryResultEnabled && settings->quaternaryResultFormat == 'r')
+        || (settings->multipleResultLinesEnabled
+            && settings->quinaryResultEnabled && settings->quinaryResultFormat == 'r');
+    if (hasRationalAlready)
+        return false;
+
+    if (!expressionUsesTrigFunction(sourceExpression, interpretedExpression))
+        return false;
+
+    return !NumberFormatter::formatTrigSymbolic(value).isEmpty();
+}
+
+inline QString appendAngleModeSuffixIfNeeded(const QString& formattedText,
+                                             const QString& sourceExpression,
+                                             const QString& interpretedExpression,
+                                             const Quantity& value,
+                                             char resultFormat,
+                                             const Settings* settings)
+{
+    if (resultFormat == 's')
+        return formattedText;
+    if (!value.isDimensionless())
+        return formattedText;
+    if (formattedText.contains(MathDsl::UnitStart) || formattedText.contains(MathDsl::UnitEnd))
+        return formattedText;
+    if (expressionUsesTrigFunction(sourceExpression, interpretedExpression))
+        return formattedText;
+    const bool hasExplicitBracketedAngleUnit =
+        containsExplicitBracketedAngleUnit(sourceExpression)
+        || containsExplicitBracketedAngleUnit(interpretedExpression);
+    const bool hasExplicitSexagesimalAngleMarkers =
+        containsExplicitSexagesimalAngleMarkers(sourceExpression)
+        || containsExplicitSexagesimalAngleMarkers(interpretedExpression);
+    if (!hasExplicitBracketedAngleUnit && !hasExplicitSexagesimalAngleMarkers)
+        return formattedText;
+
+    auto endsWithUnitToken = [&formattedText](const QString& token) {
+        return formattedText.endsWith(token)
+            || formattedText.endsWith(QString(MathDsl::QuantSp) + token)
+            || formattedText.endsWith(QStringLiteral(" ") + token);
+    };
+    if (endsWithUnitToken(Units::angleModeUnitSymbol('r'))
+        || endsWithUnitToken(Units::angleModeUnitSymbol('d'))
+        || endsWithUnitToken(Units::angleModeUnitSymbol('g'))
+        || endsWithUnitToken(Units::angleModeUnitSymbol('t'))
+        || endsWithUnitToken(Units::angleModeUnitSymbol('v'))
+        || formattedText.endsWith(UnicodeChars::Prime)
+        || formattedText.endsWith(UnicodeChars::DoublePrime)) {
+        return formattedText;
+    }
+
+    const QString symbol = Units::angleModeUnitSymbol(settings->angleUnit);
+    if (settings->angleUnit == 'd')
+        return formattedText + symbol;
+    return formattedText + QString(MathDsl::QuantSp) + symbol;
+}
+
+inline QString formatNumericResultLine(const Quantity& value,
+                                       const QString& sourceExpression,
+                                       const QString& interpretedExpression,
+                                       char resultFormat,
+                                       int precision,
+                                       bool complexNumbers,
+                                       char complexFormat,
+                                       bool stripUnitBrackets,
+                                       const Settings* settings)
+{
+    Quantity formattedValue = value;
+    if (resultFormat == 's' && isPureTimeQuantity(formattedValue))
+        formattedValue.stripUnits();
+    QString formattedText = DisplayFormatUtils::applyDigitGroupingForDisplay(
+        NumberFormatter::format(formattedValue,
+                                resultFormat,
+                                precision,
+                                complexNumbers,
+                                complexFormat));
+    formattedText = NumberFormatter::rewriteScientificNotationForDisplay(formattedText);
+    formattedText = appendAngleModeSuffixIfNeeded(
+        formattedText, sourceExpression, interpretedExpression, value, resultFormat, settings);
+    return stripUnitBrackets ? stripDisplayedUnitBrackets(formattedText) : formattedText;
+}
+
+inline QStringList formatResultLinesForDisplay(const QString& sourceExpression,
+                                               const QString& interpretedExpression,
+                                               const Quantity& value,
+                                               bool includeExpressionLine,
+                                               bool stripUnitBracketsInNumericLines)
+{
+    const Settings* settings = Settings::instance();
+    QStringList lines;
+    auto appendUniqueLine = [&lines](const QString& line) {
+        if (!line.isEmpty() && !lines.contains(line))
+            lines.append(line);
+    };
+
+    if (includeExpressionLine)
+        appendUniqueLine(formattedExpressionLineForDisplay(sourceExpression, interpretedExpression));
+
+    const QString simplifiedLine = simplifiedExpressionLineForDisplay(
+        interpretedExpression, sourceExpression, settings->simplifyResultExpressions);
+    if (!simplifiedLine.isEmpty())
+        appendUniqueLine(QStringLiteral("= ") + simplifiedLine);
+
+    if (settings->simplifyResultExpressions
+        && isPureTimeQuantity(value)
+        && (SimplifiedExpressionUtils::isStandaloneSexagesimalTimeLiteral(sourceExpression)
+            || SimplifiedExpressionUtils::containsSexagesimalTimeLiteral(sourceExpression))) {
+        Quantity sexagesimalValue(value);
+        sexagesimalValue.stripUnits();
+        const QString normalizedSexagesimal = DisplayFormatUtils::applyDigitGroupingForDisplay(
+            trimTrailingFractionZeros(
+            NumberFormatter::format(sexagesimalValue,
+                                    's',
+                                    settings->resultPrecision,
+                                    settings->complexNumbers,
+                                    settings->resultFormatComplex)));
+        appendUniqueLine(QStringLiteral("= ")
+            + normalizedSexagesimal
+            + conversionTargetSuffixForDisplay(sourceExpression));
+    }
+
+    appendUniqueLine(QStringLiteral("= ") + formatNumericResultLine(
+        value,
+        sourceExpression,
+        interpretedExpression,
+        settings->resultFormat,
+        settings->resultPrecision,
+        settings->complexNumbers,
+        settings->resultFormatComplex,
+        stripUnitBracketsInNumericLines,
+        settings));
+
+    if (settings->multipleResultLinesEnabled && settings->secondaryResultEnabled
+        && settings->alternativeResultFormat != '\0') {
+        appendUniqueLine(QStringLiteral("= ") + formatNumericResultLine(
+            value,
+            sourceExpression,
+            interpretedExpression,
+            settings->alternativeResultFormat,
+            settings->secondaryResultPrecision,
+            settings->complexNumbers && settings->secondaryComplexNumbers,
+            settings->secondaryResultFormatComplex,
+            stripUnitBracketsInNumericLines,
+            settings));
+    }
+    if (settings->multipleResultLinesEnabled && settings->tertiaryResultEnabled
+        && settings->tertiaryResultFormat != '\0') {
+        appendUniqueLine(QStringLiteral("= ") + formatNumericResultLine(
+            value,
+            sourceExpression,
+            interpretedExpression,
+            settings->tertiaryResultFormat,
+            settings->tertiaryResultPrecision,
+            settings->complexNumbers && settings->tertiaryComplexNumbers,
+            settings->tertiaryResultFormatComplex,
+            stripUnitBracketsInNumericLines,
+            settings));
+    }
+    if (settings->multipleResultLinesEnabled && settings->quaternaryResultEnabled
+        && settings->quaternaryResultFormat != '\0') {
+        appendUniqueLine(QStringLiteral("= ") + formatNumericResultLine(
+            value,
+            sourceExpression,
+            interpretedExpression,
+            settings->quaternaryResultFormat,
+            settings->quaternaryResultPrecision,
+            settings->complexNumbers && settings->quaternaryComplexNumbers,
+            settings->quaternaryResultFormatComplex,
+            stripUnitBracketsInNumericLines,
+            settings));
+    }
+    if (settings->multipleResultLinesEnabled && settings->quinaryResultEnabled
+        && settings->quinaryResultFormat != '\0') {
+        appendUniqueLine(QStringLiteral("= ") + formatNumericResultLine(
+            value,
+            sourceExpression,
+            interpretedExpression,
+            settings->quinaryResultFormat,
+            settings->quinaryResultPrecision,
+            settings->complexNumbers && settings->quinaryComplexNumbers,
+            settings->quinaryResultFormatComplex,
+            stripUnitBracketsInNumericLines,
+            settings));
+    }
+
+    if (shouldShowAdditionalRationalForTrig(
+            settings, sourceExpression, interpretedExpression, value)) {
+        appendUniqueLine(QStringLiteral("= ") + DisplayFormatUtils::applyDigitGroupingForDisplay(
+            NumberFormatter::formatTrigSymbolic(value)));
+    }
+
+    return lines;
 }
 
 } // namespace ResultLineFormatUtils
