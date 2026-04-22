@@ -3453,6 +3453,14 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
 
     QString formatted;
     formatted.reserve(displayExpression.size() + tokens.size() * 2);
+    struct UnitBracketDisplayContext {
+        bool compactDegreeSuffix = false;
+        bool forceDegreeAlias = false;
+    };
+    QVector<UnitBracketDisplayContext> unitBracketContextStack;
+    auto currentUnitBracketContext = [&unitBracketContextStack]() -> UnitBracketDisplayContext* {
+        return unitBracketContextStack.isEmpty() ? nullptr : &unitBracketContextStack.last();
+    };
     auto isFunctionCallGroupEnd = [&tokens](int closeIndex) {
         if (closeIndex < 0 || closeIndex >= tokens.size())
             return false;
@@ -3516,6 +3524,13 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
                 if (!symbol.isEmpty())
                     displayTokenText = symbol;
             }
+            UnitBracketDisplayContext* unitContext = currentUnitBracketContext();
+            if (id == UnitId::Degree
+                && unitContext
+                && unitContext->forceDegreeAlias)
+            {
+                displayTokenText = UnitDisplayFormat::shortDisplayName(unitName(UnitId::Degree));
+            }
         }
         if (isTemperatureConversionTargetIdentifier) {
             const UnitId id = unitId(normalizeUnitName(operatorText));
@@ -3533,7 +3548,7 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
                 + QStringLiteral("[%1]").arg(displayTokenText);
         }
 
-        if (token.text() == QLatin1String("[")) {
+        if (token.text().size() == 1 && token.text().at(0) == MathDsl::UnitStart) {
             const bool hasPreviousToken = i > 0;
             const Token previousToken = hasPreviousToken ? tokens.at(i - 1) : Token::null;
             const bool followsConversionArrow =
@@ -3557,12 +3572,57 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
                 && i + 1 < tokens.size()
                 && tokens.at(i + 1).isUnitIdentifier();
 
+            UnitBracketDisplayContext unitContext;
+            int depth = 1;
+            int closeIndex = -1;
+            bool hasDivisionInside = false;
+            for (int j = i + 1; j < tokens.size(); ++j) {
+                const QString tokenText = tokens.at(j).text();
+                if (tokenText.size() == 1 && tokenText.at(0) == MathDsl::UnitStart) {
+                    ++depth;
+                    continue;
+                }
+                if (tokenText.size() == 1 && tokenText.at(0) == MathDsl::UnitEnd) {
+                    --depth;
+                    if (depth == 0) {
+                        closeIndex = j;
+                        break;
+                    }
+                    continue;
+                }
+                if (depth == 1 && tokens.at(j).asOperator() == Token::Division)
+                    hasDivisionInside = true;
+            }
+            const bool isSimpleDegreeUnit =
+                closeIndex == i + 2
+                && (tokens.at(i + 1).isUnitIdentifier()
+                    || (tokens.at(i + 1).isIdentifier()
+                        && isKnownUnitIdentifier(tokens.at(i + 1).text())))
+                && unitId(normalizeUnitName(tokens.at(i + 1).text())) == UnitId::Degree;
+            unitContext.compactDegreeSuffix =
+                isSimpleDegreeUnit
+                && !followsConversionArrow
+                && hasPreviousToken
+                && previousToken.isNumber();
+            unitContext.forceDegreeAlias = hasDivisionInside;
+            unitBracketContextStack.append(unitContext);
+
             if (shouldInsertImplicitUnitOne) {
                 formatted += QStringLiteral("1");
                 formatted += MathDsl::QuantSp;
-            } else if (shouldAddValueUnitSpace) {
+            } else if (shouldAddValueUnitSpace && !unitContext.compactDegreeSuffix) {
                 formatted += MathDsl::QuantSp;
             }
+            if (unitContext.compactDegreeSuffix)
+                continue;
+        } else if (token.text().size() == 1 && token.text().at(0) == MathDsl::UnitEnd) {
+            UnitBracketDisplayContext unitContext;
+            if (!unitBracketContextStack.isEmpty()) {
+                unitContext = unitBracketContextStack.last();
+                unitBracketContextStack.removeLast();
+            }
+            if (unitContext.compactDegreeSuffix)
+                continue;
         }
 
         if (!isSpacingOperator) {
@@ -3612,9 +3672,13 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
         }
 
         if (op == Token::Division) {
-            formatted += MathDsl::DivWrap;
-            formatted += MathDsl::DivOp;
-            formatted += MathDsl::DivWrap;
+            if (currentUnitBracketContext()) {
+                formatted += MathDsl::DivOp;
+            } else {
+                formatted += MathDsl::DivWrap;
+                formatted += MathDsl::DivOp;
+                formatted += MathDsl::DivWrap;
+            }
             continue;
         }
 

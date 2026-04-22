@@ -3842,15 +3842,40 @@ void test_display_interpreted_spacing()
         QString::fromUtf8("2")
             + times
             + QStringLiteral("358")
-            + QString(MathDsl::QuantSp)
-            + QString::fromUtf8("[°]"));
+            + QString::fromUtf8("°"));
     CHECK_DISPLAY_INTERPRETED(
         QString::fromUtf8("2 [deg] * 3"),
         QStringLiteral("2")
-            + QString(MathDsl::QuantSp)
-            + QString::fromUtf8("[°]")
+            + QString::fromUtf8("°")
             + times
             + QStringLiteral("3"));
+    CHECK_DISPLAY_INTERPRETED(
+        QString::fromUtf8("360 [°]"),
+        QStringLiteral("360")
+            + QString::fromUtf8("°"));
+    CHECK_DISPLAY_INTERPRETED(
+        QString::fromUtf8("360 [deg]"),
+        QStringLiteral("360")
+            + QString::fromUtf8("°"));
+    CHECK_DISPLAY_INTERPRETED(
+        QString::fromUtf8("360 [degree]"),
+        QStringLiteral("360")
+            + QString::fromUtf8("°"));
+    CHECK_DISPLAY_INTERPRETED(
+        QString::fromUtf8("360 [°/s]"),
+        QString::fromUtf8("360")
+            + QString(MathDsl::QuantSp)
+            + QStringLiteral("[deg/s]"));
+    CHECK_DISPLAY_INTERPRETED(
+        QString::fromUtf8("360 [deg/s]"),
+        QString::fromUtf8("360")
+            + QString(MathDsl::QuantSp)
+            + QStringLiteral("[deg/s]"));
+    CHECK_DISPLAY_INTERPRETED(
+        QString::fromUtf8("360 [degree/s]"),
+        QString::fromUtf8("360")
+            + QString(MathDsl::QuantSp)
+            + QStringLiteral("[deg/s]"));
     CHECK_DISPLAY_INTERPRETED(
         QString::fromUtf8("2 * x"),
         QString::fromUtf8("2")
