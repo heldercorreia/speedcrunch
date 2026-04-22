@@ -6927,9 +6927,15 @@ void test_result_display_shows_angle_mode_unit_suffix_for_explicit_angle_input()
         const QString line1 = display.document()->findBlockByNumber(1).text();
         QString line2 = display.document()->findBlockByNumber(2).text();
         line2.replace(QString(MathDsl::SubOp), QString(MathDsl::SubOpAl1));
+        const QString wrappedDot = QString(MathDsl::MulDotWrapSp)
+            + QString(MathDsl::MulDotOp)
+            + QString(MathDsl::MulDotWrapSp);
+        // Guard the exact display contract: grouped coefficients must keep
+        // wrapped middle-dot spacing ("4 · cos(...)"), not compact "4·cos(...)".
         const bool hasSimplifiedTrigLine =
             line1.startsWith(QStringLiteral("= "))
             && line1.contains(QString::fromUtf8("4"))
+            && line1.contains(wrappedDot)
             && line1.contains(QString::fromUtf8("cos(180"))
             && line1.contains(QString::fromUtf8("[°])"));
         const bool hasFinalResultLine = line2.startsWith(QStringLiteral("= "))

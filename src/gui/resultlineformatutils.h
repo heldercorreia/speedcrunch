@@ -171,8 +171,14 @@ inline QString foldRepeatedAdditiveTermsForDisplay(const QString& text)
         const double magnitude = std::abs(coeff);
 
         QString term = base;
-        if (std::abs(magnitude - 1.0) >= 1e-12)
-            term = formatCoeff(magnitude) + QString(MathDsl::MulDotOp) + base;
+        if (std::abs(magnitude - 1.0) >= 1e-12) {
+            // Keep coefficient*term rendering on the same DSL-wrapped spacing
+            // path used by display formatting, so mixed-alias inputs do not
+            // regress to compact "4·x" while other paths show "4 · x".
+            term = formatCoeff(magnitude)
+                + MathDsl::buildWrappedToken(MathDsl::MulDotOp, MathDsl::MulDotWrapSp)
+                + base;
+        }
 
         if (rebuilt.isEmpty()) {
             rebuilt = negative ? (QString(MathDsl::SubOpAl1) + term) : term;
