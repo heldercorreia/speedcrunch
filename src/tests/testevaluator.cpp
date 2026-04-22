@@ -2164,26 +2164,26 @@ void test_sexagesimal()
     // Coverage for the documentation tables in doc/src/userguide/syntax.rst
     // ("Sexagesimal Values"): fixed-point decimal and sexagesimal columns.
     CHECK_EVAL("0", "0");
-    CHECK_EVAL("°'56", "0.01555555555555555556");
-    CHECK_EVAL("56\"", "0.01555555555555555556");
-    CHECK_EVAL("56[arcsecond]", "0.01555555555555555556");
-    CHECK_EVAL("56[arcsec]", "0.01555555555555555556");
-    CHECK_EVAL("56.78\"", "0.01577222222222222222");
-    CHECK_EVAL("8.4381406e4\"", "23.43927944444444444444");
-    CHECK_EVAL(QString::fromUtf8("8.4381406e4″"), "23.43927944444444444444");
-    CHECK_EVAL(QString::fromUtf8("8.4381406e4 ″"), "23.43927944444444444444");
-    CHECK_EVAL("°34", "0.56666666666666666667");
-    CHECK_EVAL("34'", "0.56666666666666666667");
-    CHECK_EVAL(QString::fromUtf8("34′"), "0.56666666666666666667");
-    CHECK_EVAL("34[arcminute]", "0.56666666666666666667");
-    CHECK_EVAL("34[arcmin]", "0.56666666666666666667");
-    CHECK_EVAL("34'56", "0.58222222222222222222");
-    CHECK_EVAL(QString::fromUtf8("34′56″"), "0.58222222222222222222");
-    CHECK_EVAL("12°", "12");
-    CHECK_EVAL("12°34", "12.56666666666666666667");
-    CHECK_EVAL("12°34.5", "12.575");
-    CHECK_EVAL("12°34'56", "12.58222222222222222222");
-    CHECK_EVAL("12°34'56.78", "12.58243888888888888889");
+    CHECK_EVAL("°'56", "0.01555555555555555556°");
+    CHECK_EVAL("56\"", "0.01555555555555555556°");
+    CHECK_EVAL("56[arcsecond]", "0.01555555555555555556°");
+    CHECK_EVAL("56[arcsec]", "0.01555555555555555556°");
+    CHECK_EVAL("56.78\"", "0.01577222222222222222°");
+    CHECK_EVAL("8.4381406e4\"", "23.43927944444444444444°");
+    CHECK_EVAL(QString::fromUtf8("8.4381406e4″"), "23.43927944444444444444°");
+    CHECK_EVAL(QString::fromUtf8("8.4381406e4 ″"), "23.43927944444444444444°");
+    CHECK_EVAL("°34", "0.56666666666666666667°");
+    CHECK_EVAL("34'", "0.56666666666666666667°");
+    CHECK_EVAL(QString::fromUtf8("34′"), "0.56666666666666666667°");
+    CHECK_EVAL("34[arcminute]", "0.56666666666666666667°");
+    CHECK_EVAL("34[arcmin]", "0.56666666666666666667°");
+    CHECK_EVAL("34'56", "0.58222222222222222222°");
+    CHECK_EVAL(QString::fromUtf8("34′56″"), "0.58222222222222222222°");
+    CHECK_EVAL("12°", "12°");
+    CHECK_EVAL("12°34", "12.56666666666666666667°");
+    CHECK_EVAL("12°34.5", "12.575°");
+    CHECK_EVAL("12°34'56", "12.58222222222222222222°");
+    CHECK_EVAL("12°34'56.78", "12.58243888888888888889°");
 
     CHECK_EVAL("0[second]", "0 second");
     CHECK_EVAL("::56", "56 second");
@@ -3481,7 +3481,9 @@ void test_angle_mode(Settings* settings)
         ++eval_total_tests;
         eval->setExpression(expression);
         const QString display = NumberFormatter::format(eval->evalUpdateAns());
-        const bool hasAngleSymbol = display.contains(angleSymbol);
+        const QString expectedAngleToken =
+            angleUnit == 'd' ? Units::degreeAliasSymbol() : angleSymbol;
+        const bool hasAngleSymbol = display.contains(expectedAngleToken);
         const bool hasSuperscriptPerSecond = display.contains(QString::fromUtf8("s⁻¹"));
         const bool hasSlashPerSecond = display.contains(QStringLiteral("/s"))
                                        || display.contains(QStringLiteral("/ s"));
@@ -3492,6 +3494,48 @@ void test_angle_mode(Settings* settings)
             ++eval_failed_tests;
             ++eval_new_failed_tests;
             cerr << __FILE__ << "[" << __LINE__ << "]\tangle mode angular-rate display unit\t[NEW]" << endl
+                 << "\tExpression: " << expression.toUtf8().constData() << endl
+                 << "\tResult: " << display.toUtf8().constData() << endl
+                 << "\tError: " << qPrintable(eval->error()) << endl;
+        }
+    };
+    const auto checkAngleCompositeProductDisplayContains = [&](const QString& expression,
+                                                               char angleUnit,
+                                                               const QString& angleSymbol,
+                                                               const QStringList& requiredTokens
+                                                               = QStringList{QString(::unitSymbol(UnitId::Second))},
+                                                               const QStringList& forbiddenTokens
+                                                               = QStringList{}) {
+        settings->angleUnit = angleUnit;
+        Evaluator::instance()->initializeAngleUnits();
+        ++eval_total_tests;
+        eval->setExpression(expression);
+        const QString display = NumberFormatter::format(eval->evalUpdateAns());
+        const QString expectedAngleToken =
+            angleUnit == 'd' ? Units::degreeAliasSymbol() : angleSymbol;
+        const bool hasAngleToken = display.contains(expectedAngleToken);
+        bool hasRequiredTokens = true;
+        for (const QString& token : requiredTokens) {
+            if (!display.contains(token)) {
+                hasRequiredTokens = false;
+                break;
+            }
+        }
+        bool hasForbiddenTokens = false;
+        for (const QString& token : forbiddenTokens) {
+            if (display.contains(token)) {
+                hasForbiddenTokens = true;
+                break;
+            }
+        }
+        if (!eval->error().isEmpty()
+            || !hasAngleToken
+            || !hasRequiredTokens
+            || hasForbiddenTokens)
+        {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tangle mode composite-angle product display unit\t[NEW]" << endl
                  << "\tExpression: " << expression.toUtf8().constData() << endl
                  << "\tResult: " << display.toUtf8().constData() << endl
                  << "\tError: " << qPrintable(eval->error()) << endl;
@@ -3520,16 +3564,32 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("cos(0.5*[turn])", "-1");
     CHECK_EVAL("cos(0.5*[revolution])", "-1");
     CHECK_EVAL("cos(0.5*[rev])", "-1");
-    CHECK_EVAL("[degree]","0.01745329251994329577");
-    CHECK_EVAL("[deg]","0.01745329251994329577");
-    CHECK_EVAL("[gradian]","0.01570796326794896619");
-    CHECK_EVAL("[gon]","0.01570796326794896619");
+    CHECK_EVAL("[degree]","0.01745329251994329577 rad");
+    CHECK_EVAL("[deg]","0.01745329251994329577 rad");
+    CHECK_EVAL("[gradian]","0.01570796326794896619 rad");
+    CHECK_EVAL("[gon]","0.01570796326794896619 rad");
     CHECK_EVAL("[turn]","6.28318530717958647693 rad");
     CHECK_EVAL("[tr]","6.28318530717958647693 rad");
     CHECK_EVAL("[revolution]","6.28318530717958647693 rad");
     CHECK_EVAL("[rev]","6.28318530717958647693 rad");
     CHECK_EVAL("1 [tr]", "6.28318530717958647693 rad");
     CHECK_EVAL(QString::fromUtf8("2 [µrad]"), "0.000002 rad");
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg second]"), 'r', Units::angleModeUnitSymbol('r'));
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg second metre]"), 'r', Units::angleModeUnitSymbol('r'));
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg·s·m]"), 'r', Units::angleModeUnitSymbol('r'));
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg·J·m·J·s/J²]"), 'r', Units::angleModeUnitSymbol('r'),
+                                              QStringList{QString(::unitSymbol(UnitId::Metre)),
+                                                          QString(::unitSymbol(UnitId::Second))},
+                                              QStringList{QString(::unitSymbol(UnitId::Joule))});
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg·m·N]"), 'r', Units::angleModeUnitSymbol('r'),
+                                              QStringList{QString(::unitSymbol(UnitId::Metre)),
+                                                          QString(::unitSymbol(UnitId::Newton))});
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg·kg·m^3·s^-1]"), 'r', Units::angleModeUnitSymbol('r'),
+                                              QStringList{QString(::unitSymbol(UnitId::Joule)),
+                                                          QString(::unitSymbol(UnitId::Metre)),
+                                                          QString(::unitSymbol(UnitId::Second))},
+                                              QStringList{QString(::unitSymbol(UnitId::Kilogram))});
+    checkAngularRateDisplayContains(QStringLiteral("360 [deg second^-1]"), 'r', Units::angleModeUnitSymbol('r'));
     checkAngularRateDisplayContains(QStringLiteral("1 [rev/min]"), 'r', Units::angleModeUnitSymbol('r'));
     checkAngularRateDisplayContains(QStringLiteral("1 [rev*min^-1]"), 'r', Units::angleModeUnitSymbol('r'));
     checkAngularRateDisplayContains(QStringLiteral("1 [rpm]"), 'r', Units::angleModeUnitSymbol('r'));
@@ -3546,8 +3606,8 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("tan(arctan(0.25))", "0.25");
     CHECK_EVAL_FAIL("sin(1j)");
     CHECK_EVAL("arcsin(-2)", "-90+75.4561292902168920041i");
-    CHECK_EVAL("[radian]","57.2957795130823208768 °");
-    CHECK_EVAL("[rad]","57.2957795130823208768 °");
+    CHECK_EVAL("[radian]","57.2957795130823208768°");
+    CHECK_EVAL("[rad]","57.2957795130823208768°");
     CHECK_EVAL("cos(pi*[rad])", "-1");
     CHECK_EVAL("cos(180[rad])", "-0.59846006905785813897");
     CHECK_EVAL("cos(180*[degree])", "-1");
@@ -3556,20 +3616,52 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("cos(0.5*[turn])", "-1");
     CHECK_EVAL("cos(0.5*[revolution])", "-1");
     CHECK_EVAL("cos(0.5*[rev])", "-1");
-    CHECK_EVAL("pi [rad]", "180 °");
-    CHECK_EVAL("pi[rad] -> [°]", "180 °");
-    CHECK_EVAL("[degree]","1");
-    CHECK_EVAL("[deg]","1");
-    CHECK_EVAL("1 -> [degree]", "1 °");
-    CHECK_EVAL("1 -> [deg]", "1 °");
-    CHECK_EVAL("[gradian]","0.9");
-    CHECK_EVAL("[gon]","0.9");
-    CHECK_EVAL("[turn]","360 °");
-    CHECK_EVAL("[tr]","360 °");
-    CHECK_EVAL("[revolution]","360 °");
-    CHECK_EVAL("[rev]","360 °");
-    CHECK_EVAL("1 [tr]", "360 °");
-    CHECK_EVAL(QString::fromUtf8("2 [µrad]"), "0.00011459155902616464 °");
+    CHECK_EVAL("pi [rad]", "180°");
+    CHECK_EVAL("pi[rad] -> [°]", "180°");
+    CHECK_EVAL("[degree]","1°");
+    CHECK_EVAL("[deg]","1°");
+    CHECK_EVAL("1 -> [degree]", "1°");
+    CHECK_EVAL("1 -> [deg]", "1°");
+    CHECK_EVAL("[gradian]","0.9°");
+    CHECK_EVAL("[gon]","0.9°");
+    CHECK_EVAL("[turn]","360°");
+    CHECK_EVAL("[tr]","360°");
+    CHECK_EVAL("[revolution]","360°");
+    CHECK_EVAL("[rev]","360°");
+    CHECK_EVAL("1 [tr]", "360°");
+    CHECK_EVAL(QString::fromUtf8("2 [µrad]"), "0.00011459155902616464°");
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg second]"), 'd', Units::angleModeUnitSymbol('d'));
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg second metre]"), 'd', Units::angleModeUnitSymbol('d'));
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg·s·m]"), 'd', Units::angleModeUnitSymbol('d'));
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg·J·m·J·s/J²]"), 'd', Units::angleModeUnitSymbol('d'),
+                                              QStringList{QString(::unitSymbol(UnitId::Metre)),
+                                                          QString(::unitSymbol(UnitId::Second))},
+                                              QStringList{QString(::unitSymbol(UnitId::Joule))});
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg·m·N]"), 'd', Units::angleModeUnitSymbol('d'),
+                                              QStringList{QString(::unitSymbol(UnitId::Metre)),
+                                                          QString(::unitSymbol(UnitId::Newton))});
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg·kg·m^3·s^-1]"), 'd', Units::angleModeUnitSymbol('d'),
+                                              QStringList{QString(::unitSymbol(UnitId::Joule)),
+                                                          QString(::unitSymbol(UnitId::Metre)),
+                                                          QString(::unitSymbol(UnitId::Second))},
+                                              QStringList{QString(::unitSymbol(UnitId::Kilogram))});
+    ++eval_total_tests;
+    eval->setExpression(QStringLiteral("360 [deg second^-1]"));
+    {
+        const QString display = NumberFormatter::format(eval->evalUpdateAns());
+        if (!eval->error().isEmpty()
+            || !display.contains(QStringLiteral("deg"))
+            || !display.contains(QString::fromUtf8("s⁻¹"))
+            || display.contains(QString::fromUtf8("°")))
+        {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tdegree alias preserved in composite angle unit\t[NEW]" << endl
+                 << "\tResult: " << display.toUtf8().constData() << endl
+                 << "\tError : " << qPrintable(eval->error()) << endl;
+        }
+    }
+    checkAngularRateDisplayContains(QStringLiteral("360 [deg second^-1]"), 'd', Units::angleModeUnitSymbol('d'));
     checkAngularRateDisplayContains(QStringLiteral("1 [rev/min]"), 'd', Units::angleModeUnitSymbol('d'));
     checkAngularRateDisplayContains(QStringLiteral("1 [rev*min^-1]"), 'd', Units::angleModeUnitSymbol('d'));
     checkAngularRateDisplayContains(QStringLiteral("1 [rpm]"), 'd', Units::angleModeUnitSymbol('d'));
@@ -3596,15 +3688,30 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("cos(0.5*[turn])", "-1");
     CHECK_EVAL("cos(0.5*[revolution])", "-1");
     CHECK_EVAL("cos(0.5*[rev])", "-1");
-    CHECK_EVAL("[degree]","1.11111111111111111111");
-    CHECK_EVAL("[deg]","1.11111111111111111111");
-    CHECK_EVAL("[gradian]","1");
-    CHECK_EVAL("[gon]","1");
+    CHECK_EVAL("[degree]","1.11111111111111111111 gon");
+    CHECK_EVAL("[deg]","1.11111111111111111111 gon");
+    CHECK_EVAL("[gradian]","1 gon");
+    CHECK_EVAL("[gon]","1 gon");
     CHECK_EVAL("[turn]","400 gon");
     CHECK_EVAL("[tr]","400 gon");
     CHECK_EVAL("[revolution]","400 gon");
     CHECK_EVAL("[rev]","400 gon");
     CHECK_EVAL("1 [tr]", "400 gon");
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg second]"), 'g', Units::angleModeUnitSymbol('g'));
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg second metre]"), 'g', Units::angleModeUnitSymbol('g'));
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg·s·m]"), 'g', Units::angleModeUnitSymbol('g'));
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg·J·m·J·s/J²]"), 'g', Units::angleModeUnitSymbol('g'),
+                                              QStringList{QString(::unitSymbol(UnitId::Metre)),
+                                                          QString(::unitSymbol(UnitId::Second))},
+                                              QStringList{QString(::unitSymbol(UnitId::Joule))});
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg·m·N]"), 'g', Units::angleModeUnitSymbol('g'),
+                                              QStringList{QString(::unitSymbol(UnitId::Metre)),
+                                                          QString(::unitSymbol(UnitId::Newton))});
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg·kg·m^3·s^-1]"), 'g', Units::angleModeUnitSymbol('g'),
+                                              QStringList{QString(::unitSymbol(UnitId::Joule)),
+                                                          QString(::unitSymbol(UnitId::Metre)),
+                                                          QString(::unitSymbol(UnitId::Second))},
+                                              QStringList{QString(::unitSymbol(UnitId::Kilogram))});
     checkAngularRateDisplayContains(QStringLiteral("1 [rev/min]"), 'g', Units::angleModeUnitSymbol('g'));
     checkAngularRateDisplayContains(QStringLiteral("1 [rev*min^-1]"), 'g', Units::angleModeUnitSymbol('g'));
     checkAngularRateDisplayContains(QStringLiteral("1 [rpm]"), 'g', Units::angleModeUnitSymbol('g'));
@@ -3630,15 +3737,30 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("cos(0.5*[turn])", "-1");
     CHECK_EVAL("cos(0.5*[revolution])", "-1");
     CHECK_EVAL("cos(0.5*[rev])", "-1");
-    CHECK_EVAL("[degree]","0.00277777777777777778");
-    CHECK_EVAL("[deg]","0.00277777777777777778");
-    CHECK_EVAL("[gradian]","0.0025");
-    CHECK_EVAL("[gon]","0.0025");
+    CHECK_EVAL("[degree]","0.00277777777777777778 tr");
+    CHECK_EVAL("[deg]","0.00277777777777777778 tr");
+    CHECK_EVAL("[gradian]","0.0025 tr");
+    CHECK_EVAL("[gon]","0.0025 tr");
     CHECK_EVAL("[turn]","1 tr");
     CHECK_EVAL("[tr]","1 tr");
     CHECK_EVAL("[revolution]","1 tr");
     CHECK_EVAL("[rev]","1 tr");
     CHECK_EVAL("1 [tr]", "1 tr");
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg second]"), 't', Units::angleModeUnitSymbol('t'));
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg second metre]"), 't', Units::angleModeUnitSymbol('t'));
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg·s·m]"), 't', Units::angleModeUnitSymbol('t'));
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg·J·m·J·s/J²]"), 't', Units::angleModeUnitSymbol('t'),
+                                              QStringList{QString(::unitSymbol(UnitId::Metre)),
+                                                          QString(::unitSymbol(UnitId::Second))},
+                                              QStringList{QString(::unitSymbol(UnitId::Joule))});
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg·m·N]"), 't', Units::angleModeUnitSymbol('t'),
+                                              QStringList{QString(::unitSymbol(UnitId::Metre)),
+                                                          QString(::unitSymbol(UnitId::Newton))});
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg·kg·m^3·s^-1]"), 't', Units::angleModeUnitSymbol('t'),
+                                              QStringList{QString(::unitSymbol(UnitId::Joule)),
+                                                          QString(::unitSymbol(UnitId::Metre)),
+                                                          QString(::unitSymbol(UnitId::Second))},
+                                              QStringList{QString(::unitSymbol(UnitId::Kilogram))});
     checkAngularRateDisplayContains(QStringLiteral("1 [rev/min]"), 't', Units::angleModeUnitSymbol('t'));
     checkAngularRateDisplayContains(QStringLiteral("1 [rev*min^-1]"), 't', Units::angleModeUnitSymbol('t'));
     checkAngularRateDisplayContains(QStringLiteral("1 [rpm]"), 't', Units::angleModeUnitSymbol('t'));
@@ -3664,15 +3786,30 @@ void test_angle_mode(Settings* settings)
     CHECK_EVAL("cos(0.5*[turn])", "-1");
     CHECK_EVAL("cos(0.5*[revolution])", "-1");
     CHECK_EVAL("cos(0.5*[rev])", "-1");
-    CHECK_EVAL("[degree]","0.00277777777777777778");
-    CHECK_EVAL("[deg]","0.00277777777777777778");
-    CHECK_EVAL("[gradian]","0.0025");
-    CHECK_EVAL("[gon]","0.0025");
+    CHECK_EVAL("[degree]","0.00277777777777777778 rev");
+    CHECK_EVAL("[deg]","0.00277777777777777778 rev");
+    CHECK_EVAL("[gradian]","0.0025 rev");
+    CHECK_EVAL("[gon]","0.0025 rev");
     CHECK_EVAL("[turn]","1 rev");
     CHECK_EVAL("[tr]","1 rev");
     CHECK_EVAL("[revolution]","1 rev");
     CHECK_EVAL("[rev]","1 rev");
     CHECK_EVAL("1 [tr]", "1 rev");
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg second]"), 'v', Units::angleModeUnitSymbol('v'));
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg second metre]"), 'v', Units::angleModeUnitSymbol('v'));
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg·s·m]"), 'v', Units::angleModeUnitSymbol('v'));
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg·J·m·J·s/J²]"), 'v', Units::angleModeUnitSymbol('v'),
+                                              QStringList{QString(::unitSymbol(UnitId::Metre)),
+                                                          QString(::unitSymbol(UnitId::Second))},
+                                              QStringList{QString(::unitSymbol(UnitId::Joule))});
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg·m·N]"), 'v', Units::angleModeUnitSymbol('v'),
+                                              QStringList{QString(::unitSymbol(UnitId::Metre)),
+                                                          QString(::unitSymbol(UnitId::Newton))});
+    checkAngleCompositeProductDisplayContains(QStringLiteral("360 [deg·kg·m^3·s^-1]"), 'v', Units::angleModeUnitSymbol('v'),
+                                              QStringList{QString(::unitSymbol(UnitId::Joule)),
+                                                          QString(::unitSymbol(UnitId::Metre)),
+                                                          QString(::unitSymbol(UnitId::Second))},
+                                              QStringList{QString(::unitSymbol(UnitId::Kilogram))});
     checkAngularRateDisplayContains(QStringLiteral("1 [rev/min]"), 'v', Units::angleModeUnitSymbol('v'));
     checkAngularRateDisplayContains(QStringLiteral("1 [rev*min^-1]"), 'v', Units::angleModeUnitSymbol('v'));
     checkAngularRateDisplayContains(QStringLiteral("1 [rpm]"), 'v', Units::angleModeUnitSymbol('v'));
@@ -3876,6 +4013,11 @@ void test_display_interpreted_spacing()
         QString::fromUtf8("360")
             + QString(MathDsl::QuantSp)
             + QStringLiteral("[deg/s]"));
+    CHECK_DISPLAY_INTERPRETED(
+        QString::fromUtf8("360 [s⁻¹·°]"),
+        QString::fromUtf8("360")
+            + QString(MathDsl::QuantSp)
+            + QString::fromUtf8("[deg · s⁻¹]"));
     CHECK_DISPLAY_INTERPRETED(
         QString::fromUtf8("2 * x"),
         QString::fromUtf8("2")
@@ -6994,12 +7136,17 @@ void test_result_display_shows_angle_mode_unit_suffix_for_explicit_angle_input()
             + QString(MathDsl::MulDotWrapSp);
         // Guard the exact display contract: grouped coefficients must keep
         // wrapped middle-dot spacing ("4 · cos(...)"), not compact "4·cos(...)".
+        const bool hasBracketedDegreeArg =
+            line1.contains(QString::fromUtf8("cos(180"))
+            && line1.contains(QString::fromUtf8("[°])"));
+        const bool hasCompactDegreeArg =
+            line1.contains(QString::fromUtf8("cos(180"))
+            && line1.contains(QString::fromUtf8("°)"));
         const bool hasSimplifiedTrigLine =
             line1.startsWith(QStringLiteral("= "))
             && line1.contains(QString::fromUtf8("4"))
             && line1.contains(wrappedDot)
-            && line1.contains(QString::fromUtf8("cos(180"))
-            && line1.contains(QString::fromUtf8("[°])"));
+            && (hasBracketedDegreeArg || hasCompactDegreeArg);
         const bool hasFinalResultLine = line2.startsWith(QStringLiteral("= "))
             && line2.contains(QStringLiteral("-4"));
         if (!hasSimplifiedTrigLine || !hasFinalResultLine) {
@@ -7041,11 +7188,16 @@ void test_result_display_shows_angle_mode_unit_suffix_for_explicit_angle_input()
         const QString line1 = display.document()->findBlockByNumber(1).text();
         QString line2 = display.document()->findBlockByNumber(2).text();
         line2.replace(QString(MathDsl::SubOp), QString(MathDsl::SubOpAl1));
+        const bool hasBracketedDegreeArg =
+            line1.contains(QString::fromUtf8("cos(180"))
+            && line1.contains(QString::fromUtf8("[°])"));
+        const bool hasCompactDegreeArg =
+            line1.contains(QString::fromUtf8("cos(180"))
+            && line1.contains(QString::fromUtf8("°)"));
         const bool hasSimplifiedTrigLine =
             line1.startsWith(QStringLiteral("= "))
             && line1.contains(QString::fromUtf8("4"))
-            && line1.contains(QString::fromUtf8("cos(180"))
-            && line1.contains(QString::fromUtf8("[°])"));
+            && (hasBracketedDegreeArg || hasCompactDegreeArg);
         const bool hasFinalResultLine = line2.startsWith(QStringLiteral("= "))
             && line2.contains(QStringLiteral("-4"));
 

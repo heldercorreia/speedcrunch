@@ -2250,8 +2250,13 @@ void TestEditorUi::tooltip_trig_output_does_not_append_angle_mode_suffix()
         normalizedMessage.replace(QString(MathDsl::SubOp), QString(MathDsl::SubOpAl1));
         QVERIFY2(normalizedMessage.contains(QStringLiteral("= -1")),
                  qPrintable(QStringLiteral("Expected scalar trig result, got: %1").arg(message)));
-        QVERIFY2(message.contains(QString::fromUtf8("cos(180"))
-                 && message.contains(QString::fromUtf8("[°])")),
+        const bool hasBracketedDegreeArg =
+            message.contains(QString::fromUtf8("cos(180"))
+            && message.contains(QString::fromUtf8("[°])"));
+        const bool hasCompactDegreeArg =
+            message.contains(QString::fromUtf8("cos(180"))
+            && message.contains(QString::fromUtf8("°)"));
+        QVERIFY2(hasBracketedDegreeArg || hasCompactDegreeArg,
                  qPrintable(QStringLiteral("Expected interpreted expression line, got: %1").arg(message)));
         const QStringList lines = normalizedMessage.split(QStringLiteral("<br/>"));
         QVERIFY2(!lines.isEmpty(),
@@ -2333,8 +2338,13 @@ void TestEditorUi::tooltip_shows_simplified_line_for_repeated_trig_with_degree_s
     const QString message = spy.takeLast().at(0).toString();
     QString normalizedMessage = message;
     normalizedMessage.replace(QString(MathDsl::SubOp), QString(MathDsl::SubOpAl1));
-    QVERIFY2(message.contains(QString::fromUtf8("= 4 · cos(180"))
-             && message.contains(QString::fromUtf8("[°])")),
+    const bool hasBracketedDegreeSimplifiedLine =
+        message.contains(QString::fromUtf8("= 4 · cos(180"))
+        && message.contains(QString::fromUtf8("[°])"));
+    const bool hasCompactDegreeSimplifiedLine =
+        message.contains(QString::fromUtf8("= 4 · cos(180"))
+        && message.contains(QString::fromUtf8("°)"));
+    QVERIFY2(hasBracketedDegreeSimplifiedLine || hasCompactDegreeSimplifiedLine,
              qPrintable(QStringLiteral("Expected simplified line, got: %1").arg(message)));
     QVERIFY2(normalizedMessage.contains(QStringLiteral("= -4")),
              qPrintable(QStringLiteral("Expected result line, got: %1").arg(message)));

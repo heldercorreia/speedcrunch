@@ -3453,6 +3453,21 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
 
     QString formatted;
     formatted.reserve(displayExpression.size() + tokens.size() * 2);
+    auto parenthesisDepthBefore = [&tokens](int tokenIndex) {
+        int depth = 0;
+        for (int k = 0; k < tokenIndex; ++k) {
+            const QString tokenText = tokens.at(k).text();
+            if (tokenText.size() != 1)
+                continue;
+            const QChar ch = tokenText.at(0);
+            if (ch == MathDsl::GroupStart) {
+                ++depth;
+            } else if (ch == MathDsl::GroupEnd && depth > 0) {
+                --depth;
+            }
+        }
+        return depth;
+    };
     struct UnitBracketDisplayContext {
         bool compactDegreeSuffix = false;
         bool forceDegreeAlias = false;
@@ -3484,9 +3499,179 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
         }
         return false;
     };
+    auto normalizeCompoundDegreeUnitsInBracket = [](const QString& content) {
+        if (content.isEmpty())
+            return content;
+
+        QStringList factors;
+        QStringList operators;
+        QString current;
+        int parenDepth = 0;
+        auto flushCurrent = [&]() {
+            factors.append(current.trimmed());
+            current.clear();
+        };
+        const auto isMultiplicationOp = [](const QChar& ch) {
+            return ch == MathDsl::MulOpAl1
+                || ch == MathDsl::MulDotOp
+                || ch == MathDsl::MulCrossOp;
+        };
+        for (int i = 0; i < content.size(); ++i) {
+            const QChar ch = content.at(i);
+            if (ch == MathDsl::GroupStart) {
+                ++parenDepth;
+                current += ch;
+                continue;
+            }
+            if (ch == MathDsl::GroupEnd) {
+                if (parenDepth > 0)
+                    --parenDepth;
+                current += ch;
+                continue;
+            }
+            if (parenDepth == 0
+                && (isMultiplicationOp(ch) || ch == MathDsl::DivOp))
+            {
+                flushCurrent();
+                operators.append(QString(ch));
+                continue;
+            }
+            current += ch;
+        }
+        flushCurrent();
+        if (factors.size() <= 1)
+            return content;
+
+        const QString degreeAlias = Units::degreeAliasSymbol();
+        const QString degreeName = unitName(UnitId::Degree);
+        const auto isDegreeFactor = [&](const QString& factor) {
+            const QString t = factor.trimmed();
+            if (t.isEmpty())
+                return false;
+            const QChar first = t.at(0);
+            if (first == UnicodeChars::DegreeSign)
+                return true;
+            if (t.startsWith(degreeAlias)) {
+                if (t.size() == degreeAlias.size())
+                    return true;
+                const QChar next = t.at(degreeAlias.size());
+                return !next.isLetter();
+            }
+            if (t.startsWith(degreeName)) {
+                if (t.size() == degreeName.size())
+                    return true;
+                const QChar next = t.at(degreeName.size());
+                return !next.isLetter();
+            }
+            return false;
+        };
+        const auto normalizeDegreeFactor = [&](const QString& factor) -> QString {
+            const QString t = factor.trimmed();
+            if (t.isEmpty())
+                return t;
+            if (t.at(0) == UnicodeChars::DegreeSign) {
+                QString normalized = degreeAlias;
+                normalized += t.mid(1);
+                return normalized;
+            }
+            if (t.startsWith(degreeName)) {
+                const int n = degreeName.size();
+                if (t.size() == n || !t.at(n).isLetter()) {
+                    QString normalized = degreeAlias;
+                    normalized += t.mid(n);
+                    return normalized;
+                }
+            }
+            if (t.startsWith(degreeAlias))
+                return t;
+            return t;
+        };
+
+        bool hasDivision = false;
+        for (const QString& opText : operators) {
+            if (!opText.isEmpty() && opText.at(0) == MathDsl::DivOp) {
+                hasDivision = true;
+                break;
+            }
+        }
+
+        bool changed = false;
+        for (int i = 0; i < factors.size(); ++i) {
+            if (isDegreeFactor(factors.at(i))) {
+                const QString normalized = normalizeDegreeFactor(factors.at(i));
+                if (normalized != factors.at(i))
+                    changed = true;
+                factors[i] = normalized;
+            }
+        }
+
+        if (!hasDivision) {
+            QString degreeFactor;
+            QStringList others;
+            for (const QString& factor : factors) {
+                if (degreeFactor.isEmpty() && isDegreeFactor(factor))
+                    degreeFactor = normalizeDegreeFactor(factor);
+                else
+                    others.append(factor.trimmed());
+            }
+            if (!degreeFactor.isEmpty() && !others.isEmpty()) {
+                changed = true;
+                QString result = degreeFactor;
+                const QString mulDotWrapped = QString(MathDsl::MulDotWrapSp)
+                    + QString(MathDsl::MulDotOp)
+                    + QString(MathDsl::MulDotWrapSp);
+                for (const QString& factor : others)
+                    result += mulDotWrapped + factor;
+                return result;
+            }
+        }
+
+        if (!changed)
+            return content;
+
+        QString rebuilt;
+        for (int i = 0; i < factors.size(); ++i) {
+            if (i > 0 && i - 1 < operators.size())
+                rebuilt += operators.at(i - 1);
+            rebuilt += factors.at(i).trimmed();
+        }
+        return rebuilt;
+    };
+    auto normalizeCompoundDegreeUnitsInDisplay = [&](QString text) {
+        int i = 0;
+        while (i < text.size()) {
+            if (text.at(i) != MathDsl::UnitStart) {
+                ++i;
+                continue;
+            }
+            int depth = 1;
+            int j = i + 1;
+            for (; j < text.size(); ++j) {
+                const QChar ch = text.at(j);
+                if (ch == MathDsl::UnitStart)
+                    ++depth;
+                else if (ch == MathDsl::UnitEnd) {
+                    --depth;
+                    if (depth == 0)
+                        break;
+                }
+            }
+            if (j >= text.size())
+                break;
+            const QString content = text.mid(i + 1, j - i - 1);
+            const QString normalized = normalizeCompoundDegreeUnitsInBracket(content);
+            if (normalized != content) {
+                text.replace(i + 1, j - i - 1, normalized);
+                j = i + 1 + normalized.size();
+            }
+            i = j + 1;
+        }
+        return text;
+    };
 
     for (int i = 0; i < tokens.size(); ++i) {
         const Token& token = tokens.at(i);
+        const int parenthesisDepthBeforeToken = parenthesisDepthBefore(i);
         const Token::Operator op = token.asOperator();
         const bool isSpacingOperator =
             op == Token::Addition
@@ -3529,7 +3714,7 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
                 && unitContext
                 && unitContext->forceDegreeAlias)
             {
-                displayTokenText = UnitDisplayFormat::shortDisplayName(unitName(UnitId::Degree));
+                displayTokenText = Units::degreeAliasSymbol();
             }
         }
         if (isTemperatureConversionTargetIdentifier) {
@@ -3603,7 +3788,8 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
                 isSimpleDegreeUnit
                 && !followsConversionArrow
                 && hasPreviousToken
-                && previousToken.isNumber();
+                && previousToken.isNumber()
+                && parenthesisDepthBeforeToken == 0;
             unitContext.forceDegreeAlias = hasDivisionInside;
             unitBracketContextStack.append(unitContext);
 
@@ -3702,8 +3888,10 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
         formatted += MathDsl::AddWrap;
         formatted += displayTokenText;
         formatted += MathDsl::AddWrap;
+
     }
 
+    formatted = normalizeCompoundDegreeUnitsInDisplay(formatted);
     return renderIntegerPowersAsSuperscriptsForDisplay(
         formatted,
         allowAggressiveSimplification) + commentSuffix;

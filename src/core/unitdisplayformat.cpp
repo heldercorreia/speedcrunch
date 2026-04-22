@@ -18,6 +18,7 @@
 
 #include "core/unitdisplayformat.h"
 
+#include "core/mathdsl.h"
 #include "core/unicodechars.h"
 #include "core/units.h"
 #include <QHash>
@@ -116,6 +117,13 @@ QString normalizeUnitTextForDisplay(const QString& text)
     if (text.isEmpty())
         return text;
 
+    const bool hasCompositeUnitOperators =
+        text.contains(MathDsl::MulOpAl1)
+        || text.contains(MathDsl::MulDotOp)
+        || text.contains(MathDsl::MulCrossOp)
+        || text.contains(MathDsl::DivOp);
+    const QString degreeAlias = Units::degreeAliasSymbol();
+
     QString normalized;
     normalized.reserve(text.size());
 
@@ -132,7 +140,21 @@ QString normalizeUnitTextForDisplay(const QString& text)
             ++j;
 
         const QString token = text.mid(i, j - i);
-        normalized.append(shortDisplayName(token));
+        QString displayToken = shortDisplayName(token);
+        if (hasCompositeUnitOperators
+            && unitId(normalizeUnitName(token)) == UnitId::Degree)
+        {
+            QString suffix;
+            if (!displayToken.isEmpty()
+                && displayToken.at(0) == UnicodeChars::DegreeSign)
+            {
+                suffix = displayToken.mid(1);
+            } else if (displayToken.startsWith(degreeAlias)) {
+                suffix = displayToken.mid(degreeAlias.size());
+            }
+            displayToken = degreeAlias + suffix;
+        }
+        normalized.append(displayToken);
         i = j;
     }
     return normalized;

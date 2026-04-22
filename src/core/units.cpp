@@ -359,6 +359,7 @@ namespace UnitAltSymbol {
 struct UnitRegistry;
 
 namespace {
+char s_runtimeAngleModeForUnits = 'r';
 
 QString composeAnglePerSecondUnitName(const QString& angleUnitName)
 {
@@ -1044,10 +1045,14 @@ Quantity angleUnitValueForMode(AngleUnitKind angleUnit, char angleMode)
     }
 
     if (angleUnit == AngleUnitKind::Degree) {
-        return Units::degree() / modeReference;
+        Quantity degree = Units::degree() / modeReference;
+        degree.setDisplayUnit(Quantity(1).numericValue(), Units::angleModeUnitSymbol(angleMode));
+        return degree;
     }
     if (angleUnit == AngleUnitKind::Gradian) {
-        return Units::gradian() / modeReference;
+        Quantity gradian = Units::gradian() / modeReference;
+        gradian.setDisplayUnit(Quantity(1).numericValue(), Units::angleModeUnitSymbol(angleMode));
+        return gradian;
     }
     if (angleUnit == AngleUnitKind::Turn) {
         Quantity turn = Units::turn() / modeReference;
@@ -1055,10 +1060,14 @@ Quantity angleUnitValueForMode(AngleUnitKind angleUnit, char angleMode)
         return turn;
     }
     if (angleUnit == AngleUnitKind::Arcminute) {
-        return Units::arcminute() / modeReference;
+        Quantity arcminute = Units::arcminute() / modeReference;
+        arcminute.setDisplayUnit(Quantity(1).numericValue(), Units::angleModeUnitSymbol(angleMode));
+        return arcminute;
     }
     if (angleUnit == AngleUnitKind::Arcsecond) {
-        return Units::arcsecond() / modeReference;
+        Quantity arcsecond = Units::arcsecond() / modeReference;
+        arcsecond.setDisplayUnit(Quantity(1).numericValue(), Units::angleModeUnitSymbol(angleMode));
+        return arcsecond;
     }
     return Quantity(0);
 }
@@ -1123,6 +1132,11 @@ QString Units::angleModeUnitSymbol(char angleMode)
     if (angleMode == 'v')
         return UnitSymbol::Revolution;
     return UnitSymbol::Radian;
+}
+
+QString Units::degreeAliasSymbol()
+{
+    return UnitAltSymbol::Degree;
 }
 
 QString prefixName(PrefixId id)
@@ -1372,6 +1386,65 @@ void Units::initTable()
 // prefers canonical named units, otherwise renders composed factors.
 void Units::findUnit(Quantity& q)
 {
+    struct ExplicitAngleFactorInfo {
+        bool hasFactor = false;
+        Rational exponent = Rational(0);
+        AngleUnitKind preferredKind = AngleUnitKind::None;
+    };
+    const auto explicitAngleFactorInfo = [](const QString& text) {
+        ExplicitAngleFactorInfo info;
+        if (text.isEmpty())
+            return info;
+        int sign = 1;
+        QString token;
+        auto flushToken = [&]() {
+            if (token.isEmpty())
+                return;
+            QString factor = token.trimmed();
+            token.clear();
+            if (factor.isEmpty())
+                return;
+            int exponentStart = factor.size();
+            bool hasExponent = false;
+            int exponent = parseTrailingExponent(factor, &exponentStart, &hasExponent);
+            QString base = factor.left(exponentStart).trimmed();
+            while (!base.isEmpty()
+                   && (UnicodeChars::isSuperscriptDigit(base.at(base.size() - 1))
+                       || UnicodeChars::isSuperscriptSign(base.at(base.size() - 1))))
+            {
+                base.chop(1);
+            }
+            if (base.isEmpty())
+                return;
+            const AngleUnitKind kind = angleUnitKindFromName(base);
+            if (kind == AngleUnitKind::None)
+                return;
+            info.hasFactor = true;
+            if (info.preferredKind == AngleUnitKind::None)
+                info.preferredKind = kind;
+            if (!hasExponent)
+                exponent = 1;
+            info.exponent += Rational(sign * exponent);
+        };
+        for (int i = 0; i < text.size(); ++i) {
+            const QChar ch = text.at(i);
+            const bool isUnitChar =
+                UnicodeChars::isUnitIdentifierChar(ch)
+                || UnicodeChars::isSuperscriptDigit(ch)
+                || UnicodeChars::isSuperscriptSign(ch);
+            if (isUnitChar) {
+                token += ch;
+                continue;
+            }
+            flushToken();
+            if (ch == MathDsl::DivOp)
+                sign = -1;
+        }
+        flushToken();
+        return info;
+    };
+
+    const QString originalUnitName = q.unitName();
     QString unit_name = "";
     CNumber unit(1);
     q.cleanDimension();
@@ -1380,6 +1453,12 @@ void Units::findUnit(Quantity& q)
         initTable();
 
     const QMap<UnitQuantity, Rational> dim = q.getDimensionByQuantity();
+    const ExplicitAngleFactorInfo angleInfo = explicitAngleFactorInfo(originalUnitName);
+    const bool preserveExplicitAngleFactor =
+        !originalUnitName.isEmpty()
+        && !q.isDimensionless()
+        && angleInfo.hasFactor
+        && !angleInfo.exponent.isZero();
     // Policy: only auto-canonicalize dimensions that map to a single,
     // overwhelmingly standard named unit without major semantic collision.
     // Example: N·m is intentionally kept explicit in multiplication code
@@ -1413,7 +1492,7 @@ void Units::findUnit(Quantity& q)
         }
         return false;
     };
-    if (m_matchLookup.contains(dim)) {
+    if (m_matchLookup.contains(dim) && !preserveExplicitAngleFactor) {
         Unit temp(m_matchLookup[dim]);
         if (runtimeUnitNegativeExponentStyle() == Settings::UnitNegativeExponentSuperscript)
             temp.name = applySuperscriptStyleToUnitName(temp.name);
@@ -1463,6 +1542,26 @@ void Units::findUnit(Quantity& q)
         const auto appendFactor = [&](const QString& name, const Rational& exponent) {
             factors.append(UnitFactor{name, exponent});
         };
+        if (preserveExplicitAngleFactor) {
+            const auto compositeAngleDisplayName = [](AngleUnitKind kind) {
+                if (kind == AngleUnitKind::Radian)
+                    return unitName(UnitId::Radian);
+                if (kind == AngleUnitKind::Gradian)
+                    return UnitSymbol::Gradian;
+                if (kind == AngleUnitKind::Turn)
+                    return UnitSymbol::Turn;
+                return UnitAltSymbol::Degree;
+            };
+            appendFactor(compositeAngleDisplayName(angleInfo.preferredKind), angleInfo.exponent);
+            const Quantity explicitAngleScale = angleUnitValueForMode(
+                angleInfo.preferredKind == AngleUnitKind::None
+                    ? AngleUnitKind::Degree
+                    : angleInfo.preferredKind,
+                s_runtimeAngleModeForUnits);
+            const QByteArray exponentText = angleInfo.exponent.toString().toLatin1();
+            unit *= HMath::raise(explicitAngleScale.numericValue().real,
+                                 HNumber(exponentText.constData()));
+        }
 
         // Prefer recognizable derived SI units before base-unit fallback.
         QMap<UnitQuantity, Rational> remaining = q.getDimensionByQuantity();
@@ -1863,6 +1962,7 @@ const QHash<QString, Quantity>& Units::builtInUnitValues()
 
 QHash<QString, Quantity> Units::builtInUnitLookup(char angleMode)
 {
+    s_runtimeAngleModeForUnits = angleMode;
     QHash<QString, Quantity> lookup;
 
     const auto& unitValues = Units::builtInUnitValues();

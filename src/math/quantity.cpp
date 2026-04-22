@@ -107,6 +107,237 @@ bool isExactDimension(const Quantity& q, const QMap<UnitQuantity, Rational>& exp
     return q.getDimensionByQuantity() == expected;
 }
 
+bool parseUnitFactorAndExponent(const QString& token, QString* baseOut, int* exponentOut)
+{
+    if (!baseOut || !exponentOut)
+        return false;
+    QString t = token.trimmed();
+    if (t.isEmpty())
+        return false;
+
+    int exponent = 1;
+    int suffixStart = t.size();
+    while (suffixStart > 0) {
+        const QChar ch = t.at(suffixStart - 1);
+        if (!UnicodeChars::isSuperscriptDigit(ch)
+            && !UnicodeChars::isSuperscriptSign(ch))
+        {
+            break;
+        }
+        --suffixStart;
+    }
+    if (suffixStart < t.size()) {
+        bool negative = false;
+        int pos = suffixStart;
+        if (t.at(pos) == MathDsl::PowNeg || t.at(pos) == MathDsl::PowPos) {
+            negative = t.at(pos) == MathDsl::PowNeg;
+            ++pos;
+        }
+        if (pos >= t.size())
+            return false;
+        QString digits;
+        for (; pos < t.size(); ++pos) {
+            const QChar ascii = MathDsl::superscriptDigitToAscii(t.at(pos));
+            if (ascii.isNull())
+                return false;
+            digits += ascii;
+        }
+        bool ok = false;
+        int value = digits.toInt(&ok);
+        if (!ok)
+            return false;
+        exponent = negative ? -value : value;
+        t = t.left(suffixStart).trimmed();
+    } else {
+        const int caret = t.lastIndexOf(MathDsl::PowOp);
+        if (caret >= 0 && caret + 1 < t.size()) {
+            bool ok = false;
+            const int value = t.mid(caret + 1).trimmed().toInt(&ok);
+            if (!ok)
+                return false;
+            exponent = value;
+            t = t.left(caret).trimmed();
+        }
+    }
+
+    if (t.isEmpty())
+        return false;
+    *baseOut = t;
+    *exponentOut = exponent;
+    return true;
+}
+
+QString formatUnitFactorWithExponent(const QString& base, int exponent)
+{
+    if (exponent == 1)
+        return base;
+    QString suffix;
+    if (exponent < 0)
+        suffix += MathDsl::PowNeg;
+    const QString digits = QString::number(qAbs(exponent));
+    for (const QChar ch : digits)
+        suffix += MathDsl::asciiDigitToSuperscript(ch);
+    return base + suffix;
+}
+
+bool unitTextContainsExplicitAngleFactor(const QString& unitText)
+{
+    if (unitText.isEmpty())
+        return false;
+    QString token;
+    auto flushTokenIsAngle = [&]() {
+        if (token.isEmpty())
+            return false;
+        QString base;
+        int exponent = 0;
+        const QString raw = token;
+        token.clear();
+        if (!parseUnitFactorAndExponent(raw, &base, &exponent))
+            return false;
+        return Units::isExplicitAngleUnitName(base);
+    };
+    for (int i = 0; i < unitText.size(); ++i) {
+        const QChar ch = unitText.at(i);
+        const bool isUnitChar =
+            UnicodeChars::isUnitIdentifierChar(ch)
+            || UnicodeChars::isSuperscriptDigit(ch)
+            || UnicodeChars::isSuperscriptSign(ch)
+            || ch == MathDsl::PowOp;
+        if (isUnitChar) {
+            token += ch;
+            continue;
+        }
+        if (flushTokenIsAngle())
+            return true;
+    }
+    return flushTokenIsAngle();
+}
+
+QString simplifyExplicitAngleCompositeDisplayUnits(const QString& unitName)
+{
+    QString normalized = unitName.trimmed();
+    if (normalized.isEmpty())
+        return normalized;
+
+    if (!unitTextContainsExplicitAngleFactor(normalized))
+        return normalized;
+    if (normalized.contains(MathDsl::DivOp)
+        || normalized.contains(MathDsl::AddOp)
+        || normalized.contains(MathDsl::SubOpAl1)
+        || normalized.contains(MathDsl::GroupStart)
+        || normalized.contains(MathDsl::GroupEnd))
+    {
+        return normalized;
+    }
+
+    struct Factor {
+        QString base;
+        int exponent = 1;
+    };
+    QList<Factor> factors;
+    QString token;
+    auto flushToken = [&]() -> bool {
+        if (token.isEmpty())
+            return true;
+        QString base;
+        int exponent = 0;
+        const QString raw = token;
+        token.clear();
+        if (!parseUnitFactorAndExponent(raw, &base, &exponent))
+            return false;
+        factors.append(Factor{base, exponent});
+        return true;
+    };
+    const auto isMulSeparator = [](const QChar ch) {
+        return ch.isSpace()
+            || ch == MathDsl::MulOpAl1
+            || ch == MathDsl::MulDotOp
+            || ch == MathDsl::MulCrossOp;
+    };
+    for (int i = 0; i < normalized.size(); ++i) {
+        const QChar ch = normalized.at(i);
+        if (isMulSeparator(ch)) {
+            if (!flushToken())
+                return unitName;
+            continue;
+        }
+        token += ch;
+    }
+    if (!flushToken())
+        return unitName;
+    if (factors.size() < 2)
+        return normalized;
+
+    const QString kgName = ::unitName(UnitId::Kilogram);
+    const QString kgSymbol = ::unitSymbol(UnitId::Kilogram);
+    const QString mName = ::unitName(UnitId::Metre);
+    const QString mSymbol = ::unitSymbol(UnitId::Metre);
+    const QString sName = ::unitName(UnitId::Second);
+    const QString sSymbol = ::unitSymbol(UnitId::Second);
+    const QString jSymbol = ::unitSymbol(UnitId::Joule);
+    const QString metreName = ::unitName(UnitId::Metre);
+    for (int i = 0; i < factors.size(); ++i) {
+        if (factors[i].base == ::unitName(UnitId::SquareMetre)) {
+            factors[i].base = metreName;
+            factors[i].exponent *= 2;
+        } else if (factors[i].base == ::unitName(UnitId::CubicMetre)) {
+            factors[i].base = metreName;
+            factors[i].exponent *= 3;
+        }
+    }
+
+    int kgIndex = -1;
+    int mIndex = -1;
+    int sIndex = -1;
+    for (int i = 0; i < factors.size(); ++i) {
+        const QString b = factors.at(i).base;
+        if (kgIndex < 0 && (b == kgName || b == kgSymbol))
+            kgIndex = i;
+        else if (mIndex < 0 && (b == mName || b == mSymbol))
+            mIndex = i;
+        else if (sIndex < 0 && (b == sName || b == sSymbol))
+            sIndex = i;
+    }
+
+    if (kgIndex < 0 || mIndex < 0 || sIndex < 0) {
+        return normalized;
+    }
+    if (factors[kgIndex].exponent <= 0 || factors[mIndex].exponent < 2) {
+        return normalized;
+    }
+
+    const int jExp = qMin(factors[kgIndex].exponent, factors[mIndex].exponent / 2);
+    if (jExp <= 0)
+        return normalized;
+
+    factors[kgIndex].exponent -= jExp;
+    factors[mIndex].exponent -= 2 * jExp;
+    factors[sIndex].exponent += 2 * jExp;
+
+    int jIndex = -1;
+    for (int i = 0; i < factors.size(); ++i) {
+        if (factors.at(i).base == jSymbol) {
+            jIndex = i;
+            break;
+        }
+    }
+    if (jIndex >= 0) {
+        factors[jIndex].exponent += jExp;
+    } else {
+        factors.insert(kgIndex, Factor{jSymbol, jExp});
+    }
+
+    QStringList rendered;
+    for (const Factor& factor : factors) {
+        if (factor.exponent == 0)
+            continue;
+        rendered << formatUnitFactorWithExponent(factor.base, factor.exponent);
+    }
+    if (rendered.isEmpty())
+        return normalized;
+    return rendered.join(QString(MathDsl::MulDotOp));
+}
+
 QString normalizeDisplayUnitNameForOutput(const QString& unitName)
 {
     QString normalized = unitName.trimmed();
@@ -116,6 +347,20 @@ QString normalizeDisplayUnitNameForOutput(const QString& unitName)
     if (unitId(normalized) == UnitId::Degree) {
         return QString(UnicodeChars::DegreeSign);
     }
+
+    const bool isCompositeUnit =
+        normalized.contains(MathDsl::MulOpAl1)
+        || normalized.contains(MathDsl::MulDotOp)
+        || normalized.contains(MathDsl::MulCrossOp)
+        || normalized.contains(MathDsl::DivOp);
+    if (isCompositeUnit
+        && (normalized.contains(UnicodeChars::DegreeSign)
+            || normalized.contains(UnicodeChars::MasculineOrdinalIndicator)))
+    {
+        normalized.replace(UnicodeChars::MasculineOrdinalIndicator, UnicodeChars::DegreeSign);
+        normalized.replace(QString(UnicodeChars::DegreeSign), Units::degreeAliasSymbol());
+    }
+    normalized = simplifyExplicitAngleCompositeDisplayUnits(normalized);
 
     // Keep explicit conversion-expression targets unchanged; they are meant
     // to mirror user-entered structure (operators and grouping).
@@ -518,7 +763,7 @@ bool Quantity::isDimensionless() const
 {
     Quantity temp(*this);
     temp.cleanDimension();
-    return m_dimension.empty();
+    return temp.m_dimension.empty();
 }
 
 QMap<QString, Rational> Quantity::getDimension() const
@@ -750,6 +995,14 @@ Quantity Quantity::operator*(const Quantity& other) const
 {
     Quantity result(*this);
     result.m_numericValue *= other.m_numericValue;
+    const bool lhsExplicitAngleUnit =
+        this->hasUnit() && Units::isExplicitAngleUnitName(this->unitName());
+    const bool rhsExplicitAngleUnit =
+        other.hasUnit() && Units::isExplicitAngleUnitName(other.unitName());
+    const bool lhsExplicitAngleDimensionless =
+        lhsExplicitAngleUnit && this->isDimensionless();
+    const bool rhsExplicitAngleDimensionless =
+        rhsExplicitAngleUnit && other.isDimensionless();
     const auto isPureInverseTimeQuantity = [](const Quantity& quantity) {
         QMap<UnitQuantity, Rational> dimension = quantity.getDimensionByQuantity();
         return dimension.size() == 1
@@ -760,6 +1013,38 @@ Quantity Quantity::operator*(const Quantity& other) const
         result.stripUnits();
         result.m_unit = new CNumber(source.unit());
         result.m_unitName = source.unitName();
+    };
+    const auto unitTextContainsExplicitAngleFactor = [](const QString& unitText) {
+        if (unitText.isEmpty())
+            return false;
+        QString token;
+        auto flushTokenIsAngle = [&]() {
+            if (token.isEmpty())
+                return false;
+            QString base = token.trimmed();
+            token.clear();
+            while (!base.isEmpty()
+                   && (UnicodeChars::isSuperscriptDigit(base.at(base.size() - 1))
+                       || UnicodeChars::isSuperscriptSign(base.at(base.size() - 1))))
+            {
+                base.chop(1);
+            }
+            return !base.isEmpty() && Units::isExplicitAngleUnitName(base);
+        };
+        for (int i = 0; i < unitText.size(); ++i) {
+            const QChar ch = unitText.at(i);
+            const bool isUnitChar =
+                UnicodeChars::isUnitIdentifierChar(ch)
+                || UnicodeChars::isSuperscriptDigit(ch)
+                || UnicodeChars::isSuperscriptSign(ch);
+            if (isUnitChar) {
+                token += ch;
+                continue;
+            }
+            if (flushTokenIsAngle())
+                return true;
+        }
+        return flushTokenIsAngle();
     };
     if (!other.isDimensionless()) {
         result.stripUnits();
@@ -776,7 +1061,10 @@ Quantity Quantity::operator*(const Quantity& other) const
 
         // Preserve preferred display unit when multiplying a dimensionless
         // value by a quantity with an explicit display unit.
-        if (this->isDimensionless() && other.hasUnit()) {
+        if (this->isDimensionless()
+            && other.hasUnit()
+            && !lhsExplicitAngleUnit)
+        {
             result.m_unit = new CNumber(*other.m_unit);
             result.m_unitName = other.m_unitName;
         }
@@ -787,75 +1075,87 @@ Quantity Quantity::operator*(const Quantity& other) const
         const QString n2 = normalizeUnitName(other.unitName());
         const UnitId u1 = unitId(n1);
         const UnitId u2 = unitId(n2);
+        const bool hasExplicitAngleFactorOperand =
+            unitTextContainsExplicitAngleFactor(this->unitName())
+            || unitTextContainsExplicitAngleFactor(other.unitName());
         const bool isNewtonMetrePair =
             (u1 == UnitId::Newton && u2 == UnitId::Metre)
             || (u1 == UnitId::Metre && u2 == UnitId::Newton)
             || (isExactDimension(*this, dimensionNewton()) && isExactDimension(other, dimensionMetre()))
             || (isExactDimension(*this, dimensionMetre()) && isExactDimension(other, dimensionNewton()));
-        if (isNewtonMetrePair) {
+        if (!hasExplicitAngleFactorOperand && isNewtonMetrePair) {
             // Keep N·m explicit by default because it is semantically ambiguous:
             // energy is expressed in J, while torque is commonly expressed as N·m.
             // Users can still request an explicit conversion target ("-> joule").
             result.setDisplayUnit(this->unit() * other.unit(), QString(unitPhrase(UnitPhraseId::NewtonMetre)));
-        } else if ((u1 == UnitId::Pascal
+        } else if (!hasExplicitAngleFactorOperand
+                   && ((u1 == UnitId::Pascal
                     && isExactDimension(other, dimensionCubicMetre()))
                    || (u2 == UnitId::Pascal
-                       && isExactDimension(*this, dimensionCubicMetre())))
+                       && isExactDimension(*this, dimensionCubicMetre()))))
         {
             result.setDisplayUnit(this->unit() * other.unit(), QString(::unitName(UnitId::Joule)));
-        } else if ((u1 == UnitId::Watt && u2 == UnitId::Second)
+        } else if (!hasExplicitAngleFactorOperand
+                   && ((u1 == UnitId::Watt && u2 == UnitId::Second)
                    || (u2 == UnitId::Watt && u1 == UnitId::Second)
                    || (isExactDimension(*this, dimensionWatt())
                        && isExactDimension(other, dimensionSecond())
                        && !other.hasUnit())
                    || (isExactDimension(*this, dimensionSecond())
                        && isExactDimension(other, dimensionWatt())
-                       && !this->hasUnit()))
+                       && !this->hasUnit())))
         {
             // Keep W·s explicit by default: although dimensionally equal to J,
             // it often conveys time-integration context (power over time).
             // Auto-collapsing to J can hide that intent unless user requests
             // an explicit conversion ("-> joule").
             result.setDisplayUnit(this->unit() * other.unit(), QString(unitPhrase(UnitPhraseId::WattSecond)));
-        } else if ((u1 == UnitId::Coulomb && u2 == UnitId::Volt)
-                   || (u2 == UnitId::Coulomb && u1 == UnitId::Volt))
+        } else if (!hasExplicitAngleFactorOperand
+                   && ((u1 == UnitId::Coulomb && u2 == UnitId::Volt)
+                       || (u2 == UnitId::Coulomb && u1 == UnitId::Volt)))
         {
             result.setDisplayUnit(this->unit() * other.unit(), QString(::unitName(UnitId::Joule)));
-        } else if ((isExactDimension(*this, dimensionVolt())
+        } else if (!hasExplicitAngleFactorOperand
+                   && ((isExactDimension(*this, dimensionVolt())
                     && isExactDimension(other, dimensionSecond()))
                    || (isExactDimension(other, dimensionVolt())
-                       && isExactDimension(*this, dimensionSecond())))
+                       && isExactDimension(*this, dimensionSecond()))))
         {
             result.setDisplayUnit(this->unit() * other.unit(), QString(::unitName(UnitId::Weber)));
-        } else if ((isExactDimension(*this, dimensionVolt())
+        } else if (!hasExplicitAngleFactorOperand
+                   && ((isExactDimension(*this, dimensionVolt())
                     && isExactDimension(other, dimensionAmpere()))
                    || (isExactDimension(other, dimensionVolt())
-                       && isExactDimension(*this, dimensionAmpere())))
+                       && isExactDimension(*this, dimensionAmpere()))))
         {
             result.setDisplayUnit(this->unit() * other.unit(), QString(::unitName(UnitId::Watt)));
-        } else if ((isExactDimension(*this, dimensionWatt())
+        } else if (!hasExplicitAngleFactorOperand
+                   && ((isExactDimension(*this, dimensionWatt())
                     && isExactDimension(other, dimensionVolt()))
                    || (isExactDimension(other, dimensionWatt())
-                       && isExactDimension(*this, dimensionVolt())))
+                       && isExactDimension(*this, dimensionVolt()))))
         {
             result.setDisplayUnit(this->unit() * other.unit(),
                                   QString(unitPhrase(UnitPhraseId::VoltSquaredAmpere)));
-        } else if ((isExactDimension(*this, dimensionFarad())
+        } else if (!hasExplicitAngleFactorOperand
+                   && ((isExactDimension(*this, dimensionFarad())
                     && isExactDimension(other, dimensionVolt()))
                    || (isExactDimension(other, dimensionFarad())
-                       && isExactDimension(*this, dimensionVolt())))
+                       && isExactDimension(*this, dimensionVolt()))))
         {
             result.setDisplayUnit(this->unit() * other.unit(), QString(::unitName(UnitId::Coulomb)));
-        } else if ((isExactDimension(*this, dimensionTesla())
+        } else if (!hasExplicitAngleFactorOperand
+                   && ((isExactDimension(*this, dimensionTesla())
                     && isExactDimension(other, dimensionSquareMetre()))
                    || (isExactDimension(other, dimensionTesla())
-                       && isExactDimension(*this, dimensionSquareMetre())))
+                       && isExactDimension(*this, dimensionSquareMetre()))))
         {
             result.setDisplayUnit(this->unit() * other.unit(), QString(::unitName(UnitId::Weber)));
-        } else if ((isExactDimension(*this, dimensionPascal())
+        } else if (!hasExplicitAngleFactorOperand
+                   && ((isExactDimension(*this, dimensionPascal())
                     && isExactDimension(other, dimensionSquareMetre()))
                    || (isExactDimension(other, dimensionPascal())
-                       && isExactDimension(*this, dimensionSquareMetre())))
+                       && isExactDimension(*this, dimensionSquareMetre()))))
         {
             result.setDisplayUnit(this->unit() * other.unit(), QString(::unitName(UnitId::Newton)));
         } else if (((this->hasUnit() && Units::isExplicitAngleUnitName(this->unitName())
@@ -876,10 +1176,11 @@ Quantity Quantity::operator*(const Quantity& other) const
                         && isExactDimension(other, dimensionMetre()))) {
             result.setDisplayUnit(this->unit() * other.unit(),
                                   composeProductUnitName(this->unitName(), other.unitName()));
-        } else if ((isSteradianUnitName(n1)
+        } else if (!hasExplicitAngleFactorOperand
+                   && ((isSteradianUnitName(n1)
                     && isExactDimension(other, dimensionCandela()))
                    || (isSteradianUnitName(n2)
-                       && isExactDimension(*this, dimensionCandela())))
+                       && isExactDimension(*this, dimensionCandela()))))
         {
             // This mapping is unambiguous in this context: cd·sr is luminous flux.
             result.setDisplayUnit(this->unit() * other.unit(), QString(::unitName(UnitId::Lumen)));
@@ -893,6 +1194,71 @@ Quantity Quantity::operator*(const Quantity& other) const
             copyDisplayUnit(*this);
         }
     }
+
+    if (lhsExplicitAngleDimensionless && !other.isDimensionless()) {
+        QString otherUnitName = other.unitName();
+        if (otherUnitName.isEmpty()) {
+            Quantity canonical(other);
+            canonical.cleanDimension();
+            Units::findUnit(canonical);
+            otherUnitName = canonical.unitName();
+        }
+        const QString displayName =
+            isPureInverseTimeQuantity(other)
+            ? composeAnglePerSecondUnitName(this->unitName())
+            : composeProductUnitName(this->unitName(), otherUnitName);
+        result.setDisplayUnit(this->unit() * other.unit(), displayName);
+    } else if (rhsExplicitAngleDimensionless && !this->isDimensionless()) {
+        QString thisUnitName = this->unitName();
+        if (thisUnitName.isEmpty()) {
+            Quantity canonical(*this);
+            canonical.cleanDimension();
+            Units::findUnit(canonical);
+            thisUnitName = canonical.unitName();
+        }
+        const QString displayName =
+            isPureInverseTimeQuantity(*this)
+            ? composeAnglePerSecondUnitName(other.unitName())
+            : composeProductUnitName(other.unitName(), thisUnitName);
+        result.setDisplayUnit(this->unit() * other.unit(), displayName);
+    }
+
+    if (!result.hasUnit() && !result.isDimensionless()) {
+        if (this->hasUnit()
+            && !other.hasUnit()
+            && !other.isDimensionless()
+            && unitTextContainsExplicitAngleFactor(this->unitName()))
+        {
+            Quantity canonical(other);
+            canonical.cleanDimension();
+            Units::findUnit(canonical);
+            if (canonical.hasUnit()) {
+                result.setDisplayUnit(this->unit() * other.unit(),
+                                      composeProductUnitName(this->unitName(),
+                                                             canonical.unitName()));
+            }
+        } else if (other.hasUnit()
+                   && !this->hasUnit()
+                   && !this->isDimensionless()
+                   && unitTextContainsExplicitAngleFactor(other.unitName()))
+        {
+            Quantity canonical(*this);
+            canonical.cleanDimension();
+            Units::findUnit(canonical);
+            if (canonical.hasUnit()) {
+                result.setDisplayUnit(this->unit() * other.unit(),
+                                      composeProductUnitName(other.unitName(),
+                                                             canonical.unitName()));
+            }
+        }
+    }
+
+    if (result.hasUnit()) {
+        const QString simplified = simplifyExplicitAngleCompositeDisplayUnits(result.unitName());
+        if (simplified != result.unitName())
+            result.setDisplayUnit(result.unit(), simplified);
+    }
+
     return result;
 }
 
@@ -927,6 +1293,104 @@ Quantity Quantity::operator/(const Quantity& other) const
         result.stripUnits();
         result.m_unit = new CNumber(source.unit());
         result.m_unitName = source.unitName();
+    };
+    const auto unitTextContainsExplicitAngleFactor = [](const QString& unitText) {
+        if (unitText.isEmpty())
+            return false;
+        QString token;
+        auto flushTokenIsAngle = [&]() {
+            if (token.isEmpty())
+                return false;
+            QString base = token.trimmed();
+            token.clear();
+            while (!base.isEmpty()
+                   && (UnicodeChars::isSuperscriptDigit(base.at(base.size() - 1))
+                       || UnicodeChars::isSuperscriptSign(base.at(base.size() - 1))))
+            {
+                base.chop(1);
+            }
+            return !base.isEmpty() && Units::isExplicitAngleUnitName(base);
+        };
+        for (int i = 0; i < unitText.size(); ++i) {
+            const QChar ch = unitText.at(i);
+            const bool isUnitChar =
+                UnicodeChars::isUnitIdentifierChar(ch)
+                || UnicodeChars::isSuperscriptDigit(ch)
+                || UnicodeChars::isSuperscriptSign(ch);
+            if (isUnitChar) {
+                token += ch;
+                continue;
+            }
+            if (flushTokenIsAngle())
+                return true;
+        }
+        return flushTokenIsAngle();
+    };
+    const auto firstExplicitAngleFactorToken = [](const QString& unitText) -> QString {
+        if (unitText.isEmpty())
+            return QString();
+        QString token;
+        const QString degreeName = ::unitName(UnitId::Degree);
+        const QString degreeAlias = Units::degreeAliasSymbol();
+        auto normalizeAngleToken = [&](const QString& rawToken) -> QString {
+            QString normalized = rawToken.trimmed();
+            if (normalized.isEmpty())
+                return normalized;
+
+            int suffixStart = normalized.size();
+            while (suffixStart > 0) {
+                const QChar ch = normalized.at(suffixStart - 1);
+                if (!UnicodeChars::isSuperscriptDigit(ch)
+                    && !UnicodeChars::isSuperscriptSign(ch))
+                {
+                    break;
+                }
+                --suffixStart;
+            }
+            QString base = normalized.left(suffixStart).trimmed();
+            const QString exponentSuffix = normalized.mid(suffixStart);
+            while (!base.isEmpty()
+                   && (UnicodeChars::isSuperscriptDigit(base.at(base.size() - 1))
+                       || UnicodeChars::isSuperscriptSign(base.at(base.size() - 1))))
+            {
+                base.chop(1);
+            }
+            if (!Units::isExplicitAngleUnitName(base))
+                return QString();
+
+            if (base.startsWith(UnicodeChars::DegreeSign))
+                return degreeAlias + base.mid(1) + exponentSuffix;
+            if (base.startsWith(degreeName)) {
+                const int n = degreeName.size();
+                if (base.size() == n || !base.at(n).isLetter())
+                    return degreeAlias + base.mid(n) + exponentSuffix;
+            }
+            if (base.startsWith(degreeAlias))
+                return base + exponentSuffix;
+            return base + exponentSuffix;
+        };
+        auto flushToken = [&]() {
+            if (token.isEmpty())
+                return QString();
+            QString raw = token;
+            token.clear();
+            return normalizeAngleToken(raw);
+        };
+        for (int i = 0; i < unitText.size(); ++i) {
+            const QChar ch = unitText.at(i);
+            const bool isUnitChar =
+                UnicodeChars::isUnitIdentifierChar(ch)
+                || UnicodeChars::isSuperscriptDigit(ch)
+                || UnicodeChars::isSuperscriptSign(ch);
+            if (isUnitChar) {
+                token += ch;
+                continue;
+            }
+            const QString factor = flushToken();
+            if (!factor.isEmpty())
+                return factor;
+        }
+        return flushToken();
     };
     if (!other.isDimensionless()) {
         result.stripUnits();
@@ -986,6 +1450,36 @@ Quantity Quantity::operator/(const Quantity& other) const
             Quantity canonical(result);
             canonical.cleanDimension();
             Units::findUnit(canonical);
+            const bool hasExplicitAngleFactorOperand =
+                unitTextContainsExplicitAngleFactor(this->unitName())
+                || unitTextContainsExplicitAngleFactor(other.unitName());
+            if (hasExplicitAngleFactorOperand) {
+                QString angleFactorToken =
+                    firstExplicitAngleFactorToken(this->unitName());
+                if (angleFactorToken.isEmpty())
+                    angleFactorToken = firstExplicitAngleFactorToken(other.unitName());
+
+                QString canonicalName = canonical.unitName();
+                QString displayName;
+                if (canonicalName.isEmpty()) {
+                    displayName = angleFactorToken;
+                } else if (unitTextContainsExplicitAngleFactor(canonicalName)) {
+                    displayName = canonicalName;
+                } else if (!angleFactorToken.isEmpty()) {
+                    displayName = composeProductUnitName(angleFactorToken, canonicalName);
+                } else {
+                    displayName = canonicalName;
+                }
+
+                if (!displayName.isEmpty()) {
+                    const CNumber displayUnitValue =
+                        canonical.hasUnit()
+                        ? canonical.unit()
+                        : (this->unit() / other.unit());
+                    result.setDisplayUnit(displayUnitValue, displayName);
+                    return result;
+                }
+            }
             const UnitId canonicalId =
                 unitId(normalizeUnitName(canonical.unitName()));
             if (isPreferredCanonicalDisplayUnit(canonicalId))
@@ -997,9 +1491,49 @@ Quantity Quantity::operator/(const Quantity& other) const
             }
             return result;
         }
+
+        if (!result.hasUnit()
+            && !result.isDimensionless()
+            && this->hasUnit()
+            && !other.hasUnit()
+            && unitTextContainsExplicitAngleFactor(this->unitName()))
+        {
+            Quantity canonicalResult(result);
+            canonicalResult.cleanDimension();
+            Units::findUnit(canonicalResult);
+
+            QString angleFactorToken = firstExplicitAngleFactorToken(this->unitName());
+            QString canonicalName = canonicalResult.unitName();
+            QString displayName;
+            if (canonicalName.isEmpty()) {
+                displayName = angleFactorToken;
+            } else if (unitTextContainsExplicitAngleFactor(canonicalName)) {
+                displayName = canonicalName;
+            } else if (!angleFactorToken.isEmpty()) {
+                displayName = composeProductUnitName(angleFactorToken, canonicalName);
+            } else {
+                displayName = canonicalName;
+            }
+
+            if (!displayName.isEmpty()) {
+                const CNumber displayUnitValue =
+                    canonicalResult.hasUnit()
+                    ? canonicalResult.unit()
+                    : (this->unit() / other.unit());
+                result.setDisplayUnit(displayUnitValue, displayName);
+                return result;
+            }
+        }
     } else if (this->hasUnit()) {
         copyDisplayUnit(*this);
     }
+
+    if (result.hasUnit()) {
+        const QString simplified = simplifyExplicitAngleCompositeDisplayUnits(result.unitName());
+        if (simplified != result.unitName())
+            result.setDisplayUnit(result.unit(), simplified);
+    }
+
     return result;
 }
 
@@ -1410,7 +1944,12 @@ QString DMath::format(Quantity q, Quantity::Format format)
         q.cleanDimension();
         Units::findUnit(q);
     }
-    QString unit_name = ' ' + normalizeDisplayUnitNameForOutput(q.unitName());
+    const QString normalizedUnitName = normalizeDisplayUnitNameForOutput(q.unitName());
+    const bool hasUnitSuffix = !normalizedUnitName.isEmpty();
+    const bool compactDegreeSuffix = normalizedUnitName == QString(UnicodeChars::DegreeSign);
+    const QString unit_name = hasUnitSuffix
+        ? (compactDegreeSuffix ? normalizedUnitName : (QStringLiteral(" ") + normalizedUnitName))
+        : QString();
     CNumber unit = q.unit();
     CNumber number = q.m_numericValue;
 
@@ -1423,10 +1962,10 @@ QString DMath::format(Quantity q, Quantity::Format format)
 
     QString result = CMath::format(number, format);
 
-    if (!number.real.isZero() && !number.imag.isZero() && unit_name != " ")
+    if (!number.real.isZero() && !number.imag.isZero() && hasUnitSuffix)
         result = "(" + result + ")";
 
-    if (unit_name != " ")
+    if (hasUnitSuffix)
         result.append(unit_name);
 
     return result;
