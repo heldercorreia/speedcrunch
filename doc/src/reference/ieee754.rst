@@ -84,3 +84,47 @@ and ``binary64`` is available as ``double``.
 .. function:: ieee754_quad_decode(x)
 
    Decode the quad-precision binary float ``x``.
+
+.. function:: ieee754_round_half(x)
+
+   Round ``x`` to the nearest representable half-precision value.
+
+.. function:: ieee754_round_float(x)
+
+   Round ``x`` to the nearest representable single-precision value.
+
+.. function:: ieee754_round_double(x)
+
+   Round ``x`` to the nearest representable double-precision value.
+
+.. function:: ieee754_round_quad(x)
+
+   Round ``x`` to the nearest representable quad-precision value.
+
+For the IEEE helper functions, let ``rounded`` mean the corresponding
+``ieee754_round_*`` result.
+
+- ``ieee754_*_residual(x) = x - rounded``
+- absolute error magnitude = ``abs(ieee754_*_residual(x))``
+- ULP-scaled signed error = ``ieee754_*_residual(x) / ulp(x)``
+
+That is, residual uses the ``x - rounded`` sign convention (not ``rounded - x``).
+
+.. function:: ieee754_half_residual(x)
+
+   Return ``x - ieee754_round_half(x)``.
+
+.. function:: ieee754_float_residual(x)
+
+   Return ``x - ieee754_round_float(x)``.
+
+.. function:: ieee754_double_residual(x)
+
+   Return ``x - ieee754_round_double(x)``.
+
+.. function:: ieee754_quad_residual(x)
+
+   Return ``x - ieee754_round_quad(x)``.
+
+There are currently no built-in ``ieee754_*_abs_error`` or
+``ieee754_*_ulp_error`` functions.

@@ -1226,6 +1226,65 @@ Quantity function_ieee754_quad_encode(Function* f, const Function::ArgumentList&
     return DMath::encodeIeee754(args.at(0), 15, 112);
 }
 
+static Quantity s_ieee754_round(const Function::ArgumentList& args, int exponentBits, int significandBits)
+{
+    const Quantity encoded = DMath::encodeIeee754(args.at(0), exponentBits, significandBits);
+    return DMath::decodeIeee754(encoded, exponentBits, significandBits);
+}
+
+static Quantity s_ieee754_residual(const Function::ArgumentList& args, int exponentBits, int significandBits)
+{
+    return args.at(0) - s_ieee754_round(args, exponentBits, significandBits);
+}
+
+Quantity function_ieee754_round_half(Function* f, const Function::ArgumentList& args)
+{
+    ENSURE_ARGUMENT_COUNT(1);
+    return s_ieee754_round(args, 5, 10);
+}
+
+Quantity function_ieee754_round_float(Function* f, const Function::ArgumentList& args)
+{
+    ENSURE_ARGUMENT_COUNT(1);
+    return s_ieee754_round(args, 8, 23);
+}
+
+Quantity function_ieee754_round_double(Function* f, const Function::ArgumentList& args)
+{
+    ENSURE_ARGUMENT_COUNT(1);
+    return s_ieee754_round(args, 11, 52);
+}
+
+Quantity function_ieee754_round_quad(Function* f, const Function::ArgumentList& args)
+{
+    ENSURE_ARGUMENT_COUNT(1);
+    return s_ieee754_round(args, 15, 112);
+}
+
+Quantity function_ieee754_half_residual(Function* f, const Function::ArgumentList& args)
+{
+    ENSURE_ARGUMENT_COUNT(1);
+    return s_ieee754_residual(args, 5, 10);
+}
+
+Quantity function_ieee754_float_residual(Function* f, const Function::ArgumentList& args)
+{
+    ENSURE_ARGUMENT_COUNT(1);
+    return s_ieee754_residual(args, 8, 23);
+}
+
+Quantity function_ieee754_double_residual(Function* f, const Function::ArgumentList& args)
+{
+    ENSURE_ARGUMENT_COUNT(1);
+    return s_ieee754_residual(args, 11, 52);
+}
+
+Quantity function_ieee754_quad_residual(Function* f, const Function::ArgumentList& args)
+{
+    ENSURE_ARGUMENT_COUNT(1);
+    return s_ieee754_residual(args, 15, 112);
+}
+
 Quantity function_datetime(Function* f, const Function::ArgumentList& args)
 {
     ENSURE_EITHER_ARGUMENT_COUNT(1, 2);
@@ -1428,6 +1487,14 @@ void FunctionRepo::createFunctions()
     FUNCTION_INSERT(ieee754_double_encode);
     FUNCTION_INSERT(ieee754_quad_decode);
     FUNCTION_INSERT(ieee754_quad_encode);
+    FUNCTION_INSERT(ieee754_round_half);
+    FUNCTION_INSERT(ieee754_round_float);
+    FUNCTION_INSERT(ieee754_round_double);
+    FUNCTION_INSERT(ieee754_round_quad);
+    FUNCTION_INSERT(ieee754_half_residual);
+    FUNCTION_INSERT(ieee754_float_residual);
+    FUNCTION_INSERT(ieee754_double_residual);
+    FUNCTION_INSERT(ieee754_quad_residual);
 
     //Date convertion
     FUNCTION_INSERT(datetime);
@@ -1553,6 +1620,14 @@ void FunctionRepo::setNonTranslatableFunctionUsages()
     FUNCTION_USAGE(ieee754_double_encode, "x");
     FUNCTION_USAGE(ieee754_quad_decode, "x");
     FUNCTION_USAGE(ieee754_quad_encode, "x");
+    FUNCTION_USAGE(ieee754_round_half, "x");
+    FUNCTION_USAGE(ieee754_round_float, "x");
+    FUNCTION_USAGE(ieee754_round_double, "x");
+    FUNCTION_USAGE(ieee754_round_quad, "x");
+    FUNCTION_USAGE(ieee754_half_residual, "x");
+    FUNCTION_USAGE(ieee754_float_residual, "x");
+    FUNCTION_USAGE(ieee754_double_residual, "x");
+    FUNCTION_USAGE(ieee754_quad_residual, "x");
     FUNCTION_USAGE(int, "x");
     FUNCTION_USAGE(imag, "x");
     FUNCTION_USAGE(log2, "x");
@@ -1685,6 +1760,14 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(ieee754_double_encode, tr("Encode 64-bit Double-Precision Value"));
     FUNCTION_NAME(ieee754_quad_decode, tr("Decode 128-bit Quad-Precision Value"));
     FUNCTION_NAME(ieee754_quad_encode, tr("Encode 128-bit Quad-Precision Value"));
+    FUNCTION_NAME(ieee754_round_half, tr("Round to 16-bit Half-Precision Value"));
+    FUNCTION_NAME(ieee754_round_float, tr("Round to 32-bit Single-Precision Value"));
+    FUNCTION_NAME(ieee754_round_double, tr("Round to 64-bit Double-Precision Value"));
+    FUNCTION_NAME(ieee754_round_quad, tr("Round to 128-bit Quad-Precision Value"));
+    FUNCTION_NAME(ieee754_half_residual, tr("Residual from 16-bit Half-Precision Rounding"));
+    FUNCTION_NAME(ieee754_float_residual, tr("Residual from 32-bit Single-Precision Rounding"));
+    FUNCTION_NAME(ieee754_double_residual, tr("Residual from 64-bit Double-Precision Rounding"));
+    FUNCTION_NAME(ieee754_quad_residual, tr("Residual from 128-bit Quad-Precision Rounding"));
     FUNCTION_NAME(log2, tr("Binary Logarithm"));
     FUNCTION_NAME(log10, tr("Common Logarithm"));
     FUNCTION_NAME(ln, tr("Natural Logarithm"));

@@ -2633,6 +2633,24 @@ void test_function_basic()
     CHECK_EVAL("hex(ieee754_half_encode(1))", "0x3C00");
     CHECK_EVAL("hex(ieee754_half_encode(0.99951171875))", "0x3BFF");
     CHECK_EVAL("hex(ieee754_half_encode(0.999755859375))", "0x3C00");
+
+    CHECK_EVAL("ieee754_round_half(0.999755859375)", "1");
+    CHECK_EVAL("ieee754_round_float(pi) - ieee754_single_decode(ieee754_single_encode(pi))", "0");
+    CHECK_EVAL("ieee754_round_double(pi) - ieee754_double_decode(ieee754_double_encode(pi))", "0");
+    CHECK_EVAL("ieee754_round_quad(pi) - ieee754_quad_decode(ieee754_quad_encode(pi))", "0");
+
+    CHECK_EVAL("ieee754_half_residual(0.999755859375) - (0.999755859375 - ieee754_round_half(0.999755859375))", "0");
+    CHECK_EVAL("ieee754_float_residual(pi) - (pi - ieee754_round_float(pi))", "0");
+    CHECK_EVAL("ieee754_double_residual(pi) - (pi - ieee754_round_double(pi))", "0");
+    CHECK_EVAL("ieee754_quad_residual(pi) - (pi - ieee754_round_quad(pi))", "0");
+
+    CHECK_EVAL("ieee754_double_residual(pi)", "0.00000000000000012246");
+    CHECK_EVAL("ieee754_double_residual(pi/2)", "0.00000000000000006123");
+
+    CHECK_EVAL("pi/2", "1.57079632679489661923");
+    CHECK_EVAL_PRECISE("ieee754_double_residual(pi/2)", "0.00000000000000006123233995736765886130329661375005");
+    CHECK_EVAL_PRECISE("ieee754_double_residual(ieee754_double_residual(pi/2))", "-0.00000000000000000000000000000000149738490485916978");
+    CHECK_EVAL_PRECISE("ieee754_double_residual(ieee754_double_residual(ieee754_double_residual(pi/2)))", "0.00000000000000000000000000000000000000000000000006");
 }
 
 void test_function_trig()
