@@ -1906,6 +1906,10 @@ void TestEditorUi::accepts_degree_alias_in_unit_brackets_and_normalizes_to_degre
 
     QTest::keyClicks(&editor, QString::fromUtf8("ºC"));
     QCOMPARE(editor.text(), QString::fromUtf8("100 [°C"));
+
+    // QTest::keyClicks() rejects U+02DA in qasciikey, so verify via setText().
+    editor.setText(QString::fromUtf8("100 [˚C"));
+    QCOMPARE(editor.text(), QString::fromUtf8("100 [°C"));
 }
 
 void TestEditorUi::offers_unit_completion_for_degree_symbol_in_unit_context()
@@ -2056,6 +2060,24 @@ void TestEditorUi::completes_affine_temperature_units_in_unit_context()
         Qt::DirectConnection,
         Q_ARG(QString, QString::fromUtf8("ºC:Unit"))));
     QCOMPARE(editor.text(), QString::fromUtf8("100 [°C"));
+
+    editor.setText(QString::fromUtf8("100 [˚"));
+    editor.setCursorPosition(editor.text().size());
+    QVERIFY(QMetaObject::invokeMethod(
+        &editor,
+        "autoComplete",
+        Qt::DirectConnection,
+        Q_ARG(QString, QString::fromUtf8("˚C:Unit"))));
+    QCOMPARE(editor.text(), QString::fromUtf8("100 [°C"));
+
+    editor.setText(QString::fromUtf8("100 [˚"));
+    editor.setCursorPosition(editor.text().size());
+    QVERIFY(QMetaObject::invokeMethod(
+        &editor,
+        "autoComplete",
+        Qt::DirectConnection,
+        Q_ARG(QString, QString::fromUtf8("˚F:Unit"))));
+    QCOMPARE(editor.text(), QString::fromUtf8("100 [°F"));
 
     editor.setText(QStringLiteral("100 [deg"));
     editor.setCursorPosition(editor.text().size());

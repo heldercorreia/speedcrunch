@@ -187,7 +187,8 @@ inline bool isUnitIdentifierChar(QChar ch)
         || ch == MicroSign
         || ch == GreekCapitalOmega
         || ch == DegreeSign
-        || ch == MasculineOrdinalIndicator;
+        || ch == MasculineOrdinalIndicator
+        || ch == RingAbove;
 }
 
 // Replaces mathematical styled pi symbols with plain 'π'.
@@ -204,12 +205,13 @@ inline QString normalizePiAliasesToPi(QString text)
 
 // Normalizes unit-symbol aliases to canonical forms.
 // Example input/output:
-// "Ω(U+2126) μ(U+03BC) º(U+00BA)" -> "Ω(U+03A9) µ(U+00B5) °(U+00B0)".
+// "Ω(U+2126) μ(U+03BC) º(U+00BA) ˚(U+02DA)" -> "Ω(U+03A9) µ(U+00B5) °(U+00B0) °(U+00B0)".
 inline QString normalizeUnitSymbolAliases(QString text)
 {
     text.replace(OhmSign, GreekCapitalOmega);
     text.replace(GreekSmallLetterMu, MicroSign);
     text.replace(MasculineOrdinalIndicator, DegreeSign);
+    text.replace(RingAbove, DegreeSign);
     return text;
 }
 

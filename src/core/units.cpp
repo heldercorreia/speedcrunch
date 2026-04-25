@@ -340,16 +340,19 @@ namespace UnitSymbol {
 } // namespace UnitSymbol
 
 namespace UnitAltSymbol {
+    inline const QString DegreeCelsiusRing = QStringLiteral("˚C");
     inline const QString DegreeCelsius1 = QStringLiteral("ºC");
     inline const QString DegreeCelsius2 = QStringLiteral("oC");
     inline const QString DegreeCelsius3 = QStringLiteral("degC");
     inline const QString DegreeCelsius4 = QStringLiteral("Cel");
+    inline const QString DegreeRing = QStringLiteral("˚");
     inline const QString Degree = QStringLiteral("deg");
     inline const QString Arcminute = QStringLiteral("arcmin");
     inline const QString Arcsecond = QStringLiteral("arcsec");
     inline const QString CubicCentimetre = QStringLiteral("cc");
     inline const QString Litre = QStringLiteral("l");
     inline const QString DegreeFahrenheit1 = QStringLiteral("ºF");
+    inline const QString DegreeFahrenheitRing = QStringLiteral("˚F");
     inline const QString DegreeFahrenheit2 = QStringLiteral("oF");
     inline const QString DegreeFahrenheit3 = QStringLiteral("degF");
     inline const QString DegreeFahrenheit4 = QStringLiteral("Fah");
@@ -574,7 +577,7 @@ const QHash<UnitId, UnitSpec>& s_unitSpecs()
         {UnitId::Weber, UnitSpec{UnitName::Weber, UnitSymbol::Weber, {}, UnitFamily::SiDerived, {UnitQuantity::MagneticFlux}, AllSiPrefixes, &Units::weber}},
         {UnitId::Tesla, UnitSpec{UnitName::Tesla, UnitSymbol::Tesla, {}, UnitFamily::SiDerived, {UnitQuantity::MagneticFluxDensity}, AllSiPrefixes, &Units::tesla}},
         {UnitId::Henry, UnitSpec{UnitName::Henry, UnitSymbol::Henry, {}, UnitFamily::SiDerived, {UnitQuantity::Inductance}, AllSiPrefixes, &Units::henry}},
-        {UnitId::DegreeCelsius, UnitSpec{UnitName::DegreeCelsius, UnitSymbol::DegreeCelsius, {UnitAltSymbol::DegreeCelsius1, UnitAltSymbol::DegreeCelsius2, UnitAltSymbol::DegreeCelsius3, UnitAltSymbol::DegreeCelsius4}, UnitFamily::SiAccepted, {UnitQuantity::CelsiusTemperature}, NoSiPrefixes, &Units::kelvin, {&s_celsiusToKelvin, &s_kelvinToCelsius}}},
+        {UnitId::DegreeCelsius, UnitSpec{UnitName::DegreeCelsius, UnitSymbol::DegreeCelsius, {UnitAltSymbol::DegreeCelsiusRing, UnitAltSymbol::DegreeCelsius1, UnitAltSymbol::DegreeCelsius2, UnitAltSymbol::DegreeCelsius3, UnitAltSymbol::DegreeCelsius4}, UnitFamily::SiAccepted, {UnitQuantity::CelsiusTemperature}, NoSiPrefixes, &Units::kelvin, {&s_celsiusToKelvin, &s_kelvinToCelsius}}},
         {UnitId::Lumen, UnitSpec{UnitName::Lumen, UnitSymbol::Lumen, {}, UnitFamily::SiDerived, {UnitQuantity::LuminousFlux}, AllSiPrefixes, &Units::lumen}},
         {UnitId::Lux, UnitSpec{UnitName::Lux, UnitSymbol::Lux, {}, UnitFamily::SiDerived, {UnitQuantity::Illuminance}, AllSiPrefixes, &Units::lux}},
         {UnitId::Becquerel, UnitSpec{UnitName::Becquerel, UnitSymbol::Becquerel, {}, UnitFamily::SiDerived, {UnitQuantity::ActivityReferredToARadionuclide}, AllSiPrefixes, &Units::becquerel}},
@@ -594,7 +597,7 @@ const QHash<UnitId, UnitSpec>& s_unitSpecs()
         {UnitId::Hour, UnitSpec{UnitName::Hour, UnitSymbol::Hour, {}, UnitFamily::SiAccepted, {UnitQuantity::Time}, NoSiPrefixes, &Units::hour}},
         {UnitId::Day, UnitSpec{UnitName::Day, UnitSymbol::Day, {}, UnitFamily::SiAccepted, {UnitQuantity::Time}, NoSiPrefixes, &Units::day}},
         {UnitId::AstronomicalUnit, UnitSpec{UnitName::AstronomicalUnit, UnitSymbol::AstronomicalUnit, {}, UnitFamily::SiAccepted, {UnitQuantity::Length}, NoSiPrefixes, &Units::astronomical_unit}},
-        {UnitId::Degree, UnitSpec{UnitName::Degree, UnitSymbol::Degree, {UnitAltSymbol::Degree}, UnitFamily::SiAccepted, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::degree}},
+        {UnitId::Degree, UnitSpec{UnitName::Degree, UnitSymbol::Degree, {UnitAltSymbol::DegreeRing, UnitAltSymbol::Degree}, UnitFamily::SiAccepted, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::degree}},
         {UnitId::Arcminute, UnitSpec{UnitName::Arcminute, UnitSymbol::Arcminute, {UnitAltSymbol::Arcminute}, UnitFamily::SiAccepted, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::arcminute}},
         {UnitId::Arcsecond, UnitSpec{UnitName::Arcsecond, UnitSymbol::Arcsecond, {UnitAltSymbol::Arcsecond}, UnitFamily::SiAccepted, {UnitQuantity::PlaneAngle}, NoSiPrefixes, &Units::arcsecond}},
         {UnitId::Hectare, UnitSpec{UnitName::Hectare, UnitSymbol::Hectare, {}, UnitFamily::SiAccepted, {UnitQuantity::Area}, NoSiPrefixes, &Units::hectare}},
@@ -617,7 +620,7 @@ const QHash<UnitId, UnitSpec>& s_unitSpecs()
         {UnitId::CupImp, UnitSpec{UnitName::CupImp, UnitSymbol::CupImp, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::cup_imp}},
         {UnitId::CupJp, UnitSpec{UnitName::CupJp, UnitSymbol::CupJp, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::cup_jp}},
         {UnitId::CupUs, UnitSpec{UnitName::CupUs, UnitSymbol::CupUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::cup_us}},
-        {UnitId::DegreeFahrenheit, UnitSpec{UnitName::DegreeFahrenheit, UnitSymbol::DegreeFahrenheit, {UnitAltSymbol::DegreeFahrenheit1, UnitAltSymbol::DegreeFahrenheit2, UnitAltSymbol::DegreeFahrenheit3, UnitAltSymbol::DegreeFahrenheit4}, UnitFamily::Other, {UnitQuantity::CelsiusTemperature}, NoSiPrefixes, &Units::kelvin, {&s_fahrenheitToKelvin, &s_kelvinToFahrenheit}}},
+        {UnitId::DegreeFahrenheit, UnitSpec{UnitName::DegreeFahrenheit, UnitSymbol::DegreeFahrenheit, {UnitAltSymbol::DegreeFahrenheit1, UnitAltSymbol::DegreeFahrenheitRing, UnitAltSymbol::DegreeFahrenheit2, UnitAltSymbol::DegreeFahrenheit3, UnitAltSymbol::DegreeFahrenheit4}, UnitFamily::Other, {UnitQuantity::CelsiusTemperature}, NoSiPrefixes, &Units::kelvin, {&s_fahrenheitToKelvin, &s_kelvinToFahrenheit}}},
         {UnitId::Fathom, UnitSpec{UnitName::Fathom, UnitSymbol::Fathom, {}, UnitFamily::Other, {UnitQuantity::Length}, NoSiPrefixes, &Units::fathom}},
         {UnitId::FluidOunceImp, UnitSpec{UnitName::FluidOunceImp, UnitSymbol::FluidOunceImp, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::fluid_ounce_imp}},
         {UnitId::FluidOunceUs, UnitSpec{UnitName::FluidOunceUs, UnitSymbol::FluidOunceUs, {}, UnitFamily::Other, {UnitQuantity::Volume}, NoSiPrefixes, &Units::fluid_ounce_us}},

@@ -194,8 +194,8 @@ An important feature of SpeedCrunch's unit system is *dimensional checking*. Sim
 * *Information*: ``bit``
 
 Temperature conversions also support the affine scales ``degree_celsius`` (short form
-``°C``) and ``degree_fahrenheit`` (short form ``°F``). The input aliases ``ºC`` and
-``ºF`` are accepted and normalized to ``°C`` and ``°F``::
+``°C``) and ``degree_fahrenheit`` (short form ``°F``). The input aliases ``ºC``,
+``˚C``, ``ºF`` and ``˚F`` are accepted and normalized to ``°C`` and ``°F``::
 
     77 [°F] -> [°C]
     = 25 [°C]
