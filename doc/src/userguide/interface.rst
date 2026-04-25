@@ -400,6 +400,33 @@ This section contains settings that control result output and post-evaluation be
     Applying changes from this dialog updates only the current editor previews
     immediately (live/selection) without rewriting already displayed
     calculation history.
+* :menuselection:`Rounding Mode`
+    Choose how displayed results are rounded when formatting to a finite number
+    of digits. The default is :menuselection:`Half Away from Zero (Arithmetic)`.
+
+    * :menuselection:`Half Even (Banker's)`
+        Round to nearest; ties go to the nearest even last kept digit.
+        Example at 1 fractional digit: ``2.250 -> 2.2``,
+        ``2.350 -> 2.4``, ``-2.250 -> -2.2``.
+    * :menuselection:`Half Away from Zero (Arithmetic)`
+        Round to nearest; ties increase magnitude.
+        Example at 1 fractional digit: ``2.250 -> 2.3``,
+        ``-2.250 -> -2.3``.
+    * :menuselection:`Toward Zero`
+        Discard extra digits without rounding up.
+        Example at 1 fractional digit: ``2.290 -> 2.2``,
+        ``-2.290 -> -2.2``.
+    * :menuselection:`Toward +Infinity`
+        Always round upward.
+        Example at 1 fractional digit: ``2.210 -> 2.3``,
+        ``-2.210 -> -2.2``.
+    * :menuselection:`Toward -Infinity`
+        Always round downward.
+        Example at 1 fractional digit: ``2.290 -> 2.2``,
+        ``-2.210 -> -2.3``.
+
+    This setting affects result formatting (including live previews). It does
+    not change the behavior of the :func:`round` and :func:`trunc` functions.
 * :menuselection:`Automatically Copy New Results to Clipboard`
     Automatically copy each newly evaluated result to the clipboard.
 * :menuselection:`Simplify Displayed Expressions`

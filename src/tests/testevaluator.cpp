@@ -1,6 +1,6 @@
 // This file is part of the SpeedCrunch project
 // Copyright (C) 2004-2006 Ariya Hidayat <ariya@kde.org>
-// Copyright (C) 2007-2009, 2013, 2016 @heldercorreia
+// Copyright (C) 2007-2009, 2013, 2016, 2026 @heldercorreia
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -4865,6 +4865,56 @@ void test_format()
     Evaluator::instance()->initializeAngleUnits();
 }
 
+void test_result_rounding_mode_formatting()
+{
+    Settings* settings = Settings::instance();
+    const Settings::ResultRoundingMode savedMode = settings->resultRoundingMode;
+
+    auto checkFixed0 = [&](const char* label, const char* value, const char* expected) {
+        ++eval_total_tests;
+        QString formatted = NumberFormatter::format(
+            Quantity(HNumber(value)), 'f', 0, false, 'c');
+        formatted.replace(QString::fromUtf8("−"), "-");
+        if (formatted != QString::fromUtf8(expected)) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\t" << label << "\t[NEW]" << endl
+                 << "\tResult   : " << formatted.toUtf8().constData() << endl
+                 << "\tExpected : " << expected << endl;
+        }
+    };
+
+    settings->resultRoundingMode = Settings::ResultRoundingHalfAwayFromZero;
+    setRuntimeResultRoundingMode(settings->resultRoundingMode);
+    checkFixed0("half-away +2.5", "2.5", "3");
+    checkFixed0("half-away -2.5", "-2.5", "-3");
+
+    settings->resultRoundingMode = Settings::ResultRoundingHalfEven;
+    setRuntimeResultRoundingMode(settings->resultRoundingMode);
+    checkFixed0("half-even +2.5", "2.5", "2");
+    checkFixed0("half-even +3.5", "3.5", "4");
+    checkFixed0("half-even -2.5", "-2.5", "-2");
+
+    settings->resultRoundingMode = Settings::ResultRoundingTowardZero;
+    setRuntimeResultRoundingMode(settings->resultRoundingMode);
+    checkFixed0("toward-zero +2.9", "2.9", "2");
+    checkFixed0("toward-zero -2.9", "-2.9", "-2");
+    checkFixed0("toward-zero +2.5", "2.5", "2");
+
+    settings->resultRoundingMode = Settings::ResultRoundingTowardPositiveInfinity;
+    setRuntimeResultRoundingMode(settings->resultRoundingMode);
+    checkFixed0("toward-plus-inf +2.1", "2.1", "3");
+    checkFixed0("toward-plus-inf -2.1", "-2.1", "-2");
+
+    settings->resultRoundingMode = Settings::ResultRoundingTowardNegativeInfinity;
+    setRuntimeResultRoundingMode(settings->resultRoundingMode);
+    checkFixed0("toward-minus-inf +2.9", "2.9", "2");
+    checkFixed0("toward-minus-inf -2.1", "-2.1", "-3");
+
+    settings->resultRoundingMode = savedMode;
+    setRuntimeResultRoundingMode(savedMode);
+}
+
 
 void test_datetime()
 {
@@ -7751,6 +7801,8 @@ int main(int argc, char* argv[])
     settings->applyNumberFormatStyle();
     settings->complexNumbers = false;
     settings->imaginaryUnit = 'i';
+    settings->resultRoundingMode = Settings::ResultRoundingHalfAwayFromZero;
+    setRuntimeResultRoundingMode(settings->resultRoundingMode);
     CMath::setImaginaryUnitSymbol(QLatin1Char('i'));
     DMath::complexMode = false;
 
@@ -7808,6 +7860,7 @@ int main(int argc, char* argv[])
     eval->initializeBuiltInVariables();
     test_complex();
     test_format();
+    test_result_rounding_mode_formatting();
     test_datetime();
     test_epoch();
     test_expression_operator_normalization();

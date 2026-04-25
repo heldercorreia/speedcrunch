@@ -1,6 +1,7 @@
 /* floatconvert.h: radix conversion, based on floatnum. */
 /*
     Copyright (C) 2007, 2008 Wolf Lammen.
+    Copyright (C) 2026 @heldercorreia
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -44,6 +45,14 @@ extern "C" {
 #define IO_MODE_ENG        2
 #define IO_MODE_COMPLEMENT 3
 
+typedef enum {
+  IO_ROUND_HALF_EVEN = 0,
+  IO_ROUND_HALF_AWAY_FROM_ZERO = 1,
+  IO_ROUND_TOWARD_ZERO = 2,
+  IO_ROUND_TOWARD_PLUS_INFINITY = 3,
+  IO_ROUND_TOWARD_MINUS_INFINITY = 4
+} io_rounding_mode;
+
 /* converts the integer part of f to a binary coded bigint. Returns
    IOConversionOverflow, if the bigint overflows */
 Error _floatnum2longint(t_longint* longint, floatnum f);
@@ -67,6 +76,8 @@ void _longint2floatnum(floatnum f, t_longint* longint);
            IOInvalidComplement (two's complement cannot be generated) */
 Error float_out(p_otokens tokens, floatnum x, int digits,
                 signed char base, char outmode);
+void float_set_output_rounding_mode(io_rounding_mode mode);
+io_rounding_mode float_get_output_rounding_mode(void);
 /* returns Success or one of the IO... codes
    Errors: BadLiteral, set in addition to the returned result */
 Error float_in(floatnum x, p_itokens tokens);

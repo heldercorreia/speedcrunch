@@ -1,6 +1,7 @@
 /* testfloatnum.c: regression test for floatnum. */
 /*
     Copyright (C) 2007, 2008 Wolf Lammen.
+    Copyright (C) 2026 @heldercorreia
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,6 +39,7 @@
 
 #include "math/floatconst.h"
 #include "math/floatcommon.h"
+#include "math/floatconvert.h"
 #include "math/floatlog.h"
 #include "math/floatexp.h"
 #include "math/floattrig.h"
@@ -6080,12 +6082,14 @@ static int test_out()
   };
   t_ioparams saveiop[4];
   int i;
+  io_rounding_mode savedRoundMode = float_get_output_rounding_mode();
 
   // Use our own ioparams to make sure the results are the expected ones
   for (i = 0 ; i < sizeof(iop) / sizeof(t_ioparams) ; ++i) {
     saveiop[i] = *getioparams(iop[i].base);
     setioparams(&iop[i]);
   }
+  float_set_output_rounding_mode(IO_ROUND_HALF_AWAY_FROM_ZERO);
 
   printf("testing float_out\n");
 
@@ -6237,10 +6241,30 @@ static int test_out()
   tc_out("-16", 0, 16, IO_MODE_COMPLEMENT, "0xsF0(+0d0)");
   tc_out("-17", 0, 16, IO_MODE_COMPLEMENT, "0xsFEF(+0d0)");
 
+  // Output rounding mode coverage.
+  float_set_output_rounding_mode(IO_ROUND_HALF_AWAY_FROM_ZERO);
+  tc_out("2.5", 0, 10, IO_MODE_FIXPOINT, "+0d3(+0d0)");
+  tc_out("-2.5", 0, 10, IO_MODE_FIXPOINT, "-0d3(+0d0)");
+  float_set_output_rounding_mode(IO_ROUND_HALF_EVEN);
+  tc_out("2.5", 0, 10, IO_MODE_FIXPOINT, "+0d2(+0d0)");
+  tc_out("3.5", 0, 10, IO_MODE_FIXPOINT, "+0d4(+0d0)");
+  tc_out("-2.5", 0, 10, IO_MODE_FIXPOINT, "-0d2(+0d0)");
+  float_set_output_rounding_mode(IO_ROUND_TOWARD_ZERO);
+  tc_out("2.9", 0, 10, IO_MODE_FIXPOINT, "+0d2(+0d0)");
+  tc_out("-2.9", 0, 10, IO_MODE_FIXPOINT, "-0d2(+0d0)");
+  tc_out("2.5", 0, 10, IO_MODE_FIXPOINT, "+0d2(+0d0)");
+  float_set_output_rounding_mode(IO_ROUND_TOWARD_PLUS_INFINITY);
+  tc_out("2.21", 1, 10, IO_MODE_FIXPOINT, "+0d2.3(+0d0)");
+  tc_out("-2.21", 1, 10, IO_MODE_FIXPOINT, "-0d2.2(+0d0)");
+  float_set_output_rounding_mode(IO_ROUND_TOWARD_MINUS_INFINITY);
+  tc_out("2.29", 1, 10, IO_MODE_FIXPOINT, "+0d2.2(+0d0)");
+  tc_out("-2.21", 1, 10, IO_MODE_FIXPOINT, "-0d2.3(+0d0)");
+
   // Restore default ioparams
   for (i = 0 ; i < sizeof(iop) / sizeof(t_ioparams) ; ++i) {
     setioparams(&saveiop[i]);
   }
+  float_set_output_rounding_mode(savedRoundMode);
 
   return 1;
 }

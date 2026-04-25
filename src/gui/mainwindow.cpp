@@ -425,6 +425,11 @@ void MainWindow::createActions()
     m_actions.settingsResultFormat50Digits = new QAction(this);
     m_actions.settingsResultFormat8Digits = new QAction(this);
     m_actions.settingsResultFormatCustomDigits = new QAction(this);
+    m_actions.settingsResultRoundingHalfAwayFromZero = new QAction(this);
+    m_actions.settingsResultRoundingHalfEven = new QAction(this);
+    m_actions.settingsResultRoundingTowardZero = new QAction(this);
+    m_actions.settingsResultRoundingTowardPositiveInfinity = new QAction(this);
+    m_actions.settingsResultRoundingTowardNegativeInfinity = new QAction(this);
     m_actions.settingsResultFormatAutoPrecision = new QAction(this);
     m_actions.settingsResultFormatBinary = new QAction(this);
     m_actions.settingsResultFormatEngineering = new QAction(this);
@@ -506,6 +511,16 @@ void MainWindow::createActions()
     m_actions.settingsResultFormat50Digits->setCheckable(true);
     m_actions.settingsResultFormat8Digits->setCheckable(true);
     m_actions.settingsResultFormatCustomDigits->setCheckable(true);
+    m_actions.settingsResultRoundingHalfAwayFromZero->setCheckable(true);
+    m_actions.settingsResultRoundingHalfAwayFromZero->setData(Settings::ResultRoundingHalfAwayFromZero);
+    m_actions.settingsResultRoundingHalfEven->setCheckable(true);
+    m_actions.settingsResultRoundingHalfEven->setData(Settings::ResultRoundingHalfEven);
+    m_actions.settingsResultRoundingTowardZero->setCheckable(true);
+    m_actions.settingsResultRoundingTowardZero->setData(Settings::ResultRoundingTowardZero);
+    m_actions.settingsResultRoundingTowardPositiveInfinity->setCheckable(true);
+    m_actions.settingsResultRoundingTowardPositiveInfinity->setData(Settings::ResultRoundingTowardPositiveInfinity);
+    m_actions.settingsResultRoundingTowardNegativeInfinity->setCheckable(true);
+    m_actions.settingsResultRoundingTowardNegativeInfinity->setData(Settings::ResultRoundingTowardNegativeInfinity);
     m_actions.settingsResultFormatAutoPrecision->setCheckable(true);
     m_actions.settingsResultFormatBinary->setCheckable(true);
     m_actions.settingsResultFormatCartesian->setCheckable(true);
@@ -771,6 +786,13 @@ void MainWindow::setActionsText()
     m_actions.settingsResultFormat50Digits->setText(MainWindow::tr("&50 Digits"));
     m_actions.settingsResultFormat8Digits->setText(MainWindow::tr("&8 Digits"));
     m_actions.settingsResultFormatCustomDigits->setText(MainWindow::tr("&Custom..."));
+    m_actions.settingsResultRoundingHalfAwayFromZero->setText(
+        MainWindow::tr("Half Away from Zero (&Arithmetic)"));
+    m_actions.settingsResultRoundingHalfEven->setText(
+        MainWindow::tr("Half &Even (Banker's)"));
+    m_actions.settingsResultRoundingTowardZero->setText(MainWindow::tr("Toward &Zero"));
+    m_actions.settingsResultRoundingTowardPositiveInfinity->setText(MainWindow::tr("Toward +&Infinity"));
+    m_actions.settingsResultRoundingTowardNegativeInfinity->setText(MainWindow::tr("Toward -I&nfinity"));
     m_actions.settingsResultFormatAutoPrecision->setText(MainWindow::tr("&Automatic"));
     m_actions.settingsResultFormatGeneral->setText(MainWindow::tr("&Automatic"));
     m_actions.settingsResultFormatFixed->setText(MainWindow::tr("&Fixed-Point"));
@@ -842,6 +864,13 @@ void MainWindow::createActionGroups()
     m_actionGroups.digits->addAction(m_actions.settingsResultFormat15Digits);
     m_actionGroups.digits->addAction(m_actions.settingsResultFormat50Digits);
     m_actionGroups.digits->addAction(m_actions.settingsResultFormatCustomDigits);
+
+    m_actionGroups.resultRoundingMode = new QActionGroup(this);
+    m_actionGroups.resultRoundingMode->addAction(m_actions.settingsResultRoundingHalfAwayFromZero);
+    m_actionGroups.resultRoundingMode->addAction(m_actions.settingsResultRoundingHalfEven);
+    m_actionGroups.resultRoundingMode->addAction(m_actions.settingsResultRoundingTowardZero);
+    m_actionGroups.resultRoundingMode->addAction(m_actions.settingsResultRoundingTowardPositiveInfinity);
+    m_actionGroups.resultRoundingMode->addAction(m_actions.settingsResultRoundingTowardNegativeInfinity);
 
     m_actionGroups.angle = new QActionGroup(this);
     m_actionGroups.angle->addAction(m_actions.settingsAngleUnitDegree);
@@ -1014,6 +1043,12 @@ void MainWindow::createMenus()
         m_actions.settingsUnitNegativeExponentSuperscript);
     m_menus.unitNegativeExponentStyle->addAction(
         m_actions.settingsUnitNegativeExponentFraction);
+    m_menus.resultRoundingMode = m_menus.results->addMenu("");
+    m_menus.resultRoundingMode->addAction(m_actions.settingsResultRoundingHalfAwayFromZero);
+    m_menus.resultRoundingMode->addAction(m_actions.settingsResultRoundingHalfEven);
+    m_menus.resultRoundingMode->addAction(m_actions.settingsResultRoundingTowardZero);
+    m_menus.resultRoundingMode->addAction(m_actions.settingsResultRoundingTowardPositiveInfinity);
+    m_menus.resultRoundingMode->addAction(m_actions.settingsResultRoundingTowardNegativeInfinity);
     m_menus.results->addSeparator();
 
     // Deprecated direct menus kept as internal context menus only; users should
@@ -1106,6 +1141,7 @@ void MainWindow::setMenusText()
     m_menus.settings->setTitle(MainWindow::tr("Se&ttings"));
     m_menus.results->setTitle(MainWindow::tr("&Results"));
     m_menus.unitNegativeExponentStyle->setTitle(MainWindow::tr("Unit Exponent Style"));
+    m_menus.resultRoundingMode->setTitle(MainWindow::tr("Rounding Mode"));
     m_menus.resultFormat->setTitle(MainWindow::tr("&Notation"));
     m_menus.decimal->setTitle(MainWindow::tr("&Decimal"));
     m_menus.precision->setTitle(MainWindow::tr("&Precision"));
@@ -1561,6 +1597,8 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsResultFormatScientific, SIGNAL(triggered()), SLOT(setResultFormatScientific()));
     connect(m_actionGroups.unitNegativeExponentStyle, SIGNAL(triggered(QAction*)),
             SLOT(setUnitNegativeExponentStyle(QAction*)));
+    connect(m_actionGroups.resultRoundingMode, SIGNAL(triggered(QAction*)),
+            SLOT(setResultRoundingMode(QAction*)));
 
     connect(m_actions.settingsLanguage, SIGNAL(triggered()), SLOT(showLanguageChooserDialog()));
 
@@ -1617,6 +1655,8 @@ void MainWindow::createFixedConnections()
     connect(this, SIGNAL(resultFormatChanged()), m_widgets.editor, SLOT(refreshAutoCalc()));
     connect(this, SIGNAL(resultPrecisionChanged()), m_widgets.display, SLOT(refreshLastHistoryEntry()));
     connect(this, SIGNAL(resultPrecisionChanged()), m_widgets.editor, SLOT(refreshAutoCalc()));
+    connect(this, SIGNAL(resultRoundingModeChanged()), m_widgets.display, SLOT(refreshLastHistoryEntry()));
+    connect(this, SIGNAL(resultRoundingModeChanged()), m_widgets.editor, SLOT(refreshAutoCalc()));
     connect(this, SIGNAL(colorSchemeChanged()), m_widgets.display, SLOT(rehighlight()));
     connect(this, SIGNAL(colorSchemeChanged()), m_widgets.editor, SLOT(rehighlight()));
     connect(m_actionGroups.colorScheme, &QActionGroup::hovered, this, &MainWindow::applyColorSchemeFromAction);
@@ -1757,6 +1797,25 @@ void MainWindow::applySettings()
     checkInitialResultPrecision();
     checkInitialComplexFormat();
     checkInitialImaginaryUnit();
+    switch (m_settings->resultRoundingMode) {
+    case Settings::ResultRoundingHalfEven:
+        m_actions.settingsResultRoundingHalfEven->setChecked(true);
+        break;
+    case Settings::ResultRoundingTowardZero:
+        m_actions.settingsResultRoundingTowardZero->setChecked(true);
+        break;
+    case Settings::ResultRoundingTowardPositiveInfinity:
+        m_actions.settingsResultRoundingTowardPositiveInfinity->setChecked(true);
+        break;
+    case Settings::ResultRoundingTowardNegativeInfinity:
+        m_actions.settingsResultRoundingTowardNegativeInfinity->setChecked(true);
+        break;
+    case Settings::ResultRoundingHalfAwayFromZero:
+    default:
+        m_actions.settingsResultRoundingHalfAwayFromZero->setChecked(true);
+        break;
+    }
+    setRuntimeResultRoundingMode(m_settings->resultRoundingMode);
     if (m_settings->unitNegativeExponentStyle == Settings::UnitNegativeExponentFraction)
         m_actions.settingsUnitNegativeExponentFraction->setChecked(true);
     else
@@ -4264,6 +4323,25 @@ void MainWindow::setUnitNegativeExponentStyle(QAction* action)
     // Unit exponent style changes should affect only future evaluations and
     // live editor previews, not previously displayed history entries.
     m_widgets.editor->refreshAutoCalc();
+}
+
+void MainWindow::setResultRoundingMode(QAction* action)
+{
+    const Settings::ResultRoundingMode mode =
+        static_cast<Settings::ResultRoundingMode>(action->data().toInt());
+    if (mode != Settings::ResultRoundingHalfAwayFromZero
+            && mode != Settings::ResultRoundingHalfEven
+            && mode != Settings::ResultRoundingTowardZero
+            && mode != Settings::ResultRoundingTowardPositiveInfinity
+            && mode != Settings::ResultRoundingTowardNegativeInfinity) {
+        return;
+    }
+    if (m_settings->resultRoundingMode == mode)
+        return;
+
+    m_settings->resultRoundingMode = mode;
+    setRuntimeResultRoundingMode(mode);
+    emit resultRoundingModeChanged();
 }
 
 void MainWindow::setRadixCharacter(char c)

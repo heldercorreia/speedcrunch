@@ -1,6 +1,7 @@
 /* floatconvert.c: radix conversion, based on floatnum. */
 /*
     Copyright (C) 2007 - 2009 Wolf Lammen.
+    Copyright (C) 2026 @heldercorreia
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -44,6 +45,62 @@ typedef struct{
   int lgbase;
 }t_ext_number;
 typedef t_ext_number* p_ext_number;
+
+static io_rounding_mode s_output_rounding_mode = IO_ROUND_HALF_AWAY_FROM_ZERO;
+
+void
+float_set_output_rounding_mode(
+  io_rounding_mode mode)
+{
+  if (mode == IO_ROUND_HALF_EVEN
+      || mode == IO_ROUND_HALF_AWAY_FROM_ZERO
+      || mode == IO_ROUND_TOWARD_ZERO
+      || mode == IO_ROUND_TOWARD_PLUS_INFINITY
+      || mode == IO_ROUND_TOWARD_MINUS_INFINITY)
+    s_output_rounding_mode = mode;
+}
+
+io_rounding_mode
+float_get_output_rounding_mode(void)
+{
+  return s_output_rounding_mode;
+}
+
+static char
+_isexacthalf(
+  cfloatnum x,
+  int digits)
+{
+  int i;
+  int len = float_getlength(x);
+  if (digits < 0 || digits >= len)
+    return FALSE;
+  if (float_getdigit(x, digits) != 5)
+    return FALSE;
+  for (i = digits + 1; i < len; ++i)
+  {
+    if (float_getdigit(x, i) != 0)
+      return FALSE;
+  }
+  return TRUE;
+}
+
+static roundmode
+_outputroundmode(
+  cfloatnum x,
+  int digits,
+  signed char sign)
+{
+  if (s_output_rounding_mode == IO_ROUND_TOWARD_ZERO)
+    return TOZERO;
+  if (s_output_rounding_mode == IO_ROUND_TOWARD_PLUS_INFINITY)
+    return sign < 0 ? TOMINUSINFINITY : TOPLUSINFINITY;
+  if (s_output_rounding_mode == IO_ROUND_TOWARD_MINUS_INFINITY)
+    return sign < 0 ? TOPLUSINFINITY : TOMINUSINFINITY;
+  if (s_output_rounding_mode == IO_ROUND_HALF_AWAY_FROM_ZERO && _isexacthalf(x, digits))
+    return TOINFINITY;
+  return TONEAREST;
+}
 
 /************************   conversion to/from longint   *******************/
 
@@ -426,7 +483,7 @@ _outscidec(
   p_number_desc n,
   int scale)
 {
-  float_checkedround(x, scale + 1);
+  float_checkedroundmode(x, scale + 1, _outputroundmode(x, scale + 1, n->prefix.sign));
   n->exp = float_getexponent(x);
   float_setexponent(x, 0);
   _setfndesc(n, x);
@@ -456,7 +513,8 @@ static void
 _scale2int(
   floatnum x,
   int scale,
-  signed char base)
+  signed char base,
+  signed char sign)
 {
   floatstruct pwr;
   int pwrexp;
@@ -472,7 +530,8 @@ _scale2int(
     float_addexp(x, pwrexp);
     float_free(&pwr);
   }
-  float_roundtoint(x, TONEAREST);
+  float_round(x, x, float_getexponent(x) + 1,
+              _outputroundmode(x, float_getexponent(x) + 1, sign));
 }
 
 static Error
@@ -483,7 +542,7 @@ _fixp2longint(
   int scale)
 {
   Error result;
-  _scale2int(x, scale, n->prefix.base);
+  _scale2int(x, scale, n->prefix.base, n->prefix.sign);
   result = _floatnum2longint(l, x);
   if (result != Success)
     return result;
@@ -618,7 +677,7 @@ _outfixpdec(
     _setfndesc(n, x);
     return desc2str(tokens, n, scale);
   }
-  if (float_round(x, x, digits, TONEAREST) != TRUE)
+  if (float_round(x, x, digits, _outputroundmode(x, digits, n->prefix.sign)) != TRUE)
     /* float_round() can err if the number contains too many digits */
     return float_geterror();
   _setfndesc(n, x);
@@ -668,7 +727,7 @@ _outengdec(
 {
   int shift;
 
-  float_checkedround(x, scale + 1);
+  float_checkedroundmode(x, scale + 1, _outputroundmode(x, scale + 1, n->prefix.sign));
   n->exp = float_getexponent(x);
   if (n->exp < 0)
     shift = 2 - (-n->exp-1) % 3;

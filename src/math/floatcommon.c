@@ -1,6 +1,7 @@
 /* floatcommon.c: convenience functions, based on floatnum. */
 /*
     Copyright (C) 2007 - 2009 Wolf Lammen.
+    Copyright (C) 2026 @heldercorreia
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -320,12 +321,21 @@ float_checkedround(
   floatnum x,
   int digits)
 {
+  float_checkedroundmode(x, digits, TONEAREST);
+}
+
+void
+float_checkedroundmode(
+  floatnum x,
+  int digits,
+  roundmode mode)
+{
   floatstruct tmp;
   int saveerr;
 
   saveerr = float_geterror();
   float_create(&tmp);
-  if (float_round(&tmp, x, digits, TONEAREST))
+  if (float_round(&tmp, x, digits, mode))
     float_move(x, &tmp);
   float_free(&tmp);
   float_geterror();

@@ -75,6 +75,7 @@ signals:
     void radixCharacterChanged();
     void resultFormatChanged();
     void resultPrecisionChanged();
+    void resultRoundingModeChanged();
     void syntaxHighlightingChanged();
     void historyChanged();
     void variablesChanged();
@@ -186,6 +187,7 @@ private slots:
     void setResultPrecisionAutomatic();
     void setResultPrecisionCustom();
     void setResultPrecision(int);
+    void setResultRoundingMode(QAction*);
     void setMenuBarVisible(bool);
     void setStatusBarVisible(bool);
     void setSyntaxHighlightingEnabled(bool);
@@ -341,6 +343,11 @@ private:
         QAction* settingsResultFormat15Digits;
         QAction* settingsResultFormat50Digits;
         QAction* settingsResultFormatCustomDigits;
+        QAction* settingsResultRoundingHalfAwayFromZero;
+        QAction* settingsResultRoundingHalfEven;
+        QAction* settingsResultRoundingTowardZero;
+        QAction* settingsResultRoundingTowardPositiveInfinity;
+        QAction* settingsResultRoundingTowardNegativeInfinity;
         QAction* settingsResultFormatBinary;
         QAction* settingsResultFormatOctal;
         QAction* settingsResultFormatCartesian;
@@ -412,6 +419,7 @@ private:
         QActionGroup* angle;
         QActionGroup* colorScheme;
         QActionGroup* digits;
+        QActionGroup* resultRoundingMode;
         QActionGroup* resultFormat;
         QActionGroup* complexFormat;
         QActionGroup* imaginaryUnit;
@@ -439,6 +447,7 @@ private:
         QMenu* edit;
         QMenu* results;
         QMenu* unitNegativeExponentStyle;
+        QMenu* resultRoundingMode;
         QMenu* resultFormat;
         QMenu* inputFormat;
         QMenu* help;

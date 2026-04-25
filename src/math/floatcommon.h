@@ -1,6 +1,7 @@
 /* floatcommon.h: header file for convenience functions, based on floatnum. */
 /*
     Copyright (C) 2007 - 2009 Wolf Lammen.
+    Copyright (C) 2026 @heldercorreia
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -116,6 +117,7 @@ int float_asinteger(cfloatnum x);
 /* rounds x in TONEAREST mode. If x overflows, the rounding is reverted.
    Does not report errors */
 void float_checkedround(floatnum x, int digits);
+void float_checkedroundmode(floatnum x, int digits, roundmode mode);
 
 /* a fast way to multiply with a power of ten, does not set float_error
    on overflow or NaN, returns silently NaN instead*/

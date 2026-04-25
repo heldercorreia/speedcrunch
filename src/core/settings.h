@@ -27,6 +27,8 @@
 #include <QtCore/QStringList>
 #include <QtCore/QList>
 
+#include "math/floatconvert.h"
+
 class Settings {
 public:
     enum UpDownArrowBehavior {
@@ -81,6 +83,14 @@ public:
         UnitNegativeExponentFraction = 1
     };
 
+    enum ResultRoundingMode {
+        ResultRoundingHalfAwayFromZero = 0,
+        ResultRoundingHalfEven = 1,
+        ResultRoundingTowardZero = 2,
+        ResultRoundingTowardPositiveInfinity = 3,
+        ResultRoundingTowardNegativeInfinity = 4
+    };
+
     struct CustomKeypadButton {
         int row;
         int column;
@@ -132,6 +142,7 @@ public:
     bool quinaryResultEnabled;
     bool multipleResultLinesEnabled; // UI toggle: show/use extra result lines.
     int resultPrecision; // Main precision. See HMath documentation.
+    ResultRoundingMode resultRoundingMode;
     UnitNegativeExponentStyle unitNegativeExponentStyle;
     int secondaryResultPrecision; // Secondary precision.
     int tertiaryResultPrecision; // Tertiary precision.
@@ -206,6 +217,8 @@ private:
 
 inline Settings::UnitNegativeExponentStyle g_runtimeUnitNegativeExponentStyle =
     Settings::UnitNegativeExponentSuperscript;
+inline Settings::ResultRoundingMode g_runtimeResultRoundingMode =
+    Settings::ResultRoundingHalfAwayFromZero;
 
 inline void setRuntimeUnitNegativeExponentStyle(Settings::UnitNegativeExponentStyle style)
 {
@@ -219,6 +232,35 @@ inline void setRuntimeUnitNegativeExponentStyle(Settings::UnitNegativeExponentSt
 inline Settings::UnitNegativeExponentStyle runtimeUnitNegativeExponentStyle()
 {
     return g_runtimeUnitNegativeExponentStyle;
+}
+
+inline void setRuntimeResultRoundingMode(Settings::ResultRoundingMode mode)
+{
+    if (mode != Settings::ResultRoundingHalfAwayFromZero
+        && mode != Settings::ResultRoundingHalfEven
+        && mode != Settings::ResultRoundingTowardZero
+        && mode != Settings::ResultRoundingTowardPositiveInfinity
+        && mode != Settings::ResultRoundingTowardNegativeInfinity) {
+        return;
+    }
+
+    g_runtimeResultRoundingMode = mode;
+
+    io_rounding_mode ioMode = IO_ROUND_HALF_AWAY_FROM_ZERO;
+    if (mode == Settings::ResultRoundingHalfEven)
+        ioMode = IO_ROUND_HALF_EVEN;
+    else if (mode == Settings::ResultRoundingTowardZero)
+        ioMode = IO_ROUND_TOWARD_ZERO;
+    else if (mode == Settings::ResultRoundingTowardPositiveInfinity)
+        ioMode = IO_ROUND_TOWARD_PLUS_INFINITY;
+    else if (mode == Settings::ResultRoundingTowardNegativeInfinity)
+        ioMode = IO_ROUND_TOWARD_MINUS_INFINITY;
+    float_set_output_rounding_mode(ioMode);
+}
+
+inline Settings::ResultRoundingMode runtimeResultRoundingMode()
+{
+    return g_runtimeResultRoundingMode;
 }
 
 #endif
