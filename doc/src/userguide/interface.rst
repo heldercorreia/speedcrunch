@@ -123,7 +123,8 @@ moves it there.
 Use :menuselection:`Session --> New Window` to open a blank
 session in a new window that copies the current window and dock layout.
 When SpeedCrunch restores multiple windows after a restart, each window keeps
-its own dock layout, dock visibility, and keypad visibility and layout.
+its own dock layout, dock visibility, keypad visibility and layout, and—when
+window position saving is enabled—its own size and position.
 
 
 Expression Editor Features
@@ -660,7 +661,10 @@ Widgets and Docks
     The status bar provides quick selectors for :menuselection:`Angle Mode`,
     :menuselection:`Results --> Notation`, and
     :menuselection:`Results --> Precision`. On narrow windows, selectors that
-    do not fully fit are hidden automatically.
+    do not fully fit are hidden automatically. Status bar visibility is set
+    separately for each window; the main menu always shows and changes the
+    setting for the active window. Angle mode, notation, and precision selections
+    are also retained separately for each window.
 
 Scrolling
 +++++++++

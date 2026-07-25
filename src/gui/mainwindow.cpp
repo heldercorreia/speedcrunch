@@ -2016,6 +2016,20 @@ void cancelWindowActivationRestore()
     ++windowActivationRestoreGeneration();
 }
 
+MainWindow* activeMainWindowForMenuAction(MainWindow* fallback)
+{
+    MainWindow* targetWindow = qobject_cast<MainWindow*>(QApplication::activeWindow());
+    if (targetWindow == nullptr) {
+        if (QWidget* focusWidget = QApplication::focusWidget())
+            targetWindow = qobject_cast<MainWindow*>(focusWidget->window());
+    }
+    if (targetWindow == nullptr) {
+        if (QWidget* focusWidget = lastFocusWidgetInActiveWindow())
+            targetWindow = qobject_cast<MainWindow*>(focusWidget->window());
+    }
+    return targetWindow != nullptr ? targetWindow : fallback;
+}
+
 class DockTextInputFocusTransferGuard {
 public:
     DockTextInputFocusTransferGuard()
@@ -3605,16 +3619,16 @@ void MainWindow::updateColorSchemeActionState()
 
 QString MainWindow::statusBarAngleUnitValue() const
 {
-    return (m_settings->angleUnit == 'r' ? MainWindow::tr("Radian")
-        : (m_settings->angleUnit == 'g') ? MainWindow::tr("Gradian")
-        : (m_settings->angleUnit == 't') ? MainWindow::tr("Turn")
-        : (m_settings->angleUnit == 'v') ? MainWindow::tr("Revolution")
+    return (m_status.selectedAngleUnit == 'r' ? MainWindow::tr("Radian")
+        : (m_status.selectedAngleUnit == 'g') ? MainWindow::tr("Gradian")
+        : (m_status.selectedAngleUnit == 't') ? MainWindow::tr("Turn")
+        : (m_status.selectedAngleUnit == 'v') ? MainWindow::tr("Revolution")
         : MainWindow::tr("Degree"));
 }
 
 QString MainWindow::statusBarResultFormatValue() const
 {
-    switch (m_settings->resultFormat) {
+    switch (m_status.selectedResultFormat) {
         case 'b': return MainWindow::tr("Binary");
         case 'o': return MainWindow::tr("Octal");
         case 'h': return MainWindow::tr("Hexadecimal");
@@ -3630,9 +3644,9 @@ QString MainWindow::statusBarResultFormatValue() const
 
 QString MainWindow::statusBarResultPrecisionValue() const
 {
-    if (m_settings->resultPrecision < 0)
+    if (m_status.selectedResultPrecision < 0)
         return MainWindow::tr("Automatic");
-    return QString::number(m_settings->resultPrecision);
+    return QString::number(m_status.selectedResultPrecision);
 }
 
 void MainWindow::setActionsText()
@@ -4227,11 +4241,9 @@ void MainWindow::createStatusBar()
     bar->addWidget(m_status.angleUnitSeparator);
     bar->addWidget(m_status.angleUnitSection);
     applyThemeSurfaceToStatusBar(bar, generatedSurfaceColors(m_settings));
+    bar->show();
 
-    for (const QPointer<MainWindow>& ptr : allMainWindows()) {
-        if (MainWindow* window = ptr.data())
-            window->setStatusBarText();
-    }
+    setStatusBarText();
     // When the status bar is recreated via View > Status Bar, geometry might not
     // be updated yet and width can be 0, which hides all sections. Recompute
     // once the event loop lays out the status bar.
@@ -5224,6 +5236,10 @@ void MainWindow::copyWindowLayoutFrom(const MainWindow* source)
     if (statusBarIsVisible(this) != statusBarVisible)
         setStatusBarVisible(statusBarVisible);
     m_actions.viewStatusBar->setChecked(statusBarVisible);
+    m_status.selectedAngleUnit = source->m_status.selectedAngleUnit;
+    m_status.selectedResultFormat = source->m_status.selectedResultFormat;
+    m_status.selectedResultPrecision = source->m_status.selectedResultPrecision;
+    setStatusBarText();
 
     const bool formulaBookVisible = dockIsVisible(source->m_docks.book);
     if (dockIsVisible(m_docks.book) != formulaBookVisible)
@@ -7036,7 +7052,15 @@ void MainWindow::createFixedConnections()
                 updateKeypadDisabledActionText();
             });
     connect(m_actionGroups.keypadZoom, SIGNAL(triggered(QAction*)), SLOT(setKeypadZoom(QAction*)));
-    connect(m_actions.viewStatusBar, SIGNAL(toggled(bool)), SLOT(setStatusBarVisible(bool)));
+    connect(m_actions.viewStatusBar, &QAction::triggered, this, [this](bool visible) {
+        // On macOS the native menu bar can dispatch an action belonging to an
+        // inactive window. Always apply the active menu state to the frontmost
+        // SpeedCrunch window, without changing any other window's status bar.
+        MainWindow* targetWindow = activeMainWindowForMenuAction(this);
+
+        targetWindow->setStatusBarVisible(visible);
+        targetWindow->syncStatusBarMenuActionState();
+    });
 #if !defined(Q_OS_MACOS)
     connect(m_actions.viewMenuBar, SIGNAL(toggled(bool)), SLOT(setMenuBarVisible(bool)));
 #endif
@@ -7050,11 +7074,18 @@ void MainWindow::createFixedConnections()
     connect(m_actions.viewUserFunctions, SIGNAL(triggered(bool)), SLOT(setUserFunctionsDockVisible(bool)));
     connect(m_actions.viewUserUnits, SIGNAL(triggered(bool)), SLOT(setUserUnitsDockVisible(bool)));
 
-    connect(m_actions.settingsAngleUnitDegree, SIGNAL(triggered()), SLOT(setAngleModeDegree()));
-    connect(m_actions.settingsAngleUnitRadian, SIGNAL(triggered()), SLOT(setAngleModeRadian()));
-    connect(m_actions.settingsAngleUnitGradian, SIGNAL(triggered()), SLOT(setAngleModeGradian()));
-    connect(m_actions.settingsAngleUnitTurn, SIGNAL(triggered()), SLOT(setAngleModeTurn()));
-    connect(m_actions.settingsAngleUnitRevolution, SIGNAL(triggered()), SLOT(setAngleModeRevolution()));
+    const auto connectToActiveWindow =
+        [this](QAction* action, void (MainWindow::*handler)()) {
+            connect(action, &QAction::triggered, this, [this, handler]() {
+                MainWindow* targetWindow = activeMainWindowForMenuAction(this);
+                (targetWindow->*handler)();
+            });
+        };
+    connectToActiveWindow(m_actions.settingsAngleUnitDegree, &MainWindow::setAngleModeDegree);
+    connectToActiveWindow(m_actions.settingsAngleUnitRadian, &MainWindow::setAngleModeRadian);
+    connectToActiveWindow(m_actions.settingsAngleUnitGradian, &MainWindow::setAngleModeGradian);
+    connectToActiveWindow(m_actions.settingsAngleUnitTurn, &MainWindow::setAngleModeTurn);
+    connectToActiveWindow(m_actions.settingsAngleUnitRevolution, &MainWindow::setAngleModeRevolution);
 
     if (!isWaylandPlatform())
         connect(m_actions.settingsBehaviorAlwaysOnTop, SIGNAL(toggled(bool)), SLOT(setAlwaysOnTopEnabled(bool)));
@@ -7075,7 +7106,7 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsBehaviorDigitGroupingIntegerPartOnly, SIGNAL(toggled(bool)), SLOT(setDigitGroupingIntegerPartOnlyEnabled(bool)));
     connect(m_actions.settingsBehaviorLeaveLastExpression, SIGNAL(toggled(bool)), SLOT(setLeaveLastExpressionEnabled(bool)));
     connect(m_actions.settingsBehaviorNumberFormat, SIGNAL(triggered()), SLOT(showNumberFormatDialog()));
-    connect(m_actions.settingsBehaviorResultSlots, SIGNAL(triggered()), SLOT(showResultSlotsDialog()));
+    connectToActiveWindow(m_actions.settingsBehaviorResultSlots, &MainWindow::showResultSlotsDialog);
     connect(m_actionGroups.upDownArrowBehavior, SIGNAL(triggered(QAction*)), SLOT(setUpDownArrowBehavior(QAction*)));
     connect(m_actions.settingsBehaviorAutoResultToClipboard, SIGNAL(toggled(bool)), SLOT(setAutoResultToClipboardEnabled(bool)));
     connect(m_actions.settingsBehaviorSimplifyResultExpressions, SIGNAL(toggled(bool)), SLOT(setSimplifyResultExpressionsEnabled(bool)));
@@ -7084,30 +7115,32 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsRadixCharDot, SIGNAL(triggered()), SLOT(setRadixCharacterDot()));
     connect(m_actions.settingsRadixCharBoth, SIGNAL(triggered()), SLOT(setRadixCharacterBoth()));
 
-    connect(m_actions.settingsResultFormat0Digits, &QAction::triggered, [this]() { this->setResultPrecision(0); });
-    connect(m_actions.settingsResultFormat15Digits, SIGNAL(triggered()), SLOT(setResultPrecision15Digits()));
-    connect(m_actions.settingsResultFormat2Digits, SIGNAL(triggered()), SLOT(setResultPrecision2Digits()));
-    connect(m_actions.settingsResultFormat3Digits, SIGNAL(triggered()), SLOT(setResultPrecision3Digits()));
-    connect(m_actions.settingsResultFormat50Digits, SIGNAL(triggered()), SLOT(setResultPrecision50Digits()));
-    connect(m_actions.settingsResultFormat8Digits, SIGNAL(triggered()), SLOT(setResultPrecision8Digits()));
-    connect(m_actions.settingsResultFormatCustomDigits, SIGNAL(triggered()), SLOT(setResultPrecisionCustom()));
-    connect(m_actions.settingsResultFormatAutoPrecision, SIGNAL(triggered()), SLOT(setResultPrecisionAutomatic()));
-    connect(m_actions.settingsResultFormatBinary, SIGNAL(triggered()), SLOT(setResultFormatBinary()));
+    connect(m_actions.settingsResultFormat0Digits, &QAction::triggered, this, [this]() {
+        activeMainWindowForMenuAction(this)->setResultPrecision(0);
+    });
+    connectToActiveWindow(m_actions.settingsResultFormat15Digits, &MainWindow::setResultPrecision15Digits);
+    connectToActiveWindow(m_actions.settingsResultFormat2Digits, &MainWindow::setResultPrecision2Digits);
+    connectToActiveWindow(m_actions.settingsResultFormat3Digits, &MainWindow::setResultPrecision3Digits);
+    connectToActiveWindow(m_actions.settingsResultFormat50Digits, &MainWindow::setResultPrecision50Digits);
+    connectToActiveWindow(m_actions.settingsResultFormat8Digits, &MainWindow::setResultPrecision8Digits);
+    connectToActiveWindow(m_actions.settingsResultFormatCustomDigits, &MainWindow::setResultPrecisionCustom);
+    connectToActiveWindow(m_actions.settingsResultFormatAutoPrecision, &MainWindow::setResultPrecisionAutomatic);
+    connectToActiveWindow(m_actions.settingsResultFormatBinary, &MainWindow::setResultFormatBinary);
     connect(m_actions.settingsResultFormatCartesian, SIGNAL(triggered()), SLOT(setResultFormatCartesian()));
-    connect(m_actions.settingsResultFormatEngineering, SIGNAL(triggered()), SLOT(setResultFormatEngineering()));
-    connect(m_actions.settingsResultFormatFixed, SIGNAL(triggered()), SLOT(setResultFormatFixed()));
-    connect(m_actions.settingsResultFormatGeneral, SIGNAL(triggered()), SLOT(setResultFormatGeneral()));
-    connect(m_actions.settingsResultFormatHexadecimal, SIGNAL(triggered()), SLOT(setResultFormatHexadecimal()));
+    connectToActiveWindow(m_actions.settingsResultFormatEngineering, &MainWindow::setResultFormatEngineering);
+    connectToActiveWindow(m_actions.settingsResultFormatFixed, &MainWindow::setResultFormatFixed);
+    connectToActiveWindow(m_actions.settingsResultFormatGeneral, &MainWindow::setResultFormatGeneral);
+    connectToActiveWindow(m_actions.settingsResultFormatHexadecimal, &MainWindow::setResultFormatHexadecimal);
     connect(m_actions.settingsImaginaryUnitI, SIGNAL(triggered()), SLOT(setImaginaryUnitI()));
     connect(m_actions.settingsImaginaryUnitJ, SIGNAL(triggered()), SLOT(setImaginaryUnitJ()));
-    connect(m_actions.settingsResultFormatOctal, SIGNAL(triggered()), SLOT(setResultFormatOctal()));
+    connectToActiveWindow(m_actions.settingsResultFormatOctal, &MainWindow::setResultFormatOctal);
     connect(m_actions.settingsResultFormatPolar, SIGNAL(triggered()), SLOT(setResultFormatPolar()));
     connect(m_actions.settingsResultFormatTrigonometric, SIGNAL(triggered()), SLOT(setResultFormatTrigonometric()));
     connect(m_actions.settingsResultFormatCis, SIGNAL(triggered()), SLOT(setResultFormatCis()));
     connect(m_actions.settingsResultFormatPolarAngle, SIGNAL(triggered()), SLOT(setResultFormatPolarAngle()));
-    connect(m_actions.settingsResultFormatRational, SIGNAL(triggered()), SLOT(setResultFormatRational()));
-    connect(m_actions.settingsResultFormatSexagesimal, SIGNAL(triggered()), SLOT(setResultFormatSexagesimal()));
-    connect(m_actions.settingsResultFormatScientific, SIGNAL(triggered()), SLOT(setResultFormatScientific()));
+    connectToActiveWindow(m_actions.settingsResultFormatRational, &MainWindow::setResultFormatRational);
+    connectToActiveWindow(m_actions.settingsResultFormatSexagesimal, &MainWindow::setResultFormatSexagesimal);
+    connectToActiveWindow(m_actions.settingsResultFormatScientific, &MainWindow::setResultFormatScientific);
     connect(m_actionGroups.unitNegativeExponentStyle, SIGNAL(triggered(QAction*)),
             SLOT(setUnitNegativeExponentStyle(QAction*)));
     connect(m_actionGroups.resultRoundingMode, SIGNAL(triggered(QAction*)),
@@ -7266,6 +7299,9 @@ void MainWindow::createFixedConnections()
 void MainWindow::applySettings()
 {
     emit languageChanged();
+    m_status.selectedAngleUnit = m_settings->angleUnit;
+    m_status.selectedResultFormat = m_settings->resultFormat;
+    m_status.selectedResultPrecision = m_settings->resultPrecision;
 
     // QMainWindow state restoration expects every named dock in a saved layout
     // to exist before restoreState() runs. Instantiate docks up front and keep
@@ -7324,6 +7360,7 @@ void MainWindow::applySettings()
         break;
     }
     setKeypadVisible(isVisibleKeypadMode(m_keypadMode));
+    setStatusBarVisible(m_settings->statusBarVisible);
     m_actions.viewStatusBar->setChecked(m_settings->statusBarVisible);
 #if !defined(Q_OS_MACOS)
     setMenuBarVisible(m_settings->menuBarVisible);
@@ -7835,8 +7872,16 @@ void MainWindow::saveSessionLayout(bool captureCurrentViewport)
         window.insert(QStringLiteral("id"), id);
         window.insert(QStringLiteral("active"), windowObject == this);
         window.insert(QStringLiteral("root"), windowRoot);
+        const QStatusBar* windowStatusBar =
+            windowObject->findChild<QStatusBar*>(QString(), Qt::FindDirectChildrenOnly);
         window.insert(QStringLiteral("statusBarVisible"),
-                      windowObject->statusBar() != nullptr && windowObject->statusBar()->isVisible());
+                      windowStatusBar != nullptr && !windowStatusBar->isHidden());
+        window.insert(QStringLiteral("statusBarAngleUnit"),
+                      QString(QChar::fromLatin1(windowObject->m_status.selectedAngleUnit)));
+        window.insert(QStringLiteral("statusBarResultFormat"),
+                      QString(QChar::fromLatin1(windowObject->m_status.selectedResultFormat)));
+        window.insert(QStringLiteral("statusBarResultPrecision"),
+                      windowObject->m_status.selectedResultPrecision);
         window.insert(QStringLiteral("bitfieldVisible"),
                       windowObject->m_docks.bitField != nullptr && windowObject->m_docks.bitField->isVisible());
         const bool keypadVisible = windowObject->m_widgets.keypad != nullptr;
@@ -10131,15 +10176,13 @@ void MainWindow::setHoverHighlightResultsEnabled(bool b)
 
 void MainWindow::setAngleModeDegree()
 {
-    if (m_settings->angleUnit == 'd')
+    if (m_settings->angleUnit == 'd' && m_status.selectedAngleUnit == 'd')
         return;
 
     m_settings->angleUnit = 'd';
-
-    for (const QPointer<MainWindow>& ptr : allMainWindows()) {
-        if (MainWindow* window = ptr.data())
-            window->setStatusBarText();
-    }
+    m_status.selectedAngleUnit = 'd';
+    setStatusBarText();
+    syncStatusBarSelectionMenuActionState();
 
     m_evaluator->initializeAngleUnits();
     emit angleUnitChanged();
@@ -10147,15 +10190,13 @@ void MainWindow::setAngleModeDegree()
 
 void MainWindow::setAngleModeRadian()
 {
-    if (m_settings->angleUnit == 'r')
+    if (m_settings->angleUnit == 'r' && m_status.selectedAngleUnit == 'r')
         return;
 
     m_settings->angleUnit = 'r';
-
-    for (const QPointer<MainWindow>& ptr : allMainWindows()) {
-        if (MainWindow* window = ptr.data())
-            window->setStatusBarText();
-    }
+    m_status.selectedAngleUnit = 'r';
+    setStatusBarText();
+    syncStatusBarSelectionMenuActionState();
 
     m_evaluator->initializeAngleUnits();
     emit angleUnitChanged();
@@ -10163,15 +10204,13 @@ void MainWindow::setAngleModeRadian()
 
 void MainWindow::setAngleModeGradian()
 {
-    if (m_settings->angleUnit == 'g')
+    if (m_settings->angleUnit == 'g' && m_status.selectedAngleUnit == 'g')
         return;
 
     m_settings->angleUnit = 'g';
-
-    for (const QPointer<MainWindow>& ptr : allMainWindows()) {
-        if (MainWindow* window = ptr.data())
-            window->setStatusBarText();
-    }
+    m_status.selectedAngleUnit = 'g';
+    setStatusBarText();
+    syncStatusBarSelectionMenuActionState();
 
     m_evaluator->initializeAngleUnits();
     emit angleUnitChanged();
@@ -10179,12 +10218,14 @@ void MainWindow::setAngleModeGradian()
 
 void MainWindow::setAngleModeTurn()
 {
-    if (m_settings->angleUnit == 't')
+    if (m_settings->angleUnit == 't' && m_status.selectedAngleUnit == 't')
         return;
 
     m_settings->angleUnit = 't';
+    m_status.selectedAngleUnit = 't';
 
     setStatusBarText();
+    syncStatusBarSelectionMenuActionState();
 
     m_evaluator->initializeAngleUnits();
     emit angleUnitChanged();
@@ -10192,12 +10233,14 @@ void MainWindow::setAngleModeTurn()
 
 void MainWindow::setAngleModeRevolution()
 {
-    if (m_settings->angleUnit == 'v')
+    if (m_settings->angleUnit == 'v' && m_status.selectedAngleUnit == 'v')
         return;
 
     m_settings->angleUnit = 'v';
+    m_status.selectedAngleUnit = 'v';
 
     setStatusBarText();
+    syncStatusBarSelectionMenuActionState();
 
     m_evaluator->initializeAngleUnits();
     emit angleUnitChanged();
@@ -10280,7 +10323,95 @@ void MainWindow::showFontDialog()
 void MainWindow::setStatusBarVisible(bool b)
 {
     b ? createStatusBar() : deleteStatusBar();
-    m_settings->statusBarVisible = b;
+    if (primaryMainWindow() == this)
+        m_settings->statusBarVisible = b;
+}
+
+void MainWindow::syncStatusBarMenuActionState()
+{
+    QStatusBar* existingStatusBar =
+        findChild<QStatusBar*>(QString(), Qt::FindDirectChildrenOnly);
+    const bool visible = existingStatusBar != nullptr && existingStatusBar->isVisible();
+
+    // Qt can reuse any window's QAction for the native application menu. Keep
+    // every copy aligned with the active window while leaving the actual status
+    // bars untouched.
+    for (const QPointer<MainWindow>& ptr : allMainWindows()) {
+        MainWindow* window = ptr.data();
+        if (window == nullptr || window->m_actions.viewStatusBar == nullptr)
+            continue;
+        const QSignalBlocker blocker(window->m_actions.viewStatusBar);
+        window->m_actions.viewStatusBar->setChecked(visible);
+    }
+}
+
+void MainWindow::setStatusBarSelectionActionState(char angleUnit, char resultFormat,
+                                                  int resultPrecision)
+{
+    switch (angleUnit) {
+    case 'r': m_actions.settingsAngleUnitRadian->setChecked(true); break;
+    case 'g': m_actions.settingsAngleUnitGradian->setChecked(true); break;
+    case 't': m_actions.settingsAngleUnitTurn->setChecked(true); break;
+    case 'v': m_actions.settingsAngleUnitRevolution->setChecked(true); break;
+    default: m_actions.settingsAngleUnitDegree->setChecked(true); break;
+    }
+
+    switch (resultFormat) {
+    case 'g': m_actions.settingsResultFormatGeneral->setChecked(true); break;
+    case 'n': m_actions.settingsResultFormatEngineering->setChecked(true); break;
+    case 'e': m_actions.settingsResultFormatScientific->setChecked(true); break;
+    case 'r': m_actions.settingsResultFormatRational->setChecked(true); break;
+    case 'h': m_actions.settingsResultFormatHexadecimal->setChecked(true); break;
+    case 'o': m_actions.settingsResultFormatOctal->setChecked(true); break;
+    case 'b': m_actions.settingsResultFormatBinary->setChecked(true); break;
+    case 's': m_actions.settingsResultFormatSexagesimal->setChecked(true); break;
+    default: m_actions.settingsResultFormatFixed->setChecked(true); break;
+    }
+
+    switch (resultPrecision) {
+    case 0: m_actions.settingsResultFormat0Digits->setChecked(true); break;
+    case 2: m_actions.settingsResultFormat2Digits->setChecked(true); break;
+    case 3: m_actions.settingsResultFormat3Digits->setChecked(true); break;
+    case 8: m_actions.settingsResultFormat8Digits->setChecked(true); break;
+    case 15: m_actions.settingsResultFormat15Digits->setChecked(true); break;
+    case 50: m_actions.settingsResultFormat50Digits->setChecked(true); break;
+    case -1: m_actions.settingsResultFormatAutoPrecision->setChecked(true); break;
+    default: m_actions.settingsResultFormatCustomDigits->setChecked(true); break;
+    }
+}
+
+void MainWindow::syncStatusBarSelectionMenuActionState()
+{
+    for (const QPointer<MainWindow>& ptr : allMainWindows()) {
+        MainWindow* window = ptr.data();
+        if (window == nullptr)
+            continue;
+        window->setStatusBarSelectionActionState(m_status.selectedAngleUnit,
+                                                 m_status.selectedResultFormat,
+                                                 m_status.selectedResultPrecision);
+    }
+}
+
+void MainWindow::applyStatusBarSelectionState()
+{
+    const bool angleChanged = m_settings->angleUnit != m_status.selectedAngleUnit;
+    const bool formatChanged = m_settings->resultFormat != m_status.selectedResultFormat;
+    const bool precisionChanged =
+        m_settings->resultPrecision != m_status.selectedResultPrecision;
+
+    m_settings->angleUnit = m_status.selectedAngleUnit;
+    m_settings->resultFormat = m_status.selectedResultFormat;
+    m_settings->resultPrecision = m_status.selectedResultPrecision;
+    syncStatusBarSelectionMenuActionState();
+
+    if (angleChanged) {
+        m_evaluator->initializeAngleUnits();
+        emit angleUnitChanged();
+    }
+    if (formatChanged)
+        emit resultFormatChanged();
+    if (precisionChanged)
+        emit resultPrecisionChanged();
 }
 
 void MainWindow::setMenuBarVisible(bool b)
@@ -10513,9 +10644,8 @@ bool MainWindow::event(QEvent* e)
             m_evaluator->initializeBuiltInVariables();
         }
 
-        const QSignalBlocker statusBarBlocker(m_actions.viewStatusBar);
-        QStatusBar* existingStatusBar = findChild<QStatusBar*>(QString(), Qt::FindDirectChildrenOnly);
-        m_actions.viewStatusBar->setChecked(existingStatusBar != nullptr && existingStatusBar->isVisible());
+        applyStatusBarSelectionState();
+        syncStatusBarMenuActionState();
 
         if (m_widgets.keypad == nullptr) {
             const QSignalBlocker keypadBlocker(m_actionGroups.keypad);
@@ -11987,8 +12117,30 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
     activateSession(activeSession);
     m_conditions.autoAns = restoreHistory && !m_session->historyIsEmpty();
     updatePaneEditorCursorVisibility();
+    const QString restoredAngleUnit =
+        window.value(QStringLiteral("statusBarAngleUnit")).toString();
+    if (restoredAngleUnit.size() == 1
+        && QByteArray("drgtv").contains(restoredAngleUnit.at(0).toLatin1())) {
+        m_status.selectedAngleUnit = restoredAngleUnit.at(0).toLatin1();
+    }
+    const QString restoredResultFormat =
+        window.value(QStringLiteral("statusBarResultFormat")).toString();
+    if (restoredResultFormat.size() == 1
+        && QByteArray("gnerhobsf").contains(restoredResultFormat.at(0).toLatin1())) {
+        m_status.selectedResultFormat = restoredResultFormat.at(0).toLatin1();
+    }
+    if (window.contains(QStringLiteral("statusBarResultPrecision"))) {
+        const int restoredPrecision =
+            window.value(QStringLiteral("statusBarResultPrecision")).toInt(-1);
+        if (restoredPrecision >= -1 && restoredPrecision <= 50)
+            m_status.selectedResultPrecision = restoredPrecision;
+    }
     if (window.contains(QStringLiteral("statusBarVisible")))
         setStatusBarVisible(window.value(QStringLiteral("statusBarVisible")).toBool(true));
+    else
+        setStatusBarText();
+    if (QApplication::activeWindow() == this)
+        applyStatusBarSelectionState();
     const QString windowStateBase64 = window.value(QStringLiteral("windowState")).toString();
     restoreWindowLayoutState(windowStateBase64.isEmpty()
         ? m_settings->windowState
@@ -12000,6 +12152,9 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
             window.value(QStringLiteral("keypadVisible")).toBool(false),
             window.value(QStringLiteral("keypadMode")).toInt(static_cast<int>(m_keypadMode)));
     }
+    const QString geometryBase64 = window.value(QStringLiteral("geometry")).toString();
+    if (!geometryBase64.isEmpty())
+        restoreWindowGeometry(QByteArray::fromBase64(geometryBase64.toLatin1()));
     applyThemeSurfacePalette();
     refreshPaneThemes();
     emit historyChanged();
@@ -12029,13 +12184,46 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
             m_settings->sessionLayoutJson = QString::fromUtf8(QJsonDocument(singleLayout).toJson(QJsonDocument::Compact));
             MainWindow* extraWindow = new MainWindow();
             m_settings->sessionLayoutJson = previousLayoutJson;
-            extraWindow->show();
             const QString geometryBase64 = candidate.value(QStringLiteral("geometry")).toString();
-            if (!geometryBase64.isEmpty())
-                extraWindow->restoreGeometry(QByteArray::fromBase64(geometryBase64.toLatin1()));
+            extraWindow->showRestoredWindow(
+                QByteArray::fromBase64(geometryBase64.toLatin1()));
         }
         g_restoringExtraWindows = false;
     }
+}
+
+void MainWindow::restoreWindowGeometry(const QByteArray& geometry)
+{
+    if (geometry.isEmpty())
+        return;
+
+    restoreGeometry(geometry);
+
+    // A restored window initially inherits the primary window's docks and
+    // keypad. Removing those widgets can update size constraints on later
+    // event-loop turns, so reapply this window's own geometry after both the
+    // deferred deletions and the resulting layout pass have completed.
+    QTimer::singleShot(0, this, [this, geometry]() {
+        restoreGeometry(geometry);
+        QTimer::singleShot(0, this, [this, geometry]() {
+            restoreGeometry(geometry);
+        });
+    });
+}
+
+void MainWindow::showRestoredWindow(const QByteArray& geometry)
+{
+    // Keep restored secondary windows hidden until deferred dock/keypad
+    // deletions and their follow-up layout pass have completed. Showing only
+    // the settled widget tree avoids flashing the primary window's inherited
+    // layout before this window's saved layout appears.
+    QTimer::singleShot(0, this, [this, geometry]() {
+        QTimer::singleShot(0, this, [this, geometry]() {
+            if (!geometry.isEmpty())
+                restoreGeometry(geometry);
+            show();
+        });
+    });
 }
 
 void MainWindow::restoreWindowLayoutState(const QByteArray& state)
@@ -12726,27 +12914,25 @@ void MainWindow::flushPendingSessionSave()
 
 void MainWindow::setResultPrecision(int p)
 {
-    if (m_settings->resultPrecision == p)
+    if (m_settings->resultPrecision == p && m_status.selectedResultPrecision == p)
         return;
 
     m_settings->resultPrecision = p;
-    for (const QPointer<MainWindow>& ptr : allMainWindows()) {
-        if (MainWindow* window = ptr.data())
-            window->setStatusBarText();
-    }
+    m_status.selectedResultPrecision = p;
+    setStatusBarText();
+    syncStatusBarSelectionMenuActionState();
     emit resultPrecisionChanged();
 }
 
 void MainWindow::setResultFormat(char c)
 {
-    if (m_settings->resultFormat == c)
+    if (m_settings->resultFormat == c && m_status.selectedResultFormat == c)
         return;
 
     m_settings->resultFormat = c;
-    for (const QPointer<MainWindow>& ptr : allMainWindows()) {
-        if (MainWindow* window = ptr.data())
-            window->setStatusBarText();
-    }
+    m_status.selectedResultFormat = c;
+    setStatusBarText();
+    syncStatusBarSelectionMenuActionState();
     emit resultFormatChanged();
 }
 
@@ -12820,11 +13006,14 @@ void MainWindow::showResultSlotsDialog()
         DMath::complexMode = m_settings->complexNumbers;
         if (m_settings->complexNumbers)
             m_evaluator->initializeBuiltInVariables();
+        m_status.selectedResultFormat = m_settings->resultFormat;
+        m_status.selectedResultPrecision = m_settings->resultPrecision;
+        setStatusBarText();
+        syncStatusBarSelectionMenuActionState();
         for (const QPointer<MainWindow>& ptr : allMainWindows()) {
             MainWindow* window = ptr.data();
             if (window == nullptr)
                 continue;
-            window->setStatusBarText();
             for (Editor* editor : window->splitPaneEditors())
                 editor->refreshAutoCalc();
         }

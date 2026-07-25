@@ -112,8 +112,10 @@ private slots:
     void showRenameSessionDialog();
     void closeCurrentSession();
     void restoreClosedSessionTab();
+    void restoreWindowGeometry(const QByteArray& geometry);
     void restoreWindowLayoutState(const QByteArray& state);
     void restoreWindowKeypadLayout(bool visible, int mode);
+    void showRestoredWindow(const QByteArray& geometry);
     void cycleFocusForward();
     void cycleFocusBackward();
     void closeCurrentPane();
@@ -359,6 +361,11 @@ private:
     void updateKeypadDisabledActionText();
     void setMenusText();
     void setStatusBarText();
+    void applyStatusBarSelectionState();
+    void setStatusBarSelectionActionState(char angleUnit, char resultFormat,
+                                          int resultPrecision);
+    void syncStatusBarSelectionMenuActionState();
+    void syncStatusBarMenuActionState();
     void updateStatusBarSectionVisibility();
     void updateColorSchemeActionState();
     QString statusBarAngleUnitValue() const;
@@ -616,6 +623,9 @@ private:
         QLabel* resultPrecisionLabel;
         QPushButton* resultPrecision;
         QLabel* angleUnitSeparator;
+        char selectedAngleUnit = 'd';
+        char selectedResultFormat = 'g';
+        int selectedResultPrecision = -1;
     } m_status;
 
     Constants* m_constants;
