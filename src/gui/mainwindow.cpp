@@ -4109,7 +4109,7 @@ void MainWindow::updateKeypadDisabledActionText()
 void MainWindow::updateKeypadModeActionState()
 {
     const QSignalBlocker keypadBlocker(m_actionGroups.keypad);
-    switch (m_settings->keypadMode) {
+    switch (m_keypadMode) {
     case Settings::KeypadModeBasicWide:
         m_actions.viewKeypadBasicWide->setChecked(true);
         break;
@@ -5266,9 +5266,7 @@ void MainWindow::copyWindowLayoutFrom(const MainWindow* source)
     m_actions.viewBitfield->setChecked(bitfieldVisible);
 
     const bool keypadVisible = source->m_widgets.keypad != nullptr;
-    if ((m_widgets.keypad != nullptr) != keypadVisible)
-        setKeypadVisible(keypadVisible);
-    updateKeypadModeActionState();
+    restoreWindowKeypadLayout(keypadVisible, static_cast<int>(source->m_keypadMode));
 
     applyThemeSurfacePalette();
     refreshPaneThemes();
@@ -6636,7 +6634,7 @@ void MainWindow::createKeypad()
 
     m_widgets.keypadContainer = new QWidget(m_widgets.root);
 
-    if (m_settings->keypadMode == Settings::KeypadModeCustom) {
+    if (m_keypadMode == Settings::KeypadModeCustom) {
         QList<Keypad::CustomButtonDescription> customButtons;
         for (const auto& button : m_settings->customKeypad.buttons) {
             if (button.row < 0 || button.row >= m_settings->customKeypad.rows
@@ -6658,9 +6656,9 @@ void MainWindow::createKeypad()
                 this, &MainWindow::handleCustomKeypadButtonPress);
     } else {
         Keypad::LayoutMode layoutMode = Keypad::LayoutModeScientificWide;
-        if (m_settings->keypadMode == Settings::KeypadModeBasicWide)
+        if (m_keypadMode == Settings::KeypadModeBasicWide)
             layoutMode = Keypad::LayoutModeBasicWide;
-        else if (m_settings->keypadMode == Settings::KeypadModeScientificNarrow)
+        else if (m_keypadMode == Settings::KeypadModeScientificNarrow)
             layoutMode = Keypad::LayoutModeScientificNarrow;
         m_widgets.keypad = new Keypad(layoutMode,
                                       m_widgets.keypadContainer,
@@ -6683,7 +6681,8 @@ void MainWindow::createKeypad()
 
     m_widgets.keypadContainer->show();
     m_widgets.keypad->show();
-    m_settings->keypadVisible = true;
+    if (primaryMainWindow() == this)
+        m_settings->keypadVisible = true;
     applyKeypadThemeSurfacePalette();
 }
 
@@ -7324,7 +7323,7 @@ void MainWindow::applySettings()
         m_actions.viewKeypadZoom100->setChecked(true);
         break;
     }
-    setKeypadVisible(isVisibleKeypadMode(m_settings->keypadMode));
+    setKeypadVisible(isVisibleKeypadMode(m_keypadMode));
     m_actions.viewStatusBar->setChecked(m_settings->statusBarVisible);
 #if !defined(Q_OS_MACOS)
     setMenuBarVisible(m_settings->menuBarVisible);
@@ -7616,6 +7615,8 @@ void MainWindow::saveSettings()
     if (m_widgets.manual)
         m_settings->manualWindowGeometry = m_settings->windowPositionSave ? m_widgets.manual->saveGeometry() : QByteArray();
     m_settings->windowState = saveState(DockLayoutStateVersion);
+    m_settings->keypadMode = m_keypadMode;
+    m_settings->keypadVisible = m_widgets.keypad != nullptr;
     if (m_widgets.display != nullptr)
         m_settings->displayFont = m_widgets.display->font().toString();
 
@@ -7838,7 +7839,10 @@ void MainWindow::saveSessionLayout(bool captureCurrentViewport)
                       windowObject->statusBar() != nullptr && windowObject->statusBar()->isVisible());
         window.insert(QStringLiteral("bitfieldVisible"),
                       windowObject->m_docks.bitField != nullptr && windowObject->m_docks.bitField->isVisible());
-        window.insert(QStringLiteral("keypadVisible"), windowObject->m_widgets.keypad != nullptr);
+        const bool keypadVisible = windowObject->m_widgets.keypad != nullptr;
+        window.insert(QStringLiteral("keypadVisible"), keypadVisible);
+        if (keypadVisible)
+            window.insert(QStringLiteral("keypadMode"), static_cast<int>(windowObject->m_keypadMode));
         window.insert(QStringLiteral("windowState"),
                       QString::fromLatin1(windowObject->saveState(DockLayoutStateVersion).toBase64()));
         if (windowObject->m_settings->windowPositionSave)
@@ -8025,6 +8029,7 @@ MainWindow::MainWindow(bool restorePreviousSession)
 
     m_translator = 0;
     m_settings = Settings::instance();
+    m_keypadMode = m_settings->keypadMode;
     DMath::complexMode = m_settings->complexNumbers;
     CMath::setImaginaryUnitSymbol(m_settings->imaginaryUnit);
 
@@ -10890,7 +10895,8 @@ void MainWindow::deleteKeypad()
     }
     m_layouts.keypad = 0;
 
-    m_settings->keypadVisible = false;
+    if (primaryMainWindow() == this)
+        m_settings->keypadVisible = false;
 }
 
 void MainWindow::deleteStatusBar()
@@ -11082,12 +11088,14 @@ void MainWindow::setKeypadMode(QAction* action)
         return;
     }
 
-    if (m_settings->keypadMode == mode && !isCustomMode)
+    if (m_keypadMode == mode && !isCustomMode)
         return;
 
-    const bool wasVisible = isVisibleKeypadMode(m_settings->keypadMode);
+    const bool wasVisible = isVisibleKeypadMode(m_keypadMode);
     const bool nowVisible = isVisibleKeypadMode(mode);
-    m_settings->keypadMode = mode;
+    m_keypadMode = mode;
+    if (primaryMainWindow() == this)
+        m_settings->keypadMode = mode;
     updateKeypadModeActionState();
 
     if (wasVisible && nowVisible) {
@@ -11981,17 +11989,17 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
     updatePaneEditorCursorVisibility();
     if (window.contains(QStringLiteral("statusBarVisible")))
         setStatusBarVisible(window.value(QStringLiteral("statusBarVisible")).toBool(true));
-    if (!isVisible()) {
-        const QString windowStateBase64 = window.value(QStringLiteral("windowState")).toString();
-        if (!windowStateBase64.isEmpty())
-            restoreState(QByteArray::fromBase64(windowStateBase64.toLatin1()), DockLayoutStateVersion);
-        else
-            restoreState(m_settings->windowState, DockLayoutStateVersion);
-    }
+    const QString windowStateBase64 = window.value(QStringLiteral("windowState")).toString();
+    restoreWindowLayoutState(windowStateBase64.isEmpty()
+        ? m_settings->windowState
+        : QByteArray::fromBase64(windowStateBase64.toLatin1()));
     if (window.contains(QStringLiteral("bitfieldVisible")))
         setBitfieldVisible(window.value(QStringLiteral("bitfieldVisible")).toBool(false));
-    if (window.contains(QStringLiteral("keypadVisible")))
-        setKeypadVisible(window.value(QStringLiteral("keypadVisible")).toBool(false));
+    if (window.contains(QStringLiteral("keypadVisible"))) {
+        restoreWindowKeypadLayout(
+            window.value(QStringLiteral("keypadVisible")).toBool(false),
+            window.value(QStringLiteral("keypadMode")).toInt(static_cast<int>(m_keypadMode)));
+    }
     applyThemeSurfacePalette();
     refreshPaneThemes();
     emit historyChanged();
@@ -12027,6 +12035,36 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
                 extraWindow->restoreGeometry(QByteArray::fromBase64(geometryBase64.toLatin1()));
         }
         g_restoringExtraWindows = false;
+    }
+}
+
+void MainWindow::restoreWindowLayoutState(const QByteArray& state)
+{
+    restoreState(state, DockLayoutStateVersion);
+}
+
+void MainWindow::restoreWindowKeypadLayout(bool visible, int modeValue)
+{
+    if (modeValue < static_cast<int>(Settings::KeypadModeDisabled)
+            || modeValue > static_cast<int>(Settings::KeypadModeCustom)) {
+        modeValue = static_cast<int>(m_keypadMode);
+    }
+
+    Settings::KeypadMode mode = static_cast<Settings::KeypadMode>(modeValue);
+    if (mode == Settings::KeypadModeBasicNarrow)
+        mode = Settings::KeypadModeBasicWide;
+    if (!visible || !isVisibleKeypadMode(mode))
+        mode = Settings::KeypadModeDisabled;
+
+    if (m_keypadMode != mode && m_widgets.keypad != nullptr)
+        deleteKeypad();
+    m_keypadMode = mode;
+    setKeypadVisible(isVisibleKeypadMode(mode));
+    updateKeypadModeActionState();
+
+    if (primaryMainWindow() == this) {
+        m_settings->keypadMode = mode;
+        m_settings->keypadVisible = m_widgets.keypad != nullptr;
     }
 }
 

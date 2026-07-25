@@ -5,6 +5,7 @@
 #ifndef GUI_MAINWINDOW_H
 #define GUI_MAINWINDOW_H
 
+#include "core/settings.h"
 #include "gui/keypad.h"
 #include "math/quantity.h"
 
@@ -33,7 +34,6 @@ class ManualWindow;
 class ManualServer;
 class ResultDisplay;
 class Session;
-class Settings;
 class UserFunctionListWidget;
 class UserUnitListWidget;
 class Variable;
@@ -112,6 +112,8 @@ private slots:
     void showRenameSessionDialog();
     void closeCurrentSession();
     void restoreClosedSessionTab();
+    void restoreWindowLayoutState(const QByteArray& state);
+    void restoreWindowKeypadLayout(bool visible, int mode);
     void cycleFocusForward();
     void cycleFocusBackward();
     void closeCurrentPane();
@@ -620,6 +622,7 @@ private:
     Evaluator* m_evaluator;
     FunctionRepo* m_functions;
     Settings* m_settings;
+    Settings::KeypadMode m_keypadMode;
     Session* m_session;
     QHash<QString, Session*> m_loadedSessions;
     QHash<QString, QPair<int, int>> m_sessionViewportAnchors;

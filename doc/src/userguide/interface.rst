@@ -122,6 +122,8 @@ window for that session; dropping it on a pane in another SpeedCrunch window
 moves it there.
 Use :menuselection:`Session --> New Window` to open a blank
 session in a new window that copies the current window and dock layout.
+When SpeedCrunch restores multiple windows after a restart, each window keeps
+its own dock layout, dock visibility, and keypad visibility and layout.
 
 
 Expression Editor Features

@@ -627,6 +627,7 @@ private slots:
     void calculation_settings_dialog_matches_notation_precision_layout();
     void main_window_uses_generated_theme_surface_for_chrome_and_editor();
     void restored_session_layout_reapplies_generated_theme_surfaces();
+    void visible_window_applies_restored_dock_and_keypad_layout();
     void dock_surfaces_use_successive_generated_shades();
     void restored_constants_dock_empty_filter_fills_header();
     void dock_scroll_corner_uses_scrollbar_track_fill();
@@ -2452,6 +2453,116 @@ void TestDisplayUi::restored_session_layout_reapplies_generated_theme_surfaces()
     QWidget* keypadContainer = keypad->parentWidget();
     QVERIFY(keypadContainer != nullptr);
     QCOMPARE(keypadContainer->palette().color(QPalette::Window).name(), keypadFill.name());
+}
+
+void TestDisplayUi::visible_window_applies_restored_dock_and_keypad_layout()
+{
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->constantsDockVisible = false;
+    settings->functionsDockVisible = false;
+    settings->historyDockVisible = false;
+    settings->keypadMode = Settings::KeypadModeBasicWide;
+    settings->keypadVisible = true;
+    settings->formulaBookDockVisible = false;
+    settings->variablesDockVisible = false;
+    settings->userFunctionsDockVisible = false;
+    settings->userUnitsDockVisible = false;
+    settings->bitfieldVisible = false;
+    settings->hasNumberFormatStyleSetting = true;
+
+    QByteArray docklessWindowState;
+    {
+        MainWindow sourceWindow(false);
+        sourceWindow.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&sourceWindow));
+        docklessWindowState = sourceWindow.saveState(1);
+    }
+    QVERIFY(!docklessWindowState.isEmpty());
+
+    // Global settings describe the primary window. A secondary window can
+    // restore after it is shown, and must replace that inherited dock state.
+    settings->constantsDockVisible = true;
+
+    MainWindow restoredWindow(false);
+    restoredWindow.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&restoredWindow));
+
+    QDockWidget* constantsDock =
+        restoredWindow.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(constantsDock != nullptr);
+    QVERIFY(constantsDock->isVisible());
+    QVERIFY(QMetaObject::invokeMethod(&restoredWindow,
+                                      "restoreWindowLayoutState",
+                                      Qt::DirectConnection,
+                                      Q_ARG(QByteArray, docklessWindowState)));
+    QVERIFY(!constantsDock->isVisible());
+
+    QAction* restoredBasicAction =
+        keypadModeAction(&restoredWindow, Settings::KeypadModeBasicWide);
+    QVERIFY(restoredBasicAction != nullptr);
+    QVERIFY(restoredBasicAction->isChecked());
+    QVERIFY(restoredWindow.findChild<Keypad*>() != nullptr);
+
+    MainWindow secondaryWindow(false);
+    secondaryWindow.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&secondaryWindow));
+    QVERIFY(QMetaObject::invokeMethod(
+        &secondaryWindow,
+        "restoreWindowKeypadLayout",
+        Qt::DirectConnection,
+        Q_ARG(bool, true),
+        Q_ARG(int, static_cast<int>(Settings::KeypadModeScientificNarrow))));
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    QAction* secondaryScientificNarrowAction =
+        keypadModeAction(&secondaryWindow, Settings::KeypadModeScientificNarrow);
+    QVERIFY(secondaryScientificNarrowAction != nullptr);
+    QVERIFY(secondaryScientificNarrowAction->isChecked());
+    QVERIFY(secondaryWindow.findChild<Keypad*>() != nullptr);
+    QVERIFY(restoredBasicAction->isChecked());
+    QVERIFY(restoredWindow.findChild<Keypad*>() != nullptr);
+
+    restoredWindow.persistSessionAndSettingsForShutdown();
+    const QJsonDocument savedLayout =
+        QJsonDocument::fromJson(settings->sessionLayoutJson.toUtf8());
+    QVERIFY(savedLayout.isObject());
+    const QJsonArray savedWindows =
+        savedLayout.object().value(QStringLiteral("windows")).toArray();
+    QCOMPARE(savedWindows.size(), 2);
+    bool savedBasicKeypad = false;
+    bool savedScientificNarrowKeypad = false;
+    for (const QJsonValue& value : savedWindows) {
+        const QJsonObject window = value.toObject();
+        QVERIFY(window.value(QStringLiteral("keypadVisible")).toBool(false));
+        const int mode = window.value(QStringLiteral("keypadMode")).toInt(-1);
+        savedBasicKeypad = savedBasicKeypad
+            || mode == static_cast<int>(Settings::KeypadModeBasicWide);
+        savedScientificNarrowKeypad = savedScientificNarrowKeypad
+            || mode == static_cast<int>(Settings::KeypadModeScientificNarrow);
+    }
+    QVERIFY(savedBasicKeypad);
+    QVERIFY(savedScientificNarrowKeypad);
+
+    QVERIFY(QMetaObject::invokeMethod(
+        &secondaryWindow,
+        "restoreWindowKeypadLayout",
+        Qt::DirectConnection,
+        Q_ARG(bool, false),
+        Q_ARG(int, static_cast<int>(Settings::KeypadModeScientificNarrow))));
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+    QVERIFY(secondaryWindow.findChild<Keypad*>() == nullptr);
+    QAction* secondaryDisabledAction =
+        keypadModeAction(&secondaryWindow, Settings::KeypadModeDisabled);
+    QVERIFY(secondaryDisabledAction != nullptr);
+    QVERIFY(secondaryDisabledAction->isChecked());
+    QVERIFY(restoredBasicAction->isChecked());
+    QVERIFY(restoredWindow.findChild<Keypad*>() != nullptr);
 }
 
 void TestDisplayUi::dock_surfaces_use_successive_generated_shades()
