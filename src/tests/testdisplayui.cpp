@@ -642,6 +642,7 @@ private slots:
     void focusing_loaded_pane_preserves_its_current_scroll_position();
     void persisting_layout_captures_visible_scroll_positions_for_all_panes();
     void switching_session_tabs_preserves_each_editor_text();
+    void session_tabs_show_full_name_tooltip_on_hover();
     void session_tab_navigation_shortcuts_switch_tabs();
     void new_tab_menu_action_and_shortcut_create_session_in_active_pane();
     void new_tab_menu_action_targets_focused_window_when_native_menu_uses_last_window_action();
@@ -4538,6 +4539,69 @@ void TestDisplayUi::switching_session_tabs_preserves_each_editor_text()
     QTest::mouseClick(tabBar, Qt::LeftButton, Qt::NoModifier, tabBar->tabRect(1).center());
     QCoreApplication::processEvents();
     QCOMPARE(editor->text(), QStringLiteral("second tab draft"));
+}
+
+void TestDisplayUi::session_tabs_show_full_name_tooltip_on_hover()
+{
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    settings->constantsDockVisible = false;
+    settings->functionsDockVisible = false;
+    settings->historyDockVisible = false;
+    settings->keypadMode = Settings::KeypadModeDisabled;
+    settings->keypadVisible = false;
+    settings->formulaBookDockVisible = false;
+    settings->variablesDockVisible = false;
+    settings->userFunctionsDockVisible = false;
+    settings->userUnitsDockVisible = false;
+    settings->bitfieldVisible = false;
+
+    MainWindow window;
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    QTabBar* tabBar = tabBarForDisplay(display);
+    QVERIFY(tabBar != nullptr);
+
+    QVERIFY(QMetaObject::invokeMethod(&window, "showNewSessionDialog", Qt::DirectConnection));
+    QTRY_COMPARE(tabBar->count(), 2);
+    QVERIFY(tabBar->isVisible());
+
+    const QString fullName =
+        QStringLiteral("A session name that is deliberately much too long to fit "
+                       "inside the available tab label area at hover time");
+    tabBar->setTabText(0, fullName);
+    const QPoint hoverPos = tabBar->tabRect(0).center();
+    QMouseEvent moveEvent(QEvent::MouseMove,
+                          QPointF(hoverPos),
+                          QPointF(tabBar->mapToGlobal(hoverPos)),
+                          Qt::NoButton,
+                          Qt::NoButton,
+                          Qt::NoModifier);
+    QCoreApplication::sendEvent(tabBar, &moveEvent);
+
+    QFrame* toolTipPopup =
+        tabBar->findChild<QFrame*>(QStringLiteral("sessionTabToolTipPopup"));
+    QTRY_VERIFY(toolTipPopup != nullptr && toolTipPopup->isVisible());
+    QLabel* toolTipLabel =
+        toolTipPopup->findChild<QLabel*>(QStringLiteral("sessionTabToolTipPopupLabel"));
+    QVERIFY(toolTipLabel != nullptr);
+    QCOMPARE(toolTipLabel->text(), fullName);
+
+    QVERIFY(toolTipPopup->palette().color(QPalette::Window).isValid());
+    QVERIFY(toolTipPopup->palette().color(QPalette::WindowText).isValid());
+    QVERIFY(toolTipPopup->styleSheet().contains(
+        QStringLiteral("border-radius: %1px")
+            .arg(UiConfig::CompletionPopupCornerRadius)));
+
+    tabBar->setTabText(0, QStringLiteral("Short"));
+    QCoreApplication::sendEvent(tabBar, &moveEvent);
+    QTRY_VERIFY(!toolTipPopup->isVisible());
 }
 
 void TestDisplayUi::session_tab_navigation_shortcuts_switch_tabs()

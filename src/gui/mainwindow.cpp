@@ -84,8 +84,10 @@
 #include <QFormLayout>
 #include <QFont>
 #include <QFontDialog>
+#include <QFrame>
 #include <QGridLayout>
 #include <QGroupBox>
+#include <QHelpEvent>
 #include <QHeaderView>
 #include <QImage>
 #include <QInputDialog>
@@ -2122,7 +2124,11 @@ public:
                     const QColor& stripSurface = QColor(),
                     const QColor& inactiveText = QColor(),
                     const QColor& closeButtonHoverText = QColor(),
-                    const QColor& closeButtonHoverSurface = QColor())
+                    const QColor& closeButtonHoverSurface = QColor(),
+                    const QColor& toolTipBackground = QColor(),
+                    const QColor& toolTipForeground = QColor(),
+                    const QColor& toolTipOutline = QColor(),
+                    int toolTipCornerRadius = 0)
     {
         const QColor fg = selectedText.isValid()
             ? selectedText
@@ -2154,6 +2160,11 @@ public:
         m_selectedTextColor = fg;
         m_closeButtonHoverColor = closeButtonHovered;
         m_closeButtonHoverTextColor = closeButtonHoveredText;
+        m_toolTipBackgroundColor = toolTipBackground;
+        m_toolTipForegroundColor = toolTipForeground;
+        m_toolTipOutlineColor = toolTipOutline;
+        m_toolTipCornerRadius = qMax(0, toolTipCornerRadius);
+        applyToolTipTheme();
 
         setStyleSheet(QStringLiteral(R"(
                 QToolButton {
@@ -2329,6 +2340,7 @@ protected:
 
     void mousePressEvent(QMouseEvent* event) override
     {
+        hideTabToolTip();
         if (event->button() == Qt::LeftButton) {
             m_dragTabIndex = tabAt(event->pos());
             m_dragSessionName = m_dragTabIndex >= 0 ? tabText(m_dragTabIndex) : QString();
@@ -2354,6 +2366,7 @@ protected:
     void mouseMoveEvent(QMouseEvent* event) override
     {
         updateHoveredTab(event->pos());
+        showTabToolTip(event->pos(), event->globalPosition().toPoint());
 
         const bool hasPressedTab = (event->buttons() & Qt::LeftButton)
             && m_dragTabIndex >= 0;
@@ -2480,6 +2493,7 @@ protected:
     void leaveEvent(QEvent* event) override
     {
         m_hoveredTabIndex = -1;
+        hideTabToolTip();
         setCursor(Qt::ArrowCursor);
         refreshCloseButtons();
         update();
@@ -2490,7 +2504,13 @@ protected:
     {
         if (event->type() == QEvent::HoverMove) {
             QHoverEvent* hoverEvent = static_cast<QHoverEvent*>(event);
-            updateHoveredTab(hoverEvent->position().toPoint());
+            const QPoint pos = hoverEvent->position().toPoint();
+            updateHoveredTab(pos);
+            showTabToolTip(pos, mapToGlobal(pos));
+        } else if (event->type() == QEvent::ToolTip) {
+            QHelpEvent* helpEvent = static_cast<QHelpEvent*>(event);
+            showTabToolTip(helpEvent->pos(), helpEvent->globalPos());
+            return true;
         }
         return QTabBar::event(event);
     }
@@ -2568,6 +2588,72 @@ protected:
     }
 
 private:
+    void applyToolTipTheme()
+    {
+        ToolTipStyleUtils::applyPopupTheme(
+            m_toolTipPopup,
+            m_toolTipPopupLabel,
+            this,
+            {m_toolTipBackgroundColor,
+             m_toolTipForegroundColor,
+             m_toolTipOutlineColor,
+             m_toolTipCornerRadius});
+    }
+
+    void ensureToolTipPopup()
+    {
+        if (m_toolTipPopup != nullptr)
+            return;
+
+        m_toolTipPopup = ToolTipStyleUtils::createPopup(
+            this,
+            QStringLiteral("sessionTabToolTipPopup"),
+            QStringLiteral("sessionTabToolTipPopupLabel"),
+            Qt::PlainText,
+            &m_toolTipPopupLabel,
+            true);
+        applyToolTipTheme();
+    }
+
+    void hideTabToolTip()
+    {
+        if (m_toolTipPopup != nullptr)
+            m_toolTipPopup->hide();
+    }
+
+    void showTabToolTip(const QPoint& pos, const QPoint& globalPos)
+    {
+        const int index = tabAt(pos);
+        if (index < 0) {
+            hideTabToolTip();
+            return;
+        }
+
+        const QString text = tabText(index);
+        if (fontMetrics().horizontalAdvance(text)
+            <= tabTextRect(index, tabRect(index)).width()) {
+            hideTabToolTip();
+            return;
+        }
+
+        ensureToolTipPopup();
+        ToolTipStyleUtils::showPopup(m_toolTipPopup,
+                                     m_toolTipPopupLabel,
+                                     text,
+                                     this,
+                                     globalPos,
+                                     m_toolTipCornerRadius);
+    }
+
+    QRect tabTextRect(int index, const QRect& rect) const
+    {
+        const int rightButtonWidth = tabButton(index, QTabBar::RightSide) != nullptr
+            && tabButton(index, QTabBar::RightSide)->isVisible()
+            ? tabButton(index, QTabBar::RightSide)->width() + 6
+            : 0;
+        return pillRect(rect).adjusted(12, 0, -12 - rightButtonWidth, 0);
+    }
+
     void updateHoveredTab(const QPoint& pos)
     {
         const int hoveredTabIndex = tabAt(pos);
@@ -2626,11 +2712,7 @@ private:
             painter->drawLine(QPointF(pill.left(), y), QPointF(pill.right(), y));
         }
 
-        const int rightButtonWidth = tabButton(index, QTabBar::RightSide) != nullptr
-            && tabButton(index, QTabBar::RightSide)->isVisible()
-            ? tabButton(index, QTabBar::RightSide)->width() + 6
-            : 0;
-        const QRect textRect = pill.adjusted(12, 0, -12 - rightButtonWidth, 0);
+        const QRect textRect = tabTextRect(index, rect);
         painter->setPen(selected ? m_selectedTextColor : (hovered ? m_hoveredTextColor : m_tabTextColor));
         painter->setFont(font());
         painter->drawText(textRect,
@@ -2752,6 +2834,12 @@ private:
     QColor m_selectedTextColor;
     QColor m_closeButtonHoverColor;
     QColor m_closeButtonHoverTextColor;
+    QColor m_toolTipBackgroundColor;
+    QColor m_toolTipForegroundColor;
+    QColor m_toolTipOutlineColor;
+    int m_toolTipCornerRadius = 0;
+    QFrame* m_toolTipPopup = nullptr;
+    QLabel* m_toolTipPopupLabel = nullptr;
     QString m_dragSessionName;
 
     int indexOfDragSession() const
@@ -5961,6 +6049,10 @@ void MainWindow::updatePaneTabBars()
         themeSurfaceForShadeIndex(surfaces, UiConfig::HoveredSessionTabFillShade);
     const ThemeSurfaceColors closeButtonHover =
         themeSurfaceForShadeIndex(surfaces, UiConfig::SessionTabCloseButtonHoverFillShade);
+    const ThemeSurfaceColors toolTip =
+        themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupBackgroundShade);
+    const ThemeSurfaceColors toolTipOutline =
+        themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupOutlineShade);
     for (ResultDisplay* display : displays) {
         QTabBar* tabBar = displayTabBar(display);
         if (tabBar == nullptr)
@@ -5973,7 +6065,11 @@ void MainWindow::updatePaneTabBars()
             surfaces.window.background,
             surfaces.window.foreground,
             closeButtonHover.foreground,
-            closeButtonHover.background);
+            closeButtonHover.background,
+            toolTip.background,
+            toolTip.foreground,
+            toolTipOutline.background,
+            UiConfig::CompletionPopupCornerRadius);
 
         const QSignalBlocker blocker(tabBar);
         const QStringList names = paneSessionNames(display);
