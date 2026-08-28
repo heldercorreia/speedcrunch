@@ -505,6 +505,7 @@ struct MainWindowStateGuard {
     bool oldUserUnitsDockVisible = settings->userUnitsDockVisible;
     bool oldBitfieldVisible = settings->bitfieldVisible;
     Settings::KeypadMode oldKeypadMode = settings->keypadMode;
+    int oldKeypadZoomPercent = settings->keypadZoomPercent;
     bool oldWindowPositionSave = settings->windowPositionSave;
     bool oldStatusBarVisible = settings->statusBarVisible;
     char oldAngleUnit = settings->angleUnit;
@@ -540,6 +541,7 @@ struct MainWindowStateGuard {
         settings->userUnitsDockVisible = oldUserUnitsDockVisible;
         settings->bitfieldVisible = oldBitfieldVisible;
         settings->keypadMode = oldKeypadMode;
+        settings->keypadZoomPercent = oldKeypadZoomPercent;
         settings->windowPositionSave = oldWindowPositionSave;
         settings->statusBarVisible = oldStatusBarVisible;
         settings->angleUnit = oldAngleUnit;
@@ -2566,6 +2568,7 @@ void TestDisplayUi::visible_window_applies_restored_dock_and_keypad_layout()
     settings->historyDockVisible = false;
     settings->keypadMode = Settings::KeypadModeBasicWide;
     settings->keypadVisible = true;
+    settings->keypadZoomPercent = 100;
     settings->formulaBookDockVisible = false;
     settings->variablesDockVisible = false;
     settings->userFunctionsDockVisible = false;
@@ -2605,6 +2608,10 @@ void TestDisplayUi::visible_window_applies_restored_dock_and_keypad_layout()
     QVERIFY(restoredBasicAction != nullptr);
     QVERIFY(restoredBasicAction->isChecked());
     QVERIFY(restoredWindow.findChild<Keypad*>() != nullptr);
+    QVERIFY(QMetaObject::invokeMethod(&restoredWindow,
+                                      "restoreWindowKeypadZoom",
+                                      Qt::DirectConnection,
+                                      Q_ARG(int, 150)));
 
     MainWindow secondaryWindow(false);
     secondaryWindow.show();
@@ -2615,6 +2622,10 @@ void TestDisplayUi::visible_window_applies_restored_dock_and_keypad_layout()
         Qt::DirectConnection,
         Q_ARG(bool, true),
         Q_ARG(int, static_cast<int>(Settings::KeypadModeScientificNarrow))));
+    QVERIFY(QMetaObject::invokeMethod(&secondaryWindow,
+                                      "restoreWindowKeypadZoom",
+                                      Qt::DirectConnection,
+                                      Q_ARG(int, 200)));
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
 
@@ -2639,10 +2650,14 @@ void TestDisplayUi::visible_window_applies_restored_dock_and_keypad_layout()
         const QJsonObject window = value.toObject();
         QVERIFY(window.value(QStringLiteral("keypadVisible")).toBool(false));
         const int mode = window.value(QStringLiteral("keypadMode")).toInt(-1);
+        const int zoomPercent =
+            window.value(QStringLiteral("keypadZoomPercent")).toInt(-1);
         savedBasicKeypad = savedBasicKeypad
-            || mode == static_cast<int>(Settings::KeypadModeBasicWide);
+            || (mode == static_cast<int>(Settings::KeypadModeBasicWide)
+                && zoomPercent == 150);
         savedScientificNarrowKeypad = savedScientificNarrowKeypad
-            || mode == static_cast<int>(Settings::KeypadModeScientificNarrow);
+            || (mode == static_cast<int>(Settings::KeypadModeScientificNarrow)
+                && zoomPercent == 200);
     }
     QVERIFY(savedBasicKeypad);
     QVERIFY(savedScientificNarrowKeypad);
@@ -5264,6 +5279,7 @@ void TestDisplayUi::keypad_view_menu_tracks_and_changes_only_active_window()
     settings->historyDockVisible = false;
     settings->keypadMode = Settings::KeypadModeDisabled;
     settings->keypadVisible = false;
+    settings->keypadZoomPercent = 100;
     settings->formulaBookDockVisible = false;
     settings->variablesDockVisible = false;
     settings->userFunctionsDockVisible = false;
@@ -5286,6 +5302,10 @@ void TestDisplayUi::keypad_view_menu_tracks_and_changes_only_active_window()
     QVERIFY(QMetaObject::invokeMethod(
         &firstWindow, "restoreWindowKeypadLayout", Qt::DirectConnection,
         Q_ARG(bool, true), Q_ARG(int, static_cast<int>(Settings::KeypadModeBasicWide))));
+    QVERIFY(QMetaObject::invokeMethod(&firstWindow,
+                                      "restoreWindowKeypadZoom",
+                                      Qt::DirectConnection,
+                                      Q_ARG(int, 150)));
     QVERIFY(firstWindow.findChild<Keypad*>() != nullptr);
     QVERIFY(secondWindow.findChild<Keypad*>() == nullptr);
 
@@ -5297,6 +5317,10 @@ void TestDisplayUi::keypad_view_menu_tracks_and_changes_only_active_window()
     QMenu* secondKeypadMenu = directSubmenuWithTitle(secondViewMenu, QStringLiteral("&Keypad"));
     QVERIFY(firstKeypadMenu != nullptr);
     QVERIFY(secondKeypadMenu != nullptr);
+    QMenu* firstZoomMenu = directSubmenuWithTitle(firstKeypadMenu, QStringLiteral("&Zoom"));
+    QMenu* secondZoomMenu = directSubmenuWithTitle(secondKeypadMenu, QStringLiteral("&Zoom"));
+    QVERIFY(firstZoomMenu != nullptr);
+    QVERIFY(secondZoomMenu != nullptr);
     const auto actionForMode = [](QMenu* menu, Settings::KeypadMode mode) {
         for (QAction* action : menu->actions()) {
             if (action->data().isValid()
@@ -5310,6 +5334,21 @@ void TestDisplayUi::keypad_view_menu_tracks_and_changes_only_active_window()
         int count = 0;
         for (QAction* action : menu->actions()) {
             if (action->isCheckable() && action->data().isValid() && action->isChecked())
+                ++count;
+        }
+        return count;
+    };
+    const auto actionForZoom = [](QMenu* menu, int zoomPercent) {
+        for (QAction* action : menu->actions()) {
+            if (action->data().isValid() && action->data().toInt() == zoomPercent)
+                return action;
+        }
+        return static_cast<QAction*>(nullptr);
+    };
+    const auto checkedZoomCount = [](QMenu* menu) {
+        int count = 0;
+        for (QAction* action : menu->actions()) {
+            if (action->isCheckable() && action->isChecked())
                 ++count;
         }
         return count;
@@ -5337,13 +5376,63 @@ void TestDisplayUi::keypad_view_menu_tracks_and_changes_only_active_window()
     QVERIFY(!secondDisableAction->isChecked());
     QCOMPARE(checkedModeCount(firstKeypadMenu), 1);
     QCOMPARE(checkedModeCount(secondKeypadMenu), 1);
+    QVERIFY(firstZoomMenu->menuAction()->isEnabled());
+    QVERIFY(secondZoomMenu->menuAction()->isEnabled());
+    QVERIFY(actionForZoom(firstZoomMenu, 150)->isChecked());
+    QVERIFY(actionForZoom(secondZoomMenu, 150)->isChecked());
+    QCOMPARE(checkedZoomCount(firstZoomMenu), 1);
+    QCOMPARE(checkedZoomCount(secondZoomMenu), 1);
 
-    // Simulate the native menu dispatching the inactive window's action.
+    secondWindow.raise();
+    secondWindow.activateWindow();
+    secondWindow.setFocus(Qt::OtherFocusReason);
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&secondWindow));
+    QEvent secondWindowActivate(QEvent::WindowActivate);
+    QCoreApplication::sendEvent(&secondWindow, &secondWindowActivate);
+    QCoreApplication::processEvents();
+
+    QVERIFY(!firstZoomMenu->menuAction()->isEnabled());
+    QVERIFY(!secondZoomMenu->menuAction()->isEnabled());
+    QVERIFY(actionForZoom(firstZoomMenu, 100)->isChecked());
+    QVERIFY(actionForZoom(secondZoomMenu, 100)->isChecked());
+    QCOMPARE(checkedZoomCount(firstZoomMenu), 1);
+    QCOMPARE(checkedZoomCount(secondZoomMenu), 1);
+
+    // Simulate the native menu dispatching the inactive window's actions.
+    firstBasicAction->trigger();
+    QCoreApplication::processEvents();
+    QVERIFY(firstWindow.findChild<Keypad*>() != nullptr);
+    QVERIFY(secondWindow.findChild<Keypad*>() != nullptr);
+    QVERIFY(firstZoomMenu->menuAction()->isEnabled());
+    QVERIFY(secondZoomMenu->menuAction()->isEnabled());
+
+    QAction* firstZoom200Action = actionForZoom(firstZoomMenu, 200);
+    QVERIFY(firstZoom200Action != nullptr);
+    firstZoom200Action->trigger();
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+    QVERIFY(actionForZoom(firstZoomMenu, 200)->isChecked());
+    QVERIFY(actionForZoom(secondZoomMenu, 200)->isChecked());
+    QCOMPARE(checkedZoomCount(firstZoomMenu), 1);
+    QCOMPARE(checkedZoomCount(secondZoomMenu), 1);
+
+    firstWindow.raise();
+    firstWindow.activateWindow();
+    firstWindow.setFocus(Qt::OtherFocusReason);
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&firstWindow));
+    QCoreApplication::sendEvent(&firstWindow, &firstWindowActivate);
+    QCoreApplication::processEvents();
+
+    QVERIFY(actionForZoom(firstZoomMenu, 150)->isChecked());
+    QVERIFY(actionForZoom(secondZoomMenu, 150)->isChecked());
+    QCOMPARE(checkedZoomCount(firstZoomMenu), 1);
+    QCOMPARE(checkedZoomCount(secondZoomMenu), 1);
+
     secondDisableAction->trigger();
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
     QVERIFY(firstWindow.findChild<Keypad*>() == nullptr);
-    QVERIFY(secondWindow.findChild<Keypad*>() == nullptr);
+    QVERIFY(secondWindow.findChild<Keypad*>() != nullptr);
     QAction* firstDisabledAction = actionForMode(firstKeypadMenu, Settings::KeypadModeDisabled);
     QAction* secondDisabledAction = actionForMode(secondKeypadMenu, Settings::KeypadModeDisabled);
     QVERIFY(firstDisabledAction != nullptr);
@@ -5354,6 +5443,12 @@ void TestDisplayUi::keypad_view_menu_tracks_and_changes_only_active_window()
     QVERIFY(!secondBasicAction->isChecked());
     QCOMPARE(checkedModeCount(firstKeypadMenu), 1);
     QCOMPARE(checkedModeCount(secondKeypadMenu), 1);
+    QVERIFY(!firstZoomMenu->menuAction()->isEnabled());
+    QVERIFY(!secondZoomMenu->menuAction()->isEnabled());
+    QVERIFY(actionForZoom(firstZoomMenu, 150)->isChecked());
+    QVERIFY(actionForZoom(secondZoomMenu, 150)->isChecked());
+    QCOMPARE(checkedZoomCount(firstZoomMenu), 1);
+    QCOMPARE(checkedZoomCount(secondZoomMenu), 1);
 }
 
 void TestDisplayUi::status_bar_menu_tracks_and_changes_only_active_window()

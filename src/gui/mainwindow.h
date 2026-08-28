@@ -115,6 +115,7 @@ private slots:
     void restoreWindowGeometry(const QByteArray& geometry);
     void restoreWindowLayoutState(const QByteArray& state);
     void restoreWindowKeypadLayout(bool visible, int mode);
+    void restoreWindowKeypadZoom(int zoomPercent);
     void restoreWindowUiState(const QJsonObject& window);
     void showRestoredWindow(const QByteArray& geometry);
     void cycleFocusForward();
@@ -636,6 +637,7 @@ private:
     FunctionRepo* m_functions;
     Settings* m_settings;
     Settings::KeypadMode m_keypadMode;
+    int m_keypadZoomPercent;
     Session* m_session;
     QHash<QString, Session*> m_loadedSessions;
     QHash<QString, QPair<int, int>> m_sessionViewportAnchors;

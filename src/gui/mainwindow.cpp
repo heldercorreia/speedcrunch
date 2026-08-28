@@ -5287,6 +5287,7 @@ void MainWindow::copyWindowLayoutFrom(const MainWindow* source)
 
     const bool keypadVisible = source->m_widgets.keypad != nullptr;
     restoreWindowKeypadLayout(keypadVisible, static_cast<int>(source->m_keypadMode));
+    restoreWindowKeypadZoom(source->m_keypadZoomPercent);
 
     applyThemeSurfacePalette();
     refreshPaneThemes();
@@ -6671,7 +6672,7 @@ void MainWindow::createKeypad()
         }
         m_widgets.keypad = new Keypad(customButtons,
                                       m_widgets.keypadContainer,
-                                      m_settings->keypadZoomPercent);
+                                      m_keypadZoomPercent);
         connect(m_widgets.keypad, &Keypad::customButtonPressed,
                 this, &MainWindow::handleCustomKeypadButtonPress);
     } else {
@@ -6682,7 +6683,7 @@ void MainWindow::createKeypad()
             layoutMode = Keypad::LayoutModeScientificNarrow;
         m_widgets.keypad = new Keypad(layoutMode,
                                       m_widgets.keypadContainer,
-                                      m_settings->keypadZoomPercent);
+                                      m_keypadZoomPercent);
         connect(m_widgets.keypad, SIGNAL(buttonPressed(Keypad::Button)), SLOT(handleKeypadButtonPress(Keypad::Button)));
         connect(this, SIGNAL(radixCharacterChanged()), m_widgets.keypad, SLOT(handleRadixCharacterChange()));
     }
@@ -7383,7 +7384,7 @@ void MainWindow::applySettings()
     setBitfieldVisible(bitfieldVisible);
     m_actions.viewBitfield->setChecked(bitfieldVisible);
     updateKeypadModeActionState();
-    switch (m_settings->keypadZoomPercent) {
+    switch (m_keypadZoomPercent) {
     case 150:
         m_actions.viewKeypadZoom150->setChecked(true);
         break;
@@ -7396,6 +7397,7 @@ void MainWindow::applySettings()
         break;
     }
     setKeypadVisible(isVisibleKeypadMode(m_keypadMode));
+    m_menus.keypadZoom->setEnabled(isVisibleKeypadMode(m_keypadMode));
     setStatusBarVisible(m_settings->statusBarVisible);
     m_actions.viewStatusBar->setChecked(m_settings->statusBarVisible);
 #if !defined(Q_OS_MACOS)
@@ -7694,6 +7696,7 @@ void MainWindow::saveSettings()
     m_settings->windowState = defaultWindow->saveState(DockLayoutStateVersion);
     m_settings->keypadMode = defaultWindow->m_keypadMode;
     m_settings->keypadVisible = defaultWindow->m_widgets.keypad != nullptr;
+    m_settings->keypadZoomPercent = defaultWindow->m_keypadZoomPercent;
     if (m_widgets.manual)
         m_settings->manualWindowGeometry = m_settings->windowPositionSave ? m_widgets.manual->saveGeometry() : QByteArray();
     if (m_widgets.display != nullptr)
@@ -7932,6 +7935,7 @@ void MainWindow::saveSessionLayout(bool captureCurrentViewport)
         window.insert(QStringLiteral("keypadVisible"), keypadVisible);
         if (keypadVisible)
             window.insert(QStringLiteral("keypadMode"), static_cast<int>(windowObject->m_keypadMode));
+        window.insert(QStringLiteral("keypadZoomPercent"), windowObject->m_keypadZoomPercent);
         window.insert(QStringLiteral("windowState"),
                       QString::fromLatin1(windowObject->saveState(DockLayoutStateVersion).toBase64()));
         if (windowObject->m_settings->windowPositionSave)
@@ -8119,6 +8123,7 @@ MainWindow::MainWindow(bool restorePreviousSession)
     m_translator = 0;
     m_settings = Settings::instance();
     m_keypadMode = m_settings->keypadMode;
+    m_keypadZoomPercent = m_settings->keypadZoomPercent;
     DMath::complexMode = m_settings->complexNumbers;
     CMath::setImaginaryUnitSymbol(m_settings->imaginaryUnit);
 
@@ -10389,7 +10394,8 @@ void MainWindow::syncViewMenuActionState()
     const Settings::KeypadMode keypadMode = m_widgets.keypad != nullptr
         ? m_keypadMode
         : Settings::KeypadModeDisabled;
-    const int keypadZoomPercent = m_settings->keypadZoomPercent;
+    const int keypadZoomPercent = m_keypadZoomPercent;
+    const bool keypadZoomEnabled = keypadMode != Settings::KeypadModeDisabled;
     const bool menuBarVisible = menuBar() != nullptr && !menuBar()->isHidden();
     const bool fullScreenEnabled = isFullScreen();
 
@@ -10417,6 +10423,7 @@ void MainWindow::syncViewMenuActionState()
         setChecked(window->m_actions.viewStatusBar, statusBarVisible);
         setChecked(window->m_actions.viewMenuBar, menuBarVisible);
         setChecked(window->m_actions.viewFullScreenMode, fullScreenEnabled);
+        window->m_menus.keypadZoom->setEnabled(keypadZoomEnabled);
 
         switch (keypadMode) {
         case Settings::KeypadModeBasicWide:
@@ -11354,9 +11361,10 @@ void MainWindow::setKeypadZoom(QAction* action)
     const int zoomPercent = action->data().toInt();
     if (zoomPercent != 100 && zoomPercent != 150 && zoomPercent != 200)
         return;
-    if (m_settings->keypadZoomPercent == zoomPercent)
+    if (m_keypadZoomPercent == zoomPercent)
         return;
 
+    m_keypadZoomPercent = zoomPercent;
     m_settings->keypadZoomPercent = zoomPercent;
     if (m_widgets.keypad) {
         deleteKeypad();
@@ -12305,6 +12313,10 @@ void MainWindow::restoreWindowUiState(const QJsonObject& window)
             window.value(QStringLiteral("keypadVisible")).toBool(false),
             window.value(QStringLiteral("keypadMode")).toInt(static_cast<int>(m_keypadMode)));
     }
+    if (window.contains(QStringLiteral("keypadZoomPercent"))) {
+        restoreWindowKeypadZoom(
+            window.value(QStringLiteral("keypadZoomPercent")).toInt(m_keypadZoomPercent));
+    }
     const QString geometryBase64 = window.value(QStringLiteral("geometry")).toString();
     if (!geometryBase64.isEmpty())
         restoreWindowGeometry(QByteArray::fromBase64(geometryBase64.toLatin1()));
@@ -12367,6 +12379,20 @@ void MainWindow::restoreWindowKeypadLayout(bool visible, int modeValue)
     m_keypadMode = mode;
     setKeypadVisible(isVisibleKeypadMode(mode));
     updateKeypadModeActionState();
+}
+
+void MainWindow::restoreWindowKeypadZoom(int zoomPercent)
+{
+    if (zoomPercent != 100 && zoomPercent != 150 && zoomPercent != 200)
+        return;
+    if (m_keypadZoomPercent == zoomPercent)
+        return;
+
+    m_keypadZoomPercent = zoomPercent;
+    if (m_widgets.keypad != nullptr) {
+        deleteKeypad(isVisible());
+        createKeypad();
+    }
 }
 
 void MainWindow::evaluateEditorExpression()

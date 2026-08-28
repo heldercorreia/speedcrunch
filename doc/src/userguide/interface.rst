@@ -72,7 +72,9 @@ Most of them are dockable panels that can be moved around the main window and en
     * ``150%``
     * ``200%``
 
-    The zoom level scales the keypad buttons, including their text.
+    The zoom level scales the keypad buttons, including their text. Each window
+    keeps its own zoom level. The Zoom submenu is unavailable while the keypad
+    is disabled.
 
     ``Custom...`` opens a dialog where you can define the keypad matrix size (rows and columns)
     and configure each button individually. For each position in the matrix, you can set:
@@ -123,8 +125,8 @@ moves it there.
 Use :menuselection:`Session --> New Window` to open a blank
 session in a new window that copies the current window and dock layout.
 When SpeedCrunch restores multiple windows after a restart, each window keeps
-its own dock layout, dock visibility, keypad visibility and layout, and—when
-window position saving is enabled—its own size and position.
+its own dock layout, dock visibility, keypad visibility, layout and zoom,
+and—when window position saving is enabled—its own size and position.
 
 
 Expression Editor Features
