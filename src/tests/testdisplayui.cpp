@@ -636,6 +636,7 @@ private slots:
     void calculation_settings_dialog_matches_notation_precision_layout();
     void main_window_uses_generated_theme_surface_for_chrome_and_editor();
     void restored_session_layout_reapplies_generated_theme_surfaces();
+    void saved_window_ui_state_overrides_defaults_before_show();
     void visible_window_applies_restored_dock_and_keypad_layout();
     void dock_surfaces_use_successive_generated_shades();
     void restored_constants_dock_empty_filter_fills_header();
@@ -656,6 +657,8 @@ private slots:
     void session_tab_navigation_shortcuts_switch_tabs();
     void new_tab_menu_action_and_shortcut_create_session_in_active_pane();
     void new_tab_menu_action_targets_focused_window_when_native_menu_uses_last_window_action();
+    void view_dock_menu_tracks_and_changes_only_active_window();
+    void keypad_view_menu_tracks_and_changes_only_active_window();
     void status_bar_menu_tracks_and_changes_only_active_window();
     void status_bar_visibility_persists_for_every_window_during_shutdown();
     void status_bar_setting_selectors_update_only_active_window();
@@ -2465,6 +2468,90 @@ void TestDisplayUi::restored_session_layout_reapplies_generated_theme_surfaces()
     QWidget* keypadContainer = keypad->parentWidget();
     QVERIFY(keypadContainer != nullptr);
     QCOMPARE(keypadContainer->palette().color(QPalette::Window).name(), keypadFill.name());
+}
+
+void TestDisplayUi::saved_window_ui_state_overrides_defaults_before_show()
+{
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    settings->constantsDockVisible = false;
+    settings->functionsDockVisible = false;
+    settings->historyDockVisible = false;
+    settings->keypadMode = Settings::KeypadModeDisabled;
+    settings->keypadVisible = false;
+    settings->formulaBookDockVisible = false;
+    settings->variablesDockVisible = false;
+    settings->userFunctionsDockVisible = false;
+    settings->userUnitsDockVisible = false;
+    settings->bitfieldVisible = false;
+    settings->statusBarVisible = false;
+    settings->hasNumberFormatStyleSetting = true;
+
+    QByteArray docklessWindowState;
+    {
+        MainWindow sourceWindow(false);
+        docklessWindowState = sourceWindow.saveState(1);
+    }
+    QVERIFY(!docklessWindowState.isEmpty());
+
+    QMainWindow compactGeometrySource;
+    compactGeometrySource.resize(560, 380);
+    const QSize compactSize = compactGeometrySource.size();
+    const QByteArray compactGeometry = compactGeometrySource.saveGeometry();
+    QVERIFY(!compactGeometry.isEmpty());
+
+    QJsonObject tab {
+        { QStringLiteral("name"), QStringLiteral("Missing session") },
+        { QStringLiteral("file"), QStringLiteral("missing-window-ui-state.json") }
+    };
+    QJsonObject root {
+        { QStringLiteral("type"), QStringLiteral("tabs") },
+        { QStringLiteral("active"), QStringLiteral("Missing session") },
+        { QStringLiteral("tabs"), QJsonArray({ tab }) }
+    };
+    QJsonObject savedWindow {
+        { QStringLiteral("id"), QStringLiteral("window-0") },
+        { QStringLiteral("active"), true },
+        { QStringLiteral("root"), root },
+        { QStringLiteral("statusBarVisible"), false },
+        { QStringLiteral("keypadVisible"), false },
+        { QStringLiteral("bitfieldVisible"), false },
+        { QStringLiteral("windowState"),
+          QString::fromLatin1(docklessWindowState.toBase64()) },
+        { QStringLiteral("geometry"),
+          QString::fromLatin1(compactGeometry.toBase64()) }
+    };
+    QJsonObject layout {
+        { QStringLiteral("scheme"), 1 },
+        { QStringLiteral("kind"), QStringLiteral("session-layout") },
+        { QStringLiteral("activeWindow"), QStringLiteral("window-0") },
+        { QStringLiteral("windows"), QJsonArray({ savedWindow }) }
+    };
+    settings->sessionLayoutJson = QString::fromUtf8(
+        QJsonDocument(layout).toJson(QJsonDocument::Compact));
+
+    // Deliberately conflicting defaults must never become the visible state of
+    // a window that has its own saved UI record.
+    settings->constantsDockVisible = true;
+    settings->keypadMode = Settings::KeypadModeBasicWide;
+    settings->keypadVisible = true;
+    settings->statusBarVisible = true;
+
+    MainWindow restoredWindow;
+
+    QStatusBar* statusBar =
+        restoredWindow.findChild<QStatusBar*>(QString(), Qt::FindDirectChildrenOnly);
+    QDockWidget* constantsDock =
+        restoredWindow.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(statusBar == nullptr || statusBar->isHidden());
+    QVERIFY(restoredWindow.findChild<Keypad*>() == nullptr);
+    QVERIFY(constantsDock != nullptr);
+    QVERIFY(constantsDock->isHidden());
+    QCOMPARE(restoredWindow.size(), compactSize);
 }
 
 void TestDisplayUi::visible_window_applies_restored_dock_and_keypad_layout()
@@ -5025,6 +5112,222 @@ void TestDisplayUi::new_tab_menu_action_targets_focused_window_when_native_menu_
 
     QTRY_COMPARE(firstTabBar->count(), 3);
     QCOMPARE(secondTabBar->count(), 1);
+}
+
+void TestDisplayUi::view_dock_menu_tracks_and_changes_only_active_window()
+{
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    settings->constantsDockVisible = false;
+    settings->functionsDockVisible = false;
+    settings->historyDockVisible = false;
+    settings->keypadVisible = false;
+    settings->formulaBookDockVisible = false;
+    settings->variablesDockVisible = false;
+    settings->userFunctionsDockVisible = false;
+    settings->userUnitsDockVisible = false;
+    settings->bitfieldVisible = false;
+    settings->statusBarVisible = true;
+    settings->windowPositionSave = false;
+    settings->hasNumberFormatStyleSetting = true;
+
+    MainWindow firstWindow;
+    firstWindow.resize(800, 500);
+    firstWindow.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&firstWindow));
+
+    MainWindow secondWindow;
+    secondWindow.resize(800, 500);
+    secondWindow.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&secondWindow));
+
+    struct DockSpec {
+        const char* setter;
+        const char* objectName;
+        const char* actionText;
+        bool hasFocusArgument;
+    };
+    const DockSpec dockSpecs[] = {
+        { "setFormulaBookDockVisible", "BookDock", "Formula &Book", true },
+        { "setConstantsDockVisible", "ConstantsDock", "&Constants", true },
+        { "setFunctionsDockVisible", "FunctionsDock", "&Functions", true },
+        { "setVariablesDockVisible", "VariablesDock", "User &Variables", true },
+        { "setUserFunctionsDockVisible", "UserFunctionsDock", "Use&r Functions", true },
+        { "setUserUnitsDockVisible", "UserUnitsDock", "User &Units", true },
+        { "setHistoryDockVisible", "HistoryDock", "&History", true },
+        { "setBitfieldVisible", "BitfieldDock", "Bitfield", false }
+    };
+    const auto setDockVisible = [](MainWindow* window, const DockSpec& spec, bool visible) {
+        if (!spec.hasFocusArgument) {
+            return QMetaObject::invokeMethod(window, spec.setter, Qt::DirectConnection,
+                                             Q_ARG(bool, visible));
+        }
+        return QMetaObject::invokeMethod(window, spec.setter, Qt::DirectConnection,
+                                         Q_ARG(bool, visible), Q_ARG(bool, false));
+    };
+    const auto dockIsVisible = [](MainWindow* window, const DockSpec& spec) {
+        QDockWidget* dock = window->findChild<QDockWidget*>(QString::fromLatin1(spec.objectName));
+        return dock != nullptr && dock->isVisible();
+    };
+
+    QMenu* firstViewMenu = menuWithTitle(firstWindow.menuBar(), QStringLiteral("&View"));
+    QMenu* secondViewMenu = menuWithTitle(secondWindow.menuBar(), QStringLiteral("&View"));
+    QVERIFY(firstViewMenu != nullptr);
+    QVERIFY(secondViewMenu != nullptr);
+
+    for (const DockSpec& spec : dockSpecs) {
+        QVERIFY(setDockVisible(&firstWindow, spec, true));
+        QVERIFY(dockIsVisible(&firstWindow, spec));
+        QVERIFY(!dockIsVisible(&secondWindow, spec));
+    }
+
+    firstWindow.raise();
+    firstWindow.activateWindow();
+    firstWindow.setFocus(Qt::OtherFocusReason);
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&firstWindow));
+    QEvent firstWindowActivate(QEvent::WindowActivate);
+    QCoreApplication::sendEvent(&firstWindow, &firstWindowActivate);
+    QCoreApplication::processEvents();
+
+    for (const DockSpec& spec : dockSpecs) {
+        QAction* firstAction = directMenuActionWithText(
+            firstViewMenu, QString::fromLatin1(spec.actionText));
+        QAction* secondAction = directMenuActionWithText(
+            secondViewMenu, QString::fromLatin1(spec.actionText));
+        QVERIFY(firstAction != nullptr);
+        QVERIFY(secondAction != nullptr);
+        QVERIFY(firstAction->isChecked());
+        QVERIFY(secondAction->isChecked());
+
+        // Simulate the native menu dispatching the inactive window's action.
+        secondAction->trigger();
+        QCoreApplication::processEvents();
+        QVERIFY(!dockIsVisible(&firstWindow, spec));
+        QVERIFY(!dockIsVisible(&secondWindow, spec));
+        QVERIFY(!firstAction->isChecked());
+        QVERIFY(!secondAction->isChecked());
+    }
+
+    for (const DockSpec& spec : dockSpecs) {
+        QVERIFY(setDockVisible(&secondWindow, spec, true));
+        QVERIFY(!dockIsVisible(&firstWindow, spec));
+        QVERIFY(dockIsVisible(&secondWindow, spec));
+    }
+
+    secondWindow.raise();
+    secondWindow.activateWindow();
+    secondWindow.setFocus(Qt::OtherFocusReason);
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&secondWindow));
+    QEvent secondWindowActivate(QEvent::WindowActivate);
+    QCoreApplication::sendEvent(&secondWindow, &secondWindowActivate);
+    QCoreApplication::processEvents();
+
+    for (const DockSpec& spec : dockSpecs) {
+        QAction* firstAction = directMenuActionWithText(
+            firstViewMenu, QString::fromLatin1(spec.actionText));
+        QAction* secondAction = directMenuActionWithText(
+            secondViewMenu, QString::fromLatin1(spec.actionText));
+        QVERIFY(firstAction->isChecked());
+        QVERIFY(secondAction->isChecked());
+
+        firstAction->trigger();
+        QCoreApplication::processEvents();
+        QVERIFY(!dockIsVisible(&firstWindow, spec));
+        QVERIFY(!dockIsVisible(&secondWindow, spec));
+        QVERIFY(!firstAction->isChecked());
+        QVERIFY(!secondAction->isChecked());
+    }
+}
+
+void TestDisplayUi::keypad_view_menu_tracks_and_changes_only_active_window()
+{
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    settings->constantsDockVisible = false;
+    settings->functionsDockVisible = false;
+    settings->historyDockVisible = false;
+    settings->keypadMode = Settings::KeypadModeDisabled;
+    settings->keypadVisible = false;
+    settings->formulaBookDockVisible = false;
+    settings->variablesDockVisible = false;
+    settings->userFunctionsDockVisible = false;
+    settings->userUnitsDockVisible = false;
+    settings->bitfieldVisible = false;
+    settings->statusBarVisible = true;
+    settings->windowPositionSave = false;
+    settings->hasNumberFormatStyleSetting = true;
+
+    MainWindow firstWindow;
+    firstWindow.resize(800, 500);
+    firstWindow.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&firstWindow));
+
+    MainWindow secondWindow;
+    secondWindow.resize(800, 500);
+    secondWindow.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&secondWindow));
+
+    QVERIFY(QMetaObject::invokeMethod(
+        &firstWindow, "restoreWindowKeypadLayout", Qt::DirectConnection,
+        Q_ARG(bool, true), Q_ARG(int, static_cast<int>(Settings::KeypadModeBasicWide))));
+    QVERIFY(firstWindow.findChild<Keypad*>() != nullptr);
+    QVERIFY(secondWindow.findChild<Keypad*>() == nullptr);
+
+    QMenu* firstViewMenu = menuWithTitle(firstWindow.menuBar(), QStringLiteral("&View"));
+    QMenu* secondViewMenu = menuWithTitle(secondWindow.menuBar(), QStringLiteral("&View"));
+    QVERIFY(firstViewMenu != nullptr);
+    QVERIFY(secondViewMenu != nullptr);
+    QMenu* firstKeypadMenu = directSubmenuWithTitle(firstViewMenu, QStringLiteral("&Keypad"));
+    QMenu* secondKeypadMenu = directSubmenuWithTitle(secondViewMenu, QStringLiteral("&Keypad"));
+    QVERIFY(firstKeypadMenu != nullptr);
+    QVERIFY(secondKeypadMenu != nullptr);
+    const auto actionForMode = [](QMenu* menu, Settings::KeypadMode mode) {
+        for (QAction* action : menu->actions()) {
+            if (action->data().isValid()
+                && action->data().toInt() == static_cast<int>(mode)) {
+                return action;
+            }
+        }
+        return static_cast<QAction*>(nullptr);
+    };
+
+    firstWindow.raise();
+    firstWindow.activateWindow();
+    firstWindow.setFocus(Qt::OtherFocusReason);
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&firstWindow));
+    QEvent firstWindowActivate(QEvent::WindowActivate);
+    QCoreApplication::sendEvent(&firstWindow, &firstWindowActivate);
+    QCoreApplication::processEvents();
+
+    QAction* firstBasicAction = actionForMode(firstKeypadMenu, Settings::KeypadModeBasicWide);
+    QAction* secondBasicAction = actionForMode(secondKeypadMenu, Settings::KeypadModeBasicWide);
+    QAction* secondDisableAction = actionForMode(secondKeypadMenu, Settings::KeypadModeDisabled);
+    QVERIFY(firstBasicAction != nullptr);
+    QVERIFY(secondBasicAction != nullptr);
+    QVERIFY(secondDisableAction != nullptr);
+    QVERIFY(firstBasicAction->isChecked());
+    QVERIFY(secondBasicAction->isChecked());
+
+    // Simulate the native menu dispatching the inactive window's action.
+    secondDisableAction->trigger();
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+    QVERIFY(firstWindow.findChild<Keypad*>() == nullptr);
+    QVERIFY(secondWindow.findChild<Keypad*>() == nullptr);
+    QAction* firstDisabledAction = actionForMode(firstKeypadMenu, Settings::KeypadModeDisabled);
+    QAction* secondDisabledAction = actionForMode(secondKeypadMenu, Settings::KeypadModeDisabled);
+    QVERIFY(firstDisabledAction != nullptr);
+    QVERIFY(secondDisabledAction != nullptr);
+    QVERIFY(firstDisabledAction->isChecked());
+    QVERIFY(secondDisabledAction->isChecked());
 }
 
 void TestDisplayUi::status_bar_menu_tracks_and_changes_only_active_window()

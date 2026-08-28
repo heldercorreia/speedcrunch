@@ -115,6 +115,7 @@ private slots:
     void restoreWindowGeometry(const QByteArray& geometry);
     void restoreWindowLayoutState(const QByteArray& state);
     void restoreWindowKeypadLayout(bool visible, int mode);
+    void restoreWindowUiState(const QJsonObject& window);
     void showRestoredWindow(const QByteArray& geometry);
     void cycleFocusForward();
     void cycleFocusBackward();
@@ -284,7 +285,7 @@ private:
     void checkInitialDigitGrouping();
     void restoreSession(bool restoreHistory = true);
     bool restoreSessionLayout(bool restoreHistory);
-    void deleteKeypad();
+    void deleteKeypad(bool deferredDeletion = true);
     void deleteStatusBar();
     void deleteBitField();
     void deleteBookDock();
@@ -365,7 +366,7 @@ private:
     void setStatusBarSelectionActionState(char angleUnit, char resultFormat,
                                           int resultPrecision);
     void syncStatusBarSelectionMenuActionState();
-    void syncStatusBarMenuActionState();
+    void syncViewMenuActionState();
     void updateStatusBarSectionVisibility();
     void updateColorSchemeActionState();
     QString statusBarAngleUnitValue() const;
@@ -623,6 +624,8 @@ private:
         QLabel* resultPrecisionLabel;
         QPushButton* resultPrecision;
         QLabel* angleUnitSeparator;
+        // Settings holds the active evaluator state; these values are the
+        // independent, persistent selection owned by this window.
         char selectedAngleUnit = 'd';
         char selectedResultFormat = 'g';
         int selectedResultPrecision = -1;

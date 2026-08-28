@@ -6697,8 +6697,6 @@ void MainWindow::createKeypad()
 
     m_widgets.keypadContainer->show();
     m_widgets.keypad->show();
-    if (primaryMainWindow() == this)
-        m_settings->keypadVisible = true;
     applyKeypadThemeSurfacePalette();
 }
 
@@ -7045,34 +7043,68 @@ void MainWindow::createFixedConnections()
     connect(m_actions.editSelectExpression, SIGNAL(triggered()), SLOT(selectEditorExpression()));
     connect(m_actions.editWrapSelection, SIGNAL(triggered()), SLOT(wrapSelection()));
 
-    connect(m_actions.viewFullScreenMode, SIGNAL(toggled(bool)), SLOT(setFullScreenEnabled(bool)));
-    connect(m_actionGroups.keypad, SIGNAL(triggered(QAction*)), SLOT(setKeypadMode(QAction*)));
+    const auto connectViewToggleToActiveWindow =
+        [this](QAction* action, auto apply) {
+            connect(action, &QAction::triggered, this, [this, apply](bool checked) {
+                MainWindow* targetWindow = activeMainWindowForMenuAction(this);
+                apply(targetWindow, checked);
+                targetWindow->syncViewMenuActionState();
+            });
+        };
+    connectViewToggleToActiveWindow(
+        m_actions.viewFullScreenMode,
+        [](MainWindow* window, bool enabled) { window->setFullScreenEnabled(enabled); });
+    connect(m_actionGroups.keypad, &QActionGroup::triggered, this,
+            [this](QAction* action) {
+                MainWindow* targetWindow = activeMainWindowForMenuAction(this);
+                targetWindow->setKeypadMode(action);
+                targetWindow->syncViewMenuActionState();
+            });
     connect(m_actions.viewKeypadDisabled, &QAction::toggled,
             this, [this](bool) {
                 updateKeypadDisabledActionText();
             });
-    connect(m_actionGroups.keypadZoom, SIGNAL(triggered(QAction*)), SLOT(setKeypadZoom(QAction*)));
-    connect(m_actions.viewStatusBar, &QAction::triggered, this, [this](bool visible) {
-        // On macOS the native menu bar can dispatch an action belonging to an
-        // inactive window. Always apply the active menu state to the frontmost
-        // SpeedCrunch window, without changing any other window's status bar.
-        MainWindow* targetWindow = activeMainWindowForMenuAction(this);
-
-        targetWindow->setStatusBarVisible(visible);
-        targetWindow->syncStatusBarMenuActionState();
-    });
+    connect(m_actionGroups.keypadZoom, &QActionGroup::triggered, this,
+            [this](QAction* action) {
+                MainWindow* targetWindow = activeMainWindowForMenuAction(this);
+                targetWindow->setKeypadZoom(action);
+                targetWindow->syncViewMenuActionState();
+            });
+    connectViewToggleToActiveWindow(
+        m_actions.viewStatusBar,
+        [](MainWindow* window, bool visible) { window->setStatusBarVisible(visible); });
 #if !defined(Q_OS_MACOS)
-    connect(m_actions.viewMenuBar, SIGNAL(toggled(bool)), SLOT(setMenuBarVisible(bool)));
+    connectViewToggleToActiveWindow(
+        m_actions.viewMenuBar,
+        [](MainWindow* window, bool visible) { window->setMenuBarVisible(visible); });
 #endif
-    connect(m_actions.viewBitfield, SIGNAL(toggled(bool)), SLOT(setBitfieldVisible(bool)));
-
-    connect(m_actions.viewConstants, SIGNAL(triggered(bool)), SLOT(setConstantsDockVisible(bool)));
-    connect(m_actions.viewFunctions, SIGNAL(triggered(bool)), SLOT(setFunctionsDockVisible(bool)));
-    connect(m_actions.viewHistory, SIGNAL(triggered(bool)), SLOT(setHistoryDockVisible(bool)));
-    connect(m_actions.viewFormulaBook, SIGNAL(triggered(bool)), SLOT(setFormulaBookDockVisible(bool)));
-    connect(m_actions.viewVariables, SIGNAL(triggered(bool)), SLOT(setVariablesDockVisible(bool)));
-    connect(m_actions.viewUserFunctions, SIGNAL(triggered(bool)), SLOT(setUserFunctionsDockVisible(bool)));
-    connect(m_actions.viewUserUnits, SIGNAL(triggered(bool)), SLOT(setUserUnitsDockVisible(bool)));
+    connectViewToggleToActiveWindow(
+        m_actions.viewBitfield,
+        [](MainWindow* window, bool visible) { window->setBitfieldVisible(visible); });
+    connectViewToggleToActiveWindow(
+        m_actions.viewConstants,
+        [](MainWindow* window, bool visible) { window->setConstantsDockVisible(visible); });
+    connectViewToggleToActiveWindow(
+        m_actions.viewFunctions,
+        [](MainWindow* window, bool visible) { window->setFunctionsDockVisible(visible); });
+    connectViewToggleToActiveWindow(
+        m_actions.viewHistory,
+        [](MainWindow* window, bool visible) { window->setHistoryDockVisible(visible); });
+    connectViewToggleToActiveWindow(
+        m_actions.viewFormulaBook,
+        [](MainWindow* window, bool visible) { window->setFormulaBookDockVisible(visible); });
+    connectViewToggleToActiveWindow(
+        m_actions.viewVariables,
+        [](MainWindow* window, bool visible) { window->setVariablesDockVisible(visible); });
+    connectViewToggleToActiveWindow(
+        m_actions.viewUserFunctions,
+        [](MainWindow* window, bool visible) { window->setUserFunctionsDockVisible(visible); });
+    connectViewToggleToActiveWindow(
+        m_actions.viewUserUnits,
+        [](MainWindow* window, bool visible) { window->setUserUnitsDockVisible(visible); });
+    connect(m_menus.view, &QMenu::aboutToShow, this, [this]() {
+        activeMainWindowForMenuAction(this)->syncViewMenuActionState();
+    });
 
     const auto connectToActiveWindow =
         [this](QAction* action, void (MainWindow::*handler)()) {
@@ -7367,18 +7399,19 @@ void MainWindow::applySettings()
     m_actions.viewMenuBar->setChecked(m_settings->menuBarVisible);
 #endif
 
-    if (!restoreGeometry(m_settings->windowGeometry)) {
-        // We couldn't restore the saved geometry; that means it was either empty
-        // or just isn't valid anymore so we use default size and position.
+    const bool hasSavedWindowLayout = !m_settings->sessionLayoutJson.isEmpty();
+    if (hasSavedWindowLayout || !restoreGeometry(m_settings->windowGeometry)) {
         int defaultWidth = 640;
-        if (m_settings->windowGeometry.isEmpty() && m_widgets.keypad)
+        if (m_widgets.keypad)
             defaultWidth = m_widgets.keypad->sizeHint().width();
         resize(defaultWidth, 480);
         QRect screenGeometry = QGuiApplication::primaryScreen()->availableGeometry();
         move(screenGeometry.center() - rect().center());
     }
-    restoreState(m_settings->windowState, DockLayoutStateVersion);
-    if (m_settings->windowState.isEmpty()
+    if (!hasSavedWindowLayout)
+        restoreState(m_settings->windowState, DockLayoutStateVersion);
+    if (!hasSavedWindowLayout
+        && m_settings->windowState.isEmpty()
         && constantsDockVisible
         && m_docks.constants != nullptr) {
         QPointer<QDockWidget> constantsDock(m_docks.constants);
@@ -7648,12 +7681,17 @@ void MainWindow::saveSettings()
     if (m_docks.book)
         m_settings->formulaBookActivePage = m_docks.book->currentPage();
 
-    m_settings->windowGeometry = m_settings->windowPositionSave ? saveGeometry() : QByteArray();
+    // These values seed a window only when no session-layout record exists.
+    // Use the active window rather than assigning ownership to the first one.
+    MainWindow* defaultWindow = activeMainWindowForMenuAction(this);
+    m_settings->windowGeometry = m_settings->windowPositionSave
+        ? defaultWindow->saveGeometry()
+        : QByteArray();
+    m_settings->windowState = defaultWindow->saveState(DockLayoutStateVersion);
+    m_settings->keypadMode = defaultWindow->m_keypadMode;
+    m_settings->keypadVisible = defaultWindow->m_widgets.keypad != nullptr;
     if (m_widgets.manual)
         m_settings->manualWindowGeometry = m_settings->windowPositionSave ? m_widgets.manual->saveGeometry() : QByteArray();
-    m_settings->windowState = saveState(DockLayoutStateVersion);
-    m_settings->keypadMode = m_keypadMode;
-    m_settings->keypadVisible = m_widgets.keypad != nullptr;
     if (m_widgets.display != nullptr)
         m_settings->displayFont = m_widgets.display->font().toString();
 
@@ -7874,6 +7912,8 @@ void MainWindow::saveSessionLayout(bool captureCurrentViewport)
         window.insert(QStringLiteral("root"), windowRoot);
         const QStatusBar* windowStatusBar =
             windowObject->findChild<QStatusBar*>(QString(), Qt::FindDirectChildrenOnly);
+        // isVisible() also becomes false when the top-level window is hidden
+        // during shutdown. isHidden() records only the status bar's own choice.
         window.insert(QStringLiteral("statusBarVisible"),
                       windowStatusBar != nullptr && !windowStatusBar->isHidden());
         window.insert(QStringLiteral("statusBarAngleUnit"),
@@ -10323,25 +10363,89 @@ void MainWindow::showFontDialog()
 void MainWindow::setStatusBarVisible(bool b)
 {
     b ? createStatusBar() : deleteStatusBar();
-    if (primaryMainWindow() == this)
-        m_settings->statusBarVisible = b;
 }
 
-void MainWindow::syncStatusBarMenuActionState()
+void MainWindow::syncViewMenuActionState()
 {
     QStatusBar* existingStatusBar =
         findChild<QStatusBar*>(QString(), Qt::FindDirectChildrenOnly);
-    const bool visible = existingStatusBar != nullptr && existingStatusBar->isVisible();
+    const bool statusBarVisible =
+        existingStatusBar != nullptr && !existingStatusBar->isHidden();
+    const auto dockIsVisible = [](const QDockWidget* dock) {
+        return dock != nullptr && !dock->isHidden();
+    };
+    const bool formulaBookVisible = dockIsVisible(m_docks.book);
+    const bool constantsVisible = dockIsVisible(m_docks.constants);
+    const bool functionsVisible = dockIsVisible(m_docks.functions);
+    const bool historyVisible = dockIsVisible(m_docks.history);
+    const bool variablesVisible = dockIsVisible(m_docks.variables);
+    const bool userFunctionsVisible = dockIsVisible(m_docks.userFunctions);
+    const bool userUnitsVisible = dockIsVisible(m_docks.userUnits);
+    const bool bitfieldVisible = dockIsVisible(m_docks.bitField);
+    const Settings::KeypadMode keypadMode = m_widgets.keypad != nullptr
+        ? m_keypadMode
+        : Settings::KeypadModeDisabled;
+    const int keypadZoomPercent = m_settings->keypadZoomPercent;
+    const bool menuBarVisible = menuBar() != nullptr && !menuBar()->isHidden();
+    const bool fullScreenEnabled = isFullScreen();
 
-    // Qt can reuse any window's QAction for the native application menu. Keep
-    // every copy aligned with the active window while leaving the actual status
-    // bars untouched.
+    // Qt can reuse any window's QAction for the native application menu. Mirror
+    // the active window's complete View state into every action copy while
+    // leaving the inactive windows' widgets untouched.
     for (const QPointer<MainWindow>& ptr : allMainWindows()) {
         MainWindow* window = ptr.data();
-        if (window == nullptr || window->m_actions.viewStatusBar == nullptr)
+        if (window == nullptr)
             continue;
-        const QSignalBlocker blocker(window->m_actions.viewStatusBar);
-        window->m_actions.viewStatusBar->setChecked(visible);
+
+        const auto setChecked = [](QAction* action, bool checked) {
+            if (action == nullptr)
+                return;
+            const QSignalBlocker blocker(action);
+            action->setChecked(checked);
+        };
+        setChecked(window->m_actions.viewFormulaBook, formulaBookVisible);
+        setChecked(window->m_actions.viewConstants, constantsVisible);
+        setChecked(window->m_actions.viewFunctions, functionsVisible);
+        setChecked(window->m_actions.viewHistory, historyVisible);
+        setChecked(window->m_actions.viewVariables, variablesVisible);
+        setChecked(window->m_actions.viewUserFunctions, userFunctionsVisible);
+        setChecked(window->m_actions.viewUserUnits, userUnitsVisible);
+        setChecked(window->m_actions.viewBitfield, bitfieldVisible);
+        setChecked(window->m_actions.viewStatusBar, statusBarVisible);
+        setChecked(window->m_actions.viewMenuBar, menuBarVisible);
+        setChecked(window->m_actions.viewFullScreenMode, fullScreenEnabled);
+
+        switch (keypadMode) {
+        case Settings::KeypadModeBasicWide:
+            setChecked(window->m_actions.viewKeypadBasicWide, true);
+            break;
+        case Settings::KeypadModeScientificWide:
+            setChecked(window->m_actions.viewKeypadScientificWide, true);
+            break;
+        case Settings::KeypadModeScientificNarrow:
+            setChecked(window->m_actions.viewKeypadScientificNarrow, true);
+            break;
+        case Settings::KeypadModeCustom:
+            setChecked(window->m_actions.viewKeypadCustom, true);
+            break;
+        case Settings::KeypadModeDisabled:
+        default:
+            setChecked(window->m_actions.viewKeypadDisabled, true);
+            break;
+        }
+        switch (keypadZoomPercent) {
+        case 150:
+            setChecked(window->m_actions.viewKeypadZoom150, true);
+            break;
+        case 200:
+            setChecked(window->m_actions.viewKeypadZoom200, true);
+            break;
+        case 100:
+        default:
+            setChecked(window->m_actions.viewKeypadZoom100, true);
+            break;
+        }
+        window->updateKeypadDisabledActionText();
     }
 }
 
@@ -10394,6 +10498,9 @@ void MainWindow::syncStatusBarSelectionMenuActionState()
 
 void MainWindow::applyStatusBarSelectionState()
 {
+    // Evaluators still consume the shared Settings values. Window activation
+    // projects this window's durable selection into that shared runtime without
+    // overwriting the selections retained by inactive windows.
     const bool angleChanged = m_settings->angleUnit != m_status.selectedAngleUnit;
     const bool formatChanged = m_settings->resultFormat != m_status.selectedResultFormat;
     const bool precisionChanged =
@@ -10645,14 +10752,7 @@ bool MainWindow::event(QEvent* e)
         }
 
         applyStatusBarSelectionState();
-        syncStatusBarMenuActionState();
-
-        if (m_widgets.keypad == nullptr) {
-            const QSignalBlocker keypadBlocker(m_actionGroups.keypad);
-            m_actions.viewKeypadDisabled->setChecked(true);
-        } else {
-            updateKeypadModeActionState();
-        }
+        syncViewMenuActionState();
     }
 
     return QMainWindow::event(e);
@@ -11006,27 +11106,34 @@ bool MainWindow::eventFilter(QObject* o, QEvent* e)
     return QMainWindow::eventFilter(o, e);
 }
 
-void MainWindow::deleteKeypad()
+void MainWindow::deleteKeypad(bool deferredDeletion)
 {
     if (!m_widgets.keypad)
         return;
 
     disconnect(m_widgets.keypad);
-    m_widgets.keypad->deleteLater();
+    if (deferredDeletion)
+        m_widgets.keypad->deleteLater();
+    else
+        delete m_widgets.keypad;
     m_widgets.keypad = 0;
 
     if (m_widgets.keypadContainer) {
         m_layouts.root->removeWidget(m_widgets.keypadContainer);
-        m_widgets.keypadContainer->deleteLater();
+        if (deferredDeletion)
+            m_widgets.keypadContainer->deleteLater();
+        else
+            delete m_widgets.keypadContainer;
         m_widgets.keypadContainer = 0;
     } else {
         m_layouts.root->removeItem(m_layouts.keypad);
-        m_layouts.keypad->deleteLater();
+        if (deferredDeletion)
+            m_layouts.keypad->deleteLater();
+        else
+            delete m_layouts.keypad;
     }
     m_layouts.keypad = 0;
 
-    if (primaryMainWindow() == this)
-        m_settings->keypadVisible = false;
 }
 
 void MainWindow::deleteStatusBar()
@@ -11224,8 +11331,7 @@ void MainWindow::setKeypadMode(QAction* action)
     const bool wasVisible = isVisibleKeypadMode(m_keypadMode);
     const bool nowVisible = isVisibleKeypadMode(mode);
     m_keypadMode = mode;
-    if (primaryMainWindow() == this)
-        m_settings->keypadMode = mode;
+    m_settings->keypadMode = mode;
     updateKeypadModeActionState();
 
     if (wasVisible && nowVisible) {
@@ -11793,6 +11899,10 @@ bool MainWindow::restoreSessionLayout(bool restoreHistory)
     if (tabs.isEmpty())
         return false;
 
+    // Window-local chrome is independent of session-file I/O. Restore it now
+    // so every window, including the first, has its final UI before it is shown.
+    restoreWindowUiState(window);
+
     QString activeSessionName = normalizedSessionName(root.value(QStringLiteral("active")).toString());
     QList<SessionLoadSpec> sessionLoadSpecs;
     QStringList loadNames;
@@ -12117,6 +12227,46 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
     activateSession(activeSession);
     m_conditions.autoAns = restoreHistory && !m_session->historyIsEmpty();
     updatePaneEditorCursorVisibility();
+    restoreWindowUiState(window);
+    applyThemeSurfacePalette();
+    refreshPaneThemes();
+    emit historyChanged();
+    emit variablesChanged();
+    emit functionsChanged();
+    emit unitsChanged();
+    restoreVisibleSessionViewports();
+    QTimer::singleShot(0, this, [this]() {
+        restoreVisibleSessionViewports();
+    });
+
+    if (this == primaryMainWindow() && !g_restoringExtraWindows && !g_multiWindowSpawnDone && windows.size() > 1) {
+        g_multiWindowSpawnDone = true;
+        g_restoringExtraWindows = true;
+        for (int i = 0; i < windows.size(); ++i) {
+            const QJsonValue value = windows.at(i);
+            if (!value.isObject())
+                continue;
+            const QJsonObject candidate = value.toObject();
+            if (candidate.value(QStringLiteral("id")).toString() == window.value(QStringLiteral("id")).toString())
+                continue;
+
+            QJsonObject singleLayout = layout;
+            singleLayout.insert(QStringLiteral("windows"), QJsonArray({ candidate }));
+            singleLayout.insert(QStringLiteral("activeWindow"), candidate.value(QStringLiteral("id")).toString());
+            const QString previousLayoutJson = m_settings->sessionLayoutJson;
+            m_settings->sessionLayoutJson = QString::fromUtf8(QJsonDocument(singleLayout).toJson(QJsonDocument::Compact));
+            MainWindow* extraWindow = new MainWindow();
+            m_settings->sessionLayoutJson = previousLayoutJson;
+            const QString geometryBase64 = candidate.value(QStringLiteral("geometry")).toString();
+            extraWindow->showRestoredWindow(
+                QByteArray::fromBase64(geometryBase64.toLatin1()));
+        }
+        g_restoringExtraWindows = false;
+    }
+}
+
+void MainWindow::restoreWindowUiState(const QJsonObject& window)
+{
     const QString restoredAngleUnit =
         window.value(QStringLiteral("statusBarAngleUnit")).toString();
     if (restoredAngleUnit.size() == 1
@@ -12155,41 +12305,6 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
     const QString geometryBase64 = window.value(QStringLiteral("geometry")).toString();
     if (!geometryBase64.isEmpty())
         restoreWindowGeometry(QByteArray::fromBase64(geometryBase64.toLatin1()));
-    applyThemeSurfacePalette();
-    refreshPaneThemes();
-    emit historyChanged();
-    emit variablesChanged();
-    emit functionsChanged();
-    emit unitsChanged();
-    restoreVisibleSessionViewports();
-    QTimer::singleShot(0, this, [this]() {
-        restoreVisibleSessionViewports();
-    });
-
-    if (this == primaryMainWindow() && !g_restoringExtraWindows && !g_multiWindowSpawnDone && windows.size() > 1) {
-        g_multiWindowSpawnDone = true;
-        g_restoringExtraWindows = true;
-        for (int i = 0; i < windows.size(); ++i) {
-            const QJsonValue value = windows.at(i);
-            if (!value.isObject())
-                continue;
-            const QJsonObject candidate = value.toObject();
-            if (candidate.value(QStringLiteral("id")).toString() == window.value(QStringLiteral("id")).toString())
-                continue;
-
-            QJsonObject singleLayout = layout;
-            singleLayout.insert(QStringLiteral("windows"), QJsonArray({ candidate }));
-            singleLayout.insert(QStringLiteral("activeWindow"), candidate.value(QStringLiteral("id")).toString());
-            const QString previousLayoutJson = m_settings->sessionLayoutJson;
-            m_settings->sessionLayoutJson = QString::fromUtf8(QJsonDocument(singleLayout).toJson(QJsonDocument::Compact));
-            MainWindow* extraWindow = new MainWindow();
-            m_settings->sessionLayoutJson = previousLayoutJson;
-            const QString geometryBase64 = candidate.value(QStringLiteral("geometry")).toString();
-            extraWindow->showRestoredWindow(
-                QByteArray::fromBase64(geometryBase64.toLatin1()));
-        }
-        g_restoringExtraWindows = false;
-    }
 }
 
 void MainWindow::restoreWindowGeometry(const QByteArray& geometry)
@@ -12245,15 +12360,10 @@ void MainWindow::restoreWindowKeypadLayout(bool visible, int modeValue)
         mode = Settings::KeypadModeDisabled;
 
     if (m_keypadMode != mode && m_widgets.keypad != nullptr)
-        deleteKeypad();
+        deleteKeypad(isVisible());
     m_keypadMode = mode;
     setKeypadVisible(isVisibleKeypadMode(mode));
     updateKeypadModeActionState();
-
-    if (primaryMainWindow() == this) {
-        m_settings->keypadMode = mode;
-        m_settings->keypadVisible = m_widgets.keypad != nullptr;
-    }
 }
 
 void MainWindow::evaluateEditorExpression()
@@ -12781,6 +12891,9 @@ void MainWindow::handleDockWidgetVisibilityChanged(bool visible)
     QWidget* focusWidget = dock->focusWidget();
     if (focusWidget && !visible && focusWidget->hasFocus())
         m_widgets.editor->setFocus();
+
+    if (activeMainWindowForMenuAction(nullptr) == this)
+        syncViewMenuActionState();
 
     QTimer::singleShot(0, this, [this]() {
         updateSplitterStyleSheet();
