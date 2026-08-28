@@ -56,6 +56,7 @@
 #include <QLineEdit>
 #include <QPainter>
 #include <QPointer>
+#include <QPixmap>
 #include <QPushButton>
 #include <QScrollBar>
 #include <QScopeGuard>
@@ -309,6 +310,25 @@ QPoint firstPixelMatchingColor(const QImage& image, const QRect& rect, const QCo
     for (int y = bounded.top(); y <= bounded.bottom(); ++y) {
         for (int x = bounded.left(); x <= bounded.right(); ++x) {
             if (colorsAreClose(image.pixelColor(x, y), color, tolerance))
+                return QPoint(x, y);
+        }
+    }
+    return QPoint(-1, -1);
+}
+
+QPoint firstPixelDistinctFromColor(const QImage& image,
+                                   const QRect& rect,
+                                   const QColor& color,
+                                   int minimumChannelDistance)
+{
+    const QRect bounded = rect.intersected(image.rect());
+    for (int y = bounded.top(); y <= bounded.bottom(); ++y) {
+        for (int x = bounded.left(); x <= bounded.right(); ++x) {
+            const QColor pixel = image.pixelColor(x, y);
+            const int distance = qMax(qAbs(pixel.red() - color.red()),
+                                      qMax(qAbs(pixel.green() - color.green()),
+                                           qAbs(pixel.blue() - color.blue())));
+            if (distance >= minimumChannelDistance)
                 return QPoint(x, y);
         }
     }
@@ -662,6 +682,7 @@ private slots:
     void view_dock_menu_tracks_and_changes_only_active_window();
     void keypad_view_menu_tracks_and_changes_only_active_window();
     void status_bar_menu_tracks_and_changes_only_active_window();
+    void precision_menu_editor_uses_themed_colors();
     void status_bar_visibility_persists_for_every_window_during_shutdown();
     void status_bar_setting_selectors_update_only_active_window();
     void new_session_window_menu_action_copies_layout_with_single_fresh_session();
@@ -5558,6 +5579,141 @@ void TestDisplayUi::status_bar_menu_tracks_and_changes_only_active_window()
     QVERIFY(!secondStatusBarAction->isChecked());
     QVERIFY(!statusBarIsVisible(firstWindow));
     QVERIFY(statusBarIsVisible(secondWindow));
+}
+
+void TestDisplayUi::precision_menu_editor_uses_themed_colors()
+{
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+
+    settings->colorScheme = QStringLiteral("Custom");
+    settings->customColorSchemeJson = themeJsonString(QJsonObject{
+        {QStringLiteral("background"), QStringLiteral("#300a24")}
+    });
+    settings->statusBarVisible = true;
+    settings->resultPrecision = 8;
+    settings->hasNumberFormatStyleSetting = true;
+
+    MainWindow window;
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QString failure;
+    QColor menuTextColor;
+    QColor labelTextColor;
+    QColor spinBackgroundColor;
+    QColor spinTextColor;
+    QColor spinArrowColor;
+    QImage spinImage;
+    qreal spinImageDevicePixelRatio = 1.0;
+    QRect spinEditRect;
+    QTimer::singleShot(0, &window, [&]() {
+        QMenu* menu = qobject_cast<QMenu*>(QApplication::activePopupWidget());
+        if (menu == nullptr) {
+            failure = QStringLiteral("Precision popup menu was not found.");
+            return;
+        }
+
+        QLabel* precisionLabel = nullptr;
+        for (QLabel* label : menu->findChildren<QLabel*>()) {
+            if (label->text() == QStringLiteral("Decimal places:")) {
+                precisionLabel = label;
+                break;
+            }
+        }
+        if (precisionLabel == nullptr) {
+            failure = QStringLiteral("Precision editor label was not found.");
+            menu->close();
+            return;
+        }
+        QSpinBox* precisionSpin = menu->findChild<QSpinBox*>();
+        if (precisionSpin == nullptr) {
+            failure = QStringLiteral("Precision editor spin box was not found.");
+            menu->close();
+            return;
+        }
+
+        menuTextColor = menu->palette().color(QPalette::WindowText);
+        labelTextColor = precisionLabel->palette().color(QPalette::WindowText);
+        spinBackgroundColor = precisionSpin->palette().color(QPalette::Base);
+        spinTextColor = precisionSpin->palette().color(QPalette::Text);
+        spinArrowColor = precisionSpin->palette().color(QPalette::ButtonText);
+
+        QStyleOptionSpinBox option;
+        option.initFrom(precisionSpin);
+        option.subControls = QStyle::SC_All;
+        spinEditRect = precisionSpin->style()->subControlRect(QStyle::CC_SpinBox,
+                                                              &option,
+                                                              QStyle::SC_SpinBoxEditField,
+                                                              precisionSpin);
+        const QPixmap spinPixmap = precisionSpin->grab();
+        spinImageDevicePixelRatio = spinPixmap.devicePixelRatio();
+        spinImage = spinPixmap.toImage();
+        menu->close();
+    });
+
+    QVERIFY(QMetaObject::invokeMethod(&window,
+                                      "showPrecisionContextMenu",
+                                      Qt::DirectConnection,
+                                      Q_ARG(QPoint, QPoint())));
+    QVERIFY2(failure.isEmpty(), qPrintable(failure));
+    QVERIFY(menuTextColor.isValid());
+    QCOMPARE(labelTextColor.name(), menuTextColor.name());
+
+    const QColor base(QStringLiteral("#300a24"));
+    const QVector<QColor> shades = generateOklchShades(base, 6, ThemePolarity::Dark);
+    const QVector<QColor> foregrounds = aaForegroundsForBackgrounds(shades);
+    QCOMPARE(spinBackgroundColor.name(),
+             shades.at(UiConfig::DockUnfocusedSelectedItemShade).name());
+    QCOMPARE(spinTextColor.name(),
+             foregrounds.at(UiConfig::DockUnfocusedSelectedItemShade).name());
+    QCOMPARE(spinArrowColor.name(),
+             foregrounds.at(UiConfig::DockUnfocusedSelectedItemShade).name());
+
+    const auto imageRect = [spinImageDevicePixelRatio](const QRect& logicalRect) {
+        return QRect(qRound(logicalRect.x() * spinImageDevicePixelRatio),
+                     qRound(logicalRect.y() * spinImageDevicePixelRatio),
+                     qRound(logicalRect.width() * spinImageDevicePixelRatio),
+                     qRound(logicalRect.height() * spinImageDevicePixelRatio));
+    };
+    const QColor expectedBackground =
+        shades.at(UiConfig::DockUnfocusedSelectedItemShade);
+    const QColor expectedForeground =
+        foregrounds.at(UiConfig::DockUnfocusedSelectedItemShade);
+    QVERIFY(firstPixelMatchingColor(spinImage,
+                                    imageRect(spinEditRect),
+                                    expectedBackground,
+                                    4) != QPoint(-1, -1));
+    QVERIFY(firstPixelMatchingColor(spinImage,
+                                    imageRect(spinEditRect),
+                                    expectedForeground,
+                                    8) != QPoint(-1, -1));
+    const int arrowColumnWidth = qRound(18 * spinImageDevicePixelRatio);
+    const QRect arrowColumn(spinImage.width() - arrowColumnWidth,
+                            0,
+                            arrowColumnWidth,
+                            spinImage.height());
+    const int arrowInset = qRound(3 * spinImageDevicePixelRatio);
+    const QRect arrowInterior = arrowColumn.adjusted(arrowInset,
+                                                     arrowInset,
+                                                     -arrowInset,
+                                                     -arrowInset);
+    const QRect upArrowImageRect(arrowInterior.x(),
+                                 arrowInterior.y(),
+                                 arrowInterior.width(),
+                                 arrowInterior.height() / 2);
+    const QRect downArrowImageRect(arrowInterior.x(),
+                                   arrowInterior.center().y() + 1,
+                                   arrowInterior.width(),
+                                   arrowInterior.height() - arrowInterior.height() / 2);
+    QVERIFY(firstPixelDistinctFromColor(spinImage,
+                                        upArrowImageRect,
+                                        expectedBackground,
+                                        48) != QPoint(-1, -1));
+    QVERIFY(firstPixelDistinctFromColor(spinImage,
+                                        downArrowImageRect,
+                                        expectedBackground,
+                                        48) != QPoint(-1, -1));
 }
 
 void TestDisplayUi::status_bar_visibility_persists_for_every_window_during_shutdown()

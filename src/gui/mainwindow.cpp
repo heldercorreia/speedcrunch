@@ -1161,6 +1161,80 @@ void applyMenuSurface(QMenu* menu,
     applyMenuSurface(menu, surface, selectedSurface, &visitedMenus);
 }
 
+class MenuPrecisionSpinBox : public QSpinBox {
+public:
+    using QSpinBox::QSpinBox;
+
+    void setThemeSurface(const ThemeSurfaceColors& surface)
+    {
+        m_arrowColor = surface.foreground;
+        setPalette(paletteForThemeSurface(palette(), surface));
+        setStyleSheet(QStringLiteral(
+            "QSpinBox {"
+            " background-color: %1; color: %2; border: none; border-radius: 7px;"
+            " padding: 1px 18px 1px 6px;"
+            " selection-background-color: %2; selection-color: %1;"
+            "}"
+            "QSpinBox::up-button, QSpinBox::down-button {"
+            " subcontrol-origin: border; width: 18px;"
+            " background: transparent; border: none;"
+            "}"
+            "QSpinBox::up-button { subcontrol-position: top right; }"
+            "QSpinBox::down-button { subcontrol-position: bottom right; }"
+            "QSpinBox::up-arrow, QSpinBox::down-arrow {"
+            " image: none; width: 0; height: 0;"
+            "}")
+                              .arg(surface.background.name(),
+                                   surface.foreground.name()));
+
+        if (QLineEdit* editor = lineEdit()) {
+            editor->setPalette(paletteForThemeSurface(editor->palette(), surface));
+            editor->setStyleSheet(QStringLiteral(
+                "QLineEdit { background: transparent; color: %1; border: none; }")
+                                      .arg(surface.foreground.name()));
+        }
+    }
+
+protected:
+    void paintEvent(QPaintEvent* event) override
+    {
+        QSpinBox::paintEvent(event);
+        if (!m_arrowColor.isValid())
+            return;
+
+        QStyleOptionSpinBox option;
+        initStyleOption(&option);
+
+        QColor arrowColor = m_arrowColor;
+        if (!isEnabled())
+            arrowColor.setAlphaF(0.55);
+
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing, true);
+        painter.setPen(QPen(arrowColor, 2.0, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter.setBrush(Qt::NoBrush);
+
+        const auto drawArrow = [this, &option, &painter](QStyle::SubControl control, bool up) {
+            const QRect rect = style()->subControlRect(QStyle::CC_SpinBox,
+                                                       &option,
+                                                       control,
+                                                       this);
+            const QPointF center = QRectF(rect).center();
+            QPainterPath path;
+            path.moveTo(center.x() - 3.5, center.y() + (up ? 1.5 : -1.5));
+            path.lineTo(center.x(), center.y() + (up ? -1.5 : 1.5));
+            path.lineTo(center.x() + 3.5, center.y() + (up ? 1.5 : -1.5));
+            painter.drawPath(path);
+        };
+
+        drawArrow(QStyle::SC_SpinBoxUp, true);
+        drawArrow(QStyle::SC_SpinBoxDown, false);
+    }
+
+private:
+    QColor m_arrowColor;
+};
+
 void applyScrollBarColorsToScrollArea(QAbstractScrollArea* area, const ThemeScrollBarColors& colors)
 {
     if (area == nullptr)
@@ -13266,7 +13340,7 @@ void MainWindow::showPrecisionContextMenu(const QPoint& point)
     precisionLayout->setSpacing(6);
 
     QLabel* precisionLabel = new QLabel(MainWindow::tr("Decimal places:"), precisionEditor);
-    QSpinBox* precisionSpin = new QSpinBox(precisionEditor);
+    MenuPrecisionSpinBox* precisionSpin = new MenuPrecisionSpinBox(precisionEditor);
     precisionSpin->setRange(0, 50);
     precisionSpin->setValue(m_settings->resultPrecision < 0 ? 8 : m_settings->resultPrecision);
     precisionSpin->setEnabled(m_settings->resultPrecision >= 0);
@@ -13293,6 +13367,8 @@ void MainWindow::showPrecisionContextMenu(const QPoint& point)
 
     const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
     applyMenuSurface(&menu, surfaces.headersAndBorders, surfaces.inputs);
+    precisionLabel->setPalette(menu.palette());
+    precisionSpin->setThemeSurface(surfaces.inputs);
     menu.exec(m_status.resultPrecision->mapToGlobal(point));
 }
 
