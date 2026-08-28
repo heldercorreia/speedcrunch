@@ -3777,6 +3777,12 @@ void TestDisplayUi::f6_cycles_focus_between_editor_and_visible_dock_controls()
     QVERIFY(searchBox->isVisible());
     QVERIFY(table->isVisible());
 
+    // F6 is explicit focus intent and must supersede delayed focus restoration
+    // scheduled by a recent window activation.
+    QEvent windowActivate(QEvent::WindowActivate);
+    QCoreApplication::sendEvent(&window, &windowActivate);
+    QCoreApplication::processEvents();
+
     editor->setFocus();
     QTRY_VERIFY(focusIsWithin(editor));
 
@@ -3787,6 +3793,8 @@ void TestDisplayUi::f6_cycles_focus_between_editor_and_visible_dock_controls()
     QTest::keyClick(searchBox, Qt::Key_F6);
     QCoreApplication::processEvents();
     QTRY_VERIFY(focusIsWithin(table));
+    QTest::qWait(175);
+    QVERIFY(focusIsWithin(table));
 
     QTest::keyClick(table, Qt::Key_F6);
     QCoreApplication::processEvents();
@@ -5298,6 +5306,14 @@ void TestDisplayUi::keypad_view_menu_tracks_and_changes_only_active_window()
         }
         return static_cast<QAction*>(nullptr);
     };
+    const auto checkedModeCount = [](QMenu* menu) {
+        int count = 0;
+        for (QAction* action : menu->actions()) {
+            if (action->isCheckable() && action->data().isValid() && action->isChecked())
+                ++count;
+        }
+        return count;
+    };
 
     firstWindow.raise();
     firstWindow.activateWindow();
@@ -5309,12 +5325,18 @@ void TestDisplayUi::keypad_view_menu_tracks_and_changes_only_active_window()
 
     QAction* firstBasicAction = actionForMode(firstKeypadMenu, Settings::KeypadModeBasicWide);
     QAction* secondBasicAction = actionForMode(secondKeypadMenu, Settings::KeypadModeBasicWide);
+    QAction* firstDisableAction = actionForMode(firstKeypadMenu, Settings::KeypadModeDisabled);
     QAction* secondDisableAction = actionForMode(secondKeypadMenu, Settings::KeypadModeDisabled);
     QVERIFY(firstBasicAction != nullptr);
     QVERIFY(secondBasicAction != nullptr);
+    QVERIFY(firstDisableAction != nullptr);
     QVERIFY(secondDisableAction != nullptr);
     QVERIFY(firstBasicAction->isChecked());
     QVERIFY(secondBasicAction->isChecked());
+    QVERIFY(!firstDisableAction->isChecked());
+    QVERIFY(!secondDisableAction->isChecked());
+    QCOMPARE(checkedModeCount(firstKeypadMenu), 1);
+    QCOMPARE(checkedModeCount(secondKeypadMenu), 1);
 
     // Simulate the native menu dispatching the inactive window's action.
     secondDisableAction->trigger();
@@ -5328,6 +5350,10 @@ void TestDisplayUi::keypad_view_menu_tracks_and_changes_only_active_window()
     QVERIFY(secondDisabledAction != nullptr);
     QVERIFY(firstDisabledAction->isChecked());
     QVERIFY(secondDisabledAction->isChecked());
+    QVERIFY(!firstBasicAction->isChecked());
+    QVERIFY(!secondBasicAction->isChecked());
+    QCOMPARE(checkedModeCount(firstKeypadMenu), 1);
+    QCOMPARE(checkedModeCount(secondKeypadMenu), 1);
 }
 
 void TestDisplayUi::status_bar_menu_tracks_and_changes_only_active_window()

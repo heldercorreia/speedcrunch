@@ -4808,6 +4808,10 @@ void MainWindow::cycleFocusRegion(int direction)
     if (targets.size() <= 1)
         return;
 
+    // F6 expresses a newer focus choice than the delayed replay scheduled by
+    // window activation. Do not let that replay pull focus back to the editor.
+    cancelWindowActivationRestore();
+
     QWidget* focused = focusWidget();
     if (focused == nullptr)
         focused = QApplication::focusWidget();
@@ -10400,7 +10404,6 @@ void MainWindow::syncViewMenuActionState()
         const auto setChecked = [](QAction* action, bool checked) {
             if (action == nullptr)
                 return;
-            const QSignalBlocker blocker(action);
             action->setChecked(checked);
         };
         setChecked(window->m_actions.viewFormulaBook, formulaBookVisible);
