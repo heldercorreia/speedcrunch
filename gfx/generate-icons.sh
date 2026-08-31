@@ -21,7 +21,12 @@ require_cmd() {
 require_cmd rsvg-convert
 require_cmd sips
 require_cmd magick
-require_cmd png2icns
+require_cmd xcrun
+
+if ! xcrun --find actool >/dev/null 2>&1; then
+  echo "Missing required Xcode tool: actool" >&2
+  exit 1
+fi
 
 if [[ ! -f "$SVG_FILE" ]]; then
   echo "SVG not found: $SVG_FILE" >&2
@@ -46,14 +51,45 @@ magick "$MASTER_PNG" -background none \
   "$ICO_OUT"
 
 echo "Generating macOS ICNS..."
-for s in 16 32 48 128; do
-  sips -z "$s" "$s" "$MASTER_PNG" --out "$TMP_DIR/icon-${s}.png" >/dev/null
+ASSET_CATALOG_DIR="$TMP_DIR/SpeedCrunch.xcassets"
+APP_ICONSET_DIR="$ASSET_CATALOG_DIR/speedcrunch.appiconset"
+ACTOOL_OUT_DIR="$TMP_DIR/actool-output"
+mkdir -p "$APP_ICONSET_DIR" "$ACTOOL_OUT_DIR"
+
+for s in 16 32 128 256 512; do
+  retina_s=$((s * 2))
+  sips -z "$s" "$s" "$MASTER_PNG" \
+    --out "$APP_ICONSET_DIR/icon_${s}x${s}.png" >/dev/null
+  sips -z "$retina_s" "$retina_s" "$MASTER_PNG" \
+    --out "$APP_ICONSET_DIR/icon_${s}x${s}@2x.png" >/dev/null
 done
-png2icns "$ICNS_OUT" \
-  "$TMP_DIR/icon-16.png" \
-  "$TMP_DIR/icon-32.png" \
-  "$TMP_DIR/icon-48.png" \
-  "$TMP_DIR/icon-128.png" >/dev/null
+
+cat > "$APP_ICONSET_DIR/Contents.json" <<'EOF'
+{
+  "images" : [
+    { "filename" : "icon_16x16.png",       "idiom" : "mac", "scale" : "1x", "size" : "16x16" },
+    { "filename" : "icon_16x16@2x.png",    "idiom" : "mac", "scale" : "2x", "size" : "16x16" },
+    { "filename" : "icon_32x32.png",       "idiom" : "mac", "scale" : "1x", "size" : "32x32" },
+    { "filename" : "icon_32x32@2x.png",    "idiom" : "mac", "scale" : "2x", "size" : "32x32" },
+    { "filename" : "icon_128x128.png",     "idiom" : "mac", "scale" : "1x", "size" : "128x128" },
+    { "filename" : "icon_128x128@2x.png",  "idiom" : "mac", "scale" : "2x", "size" : "128x128" },
+    { "filename" : "icon_256x256.png",     "idiom" : "mac", "scale" : "1x", "size" : "256x256" },
+    { "filename" : "icon_256x256@2x.png",  "idiom" : "mac", "scale" : "2x", "size" : "256x256" },
+    { "filename" : "icon_512x512.png",     "idiom" : "mac", "scale" : "1x", "size" : "512x512" },
+    { "filename" : "icon_512x512@2x.png",  "idiom" : "mac", "scale" : "2x", "size" : "512x512" }
+  ],
+  "info" : { "author" : "xcode", "version" : 1 }
+}
+EOF
+
+xcrun actool \
+  --compile "$ACTOOL_OUT_DIR" \
+  --platform macosx \
+  --minimum-deployment-target 10.14 \
+  --app-icon speedcrunch \
+  --output-partial-info-plist "$TMP_DIR/actool-info.plist" \
+  "$ASSET_CATALOG_DIR" >/dev/null
+cp "$ACTOOL_OUT_DIR/speedcrunch.icns" "$ICNS_OUT"
 
 echo "Done."
 file "$PNG_OUT" "$DOC_LOGO_OUT" "$ICO_OUT" "$ICNS_OUT"
