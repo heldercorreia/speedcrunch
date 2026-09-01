@@ -65,38 +65,84 @@
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.average">
 <span class="sig-name descname"><span class="pre">average</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x1</span></em>; <em class="sig-param"><span class="pre">x2</span></em>; <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Computes the arithmetic average of the arguments (sum of the arguments divided by their number). The arguments must share the same dimension.</p>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Computes the arithmetic average of the arguments (sum of the arguments divided by their number). The arguments must share the same dimension.</p>
+<p>A single list or matrix argument is also accepted. Matrix inputs are
+flattened and reduced over all elements.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.mean">
+<span class="sig-name descname"><span class="pre">mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x1</span></em>; <em class="sig-param"><span class="pre">x2</span></em>; <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Alias for <a class="reference internal" href="#sc.average" title="average"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">average()</span></code></a>.</p>
 </dd></dl>
 
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.geomean">
 <span class="sig-name descname"><span class="pre">geomean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x1</span></em>; <em class="sig-param"><span class="pre">x2</span></em>; <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Computes the geometric mean of the arguments, defined by <code class="docutils literal notranslate"><span class="pre">product(x1;</span> <span class="pre">x2;</span> <span class="pre">...)^(1/n)</span></code> where <code class="docutils literal notranslate"><span class="pre">n</span></code> is the number of arguments. All the arguments may each have a different dimension. The geometric mean is useful for comparing sets of quantities that are very different in order of magnitude and even possibly dimension.</p>
+<p>A single list or matrix argument is also accepted. Matrix inputs are
+flattened first.</p>
 </dd></dl>
 
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.median">
 <span class="sig-name descname"><span class="pre">median</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x1</span></em>; <em class="sig-param"><span class="pre">x2</span></em>; <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Computes the median of the arguments, i.e. the value dividing the set of arguments into two evenly sized parts.</p>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Computes the median of the arguments, i.e. the value dividing the set of arguments into two evenly sized parts.</p>
 <p>First the set of arguments is sorted. If the number of arguments is odd, the element in the middle of the sorted list is returned. If the number of arguments is even, the arithmetic mean of the two central elements is returned.</p>
+<p>A single list or matrix argument is also accepted. Matrix inputs are
+flattened first.</p>
 </dd></dl>
 
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.min">
 <span class="sig-name descname"><span class="pre">min</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x1</span></em>; <em class="sig-param"><span class="pre">x2</span></em>; <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Returns the minimum out of the supplied argument list. The arguments must be real and share the same dimension.</p>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Returns the minimum out of the supplied argument list. The arguments must be real and share the same dimension.</p>
+<p>A single list or matrix argument is also accepted. Matrix inputs are
+flattened first.</p>
 </dd></dl>
 
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.max">
 <span class="sig-name descname"><span class="pre">max</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x1</span></em>; <em class="sig-param"><span class="pre">x2</span></em>; <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Returns the maximum out of the supplied argument list. The arguments must be real and share the same dimension.</p>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Returns the maximum out of the supplied argument list. The arguments must be real and share the same dimension.</p>
+<p>A single list or matrix argument is also accepted. Matrix inputs are
+flattened first.</p>
 </dd></dl>
 
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.sum">
 <span class="sig-name descname"><span class="pre">sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x1</span></em>; <em class="sig-param"><span class="pre">x2</span></em>; <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Computes the sum of all the given arguments. These must share the same dimension.</p>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Computes the sum of all the given arguments. These must share the same dimension.</p>
+<p>A single list or matrix argument is also accepted. Matrix inputs are
+flattened first.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.count">
+<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x1</span></em>; <em class="sig-param"><span class="pre">x2</span></em>; <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Returns the number of arguments. With a single list or matrix argument, it
+returns the number of contained elements.</p>
 </dd></dl>
 
 <dl class="sc function">
@@ -158,20 +204,55 @@
 </td></tr></tbody></table></dd></dl>
 
 <dl class="sc function">
-<dt class="sig sig-object sc" id="sc.variance">
-<span class="sig-name descname"><span class="pre">variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x1</span></em>; <em class="sig-param"><span class="pre">x2</span></em>; <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Computes the population variance of the arguments. The variance is measure for the spreading of a set of numbers.</p>
-<p>The arguments must share the same dimension.</p>
-<table class="-x-quark-box -x-quark-admonition -x-quark-note"><tbody><tr><td width="100%" class="-x-quark-box-td"><div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This function computes the <em>population variance</em>, which assumes that all possible realizations are all given as arguments. A function to estimate the variance from a sample (<em>sample variance</em>) is not included with SpeedCrunch.</p>
+<dt class="sig sig-object sc" id="sc.varp">
+<span class="sig-name descname"><span class="pre">varp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x1</span></em>; <em class="sig-param"><span class="pre">x2</span></em>; <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
 </div>
-</td></tr></tbody></table></dd></dl>
+<p>Computes the population variance of the arguments, using normalization by
+<code class="docutils literal notranslate"><span class="pre">n</span></code>. The variance is a measure for the spreading of a set of numbers.</p>
+<p>The arguments must share the same dimension.</p>
+<p>A single list or matrix argument is also accepted. Matrix inputs are
+flattened first.</p>
+</dd></dl>
 
 <dl class="sc function">
-<dt class="sig sig-object sc" id="sc.stddev">
-<span class="sig-name descname"><span class="pre">stddev</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x1</span></em>; <em class="sig-param"><span class="pre">x2</span></em>; <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Computes the standard deviation of the given arguments. It is obtained by taking the square root of the <a class="reference internal" href="#sc.variance" title="variance"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">variance</span></code></a> of its arguments.</p>
+<dt class="sig sig-object sc" id="sc.vars">
+<span class="sig-name descname"><span class="pre">vars</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x1</span></em>; <em class="sig-param"><span class="pre">x2</span></em>; <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Computes the sample variance of the arguments, using normalization by
+<code class="docutils literal notranslate"><span class="pre">n-1</span></code>. Use this when the arguments are a sample of a larger population.</p>
+<p>The arguments must share the same dimension.</p>
+<p>A single list or matrix argument is also accepted. Matrix inputs are
+flattened first.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.stdevp">
+<span class="sig-name descname"><span class="pre">stdevp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x1</span></em>; <em class="sig-param"><span class="pre">x2</span></em>; <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Computes the population standard deviation of the given arguments. It is
+obtained by taking the square root of <a class="reference internal" href="#sc.varp" title="varp"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">varp()</span></code></a> and uses normalization
+by <code class="docutils literal notranslate"><span class="pre">n</span></code>.</p>
+<p>A single list or matrix argument is also accepted. Matrix inputs are
+flattened first.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.stdevs">
+<span class="sig-name descname"><span class="pre">stdevs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x1</span></em>; <em class="sig-param"><span class="pre">x2</span></em>; <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Computes the sample standard deviation of the given arguments. It is
+obtained by taking the square root of <a class="reference internal" href="#sc.vars" title="vars"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">vars()</span></code></a> and uses normalization
+by <code class="docutils literal notranslate"><span class="pre">n-1</span></code>.</p>
+<p>A single list or matrix argument is also accepted. Matrix inputs are
+flattened first.</p>
 </dd></dl>
 
 <dl class="sc function">
@@ -181,7 +262,23 @@
 <table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">absdev</span><span class="p">(</span><span class="n">x1</span><span class="p">;</span> <span class="n">x2</span><span class="p">;</span> ... <span class="p">)</span> <span class="o">=</span> <span class="n">abs</span><span class="p">(</span><span class="n">x1</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">abs</span><span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> ...
 </pre></div>
 </div>
-</td></tr></tbody></table></dd></dl>
+</td></tr></tbody></table><p>A single list or matrix argument is also accepted. Matrix inputs are
+flattened first.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.mad">
+<span class="sig-name descname"><span class="pre">mad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x1</span></em>; <em class="sig-param"><span class="pre">x2</span></em>; <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Computes the median absolute deviation of the arguments from their median:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">mad</span><span class="p">(</span><span class="n">x1</span><span class="p">;</span> <span class="n">x2</span><span class="p">;</span> ... <span class="p">)</span> <span class="o">=</span> <span class="n">median</span><span class="p">(</span><span class="n">abs</span><span class="p">(</span><span class="n">x1</span> <span class="o">-</span> <span class="n">median</span><span class="p">(</span><span class="n">x</span><span class="p">));</span> <span class="n">abs</span><span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">median</span><span class="p">(</span><span class="n">x</span><span class="p">));</span> ...<span class="p">)</span>
+</pre></div>
+</div>
+</td></tr></tbody></table><p>A single list or matrix argument is also accepted. Matrix inputs are
+flattened first.</p>
+</dd></dl>
 
 </section>
 <section id="binomial-distribution">

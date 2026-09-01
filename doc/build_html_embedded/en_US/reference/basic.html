@@ -65,7 +65,7 @@
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.abs">
 <span class="sig-name descname"><span class="pre">abs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Return the absolute value of <code class="docutils literal notranslate"><span class="pre">x</span></code>, commonly written as |x|. In real mode, it flips the sign of a negative number, thus forcing it to be positive. When given a complex number as argument, it returns the modulus of the number.</p>
+<dd><p>Return the absolute value of <code class="docutils literal notranslate"><span class="pre">x</span></code>, commonly written as |x|. When given a real number, it returns a non-negative real value. When given a complex number, it returns the modulus of the number.</p>
 <p>The argument can have a dimension.</p>
 <p>Example:</p>
 <table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">abs</span><span class="p">(</span><span class="o">-</span><span class="mi">3 </span><span class="n">meter</span><span class="p">)</span>
@@ -80,7 +80,7 @@
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.sqrt">
 <span class="sig-name descname"><span class="pre">sqrt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Return the square root of <code class="docutils literal notranslate"><span class="pre">x</span></code>. If complex numbers are disabled, this function is only defined for <em>x &gt; 0</em>. In <em>complex mode</em>, any complex number may be specified, yielding the complex root in the upper half plane.</p>
+<dd><p>Return the square root of <code class="docutils literal notranslate"><span class="pre">x</span></code>. Any complex number may be specified, yielding the complex root in the upper half plane.</p>
 <p>Alias: <code class="docutils literal notranslate"><span class="pre">√(x)</span></code>.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">New in version 1.0.</span></p>
@@ -91,12 +91,12 @@
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.cbrt">
 <span class="sig-name descname"><span class="pre">cbrt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Compute the third (cubic) root of <code class="docutils literal notranslate"><span class="pre">x</span></code>. In <em>real mode</em>, it accepts any real number. Negative numbers will yield a negative cubic root:</p>
+<dd><p>Compute the third (cubic) root of <code class="docutils literal notranslate"><span class="pre">x</span></code>. Negative real numbers yield a negative real cubic root:</p>
 <table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">cbrt</span><span class="p">(</span><span class="o">-</span><span class="mi">27</span><span class="p">)</span>
 <span class="ge">= -3</span>
 </pre></div>
 </div>
-</td></tr></tbody></table><p>In <em>complex mode</em>, this function accepts any complex input. The result will generally be the first complex root, i.e. the one with a phase between 0 and π/3. Real negative arguments however will still yield a real (negative) result, matching the function’s behavior in <em>real mode</em>. Use <code class="docutils literal notranslate"><span class="pre">x^(1/3)</span></code> to get the first complex root.</p>
+</td></tr></tbody></table><p>This function accepts any complex input. The result will generally be the first complex root, i.e. the one with a phase between 0 and π/3. Real negative arguments however will still yield a real (negative) result. Use <code class="docutils literal notranslate"><span class="pre">x^(1/3)</span></code> to get the first complex root.</p>
 <p>Alias: <code class="docutils literal notranslate"><span class="pre">∛(x)</span></code>.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">New in version 1.0.</span></p>
@@ -119,27 +119,51 @@
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.ln">
 <span class="sig-name descname"><span class="pre">ln</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Compute the natural logarithm. In <em>real mode</em>, the argument must be real, with <em>x &gt; 0</em>.</p>
-<p>In <em>complex mode</em>, any non-zero number may be given. The result will be the principal value. The branch cut runs across the negative real axis. Nevertheless, in SpeedCrunch <a class="reference internal" href="#sc.ln" title="ln"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">ln()</span></code></a> is defined for negative real numbers as <em>ln(-x) = ln(|x|)) + πj</em>, extending the branch from the <em>upper</em> half-plane.</p>
+<dd><p>Compute the natural logarithm.</p>
+<p>Any non-zero number may be given. The result will be the principal value. The branch cut runs across the negative real axis. Nevertheless, in SpeedCrunch <a class="reference internal" href="#sc.ln" title="ln"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">ln()</span></code></a> is defined for negative real numbers as <em>ln(-x) = ln(|x|)) + πj</em>, extending the branch from the <em>upper</em> half-plane.</p>
 </dd></dl>
 
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.lb">
 <span class="sig-name descname"><span class="pre">lb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Compute the binary logarithm. In <em>complex mode</em> the same rules apply as for <a class="reference internal" href="#sc.ln" title="ln"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">ln()</span></code></a>.</p>
+<dd><p>Compute the binary logarithm. The same complex-number rules apply as for <a class="reference internal" href="#sc.ln" title="ln"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">ln()</span></code></a>.</p>
 </dd></dl>
 
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.lg">
 <span class="sig-name descname"><span class="pre">lg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Compute the decimal logarithm. In <em>complex mode</em> the same rules apply as for <a class="reference internal" href="#sc.ln" title="ln"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">ln()</span></code></a>.</p>
+<dd><p>Compute the decimal logarithm. The same complex-number rules apply as for <a class="reference internal" href="#sc.ln" title="ln"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">ln()</span></code></a>.</p>
 </dd></dl>
 
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.log">
 <span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em>; <em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Compute the logarithm of base <code class="docutils literal notranslate"><span class="pre">n</span></code> . In <em>complex mode</em> the same rules apply as for <a class="reference internal" href="#sc.ln" title="ln"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">ln()</span></code></a>.</p>
+<dd><p>Compute the logarithm of base <code class="docutils literal notranslate"><span class="pre">n</span></code>. The same complex-number rules apply as for <a class="reference internal" href="#sc.ln" title="ln"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">ln()</span></code></a>.</p>
 </dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.numval">
+<span class="sig-name descname"><span class="pre">numval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Return the numerical value of quantity <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p>
+<p>For unitless values, this returns the value unchanged. For quantities with
+units, it returns the numerical value in SI/base units by default.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">x</span></code> includes an explicit conversion target (<code class="docutils literal notranslate"><span class="pre">-&gt;</span> <span class="pre">[unit]</span></code>), it returns
+the numerical value in that target unit.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">numval</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="ge">= 3</span>
+
+<span class="n">numval</span><span class="p">(</span><span class="mi">3 </span><span class="p">[</span><span class="n">m</span><span class="o">/</span><span class="n">s</span><span class="p">])</span>
+<span class="ge">= 3</span>
+
+<span class="n">numval</span><span class="p">(</span><span class="mi">3 </span><span class="p">[</span><span class="n">km</span><span class="o">/</span><span class="n">s</span><span class="p">])</span>
+<span class="ge">= 3000</span>
+
+<span class="n">numval</span><span class="p">(</span><span class="mi">3 </span><span class="p">[</span><span class="n">km</span><span class="o">/</span><span class="n">s</span><span class="p">]</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="n">cm</span><span class="o">/</span><span class="n">s</span><span class="p">])</span>
+<span class="ge">= 300000</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
 
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.datetime">
@@ -236,6 +260,210 @@ and <code class="docutils literal notranslate"><span class="pre">L</span></code>
 </td></tr></tbody></table></dd></dl>
 
 </section>
+<section id="lists-and-matrices">
+<h2>Lists and Matrices</h2>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Lists are written with braces and semicolon-separated elements. Matrices are
+written as a list of row lists. Only one-dimensional lists and two-dimensional
+matrices are supported:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">mylist</span> <span class="o">=</span> {<span class="mi">1</span><span class="p">;</span> <span class="mi">2</span><span class="p">;</span> <span class="mi">3</span><span class="p">;</span> <span class="mi">4</span><span class="p">;</span> <span class="mi">5</span>}
+<span class="n">mat</span> <span class="o">=</span> {{<span class="mi">1</span><span class="p">;</span> <span class="mi">2</span><span class="p">;</span> <span class="mi">3</span>}<span class="p">;</span> {<span class="mi">4</span><span class="p">;</span> <span class="mi">5</span><span class="p">;</span> <span class="mi">6</span>}}
+</pre></div>
+</div>
+</td></tr></tbody></table><p>The function-style notation <code class="docutils literal notranslate"><span class="pre">list(...)</span></code> is also accepted on input, for
+example <code class="docutils literal notranslate"><span class="pre">list(1;</span> <span class="pre">2;</span> <span class="pre">3)</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">{1;</span> <span class="pre">2;</span> <span class="pre">3}</span></code>.</p>
+<p>List and matrix results use the same spacing, for example <code class="docutils literal notranslate"><span class="pre">{1;</span> <span class="pre">2;</span> <span class="pre">3}</span></code> and
+<code class="docutils literal notranslate"><span class="pre">{{1;</span> <span class="pre">2};</span> <span class="pre">{3;</span> <span class="pre">4}}</span></code>.</p>
+<p>List and matrix elements must be dimensionless. Units cannot be attached to
+individual elements or to a list or matrix as a whole.</p>
+<p>Supported arithmetic operations are addition and subtraction between
+same-shaped lists or matrices, multiplication by a scalar on either side,
+division by a scalar on the right-hand side, and matrix multiplication for
+compatible matrices. In matrix multiplication, a list can be used as a row
+vector on the left when the right operand is a matrix. A list can also be used
+as a row vector on the right when the left operand is a one-column matrix.
+List-by-list multiplication is not supported. Matrix products with a single
+result element return that scalar directly. Scalar addition/subtraction, scalar
+divided by a list or matrix, elementwise multiplication, and elementwise
+division are not supported:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span>{<span class="mi">1</span><span class="p">;</span> <span class="mi">2</span><span class="p">;</span> <span class="mi">3</span>} <span class="o">+</span> {<span class="mi">4</span><span class="p">;</span> <span class="mi">5</span><span class="p">;</span> <span class="mi">6</span>}
+<span class="ge">= {5; 7; 9}</span>
+
+<span class="mi">2 </span><span class="o">*</span> {{<span class="mi">1</span><span class="p">;</span> <span class="mi">2</span>}<span class="p">;</span> {<span class="mi">3</span><span class="p">;</span> <span class="mi">4</span>}}
+<span class="ge">= {{2; 4}; {6; 8}}</span>
+
+{<span class="mi">1</span><span class="p">;</span> <span class="mi">2</span><span class="p">;</span> <span class="mi">3</span>} <span class="o">/</span> <span class="mi">2</span>
+<span class="ge">= {0.5; 1; 1.5}</span>
+
+{{<span class="mi">1</span><span class="p">;</span> <span class="mi">2</span>}<span class="p">;</span> {<span class="mi">3</span><span class="p">;</span> <span class="mi">4</span>}} <span class="o">*</span> {{<span class="mi">5</span><span class="p">;</span> <span class="mi">6</span>}<span class="p">;</span> {<span class="mi">7</span><span class="p">;</span> <span class="mi">8</span>}}
+<span class="ge">= {{19; 22}; {43; 50}}</span>
+
+{<span class="mi">1</span><span class="p">;</span> <span class="mi">2</span><span class="p">;</span> <span class="mi">3</span>} <span class="o">*</span> {{<span class="mi">1</span>}<span class="p">;</span> {<span class="mi">2</span>}<span class="p">;</span> {<span class="mi">3</span>}}
+<span class="ge">= 14</span>
+
+{{<span class="mi">1</span>}<span class="p">;</span> {<span class="mi">2</span>}<span class="p">;</span> {<span class="mi">3</span>}} <span class="o">*</span> {<span class="mi">4</span><span class="p">;</span> <span class="mi">5</span><span class="p">;</span> <span class="mi">6</span>}
+<span class="ge">= {{4; 5; 6}; {8; 10; 12}; {12; 15; 18}}</span>
+</pre></div>
+</div>
+</td></tr></tbody></table><p>The aggregation and statistics functions <a class="reference internal" href="statistical.html#sc.count" title="count"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">count()</span></code></a>, <a class="reference internal" href="statistical.html#sc.sum" title="sum"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">sum()</span></code></a>,
+<a class="reference internal" href="statistical.html#sc.min" title="min"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">min()</span></code></a>, <a class="reference internal" href="statistical.html#sc.max" title="max"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">max()</span></code></a>, <a class="reference internal" href="statistical.html#sc.average" title="average"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">average()</span></code></a>, <a class="reference internal" href="statistical.html#sc.mean" title="mean"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">mean()</span></code></a>, <a class="reference internal" href="statistical.html#sc.median" title="median"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">median()</span></code></a>,
+<a class="reference internal" href="statistical.html#sc.varp" title="varp"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">varp()</span></code></a>, <a class="reference internal" href="statistical.html#sc.vars" title="vars"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">vars()</span></code></a>, <a class="reference internal" href="statistical.html#sc.stdevp" title="stdevp"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">stdevp()</span></code></a>, and <a class="reference internal" href="statistical.html#sc.stdevs" title="stdevs"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">stdevs()</span></code></a> accept a list or
+matrix as a single argument. Matrix inputs are flattened for these scalar
+statistics. The <code class="docutils literal notranslate"><span class="pre">p</span></code> variants use population normalization (<code class="docutils literal notranslate"><span class="pre">n</span></code>); the <code class="docutils literal notranslate"><span class="pre">s</span></code>
+variants use sample normalization (<code class="docutils literal notranslate"><span class="pre">n-1</span></code>).</p>
+<p><a class="reference internal" href="#sc.covp" title="covp"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">covp()</span></code></a>, <a class="reference internal" href="#sc.covs" title="covs"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">covs()</span></code></a>, <a class="reference internal" href="#sc.corrp" title="corrp"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">corrp()</span></code></a>, and <a class="reference internal" href="#sc.corrs" title="corrs"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">corrs()</span></code></a> treat matrices
+column-wise: rows are observations and columns are variables.</p>
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.dot">
+<span class="sig-name descname"><span class="pre">dot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">list1</span></em>; <em class="sig-param"><span class="pre">list2</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Return the dot product of two equal-length lists.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.cross">
+<span class="sig-name descname"><span class="pre">cross</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">list1</span></em>; <em class="sig-param"><span class="pre">list2</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Return the cross product of two three-element lists.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.norm">
+<span class="sig-name descname"><span class="pre">norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">list-or-matrix</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Return the Euclidean norm of a list, or the Frobenius norm of a matrix.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.transpose">
+<span class="sig-name descname"><span class="pre">transpose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">matrix</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Return the transposed matrix.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.det">
+<span class="sig-name descname"><span class="pre">det</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">matrix</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Return the determinant of a square matrix.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.inv">
+<span class="sig-name descname"><span class="pre">inv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">matrix</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Return the inverse of a square matrix.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.trace">
+<span class="sig-name descname"><span class="pre">trace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">matrix</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Return the sum of the diagonal of a square matrix.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.rank">
+<span class="sig-name descname"><span class="pre">rank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">matrix</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Return the matrix rank.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.covp">
+<span class="sig-name descname"><span class="pre">covp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">matrix</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Return the population covariance matrix. Rows are observations and columns
+are variables. This uses population normalization (<code class="docutils literal notranslate"><span class="pre">n</span></code>).</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.covs">
+<span class="sig-name descname"><span class="pre">covs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">matrix</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Return the sample covariance matrix. Rows are observations and columns are
+variables. This uses sample normalization (<code class="docutils literal notranslate"><span class="pre">n-1</span></code>).</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.corrp">
+<span class="sig-name descname"><span class="pre">corrp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">matrix</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Return the population Pearson correlation matrix. Rows are observations and
+columns are variables. This is derived from <a class="reference internal" href="#sc.covp" title="covp"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">covp()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.corrs">
+<span class="sig-name descname"><span class="pre">corrs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">matrix</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Return the sample Pearson correlation matrix. Rows are observations and
+columns are variables. This is derived from <a class="reference internal" href="#sc.covs" title="covs"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">covs()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.flatten">
+<span class="sig-name descname"><span class="pre">flatten</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">matrix</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Return all matrix elements as a single list in row-major order.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.rows">
+<span class="sig-name descname"><span class="pre">rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">matrix</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Return the row count.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.cols">
+<span class="sig-name descname"><span class="pre">cols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">matrix</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Return the column count.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.shape">
+<span class="sig-name descname"><span class="pre">shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">list-or-matrix</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 1.0.</span></p>
+</div>
+<p>Return <code class="docutils literal notranslate"><span class="pre">{n}</span></code> for a list and <code class="docutils literal notranslate"><span class="pre">{rows;</span> <span class="pre">cols}</span></code> for a matrix.</p>
+</dd></dl>
+
+</section>
 <section id="trigonometric-inverse-trigonometric">
 <span id="trigonometric"></span><h2>Trigonometric &amp; Inverse Trigonometric</h2>
 <p>For direct trigonometric input (<a class="reference internal" href="#sc.sin" title="sin"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">sin()</span></code></a>, <a class="reference internal" href="#sc.cos" title="cos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">cos()</span></code></a>, <a class="reference internal" href="#sc.tan" title="tan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">tan()</span></code></a>,
@@ -280,6 +508,25 @@ current angle mode.</p>
 <div class="line"><a class="reference internal" href="#sc.cot" title="cot"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">cot()</span></code></a></div>
 <div class="line"><a class="reference internal" href="#sc.sec" title="sec"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">sec()</span></code></a></div>
 <div class="line"><a class="reference internal" href="#sc.arccos" title="arccos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arccos()</span></code></a></div>
+</div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.cis">
+<span class="sig-name descname"><span class="pre">cis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">cos(x)</span> <span class="pre">+</span> <span class="pre">i·sin(x)</span></code>.</p>
+<p>Like <a class="reference internal" href="#sc.sin" title="sin"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">sin()</span></code></a> and <a class="reference internal" href="#sc.cos" title="cos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">cos()</span></code></a>, explicit angle units
+(<code class="docutils literal notranslate"><span class="pre">rad</span></code>, <code class="docutils literal notranslate"><span class="pre">degree</span></code>, <code class="docutils literal notranslate"><span class="pre">gradian</span></code>/<code class="docutils literal notranslate"><span class="pre">grad</span></code>/<code class="docutils literal notranslate"><span class="pre">gon</span></code>, <code class="docutils literal notranslate"><span class="pre">turn</span></code>,
+<code class="docutils literal notranslate"><span class="pre">arcminute</span></code>, <code class="docutils literal notranslate"><span class="pre">arcsecond</span></code>) override the global angle mode. Unitless
+values follow the current angle mode.</p>
+<p>Complex arguments are allowed only in <em>radians</em> mode. The argument must be
+dimensionless.</p>
+<table class="-x-quark-box -x-quark-admonition -x-quark-seealso"><tbody><tr><td width="100%" class="-x-quark-box-td"><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="#sc.sin" title="sin"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">sin()</span></code></a></div>
+<div class="line"><a class="reference internal" href="#sc.cos" title="cos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">cos()</span></code></a></div>
 </div>
 </div>
 </td></tr></tbody></table></dd></dl>
@@ -342,9 +589,9 @@ current angle mode.</p>
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.arccos">
 <span class="sig-name descname"><span class="pre">arccos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Returns the inverse cosine of <code class="docutils literal notranslate"><span class="pre">x</span></code>, such that <em>cos(arccos(x)) = x</em>. The behavior of the function depends on both the angle mode setting and on whether complex numbers are enabled.</p>
+<dd><p>Returns the inverse cosine of <code class="docutils literal notranslate"><span class="pre">x</span></code>, such that <em>cos(arccos(x)) = x</em>. The behavior of the function depends on the angle mode setting.</p>
 <p>In <em>degrees</em>, <em>gradians</em>, or <em>turns</em> modes, <a class="reference internal" href="#sc.arccos" title="arccos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arccos()</span></code></a> takes a real argument from <em>[-1, 1]</em>, and the return value is in the range <em>[0, 180]</em>, <em>[0, 200]</em>, or <em>[0, 0.5]</em>, respectively. Real arguments outside <em>[-1, 1]</em> and complex numbers are allowed only in <em>radians</em> mode.</p>
-<p>When <em>radians</em> are set as the angle mode, <a class="reference internal" href="#sc.arccos" title="arccos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arccos()</span></code></a> maps an element from <em>[-1, 1]</em> to a value in <em>[0, π]</em>. When complex numbers are enabled in addition, <a class="reference internal" href="#sc.arccos" title="arccos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arccos()</span></code></a> may take any argument from the complex plane. In complex mode, <em>arccos(-1) = π</em> and <em>arccos(1) = 0</em> will yield the same result as in real mode.</p>
+<p>When <em>radians</em> are set as the angle mode, <a class="reference internal" href="#sc.arccos" title="arccos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arccos()</span></code></a> maps an element from <em>[-1, 1]</em> to a value in <em>[0, π]</em> and may take any argument from the complex plane. <em>arccos(-1) = π</em> and <em>arccos(1) = 0</em> match the real-valued results.</p>
 <p>The argument of <a class="reference internal" href="#sc.arccos" title="arccos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arccos()</span></code></a> must be dimensionless.</p>
 <p>The inverse function is <a class="reference internal" href="#sc.cos" title="cos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">cos()</span></code></a>.</p>
 </dd></dl>
@@ -352,9 +599,9 @@ current angle mode.</p>
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.arcsin">
 <span class="sig-name descname"><span class="pre">arcsin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Returns the inverse sine of <code class="docutils literal notranslate"><span class="pre">x</span></code>, such that <em>sin(arcsin(x)) = x</em>. The behavior of the function depends on both the angle mode setting and on whether complex numbers are enabled.</p>
+<dd><p>Returns the inverse sine of <code class="docutils literal notranslate"><span class="pre">x</span></code>, such that <em>sin(arcsin(x)) = x</em>. The behavior of the function depends on the angle mode setting.</p>
 <p>In <em>degrees</em>, <em>gradians</em>, or <em>turns</em> modes, <a class="reference internal" href="#sc.arcsin" title="arcsin"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arcsin()</span></code></a> takes a real argument from <em>[-1, 1]</em>, and the return value is in the range <em>[-90, 90]</em>, <em>[-100, 100]</em>, or <em>[-0.25, 0.25]</em>, respectively. Real arguments outside <em>[-1, 1]</em> and complex numbers are allowed only in <em>radians</em> mode.</p>
-<p>When <em>radians</em> are set as the angle mode, <a class="reference internal" href="#sc.arcsin" title="arcsin"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arcsin()</span></code></a> maps an element from <em>[-1, 1]</em> to a value in <em>[-π/2, π/2]</em>. When complex numbers are enabled in addition, <a class="reference internal" href="#sc.arcsin" title="arcsin"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arcsin()</span></code></a> may take any argument from the complex plane. In complex mode, <em>arcsin(-1) = π/2</em> and <em>arcsin(1) = π/2</em> will yield the same result as in real mode.</p>
+<p>When <em>radians</em> are set as the angle mode, <a class="reference internal" href="#sc.arcsin" title="arcsin"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arcsin()</span></code></a> maps an element from <em>[-1, 1]</em> to a value in <em>[-π/2, π/2]</em> and may take any argument from the complex plane. <em>arcsin(-1) = π/2</em> and <em>arcsin(1) = π/2</em> match the real-valued results.</p>
 <p>The argument of <a class="reference internal" href="#sc.arccos" title="arccos"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arccos()</span></code></a> must be dimensionless.</p>
 <p>The inverse function is <a class="reference internal" href="#sc.sin" title="sin"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">sin()</span></code></a>.</p>
 </dd></dl>
@@ -362,9 +609,9 @@ current angle mode.</p>
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.arctan">
 <span class="sig-name descname"><span class="pre">arctan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Returns the inverse tangent of <code class="docutils literal notranslate"><span class="pre">x</span></code>, such that <em>tan(arctan(x)) = x</em>. The behavior of the function depends on both the angle mode setting and on whether complex numbers are enabled.</p>
-<p>In <em>degrees</em>, <em>gradians</em>, or <em>turns</em> modes, <a class="reference internal" href="#sc.arctan" title="arctan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arctan()</span></code></a> takes a real argument from <em>[-1, 1]</em>, and the return value is in the range <em>[-90, 90]</em>, <em>[-100, 100]</em>, or <em>[-0.25, 0.25]</em>, respectively. Real arguments outside <em>[-1, 1]</em> and complex numbers are not allowed only in <em>radians</em> mode.</p>
-<p>When <em>radians</em> are set as the angle mode, <a class="reference internal" href="#sc.arctan" title="arctan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arctan()</span></code></a> maps a real number to a value in <em>[-π/2, π/2]</em>. When complex numbers are enabled in addition, <a class="reference internal" href="#sc.arctan" title="arctan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arctan()</span></code></a> may take any argument from the complex plane, except for <em>+j</em> and <em>-j</em>.</p>
+<dd><p>Returns the inverse tangent of <code class="docutils literal notranslate"><span class="pre">x</span></code>, such that <em>tan(arctan(x)) = x</em>. The behavior of the function depends on the angle mode setting.</p>
+<p>In <em>degrees</em>, <em>gradians</em>, or <em>turns</em> modes, <a class="reference internal" href="#sc.arctan" title="arctan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arctan()</span></code></a> takes a real argument from <em>[-1, 1]</em>, and the return value is in the range <em>[-90, 90]</em>, <em>[-100, 100]</em>, or <em>[-0.25, 0.25]</em>, respectively. Real arguments outside <em>[-1, 1]</em> and complex numbers are allowed only in <em>radians</em> mode.</p>
+<p>When <em>radians</em> are set as the angle mode, <a class="reference internal" href="#sc.arctan" title="arctan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arctan()</span></code></a> maps a real number to a value in <em>[-π/2, π/2]</em> and may take any argument from the complex plane, except for <em>+j</em> and <em>-j</em>.</p>
 <p>The argument of <a class="reference internal" href="#sc.arctan" title="arctan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arctan()</span></code></a> must be dimensionless.</p>
 <p>The inverse function is <a class="reference internal" href="#sc.tan" title="tan"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">tan()</span></code></a>.</p>
 </dd></dl>
@@ -384,7 +631,7 @@ current angle mode.</p>
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.sinh">
 <span class="sig-name descname"><span class="pre">sinh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Return the hyperbolic sine of <code class="docutils literal notranslate"><span class="pre">x</span></code>. In <em>complex mode</em>, any complex number may be used as the argument.</p>
+<dd><p>Return the hyperbolic sine of <code class="docutils literal notranslate"><span class="pre">x</span></code>. Any complex number may be used as the argument.</p>
 <p>The argument must be dimensionless.</p>
 <p>The inverse function is <a class="reference internal" href="#sc.arsinh" title="arsinh"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arsinh()</span></code></a>.</p>
 </dd></dl>
@@ -392,7 +639,7 @@ current angle mode.</p>
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.cosh">
 <span class="sig-name descname"><span class="pre">cosh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Return the hyperbolic cosine of <code class="docutils literal notranslate"><span class="pre">x</span></code>. In <em>complex mode</em>, any complex number may be used as the argument.</p>
+<dd><p>Return the hyperbolic cosine of <code class="docutils literal notranslate"><span class="pre">x</span></code>. Any complex number may be used as the argument.</p>
 <p>The argument must be dimensionless.</p>
 <p>The inverse function is <a class="reference internal" href="#sc.arcosh" title="arcosh"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">arcosh()</span></code></a>.</p>
 </dd></dl>
@@ -400,7 +647,7 @@ current angle mode.</p>
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.tanh">
 <span class="sig-name descname"><span class="pre">tanh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Return the hyperbolic tangent of <code class="docutils literal notranslate"><span class="pre">x</span></code>. In <em>complex mode</em>, any complex number may be used as the argument.</p>
+<dd><p>Return the hyperbolic tangent of <code class="docutils literal notranslate"><span class="pre">x</span></code>. Any complex number may be used as the argument.</p>
 <p>The argument must be dimensionless.</p>
 <p>The inverse function is <a class="reference internal" href="#sc.artanh" title="artanh"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">artanh()</span></code></a>.</p>
 </dd></dl>
@@ -409,7 +656,7 @@ current angle mode.</p>
 <dt class="sig sig-object sc" id="sc.arsinh">
 <span class="sig-name descname"><span class="pre">arsinh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Compute the area hyperbolic sine of <code class="docutils literal notranslate"><span class="pre">x</span></code>, the inverse function to <a class="reference internal" href="#sc.sinh" title="sinh"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">sinh()</span></code></a>. <em>arsinh(x)</em> is the only solution to <em>cosh(y) = x</em>.</p>
-<p>In complex mode, the function is defined for any complex <code class="docutils literal notranslate"><span class="pre">z</span></code> as <em>arsinh(z) = ln[z + (z</em> <sup>2</sup> <em>+1)</em> <sup>1/2</sup> <em>]</em>.</p>
+<p>The function is defined for any complex <code class="docutils literal notranslate"><span class="pre">z</span></code> as <em>arsinh(z) = ln[z + (z</em> <sup>2</sup> <em>+1)</em> <sup>1/2</sup> <em>]</em>.</p>
 <p>The function only accepts dimensionless arguments.</p>
 </dd></dl>
 
@@ -417,15 +664,15 @@ current angle mode.</p>
 <dt class="sig sig-object sc" id="sc.arcosh">
 <span class="sig-name descname"><span class="pre">arcosh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Compute the area hyperbolic cosine of <code class="docutils literal notranslate"><span class="pre">x</span></code>, the inverse function to <a class="reference internal" href="#sc.cosh" title="cosh"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">cosh()</span></code></a>. <em>arcosh(x)</em> is the positive solution to <em>cosh(y) = x</em>. Except for <em>x=1</em>, the second solution to this equation will be given by <em>-arcosh(x)</em>.</p>
-<p>In real mode, the parameter <code class="docutils literal notranslate"><span class="pre">x</span></code> must be <em>&gt; 1</em>. In complex mode, the function is defined for any complex <code class="docutils literal notranslate"><span class="pre">z</span></code> as <em>arcosh(z) = ln[z + (z</em> <sup>2</sup> <em>-1)</em> <sup>2</sup> <em>]</em>.</p>
+<p>The function is defined for any complex <code class="docutils literal notranslate"><span class="pre">z</span></code> as <em>arcosh(z) = ln[z + (z</em> <sup>2</sup> <em>-1)</em> <sup>2</sup> <em>]</em>.</p>
 <p>The function only accepts dimensionless arguments.</p>
 </dd></dl>
 
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.artanh">
 <span class="sig-name descname"><span class="pre">artanh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Compute the area hyperbolic tangent of <code class="docutils literal notranslate"><span class="pre">x</span></code>, the inverse function to <a class="reference internal" href="#sc.tanh" title="tanh"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">tanh()</span></code></a>. <em>artanh(x)</em> is the only solution to <em>tanh(y) = x</em>. In real mode, the parameter <code class="docutils literal notranslate"><span class="pre">x</span></code> has to fulfill <em>-1 &lt; x &lt; 1</em>.</p>
-<p>In complex mode, this function accepts any argument except for -1 and +1. In the complex plane, it is defined as <em>artanh(z) = 1/2 * ln[(z+1)/(z-1)]</em>.</p>
+<dd><p>Compute the area hyperbolic tangent of <code class="docutils literal notranslate"><span class="pre">x</span></code>, the inverse function to <a class="reference internal" href="#sc.tanh" title="tanh"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">tanh()</span></code></a>. <em>artanh(x)</em> is the only solution to <em>tanh(y) = x</em>.</p>
+<p>This function accepts any argument except for -1 and +1. In the complex plane, it is defined as <em>artanh(z) = 1/2 * ln[(z+1)/(z-1)]</em>.</p>
 <p>The function only accepts dimensionless arguments.</p>
 </dd></dl>
 
@@ -464,6 +711,18 @@ current angle mode.</p>
 </section>
 <section id="complex-numbers">
 <h2>Complex Numbers</h2>
+<p>The complex-form functions in this section format one result in a specific
+complex representation. They override the global
+<span class="menuselection">Settings ‣ Results ‣ Complex Numbers ‣ Form</span> setting for
+that result only.</p>
+<p>Complex numbers can also be entered in phasor notation as <code class="docutils literal notranslate"><span class="pre">r</span> <span class="pre">∠</span> <span class="pre">θ</span></code>. This is
+equivalent to <code class="docutils literal notranslate"><span class="pre">r</span> <span class="pre">*</span> <span class="pre">cis(θ)</span></code>: the left operand is the magnitude, and the right
+operand is the phase angle. Unitless phases follow the global angle mode, while
+explicit angle units override it.</p>
+<p>When the angle mode is <em>radians</em>, complex forms display simple phase multiples
+of <code class="docutils literal notranslate"><span class="pre">pi</span></code> symbolically, for example <code class="docutils literal notranslate"><span class="pre">cis(pi</span> <span class="pre">/</span> <span class="pre">2)</span></code>, <code class="docutils literal notranslate"><span class="pre">exp(i</span> <span class="pre">·</span> <span class="pre">pi</span> <span class="pre">/</span> <span class="pre">2)</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">∠</span> <span class="pre">(pi</span> <span class="pre">/</span> <span class="pre">2)</span></code>. Other angle modes display numeric phase values; exponential
+form continues to use radians.</p>
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.real">
 <span class="sig-name descname"><span class="pre">real</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
@@ -485,7 +744,7 @@ current angle mode.</p>
 <p><span class="versionmodified added">New in version 1.0.</span></p>
 </div>
 <p>Return the complex conjugate of a complex number <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p>
-<p>In <em>complex mode</em>, this function accepts any real or complex input. In <em>real mode</em>, the imaginary portion of <code class="docutils literal notranslate"><span class="pre">x</span></code> is stripped to ensure that the value returned is purely real.</p>
+<p>This function accepts any real or complex input.</p>
 </dd></dl>
 
 <dl class="sc function">
@@ -502,22 +761,58 @@ current angle mode.</p>
 </td></tr></tbody></table></dd></dl>
 
 <dl class="sc function">
-<dt class="sig sig-object sc" id="sc.polar">
-<span class="sig-name descname"><span class="pre">polar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Converts the complex number <code class="docutils literal notranslate"><span class="pre">x</span></code> to polar form.</p>
-<p>In the <code class="docutils literal notranslate"><span class="pre">Polar</span> <span class="pre">(Exponential)</span></code> complex-number display mode, values are
-shown as <em>r e</em> <sup>uɸ</sup>, where <code class="docutils literal notranslate"><span class="pre">u</span></code> is the selected imaginary-unit
-symbol (<code class="docutils literal notranslate"><span class="pre">i</span></code> or <code class="docutils literal notranslate"><span class="pre">j</span></code>), and ɸ is in radians.</p>
-<p>In the <code class="docutils literal notranslate"><span class="pre">Polar</span> <span class="pre">(Angle)</span></code> complex-number display mode, values are shown as
-<em>r ∠ ɸ</em>, and ɸ follows the global angle-unit setting.</p>
+<dt class="sig sig-object sc" id="sc.rectform">
+<span class="sig-name descname"><span class="pre">rectform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Format the complex number <code class="docutils literal notranslate"><span class="pre">x</span></code> in rectangular form, i.e. the form
+<em>a + b u</em>, where <code class="docutils literal notranslate"><span class="pre">u</span></code> is the currently selected imaginary-unit symbol
+(<code class="docutils literal notranslate"><span class="pre">i</span></code> or <code class="docutils literal notranslate"><span class="pre">j</span></code>).</p>
+<p>This corresponds to
+<span class="menuselection">Settings ‣ Results ‣ Complex Numbers ‣ Form ‣
+Rectangular (a + bi)</span>.</p>
 </dd></dl>
 
 <dl class="sc function">
-<dt class="sig sig-object sc" id="sc.cart">
-<span class="sig-name descname"><span class="pre">cart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Converts the complex number <code class="docutils literal notranslate"><span class="pre">x</span></code> to cartesian form, i.e. the form
-<em>a + b u</em>, where <code class="docutils literal notranslate"><span class="pre">u</span></code> is the currently selected imaginary-unit
-symbol (<code class="docutils literal notranslate"><span class="pre">i</span></code> or <code class="docutils literal notranslate"><span class="pre">j</span></code>).</p>
+<dt class="sig sig-object sc" id="sc.trigform">
+<span class="sig-name descname"><span class="pre">trigform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Format the complex number <code class="docutils literal notranslate"><span class="pre">x</span></code> in trigonometric form, shown as
+<em>r(cos ɸ + u sin ɸ)</em>, where <code class="docutils literal notranslate"><span class="pre">u</span></code> is the selected imaginary-unit symbol
+(<code class="docutils literal notranslate"><span class="pre">i</span></code> or <code class="docutils literal notranslate"><span class="pre">j</span></code>). The angle ɸ follows the global angle mode.</p>
+<p>This corresponds to
+<span class="menuselection">Settings ‣ Results ‣ Complex Numbers ‣ Form ‣
+Trigonometric (r(cos θ + i·sin θ))</span>.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.expform">
+<span class="sig-name descname"><span class="pre">expform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Format the complex number <code class="docutils literal notranslate"><span class="pre">x</span></code> in exponential form, shown as
+<em>r e</em> <sup>uɸ</sup>, where <code class="docutils literal notranslate"><span class="pre">u</span></code> is the selected imaginary-unit symbol
+(<code class="docutils literal notranslate"><span class="pre">i</span></code> or <code class="docutils literal notranslate"><span class="pre">j</span></code>), and ɸ is in radians.</p>
+<p>This corresponds to
+<span class="menuselection">Settings ‣ Results ‣ Complex Numbers ‣ Form ‣
+Exponential (reⁱᶿ)</span>.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.cisform">
+<span class="sig-name descname"><span class="pre">cisform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Format the complex number <code class="docutils literal notranslate"><span class="pre">x</span></code> in cis form, shown as <em>r cis(ɸ)</em>. The
+angle ɸ follows the global angle mode.</p>
+<p>This corresponds to
+<span class="menuselection">Settings ‣ Results ‣ Complex Numbers ‣ Form ‣
+Cis (r·cis(θ))</span>.</p>
+</dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.phasorform">
+<span class="sig-name descname"><span class="pre">phasorform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Format the complex number <code class="docutils literal notranslate"><span class="pre">x</span></code> in phasor form, shown as <em>r ∠ ɸ</em>. The
+angle ɸ follows the global angle mode.</p>
+<p>This output format is related to phasor input notation: <code class="docutils literal notranslate"><span class="pre">r</span> <span class="pre">∠</span> <span class="pre">θ</span></code> enters a
+complex number from magnitude <code class="docutils literal notranslate"><span class="pre">r</span></code> and phase <code class="docutils literal notranslate"><span class="pre">θ</span></code>.</p>
+<p>This corresponds to
+<span class="menuselection">Settings ‣ Results ‣ Complex Numbers ‣ Form ‣
+Phasor (r∠θ)</span>.</p>
 </dd></dl>
 
 </section>

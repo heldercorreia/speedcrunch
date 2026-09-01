@@ -71,6 +71,8 @@ that improves readability. For example:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">12[J]</span></code> stays <code class="docutils literal notranslate"><span class="pre">12[J]</span></code> (not <code class="docutils literal notranslate"><span class="pre">12[N⋅m]</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">2[J]</span> <span class="pre">+</span> <span class="pre">3[J]</span></code> displays as <code class="docutils literal notranslate"><span class="pre">5[J]</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">2[W*h]</span></code> stays in <code class="docutils literal notranslate"><span class="pre">W⋅h</span></code> context instead of being expanded unnecessarily</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1[Btu]</span></code> stays <code class="docutils literal notranslate"><span class="pre">1[Btu]</span></code> instead of being converted to joules</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1[in]</span></code> stays <code class="docutils literal notranslate"><span class="pre">1[in]</span></code> instead of being converted to metres</p></li>
 </ul>
 <p>SpeedCrunch also avoids forcing a semantic choice when dimensions are
 equivalent but context differs. A common example is <code class="docutils literal notranslate"><span class="pre">N⋅m</span></code>: it can represent
@@ -83,17 +85,89 @@ render denominator form for readability:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">C⁴⋅m⁴⋅J⁻³</span></code> may display as <code class="docutils literal notranslate"><span class="pre">C⁴⋅m⁴</span> <span class="pre">/</span> <span class="pre">J³</span></code></p></li>
 </ul>
 </section>
-<section id="unit-exponent-style">
-<h2>Unit Exponent Style</h2>
+<section id="unit-notation">
+<h2>Unit Notation</h2>
 <p>In <span class="menuselection">Settings ‣ Results</span>, SpeedCrunch provides a
-<code class="docutils literal notranslate"><span class="pre">Unit</span> <span class="pre">Exponent</span> <span class="pre">Style</span></code> submenu with two display styles:</p>
+<code class="docutils literal notranslate"><span class="pre">Unit</span> <span class="pre">Notation</span></code> submenu with two display styles:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Superscript</span> <span class="pre">Exponents</span></code> (default): keeps products with signed exponents,
+<li><p><code class="docutils literal notranslate"><span class="pre">Exponential</span> <span class="pre">(m·s⁻¹)</span></code> (default): keeps products with signed exponents,
 such as <code class="docutils literal notranslate"><span class="pre">kg⋅m²⋅s⁻³</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Fraction</span> <span class="pre">Form</span></code>: moves negative exponents to the denominator when there is
-at least one positive exponent, such as <code class="docutils literal notranslate"><span class="pre">kg⋅m²</span> <span class="pre">/</span> <span class="pre">s³</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Fractional</span> <span class="pre">(m/s)</span></code>: moves negative exponents to the denominator when there
+is at least one positive exponent, such as <code class="docutils literal notranslate"><span class="pre">kg⋅m²</span> <span class="pre">/</span> <span class="pre">s³</span></code>.</p></li>
 </ul>
 <p>This is a display preference only; numeric values and dimensions are unchanged.</p>
+</section>
+<section id="authored-units">
+<h2>Authored Units</h2>
+<p>SpeedCrunch preserves authored units that carry practical or domain meaning.
+This includes accepted metric units and many non-SI units, such as <code class="docutils literal notranslate"><span class="pre">tonne</span></code>,
+<code class="docutils literal notranslate"><span class="pre">hectare</span></code>, <code class="docutils literal notranslate"><span class="pre">inch</span></code>, <code class="docutils literal notranslate"><span class="pre">foot</span></code>, <code class="docutils literal notranslate"><span class="pre">Btu</span></code>, <code class="docutils literal notranslate"><span class="pre">eV</span></code>, <code class="docutils literal notranslate"><span class="pre">Eh</span></code>, <code class="docutils literal notranslate"><span class="pre">bar</span></code>, <code class="docutils literal notranslate"><span class="pre">atm</span></code>,
+<code class="docutils literal notranslate"><span class="pre">psi</span></code>, <code class="docutils literal notranslate"><span class="pre">Torr</span></code>, <code class="docutils literal notranslate"><span class="pre">mmHg</span></code>, <code class="docutils literal notranslate"><span class="pre">hp</span></code>, <code class="docutils literal notranslate"><span class="pre">kWh</span></code>, <code class="docutils literal notranslate"><span class="pre">bit</span></code>, and <code class="docutils literal notranslate"><span class="pre">byte</span></code>.</p>
+<p>For example:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">[tonne]</span></code> displays as <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">tonne</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[ha]</span></code> displays as <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">ha</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[Eh]</span></code> displays as <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">Eh</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[Btu]</span></code> displays as <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">Btu</span></code></p></li>
+</ul>
+<p>This preservation affects display only. Explicit conversion still converts to
+the requested target:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">[tonne]</span> <span class="pre">-&gt;</span> <span class="pre">[kg]</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[Btu]</span> <span class="pre">-&gt;</span> <span class="pre">[J]</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[in]</span> <span class="pre">-&gt;</span> <span class="pre">[cm]</span></code></p></li>
+</ul>
+<p>Time units are handled specially because they also participate in
+sexagesimal/time display. Use an explicit conversion target when you want a
+particular time unit display.</p>
+<p>When adding or subtracting compatible units, SpeedCrunch may choose a more
+readable display unit for the result instead of blindly keeping the first
+operand’s unit. For example, a tiny tonne value added to kilogram and gram
+values can display in kilograms:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">0.00000001[t]</span> <span class="pre">+</span> <span class="pre">3.2[kg]</span> <span class="pre">+</span> <span class="pre">2342.7[g]</span></code> displays as
+<code class="docutils literal notranslate"><span class="pre">5.54271</span> <span class="pre">kilogram</span></code></p></li>
+</ul>
+<p>Larger mass results can still remain in tonnes when that is the more readable
+display. Explicit conversion remains the way to force a target unit.</p>
+<p>Time sums use the same readability principle for explicit time units. Results
+of at least one hour display in hours; results below one hour but at least one
+minute display in minutes; smaller results display in seconds. Sexagesimal
+expressions keep their dedicated sexagesimal display behavior.</p>
+<p>For units that support SI prefixes, SpeedCrunch also uses a best-fit
+engineering prefix when the unprefixed unit would make the displayed number
+unnecessarily large or small. The chosen prefix aims to keep the numeric part
+in a readable range, typically from <code class="docutils literal notranslate"><span class="pre">1</span></code> up to but not including <code class="docutils literal notranslate"><span class="pre">1000</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">1[ps]</span></code> displays as <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">ps</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0.0001[s]</span> <span class="pre">+</span> <span class="pre">0.89999[ms]</span> <span class="pre">+</span> <span class="pre">1[ns]</span> <span class="pre">+</span> <span class="pre">1[ps]</span></code> displays as
+<code class="docutils literal notranslate"><span class="pre">999.991001</span> <span class="pre">µs</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0.0001[s]</span> <span class="pre">+</span> <span class="pre">0.899999[ms]</span> <span class="pre">+</span> <span class="pre">1[ns]</span> <span class="pre">+</span> <span class="pre">1[ps]</span></code> displays as
+<code class="docutils literal notranslate"><span class="pre">1.000000001</span> <span class="pre">ms</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0.0001[m]</span> <span class="pre">+</span> <span class="pre">0.899999[mm]</span> <span class="pre">+</span> <span class="pre">1[nm]</span> <span class="pre">+</span> <span class="pre">1[pm]</span></code> displays as
+<code class="docutils literal notranslate"><span class="pre">1.000000001</span> <span class="pre">mm</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0.1[m]</span></code> displays as <code class="docutils literal notranslate"><span class="pre">100</span> <span class="pre">mm</span></code>, not <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">dm</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0.01[m]</span></code> displays as <code class="docutils literal notranslate"><span class="pre">10</span> <span class="pre">mm</span></code>, not <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">cm</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0.1[g]</span></code> displays as <code class="docutils literal notranslate"><span class="pre">100</span> <span class="pre">mg</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0.1[L]</span></code> displays as <code class="docutils literal notranslate"><span class="pre">100</span> <span class="pre">mL</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0.1[s]</span></code> displays as <code class="docutils literal notranslate"><span class="pre">100</span> <span class="pre">ms</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0.1[Pa]</span></code> displays as <code class="docutils literal notranslate"><span class="pre">100</span> <span class="pre">mPa</span></code></p></li>
+</ul>
+<p>This prefix selection is not limited to time units. It applies to supported
+SI-prefixable units across dimensions, while still respecting special display
+rules such as hours/minutes/seconds for ordinary time sums and explicit
+conversion targets requested with <code class="docutils literal notranslate"><span class="pre">-&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">in</span></code>. The small SI prefixes
+<code class="docutils literal notranslate"><span class="pre">d</span></code>, <code class="docutils literal notranslate"><span class="pre">c</span></code>, <code class="docutils literal notranslate"><span class="pre">da</span></code> and <code class="docutils literal notranslate"><span class="pre">h</span></code> are accepted for input where supported, but
+SpeedCrunch does not choose them automatically for result display.</p>
+<p>In scientific notation mode, SpeedCrunch keeps the power of ten in the numeric
+part and displays a single SI-prefixable unit with its unprefixed base symbol:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">0.0000000001234234235234[m]</span></code> displays as
+<code class="docutils literal notranslate"><span class="pre">1.234234235234</span> <span class="pre">×</span> <span class="pre">10⁻¹⁰</span> <span class="pre">m</span></code>, not <code class="docutils literal notranslate"><span class="pre">1.234234235234</span> <span class="pre">×</span> <span class="pre">10²</span> <span class="pre">pm</span></code></p></li>
+</ul>
+<p>Scientific notation displayed with a multiplication sign and superscript
+exponent can be reused in unit expressions. For example,
+<code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">×</span> <span class="pre">10⁻¹²[s]</span></code> is interpreted like <code class="docutils literal notranslate"><span class="pre">1e-12[s]</span></code> and displays as <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">ps</span></code>.</p>
 </section>
 <section id="composed-units">
 <h2>Composed Units</h2>
@@ -117,6 +191,17 @@ authored structure is more readable than base expansion.</p></li>
 canonical named unit is generally expected by users for this product.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">W*h</span></code> remains in <code class="docutils literal notranslate"><span class="pre">W⋅h</span></code> form because it is a common domain unit for energy
 usage; preserving <code class="docutils literal notranslate"><span class="pre">h</span></code> keeps the practical meaning users typically intend.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">km/h</span></code> displays as <code class="docutils literal notranslate"><span class="pre">kph</span></code> and <code class="docutils literal notranslate"><span class="pre">mi/h</span></code> displays as
+<code class="docutils literal notranslate"><span class="pre">mph</span></code> instead of being expanded to <code class="docutils literal notranslate"><span class="pre">m⋅s⁻¹</span></code>. Speed units are
+usually chosen for domain readability, so SpeedCrunch preserves common
+authored speed forms when they match a supported named unit.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nmi/h</span></code> displays as <code class="docutils literal notranslate"><span class="pre">knot</span></code> for the same reason.</p></li>
+</ul>
+<p>Preserved display forms are still normal units. Use explicit conversion when
+you want another expression:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">[km/h]</span> <span class="pre">-&gt;</span> <span class="pre">[m/s]</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[mph]</span> <span class="pre">-&gt;</span> <span class="pre">[km/h]</span></code></p></li>
 </ul>
 </section>
 <section id="conversions">
@@ -952,15 +1037,19 @@ canonicalization/display policy above.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">wk</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">—</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">year_julian</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">century_julian</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">cy_jul</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">—</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">year_julian</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">a_jul</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">—</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">year_sidereal</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">year_sidereal</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">a_sid</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">—</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">year_tropical</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">year_tropical</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">a_trop</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">—</span></code></p></td>
 </tr>

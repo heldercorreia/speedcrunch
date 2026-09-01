@@ -47,9 +47,10 @@
                     </section>
                     <section title="User Interface" ref="userguide/interface.html">
                         <section title="Widgets" ref="userguide/interface.html#widgets"/>
+                        <section title="Session Tabs and Panes" ref="userguide/interface.html#session-tabs-and-panes"/>
                         <section title="Expression Editor Features" ref="userguide/interface.html#expression-editor-features"/>
                         <section title="Import/Export" ref="userguide/interface.html#import-export">
-                            <section title="Startup Definitions" ref="userguide/interface.html#startup-definitions"/>
+                            <section title="User Definitions" ref="userguide/interface.html#user-definitions"/>
                         </section>
                         <section title="Settings" ref="userguide/interface.html#settings">
                             <section title="Result Display Interactions" ref="userguide/interface.html#result-display-interactions"/>
@@ -57,25 +58,37 @@
                             <section title="Angle Mode" ref="userguide/interface.html#angle-mode"/>
                             <section title="Complex Numbers" ref="userguide/interface.html#complex-numbers"/>
                             <section title="Number Format" ref="userguide/interface.html#number-format"/>
-                            <section title="History" ref="userguide/interface.html#history"/>
+                            <section title="History Size Limit" ref="userguide/interface.html#history-size-limit"/>
                             <section title="Window" ref="userguide/interface.html#window"/>
                             <section title="Results" ref="userguide/interface.html#results"/>
                             <section title="Editing" ref="userguide/interface.html#editing"/>
                             <section title="User Interface Settings" ref="userguide/interface.html#user-interface-settings"/>
                         </section>
                         <section title="Keyboard Shortcuts" ref="userguide/interface.html#keyboard-shortcuts">
-                            <section title="Editing" ref="userguide/interface.html#id2"/>
+                            <section title="Editing" ref="userguide/interface.html#id3"/>
+                            <section title="Session Tabs" ref="userguide/interface.html#session-tabs"/>
                             <section title="Widgets and Docks" ref="userguide/interface.html#widgets-and-docks"/>
                             <section title="Scrolling" ref="userguide/interface.html#scrolling"/>
-                            <section title="Notation" ref="userguide/interface.html#id3"/>
+                            <section title="Focus Navigation" ref="userguide/interface.html#focus-navigation"/>
+                            <section title="Notation" ref="userguide/interface.html#id4"/>
                             <section title="Various" ref="userguide/interface.html#various"/>
                         </section>
+                    </section>
+                    <section title="Session JSON Schema" ref="userguide/session_json_schema.html">
+                        <section title="Schema" ref="userguide/session_json_schema.html#schema"/>
+                        <section title="Notes" ref="userguide/session_json_schema.html#notes"/>
+                    </section>
+                    <section title="Theme JSON Schema" ref="userguide/theme_json_schema.html">
+                        <section title="Schema" ref="userguide/theme_json_schema.html#schema"/>
+                        <section title="Notes" ref="userguide/theme_json_schema.html#notes"/>
+                        <section title="Fictitious Example" ref="userguide/theme_json_schema.html#fictitious-example"/>
                     </section>
                 </section>
                 <section title="Reference" ref="reference/index.html">
                     <section title="Built-in Functions" ref="reference/index.html#built-in-functions">
                         <section title="Basic Math Functions" ref="reference/basic.html">
                             <section title="General" ref="reference/basic.html#general"/>
+                            <section title="Lists and Matrices" ref="reference/basic.html#lists-and-matrices"/>
                             <section title="Trigonometric &amp; Inverse Trigonometric" ref="reference/basic.html#trigonometric-inverse-trigonometric"/>
                             <section title="Hyperbolic &amp; Inverse Hyperbolic" ref="reference/basic.html#hyperbolic-inverse-hyperbolic"/>
                             <section title="Special" ref="reference/basic.html#special"/>
@@ -102,7 +115,8 @@
                     <section title="Units" ref="reference/index.html#units">
                         <section title="Units and Canonicalization" ref="reference/units.html">
                             <section title="Display Policy" ref="reference/units.html#display-policy"/>
-                            <section title="Unit Exponent Style" ref="reference/units.html#unit-exponent-style"/>
+                            <section title="Unit Notation" ref="reference/units.html#unit-notation"/>
+                            <section title="Authored Units" ref="reference/units.html#authored-units"/>
                             <section title="Composed Units" ref="reference/units.html#composed-units"/>
                             <section title="Conversions" ref="reference/units.html#conversions"/>
                             <section title="Built-in Units Table" ref="reference/units.html#built-in-units-table">
@@ -167,17 +181,28 @@
             <keyword name="binompmf() (function)" id="function.binompmf" ref="reference/statistical.html#sc.binompmf"/>
             <keyword name="binomvar() (function)" id="function.binomvar" ref="reference/statistical.html#sc.binomvar"/>
             <keyword name="binpad() (function)" id="function.binpad" ref="reference/integer.html#sc.binpad"/>
-            <keyword name="cart() (function)" id="function.cart" ref="reference/basic.html#sc.cart"/>
             <keyword name="cbrt() (function)" id="function.cbrt" ref="reference/basic.html#sc.cbrt"/>
             <keyword name="ceil() (function)" id="function.ceil" ref="reference/integer.html#sc.ceil"/>
+            <keyword name="cis() (function)" id="function.cis" ref="reference/basic.html#sc.cis"/>
+            <keyword name="cisform() (function)" id="function.cisform" ref="reference/basic.html#sc.cisform"/>
+            <keyword name="cols() (function)" id="function.cols" ref="reference/basic.html#sc.cols"/>
             <keyword name="conj() (function)" id="function.conj" ref="reference/basic.html#sc.conj"/>
+            <keyword name="corrp() (function)" id="function.corrp" ref="reference/basic.html#sc.corrp"/>
+            <keyword name="corrs() (function)" id="function.corrs" ref="reference/basic.html#sc.corrs"/>
             <keyword name="cos() (function)" id="function.cos" ref="reference/basic.html#sc.cos"/>
             <keyword name="cosh() (function)" id="function.cosh" ref="reference/basic.html#sc.cosh"/>
             <keyword name="cot() (function)" id="function.cot" ref="reference/basic.html#sc.cot"/>
+            <keyword name="count() (function)" id="function.count" ref="reference/statistical.html#sc.count"/>
+            <keyword name="covp() (function)" id="function.covp" ref="reference/basic.html#sc.covp"/>
+            <keyword name="covs() (function)" id="function.covs" ref="reference/basic.html#sc.covs"/>
+            <keyword name="cross() (function)" id="function.cross" ref="reference/basic.html#sc.cross"/>
             <keyword name="csc() (function)" id="function.csc" ref="reference/basic.html#sc.csc"/>
             <keyword name="datetime() (function)" id="function.datetime" ref="reference/basic.html#sc.datetime"/>
             <keyword name="dec() (function)" id="function.dec" ref="reference/integer.html#sc.dec"/>
             <keyword name="degrees() (function)" id="function.degrees" ref="reference/basic.html#sc.degrees"/>
+            <keyword name="det() (function)" id="function.det" ref="reference/basic.html#sc.det"/>
+            <keyword name="dms() (function)" id="function.dms" ref="reference/integer.html#sc.dms"/>
+            <keyword name="dot() (function)" id="function.dot" ref="reference/basic.html#sc.dot"/>
             <keyword name="e (constant)" id="constant.e" ref="reference/constants.html#sc.e"/>
             <keyword name="emod() (function)" id="function.emod" ref="reference/integer.html#sc.emod"/>
             <keyword name="eng() (function)" id="function.eng" ref="reference/integer.html#sc.eng"/>
@@ -185,6 +210,8 @@
             <keyword name="erf() (function)" id="function.erf" ref="reference/basic.html#sc.erf"/>
             <keyword name="erfc() (function)" id="function.erfc" ref="reference/basic.html#sc.erfc"/>
             <keyword name="exp() (function)" id="function.exp" ref="reference/basic.html#sc.exp"/>
+            <keyword name="expform() (function)" id="function.expform" ref="reference/basic.html#sc.expform"/>
+            <keyword name="flatten() (function)" id="function.flatten" ref="reference/basic.html#sc.flatten"/>
             <keyword name="floor() (function)" id="function.floor" ref="reference/integer.html#sc.floor"/>
             <keyword name="frac() (function)" id="function.frac" ref="reference/basic.html#sc.frac"/>
             <keyword name="gamma() (function)" id="function.gamma" ref="reference/basic.html#sc.gamma"/>
@@ -219,6 +246,7 @@
             <keyword name="ieee754_single_encode() (function)" id="function.ieee754_single_encode" ref="reference/ieee754.html#sc.ieee754_single_encode"/>
             <keyword name="imag() (function)" id="function.imag" ref="reference/basic.html#sc.imag"/>
             <keyword name="int() (function)" id="function.int" ref="reference/basic.html#sc.int"/>
+            <keyword name="inv() (function)" id="function.inv" ref="reference/basic.html#sc.inv"/>
             <keyword name="j (constant)" id="constant.j" ref="reference/constants.html#sc.j"/>
             <keyword name="lb() (function)" id="function.lb" ref="reference/basic.html#sc.lb"/>
             <keyword name="lcm() (function)" id="function.lcm" ref="reference/integer.html#sc.lcm"/>
@@ -226,27 +254,31 @@
             <keyword name="ln() (function)" id="function.ln" ref="reference/basic.html#sc.ln"/>
             <keyword name="lngamma() (function)" id="function.lngamma" ref="reference/basic.html#sc.lngamma"/>
             <keyword name="log() (function)" id="function.log" ref="reference/basic.html#sc.log"/>
+            <keyword name="mad() (function)" id="function.mad" ref="reference/statistical.html#sc.mad"/>
             <keyword name="mask() (function)" id="function.mask" ref="reference/integer.html#sc.mask"/>
             <keyword name="mass() (function)" id="function.mass" ref="reference/basic.html#sc.mass"/>
             <keyword name="max() (function)" id="function.max" ref="reference/statistical.html#sc.max"/>
+            <keyword name="mean() (function)" id="function.mean" ref="reference/statistical.html#sc.mean"/>
             <keyword name="median() (function)" id="function.median" ref="reference/statistical.html#sc.median"/>
             <keyword name="min() (function)" id="function.min" ref="reference/statistical.html#sc.min"/>
             <keyword name="mod() (function)" id="function.mod" ref="reference/integer.html#sc.mod"/>
             <keyword name="molarity() (function)" id="function.molarity" ref="reference/basic.html#sc.molarity"/>
             <keyword name="molmass() (function)" id="function.molmass" ref="reference/basic.html#sc.molmass"/>
             <keyword name="ncr() (function)" id="function.ncr" ref="reference/statistical.html#sc.ncr"/>
+            <keyword name="norm() (function)" id="function.norm" ref="reference/basic.html#sc.norm"/>
             <keyword name="not() (function)" id="function.not" ref="reference/integer.html#sc.not"/>
             <keyword name="npr() (function)" id="function.npr" ref="reference/statistical.html#sc.npr"/>
+            <keyword name="numval() (function)" id="function.numval" ref="reference/basic.html#sc.numval"/>
             <keyword name="oct() (function)" id="function.oct" ref="reference/integer.html#sc.oct"/>
             <keyword name="octpad() (function)" id="function.octpad" ref="reference/integer.html#sc.octpad"/>
             <keyword name="or() (function)" id="function.or" ref="reference/integer.html#sc.or"/>
             <keyword name="phase() (function)" id="function.phase" ref="reference/basic.html#sc.phase"/>
+            <keyword name="phasorform() (function)" id="function.phasorform" ref="reference/basic.html#sc.phasorform"/>
             <keyword name="pi (constant)" id="constant.pi" ref="reference/constants.html#sc.pi"/>
             <keyword name="poicdf() (function)" id="function.poicdf" ref="reference/statistical.html#sc.poicdf"/>
             <keyword name="poimean() (function)" id="function.poimean" ref="reference/statistical.html#sc.poimean"/>
             <keyword name="poipmf() (function)" id="function.poipmf" ref="reference/statistical.html#sc.poipmf"/>
             <keyword name="poivar() (function)" id="function.poivar" ref="reference/statistical.html#sc.poivar"/>
-            <keyword name="polar() (function)" id="function.polar" ref="reference/basic.html#sc.polar"/>
             <keyword name="popcount() (function)" id="function.popcount" ref="reference/integer.html#sc.popcount"/>
             <keyword name="powmod() (function)" id="function.powmod" ref="reference/integer.html#sc.powmod"/>
             <keyword name="product() (function)" id="function.product" ref="reference/statistical.html#sc.product"/>
@@ -254,29 +286,39 @@
             <keyword name="rand() (function)" id="function.rand" ref="reference/statistical.html#sc.rand"/>
             <keyword name="randint() (function)" id="function.randint" ref="reference/statistical.html#sc.randint"/>
             <keyword name="randint() (function)" id="function.randint" ref="reference/statistical.html#sc.randint"/>
+            <keyword name="rank() (function)" id="function.rank" ref="reference/basic.html#sc.rank"/>
             <keyword name="rat() (function)" id="function.rat" ref="reference/integer.html#sc.rat"/>
             <keyword name="ratio() (function)" id="function.ratio" ref="reference/integer.html#sc.ratio"/>
             <keyword name="rational() (function)" id="function.rational" ref="reference/integer.html#sc.rational"/>
             <keyword name="real() (function)" id="function.real" ref="reference/basic.html#sc.real"/>
+            <keyword name="rectform() (function)" id="function.rectform" ref="reference/basic.html#sc.rectform"/>
             <keyword name="round() (function)" id="function.round" ref="reference/integer.html#sc.round"/>
+            <keyword name="roundeven() (function)" id="function.roundeven" ref="reference/integer.html#sc.roundeven"/>
+            <keyword name="rows() (function)" id="function.rows" ref="reference/basic.html#sc.rows"/>
             <keyword name="sci() (function)" id="function.sci" ref="reference/integer.html#sc.sci"/>
             <keyword name="sec() (function)" id="function.sec" ref="reference/basic.html#sc.sec"/>
             <keyword name="sgn() (function)" id="function.sgn" ref="reference/basic.html#sc.sgn"/>
+            <keyword name="shape() (function)" id="function.shape" ref="reference/basic.html#sc.shape"/>
             <keyword name="shl() (function)" id="function.shl" ref="reference/integer.html#sc.shl"/>
             <keyword name="shr() (function)" id="function.shr" ref="reference/integer.html#sc.shr"/>
             <keyword name="sin() (function)" id="function.sin" ref="reference/basic.html#sc.sin"/>
             <keyword name="sinh() (function)" id="function.sinh" ref="reference/basic.html#sc.sinh"/>
             <keyword name="SpeedCrunch" ref="introduction.html#index-0"/>
             <keyword name="sqrt() (function)" id="function.sqrt" ref="reference/basic.html#sc.sqrt"/>
-            <keyword name="stddev() (function)" id="function.stddev" ref="reference/statistical.html#sc.stddev"/>
+            <keyword name="stdevp() (function)" id="function.stdevp" ref="reference/statistical.html#sc.stdevp"/>
+            <keyword name="stdevs() (function)" id="function.stdevs" ref="reference/statistical.html#sc.stdevs"/>
             <keyword name="sum() (function)" id="function.sum" ref="reference/statistical.html#sc.sum"/>
             <keyword name="summation() (function)" id="function.summation" ref="reference/statistical.html#sc.summation"/>
             <keyword name="tan() (function)" id="function.tan" ref="reference/basic.html#sc.tan"/>
             <keyword name="tanh() (function)" id="function.tanh" ref="reference/basic.html#sc.tanh"/>
+            <keyword name="trace() (function)" id="function.trace" ref="reference/basic.html#sc.trace"/>
+            <keyword name="transpose() (function)" id="function.transpose" ref="reference/basic.html#sc.transpose"/>
+            <keyword name="trigform() (function)" id="function.trigform" ref="reference/basic.html#sc.trigform"/>
             <keyword name="trunc() (function)" id="function.trunc" ref="reference/integer.html#sc.trunc"/>
             <keyword name="turns() (function)" id="function.turns" ref="reference/basic.html#sc.turns"/>
             <keyword name="unmask() (function)" id="function.unmask" ref="reference/integer.html#sc.unmask"/>
-            <keyword name="variance() (function)" id="function.variance" ref="reference/statistical.html#sc.variance"/>
+            <keyword name="varp() (function)" id="function.varp" ref="reference/statistical.html#sc.varp"/>
+            <keyword name="vars() (function)" id="function.vars" ref="reference/statistical.html#sc.vars"/>
             <keyword name="xor() (function)" id="function.xor" ref="reference/integer.html#sc.xor"/>
             <keyword name="π (constant)" id="constant.π" ref="reference/constants.html#sc.π"/>
             <keyword name="ℯ (constant)" id="constant.ℯ" ref="reference/constants.html#sc.ℯ"/>
@@ -297,7 +339,9 @@
             <file>userguide/index.html</file>
             <file>userguide/installation.html</file>
             <file>userguide/interface.html</file>
+            <file>userguide/session_json_schema.html</file>
             <file>userguide/syntax.html</file>
+            <file>userguide/theme_json_schema.html</file>
             <file>reference/basic.html</file>
             <file>reference/constants.html</file>
             <file>reference/ieee754.html</file>

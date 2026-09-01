@@ -205,6 +205,14 @@ that is used for displaying results, select one of the corresponding settings in
 </dd></dl>
 
 <dl class="sc function">
+<dt class="sig sig-object sc" id="sc.dms">
+<span class="sig-name descname"><span class="pre">dms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Format <code class="docutils literal notranslate"><span class="pre">n</span></code> in sexagesimal notation, using the same convention as the
+Sexagesimal notation setting. Time quantities display as <code class="docutils literal notranslate"><span class="pre">h:mm:ss</span></code>;
+angles and dimensionless values display as degrees, minutes, and seconds.</p>
+</dd></dl>
+
+<dl class="sc function">
 <dt class="sig sig-object sc" id="sc.eng">
 <span class="sig-name descname"><span class="pre">eng</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">exponent</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
 <dd><p>Format <code class="docutils literal notranslate"><span class="pre">n</span></code> in engineering notation.</p>
@@ -275,25 +283,40 @@ If <code class="docutils literal notranslate"><span class="pre">bits</span></cod
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.ceil">
 <span class="sig-name descname"><span class="pre">ceil</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Round <code class="docutils literal notranslate"><span class="pre">x</span></code> to the next largest integer. Only real, dimensionless arguments are allowed.</p>
+<dd><p>Round <code class="docutils literal notranslate"><span class="pre">x</span></code> upward to the least integer value greater than or equal to
+<code class="docutils literal notranslate"><span class="pre">x</span></code>. For quantities with dimensions, the numeric value is rounded and the
+original dimensions are preserved.</p>
+<p>This is the expression-level counterpart to the <code class="docutils literal notranslate"><span class="pre">Toward</span> <span class="pre">+∞</span> <span class="pre">(ceil)</span></code>
+rounding mode. Only real arguments are allowed.</p>
 </dd></dl>
 
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.floor">
 <span class="sig-name descname"><span class="pre">floor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Round <code class="docutils literal notranslate"><span class="pre">x</span></code> to the next smallest integer. Only real, dimensionless arguments are allowed.</p>
+<dd><p>Round <code class="docutils literal notranslate"><span class="pre">x</span></code> downward to the greatest integer value less than or equal to
+<code class="docutils literal notranslate"><span class="pre">x</span></code>. For quantities with dimensions, the numeric value is rounded and the
+original dimensions are preserved.</p>
+<p>This is the expression-level counterpart to the <code class="docutils literal notranslate"><span class="pre">Toward</span> <span class="pre">−∞</span> <span class="pre">(floor)</span></code>
+rounding mode. Only real arguments are allowed.</p>
 </dd></dl>
 
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.round">
 <span class="sig-name descname"><span class="pre">round</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">n</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
-<dd><p>Round <code class="docutils literal notranslate"><span class="pre">x</span></code> to the nearest number with <code class="docutils literal notranslate"><span class="pre">n</span></code> fractional digits; <code class="docutils literal notranslate"><span class="pre">n</span></code> may be omitted, in which case <code class="docutils literal notranslate"><span class="pre">x</span></code> is rounded to the closest integer.</p>
-<p>Tie handling and directional behavior follow the global
-<span class="menuselection">Settings ‣ Results ‣ Rounding Mode</span> option (for
-example <em>Half Even (Banker’s)</em>, <em>Half Away from Zero</em>, or directed modes).</p>
+<dd><p>Round <code class="docutils literal notranslate"><span class="pre">x</span></code> to the nearest value with <code class="docutils literal notranslate"><span class="pre">n</span></code> fractional digits using
+half-away-from-zero rounding; <code class="docutils literal notranslate"><span class="pre">n</span></code> may be omitted, in which case <code class="docutils literal notranslate"><span class="pre">x</span></code> is
+rounded to the closest integer. When a value is exactly halfway between two
+candidates, the result with the larger absolute value is chosen.</p>
+<p>For quantities with dimensions, the numeric value is rounded and the
+original dimensions are preserved.</p>
+<p>This is the expression-level counterpart to the <code class="docutils literal notranslate"><span class="pre">Nearest,</span> <span class="pre">Half</span> <span class="pre">Away</span>
+<span class="pre">(round)</span></code> rounding mode. It does not depend on the global rounding mode.</p>
 <p>Example:</p>
 <table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">round</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
-<span class="ge">= 0</span>
+<span class="ge">= 1</span>
+
+<span class="n">round</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="ge">= -1</span>
 
 <span class="n">round</span><span class="p">(</span><span class="mf">1.5</span><span class="p">)</span>
 <span class="ge">= 2</span>
@@ -309,14 +332,54 @@ example <em>Half Even (Banker’s)</em>, <em>Half Away from Zero</em>, or direct
 </dd></dl>
 
 <dl class="sc function">
+<dt class="sig sig-object sc" id="sc.roundeven">
+<span class="sig-name descname"><span class="pre">roundeven</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">n</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
+<dd><p>Round <code class="docutils literal notranslate"><span class="pre">x</span></code> to the nearest value with <code class="docutils literal notranslate"><span class="pre">n</span></code> fractional digits using
+half-even, also known as banker’s rounding; <code class="docutils literal notranslate"><span class="pre">n</span></code> may be omitted, in which
+case <code class="docutils literal notranslate"><span class="pre">x</span></code> is rounded to the closest integer.</p>
+<p>For quantities with dimensions, the numeric value is rounded and the
+original dimensions are preserved.</p>
+<p>Ties are rounded to the value whose last kept digit is even. This is the
+expression-level counterpart to the <code class="docutils literal notranslate"><span class="pre">Nearest,</span> <span class="pre">Half</span> <span class="pre">Even</span> <span class="pre">(roundeven)</span></code>
+rounding mode. This strategy is commonly known as Banker’s rounding. It
+does not depend on the global rounding mode.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">roundeven</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="ge">= 0</span>
+
+<span class="n">roundeven</span><span class="p">(</span><span class="mf">1.5</span><span class="p">)</span>
+<span class="ge">= 2</span>
+
+<span class="n">roundeven</span><span class="p">(</span><span class="mf">2.5</span><span class="p">)</span>
+<span class="ge">= 2</span>
+
+<span class="n">roundeven</span><span class="p">(</span><span class="mf">12.345</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 12.34</span>
+</pre></div>
+</div>
+</td></tr></tbody></table><p><code class="docutils literal notranslate"><span class="pre">x</span></code> must be real. <code class="docutils literal notranslate"><span class="pre">n</span></code> must be a real, dimensionless integer.</p>
+</dd></dl>
+
+<dl class="sc function">
 <dt class="sig sig-object sc" id="sc.trunc">
 <span class="sig-name descname"><span class="pre">trunc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">n</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
-<dd><p>Truncate (rounds toward zero) <code class="docutils literal notranslate"><span class="pre">x</span></code> to the next number with <code class="docutils literal notranslate"><span class="pre">n</span></code> fractional digits; <code class="docutils literal notranslate"><span class="pre">n</span></code> may be omitted, in which case <code class="docutils literal notranslate"><span class="pre">x</span></code> is rounded to integer. Only real, dimensionless arguments are allowed.</p>
+<dd><p>Truncate <code class="docutils literal notranslate"><span class="pre">x</span></code> toward zero to the next value with <code class="docutils literal notranslate"><span class="pre">n</span></code> fractional digits;
+<code class="docutils literal notranslate"><span class="pre">n</span></code> may be omitted, in which case <code class="docutils literal notranslate"><span class="pre">x</span></code> is rounded to an integer. This
+discards extra digits without increasing the absolute value.</p>
+<p>For quantities with dimensions, the numeric value is rounded and the
+original dimensions are preserved.</p>
+<p>This is the expression-level counterpart to the <code class="docutils literal notranslate"><span class="pre">Toward</span> <span class="pre">Zero</span> <span class="pre">(trunc)</span></code>
+rounding mode. <code class="docutils literal notranslate"><span class="pre">x</span></code> must be real. <code class="docutils literal notranslate"><span class="pre">n</span></code> must be a real, dimensionless
+integer.</p>
 <table class="-x-quark-box -x-quark-admonition -x-quark-seealso"><tbody><tr><td width="100%" class="-x-quark-box-td"><div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <div class="line-block">
 <div class="line"><a class="reference internal" href="basic.html#sc.int" title="int"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">int()</span></code></a></div>
 <div class="line"><a class="reference internal" href="basic.html#sc.frac" title="frac"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">frac()</span></code></a></div>
+<div class="line"><a class="reference internal" href="#sc.ceil" title="ceil"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">ceil()</span></code></a></div>
+<div class="line"><a class="reference internal" href="#sc.floor" title="floor"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">floor()</span></code></a></div>
+<div class="line"><a class="reference internal" href="#sc.round" title="round"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">round()</span></code></a></div>
+<div class="line"><a class="reference internal" href="#sc.roundeven" title="roundeven"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">roundeven()</span></code></a></div>
 </div>
 </div>
 </td></tr></tbody></table></dd></dl>
