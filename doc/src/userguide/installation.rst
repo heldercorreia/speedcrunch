@@ -71,12 +71,12 @@ Flatpak and Flathub. Then install SpeedCrunch from its `store page <flathub-sc_>
 Building from Source
 --------------------
 
-The SpeedCrunch source code is maintained on `Bitbucket`_ in a Git repository. Clone
+The SpeedCrunch source code is maintained on `GitHub`_ in a Git repository. Clone
 the repository onto your machine by running the following command::
 
-    git clone https://bitbucket.org/heldercorreia/speedcrunch.git
+    git clone https://github.com/heldercorreia/speedcrunch.git
 
-.. _Bitbucket: https://bitbucket.org/heldercorreia/speedcrunch
+.. _GitHub: https://github.com/heldercorreia/speedcrunch
 
 The main readme file (:file:`README.md` at the root of the repository) contains
 instructions on how to compile SpeedCrunch.

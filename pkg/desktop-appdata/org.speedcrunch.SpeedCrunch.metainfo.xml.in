@@ -62,9 +62,9 @@
     </screenshot>
   </screenshots>
 
-  <url type="homepage">https://heldercorreia.bitbucket.io/speedcrunch</url>
-  <url type="bugtracker">https://bitbucket.org/heldercorreia/speedcrunch/issues</url>
-  <url type="help">https://heldercorreia.bitbucket.io/speedcrunch/introduction.html</url>
+  <url type="homepage">https://speedcrunch,org</url>
+  <url type="bugtracker">https://speedcrunch.org/issues.html</url>
+  <url type="help">https://speedcrunch.org/contents.html</url>
 
   <releases>
     <release version="1.0" date="2026-03-08"/>

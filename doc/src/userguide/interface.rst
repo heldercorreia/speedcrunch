@@ -110,7 +110,7 @@ Most of them are dockable panels that can be moved around the main window and en
 
     .. versionadded:: 1.0
 
-.. _tracker: https://bitbucket.org/heldercorreia/speedcrunch/issues
+.. _tracker: https://speedcrunch.org/issues.html
 
 
 Session Tabs and Panes

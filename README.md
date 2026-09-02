@@ -1,6 +1,5 @@
 # SpeedCrunch
 SpeedCrunch is a high-precision scientific calculator.
-Current stable version: 1.0.
 It features a syntax-highlighted scrollable display and is designed to be fully used via keyboard. Some distinctive
 features are auto-completion of functions and variables, a formula book, and quick
 insertion of constants from various fields of knowledge. It is available for Windows, macOS,
@@ -50,11 +49,9 @@ Building the HTML manual is normally not necessary because a prebuilt copy is in
 with the SpeedCrunch source. For more information, see the [manual's README](doc/src/README.md).
 
 ## Contributing
-- Report bugs or request features in the
-  [issue tracker](https://bitbucket.org/heldercorreia/speedcrunch/issues).
-- Add or improve a [translation](https://www.transifex.com/projects/p/speedcrunch/).
-- Send a message to the [forum](https://groups.google.com/group/speedcrunch).
-- Follow the news on the [blog](http://speedcrunch.blogspot.com).
+- Report bugs, request features or implement a ticket from the [issue tracker](https://speedcrunch.org/issues.html).
+- Be part of the [community](https://speedcrunch.org/community.html).
+- [Donate](https://www.speedcrunch.org/donate.html) to help supporting the expenses of server hosting, internet domain and computers for further development.
 
 ## License
 This program is free software; you can redistribute it and/or modify it
