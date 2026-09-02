@@ -176,7 +176,7 @@
   <div class="row">
     <ul class="breadcrumb">
       <li><a href="{{ pathto('index') }}">{{ _('Home') }} </a></li>
-      <li><a href="{{ pathto(master_doc) }}">{{ _('Documentation')  }} </a></li>
+      <li><a href="{{ pathto(master_doc) }}">{{ _('User Manual')  }} </a></li>
       {%- for parent in parents -%}
       <li><a href="{{ parent.link | e }}">{{ parent.title }}</a></li>
       {%- endfor %}
@@ -222,4 +222,3 @@
 {%- endblock %}
   </body>
 </html>
-
