@@ -102,8 +102,6 @@ else()
     add_executable(${APPLICATION_NAME} ${speedcrunch_SOURCES} ${speedcrunch_RESOURCES})
 endif()
 
-set_property(TARGET ${APPLICATION_NAME} PROPERTY CXX_STANDARD 11)
-
 target_compile_definitions(${APPLICATION_NAME}
     PRIVATE
         $<$<NOT:$<CONFIG:Debug>>:QT_NO_DEBUG_OUTPUT>
