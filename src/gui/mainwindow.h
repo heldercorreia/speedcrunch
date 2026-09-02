@@ -146,8 +146,6 @@ private slots:
     void checkForUpdates();
     void openFeedbackURL();
     void openCommunityURL();
-    void openFacebookGroupURL();
-    void openNewsURL();
     void openSourceURL();
     void openDonateURL();
     void retranslateText();
@@ -512,8 +510,6 @@ private:
         QAction* helpUpdates;
         QAction* helpFeedback;
         QAction* helpCommunity;
-        QAction* helpFacebookGroup;
-        QAction* helpNews;
         QAction* helpSource;
         QAction* helpDonate;
         QAction* helpAbout;
