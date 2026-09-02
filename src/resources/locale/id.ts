@@ -4585,1257 +4585,1247 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3476"/>
+        <location filename="../../gui/mainwindow.cpp" line="3692"/>
         <source>Radian</source>
         <translation>Radian</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3480"/>
+        <location filename="../../gui/mainwindow.cpp" line="3696"/>
         <source>Degree</source>
         <translation>Derajat</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3477"/>
+        <location filename="../../gui/mainwindow.cpp" line="3693"/>
         <source>Gradian</source>
         <translation>Gradian</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3486"/>
+        <location filename="../../gui/mainwindow.cpp" line="3702"/>
         <source>Binary</source>
         <translation>Biner</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3487"/>
+        <location filename="../../gui/mainwindow.cpp" line="3703"/>
         <source>Octal</source>
         <translation>Oktal</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3488"/>
+        <location filename="../../gui/mainwindow.cpp" line="3704"/>
         <source>Hexadecimal</source>
         <translation>Heksadesimal</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3489"/>
+        <location filename="../../gui/mainwindow.cpp" line="3705"/>
         <source>Sexagesimal</source>
         <translation>Seksagesimal</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3491"/>
+        <location filename="../../gui/mainwindow.cpp" line="3707"/>
         <source>Engineering decimal</source>
         <translation>Desimal teknik</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3492"/>
+        <location filename="../../gui/mainwindow.cpp" line="3708"/>
         <source>Scientific decimal</source>
         <translation>Desimal ilmiah</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3511"/>
+        <location filename="../../gui/mainwindow.cpp" line="3727"/>
         <source>&amp;Import...</source>
         <translation>&amp;Impor...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3517"/>
+        <location filename="../../gui/mainwindow.cpp" line="3733"/>
         <source>&amp;Quit</source>
         <translation>&amp;Keluar</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3519"/>
+        <location filename="../../gui/mainwindow.cpp" line="3735"/>
         <source>Clear E&amp;xpression</source>
         <translation>Bersihkan &amp;Ekspresi</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3520"/>
+        <location filename="../../gui/mainwindow.cpp" line="3736"/>
         <source>Clear &amp;History</source>
         <translation>Bersihkan Histor&amp;y</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3521"/>
+        <location filename="../../gui/mainwindow.cpp" line="3737"/>
         <source>Copy Last &amp;Result</source>
         <translation>Salin &amp;Hasil Terakhir</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3522"/>
+        <location filename="../../gui/mainwindow.cpp" line="3738"/>
         <source>&amp;Copy</source>
         <translation>&amp;Salin</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3523"/>
+        <location filename="../../gui/mainwindow.cpp" line="3739"/>
         <source>&amp;Paste</source>
         <translation>&amp;Tempel</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3524"/>
+        <location filename="../../gui/mainwindow.cpp" line="3740"/>
         <source>&amp;Select Expression</source>
         <translation>Pilih &amp;Ekspresi</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3525"/>
+        <location filename="../../gui/mainwindow.cpp" line="3741"/>
         <source>&amp;Wrap Selection in Parentheses</source>
         <translation>&amp;Bungkus Pilihan dalam Tanda Kurung</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3527"/>
+        <location filename="../../gui/mainwindow.cpp" line="3743"/>
         <source>&amp;Constants</source>
         <translation>&amp;Konstanta</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3528"/>
+        <location filename="../../gui/mainwindow.cpp" line="3744"/>
         <source>F&amp;ull Screen Mode</source>
         <translation>Mode Layar Pen&amp;uh</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3529"/>
+        <location filename="../../gui/mainwindow.cpp" line="3745"/>
         <source>&amp;Functions</source>
         <translation>&amp;Fungsi</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3530"/>
+        <location filename="../../gui/mainwindow.cpp" line="3746"/>
         <source>&amp;History</source>
         <translation>&amp;Riwayat</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3540"/>
+        <location filename="../../gui/mainwindow.cpp" line="3756"/>
         <source>&amp;Status Bar</source>
         <translation>Bilah &amp;Status</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3543"/>
-        <location filename="../../gui/mainwindow.cpp" line="6471"/>
+        <location filename="../../gui/mainwindow.cpp" line="3759"/>
+        <location filename="../../gui/mainwindow.cpp" line="6705"/>
         <source>Bitfield</source>
         <translation>Bidang Bit</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3544"/>
+        <location filename="../../gui/mainwindow.cpp" line="3760"/>
         <source>Use&amp;r Functions</source>
         <translation>Fungsi &amp;Pengguna</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3547"/>
+        <location filename="../../gui/mainwindow.cpp" line="3763"/>
         <source>&amp;Degree</source>
         <translation>&amp;Derajat</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3548"/>
+        <location filename="../../gui/mainwindow.cpp" line="3764"/>
         <source>&amp;Radian</source>
         <translation>&amp;Radian</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3549"/>
+        <location filename="../../gui/mainwindow.cpp" line="3765"/>
         <source>&amp;Gradian</source>
         <translation>&amp;Gradian</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3556"/>
+        <location filename="../../gui/mainwindow.cpp" line="3772"/>
         <source>Automatic &amp;Completion</source>
         <translation>Pelengkapan &amp;Otomatis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3567"/>
+        <location filename="../../gui/mainwindow.cpp" line="3783"/>
         <source>Syntax &amp;Highlighting</source>
         <translation>Penyorotan &amp;Sintaks</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3585"/>
+        <location filename="../../gui/mainwindow.cpp" line="3801"/>
         <source>&amp;Comma</source>
         <translation>&amp;Koma</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3586"/>
+        <location filename="../../gui/mainwindow.cpp" line="3802"/>
         <source>&amp;System Default</source>
         <translation>Default &amp;Sistem</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3587"/>
+        <location filename="../../gui/mainwindow.cpp" line="3803"/>
         <source>&amp;Dot</source>
         <translation>&amp;Titik</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3588"/>
+        <location filename="../../gui/mainwindow.cpp" line="3804"/>
         <source>Dot &amp;And Comma</source>
         <translation>Titik &amp;dan Koma</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3611"/>
+        <location filename="../../gui/mainwindow.cpp" line="3827"/>
         <source>&amp;Binary</source>
         <translation>&amp;Biner</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3608"/>
+        <location filename="../../gui/mainwindow.cpp" line="3824"/>
         <source>&amp;Engineering</source>
         <translation>&amp;Teknik</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3613"/>
+        <location filename="../../gui/mainwindow.cpp" line="3829"/>
         <source>&amp;Hexadecimal</source>
         <translation>&amp;Heksadesimal</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3612"/>
+        <location filename="../../gui/mainwindow.cpp" line="3828"/>
         <source>&amp;Octal</source>
         <translation>&amp;Oktal</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3609"/>
+        <location filename="../../gui/mainwindow.cpp" line="3825"/>
         <source>&amp;Scientific</source>
         <translation>&amp;Ilmiah</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3631"/>
+        <location filename="../../gui/mainwindow.cpp" line="3847"/>
         <source>User &amp;Manual</source>
         <translation>&amp;Manual Pengguna</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3639"/>
+        <location filename="../../gui/mainwindow.cpp" line="3853"/>
         <source>&amp;Donate</source>
         <translation>&amp;Donasi</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4281"/>
+        <location filename="../../gui/mainwindow.cpp" line="4503"/>
         <source>New Tab</source>
         <translation>Tab baru</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6577"/>
+        <location filename="../../gui/mainwindow.cpp" line="6810"/>
         <source>Constants</source>
         <translation>Konstanta</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6607"/>
+        <location filename="../../gui/mainwindow.cpp" line="6840"/>
         <source>Functions</source>
         <translation>Fungsi</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6630"/>
+        <location filename="../../gui/mainwindow.cpp" line="6863"/>
         <source>History</source>
         <translation>Riwayat</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6700"/>
+        <location filename="../../gui/mainwindow.cpp" line="6933"/>
         <source>User Functions</source>
         <translation>Fungsi Pengguna</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7372"/>
+        <location filename="../../gui/mainwindow.cpp" line="7660"/>
         <source>Type an expression here</source>
         <translation>Ketikkan suatu ekspresi di sini</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3627"/>
+        <location filename="../../gui/mainwindow.cpp" line="3843"/>
         <source>&amp;Font...</source>
         <translation>&amp;Fonta...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3629"/>
+        <location filename="../../gui/mainwindow.cpp" line="3845"/>
         <source>&amp;Language...</source>
         <translation>&amp;Bahasa...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3943"/>
+        <location filename="../../gui/mainwindow.cpp" line="4155"/>
         <source>&amp;Session</source>
         <translation>&amp;Sesi</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3945"/>
+        <location filename="../../gui/mainwindow.cpp" line="4157"/>
         <source>&amp;Edit</source>
         <translation>&amp;Ubah</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3946"/>
+        <location filename="../../gui/mainwindow.cpp" line="4158"/>
         <source>&amp;View</source>
         <translation>&amp;Tilik</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3949"/>
+        <location filename="../../gui/mainwindow.cpp" line="4161"/>
         <source>Se&amp;ttings</source>
         <translation>&amp;Pengaturan</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3955"/>
+        <location filename="../../gui/mainwindow.cpp" line="4167"/>
         <source>&amp;Decimal</source>
         <translation>&amp;Desimal</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3947"/>
+        <location filename="../../gui/mainwindow.cpp" line="4159"/>
         <source>&amp;Keypad</source>
         <translation>Papan &amp;Tombol</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3552"/>
+        <location filename="../../gui/mainwindow.cpp" line="3768"/>
         <source>Always on &amp;Top</source>
         <translation>Selalu di &amp;Atas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3569"/>
+        <location filename="../../gui/mainwindow.cpp" line="3785"/>
         <source>Disabled</source>
         <translation>Dinonaktifkan</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3570"/>
+        <location filename="../../gui/mainwindow.cpp" line="3786"/>
         <source>Small Space</source>
         <translation>Spasi Kecil</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3571"/>
+        <location filename="../../gui/mainwindow.cpp" line="3787"/>
         <source>Medium Space</source>
         <translation>Spasi Sedang</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3572"/>
+        <location filename="../../gui/mainwindow.cpp" line="3788"/>
         <source>Large Space</source>
         <translation>Spasi Besar</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3589"/>
+        <location filename="../../gui/mainwindow.cpp" line="3805"/>
         <source>&amp;0 Digits</source>
         <translation>&amp;0 Digit</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3590"/>
+        <location filename="../../gui/mainwindow.cpp" line="3806"/>
         <source>&amp;15 Digits</source>
         <translation>&amp;15 Digit</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3591"/>
+        <location filename="../../gui/mainwindow.cpp" line="3807"/>
         <source>&amp;2 Digits</source>
         <translation>&amp;2 Digit</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3592"/>
+        <location filename="../../gui/mainwindow.cpp" line="3808"/>
         <source>&amp;3 Digits</source>
         <translation>&amp;3 Digit</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3593"/>
+        <location filename="../../gui/mainwindow.cpp" line="3809"/>
         <source>&amp;50 Digits</source>
         <translation>&amp;50 Digit</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3594"/>
+        <location filename="../../gui/mainwindow.cpp" line="3810"/>
         <source>&amp;8 Digits</source>
         <translation>&amp;8 Digit</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3614"/>
+        <location filename="../../gui/mainwindow.cpp" line="3830"/>
         <source>&amp;Sexagesimal</source>
         <translation>&amp;Seksagesimal</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3632"/>
+        <location filename="../../gui/mainwindow.cpp" line="3848"/>
         <source>Context Help</source>
         <translation>Bantuan Kontekstual</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3640"/>
+        <location filename="../../gui/mainwindow.cpp" line="3854"/>
         <source>About &amp;SpeedCrunch</source>
         <translation>Tentang &amp;SpeedCrunch</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3966"/>
+        <location filename="../../gui/mainwindow.cpp" line="4178"/>
         <source>&amp;Help</source>
         <translation>&amp;Bantuan</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9141"/>
-        <location filename="../../gui/mainwindow.cpp" line="9147"/>
-        <location filename="../../gui/mainwindow.cpp" line="9155"/>
-        <location filename="../../gui/mainwindow.cpp" line="9161"/>
-        <location filename="../../gui/mainwindow.cpp" line="9177"/>
-        <location filename="../../gui/mainwindow.cpp" line="9183"/>
-        <location filename="../../gui/mainwindow.cpp" line="9234"/>
-        <location filename="../../gui/mainwindow.cpp" line="9240"/>
-        <location filename="../../gui/mainwindow.cpp" line="9339"/>
-        <location filename="../../gui/mainwindow.cpp" line="10065"/>
-        <location filename="../../gui/mainwindow.cpp" line="10085"/>
+        <location filename="../../gui/mainwindow.cpp" line="9455"/>
+        <location filename="../../gui/mainwindow.cpp" line="9461"/>
+        <location filename="../../gui/mainwindow.cpp" line="9469"/>
+        <location filename="../../gui/mainwindow.cpp" line="9475"/>
+        <location filename="../../gui/mainwindow.cpp" line="9491"/>
+        <location filename="../../gui/mainwindow.cpp" line="9497"/>
+        <location filename="../../gui/mainwindow.cpp" line="9548"/>
+        <location filename="../../gui/mainwindow.cpp" line="9554"/>
+        <location filename="../../gui/mainwindow.cpp" line="9653"/>
+        <location filename="../../gui/mainwindow.cpp" line="10377"/>
+        <location filename="../../gui/mainwindow.cpp" line="10397"/>
         <source>Error</source>
         <translation>Kesalahan</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9141"/>
-        <location filename="../../gui/mainwindow.cpp" line="9373"/>
+        <location filename="../../gui/mainwindow.cpp" line="9455"/>
+        <location filename="../../gui/mainwindow.cpp" line="9687"/>
         <source>Can&apos;t read from file %1</source>
         <translation>Tidak dapat membaca dari berkas %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9355"/>
-        <location filename="../../gui/mainwindow.cpp" line="9373"/>
-        <location filename="../../gui/mainwindow.cpp" line="9381"/>
-        <location filename="../../gui/mainwindow.cpp" line="9388"/>
-        <location filename="../../gui/mainwindow.cpp" line="9396"/>
-        <location filename="../../gui/mainwindow.cpp" line="9404"/>
-        <location filename="../../gui/mainwindow.cpp" line="9410"/>
-        <location filename="../../gui/mainwindow.cpp" line="9418"/>
-        <location filename="../../gui/mainwindow.cpp" line="9424"/>
-        <location filename="../../gui/mainwindow.cpp" line="9432"/>
-        <location filename="../../gui/mainwindow.cpp" line="9438"/>
-        <location filename="../../gui/mainwindow.cpp" line="9446"/>
+        <location filename="../../gui/mainwindow.cpp" line="9669"/>
+        <location filename="../../gui/mainwindow.cpp" line="9687"/>
+        <location filename="../../gui/mainwindow.cpp" line="9695"/>
+        <location filename="../../gui/mainwindow.cpp" line="9702"/>
+        <location filename="../../gui/mainwindow.cpp" line="9710"/>
+        <location filename="../../gui/mainwindow.cpp" line="9718"/>
+        <location filename="../../gui/mainwindow.cpp" line="9724"/>
+        <location filename="../../gui/mainwindow.cpp" line="9732"/>
+        <location filename="../../gui/mainwindow.cpp" line="9738"/>
+        <location filename="../../gui/mainwindow.cpp" line="9746"/>
+        <location filename="../../gui/mainwindow.cpp" line="9752"/>
+        <location filename="../../gui/mainwindow.cpp" line="9760"/>
         <source>Import Session</source>
         <translation>Impor Sesi</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2222"/>
-        <location filename="../../gui/mainwindow.cpp" line="4301"/>
+        <location filename="../../gui/mainwindow.cpp" line="2350"/>
+        <location filename="../../gui/mainwindow.cpp" line="4523"/>
         <source>Close Session</source>
         <translation>Tutup sesi</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3411"/>
+        <location filename="../../gui/mainwindow.cpp" line="3614"/>
         <source>Angle Mode:</source>
         <translation>Mode sudut:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3412"/>
+        <location filename="../../gui/mainwindow.cpp" line="3615"/>
         <source>Notation:</source>
         <translation>Notasi:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3413"/>
+        <location filename="../../gui/mainwindow.cpp" line="3616"/>
         <source>Precision:</source>
         <translation>Presisi:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3478"/>
+        <location filename="../../gui/mainwindow.cpp" line="3694"/>
         <source>Turn</source>
         <translation>Putaran</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3479"/>
+        <location filename="../../gui/mainwindow.cpp" line="3695"/>
         <source>Revolution</source>
         <translation>Revolusi</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3490"/>
+        <location filename="../../gui/mainwindow.cpp" line="3706"/>
         <source>Fixed-point decimal</source>
         <translation>Desimal titik tetap</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3493"/>
+        <location filename="../../gui/mainwindow.cpp" line="3709"/>
         <source>Rational</source>
         <translation>Rasional</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3494"/>
+        <location filename="../../gui/mainwindow.cpp" line="3710"/>
         <source>Automatic decimal</source>
         <translation>Desimal otomatis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3502"/>
-        <location filename="../../gui/mainwindow.cpp" line="12722"/>
+        <location filename="../../gui/mainwindow.cpp" line="3718"/>
+        <location filename="../../gui/mainwindow.cpp" line="13302"/>
         <source>Automatic</source>
         <translation>Otomatis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3512"/>
+        <location filename="../../gui/mainwindow.cpp" line="3728"/>
         <source>User &amp;Definitions...</source>
         <translation>&amp;Definisi pengguna...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3513"/>
+        <location filename="../../gui/mainwindow.cpp" line="3729"/>
         <source>New &amp;Tab</source>
         <translation>&amp;Tab baru</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3514"/>
+        <location filename="../../gui/mainwindow.cpp" line="3730"/>
         <source>New &amp;Window</source>
         <translation>&amp;Jendela baru</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3515"/>
+        <location filename="../../gui/mainwindow.cpp" line="3731"/>
         <source>&amp;Open...</source>
         <translation>&amp;Buka...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3516"/>
+        <location filename="../../gui/mainwindow.cpp" line="3732"/>
         <source>Open Sessions &amp;Folder</source>
         <translation>Buka &amp;folder sesi</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3532"/>
+        <location filename="../../gui/mainwindow.cpp" line="3748"/>
         <source>&amp;Basic</source>
         <translation>&amp;Dasar</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3533"/>
+        <location filename="../../gui/mainwindow.cpp" line="3749"/>
         <source>&amp;Scientific (wide)</source>
         <translation>&amp;Ilmiah (lebar)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3534"/>
+        <location filename="../../gui/mainwindow.cpp" line="3750"/>
         <source>Scientific (narrow)</source>
         <translation>Ilmiah (sempit)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3535"/>
-        <location filename="../../gui/mainwindow.cpp" line="3595"/>
+        <location filename="../../gui/mainwindow.cpp" line="3751"/>
+        <location filename="../../gui/mainwindow.cpp" line="3811"/>
         <source>&amp;Custom...</source>
         <translation>&amp;Kustom...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3541"/>
+        <location filename="../../gui/mainwindow.cpp" line="3757"/>
         <source>Main &amp;Menu</source>
         <translation>&amp;Menu utama</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3542"/>
+        <location filename="../../gui/mainwindow.cpp" line="3758"/>
         <source>User &amp;Variables</source>
         <translation>&amp;Variabel pengguna</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3545"/>
+        <location filename="../../gui/mainwindow.cpp" line="3761"/>
         <source>User &amp;Units</source>
         <translation>&amp;Satuan pengguna</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3550"/>
+        <location filename="../../gui/mainwindow.cpp" line="3766"/>
         <source>&amp;Turn</source>
         <translation>&amp;Putaran</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3551"/>
+        <location filename="../../gui/mainwindow.cpp" line="3767"/>
         <source>&amp;Revolution</source>
         <translation>&amp;Revolusi</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3553"/>
+        <location filename="../../gui/mainwindow.cpp" line="3769"/>
         <source>Auto-Insert &quot;ans&quot; When Starting with an Operator</source>
         <translation>Sisipkan otomatis &quot;ans&quot; saat dimulai dengan operator</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3554"/>
-        <location filename="../../gui/mainwindow.cpp" line="3555"/>
+        <location filename="../../gui/mainwindow.cpp" line="3770"/>
+        <location filename="../../gui/mainwindow.cpp" line="3771"/>
         <source>If a new expression starts with +, -, *, or /, SpeedCrunch inserts &quot;ans&quot; first.</source>
         <translation>Jika ekspresi baru dimulai dengan +, -, *, atau /, SpeedCrunch menyisipkan &quot;ans&quot; terlebih dahulu.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3557"/>
+        <location filename="../../gui/mainwindow.cpp" line="3773"/>
         <source>Built-in &amp;functions</source>
         <translation>&amp;Fungsi bawaan</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3558"/>
+        <location filename="../../gui/mainwindow.cpp" line="3774"/>
         <source>Built-in &amp;variables</source>
         <translation>&amp;Variabel bawaan</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3559"/>
+        <location filename="../../gui/mainwindow.cpp" line="3775"/>
         <source>&amp;Units</source>
         <translation>&amp;Satuan</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3560"/>
+        <location filename="../../gui/mainwindow.cpp" line="3776"/>
         <source>User &amp;functions</source>
         <translation>&amp;Fungsi pengguna</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3561"/>
+        <location filename="../../gui/mainwindow.cpp" line="3777"/>
         <source>User &amp;variables</source>
         <translation>&amp;Variabel pengguna</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3562"/>
+        <location filename="../../gui/mainwindow.cpp" line="3778"/>
         <source>Show Empty History &amp;Hint</source>
         <translation>Tampilkan &amp;petunjuk riwayat kosong</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3563"/>
-        <location filename="../../gui/mainwindow.cpp" line="3564"/>
+        <location filename="../../gui/mainwindow.cpp" line="3779"/>
+        <location filename="../../gui/mainwindow.cpp" line="3780"/>
         <source>When history is empty, show a hint in the status area.</source>
         <translation>Saat riwayat kosong, tampilkan petunjuk di area status.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3565"/>
+        <location filename="../../gui/mainwindow.cpp" line="3781"/>
         <source>Show Live Result &amp;Preview</source>
         <translation>Tampilkan &amp;pratinjau hasil langsung</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3566"/>
+        <location filename="../../gui/mainwindow.cpp" line="3782"/>
         <source>Save &amp;Window Position on Exit</source>
         <translation>Simpan posisi &amp;jendela saat keluar</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3568"/>
+        <location filename="../../gui/mainwindow.cpp" line="3784"/>
         <source>Hover Highlighting</source>
         <translation>Penyorotan saat diarahkan</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3573"/>
+        <location filename="../../gui/mainwindow.cpp" line="3789"/>
         <source>Group Integer Part Only</source>
         <translation>Kelompokkan bagian bilangan bulat saja</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3574"/>
+        <location filename="../../gui/mainwindow.cpp" line="3790"/>
         <source>Keep Entered Expression After Evaluate</source>
         <translation>Pertahankan ekspresi yang dimasukkan setelah evaluasi</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3575"/>
+        <location filename="../../gui/mainwindow.cpp" line="3791"/>
         <source>Number Format...</source>
         <translation>Format angka...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3576"/>
+        <location filename="../../gui/mainwindow.cpp" line="3792"/>
         <source>Notation &amp;&amp; Precision...</source>
         <translation>Notasi &amp;&amp; Presisi...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3577"/>
-        <location filename="../../gui/mainwindow.cpp" line="3578"/>
+        <location filename="../../gui/mainwindow.cpp" line="3793"/>
+        <location filename="../../gui/mainwindow.cpp" line="3794"/>
         <source>After pressing Enter, keep the entered expression selected in the editor.</source>
         <translation>Setelah menekan Enter, pertahankan ekspresi yang dimasukkan tetap dipilih di editor.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3579"/>
+        <location filename="../../gui/mainwindow.cpp" line="3795"/>
         <source>Never</source>
         <translation>Tidak pernah</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3580"/>
+        <location filename="../../gui/mainwindow.cpp" line="3796"/>
         <source>Always</source>
         <translation>Selalu</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3581"/>
+        <location filename="../../gui/mainwindow.cpp" line="3797"/>
         <source>Only for Single-Line Expressions</source>
         <translation>Hanya untuk ekspresi satu baris</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3582"/>
+        <location filename="../../gui/mainwindow.cpp" line="3798"/>
         <source>Automatically Copy New Results to Clipboard</source>
         <translation>Salin hasil baru ke papan klip secara otomatis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3583"/>
+        <location filename="../../gui/mainwindow.cpp" line="3799"/>
         <source>Simplify Displayed Expressions</source>
         <translation>Sederhanakan ekspresi yang ditampilkan</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3584"/>
+        <location filename="../../gui/mainwindow.cpp" line="3800"/>
         <source>History Size &amp;Limit...</source>
         <translation>&amp;Batas ukuran riwayat...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3597"/>
+        <location filename="../../gui/mainwindow.cpp" line="3813"/>
         <source>Nearest, Half &amp;Away (round)</source>
         <translation>Terdekat, setengah &amp;menjauh (round)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3599"/>
+        <location filename="../../gui/mainwindow.cpp" line="3815"/>
         <source>Nearest, Half &amp;Even (roundeven)</source>
         <translation>Terdekat, setengah &amp;genap (roundeven)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3600"/>
+        <location filename="../../gui/mainwindow.cpp" line="3816"/>
         <source>Toward &amp;Zero (trunc)</source>
         <translation>Menuju &amp;nol (trunc)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3602"/>
+        <location filename="../../gui/mainwindow.cpp" line="3818"/>
         <source>Toward +&amp;∞ (ceil)</source>
         <translation>Menuju +&amp;∞ (ceil)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3604"/>
+        <location filename="../../gui/mainwindow.cpp" line="3820"/>
         <source>Toward −&amp;∞ (floor)</source>
         <translation>Menuju −&amp;∞ (floor)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3607"/>
+        <location filename="../../gui/mainwindow.cpp" line="3823"/>
         <source>&amp;Fixed-Point</source>
         <translation>Titik &amp;tetap</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3610"/>
+        <location filename="../../gui/mainwindow.cpp" line="3826"/>
         <source>&amp;Rational</source>
         <translation>&amp;Rasional</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3616"/>
+        <location filename="../../gui/mainwindow.cpp" line="3832"/>
         <source>&amp;Exponential (m·s⁻¹)</source>
         <translation>&amp;Eksponensial (m·s⁻¹)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3618"/>
+        <location filename="../../gui/mainwindow.cpp" line="3834"/>
         <source>&amp;Fractional (m/s)</source>
         <translation>&amp;Pecahan (m/s)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3619"/>
+        <location filename="../../gui/mainwindow.cpp" line="3835"/>
         <source>&amp;Rectangular (a + bi)</source>
         <translation>&amp;Persegi panjang (a + bi)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3620"/>
+        <location filename="../../gui/mainwindow.cpp" line="3836"/>
         <source>Exponential (reⁱᶿ)</source>
         <translation>Eksponensial (reⁱᶿ)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3622"/>
+        <location filename="../../gui/mainwindow.cpp" line="3838"/>
         <source>Trigonometric (r(cos θ + i·sin θ))</source>
         <translation>Trigonometri (r(cos θ + i·sin θ))</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3624"/>
+        <location filename="../../gui/mainwindow.cpp" line="3840"/>
         <source>Phasor (r∠θ)</source>
         <translation>Fasor (r∠θ)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3628"/>
+        <location filename="../../gui/mainwindow.cpp" line="3844"/>
         <source>&amp;Theme...</source>
         <translation>&amp;Tema...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3633"/>
+        <location filename="../../gui/mainwindow.cpp" line="3849"/>
         <source>Check for &amp;Updates</source>
         <translation>Periksa &amp;pembaruan</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3634"/>
+        <location filename="../../gui/mainwindow.cpp" line="3850"/>
         <source>Issue Tracker</source>
         <translation>Pelacak masalah</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3635"/>
-        <source>Google Group</source>
-        <translation>Grup Google</translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="3636"/>
-        <source>Facebook &amp;Group</source>
-        <translation>&amp;Grup Facebook</translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="3637"/>
-        <source>&amp;Blogspot</source>
-        <translation>&amp;Blogspot</translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="3638"/>
+        <location filename="../../gui/mainwindow.cpp" line="3852"/>
         <source>Source Code</source>
         <translation>Kode sumber</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3948"/>
+        <location filename="../../gui/mainwindow.cpp" line="4160"/>
         <source>&amp;Zoom</source>
         <translation>&amp;Zum</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3950"/>
+        <location filename="../../gui/mainwindow.cpp" line="4162"/>
         <source>&amp;Results</source>
         <translation>&amp;Hasil</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3951"/>
+        <location filename="../../gui/mainwindow.cpp" line="4163"/>
         <source>&amp;Symbols</source>
         <translation>&amp;Simbol</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3952"/>
+        <location filename="../../gui/mainwindow.cpp" line="4164"/>
         <source>Unit Notation</source>
         <translation>Notasi satuan</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3953"/>
+        <location filename="../../gui/mainwindow.cpp" line="4165"/>
         <source>Rounding Mode</source>
         <translation>Mode pembulatan</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3954"/>
+        <location filename="../../gui/mainwindow.cpp" line="4166"/>
         <source>&amp;Notation</source>
         <translation>&amp;Notasi</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3957"/>
+        <location filename="../../gui/mainwindow.cpp" line="4169"/>
         <source>&amp;Angle Mode</source>
         <translation>Mode &amp;sudut</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3958"/>
+        <location filename="../../gui/mainwindow.cpp" line="4170"/>
         <source>Complex &amp;Numbers</source>
         <translation>Bilangan &amp;kompleks</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3959"/>
+        <location filename="../../gui/mainwindow.cpp" line="4171"/>
         <source>&amp;Form</source>
         <translation>&amp;Bentuk</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3960"/>
+        <location filename="../../gui/mainwindow.cpp" line="4172"/>
         <source>&amp;Imaginary Unit</source>
         <translation>Satuan &amp;imajiner</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3961"/>
+        <location filename="../../gui/mainwindow.cpp" line="4173"/>
         <source>&amp;Window</source>
         <translation>&amp;Jendela</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3962"/>
+        <location filename="../../gui/mainwindow.cpp" line="4174"/>
         <source>&amp;Editing</source>
         <translation>P&amp;engeditan</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3963"/>
+        <location filename="../../gui/mainwindow.cpp" line="4175"/>
         <source>A&amp;utocomplete</source>
         <translation>Pelengkapan &amp;otomatis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3964"/>
+        <location filename="../../gui/mainwindow.cpp" line="4176"/>
         <source>Up/Down Arrow History</source>
         <translation>Riwayat panah atas/bawah</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3965"/>
+        <location filename="../../gui/mainwindow.cpp" line="4177"/>
         <source>&amp;Appearance</source>
         <translation>T&amp;ampilan</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3972"/>
+        <location filename="../../gui/mainwindow.cpp" line="4184"/>
         <source>&amp;Disabled</source>
         <translation>&amp;Dinonaktifkan</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3974"/>
+        <location filename="../../gui/mainwindow.cpp" line="4186"/>
         <source>&amp;Disable</source>
         <translation>&amp;Nonaktifkan</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4138"/>
+        <location filename="../../gui/mainwindow.cpp" line="4360"/>
         <source>Close preview</source>
         <translation>Tutup pratinjau</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9313"/>
-        <location filename="../../gui/mainwindow.cpp" line="9354"/>
+        <location filename="../../gui/mainwindow.cpp" line="9627"/>
+        <location filename="../../gui/mainwindow.cpp" line="9668"/>
         <source>JSON file (*.json);;Any file (*.*)</source>
         <translation>Berkas JSON (*.json);;Berkas apa pun (*.*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9317"/>
+        <location filename="../../gui/mainwindow.cpp" line="9631"/>
         <source>Export session as JSON</source>
         <translation>Ekspor sesi sebagai JSON</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9382"/>
+        <location filename="../../gui/mainwindow.cpp" line="9696"/>
         <source>The selected file is not valid JSON: %1</source>
         <translation>Berkas yang dipilih bukan JSON valid: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9389"/>
+        <location filename="../../gui/mainwindow.cpp" line="9703"/>
         <source>The selected file is not a SpeedCrunch session JSON file.</source>
         <translation>Berkas yang dipilih bukan berkas JSON sesi SpeedCrunch.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9397"/>
+        <location filename="../../gui/mainwindow.cpp" line="9711"/>
         <source>This file uses an obsolete SpeedCrunch session format and cannot be imported.</source>
         <translation>Berkas ini menggunakan format sesi SpeedCrunch usang dan tidak dapat diimpor.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9405"/>
+        <location filename="../../gui/mainwindow.cpp" line="9719"/>
         <source>The selected JSON file is missing the required $schema field.</source>
         <translation>Berkas JSON yang dipilih tidak memiliki bidang $schema yang diperlukan.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9411"/>
+        <location filename="../../gui/mainwindow.cpp" line="9725"/>
         <source>The selected JSON file uses an unsupported JSON schema: %1</source>
         <translation>Berkas JSON yang dipilih menggunakan skema JSON yang tidak didukung: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9419"/>
+        <location filename="../../gui/mainwindow.cpp" line="9733"/>
         <source>The selected JSON file is missing the SpeedCrunch session schema identifier ($id).</source>
         <translation>Berkas JSON yang dipilih tidak memiliki pengenal skema sesi SpeedCrunch ($id).</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9425"/>
+        <location filename="../../gui/mainwindow.cpp" line="9739"/>
         <source>The selected JSON file uses an unsupported SpeedCrunch session format: %1</source>
         <translation>Berkas JSON yang dipilih menggunakan format sesi SpeedCrunch yang tidak didukung: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9433"/>
+        <location filename="../../gui/mainwindow.cpp" line="9747"/>
         <source>The selected JSON file is missing the required session name.</source>
         <translation>Berkas JSON yang dipilih tidak memiliki nama sesi yang diperlukan.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9439"/>
+        <location filename="../../gui/mainwindow.cpp" line="9753"/>
         <source>The selected JSON file has an empty session name.</source>
         <translation>Berkas JSON yang dipilih memiliki nama sesi kosong.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9447"/>
+        <location filename="../../gui/mainwindow.cpp" line="9761"/>
         <source>The selected JSON file has invalid or incomplete SpeedCrunch session data.</source>
         <translation>Berkas JSON yang dipilih memiliki data sesi SpeedCrunch yang tidak valid atau tidak lengkap.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9458"/>
-        <location filename="../../gui/mainwindow.cpp" line="9466"/>
+        <location filename="../../gui/mainwindow.cpp" line="9772"/>
+        <location filename="../../gui/mainwindow.cpp" line="9780"/>
         <source>Open Sessions Folder</source>
         <translation>Buka folder sesi</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9459"/>
+        <location filename="../../gui/mainwindow.cpp" line="9773"/>
         <source>Could not create the sessions folder: %1</source>
         <translation>Tidak dapat membuat folder sesi: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9467"/>
+        <location filename="../../gui/mainwindow.cpp" line="9781"/>
         <source>Could not open the sessions folder: %1</source>
         <translation>Tidak dapat membuka folder sesi: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4282"/>
-        <location filename="../../gui/mainwindow.cpp" line="8135"/>
+        <location filename="../../gui/mainwindow.cpp" line="4504"/>
+        <location filename="../../gui/mainwindow.cpp" line="8449"/>
         <source>Open Session</source>
         <translation>Buka sesi</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4284"/>
+        <location filename="../../gui/mainwindow.cpp" line="3851"/>
+        <source>Community</source>
+        <translation>Komunitas</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4506"/>
         <source>Split Left</source>
         <translation>Belah kiri</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4285"/>
+        <location filename="../../gui/mainwindow.cpp" line="4507"/>
         <source>Split Right</source>
         <translation>Belah kanan</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4286"/>
+        <location filename="../../gui/mainwindow.cpp" line="4508"/>
         <source>Split Up</source>
         <translation>Belah atas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4287"/>
+        <location filename="../../gui/mainwindow.cpp" line="4509"/>
         <source>Split Down</source>
         <translation>Belah bawah</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4295"/>
-        <location filename="../../gui/mainwindow.cpp" line="8216"/>
-        <location filename="../../gui/mainwindow.cpp" line="8227"/>
-        <location filename="../../gui/mainwindow.cpp" line="8240"/>
-        <location filename="../../gui/mainwindow.cpp" line="8250"/>
+        <location filename="../../gui/mainwindow.cpp" line="4517"/>
+        <location filename="../../gui/mainwindow.cpp" line="8530"/>
+        <location filename="../../gui/mainwindow.cpp" line="8541"/>
+        <location filename="../../gui/mainwindow.cpp" line="8554"/>
+        <location filename="../../gui/mainwindow.cpp" line="8564"/>
         <source>Duplicate Session</source>
         <translation>Duplikat sesi</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4296"/>
-        <location filename="../../gui/mainwindow.cpp" line="8279"/>
-        <location filename="../../gui/mainwindow.cpp" line="8293"/>
-        <location filename="../../gui/mainwindow.cpp" line="8304"/>
+        <location filename="../../gui/mainwindow.cpp" line="4518"/>
+        <location filename="../../gui/mainwindow.cpp" line="8593"/>
+        <location filename="../../gui/mainwindow.cpp" line="8607"/>
+        <location filename="../../gui/mainwindow.cpp" line="8618"/>
         <source>Rename Session</source>
         <translation>Ubah nama sesi</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4298"/>
+        <location filename="../../gui/mainwindow.cpp" line="4520"/>
         <source>Clear Session</source>
         <translation>Bersihkan sesi</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4299"/>
-        <location filename="../../gui/mainwindow.cpp" line="8578"/>
+        <location filename="../../gui/mainwindow.cpp" line="4521"/>
+        <location filename="../../gui/mainwindow.cpp" line="8892"/>
         <source>Delete Session</source>
         <translation>Hapus sesi</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4302"/>
+        <location filename="../../gui/mainwindow.cpp" line="4524"/>
         <source>Close Pane</source>
         <translation>Tutup panel</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6663"/>
+        <location filename="../../gui/mainwindow.cpp" line="6896"/>
         <source>User Variables</source>
         <translation>Variabel pengguna</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6737"/>
+        <location filename="../../gui/mainwindow.cpp" line="6970"/>
         <source>User Units</source>
         <translation>Satuan pengguna</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7981"/>
-        <location filename="../../gui/mainwindow.cpp" line="8012"/>
+        <location filename="../../gui/mainwindow.cpp" line="8295"/>
+        <location filename="../../gui/mainwindow.cpp" line="8326"/>
         <source>Clear History</source>
         <translation>Bersihkan riwayat</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7982"/>
-        <location filename="../../gui/mainwindow.cpp" line="8013"/>
+        <location filename="../../gui/mainwindow.cpp" line="8296"/>
+        <location filename="../../gui/mainwindow.cpp" line="8327"/>
         <source>Are you sure you want to clear the calculation history?</source>
         <translation>Anda yakin ingin membersihkan riwayat perhitungan?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8217"/>
-        <location filename="../../gui/mainwindow.cpp" line="8280"/>
+        <location filename="../../gui/mainwindow.cpp" line="8531"/>
+        <location filename="../../gui/mainwindow.cpp" line="8594"/>
         <source>Session name:</source>
         <translation>Nama sesi:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8228"/>
-        <location filename="../../gui/mainwindow.cpp" line="8294"/>
+        <location filename="../../gui/mainwindow.cpp" line="8542"/>
+        <location filename="../../gui/mainwindow.cpp" line="8608"/>
         <source>A session named %1 already exists.</source>
         <translation>Sesi bernama %1 sudah ada.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8241"/>
+        <location filename="../../gui/mainwindow.cpp" line="8555"/>
         <source>Could not create session file %1.</source>
         <translation>Tidak dapat membuat berkas sesi %1.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8251"/>
+        <location filename="../../gui/mainwindow.cpp" line="8565"/>
         <source>Could not write session file %1.</source>
         <translation>Tidak dapat menulis berkas sesi %1.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8305"/>
+        <location filename="../../gui/mainwindow.cpp" line="8619"/>
         <source>Could not rename session file %1.</source>
         <translation>Tidak dapat mengganti nama berkas sesi %1.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8579"/>
+        <location filename="../../gui/mainwindow.cpp" line="8893"/>
         <source>Are you sure you want to delete this session?</source>
         <translation>Anda yakin ingin menghapus sesi ini?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8754"/>
+        <location filename="../../gui/mainwindow.cpp" line="9068"/>
         <source>Custom Precision</source>
         <translation>Presisi kustom</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8755"/>
+        <location filename="../../gui/mainwindow.cpp" line="9069"/>
         <source>Fractional digits:</source>
         <translation>Digit pecahan:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8772"/>
+        <location filename="../../gui/mainwindow.cpp" line="9086"/>
         <source>Theme</source>
         <translation>Tema</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8781"/>
+        <location filename="../../gui/mainwindow.cpp" line="9095"/>
         <source>Light Themes</source>
         <translation>Tema terang</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8788"/>
+        <location filename="../../gui/mainwindow.cpp" line="9102"/>
         <source>Dark Themes</source>
         <translation>Tema gelap</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8796"/>
+        <location filename="../../gui/mainwindow.cpp" line="9110"/>
         <source>Preview</source>
         <translation>Pratinjau</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8858"/>
+        <location filename="../../gui/mainwindow.cpp" line="9172"/>
         <source>Colors</source>
         <translation>Warna</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9050"/>
+        <location filename="../../gui/mainwindow.cpp" line="9364"/>
         <source>Select color for %1</source>
         <translation>Pilih warna untuk %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9104"/>
+        <location filename="../../gui/mainwindow.cpp" line="9418"/>
         <source>Import...</source>
         <translation>Impor...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9105"/>
+        <location filename="../../gui/mainwindow.cpp" line="9419"/>
         <source>Export...</source>
         <translation>Ekspor...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9135"/>
+        <location filename="../../gui/mainwindow.cpp" line="9449"/>
         <source>Import Theme</source>
         <translation>Impor tema</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9136"/>
-        <location filename="../../gui/mainwindow.cpp" line="9225"/>
+        <location filename="../../gui/mainwindow.cpp" line="9450"/>
+        <location filename="../../gui/mainwindow.cpp" line="9539"/>
         <source>Theme file (*.json);;All files (*)</source>
         <translation>Berkas tema (*.json);;Semua berkas (*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9147"/>
+        <location filename="../../gui/mainwindow.cpp" line="9461"/>
         <source>Invalid theme file.</source>
         <translation>Berkas tema tidak valid.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9156"/>
+        <location filename="../../gui/mainwindow.cpp" line="9470"/>
         <source>Can&apos;t import theme &quot;%1&quot; because it conflicts with a built-in theme.</source>
         <translation>Tidak dapat mengimpor tema &quot;%1&quot; karena bertentangan dengan tema bawaan.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9161"/>
+        <location filename="../../gui/mainwindow.cpp" line="9475"/>
         <source>Can&apos;t find a writable theme folder.</source>
         <translation>Tidak dapat menemukan folder tema yang dapat ditulis.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9168"/>
+        <location filename="../../gui/mainwindow.cpp" line="9482"/>
         <source>Overwrite Theme</source>
         <translation>Timpa tema</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9169"/>
+        <location filename="../../gui/mainwindow.cpp" line="9483"/>
         <source>A custom theme named &quot;%1&quot; already exists. Do you want to overwrite it?</source>
         <translation>Tema kustom bernama &quot;%1&quot; sudah ada. Apakah Anda ingin menimpanya?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9177"/>
+        <location filename="../../gui/mainwindow.cpp" line="9491"/>
         <source>Can&apos;t overwrite theme file %1</source>
         <translation>Tidak dapat menimpa berkas tema %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9183"/>
+        <location filename="../../gui/mainwindow.cpp" line="9497"/>
         <source>Can&apos;t copy theme file to %1</source>
         <translation>Tidak dapat menyalin berkas tema ke %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9224"/>
+        <location filename="../../gui/mainwindow.cpp" line="9538"/>
         <source>Export Theme</source>
         <translation>Ekspor tema</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9235"/>
+        <location filename="../../gui/mainwindow.cpp" line="9549"/>
         <source>Can&apos;t export theme as &quot;%1&quot; because it conflicts with a built-in theme.</source>
         <translation>Tidak dapat mengekspor tema sebagai &quot;%1&quot; karena bertentangan dengan tema bawaan.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9240"/>
-        <location filename="../../gui/mainwindow.cpp" line="9339"/>
-        <location filename="../../gui/mainwindow.cpp" line="10065"/>
-        <location filename="../../gui/mainwindow.cpp" line="10085"/>
+        <location filename="../../gui/mainwindow.cpp" line="9554"/>
+        <location filename="../../gui/mainwindow.cpp" line="9653"/>
+        <location filename="../../gui/mainwindow.cpp" line="10377"/>
+        <location filename="../../gui/mainwindow.cpp" line="10397"/>
         <source>Can&apos;t write to file %1</source>
         <translation>Tidak dapat menulis ke berkas %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9476"/>
+        <location filename="../../gui/mainwindow.cpp" line="9790"/>
         <source>Global User Variable</source>
         <translation>Variabel pengguna global</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9477"/>
+        <location filename="../../gui/mainwindow.cpp" line="9791"/>
         <source>Global User Function</source>
         <translation>Fungsi pengguna global</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9478"/>
+        <location filename="../../gui/mainwindow.cpp" line="9792"/>
         <source>Global User Unit</source>
         <translation>Satuan pengguna global</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9848"/>
+        <location filename="../../gui/mainwindow.cpp" line="10162"/>
         <source>History Size Limit</source>
         <translation>Batas ukuran riwayat</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9849"/>
+        <location filename="../../gui/mainwindow.cpp" line="10163"/>
         <source>Maximum number of history entries for this session (0 = unlimited):</source>
         <translation>Jumlah maksimum entri riwayat untuk sesi ini (0 = tak terbatas):</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10078"/>
+        <location filename="../../gui/mainwindow.cpp" line="10390"/>
         <source>Text file (*.txt);;Any file (*.*)</source>
         <translation>Berkas teks (*.txt);;Berkas apa pun (*.*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10115"/>
+        <location filename="../../gui/mainwindow.cpp" line="10427"/>
         <source>Display font</source>
         <translation>Fonta tampilan</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11919"/>
-        <location filename="../../gui/mainwindow.cpp" line="12092"/>
+        <location filename="../../gui/mainwindow.cpp" line="12495"/>
+        <location filename="../../gui/mainwindow.cpp" line="12668"/>
         <source>Could not recalculate from calculation %1: %2</source>
         <translation>Tidak dapat menghitung ulang dari perhitungan %1: %2</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12008"/>
+        <location filename="../../gui/mainwindow.cpp" line="12584"/>
         <source>History Size Limit Reached</source>
         <translation>Batas ukuran riwayat tercapai</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12009"/>
+        <location filename="../../gui/mainwindow.cpp" line="12585"/>
         <source>This calculation fills the last available history slot. Future calculations will remove the oldest calculation from history. You can increase the limit from Session &gt; History Size Limit.</source>
         <translation>Perhitungan ini mengisi slot riwayat terakhir yang tersedia. Perhitungan berikutnya akan menghapus perhitungan tertua dari riwayat. Anda dapat meningkatkan batas dari Sesi &gt; Batas Ukuran Riwayat.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12032"/>
+        <location filename="../../gui/mainwindow.cpp" line="12608"/>
         <source>Editing calculation. Press Esc twice to cancel.</source>
         <translation>Mengedit perhitungan. Tekan Esc dua kali untuk membatalkan.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12073"/>
+        <location filename="../../gui/mainwindow.cpp" line="12649"/>
         <source>Calculation Settings</source>
         <translation>Pengaturan perhitungan</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12149"/>
+        <location filename="../../gui/mainwindow.cpp" line="12725"/>
         <source>Invalid recalculation start index</source>
         <translation>Indeks awal penghitungan ulang tidak valid</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12696"/>
+        <location filename="../../gui/mainwindow.cpp" line="13276"/>
         <source>System Default</source>
         <translation>Default Sistem</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12700"/>
+        <location filename="../../gui/mainwindow.cpp" line="13280"/>
         <source>Language</source>
         <translation>Bahasa</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12700"/>
+        <location filename="../../gui/mainwindow.cpp" line="13280"/>
         <source>Select the language:</source>
         <translation>Pilih bahasa:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12730"/>
+        <location filename="../../gui/mainwindow.cpp" line="13310"/>
         <source>Custom</source>
         <translation>Kustom</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12742"/>
+        <location filename="../../gui/mainwindow.cpp" line="13322"/>
         <source>Decimal places:</source>
         <translation>Jumlah desimal:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3605"/>
-        <location filename="../../gui/mainwindow.cpp" line="3606"/>
+        <location filename="../../gui/mainwindow.cpp" line="3821"/>
+        <location filename="../../gui/mainwindow.cpp" line="3822"/>
         <source>&amp;Automatic</source>
         <translation>Otom&amp;atis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3956"/>
+        <location filename="../../gui/mainwindow.cpp" line="4168"/>
         <source>&amp;Precision</source>
         <translation>&amp;Presisi</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3510"/>
+        <location filename="../../gui/mainwindow.cpp" line="3726"/>
         <source>Plain &amp;text</source>
         <translation>&amp;Teks polos</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3539"/>
+        <location filename="../../gui/mainwindow.cpp" line="3755"/>
         <source>Formula &amp;Book</source>
         <translation>Buku &amp;Rumus</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3944"/>
+        <location filename="../../gui/mainwindow.cpp" line="4156"/>
         <source>&amp;Export</source>
         <translation>&amp;Ekspor</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10057"/>
+        <location filename="../../gui/mainwindow.cpp" line="10369"/>
         <source>Export session as HTML</source>
         <translation>Ekspor sesi sebagai HTML</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10058"/>
+        <location filename="../../gui/mainwindow.cpp" line="10370"/>
         <source>HTML file (*.html)</source>
         <translation>Berkas HTML (*.html)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10077"/>
+        <location filename="../../gui/mainwindow.cpp" line="10389"/>
         <source>Export session as plain text</source>
         <translation>Ekspor sesi sebagai teks polos</translation>
     </message>
