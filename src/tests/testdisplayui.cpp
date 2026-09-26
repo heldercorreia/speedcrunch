@@ -27,6 +27,7 @@
 #include <QCheckBox>
 #include <QClipboard>
 #include <QComboBox>
+#include <QContextMenuEvent>
 #include <QCursor>
 #include <QDesktopServices>
 #include <QDialog>
@@ -671,6 +672,7 @@ private slots:
     void clicking_tab_activates_own_pane_in_nested_split_layout();
     void active_pane_survives_window_reactivation_focus_replay();
     void extra_window_activation_restores_own_active_tab_indicator();
+    void session_tab_context_menu_opens_on_right_click();
     void focused_dock_search_survives_window_reactivation_focus_replay();
     void focusing_loaded_pane_preserves_its_current_scroll_position();
     void persisting_layout_captures_visible_scroll_positions_for_all_panes();
@@ -4918,6 +4920,65 @@ void TestDisplayUi::session_tabs_show_full_name_tooltip_on_hover()
     tabBar->setTabText(0, QStringLiteral("Short"));
     QCoreApplication::sendEvent(tabBar, &moveEvent);
     QTRY_VERIFY(!toolTipPopup->isVisible());
+}
+
+void TestDisplayUi::session_tab_context_menu_opens_on_right_click()
+{
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    settings->constantsDockVisible = false;
+    settings->functionsDockVisible = false;
+    settings->historyDockVisible = false;
+    settings->keypadMode = Settings::KeypadModeDisabled;
+    settings->keypadVisible = false;
+    settings->formulaBookDockVisible = false;
+    settings->variablesDockVisible = false;
+    settings->userFunctionsDockVisible = false;
+    settings->userUnitsDockVisible = false;
+    settings->bitfieldVisible = false;
+    settings->statusBarVisible = false;
+    settings->hasNumberFormatStyleSetting = true;
+
+    MainWindow window;
+    window.resize(900, 500);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    QVERIFY(display != nullptr);
+    QTabBar* tabBar = tabBarForDisplay(display);
+    QVERIFY(tabBar != nullptr);
+    QVERIFY(QMetaObject::invokeMethod(&window, "showNewSessionDialog", Qt::DirectConnection));
+    QVERIFY(QMetaObject::invokeMethod(&window, "showNewSessionDialog", Qt::DirectConnection));
+    QTRY_COMPARE(tabBar->count(), 3);
+    tabBar->show();
+    QCoreApplication::processEvents();
+
+    bool menuOpened = false;
+    QStringList menuActionTexts;
+    QTimer::singleShot(0, &window, [&]() {
+        QMenu* menu = qobject_cast<QMenu*>(QApplication::activePopupWidget());
+        if (menu == nullptr)
+            return;
+        menuOpened = true;
+        for (QAction* action : menu->actions()) {
+            if (!action->isSeparator())
+                menuActionTexts.append(action->text());
+        }
+        menu->close();
+    });
+
+    const QPoint tabPosition = tabBar->tabRect(0).center();
+    QContextMenuEvent contextMenuEvent(QContextMenuEvent::Mouse,
+                                       tabPosition,
+                                       tabBar->mapToGlobal(tabPosition));
+    QCoreApplication::sendEvent(tabBar, &contextMenuEvent);
+    QTRY_VERIFY(menuOpened);
+    QVERIFY(menuActionTexts.contains(QStringLiteral("Rename Session")));
+    QVERIFY(menuActionTexts.contains(QStringLiteral("Close Session")));
 }
 
 void TestDisplayUi::session_tab_navigation_shortcuts_switch_tabs()

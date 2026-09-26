@@ -2194,7 +2194,7 @@ public:
         setMovable(true);
         setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
         setUsesScrollButtons(false);
-        setContextMenuPolicy(Qt::CustomContextMenu);
+        setContextMenuPolicy(Qt::DefaultContextMenu);
         applyStyle(QColor());
     }
 
