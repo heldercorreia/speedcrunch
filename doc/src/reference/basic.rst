@@ -546,6 +546,9 @@ Hyperbolic & Inverse Hyperbolic
 
     The argument must be dimensionless.
 
+    For sufficiently large positive or negative real arguments, the result rounds
+    to ``1`` or ``-1``, respectively, without a range error.
+
     The inverse function is :func:`artanh`.
 
 

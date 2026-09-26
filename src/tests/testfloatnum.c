@@ -4422,6 +4422,101 @@ static int test_tanhminus1gt0()
   return 1;
 }
 
+static int test_tanh_range()
+{
+  const char* inputs[] = {
+    "1e8", "618095478", "618095480", "1e9",
+    "1236190956", "1236190958", "1e10", "1e100"
+  };
+  const int precisions[] = { 1, 20, 50, 83, 100 };
+  floatstruct x;
+  int p, i, sign, offset, ok = 1;
+  Error error;
+
+  float_create(&x);
+  for (p = 0; p < (int)(sizeof(precisions)/sizeof(precisions[0])); ++p)
+    for (sign = -1; sign <= 1; sign += 2)
+    {
+      for (i = 0; i <= (int)(sizeof(inputs)/sizeof(inputs[0])); ++i)
+      {
+        float_geterror();
+        if (i == (int)(sizeof(inputs)/sizeof(inputs[0])))
+        {
+          float_setinteger(&x, 9);
+          float_setexponent(&x, float_getrange());
+        }
+        else
+          float_setasciiz(&x, inputs[i]);
+        float_setsign(&x, sign);
+        ok = float_tanh(&x, precisions[p]);
+        error = float_geterror();
+        if (!ok || error != Success || float_cmp(&x, sign > 0? &c1 : &cMinus1) != 0)
+        {
+          printf("FAILED tanh range: input %d, sign %d, digits %d, error %d\n",
+                 i, sign, precisions[p], error);
+          float_free(&x);
+          return 0;
+        }
+      }
+      /* Check both sides of the conservative, precision-dependent cutoff. */
+      for (offset = precisions[p] == 1? 0 : -1; offset <= 1; ++offset)
+      {
+        float_setinteger(&x, sign*(2*precisions[p] + offset));
+        ok = float_tanh(&x, precisions[p]);
+        float_round(&x, &x, precisions[p], TONEAREST);
+        error = float_geterror();
+        if (!ok || error != Success || float_cmp(&x, sign > 0? &c1 : &cMinus1) != 0)
+        {
+          printf("FAILED tanh cutoff: sign %d, digits %d, offset %d\n",
+                 sign, precisions[p], offset);
+          float_free(&x);
+          return 0;
+        }
+      }
+    }
+
+  /* A correction invisible at 50 digits must remain visible at 100 digits. */
+  float_setinteger(&x, 100);
+  ok = float_tanh(&x, 100);
+  error = float_geterror();
+  if (!ok || error != Success || float_cmp(&x, &c1) >= 0)
+  {
+    printf("FAILED tanh precision: tanh(100) must remain below 1 at 100 digits\n");
+    float_free(&x);
+    return 0;
+  }
+
+  float_setasciiz(&x, "1e10");
+  ok = float_exp(&x, 100);
+  error = float_geterror();
+  if (ok || error != Overflow || !float_isnan(&x))
+  {
+    printf("FAILED genuine exp overflow\n");
+    float_free(&x);
+    return 0;
+  }
+  float_setasciiz(&x, "-1e10");
+  ok = float_exp(&x, 100);
+  error = float_geterror();
+  if (ok || error != Underflow || !float_isnan(&x))
+  {
+    printf("FAILED genuine exp underflow\n");
+    float_free(&x);
+    return 0;
+  }
+  float_setasciiz(&x, "1e10");
+  ok = float_tanhminus1(&x, 100);
+  error = float_geterror();
+  if (ok || error != Underflow || !float_isnan(&x))
+  {
+    printf("FAILED genuine tanh(x)-1 underflow\n");
+    float_free(&x);
+    return 0;
+  }
+  float_free(&x);
+  return 1;
+}
+
 static int test_arctanlt1()
 {
   floatstruct x, tmp, max, step, ofs;
@@ -6970,6 +7065,7 @@ int main(int argc, char* argv[])
   if(!test_coshminus1()) return testfailed("_coshminus1");
   if(!test_tanhlt0_5()) return testfailed("_tanhlt0_5");
   if(!test_tanhminus1gt0()) return testfailed("_tanhminus1gt0");
+  if(!test_tanh_range()) return testfailed("float_tanh range");
   if(!test_arctanlt1()) return testfailed("_arctanlt1");
   if(!test_arctan()) return testfailed("_arctan");
   if(!test_arccosxplus1lt0_5()) return testfailed("_arccosxplus1lt0_5");

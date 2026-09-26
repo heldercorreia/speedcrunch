@@ -3157,6 +3157,32 @@ void test_function_trig()
     CHECK_EVAL("turns(2*pi)", "1");
 }
 
+void test_function_tanh_range()
+{
+    CHECK_EVAL("tanh(0)", "0");
+    CHECK_EVAL_PRECISE("tanh(58)", "0.99999999999999999999999999999999999999999999999999");
+    CHECK_EVAL_PRECISE("tanh(-58)", "-0.99999999999999999999999999999999999999999999999999");
+    CHECK_EVAL_PRECISE("tanh(59)", "1.00000000000000000000000000000000000000000000000000");
+    CHECK_EVAL_PRECISE("tanh(-59)", "-1.00000000000000000000000000000000000000000000000000");
+
+    // Straddle the old exp(2*x) and exp(x) intermediate range boundaries.
+    const char* magnitudes[] = {
+        "1e8", "618095478", "618095480", "1e9",
+        "1236190956", "1236190958", "1e10", "1e100",
+        "9.99999999999999999999e536870911"
+    };
+    for (const char* magnitude : magnitudes) {
+        CHECK_EVAL(QStringLiteral("tanh(%1)").arg(QLatin1String(magnitude)), "1");
+        CHECK_EVAL(QStringLiteral("tanh(-%1)").arg(QLatin1String(magnitude)), "-1");
+    }
+
+    // Errors from genuinely unrepresentable results must still reach the user.
+    CHECK_EVAL_FAIL("exp(1e10)");
+    CHECK_EVAL_FAIL("exp(-1e10)");
+    CHECK_EVAL_FAIL("sinh(1e10)");
+    CHECK_EVAL_FAIL("cosh(1e10)");
+}
+
 void test_function_stat()
 {
     CHECK_EVAL_FAIL("MIN(0)");
@@ -10461,6 +10487,7 @@ int main(int argc, char* argv[])
 
     test_function_basic();
     test_function_trig();
+    test_function_tanh_range();
     test_function_stat();
     test_function_logic();
     test_function_discrete();
@@ -10489,6 +10516,7 @@ int main(int argc, char* argv[])
     DMath::complexMode = true;
     eval->initializeBuiltInVariables();
     test_complex();
+    test_function_tanh_range();
     test_format();
     test_result_rounding_mode_formatting();
     test_datetime();

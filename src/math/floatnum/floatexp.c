@@ -355,16 +355,23 @@ _tanhgt0_5(
   floatnum x,
   int digits)
 {
+  floatstruct limit;
   int expx;
 
-  expx = float_getexponent(x);
-  if (5*expx >= digits)
+  /* 1 - tanh(x) < 2*exp(-2*x). For x >= 2*digits and digits >= 1,
+     this is less than half an ulp below 1 at the requested precision.
+     Compare before forming 2*x or exp(2*x), which may exceed the range. */
+  float_create(&limit);
+  float_setinteger(&limit, 2*digits);
+  if (float_cmp(x, &limit) >= 0)
     float_copy(x, &c1, EXACT);
   else
   {
+    expx = float_getexponent(x);
     _tanhminus1gt0(x, digits - 5*expx);
     float_add(x, x, &c1, digits);
   }
+  float_free(&limit);
 }
 
 char

@@ -746,6 +746,8 @@ CNumber CMath::cosh(const CNumber& x)
  */
 CNumber CMath::tanh(const CNumber& x)
 {
+    if (x.isReal())
+        return CNumber(HMath::tanh(x.real));
     return sinh(x) / cosh(x);
 }
 
