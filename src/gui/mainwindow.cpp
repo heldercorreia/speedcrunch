@@ -2323,6 +2323,9 @@ public:
                 closeButton->setAutoRaise(false);
                 closeButton->setCursor(Qt::PointingHandCursor);
                 closeButton->setFocusPolicy(Qt::NoFocus);
+                closeButton->setObjectName(QStringLiteral("SessionTabCloseButton"));
+                closeButton->setMouseTracking(true);
+                closeButton->setAttribute(Qt::WA_Hover, true);
                 closeButton->setText(QStringLiteral("×"));
                 closeButton->setStyleSheet(QStringLiteral(R"(
                     QToolButton {
@@ -2347,7 +2350,8 @@ public:
                         background: rgba(127, 127, 127, 192);
                     }
                 )"));
-                closeButton->setToolTip(MainWindow::tr("Close Session"));
+                closeButton->setToolTip(QString());
+                closeButton->installEventFilter(this);
                 QFont closeFont = closeButton->font();
                 closeFont.setBold(false);
                 closeFont.setPixelSize(qMax(11, fontMetrics().height() - 5));
@@ -2674,6 +2678,34 @@ protected:
     }
 
 private:
+    bool eventFilter(QObject* watched, QEvent* event) override
+    {
+        QWidget* watchedWidget = qobject_cast<QWidget*>(watched);
+        if (watchedWidget != nullptr
+            && watchedWidget->objectName() == QLatin1String("SessionTabCloseButton")) {
+            switch (event->type()) {
+            case QEvent::Enter:
+            case QEvent::HoverEnter:
+            case QEvent::MouseMove:
+            case QEvent::HoverMove:
+                showCloseButtonToolTip(QCursor::pos());
+                break;
+            case QEvent::Leave:
+            case QEvent::HoverLeave:
+                hideTabToolTip();
+                break;
+            case QEvent::ToolTip: {
+                const QHelpEvent* helpEvent = static_cast<QHelpEvent*>(event);
+                showCloseButtonToolTip(helpEvent->globalPos());
+                return true;
+            }
+            default:
+                break;
+            }
+        }
+        return QTabBar::eventFilter(watched, event);
+    }
+
     void applyToolTipTheme()
     {
         ToolTipStyleUtils::applyPopupTheme(
@@ -2715,6 +2747,13 @@ private:
             return;
         }
 
+        QWidget* closeButton = tabButton(index, QTabBar::RightSide);
+        if (closeButton != nullptr
+            && closeButton->rect().contains(closeButton->mapFromGlobal(globalPos))) {
+            hideTabToolTip();
+            return;
+        }
+
         const QString text = tabText(index);
         if (fontMetrics().horizontalAdvance(text)
             <= tabTextRect(index, tabRect(index)).width()) {
@@ -2726,6 +2765,17 @@ private:
         ToolTipStyleUtils::showPopup(m_toolTipPopup,
                                      m_toolTipPopupLabel,
                                      text,
+                                     this,
+                                     globalPos,
+                                     m_toolTipCornerRadius);
+    }
+
+    void showCloseButtonToolTip(const QPoint& globalPos)
+    {
+        ensureToolTipPopup();
+        ToolTipStyleUtils::showPopup(m_toolTipPopup,
+                                     m_toolTipPopupLabel,
+                                     MainWindow::tr("Close Session"),
                                      this,
                                      globalPos,
                                      m_toolTipCornerRadius);

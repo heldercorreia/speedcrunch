@@ -1992,6 +1992,27 @@ void TestDisplayUi::main_window_uses_generated_theme_surface_for_chrome_and_edit
         sessionTabBar->show();
         QCoreApplication::processEvents();
         QVERIFY(sessionTabBar->isVisible());
+        QToolButton* sessionCloseButton = qobject_cast<QToolButton*>(
+            sessionTabBar->tabButton(0, QTabBar::RightSide));
+        QVERIFY(sessionCloseButton != nullptr);
+        QVERIFY(sessionCloseButton->toolTip().isEmpty());
+        QEvent closeButtonEnterEvent(QEvent::Enter);
+        QCoreApplication::sendEvent(sessionCloseButton, &closeButtonEnterEvent);
+        QCoreApplication::processEvents();
+        QFrame* closeButtonToolTip =
+            sessionTabBar->findChild<QFrame*>(QStringLiteral("sessionTabToolTipPopup"));
+        QVERIFY(closeButtonToolTip != nullptr);
+        QVERIFY(closeButtonToolTip->isVisible());
+        QVERIFY(closeButtonToolTip->styleSheet().contains(
+            shades.at(UiConfig::CompletionPopupBackgroundShade).name()));
+        QLabel* closeButtonToolTipLabel = closeButtonToolTip->findChild<QLabel*>(
+            QStringLiteral("sessionTabToolTipPopupLabel"));
+        QVERIFY(closeButtonToolTipLabel != nullptr);
+        QCOMPARE(closeButtonToolTipLabel->text(), QStringLiteral("Close Session"));
+        QEvent closeButtonLeaveEvent(QEvent::Leave);
+        QCoreApplication::sendEvent(sessionCloseButton, &closeButtonLeaveEvent);
+        QCoreApplication::processEvents();
+        QVERIFY(!closeButtonToolTip->isVisible());
         const QImage tabBarImage = sessionTabBar->grab().toImage();
         QVERIFY(!tabBarImage.isNull());
         QCOMPARE(tabBarImage.pixelColor(tabBarImage.width() - 1,
