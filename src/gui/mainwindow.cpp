@@ -413,7 +413,7 @@ bool loadedSessionNameExists(const QHash<QString, Session*>& sessions, const QSt
 
 QString firstAvailableUntitledSessionName(const QHash<QString, Session*>& sessions)
 {
-    for (int number = 1; number < std::numeric_limits<int>::max(); ++number) {
+    for (int number = 1; number < (std::numeric_limits<int>::max)(); ++number) {
         const QString name = QStringLiteral("Untitled-%1").arg(number);
         if (!loadedSessionNameExists(sessions, name) && !QFileInfo::exists(sessionFilePath(name)))
             return name;
@@ -432,7 +432,7 @@ QString firstAvailableImportedSessionName(const QString& preferredName, const QH
     if (isAvailable(baseName))
         return baseName;
 
-    for (int number = 2; number < std::numeric_limits<int>::max(); ++number) {
+    for (int number = 2; number < (std::numeric_limits<int>::max)(); ++number) {
         const QString candidate = QStringLiteral("%1 (%2)").arg(baseName).arg(number);
         if (isAvailable(candidate))
             return candidate;
@@ -5412,7 +5412,7 @@ void MainWindow::copyWindowLayoutFrom(const MainWindow* source)
 Session* MainWindow::createUntitledSession(bool activateCreatedSession)
 {
     Session* recycledSession = nullptr;
-    int recycledNumber = std::numeric_limits<int>::max();
+    int recycledNumber = (std::numeric_limits<int>::max)();
     for (auto it = m_loadedSessions.constBegin(); it != m_loadedSessions.constEnd(); ++it) {
         const QString name = it.key();
         const int number = untitledSessionNumber(name);
