@@ -32,7 +32,7 @@
   %}
 {% endif %}
 
-{% set bootswatch_css_custom = ['_static/extra.css'] %}
+{% set bootswatch_css_custom = ['_static/extra.css?home=2'] %}
 {% set css_files = css_files + theme_css_files + bootswatch_css_custom %}
 
 {% set script_files = script_files + [
@@ -195,13 +195,6 @@
 {%- block footer %}
 <footer class="footer">
   <div class="container">
-    <p class="pull-right">
-      <a href="#">Back to top</a>
-      {% if theme_source_link_position == "footer" %}
-        <br/>
-        {% include "sourcelink.html" %}
-      {% endif %}
-    </p>
     <p>
     {%- if show_copyright %}
       {%- if hasdoc('copyright') %}

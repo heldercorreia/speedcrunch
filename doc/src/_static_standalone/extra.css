@@ -10,9 +10,17 @@
   padding: 0px;
 }
 .navbar-brand>span>img {
-  height: 100%;
-  padding: 7px 15px;
+  height: calc(100% - 14px);
+  margin: 7px 15px;
   width: auto;
+  border-radius: 9px;
+  background-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.32),
+              0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+#navbar a:focus:not(:focus-visible) {
+  outline: none;
 }
 
 .navbar-nav.navbar-right > li {
@@ -71,6 +79,44 @@ body {
   filter: drop-shadow(5px 5px 5px #222);
 }
 
+video.featurette-image {
+  border-radius: 16px;
+  -webkit-filter: none;
+  filter: none;
+  box-shadow: 0 0 12px rgba(34, 34, 34, 0.22);
+}
+
+.constant-catalog {
+  padding-left: 24px;
+}
+
+.constant-catalog li {
+  margin-bottom: 6px;
+}
+
+.hero-facts {
+  color: #666;
+  font-size: 16px;
+  margin: 16px 0 0;
+  padding-left: 24px;
+}
+
+.hero-actions {
+  margin-bottom: 8px;
+}
+
+.hero-platforms {
+  color: #666;
+  font-size: 16px;
+  margin-bottom: 0;
+}
+
+.hero-facts li {
+  margin-bottom: 3px;
+}
+
 .jumbotron {
     margin-top: -15px;
+    background-color: #fff;
+    background-image: none;
 }
