@@ -23,10 +23,24 @@ executable so the entire directory can be copied to another computer and run
 there.
 
 
-.. Apple OS X
-.. ----------
+macOS
+-----
 
-.. TODO: OSX installation instructions
+Download the macOS disk image from `the SpeedCrunch website <sc_>`_, open it, and
+drag :guilabel:`SpeedCrunch` to the :guilabel:`Applications` folder.
+
+On first launch, macOS may block SpeedCrunch because it cannot verify the developer.
+Only continue if you downloaded SpeedCrunch from the official website and trust the
+download. Try to open SpeedCrunch once, then:
+
+#. Open the Apple menu and choose :guilabel:`System Settings` > :guilabel:`Privacy & Security`.
+#. Scroll to :guilabel:`Security` and click :guilabel:`Open` or :guilabel:`Open Anyway`
+   next to SpeedCrunch.
+#. Confirm that you want to open the app. Enter your Mac password if asked.
+
+The :guilabel:`Open Anyway` option is available for about an hour after your first
+attempt. macOS remembers the exception, so you can open SpeedCrunch normally afterward.
+See `Apple's step-by-step instructions <https://support.apple.com/en-am/guide/mac-help/mh40616/27/mac/27>`_.
 
 
 Linux

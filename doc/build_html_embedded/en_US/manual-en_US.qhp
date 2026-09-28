@@ -15,6 +15,7 @@
                 <section title="User Guide" ref="userguide/index.html">
                     <section title="Installation" ref="userguide/installation.html">
                         <section title="Microsoft Windows" ref="userguide/installation.html#microsoft-windows"/>
+                        <section title="macOS" ref="userguide/installation.html#macos"/>
                         <section title="Linux" ref="userguide/installation.html#linux">
                             <section title="Distribution Packages" ref="userguide/installation.html#distribution-packages"/>
                             <section title="Flatpak" ref="userguide/installation.html#flatpak"/>

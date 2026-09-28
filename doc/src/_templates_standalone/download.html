@@ -38,6 +38,12 @@
             <a class="btn btn-primary btn-md dl-button"><i class="fa fa-laptop fa-lg" style="vertical-align:middle;"></i>&nbsp;Download</a>
           </p>
         {%- endif %}
+        <div class="alert alert-warning text-left" role="alert">
+          <p><strong>{% trans %}macOS first launch{% endtrans %}</strong></p>
+          <p>{% trans %}After installing SpeedCrunch, try to open it once. If macOS blocks it, and you trust this download, open Apple menu &gt; System Settings &gt; Privacy &amp; Security. In the Security section, click Open or Open Anyway next to SpeedCrunch, then confirm the prompt. Enter your Mac password if asked.{% endtrans %}</p>
+          <p>{% trans %}The Open Anyway option is available for about an hour after your first attempt. macOS remembers the exception, so you can open SpeedCrunch normally afterward.{% endtrans %}</p>
+          <p><a href="https://support.apple.com/en-am/guide/mac-help/mh40616/27/mac/27">{% trans %}See Apple's step-by-step instructions{% endtrans %}</a></p>
+        </div>
       </div>
 
       <div class="col-lg-4 center-div">
