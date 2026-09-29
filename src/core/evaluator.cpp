@@ -2435,41 +2435,41 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
         QString simplified;
         QSet<QString> emittedBaseKeys;
         bool hasOutput = false;
-        int i = 0;
-        while (i < factors.size()) {
+        int factorIndex = 0;
+        while (factorIndex < factors.size()) {
             QString base;
             int exponent = 0;
             const bool isSimplifiableFactor =
-                parseSimplifiablePowerFactor(factors.at(i), &base, &exponent);
+                parseSimplifiablePowerFactor(factors.at(factorIndex), &base, &exponent);
 
             if (!isSimplifiableFactor) {
-                if (hasOutput && i > 0)
-                    simplified += operators.at(i - 1);
-                simplified += factors.at(i);
+                if (hasOutput && factorIndex > 0)
+                    simplified += operators.at(factorIndex - 1);
+                simplified += factors.at(factorIndex);
                 hasOutput = true;
-                ++i;
+                ++factorIndex;
                 continue;
             }
 
             const QString baseKey = canonicalSimplifiableBaseKeyForDisplay(base);
             if (emittedBaseKeys.contains(baseKey)) {
-                ++i;
+                ++factorIndex;
                 continue;
             }
             emittedBaseKeys.insert(baseKey);
 
-            if (hasOutput && i > 0)
-                simplified += operators.at(i - 1);
+            if (hasOutput && factorIndex > 0)
+                simplified += operators.at(factorIndex - 1);
             const int totalExponent = totalExponentsByBase.value(baseKey, 0);
             const QString representativeBase = representativeBaseByKey.value(baseKey, base);
             if (totalExponent > 1) {
                 simplified += representativeBase;
                 simplified += QStringLiteral("^%1").arg(totalExponent);
             } else {
-                simplified += factors.at(i);
+                simplified += factors.at(factorIndex);
             }
             hasOutput = true;
-            ++i;
+            ++factorIndex;
         }
 
         QVector<QString> finalFactors;
@@ -5021,13 +5021,13 @@ QString Evaluator::fixSexagesimal(const QString& number, QString& unit)
             number.contains(QLatin1Char('e'), Qt::CaseInsensitive);
         int dotNumber = number.lastIndexOf(QRegularExpression("[.,]"));
         if (dotNumber >= 0 && !hasScientificExponent) {  // append decimals, remove possible postfix units
-            int minPos = number.indexOf(QRegularExpression(minuteMarkClass));
-            int secPos = number.indexOf(QRegularExpression(secondMarkClass));
-            int unitPos = (secPos >= 0 && secPos < minPos) ? secPos : minPos;
+            int minuteUnitPos = number.indexOf(QRegularExpression(minuteMarkClass));
+            int secondUnitPos = number.indexOf(QRegularExpression(secondMarkClass));
+            int suffixPos = (secondUnitPos >= 0 && secondUnitPos < minuteUnitPos) ? secondUnitPos : minuteUnitPos;
             int dotResult = result.lastIndexOf(MathDsl::DotSep);
             if (dotResult >= 0)  // replace decimals with original ones for accuracy
                 result.resize(dotResult);
-            result += number.mid(dotNumber, unitPos < 0 ? -1 : unitPos - dotNumber);
+            result += number.mid(dotNumber, suffixPos < 0 ? -1 : suffixPos - dotNumber);
         }
     }
     else
@@ -8874,11 +8874,11 @@ QString Evaluator::autoFix(const QString& expr)
     // Special treatment for simple function
     // e.g. "cos" is regarded as "cos(ans)".
     if (!result.isEmpty()) {
-        Tokens tokens = Evaluator::scan(result);
+        Tokens functionTokens = Evaluator::scan(result);
 
-        if (tokens.count() == 1
-            && tokens.at(0).isIdentifier()
-            && FunctionRepo::instance()->find(tokens.at(0).text()))
+        if (functionTokens.count() == 1
+            && functionTokens.at(0).isIdentifier()
+            && FunctionRepo::instance()->find(functionTokens.at(0).text()))
         {
             result.append("(ans)");
         }

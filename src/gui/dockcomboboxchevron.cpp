@@ -19,7 +19,7 @@
 namespace {
 
 constexpr int kChevronAnimationMs = 150;
-constexpr qreal kChevronOpacity = 0.76;
+constexpr float kChevronOpacity = 0.76f;
 
 void removeFrame(QWidget* widget)
 {

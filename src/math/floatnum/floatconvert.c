@@ -235,7 +235,7 @@ _pack2longint(
   int ofs;
   int logbase;
 
-  logbase = lgbase(n->seq.base);
+  logbase = lgbase((signed char)n->seq.base);
   ofs = n->seq.leadingSignDigits;
   if (_significantdigits(&n->seq) == 0)
       /* can be true in complement case: 0xFF00 */
@@ -259,7 +259,7 @@ _getlongintdigit(
   if (ofs < 0 || ofs >= n->digits)
     return 0;
   return (char)(_bitsubstr(((t_longint*)(n->param))->value,
-                    (n->digits - ofs - 1) * lgbase(n->base))
+                    (n->digits - ofs - 1) * lgbase((signed char)n->base))
          & (n->base - 1));
 }
 
@@ -277,7 +277,7 @@ _getlongintofsdigit(
     return 0;
   digits += nmb->fracpart.seq.digits;
   return (char)(_bitsubstr(((t_longint*)(nmb->fracpart.seq.param))->value,
-                    (digits - ofs - 1) * lgbase(n->base))
+                    (digits - ofs - 1) * lgbase((signed char)n->base))
          & (n->base - 1));
 }
 

@@ -241,7 +241,7 @@ _str2seq(
   /* skip sign digits (usually 0, in complement mode
      F, 7 or 1 */
   for (; _ascii2digit(*p) == leadingdigit; ++p);
-  n->seq.leadingSignDigits = p - digits;
+  n->seq.leadingSignDigits = (int)(p - digits);
   /* pz is pointer to first trailing zero */
   pz = p;
   for (; (c = _ascii2digit(*(p++))) < base;)
@@ -249,8 +249,8 @@ _str2seq(
     if (--maxdigits >= 0 && c != 0)
       pz = p;
   }
-  n->seq.trailing0 = p - pz - 1;
-  n->seq.digits = p - digits - 1;
+  n->seq.trailing0 = (int)(p - pz - 1);
+  n->seq.digits = (int)(p - digits - 1);
   n->seq.param = (void*)digits;
   if (complement || _significantdigits(&n->seq) != 0)
     n->seq.base = base;
@@ -796,9 +796,9 @@ parse(
     const char* expptr;
     int i;
     int e = 0;
-    int expbase;
+    signed char expbase;
     ++p;
-    idx = expchar - expbegin;
+    idx = (int)(expchar - expbegin);
     tokens->expsign = _parsesign(&p);
     expbase = _parsebase(&p, base);
     expptr = _scandigits(&p, expbase);

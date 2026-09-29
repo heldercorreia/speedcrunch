@@ -179,8 +179,8 @@ _shr(
   if (shift > 0)
   {
     for (idx = -1; ++idx < maxidx;)
-      x->value[idx] = _longshr(x->value[idx], x->value[idx+1], shift);
-    x->value[MAXIDX] = _longshr(x->value[MAXIDX], sign, shift);
+      x->value[idx] = _longshr(x->value[idx], x->value[idx+1], (char)shift);
+    x->value[MAXIDX] = _longshr(x->value[MAXIDX], sign, (char)shift);
   }
 }
 
@@ -205,7 +205,7 @@ _shl(
   if (shift > 0)
   {
     for (idx = MAXIDX; idx > 0; --idx)
-      x->value[idx] = _longshl(x->value[idx-1], x->value[idx], shift);
+      x->value[idx] = _longshl(x->value[idx-1], x->value[idx], (char)shift);
     x->value[0] <<= shift;
   }
 }

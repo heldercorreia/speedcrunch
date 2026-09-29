@@ -637,6 +637,7 @@ public slots:
 private slots:
     void color_scheme_roles_exclude_obsolete_scrollbar();
     void color_scheme_reads_optional_display_name();
+    void color_scheme_preserves_rose_pine_names_with_ascii_resources();
     void color_scheme_validates_schema_metadata();
     void theme_dialog_preserves_list_scroll_and_fills_role_color_buttons();
     void result_display_insets_viewport_horizontally();
@@ -770,6 +771,28 @@ void TestDisplayUi::color_scheme_reads_optional_display_name()
     }));
     QVERIFY(nonStringNameScheme.isValid());
     QVERIFY(nonStringNameScheme.displayName().isEmpty());
+}
+
+void TestDisplayUi::color_scheme_preserves_rose_pine_names_with_ascii_resources()
+{
+    const QStringList schemeNames = ColorScheme::enumerate();
+    for (const QString& variant : {QStringLiteral("Moon"), QStringLiteral("Dawn")}) {
+        const QString schemeName = QStringLiteral("Ros\u00e9 Pine %1").arg(variant);
+        const QString resourceName = QStringLiteral("Rose Pine %1").arg(variant);
+        const QString resourcePath = QStringLiteral(":/color-schemes/%1.json").arg(resourceName);
+        QCOMPARE(schemeNames.count(schemeName), 1);
+        QVERIFY(!schemeNames.contains(resourceName));
+        QVERIFY(ColorScheme::isBuiltInName(schemeName));
+        QVERIFY(!ColorScheme::isBuiltInName(resourceName));
+        QCOMPARE(ColorScheme::filePathForName(schemeName), resourcePath);
+
+        const ColorScheme selectedScheme = ColorScheme::loadByName(schemeName);
+        const ColorScheme resourceScheme = ColorScheme::loadFromFile(resourcePath);
+        QVERIFY(selectedScheme.isValid());
+        QVERIFY(resourceScheme.isValid());
+        QCOMPARE(selectedScheme.displayName(), schemeName);
+        QCOMPARE(selectedScheme.toJsonObject(), resourceScheme.toJsonObject());
+    }
 }
 
 void TestDisplayUi::color_scheme_validates_schema_metadata()

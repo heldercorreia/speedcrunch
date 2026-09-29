@@ -49,6 +49,7 @@
 #include "math/floatnum/floatgamma.h"
 #include "math/floatnum/floatlogic.h"
 #include "math/floatnum/floaterf.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -174,14 +175,14 @@ static unsigned hash(floatnum x)
   if (x)
   {
     bc = x->significand;
-    result = rol(x->exponent) ^ (unsigned long)(bc);
+    result = rol(x->exponent) ^ (unsigned)(uintptr_t)bc;
     if (bc)
     {
       result = rol(result) ^ bc->n_sign;
       result = rol(result) ^ bc->n_len;
       result = rol(result) ^ bc->n_scale;
       p = bc->n_value;
-      result = rol(result) ^ (unsigned long)p;
+      result = rol(result) ^ (unsigned)(uintptr_t)p;
       for (i = 0; i++ <= bc->n_scale;)
         result = rol(result) ^ *(p++);
     }
@@ -207,7 +208,7 @@ static char mantcmp(bc_num b, const char* s)
   int lg, i;
 
   p = b->n_value;
-  lg = strlen(s);
+  lg = (int)strlen(s);
   if (maxdigits < lg)
     lg = maxdigits;
   while (s[lg-1] == '0')
@@ -231,7 +232,7 @@ static int scmp(floatnum v, char* s)
 static char* maxexp(char* buf, char* significand)
 {
   int lg;
-  lg = strlen(significand);
+  lg = (int)strlen(significand);
   memcpy(buf, significand, lg);
   sprintf(buf + lg, "%d", float_getrange());
   return buf;
@@ -240,7 +241,7 @@ static char* maxexp(char* buf, char* significand)
 static char* minexp(char* buf, char* significand)
 {
   int lg;
-  lg = strlen(significand);
+  lg = (int)strlen(significand);
   memcpy(buf, significand, lg);
   sprintf(buf+lg, "%d", -float_getrange()-1);
   return buf;
@@ -853,7 +854,7 @@ static int tc_getsignificand(const char* value, int bufsz, const char* result)
   {
     memset(buf, '?', 30);
     h = hash(&f);
-    lg = strlen(result);
+    lg = (int)strlen(result);
     retvalue = float_getsignificand(buf+1, bufsz, &f) == lg
         && buf[0] == '?'
         && buf[lg + 1] == '?'
@@ -865,7 +866,7 @@ static int tc_getsignificand(const char* value, int bufsz, const char* result)
     for (i = sizeof(exp)/sizeof(int); --i >= 0;)
       for (j = -1; ++j < 2;)
       {
-        lg = strlen(result);
+        lg = (int)strlen(result);
         memset(buf, '?', 30);
         f.significand->n_sign = sign[j];
         f.exponent = exp[i];
@@ -1225,7 +1226,7 @@ static int tc_getdigit(const char* value)
   }
   else
   {
-    lg = strlen(value);
+    lg = (int)strlen(value);
     save = float_setrange(MAXEXP);
     for (i = sizeof(exp)/sizeof(exp[0]); --i >= 0;)
       for (j = -1; ++j < 2;)
@@ -1283,7 +1284,7 @@ static int tc_getscientific(const char* s, int exp, int sz, const char* result)
   memset(buf, '?', 30);
   h = hash(&f);
   float_geterror();
-  lg = strlen(result);
+  lg = (int)strlen(result);
   r[0] = '\0';
   if (lg == 0)
   {
@@ -1298,7 +1299,7 @@ static int tc_getscientific(const char* s, int exp, int sz, const char* result)
     memcpy(r, result, lg+1);
     if (float_getlength(&f) != 0)
       sprintf(r + lg, "%d", exp);
-    lg = strlen(r);
+    lg = (int)strlen(r);
     if (float_getscientific(buf+1, sz, &f) != lg
         || h != hash(&f)
         || buf[0] != '?'
@@ -1399,7 +1400,7 @@ static int tc_setscientific(const char* value, const char* result)
   float_getscientific(buf, sizeof(buf), &f);
   if (refs != _one_->n_refs || strcmp(buf, result) != 0)
     return 0;
-  sz = strlen(value);
+  sz = (int)strlen(value);
   memset(v, '1', sizeof(v));
   memcpy(v+1, value, sz);
   float_setscientific(&f, v+1, sz);
@@ -2041,7 +2042,7 @@ static int tc_add(char* msg, char* val1, char* val2, int digits, char* result)
   float_add(&sum, &v1, &v2, digits);
 
   float_getscientific(buf, 30, &sum);
-  lg = strlen(result);
+  lg = (int)strlen(result);
   ok = _cmp(&v1, &b1) == 0
        && _cmp(&v2, &b2) == 0
        && lg == strlen(buf)
@@ -2167,7 +2168,7 @@ static int tc_sub(char* msg, char* val1, char* val2, int digits, char* result)
   float_sub(&diff, &v1, &v2, digits);
 
   float_getscientific(buf, 30, &diff);
-  lg = strlen(result);
+  lg = (int)strlen(result);
   ok = _cmp(&v1, &b1) == 0
        && _cmp(&v2, &b2) == 0
        && lg == strlen(buf)
@@ -2249,7 +2250,7 @@ static int tc_mul(char* msg, char* val1, char* val2, int digits, char* result)
   float_mul(&prod, &v1, &v2, digits);
 
   float_getscientific(buf, 30, &prod);
-  lg = strlen(result);
+  lg = (int)strlen(result);
   ok = _cmp(&v1, &b1) == 0
        && _cmp(&v2, &b2) == 0
        && lg == strlen(buf)
@@ -2348,7 +2349,7 @@ static int tc_div(char* msg, char* val1, char* val2, int digits, char* result)
   float_div(&quot, &v1, &v2, digits);
 
   float_getscientific(buf, 30, &quot);
-  lg = strlen(result);
+  lg = (int)strlen(result);
   ok = _cmp(&v1, &b1) == 0
        && _cmp(&v2, &b2) == 0
        && lg == strlen(buf)
@@ -2443,7 +2444,7 @@ static int tc_sqrt(char* msg, char* val, int digits, char* result)
   float_round(&v, &v, digits - 1, TONEAREST);
   float_getscientific(buf, 30, &v);
   float_free(&v);
-  lg = strlen(result);
+  lg = (int)strlen(result);
   return strlen(buf) == lg && memcmp(buf, result, lg) == 0? TRUE : FALSE;
 }
 
@@ -2474,7 +2475,7 @@ static int tc_int(char* msg, char* value, char* result)
   float_setscientific(&f, value, NULLTERMINATED);
   float_int(&f);
   float_getscientific(buf, 30, &f);
-  lg = strlen(result);
+  lg = (int)strlen(result);
   float_free(&f);
   return (lg == strlen(buf) && memcmp(buf, result, lg) == 0);
 }
@@ -4447,7 +4448,7 @@ static int test_tanh_range()
         }
         else
           float_setasciiz(&x, inputs[i]);
-        float_setsign(&x, sign);
+        float_setsign(&x, (signed char)sign);
         ok = float_tanh(&x, precisions[p]);
         error = float_geterror();
         if (!ok || error != Success || float_cmp(&x, sign > 0? &c1 : &cMinus1) != 0)
@@ -5945,8 +5946,8 @@ static int test_floatnum2logic()
 
   if(!tc_floatnum2logic("0", 0, 0, 0)) return 0;
   if(!tc_floatnum2logic("1", 1, 0, 0)) return 0;
-  if(!tc_floatnum2logic("-1", ~0, ~0, ~0)) return 0;
-  if(!tc_floatnum2logic("-2147483648", ~2147483647, ~0, ~0)) return 0;
+  if(!tc_floatnum2logic("-1", ~0u, ~0u, ~0u)) return 0;
+  if(!tc_floatnum2logic("-2147483648", ~2147483647u, ~0u, ~0u)) return 0;
   if(!tc_floatnum2logic("8589934592", 0, 2, 0)) return 0;
   return 1;
 }
@@ -6673,12 +6674,13 @@ static int test_erfcasymptotic()
 
 static int test_erfcsum()
 {
+  printf("testing erfcsum IGNORED\n");
+  return 1;
+
+#if 0 /* Keep this already disabled test out of the compiled code. */
   floatstruct x, x1, tmp, max;
   int i, prec;
   char  buf[50];
-
-  printf("testing erfcsum IGNORED\n");
-  return 1;
 
   float_create(&x);
   float_create(&x1);
@@ -6768,16 +6770,18 @@ static int test_erfcsum()
   float_free(&tmp);
   float_free(&max);
   return 1;
+#endif
 }
 
 static int test_erfc()
 {
+  printf("testing erfc IGNORED\n");
+  return 1;
+
+#if 0 /* Keep this already disabled test out of the compiled code. */
   int prec, i;
   floatstruct x, x1, step1;
   floatstruct results[40];
-
-  printf("testing erfc IGNORED\n");
-  return 1;
 
   printf("testing erfc\n");
   float_create(&x);
@@ -6898,6 +6902,7 @@ static int test_erfc()
   for (i = -1; ++i < 40;)
     float_free(&results[i]);
   return 1;
+#endif
 }
 
 static int test_erf()
@@ -6967,7 +6972,7 @@ static int testfailed(char* msg)
 
 #endif /* _FLOATNUMTEST */
 
-int main(int argc, char* argv[])
+int main(void)
 {
 
 #ifdef _FLOATNUMTEST

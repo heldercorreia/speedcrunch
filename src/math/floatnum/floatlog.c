@@ -208,7 +208,7 @@ _ln(
 
   /* reducing the significand to 0.6 <= x < 2
      by simple multiplication */
-  dgt = leadingdigits(x, 1);
+  dgt = (char)leadingdigits(x, 1);
   coef3 = 0;
   if (dgt == 1)
     float_setexponent(x, 0);

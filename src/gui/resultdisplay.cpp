@@ -2153,9 +2153,9 @@ void ResultDisplay::markSimplifiedExpressionBlock(int blockNumber)
     if (!block.isValid())
         return;
 
-    auto data = new SyntaxHighlightBlockData;
-    data->highlightResultExpressionSyntax = true;
-    block.setUserData(data);
+    auto blockData = new SyntaxHighlightBlockData;
+    blockData->highlightResultExpressionSyntax = true;
+    block.setUserData(blockData);
     m_highlighter->rehighlightBlock(block);
 }
 
