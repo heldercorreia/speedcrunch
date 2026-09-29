@@ -1205,7 +1205,7 @@ protected:
 
         QColor arrowColor = m_arrowColor;
         if (!isEnabled())
-            arrowColor.setAlphaF(0.55);
+            arrowColor.setAlphaF(0.55f);
 
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing, true);
@@ -8015,8 +8015,8 @@ void MainWindow::saveSessionLayout(bool captureCurrentViewport)
         };
 
         QJsonObject windowRoot;
-        const QList<ResultDisplay*> displays = windowObject->splitPaneDisplays();
-        if (windowObject->m_widgets.splitContainer != nullptr && displays.size() > 1) {
+        const QList<ResultDisplay*> windowDisplays = windowObject->splitPaneDisplays();
+        if (windowObject->m_widgets.splitContainer != nullptr && windowDisplays.size() > 1) {
             windowRoot = nodeForWidget(windowObject->m_widgets.splitContainer, nodeForWidget);
             windowRoot.insert(QStringLiteral("active"), windowObject->m_session ? windowObject->m_session->name() : QString());
             windowRoot.insert(QStringLiteral("tabs"), windowTabs);
@@ -8606,8 +8606,8 @@ void MainWindow::showDuplicateSessionDialog()
             continue;
         }
 
-        const QByteArray data = QJsonDocument(duplicateJson).toJson(QJsonDocument::Compact);
-        if (duplicateFile.write(data) != data.size()) {
+        const QByteArray sessionData = QJsonDocument(duplicateJson).toJson(QJsonDocument::Compact);
+        if (duplicateFile.write(sessionData) != sessionData.size()) {
             duplicateFile.close();
             QFile::remove(duplicatePath);
             QMessageBox::warning(this,

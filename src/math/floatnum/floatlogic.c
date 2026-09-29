@@ -50,7 +50,7 @@ _neg(
   const int maxidx = MAXIDX;
   while (++idx <= maxidx && longint->value[idx] == 0);
   if (idx <= maxidx)
-    longint->value[idx] = - longint->value[idx];
+    longint->value[idx] = 0u - longint->value[idx];
   while (++idx <= maxidx)
     longint->value[idx] = ~longint->value[idx];
 }

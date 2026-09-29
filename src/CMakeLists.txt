@@ -26,10 +26,11 @@ endif()
 if (MSVC)
     add_definitions(-D_USE_MATH_DEFINES)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
+    # MSVC's /Wall also enables normally disabled padding and inlining reports.
+    add_compile_options(/W4)
 else()
-    add_compile_options(-Wno-shift-negative-value)
+    add_compile_options(-Wno-shift-negative-value -Wall -pedantic)
 endif()
-add_compile_options(-Wall -pedantic)
 
 if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
@@ -51,10 +52,6 @@ ADD_DEFINITIONS(-DQT_USE_QSTRINGBUILDER)
 include(SourceFiles.cmake)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-# Legacy GNU bc number implementation uses K&R-style definitions.
-# Keep global warnings strict while silencing C23 prototype deprecations for this file.
-    set_source_files_properties(math/number.c PROPERTIES
-        COMPILE_OPTIONS "-Wno-deprecated-non-prototype;-Wno-strict-prototypes")
     set_source_files_properties(tests/testfloatnum.c PROPERTIES
         COMPILE_OPTIONS "-Wno-strict-prototypes")
 endif()

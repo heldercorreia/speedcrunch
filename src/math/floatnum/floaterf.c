@@ -130,7 +130,7 @@ erfcsum(floatnum x, /* should be the square of the parameter to erfc */
     /* create new alpha appropriate for the desired precision
     This alpha need not be high precision, any alpha near the
     one evaluated here would do */
-    float_setfloat(&erfcalpha, M_PI / aprxsqrt((digits + 4) * M_LN10));
+    float_setfloat(&erfcalpha, (float)(M_PI / aprxsqrt((float)((digits + 4) * M_LN10))));
     float_round(&erfcalpha, &erfcalpha, 3, TONEAREST);
 
     float_mul(&erfcalphasqr, &erfcalpha, &erfcalpha, EXACT);

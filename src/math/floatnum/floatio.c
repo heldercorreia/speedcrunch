@@ -70,7 +70,7 @@ _match(
 
   if (_isempty(dest) || _isempty(pattern))
     return 0;
-  lg = strlen(pattern);
+  lg = (int)strlen(pattern);
   return strncmp(dest, pattern, lg) == 0? lg : 0;
 }
 
@@ -179,7 +179,7 @@ _getcmpldigit(
   lastnz = _ofslastnz(n);
   if (ofs > lastnz)
     return 0;
-  c = n->base - _getseqdigit(ofs, n) - (ofs == lastnz? 0 : 1);
+  c = (char)(n->base - _getseqdigit(ofs, n) - (ofs == lastnz? 0 : 1));
   return c == n->base? 1 : c;
 }
 
@@ -298,7 +298,7 @@ _cmplseq2str(
   lastnz = _ofslastnz(&n->seq);
   for (ofs = -1; ++ofs < lastnz;)
   {
-    c = n->seq.base - n->getdigit(ofs, &n->seq) - 1;
+    c = (char)(n->seq.base - n->getdigit(ofs, &n->seq) - 1);
     *(buf++) = _digit2ascii(c);
   }
   c = n->getdigit(ofs, &n->seq);
@@ -876,7 +876,7 @@ cattokens(
 {
   int sz;
   int fraclg;
-  p_ioparams ioparams;
+  p_ioparams params;
   char* expbegin;
   char* expend;
   char* cmpltag;
@@ -904,18 +904,18 @@ cattokens(
   fraclg = 0;
   if (!_isempty(tokens->fracpart.buf))
   {
-    fraclg = strlen(tokens->fracpart.buf) - 1;
+    fraclg = (int)(strlen(tokens->fracpart.buf) - 1);
     if ((flags & IO_FLAG_SUPPRESS_TRL_ZERO) != 0)
       while (fraclg >= 0 && tokens->fracpart.buf[fraclg] == '0')
         --fraclg;
     ++fraclg;
   }
-  ioparams = getioparams(IO_BASE_DEFAULT);
+  params = getioparams(IO_BASE_DEFAULT);
   base = tokens->base;
   printbasetag = !_isspecial(base)
                  && (flags & IO_FLAG_SUPPRESS_BASETAG) == 0
-                 && (ioparams == NULL || ioparams->base != base);
-  ioparams = getioparams(base);
+                 && (params == NULL || params->base != base);
+  params = getioparams(base);
   basetag = _decodebase(base);
   cmpltag = _decodecomplement(tokens->sign, base);
   expbasetag = NULL;
@@ -938,7 +938,7 @@ cattokens(
   if (printexp)
   {
     if (expbase < 2)
-      expbase = ioparams->expbase;
+      expbase = params->expbase;
     expbasetag = _decodebase(expbase);
     printexpsign = tokens->exp < 0
                    || (flags & IO_FLAG_SUPPRESS_EXPPLUS) == 0;
@@ -952,11 +952,11 @@ cattokens(
   dot = '.';
   expbegin = "(";
   expend = ")";
-  if (ioparams != NULL)
+  if (params != NULL)
   {
-    dot = ioparams->dot;
-    expbegin = ioparams->expbegin;
-    expend = ioparams->expend;
+    dot = params->dot;
+    expbegin = params->expbegin;
+    expend = params->expend;
   }
   printexpbegin = *expbegin != '\0';
   printexpend = *expend != '\0' && *expend != ' ';
@@ -964,13 +964,13 @@ cattokens(
   if (printsign)
     sz += 1;
   if (printbasetag)
-    sz += strlen(basetag);
+    sz = (int)(sz + strlen(basetag));
   if (printcmpl)
-    sz += strlen(cmpltag);
+    sz = (int)(sz + strlen(cmpltag));
   if (printleading0)
     ++sz;
   if (!_isempty(tokens->intpart.buf))
-    sz += strlen(tokens->intpart.buf);
+    sz = (int)(sz + strlen(tokens->intpart.buf));
   if (printdot)
     sz += 1;
   sz += fraclg;
@@ -982,8 +982,8 @@ cattokens(
     if (printexpsign)
       sz += 1;
     if (printexpbase)
-      sz += strlen(expbasetag);
-    sz += strlen(expBuf.buf);
+      sz = (int)(sz + strlen(expbasetag));
+    sz = (int)(sz + strlen(expBuf.buf));
     if (printexpend)
       ++sz;
   }

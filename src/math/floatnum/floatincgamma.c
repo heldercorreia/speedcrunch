@@ -112,14 +112,14 @@ addgammapole(floatnum lowgamma, cfloatnum x, int k, cfloatnum h, int digits){
   float fexp = aprxlog10fn(x);
   fexp *= fh;
   fexp -= aprxlog10fn(h);
-  xx = aprxlngamma(k+1);
+  xx = aprxlngamma((float)(k+1));
   xx *= 0.434294481903f;
   fexp += xx;
   fexp +=1;
 /*  float fexp = (aprxlog2fn(x)*fh - aprxlog2fn(h)) * 0.301029995663981f
                - aprxlngamma(k+1) * 0.434294481903f + 1;*/
   if (fexp > EXPMIN){
-    int exp = fexp;
+    int exp = (int)fexp;
     int explowgamma = float_getexponent(lowgamma);
     int workprec = digits + 3;
     if (exp < explowgamma-3)

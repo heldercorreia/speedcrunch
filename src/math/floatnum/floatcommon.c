@@ -5,10 +5,12 @@
 #include "floatconst.h"
 #include "floatlong.h"
 #include <string.h>
+#ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
+#endif
 #include <math.h>
 
-#define MSB (1 << (sizeof(unsigned)*8 - 1))
+#define MSB (1u << (sizeof(unsigned)*8 - 1))
 #define LOGMSB ((301*(sizeof(unsigned)*8-1))/1000)
 
 static char
@@ -393,7 +395,7 @@ static float _ipwr(float x, int exp){
   while (e >>= 1){
     pwr *= pwr;
     if ((exp & 1) != 0)
-      x *= pwr;
+      x = (float)(x * pwr);
   }
   return exp < 0? 1/x : x;
 }
@@ -403,11 +405,11 @@ static float _ipwr(float x, int exp){
    be in the valid range of a float */
 
 float float_asfloat(cfloatnum x){
-  return leadingdigits(x, 6)/100000.0 * _ipwr(10, float_getexponent(x));
+  return (float)(leadingdigits(x, 6)/100000.0 * _ipwr(10, float_getexponent(x)));
 }
 
 void float_setfloat(floatnum dest, float x){
-  int exp = aprxlog10(x);
+  int exp = (int)aprxlog10(x);
   // use two assignments to avoid overflow
   x *= _ipwr(10, -exp);
   x *= 100000000;
@@ -425,13 +427,13 @@ void float_setfloat(floatnum dest, float x){
 
 float aprxsqrt(float x){
   int exp, i;
-  float x2 = 2 * frexp(x, &exp) - 1;
-  float result = (0.5 - 0.125 * x2) * x2 + 1;
+  float x2 = (float)(2 * frexp(x, &exp) - 1);
+  float result = (float)((0.5 - 0.125 * x2) * x2 + 1);
   x2 += 1;
   for (i = 0; ++i <= 2;)
-    result = 0.5 * (result + x2 / result);
+    result = (float)(0.5 * (result + x2 / result));
   if ((exp & 1) == 0)
-    result *= M_SQRT2;
+    result = (float)(result * M_SQRT2);
   return result * _ipwr(2, (exp - 1) >> 1);
 }
 
@@ -443,28 +445,28 @@ float aprxln(float x){
   5 (decimal) digits after the decimal point. */
   int exp;
 
-  x = 2 * frexpf(fabs(x), &exp) - 1;
-  return ((((0.03215845 * x
+  x = 2 * frexpf((float)fabs(x), &exp) - 1;
+  return (float)(((((0.03215845 * x
          - 0.13606275) * x
          + 0.28947478) * x
          - 0.49190896) * x
          + 0.99949556) * x
-         + (exp - 1) * M_LN2;
+         + (exp - 1) * M_LN2);
 }
 
 float aprxlog2(float x){
-  return aprxln(x) * M_LOG2E;
+  return (float)(aprxln(x) * M_LOG2E);
 }
 
 float aprxlog10(float x){
-  return aprxln(x) * M_LOG10E;
+  return (float)(aprxln(x) * M_LOG10E);
 }
 
 float aprxlog10fn(cfloatnum x){
  return float_getexponent(x)
-        + aprxlog10(leadingdigits(x, 5)) - 4;
+        + aprxlog10((float)leadingdigits(x, 5)) - 4;
 }
 
 float aprxlngamma(float x){
-  return (x-0.5) * aprxln(x) - x + 0.9189385332f;
+  return (float)((x-0.5) * aprxln(x) - x + 0.9189385332f);
 }

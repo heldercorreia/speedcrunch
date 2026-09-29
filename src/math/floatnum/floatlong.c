@@ -4,8 +4,8 @@
 #include "floatlong.h"
 
 #define HALFSIZE (sizeof(unsigned) * 4)
-#define LOWMASK ((1 << HALFSIZE) - 1)
-#define MSB (1 << (2*HALFSIZE-1))
+#define LOWMASK ((1u << HALFSIZE) - 1u)
+#define MSB (1u << (2*HALFSIZE-1))
 
 /***************  functions handling a single unsigned  ********************/
 
@@ -213,7 +213,7 @@ _lastnonzerobit(
   int i;
 
   if (l->length == 0)
-    return -1;
+    return ~0u;
   i = -1;
   for (; ++i < l->length && l->value[i] == 0;);
   return i * BITS_IN_UNSIGNED + _revfindfirstbit(l->value[i]);

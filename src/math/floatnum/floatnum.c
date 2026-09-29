@@ -607,7 +607,7 @@ int float_getscientific(
 
   /* convert the exponent */
   sprintf(b, "%d", float_getexponent(f));
-  explg = strlen(b);
+  explg = (int)strlen(b);
 
   /* 3 extra bytes for dot, exp char and terminating \0 */
   bufsz -= explg + sgnlg + 3; /* rest is for significand */
@@ -663,7 +663,7 @@ float_setsignificand(
 
   float_setnan(f);
   if (bufsz == NULLTERMINATED)
-    bufsz = strlen(buf);
+    bufsz = (int)strlen(buf);
 
   /* initialize the output parameters for all
      early out branches */
@@ -786,7 +786,7 @@ float_setscientific(
   float_setnan(f);
 
   if (bufsz == NULLTERMINATED)
-    bufsz = strlen(buf);
+    bufsz = (int)strlen(buf);
 
   /* find the offset of the exponent character,
      or -1, if not found */

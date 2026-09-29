@@ -258,9 +258,9 @@ _getlongintdigit(
 {
   if (ofs < 0 || ofs >= n->digits)
     return 0;
-  return _bitsubstr(((t_longint*)(n->param))->value,
+  return (char)(_bitsubstr(((t_longint*)(n->param))->value,
                     (n->digits - ofs - 1) * lgbase(n->base))
-         & (n->base - 1);
+         & (n->base - 1));
 }
 
 static char
@@ -276,9 +276,9 @@ _getlongintofsdigit(
   if (ofs < 0 || ofs >= digits)
     return 0;
   digits += nmb->fracpart.seq.digits;
-  return _bitsubstr(((t_longint*)(nmb->fracpart.seq.param))->value,
+  return (char)(_bitsubstr(((t_longint*)(nmb->fracpart.seq.param))->value,
                     (digits - ofs - 1) * lgbase(n->base))
-         & (n->base - 1);
+         & (n->base - 1));
 }
 
 static void
