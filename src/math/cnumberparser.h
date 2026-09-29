@@ -38,6 +38,7 @@
 #define CNUMBER_PARSER_HXX
 
 #include <ctype.h>
+#include <exception>
 #include <string.h>
 
 #include "hmath.h"
@@ -79,7 +80,7 @@ namespace CNumberParserExceptions {
   };
 
   class LogicError
-      : Exception {};
+      : public Exception {};
 
   class UnexpectedEnd
       : public Exception {};

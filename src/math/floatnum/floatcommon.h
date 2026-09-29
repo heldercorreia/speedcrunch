@@ -5,6 +5,13 @@
 # define FLOATCOMMON_H
 #include "floatnum.h"
 
+/* Load the system constants before supplying fallbacks. MSVC defines them
+   outside math.h's include guard when _USE_MATH_DEFINES is enabled. */
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
+#include <math.h>
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846  // Pi
 #endif

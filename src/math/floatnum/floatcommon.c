@@ -5,9 +5,6 @@
 #include "floatconst.h"
 #include "floatlong.h"
 #include <string.h>
-#ifndef _USE_MATH_DEFINES
-#define _USE_MATH_DEFINES
-#endif
 #include <math.h>
 
 #define MSB (1u << (sizeof(unsigned)*8 - 1))
@@ -87,7 +84,8 @@ float_divi(
   int digits)
 {
   floatstruct tmp;
-  int result, expx;
+  char result;
+  int expx;
 
   if (!_chckparam1(dividend, digits, maxdigits, INTQUOT))
     return _setnan(quotient);
@@ -114,7 +112,7 @@ float_addi(
   int digits)
 {
   floatstruct tmp;
-  int result;
+  char result;
 
   if (!_chckparam1(summand1, digits, maxdigits, EXACT))
     return _setnan(sum);
@@ -135,7 +133,7 @@ float_muli(
   int digits)
 {
   floatstruct tmp;
-  int result;
+  char result;
   int expx;
 
   if (!_chckparam1(factor1, digits, maxdigits, EXACT))

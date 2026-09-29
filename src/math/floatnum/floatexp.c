@@ -118,7 +118,7 @@ _expltln10(
   factor = 1;
   if (expx >= -1)
   {
-    sgnf = leadingdigits(x, 2 + expx);
+    sgnf = (char)leadingdigits(x, 2 + expx);
     if (sgnf > 4)
     {
       if (sgnf < 9)

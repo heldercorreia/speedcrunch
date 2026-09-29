@@ -61,7 +61,7 @@ _scan_digit(
 
   ps = p;
   for (; count-- > 0 && *p == digit; ++p);
-  return p - ps;
+  return (int)(p - ps);
 }
 
 /*  bc_num primitives  */
@@ -391,7 +391,7 @@ _bscandigit(
 
   ps = _valueof(f);
   for (p = ps + scale + 1; p-- != ps && *p == digit;);
-  return scale - (p - ps);
+  return (int)(scale - (p - ps));
 }
 
 /* scans two significands for the first occurence
@@ -433,7 +433,7 @@ _scan_09pairs(
   p2 = _valueof(f2) + 1;
   p = p1;
   for (; count-- > 0 && *p1 == 0 && *(p2++) == 9; ++p1);
-  return p1 - p;
+  return (int)(p1 - p);
 }
 
 signed char
@@ -498,7 +498,7 @@ float_cmp(
     return -sgn1;
   if (_is_special(val1))
     return 0;
-  return (bc_compare(val1->significand, val2->significand));
+  return (signed char)bc_compare(val1->significand, val2->significand);
 }
 
 /* normalizing process:
@@ -689,7 +689,7 @@ float_setsignificand(
     b = _memskip(b+1, last, '0');
 
   /* the 'leading zeros' */
-  zeros = b - buf - (dot == NULL || dot >= b? 0:1);
+  zeros = (int)(b - buf - (dot == NULL || dot >= b? 0:1));
 
   /* only zeros found? */
   if (b == last)
@@ -703,7 +703,7 @@ float_setsignificand(
   }
 
   /* size of the rest buffer without leading zeros */
-  bufsz -= b - buf;
+  bufsz = (int)(bufsz - (b - buf));
 
   /* does the rest buffer contain a dot? */
   lg = dot >= b && dot - b < maxdigits? 1 : 0;
@@ -751,7 +751,7 @@ float_setsignificand(
 #ifdef FLOATDEBUG
   _setvalue_(f);
 #endif
-  return dot == NULL? -1 : dot - buf;
+  return dot == NULL? -1 : (int)(dot - buf);
 }
 
 void
@@ -866,7 +866,7 @@ float_setscientific(
      is given in dotpos, -1 otherwise.
      zeros are the count of leading '0' digits before
      the first non_zero digit. */
-  dotpos = float_setsignificand(f, &zeros, buf, last-buf);
+  dotpos = float_setsignificand(f, &zeros, buf, (int)(last-buf));
   if (_is_special(f))
     /* setsignificand either found a zero or encountered
        invalid characters */
@@ -875,7 +875,7 @@ float_setscientific(
   /* if we did not find a dot, we assume an integer,
        and put the dot after last digit */
   if (dotpos == -1)
-    dotpos = last - buf;
+    dotpos = (int)(last - buf);
 
   /* leading zeros shift the dot to the left.
      dotpos is now the exponent that results
@@ -1238,7 +1238,7 @@ _sub_checkborrow(
   /* the operands have opposite signs, the same exponent,
      but their first digit of the significand differ.
      The operands are ordered by this digit. */
-  int result;
+  char result;
   int borrow;
   int scale1, scale2;
   char save = 0;
@@ -1376,7 +1376,7 @@ _sub_expdiff1(
   /* Cancellation occurs when subtracting 0.9xxx from
      1.0yyy */
 
-  int result;
+  char result;
   char singledigit;
   char* v1;
   char* v2;
@@ -1523,7 +1523,7 @@ float_sub(
   cfloatnum subtrahend,
   int scale)
 {
-  int result;
+  char result;
   if (minuend == subtrahend)
   {
     /* changing the sign of one operand would change that of
@@ -1547,7 +1547,7 @@ float_mul(
   cfloatnum factor2,
   int digits)
 {
-  int result;
+  char result;
   int fullscale;
   int savescale1, savescale2;
   int scale;
@@ -1594,7 +1594,7 @@ float_div(
   cfloatnum divisor,
   int digits)
 {
-  int result;
+  char result;
   int savescale1, savescale2;
   int exp;
 

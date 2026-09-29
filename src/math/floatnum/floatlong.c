@@ -164,7 +164,7 @@ _bitsubstr(
     return *uarray << -ofs;
   idx = ofs / BITS_IN_UNSIGNED;
   return _longshr(*(uarray+idx), *(uarray+idx+1),
-                  ofs - idx * BITS_IN_UNSIGNED);
+                  (char)(ofs - idx * BITS_IN_UNSIGNED));
 }
 
 void

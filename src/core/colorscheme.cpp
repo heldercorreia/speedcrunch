@@ -15,6 +15,25 @@
 
 static const constexpr auto COLOR_SCHEME_EXTENSION = "json";
 
+static const QMap<QString, QString>& builtInResourceNames()
+{
+    // Keep persisted scheme names while using ASCII paths: rcc emits filenames
+    // in the Windows code page in generated C++ comments and dependency lists.
+    static const QMap<QString, QString> names{
+        {QStringLiteral("Ros\u00e9 Pine Moon"), QStringLiteral("Rose Pine Moon")},
+        {QStringLiteral("Ros\u00e9 Pine Dawn"), QStringLiteral("Rose Pine Dawn")}
+    };
+    return names;
+}
+
+static QString builtInResourceName(const QString& schemeName)
+{
+    // Internal filenames do not reserve additional names for user themes.
+    if (builtInResourceNames().values().contains(schemeName))
+        return QString();
+    return builtInResourceNames().value(schemeName, schemeName);
+}
+
 static const QVector<QString> colorSchemeSearchPaths()
 {
     static QVector<QString> searchPaths;
@@ -40,13 +59,20 @@ QVector<QString> ColorScheme::fileSystemSearchPaths()
 
 bool ColorScheme::isBuiltInName(const QString& name)
 {
-    return loadFromFile(QStringLiteral(":/color-schemes/%1.%2").arg(name, COLOR_SCHEME_EXTENSION)).isValid();
+    const QString resourceName = builtInResourceName(name);
+    if (resourceName.isEmpty())
+        return false;
+    return loadFromFile(QStringLiteral(":/color-schemes/%1.%2").arg(resourceName, COLOR_SCHEME_EXTENSION)).isValid();
 }
 
 QString ColorScheme::filePathForName(const QString& name)
 {
     for (const auto& path : colorSchemeSearchPaths()) {
-        const QString fileName = QString("%1/%2.%3").arg(path, name, COLOR_SCHEME_EXTENSION);
+        const QString baseName = path.startsWith(QLatin1Char(':'))
+            ? builtInResourceName(name) : name;
+        if (baseName.isEmpty())
+            continue;
+        const QString fileName = QString("%1/%2.%3").arg(path, baseName, COLOR_SCHEME_EXTENSION);
         if (loadFromFile(fileName).isValid())
             return fileName;
     }
@@ -130,8 +156,12 @@ QStringList ColorScheme::enumerate()
         dir.setFilter(QDir::Files | QDir::Readable);
         dir.setNameFilters({ QString("*.%1").arg(COLOR_SCHEME_EXTENSION) });
         const auto infoList = dir.entryInfoList();
-        for (auto& info : infoList) // TODO: Use Qt 5.7's qAsConst().
-            colorSchemes.insert(info.completeBaseName(), nullptr);
+        for (auto& info : infoList) { // TODO: Use Qt 5.7's qAsConst().
+            const QString baseName = info.completeBaseName();
+            const QString schemeName = searchPath.startsWith(QLatin1Char(':'))
+                ? builtInResourceNames().key(baseName, baseName) : baseName;
+            colorSchemes.insert(schemeName, nullptr);
+        }
     }
     // Since this is a QMap, the keys are already sorted in ascending order.
     return colorSchemes.keys();

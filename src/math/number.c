@@ -487,7 +487,7 @@ _bc_do_sub (bc_num n1, bc_num n2, int scale_min)
 	    }
 	  else
 	    borrow = 0;
-	  *diffptr-- = val;
+	  *diffptr-- = (char)val;
 	}
     }
 
@@ -503,7 +503,7 @@ _bc_do_sub (bc_num n1, bc_num n2, int scale_min)
 	}
       else
 	borrow = 0;
-      *diffptr-- = val;
+      *diffptr-- = (char)val;
     }
 
   /* If n1 has more digits then n2, we now do that subtract. */
@@ -519,7 +519,7 @@ _bc_do_sub (bc_num n1, bc_num n2, int scale_min)
 	    }
 	  else
 	    borrow = 0;
-	  *diffptr-- = val;
+	  *diffptr-- = (char)val;
 	}
     }
 
@@ -683,7 +683,7 @@ _bc_simp_mul (bc_num n1, int n1len, bc_num n2, int n2len, bc_num *prod,
       *pvptr-- = sum % BASE;
       sum = sum / BASE;
     }
-  *pvptr = sum;
+  *pvptr = (char)sum;
 }
 
 
@@ -721,7 +721,7 @@ _bc_shift_addsub (bc_num accum, bc_num val, int shift, int sub)
       }
     }
     while (carry) {
-      *accp -= carry;
+      *accp = (signed char)(*accp - carry);
       if (*accp < 0)
 	*accp-- += BASE;
       else
@@ -740,7 +740,7 @@ _bc_shift_addsub (bc_num accum, bc_num val, int shift, int sub)
       }
     }
     while (carry) {
-      *accp += carry;
+      *accp = (signed char)(*accp + carry);
       if (*accp > (BASE-1))
 	*accp-- -= BASE;
       else
@@ -915,7 +915,7 @@ _one_mult (unsigned char *num, int size, int digit, unsigned char *result)
 	      carry = value / BASE;
 	    }
 
-	  if (carry != 0) *rptr = carry;
+	  if (carry != 0) *rptr = (unsigned char)carry;
 	}
     }
 }
@@ -1068,7 +1068,7 @@ bc_divide (bc_num n1, bc_num n2, bc_num *quot, int scale)
 		    }
 		  else
 		    borrow = 0;
-		  *ptr1-- = val;
+		  *ptr1-- = (unsigned char)val;
 		}
 	    }
 
@@ -1089,13 +1089,13 @@ bc_divide (bc_num n1, bc_num n2, bc_num *quot, int scale)
 		    }
 		  else
 		    carry = 0;
-		  *ptr1-- = val;
+		  *ptr1-- = (unsigned char)val;
 		}
 	      if (carry == 1) *ptr1 = (*ptr1 + 1) % 10;
 	    }
 
 	  /* We now know the quotient digit. */
-	  *qptr++ =  qguess;
+	  *qptr++ = (unsigned char)qguess;
 	  qdig++;
 	}
     }

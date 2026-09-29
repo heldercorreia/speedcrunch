@@ -543,12 +543,11 @@ void SyntaxHighlighter::asHtml(QString& html)
     tempCursor.setCharFormat(textfmt);
 
     // Apply the additional formats set by the syntax highlighter
-    QTextBlock start = document()->findBlock(cursor.selectionStart());
-    QTextBlock end = document()->findBlock(cursor.selectionEnd());
-    end = end.next();
+    const QTextBlock firstBlock = document()->findBlock(cursor.selectionStart());
+    const QTextBlock endBlock = document()->findBlock(cursor.selectionEnd()).next();
     const int selectionStart = cursor.selectionStart();
     const int endOfDocument = tempDocument->characterCount() - 1;
-    for(QTextBlock current = start; current.isValid() && current != end; current = current.next()) {
+    for(QTextBlock current = firstBlock; current.isValid() && current != endBlock; current = current.next()) {
         const QTextLayout* layout(current.layout());
 
         foreach(const QTextLayout::FormatRange &range, layout->formats()) {
