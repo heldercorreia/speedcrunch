@@ -457,6 +457,14 @@ static bool isAnyAdditionOperator(const QChar& ch)
 
 static QChar normalizedTypedCharFromEvent(const QKeyEvent* event, const QString& normalizedEventText)
 {
+    // Editing keys can carry text (e.g. Backspace's U+0008), but must not
+    // enter the character-insertion rules. Unknown keys may carry symbols
+    // from keyboard layouts, so keep accepting their printable payloads.
+    if ((event->key() >= Qt::Key_Escape && event->key() != Qt::Key_unknown)
+        || (!event->text().isEmpty() && !event->text().at(0).isPrint())) {
+        return QChar();
+    }
+
     if (normalizedEventText.size() == 1)
         return normalizedEventText.at(0);
 
@@ -2787,7 +2795,7 @@ void Editor::keyPressEvent(QKeyEvent* event)
 
     const bool hasPrintableTextPayload =
         !event->text().isEmpty()
-        && key < Qt::Key_Escape
+        && (key < Qt::Key_Escape || key == Qt::Key_unknown)
         && std::all_of(event->text().cbegin(), event->text().cend(),
                        [](const QChar& ch) { return ch.isPrint(); });
     if (isInsideCommentFromQuestionMark(text(), cursorPosition)
@@ -2797,6 +2805,7 @@ void Editor::keyPressEvent(QKeyEvent* event)
         return;
     }
     if (!textCursor().hasSelection()
+        && (hasPrintableTextPayload || isDeadKey(key))
         && hasOnlyWhitespaceToLeft(text(), cursorPosition)) {
         const bool autoAnsEnabledForStart = Settings::instance()->autoAns;
         // When "Auto-insert ans..." is off, treat expression start as a strict

@@ -74,6 +74,9 @@ private slots:
     void inserts_unit_conversion_with_placeholder_when_typing_arrow_symbol();
     void treats_spaced_unit_conversion_as_atomic_navigation_and_edit_token();
     void treats_spaced_shift_operators_as_atomic_navigation_and_edit_tokens();
+    void backspace_removes_typed_operator_after_unit();
+    void editing_keys_bypass_typing_restrictions_data();
+    void editing_keys_bypass_typing_restrictions();
     void treats_spaced_question_comment_as_atomic_navigation_and_edit_token();
     void treats_spaced_equal_as_atomic_navigation_and_edit_token();
     void treats_leading_question_comment_as_atomic_navigation_and_edit_token();
@@ -1158,6 +1161,96 @@ void TestEditorUi::treats_spaced_shift_operators_as_atomic_navigation_and_edit_t
     editor.setCursorPosition(1); // right before grouped token
     QTest::keyClick(&editor, Qt::Key_Delete, Qt::NoModifier);
     QCOMPARE(editor.document()->toRawText(), QStringLiteral("12"));
+}
+
+void TestEditorUi::backspace_removes_typed_operator_after_unit()
+{
+    Editor editor;
+    QTest::keyClicks(&editor, QStringLiteral("2 [g"));
+    QTest::keyClick(&editor, Qt::Key_Right); // Leave the auto-inserted unit brackets.
+    QTest::keyClicks(&editor, QStringLiteral("/"));
+    const QString quantity = QStringLiteral("2") + MathDsl::QuantSp + QStringLiteral("[g]");
+    const QString division = MathDsl::buildWrappedToken(MathDsl::DivOp, MathDsl::DivWrap);
+    QCOMPARE(editor.document()->toRawText(), quantity + division);
+
+    // Native Backspace events carry a control character; QTest::keyClick
+    // does not reproduce that payload on every platform.
+    QKeyEvent backspace(QEvent::KeyPress, Qt::Key_Backspace, Qt::NoModifier,
+                        QString(QChar(0x08)));
+    QApplication::sendEvent(&editor, &backspace);
+    QCOMPARE(editor.document()->toRawText(), quantity);
+    QCOMPARE(editor.textCursor().position(), quantity.size());
+}
+
+void TestEditorUi::editing_keys_bypass_typing_restrictions_data()
+{
+    QTest::addColumn<QString>("expression");
+    QTest::addColumn<int>("position");
+    QTest::addColumn<int>("key");
+    QTest::addColumn<QString>("payload");
+    QTest::addColumn<QString>("expected");
+    QTest::addColumn<int>("expectedPosition");
+
+    const QList<QChar> operators = {
+        MathDsl::AddOp, MathDsl::SubOp, MathDsl::DivOp,
+        MathDsl::MulCrossOp, MathDsl::PowOp
+    };
+    const QStringList prefixes = {
+        QStringLiteral("2"),
+        QStringLiteral("2") + MathDsl::QuantSp + QStringLiteral("[g]"),
+        QStringLiteral("2") + MathDsl::QuantSp + QStringLiteral("[g")
+    };
+    for (int context = 0; context < prefixes.size(); ++context) {
+        for (const QChar op : operators) {
+            const QString token = context == 2 || op == MathDsl::PowOp
+                ? QString(op) : MathDsl::buildWrappedToken(op);
+            const QString expression = prefixes.at(context) + token;
+            const QByteArray name = QStringLiteral("context-%1-op-%2")
+                .arg(context).arg(uint(op.unicode())).toLatin1();
+            QTest::newRow(QByteArray(name + "-backspace").constData())
+                << expression << int(expression.size()) << int(Qt::Key_Backspace)
+                << QString(QChar(0x08)) << prefixes.at(context) << int(prefixes.at(context).size());
+            QTest::newRow(QByteArray(name + "-delete").constData())
+                << expression + QStringLiteral("7") << int(expression.size()) << int(Qt::Key_Delete)
+                << QString(QChar(0x7f)) << expression << int(expression.size());
+            QTest::newRow(QByteArray(name + "-escape").constData())
+                << expression << int(expression.size()) << int(Qt::Key_Escape)
+                << QString(QChar(0x1b)) << expression << int(expression.size());
+            QTest::newRow(QByteArray(name + "-tab").constData())
+                << expression << int(expression.size()) << int(Qt::Key_Tab)
+                << QString(QChar(0x09)) << expression << int(expression.size());
+        }
+    }
+    QTest::newRow("delete-at-expression-start")
+        << QStringLiteral("7") << 0 << int(Qt::Key_Delete)
+        << QString(QChar(0x7f)) << QString() << 0;
+    QTest::newRow("backspace-in-leading-whitespace")
+        << QStringLiteral("  7") << 2 << int(Qt::Key_Backspace)
+        << QString(QChar(0x08)) << QStringLiteral(" 7") << 1;
+    QTest::newRow("escape-in-empty-editor")
+        << QString() << 0 << int(Qt::Key_Escape)
+        << QString(QChar(0x1b)) << QString() << 0;
+}
+
+void TestEditorUi::editing_keys_bypass_typing_restrictions()
+{
+    QFETCH(QString, expression);
+    QFETCH(int, position);
+    QFETCH(int, key);
+    QFETCH(QString, payload);
+    QFETCH(QString, expected);
+    QFETCH(int, expectedPosition);
+
+    Editor editor;
+    editor.setText(expression);
+    editor.setCursorPosition(position);
+    QSignalSpy escapeSpy(&editor, SIGNAL(escapePressed()));
+    QKeyEvent event(QEvent::KeyPress, key, Qt::NoModifier, payload);
+    QApplication::sendEvent(&editor, &event);
+
+    QCOMPARE(editor.document()->toRawText(), expected);
+    QCOMPARE(editor.textCursor().position(), expectedPosition);
+    QCOMPARE(escapeSpy.count(), key == Qt::Key_Escape ? 1 : 0);
 }
 
 void TestEditorUi::treats_spaced_question_comment_as_atomic_navigation_and_edit_token()
