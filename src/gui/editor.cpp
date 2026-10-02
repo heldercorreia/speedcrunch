@@ -34,6 +34,7 @@
 #include <QLineEdit>
 #include <QMimeData>
 #include <QPainter>
+#include <QPaintEvent>
 #include <QPlainTextEdit>
 #include <QPointer>
 #include <QScreen>
@@ -2339,21 +2340,97 @@ void Editor::evaluate()
 
 void Editor::paintEvent(QPaintEvent* event)
 {
+    if (m_customCursorVisible && !m_themePrimaryColor.isValid()) {
+        QPlainTextEdit::paintEvent(event);
+        return;
+    }
+
+    // Paint the text layouts directly so Qt never draws its native cursor.
+    // A zero cursor width is insufficient: QTextLayout can still draw a
+    // cosmetic hairline at fractional display scales (and bidi cursor marks).
+    // Its independent blink and raster inversion then add extra cursor states.
+    QPainter painter(viewport());
+    painter.setClipRegion(event->region());
+    QPointF offset = contentOffset();
+    painter.setBrushOrigin(offset);
+    const auto context = getPaintContext();
+    painter.setPen(context.palette.text().color());
+    QRect clip = event->rect();
+    const qreal maximumWidth = qMax(qreal(viewport()->width()),
+                                    document()->documentLayout()->documentSize().width());
+
+    if (document()->isEmpty() && !placeholderText().isEmpty()
+        && !textCursor().hasSelection()
+        && textCursor().block().layout()->preeditAreaText().isEmpty()) {
+        painter.save();
+        painter.setPen(context.palette.placeholderText().color());
+        const int margin = int(document()->documentMargin());
+        painter.drawText(viewport()->rect().adjusted(margin, margin, 0, 0),
+                         Qt::AlignTop | Qt::TextWordWrap, placeholderText());
+        painter.restore();
+    }
+
+    // Keep full-width selections out of the document's right margin, as in
+    // QPlainTextEdit's normal paint path.
+    const int rightEdge = int(offset.x() + maximumWidth - document()->documentMargin())
+        + cursorWidth();
+    clip.setRight(qMin(clip.right(), rightEdge));
+    painter.setClipRect(clip, Qt::IntersectClip);
+
+    QTextBlock block = firstVisibleBlock();
+    for (; block.isValid(); block = block.next()) {
+        const QRectF bounds = blockBoundingRect(block).translated(offset);
+        if (block.isVisible() && bounds.bottom() >= clip.top() && bounds.top() <= clip.bottom()) {
+            const QBrush background = block.blockFormat().background();
+            if (background != Qt::NoBrush) {
+                QRectF backgroundRect = bounds;
+                backgroundRect.setWidth(maximumWidth);
+                painter.fillRect(backgroundRect, background);
+            }
+
+            QList<QTextLayout::FormatRange> selections;
+            QTextLayout* layout = block.layout();
+            for (const auto& selection : context.selections) {
+                const int start = selection.cursor.selectionStart() - block.position();
+                const int end = selection.cursor.selectionEnd() - block.position();
+                QTextLayout::FormatRange range;
+                range.format = selection.format;
+                if (start < block.length() && end > 0 && end > start) {
+                    range.start = start;
+                    range.length = end - start;
+                } else if (!selection.cursor.hasSelection()
+                           && selection.format.boolProperty(QTextFormat::FullWidthSelection)
+                           && block.contains(selection.cursor.position())) {
+                    const QTextLine line = layout->lineForTextPosition(start);
+                    range.start = line.textStart();
+                    range.length = line.textLength();
+                    if (range.start + range.length == block.length() - 1)
+                        ++range.length;
+                } else {
+                    continue;
+                }
+                selections.append(range);
+            }
+            layout->draw(&painter, offset, selections, clip);
+        }
+        offset.ry() += bounds.height();
+        if (offset.y() > viewport()->height()) {
+            block = block.next();
+            break;
+        }
+    }
+    if (backgroundVisible() && !block.isValid() && offset.y() <= clip.bottom()
+        && (centerOnScroll() || verticalScrollBar()->maximum() == verticalScrollBar()->minimum())) {
+        painter.fillRect(QRect(QPoint(clip.left(), int(offset.y())), clip.bottomRight()),
+                         palette().window());
+    }
+
     const bool paintThemedCursor = shouldPaintThemedCursor();
     const QRect themedCursor = paintThemedCursor ? themedCursorRect() : QRect();
-    const int savedCursorWidth = cursorWidth();
-    if (paintThemedCursor)
-        setCursorWidth(0);
-
-    QPlainTextEdit::paintEvent(event);
-
-    if (paintThemedCursor)
-        setCursorWidth(savedCursorWidth);
-
     if (!paintThemedCursor || !m_themedCursorVisible || !themedCursor.isValid())
         return;
 
-    QPainter painter(viewport());
+    painter.setClipRegion(event->region());
     painter.setPen(Qt::NoPen);
     painter.fillRect(themedCursor, m_themePrimaryColor);
 }

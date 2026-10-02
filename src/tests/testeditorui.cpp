@@ -23,11 +23,13 @@
 #include <QJsonObject>
 #include <QKeyEvent>
 #include <QPalette>
+#include <QPainter>
 #include <QPushButton>
 #include <QScrollBar>
 #include <QSignalSpy>
 #include <QTest>
 #include <QTextLayout>
+#include <QElapsedTimer>
 #include <QTreeWidget>
 #include <QVBoxLayout>
 
@@ -166,6 +168,10 @@ private slots:
     void adding_second_wrapped_character_keeps_first_line_visible();
     void editor_fill_color_is_15_percent_lighter_for_dark_background_role();
     void editor_fill_color_is_15_percent_darker_for_light_background_role();
+    void themed_cursor_has_only_two_states_at_display_scale_data();
+    void themed_cursor_has_only_two_states_at_display_scale();
+    void cursor_free_painting_preserves_text_and_selections_data();
+    void cursor_free_painting_preserves_text_and_selections();
 };
 
 static QTreeWidget* s_completionPopupTree()
@@ -4398,6 +4404,140 @@ void TestEditorUi::editor_fill_color_is_15_percent_darker_for_light_background_r
 
     settings->colorScheme = oldColorScheme;
     settings->customColorSchemeJson = oldCustomColorSchemeJson;
+}
+
+void TestEditorUi::themed_cursor_has_only_two_states_at_display_scale_data()
+{
+    QTest::addColumn<qreal>("scale");
+    QTest::newRow("100-percent") << qreal(1);
+    QTest::newRow("125-percent") << qreal(1.25);
+    QTest::newRow("150-percent") << qreal(1.5);
+    QTest::newRow("200-percent") << qreal(2);
+}
+
+void TestEditorUi::themed_cursor_has_only_two_states_at_display_scale()
+{
+    QFETCH(qreal, scale);
+    Editor editor;
+    editor.setAutoCalcEnabled(false);
+    editor.setAutoCompletionEnabled(false);
+    const QColor primary(QStringLiteral("#ff3377"));
+    editor.setThemePrimaryColor(primary, false);
+    editor.setText(QStringLiteral("123"));
+    editor.setCursorPosition(3);
+    editor.resize(400, editor.height());
+    editor.show();
+    editor.activateWindow();
+    editor.setFocus();
+    QTRY_VERIFY(editor.hasFocus());
+
+    const QRect cursor = editor.cursorRect();
+    const QRect themedCursor(cursor.x() + (cursor.width() - 2) / 2,
+                             cursor.y(), 2, cursor.height());
+    const QRect sample(qFloor((themedCursor.left() - 2) * scale),
+                       qFloor(themedCursor.center().y() * scale),
+                       qCeil(6 * scale), 1);
+    const auto render = [&]() {
+        QImage image(QSize(qCeil(editor.viewport()->width() * scale),
+                           qCeil(editor.viewport()->height() * scale)),
+                     QImage::Format_ARGB32_Premultiplied);
+        image.setDevicePixelRatio(scale);
+        image.fill(Qt::transparent);
+        QPainter painter(&image);
+        editor.viewport()->render(&painter);
+        return image;
+    };
+    editor.setCustomCursorVisible(false);
+    const QImage hidden = render();
+    QImage visible = hidden.copy();
+    {
+        QPainter painter(&visible);
+        painter.fillRect(themedCursor, primary);
+    }
+    const QImage hiddenSample = hidden.copy(sample);
+    const QImage visibleSample = visible.copy(sample);
+    QVERIFY(hiddenSample != visibleSample);
+    // Even a hidden custom cursor must not leave Qt's independently blinking
+    // zero-width cursor behind at fractional display scales.
+    const int flashTime = qMax(1000, QApplication::cursorFlashTime());
+    QElapsedTimer elapsed;
+    elapsed.start();
+    while (elapsed.elapsed() < flashTime) {
+        QVERIFY(render().copy(sample) == hiddenSample);
+        QTest::qWait(20);
+    }
+
+    editor.setCustomCursorVisible(true);
+    bool sawVisible = false;
+    bool sawHidden = false;
+    elapsed.restart();
+    while (elapsed.elapsed() < flashTime * 2) {
+        const QImage actual = render().copy(sample);
+        QVERIFY2(actual == visibleSample || actual == hiddenSample,
+                 "Cursor shows an extra color or width during its blink cycle");
+        sawVisible |= actual == visibleSample;
+        sawHidden |= actual == hiddenSample;
+        QTest::qWait(20);
+    }
+    QVERIFY(sawVisible);
+    QVERIFY(sawHidden);
+}
+
+void TestEditorUi::cursor_free_painting_preserves_text_and_selections_data()
+{
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<bool>("selectText");
+    QTest::newRow("placeholder") << QString() << false;
+    QTest::newRow("syntax-highlighting") << QStringLiteral("sin(123) + 456") << false;
+    QTest::newRow("selected-wrapped-text")
+        << QStringLiteral("123 + 456 + 789 + 123 + 456 + 789 + 123 + 456\n123 + 456") << true;
+    QTest::newRow("full-width-selection") << QStringLiteral("123\n456\n789") << false;
+}
+
+void TestEditorUi::cursor_free_painting_preserves_text_and_selections()
+{
+    QFETCH(QString, text);
+    QFETCH(bool, selectText);
+    class NativePaintingEditor : public Editor {
+    protected:
+        void paintEvent(QPaintEvent* event) override { QPlainTextEdit::paintEvent(event); }
+    };
+    NativePaintingEditor reference;
+    Editor editor;
+    for (Editor* target : { static_cast<Editor*>(&reference), &editor }) {
+        target->setAutoCalcEnabled(false);
+        target->setAutoCompletionEnabled(false);
+        target->setThemePrimaryColor(QColor(QStringLiteral("#ff3377")), false);
+        target->setPlaceholderText(QStringLiteral("Enter an expression"));
+        target->setText(text);
+        target->setCursorPosition(0);
+        target->setCustomCursorVisible(false);
+        target->setTextInteractionFlags(Qt::TextSelectableByMouse);
+        target->resize(220, target->height());
+        target->show();
+        if (selectText)
+            target->selectAll();
+        if (qstrcmp(QTest::currentDataTag(), "full-width-selection") == 0) {
+            QTextEdit::ExtraSelection selection;
+            selection.cursor = target->textCursor();
+            selection.cursor.setPosition(4);
+            selection.format.setBackground(QColor(QStringLiteral("#557799")));
+            selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+            target->setExtraSelections({ selection });
+            // Exercise explicit block backgrounds as well as extra selections.
+            QTextCursor blockCursor(target->document());
+            QTextBlockFormat format;
+            format.setBackground(QColor(QStringLiteral("#774455")));
+            blockCursor.setBlockFormat(format);
+        }
+    }
+    QCoreApplication::processEvents();
+    reference.clearFocus();
+    editor.clearFocus();
+    const QImage expected = reference.viewport()->grab().toImage();
+    const QImage actual = editor.viewport()->grab().toImage();
+    QVERIFY2(actual == expected,
+             "Cursor-free painting changes Qt's text, background, or selection rendering");
 }
 
 QTEST_MAIN(TestEditorUi)
