@@ -161,6 +161,9 @@ private slots:
     void completion_popup_keeps_editor_widgets_non_native();
     void completion_popup_follows_editor_geometry_data();
     void completion_popup_follows_editor_geometry();
+    void completion_popup_geometry_avoids_editor_overlap_data();
+    void completion_popup_geometry_avoids_editor_overlap();
+    void completion_popup_shortens_tall_lists_without_covering_editor();
     void constant_completion_popup_follows_wrapped_editor_cursor();
     void completion_popup_uses_configured_surface_colors();
     void constant_completion_popup_uses_configured_surface_colors();
@@ -4093,6 +4096,71 @@ void TestEditorUi::completion_popup_follows_editor_geometry()
     QVERIFY(screen.contains(popup->geometry()));
     if (wrapped)
         QVERIFY(editor.verticalScrollBar()->value() > 0);
+    popup->hide();
+}
+
+void TestEditorUi::completion_popup_geometry_avoids_editor_overlap_data()
+{
+    QTest::addColumn<QRect>("bounds");
+    QTest::addColumn<QRect>("editor");
+    QTest::addColumn<int>("height");
+    QTest::addColumn<QRect>("expected");
+    QTest::newRow("below")
+        << QRect(0, 0, 600, 400) << QRect(30, 100, 400, 60) << 100 << QRect(50, 160, 200, 100);
+    QTest::newRow("above-at-window-bottom")
+        << QRect(0, 0, 600, 400) << QRect(30, 330, 400, 60) << 100 << QRect(50, 230, 200, 100);
+    QTest::newRow("shrink-above")
+        << QRect(0, 0, 600, 400) << QRect(30, 200, 400, 60) << 300 << QRect(50, 0, 200, 200);
+    QTest::newRow("shrink-below")
+        << QRect(0, 0, 600, 400) << QRect(30, 80, 400, 60) << 300 << QRect(50, 140, 200, 260);
+    QTest::newRow("negative-screen-origin")
+        << QRect(0, -400, 600, 400) << QRect(30, -200, 400, 60) << 300 << QRect(50, -400, 200, 200);
+    QTest::newRow("no-space")
+        << QRect(0, 0, 600, 60) << QRect(30, 0, 400, 60) << 100 << QRect();
+}
+
+void TestEditorUi::completion_popup_geometry_avoids_editor_overlap()
+{
+    QFETCH(QRect, bounds);
+    QFETCH(QRect, editor);
+    QFETCH(int, height);
+    QFETCH(QRect, expected);
+    const QRect popup = EditorUtils::completionPopupGeometry(editor, 50, QSize(200, height), bounds);
+    QCOMPARE(popup, expected);
+    QVERIFY(!popup.intersects(editor));
+    if (popup.isValid())
+        QVERIFY(bounds.contains(popup));
+}
+
+void TestEditorUi::completion_popup_shortens_tall_lists_without_covering_editor()
+{
+    Editor editor;
+    editor.setAutoCompletionEnabled(false);
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+    const QRect screen = editor.screen()->availableGeometry();
+    editor.move(screen.left() + 20, screen.center().y() - editor.height() / 2);
+
+    QTreeWidget* popup = editor.findChild<QTreeWidget*>(QStringLiteral("editorCompletionPopup"));
+    QVERIFY(popup);
+    QFont font = popup->font();
+    font.setPixelSize(qMax(1, screen.height() / 8));
+    popup->setFont(font);
+    QStringList choices;
+    for (int i = 0; i < 8; ++i)
+        choices.append(QStringLiteral("%1:x").arg(i));
+    EditorCompletion* completion = editor.findChild<EditorCompletion*>();
+    QVERIFY(completion);
+    completion->showCompletion(choices);
+    QCoreApplication::processEvents();
+
+    QVERIFY(popup->isVisible());
+    const QRect editorRect(editor.mapToGlobal(QPoint(0, 0)), editor.size());
+    QVERIFY(!popup->geometry().intersects(editorRect));
+    QVERIFY(popup->geometry().top() >= screen.top());
+    QVERIFY(popup->geometry().bottom() <= screen.bottom());
+    QVERIFY(popup->verticalScrollBar()->maximum() > 0);
     popup->hide();
 }
 

@@ -81,22 +81,23 @@ static void updateCompletionTransientParent(QWidget* popup, Editor* editor)
     }
 }
 
-static QPoint completionPopupPosition(Editor* editor, const QTextCursor& cursor,
-                                      const QSize& size)
+static QRect completionPopupGeometry(Editor* editor, const QTextCursor& cursor,
+                                     const QSize& size)
 {
     // cursorRect includes wrapping, scrolling, text direction and text margins;
     // measuring the whole text prefix does not describe its visible position.
     const int x = editor->viewport()->mapToGlobal(editor->cursorRect(cursor).topLeft()).x();
-    const QPoint editorTop = editor->mapToGlobal(QPoint(0, 0));
-    QPoint position(x, editorTop.y() + editor->height());
-    const QRect screen = editor->screen()->availableGeometry();
-    if (position.y() + size.height() > screen.bottom() + 1)
-        position.setY(editorTop.y() - size.height());
-    position.setX(qBound(screen.left(), position.x(),
-                         qMax(screen.left(), screen.right() + 1 - size.width())));
-    position.setY(qBound(screen.top(), position.y(),
-                         qMax(screen.top(), screen.bottom() + 1 - size.height())));
-    return position;
+    const QRect editorRect(editor->mapToGlobal(QPoint(0, 0)), editor->size());
+    QRect bounds = editor->screen()->availableGeometry();
+    if (QGuiApplication::platformName().startsWith(QLatin1String("wayland"))
+        && editor->window() != editor) {
+        // Wayland reports no reliable global position for the containing window.
+        // Keep the popup inside its client area, whose coordinates are known,
+        // so the compositor does not slide a screen-constrained popup over input.
+        QWidget* window = editor->window();
+        bounds = QRect(window->mapToGlobal(QPoint(0, 0)), window->size());
+    }
+    return EditorUtils::completionPopupGeometry(editorRect, x, size, bounds);
 }
 
 static int editorVerticalDecorationHeight()
@@ -4553,10 +4554,14 @@ void EditorCompletion::showCompletion(const QStringList& choices)
     updateCompletionTransientParent(m_popup, m_editor);
     auto cursor = m_editor->textCursor();
     cursor.movePosition(QTextCursor::StartOfWord);
-    const QPoint position = completionPopupPosition(m_editor, cursor, QSize(width, height));
+    const QRect geometry = completionPopupGeometry(m_editor, cursor, QSize(width, height));
 
     m_popup->setUpdatesEnabled(true);
-    m_popup->setGeometry(QRect(position, QSize(width, height)));
+    if (!geometry.isValid()) {
+        m_popup->hide();
+        return;
+    }
+    m_popup->setGeometry(geometry);
     ToolTipStyleUtils::applyRoundedPopupMask(m_popup, m_cornerRadius);
     m_popup->verticalScrollBar()->setValue(m_popup->verticalScrollBar()->minimum());
     m_popup->show();
@@ -4662,6 +4667,7 @@ ConstantCompletion::ConstantCompletion(Editor* editor)
     width += 200; // Extra space (FIXME: scrollbar size?).
 
     // Adjust dimensions.
+    m_popupSize = QSize(width, height);
     m_popup->resize(width, height);
     m_constantWidget->resize(width, height);
     m_categoryWidget->resize(width, height);
@@ -4871,13 +4877,19 @@ void ConstantCompletion::showCompletion()
     applyThemeColors();
 
     updateCompletionTransientParent(m_popup, m_editor);
-    const QPoint pos = completionPopupPosition(m_editor, m_editor->textCursor(), m_popup->size());
+    const QRect geometry = completionPopupGeometry(m_editor, m_editor->textCursor(), m_popupSize);
+    if (!geometry.isValid()) {
+        m_popup->hide();
+        return;
+    }
 
     // Start with category.
     m_categoryWidget->setFocus();
     setHorizontalPosition(0);
 
-    m_popup->move(pos);
+    m_popup->setGeometry(geometry);
+    m_categoryWidget->resize(geometry.size());
+    m_constantWidget->resize(geometry.size());
     ToolTipStyleUtils::applyRoundedPopupMask(m_popup, m_cornerRadius);
     m_popup->show();
 }

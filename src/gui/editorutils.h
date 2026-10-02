@@ -16,8 +16,26 @@
 
 #include <QString>
 #include <QStringList>
+#include <QRect>
 
 namespace EditorUtils {
+
+inline QRect completionPopupGeometry(const QRect& editor, int anchorX,
+                                      const QSize& requestedSize, const QRect& bounds)
+{
+    const int below = qMax(0, bounds.bottom() - editor.bottom());
+    const int above = qMax(0, editor.top() - bounds.top());
+    const bool useBelow = requestedSize.height() <= below
+        || (requestedSize.height() > above && below >= above);
+    const int height = qMin(requestedSize.height(), useBelow ? below : above);
+    if (height <= 0)
+        return QRect();
+
+    const int x = qBound(bounds.left(), anchorX,
+                         qMax(bounds.left(), bounds.right() + 1 - requestedSize.width()));
+    const int y = useBelow ? editor.bottom() + 1 : editor.top() - height;
+    return QRect(QPoint(x, y), QSize(requestedSize.width(), height));
+}
 
 enum AutoAnsRewriteMode {
     AutoAnsNoRewrite = 0,

@@ -137,6 +137,7 @@ The expression editor provides some advanced features:
 * Autocompletion
     If you start typing a name (e.g. of a variable, function, or unit), a pop-up with matching names will appear below the editor, aligned with the start of
     the name being completed. It appears above the editor when there is insufficient space below and shifts horizontally to stay on screen.
+    The list becomes shorter and scrollable when needed to avoid covering the editor. On Wayland, it stays within the application window.
     Alignment follows the visible text even when the expression wraps or scrolls. Press :kbd:`Tab` to insert the current
     suggestion. Pressing :kbd:`Enter` evaluates the expression by default. If you explicitly navigate the popup with arrow/page/home/end keys or click a
     suggestion with the mouse, then :kbd:`Enter` accepts that selected suggestion. Pressing :kbd:`Escape` dismisses the autocomplete popup.
