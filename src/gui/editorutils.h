@@ -16,8 +16,46 @@
 
 #include <QString>
 #include <QStringList>
+#include <QRect>
 
 namespace EditorUtils {
+
+inline QRect completionPopupAnchorRect(const QRect& editor, int anchorX)
+{
+    return QRect(qBound(editor.left(), anchorX, editor.right()), editor.top(),
+                 1, editor.height());
+}
+
+inline QRect completionPopupCompositorGeometry(const QRect& anchor, const QSize& requestedSize,
+                                               const QSize& availableSize)
+{
+    // Without a global window position, limit unusually tall lists to a height
+    // that fits on at least one side of an on-screen editor. The compositor
+    // determines which side has room and may constrain the size further.
+    const int height = qMin(requestedSize.height(),
+                             qMax(0, (availableSize.height() - anchor.height()) / 2));
+    if (height <= 0)
+        return QRect();
+    return QRect(QPoint(anchor.left(), anchor.bottom() + 1),
+                 QSize(qMin(requestedSize.width(), availableSize.width()), height));
+}
+
+inline QRect completionPopupGeometry(const QRect& editor, int anchorX,
+                                      const QSize& requestedSize, const QRect& bounds)
+{
+    const int below = qMax(0, bounds.bottom() - editor.bottom());
+    const int above = qMax(0, editor.top() - bounds.top());
+    const bool useBelow = requestedSize.height() <= below
+        || (requestedSize.height() > above && below >= above);
+    const int height = qMin(requestedSize.height(), useBelow ? below : above);
+    if (height <= 0)
+        return QRect();
+
+    const int x = qBound(bounds.left(), anchorX,
+                         qMax(bounds.left(), bounds.right() + 1 - requestedSize.width()));
+    const int y = useBelow ? editor.bottom() + 1 : editor.top() - height;
+    return QRect(QPoint(x, y), QSize(requestedSize.width(), height));
+}
 
 enum AutoAnsRewriteMode {
     AutoAnsNoRewrite = 0,

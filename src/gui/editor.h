@@ -280,6 +280,7 @@ private:
     QString m_lastDomain;
     QTreeWidget* m_constantWidget;
     QFrame* m_popup;
+    QSize m_popupSize;
     QTimeLine* m_slider;
     QColor m_backgroundColor;
     QColor m_foregroundColor;

@@ -157,8 +157,18 @@ private slots:
     void completion_popup_reopens_after_typing_following_escape();
     void completion_popup_shows_for_two_character_prefixes();
     void completion_popup_uses_positionable_nonactivating_surface();
+    void completion_popup_keeps_editor_widgets_non_native_data();
+    void completion_popup_keeps_editor_widgets_non_native();
     void completion_popup_follows_editor_geometry_data();
     void completion_popup_follows_editor_geometry();
+    void completion_popup_geometry_avoids_editor_overlap_data();
+    void completion_popup_geometry_avoids_editor_overlap();
+    void completion_popup_shortens_tall_lists_without_covering_editor();
+    void completion_popups_configure_editor_anchor_data();
+    void completion_popups_configure_editor_anchor();
+    void completion_popup_compositor_geometry_data();
+    void completion_popup_compositor_geometry();
+    void constant_completion_pages_follow_popup_resize();
     void constant_completion_popup_follows_wrapped_editor_cursor();
     void completion_popup_uses_configured_surface_colors();
     void constant_completion_popup_uses_configured_surface_colors();
@@ -3995,6 +4005,48 @@ void TestEditorUi::completion_popup_uses_positionable_nonactivating_surface()
     popup->hide();
 }
 
+void TestEditorUi::completion_popup_keeps_editor_widgets_non_native_data()
+{
+    QTest::addColumn<bool>("constants");
+    QTest::newRow("autocomplete") << false;
+    QTest::newRow("constants") << true;
+}
+
+void TestEditorUi::completion_popup_keeps_editor_widgets_non_native()
+{
+    QFETCH(bool, constants);
+    QWidget window;
+    QVBoxLayout layout(&window);
+    Editor editor;
+    editor.setAutoCompletionEnabled(false);
+    layout.addWidget(&editor);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    editor.setFocus();
+    QVERIFY(!editor.testAttribute(Qt::WA_NativeWindow));
+    QVERIFY(!editor.viewport()->testAttribute(Qt::WA_NativeWindow));
+    QVERIFY(!editor.verticalScrollBar()->testAttribute(Qt::WA_NativeWindow));
+
+    if (constants) {
+        QTest::keyClick(&editor, Qt::Key_Space, Qt::ControlModifier);
+        QVERIFY(QApplication::activePopupWidget());
+    } else {
+        EditorCompletion* completion = editor.findChild<EditorCompletion*>();
+        QVERIFY(completion);
+        completion->showCompletion({QStringLiteral("cos:Cosine")});
+        QVERIFY(s_completionPopupTree());
+    }
+    QCoreApplication::processEvents();
+
+    // Forcing native siblings creates extra Wayland subsurfaces for the text
+    // viewport and scrollbars and changes their backing-store composition.
+    QVERIFY(!editor.testAttribute(Qt::WA_NativeWindow));
+    QVERIFY(!editor.viewport()->testAttribute(Qt::WA_NativeWindow));
+    QVERIFY(!editor.verticalScrollBar()->testAttribute(Qt::WA_NativeWindow));
+    if (QWidget* popup = constants ? QApplication::activePopupWidget() : s_completionPopupTree())
+        popup->hide();
+}
+
 void TestEditorUi::completion_popup_follows_editor_geometry_data()
 {
     QTest::addColumn<bool>("wrapped");
@@ -4049,6 +4101,224 @@ void TestEditorUi::completion_popup_follows_editor_geometry()
     QVERIFY(screen.contains(popup->geometry()));
     if (wrapped)
         QVERIFY(editor.verticalScrollBar()->value() > 0);
+    popup->hide();
+}
+
+void TestEditorUi::completion_popup_geometry_avoids_editor_overlap_data()
+{
+    QTest::addColumn<QRect>("bounds");
+    QTest::addColumn<QRect>("editor");
+    QTest::addColumn<int>("height");
+    QTest::addColumn<QRect>("expected");
+    QTest::newRow("below")
+        << QRect(0, 0, 600, 400) << QRect(30, 100, 400, 60) << 100 << QRect(50, 160, 200, 100);
+    QTest::newRow("above-at-window-bottom")
+        << QRect(0, 0, 600, 400) << QRect(30, 330, 400, 60) << 100 << QRect(50, 230, 200, 100);
+    QTest::newRow("shrink-above")
+        << QRect(0, 0, 600, 400) << QRect(30, 200, 400, 60) << 300 << QRect(50, 0, 200, 200);
+    QTest::newRow("shrink-below")
+        << QRect(0, 0, 600, 400) << QRect(30, 80, 400, 60) << 300 << QRect(50, 140, 200, 260);
+    QTest::newRow("negative-screen-origin")
+        << QRect(0, -400, 600, 400) << QRect(30, -200, 400, 60) << 300 << QRect(50, -400, 200, 200);
+    QTest::newRow("no-space")
+        << QRect(0, 0, 600, 60) << QRect(30, 0, 400, 60) << 100 << QRect();
+}
+
+void TestEditorUi::completion_popup_geometry_avoids_editor_overlap()
+{
+    QFETCH(QRect, bounds);
+    QFETCH(QRect, editor);
+    QFETCH(int, height);
+    QFETCH(QRect, expected);
+    const QRect popup = EditorUtils::completionPopupGeometry(editor, 50, QSize(200, height), bounds);
+    QCOMPARE(popup, expected);
+    QVERIFY(!popup.intersects(editor));
+    if (popup.isValid())
+        QVERIFY(bounds.contains(popup));
+}
+
+void TestEditorUi::completion_popup_shortens_tall_lists_without_covering_editor()
+{
+    Editor editor;
+    editor.setAutoCompletionEnabled(false);
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+    const QRect screen = editor.screen()->availableGeometry();
+    editor.move(screen.left() + 20, screen.center().y() - editor.height() / 2);
+
+    QTreeWidget* popup = editor.findChild<QTreeWidget*>(QStringLiteral("editorCompletionPopup"));
+    QVERIFY(popup);
+    QFont font = popup->font();
+    font.setPixelSize(qMax(1, screen.height() / 8));
+    popup->setFont(font);
+    QStringList choices;
+    for (int i = 0; i < 8; ++i)
+        choices.append(QStringLiteral("%1:x").arg(i));
+    EditorCompletion* completion = editor.findChild<EditorCompletion*>();
+    QVERIFY(completion);
+    completion->showCompletion(choices);
+    QCoreApplication::processEvents();
+
+    QVERIFY(popup->isVisible());
+    const QRect editorRect(editor.mapToGlobal(QPoint(0, 0)), editor.size());
+    QVERIFY(!popup->geometry().intersects(editorRect));
+    QVERIFY(popup->geometry().top() >= screen.top());
+    QVERIFY(popup->geometry().bottom() <= screen.bottom());
+    QVERIFY(popup->verticalScrollBar()->maximum() > 0);
+    popup->hide();
+}
+
+void TestEditorUi::completion_popups_configure_editor_anchor_data()
+{
+    QTest::addColumn<bool>("constants");
+    QTest::newRow("autocomplete") << false;
+    QTest::newRow("constants") << true;
+}
+
+void TestEditorUi::completion_popups_configure_editor_anchor()
+{
+    QFETCH(bool, constants);
+    QWidget window;
+    QVBoxLayout layout(&window);
+    layout.addStretch();
+    Editor editor;
+    editor.setAutoCompletionEnabled(false);
+    editor.setFixedWidth(340);
+    layout.addWidget(&editor);
+    window.resize(400, 400);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    // Constant completion is normally constructed lazily on Ctrl+Space.
+    ConstantCompletion* constantCompletion = constants ? new ConstantCompletion(&editor) : nullptr;
+    QWidget* popup = editor.findChild<QWidget*>(constants
+        ? QStringLiteral("constantCompletionPopup") : QStringLiteral("editorCompletionPopup"));
+    QVERIFY(popup);
+    // Both popups must configure the very first native surface created by show().
+    QVERIFY(!popup->windowHandle());
+    QRect previousAnchor;
+    for (const bool wrapped : {false, true}) {
+        const QString input = wrapped
+            ? QStringLiteral("1234567890 + ").repeated(30) + QStringLiteral("co")
+            : QStringLiteral("123 + co");
+        editor.setText(input);
+        editor.setCursorPosition(input.size());
+        editor.setFocus();
+        QCoreApplication::processEvents();
+        QTextCursor cursor = editor.textCursor();
+        if (!constants)
+            cursor.movePosition(QTextCursor::StartOfWord);
+        const QRect editorRect(editor.mapTo(&window, QPoint()), editor.size());
+        const int cursorX = editor.viewport()->mapTo(&window, editor.cursorRect(cursor).topLeft()).x();
+        const QRect expected(qBound(editorRect.left(), cursorX, editorRect.right()),
+                             editorRect.top(), 1, editorRect.height());
+
+        if (constants) {
+            constantCompletion->showCompletion();
+        } else {
+            editor.findChild<EditorCompletion*>()->showCompletion({QStringLiteral("cos:Cosine")});
+        }
+        QVERIFY(popup->isVisible());
+        QWindow* native = popup->windowHandle();
+        QVERIFY(native);
+        QCOMPARE(native->transientParent(), window.windowHandle());
+        QCOMPARE(native->property("_q_waylandPopupAnchorRect").toRect(), expected);
+        QCOMPARE(native->property("_q_waylandPopupAnchor").value<Qt::Edges>(),
+                 Qt::Edges(Qt::BottomEdge | Qt::LeftEdge));
+        QCOMPARE(native->property("_q_waylandPopupGravity").value<Qt::Edges>(),
+                 Qt::Edges(Qt::BottomEdge | Qt::RightEdge));
+        const uint constraints = native->property("_q_waylandPopupConstraintAdjustment").toUInt();
+        QVERIFY(constraints & 1); // slide_x
+        QVERIFY(constraints & 8); // flip_y
+        QVERIFY(constraints & 32); // resize_y
+        QVERIFY(!(constraints & 2)); // slide_y would overlap the editor
+        if (wrapped) {
+            QVERIFY(expected != previousAnchor);
+            QVERIFY(editor.verticalScrollBar()->value() > 0);
+        }
+        previousAnchor = expected;
+        popup->hide();
+    }
+}
+
+void TestEditorUi::completion_popup_compositor_geometry_data()
+{
+    QTest::addColumn<QRect>("editor");
+    QTest::addColumn<int>("cursorX");
+    QTest::addColumn<QSize>("requested");
+    QTest::addColumn<QRect>("expectedAnchor");
+    QTest::addColumn<QRect>("expectedPopup");
+    QTest::newRow("below-bottom-of-parent")
+        << QRect(10, 340, 400, 60) << 50 << QSize(200, 100)
+        << QRect(50, 340, 1, 60) << QRect(50, 400, 200, 100);
+    QTest::newRow("negative-guessed-origin")
+        << QRect(-600, -400, 400, 60) << -550 << QSize(200, 100)
+        << QRect(-550, -400, 1, 60) << QRect(-550, -340, 200, 100);
+    QTest::newRow("word-start-scrolled-off-left")
+        << QRect(10, 340, 400, 60) << -50 << QSize(200, 100)
+        << QRect(10, 340, 1, 60) << QRect(10, 400, 200, 100);
+    QTest::newRow("cursor-scrolled-off-right")
+        << QRect(10, 340, 400, 60) << 500 << QSize(200, 100)
+        << QRect(409, 340, 1, 60) << QRect(409, 400, 200, 100);
+    QTest::newRow("tall-and-wide-list")
+        << QRect(10, 340, 400, 60) << 50 << QSize(1000, 1000)
+        << QRect(50, 340, 1, 60) << QRect(50, 400, 800, 270);
+    QTest::newRow("editor-fills-output")
+        << QRect(10, 0, 400, 600) << 50 << QSize(200, 100)
+        << QRect(50, 0, 1, 600) << QRect();
+}
+
+void TestEditorUi::completion_popup_compositor_geometry()
+{
+    QFETCH(QRect, editor);
+    QFETCH(int, cursorX);
+    QFETCH(QSize, requested);
+    QFETCH(QRect, expectedAnchor);
+    QFETCH(QRect, expectedPopup);
+    const QRect anchor = EditorUtils::completionPopupAnchorRect(editor, cursorX);
+    QCOMPARE(anchor, expectedAnchor);
+    const QRect popup = EditorUtils::completionPopupCompositorGeometry(anchor, requested, QSize(800, 600));
+    QCOMPARE(popup, expectedPopup);
+    QVERIFY(!popup.intersects(editor));
+    if (popup.isValid()) {
+        // xdg-shell flip_y reflects both anchor and gravity, placing the bottom
+        // of the popup at the editor's top, regardless of the parent's origin.
+        const QRect flipped(QPoint(anchor.left(), anchor.top() - popup.height()), popup.size());
+        QVERIFY(!flipped.intersects(editor));
+        QCOMPARE(flipped.bottom() + 1, editor.top());
+    }
+}
+
+void TestEditorUi::constant_completion_pages_follow_popup_resize()
+{
+    Editor editor;
+    editor.setAutoCompletionEnabled(false);
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    ConstantCompletion completion(&editor);
+    completion.showCompletion();
+    QWidget* popup = QApplication::activePopupWidget();
+    QVERIFY(popup);
+    QTreeWidget* category = popup->findChild<QTreeWidget*>(QStringLiteral("constantCompletionCategoryPopup"));
+    QTreeWidget* constants = popup->findChild<QTreeWidget*>(QStringLiteral("constantCompletionConstantsPopup"));
+    QVERIFY(category);
+    QVERIFY(constants);
+    popup->resize(320, 40);
+    QCOMPARE(category->size(), popup->size());
+    QCOMPARE(constants->size(), popup->size());
+    QCOMPARE(category->x(), 0);
+    QCOMPARE(constants->x(), popup->width());
+    QTRY_VERIFY(category->verticalScrollBar()->maximum() > 0);
+
+    QVERIFY(QMetaObject::invokeMethod(&completion, "showConstants", Qt::DirectConnection));
+    QTRY_COMPARE(category->x(), -popup->width());
+    popup->resize(300, 30);
+    QCOMPARE(category->size(), popup->size());
+    QCOMPARE(constants->size(), popup->size());
+    QCOMPARE(category->x(), -popup->width());
+    QCOMPARE(constants->x(), 0);
+    QTRY_VERIFY(constants->verticalScrollBar()->maximum() > 0);
     popup->hide();
 }
 
