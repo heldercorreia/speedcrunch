@@ -39,6 +39,7 @@
 #include <QPointer>
 #include <QScreen>
 #include <QScrollBar>
+#include <QShowEvent>
 #include <QRegularExpression>
 #include <QStyle>
 #include <QResizeEvent>
@@ -47,6 +48,7 @@
 #include <QTextBlock>
 #include <QTextLayout>
 #include <QTreeWidget>
+#include <QVersionNumber>
 #include <QWheelEvent>
 #include <QWindow>
 
@@ -64,6 +66,72 @@ constexpr int kEditorCursorWidth = 2;
 constexpr int kEditorDocumentMargin = 2;
 
 static QPointer<Editor> s_completionMouseSelectionOwner;
+
+static bool usesWaylandCompletionPositioner()
+{
+    // Qt's xdg-shell anchor overrides are available starting with Qt 6.6.
+    return QGuiApplication::platformName().startsWith(QLatin1String("wayland"))
+        && QVersionNumber::fromString(QString::fromLatin1(qVersion())) >= QVersionNumber(6, 6);
+}
+
+template <typename Widget>
+class CompletionPopup : public Widget
+{
+public:
+    explicit CompletionPopup(QWidget* parent = nullptr) : Widget(parent) {}
+
+    void setPlacementAnchor(const QRect& anchor, const QSize& requestedSize, int cornerRadius)
+    {
+        // Older xdg-shell versions cannot reposition a mapped popup. Remap it
+        // when its anchor or requested size changes so every supported Qt and
+        // compositor uses the new positioner.
+        if (usesWaylandCompletionPositioner() && this->isVisible()
+            && (anchor != m_anchor || requestedSize != m_requestedSize)) {
+            this->hide();
+        }
+        m_anchor = anchor;
+        m_requestedSize = requestedSize;
+        m_cornerRadius = cornerRadius;
+        configurePositioner();
+    }
+
+protected:
+    void showEvent(QShowEvent* event) override
+    {
+        // show() creates the QWindow before this event and maps it afterwards.
+        // Configure the first native surface here without forcing winId().
+        configurePositioner();
+        Widget::showEvent(event);
+    }
+
+    void resizeEvent(QResizeEvent* event) override
+    {
+        Widget::resizeEvent(event);
+        ToolTipStyleUtils::applyRoundedPopupMask(this, m_cornerRadius);
+    }
+
+private:
+    void configurePositioner()
+    {
+        if (QWindow* window = this->windowHandle()) {
+            // Qt's Wayland backend consumes these overrides; other platforms
+            // ignore them. Keep the anchor in the transient parent's coordinates.
+            window->setProperty("_q_waylandPopupAnchorRect", m_anchor);
+            window->setProperty("_q_waylandPopupAnchor",
+                                QVariant::fromValue(Qt::Edges(Qt::BottomEdge | Qt::LeftEdge)));
+            window->setProperty("_q_waylandPopupGravity",
+                                QVariant::fromValue(Qt::Edges(Qt::BottomEdge | Qt::RightEdge)));
+            // xdg_positioner: slide_x = 1, flip_y = 8, resize_y = 32.
+            // Vertical sliding would move the popup across the editor. Flipping
+            // around its full height keeps the popup wholly below or above it.
+            window->setProperty("_q_waylandPopupConstraintAdjustment", uint(1 | 8 | 32));
+        }
+    }
+
+    QRect m_anchor;
+    QSize m_requestedSize;
+    int m_cornerRadius = 0;
+};
 
 static void updateCompletionTransientParent(QWidget* popup, Editor* editor)
 {
@@ -89,6 +157,12 @@ static QRect completionPopupGeometry(Editor* editor, const QTextCursor& cursor,
     const int x = editor->viewport()->mapToGlobal(editor->cursorRect(cursor).topLeft()).x();
     const QRect editorRect(editor->mapToGlobal(QPoint(0, 0)), editor->size());
     QRect bounds = editor->screen()->availableGeometry();
+    if (usesWaylandCompletionPositioner()) {
+        // Global top-level positions on Wayland are guesses. Request placement
+        // below the editor and let xdg-shell flip it using the real screen space.
+        return EditorUtils::completionPopupCompositorGeometry(
+            EditorUtils::completionPopupAnchorRect(editorRect, x), size, bounds.size());
+    }
     if (QGuiApplication::platformName().startsWith(QLatin1String("wayland"))
         && editor->window() != editor) {
         // Wayland reports no reliable global position for the containing window.
@@ -98,6 +172,18 @@ static QRect completionPopupGeometry(Editor* editor, const QTextCursor& cursor,
         bounds = QRect(window->mapToGlobal(QPoint(0, 0)), window->size());
     }
     return EditorUtils::completionPopupGeometry(editorRect, x, size, bounds);
+}
+
+template <typename Widget>
+static void prepareCompletionPopup(Widget* popup, Editor* editor, const QTextCursor& cursor,
+                                   const QSize& size, int cornerRadius)
+{
+    updateCompletionTransientParent(popup, editor);
+    QWidget* parent = editor->window();
+    const QRect editorRect(editor->mapTo(parent, QPoint(0, 0)), editor->size());
+    const int anchorX = editor->viewport()->mapTo(parent, editor->cursorRect(cursor).topLeft()).x();
+    static_cast<CompletionPopup<Widget>*>(popup)->setPlacementAnchor(
+        EditorUtils::completionPopupAnchorRect(editorRect, anchorX), size, cornerRadius);
 }
 
 static int editorVerticalDecorationHeight()
@@ -142,11 +228,11 @@ static bool isOperatorOnlyIncompleteInput(const QString& expression)
     return sawOperator;
 }
 
-class EditorCompletionPopup : public QTreeWidget
+class EditorCompletionPopup : public CompletionPopup<QTreeWidget>
 {
 public:
     explicit EditorCompletionPopup(QWidget* parent = nullptr)
-        : QTreeWidget(parent)
+        : CompletionPopup<QTreeWidget>(parent)
     {
         viewport()->installEventFilter(this);
     }
@@ -4551,9 +4637,9 @@ void EditorCompletion::showCompletion(const QStringList& choices)
                       + m_popup->columnWidth(1)
                       + m_popup->columnWidth(2) + 1;
 
-    updateCompletionTransientParent(m_popup, m_editor);
     auto cursor = m_editor->textCursor();
     cursor.movePosition(QTextCursor::StartOfWord);
+    prepareCompletionPopup(m_popup, m_editor, cursor, QSize(width, height), m_cornerRadius);
     const QRect geometry = completionPopupGeometry(m_editor, cursor, QSize(width, height));
 
     m_popup->setUpdatesEnabled(true);
@@ -4585,7 +4671,7 @@ ConstantCompletion::ConstantCompletion(Editor* editor)
 {
     m_editor = editor;
 
-    m_popup = new QFrame;
+    m_popup = new CompletionPopup<QFrame>;
     m_popup->setObjectName(QStringLiteral("constantCompletionPopup"));
     m_popup->setParent(editor, Qt::Popup | Qt::FramelessWindowHint);
     m_popup->setFocusPolicy(Qt::NoFocus);
@@ -4671,6 +4757,7 @@ ConstantCompletion::ConstantCompletion(Editor* editor)
     m_popup->resize(width, height);
     m_constantWidget->resize(width, height);
     m_categoryWidget->resize(width, height);
+    m_popup->installEventFilter(this);
 }
 
 ConstantCompletion::~ConstantCompletion()
@@ -4774,6 +4861,20 @@ void ConstantCompletion::showConstants()
 
 bool ConstantCompletion::eventFilter(QObject* object, QEvent* event)
 {
+    if (object == m_popup) {
+        if (event->type() == QEvent::Resize) {
+            // A Wayland compositor can shorten a popup to fit the output. Keep
+            // both sliding pages fitted to that actual size, including scrollbars.
+            const int oldWidth = static_cast<QResizeEvent*>(event)->oldSize().width();
+            const int position = oldWidth > 0
+                ? -m_categoryWidget->x() * m_popup->width() / oldWidth : 0;
+            m_categoryWidget->resize(m_popup->size());
+            m_constantWidget->resize(m_popup->size());
+            setHorizontalPosition(position);
+        }
+        return false;
+    }
+
     if (event->type() == QEvent::Hide) {
         emit canceledCompletion();
         return true;
@@ -4876,7 +4977,7 @@ void ConstantCompletion::showCompletion()
 {
     applyThemeColors();
 
-    updateCompletionTransientParent(m_popup, m_editor);
+    prepareCompletionPopup(m_popup, m_editor, m_editor->textCursor(), m_popupSize, m_cornerRadius);
     const QRect geometry = completionPopupGeometry(m_editor, m_editor->textCursor(), m_popupSize);
     if (!geometry.isValid()) {
         m_popup->hide();
