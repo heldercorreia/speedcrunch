@@ -67,13 +67,17 @@ static QPointer<Editor> s_completionMouseSelectionOwner;
 
 static void updateCompletionTransientParent(QWidget* popup, Editor* editor)
 {
-    // Editors are constructed before being inserted into a pane, and panes can
-    // move between windows. Resolve the native parent when displaying the popup.
-    popup->winId();
-    QWindow* parent = editor->window()->windowHandle();
-    if (popup->windowHandle()->transientParent() != parent) {
-        popup->hide();
-        popup->windowHandle()->setTransientParent(parent);
+    // Let show() create the native popup normally. Calling winId() here sets
+    // WA_NativeWindow and forces the editor's viewport/scrollbars into native
+    // sibling windows, disrupting their backing-store composition on Wayland.
+    // Existing popups still need their transient parent refreshed after a pane
+    // moves between windows.
+    if (QWindow* window = popup->windowHandle()) {
+        QWindow* parent = editor->window()->windowHandle();
+        if (window->transientParent() != parent) {
+            popup->hide();
+            window->setTransientParent(parent);
+        }
     }
 }
 
@@ -4578,7 +4582,7 @@ ConstantCompletion::ConstantCompletion(Editor* editor)
 
     m_popup = new QFrame;
     m_popup->setObjectName(QStringLiteral("constantCompletionPopup"));
-    m_popup->setParent(editor, Qt::Popup);
+    m_popup->setParent(editor, Qt::Popup | Qt::FramelessWindowHint);
     m_popup->setFocusPolicy(Qt::NoFocus);
     m_popup->setFocusProxy(editor);
     m_popup->setFrameStyle(QFrame::NoFrame);

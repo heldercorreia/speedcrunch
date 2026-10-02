@@ -157,6 +157,8 @@ private slots:
     void completion_popup_reopens_after_typing_following_escape();
     void completion_popup_shows_for_two_character_prefixes();
     void completion_popup_uses_positionable_nonactivating_surface();
+    void completion_popup_keeps_editor_widgets_non_native_data();
+    void completion_popup_keeps_editor_widgets_non_native();
     void completion_popup_follows_editor_geometry_data();
     void completion_popup_follows_editor_geometry();
     void constant_completion_popup_follows_wrapped_editor_cursor();
@@ -3993,6 +3995,48 @@ void TestEditorUi::completion_popup_uses_positionable_nonactivating_surface()
     QCOMPARE(popup->windowHandle()->transientParent(), secondWindow.windowHandle());
     QVERIFY(s_editorOrViewportHasFocus(&editor));
     popup->hide();
+}
+
+void TestEditorUi::completion_popup_keeps_editor_widgets_non_native_data()
+{
+    QTest::addColumn<bool>("constants");
+    QTest::newRow("autocomplete") << false;
+    QTest::newRow("constants") << true;
+}
+
+void TestEditorUi::completion_popup_keeps_editor_widgets_non_native()
+{
+    QFETCH(bool, constants);
+    QWidget window;
+    QVBoxLayout layout(&window);
+    Editor editor;
+    editor.setAutoCompletionEnabled(false);
+    layout.addWidget(&editor);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    editor.setFocus();
+    QVERIFY(!editor.testAttribute(Qt::WA_NativeWindow));
+    QVERIFY(!editor.viewport()->testAttribute(Qt::WA_NativeWindow));
+    QVERIFY(!editor.verticalScrollBar()->testAttribute(Qt::WA_NativeWindow));
+
+    if (constants) {
+        QTest::keyClick(&editor, Qt::Key_Space, Qt::ControlModifier);
+        QVERIFY(QApplication::activePopupWidget());
+    } else {
+        EditorCompletion* completion = editor.findChild<EditorCompletion*>();
+        QVERIFY(completion);
+        completion->showCompletion({QStringLiteral("cos:Cosine")});
+        QVERIFY(s_completionPopupTree());
+    }
+    QCoreApplication::processEvents();
+
+    // Forcing native siblings creates extra Wayland subsurfaces for the text
+    // viewport and scrollbars and changes their backing-store composition.
+    QVERIFY(!editor.testAttribute(Qt::WA_NativeWindow));
+    QVERIFY(!editor.viewport()->testAttribute(Qt::WA_NativeWindow));
+    QVERIFY(!editor.verticalScrollBar()->testAttribute(Qt::WA_NativeWindow));
+    if (QWidget* popup = constants ? QApplication::activePopupWidget() : s_completionPopupTree())
+        popup->hide();
 }
 
 void TestEditorUi::completion_popup_follows_editor_geometry_data()
