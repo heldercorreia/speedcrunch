@@ -48,6 +48,7 @@
 #include <QTextLayout>
 #include <QTreeWidget>
 #include <QWheelEvent>
+#include <QWindow>
 
 #include <algorithm>
 #include <cmath>
@@ -63,6 +64,36 @@ constexpr int kEditorCursorWidth = 2;
 constexpr int kEditorDocumentMargin = 2;
 
 static QPointer<Editor> s_completionMouseSelectionOwner;
+
+static void updateCompletionTransientParent(QWidget* popup, Editor* editor)
+{
+    // Editors are constructed before being inserted into a pane, and panes can
+    // move between windows. Resolve the native parent when displaying the popup.
+    popup->winId();
+    QWindow* parent = editor->window()->windowHandle();
+    if (popup->windowHandle()->transientParent() != parent) {
+        popup->hide();
+        popup->windowHandle()->setTransientParent(parent);
+    }
+}
+
+static QPoint completionPopupPosition(Editor* editor, const QTextCursor& cursor,
+                                      const QSize& size)
+{
+    // cursorRect includes wrapping, scrolling, text direction and text margins;
+    // measuring the whole text prefix does not describe its visible position.
+    const int x = editor->viewport()->mapToGlobal(editor->cursorRect(cursor).topLeft()).x();
+    const QPoint editorTop = editor->mapToGlobal(QPoint(0, 0));
+    QPoint position(x, editorTop.y() + editor->height());
+    const QRect screen = editor->screen()->availableGeometry();
+    if (position.y() + size.height() > screen.bottom() + 1)
+        position.setY(editorTop.y() - size.height());
+    position.setX(qBound(screen.left(), position.x(),
+                         qMax(screen.left(), screen.right() + 1 - size.width())));
+    position.setY(qBound(screen.top(), position.y(),
+                         qMax(screen.top(), screen.bottom() + 1 - size.height())));
+    return position;
+}
 
 static int editorVerticalDecorationHeight()
 {
@@ -4185,8 +4216,10 @@ EditorCompletion::EditorCompletion(Editor* editor)
     qApp->installEventFilter(this);
 
     m_popup->hide();
-    m_popup->setParent(editor->window(), Qt::Tool | Qt::FramelessWindowHint);
-    m_popup->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint);
+    // ToolTip creates a positioned, non-grabbing xdg_popup on Wayland. Tool
+    // creates an xdg_toplevel whose position is controlled by the compositor.
+    // Keyboard input stays with the editor; our event filter handles clicks.
+    m_popup->setParent(editor, Qt::ToolTip | Qt::FramelessWindowHint);
     m_popup->setAutoFillBackground(true);
     m_popup->setAttribute(Qt::WA_TranslucentBackground, false);
     m_popup->setAttribute(Qt::WA_ShowWithoutActivating, true);
@@ -4198,8 +4231,7 @@ EditorCompletion::EditorCompletion(Editor* editor)
 EditorCompletion::~EditorCompletion()
 {
     qApp->removeEventFilter(this);
-    // Popup ownership is handled by Qt parent-child deletion (its parent is
-    // the window). Deleting it manually here can double-delete during shutdown.
+    // The editor owns the popup through Qt parent-child deletion.
 }
 
 void EditorCompletion::setThemeColors(const QColor& background,
@@ -4445,8 +4477,6 @@ void EditorCompletion::showCompletion(const QStringList& choices)
     m_popupInteracted = false;
     applyThemeColors();
 
-    QFontMetrics metrics(m_editor->font());
-
     m_popup->setUpdatesEnabled(false);
     m_popup->clear();
     // Performance: compute these once per popup render (not per row) because
@@ -4516,19 +4546,10 @@ void EditorCompletion::showCompletion(const QStringList& choices)
                       + m_popup->columnWidth(1)
                       + m_popup->columnWidth(2) + 1;
 
-    // Position, reference is editor's cursor position in global coord.
+    updateCompletionTransientParent(m_popup, m_editor);
     auto cursor = m_editor->textCursor();
     cursor.movePosition(QTextCursor::StartOfWord);
-    const int pixelsOffset = metrics.horizontalAdvance(m_editor->text(), cursor.position());
-    auto point = QPoint(pixelsOffset, m_editor->height());
-    QPoint position = m_editor->mapToGlobal(point);
-
-    // If popup is partially invisible, move to other position.
-    auto screen = m_editor->screen()->availableGeometry();
-    if (position.y() + height > screen.y() + screen.height())
-        position.setY(position.y() - height - m_editor->height());
-    if (position.x() + width > screen.x() + screen.width())
-        position.setX(screen.x() + screen.width() - width);
+    const QPoint position = completionPopupPosition(m_editor, cursor, QSize(width, height));
 
     m_popup->setUpdatesEnabled(true);
     m_popup->setGeometry(QRect(position, QSize(width, height)));
@@ -4557,7 +4578,7 @@ ConstantCompletion::ConstantCompletion(Editor* editor)
 
     m_popup = new QFrame;
     m_popup->setObjectName(QStringLiteral("constantCompletionPopup"));
-    m_popup->setParent(editor->window(), Qt::Popup);
+    m_popup->setParent(editor, Qt::Popup);
     m_popup->setFocusPolicy(Qt::NoFocus);
     m_popup->setFocusProxy(editor);
     m_popup->setFrameStyle(QFrame::NoFrame);
@@ -4644,8 +4665,7 @@ ConstantCompletion::ConstantCompletion(Editor* editor)
 
 ConstantCompletion::~ConstantCompletion()
 {
-    // Popup ownership is handled by Qt parent-child deletion (its parent is
-    // the window). Deleting it manually here can double-delete during shutdown.
+    // The editor owns the popup through Qt parent-child deletion.
     m_editor->setFocus();
 }
 
@@ -4846,21 +4866,8 @@ void ConstantCompletion::showCompletion()
 {
     applyThemeColors();
 
-    // Position, reference is editor's cursor position in global coord.
-    QFontMetrics metrics(m_editor->font());
-    const int currentPosition = m_editor->textCursor().position();
-    const int pixelsOffset = metrics.horizontalAdvance(m_editor->text(), currentPosition);
-    auto pos = m_editor->mapToGlobal(QPoint(pixelsOffset, m_editor->height()));
-
-    const int height = m_popup->height();
-    const int width = m_popup->width();
-
-    // If popup is partially invisible, move to other position.
-    const QRect screen = m_editor->screen()->availableGeometry();
-    if (pos.y() + height > screen.y() + screen.height())
-        pos.setY(pos.y() - height - m_editor->height());
-    if (pos.x() + width > screen.x() + screen.width())
-        pos.setX(screen.x() + screen.width() - width);
+    updateCompletionTransientParent(m_popup, m_editor);
+    const QPoint pos = completionPopupPosition(m_editor, m_editor->textCursor(), m_popup->size());
 
     // Start with category.
     m_categoryWidget->setFocus();

@@ -26,12 +26,14 @@
 #include <QPainter>
 #include <QPushButton>
 #include <QScrollBar>
+#include <QScreen>
 #include <QSignalSpy>
 #include <QTest>
 #include <QTextLayout>
 #include <QElapsedTimer>
 #include <QTreeWidget>
 #include <QVBoxLayout>
+#include <QWindow>
 
 namespace {
 QJsonObject themeJson(QJsonObject colors)
@@ -154,6 +156,10 @@ private slots:
     void completion_popup_escape_keeps_focus_on_owning_editor();
     void completion_popup_reopens_after_typing_following_escape();
     void completion_popup_shows_for_two_character_prefixes();
+    void completion_popup_uses_positionable_nonactivating_surface();
+    void completion_popup_follows_editor_geometry_data();
+    void completion_popup_follows_editor_geometry();
+    void constant_completion_popup_follows_wrapped_editor_cursor();
     void completion_popup_uses_configured_surface_colors();
     void constant_completion_popup_uses_configured_surface_colors();
     void inactive_editor_does_not_show_completion_popup();
@@ -3949,6 +3955,136 @@ void TestEditorUi::completion_popup_shows_for_two_character_prefixes()
         QVERIFY(popup->isVisible());
         popup->hide();
     }
+}
+
+void TestEditorUi::completion_popup_uses_positionable_nonactivating_surface()
+{
+    QWidget firstWindow;
+    QWidget secondWindow;
+    QVBoxLayout firstLayout(&firstWindow);
+    QVBoxLayout secondLayout(&secondWindow);
+    // Match application startup: construct the editor before placing it in a pane.
+    Editor editor;
+    editor.setAutoCompletionEnabled(false);
+    firstLayout.addWidget(&editor);
+    firstWindow.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&firstWindow));
+    editor.setFocus();
+
+    EditorCompletion* completion = editor.findChild<EditorCompletion*>();
+    QVERIFY(completion);
+    completion->showCompletion({QStringLiteral("cos:Cosine")});
+    QTreeWidget* popup = s_completionPopupTree();
+    QVERIFY(popup);
+    QCOMPARE(popup->windowType(), Qt::ToolTip);
+    QVERIFY(popup->testAttribute(Qt::WA_ShowWithoutActivating));
+    QCOMPARE(popup->focusPolicy(), Qt::NoFocus);
+    QCOMPARE(popup->windowHandle()->transientParent(), firstWindow.windowHandle());
+    QVERIFY(s_editorOrViewportHasFocus(&editor));
+    popup->hide();
+
+    // Moving an existing pane into another window must refresh the native parent.
+    secondLayout.addWidget(&editor);
+    firstWindow.hide();
+    secondWindow.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&secondWindow));
+    editor.setFocus();
+    completion->showCompletion({QStringLiteral("cos:Cosine")});
+    QCOMPARE(popup->windowHandle()->transientParent(), secondWindow.windowHandle());
+    QVERIFY(s_editorOrViewportHasFocus(&editor));
+    popup->hide();
+}
+
+void TestEditorUi::completion_popup_follows_editor_geometry_data()
+{
+    QTest::addColumn<bool>("wrapped");
+    QTest::addColumn<bool>("nearBottom");
+    QTest::addColumn<bool>("nearRight");
+    QTest::newRow("below") << false << false << false;
+    QTest::newRow("above") << false << true << false;
+    QTest::newRow("right-edge") << false << false << true;
+    QTest::newRow("wrapped") << true << false << false;
+    QTest::newRow("wrapped-above") << true << true << false;
+}
+
+void TestEditorUi::completion_popup_follows_editor_geometry()
+{
+    QFETCH(bool, wrapped);
+    QFETCH(bool, nearBottom);
+    QFETCH(bool, nearRight);
+
+    Editor editor;
+    editor.setAutoCompletionEnabled(false);
+    editor.setFixedWidth(340);
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+    const QString input = wrapped
+        ? QStringLiteral("1234567890 + ").repeated(30) + QStringLiteral("co")
+        : QStringLiteral("123 + co");
+    editor.setText(input);
+    editor.setCursorPosition(input.size());
+    QCoreApplication::processEvents();
+
+    const QRect screen = editor.screen()->availableGeometry();
+    const int x = nearRight ? screen.right() - 40 : screen.left() + 30;
+    const int y = nearBottom ? screen.bottom() - editor.height() + 1 : screen.top() + 80;
+    editor.move(x, y);
+    QCoreApplication::processEvents();
+    QTextCursor anchor = editor.textCursor();
+    anchor.movePosition(QTextCursor::StartOfWord);
+    const int anchorX = editor.viewport()->mapToGlobal(editor.cursorRect(anchor).topLeft()).x();
+
+    EditorCompletion* completion = editor.findChild<EditorCompletion*>();
+    QVERIFY(completion);
+    completion->showCompletion({QStringLiteral("cos:Cosine"), QStringLiteral("cosh:Hyperbolic cosine")});
+    QTreeWidget* popup = s_completionPopupTree();
+    QVERIFY(popup);
+    const QPoint editorTop = editor.mapToGlobal(QPoint(0, 0));
+    const int belowY = editorTop.y() + editor.height();
+    const int expectedY = belowY + popup->height() > screen.bottom() + 1
+        ? editorTop.y() - popup->height() : belowY;
+    const int expectedX = qBound(screen.left(), anchorX, screen.right() + 1 - popup->width());
+    QCOMPARE(popup->geometry().topLeft(), QPoint(expectedX, expectedY));
+    QVERIFY(screen.contains(popup->geometry()));
+    if (wrapped)
+        QVERIFY(editor.verticalScrollBar()->value() > 0);
+    popup->hide();
+}
+
+void TestEditorUi::constant_completion_popup_follows_wrapped_editor_cursor()
+{
+    QWidget window;
+    QVBoxLayout layout(&window);
+    Editor editor;
+    editor.setAutoCompletionEnabled(false);
+    editor.setFixedWidth(340);
+    layout.addWidget(&editor);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    editor.setFocus();
+    const QString input = QStringLiteral("1234567890 + ").repeated(30);
+    editor.setText(input);
+    editor.setCursorPosition(input.size());
+    QCoreApplication::processEvents();
+    const QRect screen = editor.screen()->availableGeometry();
+    window.move(screen.left() + 30, screen.top() + 80);
+    QCoreApplication::processEvents();
+    const int anchorX = editor.viewport()->mapToGlobal(editor.cursorRect().topLeft()).x();
+
+    QTest::keyClick(&editor, Qt::Key_Space, Qt::ControlModifier);
+    QWidget* popup = QApplication::activePopupWidget();
+    QVERIFY(popup);
+    QCOMPARE(popup->objectName(), QStringLiteral("constantCompletionPopup"));
+    QCOMPARE(popup->windowHandle()->transientParent(), window.windowHandle());
+    const QPoint editorTop = editor.mapToGlobal(QPoint(0, 0));
+    const int belowY = editorTop.y() + editor.height();
+    const int expectedY = belowY + popup->height() > screen.bottom() + 1
+        ? editorTop.y() - popup->height() : belowY;
+    const int expectedX = qBound(screen.left(), anchorX, screen.right() + 1 - popup->width());
+    QCOMPARE(popup->geometry().topLeft(), QPoint(expectedX, expectedY));
+    QVERIFY(editor.verticalScrollBar()->value() > 0);
+    popup->hide();
 }
 
 void TestEditorUi::completion_popup_uses_configured_surface_colors()
