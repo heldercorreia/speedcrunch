@@ -200,7 +200,12 @@ and—when window position saving is enabled—its own size and position.</p>
 <p>The expression editor provides some advanced features:</p>
 <ul class="simple">
 <li><dl class="simple">
-<dt>Autocompletion</dt><dd><p>If you start typing a name (e.g. of a variable, function, or unit), a pop-up with matching names will appear. Press <kbd class="kbd docutils literal notranslate">Tab</kbd> to insert the current
+<dt>Autocompletion</dt><dd><p>If you start typing a name (e.g. of a variable, function, or unit), a pop-up with matching names will appear below the editor, aligned with the start of
+the name being completed. It appears above the editor when there is insufficient space below and shifts horizontally to stay on screen.
+The list becomes shorter and scrollable when needed to avoid covering the editor.
+On Wayland with Qt 6.6 or later, the compositor chooses below or above according to the available screen space.
+With older Qt versions on Wayland, the list stays within the application window.
+Alignment follows the visible text even when the expression wraps or scrolls. Press <kbd class="kbd docutils literal notranslate">Tab</kbd> to insert the current
 suggestion. Pressing <kbd class="kbd docutils literal notranslate">Enter</kbd> evaluates the expression by default. If you explicitly navigate the popup with arrow/page/home/end keys or click a
 suggestion with the mouse, then <kbd class="kbd docutils literal notranslate">Enter</kbd> accepts that selected suggestion. Pressing <kbd class="kbd docutils literal notranslate">Escape</kbd> dismisses the autocomplete popup.</p>
 </dd>
@@ -215,6 +220,7 @@ This also works for user-defined functions. Pressing <kbd class="kbd docutils li
 <li><dl class="simple">
 <dt>Quick constant insertion</dt><dd><p>Press <kbd class="kbd compound docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">Space</kbd></kbd> to open a list of constants that allows quick access to the same constants as the constants widget (see above).
 Use the arrow keys to navigate the list. Pressing <kbd class="kbd docutils literal notranslate">Escape</kbd> will dismiss this popup.
+The list follows the cursor’s horizontal position and uses the same below-or-above placement rules as autocompletion.
 Selecting an entry inserts its identifier (for example <code class="docutils literal notranslate"><span class="pre">k_speed_of_light_in_vacuum</span></code>).</p>
 </dd>
 </dl>
@@ -817,7 +823,7 @@ For the full schema, see <a class="reference internal" href="theme_json_schema.h
 </dl>
 </li>
 <li><dl class="simple">
-<dt><kbd class="kbd compound docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">Q</kbd></kbd></dt><dd><p>Quit SpeedCrunch.</p>
+<dt><kbd class="kbd compound docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">Q</kbd></kbd></dt><dd><p>Quit SpeedCrunch (<kbd class="kbd compound docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Cmd</kbd>+<kbd class="kbd docutils literal notranslate">Q</kbd></kbd> on macOS).</p>
 </dd>
 </dl>
 </li>
@@ -959,7 +965,8 @@ are also retained separately for each window.</p>
 <h3>Focus Navigation</h3>
 <ul class="simple">
 <li><dl class="simple">
-<dt><kbd class="kbd docutils literal notranslate">F6</kbd> and <kbd class="kbd compound docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Shift</kbd>+<kbd class="kbd docutils literal notranslate">F6</kbd></kbd></dt><dd><p>Move focus forward or backward between the expression editor and visible dock controls.</p>
+<dt><kbd class="kbd docutils literal notranslate">F6</kbd> and <kbd class="kbd compound docutils literal notranslate"><kbd class="kbd docutils literal notranslate">Shift</kbd>+<kbd class="kbd docutils literal notranslate">F6</kbd></kbd></dt><dd><p>Move focus forward or backward between the expression editor and visible dock controls.
+Focus navigation applies to the current window, including its floating docks.</p>
 </dd>
 </dl>
 </li>
