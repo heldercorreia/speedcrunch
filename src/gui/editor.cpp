@@ -1682,6 +1682,11 @@ void Editor::setHistoryArrowNavigationEnabled(bool enabled)
 
 void Editor::checkAutoComplete()
 {
+    // A dismissal only suppresses completion until the next text edit, even
+    // when later edits restore the same text and cursor position.
+    m_suppressedCompletionText.clear();
+    m_suppressedCompletionPosition = -1;
+
     if (!m_isAutoCompletionEnabled)
         return;
 

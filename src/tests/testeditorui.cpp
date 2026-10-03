@@ -155,6 +155,8 @@ private slots:
     void completion_popup_escape_closes_and_stays_closed();
     void completion_popup_escape_keeps_focus_on_owning_editor();
     void completion_popup_reopens_after_typing_following_escape();
+    void completion_popup_reopens_after_retyping_deleted_letter_data();
+    void completion_popup_reopens_after_retyping_deleted_letter();
     void completion_popup_shows_for_two_character_prefixes();
     void completion_popup_uses_positionable_nonactivating_surface();
     void completion_popup_keeps_editor_widgets_non_native_data();
@@ -3942,6 +3944,62 @@ void TestEditorUi::completion_popup_reopens_after_typing_following_escape()
 
     QTRY_VERIFY_WITH_TIMEOUT((popup = s_completionPopupTree()) != nullptr, 1000);
     QVERIFY(popup->isVisible());
+    popup->hide();
+}
+
+void TestEditorUi::completion_popup_reopens_after_retyping_deleted_letter_data()
+{
+    QTest::addColumn<QString>("initialText");
+    QTest::addColumn<QString>("letter");
+    QTest::addColumn<bool>("processDeletion");
+    QTest::addColumn<bool>("dismissWithEscape");
+
+    QTest::newRow("a-immediate") << QString() << QStringLiteral("a") << false << false;
+    QTest::newRow("a-delayed") << QString() << QStringLiteral("a") << true << false;
+    QTest::newRow("c-delayed") << QString() << QStringLiteral("c") << true << false;
+    QTest::newRow("s-delayed") << QString() << QStringLiteral("s") << true << false;
+    QTest::newRow("co-immediate") << QStringLiteral("c") << QStringLiteral("o") << false << false;
+    QTest::newRow("unit-delayed") << QStringLiteral("1[") << QStringLiteral("m") << true << false;
+    QTest::newRow("escape-delayed") << QString() << QStringLiteral("a") << true << true;
+}
+
+void TestEditorUi::completion_popup_reopens_after_retyping_deleted_letter()
+{
+    QFETCH(QString, initialText);
+    QFETCH(QString, letter);
+    QFETCH(bool, processDeletion);
+    QFETCH(bool, dismissWithEscape);
+
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.activateWindow();
+    editor.setFocus();
+    QTRY_VERIFY_WITH_TIMEOUT(s_editorOrViewportHasFocus(&editor), 1000);
+    editor.setText(initialText);
+    editor.setCursorPosition(editor.text().size());
+    QTest::keyClicks(&editor, letter);
+    const QString completedText = editor.text();
+    const int completedPosition = editor.textCursor().position();
+
+    QTreeWidget* popup = nullptr;
+    QTRY_VERIFY_WITH_TIMEOUT((popup = s_completionPopupTree()) != nullptr, 1000);
+
+    for (int cycle = 0; cycle < 2; ++cycle) {
+        if (dismissWithEscape) {
+            QTest::keyClick(&editor, Qt::Key_Escape);
+            QVERIFY(!popup->isVisible());
+        }
+        QTest::keyClick(&editor, Qt::Key_Backspace);
+        QCOMPARE(editor.text(), initialText);
+        if (processDeletion)
+            QTest::qWait(50);
+
+        QTest::keyClicks(&editor, letter);
+        QCOMPARE(editor.text(), completedText);
+        QCOMPARE(editor.textCursor().position(), completedPosition);
+        QTRY_VERIFY_WITH_TIMEOUT((popup = s_completionPopupTree()) != nullptr, 1000);
+    }
     popup->hide();
 }
 
