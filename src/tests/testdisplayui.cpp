@@ -658,6 +658,8 @@ private slots:
     void dock_list_selected_row_keeps_primary_fill_while_hovered();
     void custom_keypad_action_stays_checked_after_dialog_accepts();
     void keypad_power_button_uses_exponent_label_but_inserts_caret();
+    void keypad_input_stays_in_own_window_data();
+    void keypad_input_stays_in_own_window();
     void functions_dock_retranslates_domain_label_after_language_change();
     void main_window_applies_primary_role_to_active_editor_and_dock_selection();
     void current_result_tooltip_stays_hidden_after_escape_and_arrow_caret_move();
@@ -1714,6 +1716,99 @@ void TestDisplayUi::keypad_power_button_uses_exponent_label_but_inserts_caret()
 
     QTest::mouseClick(powerButton, Qt::LeftButton);
     QTRY_COMPARE(editor->text(), QStringLiteral("2^"));
+}
+
+void TestDisplayUi::keypad_input_stays_in_own_window_data()
+{
+    QTest::addColumn<int>("mode");
+    QTest::newRow("basic") << int(Settings::KeypadModeBasicWide);
+    QTest::newRow("scientific-wide") << int(Settings::KeypadModeScientificWide);
+    QTest::newRow("scientific-narrow") << int(Settings::KeypadModeScientificNarrow);
+    QTest::newRow("custom") << int(Settings::KeypadModeCustom);
+}
+
+void TestDisplayUi::keypad_input_stays_in_own_window()
+{
+    QFETCH(int, mode);
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    const auto oldCustomKeypad = settings->customKeypad;
+    struct CustomKeypadGuard {
+        Settings* settings;
+        Settings::CustomKeypad keypad;
+        ~CustomKeypadGuard() { settings->customKeypad = keypad; }
+    } customGuard { settings, oldCustomKeypad };
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    settings->keypadMode = static_cast<Settings::KeypadMode>(mode);
+    settings->keypadVisible = true;
+    settings->hasNumberFormatStyleSetting = true;
+    if (mode == Settings::KeypadModeCustom) {
+        settings->customKeypad.rows = 1;
+        settings->customKeypad.columns = 3;
+        settings->customKeypad.buttons.clear();
+        settings->customKeypad.buttons.append(
+            { 0, 0, QStringLiteral("7"), QStringLiteral("7"), Settings::CustomKeypadActionInsertText });
+        settings->customKeypad.buttons.append(
+            { 0, 1, QString::fromUtf8("⌫"), QString(), Settings::CustomKeypadActionBackspace });
+        settings->customKeypad.buttons.append(
+            { 0, 2, QStringLiteral("="), QString(), Settings::CustomKeypadActionEvaluateExpression });
+    }
+
+    MainWindow firstWindow;
+    firstWindow.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&firstWindow));
+    MainWindow secondWindow;
+    secondWindow.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&secondWindow));
+    Editor* firstEditor = firstWindow.findChild<Editor*>();
+    Editor* secondEditor = secondWindow.findChild<Editor*>();
+    ResultDisplay* firstDisplay = firstWindow.findChild<ResultDisplay*>();
+    ResultDisplay* secondDisplay = secondWindow.findChild<ResultDisplay*>();
+    QVERIFY(firstEditor != nullptr);
+    QVERIFY(secondEditor != nullptr);
+    QVERIFY(firstDisplay != nullptr);
+    QVERIFY(secondDisplay != nullptr);
+    Keypad* firstKeypad = firstWindow.findChild<Keypad*>();
+    Keypad* secondKeypad = secondWindow.findChild<Keypad*>();
+    QPushButton* firstDigit = keypadButtonWithText(firstKeypad, QStringLiteral("7"));
+    QPushButton* secondDigit = keypadButtonWithText(secondKeypad, QStringLiteral("7"));
+    QPushButton* firstBackspace = keypadButtonWithText(firstKeypad, QString::fromUtf8("⌫"));
+    QPushButton* firstEquals = keypadButtonWithText(firstKeypad, QStringLiteral("="));
+    QVERIFY(firstDigit != nullptr);
+    QVERIFY(secondDigit != nullptr);
+    QVERIFY(firstBackspace != nullptr);
+    QVERIFY(firstEquals != nullptr);
+
+    secondWindow.activateWindow();
+    secondEditor->setFocus();
+    QTRY_VERIFY(secondEditor->hasFocus());
+    // Let the activation focus replay finish before exercising the keypad.
+    QTest::qWait(400);
+    firstEditor->setText(QString());
+    secondEditor->setText(QString());
+    QTest::mouseClick(secondDigit, Qt::LeftButton);
+    QCOMPARE(secondEditor->text(), QStringLiteral("7"));
+    QCOMPARE(firstEditor->text(), QString());
+
+    // No explicit window activation or editor focus before this click.
+    QTest::mouseClick(firstDigit, Qt::LeftButton);
+    QCOMPARE(firstEditor->text(), QStringLiteral("7"));
+    QCOMPARE(secondEditor->text(), QStringLiteral("7"));
+    QTest::mouseClick(firstBackspace, Qt::LeftButton);
+    QCOMPARE(firstEditor->text(), QString());
+    QCOMPARE(secondEditor->text(), QStringLiteral("7"));
+    QTest::mouseClick(firstDigit, Qt::LeftButton);
+    const int firstHistorySize = firstDisplay->session()->historySize();
+    const int secondHistorySize = secondDisplay->session()->historySize();
+    QTest::mouseClick(firstEquals, Qt::LeftButton);
+    QCOMPARE(firstDisplay->session()->historySize(), firstHistorySize + 1);
+    QCOMPARE(secondDisplay->session()->historySize(), secondHistorySize);
+    QCOMPARE(secondEditor->text(), QStringLiteral("7"));
+
+    QTest::mouseClick(secondDigit, Qt::LeftButton);
+    QCOMPARE(secondEditor->text(), QStringLiteral("77"));
 }
 
 void TestDisplayUi::functions_dock_retranslates_domain_label_after_language_change()

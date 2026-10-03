@@ -11191,6 +11191,11 @@ bool MainWindow::eventFilter(QObject* o, QEvent* e)
             filteredEditor = qobject_cast<Editor*>(widget->parentWidget());
     }
     if (Editor* editor = filteredEditor) {
+        // Every main window filters application-wide events. Input in another
+        // window must not replace this window's active editor/display pointers.
+        if (editor->window() != this)
+            return QMainWindow::eventFilter(o, e);
+
         if (e->type() == QEvent::FocusIn && pendingDockFocusTarget() != nullptr) {
             // A dock click is explicit focus intent. Handle it before editor
             // completion focus recovery, otherwise a pending completion owner can
