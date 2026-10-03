@@ -17,7 +17,7 @@ require_cmd cmake
 require_cmd cpack
 require_cmd strip
 require_cmd otool
-require_cmd rg
+require_cmd grep
 require_cmd macdeployqt
 require_cmd codesign
 require_cmd /usr/libexec/PlistBuddy
@@ -56,9 +56,10 @@ if [[ ! -d "$APP_FRAMEWORKS_DIR" ]] || [[ ! -e "$APP_FRAMEWORKS_DIR/QtCore.frame
   exit 1
 fi
 
-if otool -L "$APP_BIN" | rg -q '/opt/homebrew|/usr/local|Cellar'; then
+# Consume all otool output so pipefail cannot hide a match behind SIGPIPE.
+if otool -L "$APP_BIN" | grep -E '/opt/homebrew|/usr/local|Cellar' >/dev/null; then
   echo "Qt deployment failed: binary still links to Homebrew Qt paths." >&2
-  otool -L "$APP_BIN" | rg 'Qt|/opt/homebrew|/usr/local|Cellar' >&2 || true
+  otool -L "$APP_BIN" | grep -E 'Qt|/opt/homebrew|/usr/local|Cellar' >&2 || true
   exit 1
 fi
 
