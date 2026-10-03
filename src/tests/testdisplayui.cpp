@@ -707,6 +707,8 @@ private slots:
     void session_import_dialog_opens_valid_json_as_new_tab();
     void session_import_rejects_invalid_json_without_new_tab();
     void session_export_menu_offers_json_without_save_action();
+    void session_export_dialog_prefills_session_name_data();
+    void session_export_dialog_prefills_session_name();
     void restore_closed_tab_shortcut_restores_last_closed_session_tab();
     void session_tabs_reorder_with_horizontal_drag();
     void closing_and_reopening_docks_keeps_attached_widgets();
@@ -6911,6 +6913,74 @@ void TestDisplayUi::session_export_menu_offers_json_without_save_action()
     });
     jsonAction->trigger();
     QVERIFY(sawJsonDialog);
+}
+
+void TestDisplayUi::session_export_dialog_prefills_session_name_data()
+{
+    QTest::addColumn<QString>("exportSlot");
+    QTest::addColumn<QString>("extension");
+    QTest::addColumn<QString>("sessionName");
+    QTest::addColumn<QString>("baseName");
+
+    for (const auto& format : {qMakePair(QStringLiteral("exportJson"), QStringLiteral("json")),
+                               qMakePair(QStringLiteral("exportHtml"), QStringLiteral("html")),
+                               qMakePair(QStringLiteral("exportPlainText"), QStringLiteral("txt"))}) {
+        QTest::newRow(qPrintable(format.second + QStringLiteral("-named")))
+            << format.first << format.second << QStringLiteral("Project notes") << QStringLiteral("Project notes");
+        QTest::newRow(qPrintable(format.second + QStringLiteral("-sanitized")))
+            << format.first << format.second << QStringLiteral("Budget/2026: Q4") << QStringLiteral("Budget_2026_ Q4");
+    }
+}
+
+void TestDisplayUi::session_export_dialog_prefills_session_name()
+{
+    QFETCH(QString, exportSlot);
+    QFETCH(QString, extension);
+    QFETCH(QString, sessionName);
+    QFETCH(QString, baseName);
+
+    MainWindowStateGuard guard;
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    QVERIFY(display != nullptr);
+    Session* session = const_cast<Session*>(display->session());
+    QVERIFY(session != nullptr);
+    const QString originalName = session->name();
+    const auto restoreName = qScopeGuard([session, originalName]() { session->setName(originalName); });
+    session->setName(sessionName);
+
+    bool sawDialog = false;
+    QString suggestedFileName;
+    QString defaultSuffix;
+    QString selectedName;
+    QFileDialog::AcceptMode acceptMode = QFileDialog::AcceptOpen;
+    QTimer::singleShot(0, &window, [&]() {
+        QFileDialog* dialog = qobject_cast<QFileDialog*>(QApplication::activeModalWidget());
+        if (dialog == nullptr)
+            return;
+
+        // Let the export dialog's filename-selection timer run first.
+        QTimer::singleShot(0, dialog, [&, dialog]() {
+            sawDialog = true;
+            const QStringList files = dialog->selectedFiles();
+            if (!files.isEmpty())
+                suggestedFileName = QFileInfo(files.constFirst()).fileName();
+            defaultSuffix = dialog->defaultSuffix();
+            acceptMode = dialog->acceptMode();
+            if (QLineEdit* fileNameEdit = dialog->findChild<QLineEdit*>(QStringLiteral("fileNameEdit")))
+                selectedName = fileNameEdit->selectedText();
+            dialog->reject();
+        });
+    });
+    QVERIFY(QMetaObject::invokeMethod(&window, qPrintable(exportSlot), Qt::DirectConnection));
+    QVERIFY(sawDialog);
+    QCOMPARE(suggestedFileName, baseName + QLatin1Char('.') + extension);
+    QCOMPARE(defaultSuffix, extension);
+    QCOMPARE(acceptMode, QFileDialog::AcceptSave);
+    QCOMPARE(selectedName, baseName);
 }
 
 void TestDisplayUi::restore_closed_tab_shortcut_restores_last_closed_session_tab()

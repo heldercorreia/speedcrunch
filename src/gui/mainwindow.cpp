@@ -10585,9 +10585,27 @@ inline static QString documentsLocation()
 
 void MainWindow::exportHtml()
 {
-    QString fname = QFileDialog::getSaveFileName(this, tr("Export session as HTML"),
-        documentsLocation(), tr("HTML file (*.html)"));
+    if (m_session == nullptr)
+        return;
 
+    const QString sessionBaseName = sessionFileBaseName(m_session->name());
+    QFileDialog dialog(this, tr("Export session as HTML"), documentsLocation(), tr("HTML file (*.html)"));
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    dialog.setDefaultSuffix(QStringLiteral("html"));
+    dialog.selectFile(sessionBaseName + QLatin1String(".html"));
+    QTimer::singleShot(0, &dialog, [sessionBaseName, &dialog]() {
+        if (QLineEdit* fileNameEdit = dialog.findChild<QLineEdit*>())
+            fileNameEdit->setSelection(0, sessionBaseName.size());
+    });
+
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+
+    const QStringList selectedFiles = dialog.selectedFiles();
+    if (selectedFiles.isEmpty())
+        return;
+
+    const QString fname = selectedFiles.constFirst();
     if (fname.isEmpty())
         return;
 
@@ -10605,9 +10623,28 @@ void MainWindow::exportHtml()
 
 void MainWindow::exportPlainText()
 {
-    QString fname = QFileDialog::getSaveFileName(this, tr("Export session as plain text"),                                                 
-                            documentsLocation(), tr("Text file (*.txt);;Any file (*.*)"));
+    if (m_session == nullptr)
+        return;
 
+    const QString sessionBaseName = sessionFileBaseName(m_session->name());
+    QFileDialog dialog(this, tr("Export session as plain text"), documentsLocation(),
+                       tr("Text file (*.txt);;Any file (*.*)"));
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    dialog.setDefaultSuffix(QStringLiteral("txt"));
+    dialog.selectFile(sessionBaseName + QLatin1String(".txt"));
+    QTimer::singleShot(0, &dialog, [sessionBaseName, &dialog]() {
+        if (QLineEdit* fileNameEdit = dialog.findChild<QLineEdit*>())
+            fileNameEdit->setSelection(0, sessionBaseName.size());
+    });
+
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+
+    const QStringList selectedFiles = dialog.selectedFiles();
+    if (selectedFiles.isEmpty())
+        return;
+
+    const QString fname = selectedFiles.constFirst();
     if (fname.isEmpty())
         return;
 
