@@ -54,6 +54,8 @@ class TestEditorUi : public QObject {
 
 private slots:
     void blocks_consecutive_plus();
+    void respects_keyboard_layout_for_equals_and_plus_data();
+    void respects_keyboard_layout_for_equals_and_plus();
     void wraps_left_shift_operator_and_blocks_immediate_duplicate_less_than();
     void wraps_right_shift_operator_and_blocks_immediate_duplicate_greater_than();
     void blocks_consecutive_caret();
@@ -296,6 +298,60 @@ void TestEditorUi::blocks_consecutive_plus()
 
     QTest::keyClick(&editor, Qt::Key_Plus, Qt::NoModifier);
     QCOMPARE(editor.text(), afterFirstPlus);
+}
+
+void TestEditorUi::respects_keyboard_layout_for_equals_and_plus_data()
+{
+    QTest::addColumn<int>("key");
+    QTest::addColumn<Qt::KeyboardModifiers>("modifiers");
+    QTest::addColumn<QString>("payload");
+    QTest::addColumn<QString>("initial");
+    QTest::addColumn<QString>("expected");
+
+    QTest::newRow("portuguese-shift-equals")
+        << int(Qt::Key_Equal) << Qt::KeyboardModifiers(Qt::ShiftModifier)
+        << QStringLiteral("=") << QStringLiteral("foo") << QStringLiteral("foo = ");
+    QTest::newRow("shift-zero-equals-payload")
+        << int(Qt::Key_0) << Qt::KeyboardModifiers(Qt::ShiftModifier)
+        << QStringLiteral("=") << QStringLiteral("foo") << QStringLiteral("foo = ");
+    QTest::newRow("unshifted-equals")
+        << int(Qt::Key_Equal) << Qt::KeyboardModifiers(Qt::NoModifier)
+        << QStringLiteral("=") << QStringLiteral("foo") << QStringLiteral("foo = ");
+    QTest::newRow("us-shift-equals-plus-payload")
+        << int(Qt::Key_Equal) << Qt::KeyboardModifiers(Qt::ShiftModifier)
+        << QStringLiteral("+") << QStringLiteral("1") << QStringLiteral("1 + ");
+    QTest::newRow("plus-key")
+        << int(Qt::Key_Plus) << Qt::KeyboardModifiers(Qt::NoModifier)
+        << QStringLiteral("+") << QStringLiteral("1") << QStringLiteral("1 + ");
+    QTest::newRow("shift-equals-without-payload")
+        << int(Qt::Key_Equal) << Qt::KeyboardModifiers(Qt::ShiftModifier)
+        << QString() << QStringLiteral("foo") << QStringLiteral("foo = ");
+    QTest::newRow("shift-equals-blocks-duplicate")
+        << int(Qt::Key_Equal) << Qt::KeyboardModifiers(Qt::ShiftModifier)
+        << QStringLiteral("=") << QStringLiteral("foo = ") << QStringLiteral("foo = ");
+    QTest::newRow("shift-plus-blocks-duplicate")
+        << int(Qt::Key_Equal) << Qt::KeyboardModifiers(Qt::ShiftModifier)
+        << QStringLiteral("+") << QStringLiteral("1 + ") << QStringLiteral("1 + ");
+}
+
+void TestEditorUi::respects_keyboard_layout_for_equals_and_plus()
+{
+    QFETCH(int, key);
+    QFETCH(Qt::KeyboardModifiers, modifiers);
+    QFETCH(QString, payload);
+    QFETCH(QString, initial);
+    QFETCH(QString, expected);
+
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+    editor.setText(initial);
+    editor.setCursorPosition(editor.text().size());
+
+    QKeyEvent event(QEvent::KeyPress, key, modifiers, payload);
+    QApplication::sendEvent(&editor, &event);
+    QCOMPARE(editor.document()->toRawText(), expected);
 }
 
 void TestEditorUi::wraps_left_shift_operator_and_blocks_immediate_duplicate_less_than()

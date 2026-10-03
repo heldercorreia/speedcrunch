@@ -606,8 +606,7 @@ static QChar normalizedTypedCharFromEvent(const QKeyEvent* event, const QString&
 
     switch (event->key()) {
     case Qt::Key_Plus: return MathDsl::AddOp;
-    case Qt::Key_Equal:
-        return (event->modifiers() & Qt::ShiftModifier) ? MathDsl::AddOp : MathDsl::Equals;
+    case Qt::Key_Equal: return MathDsl::Equals;
     case Qt::Key_Minus: return MathDsl::SubOp;
     case Qt::Key_Slash: return MathDsl::DivOp;
     case Qt::Key_Asterisk: return MathDsl::MulCrossOp;
@@ -3197,11 +3196,10 @@ void Editor::keyPressEvent(QKeyEvent* event)
         return;
     }
 
+    // Use the layout's text payload before falling back to the logical key.
+    // Shift+Key_Equal can produce '=' on Portuguese keyboards, not just '+'.
     const bool isTypedPlus =
-        key == Qt::Key_Plus
-        || (key == Qt::Key_Equal && (event->modifiers() & Qt::ShiftModifier))
-        || textContainsOnlyAdditionAliases(event->text())
-        || textContainsOnlyAdditionAliases(normalizedEventText);
+        normalizedTypedCharFromEvent(event, normalizedEventText) == MathDsl::AddOp;
     if (isTypedPlus) {
         if (squareBracketContext) {
             event->accept();
@@ -3862,7 +3860,7 @@ void Editor::keyPressEvent(QKeyEvent* event)
 
     case Qt::Key_Plus:
     case Qt::Key_Equal:
-        if (key == Qt::Key_Equal && !(event->modifiers() & Qt::ShiftModifier)) {
+        if (key == Qt::Key_Equal && !isTypedPlus) {
             const QChar prev = previousNonSpaceChar(text(), textCursor().position());
             if (isAnyAdditionOperator(prev)
                 || MathDsl::isSubtractionOperatorAlias(prev)
