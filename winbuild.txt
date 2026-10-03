@@ -46,3 +46,10 @@ if [ -f /c/Qt/6.11.0/msvc2022_64/plugins/tls/qschannelbackend.dll ]; then
 else
     echo MISSING
 fi
+
+
+
+cpack -C Release -G NSIS -D CPACK_PACKAGE_FILE_NAME=speedcrunch-1.0-tls-check
+find _CPack_Packages/win64/NSIS -type f -iname 'qschannelbackend.dll'
+# ...
+ls -l "/c/Program Files/SpeedCrunch/tls/qschannelbackend.dll"
