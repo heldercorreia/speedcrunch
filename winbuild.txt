@@ -1,0 +1,32 @@
+###############
+    WINDOWS
+###############
+# Install MSVC 2022
+# Install CMake
+# Install official online Qt installer - run, ensure MSVC 2022 target is selected and install Qt 6.11.0
+# Install NSIS
+# Install Git - run: git clone https://heldercorreia@github.com/heldercorreia/speedcrunch.git
+
+# Build standard app:
+  cd speedcrunch/src ; mkdir build ; cd build
+  cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="C:/Qt/6.11.0/msvc2022_64"
+  # To generate the binaries for testing, run:
+      cmake --build . --config Release
+      C:/Qt/6.11.0/msvc2022_64/bin/windeployqt.exe ./Release/speedcrunch.exe
+  # Otherwise, do everything at once and generate the installer (NSIS executable):
+      cmake --build . --config Release --target PACKAGE # this creates the installer
+
+# Build portable app:
+  cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="C:/Qt/6.11.0/msvc2022_64" -DPORTABLE_SPEEDCRUNCH=ON -DCPACK_GENERATOR=ZIP
+  # To generate the binaries for testing, run:
+      cmake --build . --config Release
+      C:/Qt/6.11.0/msvc2022_64/bin/windeployqt.exe ./Release/speedcrunch.exe
+  # Otherwise, do everything at once and generate the installer (ZIP):
+      cmake --build . --config Release --target PACKAGE
+
+
+
+
+
+# Testing
+ctest -C Release --parallel --output-on-failure
