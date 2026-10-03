@@ -30,3 +30,11 @@
 
 # Testing
 ctest -C Release --parallel --output-on-failure
+
+
+
+
+
+Select-String -Path ../cmake/QtWin32Deploy.cmake -Pattern qschannelbackend
+Select-String -Path cmake_install.cmake -Pattern qschannelbackend
+Test-Path "C:/Qt/6.11.0/msvc2022_64/plugins/tls/qschannelbackend.dll"
