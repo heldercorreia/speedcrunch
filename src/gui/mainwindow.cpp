@@ -9464,11 +9464,13 @@ void MainWindow::showCustomThemeDialog()
         applyPreview();
         restorePressedThemeListScroll(currentList);
     };
-    connect(lightThemeList, &QListWidget::currentItemChanged, &dialog, [&](QListWidgetItem* current) {
-        handleThemeSelection(lightThemeList, darkThemeList, current);
+    // Clearing a selection leaves the current item in place, so selecting that
+    // same theme again must update the preview even when the current item stays.
+    connect(lightThemeList, &QListWidget::itemSelectionChanged, &dialog, [&]() {
+        handleThemeSelection(lightThemeList, darkThemeList, lightThemeList->selectedItems().value(0));
     });
-    connect(darkThemeList, &QListWidget::currentItemChanged, &dialog, [&](QListWidgetItem* current) {
-        handleThemeSelection(darkThemeList, lightThemeList, current);
+    connect(darkThemeList, &QListWidget::itemSelectionChanged, &dialog, [&]() {
+        handleThemeSelection(darkThemeList, lightThemeList, darkThemeList->selectedItems().value(0));
     });
 
     QDialogButtonBox* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);

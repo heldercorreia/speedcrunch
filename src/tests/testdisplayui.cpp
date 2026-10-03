@@ -641,6 +641,8 @@ private slots:
     void color_scheme_preserves_rose_pine_names_with_ascii_resources();
     void color_scheme_validates_schema_metadata();
     void theme_dialog_preserves_list_scroll_and_fills_role_color_buttons();
+    void theme_dialog_repeatedly_previews_same_light_and_dark_themes_data();
+    void theme_dialog_repeatedly_previews_same_light_and_dark_themes();
     void result_display_insets_viewport_horizontally();
     void result_display_scrollbar_hover_keeps_viewport_width_stable();
     void result_display_hover_action_badges_use_hover_and_primary_colors();
@@ -985,6 +987,99 @@ void TestDisplayUi::theme_dialog_preserves_list_scroll_and_fills_role_color_butt
     QCOMPARE(darkScrollAfter, darkScrollBefore);
     QVERIFY(colorsAreClose(backgroundButtonPixel, backgroundButtonColor, 3));
     QCOMPARE(primaryButtonColor.name(), expectedPrimaryButtonColor.name());
+}
+
+void TestDisplayUi::theme_dialog_repeatedly_previews_same_light_and_dark_themes_data()
+{
+    QTest::addColumn<bool>("useKeyboard");
+    QTest::addColumn<bool>("acceptTheme");
+    QTest::newRow("mouse-accept") << false << true;
+    QTest::newRow("mouse-cancel") << false << false;
+    QTest::newRow("keyboard-accept") << true << true;
+    QTest::newRow("keyboard-cancel") << true << false;
+}
+
+void TestDisplayUi::theme_dialog_repeatedly_previews_same_light_and_dark_themes()
+{
+    QFETCH(bool, useKeyboard);
+    QFETCH(bool, acceptTheme);
+    MainWindowStateGuard guard;
+    Settings* settings = Settings::instance();
+    const QString initialSchemeName = QStringLiteral("Duskfox");
+    settings->colorScheme = initialSchemeName;
+
+    MainWindow window;
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    int previewsChecked = 0;
+    QString lastSchemeName;
+    QTimer::singleShot(0, &window, [&]() {
+        QDialog* dialog = window.findChild<QDialog*>(QStringLiteral("ThemeDialog"));
+        QVERIFY(dialog != nullptr);
+        auto finishDialog = qScopeGuard([dialog]() { dialog->reject(); });
+        Q_UNUSED(finishDialog);
+
+        QListWidget* lightList = dialog->findChild<QListWidget*>(QStringLiteral("LightThemeList"));
+        QListWidget* darkList = dialog->findChild<QListWidget*>(QStringLiteral("DarkThemeList"));
+        QWidget* previewWidget = dialog->findChild<QWidget*>(QStringLiteral("ThemePreview"));
+        QVERIFY(lightList != nullptr);
+        QVERIFY(darkList != nullptr);
+        QVERIFY(previewWidget != nullptr);
+        QPlainTextEdit* resultPreview = nullptr;
+        for (QPlainTextEdit* textEdit : previewWidget->findChildren<QPlainTextEdit*>()) {
+            if (qobject_cast<Editor*>(textEdit) == nullptr)
+                resultPreview = textEdit;
+        }
+        Editor* editorPreview = previewWidget->findChild<Editor*>();
+        QPushButton* backgroundButton = dialog->findChild<QPushButton*>(
+            QStringLiteral("ThemeColorButton_background"));
+        QVERIFY(resultPreview != nullptr);
+        QVERIFY(editorPreview != nullptr);
+        QVERIFY(backgroundButton != nullptr);
+        QVERIFY(lightList->count() > 0);
+        QVERIFY(darkList->count() > 0);
+        QCoreApplication::processEvents();
+
+        for (int cycle = 0; cycle < 4; ++cycle) {
+            for (QListWidget* list : {lightList, darkList}) {
+                QListWidgetItem* item = list->item(0);
+                list->scrollToItem(item);
+                if (useKeyboard) {
+                    list->setFocus();
+                    QTest::keyClick(list, Qt::Key_Home);
+                    QTest::keyClick(list, Qt::Key_Space);
+                } else {
+                    QTest::mouseClick(list->viewport(), Qt::LeftButton, Qt::NoModifier,
+                                      list->visualItemRect(item).center());
+                }
+                QCoreApplication::processEvents();
+
+                QCOMPARE(list->selectedItems(), QList<QListWidgetItem*>{item});
+                QListWidget* otherList = list == lightList ? darkList : lightList;
+                QVERIFY(otherList->selectedItems().isEmpty());
+                lastSchemeName = item->data(Qt::UserRole).toString();
+                const ColorScheme scheme = ColorScheme::loadByName(lastSchemeName);
+                QVERIFY(scheme.isValid());
+                const QColor background = scheme.colorForRole(ColorScheme::Background);
+                QCOMPARE(QColor(backgroundButton->text()), background);
+                QCOMPARE(resultPreview->palette().color(QPalette::Base), background);
+                const QVector<QColor> shades = generateOklchShades(
+                    background, 6, themePolarityForBackground(background));
+                QCOMPARE(editorPreview->palette().color(QPalette::Base),
+                         shades.at(UiConfig::DockBackgroundShade));
+                ++previewsChecked;
+            }
+        }
+        if (acceptTheme) {
+            dialog->accept();
+            finishDialog.dismiss();
+        }
+    });
+
+    QVERIFY(QMetaObject::invokeMethod(&window, "showCustomThemeDialog", Qt::DirectConnection));
+    QCOMPARE(previewsChecked, 8);
+    QCOMPARE(settings->colorScheme, acceptTheme ? lastSchemeName : initialSchemeName);
 }
 
 void TestDisplayUi::result_display_insets_viewport_horizontally()
