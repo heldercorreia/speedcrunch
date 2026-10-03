@@ -198,8 +198,9 @@ set(qtwin32_Qt6Core_LIBS Qt6Core)
 if(MINGW)
   set(qtwin32_Qt6Core_DEPS qtwin32_MinGW)
 endif()
-# qtwin32_Qt6Network - QtNetwork, without any plugins it might need though
+# qtwin32_Qt6Network - QtNetwork with the native Windows TLS backend
 set(qtwin32_Qt6Network_LIBS Qt6Network)
+set(qtwin32_Qt6Network_PLUGINS tls/qschannelbackend)
 set(qtwin32_Qt6Network_DEPS qtwin32_Qt6Core)
 # qtwin32_Qt6Gui - QtGui (without QtQuick or Widgets), including the platform plugin
 set(qtwin32_Qt6Gui_LIBS Qt6Gui)
