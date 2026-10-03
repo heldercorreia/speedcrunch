@@ -4191,7 +4191,6 @@ void MainWindow::createMenus()
     m_menus.help->addAction(m_actions.contextHelp);
     m_menus.help->addSeparator();
     m_menus.help->addAction(m_actions.helpCommunity);
-    m_menus.help->addSeparator();
     m_menus.help->addAction(m_actions.helpFeedback);
     m_menus.help->addAction(m_actions.helpSource);
     m_menus.help->addAction(m_actions.helpDonate);
