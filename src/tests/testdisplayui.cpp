@@ -61,6 +61,7 @@
 #include <QPushButton>
 #include <QScrollBar>
 #include <QScopeGuard>
+#include <QShortcut>
 #include <QSignalSpy>
 #include <QSplitter>
 #include <QSplitterHandle>
@@ -668,6 +669,8 @@ private slots:
     void dock_separator_style_uses_primary_while_hovered_or_dragged();
     void constants_dock_uses_configured_narrow_minimum_width();
     void f6_cycles_focus_between_editor_and_visible_dock_controls();
+    void f6_cycles_focus_with_another_main_window_visible();
+    void f6_cycles_focus_with_another_main_window_visible_data();
     void dock_search_focus_suppresses_editor_primary_outline_across_panes();
     void dock_selection_inserts_into_active_session_pane_after_focus_transfer();
     void clicking_tab_activates_own_pane_in_nested_split_layout();
@@ -690,6 +693,7 @@ private slots:
     void status_bar_setting_selectors_update_only_active_window();
     void new_session_window_menu_action_copies_layout_with_single_fresh_session();
     void session_open_menu_action_uses_open_dialog();
+    void quit_shortcut_triggers_menu_action_from_editor_and_window();
     void session_open_sessions_folder_menu_action_opens_session_storage();
     void session_import_dialog_opens_valid_json_as_new_tab();
     void session_import_rejects_invalid_json_without_new_tab();
@@ -3887,6 +3891,73 @@ void TestDisplayUi::f6_cycles_focus_between_editor_and_visible_dock_controls()
     QTRY_VERIFY(focusIsWithin(table));
 }
 
+void TestDisplayUi::f6_cycles_focus_with_another_main_window_visible()
+{
+    QFETCH(bool, floatingDock);
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    settings->constantsDockVisible = true;
+    settings->functionsDockVisible = false;
+    settings->historyDockVisible = false;
+    settings->formulaBookDockVisible = false;
+    settings->variablesDockVisible = false;
+    settings->userFunctionsDockVisible = false;
+    settings->userUnitsDockVisible = false;
+    settings->bitfieldVisible = false;
+    settings->keypadMode = Settings::KeypadModeDisabled;
+    settings->keypadVisible = false;
+    settings->hasNumberFormatStyleSetting = true;
+
+    MainWindow firstWindow(false);
+    MainWindow secondWindow(false);
+    firstWindow.show();
+    secondWindow.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&firstWindow));
+    QVERIFY(QTest::qWaitForWindowExposed(&secondWindow));
+
+    for (MainWindow* window : {&firstWindow, &secondWindow}) {
+        window->activateWindow();
+        Editor* editor = window->findChild<Editor*>();
+        QDockWidget* dock = window->findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+        QVERIFY(editor != nullptr);
+        QVERIFY(dock != nullptr);
+        dock->setFloating(floatingDock);
+        window->activateWindow();
+        QLineEdit* searchBox = dock->findChild<QLineEdit*>();
+        QTreeWidget* table = dock->findChild<QTreeWidget*>();
+        QVERIFY(searchBox != nullptr);
+        QVERIFY(table != nullptr);
+        editor->setFocus();
+        QTRY_VERIFY(focusIsWithin(editor));
+
+        QTest::keyClick(editor, Qt::Key_F6);
+        QTRY_VERIFY(focusIsWithin(searchBox));
+        if (floatingDock)
+            dock->activateWindow();
+        QTest::keyClick(searchBox, Qt::Key_F6);
+        QTRY_VERIFY(focusIsWithin(table));
+        QTest::keyClick(table, Qt::Key_F6);
+        QTRY_VERIFY(focusIsWithin(editor));
+
+        QTest::keyClick(editor, Qt::Key_F6, Qt::ShiftModifier);
+        QTRY_VERIFY(focusIsWithin(table));
+        QTest::keyClick(table, Qt::Key_F6, Qt::ShiftModifier);
+        QTRY_VERIFY(focusIsWithin(searchBox));
+        QTest::keyClick(searchBox, Qt::Key_F6, Qt::ShiftModifier);
+        QTRY_VERIFY(focusIsWithin(editor));
+    }
+}
+
+void TestDisplayUi::f6_cycles_focus_with_another_main_window_visible_data()
+{
+    QTest::addColumn<bool>("floatingDock");
+    QTest::newRow("docked") << false;
+    QTest::newRow("floating") << true;
+}
+
 void TestDisplayUi::dock_search_focus_suppresses_editor_primary_outline_across_panes()
 {
     Settings* settings = Settings::instance();
@@ -6241,6 +6312,43 @@ void TestDisplayUi::session_open_menu_action_uses_open_dialog()
     });
     openAction->trigger();
     QVERIFY(menuActionOpenedDialog);
+}
+
+void TestDisplayUi::quit_shortcut_triggers_menu_action_from_editor_and_window()
+{
+    MainWindowStateGuard guard;
+    guard.settings->sessionLayoutJson.clear();
+    guard.settings->windowState.clear();
+    guard.settings->windowGeometry.clear();
+    guard.settings->hasNumberFormatStyleSetting = true;
+
+    MainWindow window;
+    window.show();
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QMenu* sessionMenu = menuWithTitle(window.menuBar(), QStringLiteral("&Session"));
+    QVERIFY(sessionMenu != nullptr);
+    QAction* quitAction = directMenuActionWithText(sessionMenu, QStringLiteral("&Quit"));
+    QVERIFY(quitAction != nullptr);
+    QCOMPARE(quitAction->shortcut(), QKeySequence(Qt::CTRL | Qt::Key_Q));
+    for (QShortcut* shortcut : window.findChildren<QShortcut*>())
+        QVERIFY(!shortcut->keys().contains(quitAction->shortcut()));
+
+    // Observe shortcut dispatch without terminating the test application.
+    QVERIFY(quitAction->disconnect(qApp));
+    QSignalSpy triggered(quitAction, &QAction::triggered);
+
+    Editor* editor = window.findChild<Editor*>();
+    QVERIFY(editor != nullptr);
+    editor->setFocus();
+    QTRY_VERIFY(editor->hasFocus());
+    QTest::keyClick(editor, Qt::Key_Q, Qt::ControlModifier);
+    QCOMPARE(triggered.count(), 1);
+
+    window.setFocus();
+    QTest::keyClick(&window, Qt::Key_Q, Qt::ControlModifier);
+    QCOMPARE(triggered.count(), 2);
 }
 
 void TestDisplayUi::session_open_sessions_folder_menu_action_opens_session_storage()

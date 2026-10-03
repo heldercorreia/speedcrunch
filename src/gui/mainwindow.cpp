@@ -3997,6 +3997,8 @@ void MainWindow::createActionGroups()
 void MainWindow::createActionShortcuts()
 {
     m_actions.sessionNewTab->setShortcuts(QKeySequence::AddTab);
+    // Let this QAction own Quit; a separate standard-key QShortcut would
+    // duplicate Ctrl+Q on Linux and make the shortcut ambiguous.
     m_actions.sessionQuit->setShortcut(Qt::CTRL | Qt::Key_Q);
     m_actions.editCopyLastResult->setShortcut(Qt::CTRL | Qt::Key_R);
     m_actions.editCopy->setShortcut(Qt::CTRL | Qt::Key_C);
@@ -4928,9 +4930,10 @@ void MainWindow::cycleFocusRegion(int direction)
     // window activation. Do not let that replay pull focus back to the editor.
     cancelWindowActivationRestore();
 
-    QWidget* focused = focusWidget();
-    if (focused == nullptr)
-        focused = QApplication::focusWidget();
+    QWidget* focused = QApplication::focusWidget();
+    if (focused == nullptr
+        || (focused->window() != this && !isDockWidgetDescendant(focused)))
+        focused = focusWidget();
 
     int currentIndex = -1;
     for (int i = 0; i < targets.size(); ++i) {
@@ -4966,6 +4969,10 @@ void MainWindow::cycleFocusRegion(int direction)
             }
         });
     }
+    // Floating docks are separate top-level windows; activate the destination
+    // before asking one of its children to take focus.
+    if (!target->window()->isActiveWindow())
+        target->window()->activateWindow();
     target->setFocus(Qt::ShortcutFocusReason);
 }
 
@@ -7410,7 +7417,6 @@ void MainWindow::createFixedConnections()
     bindStandardKey(QKeySequence::New, [this]() { showNewSessionDialog(); });
     bindStandardKey(QKeySequence::Open, [this]() { showOpenSessionDialog(); });
     bindStandardKey(QKeySequence::Close, [this]() { closeCurrentSession(); });
-    bindStandardKey(QKeySequence::Quit, []() { qApp->quit(); });
 
 #if defined(Q_OS_MACOS)
     bindApplicationShortcut(QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_Right),
@@ -7431,13 +7437,15 @@ void MainWindow::createFixedConnections()
             this, &MainWindow::restoreClosedSessionTab);
 
     QShortcut* cycleFocusForwardShortcut = new QShortcut(QKeySequence(Qt::Key_F6), this);
-    cycleFocusForwardShortcut->setContext(Qt::ApplicationShortcut);
+    // Each window owns its focus cycle. Application-wide bindings conflict
+    // when more than one main window is visible.
+    cycleFocusForwardShortcut->setContext(Qt::WindowShortcut);
     connect(cycleFocusForwardShortcut, &QShortcut::activated,
             this, &MainWindow::cycleFocusForward);
 
     QShortcut* cycleFocusBackwardShortcut =
         new QShortcut(QKeySequence(Qt::SHIFT | Qt::Key_F6), this);
-    cycleFocusBackwardShortcut->setContext(Qt::ApplicationShortcut);
+    cycleFocusBackwardShortcut->setContext(Qt::WindowShortcut);
     connect(cycleFocusBackwardShortcut, &QShortcut::activated,
             this, &MainWindow::cycleFocusBackward);
 
@@ -10886,7 +10894,8 @@ bool MainWindow::eventFilter(QObject* o, QEvent* e)
 {
     if (e != nullptr && e->type() == QEvent::KeyPress) {
         if (QWidget* widget = qobject_cast<QWidget*>(o);
-            widget != nullptr && widget->window() == this) {
+            widget != nullptr
+            && (widget->window() == this || isDockWidgetDescendant(widget))) {
             QKeyEvent* keyEvent = static_cast<QKeyEvent*>(e);
             const Qt::KeyboardModifiers shortcutModifiers =
                 keyEvent->modifiers() & ~(Qt::KeypadModifier);

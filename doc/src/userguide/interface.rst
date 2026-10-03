@@ -620,7 +620,7 @@ Editing
 * :kbd:`Ctrl+O`
     Open session.
 * :kbd:`Ctrl+Q`
-    Quit SpeedCrunch.
+    Quit SpeedCrunch (:kbd:`Cmd+Q` on macOS).
 * :kbd:`Ctrl+N`
     Create a new session in the current session pane.
 * :kbd:`Ctrl+T` (:kbd:`Cmd+T` on macOS)
@@ -690,6 +690,7 @@ Focus Navigation
 
 * :kbd:`F6` and :kbd:`Shift+F6`
     Move focus forward or backward between the expression editor and visible dock controls.
+    Focus navigation applies to the current window, including its floating docks.
 
 
 Notation
