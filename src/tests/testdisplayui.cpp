@@ -9,6 +9,7 @@
 #include "core/settings.h"
 #include "core/userdefinitions.h"
 #include "gui/bitfieldwidget.h"
+#include "gui/bookdock.h"
 #include "gui/constantswidget.h"
 #include "gui/dockliststyle.h"
 #include "gui/editor.h"
@@ -24,6 +25,7 @@
 
 #include <QCoreApplication>
 #include <QAbstractItemView>
+#include <QAbstractTextDocumentLayout>
 #include <QAbstractButton>
 #include <QApplication>
 #include <QCheckBox>
@@ -42,6 +44,7 @@
 #include <QFrame>
 #include <QFocusEvent>
 #include <QHeaderView>
+#include <QGlyphRun>
 #include <QHelpEvent>
 #include <QImage>
 #include <QLabel>
@@ -75,6 +78,9 @@
 #include <QTabBar>
 #include <QTest>
 #include <QTextBrowser>
+#include <QTextBlock>
+#include <QTextDocument>
+#include <QTextLayout>
 #include <QToolButton>
 #include <QTranslator>
 #include <QTimer>
@@ -671,6 +677,8 @@ private slots:
     void saved_window_ui_state_overrides_defaults_before_show();
     void visible_window_applies_restored_dock_and_keypad_layout();
     void dock_surfaces_use_successive_generated_shades();
+    void formula_book_text_scales_with_zoom_data();
+    void formula_book_text_scales_with_zoom();
     void restored_constants_dock_empty_filter_fills_header();
     void dock_scroll_corner_uses_scrollbar_track_fill();
     void dock_separator_style_uses_primary_while_hovered_or_dragged();
@@ -3663,6 +3671,92 @@ void TestDisplayUi::dock_surfaces_use_successive_generated_shades()
     QCOMPARE(table->viewport()->palette().color(QPalette::Base).name(),
              changedContentFill.name());
     QVERIFY(table->styleSheet().contains(changedContentFill.name()));
+}
+
+void TestDisplayUi::formula_book_text_scales_with_zoom_data()
+{
+    QTest::addColumn<QString>("page");
+    QTest::addColumn<QString>("formula");
+    QTest::addColumn<QString>("caption");
+    QTest::addColumn<QString>("variable");
+    QTest::addColumn<QString>("unit");
+
+    QTest::newRow("geometry")
+        << QStringLiteral("geometry/circle") << QStringLiteral("A =")
+        << QStringLiteral("radius") << QStringLiteral("r") << QString();
+    QTest::newRow("electronics")
+        << QStringLiteral("electronics/ohmslaw") << QStringLiteral("R =")
+        << QStringLiteral("resistance") << QStringLiteral("R") << QStringLiteral("Ω");
+    QTest::newRow("compound-unit")
+        << QStringLiteral("rf/propagation") << QStringLiteral("= 3e8")
+        << QStringLiteral("dielectric constant") << QStringLiteral("e") << QStringLiteral("m·s");
+}
+
+void TestDisplayUi::formula_book_text_scales_with_zoom()
+{
+    QFETCH(QString, page);
+    QFETCH(QString, formula);
+    QFETCH(QString, caption);
+    QFETCH(QString, variable);
+    QFETCH(QString, unit);
+
+    BookDock dock;
+    dock.resize(800, 600);
+    dock.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&dock));
+    dock.openPage(QUrl(page));
+    QTextBrowser* browser = dock.findChild<QTextBrowser*>();
+    QVERIFY(browser != nullptr);
+
+    // Inspect laid-out glyph fonts so relative sizes and the document's zoom
+    // are resolved by Qt, including fonts inside caption table cells.
+    const auto pixelSize = [&](const QString& text, bool backwards = false) -> qreal {
+        QTextDocument* document = browser->document();
+        document->documentLayout()->documentSize();
+        const QTextCursor cursor = document->find(
+            text, backwards ? document->characterCount() - 1 : 0,
+            backwards ? QTextDocument::FindBackward | QTextDocument::FindWholeWords
+                      : QTextDocument::FindFlags());
+        if (cursor.isNull())
+            return -1;
+        const QTextBlock block = cursor.block();
+        const auto runs = block.layout()->glyphRuns(cursor.selectionStart() - block.position(), 1);
+        return runs.isEmpty() ? -1 : runs.first().rawFont().pixelSize();
+    };
+    const auto sizes = [&]() {
+        return QList<qreal> { pixelSize(QStringLiteral("Index")), pixelSize(formula),
+                             pixelSize(caption), pixelSize(variable, true) };
+    };
+    const QList<qreal> original = sizes();
+    for (qreal size : original)
+        QVERIFY(size > 0);
+    const qreal originalBaseSize = browser->document()->defaultFont().pointSizeF();
+
+    for (int steps : { 4, -4 }) {
+        browser->zoomIn(steps);
+        const qreal scale = browser->document()->defaultFont().pointSizeF() / originalBaseSize;
+        const QList<qreal> zoomed = sizes();
+        for (qsizetype i = 0; i < original.size(); ++i) {
+            QVERIFY2(steps > 0 ? zoomed[i] > original[i] : zoomed[i] < original[i],
+                     qPrintable(QStringLiteral("text sample %1 does not follow zoom").arg(i)));
+            QVERIFY(qAbs(zoomed[i] / original[i] - scale) < 0.1);
+        }
+        if (!unit.isEmpty())
+            QCOMPARE(pixelSize(unit), pixelSize(formula));
+
+        // Reloading content must retain the same sizes at the current zoom.
+        dock.openPage(QUrl(QStringLiteral("index")));
+        dock.openPage(QUrl(page));
+        QCOMPARE(sizes(), zoomed);
+        dock.setContentSurfaceColors(QColor(steps > 0 ? "#202020" : "#303030"), QColor("#eeeeee"));
+        QCOMPARE(sizes(), zoomed);
+        dock.retranslateText();
+        QCOMPARE(sizes(), zoomed);
+        browser->zoomOut(steps);
+        QCOMPARE(sizes(), original);
+    }
+    if (!unit.isEmpty())
+        QCOMPARE(pixelSize(unit), pixelSize(formula));
 }
 
 void TestDisplayUi::restored_constants_dock_empty_filter_fills_header()

@@ -17,17 +17,17 @@
         \
         ".variable {" \
             "font-weight: bold;" \
-            "font-size: 10pt;" \
+            "font-size: small;" \
         "}" \
         \
         ".unit {" \
-            "font-size: 8pt;" \
+            "font-size: large;" \
             "font-style: italic;" \
         "}" \
         \
         ".caption {" \
             "font-style: italic;" \
-            "font-size: 10pt;" \
+            "font-size: small;" \
         \
         "}" \
         \
@@ -42,7 +42,7 @@
         \
         ".formula a:link {" \
             "color: SteelBlue;" \
-            "font-size: 15pt;" \
+            "font-size: large;" \
             "font-family: \"Times New Roman\", Verdana, Arial, Helvetica, sans-serif;" \
         "}" \
     "</style>"
