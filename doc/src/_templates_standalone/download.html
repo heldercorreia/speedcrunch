@@ -40,9 +40,7 @@
         {%- endif %}
         <div class="alert alert-warning text-left" role="alert">
           <p><strong>{% trans %}macOS first launch{% endtrans %}</strong></p>
-          <p>{% trans %}After installing SpeedCrunch, try to open it once. If macOS blocks it, and you trust this download, open Apple menu &gt; System Settings &gt; Privacy &amp; Security. In the Security section, click Open or Open Anyway next to SpeedCrunch, then confirm the prompt. Enter your Mac password if asked.{% endtrans %}</p>
-          <p>{% trans %}The Open Anyway option is available for about an hour after your first attempt. macOS remembers the exception, so you can open SpeedCrunch normally afterward.{% endtrans %}</p>
-          <p><a href="https://support.apple.com/en-am/guide/mac-help/mh40616/27/mac/27">{% trans %}See Apple's step-by-step instructions{% endtrans %}</a></p>
+          <p>{% trans %}If macOS blocks SpeedCrunch, open System Settings &gt; Privacy &amp; Security and click Open Anyway.{% endtrans %} <a href="https://support.apple.com/en-am/guide/mac-help/mh40616/27/mac/27">{% trans %}Apple's instructions{% endtrans %}</a></p>
         </div>
       </div>
 
@@ -92,10 +90,10 @@
   <div class="panel panel-default">
     <div class="panel-heading" role="tab">
       <h4 class="panel-title">
-        <a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ id }}" aria-expanded="false" aria-controls="collapse{{ id }}">{{ _('Version') }} {{ version }}</a>
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ id }}" aria-expanded="true" aria-controls="collapse{{ id }}">{{ _('Version') }} {{ version }}</a>
       </h4>
     </div>
-    <div id="collapse{{ id }}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{ id }}" style="margin-top: 1em">
+    <div id="collapse{{ id }}" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="heading{{ id }}" style="margin-top: 1em">
       {{ downloads(*args, **kwargs) }}
     </div>
   </div>
@@ -128,9 +126,90 @@
         {% trans %}Unsure about the installation?{% endtrans %}
         <a href="{{ pathto('userguide/installation') }}">{% trans %}Have a look at the instructions.{% endtrans %}</a>
       </p>
+      <p><a href="#older-versions">{% trans %}Older versions (0.12){% endtrans %}</a></p>
       <hr/>
 
-      <h1>{% trans %}Older Versions{% endtrans %}</h1>
+      <section aria-labelledby="whats-new-in-1-0">
+        <h2 id="whats-new-in-1-0" style="scroll-margin-top: 80px;">{% trans %}What's new in 1.0{% endtrans %}</h2>
+        <p>{% trans %}Here are the main changes coming in SpeedCrunch 1.0.{% endtrans %}</p>
+        <p><a href="#whats-new-in-1-0">{% trans %}Link to this section{% endtrans %}</a></p>
+        <ul class="list-inline">
+          <li><a href="#release-1-0-workspace">{% trans %}Workspace and history{% endtrans %}</a></li>
+          <li><a href="#release-1-0-expressions">{% trans %}Expressions and editing{% endtrans %}</a></li>
+          <li><a href="#release-1-0-results">{% trans %}Results and formatting{% endtrans %}</a></li>
+          <li><a href="#release-1-0-functions">{% trans %}New functions{% endtrans %}</a></li>
+          <li><a href="#release-1-0-units">{% trans %}Units{% endtrans %}</a></li>
+          <li><a href="#release-1-0-settings">{% trans %}Appearance and settings{% endtrans %}</a></li>
+        </ul>
+
+        <h3 id="release-1-0-workspace" style="scroll-margin-top: 80px;">{% trans %}Workspace and history{% endtrans %}</h3>
+        <ul>
+          <li>{% trans %}Work in tabs and split panes to keep several calculations open side by side.{% endtrans %}</li>
+          <li>{% trans %}Save calculation history between launches and set a history size limit.{% endtrans %}</li>
+          <li>{% trans %}Load your own functions and variables at startup.{% endtrans %}</li>
+          <li>{% trans %}Choose a keypad preset or build a custom keypad.{% endtrans %}</li>
+          <li>{% trans %}Show or hide the main menu. The result display now has a right-click context menu with an entry for the main menu.{% endtrans %}</li>
+          <li>{% trans %}Highlight a calculation block by hovering over it, using Appearance &gt; Hover Highlighting. From that block, re-edit an earlier expression and recalculate all the expressions below it.{% endtrans %}</li>
+          <li>{% trans %}Check for updates from within SpeedCrunch.{% endtrans %}</li>
+        </ul>
+
+        <h3 id="release-1-0-expressions" style="scroll-margin-top: 80px;">{% trans %}Expressions and editing{% endtrans %}</h3>
+        <ul>
+          <li>{% trans %}Use lists and matrices in expressions.{% endtrans %}</li>
+          <li>{% trans %}See the interpreted expression alongside the result, with implicit multiplication made explicit. Choose whether to simplify interpreted expressions.{% endtrans %}</li>
+          <li>{% trans %}Write integer powers with superscript digits.{% endtrans %}</li>
+          <li>{% trans %}Use{% endtrans %} <code>√</code>, <code>∛</code>, <code>Σ</code> {% trans %}(summation), and{% endtrans %} <code>π</code> {% trans %}as aliases. The{% endtrans %} <code>~</code> {% trans %}operator is an alias for{% endtrans %} <code>not()</code>.</li>
+          <li>{% trans %}More symbol aliases are accepted for addition, subtraction, multiplication, and division.{% endtrans %}</li>
+          <li>{% trans %}Autocomplete suggestions now show category icons. Choose when suggestions appear in Editing &gt; Autocomplete.{% endtrans %}</li>
+          <li>{% trans %}Pasted numbers are automatically formatted to match the global Number Format setting.{% endtrans %}</li>
+          <li>{% trans %}Insert constants and formula book entries with their units included.{% endtrans %}</li>
+        </ul>
+
+        <h3 id="release-1-0-results" style="scroll-margin-top: 80px;">{% trans %}Results and formatting{% endtrans %}</h3>
+        <ul>
+          <li>{% trans %}Show a calculation in several result formats at once. Number-format choices include Indian 3-2-2 digit grouping.{% endtrans %}</li>
+          <li>{% trans %}Show rational results as fractions, or use sexagesimal notation for angles and time.{% endtrans %}</li>
+          <li>{% trans %}Show angles as multiples of pi in radian mode or through an explicit conversion.{% endtrans %}</li>
+          <li>{% trans %}Choose how complex numbers are displayed, with polar forms and options for the imaginary unit.{% endtrans %}</li>
+          <li>{% trans %}Set a custom precision with the Custom... option.{% endtrans %}</li>
+          <li>{% trans %}Choose from five modes in Settings &gt; Results &gt; Rounding Mode: Half Even (Banker's), Half Away from Zero (Arithmetic), Toward Zero, Toward +Infinity, and Toward -Infinity.{% endtrans %}</li>
+          <li>{% trans %}Changing the primary result format updates only the last expression. Earlier history entries keep their formatting.{% endtrans %}</li>
+        </ul>
+
+        <h3 id="release-1-0-functions" style="scroll-margin-top: 80px;">{% trans %}New functions{% endtrans %}</h3>
+        <ul>
+          <li><strong>{% trans %}Integer arithmetic:{% endtrans %}</strong> <code>powmod</code> {% trans %}for modular exponentiation,{% endtrans %} <code>emod</code> {% trans %}for Euclidean modulo,{% endtrans %} <code>lcm</code> {% trans %}for least common multiples, and{% endtrans %} <code>popcount</code> {% trans %}for counting set bits.{% endtrans %}</li>
+          <li><strong>{% trans %}Number formatting:{% endtrans %}</strong> <code>binpad</code>, <code>octpad</code>, {% trans %}and{% endtrans %} <code>hexpad</code> {% trans %}for padded binary, octal, and hexadecimal output. Use{% endtrans %} <code>sci</code> {% trans %}and{% endtrans %} <code>eng</code> {% trans %}for scientific and engineering notation.{% endtrans %}</li>
+          <li><strong>{% trans %}Random numbers:{% endtrans %}</strong> <code>rand</code> {% trans %}and{% endtrans %} <code>randint</code> {% trans %}generate random decimals and integers.{% endtrans %}</li>
+          <li><strong>{% trans %}Dates and time:{% endtrans %}</strong> <code>datetime</code> {% trans %}and{% endtrans %} <code>epoch</code> {% trans %}convert between date/time values and Unix timestamps.{% endtrans %}</li>
+          <li><strong>{% trans %}Summation:{% endtrans %}</strong> <code>sigma</code>, {% trans %}also written as{% endtrans %} <code>Σ</code>.</li>
+          <li><strong>{% trans %}Complex numbers:{% endtrans %}</strong> <code>conj</code> {% trans %}for complex conjugates and{% endtrans %} <code>cis</code> {% trans %}for constructing a complex number from an angle. Choose rectangular, exponential, or phasor output with{% endtrans %} <code>rectform</code>, <code>expform</code>, {% trans %}and{% endtrans %} <code>phasorform</code>.</li>
+          <li><strong>{% trans %}IEEE 754:{% endtrans %}</strong> <code>ieee754_round_*</code> {% trans %}rounds to a floating-point format, and{% endtrans %} <code>ieee754_*_residual(x)</code> {% trans %}returns the rounding residual. Both families support{% endtrans %} <code>half</code>, <code>float</code>, <code>double</code>, {% trans %}and{% endtrans %} <code>quad</code>.</li>
+          <li><strong>{% trans %}Chemistry:{% endtrans %}</strong> <code>molmass</code>, <code>mass</code>, {% trans %}and{% endtrans %} <code>molarity</code> {% trans %}for molar mass, mass from an amount of substance, and solution molarity.{% endtrans %}</li>
+          <li><strong>{% trans %}Linear algebra and data:{% endtrans %}</strong> {% trans %}List and matrix support with{% endtrans %} <code>cols</code>, <code>corrp</code>, <code>corrs</code>, <code>covp</code>, <code>covs</code>, <code>cross</code>, <code>det</code>, <code>dot</code>, <code>flatten</code>, <code>inv</code>, <code>norm</code>, <code>rank</code>, <code>rows</code>, <code>shape</code>, <code>trace</code>, {% trans %}and{% endtrans %} <code>transpose</code>.</li>
+          <li><strong>{% trans %}Statistics:{% endtrans %}</strong> <code>stdevp</code>, <code>stdevs</code>, <code>varp</code>, <code>vars</code>, {% trans %}and{% endtrans %} <code>mad</code>, {% trans %}with list and matrix support.{% endtrans %}</li>
+        </ul>
+
+        <h3 id="release-1-0-units" style="scroll-margin-top: 80px;">{% trans %}Units{% endtrans %}</h3>
+        <p>{% trans %}Use square brackets to identify units explicitly in expressions, such as{% endtrans %} <code>[m]</code> {% trans %}or{% endtrans %} <code>[s]</code>. {% trans %}New units and aliases include:{% endtrans %}</p>
+        <ul>
+          <li><strong>{% trans %}Angles:{% endtrans %}</strong> <code>gradian</code> (<code>gon</code>), <code>turn</code> (<code>tr</code>, <code>pla</code>), <code>revolution</code> (<code>rev</code>), <code>degree</code> (<code>°</code>), <code>arcmin</code> (<code>′</code>), {% trans %}and{% endtrans %} <code>arcsec</code> (<code>″</code>).</li>
+          <li><strong>{% trans %}Time:{% endtrans %}</strong> {% trans %}Julian century{% endtrans %} (<code>cy_jul</code>).</li>
+          <li><strong>{% trans %}Area and mass:{% endtrans %}</strong> <code>hectare</code> {% trans %}and{% endtrans %} <code>tonne</code>.</li>
+          <li><strong>{% trans %}Speed:{% endtrans %}</strong> <code>kph</code> {% trans %}and{% endtrans %} <code>mph</code>.</li>
+          <li><strong>{% trans %}Energy:{% endtrans %}</strong> <code>quad</code>, {% trans %}equal to{% endtrans %} 10<sup>15</sup> <code>[Btu]</code>.</li>
+        </ul>
+
+        <h3 id="release-1-0-settings" style="scroll-margin-top: 80px;">{% trans %}Appearance and settings{% endtrans %}</h3>
+        <ul>
+          <li>{% trans %}Choose from more built-in themes or create a custom theme.{% endtrans %}</li>
+          <li>{% trans %}Use the Up and Down arrow keys to browse history, with a setting to control this behavior.{% endtrans %}</li>
+          <li>{% trans %}Interface scaling now applies to the expression editor too.{% endtrans %}</li>
+        </ul>
+      </section>
+      <hr/>
+
+      <h1 id="older-versions" style="scroll-margin-top: 80px;">{% trans %}Older Versions{% endtrans %}</h1>
       <div id="accordion" role="tablist" aria-multiselectable="true">
         {{ oldVersion('0.12', '012',
           win=[

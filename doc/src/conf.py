@@ -150,7 +150,7 @@ else:
     }
     html_sidebars = {'**': ['scrollspy.html']}
     html_static_path = ['_static_standalone']
-    html_extra_path = ['demo/demo1.mp4']
+    html_extra_path = ['demo1.mp4']
     templates_path = ['_templates_standalone']
     html_logo = 'logo.png'
     html_context = {
