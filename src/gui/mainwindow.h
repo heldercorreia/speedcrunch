@@ -237,6 +237,7 @@ private slots:
     void showKeypadContextMenu(const QPoint&);
     void showResultFormatContextMenu(const QPoint&);
     void showSessionImportDialog();
+    void showUserDefinitionsImportDialog();
     void openSessionsFolder();
     void wrapSelection();
     void startHistoryEntryEdit(int index);

@@ -3,9 +3,11 @@
 
 
 #include "core/colorscheme.h"
+#include "core/evaluator.h"
 #include "core/session.h"
 #include "core/sessionjsonkeys.h"
 #include "core/settings.h"
+#include "core/userdefinitions.h"
 #include "gui/bitfieldwidget.h"
 #include "gui/constantswidget.h"
 #include "gui/dockliststyle.h"
@@ -56,6 +58,7 @@
 #include <QMargins>
 #include <QLineEdit>
 #include <QPainter>
+#include <QPlainTextEdit>
 #include <QPointer>
 #include <QPixmap>
 #include <QPushButton>
@@ -695,6 +698,8 @@ private slots:
     void status_bar_setting_selectors_update_only_active_window();
     void new_session_window_menu_action_copies_layout_with_single_fresh_session();
     void session_open_menu_action_uses_open_dialog();
+    void user_definitions_menu_opens_working_dialog_data();
+    void user_definitions_menu_opens_working_dialog();
     void quit_shortcut_triggers_menu_action_from_editor_and_window();
     void session_open_sessions_folder_menu_action_opens_session_storage();
     void session_import_dialog_opens_valid_json_as_new_tab();
@@ -6407,6 +6412,134 @@ void TestDisplayUi::session_open_menu_action_uses_open_dialog()
     });
     openAction->trigger();
     QVERIFY(menuActionOpenedDialog);
+}
+
+void TestDisplayUi::user_definitions_menu_opens_working_dialog_data()
+{
+    QTest::addColumn<QString>("operation");
+    QTest::newRow("cancel") << QStringLiteral("Cancel");
+    QTest::newRow("validate") << QStringLiteral("Validate");
+    QTest::newRow("apply") << QStringLiteral("Apply");
+    QTest::newRow("ok") << QStringLiteral("OK");
+}
+
+void TestDisplayUi::user_definitions_menu_opens_working_dialog()
+{
+    QFETCH(QString, operation);
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    settings->hasNumberFormatStyleSetting = true;
+
+    const QString oldDefinitions = settings->startupUserDefinitions;
+    const QString definitionsPath = QDir(Settings::getDataPath()).filePath(QStringLiteral("definitions.json"));
+    QFile definitionsFile(definitionsPath);
+    const bool hadDefinitionsFile = definitionsFile.exists();
+    QByteArray oldFileContents;
+    if (hadDefinitionsFile) {
+        QVERIFY(definitionsFile.open(QIODevice::ReadOnly));
+        oldFileContents = definitionsFile.readAll();
+        definitionsFile.close();
+    }
+    const auto restoreDefinitions = qScopeGuard([&]() {
+        settings->startupUserDefinitions = oldDefinitions;
+        if (hadDefinitionsFile)
+            writeFile(definitionsPath, oldFileContents);
+        else
+            QFile::remove(definitionsPath);
+    });
+    Q_UNUSED(restoreDefinitions);
+
+    const QString original = QStringLiteral("dialogexisting=7");
+    const QString edited = QStringLiteral("dialogvalue=42\ndialogfunction(x)=x+1\n[dialogunit]=[metre]\n1+1");
+    settings->startupUserDefinitions = original;
+    UserDefinitions::saveFrom(settings);
+    QVERIFY2(QFileInfo::exists(definitionsPath), qPrintable(definitionsPath));
+
+    MainWindow window;
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    QVERIFY(display != nullptr);
+    const Evaluator* evaluator = display->session()->evaluator();
+    QVERIFY(evaluator->hasVariable(QStringLiteral("dialogexisting")));
+
+    QMenu* settingsMenu = menuWithTitle(window.menuBar(), QStringLiteral("Se&ttings"));
+    QVERIFY(settingsMenu != nullptr);
+    QMenu* symbolsMenu = directSubmenuWithTitle(settingsMenu, QStringLiteral("&Symbols"));
+    QVERIFY(symbolsMenu != nullptr);
+    QAction* action = directMenuActionWithText(symbolsMenu, QStringLiteral("User &Definitions..."));
+    QVERIFY(action != nullptr);
+
+    bool visitedDialog = false;
+    bool visitedResults = false;
+    QTimer::singleShot(0, &window, [&]() {
+        QDialog* dialog = qobject_cast<QDialog*>(QApplication::activeModalWidget());
+        QVERIFY(dialog != nullptr);
+        const auto closeDialog = qScopeGuard([dialog]() {
+            if (dialog->isVisible())
+                dialog->reject();
+        });
+        Q_UNUSED(closeDialog);
+        QCOMPARE(dialog->windowTitle(), QStringLiteral("User Definitions"));
+        QPlainTextEdit* editor = dialog->findChild<QPlainTextEdit*>(QStringLiteral("UserDefinitionsEditor"));
+        QPlainTextEdit* lineNumbers = dialog->findChild<QPlainTextEdit*>(QStringLiteral("UserDefinitionsLineNumbers"));
+        QDialogButtonBox* buttons = dialog->findChild<QDialogButtonBox*>();
+        QVERIFY(editor != nullptr);
+        QVERIFY(lineNumbers != nullptr);
+        QVERIFY(buttons != nullptr);
+        QCOMPARE(editor->toPlainText(), original);
+        editor->setPlainText(edited);
+        QCOMPARE(lineNumbers->toPlainText(), QStringLiteral("1\n2\n3\n4"));
+        visitedDialog = true;
+
+        if (operation == QLatin1String("Cancel")) {
+            buttons->button(QDialogButtonBox::Cancel)->click();
+            return;
+        }
+        if (operation == QLatin1String("OK")) {
+            buttons->button(QDialogButtonBox::Ok)->click();
+            return;
+        }
+
+        QPushButton* operationButton = nullptr;
+        for (QAbstractButton* button : buttons->buttons()) {
+            if (button->text() == operation)
+                operationButton = qobject_cast<QPushButton*>(button);
+        }
+        QVERIFY(operationButton != nullptr);
+        QTimer::singleShot(0, dialog, [&]() {
+            QMessageBox* results = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+            QVERIFY(results != nullptr);
+            const auto closeResults = qScopeGuard([results]() { results->accept(); });
+            Q_UNUSED(closeResults);
+            QVERIFY(results->text().contains(QStringLiteral("Imported variables: 1")));
+            QVERIFY(results->text().contains(QStringLiteral("Imported functions: 1")));
+            QVERIFY(results->text().contains(QStringLiteral("Imported units: 1")));
+            QVERIFY(results->text().contains(QStringLiteral("Line numbers with errors: 4")));
+            visitedResults = true;
+        });
+        operationButton->click();
+        QVERIFY(dialog->isVisible());
+        const bool applied = operation == QLatin1String("Apply");
+        QCOMPARE(evaluator->hasVariable(QStringLiteral("dialogvalue")), applied);
+        QCOMPARE(settings->startupUserDefinitions, applied ? edited : original);
+        buttons->button(applied ? QDialogButtonBox::Ok : QDialogButtonBox::Cancel)->click();
+    });
+    action->trigger();
+    QVERIFY(visitedDialog);
+    QCOMPARE(visitedResults, operation == QLatin1String("Validate") || operation == QLatin1String("Apply"));
+
+    const bool saved = operation == QLatin1String("OK") || operation == QLatin1String("Apply");
+    QCOMPARE(evaluator->hasVariable(QStringLiteral("dialogvalue")), saved);
+    QCOMPARE(evaluator->hasUserFunction(QStringLiteral("dialogfunction")), saved);
+    QCOMPARE(evaluator->hasUserUnit(QStringLiteral("dialogunit")), saved);
+    QCOMPARE(evaluator->hasVariable(QStringLiteral("dialogexisting")), !saved);
+    QCOMPARE(settings->startupUserDefinitions, saved ? edited : original);
+    UserDefinitions::loadInto(settings);
+    QCOMPARE(settings->startupUserDefinitions, saved ? edited : original);
 }
 
 void TestDisplayUi::quit_shortcut_triggers_menu_action_from_editor_and_window()
