@@ -200,6 +200,14 @@ and—when window position saving is enabled—its own size and position.</p>
 <p>The expression editor provides some advanced features:</p>
 <ul class="simple">
 <li><dl class="simple">
+<dt>Automatic closing parentheses and square brackets</dt><dd><p>Typing <code class="docutils literal notranslate"><span class="pre">(</span></code> or <code class="docutils literal notranslate"><span class="pre">[</span></code> with no text selected inserts the matching closing
+character only when the cursor is at the end of the expression or only
+whitespace follows it. The cursor stays between the pair. If non-whitespace
+text follows the cursor, only the opening character is inserted.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>Autocompletion</dt><dd><p>If you start typing a name (e.g. of a variable, function, or unit), a pop-up with matching names will appear below the editor, aligned with the start of
 the name being completed. It appears above the editor when there is insufficient space below and shifts horizontally to stay on screen.
 The list becomes shorter and scrollable when needed to avoid covering the editor.
