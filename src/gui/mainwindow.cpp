@@ -10361,7 +10361,8 @@ void MainWindow::setAlwaysOnTopEnabled(bool b)
 {
     m_settings->windowAlwaysOnTop = b;
 
-    QPoint cur = mapToGlobal(QPoint(0, 0));
+    // move() uses the outer frame position, not the global client-area origin.
+    const QPoint cur = pos();
     if (b)
         setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
     else

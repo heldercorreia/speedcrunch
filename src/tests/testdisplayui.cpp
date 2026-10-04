@@ -678,6 +678,7 @@ private slots:
     void restored_session_layout_reapplies_generated_theme_surfaces();
     void saved_window_ui_state_overrides_defaults_before_show();
     void visible_window_applies_restored_dock_and_keypad_layout();
+    void always_on_top_toggles_preserve_window_geometry();
     void dock_surfaces_use_successive_generated_shades();
     void formula_book_text_scales_with_zoom_data();
     void formula_book_text_scales_with_zoom();
@@ -2750,6 +2751,58 @@ void TestDisplayUi::restored_session_layout_reapplies_generated_theme_surfaces()
     QWidget* keypadContainer = keypad->parentWidget();
     QVERIFY(keypadContainer != nullptr);
     QCOMPARE(keypadContainer->palette().color(QPalette::Window).name(), keypadFill.name());
+}
+
+void TestDisplayUi::always_on_top_toggles_preserve_window_geometry()
+{
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    const bool oldAlwaysOnTop = settings->windowAlwaysOnTop;
+    const bool oldFullScreen = settings->windowOnfullScreen;
+    const auto restoreWindowSettings = qScopeGuard([settings, oldAlwaysOnTop, oldFullScreen]() {
+        settings->windowAlwaysOnTop = oldAlwaysOnTop;
+        settings->windowOnfullScreen = oldFullScreen;
+    });
+    settings->windowAlwaysOnTop = false;
+    settings->windowOnfullScreen = false;
+    settings->hasNumberFormatStyleSetting = true;
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+
+    MainWindow window(false);
+    window.resize(640, 480);
+    window.move(100, 100);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QCoreApplication::processEvents();
+
+    QAction* alwaysOnTop = nullptr;
+    for (QAction* action : window.findChildren<QAction*>()) {
+        if (action->text() == QStringLiteral("Always on &Top")) {
+            alwaysOnTop = action;
+            break;
+        }
+    }
+    QVERIFY(alwaysOnTop != nullptr);
+    QVERIFY(!alwaysOnTop->isChecked());
+    const QRect originalFrame = window.frameGeometry();
+    const QRect originalGeometry = window.geometry();
+    const Qt::WindowFlags originalFlags = window.windowFlags();
+
+    for (int toggle = 0; toggle < 10; ++toggle) {
+        const bool enabled = toggle % 2 == 0;
+        alwaysOnTop->trigger();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        QCoreApplication::processEvents();
+
+        QCOMPARE(alwaysOnTop->isChecked(), enabled);
+        QCOMPARE(settings->windowAlwaysOnTop, enabled);
+        QCOMPARE(window.windowFlags().testFlag(Qt::WindowStaysOnTopHint), enabled);
+        QCOMPARE(window.windowFlags() & ~Qt::WindowStaysOnTopHint, originalFlags);
+        QCOMPARE(window.frameGeometry(), originalFrame);
+        QCOMPARE(window.geometry(), originalGeometry);
+    }
 }
 
 void TestDisplayUi::saved_window_ui_state_overrides_defaults_before_show()
