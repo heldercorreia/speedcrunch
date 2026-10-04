@@ -88,6 +88,8 @@
 #include <QTreeWidget>
 #include <QUrl>
 
+#include <cmath>
+
 namespace {
 QJsonObject themeJson(QJsonObject colors)
 {
@@ -710,6 +712,8 @@ private slots:
     void session_open_menu_action_uses_open_dialog();
     void user_definitions_menu_opens_working_dialog_data();
     void user_definitions_menu_opens_working_dialog();
+    void user_definitions_hint_follows_theme_contrast_data();
+    void user_definitions_hint_follows_theme_contrast();
     void quit_shortcut_triggers_menu_action_from_editor_and_window();
     void session_open_sessions_folder_menu_action_opens_session_storage();
     void session_import_dialog_opens_valid_json_as_new_tab();
@@ -6731,6 +6735,80 @@ void TestDisplayUi::user_definitions_menu_opens_working_dialog()
     QCOMPARE(settings->startupUserDefinitions, saved ? edited : original);
     UserDefinitions::loadInto(settings);
     QCOMPARE(settings->startupUserDefinitions, saved ? edited : original);
+}
+
+void TestDisplayUi::user_definitions_hint_follows_theme_contrast_data()
+{
+    QTest::addColumn<QColor>("background");
+    QTest::addColumn<QColor>("changedBackground");
+    QTest::newRow("dark-to-light") << QColor(QStringLiteral("#222134")) << QColor(QStringLiteral("#f7f4e8"));
+    QTest::newRow("light-to-dark") << QColor(QStringLiteral("#f7f4e8")) << QColor(QStringLiteral("#222134"));
+}
+
+void TestDisplayUi::user_definitions_hint_follows_theme_contrast()
+{
+    QFETCH(QColor, background);
+    QFETCH(QColor, changedBackground);
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    settings->hasNumberFormatStyleSetting = true;
+    settings->colorScheme = QStringLiteral("Custom");
+    settings->customColorSchemeJson = themeJsonString(QJsonObject{
+        {QStringLiteral("background"), background.name()}
+    });
+
+    MainWindow window;
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    bool visitedDialog = false;
+    QTimer::singleShot(0, &window, [&]() {
+        QDialog* dialog = window.findChild<QDialog*>(QStringLiteral("UserDefinitionsDialog"));
+        QVERIFY(dialog != nullptr);
+        const auto closeDialog = qScopeGuard([dialog]() { dialog->reject(); });
+        Q_UNUSED(closeDialog);
+        QPlainTextEdit* editor = dialog->findChild<QPlainTextEdit*>(QStringLiteral("UserDefinitionsEditor"));
+        QVERIFY(editor != nullptr);
+        editor->clear();
+        QVERIFY(!editor->placeholderText().isEmpty());
+
+        const auto verifyHint = [editor](const QColor& expectedBackground) {
+            const auto luminance = [](const QColor& color) {
+                const auto linear = [](double channel) {
+                    return channel <= 0.04045 ? channel / 12.92
+                        : std::pow((channel + 0.055) / 1.055, 2.4);
+                };
+                return 0.2126 * linear(color.redF())
+                    + 0.7152 * linear(color.greenF())
+                    + 0.0722 * linear(color.blueF());
+            };
+            QCOMPARE(editor->palette().color(QPalette::Active, QPalette::Base), expectedBackground);
+            for (const QPalette::ColorGroup group : {QPalette::Active,
+                                                    QPalette::Inactive,
+                                                    QPalette::Disabled}) {
+                const QColor base = editor->palette().color(group, QPalette::Base);
+                const QColor hint = editor->palette().color(group, QPalette::PlaceholderText);
+                const double baseLuminance = luminance(base);
+                const double hintLuminance = luminance(hint);
+                const double contrast = (qMax(baseLuminance, hintLuminance) + 0.05)
+                    / (qMin(baseLuminance, hintLuminance) + 0.05);
+                QVERIFY2(contrast >= 7.0, qPrintable(QStringLiteral("Hint contrast is %1:1").arg(contrast)));
+                QCOMPARE(hint.alpha(), 255);
+                QCOMPARE(editor->viewport()->palette().color(group, QPalette::PlaceholderText), hint);
+            }
+        };
+        verifyHint(background);
+        settings->customColorSchemeJson = themeJsonString(QJsonObject{
+            {QStringLiteral("background"), changedBackground.name()}
+        });
+        QVERIFY(QMetaObject::invokeMethod(&window, "colorSchemeChanged", Qt::DirectConnection));
+        verifyHint(changedBackground);
+        visitedDialog = true;
+    });
+    QVERIFY(QMetaObject::invokeMethod(&window, "showUserDefinitionsImportDialog", Qt::DirectConnection));
+    QVERIFY(visitedDialog);
 }
 
 void TestDisplayUi::quit_shortcut_triggers_menu_action_from_editor_and_window()

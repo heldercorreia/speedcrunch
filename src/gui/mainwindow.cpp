@@ -10214,9 +10214,20 @@ void MainWindow::showUserDefinitionsImportDialog()
                                     "f(x)=x^2+1\n"
                                     "[cm_s]=[centimetre/second]"));
     SyntaxHighlighter* startupDefinitionsHighlighter = new SyntaxHighlighter(textEdit);
-    connect(this, &MainWindow::colorSchemeChanged, &dialog, [startupDefinitionsHighlighter]() {
+    const auto updateDefinitionsTheme = [textEdit, startupDefinitionsHighlighter]() {
         startupDefinitionsHighlighter->update();
-    });
+        QPalette palette = textEdit->palette();
+        for (const QPalette::ColorGroup group : {QPalette::Active,
+                                                QPalette::Inactive,
+                                                QPalette::Disabled}) {
+            palette.setColor(group, QPalette::PlaceholderText,
+                             aaForegroundForBackground(palette.color(group, QPalette::Base)));
+        }
+        textEdit->setPalette(palette);
+        textEdit->viewport()->setPalette(palette);
+    };
+    updateDefinitionsTheme();
+    connect(this, &MainWindow::colorSchemeChanged, &dialog, updateDefinitionsTheme);
     connect(this, &MainWindow::syntaxHighlightingChanged, &dialog, [startupDefinitionsHighlighter]() {
         startupDefinitionsHighlighter->rehighlight();
     });
