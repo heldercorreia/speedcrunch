@@ -338,7 +338,7 @@ void Constants::Private::populate()
     PUSH_CONSTANT(QT_TR_NOOP("muon magnetic moment to nuclear magneton ratio"), "-8.89059704", "");
     PUSH_CONSTANT(QT_TR_NOOP("muon mass"), "1.883531627e-28", "kg");
     PUSH_CONSTANT(QT_TR_NOOP("muon mass energy equivalent"), "1.692833804e-11", "J");
-    PUSH_CONSTANT(QT_TR_NOOP("muon mass energy equivalent in MeV"), "105.6583755", "MeV·c⁻²");
+    PUSH_CONSTANT(QT_TR_NOOP("muon mass energy equivalent in MeV"), "105.6583755", "MeV");
     PUSH_CONSTANT(QT_TR_NOOP("muon mass in u"), "0.1134289257", "u");
     PUSH_CONSTANT(QT_TR_NOOP("muon molar mass"), "1.134289258e-4", "kg·mol⁻¹");
     PUSH_CONSTANT(QT_TR_NOOP("muon-neutron mass ratio"), "0.1124545168", "");
@@ -372,7 +372,7 @@ void Constants::Private::populate()
     PUSH_CONSTANT(QT_TR_NOOP("proton magnetic shielding correction"), "2.56715e-5", "");
     PUSH_CONSTANT(QT_TR_NOOP("proton mass (mₚ)"), "1.67262192595e-27", "kg");
     PUSH_CONSTANT(QT_TR_NOOP("proton mass energy equivalent"), "1.50327761802e-10", "J");
-    PUSH_CONSTANT(QT_TR_NOOP("proton mass energy equivalent in MeV"), "938.27208943", "MeV·c⁻²");
+    PUSH_CONSTANT(QT_TR_NOOP("proton mass energy equivalent in MeV"), "938.27208943", "MeV");
     PUSH_CONSTANT(QT_TR_NOOP("proton mass in u"), "1.0072764665789", "u");
     PUSH_CONSTANT(QT_TR_NOOP("proton molar mass (Mₚ)"), "1.00727646764e-3", "kg·mol⁻¹");
     PUSH_CONSTANT(QT_TR_NOOP("proton-muon mass ratio"), "8.88024338", "");
@@ -400,7 +400,7 @@ void Constants::Private::populate()
     PUSH_CONSTANT(QT_TR_NOOP("neutron magnetic moment to nuclear magneton ratio"), "-1.91304276", "");
     PUSH_CONSTANT(QT_TR_NOOP("neutron mass (mₙ)"), "1.67492750056e-27", "kg");
     PUSH_CONSTANT(QT_TR_NOOP("neutron mass energy equivalent"), "1.50534976514e-10", "J");
-    PUSH_CONSTANT(QT_TR_NOOP("neutron mass energy equivalent in MeV"), "939.56542194", "MeV·c⁻²");
+    PUSH_CONSTANT(QT_TR_NOOP("neutron mass energy equivalent in MeV"), "939.56542194", "MeV");
     PUSH_CONSTANT(QT_TR_NOOP("neutron mass in u"), "1.00866491606", "u");
     PUSH_CONSTANT(QT_TR_NOOP("neutron molar mass (Mₙ)"), "1.00866491712e-3", "kg·mol⁻¹");
     PUSH_CONSTANT(QT_TR_NOOP("neutron-muon mass ratio"), "8.89248408", "");
