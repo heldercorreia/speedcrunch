@@ -9,7 +9,7 @@ Visit the [SpeedCrunch website](https://www.speedcrunch.org/) for
 [downloads](https://www.speedcrunch.org/download.html) and the
 [online manual](https://www.speedcrunch.org/introduction.html).
 
-![capture.png](https://bitbucket.org/repo/dR7BnG/images/3654665019-capture.png)
+![SpeedCrunch screenshot](doc/src/screen1.png)
 
 ## Building
 To build SpeedCrunch, you need:
