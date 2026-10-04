@@ -778,7 +778,10 @@ const Quantity& Evaluator::checkOperatorResult(const Quantity& n)
                                 "require dimensionless arguments");
         break;
     case NotImplemented:
-        m_error = Evaluator::tr("operation is not defined for these arguments");
+        // Arguments are NaN placeholders while a function is being defined
+        // (e.g. f(n) = n!), so the operation can't be judged yet.
+        if (!(m_assignFunc && !m_assignArg.isEmpty()))
+            m_error = Evaluator::tr("operation is not defined for these arguments");
         break;
     case EvalUnstable:
         m_error = Evaluator::tr("Computation aborted - encountered "

@@ -3471,6 +3471,25 @@ void test_function_simplified()
     CHECK_EVAL("abs -123 + 10", "133");  /* (issue #600) */
     CHECK_EVAL("10 * abs 123", "1230");
     CHECK_EVAL("abs 123 * 10", "1230");
+    /* Postfix factorial in user function bodies. Complex mode is the app
+       default and the case that used to reject the definition. */
+    {
+        Settings* settings = Settings::instance();
+        const bool oldComplexNumbers = settings->complexNumbers;
+        const bool oldComplexMode = DMath::complexMode;
+        for (const bool complexNumbers : {false, true}) {
+            settings->complexNumbers = complexNumbers;
+            DMath::complexMode = complexNumbers;
+            CHECK_USERFUNC_SET("fact1(n) = n!");
+            CHECK_EVAL("fact1(5)", "120");
+            CHECK_USERFUNC_SET("fact2(n) = n! / 2");
+            CHECK_EVAL("fact2(6)", "360");
+            CHECK_USERFUNC_SET("fact3(x) = 2*x!");
+            CHECK_EVAL("fact3(3)", "12");
+        }
+        settings->complexNumbers = oldComplexNumbers;
+        DMath::complexMode = oldComplexMode;
+    }
     /* Tests for user functions (issue #600, cf. discussion) */
     CHECK_USERFUNC_SET("func2(x) = abs(x)");
     CHECK_EVAL("func2 123", "123");
