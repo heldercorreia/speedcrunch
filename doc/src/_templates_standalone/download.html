@@ -53,7 +53,9 @@
             {% if not linux_dropdown -%}
               {% for (name, path) in linux -%}
                 {% if name == 'Flathub' -%}
-                  <a href="{{ path }}"><img width="180" alt="{{ _('Download on Flathub') }}" src='https://flathub.org/assets/badges/flathub-badge-en.png'/></a>
+                  <img width="180" alt="{{ _('Download on Flathub') }}" src='https://flathub.org/assets/badges/flathub-badge-en.png'/>
+                  <br/>
+                  <small>{% trans %}Currently unavailable.{% endtrans %}</small>
                 {%- else -%}
                   <a class="btn btn-primary btn-md dl-button" href="{{ path }}"><i class="fa fa-laptop fa-lg" style="vertical-align:middle;"></i>&nbsp;{{ name }}</a>
                 {%- endif %}

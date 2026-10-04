@@ -105,6 +105,10 @@ video.featurette-image {
   margin-bottom: 8px;
 }
 
+.hero-actions a.btn:visited {
+  color: #fff;
+}
+
 .hero-platforms {
   color: #666;
   font-size: 16px;

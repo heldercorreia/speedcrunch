@@ -32,7 +32,7 @@
   %}
 {% endif %}
 
-{% set bootswatch_css_custom = ['_static/extra.css?home=2'] %}
+{% set bootswatch_css_custom = ['_static/extra.css?home=3'] %}
 {% set css_files = css_files + theme_css_files + bootswatch_css_custom %}
 
 {% set script_files = script_files + [
@@ -98,7 +98,9 @@
 
 {%- macro script() %}
     {%- for scriptfile in script_files %}
-    {%- if scriptfile == '_static/documentation_options.js' %}
+    {%- if scriptfile|attr('filename') is defined %}
+    {{ js_tag(scriptfile) }}
+    {%- elif scriptfile == '_static/documentation_options.js' %}
     <script type="text/javascript" id="documentation_options" data-url_root="{{ url_root }}" src="{{ pathto(scriptfile, 1) }}"></script>
     {%- else %}
     <script type="text/javascript" src="{{ pathto(scriptfile, 1) }}"></script>
@@ -107,11 +109,13 @@
 {%- endmacro %}
 
 {%- macro css() %}
-    <link rel="stylesheet" href="{{ pathto('_static/' + style, 1) }}" type="text/css" />
-    <link rel="stylesheet" href="{{ pathto('_static/pygments.css', 1) }}" type="text/css" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
     {%- for cssfile in css_files %}
+    {%- if cssfile|attr('filename') is defined %}
+    {{ css_tag(cssfile) }}
+    {%- else %}
     <link rel="stylesheet" href="{{ pathto(cssfile, 1) }}" type="text/css" />
+    {%- endif %}
     {%- endfor %}
 {%- endmacro %}
 
