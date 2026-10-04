@@ -5,7 +5,7 @@
     <name>AboutBox</name>
     <message>
         <location filename="../../gui/aboutbox.cpp" line="19"/>
-        <location filename="../../gui/aboutbox.cpp" line="141"/>
+        <location filename="../../gui/aboutbox.cpp" line="142"/>
         <source>About SpeedCrunch</source>
         <translation>SpeedCrunch பற்றி</translation>
     </message>
@@ -20,7 +20,7 @@
         <translation>அசல் ஆசிரியர்</translation>
     </message>
     <message>
-        <location filename="../../gui/aboutbox.cpp" line="133"/>
+        <location filename="../../gui/aboutbox.cpp" line="134"/>
         <source>Close</source>
         <translation>மூடு</translation>
     </message>
@@ -40,17 +40,17 @@
         <translation>நன்றி</translation>
     </message>
     <message>
-        <location filename="../../gui/aboutbox.cpp" line="110"/>
+        <location filename="../../gui/aboutbox.cpp" line="111"/>
         <source>Copyright (C) 2004-2026 The SpeedCrunch developers</source>
         <translation>பதிப்புரிமை (C) 2004-2026 SpeedCrunch உருவாக்குநர்கள்</translation>
     </message>
     <message>
-        <location filename="../../gui/aboutbox.cpp" line="114"/>
+        <location filename="../../gui/aboutbox.cpp" line="115"/>
         <source>This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version</source>
         <translation>இந்த திட்டம் இலவச மென்பொருள்; இலவச மென்பொருள் அறக்கட்டளையால் வெளியிடப்பட்ட குனு பொது பொது உரிமத்தின் விதிமுறைகளின் கீழ் நீங்கள் அதை மறுபகிர்வு செய்யலாம் மற்றும்/அல்லது மாற்றலாம்; உரிமத்தின் பதிப்பு 2, அல்லது (உங்கள் விருப்பப்படி) ஏதேனும் பிந்தைய பதிப்பு</translation>
     </message>
     <message>
-        <location filename="../../gui/aboutbox.cpp" line="120"/>
+        <location filename="../../gui/aboutbox.cpp" line="121"/>
         <source>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.</source>
         <translation>இந்த திட்டம் பயனுள்ளதாக இருக்கும் என்ற நம்பிக்கையில் விநியோகிக்கப்படுகிறது, ஆனால் எந்த உத்தரவாதமும் இல்லாமல்; ஒரு குறிப்பிட்ட நோக்கத்திற்காக வணிகம் அல்லது உடற்தகுதியின் மறைமுக உத்தரவாதம் கூட இல்லாமல். மேலும் விவரங்களுக்கு குனு பொது பொது உரிமத்தைப் பார்க்கவும்.</translation>
     </message>
@@ -414,9 +414,9 @@
 <context>
     <name>ConstantCompletion</name>
     <message>
-        <location filename="../../gui/editor.cpp" line="4521"/>
-        <location filename="../../gui/editor.cpp" line="4531"/>
-        <location filename="../../gui/editor.cpp" line="4645"/>
+        <location filename="../../gui/editor.cpp" line="4730"/>
+        <location filename="../../gui/editor.cpp" line="4740"/>
+        <location filename="../../gui/editor.cpp" line="4855"/>
         <source>All</source>
         <translation>அனைத்தும்</translation>
     </message>
@@ -2663,45 +2663,45 @@
 <context>
     <name>Editor</name>
     <message>
-        <location filename="../../gui/editor.cpp" line="1795"/>
+        <location filename="../../gui/editor.cpp" line="1930"/>
         <source>Unit</source>
         <translation>அலகு</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="1799"/>
+        <location filename="../../gui/editor.cpp" line="1934"/>
         <source>User unit</source>
         <translation>பயனர் அலகு</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="1854"/>
+        <location filename="../../gui/editor.cpp" line="1989"/>
         <source>User function</source>
         <translation>பயனர் செயல்பாடு</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="1981"/>
+        <location filename="../../gui/editor.cpp" line="2116"/>
         <source>Argument</source>
         <translation>வாதம்</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="2157"/>
-        <location filename="../../gui/editor.cpp" line="2191"/>
+        <location filename="../../gui/editor.cpp" line="2292"/>
+        <location filename="../../gui/editor.cpp" line="2326"/>
         <source>Current result:&lt;br/&gt;%1</source>
         <translation>தற்போதைய முடிவு:&lt;br/&gt;%1</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="2263"/>
-        <location filename="../../gui/editor.cpp" line="2291"/>
+        <location filename="../../gui/editor.cpp" line="2398"/>
+        <location filename="../../gui/editor.cpp" line="2426"/>
         <source>Selection result:&lt;br/&gt;%1</source>
         <translation>தேர்வு முடிவு:&lt;br/&gt;%1</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="2257"/>
-        <location filename="../../gui/editor.cpp" line="2285"/>
+        <location filename="../../gui/editor.cpp" line="2392"/>
+        <location filename="../../gui/editor.cpp" line="2420"/>
         <source>Selection result: n/a</source>
         <translation>தேர்வு முடிவு: பொருந்தாது</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="2298"/>
+        <location filename="../../gui/editor.cpp" line="2433"/>
         <source>Selection result: %1</source>
         <translation>தேர்வு முடிவு: %1</translation>
     </message>
@@ -4585,1247 +4585,1315 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3692"/>
+        <location filename="../../gui/mainwindow.cpp" line="3742"/>
         <source>Radian</source>
         <translation>ரேடியன்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3696"/>
+        <location filename="../../gui/mainwindow.cpp" line="3746"/>
         <source>Degree</source>
         <translation>பாகை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3693"/>
+        <location filename="../../gui/mainwindow.cpp" line="3743"/>
         <source>Gradian</source>
         <translation>கிரேடியன்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3702"/>
+        <location filename="../../gui/mainwindow.cpp" line="3752"/>
         <source>Binary</source>
         <translation>இருமம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3703"/>
+        <location filename="../../gui/mainwindow.cpp" line="3753"/>
         <source>Octal</source>
         <translation>எண்மம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3704"/>
+        <location filename="../../gui/mainwindow.cpp" line="3754"/>
         <source>Hexadecimal</source>
         <translation>பதினாறுமம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3705"/>
+        <location filename="../../gui/mainwindow.cpp" line="3755"/>
         <source>Sexagesimal</source>
         <translation>அறுபதடிமுறை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3707"/>
+        <location filename="../../gui/mainwindow.cpp" line="3757"/>
         <source>Engineering decimal</source>
         <translation>பொறியியல் தசமம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3708"/>
+        <location filename="../../gui/mainwindow.cpp" line="3758"/>
         <source>Scientific decimal</source>
         <translation>அறிவியல் தசமம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3727"/>
+        <location filename="../../gui/mainwindow.cpp" line="3777"/>
         <source>&amp;Import...</source>
         <translation>&amp;இறக்குமதி...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3733"/>
+        <location filename="../../gui/mainwindow.cpp" line="3783"/>
         <source>&amp;Quit</source>
         <translation>&amp;வெளியேறு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3735"/>
+        <location filename="../../gui/mainwindow.cpp" line="3785"/>
         <source>Clear E&amp;xpression</source>
         <translation>வெ&amp;ளிப்பாடு அழி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3736"/>
+        <location filename="../../gui/mainwindow.cpp" line="3786"/>
         <source>Clear &amp;History</source>
         <translation>அழி &amp;வரலாறு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3737"/>
+        <location filename="../../gui/mainwindow.cpp" line="3787"/>
         <source>Copy Last &amp;Result</source>
         <translation>கடைசி &amp;முடிவை நகலெடுக்கவும்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3738"/>
+        <location filename="../../gui/mainwindow.cpp" line="3788"/>
         <source>&amp;Copy</source>
         <translation>&amp;நகல்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3739"/>
+        <location filename="../../gui/mainwindow.cpp" line="3789"/>
         <source>&amp;Paste</source>
         <translation>&amp;ஒட்டு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3740"/>
+        <location filename="../../gui/mainwindow.cpp" line="3790"/>
         <source>&amp;Select Expression</source>
         <translation>&amp;வெளிப்பாட்டை தேர்ந்தெடுக்கவும்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3741"/>
+        <location filename="../../gui/mainwindow.cpp" line="3791"/>
         <source>&amp;Wrap Selection in Parentheses</source>
         <translation>&amp;தேர்வு அடைப்புக்குறிக்குள் மடக்கு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3743"/>
+        <location filename="../../gui/mainwindow.cpp" line="3793"/>
         <source>&amp;Constants</source>
         <translation>&amp;மாறிலிகள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3744"/>
+        <location filename="../../gui/mainwindow.cpp" line="3794"/>
         <source>F&amp;ull Screen Mode</source>
         <translation>மு&amp;ழு திரையில் முறையில்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3745"/>
+        <location filename="../../gui/mainwindow.cpp" line="3795"/>
         <source>&amp;Functions</source>
         <translation>&amp;செயல்பாடுகள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3746"/>
+        <location filename="../../gui/mainwindow.cpp" line="3796"/>
         <source>&amp;History</source>
         <translation>&amp;வரலாறு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3756"/>
+        <location filename="../../gui/mainwindow.cpp" line="3806"/>
         <source>&amp;Status Bar</source>
         <translation>&amp;நிலைமை பட்டை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3759"/>
-        <location filename="../../gui/mainwindow.cpp" line="6705"/>
+        <location filename="../../gui/mainwindow.cpp" line="3809"/>
+        <location filename="../../gui/mainwindow.cpp" line="6761"/>
         <source>Bitfield</source>
         <translation>இருமபுலம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3760"/>
+        <location filename="../../gui/mainwindow.cpp" line="3810"/>
         <source>Use&amp;r Functions</source>
         <translation>ப&amp;யனர் செயல்பாடு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3763"/>
+        <location filename="../../gui/mainwindow.cpp" line="3813"/>
         <source>&amp;Degree</source>
         <translation>&amp;பாகை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3764"/>
+        <location filename="../../gui/mainwindow.cpp" line="3814"/>
         <source>&amp;Radian</source>
         <translation>&amp;ரேடியன்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3765"/>
+        <location filename="../../gui/mainwindow.cpp" line="3815"/>
         <source>&amp;Gradian</source>
         <translation>&amp;கிரேடியன்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3772"/>
+        <location filename="../../gui/mainwindow.cpp" line="3822"/>
         <source>Automatic &amp;Completion</source>
         <translation>தானியங்கி &amp;நிறைவு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3783"/>
+        <location filename="../../gui/mainwindow.cpp" line="3833"/>
         <source>Syntax &amp;Highlighting</source>
         <translation>தொடரியல் &amp;சிறப்பம்சமாக</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3801"/>
+        <location filename="../../gui/mainwindow.cpp" line="3851"/>
         <source>&amp;Comma</source>
         <translation>&amp;காற்புள்ளி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3802"/>
+        <location filename="../../gui/mainwindow.cpp" line="3852"/>
         <source>&amp;System Default</source>
         <translation>&amp;கணினி இயல்புநிலை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3803"/>
+        <location filename="../../gui/mainwindow.cpp" line="3853"/>
         <source>&amp;Dot</source>
         <translation>&amp;புள்ளி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3804"/>
+        <location filename="../../gui/mainwindow.cpp" line="3854"/>
         <source>Dot &amp;And Comma</source>
         <translation>புள்ளி &amp;மற்றும் காற்புள்ளி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3827"/>
+        <location filename="../../gui/mainwindow.cpp" line="3877"/>
         <source>&amp;Binary</source>
         <translation>&amp;இருமம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3824"/>
+        <location filename="../../gui/mainwindow.cpp" line="3874"/>
         <source>&amp;Engineering</source>
         <translation>&amp;பொறியியல்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3829"/>
+        <location filename="../../gui/mainwindow.cpp" line="3879"/>
         <source>&amp;Hexadecimal</source>
         <translation>&amp;பதின்மங்கள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3828"/>
+        <location filename="../../gui/mainwindow.cpp" line="3878"/>
         <source>&amp;Octal</source>
         <translation>&amp;எட்டுத்தொகை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3825"/>
+        <location filename="../../gui/mainwindow.cpp" line="3875"/>
         <source>&amp;Scientific</source>
         <translation>&amp;அறிவியல்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3847"/>
+        <location filename="../../gui/mainwindow.cpp" line="3897"/>
         <source>User &amp;Manual</source>
         <translation>பயனர் &amp;கையேடு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3853"/>
+        <location filename="../../gui/mainwindow.cpp" line="3903"/>
         <source>&amp;Donate</source>
         <translation>&amp;நன்கொடை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4503"/>
+        <location filename="../../gui/mainwindow.cpp" line="4554"/>
         <source>New Tab</source>
         <translation>புதிய தாவல்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6810"/>
+        <location filename="../../gui/mainwindow.cpp" line="6866"/>
         <source>Constants</source>
         <translation>மாறிலிகள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6840"/>
+        <location filename="../../gui/mainwindow.cpp" line="6896"/>
         <source>Functions</source>
         <translation>செயல்பாடுகள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6863"/>
+        <location filename="../../gui/mainwindow.cpp" line="6919"/>
         <source>History</source>
         <translation>வரலாறு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6933"/>
+        <location filename="../../gui/mainwindow.cpp" line="6989"/>
         <source>User Functions</source>
         <translation>பயனர் செயல்பாடு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7660"/>
+        <location filename="../../gui/mainwindow.cpp" line="7719"/>
         <source>Type an expression here</source>
         <translation>இங்கே ஒரு வெளிப்பாட்டைத் தட்டச்சு செய்க</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3843"/>
+        <location filename="../../gui/mainwindow.cpp" line="3893"/>
         <source>&amp;Font...</source>
         <translation>&amp;எழுத்துரு...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3845"/>
+        <location filename="../../gui/mainwindow.cpp" line="3895"/>
         <source>&amp;Language...</source>
         <translation>&amp;மொழி...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4155"/>
+        <location filename="../../gui/mainwindow.cpp" line="4206"/>
         <source>&amp;Session</source>
         <translation>&amp;அமர்வு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4157"/>
+        <location filename="../../gui/mainwindow.cpp" line="4208"/>
         <source>&amp;Edit</source>
         <translation>&amp;தொகு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4158"/>
+        <location filename="../../gui/mainwindow.cpp" line="4209"/>
         <source>&amp;View</source>
         <translation>&amp;நோக்கு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4161"/>
+        <location filename="../../gui/mainwindow.cpp" line="4212"/>
         <source>Se&amp;ttings</source>
         <translation>அ&amp;மைப்புகள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4167"/>
+        <location filename="../../gui/mainwindow.cpp" line="4218"/>
         <source>&amp;Decimal</source>
         <translation>&amp;தசம</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4159"/>
+        <location filename="../../gui/mainwindow.cpp" line="4210"/>
         <source>&amp;Keypad</source>
         <translation>&amp;விசைப்பலகை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3768"/>
+        <location filename="../../gui/mainwindow.cpp" line="3818"/>
         <source>Always on &amp;Top</source>
         <translation>எப்போதும் &amp;மேலே</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3785"/>
+        <location filename="../../gui/mainwindow.cpp" line="3835"/>
         <source>Disabled</source>
         <translation>முடக்கப்பட்டது</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3786"/>
+        <location filename="../../gui/mainwindow.cpp" line="3836"/>
         <source>Small Space</source>
         <translation>சிறிய இடம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3787"/>
+        <location filename="../../gui/mainwindow.cpp" line="3837"/>
         <source>Medium Space</source>
         <translation>நடுத்தர இடம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3788"/>
+        <location filename="../../gui/mainwindow.cpp" line="3838"/>
         <source>Large Space</source>
         <translation>பெரிய இடம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3805"/>
+        <location filename="../../gui/mainwindow.cpp" line="3855"/>
         <source>&amp;0 Digits</source>
         <translation>&amp;0 இலக்கங்கள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3806"/>
+        <location filename="../../gui/mainwindow.cpp" line="3856"/>
         <source>&amp;15 Digits</source>
         <translation>&amp;15 இலக்கங்கள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3807"/>
+        <location filename="../../gui/mainwindow.cpp" line="3857"/>
         <source>&amp;2 Digits</source>
         <translation>&amp;2 இலக்கங்கள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3808"/>
+        <location filename="../../gui/mainwindow.cpp" line="3858"/>
         <source>&amp;3 Digits</source>
         <translation>&amp;3 இலக்கங்கள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3809"/>
+        <location filename="../../gui/mainwindow.cpp" line="3859"/>
         <source>&amp;50 Digits</source>
         <translation>&amp;50 இலக்கங்கள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3810"/>
+        <location filename="../../gui/mainwindow.cpp" line="3860"/>
         <source>&amp;8 Digits</source>
         <translation>&amp;8 இலக்கங்கள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3830"/>
+        <location filename="../../gui/mainwindow.cpp" line="3880"/>
         <source>&amp;Sexagesimal</source>
         <translation>&amp;அறுபது சார்ந்த</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3848"/>
+        <location filename="../../gui/mainwindow.cpp" line="3898"/>
         <source>Context Help</source>
         <translation>சூழல் உதவி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3854"/>
+        <location filename="../../gui/mainwindow.cpp" line="3904"/>
         <source>About &amp;SpeedCrunch</source>
         <translation>&amp;SpeedCrunch பற்றி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4178"/>
+        <location filename="../../gui/mainwindow.cpp" line="4229"/>
         <source>&amp;Help</source>
         <translation>&amp;உதவி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9455"/>
-        <location filename="../../gui/mainwindow.cpp" line="9461"/>
-        <location filename="../../gui/mainwindow.cpp" line="9469"/>
-        <location filename="../../gui/mainwindow.cpp" line="9475"/>
-        <location filename="../../gui/mainwindow.cpp" line="9491"/>
-        <location filename="../../gui/mainwindow.cpp" line="9497"/>
-        <location filename="../../gui/mainwindow.cpp" line="9548"/>
-        <location filename="../../gui/mainwindow.cpp" line="9554"/>
-        <location filename="../../gui/mainwindow.cpp" line="9653"/>
-        <location filename="../../gui/mainwindow.cpp" line="10377"/>
-        <location filename="../../gui/mainwindow.cpp" line="10397"/>
+        <location filename="../../gui/mainwindow.cpp" line="9516"/>
+        <location filename="../../gui/mainwindow.cpp" line="9522"/>
+        <location filename="../../gui/mainwindow.cpp" line="9530"/>
+        <location filename="../../gui/mainwindow.cpp" line="9536"/>
+        <location filename="../../gui/mainwindow.cpp" line="9552"/>
+        <location filename="../../gui/mainwindow.cpp" line="9558"/>
+        <location filename="../../gui/mainwindow.cpp" line="9609"/>
+        <location filename="../../gui/mainwindow.cpp" line="9615"/>
+        <location filename="../../gui/mainwindow.cpp" line="9714"/>
+        <location filename="../../gui/mainwindow.cpp" line="10625"/>
+        <location filename="../../gui/mainwindow.cpp" line="10664"/>
         <source>Error</source>
         <translation>பிழை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9455"/>
-        <location filename="../../gui/mainwindow.cpp" line="9687"/>
+        <location filename="../../gui/mainwindow.cpp" line="9516"/>
+        <location filename="../../gui/mainwindow.cpp" line="9748"/>
         <source>Can&apos;t read from file %1</source>
         <translation>%1 கோப்பிலிருந்து படிக்க முடியவில்லை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9669"/>
-        <location filename="../../gui/mainwindow.cpp" line="9687"/>
-        <location filename="../../gui/mainwindow.cpp" line="9695"/>
-        <location filename="../../gui/mainwindow.cpp" line="9702"/>
-        <location filename="../../gui/mainwindow.cpp" line="9710"/>
-        <location filename="../../gui/mainwindow.cpp" line="9718"/>
-        <location filename="../../gui/mainwindow.cpp" line="9724"/>
-        <location filename="../../gui/mainwindow.cpp" line="9732"/>
-        <location filename="../../gui/mainwindow.cpp" line="9738"/>
-        <location filename="../../gui/mainwindow.cpp" line="9746"/>
-        <location filename="../../gui/mainwindow.cpp" line="9752"/>
-        <location filename="../../gui/mainwindow.cpp" line="9760"/>
+        <location filename="../../gui/mainwindow.cpp" line="9730"/>
+        <location filename="../../gui/mainwindow.cpp" line="9748"/>
+        <location filename="../../gui/mainwindow.cpp" line="9756"/>
+        <location filename="../../gui/mainwindow.cpp" line="9763"/>
+        <location filename="../../gui/mainwindow.cpp" line="9771"/>
+        <location filename="../../gui/mainwindow.cpp" line="9779"/>
+        <location filename="../../gui/mainwindow.cpp" line="9785"/>
+        <location filename="../../gui/mainwindow.cpp" line="9793"/>
+        <location filename="../../gui/mainwindow.cpp" line="9799"/>
+        <location filename="../../gui/mainwindow.cpp" line="9807"/>
+        <location filename="../../gui/mainwindow.cpp" line="9813"/>
+        <location filename="../../gui/mainwindow.cpp" line="9821"/>
         <source>Import Session</source>
         <translation>அமர்வை இறக்குமதி செய்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2350"/>
-        <location filename="../../gui/mainwindow.cpp" line="4523"/>
+        <location filename="../../gui/mainwindow.cpp" line="2778"/>
+        <location filename="../../gui/mainwindow.cpp" line="4574"/>
         <source>Close Session</source>
         <translation>அமர்வை மூடு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3614"/>
+        <location filename="../../gui/mainwindow.cpp" line="3664"/>
         <source>Angle Mode:</source>
         <translation>கோண முறை:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3615"/>
+        <location filename="../../gui/mainwindow.cpp" line="3665"/>
         <source>Notation:</source>
         <translation>குறியீட்டுமுறை:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3616"/>
+        <location filename="../../gui/mainwindow.cpp" line="3666"/>
         <source>Precision:</source>
         <translation>துல்லியம்:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3694"/>
+        <location filename="../../gui/mainwindow.cpp" line="3744"/>
         <source>Turn</source>
         <translation>திருப்பு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3695"/>
+        <location filename="../../gui/mainwindow.cpp" line="3745"/>
         <source>Revolution</source>
         <translation>சுழற்சி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3706"/>
+        <location filename="../../gui/mainwindow.cpp" line="3756"/>
         <source>Fixed-point decimal</source>
         <translation>நிலைத்த புள்ளி தசமம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3709"/>
+        <location filename="../../gui/mainwindow.cpp" line="3759"/>
         <source>Rational</source>
         <translation>விகிதமுறை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3710"/>
+        <location filename="../../gui/mainwindow.cpp" line="3760"/>
         <source>Automatic decimal</source>
         <translation>தானியங்கி தசமம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3718"/>
-        <location filename="../../gui/mainwindow.cpp" line="13302"/>
+        <location filename="../../gui/mainwindow.cpp" line="3768"/>
+        <location filename="../../gui/mainwindow.cpp" line="13575"/>
         <source>Automatic</source>
         <translation>தானியங்கி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3728"/>
+        <location filename="../../gui/mainwindow.cpp" line="3778"/>
         <source>User &amp;Definitions...</source>
         <translation>பயனர் &amp;வரையறைகள்...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3729"/>
+        <location filename="../../gui/mainwindow.cpp" line="3779"/>
         <source>New &amp;Tab</source>
         <translation>புதிய &amp;தாவல்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3730"/>
+        <location filename="../../gui/mainwindow.cpp" line="3780"/>
         <source>New &amp;Window</source>
         <translation>புதிய &amp;சாளரம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3731"/>
+        <location filename="../../gui/mainwindow.cpp" line="3781"/>
         <source>&amp;Open...</source>
         <translation>&amp;திற...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3732"/>
+        <location filename="../../gui/mainwindow.cpp" line="3782"/>
         <source>Open Sessions &amp;Folder</source>
         <translation>அமர்வுகள் &amp;கோப்புறையைத் திற</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3748"/>
+        <location filename="../../gui/mainwindow.cpp" line="3798"/>
         <source>&amp;Basic</source>
         <translation>&amp;அடிப்படை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3749"/>
+        <location filename="../../gui/mainwindow.cpp" line="3799"/>
         <source>&amp;Scientific (wide)</source>
         <translation>&amp;அறிவியல் (அகலம்)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3750"/>
+        <location filename="../../gui/mainwindow.cpp" line="3800"/>
         <source>Scientific (narrow)</source>
         <translation>அறிவியல் (குறுகல்)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3751"/>
-        <location filename="../../gui/mainwindow.cpp" line="3811"/>
+        <location filename="../../gui/mainwindow.cpp" line="3801"/>
+        <location filename="../../gui/mainwindow.cpp" line="3861"/>
         <source>&amp;Custom...</source>
         <translation>&amp;தனிப்பயன்...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3757"/>
+        <location filename="../../gui/mainwindow.cpp" line="3807"/>
         <source>Main &amp;Menu</source>
         <translation>முதன்மை &amp;பட்டி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3758"/>
+        <location filename="../../gui/mainwindow.cpp" line="3808"/>
         <source>User &amp;Variables</source>
         <translation>பயனர் &amp;மாறிகள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3761"/>
+        <location filename="../../gui/mainwindow.cpp" line="3811"/>
         <source>User &amp;Units</source>
         <translation>பயனர் &amp;அலகுகள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3766"/>
+        <location filename="../../gui/mainwindow.cpp" line="3816"/>
         <source>&amp;Turn</source>
         <translation>&amp;திருப்பு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3767"/>
+        <location filename="../../gui/mainwindow.cpp" line="3817"/>
         <source>&amp;Revolution</source>
         <translation>&amp;சுழற்சி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3769"/>
+        <location filename="../../gui/mainwindow.cpp" line="3819"/>
         <source>Auto-Insert &quot;ans&quot; When Starting with an Operator</source>
         <translation>செயற்குறியுடன் தொடங்கும்போது &quot;ans&quot;-ஐ தானாகச் செருகு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3770"/>
-        <location filename="../../gui/mainwindow.cpp" line="3771"/>
+        <location filename="../../gui/mainwindow.cpp" line="3820"/>
+        <location filename="../../gui/mainwindow.cpp" line="3821"/>
         <source>If a new expression starts with +, -, *, or /, SpeedCrunch inserts &quot;ans&quot; first.</source>
         <translation>புதிய கூற்று +, -, *, அல்லது / கொண்டு தொடங்கினால், SpeedCrunch முதலில் &quot;ans&quot;-ஐ செருகும்.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3773"/>
+        <location filename="../../gui/mainwindow.cpp" line="3823"/>
         <source>Built-in &amp;functions</source>
         <translation>உள்ளமைந்த &amp;சார்புகள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3774"/>
+        <location filename="../../gui/mainwindow.cpp" line="3824"/>
         <source>Built-in &amp;variables</source>
         <translation>உள்ளமைந்த &amp;மாறிகள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3775"/>
+        <location filename="../../gui/mainwindow.cpp" line="3825"/>
         <source>&amp;Units</source>
         <translation>&amp;அலகுகள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3776"/>
+        <location filename="../../gui/mainwindow.cpp" line="3826"/>
         <source>User &amp;functions</source>
         <translation>பயனர் &amp;சார்புகள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3777"/>
+        <location filename="../../gui/mainwindow.cpp" line="3827"/>
         <source>User &amp;variables</source>
         <translation>பயனர் &amp;மாறிகள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3778"/>
+        <location filename="../../gui/mainwindow.cpp" line="3828"/>
         <source>Show Empty History &amp;Hint</source>
         <translation>வெற்று வரலாறு &amp;குறிப்பைக் காட்டு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3779"/>
-        <location filename="../../gui/mainwindow.cpp" line="3780"/>
+        <location filename="../../gui/mainwindow.cpp" line="3829"/>
+        <location filename="../../gui/mainwindow.cpp" line="3830"/>
         <source>When history is empty, show a hint in the status area.</source>
         <translation>வரலாறு காலியாக இருக்கும்போது, நிலை பகுதியில் குறிப்பைக் காட்டு.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3781"/>
+        <location filename="../../gui/mainwindow.cpp" line="3831"/>
         <source>Show Live Result &amp;Preview</source>
         <translation>உடனடி முடிவு &amp;முன்னோட்டத்தைக் காட்டு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3782"/>
+        <location filename="../../gui/mainwindow.cpp" line="3832"/>
         <source>Save &amp;Window Position on Exit</source>
         <translation>வெளியேறும் போது &amp;சாளர நிலையை சேமி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3784"/>
+        <location filename="../../gui/mainwindow.cpp" line="3834"/>
         <source>Hover Highlighting</source>
         <translation>சுட்டி மேலிருக்கும் போது முன்னிறுத்தல்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3789"/>
+        <location filename="../../gui/mainwindow.cpp" line="3839"/>
         <source>Group Integer Part Only</source>
         <translation>முழு எண் பகுதியை மட்டும் குழுவாக்கு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3790"/>
+        <location filename="../../gui/mainwindow.cpp" line="3840"/>
         <source>Keep Entered Expression After Evaluate</source>
         <translation>கணக்கிட்ட பிறகு உள்ளிடப்பட்ட கூற்றை வைத்திரு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3791"/>
+        <location filename="../../gui/mainwindow.cpp" line="3841"/>
         <source>Number Format...</source>
         <translation>எண் வடிவம்...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3792"/>
+        <location filename="../../gui/mainwindow.cpp" line="3842"/>
         <source>Notation &amp;&amp; Precision...</source>
         <translation>குறியீட்டுமுறை &amp;&amp; துல்லியம்...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3793"/>
-        <location filename="../../gui/mainwindow.cpp" line="3794"/>
+        <location filename="../../gui/mainwindow.cpp" line="3843"/>
+        <location filename="../../gui/mainwindow.cpp" line="3844"/>
         <source>After pressing Enter, keep the entered expression selected in the editor.</source>
         <translation>Enter அழுத்திய பிறகு, உள்ளிடப்பட்ட கூற்றை திருத்தியில் தேர்ந்தெடுத்தபடி வைத்திரு.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3795"/>
+        <location filename="../../gui/mainwindow.cpp" line="3845"/>
         <source>Never</source>
         <translation>ஒருபோதும் இல்லை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3796"/>
+        <location filename="../../gui/mainwindow.cpp" line="3846"/>
         <source>Always</source>
         <translation>எப்போதும்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3797"/>
+        <location filename="../../gui/mainwindow.cpp" line="3847"/>
         <source>Only for Single-Line Expressions</source>
         <translation>ஒற்றைவரி கூற்றுகளுக்கு மட்டும்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3798"/>
+        <location filename="../../gui/mainwindow.cpp" line="3848"/>
         <source>Automatically Copy New Results to Clipboard</source>
         <translation>புதிய முடிவுகளை தானாக கிளிப்போர்டுக்கு நகலெடு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3799"/>
+        <location filename="../../gui/mainwindow.cpp" line="3849"/>
         <source>Simplify Displayed Expressions</source>
         <translation>காட்சியளிக்கும் கூற்றுகளை எளிமைப்படுத்து</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3800"/>
+        <location filename="../../gui/mainwindow.cpp" line="3850"/>
         <source>History Size &amp;Limit...</source>
         <translation>வரலாறு அளவு &amp;வரம்பு...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3813"/>
+        <location filename="../../gui/mainwindow.cpp" line="3863"/>
         <source>Nearest, Half &amp;Away (round)</source>
         <translation>அருகியது, பாதி &amp;விலகி (round)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3815"/>
+        <location filename="../../gui/mainwindow.cpp" line="3865"/>
         <source>Nearest, Half &amp;Even (roundeven)</source>
         <translation>அருகியது, பாதி &amp;சமம் (roundeven)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3816"/>
+        <location filename="../../gui/mainwindow.cpp" line="3866"/>
         <source>Toward &amp;Zero (trunc)</source>
         <translation>&amp;பூஜ்ஜியத்தை நோக்கி (trunc)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3818"/>
+        <location filename="../../gui/mainwindow.cpp" line="3868"/>
         <source>Toward +&amp;∞ (ceil)</source>
         <translation>+&amp;∞ நோக்கி (ceil)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3820"/>
+        <location filename="../../gui/mainwindow.cpp" line="3870"/>
         <source>Toward −&amp;∞ (floor)</source>
         <translation>−&amp;∞ நோக்கி (floor)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3823"/>
+        <location filename="../../gui/mainwindow.cpp" line="3873"/>
         <source>&amp;Fixed-Point</source>
         <translation>&amp;நிலைத்த புள்ளி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3826"/>
+        <location filename="../../gui/mainwindow.cpp" line="3876"/>
         <source>&amp;Rational</source>
         <translation>&amp;விகிதமுறை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3832"/>
+        <location filename="../../gui/mainwindow.cpp" line="3882"/>
         <source>&amp;Exponential (m·s⁻¹)</source>
         <translation>&amp;அடுக்கியல் (m·s⁻¹)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3834"/>
+        <location filename="../../gui/mainwindow.cpp" line="3884"/>
         <source>&amp;Fractional (m/s)</source>
         <translation>&amp;பின்ன (m/s)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3835"/>
+        <location filename="../../gui/mainwindow.cpp" line="3885"/>
         <source>&amp;Rectangular (a + bi)</source>
         <translation>&amp;செவ்வக (a + bi)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3836"/>
+        <location filename="../../gui/mainwindow.cpp" line="3886"/>
         <source>Exponential (reⁱᶿ)</source>
         <translation>அடுக்கியல் (reⁱᶿ)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3838"/>
+        <location filename="../../gui/mainwindow.cpp" line="3888"/>
         <source>Trigonometric (r(cos θ + i·sin θ))</source>
         <translation>முக்கோணவியல் (r(cos θ + i·sin θ))</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3840"/>
+        <location filename="../../gui/mainwindow.cpp" line="3890"/>
         <source>Phasor (r∠θ)</source>
         <translation>ஃபேசர் (r∠θ)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3844"/>
+        <location filename="../../gui/mainwindow.cpp" line="3894"/>
         <source>&amp;Theme...</source>
         <translation>&amp;கருப்பொருள்...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3849"/>
+        <location filename="../../gui/mainwindow.cpp" line="3899"/>
         <source>Check for &amp;Updates</source>
         <translation>&amp;புதுப்பிப்புகளைச் சரிபார்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3850"/>
+        <location filename="../../gui/mainwindow.cpp" line="3900"/>
         <source>Issue Tracker</source>
         <translation>பிரச்சனை கண்காணிப்பான்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3852"/>
+        <location filename="../../gui/mainwindow.cpp" line="3902"/>
         <source>Source Code</source>
         <translation>மூலக் குறியீடு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4160"/>
+        <location filename="../../gui/mainwindow.cpp" line="4211"/>
         <source>&amp;Zoom</source>
         <translation>&amp;பெரிதாக்கு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4162"/>
+        <location filename="../../gui/mainwindow.cpp" line="4213"/>
         <source>&amp;Results</source>
         <translation>&amp;முடிவுகள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4163"/>
+        <location filename="../../gui/mainwindow.cpp" line="4214"/>
         <source>&amp;Symbols</source>
         <translation>&amp;குறியீடுகள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4164"/>
+        <location filename="../../gui/mainwindow.cpp" line="4215"/>
         <source>Unit Notation</source>
         <translation>அலகு குறியீட்டுமுறை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4165"/>
+        <location filename="../../gui/mainwindow.cpp" line="4216"/>
         <source>Rounding Mode</source>
         <translation>வட்டமிடும் முறை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4166"/>
+        <location filename="../../gui/mainwindow.cpp" line="4217"/>
         <source>&amp;Notation</source>
         <translation>&amp;குறியீட்டுமுறை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4169"/>
+        <location filename="../../gui/mainwindow.cpp" line="4220"/>
         <source>&amp;Angle Mode</source>
         <translation>&amp;கோண முறை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4170"/>
+        <location filename="../../gui/mainwindow.cpp" line="4221"/>
         <source>Complex &amp;Numbers</source>
         <translation>கலப்பு &amp;எண்கள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4171"/>
+        <location filename="../../gui/mainwindow.cpp" line="4222"/>
         <source>&amp;Form</source>
         <translation>&amp;வடிவம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4172"/>
+        <location filename="../../gui/mainwindow.cpp" line="4223"/>
         <source>&amp;Imaginary Unit</source>
         <translation>&amp;கற்பனை அலகு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4173"/>
+        <location filename="../../gui/mainwindow.cpp" line="4224"/>
         <source>&amp;Window</source>
         <translation>&amp;சாளரம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4174"/>
+        <location filename="../../gui/mainwindow.cpp" line="4225"/>
         <source>&amp;Editing</source>
         <translation>&amp;திருத்தம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4175"/>
+        <location filename="../../gui/mainwindow.cpp" line="4226"/>
         <source>A&amp;utocomplete</source>
         <translation>&amp;தானியக்க நிறைவு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4176"/>
+        <location filename="../../gui/mainwindow.cpp" line="4227"/>
         <source>Up/Down Arrow History</source>
         <translation>மேல்/கீழ் அம்பு வரலாறு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4177"/>
+        <location filename="../../gui/mainwindow.cpp" line="4228"/>
         <source>&amp;Appearance</source>
         <translation>&amp;தோற்றம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4184"/>
+        <location filename="../../gui/mainwindow.cpp" line="4235"/>
         <source>&amp;Disabled</source>
         <translation>&amp;முடக்கப்பட்டது</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4186"/>
+        <location filename="../../gui/mainwindow.cpp" line="4237"/>
         <source>&amp;Disable</source>
         <translation>&amp;முடக்கு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4360"/>
+        <location filename="../../gui/mainwindow.cpp" line="4411"/>
         <source>Close preview</source>
         <translation>முன்னோட்டத்தை மூடு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9627"/>
-        <location filename="../../gui/mainwindow.cpp" line="9668"/>
+        <location filename="../../gui/mainwindow.cpp" line="9688"/>
+        <location filename="../../gui/mainwindow.cpp" line="9729"/>
         <source>JSON file (*.json);;Any file (*.*)</source>
         <translation>JSON கோப்பு (*.json);;எந்த கோப்பும் (*.*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9631"/>
+        <location filename="../../gui/mainwindow.cpp" line="9692"/>
         <source>Export session as JSON</source>
         <translation>அமர்வை JSON ஆக ஏற்றுமதி செய்யவும்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9696"/>
+        <location filename="../../gui/mainwindow.cpp" line="9757"/>
         <source>The selected file is not valid JSON: %1</source>
         <translation>தேர்ந்தெடுக்கப்பட்ட கோப்பு செல்லுபடியாகும் JSON அல்ல: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9703"/>
+        <location filename="../../gui/mainwindow.cpp" line="9764"/>
         <source>The selected file is not a SpeedCrunch session JSON file.</source>
         <translation>தேர்ந்தெடுக்கப்பட்ட கோப்பு SpeedCrunch அமர்வு JSON கோப்பு அல்ல.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9711"/>
+        <location filename="../../gui/mainwindow.cpp" line="9772"/>
         <source>This file uses an obsolete SpeedCrunch session format and cannot be imported.</source>
         <translation>இந்த கோப்பு காலாவதியான SpeedCrunch அமர்வு வடிவத்தைப் பயன்படுத்துகிறது, இறக்குமதி செய்ய முடியாது.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9719"/>
+        <location filename="../../gui/mainwindow.cpp" line="9780"/>
         <source>The selected JSON file is missing the required $schema field.</source>
         <translation>தேர்ந்தெடுக்கப்பட்ட JSON கோப்பில் தேவையான $schema புலம் இல்லை.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9725"/>
+        <location filename="../../gui/mainwindow.cpp" line="9786"/>
         <source>The selected JSON file uses an unsupported JSON schema: %1</source>
         <translation>தேர்ந்தெடுக்கப்பட்ட JSON கோப்பு ஆதரிக்கப்படாத JSON திட்டத்தைப் பயன்படுத்துகிறது: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9733"/>
+        <location filename="../../gui/mainwindow.cpp" line="9794"/>
         <source>The selected JSON file is missing the SpeedCrunch session schema identifier ($id).</source>
         <translation>தேர்ந்தெடுக்கப்பட்ட JSON கோப்பில் SpeedCrunch அமர்வு திட்ட அடையாளங்காட்டி ($id) இல்லை.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9739"/>
+        <location filename="../../gui/mainwindow.cpp" line="9800"/>
         <source>The selected JSON file uses an unsupported SpeedCrunch session format: %1</source>
         <translation>தேர்ந்தெடுக்கப்பட்ட JSON கோப்பு ஆதரிக்கப்படாத SpeedCrunch அமர்வு வடிவத்தைப் பயன்படுத்துகிறது: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9747"/>
+        <location filename="../../gui/mainwindow.cpp" line="9808"/>
         <source>The selected JSON file is missing the required session name.</source>
         <translation>தேர்ந்தெடுக்கப்பட்ட JSON கோப்பில் தேவையான அமர்வு பெயர் இல்லை.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9753"/>
+        <location filename="../../gui/mainwindow.cpp" line="9814"/>
         <source>The selected JSON file has an empty session name.</source>
         <translation>தேர்ந்தெடுக்கப்பட்ட JSON கோப்பில் அமர்வு பெயர் காலியாக உள்ளது.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9761"/>
+        <location filename="../../gui/mainwindow.cpp" line="9822"/>
         <source>The selected JSON file has invalid or incomplete SpeedCrunch session data.</source>
         <translation>தேர்ந்தெடுக்கப்பட்ட JSON கோப்பில் செல்லுபடியாகாத அல்லது முழுமையற்ற SpeedCrunch அமர்வு தரவு உள்ளது.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9772"/>
-        <location filename="../../gui/mainwindow.cpp" line="9780"/>
+        <location filename="../../gui/mainwindow.cpp" line="9833"/>
+        <location filename="../../gui/mainwindow.cpp" line="9841"/>
         <source>Open Sessions Folder</source>
         <translation>அமர்வுகள் கோப்புறையைத் திற</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9773"/>
+        <location filename="../../gui/mainwindow.cpp" line="9834"/>
         <source>Could not create the sessions folder: %1</source>
         <translation>அமர்வுகள் கோப்புறையை உருவாக்க முடியவில்லை: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9781"/>
+        <location filename="../../gui/mainwindow.cpp" line="9842"/>
         <source>Could not open the sessions folder: %1</source>
         <translation>அமர்வுகள் கோப்புறையைத் திறக்க முடியவில்லை: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4504"/>
-        <location filename="../../gui/mainwindow.cpp" line="8449"/>
+        <location filename="../../gui/mainwindow.cpp" line="4555"/>
+        <location filename="../../gui/mainwindow.cpp" line="8508"/>
         <source>Open Session</source>
         <translation>அமர்வைத் திற</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3851"/>
+        <location filename="../../gui/mainwindow.cpp" line="3901"/>
         <source>Community</source>
         <translation>சமூகம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4506"/>
+        <location filename="../../gui/mainwindow.cpp" line="4557"/>
         <source>Split Left</source>
         <translation>இடப்புறம் பிரி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4507"/>
+        <location filename="../../gui/mainwindow.cpp" line="4558"/>
         <source>Split Right</source>
         <translation>வலப்புறம் பிரி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4508"/>
+        <location filename="../../gui/mainwindow.cpp" line="4559"/>
         <source>Split Up</source>
         <translation>மேல்புறம் பிரி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4509"/>
+        <location filename="../../gui/mainwindow.cpp" line="4560"/>
         <source>Split Down</source>
         <translation>கீழ்புறம் பிரி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4517"/>
-        <location filename="../../gui/mainwindow.cpp" line="8530"/>
-        <location filename="../../gui/mainwindow.cpp" line="8541"/>
-        <location filename="../../gui/mainwindow.cpp" line="8554"/>
-        <location filename="../../gui/mainwindow.cpp" line="8564"/>
+        <location filename="../../gui/mainwindow.cpp" line="4568"/>
+        <location filename="../../gui/mainwindow.cpp" line="8589"/>
+        <location filename="../../gui/mainwindow.cpp" line="8600"/>
+        <location filename="../../gui/mainwindow.cpp" line="8613"/>
+        <location filename="../../gui/mainwindow.cpp" line="8623"/>
         <source>Duplicate Session</source>
         <translation>அமர்வை நகலாக்கு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4518"/>
-        <location filename="../../gui/mainwindow.cpp" line="8593"/>
-        <location filename="../../gui/mainwindow.cpp" line="8607"/>
-        <location filename="../../gui/mainwindow.cpp" line="8618"/>
+        <location filename="../../gui/mainwindow.cpp" line="4569"/>
+        <location filename="../../gui/mainwindow.cpp" line="8652"/>
+        <location filename="../../gui/mainwindow.cpp" line="8666"/>
+        <location filename="../../gui/mainwindow.cpp" line="8677"/>
         <source>Rename Session</source>
         <translation>அமர்வின் பெயரை மாற்று</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4520"/>
+        <location filename="../../gui/mainwindow.cpp" line="4571"/>
         <source>Clear Session</source>
         <translation>அமர்வை அழி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4521"/>
-        <location filename="../../gui/mainwindow.cpp" line="8892"/>
+        <location filename="../../gui/mainwindow.cpp" line="4572"/>
+        <location filename="../../gui/mainwindow.cpp" line="8951"/>
         <source>Delete Session</source>
         <translation>அமர்வை நீக்கு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4524"/>
+        <location filename="../../gui/mainwindow.cpp" line="4575"/>
         <source>Close Pane</source>
         <translation>பலத்தை மூடு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6896"/>
+        <location filename="../../gui/mainwindow.cpp" line="6952"/>
         <source>User Variables</source>
         <translation>பயனர் மாறிகள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6970"/>
+        <location filename="../../gui/mainwindow.cpp" line="7026"/>
         <source>User Units</source>
         <translation>பயனர் அலகுகள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8295"/>
-        <location filename="../../gui/mainwindow.cpp" line="8326"/>
+        <location filename="../../gui/mainwindow.cpp" line="8354"/>
+        <location filename="../../gui/mainwindow.cpp" line="8385"/>
         <source>Clear History</source>
         <translation>வரலாற்றை அழி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8296"/>
-        <location filename="../../gui/mainwindow.cpp" line="8327"/>
+        <location filename="../../gui/mainwindow.cpp" line="8355"/>
+        <location filename="../../gui/mainwindow.cpp" line="8386"/>
         <source>Are you sure you want to clear the calculation history?</source>
         <translation>கணக்கீட்டு வரலாற்றை அழிக்க வேண்டுமா?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8531"/>
-        <location filename="../../gui/mainwindow.cpp" line="8594"/>
+        <location filename="../../gui/mainwindow.cpp" line="8590"/>
+        <location filename="../../gui/mainwindow.cpp" line="8653"/>
         <source>Session name:</source>
         <translation>அமர்வு பெயர்:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8542"/>
-        <location filename="../../gui/mainwindow.cpp" line="8608"/>
+        <location filename="../../gui/mainwindow.cpp" line="8601"/>
+        <location filename="../../gui/mainwindow.cpp" line="8667"/>
         <source>A session named %1 already exists.</source>
         <translation>%1 என்ற பெயருடைய அமர்வு ஏற்கனவே உள்ளது.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8555"/>
+        <location filename="../../gui/mainwindow.cpp" line="8614"/>
         <source>Could not create session file %1.</source>
         <translation>%1 அமர்வு கோப்பை உருவாக்க முடியவில்லை.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8565"/>
+        <location filename="../../gui/mainwindow.cpp" line="8624"/>
         <source>Could not write session file %1.</source>
         <translation>%1 அமர்வு கோப்பை எழுத முடியவில்லை.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8619"/>
+        <location filename="../../gui/mainwindow.cpp" line="8678"/>
         <source>Could not rename session file %1.</source>
         <translation>%1 அமர்வு கோப்பின் பெயரை மாற்ற முடியவில்லை.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8893"/>
+        <location filename="../../gui/mainwindow.cpp" line="8952"/>
         <source>Are you sure you want to delete this session?</source>
         <translation>இந்த அமர்வை நீக்க வேண்டுமா?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9068"/>
+        <location filename="../../gui/mainwindow.cpp" line="9127"/>
         <source>Custom Precision</source>
         <translation>தனிப்பயன் துல்லியம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9069"/>
+        <location filename="../../gui/mainwindow.cpp" line="9128"/>
         <source>Fractional digits:</source>
         <translation>பின்ன இலக்கங்கள்:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9086"/>
+        <location filename="../../gui/mainwindow.cpp" line="9145"/>
         <source>Theme</source>
         <translation>கருப்பொருள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9095"/>
+        <location filename="../../gui/mainwindow.cpp" line="9154"/>
         <source>Light Themes</source>
         <translation>ஒளி கருப்பொருள்கள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9102"/>
+        <location filename="../../gui/mainwindow.cpp" line="9161"/>
         <source>Dark Themes</source>
         <translation>இருள் கருப்பொருள்கள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9110"/>
+        <location filename="../../gui/mainwindow.cpp" line="9169"/>
         <source>Preview</source>
         <translation>முன்னோட்டம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9172"/>
+        <location filename="../../gui/mainwindow.cpp" line="9231"/>
         <source>Colors</source>
         <translation>நிறங்கள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9364"/>
+        <location filename="../../gui/mainwindow.cpp" line="9423"/>
         <source>Select color for %1</source>
         <translation>%1-க்கு நிறத்தைத் தேர்ந்தெடு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9418"/>
+        <location filename="../../gui/mainwindow.cpp" line="9479"/>
         <source>Import...</source>
         <translation>இறக்குமதி...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9419"/>
+        <location filename="../../gui/mainwindow.cpp" line="9480"/>
         <source>Export...</source>
         <translation>ஏற்றுமதி...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9449"/>
+        <location filename="../../gui/mainwindow.cpp" line="9510"/>
         <source>Import Theme</source>
         <translation>கருப்பொருளை இறக்குமதி செய்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9450"/>
-        <location filename="../../gui/mainwindow.cpp" line="9539"/>
+        <location filename="../../gui/mainwindow.cpp" line="9511"/>
+        <location filename="../../gui/mainwindow.cpp" line="9600"/>
         <source>Theme file (*.json);;All files (*)</source>
         <translation>கருப்பொருள் கோப்பு (*.json);;அனைத்து கோப்புகளும் (*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9461"/>
+        <location filename="../../gui/mainwindow.cpp" line="9522"/>
         <source>Invalid theme file.</source>
         <translation>செல்லாத கருப்பொருள் கோப்பு.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9470"/>
+        <location filename="../../gui/mainwindow.cpp" line="9531"/>
         <source>Can&apos;t import theme &quot;%1&quot; because it conflicts with a built-in theme.</source>
         <translation>&quot;%1&quot; கருப்பொருளை இறக்குமதி செய்ய முடியவில்லை; அது உள்ளமைந்த கருப்பொருளுடன் முரண்படுகிறது.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9475"/>
+        <location filename="../../gui/mainwindow.cpp" line="9536"/>
         <source>Can&apos;t find a writable theme folder.</source>
         <translation>எழுதக்கூடிய கருப்பொருள் அடைவை கண்டுபிடிக்க முடியவில்லை.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9482"/>
+        <location filename="../../gui/mainwindow.cpp" line="9543"/>
         <source>Overwrite Theme</source>
         <translation>கருப்பொருளை மேலெழுது</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9483"/>
+        <location filename="../../gui/mainwindow.cpp" line="9544"/>
         <source>A custom theme named &quot;%1&quot; already exists. Do you want to overwrite it?</source>
         <translation>&quot;%1&quot; என்ற தனிப்பயன் கருப்பொருள் ஏற்கனவே உள்ளது. அதை மேலெழுத வேண்டுமா?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9491"/>
+        <location filename="../../gui/mainwindow.cpp" line="9552"/>
         <source>Can&apos;t overwrite theme file %1</source>
         <translation>%1 கருப்பொருள் கோப்பை மேலெழுத முடியவில்லை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9497"/>
+        <location filename="../../gui/mainwindow.cpp" line="9558"/>
         <source>Can&apos;t copy theme file to %1</source>
         <translation>கருப்பொருள் கோப்பை %1-க்கு நகலெடுக்க முடியவில்லை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9538"/>
+        <location filename="../../gui/mainwindow.cpp" line="9599"/>
         <source>Export Theme</source>
         <translation>கருப்பொருளை ஏற்றுமதி செய்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9549"/>
+        <location filename="../../gui/mainwindow.cpp" line="9610"/>
         <source>Can&apos;t export theme as &quot;%1&quot; because it conflicts with a built-in theme.</source>
         <translation>&quot;%1&quot; என கருப்பொருளை ஏற்றுமதி செய்ய முடியவில்லை; அது உள்ளமைந்த கருப்பொருளுடன் முரண்படுகிறது.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9554"/>
-        <location filename="../../gui/mainwindow.cpp" line="9653"/>
-        <location filename="../../gui/mainwindow.cpp" line="10377"/>
-        <location filename="../../gui/mainwindow.cpp" line="10397"/>
+        <location filename="../../gui/mainwindow.cpp" line="9615"/>
+        <location filename="../../gui/mainwindow.cpp" line="9714"/>
+        <location filename="../../gui/mainwindow.cpp" line="10625"/>
+        <location filename="../../gui/mainwindow.cpp" line="10664"/>
         <source>Can&apos;t write to file %1</source>
         <translation>%1 கோப்பில் எழுத முடியவில்லை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9790"/>
+        <location filename="../../gui/mainwindow.cpp" line="9851"/>
         <source>Global User Variable</source>
         <translation>முழுமையான பயனர் மாறி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9791"/>
+        <location filename="../../gui/mainwindow.cpp" line="9852"/>
         <source>Global User Function</source>
         <translation>முழுமையான பயனர் சார்பு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9792"/>
+        <location filename="../../gui/mainwindow.cpp" line="9853"/>
         <source>Global User Unit</source>
         <translation>முழுமையான பயனர் அலகு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10162"/>
+        <location filename="../../gui/mainwindow.cpp" line="10196"/>
+        <source>User Definitions</source>
+        <translation>பயனர் வரையறைகள்</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10202"/>
+        <source>These definitions are global and are loaded into every session.
+They are immutable for sessions and override same-name definitions from the session editor.
+Enter one definition per line.</source>
+        <translation>இந்த வரையறைகள் உலகளாவியவை; ஒவ்வொரு அமர்விலும் ஏற்றப்படும்.
+அமர்வுகளில் இவற்றை மாற்ற முடியாது; அமர்வுத் திருத்தியில் உள்ள அதே பெயருடைய வரையறைகளை விட இவற்றுக்கே முன்னுரிமை உண்டு.
+ஒவ்வொரு வரியிலும் ஒரு வரையறையை உள்ளிடவும்.</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10212"/>
+        <source>Examples:
+my_rate=1.25
+f(x)=x^2+1
+[cm_s]=[centimetre/second]</source>
+        <translation>எடுத்துக்காட்டுகள்:
+my_rate=1.25
+f(x)=x^2+1
+[cm_s]=[centimetre/second]</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10274"/>
+        <source>Apply</source>
+        <translation>பயன்படுத்து</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10275"/>
+        <source>Validate</source>
+        <translation>சரிபார்</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10311"/>
+        <source>Test Results</source>
+        <translation>சோதனை முடிவுகள்</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10312"/>
+        <location filename="../../gui/mainwindow.cpp" line="10344"/>
+        <source>Imported variables: %1
+Imported functions: %2
+Imported units: %3
+Line numbers with errors: %4</source>
+        <translation>இறக்குமதி செய்யப்பட்ட மாறிகள்: %1
+இறக்குமதி செய்யப்பட்ட சார்புகள்: %2
+இறக்குமதி செய்யப்பட்ட அலகுகள்: %3
+பிழைகள் உள்ள வரிகளின் எண்கள்: %4</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10316"/>
+        <location filename="../../gui/mainwindow.cpp" line="10348"/>
+        <source>none</source>
+        <translation>எதுவுமில்லை</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10343"/>
+        <source>Apply Results</source>
+        <translation>பயன்படுத்தியதன் முடிவுகள்</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10357"/>
+        <source>User definitions saved.</source>
+        <translation>பயனர் வரையறைகள் சேமிக்கப்பட்டன.</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10392"/>
         <source>History Size Limit</source>
         <translation>வரலாறு அளவு வரம்பு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10163"/>
+        <location filename="../../gui/mainwindow.cpp" line="10393"/>
         <source>Maximum number of history entries for this session (0 = unlimited):</source>
         <translation>இந்த அமர்விற்கான அதிகபட்ச வரலாறு பதிவுகள் (0 = வரம்பில்லை):</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10390"/>
+        <location filename="../../gui/mainwindow.cpp" line="10642"/>
         <source>Text file (*.txt);;Any file (*.*)</source>
         <translation>உரை கோப்பு (*.txt);; எந்த கோப்பும் (*.*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10427"/>
+        <location filename="../../gui/mainwindow.cpp" line="10694"/>
         <source>Display font</source>
         <translation>காட்சி எழுத்துரு</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12495"/>
-        <location filename="../../gui/mainwindow.cpp" line="12668"/>
+        <location filename="../../gui/mainwindow.cpp" line="12768"/>
+        <location filename="../../gui/mainwindow.cpp" line="12941"/>
         <source>Could not recalculate from calculation %1: %2</source>
         <translation>%1 கணக்கீட்டிலிருந்து மறுகணக்கிட முடியவில்லை: %2</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12584"/>
+        <location filename="../../gui/mainwindow.cpp" line="12857"/>
         <source>History Size Limit Reached</source>
         <translation>வரலாறு அளவு வரம்பை எட்டியது</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12585"/>
+        <location filename="../../gui/mainwindow.cpp" line="12858"/>
         <source>This calculation fills the last available history slot. Future calculations will remove the oldest calculation from history. You can increase the limit from Session &gt; History Size Limit.</source>
         <translation>இந்த கணக்கீடு கிடைக்கும் கடைசி வரலாறு இடத்தை நிரப்புகிறது. இனி வரும் கணக்கீடுகள் வரலாற்றிலிருந்து மிகப் பழைய கணக்கீட்டை அகற்றும். அமர்வு &gt; வரலாறு அளவு வரம்பு வழியாக வரம்பை அதிகரிக்கலாம்.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12608"/>
+        <location filename="../../gui/mainwindow.cpp" line="12881"/>
         <source>Editing calculation. Press Esc twice to cancel.</source>
         <translation>கணக்கீடு திருத்தப்படுகிறது. ரத்துசெய்ய Esc-ஐ இருமுறை அழுத்தவும்.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12649"/>
+        <location filename="../../gui/mainwindow.cpp" line="12922"/>
         <source>Calculation Settings</source>
         <translation>கணக்கீட்டு அமைப்புகள்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12725"/>
+        <location filename="../../gui/mainwindow.cpp" line="12998"/>
         <source>Invalid recalculation start index</source>
         <translation>மறுகணக்கீட்டு தொடக்க குறியீடு செல்லாது</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="13276"/>
+        <location filename="../../gui/mainwindow.cpp" line="13549"/>
         <source>System Default</source>
         <translation>கணினி இயல்புநிலை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="13280"/>
+        <location filename="../../gui/mainwindow.cpp" line="13553"/>
         <source>Language</source>
         <translation>மொழி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="13280"/>
+        <location filename="../../gui/mainwindow.cpp" line="13553"/>
         <source>Select the language:</source>
         <translation>மொழியைத் தேர்ந்தெடுக்கவும்:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="13310"/>
+        <location filename="../../gui/mainwindow.cpp" line="13583"/>
         <source>Custom</source>
         <translation>தனிப்பயன்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="13322"/>
+        <location filename="../../gui/mainwindow.cpp" line="13595"/>
         <source>Decimal places:</source>
         <translation>தசம இடங்கள்:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3821"/>
-        <location filename="../../gui/mainwindow.cpp" line="3822"/>
+        <location filename="../../gui/mainwindow.cpp" line="3871"/>
+        <location filename="../../gui/mainwindow.cpp" line="3872"/>
         <source>&amp;Automatic</source>
         <translation>&amp;தானியங்கி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4168"/>
+        <location filename="../../gui/mainwindow.cpp" line="4219"/>
         <source>&amp;Precision</source>
         <translation>&amp;துல்லியம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3726"/>
+        <location filename="../../gui/mainwindow.cpp" line="3776"/>
         <source>Plain &amp;text</source>
         <translation>எளிய &amp;உரை</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3755"/>
+        <location filename="../../gui/mainwindow.cpp" line="3805"/>
         <source>Formula &amp;Book</source>
         <translation>சூத்திரம் &amp;புத்தகம்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4156"/>
+        <location filename="../../gui/mainwindow.cpp" line="4207"/>
         <source>&amp;Export</source>
         <translation>&amp;ஏற்றுமதி</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10369"/>
+        <location filename="../../gui/mainwindow.cpp" line="10603"/>
         <source>Export session as HTML</source>
         <translation>அமர்வை மிஉகுமொ ஆக ஏற்றுமதி செய்யவும்</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10370"/>
+        <location filename="../../gui/mainwindow.cpp" line="10603"/>
         <source>HTML file (*.html)</source>
         <translation>மிஉகுமொ கோப்பு (*.html)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10389"/>
+        <location filename="../../gui/mainwindow.cpp" line="10641"/>
         <source>Export session as plain text</source>
         <translation>அமர்வை எளிய உரையாக ஏற்றுமதி செய்யவும்</translation>
     </message>

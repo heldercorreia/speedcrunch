@@ -5,7 +5,7 @@
     <name>AboutBox</name>
     <message>
         <location filename="../../gui/aboutbox.cpp" line="19"/>
-        <location filename="../../gui/aboutbox.cpp" line="141"/>
+        <location filename="../../gui/aboutbox.cpp" line="142"/>
         <source>About SpeedCrunch</source>
         <translation>SpeedCrunch గురించి</translation>
     </message>
@@ -20,7 +20,7 @@
         <translation>అసలు రచయిత</translation>
     </message>
     <message>
-        <location filename="../../gui/aboutbox.cpp" line="133"/>
+        <location filename="../../gui/aboutbox.cpp" line="134"/>
         <source>Close</source>
         <translation>మూసివేయి</translation>
     </message>
@@ -40,17 +40,17 @@
         <translation>ధన్యవాదాలు</translation>
     </message>
     <message>
-        <location filename="../../gui/aboutbox.cpp" line="110"/>
+        <location filename="../../gui/aboutbox.cpp" line="111"/>
         <source>Copyright (C) 2004-2026 The SpeedCrunch developers</source>
         <translation>కాపీరైట్ (C) 2004-2026 SpeedCrunch అభివృద్ధికర్తలు</translation>
     </message>
     <message>
-        <location filename="../../gui/aboutbox.cpp" line="114"/>
+        <location filename="../../gui/aboutbox.cpp" line="115"/>
         <source>This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version</source>
         <translation>ఈ ప్రోగ్రామ్ ఉచిత సాఫ్ట్‌వేర్; ఉచిత సాఫ్ట్‌వేర్ ఫౌండేషన్ ప్రచురించినట్లు మీరు దానిని పునఃపంపిణీ చేయవచ్చు మరియు / లేదా GNU జనరల్ పబ్లిక్ లైసెన్స్ నిబంధనల ప్రకారం సవరించవచ్చు; లైసెన్స్ యొక్క సంస్కరణ 2, లేదా (మీ ఎంపిక వద్ద) ఏదైనా తరువాతి సంస్కరణ</translation>
     </message>
     <message>
-        <location filename="../../gui/aboutbox.cpp" line="120"/>
+        <location filename="../../gui/aboutbox.cpp" line="121"/>
         <source>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.</source>
         <translation>ఈ ప్రోగ్రామ్ ఉపయోగకరంగా ఉంటుందనే ఆశతో పంపిణీ చేయబడుతుంది, కానీ ఎటువంటి వారంటీ లేకుండా; వాణిజ్యయోగ్యత లేదా నిర్దిష్ట ప్రయోజనానికి అనుకూలత అనే సూచిత వారంటీ కూడా లేకుండా. మరిన్ని వివరాలకు GNU జనరల్ పబ్లిక్ లైసెన్స్ చూడండి.</translation>
     </message>
@@ -414,9 +414,9 @@
 <context>
     <name>ConstantCompletion</name>
     <message>
-        <location filename="../../gui/editor.cpp" line="4521"/>
-        <location filename="../../gui/editor.cpp" line="4531"/>
-        <location filename="../../gui/editor.cpp" line="4645"/>
+        <location filename="../../gui/editor.cpp" line="4730"/>
+        <location filename="../../gui/editor.cpp" line="4740"/>
+        <location filename="../../gui/editor.cpp" line="4855"/>
         <source>All</source>
         <translation>అన్నీ</translation>
     </message>
@@ -2663,45 +2663,45 @@
 <context>
     <name>Editor</name>
     <message>
-        <location filename="../../gui/editor.cpp" line="1795"/>
+        <location filename="../../gui/editor.cpp" line="1930"/>
         <source>Unit</source>
         <translation>యూనిట్</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="1799"/>
+        <location filename="../../gui/editor.cpp" line="1934"/>
         <source>User unit</source>
         <translation>వినియోగదారు యూనిట్</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="1854"/>
+        <location filename="../../gui/editor.cpp" line="1989"/>
         <source>User function</source>
         <translation>వినియోగదారు ఫంక్షన్</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="1981"/>
+        <location filename="../../gui/editor.cpp" line="2116"/>
         <source>Argument</source>
         <translation>ఆర్గ్యుమెంట్</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="2157"/>
-        <location filename="../../gui/editor.cpp" line="2191"/>
+        <location filename="../../gui/editor.cpp" line="2292"/>
+        <location filename="../../gui/editor.cpp" line="2326"/>
         <source>Current result:&lt;br/&gt;%1</source>
         <translation>ప్రస్తుత ఫలితం:&lt;br/&gt;%1</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="2263"/>
-        <location filename="../../gui/editor.cpp" line="2291"/>
+        <location filename="../../gui/editor.cpp" line="2398"/>
+        <location filename="../../gui/editor.cpp" line="2426"/>
         <source>Selection result:&lt;br/&gt;%1</source>
         <translation>ఎంపిక ఫలితం:&lt;br/&gt;%1</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="2257"/>
-        <location filename="../../gui/editor.cpp" line="2285"/>
+        <location filename="../../gui/editor.cpp" line="2392"/>
+        <location filename="../../gui/editor.cpp" line="2420"/>
         <source>Selection result: n/a</source>
         <translation>ఎంపిక ఫలితం: వర్తించదు</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="2298"/>
+        <location filename="../../gui/editor.cpp" line="2433"/>
         <source>Selection result: %1</source>
         <translation>ఎంపిక ఫలితం: %1</translation>
     </message>
@@ -4585,1247 +4585,1315 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3692"/>
+        <location filename="../../gui/mainwindow.cpp" line="3742"/>
         <source>Radian</source>
         <translation>రేడియన్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3696"/>
+        <location filename="../../gui/mainwindow.cpp" line="3746"/>
         <source>Degree</source>
         <translation>డిగ్రీ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3693"/>
+        <location filename="../../gui/mainwindow.cpp" line="3743"/>
         <source>Gradian</source>
         <translation>గ్రేడియన్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3702"/>
+        <location filename="../../gui/mainwindow.cpp" line="3752"/>
         <source>Binary</source>
         <translation>ద్విమానం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3703"/>
+        <location filename="../../gui/mainwindow.cpp" line="3753"/>
         <source>Octal</source>
         <translation>అష్టమానం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3704"/>
+        <location filename="../../gui/mainwindow.cpp" line="3754"/>
         <source>Hexadecimal</source>
         <translation>షోడశమానం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3705"/>
+        <location filename="../../gui/mainwindow.cpp" line="3755"/>
         <source>Sexagesimal</source>
         <translation>షష్ట్యంశం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3707"/>
+        <location filename="../../gui/mainwindow.cpp" line="3757"/>
         <source>Engineering decimal</source>
         <translation>ఇంజినీరింగ్ దశాంశం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3708"/>
+        <location filename="../../gui/mainwindow.cpp" line="3758"/>
         <source>Scientific decimal</source>
         <translation>శాస్త్రీయ దశాంశం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3727"/>
+        <location filename="../../gui/mainwindow.cpp" line="3777"/>
         <source>&amp;Import...</source>
         <translation>&amp;దిగుమతి...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3733"/>
+        <location filename="../../gui/mainwindow.cpp" line="3783"/>
         <source>&amp;Quit</source>
         <translation>&amp;నిష్క్రమించు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3735"/>
+        <location filename="../../gui/mainwindow.cpp" line="3785"/>
         <source>Clear E&amp;xpression</source>
         <translation>వ్యక్తీకరణను &amp;క్లియర్ చేయి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3736"/>
+        <location filename="../../gui/mainwindow.cpp" line="3786"/>
         <source>Clear &amp;History</source>
         <translation>చరిత్రను &amp;క్లియర్ చేయి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3737"/>
+        <location filename="../../gui/mainwindow.cpp" line="3787"/>
         <source>Copy Last &amp;Result</source>
         <translation>చివరి &amp;ఫలితాన్ని కాపీ చేయి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3738"/>
+        <location filename="../../gui/mainwindow.cpp" line="3788"/>
         <source>&amp;Copy</source>
         <translation>&amp;కాపీ చేయి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3739"/>
+        <location filename="../../gui/mainwindow.cpp" line="3789"/>
         <source>&amp;Paste</source>
         <translation>&amp;అతికించు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3740"/>
+        <location filename="../../gui/mainwindow.cpp" line="3790"/>
         <source>&amp;Select Expression</source>
         <translation>వ్యక్తీకరణను &amp;ఎంచుకో</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3741"/>
+        <location filename="../../gui/mainwindow.cpp" line="3791"/>
         <source>&amp;Wrap Selection in Parentheses</source>
         <translation>ఎంపికను కుండలీలలో &amp;చుట్టు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3743"/>
+        <location filename="../../gui/mainwindow.cpp" line="3793"/>
         <source>&amp;Constants</source>
         <translation>&amp;స్థిరాంకాలు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3744"/>
+        <location filename="../../gui/mainwindow.cpp" line="3794"/>
         <source>F&amp;ull Screen Mode</source>
         <translation>&amp;పూర్తి తెర మోడ్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3745"/>
+        <location filename="../../gui/mainwindow.cpp" line="3795"/>
         <source>&amp;Functions</source>
         <translation>&amp;ఫంక్షన్లు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3746"/>
+        <location filename="../../gui/mainwindow.cpp" line="3796"/>
         <source>&amp;History</source>
         <translation>&amp;చరిత్ర</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3756"/>
+        <location filename="../../gui/mainwindow.cpp" line="3806"/>
         <source>&amp;Status Bar</source>
         <translation>&amp;స్థితి పట్టీ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3759"/>
-        <location filename="../../gui/mainwindow.cpp" line="6705"/>
+        <location filename="../../gui/mainwindow.cpp" line="3809"/>
+        <location filename="../../gui/mainwindow.cpp" line="6761"/>
         <source>Bitfield</source>
         <translation>బిట్‌ఫీల్డ్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3760"/>
+        <location filename="../../gui/mainwindow.cpp" line="3810"/>
         <source>Use&amp;r Functions</source>
         <translation>వినియోగదారు &amp;ఫంక్షన్లు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3763"/>
+        <location filename="../../gui/mainwindow.cpp" line="3813"/>
         <source>&amp;Degree</source>
         <translation>&amp;డిగ్రీ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3764"/>
+        <location filename="../../gui/mainwindow.cpp" line="3814"/>
         <source>&amp;Radian</source>
         <translation>&amp;రేడియన్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3765"/>
+        <location filename="../../gui/mainwindow.cpp" line="3815"/>
         <source>&amp;Gradian</source>
         <translation>&amp;గ్రేడియన్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3772"/>
+        <location filename="../../gui/mainwindow.cpp" line="3822"/>
         <source>Automatic &amp;Completion</source>
         <translation>స్వయంచాలక &amp;పూర్తి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3783"/>
+        <location filename="../../gui/mainwindow.cpp" line="3833"/>
         <source>Syntax &amp;Highlighting</source>
         <translation>వాక్యనిర్మాణ &amp;హైలైటింగ్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3801"/>
+        <location filename="../../gui/mainwindow.cpp" line="3851"/>
         <source>&amp;Comma</source>
         <translation>&amp;కామా</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3802"/>
+        <location filename="../../gui/mainwindow.cpp" line="3852"/>
         <source>&amp;System Default</source>
         <translation>&amp;సిస్టమ్ డిఫాల్ట్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3803"/>
+        <location filename="../../gui/mainwindow.cpp" line="3853"/>
         <source>&amp;Dot</source>
         <translation>&amp;చుక్క</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3804"/>
+        <location filename="../../gui/mainwindow.cpp" line="3854"/>
         <source>Dot &amp;And Comma</source>
         <translation>చుక్క &amp;మరియు కామా</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3827"/>
+        <location filename="../../gui/mainwindow.cpp" line="3877"/>
         <source>&amp;Binary</source>
         <translation>&amp;ద్విమానం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3824"/>
+        <location filename="../../gui/mainwindow.cpp" line="3874"/>
         <source>&amp;Engineering</source>
         <translation>&amp;ఇంజినీరింగ్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3829"/>
+        <location filename="../../gui/mainwindow.cpp" line="3879"/>
         <source>&amp;Hexadecimal</source>
         <translation>&amp;షోడశమానం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3828"/>
+        <location filename="../../gui/mainwindow.cpp" line="3878"/>
         <source>&amp;Octal</source>
         <translation>&amp;అష్టమానం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3825"/>
+        <location filename="../../gui/mainwindow.cpp" line="3875"/>
         <source>&amp;Scientific</source>
         <translation>&amp;శాస్త్రీయ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3847"/>
+        <location filename="../../gui/mainwindow.cpp" line="3897"/>
         <source>User &amp;Manual</source>
         <translation>వినియోగదారు &amp;మాన్యువల్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3853"/>
+        <location filename="../../gui/mainwindow.cpp" line="3903"/>
         <source>&amp;Donate</source>
         <translation>&amp;విరాళం ఇవ్వండి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4503"/>
+        <location filename="../../gui/mainwindow.cpp" line="4554"/>
         <source>New Tab</source>
         <translation>కొత్త ట్యాబ్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6810"/>
+        <location filename="../../gui/mainwindow.cpp" line="6866"/>
         <source>Constants</source>
         <translation>స్థిరాంకాలు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6840"/>
+        <location filename="../../gui/mainwindow.cpp" line="6896"/>
         <source>Functions</source>
         <translation>ఫంక్షన్లు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6863"/>
+        <location filename="../../gui/mainwindow.cpp" line="6919"/>
         <source>History</source>
         <translation>చరిత్ర</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6933"/>
+        <location filename="../../gui/mainwindow.cpp" line="6989"/>
         <source>User Functions</source>
         <translation>వినియోగదారు ఫంక్షన్లు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7660"/>
+        <location filename="../../gui/mainwindow.cpp" line="7719"/>
         <source>Type an expression here</source>
         <translation>ఇక్కడ వ్యక్తీకరణను టైప్ చేయండి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3843"/>
+        <location filename="../../gui/mainwindow.cpp" line="3893"/>
         <source>&amp;Font...</source>
         <translation>&amp;ఫాంట్...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3845"/>
+        <location filename="../../gui/mainwindow.cpp" line="3895"/>
         <source>&amp;Language...</source>
         <translation>&amp;భాష...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4155"/>
+        <location filename="../../gui/mainwindow.cpp" line="4206"/>
         <source>&amp;Session</source>
         <translation>&amp;సెషన్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4157"/>
+        <location filename="../../gui/mainwindow.cpp" line="4208"/>
         <source>&amp;Edit</source>
         <translation>&amp;సవరించు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4158"/>
+        <location filename="../../gui/mainwindow.cpp" line="4209"/>
         <source>&amp;View</source>
         <translation>&amp;వీక్షణ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4161"/>
+        <location filename="../../gui/mainwindow.cpp" line="4212"/>
         <source>Se&amp;ttings</source>
         <translation>&amp;సెట్టింగ్‌లు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4167"/>
+        <location filename="../../gui/mainwindow.cpp" line="4218"/>
         <source>&amp;Decimal</source>
         <translation>&amp;దశాంశం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4159"/>
+        <location filename="../../gui/mainwindow.cpp" line="4210"/>
         <source>&amp;Keypad</source>
         <translation>&amp;కీప్యాడ్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3768"/>
+        <location filename="../../gui/mainwindow.cpp" line="3818"/>
         <source>Always on &amp;Top</source>
         <translation>ఎల్లప్పుడూ &amp;పైన</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3785"/>
+        <location filename="../../gui/mainwindow.cpp" line="3835"/>
         <source>Disabled</source>
         <translation>నిలిపివేయబడింది</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3786"/>
+        <location filename="../../gui/mainwindow.cpp" line="3836"/>
         <source>Small Space</source>
         <translation>చిన్న ఖాళీ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3787"/>
+        <location filename="../../gui/mainwindow.cpp" line="3837"/>
         <source>Medium Space</source>
         <translation>మధ్యస్థ ఖాళీ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3788"/>
+        <location filename="../../gui/mainwindow.cpp" line="3838"/>
         <source>Large Space</source>
         <translation>పెద్ద ఖాళీ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3805"/>
+        <location filename="../../gui/mainwindow.cpp" line="3855"/>
         <source>&amp;0 Digits</source>
         <translation>&amp;0 అంకెలు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3806"/>
+        <location filename="../../gui/mainwindow.cpp" line="3856"/>
         <source>&amp;15 Digits</source>
         <translation>&amp;15 అంకెలు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3807"/>
+        <location filename="../../gui/mainwindow.cpp" line="3857"/>
         <source>&amp;2 Digits</source>
         <translation>&amp;2 అంకెలు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3808"/>
+        <location filename="../../gui/mainwindow.cpp" line="3858"/>
         <source>&amp;3 Digits</source>
         <translation>&amp;3 అంకెలు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3809"/>
+        <location filename="../../gui/mainwindow.cpp" line="3859"/>
         <source>&amp;50 Digits</source>
         <translation>&amp;50 అంకెలు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3810"/>
+        <location filename="../../gui/mainwindow.cpp" line="3860"/>
         <source>&amp;8 Digits</source>
         <translation>&amp;8 అంకెలు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3830"/>
+        <location filename="../../gui/mainwindow.cpp" line="3880"/>
         <source>&amp;Sexagesimal</source>
         <translation>&amp;షష్ట్యంశం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3848"/>
+        <location filename="../../gui/mainwindow.cpp" line="3898"/>
         <source>Context Help</source>
         <translation>సందర్భ సహాయం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3854"/>
+        <location filename="../../gui/mainwindow.cpp" line="3904"/>
         <source>About &amp;SpeedCrunch</source>
         <translation>&amp;SpeedCrunch గురించి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4178"/>
+        <location filename="../../gui/mainwindow.cpp" line="4229"/>
         <source>&amp;Help</source>
         <translation>&amp;సహాయం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9455"/>
-        <location filename="../../gui/mainwindow.cpp" line="9461"/>
-        <location filename="../../gui/mainwindow.cpp" line="9469"/>
-        <location filename="../../gui/mainwindow.cpp" line="9475"/>
-        <location filename="../../gui/mainwindow.cpp" line="9491"/>
-        <location filename="../../gui/mainwindow.cpp" line="9497"/>
-        <location filename="../../gui/mainwindow.cpp" line="9548"/>
-        <location filename="../../gui/mainwindow.cpp" line="9554"/>
-        <location filename="../../gui/mainwindow.cpp" line="9653"/>
-        <location filename="../../gui/mainwindow.cpp" line="10377"/>
-        <location filename="../../gui/mainwindow.cpp" line="10397"/>
+        <location filename="../../gui/mainwindow.cpp" line="9516"/>
+        <location filename="../../gui/mainwindow.cpp" line="9522"/>
+        <location filename="../../gui/mainwindow.cpp" line="9530"/>
+        <location filename="../../gui/mainwindow.cpp" line="9536"/>
+        <location filename="../../gui/mainwindow.cpp" line="9552"/>
+        <location filename="../../gui/mainwindow.cpp" line="9558"/>
+        <location filename="../../gui/mainwindow.cpp" line="9609"/>
+        <location filename="../../gui/mainwindow.cpp" line="9615"/>
+        <location filename="../../gui/mainwindow.cpp" line="9714"/>
+        <location filename="../../gui/mainwindow.cpp" line="10625"/>
+        <location filename="../../gui/mainwindow.cpp" line="10664"/>
         <source>Error</source>
         <translation>లోపం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9455"/>
-        <location filename="../../gui/mainwindow.cpp" line="9687"/>
+        <location filename="../../gui/mainwindow.cpp" line="9516"/>
+        <location filename="../../gui/mainwindow.cpp" line="9748"/>
         <source>Can&apos;t read from file %1</source>
         <translation>%1 ఫైల్ నుండి చదవలేరు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9669"/>
-        <location filename="../../gui/mainwindow.cpp" line="9687"/>
-        <location filename="../../gui/mainwindow.cpp" line="9695"/>
-        <location filename="../../gui/mainwindow.cpp" line="9702"/>
-        <location filename="../../gui/mainwindow.cpp" line="9710"/>
-        <location filename="../../gui/mainwindow.cpp" line="9718"/>
-        <location filename="../../gui/mainwindow.cpp" line="9724"/>
-        <location filename="../../gui/mainwindow.cpp" line="9732"/>
-        <location filename="../../gui/mainwindow.cpp" line="9738"/>
-        <location filename="../../gui/mainwindow.cpp" line="9746"/>
-        <location filename="../../gui/mainwindow.cpp" line="9752"/>
-        <location filename="../../gui/mainwindow.cpp" line="9760"/>
+        <location filename="../../gui/mainwindow.cpp" line="9730"/>
+        <location filename="../../gui/mainwindow.cpp" line="9748"/>
+        <location filename="../../gui/mainwindow.cpp" line="9756"/>
+        <location filename="../../gui/mainwindow.cpp" line="9763"/>
+        <location filename="../../gui/mainwindow.cpp" line="9771"/>
+        <location filename="../../gui/mainwindow.cpp" line="9779"/>
+        <location filename="../../gui/mainwindow.cpp" line="9785"/>
+        <location filename="../../gui/mainwindow.cpp" line="9793"/>
+        <location filename="../../gui/mainwindow.cpp" line="9799"/>
+        <location filename="../../gui/mainwindow.cpp" line="9807"/>
+        <location filename="../../gui/mainwindow.cpp" line="9813"/>
+        <location filename="../../gui/mainwindow.cpp" line="9821"/>
         <source>Import Session</source>
         <translation>సెషన్‌ను దిగుమతి చేయి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="2350"/>
-        <location filename="../../gui/mainwindow.cpp" line="4523"/>
+        <location filename="../../gui/mainwindow.cpp" line="2778"/>
+        <location filename="../../gui/mainwindow.cpp" line="4574"/>
         <source>Close Session</source>
         <translation>సెషన్‌ను మూసివేయి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3614"/>
+        <location filename="../../gui/mainwindow.cpp" line="3664"/>
         <source>Angle Mode:</source>
         <translation>కోణ మోడ్:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3615"/>
+        <location filename="../../gui/mainwindow.cpp" line="3665"/>
         <source>Notation:</source>
         <translation>సంకేతనం:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3616"/>
+        <location filename="../../gui/mainwindow.cpp" line="3666"/>
         <source>Precision:</source>
         <translation>ఖచ్చితత్వం:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3694"/>
+        <location filename="../../gui/mainwindow.cpp" line="3744"/>
         <source>Turn</source>
         <translation>టర్న్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3695"/>
+        <location filename="../../gui/mainwindow.cpp" line="3745"/>
         <source>Revolution</source>
         <translation>పరిభ్రమణం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3706"/>
+        <location filename="../../gui/mainwindow.cpp" line="3756"/>
         <source>Fixed-point decimal</source>
         <translation>స్థిర-బిందు దశాంశం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3709"/>
+        <location filename="../../gui/mainwindow.cpp" line="3759"/>
         <source>Rational</source>
         <translation>రేషనల్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3710"/>
+        <location filename="../../gui/mainwindow.cpp" line="3760"/>
         <source>Automatic decimal</source>
         <translation>స్వయంచాలక దశాంశం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3718"/>
-        <location filename="../../gui/mainwindow.cpp" line="13302"/>
+        <location filename="../../gui/mainwindow.cpp" line="3768"/>
+        <location filename="../../gui/mainwindow.cpp" line="13575"/>
         <source>Automatic</source>
         <translation>స్వయంచాలక</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3728"/>
+        <location filename="../../gui/mainwindow.cpp" line="3778"/>
         <source>User &amp;Definitions...</source>
         <translation>వినియోగదారు &amp;నిర్వచనలు...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3729"/>
+        <location filename="../../gui/mainwindow.cpp" line="3779"/>
         <source>New &amp;Tab</source>
         <translation>కొత్త &amp;ట్యాబ్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3730"/>
+        <location filename="../../gui/mainwindow.cpp" line="3780"/>
         <source>New &amp;Window</source>
         <translation>కొత్త &amp;విండో</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3731"/>
+        <location filename="../../gui/mainwindow.cpp" line="3781"/>
         <source>&amp;Open...</source>
         <translation>&amp;తెరువు...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3732"/>
+        <location filename="../../gui/mainwindow.cpp" line="3782"/>
         <source>Open Sessions &amp;Folder</source>
         <translation>సెషన్ల &amp;ఫోల్డర్‌ను తెరువు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3748"/>
+        <location filename="../../gui/mainwindow.cpp" line="3798"/>
         <source>&amp;Basic</source>
         <translation>&amp;ప్రాథమిక</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3749"/>
+        <location filename="../../gui/mainwindow.cpp" line="3799"/>
         <source>&amp;Scientific (wide)</source>
         <translation>&amp;శాస్త్రీయ (వెడల్పు)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3750"/>
+        <location filename="../../gui/mainwindow.cpp" line="3800"/>
         <source>Scientific (narrow)</source>
         <translation>శాస్త్రీయ (ఇరుకు)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3751"/>
-        <location filename="../../gui/mainwindow.cpp" line="3811"/>
+        <location filename="../../gui/mainwindow.cpp" line="3801"/>
+        <location filename="../../gui/mainwindow.cpp" line="3861"/>
         <source>&amp;Custom...</source>
         <translation>&amp;అనుకూల...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3757"/>
+        <location filename="../../gui/mainwindow.cpp" line="3807"/>
         <source>Main &amp;Menu</source>
         <translation>ప్రధాన &amp;మెను</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3758"/>
+        <location filename="../../gui/mainwindow.cpp" line="3808"/>
         <source>User &amp;Variables</source>
         <translation>వినియోగదారు &amp;చరరాశులు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3761"/>
+        <location filename="../../gui/mainwindow.cpp" line="3811"/>
         <source>User &amp;Units</source>
         <translation>వినియోగదారు &amp;యూనిట్లు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3766"/>
+        <location filename="../../gui/mainwindow.cpp" line="3816"/>
         <source>&amp;Turn</source>
         <translation>&amp;టర్న్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3767"/>
+        <location filename="../../gui/mainwindow.cpp" line="3817"/>
         <source>&amp;Revolution</source>
         <translation>&amp;పరిభ్రమణం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3769"/>
+        <location filename="../../gui/mainwindow.cpp" line="3819"/>
         <source>Auto-Insert &quot;ans&quot; When Starting with an Operator</source>
         <translation>ఆపరేటర్‌తో ప్రారంభించినప్పుడు &quot;ans&quot; ను స్వయంగా చొప్పించు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3770"/>
-        <location filename="../../gui/mainwindow.cpp" line="3771"/>
+        <location filename="../../gui/mainwindow.cpp" line="3820"/>
+        <location filename="../../gui/mainwindow.cpp" line="3821"/>
         <source>If a new expression starts with +, -, *, or /, SpeedCrunch inserts &quot;ans&quot; first.</source>
         <translation>కొత్త వ్యక్తీకరణ +, -, *, లేదా / తో ప్రారంభమైతే, SpeedCrunch ముందుగా &quot;ans&quot; ను చొప్పిస్తుంది.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3773"/>
+        <location filename="../../gui/mainwindow.cpp" line="3823"/>
         <source>Built-in &amp;functions</source>
         <translation>అంతర్నిర్మిత &amp;ఫంక్షన్లు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3774"/>
+        <location filename="../../gui/mainwindow.cpp" line="3824"/>
         <source>Built-in &amp;variables</source>
         <translation>అంతర్నిర్మిత &amp;చరరాశులు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3775"/>
+        <location filename="../../gui/mainwindow.cpp" line="3825"/>
         <source>&amp;Units</source>
         <translation>&amp;యూనిట్లు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3776"/>
+        <location filename="../../gui/mainwindow.cpp" line="3826"/>
         <source>User &amp;functions</source>
         <translation>వినియోగదారు &amp;ఫంక్షన్లు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3777"/>
+        <location filename="../../gui/mainwindow.cpp" line="3827"/>
         <source>User &amp;variables</source>
         <translation>వినియోగదారు &amp;చరరాశులు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3778"/>
+        <location filename="../../gui/mainwindow.cpp" line="3828"/>
         <source>Show Empty History &amp;Hint</source>
         <translation>ఖాళీ చరిత్ర &amp;సూచనను చూపు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3779"/>
-        <location filename="../../gui/mainwindow.cpp" line="3780"/>
+        <location filename="../../gui/mainwindow.cpp" line="3829"/>
+        <location filename="../../gui/mainwindow.cpp" line="3830"/>
         <source>When history is empty, show a hint in the status area.</source>
         <translation>చరిత్ర ఖాళీగా ఉన్నప్పుడు, స్థితి ప్రాంతంలో సూచనను చూపు.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3781"/>
+        <location filename="../../gui/mainwindow.cpp" line="3831"/>
         <source>Show Live Result &amp;Preview</source>
         <translation>ప్రత్యక్ష ఫలిత &amp;ప్రివ్యూను చూపు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3782"/>
+        <location filename="../../gui/mainwindow.cpp" line="3832"/>
         <source>Save &amp;Window Position on Exit</source>
         <translation>నిష్క్రమించినప్పుడు &amp;విండో స్థానాన్ని సేవ్ చేయి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3784"/>
+        <location filename="../../gui/mainwindow.cpp" line="3834"/>
         <source>Hover Highlighting</source>
         <translation>హోవర్ హైలైటింగ్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3789"/>
+        <location filename="../../gui/mainwindow.cpp" line="3839"/>
         <source>Group Integer Part Only</source>
         <translation>పూర్ణసంఖ్య భాగాన్ని మాత్రమే సమూహీకరించు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3790"/>
+        <location filename="../../gui/mainwindow.cpp" line="3840"/>
         <source>Keep Entered Expression After Evaluate</source>
         <translation>లెక్కించిన తరువాత నమోదు చేసిన వ్యక్తీకరణను ఉంచు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3791"/>
+        <location filename="../../gui/mainwindow.cpp" line="3841"/>
         <source>Number Format...</source>
         <translation>సంఖ్య ఆకృతి...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3792"/>
+        <location filename="../../gui/mainwindow.cpp" line="3842"/>
         <source>Notation &amp;&amp; Precision...</source>
         <translation>సంకేతనం &amp;&amp; ఖచ్చితత్వం...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3793"/>
-        <location filename="../../gui/mainwindow.cpp" line="3794"/>
+        <location filename="../../gui/mainwindow.cpp" line="3843"/>
+        <location filename="../../gui/mainwindow.cpp" line="3844"/>
         <source>After pressing Enter, keep the entered expression selected in the editor.</source>
         <translation>Enter నొక్కిన తరువాత, నమోదు చేసిన వ్యక్తీకరణను ఎడిటర్‌లో ఎంపికగా ఉంచు.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3795"/>
+        <location filename="../../gui/mainwindow.cpp" line="3845"/>
         <source>Never</source>
         <translation>ఎప్పుడూ కాదు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3796"/>
+        <location filename="../../gui/mainwindow.cpp" line="3846"/>
         <source>Always</source>
         <translation>ఎల్లప్పుడూ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3797"/>
+        <location filename="../../gui/mainwindow.cpp" line="3847"/>
         <source>Only for Single-Line Expressions</source>
         <translation>ఒకే-లైన్ వ్యక్తీకరణలకే</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3798"/>
+        <location filename="../../gui/mainwindow.cpp" line="3848"/>
         <source>Automatically Copy New Results to Clipboard</source>
         <translation>కొత్త ఫలితాలను స్వయంచాలకంగా క్లిప్‌బోర్డుకు కాపీ చేయి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3799"/>
+        <location filename="../../gui/mainwindow.cpp" line="3849"/>
         <source>Simplify Displayed Expressions</source>
         <translation>ప్రదర్శించిన వ్యక్తీకరణలను సరళీకరించు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3800"/>
+        <location filename="../../gui/mainwindow.cpp" line="3850"/>
         <source>History Size &amp;Limit...</source>
         <translation>చరిత్ర పరిమాణ &amp;పరిమితి...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3813"/>
+        <location filename="../../gui/mainwindow.cpp" line="3863"/>
         <source>Nearest, Half &amp;Away (round)</source>
         <translation>సమీపం, సగం &amp;దూరంగా (round)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3815"/>
+        <location filename="../../gui/mainwindow.cpp" line="3865"/>
         <source>Nearest, Half &amp;Even (roundeven)</source>
         <translation>సమీపం, సగం &amp;సమసంఖ్యకు (roundeven)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3816"/>
+        <location filename="../../gui/mainwindow.cpp" line="3866"/>
         <source>Toward &amp;Zero (trunc)</source>
         <translation>&amp;సున్నా వైపు (trunc)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3818"/>
+        <location filename="../../gui/mainwindow.cpp" line="3868"/>
         <source>Toward +&amp;∞ (ceil)</source>
         <translation>+&amp;∞ వైపు (ceil)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3820"/>
+        <location filename="../../gui/mainwindow.cpp" line="3870"/>
         <source>Toward −&amp;∞ (floor)</source>
         <translation>−&amp;∞ వైపు (floor)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3823"/>
+        <location filename="../../gui/mainwindow.cpp" line="3873"/>
         <source>&amp;Fixed-Point</source>
         <translation>&amp;స్థిర-బిందు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3826"/>
+        <location filename="../../gui/mainwindow.cpp" line="3876"/>
         <source>&amp;Rational</source>
         <translation>&amp;రేషనల్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3832"/>
+        <location filename="../../gui/mainwindow.cpp" line="3882"/>
         <source>&amp;Exponential (m·s⁻¹)</source>
         <translation>&amp;ఘాతాంక (m·s⁻¹)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3834"/>
+        <location filename="../../gui/mainwindow.cpp" line="3884"/>
         <source>&amp;Fractional (m/s)</source>
         <translation>&amp;భిన్న (m/s)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3835"/>
+        <location filename="../../gui/mainwindow.cpp" line="3885"/>
         <source>&amp;Rectangular (a + bi)</source>
         <translation>&amp;ఆయతాకార (a + bi)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3836"/>
+        <location filename="../../gui/mainwindow.cpp" line="3886"/>
         <source>Exponential (reⁱᶿ)</source>
         <translation>ఘాతాంక (reⁱᶿ)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3838"/>
+        <location filename="../../gui/mainwindow.cpp" line="3888"/>
         <source>Trigonometric (r(cos θ + i·sin θ))</source>
         <translation>త్రికోణమితీయ (r(cos θ + i·sin θ))</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3840"/>
+        <location filename="../../gui/mainwindow.cpp" line="3890"/>
         <source>Phasor (r∠θ)</source>
         <translation>ఫేజర్ (r∠θ)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3844"/>
+        <location filename="../../gui/mainwindow.cpp" line="3894"/>
         <source>&amp;Theme...</source>
         <translation>&amp;థీమ్...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3849"/>
+        <location filename="../../gui/mainwindow.cpp" line="3899"/>
         <source>Check for &amp;Updates</source>
         <translation>&amp;నవీకరణల కోసం తనిఖీ చేయి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3850"/>
+        <location filename="../../gui/mainwindow.cpp" line="3900"/>
         <source>Issue Tracker</source>
         <translation>ఇష్యూ ట్రాకర్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3852"/>
+        <location filename="../../gui/mainwindow.cpp" line="3902"/>
         <source>Source Code</source>
         <translation>మూల కోడ్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4160"/>
+        <location filename="../../gui/mainwindow.cpp" line="4211"/>
         <source>&amp;Zoom</source>
         <translation>&amp;జూమ్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4162"/>
+        <location filename="../../gui/mainwindow.cpp" line="4213"/>
         <source>&amp;Results</source>
         <translation>&amp;ఫలితాలు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4163"/>
+        <location filename="../../gui/mainwindow.cpp" line="4214"/>
         <source>&amp;Symbols</source>
         <translation>&amp;చిహ్నాలు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4164"/>
+        <location filename="../../gui/mainwindow.cpp" line="4215"/>
         <source>Unit Notation</source>
         <translation>యూనిట్ సంకేతనం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4165"/>
+        <location filename="../../gui/mainwindow.cpp" line="4216"/>
         <source>Rounding Mode</source>
         <translation>రౌండింగ్ మోడ్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4166"/>
+        <location filename="../../gui/mainwindow.cpp" line="4217"/>
         <source>&amp;Notation</source>
         <translation>&amp;సంకేతనం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4169"/>
+        <location filename="../../gui/mainwindow.cpp" line="4220"/>
         <source>&amp;Angle Mode</source>
         <translation>&amp;కోణ మోడ్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4170"/>
+        <location filename="../../gui/mainwindow.cpp" line="4221"/>
         <source>Complex &amp;Numbers</source>
         <translation>సంక్లిష్ట &amp;సంఖ్యలు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4171"/>
+        <location filename="../../gui/mainwindow.cpp" line="4222"/>
         <source>&amp;Form</source>
         <translation>&amp;రూపం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4172"/>
+        <location filename="../../gui/mainwindow.cpp" line="4223"/>
         <source>&amp;Imaginary Unit</source>
         <translation>&amp;కల్పిత యూనిట్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4173"/>
+        <location filename="../../gui/mainwindow.cpp" line="4224"/>
         <source>&amp;Window</source>
         <translation>&amp;విండో</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4174"/>
+        <location filename="../../gui/mainwindow.cpp" line="4225"/>
         <source>&amp;Editing</source>
         <translation>&amp;సవరణ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4175"/>
+        <location filename="../../gui/mainwindow.cpp" line="4226"/>
         <source>A&amp;utocomplete</source>
         <translation>&amp;స్వయంపూర్తి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4176"/>
+        <location filename="../../gui/mainwindow.cpp" line="4227"/>
         <source>Up/Down Arrow History</source>
         <translation>పై/క్రింది బాణం చరిత్ర</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4177"/>
+        <location filename="../../gui/mainwindow.cpp" line="4228"/>
         <source>&amp;Appearance</source>
         <translation>&amp;రూపురేఖలు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4184"/>
+        <location filename="../../gui/mainwindow.cpp" line="4235"/>
         <source>&amp;Disabled</source>
         <translation>&amp;నిలిపివేయబడింది</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4186"/>
+        <location filename="../../gui/mainwindow.cpp" line="4237"/>
         <source>&amp;Disable</source>
         <translation>&amp;నిలిపివేయి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4360"/>
+        <location filename="../../gui/mainwindow.cpp" line="4411"/>
         <source>Close preview</source>
         <translation>ప్రివ్యూను మూసివేయి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9627"/>
-        <location filename="../../gui/mainwindow.cpp" line="9668"/>
+        <location filename="../../gui/mainwindow.cpp" line="9688"/>
+        <location filename="../../gui/mainwindow.cpp" line="9729"/>
         <source>JSON file (*.json);;Any file (*.*)</source>
         <translation>JSON ఫైల్ (*.json);;ఏ ఫైల్ అయినా (*.*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9631"/>
+        <location filename="../../gui/mainwindow.cpp" line="9692"/>
         <source>Export session as JSON</source>
         <translation>సెషన్‌ను JSONగా ఎగుమతి చేయి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9696"/>
+        <location filename="../../gui/mainwindow.cpp" line="9757"/>
         <source>The selected file is not valid JSON: %1</source>
         <translation>ఎంచుకున్న ఫైల్ చెల్లుబాటు అయ్యే JSON కాదు: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9703"/>
+        <location filename="../../gui/mainwindow.cpp" line="9764"/>
         <source>The selected file is not a SpeedCrunch session JSON file.</source>
         <translation>ఎంచుకున్న ఫైల్ SpeedCrunch సెషన్ JSON ఫైల్ కాదు.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9711"/>
+        <location filename="../../gui/mainwindow.cpp" line="9772"/>
         <source>This file uses an obsolete SpeedCrunch session format and cannot be imported.</source>
         <translation>ఈ ఫైల్ పాతబడిన SpeedCrunch సెషన్ ఆకృతిని ఉపయోగిస్తుంది మరియు దిగుమతి చేయలేరు.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9719"/>
+        <location filename="../../gui/mainwindow.cpp" line="9780"/>
         <source>The selected JSON file is missing the required $schema field.</source>
         <translation>ఎంచుకున్న JSON ఫైల్‌లో అవసరమైన $schema ఫీల్డ్ లేదు.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9725"/>
+        <location filename="../../gui/mainwindow.cpp" line="9786"/>
         <source>The selected JSON file uses an unsupported JSON schema: %1</source>
         <translation>ఎంచుకున్న JSON ఫైల్ మద్దతు లేని JSON స్కీమాను ఉపయోగిస్తోంది: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9733"/>
+        <location filename="../../gui/mainwindow.cpp" line="9794"/>
         <source>The selected JSON file is missing the SpeedCrunch session schema identifier ($id).</source>
         <translation>ఎంచుకున్న JSON ఫైల్‌లో SpeedCrunch సెషన్ స్కీమా గుర్తింపు ($id) లేదు.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9739"/>
+        <location filename="../../gui/mainwindow.cpp" line="9800"/>
         <source>The selected JSON file uses an unsupported SpeedCrunch session format: %1</source>
         <translation>ఎంచుకున్న JSON ఫైల్ మద్దతు లేని SpeedCrunch సెషన్ ఆకృతిని ఉపయోగిస్తోంది: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9747"/>
+        <location filename="../../gui/mainwindow.cpp" line="9808"/>
         <source>The selected JSON file is missing the required session name.</source>
         <translation>ఎంచుకున్న JSON ఫైల్‌లో అవసరమైన సెషన్ పేరు లేదు.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9753"/>
+        <location filename="../../gui/mainwindow.cpp" line="9814"/>
         <source>The selected JSON file has an empty session name.</source>
         <translation>ఎంచుకున్న JSON ఫైల్‌లో సెషన్ పేరు ఖాళీగా ఉంది.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9761"/>
+        <location filename="../../gui/mainwindow.cpp" line="9822"/>
         <source>The selected JSON file has invalid or incomplete SpeedCrunch session data.</source>
         <translation>ఎంచుకున్న JSON ఫైల్‌లో చెల్లని లేదా అసంపూర్ణ SpeedCrunch సెషన్ డేటా ఉంది.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9772"/>
-        <location filename="../../gui/mainwindow.cpp" line="9780"/>
+        <location filename="../../gui/mainwindow.cpp" line="9833"/>
+        <location filename="../../gui/mainwindow.cpp" line="9841"/>
         <source>Open Sessions Folder</source>
         <translation>సెషన్ల ఫోల్డర్‌ను తెరువు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9773"/>
+        <location filename="../../gui/mainwindow.cpp" line="9834"/>
         <source>Could not create the sessions folder: %1</source>
         <translation>సెషన్ల ఫోల్డర్‌ను సృష్టించలేకపోయింది: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9781"/>
+        <location filename="../../gui/mainwindow.cpp" line="9842"/>
         <source>Could not open the sessions folder: %1</source>
         <translation>సెషన్ల ఫోల్డర్‌ను తెరవలేకపోయింది: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4504"/>
-        <location filename="../../gui/mainwindow.cpp" line="8449"/>
+        <location filename="../../gui/mainwindow.cpp" line="4555"/>
+        <location filename="../../gui/mainwindow.cpp" line="8508"/>
         <source>Open Session</source>
         <translation>సెషన్‌ను తెరువు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3851"/>
+        <location filename="../../gui/mainwindow.cpp" line="3901"/>
         <source>Community</source>
         <translation>సముదాయం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4506"/>
+        <location filename="../../gui/mainwindow.cpp" line="4557"/>
         <source>Split Left</source>
         <translation>ఎడమవైపు విభజించు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4507"/>
+        <location filename="../../gui/mainwindow.cpp" line="4558"/>
         <source>Split Right</source>
         <translation>కుడివైపు విభజించు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4508"/>
+        <location filename="../../gui/mainwindow.cpp" line="4559"/>
         <source>Split Up</source>
         <translation>పైవైపు విభజించు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4509"/>
+        <location filename="../../gui/mainwindow.cpp" line="4560"/>
         <source>Split Down</source>
         <translation>క్రిందవైపు విభజించు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4517"/>
-        <location filename="../../gui/mainwindow.cpp" line="8530"/>
-        <location filename="../../gui/mainwindow.cpp" line="8541"/>
-        <location filename="../../gui/mainwindow.cpp" line="8554"/>
-        <location filename="../../gui/mainwindow.cpp" line="8564"/>
+        <location filename="../../gui/mainwindow.cpp" line="4568"/>
+        <location filename="../../gui/mainwindow.cpp" line="8589"/>
+        <location filename="../../gui/mainwindow.cpp" line="8600"/>
+        <location filename="../../gui/mainwindow.cpp" line="8613"/>
+        <location filename="../../gui/mainwindow.cpp" line="8623"/>
         <source>Duplicate Session</source>
         <translation>సెషన్‌ను నకలు చేయి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4518"/>
-        <location filename="../../gui/mainwindow.cpp" line="8593"/>
-        <location filename="../../gui/mainwindow.cpp" line="8607"/>
-        <location filename="../../gui/mainwindow.cpp" line="8618"/>
+        <location filename="../../gui/mainwindow.cpp" line="4569"/>
+        <location filename="../../gui/mainwindow.cpp" line="8652"/>
+        <location filename="../../gui/mainwindow.cpp" line="8666"/>
+        <location filename="../../gui/mainwindow.cpp" line="8677"/>
         <source>Rename Session</source>
         <translation>సెషన్ పేరు మార్చు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4520"/>
+        <location filename="../../gui/mainwindow.cpp" line="4571"/>
         <source>Clear Session</source>
         <translation>సెషన్‌ను క్లియర్ చేయి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4521"/>
-        <location filename="../../gui/mainwindow.cpp" line="8892"/>
+        <location filename="../../gui/mainwindow.cpp" line="4572"/>
+        <location filename="../../gui/mainwindow.cpp" line="8951"/>
         <source>Delete Session</source>
         <translation>సెషన్‌ను తొలగించు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4524"/>
+        <location filename="../../gui/mainwindow.cpp" line="4575"/>
         <source>Close Pane</source>
         <translation>పేన్‌ను మూసివేయి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6896"/>
+        <location filename="../../gui/mainwindow.cpp" line="6952"/>
         <source>User Variables</source>
         <translation>వినియోగదారు చరరాశులు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6970"/>
+        <location filename="../../gui/mainwindow.cpp" line="7026"/>
         <source>User Units</source>
         <translation>వినియోగదారు యూనిట్లు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8295"/>
-        <location filename="../../gui/mainwindow.cpp" line="8326"/>
+        <location filename="../../gui/mainwindow.cpp" line="8354"/>
+        <location filename="../../gui/mainwindow.cpp" line="8385"/>
         <source>Clear History</source>
         <translation>చరిత్రను క్లియర్ చేయి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8296"/>
-        <location filename="../../gui/mainwindow.cpp" line="8327"/>
+        <location filename="../../gui/mainwindow.cpp" line="8355"/>
+        <location filename="../../gui/mainwindow.cpp" line="8386"/>
         <source>Are you sure you want to clear the calculation history?</source>
         <translation>గణన చరిత్రను క్లియర్ చేయాలనుకుంటున్నారా?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8531"/>
-        <location filename="../../gui/mainwindow.cpp" line="8594"/>
+        <location filename="../../gui/mainwindow.cpp" line="8590"/>
+        <location filename="../../gui/mainwindow.cpp" line="8653"/>
         <source>Session name:</source>
         <translation>సెషన్ పేరు:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8542"/>
-        <location filename="../../gui/mainwindow.cpp" line="8608"/>
+        <location filename="../../gui/mainwindow.cpp" line="8601"/>
+        <location filename="../../gui/mainwindow.cpp" line="8667"/>
         <source>A session named %1 already exists.</source>
         <translation>%1 అనే సెషన్ ఇప్పటికే ఉంది.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8555"/>
+        <location filename="../../gui/mainwindow.cpp" line="8614"/>
         <source>Could not create session file %1.</source>
         <translation>సెషన్ ఫైల్ %1 సృష్టించలేకపోయింది.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8565"/>
+        <location filename="../../gui/mainwindow.cpp" line="8624"/>
         <source>Could not write session file %1.</source>
         <translation>సెషన్ ఫైల్ %1 వ్రాయలేకపోయింది.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8619"/>
+        <location filename="../../gui/mainwindow.cpp" line="8678"/>
         <source>Could not rename session file %1.</source>
         <translation>సెషన్ ఫైల్ %1 పేరు మార్చలేకపోయింది.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8893"/>
+        <location filename="../../gui/mainwindow.cpp" line="8952"/>
         <source>Are you sure you want to delete this session?</source>
         <translation>ఈ సెషన్‌ను తొలగించాలనుకుంటున్నారా?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9068"/>
+        <location filename="../../gui/mainwindow.cpp" line="9127"/>
         <source>Custom Precision</source>
         <translation>అనుకూల ఖచ్చితత్వం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9069"/>
+        <location filename="../../gui/mainwindow.cpp" line="9128"/>
         <source>Fractional digits:</source>
         <translation>భిన్న అంకెలు:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9086"/>
+        <location filename="../../gui/mainwindow.cpp" line="9145"/>
         <source>Theme</source>
         <translation>థీమ్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9095"/>
+        <location filename="../../gui/mainwindow.cpp" line="9154"/>
         <source>Light Themes</source>
         <translation>లైట్ థీమ్‌లు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9102"/>
+        <location filename="../../gui/mainwindow.cpp" line="9161"/>
         <source>Dark Themes</source>
         <translation>డార్క్ థీమ్‌లు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9110"/>
+        <location filename="../../gui/mainwindow.cpp" line="9169"/>
         <source>Preview</source>
         <translation>ప్రివ్యూ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9172"/>
+        <location filename="../../gui/mainwindow.cpp" line="9231"/>
         <source>Colors</source>
         <translation>రంగులు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9364"/>
+        <location filename="../../gui/mainwindow.cpp" line="9423"/>
         <source>Select color for %1</source>
         <translation>%1 కోసం రంగును ఎంచుకోండి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9418"/>
+        <location filename="../../gui/mainwindow.cpp" line="9479"/>
         <source>Import...</source>
         <translation>దిగుమతి...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9419"/>
+        <location filename="../../gui/mainwindow.cpp" line="9480"/>
         <source>Export...</source>
         <translation>ఎగుమతి...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9449"/>
+        <location filename="../../gui/mainwindow.cpp" line="9510"/>
         <source>Import Theme</source>
         <translation>థీమ్‌ను దిగుమతి చేయి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9450"/>
-        <location filename="../../gui/mainwindow.cpp" line="9539"/>
+        <location filename="../../gui/mainwindow.cpp" line="9511"/>
+        <location filename="../../gui/mainwindow.cpp" line="9600"/>
         <source>Theme file (*.json);;All files (*)</source>
         <translation>థీమ్ ఫైల్ (*.json);;అన్ని ఫైళ్లు (*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9461"/>
+        <location filename="../../gui/mainwindow.cpp" line="9522"/>
         <source>Invalid theme file.</source>
         <translation>చెల్లని థీమ్ ఫైల్.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9470"/>
+        <location filename="../../gui/mainwindow.cpp" line="9531"/>
         <source>Can&apos;t import theme &quot;%1&quot; because it conflicts with a built-in theme.</source>
         <translation>&quot;%1&quot; థీమ్‌ను దిగుమతి చేయలేరు, ఎందుకంటే అది అంతర్నిర్మిత థీమ్‌తో విరుద్ధంగా ఉంది.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9475"/>
+        <location filename="../../gui/mainwindow.cpp" line="9536"/>
         <source>Can&apos;t find a writable theme folder.</source>
         <translation>వ్రాయగల థీమ్ ఫోల్డర్ కనబడలేదు.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9482"/>
+        <location filename="../../gui/mainwindow.cpp" line="9543"/>
         <source>Overwrite Theme</source>
         <translation>థీమ్‌ను ఓవర్‌రైట్ చేయి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9483"/>
+        <location filename="../../gui/mainwindow.cpp" line="9544"/>
         <source>A custom theme named &quot;%1&quot; already exists. Do you want to overwrite it?</source>
         <translation>&quot;%1&quot; అనే అనుకూల థీమ్ ఇప్పటికే ఉంది. దానిని ఓవర్‌రైట్ చేయాలా?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9491"/>
+        <location filename="../../gui/mainwindow.cpp" line="9552"/>
         <source>Can&apos;t overwrite theme file %1</source>
         <translation>థీమ్ ఫైల్ %1 ను ఓవర్‌రైట్ చేయలేరు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9497"/>
+        <location filename="../../gui/mainwindow.cpp" line="9558"/>
         <source>Can&apos;t copy theme file to %1</source>
         <translation>థీమ్ ఫైల్‌ను %1 కు కాపీ చేయలేరు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9538"/>
+        <location filename="../../gui/mainwindow.cpp" line="9599"/>
         <source>Export Theme</source>
         <translation>థీమ్‌ను ఎగుమతి చేయి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9549"/>
+        <location filename="../../gui/mainwindow.cpp" line="9610"/>
         <source>Can&apos;t export theme as &quot;%1&quot; because it conflicts with a built-in theme.</source>
         <translation>&quot;%1&quot; గా థీమ్‌ను ఎగుమతి చేయలేరు, ఎందుకంటే అది అంతర్నిర్మిత థీమ్‌తో విరుద్ధంగా ఉంది.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9554"/>
-        <location filename="../../gui/mainwindow.cpp" line="9653"/>
-        <location filename="../../gui/mainwindow.cpp" line="10377"/>
-        <location filename="../../gui/mainwindow.cpp" line="10397"/>
+        <location filename="../../gui/mainwindow.cpp" line="9615"/>
+        <location filename="../../gui/mainwindow.cpp" line="9714"/>
+        <location filename="../../gui/mainwindow.cpp" line="10625"/>
+        <location filename="../../gui/mainwindow.cpp" line="10664"/>
         <source>Can&apos;t write to file %1</source>
         <translation>%1 ఫైల్‌కు వ్రాయలేరు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9790"/>
+        <location filename="../../gui/mainwindow.cpp" line="9851"/>
         <source>Global User Variable</source>
         <translation>గ్లోబల్ వినియోగదారు చరరాశి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9791"/>
+        <location filename="../../gui/mainwindow.cpp" line="9852"/>
         <source>Global User Function</source>
         <translation>గ్లోబల్ వినియోగదారు ఫంక్షన్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9792"/>
+        <location filename="../../gui/mainwindow.cpp" line="9853"/>
         <source>Global User Unit</source>
         <translation>గ్లోబల్ వినియోగదారు యూనిట్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10162"/>
+        <location filename="../../gui/mainwindow.cpp" line="10196"/>
+        <source>User Definitions</source>
+        <translation>వినియోగదారు నిర్వచనాలు</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10202"/>
+        <source>These definitions are global and are loaded into every session.
+They are immutable for sessions and override same-name definitions from the session editor.
+Enter one definition per line.</source>
+        <translation>ఈ నిర్వచనాలు గ్లోబల్‌గా ఉంటాయి మరియు ప్రతి సెషన్‌లో లోడ్ చేయబడతాయి.
+సెషన్‌లలో వీటిని మార్చలేరు మరియు సెషన్ ఎడిటర్‌లోని అదే పేరు గల నిర్వచనాల కంటే వీటికే ప్రాధాన్యత ఉంటుంది.
+ప్రతి పంక్తిలో ఒక నిర్వచనాన్ని నమోదు చేయండి.</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10212"/>
+        <source>Examples:
+my_rate=1.25
+f(x)=x^2+1
+[cm_s]=[centimetre/second]</source>
+        <translation>ఉదాహరణలు:
+my_rate=1.25
+f(x)=x^2+1
+[cm_s]=[centimetre/second]</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10274"/>
+        <source>Apply</source>
+        <translation>వర్తింపజేయి</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10275"/>
+        <source>Validate</source>
+        <translation>ధృవీకరించు</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10311"/>
+        <source>Test Results</source>
+        <translation>పరీక్ష ఫలితాలు</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10312"/>
+        <location filename="../../gui/mainwindow.cpp" line="10344"/>
+        <source>Imported variables: %1
+Imported functions: %2
+Imported units: %3
+Line numbers with errors: %4</source>
+        <translation>దిగుమతి చేసిన చరరాశులు: %1
+దిగుమతి చేసిన ఫంక్షన్లు: %2
+దిగుమతి చేసిన యూనిట్లు: %3
+లోపాలు ఉన్న పంక్తుల సంఖ్యలు: %4</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10316"/>
+        <location filename="../../gui/mainwindow.cpp" line="10348"/>
+        <source>none</source>
+        <translation>ఏవీ లేవు</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10343"/>
+        <source>Apply Results</source>
+        <translation>వర్తింపజేసిన ఫలితాలు</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10357"/>
+        <source>User definitions saved.</source>
+        <translation>వినియోగదారు నిర్వచనాలు సేవ్ చేయబడ్డాయి.</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10392"/>
         <source>History Size Limit</source>
         <translation>చరిత్ర పరిమాణ పరిమితి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10163"/>
+        <location filename="../../gui/mainwindow.cpp" line="10393"/>
         <source>Maximum number of history entries for this session (0 = unlimited):</source>
         <translation>ఈ సెషన్‌లో చరిత్ర నమోదుల గరిష్ఠ సంఖ్య (0 = అపరిమితం):</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10390"/>
+        <location filename="../../gui/mainwindow.cpp" line="10642"/>
         <source>Text file (*.txt);;Any file (*.*)</source>
         <translation>పాఠ్య ఫైల్ (*.txt);;ఏ ఫైల్ అయినా (*.*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10427"/>
+        <location filename="../../gui/mainwindow.cpp" line="10694"/>
         <source>Display font</source>
         <translation>ప్రదర్శన ఫాంట్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12495"/>
-        <location filename="../../gui/mainwindow.cpp" line="12668"/>
+        <location filename="../../gui/mainwindow.cpp" line="12768"/>
+        <location filename="../../gui/mainwindow.cpp" line="12941"/>
         <source>Could not recalculate from calculation %1: %2</source>
         <translation>గణన %1 నుండి మళ్లీ లెక్కించలేకపోయింది: %2</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12584"/>
+        <location filename="../../gui/mainwindow.cpp" line="12857"/>
         <source>History Size Limit Reached</source>
         <translation>చరిత్ర పరిమాణ పరిమితి చేరుకుంది</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12585"/>
+        <location filename="../../gui/mainwindow.cpp" line="12858"/>
         <source>This calculation fills the last available history slot. Future calculations will remove the oldest calculation from history. You can increase the limit from Session &gt; History Size Limit.</source>
         <translation>ఈ గణన చివరి అందుబాటులో ఉన్న చరిత్ర స్థానాన్ని నింపుతుంది. భవిష్యత్ గణనలు చరిత్రలోని అతి పాత గణనను తొలగిస్తాయి. Session &gt; History Size Limit నుండి పరిమితిని పెంచవచ్చు.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12608"/>
+        <location filename="../../gui/mainwindow.cpp" line="12881"/>
         <source>Editing calculation. Press Esc twice to cancel.</source>
         <translation>గణనను సవరిస్తున్నారు. రద్దు చేయడానికి Esc ను రెండుసార్లు నొక్కండి.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12649"/>
+        <location filename="../../gui/mainwindow.cpp" line="12922"/>
         <source>Calculation Settings</source>
         <translation>గణన సెట్టింగ్‌లు</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12725"/>
+        <location filename="../../gui/mainwindow.cpp" line="12998"/>
         <source>Invalid recalculation start index</source>
         <translation>చెల్లని మళ్లీ గణన ప్రారంభ సూచిక</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="13276"/>
+        <location filename="../../gui/mainwindow.cpp" line="13549"/>
         <source>System Default</source>
         <translation>సిస్టమ్ డిఫాల్ట్</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="13280"/>
+        <location filename="../../gui/mainwindow.cpp" line="13553"/>
         <source>Language</source>
         <translation>భాష</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="13280"/>
+        <location filename="../../gui/mainwindow.cpp" line="13553"/>
         <source>Select the language:</source>
         <translation>భాషను ఎంచుకోండి:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="13310"/>
+        <location filename="../../gui/mainwindow.cpp" line="13583"/>
         <source>Custom</source>
         <translation>అనుకూలం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="13322"/>
+        <location filename="../../gui/mainwindow.cpp" line="13595"/>
         <source>Decimal places:</source>
         <translation>దశాంశ స్థానాలు:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3821"/>
-        <location filename="../../gui/mainwindow.cpp" line="3822"/>
+        <location filename="../../gui/mainwindow.cpp" line="3871"/>
+        <location filename="../../gui/mainwindow.cpp" line="3872"/>
         <source>&amp;Automatic</source>
         <translation>&amp;స్వయంచాలక</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4168"/>
+        <location filename="../../gui/mainwindow.cpp" line="4219"/>
         <source>&amp;Precision</source>
         <translation>&amp;ఖచ్చితత్వం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3726"/>
+        <location filename="../../gui/mainwindow.cpp" line="3776"/>
         <source>Plain &amp;text</source>
         <translation>సాధారణ &amp;పాఠ్యం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3755"/>
+        <location filename="../../gui/mainwindow.cpp" line="3805"/>
         <source>Formula &amp;Book</source>
         <translation>సూత్రాల &amp;పుస్తకం</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4156"/>
+        <location filename="../../gui/mainwindow.cpp" line="4207"/>
         <source>&amp;Export</source>
         <translation>&amp;ఎగుమతి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10369"/>
+        <location filename="../../gui/mainwindow.cpp" line="10603"/>
         <source>Export session as HTML</source>
         <translation>సెషన్‌ను HTMLగా ఎగుమతి చేయి</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10370"/>
+        <location filename="../../gui/mainwindow.cpp" line="10603"/>
         <source>HTML file (*.html)</source>
         <translation>HTML ఫైల్ (*.html)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10389"/>
+        <location filename="../../gui/mainwindow.cpp" line="10641"/>
         <source>Export session as plain text</source>
         <translation>సెషన్‌ను సాధారణ పాఠ్యంగా ఎగుమతి చేయి</translation>
     </message>
