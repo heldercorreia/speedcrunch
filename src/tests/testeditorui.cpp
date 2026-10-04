@@ -68,6 +68,8 @@ private slots:
     void auto_ans_rewrite_helper_handles_tilde_and_factorial();
     void blocks_operator_right_after_open_square_bracket();
     void inserts_value_unit_space_brackets_after_number_or_symbol();
+    void inserts_closing_square_bracket_only_with_spaces_to_right_data();
+    void inserts_closing_square_bracket_only_with_spaces_to_right();
     void ignores_space_on_empty_or_all_space_editor();
     void auto_inserts_space_before_question_comment_only_with_non_space_content();
     void inserts_middle_dot_on_space_after_identifier_or_closed_group();
@@ -754,6 +756,60 @@ void TestEditorUi::inserts_value_unit_space_brackets_after_number_or_symbol()
              QStringLiteral("2 [K] in")
                  + QString(MathDsl::QuantSp)
                  + QStringLiteral("[]"));
+}
+
+void TestEditorUi::inserts_closing_square_bracket_only_with_spaces_to_right_data()
+{
+    QTest::addColumn<QString>("initialText");
+    QTest::addColumn<int>("cursorPosition");
+    QTest::addColumn<QString>("expectedText");
+    QTest::addColumn<int>("expectedCursorPosition");
+
+    const QString unitSpace = QString(MathDsl::QuantSp);
+    QTest::newRow("empty") << QString() << 0 << QStringLiteral("[]") << 1;
+    QTest::newRow("end") << QStringLiteral("2") << 1
+        << QStringLiteral("2") + unitSpace + QStringLiteral("[]") << 3;
+    QTest::newRow("before-trailing-spaces") << QStringLiteral("2   ") << 1
+        << QStringLiteral("2") + unitSpace + QStringLiteral("[]   ") << 3;
+    QTest::newRow("after-trailing-spaces") << QStringLiteral("2   ") << 4
+        << QStringLiteral("2") + unitSpace + QStringLiteral("[]") << 3;
+    QTest::newRow("before-unicode-space") << QStringLiteral("2") + unitSpace << 1
+        << QStringLiteral("2") + unitSpace + QStringLiteral("[]") + unitSpace << 3;
+    QTest::newRow("before-operator") << QStringLiteral("2+3") << 1
+        << QStringLiteral("2") + unitSpace + QStringLiteral("[+3") << 3;
+    QTest::newRow("before-unit-and-existing-close") << QStringLiteral("2m]") << 1
+        << QStringLiteral("2") + unitSpace + QStringLiteral("[m]") << 3;
+    QTest::newRow("before-existing-close") << QStringLiteral("2]") << 1
+        << QStringLiteral("2") + unitSpace + QStringLiteral("[]") << 3;
+    QTest::newRow("inside-spaces-before-content") << QStringLiteral("2  +3") << 2
+        << QStringLiteral("2") + unitSpace + QStringLiteral("[ +3") << 3;
+    QTest::newRow("start-before-content") << QStringLiteral("2") << 0
+        << QStringLiteral("[2") << 1;
+    QTest::newRow("after-closed-group") << QStringLiteral("(2)+3") << 3
+        << QStringLiteral("(2)") + unitSpace + QStringLiteral("[+3") << 5;
+}
+
+void TestEditorUi::inserts_closing_square_bracket_only_with_spaces_to_right()
+{
+    QFETCH(QString, initialText);
+    QFETCH(int, cursorPosition);
+    QFETCH(QString, expectedText);
+    QFETCH(int, expectedCursorPosition);
+
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    for (const int key : {Qt::Key_unknown, Qt::Key_BracketLeft}) {
+        editor.setText(initialText);
+        editor.setCursorPosition(cursorPosition);
+        QKeyEvent openBracket(QEvent::KeyPress, key, Qt::NoModifier,
+                              key == Qt::Key_unknown ? QStringLiteral("[") : QString());
+        QApplication::sendEvent(&editor, &openBracket);
+        QCOMPARE(editor.document()->toRawText(), expectedText);
+        QCOMPARE(editor.textCursor().position(), expectedCursorPosition);
+    }
 }
 
 void TestEditorUi::ignores_space_on_empty_or_all_space_editor()

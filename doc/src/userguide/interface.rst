@@ -134,6 +134,12 @@ Expression Editor Features
 
 The expression editor provides some advanced features:
 
+* Automatic closing parentheses and square brackets
+    Typing ``(`` or ``[`` with no text selected inserts the matching closing
+    character only when the cursor is at the end of the expression or only
+    whitespace follows it. The cursor stays between the pair. If non-whitespace
+    text follows the cursor, only the opening character is inserted.
+
 * Autocompletion
     If you start typing a name (e.g. of a variable, function, or unit), a pop-up with matching names will appear below the editor, aligned with the start of
     the name being completed. It appears above the editor when there is insufficient space below and shifts horizontally to stay on screen.

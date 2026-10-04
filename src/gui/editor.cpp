@@ -3492,6 +3492,7 @@ void Editor::keyPressEvent(QKeyEvent* event)
         }
         QTextCursor cursor = textCursor();
         const int position = cursor.position();
+        const bool shouldAutoInsertUnitEnd = hasOnlySpacesToRight(text(), position);
         const bool shouldInsertValueUnitSpace =
             previous == MathDsl::GroupEnd
             || !implicitMulPrefixForTypedChar(MathDsl::UnitStart).isEmpty();
@@ -3509,7 +3510,10 @@ void Editor::keyPressEvent(QKeyEvent* event)
             }
         }
         const int insertionPosition = cursor.position();
-        cursor.insertText(prefix + QStringLiteral("[]"));
+        QString insertedUnit = prefix + MathDsl::UnitStart;
+        if (shouldAutoInsertUnitEnd)
+            insertedUnit += MathDsl::UnitEnd;
+        cursor.insertText(insertedUnit);
         cursor.setPosition(insertionPosition + prefix.size() + 1);
         setTextCursor(cursor);
         event->accept();
