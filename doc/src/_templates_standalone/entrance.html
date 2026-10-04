@@ -48,4 +48,14 @@
     </div>
 {%- endblock %}
 
+    <div class="container">
+      <a href="{{ pathto('screen1.png', 1) }}"
+         aria-label="{{ _('Open the SpeedCrunch screenshot at full size') }}">
+        <img class="img-responsive center-block"
+             src="{{ pathto('screen1.png', 1) }}"
+             width="3922" height="2324" loading="lazy" decoding="async"
+             alt="{{ _('SpeedCrunch with multiple sessions, the formula book, and function, constant, variable, and unit panels') }}">
+      </a>
+    </div>
+
 {%- endblock %}
