@@ -1,3 +1,6 @@
+.. meta::
+   :description: Learn how to define variables, custom functions and units in SpeedCrunch, reuse calculation results, and convert between compatible units.
+
 User-Defined Variables, Functions and Units
 ===========================================
 

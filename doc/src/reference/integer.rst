@@ -1,3 +1,6 @@
+.. meta::
+   :description: Find SpeedCrunch integer and bitwise functions for binary arithmetic, modular operations, numeral bases and number formatting, with examples.
+
 Integer & Bitwise Arithmetic Functions
 ======================================
 

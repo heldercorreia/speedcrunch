@@ -1,3 +1,6 @@
+.. meta::
+   :description: Use SpeedCrunch's IEEE 754 functions to encode and decode binary floating-point values, round to standard formats and inspect rounding residuals.
+
 IEEE-754 Functions
 ==================
 

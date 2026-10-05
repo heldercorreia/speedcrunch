@@ -1,14 +1,14 @@
-
 <!DOCTYPE html>
 
-<html lang="en-US">
+<html lang="en-US" data-content_root="../">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta content="Learn SpeedCrunch expression syntax, number notation, arithmetic operators, complex numbers and unit conversions, with worked calculation examples." name="description" />
 
     <title>Syntax</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/quark.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=0fbef478" />
+    <link rel="stylesheet" type="text/css" href="../_static/quark.css?v=b0b2863f" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="next" title="User-Defined Variables, Functions and Units" href="advanced.html" />
     <link rel="prev" title="First Steps" href="first_steps.html" />
@@ -196,7 +196,7 @@ calculations and thus susceptible to rounding errors.</p>
 <span id="id3"></span><h3>Sexagesimal Values</h3>
 <blockquote>
 <div><div class="versionadded">
-<p><span class="versionmodified added">New in version 1.0.</span></p>
+<p><span class="versionmodified added">Added in version 1.0.</span></p>
 </div>
 </div></blockquote>
 <p>Sexagesimal values in SpeedCrunch are angle degrees or time values represented with minutes and seconds.</p>
@@ -209,7 +209,7 @@ calculations and thus susceptible to rounding errors.</p>
 </div>
 </td></tr></tbody></table><p>Dimensionless input values are automatically considered to be in current angle mode. For example, in radian mode:</p>
 <table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="no">pi</span>
-<span class="ge">= 180°00&#39;00</span>
+<span class="ge">= 180°00'00</span>
 </pre></div>
 </div>
 </td></tr></tbody></table><p>For trigonometric input, explicit angle units override angle mode. For example,
@@ -406,7 +406,7 @@ So <code class="docutils literal notranslate"><span class="pre">1+(2+3)+10%</spa
 </dd>
 </dl>
 <div class="versionadded">
-<p><span class="versionmodified added">New in version 1.0: </span>Contextual percent semantics.</p>
+<p><span class="versionmodified added">Added in version 1.0: </span>Contextual percent semantics.</p>
 </div>
 </td>
 <td><p><code class="docutils literal notranslate"><span class="pre">50%</span> <span class="pre">=</span> <span class="pre">0.5</span></code>
@@ -437,7 +437,7 @@ with either <code class="docutils literal notranslate"><span class="pre">^</span
 </dd>
 </dl>
 <div class="versionadded">
-<p><span class="versionmodified added">New in version 1.0: </span>Integer superscript powers and <code class="docutils literal notranslate"><span class="pre">f^n(x)</span></code> function-power
+<p><span class="versionmodified added">Added in version 1.0: </span>Integer superscript powers and <code class="docutils literal notranslate"><span class="pre">f^n(x)</span></code> function-power
 notation (equivalent to <code class="docutils literal notranslate"><span class="pre">fⁿ(x)</span></code>).</p>
 </div>
 </td>
@@ -457,7 +457,7 @@ notation (equivalent to <code class="docutils literal notranslate"><span class="
 </dd>
 </dl>
 <div class="versionadded">
-<p><span class="versionmodified added">New in version 1.0.</span></p>
+<p><span class="versionmodified added">Added in version 1.0.</span></p>
 </div>
 </td>
 <td><p><code class="docutils literal notranslate"><span class="pre">~5</span> <span class="pre">=</span> <span class="pre">-6</span></code>
@@ -495,11 +495,11 @@ showing the interpreted expression before the numeric
 result.</p>
 </div></blockquote>
 <div class="versionadded">
-<p><span class="versionmodified added">New in version 0.12: </span>Implicit multiplication was added
+<p><span class="versionmodified added">Added in version 0.12: </span>Implicit multiplication was added
 SpeedCrunch 0.12.</p>
 </div>
 <div class="versionadded">
-<p><span class="versionmodified added">New in version 1.0: </span>Multiplication and division symbol aliases.
+<p><span class="versionmodified added">Added in version 1.0: </span>Multiplication and division symbol aliases.
 Improved explicit interpretation/association in results.</p>
 </div>
 </td>
@@ -518,7 +518,7 @@ these symbols are normalized to <code class="docutils literal notranslate"><span
 </dd>
 </dl>
 <div class="versionadded">
-<p><span class="versionmodified added">New in version 1.0: </span>Addition and subtraction symbol aliases.</p>
+<p><span class="versionmodified added">Added in version 1.0: </span>Addition and subtraction symbol aliases.</p>
 </div>
 </td>
 <td></td>
@@ -574,7 +574,7 @@ negative value.</p>
 <section id="complex-numbers">
 <h2>Complex Numbers</h2>
 <div class="versionadded">
-<p><span class="versionmodified added">New in version 0.12.</span></p>
+<p><span class="versionmodified added">Added in version 0.12.</span></p>
 </div>
 <p>SpeedCrunch supports complex-number expressions by default. Enter the imaginary
 unit as <code class="docutils literal notranslate"><span class="pre">i</span></code> or <code class="docutils literal notranslate"><span class="pre">j</span></code>:</p>
@@ -656,8 +656,8 @@ cubic root for real inputs.</p>
       <td colspan="2" align="center">
         
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2026, The SpeedCrunch Developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2026, The SpeedCrunch Developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
     </div>
       </td>
     </tr>

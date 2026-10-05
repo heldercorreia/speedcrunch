@@ -16,6 +16,7 @@
 #include "gui/functionswidget.h"
 #include "gui/keypad.h"
 #include "gui/mainwindow.h"
+#include "gui/manualwindow.h"
 #include "gui/notationandprecisiondialog.h"
 #include "gui/oklchutils.h"
 #include "gui/resultdisplay.h"
@@ -647,6 +648,7 @@ public slots:
     void captureOpenedUrl(const QUrl& url) { m_capturedUrl = url; }
 
 private slots:
+    void manual_preserves_text_weights_and_emphasis();
     void color_scheme_roles_exclude_obsolete_scrollbar();
     void color_scheme_reads_optional_display_name();
     void color_scheme_preserves_rose_pine_names_with_ascii_resources();
@@ -729,6 +731,37 @@ private slots:
 private:
     QUrl m_capturedUrl;
 };
+
+void TestDisplayUi::manual_preserves_text_weights_and_emphasis()
+{
+    const QFont originalFont = QApplication::font();
+    const auto restoreFont = qScopeGuard([originalFont]() {
+        QApplication::setFont(originalFont);
+    });
+    QFont boldApplicationFont = originalFont;
+    boldApplicationFont.setWeight(QFont::Bold);
+    QApplication::setFont(boldApplicationFont);
+
+    ManualWindow manual;
+    manual.setHtml(QStringLiteral(
+        "<h1>Heading</h1><p>Body text <strong>Bold emphasis</strong> "
+        "<em>Italic emphasis</em> <a href=\"qthelp://manual/doc/next.html\">Link</a></p>"));
+
+    const auto textFont = [&manual](const QString& text) {
+        return manual.document()->find(text).charFormat().font()
+            .resolve(manual.document()->defaultFont());
+    };
+    QCOMPARE(textFont(QStringLiteral("Body text")).weight(), QFont::Normal);
+    QCOMPARE(textFont(QStringLiteral("Link")).weight(), QFont::Normal);
+    QCOMPARE(textFont(QStringLiteral("Heading")).weight(), QFont::Bold);
+    QCOMPARE(textFont(QStringLiteral("Bold emphasis")).weight(), QFont::Bold);
+    QVERIFY(textFont(QStringLiteral("Italic emphasis")).italic());
+    QVERIFY(!textFont(QStringLiteral("Body text")).italic());
+#ifdef Q_OS_MACOS
+    QVERIFY(textFont(QStringLiteral("Body text")).styleStrategy() & QFont::NoSubpixelAntialias);
+    QVERIFY(textFont(QStringLiteral("Bold emphasis")).styleStrategy() & QFont::NoSubpixelAntialias);
+#endif
+}
 
 void TestDisplayUi::color_scheme_roles_exclude_obsolete_scrollbar()
 {

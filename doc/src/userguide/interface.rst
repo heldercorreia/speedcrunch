@@ -1,3 +1,6 @@
+.. meta::
+   :description: Explore SpeedCrunch's interface, session tabs and panes, calculation history, result formats, complex numbers, keyboard shortcuts and appearance settings.
+
 User Interface
 ==============
 

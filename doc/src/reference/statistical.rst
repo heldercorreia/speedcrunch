@@ -1,3 +1,6 @@
+.. meta::
+   :description: Look up SpeedCrunch statistical functions for averages, variance, standard deviation, probability distributions, random numbers and summation.
+
 Statistical Functions
 =====================
 

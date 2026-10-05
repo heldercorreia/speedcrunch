@@ -1,3 +1,6 @@
+.. meta::
+   :description: Understand the SpeedCrunch session JSON schema for calculation history, variables, user functions, custom units and startup definitions.
+
 Session JSON Schema
 ===================
 

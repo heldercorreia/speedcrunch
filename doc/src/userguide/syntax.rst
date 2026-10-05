@@ -1,3 +1,6 @@
+.. meta::
+   :description: Learn SpeedCrunch expression syntax, number notation, arithmetic operators, complex numbers and unit conversions, with worked calculation examples.
+
 Syntax
 ======
 

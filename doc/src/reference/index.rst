@@ -1,3 +1,6 @@
+.. meta::
+   :description: Browse SpeedCrunch's reference for built-in mathematical functions, integer and bitwise operations, statistics, scientific constants and units.
+
 Reference
 =========
 

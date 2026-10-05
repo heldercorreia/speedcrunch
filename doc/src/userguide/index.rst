@@ -1,3 +1,6 @@
+.. meta::
+   :description: Learn to use SpeedCrunch with guides to installation, scientific calculations, expression syntax, custom functions, units and interface settings.
+
 User Guide
 ==========
 

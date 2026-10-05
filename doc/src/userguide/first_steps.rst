@@ -1,3 +1,6 @@
+.. meta::
+   :description: Get started with SpeedCrunch: enter calculations, recall results, use the keyboard interface, and explore built-in functions and variables.
+
 First Steps
 ===========
 

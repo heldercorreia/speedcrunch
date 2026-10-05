@@ -19,9 +19,13 @@ ManualWindow::ManualWindow(QWidget* parent)
     setWindowFlags(Qt::Window);
     setWindowIcon(QPixmap(":/speedcrunch.png"));
     setStyleSheet(QStringLiteral("QTextBrowser { background-color: #FFFFFF; }"));
-    QFont f("Helvetica");
+    QFont f("Helvetica", 10, QFont::Normal);
     f.setStyleHint(QFont::SansSerif);
-    f.setPointSize(10);
+#ifdef Q_OS_MACOS
+    // CoreText font smoothing makes regular text look heavier on the manual's
+    // white background. Use grayscale antialiasing without changing the weight.
+    f.setStyleStrategy(QFont::NoSubpixelAntialias);
+#endif
     setFont(f);
 
     //Disable automatic opening of links. We handle them ourselves.

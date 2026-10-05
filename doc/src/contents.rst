@@ -1,3 +1,6 @@
+.. meta::
+   :description: Browse the SpeedCrunch manual: installation, calculation tutorials, expression syntax, interface settings, mathematical functions, constants and units.
+
 Table of Contents
 =================
 

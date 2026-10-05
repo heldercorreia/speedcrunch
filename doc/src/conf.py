@@ -138,6 +138,9 @@ if bundled:
     }
 else:
     import sphinx_bootstrap_theme
+    html_baseurl = 'https://www.speedcrunch.org/'
+    # The units table is included in the units reference, not a separate web page.
+    exclude_patterns.append('reference/units_table.rst')
     html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
     html_theme = 'bootstrap'
     html_theme_options = {
@@ -150,7 +153,7 @@ else:
     }
     html_sidebars = {'**': ['scrollspy.html']}
     html_static_path = ['_static_standalone']
-    html_extra_path = ['demo1.mp4', 'screen1.png']
+    html_extra_path = ['demo1.mp4', 'screen1.png', 'robots.txt', 'sitemap.xml']
     templates_path = ['_templates_standalone']
     html_logo = 'logo.png'
     html_context = {

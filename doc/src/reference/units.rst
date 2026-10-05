@@ -1,3 +1,6 @@
+.. meta::
+   :description: Convert units in SpeedCrunch, understand dimensional arithmetic and result formatting, and browse the built-in units for physics and engineering.
+
 Units and Canonicalization
 ==========================
 

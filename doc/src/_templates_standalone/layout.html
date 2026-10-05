@@ -32,7 +32,7 @@
   %}
 {% endif %}
 
-{% set bootswatch_css_custom = ['_static/extra.css?home=3'] %}
+{% set bootswatch_css_custom = ['_static/extra.css?home=4'] %}
 {% set css_files = css_files + theme_css_files + bootswatch_css_custom %}
 
 {% set script_files = script_files + [
@@ -47,6 +47,24 @@
 
 {%- set bs_content_width = render_sidebar and "9" or "12"%}
 
+
+{%- set website_titles = {
+    'index': _('SpeedCrunch — Free High-Precision Scientific Calculator'),
+    'download': _('Download SpeedCrunch for Windows, macOS and Linux'),
+    'community': _('SpeedCrunch Community and Support'),
+    'donate': _('Donate to Support SpeedCrunch')
+} %}
+{%- set website_descriptions = {
+    'index': _('SpeedCrunch is a free, open-source scientific calculator for Windows, macOS and Linux, with 50-digit precision, complex numbers and unit conversion.'),
+    'download': _('Download the free SpeedCrunch scientific calculator for Windows and macOS, find Linux installation options, and explore release notes and older versions.'),
+    'community': _('Connect with SpeedCrunch users, ask questions, share calculation tips, and follow news about this free, open-source scientific calculator.'),
+    'donate': _('Support SpeedCrunch development and hosting with a donation to keep this open-source scientific calculator free for everyone.')
+} %}
+{%- set seo_title = website_titles.get(pagename, (title|default('')|striptags) ~ ' — ' ~ _('SpeedCrunch Manual')) %}
+{%- if pageurl %}
+  {# Use the site root rather than its duplicate index.html URL. #}
+  {%- set canonical_url = pageurl[:-10] if pagename == 'index' else pageurl %}
+{%- endif %}
 
 {%- block doctype -%}
 <!DOCTYPE html>
@@ -120,13 +138,62 @@
 {%- endmacro %}
 
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="{{ language|default('en', true)|replace('_', '-')|e }}">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset={{ encoding }}" />
     {{ metatags }}
+    {%- if pagename in website_descriptions %}
+    <meta name="description" content="{{ website_descriptions[pagename]|e }}" />
+    {%- endif %}
+    {%- if pagename == 'search' %}
+    <meta name="robots" content="noindex, follow" />
+    {%- endif %}
     {%- block htmltitle %}
-    <title>{{ title|striptags|e }}{{ titlesuffix }}</title>
+    <title>{{ seo_title|e }}</title>
     {%- endblock %}
+    {%- if pageurl %}
+    <link rel="canonical" href="{{ canonical_url|e }}" />
+    <meta property="og:url" content="{{ canonical_url|e }}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="SpeedCrunch" />
+    <meta property="og:title" content="{{ seo_title|e }}" />
+    {%- if pagename in website_descriptions %}
+    <meta property="og:description" content="{{ website_descriptions[pagename]|e }}" />
+    {%- endif %}
+    {%- endif %}
+    {%- if pagename == 'index' and pageurl %}
+    <meta property="og:image" content="{{ (canonical_url ~ 'screen1.png')|e }}" />
+    <meta property="og:image:alt" content="{{ _('SpeedCrunch scientific calculator with multiple sessions and reference panels')|e }}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "name": "SpeedCrunch",
+          "url": {{ canonical_url|tojson }}
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "SpeedCrunch",
+          "url": {{ canonical_url|tojson }},
+          "description": {{ website_descriptions['index']|tojson }},
+          "applicationCategory": "EducationalApplication",
+          "operatingSystem": "Windows, macOS, Linux",
+          "softwareVersion": {{ release|tojson }},
+          "downloadUrl": {{ (canonical_url ~ 'download.html')|tojson }},
+          "screenshot": {{ (canonical_url ~ 'screen1.png')|tojson }},
+          "offers": {
+            "@type": "Offer",
+            "price": 0,
+            "priceCurrency": "USD"
+          }
+        }
+      ]
+    }
+    </script>
+    {%- endif %}
     {{ css() }}
     {%- if not embedded %}
     {{ script() }}
@@ -166,7 +233,7 @@
 {%- block extrahead %}
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
-    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
     <meta name="apple-mobile-web-app-capable" content="yes">
 {% endblock %}
   </head>

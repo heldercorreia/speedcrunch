@@ -1,9 +1,5 @@
 {% extends "layout.html" %}
 
-{%- block htmltitle %}
-<title>SpeedCrunch</title>
-{%- endblock %}
-
 {% macro entranceNavBar() %}
 {% include "entrance_navbar.html" %}
 {% endmacro %}
@@ -17,7 +13,7 @@
         <div class="row">
           <div class="col-md-6">
             <h1>SpeedCrunch</h1>
-            <p>{% trans %}A powerful high-precision scientific calculator.{% endtrans %}</p>
+            <p>{% trans %}A free, open-source high-precision scientific calculator.{% endtrans %}</p>
             <p class="hero-audience">{% trans %}Built for STEM professionals, students and teachers.{% endtrans %}</p>
             <p class="hero-actions">
               <a class="btn btn-success btn-lg" href="{{ pathto('download') }}" role="button"><i class="fa fa-download fa-lg" style="vertical-align:middle;"></i>&nbsp;{{ _('Download') }}</a>
@@ -26,12 +22,13 @@
             </p>
             <p class="hero-platforms">{% trans %}Free to download and use on Windows, macOS, and Linux.{% endtrans %}</p>
             <ul class="hero-facts">
-              <li>{% trans %}Up to 50 digits of precision, with complex number support{% endtrans %}</li>
-              <li>{% trans %}140+ functions, and a myriad of units and constants{% endtrans %}</li>
-              <li>{% trans %}User-defined variables, functions, and units{% endtrans %}</li>
-              <li>{% trans %}Vector and matrix support{% endtrans %}</li>
+              <li>{% trans %}Up to 50 digits of precision, with{% endtrans %} <a href="{{ pathto('userguide/syntax') }}#complex-numbers">{% trans %}complex number support{% endtrans %}</a></li>
+              <li><a href="{{ pathto('reference/index') }}">{% trans %}140+ functions, and a myriad of units and constants{% endtrans %}</a></li>
+              <li><a href="{{ pathto('userguide/advanced') }}">{% trans %}User-defined variables, functions, and units{% endtrans %}</a></li>
+              <li><a href="{{ pathto('reference/basic') }}#lists-and-matrices">{% trans %}Vector and matrix support{% endtrans %}</a></li>
               <li>{% trans %}History rewriting, and per-result settings{% endtrans %}</li>
-              <li>{% trans %}Multiple active sessions with tabs, panes, or windows{% endtrans %}</li>
+              <li><a href="{{ pathto('userguide/interface') }}#keypad">{% trans %}Keypad presets and a fully customizable layout{% endtrans %}</a></li>
+              <li><a href="{{ pathto('userguide/interface') }}#session-tabs-and-panes">{% trans %}Multiple active sessions with tabs, panes, or windows{% endtrans %}</a></li>
               <li>{% trans %}More than 40 translations, and over 40 color schemes{% endtrans %}</li>
             </ul>
           </div>

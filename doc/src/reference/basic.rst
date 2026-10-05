@@ -1,3 +1,6 @@
+.. meta::
+   :description: Look up SpeedCrunch functions for roots, logarithms, trigonometry, complex numbers, lists, matrices, dates and chemistry, with syntax and examples.
+
 Basic Math Functions
 ====================
 

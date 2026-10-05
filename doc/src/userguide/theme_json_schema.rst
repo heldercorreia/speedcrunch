@@ -1,3 +1,6 @@
+.. meta::
+   :description: Create and validate SpeedCrunch color themes using the theme JSON schema, supported color roles, metadata and an example theme file.
+
 Theme JSON Schema
 =================
 

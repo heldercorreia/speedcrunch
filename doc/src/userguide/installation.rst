@@ -1,3 +1,6 @@
+.. meta::
+   :description: Find SpeedCrunch installation instructions for Windows, macOS and Linux, including portable downloads, package managers and building from source.
+
 .. highlight:: shell
 
 Installation

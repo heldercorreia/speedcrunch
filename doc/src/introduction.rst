@@ -1,3 +1,6 @@
+.. meta::
+   :description: Discover SpeedCrunch, a free scientific desktop calculator for Windows, macOS and Linux, and learn where to find its user guide and mathematical reference.
+
 .. This index entry identifies the "home page" of the manual, which is displayed when opening the manual in the application.
 .. index:: SpeedCrunch
 
@@ -8,7 +11,7 @@ Welcome to the SpeedCrunch manual! SpeedCrunch is a high-precision scientific de
 It features a syntax-highlighted scrollable display and is designed to be fully used via keyboard.
 Some distinctive features are auto-completion of functions and variables, a formula book,
 and quick insertion of constants from various fields of knowledge. It is available for Windows,
-OS X, and Linux in a number of languages. We hope you have fun with SpeedCrunch!
+macOS, and Linux in a number of languages. We hope you have fun with SpeedCrunch!
 
 This documentation is divided into two major parts:
 

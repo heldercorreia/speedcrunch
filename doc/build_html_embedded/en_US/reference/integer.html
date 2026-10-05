@@ -1,14 +1,14 @@
-
 <!DOCTYPE html>
 
-<html lang="en-US">
+<html lang="en-US" data-content_root="../">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta content="Find SpeedCrunch integer and bitwise functions for binary arithmetic, modular operations, numeral bases and number formatting, with examples." name="description" />
 
     <title>Integer &amp; Bitwise Arithmetic Functions</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/quark.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=0fbef478" />
+    <link rel="stylesheet" type="text/css" href="../_static/quark.css?v=b0b2863f" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="next" title="Statistical Functions" href="statistical.html" />
     <link rel="prev" title="Basic Math Functions" href="basic.html" />
@@ -84,7 +84,7 @@
 <dt class="sig sig-object sc" id="sc.popcount">
 <span class="sig-name descname"><span class="pre">popcount</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em><span class="sig-paren">)</span></dt>
 <dd><div class="versionadded">
-<p><span class="versionmodified added">New in version 1.0.</span></p>
+<p><span class="versionmodified added">Added in version 1.0.</span></p>
 </div>
 <p>Returns the number of set bits (<code class="docutils literal notranslate"><span class="pre">1</span></code> bits) in the 256-bit two’s complement
 representation of <code class="docutils literal notranslate"><span class="pre">n</span></code>.</p>
@@ -113,7 +113,7 @@ the bitwise functions. Non-integer arguments are rounded toward zero.</p>
 </pre></div>
 </div>
 </td></tr></tbody></table><div class="versionadded">
-<p><span class="versionmodified added">New in version 1.0.</span></p>
+<p><span class="versionmodified added">Added in version 1.0.</span></p>
 </div>
 </dd></dl>
 
@@ -245,7 +245,7 @@ the result falls back to decimal automatic formatting.</p>
 <dt class="sig sig-object sc" id="sc.binpad">
 <span class="sig-name descname"><span class="pre">binpad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">bits</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
 <dd><div class="versionadded">
-<p><span class="versionmodified added">New in version 1.0.</span></p>
+<p><span class="versionmodified added">Added in version 1.0.</span></p>
 </div>
 <p>Format integer <code class="docutils literal notranslate"><span class="pre">n</span></code> as binary (base-2) and left-pad the integer part with zeros.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">bits</span></code> is omitted, the width is padded to the next multiple of 8 bits (byte boundary).
@@ -257,7 +257,7 @@ If <code class="docutils literal notranslate"><span class="pre">bits</span></cod
 <dt class="sig sig-object sc" id="sc.octpad">
 <span class="sig-name descname"><span class="pre">octpad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">bits</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
 <dd><div class="versionadded">
-<p><span class="versionmodified added">New in version 1.0.</span></p>
+<p><span class="versionmodified added">Added in version 1.0.</span></p>
 </div>
 <p>Format integer <code class="docutils literal notranslate"><span class="pre">n</span></code> as octal (base-8) and left-pad the integer part with zeros.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">bits</span></code> is omitted, the width is padded to the next multiple of 8 bits (byte boundary).
@@ -269,7 +269,7 @@ If <code class="docutils literal notranslate"><span class="pre">bits</span></cod
 <dt class="sig sig-object sc" id="sc.hexpad">
 <span class="sig-name descname"><span class="pre">hexpad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">bits</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
 <dd><div class="versionadded">
-<p><span class="versionmodified added">New in version 1.0.</span></p>
+<p><span class="versionmodified added">Added in version 1.0.</span></p>
 </div>
 <p>Format integer <code class="docutils literal notranslate"><span class="pre">n</span></code> as hexadecimal (base-16) and left-pad the integer part with zeros.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">bits</span></code> is omitted, the width is padded to the next multiple of 8 bits (byte boundary).
@@ -416,7 +416,7 @@ Use <a class="reference internal" href="#sc.powmod" title="powmod"><code class="
 <dt class="sig sig-object sc" id="sc.emod">
 <span class="sig-name descname"><span class="pre">emod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">a</span></em>; <em class="sig-param"><span class="pre">b</span></em><span class="sig-paren">)</span></dt>
 <dd><div class="versionadded">
-<p><span class="versionmodified added">New in version 1.0.</span></p>
+<p><span class="versionmodified added">Added in version 1.0.</span></p>
 </div>
 <p>Compute the Euclidean remainder of <code class="docutils literal notranslate"><span class="pre">a/b</span></code>. The divisor <code class="docutils literal notranslate"><span class="pre">b</span></code> must be non-zero.
 The result has the sign of <code class="docutils literal notranslate"><span class="pre">b</span></code> (or is zero), and its absolute value is
@@ -432,7 +432,7 @@ smaller than the absolute value of <code class="docutils literal notranslate"><s
 <dt class="sig sig-object sc" id="sc.powmod">
 <span class="sig-name descname"><span class="pre">powmod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">base</span></em>; <em class="sig-param"><span class="pre">exponent</span></em>; <em class="sig-param"><span class="pre">modulo</span></em><span class="sig-paren">)</span></dt>
 <dd><div class="versionadded">
-<p><span class="versionmodified added">New in version 1.0.</span></p>
+<p><span class="versionmodified added">Added in version 1.0.</span></p>
 </div>
 <p>Compute <code class="docutils literal notranslate"><span class="pre">base^exponent</span></code> reduced by <code class="docutils literal notranslate"><span class="pre">modulo</span></code> using modular exponentiation.
 This avoids building huge intermediate powers and is therefore the recommended
@@ -455,7 +455,7 @@ If a rational number is given as <code class="docutils literal notranslate"><spa
 <dt class="sig sig-object sc" id="sc.lcm">
 <span class="sig-name descname"><span class="pre">lcm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n1</span></em>; <em class="sig-param"><span class="pre">n2</span></em>; <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span></dt>
 <dd><div class="versionadded">
-<p><span class="versionmodified added">New in version 1.0.</span></p>
+<p><span class="versionmodified added">Added in version 1.0.</span></p>
 </div>
 <p>Returns the least common multiple of the arguments (at least two must be given).
 The result is always non-negative.</p>
@@ -514,8 +514,8 @@ The result is always non-negative.</p>
       <td colspan="2" align="center">
         
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2026, The SpeedCrunch Developers.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.2.1.
+    &#169; Copyright 2026, The SpeedCrunch Developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
     </div>
       </td>
     </tr>

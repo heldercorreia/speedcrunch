@@ -111,7 +111,9 @@
     </ul>
 
     <div class="container">
-      <h1>{% trans %}Version 1.0{% endtrans %}</h1>
+      <h1>{% trans %}Download SpeedCrunch{% endtrans %}</h1>
+      <p>{% trans %}Free, open-source scientific calculator for Windows, macOS and Linux.{% endtrans %}</p>
+      <h2>{% trans %}Version 1.0{% endtrans %}</h2>
       {{ downloads(
         win=[
           (_('Installer'), 'https://github.com/heldercorreia/speedcrunch/releases/download/v1.0.0/speedcrunch-1.0-win64.exe'),
@@ -215,7 +217,7 @@
       </section>
       <hr/>
 
-      <h1 id="older-versions" style="scroll-margin-top: 80px;">{% trans %}Older Versions{% endtrans %}</h1>
+      <h2 id="older-versions" style="scroll-margin-top: 80px;">{% trans %}Older Versions{% endtrans %}</h2>
       <div id="accordion" role="tablist" aria-multiselectable="true">
         {{ oldVersion('0.12', '012',
           win=[

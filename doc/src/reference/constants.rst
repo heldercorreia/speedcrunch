@@ -1,3 +1,6 @@
+.. meta::
+   :description: Explore SpeedCrunch's built-in mathematical and scientific constants, their values and units, and how to insert them into calculations.
+
 .. _constants:
 
 Constants
