@@ -59,11 +59,11 @@ General
 
     Any non-zero number may be given. The result will be the principal value. The branch cut runs across the negative real axis. Nevertheless, in SpeedCrunch :func:`ln` is defined for negative real numbers as *ln(-x) = ln(\|x\|)) + πj*, extending the branch from the *upper* half-plane.
 
-.. function:: lb(x)
+.. function:: log2(x)
 
     Compute the binary logarithm. The same complex-number rules apply as for :func:`ln`.
 
-.. function:: lg(x)
+.. function:: log10(x)
 
     Compute the decimal logarithm. The same complex-number rules apply as for :func:`ln`.
 

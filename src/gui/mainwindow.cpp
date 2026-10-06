@@ -12027,7 +12027,7 @@ void MainWindow::handleKeypadButtonPress(Keypad::Button b)
 
     case Keypad::KeySqrt: insertTextIntoEditor("sqrt("); break;
     case Keypad::KeyCbrt: insertTextIntoEditor("cbrt("); break;
-    case Keypad::KeyLg: insertTextIntoEditor("lg("); break;
+    case Keypad::KeyLog10: insertTextIntoEditor("log10("); break;
     case Keypad::KeyMod: insertTextIntoEditor("mod("); break;
     case Keypad::KeyLn: insertTextIntoEditor("ln("); break;
     case Keypad::KeyExp:insertTextIntoEditor("exp("); break;
