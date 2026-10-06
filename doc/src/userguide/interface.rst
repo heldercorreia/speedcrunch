@@ -69,6 +69,11 @@ Most of them are dockable panels that can be moved around the main window and en
     * ``Custom...``
     * ``Disable`` (shown as ``Disabled`` when selected)
 
+    Both scientific layouts include ``ln`` for the natural logarithm and
+    ``log10`` for the common (base-10) logarithm. These buttons insert
+    ``ln(`` and ``log10(``, respectively. Copying a scientific preset into a
+    custom layout uses the same labels and function names.
+
     Available entries in :menuselection:`View --> Keypad --> Zoom` are:
 
     * ``100%`` (**default**)

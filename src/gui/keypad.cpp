@@ -67,7 +67,7 @@ const Keypad::KeyDescription Keypad::keyDescriptions[] = {
     {QString::fromLatin1("x="), KeyXEquals, false, 3, 9},
     {QString::fromLatin1("x"), KeyX, false, 2, 9},
     {QString::fromUtf8("∛"), KeyCbrt, false, 1, 6},
-    {QString::fromLatin1("lg"), KeyLg, false, 2, 6},
+    {QString::fromLatin1("log10"), KeyLog10, false, 2, 6},
     {QString::fromLatin1("mod"), KeyMod, false, 3, 6},
     {QString::fromUtf8("π"), KeyPi, false, 0, 9},
     {QString::fromUtf8("√"), KeySqrt, false, 0, 6}
@@ -95,7 +95,7 @@ const LayoutEntry s_scientificWideLayout[] = {
     {Keypad::KeyEE, 1, 4}, {Keypad::KeyRaise, 1, 5}, {Keypad::KeyCbrt, 1, 6},
     {Keypad::KeySin, 1, 7}, {Keypad::KeyAsin, 1, 8}, {Keypad::KeyAns, 1, 9},
     {Keypad::Key1, 2, 0}, {Keypad::Key2, 2, 1}, {Keypad::Key3, 2, 2}, {Keypad::KeyMinus, 2, 3},
-    {Keypad::KeyLeftPar, 2, 4}, {Keypad::KeyRightPar, 2, 5}, {Keypad::KeyLg, 2, 6},
+    {Keypad::KeyLeftPar, 2, 4}, {Keypad::KeyRightPar, 2, 5}, {Keypad::KeyLog10, 2, 6},
     {Keypad::KeyCos, 2, 7}, {Keypad::KeyAcos, 2, 8}, {Keypad::KeyX, 2, 9},
     {Keypad::Key0, 3, 0}, {Keypad::KeyRadixChar, 3, 1}, {Keypad::KeyEquals, 3, 2}, {Keypad::KeyPlus, 3, 3},
     {Keypad::KeyPercent, 3, 4}, {Keypad::KeyFactorial, 3, 5}, {Keypad::KeyMod, 3, 6},
@@ -109,7 +109,7 @@ const LayoutEntry s_scientificNarrowLayout[] = {
     {Keypad::Key0, 3, 0}, {Keypad::KeyRadixChar, 3, 1}, {Keypad::KeyEquals, 3, 2}, {Keypad::KeyPlus, 3, 3}, {Keypad::KeyRightPar, 3, 4},
     {Keypad::KeyEE, 4, 0}, {Keypad::KeySqrt, 4, 1}, {Keypad::KeyExp, 4, 2}, {Keypad::KeyLn, 4, 3}, {Keypad::KeyPi, 4, 4},
     {Keypad::KeyRaise, 5, 0}, {Keypad::KeyCbrt, 5, 1}, {Keypad::KeySin, 5, 2}, {Keypad::KeyAsin, 5, 3}, {Keypad::KeyAns, 5, 4},
-    {Keypad::KeyPercent, 6, 0}, {Keypad::KeyLg, 6, 1}, {Keypad::KeyCos, 6, 2}, {Keypad::KeyAcos, 6, 3}, {Keypad::KeyX, 6, 4},
+    {Keypad::KeyPercent, 6, 0}, {Keypad::KeyLog10, 6, 1}, {Keypad::KeyCos, 6, 2}, {Keypad::KeyAcos, 6, 3}, {Keypad::KeyX, 6, 4},
     {Keypad::KeyFactorial, 7, 0}, {Keypad::KeyMod, 7, 1}, {Keypad::KeyTan, 7, 2}, {Keypad::KeyAtan, 7, 3}, {Keypad::KeyXEquals, 7, 4}
 };
 
@@ -158,7 +158,7 @@ QString customButtonInsertText(Keypad::Button button, QChar radixCharacter)
     case Keypad::KeyAns: return QString::fromLatin1("ans");
     case Keypad::KeySqrt: return QString::fromLatin1("sqrt(");
     case Keypad::KeyCbrt: return QString::fromLatin1("cbrt(");
-    case Keypad::KeyLg: return QString::fromLatin1("lg(");
+    case Keypad::KeyLog10: return QString::fromLatin1("log10(");
     case Keypad::KeyMod: return QString::fromLatin1("mod(");
     case Keypad::KeyLn: return QString::fromLatin1("ln(");
     case Keypad::KeyExp: return QString::fromLatin1("exp(");
@@ -200,7 +200,7 @@ QString customButtonLabel(Keypad::Button button, QChar radixCharacter)
     case Keypad::KeyRaise: return QString::fromUtf8("xʸ");
     case Keypad::KeySqrt: return QString::fromUtf8("√");
     case Keypad::KeyCbrt: return QString::fromUtf8("∛");
-    case Keypad::KeyLg: return QString::fromLatin1("lg");
+    case Keypad::KeyLog10: return QString::fromLatin1("log10");
     case Keypad::KeyMod: return QString::fromLatin1("mod");
     case Keypad::KeyBackspace: return QString::fromUtf8("⌫");
     case Keypad::KeyPercent: return QString::fromLatin1("%");
@@ -925,7 +925,7 @@ void Keypad::setButtonTooltips()
     setButtonTooltip(KeyLn, Keypad::tr("Natural logarithm"));
     setButtonTooltip(KeyLeftPar, Keypad::tr("Left parenthesis"));
     setButtonTooltip(KeyCbrt, Keypad::tr("Cube root"));
-    setButtonTooltip(KeyLg, Keypad::tr("Common logarithm"));
+    setButtonTooltip(KeyLog10, Keypad::tr("Common logarithm"));
     setButtonTooltip(KeyMod, Keypad::tr("Modulo"));
     setButtonTooltip(KeyPercent, Keypad::tr("Contextual percentage"));
     setButtonTooltip(KeyRaise, Keypad::tr("Power"));
