@@ -330,6 +330,39 @@ QPoint firstPixelMatchingColor(const QImage& image, const QRect& rect, const QCo
     return QPoint(-1, -1);
 }
 
+QPoint firstPixelMatchingColorBlend(const QImage& image, const QRect& rect,
+                                  const QColor& foreground, const QColor& background,
+                                  int tolerance)
+{
+    const int redDelta = foreground.red() - background.red();
+    const int greenDelta = foreground.green() - background.green();
+    const int blueDelta = foreground.blue() - background.blue();
+    const int squaredDistance = redDelta * redDelta + greenDelta * greenDelta
+        + blueDelta * blueDelta;
+    if (squaredDistance == 0)
+        return QPoint(-1, -1);
+
+    const QRect bounded = rect.intersected(image.rect());
+    for (int y = bounded.top(); y <= bounded.bottom(); ++y) {
+        for (int x = bounded.left(); x <= bounded.right(); ++x) {
+            const QColor pixel = image.pixelColor(x, y);
+            // Antialiased glyphs can contain only partial foreground coverage.
+            // Check the blend's hue as well as its contrast with the background.
+            const qreal coverage = qreal((pixel.red() - background.red()) * redDelta
+                + (pixel.green() - background.green()) * greenDelta
+                + (pixel.blue() - background.blue()) * blueDelta) / squaredDistance;
+            if (coverage < 0.25 || coverage > 1.0)
+                continue;
+            const QColor blended(qRound(background.red() + coverage * redDelta),
+                                 qRound(background.green() + coverage * greenDelta),
+                                 qRound(background.blue() + coverage * blueDelta));
+            if (colorsAreClose(pixel, blended, tolerance))
+                return QPoint(x, y);
+        }
+    }
+    return QPoint(-1, -1);
+}
+
 QPoint firstPixelDistinctFromColor(const QImage& image,
                                    const QRect& rect,
                                    const QColor& color,
@@ -552,6 +585,8 @@ struct MainWindowStateGuard {
     MainWindowStateGuard()
     {
         settings->windowPositionSave = false;
+        // Keep the first-run number format prompt out of unrelated UI tests.
+        settings->hasNumberFormatStyleSetting = true;
         qputenv("SPEEDCRUNCH_TEST_SKIP_UPDATE_CHECK", "1");
     }
 
@@ -653,6 +688,7 @@ private slots:
     void color_scheme_reads_optional_display_name();
     void color_scheme_preserves_rose_pine_names_with_ascii_resources();
     void color_scheme_validates_schema_metadata();
+    void theme_dialog_preserves_list_scroll_and_fills_role_color_buttons_data();
     void theme_dialog_preserves_list_scroll_and_fills_role_color_buttons();
     void theme_dialog_repeatedly_previews_same_light_and_dark_themes_data();
     void theme_dialog_repeatedly_previews_same_light_and_dark_themes();
@@ -688,6 +724,7 @@ private slots:
     void dock_scroll_corner_uses_scrollbar_track_fill();
     void dock_separator_style_uses_primary_while_hovered_or_dragged();
     void constants_dock_uses_configured_narrow_minimum_width();
+    void f6_cycles_focus_between_editor_and_visible_dock_controls_data();
     void f6_cycles_focus_between_editor_and_visible_dock_controls();
     void f6_cycles_focus_with_another_main_window_visible();
     void f6_cycles_focus_with_another_main_window_visible_data();
@@ -708,6 +745,7 @@ private slots:
     void view_dock_menu_tracks_and_changes_only_active_window();
     void keypad_view_menu_tracks_and_changes_only_active_window();
     void status_bar_menu_tracks_and_changes_only_active_window();
+    void precision_menu_editor_uses_themed_colors_data();
     void precision_menu_editor_uses_themed_colors();
     void status_bar_visibility_persists_for_every_window_during_shutdown();
     void status_bar_setting_selectors_update_only_active_window();
@@ -911,10 +949,23 @@ void TestDisplayUi::color_scheme_validates_schema_metadata()
     QVERIFY(!ColorScheme::fromJsonObject(missingId).isValid());
 }
 
+void TestDisplayUi::theme_dialog_preserves_list_scroll_and_fills_role_color_buttons_data()
+{
+    QTest::addColumn<bool>("hasNumberFormatPreference");
+    QTest::newRow("first-run") << false;
+    QTest::newRow("saved-preference") << true;
+}
+
 void TestDisplayUi::theme_dialog_preserves_list_scroll_and_fills_role_color_buttons()
 {
-    MainWindowStateGuard guard;
+    QFETCH(bool, hasNumberFormatPreference);
     Settings* settings = Settings::instance();
+    const bool originalPreference = settings->hasNumberFormatStyleSetting;
+    const auto restorePreference = qScopeGuard([settings, originalPreference]() {
+        settings->hasNumberFormatStyleSetting = originalPreference;
+    });
+    settings->hasNumberFormatStyleSetting = hasNumberFormatPreference;
+    MainWindowStateGuard guard;
 
     settings->colorScheme = QStringLiteral("Custom");
     settings->customColorSchemeJson = themeJsonString(QJsonObject{
@@ -4148,61 +4199,29 @@ void TestDisplayUi::constants_dock_uses_configured_narrow_minimum_width()
             <= UiConfig::ConstantsDockMinimumWidth);
 }
 
+void TestDisplayUi::f6_cycles_focus_between_editor_and_visible_dock_controls_data()
+{
+    QTest::addColumn<bool>("savedDockLayout");
+    QTest::newRow("default-layout") << false;
+    QTest::newRow("saved-visible-dock") << true;
+}
+
 void TestDisplayUi::f6_cycles_focus_between_editor_and_visible_dock_controls()
 {
-    Settings* settings = Settings::instance();
-    struct SettingsGuard {
-        Settings* settings;
-        bool oldConstantsDockVisible;
-        bool oldFunctionsDockVisible;
-        bool oldHistoryDockVisible;
-        bool oldFormulaBookDockVisible;
-        bool oldVariablesDockVisible;
-        bool oldUserFunctionsDockVisible;
-        bool oldUserUnitsDockVisible;
-        bool oldBitfieldVisible;
-        Settings::KeypadMode oldKeypadMode;
-        bool oldKeypadVisible;
-        bool oldHasNumberFormatStyleSetting;
-        QByteArray oldSkipUpdateCheck;
-        bool hadSkipUpdateCheck;
-
-        ~SettingsGuard()
-        {
-            settings->constantsDockVisible = oldConstantsDockVisible;
-            settings->functionsDockVisible = oldFunctionsDockVisible;
-            settings->historyDockVisible = oldHistoryDockVisible;
-            settings->formulaBookDockVisible = oldFormulaBookDockVisible;
-            settings->variablesDockVisible = oldVariablesDockVisible;
-            settings->userFunctionsDockVisible = oldUserFunctionsDockVisible;
-            settings->userUnitsDockVisible = oldUserUnitsDockVisible;
-            settings->bitfieldVisible = oldBitfieldVisible;
-            settings->keypadMode = oldKeypadMode;
-            settings->keypadVisible = oldKeypadVisible;
-            settings->hasNumberFormatStyleSetting = oldHasNumberFormatStyleSetting;
-            if (hadSkipUpdateCheck)
-                qputenv("SPEEDCRUNCH_TEST_SKIP_UPDATE_CHECK", oldSkipUpdateCheck);
-            else
-                qunsetenv("SPEEDCRUNCH_TEST_SKIP_UPDATE_CHECK");
-        }
-    } guard {
-        settings,
-        settings->constantsDockVisible,
-        settings->functionsDockVisible,
-        settings->historyDockVisible,
-        settings->formulaBookDockVisible,
-        settings->variablesDockVisible,
-        settings->userFunctionsDockVisible,
-        settings->userUnitsDockVisible,
-        settings->bitfieldVisible,
-        settings->keypadMode,
-        settings->keypadVisible,
-        settings->hasNumberFormatStyleSetting,
-        qgetenv("SPEEDCRUNCH_TEST_SKIP_UPDATE_CHECK"),
-        qEnvironmentVariableIsSet("SPEEDCRUNCH_TEST_SKIP_UPDATE_CHECK")
-    };
-
-    qputenv("SPEEDCRUNCH_TEST_SKIP_UPDATE_CHECK", "1");
+    QFETCH(bool, savedDockLayout);
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    if (savedDockLayout) {
+        settings->sessionLayoutJson.clear();
+        settings->windowState.clear();
+        settings->constantsDockVisible = true;
+        MainWindow previousWindow(false);
+        settings->windowState = previousWindow.saveState(1);
+    }
+    // Saved layouts can re-show docks after the visibility settings below.
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
     settings->constantsDockVisible = false;
     settings->functionsDockVisible = false;
     settings->historyDockVisible = false;
@@ -6138,8 +6157,16 @@ void TestDisplayUi::status_bar_menu_tracks_and_changes_only_active_window()
     QVERIFY(statusBarIsVisible(secondWindow));
 }
 
+void TestDisplayUi::precision_menu_editor_uses_themed_colors_data()
+{
+    QTest::addColumn<bool>("smallFont");
+    QTest::newRow("default-font") << false;
+    QTest::newRow("small-antialiased-font") << true;
+}
+
 void TestDisplayUi::precision_menu_editor_uses_themed_colors()
 {
+    QFETCH(bool, smallFont);
     MainWindowStateGuard guard;
     Settings* settings = guard.settings;
 
@@ -6188,6 +6215,14 @@ void TestDisplayUi::precision_menu_editor_uses_themed_colors()
             failure = QStringLiteral("Precision editor spin box was not found.");
             menu->close();
             return;
+        }
+
+        if (smallFont) {
+            QFont font = precisionSpin->font();
+            font.setPixelSize(8);
+            font.setWeight(QFont::Thin);
+            font.setStyleStrategy(QFont::PreferAntialias);
+            precisionSpin->setFont(font);
         }
 
         menuTextColor = menu->palette().color(QPalette::WindowText);
@@ -6241,10 +6276,11 @@ void TestDisplayUi::precision_menu_editor_uses_themed_colors()
                                     imageRect(spinEditRect),
                                     expectedBackground,
                                     4) != QPoint(-1, -1));
-    QVERIFY(firstPixelMatchingColor(spinImage,
-                                    imageRect(spinEditRect),
-                                    expectedForeground,
-                                    8) != QPoint(-1, -1));
+    QVERIFY(firstPixelMatchingColorBlend(spinImage,
+                                        imageRect(spinEditRect),
+                                        expectedForeground,
+                                        expectedBackground,
+                                        8) != QPoint(-1, -1));
     const int arrowColumnWidth = qRound(18 * spinImageDevicePixelRatio);
     const QRect arrowColumn(spinImage.width() - arrowColumnWidth,
                             0,
