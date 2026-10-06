@@ -86,6 +86,7 @@
 #include <QTranslator>
 #include <QTimer>
 #include <QTemporaryDir>
+#include <QTemporaryFile>
 #include <QTreeWidget>
 #include <QUrl>
 
@@ -316,6 +317,13 @@ bool colorsAreClose(const QColor& actual, const QColor& expected, int tolerance 
     return qAbs(actual.red() - expected.red()) <= tolerance
         && qAbs(actual.green() - expected.green()) <= tolerance
         && qAbs(actual.blue() - expected.blue()) <= tolerance;
+}
+
+QRect imageRectForWidgetRect(const QImage& image, const QRect& rect)
+{
+    const qreal scale = image.devicePixelRatio();
+    return QRect(qRound(rect.x() * scale), qRound(rect.y() * scale),
+                 qRound(rect.width() * scale), qRound(rect.height() * scale));
 }
 
 QPoint firstPixelMatchingColor(const QImage& image, const QRect& rect, const QColor& color, int tolerance)
@@ -683,6 +691,7 @@ public slots:
     void captureOpenedUrl(const QUrl& url) { m_capturedUrl = url; }
 
 private slots:
+    void initTestCase();
     void manual_preserves_text_weights_and_emphasis();
     void color_scheme_roles_exclude_obsolete_scrollbar();
     void color_scheme_reads_optional_display_name();
@@ -694,6 +703,7 @@ private slots:
     void theme_dialog_repeatedly_previews_same_light_and_dark_themes();
     void result_display_insets_viewport_horizontally();
     void result_display_scrollbar_hover_keeps_viewport_width_stable();
+    void result_display_hover_action_badges_use_hover_and_primary_colors_data();
     void result_display_hover_action_badges_use_hover_and_primary_colors();
     void result_display_hover_action_badges_trigger_when_clicked();
     void result_display_scroll_to_bottom_button_uses_custom_tooltip();
@@ -769,6 +779,20 @@ private slots:
 private:
     QUrl m_capturedUrl;
 };
+
+void TestDisplayUi::initTestCase()
+{
+    // Fail before a file-operation test can open an unhandled error dialog.
+    for (const QString& path : {Settings::getConfigPath(), Settings::getDataPath(),
+                                Settings::getCachePath()}) {
+        QVERIFY2(QDir().mkpath(path),
+                 qPrintable(QStringLiteral("Cannot create test storage at %1").arg(path)));
+        QTemporaryFile probe(QDir(path).filePath(QStringLiteral("storage-probe-XXXXXX")));
+        QVERIFY2(probe.open(),
+                 qPrintable(QStringLiteral("Cannot write test storage at %1: %2")
+                                .arg(path, probe.errorString())));
+    }
+}
 
 void TestDisplayUi::manual_preserves_text_weights_and_emphasis()
 {
@@ -1224,9 +1248,23 @@ void TestDisplayUi::result_display_scrollbar_hover_keeps_viewport_width_stable()
     QCOMPARE(display.viewport()->geometry(), initialViewportGeometry);
 }
 
+void TestDisplayUi::result_display_hover_action_badges_use_hover_and_primary_colors_data()
+{
+    QTest::addColumn<int>("fontPixelSize");
+    QTest::newRow("default-font") << 0;
+    QTest::newRow("small-badges") << 12;
+    QTest::newRow("even-badge-diameter") << 13;
+}
+
 void TestDisplayUi::result_display_hover_action_badges_use_hover_and_primary_colors()
 {
+    QFETCH(int, fontPixelSize);
     BadgeTestResultDisplay display;
+    if (fontPixelSize > 0) {
+        QFont font = display.font();
+        font.setPixelSize(fontPixelSize);
+        display.setFont(font);
+    }
     const QColor resultBackground(QStringLiteral("#101820"));
     const QColor hoverColor(QStringLiteral("#2a3038"));
     const QColor primaryColor(QStringLiteral("#79b8ff"));
@@ -1254,16 +1292,22 @@ void TestDisplayUi::result_display_hover_action_badges_use_hover_and_primary_col
     QVERIFY(copyRect.isValid());
     QVERIFY(editRect.isValid());
 
+    // A preceding data row can leave the cursor at the target position.
+    QTest::mouseMove(display.viewport(), QPoint(1, 1));
     QTest::mouseMove(display.viewport(), QPoint(18, copyRect.center().y()));
     QTRY_VERIFY(display.viewport()->cursor().shape() != Qt::PointingHandCursor);
     QCOMPARE(display.viewport()->toolTip(), QString());
     QImage rowHoverImage = display.viewport()->grab().toImage();
-    QVERIFY2(colorsAreClose(rowHoverImage.pixelColor(copyRect.center()), expectedBadgeFill, 3),
-             qPrintable(QStringLiteral("badge fill %1 expected %2")
-                            .arg(rowHoverImage.pixelColor(copyRect.center()).name(),
-                                 expectedBadgeFill.name())));
+    // The center can lie on a copy-glyph stroke at some font sizes.
+    QVERIFY2(firstPixelMatchingColor(rowHoverImage,
+                                     imageRectForWidgetRect(rowHoverImage, copyRect),
+                                     expectedBadgeFill, 3) != QPoint(-1, -1),
+             qPrintable(QStringLiteral("badge fill did not use %1")
+                            .arg(expectedBadgeFill.name())));
     const QPoint defaultIconPixel =
-        firstPixelMatchingColor(rowHoverImage, copyRect, hoverColor, 10);
+        firstPixelMatchingColorBlend(rowHoverImage,
+                                     imageRectForWidgetRect(rowHoverImage, copyRect),
+                                     hoverColor, expectedBadgeFill, 10);
     QVERIFY2(defaultIconPixel.x() >= 0,
              qPrintable(QStringLiteral("copy glyph did not use hover color %1")
                             .arg(hoverColor.name())));
@@ -1286,12 +1330,16 @@ void TestDisplayUi::result_display_hover_action_badges_use_hover_and_primary_col
     QVERIFY(actionPopup->testAttribute(Qt::WA_TransparentForMouseEvents));
     QImage copyHoverImage = display.viewport()->grab().toImage();
     const QPoint primaryIconPixel =
-        firstPixelMatchingColor(copyHoverImage, copyRect, primaryColor, 10);
+        firstPixelMatchingColorBlend(copyHoverImage,
+                                     imageRectForWidgetRect(copyHoverImage, copyRect),
+                                     primaryColor, expectedBadgeFill, 10);
     QVERIFY2(primaryIconPixel.x() >= 0,
              qPrintable(QStringLiteral("hovered copy glyph did not use primary color %1")
                             .arg(primaryColor.name())));
     const QPoint editHoverPixel =
-        firstPixelMatchingColor(copyHoverImage, editRect, hoverColor, 10);
+        firstPixelMatchingColorBlend(copyHoverImage,
+                                     imageRectForWidgetRect(copyHoverImage, editRect),
+                                     hoverColor, expectedBadgeFill, 10);
     QVERIFY2(editHoverPixel.x() >= 0,
              qPrintable(QStringLiteral("non-hovered edit glyph did not keep hover color %1")
                             .arg(hoverColor.name())));
@@ -7699,6 +7747,19 @@ void TestDisplayUi::closing_and_reopening_docks_keeps_attached_widgets()
 
 int main(int argc, char** argv)
 {
+#if defined(Q_OS_UNIX) && !defined(Q_OS_MACOS)
+    // CI/build environments may provide no writable home directory.
+    // Keep test storage writable and isolated for the lifetime of QApplication.
+    QTemporaryDir testStorage(QDir::tempPath()
+                              + QStringLiteral("/speedcrunch-testdisplayui-XXXXXX"));
+    if (!testStorage.isValid()) {
+        qCritical("Cannot create temporary application storage for testdisplayui.");
+        return 1;
+    }
+    qputenv("XDG_CONFIG_HOME", testStorage.filePath(QStringLiteral("config")).toUtf8());
+    qputenv("XDG_DATA_HOME", testStorage.filePath(QStringLiteral("data")).toUtf8());
+    qputenv("XDG_CACHE_HOME", testStorage.filePath(QStringLiteral("cache")).toUtf8());
+#endif
     if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM"))
         qputenv("QT_QPA_PLATFORM", "offscreen");
     QApplication app(argc, argv);
