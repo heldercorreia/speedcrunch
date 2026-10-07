@@ -1,4 +1,5 @@
 include(common.pri)
+DEFINES += SPEEDCRUNCH_UI_TEST
 
 SOURCES += ../gui/constantswidget.cpp \
            ../gui/dockliststyle.cpp \

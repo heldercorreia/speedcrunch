@@ -23,6 +23,7 @@
 #include "gui/themedlineedit.h"
 #include "gui/uiconfig.h"
 #include "math/quantity.h"
+#include "uitestfixture.h"
 
 #include <QCoreApplication>
 #include <QAbstractItemView>
@@ -65,6 +66,7 @@
 #include <QPlainTextEdit>
 #include <QPointer>
 #include <QPixmap>
+#include <QProxyStyle>
 #include <QPushButton>
 #include <QScrollBar>
 #include <QScopeGuard>
@@ -75,6 +77,7 @@
 #include <QSpinBox>
 #include <QStatusBar>
 #include <QStyle>
+#include <QStyleFactory>
 #include <QStyleOption>
 #include <QTabBar>
 #include <QTest>
@@ -93,6 +96,34 @@
 #include <cmath>
 
 namespace {
+class DockHeaderButtonTestStyle : public QProxyStyle {
+public:
+    explicit DockHeaderButtonTestStyle(bool framed)
+        : QProxyStyle(QStyleFactory::create(QStringLiteral("Fusion")))
+        , m_framed(framed)
+    {}
+
+    int pixelMetric(PixelMetric metric, const QStyleOption* option = nullptr,
+                    const QWidget* widget = nullptr) const override
+    {
+        if (metric == PM_SmallIconSize)
+            return 16;
+        return QProxyStyle::pixelMetric(metric, option, widget);
+    }
+
+    int styleHint(StyleHint hint, const QStyleOption* option = nullptr,
+                  const QWidget* widget = nullptr,
+                  QStyleHintReturn* returnData = nullptr) const override
+    {
+        if (hint == SH_DockWidget_ButtonsHaveFrame)
+            return m_framed;
+        return QProxyStyle::styleHint(hint, option, widget, returnData);
+    }
+
+private:
+    bool m_framed;
+};
+
 QJsonObject themeJson(QJsonObject colors)
 {
     colors.insert(QStringLiteral("$schema"), QString::fromLatin1(ColorScheme::SchemaDraft));
@@ -593,8 +624,6 @@ struct MainWindowStateGuard {
     MainWindowStateGuard()
     {
         settings->windowPositionSave = false;
-        // Keep the first-run number format prompt out of unrelated UI tests.
-        settings->hasNumberFormatStyleSetting = true;
         qputenv("SPEEDCRUNCH_TEST_SKIP_UPDATE_CHECK", "1");
     }
 
@@ -692,6 +721,8 @@ public slots:
 
 private slots:
     void initTestCase();
+    void init() { UiTestFixture::resetSettings(); }
+    void ui_test_fixture_resets_persisted_layout_and_first_run_preference();
     void manual_preserves_text_weights_and_emphasis();
     void color_scheme_roles_exclude_obsolete_scrollbar();
     void color_scheme_reads_optional_display_name();
@@ -728,6 +759,14 @@ private slots:
     void visible_window_applies_restored_dock_and_keypad_layout();
     void always_on_top_toggles_preserve_window_geometry();
     void dock_surfaces_use_successive_generated_shades();
+    void dock_header_buttons_render_full_size_data();
+    void dock_header_buttons_render_full_size();
+    void dock_header_buttons_render_full_size_on_first_run_data();
+    void dock_header_buttons_render_full_size_on_first_run();
+    void dock_header_buttons_stay_centered_in_title_bar_data();
+    void dock_header_buttons_stay_centered_in_title_bar();
+    void dock_header_buttons_keep_theme_after_redocking_data();
+    void dock_header_buttons_keep_theme_after_redocking();
     void formula_book_text_scales_with_zoom_data();
     void formula_book_text_scales_with_zoom();
     void restored_constants_dock_empty_filter_fills_header();
@@ -792,6 +831,38 @@ void TestDisplayUi::initTestCase()
                  qPrintable(QStringLiteral("Cannot write test storage at %1: %2")
                                 .arg(path, probe.errorString())));
     }
+}
+
+void TestDisplayUi::ui_test_fixture_resets_persisted_layout_and_first_run_preference()
+{
+    Settings* settings = Settings::instance();
+    settings->sessionLayoutJson = QStringLiteral("{\"windows\":[{\"id\":\"stale-window\"}]}");
+    settings->windowState = QByteArray("stale dock state");
+    settings->keypadMode = Settings::KeypadModeScientificNarrow;
+    settings->hasNumberFormatStyleSetting = false;
+    settings->save();
+
+    const QString root = QString::fromUtf8(qgetenv("SPEEDCRUNCH_UI_TEST_STORAGE"));
+    QVERIFY(!root.isEmpty());
+    for (const QString& path : {Settings::getConfigPath(), Settings::getDataPath(),
+                                Settings::getCachePath()})
+        QVERIFY(path.startsWith(root + QLatin1Char('/')));
+
+    UiTestFixture::resetSettings();
+    QVERIFY(settings->sessionLayoutJson.isEmpty());
+    QVERIFY(settings->windowState.isEmpty());
+    QVERIFY(settings->hasNumberFormatStyleSetting);
+    QVERIFY(!settings->windowPositionSave);
+    QSettings persisted(Settings::getConfigPath() + QStringLiteral("/SpeedCrunch.ini"),
+                        QSettings::IniFormat);
+    QVERIFY(!persisted.contains(QStringLiteral("SpeedCrunch/General/SessionLayoutJson")));
+
+    MainWindow window;
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QCoreApplication::processEvents();
+    QCOMPARE(topLevelMainWindows().size(), 1);
+    QVERIFY(QApplication::activeModalWidget() == nullptr);
 }
 
 void TestDisplayUi::manual_preserves_text_weights_and_emphasis()
@@ -989,6 +1060,8 @@ void TestDisplayUi::theme_dialog_preserves_list_scroll_and_fills_role_color_butt
         settings->hasNumberFormatStyleSetting = originalPreference;
     });
     settings->hasNumberFormatStyleSetting = hasNumberFormatPreference;
+    UiTestFixture::resetSettings();
+    QVERIFY(settings->hasNumberFormatStyleSetting);
     MainWindowStateGuard guard;
 
     settings->colorScheme = QStringLiteral("Custom");
@@ -3862,6 +3935,230 @@ void TestDisplayUi::dock_surfaces_use_successive_generated_shades()
     QVERIFY(table->styleSheet().contains(changedContentFill.name()));
 }
 
+void TestDisplayUi::dock_header_buttons_render_full_size_data()
+{
+    QTest::addColumn<bool>("framed");
+    QTest::addColumn<QString>("background");
+    QTest::newRow("dark-framed") << true << QStringLiteral("#402034");
+    QTest::newRow("dark-unframed") << false << QStringLiteral("#402034");
+    QTest::newRow("light-framed") << true << QStringLiteral("#f4e8ee");
+    QTest::newRow("light-unframed") << false << QStringLiteral("#f4e8ee");
+}
+
+void TestDisplayUi::dock_header_buttons_render_full_size()
+{
+    QFETCH(bool, framed);
+    QFETCH(QString, background);
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    settings->colorScheme = QStringLiteral("Custom");
+    settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), background}});
+    settings->windowState.clear();
+    settings->constantsDockVisible = true;
+
+    MainWindow window;
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QDockWidget* dock = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(dock != nullptr);
+    dock->setFloating(false);
+    dock->show();
+    dock->raise();
+    QCoreApplication::processEvents();
+    QAbstractButton* closeButton = dock->findChild<QAbstractButton*>(
+        QStringLiteral("qt_dockwidget_closebutton"));
+    QAbstractButton* floatButton = dock->findChild<QAbstractButton*>(
+        QStringLiteral("qt_dockwidget_floatbutton"));
+    QVERIFY(closeButton != nullptr);
+    QVERIFY(floatButton != nullptr);
+
+    for (QAbstractButton* button : {closeButton, floatButton}) {
+        auto* style = new DockHeaderButtonTestStyle(framed);
+        style->setParent(button);
+        button->setStyle(style);
+        QCOMPARE(button->style()->styleHint(QStyle::SH_DockWidget_ButtonsHaveFrame,
+                                           nullptr, button), int(framed));
+        QCOMPARE(button->style()->pixelMetric(QStyle::PM_SmallIconSize,
+                                              nullptr, button), 16);
+        QVERIFY(button->isVisible());
+
+        for (bool hovered : {false, true}) {
+            QEvent hoverEvent(hovered ? QEvent::Enter : QEvent::Leave);
+            QCoreApplication::sendEvent(button, &hoverEvent);
+            const QImage rendered = button->grab().toImage();
+            const qreal dpr = rendered.devicePixelRatio();
+            const QImage expected = button->icon().pixmap(button->iconSize(), dpr).toImage();
+            QCOMPARE(rendered.size(), expected.size());
+
+            // Compare the actual widget's symbol with the full-size source icon.
+            // Checking iconSize() alone misses Qt's private dock-button scaling.
+            const QRect symbolRect(qRound(4 * dpr), qRound(4 * dpr),
+                                   qRound(10 * dpr), qRound(10 * dpr));
+            for (int y = symbolRect.top(); y <= symbolRect.bottom(); ++y) {
+                for (int x = symbolRect.left(); x <= symbolRect.right(); ++x) {
+                    QVERIFY2(colorsAreClose(rendered.pixelColor(x, y),
+                                            expected.pixelColor(x, y), 3),
+                             qPrintable(QStringLiteral("%1 symbol differs at %2,%3")
+                                            .arg(button->objectName()).arg(x).arg(y)));
+                }
+            }
+        }
+    }
+
+    QTest::mouseClick(floatButton, Qt::LeftButton);
+    QTRY_VERIFY(dock->isFloating());
+    dock->setFloating(false);
+    QTRY_VERIFY(closeButton->isVisible());
+    QTest::mouseClick(closeButton, Qt::LeftButton);
+    QTRY_VERIFY(!dock->isVisible());
+}
+
+void TestDisplayUi::dock_header_buttons_render_full_size_on_first_run_data()
+{
+    dock_header_buttons_render_full_size_data();
+}
+
+void TestDisplayUi::dock_header_buttons_render_full_size_on_first_run()
+{
+    Settings* settings = Settings::instance();
+    const bool oldHasNumberFormatStyleSetting = settings->hasNumberFormatStyleSetting;
+    const auto restoreSettings = qScopeGuard([&]() {
+        settings->hasNumberFormatStyleSetting = oldHasNumberFormatStyleSetting;
+    });
+    settings->hasNumberFormatStyleSetting = false;
+    // Exercise the shared fixture with fresh first-run settings; no window
+    // guard should need to suppress this dialog on its own.
+    UiTestFixture::resetSettings();
+    QVERIFY(settings->hasNumberFormatStyleSetting);
+    dock_header_buttons_render_full_size();
+    QVERIFY(QApplication::activeModalWidget() == nullptr);
+    QVERIFY(settings->hasNumberFormatStyleSetting);
+}
+
+void TestDisplayUi::dock_header_buttons_stay_centered_in_title_bar_data()
+{
+    QTest::addColumn<int>("fontPixelSize");
+    QTest::addColumn<bool>("verticalTitleBar");
+    QTest::newRow("small-horizontal") << 9 << false;
+    QTest::newRow("normal-horizontal") << 13 << false;
+    QTest::newRow("large-horizontal") << 22 << false;
+    QTest::newRow("small-vertical") << 9 << true;
+    QTest::newRow("large-vertical") << 22 << true;
+}
+
+void TestDisplayUi::dock_header_buttons_stay_centered_in_title_bar()
+{
+    QFETCH(int, fontPixelSize);
+    QFETCH(bool, verticalTitleBar);
+    MainWindowStateGuard guard;
+    guard.settings->windowState.clear();
+    guard.settings->constantsDockVisible = true;
+
+    MainWindow window;
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QDockWidget* dock = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(dock != nullptr);
+    dock->setFloating(false);
+    dock->show();
+    dock->raise();
+    if (verticalTitleBar)
+        dock->setFeatures(dock->features() | QDockWidget::DockWidgetVerticalTitleBar);
+    QFont font = dock->font();
+    font.setPixelSize(fontPixelSize);
+    dock->setFont(font);
+
+    for (const QSize size : {QSize(800, 600), QSize(1050, 750)}) {
+        window.resize(size);
+        QCoreApplication::processEvents();
+        const int titleExtent = verticalTitleBar
+            ? dock->widget()->geometry().left() : dock->widget()->geometry().top();
+        QVERIFY(titleExtent >= 18);
+        for (const QString& name : {QStringLiteral("qt_dockwidget_closebutton"),
+                                    QStringLiteral("qt_dockwidget_floatbutton")}) {
+            QAbstractButton* button = dock->findChild<QAbstractButton*>(name);
+            QVERIFY(button != nullptr);
+            QVERIFY(button->isVisible());
+            const QRect rect = button->geometry();
+            const int twiceButtonCenter = verticalTitleBar
+                ? 2 * rect.x() + rect.width() : 2 * rect.y() + rect.height();
+            QVERIFY2(qAbs(twiceButtonCenter - titleExtent) <= 1,
+                     qPrintable(QStringLiteral("%1 center %2 differs from title center %3")
+                                    .arg(name).arg(twiceButtonCenter / 2.0)
+                                    .arg(titleExtent / 2.0)));
+        }
+    }
+}
+
+void TestDisplayUi::dock_header_buttons_keep_theme_after_redocking_data()
+{
+    QTest::addColumn<QString>("background");
+    QTest::addColumn<QString>("dockName");
+    QTest::newRow("dark-constants") << QStringLiteral("#402034") << QStringLiteral("ConstantsDock");
+    QTest::newRow("light-constants") << QStringLiteral("#f4e8ee") << QStringLiteral("ConstantsDock");
+    QTest::newRow("dark-functions") << QStringLiteral("#402034") << QStringLiteral("FunctionsDock");
+    QTest::newRow("light-functions") << QStringLiteral("#f4e8ee") << QStringLiteral("FunctionsDock");
+}
+
+void TestDisplayUi::dock_header_buttons_keep_theme_after_redocking()
+{
+    QFETCH(QString, background);
+    QFETCH(QString, dockName);
+    MainWindowStateGuard guard;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), background}});
+    guard.settings->windowState.clear();
+    guard.settings->constantsDockVisible = true;
+    guard.settings->functionsDockVisible = true;
+
+    MainWindow window;
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QDockWidget* dock = window.findChild<QDockWidget*>(dockName);
+    QVERIFY(dock != nullptr);
+    dock->setFloating(false);
+    dock->show();
+    dock->raise();
+    QCoreApplication::processEvents();
+
+    const QStringList buttonNames {QStringLiteral("qt_dockwidget_closebutton"),
+                                   QStringLiteral("qt_dockwidget_floatbutton")};
+    QList<QAbstractButton*> buttons;
+    QList<QImage> expectedIcons;
+    for (const QString& name : buttonNames) {
+        QAbstractButton* button = dock->findChild<QAbstractButton*>(name);
+        QVERIFY(button != nullptr);
+        button->setAttribute(Qt::WA_UnderMouse, false);
+        QEvent leaveEvent(QEvent::Leave);
+        QCoreApplication::sendEvent(button, &leaveEvent);
+        const QImage icon = button->icon().pixmap(button->iconSize()).toImage();
+        QVERIFY(!icon.isNull());
+        QVERIFY(colorsAreClose(icon.pixelColor(2, 9),
+                               button->property("speedcrunchDockHeaderButtonFill").value<QColor>()));
+        buttons.append(button);
+        expectedIcons.append(icon);
+    }
+
+    for (int cycle = 0; cycle < 2; ++cycle) {
+        dock->setFloating(true);
+        QVERIFY(dock->isFloating());
+        dock->setFloating(false);
+        QVERIFY(!dock->isFloating());
+        // Check before a paint, queued theme update, or hover can repair an icon.
+        for (bool processEvents : {false, true}) {
+            if (processEvents)
+                QCoreApplication::processEvents();
+            for (int i = 0; i < buttons.size(); ++i) {
+                QVERIFY(!buttons.at(i)->underMouse());
+                const QImage icon = buttons.at(i)->icon().pixmap(buttons.at(i)->iconSize()).toImage();
+                QVERIFY2(icon == expectedIcons.at(i), qPrintable(buttonNames.at(i)));
+            }
+        }
+    }
+}
+
 void TestDisplayUi::formula_book_text_scales_with_zoom_data()
 {
     QTest::addColumn<QString>("page");
@@ -4500,10 +4797,14 @@ void TestDisplayUi::dock_search_focus_suppresses_editor_primary_outline_across_p
     const QVector<QColor> shades =
         generateOklchShades(QColor(QStringLiteral("#1f3229")), 6, ThemePolarity::Dark);
     const QColor selectedTabFill = shades.at(UiConfig::SelectedSessionTabFillShade);
-    QList<QTabBar*> tabBars = window.findChildren<QTabBar*>();
-    tabBars.erase(std::remove_if(tabBars.begin(), tabBars.end(), [](QTabBar* tabBar) {
-        return tabBar->count() == 0 || !tabBar->isVisible();
-    }), tabBars.end());
+    QList<QTabBar*> tabBars;
+    for (ResultDisplay* display : window.findChildren<ResultDisplay*>()) {
+        QTabBar* tabBar = tabBarForDisplay(display);
+        QVERIFY(tabBar != nullptr);
+        QVERIFY(tabBar->isVisible());
+        QVERIFY(tabBar->count() > 0);
+        tabBars.append(tabBar);
+    }
     QCOMPARE(tabBars.size(), 2);
     for (QTabBar* tabBar : tabBars) {
         QVERIFY2(colorsAreClose(selectedSessionTabFillColor(tabBar), selectedTabFill),
@@ -7747,24 +8048,7 @@ void TestDisplayUi::closing_and_reopening_docks_keeps_attached_widgets()
 
 int main(int argc, char** argv)
 {
-#if defined(Q_OS_UNIX) && !defined(Q_OS_MACOS)
-    // CI/build environments may provide no writable home directory.
-    // Keep test storage writable and isolated for the lifetime of QApplication.
-    QTemporaryDir testStorage(QDir::tempPath()
-                              + QStringLiteral("/speedcrunch-testdisplayui-XXXXXX"));
-    if (!testStorage.isValid()) {
-        qCritical("Cannot create temporary application storage for testdisplayui.");
-        return 1;
-    }
-    qputenv("XDG_CONFIG_HOME", testStorage.filePath(QStringLiteral("config")).toUtf8());
-    qputenv("XDG_DATA_HOME", testStorage.filePath(QStringLiteral("data")).toUtf8());
-    qputenv("XDG_CACHE_HOME", testStorage.filePath(QStringLiteral("cache")).toUtf8());
-#endif
-    if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM"))
-        qputenv("QT_QPA_PLATFORM", "offscreen");
-    QApplication app(argc, argv);
-    TestDisplayUi test;
-    return QTest::qExec(&test, argc, argv);
+    return UiTestFixture::run<TestDisplayUi>(argc, argv);
 }
 
 #include "testdisplayui.moc"

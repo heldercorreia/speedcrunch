@@ -9,6 +9,7 @@
 #include "gui/splittertreeutils.h"
 #include "gui/userunitlistwidget.h"
 #include "gui/variablelistwidget.h"
+#include "uitestfixture.h"
 
 #include <QSignalSpy>
 #include <QTest>
@@ -46,6 +47,7 @@ class TestDocksUi : public QObject {
     Q_OBJECT
 
 private slots:
+    void init() { UiTestFixture::resetSettings(); }
     void constants_dock_inserts_pi_symbol_with_translated_name();
     void user_units_dock_shows_rhs_and_description_after_definition();
     void user_variables_dock_keeps_existing_value_text_after_new_definition();
@@ -201,11 +203,7 @@ void TestDocksUi::splitter_normalization_removes_single_child_nested_splitter_af
 
 int main(int argc, char** argv)
 {
-    if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM"))
-        qputenv("QT_QPA_PLATFORM", "offscreen");
-    QApplication app(argc, argv);
-    TestDocksUi test;
-    return QTest::qExec(&test, argc, argv);
+    return UiTestFixture::run<TestDocksUi>(argc, argv);
 }
 
 #include "testdocksui.moc"

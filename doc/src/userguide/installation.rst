@@ -107,5 +107,9 @@ repository root::
     cmake --build src/build --config Release --parallel
     ctest --test-dir src/build -C Release --output-on-failure
 
+The UI test suites use temporary configuration, session and cache directories,
+and reset settings before each test case. They suppress the first-run number
+format prompt; an unexpected prompt fails the test instead of blocking the suite.
+
 The option is saved in the build directory's CMake cache. To return that directory
 to application-only builds, configure it again with ``-DBUILD_TESTING=OFF``.

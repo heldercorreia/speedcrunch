@@ -15,6 +15,10 @@ Apart from the main display, SpeedCrunch offers a number of extra panels, referr
 Most of them are dockable panels that can be moved around the main window and enabled or disabled via the
 :menuselection:`View` menu.
 
+Use the cross in a dock panel's title bar to hide the panel, or the square
+to detach it into a floating window. Hidden panels can be shown again via
+the :menuselection:`View` menu.
+
 * Formula Book
     The formula book provides access to commonly used formulas and calculations. Simply insert
     a formula into the expression editor by clicking on it.
