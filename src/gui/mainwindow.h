@@ -420,6 +420,7 @@ private:
         QAction* viewKeypadScientificWide;
         QAction* viewKeypadScientificNarrow;
         QAction* viewKeypadCustom;
+        QAction* viewKeypadZoom50;
         QAction* viewKeypadZoom100;
         QAction* viewKeypadZoom150;
         QAction* viewKeypadZoom200;
