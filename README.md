@@ -55,8 +55,36 @@ running CMake, in the form `cmake -S src -B build -Dvariable=value`.
   in the same location as the executable, e.g. for running from a USB drive without
   requiring installation.
 - **CMAKE_INSTALL_PREFIX**: Change the installation prefix for SpeedCrunch.
+- **CMAKE_INSTALL_BINDIR**: Change the executable directory on Unix systems except
+  macOS and Haiku. Defaults to `bin` under the installation prefix.
+- **CMAKE_INSTALL_DATAROOTDIR**: Change the shared data root on Unix systems except
+  macOS and Haiku. Defaults to `share` under the installation prefix.
 - **HTML_DOCS_DIR**: Change the path to the HTML manual that's embedded in the binary
   by the build. By default, a bundled prebuilt copy is used to minimize dependencies.
+
+### Unix installation and packaging
+
+On Linux and other Unix systems except macOS and Haiku, installation uses CMake's
+`GNUInstallDirs` conventions. `CMAKE_INSTALL_BINDIR` and
+`CMAKE_INSTALL_DATAROOTDIR` are relative to `CMAKE_INSTALL_PREFIX` unless explicitly
+configured as absolute paths. For example:
+
+    cmake -S src -B build -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_INSTALL_BINDIR=bin -DCMAKE_INSTALL_DATAROOTDIR=share
+    cmake --build build --config Release --parallel
+    DESTDIR=/tmp/speedcrunch-package cmake --install build --config Release
+
+`DESTDIR` stages the installation under another directory for packaging. With
+the example above, the executable is staged under
+`/tmp/speedcrunch-package/usr/bin`. Desktop entries and application metadata are
+installed under `applications` and `metainfo` within the shared data root.
+
+Desktop icons are installed in the `hicolor` theme: the SVG in
+`icons/hicolor/scalable/apps` and PNGs in
+`icons/hicolor/<size>x<size>/apps` for sizes 16, 22, 24, 32, 48, 64, 128, and 256.
+The installed icon basename is `org.speedcrunch.SpeedCrunch`. The PNG files are
+included in the source distribution; building and installing SpeedCrunch does
+not require icon-generation tools.
 
 ## File locations
 SpeedCrunch uses [Qt's standard per-user locations](https://doc.qt.io/qt-6/qstandardpaths.html)

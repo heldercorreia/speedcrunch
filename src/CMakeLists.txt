@@ -171,12 +171,12 @@ include_directories(${CMAKE_BINARY_DIR} thirdparty core gui math)
 ################################# INSTALL ######################################
 
 if(UNIX AND NOT APPLE AND NOT HAIKU)
-    set(SHARE_DIR "share")
-    set(BIN_INSTALL_DIR "bin")
+    include(GNUInstallDirs)
+    set(BIN_INSTALL_DIR "${CMAKE_INSTALL_BINDIR}")
 
-    set(MENU_DIR "${SHARE_DIR}/applications/")
-    set(APP_DATA_DIR "${SHARE_DIR}/metainfo/")
-    set(ICON_DIR "${SHARE_DIR}/pixmaps/")
+    set(MENU_DIR "${CMAKE_INSTALL_DATAROOTDIR}/applications")
+    set(APP_DATA_DIR "${CMAKE_INSTALL_DATAROOTDIR}/metainfo")
+    set(ICON_DIR "${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor")
 elseif(APPLE)
     set(BIN_INSTALL_DIR ".")
     set(DOC_INSTALL_DIR ${APPLICATION_NAME}.app/Contents/Resources)
@@ -193,12 +193,18 @@ if(PORTABLE_SPEEDCRUNCH)
     add_definitions(-DSPEEDCRUNCH_PORTABLE)
 endif(PORTABLE_SPEEDCRUNCH)
 
-install(TARGETS ${APPLICATION_NAME} DESTINATION ${BIN_INSTALL_DIR})
+install(TARGETS ${APPLICATION_NAME} DESTINATION "${BIN_INSTALL_DIR}")
 
 if(UNIX AND NOT APPLE AND NOT HAIKU)
-    install(FILES ../pkg/org.speedcrunch.SpeedCrunch.desktop DESTINATION ${MENU_DIR})
-    install(FILES resources/speedcrunch.png DESTINATION ${ICON_DIR} RENAME org.speedcrunch.SpeedCrunch.png)
-    install(FILES ../pkg/org.speedcrunch.SpeedCrunch.metainfo.xml DESTINATION ${APP_DATA_DIR})
+    install(FILES ../pkg/org.speedcrunch.SpeedCrunch.desktop DESTINATION "${MENU_DIR}")
+    install(FILES ../gfx/speedcrunch.svg
+        DESTINATION "${ICON_DIR}/scalable/apps"
+        RENAME org.speedcrunch.SpeedCrunch.svg)
+    foreach(ICON_SIZE IN ITEMS 16 22 24 32 48 64 128 256)
+        install(FILES "../gfx/icons/${ICON_SIZE}x${ICON_SIZE}/org.speedcrunch.SpeedCrunch.png"
+            DESTINATION "${ICON_DIR}/${ICON_SIZE}x${ICON_SIZE}/apps")
+    endforeach()
+    install(FILES ../pkg/org.speedcrunch.SpeedCrunch.metainfo.xml DESTINATION "${APP_DATA_DIR}")
 elseif(WIN32)
     install(FILES ../pkg/COPYING.rtf DESTINATION ${DOC_INSTALL_DIR})
 endif()

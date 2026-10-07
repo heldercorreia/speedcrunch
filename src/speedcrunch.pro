@@ -45,12 +45,25 @@ win32-msvc*:LIBS += User32.lib
         INCLUDEPATH += thirdparty
         target.path = "/bin"
         menu.path = "/share/applications"
-        appdata.path = "/share/appdata"
-        icon.path = "/share/pixmaps"
-        icon.files += resources/speedcrunch.png
-        menu.files += ../pkg/speedcrunch.desktop
-        appdata.files += ../pkg/speedcrunch.appdata.xml
-        INSTALLS += target icon menu appdata
+        appdata.path = "/share/metainfo"
+        menu.files += ../pkg/org.speedcrunch.SpeedCrunch.desktop
+        appdata.files += ../pkg/org.speedcrunch.SpeedCrunch.metainfo.xml
+        INSTALLS += target menu appdata
+
+        icon_svg.path = "/share/icons/hicolor/scalable/apps"
+        icon_svg.extra = $(INSTALL_FILE) $$shell_quote($$PWD/../gfx/speedcrunch.svg) \
+            "$(INSTALL_ROOT)$${icon_svg.path}/org.speedcrunch.SpeedCrunch.svg"
+        icon_svg.uninstall = $(DEL_FILE) \
+            "$(INSTALL_ROOT)$${icon_svg.path}/org.speedcrunch.SpeedCrunch.svg"
+        INSTALLS += icon_svg
+
+        ICON_SIZES = 16 22 24 32 48 64 128 256
+        for(ICON_SIZE, ICON_SIZES) {
+            ICON_INSTALL = icon_$${ICON_SIZE}
+            $${ICON_INSTALL}.path = /share/icons/hicolor/$${ICON_SIZE}x$${ICON_SIZE}/apps
+            $${ICON_INSTALL}.files = $$PWD/../gfx/icons/$${ICON_SIZE}x$${ICON_SIZE}/org.speedcrunch.SpeedCrunch.png
+            INSTALLS += $$ICON_INSTALL
+        }
     }
 }
 
