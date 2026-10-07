@@ -80,6 +80,7 @@ the :menuselection:`View` menu.
 
     Available entries in :menuselection:`View --> Keypad --> Zoom` are:
 
+    * ``50%``
     * ``100%`` (**default**)
     * ``150%``
     * ``200%``

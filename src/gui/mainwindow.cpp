@@ -3457,6 +3457,7 @@ void MainWindow::createActions()
     m_actions.viewKeypadScientificWide = new QAction(this);
     m_actions.viewKeypadScientificNarrow = new QAction(this);
     m_actions.viewKeypadCustom = new QAction(this);
+    m_actions.viewKeypadZoom50 = new QAction(this);
     m_actions.viewKeypadZoom100 = new QAction(this);
     m_actions.viewKeypadZoom150 = new QAction(this);
     m_actions.viewKeypadZoom200 = new QAction(this);
@@ -3640,6 +3641,8 @@ void MainWindow::createActions()
     m_actions.viewKeypadScientificNarrow->setData(Settings::KeypadModeScientificNarrow);
     m_actions.viewKeypadCustom->setCheckable(true);
     m_actions.viewKeypadCustom->setData(Settings::KeypadModeCustom);
+    m_actions.viewKeypadZoom50->setCheckable(true);
+    m_actions.viewKeypadZoom50->setData(50);
     m_actions.viewKeypadZoom100->setCheckable(true);
     m_actions.viewKeypadZoom100->setData(100);
     m_actions.viewKeypadZoom150->setCheckable(true);
@@ -3831,6 +3834,7 @@ void MainWindow::setActionsText()
     m_actions.viewKeypadScientificWide->setText(MainWindow::tr("&Scientific (wide)"));
     m_actions.viewKeypadScientificNarrow->setText(MainWindow::tr("Scientific (narrow)"));
     m_actions.viewKeypadCustom->setText(MainWindow::tr("&Custom..."));
+    m_actions.viewKeypadZoom50->setText(QStringLiteral("50%"));
     m_actions.viewKeypadZoom100->setText(QStringLiteral("100%"));
     m_actions.viewKeypadZoom150->setText(QStringLiteral("150%"));
     m_actions.viewKeypadZoom200->setText(QStringLiteral("200%"));
@@ -4015,6 +4019,7 @@ void MainWindow::createActionGroups()
     m_actionGroups.keypad->addAction(m_actions.viewKeypadCustom);
 
     m_actionGroups.keypadZoom = new QActionGroup(this);
+    m_actionGroups.keypadZoom->addAction(m_actions.viewKeypadZoom50);
     m_actionGroups.keypadZoom->addAction(m_actions.viewKeypadZoom100);
     m_actionGroups.keypadZoom->addAction(m_actions.viewKeypadZoom150);
     m_actionGroups.keypadZoom->addAction(m_actions.viewKeypadZoom200);
@@ -4100,6 +4105,7 @@ void MainWindow::createMenus()
     m_menus.keypad->addAction(m_actions.viewKeypadCustom);
     m_menus.keypad->addSeparator();
     m_menus.keypadZoom = m_menus.keypad->addMenu("");
+    m_menus.keypadZoom->addAction(m_actions.viewKeypadZoom50);
     m_menus.keypadZoom->addAction(m_actions.viewKeypadZoom100);
     m_menus.keypadZoom->addAction(m_actions.viewKeypadZoom150);
     m_menus.keypadZoom->addAction(m_actions.viewKeypadZoom200);
@@ -7549,6 +7555,9 @@ void MainWindow::applySettings()
     m_actions.viewBitfield->setChecked(bitfieldVisible);
     updateKeypadModeActionState();
     switch (m_keypadZoomPercent) {
+    case 50:
+        m_actions.viewKeypadZoom50->setChecked(true);
+        break;
     case 150:
         m_actions.viewKeypadZoom150->setChecked(true);
         break;
@@ -10816,6 +10825,9 @@ void MainWindow::syncViewMenuActionState()
             break;
         }
         switch (keypadZoomPercent) {
+        case 50:
+            setChecked(window->m_actions.viewKeypadZoom50, true);
+            break;
         case 150:
             setChecked(window->m_actions.viewKeypadZoom150, true);
             break;
@@ -11748,7 +11760,8 @@ void MainWindow::setKeypadZoom(QAction* action)
         return;
 
     const int zoomPercent = action->data().toInt();
-    if (zoomPercent != 100 && zoomPercent != 150 && zoomPercent != 200)
+    if (zoomPercent != 50 && zoomPercent != 100
+            && zoomPercent != 150 && zoomPercent != 200)
         return;
     if (m_keypadZoomPercent == zoomPercent)
         return;
@@ -12762,7 +12775,8 @@ void MainWindow::restoreWindowKeypadLayout(bool visible, int modeValue)
 
 void MainWindow::restoreWindowKeypadZoom(int zoomPercent)
 {
-    if (zoomPercent != 100 && zoomPercent != 150 && zoomPercent != 200)
+    if (zoomPercent != 50 && zoomPercent != 100
+            && zoomPercent != 150 && zoomPercent != 200)
         return;
     if (m_keypadZoomPercent == zoomPercent)
         return;

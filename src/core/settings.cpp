@@ -558,7 +558,8 @@ void Settings::load()
         || keypadMode == KeypadModeScientificNarrow
         || keypadMode == KeypadModeCustom);
     keypadZoomPercent = settings->value(key + QLatin1String("KeypadZoomPercent"), 100).toInt();
-    if (keypadZoomPercent != 100 && keypadZoomPercent != 150 && keypadZoomPercent != 200)
+    if (keypadZoomPercent != 50 && keypadZoomPercent != 100
+            && keypadZoomPercent != 150 && keypadZoomPercent != 200)
         keypadZoomPercent = 100;
     const QString customKeypadJson = settings->value(key + QLatin1String("CustomKeypad"), QString()).toString();
     if (!customKeypadJson.isEmpty()) {

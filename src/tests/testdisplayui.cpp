@@ -747,6 +747,9 @@ private slots:
     void keypad_power_button_uses_exponent_label_but_inserts_caret();
     void keypad_zoom_round_trip_restores_button_sizes_data();
     void keypad_zoom_round_trip_restores_button_sizes();
+    void keypad_fifty_percent_zoom_scales_and_restores_data();
+    void keypad_fifty_percent_zoom_scales_and_restores();
+    void keypad_fifty_percent_zoom_survives_settings_reload();
     void keypad_input_stays_in_own_window_data();
     void keypad_input_stays_in_own_window();
     void functions_dock_retranslates_domain_label_after_language_change();
@@ -6290,6 +6293,129 @@ void TestDisplayUi::keypad_zoom_round_trip_restores_button_sizes()
         QCOMPARE(button()->size(), originalSize);
         QCOMPARE(window.findChild<Keypad*>()->size(), originalKeypadSize);
     }
+}
+
+void TestDisplayUi::keypad_fifty_percent_zoom_scales_and_restores_data()
+{
+    QTest::addColumn<int>("mode");
+    QTest::newRow("scientific-wide") << int(Settings::KeypadModeScientificWide);
+    QTest::newRow("scientific-narrow") << int(Settings::KeypadModeScientificNarrow);
+    QTest::newRow("basic") << int(Settings::KeypadModeBasicWide);
+    QTest::newRow("custom") << int(Settings::KeypadModeCustom);
+}
+
+void TestDisplayUi::keypad_fifty_percent_zoom_scales_and_restores()
+{
+    QFETCH(int, mode);
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    settings->keypadMode = static_cast<Settings::KeypadMode>(mode);
+    settings->keypadVisible = true;
+    settings->keypadZoomPercent = 100;
+    settings->constantsDockVisible = false;
+    settings->functionsDockVisible = false;
+    settings->historyDockVisible = false;
+    settings->formulaBookDockVisible = false;
+    settings->variablesDockVisible = false;
+    settings->userFunctionsDockVisible = false;
+    settings->userUnitsDockVisible = false;
+    settings->bitfieldVisible = false;
+
+    MainWindow window;
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    window.activateWindow();
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&window));
+    const auto button = [&window]() {
+        return keypadButtonWithText(window.findChild<Keypad*>(), QStringLiteral("7"));
+    };
+    QVERIFY(button() != nullptr);
+    const QSize originalSize = button()->size();
+    const QFont originalFont = button()->font();
+    QMenu* viewMenu = menuWithTitle(window.menuBar(), QStringLiteral("&View"));
+    QVERIFY(viewMenu != nullptr);
+    QMenu* keypadMenu = directSubmenuWithTitle(viewMenu, QStringLiteral("&Keypad"));
+    QVERIFY(keypadMenu != nullptr);
+    QMenu* zoomMenu = directSubmenuWithTitle(keypadMenu, QStringLiteral("&Zoom"));
+    QVERIFY(zoomMenu != nullptr);
+    const QList<QAction*> zoomActions = zoomMenu->actions();
+    QCOMPARE(zoomActions.size(), 4);
+    QCOMPARE(zoomActions.at(0)->text(), QStringLiteral("50%"));
+    QCOMPARE(zoomActions.at(0)->data().toInt(), 50);
+    QCOMPARE(zoomActions.at(1)->data().toInt(), 100);
+    QCOMPARE(zoomActions.at(2)->data().toInt(), 150);
+    QCOMPARE(zoomActions.at(3)->data().toInt(), 200);
+    const auto flushEvents = []() {
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
+    };
+
+    zoomActions.at(0)->trigger();
+    flushEvents();
+    QVERIFY(button() != nullptr);
+    const QSize halfSize = button()->size();
+    const QFont halfFont = button()->font();
+    QVERIFY(halfSize.width() < originalSize.width());
+    QVERIFY(halfSize.height() < originalSize.height());
+    QCOMPARE(halfFont.pointSizeF(), originalFont.pointSizeF() * 0.5);
+    QVERIFY(zoomActions.at(0)->isChecked());
+    QVERIFY(!zoomActions.at(1)->isChecked());
+    QCOMPARE(settings->keypadZoomPercent, 50);
+
+    zoomActions.at(2)->trigger();
+    flushEvents();
+    zoomActions.at(0)->trigger();
+    flushEvents();
+    QVERIFY(button() != nullptr);
+    QCOMPARE(button()->size(), halfSize);
+    QCOMPARE(button()->font(), halfFont);
+    zoomActions.at(1)->trigger();
+    flushEvents();
+    QVERIFY(button() != nullptr);
+    QCOMPARE(button()->size(), originalSize);
+    QCOMPARE(button()->font(), originalFont);
+
+    QVERIFY(QMetaObject::invokeMethod(&window, "restoreWindowKeypadZoom",
+                                      Qt::DirectConnection, Q_ARG(int, 50)));
+    flushEvents();
+    QVERIFY(button() != nullptr);
+    QCOMPARE(button()->size(), halfSize);
+    QCOMPARE(button()->font(), halfFont);
+    window.persistSessionAndSettingsForShutdown();
+    const QJsonArray savedWindows = QJsonDocument::fromJson(settings->sessionLayoutJson.toUtf8())
+                                       .object().value(QStringLiteral("windows")).toArray();
+    QCOMPARE(savedWindows.size(), 1);
+    QCOMPARE(savedWindows.first().toObject().value(QStringLiteral("keypadZoomPercent")).toInt(), 50);
+}
+
+void TestDisplayUi::keypad_fifty_percent_zoom_survives_settings_reload()
+{
+    const auto resetSettings = qScopeGuard([]() { UiTestFixture::resetSettings(); });
+    UiTestFixture::resetSettings();
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    settings->keypadZoomPercent = 50;
+    settings->keypadMode = Settings::KeypadModeBasicWide;
+    settings->save();
+    settings->keypadZoomPercent = 100;
+    settings->load();
+    QCOMPARE(settings->keypadZoomPercent, 50);
+
+    MainWindow window;
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QMenu* viewMenu = menuWithTitle(window.menuBar(), QStringLiteral("&View"));
+    QVERIFY(viewMenu != nullptr);
+    QMenu* keypadMenu = directSubmenuWithTitle(viewMenu, QStringLiteral("&Keypad"));
+    QVERIFY(keypadMenu != nullptr);
+    QMenu* zoomMenu = directSubmenuWithTitle(keypadMenu, QStringLiteral("&Zoom"));
+    QVERIFY(zoomMenu != nullptr);
+    QCOMPARE(zoomMenu->actions().size(), 4);
+    QVERIFY(zoomMenu->actions().first()->isChecked());
+    QCOMPARE(zoomMenu->actions().first()->data().toInt(), 50);
 }
 
 void TestDisplayUi::keypad_view_menu_tracks_and_changes_only_active_window()
