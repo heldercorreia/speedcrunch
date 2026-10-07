@@ -963,7 +963,7 @@ ThemeScrollBarColors scrollBarColorsForSurfaceIndex(const GeneratedThemeSurfaces
 
 constexpr auto DockSeparatorNormalColorProperty = "speedcrunchDockSeparatorNormalColor";
 constexpr auto DockSeparatorActiveColorProperty = "speedcrunchDockSeparatorActiveColor";
-constexpr auto DockSeparatorStyleInstalledProperty = "speedcrunchDockSeparatorStyleInstalled";
+constexpr auto DockChromeStyleInstalledProperty = "speedcrunchDockChromeStyleInstalled";
 
 QColor dockSeparatorColorForWidget(const QWidget* widget, const char* propertyName)
 {
@@ -990,9 +990,41 @@ QRect dockSeparatorStrokeRect(const QRect& separatorRect)
     return strokeRect;
 }
 
-class DockSeparatorStyle : public QProxyStyle {
+class DockChromeStyle : public QProxyStyle {
 public:
     using QProxyStyle::QProxyStyle;
+
+    QRect subElementRect(SubElement element, const QStyleOption* option,
+                         const QWidget* widget = nullptr) const override
+    {
+        QRect rect = QProxyStyle::subElementRect(element, option, widget);
+        if (element != SE_DockWidgetCloseButton && element != SE_DockWidgetFloatButton)
+            return rect;
+
+        const auto* dock = qobject_cast<const QDockWidget*>(widget);
+        const auto* dockOption = qstyleoption_cast<const QStyleOptionDockWidget*>(option);
+        if (dock == nullptr || dockOption == nullptr || rect.isEmpty())
+            return rect;
+        const auto* button = dock->findChild<QAbstractButton*>(
+            element == SE_DockWidgetCloseButton ? QStringLiteral("qt_dockwidget_closebutton")
+                                               : QStringLiteral("qt_dockwidget_floatbutton"),
+            Qt::FindDirectChildrenOnly);
+        if (button == nullptr || !button->property("speedcrunchDockHeaderButton").toBool())
+            return rect;
+
+        // Native styles center their own button extent. QWidget's fixed size
+        // can then change that extent without adjusting the origin. Center the
+        // actual themed button in the title area before Qt applies its geometry.
+        const QRect titleRect = dockOption->rect;
+        if (dockOption->verticalTitleBar) {
+            rect.setLeft(titleRect.left() + (titleRect.width() - button->width()) / 2);
+            rect.setWidth(button->width());
+        } else {
+            rect.setTop(titleRect.top() + (titleRect.height() - button->height()) / 2);
+            rect.setHeight(button->height());
+        }
+        return rect;
+    }
 
     void drawPrimitive(PrimitiveElement element,
                        const QStyleOption* option,
@@ -1021,13 +1053,13 @@ public:
     }
 };
 
-void ensureDockSeparatorStyleInstalled()
+void ensureDockChromeStyleInstalled()
 {
-    if (QApplication::style()->property(DockSeparatorStyleInstalledProperty).toBool())
+    if (QApplication::style()->property(DockChromeStyleInstalledProperty).toBool())
         return;
 
-    QStyle* style = new DockSeparatorStyle(QApplication::style());
-    style->setProperty(DockSeparatorStyleInstalledProperty, true);
+    QStyle* style = new DockChromeStyle(QApplication::style());
+    style->setProperty(DockChromeStyleInstalledProperty, true);
     QApplication::setStyle(style);
 }
 
@@ -1262,12 +1294,12 @@ QIcon dockTitleButtonIcon(bool isCloseButton, const QColor& fill, const QColor& 
         painter.drawEllipse(QRectF(0.5, 0.5, 17.0, 17.0));
 
         painter.setBrush(Qt::NoBrush);
-        painter.setPen(QPen(foreground, 1.55, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter.setPen(QPen(foreground, 1.35, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         if (isCloseButton) {
-            painter.drawLine(QPointF(6.0, 6.0), QPointF(12.0, 12.0));
-            painter.drawLine(QPointF(12.0, 6.0), QPointF(6.0, 12.0));
+            painter.drawLine(QPointF(6.5, 6.5), QPointF(11.5, 11.5));
+            painter.drawLine(QPointF(11.5, 6.5), QPointF(6.5, 11.5));
         } else {
-            painter.drawRect(QRectF(6.0, 6.0, 6.0, 6.0));
+            painter.drawRect(QRectF(6.5, 6.5, 5.0, 5.0));
         }
         return pixmap;
     };
@@ -7052,6 +7084,15 @@ void MainWindow::createUserUnitsDock(bool takeFocus)
 void MainWindow::addTabifiedDock(QDockWidget* newDock, bool takeFocus, Qt::DockWidgetArea area)
 {
     connect(newDock, &QDockWidget::visibilityChanged, this, &MainWindow::handleDockWidgetVisibilityChanged);
+    connect(newDock, &QDockWidget::topLevelChanged, newDock, [newDock]() {
+        // Qt replaces title button icons when changing between floating and
+        // docked. Restore our themed icons after that reset, before any hover.
+        for (QAbstractButton* button : newDock->findChildren<QAbstractButton*>(
+                 QString(), Qt::FindDirectChildrenOnly)) {
+            if (button->property("speedcrunchDockHeaderButton").toBool())
+                applyDockTitleButtonIcon(button, button->underMouse());
+        }
+    });
     addDockWidget(area, newDock);
     // Try to find an existing dock we can tabify with.
     const auto allDocks = m_allDocks; // TODO: Use Qt 5.7's qAsConst().
@@ -8298,7 +8339,7 @@ MainWindow::MainWindow(bool restorePreviousSession)
     applySettings();
     applyThemeSurfacePalette();
     refreshPaneThemes();
-    ensureDockSeparatorStyleInstalled();
+    ensureDockChromeStyleInstalled();
     updatePaneLoadedSessionCounts();
 
     if (!m_settings->hasNumberFormatStyleSetting)
@@ -11138,7 +11179,18 @@ bool MainWindow::eventFilter(QObject* o, QEvent* e)
 
     if (QAbstractButton* button = qobject_cast<QAbstractButton*>(o);
         button != nullptr && button->property("speedcrunchDockHeaderButton").toBool()) {
-        if (e->type() == QEvent::Enter
+        if (e->type() == QEvent::Paint) {
+            // Qt's dock title button ignores QAbstractButton::iconSize() and
+            // shrinks icons to 5/8 of PM_SmallIconSize on framed styles (Windows).
+            // Paint our themed icon directly at its intended logical size.
+            QPainter painter(button);
+            const QSize size = button->iconSize().boundedTo(button->size());
+            const QRect iconRect(QPoint((button->width() - size.width()) / 2,
+                                        (button->height() - size.height()) / 2), size);
+            button->icon().paint(&painter, iconRect, Qt::AlignCenter,
+                                 button->isEnabled() ? QIcon::Normal : QIcon::Disabled);
+            return true;
+        } else if (e->type() == QEvent::Enter
             || e->type() == QEvent::HoverEnter
             || e->type() == QEvent::MouseMove) {
             applyDockTitleButtonIcon(button, true);

@@ -1,4 +1,5 @@
 include(common.pri)
+DEFINES += SPEEDCRUNCH_UI_TEST
 
 SOURCES += ../core/userdefinitions.cpp \
            ../gui/aboutbox.cpp \

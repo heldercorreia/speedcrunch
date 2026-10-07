@@ -130,9 +130,21 @@ bool shouldUseNonAtomicSettingsSync(const QString& fileName)
 }
 } // namespace
 
+#ifdef SPEEDCRUNCH_UI_TEST
+static QString uiTestStoragePath(const QString& directory)
+{
+    const QString root = QString::fromUtf8(qgetenv("SPEEDCRUNCH_UI_TEST_STORAGE"));
+    if (root.isEmpty())
+        qFatal("UI tests must initialize UiTestFixture before accessing settings.");
+    return QDir(root).filePath(directory);
+}
+#endif
+
 QString Settings::getConfigPath()
 {
-#ifdef SPEEDCRUNCH_PORTABLE
+#ifdef SPEEDCRUNCH_UI_TEST
+    return uiTestStoragePath(QStringLiteral("config"));
+#elif defined(SPEEDCRUNCH_PORTABLE)
     return QApplication::applicationDirPath();
 #elif defined(Q_OS_WIN)
     // On Windows, use AppData/Roaming/SpeedCrunch, the same path as getDataPath.
@@ -148,7 +160,9 @@ QString Settings::getConfigPath()
 
 QString Settings::getDataPath()
 {
-#ifdef SPEEDCRUNCH_PORTABLE
+#ifdef SPEEDCRUNCH_UI_TEST
+    return uiTestStoragePath(QStringLiteral("data"));
+#elif defined(SPEEDCRUNCH_PORTABLE)
     return QApplication::applicationDirPath();
 #elif QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
     return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
@@ -178,7 +192,9 @@ QString Settings::getDataPath()
 
 QString Settings::getCachePath()
 {
-#ifdef SPEEDCRUNCH_PORTABLE
+#ifdef SPEEDCRUNCH_UI_TEST
+    return uiTestStoragePath(QStringLiteral("cache"));
+#elif defined(SPEEDCRUNCH_PORTABLE)
     return QApplication::applicationDirPath();
 #else
     return QStandardPaths::writableLocation(QStandardPaths::CacheLocation);

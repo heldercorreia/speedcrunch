@@ -16,6 +16,7 @@
 #include "core/units.h"
 #include "core/userfunction.h"
 #include "core/userunit.h"
+#include "uitestfixture.h"
 
 #include <QApplication>
 #include <QInputMethodEvent>
@@ -53,6 +54,7 @@ class TestEditorUi : public QObject {
     Q_OBJECT
 
 private slots:
+    void init() { UiTestFixture::resetSettings(); }
     void blocks_consecutive_plus();
     void respects_keyboard_layout_for_equals_and_plus_data();
     void respects_keyboard_layout_for_equals_and_plus();
@@ -5116,5 +5118,8 @@ void TestEditorUi::cursor_free_painting_preserves_text_and_selections()
              "Cursor-free painting changes Qt's text, background, or selection rendering");
 }
 
-QTEST_MAIN(TestEditorUi)
+int main(int argc, char** argv)
+{
+    return UiTestFixture::run<TestEditorUi>(argc, argv);
+}
 #include "testeditorui.moc"
