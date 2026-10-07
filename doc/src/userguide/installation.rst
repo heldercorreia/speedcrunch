@@ -97,3 +97,15 @@ the repository onto your machine by running the following command::
 
 The main readme file (:file:`README.md` at the root of the repository) contains
 instructions on how to compile SpeedCrunch.
+
+By default, CMake builds only the application. The Qt Test module is required only
+when building the tests. To enable the test executables and register them with
+CTest, configure with ``-DBUILD_TESTING=ON``, then build and run the tests from the
+repository root::
+
+    cmake -S src -B src/build -DBUILD_TESTING=ON
+    cmake --build src/build --config Release --parallel
+    ctest --test-dir src/build -C Release --output-on-failure
+
+The option is saved in the build directory's CMake cache. To return that directory
+to application-only builds, configure it again with ``-DBUILD_TESTING=OFF``.

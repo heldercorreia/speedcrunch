@@ -18,9 +18,15 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 message("Build type: ${CMAKE_BUILD_TYPE}")
 
-find_package(Qt6 COMPONENTS Core Widgets Help Network Test QUIET)
+option(BUILD_TESTING "Build the test executables and enable CTest" OFF)
+
+find_package(Qt6 COMPONENTS Core Widgets Help Network QUIET)
 if(Qt6_FOUND)
     message(STATUS "Found Qt version: ${Qt6_VERSION}")
+endif()
+
+if(BUILD_TESTING)
+    find_package(Qt6 COMPONENTS Test REQUIRED)
 endif()
 
 if (MSVC)
@@ -51,7 +57,7 @@ ADD_DEFINITIONS(-DQT_USE_QSTRINGBUILDER)
 
 include(SourceFiles.cmake)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+if(BUILD_TESTING AND CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     set_source_files_properties(tests/testfloatnum.c PROPERTIES
         COMPILE_OPTIONS "-Wno-strict-prototypes")
 endif()
@@ -111,47 +117,49 @@ add_custom_target(confclean COMMAND rm -rf Makefile CMakeFiles/ CMakeCache.txt c
 set(QT_LIBRARIES Qt6::Widgets Qt6::Help Qt6::Network Qt6::Core)
 target_link_libraries(${APPLICATION_NAME} ${QT_LIBRARIES})
 
-enable_testing()
+if(BUILD_TESTING)
+    enable_testing()
 
-add_executable(testhmath ${testhmath_SOURCES})
-target_link_libraries(testhmath ${QT_LIBRARIES})
-add_test(testhmath testhmath)
+    add_executable(testhmath ${testhmath_SOURCES})
+    target_link_libraries(testhmath ${QT_LIBRARIES})
+    add_test(testhmath testhmath)
 
-add_executable(testevaluator ${testevaluator_SOURCES} ${testevaluator_HEADERS_MOC})
-target_link_libraries(testevaluator ${QT_LIBRARIES})
-add_test(testevaluator testevaluator)
+    add_executable(testevaluator ${testevaluator_SOURCES} ${testevaluator_HEADERS_MOC})
+    target_link_libraries(testevaluator ${QT_LIBRARIES})
+    add_test(testevaluator testevaluator)
 
-add_executable(testfloatnum ${testfloatnum_SOURCES})
-set_property(TARGET testfloatnum APPEND PROPERTY COMPILE_DEFINITIONS _FLOATNUMTEST)
-add_test(testfloatnum testfloatnum)
+    add_executable(testfloatnum ${testfloatnum_SOURCES})
+    set_property(TARGET testfloatnum APPEND PROPERTY COMPILE_DEFINITIONS _FLOATNUMTEST)
+    add_test(testfloatnum testfloatnum)
 
-add_executable(testcmath ${testcmath_SOURCES})
-target_link_libraries(testcmath ${QT_LIBRARIES})
-add_test(testcmath testcmath)
+    add_executable(testcmath ${testcmath_SOURCES})
+    target_link_libraries(testcmath ${QT_LIBRARIES})
+    add_test(testcmath testcmath)
 
-add_executable(testdmath ${testdmath_SOURCES})
-target_link_libraries(testdmath ${QT_LIBRARIES})
-add_test(testdmath testdmath)
+    add_executable(testdmath ${testdmath_SOURCES})
+    target_link_libraries(testdmath ${QT_LIBRARIES})
+    add_test(testdmath testdmath)
 
-add_executable(testserial ${testserial_SOURCES})
-target_link_libraries(testserial ${QT_LIBRARIES})
-add_test(testserial testserial)
+    add_executable(testserial ${testserial_SOURCES})
+    target_link_libraries(testserial ${QT_LIBRARIES})
+    add_test(testserial testserial)
 
-add_executable(testeditorui ${testeditorui_SOURCES})
-target_link_libraries(testeditorui ${QT_LIBRARIES} Qt6::Test)
-add_test(NAME testeditorui COMMAND testeditorui)
+    add_executable(testeditorui ${testeditorui_SOURCES})
+    target_link_libraries(testeditorui ${QT_LIBRARIES} Qt6::Test)
+    add_test(NAME testeditorui COMMAND testeditorui)
 
-add_executable(testoklch ${testoklch_SOURCES})
-target_link_libraries(testoklch ${QT_LIBRARIES} Qt6::Test)
-add_test(NAME testoklch COMMAND testoklch)
+    add_executable(testoklch ${testoklch_SOURCES})
+    target_link_libraries(testoklch ${QT_LIBRARIES} Qt6::Test)
+    add_test(NAME testoklch COMMAND testoklch)
 
-add_executable(testdocksui ${testdocksui_SOURCES})
-target_link_libraries(testdocksui ${QT_LIBRARIES} Qt6::Test)
-add_test(NAME testdocksui COMMAND testdocksui)
+    add_executable(testdocksui ${testdocksui_SOURCES})
+    target_link_libraries(testdocksui ${QT_LIBRARIES} Qt6::Test)
+    add_test(NAME testdocksui COMMAND testdocksui)
 
-add_executable(testdisplayui ${testdisplayui_SOURCES})
-target_link_libraries(testdisplayui ${QT_LIBRARIES} Qt6::Test)
-add_test(NAME testdisplayui COMMAND testdisplayui)
+    add_executable(testdisplayui ${testdisplayui_SOURCES})
+    target_link_libraries(testdisplayui ${QT_LIBRARIES} Qt6::Test)
+    add_test(NAME testdisplayui COMMAND testdisplayui)
+endif()
 
 set_property(TARGET ${APPLICATION_NAME} APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>:EVALUATOR_DEBUG>)
 

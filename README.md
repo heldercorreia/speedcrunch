@@ -15,7 +15,8 @@ Visit the [SpeedCrunch website](https://www.speedcrunch.org/) for
 To build SpeedCrunch, you need:
 
 - A compiler toolchain with C17 and C++17 support
-- [Qt](https://www.qt.io/) 6.x (Core, Widgets, Help, Network, Test)
+- [Qt](https://www.qt.io/) 6.x (Core, Widgets, Help, Network; Test is required only
+  when building the tests)
 - [CMake](https://cmake.org/) 3.16 or later
 
 To build SpeedCrunch in a dedicated build directory and install it, run the following
@@ -24,6 +25,16 @@ commands from the root of the source directory:
     cmake -S src -B build
     cmake --build build --config Release --parallel
     cmake --install build --config Release
+
+By default, only the application is built. To also build and run the tests, enable
+`BUILD_TESTING` when configuring:
+
+    cmake -S src -B build -DBUILD_TESTING=ON
+    cmake --build build --config Release --parallel
+    ctest --test-dir build -C Release --output-on-failure
+
+CMake saves this option in the build directory's cache. Configure again with
+`-DBUILD_TESTING=OFF` to return to application-only builds.
 
 When building against a Qt version that is not the system default Qt installation,
 point CMake towards the Qt installation to use by setting `CMAKE_PREFIX_PATH` or
@@ -38,6 +49,8 @@ Example (Homebrew on macOS):
 You can customize the build using the following variables. These are specified when
 running CMake, in the form `cmake -S src -B build -Dvariable=value`.
 
+- **BUILD_TESTING**: Set this to `ON` to build the test executables and register
+  them with CTest. Defaults to `OFF`.
 - **PORTABLE_SPEEDCRUNCH**: Set this to `on` to have the application settings stored
   in the same location as the executable, e.g. for running from a USB drive without
   requiring installation.
