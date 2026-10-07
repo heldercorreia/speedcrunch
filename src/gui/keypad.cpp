@@ -1051,6 +1051,11 @@ void Keypad::sizeButtons()
     if (m_isCustom)
         return;
 
+    // Resolve the stylesheet font before measuring. Otherwise an initial keypad
+    // and one rebuilt under an already polished window can use different metrics.
+    key(Key0)->ensurePolished();
+    key(KeyAcos)->ensurePolished();
+
     // The same font in all buttons, so just pick one.
     QFontMetrics fm = key(Key0)->fontMetrics();
 
@@ -1090,6 +1095,8 @@ void Keypad::sizeCustomButtons()
 {
     if (!m_isCustom || m_customWidgets.isEmpty())
         return;
+
+    m_customWidgets.first()->ensurePolished();
 
     // Match preset keypad sizing baseline exactly (bold, larger numeric key font).
     QFont boldFont = m_customWidgets.first()->font();
