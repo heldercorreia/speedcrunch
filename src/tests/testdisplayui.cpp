@@ -745,6 +745,8 @@ private slots:
     void dock_list_selected_row_keeps_primary_fill_while_hovered();
     void custom_keypad_action_stays_checked_after_dialog_accepts();
     void keypad_power_button_uses_exponent_label_but_inserts_caret();
+    void keypad_zoom_round_trip_restores_button_sizes_data();
+    void keypad_zoom_round_trip_restores_button_sizes();
     void keypad_input_stays_in_own_window_data();
     void keypad_input_stays_in_own_window();
     void functions_dock_retranslates_domain_label_after_language_change();
@@ -6209,6 +6211,84 @@ void TestDisplayUi::view_dock_menu_tracks_and_changes_only_active_window()
         QVERIFY(!dockIsVisible(&secondWindow, spec));
         QVERIFY(!firstAction->isChecked());
         QVERIFY(!secondAction->isChecked());
+    }
+}
+
+void TestDisplayUi::keypad_zoom_round_trip_restores_button_sizes_data()
+{
+    QTest::addColumn<int>("mode");
+    QTest::newRow("scientific-wide") << int(Settings::KeypadModeScientificWide);
+    QTest::newRow("scientific-narrow") << int(Settings::KeypadModeScientificNarrow);
+    QTest::newRow("basic") << int(Settings::KeypadModeBasicWide);
+    QTest::newRow("custom") << int(Settings::KeypadModeCustom);
+}
+
+void TestDisplayUi::keypad_zoom_round_trip_restores_button_sizes()
+{
+    QFETCH(int, mode);
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    const auto oldCustomKeypad = settings->customKeypad;
+    const auto restoreCustomKeypad = qScopeGuard([settings, oldCustomKeypad]() {
+        settings->customKeypad = oldCustomKeypad;
+    });
+    settings->customKeypad.rows = 1;
+    settings->customKeypad.columns = 1;
+    settings->customKeypad.buttons.clear();
+    Settings::CustomKeypadButton customButton;
+    customButton.label = QStringLiteral("7");
+    customButton.text = QStringLiteral("7");
+    customButton.row = 0;
+    customButton.column = 0;
+    customButton.action = Settings::CustomKeypadActionInsertText;
+    settings->customKeypad.buttons.append(customButton);
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    settings->keypadMode = static_cast<Settings::KeypadMode>(mode);
+    settings->keypadVisible = true;
+    settings->keypadZoomPercent = 100;
+    settings->constantsDockVisible = false;
+    settings->functionsDockVisible = false;
+    settings->historyDockVisible = false;
+    settings->formulaBookDockVisible = false;
+    settings->variablesDockVisible = false;
+    settings->userFunctionsDockVisible = false;
+    settings->userUnitsDockVisible = false;
+    settings->bitfieldVisible = false;
+
+    MainWindow window;
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QCoreApplication::processEvents();
+    const auto button = [&window]() {
+        return keypadButtonWithText(window.findChild<Keypad*>(), QStringLiteral("7"));
+    };
+    QVERIFY(button() != nullptr);
+    const QSize originalSize = button()->size();
+    const QFont originalFont = button()->font();
+    const QSize originalKeypadSize = window.findChild<Keypad*>()->size();
+
+    for (int zoom : {150, 200, 150}) {
+        QAction zoomAction;
+        zoomAction.setData(zoom);
+        QVERIFY(QMetaObject::invokeMethod(&window, "setKeypadZoom", Qt::DirectConnection,
+                                          Q_ARG(QAction*, &zoomAction)));
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
+        QVERIFY(button() != nullptr);
+        QVERIFY(button()->width() > originalSize.width());
+        QVERIFY(button()->font().pointSizeF() > originalFont.pointSizeF());
+
+        zoomAction.setData(100);
+        QVERIFY(QMetaObject::invokeMethod(&window, "setKeypadZoom", Qt::DirectConnection,
+                                          Q_ARG(QAction*, &zoomAction)));
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
+        QVERIFY(button() != nullptr);
+        QCOMPARE(button()->font(), originalFont);
+        QCOMPARE(button()->size(), originalSize);
+        QCOMPARE(window.findChild<Keypad*>()->size(), originalKeypadSize);
     }
 }
 
