@@ -12,86 +12,10 @@ Visit the [SpeedCrunch website](https://www.speedcrunch.org/) for
 ![SpeedCrunch screenshot](doc/src/screen1.png)
 
 ## Building
-To build SpeedCrunch, you need:
 
-- A compiler toolchain with C17 and C++17 support
-- [Qt](https://www.qt.io/) 6.x (Core, Widgets, Help, Network; Test is required only
-  when building the tests)
-- [CMake](https://cmake.org/) 3.16 or later
-
-To build SpeedCrunch in a dedicated build directory and install it, run the following
-commands from the root of the source directory:
-
-    cmake -S . -B build
-    cmake --build build --config Release --parallel
-    cmake --install build --config Release
-
-Application and test executables are placed directly under `build`. On macOS,
-the default build produces `build/SpeedCrunch.app`. Some generators use
-configuration subdirectories, such as `build/Release`.
-
-Use a fresh build directory if an existing one was configured before the root
-CMake entry point was added. CMake saves the source directory in its cache.
-
-By default, only the application is built. To also build and run the tests, enable
-`BUILD_TESTING` when configuring:
-
-    cmake -S . -B build -DBUILD_TESTING=ON
-    cmake --build build --config Release --parallel
-    ctest --test-dir build -C Release --output-on-failure
-
-CMake saves this option in the build directory's cache. Configure again with
-`-DBUILD_TESTING=OFF` to return to application-only builds.
-
-When building against a Qt version that is not the system default Qt installation,
-point CMake towards the Qt installation to use by setting `CMAKE_PREFIX_PATH` or
-`Qt6_DIR` when running CMake.
-
-Example (Homebrew on macOS):
-
-    brew install qt
-    cmake -S . -B build -DCMAKE_PREFIX_PATH="$(brew --prefix qt)"
-    cmake --build build --config Release --parallel
-
-You can customize the build using the following variables. These are specified when
-running CMake, in the form `cmake -S . -B build -Dvariable=value`.
-
-- **BUILD_TESTING**: Set this to `ON` to build the test executables and register
-  them with CTest. Defaults to `OFF`.
-- **PORTABLE_SPEEDCRUNCH**: Set this to `on` to have the application settings stored
-  in the same location as the executable, e.g. for running from a USB drive without
-  requiring installation.
-- **CMAKE_INSTALL_PREFIX**: Change the installation prefix for SpeedCrunch.
-- **CMAKE_INSTALL_BINDIR**: Change the executable directory on Unix systems except
-  macOS and Haiku. Defaults to `bin` under the installation prefix.
-- **CMAKE_INSTALL_DATAROOTDIR**: Change the shared data root on Unix systems except
-  macOS and Haiku. Defaults to `share` under the installation prefix.
-- **HTML_DOCS_DIR**: Change the path to the HTML manual that's embedded in the binary
-  by the build. By default, a bundled prebuilt copy is used to minimize dependencies.
-
-### Unix installation and packaging
-
-On Linux and other Unix systems except macOS and Haiku, installation uses CMake's
-`GNUInstallDirs` conventions. `CMAKE_INSTALL_BINDIR` and
-`CMAKE_INSTALL_DATAROOTDIR` are relative to `CMAKE_INSTALL_PREFIX` unless explicitly
-configured as absolute paths. For example:
-
-    cmake -S . -B build -DCMAKE_INSTALL_PREFIX=/usr \
-        -DCMAKE_INSTALL_BINDIR=bin -DCMAKE_INSTALL_DATAROOTDIR=share
-    cmake --build build --config Release --parallel
-    DESTDIR=/tmp/speedcrunch-package cmake --install build --config Release
-
-`DESTDIR` stages the installation under another directory for packaging. With
-the example above, the executable is staged under
-`/tmp/speedcrunch-package/usr/bin`. Desktop entries and application metadata are
-installed under `applications` and `metainfo` within the shared data root.
-
-Desktop icons are installed in the `hicolor` theme: the SVG in
-`icons/hicolor/scalable/apps` and PNGs in
-`icons/hicolor/<size>x<size>/apps` for sizes 16, 22, 24, 32, 48, 64, 128, and 256.
-The installed icon basename is `org.speedcrunch.SpeedCrunch`. The PNG files are
-included in the source distribution; building and installing SpeedCrunch does
-not require icon-generation tools.
+See [BUILDING.md](BUILDING.md) for requirements and instructions on building,
+running the tests, installing SpeedCrunch, and packaging it. The guide also
+links to instructions for building the manual.
 
 ## File locations
 SpeedCrunch uses [Qt's standard per-user locations](https://doc.qt.io/qt-6/qstandardpaths.html)
@@ -106,10 +30,6 @@ for persistent application data and configuration:
 Qt respects system-specific overrides to these locations. In the Windows portable build,
 application data and preferences/configuration are all stored in the same directory as
 the portable application.
-
-## Building the manual
-Building the HTML manual is normally not necessary because a prebuilt copy is included
-with the SpeedCrunch source. For more information, see the [manual's README](doc/src/README.md).
 
 ## Contributing
 - Report bugs, request features or implement a ticket from the [issue tracker](https://speedcrunch.org/issues.html).

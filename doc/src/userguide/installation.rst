@@ -88,36 +88,8 @@ Flatpak and Flathub. Then install SpeedCrunch from its `store page <flathub-sc_>
 Building from Source
 --------------------
 
-The SpeedCrunch source code is maintained on `GitHub`_ in a Git repository. Clone
-the repository onto your machine by running the following command::
-
-    git clone https://github.com/heldercorreia/speedcrunch.git
+The SpeedCrunch source code is maintained on `GitHub`_ in a Git repository.
+For build requirements and instructions on compiling, running the tests, and
+installing from source, see :file:`BUILDING.md` at the repository root.
 
 .. _GitHub: https://github.com/heldercorreia/speedcrunch
-
-The main readme file (:file:`README.md` at the root of the repository) contains
-instructions on how to compile SpeedCrunch.
-
-Configure CMake from the repository root with ``cmake -S . -B build``.
-Application and test executables are placed directly under ``build``. On macOS,
-the default build produces ``build/SpeedCrunch.app``. Some generators use
-configuration subdirectories, such as ``build/Release``.
-
-Use a fresh build directory if an existing one was configured before the root
-CMake entry point was added. CMake saves the source directory in its cache.
-
-By default, CMake builds only the application. The Qt Test module is required only
-when building the tests. To enable the test executables and register them with
-CTest, configure with ``-DBUILD_TESTING=ON``, then build and run the tests from the
-repository root::
-
-    cmake -S . -B build -DBUILD_TESTING=ON
-    cmake --build build --config Release --parallel
-    ctest --test-dir build -C Release --output-on-failure
-
-The UI test suites use temporary configuration, session and cache directories,
-and reset settings before each test case. They suppress the first-run number
-format prompt; an unexpected prompt fails the test instead of blocking the suite.
-
-The option is saved in the build directory's CMake cache. To return that directory
-to application-only builds, configure it again with ``-DBUILD_TESTING=OFF``.
