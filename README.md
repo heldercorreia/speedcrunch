@@ -22,14 +22,21 @@ To build SpeedCrunch, you need:
 To build SpeedCrunch in a dedicated build directory and install it, run the following
 commands from the root of the source directory:
 
-    cmake -S src -B build
+    cmake -S . -B build
     cmake --build build --config Release --parallel
     cmake --install build --config Release
+
+Application and test executables are placed directly under `build`. On macOS,
+the default build produces `build/SpeedCrunch.app`. Some generators use
+configuration subdirectories, such as `build/Release`.
+
+Use a fresh build directory if an existing one was configured before the root
+CMake entry point was added. CMake saves the source directory in its cache.
 
 By default, only the application is built. To also build and run the tests, enable
 `BUILD_TESTING` when configuring:
 
-    cmake -S src -B build -DBUILD_TESTING=ON
+    cmake -S . -B build -DBUILD_TESTING=ON
     cmake --build build --config Release --parallel
     ctest --test-dir build -C Release --output-on-failure
 
@@ -43,11 +50,11 @@ point CMake towards the Qt installation to use by setting `CMAKE_PREFIX_PATH` or
 Example (Homebrew on macOS):
 
     brew install qt
-    cmake -S src -B build -DCMAKE_PREFIX_PATH="$(brew --prefix qt)"
+    cmake -S . -B build -DCMAKE_PREFIX_PATH="$(brew --prefix qt)"
     cmake --build build --config Release --parallel
 
 You can customize the build using the following variables. These are specified when
-running CMake, in the form `cmake -S src -B build -Dvariable=value`.
+running CMake, in the form `cmake -S . -B build -Dvariable=value`.
 
 - **BUILD_TESTING**: Set this to `ON` to build the test executables and register
   them with CTest. Defaults to `OFF`.
@@ -69,7 +76,7 @@ On Linux and other Unix systems except macOS and Haiku, installation uses CMake'
 `CMAKE_INSTALL_DATAROOTDIR` are relative to `CMAKE_INSTALL_PREFIX` unless explicitly
 configured as absolute paths. For example:
 
-    cmake -S src -B build -DCMAKE_INSTALL_PREFIX=/usr \
+    cmake -S . -B build -DCMAKE_INSTALL_PREFIX=/usr \
         -DCMAKE_INSTALL_BINDIR=bin -DCMAKE_INSTALL_DATAROOTDIR=share
     cmake --build build --config Release --parallel
     DESTDIR=/tmp/speedcrunch-package cmake --install build --config Release

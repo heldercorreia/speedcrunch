@@ -98,14 +98,22 @@ the repository onto your machine by running the following command::
 The main readme file (:file:`README.md` at the root of the repository) contains
 instructions on how to compile SpeedCrunch.
 
+Configure CMake from the repository root with ``cmake -S . -B build``.
+Application and test executables are placed directly under ``build``. On macOS,
+the default build produces ``build/SpeedCrunch.app``. Some generators use
+configuration subdirectories, such as ``build/Release``.
+
+Use a fresh build directory if an existing one was configured before the root
+CMake entry point was added. CMake saves the source directory in its cache.
+
 By default, CMake builds only the application. The Qt Test module is required only
 when building the tests. To enable the test executables and register them with
 CTest, configure with ``-DBUILD_TESTING=ON``, then build and run the tests from the
 repository root::
 
-    cmake -S src -B src/build -DBUILD_TESTING=ON
-    cmake --build src/build --config Release --parallel
-    ctest --test-dir src/build -C Release --output-on-failure
+    cmake -S . -B build -DBUILD_TESTING=ON
+    cmake --build build --config Release --parallel
+    ctest --test-dir build -C Release --output-on-failure
 
 The UI test suites use temporary configuration, session and cache directories,
 and reset settings before each test case. They suppress the first-run number

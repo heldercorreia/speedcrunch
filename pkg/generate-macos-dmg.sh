@@ -2,9 +2,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SRC_DIR="$ROOT_DIR/src"
-BUILD_DIR="$SRC_DIR/build-arm64"
-OUT_DIR="$SRC_DIR/build/dmg"
+BUILD_DIR="$ROOT_DIR/build-arm64"
+OUT_DIR="$ROOT_DIR/build/dmg"
 
 require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -29,15 +28,15 @@ if [[ -z "${JOBS:-}" ]]; then
 fi
 
 echo "Configuring arm64 build..."
-cmake -S "$SRC_DIR" -B "$BUILD_DIR" \
+cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
   -DCMAKE_OSX_ARCHITECTURES="arm64" \
   -DCMAKE_BUILD_TYPE=Release
 
 echo "Building SpeedCrunch (arm64, parallel jobs: $JOBS)..."
 cmake --build "$BUILD_DIR" --config Release --target SpeedCrunch --parallel "$JOBS"
 
-APP_BIN="$BUILD_DIR/SpeedCrunch.app/Contents/MacOS/SpeedCrunch"
 APP_BUNDLE="$BUILD_DIR/SpeedCrunch.app"
+APP_BIN="$APP_BUNDLE/Contents/MacOS/SpeedCrunch"
 APP_FRAMEWORKS_DIR="$APP_BUNDLE/Contents/Frameworks"
 APP_PLIST="$APP_BUNDLE/Contents/Info.plist"
 if [[ ! -f "$APP_BIN" ]]; then

@@ -3,6 +3,7 @@ src/speedcrunch.pro.user
 /.idea
 cmake-build-debug
 build/
+/build-*/
 src/build*/
 **/.DS_Store
 doc/src/_build-*/.doctrees/

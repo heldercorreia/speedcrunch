@@ -1,5 +1,9 @@
 if(APPLE)
     set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install")
+    if(NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+        # The parent install rules need the same prefix as the app bundle.
+        set(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" PARENT_SCOPE)
+    endif()
 endif()
 
 set(CPACK_PACKAGE_VENDOR SpeedCrunch)

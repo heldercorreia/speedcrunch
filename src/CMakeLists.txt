@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(speedcrunch)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -112,7 +112,9 @@ target_compile_definitions(${APPLICATION_NAME}
         $<$<NOT:$<CONFIG:Debug>>:QT_NO_WARNING_OUTPUT>
 )
 
-add_custom_target(confclean COMMAND rm -rf Makefile CMakeFiles/ CMakeCache.txt cmake_install.cmake DartTestfile.txt install_manifest.txt)
+add_custom_target(confclean
+    COMMAND rm -rf Makefile CMakeFiles/ CMakeCache.txt cmake_install.cmake DartTestfile.txt install_manifest.txt
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
 
 set(QT_LIBRARIES Qt6::Widgets Qt6::Help Qt6::Network Qt6::Core)
 target_link_libraries(${APPLICATION_NAME} ${QT_LIBRARIES})
@@ -122,27 +124,27 @@ if(BUILD_TESTING)
 
     add_executable(testhmath ${testhmath_SOURCES})
     target_link_libraries(testhmath ${QT_LIBRARIES})
-    add_test(testhmath testhmath)
+    add_test(NAME testhmath COMMAND testhmath)
 
     add_executable(testevaluator ${testevaluator_SOURCES} ${testevaluator_HEADERS_MOC})
     target_link_libraries(testevaluator ${QT_LIBRARIES})
-    add_test(testevaluator testevaluator)
+    add_test(NAME testevaluator COMMAND testevaluator)
 
     add_executable(testfloatnum ${testfloatnum_SOURCES})
     set_property(TARGET testfloatnum APPEND PROPERTY COMPILE_DEFINITIONS _FLOATNUMTEST)
-    add_test(testfloatnum testfloatnum)
+    add_test(NAME testfloatnum COMMAND testfloatnum)
 
     add_executable(testcmath ${testcmath_SOURCES})
     target_link_libraries(testcmath ${QT_LIBRARIES})
-    add_test(testcmath testcmath)
+    add_test(NAME testcmath COMMAND testcmath)
 
     add_executable(testdmath ${testdmath_SOURCES})
     target_link_libraries(testdmath ${QT_LIBRARIES})
-    add_test(testdmath testdmath)
+    add_test(NAME testdmath COMMAND testdmath)
 
     add_executable(testserial ${testserial_SOURCES})
     target_link_libraries(testserial ${QT_LIBRARIES})
-    add_test(testserial testserial)
+    add_test(NAME testserial COMMAND testserial)
 
     add_executable(testeditorui ${testeditorui_SOURCES})
     target_link_libraries(testeditorui ${QT_LIBRARIES} Qt6::Test)
@@ -166,7 +168,7 @@ endif()
 
 set_property(TARGET ${APPLICATION_NAME} APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>:EVALUATOR_DEBUG>)
 
-include_directories(${CMAKE_BINARY_DIR} thirdparty core gui math)
+include_directories("${CMAKE_CURRENT_BINARY_DIR}" thirdparty core gui math)
 
 ################################# INSTALL ######################################
 
