@@ -147,6 +147,14 @@ Expression Editor Features
 
 The expression editor provides some advanced features:
 
+* Undo and redo
+    Press :kbd:`Ctrl+Z` to undo the last edit. On Windows/Linux, use
+    :kbd:`Ctrl+Shift+Z` or :kbd:`Ctrl+Y` to redo it. On macOS, use
+    :kbd:`Cmd+Shift+Z`. Each key press is a separate undo step.
+    Automatic changes made by that key, such as inserting a closing bracket
+    or converting an exponent to superscript, are undone together. Text
+    committed through an input method is undone as a single edit.
+
 * Automatic closing parentheses and square brackets
     Typing ``(`` or ``[`` with no text selected inserts the matching closing
     character only when the cursor is at the end of the expression or only

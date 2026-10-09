@@ -19,6 +19,7 @@
 #include "uitestfixture.h"
 
 #include <QApplication>
+#include <QClipboard>
 #include <QInputMethodEvent>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -87,6 +88,13 @@ private slots:
     void backspace_removes_typed_operator_after_unit();
     void editing_keys_bypass_typing_restrictions_data();
     void editing_keys_bypass_typing_restrictions();
+    void undo_redo_shortcuts_preserve_expression_data();
+    void undo_redo_shortcuts_preserve_expression();
+    void typing_undoes_one_key_at_a_time_data();
+    void typing_undoes_one_key_at_a_time();
+    void non_printable_key_payloads_do_not_replace_selection();
+    void clipboard_shortcuts_do_not_insert_key_payloads_data();
+    void clipboard_shortcuts_do_not_insert_key_payloads();
     void treats_spaced_question_comment_as_atomic_navigation_and_edit_token();
     void treats_spaced_equal_as_atomic_navigation_and_edit_token();
     void treats_leading_question_comment_as_atomic_navigation_and_edit_token();
@@ -1389,6 +1397,202 @@ void TestEditorUi::editing_keys_bypass_typing_restrictions()
     QCOMPARE(editor.document()->toRawText(), expected);
     QCOMPARE(editor.textCursor().position(), expectedPosition);
     QCOMPARE(escapeSpy.count(), key == Qt::Key_Escape ? 1 : 0);
+}
+
+void TestEditorUi::undo_redo_shortcuts_preserve_expression_data()
+{
+    QTest::addColumn<QString>("expression");
+    QTest::addColumn<int>("position");
+    QTest::addColumn<int>("selectionLength");
+    QTest::addColumn<int>("shortcutPosition");
+    QTest::addColumn<QString>("payload");
+
+    const QStringList expressions = {
+        QStringLiteral("123456"), QStringLiteral("12+34"),
+        QStringLiteral("12[m/s]"), QString::fromUtf8("12°34′56″"),
+        QStringLiteral("12 ? comment")
+    };
+    const QStringList payloads = {QString(), QString(QChar(0x1a)), QStringLiteral("z")};
+    const QList<int> shortcutPositions = {3, 3, 5, 4, 7};
+    for (int context = 0; context < expressions.size(); ++context) {
+        for (int payload = 0; payload < payloads.size(); ++payload) {
+            for (int selectionLength : {0, 2}) {
+                const QByteArray name = QStringLiteral("context-%1-payload-%2-selection-%3")
+                    .arg(context).arg(payload).arg(selectionLength).toLatin1();
+                QTest::newRow(name.constData())
+                    << expressions.at(context) << 2 << selectionLength
+                    << shortcutPositions.at(context) << payloads.at(payload);
+            }
+        }
+    }
+}
+
+void TestEditorUi::undo_redo_shortcuts_preserve_expression()
+{
+    QFETCH(QString, expression);
+    QFETCH(int, position);
+    QFETCH(int, selectionLength);
+    QFETCH(int, shortcutPosition);
+    QFETCH(QString, payload);
+
+    const auto undoBindings = QKeySequence::keyBindings(QKeySequence::Undo);
+    const auto redoBindings = QKeySequence::keyBindings(QKeySequence::Redo);
+    QVERIFY(!undoBindings.isEmpty());
+    QVERIFY(!redoBindings.isEmpty());
+    for (const QKeySequence& undoBinding : undoBindings) {
+        for (const QKeySequence& redoBinding : redoBindings) {
+            Editor editor;
+            editor.setAutoCompletionEnabled(false);
+            editor.setText(expression);
+            const QString original = editor.document()->toRawText();
+            QTextCursor cursor = editor.textCursor();
+            cursor.setPosition(position);
+            cursor.setPosition(position + selectionLength, QTextCursor::KeepAnchor);
+            editor.setTextCursor(cursor);
+            QTest::keyClicks(&editor, QStringLiteral("9"));
+            const QString edited = editor.document()->toRawText();
+            QVERIFY(edited != original);
+            editor.setCursorPosition(shortcutPosition);
+
+            // Native shortcuts can carry a control character or printable text.
+            const auto undoKey = undoBinding[0];
+            QKeyEvent undoEvent(QEvent::KeyPress, undoKey.key(), undoKey.keyboardModifiers(), payload);
+            QVERIFY(undoEvent.matches(QKeySequence::Undo));
+            QApplication::sendEvent(&editor, &undoEvent);
+            QCOMPARE(editor.document()->toRawText(), original);
+            QVERIFY(editor.document()->isRedoAvailable());
+
+            // Keep a selection active to catch accidental replacement by shortcut text.
+            cursor = editor.textCursor();
+            cursor.setPosition(0);
+            cursor.setPosition(2, QTextCursor::KeepAnchor);
+            editor.setTextCursor(cursor);
+            const auto redoKey = redoBinding[0];
+            const QString redoPayload = payload.isEmpty() ? QString()
+                : payload.at(0).isPrint() ? QStringLiteral("z") : QString(QChar(0x19));
+            QKeyEvent redoEvent(QEvent::KeyPress, redoKey.key(), redoKey.keyboardModifiers(), redoPayload);
+            QVERIFY(redoEvent.matches(QKeySequence::Redo));
+            QApplication::sendEvent(&editor, &redoEvent);
+            QCOMPARE(editor.document()->toRawText(), edited);
+            QApplication::sendEvent(&editor, &redoEvent);
+            QCOMPARE(editor.document()->toRawText(), edited);
+
+            QApplication::sendEvent(&editor, &undoEvent);
+            QCOMPARE(editor.document()->toRawText(), original);
+            QVERIFY(!editor.document()->isUndoAvailable());
+            QApplication::sendEvent(&editor, &undoEvent);
+            QCOMPARE(editor.document()->toRawText(), original);
+            QVERIFY(editor.document()->isRedoAvailable());
+        }
+    }
+}
+
+void TestEditorUi::typing_undoes_one_key_at_a_time_data()
+{
+    QTest::addColumn<QString>("input");
+    QTest::addColumn<bool>("inputMethod");
+    for (bool inputMethod : {false, true}) {
+        const QByteArray prefix = inputMethod ? "ime-" : "key-";
+        QTest::newRow(QByteArray(prefix + "digits").constData()) << QStringLiteral("12345") << inputMethod;
+        QTest::newRow(QByteArray(prefix + "operators").constData()) << QStringLiteral("12+34") << inputMethod;
+        QTest::newRow(QByteArray(prefix + "units").constData()) << QStringLiteral("12[m/s]") << inputMethod;
+        QTest::newRow(QByteArray(prefix + "degrees").constData()) << QString::fromUtf8("12º34'56\"") << inputMethod;
+        QTest::newRow(QByteArray(prefix + "superscript-rewrite").constData()) << QStringLiteral("12^34") << inputMethod;
+        if (!inputMethod) {
+            QTest::newRow("key-unit-conversion-rewrite") << QStringLiteral("12--") << false;
+            QTest::newRow("key-parenthesis-pair") << QStringLiteral("12+(34") << false;
+        }
+    }
+}
+
+void TestEditorUi::typing_undoes_one_key_at_a_time()
+{
+    QFETCH(QString, input);
+    QFETCH(bool, inputMethod);
+    Editor editor;
+    editor.setAutoCompletionEnabled(false);
+    editor.setText(QString());
+    QStringList states = {editor.document()->toRawText()};
+    for (const QChar ch : input) {
+        if (inputMethod) {
+            QInputMethodEvent event;
+            event.setCommitString(QString(ch));
+            QApplication::sendEvent(&editor, &event);
+        } else if (ch.unicode() < 128) {
+            QTest::keyClicks(&editor, QString(ch));
+        } else {
+            QKeyEvent event(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QString(ch));
+            QApplication::sendEvent(&editor, &event);
+        }
+        const QString state = editor.document()->toRawText();
+        if (state != states.last())
+            states.append(state);
+    }
+    QVERIFY(states.size() > 2);
+    for (int i = states.size() - 2; i >= 0; --i) {
+        QVERIFY(editor.document()->isUndoAvailable());
+        editor.undo();
+        QCOMPARE(editor.document()->toRawText(), states.at(i));
+    }
+    QVERIFY(!editor.document()->isUndoAvailable());
+    for (int i = 1; i < states.size(); ++i) {
+        QVERIFY(editor.document()->isRedoAvailable());
+        editor.redo();
+        QCOMPARE(editor.document()->toRawText(), states.at(i));
+    }
+    QVERIFY(!editor.document()->isRedoAvailable());
+}
+
+void TestEditorUi::non_printable_key_payloads_do_not_replace_selection()
+{
+    for (ushort code : {0x01, 0x19, 0x1a, 0x7f}) {
+        Editor editor;
+        editor.setText(QStringLiteral("123456"));
+        QTextCursor cursor = editor.textCursor();
+        cursor.setPosition(2);
+        cursor.setPosition(4, QTextCursor::KeepAnchor);
+        editor.setTextCursor(cursor);
+        QKeyEvent event(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QString(QChar(code)));
+        QApplication::sendEvent(&editor, &event);
+        QCOMPARE(editor.document()->toRawText(), QStringLiteral("123456"));
+        QCOMPARE(editor.textCursor().selectedText(), QStringLiteral("34"));
+        QVERIFY(!editor.document()->isUndoAvailable());
+    }
+}
+
+void TestEditorUi::clipboard_shortcuts_do_not_insert_key_payloads_data()
+{
+    QTest::addColumn<QString>("cutPayload");
+    QTest::addColumn<QString>("pastePayload");
+    QTest::newRow("empty") << QString() << QString();
+    QTest::newRow("control-characters") << QString(QChar(0x18)) << QString(QChar(0x16));
+    QTest::newRow("printable-letters") << QStringLiteral("x") << QStringLiteral("v");
+}
+
+void TestEditorUi::clipboard_shortcuts_do_not_insert_key_payloads()
+{
+    QFETCH(QString, cutPayload);
+    QFETCH(QString, pastePayload);
+    Editor editor;
+    editor.setText(QStringLiteral("123456"));
+    QTextCursor cursor = editor.textCursor();
+    cursor.setPosition(2);
+    cursor.setPosition(4, QTextCursor::KeepAnchor);
+    editor.setTextCursor(cursor);
+    const auto cutKey = QKeySequence(QKeySequence::Cut)[0];
+    QKeyEvent cutEvent(QEvent::KeyPress, cutKey.key(), cutKey.keyboardModifiers(), cutPayload);
+    QApplication::sendEvent(&editor, &cutEvent);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("1256"));
+    QCOMPARE(QApplication::clipboard()->text(), QStringLiteral("34"));
+
+    const auto pasteKey = QKeySequence(QKeySequence::Paste)[0];
+    QKeyEvent pasteEvent(QEvent::KeyPress, pasteKey.key(), pasteKey.keyboardModifiers(), pastePayload);
+    QApplication::sendEvent(&editor, &pasteEvent);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("123456"));
+    editor.undo();
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("1256"));
+    editor.undo();
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("123456"));
 }
 
 void TestEditorUi::treats_spaced_question_comment_as_atomic_navigation_and_edit_token()

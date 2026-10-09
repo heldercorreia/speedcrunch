@@ -38,6 +38,7 @@
 #include <QPlainTextEdit>
 #include <QPointer>
 #include <QScreen>
+#include <QScopeGuard>
 #include <QScrollBar>
 #include <QShowEvent>
 #include <QRegularExpression>
@@ -2648,6 +2649,17 @@ void Editor::focusOutEvent(QFocusEvent* event)
 
 void Editor::inputMethodEvent(QInputMethodEvent* event)
 {
+    // Composed input can also rewrite existing text, such as an exponent.
+    // Keep that rewrite in the same undo step as the committed characters.
+    const bool hasCommittedEdit = !event->commitString().isEmpty() || event->replacementLength() > 0;
+    QTextCursor editCursor = textCursor();
+    if (hasCommittedEdit)
+        editCursor.beginEditBlock();
+    const auto finishEdit = qScopeGuard([&]() {
+        if (hasCommittedEdit)
+            editCursor.endEditBlock();
+    });
+
     const QString normalizedCommit = normalizeExpressionTypedInEditor(event->commitString());
     const QString normalizedPreedit = normalizeExpressionTypedInEditor(event->preeditString());
     const int cursorPosition = textCursor().position();
@@ -2921,6 +2933,20 @@ void Editor::keyPressEvent(QKeyEvent* event)
     if (m_completion->handleEditorKeyPress(event))
         return;
 
+    // Shortcut text can contain control characters or printable letters.
+    // Let Qt perform the edit before any expression insertion rules run.
+    if (event->matches(QKeySequence::Undo)
+        || event->matches(QKeySequence::Redo)
+        || event->matches(QKeySequence::Cut)
+        || event->matches(QKeySequence::Paste)) {
+        QPlainTextEdit::keyPressEvent(event);
+        return;
+    }
+    if (event->matches(QKeySequence::Copy)) {
+        emit copySequencePressed();
+        event->accept();
+        return;
+    }
     if (event->matches(QKeySequence::SelectAll)) {
         QPlainTextEdit::keyPressEvent(event);
         if (textCursor().hasSelection())
@@ -2930,6 +2956,22 @@ void Editor::keyPressEvent(QKeyEvent* event)
         event->accept();
         return;
     }
+
+    const bool hasPrintableTextPayload =
+        !event->text().isEmpty()
+        && (event->key() < Qt::Key_Escape || event->key() == Qt::Key_unknown)
+        && std::all_of(event->text().cbegin(), event->text().cend(),
+                       [](const QChar& ch) { return ch.isPrint(); });
+
+    // Keep a typed key and its automatic rewrites together, while preventing
+    // consecutive digits from merging into one undo step.
+    QTextCursor editCursor = textCursor();
+    if (hasPrintableTextPayload)
+        editCursor.beginEditBlock();
+    const auto finishEdit = qScopeGuard([&]() {
+        if (hasPrintableTextPayload)
+            editCursor.endEditBlock();
+    });
 
     int key = event->key();
     switch (key) {
@@ -2974,7 +3016,8 @@ void Editor::keyPressEvent(QKeyEvent* event)
         return QString();
     };
 
-    const QString normalizedEventText = normalizeExpressionTypedInEditor(event->text());
+    const QString normalizedEventText = hasPrintableTextPayload
+        ? normalizeExpressionTypedInEditor(event->text()) : QString();
     const auto isOperatorLikeSingleCharInput = [](const QString& input) {
         if (input.size() != 1)
             return false;
@@ -2996,11 +3039,6 @@ void Editor::keyPressEvent(QKeyEvent* event)
         return;
     }
 
-    const bool hasPrintableTextPayload =
-        !event->text().isEmpty()
-        && (key < Qt::Key_Escape || key == Qt::Key_unknown)
-        && std::all_of(event->text().cbegin(), event->text().cend(),
-                       [](const QChar& ch) { return ch.isPrint(); });
     if (isInsideCommentFromQuestionMark(text(), cursorPosition)
         && !(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))
         && hasPrintableTextPayload) {
@@ -3952,12 +3990,6 @@ void Editor::keyPressEvent(QKeyEvent* event)
     case Qt::Key_ParenLeft:
         break;
     default:;
-    }
-
-    if (event->matches(QKeySequence::Copy)) {
-        emit copySequencePressed();
-        event->accept();
-        return;
     }
 
     QString normalizedText = normalizedEventText;
