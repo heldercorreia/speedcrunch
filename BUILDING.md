@@ -92,6 +92,8 @@ running CMake, in the form `cmake -S . -B build -Dvariable=value`.
   project. Multi-configuration generators use `--config` when building instead.
 - **BUILD_TESTING**: Set this to `ON` to build the test executables and register
   them with CTest. Defaults to `OFF`.
+- **ENABLE_UPDATE_CHECKS**: Set this to `ON` to enable update checks on launch
+  and the `Help > Check for Updates` menu entry. Defaults to `OFF`.
 - **PORTABLE_SPEEDCRUNCH**: Set this to `on` to have the application settings stored
   in the same location as the executable, e.g. for running from a USB drive without
   requiring installation.
@@ -102,6 +104,20 @@ running CMake, in the form `cmake -S . -B build -Dvariable=value`.
   macOS and Haiku. Defaults to `share` under the installation prefix.
 - **HTML_DOCS_DIR**: Change the path to the HTML manual that's embedded in the binary
   by the build. By default, a bundled prebuilt copy is used to minimize dependencies.
+
+Official SpeedCrunch builds enable update checks explicitly:
+
+    cmake -S . -B build -DENABLE_UPDATE_CHECKS=ON
+
+These builds check for updates on launch at most once every 24 hours. Checks
+report upstream releases and link to the SpeedCrunch website. They do not
+install updates.
+
+Package providers should leave this option off so users update through their
+provider. CMake saves the option in the build directory's cache. Configure again
+with `-DENABLE_UPDATE_CHECKS=OFF` to disable it in an existing build directory.
+
+For qmake builds, add `CONFIG+=enable_update_checks` to enable the feature.
 
 ## Unix installation and packaging
 

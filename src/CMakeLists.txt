@@ -19,6 +19,10 @@ endif()
 message("Build type: ${CMAKE_BUILD_TYPE}")
 
 option(BUILD_TESTING "Build the test executables and enable CTest" OFF)
+option(ENABLE_UPDATE_CHECKS "Enable launch-time and manual update checks" OFF)
+if(ENABLE_UPDATE_CHECKS)
+    add_compile_definitions(SPEEDCRUNCH_ENABLE_UPDATE_CHECKS)
+endif()
 
 find_package(Qt6 COMPONENTS Core Widgets Help Network QUIET)
 if(Qt6_FOUND)

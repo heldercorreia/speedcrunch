@@ -21,6 +21,11 @@ win32-g++:QMAKE_LFLAGS += -static
 
 DEFINES += SPEEDCRUNCH_VERSION=\\\"1.0\\\"
 DEFINES += QT_USE_QSTRINGBUILDER
+contains(CONFIG, enable_update_checks) {
+    DEFINES += SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
+    HEADERS += gui/versioncheck.h
+    SOURCES += gui/versioncheck.cpp
+}
 win32:DEFINES += _USE_MATH_DEFINES
 win32:DEFINES += _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_WARNINGS _SCL_SECURE_NO_WARNINGS
 
@@ -112,7 +117,6 @@ HEADERS += core/book.h \
            gui/variablelistwidget.h \
            gui/userfunctionlistwidget.h \
            gui/userunitlistwidget.h \
-           gui/versioncheck.h \
            gui/manualwindow.h \
            gui/notationandprecisiondialog.h \
            gui/numberformatdialog.h \
@@ -187,7 +191,6 @@ SOURCES += main.cpp \
            gui/variablelistwidget.cpp \
            gui/userfunctionlistwidget.cpp \
            gui/userunitlistwidget.cpp \
-           gui/versioncheck.cpp \
            gui/mainwindow.cpp \
            gui/manualwindow.cpp \
            gui/notationandprecisiondialog.cpp \

@@ -1,5 +1,10 @@
 include(common.pri)
 DEFINES += SPEEDCRUNCH_UI_TEST
+contains(CONFIG, enable_update_checks) {
+    DEFINES += SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
+    HEADERS += ../gui/versioncheck.h
+    SOURCES += ../gui/versioncheck.cpp
+}
 
 SOURCES += ../core/userdefinitions.cpp \
            ../gui/aboutbox.cpp \
@@ -23,7 +28,6 @@ SOURCES += ../core/userdefinitions.cpp \
            ../gui/themedlineedit.cpp \
            ../gui/userfunctionlistwidget.cpp \
            ../gui/userunitlistwidget.cpp \
-           ../gui/versioncheck.cpp \
            testdisplayui.cpp
 
 HEADERS += ../core/userdefinitions.h \
@@ -47,8 +51,7 @@ HEADERS += ../core/userdefinitions.h \
            ../gui/syntaxhighlighter.h \
            ../gui/themedlineedit.h \
            ../gui/userfunctionlistwidget.h \
-           ../gui/userunitlistwidget.h \
-           ../gui/versioncheck.h
+           ../gui/userunitlistwidget.h
 
 RESOURCES += ../resources/speedcrunch.qrc
 

@@ -31,7 +31,9 @@
 #include "gui/userfunctionlistwidget.h"
 #include "gui/userunitlistwidget.h"
 #include "gui/variablelistwidget.h"
+#ifdef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
 #include "gui/versioncheck.h"
+#endif
 #include "gui/editor.h"
 #include "gui/historywidget.h"
 #include "gui/manualwindow.h"
@@ -3539,7 +3541,9 @@ void MainWindow::createActions()
     m_actions.settingsUnitNegativeExponentSuperscript = new QAction(this);
     m_actions.settingsUnitNegativeExponentFraction = new QAction(this);
     m_actions.helpManual = new QAction(this);
+#ifdef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
     m_actions.helpUpdates = new QAction(this);
+#endif
     m_actions.helpFeedback = new QAction(this);
     m_actions.helpCommunity = new QAction(this);
     m_actions.helpSource = new QAction(this);
@@ -3932,7 +3936,9 @@ void MainWindow::setActionsText()
 
     m_actions.helpManual->setText(MainWindow::tr("User &Manual"));
     m_actions.contextHelp->setText(MainWindow::tr("Context Help"));
+#ifdef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
     m_actions.helpUpdates->setText(MainWindow::tr("Check for &Updates"));
+#endif
     m_actions.helpFeedback->setText(MainWindow::tr("Issue Tracker"));
     m_actions.helpCommunity->setText(MainWindow::tr("Community"));
     m_actions.helpSource->setText(MainWindow::tr("Source Code"));
@@ -4233,7 +4239,9 @@ void MainWindow::createMenus()
     m_menus.help->addAction(m_actions.helpSource);
     m_menus.help->addAction(m_actions.helpDonate);
     m_menus.help->addSeparator();
+#ifdef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
     m_menus.help->addAction(m_actions.helpUpdates);
+#endif
     m_menus.help->addAction(m_actions.helpAbout);
 
     addActions(menuBar()->actions());
@@ -7358,7 +7366,9 @@ void MainWindow::createFixedConnections()
 
     connect(m_actions.helpManual, SIGNAL(triggered()), SLOT(showManualWindow()));
     connect(m_actions.contextHelp, SIGNAL(triggered()), SLOT(showContextHelp()));
+#ifdef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
     connect(m_actions.helpUpdates, SIGNAL(triggered()), SLOT(checkForUpdates()));
+#endif
     connect(m_actions.helpFeedback, SIGNAL(triggered()), SLOT(openFeedbackURL()));
     connect(m_actions.helpCommunity, SIGNAL(triggered()), SLOT(openCommunityURL()));
     connect(m_actions.helpSource, SIGNAL(triggered()), SLOT(openSourceURL()));
@@ -8330,7 +8340,9 @@ MainWindow::MainWindow(bool restorePreviousSession)
     m_copyWidget = 0;
     m_pendingHistoryEditIndex = -1;
     m_shutdownStateSaved = false;
+#ifdef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
     m_versionCheck = 0;
+#endif
     m_deferredSessionSaveTimer = new QTimer(this);
     m_deferredSessionSaveTimer->setSingleShot(true);
     m_deferredSessionSaveTimer->setInterval(200);
@@ -8354,11 +8366,13 @@ MainWindow::MainWindow(bool restorePreviousSession)
     if (!m_settings->hasNumberFormatStyleSetting)
         QTimer::singleShot(0, this, SLOT(showNumberFormatDialog()));
 
+#ifdef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
     m_versionCheck = new VersionCheck(this, this);
     QTimer::singleShot(0, this, [this]() {
         if (m_versionCheck)
             m_versionCheck->checkForUpdateIfDue();
     });
+#endif
 
     m_manualServer = ManualServer::instance();
     connect(this, SIGNAL(languageChanged()), m_manualServer, SLOT(ensureCorrectLanguage()));
@@ -12143,12 +12157,14 @@ void MainWindow::handleCustomKeypadButtonPress(int action, const QString& text)
     }
 }
 
+#ifdef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
 void MainWindow::checkForUpdates()
 {
     if (!m_versionCheck)
         return;
     m_versionCheck->checkForUpdateNow();
 }
+#endif
 
 void MainWindow::openFeedbackURL()
 {

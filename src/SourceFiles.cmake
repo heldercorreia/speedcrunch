@@ -51,7 +51,6 @@ gui/userunitlistwidget.h
 gui/syntaxhighlighter.h
 gui/themedlineedit.h
 gui/uiconfig.h
-gui/versioncheck.h
 math/floatnum/floatcommon.h
 math/floatnum/floatconfig.h
 math/floatnum/floatconst.h
@@ -125,7 +124,6 @@ gui/tooltipstyleutils.cpp
 gui/variablelistwidget.cpp
 gui/userfunctionlistwidget.cpp
 gui/userunitlistwidget.cpp
-gui/versioncheck.cpp
 math/floatnum/floatcommon.c
 math/floatnum/floatconst.c
 math/floatnum/floatconvert.c
@@ -462,7 +460,6 @@ gui/tooltipstyleutils.cpp
 gui/userfunctionlistwidget.cpp
 gui/variablelistwidget.cpp
 gui/userunitlistwidget.cpp
-gui/versioncheck.cpp
 math/floatnum/floatcommon.c
 math/floatnum/floatconst.c
 math/floatnum/floatconvert.c
@@ -490,6 +487,12 @@ core/unitdisplayformat.cpp
 resources/speedcrunch.qrc
 tests/testdisplayui.cpp
 )
+
+if(ENABLE_UPDATE_CHECKS)
+    list(APPEND speedcrunch_HEADERS gui/versioncheck.h)
+    list(APPEND speedcrunch_SOURCES gui/versioncheck.cpp)
+    list(APPEND testdisplayui_SOURCES gui/versioncheck.cpp)
+endif()
 
 set(testserial_SOURCES
 core/numberformatter.cpp

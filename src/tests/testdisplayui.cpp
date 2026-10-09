@@ -722,6 +722,7 @@ public slots:
 private slots:
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
+    void update_checks_follow_build_option();
     void ui_test_fixture_resets_persisted_layout_and_first_run_preference();
     void manual_preserves_text_weights_and_emphasis();
     void color_scheme_roles_exclude_obsolete_scrollbar();
@@ -836,6 +837,54 @@ void TestDisplayUi::initTestCase()
                  qPrintable(QStringLiteral("Cannot write test storage at %1: %2")
                                 .arg(path, probe.errorString())));
     }
+}
+
+void TestDisplayUi::update_checks_follow_build_option()
+{
+    MainWindowStateGuard guard;
+#ifndef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
+    // A disabled build must work without the test-only launch-check bypass.
+    qunsetenv("SPEEDCRUNCH_TEST_SKIP_UPDATE_CHECK");
+#endif
+
+    MainWindow window;
+    QCoreApplication::processEvents();
+    QVERIFY(QMetaObject::invokeMethod(&window, "retranslateText", Qt::DirectConnection));
+
+    int checkerCount = 0;
+    for (QObject* child : window.children()) {
+        if (child->inherits("VersionCheck"))
+            ++checkerCount;
+    }
+
+    QAction* updateAction = nullptr;
+    const QString updateText = MainWindow::tr("Check for &Updates");
+    for (QAction* action : window.findChildren<QAction*>()) {
+        if (action->text() == updateText) {
+            QVERIFY(!updateAction);
+            updateAction = action;
+        }
+    }
+
+#ifdef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
+    QCOMPARE(checkerCount, 1);
+    QVERIFY(updateAction);
+    QVERIFY(updateAction->isEnabled());
+    QVERIFY(window.metaObject()->indexOfSlot("checkForUpdates()") >= 0);
+
+    bool inHelpMenu = false;
+    for (QMenu* menu : window.findChildren<QMenu*>()) {
+        if (menu->title() == MainWindow::tr("&Help")
+            && menu->actions().contains(updateAction)) {
+            inHelpMenu = true;
+        }
+    }
+    QVERIFY(inHelpMenu);
+#else
+    QCOMPARE(checkerCount, 0);
+    QVERIFY(!updateAction);
+    QCOMPARE(window.metaObject()->indexOfSlot("checkForUpdates()"), -1);
+#endif
 }
 
 void TestDisplayUi::ui_test_fixture_resets_persisted_layout_and_first_run_preference()

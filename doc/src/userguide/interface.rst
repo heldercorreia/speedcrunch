@@ -625,8 +625,16 @@ User Interface Settings
 * :menuselection:`Settings --> Language`
     Select the user interface language.
 
-* :menuselection:`Settings --> Check for Updates`
+
+Help
+----
+
+* :menuselection:`Help --> Check for Updates`
     Trigger an update check and show information when a newer version is available.
+    Update checks are enabled in official SpeedCrunch builds. Other distributors
+    can choose whether to enable them. When enabled, this menu entry is available
+    and SpeedCrunch also checks for updates on launch, at most once every 24 hours.
+    See :ref:`update-checks` for build options and package manager guidance.
 
     .. versionadded:: 1.0
 

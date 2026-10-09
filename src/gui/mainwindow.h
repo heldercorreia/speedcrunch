@@ -38,7 +38,9 @@ class UserFunctionListWidget;
 class UserUnitListWidget;
 class Variable;
 class VariableListWidget;
+#ifdef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
 class VersionCheck;
+#endif
 
 class QAbstractItemView;
 class QActionGroup;
@@ -143,7 +145,9 @@ private slots:
     void insertVariableIntoEditor(const QString&);
     void insertUserFunctionIntoEditor(const QString&);
     void insertUserUnitIntoEditor(const QString&);
+#ifdef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
     void checkForUpdates();
+#endif
     void openFeedbackURL();
     void openCommunityURL();
     void openSourceURL();
@@ -509,7 +513,9 @@ private:
         QAction* settingsRadixCharComma;
         QAction* settingsLanguage;
         QAction* helpManual;
+#ifdef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
         QAction* helpUpdates;
+#endif
         QAction* helpFeedback;
         QAction* helpCommunity;
         QAction* helpSource;
@@ -643,7 +649,9 @@ private:
     QTranslator* m_translator;
     QPlainTextEdit* m_copyWidget;
     ManualServer* m_manualServer;
+#ifdef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
     VersionCheck* m_versionCheck;
+#endif
     int m_pendingHistoryEditIndex;
     bool m_shutdownStateSaved;
     bool m_restorePreviousSessionOnStartup;
