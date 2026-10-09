@@ -3,6 +3,7 @@
 
 
 #include "gui/resultdisplay.h"
+#include "gui/menustyleutils.h"
 
 #include "gui/displayformatutils.h"
 #include "gui/resultlineformatutils.h"
@@ -155,53 +156,17 @@ void applyContextMenuTheme(QMenu* menu,
                            const QColor& hoverBackground,
                            const QColor& hoverForeground)
 {
-    if (menu == nullptr || !background.isValid() || !foreground.isValid())
-        return;
-
     const QColor effectiveHoverBackground = hoverBackground.isValid()
         ? hoverBackground
         : background;
     const QColor effectiveHoverForeground = hoverForeground.isValid()
         ? hoverForeground
         : foreground;
-    QPalette palette = menu->palette();
-    for (const QPalette::ColorGroup group : {QPalette::Active,
-                                             QPalette::Inactive,
-                                             QPalette::Disabled}) {
-        palette.setColor(group, QPalette::Window, background);
-        palette.setColor(group, QPalette::Base, background);
-        palette.setColor(group, QPalette::Text, foreground);
-        palette.setColor(group, QPalette::WindowText, foreground);
-        palette.setColor(group, QPalette::ButtonText, foreground);
-        palette.setColor(group, QPalette::Highlight, effectiveHoverBackground);
-        palette.setColor(group, QPalette::HighlightedText, effectiveHoverForeground);
-    }
-    menu->setPalette(palette);
-    menu->setStyleSheet(QStringLiteral(
-        "QMenu {"
-        " background-color: %1;"
-        " color: %2;"
-        " border: 1px solid %3;"
-        " border-radius: 8px;"
-        "}"
-        "QMenu::item:selected {"
-        " background-color: %4;"
-        " color: %5;"
-        "}")
-                            .arg(background.name(),
-                                 foreground.name(),
-                                 effectiveHoverBackground.name(),
-                                 effectiveHoverBackground.name(),
-                                 effectiveHoverForeground.name()));
-
-    for (QAction* action : menu->actions()) {
-        if (QMenu* submenu = action->menu())
-            applyContextMenuTheme(submenu,
-                                  background,
-                                  foreground,
-                                  effectiveHoverBackground,
-                                  effectiveHoverForeground);
-    }
+    if (background.isValid() && foreground.isValid())
+        MenuStyle::setThemeColors(menu, background, foreground,
+                                  effectiveHoverBackground, effectiveHoverForeground);
+    else
+        MenuStyle::apply(menu);
 }
 
 int maxRenderedHistoryEntries(const Session* session)
@@ -454,6 +419,7 @@ ResultDisplay::ResultDisplay(QWidget* parent)
     , m_scrollToBottomButton(new QToolButton(this))
 {
     setViewportMargins(kResultDisplayHorizontalPadding, 0, kResultDisplayHorizontalPadding, 0);
+    MenuStyle::install();
     setBackgroundRole(QPalette::Base);
     setLayoutDirection(Qt::LeftToRight);
     setMinimumWidth(150);

@@ -37,8 +37,10 @@ gui/functiontooltiputils.h
 gui/functionswidget.h
 gui/historywidget.h
 gui/genericdock.h
+gui/gtkmenupalette.h
 gui/keypad.h
 gui/mainwindow.h
+gui/menustyleutils.h
 gui/manualwindow.h
 gui/numberformatdialog.h
     gui/notationandprecisiondialog.h
@@ -112,6 +114,7 @@ gui/historywidget.cpp
 gui/genericdock.h
 gui/keypad.cpp
 gui/mainwindow.cpp
+gui/menustyleutils.cpp
 gui/manualwindow.cpp
 gui/numberformatdialog.cpp
 gui/notationandprecisiondialog.cpp
@@ -188,6 +191,8 @@ gui/uiconfig.h
 )
 
 set(testevaluator_SOURCES
+gui/dockcomboboxchevron.cpp
+gui/menustyleutils.cpp
 core/constants.cpp
 core/colorscheme.cpp
 core/evaluator.cpp
@@ -313,6 +318,8 @@ tests/testdmath.cpp
 )
 
 set(testeditorui_SOURCES
+gui/dockcomboboxchevron.cpp
+gui/menustyleutils.cpp
 core/constants.cpp
 core/colorscheme.cpp
 core/evaluator.cpp
@@ -365,6 +372,8 @@ tests/testoklch.cpp
 )
 
 set(testdocksui_SOURCES
+gui/dockcomboboxchevron.cpp
+gui/menustyleutils.cpp
 core/constants.cpp
 core/colorscheme.cpp
 core/evaluator.cpp
@@ -418,6 +427,7 @@ tests/testdocksui.cpp
 )
 
 set(testdisplayui_SOURCES
+gui/menustyleutils.cpp
 core/book.cpp
 core/constants.cpp
 core/colorscheme.cpp

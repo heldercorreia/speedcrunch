@@ -68,6 +68,7 @@ signals:
     void angleUnitChanged();
     void complexNumbersChanged();
     void colorSchemeChanged();
+    void menuAppearanceChanged();
     void languageChanged();
     void radixCharacterChanged();
     void resultFormatChanged();
@@ -176,6 +177,7 @@ private slots:
     void setFunctionsDockVisible(bool, bool takeFocus = true);
     void setHistoryDockVisible(bool, bool takeFocus = true);
     void setKeypadMode(QAction*);
+    void setMenuAppearance(QAction*);
     void setKeypadZoom(QAction*);
     void setKeypadVisible(bool);
     void setLeaveLastExpressionEnabled(bool);
@@ -507,6 +509,8 @@ private:
         QAction* settingsDisplayZoomOut;
         QAction* settingsDisplayFont;
         QAction* settingsDisplayColorSchemeCustom;
+        QAction* settingsMenuAppearanceSystem;
+        QAction* settingsMenuAppearanceSpeedCrunch;
         QVector<QAction*> settingsDisplayColorSchemes;
         QAction* settingsRadixCharDefault;
         QAction* settingsRadixCharDot;
@@ -527,6 +531,7 @@ private:
     struct {
         QActionGroup* angle;
         QActionGroup* colorScheme;
+        QActionGroup* menuAppearance;
         QActionGroup* digits;
         QActionGroup* resultRoundingMode;
         QActionGroup* resultFormat;
@@ -551,6 +556,7 @@ private:
         QMenu* decimal;
         QMenu* digitGrouping;
         QMenu* display;
+        QMenu* menuAppearance;
         QMenu* edit;
         QMenu* results;
         QMenu* unitNegativeExponentStyle;

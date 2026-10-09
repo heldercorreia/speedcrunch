@@ -14,8 +14,11 @@
 #include "gui/dockliststyle.h"
 #include "gui/editor.h"
 #include "gui/functionswidget.h"
+#include "gui/gtkmenupalette.h"
+#include "gui/historywidget.h"
 #include "gui/keypad.h"
 #include "gui/mainwindow.h"
+#include "gui/menustyleutils.h"
 #include "gui/manualwindow.h"
 #include "gui/notationandprecisiondialog.h"
 #include "gui/oklchutils.h"
@@ -96,6 +99,46 @@
 #include <cmath>
 
 namespace {
+class TransparentMenuBarTestStyle : public QProxyStyle {
+public:
+    TransparentMenuBarTestStyle()
+        : QProxyStyle(QStyleFactory::create(QStringLiteral("Fusion")))
+    {}
+
+    void drawControl(ControlElement element, const QStyleOption* option,
+                     QPainter* painter, const QWidget* widget = nullptr) const override
+    {
+        if (element != CE_MenuBarEmptyArea)
+            QProxyStyle::drawControl(element, option, painter, widget);
+    }
+
+    void drawPrimitive(PrimitiveElement element, const QStyleOption* option,
+                       QPainter* painter, const QWidget* widget = nullptr) const override
+    {
+        if (element != PE_PanelMenuBar)
+            QProxyStyle::drawPrimitive(element, option, painter, widget);
+    }
+};
+
+class MenuBarPaletteTestStyle : public QProxyStyle {
+public:
+    explicit MenuBarPaletteTestStyle(const QPalette& platformPalette)
+        : QProxyStyle(QStyleFactory::create(QStringLiteral("Fusion")))
+        , m_platformPalette(platformPalette)
+    {}
+
+    void polish(QWidget* widget) override
+    {
+        QProxyStyle::polish(widget);
+        // Breeze gives menu bars their own desktop header palette.
+        if (qobject_cast<QMenuBar*>(widget))
+            widget->setPalette(m_platformPalette);
+    }
+
+private:
+    QPalette m_platformPalette;
+};
+
 class DockHeaderButtonTestStyle : public QProxyStyle {
 public:
     explicit DockHeaderButtonTestStyle(bool framed)
@@ -595,6 +638,7 @@ struct MainWindowStateGuard {
     Settings* settings = Settings::instance();
     QString oldColorScheme = settings->colorScheme;
     QString oldCustomColorSchemeJson = settings->customColorSchemeJson;
+    Settings::MenuAppearance oldMenuAppearance = settings->menuAppearance;
     QString oldSessionLayoutJson = settings->sessionLayoutJson;
     QString oldConstantsDockDomain = settings->constantsDockDomain;
     QString oldConstantsDockSubdomain = settings->constantsDockSubdomain;
@@ -631,6 +675,7 @@ struct MainWindowStateGuard {
     {
         settings->colorScheme = oldColorScheme;
         settings->customColorSchemeJson = oldCustomColorSchemeJson;
+        settings->menuAppearance = oldMenuAppearance;
         settings->sessionLayoutJson = oldSessionLayoutJson;
         settings->constantsDockDomain = oldConstantsDockDomain;
         settings->constantsDockSubdomain = oldConstantsDockSubdomain;
@@ -760,6 +805,25 @@ private slots:
     void current_result_tooltip_hides_when_dragging_splitters();
     void calculation_settings_dialog_matches_notation_precision_layout();
     void main_window_uses_generated_theme_surface_for_chrome_and_editor();
+    void menu_bar_keeps_themed_contrast_with_platform_palette_data();
+    void menu_bar_keeps_themed_contrast_with_platform_palette();
+    void menu_appearance_defaults_to_system_and_persists();
+    void menu_bar_restores_native_painting_after_theme_switch_data();
+    void menu_bar_restores_native_painting_after_theme_switch();
+    void system_menus_restore_style_polished_foreground_and_hover_colors();
+    void gtk_menus_use_hover_colors_instead_of_the_list_accent_data();
+    void gtk_menus_use_hover_colors_instead_of_the_list_accent();
+    void dock_dropdowns_follow_menu_appearance_data();
+    void dock_dropdowns_follow_menu_appearance();
+    void system_dropdowns_use_the_native_popup_selection_palette_data();
+    void system_dropdowns_use_the_native_popup_selection_palette();
+    void macos_system_menus_use_cocoa_style_and_selection_colors();
+    void menu_appearance_switches_all_windows_without_changing_other_controls();
+    void system_menus_preserve_platform_roles_and_follow_palette_changes_data();
+    void system_menus_preserve_platform_roles_and_follow_palette_changes();
+    void precision_menu_editor_uses_system_colors();
+    void dock_context_menus_follow_menu_theme_data();
+    void dock_context_menus_follow_menu_theme();
     void restored_session_layout_reapplies_generated_theme_surfaces();
     void saved_window_ui_state_overrides_defaults_before_show();
     void visible_window_applies_restored_dock_and_keypad_layout();
@@ -1576,6 +1640,8 @@ void TestDisplayUi::result_display_scroll_to_bottom_button_uses_custom_tooltip()
 
 void TestDisplayUi::result_display_context_menu_hides_main_menu_when_menu_bar_visible()
 {
+    MainWindowStateGuard guard;
+    guard.settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
     QMainWindow window;
     window.menuBar()->addMenu(QStringLiteral("File"))->addAction(QStringLiteral("Dummy"));
     MenuTestResultDisplay* display = new MenuTestResultDisplay(&window);
@@ -2869,6 +2935,922 @@ void TestDisplayUi::main_window_uses_generated_theme_surface_for_chrome_and_edit
     QVERIFY(reportHtml.contains(QStringLiteral("<td><code>#300A24</code></td>")));
 }
 
+void TestDisplayUi::menu_bar_keeps_themed_contrast_with_platform_palette_data()
+{
+    QTest::addColumn<bool>("darkPlatform");
+    QTest::addColumn<QString>("background");
+    QTest::newRow("dark-desktop-dark-theme") << true << QStringLiteral("#232136");
+    QTest::newRow("light-desktop-dark-theme") << false << QStringLiteral("#232136");
+    QTest::newRow("dark-desktop-light-theme") << true << QStringLiteral("#e5eee8");
+    QTest::newRow("light-desktop-light-theme") << false << QStringLiteral("#e5eee8");
+}
+
+void TestDisplayUi::menu_bar_keeps_themed_contrast_with_platform_palette()
+{
+    QFETCH(bool, darkPlatform);
+    QFETCH(QString, background);
+    MainWindowStateGuard guard;
+    guard.settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), background}});
+
+    MainWindow window;
+    QMenuBar* bar = window.menuBar();
+    bar->setNativeMenuBar(false);
+    QPalette platformPalette = QApplication::palette();
+    for (const QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive,
+                                            QPalette::Disabled}) {
+        platformPalette.setColor(group, QPalette::Window,
+                                 darkPlatform ? QColor("#1e1e1e") : QColor("#efefef"));
+        platformPalette.setColor(group, QPalette::WindowText,
+                                 darkPlatform ? QColor("#eff0f1") : QColor("#232629"));
+        platformPalette.setColor(group, QPalette::ButtonText,
+                                 platformPalette.color(group, QPalette::WindowText));
+    }
+    auto* platformStyle = new MenuBarPaletteTestStyle(platformPalette);
+    platformStyle->setParent(bar);
+    bar->setStyle(platformStyle);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    window.colorSchemeChanged();
+    QCoreApplication::processEvents();
+
+    const auto verifyTheme = [bar](const QColor& base) {
+        const QVector<QColor> shades = generateOklchShades(base, 6, themePolarityForBackground(base));
+        const QColor fill = shades.at(UiConfig::WindowBackgroundShade);
+        const QColor text = aaForegroundForBackground(fill);
+        const QColor selectedFill = shades.at(UiConfig::DockUnfocusedSelectedItemShade);
+        const QColor selectedText = aaForegroundForBackground(selectedFill);
+        for (const QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive,
+                                                QPalette::Disabled}) {
+            QCOMPARE(bar->palette().color(group, QPalette::Window), fill);
+            QCOMPARE(bar->palette().color(group, QPalette::WindowText), text);
+            QCOMPARE(bar->palette().color(group, QPalette::ButtonText), text);
+            QCOMPARE(bar->palette().color(group, QPalette::Highlight), selectedFill);
+            QCOMPARE(bar->palette().color(group, QPalette::HighlightedText), selectedText);
+        }
+
+        const QImage rendered = bar->grab().toImage();
+        const qreal dpr = rendered.devicePixelRatio();
+        QCOMPARE(rendered.pixelColor(qRound((bar->width() - 4) * dpr),
+                                     qRound(bar->height() / 2.0 * dpr)).name(), fill.name());
+
+        // Check painted glyphs as well as palette roles. Native styles may
+        // choose a different text role or selection color when drawing items.
+        for (const QStyle::State state : {QStyle::State(QStyle::State_Enabled | QStyle::State_Active),
+                                          QStyle::State(QStyle::State_Enabled),
+                                          QStyle::State(QStyle::State_None),
+                                          QStyle::State(QStyle::State_Enabled | QStyle::State_Selected),
+                                          QStyle::State(QStyle::State_Enabled | QStyle::State_Selected
+                                                        | QStyle::State_Sunken)}) {
+            QStyleOptionMenuItem option;
+            option.initFrom(bar);
+            option.state = state;
+            option.rect = QRect(0, 0, 100, bar->height());
+            option.text = QStringLiteral("Session");
+            const bool selected = state.testFlag(QStyle::State_Selected);
+            const QColor expectedFill = selected ? selectedFill : fill;
+            const QColor expectedText = selected ? selectedText : text;
+            QImage item(option.rect.size(), QImage::Format_ARGB32_Premultiplied);
+            item.fill(fill);
+            QPainter painter(&item);
+            painter.setFont(bar->font());
+            bar->style()->drawControl(QStyle::CE_MenuBarItem, &option, &painter, bar);
+            painter.end();
+            QCOMPARE(item.pixelColor(1, 1).name(), expectedFill.name());
+            int textPixels = 0;
+            for (int y = 0; y < item.height(); ++y) {
+                for (int x = 0; x < item.width(); ++x) {
+                    const QColor pixel = item.pixelColor(x, y);
+                    if (qAbs(pixel.red() - expectedText.red()) < 24
+                        && qAbs(pixel.green() - expectedText.green()) < 24
+                        && qAbs(pixel.blue() - expectedText.blue()) < 24)
+                        ++textPixels;
+                }
+            }
+            QVERIFY2(textPixels > 10, "Menu bar text does not use the contrasting theme color.");
+        }
+    };
+    verifyTheme(QColor(background));
+
+    const QColor switchedBackground(background == QLatin1String("#232136")
+                                    ? QStringLiteral("#e5eee8") : QStringLiteral("#232136"));
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), switchedBackground.name()}});
+    window.colorSchemeChanged();
+    QCoreApplication::processEvents();
+    verifyTheme(switchedBackground);
+}
+
+void TestDisplayUi::menu_bar_restores_native_painting_after_theme_switch_data()
+{
+    QTest::addColumn<QString>("styleName");
+    QTest::newRow("fusion") << QStringLiteral("Fusion");
+    QTest::newRow("windows") << QStringLiteral("Windows");
+}
+
+void TestDisplayUi::menu_bar_restores_native_painting_after_theme_switch()
+{
+    QFETCH(QString, styleName);
+    MainWindowStateGuard guard;
+    guard.settings->menuAppearance = Settings::MenuAppearanceSystem;
+    MainWindow window(false);
+    QMenuBar* bar = window.menuBar();
+    bar->setNativeMenuBar(false);
+    QScopedPointer<QStyle> style(QStyleFactory::create(styleName));
+    QVERIFY(style != nullptr);
+    bar->setStyle(style.data());
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    MenuStyle::refresh();
+    QCoreApplication::processEvents();
+    const bool nativeStyledBackground = bar->testAttribute(Qt::WA_StyledBackground);
+    const QImage nativeRendering = bar->grab().toImage();
+    QMenu* appearance = window.findChild<QMenu*>(QStringLiteral("MenuAppearanceMenu"));
+    QVERIFY(appearance != nullptr);
+    QCOMPARE(appearance->title(), QStringLiteral("&Menus"));
+    for (int cycle = 0; cycle < 2; ++cycle) {
+        appearance->actions().at(1)->trigger();
+        QCoreApplication::processEvents();
+        QVERIFY(bar->testAttribute(Qt::WA_StyledBackground));
+        // Switch from an open menu, as users do, then let the style finish.
+        bool switched = false;
+        QTimer::singleShot(0, &window, [&]() {
+            appearance->actions().at(0)->trigger();
+            appearance->close();
+            switched = true;
+        });
+        appearance->exec(bar->mapToGlobal(QPoint(0, bar->height())));
+        QVERIFY(switched);
+        QCoreApplication::processEvents();
+        QVERIFY(bar->styleSheet().isEmpty());
+        QCOMPARE(bar->testAttribute(Qt::WA_StyledBackground), nativeStyledBackground);
+        QCOMPARE(bar->grab().toImage(), nativeRendering);
+    }
+    bar->setStyle(nullptr);
+}
+
+void TestDisplayUi::dock_dropdowns_follow_menu_appearance_data()
+{
+    QTest::addColumn<bool>("darkSystem");
+    QTest::addColumn<bool>("floating");
+    QTest::newRow("dark-attached") << true << false;
+    QTest::newRow("light-attached") << false << false;
+    QTest::newRow("dark-floating") << true << true;
+    QTest::newRow("light-floating") << false << true;
+}
+
+void TestDisplayUi::dock_dropdowns_follow_menu_appearance()
+{
+    QFETCH(bool, darkSystem);
+    QFETCH(bool, floating);
+    MainWindowStateGuard guard;
+    const QPalette original = QApplication::palette();
+    const auto restorePalette = qScopeGuard([&]() {
+        QApplication::setPalette(original);
+        MenuStyle::refresh();
+    });
+    QPalette native = original;
+    for (const QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
+        for (const QPalette::ColorRole role : {QPalette::Window, QPalette::Base, QPalette::Button})
+            native.setColor(group, role, QColor(darkSystem ? "#202428" : "#eeeeee"));
+        for (const QPalette::ColorRole role : {QPalette::WindowText, QPalette::Text, QPalette::ButtonText})
+            native.setColor(group, role, QColor(group == QPalette::Disabled ? "#808890"
+                                                                         : (darkSystem ? "#f0f0f0" : "#202020")));
+        native.setColor(group, QPalette::Highlight, QColor("#354faf"));
+        native.setColor(group, QPalette::HighlightedText, QColor("#ffffff"));
+    }
+    QApplication::setPalette(native);
+    guard.settings->menuAppearance = Settings::MenuAppearanceSystem;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), darkSystem ? "#e5eee8" : "#232136"}});
+    guard.settings->constantsDockVisible = true;
+    guard.settings->functionsDockVisible = true;
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QMenu* appearance = window.findChild<QMenu*>(QStringLiteral("MenuAppearanceMenu"));
+    QVERIFY(appearance != nullptr);
+    for (const char* dockName : {"ConstantsDock", "FunctionsDock"}) {
+        appearance->actions().at(0)->trigger();
+        QDockWidget* dock = window.findChild<QDockWidget*>(QString::fromLatin1(dockName));
+        QVERIFY(dock != nullptr);
+        dock->setFloating(floating);
+        dock->show();
+        QComboBox* combo = dock->findChild<QComboBox*>();
+        QVERIFY(combo != nullptr);
+        QCoreApplication::processEvents();
+        QAbstractItemView* view = combo->view();
+        const auto nativeFrame = view->frameShape();
+        const bool nativeViewportFill = view->viewport()->autoFillBackground();
+        const QPalette closedPalette = combo->palette();
+        for (const int mode : {0, 1, 0, 1, 0}) {
+            appearance->actions().at(mode)->trigger();
+            combo->showPopup();
+            const auto closePopup = qScopeGuard([combo]() { combo->hidePopup(); });
+            QCoreApplication::processEvents();
+            QVERIFY(view->isVisible());
+            QWidget* popup = view->window();
+            QCOMPARE(combo->palette(), closedPalette);
+            if (mode == 0) {
+                QVERIFY(view->styleSheet().isEmpty());
+                QVERIFY(view->verticalScrollBar()->styleSheet().isEmpty());
+                QVERIFY(!combo->styleSheet().contains(QStringLiteral("QComboBox QAbstractItemView")));
+                QCOMPARE(view->frameShape(), nativeFrame);
+                QCOMPARE(view->viewport()->autoFillBackground(), nativeViewportFill);
+                QVERIFY(popup->mask().isEmpty());
+                for (QWidget* surface : {static_cast<QWidget*>(view), view->viewport(), popup}) {
+                    const QPalette expected = MenuStyle::systemPalette(surface);
+                    for (const QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive,
+                                                            QPalette::Disabled}) {
+                        for (const QPalette::ColorRole role : {QPalette::Base, QPalette::Text,
+                                                               QPalette::Highlight, QPalette::HighlightedText})
+                            QCOMPARE(surface->palette().color(group, role), expected.color(group, role));
+                    }
+                }
+                const QImage image = view->viewport()->grab().toImage();
+                int backgroundPixels = 0;
+                for (int y = 0; y < image.height(); ++y) {
+                    for (int x = 0; x < image.width(); ++x)
+                        backgroundPixels += image.pixelColor(x, y).name() == native.color(QPalette::Base).name();
+                }
+                QVERIFY2(backgroundPixels > image.width() * image.height() / 3,
+                         qPrintable(QStringLiteral("%1: expected %2, view %3, viewport %4, painted %5")
+                             .arg(QString::fromLatin1(dockName), native.color(QPalette::Base).name(),
+                                  view->palette().color(QPalette::Base).name(),
+                                  view->viewport()->palette().color(QPalette::Base).name(),
+                                  image.pixelColor(5, 5).name())));
+            } else {
+                QVERIFY(!view->styleSheet().isEmpty());
+                QVERIFY(!view->verticalScrollBar()->styleSheet().isEmpty());
+                QVERIFY(!popup->mask().isEmpty());
+                QCOMPARE(view->frameShape(), QFrame::NoFrame);
+                QVERIFY(view->palette().color(QPalette::Base) != native.color(QPalette::Base));
+            }
+            // Refresh an already-open dropdown without changing other controls.
+            appearance->actions().at(1 - mode)->trigger();
+            QCoreApplication::processEvents();
+            QCOMPARE(view->styleSheet().isEmpty(), mode == 1);
+        }
+        appearance->actions().at(0)->trigger();
+        combo->showPopup();
+        const auto closePopup = qScopeGuard([combo]() { combo->hidePopup(); });
+        for (const QPalette::ColorRole role : {QPalette::Window, QPalette::Base, QPalette::Button})
+            native.setColor(role, QColor(darkSystem ? "#292e36" : "#e1f0fd"));
+        native.setColor(QPalette::Highlight, QColor("#6850aa"));
+        QApplication::setPalette(native);
+        QCoreApplication::processEvents();
+        QCOMPARE(view->palette().color(QPalette::Base), native.color(QPalette::Base));
+        QCOMPARE(view->palette().color(QPalette::Highlight), native.color(QPalette::Highlight));
+        guard.settings->customColorSchemeJson = themeJsonString(
+            QJsonObject{{QStringLiteral("background"), QStringLiteral("#433229")}});
+        window.colorSchemeChanged();
+        QCoreApplication::processEvents();
+        QVERIFY(view->styleSheet().isEmpty());
+        QCOMPARE(view->palette().color(QPalette::Base), native.color(QPalette::Base));
+        QCOMPARE(view->viewport()->palette().color(QPalette::Base), native.color(QPalette::Base));
+    }
+}
+
+void TestDisplayUi::system_dropdowns_use_the_native_popup_selection_palette_data()
+{
+    QTest::addColumn<bool>("editable");
+    QTest::newRow("menu-popup") << false;
+    QTest::newRow("list-popup") << true;
+}
+
+void TestDisplayUi::system_dropdowns_use_the_native_popup_selection_palette()
+{
+    QFETCH(bool, editable);
+    MainWindowStateGuard guard;
+    const QPalette originalMenu = QApplication::palette("QMenu");
+    const QPalette originalList = QApplication::palette("QListView");
+    const auto restorePalettes = qScopeGuard([&]() {
+        QApplication::setPalette(originalMenu, "QMenu");
+        QApplication::setPalette(originalList, "QListView");
+        MenuStyle::refresh();
+    });
+    QPalette nativeMenu = originalMenu;
+    QPalette nativeList = originalList;
+    for (const QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
+        nativeMenu.setColor(group, QPalette::Highlight, QColor("#427dc0"));
+        nativeMenu.setColor(group, QPalette::HighlightedText, QColor("#fefefe"));
+        nativeList.setColor(group, QPalette::Highlight, QColor("#1a4266"));
+        nativeList.setColor(group, QPalette::HighlightedText, QColor("#eeeeee"));
+    }
+    QApplication::setPalette(nativeMenu, "QMenu");
+    QApplication::setPalette(nativeList, "QListView");
+    guard.settings->menuAppearance = Settings::MenuAppearanceSystem;
+    guard.settings->constantsDockVisible = true;
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    auto* dock = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(dock != nullptr);
+    auto* combo = dock->findChild<QComboBox*>();
+    QVERIFY(combo != nullptr);
+    combo->setEditable(editable);
+    QStyleOptionComboBox option;
+    option.initFrom(combo);
+    option.editable = editable;
+    const bool menuPopup = QApplication::style()->styleHint(QStyle::SH_ComboBox_Popup, &option, combo);
+    const QPalette expected = menuPopup ? nativeMenu : nativeList;
+    QMenu* appearance = window.findChild<QMenu*>(QStringLiteral("MenuAppearanceMenu"));
+    QVERIFY(appearance != nullptr);
+    for (const int mode : {0, 1, 0}) {
+        appearance->actions().at(mode)->trigger();
+        combo->showPopup();
+        const auto closePopup = qScopeGuard([combo]() { combo->hidePopup(); });
+        QCoreApplication::processEvents();
+        if (mode != 0)
+            continue;
+        for (const QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
+            QCOMPARE(combo->view()->palette().color(group, QPalette::Highlight),
+                     expected.color(group, QPalette::Highlight));
+            QCOMPARE(combo->view()->palette().color(group, QPalette::HighlightedText),
+                     expected.color(group, QPalette::HighlightedText));
+        }
+        QStyleOptionViewItem selected;
+        selected.initFrom(combo->view());
+        selected.rect = QRect(0, 0, 240, 40);
+        selected.state = QStyle::State_Active | QStyle::State_Enabled | QStyle::State_Selected;
+        selected.palette.setCurrentColorGroup(QPalette::Active);
+        QImage image(selected.rect.size(), QImage::Format_ARGB32_Premultiplied);
+        image.fill(Qt::transparent);
+        QPainter painter(&image);
+        combo->itemDelegate()->paint(&painter, selected, combo->model()->index(0, combo->modelColumn()));
+        painter.end();
+        QCOMPARE(image.pixelColor(220, 20).name(), expected.color(QPalette::Active, QPalette::Highlight).name());
+    }
+}
+
+void TestDisplayUi::macos_system_menus_use_cocoa_style_and_selection_colors()
+{
+#if defined(Q_OS_MACOS)
+    if (QApplication::platformName() != QLatin1String("cocoa")) {
+        QTest::qSkip("Native macOS theme verification requires the Cocoa backend.", __FILE__, __LINE__);
+        return;
+    }
+    MainWindowStateGuard guard;
+    guard.settings->menuAppearance = Settings::MenuAppearanceSystem;
+    guard.settings->constantsDockVisible = true;
+    MainWindow window(false);
+    QStyle* nativeStyle = QApplication::style();
+    while (auto* proxy = qobject_cast<QProxyStyle*>(nativeStyle))
+        nativeStyle = proxy->baseStyle();
+    QCOMPARE(nativeStyle->objectName(), QStringLiteral("macos"));
+    const QPalette nativeMenu = QApplication::palette("QMenu");
+    QScopedPointer<QMenu> menu(window.findChild<Editor*>()->createStandardContextMenu());
+    menu->ensurePolished();
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    auto* dock = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(dock != nullptr);
+    auto* combo = dock->findChild<QComboBox*>();
+    QVERIFY(combo != nullptr);
+    combo->showPopup();
+    const auto closePopup = qScopeGuard([combo]() { combo->hidePopup(); });
+    QCoreApplication::processEvents();
+    for (const QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
+        QCOMPARE(menu->palette().color(group, QPalette::Highlight), nativeMenu.color(group, QPalette::Highlight));
+        QCOMPARE(combo->view()->palette().color(group, QPalette::Highlight),
+                 nativeMenu.color(group, QPalette::Highlight));
+        QCOMPARE(combo->view()->palette().color(group, QPalette::HighlightedText),
+                 nativeMenu.color(group, QPalette::HighlightedText));
+    }
+#else
+    QTest::qSkip("Native macOS theme verification requires macOS.", __FILE__, __LINE__);
+#endif
+}
+
+void TestDisplayUi::menu_appearance_defaults_to_system_and_persists()
+{
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSystem);
+    const QString scheme = settings->colorScheme;
+    for (const Settings::MenuAppearance appearance : {Settings::MenuAppearanceSpeedCrunch,
+                                                     Settings::MenuAppearanceSystem}) {
+        settings->menuAppearance = appearance;
+        settings->save();
+        settings->menuAppearance = appearance == Settings::MenuAppearanceSystem
+            ? Settings::MenuAppearanceSpeedCrunch : Settings::MenuAppearanceSystem;
+        settings->load();
+        QCOMPARE(settings->menuAppearance, appearance);
+        QCOMPARE(settings->colorScheme, scheme);
+    }
+    QSettings persisted(Settings::getConfigPath() + QStringLiteral("/SpeedCrunch.ini"),
+                        QSettings::IniFormat);
+    const QString key = QStringLiteral("SpeedCrunch/Display/MenuAppearance");
+    persisted.remove(key);
+    persisted.sync();
+    settings->load();
+    QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSystem);
+    persisted.setValue(key, 99);
+    persisted.sync();
+    settings->load();
+    QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSystem);
+}
+
+void TestDisplayUi::menu_appearance_switches_all_windows_without_changing_other_controls()
+{
+    MainWindowStateGuard guard;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), QStringLiteral("#232136")}});
+    guard.settings->constantsDockVisible = true;
+    MainWindow first(false);
+    MainWindow second(false);
+    first.menuBar()->setNativeMenuBar(false);
+    second.menuBar()->setNativeMenuBar(false);
+    first.show();
+    second.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&first));
+    QVERIFY(QTest::qWaitForWindowExposed(&second));
+    MenuStyle::refresh();
+    QMenu* firstAppearance = first.findChild<QMenu*>(QStringLiteral("MenuAppearanceMenu"));
+    QMenu* secondAppearance = second.findChild<QMenu*>(QStringLiteral("MenuAppearanceMenu"));
+    QVERIFY(firstAppearance != nullptr);
+    QVERIFY(secondAppearance != nullptr);
+    QCOMPARE(firstAppearance->actions().size(), 2);
+    QVERIFY(firstAppearance->actions().at(0)->isChecked());
+    QVERIFY(secondAppearance->actions().at(0)->isChecked());
+    Editor* editor = first.findChild<Editor*>();
+    ResultDisplay* display = first.findChild<ResultDisplay*>();
+    QDockWidget* constants = first.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(editor != nullptr);
+    QVERIFY(display != nullptr);
+    QVERIFY(constants != nullptr);
+    const QPalette editorPalette = editor->palette();
+    const QPalette displayPalette = display->palette();
+    const QPalette dockPalette = constants->palette();
+    const QString editorStyle = editor->styleSheet();
+
+    // Keep a context menu alive across both switches to catch stale palettes
+    // and styles that would otherwise survive until the next popup.
+    QScopedPointer<QMenu> context(editor->createStandardContextMenu());
+    context->ensurePolished();
+    QVERIFY(context->styleSheet().isEmpty());
+    firstAppearance->actions().at(1)->trigger();
+    QCOMPARE(guard.settings->menuAppearance, Settings::MenuAppearanceSpeedCrunch);
+    QVERIFY(firstAppearance->actions().at(1)->isChecked());
+    QVERIFY(secondAppearance->actions().at(1)->isChecked());
+    for (QMenuBar* bar : {first.menuBar(), second.menuBar()})
+        QVERIFY(!bar->styleSheet().isEmpty());
+    QVERIFY(!context->styleSheet().isEmpty());
+    QMenu* child = context->addMenu(QStringLiteral("Nested"));
+    child->addAction(QStringLiteral("Disabled"))->setEnabled(false);
+    child->ensurePolished();
+    QVERIFY(!child->styleSheet().isEmpty());
+    QCOMPARE(child->palette().color(QPalette::Window).name(), context->palette().color(QPalette::Window).name());
+
+    secondAppearance->actions().at(0)->trigger();
+    QCOMPARE(guard.settings->menuAppearance, Settings::MenuAppearanceSystem);
+    QVERIFY(firstAppearance->actions().at(0)->isChecked());
+    QVERIFY(secondAppearance->actions().at(0)->isChecked());
+    for (QWidget* menu : {static_cast<QWidget*>(first.menuBar()),
+                          static_cast<QWidget*>(second.menuBar()),
+                          static_cast<QWidget*>(context.data()), static_cast<QWidget*>(child)}) {
+        QVERIFY(menu->styleSheet().isEmpty());
+        QCOMPARE(menu->palette().color(QPalette::Window), QApplication::palette(menu).color(QPalette::Window));
+        QCOMPARE(menu->palette().color(QPalette::Disabled, QPalette::WindowText),
+                 QApplication::palette(menu).color(QPalette::Disabled, QPalette::WindowText));
+    }
+    QCOMPARE(editor->palette(), editorPalette);
+    QCOMPARE(display->palette(), displayPalette);
+    QCOMPARE(constants->palette(), dockPalette);
+    QCOMPARE(editor->styleSheet(), editorStyle);
+}
+
+void TestDisplayUi::system_menus_restore_style_polished_foreground_and_hover_colors()
+{
+    MainWindowStateGuard guard;
+    guard.settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), QStringLiteral("#232136")}});
+    MainWindow window(false);
+    QMenuBar* bar = window.menuBar();
+    bar->setNativeMenuBar(false);
+    QPalette native = QApplication::palette(bar);
+    for (const QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
+        native.setColor(group, QPalette::Window, QColor("#eeeeee"));
+        native.setColor(group, QPalette::Button, QColor("#eeeeee"));
+        native.setColor(group, QPalette::ButtonText,
+                        group == QPalette::Disabled ? QColor("#777777") : QColor("#242424"));
+        native.setColor(group, QPalette::Highlight, QColor("#cccccc"));
+        native.setColor(group, QPalette::HighlightedText, QColor("#242424"));
+    }
+    auto* style = new MenuBarPaletteTestStyle(native);
+    style->setParent(bar);
+    bar->setStyle(style);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QMenu* appearance = window.findChild<QMenu*>(QStringLiteral("MenuAppearanceMenu"));
+    QVERIFY(appearance != nullptr);
+    for (int cycle = 0; cycle < 3; ++cycle) {
+        appearance->actions().at(1)->trigger();
+        QCoreApplication::processEvents();
+        appearance->actions().at(0)->trigger();
+        QCoreApplication::processEvents();
+        QVERIFY(bar->styleSheet().isEmpty());
+        for (const QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
+            for (const QPalette::ColorRole role : {QPalette::ButtonText, QPalette::Highlight,
+                                                   QPalette::HighlightedText})
+                QCOMPARE(bar->palette().color(group, role), native.color(group, role));
+        }
+        for (const QStyle::State state : {QStyle::State(QStyle::State_Enabled | QStyle::State_Active),
+                                          QStyle::State(QStyle::State_Enabled),
+                                          QStyle::State(QStyle::State_None)}) {
+            QStyleOptionMenuItem option;
+            option.initFrom(bar);
+            option.state = state;
+            option.palette.setCurrentColorGroup(state & QStyle::State_Enabled
+                ? state & QStyle::State_Active ? QPalette::Active : QPalette::Inactive : QPalette::Disabled);
+            option.rect = QRect(0, 0, 200, 32);
+            option.text = QStringLiteral("Menu foreground");
+            option.font = bar->font();
+            QImage image(option.rect.size(), QImage::Format_ARGB32_Premultiplied);
+            image.fill(native.color(QPalette::Window));
+            QPainter painter(&image);
+            bar->style()->drawControl(QStyle::CE_MenuBarItem, &option, &painter, bar);
+            painter.end();
+            QVERIFY(firstPixelMatchingColor(image, image.rect(),
+                native.color(option.palette.currentColorGroup(), QPalette::ButtonText), 12) != QPoint(-1, -1));
+        }
+    }
+}
+
+void TestDisplayUi::gtk_menus_use_hover_colors_instead_of_the_list_accent_data()
+{
+    QTest::addColumn<bool>("dark");
+    QTest::newRow("light-menu") << false;
+    QTest::newRow("dark-menu") << true;
+}
+
+void TestDisplayUi::gtk_menus_use_hover_colors_instead_of_the_list_accent()
+{
+    QFETCH(bool, dark);
+    // Model GTK's CSS states and Cairo's pixel buffer without requiring a
+    // GNOME session. This also checks translucent disabled text and cleanup.
+    struct Widget {
+        unsigned state = 0;
+        Widget* child = nullptr;
+        bool destroyed = false;
+    };
+    static bool darkTheme;
+    static int widgetCount;
+    static int surfaceCount;
+    darkTheme = dark;
+    widgetCount = surfaceCount = 0;
+    GtkMenuPalette::Api api{};
+    api.popoverNew = [](void*) -> void* { ++widgetCount; return new Widget; };
+    api.modelButtonNew = []() -> void* { ++widgetCount; return new Widget; };
+    api.add = [](void* menu, void* item) { static_cast<Widget*>(menu)->child = static_cast<Widget*>(item); };
+    api.context = [](void* widget) { return widget; };
+    api.setState = [](void* widget, unsigned state) { static_cast<Widget*>(widget)->state = state; };
+    api.color = [](void*, unsigned state, GtkMenuPalette::Rgba* color) {
+        const double component = state & (1 << 3) ? 0 : darkTheme ? 238.0 / 255 : 36.0 / 255;
+        *color = {component, component, component, state & (1 << 3) ? 0.5 : 1};
+    };
+    api.background = [](void* context, void* painter, double, double, double, double) {
+        auto* widget = static_cast<Widget*>(context);
+        auto* image = static_cast<QImage*>(painter);
+        if (widget->child) {
+            image->fill(QColor(darkTheme ? "#202020" : "#f0f0f0"));
+        } else if (widget->state & (1 << 1)) {
+            // GTK themes can express hover colors with translucent CSS.
+            QPainter paint(image);
+            paint.fillRect(image->rect(), darkTheme ? QColor(255, 255, 255, 32) : QColor(0, 0, 0, 32));
+        }
+    };
+    api.destroyWidget = [](void* widget) {
+        auto* menu = static_cast<Widget*>(widget);
+        delete menu->child;
+        menu->child = nullptr;
+        menu->destroyed = true;
+        --widgetCount;
+    };
+    api.refSink = [](void* widget) { return widget; };
+    api.unref = [](void* widget) {
+        auto* menu = static_cast<Widget*>(widget);
+        Q_ASSERT(menu->destroyed);
+        delete menu;
+        --widgetCount;
+    };
+    api.surfaceForData = [](unsigned char* data, int format, int width, int height, int stride) -> void* {
+        Q_ASSERT(format == 0);
+        ++surfaceCount;
+        return new QImage(data, width, height, stride, QImage::Format_ARGB32_Premultiplied);
+    };
+    api.createPainter = [](void* surface) { return surface; };
+    api.destroyPainter = [](void*) {};
+    api.flushSurface = [](void*) {};
+    api.destroySurface = [](void* surface) { delete static_cast<QImage*>(surface); --surfaceCount; };
+    QPalette fallback;
+    fallback.setColor(QPalette::Highlight, QColor("#e95420"));
+    const QPalette palette = GtkMenuPalette::read(api, fallback);
+    const QColor fill(dark ? "#202020" : "#f0f0f0");
+    const QColor selected(dark ? "#3c3c3c" : "#d2d2d2");
+    for (const QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
+        QCOMPARE(palette.color(group, QPalette::Window), fill);
+        QCOMPARE(palette.color(group, QPalette::Highlight), selected);
+        if (group != QPalette::Disabled) {
+            QCOMPARE(palette.color(group, QPalette::ButtonText), QColor(dark ? "#eeeeee" : "#242424"));
+            QCOMPARE(palette.color(group, QPalette::HighlightedText), palette.color(group, QPalette::ButtonText));
+        }
+    }
+    QCOMPARE(palette.color(QPalette::Disabled, QPalette::ButtonText),
+             QColor(dark ? "#101010" : "#787878"));
+    QCOMPARE(palette.color(QPalette::Link), fallback.color(QPalette::Link));
+    QCOMPARE(fallback.color(QPalette::Highlight), QColor("#e95420"));
+    QCOMPARE(widgetCount, 0);
+    QCOMPARE(surfaceCount, 0);
+}
+
+void TestDisplayUi::system_menus_preserve_platform_roles_and_follow_palette_changes_data()
+{
+    QTest::addColumn<bool>("darkPlatform");
+    QTest::newRow("dark-system-light-calculator") << true;
+    QTest::newRow("light-system-dark-calculator") << false;
+}
+
+void TestDisplayUi::system_menus_preserve_platform_roles_and_follow_palette_changes()
+{
+    QFETCH(bool, darkPlatform);
+    MainWindowStateGuard guard;
+    const QPalette original = QApplication::palette();
+    const QPalette originalMenu = QApplication::palette("QMenu");
+    const QPalette originalBar = QApplication::palette("QMenuBar");
+    const auto restorePalette = qScopeGuard([&]() {
+        QApplication::setPalette(original);
+        QApplication::setPalette(originalMenu, "QMenu");
+        QApplication::setPalette(originalBar, "QMenuBar");
+        MenuStyle::refresh();
+    });
+    const auto platformPalette = [&original](bool dark) {
+        QPalette palette = original;
+        for (const QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive,
+                                                QPalette::Disabled}) {
+            const QColor fill(dark ? "#202428" : "#eeeeee");
+            const QColor text(group == QPalette::Disabled ? "#808890" : (dark ? "#f0f0f0" : "#202020"));
+            for (const QPalette::ColorRole role : {QPalette::Window, QPalette::Base, QPalette::Button})
+                palette.setColor(group, role, fill);
+            for (const QPalette::ColorRole role : {QPalette::WindowText, QPalette::Text, QPalette::ButtonText})
+                palette.setColor(group, role, text);
+            palette.setColor(group, QPalette::Highlight, QColor("#354faf"));
+            palette.setColor(group, QPalette::HighlightedText, QColor("#ffffff"));
+        }
+        return palette;
+    };
+    QPalette menuPalette = platformPalette(darkPlatform);
+    QPalette barPalette = menuPalette;
+    barPalette.setColor(QPalette::Highlight, QColor("#246044"));
+    QApplication::setPalette(menuPalette, "QMenu");
+    QApplication::setPalette(barPalette, "QMenuBar");
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(QJsonObject{
+        {QStringLiteral("background"), darkPlatform ? QStringLiteral("#e5eee8") : QStringLiteral("#232136")}
+    });
+    MainWindow window(false);
+    window.menuBar()->setNativeMenuBar(false);
+    auto* transparentStyle = new TransparentMenuBarTestStyle;
+    transparentStyle->setParent(window.menuBar());
+    window.menuBar()->setStyle(transparentStyle);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    MenuStyle::refresh();
+    QScopedPointer<QMenu> editorMenu(window.findChild<Editor*>()->createStandardContextMenu());
+    editorMenu->ensurePolished();
+    MenuTestResultDisplay result;
+    QScopedPointer<QMenu> resultMenu(result.createContextMenu(QPoint()));
+    resultMenu->ensurePolished();
+    const auto verifyPalette = [](QWidget* widget, const QPalette& expected) {
+        widget->ensurePolished();
+        QVERIFY(widget->styleSheet().isEmpty());
+        for (const QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive,
+                                                QPalette::Disabled}) {
+            for (const QPalette::ColorRole role : {QPalette::Window, QPalette::Text,
+                                                   QPalette::WindowText, QPalette::ButtonText,
+                                                   QPalette::Highlight, QPalette::HighlightedText}) {
+                QCOMPARE(widget->palette().color(group, role), expected.color(group, role));
+            }
+        }
+    };
+    verifyPalette(window.menuBar(), barPalette);
+    const QImage barImage = window.menuBar()->grab().toImage();
+    const QPoint backgroundPixel(barImage.width() - 4, barImage.height() / 2);
+    QCOMPARE(barImage.pixelColor(backgroundPixel), barPalette.color(QPalette::Button));
+    for (QMenu* menu : window.findChildren<QMenu*>())
+        verifyPalette(menu, menuPalette);
+    verifyPalette(editorMenu.data(), menuPalette);
+    verifyPalette(resultMenu.data(), menuPalette);
+    for (QMenu* submenu : resultMenu->findChildren<QMenu*>())
+        verifyPalette(submenu, menuPalette);
+
+    for (bool enabled : {true, false}) {
+        QStyleOptionMenuItem option;
+        option.initFrom(editorMenu.data());
+        option.menuItemType = QStyleOptionMenuItem::Normal;
+        option.rect = QRect(0, 0, 160, 28);
+        option.text = QStringLiteral("Menu item");
+        option.state = enabled ? QStyle::State(QStyle::State_Enabled | QStyle::State_Selected)
+                               : QStyle::State(QStyle::State_None);
+        option.palette.setCurrentColorGroup(enabled ? QPalette::Active : QPalette::Disabled);
+        option.font = editorMenu->font();
+        const QColor fill = menuPalette.color(enabled ? QPalette::Highlight : QPalette::Window);
+        const QColor text = enabled ? menuPalette.color(QPalette::HighlightedText)
+                                   : menuPalette.color(QPalette::Disabled, QPalette::Text);
+        QImage image(option.rect.size(), QImage::Format_ARGB32_Premultiplied);
+        image.fill(fill);
+        QPainter painter(&image);
+        painter.setFont(option.font);
+        editorMenu->style()->drawControl(QStyle::CE_MenuItem, &option, &painter, editorMenu.data());
+        painter.end();
+        QVERIFY(firstPixelMatchingColor(image, image.rect(), text, 12) != QPoint(-1, -1));
+    }
+
+    menuPalette = platformPalette(!darkPlatform);
+    barPalette = menuPalette;
+    barPalette.setColor(QPalette::Highlight, QColor("#246044"));
+    QApplication::setPalette(menuPalette, "QMenu");
+    QApplication::setPalette(barPalette, "QMenuBar");
+    QCoreApplication::processEvents();
+    verifyPalette(window.menuBar(), barPalette);
+    verifyPalette(editorMenu.data(), menuPalette);
+    verifyPalette(resultMenu.data(), menuPalette);
+}
+
+void TestDisplayUi::precision_menu_editor_uses_system_colors()
+{
+    MainWindowStateGuard guard;
+    guard.settings->statusBarVisible = true;
+    guard.settings->resultPrecision = -1;
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    bool inspected = false;
+    QTimer::singleShot(0, &window, [&]() {
+        QMenu* menu = qobject_cast<QMenu*>(QApplication::activePopupWidget());
+        if (menu == nullptr)
+            return;
+        const auto closeMenu = qScopeGuard([menu]() { menu->close(); });
+        QSpinBox* spin = menu->findChild<QSpinBox*>();
+        QVERIFY(spin != nullptr);
+        QVERIFY(!spin->isEnabled());
+        QVERIFY(spin->styleSheet().isEmpty());
+        QVERIFY(menu->styleSheet().isEmpty());
+        QCOMPARE(spin->palette().color(QPalette::Disabled, QPalette::Base),
+                 QApplication::palette(spin).color(QPalette::Disabled, QPalette::Base));
+        QCOMPARE(spin->palette().color(QPalette::Disabled, QPalette::Text),
+                 QApplication::palette(spin).color(QPalette::Disabled, QPalette::Text));
+        inspected = true;
+    });
+    QVERIFY(QMetaObject::invokeMethod(&window, "showPrecisionContextMenu", Qt::DirectConnection,
+                                      Q_ARG(QPoint, QPoint())));
+    QVERIFY(inspected);
+}
+
+void TestDisplayUi::dock_context_menus_follow_menu_theme_data()
+{
+    QTest::addColumn<bool>("darkSystem");
+    QTest::addColumn<bool>("floating");
+    QTest::newRow("dark-system-attached") << true << false;
+    QTest::newRow("light-system-attached") << false << false;
+    QTest::newRow("dark-system-floating") << true << true;
+    QTest::newRow("light-system-floating") << false << true;
+}
+
+void TestDisplayUi::dock_context_menus_follow_menu_theme()
+{
+    QFETCH(bool, darkSystem);
+    QFETCH(bool, floating);
+    MainWindowStateGuard guard;
+    const QPalette originalMenuPalette = QApplication::palette("QMenu");
+    const auto restorePalette = qScopeGuard([&]() {
+        QApplication::setPalette(originalMenuPalette, "QMenu");
+        MenuStyle::refresh();
+    });
+    QPalette native = originalMenuPalette;
+    for (const QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
+        const QColor background(darkSystem ? "#202428" : "#eeeeee");
+        const QColor foreground(group == QPalette::Disabled ? "#808890"
+                                                            : (darkSystem ? "#f0f0f0" : "#202020"));
+        for (const QPalette::ColorRole role : {QPalette::Window, QPalette::Base, QPalette::Button})
+            native.setColor(group, role, background);
+        for (const QPalette::ColorRole role : {QPalette::WindowText, QPalette::Text, QPalette::ButtonText})
+            native.setColor(group, role, foreground);
+        native.setColor(group, QPalette::Highlight, QColor("#354faf"));
+        native.setColor(group, QPalette::HighlightedText, QColor("#ffffff"));
+    }
+    QApplication::setPalette(native, "QMenu");
+    const QColor calculatorBackground(darkSystem ? "#e5eee8" : "#232136");
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), calculatorBackground.name()}});
+    guard.settings->historyDockVisible = true;
+    guard.settings->variablesDockVisible = true;
+    guard.settings->userFunctionsDockVisible = true;
+    guard.settings->userUnitsDockVisible = true;
+    Session historySession;
+    historySession.addHistoryEntry(HistoryEntry(QStringLiteral("1+1"), Quantity(2)));
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QMenu* appearance = window.findChild<QMenu*>(QStringLiteral("MenuAppearanceMenu"));
+    QVERIFY(appearance != nullptr);
+    HistoryWidget* history = window.findChild<HistoryWidget*>();
+    QVERIFY(history != nullptr);
+    history->setSession(&historySession);
+
+    const QVector<QColor> shades = generateOklchShades(
+        calculatorBackground, 6, themePolarityForBackground(calculatorBackground));
+    for (const char* dockName : {"HistoryDock", "VariablesDock", "UserFunctionsDock", "UserUnitsDock"}) {
+        QDockWidget* dock = window.findChild<QDockWidget*>(QString::fromLatin1(dockName));
+        QVERIFY(dock != nullptr);
+        dock->setFloating(floating);
+        dock->show();
+        dock->raise();
+        QCoreApplication::processEvents();
+        QAbstractItemView* list = dock->findChild<QAbstractItemView*>();
+        QVERIFY(list != nullptr);
+        const QPalette listPalette = list->palette();
+        const QString listStyle = list->styleSheet();
+        for (const int mode : {0, 1, 0}) {
+            appearance->actions().at(mode)->trigger();
+            const QColor expectedBackground = mode == 0 ? native.color(QPalette::Window)
+                                                        : shades.at(UiConfig::DockHeaderShade);
+            const auto inspectPopup = [&](QWidget* target, const QPoint& pos) {
+                bool inspected = false;
+                QTimer inspector;
+                inspector.setSingleShot(true);
+                connect(&inspector, &QTimer::timeout, &window, [&]() {
+                    auto* menu = qobject_cast<QMenu*>(QApplication::activePopupWidget());
+                    QVERIFY2(menu != nullptr, dockName);
+                    const auto closeMenu = qScopeGuard([menu]() { menu->close(); });
+                    QVERIFY(!menu->actions().isEmpty());
+                    QCOMPARE(menu->palette().color(QPalette::Window).name(), expectedBackground.name());
+                    if (mode == 0) {
+                        QVERIFY(menu->styleSheet().isEmpty());
+                        for (const QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive,
+                                                                QPalette::Disabled}) {
+                            for (const QPalette::ColorRole role : {QPalette::WindowText, QPalette::Text,
+                                                                   QPalette::Highlight, QPalette::HighlightedText})
+                                QCOMPARE(menu->palette().color(group, role), native.color(group, role));
+                        }
+                    } else {
+                        QVERIFY(!menu->styleSheet().isEmpty());
+                    }
+                    // Check the pixels too. An inherited stylesheet can replace
+                    // a correct menu palette when the popup is painted.
+                    const QImage image = menu->grab().toImage();
+                    QColor paintedBackground = expectedBackground;
+                    if (mode == 0) {
+                        // Native styles may shade the palette's background.
+                        // Compare with the same style without a themed parent.
+                        QMenu reference;
+                        reference.ensurePolished();
+                        QStyleOption option;
+                        option.initFrom(&reference);
+                        option.rect = image.rect();
+                        QImage nativeBackground(image.size(), QImage::Format_ARGB32_Premultiplied);
+                        nativeBackground.fill(native.color(QPalette::Window));
+                        QPainter painter(&nativeBackground);
+                        reference.style()->drawPrimitive(QStyle::PE_PanelMenu, &option, &painter, &reference);
+                        painter.end();
+                        paintedBackground = nativeBackground.pixelColor(nativeBackground.rect().center());
+                    }
+                    const QRect interior = image.rect().adjusted(5, 5, -5, -5);
+                    int matchingPixels = 0;
+                    for (int y = interior.top(); y <= interior.bottom(); ++y) {
+                        for (int x = interior.left(); x <= interior.right(); ++x) {
+                            if (image.pixelColor(x, y).name() == paintedBackground.name())
+                                ++matchingPixels;
+                        }
+                    }
+                    QVERIFY2(matchingPixels > interior.width() * interior.height() / 2, dockName);
+                    inspected = true;
+                });
+                inspector.start(0);
+                QContextMenuEvent event(QContextMenuEvent::Mouse, pos, target->mapToGlobal(pos));
+                QCoreApplication::sendEvent(target, &event);
+                QCoreApplication::processEvents();
+                inspector.stop();
+                QVERIFY2(inspected, dockName);
+            };
+            const QPoint listPos = list->model()->rowCount() > 0
+                ? list->visualRect(list->model()->index(0, 0)).center() : QPoint(8, 8);
+            inspectPopup(list->viewport(), listPos);
+            if (QLineEdit* search = dock->findChild<QLineEdit*>())
+                inspectPopup(search, QPoint(8, 8));
+            QCOMPARE(list->palette(), listPalette);
+            QCOMPARE(list->styleSheet(), listStyle);
+        }
+    }
+}
+
 void TestDisplayUi::restored_session_layout_reapplies_generated_theme_surfaces()
 {
     Settings* settings = Settings::instance();
@@ -3315,6 +4297,11 @@ void TestDisplayUi::visible_window_applies_restored_dock_and_keypad_layout()
 void TestDisplayUi::dock_surfaces_use_successive_generated_shades()
 {
     Settings* settings = Settings::instance();
+    const Settings::MenuAppearance oldMenuAppearance = settings->menuAppearance;
+    const auto restoreMenuAppearance = qScopeGuard([settings, oldMenuAppearance]() {
+        settings->menuAppearance = oldMenuAppearance;
+    });
+    settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
     struct SettingsGuard {
         Settings* settings;
         QString oldColorScheme;
@@ -6773,6 +7760,7 @@ void TestDisplayUi::precision_menu_editor_uses_themed_colors()
     QFETCH(bool, smallFont);
     MainWindowStateGuard guard;
     Settings* settings = guard.settings;
+    settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
 
     settings->colorScheme = QStringLiteral("Custom");
     settings->customColorSchemeJson = themeJsonString(QJsonObject{

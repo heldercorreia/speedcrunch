@@ -616,6 +616,28 @@ User Interface Settings
 
     .. versionadded:: 1.0
        The :menuselection:`Theme...` dialog, including live preview and JSON import/export.
+
+* :menuselection:`Settings --> Appearance --> Menus`
+    Choose how menus look:
+
+    * :guilabel:`System` (the default) uses the system's menu colors and styling,
+      including highlighted and disabled items. Menus follow changes to the
+      system theme while SpeedCrunch is running.
+    * :guilabel:`SpeedCrunch Theme` uses the selected SpeedCrunch theme for
+      menu backgrounds and text, including highlighted items.
+
+    This setting applies to the menu bar shown inside the application window,
+    dropdown menus, context menus, and dropdown lists in attached and floating
+    docks. Closed dropdown controls still use the SpeedCrunch theme.
+    The macOS system menu bar keeps its native appearance.
+    Popup menus drawn by Qt can look slightly different from native macOS menus.
+    On GNOME, popup menus use the GTK theme's popup hover colors when GTK is
+    available. Otherwise they use Qt's system palette.
+    The choice applies to all SpeedCrunch windows and is saved between launches.
+
+    Selections in the expression editor, result display, and dock lists still
+    use the SpeedCrunch theme. Their appearance is independent of this setting.
+
 * :menuselection:`Settings --> Appearance --> Font`
     Select the font to use for the expression editor and result display.
 * :menuselection:`Settings --> Appearance --> Syntax Highlighting`

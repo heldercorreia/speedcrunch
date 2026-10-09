@@ -3,6 +3,7 @@
 
 
 #include "gui/mainwindow.h"
+#include "gui/menustyleutils.h"
 
 #include "core/complexform.h"
 #include "core/constants.h"
@@ -1139,63 +1140,21 @@ void applyScrollCornerColorToScrollArea(QAbstractScrollArea* area, const QColor&
                               .arg(color.name()));
 }
 
-void applyMenuSurface(QMenu* menu,
-                      const ThemeSurfaceColors& surface,
-                      const ThemeSurfaceColors& selectedSurface,
-                      QSet<QMenu*>* visitedMenus)
-{
-    if (menu == nullptr)
-        return;
-    if (visitedMenus != nullptr) {
-        if (visitedMenus->contains(menu))
-            return;
-        visitedMenus->insert(menu);
-    }
-
-    QPalette palette = menu->palette();
-    for (const QPalette::ColorGroup group : {QPalette::Active,
-                                             QPalette::Inactive,
-                                             QPalette::Disabled}) {
-        palette.setColor(group, QPalette::Window, surface.background);
-        palette.setColor(group, QPalette::Base, surface.background);
-        palette.setColor(group, QPalette::Text, surface.foreground);
-        palette.setColor(group, QPalette::WindowText, surface.foreground);
-        palette.setColor(group, QPalette::ButtonText, surface.foreground);
-        palette.setColor(group, QPalette::Highlight, selectedSurface.background);
-        palette.setColor(group, QPalette::HighlightedText, selectedSurface.foreground);
-    }
-    menu->setPalette(palette);
-    menu->setStyleSheet(QStringLiteral(
-        "QMenu {"
-        " background-color: %1; color: %2;"
-        " border: 1px solid %3; border-radius: 8px;"
-        "}"
-        "QMenu::item:selected {"
-        " background-color: %4; color: %5;"
-        "}")
-                            .arg(surface.background.name(),
-                                 surface.foreground.name(),
-                                 selectedSurface.background.name(),
-                                 selectedSurface.background.name(),
-                                 selectedSurface.foreground.name()));
-
-    for (QAction* action : menu->actions()) {
-        if (QMenu* submenu = action->menu())
-            applyMenuSurface(submenu, surface, selectedSurface, visitedMenus);
-    }
-}
-
-void applyMenuSurface(QMenu* menu,
-                      const ThemeSurfaceColors& surface,
-                      const ThemeSurfaceColors& selectedSurface)
-{
-    QSet<QMenu*> visitedMenus;
-    applyMenuSurface(menu, surface, selectedSurface, &visitedMenus);
-}
-
 class MenuPrecisionSpinBox : public QSpinBox {
 public:
     using QSpinBox::QSpinBox;
+
+    void setSystemAppearance()
+    {
+        m_arrowColor = QColor();
+        setStyleSheet(QString());
+        setPalette(MenuStyle::systemPalette(this));
+        if (QLineEdit* editor = lineEdit()) {
+            editor->setStyleSheet(QString());
+            editor->setPalette(MenuStyle::systemPalette(editor));
+        }
+        update();
+    }
 
     void setThemeSurface(const ThemeSurfaceColors& surface)
     {
@@ -1425,7 +1384,7 @@ void applyNoMatchLabelSurface(QAbstractItemView* view, const ThemeSurfaceColors&
 
 bool isStructuralDockBackgroundWidget(QWidget* widget)
 {
-    if (widget == nullptr)
+    if (widget == nullptr || widget->window()->windowType() == Qt::Popup)
         return false;
     if (qobject_cast<QAbstractButton*>(widget)
         || qobject_cast<QAbstractScrollArea*>(widget)
@@ -1449,7 +1408,11 @@ void applySurfaceToStructuralDockWidget(QWidget* widget, const ThemeSurfaceColor
     widget->setPalette(paletteForThemeSurface(widget->palette(), surface));
     widget->setAutoFillBackground(true);
     widget->setAttribute(Qt::WA_StyledBackground, true);
-    widget->setStyleSheet(QStringLiteral("background-color: %1; color: %2;")
+    // Dock containers share their stylesheet with child menus. Limit these
+    // colors to the structural surfaces so the menu setting controls popups.
+    widget->setProperty("speedcrunchDockSurface", true);
+    widget->setStyleSheet(QStringLiteral(
+        "QWidget[speedcrunchDockSurface=\"true\"] { background-color: %1; color: %2; }")
                               .arg(surface.background.name(),
                                    surface.foreground.name()));
 }
@@ -1673,37 +1636,29 @@ void applyGeneratedDockContentSurfaces(MainWindow* owner, QDockWidget* dock, con
     for (QComboBox* comboBox : comboBoxes) {
         applySurfaceToContainingRow(dockContent, comboBox, dockSurface);
         comboBox->setPalette(paletteForThemeSurface(comboBox->palette(), dockTextInput));
-        comboBox->setStyleSheet(QStringLiteral(
+        DockComboBoxChevron::PopupTheme popupTheme;
+        popupTheme.buttonStyle = QStringLiteral(
             "QComboBox {"
             " background-color: %1; color: %2;"
-            " border: 1px solid %3; border-radius: 8px; padding: 4px %6px 4px 8px;"
+            " border: 1px solid %3; border-radius: 8px; padding: 4px %4px 4px 8px;"
             "}"
             "QComboBox::drop-down {"
             " subcontrol-origin: border; subcontrol-position: top right;"
-            " width: %7px; border: none; background: transparent;"
+            " width: %5px; border: none; background: transparent;"
             "}"
             "QComboBox::down-arrow {"
             " image: none; width: 0px; height: 0px;"
-            "}"
-            "QComboBox QAbstractItemView {"
-            " background-color: %4; color: %5;"
-            " border: 0; outline: 0;"
             "}")
                                     .arg(dockTextInput.background.name(),
                                          dockTextInput.foreground.name(),
-                                         dockTextInputOutline.background.name(),
-                                         dockComboPopup.background.name(),
-                                         dockComboPopup.foreground.name())
+                                         dockTextInputOutline.background.name())
                                     .arg(DockComboBoxChevron::IndicatorWidth + 4)
-                                    .arg(DockComboBoxChevron::IndicatorWidth));
-        DockComboBoxChevron::apply(comboBox,
-                                   dockTextInput.foreground,
-                                   dockTextInputOutline.background);
+                                    .arg(DockComboBoxChevron::IndicatorWidth);
         if (QAbstractItemView* popupView = comboBox->view()) {
-            QPalette popupPalette = paletteForThemeSurface(popupView->palette(), dockComboPopup);
+            QPalette popupPalette = paletteForThemeSurface(MenuStyle::systemPalette(popupView), dockComboPopup);
             popupPalette.setColor(QPalette::Highlight, dockHoveredItem.background);
             popupPalette.setColor(QPalette::HighlightedText, dockHoveredItem.foreground);
-            popupView->setStyleSheet(QStringLiteral(
+            popupTheme.viewStyle = QStringLiteral(
                 "QAbstractItemView {"
                 " background-color: %1; color: %2;"
                 " border: 0; border-radius: %7px; outline: 0;"
@@ -1723,11 +1678,11 @@ void applyGeneratedDockContentSurfaces(MainWindow* owner, QDockWidget* dock, con
                                          .arg(dockHoveredItem.background.name(),
                                               dockHoveredItem.foreground.name())
                                          .arg(UiConfig::CompletionPopupCornerRadius)
-                                         .arg(UiConfig::DockHoveredItemCornerRadius)
-                                     + scrollBarStyleSheet(comboPopupScrollBars));
-            popupView->setPalette(popupPalette);
-            popupView->viewport()->setPalette(popupPalette);
-            applyScrollBarColorsToScrollArea(popupView, comboPopupScrollBars);
+                                         .arg(UiConfig::DockHoveredItemCornerRadius);
+            popupTheme.palette = popupPalette;
+            popupTheme.scrollBarStyle = scrollBarStyleSheet(comboPopupScrollBars);
+            DockComboBoxChevron::apply(comboBox, dockTextInput.foreground,
+                                       dockTextInputOutline.background, popupTheme);
         }
     }
 
@@ -1829,8 +1784,14 @@ void applyThemeBackgroundRoleToWidget(QWidget* widget, const QColor& background)
     widget->setPalette(pal);
     widget->setAutoFillBackground(true);
     widget->setAttribute(Qt::WA_StyledBackground, true);
-    if (!qobject_cast<QSplitter*>(widget))
-        widget->setStyleSheet(QStringLiteral("background-color: %1;").arg(background.name()));
+    if (!qobject_cast<QSplitter*>(widget)) {
+        // Keep the surface color local. An unqualified stylesheet also paints
+        // child menus, even when they have a complete system palette.
+        widget->setProperty("speedcrunchThemeSurfaceBackground", true);
+        widget->setStyleSheet(QStringLiteral(
+            "QWidget[speedcrunchThemeSurfaceBackground=\"true\"] { background-color: %1; }")
+                                 .arg(background.name()));
+    }
 }
 
 void applyDockTabBarBackgroundToWidget(QWidget* widget, const ThemeSurfaceColors& surface)
@@ -3504,6 +3465,12 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorHistorySizeLimit = new QAction(this);
     m_actions.settingsDisplayFont = new QAction(this);
     m_actions.settingsDisplayColorSchemeCustom = new QAction(this);
+    m_actions.settingsMenuAppearanceSystem = new QAction(this);
+    m_actions.settingsMenuAppearanceSpeedCrunch = new QAction(this);
+    m_actions.settingsMenuAppearanceSystem->setCheckable(true);
+    m_actions.settingsMenuAppearanceSystem->setData(Settings::MenuAppearanceSystem);
+    m_actions.settingsMenuAppearanceSpeedCrunch->setCheckable(true);
+    m_actions.settingsMenuAppearanceSpeedCrunch->setData(Settings::MenuAppearanceSpeedCrunch);
     m_actions.settingsLanguage = new QAction(this);
     m_actions.settingsRadixCharComma = new QAction(this);
     m_actions.settingsRadixCharDefault = new QAction(this);
@@ -3776,6 +3743,24 @@ void MainWindow::updateColorSchemeActionState()
                                                            && m_settings->colorScheme == QLatin1String("Custom"));
 }
 
+void MainWindow::setMenuAppearance(QAction* action)
+{
+    if (action == nullptr)
+        return;
+    m_settings->menuAppearance = action->data().toInt() == Settings::MenuAppearanceSpeedCrunch
+        ? Settings::MenuAppearanceSpeedCrunch : Settings::MenuAppearanceSystem;
+    MenuStyle::refresh();
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (!window)
+            continue;
+        window->m_actions.settingsMenuAppearanceSystem->setChecked(
+            m_settings->menuAppearance == Settings::MenuAppearanceSystem);
+        window->m_actions.settingsMenuAppearanceSpeedCrunch->setChecked(
+            m_settings->menuAppearance == Settings::MenuAppearanceSpeedCrunch);
+        emit window->menuAppearanceChanged();
+    }
+}
+
 QString MainWindow::statusBarAngleUnitValue() const
 {
     return (m_status.selectedAngleUnit == 'r' ? MainWindow::tr("Radian")
@@ -3932,6 +3917,8 @@ void MainWindow::setActionsText()
     m_actions.settingsImaginaryUnitJ->setText(QStringLiteral("&j"));
     m_actions.settingsDisplayFont->setText(MainWindow::tr("&Font..."));
     m_actions.settingsDisplayColorSchemeCustom->setText(MainWindow::tr("&Theme..."));
+    m_actions.settingsMenuAppearanceSystem->setText(MainWindow::tr("&System"));
+    m_actions.settingsMenuAppearanceSpeedCrunch->setText(MainWindow::tr("&SpeedCrunch Theme"));
     m_actions.settingsLanguage->setText(MainWindow::tr("&Language..."));
 
     m_actions.helpManual->setText(MainWindow::tr("User &Manual"));
@@ -4002,6 +3989,9 @@ void MainWindow::createActionGroups()
     m_actionGroups.angle->addAction(m_actions.settingsAngleUnitRevolution);
 
     m_actionGroups.colorScheme = new QActionGroup(this);
+    m_actionGroups.menuAppearance = new QActionGroup(this);
+    m_actionGroups.menuAppearance->addAction(m_actions.settingsMenuAppearanceSystem);
+    m_actionGroups.menuAppearance->addAction(m_actions.settingsMenuAppearanceSpeedCrunch);
     const auto schemes = m_actions.settingsDisplayColorSchemes;
     for (auto& action : schemes)
         m_actionGroups.colorScheme->addAction(action);
@@ -4137,6 +4127,10 @@ void MainWindow::createMenus()
 
     m_menus.display = m_menus.settings->addMenu("");
     m_menus.display->addAction(m_actions.settingsDisplayColorSchemeCustom);
+    m_menus.menuAppearance = m_menus.display->addMenu("");
+    m_menus.menuAppearance->setObjectName(QStringLiteral("MenuAppearanceMenu"));
+    m_menus.menuAppearance->addAction(m_actions.settingsMenuAppearanceSystem);
+    m_menus.menuAppearance->addAction(m_actions.settingsMenuAppearanceSpeedCrunch);
     m_menus.display->addAction(m_actions.settingsDisplayFont);
     m_menus.display->addSeparator();
     m_menus.display->addAction(m_actions.settingsBehaviorSyntaxHighlighting);
@@ -4272,6 +4266,7 @@ void MainWindow::setMenusText()
     m_menus.autoCompletion->setTitle(MainWindow::tr("A&utocomplete"));
     m_menus.upDownArrowBehavior->setTitle(MainWindow::tr("Up/Down Arrow History"));
     m_menus.display->setTitle(MainWindow::tr("&Appearance"));
+    m_menus.menuAppearance->setTitle(MainWindow::tr("&Menus"));
     m_menus.help->setTitle(MainWindow::tr("&Help"));
 }
 
@@ -4620,8 +4615,7 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
         QAction* closeSessionAction = menu.addAction(tr("Close Session"));
         QAction* closePaneAction = menu.addAction(tr("Close Pane"));
 
-        const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
-        applyMenuSurface(&menu, surfaces.headersAndBorders, surfaces.inputs);
+        MenuStyle::apply(&menu);
         QAction* selectedAction = menu.exec(globalPos);
         if (selectedAction == nullptr)
             return;
@@ -6457,6 +6451,7 @@ void MainWindow::applyThemeSurfacePalette()
     setAttribute(Qt::WA_StyledBackground, true);
     setStyleSheet(QStringLiteral("QMainWindow { background-color: %1; }")
                       .arg(surface.background.name()));
+    MenuStyle::refresh();
 
     if (m_widgets.root)
         applyThemeBackgroundRoleToWidget(m_widgets.root, surface.background);
@@ -6469,8 +6464,6 @@ void MainWindow::applyThemeSurfacePalette()
         applyGeneratedDockContentSurfaces(this, dock, surfaces);
         applyGeneratedDockChromeSurfaces(this, dock, surfaces);
     }
-    for (QMenu* menu : findChildren<QMenu*>())
-        applyMenuSurface(menu, surfaces.headersAndBorders, surfaces.inputs);
     applyDockTabBarSurfaces(surfaces);
     if (m_widgets.bitField) {
         const ThemeSurfaceColors bitfieldBackground =
@@ -6514,13 +6507,12 @@ void MainWindow::applyThemeSurfacePalette()
     }
     QTimer::singleShot(0, this, [this, applyDockTabBarSurfaces]() {
         const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
+        MenuStyle::refresh();
         const QList<QDockWidget*> docks = m_allDocks;
         for (QDockWidget* dock : docks) {
             applyGeneratedDockContentSurfaces(this, dock, surfaces);
             applyGeneratedDockChromeSurfaces(this, dock, surfaces);
         }
-        for (QMenu* menu : findChildren<QMenu*>())
-            applyMenuSurface(menu, surfaces.headersAndBorders, surfaces.inputs);
         applyDockTabBarSurfaces(surfaces);
     });
 }
@@ -7165,6 +7157,8 @@ void MainWindow::createFixedConnections()
     connect(this, &MainWindow::colorSchemeChanged, this, &MainWindow::updateSplitterStyleSheet);
     connect(this, &MainWindow::colorSchemeChanged, this, &MainWindow::applyThemeSurfacePalette);
     connect(this, &MainWindow::colorSchemeChanged, this, &MainWindow::refreshPaneThemes);
+    connect(m_actionGroups.menuAppearance, &QActionGroup::triggered,
+            this, &MainWindow::setMenuAppearance);
     connect(this, &MainWindow::syntaxHighlightingChanged, this, &MainWindow::refreshPaneThemes);
 
     connect(m_actions.sessionExportJson, SIGNAL(triggered()), SLOT(exportJson()));
@@ -7515,6 +7509,10 @@ void MainWindow::createFixedConnections()
 
 void MainWindow::applySettings()
 {
+    m_actions.settingsMenuAppearanceSystem->setChecked(
+        m_settings->menuAppearance == Settings::MenuAppearanceSystem);
+    m_actions.settingsMenuAppearanceSpeedCrunch->setChecked(
+        m_settings->menuAppearance == Settings::MenuAppearanceSpeedCrunch);
     emit languageChanged();
     m_status.selectedAngleUnit = m_settings->angleUnit;
     m_status.selectedResultFormat = m_settings->resultFormat;
@@ -8305,6 +8303,7 @@ MainWindow::MainWindow(bool restorePreviousSession)
 
     m_translator = 0;
     m_settings = Settings::instance();
+    MenuStyle::install();
     m_keypadMode = m_settings->keypadMode;
     m_keypadZoomPercent = m_settings->keypadZoomPercent;
     DMath::complexMode = m_settings->complexNumbers;
@@ -9086,8 +9085,7 @@ void MainWindow::showLoadedSessionsMenu(const QPoint& globalPos)
         action->setData(name);
     }
 
-    const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
-    applyMenuSurface(&menu, surfaces.headersAndBorders, surfaces.inputs);
+    MenuStyle::apply(&menu);
     QAction* selectedAction = menu.exec(globalPos);
     if (selectedAction == nullptr)
         return;
@@ -13700,10 +13698,18 @@ void MainWindow::showPrecisionContextMenu(const QPoint& point)
     editorAction->setDefaultWidget(precisionEditor);
     menu.addAction(editorAction);
 
-    const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
-    applyMenuSurface(&menu, surfaces.headersAndBorders, surfaces.inputs);
-    precisionLabel->setPalette(menu.palette());
-    precisionSpin->setThemeSurface(surfaces.inputs);
+    const auto updateAppearance = [this, &menu, precisionEditor, precisionLabel, precisionSpin]() {
+        MenuStyle::apply(&menu);
+        precisionEditor->setPalette(menu.palette());
+        precisionLabel->setPalette(menu.palette());
+        if (m_settings->menuAppearance == Settings::MenuAppearanceSpeedCrunch)
+            precisionSpin->setThemeSurface(generatedSurfaceColors(m_settings).inputs);
+        else
+            precisionSpin->setSystemAppearance();
+    };
+    connect(this, &MainWindow::menuAppearanceChanged, &menu, updateAppearance);
+    connect(this, &MainWindow::colorSchemeChanged, &menu, updateAppearance);
+    updateAppearance();
     menu.exec(m_status.resultPrecision->mapToGlobal(point));
 }
 

@@ -37,6 +37,11 @@ public:
         CustomKeypadActionEvaluateExpression = 3
     };
 
+    enum MenuAppearance {
+        MenuAppearanceSystem = 0,
+        MenuAppearanceSpeedCrunch = 1
+    };
+
     enum NumberFormatStyle {
         NumberFormatSystem = 0, // Legacy value kept for migration compatibility.
         NumberFormatNoGroupingDot = 1,
@@ -186,6 +191,7 @@ public:
     QString formulaBookActivePage;
 
     QString colorScheme;
+    MenuAppearance menuAppearance;
     QString customColorSchemeJson;
     QString displayFont;
     QString sessionLayoutJson;
