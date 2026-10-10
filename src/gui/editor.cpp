@@ -41,6 +41,7 @@
 #include <QScopeGuard>
 #include <QScrollBar>
 #include <QShowEvent>
+#include <QSignalBlocker>
 #include <QRegularExpression>
 #include <QStyle>
 #include <QResizeEvent>
@@ -1456,7 +1457,11 @@ void Editor::setSession(Session* session)
 
     m_session = session;
     m_evaluator = m_session->evaluator();
-    m_highlighter->setEvaluator(m_evaluator);
+    {
+        // Rebinding the highlighter changes formatting, not the expression.
+        const QSignalBlocker blocker(this);
+        m_highlighter->setEvaluator(m_evaluator);
+    }
     updateHistory();
 }
 
@@ -4166,6 +4171,9 @@ void Editor::wheelEvent(QWheelEvent* event)
 
 void Editor::rehighlight()
 {
+    // Qt can emit textChanged while applying styles and highlighting.
+    // A theme refresh must not act like an edit or clear a result selection.
+    const QSignalBlocker blocker(this);
     if (m_themePreviewColorScheme.has_value())
         m_highlighter->setColorScheme(
             ColorScheme::fromJsonObject(m_themePreviewColorScheme->toJsonObject()));
