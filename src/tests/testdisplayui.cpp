@@ -13,6 +13,7 @@
 #include "gui/constantswidget.h"
 #include "gui/dockliststyle.h"
 #include "gui/editor.h"
+#include "gui/syntaxhighlighter.h"
 #include "gui/functionswidget.h"
 #include "gui/gtkmenupalette.h"
 #include "gui/historywidget.h"
@@ -769,6 +770,8 @@ private slots:
     void init() { UiTestFixture::resetSettings(); }
     void update_checks_follow_build_option();
     void ui_test_fixture_resets_persisted_layout_and_first_run_preference();
+    void editing_input_digit_grouping_updates_all_open_editors();
+    void number_format_is_shared_and_refreshes_all_input_panes();
     void manual_preserves_text_weights_and_emphasis();
     void color_scheme_roles_exclude_obsolete_scrollbar();
     void color_scheme_reads_optional_display_name();
@@ -949,6 +952,102 @@ void TestDisplayUi::update_checks_follow_build_option()
     QVERIFY(!updateAction);
     QCOMPARE(window.metaObject()->indexOfSlot("checkForUpdates()"), -1);
 #endif
+}
+
+void TestDisplayUi::editing_input_digit_grouping_updates_all_open_editors()
+{
+    Settings::instance()->numberFormatStyle = Settings::NumberFormatThreeDigitSpaceDot;
+    Settings::instance()->applyNumberFormatStyle();
+    MainWindow first;
+    MainWindow second;
+    QAction* firstAction = first.findChild<QAction*>(QStringLiteral("InputDigitGroupingAction"));
+    QAction* secondAction = second.findChild<QAction*>(QStringLiteral("InputDigitGroupingAction"));
+    QVERIFY(firstAction);
+    QVERIFY(secondAction);
+    QVERIFY(firstAction->isCheckable());
+    QVERIFY(firstAction->isChecked());
+    bool inEditingMenu = false;
+    for (QMenu* menu : first.findChildren<QMenu*>()) {
+        if (menu->title() == MainWindow::tr("&Editing") && menu->actions().contains(firstAction))
+            inEditingMenu = true;
+    }
+    QVERIFY(inEditingMenu);
+    QVERIFY(QMetaObject::invokeMethod(&first, "splitActivePaneRight", Qt::DirectConnection));
+    const QList<Editor*> editors = first.findChildren<Editor*>() + second.findChildren<Editor*>();
+    QVERIFY(editors.size() >= 3);
+    for (Editor* editor : editors)
+        editor->setText(QStringLiteral("1000"));
+    for (bool enabled : {false, true}) {
+        firstAction->trigger();
+        QCOMPARE(Settings::instance()->inputDigitGrouping, enabled);
+        QCOMPARE(secondAction->isChecked(), enabled);
+        for (Editor* editor : editors) {
+            bool hasGap = false;
+            for (const auto& range : editor->document()->firstBlock().layout()->formats())
+                hasGap |= range.format.hasProperty(SyntaxHighlighter::InputDigitSeparator);
+            QCOMPARE(hasGap, enabled);
+            QCOMPARE(editor->text(), QStringLiteral("1000"));
+        }
+    }
+}
+
+void TestDisplayUi::number_format_is_shared_and_refreshes_all_input_panes()
+{
+    Settings::instance()->inputDigitGrouping = true;
+    MainWindow first;
+    MainWindow second;
+    QAction* numberFormatAction = nullptr;
+    for (QMenu* menu : first.findChildren<QMenu*>()) {
+        for (QAction* action : menu->actions()) {
+            if (action->text() == MainWindow::tr("Number Format...")) {
+                QCOMPARE(menu->title(), MainWindow::tr("Se&ttings"));
+                QCOMPARE(menu->actions().first(), action);
+                numberFormatAction = action;
+            }
+        }
+    }
+    QVERIFY(numberFormatAction);
+    QVERIFY(QMetaObject::invokeMethod(&first, "splitActivePaneRight", Qt::DirectConnection));
+    const QList<Editor*> editors = first.findChildren<Editor*>() + second.findChildren<Editor*>();
+    QVERIFY(editors.size() >= 3);
+    for (Editor* editor : editors)
+        editor->setText(QStringLiteral("12345678.1234567"));
+    for (auto style : {Settings::NumberFormatIndianCommaDot,
+                       Settings::NumberFormatThreeDigitUnderscoreDotFraction,
+                       Settings::NumberFormatNoGroupingDot}) {
+        QTimer::singleShot(0, &first, [style]() {
+            auto* dialog = qobject_cast<QDialog*>(QApplication::activeModalWidget());
+            QVERIFY(dialog);
+            auto* combo = dialog->findChild<QComboBox*>();
+            QVERIFY(combo);
+            // Select by example because the dialog's ordering differs from the enum.
+            const QString example = style == Settings::NumberFormatIndianCommaDot
+                ? QStringLiteral("12,34,567.12345")
+                : style == Settings::NumberFormatThreeDigitUnderscoreDotFraction
+                    ? QStringLiteral("1_234_567.123_45") : QStringLiteral("1234567.12345");
+            const int index = combo->findText(example);
+            QVERIFY(index >= 0);
+            combo->setCurrentIndex(index);
+            dialog->accept();
+        });
+        numberFormatAction->trigger();
+        QCOMPARE(Settings::instance()->numberFormatStyle, style);
+        const QList<int> expected = style == Settings::NumberFormatIndianCommaDot
+            ? QList<int>{0, 2, 4}
+            : style == Settings::NumberFormatThreeDigitUnderscoreDotFraction
+                ? QList<int>{1, 4, 11, 14} : QList<int>{};
+        for (Editor* editor : editors) {
+            QList<int> positions;
+            for (const auto& range : editor->document()->firstBlock().layout()->formats()) {
+                if (range.format.hasProperty(SyntaxHighlighter::InputDigitSeparator)) {
+                    for (int pos = range.start; pos < range.start + range.length; ++pos)
+                        positions.append(pos);
+                }
+            }
+            QCOMPARE(positions, expected);
+            QCOMPARE(editor->text(), QStringLiteral("12345678.1234567"));
+        }
+    }
 }
 
 void TestDisplayUi::ui_test_fixture_resets_persisted_layout_and_first_run_preference()

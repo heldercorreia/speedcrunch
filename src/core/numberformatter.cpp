@@ -653,6 +653,26 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride,
     return result;
 }
 
+QList<int> NumberFormatter::digitGroupingPositions(int digitCount, int groupSize, bool fractional)
+{
+    // Share the grouping boundaries between concrete result text and the
+    // editor's painted separators so both follow the same Number Format.
+    const Settings* settings = Settings::instance();
+    QList<int> positions;
+    if (!settings->isDigitGroupingEnabled() || groupSize <= 0
+            || (fractional && settings->digitGroupingIntegerPartOnly))
+        return positions;
+    if (fractional) {
+        for (int pos = groupSize; pos < digitCount; pos += groupSize)
+            positions.append(pos);
+    } else {
+        const int leadingGroupSize = settings->isIndianDigitGrouping() && groupSize == 3 ? 2 : groupSize;
+        for (int pos = digitCount - groupSize; pos > 0; pos -= leadingGroupSize)
+            positions.prepend(pos);
+    }
+    return positions;
+}
+
 QString NumberFormatter::formatNumericLiteralForDisplay(const QString& input)
 {
     const Settings* settings = Settings::instance();
@@ -661,39 +681,15 @@ QString NumberFormatter::formatNumericLiteralForDisplay(const QString& input)
     const QChar decimalSep = QChar(settings->decimalSeparator());
     const QChar altDecimalSep = (decimalSep == MathDsl::DotSep) ? MathDsl::CommaSep : MathDsl::DotSep;
 
-    const bool indianGrouping = settings->isIndianDigitGrouping();
     auto groupPart = [&separator](const QString& digits, int groupSize, bool fromRight) {
-        if (digits.size() <= groupSize)
-            return digits;
-
         QString result;
-        if (fromRight) {
-            int first = digits.size() % groupSize;
-            if (first == 0)
-                first = groupSize;
-            result = digits.left(first);
-            for (int i = first; i < digits.size(); i += groupSize) {
-                result += separator;
-                result += digits.mid(i, groupSize);
-            }
-            return result;
+        int start = 0;
+        for (int pos : NumberFormatter::digitGroupingPositions(digits.size(), groupSize, !fromRight)) {
+            result += digits.mid(start, pos - start) + separator;
+            start = pos;
         }
-
-        for (int i = 0; i < digits.size(); i += groupSize) {
-            if (i > 0)
-                result += separator;
-            result += digits.mid(i, groupSize);
-        }
+        result += digits.mid(start);
         return result;
-    };
-    auto groupIntegral = [&](const QString& integral, int standardSize) -> QString {
-        if (!indianGrouping || standardSize != 3 || integral.size() <= 3)
-            return groupPart(integral, standardSize, true);
-
-        const int leadingLength = integral.size() - 3;
-        const QString leading = integral.left(leadingLength);
-        const QString tail = integral.right(3);
-        return groupPart(leading, 2, true) + separator + tail;
     };
 
     QString output;
@@ -750,13 +746,13 @@ QString NumberFormatter::formatNumericLiteralForDisplay(const QString& input)
             if (groupingEnabled && !settings->digitGroupingIntegerPartOnly)
                 groupedFractional = groupPart(fractional, groupSize, false);
             token = prefix
-                + (groupingEnabled ? groupIntegral(integral, groupSize) : integral)
+                + (groupingEnabled ? groupPart(integral, groupSize, true) : integral)
                 + decimalSep
                 + groupedFractional
                 + exponent;
         } else {
             const QString integral = stripGroupingChars(body);
-            token = prefix + (groupingEnabled ? groupIntegral(integral, groupSize) : integral) + exponent;
+            token = prefix + (groupingEnabled ? groupPart(integral, groupSize, true) : integral) + exponent;
         }
 
         output += token;

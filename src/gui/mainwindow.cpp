@@ -3454,6 +3454,8 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorPartialResults = new QAction(this);
     m_actions.settingsBehaviorSaveWindowPositionOnExit = new QAction(this);
     m_actions.settingsBehaviorSyntaxHighlighting = new QAction(this);
+    m_actions.settingsEditingInputDigitGrouping = new QAction(this);
+    m_actions.settingsEditingInputDigitGrouping->setObjectName(QStringLiteral("InputDigitGroupingAction"));
     m_actions.settingsBehaviorHoverHighlightResults = new QAction(this);
     m_actions.settingsBehaviorDigitGroupingNone = new QAction(this);
     m_actions.settingsBehaviorDigitGroupingOneSpace = new QAction(this);
@@ -3542,6 +3544,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorPartialResults->setCheckable(true);
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setCheckable(true);
     m_actions.settingsBehaviorSyntaxHighlighting->setCheckable(true);
+    m_actions.settingsEditingInputDigitGrouping->setCheckable(true);
     m_actions.settingsBehaviorHoverHighlightResults->setCheckable(true);
     m_actions.settingsBehaviorDigitGroupingNone->setCheckable(true);
     m_actions.settingsBehaviorDigitGroupingNone->setData(0);
@@ -3856,6 +3859,8 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorPartialResults->setText(MainWindow::tr("Show Live Result &Preview"));
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setText(MainWindow::tr("Save &Window Position on Exit"));
     m_actions.settingsBehaviorSyntaxHighlighting->setText(MainWindow::tr("Syntax &Highlighting"));
+    m_actions.settingsEditingInputDigitGrouping->setText(MainWindow::tr("Group Digits in &Input"));
+    m_actions.settingsEditingInputDigitGrouping->setToolTip(MainWindow::tr("Group input digits using the selected number format."));
     m_actions.settingsBehaviorHoverHighlightResults->setText(MainWindow::tr("Hover Highlighting"));
     m_actions.settingsBehaviorDigitGroupingNone->setText(MainWindow::tr("Disabled"));
     m_actions.settingsBehaviorDigitGroupingOneSpace->setText(MainWindow::tr("Small Space"));
@@ -4124,6 +4129,8 @@ void MainWindow::createMenus()
 #endif
     m_menus.settings = new QMenu("", this);
     menuBar()->addMenu(m_menus.settings);
+    m_menus.settings->addAction(m_actions.settingsBehaviorNumberFormat);
+    m_menus.settings->addSeparator();
 
     m_menus.display = m_menus.settings->addMenu("");
     m_menus.display->addAction(m_actions.settingsDisplayColorSchemeCustom);
@@ -4143,6 +4150,7 @@ void MainWindow::createMenus()
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionUserFunctions);
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionUserVariables);
     m_menus.editing->addAction(m_actions.settingsBehaviorAutoAns);
+    m_menus.editing->addAction(m_actions.settingsEditingInputDigitGrouping);
     m_menus.editing->addAction(m_actions.settingsBehaviorEmptyHistoryHint);
     m_menus.editing->addAction(m_actions.settingsBehaviorLeaveLastExpression);
     m_menus.upDownArrowBehavior = m_menus.editing->addMenu("");
@@ -4151,7 +4159,6 @@ void MainWindow::createMenus()
     m_menus.upDownArrowBehavior->addAction(m_actions.settingsBehaviorUpDownArrowSingleLineOnly);
 
     m_menus.results = m_menus.settings->addMenu("");
-    m_menus.results->addAction(m_actions.settingsBehaviorNumberFormat);
     m_menus.results->addAction(m_actions.settingsBehaviorResultSlots);
     m_menus.results->addSeparator();
     m_menus.resultRoundingMode = m_menus.results->addMenu("");
@@ -7311,6 +7318,8 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsBehaviorHistorySizeLimit, SIGNAL(triggered()), SLOT(setHistorySizeLimit()));
     connect(m_actions.settingsBehaviorSaveWindowPositionOnExit, SIGNAL(toggled(bool)), SLOT(setWindowPositionSaveEnabled(bool)));
     connect(m_actions.settingsBehaviorSyntaxHighlighting, SIGNAL(toggled(bool)), SLOT(setSyntaxHighlightingEnabled(bool)));
+    connect(m_actions.settingsEditingInputDigitGrouping, &QAction::toggled,
+            this, &MainWindow::setInputDigitGroupingEnabled);
     connect(m_actions.settingsBehaviorHoverHighlightResults, SIGNAL(toggled(bool)), SLOT(setHoverHighlightResultsEnabled(bool)));
     connect(m_actionGroups.digitGrouping, SIGNAL(triggered(QAction*)), SLOT(setDigitGrouping(QAction*)));
     connect(m_actions.settingsBehaviorDigitGroupingIntegerPartOnly, SIGNAL(toggled(bool)), SLOT(setDigitGroupingIntegerPartOnlyEnabled(bool)));
@@ -7707,6 +7716,7 @@ void MainWindow::applySettings()
         m_actions.settingsBehaviorSyntaxHighlighting->setChecked(true);
     else
         setSyntaxHighlightingEnabled(false);
+    m_actions.settingsEditingInputDigitGrouping->setChecked(m_settings->inputDigitGrouping);
 
     if (m_settings->hoverHighlightResults)
         m_actions.settingsBehaviorHoverHighlightResults->setChecked(true);
@@ -10539,6 +10549,21 @@ void MainWindow::setSyntaxHighlightingEnabled(bool b)
 {
     m_settings->syntaxHighlighting = b;
     emit syntaxHighlightingChanged();
+}
+
+void MainWindow::setInputDigitGroupingEnabled(bool enabled)
+{
+    m_settings->inputDigitGrouping = enabled;
+    QList<QPointer<MainWindow>> windows = allMainWindows();
+    if (!windows.contains(QPointer<MainWindow>(this)))
+        windows.append(QPointer<MainWindow>(this));
+    for (const QPointer<MainWindow>& window : windows) {
+        if (!window)
+            continue;
+        const QSignalBlocker blocker(window->m_actions.settingsEditingInputDigitGrouping);
+        window->m_actions.settingsEditingInputDigitGrouping->setChecked(enabled);
+        emit window->syntaxHighlightingChanged();
+    }
 }
 
 void MainWindow::setDigitGrouping(QAction *action)
@@ -13542,10 +13567,15 @@ void MainWindow::showNumberFormatDialog()
 
     m_settings->numberFormatStyle = selectedStyle;
     m_settings->applyNumberFormatStyle();
-    emit syntaxHighlightingChanged();
     // Number format changes from this dialog should not rewrite previous
     // history entries in Result Display. Only refresh live editor previews.
-    m_widgets.editor->refreshAutoCalc();
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (!window)
+            continue;
+        emit window->syntaxHighlightingChanged();
+        for (Editor* editor : window->findChildren<Editor*>())
+            editor->refreshAutoCalc();
+    }
 }
 
 void MainWindow::showResultSlotsDialog()

@@ -7,9 +7,11 @@
 #include "core/evaluator.h"
 #include "core/functions.h"
 #include "core/mathdsl.h"
+#include "core/numberformatter.h"
 #include "core/settings.h"
 
 #include <QPlainTextEdit>
+#include <QFontMetricsF>
 #include <QTextDocument>
 #include <QTextDocumentFragment>
 
@@ -63,9 +65,10 @@ static QString stripTrailingAsciiDigits(QString text)
 
 
 
-SyntaxHighlighter::SyntaxHighlighter(QPlainTextEdit* edit)
+SyntaxHighlighter::SyntaxHighlighter(QPlainTextEdit* edit, bool inputEditor)
     : QSyntaxHighlighter(edit)
     , m_evaluator(Evaluator::instance())
+    , m_inputEditor(inputEditor)
 {
     setDocument(edit->document());
     update();
@@ -87,6 +90,111 @@ void SyntaxHighlighter::setColorScheme(ColorScheme&& colorScheme) {
 }
 
 void SyntaxHighlighter::highlightBlock(const QString& text)
+{
+    highlightSyntaxBlock(text);
+    if (m_inputEditor && Settings::instance()->inputDigitGrouping)
+        groupInputDigits(text);
+}
+
+void SyntaxHighlighter::groupInputDigits(const QString& text)
+{
+    // Keep the user's expression intact. For example, typing "1000" leaves
+    // four characters in the document even when it appears as "1,000".
+    // QSyntaxHighlighter formats belong to the text layout, not to an edit of
+    // the document, so grouping creates no cursor stops or undo commands.
+    // Copying, saving and evaluation still use the original expression.
+    const Settings* settings = Settings::instance();
+    const QString separator = settings->digitGroupingSeparator();
+    const QFontMetricsF metrics(document()->defaultFont());
+    const auto groupPart = [this, &separator, &metrics](int start, int end, int groupSize, bool fractional) {
+        for (int boundary : NumberFormatter::digitGroupingPositions(end - start, groupSize, fractional)) {
+            // Reserve the separator's width after the preceding digit. Qt uses
+            // this width for wrapping and cursor placement. Store the glyph as
+            // a format property so Editor can paint it inside that gap.
+            const int pos = start + boundary - 1;
+            QTextCharFormat fmt = format(pos);
+            fmt.setFontLetterSpacingType(QFont::AbsoluteSpacing);
+            fmt.setFontLetterSpacing(metrics.horizontalAdvance(separator));
+            fmt.setProperty(InputDigitSeparator, separator);
+            setFormat(pos, 1, fmt);
+        }
+    };
+    const Tokens tokens = evaluator()->scan(textNormalizedForHighlighting(text));
+    for (const Token& token : tokens) {
+        if (token.type() != Token::stxNumber)
+            continue;
+
+        int start = token.pos();
+        const int limit = qMin(text.size(), start + token.size());
+        if (start < 0 || start >= limit)
+            continue;
+        while (start < limit && text.at(start).isSpace())
+            ++start;
+
+        int base = 10;
+        if (start < limit && text.at(start) == MathDsl::HexPrefixAl1) {
+            base = 16;
+            ++start;
+        } else if (start + 1 < limit && text.at(start) == QLatin1Char('0')) {
+            const QChar prefix = text.at(start + 1).toLower();
+            if (prefix == QLatin1Char('x')) base = 16;
+            else if (prefix == QLatin1Char('b')) base = 2;
+            else if (prefix == QLatin1Char('o')) base = 8;
+            if (base != 10 || prefix == QLatin1Char('d'))
+                start += 2;
+        }
+
+        const auto isDigit = [base](QChar ch) {
+            ch = ch.toLower();
+            const int digit = ch >= QLatin1Char('0') && ch <= QLatin1Char('9')
+                ? ch.unicode() - '0'
+                : ch >= QLatin1Char('a') && ch <= QLatin1Char('f')
+                    ? ch.unicode() - 'a' + 10 : -1;
+            return digit >= 0 && digit < base;
+        };
+        int end = start;
+        while (end < limit && isDigit(text.at(end)))
+            ++end;
+
+        // Leave manually spaced groups alone rather than adding separators twice.
+        int next = end;
+        while (next < limit && (text.at(next).isSpace() || text.at(next) == QLatin1Char('_')))
+            ++next;
+        if (next > end && next < limit && isDigit(text.at(next)))
+            continue;
+
+        const int groupSize = base == 2 || base == 16 ? 4 : 3;
+        if (end < limit && QString(text.at(end)) == separator) {
+            // A pasted number may already contain the selected grouping marks.
+            // Do not mistake those marks for an alternate decimal separator.
+            const QString tail = text.mid(end + 1, limit - end - 1).trimmed();
+            bool groupedTail = tail.size() == groupSize && end - start <= groupSize;
+            for (QChar ch : tail)
+                groupedTail = groupedTail && isDigit(ch);
+            if (groupedTail || tail.contains(QChar(settings->decimalSeparator()))
+                    || tail.contains(separator))
+                continue;
+        }
+        groupPart(start, end, groupSize, false);
+        if (end < limit && Evaluator::isRadixChar(text.at(end))) {
+            if (text.at(end) != QChar(settings->decimalSeparator())) {
+                // Decimal separator changes are also visual. Editor paints the
+                // selected separator over this character, leaving the typed
+                // separator in the source expression and on the clipboard.
+                QTextCharFormat fmt = format(end);
+                fmt.setProperty(InputRadixReplacement, QString(QChar(settings->decimalSeparator())));
+                setFormat(end, 1, fmt);
+            }
+            const int fractionalStart = end + 1;
+            int fractionalEnd = fractionalStart;
+            while (fractionalEnd < limit && isDigit(text.at(fractionalEnd)))
+                ++fractionalEnd;
+            groupPart(fractionalStart, fractionalEnd, groupSize, true);
+        }
+    }
+}
+
+void SyntaxHighlighter::highlightSyntaxBlock(const QString& text)
 {
     // Default color for the text
     setFormat(0, text.length(), colorForRole(ColorScheme::Number));
