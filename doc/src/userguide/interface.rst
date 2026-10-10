@@ -682,7 +682,8 @@ Help
     Update checks are enabled in official SpeedCrunch builds. Other distributors
     can choose whether to enable them. When enabled, this menu entry is available
     and SpeedCrunch also checks for updates on launch, at most once every 24 hours.
-    See :ref:`update-checks` for build options and package manager guidance.
+    See :file:`BUILDING.md` at the repository root for build options and
+    package provider guidance.
 
     .. versionadded:: 1.0
 
