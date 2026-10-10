@@ -11,11 +11,13 @@ Visit the [SpeedCrunch website](https://www.speedcrunch.org/) for
 
 ![SpeedCrunch screenshot](doc/src/screen1.png)
 
-## Building
+## Building and testing
 
 See [BUILDING.md](BUILDING.md) for requirements and instructions on building,
-running the tests, installing SpeedCrunch, and packaging it. The guide also
-links to instructions for building the manual.
+installing SpeedCrunch, and packaging it. The guide also links to instructions
+for building the manual.
+
+See [TESTING.md](TESTING.md) for instructions on building and running the tests.
 
 ## File locations
 SpeedCrunch uses [Qt's standard per-user locations](https://doc.qt.io/qt-6/qstandardpaths.html)
