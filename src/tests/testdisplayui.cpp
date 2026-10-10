@@ -887,6 +887,9 @@ private slots:
     void user_definitions_hint_follows_theme_contrast_data();
     void user_definitions_hint_follows_theme_contrast();
     void quit_shortcut_triggers_menu_action_from_editor_and_window();
+    void clipboard_actions_follow_active_pane_data();
+    void clipboard_actions_follow_active_pane();
+    void copy_shortcut_preserves_display_selection_in_other_pane();
     void session_open_sessions_folder_menu_action_opens_session_storage();
     void session_import_dialog_opens_valid_json_as_new_tab();
     void session_import_rejects_invalid_json_without_new_tab();
@@ -8899,6 +8902,127 @@ void TestDisplayUi::user_definitions_hint_follows_theme_contrast()
     });
     QVERIFY(QMetaObject::invokeMethod(&window, "showUserDefinitionsImportDialog", Qt::DirectConnection));
     QVERIFY(visitedDialog);
+}
+
+void TestDisplayUi::clipboard_actions_follow_active_pane_data()
+{
+    QTest::addColumn<bool>("split");
+    QTest::addColumn<bool>("restore");
+    QTest::addColumn<bool>("shortcut");
+    for (const bool shortcut : {false, true}) {
+        const QByteArray method = shortcut ? "shortcut" : "menu";
+        QTest::newRow(QByteArray(method + "-fresh").constData()) << false << false << shortcut;
+        QTest::newRow(QByteArray(method + "-split").constData()) << true << false << shortcut;
+        QTest::newRow(QByteArray(method + "-restored").constData()) << false << true << shortcut;
+        QTest::newRow(QByteArray(method + "-restored-split").constData()) << true << true << shortcut;
+    }
+}
+
+void TestDisplayUi::clipboard_actions_follow_active_pane()
+{
+    QFETCH(bool, split);
+    QFETCH(bool, restore);
+    QFETCH(bool, shortcut);
+    MainWindowStateGuard guard;
+    guard.settings->sessionLayoutJson.clear();
+    guard.settings->windowState.clear();
+    guard.settings->windowGeometry.clear();
+    guard.settings->hasNumberFormatStyleSetting = true;
+    const QString oldClipboard = QApplication::clipboard()->text();
+    const auto restoreClipboard = qScopeGuard([oldClipboard]() {
+        QApplication::clipboard()->setText(oldClipboard);
+    });
+
+    if (restore) {
+        MainWindow source;
+        if (split)
+            QVERIFY(QMetaObject::invokeMethod(&source, "splitActivePaneRight", Qt::DirectConnection));
+        source.persistSessionAndSettingsForShutdown();
+        QVERIFY(!guard.settings->sessionLayoutJson.isEmpty());
+    }
+
+    MainWindow window;
+    window.show();
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    if (restore) {
+        QTRY_COMPARE(window.findChildren<Editor*>().size(), split ? 2 : 1);
+        QTRY_VERIFY(window.findChildren<QTabBar*>().first()->count() > 0);
+        // Restoration replaces the initial editor asynchronously, even for one pane.
+        QTest::qWait(400);
+    } else if (split) {
+        QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
+        QTRY_COMPARE(window.findChildren<Editor*>().size(), 2);
+    }
+    const QList<Editor*> editors = window.findChildren<Editor*>();
+    QMenu* editMenu = menuWithTitle(window.menuBar(), QStringLiteral("&Edit"));
+    QVERIFY(editMenu != nullptr);
+    QAction* copyAction = directMenuActionWithText(editMenu, QStringLiteral("&Copy"));
+    QAction* pasteAction = directMenuActionWithText(editMenu, QStringLiteral("&Paste"));
+    QVERIFY(copyAction != nullptr);
+    QVERIFY(pasteAction != nullptr);
+
+    for (Editor* editor : editors) {
+        QTest::mouseClick(editor->viewport(), Qt::LeftButton);
+        QTRY_VERIFY(editor->hasFocus());
+        editor->setText(QStringLiteral("123456"));
+        QTextCursor cursor = editor->textCursor();
+        cursor.setPosition(2);
+        cursor.setPosition(4, QTextCursor::KeepAnchor);
+        editor->setTextCursor(cursor);
+        QApplication::clipboard()->setText(QStringLiteral("unchanged"));
+        if (shortcut) {
+            const QKeyCombination key = QKeySequence(QKeySequence::Copy)[0];
+            QTest::keyClick(editor, key.key(), key.keyboardModifiers());
+        } else {
+            copyAction->trigger();
+        }
+        QCOMPARE(QApplication::clipboard()->text(), QStringLiteral("34"));
+        QCOMPARE(editor->text(), QStringLiteral("123456"));
+
+        QApplication::clipboard()->setText(QStringLiteral("78"));
+        if (shortcut) {
+            const QKeyCombination key = QKeySequence(QKeySequence::Paste)[0];
+            // Exercise the menu shortcut path as well as the widget's own handler.
+            QTest::keyClick(&window, key.key(), key.keyboardModifiers());
+        } else {
+            pasteAction->trigger();
+        }
+        QCOMPARE(editor->text(), QStringLiteral("127856"));
+        editor->undo();
+        QCOMPARE(editor->text(), QStringLiteral("123456"));
+        editor->clear();
+    }
+}
+
+void TestDisplayUi::copy_shortcut_preserves_display_selection_in_other_pane()
+{
+    MainWindowStateGuard guard;
+    guard.settings->sessionLayoutJson.clear();
+    guard.settings->windowState.clear();
+    guard.settings->windowGeometry.clear();
+    guard.settings->hasNumberFormatStyleSetting = true;
+    MainWindow window;
+    window.show();
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
+    QTRY_COMPARE(window.findChildren<ResultDisplay*>().size(), 2);
+    const QList<ResultDisplay*> displays = window.findChildren<ResultDisplay*>();
+    for (ResultDisplay* display : displays) {
+        display->setPlainText(QStringLiteral("123456"));
+        QTextCursor cursor = display->textCursor();
+        cursor.setPosition(2);
+        cursor.setPosition(4, QTextCursor::KeepAnchor);
+        display->setTextCursor(cursor);
+        Editor* editor = display->parentWidget()->findChild<Editor*>();
+        QVERIFY(editor != nullptr);
+        QTRY_VERIFY(editor->hasFocus());
+        QApplication::clipboard()->setText(QStringLiteral("unchanged"));
+        const QKeyCombination key = QKeySequence(QKeySequence::Copy)[0];
+        QTest::keyClick(editor, key.key(), key.keyboardModifiers());
+        QCOMPARE(QApplication::clipboard()->text(), QStringLiteral("34"));
+    }
 }
 
 void TestDisplayUi::quit_shortcut_triggers_menu_action_from_editor_and_window()

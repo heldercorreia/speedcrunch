@@ -4808,7 +4808,10 @@ void MainWindow::setActiveEditorDisplayPane(ResultDisplay* display, Editor* edit
 
         m_widgets.display = display;
         m_widgets.editor = editor;
-        m_copyWidget = editor;
+        // Selection signals can set the copy source before activating a pane.
+        // Keep that source when it belongs to the pane being activated.
+        if (m_copyWidget != display && m_copyWidget != editor)
+            m_copyWidget = editor;
 
         if (paneSession != nullptr && paneSession != m_session)
             activateSession(paneSession);
@@ -7224,7 +7227,10 @@ void MainWindow::createFixedConnections()
     connect(m_actions.editClearHistory, SIGNAL(triggered()), SLOT(clearHistory()));
     connect(m_actions.editCopyLastResult, SIGNAL(triggered()), SLOT(copyResultToClipboard()));
     connect(m_actions.editCopy, SIGNAL(triggered()), SLOT(copy()));
-    connect(m_actions.editPaste, SIGNAL(triggered()), m_widgets.editor, SLOT(paste()));
+    connect(m_actions.editPaste, &QAction::triggered, this, [this]() {
+        if (m_widgets.editor != nullptr)
+            m_widgets.editor->paste();
+    });
     connect(m_actions.editSelectExpression, SIGNAL(triggered()), SLOT(selectEditorExpression()));
     connect(m_actions.editWrapSelection, SIGNAL(triggered()), SLOT(wrapSelection()));
 

@@ -105,6 +105,9 @@ private slots:
     void non_printable_key_payloads_do_not_replace_selection();
     void clipboard_shortcuts_do_not_insert_key_payloads_data();
     void clipboard_shortcuts_do_not_insert_key_payloads();
+    void copy_shortcut_preserves_editor_state_data();
+    void copy_shortcut_preserves_editor_state();
+    void highlight_refresh_preserves_text_and_selection_without_edit_signals();
     void treats_spaced_question_comment_as_atomic_navigation_and_edit_token();
     void treats_spaced_equal_as_atomic_navigation_and_edit_token();
     void treats_leading_question_comment_as_atomic_navigation_and_edit_token();
@@ -1603,6 +1606,88 @@ void TestEditorUi::clipboard_shortcuts_do_not_insert_key_payloads()
     QCOMPARE(editor.document()->toRawText(), QStringLiteral("1256"));
     editor.undo();
     QCOMPARE(editor.document()->toRawText(), QStringLiteral("123456"));
+}
+
+void TestEditorUi::copy_shortcut_preserves_editor_state_data()
+{
+    QTest::addColumn<QString>("payload");
+    QTest::addColumn<bool>("selectText");
+    QTest::newRow("empty-selection") << QString() << true;
+    QTest::newRow("control-character-selection") << QString(QChar(0x03)) << true;
+    QTest::newRow("printable-letter-selection") << QStringLiteral("c") << true;
+    QTest::newRow("empty-no-selection") << QString() << false;
+    QTest::newRow("control-character-no-selection") << QString(QChar(0x03)) << false;
+    QTest::newRow("printable-letter-no-selection") << QStringLiteral("c") << false;
+}
+
+void TestEditorUi::copy_shortcut_preserves_editor_state()
+{
+    QFETCH(QString, payload);
+    QFETCH(bool, selectText);
+    Editor editor;
+    // MainWindow routes this signal to the widget whose selection is copied.
+    // Use the editor as that widget here to exercise the clipboard operation.
+    connect(&editor, &Editor::copySequencePressed, &editor, &QPlainTextEdit::copy);
+    QSignalSpy copySpy(&editor, &Editor::copySequencePressed);
+    QVERIFY(copySpy.isValid());
+
+    editor.setText(QStringLiteral("123456"));
+    editor.setCursorPosition(6);
+    QTest::keyClicks(&editor, "78");
+    editor.undo();
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("1234567"));
+    QVERIFY(editor.document()->isUndoAvailable());
+    QVERIFY(editor.document()->isRedoAvailable());
+
+    QTextCursor cursor = editor.textCursor();
+    cursor.setPosition(2);
+    if (selectText)
+        cursor.setPosition(4, QTextCursor::KeepAnchor);
+    editor.setTextCursor(cursor);
+    QApplication::clipboard()->setText(QStringLiteral("unchanged"));
+
+    const auto copyKey = QKeySequence(QKeySequence::Copy)[0];
+    QKeyEvent copyEvent(QEvent::KeyPress, copyKey.key(), copyKey.keyboardModifiers(), payload);
+    copyEvent.ignore();
+    QApplication::sendEvent(&editor, &copyEvent);
+
+    QVERIFY(copyEvent.isAccepted());
+    QCOMPARE(copySpy.count(), 1);
+    QCOMPARE(QApplication::clipboard()->text(), selectText ? QStringLiteral("34") : QStringLiteral("unchanged"));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("1234567"));
+    QCOMPARE(editor.textCursor().position(), cursor.position());
+    QCOMPARE(editor.textCursor().anchor(), cursor.anchor());
+    QVERIFY(editor.document()->isUndoAvailable());
+    QVERIFY(editor.document()->isRedoAvailable());
+    editor.redo();
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("12345678"));
+    editor.undo();
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("1234567"));
+    editor.undo();
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("123456"));
+}
+
+void TestEditorUi::highlight_refresh_preserves_text_and_selection_without_edit_signals()
+{
+    Editor editor;
+    editor.setText(QStringLiteral("123456"));
+    QTextCursor cursor = editor.textCursor();
+    cursor.setPosition(2);
+    cursor.setPosition(4, QTextCursor::KeepAnchor);
+    editor.setTextCursor(cursor);
+    QSignalSpy textChangedSpy(&editor, &Editor::textChanged);
+    QVERIFY(textChangedSpy.isValid());
+
+    editor.setThemePrimaryColor(QColor(QStringLiteral("#334455")), true);
+    editor.rehighlight();
+
+    QCOMPARE(textChangedSpy.count(), 0);
+    editor.setSession(nullptr);
+    QCOMPARE(textChangedSpy.count(), 0);
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("123456"));
+    QCOMPARE(editor.textCursor().position(), cursor.position());
+    QCOMPARE(editor.textCursor().anchor(), cursor.anchor());
+    QVERIFY(!editor.document()->isUndoAvailable());
 }
 
 void TestEditorUi::treats_spaced_question_comment_as_atomic_navigation_and_edit_token()
