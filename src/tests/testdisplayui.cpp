@@ -8,6 +8,7 @@
 #include "core/sessionjsonkeys.h"
 #include "core/settings.h"
 #include "core/userdefinitions.h"
+#include "gui/aboutbox.h"
 #include "gui/bitfieldwidget.h"
 #include "gui/bookdock.h"
 #include "gui/constantswidget.h"
@@ -83,11 +84,13 @@
 #include <QStyle>
 #include <QStyleFactory>
 #include <QStyleOption>
+#include <QSysInfo>
 #include <QTabBar>
 #include <QTest>
 #include <QTextBrowser>
 #include <QTextBlock>
 #include <QTextDocument>
+#include <QTextEdit>
 #include <QTextLayout>
 #include <QToolButton>
 #include <QTranslator>
@@ -768,6 +771,7 @@ public slots:
 private slots:
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
+    void about_box_shows_os_between_application_and_qt_versions();
     void update_checks_follow_build_option();
     void ui_test_fixture_resets_persisted_layout_and_first_run_preference();
     void editing_input_digit_grouping_updates_all_open_editors();
@@ -906,6 +910,28 @@ void TestDisplayUi::initTestCase()
                  qPrintable(QStringLiteral("Cannot write test storage at %1: %2")
                                 .arg(path, probe.errorString())));
     }
+}
+
+void TestDisplayUi::about_box_shows_os_between_application_and_qt_versions()
+{
+    AboutBox dialog;
+    const QTextEdit* textEdit = dialog.findChild<QTextEdit*>();
+    QVERIFY(textEdit);
+
+    QString applicationVersion = QStringLiteral("SpeedCrunch " SPEEDCRUNCH_VERSION);
+#ifdef SPEEDCRUNCH_PORTABLE
+    applicationVersion += QStringLiteral(" Portable");
+#else
+    QVERIFY(!textEdit->toPlainText().contains(QStringLiteral("Portable")));
+#endif
+    const QStringList lines = textEdit->toPlainText().split(QLatin1Char('\n'));
+    const int versionLine = lines.indexOf(applicationVersion);
+    QVERIFY(versionLine >= 0);
+    QVERIFY(lines.size() > versionLine + 2);
+    const QString osName = QSysInfo::prettyProductName()
+        .remove(QLatin1Char('(')).remove(QLatin1Char(')'));
+    QCOMPARE(lines.at(versionLine + 1), osName);
+    QCOMPARE(lines.at(versionLine + 2), QStringLiteral("Qt " QT_VERSION_STR));
 }
 
 void TestDisplayUi::update_checks_follow_build_option()

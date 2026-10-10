@@ -677,6 +677,11 @@ User Interface Settings
 Help
 ----
 
+* :menuselection:`Help --> About SpeedCrunch`
+    Show the SpeedCrunch version, the operating system and its version, and the Qt
+    version. Portable builds display ``Portable`` next to the SpeedCrunch
+    version.
+
 * :menuselection:`Help --> Check for Updates`
     Trigger an update check and show information when a newer version is available.
     Update checks are enabled in official SpeedCrunch builds. Other distributors

@@ -8,6 +8,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QSpacerItem>
+#include <QSysInfo>
 #include <QTextEdit>
 
 #define THANKS(name) #name"<br>"
@@ -22,9 +23,13 @@ AboutBox::AboutBox(QWidget* parent, Qt::WindowFlags f)
     msg += "<img src=\":/speedcrunch.png\"><br>";
     msg += "<b>SpeedCrunch " SPEEDCRUNCH_VERSION;
 #ifdef SPEEDCRUNCH_PORTABLE
-    msg += " (Portable Edition)";
+    msg += " Portable";
 #endif
-    msg += "</b><br>(Qt " + QLatin1String(QT_VERSION_STR) + ")<br>";
+    msg += "</b><br>";
+    const QString osName = QSysInfo::prettyProductName()
+        .remove(QLatin1Char('(')).remove(QLatin1Char(')'));
+    msg += osName.toHtmlEscaped() + "<br>";
+    msg += "Qt " + QLatin1String(QT_VERSION_STR) + "<br>";
 
     const QString authors = "<p><b>%1</b><br>%2";
     msg += authors.arg(tr("Main author | Logo | Maintainer"), "Helder Correia (@heldercorreia)");
