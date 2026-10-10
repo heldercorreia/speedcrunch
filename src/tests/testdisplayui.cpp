@@ -51,6 +51,7 @@
 #include <QFileInfo>
 #include <QFrame>
 #include <QFocusEvent>
+#include <QFontDialog>
 #include <QHeaderView>
 #include <QGlyphRun>
 #include <QGridLayout>
@@ -778,6 +779,8 @@ private slots:
     void ui_test_fixture_resets_persisted_layout_and_first_run_preference();
     void editing_input_digit_grouping_updates_all_open_editors();
     void number_format_is_shared_and_refreshes_all_input_panes();
+    void display_font_changes_update_all_sessions_and_windows_data();
+    void display_font_changes_update_all_sessions_and_windows();
     void settings_reset_restores_persisted_defaults();
     void settings_reset_can_be_cancelled_data();
     void settings_reset_can_be_cancelled();
@@ -1095,6 +1098,140 @@ void TestDisplayUi::number_format_is_shared_and_refreshes_all_input_panes()
             QCOMPARE(editor->text(), QStringLiteral("12345678.1234567"));
         }
     }
+}
+
+void TestDisplayUi::display_font_changes_update_all_sessions_and_windows_data()
+{
+    QTest::addColumn<QString>("operation");
+    QTest::addColumn<int>("initialSize");
+    QTest::addColumn<int>("expectedSize");
+    QTest::newRow("accept-font-dialog") << QStringLiteral("accept") << 16 << 23;
+    QTest::newRow("cancel-font-dialog") << QStringLiteral("cancel") << 16 << 16;
+    QTest::newRow("increase-font-size") << QStringLiteral("increase") << 16 << 17;
+    QTest::newRow("decrease-font-size") << QStringLiteral("decrease") << 16 << 15;
+    QTest::newRow("maximum-font-size") << QStringLiteral("increase") << 96 << 96;
+    QTest::newRow("minimum-font-size") << QStringLiteral("decrease") << 8 << 8;
+}
+
+void TestDisplayUi::display_font_changes_update_all_sessions_and_windows()
+{
+    QFETCH(QString, operation);
+    QFETCH(int, initialSize);
+    QFETCH(int, expectedSize);
+    Settings* settings = Settings::instance();
+    QFont initialFont;
+    initialFont.setPointSize(initialSize);
+    settings->displayFont = initialFont.toString();
+    settings->autoCalc = false;
+    const bool nativeDialogsDisabled = QApplication::testAttribute(Qt::AA_DontUseNativeDialogs);
+    QApplication::setAttribute(Qt::AA_DontUseNativeDialogs, true);
+    const auto restoreDialogs = qScopeGuard([nativeDialogsDisabled]() {
+        QApplication::setAttribute(Qt::AA_DontUseNativeDialogs, nativeDialogsDisabled);
+    });
+
+    MainWindow first(false);
+    MainWindow second(false);
+    for (MainWindow* window : {&first, &second}) {
+        QVERIFY(QMetaObject::invokeMethod(window, "splitActivePaneRight", Qt::DirectConnection));
+        QVERIFY(QMetaObject::invokeMethod(window, "showNewSessionDialog", Qt::DirectConnection));
+    }
+    const QList<Editor*> editors = first.findChildren<Editor*>() + second.findChildren<Editor*>();
+    const QList<ResultDisplay*> displays = first.findChildren<ResultDisplay*>() + second.findChildren<ResultDisplay*>();
+    QCOMPARE(editors.size(), 4);
+    QCOMPARE(displays.size(), 4);
+    QMap<Editor*, QString> drafts;
+    QMap<Editor*, int> cursors;
+    QMap<ResultDisplay*, QString> results;
+    for (Editor* editor : editors) {
+        editor->setText(QStringLiteral("1234+56"));
+        editor->setCursorPosition(3);
+        drafts.insert(editor, editor->text());
+        cursors.insert(editor, editor->cursorPosition());
+    }
+    for (ResultDisplay* display : displays) {
+        Session* session = const_cast<Session*>(display->session());
+        QVERIFY(session);
+        session->addHistoryEntry(HistoryEntry(QStringLiteral("6*7"), Quantity(42)));
+        display->refresh();
+        results.insert(display, display->toPlainText());
+    }
+
+    QFont expectedFont = displays.constFirst()->font();
+    expectedFont.setPointSize(expectedSize);
+    if (operation == QLatin1String("accept") || operation == QLatin1String("cancel")) {
+        bool handledDialog = false;
+        QTimer::singleShot(0, &first, [&]() {
+            auto* dialog = qobject_cast<QFontDialog*>(QApplication::activeModalWidget());
+            QVERIFY(dialog);
+            QFont chosenFont = expectedFont;
+            chosenFont.setPointSize(23);
+            chosenFont.setStyleName(QString());
+            chosenFont.setBold(true);
+            chosenFont.setItalic(true);
+            dialog->setCurrentFont(chosenFont);
+            if (operation == QLatin1String("accept")) {
+                static_cast<QDialog*>(dialog)->accept();
+                expectedFont = dialog->selectedFont();
+            } else {
+                dialog->reject();
+            }
+            handledDialog = true;
+        });
+        QVERIFY(QMetaObject::invokeMethod(&first, "showFontDialog", Qt::DirectConnection));
+        QVERIFY(handledDialog);
+        QCOMPARE(expectedFont.pointSize(), expectedSize);
+    } else {
+        // Exercise the editor signals used by Shift+Up and Shift+Down.
+        const char* signal = operation == QLatin1String("increase")
+            ? "shiftUpPressed" : "shiftDownPressed";
+        QVERIFY(QMetaObject::invokeMethod(first.findChildren<Editor*>().constFirst(), signal,
+                                         Qt::DirectConnection));
+    }
+
+    for (Editor* editor : editors) {
+        QCOMPARE(editor->font(), expectedFont);
+        QCOMPARE(editor->text(), drafts.value(editor));
+        QCOMPARE(editor->cursorPosition(), cursors.value(editor));
+    }
+    for (ResultDisplay* display : displays) {
+        QCOMPARE(display->font(), expectedFont);
+        QCOMPARE(display->toPlainText(), results.value(display));
+        QCOMPARE(display->session()->historySize(), 1);
+    }
+    QFont savedFont;
+    QVERIFY(savedFont.fromString(settings->displayFont));
+    QCOMPARE(savedFont, expectedFont);
+
+    // Inactive tabs reuse their pane's widgets when selected.
+    for (MainWindow* window : {&first, &second}) {
+        int sessionCount = 0;
+        for (ResultDisplay* display : window->findChildren<ResultDisplay*>()) {
+            QTabBar* tabBar = tabBarForDisplay(display);
+            QVERIFY(tabBar);
+            sessionCount += tabBar->count();
+            for (int index = 0; index < tabBar->count(); ++index)
+                tabBar->setCurrentIndex(index);
+        }
+        QCOMPARE(sessionCount, 3);
+        for (Editor* editor : window->findChildren<Editor*>())
+            QCOMPARE(editor->font(), expectedFont);
+        QVERIFY(QMetaObject::invokeMethod(window, "splitActivePaneDown", Qt::DirectConnection));
+        for (ResultDisplay* display : window->findChildren<ResultDisplay*>())
+            QCOMPARE(display->font(), expectedFont);
+    }
+    MainWindow third(false);
+    // Qt can clear the style name while polishing a new widget.
+    for (const QFont& font : {third.findChild<Editor*>()->font(),
+                              third.findChild<ResultDisplay*>()->font()}) {
+        QCOMPARE(font.family(), expectedFont.family());
+        QCOMPARE(font.pointSizeF(), expectedFont.pointSizeF());
+        QCOMPARE(font.weight(), expectedFont.weight());
+        QCOMPARE(font.italic(), expectedFont.italic());
+    }
+    settings->save();
+    settings->load();
+    QVERIFY(savedFont.fromString(settings->displayFont));
+    QCOMPARE(savedFont, expectedFont);
 }
 
 void TestDisplayUi::settings_reset_restores_persisted_defaults()

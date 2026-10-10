@@ -10887,10 +10887,24 @@ void MainWindow::showFontDialog()
     QFont f = QFontDialog::getFont(&ok, m_widgets.display->font(), this, tr("Display font"));
     if (!ok)
         return;
-    m_widgets.display->setFont(f);
-    m_widgets.editor->setFont(f);
-    if (m_widgets.state->isVisible())
-        showStateLabel(m_widgets.state->text());
+    setDisplayFont(f);
+}
+
+void MainWindow::setDisplayFont(const QFont& font)
+{
+    // New windows read the shared preference. Existing tabs share the editor
+    // and result display in their pane, so updating every pane covers them too.
+    m_settings->displayFont = font.toString();
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (!window)
+            continue;
+        for (ResultDisplay* display : window->splitPaneDisplays())
+            display->setFont(font);
+        for (Editor* editor : window->splitPaneEditors())
+            editor->setFont(font);
+        if (window->m_widgets.state != nullptr && window->m_widgets.state->isVisible())
+            window->showStateLabel(window->m_widgets.state->text());
+    }
 }
 
 void MainWindow::setStatusBarVisible(bool b)
@@ -13708,32 +13722,18 @@ void MainWindow::showResultSlotsDialog()
 
 void MainWindow::increaseDisplayFontPointSize()
 {
-    if (m_widgets.display != nullptr)
-        m_widgets.display->increaseFontPointSize();
-    const QFont displayFont = m_widgets.display->font();
-    for (ResultDisplay* display : splitPaneDisplays()) {
-        if (display != m_widgets.display)
-            display->setFont(displayFont);
-        if (Editor* editor = display->parentWidget()->findChild<Editor*>())
-            editor->setFont(displayFont);
-    }
-    if (m_widgets.state->isVisible())
-        showStateLabel(m_widgets.state->text());
+    if (m_widgets.display == nullptr)
+        return;
+    m_widgets.display->increaseFontPointSize();
+    setDisplayFont(m_widgets.display->font());
 }
 
 void MainWindow::decreaseDisplayFontPointSize()
 {
-    if (m_widgets.display != nullptr)
-        m_widgets.display->decreaseFontPointSize();
-    const QFont displayFont = m_widgets.display->font();
-    for (ResultDisplay* display : splitPaneDisplays()) {
-        if (display != m_widgets.display)
-            display->setFont(displayFont);
-        if (Editor* editor = display->parentWidget()->findChild<Editor*>())
-            editor->setFont(displayFont);
-    }
-    if (m_widgets.state->isVisible())
-        showStateLabel(m_widgets.state->text());
+    if (m_widgets.display == nullptr)
+        return;
+    m_widgets.display->decreaseFontPointSize();
+    setDisplayFont(m_widgets.display->font());
 }
 
 void MainWindow::showLanguageChooserDialog()

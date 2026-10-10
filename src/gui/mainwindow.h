@@ -285,6 +285,7 @@ private:
     void createUserUnitsDock(bool takeFocus = true);
     void createFixedConnections();
     void applySettings(bool initializing = true);
+    void setDisplayFont(const QFont& font);
     void checkInitialResultFormat();
     void checkInitialComplexFormat();
     void checkInitialImaginaryUnit();
