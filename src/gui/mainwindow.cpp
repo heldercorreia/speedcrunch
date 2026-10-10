@@ -143,6 +143,7 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <vector>
 #ifdef Q_OS_WIN32
 #include "windows.h"
 #include <shlobj.h>
@@ -3447,6 +3448,8 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorEmptyHistoryHint = new QAction(this);
     m_actions.settingsBehaviorLeaveLastExpression = new QAction(this);
     m_actions.settingsBehaviorNumberFormat = new QAction(this);
+    m_actions.settingsResetAll = new QAction(this);
+    m_actions.settingsResetAll->setObjectName(QStringLiteral("ResetAllSettingsAction"));
     m_actions.settingsBehaviorResultSlots = new QAction(this);
     m_actions.settingsBehaviorUpDownArrowNever = new QAction(this);
     m_actions.settingsBehaviorUpDownArrowAlways = new QAction(this);
@@ -3921,6 +3924,7 @@ void MainWindow::setActionsText()
     m_actions.settingsImaginaryUnitI->setText(QStringLiteral("&i"));
     m_actions.settingsImaginaryUnitJ->setText(QStringLiteral("&j"));
     m_actions.settingsDisplayFont->setText(MainWindow::tr("&Font..."));
+    m_actions.settingsResetAll->setText(MainWindow::tr("Reset All Settings..."));
     m_actions.settingsDisplayColorSchemeCustom->setText(MainWindow::tr("&Theme..."));
     m_actions.settingsMenuAppearanceSystem->setText(MainWindow::tr("&System"));
     m_actions.settingsMenuAppearanceSpeedCrunch->setText(MainWindow::tr("&SpeedCrunch Theme"));
@@ -4229,6 +4233,8 @@ void MainWindow::createMenus()
         m_menus.window->addAction(m_actions.settingsBehaviorAlwaysOnTop);
 
     m_menus.settings->addAction(m_actions.settingsLanguage);
+    m_menus.settings->addSeparator();
+    m_menus.settings->addAction(m_actions.settingsResetAll);
 
     m_menus.help = new QMenu("", this);
     menuBar()->addMenu(m_menus.help);
@@ -7372,6 +7378,7 @@ void MainWindow::createFixedConnections()
             SLOT(setResultRoundingMode(QAction*)));
 
     connect(m_actions.settingsLanguage, SIGNAL(triggered()), SLOT(showLanguageChooserDialog()));
+    connectToActiveWindow(m_actions.settingsResetAll, &MainWindow::resetAllSettings);
 
     connect(m_actions.helpManual, SIGNAL(triggered()), SLOT(showManualWindow()));
     connect(m_actions.contextHelp, SIGNAL(triggered()), SLOT(showContextHelp()));
@@ -7522,7 +7529,7 @@ void MainWindow::createFixedConnections()
     connect(splitDownShortcut, &QShortcut::activated, this, &MainWindow::splitActivePaneDown);
 }
 
-void MainWindow::applySettings()
+void MainWindow::applySettings(bool initializing)
 {
     m_actions.settingsMenuAppearanceSystem->setChecked(
         m_settings->menuAppearance == Settings::MenuAppearanceSystem);
@@ -7641,11 +7648,12 @@ void MainWindow::applySettings()
     else if (m_settings->angleUnit == 'v')
         m_actions.settingsAngleUnitRevolution->setChecked(true);
 
-    UserDefinitions::loadInto(m_settings);
-
-    if (m_restorePreviousSessionOnStartup)
-        restoreSession();
-    applyUserDefinitions();
+    if (initializing) {
+        UserDefinitions::loadInto(m_settings);
+        if (m_restorePreviousSessionOnStartup)
+            restoreSession();
+        applyUserDefinitions();
+    }
 
     m_actions.settingsBehaviorLeaveLastExpression->setChecked(m_settings->leaveLastExpression);
     switch (m_settings->upDownArrowBehavior) {
@@ -7746,7 +7754,7 @@ void MainWindow::applySettings()
     for (Editor* editor : splitPaneEditors())
         editor->setFont(font);
 
-    if (m_widgets.display != nullptr)
+    if (initializing && m_widgets.display != nullptr)
         m_widgets.display->verticalScrollBar()->setValue(m_widgets.display->verticalScrollBar()->maximum());
 
     updateColorSchemeActionState();
@@ -7754,6 +7762,98 @@ void MainWindow::applySettings()
 
     if (m_widgets.display != nullptr && m_widgets.display->isEmpty())
         QTimer::singleShot(0, this, SLOT(showReadyMessage()));
+}
+
+void MainWindow::resetAllSettings()
+{
+    QMessageBox confirmation(this);
+    confirmation.setIcon(QMessageBox::Question);
+    confirmation.setWindowTitle(tr("Reset All Settings"));
+    confirmation.setText(tr("Reset all settings to their default values?"));
+    confirmation.setInformativeText(tr("This includes appearance, editing, result formats, and window preferences. "
+                                       "Your calculations, open sessions, and user definitions will be kept."));
+    confirmation.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+    confirmation.setDefaultButton(QMessageBox::No);
+    confirmation.setEscapeButton(QMessageBox::No);
+    if (confirmation.exec() != QMessageBox::Yes)
+        return;
+
+    saveSessionLayout(false);
+    if (!m_settings->resetToDefaults()) {
+        QMessageBox::warning(this, tr("Reset All Settings"), tr("The settings file could not be written."));
+        return;
+    }
+
+    DMath::complexMode = m_settings->complexNumbers;
+    CMath::setImaginaryUnitSymbol(m_settings->imaginaryUnit);
+    MenuStyle::refresh();
+    // Keep QActionGroup's exclusive checks working while suppressing window
+    // notifications that would reformat existing calculation history.
+    std::vector<std::unique_ptr<QSignalBlocker>> windowBlockers;
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (window)
+            windowBlockers.push_back(std::make_unique<QSignalBlocker>(window.data()));
+    }
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (!window)
+            continue;
+
+        std::vector<std::unique_ptr<QSignalBlocker>> blockers;
+        QDockWidget* previousDock = nullptr;
+        for (QDockWidget* dock : window->m_allDocks) {
+            blockers.push_back(std::make_unique<QSignalBlocker>(dock));
+            window->removeDockWidget(dock);
+            const bool bitfield = dock == window->m_docks.bitField;
+            window->addDockWidget(bitfield ? Qt::BottomDockWidgetArea : Qt::RightDockWidgetArea, dock);
+            dock->setFloating(false);
+            if (!bitfield) {
+                if (previousDock)
+                    window->tabifyDockWidget(previousDock, dock);
+                previousDock = dock;
+            }
+        }
+
+        window->deleteKeypad();
+        window->m_keypadMode = m_settings->keypadMode;
+        window->m_keypadZoomPercent = m_settings->keypadZoomPercent;
+        window->applySettings(false);
+        if (!isWaylandPlatform())
+            window->setAlwaysOnTopEnabled(m_settings->windowAlwaysOnTop);
+        window->setFullScreenEnabled(m_settings->windowOnfullScreen);
+
+        for (QComboBox* combo : window->m_docks.constants->widget()->findChildren<QComboBox*>())
+            combo->setCurrentIndex(0);
+        window->m_docks.constants->widget()->restoreState(QString(), QString(), QStringLiteral(""));
+        for (QComboBox* combo : window->m_docks.functions->widget()->findChildren<QComboBox*>())
+            combo->setCurrentIndex(0);
+        window->m_docks.functions->widget()->setSearchText(QString());
+        window->m_docks.variables->widget()->setSearchText(QString());
+        window->m_docks.userFunctions->widget()->setSearchText(QString());
+        window->m_docks.userUnits->widget()->setSearchText(QString());
+        window->m_docks.book->openPage(QUrl(m_settings->formulaBookActivePage));
+        if (window->m_widgets.manual)
+            window->m_widgets.manual->resize(640, 480);
+
+        for (ResultDisplay* display : window->splitPaneDisplays())
+            display->setHoverHighlightEnabled(m_settings->hoverHighlightResults);
+        for (Editor* editor : window->splitPaneEditors()) {
+            editor->setAutoCalcEnabled(m_settings->autoCalc);
+            editor->setAutoCompletionEnabled(m_settings->autoCompletion);
+            editor->refreshAutoCalc();
+        }
+        window->setStatusBarText();
+        window->syncStatusBarSelectionMenuActionState();
+    }
+    windowBlockers.clear();
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (!window)
+            continue;
+        emit window->languageChanged();
+        emit window->colorSchemeChanged();
+        emit window->menuAppearanceChanged();
+    }
+    saveSessionLayout(false);
+    m_settings->save();
 }
 
 void MainWindow::showManualWindow()

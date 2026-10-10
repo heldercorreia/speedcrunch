@@ -88,6 +88,7 @@ private slots:
     void clearEditorAndBitfield();
     void clearHistory();
     void clearSession();
+    void resetAllSettings();
     void copyResultToClipboard();
     void decreaseDisplayFontPointSize();
     void decreaseOpacity();
@@ -283,7 +284,7 @@ private:
     void createUserFunctionsDock(bool takeFocus = true);
     void createUserUnitsDock(bool takeFocus = true);
     void createFixedConnections();
-    void applySettings();
+    void applySettings(bool initializing = true);
     void checkInitialResultFormat();
     void checkInitialComplexFormat();
     void checkInitialImaginaryUnit();
@@ -498,6 +499,7 @@ private:
         QAction* settingsBehaviorAutoAns;
         QAction* settingsBehaviorLeaveLastExpression;
         QAction* settingsBehaviorNumberFormat;
+        QAction* settingsResetAll;
         QAction* settingsBehaviorResultSlots;
         QAction* settingsBehaviorUpDownArrowNever;
         QAction* settingsBehaviorUpDownArrowAlways;

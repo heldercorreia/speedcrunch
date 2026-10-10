@@ -34,6 +34,7 @@
 #include <QAbstractItemView>
 #include <QAbstractTextDocumentLayout>
 #include <QAbstractButton>
+#include <QActionGroup>
 #include <QApplication>
 #include <QCheckBox>
 #include <QClipboard>
@@ -777,6 +778,10 @@ private slots:
     void ui_test_fixture_resets_persisted_layout_and_first_run_preference();
     void editing_input_digit_grouping_updates_all_open_editors();
     void number_format_is_shared_and_refreshes_all_input_panes();
+    void settings_reset_restores_persisted_defaults();
+    void settings_reset_can_be_cancelled_data();
+    void settings_reset_can_be_cancelled();
+    void settings_reset_updates_all_windows_and_preserves_sessions();
     void manual_preserves_text_weights_and_emphasis();
     void color_scheme_roles_exclude_obsolete_scrollbar();
     void color_scheme_reads_optional_display_name();
@@ -1086,6 +1091,257 @@ void TestDisplayUi::number_format_is_shared_and_refreshes_all_input_panes()
             QCOMPARE(editor->text(), QStringLiteral("12345678.1234567"));
         }
     }
+}
+
+void TestDisplayUi::settings_reset_restores_persisted_defaults()
+{
+    Settings* settings = Settings::instance();
+    const QString path = Settings::getConfigPath() + QStringLiteral("/SpeedCrunch.ini");
+    QSettings persisted(path, QSettings::IniFormat);
+    persisted.remove(QStringLiteral("SpeedCrunch"));
+    persisted.sync();
+    settings->load();
+    settings->save();
+
+    QMap<QString, QVariant> defaults;
+    persisted.sync();
+    for (const QString& key : persisted.allKeys())
+        defaults.insert(key, persisted.value(key));
+
+    settings->language = QStringLiteral("pt_PT");
+    settings->autoAns = true;
+    settings->autoCalc = false;
+    settings->autoCompletion = false;
+    settings->inputDigitGrouping = false;
+    settings->numberFormatStyle = Settings::NumberFormatIndianCommaDot;
+    settings->applyNumberFormatStyle();
+    settings->resultFormat = 'h';
+    settings->resultPrecision = 2;
+    settings->imaginaryUnit = 'j';
+    settings->resultRoundingMode = Settings::ResultRoundingHalfEven;
+    settings->unitNegativeExponentStyle = Settings::UnitNegativeExponentFraction;
+    settings->colorScheme = QStringLiteral("Custom");
+    settings->customColorSchemeJson = QStringLiteral("{}");
+    settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
+    settings->keypadMode = Settings::KeypadModeCustom;
+    settings->keypadZoomPercent = 200;
+    settings->customKeypad.buttons.clear();
+    settings->windowGeometry = QByteArray("old geometry");
+    settings->windowState = QByteArray("old dock layout");
+    settings->sessionLayoutJson = QStringLiteral("{\"windows\":[]}");
+    settings->startupUserDefinitions = QStringLiteral("saved_variable=7");
+    settings->save();
+    persisted.setValue(QStringLiteral("SpeedCrunch/General/HistoryNavigationWithUpDown"), false);
+    persisted.setValue(QStringLiteral("SpeedCrunch/Format/Precision"), 3);
+    persisted.setValue(QStringLiteral("UpdateCheck/TestMetadata"), 42);
+    persisted.sync();
+
+    QVERIFY(settings->resetToDefaults());
+    settings->load();
+    QVERIFY(settings->hasNumberFormatStyleSetting);
+    QCOMPARE(settings->startupUserDefinitions, QStringLiteral("saved_variable=7"));
+    QCOMPARE(runtimeResultRoundingMode(), char(Settings::ResultRoundingHalfAwayFromZero));
+    QCOMPARE(runtimeUnitNegativeExponentStyle(), char(Settings::UnitNegativeExponentSuperscript));
+    settings->save();
+    persisted.sync();
+    defaults[QStringLiteral("SpeedCrunch/Layout/SessionLayoutJson")] = QStringLiteral("{\"windows\":[]}");
+    defaults[QStringLiteral("UpdateCheck/TestMetadata")] = 42;
+    QMap<QString, QVariant> actual;
+    for (const QString& key : persisted.allKeys())
+        actual.insert(key, persisted.value(key));
+    QCOMPARE(actual, defaults);
+}
+
+void TestDisplayUi::settings_reset_can_be_cancelled_data()
+{
+    QTest::addColumn<bool>("useEscape");
+    QTest::newRow("no-button") << false;
+    QTest::newRow("escape") << true;
+}
+
+void TestDisplayUi::settings_reset_can_be_cancelled()
+{
+    QFETCH(bool, useEscape);
+    Settings* settings = Settings::instance();
+    settings->autoAns = true;
+    settings->numberFormatStyle = Settings::NumberFormatIndianCommaDot;
+    settings->applyNumberFormatStyle();
+    MainWindow window;
+    settings->save();
+    QFile persisted(Settings::getConfigPath() + QStringLiteral("/SpeedCrunch.ini"));
+    QVERIFY(persisted.open(QIODevice::ReadOnly));
+    const QByteArray before = persisted.readAll();
+    persisted.close();
+    QAction* action = window.findChild<QAction*>(QStringLiteral("ResetAllSettingsAction"));
+    QVERIFY(action);
+    bool inSettingsMenu = false;
+    for (QMenu* menu : window.findChildren<QMenu*>()) {
+        if (menu->title() == MainWindow::tr("Se&ttings") && menu->actions().contains(action))
+            inSettingsMenu = true;
+    }
+    QVERIFY(inSettingsMenu);
+    QTimer::singleShot(0, &window, [useEscape]() {
+        auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        QVERIFY(dialog);
+        QCOMPARE(dialog->defaultButton(), dialog->button(QMessageBox::No));
+        if (useEscape)
+            QTest::keyClick(dialog, Qt::Key_Escape);
+        else
+            dialog->button(QMessageBox::No)->click();
+    });
+    action->trigger();
+    QVERIFY(settings->autoAns);
+    QCOMPARE(settings->numberFormatStyle, Settings::NumberFormatIndianCommaDot);
+    QVERIFY(persisted.open(QIODevice::ReadOnly));
+    QCOMPARE(persisted.readAll(), before);
+}
+
+void TestDisplayUi::settings_reset_updates_all_windows_and_preserves_sessions()
+{
+    Settings* settings = Settings::instance();
+    settings->autoAns = true;
+    settings->autoCalc = false;
+    settings->autoCompletion = false;
+    settings->inputDigitGrouping = false;
+    settings->syntaxHighlighting = false;
+    settings->hoverHighlightResults = false;
+    settings->numberFormatStyle = Settings::NumberFormatIndianCommaDot;
+    settings->applyNumberFormatStyle();
+    settings->resultFormat = 'h';
+    settings->resultPrecision = 2;
+    settings->imaginaryUnit = 'j';
+    settings->angleUnit = 'd';
+    settings->resultRoundingMode = Settings::ResultRoundingHalfEven;
+    settings->unitNegativeExponentStyle = Settings::UnitNegativeExponentFraction;
+    settings->keypadMode = Settings::KeypadModeScientificNarrow;
+    settings->keypadZoomPercent = 200;
+    settings->constantsDockVisible = true;
+    settings->constantsDockSearchText = QStringLiteral("old filter");
+    settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
+    settings->colorScheme = QStringLiteral("Terminal");
+    QFont customFont;
+    customFont.setPointSize(24);
+    settings->displayFont = customFont.toString();
+    MainWindow first(false);
+    MainWindow second(false);
+    auto* floatingConstants = first.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(floatingConstants);
+    floatingConstants->setFloating(true);
+    QVERIFY(QMetaObject::invokeMethod(&first, "splitActivePaneRight", Qt::DirectConnection));
+    const QList<Editor*> editors = first.findChildren<Editor*>() + second.findChildren<Editor*>();
+    const QList<ResultDisplay*> displays = first.findChildren<ResultDisplay*>() + second.findChildren<ResultDisplay*>();
+    QVERIFY(editors.size() >= 3);
+    settings->startupUserDefinitions = QStringLiteral("saved_variable=7");
+    QFile originalDefinitions(Settings::getDataPath() + QStringLiteral("/definitions.json"));
+    const bool hadDefinitions = originalDefinitions.exists();
+    QByteArray originalContents;
+    if (hadDefinitions) {
+        QVERIFY(originalDefinitions.open(QIODevice::ReadOnly));
+        originalContents = originalDefinitions.readAll();
+        originalDefinitions.close();
+    }
+    const auto restoreDefinitions = qScopeGuard([&]() {
+        if (hadDefinitions)
+            writeFile(originalDefinitions.fileName(), originalContents);
+        else
+            QFile::remove(originalDefinitions.fileName());
+    });
+    UserDefinitions::saveFrom(settings);
+    QFile definitions(Settings::getDataPath() + QStringLiteral("/definitions.json"));
+    QVERIFY(definitions.open(QIODevice::ReadOnly));
+    const QByteArray savedDefinitions = definitions.readAll();
+    definitions.close();
+    QMap<const Session*, QJsonObject> histories;
+    for (ResultDisplay* display : displays) {
+        Session* session = const_cast<Session*>(display->session());
+        QVERIFY(session);
+        if (histories.contains(session))
+            continue;
+        session->addHistoryEntry(HistoryEntry(QStringLiteral("6*7"), Quantity(42)));
+        session->addVariable(Variable(QStringLiteral("kept_variable"), Quantity(7)));
+        QJsonObject entry;
+        session->historyEntryAtRef(0).serialize(entry);
+        histories.insert(session, entry);
+    }
+    QMap<ResultDisplay*, QString> displayTexts;
+    for (ResultDisplay* display : displays) {
+        display->refresh();
+        displayTexts.insert(display, display->toPlainText());
+    }
+    for (Editor* editor : editors)
+        editor->setText(QStringLiteral("1234567+8"));
+    QMap<Editor*, QString> editorTexts;
+    for (Editor* editor : editors)
+        editorTexts.insert(editor, editor->text());
+
+    QAction* action = first.findChild<QAction*>(QStringLiteral("ResetAllSettingsAction"));
+    QVERIFY(action);
+    QTimer::singleShot(0, &first, []() {
+        auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        QVERIFY(dialog);
+        dialog->button(QMessageBox::Yes)->click();
+    });
+    action->trigger();
+    QCoreApplication::processEvents();
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCOMPARE(topLevelMainWindows().size(), 2);
+    QCOMPARE(settings->resultFormat, 'f');
+    QCOMPARE(settings->resultPrecision, -1);
+    QCOMPARE(settings->imaginaryUnit, 'i');
+    QCOMPARE(settings->angleUnit, 'r');
+    QCOMPARE(settings->numberFormatStyle, Settings::NumberFormatNoGroupingDot);
+    QVERIFY(!settings->autoAns);
+    QVERIFY(settings->autoCalc);
+    QVERIFY(settings->autoCompletion);
+    QVERIFY(settings->syntaxHighlighting);
+    QVERIFY(settings->hoverHighlightResults);
+    QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSystem);
+    QCOMPARE(settings->colorScheme, QStringLiteral("Duskfox"));
+    QCOMPARE(CMath::imaginaryUnitSymbol(), QChar('i'));
+    Keypad defaultKeypad(Keypad::LayoutModeBasicWide);
+    for (MainWindow* window : {&first, &second}) {
+        QVERIFY(window->findChild<QAction*>(QStringLiteral("InputDigitGroupingAction"))->isChecked());
+        for (QActionGroup* group : window->findChildren<QActionGroup*>()) {
+            if (!group->isExclusive())
+                continue;
+            int checkedCount = 0;
+            for (QAction* groupedAction : group->actions())
+                checkedCount += groupedAction->isChecked() ? 1 : 0;
+            QVERIFY(checkedCount <= 1);
+        }
+        auto* constants = window->findChild<ConstantsWidget*>();
+        QVERIFY(constants);
+        QVERIFY(constants->searchText().isEmpty());
+        QVERIFY(window->findChild<QDockWidget*>(QStringLiteral("ConstantsDock"))->isHidden());
+        QVERIFY(!window->findChild<QDockWidget*>(QStringLiteral("ConstantsDock"))->isFloating());
+        auto* keypad = window->findChild<Keypad*>();
+        QVERIFY(keypad);
+        QCOMPARE(keypad->sizeHint(), defaultKeypad.sizeHint());
+    }
+    for (Editor* editor : editors) {
+        QCOMPARE(editor->text(), editorTexts.value(editor));
+        QCOMPARE(editor->font().pointSize(), QFont().pointSize());
+    }
+    for (ResultDisplay* display : displays) {
+        QVERIFY(histories.contains(display->session()));
+        QVERIFY(display->session()->hasVariable(QStringLiteral("kept_variable")));
+        QCOMPARE(display->session()->historySize(), 1);
+        QCOMPARE(display->toPlainText(), displayTexts.value(display));
+        QJsonObject entry;
+        display->session()->historyEntryAtRef(0).serialize(entry);
+        QCOMPARE(entry, histories.value(display->session()));
+    }
+    QCOMPARE(settings->startupUserDefinitions, QStringLiteral("saved_variable=7"));
+    QVERIFY(definitions.open(QIODevice::ReadOnly));
+    QCOMPARE(definitions.readAll(), savedDefinitions);
+    settings->load();
+    QCOMPARE(settings->keypadMode, Settings::KeypadModeBasicWide);
+    QCOMPARE(settings->keypadZoomPercent, 100);
+    QCOMPARE(settings->numberFormatStyle, Settings::NumberFormatNoGroupingDot);
+    QVERIFY(settings->hasNumberFormatStyleSetting);
+    QVERIFY(!settings->sessionLayoutJson.isEmpty());
+    QVERIFY(QApplication::activeModalWidget() == nullptr);
+    QCOMPARE(first.findChildren<Editor*>().size() + second.findChildren<Editor*>().size(), editors.size());
 }
 
 void TestDisplayUi::ui_test_fixture_resets_persisted_layout_and_first_run_preference()

@@ -96,6 +96,7 @@ public:
 
     void load();
     void save();
+    bool resetToDefaults();
     void saveSessionLayoutJson();
 
     char radixCharacter() const; // 0 or '*': Automatic.

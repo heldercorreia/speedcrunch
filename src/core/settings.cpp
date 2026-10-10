@@ -723,6 +723,30 @@ void Settings::save()
     delete settings;
 }
 
+bool Settings::resetToDefaults()
+{
+    QSettings* settings = createQSettings(QStringLiteral("SpeedCrunch"));
+    if (!settings)
+        return false;
+
+    // The open sessions are work in progress, so keep their layout while
+    // removing preferences, including keys left behind by older versions.
+    settings->remove(QStringLiteral("SpeedCrunch"));
+    settings->setValue(QStringLiteral("SpeedCrunch/Layout/SessionLayoutJson"), sessionLayoutJson);
+    settings->sync();
+    const bool success = settings->status() == QSettings::NoError;
+    delete settings;
+    if (!success)
+        return false;
+
+    // Use the same defaults as a fresh installation instead of keeping a
+    // second list here. Save the number format to avoid a first-run prompt.
+    load();
+    hasNumberFormatStyleSetting = true;
+    save();
+    return true;
+}
+
 void Settings::saveSessionLayoutJson()
 {
     const QString KEY = QString::fromLatin1("SpeedCrunch");

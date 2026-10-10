@@ -255,6 +255,21 @@ Settings
 SpeedCrunch's behavior can be customized to a large degree using the configuration options in the
 :menuselection:`Settings` menu. This section explains the settings that are available.
 
+Resetting Settings
+++++++++++++++++++
+
+Choose :menuselection:`Settings --> Reset All Settings...` to restore the default
+preferences. SpeedCrunch asks for confirmation before making any changes.
+The reset applies to all open windows immediately and is saved for the next
+launch. It includes appearance, editing options, number and result formats,
+language, and window preferences, including dock visibility and keypad settings.
+
+Your calculation history, open session tabs and panes, and user definitions are
+kept. Existing calculations keep their recorded result formats. New calculations
+and live previews use the default settings.
+
+.. versionadded:: 1.1
+
 Result Display Interactions
 +++++++++++++++++++++++++++
 
