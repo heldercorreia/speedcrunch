@@ -1416,6 +1416,7 @@ Editor::Editor(QWidget* parent)
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setCursorWidth(kEditorCursorWidth);
     setAttribute(Qt::WA_StyledBackground, true);
+    viewport()->setObjectName(QStringLiteral("editorViewport"));
     viewport()->setAutoFillBackground(false);
     document()->setDocumentMargin(kEditorDocumentMargin);
 
@@ -4237,7 +4238,9 @@ void Editor::rehighlight()
        .arg(UiConfig::OutlineStrokeWidth));
     setPalette(pal);
     document()->setDocumentMargin(kEditorDocumentMargin);
-    viewport()->setStyleSheet(QStringLiteral("background: transparent;"));
+    // Qt parents the right-click menu to the viewport. Keep transparency
+    // scoped to the viewport so system menus can paint their own background.
+    viewport()->setStyleSheet(QStringLiteral("QWidget#editorViewport { background: transparent; }"));
     viewport()->setPalette(viewportPalette);
     clearMask();
     m_highlighter->rehighlight();

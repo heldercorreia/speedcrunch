@@ -821,6 +821,8 @@ private slots:
     void system_dropdowns_use_the_native_popup_selection_palette_data();
     void system_dropdowns_use_the_native_popup_selection_palette();
     void macos_system_menus_use_cocoa_style_and_selection_colors();
+    void editor_context_menu_paints_system_background_data();
+    void editor_context_menu_paints_system_background();
     void menu_appearance_switches_all_windows_without_changing_other_controls();
     void system_menus_preserve_platform_roles_and_follow_palette_changes_data();
     void system_menus_preserve_platform_roles_and_follow_palette_changes();
@@ -3422,6 +3424,81 @@ void TestDisplayUi::macos_system_menus_use_cocoa_style_and_selection_colors()
 #else
     QTest::qSkip("Native macOS theme verification requires macOS.", __FILE__, __LINE__);
 #endif
+}
+
+void TestDisplayUi::editor_context_menu_paints_system_background_data()
+{
+    QTest::addColumn<QString>("editorBackground");
+    QTest::newRow("dark-editor") << QStringLiteral("#232136");
+    QTest::newRow("light-editor") << QStringLiteral("#e5eee8");
+}
+
+void TestDisplayUi::editor_context_menu_paints_system_background()
+{
+    QFETCH(QString, editorBackground);
+    MainWindowStateGuard guard;
+    guard.settings->menuAppearance = Settings::MenuAppearanceSystem;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), editorBackground}});
+    MainWindow window(false);
+    auto* editor = window.findChild<Editor*>();
+    QVERIFY(editor != nullptr);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    const auto openContextMenu = [&]() {
+        const QPoint pos(8, 8);
+        QContextMenuEvent event(QContextMenuEvent::Mouse, pos,
+                                editor->viewport()->mapToGlobal(pos));
+        QCoreApplication::sendEvent(editor->viewport(), &event);
+        auto* menu = qobject_cast<QMenu*>(QApplication::activePopupWidget());
+        if (menu != nullptr)
+            menu->setAttribute(Qt::WA_DeleteOnClose, false);
+        return menu;
+    };
+    QScopedPointer<QMenu> context(openContextMenu());
+    QVERIFY(context != nullptr);
+    QCOMPARE(context->parentWidget(), editor->viewport());
+
+    // Palette checks alone miss inherited stylesheets that suppress painting.
+    const auto panelImage = [](QMenu* menu) {
+        menu->ensurePolished();
+        QImage image(180, 120, QImage::Format_ARGB32_Premultiplied);
+        image.fill(Qt::transparent);
+        QStyleOption option;
+        option.initFrom(menu);
+        option.rect = image.rect();
+        option.state = QStyle::State_Enabled | QStyle::State_Active;
+        QPainter painter(&image);
+        menu->style()->drawPrimitive(QStyle::PE_PanelMenu, &option, &painter, menu);
+        painter.end();
+        return image;
+    };
+    const auto verifyBackground = [&](QMenu* menu) {
+        QMenu reference;
+        const QImage expected = panelImage(&reference);
+        const QPoint center = expected.rect().center();
+        QVERIFY(expected.pixelColor(center).alpha() > 0);
+        const QImage actual = panelImage(menu);
+        QCOMPARE(actual.pixelColor(center), expected.pixelColor(center));
+    };
+    verifyBackground(context.data());
+    context->close();
+
+    // Check both a retained popup and a newly created one after switching back.
+    guard.settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
+    MenuStyle::refresh();
+    context->ensurePolished();
+    const QImage themed = panelImage(context.data());
+    QCOMPARE(themed.pixelColor(themed.rect().center()).rgba(),
+             context->palette().color(QPalette::Window).rgba());
+    guard.settings->menuAppearance = Settings::MenuAppearanceSystem;
+    MenuStyle::refresh();
+    QCoreApplication::processEvents();
+    verifyBackground(context.data());
+    QScopedPointer<QMenu> fresh(openContextMenu());
+    QVERIFY(fresh != nullptr);
+    verifyBackground(fresh.data());
 }
 
 void TestDisplayUi::menu_appearance_defaults_to_system_and_persists()
