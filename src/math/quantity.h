@@ -166,6 +166,7 @@ public:
     static Quantity trunc(const Quantity&, int prec = 0);
     static Quantity sqrt(const Quantity&);
     static Quantity cbrt(const Quantity&);
+    static Quantity root(const Quantity&, const Quantity&);
     static Quantity raise(const Quantity&, int);
     static Quantity raise(const Quantity&, const Quantity&);
     static Quantity sgn(const Quantity&);

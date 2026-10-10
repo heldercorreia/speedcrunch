@@ -583,6 +583,12 @@ Quantity function_cbrt(Function* f, const Function::ArgumentList& args)
     return DMath::cbrt(args[0]);
 }
 
+Quantity function_root(Function* f, const Function::ArgumentList& args)
+{
+    ENSURE_ARGUMENT_COUNT(2);
+    return DMath::root(args[0], args[1]);
+}
+
 Quantity function_exp(Function* f, const Function::ArgumentList& args)
 {
     ENSURE_ARGUMENT_COUNT(1);
@@ -2000,6 +2006,7 @@ void FunctionRepo::createFunctions()
     FUNCTION_INSERT(FunctionDomain::Arithmetic, round);
     FUNCTION_INSERT(FunctionDomain::Arithmetic, roundeven);
     FUNCTION_INSERT(FunctionDomain::Arithmetic, sgn);
+    FUNCTION_INSERT(FunctionDomain::Arithmetic, root);
     FUNCTION_INSERT(FunctionDomain::Arithmetic, sqrt);
     FUNCTION_INSERT(FunctionDomain::Arithmetic, trunc);
 
@@ -2362,6 +2369,7 @@ void FunctionRepo::setNonTranslatableFunctionUsages()
     FUNCTION_USAGE(real, "x");
     FUNCTION_USAGE(rat, "x");
     FUNCTION_USAGE(rectform, "x");
+    FUNCTION_USAGE(root, "x; n");
     FUNCTION_USAGE(sci, "x");
     FUNCTION_USAGE(sec, "x)");
     FUNCTION_USAGE(sgn, "x");
@@ -2545,6 +2553,7 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(rectform, tr("Convert to Rectangular Complex Form"));
     FUNCTION_NAME(round, tr("Round Half Away from Zero"));
     FUNCTION_NAME(roundeven, tr("Round Half Even"));
+    FUNCTION_NAME(root, tr("Nth Root"));
     FUNCTION_NAME(sci, tr("Convert to Scientific Notation"));
     FUNCTION_NAME(sec, tr("Secant"));
     FUNCTION_NAME(shl, tr("Arithmetic Shift Left"));

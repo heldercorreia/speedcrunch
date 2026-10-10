@@ -12122,13 +12122,13 @@ void MainWindow::handleKeypadButtonPress(Keypad::Button b)
     case Keypad::KeyPercent: typeWithRules("%"); break;
     case Keypad::KeyFactorial: typeWithRules("!"); break;
 
-    case Keypad::KeyX: insertTextIntoEditor("x"); break;
-    case Keypad::KeyXEquals: insertTextIntoEditor("x="); break;
+    case Keypad::KeySquare: typeWithRules("^2"); break;
+    case Keypad::KeyArgumentSeparator: typeWithRules(";"); break;
     case Keypad::KeyPi: insertTextIntoEditor("pi"); break;
     case Keypad::KeyAns: insertTextIntoEditor("ans"); break;
 
     case Keypad::KeySqrt: insertTextIntoEditor("sqrt("); break;
-    case Keypad::KeyCbrt: insertTextIntoEditor("cbrt("); break;
+    case Keypad::KeyRoot: insertTextIntoEditor("root("); break;
     case Keypad::KeyLog10: insertTextIntoEditor("log10("); break;
     case Keypad::KeyMod: insertTextIntoEditor("mod("); break;
     case Keypad::KeyLn: insertTextIntoEditor("ln("); break;

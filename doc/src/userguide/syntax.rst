@@ -425,7 +425,7 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 
 For negative bases, fractional powers return the principal complex root.
 Use :func:`cbrt` when you specifically need the real cubic root of a real
-negative value.
+negative value, or :func:`root` for other odd root indices.
 
 
 Complex Numbers
@@ -465,5 +465,9 @@ the reference.
 Caution: fractional powers return principal complex roots. For example,
 ``x^(1/3)`` may be non-real. In contrast, :func:`cbrt` always returns the real
 cubic root for real inputs.
+
+For other root indices, use :func:`root`, for example ``root(-32; 5) = -2``.
+It returns the real root for real inputs whenever one exists. Negative real
+inputs with an even index return the principal complex root.
 
 :const:`i` and :const:`j` are built-in constants for the imaginary unit.

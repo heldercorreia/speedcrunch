@@ -16,6 +16,8 @@
 #include <QJsonArray>
 #include <QStringList>
 
+#include <limits>
+
 #define RATIONAL_TOL HNumber("1e-20")
 
 #define ENSURE_DIMENSIONLESS(x) \
@@ -2926,6 +2928,45 @@ Quantity DMath::cbrt(const Quantity& n)
         auto& name = i.key();
         result.modifyDimension(name, exp * Rational(1,3));
         ++i;
+    }
+    return result;
+}
+
+Quantity DMath::root(const Quantity& x, const Quantity& n)
+{
+    ENSURE_DIMENSIONLESS(n);
+    if (x.isCollection() || n.isCollection() || !n.isInteger() || !n.isPositive())
+        return nan(OutOfDomain);
+
+    const HNumber index = n.numericValue().real;
+    if (!x.isDimensionless() && index > HNumber(std::numeric_limits<int>::max()))
+        return nan(OutOfDomain);
+    if (index == HNumber(1))
+        return x;
+    if (index == HNumber(2))
+        return sqrt(x);
+    if (index == HNumber(3) && x.isReal())
+        return cbrt(x);
+
+    const HNumber exponent = HNumber(1) / index;
+    const CNumber value = x.numericValue();
+    CNumber numericRoot;
+    if (value.isReal()
+        && (!value.isNegative() || (index % HNumber(2)) == HNumber(1))) {
+        // Use the magnitude so odd roots stay real even in complex mode.
+        const HNumber magnitude = HMath::raise(HMath::abs(value.real), exponent);
+        numericRoot = value.isNegative() ? -magnitude : magnitude;
+    } else {
+        if (!complexMode)
+            return nan(OutOfDomain);
+        numericRoot = CMath::raise(value, CNumber(exponent));
+    }
+
+    Quantity result(numericRoot);
+    if (!x.isDimensionless()) {
+        const Rational dimensionExponent(1, index.toInt());
+        for (auto i = x.m_dimension.constBegin(); i != x.m_dimension.constEnd(); ++i)
+            result.modifyDimension(i.key(), i.value() * dimensionExponent);
     }
     return result;
 }
