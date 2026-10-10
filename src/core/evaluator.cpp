@@ -2789,7 +2789,7 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
     };
     rebuilt = simplifyParenthesizedDenominators(rebuilt);
 
-    auto simplifyAlgebraicMulDivChain = [&negativeUnitFactorCount](const QString& text) {
+    auto simplifyAlgebraicMulDivChain = [&negativeUnitFactorCount, &workingTerm](const QString& text) {
         if (RegExpPatterns::simpleParenthesizedDenominatorQuotient().match(text).hasMatch())
             return text;
 
@@ -2968,6 +2968,9 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
         QHash<QString, QString> representativeBaseByKey;
         QVector<QString> baseOrder;
         double numericCoefficient = 1.0;
+        int numericFactorCount = 0;
+        bool hasAlgebraicReduction = text != workingTerm;
+        const int previousNegativeFactorCount = negativeUnitFactorCount;
         bool hasNonNumericBase = false;
         bool hasOnlyUnitBases = true;
         auto combineMulDivOps = [](const QString& outerOp, const QString& innerOp) {
@@ -3021,8 +3024,10 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
                 return text;
 
             QString foldedNumericFactor;
-            if (tryFoldParenthesizedNumericAddSubFactor(unsignedFactor, &foldedNumericFactor))
+            if (tryFoldParenthesizedNumericAddSubFactor(unsignedFactor, &foldedNumericFactor)) {
+                hasAlgebraicReduction |= foldedNumericFactor != unsignedFactor;
                 unsignedFactor = foldedNumericFactor;
+            }
 
             if (factorSign < 0)
                 ++negativeUnitFactorCount;
@@ -3037,8 +3042,10 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
             for (int j = 0; j < chainFactors.size(); ++j) {
                 QString chainFactor = chainFactors.at(j).trimmed();
                 QString foldedChainFactor;
-                if (tryFoldParenthesizedNumericAddSubFactor(chainFactor, &foldedChainFactor))
+                if (tryFoldParenthesizedNumericAddSubFactor(chainFactor, &foldedChainFactor)) {
+                    hasAlgebraicReduction |= foldedChainFactor != chainFactor;
                     chainFactor = foldedChainFactor;
+                }
 
                 QString base;
                 int exponent = 0;
@@ -3053,13 +3060,18 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
                     const double value = base.toDouble(&ok);
                     if (!ok)
                         return text;
+                    ++numericFactorCount;
+                    hasAlgebraicReduction |= numericFactorCount > 1 || value == 1.0 || exponent != 1;
                     numericCoefficient *= std::pow(value, sign * exponent);
                 } else if (!isUnsignedDecimalNumberText(base)) {
                     const QString baseKey = canonicalSimplifiableBaseKeyForDisplay(base);
                     if (!exponentByBase.contains(baseKey)) {
                         baseOrder.append(baseKey);
                         representativeBaseByKey.insert(baseKey, base);
+                    } else {
+                        hasAlgebraicReduction = true;
                     }
+                    hasAlgebraicReduction |= exponent == 0;
                     exponentByBase[baseKey] += sign * exponent;
                     hasNonNumericBase = true;
                     if (hasOnlyUnitBases && !isUnitOnlyBase(base))
@@ -3072,6 +3084,13 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
 
         if (!hasNonNumericBase)
             return formatSimplifiedDecimal(numericCoefficient);
+
+        // Moving a denominator into a leading coefficient does not simplify
+        // anything. Keep the existing form unless factors actually reduce.
+        if (!hasAlgebraicReduction) {
+            negativeUnitFactorCount = previousNegativeFactorCount;
+            return text;
+        }
 
         QStringList positiveFactors;
         QStringList negativeFactors;

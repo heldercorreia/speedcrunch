@@ -10131,6 +10131,72 @@ void test_trig_symbolic_fraction_half()
     }
 }
 
+void test_interpreted_quotient_simplification()
+{
+    const QString dot = space + QString(MathDsl::MulDotOp) + space;
+    const QString plus = space + QString(MathDsl::AddOp) + space;
+    const QString minus(UnicodeChars::MinusSign);
+    struct SimplificationCase {
+        QString expression;
+        QString simplified;
+        QString displayed;
+    };
+    const SimplificationCase cases[] = {
+        {QStringLiteral("ans/9"), QStringLiteral("ans/9"),
+         QStringLiteral("ans") + slash + QStringLiteral("9")},
+        {QStringLiteral("ans/0.25"), QStringLiteral("ans/0.25"),
+         QStringLiteral("ans") + slash + QStringLiteral("0.25")},
+        {QStringLiteral("e/7"), QStringLiteral("e/7"),
+         QStringLiteral("e") + slash + QStringLiteral("7")},
+        {QStringLiteral("cos(pi)/11"), QStringLiteral("cos(pi)/11"),
+         QStringLiteral("cos(pi)") + slash + QStringLiteral("11")},
+        {QStringLiteral("ans^2/13"), QStringLiteral("ans^2/13"),
+         QString::fromUtf8("ans²") + slash + QStringLiteral("13")},
+        {QStringLiteral("ans*e/5"), QString::fromUtf8("ans·e/5"),
+         QStringLiteral("ans") + dot + QStringLiteral("e") + slash + QStringLiteral("5")},
+        {QStringLiteral("ans/(17*e)"), QString::fromUtf8("ans/(17·e)"),
+         QStringLiteral("ans") + slash + QStringLiteral("(17") + dot + QStringLiteral("e)")},
+        {QStringLiteral("(-ans)/8"), QStringLiteral("-ans/8"),
+         minus + QStringLiteral("ans") + slash + QStringLiteral("8")},
+        {QStringLiteral("ans/(-6)"), QStringLiteral("ans/(-6)"),
+         QStringLiteral("ans") + slash + QStringLiteral("(") + minus + QStringLiteral("6)")},
+        {QStringLiteral("ans/10+e/7"), QStringLiteral("ans/10+e/7"),
+         QStringLiteral("ans") + slash + QStringLiteral("10")
+             + plus + QStringLiteral("e") + slash + QStringLiteral("7")},
+        {QStringLiteral("ans/12 ? previous answer"), QStringLiteral("ans/12"),
+         QStringLiteral("ans") + slash + QStringLiteral("12")},
+        {QString::fromUtf8("ans÷16"), QStringLiteral("ans/16"),
+         QStringLiteral("ans") + slash + QStringLiteral("16")},
+        {QStringLiteral("ans*ans/25"), QStringLiteral("1/25*ans^2"),
+         QStringLiteral("1") + slash + QStringLiteral("25") + dot + QString::fromUtf8("ans²")},
+        {QStringLiteral("6*ans/15"), QStringLiteral("2/5*ans"),
+         QStringLiteral("2") + slash + QStringLiteral("5") + dot + QStringLiteral("ans")},
+        {QStringLiteral("ans/2/7"), QStringLiteral("1/14*ans"),
+         QStringLiteral("1") + slash + QStringLiteral("14") + dot + QStringLiteral("ans")},
+        {QStringLiteral("ans*e/e/8"), QStringLiteral("1/8*ans"),
+         QStringLiteral("1") + slash + QStringLiteral("8") + dot + QStringLiteral("ans")},
+        {QStringLiteral("ans/1"), QStringLiteral("ans"), QStringLiteral("ans")}
+    };
+
+    for (const SimplificationCase& testCase : cases) {
+        CHECK_EVAL("4", "4");
+        CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(testCase.expression, testCase.displayed);
+        if (!eval->error().isEmpty())
+            continue;
+
+        ++eval_total_tests;
+        const QString simplified = Evaluator::simplifyInterpretedExpression(eval->interpretedExpression());
+        if (simplified != testCase.simplified) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\tinterpreted quotient simplification\t[NEW]" << endl
+                 << "\tExpression : " << qPrintable(testCase.expression) << endl
+                 << "\tSimplified : " << qPrintable(simplified) << endl
+                 << "\tExpected   : " << qPrintable(testCase.simplified) << endl;
+        }
+    }
+}
+
 void test_non_informative_numeric_simplified_row_suppression()
 {
     checkSuppressSimplifiedExpressionLine(
@@ -10667,6 +10733,7 @@ int main(int argc, char* argv[])
     test_result_display_shows_pi_multiples_for_radian_angle_results();
     test_result_display_compacts_bracketed_degree_inside_trig_call();
     test_trig_symbolic_fraction_half();
+    test_interpreted_quotient_simplification();
     test_non_informative_numeric_simplified_row_suppression();
 
     test_angle_mode(settings);

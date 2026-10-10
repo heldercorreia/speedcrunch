@@ -557,6 +557,9 @@ This section contains settings that control result output and post-evaluation be
     association explicit. Disable this option to keep only the unsimplified
     interpreted expression and numeric results.
 
+    An extra line appears only when there is a useful reduction. For example,
+    ``ans / 9`` stays as written instead of becoming ``1 / 9 · ans``.
+
     Entering the expression ``2.1 − 1 cos(pi)^2 cos(pi) 5 cos pi  / −cos^2(pi) + 3.4``
     gives the following interpretation and simplification:
 

@@ -801,6 +801,10 @@ private slots:
     void result_display_copies_entire_calculation_data();
     void result_display_copies_entire_calculation();
     void result_display_copies_generated_simplification_and_formats();
+    void result_display_preserves_unreduced_quotients_data();
+    void result_display_preserves_unreduced_quotients();
+    void result_display_reduces_combinable_quotient_factors_data();
+    void result_display_reduces_combinable_quotient_factors();
     void result_display_copy_calculation_ignores_empty_areas();
     void bitfield_selected_bit_keeps_primary_fill_while_hovered();
     void bitfield_buttons_use_configured_generated_shades();
@@ -2051,6 +2055,90 @@ void TestDisplayUi::result_display_copies_generated_simplification_and_formats()
     QVERIFY(action != nullptr);
     action->trigger();
     QCOMPARE(QApplication::clipboard()->text(), expected);
+}
+
+void TestDisplayUi::result_display_preserves_unreduced_quotients_data()
+{
+    QTest::addColumn<QString>("expression");
+    QTest::newRow("previous-answer") << QStringLiteral("ans/9");
+    QTest::newRow("decimal-denominator") << QStringLiteral("ans/0.25");
+    QTest::newRow("constant") << QStringLiteral("e/7");
+    QTest::newRow("function") << QStringLiteral("cos(pi)/11");
+    QTest::newRow("power") << QStringLiteral("ans^2/13");
+    QTest::newRow("product") << QStringLiteral("ans*e/5");
+    QTest::newRow("grouped-denominator") << QStringLiteral("ans/(17*e)");
+    QTest::newRow("negative-numerator") << QStringLiteral("(-ans)/8");
+    QTest::newRow("negative-denominator") << QStringLiteral("ans/(-6)");
+    QTest::newRow("sum") << QStringLiteral("ans/10+e/7");
+    QTest::newRow("comment") << QStringLiteral("ans/12 ? previous answer");
+    QTest::newRow("unicode-division") << QString::fromUtf8("ans÷16");
+}
+
+void TestDisplayUi::result_display_preserves_unreduced_quotients()
+{
+    QFETCH(QString, expression);
+    Settings::instance()->simplifyResultExpressions = true;
+    Settings::instance()->multipleResultLinesEnabled = false;
+    Session session;
+    Evaluator* evaluator = session.evaluator();
+    evaluator->setExpression(QStringLiteral("4"));
+    QCOMPARE(evaluator->evalUpdateAns(), Quantity(4));
+    evaluator->setExpression(expression);
+    const Quantity value = evaluator->evalUpdateAns();
+    QVERIFY2(evaluator->error().isEmpty(), qPrintable(evaluator->error()));
+
+    const QString interpreted = evaluator->interpretedExpression();
+    const QString withoutComment = interpreted.section(QLatin1Char('?'), 0, 0).trimmed();
+    QCOMPARE(Evaluator::simplifyInterpretedExpression(interpreted), withoutComment);
+    QCOMPARE(Evaluator::formatInterpretedExpressionSimplifiedForDisplay(interpreted, evaluator),
+             Evaluator::formatInterpretedExpressionForDisplay(withoutComment, evaluator));
+
+    EvaluationContext context;
+    context.main.fmt = 'f';
+    context.main.prec = 20;
+    session.addHistoryEntry(HistoryEntry(expression, value, interpreted, context));
+    ResultDisplay display;
+    display.setSession(&session);
+    const QStringList lines = display.toPlainText().trimmed().split(QLatin1Char('\n'));
+    QCOMPARE(lines.size(), 2);
+    if (expression == QStringLiteral("ans/9"))
+        QCOMPARE(lines.last(), QStringLiteral("= 0.44444444444444444444"));
+}
+
+void TestDisplayUi::result_display_reduces_combinable_quotient_factors_data()
+{
+    QTest::addColumn<QString>("expression");
+    QTest::addColumn<QString>("simplified");
+    QTest::newRow("repeated-factor") << QStringLiteral("ans*ans/25") << QStringLiteral("1/25*ans^2");
+    QTest::newRow("numeric-coefficient") << QStringLiteral("6*ans/15") << QStringLiteral("2/5*ans");
+    QTest::newRow("numeric-denominators") << QStringLiteral("ans/2/7") << QStringLiteral("1/14*ans");
+    QTest::newRow("cancellation") << QStringLiteral("ans*e/e/8") << QStringLiteral("1/8*ans");
+    QTest::newRow("neutral-factor") << QStringLiteral("ans/1") << QStringLiteral("ans");
+}
+
+void TestDisplayUi::result_display_reduces_combinable_quotient_factors()
+{
+    QFETCH(QString, expression);
+    QFETCH(QString, simplified);
+    Settings::instance()->simplifyResultExpressions = true;
+    Settings::instance()->multipleResultLinesEnabled = false;
+    Session session;
+    Evaluator* evaluator = session.evaluator();
+    evaluator->setExpression(QStringLiteral("4"));
+    QCOMPARE(evaluator->evalUpdateAns(), Quantity(4));
+    evaluator->setExpression(expression);
+    const Quantity value = evaluator->evalUpdateAns();
+    QVERIFY2(evaluator->error().isEmpty(), qPrintable(evaluator->error()));
+
+    const QString interpreted = evaluator->interpretedExpression();
+    QCOMPARE(Evaluator::simplifyInterpretedExpression(interpreted), simplified);
+    session.addHistoryEntry(HistoryEntry(expression, value, interpreted));
+    ResultDisplay display;
+    display.setSession(&session);
+    const QStringList lines = display.toPlainText().trimmed().split(QLatin1Char('\n'));
+    QCOMPARE(lines.size(), 3);
+    QCOMPARE(lines.at(1), QStringLiteral("= ")
+             + Evaluator::formatInterpretedExpressionForDisplay(simplified, evaluator));
 }
 
 void TestDisplayUi::result_display_copy_calculation_ignores_empty_areas()
