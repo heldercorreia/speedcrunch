@@ -42,6 +42,7 @@
 #include <QPolygonF>
 #include <QLinearGradient>
 #include <QScrollBar>
+#include <QTextDocumentFragment>
 #include <QToolButton>
 
 #include <limits>
@@ -1289,6 +1290,24 @@ QMenu* ResultDisplay::createContextMenu(const QPoint& pos)
                 return;
 
             QApplication::clipboard()->setText(formatResultForClipboard(value), QClipboard::Clipboard);
+        });
+        QAction* copyCalculationAction = menu->addAction(tr("Copy Calculation"));
+        int startBlock = -1;
+        int endBlock = -1;
+        QString calculationText;
+        if (blockRangeForHistoryIndex(historyIndex, startBlock, endBlock)) {
+            // Use the displayed lines so saved formatting and simplifications
+            // are copied exactly as shown, without the blank separator line.
+            QTextCursor calculationCursor(document());
+            calculationCursor.setPosition(document()->findBlockByNumber(startBlock).position());
+            const QTextBlock lastBlock = document()->findBlockByNumber(endBlock);
+            calculationCursor.setPosition(lastBlock.position() + lastBlock.length() - 1,
+                                          QTextCursor::KeepAnchor);
+            calculationText = QTextDocumentFragment(calculationCursor).toPlainText();
+        }
+        copyCalculationAction->setEnabled(!calculationText.isEmpty());
+        connect(copyCalculationAction, &QAction::triggered, this, [calculationText]() {
+            QApplication::clipboard()->setText(calculationText, QClipboard::Clipboard);
         });
         menu->addSeparator();
         QAction* editAction = menu->addAction(tr("Edit Expression"));

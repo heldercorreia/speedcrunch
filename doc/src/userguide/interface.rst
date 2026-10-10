@@ -263,6 +263,11 @@ The result display supports mouse-driven interactions for navigation and editing
 * Right-click context menu
     Right-clicking an expression/calculation block in the result display opens a context menu
     for that specific block.
+    Choose :guilabel:`Copy Calculation` to copy all its displayed lines at once,
+    including the expression, any simplification, and every result format.
+    The lines are copied as plain text in the order shown, without the blank
+    line between calculations. :guilabel:`Copy Expression` and
+    :guilabel:`Copy Result` let you copy either part separately.
     This menu includes an entry to toggle the main menu bar visibility.
 
     .. versionadded:: 1.0
