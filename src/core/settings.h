@@ -158,6 +158,7 @@ public:
     bool leaveLastExpression;
     bool showEmptyHistoryHint;
     bool syntaxHighlighting;
+    bool inputDigitGrouping;
     bool hoverHighlightResults;
     bool windowAlwaysOnTop;
     bool autoResultToClipboard;

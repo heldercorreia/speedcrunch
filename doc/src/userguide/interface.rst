@@ -383,7 +383,11 @@ Number Format
 +++++++++++++
 
 Choose how decimal numbers are displayed and interpreted via
-:menuselection:`Settings --> Results --> Number Format...`.
+:menuselection:`Settings --> Number Format...`.
+
+This shared setting controls result formatting and, when
+:menuselection:`Settings --> Editing --> Group Digits in Input` is enabled,
+digit grouping in the input field.
 
 .. versionadded:: 1.0
 
@@ -454,10 +458,6 @@ This section contains settings that control result output and post-evaluation be
 * :menuselection:`Show Live Result Preview`
     If set, SpeedCrunch will display partial results as you type your expression as well
     as results when selecting a partial expression in the editor.
-
-* :menuselection:`Number Format...`
-    Open the number-format dialog and pick one combined setting for decimal
-    separator and digit grouping. See :ref:`radix_character`.
 
 * :menuselection:`Notation & Precision...`
     Open a tabular layout with one mandatory ``Main Line`` row and four
@@ -559,6 +559,24 @@ Editing
 
 * :menuselection:`Auto-Insert "ans" When Starting with an Operator`
     If a new expression starts with ``+``, ``-``, ``*``, or ``/``, SpeedCrunch inserts ``ans`` first.
+* :menuselection:`Group Digits in Input`
+    Group digits as you type, using the separator and grouping pattern selected
+    in :menuselection:`Settings --> Number Format...`. For example, ``1000``
+    appears as ``1 000`` with a space grouping format or ``1,000`` with a comma
+    grouping format. This option is enabled by default. A number format with
+    no grouping adds no separators.
+
+    Integer digits are grouped in threes for decimal and octal numbers,
+    or in fours for binary and hexadecimal numbers. The Indian format uses
+    3-2-2 grouping. Fractional digits are grouped only when the selected format
+    includes fractional grouping. Scientific exponents are left unchanged.
+    The separators only affect how the input looks, so copying the expression
+    keeps the original text.
+
+    This setting works even when syntax highlighting is disabled.
+
+    .. versionadded:: 1.1
+
 * :menuselection:`Show Empty History Hint`
     Show or hide the ``Type an expression here`` hint when there are no calculations in history.
 * :menuselection:`Keep Entered Expression After Evaluate`

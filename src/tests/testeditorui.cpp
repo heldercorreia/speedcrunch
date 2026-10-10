@@ -13,6 +13,7 @@
 #include "core/settings.h"
 #include "core/unicodechars.h"
 #include "core/mathdsl.h"
+#include "core/numberformatter.h"
 #include "core/units.h"
 #include "core/userfunction.h"
 #include "core/userunit.h"
@@ -21,6 +22,7 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QInputMethodEvent>
+#include <QFontDatabase>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QKeyEvent>
@@ -68,6 +70,14 @@ private slots:
     void allows_special_function_symbols_as_leading_chars();
     void allows_list_start_after_operators();
     void highlights_list_braces_as_parentheses();
+    void input_digit_grouping_formats_only_integer_digits_data();
+    void input_digit_grouping_formats_only_integer_digits();
+    void input_digit_grouping_preserves_typing_selection_and_undo();
+    void input_digit_grouping_survives_settings_reload();
+    void input_digit_grouping_follows_number_format_data();
+    void input_digit_grouping_follows_number_format();
+    void input_digit_grouping_paints_separator_glyphs_data();
+    void input_digit_grouping_paints_separator_glyphs();
     void auto_ans_rewrite_helper_handles_tilde_and_factorial();
     void blocks_operator_right_after_open_square_bracket();
     void inserts_value_unit_space_brackets_after_number_or_symbol();
@@ -5320,6 +5330,252 @@ void TestEditorUi::cursor_free_painting_preserves_text_and_selections()
     const QImage actual = editor.viewport()->grab().toImage();
     QVERIFY2(actual == expected,
              "Cursor-free painting changes Qt's text, background, or selection rendering");
+}
+
+void TestEditorUi::input_digit_grouping_formats_only_integer_digits_data()
+{
+    QTest::addColumn<QString>("input");
+    QTest::addColumn<QList<int>>("positions");
+    QTest::newRow("short") << QStringLiteral("999") << QList<int>{};
+    QTest::newRow("thousand") << QStringLiteral("1000") << QList<int>{0};
+    QTest::newRow("million") << QStringLiteral("1234567") << QList<int>{0, 3};
+    QTest::newRow("fraction") << QStringLiteral("1234.56789") << QList<int>{0};
+    QTest::newRow("comma-fraction") << QStringLiteral("1234,56789") << QList<int>{0};
+    QTest::newRow("fraction-only") << QStringLiteral("0.1234567") << QList<int>{};
+    QTest::newRow("scientific") << QStringLiteral("1000e1234") << QList<int>{0};
+    QTest::newRow("hex") << QStringLiteral("0x12345") << QList<int>{2};
+    QTest::newRow("hex-alias") << QStringLiteral("#12345") << QList<int>{1};
+    QTest::newRow("binary") << QStringLiteral("0b10101010") << QList<int>{5};
+    QTest::newRow("octal") << QStringLiteral("0o1234567") << QList<int>{2, 5};
+    QTest::newRow("decimal-prefix") << QStringLiteral("0d1234567") << QList<int>{2, 5};
+    QTest::newRow("expression") << QStringLiteral("1000 + 20000") << QList<int>{0, 8};
+    QTest::newRow("identifier-comment") << QStringLiteral("x1234 ? 1000") << QList<int>{};
+    QTest::newRow("unit-power") << QStringLiteral("1000[m²] + 2000") << QList<int>{0, 11};
+    QTest::newRow("manual-spaces") << QStringLiteral("1 234 567") << QList<int>{};
+    QTest::newRow("manual-underscores") << QStringLiteral("1_234_567") << QList<int>{};
+}
+
+void TestEditorUi::input_digit_grouping_formats_only_integer_digits()
+{
+    QFETCH(QString, input);
+    QFETCH(QList<int>, positions);
+    Settings* settings = Settings::instance();
+    settings->numberFormatStyle = Settings::NumberFormatThreeDigitSpaceDot;
+    settings->applyNumberFormatStyle();
+    QPlainTextEdit inputEdit;
+    SyntaxHighlighter inputHighlighter(&inputEdit, true);
+    inputEdit.setPlainText(input);
+    QPlainTextEdit display;
+    SyntaxHighlighter displayHighlighter(&display);
+    display.setPlainText(input);
+
+    auto groupedPositions = [](QPlainTextEdit& edit) {
+        QList<int> result;
+        for (const auto& range : edit.document()->firstBlock().layout()->formats()) {
+            if (range.format.hasProperty(SyntaxHighlighter::InputDigitSeparator)) {
+                for (int pos = range.start; pos < range.start + range.length; ++pos)
+                    result.append(pos);
+            }
+        }
+        return result;
+    };
+    for (bool highlighting : {true, false}) {
+        settings->syntaxHighlighting = highlighting;
+        for (bool grouping : {false, true, false}) {
+            settings->inputDigitGrouping = grouping;
+            inputHighlighter.rehighlight();
+            displayHighlighter.rehighlight();
+            QCOMPARE(groupedPositions(inputEdit), grouping ? positions : QList<int>{});
+            QVERIFY(groupedPositions(display).isEmpty());
+            QCOMPARE(inputEdit.toPlainText(), input);
+        }
+    }
+}
+
+void TestEditorUi::input_digit_grouping_preserves_typing_selection_and_undo()
+{
+    Settings::instance()->numberFormatStyle = Settings::NumberFormatThreeDigitSpaceDot;
+    Settings::instance()->applyNumberFormatStyle();
+    Settings::instance()->inputDigitGrouping = true;
+    Editor editor;
+    editor.setAutoCalcEnabled(false);
+    editor.setAutoCompletionEnabled(false);
+    editor.show();
+    QTest::keyClicks(&editor, "1000");
+    editor.rehighlight();
+    QCOMPARE(editor.text(), QStringLiteral("1000"));
+    QCOMPARE(editor.textCursor().position(), 4);
+    bool hasGap = false;
+    for (const auto& range : editor.document()->firstBlock().layout()->formats())
+        hasGap |= range.format.hasProperty(SyntaxHighlighter::InputDigitSeparator);
+    QVERIFY(hasGap);
+
+    QTest::keyClick(&editor, Qt::Key_Left);
+    QCOMPARE(editor.textCursor().position(), 3);
+    QTest::keyClick(&editor, Qt::Key_Backspace);
+    QCOMPARE(editor.text(), QStringLiteral("100"));
+    editor.undo();
+    QCOMPARE(editor.text(), QStringLiteral("1000"));
+    editor.redo();
+    QCOMPARE(editor.text(), QStringLiteral("100"));
+    editor.undo();
+    editor.selectAll();
+    editor.copy();
+    QCOMPARE(QApplication::clipboard()->text(), QStringLiteral("1000"));
+    const QTextCursor before = editor.textCursor();
+    Settings::instance()->inputDigitGrouping = false;
+    editor.rehighlight();
+    QCOMPARE(editor.textCursor().position(), before.position());
+    QCOMPARE(editor.textCursor().anchor(), before.anchor());
+    editor.undo();
+    QCOMPARE(editor.text(), QStringLiteral("100"));
+}
+
+void TestEditorUi::input_digit_grouping_follows_number_format_data()
+{
+    QTest::addColumn<int>("style");
+    QTest::addColumn<QString>("expected");
+    QTest::newRow("ungrouped-dot") << int(Settings::NumberFormatNoGroupingDot) << QStringLiteral("1234567.1234567");
+    QTest::newRow("ungrouped-comma") << int(Settings::NumberFormatNoGroupingComma) << QStringLiteral("1234567,1234567");
+    QTest::newRow("si-dot") << int(Settings::NumberFormatSIDot) << QStringLiteral("1 234 567.123 456 7");
+    QTest::newRow("si-comma") << int(Settings::NumberFormatSIComma) << QStringLiteral("1 234 567,123 456 7");
+    QTest::newRow("comma-dot") << int(Settings::NumberFormatThreeDigitCommaDot) << QStringLiteral("1,234,567.1234567");
+    QTest::newRow("comma-dot-fraction") << int(Settings::NumberFormatThreeDigitCommaDotFraction) << QStringLiteral("1,234,567.123,456,7");
+    QTest::newRow("dot-comma") << int(Settings::NumberFormatThreeDigitDotComma) << QStringLiteral("1.234.567,1234567");
+    QTest::newRow("dot-comma-fraction") << int(Settings::NumberFormatThreeDigitDotCommaFraction) << QStringLiteral("1.234.567,123.456.7");
+    QTest::newRow("space-dot") << int(Settings::NumberFormatThreeDigitSpaceDot) << QStringLiteral("1 234 567.1234567");
+    QTest::newRow("space-comma") << int(Settings::NumberFormatThreeDigitSpaceComma) << QStringLiteral("1 234 567,1234567");
+    QTest::newRow("underscore-dot") << int(Settings::NumberFormatThreeDigitUnderscoreDot) << QStringLiteral("1_234_567.1234567");
+    QTest::newRow("underscore-dot-fraction") << int(Settings::NumberFormatThreeDigitUnderscoreDotFraction) << QStringLiteral("1_234_567.123_456_7");
+    QTest::newRow("underscore-comma") << int(Settings::NumberFormatThreeDigitUnderscoreComma) << QStringLiteral("1_234_567,1234567");
+    QTest::newRow("underscore-comma-fraction") << int(Settings::NumberFormatThreeDigitUnderscoreCommaFraction) << QStringLiteral("1_234_567,123_456_7");
+    QTest::newRow("indian") << int(Settings::NumberFormatIndianCommaDot) << QStringLiteral("12,34,567.1234567");
+}
+
+void TestEditorUi::input_digit_grouping_follows_number_format()
+{
+    QFETCH(int, style);
+    QFETCH(QString, expected);
+    Settings* settings = Settings::instance();
+    settings->numberFormatStyle = static_cast<Settings::NumberFormatStyle>(style);
+    settings->applyNumberFormatStyle();
+    settings->inputDigitGrouping = true;
+    const QString raw = QStringLiteral("1234567") + QChar(settings->decimalSeparator())
+        + QStringLiteral("1234567");
+    Editor editor;
+    editor.setText(raw);
+    editor.rehighlight();
+    const auto displayedText = [&editor]() {
+        QString display = editor.text();
+        const auto ranges = editor.document()->firstBlock().layout()->formats();
+        for (auto it = ranges.crbegin(); it != ranges.crend(); ++it) {
+            const QString radix = it->format.stringProperty(SyntaxHighlighter::InputRadixReplacement);
+            if (!radix.isEmpty())
+                display.replace(it->start, 1, radix);
+            const QString separator = it->format.stringProperty(SyntaxHighlighter::InputDigitSeparator);
+            if (!separator.isEmpty()) {
+                for (int pos = it->start + it->length - 1; pos >= it->start; --pos)
+                    display.insert(pos + 1, separator);
+            }
+        }
+        return display;
+    };
+    for (bool syntaxHighlighting : {true, false}) {
+        settings->syntaxHighlighting = syntaxHighlighting;
+        editor.rehighlight();
+        QCOMPARE(displayedText(), expected);
+        QCOMPARE(editor.text(), raw);
+        QCOMPARE(NumberFormatter::formatNumericLiteralForDisplay(raw), expected);
+    }
+    if (settings->decimalSeparator() == ',') {
+        editor.setText(QStringLiteral("1234567.1234567"));
+        editor.rehighlight();
+        QCOMPARE(displayedText(), expected);
+    }
+    editor.setText(expected);
+    editor.rehighlight();
+    QCOMPARE(displayedText(), expected);
+    settings->inputDigitGrouping = false;
+    editor.setText(raw);
+    editor.rehighlight();
+    QCOMPARE(displayedText(), raw);
+}
+
+void TestEditorUi::input_digit_grouping_paints_separator_glyphs_data()
+{
+    QTest::addColumn<bool>("themed");
+    QTest::addColumn<bool>("selected");
+    QTest::newRow("native") << false << false;
+    QTest::newRow("native-selected") << false << true;
+    QTest::newRow("themed") << true << false;
+    QTest::newRow("themed-selected") << true << true;
+}
+
+void TestEditorUi::input_digit_grouping_paints_separator_glyphs()
+{
+    QFETCH(bool, themed);
+    QFETCH(bool, selected);
+    Settings* settings = Settings::instance();
+    settings->inputDigitGrouping = true;
+    Editor editor;
+    QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    font.setPointSize(20);
+    editor.setFont(font);
+    editor.setAutoCalcEnabled(false);
+    editor.setAutoCompletionEnabled(false);
+    editor.resize(600, 120);
+    editor.show();
+    editor.clearFocus();
+    editor.setThemePrimaryColor(themed ? QColor(QStringLiteral("#2277aa")) : QColor(), false);
+    for (auto style : {Settings::NumberFormatThreeDigitCommaDot,
+                       Settings::NumberFormatThreeDigitDotComma,
+                       Settings::NumberFormatThreeDigitUnderscoreDot}) {
+        settings->numberFormatStyle = style;
+        settings->applyNumberFormatStyle();
+        editor.setText(QStringLiteral("1234567.56"));
+        editor.rehighlight();
+        if (selected)
+            editor.selectAll();
+        QCoreApplication::processEvents();
+        editor.clearFocus();
+        const auto separatorWidth = [&editor]() {
+            for (const auto& range : editor.document()->firstBlock().layout()->formats()) {
+                if (range.format.hasProperty(SyntaxHighlighter::InputDigitSeparator))
+                    return range.format.fontLetterSpacing();
+            }
+            return qreal(0);
+        };
+        const qreal previousWidth = separatorWidth();
+        editor.increaseFontPointSize();
+        QVERIFY(separatorWidth() > previousWidth);
+        const QImage withSeparators = editor.viewport()->grab().toImage();
+        QTextLayout* layout = editor.document()->firstBlock().layout();
+        auto formats = layout->formats();
+        for (auto& range : formats) {
+            range.format.clearProperty(SyntaxHighlighter::InputDigitSeparator);
+            range.format.clearProperty(SyntaxHighlighter::InputRadixReplacement);
+        }
+        layout->setFormats(formats);
+        editor.viewport()->update();
+        const QImage withoutSeparators = editor.viewport()->grab().toImage();
+        QVERIFY2(withSeparators != withoutSeparators, "Input separators must paint glyphs, not just gaps");
+    }
+}
+
+void TestEditorUi::input_digit_grouping_survives_settings_reload()
+{
+    Settings* settings = Settings::instance();
+    QVERIFY(settings->inputDigitGrouping);
+    for (bool enabled : {true, false}) {
+        settings->inputDigitGrouping = enabled;
+        settings->numberFormatStyle = Settings::NumberFormatThreeDigitCommaDot;
+        settings->applyNumberFormatStyle();
+        QCOMPARE(settings->inputDigitGrouping, enabled);
+        settings->save();
+        settings->inputDigitGrouping = !enabled;
+        settings->load();
+        QCOMPARE(settings->inputDigitGrouping, enabled);
+    }
 }
 
 int main(int argc, char** argv)

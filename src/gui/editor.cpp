@@ -1400,7 +1400,7 @@ Editor::Editor(QWidget* parent)
     m_constantCompletion = 0;
     m_completionTimer = new QTimer(this);
     m_isAutoCalcEnabled = true;
-    m_highlighter = new SyntaxHighlighter(this);
+    m_highlighter = new SyntaxHighlighter(this, true);
     updateMatchedParenthesisColors();
     m_matchingTimer = new QTimer(this);
     m_cursorBlinkTimer = new QTimer(this);
@@ -2465,10 +2465,76 @@ void Editor::evaluate()
     triggerEnter();
 }
 
+static void paintInputDigitSeparators(QPainter& painter, const QTextBlock& block,
+                                     const QPointF& offset,
+                                     const QAbstractTextDocumentLayout::PaintContext& context)
+{
+    // The layout has already drawn the unchanged document text. Add the glyphs
+    // described by SyntaxHighlighter's format properties. A space needs only
+    // the reserved gap, while commas, dots and underscores need a painted glyph.
+    // The grouping glyph belongs to the preceding digit for selection colors.
+    // It is never a separate character that the cursor or Backspace can visit.
+    const QTextLayout* layout = block.layout();
+    for (const auto& range : layout->formats()) {
+        const bool replacement = range.format.hasProperty(SyntaxHighlighter::InputRadixReplacement);
+        const QString separator = range.format.stringProperty(replacement
+            ? SyntaxHighlighter::InputRadixReplacement : SyntaxHighlighter::InputDigitSeparator);
+        if (separator.isEmpty() || separator == QLatin1String(" "))
+            continue;
+        for (int pos = range.start; pos < range.start + range.length; ++pos) {
+            const QTextLine line = layout->lineForTextPosition(pos);
+            if (!line.isValid())
+                continue;
+            QFont font = range.format.font().resolve(layout->font());
+            font.setLetterSpacing(QFont::AbsoluteSpacing, 0);
+            QColor color = range.format.foreground().color();
+            QBrush background = block.blockFormat().background();
+            if (background == Qt::NoBrush)
+                background = context.palette.base();
+            for (const auto& selection : context.selections) {
+                const int absolutePos = block.position() + pos;
+                if (absolutePos >= selection.cursor.selectionStart()
+                        && absolutePos < selection.cursor.selectionEnd()) {
+                    if (selection.format.foreground() != Qt::NoBrush)
+                        color = selection.format.foreground().color();
+                    if (selection.format.background() != Qt::NoBrush)
+                        background = selection.format.background();
+                }
+            }
+            painter.save();
+            painter.setFont(font);
+            painter.setPen(color);
+            const qreal x = replacement ? line.cursorToX(pos)
+                : line.cursorToX(pos + 1) - range.format.fontLetterSpacing();
+            if (replacement) {
+                // Cover the original decimal glyph, including its selection
+                // background, then draw the selected one in the same place.
+                // This changes the view without rewriting the document.
+                painter.fillRect(QRectF(offset + QPointF(x, line.y()),
+                                       QSizeF(line.cursorToX(pos + 1) - x, line.height())), background);
+            }
+            painter.drawText(offset + QPointF(x, line.y() + line.ascent()), separator);
+            painter.restore();
+        }
+    }
+}
+
 void Editor::paintEvent(QPaintEvent* event)
 {
     if (m_customCursorVisible && !m_themePrimaryColor.isValid()) {
         QPlainTextEdit::paintEvent(event);
+        if (!Settings::instance()->inputDigitGrouping)
+            return;
+        QPainter painter(viewport());
+        painter.setClipRegion(event->region());
+        QPointF offset = contentOffset();
+        const auto context = getPaintContext();
+        for (QTextBlock block = firstVisibleBlock(); block.isValid(); block = block.next()) {
+            paintInputDigitSeparators(painter, block, offset, context);
+            offset.ry() += blockBoundingRect(block).height();
+            if (offset.y() > viewport()->height())
+                break;
+        }
         return;
     }
 
@@ -2539,6 +2605,7 @@ void Editor::paintEvent(QPaintEvent* event)
                 selections.append(range);
             }
             layout->draw(&painter, offset, selections, clip);
+            paintInputDigitSeparators(painter, block, offset, context);
         }
         offset.ry() += bounds.height();
         if (offset.y() > viewport()->height()) {
@@ -2610,9 +2677,11 @@ void Editor::triggerEnter()
 
 void Editor::changeEvent(QEvent* event)
 {
-    if (event->type() == QEvent::FontChange)
-        updateHeightAndEnsureCursorVisible();
     QPlainTextEdit::changeEvent(event);
+    if (event->type() == QEvent::FontChange) {
+        m_highlighter->rehighlight();
+        updateHeightAndEnsureCursorVisible();
+    }
 }
 
 bool Editor::event(QEvent* event)
