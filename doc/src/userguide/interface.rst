@@ -78,6 +78,17 @@ the :menuselection:`View` menu.
     ``ln(`` and ``log10(``, respectively. Copying a scientific preset into a
     custom layout uses the same labels and function names.
 
+    Since version 1.1, both scientific layouts show ``ⁿ√`` for the nth root
+    in place of the cube-root button. It inserts ``root(`` so you can enter
+    a value and a root index, for example ``root(32; 5)``. Copying either
+    scientific preset into a custom layout includes this button.
+
+    The scientific layouts also include ``x²``, which inserts ``^2``, and
+    ``;`` to separate function arguments. These replace the ``x`` and ``x=``
+    shortcuts in version 1.1. Related buttons sit together: ``√`` and ``x²``,
+    ``xʸ`` and ``ⁿ√``, ``E`` and ``exp``, ``ln`` and ``log10``, and each
+    trigonometric function with its inverse.
+
     Available entries in :menuselection:`View --> Keypad --> Zoom` are:
 
     * ``50%``

@@ -44,6 +44,44 @@ General
 
     .. versionadded:: 1.0
 
+.. function:: root(x; n)
+
+    Return the nth root of ``x``. The index ``n`` must be a positive,
+    dimensionless integer.
+
+    For real inputs, return the real root whenever one exists. Negative real
+    inputs with an odd index return a negative real root, as with :func:`cbrt`.
+    Negative real inputs with an even index and non-real complex inputs return
+    the principal complex root.
+
+    Example::
+
+        root(32; 5)
+        = 2
+
+        root(-32; 5)
+        = -2
+
+        root(-16; 2)
+        = 4i
+
+    The argument ``x`` may have a dimension. Its unit exponents are divided
+    by ``n``. For dimensioned inputs, ``n`` must not exceed 2147483647::
+
+        root(32 [m^5]; 5)
+        = 2 metre
+
+    ``root(x; 1)`` returns ``x`` unchanged. A zero, negative, fractional or
+    complex index is rejected.
+
+    Unlike ``x^(1/n)``, this function keeps odd roots of negative real inputs
+    real even when complex numbers are enabled.
+
+    .. seealso::
+       | :func:`sqrt` (square root), :func:`cbrt` (cube root)
+
+    .. versionadded:: 1.1
+
 .. function:: exp(x)
 
     Compute the natural exponential function.

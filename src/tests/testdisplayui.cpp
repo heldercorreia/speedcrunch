@@ -52,6 +52,7 @@
 #include <QFocusEvent>
 #include <QHeaderView>
 #include <QGlyphRun>
+#include <QGridLayout>
 #include <QHelpEvent>
 #include <QImage>
 #include <QLabel>
@@ -798,6 +799,8 @@ private slots:
     void dock_list_selected_row_keeps_primary_fill_while_hovered();
     void custom_keypad_action_stays_checked_after_dialog_accepts();
     void keypad_power_button_uses_exponent_label_but_inserts_caret();
+    void keypad_nth_root_button_inserts_root_data();
+    void keypad_nth_root_button_inserts_root();
     void keypad_zoom_round_trip_restores_button_sizes_data();
     void keypad_zoom_round_trip_restores_button_sizes();
     void keypad_fifty_percent_zoom_scales_and_restores_data();
@@ -2183,6 +2186,177 @@ void TestDisplayUi::keypad_power_button_uses_exponent_label_but_inserts_caret()
 
     QTest::mouseClick(powerButton, Qt::LeftButton);
     QTRY_COMPARE(editor->text(), QStringLiteral("2^"));
+}
+
+void TestDisplayUi::keypad_nth_root_button_inserts_root_data()
+{
+    QTest::addColumn<int>("layoutMode");
+    QTest::addColumn<bool>("custom");
+    QTest::newRow("scientific-wide") << int(Keypad::LayoutModeScientificWide) << false;
+    QTest::newRow("scientific-narrow") << int(Keypad::LayoutModeScientificNarrow) << false;
+    QTest::newRow("custom-wide") << int(Keypad::LayoutModeScientificWide) << true;
+    QTest::newRow("custom-narrow") << int(Keypad::LayoutModeScientificNarrow) << true;
+}
+
+void TestDisplayUi::keypad_nth_root_button_inserts_root()
+{
+    QFETCH(int, layoutMode);
+    QFETCH(bool, custom);
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    const auto oldCustomKeypad = settings->customKeypad;
+    const auto customGuard = qScopeGuard([&]() { settings->customKeypad = oldCustomKeypad; });
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    settings->keypadVisible = true;
+    settings->hasNumberFormatStyleSetting = true;
+
+    const auto layout = static_cast<Keypad::LayoutMode>(layoutMode);
+    const bool wide = layout == Keypad::LayoutModeScientificWide;
+    const QString rootLabel = QString::fromUtf8("ⁿ√");
+    int rows = 0;
+    int columns = 0;
+    const auto preset = Keypad::presetCustomButtons(layout, QLatin1Char('.'), &rows, &columns);
+    int rootButtonCount = 0;
+    int squareButtonCount = 0;
+    int separatorButtonCount = 0;
+    for (const auto& button : preset) {
+        QVERIFY(button.label != QString::fromUtf8("∛"));
+        QVERIFY(button.text != QStringLiteral("cbrt("));
+        QVERIFY(button.label != QStringLiteral("x"));
+        QVERIFY(button.label != QStringLiteral("x="));
+        if (button.label == QString::fromUtf8("x²")) {
+            ++squareButtonCount;
+            QCOMPARE(button.action, int(Settings::CustomKeypadActionInsertText));
+            QCOMPARE(button.text, QStringLiteral("^2"));
+        }
+        if (button.label == QStringLiteral(";")) {
+            ++separatorButtonCount;
+            QCOMPARE(button.action, int(Settings::CustomKeypadActionInsertText));
+            QCOMPARE(button.text, QStringLiteral(";"));
+        }
+        if (button.label != rootLabel)
+            continue;
+        ++rootButtonCount;
+        QCOMPARE(button.action, int(Settings::CustomKeypadActionInsertText));
+        QCOMPARE(button.text, QStringLiteral("root("));
+        QCOMPARE(button.row, wide ? 1 : 5);
+        QCOMPARE(button.column, wide ? 5 : 1);
+    }
+    QCOMPARE(rootButtonCount, 1);
+    QCOMPARE(squareButtonCount, 1);
+    QCOMPARE(separatorButtonCount, 1);
+
+    if (custom) {
+        settings->keypadMode = Settings::KeypadModeCustom;
+        settings->customKeypad.rows = rows;
+        settings->customKeypad.columns = columns;
+        settings->customKeypad.buttons.clear();
+        for (const auto& button : preset) {
+            settings->customKeypad.buttons.append({button.row, button.column, button.label,
+                button.text, static_cast<Settings::CustomKeypadButtonAction>(button.action)});
+        }
+    } else {
+        settings->keypadMode = wide ? Settings::KeypadModeScientificWide
+                                   : Settings::KeypadModeScientificNarrow;
+    }
+
+    MainWindow window;
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    Keypad* keypad = window.findChild<Keypad*>();
+    QVERIFY(keypad != nullptr);
+    const QStringList expectedRows = wide
+        ? QStringList{
+            QString::fromUtf8("7 8 9 ÷ √ x² E exp ⌧ ⌫"),
+            QString::fromUtf8("4 5 6 × xʸ ⁿ√ ln log10 π ans"),
+            QString::fromUtf8("1 2 3 − sin arcsin cos arccos ( )"),
+            QString::fromUtf8("0 . = + tan arctan mod ; % !")}
+        : QStringList{
+            QString::fromUtf8("7 8 9 ÷ ⌧"),
+            QString::fromUtf8("4 5 6 × ⌫"),
+            QString::fromUtf8("1 2 3 − ("),
+            QStringLiteral("0 . = + )"),
+            QString::fromUtf8("√ x² E exp π"),
+            QString::fromUtf8("xʸ ⁿ√ ln log10 ans"),
+            QStringLiteral("sin arcsin cos arccos mod"),
+            QStringLiteral("tan arctan % ! ;")};
+    QGridLayout* grid = qobject_cast<QGridLayout*>(keypad->layout());
+    QVERIFY(grid != nullptr);
+    QCOMPARE(rows, expectedRows.size());
+    QCOMPARE(columns, wide ? 10 : 5);
+    QCOMPARE(grid->count(), 40);
+    for (int row = 0; row < expectedRows.size(); ++row) {
+        const QStringList labels = expectedRows.at(row).split(QLatin1Char(' '));
+        QCOMPARE(labels.size(), columns);
+        for (int column = 0; column < columns; ++column) {
+            QLayoutItem* item = grid->itemAtPosition(row, column);
+            QVERIFY(item != nullptr);
+            QPushButton* button = qobject_cast<QPushButton*>(item->widget());
+            QVERIFY(button != nullptr);
+            const QString expectedLabel = labels.at(column) == QStringLiteral(".")
+                ? QString(settings->radixCharacter()) : labels.at(column);
+            QCOMPARE(button->text(), expectedLabel);
+            QVERIFY(button->isVisible());
+        }
+    }
+    QPushButton* rootButton = keypadButtonWithText(keypad, rootLabel);
+    QVERIFY(rootButton != nullptr);
+    QCOMPARE(keypadButtonWithText(keypad, QString::fromUtf8("∛")), nullptr);
+
+    if (!custom) {
+        const QPoint center = rootButton->rect().center();
+        QHelpEvent tooltipEvent(QEvent::ToolTip, center, rootButton->mapToGlobal(center));
+        QCoreApplication::sendEvent(rootButton, &tooltipEvent);
+        QFrame* popup = keypad->findChild<QFrame*>(QStringLiteral("keypadSummaryPopup"));
+        QTRY_VERIFY(popup != nullptr && popup->isVisible());
+        QLabel* label = popup->findChild<QLabel*>(QStringLiteral("keypadSummaryPopupLabel"));
+        QVERIFY(label != nullptr);
+        QCOMPARE(label->text(), Keypad::tr("Nth root"));
+    }
+
+    Editor* editor = window.findChild<Editor*>();
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    QVERIFY(editor != nullptr);
+    QVERIFY(display != nullptr);
+    editor->setText(QString());
+    editor->setAutoCompletionEnabled(false);
+    QTest::mouseClick(rootButton, Qt::LeftButton);
+    QCOMPARE(editor->text(), custom ? QStringLiteral("root()") : QStringLiteral("root("));
+    QCOMPARE(editor->cursorPosition(), 5);
+
+    const auto clickButton = [keypad](const QString& label) {
+        QTest::mouseClick(keypadButtonWithText(keypad, label), Qt::LeftButton);
+    };
+    clickButton(QStringLiteral("3"));
+    clickButton(QStringLiteral("2"));
+    clickButton(QStringLiteral(";"));
+    clickButton(QStringLiteral("5"));
+    if (!custom)
+        clickButton(QStringLiteral(")"));
+    QCOMPARE(editor->text(), QStringLiteral("root(32;5)"));
+    QPushButton* equalsButton = keypadButtonWithText(keypad, QStringLiteral("="));
+    QVERIFY(equalsButton != nullptr);
+    const int historySize = display->session()->historySize();
+    QTest::mouseClick(equalsButton, Qt::LeftButton);
+    QCOMPARE(display->session()->historySize(), historySize + 1);
+    const Quantity result = display->session()->historyEntryAtRef(historySize).result();
+    QVERIFY(result.numericValue().real == HNumber(2));
+    QVERIFY(result.numericValue().imag.isZero());
+
+    editor->setText(QString());
+    clickButton(QStringLiteral("7"));
+    clickButton(QString::fromUtf8("x²"));
+    QCOMPARE(editor->text(), QString::fromUtf8("7²"));
+    clickButton(QStringLiteral("="));
+    QCOMPARE(display->session()->historySize(), historySize + 2);
+    const Quantity squared = display->session()->historyEntryAtRef(historySize + 1).result();
+    // Complex-mode powers can leave rounding noise beyond the displayed digits.
+    QVERIFY2(HMath::abs(squared.numericValue().real - HNumber(49)) < HNumber("1e-50"),
+             qPrintable(HMath::format(squared.numericValue().real,
+                                     HNumber::Format::Fixed() + HNumber::Format::Precision(70))));
+    QVERIFY(squared.numericValue().imag.isZero());
 }
 
 void TestDisplayUi::keypad_input_stays_in_own_window_data()

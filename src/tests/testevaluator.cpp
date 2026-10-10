@@ -2928,6 +2928,89 @@ void test_rational_format()
     Evaluator::instance()->initializeAngleUnits();
 }
 
+void test_function_root()
+{
+    Settings* settings = Settings::instance();
+    const bool oldComplexNumbers = settings->complexNumbers;
+    const bool oldComplexMode = DMath::complexMode;
+
+    for (const bool complex : {false, true}) {
+        settings->complexNumbers = complex;
+        DMath::complexMode = complex;
+        eval->initializeBuiltInVariables();
+
+        CHECK_EVAL("root(32; 5)", "2");
+        CHECK_EVAL("ROOT(81; 4)", "3");
+        CHECK_EVAL("root(-32; 5)", "-2");
+        CHECK_EVAL("root(-128; 7)", "-2");
+        CHECK_EVAL("root(0.00032; 5)", "0.2");
+        CHECK_EVAL("root(-0.00032; 5)", "-0.2");
+        CHECK_EVAL("root(0; 5)", "0");
+        CHECK_EVAL("root(0; 2)", "0");
+        CHECK_EVAL("root(-32; 1)", "-32");
+        CHECK_EVAL("root(81; 2)", "9");
+        CHECK_EVAL("root(-27; 3)", "-3");
+        CHECK_EVAL("root(1; 2147483648)", "1");
+        CHECK_EVAL("root(-1; 2147483649)", "-1");
+        CHECK_EVAL("root(32 [m^5]; 5)/(2 [m])", "1");
+        CHECK_EVAL("root(-32 [m^5]; 5)/(-2 [m])", "1");
+        CHECK_EVAL("root(81 [m^4]; 4)/(3 [m])", "1");
+        CHECK_EVAL("root(4 [m^2]; 2)/(2 [m])", "1");
+        CHECK_EVAL("root(-27 [m^3]; 3)/(-3 [m])", "1");
+        CHECK_EVAL("root(7 [cm]; 1)/(7 [cm])", "1");
+        CHECK_EVAL("root(32 [cm^5]; 5)/(2 [cm])", "1");
+        CHECK_EVAL("root(32 [m^5/s^5]; 5)/(2 [m/s])", "1");
+        CHECK_EVAL("root(2; 5)^5", "2");
+
+        CHECK_EVAL_FAIL("root(32)");
+        CHECK_EVAL_FAIL("root(32; 5; 1)");
+        CHECK_EVAL_FAIL("root(32; 0)");
+        CHECK_EVAL_FAIL("root(32; -5)");
+        CHECK_EVAL_FAIL("root(32; 2.5)");
+        CHECK_EVAL_FAIL("root(32; 5 [m])");
+        CHECK_EVAL_FAIL("root(1 [m]; 2147483648)");
+        CHECK_EVAL_FAIL("root({1; 32}; 5)");
+        CHECK_EVAL_FAIL("root(32; {1; 5})");
+
+        if (complex) {
+            CHECK_EVAL("root(-16; 2)", "4i");
+            CHECK_EVAL("root(-1; 2)", "1i");
+            CHECK_EVAL("root(-81; 2)", "9i");
+            CHECK_EVAL("root(-0.25; 2)", "0.5i");
+            CHECK_EVAL("root(-1; 4)", "0.7071067811865475244+0.7071067811865475244i");
+            CHECK_EVAL("root(-64; 6)", "1.73205080756887729353+1i");
+            CHECK_EVAL("root(-256; 8)", "1.84775906502257351226+0.76536686473017954346i");
+            CHECK_EVAL("root(3+4i; 2)", "2+1i");
+            CHECK_EVAL("root(3-4i; 2)", "2-1i");
+            CHECK_EVAL("root(-3+4i; 2)", "1+2i");
+            CHECK_EVAL("root(-3-4i; 2)", "1-2i");
+            CHECK_EVAL("root(-8i; 3)", "1.73205080756887729353-1i");
+            CHECK_EVAL("root(16i; 4)", "1.84775906502257351226+0.76536686473017954346i");
+            CHECK_EVAL("root(-16i; 4)", "1.84775906502257351226-0.76536686473017954346i");
+            CHECK_EVAL("root(32i; 5)", "1.90211303259030714423+0.6180339887498948482i");
+            CHECK_EVAL("root(-16 [m^2]; 2)", "4i metre");
+            CHECK_EVAL("root((3+4i) [m^2]; 2)", "(2+1i) metre");
+            CHECK_EVAL("root(-1; 2)+root(-81; 2)", "10i");
+            CHECK_EVAL("2*root(-16; 2)", "8i");
+            CHECK_EVAL("root(-16; 4)", "1.4142135623730950488+1.4142135623730950488i");
+            CHECK_EVAL("root(8i; 3)", "1.73205080756887729353+1i");
+            CHECK_EVAL("root(1+i; 5)^5", "1+1i");
+            CHECK_EVAL("phase(root(1+i; 5))*5/phase(1+i)", "1");
+            CHECK_EVAL("root(1+i; 1)", "1+1i");
+            CHECK_EVAL("root(-16 [m^4]; 4)/(root(-16; 4)*1 [m])", "1");
+            CHECK_EVAL_FAIL("root(32; i)");
+            CHECK_EVAL_FAIL("root(32; 5+i)");
+        } else {
+            CHECK_EVAL_FAIL("root(-16; 2)");
+            CHECK_EVAL_FAIL("root(-16; 4)");
+        }
+    }
+
+    settings->complexNumbers = oldComplexNumbers;
+    DMath::complexMode = oldComplexMode;
+    eval->initializeBuiltInVariables();
+}
+
 void test_function_basic()
 {
     CHECK_EVAL("ABS(0)", "0");
@@ -10505,6 +10588,7 @@ int main(int argc, char* argv[])
     test_rational_format();
 
     test_function_basic();
+    test_function_root();
     test_function_trig();
     test_function_tanh_range();
     test_function_stat();
