@@ -3505,6 +3505,7 @@ void MainWindow::createActions()
     m_actions.settingsAngleUnitTurn = new QAction(this);
     m_actions.settingsAngleUnitRevolution = new QAction(this);
     m_actions.settingsBehaviorAlwaysOnTop = new QAction(this);
+    m_actions.settingsOpenPrivateTabOnStartup = new QAction(this);
     m_actions.settingsBehaviorAutoAns = new QAction(this);
     m_actions.settingsBehaviorAutoCompletion = new QAction(this);
     m_actions.settingsBehaviorAutoCompletionBuiltInFunctions = new QAction(this);
@@ -3598,6 +3599,7 @@ void MainWindow::createActions()
     m_actions.settingsAngleUnitTurn->setCheckable(true);
     m_actions.settingsAngleUnitRevolution->setCheckable(true);
     m_actions.settingsBehaviorAlwaysOnTop->setCheckable(true);
+    m_actions.settingsOpenPrivateTabOnStartup->setCheckable(true);
     m_actions.settingsBehaviorAutoAns->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletion->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletionBuiltInFunctions->setCheckable(true);
@@ -3935,6 +3937,9 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorEmptyHistoryHint->setStatusTip(MainWindow::tr("When history is empty, show a hint in the status area."));
     m_actions.settingsBehaviorPartialResults->setText(MainWindow::tr("Show Live Result &Preview"));
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setText(MainWindow::tr("Save &Window Position on Exit"));
+    m_actions.settingsOpenPrivateTabOnStartup->setText(tr("Open a Private Tab on Startup"));
+    m_actions.settingsOpenPrivateTabOnStartup->setToolTip(tr("Open and focus a new private tab whenever SpeedCrunch starts."));
+    m_actions.settingsOpenPrivateTabOnStartup->setStatusTip(m_actions.settingsOpenPrivateTabOnStartup->toolTip());
     m_actions.settingsBehaviorSyntaxHighlighting->setText(MainWindow::tr("Syntax &Highlighting"));
     m_actions.settingsEditingInputDigitGrouping->setText(MainWindow::tr("Group Digits in &Input"));
     m_actions.settingsEditingInputDigitGrouping->setToolTip(MainWindow::tr("Group input digits using the selected number format."));
@@ -4315,6 +4320,7 @@ void MainWindow::createMenus()
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitRevolution);
 
     m_menus.window = m_menus.settings->addMenu("");
+    m_menus.window->addAction(m_actions.settingsOpenPrivateTabOnStartup);
     m_menus.window->addAction(m_actions.settingsBehaviorSaveWindowPositionOnExit);
     if (!isWaylandPlatform())
         m_menus.window->addAction(m_actions.settingsBehaviorAlwaysOnTop);
@@ -7439,6 +7445,8 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsBehaviorPartialResults, SIGNAL(toggled(bool)), SLOT(setAutoCalcEnabled(bool)));
     connect(m_actions.settingsBehaviorHistorySizeLimit, SIGNAL(triggered()), SLOT(setHistorySizeLimit()));
     connect(m_actions.settingsBehaviorSaveWindowPositionOnExit, SIGNAL(toggled(bool)), SLOT(setWindowPositionSaveEnabled(bool)));
+    connect(m_actions.settingsOpenPrivateTabOnStartup, &QAction::toggled,
+            this, &MainWindow::setOpenPrivateTabOnStartupEnabled);
     connect(m_actions.settingsBehaviorSyntaxHighlighting, SIGNAL(toggled(bool)), SLOT(setSyntaxHighlightingEnabled(bool)));
     connect(m_actions.settingsEditingInputDigitGrouping, &QAction::toggled,
             this, &MainWindow::setInputDigitGroupingEnabled);
@@ -7784,6 +7792,7 @@ void MainWindow::applySettings(bool initializing)
     }
     m_actions.settingsBehaviorEmptyHistoryHint->setChecked(m_settings->showEmptyHistoryHint);
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setChecked(m_settings->windowPositionSave);
+    m_actions.settingsOpenPrivateTabOnStartup->setChecked(m_settings->openPrivateTabOnStartup);
 
 
     checkInitialResultFormat();
@@ -8556,6 +8565,12 @@ MainWindow::MainWindow(bool restorePreviousSession)
 
     m_translator = 0;
     m_settings = Settings::instance();
+    m_startupPrivateTabPending = restorePreviousSession && this == primaryMainWindow()
+        && !g_restoringExtraWindows && m_settings->openPrivateTabOnStartup;
+    if (g_restoringExtraWindows && primaryMainWindow()
+        && primaryMainWindow()->m_startupPrivateTabPending) {
+        setAttribute(Qt::WA_ShowWithoutActivating);
+    }
     MenuStyle::install();
     m_keypadMode = m_settings->keypadMode;
     m_keypadZoomPercent = m_settings->keypadZoomPercent;
@@ -8760,7 +8775,32 @@ void MainWindow::showNewPrivateSession()
     m_loadedSessions.insert(session->name(), session);
     applyUserDefinitions();
     activateSession(session);
-    saveSessionLayout(false);
+    // Startup must keep the saved workspace intact while other windows restore.
+    if (!m_startupPrivateTabPending)
+        saveSessionLayout(false);
+}
+
+void MainWindow::finishStartupSessionRestore(bool restoredSession)
+{
+    if (!m_startupPrivateTabPending)
+        return;
+    const bool emptyUntitledSession = untitledSessionNumber(m_session->name()) > 0
+        && !sessionHasPersistableContent(m_session)
+        && m_widgets.editor->text().trimmed().isEmpty();
+    if (restoredSession && !emptyUntitledSession) {
+        showNewPrivateSession();
+    } else {
+        // Reuse a blank tab instead of opening an extra empty ordinary session.
+        m_session->setPrivate(true);
+        renameLoadedSession(m_session, firstAvailableSessionNameAcrossWindows(true));
+        applyUserDefinitions();
+    }
+    m_startupPrivateTabPending = false;
+    if (isVisible()) {
+        raise();
+        activateWindow();
+    }
+    m_widgets.editor->setFocus();
 }
 
 void MainWindow::renameLoadedSession(Session* session, const QString& name)
@@ -10867,6 +10907,20 @@ void MainWindow::setWindowPositionSaveEnabled(bool b)
     m_settings->windowPositionSave = b;
 }
 
+void MainWindow::setOpenPrivateTabOnStartupEnabled(bool enabled)
+{
+    if (m_settings->openPrivateTabOnStartup == enabled)
+        return;
+    m_settings->openPrivateTabOnStartup = enabled;
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (!window)
+            continue;
+        const QSignalBlocker blocker(window->m_actions.settingsOpenPrivateTabOnStartup);
+        window->m_actions.settingsOpenPrivateTabOnStartup->setChecked(enabled);
+    }
+    m_settings->save();
+}
+
 void MainWindow::setAutoCompletionEnabled(bool b)
 {
     m_settings->autoCompletion = b;
@@ -12628,8 +12682,10 @@ void MainWindow::restoreSession(bool restoreHistory) {
         QMetaObject::invokeMethod(windowGuard.data(), [windowGuard, ok, json, name, restoreHistory]() mutable {
             if (!windowGuard)
                 return;
-            if (!ok)
+            if (!ok) {
+                windowGuard->finishStartupSessionRestore(false);
                 return;
+            }
 
             Session* loadedSession = new Session();
             loadedSession->deSerialize(json, false);
@@ -12655,6 +12711,7 @@ void MainWindow::restoreSession(bool restoreHistory) {
             emit window->unitsChanged();
             window->restoreEditorTextFromCurrentSession();
             window->m_conditions.autoAns = restoreHistory && !loadedSession->historyIsEmpty();
+            window->finishStartupSessionRestore(true);
         }, Qt::QueuedConnection);
     });
     {
@@ -12829,8 +12886,10 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
     const QJsonArray windows = layout.value(QStringLiteral("windows")).toArray();
     const QString rootType = root.value(QStringLiteral("type")).toString();
 
-    if (sessionJsons.isEmpty())
+    if (sessionJsons.isEmpty()) {
+        finishStartupSessionRestore(false);
         return;
+    }
 
     QHash<QString, Session*> restoredSessions;
     for (auto it = sessionJsons.constBegin(); it != sessionJsons.constEnd(); ++it) {
@@ -13097,6 +13156,7 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
         }
         g_restoringExtraWindows = false;
     }
+    finishStartupSessionRestore(true);
 }
 
 void MainWindow::restoreWindowUiState(const QJsonObject& window)
@@ -13174,7 +13234,19 @@ void MainWindow::showRestoredWindow(const QByteArray& geometry)
         QTimer::singleShot(0, this, [this, geometry]() {
             if (!geometry.isEmpty())
                 restoreGeometry(geometry);
+            const bool preserveStartupFocus = testAttribute(Qt::WA_ShowWithoutActivating);
             show();
+            setAttribute(Qt::WA_ShowWithoutActivating, false);
+            if (preserveStartupFocus && primaryMainWindow()) {
+                MainWindow* startupWindow = primaryMainWindow();
+                QTimer::singleShot(0, startupWindow, [startupWindow]() {
+                    if (!startupWindow->m_session || !startupWindow->m_session->isPrivate())
+                        return;
+                    startupWindow->raise();
+                    startupWindow->activateWindow();
+                    startupWindow->m_widgets.editor->setFocus();
+                });
+            }
         });
     });
 }

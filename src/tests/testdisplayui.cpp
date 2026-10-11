@@ -215,6 +215,24 @@ void writeFile(const QString& filePath, const QByteArray& data)
     QCOMPARE(file.write(data), qint64(data.size()));
 }
 
+QJsonObject startupSessionWindow(const QString& name, const QString& id)
+{
+    const QJsonObject tab {
+        { QStringLiteral("name"), name },
+        { QStringLiteral("editor"), QJsonObject {
+            { QStringLiteral("text"), QStringLiteral("saved draft") }
+        } }
+    };
+    return QJsonObject {
+        { QStringLiteral("id"), id },
+        { QStringLiteral("root"), QJsonObject {
+            { QStringLiteral("type"), QStringLiteral("tabs") },
+            { QStringLiteral("active"), name },
+            { QStringLiteral("tabs"), QJsonArray { tab } }
+        } }
+    };
+}
+
 QWidget* paneWidgetForDisplay(ResultDisplay* display)
 {
     QWidget* widget = display;
@@ -913,6 +931,14 @@ private slots:
     void private_tab_shortcut_opens_in_active_pane_data();
     void private_tab_shortcut_opens_in_active_pane();
     void private_only_workspace_restores_with_a_fresh_session();
+    void startup_private_tab_setting_is_saved_and_reset();
+    void startup_private_tab_reuses_empty_untitled_session_data();
+    void startup_private_tab_reuses_empty_untitled_session();
+    void startup_private_tab_without_saved_sessions_data();
+    void startup_private_tab_without_saved_sessions();
+    void startup_private_tab_restores_saved_sessions_data();
+    void startup_private_tab_restores_saved_sessions();
+    void startup_private_tab_is_opened_once_across_restored_windows();
     void focused_dock_search_survives_window_reactivation_focus_replay();
     void focusing_loaded_pane_preserves_its_current_scroll_position();
     void persisting_layout_captures_visible_scroll_positions_for_all_panes();
@@ -8367,6 +8393,364 @@ void TestDisplayUi::private_only_workspace_restores_with_a_fresh_session()
         QVERIFY(display->session()->historyIsEmpty());
     }
     QVERIFY(restored.findChild<Editor*>()->text().isEmpty());
+}
+
+void TestDisplayUi::startup_private_tab_setting_is_saved_and_reset()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    const auto resetSettings = qScopeGuard([]() { UiTestFixture::resetSettings(); });
+    Settings* settings = Settings::instance();
+    QVERIFY(!settings->openPrivateTabOnStartup);
+    MainWindow first(false);
+    MainWindow second(false);
+    const auto startupAction = [](MainWindow& window) -> QAction* {
+        QMenu* menu = menuWithTitle(window.menuBar(), QStringLiteral("Se&ttings"));
+        QMenu* windowMenu = menu ? directSubmenuWithTitle(menu, QStringLiteral("&Window")) : nullptr;
+        return windowMenu ? directMenuActionWithText(windowMenu, QStringLiteral("Open a Private Tab on Startup")) : nullptr;
+    };
+    QAction* firstAction = startupAction(first);
+    QAction* secondAction = startupAction(second);
+    QVERIFY(firstAction);
+    QVERIFY(secondAction);
+    QVERIFY(firstAction->isCheckable());
+    QVERIFY(!firstAction->isChecked());
+    QCOMPARE(firstAction->toolTip(), QStringLiteral("Open and focus a new private tab whenever SpeedCrunch starts."));
+    firstAction->trigger();
+    QVERIFY(settings->openPrivateTabOnStartup);
+    QVERIFY(secondAction->isChecked());
+    QVERIFY(!first.findChild<ResultDisplay*>()->session()->isPrivate());
+    QVERIFY(!second.findChild<ResultDisplay*>()->session()->isPrivate());
+    settings->openPrivateTabOnStartup = false;
+    settings->load();
+    QVERIFY(settings->openPrivateTabOnStartup);
+    MainWindow another(false);
+    QVERIFY(startupAction(another)->isChecked());
+    QVERIFY(!another.findChild<ResultDisplay*>()->session()->isPrivate());
+
+    secondAction->trigger();
+    QVERIFY(!firstAction->isChecked());
+    QVERIFY(!startupAction(another)->isChecked());
+    settings->load();
+    QVERIFY(!settings->openPrivateTabOnStartup);
+    firstAction->trigger();
+    QTimer::singleShot(0, &first, []() {
+        auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        QVERIFY(dialog);
+        dialog->done(QMessageBox::Yes);
+    });
+    QVERIFY(QMetaObject::invokeMethod(&first, "resetAllSettings"));
+    QVERIFY(!settings->openPrivateTabOnStartup);
+    QVERIFY(!firstAction->isChecked());
+    QVERIFY(!secondAction->isChecked());
+    QVERIFY(!startupAction(another)->isChecked());
+    settings->load();
+    QVERIFY(!settings->openPrivateTabOnStartup);
+}
+
+void TestDisplayUi::startup_private_tab_reuses_empty_untitled_session_data()
+{
+    QTest::addColumn<QString>("content");
+    QTest::addColumn<bool>("enabled");
+    QTest::newRow("empty-enabled") << QStringLiteral("empty") << true;
+    QTest::newRow("empty-disabled") << QStringLiteral("empty") << false;
+    QTest::newRow("empty-legacy") << QStringLiteral("legacy") << true;
+    QTest::newRow("global-definitions") << QStringLiteral("global") << true;
+    QTest::newRow("history") << QStringLiteral("history") << true;
+    QTest::newRow("draft") << QStringLiteral("draft") << true;
+    QTest::newRow("variable") << QStringLiteral("variable") << true;
+    QTest::newRow("function") << QStringLiteral("function") << true;
+    QTest::newRow("unit") << QStringLiteral("unit") << true;
+    QTest::newRow("named-empty-session") << QStringLiteral("named") << true;
+}
+
+void TestDisplayUi::startup_private_tab_reuses_empty_untitled_session()
+{
+    QFETCH(QString, content);
+    QFETCH(bool, enabled);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    const auto resetSettings = qScopeGuard([]() { UiTestFixture::resetSettings(); });
+    Settings* settings = Settings::instance();
+    settings->openPrivateTabOnStartup = enabled;
+    const bool legacy = content == QLatin1String("legacy");
+    const QString name = content == QLatin1String("named")
+        ? QStringLiteral("Saved empty session")
+        : (legacy ? QStringLiteral("Untitled-1") : QStringLiteral("Untitled-9"));
+    Session savedSession;
+    savedSession.setName(name);
+    if (content == QLatin1String("history"))
+        savedSession.addHistoryEntry(HistoryEntry(QStringLiteral("6*7"), Quantity(42)));
+    else if (content == QLatin1String("variable"))
+        savedSession.addVariable(Variable(QStringLiteral("startupvalue"), Quantity(42)));
+    else if (content == QLatin1String("function"))
+        savedSession.addUserFunction(UserFunction(QStringLiteral("startupfunction"), {QStringLiteral("x")}, QStringLiteral("x+1")));
+    else if (content == QLatin1String("unit"))
+        savedSession.addUserUnit(UserUnit(QStringLiteral("startupunit"), Quantity(42)));
+    else if (content == QLatin1String("global")) {
+        settings->startupUserDefinitions = QStringLiteral("startupglobal=42");
+        UserDefinitions::saveFrom(settings);
+    }
+    QJsonObject json;
+    savedSession.serialize(json);
+    const QString path = legacy
+        ? QDir(Settings::getDataPath()).filePath(QStringLiteral("history.json")) : storage.path(name);
+    QDir().mkpath(QFileInfo(path).path());
+    writeFile(path, QJsonDocument(json).toJson());
+    if (!legacy) {
+        QJsonObject window = startupSessionWindow(name, QStringLiteral("saved"));
+        QJsonObject root = window.value(QStringLiteral("root")).toObject();
+        QJsonObject tab = root.value(QStringLiteral("tabs")).toArray().first().toObject();
+        tab.insert(QStringLiteral("editor"), QJsonObject {
+            { QStringLiteral("text"), content == QLatin1String("draft") ? QStringLiteral("unfinished input") : QString() }
+        });
+        root.insert(QStringLiteral("tabs"), QJsonArray { tab });
+        window.insert(QStringLiteral("root"), root);
+        settings->sessionLayoutJson = QString::fromUtf8(QJsonDocument(QJsonObject {
+            { QStringLiteral("scheme"), 1 },
+            { QStringLiteral("kind"), QStringLiteral("session-layout") },
+            { QStringLiteral("windows"), QJsonArray { window } }
+        }).toJson(QJsonDocument::Compact));
+    }
+    MainWindow window;
+    window.show();
+    if (enabled)
+        QTRY_VERIFY(window.findChild<ResultDisplay*>()->session()->isPrivate());
+    else
+        QTRY_COMPARE(window.findChild<ResultDisplay*>()->session()->name(), name);
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    QTabBar* tabs = tabBarForDisplay(display);
+    const bool keepRegular = content != QLatin1String("empty") && content != QLatin1String("legacy")
+        && content != QLatin1String("global");
+    QCOMPARE(tabs->count(), enabled && keepRegular ? 2 : 1);
+    QTRY_VERIFY(window.findChild<Editor*>()->hasFocus());
+    if (enabled) {
+        QVERIFY(display->session()->historyIsEmpty());
+        if (content == QLatin1String("global"))
+            QVERIFY(display->session()->hasVariable(QStringLiteral("startupglobal")));
+    }
+    if (keepRegular || !enabled) {
+        tabs->setCurrentIndex(0);
+        QCOMPARE(display->session()->name(), name);
+        QVERIFY(!display->session()->isPrivate());
+        if (content == QLatin1String("history"))
+            QCOMPARE(display->session()->historySize(), 1);
+        else if (content == QLatin1String("draft"))
+            QCOMPARE(window.findChild<Editor*>()->text(), QStringLiteral("unfinished input"));
+        else if (content == QLatin1String("variable"))
+            QVERIFY(display->session()->hasVariable(QStringLiteral("startupvalue")));
+        else if (content == QLatin1String("function"))
+            QVERIFY(display->session()->hasUserFunction(QStringLiteral("startupfunction")));
+        else if (content == QLatin1String("unit"))
+            QVERIFY(display->session()->hasUserUnit(QStringLiteral("startupunit")));
+    } else {
+        QVERIFY(tabs->isHidden());
+    }
+    QVERIFY(QFileInfo::exists(storage.path(name)));
+    QFile saved(storage.path(name));
+    QVERIFY(saved.open(QIODevice::ReadOnly));
+    QCOMPARE(QJsonDocument::fromJson(saved.readAll()).object(), json);
+}
+
+void TestDisplayUi::startup_private_tab_without_saved_sessions_data()
+{
+    QTest::addColumn<QString>("savedLayout");
+    QTest::newRow("fresh") << QString();
+    QTest::newRow("invalid-layout") << QStringLiteral("invalid JSON");
+    QTest::newRow("private-only-workspace") << QStringLiteral(
+        "{\"scheme\":1,\"kind\":\"session-layout\",\"windows\":[]}");
+    const QJsonObject window = startupSessionWindow(QStringLiteral("Missing"), QStringLiteral("saved"));
+    QTest::newRow("missing-session-file") << QString::fromUtf8(QJsonDocument(QJsonObject {
+        { QStringLiteral("scheme"), 1 },
+        { QStringLiteral("kind"), QStringLiteral("session-layout") },
+        { QStringLiteral("windows"), QJsonArray { window } }
+    }).toJson(QJsonDocument::Compact));
+}
+
+void TestDisplayUi::startup_private_tab_without_saved_sessions()
+{
+    QFETCH(QString, savedLayout);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    const auto resetSettings = qScopeGuard([]() { UiTestFixture::resetSettings(); });
+    Settings* settings = Settings::instance();
+    settings->openPrivateTabOnStartup = true;
+    settings->sessionLayoutJson = savedLayout;
+    {
+        MainWindow window;
+        window.show();
+        ResultDisplay* display = window.findChild<ResultDisplay*>();
+        QTRY_VERIFY(display->session()->isPrivate());
+        QTabBar* tabs = tabBarForDisplay(display);
+        QCOMPARE(tabs->count(), 1);
+        QVERIFY(tabs->isHidden());
+        Editor* editor = window.findChild<Editor*>();
+        QTRY_VERIFY(editor->hasFocus());
+        QVERIFY(display->session()->historyIsEmpty());
+        QVERIFY(editor->text().isEmpty());
+        editor->setText(QStringLiteral("startupsecret = 7654321"));
+        QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
+        editor->setText(QStringLiteral("unfinished startup secret"));
+        window.persistSessionAndSettingsForShutdown();
+        QVERIFY(!QFileInfo::exists(storage.path(display->session()->name())));
+        QVERIFY(!QFileInfo::exists(storage.path(QStringLiteral("Untitled-1"))));
+        QVERIFY(!settings->sessionLayoutJson.contains(QStringLiteral("startupsecret")));
+        QVERIFY(!settings->sessionLayoutJson.contains(QStringLiteral("unfinished startup secret")));
+    }
+    MainWindow restarted;
+    restarted.show();
+    ResultDisplay* display = restarted.findChild<ResultDisplay*>();
+    QTRY_VERIFY(display->session()->isPrivate());
+    QCOMPARE(tabBarForDisplay(display)->count(), 1);
+    QVERIFY(display->session()->historyIsEmpty());
+    QVERIFY(restarted.findChild<Editor*>()->text().isEmpty());
+}
+
+void TestDisplayUi::startup_private_tab_restores_saved_sessions_data()
+{
+    QTest::addColumn<QString>("layoutType");
+    QTest::addColumn<bool>("enabled");
+    QTest::newRow("legacy-enabled") << QStringLiteral("legacy") << true;
+    QTest::newRow("legacy-disabled") << QStringLiteral("legacy") << false;
+    QTest::newRow("tabs-enabled") << QStringLiteral("tabs") << true;
+    QTest::newRow("tabs-disabled") << QStringLiteral("tabs") << false;
+    QTest::newRow("split-enabled") << QStringLiteral("split") << true;
+    QTest::newRow("split-disabled") << QStringLiteral("split") << false;
+}
+
+void TestDisplayUi::startup_private_tab_restores_saved_sessions()
+{
+    QFETCH(QString, layoutType);
+    QFETCH(bool, enabled);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    const auto resetSettings = qScopeGuard([]() { UiTestFixture::resetSettings(); });
+    Settings* settings = Settings::instance();
+    settings->openPrivateTabOnStartup = enabled;
+    const bool legacy = layoutType == QLatin1String("legacy");
+    const QString activeName = legacy ? QStringLiteral("Untitled-1") : QStringLiteral("Saved-2");
+    const QString firstPath = legacy
+        ? QDir(Settings::getDataPath()).filePath(QStringLiteral("history.json"))
+        : storage.path(QStringLiteral("Untitled-1"));
+    QDir().mkpath(QFileInfo(firstPath).path());
+    writeFile(firstPath, QJsonDocument(sessionJson(QStringLiteral("Untitled-1"))).toJson());
+    if (!legacy) {
+        writeFile(storage.path(activeName), QJsonDocument(sessionJson(activeName)).toJson());
+        QJsonObject window = startupSessionWindow(activeName, QStringLiteral("saved"));
+        QJsonObject root = window.value(QStringLiteral("root")).toObject();
+        QJsonObject firstPane = startupSessionWindow(QStringLiteral("Untitled-1"), QString()).value(QStringLiteral("root")).toObject();
+        if (layoutType == QLatin1String("split")) {
+            firstPane.insert(QStringLiteral("type"), QStringLiteral("pane"));
+            QJsonObject secondPane = root;
+            secondPane.insert(QStringLiteral("type"), QStringLiteral("pane"));
+            root.insert(QStringLiteral("type"), QStringLiteral("split"));
+            root.insert(QStringLiteral("orientation"), QStringLiteral("horizontal"));
+            root.insert(QStringLiteral("children"), QJsonArray { firstPane, secondPane });
+        } else {
+            root.insert(QStringLiteral("tabs"), QJsonArray {
+                firstPane.value(QStringLiteral("tabs")).toArray().first(),
+                root.value(QStringLiteral("tabs")).toArray().first()
+            });
+        }
+        window.insert(QStringLiteral("root"), root);
+        settings->sessionLayoutJson = QString::fromUtf8(QJsonDocument(QJsonObject {
+            { QStringLiteral("scheme"), 1 },
+            { QStringLiteral("kind"), QStringLiteral("session-layout") },
+            { QStringLiteral("activeWindow"), QStringLiteral("saved") },
+            { QStringLiteral("windows"), QJsonArray { window } }
+        }).toJson(QJsonDocument::Compact));
+    }
+    MainWindow window;
+    window.show();
+    const auto activeDisplay = [&window]() -> ResultDisplay* {
+        for (ResultDisplay* display : window.findChildren<ResultDisplay*>()) {
+            Editor* editor = paneWidgetForDisplay(display)->findChild<Editor*>();
+            if (editor && editor->hasFocus())
+                return display;
+        }
+        return nullptr;
+    };
+    QTRY_VERIFY(activeDisplay());
+    QTRY_COMPARE(activeDisplay()->session()->isPrivate(), enabled);
+    if (!enabled) {
+        QTRY_COMPARE(activeDisplay()->session()->name(), activeName);
+        QTRY_COMPARE(activeDisplay()->session()->historySize(), 1);
+    }
+    ResultDisplay* display = activeDisplay();
+    QTabBar* tabs = tabBarForDisplay(display);
+    QCOMPARE(tabs->count(), (legacy || layoutType == QLatin1String("split") ? 1 : 2) + (enabled ? 1 : 0));
+    if (enabled) {
+        QVERIFY(display->session()->historyIsEmpty());
+        QCOMPARE(window.findChildren<ResultDisplay*>().size(), layoutType == QLatin1String("split") ? 2 : 1);
+        int ordinaryIndex = -1;
+        for (int i = 0; i < tabs->count(); ++i) {
+            if (tabs->tabText(i) == activeName)
+                ordinaryIndex = i;
+        }
+        QVERIFY(ordinaryIndex >= 0);
+        tabs->setCurrentIndex(ordinaryIndex);
+    }
+    QCOMPARE(display->session()->name(), activeName);
+    QCOMPARE(display->session()->historySize(), 1);
+    Editor* editor = paneWidgetForDisplay(display)->findChild<Editor*>();
+    QCOMPARE(editor->text(), legacy ? QString() : QStringLiteral("saved draft"));
+    window.persistSessionAndSettingsForShutdown();
+    QVERIFY(!settings->sessionLayoutJson.contains(QStringLiteral("Private-")));
+    QVERIFY(settings->sessionLayoutJson.contains(activeName));
+}
+
+void TestDisplayUi::startup_private_tab_is_opened_once_across_restored_windows()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    const auto resetSettings = qScopeGuard([]() { UiTestFixture::resetSettings(); });
+    Settings* settings = Settings::instance();
+    settings->openPrivateTabOnStartup = true;
+    QDir().mkpath(QFileInfo(storage.path(QStringLiteral("Saved-First"))).path());
+    for (const QString& name : {QStringLiteral("Saved-First"), QStringLiteral("Saved-Active")})
+        writeFile(storage.path(name), QJsonDocument(sessionJson(name)).toJson());
+    settings->sessionLayoutJson = QString::fromUtf8(QJsonDocument(QJsonObject {
+        { QStringLiteral("scheme"), 1 },
+        { QStringLiteral("kind"), QStringLiteral("session-layout") },
+        { QStringLiteral("activeWindow"), QStringLiteral("active") },
+        { QStringLiteral("windows"), QJsonArray {
+            startupSessionWindow(QStringLiteral("Saved-First"), QStringLiteral("first")),
+            startupSessionWindow(QStringLiteral("Saved-Active"), QStringLiteral("active"))
+        } }
+    }).toJson(QJsonDocument::Compact));
+    MainWindow window;
+    const auto cleanupWindows = qScopeGuard([&window]() {
+        for (MainWindow* other : topLevelMainWindows()) {
+            if (other != &window)
+                delete other;
+        }
+    });
+    window.show();
+    QTRY_COMPARE(topLevelMainWindows().size(), 2);
+    MainWindow* other = nullptr;
+    for (MainWindow* candidate : topLevelMainWindows()) {
+        if (candidate != &window)
+            other = candidate;
+    }
+    QVERIFY(other);
+    QTRY_COMPARE(other->findChild<ResultDisplay*>()->session()->name(), QStringLiteral("Saved-First"));
+    QTRY_VERIFY(other->isVisible());
+    QTRY_VERIFY(window.findChild<ResultDisplay*>()->session()->isPrivate());
+    QCOMPARE(tabBarForDisplay(window.findChild<ResultDisplay*>())->count(), 2);
+    QCOMPARE(tabBarForDisplay(other->findChild<ResultDisplay*>())->count(), 1);
+    QVERIFY(!other->findChild<ResultDisplay*>()->session()->isPrivate());
+    QCOMPARE(other->findChild<Editor*>()->text(), QStringLiteral("saved draft"));
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&window));
+    QTRY_VERIFY(window.findChild<Editor*>()->hasFocus());
+    QVERIFY(settings->sessionLayoutJson.contains(QStringLiteral("Saved-Active")));
+    QVERIFY(settings->sessionLayoutJson.contains(QStringLiteral("Saved-First")));
+    QVERIFY(settings->sessionLayoutJson.contains(QStringLiteral("saved draft")));
+    window.persistSessionAndSettingsForShutdown();
+    const QJsonArray windows = QJsonDocument::fromJson(settings->sessionLayoutJson.toUtf8()).object().value(QStringLiteral("windows")).toArray();
+    QCOMPARE(windows.size(), 2);
+    QVERIFY(!settings->sessionLayoutJson.contains(QStringLiteral("Private-")));
+    QVERIFY(settings->sessionLayoutJson.contains(QStringLiteral("Saved-Active")));
+    QVERIFY(settings->sessionLayoutJson.contains(QStringLiteral("Saved-First")));
 }
 
 void TestDisplayUi::new_tab_menu_action_and_shortcut_create_session_in_active_pane()
