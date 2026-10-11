@@ -3403,6 +3403,7 @@ void MainWindow::createActions()
     m_actions.sessionNewTab = new QAction(this);
     m_actions.sessionNewWindow = new QAction(this);
     m_actions.sessionOpen = new QAction(this);
+    m_actions.sessionRename = new QAction(this);
     m_actions.sessionOpenSessionsFolder = new QAction(this);
     m_actions.sessionQuit = new QAction(this);
     m_actions.editClearExpression = new QAction(this);
@@ -3809,6 +3810,7 @@ void MainWindow::setActionsText()
     m_actions.sessionNewTab->setText(MainWindow::tr("New &Tab"));
     m_actions.sessionNewWindow->setText(MainWindow::tr("New &Window"));
     m_actions.sessionOpen->setText(MainWindow::tr("&Open..."));
+    m_actions.sessionRename->setText(MainWindow::tr("&Rename Session..."));
     m_actions.sessionOpenSessionsFolder->setText(MainWindow::tr("Open Sessions &Folder"));
     m_actions.sessionQuit->setText(MainWindow::tr("&Quit"));
 
@@ -4078,6 +4080,7 @@ void MainWindow::createMenus()
     m_menus.session->addAction(m_actions.sessionNewTab);
     m_menus.session->addAction(m_actions.sessionNewWindow);
     m_menus.session->addAction(m_actions.sessionOpen);
+    m_menus.session->addAction(m_actions.sessionRename);
     m_menus.session->addSeparator();
     m_menus.session->addAction(m_actions.sessionImport);
     m_menus.sessionExport = m_menus.session->addMenu("");
@@ -7226,6 +7229,7 @@ void MainWindow::createFixedConnections()
     });
     connect(m_actions.sessionNewWindow, SIGNAL(triggered()), SLOT(showNewSessionWindow()));
     connect(m_actions.sessionOpen, SIGNAL(triggered()), SLOT(showOpenSessionDialog()));
+    connect(m_actions.sessionRename, &QAction::triggered, this, &MainWindow::showRenameSessionDialog);
     connect(m_actions.sessionOpenSessionsFolder, SIGNAL(triggered()), SLOT(openSessionsFolder()));
     connect(m_actions.sessionQuit, &QAction::triggered, qApp, &QCoreApplication::quit);
 

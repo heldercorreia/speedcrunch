@@ -146,6 +146,9 @@ reorder them within the pane, or drag a tab away from the tab bar to move it to
 another pane. Dropping a dragged tab outside the current window creates a new
 window for that session; dropping it on a pane in another SpeedCrunch window
 moves it there.
+Use :menuselection:`Session --> Rename Session...` to rename the active session.
+You can also double-click its tab or choose :menuselection:`Rename Session`
+from the tab or result display context menu.
 Use :menuselection:`Session --> New Window` to open a blank
 session in a new window that copies the current window and dock layout.
 When SpeedCrunch restores multiple windows after a restart, each window keeps

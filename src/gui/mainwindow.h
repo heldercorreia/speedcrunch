@@ -403,6 +403,7 @@ private:
 
     struct {
         QAction* sessionOpen;
+        QAction* sessionRename;
         QAction* sessionNewTab;
         QAction* sessionNewWindow;
         QAction* sessionOpenSessionsFolder;
