@@ -57,6 +57,7 @@
 #include <QGridLayout>
 #include <QHelpEvent>
 #include <QImage>
+#include <QInputDialog>
 #include <QLabel>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -713,6 +714,26 @@ struct MainWindowStateGuard {
     }
 };
 
+struct PrivateSessionStorage {
+    QTemporaryDir directory;
+    QByteArray previousRoot = qgetenv("SPEEDCRUNCH_UI_TEST_STORAGE");
+
+    PrivateSessionStorage()
+    {
+        qputenv("SPEEDCRUNCH_UI_TEST_STORAGE", directory.path().toUtf8());
+        for (const QString& path : {Settings::getConfigPath(), Settings::getDataPath(), Settings::getCachePath()})
+            QDir().mkpath(path);
+        UiTestFixture::resetSettings();
+    }
+
+    ~PrivateSessionStorage() { qputenv("SPEEDCRUNCH_UI_TEST_STORAGE", previousRoot); }
+
+    QString path(const QString& name) const
+    {
+        return QDir(Settings::getDataPath()).filePath(QStringLiteral("sessions/%1.json").arg(name));
+    }
+};
+
 void sendTabDragMouseEvent(QTabBar* tabBar, QEvent::Type type, const QPoint& pos,
                            Qt::MouseButton button, Qt::MouseButtons buttons)
 {
@@ -882,6 +903,16 @@ private slots:
     void active_pane_survives_window_reactivation_focus_replay();
     void extra_window_activation_restores_own_active_tab_indicator();
     void session_tab_context_menu_opens_on_right_click();
+    void private_sessions_never_save_or_restore();
+    void private_session_keep_action_is_discoverable();
+    void private_session_conversion_preserves_contents_and_removes_json();
+    void private_session_conversion_handles_storage_failures();
+    void private_session_rename_duplicate_and_close_keep_privacy();
+    void private_sessions_use_available_names_across_windows();
+    void private_session_menu_targets_active_window_and_keeps_private_window_title();
+    void private_tab_shortcut_opens_in_active_pane_data();
+    void private_tab_shortcut_opens_in_active_pane();
+    void private_only_workspace_restores_with_a_fresh_session();
     void focused_dock_search_survives_window_reactivation_focus_replay();
     void focusing_loaded_pane_preserves_its_current_scroll_position();
     void persisting_layout_captures_visible_scroll_positions_for_all_panes();
@@ -7982,6 +8013,360 @@ void TestDisplayUi::session_tab_navigation_shortcuts_switch_tabs()
     const QKeyCombination previous = previousSessionTabShortcut();
     QTest::keyClick(editor, previous.key(), previous.keyboardModifiers());
     QTRY_COMPARE(tabBar->currentIndex(), 1);
+}
+
+void TestDisplayUi::private_sessions_never_save_or_restore()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    QString normalName;
+    {
+        MainWindow window(false);
+        window.show();
+        ResultDisplay* display = window.findChild<ResultDisplay*>();
+        Editor* editor = window.findChild<Editor*>();
+        normalName = display->session()->name();
+        editor->setText(QStringLiteral("ordinaryvalue = 41"));
+        QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
+        QVERIFY(QMetaObject::invokeMethod(&window, "showNewPrivateSession"));
+        const Session* session = display->session();
+        QVERIFY(session->isPrivate());
+        QCOMPARE(session->name(), QStringLiteral("Private-1"));
+        editor->setText(QStringLiteral("secretvalue = 987654321"));
+        QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
+        editor->setText(QStringLiteral("unfinished_secret +"));
+        QTest::qWait(300);
+        QVERIFY(!QFileInfo::exists(storage.path(session->name())));
+        QTabBar* tabBar = tabBarForDisplay(display);
+        QVERIFY(!tabBar->tabIcon(tabBar->currentIndex()).isNull());
+        QVERIFY(window.windowTitle().contains(QStringLiteral("[Private]")));
+
+        QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight"));
+        QVERIFY(QMetaObject::invokeMethod(&window, "showNewPrivateSession"));
+        window.persistSessionAndSettingsForShutdown();
+        const QString layout = Settings::instance()->sessionLayoutJson;
+        QVERIFY(!layout.contains(QStringLiteral("Private-")));
+        QVERIFY(!layout.contains(QStringLiteral("unfinished_secret")));
+        const QStringList files = QDir(QFileInfo(storage.path(normalName)).path()).entryList({QStringLiteral("*.json")});
+        QVERIFY(files.contains(normalName + QStringLiteral(".json")));
+        for (const QString& fileName : files) {
+            QFile file(QDir(QFileInfo(storage.path(normalName)).path()).filePath(fileName));
+            QVERIFY(file.open(QIODevice::ReadOnly));
+            QVERIFY(!file.readAll().contains("secretvalue"));
+        }
+    }
+    MainWindow restored;
+    restored.show();
+    QTest::qWait(400);
+    for (ResultDisplay* display : restored.findChildren<ResultDisplay*>()) {
+        QVERIFY(!display->session()->isPrivate());
+        QVERIFY(!display->session()->hasVariable(QStringLiteral("secretvalue")));
+    }
+}
+
+void TestDisplayUi::private_session_keep_action_is_discoverable()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QMetaObject::invokeMethod(&window, "showNewPrivateSession"));
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    QVERIFY(display);
+    QTabBar* tabs = tabBarForDisplay(display);
+    QVERIFY(tabs);
+    QCOMPARE(tabs->tabToolTip(tabs->currentIndex()),
+             QStringLiteral("%1\nPrivate session: contents are discarded when closed.\n"
+                            "Choose Keep Session to turn it into a regular session.").arg(display->session()->name()));
+
+    QMenu* menu = menuWithTitle(window.menuBar(), QStringLiteral("&Session"));
+    QVERIFY(menu);
+    QAction* keep = directMenuActionWithText(menu, QStringLiteral("Keep Session"));
+    QVERIFY(keep);
+    window.activateWindow();
+    window.findChild<Editor*>()->setFocus();
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&window));
+    keep->trigger();
+    QVERIFY(!display->session()->isPrivate());
+    QVERIFY(QFileInfo::exists(storage.path(display->session()->name())));
+    QVERIFY(tabs->tabToolTip(tabs->currentIndex()).isEmpty());
+}
+
+void TestDisplayUi::private_session_conversion_preserves_contents_and_removes_json()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    MainWindow window(false);
+    window.show();
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    Editor* editor = window.findChild<Editor*>();
+    const QString occupiedName = display->session()->name();
+    QVERIFY(QMetaObject::invokeMethod(&window, "showNewPrivateSession"));
+    const Session* session = display->session();
+    editor->setText(QStringLiteral("privatevalue = 123"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
+    editor->setText(QStringLiteral("privatevalue +"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "convertSessionPrivacy"));
+    QVERIFY(!session->isPrivate());
+    QCOMPARE(session->name(), QStringLiteral("Untitled-2"));
+    QVERIFY(session->name() != occupiedName);
+    QCOMPARE(session->historySize(), 1);
+    QCOMPARE(editor->text(), QStringLiteral("privatevalue +"));
+    QVERIFY(Settings::instance()->sessionLayoutJson.contains(QStringLiteral("privatevalue +")));
+    const QString savedName = session->name();
+    QFile saved(storage.path(savedName));
+    QVERIFY(saved.open(QIODevice::ReadOnly));
+    QVERIFY(saved.readAll().contains("privatevalue"));
+    saved.close();
+
+    bool confirmed = false;
+    QTimer::singleShot(0, &window, [&]() {
+        auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        QVERIFY(dialog);
+        confirmed = dialog->text().contains(savedName) && dialog->text().contains(QStringLiteral("deleted"));
+        QCOMPARE(dialog->defaultButton(), dialog->button(QMessageBox::Cancel));
+        dialog->done(QMessageBox::Cancel);
+    });
+    QVERIFY(QMetaObject::invokeMethod(&window, "convertSessionPrivacy"));
+    QVERIFY(confirmed);
+    QVERIFY(!session->isPrivate());
+    QVERIFY(QFileInfo::exists(storage.path(savedName)));
+
+    // Leave a delayed save queued when confirming conversion.
+    editor->setText(QStringLiteral("456"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
+    QTimer::singleShot(0, &window, []() {
+        auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        QVERIFY(dialog);
+        dialog->done(QMessageBox::Yes);
+    });
+    QVERIFY(QMetaObject::invokeMethod(&window, "convertSessionPrivacy"));
+    QVERIFY(session->isPrivate());
+    QCOMPARE(session->name(), QStringLiteral("Private-1"));
+    QCOMPARE(session->historySize(), 2);
+    QTest::qWait(300);
+    QVERIFY(!QFileInfo::exists(storage.path(savedName)));
+    QVERIFY(!Settings::instance()->sessionLayoutJson.contains(savedName));
+    QVERIFY(!Settings::instance()->sessionLayoutJson.contains(session->name()));
+    window.persistSessionAndSettingsForShutdown();
+    QVERIFY(!QFileInfo::exists(storage.path(savedName)));
+}
+
+void TestDisplayUi::private_session_conversion_handles_storage_failures()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    MainWindow window(false);
+    window.show();
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    const Session* session = display->session();
+    const QString name = session->name();
+    QVERIFY(QDir().mkpath(storage.path(name)));
+    QTimer::singleShot(0, &window, [&]() {
+        auto* confirmation = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        QVERIFY(confirmation);
+        QTimer::singleShot(0, &window, []() {
+            auto* error = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+            QVERIFY(error);
+            QVERIFY(error->text().contains(QStringLiteral("Could not delete")));
+            error->accept();
+        });
+        confirmation->done(QMessageBox::Yes);
+    });
+    QVERIFY(QMetaObject::invokeMethod(&window, "convertSessionPrivacy"));
+    QVERIFY(!session->isPrivate());
+    QCOMPARE(session->name(), name);
+    QVERIFY(QMetaObject::invokeMethod(&window, "showNewPrivateSession"));
+    session = display->session();
+    const QString privateName = session->name();
+    const QString sessionsDir = QFileInfo(storage.path(name)).path();
+    QVERIFY(QDir(sessionsDir).removeRecursively());
+    QFile blocker(sessionsDir);
+    QVERIFY(blocker.open(QIODevice::WriteOnly));
+    blocker.close();
+    QTimer::singleShot(0, &window, []() {
+        auto* error = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        QVERIFY(error);
+        QVERIFY(error->text().contains(QStringLiteral("remains private")));
+        error->accept();
+    });
+    QVERIFY(QMetaObject::invokeMethod(&window, "convertSessionPrivacy"));
+    QVERIFY(session->isPrivate());
+    QCOMPARE(session->name(), privateName);
+}
+
+void TestDisplayUi::private_session_rename_duplicate_and_close_keep_privacy()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QMetaObject::invokeMethod(&window, "showNewPrivateSession"));
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    Editor* editor = window.findChild<Editor*>();
+    editor->setText(QStringLiteral("789"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
+    const auto enterName = [&window](const QString& name) {
+        QTimer::singleShot(0, &window, [name]() {
+            auto* dialog = qobject_cast<QInputDialog*>(QApplication::activeModalWidget());
+            QVERIFY(dialog);
+            dialog->setTextValue(name);
+            dialog->accept();
+        });
+    };
+    enterName(QStringLiteral("Temporary work"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "showRenameSessionDialog"));
+    QVERIFY(display->session()->isPrivate());
+    QCOMPARE(display->session()->name(), QStringLiteral("Temporary work"));
+    QVERIFY(!QFileInfo::exists(storage.path(QStringLiteral("Temporary work"))));
+    enterName(QStringLiteral("Temporary copy"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "showDuplicateSessionDialog"));
+    QVERIFY(display->session()->isPrivate());
+    QCOMPARE(display->session()->historySize(), 1);
+    QVERIFY(QMetaObject::invokeMethod(&window, "closeCurrentSession"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "restoreClosedSessionTab"));
+    for (QTabBar* tabBar : window.findChildren<QTabBar*>()) {
+        for (int i = 0; i < tabBar->count(); ++i)
+            QVERIFY(tabBar->tabText(i) != QStringLiteral("Temporary copy"));
+    }
+    window.persistSessionAndSettingsForShutdown();
+    QVERIFY(!QFileInfo::exists(storage.path(QStringLiteral("Temporary copy"))));
+    QVERIFY(!Settings::instance()->sessionLayoutJson.contains(QStringLiteral("Temporary")));
+}
+
+void TestDisplayUi::private_sessions_use_available_names_across_windows()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    MainWindow first(false);
+    MainWindow second(false);
+    QVERIFY(QMetaObject::invokeMethod(&first, "showNewPrivateSession"));
+    QVERIFY(QMetaObject::invokeMethod(&second, "showNewPrivateSession"));
+    QCOMPARE(first.findChild<ResultDisplay*>()->session()->name(), QStringLiteral("Private-1"));
+    QCOMPARE(second.findChild<ResultDisplay*>()->session()->name(), QStringLiteral("Private-2"));
+    QVERIFY(QMetaObject::invokeMethod(&first, "closeCurrentSession"));
+    QVERIFY(QMetaObject::invokeMethod(&second, "showNewPrivateSession"));
+    QCOMPARE(second.findChild<ResultDisplay*>()->session()->name(), QStringLiteral("Private-1"));
+}
+
+void TestDisplayUi::private_session_menu_targets_active_window_and_keeps_private_window_title()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    MainWindow first(false);
+    MainWindow second(false);
+    first.show();
+    second.show();
+    QVERIFY(tabBarForDisplay(first.findChild<ResultDisplay*>())->isHidden());
+    QMenu* menu = menuWithTitle(second.menuBar(), QStringLiteral("&Session"));
+    QVERIFY(menu);
+    QAction* create = directMenuActionWithText(menu, QStringLiteral("New &Private Tab"));
+    QVERIFY(create);
+    first.activateWindow();
+    first.findChild<Editor*>()->setFocus();
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&first));
+    create->trigger();
+    ResultDisplay* display = first.findChild<ResultDisplay*>();
+    QVERIFY(display->session()->isPrivate());
+    QVERIFY(!second.findChild<ResultDisplay*>()->session()->isPrivate());
+    QTabBar* tabs = tabBarForDisplay(display);
+    QCOMPARE(tabs->count(), 2);
+    QVERIFY(tabs->isVisible());
+    tabs->setCurrentIndex(0);
+    QVERIFY(QMetaObject::invokeMethod(&first, "closeCurrentSession"));
+    QCOMPARE(tabs->count(), 1);
+    QVERIFY(tabs->isHidden());
+    QVERIFY(!tabs->tabIcon(0).isNull());
+    QVERIFY(display->session()->isPrivate());
+    QVERIFY(first.windowTitle().contains(QStringLiteral("[Private]")));
+
+    QAction* convert = directMenuActionWithText(menu, QStringLiteral("Make Session Private..."));
+    QVERIFY(convert);
+    convert->trigger();
+    QVERIFY(!display->session()->isPrivate());
+    QVERIFY(tabs->isHidden());
+    QVERIFY(!second.findChild<ResultDisplay*>()->session()->isPrivate());
+    QVERIFY(QFileInfo::exists(storage.path(display->session()->name())));
+}
+
+void TestDisplayUi::private_tab_shortcut_opens_in_active_pane_data()
+{
+    QTest::addColumn<QString>("focusTarget");
+    QTest::newRow("window") << QStringLiteral("window");
+    QTest::newRow("editor") << QStringLiteral("editor");
+    QTest::newRow("display") << QStringLiteral("display");
+}
+
+void TestDisplayUi::private_tab_shortcut_opens_in_active_pane()
+{
+    QFETCH(QString, focusTarget);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    MainWindow window(false);
+    MainWindow other(false);
+    window.show();
+    other.show();
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight"));
+    const QList<ResultDisplay*> displays = window.findChildren<ResultDisplay*>();
+    QCOMPARE(displays.size(), 2);
+    ResultDisplay* target = displays.last();
+    Editor* editor = paneWidgetForDisplay(target)->findChild<Editor*>();
+    QVERIFY(editor);
+    window.activateWindow();
+    QTest::mouseClick(target->viewport(), Qt::LeftButton, Qt::NoModifier, target->viewport()->rect().center());
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&window));
+    editor->setText(QStringLiteral("ordinary draft"));
+    const Session* ordinary = target->session();
+
+    QMenu* menu = menuWithTitle(window.menuBar(), QStringLiteral("&Session"));
+    QVERIFY(menu);
+    QAction* action = directMenuActionWithText(menu, QStringLiteral("New &Private Tab"));
+    QVERIFY(action);
+    const QKeySequence shortcut(Qt::CTRL | Qt::SHIFT | Qt::Key_N);
+    QCOMPARE(action->shortcut(), shortcut);
+    QSignalSpy triggered(action, &QAction::triggered);
+    QWidget* focus = &window;
+    if (focusTarget == QLatin1String("editor"))
+        focus = editor;
+    else if (focusTarget == QLatin1String("display"))
+        focus = target;
+    focus->setFocus();
+    QCoreApplication::processEvents();
+    QTest::keyClick(focus, shortcut[0].key(), shortcut[0].keyboardModifiers());
+    QTRY_COMPARE(triggered.count(), 1);
+    QVERIFY(target->session()->isPrivate());
+    QCOMPARE(tabBarForDisplay(target)->count(), 2);
+    QCOMPARE(tabBarForDisplay(displays.first())->count(), 1);
+    QVERIFY(!other.findChild<ResultDisplay*>()->session()->isPrivate());
+    QCOMPARE(ordinary->editorText(), QStringLiteral("ordinary draft"));
+    QVERIFY(editor->text().isEmpty());
+}
+
+void TestDisplayUi::private_only_workspace_restores_with_a_fresh_session()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    {
+        MainWindow window(false);
+        QVERIFY(QMetaObject::invokeMethod(&window, "showNewPrivateSession"));
+        ResultDisplay* display = window.findChild<ResultDisplay*>();
+        QTabBar* tabs = tabBarForDisplay(display);
+        tabs->setCurrentIndex(0);
+        QVERIFY(QMetaObject::invokeMethod(&window, "closeCurrentSession"));
+        QVERIFY(display->session()->isPrivate());
+        window.findChild<Editor*>()->setText(QStringLiteral("sole_private_secret"));
+        window.persistSessionAndSettingsForShutdown();
+        const QJsonObject layout = QJsonDocument::fromJson(Settings::instance()->sessionLayoutJson.toUtf8()).object();
+        QVERIFY(layout.value(QStringLiteral("windows")).toArray().isEmpty());
+        QVERIFY(!Settings::instance()->sessionLayoutJson.contains(QStringLiteral("sole_private_secret")));
+    }
+    MainWindow restored;
+    QTest::qWait(300);
+    for (ResultDisplay* display : restored.findChildren<ResultDisplay*>()) {
+        QVERIFY(!display->session()->isPrivate());
+        QVERIFY(display->session()->historyIsEmpty());
+    }
+    QVERIFY(restored.findChild<Editor*>()->text().isEmpty());
 }
 
 void TestDisplayUi::new_tab_menu_action_and_shortcut_create_session_in_active_pane()

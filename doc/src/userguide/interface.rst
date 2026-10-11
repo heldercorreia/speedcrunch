@@ -156,6 +156,41 @@ its own dock layout, dock visibility, keypad visibility, layout and zoom,
 and—when window position saving is enabled—its own size and position.
 
 
+Private Sessions
+----------------
+
+Use :menuselection:`Session --> New Private Tab` or :kbd:`Ctrl+Shift+N`
+(:kbd:`Cmd+Shift+N` on macOS) to open a session that stays in memory.
+Private sessions are named ``Private-1``, ``Private-2``, and so on,
+using the first available number. A shield icon marks their tabs. The window
+title also identifies the active private session, even after you rename it.
+The tab bar is hidden when a private session is the only session in a single
+pane, just as it is for an ordinary session.
+
+Private sessions do not save their history, unfinished expressions, variables,
+functions, or units automatically. They are excluded from the workspace
+restored at the next launch. Closing a private session discards its contents,
+and it cannot be reopened with the Restore Closed Tab shortcut. Copying and
+explicit export remain available. Duplicating a private session creates another
+private session.
+
+Choose :menuselection:`Session --> Keep Session` to save a private
+session, including its current contents. It receives the first available
+``Untitled-XXX`` name and behaves like an ordinary session from then on.
+
+Choose :menuselection:`Session --> Make Session Private...` to convert an ordinary
+session. SpeedCrunch asks for confirmation before deleting its saved JSON file.
+Its contents stay open under the first available ``Private-XXX`` name until you
+close it or exit. If the file cannot be deleted, the session remains ordinary.
+If a private session cannot be saved during conversion, it remains private.
+
+These actions are also available from the tab and result display context menus.
+Privacy belongs to the session, so renaming it does not change whether it is
+saved. Ordinary sessions can remain open alongside private ones.
+
+.. versionadded:: 1.1
+
+
 Expression Editor Features
 --------------------------
 
@@ -457,8 +492,9 @@ History Size Limit
 This setting controls how calculation history is stored for the active session.
 It is available from :menuselection:`Session --> History Size Limit...`.
 
-Calculation history is saved automatically when a session changes and restored
-on the next launch.
+Calculation history in ordinary sessions is saved automatically when a session
+changes and restored on the next launch. Private sessions keep history only
+while they are open.
 
 The history size limit sets the maximum number of stored history entries for
 that session. By default, SpeedCrunch keeps up to 1000 entries per session and
@@ -751,7 +787,9 @@ Editing
     Create a new session in the current session pane.
 * :kbd:`Ctrl+T` (:kbd:`Cmd+T` on macOS)
     Create a new session tab in the current session pane.
-* :kbd:`Ctrl+Shift+T`
+* :kbd:`Ctrl+Shift+N` (:kbd:`Cmd+Shift+N` on macOS)
+    Create a new private tab in the current session pane.
+* :kbd:`Ctrl+Shift+T` (:kbd:`Cmd+Shift+T` on macOS)
     Reopen the most recently closed session tab.
 * :kbd:`Ctrl+C`
     Copy selected text to clipboard.

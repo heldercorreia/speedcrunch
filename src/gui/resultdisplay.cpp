@@ -1339,6 +1339,8 @@ QMenu* ResultDisplay::createContextMenu(const QPoint& pos)
         emit newSessionRequested();
     });
     QAction* openSessionAction = menu->addAction(tr("Open Session"));
+    QAction* privateSessionAction = menu->addAction(tr("New Private Tab"));
+    connect(privateSessionAction, &QAction::triggered, this, &ResultDisplay::newPrivateSessionRequested);
     connect(openSessionAction, &QAction::triggered, this, [this]() {
         emit openSessionRequested();
     });
@@ -1383,6 +1385,9 @@ QMenu* ResultDisplay::createContextMenu(const QPoint& pos)
         emit duplicateSessionRequested();
     });
     QAction* renameSessionAction = menu->addAction(tr("Rename Session"));
+    QAction* convertPrivacyAction = menu->addAction(m_session && m_session->isPrivate()
+        ? tr("Keep Session") : tr("Make Session Private..."));
+    connect(convertPrivacyAction, &QAction::triggered, this, &ResultDisplay::convertSessionPrivacyRequested);
     connect(renameSessionAction, &QAction::triggered, this, [this]() {
         emit renameSessionRequested();
     });

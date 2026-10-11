@@ -123,6 +123,7 @@
 #include <QStackedWidget>
 #include <QStandardPaths>
 #include <QScrollBar>
+#include <QSaveFile>
 #include <QSet>
 #include <QStatusBar>
 #include <QStyle>
@@ -341,22 +342,25 @@ void unregisterAsyncSessionIoThread(QThread* thread)
     asyncSessionIoThreads().removeAll(thread);
 }
 
-void writeSessionJsonToFile(const QJsonObject& json, const QString& filePath, quint64 generation = 0)
+bool writeSessionJsonToFile(const QJsonObject& json, const QString& filePath, quint64 generation = 0)
 {
     const QByteArray data = QJsonDocument(json).toJson(QJsonDocument::Compact);
 
     if (generation != 0 && !asyncSessionSaveIsCurrent(filePath, generation))
-        return;
+        return false;
 
-    QFile file(filePath);
+    QSaveFile file(filePath);
     if (!file.open(QIODevice::WriteOnly))
-        return;
-    file.write(data);
-    file.close();
+        return false;
+    if (file.write(data) != data.size())
+        return false;
+    return file.commit();
 }
 
 void saveSessionAsync(const Session& session, const QString& filePath)
 {
+    if (session.isPrivate())
+        return;
     ensureSessionsPath();
 
     QJsonObject json;
@@ -426,6 +430,62 @@ QString firstAvailableUntitledSessionName(const QHash<QString, Session*>& sessio
     return QStringLiteral("Untitled");
 }
 
+QIcon privateSessionIcon(const QColor& color)
+{
+    QPixmap pixmap(32, 32);
+    pixmap.fill(Qt::transparent);
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setPen(QPen(color, 2.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    painter.setBrush(Qt::NoBrush);
+    QPainterPath shield;
+    shield.moveTo(16, 3);
+    shield.lineTo(27, 7);
+    shield.lineTo(26, 17);
+    shield.cubicTo(25, 23, 20, 27, 16, 29);
+    shield.cubicTo(12, 27, 7, 23, 6, 17);
+    shield.lineTo(5, 7);
+    shield.closeSubpath();
+    painter.drawPath(shield);
+    return QIcon(pixmap);
+}
+
+QJsonObject persistentSessionLayout(QJsonObject node, const QSet<QString>& privateNames)
+{
+    if (node.contains(QStringLiteral("tabs"))) {
+        QJsonArray tabs;
+        for (const QJsonValue& value : node.value(QStringLiteral("tabs")).toArray()) {
+            const QString name = value.toObject().value(QStringLiteral("name")).toString();
+            if (!privateNames.contains(name))
+                tabs.append(value);
+        }
+        node.insert(QStringLiteral("tabs"), tabs);
+        if (privateNames.contains(node.value(QStringLiteral("active")).toString()))
+            node.insert(QStringLiteral("active"), tabs.isEmpty()
+                ? QString() : tabs.first().toObject().value(QStringLiteral("name")).toString());
+        if (tabs.isEmpty())
+            return QJsonObject();
+    }
+    if (node.contains(QStringLiteral("children"))) {
+        QJsonArray children;
+        QJsonArray sizes;
+        const QJsonArray oldChildren = node.value(QStringLiteral("children")).toArray();
+        const QJsonArray oldSizes = node.value(QStringLiteral("sizes")).toArray();
+        for (int i = 0; i < oldChildren.size(); ++i) {
+            const QJsonObject child = persistentSessionLayout(oldChildren.at(i).toObject(), privateNames);
+            if (!child.isEmpty()) {
+                children.append(child);
+                sizes.append(i < oldSizes.size() ? oldSizes.at(i) : QJsonValue(1));
+            }
+        }
+        if (children.isEmpty())
+            return QJsonObject();
+        node.insert(QStringLiteral("children"), children);
+        node.insert(QStringLiteral("sizes"), sizes);
+    }
+    return node;
+}
+
 QString firstAvailableImportedSessionName(const QString& preferredName, const QHash<QString, Session*>& sessions)
 {
     const QString baseName = normalizedSessionName(preferredName);
@@ -458,7 +518,7 @@ int untitledSessionNumber(const QString& name)
 
 bool isReusableUntitledSession(const Session* session)
 {
-    if (session == nullptr || !session->historyIsEmpty())
+    if (session == nullptr || session->isPrivate() || !session->historyIsEmpty())
         return false;
 
     const Evaluator* evaluator = session->evaluator();
@@ -2668,7 +2728,7 @@ protected:
         const int closeExtent = qMax(16, fontMetrics().height() + 1);
         const int closeWidth = closeExtent + 8;
         const int width = fontMetrics().horizontalAdvance(tabText(index))
-            + UiConfig::SessionTabHorizontalPadding + closeWidth;
+            + UiConfig::SessionTabHorizontalPadding + closeWidth + (tabIcon(index).isNull() ? 0 : 22);
         const int height = qMax(30, fontMetrics().height() + 12);
         return QSize(width, height);
     }
@@ -2750,8 +2810,8 @@ private:
             return;
         }
 
-        const QString text = tabText(index);
-        if (fontMetrics().horizontalAdvance(text)
+        const QString text = tabToolTip(index).isEmpty() ? tabText(index) : tabToolTip(index);
+        if (tabIcon(index).isNull() && fontMetrics().horizontalAdvance(text)
             <= tabTextRect(index, tabRect(index)).width()) {
             hideTabToolTip();
             return;
@@ -2783,7 +2843,7 @@ private:
             && tabButton(index, QTabBar::RightSide)->isVisible()
             ? tabButton(index, QTabBar::RightSide)->width() + 6
             : 0;
-        return pillRect(rect).adjusted(12, 0, -12 - rightButtonWidth, 0);
+        return pillRect(rect).adjusted(12 + (tabIcon(index).isNull() ? 0 : 22), 0, -12 - rightButtonWidth, 0);
     }
 
     void updateHoveredTab(const QPoint& pos)
@@ -2845,6 +2905,10 @@ private:
         }
 
         const QRect textRect = tabTextRect(index, rect);
+        if (!tabIcon(index).isNull()) {
+            const QRect iconRect(textRect.left() - 22, textRect.center().y() - 8, 16, 16);
+            tabIcon(index).paint(painter, iconRect);
+        }
         painter->setPen(selected ? m_selectedTextColor : (hovered ? m_hoveredTextColor : m_tabTextColor));
         painter->setFont(font());
         painter->drawText(textRect,
@@ -3401,6 +3465,8 @@ void MainWindow::createActions()
     m_actions.sessionImport = new QAction(this);
     m_actions.sessionImportUserDefinitions = new QAction(this);
     m_actions.sessionNewTab = new QAction(this);
+    m_actions.sessionNewPrivate = new QAction(this);
+    m_actions.sessionConvertPrivacy = new QAction(this);
     m_actions.sessionNewWindow = new QAction(this);
     m_actions.sessionOpen = new QAction(this);
     m_actions.sessionRename = new QAction(this);
@@ -3811,6 +3877,9 @@ void MainWindow::setActionsText()
     m_actions.sessionImport->setText(MainWindow::tr("&Import..."));
     m_actions.sessionImportUserDefinitions->setText(MainWindow::tr("User &Definitions..."));
     m_actions.sessionNewTab->setText(MainWindow::tr("New &Tab"));
+    m_actions.sessionNewPrivate->setText(MainWindow::tr("New &Private Tab"));
+    m_actions.sessionConvertPrivacy->setText(m_session && m_session->isPrivate()
+        ? tr("Keep Session") : tr("Make Session Private..."));
     m_actions.sessionNewWindow->setText(MainWindow::tr("New &Window"));
     m_actions.sessionOpen->setText(MainWindow::tr("&Open..."));
     m_actions.sessionRename->setText(MainWindow::tr("&Rename Session..."));
@@ -4046,6 +4115,7 @@ void MainWindow::createActionGroups()
 void MainWindow::createActionShortcuts()
 {
     m_actions.sessionNewTab->setShortcuts(QKeySequence::AddTab);
+    m_actions.sessionNewPrivate->setShortcut(Qt::CTRL | Qt::SHIFT | Qt::Key_N);
     // Let this QAction own Quit; a separate standard-key QShortcut would
     // duplicate Ctrl+Q on Linux and make the shortcut ambiguous.
     m_actions.sessionQuit->setShortcut(Qt::CTRL | Qt::Key_Q);
@@ -4083,9 +4153,11 @@ void MainWindow::createMenus()
     m_menus.session = new QMenu("", this);
     menuBar()->addMenu(m_menus.session);
     m_menus.session->addAction(m_actions.sessionNewTab);
+    m_menus.session->addAction(m_actions.sessionNewPrivate);
     m_menus.session->addAction(m_actions.sessionNewWindow);
     m_menus.session->addAction(m_actions.sessionOpen);
     m_menus.session->addAction(m_actions.sessionRename);
+    m_menus.session->addAction(m_actions.sessionConvertPrivacy);
     m_menus.session->addSeparator();
     m_menus.session->addAction(m_actions.sessionImport);
     m_menus.sessionExport = m_menus.session->addMenu("");
@@ -4097,6 +4169,11 @@ void MainWindow::createMenus()
     m_menus.session->addAction(m_actions.settingsBehaviorHistorySizeLimit);
     m_menus.session->addSeparator();
     m_menus.session->addAction(m_actions.sessionQuit);
+    connect(m_menus.session, &QMenu::aboutToShow, this, [this]() {
+        const MainWindow* window = activeMainWindowForMenuAction(this);
+        m_actions.sessionConvertPrivacy->setText(window->m_session && window->m_session->isPrivate()
+            ? tr("Keep Session") : tr("Make Session Private..."));
+    });
 
     m_menus.edit = new QMenu("", this);
     menuBar()->addMenu(m_menus.edit);
@@ -4615,6 +4692,7 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
 
         QMenu menu(this);
         QAction* newSessionAction = menu.addAction(tr("New Tab"));
+        QAction* newPrivateAction = menu.addAction(tr("New Private Tab"));
         QAction* openSessionAction = menu.addAction(tr("Open Session"));
         menu.addSeparator();
         QAction* splitLeftAction = menu.addAction(tr("Split Left"));
@@ -4630,6 +4708,8 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
         menu.addSeparator();
         QAction* duplicateSessionAction = menu.addAction(tr("Duplicate Session"));
         QAction* renameSessionAction = menu.addAction(tr("Rename Session"));
+        QAction* convertPrivacyAction = menu.addAction(m_session->isPrivate()
+            ? tr("Keep Session") : tr("Make Session Private..."));
         menu.addSeparator();
         QAction* clearSessionAction = menu.addAction(tr("Clear Session"));
         QAction* deleteSessionAction = menu.addAction(tr("Delete Session"));
@@ -4645,6 +4725,10 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
         setActiveEditorDisplayPane(display, editor);
         if (selectedAction == newSessionAction)
             showNewSessionDialog();
+        else if (selectedAction == newPrivateAction)
+            showNewPrivateSession();
+        else if (selectedAction == convertPrivacyAction)
+            convertSessionPrivacy();
         else if (selectedAction == openSessionAction)
             showOpenSessionDialog();
         else if (selectedAction == duplicateSessionAction)
@@ -4691,10 +4775,6 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
         if (sourceSession == nullptr)
             return;
 
-        QJsonObject sourceJson;
-        sourceSession->serialize(sourceJson);
-        sourceJson.insert(QLatin1String(SessionJsonKeys::Session), sessionName);
-
         const QStringList detachedNames = detachedWindow->m_loadedSessions.keys();
         for (const QString& name : detachedNames) {
             Session* sessionToDelete = detachedWindow->m_loadedSessions.take(name);
@@ -4705,8 +4785,7 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
             if (sessionToDelete != nullptr)
                 delete sessionToDelete;
         }
-        Session* movedSession = new Session();
-        movedSession->deSerialize(sourceJson, false);
+        Session* movedSession = new Session(*sourceSession);
         movedSession->setName(sessionName);
         detachedWindow->m_loadedSessions.insert(sessionName, movedSession);
         detachedWindow->applyUserDefinitions();
@@ -4805,6 +4884,8 @@ void MainWindow::setActiveEditorDisplayPane(ResultDisplay* display, Editor* edit
         const bool previousSessionIsLoaded =
             m_session != nullptr && m_loadedSessions.values().contains(m_session);
         if (previousSessionIsLoaded) {
+            if (m_sessionSavePending)
+                flushPendingSessionSave();
             captureEditorTextInCurrentSession();
             if (m_widgets.display != nullptr
                     && m_paneSessionNames.value(m_widgets.display) == m_session->name()) {
@@ -5171,6 +5252,8 @@ void MainWindow::configureEditorDisplayPane(ResultDisplay* display, Editor* edit
     connect(display, &ResultDisplay::removeHistoryEntriesAboveRequested, this, &MainWindow::removeHistoryEntriesAbove);
     connect(display, &ResultDisplay::removeHistoryEntriesBelowRequested, this, &MainWindow::removeHistoryEntriesBelow);
     connect(display, &ResultDisplay::newSessionRequested, this, &MainWindow::showNewSessionDialog);
+    connect(display, &ResultDisplay::newPrivateSessionRequested, this, &MainWindow::showNewPrivateSession);
+    connect(display, &ResultDisplay::convertSessionPrivacyRequested, this, &MainWindow::convertSessionPrivacy);
     connect(display, &ResultDisplay::openSessionRequested, this, &MainWindow::showOpenSessionDialog);
     connect(display, &ResultDisplay::importSessionRequested, this, &MainWindow::showSessionImportDialog);
     connect(display, &ResultDisplay::exportSessionJsonRequested, this, &MainWindow::exportJson);
@@ -5711,11 +5794,7 @@ void MainWindow::moveSessionTab(QTabBar* sourceTabBar, QTabBar* targetTabBar, co
         if (sourceSession == nullptr)
             return;
 
-        QJsonObject movedJson;
-        sourceSession->serialize(movedJson);
-        movedJson.insert(QLatin1String(SessionJsonKeys::Session), name);
-        Session* movedSession = new Session();
-        movedSession->deSerialize(movedJson, false);
+        Session* movedSession = new Session(*sourceSession);
         movedSession->setName(name);
         m_loadedSessions.insert(name, movedSession);
         applyUserDefinitions();
@@ -5815,7 +5894,7 @@ void MainWindow::rememberClosedSessionTab(ResultDisplay* display, const QString&
         return;
 
     Session* session = m_loadedSessions.value(name, nullptr);
-    if (session == nullptr)
+    if (session == nullptr || session->isPrivate())
         return;
 
     if (display == m_widgets.display && session == m_session)
@@ -6288,6 +6367,15 @@ void MainWindow::updatePaneTabBars()
             for (const QString& name : names)
                 tabBar->addTab(name);
         }
+        for (int i = 0; i < names.size(); ++i) {
+            const Session* session = m_loadedSessions.value(names.at(i));
+            const bool isPrivate = session && session->isPrivate();
+            tabBar->setTabIcon(i, isPrivate ? privateSessionIcon(selectedSessionTab.foreground) : QIcon());
+            tabBar->setTabToolTip(i, isPrivate
+                ? tr("%1\nPrivate session: contents are discarded when closed.\n"
+                     "Choose Keep Session to turn it into a regular session."
+                    ).arg(names.at(i)) : QString());
+        }
 
         const int activeIndex = names.indexOf(m_paneSessionNames.value(display));
         tabBar->setCurrentIndex(activeIndex >= 0 ? activeIndex : 0);
@@ -6301,6 +6389,12 @@ void MainWindow::updatePaneTabBars()
 
 void MainWindow::updateSessionWindowTitle()
 {
+    m_actions.sessionConvertPrivacy->setText(m_session && m_session->isPrivate()
+        ? tr("Keep Session") : tr("Make Session Private..."));
+    if (m_session && m_session->isPrivate()) {
+        setWindowTitle(tr("SpeedCrunch - %1 [Private]").arg(m_session->name()));
+        return;
+    }
     const QList<ResultDisplay*> displays = splitPaneDisplays();
     if (displays.size() == 1) {
         const QStringList names = paneSessionNames(displays.first());
@@ -7234,6 +7328,12 @@ void MainWindow::createFixedConnections()
         });
     });
     connect(m_actions.sessionNewWindow, SIGNAL(triggered()), SLOT(showNewSessionWindow()));
+    connect(m_actions.sessionNewPrivate, &QAction::triggered, this, [this]() {
+        activeMainWindowForMenuAction(this)->showNewPrivateSession();
+    });
+    connect(m_actions.sessionConvertPrivacy, &QAction::triggered, this, [this]() {
+        activeMainWindowForMenuAction(this)->convertSessionPrivacy();
+    });
     connect(m_actions.sessionOpen, SIGNAL(triggered()), SLOT(showOpenSessionDialog()));
     connect(m_actions.sessionRename, &QAction::triggered, this, &MainWindow::showRenameSessionDialog);
     connect(m_actions.sessionOpenSessionsFolder, SIGNAL(triggered()), SLOT(openSessionsFolder()));
@@ -7441,6 +7541,8 @@ void MainWindow::createFixedConnections()
     connect(m_widgets.display, SIGNAL(removeHistoryEntriesAboveRequested(int)), SLOT(removeHistoryEntriesAbove(int)));
     connect(m_widgets.display, SIGNAL(removeHistoryEntriesBelowRequested(int)), SLOT(removeHistoryEntriesBelow(int)));
     connect(m_widgets.display, SIGNAL(newSessionRequested()), SLOT(showNewSessionDialog()));
+    connect(m_widgets.display, &ResultDisplay::newPrivateSessionRequested, this, &MainWindow::showNewPrivateSession);
+    connect(m_widgets.display, &ResultDisplay::convertSessionPrivacyRequested, this, &MainWindow::convertSessionPrivacy);
     connect(m_widgets.display, SIGNAL(openSessionRequested()), SLOT(showOpenSessionDialog()));
     connect(m_widgets.display, SIGNAL(importSessionRequested()), SLOT(showSessionImportDialog()));
     connect(m_widgets.display, SIGNAL(exportSessionJsonRequested()), SLOT(exportJson()));
@@ -8023,9 +8125,9 @@ void MainWindow::saveSession(QString & fname)
     writeSessionJsonToFile(json, fname);
 }
 
-void MainWindow::saveSessionLayout(bool captureCurrentViewport)
+void MainWindow::saveSessionLayout(bool captureCurrentViewport, bool captureEditorState)
 {
-    const bool includeEditorState = m_shutdownStateSaved || applicationShutdownInProgress();
+    const bool includeEditorState = captureEditorState || m_shutdownStateSaved || applicationShutdownInProgress();
     const auto editorForDisplay = [](ResultDisplay* display) -> Editor* {
         QWidget* page = display ? display->parentWidget() : nullptr;
         return page ? page->findChild<Editor*>(QString(), Qt::FindDirectChildrenOnly) : nullptr;
@@ -8257,7 +8359,27 @@ void MainWindow::saveSessionLayout(bool captureCurrentViewport)
     layout.insert(QStringLiteral("scheme"), 1);
     layout.insert(QStringLiteral("kind"), QStringLiteral("session-layout"));
     layout.insert(QStringLiteral("activeWindow"), QStringLiteral("window-0"));
-    layout.insert(QStringLiteral("windows"), windows);
+    QSet<QString> privateNames;
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (window) {
+            for (Session* session : window->m_loadedSessions) {
+                if (session->isPrivate())
+                    privateNames.insert(session->name());
+            }
+        }
+    }
+    QJsonArray persistentWindows;
+    for (const QJsonValue& value : windows) {
+        QJsonObject window = value.toObject();
+        const QJsonObject root = persistentSessionLayout(window.value(QStringLiteral("root")).toObject(), privateNames);
+        if (!root.isEmpty()) {
+            window.insert(QStringLiteral("root"), root);
+            persistentWindows.append(window);
+        }
+    }
+    if (!persistentWindows.isEmpty())
+        layout.insert(QStringLiteral("activeWindow"), persistentWindows.first().toObject().value(QStringLiteral("id")));
+    layout.insert(QStringLiteral("windows"), persistentWindows);
 
     m_settings->sessionLayoutJson = QString::fromUtf8(
         QJsonDocument(layout).toJson(QJsonDocument::Compact));
@@ -8292,6 +8414,8 @@ void MainWindow::activateSession(Session* session)
     const bool previousSessionIsLoaded =
         m_session != nullptr && m_loadedSessions.values().contains(m_session);
     if (previousSessionIsLoaded && m_session != session) {
+        if (m_sessionSavePending)
+            flushPendingSessionSave();
         captureEditorTextInCurrentSession();
         if (m_widgets.display != nullptr
                 && m_paneSessionNames.value(m_widgets.display) == m_session->name()) {
@@ -8609,6 +8733,135 @@ void MainWindow::showNewSessionDialog()
     saveSessionLayout(false);
 }
 
+QString MainWindow::firstAvailableSessionNameAcrossWindows(bool privateSession) const
+{
+    QHash<QString, Session*> sessions;
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (window) {
+            for (auto it = window->m_loadedSessions.constBegin(); it != window->m_loadedSessions.constEnd(); ++it)
+                sessions.insert(it.key(), it.value());
+        }
+    }
+    if (!privateSession)
+        return firstAvailableUntitledSessionName(sessions);
+    for (int number = 1; number < (std::numeric_limits<int>::max)(); ++number) {
+        const QString name = QStringLiteral("Private-%1").arg(number);
+        if (!loadedSessionNameExists(sessions, name) && !QFileInfo::exists(sessionFilePath(name)))
+            return name;
+    }
+    return firstAvailableImportedSessionName(QStringLiteral("Private"), sessions);
+}
+
+void MainWindow::showNewPrivateSession()
+{
+    Session* session = new Session();
+    session->setPrivate(true);
+    session->setName(firstAvailableSessionNameAcrossWindows(true));
+    m_loadedSessions.insert(session->name(), session);
+    applyUserDefinitions();
+    activateSession(session);
+    saveSessionLayout(false);
+}
+
+void MainWindow::renameLoadedSession(Session* session, const QString& name)
+{
+    const QString originalName = session->name();
+    session->setName(name);
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (!window)
+            continue;
+        // Old reopen snapshots must not bring back the session's saved identity.
+        for (int i = window->m_closedSessionTabs.size() - 1; i >= 0; --i) {
+            if (window->m_closedSessionTabs.at(i).name == originalName)
+                window->m_closedSessionTabs.removeAt(i);
+        }
+        if (window->m_loadedSessions.value(originalName) != session)
+            continue;
+        window->m_loadedSessions.remove(originalName);
+        window->m_loadedSessions.insert(name, session);
+        if (window->m_sessionViewportAnchors.contains(originalName))
+            window->m_sessionViewportAnchors.insert(name, window->m_sessionViewportAnchors.take(originalName));
+        if (window->m_sessionScrollValues.contains(originalName))
+            window->m_sessionScrollValues.insert(name, window->m_sessionScrollValues.take(originalName));
+        for (QString& paneName : window->m_paneSessionNames) {
+            if (paneName == originalName)
+                paneName = name;
+        }
+        for (QStringList& names : window->m_paneSessionTabs) {
+            for (QString& paneName : names) {
+                if (paneName == originalName)
+                    paneName = name;
+            }
+        }
+        window->updatePaneTabBars();
+    }
+}
+
+void MainWindow::convertSessionPrivacy()
+{
+    if (m_session == nullptr)
+        return;
+    Session* session = m_session;
+    const bool makePrivate = !session->isPrivate();
+    if (makePrivate) {
+        QMessageBox confirmation(QMessageBox::Warning, tr("Make Session Private"),
+            tr("The saved session %1 will be deleted. Its contents will stay open in a private session "
+               "and will be discarded when that session is closed or SpeedCrunch exits.")
+                .arg(session->name()), QMessageBox::Yes | QMessageBox::Cancel, this);
+        confirmation.setDefaultButton(QMessageBox::Cancel);
+        confirmation.setEscapeButton(QMessageBox::Cancel);
+        confirmation.button(QMessageBox::Yes)->setText(tr("Make Private"));
+        if (confirmation.exec() != QMessageBox::Yes)
+            return;
+    }
+
+    captureEditorTextInCurrentSession();
+    // A delayed or running save must not recreate the file after conversion.
+    m_deferredSessionSaveTimer->stop();
+    m_sessionSavePending = false;
+    waitForAsyncSessionIo();
+    const QString name = firstAvailableSessionNameAcrossWindows(makePrivate);
+    if (makePrivate) {
+        const QString path = sessionFilePath(session->name());
+        if (QFileInfo::exists(path) && !QFile::remove(path)) {
+            QMessageBox::warning(this, tr("Make Session Private"),
+                                 tr("Could not delete the saved session %1.").arg(path));
+            saveSessionToDefaultPath();
+            return;
+        }
+    } else {
+        QJsonObject json;
+        session->serialize(json);
+        json.insert(QLatin1String(SessionJsonKeys::Session), name);
+        if (!writeSessionJsonToFile(json, sessionFilePath(name))) {
+            QMessageBox::warning(this, tr("Keep Session"),
+                                 tr("Could not save the session. It remains private."));
+            return;
+        }
+    }
+    session->setPrivate(makePrivate);
+    renameLoadedSession(session, name);
+    saveSessionLayout(true, !makePrivate);
+}
+
+void MainWindow::discardUnusedPrivateSessions()
+{
+    for (auto it = m_loadedSessions.begin(); it != m_loadedSessions.end();) {
+        Session* session = it.value();
+        bool attached = session == m_session;
+        for (const QStringList& names : m_paneSessionTabs)
+            attached = attached || names.contains(it.key());
+        if (session->isPrivate() && !attached) {
+            m_sessionViewportAnchors.remove(it.key());
+            m_sessionScrollValues.remove(it.key());
+            it = m_loadedSessions.erase(it);
+            delete session;
+        } else {
+            ++it;
+        }
+    }
+}
+
 void MainWindow::showNewSessionWindow()
 {
     if (m_shutdownStateSaved)
@@ -8781,7 +9034,8 @@ void MainWindow::showDuplicateSessionDialog()
             tr("Duplicate Session"),
             tr("Session name:"),
             QLineEdit::Normal,
-            originalName + QStringLiteral(" (copy)"),
+            m_session->isPrivate() ? firstAvailableSessionNameAcrossWindows(true)
+                                   : originalName + QStringLiteral(" (copy)"),
             &accepted).trimmed();
         if (!accepted)
             return;
@@ -8799,6 +9053,14 @@ void MainWindow::showDuplicateSessionDialog()
         duplicateJson.insert(QLatin1String(SessionJsonKeys::Session), name);
 
         const QString duplicatePath = sessionFilePath(name);
+        if (m_session->isPrivate()) {
+            Session* duplicate = new Session(*m_session);
+            duplicate->setName(name);
+            m_loadedSessions.insert(name, duplicate);
+            activateSession(duplicate);
+            saveSessionLayout(false);
+            return;
+        }
         QFile duplicateFile(duplicatePath);
         if (!duplicateFile.open(QIODevice::WriteOnly)) {
             QMessageBox::warning(this,
@@ -8840,68 +9102,47 @@ void MainWindow::showRenameSessionDialog()
     while (true) {
         bool accepted = false;
         const QString enteredName = QInputDialog::getText(
-            this,
-            tr("Rename Session"),
-            tr("Session name:"),
-            QLineEdit::Normal,
-            originalName,
-            &accepted).trimmed();
+            this, tr("Rename Session"), tr("Session name:"), QLineEdit::Normal,
+            originalName, &accepted).trimmed();
         if (!accepted)
             return;
-
         const QString name = normalizedSessionName(enteredName);
         if (name == originalName)
             return;
 
-        if (loadedSessionNameExists(m_loadedSessions, name) || QFileInfo::exists(sessionFilePath(name))) {
-            QMessageBox::warning(this,
-                                 tr("Rename Session"),
+        bool exists = QFileInfo::exists(sessionFilePath(name));
+        for (const QPointer<MainWindow>& window : allMainWindows()) {
+            if (window)
+                exists = exists || loadedSessionNameExists(window->m_loadedSessions, name);
+        }
+        if (exists) {
+            QMessageBox::warning(this, tr("Rename Session"),
                                  tr("A session named %1 already exists.").arg(name));
             continue;
         }
-
-        saveSessionToDefaultPath();
-
-        const QString originalPath = sessionFilePath(originalName);
-        const QString renamedPath = sessionFilePath(name);
-        if (QFileInfo::exists(originalPath) && !QFile::rename(originalPath, renamedPath)) {
-            QMessageBox::warning(this,
-                                 tr("Rename Session"),
-                                 tr("Could not rename session file %1.").arg(originalPath));
-            continue;
-        }
-
-        const QPair<int, int> viewportAnchor = m_sessionViewportAnchors.take(originalName);
-        const int scrollValue = m_sessionScrollValues.take(originalName);
-        m_loadedSessions.remove(originalName);
-        m_session->setName(name);
-        m_loadedSessions.insert(name, m_session);
-        for (auto it = m_paneSessionNames.begin(); it != m_paneSessionNames.end(); ++it) {
-            if (it.value().compare(originalName, Qt::CaseInsensitive) == 0)
-                it.value() = name;
-        }
-        for (auto it = m_paneSessionTabs.begin(); it != m_paneSessionTabs.end(); ++it) {
-            QStringList names = it.value();
-            for (QString& paneName : names) {
-                if (paneName.compare(originalName, Qt::CaseInsensitive) == 0)
-                    paneName = name;
-            }
-            it.value() = names;
-        }
-        if (viewportAnchor.first >= 0)
-            m_sessionViewportAnchors.insert(name, viewportAnchor);
-        if (scrollValue >= 0)
-            m_sessionScrollValues.insert(name, scrollValue);
-
-        m_widgets.display->viewport()->update();
-        updatePaneTabBars();
-        {
+        captureEditorTextInCurrentSession();
+        if (!m_session->isPrivate()) {
+            m_deferredSessionSaveTimer->stop();
+            m_sessionSavePending = false;
+            waitForAsyncSessionIo();
             QJsonObject json;
             m_session->serialize(json);
-            QFile renamedFile(sessionFilePath(name));
-            if (renamedFile.open(QIODevice::WriteOnly))
-                renamedFile.write(QJsonDocument(json).toJson(QJsonDocument::Compact));
+            json.insert(QLatin1String(SessionJsonKeys::Session), name);
+            const QString path = sessionFilePath(name);
+            if (!writeSessionJsonToFile(json, path)) {
+                QMessageBox::warning(this, tr("Rename Session"),
+                                     tr("Could not save session file %1.").arg(path));
+                continue;
+            }
+            const QString originalPath = sessionFilePath(originalName);
+            if (QFileInfo::exists(originalPath) && !QFile::remove(originalPath)) {
+                QFile::remove(path);
+                QMessageBox::warning(this, tr("Rename Session"),
+                                     tr("Could not delete session file %1.").arg(originalPath));
+                continue;
+            }
         }
+        renameLoadedSession(m_session, name);
         saveSessionLayout();
         return;
     }
@@ -8980,6 +9221,7 @@ void MainWindow::closeCurrentSession()
         Session* nextSession = m_loadedSessions.value(m_paneSessionNames.value(nextDisplay), nullptr);
         if (nextSession != nullptr)
             activateSession(nextSession);
+        discardUnusedPrivateSessions();
         saveSessionLayout(false);
         return;
     }
@@ -9005,6 +9247,7 @@ void MainWindow::closeCurrentSession()
     paneNames.removeAll(closingName);
     m_paneSessionTabs.insert(m_widgets.display, paneNames);
     activateSession(nextSession);
+    discardUnusedPrivateSessions();
     updatePaneLoadedSessionCounts();
     saveSessionLayout(false);
 }
@@ -9027,7 +9270,7 @@ void MainWindow::closeCurrentPane()
 
     const auto saveLoadedSession = [this](const QString& name) {
         Session* session = m_loadedSessions.value(name, nullptr);
-        if (session == nullptr)
+        if (session == nullptr || session->isPrivate())
             return;
         if (shouldDeleteSessionFileOnClose(name, session)) {
             QFile::remove(sessionFilePath(name));
@@ -13615,6 +13858,8 @@ void MainWindow::persistSessionAndSettingsForShutdown()
 
 void MainWindow::saveSessionToDefaultPath()
 {
+    if (m_session == nullptr || m_session->isPrivate())
+        return;
     m_sessionSavePending = true;
     m_deferredSessionSaveTimer->start();
 }
@@ -13625,6 +13870,8 @@ void MainWindow::flushPendingSessionSave()
         return;
 
     m_sessionSavePending = false;
+    if (m_session == nullptr || m_session->isPrivate())
+        return;
     ensureSessionsPath();
     captureEditorTextInCurrentSession();
 
