@@ -341,6 +341,7 @@ Session::Session(const Session& other)
     , m_evaluator(new Evaluator)
     , m_name(other.m_name)
     , m_editorText(other.m_editorText)
+    , m_private(other.m_private)
     , m_historyLimit(other.m_historyLimit)
 {
     bindEvaluator();
@@ -356,6 +357,7 @@ Session& Session::operator=(const Session& other)
     m_historyHead = other.m_historyHead;
     m_name = other.m_name;
     m_editorText = other.m_editorText;
+    m_private = other.m_private;
     m_historyLimit = other.m_historyLimit;
     bindEvaluator();
     m_evaluator->copySymbolContextFrom(*other.m_evaluator);

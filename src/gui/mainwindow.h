@@ -110,6 +110,8 @@ private slots:
     void handleEditorTextChange();
     void handleEditorEscapePressed();
     void showNewSessionDialog();
+    void showNewPrivateSession();
+    void convertSessionPrivacy();
     void showNewSessionWindow();
     void showOpenSessionDialog();
     void showDuplicateSessionDialog();
@@ -334,6 +336,9 @@ private:
     void cycleFocusRegion(int direction);
     void splitActivePane(Qt::Orientation orientation, bool insertAfter);
     Session* createUntitledSession(bool activateCreatedSession = true);
+    QString firstAvailableSessionNameAcrossWindows(bool privateSession) const;
+    void renameLoadedSession(Session* session, const QString& name);
+    void discardUnusedPrivateSessions();
     QString firstAvailableUntitledSessionNameAcrossWindows(const MainWindow* ignoredWindow = nullptr) const;
     void copyWindowLayoutFrom(const MainWindow* source);
     QList<ResultDisplay*> splitPaneDisplays() const;
@@ -364,7 +369,7 @@ private:
     void refreshPaneThemes();
     void captureVisibleSessionViewports();
     void restoreVisibleSessionViewports();
-    void saveSessionLayout(bool captureCurrentViewport = true);
+    void saveSessionLayout(bool captureCurrentViewport = true, bool captureEditorState = false);
     void flushPendingSessionSave();
     bool configureCustomKeypad();
     void updateKeypadModeActionState();
@@ -406,6 +411,8 @@ private:
         QAction* sessionOpen;
         QAction* sessionRename;
         QAction* sessionNewTab;
+        QAction* sessionNewPrivate;
+        QAction* sessionConvertPrivacy;
         QAction* sessionNewWindow;
         QAction* sessionOpenSessionsFolder;
         QAction* sessionImport;

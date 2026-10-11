@@ -79,6 +79,8 @@ signals:
     void removeHistoryEntriesAboveRequested(int index);
     void removeHistoryEntriesBelowRequested(int index);
     void newSessionRequested();
+    void newPrivateSessionRequested();
+    void convertSessionPrivacyRequested();
     void openSessionRequested();
     void importSessionRequested();
     void exportSessionJsonRequested();
