@@ -379,6 +379,7 @@ void Settings::load()
     autoResultToClipboard = settings->value(key + QLatin1String("AutoResultToClipboard"), false).toBool();
     simplifyResultExpressions = settings->value(key + QLatin1String("SimplifyResultExpressions"), true).toBool();
     windowPositionSave = settings->value(key + QLatin1String("WindowPositionSave"), true).toBool();
+    openPrivateTabOnStartup = settings->value(key + QLatin1String("OpenPrivateTabOnStartup"), false).toBool();
     complexNumbers = true;
     QString imaginaryUnitStr = settings->value(key + QLatin1String("ImaginaryUnit"), 'i').toString();
     if (imaginaryUnitStr != QLatin1String("i") && imaginaryUnitStr != QLatin1String("j"))
@@ -639,6 +640,7 @@ void Settings::save()
     settings->setValue(key + QLatin1String("SimplifyResultExpressions"), simplifyResultExpressions);
     settings->setValue(key + QLatin1String("Language"), language);
     settings->setValue(key + QLatin1String("WindowPositionSave"), windowPositionSave);
+    settings->setValue(key + QLatin1String("OpenPrivateTabOnStartup"), openPrivateTabOnStartup);
     settings->setValue(key + QLatin1String("ComplexNumbers"), true);
     settings->setValue(key + QLatin1String("ImaginaryUnit"), QString(QChar(imaginaryUnit)));
     settings->setValue(key + QLatin1String("AngleMode"), QString(QChar(angleUnit)));

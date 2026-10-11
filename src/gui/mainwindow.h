@@ -232,6 +232,7 @@ private slots:
     void setUserFunctionsDockVisible(bool, bool takeFocus = true);
     void setUserUnitsDockVisible(bool, bool takeFocus = true);
     void setWindowPositionSaveEnabled(bool);
+    void setOpenPrivateTabOnStartupEnabled(bool);
     void setWidgetsDirection();
     void showAboutDialog();
     void showStateLabel(const QString&);
@@ -339,6 +340,7 @@ private:
     QString firstAvailableSessionNameAcrossWindows(bool privateSession) const;
     void renameLoadedSession(Session* session, const QString& name);
     void discardUnusedPrivateSessions();
+    void finishStartupSessionRestore(bool restoredSession);
     QString firstAvailableUntitledSessionNameAcrossWindows(const MainWindow* ignoredWindow = nullptr) const;
     void copyWindowLayoutFrom(const MainWindow* source);
     QList<ResultDisplay*> splitPaneDisplays() const;
@@ -516,6 +518,7 @@ private:
         QAction* settingsBehaviorUpDownArrowAlways;
         QAction* settingsBehaviorUpDownArrowSingleLineOnly;
         QAction* settingsBehaviorAlwaysOnTop;
+        QAction* settingsOpenPrivateTabOnStartup;
         QAction* settingsBehaviorAutoResultToClipboard;
         QAction* settingsBehaviorSimplifyResultExpressions;
         QAction* settingsBehaviorHistorySizeLimit;
@@ -676,6 +679,7 @@ private:
     int m_pendingHistoryEditIndex;
     bool m_shutdownStateSaved;
     bool m_restorePreviousSessionOnStartup;
+    bool m_startupPrivateTabPending = false;
     QTimer* m_deferredSessionSaveTimer;
     bool m_sessionSavePending;
     bool m_bulkEvaluationInProgress;

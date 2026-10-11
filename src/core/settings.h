@@ -166,6 +166,7 @@ public:
     bool autoResultToClipboard;
     bool simplifyResultExpressions;
     bool windowPositionSave;
+    bool openPrivateTabOnStartup;
     QString startupUserDefinitions;
 
     bool constantsDockVisible;

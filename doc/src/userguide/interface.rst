@@ -188,6 +188,16 @@ These actions are also available from the tab and result display context menus.
 Privacy belongs to the session, so renaming it does not change whether it is
 saved. Ordinary sessions can remain open alongside private ones.
 
+Enable :menuselection:`Settings --> Window --> Open a Private Tab on Startup`
+to open and focus a fresh private tab whenever SpeedCrunch starts. This option
+is off by default. Saved ordinary sessions are restored as usual, with one new
+private tab in the active window, even when several windows are restored.
+An empty active ``Untitled-XXX`` session is used for the private tab instead of
+opening an extra ordinary tab. Sessions with history, unfinished expressions,
+or their own definitions stay open. When there are no sessions to restore,
+SpeedCrunch starts with just the private tab. Opening another window while
+the app is running still creates an ordinary session.
+
 .. versionadded:: 1.1
 
 
@@ -511,6 +521,11 @@ Window
 
 This section contains settings that control the main window behavior.
 
+* :menuselection:`Open a Private Tab on Startup`
+    Open and focus a fresh private tab after restoring saved sessions. If there
+    are no sessions to restore, or the active session is an empty
+    ``Untitled-XXX`` tab, start without an extra ordinary tab. This option is off
+    by default.
 * :menuselection:`Save Window Position on Exit`
     Controls if the window position is saved and restored.
 * :menuselection:`Always on Top`
