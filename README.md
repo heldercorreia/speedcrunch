@@ -53,3 +53,7 @@ You should have received a copy of the GNU General Public License along
 with this program; see the file [LICENSE](LICENSE).  If not, write to the Free
 Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 MA 02110-1301, USA.
+
+## Packaging status
+
+[![Packaging status](https://repology.org/badge/vertical-allrepos/speedcrunch.svg?exclude_unsupported=1&minversion=1.0.0&columns=4&exclude_sources=modules,site)](https://repology.org/project/speedcrunch/versions)
