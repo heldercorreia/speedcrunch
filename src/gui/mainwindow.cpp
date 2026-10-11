@@ -4134,6 +4134,7 @@ void MainWindow::createMenus()
     m_menus.settings = new QMenu("", this);
     menuBar()->addMenu(m_menus.settings);
     m_menus.settings->addAction(m_actions.settingsBehaviorNumberFormat);
+    m_menus.settings->addAction(m_actions.settingsLanguage);
     m_menus.settings->addSeparator();
 
     m_menus.display = m_menus.settings->addMenu("");
@@ -4232,7 +4233,6 @@ void MainWindow::createMenus()
     if (!isWaylandPlatform())
         m_menus.window->addAction(m_actions.settingsBehaviorAlwaysOnTop);
 
-    m_menus.settings->addAction(m_actions.settingsLanguage);
     m_menus.settings->addSeparator();
     m_menus.settings->addAction(m_actions.settingsResetAll);
 
