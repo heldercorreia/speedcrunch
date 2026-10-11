@@ -778,6 +778,7 @@ private slots:
     void update_checks_follow_build_option();
     void ui_test_fixture_resets_persisted_layout_and_first_run_preference();
     void editing_input_digit_grouping_updates_all_open_editors();
+    void editing_cursor_blinking_updates_all_open_editors();
     void number_format_is_shared_and_refreshes_all_input_panes();
     void display_font_changes_update_all_sessions_and_windows_data();
     void display_font_changes_update_all_sessions_and_windows();
@@ -1038,6 +1039,66 @@ void TestDisplayUi::editing_input_digit_grouping_updates_all_open_editors()
             QCOMPARE(hasGap, enabled);
             QCOMPARE(editor->text(), QStringLiteral("1000"));
         }
+    }
+}
+
+void TestDisplayUi::editing_cursor_blinking_updates_all_open_editors()
+{
+    MainWindow first;
+    MainWindow second;
+    QAction* firstAction = first.findChild<QAction*>(QStringLiteral("CursorBlinkingAction"));
+    QAction* secondAction = second.findChild<QAction*>(QStringLiteral("CursorBlinkingAction"));
+    QVERIFY(firstAction);
+    QVERIFY(secondAction);
+    QVERIFY(firstAction->isCheckable());
+    QVERIFY(firstAction->isChecked());
+    bool inEditingMenu = false;
+    for (QMenu* menu : first.findChildren<QMenu*>()) {
+        if (menu->title() == MainWindow::tr("&Editing") && menu->actions().contains(firstAction))
+            inEditingMenu = true;
+    }
+    QVERIFY(inEditingMenu);
+    QVERIFY(QMetaObject::invokeMethod(&first, "splitActivePaneRight", Qt::DirectConnection));
+    const QList<Editor*> editors = first.findChildren<Editor*>() + second.findChildren<Editor*>();
+    QVERIFY(editors.size() >= 3);
+    for (Editor* editor : editors)
+        editor->setText(QStringLiteral("123"));
+    firstAction->trigger();
+    QVERIFY(!Settings::instance()->cursorBlinking);
+    QVERIFY(!secondAction->isChecked());
+    for (Editor* editor : editors) {
+        QVERIFY(!editor->isCursorBlinkingEnabled());
+        QCOMPARE(editor->text(), QStringLiteral("123"));
+    }
+
+    // Panes and windows opened after the change inherit the saved choice.
+    QVERIFY(QMetaObject::invokeMethod(&first, "splitActivePaneDown", Qt::DirectConnection));
+    MainWindow third;
+    QVERIFY(!third.findChild<QAction*>(QStringLiteral("CursorBlinkingAction"))->isChecked());
+    for (MainWindow* window : {&first, &second, &third}) {
+        for (Editor* editor : window->findChildren<Editor*>())
+            QVERIFY(!editor->isCursorBlinkingEnabled());
+    }
+    secondAction->trigger();
+    QVERIFY(Settings::instance()->cursorBlinking);
+    for (MainWindow* window : {&first, &second, &third}) {
+        QVERIFY(window->findChild<QAction*>(QStringLiteral("CursorBlinkingAction"))->isChecked());
+        for (Editor* editor : window->findChildren<Editor*>())
+            QVERIFY(editor->isCursorBlinkingEnabled());
+    }
+    firstAction->trigger();
+    QAction* resetAction = first.findChild<QAction*>(QStringLiteral("ResetAllSettingsAction"));
+    QVERIFY(resetAction);
+    QTimer::singleShot(0, &first, []() {
+        auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        QVERIFY(dialog);
+        dialog->button(QMessageBox::Yes)->click();
+    });
+    resetAction->trigger();
+    for (MainWindow* window : {&first, &second, &third}) {
+        QVERIFY(window->findChild<QAction*>(QStringLiteral("CursorBlinkingAction"))->isChecked());
+        for (Editor* editor : window->findChildren<Editor*>())
+            QVERIFY(editor->isCursorBlinkingEnabled());
     }
 }
 

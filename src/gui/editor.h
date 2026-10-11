@@ -44,6 +44,7 @@ public:
 
     bool isAutoCalcEnabled() const;
     bool isAutoCompletionEnabled() const;
+    bool isCursorBlinkingEnabled() const { return m_cursorBlinkingEnabled; }
     Evaluator* evaluator() const { return m_evaluator; }
     static Editor* completionMouseSelectionOwner();
     void clearHistory();
@@ -56,6 +57,7 @@ public:
     void setAutoCalcEnabled(bool);
     void setAutoCompletionEnabled(bool);
     void setCustomCursorVisible(bool visible);
+    void setCursorBlinkingEnabled(bool enabled);
     void setThemePrimaryColor(const QColor& color, bool usePrimaryOutline);
     void setThemePreviewColorScheme(const ColorScheme& scheme);
     void setThemeCompletionColors(const QColor& background,
@@ -158,6 +160,7 @@ private:
     int m_currentHistoryIndex;
     QTimer* m_matchingTimer;
     QTimer* m_cursorBlinkTimer;
+    bool m_cursorBlinkingEnabled;
     bool m_customCursorVisible;
     bool m_themedCursorVisible = false;
     bool m_historyArrowNavigationEnabled;

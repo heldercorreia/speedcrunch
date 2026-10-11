@@ -1405,6 +1405,7 @@ Editor::Editor(QWidget* parent)
     updateMatchedParenthesisColors();
     m_matchingTimer = new QTimer(this);
     m_cursorBlinkTimer = new QTimer(this);
+    m_cursorBlinkingEnabled = Settings::instance()->cursorBlinking;
     m_customCursorVisible = true;
     m_historyArrowNavigationEnabled = true;
 
@@ -1644,10 +1645,21 @@ void Editor::setCustomCursorVisible(bool visible)
     viewport()->update();
 }
 
+void Editor::setCursorBlinkingEnabled(bool enabled)
+{
+    if (m_cursorBlinkingEnabled == enabled)
+        return;
+    m_cursorBlinkingEnabled = enabled;
+    if (hasFocus() || m_completion->isVisible())
+        showThemedCursorAndRestartBlink();
+    else
+        hideThemedCursorAndStopBlink();
+}
+
 void Editor::showThemedCursorAndRestartBlink()
 {
     m_themedCursorVisible = true;
-    if (shouldPaintThemedCursor()) {
+    if (shouldPaintThemedCursor() && m_cursorBlinkingEnabled) {
         const int cursorFlashTime = QApplication::cursorFlashTime();
         const int blinkInterval = cursorFlashTime > 0 ? qMax(1, cursorFlashTime / 2) : 500;
         m_cursorBlinkTimer->start(blinkInterval);

@@ -215,6 +215,9 @@ private slots:
     void editor_fill_color_is_15_percent_darker_for_light_background_role();
     void themed_cursor_has_only_two_states_at_display_scale_data();
     void themed_cursor_has_only_two_states_at_display_scale();
+    void non_blinking_cursor_stays_visible_data();
+    void non_blinking_cursor_stays_visible();
+    void cursor_blinking_survives_settings_reload();
     void cursor_free_painting_preserves_text_and_selections_data();
     void cursor_free_painting_preserves_text_and_selections();
 };
@@ -5358,6 +5361,90 @@ void TestEditorUi::themed_cursor_has_only_two_states_at_display_scale()
     }
     QVERIFY(sawVisible);
     QVERIFY(sawHidden);
+}
+
+void TestEditorUi::non_blinking_cursor_stays_visible_data()
+{
+    QTest::addColumn<qreal>("scale");
+    QTest::newRow("100-percent") << qreal(1);
+    QTest::newRow("125-percent") << qreal(1.25);
+    QTest::newRow("150-percent") << qreal(1.5);
+}
+
+void TestEditorUi::non_blinking_cursor_stays_visible()
+{
+    QFETCH(qreal, scale);
+    Editor editor;
+    editor.setAutoCalcEnabled(false);
+    editor.setAutoCompletionEnabled(false);
+    const QColor primary(QStringLiteral("#ff3377"));
+    editor.setThemePrimaryColor(primary, false);
+    editor.setText(QStringLiteral("123"));
+    editor.setCursorPosition(3);
+    editor.resize(400, editor.height());
+    editor.show();
+    editor.activateWindow();
+    editor.setFocus();
+    QTRY_VERIFY(editor.hasFocus());
+    QVERIFY(editor.isCursorBlinkingEnabled());
+
+    const auto cursorPixel = [&]() {
+        QImage image(QSize(qCeil(editor.viewport()->width() * scale),
+                           qCeil(editor.viewport()->height() * scale)),
+                     QImage::Format_ARGB32_Premultiplied);
+        image.setDevicePixelRatio(scale);
+        image.fill(Qt::transparent);
+        QPainter painter(&image);
+        editor.viewport()->render(&painter);
+        const QRect cursor = editor.cursorRect();
+        const int cursorX = cursor.x() + (cursor.width() - 2) / 2 + 1;
+        return image.pixelColor(qFloor(cursorX * scale), qFloor(cursor.center().y() * scale));
+    };
+    const int flashTime = qMax(1000, QApplication::cursorFlashTime());
+    QTRY_VERIFY_WITH_TIMEOUT(cursorPixel().rgba() != primary.rgba(), flashTime * 2);
+    editor.setCursorBlinkingEnabled(false);
+    QCOMPARE(cursorPixel().rgba(), primary.rgba());
+
+    // Editing, focus changes and theme updates must keep the cursor steady.
+    QTest::keyClick(&editor, Qt::Key_Left);
+    QTest::keyClick(&editor, Qt::Key_4);
+    editor.clearFocus();
+    QVERIFY(cursorPixel().rgba() != primary.rgba());
+    editor.setFocus();
+    QTRY_VERIFY(editor.hasFocus());
+    editor.setThemePrimaryColor(primary, false);
+    QElapsedTimer elapsed;
+    elapsed.start();
+    while (elapsed.elapsed() < flashTime * 2) {
+        QCOMPARE(cursorPixel().rgba(), primary.rgba());
+        QTest::qWait(20);
+    }
+
+    editor.setCustomCursorVisible(false);
+    QVERIFY(cursorPixel().rgba() != primary.rgba());
+    editor.setCustomCursorVisible(true);
+    QCOMPARE(cursorPixel().rgba(), primary.rgba());
+    editor.setCursorBlinkingEnabled(true);
+    QTRY_VERIFY_WITH_TIMEOUT(cursorPixel().rgba() != primary.rgba(), flashTime * 2);
+    QTRY_COMPARE_WITH_TIMEOUT(cursorPixel().rgba(), primary.rgba(), flashTime * 2);
+}
+
+void TestEditorUi::cursor_blinking_survives_settings_reload()
+{
+    Settings* settings = Settings::instance();
+    QVERIFY(settings->cursorBlinking);
+    for (bool enabled : {false, true}) {
+        settings->cursorBlinking = enabled;
+        settings->save();
+        settings->cursorBlinking = !enabled;
+        settings->load();
+        QCOMPARE(settings->cursorBlinking, enabled);
+        Editor editor;
+        QCOMPARE(editor.isCursorBlinkingEnabled(), enabled);
+    }
+    settings->cursorBlinking = false;
+    QVERIFY(settings->resetToDefaults());
+    QVERIFY(settings->cursorBlinking);
 }
 
 void TestEditorUi::cursor_free_painting_preserves_text_and_selections_data()
