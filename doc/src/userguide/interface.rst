@@ -614,6 +614,14 @@ Editing
 
     .. versionadded:: 1.1
 
+* :menuselection:`Blinking Cursor`
+    Make the cursor blink in the expression editor. This option is enabled
+    by default. Turn it off for a steady cursor. Changes apply immediately
+    to all open session panes and windows, and the choice is saved between
+    launches.
+
+    .. versionadded:: 1.1
+
 * :menuselection:`Show Empty History Hint`
     Show or hide the ``Type an expression here`` hint when there are no calculations in history.
 * :menuselection:`Keep Entered Expression After Evaluate`

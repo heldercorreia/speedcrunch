@@ -220,6 +220,7 @@ private slots:
     void setStatusBarVisible(bool);
     void setSyntaxHighlightingEnabled(bool);
     void setInputDigitGroupingEnabled(bool);
+    void setCursorBlinkingEnabled(bool);
     void setDigitGrouping(QAction*);
     void setDigitGroupingIntegerPartOnlyEnabled(bool);
     void setAutoResultToClipboardEnabled(bool);
@@ -491,6 +492,7 @@ private:
         QAction* settingsBehaviorAutoCompletionUserVariables;
         QAction* settingsBehaviorSyntaxHighlighting;
         QAction* settingsEditingInputDigitGrouping;
+        QAction* settingsEditingCursorBlinking;
         QAction* settingsBehaviorHoverHighlightResults;
         QAction* settingsBehaviorEmptyHistoryHint;
         QAction* settingsBehaviorDigitGroupingNone;

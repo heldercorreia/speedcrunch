@@ -160,6 +160,7 @@ public:
     bool showEmptyHistoryHint;
     bool syntaxHighlighting;
     bool inputDigitGrouping;
+    bool cursorBlinking;
     bool hoverHighlightResults;
     bool windowAlwaysOnTop;
     bool autoResultToClipboard;

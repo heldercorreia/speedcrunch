@@ -3460,6 +3460,8 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorSyntaxHighlighting = new QAction(this);
     m_actions.settingsEditingInputDigitGrouping = new QAction(this);
     m_actions.settingsEditingInputDigitGrouping->setObjectName(QStringLiteral("InputDigitGroupingAction"));
+    m_actions.settingsEditingCursorBlinking = new QAction(this);
+    m_actions.settingsEditingCursorBlinking->setObjectName(QStringLiteral("CursorBlinkingAction"));
     m_actions.settingsBehaviorHoverHighlightResults = new QAction(this);
     m_actions.settingsBehaviorDigitGroupingNone = new QAction(this);
     m_actions.settingsBehaviorDigitGroupingOneSpace = new QAction(this);
@@ -3549,6 +3551,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setCheckable(true);
     m_actions.settingsBehaviorSyntaxHighlighting->setCheckable(true);
     m_actions.settingsEditingInputDigitGrouping->setCheckable(true);
+    m_actions.settingsEditingCursorBlinking->setCheckable(true);
     m_actions.settingsBehaviorHoverHighlightResults->setCheckable(true);
     m_actions.settingsBehaviorDigitGroupingNone->setCheckable(true);
     m_actions.settingsBehaviorDigitGroupingNone->setData(0);
@@ -3866,6 +3869,8 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorSyntaxHighlighting->setText(MainWindow::tr("Syntax &Highlighting"));
     m_actions.settingsEditingInputDigitGrouping->setText(MainWindow::tr("Group Digits in &Input"));
     m_actions.settingsEditingInputDigitGrouping->setToolTip(MainWindow::tr("Group input digits using the selected number format."));
+    m_actions.settingsEditingCursorBlinking->setText(MainWindow::tr("&Blinking Cursor"));
+    m_actions.settingsEditingCursorBlinking->setToolTip(MainWindow::tr("Blink the cursor in the expression editor."));
     m_actions.settingsBehaviorHoverHighlightResults->setText(MainWindow::tr("Hover Highlighting"));
     m_actions.settingsBehaviorDigitGroupingNone->setText(MainWindow::tr("Disabled"));
     m_actions.settingsBehaviorDigitGroupingOneSpace->setText(MainWindow::tr("Small Space"));
@@ -4159,6 +4164,7 @@ void MainWindow::createMenus()
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionUserVariables);
     m_menus.editing->addAction(m_actions.settingsBehaviorAutoAns);
     m_menus.editing->addAction(m_actions.settingsEditingInputDigitGrouping);
+    m_menus.editing->addAction(m_actions.settingsEditingCursorBlinking);
     m_menus.editing->addAction(m_actions.settingsBehaviorEmptyHistoryHint);
     m_menus.editing->addAction(m_actions.settingsBehaviorLeaveLastExpression);
     m_menus.upDownArrowBehavior = m_menus.editing->addMenu("");
@@ -7336,6 +7342,8 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsBehaviorSyntaxHighlighting, SIGNAL(toggled(bool)), SLOT(setSyntaxHighlightingEnabled(bool)));
     connect(m_actions.settingsEditingInputDigitGrouping, &QAction::toggled,
             this, &MainWindow::setInputDigitGroupingEnabled);
+    connect(m_actions.settingsEditingCursorBlinking, &QAction::toggled,
+            this, &MainWindow::setCursorBlinkingEnabled);
     connect(m_actions.settingsBehaviorHoverHighlightResults, SIGNAL(toggled(bool)), SLOT(setHoverHighlightResultsEnabled(bool)));
     connect(m_actionGroups.digitGrouping, SIGNAL(triggered(QAction*)), SLOT(setDigitGrouping(QAction*)));
     connect(m_actions.settingsBehaviorDigitGroupingIntegerPartOnly, SIGNAL(toggled(bool)), SLOT(setDigitGroupingIntegerPartOnlyEnabled(bool)));
@@ -7735,6 +7743,7 @@ void MainWindow::applySettings(bool initializing)
     else
         setSyntaxHighlightingEnabled(false);
     m_actions.settingsEditingInputDigitGrouping->setChecked(m_settings->inputDigitGrouping);
+    setCursorBlinkingEnabled(m_settings->cursorBlinking);
 
     if (m_settings->hoverHighlightResults)
         m_actions.settingsBehaviorHoverHighlightResults->setChecked(true);
@@ -10673,6 +10682,22 @@ void MainWindow::setInputDigitGroupingEnabled(bool enabled)
         const QSignalBlocker blocker(window->m_actions.settingsEditingInputDigitGrouping);
         window->m_actions.settingsEditingInputDigitGrouping->setChecked(enabled);
         emit window->syntaxHighlightingChanged();
+    }
+}
+
+void MainWindow::setCursorBlinkingEnabled(bool enabled)
+{
+    m_settings->cursorBlinking = enabled;
+    QList<QPointer<MainWindow>> windows = allMainWindows();
+    if (!windows.contains(QPointer<MainWindow>(this)))
+        windows.append(QPointer<MainWindow>(this));
+    for (const QPointer<MainWindow>& window : windows) {
+        if (!window)
+            continue;
+        const QSignalBlocker blocker(window->m_actions.settingsEditingCursorBlinking);
+        window->m_actions.settingsEditingCursorBlinking->setChecked(enabled);
+        for (Editor* editor : window->findChildren<Editor*>())
+            editor->setCursorBlinkingEnabled(enabled);
     }
 }
 
