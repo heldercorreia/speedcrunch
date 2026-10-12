@@ -558,6 +558,12 @@ void ConstantsWidget::showSummaryPopup(QTreeWidgetItem* item,
 void ConstantsWidget::updateSummaryPopupForViewportPosition(const QPoint& viewportPos,
                                                             const QPoint& globalPos)
 {
+    // QTreeView can return the first row for positions above the viewport.
+    if (!m_list->viewport()->rect().contains(viewportPos)) {
+        hideSummaryPopup();
+        return;
+    }
+
     const QModelIndex index = m_list->indexAt(viewportPos);
     QTreeWidgetItem* item = index.isValid() ? m_list->itemAt(viewportPos) : nullptr;
     if (item == nullptr) {

@@ -14,6 +14,12 @@
 #include <QSignalSpy>
 #include <QTest>
 #include <QCoreApplication>
+#include <QFrame>
+#include <QHeaderView>
+#include <QHelpEvent>
+#include <QHoverEvent>
+#include <QLabel>
+#include <QMouseEvent>
 #include <QTranslator>
 #include <QSplitter>
 #include <QTreeWidget>
@@ -49,6 +55,8 @@ class TestDocksUi : public QObject {
 private slots:
     void init() { UiTestFixture::resetSettings(); }
     void constants_dock_inserts_pi_symbol_with_translated_name();
+    void constants_summary_popup_ignores_header_and_padding_data();
+    void constants_summary_popup_ignores_header_and_padding();
     void user_units_dock_shows_rhs_and_description_after_definition();
     void user_variables_dock_keeps_existing_value_text_after_new_definition();
     void splitter_normalization_removes_single_child_nested_splitter_after_pane_close_shape();
@@ -85,6 +93,87 @@ void TestDocksUi::constants_dock_inserts_pi_symbol_with_translated_name()
     QCOMPARE(spy.takeFirst().at(0).toString(), QString::fromUtf8("π"));
 
     QCoreApplication::removeTranslator(&translator);
+}
+
+void TestDocksUi::constants_summary_popup_ignores_header_and_padding_data()
+{
+    QTest::addColumn<int>("eventType");
+    QTest::addColumn<bool>("sendToViewport");
+
+    for (bool sendToViewport : {false, true}) {
+        const QByteArray target = sendToViewport ? "viewport-" : "tree-";
+        QTest::newRow(QByteArray(target + "mouse").constData())
+            << int(QEvent::MouseMove) << sendToViewport;
+        QTest::newRow(QByteArray(target + "hover").constData())
+            << int(QEvent::HoverMove) << sendToViewport;
+        QTest::newRow(QByteArray(target + "tooltip").constData())
+            << int(QEvent::ToolTip) << sendToViewport;
+    }
+}
+
+void TestDocksUi::constants_summary_popup_ignores_header_and_padding()
+{
+    QFETCH(int, eventType);
+    QFETCH(bool, sendToViewport);
+
+    ConstantsWidget widget;
+    widget.resize(420, 360);
+    QTreeWidget* tree = widget.findChild<QTreeWidget*>();
+    QVERIFY(tree != nullptr);
+    tree->setStyleSheet(QStringLiteral("QTreeWidget { padding: 6px 8px; border: 0; }"));
+    widget.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&widget));
+    QVERIFY(tree->topLevelItemCount() > 0);
+    QTreeWidgetItem* firstItem = tree->topLevelItem(0);
+    tree->scrollToItem(firstItem);
+    QCoreApplication::processEvents();
+
+    QWidget* viewport = tree->viewport();
+    QWidget* target = sendToViewport ? viewport : tree;
+    const QPoint rowPos = tree->visualItemRect(firstItem).center();
+    QVERIFY(viewport->rect().contains(rowPos));
+    const auto sendPosition = [&](const QPoint& viewportPos) {
+        const QPoint pos = viewport->mapTo(target, viewportPos);
+        const QPoint globalPos = viewport->mapToGlobal(viewportPos);
+        if (eventType == QEvent::MouseMove) {
+            QMouseEvent event(QEvent::MouseMove, QPointF(pos), QPointF(globalPos),
+                              Qt::NoButton, Qt::NoButton, Qt::NoModifier);
+            QCoreApplication::sendEvent(target, &event);
+        } else if (eventType == QEvent::HoverMove) {
+            QHoverEvent event(QEvent::HoverMove, QPointF(pos), QPointF(globalPos),
+                              QPointF(pos));
+            QCoreApplication::sendEvent(target, &event);
+        } else {
+            QHelpEvent event(QEvent::ToolTip, pos, globalPos);
+            QCoreApplication::sendEvent(target, &event);
+        }
+    };
+
+    // Header and padding positions must not resolve to the first constant.
+    const QList<QPoint> outsidePositions = {
+        viewport->mapFrom(tree, QPoint(rowPos.x(), 1)),
+        viewport->mapFromGlobal(tree->header()->mapToGlobal(tree->header()->rect().center())),
+        QPoint(rowPos.x(), -1),
+        QPoint(-1, rowPos.y()),
+        QPoint(viewport->width(), rowPos.y()),
+        QPoint(rowPos.x(), viewport->height())
+    };
+    for (const QPoint& outsidePos : outsidePositions) {
+        QVERIFY(!viewport->rect().contains(outsidePos));
+        sendPosition(rowPos);
+        QFrame* popup = widget.findChild<QFrame*>(QStringLiteral("constantsSummaryPopup"));
+        QVERIFY(popup != nullptr);
+        QVERIFY(popup->isVisible());
+        QLabel* label = popup->findChild<QLabel*>(QStringLiteral("constantsSummaryPopupLabel"));
+        QVERIFY(label != nullptr);
+        QCOMPARE(label->text(), firstItem->toolTip(tree->indexAt(rowPos).column()));
+
+        sendPosition(outsidePos);
+        QVERIFY2(!popup->isVisible(), qPrintable(QStringLiteral("Popup remains visible at (%1, %2)")
+                                                    .arg(outsidePos.x()).arg(outsidePos.y())));
+        sendPosition(outsidePos);
+        QVERIFY(!popup->isVisible());
+    }
 }
 
 void TestDocksUi::user_units_dock_shows_rhs_and_description_after_definition()
