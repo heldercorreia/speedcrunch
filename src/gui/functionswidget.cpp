@@ -8,6 +8,7 @@
 #include "core/settings.h"
 #include "gui/dockliststyle.h"
 #include "gui/themedlineedit.h"
+#include "gui/uiconfig.h"
 
 #include <QEvent>
 #include <QString>
@@ -31,7 +32,6 @@ FunctionsWidget::FunctionsWidget(QWidget* parent)
     , m_searchLabel(new QLabel(this))
 {
     constexpr int kControlRowHorizontalPadding = 8;
-    constexpr int kControlRowVerticalPadding = 6;
 
     m_filterTimer->setInterval(500);
     m_filterTimer->setSingleShot(true);
@@ -59,9 +59,9 @@ FunctionsWidget::FunctionsWidget(QWidget* parent)
     domainLayout->addWidget(m_domainLabel);
     domainLayout->addWidget(m_domain);
     domainLayout->setContentsMargins(kControlRowHorizontalPadding,
-                                     kControlRowVerticalPadding,
+                                     UiConfig::DockSearchRowVerticalPadding,
                                      kControlRowHorizontalPadding,
-                                     kControlRowVerticalPadding);
+                                     0);
     domainBox->setLayout(domainLayout);
 
     QWidget* searchBox = new QWidget(this);
@@ -69,9 +69,9 @@ FunctionsWidget::FunctionsWidget(QWidget* parent)
     searchLayout->addWidget(m_searchLabel);
     searchLayout->addWidget(m_searchFilter);
     searchLayout->setContentsMargins(kControlRowHorizontalPadding,
-                                     kControlRowVerticalPadding,
+                                     UiConfig::DockSearchRowVerticalPadding,
                                      kControlRowHorizontalPadding,
-                                     kControlRowVerticalPadding);
+                                     UiConfig::DockSearchRowVerticalPadding);
     searchBox->setLayout(searchLayout);
 
     QVBoxLayout* layout = new QVBoxLayout;
