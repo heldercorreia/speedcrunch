@@ -3546,6 +3546,12 @@ void MainWindow::createActions()
     m_actions.settingsMenuAppearanceSystem->setData(Settings::MenuAppearanceSystem);
     m_actions.settingsMenuAppearanceSpeedCrunch->setCheckable(true);
     m_actions.settingsMenuAppearanceSpeedCrunch->setData(Settings::MenuAppearanceSpeedCrunch);
+    m_actions.settingsEditorDisplayClassic = new QAction(this);
+    m_actions.settingsEditorDisplayClassic->setCheckable(true);
+    m_actions.settingsEditorDisplayClassic->setData(Settings::EditorDisplayClassic);
+    m_actions.settingsEditorDisplayModern = new QAction(this);
+    m_actions.settingsEditorDisplayModern->setCheckable(true);
+    m_actions.settingsEditorDisplayModern->setData(Settings::EditorDisplayModern);
     m_actions.settingsLanguage = new QAction(this);
     m_actions.settingsRadixCharComma = new QAction(this);
     m_actions.settingsRadixCharDefault = new QAction(this);
@@ -3839,6 +3845,39 @@ void MainWindow::setMenuAppearance(QAction* action)
     }
 }
 
+void MainWindow::setEditorDisplayStyle(QAction* action)
+{
+    if (action == nullptr)
+        return;
+    m_settings->editorDisplayStyle = action->data().toInt() == Settings::EditorDisplayClassic
+        ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern;
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (window)
+            window->applyEditorDisplayStyle();
+    }
+    updatePaneEditorCursorVisibility();
+}
+
+void MainWindow::applyEditorDisplayStyle()
+{
+    m_actions.settingsEditorDisplayClassic->setChecked(
+        m_settings->editorDisplayStyle == Settings::EditorDisplayClassic);
+    m_actions.settingsEditorDisplayModern->setChecked(
+        m_settings->editorDisplayStyle == Settings::EditorDisplayModern);
+    for (ResultDisplay* display : splitPaneDisplays())
+        display->applyEditorDisplayStyle();
+    for (Editor* editor : splitPaneEditors())
+        editor->rehighlight();
+    updateSplitterStyleSheet();
+    if (m_widgets.state != nullptr && m_widgets.state->isVisible()) {
+        // The new editor height takes effect when Qt lays out the pane.
+        QTimer::singleShot(0, this, [this]() {
+            if (m_widgets.state->isVisible())
+                showStateLabel(m_widgets.state->text());
+        });
+    }
+}
+
 QString MainWindow::statusBarAngleUnitValue() const
 {
     return (m_status.selectedAngleUnit == 'r' ? MainWindow::tr("Radian")
@@ -4009,6 +4048,8 @@ void MainWindow::setActionsText()
     m_actions.settingsDisplayColorSchemeCustom->setText(MainWindow::tr("&Theme..."));
     m_actions.settingsMenuAppearanceSystem->setText(MainWindow::tr("&System"));
     m_actions.settingsMenuAppearanceSpeedCrunch->setText(MainWindow::tr("&SpeedCrunch Theme"));
+    m_actions.settingsEditorDisplayClassic->setText(MainWindow::tr("&Classic"));
+    m_actions.settingsEditorDisplayModern->setText(MainWindow::tr("&Modern"));
     m_actions.settingsLanguage->setText(MainWindow::tr("&Language..."));
 
     m_actions.helpManual->setText(MainWindow::tr("User &Manual"));
@@ -4082,6 +4123,9 @@ void MainWindow::createActionGroups()
     m_actionGroups.menuAppearance = new QActionGroup(this);
     m_actionGroups.menuAppearance->addAction(m_actions.settingsMenuAppearanceSystem);
     m_actionGroups.menuAppearance->addAction(m_actions.settingsMenuAppearanceSpeedCrunch);
+    m_actionGroups.editorDisplayStyle = new QActionGroup(this);
+    m_actionGroups.editorDisplayStyle->addAction(m_actions.settingsEditorDisplayClassic);
+    m_actionGroups.editorDisplayStyle->addAction(m_actions.settingsEditorDisplayModern);
     const auto schemes = m_actions.settingsDisplayColorSchemes;
     for (auto& action : schemes)
         m_actionGroups.colorScheme->addAction(action);
@@ -4233,6 +4277,10 @@ void MainWindow::createMenus()
     m_menus.menuAppearance->setObjectName(QStringLiteral("MenuAppearanceMenu"));
     m_menus.menuAppearance->addAction(m_actions.settingsMenuAppearanceSystem);
     m_menus.menuAppearance->addAction(m_actions.settingsMenuAppearanceSpeedCrunch);
+    m_menus.editorDisplayStyle = m_menus.display->addMenu("");
+    m_menus.editorDisplayStyle->setObjectName(QStringLiteral("EditorDisplayStyleMenu"));
+    m_menus.editorDisplayStyle->addAction(m_actions.settingsEditorDisplayClassic);
+    m_menus.editorDisplayStyle->addAction(m_actions.settingsEditorDisplayModern);
     m_menus.display->addAction(m_actions.settingsDisplayFont);
     m_menus.display->addSeparator();
     m_menus.display->addAction(m_actions.settingsBehaviorSyntaxHighlighting);
@@ -4372,6 +4420,7 @@ void MainWindow::setMenusText()
     m_menus.upDownArrowBehavior->setTitle(MainWindow::tr("Up/Down Arrow History"));
     m_menus.display->setTitle(MainWindow::tr("&Appearance"));
     m_menus.menuAppearance->setTitle(MainWindow::tr("&Menus"));
+    m_menus.editorDisplayStyle->setTitle(MainWindow::tr("&Editor"));
     m_menus.help->setTitle(MainWindow::tr("&Help"));
 }
 
@@ -4547,6 +4596,7 @@ void MainWindow::createFixedWidgets()
     m_widgets.editor->setSession(m_session);
 
     m_widgets.state = new QLabel(this);
+    m_widgets.state->setObjectName(QStringLiteral("EditorStatePopup"));
     m_widgets.state->setPalette(QToolTip::palette());
     m_widgets.state->setAutoFillBackground(true);
     m_widgets.state->setFrameShape(QFrame::NoFrame);
@@ -6264,6 +6314,7 @@ void MainWindow::updatePaneLoadedSessionCounts()
         display->setCloseSessionEnabled(multiplePanes || paneSessionNames(display).size() > 1);
     }
     updatePaneTabBars();
+    updatePaneEditorCursorVisibility();
 }
 
 void MainWindow::updatePaneEditorCursorVisibility()
@@ -6271,6 +6322,8 @@ void MainWindow::updatePaneEditorCursorVisibility()
     const QPointer<ResultDisplay> activeDisplay = globallyActiveDisplay();
     const QPointer<Editor> activeEditor = globallyActiveEditor();
     const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
+    const int windowCount = std::count_if(allMainWindows().cbegin(), allMainWindows().cend(),
+        [](const QPointer<MainWindow>& window) { return !window.isNull(); });
     QSet<MainWindow*> updatedWindows;
     for (const QPointer<MainWindow>& ptr : allMainWindows()) {
         MainWindow* window = ptr.data();
@@ -6278,8 +6331,11 @@ void MainWindow::updatePaneEditorCursorVisibility()
             continue;
 
         updatedWindows.insert(window);
+        const QList<ResultDisplay*> displays = window->splitPaneDisplays();
+        const bool showActiveOutline = m_settings->editorDisplayStyle != Settings::EditorDisplayClassic
+            || windowCount != 1 || displays.size() != 1;
         QSet<Editor*> updatedEditors;
-        for (ResultDisplay* display : window->splitPaneDisplays()) {
+        for (ResultDisplay* display : displays) {
             QWidget* page = display->parentWidget();
             Editor* editor = page
                 ? page->findChild<Editor*>(QString(), Qt::FindDirectChildrenOnly)
@@ -6291,7 +6347,7 @@ void MainWindow::updatePaneEditorCursorVisibility()
             if (editor != nullptr) {
                 updatedEditors.insert(editor);
                 editor->setCustomCursorVisible(active);
-                editor->setThemePrimaryColor(surfaces.primary.background, active);
+                editor->setThemePrimaryColor(surfaces.primary.background, active && showActiveOutline);
             }
         }
         for (Editor* editor : window->splitPaneEditors()) {
@@ -6424,18 +6480,25 @@ void MainWindow::updateSplitterStyleSheet()
         return;
 
     const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
-    const QColor handle = themeSurfaceForShadeIndex(surfaces, UiConfig::SplitterShade).background;
+    const bool classic = m_settings->editorDisplayStyle == Settings::EditorDisplayClassic;
+    const QColor handle = themeSurfaceForShadeIndex(
+        surfaces, classic ? UiConfig::ClassicVerticalPaneDividerShade : UiConfig::SplitterShade).background;
     const QColor hoveredHandle = UiConfig::SplitterHoverUsesPrimary
         ? surfaces.primary.background
         : themeSurfaceForShadeIndex(surfaces, UiConfig::SplitterHoverShade).background;
     setProperty(DockSeparatorNormalColorProperty, handle);
     setProperty(DockSeparatorActiveColorProperty, hoveredHandle);
 
+    const QColor classicPaneDivider = themeSurfaceForShadeIndex(
+        surfaces, UiConfig::ClassicVerticalPaneDividerShade).background;
     const QString styleSheet = splitterStyleSheet(handle, hoveredHandle);
-    const auto applyStyle = [&styleSheet](QSplitter* splitter, const auto& applyStyleRef) -> void {
+    const QString classicVerticalStyleSheet = splitterStyleSheet(classicPaneDivider, hoveredHandle);
+    const auto applyStyle = [classic, &styleSheet, &classicVerticalStyleSheet](
+        QSplitter* splitter, const auto& applyStyleRef) -> void {
         if (splitter == nullptr)
             return;
-        splitter->setStyleSheet(styleSheet);
+        splitter->setStyleSheet(classic && splitter->orientation() == Qt::Horizontal
+            ? classicVerticalStyleSheet : styleSheet);
         for (int i = 0; i < splitter->count(); ++i) {
             if (QSplitter* childSplitter = qobject_cast<QSplitter*>(splitter->widget(i)))
                 applyStyleRef(childSplitter, applyStyleRef);
@@ -6443,10 +6506,13 @@ void MainWindow::updateSplitterStyleSheet()
     };
     applyStyle(m_widgets.splitContainer, applyStyle);
 
-    const QString handleStyleSheet = splitterHandleStyleSheet(handle, hoveredHandle);
     for (QSplitterHandle* splitterHandle : findChildren<QSplitterHandle*>()) {
         splitterHandle->installEventFilter(this);
-        splitterHandle->setStyleSheet(handleStyleSheet);
+        const bool classicVerticalDivider = classic
+            && splitterHandle->orientation() == Qt::Horizontal
+            && m_widgets.splitContainer->isAncestorOf(splitterHandle);
+        splitterHandle->setStyleSheet(splitterHandleStyleSheet(
+            classicVerticalDivider ? classicPaneDivider : handle, hoveredHandle));
         splitterHandle->update();
     }
 }
@@ -7284,6 +7350,8 @@ void MainWindow::createFixedConnections()
     connect(this, &MainWindow::colorSchemeChanged, this, &MainWindow::refreshPaneThemes);
     connect(m_actionGroups.menuAppearance, &QActionGroup::triggered,
             this, &MainWindow::setMenuAppearance);
+    connect(m_actionGroups.editorDisplayStyle, &QActionGroup::triggered,
+            this, &MainWindow::setEditorDisplayStyle);
     connect(this, &MainWindow::syntaxHighlightingChanged, this, &MainWindow::refreshPaneThemes);
 
     connect(m_actions.sessionExportJson, SIGNAL(triggered()), SLOT(exportJson()));
@@ -7653,6 +7721,7 @@ void MainWindow::createFixedConnections()
 
 void MainWindow::applySettings(bool initializing)
 {
+    applyEditorDisplayStyle();
     m_actions.settingsMenuAppearanceSystem->setChecked(
         m_settings->menuAppearance == Settings::MenuAppearanceSystem);
     m_actions.settingsMenuAppearanceSpeedCrunch->setChecked(
@@ -8650,6 +8719,8 @@ MainWindow::~MainWindow()
     qApp->removeEventFilter(this);
     windowIds().remove(objectName());
     allMainWindows().removeAll(QPointer<MainWindow>(this));
+    if (!applicationShutdownInProgress())
+        updatePaneEditorCursorVisibility();
     if (m_docks.book)
         deleteBookDock();
     if (m_docks.constants)
@@ -11462,8 +11533,10 @@ void MainWindow::showStateLabel(const QString& msg)
     m_widgets.state->show();
     m_widgets.state->raise();
     const int height = m_widgets.state->height();
+    const int horizontalMargin = m_settings->editorDisplayStyle == Settings::EditorDisplayClassic
+        ? UiConfig::ClassicTextInset : UiConfig::ResultTooltipStartMargin;
     QPoint pos = mapFromGlobal(
-        positionEditor->mapToGlobal(QPoint(UiConfig::ResultTooltipStartMargin, -height)));
+        positionEditor->mapToGlobal(QPoint(horizontalMargin, -height)));
     m_widgets.state->move(pos);
 }
 
@@ -12027,7 +12100,6 @@ void MainWindow::deleteKeypad(bool deferredDeletion)
             delete m_layouts.keypad;
     }
     m_layouts.keypad = 0;
-
 }
 
 void MainWindow::deleteStatusBar()
@@ -13877,6 +13949,7 @@ void MainWindow::closeEvent(QCloseEvent* e)
     } else {
         if (!applicationShutdownInProgress()) {
             allMainWindows().removeAll(QPointer<MainWindow>(this));
+            updatePaneEditorCursorVisibility();
             saveSessionLayout(false);
         }
     }

@@ -108,6 +108,10 @@ private slots:
     void copy_shortcut_preserves_editor_state_data();
     void copy_shortcut_preserves_editor_state();
     void highlight_refresh_preserves_text_and_selection_without_edit_signals();
+    void editor_text_line_is_vertically_centered_data();
+    void editor_text_line_is_vertically_centered();
+    void unchanged_primary_theme_avoids_editor_style_refresh_data();
+    void unchanged_primary_theme_avoids_editor_style_refresh();
     void treats_spaced_question_comment_as_atomic_navigation_and_edit_token();
     void treats_spaced_equal_as_atomic_navigation_and_edit_token();
     void treats_leading_question_comment_as_atomic_navigation_and_edit_token();
@@ -208,6 +212,9 @@ private slots:
     void wrap_selection_method_wraps_whole_expression_without_selection();
     void matching_parentheses_use_parens_and_generated_foreground_colors();
     void keeps_wrapped_cursor_line_visible_at_height_cap();
+    void classic_editor_keeps_wrapped_input_visible_and_preserves_undo();
+    void classic_completion_popups_follow_text_inset_data();
+    void classic_completion_popups_follow_text_inset();
     void editor_height_adds_only_one_line_height_per_visible_line();
     void editor_keeps_unit_descenders_inside_viewport();
     void adding_second_wrapped_character_keeps_first_line_visible();
@@ -1691,6 +1698,113 @@ void TestEditorUi::highlight_refresh_preserves_text_and_selection_without_edit_s
     QCOMPARE(editor.textCursor().position(), cursor.position());
     QCOMPARE(editor.textCursor().anchor(), cursor.anchor());
     QVERIFY(!editor.document()->isUndoAvailable());
+}
+
+void TestEditorUi::unchanged_primary_theme_avoids_editor_style_refresh_data()
+{
+    QTest::addColumn<bool>("classic");
+    QTest::newRow("modern") << false;
+    QTest::newRow("classic") << true;
+}
+
+void TestEditorUi::unchanged_primary_theme_avoids_editor_style_refresh()
+{
+    QFETCH(bool, classic);
+    Settings::instance()->editorDisplayStyle = classic
+        ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern;
+    Editor editor;
+    editor.setAutoCompletionEnabled(false);
+    const QColor primary(QStringLiteral("#334455"));
+    editor.setThemePrimaryColor(primary, true);
+    editor.setText(QStringLiteral("123+456"));
+    editor.setCursorPosition(editor.text().size());
+
+    class StyleChangeRecorder : public QObject {
+    public:
+        int count = 0;
+        bool eventFilter(QObject*, QEvent* event) override
+        {
+            if (event->type() == QEvent::StyleChange)
+                ++count;
+            return false;
+        }
+    } recorder;
+    editor.installEventFilter(&recorder);
+    for (int i = 0; i < 5; ++i) {
+        QTest::keyClicks(&editor, QStringLiteral("1"));
+        editor.setThemePrimaryColor(primary, true);
+    }
+    QCOMPARE(recorder.count, 0);
+    QCOMPARE(editor.text(), QStringLiteral("123+45611111"));
+
+    const QString activeStyle = editor.styleSheet();
+    editor.setThemePrimaryColor(primary, false);
+    QVERIFY(recorder.count > 0);
+    QVERIFY(editor.styleSheet() != activeStyle);
+    recorder.count = 0;
+    editor.setThemePrimaryColor(primary, false);
+    QCOMPARE(recorder.count, 0);
+
+    editor.setThemePrimaryColor(QColor(QStringLiteral("#556677")), true);
+    QVERIFY(recorder.count > 0);
+    QVERIFY(editor.styleSheet() != activeStyle);
+
+    QPalette viewportPalette = editor.viewport()->palette();
+    viewportPalette.setColor(QPalette::Base, Qt::transparent);
+    editor.viewport()->setPalette(viewportPalette);
+    editor.setThemePrimaryColor(QColor(QStringLiteral("#556677")), true);
+    QCOMPARE(editor.viewport()->palette().color(QPalette::Base),
+             editor.palette().color(QPalette::Base));
+}
+
+void TestEditorUi::editor_text_line_is_vertically_centered_data()
+{
+    QTest::addColumn<bool>("classic");
+    QTest::addColumn<int>("pixelSize");
+    QTest::addColumn<int>("lineCount");
+    for (const bool classic : {false, true}) {
+        for (const int pixelSize : {16, 24, 32}) {
+            for (const int lineCount : {1, 5}) {
+                const QByteArray name = QByteArray(classic ? "classic-" : "modern-")
+                    + QByteArray::number(pixelSize) + '-' + QByteArray::number(lineCount);
+                QTest::newRow(name.constData()) << classic << pixelSize << lineCount;
+            }
+        }
+    }
+}
+
+void TestEditorUi::editor_text_line_is_vertically_centered()
+{
+    QFETCH(bool, classic);
+    QFETCH(int, pixelSize);
+    QFETCH(int, lineCount);
+    Settings::instance()->editorDisplayStyle = classic
+        ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern;
+    Editor editor;
+    QFont font = editor.font();
+    font.setPixelSize(pixelSize);
+    editor.setFont(font);
+    editor.setFixedWidth(400);
+    editor.rehighlight();
+    editor.setThemePrimaryColor(QColor(QStringLiteral("#90aaff")), true);
+    QStringList lines;
+    for (int i = 0; i < lineCount; ++i)
+        lines.append(QStringLiteral("23323323"));
+    editor.setText(lines.join(QLatin1Char('\n')));
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    QCoreApplication::processEvents();
+    QTextCursor first(editor.document());
+    QTextCursor last(editor.document());
+    last.movePosition(QTextCursor::End);
+    const QRect firstLine = editor.cursorRect(first).translated(editor.viewport()->pos());
+    const QRect lastLine = editor.cursorRect(last).translated(editor.viewport()->pos());
+    const int top = classic ? UiConfig::OutlineStrokeWidth : UiConfig::ModernEditorTopMargin;
+    const int bottom = editor.height()
+        - (classic ? 0 : UiConfig::ModernEditorBottomMargin);
+    QVERIFY2(qAbs((firstLine.top() + lastLine.bottom() + 1) - (top + bottom)) <= 1,
+        qPrintable(QStringLiteral("Text spans %1..%2 inside editor area %3..%4")
+            .arg(firstLine.top()).arg(lastLine.bottom() + 1).arg(top).arg(bottom)));
 }
 
 void TestEditorUi::treats_spaced_question_comment_as_atomic_navigation_and_edit_token()
@@ -5187,6 +5301,87 @@ void TestEditorUi::keeps_wrapped_cursor_line_visible_at_height_cap()
     QTRY_VERIFY(editor.document()->begin().layout()->lineCount() > 5);
     QTRY_VERIFY(editor.cursorRect().top() >= editor.viewport()->rect().top());
     QTRY_VERIFY(editor.cursorRect().bottom() <= editor.viewport()->rect().bottom());
+}
+
+void TestEditorUi::classic_editor_keeps_wrapped_input_visible_and_preserves_undo()
+{
+    Settings* settings = Settings::instance();
+    settings->autoCalc = false;
+    settings->editorDisplayStyle = Settings::EditorDisplayClassic;
+    Editor editor;
+    editor.setFixedWidth(220);
+    editor.rehighlight();
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+    editor.setText(QStringLiteral("2 [gypq]"));
+    editor.setCursorPosition(editor.text().size());
+    const int singleLineHeight = editor.height();
+    QVERIFY(editor.cursorRect().bottom() < editor.viewport()->height());
+    editor.setText(QStringLiteral("1\n2\n3\n4\n5"));
+    QCOMPARE(editor.height() - singleLineHeight, 4 * editor.fontMetrics().lineSpacing());
+    const QString input = QStringLiteral("1234567890+").repeated(30);
+    editor.setText(input);
+    editor.setCursorPosition(input.size());
+    QTRY_VERIFY(editor.document()->firstBlock().layout()->lineCount() > 5);
+    QTRY_COMPARE(editor.height() - singleLineHeight, 4 * editor.fontMetrics().lineSpacing());
+    QTRY_VERIFY(editor.cursorRect().top() >= 0);
+    QTRY_VERIFY(editor.cursorRect().bottom() < editor.viewport()->height());
+    QTest::keyClicks(&editor, QStringLiteral("2"));
+    QCOMPARE(editor.text(), input + QStringLiteral("2"));
+    settings->editorDisplayStyle = Settings::EditorDisplayModern;
+    editor.rehighlight();
+    QTRY_VERIFY(editor.cursorRect().top() >= 0);
+    QTRY_VERIFY(editor.cursorRect().bottom() < editor.viewport()->height());
+    editor.undo();
+    QCOMPARE(editor.text(), input);
+    settings->editorDisplayStyle = Settings::EditorDisplayClassic;
+    editor.rehighlight();
+    editor.redo();
+    QCOMPARE(editor.text(), input + QStringLiteral("2"));
+    QTRY_VERIFY(editor.cursorRect().top() >= 0);
+    QTRY_VERIFY(editor.cursorRect().bottom() < editor.viewport()->height());
+}
+
+void TestEditorUi::classic_completion_popups_follow_text_inset_data()
+{
+    QTest::addColumn<bool>("constant");
+    QTest::newRow("symbol-completion") << false;
+    QTest::newRow("constant-completion") << true;
+}
+
+void TestEditorUi::classic_completion_popups_follow_text_inset()
+{
+    QFETCH(bool, constant);
+    Settings::instance()->editorDisplayStyle = Settings::EditorDisplayClassic;
+    Editor editor;
+    editor.setAutoCompletionEnabled(false);
+    editor.setFixedWidth(340);
+    editor.rehighlight();
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+    const QRect screen = editor.screen()->availableGeometry();
+    editor.move(screen.left() + 20, screen.top() + 80);
+    editor.setText(constant ? QString() : QStringLiteral("co"));
+    editor.setCursorPosition(editor.text().size());
+    QCoreApplication::processEvents();
+    QWidget* popup = nullptr;
+    if (constant) {
+        QTest::keyClick(&editor, Qt::Key_Space, Qt::ControlModifier);
+        popup = QApplication::activePopupWidget();
+    } else {
+        auto* completion = editor.findChild<EditorCompletion*>();
+        QVERIFY(completion);
+        completion->showCompletion({QStringLiteral("cos:Cosine"),
+                                    QStringLiteral("cosh:Hyperbolic cosine")});
+        popup = s_completionPopupTree();
+    }
+    QVERIFY(popup);
+    const int textX = editor.mapToGlobal(QPoint(UiConfig::ClassicTextInset, 0)).x();
+    QCOMPARE(popup->geometry().left(), textX);
+    QVERIFY(screen.contains(popup->geometry()));
+    popup->hide();
 }
 
 void TestEditorUi::editor_height_adds_only_one_line_height_per_visible_line()

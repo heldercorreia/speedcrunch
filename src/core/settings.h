@@ -42,6 +42,11 @@ public:
         MenuAppearanceSpeedCrunch = 1
     };
 
+    enum EditorDisplayStyle {
+        EditorDisplayModern = 0,
+        EditorDisplayClassic = 1
+    };
+
     enum NumberFormatStyle {
         NumberFormatSystem = 0, // Legacy value kept for migration compatibility.
         NumberFormatNoGroupingDot = 1,
@@ -196,6 +201,7 @@ public:
 
     QString colorScheme;
     MenuAppearance menuAppearance;
+    EditorDisplayStyle editorDisplayStyle;
     QString customColorSchemeJson;
     QString displayFont;
     QString sessionLayoutJson;

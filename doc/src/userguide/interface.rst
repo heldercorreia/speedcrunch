@@ -760,6 +760,28 @@ User Interface Settings
     Selections in the expression editor, result display, and dock lists still
     use the SpeedCrunch theme. Their appearance is independent of this setting.
 
+* :menuselection:`Settings --> Appearance --> Editor`
+    Choose the layout of the expression editor and result display:
+
+    * :guilabel:`Modern` (the default) uses a rounded input box with compact
+      padding and a small gap around it. History aligns with the left edge of
+      the box.
+    * :guilabel:`Classic` uses a compact, full-width editor directly below the
+      results and a small history gutter. All editors use the Modern input
+      background color across the whole input area. Text and editor popups
+      share a small inset from the edge, with enough space below
+      the input for rounded window corners. A top line marks the active pane,
+      using the same thickness and accent color as the Modern outline.
+      This line is hidden when there is only one window and one pane,
+      regardless of how many session tabs it contains.
+      Vertical pane dividers remain visible through the input area.
+
+    Both styles keep the same editing features, including input that grows as
+    expressions wrap. The choice applies immediately to every window and pane
+    and is saved between launches.
+
+    .. versionadded:: 1.1
+
 * :menuselection:`Settings --> Appearance --> Font`
     Select the font to use for the expression editor and result display.
 * :menuselection:`Settings --> Appearance --> Syntax Highlighting`

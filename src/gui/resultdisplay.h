@@ -47,6 +47,7 @@ public:
     void setCloseSessionEnabled(bool enabled);
     void setSession(const Session* session);
     void setThemeSurfaceColor(const QColor& color);
+    void applyEditorDisplayStyle();
     void setThemeToolTipColors(const QColor& background,
                                const QColor& foreground,
                                const QColor& outline);

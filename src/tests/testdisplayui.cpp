@@ -77,6 +77,7 @@
 #include <QPixmap>
 #include <QProxyStyle>
 #include <QPushButton>
+#include <QResizeEvent>
 #include <QScrollBar>
 #include <QScopeGuard>
 #include <QShortcut>
@@ -821,6 +822,25 @@ private slots:
     void number_format_is_shared_and_refreshes_all_input_panes();
     void display_font_changes_update_all_sessions_and_windows_data();
     void display_font_changes_update_all_sessions_and_windows();
+    void editor_display_style_defaults_to_modern_and_persists();
+    void editor_display_style_switches_all_windows_and_preserves_work();
+    void editor_display_style_preserves_result_selection_and_copy();
+    void classic_editor_display_renders_and_tracks_active_pane_data();
+    void classic_editor_display_renders_and_tracks_active_pane();
+    void classic_editor_display_restores_split_panes();
+    void classic_focus_line_follows_open_windows_and_sessions_data();
+    void classic_focus_line_follows_open_windows_and_sessions();
+    void classic_vertical_pane_dividers_contrast_with_input_data();
+    void classic_vertical_pane_dividers_contrast_with_input();
+    void classic_separator_thickness_preserves_input_geometry_data();
+    void classic_separator_thickness_preserves_input_geometry();
+    void typing_long_expressions_keeps_editor_height_stable_data();
+    void typing_long_expressions_keeps_editor_height_stable();
+    void classic_keypad_boundary_follows_bordering_panes_data();
+    void classic_keypad_boundary_follows_bordering_panes();
+    void classic_keypad_boundary_restores_nested_panes();
+    void editor_popups_follow_style_padding_data();
+    void editor_popups_follow_style_padding();
     void settings_reset_restores_persisted_defaults();
     void settings_reset_can_be_cancelled_data();
     void settings_reset_can_be_cancelled();
@@ -1350,6 +1370,881 @@ void TestDisplayUi::display_font_changes_update_all_sessions_and_windows()
     settings->load();
     QVERIFY(savedFont.fromString(settings->displayFont));
     QCOMPARE(savedFont, expectedFont);
+}
+
+void TestDisplayUi::editor_display_style_defaults_to_modern_and_persists()
+{
+    Settings* settings = Settings::instance();
+    QCOMPARE(settings->editorDisplayStyle, Settings::EditorDisplayModern);
+    for (const auto style : {Settings::EditorDisplayClassic, Settings::EditorDisplayModern}) {
+        settings->editorDisplayStyle = style;
+        settings->save();
+        settings->editorDisplayStyle = style == Settings::EditorDisplayModern
+            ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern;
+        settings->load();
+        QCOMPARE(settings->editorDisplayStyle, style);
+    }
+    QSettings persisted(Settings::getConfigPath() + QStringLiteral("/SpeedCrunch.ini"),
+                        QSettings::IniFormat);
+    const QString key = QStringLiteral("SpeedCrunch/Display/EditorDisplayStyle");
+    persisted.remove(key);
+    persisted.sync();
+    settings->load();
+    QCOMPARE(settings->editorDisplayStyle, Settings::EditorDisplayModern);
+    persisted.setValue(key, 99);
+    persisted.sync();
+    settings->load();
+    QCOMPARE(settings->editorDisplayStyle, Settings::EditorDisplayModern);
+    settings->editorDisplayStyle = Settings::EditorDisplayClassic;
+    settings->save();
+    QVERIFY(settings->resetToDefaults());
+    QCOMPARE(settings->editorDisplayStyle, Settings::EditorDisplayModern);
+}
+
+void TestDisplayUi::editor_display_style_switches_all_windows_and_preserves_work()
+{
+    Settings* settings = Settings::instance();
+    settings->autoCalc = false;
+    MainWindow first(false);
+    MainWindow second(false);
+    for (MainWindow* window : {&first, &second}) {
+        QVERIFY(QMetaObject::invokeMethod(window, "splitActivePaneRight", Qt::DirectConnection));
+        QVERIFY(QMetaObject::invokeMethod(window, "showNewSessionDialog", Qt::DirectConnection));
+        window->resize(900, 600);
+        window->show();
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+    }
+    const auto editors = first.findChildren<Editor*>() + second.findChildren<Editor*>();
+    const auto displays = first.findChildren<ResultDisplay*>() + second.findChildren<ResultDisplay*>();
+    QCOMPARE(editors.size(), 4);
+    QCOMPARE(displays.size(), 4);
+    QMap<Editor*, int> modernHeights;
+    QMap<Editor*, int> modernInsets;
+    QMap<Editor*, QColor> modernColors;
+    QMap<ResultDisplay*, QString> results;
+    QMap<ResultDisplay*, int> modernGutters;
+    for (Editor* editor : editors) {
+        editor->setText(QStringLiteral("1234+56"));
+        QTextCursor cursor = editor->textCursor();
+        cursor.setPosition(2);
+        cursor.setPosition(5, QTextCursor::KeepAnchor);
+        editor->setTextCursor(cursor);
+        modernHeights.insert(editor, editor->height());
+        modernInsets.insert(editor, editor->viewport()->x());
+        modernColors.insert(editor, editor->palette().color(QPalette::Base));
+    }
+    for (ResultDisplay* display : displays) {
+        Session* session = const_cast<Session*>(display->session());
+        QVERIFY(session);
+        session->addHistoryEntry(HistoryEntry(QStringLiteral("6*7"), Quantity(42)));
+        display->refresh();
+        results.insert(display, display->toPlainText());
+        modernGutters.insert(display, display->viewport()->x());
+    }
+    QMenu* menu = first.findChild<QMenu*>(QStringLiteral("EditorDisplayStyleMenu"));
+    QVERIFY(menu);
+    QCOMPARE(menu->title(), QStringLiteral("&Editor"));
+    QCOMPARE(menu->actions().size(), 2);
+    QCOMPARE(menu->actions().at(0)->text(), QStringLiteral("&Classic"));
+    QCOMPARE(menu->actions().at(1)->text(), QStringLiteral("&Modern"));
+    QVERIFY(menu->actions().at(1)->isChecked());
+    auto* appearance = qobject_cast<QMenu*>(menu->parent());
+    QVERIFY(appearance);
+    QCOMPARE(appearance->title(), QStringLiteral("&Appearance"));
+    QVERIFY(appearance->actions().contains(menu->menuAction()));
+    for (const bool classic : {true, false, true}) {
+        menu->actions().at(classic ? 0 : 1)->trigger();
+        QCOMPARE(settings->editorDisplayStyle,
+                 classic ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern);
+        QCoreApplication::processEvents();
+        for (MainWindow* window : {&first, &second}) {
+            QMenu* windowMenu = window->findChild<QMenu*>(QStringLiteral("EditorDisplayStyleMenu"));
+            QVERIFY(windowMenu);
+            QCOMPARE(windowMenu->actions().at(0)->isChecked(), classic);
+            QCOMPARE(windowMenu->actions().at(1)->isChecked(), !classic);
+        }
+        for (Editor* editor : editors) {
+            QCOMPARE(editor->text(), QStringLiteral("1234+56"));
+            QCOMPARE(editor->textCursor().anchor(), 2);
+            QCOMPARE(editor->textCursor().position(), 5);
+            if (classic) {
+                QVERIFY(editor->height() < modernHeights.value(editor));
+                QVERIFY(editor->viewport()->x() < modernInsets.value(editor));
+            } else {
+                QCOMPARE(editor->height(), modernHeights.value(editor));
+                QCOMPARE(editor->viewport()->x(), modernInsets.value(editor));
+            }
+        }
+        for (ResultDisplay* display : displays) {
+            QCOMPARE(display->toPlainText(), results.value(display));
+            QCOMPARE(display->session()->historySize(), 1);
+            QCOMPARE(display->viewport()->x(), classic ? 4 : modernGutters.value(display));
+        }
+    }
+    // Inactive tabs share their pane's widgets, and new panes inherit Classic.
+    for (MainWindow* window : {&first, &second}) {
+        for (ResultDisplay* display : window->findChildren<ResultDisplay*>()) {
+            QTabBar* tabs = tabBarForDisplay(display);
+            QVERIFY(tabs);
+            for (int index = 0; index < tabs->count(); ++index) {
+                tabs->setCurrentIndex(index);
+                QCOMPARE(display->viewport()->x(), 4);
+                Editor* editor = editorForDisplay(display);
+                const QColor expected = modernColors.value(editor);
+                QCOMPARE(editor->palette().color(QPalette::Base).rgba(), expected.rgba());
+            }
+        }
+        QVERIFY(QMetaObject::invokeMethod(window, "splitActivePaneDown", Qt::DirectConnection));
+        for (ResultDisplay* display : window->findChildren<ResultDisplay*>())
+            QCOMPARE(display->viewport()->x(), 4);
+    }
+    MainWindow third(false);
+    QCOMPARE(third.findChild<ResultDisplay*>()->viewport()->x(), 4);
+    QVERIFY(third.findChild<QMenu*>(QStringLiteral("EditorDisplayStyleMenu"))->actions().at(0)->isChecked());
+    QTimer::singleShot(0, &first, []() {
+        auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        QVERIFY(dialog);
+        dialog->button(QMessageBox::Yes)->click();
+    });
+    first.findChild<QAction*>(QStringLiteral("ResetAllSettingsAction"))->trigger();
+    QCOMPARE(settings->editorDisplayStyle, Settings::EditorDisplayModern);
+    for (MainWindow* window : {&first, &second, &third}) {
+        QVERIFY(window->findChild<QMenu*>(QStringLiteral("EditorDisplayStyleMenu"))->actions().at(1)->isChecked());
+        for (ResultDisplay* display : window->findChildren<ResultDisplay*>())
+            QVERIFY(display->viewport()->x() > 0);
+    }
+}
+
+void TestDisplayUi::editor_display_style_preserves_result_selection_and_copy()
+{
+    Settings::instance()->autoCalc = false;
+    MainWindow window(false);
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    Editor* editor = window.findChild<Editor*>();
+    QVERIFY(display);
+    QVERIFY(editor);
+    editor->setText(QStringLiteral("123+456"));
+    Session* session = const_cast<Session*>(display->session());
+    session->addHistoryEntry(HistoryEntry(QStringLiteral("6*7"), Quantity(42)));
+    display->refresh();
+    QTextCursor selection = display->textCursor();
+    selection.select(QTextCursor::Document);
+    display->setTextCursor(selection);
+    const QString selectedText = selection.selectedText();
+    QVERIFY(!selectedText.isEmpty());
+    QSignalSpy edits(editor, &Editor::textChanged);
+    QMenu* menu = window.findChild<QMenu*>(QStringLiteral("EditorDisplayStyleMenu"));
+    QVERIFY(menu);
+    for (QAction* action : menu->actions()) {
+        action->trigger();
+        QCOMPARE(display->textCursor().selectedText(), selectedText);
+        QCOMPARE(editor->text(), QStringLiteral("123+456"));
+        QCOMPARE(edits.count(), 0);
+        QApplication::clipboard()->clear();
+        QVERIFY(QMetaObject::invokeMethod(&window, "copy", Qt::DirectConnection));
+        QCOMPARE(QApplication::clipboard()->text(), display->toPlainText());
+    }
+}
+
+void TestDisplayUi::classic_editor_display_renders_and_tracks_active_pane_data()
+{
+    QTest::addColumn<QString>("background");
+    QTest::newRow("dark") << QStringLiteral("#310b28");
+    QTest::newRow("light") << QStringLiteral("#eeeeee");
+}
+
+void TestDisplayUi::classic_editor_display_renders_and_tracks_active_pane()
+{
+    QFETCH(QString, background);
+    MainWindowStateGuard guard;
+    guard.settings->editorDisplayStyle = Settings::EditorDisplayClassic;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), background}});
+    guard.settings->constantsDockVisible = true;
+    guard.settings->cursorBlinking = false;
+    MainWindow window(false);
+    window.resize(900, 600);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
+    QCoreApplication::processEvents();
+    const auto displays = window.findChildren<ResultDisplay*>();
+    QCOMPARE(displays.size(), 2);
+    QMenu* styles = window.findChild<QMenu*>(QStringLiteral("EditorDisplayStyleMenu"));
+    QVERIFY(styles);
+    styles->actions().at(1)->trigger();
+    QCoreApplication::processEvents();
+    const QColor inactiveColor = editorForDisplay(displays.first())->palette().color(QPalette::Base);
+    styles->actions().at(0)->trigger();
+    QCoreApplication::processEvents();
+    const QColor primary = generatePrimaryFromBackground(QColor(background));
+    const auto separatorColor = [](Editor* editor) {
+        const QImage image = editor->grab().toImage();
+        return image.pixelColor(image.width() / 2, 0).rgba();
+    };
+    QMap<Editor*, QRect> geometry;
+    for (ResultDisplay* display : displays) {
+        Editor* editor = editorForDisplay(display);
+        QVERIFY(editor);
+        QCOMPARE(editor->geometry().left(), display->geometry().left());
+        QCOMPARE(editor->width(), display->width());
+        QCOMPARE(editor->geometry().top(), display->geometry().bottom() + 1);
+        const QColor expected = inactiveColor;
+        QCOMPARE(editor->palette().color(QPalette::Base).rgba(), expected.rgba());
+        const int editorTextX = editor->viewport()->x() + editor->cursorRect().x();
+        const int displayTextX = display->viewport()->x() + display->cursorRect().x();
+        QCOMPARE(editorTextX, displayTextX);
+        QCOMPARE(editorTextX, UiConfig::ClassicTextInset);
+        QVERIFY(editor->height() - editor->viewport()->geometry().bottom() - 1
+                >= UiConfig::ClassicEditorVerticalPadding);
+        geometry.insert(editor, editor->geometry());
+        const QImage image = editor->grab().toImage();
+        QCOMPARE(image.pixelColor(0, image.height() / 2).rgba(),
+                 expected.rgba());
+    }
+    for (ResultDisplay* activeDisplay : displays) {
+        Editor* activeEditor = editorForDisplay(activeDisplay);
+        QTest::mouseClick(activeEditor->viewport(), Qt::LeftButton);
+        QTRY_COMPARE(separatorColor(activeEditor), primary.rgba());
+        for (ResultDisplay* display : displays) {
+            Editor* editor = editorForDisplay(display);
+            QCOMPARE(editor->geometry(), geometry.value(editor));
+            const QColor expected = inactiveColor;
+            QCOMPARE(editor->palette().color(QPalette::Base).rgba(), expected.rgba());
+            QCOMPARE(editor->viewport()->palette().color(QPalette::Base).rgba(), expected.rgba());
+            const QImage image = editor->grab().toImage();
+            for (const QPoint point : {QPoint(0, image.height() / 2),
+                                       QPoint(image.width() / 2, image.height() / 2),
+                                       QPoint(image.width() - 1, image.height() - 1)}) {
+                QCOMPARE(image.pixelColor(point).rgba(), expected.rgba());
+            }
+            if (display != activeDisplay)
+                QTRY_COMPARE(separatorColor(editor), inactiveColor.rgba());
+        }
+        // Selecting history keeps the pane's input destination indicated.
+        QTest::mouseClick(activeDisplay->viewport(), Qt::LeftButton, Qt::NoModifier, QPoint(20, 20));
+        QTRY_COMPARE(separatorColor(activeEditor), primary.rgba());
+    }
+    QDockWidget* constants = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(constants);
+    auto* search = constants->findChild<QLineEdit*>();
+    QVERIFY(search);
+    search->setFocus();
+    QTRY_VERIFY(search->hasFocus());
+    for (ResultDisplay* display : displays) {
+        QTRY_COMPARE(separatorColor(editorForDisplay(display)), inactiveColor.rgba());
+        QCOMPARE(editorForDisplay(display)->palette().color(QPalette::Base).rgba(), inactiveColor.rgba());
+    }
+
+    // The inactive fill follows the Modern input color after a theme change.
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), QStringLiteral("#213c31")}});
+    QVERIFY(QMetaObject::invokeMethod(&window, "colorSchemeChanged", Qt::DirectConnection));
+    styles->actions().at(1)->trigger();
+    const QColor updatedInactiveColor = editorForDisplay(displays.first())->palette().color(QPalette::Base);
+    styles->actions().at(0)->trigger();
+    for (ResultDisplay* display : displays)
+        QCOMPARE(editorForDisplay(display)->palette().color(QPalette::Base).rgba(),
+                 updatedInactiveColor.rgba());
+}
+
+void TestDisplayUi::classic_editor_display_restores_split_panes()
+{
+    MainWindowStateGuard guard;
+    guard.settings->editorDisplayStyle = Settings::EditorDisplayClassic;
+    {
+        MainWindow original(false);
+        QVERIFY(QMetaObject::invokeMethod(&original, "splitActivePaneRight", Qt::DirectConnection));
+        QVERIFY(QMetaObject::invokeMethod(&original, "showNewSessionDialog", Qt::DirectConnection));
+        for (Editor* editor : original.findChildren<Editor*>())
+            editor->setText(QStringLiteral("123+456"));
+        original.persistSessionAndSettingsForShutdown();
+    }
+    QVERIFY(!guard.settings->sessionLayoutJson.isEmpty());
+    MainWindow restored;
+    restored.show();
+    QCoreApplication::processEvents();
+    const auto displays = restored.findChildren<ResultDisplay*>();
+    QCOMPARE(displays.size(), 2);
+    QMenu* menu = restored.findChild<QMenu*>(QStringLiteral("EditorDisplayStyleMenu"));
+    QVERIFY(menu);
+    QVERIFY(menu->actions().at(0)->isChecked());
+    menu->actions().at(1)->trigger();
+    const QColor inactiveColor = editorForDisplay(displays.first())->palette().color(QPalette::Base);
+    menu->actions().at(0)->trigger();
+    for (ResultDisplay* display : displays) {
+        QCOMPARE(display->viewport()->x(), 4);
+        Editor* editor = editorForDisplay(display);
+        QVERIFY(editor);
+        QCOMPARE(editor->text(), QStringLiteral("123+456"));
+        const QColor expected = inactiveColor;
+        QCOMPARE(editor->palette().color(QPalette::Base).rgba(), expected.rgba());
+    }
+    menu->actions().at(1)->trigger();
+    for (ResultDisplay* display : displays)
+        QVERIFY(display->viewport()->x() > 0);
+}
+
+void TestDisplayUi::classic_focus_line_follows_open_windows_and_sessions_data()
+{
+    QTest::addColumn<QString>("background");
+    QTest::newRow("dark") << QStringLiteral("#310b28");
+    QTest::newRow("light") << QStringLiteral("#eeeeee");
+}
+
+void TestDisplayUi::classic_focus_line_follows_open_windows_and_sessions()
+{
+    QFETCH(QString, background);
+    MainWindowStateGuard guard;
+    guard.settings->editorDisplayStyle = Settings::EditorDisplayClassic;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), background}});
+    guard.settings->autoCalc = false;
+    guard.settings->cursorBlinking = false;
+    MainWindow window(false);
+    window.resize(900, 600);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    Editor* editor = window.findChild<Editor*>();
+    QVERIFY(editor);
+    editor->setText(QStringLiteral("1234+56"));
+    const QString draft = editor->text();
+    QTest::mouseClick(editor->viewport(), Qt::LeftButton);
+    QCoreApplication::processEvents();
+    const int height = editor->height();
+    const QRect viewport = editor->viewport()->geometry();
+    const QColor fill = editor->palette().color(QPalette::Base);
+    const QColor primary = generatePrimaryFromBackground(QColor(background));
+    const auto topColor = [](Editor* input) {
+        const QImage image = input->grab().toImage();
+        return image.pixelColor(image.width() / 2, 0).rgba();
+    };
+    const auto checkActiveLine = [&](bool visible) {
+        window.activateWindow();
+        QCoreApplication::processEvents();
+        QTest::mouseClick(editor->viewport(), Qt::LeftButton);
+        QCoreApplication::processEvents();
+        QTRY_VERIFY(editor->hasFocus());
+        QTRY_COMPARE(topColor(editor), visible ? primary.rgba() : fill.rgba());
+        QVERIFY(editor->cursorWidth() > 0);
+        QCOMPARE(editor->height(), height);
+        QCOMPARE(editor->viewport()->geometry().top(), viewport.top());
+        QCOMPARE(editor->viewport()->height(), viewport.height());
+        QCOMPARE(editor->palette().color(QPalette::Base).rgba(), fill.rgba());
+    };
+    checkActiveLine(false);
+    QCOMPARE(editor->text(), draft);
+
+    // Style changes keep the Modern outline and suppress the single Classic line.
+    QMenu* styles = window.findChild<QMenu*>(QStringLiteral("EditorDisplayStyleMenu"));
+    QVERIFY(styles);
+    styles->actions().at(1)->trigger();
+    QCoreApplication::processEvents();
+    const QPixmap modern = editor->grab();
+    QCOMPARE(modern.toImage().pixelColor(modern.width() / 2,
+        qRound(UiConfig::ModernEditorTopMargin * modern.devicePixelRatio())).rgba(), primary.rgba());
+    styles->actions().at(0)->trigger();
+    checkActiveLine(false);
+
+    QVERIFY(QMetaObject::invokeMethod(&window, "showNewSessionDialog", Qt::DirectConnection));
+    checkActiveLine(false);
+    QVERIFY(QMetaObject::invokeMethod(&window, "showNewSessionDialog", Qt::DirectConnection));
+    checkActiveLine(false);
+    QTabBar* tabs = tabBarForDisplay(window.findChild<ResultDisplay*>());
+    QVERIFY(tabs);
+    QCOMPARE(tabs->count(), 3);
+    for (int index = 0; index < tabs->count(); ++index) {
+        tabs->setCurrentIndex(index);
+        checkActiveLine(false);
+    }
+    QVERIFY(QMetaObject::invokeMethod(&window, "closeCurrentSession", Qt::DirectConnection));
+    checkActiveLine(false);
+    tabs->setCurrentIndex(1);
+    QVERIFY(QMetaObject::invokeMethod(&window, "closeCurrentSession", Qt::DirectConnection));
+    checkActiveLine(false);
+    QCOMPARE(editor->text(), draft);
+
+    QVERIFY(QMetaObject::invokeMethod(&window, "showNewPrivateSession", Qt::DirectConnection));
+    checkActiveLine(false);
+    QVERIFY(QMetaObject::invokeMethod(&window, "closeCurrentSession", Qt::DirectConnection));
+    checkActiveLine(false);
+
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
+    checkActiveLine(true);
+    QPointer<Editor> otherEditor;
+    for (Editor* input : window.findChildren<Editor*>()) {
+        if (input != editor)
+            otherEditor = input;
+    }
+    QVERIFY(otherEditor);
+    QTest::mouseClick(otherEditor->viewport(), Qt::LeftButton);
+    QVERIFY(QMetaObject::invokeMethod(&window, "closeCurrentPane", Qt::DirectConnection));
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    checkActiveLine(false);
+
+    // Multiple tabs stay unmarked after the second window closes as well.
+    QVERIFY(QMetaObject::invokeMethod(&window, "showNewSessionDialog", Qt::DirectConnection));
+    checkActiveLine(false);
+    {
+        MainWindow second(false);
+        second.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&second));
+        checkActiveLine(true);
+        second.close();
+        checkActiveLine(false);
+    }
+    checkActiveLine(false);
+    {
+        // Destruction also updates the remaining window without a close event.
+        MainWindow second(false);
+        checkActiveLine(true);
+    }
+    checkActiveLine(false);
+    QVERIFY(QMetaObject::invokeMethod(&window, "closeCurrentSession", Qt::DirectConnection));
+    checkActiveLine(false);
+    QCOMPARE(editor->text(), draft);
+}
+
+void TestDisplayUi::classic_vertical_pane_dividers_contrast_with_input_data()
+{
+    QTest::addColumn<QString>("background");
+    QTest::addColumn<bool>("keypadVisible");
+    QTest::newRow("dark") << QStringLiteral("#310b28") << false;
+    QTest::newRow("light") << QStringLiteral("#eeeeee") << false;
+    QTest::newRow("dark-keypad") << QStringLiteral("#310b28") << true;
+    QTest::newRow("light-keypad") << QStringLiteral("#eeeeee") << true;
+}
+
+void TestDisplayUi::classic_vertical_pane_dividers_contrast_with_input()
+{
+    QFETCH(QString, background);
+    QFETCH(bool, keypadVisible);
+    MainWindowStateGuard guard;
+    guard.settings->editorDisplayStyle = Settings::EditorDisplayClassic;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), background}});
+    guard.settings->keypadMode = keypadVisible
+        ? Settings::KeypadModeBasicWide : Settings::KeypadModeDisabled;
+    MainWindow window(false);
+    window.resize(1000, 900);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneDown", Qt::DirectConnection));
+    QCoreApplication::processEvents();
+    QSplitter* root = window.findChild<QSplitter*>(QStringLiteral("MainSplitContainer"));
+    QVERIFY(root);
+    QCOMPARE(root->orientation(), Qt::Horizontal);
+    QSplitterHandle* divider = root->handle(1);
+    QVERIFY(divider);
+    auto* styles = window.findChild<QMenu*>(QStringLiteral("EditorDisplayStyleMenu"));
+    QVERIFY(styles);
+    const auto displays = window.findChildren<ResultDisplay*>();
+    QCOMPARE(displays.size(), 3);
+    QTest::mouseMove(displays.first()->viewport(), QPoint(30, 30));
+    for (const bool classic : {true, false, true}) {
+        styles->actions().at(classic ? 0 : 1)->trigger();
+        QCoreApplication::processEvents();
+        QCOMPARE(root->handleWidth(), UiConfig::SessionPaneSplitterWidth);
+        const QPixmap pixmap = divider->grab();
+        const QImage image = pixmap.toImage();
+        const QColor dividerColor = image.pixelColor(image.width() / 2, image.height() / 2);
+        for (ResultDisplay* display : displays) {
+            Editor* editor = editorForDisplay(display);
+            QVERIFY(editor);
+            const QColor fill = editor->palette().color(QPalette::Base);
+            if (classic)
+                QVERIFY(dividerColor.rgba() != fill.rgba());
+            else
+                QCOMPARE(dividerColor.rgba(), fill.rgba());
+            const QPoint position = divider->mapFromGlobal(
+                editor->mapToGlobal(QPoint(0, editor->height() / 2)));
+            const int row = qRound(position.y() * pixmap.devicePixelRatio());
+            QVERIFY(row >= 0 && row < image.height());
+            QCOMPARE(image.pixelColor(image.width() / 2, row).rgba(), dividerColor.rgba());
+            if (classic) {
+                const QImage editorImage = editor->grab().toImage();
+                QCOMPARE(editorImage.pixelColor(0, editorImage.height() / 2).rgba(), fill.rgba());
+            }
+        }
+    }
+}
+
+void TestDisplayUi::classic_separator_thickness_preserves_input_geometry_data()
+{
+    QTest::addColumn<QString>("background");
+    QTest::newRow("dark") << QStringLiteral("#310b28");
+    QTest::newRow("light") << QStringLiteral("#eeeeee");
+}
+
+void TestDisplayUi::classic_separator_thickness_preserves_input_geometry()
+{
+    QFETCH(QString, background);
+    MainWindowStateGuard guard;
+    guard.settings->editorDisplayStyle = Settings::EditorDisplayClassic;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), background}});
+    guard.settings->autoCalc = false;
+    MainWindow window(false);
+    window.resize(700, 600);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
+    const auto editors = window.findChildren<Editor*>();
+    QCOMPARE(editors.size(), 2);
+    QMap<Editor*, QRect> geometry;
+    QMap<Editor*, QRect> viewportGeometry;
+    QMap<Editor*, QRect> cursorGeometry;
+    QMap<Editor*, QTextCursor> cursors;
+    for (Editor* editor : editors) {
+        editor->setText(QStringLiteral("1234567890+").repeated(12));
+        QCoreApplication::processEvents();
+        QVERIFY(editor->document()->begin().layout()->lineCount() > 1);
+        geometry.insert(editor, editor->geometry());
+        viewportGeometry.insert(editor, editor->viewport()->geometry());
+        cursorGeometry.insert(editor, editor->cursorRect());
+        cursors.insert(editor, editor->textCursor());
+    }
+    const QColor primary = generatePrimaryFromBackground(QColor(background));
+    const auto pixelAtRow = [](Editor* editor, int row) {
+        const QPixmap pixmap = editor->grab();
+        const QImage image = pixmap.toImage();
+        return image.pixelColor(image.width() / 2, qRound(row * pixmap.devicePixelRatio())).rgba();
+    };
+    for (int cycle = 0; cycle < 2; ++cycle) {
+        for (Editor* activeEditor : editors) {
+            QTest::mouseClick(activeEditor->viewport(), Qt::LeftButton);
+            activeEditor->setTextCursor(cursors.value(activeEditor));
+            QTRY_VERIFY(activeEditor->hasFocus());
+            QCoreApplication::processEvents();
+            QTRY_COMPARE(pixelAtRow(activeEditor, 0), primary.rgba());
+            for (Editor* editor : editors) {
+                const QColor base = editor->palette().color(QPalette::Base);
+                if (editor == activeEditor) {
+                    QCOMPARE(pixelAtRow(editor, 1), primary.rgba());
+                } else {
+                    QCOMPARE(pixelAtRow(editor, 0), base.rgba());
+                    QCOMPARE(pixelAtRow(editor, 1), base.rgba());
+                }
+                QCOMPARE(pixelAtRow(editor, 2), base.rgba());
+                QCOMPARE(editor->geometry(), geometry.value(editor));
+                QCOMPARE(editor->viewport()->geometry(), viewportGeometry.value(editor));
+                QCOMPARE(editor->cursorRect().topLeft(), cursorGeometry.value(editor).topLeft());
+                QCOMPARE(editor->cursorRect().height(), cursorGeometry.value(editor).height());
+            }
+        }
+    }
+}
+
+void TestDisplayUi::typing_long_expressions_keeps_editor_height_stable_data()
+{
+    QTest::addColumn<bool>("classic");
+    QTest::addColumn<bool>("split");
+    QTest::newRow("modern-single-pane") << false << false;
+    QTest::newRow("modern-split-panes") << false << true;
+    QTest::newRow("classic-single-pane") << true << false;
+    QTest::newRow("classic-split-panes") << true << true;
+}
+
+void TestDisplayUi::typing_long_expressions_keeps_editor_height_stable()
+{
+    QFETCH(bool, classic);
+    QFETCH(bool, split);
+    MainWindowStateGuard guard;
+    guard.settings->editorDisplayStyle = classic
+        ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern;
+    guard.settings->autoCalc = false;
+    MainWindow window(false);
+    window.resize(700, 600);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    if (split)
+        QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
+    Editor* editor = window.findChildren<Editor*>().last();
+    editor->setAutoCompletionEnabled(false);
+    QTest::mouseClick(editor->viewport(), Qt::LeftButton);
+    QCoreApplication::processEvents();
+    editor->setText(QString());
+    QCoreApplication::processEvents();
+    const int singleLineHeight = editor->height();
+    const int cappedHeight = singleLineHeight + 4 * editor->fontMetrics().lineSpacing();
+
+    class ResizeRecorder : public QObject {
+    public:
+        QList<int> heights;
+        QList<int> viewportHeights;
+        Editor* editor = nullptr;
+        bool eventFilter(QObject* object, QEvent* event) override
+        {
+            if (event->type() == QEvent::Resize) {
+                const int height = static_cast<QResizeEvent*>(event)->size().height();
+                (object == editor ? heights : viewportHeights).append(height);
+            }
+            return false;
+        }
+    } recorder;
+    recorder.editor = editor;
+    editor->installEventFilter(&recorder);
+    editor->viewport()->installEventFilter(&recorder);
+    const QString input = QStringLiteral("123+456+789+").repeated(50);
+    for (const QChar ch : input) {
+        const int previousHeight = editor->height();
+        const int previousViewportHeight = editor->viewport()->height();
+        QTest::keyClicks(editor, QString(ch));
+        QCoreApplication::processEvents();
+        QVERIFY2(editor->height() >= previousHeight,
+            qPrintable(QStringLiteral("Editor shrinks from %1 to %2 with %3 characters and %4 lines")
+                .arg(previousHeight).arg(editor->height()).arg(editor->text().size())
+                .arg(editor->document()->begin().layout()->lineCount())));
+        for (const int height : recorder.heights)
+            QVERIFY2(height >= previousHeight, qPrintable(QStringLiteral("Editor shrinks from %1 to %2")
+                .arg(previousHeight).arg(height)));
+        for (const int height : recorder.viewportHeights)
+            QVERIFY2(height >= previousViewportHeight, qPrintable(QStringLiteral("Viewport shrinks from %1 to %2")
+                .arg(previousViewportHeight).arg(height)));
+        recorder.heights.clear();
+        recorder.viewportHeights.clear();
+        const int visibleLines = qBound(1, editor->document()->begin().layout()->lineCount(), 5);
+        QCOMPARE(editor->height(), singleLineHeight + (visibleLines - 1) * editor->fontMetrics().lineSpacing());
+        QVERIFY(editor->cursorRect().top() >= 0);
+        QVERIFY(editor->cursorRect().bottom() < editor->viewport()->height());
+    }
+    QCOMPARE(editor->height(), cappedHeight);
+    QVERIFY(editor->document()->begin().layout()->lineCount() > 5);
+    editor->selectAll();
+    QTest::keyClicks(editor, QStringLiteral("1"));
+    QCoreApplication::processEvents();
+    QCOMPARE(editor->height(), singleLineHeight);
+    editor->undo();
+    QCoreApplication::processEvents();
+    QCOMPARE(editor->height(), cappedHeight);
+    QVERIFY(editor->cursorRect().top() >= 0);
+    QVERIFY(editor->cursorRect().bottom() < editor->viewport()->height());
+}
+
+void TestDisplayUi::classic_keypad_boundary_follows_bordering_panes_data()
+{
+    QTest::addColumn<QString>("background");
+    QTest::newRow("dark") << QStringLiteral("#310b28");
+    QTest::newRow("light") << QStringLiteral("#eeeeee");
+}
+
+void TestDisplayUi::classic_keypad_boundary_follows_bordering_panes()
+{
+    QFETCH(QString, background);
+    MainWindowStateGuard guard;
+    guard.settings->editorDisplayStyle = Settings::EditorDisplayClassic;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), background}});
+    guard.settings->keypadMode = Settings::KeypadModeBasicWide;
+    guard.settings->autoCalc = false;
+    MainWindow window(false);
+    window.resize(1000, 900);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    auto* styles = window.findChild<QMenu*>(QStringLiteral("EditorDisplayStyleMenu"));
+    QVERIFY(styles);
+    const auto checkBoundary = [&window, &guard](int expectedCount) {
+        QCoreApplication::processEvents();
+        QVERIFY(window.findChildren<QWidget*>(QStringLiteral("ClassicKeypadSeparator")).isEmpty());
+        Keypad* keypad = window.findChild<Keypad*>();
+        const bool classic = guard.settings->editorDisplayStyle == Settings::EditorDisplayClassic;
+        const int keypadTop = keypad
+            ? keypad->parentWidget()->mapToGlobal(QPoint()).y() : -1;
+        int borderingCount = 0;
+        for (ResultDisplay* display : window.findChildren<ResultDisplay*>()) {
+            QWidget* pane = paneWidgetForDisplay(display);
+            QVERIFY(pane);
+            const bool bordersKeypad = keypad
+                && pane->mapToGlobal(QPoint(0, pane->height())).y() == keypadTop;
+            if (!classic || !bordersKeypad)
+                continue;
+            ++borderingCount;
+            Editor* editor = editorForDisplay(display);
+            QVERIFY(editor);
+            QCOMPARE(editor->mapToGlobal(QPoint(0, editor->height())).y(), keypadTop);
+        }
+        QCOMPARE(borderingCount, expectedCount);
+    };
+
+    checkBoundary(1);
+    Editor* leftEditor = window.findChild<Editor*>();
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
+    checkBoundary(2);
+    Editor* upperRightEditor = qobject_cast<Editor*>(QApplication::focusWidget());
+    QVERIFY(upperRightEditor);
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneDown", Qt::DirectConnection));
+    checkBoundary(2);
+    QPointer<Editor> lowerRightEditor = qobject_cast<Editor*>(QApplication::focusWidget());
+    QVERIFY(lowerRightEditor);
+    QTest::mouseClick(upperRightEditor->viewport(), Qt::LeftButton);
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
+    checkBoundary(2);
+    // Both children of the upper horizontal split stay above the keypad.
+    QCOMPARE(window.findChildren<ResultDisplay*>().size(), 4);
+    window.resize(1100, 1000);
+    checkBoundary(2);
+    for (QSplitter* splitter : window.findChildren<QSplitter*>()) {
+        QList<int> sizes = splitter->sizes();
+        if (sizes.size() > 1) {
+            sizes[0] += 30;
+            sizes[1] = qMax(1, sizes[1] - 30);
+            splitter->setSizes(sizes);
+        }
+    }
+    checkBoundary(2);
+
+    MainWindow other(false);
+    QVERIFY(QMetaObject::invokeMethod(&other, "restoreWindowKeypadLayout", Qt::DirectConnection,
+        Q_ARG(bool, false), Q_ARG(int, int(Settings::KeypadModeDisabled))));
+    other.show();
+    styles->actions().at(1)->trigger();
+    checkBoundary(0);
+    const QColor inactiveColor = leftEditor->palette().color(QPalette::Base);
+    styles->actions().at(0)->trigger();
+    checkBoundary(2);
+    QVERIFY(other.findChildren<QWidget*>(QStringLiteral("ClassicKeypadSeparator")).isEmpty());
+    QCOMPARE(leftEditor->palette().color(QPalette::Base).rgba(), inactiveColor.rgba());
+
+    QVERIFY(QMetaObject::invokeMethod(&window, "restoreWindowKeypadLayout", Qt::DirectConnection,
+        Q_ARG(bool, false), Q_ARG(int, int(Settings::KeypadModeDisabled))));
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    checkBoundary(0);
+    for (const auto mode : {Settings::KeypadModeScientificWide, Settings::KeypadModeScientificNarrow}) {
+        QVERIFY(QMetaObject::invokeMethod(&window, "restoreWindowKeypadLayout", Qt::DirectConnection,
+            Q_ARG(bool, true), Q_ARG(int, int(mode))));
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+        checkBoundary(2);
+    }
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), QStringLiteral("#213c31")}});
+    QVERIFY(QMetaObject::invokeMethod(&window, "colorSchemeChanged", Qt::DirectConnection));
+    checkBoundary(2);
+    QVERIFY(leftEditor->palette().color(QPalette::Base).rgba() != inactiveColor.rgba());
+
+    // Closing the bottom pane brings the two upper panes down to the keypad.
+    QVERIFY(lowerRightEditor);
+    QTest::mouseClick(lowerRightEditor->viewport(), Qt::LeftButton);
+    QVERIFY(QMetaObject::invokeMethod(&window, "closeCurrentPane", Qt::DirectConnection));
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    checkBoundary(3);
+}
+
+void TestDisplayUi::classic_keypad_boundary_restores_nested_panes()
+{
+    MainWindowStateGuard guard;
+    guard.settings->editorDisplayStyle = Settings::EditorDisplayClassic;
+    guard.settings->keypadMode = Settings::KeypadModeBasicWide;
+    {
+        MainWindow original(false);
+        QVERIFY(QMetaObject::invokeMethod(&original, "splitActivePaneRight", Qt::DirectConnection));
+        QVERIFY(QMetaObject::invokeMethod(&original, "splitActivePaneDown", Qt::DirectConnection));
+        original.persistSessionAndSettingsForShutdown();
+    }
+    MainWindow restored;
+    restored.resize(1000, 900);
+    restored.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&restored));
+    QCoreApplication::processEvents();
+    Keypad* keypad = restored.findChild<Keypad*>();
+    QVERIFY(keypad);
+    const int keypadTop = keypad->parentWidget()->mapToGlobal(QPoint()).y();
+    const auto displays = restored.findChildren<ResultDisplay*>();
+    QCOMPARE(displays.size(), 3);
+    QVERIFY(restored.findChildren<QWidget*>(QStringLiteral("ClassicKeypadSeparator")).isEmpty());
+    int borderingCount = 0;
+    for (ResultDisplay* display : displays) {
+        QWidget* pane = paneWidgetForDisplay(display);
+        const bool bordersKeypad = pane->mapToGlobal(QPoint(0, pane->height())).y() == keypadTop;
+        if (!bordersKeypad)
+            continue;
+        ++borderingCount;
+        Editor* editor = editorForDisplay(display);
+        QVERIFY(editor);
+        QCOMPARE(editor->mapToGlobal(QPoint(0, editor->height())).y(), keypadTop);
+    }
+    QCOMPARE(borderingCount, 2);
+}
+
+void TestDisplayUi::editor_popups_follow_style_padding_data()
+{
+    QTest::addColumn<int>("initialStyle");
+    QTest::addColumn<QString>("popupKind");
+    for (const auto style : {Settings::EditorDisplayClassic, Settings::EditorDisplayModern}) {
+        for (const QString& kind : {QStringLiteral("current"), QStringLiteral("selection"),
+                                    QStringLiteral("error")}) {
+            const QString name = QStringLiteral("%1-%2")
+                .arg(style == Settings::EditorDisplayClassic ? QStringLiteral("classic")
+                                                             : QStringLiteral("modern"), kind);
+            QTest::newRow(qPrintable(name)) << int(style) << kind;
+        }
+    }
+}
+
+void TestDisplayUi::editor_popups_follow_style_padding()
+{
+    QFETCH(int, initialStyle);
+    QFETCH(QString, popupKind);
+    Settings* settings = Settings::instance();
+    settings->editorDisplayStyle = static_cast<Settings::EditorDisplayStyle>(initialStyle);
+    MainWindow window(false);
+    window.resize(900, 600);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneDown", Qt::DirectConnection));
+    QCoreApplication::processEvents();
+    const auto displays = window.findChildren<ResultDisplay*>();
+    QCOMPARE(displays.size(), 3);
+    auto* popup = window.findChild<QLabel*>(QStringLiteral("EditorStatePopup"));
+    QVERIFY(popup);
+    auto* styles = window.findChild<QMenu*>(QStringLiteral("EditorDisplayStyleMenu"));
+    QVERIFY(styles);
+    int operand = 24;
+    for (ResultDisplay* display : displays) {
+        Editor* editor = editorForDisplay(display);
+        QVERIFY(editor);
+        QTest::mouseClick(editor->viewport(), Qt::LeftButton);
+        if (popupKind == QLatin1String("error")) {
+            editor->setText(QStringLiteral("1/0"));
+            QTest::keyClick(editor, Qt::Key_Return);
+            QTRY_VERIFY(!popup->text().isEmpty());
+            QVERIFY(!popup->text().contains(QStringLiteral("Current result:")));
+        } else {
+            editor->setText(QStringLiteral("1+%1").arg(operand++));
+            editor->setCursorPosition(editor->text().size());
+            editor->refreshAutoCalc();
+            if (popupKind == QLatin1String("selection")) {
+                QTextCursor selection = editor->textCursor();
+                selection.setPosition(0);
+                selection.setPosition(1, QTextCursor::KeepAnchor);
+                editor->setTextCursor(selection);
+                QTRY_VERIFY(popup->text().contains(QStringLiteral("Selection result:")));
+            } else {
+                QTRY_VERIFY(popup->text().contains(QStringLiteral("Current result:")));
+            }
+        }
+        QTRY_VERIFY(popup->isVisible());
+        const QString message = popup->text();
+        for (const auto style : {static_cast<Settings::EditorDisplayStyle>(initialStyle),
+                                 initialStyle == Settings::EditorDisplayClassic
+                                     ? Settings::EditorDisplayModern : Settings::EditorDisplayClassic}) {
+            styles->actions().at(style == Settings::EditorDisplayClassic ? 0 : 1)->trigger();
+            const int inset = style == Settings::EditorDisplayClassic
+                ? UiConfig::ClassicTextInset : UiConfig::ResultTooltipStartMargin;
+            QTRY_COMPARE(popup->mapToGlobal(QPoint(0, 0)).x(),
+                         editor->mapToGlobal(QPoint(inset, 0)).x());
+            QTRY_COMPARE(popup->mapToGlobal(QPoint(0, popup->height())).y(),
+                         editor->mapToGlobal(QPoint(0, 0)).y());
+            QCOMPARE(popup->text(), message);
+            QVERIFY(popup->isVisible());
+        }
+    }
 }
 
 void TestDisplayUi::settings_reset_restores_persisted_defaults()
@@ -3447,6 +4342,7 @@ void TestDisplayUi::main_window_uses_generated_theme_surface_for_chrome_and_edit
         bool oldKeypadVisible;
         bool oldStatusBarVisible;
         bool oldBitfieldVisible;
+        Settings::EditorDisplayStyle oldEditorDisplayStyle;
         bool oldHasNumberFormatStyleSetting;
         QByteArray oldSkipUpdateCheck;
         bool hadSkipUpdateCheck;
@@ -3459,6 +4355,7 @@ void TestDisplayUi::main_window_uses_generated_theme_surface_for_chrome_and_edit
             settings->keypadVisible = oldKeypadVisible;
             settings->statusBarVisible = oldStatusBarVisible;
             settings->bitfieldVisible = oldBitfieldVisible;
+            settings->editorDisplayStyle = oldEditorDisplayStyle;
             settings->hasNumberFormatStyleSetting = oldHasNumberFormatStyleSetting;
             if (hadSkipUpdateCheck)
                 qputenv("SPEEDCRUNCH_TEST_SKIP_UPDATE_CHECK", oldSkipUpdateCheck);
@@ -3473,6 +4370,7 @@ void TestDisplayUi::main_window_uses_generated_theme_surface_for_chrome_and_edit
         settings->keypadVisible,
         settings->statusBarVisible,
         settings->bitfieldVisible,
+        settings->editorDisplayStyle,
         settings->hasNumberFormatStyleSetting,
         qgetenv("SPEEDCRUNCH_TEST_SKIP_UPDATE_CHECK"),
         qEnvironmentVariableIsSet("SPEEDCRUNCH_TEST_SKIP_UPDATE_CHECK")
@@ -3483,6 +4381,7 @@ void TestDisplayUi::main_window_uses_generated_theme_surface_for_chrome_and_edit
     settings->keypadMode = Settings::KeypadModeBasicWide;
     settings->statusBarVisible = true;
     settings->bitfieldVisible = true;
+    settings->editorDisplayStyle = Settings::EditorDisplayClassic;
     settings->hasNumberFormatStyleSetting = true;
 
     const auto verifyTheme = [settings](const QString& baseName, ThemePolarity polarity) {
@@ -3510,6 +4409,7 @@ void TestDisplayUi::main_window_uses_generated_theme_surface_for_chrome_and_edit
             shades.at(UiConfig::BitfieldButtonPressedFillShade);
         const QColor expectedStatusBarSurface = shades.at(UiConfig::StatusBarBackgroundShade);
         const QColor expectedPrimary = generatePrimaryFromBackground(base);
+        const QColor expectedDockSeparator = shades.at(UiConfig::ClassicVerticalPaneDividerShade);
         const QColor expectedWindowForeground = foregrounds.at(UiConfig::WindowBackgroundShade);
         const QColor expectedKeypadForeground = foregrounds.at(UiConfig::KeypadBackgroundShade);
         const QColor expectedEditorForeground = foregrounds.at(UiConfig::DockBackgroundShade);
@@ -3583,6 +4483,8 @@ void TestDisplayUi::main_window_uses_generated_theme_surface_for_chrome_and_edit
         QVERIFY(sessionTabBar != nullptr);
         QCOMPARE(splitContainer->palette().color(QPalette::Window).name(),
                  expectedWindowSurface.name());
+        QCOMPARE(window.property("speedcrunchDockSeparatorNormalColor").value<QColor>().name(),
+                 expectedDockSeparator.name());
         QCOMPARE(pane->palette().color(QPalette::Window).name(),
                  expectedResultSurface.name());
         QCOMPARE(page->palette().color(QPalette::Window).name(),
@@ -3637,7 +4539,9 @@ void TestDisplayUi::main_window_uses_generated_theme_surface_for_chrome_and_edit
                  expectedEditorSurface.name());
         QVERIFY(editor->styleSheet().contains(expectedEditorSurface.name()));
         QVERIFY(editor->styleSheet().contains(QStringLiteral("border-radius: 13px")));
-        QVERIFY(editor->styleSheet().contains(QStringLiteral("padding: 10px 18px")));
+        QVERIFY(editor->styleSheet().contains(QStringLiteral("padding: %1px %2px")
+            .arg(UiConfig::ModernEditorVerticalPadding)
+            .arg(UiConfig::ModernEditorHorizontalPadding)));
         QVERIFY(editor->viewport()->styleSheet().contains(QStringLiteral("background: transparent")));
         QTRY_COMPARE(editor->cursorWidth(), 2);
         QCOMPARE(editor->graphicsEffect(), nullptr);

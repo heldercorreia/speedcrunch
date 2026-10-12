@@ -181,6 +181,7 @@ private slots:
     void setHistoryDockVisible(bool, bool takeFocus = true);
     void setKeypadMode(QAction*);
     void setMenuAppearance(QAction*);
+    void setEditorDisplayStyle(QAction*);
     void setKeypadZoom(QAction*);
     void setKeypadVisible(bool);
     void setLeaveLastExpressionEnabled(bool);
@@ -290,6 +291,7 @@ private:
     void createFixedConnections();
     void applySettings(bool initializing = true);
     void setDisplayFont(const QFont& font);
+    void applyEditorDisplayStyle();
     void checkInitialResultFormat();
     void checkInitialComplexFormat();
     void checkInitialImaginaryUnit();
@@ -529,6 +531,8 @@ private:
         QAction* settingsDisplayColorSchemeCustom;
         QAction* settingsMenuAppearanceSystem;
         QAction* settingsMenuAppearanceSpeedCrunch;
+        QAction* settingsEditorDisplayClassic;
+        QAction* settingsEditorDisplayModern;
         QVector<QAction*> settingsDisplayColorSchemes;
         QAction* settingsRadixCharDefault;
         QAction* settingsRadixCharDot;
@@ -550,6 +554,7 @@ private:
         QActionGroup* angle;
         QActionGroup* colorScheme;
         QActionGroup* menuAppearance;
+        QActionGroup* editorDisplayStyle;
         QActionGroup* digits;
         QActionGroup* resultRoundingMode;
         QActionGroup* resultFormat;
@@ -575,6 +580,7 @@ private:
         QMenu* digitGrouping;
         QMenu* display;
         QMenu* menuAppearance;
+        QMenu* editorDisplayStyle;
         QMenu* edit;
         QMenu* results;
         QMenu* unitNegativeExponentStyle;
