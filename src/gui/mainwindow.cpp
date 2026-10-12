@@ -127,6 +127,7 @@
 #include <QSet>
 #include <QStatusBar>
 #include <QStyle>
+#include <QStyleOptionComboBox>
 #include <QStyleOption>
 #include <QTabBar>
 #include <QToolButton>
@@ -1175,6 +1176,9 @@ QString scrollBarStyleSheet(const ThemeScrollBarColors& colors)
              colors.pressedThumb.name());
 }
 
+void saveNativeDockSurface(QWidget* widget);
+void restoreNativeDockSurface(QWidget* widget);
+
 void applyScrollCornerColorToScrollArea(QAbstractScrollArea* area, const QColor& color)
 {
     if (area == nullptr || !color.isValid())
@@ -1185,6 +1189,7 @@ void applyScrollCornerColorToScrollArea(QAbstractScrollArea* area, const QColor&
         corner = new QWidget(area);
         area->setCornerWidget(corner);
     }
+    saveNativeDockSurface(corner);
 
     QPalette palette = corner->palette();
     for (const QPalette::ColorGroup group : {QPalette::Active,
@@ -1517,12 +1522,54 @@ void updateDockSystemTabCursor(QTabBar* tabBar, const QPoint& pos)
                           : Qt::ArrowCursor);
 }
 
-void applyGeneratedDockChromeSurfaces(MainWindow* owner,
-                                      QDockWidget* dock,
-                                      const GeneratedThemeSurfaces& surfaces)
+void applyDockChromeAppearance(MainWindow* owner,
+                               QDockWidget* dock,
+                               const GeneratedThemeSurfaces& surfaces)
 {
     if (dock == nullptr)
         return;
+
+    saveNativeDockSurface(dock);
+    QList<QAbstractButton*> titleButtons;
+    for (QAbstractButton* button : dock->findChildren<QAbstractButton*>(
+             QString(), Qt::FindDirectChildrenOnly)) {
+        if (button->objectName() != QLatin1String("qt_dockwidget_closebutton")
+            && button->objectName() != QLatin1String("qt_dockwidget_floatbutton"))
+            continue;
+        saveNativeDockSurface(button);
+        if (!button->property("speedcrunchNativeDockHeaderButton").isValid()) {
+            const QVariantList state {button->minimumSize(), button->maximumSize(), button->iconSize(),
+                                      QVariant::fromValue(button->cursor()), button->hasMouseTracking(),
+                                      button->testAttribute(Qt::WA_Hover)};
+            button->setProperty("speedcrunchNativeDockHeaderButton", state);
+        }
+        titleButtons.append(button);
+    }
+    if (Settings::instance()->dockAppearance == Settings::DockAppearanceSystem) {
+        for (QAbstractButton* button : titleButtons) {
+            button->setProperty("speedcrunchDockHeaderButton", false);
+            if (owner != nullptr)
+                button->removeEventFilter(owner);
+            restoreNativeDockSurface(button);
+            const QVariantList state = button->property("speedcrunchNativeDockHeaderButton").toList();
+            button->setMinimumSize(state.at(0).toSize());
+            button->setMaximumSize(state.at(1).toSize());
+            button->setIconSize(state.at(2).toSize());
+            button->setCursor(state.at(3).value<QCursor>());
+            button->setMouseTracking(state.at(4).toBool());
+            button->setAttribute(Qt::WA_Hover, state.at(5).toBool());
+        }
+        restoreNativeDockSurface(dock);
+        // Some system styles leave the title background transparent. Fill the
+        // dock with its system palette so the main window theme cannot show through.
+        dock->setAutoFillBackground(true);
+        // Let Qt refresh native title icons and layout for the current dock state.
+        QEvent styleChange(QEvent::StyleChange);
+        QCoreApplication::sendEvent(dock, &styleChange);
+        dock->updateGeometry();
+        dock->update();
+        return;
+    }
 
     const ThemeSurfaceColors titleButton =
         themeSurfaceForShadeIndex(surfaces, UiConfig::DockHeaderButtonFillShade);
@@ -1561,11 +1608,8 @@ void applyGeneratedDockChromeSurfaces(MainWindow* owner,
     dock->style()->polish(dock);
     dock->setWindowTitle(dock->windowTitle());
     dock->update();
-    for (QAbstractButton* button : dock->findChildren<QAbstractButton*>()) {
+    for (QAbstractButton* button : titleButtons) {
         const bool closeButton = button->objectName() == QLatin1String("qt_dockwidget_closebutton");
-        const bool floatButton = button->objectName() == QLatin1String("qt_dockwidget_floatbutton");
-        if (!closeButton && !floatButton)
-            continue;
         button->setProperty("speedcrunchDockHeaderButton", true);
         button->setProperty("speedcrunchDockHeaderCloseButton", closeButton);
         button->setProperty("speedcrunchDockHeaderButtonFill", titleButton.background);
@@ -1598,11 +1642,130 @@ void applyGeneratedDockChromeSurfaces(MainWindow* owner,
     }
 }
 
-void applyGeneratedDockContentSurfaces(MainWindow* owner, QDockWidget* dock, const GeneratedThemeSurfaces& surfaces)
+void saveNativeDockSurface(QWidget* widget)
+{
+    // Keep frame and background settings before the first theme application.
+    if (widget->property("speedcrunchNativeDockSurface").isValid())
+        return;
+    QVariantList state {widget->styleSheet(), widget->autoFillBackground(),
+                        widget->testAttribute(Qt::WA_StyledBackground)};
+    if (QFrame* frame = qobject_cast<QFrame*>(widget)) {
+        state << int(frame->frameShape()) << int(frame->frameShadow())
+              << frame->lineWidth() << frame->midLineWidth();
+    }
+    widget->setProperty("speedcrunchNativeDockSurface", state);
+    if (QAbstractButton* button = qobject_cast<QAbstractButton*>(widget))
+        button->setProperty("speedcrunchNativeDockIcon", button->icon());
+    if (QLineEdit* edit = qobject_cast<QLineEdit*>(widget)) {
+        for (QAction* action : edit->actions())
+            action->setProperty("speedcrunchNativeDockIcon", action->icon());
+    }
+}
+
+void restoreNativeDockSurface(QWidget* widget)
+{
+    const QVariantList state = widget->property("speedcrunchNativeDockSurface").toList();
+    if (state.size() < 3)
+        return;
+    widget->setStyleSheet(state.at(0).toString());
+    if (widget->property("dockListNoMatchLabel").toBool())
+        widget->setStyleSheet(QStringLiteral("QLabel { background: transparent; }"));
+    widget->style()->unpolish(widget);
+    widget->setPalette(MenuStyle::systemPalette(widget));
+    widget->style()->polish(widget);
+    widget->setAutoFillBackground(state.at(1).toBool());
+    widget->setAttribute(Qt::WA_StyledBackground, state.at(2).toBool());
+    if (QFrame* frame = qobject_cast<QFrame*>(widget)) {
+        if (state.size() == 7) {
+            frame->setFrameShape(static_cast<QFrame::Shape>(state.at(3).toInt()));
+            frame->setFrameShadow(static_cast<QFrame::Shadow>(state.at(4).toInt()));
+            frame->setLineWidth(state.at(5).toInt());
+            frame->setMidLineWidth(state.at(6).toInt());
+        }
+        const QVariant nativeListFrame = frame->property("dockListNativeFrameShape");
+        if (nativeListFrame.isValid())
+            frame->setFrameShape(static_cast<QFrame::Shape>(nativeListFrame.toInt()));
+    }
+    if (QAbstractButton* button = qobject_cast<QAbstractButton*>(widget))
+        button->setIcon(button->property("speedcrunchNativeDockIcon").value<QIcon>());
+    for (const char* property : {"dockListHoverBackground", "dockListHoverForeground",
+                                 "dockListActiveSelectionBackground", "dockListActiveSelectionForeground",
+                                 "dockListInactiveSelectionBackground", "dockListInactiveSelectionForeground"})
+        widget->setProperty(property, QVariant());
+    if (ThemedLineEdit* edit = dynamic_cast<ThemedLineEdit*>(widget))
+        edit->setCursorColor(QColor());
+    if (QLineEdit* edit = qobject_cast<QLineEdit*>(widget)) {
+        for (QAction* action : edit->actions())
+            action->setIcon(action->property("speedcrunchNativeDockIcon").value<QIcon>());
+    }
+    widget->update();
+}
+
+void alignDockSearchRow(QWidget* content)
+{
+    QLineEdit* search = content->findChild<QLineEdit*>();
+    if (!search || !search->parentWidget()->layout())
+        return;
+
+    const auto combos = content->findChildren<QComboBox*>();
+    if (combos.isEmpty())
+        return;
+    int bottomInset = 0;
+    for (QComboBox* combo : combos) {
+        QStyleOptionComboBox option;
+        option.initFrom(combo);
+        option.rect = QRect(QPoint(), combo->sizeHint());
+        const QRect itemRect = combo->style()->subElementRect(QStyle::SE_ComboBoxLayoutItem, &option, combo);
+        if (!itemRect.isEmpty())
+            bottomInset = qMax(bottomInset, option.rect.bottom() - itemRect.bottom());
+    }
+    // Native dropdowns reserve space below their painted bounds in the row above.
+    QLayout* layout = search->parentWidget()->layout();
+    QMargins margins = layout->contentsMargins();
+    margins.setTop(qMax(0, UiConfig::DockSearchRowVerticalPadding - bottomInset));
+    layout->setContentsMargins(margins);
+}
+
+void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock, const GeneratedThemeSurfaces& surfaces)
 {
     QWidget* dockContent = dock->widget();
     if (dockContent == nullptr)
         return;
+
+    QList<QWidget*> widgets = dockContent->findChildren<QWidget*>();
+    widgets.prepend(dockContent);
+    for (QWidget* widget : widgets) {
+        if (!qobject_cast<QMenu*>(widget))
+            saveNativeDockSurface(widget);
+    }
+    if (Settings::instance()->dockAppearance == Settings::DockAppearanceSystem) {
+        for (QWidget* widget : widgets) {
+            if (!qobject_cast<QMenu*>(widget))
+                restoreNativeDockSurface(widget);
+        }
+        dockContent->setAutoFillBackground(true);
+        if (BookDock* book = qobject_cast<BookDock*>(dock)) {
+            const QPalette palette = MenuStyle::systemPalette(book->findChild<QTextBrowser*>());
+            book->setContentSurfaceColors(palette.color(QPalette::Base), palette.color(QPalette::Text));
+        }
+        if (BitFieldWidget* bitField = qobject_cast<BitFieldWidget*>(dockContent)) {
+            bitField->setThemeColors(QColor(), QColor());
+            const QPalette palette = MenuStyle::systemPalette(bitField);
+            bitField->setToolTipThemeColors(palette.color(QPalette::ToolTipBase),
+                                           palette.color(QPalette::ToolTipText),
+                                           palette.color(QPalette::Mid), 0);
+        }
+        if (ConstantsWidget* constants = qobject_cast<ConstantsWidget*>(dockContent)) {
+            const QPalette palette = MenuStyle::systemPalette(constants);
+            constants->setSummaryPopupThemeColors(palette.color(QPalette::ToolTipBase),
+                                                  palette.color(QPalette::ToolTipText),
+                                                  palette.color(QPalette::Mid), 0);
+        }
+        for (QComboBox* combo : dockContent->findChildren<QComboBox*>())
+            DockComboBoxChevron::applySystemAppearance(combo);
+        alignDockSearchRow(dockContent);
+        return;
+    }
 
     const ThemeSurfaceColors dockBackground =
         themeSurfaceForShadeIndex(surfaces, UiConfig::DockBackgroundShade);
@@ -1777,6 +1940,7 @@ void applyGeneratedDockContentSurfaces(MainWindow* owner, QDockWidget* dock, con
     for (QAbstractItemView* view : dockContent->findChildren<QAbstractItemView*>()) {
         if (isComboBoxPopupView(view, comboBoxes))
             continue;
+        view->setFrameShape(QFrame::NoFrame);
         QPalette palette = paletteForThemeSurface(view->palette(), dockBackground);
         palette.setColor(QPalette::Active, QPalette::Highlight, surfaces.primary.background);
         palette.setColor(QPalette::Active, QPalette::HighlightedText, surfaces.primary.foreground);
@@ -1838,6 +2002,7 @@ void applyGeneratedDockContentSurfaces(MainWindow* owner, QDockWidget* dock, con
                                   .arg(headerMargin)
                                   .arg(headerContentHeight));
     }
+    alignDockSearchRow(dockContent);
 }
 
 void applyThemeBackgroundRoleToWidget(QWidget* widget, const QColor& background)
@@ -3558,6 +3723,12 @@ void MainWindow::createActions()
     m_actions.settingsMenuAppearanceSystem->setData(Settings::MenuAppearanceSystem);
     m_actions.settingsMenuAppearanceSpeedCrunch->setCheckable(true);
     m_actions.settingsMenuAppearanceSpeedCrunch->setData(Settings::MenuAppearanceSpeedCrunch);
+    m_actions.settingsDockAppearanceSystem = new QAction(this);
+    m_actions.settingsDockAppearanceSpeedCrunch = new QAction(this);
+    m_actions.settingsDockAppearanceSystem->setCheckable(true);
+    m_actions.settingsDockAppearanceSystem->setData(Settings::DockAppearanceSystem);
+    m_actions.settingsDockAppearanceSpeedCrunch->setCheckable(true);
+    m_actions.settingsDockAppearanceSpeedCrunch->setData(Settings::DockAppearanceSpeedCrunch);
     m_actions.settingsEditorDisplayClassic = new QAction(this);
     m_actions.settingsEditorDisplayClassic->setCheckable(true);
     m_actions.settingsEditorDisplayClassic->setData(Settings::EditorDisplayClassic);
@@ -3857,6 +4028,28 @@ void MainWindow::setMenuAppearance(QAction* action)
     }
 }
 
+void MainWindow::setDockAppearance(QAction* action)
+{
+    if (action == nullptr)
+        return;
+    m_settings->dockAppearance = action->data().toInt() == Settings::DockAppearanceSystem
+        ? Settings::DockAppearanceSystem : Settings::DockAppearanceSpeedCrunch;
+    const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (!window)
+            continue;
+        window->m_actions.settingsDockAppearanceSystem->setChecked(
+            m_settings->dockAppearance == Settings::DockAppearanceSystem);
+        window->m_actions.settingsDockAppearanceSpeedCrunch->setChecked(
+            m_settings->dockAppearance == Settings::DockAppearanceSpeedCrunch);
+        for (QDockWidget* dock : window->m_allDocks) {
+            applyDockContentAppearance(window, dock, surfaces);
+            applyDockChromeAppearance(window, dock, surfaces);
+        }
+        window->applyDockTabBarAppearance();
+    }
+}
+
 void MainWindow::setEditorDisplayStyle(QAction* action)
 {
     if (action == nullptr)
@@ -4060,6 +4253,8 @@ void MainWindow::setActionsText()
     m_actions.settingsDisplayColorSchemeCustom->setText(MainWindow::tr("&Theme..."));
     m_actions.settingsMenuAppearanceSystem->setText(MainWindow::tr("&System"));
     m_actions.settingsMenuAppearanceSpeedCrunch->setText(MainWindow::tr("&SpeedCrunch Theme"));
+    m_actions.settingsDockAppearanceSystem->setText(MainWindow::tr("&System"));
+    m_actions.settingsDockAppearanceSpeedCrunch->setText(MainWindow::tr("&SpeedCrunch Theme"));
     m_actions.settingsEditorDisplayClassic->setText(MainWindow::tr("&Classic"));
     m_actions.settingsEditorDisplayModern->setText(MainWindow::tr("&Modern"));
     m_actions.settingsLanguage->setText(MainWindow::tr("&Language..."));
@@ -4135,6 +4330,9 @@ void MainWindow::createActionGroups()
     m_actionGroups.menuAppearance = new QActionGroup(this);
     m_actionGroups.menuAppearance->addAction(m_actions.settingsMenuAppearanceSystem);
     m_actionGroups.menuAppearance->addAction(m_actions.settingsMenuAppearanceSpeedCrunch);
+    m_actionGroups.dockAppearance = new QActionGroup(this);
+    m_actionGroups.dockAppearance->addAction(m_actions.settingsDockAppearanceSystem);
+    m_actionGroups.dockAppearance->addAction(m_actions.settingsDockAppearanceSpeedCrunch);
     m_actionGroups.editorDisplayStyle = new QActionGroup(this);
     m_actionGroups.editorDisplayStyle->addAction(m_actions.settingsEditorDisplayClassic);
     m_actionGroups.editorDisplayStyle->addAction(m_actions.settingsEditorDisplayModern);
@@ -4289,6 +4487,10 @@ void MainWindow::createMenus()
     m_menus.menuAppearance->setObjectName(QStringLiteral("MenuAppearanceMenu"));
     m_menus.menuAppearance->addAction(m_actions.settingsMenuAppearanceSystem);
     m_menus.menuAppearance->addAction(m_actions.settingsMenuAppearanceSpeedCrunch);
+    m_menus.dockAppearance = m_menus.display->addMenu("");
+    m_menus.dockAppearance->setObjectName(QStringLiteral("DockAppearanceMenu"));
+    m_menus.dockAppearance->addAction(m_actions.settingsDockAppearanceSystem);
+    m_menus.dockAppearance->addAction(m_actions.settingsDockAppearanceSpeedCrunch);
     m_menus.editorDisplayStyle = m_menus.display->addMenu("");
     m_menus.editorDisplayStyle->setObjectName(QStringLiteral("EditorDisplayStyleMenu"));
     m_menus.editorDisplayStyle->addAction(m_actions.settingsEditorDisplayClassic);
@@ -4432,6 +4634,7 @@ void MainWindow::setMenusText()
     m_menus.upDownArrowBehavior->setTitle(MainWindow::tr("Up/Down Arrow History"));
     m_menus.display->setTitle(MainWindow::tr("&Appearance"));
     m_menus.menuAppearance->setTitle(MainWindow::tr("&Menus"));
+    m_menus.dockAppearance->setTitle(MainWindow::tr("&Docks"));
     m_menus.editorDisplayStyle->setTitle(MainWindow::tr("&Editor"));
     m_menus.help->setTitle(MainWindow::tr("&Help"));
 }
@@ -6582,53 +6785,81 @@ void MainWindow::refreshPaneThemes()
     updateSplitterStyleSheet();
 }
 
+void MainWindow::applyDockTabBarAppearance()
+{
+    const GeneratedThemeSurfaces tabSurfaces = generatedSurfaceColors(m_settings);
+    for (QTabBar* tabBar : findChildren<QTabBar*>()) {
+        if (m_tabBarDisplays.contains(tabBar))
+            continue;
+        saveNativeDockSurface(tabBar);
+        if (!tabBar->property("speedcrunchNativeDockTabBar").isValid()) {
+            const QVariantList state {tabBar->drawBase(), QVariant::fromValue(tabBar->cursor()),
+                                      tabBar->hasMouseTracking(), tabBar->testAttribute(Qt::WA_Hover)};
+            tabBar->setProperty("speedcrunchNativeDockTabBar", state);
+        }
+        QWidget* tabBarParent = tabBar->parentWidget();
+        const bool separateParent = tabBarParent != nullptr && tabBarParent != this
+            && !qobject_cast<QDockWidget*>(tabBarParent);
+        if (separateParent)
+            saveNativeDockSurface(tabBarParent);
+        if (m_settings->dockAppearance == Settings::DockAppearanceSystem) {
+            tabBar->setProperty("speedcrunchDockSystemTabBar", false);
+            tabBar->removeEventFilter(this);
+            restoreNativeDockSurface(tabBar);
+            const QVariantList state = tabBar->property("speedcrunchNativeDockTabBar").toList();
+            tabBar->setDrawBase(state.at(0).toBool());
+            tabBar->setCursor(state.at(1).value<QCursor>());
+            tabBar->setMouseTracking(state.at(2).toBool());
+            tabBar->setAttribute(Qt::WA_Hover, state.at(3).toBool());
+            // Fill unused space with system colors instead of the main window theme.
+            tabBar->setAutoFillBackground(true);
+            if (separateParent) {
+                restoreNativeDockSurface(tabBarParent);
+                tabBarParent->setAutoFillBackground(true);
+            }
+            continue;
+        }
+        if (separateParent) {
+            applyDockTabBarBackgroundToWidget(tabBarParent, tabSurfaces.window);
+        }
+        const QPalette tabBarPalette =
+            paletteForThemeSurface(tabBar->palette(), tabSurfaces.headersAndBorders);
+        if (!tabBar->property("speedcrunchDockSystemTabBar").toBool()) {
+            tabBar->setProperty("speedcrunchDockSystemTabBar", true);
+            tabBar->setMouseTracking(true);
+            tabBar->setAttribute(Qt::WA_Hover, true);
+            tabBar->installEventFilter(this);
+        }
+        updateDockSystemTabCursor(tabBar, tabBar->mapFromGlobal(QCursor::pos()));
+        tabBar->setDrawBase(false);
+        tabBar->setPalette(tabBarPalette);
+        tabBar->setStyleSheet(QStringLiteral(
+            "QTabBar { background-color: %1; }"
+            "QTabBar::tab {"
+            " background-color: transparent; color: %2;"
+            " padding: 5px 14px; margin: 2px 1px;"
+            "}"
+            "QTabBar::tab:!selected:hover {"
+            " background-color: %3; color: %4;"
+            " border-radius: 10px;"
+            "}"
+            "QTabBar::tab:selected {"
+            " background-color: %5; color: %6;"
+            " border-radius: 10px;"
+            "}")
+                                  .arg(tabSurfaces.window.background.name(),
+                                       tabSurfaces.window.foreground.name(),
+                                       tabSurfaces.result.background.name(),
+                                       tabSurfaces.result.foreground.name(),
+                                       tabSurfaces.headersAndBorders.background.name(),
+                                       tabSurfaces.headersAndBorders.foreground.name()));
+        tabBar->setPalette(tabBarPalette);
+    }
+}
+
 void MainWindow::applyThemeSurfacePalette()
 {
     const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
-    const auto applyDockTabBarSurfaces = [this](const GeneratedThemeSurfaces& tabSurfaces) {
-        for (QTabBar* tabBar : findChildren<QTabBar*>()) {
-            if (m_tabBarDisplays.contains(tabBar))
-                continue;
-            QWidget* tabBarParent = tabBar->parentWidget();
-            if (tabBarParent != nullptr
-                && tabBarParent != this
-                && !qobject_cast<QDockWidget*>(tabBarParent)) {
-                applyDockTabBarBackgroundToWidget(tabBarParent, tabSurfaces.window);
-            }
-            const QPalette tabBarPalette =
-                paletteForThemeSurface(tabBar->palette(), tabSurfaces.headersAndBorders);
-            if (!tabBar->property("speedcrunchDockSystemTabBar").toBool()) {
-                tabBar->setProperty("speedcrunchDockSystemTabBar", true);
-                tabBar->setMouseTracking(true);
-                tabBar->setAttribute(Qt::WA_Hover, true);
-                tabBar->installEventFilter(this);
-            }
-            updateDockSystemTabCursor(tabBar, tabBar->mapFromGlobal(QCursor::pos()));
-            tabBar->setDrawBase(false);
-            tabBar->setPalette(tabBarPalette);
-            tabBar->setStyleSheet(QStringLiteral(
-                "QTabBar { background-color: %1; }"
-                "QTabBar::tab {"
-                " background-color: transparent; color: %2;"
-                " padding: 5px 14px; margin: 2px 1px;"
-                "}"
-                "QTabBar::tab:!selected:hover {"
-                " background-color: %3; color: %4;"
-                " border-radius: 10px;"
-                "}"
-                "QTabBar::tab:selected {"
-                " background-color: %5; color: %6;"
-                " border-radius: 10px;"
-                "}")
-                                      .arg(tabSurfaces.window.background.name(),
-                                           tabSurfaces.window.foreground.name(),
-                                           tabSurfaces.result.background.name(),
-                                           tabSurfaces.result.foreground.name(),
-                                           tabSurfaces.headersAndBorders.background.name(),
-                                           tabSurfaces.headersAndBorders.foreground.name()));
-            tabBar->setPalette(tabBarPalette);
-        }
-    };
     if (UiConfig::OklchThemeDebugReportEnabled) {
         const QString reportKey = oklchThemeReportKey(surfaces);
         if (reportKey != lastOklchThemeReportKey()) {
@@ -6665,11 +6896,11 @@ void MainWindow::applyThemeSurfacePalette()
     for (QDockWidget* dock : m_allDocks) {
         if (dock == nullptr)
             continue;
-        applyGeneratedDockContentSurfaces(this, dock, surfaces);
-        applyGeneratedDockChromeSurfaces(this, dock, surfaces);
+        applyDockContentAppearance(this, dock, surfaces);
+        applyDockChromeAppearance(this, dock, surfaces);
     }
-    applyDockTabBarSurfaces(surfaces);
-    if (m_widgets.bitField) {
+    applyDockTabBarAppearance();
+    if (m_widgets.bitField && m_settings->dockAppearance == Settings::DockAppearanceSpeedCrunch) {
         const ThemeSurfaceColors bitfieldBackground =
             themeSurfaceForShadeIndex(surfaces, UiConfig::DockBackgroundShade);
         const ThemeSurfaceColors bitfieldHover =
@@ -6709,15 +6940,15 @@ void MainWindow::applyThemeSurfacePalette()
                                            bitfieldButtonPressed.background,
                                            bitfieldButtonPressed.foreground);
     }
-    QTimer::singleShot(0, this, [this, applyDockTabBarSurfaces]() {
+    QTimer::singleShot(0, this, [this]() {
         const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
         MenuStyle::refresh();
         const QList<QDockWidget*> docks = m_allDocks;
         for (QDockWidget* dock : docks) {
-            applyGeneratedDockContentSurfaces(this, dock, surfaces);
-            applyGeneratedDockChromeSurfaces(this, dock, surfaces);
+            applyDockContentAppearance(this, dock, surfaces);
+            applyDockChromeAppearance(this, dock, surfaces);
         }
-        applyDockTabBarSurfaces(surfaces);
+        applyDockTabBarAppearance();
     });
 }
 
@@ -7314,16 +7545,18 @@ void MainWindow::addTabifiedDock(QDockWidget* newDock, bool takeFocus, Qt::DockW
     newDock->show();
     newDock->raise();
     const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
-    applyGeneratedDockContentSurfaces(this, newDock, surfaces);
-    applyGeneratedDockChromeSurfaces(this, newDock, surfaces);
+    applyDockContentAppearance(this, newDock, surfaces);
+    applyDockChromeAppearance(this, newDock, surfaces);
+    applyDockTabBarAppearance();
     updateSplitterStyleSheet();
     QPointer<QDockWidget> guardedDock(newDock);
     QTimer::singleShot(0, newDock, [this, guardedDock]() {
         if (guardedDock == nullptr)
             return;
         const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
-        applyGeneratedDockContentSurfaces(this, guardedDock, surfaces);
-        applyGeneratedDockChromeSurfaces(this, guardedDock, surfaces);
+        applyDockContentAppearance(this, guardedDock, surfaces);
+        applyDockChromeAppearance(this, guardedDock, surfaces);
+        applyDockTabBarAppearance();
         updateSplitterStyleSheet();
     });
     if (takeFocus)
@@ -7363,6 +7596,8 @@ void MainWindow::createFixedConnections()
     connect(this, &MainWindow::colorSchemeChanged, this, &MainWindow::refreshPaneThemes);
     connect(m_actionGroups.menuAppearance, &QActionGroup::triggered,
             this, &MainWindow::setMenuAppearance);
+    connect(m_actionGroups.dockAppearance, &QActionGroup::triggered,
+            this, &MainWindow::setDockAppearance);
     connect(m_actionGroups.editorDisplayStyle, &QActionGroup::triggered,
             this, &MainWindow::setEditorDisplayStyle);
     connect(this, &MainWindow::syntaxHighlightingChanged, this, &MainWindow::refreshPaneThemes);
@@ -7734,6 +7969,10 @@ void MainWindow::createFixedConnections()
 
 void MainWindow::applySettings(bool initializing)
 {
+    m_actions.settingsDockAppearanceSystem->setChecked(
+        m_settings->dockAppearance == Settings::DockAppearanceSystem);
+    m_actions.settingsDockAppearanceSpeedCrunch->setChecked(
+        m_settings->dockAppearance == Settings::DockAppearanceSpeedCrunch);
     applyEditorDisplayStyle();
     m_actions.settingsMenuAppearanceSystem->setChecked(
         m_settings->menuAppearance == Settings::MenuAppearanceSystem);
@@ -11585,6 +11824,22 @@ void MainWindow::setFullScreenEnabled(bool b)
 
 bool MainWindow::event(QEvent* e)
 {
+    if (e != nullptr && !m_allDocks.isEmpty()
+        && m_settings->dockAppearance == Settings::DockAppearanceSystem
+        && (e->type() == QEvent::ApplicationPaletteChange || e->type() == QEvent::ThemeChange
+            || e->type() == QEvent::StyleChange)
+        && !property("speedcrunchDockRefreshPending").toBool()) {
+        setProperty("speedcrunchDockRefreshPending", true);
+        QTimer::singleShot(0, this, [this]() {
+            const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
+            for (QDockWidget* dock : m_allDocks) {
+                applyDockContentAppearance(this, dock, surfaces);
+                applyDockChromeAppearance(this, dock, surfaces);
+            }
+            applyDockTabBarAppearance();
+            setProperty("speedcrunchDockRefreshPending", false);
+        });
+    }
     if (e != nullptr) {
         const bool updateDockSeparators =
             e->type() == QEvent::Enter
@@ -11816,10 +12071,12 @@ bool MainWindow::eventFilter(QObject* o, QEvent* e)
             });
         } else if (e->type() == QEvent::FocusIn) {
             deactivateActiveEditorForTextInputFocus();
-            if (QLineEdit* lineEdit = qobject_cast<QLineEdit*>(widget))
+            if (QLineEdit* lineEdit = qobject_cast<QLineEdit*>(widget);
+                lineEdit && m_settings->dockAppearance == Settings::DockAppearanceSpeedCrunch)
                 applyDockSearchClearButtonIcon(lineEdit, generatedSurfaceColors(m_settings), true);
         } else if (e->type() == QEvent::FocusOut) {
-            if (QLineEdit* lineEdit = qobject_cast<QLineEdit*>(widget))
+            if (QLineEdit* lineEdit = qobject_cast<QLineEdit*>(widget);
+                lineEdit && m_settings->dockAppearance == Settings::DockAppearanceSpeedCrunch)
                 applyDockSearchClearButtonIcon(lineEdit, generatedSurfaceColors(m_settings), false);
         }
         return QMainWindow::eventFilter(o, e);
@@ -13907,6 +14164,7 @@ void MainWindow::handleDockWidgetVisibilityChanged(bool visible)
 
     QTimer::singleShot(0, this, [this]() {
         updateSplitterStyleSheet();
+        applyDockTabBarAppearance();
     });
 }
 

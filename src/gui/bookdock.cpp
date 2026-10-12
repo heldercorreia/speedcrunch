@@ -9,6 +9,7 @@
 #include "core/settings.h"
 #include "core/mathdsl.h"
 #include "gui/editorutils.h"
+#include "gui/menustyleutils.h"
 #include "gui/oklchutils.h"
 
 #include <QEvent>
@@ -75,7 +76,7 @@ void TextBrowser::changeEvent(QEvent* event)
 }
 
 BookDock::BookDock(QWidget* parent)
-    : QDockWidget(parent)
+    : DockWidget(parent)
     , m_book(new Book(this))
 {
     QWidget* widget = new QWidget(this);
@@ -84,6 +85,7 @@ BookDock::BookDock(QWidget* parent)
     bookLayout->setSpacing(0);
 
     m_browser = new TextBrowser(this);
+    m_browser->setFrameShape(QFrame::NoFrame);
     m_browser->setLineWrapMode(QTextEdit::NoWrap);
     m_browser->setOpenLinks(false);
     m_browser->setOpenExternalLinks(false);
@@ -189,10 +191,11 @@ QString BookDock::applyPaletteStyle(const QString& content) const
     const QPalette palette = m_browser->palette();
     const QColor background = palette.color(QPalette::Base);
     const QColor foreground = palette.color(QPalette::Text);
-    const QColor formulaLink = aaForegroundForBackground(
-        background, palette.color(QPalette::Link));
-    const QColor sectionLink = generateSecondaryLinkFromBackground(
-        background, formulaLink);
+    const bool system = Settings::instance()->dockAppearance == Settings::DockAppearanceSystem;
+    const QColor formulaLink = system ? palette.color(QPalette::Link)
+        : aaForegroundForBackground(background, palette.color(QPalette::Link));
+    const QColor sectionLink = system ? formulaLink
+        : generateSecondaryLinkFromBackground(background, formulaLink);
     const QString sectionLinkName =
         sectionLink.isValid() ? sectionLink.name() : foreground.name();
     QString styledContent = content;
@@ -209,7 +212,8 @@ QString BookDock::applyPaletteStyle(const QString& content) const
 
 void BookDock::updatePaletteStyle()
 {
-    QPalette palette = this->palette();
+    QPalette palette = Settings::instance()->dockAppearance == Settings::DockAppearanceSystem
+        ? MenuStyle::systemPalette(m_browser) : this->palette();
     palette.setColor(QPalette::Base,
                      m_contentBackground.isValid()
                          ? m_contentBackground

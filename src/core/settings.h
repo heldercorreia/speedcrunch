@@ -42,6 +42,11 @@ public:
         MenuAppearanceSpeedCrunch = 1
     };
 
+    enum DockAppearance {
+        DockAppearanceSystem = 0,
+        DockAppearanceSpeedCrunch = 1
+    };
+
     enum EditorDisplayStyle {
         EditorDisplayModern = 0,
         EditorDisplayClassic = 1
@@ -201,6 +206,7 @@ public:
 
     QString colorScheme;
     MenuAppearance menuAppearance;
+    DockAppearance dockAppearance;
     EditorDisplayStyle editorDisplayStyle;
     QString customColorSchemeJson;
     QString displayFont;

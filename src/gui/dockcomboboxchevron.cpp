@@ -130,6 +130,7 @@ DockComboBoxChevron::DockComboBoxChevron(QComboBox* comboBox)
     : QWidget(comboBox)
     , m_comboBox(comboBox)
     , m_animation(new QVariantAnimation(this))
+    , m_nativeButtonStyle(comboBox->styleSheet())
 {
     setObjectName(QStringLiteral("speedcrunchDockComboBoxChevron"));
     setAttribute(Qt::WA_TransparentForMouseEvents);
@@ -185,6 +186,11 @@ void DockComboBoxChevron::refreshPopupAppearance(QComboBox* comboBox)
         chevron->refresh();
 }
 
+void DockComboBoxChevron::applySystemAppearance(QComboBox* comboBox)
+{
+    apply(comboBox, QColor(), QColor(), PopupTheme());
+}
+
 void DockComboBoxChevron::setColors(QColor chevronColor, const QColor& outlineColor)
 {
     chevronColor.setAlphaF(kChevronOpacity);
@@ -202,6 +208,7 @@ void DockComboBoxChevron::refresh()
     reposition();
     setPopupOpen(m_view != nullptr && m_view->isVisible());
     raise();
+    setVisible(Settings::instance()->dockAppearance != Settings::DockAppearanceSystem);
 }
 
 bool DockComboBoxChevron::eventFilter(QObject* watched, QEvent* event)
@@ -323,18 +330,20 @@ void DockComboBoxChevron::reposition()
 
 void DockComboBoxChevron::stylePopupChrome()
 {
-    if (m_view == nullptr || m_stylingPopup || m_popupTheme.viewStyle.isEmpty())
+    const bool systemDock = Settings::instance()->dockAppearance == Settings::DockAppearanceSystem;
+    if (m_view == nullptr || m_stylingPopup || (!systemDock && m_popupTheme.viewStyle.isEmpty()))
         return;
     QScopedValueRollback<bool> guard(m_stylingPopup, true);
-    const bool system = Settings::instance()->menuAppearance == Settings::MenuAppearanceSystem;
+    const bool system = systemDock || Settings::instance()->menuAppearance == Settings::MenuAppearanceSystem;
     if (!system && m_view->itemDelegate() == m_systemDelegate && m_themedDelegate)
         m_view->setItemDelegate(m_themedDelegate);
-    const QString comboStyle = m_popupTheme.buttonStyle + (system ? QString() : QStringLiteral(
+    const QString comboStyle = systemDock ? m_nativeButtonStyle : m_popupTheme.buttonStyle + (system ? QString() : QStringLiteral(
         "QComboBox QAbstractItemView { background-color: %1; color: %2; border: 0; outline: 0; }")
         .arg(m_popupTheme.palette.color(QPalette::Base).name(),
              m_popupTheme.palette.color(QPalette::Text).name()));
     if (m_comboBox->styleSheet() != comboStyle)
         m_comboBox->setStyleSheet(comboStyle);
+    setVisible(!systemDock);
 
     if (system) {
         if (m_view->itemDelegate() != m_systemDelegate) {

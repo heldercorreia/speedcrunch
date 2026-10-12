@@ -6,6 +6,7 @@
 #include "core/session.h"
 #include "core/settings.h"
 #include "gui/constantswidget.h"
+#include "gui/genericdock.h"
 #include "gui/splittertreeutils.h"
 #include "gui/userunitlistwidget.h"
 #include "gui/variablelistwidget.h"
@@ -20,6 +21,7 @@
 #include <QHoverEvent>
 #include <QLabel>
 #include <QMouseEvent>
+#include <QMainWindow>
 #include <QTranslator>
 #include <QSplitter>
 #include <QTreeWidget>
@@ -49,11 +51,36 @@ public:
     using ConstantsWidget::updateList;
 };
 
+class TestableWaylandDock : public GenericDock<QWidget> {
+public:
+    explicit TestableWaylandDock(QWidget* parent)
+        : GenericDock<QWidget>("TestDocksUi", "Test dock", parent)
+    {
+    }
+
+    QRect titleRect() const
+    {
+        QStyleOptionDockWidget option;
+        initStyleOption(&option);
+        return option.rect;
+    }
+
+    bool waylandMoves = true;
+    int moveRequests = 0;
+
+protected:
+    bool usesWaylandWindowMoves() const override { return waylandMoves; }
+    void startWindowMove() override { ++moveRequests; }
+};
+
 class TestDocksUi : public QObject {
     Q_OBJECT
 
 private slots:
     void init() { UiTestFixture::resetSettings(); }
+    void floating_wayland_dock_uses_system_move_data();
+    void floating_wayland_dock_uses_system_move();
+    void floating_wayland_dock_keeps_title_controls();
     void constants_dock_inserts_pi_symbol_with_translated_name();
     void constants_summary_popup_ignores_header_and_padding_data();
     void constants_summary_popup_ignores_header_and_padding();
@@ -61,6 +88,120 @@ private slots:
     void user_variables_dock_keeps_existing_value_text_after_new_definition();
     void splitter_normalization_removes_single_child_nested_splitter_after_pane_close_shape();
 };
+
+void TestDocksUi::floating_wayland_dock_uses_system_move_data()
+{
+    QTest::addColumn<bool>("vertical");
+    QTest::newRow("horizontal-title") << false;
+    QTest::newRow("vertical-title") << true;
+}
+
+void TestDocksUi::floating_wayland_dock_uses_system_move()
+{
+    QFETCH(bool, vertical);
+    QMainWindow window;
+    auto* dock = new TestableWaylandDock(&window);
+    if (vertical)
+        dock->setFeatures(dock->features() | QDockWidget::DockWidgetVerticalTitleBar);
+    window.setCentralWidget(new QWidget(&window));
+    window.addDockWidget(Qt::RightDockWidgetArea, dock);
+    window.resize(640, 480);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QCoreApplication::processEvents();
+    const QPoint titlePos = dock->titleRect().center();
+    QVERIFY(!dock->titleRect().isEmpty());
+
+    // Attached docks keep Qt's docking behavior.
+    QTest::mouseClick(dock, Qt::LeftButton, Qt::NoModifier, titlePos);
+    QCOMPARE(dock->moveRequests, 0);
+    QVERIFY(!dock->isFloating());
+
+    dock->setFloating(true);
+    QVERIFY(QTest::qWaitForWindowExposed(dock));
+    QCoreApplication::processEvents();
+    // Offscreen uses native decorations. Qt retains the attached title rect,
+    // allowing us to exercise the Wayland event route without a compositor.
+    QVERIFY(dock->titleRect().contains(titlePos));
+    const QRect originalGeometry = dock->geometry();
+    QTest::mouseClick(dock, Qt::RightButton, Qt::NoModifier, titlePos);
+    QCOMPARE(dock->moveRequests, 0);
+    const QPoint contentPos(dock->width() - 20, dock->height() - 20);
+    QVERIFY(!dock->titleRect().contains(contentPos));
+    QTest::mouseClick(dock, Qt::LeftButton, Qt::NoModifier, contentPos);
+    QCOMPARE(dock->moveRequests, 0);
+
+    for (int attempt = 1; attempt <= 2; ++attempt) {
+        QTest::mousePress(dock, Qt::LeftButton, Qt::NoModifier, titlePos);
+        QCOMPARE(dock->moveRequests, attempt);
+        const QPoint movedPos = titlePos + QPoint(QApplication::startDragDistance() + 20, 30);
+        QMouseEvent move(QEvent::MouseMove, QPointF(movedPos),
+                         QPointF(dock->mapToGlobal(movedPos)),
+                         Qt::NoButton, Qt::LeftButton, Qt::NoModifier);
+        QCoreApplication::sendEvent(dock, &move);
+        QTest::mouseRelease(dock, Qt::LeftButton, Qt::NoModifier, movedPos);
+        QCOMPARE(dock->geometry(), originalGeometry);
+        QVERIFY(QWidget::mouseGrabber() != dock);
+        QVERIFY(dock->isFloating());
+    }
+
+    // A custom title bar owns its input handling.
+    dock->setTitleBarWidget(new QWidget(dock));
+    QCoreApplication::processEvents();
+    QTest::mouseClick(dock, Qt::LeftButton, Qt::NoModifier, titlePos);
+    QCOMPARE(dock->moveRequests, 2);
+    dock->setTitleBarWidget(nullptr);
+    dock->setFloating(false);
+    QCoreApplication::processEvents();
+    dock->waylandMoves = false;
+    dock->setFloating(true);
+    QTest::mouseClick(dock, Qt::LeftButton, Qt::NoModifier, titlePos);
+    QCOMPARE(dock->moveRequests, 2);
+}
+
+void TestDocksUi::floating_wayland_dock_keeps_title_controls()
+{
+    QMainWindow window;
+    auto* dock = new TestableWaylandDock(&window);
+    window.addDockWidget(Qt::RightDockWidgetArea, dock);
+    window.resize(640, 480);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    const QPoint titlePos = dock->titleRect().center();
+    dock->setFloating(true);
+    QCoreApplication::processEvents();
+    QTest::mouseDClick(dock, Qt::LeftButton, Qt::NoModifier, titlePos);
+    QVERIFY(!dock->isFloating());
+    QCOMPARE(dock->moveRequests, 0);
+
+    dock->setFloating(true);
+    dock->setFeatures(dock->features() & ~QDockWidget::DockWidgetFloatable);
+    QTest::mouseDClick(dock, Qt::LeftButton, Qt::NoModifier, titlePos);
+    QVERIFY(dock->isFloating());
+    dock->setFeatures(dock->features() | QDockWidget::DockWidgetFloatable);
+    dock->setFloating(false);
+
+    auto* floatButton = dock->findChild<QAbstractButton*>(QStringLiteral("qt_dockwidget_floatbutton"));
+    auto* closeButton = dock->findChild<QAbstractButton*>(QStringLiteral("qt_dockwidget_closebutton"));
+    QVERIFY(floatButton != nullptr);
+    QVERIFY(closeButton != nullptr);
+    QTest::mouseClick(floatButton, Qt::LeftButton);
+    QVERIFY(dock->isFloating());
+    // Expose Qt's client title buttons on the offscreen backend as on Wayland.
+    floatButton->show();
+    closeButton->show();
+    const QPoint buttonPos = floatButton->geometry().center();
+    QTest::mouseClick(dock, Qt::LeftButton, Qt::NoModifier, buttonPos);
+    QCOMPARE(dock->moveRequests, 0);
+    QTest::mouseClick(floatButton, Qt::LeftButton);
+    QVERIFY(!dock->isFloating());
+    QTest::mouseClick(floatButton, Qt::LeftButton);
+    QVERIFY(dock->isFloating());
+    closeButton->show();
+    QTest::mouseClick(closeButton, Qt::LeftButton);
+    QVERIFY(dock->isHidden());
+    QCOMPARE(dock->moveRequests, 0);
+}
 
 void TestDocksUi::constants_dock_inserts_pi_symbol_with_translated_name()
 {

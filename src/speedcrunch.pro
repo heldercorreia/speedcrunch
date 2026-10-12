@@ -107,6 +107,7 @@ HEADERS += core/book.h \
            gui/displayformatutils.h \
            gui/dockcomboboxchevron.h \
            gui/dockliststyle.h \
+           gui/dockwidget.h \
            gui/resultdisplay.h \
            gui/editor.h \
            gui/functiontooltiputils.h \

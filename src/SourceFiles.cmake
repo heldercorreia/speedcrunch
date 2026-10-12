@@ -32,6 +32,7 @@ gui/customkeypaddialog.h
 gui/displayformatutils.h
 gui/dockcomboboxchevron.h
 gui/dockliststyle.h
+gui/dockwidget.h
 gui/editor.h
 gui/functiontooltiputils.h
 gui/functionswidget.h
@@ -106,6 +107,7 @@ gui/customkeypaddialog.cpp
 gui/displayformatutils.cpp
 gui/dockcomboboxchevron.cpp
 gui/dockliststyle.cpp
+gui/dockwidget.h
 gui/editor.cpp
 gui/functiontooltiputils.cpp
 gui/functionswidget.cpp

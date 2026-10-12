@@ -181,6 +181,7 @@ private slots:
     void setHistoryDockVisible(bool, bool takeFocus = true);
     void setKeypadMode(QAction*);
     void setMenuAppearance(QAction*);
+    void setDockAppearance(QAction*);
     void setEditorDisplayStyle(QAction*);
     void setKeypadZoom(QAction*);
     void setKeypadVisible(bool);
@@ -366,6 +367,7 @@ private:
     void removePaneForDisplay(ResultDisplay* display);
     void normalizeSplitContainerTree();
     void applyThemeSurfacePalette();
+    void applyDockTabBarAppearance();
     void applyKeypadThemeSurfacePalette();
     void scheduleThemeRuntimeDiagnosticsReport();
     void writeThemeRuntimeDiagnosticsReport();
@@ -531,6 +533,8 @@ private:
         QAction* settingsDisplayColorSchemeCustom;
         QAction* settingsMenuAppearanceSystem;
         QAction* settingsMenuAppearanceSpeedCrunch;
+        QAction* settingsDockAppearanceSystem;
+        QAction* settingsDockAppearanceSpeedCrunch;
         QAction* settingsEditorDisplayClassic;
         QAction* settingsEditorDisplayModern;
         QVector<QAction*> settingsDisplayColorSchemes;
@@ -554,6 +558,7 @@ private:
         QActionGroup* angle;
         QActionGroup* colorScheme;
         QActionGroup* menuAppearance;
+        QActionGroup* dockAppearance;
         QActionGroup* editorDisplayStyle;
         QActionGroup* digits;
         QActionGroup* resultRoundingMode;
@@ -580,6 +585,7 @@ private:
         QMenu* digitGrouping;
         QMenu* display;
         QMenu* menuAppearance;
+        QMenu* dockAppearance;
         QMenu* editorDisplayStyle;
         QMenu* edit;
         QMenu* results;

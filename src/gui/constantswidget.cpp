@@ -25,6 +25,7 @@
 #include <QTimer>
 #include <QComboBox>
 #include <QHBoxLayout>
+#include <QGridLayout>
 #include <QHeaderView>
 #include <QLabel>
 #include <QLineEdit>
@@ -83,29 +84,13 @@ ConstantsWidget::ConstantsWidget(QWidget* parent)
     connect(m_subdomain, SIGNAL(activated(int)), SLOT(filter()));
 
     m_domainBox = new QWidget(this);
-    m_domainLayout = new QHBoxLayout;
+    m_domainLayout = new QGridLayout;
     m_domainBox->setLayout(m_domainLayout);
     m_domainLayout->setContentsMargins(kControlRowHorizontalPadding,
                                        UiConfig::DockSearchRowVerticalPadding,
                                        kControlRowHorizontalPadding,
                                        0);
     m_domainLayout->setSpacing(6);
-
-    m_domainRow1 = new QWidget(this);
-    m_domainRow1Layout = new QHBoxLayout;
-    m_domainRow1->setLayout(m_domainRow1Layout);
-    m_domainRow1Layout->setContentsMargins(0, 0, 0, 0);
-    m_domainRow1Layout->setSpacing(6);
-    m_domainRow1Layout->addWidget(m_domainLabel);
-    m_domainRow1Layout->addWidget(m_domain);
-
-    m_domainRow2 = new QWidget(this);
-    m_domainRow2Layout = new QHBoxLayout;
-    m_domainRow2->setLayout(m_domainRow2Layout);
-    m_domainRow2Layout->setContentsMargins(0, 0, 0, 0);
-    m_domainRow2Layout->setSpacing(6);
-    m_domainRow2Layout->addWidget(m_subdomainLabel);
-    m_domainRow2Layout->addWidget(m_subdomain);
 
     m_label = new QLabel(this);
 
@@ -118,6 +103,7 @@ ConstantsWidget::ConstantsWidget(QWidget* parent)
     QWidget* searchBox = new QWidget(this);
     QHBoxLayout* searchLayout = new QHBoxLayout;
     searchBox->setLayout(searchLayout);
+    searchLayout->setSpacing(6);
     searchLayout->addWidget(m_label);
     searchLayout->addWidget(m_filter);
     searchLayout->setContentsMargins(kControlRowHorizontalPadding,
@@ -420,7 +406,7 @@ void ConstantsWidget::refreshSubdomains()
         m_subdomain->setCurrentIndex(0);
         m_subdomainLabel->setVisible(true);
         m_subdomain->setVisible(true);
-        m_domainRow2->setVisible(true);
+        updateDomainLayout();
         return;
     }
 
@@ -432,7 +418,7 @@ void ConstantsWidget::refreshSubdomains()
     const bool hasConfiguredSubdomains = !subdomains.isEmpty();
     m_subdomainLabel->setVisible(hasConfiguredSubdomains);
     m_subdomain->setVisible(hasConfiguredSubdomains);
-    m_domainRow2->setVisible(hasConfiguredSubdomains);
+    updateDomainLayout();
 }
 
 void ConstantsWidget::changeEvent(QEvent* e)
@@ -441,8 +427,11 @@ void ConstantsWidget::changeEvent(QEvent* e)
         Constants::instance()->retranslateText();
         retranslateText();
     }
-    else
+    else {
         QWidget::changeEvent(e);
+        if (e->type() == QEvent::FontChange)
+            QTimer::singleShot(0, this, [this]() { updateDomainLayout(); });
+    }
 }
 
 bool ConstantsWidget::eventFilter(QObject* watched, QEvent* event)
@@ -627,25 +616,22 @@ void ConstantsWidget::updateDomainLayout()
     const int practicalInlineWidth = 560;
     const int availableWidth = m_domainBox->width() > 0 ? m_domainBox->width() : width();
     const bool compact = availableWidth < std::max(minInlineWidthByControls, practicalInlineWidth);
-    if (m_domainLayoutInitialized && compact == m_isCompactDomainLayout)
+    m_domainLayout->setColumnStretch(3, compact || m_subdomain->isHidden() ? 0 : 1);
+    if (m_domainLayoutInitialized && compact == m_isCompactDomainLayout) {
+        updateDomainLabelAlignment();
         return;
+    }
 
     m_domainLayoutInitialized = true;
     m_isCompactDomainLayout = compact;
     while (QLayoutItem* item = m_domainLayout->takeAt(0))
         delete item;
 
-    if (compact) {
-        QVBoxLayout* stacked = new QVBoxLayout;
-        stacked->setContentsMargins(0, 0, 0, 0);
-        stacked->setSpacing(UiConfig::DockSearchRowVerticalPadding);
-        stacked->addWidget(m_domainRow1);
-        stacked->addWidget(m_domainRow2);
-        m_domainLayout->addLayout(stacked);
-    } else {
-        m_domainLayout->addWidget(m_domainRow1);
-        m_domainLayout->addWidget(m_domainRow2);
-    }
+    m_domainLayout->setColumnStretch(1, 1);
+    m_domainLayout->addWidget(m_domainLabel, 0, 0);
+    m_domainLayout->addWidget(m_domain, 0, 1);
+    m_domainLayout->addWidget(m_subdomainLabel, compact ? 1 : 0, compact ? 0 : 2);
+    m_domainLayout->addWidget(m_subdomain, compact ? 1 : 0, compact ? 1 : 3);
 
     updateDomainLabelAlignment();
 }
@@ -653,13 +639,16 @@ void ConstantsWidget::updateDomainLayout()
 void ConstantsWidget::updateDomainLabelAlignment()
 {
     if (m_isCompactDomainLayout) {
-        const int labelWidth = std::max(m_domainLabel->sizeHint().width(),
-                                        m_subdomainLabel->sizeHint().width());
+        const int labelWidth = std::max({m_domainLabel->sizeHint().width(),
+                                        m_subdomainLabel->sizeHint().width(),
+                                        m_label->sizeHint().width()});
         m_domainLabel->setFixedWidth(labelWidth);
         m_subdomainLabel->setFixedWidth(labelWidth);
+        m_label->setFixedWidth(labelWidth);
     } else {
-        m_domainLabel->setMinimumWidth(0);
-        m_domainLabel->setMaximumWidth(QWIDGETSIZE_MAX);
+        const int labelWidth = std::max(m_domainLabel->sizeHint().width(), m_label->sizeHint().width());
+        m_domainLabel->setFixedWidth(labelWidth);
+        m_label->setFixedWidth(labelWidth);
         m_subdomainLabel->setMinimumWidth(0);
         m_subdomainLabel->setMaximumWidth(QWIDGETSIZE_MAX);
     }

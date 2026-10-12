@@ -10,6 +10,8 @@
 #include "gui/themedlineedit.h"
 #include "gui/uiconfig.h"
 
+#include <algorithm>
+
 #include <QEvent>
 #include <QString>
 #include <QTimer>
@@ -58,6 +60,7 @@ FunctionsWidget::FunctionsWidget(QWidget* parent)
     QHBoxLayout* domainLayout = new QHBoxLayout;
     domainLayout->addWidget(m_domainLabel);
     domainLayout->addWidget(m_domain);
+    domainLayout->setSpacing(6);
     domainLayout->setContentsMargins(kControlRowHorizontalPadding,
                                      UiConfig::DockSearchRowVerticalPadding,
                                      kControlRowHorizontalPadding,
@@ -68,6 +71,7 @@ FunctionsWidget::FunctionsWidget(QWidget* parent)
     QHBoxLayout* searchLayout = new QHBoxLayout;
     searchLayout->addWidget(m_searchLabel);
     searchLayout->addWidget(m_searchFilter);
+    searchLayout->setSpacing(6);
     searchLayout->setContentsMargins(kControlRowHorizontalPadding,
                                      UiConfig::DockSearchRowVerticalPadding,
                                      kControlRowHorizontalPadding,
@@ -173,6 +177,7 @@ void FunctionsWidget::retranslateText()
 
     m_searchLabel->setText(tr("Search"));
     m_domainLabel->setText(tr("Domain"));
+    updateControlLabelWidths();
     const QString selectedDomain = m_domain->currentText();
     m_domain->clear();
     m_domain->addItem(tr("All"));
@@ -227,6 +232,16 @@ void FunctionsWidget::changeEvent(QEvent* event)
     if (event->type() == QEvent::LanguageChange) {
         FunctionRepo::instance()->retranslateText();
         retranslateText();
-    } else
+    } else {
         QWidget::changeEvent(event);
+        if (event->type() == QEvent::FontChange)
+            QTimer::singleShot(0, this, [this]() { updateControlLabelWidths(); });
+    }
+}
+
+void FunctionsWidget::updateControlLabelWidths()
+{
+    const int labelWidth = std::max(m_domainLabel->sizeHint().width(), m_searchLabel->sizeHint().width());
+    m_domainLabel->setFixedWidth(labelWidth);
+    m_searchLabel->setFixedWidth(labelWidth);
 }

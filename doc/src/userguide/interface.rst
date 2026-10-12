@@ -19,6 +19,10 @@ Use the cross in a dock panel's title bar to hide the panel, or the square
 to detach it into a floating window. Hidden panels can be shown again via
 the :menuselection:`View` menu.
 
+On Linux with Wayland, drag a floating panel by its title bar to move it.
+Use its square button or double-click the title bar to attach it to the
+main window again.
+
 * Formula Book
     The formula book provides access to commonly used formulas and calculations. Simply insert
     a formula into the expression editor by clicking on it.
@@ -755,15 +759,37 @@ User Interface Settings
 
     This setting applies to the menu bar shown inside the application window,
     dropdown menus, context menus, and dropdown lists in attached and floating
-    docks. Closed dropdown controls still use the SpeedCrunch theme.
+    docks that use the SpeedCrunch theme. Closed dropdown controls follow the
+    :menuselection:`Docks` setting.
     The macOS system menu bar keeps its native appearance.
     Popup menus drawn by Qt can look slightly different from native macOS menus.
     On GNOME, popup menus use the GTK theme's popup hover colors when GTK is
     available. Otherwise they use Qt's system palette.
     The choice applies to all SpeedCrunch windows and is saved between launches.
 
-    Selections in the expression editor, result display, and dock lists still
-    use the SpeedCrunch theme. Their appearance is independent of this setting.
+    Selections in the expression editor and result display use the SpeedCrunch
+    theme. Dock list selections follow the :menuselection:`Docks` setting.
+
+* :menuselection:`Settings --> Appearance --> Docks`
+    Choose how attached and floating docks look, including their title bars:
+
+    * :guilabel:`System` uses the system's colors and widget styles for lists,
+      search fields, dropdown controls, scrollbars, dock title bars, and the tabs
+      used to switch between overlapping docks.
+      Close and float buttons use the system style. Dropdown lists also
+      use the system appearance, regardless of the :menuselection:`Menus` choice.
+      The Formula Book and bitfield use system colors as well. Formula and
+      navigation links use the system link color directly. On bits use the system
+      selection colors, with a separate hover color for off bits.
+    * :guilabel:`SpeedCrunch Theme` (the default) uses the selected SpeedCrunch
+      theme for dock content, title bars, and tabs, including list selections and
+      search fields.
+
+    The choice applies immediately to all SpeedCrunch windows and is saved
+    between launches. System colors follow changes to the system theme while
+    SpeedCrunch is running.
+
+    .. versionadded:: 1.1
 
 * :menuselection:`Settings --> Appearance --> Editor`
     Choose the layout of the expression editor and result display:
