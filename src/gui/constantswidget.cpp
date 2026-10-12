@@ -69,7 +69,6 @@ ConstantsWidget::ConstantsWidget(QWidget* parent)
     : QWidget(parent)
 {
     constexpr int kControlRowHorizontalPadding = 8;
-    constexpr int kControlRowVerticalPadding = 6;
 
     m_domainLabel = new QLabel(this);
     m_domain = new QComboBox(this);
@@ -87,9 +86,9 @@ ConstantsWidget::ConstantsWidget(QWidget* parent)
     m_domainLayout = new QHBoxLayout;
     m_domainBox->setLayout(m_domainLayout);
     m_domainLayout->setContentsMargins(kControlRowHorizontalPadding,
-                                       kControlRowVerticalPadding,
+                                       UiConfig::DockSearchRowVerticalPadding,
                                        kControlRowHorizontalPadding,
-                                       kControlRowVerticalPadding);
+                                       0);
     m_domainLayout->setSpacing(6);
 
     m_domainRow1 = new QWidget(this);
@@ -122,9 +121,9 @@ ConstantsWidget::ConstantsWidget(QWidget* parent)
     searchLayout->addWidget(m_label);
     searchLayout->addWidget(m_filter);
     searchLayout->setContentsMargins(kControlRowHorizontalPadding,
-                                     kControlRowVerticalPadding,
+                                     UiConfig::DockSearchRowVerticalPadding,
                                      kControlRowHorizontalPadding,
-                                     kControlRowVerticalPadding);
+                                     UiConfig::DockSearchRowVerticalPadding);
 
     m_list = new QTreeWidget(this);
     m_list->setAutoScroll(true);
@@ -421,6 +420,7 @@ void ConstantsWidget::refreshSubdomains()
         m_subdomain->setCurrentIndex(0);
         m_subdomainLabel->setVisible(true);
         m_subdomain->setVisible(true);
+        m_domainRow2->setVisible(true);
         return;
     }
 
@@ -432,6 +432,7 @@ void ConstantsWidget::refreshSubdomains()
     const bool hasConfiguredSubdomains = !subdomains.isEmpty();
     m_subdomainLabel->setVisible(hasConfiguredSubdomains);
     m_subdomain->setVisible(hasConfiguredSubdomains);
+    m_domainRow2->setVisible(hasConfiguredSubdomains);
 }
 
 void ConstantsWidget::changeEvent(QEvent* e)
@@ -637,7 +638,7 @@ void ConstantsWidget::updateDomainLayout()
     if (compact) {
         QVBoxLayout* stacked = new QVBoxLayout;
         stacked->setContentsMargins(0, 0, 0, 0);
-        stacked->setSpacing(4);
+        stacked->setSpacing(UiConfig::DockSearchRowVerticalPadding);
         stacked->addWidget(m_domainRow1);
         stacked->addWidget(m_domainRow2);
         m_domainLayout->addLayout(stacked);

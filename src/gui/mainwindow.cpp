@@ -873,8 +873,8 @@ struct ThemeScrollBarColors
 };
 
 constexpr int kThemeGeneratedShadeCount = UiConfig::Shade600 + 1;
-constexpr int kDockListHorizontalPadding = 8;
-constexpr int kDockListVerticalPadding = 6;
+constexpr int kDockComboPopupHorizontalPadding = 8;
+constexpr int kDockComboPopupVerticalPadding = 6;
 
 struct GeneratedThemeSurfaces
 {
@@ -1735,8 +1735,8 @@ void applyGeneratedDockContentSurfaces(MainWindow* owner, QDockWidget* dock, con
                 "}")
                                          .arg(dockComboPopup.background.name(),
                                               dockComboPopup.foreground.name())
-                                         .arg(kDockListVerticalPadding)
-                                         .arg(kDockListHorizontalPadding)
+                                         .arg(kDockComboPopupVerticalPadding)
+                                         .arg(kDockComboPopupHorizontalPadding)
                                          .arg(dockHoveredItem.background.name(),
                                               dockHoveredItem.foreground.name())
                                          .arg(UiConfig::CompletionPopupCornerRadius)
@@ -1794,12 +1794,11 @@ void applyGeneratedDockContentSurfaces(MainWindow* owner, QDockWidget* dock, con
             "QAbstractItemView {"
             " background-color: %1; color: %2;"
             " border: 0;"
-            " padding: %3px %4px;"
+            " padding: %3px;"
             "}")
                                 .arg(dockBackground.background.name(),
                                      dockBackground.foreground.name())
-                                .arg(kDockListVerticalPadding)
-                                .arg(kDockListHorizontalPadding)
+                                .arg(UiConfig::DockListPadding)
                             + scrollBarStyleSheet(listScrollBars));
         view->setPalette(palette);
         view->viewport()->setPalette(palette);
@@ -1808,16 +1807,24 @@ void applyGeneratedDockContentSurfaces(MainWindow* owner, QDockWidget* dock, con
     }
 
     for (QHeaderView* header : dockContent->findChildren<QHeaderView*>()) {
+        restoreNativeDockSurface(header);
+        QStyleOptionHeader option;
+        option.initFrom(header);
+        const int headerMargin = qMax(0, header->style()->pixelMetric(
+            QStyle::PM_HeaderMargin, &option, header));
+        // Keep the native height, including the two themed border strokes.
+        const int headerContentHeight = qMax(0, header->sizeHint().height() - 2);
         header->setPalette(paletteForThemeSurface(header->palette(), dockBackground));
         header->setStyleSheet(QStringLiteral(
-            "QHeaderView { background-color: %1; color: %2; border: 0; }"
+            "QHeaderView { background-color: %1; color: %2; border: 0; padding: 0; }"
             "QHeaderView::section {"
             " background-color: %1; color: %2;"
             " border: 0;"
             " border-top: 1px solid %3;"
             " border-right: 1px solid %3;"
             " border-bottom: 1px solid %3;"
-            " padding: 4px 8px;"
+            " padding: 0px %4px;"
+            " height: %5px;"
             "}"
             "QHeaderView::section:first {"
             " border-left: 0;"
@@ -1827,7 +1834,9 @@ void applyGeneratedDockContentSurfaces(MainWindow* owner, QDockWidget* dock, con
             "}")
                                   .arg(dockBackground.background.name(),
                                        dockBackground.foreground.name(),
-                                       dockHeader.background.name()));
+                                       dockHeader.background.name())
+                                  .arg(headerMargin)
+                                  .arg(headerContentHeight));
     }
 }
 

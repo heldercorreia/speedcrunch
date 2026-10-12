@@ -27,6 +27,9 @@
 #include "gui/resultdisplay.h"
 #include "gui/themedlineedit.h"
 #include "gui/uiconfig.h"
+#include "gui/userfunctionlistwidget.h"
+#include "gui/userunitlistwidget.h"
+#include "gui/variablelistwidget.h"
 #include "math/quantity.h"
 #include "uitestfixture.h"
 
@@ -890,6 +893,7 @@ private slots:
     void current_result_tooltip_stays_hidden_after_escape_and_mouse_caret_move();
     void current_result_tooltip_hides_when_dragging_splitters();
     void calculation_settings_dialog_matches_notation_precision_layout();
+    void main_window_uses_generated_theme_surface_for_chrome_and_editor_data();
     void main_window_uses_generated_theme_surface_for_chrome_and_editor();
     void menu_bar_keeps_themed_contrast_with_platform_palette_data();
     void menu_bar_keeps_themed_contrast_with_platform_palette();
@@ -917,6 +921,14 @@ private slots:
     void visible_window_applies_restored_dock_and_keypad_layout();
     void always_on_top_toggles_preserve_window_geometry();
     void dock_surfaces_use_successive_generated_shades();
+    void dock_search_rows_use_configured_vertical_padding_data();
+    void dock_search_rows_use_configured_vertical_padding();
+    void themed_dock_controls_have_equal_visible_gaps_data();
+    void themed_dock_controls_have_equal_visible_gaps();
+    void themed_dock_lists_use_compact_spacing_data();
+    void themed_dock_lists_use_compact_spacing();
+    void dock_first_control_matches_shared_vertical_spacing_data();
+    void dock_first_control_matches_shared_vertical_spacing();
     void dock_and_popup_text_meet_contrast_target_across_themes();
     void dock_header_buttons_render_full_size_data();
     void dock_header_buttons_render_full_size();
@@ -4332,8 +4344,16 @@ void TestDisplayUi::calculation_settings_dialog_matches_notation_precision_layou
     QCOMPARE(updated.extras.at(0).prec, 5);
 }
 
+void TestDisplayUi::main_window_uses_generated_theme_surface_for_chrome_and_editor_data()
+{
+    QTest::addColumn<int>("editorDisplayStyle");
+    QTest::newRow("classic") << int(Settings::EditorDisplayClassic);
+    QTest::newRow("modern") << int(Settings::EditorDisplayModern);
+}
+
 void TestDisplayUi::main_window_uses_generated_theme_surface_for_chrome_and_editor()
 {
+    QFETCH(int, editorDisplayStyle);
     Settings* settings = Settings::instance();
     struct SettingsGuard {
         Settings* settings;
@@ -4382,7 +4402,7 @@ void TestDisplayUi::main_window_uses_generated_theme_surface_for_chrome_and_edit
     settings->keypadMode = Settings::KeypadModeBasicWide;
     settings->statusBarVisible = true;
     settings->bitfieldVisible = true;
-    settings->editorDisplayStyle = Settings::EditorDisplayClassic;
+    settings->editorDisplayStyle = static_cast<Settings::EditorDisplayStyle>(editorDisplayStyle);
     settings->hasNumberFormatStyleSetting = true;
 
     const auto verifyTheme = [settings](const QString& baseName, ThemePolarity polarity) {
@@ -4410,7 +4430,9 @@ void TestDisplayUi::main_window_uses_generated_theme_surface_for_chrome_and_edit
             shades.at(UiConfig::BitfieldButtonPressedFillShade);
         const QColor expectedStatusBarSurface = shades.at(UiConfig::StatusBarBackgroundShade);
         const QColor expectedPrimary = generatePrimaryFromBackground(base);
-        const QColor expectedDockSeparator = shades.at(UiConfig::ClassicVerticalPaneDividerShade);
+        const bool classic = settings->editorDisplayStyle == Settings::EditorDisplayClassic;
+        const QColor expectedDockSeparator = shades.at(
+            classic ? UiConfig::ClassicVerticalPaneDividerShade : UiConfig::SplitterShade);
         const QColor expectedWindowForeground = foregrounds.at(UiConfig::WindowBackgroundShade);
         const QColor expectedKeypadForeground = foregrounds.at(UiConfig::KeypadBackgroundShade);
         const QColor expectedEditorForeground = foregrounds.at(UiConfig::DockBackgroundShade);
@@ -4539,11 +4561,21 @@ void TestDisplayUi::main_window_uses_generated_theme_surface_for_chrome_and_edit
         QCOMPARE(editor->palette().color(QPalette::Base).name(),
                  expectedEditorSurface.name());
         QVERIFY(editor->styleSheet().contains(expectedEditorSurface.name()));
-        QVERIFY(editor->styleSheet().contains(QStringLiteral("border-radius: %1px")
-            .arg(UiConfig::ModernEditorCornerRadius)));
-        QVERIFY(editor->styleSheet().contains(QStringLiteral("padding: %1px %2px")
-            .arg(UiConfig::ModernEditorVerticalPadding)
-            .arg(UiConfig::ModernEditorHorizontalPadding)));
+        if (classic) {
+            QVERIFY(editor->styleSheet().contains(QStringLiteral("border-radius: 0;")));
+            QVERIFY(editor->styleSheet().contains(QStringLiteral("margin: 0;")));
+            QCOMPARE(editor->geometry().left(), display->geometry().left());
+            QCOMPARE(editor->width(), display->width());
+            QCOMPARE(editor->geometry().top(), display->geometry().bottom() + 1);
+            QCOMPARE(editor->viewport()->x() + editor->cursorRect().x(),
+                     UiConfig::ClassicTextInset);
+        } else {
+            QVERIFY(editor->styleSheet().contains(QStringLiteral("border-radius: %1px")
+                .arg(UiConfig::ModernEditorCornerRadius)));
+            QVERIFY(editor->styleSheet().contains(QStringLiteral("padding: %1px %2px")
+                .arg(UiConfig::ModernEditorVerticalPadding)
+                .arg(UiConfig::ModernEditorHorizontalPadding)));
+        }
         QVERIFY(editor->viewport()->styleSheet().contains(QStringLiteral("background: transparent")));
         QTRY_COMPARE(editor->cursorWidth(), 2);
         QCOMPARE(editor->graphicsEffect(), nullptr);
@@ -6409,6 +6441,311 @@ void TestDisplayUi::dock_and_popup_text_meet_contrast_target_across_themes()
     }
 }
 
+void TestDisplayUi::dock_search_rows_use_configured_vertical_padding_data()
+{
+    QTest::addColumn<QString>("dock");
+    QTest::addColumn<int>("topPadding");
+    for (const QString& dock : {QStringLiteral("constants"), QStringLiteral("functions")})
+        QTest::newRow(qPrintable(dock)) << dock << UiConfig::DockSearchRowVerticalPadding;
+    for (const QString& dock : {QStringLiteral("user-variables"),
+                               QStringLiteral("user-functions"),
+                               QStringLiteral("user-units")})
+        QTest::newRow(qPrintable(dock)) << dock << 6;
+}
+
+void TestDisplayUi::dock_search_rows_use_configured_vertical_padding()
+{
+    QFETCH(QString, dock);
+    QFETCH(int, topPadding);
+
+    QWidget owner;
+    QWidget* widget = nullptr;
+    if (dock == QStringLiteral("constants"))
+        widget = new ConstantsWidget(&owner);
+    else if (dock == QStringLiteral("functions"))
+        widget = new FunctionsWidget(&owner);
+    else if (dock == QStringLiteral("user-variables"))
+        widget = new VariableListWidget(&owner);
+    else if (dock == QStringLiteral("user-functions"))
+        widget = new UserFunctionListWidget(&owner);
+    else if (dock == QStringLiteral("user-units"))
+        widget = new UserUnitListWidget(&owner);
+    QVERIFY(widget);
+
+    widget->resize(420, 360);
+    widget->show();
+    QLineEdit* search = widget->findChild<QLineEdit*>();
+    QTreeWidget* list = widget->findChild<QTreeWidget*>();
+    QVERIFY(search);
+    QVERIFY(list);
+    QWidget* row = search->parentWidget();
+    QVERIFY(row->layout());
+    widget->layout()->activate();
+    row->layout()->activate();
+
+    QCOMPARE(row->layout()->contentsMargins(),
+             QMargins(8, topPadding, 8, UiConfig::DockSearchRowVerticalPadding));
+    const int searchTop = search->mapTo(widget, QPoint()).y();
+    const int rowTop = row->mapTo(widget, QPoint()).y();
+    QCOMPARE(searchTop - rowTop, topPadding);
+    QCOMPARE(list->y() - (searchTop + search->height()),
+             UiConfig::DockSearchRowVerticalPadding);
+}
+
+void TestDisplayUi::themed_dock_lists_use_compact_spacing_data()
+{
+    QTest::addColumn<QString>("dockName");
+    QTest::addColumn<bool>("light");
+    for (bool light : {false, true}) {
+        for (const QString& dock : {QStringLiteral("ConstantsDock"), QStringLiteral("FunctionsDock"),
+                                    QStringLiteral("VariablesDock"), QStringLiteral("UserFunctionsDock"),
+                                    QStringLiteral("UserUnitsDock"), QStringLiteral("HistoryDock")}) {
+            const QString name = (light ? QStringLiteral("light-") : QStringLiteral("dark-")) + dock;
+            QTest::newRow(qPrintable(name)) << dock << light;
+        }
+    }
+}
+
+void TestDisplayUi::themed_dock_lists_use_compact_spacing()
+{
+    QFETCH(QString, dockName);
+    QFETCH(bool, light);
+    MainWindowStateGuard guard;
+    guard.settings->dockAppearance = Settings::DockAppearanceSystem;
+    guard.settings->constantsDockVisible = true;
+    guard.settings->functionsDockVisible = true;
+    guard.settings->variablesDockVisible = true;
+    guard.settings->userFunctionsDockVisible = true;
+    guard.settings->userUnitsDockVisible = true;
+    guard.settings->historyDockVisible = true;
+    guard.settings->windowState.clear();
+    guard.settings->sessionLayoutJson.clear();
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), QString(light ? "#e5eee8" : "#27314a")}});
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QDockWidget* dock = window.findChild<QDockWidget*>(dockName);
+    QMenu* appearance = window.findChild<QMenu*>(QStringLiteral("DockAppearanceMenu"));
+    QVERIFY(dock);
+    QVERIFY(appearance);
+    dock->setFloating(true);
+    dock->resize(500, 400);
+    dock->show();
+    QAbstractItemView* list = nullptr;
+    for (QAbstractItemView* view : dock->findChildren<QAbstractItemView*>()) {
+        if (!qobject_cast<QHeaderView*>(view) && !qobject_cast<QComboBox*>(view->parentWidget())) {
+            if (qobject_cast<QTreeWidget*>(view) || qobject_cast<QListWidget*>(view)) {
+                list = view;
+                break;
+            }
+        }
+    }
+    QVERIFY(list);
+    QCoreApplication::processEvents();
+    const auto firstRow = [list]() {
+        if (list->model()->rowCount() == 0) {
+            if (QTreeWidget* tree = qobject_cast<QTreeWidget*>(list))
+                new QTreeWidgetItem(tree, QStringList{QStringLiteral("Sample"), QStringLiteral("123")});
+            else
+                qobject_cast<QListWidget*>(list)->addItem(QStringLiteral("Sample"));
+        }
+        list->doItemsLayout();
+        return list->model()->index(0, 0);
+    };
+    const QModelIndex first = firstRow();
+    QVERIFY(first.isValid());
+    const int nativeRowHeight = list->visualRect(first).height();
+    const int nativeInset = list->viewport()->x();
+    QTreeWidget* tree = qobject_cast<QTreeWidget*>(list);
+    const int nativeHeaderHeight = tree ? tree->header()->height() : 0;
+    for (int cycle = 0; cycle < 2; ++cycle) {
+        appearance->actions().at(1)->trigger();
+        QCoreApplication::processEvents();
+        QCOMPARE(list->contentsMargins(), QMargins());
+        QVERIFY(list->viewport()->x() <= nativeInset);
+        QCOMPARE(list->visualRect(firstRow()).height(), nativeRowHeight);
+        if (tree) {
+            QCOMPARE(tree->header()->height(), nativeHeaderHeight);
+        }
+        appearance->actions().at(0)->trigger();
+        QCoreApplication::processEvents();
+        QCOMPARE(list->viewport()->x(), nativeInset);
+        if (tree)
+            QCOMPARE(tree->header()->height(), nativeHeaderHeight);
+    }
+}
+
+void TestDisplayUi::themed_dock_controls_have_equal_visible_gaps_data()
+{
+    QTest::addColumn<QString>("dockName");
+    QTest::addColumn<bool>("wide");
+    QTest::addColumn<bool>("light");
+    QTest::addColumn<bool>("subdomains");
+    for (bool light : {false, true}) {
+        const QByteArray theme = light ? "light-" : "dark-";
+        for (const QString& dock : {QStringLiteral("ConstantsDock"),
+                                   QStringLiteral("FunctionsDock"),
+                                   QStringLiteral("VariablesDock"),
+                                   QStringLiteral("UserFunctionsDock"),
+                                   QStringLiteral("UserUnitsDock")}) {
+            const QByteArray name = theme + dock.toUtf8();
+            QTest::newRow(name.constData()) << dock << false << light << true;
+        }
+        const QByteArray wideName = theme + "constants-wide";
+        QTest::newRow(wideName.constData())
+            << QStringLiteral("ConstantsDock") << true << light << true;
+        for (bool wide : {false, true}) {
+            const QByteArray name = theme + (wide ? "constants-single-wide" : "constants-single");
+            QTest::newRow(name.constData())
+                << QStringLiteral("ConstantsDock") << wide << light << false;
+        }
+    }
+}
+
+void TestDisplayUi::themed_dock_controls_have_equal_visible_gaps()
+{
+    QFETCH(QString, dockName);
+    QFETCH(bool, wide);
+    QFETCH(bool, light);
+    QFETCH(bool, subdomains);
+
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    settings->constantsDockVisible = dockName == QStringLiteral("ConstantsDock");
+    settings->functionsDockVisible = dockName == QStringLiteral("FunctionsDock");
+    settings->variablesDockVisible = dockName == QStringLiteral("VariablesDock");
+    settings->userFunctionsDockVisible = dockName == QStringLiteral("UserFunctionsDock");
+    settings->userUnitsDockVisible = dockName == QStringLiteral("UserUnitsDock");
+    settings->historyDockVisible = false;
+    settings->formulaBookDockVisible = false;
+    settings->bitfieldVisible = false;
+    settings->keypadVisible = false;
+    settings->colorScheme = QStringLiteral("Custom");
+    settings->customColorSchemeJson = themeJsonString(QJsonObject {
+        {QStringLiteral("background"), light ? QStringLiteral("#f0f6ef")
+                                             : QStringLiteral("#1f3229")}
+    });
+
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QDockWidget* dock = window.findChild<QDockWidget*>(dockName);
+    QVERIFY(dock);
+    dock->setFloating(true);
+    dock->resize(wide ? 800 : 320, 480);
+
+    QWidget* content = dock->widget();
+    if (ConstantsWidget* constants = qobject_cast<ConstantsWidget*>(content)) {
+        QComboBox* domain = constants->findChild<QComboBox*>();
+        QVERIFY(domain);
+        constants->restoreState(domain->itemText(subdomains ? 0 : 1), QString(), QString());
+    }
+    QCoreApplication::processEvents();
+    QTest::qWait(30);
+    QLineEdit* search = content->findChild<QLineEdit*>();
+    QTreeWidget* table = content->findChild<QTreeWidget*>();
+    QVERIFY(search);
+    QVERIFY(table);
+    QVERIFY(table->header()->isVisible());
+    const auto top = [content](QWidget* widget) {
+        return widget->mapTo(content, QPoint()).y();
+    };
+    const auto bottom = [&top](QWidget* widget) {
+        return top(widget) + widget->height();
+    };
+
+    // Measure the painted header, including any padding inside the table.
+    QCOMPARE(top(table->header()->viewport()) - bottom(search),
+             UiConfig::DockSearchRowVerticalPadding);
+    QList<QComboBox*> combos;
+    for (QComboBox* combo : content->findChildren<QComboBox*>()) {
+        if (combo->isVisible())
+            combos.append(combo);
+    }
+    if (!combos.isEmpty()) {
+        if (dockName == QStringLiteral("ConstantsDock"))
+            QCOMPARE(combos.size(), subdomains ? 2 : 1);
+        QComboBox* lowest = combos.first();
+        for (QComboBox* combo : combos) {
+            if (bottom(combo) > bottom(lowest))
+                lowest = combo;
+        }
+        QCOMPARE(top(search) - bottom(lowest), UiConfig::DockSearchRowVerticalPadding);
+        if (combos.size() == 2) {
+            if (wide) {
+                QCOMPARE(top(combos.first()), top(combos.last()));
+            } else {
+                QComboBox* upper = top(combos.first()) < top(combos.last())
+                    ? combos.first() : combos.last();
+                QComboBox* lower = upper == combos.first() ? combos.last() : combos.first();
+                QCOMPARE(top(lower) - bottom(upper), UiConfig::DockSearchRowVerticalPadding);
+            }
+        }
+    }
+}
+
+void TestDisplayUi::dock_first_control_matches_shared_vertical_spacing_data()
+{
+    QTest::addColumn<bool>("light");
+    QTest::newRow("dark") << false;
+    QTest::newRow("light") << true;
+}
+
+void TestDisplayUi::dock_first_control_matches_shared_vertical_spacing()
+{
+    QFETCH(bool, light);
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    settings->constantsDockVisible = true;
+    settings->functionsDockVisible = true;
+    settings->variablesDockVisible = true;
+    settings->userFunctionsDockVisible = true;
+    settings->userUnitsDockVisible = true;
+    settings->historyDockVisible = false;
+    settings->formulaBookDockVisible = false;
+    settings->bitfieldVisible = false;
+    settings->keypadVisible = false;
+    settings->colorScheme = QStringLiteral("Custom");
+    settings->customColorSchemeJson = themeJsonString(QJsonObject {
+        {QStringLiteral("background"), light ? QStringLiteral("#f0f6ef")
+                                             : QStringLiteral("#1f3229")}
+    });
+
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    for (const QString& name : {QStringLiteral("ConstantsDock"),
+                               QStringLiteral("FunctionsDock"),
+                               QStringLiteral("VariablesDock"),
+                               QStringLiteral("UserFunctionsDock"),
+                               QStringLiteral("UserUnitsDock")}) {
+        QDockWidget* dock = window.findChild<QDockWidget*>(name);
+        QVERIFY(dock);
+        dock->setFloating(true);
+        dock->resize(320, 480);
+        dock->show();
+        QCoreApplication::processEvents();
+        QWidget* content = dock->widget();
+        QWidget* first = content->findChild<QLineEdit*>();
+        QVERIFY(first);
+        for (QComboBox* combo : content->findChildren<QComboBox*>()) {
+            if (combo->isVisible()
+                && combo->mapTo(content, QPoint()).y() < first->mapTo(content, QPoint()).y())
+                first = combo;
+        }
+        QTRY_COMPARE(first->mapTo(content, QPoint()).y(),
+                     UiConfig::DockSearchRowVerticalPadding);
+    }
+}
+
 void TestDisplayUi::dock_surfaces_use_successive_generated_shades()
 {
     Settings* settings = Settings::instance();
@@ -6829,7 +7166,7 @@ void TestDisplayUi::dock_surfaces_use_successive_generated_shades()
     QCOMPARE(table->property("dockListHoverForeground").value<QColor>().name(),
              hoveredItemText.name());
     QCOMPARE(table->viewport()->palette().color(QPalette::Base).name(), contentFill.name());
-    QVERIFY(table->styleSheet().contains(QStringLiteral("padding: 6px 8px")));
+    QVERIFY(table->styleSheet().contains(QStringLiteral("padding: %1px").arg(UiConfig::DockListPadding)));
     QVERIFY(table->styleSheet().contains(QStringLiteral("border: 0")));
     QCOMPARE(table->frameShape(), QFrame::NoFrame);
     QCOMPARE(table->property("dockListInactiveSelectionBackground").value<QColor>().name(),
@@ -6883,7 +7220,8 @@ void TestDisplayUi::dock_surfaces_use_successive_generated_shades()
     QCOMPARE(dockRootMargins, QMargins(0, 0, 0, 0));
     const QMargins searchRowMargins =
         searchLabel->parentWidget()->layout()->contentsMargins();
-    QCOMPARE(searchRowMargins, QMargins(8, 6, 8, 6));
+    QCOMPARE(searchRowMargins, QMargins(8, UiConfig::DockSearchRowVerticalPadding,
+                                      8, UiConfig::DockSearchRowVerticalPadding));
     QVERIFY(searchLabel->parentWidget()->styleSheet().contains(contentFill.name()));
     bool foundStyledDockMenu = false;
     for (QMenu* menu : window.findChildren<QMenu*>()) {
@@ -6939,7 +7277,7 @@ void TestDisplayUi::dock_surfaces_use_successive_generated_shades()
     QVERIFY(domainLabel->styleSheet().contains(contentText.name()));
     const QMargins domainRowMargins =
         domainLabel->parentWidget()->layout()->contentsMargins();
-    QCOMPARE(domainRowMargins, QMargins(8, 6, 8, 6));
+    QCOMPARE(domainRowMargins, QMargins(8, 6, 8, 0));
     QVERIFY(domainLabel->parentWidget()->styleSheet().contains(contentFill.name()));
 
     constantsDock->show();
