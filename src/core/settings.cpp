@@ -602,6 +602,8 @@ void Settings::load()
     colorScheme = settings->value(key + QLatin1String("ColorSchemeName"), DefaultColorScheme).toString();
     menuAppearance = settings->value(key + QLatin1String("MenuAppearance"), MenuAppearanceSystem).toInt()
         == MenuAppearanceSpeedCrunch ? MenuAppearanceSpeedCrunch : MenuAppearanceSystem;
+    editorDisplayStyle = settings->value(key + QLatin1String("EditorDisplayStyle"), EditorDisplayModern).toInt()
+        == EditorDisplayClassic ? EditorDisplayClassic : EditorDisplayModern;
     customColorSchemeJson = settings->value(key + QLatin1String("CustomColorSchemeJson"), QString()).toString();
 
     delete settings;
@@ -722,6 +724,7 @@ void Settings::save()
     settings->setValue(key + QLatin1String("DisplayFont"), displayFont);
     settings->setValue(key + QLatin1String("ColorSchemeName"), colorScheme);
     settings->setValue(key + QLatin1String("MenuAppearance"), static_cast<int>(menuAppearance));
+    settings->setValue(key + QLatin1String("EditorDisplayStyle"), static_cast<int>(editorDisplayStyle));
     settings->setValue(key + QLatin1String("CustomColorSchemeJson"), customColorSchemeJson);
 
 

@@ -27,6 +27,7 @@
 #include <QAbstractTextDocumentLayout>
 #include <QEvent>
 #include <QFont>
+#include <QFontMetricsF>
 #include <QFrame>
 #include <QHeaderView>
 #include <QInputMethodEvent>
@@ -39,6 +40,7 @@
 #include <QPointer>
 #include <QScreen>
 #include <QScopeGuard>
+#include <QScopedValueRollback>
 #include <QScrollBar>
 #include <QShowEvent>
 #include <QSignalBlocker>
@@ -57,15 +59,16 @@
 #include <algorithm>
 #include <cmath>
 
-constexpr int kEditorOuterLeft = 14;
-constexpr int kEditorOuterTop = 8;
-constexpr int kEditorOuterRight = 14;
-constexpr int kEditorOuterBottom = 14;
-constexpr int kEditorHorizontalPadding = 18;
-constexpr int kEditorVerticalPadding = 10;
+constexpr int kEditorOuterLeft = UiConfig::ModernEditorHorizontalMargin;
+constexpr int kEditorOuterTop = UiConfig::ModernEditorTopMargin;
+constexpr int kEditorOuterRight = UiConfig::ModernEditorHorizontalMargin;
+constexpr int kEditorOuterBottom = UiConfig::ModernEditorBottomMargin;
+constexpr int kEditorHorizontalPadding = UiConfig::ModernEditorHorizontalPadding;
+constexpr int kEditorVerticalPadding = UiConfig::ModernEditorVerticalPadding;
 constexpr int kEditorRadius = 13;
 constexpr int kEditorCursorWidth = 2;
 constexpr int kEditorDocumentMargin = 2;
+constexpr int kClassicEditorHorizontalPadding = UiConfig::ClassicTextInset - kEditorDocumentMargin;
 
 static QPointer<Editor> s_completionMouseSelectionOwner;
 
@@ -190,8 +193,18 @@ static void prepareCompletionPopup(Widget* popup, Editor* editor, const QTextCur
 
 static int editorVerticalDecorationHeight()
 {
+    if (Settings::instance()->editorDisplayStyle == Settings::EditorDisplayClassic)
+        return 2 * (kEditorDocumentMargin + UiConfig::ClassicEditorVerticalPadding)
+            + UiConfig::OutlineStrokeWidth;
     return kEditorOuterTop + kEditorOuterBottom + 2 * kEditorVerticalPadding
-           + 2 * kEditorDocumentMargin + 2;
+           + 2 * kEditorDocumentMargin + 2 * UiConfig::OutlineStrokeWidth;
+}
+
+static int editorLineHeight(const QFont& font)
+{
+    // QPlainTextEdit advances each line by a whole-pixel height. Integer font
+    // metrics can round down and leave too little space below the text.
+    return int(std::ceil(QFontMetricsF(font).height()));
 }
 
 static QColor editorFillColorForThemeBackground(const QColor& background)
@@ -1600,7 +1613,7 @@ QSize Editor::sizeHint() const
     ensurePolished();
     const QFontMetrics metrics = fontMetrics();
     const int width = metrics.horizontalAdvance('x') * 10;
-    const int height = metrics.lineSpacing() + editorVerticalDecorationHeight();
+    const int height = editorLineHeight(font()) + editorVerticalDecorationHeight();
     return QSize(width, height);
 }
 
@@ -4139,10 +4152,13 @@ void Editor::scrollContentsBy(int dx, int dy)
 
 void Editor::updateHeightForWrappedText()
 {
-    const int lineHeight = fontMetrics().lineSpacing();
+    const int lineHeight = editorLineHeight(font());
     int visualLineCount = 0;
 
     for (QTextBlock block = document()->begin(); block.isValid(); block = block.next()) {
+        // Highlighting can invalidate wrapping before Qt lays the block out again.
+        // Resolve it before counting lines so the editor does not briefly shrink.
+        blockBoundingRect(block);
         const QTextLayout* layout = block.layout();
         if (!layout) {
             visualLineCount += 1;
@@ -4164,6 +4180,9 @@ void Editor::updateHeightForWrappedText()
 
 void Editor::updateHeightAndEnsureCursorVisible()
 {
+    if (m_updatingWrappedTextHeight)
+        return;
+    const QScopedValueRollback<bool> updatingHeight(m_updatingWrappedTextHeight, true);
     updateHeightForWrappedText();
     if (m_canScrollWrappedText)
         ensureCursorVisible();
@@ -4202,23 +4221,25 @@ void Editor::rehighlight()
         : (generatedPrimary.isValid()
               ? generatedPrimary
               : QApplication::palette().color(QPalette::Text));
-    const QColor color = m_themeSurfaceColor.isValid()
+    const bool classic = Settings::instance()->editorDisplayStyle == Settings::EditorDisplayClassic;
+    const QColor modernColor = m_themeSurfaceColor.isValid()
         ? m_themeSurfaceColor
         : editorFillColorForThemeBackground(themeBackground);
     const QColor outerColor = m_themeOuterSurfaceColor.isValid()
         ? m_themeOuterSurfaceColor
-        : color;
+        : (classic ? themeBackground : modernColor);
+    const QColor color = modernColor;
     const QString colorName = color.name();
     const QString primaryColorName = primaryColor.name();
     const QString borderColorName = m_usePrimaryOutline
         ? primaryColorName
-        : QStringLiteral("transparent");
+        : (classic ? modernColor.name() : QStringLiteral("transparent"));
     QPalette pal = palette();
     for (const QPalette::ColorGroup group : {QPalette::Active,
                                              QPalette::Inactive,
                                              QPalette::Disabled}) {
         pal.setColor(group, QPalette::Base, color);
-        pal.setColor(group, QPalette::Window, outerColor);
+        pal.setColor(group, QPalette::Window, classic ? color : outerColor);
         pal.setColor(group, QPalette::Text, primaryColor);
     }
     setPalette(pal);
@@ -4236,26 +4257,49 @@ void Editor::rehighlight()
     viewport()->setPalette(viewportPalette);
     viewport()->setAutoFillBackground(false);
     viewport()->setAttribute(Qt::WA_StyledBackground, true);
-    setStyleSheet(QStringLiteral(R"(
-        QPlainTextEdit {
-            background-color: %1;
-            color: %2;
-            border: %11px solid %3;
-            border-radius: %4px;
-            margin: %5px %6px %7px %8px;
-            padding: %9px %10px;
-        }
-    )").arg(colorName,
-            primaryColorName,
-            borderColorName)
-       .arg(kEditorRadius)
-       .arg(kEditorOuterTop)
-       .arg(kEditorOuterRight)
-       .arg(kEditorOuterBottom)
-       .arg(kEditorOuterLeft)
-       .arg(kEditorVerticalPadding)
-       .arg(kEditorHorizontalPadding)
-       .arg(UiConfig::OutlineStrokeWidth));
+    if (classic) {
+        const int separatorWidth = m_usePrimaryOutline
+            ? UiConfig::OutlineStrokeWidth : UiConfig::ClassicUnfocusedSeparatorWidth;
+        // Keep the text in place when the focus line changes thickness.
+        const int topPadding = UiConfig::ClassicEditorVerticalPadding
+            + UiConfig::OutlineStrokeWidth - separatorWidth;
+        setStyleSheet(QStringLiteral(R"(
+            QPlainTextEdit {
+                background-color: %1;
+                color: %2;
+                border: 0;
+                border-top: %4px solid %3;
+                border-radius: 0;
+                margin: 0;
+                padding: %7px %5px %6px;
+            }
+        )").arg(colorName, primaryColorName, borderColorName)
+           .arg(separatorWidth)
+           .arg(kClassicEditorHorizontalPadding)
+           .arg(UiConfig::ClassicEditorVerticalPadding)
+           .arg(topPadding));
+    } else {
+        setStyleSheet(QStringLiteral(R"(
+            QPlainTextEdit {
+                background-color: %1;
+                color: %2;
+                border: %11px solid %3;
+                border-radius: %4px;
+                margin: %5px %6px %7px %8px;
+                padding: %9px %10px;
+            }
+        )").arg(colorName,
+                primaryColorName,
+                borderColorName)
+           .arg(kEditorRadius)
+           .arg(kEditorOuterTop)
+           .arg(kEditorOuterRight)
+           .arg(kEditorOuterBottom)
+           .arg(kEditorOuterLeft)
+           .arg(kEditorVerticalPadding)
+           .arg(kEditorHorizontalPadding)
+           .arg(UiConfig::OutlineStrokeWidth));
+    }
     setPalette(pal);
     document()->setDocumentMargin(kEditorDocumentMargin);
     // Qt parents the right-click menu to the viewport. Keep transparency
@@ -4264,6 +4308,7 @@ void Editor::rehighlight()
     viewport()->setPalette(viewportPalette);
     clearMask();
     m_highlighter->rehighlight();
+    updateHeightAndEnsureCursorVisible();
 }
 
 void Editor::setThemeSurfaceColor(const QColor& color, const QColor& outerColor)
@@ -4294,9 +4339,16 @@ QTextCharFormat Editor::matchedParenthesisFormat() const
 
 void Editor::setThemePrimaryColor(const QColor& color, bool usePrimaryOutline)
 {
+    // Pane activation runs while typing. Keep unchanged themes from rebuilding
+    // the editor's styles and text layout on every character.
+    const bool themeChanged = m_themePrimaryColor != color
+        || m_usePrimaryOutline != usePrimaryOutline
+        // Qt can reset the viewport palette when polishing a parent widget.
+        || viewport()->palette().color(QPalette::Base) != palette().color(QPalette::Base);
     m_themePrimaryColor = color;
     m_usePrimaryOutline = usePrimaryOutline;
-    rehighlight();
+    if (themeChanged)
+        rehighlight();
     if (shouldPaintThemedCursor())
         showThemedCursorAndRestartBlink();
     else

@@ -165,6 +165,7 @@ private:
     bool m_themedCursorVisible = false;
     bool m_historyArrowNavigationEnabled;
     bool m_canScrollWrappedText = false;
+    bool m_updatingWrappedTextHeight = false;
     bool m_mouseSelectionInProgress = false;
     bool m_currentAutoCalcDismissed = false;
     bool m_pendingDeadCaretPreedit = false;

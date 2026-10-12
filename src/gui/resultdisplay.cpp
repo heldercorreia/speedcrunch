@@ -48,7 +48,7 @@
 #include <limits>
 
 namespace {
-constexpr int kResultDisplayHorizontalPadding = 14;
+constexpr int kResultDisplayHorizontalPadding = UiConfig::ModernEditorHorizontalMargin;
 constexpr int kResultDisplayFadeHeight = 28;
 
 struct ResultDisplayScrollBarColors
@@ -419,7 +419,7 @@ ResultDisplay::ResultDisplay(QWidget* parent)
     , m_scrollToBottomButtonHovered(false)
     , m_scrollToBottomButton(new QToolButton(this))
 {
-    setViewportMargins(kResultDisplayHorizontalPadding, 0, kResultDisplayHorizontalPadding, 0);
+    applyEditorDisplayStyle();
     MenuStyle::install();
     setBackgroundRole(QPalette::Base);
     setLayoutDirection(Qt::LeftToRight);
@@ -684,6 +684,16 @@ void ResultDisplay::rehighlight()
 
     updateSurfaceStyleSheet();
     updateScrollBarStyleSheet();
+}
+
+void ResultDisplay::applyEditorDisplayStyle()
+{
+    const int inset = Settings::instance()->editorDisplayStyle == Settings::EditorDisplayClassic
+        ? UiConfig::ClassicTextInset
+        : kResultDisplayHorizontalPadding;
+    const int padding = qMax(0, inset - qRound(document()->documentMargin()));
+    setViewportMargins(padding, 0, padding, 0);
+    repositionScrollToBottomButton();
 }
 
 void ResultDisplay::setThemeSurfaceColor(const QColor& color)
