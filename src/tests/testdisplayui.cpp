@@ -4538,7 +4538,8 @@ void TestDisplayUi::main_window_uses_generated_theme_surface_for_chrome_and_edit
         QCOMPARE(editor->palette().color(QPalette::Base).name(),
                  expectedEditorSurface.name());
         QVERIFY(editor->styleSheet().contains(expectedEditorSurface.name()));
-        QVERIFY(editor->styleSheet().contains(QStringLiteral("border-radius: 13px")));
+        QVERIFY(editor->styleSheet().contains(QStringLiteral("border-radius: %1px")
+            .arg(UiConfig::ModernEditorCornerRadius)));
         QVERIFY(editor->styleSheet().contains(QStringLiteral("padding: %1px %2px")
             .arg(UiConfig::ModernEditorVerticalPadding)
             .arg(UiConfig::ModernEditorHorizontalPadding)));

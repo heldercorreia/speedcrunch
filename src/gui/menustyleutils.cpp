@@ -422,7 +422,7 @@ private:
             palette.setColor(group, QPalette::Highlight, colors.selectedBackground);
             palette.setColor(group, QPalette::HighlightedText, colors.selectedForeground);
         }
-        const QString style = (bar != nullptr
+        QString style = (bar != nullptr
             ? QStringLiteral(
                 "QMenuBar { background-color: %1; color: %2; border: none; }"
                 "QMenuBar::item { background: transparent; color: %2; }"
@@ -430,10 +430,12 @@ private:
                 "QMenuBar::item:pressed { background-color: %3; color: %4; }")
             : QStringLiteral(
                 "QMenu { background-color: %1; color: %2;"
-                " border: 1px solid %3; border-radius: 8px; }"
+                " border: 1px solid %3; border-radius: %5px; }"
                 "QMenu::item:selected { background-color: %3; color: %4; }"))
             .arg(colors.background.name(), colors.foreground.name(),
                  colors.selectedBackground.name(), colors.selectedForeground.name());
+        if (bar == nullptr)
+            style = style.arg(UiConfig::ControlCornerRadius);
         if (widget->styleSheet() != style)
             widget->setStyleSheet(style);
         if (widget->palette() != palette)
