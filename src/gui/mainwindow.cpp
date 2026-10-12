@@ -6630,7 +6630,8 @@ void MainWindow::applyThemeSurfacePalette()
                                                                       defaultOklchShadeDistanceFactor(),
                                                                       false,
                                                                       surfaces.backgrounds,
-                                                                      surfaces.foregrounds);
+                                                                      surfaces.foregrounds,
+                                                                      UiConfig::GeneratedTextMinimumContrast);
             if (!reportPath.isEmpty()) {
                 lastOklchThemeReportKey() = reportKey;
                 QTextStream stream(stderr);

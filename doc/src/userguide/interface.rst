@@ -705,6 +705,11 @@ User Interface Settings
     areas, pane splitters, and scrollbars. It also generates the
     primary/accent color unless the theme specifies a ``primary`` color.
 
+    Text on generated surfaces, including docks and popups, targets a contrast
+    ratio of at least 10:1 against its own background. SpeedCrunch keeps a tint
+    from the theme where possible. If a surface cannot reach that ratio, it
+    uses black or white, whichever gives better contrast.
+
     The :guilabel:`Colors` area provides per-role color selection buttons showing
     both the ``#RRGGBB`` value and the actual color. Changing any color creates a
     custom theme based on the current selection.
