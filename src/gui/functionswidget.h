@@ -43,6 +43,8 @@ protected slots:
 private:
     Q_DISABLE_COPY(FunctionsWidget)
 
+    void updateControlLabelWidths();
+
     QTimer* m_filterTimer;
     QComboBox* m_domain;
     QLabel* m_domainLabel;

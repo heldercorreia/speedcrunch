@@ -34,6 +34,7 @@ public:
     static void apply(QComboBox* comboBox, const QColor& textColor, const QColor& outlineColor,
                       const PopupTheme& popupTheme);
     static void refreshPopupAppearance(QComboBox* comboBox);
+    static void applySystemAppearance(QComboBox* comboBox);
 
     void setColors(QColor chevronColor, const QColor& outlineColor);
     void refresh();
@@ -70,6 +71,7 @@ private:
     QColor m_chevronColor;
     QColor m_outlineColor;
     PopupTheme m_popupTheme;
+    QString m_nativeButtonStyle;
     NativeSurface m_nativeView;
     NativeSurface m_nativeViewport;
     NativeSurface m_nativePopup;

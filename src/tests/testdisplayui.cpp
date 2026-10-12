@@ -53,6 +53,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFrame>
+#include <QEnterEvent>
 #include <QFocusEvent>
 #include <QFontDialog>
 #include <QHeaderView>
@@ -90,6 +91,7 @@
 #include <QSpinBox>
 #include <QStatusBar>
 #include <QStyle>
+#include <QStyledItemDelegate>
 #include <QStyleFactory>
 #include <QStyleOption>
 #include <QSysInfo>
@@ -99,6 +101,7 @@
 #include <QTextBlock>
 #include <QTextDocument>
 #include <QTextEdit>
+#include <QTextFragment>
 #include <QTextLayout>
 #include <QToolButton>
 #include <QTranslator>
@@ -669,6 +672,7 @@ struct MainWindowStateGuard {
     QString oldColorScheme = settings->colorScheme;
     QString oldCustomColorSchemeJson = settings->customColorSchemeJson;
     Settings::MenuAppearance oldMenuAppearance = settings->menuAppearance;
+    Settings::DockAppearance oldDockAppearance = settings->dockAppearance;
     QString oldSessionLayoutJson = settings->sessionLayoutJson;
     QString oldConstantsDockDomain = settings->constantsDockDomain;
     QString oldConstantsDockSubdomain = settings->constantsDockSubdomain;
@@ -706,6 +710,7 @@ struct MainWindowStateGuard {
         settings->colorScheme = oldColorScheme;
         settings->customColorSchemeJson = oldCustomColorSchemeJson;
         settings->menuAppearance = oldMenuAppearance;
+        settings->dockAppearance = oldDockAppearance;
         settings->sessionLayoutJson = oldSessionLayoutJson;
         settings->constantsDockDomain = oldConstantsDockDomain;
         settings->constantsDockSubdomain = oldConstantsDockSubdomain;
@@ -873,6 +878,12 @@ private slots:
     void result_display_reduces_combinable_quotient_factors();
     void result_display_copy_calculation_ignores_empty_areas();
     void bitfield_selected_bit_keeps_primary_fill_while_hovered();
+    void system_bitfield_keeps_on_and_off_bits_distinct_data();
+    void system_bitfield_keeps_on_and_off_bits_distinct();
+    void system_bitfield_paints_background_data();
+    void system_bitfield_paints_background();
+    void system_bitfield_background_is_visible_in_window_data();
+    void system_bitfield_background_is_visible_in_window();
     void bitfield_buttons_use_configured_generated_shades();
     void keypad_buttons_use_custom_themed_tooltips();
     void dock_list_selected_row_keeps_primary_fill_while_hovered();
@@ -897,9 +908,22 @@ private slots:
     void main_window_uses_generated_theme_surface_for_chrome_and_editor();
     void menu_bar_keeps_themed_contrast_with_platform_palette_data();
     void menu_bar_keeps_themed_contrast_with_platform_palette();
+    void dock_appearance_defaults_to_theme_and_persists();
+    void dock_appearance_switches_all_windows_data();
+    void dock_appearance_switches_all_windows();
+    void dock_tabs_follow_appearance_data();
+    void dock_tabs_follow_appearance();
+    void system_docks_follow_palette_and_theme_changes();
+    void dock_headers_follow_appearance_data();
+    void dock_headers_follow_appearance();
+    void system_dock_headers_paint_system_background_data();
+    void system_dock_headers_paint_system_background();
+    void system_dock_controls_keep_aligned_rows_data();
+    void system_dock_controls_keep_aligned_rows();
     void menu_appearance_defaults_to_system_and_persists();
     void menu_bar_restores_native_painting_after_theme_switch_data();
     void menu_bar_restores_native_painting_after_theme_switch();
+    void system_menus_restore_style_polished_foreground_and_hover_colors_data();
     void system_menus_restore_style_polished_foreground_and_hover_colors();
     void gtk_menus_use_hover_colors_instead_of_the_list_accent_data();
     void gtk_menus_use_hover_colors_instead_of_the_list_accent();
@@ -940,6 +964,8 @@ private slots:
     void dock_header_buttons_keep_theme_after_redocking();
     void formula_book_text_scales_with_zoom_data();
     void formula_book_text_scales_with_zoom();
+    void formula_book_links_follow_dock_appearance_data();
+    void formula_book_links_follow_dock_appearance();
     void restored_constants_dock_empty_filter_fills_header();
     void dock_scroll_corner_uses_scrollbar_track_fill();
     void dock_separator_style_uses_primary_while_hovered_or_dragged();
@@ -3528,6 +3554,234 @@ void TestDisplayUi::bitfield_selected_bit_keeps_primary_fill_while_hovered()
                  primaryBackground.name());
 }
 
+void TestDisplayUi::system_bitfield_keeps_on_and_off_bits_distinct_data()
+{
+    QTest::addColumn<bool>("dark");
+    QTest::addColumn<bool>("switchFromTheme");
+    QTest::newRow("dark-system-startup") << true << false;
+    QTest::newRow("light-system-startup") << false << false;
+    QTest::newRow("dark-switch-from-theme") << true << true;
+    QTest::newRow("light-switch-from-theme") << false << true;
+}
+
+void TestDisplayUi::system_bitfield_keeps_on_and_off_bits_distinct()
+{
+    QFETCH(bool, dark);
+    QFETCH(bool, switchFromTheme);
+    MainWindowStateGuard guard;
+    const QPalette originalPalette = QApplication::palette();
+    const auto restorePalette = qScopeGuard([originalPalette]() { QApplication::setPalette(originalPalette); });
+    const auto systemPalette = [originalPalette](bool dark) {
+        QPalette palette = originalPalette;
+        palette.setColor(QPalette::Window, QColor(dark ? "#202020" : "#eeeeee"));
+        palette.setColor(QPalette::WindowText, QColor(dark ? "#ffffff" : "#000000"));
+        // Some system palettes use the same neutral shade for both roles.
+        palette.setColor(QPalette::Mid, palette.color(QPalette::Window));
+        palette.setColor(QPalette::Button, QColor(dark ? "#383838" : "#dddddd"));
+        palette.setColor(QPalette::ButtonText, palette.color(QPalette::WindowText));
+        palette.setColor(QPalette::Highlight, QColor(dark ? "#246fc0" : "#185ca8"));
+        palette.setColor(QPalette::HighlightedText, QColor("#ffffff"));
+        return palette;
+    };
+    QApplication::setPalette(systemPalette(dark));
+    guard.settings->dockAppearance = switchFromTheme ? Settings::DockAppearanceSpeedCrunch : Settings::DockAppearanceSystem;
+    guard.settings->bitfieldVisible = true;
+    guard.settings->windowState.clear();
+    guard.settings->sessionLayoutJson.clear();
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QMenu* appearance = window.findChild<QMenu*>(QStringLiteral("DockAppearanceMenu"));
+    QVERIFY(appearance);
+    if (switchFromTheme)
+        appearance->actions().at(0)->trigger();
+    BitFieldWidget* field = window.findChild<BitFieldWidget*>();
+    QVERIFY(field);
+    QDockWidget* dock = window.findChild<QDockWidget*>(QStringLiteral("BitfieldDock"));
+    QVERIFY(dock);
+    dock->setFloating(true);
+    dock->resize(700, 240);
+    dock->move(20, 20);
+    dock->show();
+    QVERIFY(QTest::qWaitForWindowExposed(dock));
+    BitWidget* onBit = nullptr;
+    BitWidget* offBit = nullptr;
+    for (BitWidget* bit : field->findChildren<BitWidget*>()) {
+        if (bit->text() == QStringLiteral("0"))
+            onBit = bit;
+        if (bit->text() == QStringLiteral("1"))
+            offBit = bit;
+    }
+    QVERIFY(onBit);
+    QVERIFY(offBit);
+    field->clear();
+    onBit->setState(true);
+    offBit->setState(false);
+    const auto fill = [](BitWidget* bit) {
+        const QImage image = bit->grab().toImage();
+        const int inset = qRound(2 * bit->devicePixelRatioF());
+        return image.pixelColor(inset, inset).rgba();
+    };
+    for (bool useDark : {dark, !dark}) {
+        const QPalette palette = systemPalette(useDark);
+        QApplication::setPalette(palette);
+        QTest::mouseMove(dock->windowHandle(), QPoint(1, 1));
+        QTRY_COMPARE(fill(onBit), palette.color(QPalette::Highlight).rgba());
+        QTRY_COMPARE(fill(offBit), palette.color(QPalette::Window).rgba());
+        QVERIFY(fill(onBit) != fill(offBit));
+        QCOMPARE(onBit->palette().color(QPalette::WindowText).rgba(), palette.color(QPalette::HighlightedText).rgba());
+
+        QTest::mouseMove(dock->windowHandle(), offBit->mapTo(dock, offBit->rect().center()));
+        QTRY_VERIFY(offBit->underMouse());
+        QTRY_COMPARE(fill(offBit), palette.color(QPalette::Button).rgba());
+        QVERIFY(fill(onBit) != fill(offBit));
+        QTest::mouseMove(dock->windowHandle(), onBit->mapTo(dock, onBit->rect().center()));
+        QTRY_VERIFY(onBit->underMouse());
+        QTRY_COMPARE(fill(onBit), palette.color(QPalette::Highlight).rgba());
+
+        QSignalSpy changes(field, &BitFieldWidget::bitsChanged);
+        QTest::mouseClick(onBit, Qt::LeftButton);
+        QVERIFY(!onBit->state());
+        QTRY_COMPARE(fill(onBit), palette.color(QPalette::Button).rgba());
+        QCOMPARE(changes.count(), 1);
+        QCOMPARE(changes.takeFirst().at(0).toString(), QStringLiteral("0b0"));
+        QTest::mouseClick(onBit, Qt::LeftButton);
+        QVERIFY(onBit->state());
+        QTRY_COMPARE(fill(onBit), palette.color(QPalette::Highlight).rgba());
+        QCOMPARE(changes.count(), 1);
+        QCOMPARE(changes.takeFirst().at(0).toString(), QStringLiteral("0b1"));
+    }
+}
+
+void TestDisplayUi::system_bitfield_paints_background_data()
+{
+    QTest::addColumn<bool>("dark");
+    QTest::addColumn<bool>("floating");
+    QTest::addColumn<bool>("switchFromTheme");
+    for (bool dark : {false, true}) {
+        for (bool floating : {false, true}) {
+            for (bool switchFromTheme : {false, true}) {
+                const QString name = QStringLiteral("%1-%2-%3")
+                    .arg(dark ? "dark" : "light", floating ? "floating" : "attached",
+                         switchFromTheme ? "switch-from-theme" : "system-startup");
+                QTest::newRow(qPrintable(name)) << dark << floating << switchFromTheme;
+            }
+        }
+    }
+}
+
+void TestDisplayUi::system_bitfield_paints_background()
+{
+    QFETCH(bool, dark);
+    QFETCH(bool, floating);
+    QFETCH(bool, switchFromTheme);
+    MainWindowStateGuard guard;
+    const QPalette original = QApplication::palette();
+    const auto restorePalette = qScopeGuard([original]() { QApplication::setPalette(original); });
+    QPalette native = original;
+    native.setColor(QPalette::Window, QColor(dark ? "#202020" : "#eeeeee"));
+    native.setColor(QPalette::WindowText, QColor(dark ? "#ffffff" : "#000000"));
+    QApplication::setPalette(native);
+    guard.settings->dockAppearance = switchFromTheme ? Settings::DockAppearanceSpeedCrunch : Settings::DockAppearanceSystem;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), QStringLiteral("#631840")}});
+    guard.settings->bitfieldVisible = true;
+    guard.settings->windowState.clear();
+    guard.settings->sessionLayoutJson.clear();
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QDockWidget* dock = window.findChild<QDockWidget*>(QStringLiteral("BitfieldDock"));
+    BitFieldWidget* field = window.findChild<BitFieldWidget*>();
+    QMenu* appearance = window.findChild<QMenu*>(QStringLiteral("DockAppearanceMenu"));
+    QVERIFY(dock);
+    QVERIFY(field);
+    QVERIFY(appearance);
+    dock->setFloating(floating);
+    dock->show();
+    dock->raise();
+    const auto background = [field]() {
+        const QImage image = field->grab().toImage();
+        const int inset = qRound(2 * field->devicePixelRatioF());
+        return image.pixelColor(inset, inset).rgba();
+    };
+    if (!switchFromTheme)
+        QTRY_COMPARE(background(), native.color(QPalette::Window).rgba());
+    else
+        QTRY_VERIFY(background() != native.color(QPalette::Window).rgba());
+    for (int cycle = 0; cycle < 2; ++cycle) {
+        appearance->actions().at(0)->trigger();
+        QTRY_COMPARE(background(), native.color(QPalette::Window).rgba());
+        native.setColor(QPalette::Window, QColor(cycle ? "#303030" : "#dddddd"));
+        QApplication::setPalette(native);
+        QTRY_COMPARE(background(), native.color(QPalette::Window).rgba());
+        appearance->actions().at(1)->trigger();
+        QTRY_VERIFY(background() != native.color(QPalette::Window).rgba());
+    }
+}
+
+void TestDisplayUi::system_bitfield_background_is_visible_in_window_data()
+{
+    system_bitfield_paints_background_data();
+}
+
+void TestDisplayUi::system_bitfield_background_is_visible_in_window()
+{
+    QFETCH(bool, dark);
+    QFETCH(bool, floating);
+    QFETCH(bool, switchFromTheme);
+    MainWindowStateGuard guard;
+    const QPalette original = QApplication::palette();
+    const auto restorePalette = qScopeGuard([original]() { QApplication::setPalette(original); });
+    QPalette native = original;
+    native.setColor(QPalette::Window, QColor(dark ? "#202020" : "#eeeeee"));
+    native.setColor(QPalette::WindowText, QColor(dark ? "#ffffff" : "#000000"));
+    QApplication::setPalette(native);
+    guard.settings->dockAppearance = switchFromTheme ? Settings::DockAppearanceSpeedCrunch : Settings::DockAppearanceSystem;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), QStringLiteral("#062852")}});
+    guard.settings->bitfieldVisible = true;
+    guard.settings->constantsDockVisible = true;
+    guard.settings->windowState.clear();
+    guard.settings->sessionLayoutJson.clear();
+    MainWindow window(false);
+    window.resize(1000, 700);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QDockWidget* dock = window.findChild<QDockWidget*>(QStringLiteral("BitfieldDock"));
+    BitFieldWidget* field = window.findChild<BitFieldWidget*>();
+    QMenu* appearance = window.findChild<QMenu*>(QStringLiteral("DockAppearanceMenu"));
+    QVERIFY(dock);
+    QVERIFY(field);
+    QVERIFY(appearance);
+    window.addDockWidget(Qt::RightDockWidgetArea, dock);
+    dock->setFloating(floating);
+    dock->show();
+    dock->raise();
+    const auto background = [field]() {
+        // Capture the parent so QWidget::grab cannot force a hidden background fill.
+        QWidget* root = field->window();
+        const QImage image = root->grab().toImage();
+        const QPoint point = field->mapTo(root, QPoint(2, 2));
+        return image.pixelColor(qRound(point.x() * root->devicePixelRatioF()),
+                                qRound(point.y() * root->devicePixelRatioF())).rgba();
+    };
+    if (switchFromTheme)
+        appearance->actions().at(0)->trigger();
+    QTRY_COMPARE(background(), native.color(QPalette::Window).rgba());
+    for (int cycle = 0; cycle < 2; ++cycle) {
+        appearance->actions().at(1)->trigger();
+        QTRY_VERIFY(background() != native.color(QPalette::Window).rgba());
+        appearance->actions().at(0)->trigger();
+        QTRY_COMPARE(background(), native.color(QPalette::Window).rgba());
+        native.setColor(QPalette::Window, QColor(cycle ? "#303030" : "#dddddd"));
+        QApplication::setPalette(native);
+        QTRY_COMPARE(background(), native.color(QPalette::Window).rgba());
+    }
+}
+
 void TestDisplayUi::bitfield_buttons_use_configured_generated_shades()
 {
     MainWindowStateGuard guard;
@@ -5384,6 +5638,720 @@ void TestDisplayUi::editor_context_menu_paints_system_background()
     verifyBackground(fresh.data());
 }
 
+void TestDisplayUi::dock_appearance_defaults_to_theme_and_persists()
+{
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    QSettings persisted(Settings::getConfigPath() + QStringLiteral("/SpeedCrunch.ini"),
+                        QSettings::IniFormat);
+    const QString key = QStringLiteral("SpeedCrunch/Display/DockAppearance");
+    persisted.remove(key);
+    persisted.sync();
+    settings->load();
+    QCOMPARE(settings->dockAppearance, Settings::DockAppearanceSpeedCrunch);
+    const QString scheme = settings->colorScheme;
+    const Settings::MenuAppearance menus = settings->menuAppearance;
+    for (const auto appearance : {Settings::DockAppearanceSystem, Settings::DockAppearanceSpeedCrunch}) {
+        settings->dockAppearance = appearance;
+        settings->save();
+        settings->dockAppearance = appearance == Settings::DockAppearanceSystem
+            ? Settings::DockAppearanceSpeedCrunch : Settings::DockAppearanceSystem;
+        settings->load();
+        QCOMPARE(settings->dockAppearance, appearance);
+        QCOMPARE(settings->colorScheme, scheme);
+        QCOMPARE(settings->menuAppearance, menus);
+    }
+    persisted.setValue(key, 99);
+    persisted.sync();
+    settings->load();
+    QCOMPARE(settings->dockAppearance, Settings::DockAppearanceSpeedCrunch);
+}
+
+void TestDisplayUi::dock_appearance_switches_all_windows_data()
+{
+    QTest::addColumn<bool>("floating");
+    QTest::addColumn<bool>("themedMenus");
+    QTest::newRow("attached-system-menus") << false << false;
+    QTest::newRow("attached-themed-menus") << false << true;
+    QTest::newRow("floating-system-menus") << true << false;
+    QTest::newRow("floating-themed-menus") << true << true;
+}
+
+void TestDisplayUi::dock_appearance_switches_all_windows()
+{
+    QFETCH(bool, floating);
+    QFETCH(bool, themedMenus);
+    MainWindowStateGuard guard;
+    guard.settings->dockAppearance = Settings::DockAppearanceSpeedCrunch;
+    guard.settings->menuAppearance = themedMenus ? Settings::MenuAppearanceSpeedCrunch : Settings::MenuAppearanceSystem;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), QStringLiteral("#232136")}});
+    guard.settings->constantsDockVisible = true;
+    guard.settings->formulaBookDockVisible = true;
+    guard.settings->bitfieldVisible = true;
+    MainWindow first(false);
+    MainWindow second(false);
+    first.show();
+    second.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&first));
+    QVERIFY(QTest::qWaitForWindowExposed(&second));
+    QCoreApplication::processEvents();
+    QMenu* firstAppearance = first.findChild<QMenu*>(QStringLiteral("DockAppearanceMenu"));
+    QMenu* secondAppearance = second.findChild<QMenu*>(QStringLiteral("DockAppearanceMenu"));
+    QVERIFY(firstAppearance);
+    QVERIFY(secondAppearance);
+    QCOMPARE(firstAppearance->title(), QStringLiteral("&Docks"));
+    QCOMPARE(firstAppearance->actions().size(), 2);
+    QCOMPARE(firstAppearance->actions().at(0)->text(), QStringLiteral("&System"));
+    QCOMPARE(firstAppearance->actions().at(1)->text(), QStringLiteral("&SpeedCrunch Theme"));
+    QVERIFY(firstAppearance->actions().at(1)->isChecked());
+    QVERIFY(secondAppearance->actions().at(1)->isChecked());
+    QMenu* menus = first.findChild<QMenu*>(QStringLiteral("MenuAppearanceMenu"));
+    QVERIFY(menus);
+    const QList<QAction*> appearanceActions = firstAppearance->parentWidget()->actions();
+    QCOMPARE(appearanceActions.indexOf(firstAppearance->menuAction()),
+             appearanceActions.indexOf(menus->menuAction()) + 1);
+    QDockWidget* constants = first.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(constants);
+    constants->setFloating(floating);
+    constants->show();
+    QTest::qWait(50);
+    QLineEdit* search = constants->findChild<QLineEdit*>();
+    QComboBox* combo = constants->findChild<QComboBox*>();
+    QTreeWidget* table = constants->findChild<QTreeWidget*>();
+    QVERIFY(search);
+    QVERIFY(combo);
+    QVERIFY(table);
+    const QString themedSearchStyle = search->styleSheet();
+    const QString themedComboStyle = combo->styleSheet();
+    const QColor themedBase = table->palette().color(QPalette::Base);
+    Editor* editor = first.findChild<Editor*>();
+    QVERIFY(editor);
+    const QPalette editorPalette = editor->palette();
+    const QString editorStyle = editor->styleSheet();
+    const QString dockTitleStyle = constants->styleSheet();
+    for (int cycle = 0; cycle < 2; ++cycle) {
+        firstAppearance->actions().at(0)->trigger();
+        QCoreApplication::processEvents();
+        QCOMPARE(guard.settings->dockAppearance, Settings::DockAppearanceSystem);
+        QVERIFY(firstAppearance->actions().at(0)->isChecked());
+        QVERIFY(secondAppearance->actions().at(0)->isChecked());
+        QVERIFY(!firstAppearance->actions().at(1)->isChecked());
+        for (const auto group : {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
+            for (const auto role : {QPalette::Base, QPalette::Text, QPalette::Highlight, QPalette::HighlightedText})
+                QCOMPARE(editor->palette().color(group, role).rgba(), editorPalette.color(group, role).rgba());
+        }
+        QCOMPARE(editor->styleSheet(), editorStyle);
+        QVERIFY(constants->styleSheet().isEmpty());
+        for (MainWindow* window : {&first, &second}) {
+            for (QDockWidget* dock : window->findChildren<QDockWidget*>()) {
+                QVERIFY(dock->widget());
+                QCOMPARE(dock->widget()->palette().color(QPalette::Window).rgba(),
+                         MenuStyle::systemPalette(dock->widget()).color(QPalette::Window).rgba());
+                for (QLineEdit* edit : dock->widget()->findChildren<QLineEdit*>()) {
+                    QVERIFY(edit->styleSheet().isEmpty());
+                    QCOMPARE(edit->palette().color(QPalette::Base).rgba(),
+                             MenuStyle::systemPalette(edit).color(QPalette::Base).rgba());
+                    if (auto* themed = dynamic_cast<ThemedLineEdit*>(edit))
+                        QVERIFY(!themed->cursorColor().isValid());
+                }
+            }
+        }
+        QVERIFY(search->styleSheet().isEmpty());
+        QVERIFY(combo->styleSheet().isEmpty());
+        QVERIFY(table->styleSheet().isEmpty());
+        QTreeWidget nativeTable;
+        QCOMPARE(table->frameShape(), nativeTable.frameShape());
+        QVERIFY(table->verticalScrollBar()->styleSheet().isEmpty());
+        QVERIFY(table->cornerWidget());
+        QVERIFY(table->cornerWidget()->styleSheet().isEmpty());
+        QVERIFY(!table->property("dockListHoverBackground").isValid());
+        QCOMPARE(table->palette().color(QPalette::Base).rgba(),
+                 MenuStyle::systemPalette(table).color(QPalette::Base).rgba());
+        search->setFocus();
+        QCoreApplication::processEvents();
+        combo->showPopup();
+        QCoreApplication::processEvents();
+        QVERIFY(combo->view()->styleSheet().isEmpty());
+        QCOMPARE(combo->view()->palette().color(QPalette::Base).rgba(),
+                 MenuStyle::systemComboPopupPalette(combo).color(QPalette::Base).rgba());
+        QVERIFY(!combo->findChild<QWidget*>(QStringLiteral("speedcrunchDockComboBoxChevron"))->isVisible());
+        combo->hidePopup();
+        QVERIFY(table->model()->rowCount() > 0);
+        const QModelIndex index = table->model()->index(0, 0);
+        QStyleOptionViewItem option;
+        option.initFrom(table);
+        option.widget = table;
+        option.rect = QRect(0, 0, 240, 30);
+        option.state |= QStyle::State_Selected | QStyle::State_HasFocus | QStyle::State_MouseOver;
+        QImage actual(option.rect.size(), QImage::Format_ARGB32_Premultiplied);
+        QImage expected(actual.size(), actual.format());
+        actual.fill(Qt::transparent);
+        expected.fill(Qt::transparent);
+        QPainter actualPainter(&actual);
+        table->itemDelegate()->paint(&actualPainter, option, index);
+        actualPainter.end();
+        QPainter expectedPainter(&expected);
+        QStyledItemDelegate nativeDelegate;
+        nativeDelegate.paint(&expectedPainter, option, index);
+        expectedPainter.end();
+        QCOMPARE(actual, expected);
+        QTextBrowser* browser = first.findChild<QTextBrowser*>();
+        QVERIFY(browser);
+        QCOMPARE(browser->palette().color(QPalette::Base).rgba(),
+                 MenuStyle::systemPalette(browser).color(QPalette::Base).rgba());
+        BitFieldWidget* bits = first.findChild<BitFieldWidget*>();
+        QVERIFY(bits);
+        for (QPushButton* button : bits->findChildren<QPushButton*>())
+            QVERIFY(button->styleSheet().isEmpty());
+        secondAppearance->actions().at(1)->trigger();
+        QCoreApplication::processEvents();
+        QCOMPARE(guard.settings->dockAppearance, Settings::DockAppearanceSpeedCrunch);
+        QVERIFY(firstAppearance->actions().at(1)->isChecked());
+        QCOMPARE(constants->styleSheet(), dockTitleStyle);
+        QCOMPARE(search->styleSheet(), themedSearchStyle);
+        QCOMPARE(combo->styleSheet(), themedComboStyle);
+        QCOMPARE(table->palette().color(QPalette::Base).rgba(), themedBase.rgba());
+    }
+    firstAppearance->actions().at(0)->trigger();
+    MainWindow third(false);
+    QMenu* thirdAppearance = third.findChild<QMenu*>(QStringLiteral("DockAppearanceMenu"));
+    QVERIFY(thirdAppearance);
+    QVERIFY(thirdAppearance->actions().at(0)->isChecked());
+    QDockWidget* thirdConstants = third.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(thirdConstants);
+    QVERIFY(thirdConstants->findChild<QLineEdit*>()->styleSheet().isEmpty());
+    QCOMPARE(guard.settings->menuAppearance,
+             themedMenus ? Settings::MenuAppearanceSpeedCrunch : Settings::MenuAppearanceSystem);
+}
+
+void TestDisplayUi::dock_tabs_follow_appearance_data()
+{
+    QTest::addColumn<bool>("systemAtStartup");
+    QTest::addColumn<bool>("dark");
+    for (bool system : {false, true}) {
+        for (bool dark : {false, true}) {
+            const QString name = QStringLiteral("%1-%2")
+                .arg(system ? "system-startup" : "theme-startup", dark ? "dark" : "light");
+            QTest::newRow(qPrintable(name)) << system << dark;
+        }
+    }
+}
+
+void TestDisplayUi::dock_tabs_follow_appearance()
+{
+    QFETCH(bool, systemAtStartup);
+    QFETCH(bool, dark);
+    MainWindowStateGuard guard;
+    const QPalette original = QApplication::palette();
+    const auto restorePalette = qScopeGuard([original]() { QApplication::setPalette(original); });
+    QPalette native = original;
+    native.setColor(QPalette::Window, QColor(dark ? "#252525" : "#eeeeee"));
+    native.setColor(QPalette::WindowText, QColor(dark ? "#eeeeee" : "#252525"));
+    native.setColor(QPalette::Button, native.color(QPalette::Window));
+    native.setColor(QPalette::ButtonText, native.color(QPalette::WindowText));
+    QApplication::setPalette(native);
+    guard.settings->dockAppearance = systemAtStartup ? Settings::DockAppearanceSystem : Settings::DockAppearanceSpeedCrunch;
+    guard.settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
+    guard.settings->constantsDockVisible = true;
+    guard.settings->functionsDockVisible = true;
+    guard.settings->windowState.clear();
+    guard.settings->sessionLayoutJson.clear();
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), QStringLiteral("#631840")}});
+    MainWindow first(false);
+    MainWindow second(false);
+    first.show();
+    second.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&first));
+    QVERIFY(QTest::qWaitForWindowExposed(&second));
+    QMenu* appearance = first.findChild<QMenu*>(QStringLiteral("DockAppearanceMenu"));
+    QVERIFY(appearance);
+    const auto findTabs = [](MainWindow* window) -> QTabBar* {
+        for (QTabBar* bar : window->findChildren<QTabBar*>()) {
+            for (int index = 0; index < bar->count(); ++index) {
+                if (bar->tabText(index) == QStringLiteral("Constants"))
+                    return bar;
+            }
+        }
+        return nullptr;
+    };
+    const auto verify = [&](MainWindow* window, bool system) {
+        QTabBar* bar = findTabs(window);
+        QVERIFY(bar);
+        if (!system) {
+            QVERIFY(bar->styleSheet().contains(QStringLiteral("border-radius: 10px")));
+            QVERIFY(!bar->drawBase());
+            return;
+        }
+        QVERIFY(bar->styleSheet().isEmpty());
+        QVERIFY(bar->drawBase());
+        QCOMPARE(bar->cursor().shape(), Qt::ArrowCursor);
+        for (const auto group : {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
+            for (const auto role : {QPalette::Window, QPalette::WindowText, QPalette::Button,
+                                     QPalette::ButtonText, QPalette::Highlight, QPalette::HighlightedText}) {
+                QTRY_COMPARE(bar->palette().color(group, role).rgba(),
+                             MenuStyle::systemPalette(bar).color(group, role).rgba());
+            }
+        }
+        const QPoint unusedSpace(bar->width() - 2, bar->height() / 2);
+        bool insideTab = false;
+        for (int index = 0; index < bar->count(); ++index)
+            insideTab |= bar->tabRect(index).contains(unusedSpace);
+        if (!insideTab && bar->isVisible()) {
+            const QImage image = window->grab().toImage();
+            const QPoint mapped = bar->mapTo(window, unusedSpace);
+            QCOMPARE(image.pixelColor(qRound(mapped.x() * window->devicePixelRatioF()),
+                                       qRound(mapped.y() * window->devicePixelRatioF())).rgba(),
+                     MenuStyle::systemPalette(bar).color(QPalette::Window).rgba());
+        }
+        for (bool selected : {false, true}) {
+            QStyleOptionTab option;
+            option.initFrom(bar);
+            option.rect = QRect(0, 0, 140, 32);
+            option.shape = bar->shape();
+            option.text = QStringLiteral("Constants");
+            option.position = QStyleOptionTab::Beginning;
+            option.state.setFlag(QStyle::State_Selected, selected);
+            QImage actual(option.rect.size(), QImage::Format_ARGB32_Premultiplied);
+            QImage expected(actual.size(), actual.format());
+            actual.fill(Qt::transparent);
+            expected.fill(Qt::transparent);
+            QPainter actualPainter(&actual);
+            bar->style()->drawControl(QStyle::CE_TabBarTab, &option, &actualPainter, bar);
+            actualPainter.end();
+            QPainter expectedPainter(&expected);
+            QApplication::style()->drawControl(QStyle::CE_TabBarTab, &option, &expectedPainter, bar);
+            expectedPainter.end();
+            QCOMPARE(actual, expected);
+        }
+    };
+    QCoreApplication::processEvents();
+    verify(&first, systemAtStartup);
+    verify(&second, systemAtStartup);
+    for (bool system : {true, false, true, false}) {
+        appearance->actions().at(system ? 0 : 1)->trigger();
+        QCoreApplication::processEvents();
+        verify(&first, system);
+        verify(&second, system);
+    }
+    appearance->actions().at(0)->trigger();
+    native.setColor(QPalette::Window, QColor(dark ? "#353535" : "#dddddd"));
+    QApplication::setPalette(native);
+    QCoreApplication::processEvents();
+    verify(&first, true);
+    verify(&second, true);
+    QDockWidget* functions = first.findChild<QDockWidget*>(QStringLiteral("FunctionsDock"));
+    QDockWidget* constants = first.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(functions);
+    QVERIFY(constants);
+    functions->setFloating(true);
+    functions->setFloating(false);
+    first.tabifyDockWidget(constants, functions);
+    functions->show();
+    QCoreApplication::processEvents();
+    verify(&first, true);
+    QVERIFY(QMetaObject::invokeMethod(&first, "setHistoryDockVisible", Q_ARG(bool, true)));
+    QCoreApplication::processEvents();
+    verify(&first, true);
+    QCOMPARE(guard.settings->menuAppearance, Settings::MenuAppearanceSpeedCrunch);
+}
+
+void TestDisplayUi::dock_headers_follow_appearance_data()
+{
+    QTest::addColumn<bool>("systemAtStartup");
+    QTest::addColumn<bool>("floating");
+    QTest::addColumn<bool>("dark");
+    for (bool system : {false, true}) {
+        for (bool floating : {false, true}) {
+            for (bool dark : {false, true}) {
+                const QString name = QStringLiteral("%1-%2-%3")
+                    .arg(system ? "system-startup" : "theme-startup",
+                         floating ? "floating" : "attached", dark ? "dark" : "light");
+                QTest::newRow(qPrintable(name)) << system << floating << dark;
+            }
+        }
+    }
+}
+
+void TestDisplayUi::dock_headers_follow_appearance()
+{
+    QFETCH(bool, systemAtStartup);
+    QFETCH(bool, floating);
+    QFETCH(bool, dark);
+    MainWindowStateGuard guard;
+    const QPalette original = QApplication::palette();
+    const auto restorePalette = qScopeGuard([original]() { QApplication::setPalette(original); });
+    QPalette native = original;
+    native.setColor(QPalette::Window, QColor(dark ? "#252525" : "#eeeeee"));
+    native.setColor(QPalette::WindowText, QColor(dark ? "#eeeeee" : "#252525"));
+    native.setColor(QPalette::Button, native.color(QPalette::Window));
+    native.setColor(QPalette::ButtonText, native.color(QPalette::WindowText));
+    QApplication::setPalette(native);
+    guard.settings->dockAppearance = systemAtStartup ? Settings::DockAppearanceSystem : Settings::DockAppearanceSpeedCrunch;
+    guard.settings->constantsDockVisible = true;
+    guard.settings->functionsDockVisible = true;
+    guard.settings->formulaBookDockVisible = true;
+    guard.settings->bitfieldVisible = true;
+    guard.settings->windowState.clear();
+    guard.settings->sessionLayoutJson.clear();
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), QStringLiteral("#631840")}});
+    MainWindow first(false);
+    MainWindow second(false);
+    first.show();
+    second.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&first));
+    QVERIFY(QTest::qWaitForWindowExposed(&second));
+    QMenu* appearance = first.findChild<QMenu*>(QStringLiteral("DockAppearanceMenu"));
+    QVERIFY(appearance);
+    QDockWidget* constants = first.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(constants);
+    constants->setFloating(floating);
+    constants->show();
+    QDockWidget reference;
+    reference.setPalette(native);
+    reference.ensurePolished();
+    const QStringList names {QStringLiteral("qt_dockwidget_closebutton"),
+                             QStringLiteral("qt_dockwidget_floatbutton")};
+    const auto verifyNative = [&](QDockWidget* dock) {
+        QVERIFY(dock->styleSheet().isEmpty());
+        for (auto group : {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
+            for (auto role : {QPalette::Window, QPalette::WindowText, QPalette::Button, QPalette::ButtonText})
+                QCOMPARE(dock->palette().color(group, role).rgba(), native.color(group, role).rgba());
+        }
+        QStyleOptionDockWidget option;
+        option.initFrom(dock);
+        option.rect = QRect(0, 0, 240, 30);
+        option.title = dock->windowTitle();
+        option.closable = dock->features().testFlag(QDockWidget::DockWidgetClosable);
+        option.floatable = dock->features().testFlag(QDockWidget::DockWidgetFloatable);
+        option.movable = dock->features().testFlag(QDockWidget::DockWidgetMovable);
+        option.verticalTitleBar = dock->features().testFlag(QDockWidget::DockWidgetVerticalTitleBar);
+        QImage actual(option.rect.size(), QImage::Format_ARGB32_Premultiplied);
+        actual.fill(Qt::transparent);
+        QImage expected = actual;
+        QPainter actualPainter(&actual);
+        dock->style()->drawControl(QStyle::CE_DockWidgetTitle, &option, &actualPainter, dock);
+        actualPainter.end();
+        QPainter expectedPainter(&expected);
+        QApplication::style()->drawControl(QStyle::CE_DockWidgetTitle, &option, &expectedPainter, dock);
+        expectedPainter.end();
+        QCOMPARE(actual, expected);
+        for (const QString& name : names) {
+            QAbstractButton* button = dock->findChild<QAbstractButton*>(name, Qt::FindDirectChildrenOnly);
+            QAbstractButton* referenceButton = reference.findChild<QAbstractButton*>(name);
+            QVERIFY(button);
+            QVERIFY(referenceButton);
+            QVERIFY(!button->property("speedcrunchDockHeaderButton").toBool());
+            QVERIFY(button->styleSheet().isEmpty());
+            QCOMPARE(button->minimumSize(), referenceButton->minimumSize());
+            QCOMPARE(button->maximumSize(), referenceButton->maximumSize());
+            QCOMPARE(button->iconSize(), referenceButton->iconSize());
+            QCOMPARE(button->cursor().shape(), referenceButton->cursor().shape());
+            const auto standard = name == names.first() ? QStyle::SP_TitleBarCloseButton : QStyle::SP_TitleBarNormalButton;
+            const QImage icon = button->icon().pixmap(QSize(24, 24)).toImage();
+            const QImage nativeIcon = QApplication::style()->standardIcon(standard, &option, dock).pixmap(QSize(24, 24)).toImage();
+            QCOMPARE(icon, nativeIcon);
+            const QPoint center = button->rect().center();
+            QEnterEvent enter(center, button->mapTo(button->window(), center), button->mapToGlobal(center));
+            QCoreApplication::sendEvent(button, &enter);
+            QCOMPARE(button->icon().pixmap(QSize(24, 24)).toImage(), nativeIcon);
+        }
+    };
+    for (bool system : {systemAtStartup, !systemAtStartup, systemAtStartup, true}) {
+        appearance->actions().at(system ? 0 : 1)->trigger();
+        QCoreApplication::processEvents();
+        for (MainWindow* window : {&first, &second}) {
+            for (QDockWidget* dock : window->findChildren<QDockWidget*>()) {
+                if (system) {
+                    verifyNative(dock);
+                    if (QTest::currentTestFailed())
+                        return;
+                } else {
+                    QVERIFY(!dock->styleSheet().isEmpty());
+                    for (const QString& name : names) {
+                        QAbstractButton* button = dock->findChild<QAbstractButton*>(name, Qt::FindDirectChildrenOnly);
+                        QVERIFY(button);
+                        QVERIFY(button->property("speedcrunchDockHeaderButton").toBool());
+                        QCOMPARE(button->size(), QSize(18, 18));
+                    }
+                }
+            }
+        }
+    }
+    for (bool floatingState : {true, false}) {
+        constants->setFloating(floatingState);
+        QCoreApplication::processEvents();
+        verifyNative(constants);
+        if (QTest::currentTestFailed())
+            return;
+    }
+    native.setColor(QPalette::Window, QColor(dark ? "#353535" : "#dddddd"));
+    native.setColor(QPalette::Button, native.color(QPalette::Window));
+    QApplication::setPalette(native);
+    QCoreApplication::processEvents();
+    for (MainWindow* window : {&first, &second}) {
+        for (QDockWidget* dock : window->findChildren<QDockWidget*>()) {
+            QTRY_COMPARE(dock->palette().color(QPalette::Window).rgba(), native.color(QPalette::Window).rgba());
+            verifyNative(dock);
+            if (QTest::currentTestFailed())
+                return;
+        }
+    }
+    MainWindow third(false);
+    for (QDockWidget* dock : third.findChildren<QDockWidget*>()) {
+        verifyNative(dock);
+        if (QTest::currentTestFailed())
+            return;
+    }
+    QAbstractButton* floatButton = constants->findChild<QAbstractButton*>(names.last());
+    QTest::mouseClick(floatButton, Qt::LeftButton);
+    QVERIFY(constants->isFloating());
+    constants->setFloating(false);
+    QCoreApplication::processEvents();
+    verifyNative(constants);
+    if (QTest::currentTestFailed())
+        return;
+    QAbstractButton* closeButton = constants->findChild<QAbstractButton*>(names.first());
+    QTest::mouseClick(closeButton, Qt::LeftButton);
+    QVERIFY(!constants->isVisible());
+}
+
+void TestDisplayUi::system_dock_headers_paint_system_background_data()
+{
+    QTest::addColumn<bool>("switchFromTheme");
+    QTest::addColumn<bool>("darkSystem");
+    for (bool switching : {false, true}) {
+        for (bool dark : {false, true}) {
+            const QString name = QStringLiteral("%1-%2")
+                .arg(switching ? "switch-from-theme" : "system-startup",
+                     dark ? "dark-system" : "light-system");
+            QTest::newRow(qPrintable(name)) << switching << dark;
+        }
+    }
+}
+
+void TestDisplayUi::system_dock_headers_paint_system_background()
+{
+    QFETCH(bool, switchFromTheme);
+    QFETCH(bool, darkSystem);
+    MainWindowStateGuard guard;
+    const QPalette original = QApplication::palette();
+    const auto restorePalette = qScopeGuard([original]() { QApplication::setPalette(original); });
+    QPalette native = original;
+    native.setColor(QPalette::Window, QColor(darkSystem ? "#252525" : "#eeeeee"));
+    native.setColor(QPalette::WindowText, QColor(darkSystem ? "#eeeeee" : "#252525"));
+    QApplication::setPalette(native);
+    guard.settings->dockAppearance = switchFromTheme
+        ? Settings::DockAppearanceSpeedCrunch : Settings::DockAppearanceSystem;
+    guard.settings->constantsDockVisible = true;
+    guard.settings->windowState.clear();
+    guard.settings->sessionLayoutJson.clear();
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), QStringLiteral("#631840")}});
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QDockWidget* dock = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(dock);
+    if (switchFromTheme) {
+        QMenu* appearance = window.findChild<QMenu*>(QStringLiteral("DockAppearanceMenu"));
+        QVERIFY(appearance);
+        appearance->actions().first()->trigger();
+    }
+    QCoreApplication::processEvents();
+
+    // Render the whole window so a transparent header exposes its parent fill.
+    // Painting CE_DockWidgetTitle alone cannot detect that background leak.
+    const auto verifyHeader = [&]() {
+        const QAbstractButton* button = dock->findChild<QAbstractButton*>(
+            QStringLiteral("qt_dockwidget_floatbutton"), Qt::FindDirectChildrenOnly);
+        QVERIFY(button);
+        const QPoint sample(button->geometry().left() - 8, button->geometry().center().y());
+        QVERIFY(dock->rect().contains(sample));
+        QVERIFY(sample.y() < dock->widget()->geometry().top());
+        QStyleOptionDockWidget option;
+        option.initFrom(dock);
+        option.rect = QRect(0, 0, dock->width(), dock->widget()->geometry().top());
+        option.title = dock->windowTitle();
+        option.closable = dock->features().testFlag(QDockWidget::DockWidgetClosable);
+        option.floatable = dock->features().testFlag(QDockWidget::DockWidgetFloatable);
+        option.movable = dock->features().testFlag(QDockWidget::DockWidgetMovable);
+        // Preserve any background the native title painter adds, such as the
+        // Windows style's gradient, over the system window surface.
+        QImage expected(option.rect.size(), QImage::Format_ARGB32_Premultiplied);
+        expected.fill(native.color(QPalette::Window));
+        QPainter painter(&expected);
+        QApplication::style()->drawControl(QStyle::CE_DockWidgetTitle, &option, &painter, dock);
+        painter.end();
+        const QImage image = window.grab().toImage();
+        const QPoint position = dock->mapTo(&window, sample);
+        QCOMPARE(image.pixelColor(qRound(position.x() * image.devicePixelRatio()),
+                                  qRound(position.y() * image.devicePixelRatio())),
+                 expected.pixelColor(sample));
+    };
+    verifyHeader();
+    if (QTest::currentTestFailed())
+        return;
+
+    native.setColor(QPalette::Window, QColor(darkSystem ? "#353535" : "#dddddd"));
+    QApplication::setPalette(native);
+    QTRY_COMPARE(dock->palette().color(QPalette::Window), native.color(QPalette::Window));
+    verifyHeader();
+}
+
+void TestDisplayUi::system_dock_controls_keep_aligned_rows_data()
+{
+    QTest::addColumn<bool>("switchFromTheme");
+    QTest::addColumn<bool>("wide");
+    QTest::addColumn<bool>("subdomains");
+    QTest::addColumn<bool>("largeFont");
+    for (bool switching : {false, true}) {
+        for (bool wide : {false, true}) {
+            for (bool subdomains : {false, true}) {
+                for (bool largeFont : {false, true}) {
+                    const QString name = QStringLiteral("%1-%2-%3-%4")
+                        .arg(switching ? "switch" : "startup", wide ? "wide" : "compact",
+                             subdomains ? "subdomains" : "no-subdomains", largeFont ? "large-font" : "default-font");
+                    QTest::newRow(qPrintable(name)) << switching << wide << subdomains << largeFont;
+                }
+            }
+        }
+    }
+}
+
+void TestDisplayUi::system_dock_controls_keep_aligned_rows()
+{
+    QFETCH(bool, switchFromTheme);
+    QFETCH(bool, wide);
+    QFETCH(bool, subdomains);
+    QFETCH(bool, largeFont);
+    MainWindowStateGuard guard;
+    guard.settings->dockAppearance = switchFromTheme ? Settings::DockAppearanceSpeedCrunch : Settings::DockAppearanceSystem;
+    guard.settings->constantsDockVisible = true;
+    guard.settings->constantsDockDomain.clear();
+    guard.settings->constantsDockSubdomain.clear();
+    guard.settings->functionsDockVisible = true;
+    guard.settings->sessionLayoutJson.clear();
+    guard.settings->windowState.clear();
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    if (largeFont) {
+        QFont font = window.font();
+        font.setPointSize(font.pointSize() + 4);
+        window.setFont(font);
+    }
+    if (switchFromTheme) {
+        QMenu* appearance = window.findChild<QMenu*>(QStringLiteral("DockAppearanceMenu"));
+        QVERIFY(appearance);
+        appearance->actions().at(0)->trigger();
+    }
+    for (const char* name : {"ConstantsDock", "FunctionsDock"}) {
+        QDockWidget* dock = window.findChild<QDockWidget*>(QString::fromLatin1(name));
+        QVERIFY(dock);
+        dock->setFloating(true);
+        dock->resize(wide ? 900 : 380, 480);
+        dock->show();
+        if (auto* constants = qobject_cast<ConstantsWidget*>(dock->widget())) {
+            QComboBox* domain = constants->findChild<QComboBox*>();
+            QVERIFY(domain);
+            constants->restoreState(domain->itemText(subdomains ? 0 : 1), QString(), QString());
+        }
+        QTest::qWait(50);
+        QWidget* content = dock->widget();
+        QLineEdit* search = content->findChild<QLineEdit*>();
+        QVERIFY(search);
+        const auto layoutRect = [content](QComboBox* combo) {
+            QStyleOptionComboBox option;
+            option.initFrom(combo);
+            option.rect = combo->rect();
+            QRect rect = combo->style()->subElementRect(QStyle::SE_ComboBoxLayoutItem, &option, combo);
+            if (rect.isEmpty())
+                rect = combo->rect();
+            rect.translate(combo->mapTo(content, QPoint()));
+            return rect;
+        };
+        QList<QRect> combos;
+        for (QComboBox* combo : content->findChildren<QComboBox*>()) {
+            if (combo->isVisible()) {
+                combos.append(layoutRect(combo));
+            }
+        }
+        QVERIFY(!combos.isEmpty());
+        std::sort(combos.begin(), combos.end(), [](const QRect& a, const QRect& b) {
+            return a.top() == b.top() ? a.left() < b.left() : a.top() < b.top();
+        });
+        const QRect searchRect(search->mapTo(content, QPoint()), search->size());
+        QCOMPARE(combos.first().left(), searchRect.left());
+        QCOMPARE(combos.last().right(), searchRect.right());
+        QCOMPARE(combos.first().top(), UiConfig::DockSearchRowVerticalPadding);
+        QCOMPARE(searchRect.top() - (combos.last().bottom() + 1), UiConfig::DockSearchRowVerticalPadding);
+        if (QString::fromLatin1(name) == QStringLiteral("ConstantsDock"))
+            QCOMPARE(combos.size(), subdomains ? 2 : 1);
+        if (combos.size() == 2) {
+            if (wide)
+                QCOMPARE(combos.first().top(), combos.last().top());
+            else
+                QCOMPARE(combos.last().top() - (combos.first().bottom() + 1), UiConfig::DockSearchRowVerticalPadding);
+        }
+    }
+}
+
+void TestDisplayUi::system_docks_follow_palette_and_theme_changes()
+{
+    MainWindowStateGuard guard;
+    const QPalette original = QApplication::palette();
+    const auto restorePalette = qScopeGuard([original]() { QApplication::setPalette(original); });
+    guard.settings->dockAppearance = Settings::DockAppearanceSpeedCrunch;
+    guard.settings->constantsDockVisible = true;
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QDockWidget* dock = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(dock);
+    QLineEdit* search = dock->findChild<QLineEdit*>();
+    QTreeWidget* table = dock->findChild<QTreeWidget*>();
+    QVERIFY(search);
+    QVERIFY(table);
+    search->setText(QStringLiteral("no matching constant 987654321"));
+    QLabel* noMatch = nullptr;
+    QTRY_VERIFY(([&]() {
+        for (QLabel* label : table->viewport()->findChildren<QLabel*>()) {
+            if (label->property("dockListNoMatchLabel").toBool())
+                noMatch = label;
+        }
+        return noMatch != nullptr;
+    })());
+    QMenu* appearance = window.findChild<QMenu*>(QStringLiteral("DockAppearanceMenu"));
+    QVERIFY(appearance);
+    appearance->actions().at(0)->trigger();
+    QVERIFY(!noMatch->styleSheet().contains(QStringLiteral("color:")));
+    QPalette changed = original;
+    changed.setColor(QPalette::Base, QColor("#304050"));
+    changed.setColor(QPalette::Text, QColor("#f1f2f3"));
+    changed.setColor(QPalette::Window, QColor("#405060"));
+    changed.setColor(QPalette::WindowText, QColor("#f1f2f3"));
+    changed.setColor(QPalette::Highlight, QColor("#108030"));
+    QApplication::setPalette(changed);
+    QTRY_COMPARE(search->palette().color(QPalette::Base).rgba(), changed.color(QPalette::Base).rgba());
+    QTRY_COMPARE(table->palette().color(QPalette::Highlight).rgba(), changed.color(QPalette::Highlight).rgba());
+    QTRY_COMPARE(noMatch->palette().color(QPalette::WindowText).rgba(), changed.color(QPalette::WindowText).rgba());
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), QStringLiteral("#730a24")}});
+    window.colorSchemeChanged();
+    QCoreApplication::processEvents();
+    QCOMPARE(search->palette().color(QPalette::Base).rgba(), changed.color(QPalette::Base).rgba());
+    QVERIFY(search->styleSheet().isEmpty());
+    QVERIFY(table->styleSheet().isEmpty());
+}
+
 void TestDisplayUi::menu_appearance_defaults_to_system_and_persists()
 {
     MainWindowStateGuard guard;
@@ -5469,13 +6437,12 @@ void TestDisplayUi::menu_appearance_switches_all_windows_without_changing_other_
     QCOMPARE(guard.settings->menuAppearance, Settings::MenuAppearanceSystem);
     QVERIFY(firstAppearance->actions().at(0)->isChecked());
     QVERIFY(secondAppearance->actions().at(0)->isChecked());
+    // Desktop styles can change palettes while menus are polished. Check
+    // color restoration separately with an explicit style palette.
     for (QWidget* menu : {static_cast<QWidget*>(first.menuBar()),
                           static_cast<QWidget*>(second.menuBar()),
                           static_cast<QWidget*>(context.data()), static_cast<QWidget*>(child)}) {
         QVERIFY(menu->styleSheet().isEmpty());
-        QCOMPARE(menu->palette().color(QPalette::Window), QApplication::palette(menu).color(QPalette::Window));
-        QCOMPARE(menu->palette().color(QPalette::Disabled, QPalette::WindowText),
-                 QApplication::palette(menu).color(QPalette::Disabled, QPalette::WindowText));
     }
     QCOMPARE(editor->palette(), editorPalette);
     QCOMPARE(display->palette(), displayPalette);
@@ -5483,8 +6450,16 @@ void TestDisplayUi::menu_appearance_switches_all_windows_without_changing_other_
     QCOMPARE(editor->styleSheet(), editorStyle);
 }
 
+void TestDisplayUi::system_menus_restore_style_polished_foreground_and_hover_colors_data()
+{
+    QTest::addColumn<QColor>("background");
+    QTest::newRow("light-style") << QColor("#eeeeee");
+    QTest::newRow("dark-style") << QColor("#454358");
+}
+
 void TestDisplayUi::system_menus_restore_style_polished_foreground_and_hover_colors()
 {
+    QFETCH(QColor, background);
     MainWindowStateGuard guard;
     guard.settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
     guard.settings->colorScheme = QStringLiteral("Custom");
@@ -5494,13 +6469,16 @@ void TestDisplayUi::system_menus_restore_style_polished_foreground_and_hover_col
     QMenuBar* bar = window.menuBar();
     bar->setNativeMenuBar(false);
     QPalette native = QApplication::palette(bar);
+    const bool dark = background.lightness() < 128;
+    const QColor foreground(dark ? "#eeeeee" : "#242424");
+    const QColor disabledForeground(dark ? "#999999" : "#777777");
     for (const QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
-        native.setColor(group, QPalette::Window, QColor("#eeeeee"));
-        native.setColor(group, QPalette::Button, QColor("#eeeeee"));
-        native.setColor(group, QPalette::ButtonText,
-                        group == QPalette::Disabled ? QColor("#777777") : QColor("#242424"));
-        native.setColor(group, QPalette::Highlight, QColor("#cccccc"));
-        native.setColor(group, QPalette::HighlightedText, QColor("#242424"));
+        native.setColor(group, QPalette::Window, background);
+        native.setColor(group, QPalette::Button, background);
+        for (const QPalette::ColorRole role : {QPalette::WindowText, QPalette::ButtonText})
+            native.setColor(group, role, group == QPalette::Disabled ? disabledForeground : foreground);
+        native.setColor(group, QPalette::Highlight, QColor(dark ? "#656378" : "#cccccc"));
+        native.setColor(group, QPalette::HighlightedText, foreground);
     }
     auto* style = new MenuBarPaletteTestStyle(native);
     style->setParent(bar);
@@ -5516,7 +6494,8 @@ void TestDisplayUi::system_menus_restore_style_polished_foreground_and_hover_col
         QCoreApplication::processEvents();
         QVERIFY(bar->styleSheet().isEmpty());
         for (const QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
-            for (const QPalette::ColorRole role : {QPalette::ButtonText, QPalette::Highlight,
+            for (const QPalette::ColorRole role : {QPalette::Window, QPalette::WindowText,
+                                                   QPalette::Button, QPalette::ButtonText, QPalette::Highlight,
                                                    QPalette::HighlightedText})
                 QCOMPARE(bar->palette().color(group, role), native.color(group, role));
         }
@@ -7650,6 +8629,105 @@ void TestDisplayUi::dock_header_buttons_keep_theme_after_redocking()
                 QVERIFY2(icon == expectedIcons.at(i), qPrintable(buttonNames.at(i)));
             }
         }
+    }
+}
+
+void TestDisplayUi::formula_book_links_follow_dock_appearance_data()
+{
+    QTest::addColumn<bool>("dark");
+    QTest::addColumn<bool>("systemAtStartup");
+    QTest::newRow("dark-system-startup") << true << true;
+    QTest::newRow("light-system-startup") << false << true;
+    QTest::newRow("dark-switch-from-theme") << true << false;
+    QTest::newRow("light-switch-from-theme") << false << false;
+}
+
+void TestDisplayUi::formula_book_links_follow_dock_appearance()
+{
+    QFETCH(bool, dark);
+    QFETCH(bool, systemAtStartup);
+    MainWindowStateGuard guard;
+    const QPalette original = QApplication::palette();
+    const auto restorePalette = qScopeGuard([original]() { QApplication::setPalette(original); });
+    QPalette native = original;
+    native.setColor(QPalette::Base, QColor(dark ? "#202020" : "#fafafa"));
+    native.setColor(QPalette::Text, QColor(dark ? "#eeeeee" : "#202020"));
+    // Keep the system link color even when a contrast adjustment would change it.
+    native.setColor(QPalette::Link, QColor(dark ? "#343c4b" : "#c1c7d0"));
+    QApplication::setPalette(native);
+    guard.settings->dockAppearance = systemAtStartup ? Settings::DockAppearanceSystem : Settings::DockAppearanceSpeedCrunch;
+    guard.settings->formulaBookDockVisible = true;
+    guard.settings->windowState.clear();
+    guard.settings->sessionLayoutJson.clear();
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), QStringLiteral("#27314a")}});
+    MainWindow first(false);
+    MainWindow second(false);
+    first.show();
+    second.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&first));
+    QVERIFY(QTest::qWaitForWindowExposed(&second));
+    QMenu* appearance = first.findChild<QMenu*>(QStringLiteral("DockAppearanceMenu"));
+    QVERIFY(appearance);
+    const auto verifyLinks = [&](BookDock* book, bool system, const QColor& nativeLink) {
+        QTextBrowser* browser = book->findChild<QTextBrowser*>();
+        QVERIFY(browser);
+        const QColor background = browser->palette().color(QPalette::Base);
+        const QColor formulaColor = system ? nativeLink
+            : aaForegroundForBackground(background, browser->palette().color(QPalette::Link));
+        const QColor navigationColor = system ? nativeLink
+            : generateSecondaryLinkFromBackground(background, formulaColor);
+        int navigationLinks = 0;
+        int formulaLinks = 0;
+        for (QTextBlock block = browser->document()->begin(); block.isValid(); block = block.next()) {
+            for (auto it = block.begin(); !it.atEnd(); ++it) {
+                const QTextCharFormat format = it.fragment().charFormat();
+                if (!format.isAnchor())
+                    continue;
+                const bool formula = format.anchorHref().startsWith(QStringLiteral("formula:"));
+                QCOMPARE(format.foreground().color().rgba(), (formula ? formulaColor : navigationColor).rgba());
+                if (formula)
+                    ++formulaLinks;
+                else
+                    ++navigationLinks;
+            }
+        }
+        QVERIFY(navigationLinks > 0);
+        QCOMPARE(formulaLinks > 0, book->currentPage() != QStringLiteral("index"));
+    };
+    for (bool system : {systemAtStartup, !systemAtStartup, systemAtStartup}) {
+        appearance->actions().at(system ? 0 : 1)->trigger();
+        QCoreApplication::processEvents();
+        for (MainWindow* window : {&first, &second}) {
+            BookDock* book = window->findChild<BookDock*>(QStringLiteral("BookDock"));
+            QVERIFY(book);
+            for (const QString& page : {QStringLiteral("index"), QStringLiteral("electronics/ohmslaw")}) {
+                book->openPage(QUrl(page));
+                verifyLinks(book, system, native.color(QPalette::Link));
+                if (QTest::currentTestFailed())
+                    return;
+            }
+        }
+    }
+    appearance->actions().at(0)->trigger();
+    native.setColor(QPalette::Link, QColor(dark ? "#b8a0eb" : "#6321a0"));
+    QApplication::setPalette(native);
+    QCoreApplication::processEvents();
+    for (MainWindow* window : {&first, &second}) {
+        BookDock* book = window->findChild<BookDock*>(QStringLiteral("BookDock"));
+        QVERIFY(book);
+        QTextBrowser* browser = book->findChild<QTextBrowser*>();
+        QVERIFY(browser);
+        QTRY_COMPARE(browser->palette().color(QPalette::Link).rgba(), native.color(QPalette::Link).rgba());
+        QCOMPARE(book->currentPage(), QStringLiteral("electronics/ohmslaw"));
+        verifyLinks(book, true, native.color(QPalette::Link));
+        if (QTest::currentTestFailed())
+            return;
+        book->openPage(QUrl(QStringLiteral("index")));
+        verifyLinks(book, true, native.color(QPalette::Link));
+        if (QTest::currentTestFailed())
+            return;
     }
 }
 

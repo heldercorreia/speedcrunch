@@ -6,9 +6,9 @@
 #define GUI_BOOKDOCK_H
 
 #include "core/book.h"
+#include "gui/dockwidget.h"
 
 #include <QColor>
-#include <QDockWidget>
 #include <QTextBrowser>
 
 class QUrl;
@@ -25,7 +25,7 @@ protected:
     void changeEvent(QEvent*) override;
 };
 
-class BookDock : public QDockWidget {
+class BookDock : public DockWidget {
     Q_OBJECT
 
 public:
