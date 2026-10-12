@@ -1701,7 +1701,7 @@ void applyGeneratedDockContentSurfaces(MainWindow* owner, QDockWidget* dock, con
         popupTheme.buttonStyle = QStringLiteral(
             "QComboBox {"
             " background-color: %1; color: %2;"
-            " border: 1px solid %3; border-radius: 8px; padding: 4px %4px 4px 8px;"
+            " border: 1px solid %3; border-radius: %6px; padding: 4px %4px 4px 8px;"
             "}"
             "QComboBox::drop-down {"
             " subcontrol-origin: border; subcontrol-position: top right;"
@@ -1714,7 +1714,8 @@ void applyGeneratedDockContentSurfaces(MainWindow* owner, QDockWidget* dock, con
                                          dockTextInput.foreground.name(),
                                          dockTextInputOutline.background.name())
                                     .arg(DockComboBoxChevron::IndicatorWidth + 4)
-                                    .arg(DockComboBoxChevron::IndicatorWidth);
+                                    .arg(DockComboBoxChevron::IndicatorWidth)
+                                    .arg(UiConfig::ControlCornerRadius);
         if (QAbstractItemView* popupView = comboBox->view()) {
             QPalette popupPalette = paletteForThemeSurface(MenuStyle::systemPalette(popupView), dockComboPopup);
             popupPalette.setColor(QPalette::Highlight, dockHoveredItem.background);
@@ -1758,7 +1759,7 @@ void applyGeneratedDockContentSurfaces(MainWindow* owner, QDockWidget* dock, con
         searchBox->setStyleSheet(QStringLiteral(
             "QLineEdit {"
             " background-color: %1; color: %2;"
-            " border: %5px solid %3; border-radius: 8px; padding: 4px 8px;"
+            " border: %5px solid %3; border-radius: %7px; padding: 4px 8px;"
             "}"
             "QLineEdit:focus {"
             " border: %6px solid %4;"
@@ -1768,7 +1769,8 @@ void applyGeneratedDockContentSurfaces(MainWindow* owner, QDockWidget* dock, con
                                           dockTextInputOutline.background.name(),
                                           surfaces.primary.background.name())
                                      .arg(UiConfig::DockTextInputUnfocusedOutlineStrokeWidth)
-                                     .arg(UiConfig::OutlineStrokeWidth));
+                                     .arg(UiConfig::OutlineStrokeWidth)
+                                     .arg(UiConfig::ControlCornerRadius));
         applyDockSearchClearButtonIcon(searchBox, surfaces);
     }
 
@@ -2865,7 +2867,8 @@ private:
     QPainterPath topRoundedTabPath(const QRect& rect) const
     {
         const QRectF tab(rect);
-        const qreal radius = qMin(tab.width() / 2.0, tab.height() / 2.0);
+        const qreal radius = qMin(qreal(UiConfig::ControlCornerRadius),
+                                 qMin(tab.width() / 2.0, tab.height() / 2.0));
         QPainterPath path;
         path.moveTo(tab.left(), tab.bottom());
         path.lineTo(tab.left(), tab.top() + radius);
