@@ -33,6 +33,10 @@ constexpr int KeypadOperatorPrimaryHueChromaPercent = 50;
 constexpr int KeypadEvaluatePrimaryHueChromaPercent = 90;
 constexpr double KeypadButtonGradientLightnessDelta = 0.035;
 
+// Keep generated text comfortably readable on tinted surfaces. If a surface
+// cannot reach this ratio, use whichever contrasts better, black or white.
+constexpr double GeneratedTextMinimumContrast = 10.0;
+
 // Enables the temporary OKLCH HTML diagnostics report in the system temp
 // directory. Keep disabled for normal builds; it is only useful while tuning
 // generated theme surfaces.

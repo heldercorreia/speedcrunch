@@ -917,6 +917,7 @@ private slots:
     void visible_window_applies_restored_dock_and_keypad_layout();
     void always_on_top_toggles_preserve_window_geometry();
     void dock_surfaces_use_successive_generated_shades();
+    void dock_and_popup_text_meet_contrast_target_across_themes();
     void dock_header_buttons_render_full_size_data();
     void dock_header_buttons_render_full_size();
     void dock_header_buttons_render_full_size_on_first_run_data();
@@ -6318,6 +6319,94 @@ void TestDisplayUi::visible_window_applies_restored_dock_and_keypad_layout()
     QTRY_VERIFY(!compactConstantsDock->isVisible());
     QTRY_VERIFY(compactWindow.findChild<Keypad*>() == nullptr);
     QTRY_COMPARE(compactWindow.size(), compactSize);
+}
+
+void TestDisplayUi::dock_and_popup_text_meet_contrast_target_across_themes()
+{
+    Settings* settings = Settings::instance();
+    settings->colorScheme = QStringLiteral("Terminal");
+    settings->constantsDockVisible = true;
+    settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
+    MainWindow window(false);
+    window.resize(1000, 700);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    auto* dock = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(dock);
+    auto* constants = dock->findChild<ConstantsWidget*>();
+    auto* table = dock->findChild<QTreeWidget*>();
+    auto* search = dock->findChild<QLineEdit*>();
+    auto* combo = dock->findChild<QComboBox*>();
+    QVERIFY(constants && table && search && combo);
+
+    const auto verifyContrast = [](const QPalette& palette, QPalette::ColorRole textRole,
+                                   QPalette::ColorRole backgroundRole) {
+        const auto luminance = [](const QColor& color) {
+            const auto linear = [](double channel) {
+                return channel <= 0.04045 ? channel / 12.92
+                    : std::pow((channel + 0.055) / 1.055, 2.4);
+            };
+            return 0.2126 * linear(color.redF()) + 0.7152 * linear(color.greenF())
+                + 0.0722 * linear(color.blueF());
+        };
+        // Match the hex colors used by the widgets' stylesheets.
+        const QColor text(palette.color(textRole).name());
+        const QColor background(palette.color(backgroundRole).name());
+        const double textLuminance = luminance(text);
+        const double backgroundLuminance = luminance(background);
+        const double contrast = (qMax(textLuminance, backgroundLuminance) + 0.05)
+            / (qMin(textLuminance, backgroundLuminance) + 0.05);
+        const double best = qMax((backgroundLuminance + 0.05) / 0.05,
+                                 1.05 / (backgroundLuminance + 0.05));
+        QVERIFY2(contrast >= 10.0 || (best < 10.0 && qAbs(contrast - best) < 1e-6),
+                 qPrintable(QStringLiteral("Role %1 on role %2: %3 on %4 gives %5:1")
+                                .arg(textRole).arg(backgroundRole)
+                                .arg(text.name(), background.name()).arg(contrast)));
+    };
+
+    const QStringList themes = ColorScheme::enumerate();
+    QVERIFY(themes.contains(QStringLiteral("Terminal")));
+    for (const QString& theme : themes) {
+        if (!ColorScheme::isBuiltInName(theme))
+            continue;
+        settings->colorScheme = theme;
+        window.colorSchemeChanged();
+        QCoreApplication::processEvents();
+        // The title has its own stylesheet fill, separate from QPalette::Window.
+        const QImage dockImage = dock->grab().toImage();
+        QVERIFY(!dockImage.isNull());
+        QPalette titlePalette = dock->palette();
+        titlePalette.setColor(QPalette::Window,
+                              dockImage.pixelColor(dockImage.width() / 2,
+                                                   qRound(3 * dockImage.devicePixelRatio())));
+        verifyContrast(titlePalette, QPalette::WindowText, QPalette::Window);
+        verifyContrast(table->palette(), QPalette::Text, QPalette::Base);
+        verifyContrast(search->palette(), QPalette::Text, QPalette::Base);
+        verifyContrast(combo->palette(), QPalette::ButtonText, QPalette::Button);
+        combo->showPopup();
+        QTRY_VERIFY(combo->view()->isVisible());
+        verifyContrast(combo->view()->palette(), QPalette::Text, QPalette::Base);
+        combo->hidePopup();
+
+        QTRY_VERIFY(table->topLevelItemCount() > 0);
+        auto* item = table->topLevelItem(0);
+        table->scrollToItem(item);
+        QCoreApplication::processEvents();
+        const QPoint pos = table->visualItemRect(item).center();
+        QMouseEvent move(QEvent::MouseMove, QPointF(pos),
+                         QPointF(table->viewport()->mapToGlobal(pos)),
+                         Qt::NoButton, Qt::NoButton, Qt::NoModifier);
+        QCoreApplication::sendEvent(table->viewport(), &move);
+        auto* popup = constants->findChild<QFrame*>(QStringLiteral("constantsSummaryPopup"));
+        QTRY_VERIFY(popup && popup->isVisible());
+        QCoreApplication::processEvents();
+        auto* label = popup->findChild<QLabel*>(QStringLiteral("constantsSummaryPopupLabel"));
+        QVERIFY(label);
+        QCOMPARE(label->palette().color(QPalette::WindowText),
+                 popup->palette().color(QPalette::WindowText));
+        verifyContrast(popup->palette(), QPalette::WindowText, QPalette::Window);
+        popup->hide();
+    }
 }
 
 void TestDisplayUi::dock_surfaces_use_successive_generated_shades()
