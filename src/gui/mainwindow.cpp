@@ -4538,12 +4538,6 @@ void MainWindow::createMenus()
     m_menus.keypad->addAction(m_actions.viewKeypadScientificWide);
     m_menus.keypad->addAction(m_actions.viewKeypadScientificNarrow);
     m_menus.keypad->addAction(m_actions.viewKeypadCustom);
-    m_menus.keypad->addSeparator();
-    m_menus.keypadZoom = m_menus.keypad->addMenu("");
-    m_menus.keypadZoom->addAction(m_actions.viewKeypadZoom50);
-    m_menus.keypadZoom->addAction(m_actions.viewKeypadZoom100);
-    m_menus.keypadZoom->addAction(m_actions.viewKeypadZoom150);
-    m_menus.keypadZoom->addAction(m_actions.viewKeypadZoom200);
     m_menus.view->addAction(m_actions.viewStatusBar);
     m_menus.view->addSeparator();
     m_menus.view->addAction(m_actions.viewFormulaBook);
@@ -4569,6 +4563,7 @@ void MainWindow::createMenus()
 
     m_menus.display = m_menus.settings->addMenu("");
     m_menus.display->addAction(m_actions.settingsDisplayColorSchemeCustom);
+    m_menus.display->addSeparator();
     m_menus.menuAppearance = m_menus.display->addMenu("");
     m_menus.menuAppearance->setObjectName(QStringLiteral("MenuAppearanceMenu"));
     m_menus.menuAppearance->addAction(m_actions.settingsMenuAppearanceSystem);
@@ -4585,6 +4580,12 @@ void MainWindow::createMenus()
     m_menus.keypadAppearance->setObjectName(QStringLiteral("KeypadAppearanceMenu"));
     m_menus.keypadAppearance->addAction(m_actions.settingsKeypadAppearanceClassic);
     m_menus.keypadAppearance->addAction(m_actions.settingsKeypadAppearanceModern);
+    m_menus.keypadAppearance->addSeparator();
+    m_menus.keypadZoom = m_menus.keypadAppearance->addMenu("");
+    m_menus.keypadZoom->addAction(m_actions.viewKeypadZoom50);
+    m_menus.keypadZoom->addAction(m_actions.viewKeypadZoom100);
+    m_menus.keypadZoom->addAction(m_actions.viewKeypadZoom150);
+    m_menus.keypadZoom->addAction(m_actions.viewKeypadZoom200);
     m_menus.statusBarAppearance = m_menus.display->addMenu("");
     m_menus.statusBarAppearance->setObjectName(QStringLiteral("StatusBarAppearanceMenu"));
     m_menus.statusBarAppearance->addAction(m_actions.settingsStatusBarAppearanceSystem);

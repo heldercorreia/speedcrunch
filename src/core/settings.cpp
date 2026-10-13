@@ -600,8 +600,8 @@ void Settings::load()
     key = KEY + QLatin1String("/Display/");
     displayFont = settings->value(key + QLatin1String("DisplayFont"), QFont().toString()).toString();
     colorScheme = settings->value(key + QLatin1String("ColorSchemeName"), DefaultColorScheme).toString();
-    menuAppearance = settings->value(key + QLatin1String("MenuAppearance"), MenuAppearanceSystem).toInt()
-        == MenuAppearanceSpeedCrunch ? MenuAppearanceSpeedCrunch : MenuAppearanceSystem;
+    menuAppearance = settings->value(key + QLatin1String("MenuAppearance"), MenuAppearanceSpeedCrunch).toInt()
+        == MenuAppearanceSystem ? MenuAppearanceSystem : MenuAppearanceSpeedCrunch;
     dockAppearance = settings->value(key + QLatin1String("DockAppearance"), DockAppearanceSpeedCrunch).toInt()
         == DockAppearanceSystem ? DockAppearanceSystem : DockAppearanceSpeedCrunch;
     statusBarAppearance = settings->value(key + QLatin1String("StatusBarAppearance"), StatusBarAppearanceSpeedCrunch).toInt()

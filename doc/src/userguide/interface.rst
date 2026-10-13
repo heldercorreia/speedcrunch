@@ -96,7 +96,7 @@ main window again.
     ``xʸ`` and ``ⁿ√``, ``E`` and ``exp``, ``ln`` and ``log10``, and each
     trigonometric function with its inverse.
 
-    Available entries in :menuselection:`View --> Keypad --> Zoom` are:
+    Available entries in :menuselection:`Settings --> Appearance --> Keypad --> Zoom` are:
 
     * ``50%``
     * ``100%`` (**default**)
@@ -754,11 +754,11 @@ User Interface Settings
 * :menuselection:`Settings --> Appearance --> Menus`
     Choose how menus look:
 
-    * :guilabel:`System` (the default) uses the system's menu colors and styling,
+    * :guilabel:`System` uses the system's menu colors and styling,
       including highlighted and disabled items. Menus follow changes to the
       system theme while SpeedCrunch is running.
-    * :guilabel:`SpeedCrunch Theme` uses the selected SpeedCrunch theme for
-      menu backgrounds and text, including highlighted items.
+    * :guilabel:`SpeedCrunch Theme` (the default) uses the selected SpeedCrunch
+      theme for menu backgrounds and text, including highlighted items.
 
     This setting applies to the menu bar shown inside the application window,
     dropdown menus, context menus, and dropdown lists in attached and floating
@@ -840,7 +840,8 @@ User Interface Settings
 
     The choice applies immediately to all windows and is saved between launches.
     It works with every preset and custom keypad. Each window keeps its own
-    layout and zoom level, selected from :menuselection:`View --> Keypad`.
+    layout, selected from :menuselection:`View --> Keypad`, and zoom level,
+    selected from :menuselection:`Settings --> Appearance --> Keypad --> Zoom`.
 
     .. versionadded:: 1.1
 

@@ -833,6 +833,8 @@ private slots:
     void number_format_is_shared_and_refreshes_all_input_panes();
     void display_font_changes_update_all_sessions_and_windows_data();
     void display_font_changes_update_all_sessions_and_windows();
+    void appearance_menu_groups_theme_and_keypad_zoom();
+    void appearance_defaults_select_theme_and_modern_styles();
     void editor_display_style_defaults_to_modern_and_persists();
     void editor_display_style_switches_all_windows_and_preserves_work();
     void editor_display_style_preserves_result_selection_and_copy();
@@ -929,7 +931,7 @@ private slots:
     void system_dock_headers_paint_system_background();
     void system_dock_controls_keep_aligned_rows_data();
     void system_dock_controls_keep_aligned_rows();
-    void menu_appearance_defaults_to_system_and_persists();
+    void menu_appearance_defaults_to_theme_and_persists();
     void menu_bar_restores_native_painting_after_theme_switch_data();
     void menu_bar_restores_native_painting_after_theme_switch();
     void system_menus_restore_style_polished_foreground_and_hover_colors_data();
@@ -1420,6 +1422,73 @@ void TestDisplayUi::display_font_changes_update_all_sessions_and_windows()
     settings->load();
     QVERIFY(savedFont.fromString(settings->displayFont));
     QCOMPARE(savedFont, expectedFont);
+}
+
+void TestDisplayUi::appearance_menu_groups_theme_and_keypad_zoom()
+{
+    MainWindowStateGuard guard;
+    MainWindow window(false);
+    auto* settingsMenu = menuWithTitle(window.menuBar(), QStringLiteral("Se&ttings"));
+    QVERIFY(settingsMenu);
+    auto* appearanceMenu = directSubmenuWithTitle(settingsMenu, QStringLiteral("&Appearance"));
+    QVERIFY(appearanceMenu);
+    const auto appearanceActions = appearanceMenu->actions();
+    QVERIFY(appearanceActions.size() > 2);
+    QCOMPARE(appearanceActions.at(0)->text(), QStringLiteral("&Theme..."));
+    QVERIFY(appearanceActions.at(1)->isSeparator());
+    QCOMPARE(appearanceActions.at(2)->menu(),
+             window.findChild<QMenu*>(QStringLiteral("MenuAppearanceMenu")));
+
+    auto* keypadMenu = directSubmenuWithTitle(appearanceMenu, QStringLiteral("&Keypad"));
+    QVERIFY(keypadMenu);
+    const auto keypadActions = keypadMenu->actions();
+    QCOMPARE(keypadActions.size(), 4);
+    QCOMPARE(keypadActions.at(0)->text(), QStringLiteral("&Classic"));
+    QCOMPARE(keypadActions.at(1)->text(), QStringLiteral("&Modern"));
+    QVERIFY(keypadActions.at(2)->isSeparator());
+    auto* zoomMenu = directSubmenuWithTitle(keypadMenu, QStringLiteral("&Zoom"));
+    QVERIFY(zoomMenu);
+    QCOMPARE(keypadActions.last(), zoomMenu->menuAction());
+    QCOMPARE(zoomMenu->parentWidget(), keypadMenu);
+    QCOMPARE(zoomMenu->actions().size(), 4);
+    for (int index = 0; index < 4; ++index)
+        QCOMPARE(zoomMenu->actions().at(index)->data().toInt(), (index + 1) * 50);
+
+    auto* viewMenu = menuWithTitle(window.menuBar(), QStringLiteral("&View"));
+    QVERIFY(viewMenu);
+    auto* layoutsMenu = directSubmenuWithTitle(viewMenu, QStringLiteral("&Keypad"));
+    QVERIFY(layoutsMenu);
+    QVERIFY(!directSubmenuWithTitle(layoutsMenu, QStringLiteral("&Zoom")));
+    QVERIFY(!layoutsMenu->actions().last()->isSeparator());
+}
+
+void TestDisplayUi::appearance_defaults_select_theme_and_modern_styles()
+{
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    settings->menuAppearance = Settings::MenuAppearanceSystem;
+    settings->dockAppearance = Settings::DockAppearanceSystem;
+    settings->statusBarAppearance = Settings::StatusBarAppearanceSystem;
+    settings->editorDisplayStyle = Settings::EditorDisplayClassic;
+    settings->keypadAppearance = Settings::KeypadAppearanceClassic;
+    QVERIFY(settings->resetToDefaults());
+    QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSpeedCrunch);
+    QCOMPARE(settings->dockAppearance, Settings::DockAppearanceSpeedCrunch);
+    QCOMPARE(settings->statusBarAppearance, Settings::StatusBarAppearanceSpeedCrunch);
+    QCOMPARE(settings->editorDisplayStyle, Settings::EditorDisplayModern);
+    QCOMPARE(settings->keypadAppearance, Settings::KeypadAppearanceModern);
+
+    MainWindow window(false);
+    for (const QString& name : {QStringLiteral("MenuAppearanceMenu"),
+                                QStringLiteral("DockAppearanceMenu"),
+                                QStringLiteral("StatusBarAppearanceMenu"),
+                                QStringLiteral("EditorDisplayStyleMenu"),
+                                QStringLiteral("KeypadAppearanceMenu")}) {
+        auto* menu = window.findChild<QMenu*>(name);
+        QVERIFY(menu);
+        QVERIFY2(menu->actions().at(1)->isChecked(), qPrintable(name));
+        QVERIFY2(!menu->actions().at(0)->isChecked(), qPrintable(name));
+    }
 }
 
 void TestDisplayUi::editor_display_style_defaults_to_modern_and_persists()
@@ -2499,7 +2568,7 @@ void TestDisplayUi::settings_reset_updates_all_windows_and_preserves_sessions()
     QVERIFY(settings->autoCompletion);
     QVERIFY(settings->syntaxHighlighting);
     QVERIFY(settings->hoverHighlightResults);
-    QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSystem);
+    QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSpeedCrunch);
     QCOMPARE(settings->colorScheme, QStringLiteral("Duskfox"));
     QCOMPARE(CMath::imaginaryUnitSymbol(), QChar('i'));
     Keypad defaultKeypad(Keypad::LayoutModeBasicWide);
@@ -6575,11 +6644,11 @@ void TestDisplayUi::system_docks_follow_palette_and_theme_changes()
     QVERIFY(table->styleSheet().isEmpty());
 }
 
-void TestDisplayUi::menu_appearance_defaults_to_system_and_persists()
+void TestDisplayUi::menu_appearance_defaults_to_theme_and_persists()
 {
     MainWindowStateGuard guard;
     Settings* settings = guard.settings;
-    QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSystem);
+    QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSpeedCrunch);
     const QString scheme = settings->colorScheme;
     for (const Settings::MenuAppearance appearance : {Settings::MenuAppearanceSpeedCrunch,
                                                      Settings::MenuAppearanceSystem}) {
@@ -6597,16 +6666,17 @@ void TestDisplayUi::menu_appearance_defaults_to_system_and_persists()
     persisted.remove(key);
     persisted.sync();
     settings->load();
-    QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSystem);
+    QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSpeedCrunch);
     persisted.setValue(key, 99);
     persisted.sync();
     settings->load();
-    QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSystem);
+    QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSpeedCrunch);
 }
 
 void TestDisplayUi::menu_appearance_switches_all_windows_without_changing_other_controls()
 {
     MainWindowStateGuard guard;
+    guard.settings->menuAppearance = Settings::MenuAppearanceSystem;
     guard.settings->colorScheme = QStringLiteral("Custom");
     guard.settings->customColorSchemeJson = themeJsonString(
         QJsonObject{{QStringLiteral("background"), QStringLiteral("#232136")}});
@@ -6842,6 +6912,7 @@ void TestDisplayUi::system_menus_preserve_platform_roles_and_follow_palette_chan
 {
     QFETCH(bool, darkPlatform);
     MainWindowStateGuard guard;
+    guard.settings->menuAppearance = Settings::MenuAppearanceSystem;
     const QPalette original = QApplication::palette();
     const QPalette originalMenu = QApplication::palette("QMenu");
     const QPalette originalBar = QApplication::palette("QMenuBar");
@@ -6947,6 +7018,7 @@ void TestDisplayUi::system_menus_preserve_platform_roles_and_follow_palette_chan
 void TestDisplayUi::precision_menu_editor_uses_system_colors()
 {
     MainWindowStateGuard guard;
+    guard.settings->menuAppearance = Settings::MenuAppearanceSystem;
     guard.settings->statusBarVisible = true;
     guard.settings->resultPrecision = -1;
     MainWindow window(false);
@@ -11930,7 +12002,7 @@ void TestDisplayUi::keypad_appearance_switches_all_windows()
     auto* appearanceMenu = directSubmenuWithTitle(settingsMenu, QStringLiteral("&Appearance"));
     QVERIFY(appearanceMenu != nullptr);
     QCOMPARE(directSubmenuWithTitle(appearanceMenu, QStringLiteral("&Keypad")), menu);
-    QCOMPARE(menu->actions().size(), 2);
+    QCOMPARE(menu->actions().size(), 4);
     QCOMPARE(menu->actions().at(0)->text(), QStringLiteral("&Classic"));
     QCOMPARE(menu->actions().at(1)->text(), QStringLiteral("&Modern"));
     QVERIFY(menu->actions().at(1)->isChecked());
@@ -12110,7 +12182,8 @@ void TestDisplayUi::keypad_fifty_percent_zoom_scales_and_restores()
     QVERIFY(viewMenu != nullptr);
     QMenu* keypadMenu = directSubmenuWithTitle(viewMenu, QStringLiteral("&Keypad"));
     QVERIFY(keypadMenu != nullptr);
-    QMenu* zoomMenu = directSubmenuWithTitle(keypadMenu, QStringLiteral("&Zoom"));
+    QMenu* zoomMenu = directSubmenuWithTitle(
+        window.findChild<QMenu*>(QStringLiteral("KeypadAppearanceMenu")), QStringLiteral("&Zoom"));
     QVERIFY(zoomMenu != nullptr);
     const QList<QAction*> zoomActions = zoomMenu->actions();
     QCOMPARE(zoomActions.size(), 4);
@@ -12182,7 +12255,8 @@ void TestDisplayUi::keypad_fifty_percent_zoom_survives_settings_reload()
     QVERIFY(viewMenu != nullptr);
     QMenu* keypadMenu = directSubmenuWithTitle(viewMenu, QStringLiteral("&Keypad"));
     QVERIFY(keypadMenu != nullptr);
-    QMenu* zoomMenu = directSubmenuWithTitle(keypadMenu, QStringLiteral("&Zoom"));
+    QMenu* zoomMenu = directSubmenuWithTitle(
+        window.findChild<QMenu*>(QStringLiteral("KeypadAppearanceMenu")), QStringLiteral("&Zoom"));
     QVERIFY(zoomMenu != nullptr);
     QCOMPARE(zoomMenu->actions().size(), 4);
     QVERIFY(zoomMenu->actions().first()->isChecked());
@@ -12240,8 +12314,10 @@ void TestDisplayUi::keypad_view_menu_tracks_and_changes_only_active_window()
     QMenu* secondKeypadMenu = directSubmenuWithTitle(secondViewMenu, QStringLiteral("&Keypad"));
     QVERIFY(firstKeypadMenu != nullptr);
     QVERIFY(secondKeypadMenu != nullptr);
-    QMenu* firstZoomMenu = directSubmenuWithTitle(firstKeypadMenu, QStringLiteral("&Zoom"));
-    QMenu* secondZoomMenu = directSubmenuWithTitle(secondKeypadMenu, QStringLiteral("&Zoom"));
+    QMenu* firstZoomMenu = directSubmenuWithTitle(
+        firstWindow.findChild<QMenu*>(QStringLiteral("KeypadAppearanceMenu")), QStringLiteral("&Zoom"));
+    QMenu* secondZoomMenu = directSubmenuWithTitle(
+        secondWindow.findChild<QMenu*>(QStringLiteral("KeypadAppearanceMenu")), QStringLiteral("&Zoom"));
     QVERIFY(firstZoomMenu != nullptr);
     QVERIFY(secondZoomMenu != nullptr);
     const auto actionForMode = [](QMenu* menu, Settings::KeypadMode mode) {
