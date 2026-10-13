@@ -15,6 +15,9 @@ Apart from the main display, SpeedCrunch offers a number of extra panels, referr
 Most of them are dockable panels that can be moved around the main window and enabled or disabled via the
 :menuselection:`View` menu.
 
+Panels docked on the left or right fill the available height. Panels above
+or below the display and keypad fit between the side panels.
+
 Use the cross in a dock panel's title bar to hide the panel, or the square
 to detach it into a floating window. Hidden panels can be shown again via
 the :menuselection:`View` menu.
