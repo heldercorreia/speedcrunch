@@ -2932,7 +2932,7 @@ Quantity DMath::cbrt(const Quantity& n)
     return result;
 }
 
-Quantity DMath::root(const Quantity& x, const Quantity& n)
+Quantity DMath::root(const Quantity& n, const Quantity& x)
 {
     ENSURE_DIMENSIONLESS(n);
     if (x.isCollection() || n.isCollection() || !n.isInteger() || !n.isPositive())

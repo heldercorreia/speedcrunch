@@ -87,7 +87,7 @@ main window again.
 
     Since version 1.1, both scientific layouts show ``ⁿ√`` for the nth root
     in place of the cube-root button. It inserts ``root(`` so you can enter
-    a value and a root index, for example ``root(32; 5)``. Copying either
+    a root index and a value, for example ``root(5; 32)``. Copying either
     scientific preset into a custom layout includes this button.
 
     The scientific layouts also include ``x²``, which inserts ``^2``, and

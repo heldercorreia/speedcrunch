@@ -31,6 +31,7 @@
 #include "gui/userunitlistwidget.h"
 #include "gui/variablelistwidget.h"
 #include "math/quantity.h"
+#include "core/functions.h"
 #include "uitestfixture.h"
 
 #include <QCoreApplication>
@@ -4114,6 +4115,9 @@ void TestDisplayUi::keypad_nth_root_button_inserts_root()
 {
     QFETCH(int, layoutMode);
     QFETCH(bool, custom);
+    const Function* rootFunction = FunctionRepo::instance()->find(QStringLiteral("root"));
+    QVERIFY(rootFunction != nullptr);
+    QCOMPARE(rootFunction->usage(), QStringLiteral("n; x"));
     MainWindowStateGuard guard;
     Settings* settings = guard.settings;
     const auto oldCustomKeypad = settings->customKeypad;
@@ -4241,13 +4245,13 @@ void TestDisplayUi::keypad_nth_root_button_inserts_root()
     const auto clickButton = [keypad](const QString& label) {
         QTest::mouseClick(keypadButtonWithText(keypad, label), Qt::LeftButton);
     };
+    clickButton(QStringLiteral("5"));
+    clickButton(QStringLiteral(";"));
     clickButton(QStringLiteral("3"));
     clickButton(QStringLiteral("2"));
-    clickButton(QStringLiteral(";"));
-    clickButton(QStringLiteral("5"));
     if (!custom)
         clickButton(QStringLiteral(")"));
-    QCOMPARE(editor->text(), QStringLiteral("root(32;5)"));
+    QCOMPARE(editor->text(), QStringLiteral("root(5;32)"));
     QPushButton* equalsButton = keypadButtonWithText(keypad, QStringLiteral("="));
     QVERIFY(equalsButton != nullptr);
     const int historySize = display->session()->historySize();

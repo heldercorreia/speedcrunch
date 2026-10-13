@@ -2369,7 +2369,7 @@ void FunctionRepo::setNonTranslatableFunctionUsages()
     FUNCTION_USAGE(real, "x");
     FUNCTION_USAGE(rat, "x");
     FUNCTION_USAGE(rectform, "x");
-    FUNCTION_USAGE(root, "x; n");
+    FUNCTION_USAGE(root, "n; x");
     FUNCTION_USAGE(sci, "x");
     FUNCTION_USAGE(sec, "x)");
     FUNCTION_USAGE(sgn, "x");
