@@ -3729,6 +3729,12 @@ void MainWindow::createActions()
     m_actions.settingsDockAppearanceSystem->setData(Settings::DockAppearanceSystem);
     m_actions.settingsDockAppearanceSpeedCrunch->setCheckable(true);
     m_actions.settingsDockAppearanceSpeedCrunch->setData(Settings::DockAppearanceSpeedCrunch);
+    m_actions.settingsKeypadAppearanceClassic = new QAction(this);
+    m_actions.settingsKeypadAppearanceClassic->setCheckable(true);
+    m_actions.settingsKeypadAppearanceClassic->setData(Settings::KeypadAppearanceClassic);
+    m_actions.settingsKeypadAppearanceModern = new QAction(this);
+    m_actions.settingsKeypadAppearanceModern->setCheckable(true);
+    m_actions.settingsKeypadAppearanceModern->setData(Settings::KeypadAppearanceModern);
     m_actions.settingsEditorDisplayClassic = new QAction(this);
     m_actions.settingsEditorDisplayClassic->setCheckable(true);
     m_actions.settingsEditorDisplayClassic->setData(Settings::EditorDisplayClassic);
@@ -4050,6 +4056,27 @@ void MainWindow::setDockAppearance(QAction* action)
     }
 }
 
+void MainWindow::setKeypadAppearance(QAction* action)
+{
+    if (action == nullptr)
+        return;
+    m_settings->keypadAppearance = action->data().toInt() == Settings::KeypadAppearanceClassic
+        ? Settings::KeypadAppearanceClassic : Settings::KeypadAppearanceModern;
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (window)
+            window->applyKeypadAppearance();
+    }
+}
+
+void MainWindow::applyKeypadAppearance()
+{
+    const bool classic = m_settings->keypadAppearance == Settings::KeypadAppearanceClassic;
+    m_actions.settingsKeypadAppearanceClassic->setChecked(classic);
+    m_actions.settingsKeypadAppearanceModern->setChecked(!classic);
+    if (m_widgets.keypad)
+        m_widgets.keypad->setAppearance(classic ? Keypad::Classic : Keypad::Modern);
+}
+
 void MainWindow::setEditorDisplayStyle(QAction* action)
 {
     if (action == nullptr)
@@ -4255,6 +4282,8 @@ void MainWindow::setActionsText()
     m_actions.settingsMenuAppearanceSpeedCrunch->setText(MainWindow::tr("&SpeedCrunch Theme"));
     m_actions.settingsDockAppearanceSystem->setText(MainWindow::tr("&System"));
     m_actions.settingsDockAppearanceSpeedCrunch->setText(MainWindow::tr("&SpeedCrunch Theme"));
+    m_actions.settingsKeypadAppearanceClassic->setText(MainWindow::tr("&Classic"));
+    m_actions.settingsKeypadAppearanceModern->setText(MainWindow::tr("&Modern"));
     m_actions.settingsEditorDisplayClassic->setText(MainWindow::tr("&Classic"));
     m_actions.settingsEditorDisplayModern->setText(MainWindow::tr("&Modern"));
     m_actions.settingsLanguage->setText(MainWindow::tr("&Language..."));
@@ -4333,6 +4362,9 @@ void MainWindow::createActionGroups()
     m_actionGroups.dockAppearance = new QActionGroup(this);
     m_actionGroups.dockAppearance->addAction(m_actions.settingsDockAppearanceSystem);
     m_actionGroups.dockAppearance->addAction(m_actions.settingsDockAppearanceSpeedCrunch);
+    m_actionGroups.keypadAppearance = new QActionGroup(this);
+    m_actionGroups.keypadAppearance->addAction(m_actions.settingsKeypadAppearanceClassic);
+    m_actionGroups.keypadAppearance->addAction(m_actions.settingsKeypadAppearanceModern);
     m_actionGroups.editorDisplayStyle = new QActionGroup(this);
     m_actionGroups.editorDisplayStyle->addAction(m_actions.settingsEditorDisplayClassic);
     m_actionGroups.editorDisplayStyle->addAction(m_actions.settingsEditorDisplayModern);
@@ -4495,6 +4527,10 @@ void MainWindow::createMenus()
     m_menus.editorDisplayStyle->setObjectName(QStringLiteral("EditorDisplayStyleMenu"));
     m_menus.editorDisplayStyle->addAction(m_actions.settingsEditorDisplayClassic);
     m_menus.editorDisplayStyle->addAction(m_actions.settingsEditorDisplayModern);
+    m_menus.keypadAppearance = m_menus.display->addMenu("");
+    m_menus.keypadAppearance->setObjectName(QStringLiteral("KeypadAppearanceMenu"));
+    m_menus.keypadAppearance->addAction(m_actions.settingsKeypadAppearanceClassic);
+    m_menus.keypadAppearance->addAction(m_actions.settingsKeypadAppearanceModern);
     m_menus.display->addAction(m_actions.settingsDisplayFont);
     m_menus.display->addSeparator();
     m_menus.display->addAction(m_actions.settingsBehaviorSyntaxHighlighting);
@@ -4635,6 +4671,7 @@ void MainWindow::setMenusText()
     m_menus.display->setTitle(MainWindow::tr("&Appearance"));
     m_menus.menuAppearance->setTitle(MainWindow::tr("&Menus"));
     m_menus.dockAppearance->setTitle(MainWindow::tr("&Docks"));
+    m_menus.keypadAppearance->setTitle(MainWindow::tr("&Keypad"));
     m_menus.editorDisplayStyle->setTitle(MainWindow::tr("&Editor"));
     m_menus.help->setTitle(MainWindow::tr("&Help"));
 }
@@ -7283,6 +7320,7 @@ void MainWindow::createKeypad()
         connect(this, SIGNAL(radixCharacterChanged()), m_widgets.keypad, SLOT(handleRadixCharacterChange()));
     }
     m_widgets.keypad->setFocusPolicy(Qt::NoFocus);
+    applyKeypadAppearance();
     m_widgets.keypad->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(m_widgets.keypad, SIGNAL(customContextMenuRequested(const QPoint&)),
             SLOT(showKeypadContextMenu(const QPoint&)));
@@ -7598,6 +7636,8 @@ void MainWindow::createFixedConnections()
             this, &MainWindow::setMenuAppearance);
     connect(m_actionGroups.dockAppearance, &QActionGroup::triggered,
             this, &MainWindow::setDockAppearance);
+    connect(m_actionGroups.keypadAppearance, &QActionGroup::triggered,
+            this, &MainWindow::setKeypadAppearance);
     connect(m_actionGroups.editorDisplayStyle, &QActionGroup::triggered,
             this, &MainWindow::setEditorDisplayStyle);
     connect(this, &MainWindow::syntaxHighlightingChanged, this, &MainWindow::refreshPaneThemes);
@@ -7969,6 +8009,7 @@ void MainWindow::createFixedConnections()
 
 void MainWindow::applySettings(bool initializing)
 {
+    applyKeypadAppearance();
     m_actions.settingsDockAppearanceSystem->setChecked(
         m_settings->dockAppearance == Settings::DockAppearanceSystem);
     m_actions.settingsDockAppearanceSpeedCrunch->setChecked(

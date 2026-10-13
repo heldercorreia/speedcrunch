@@ -182,6 +182,8 @@ private slots:
     void setKeypadMode(QAction*);
     void setMenuAppearance(QAction*);
     void setDockAppearance(QAction*);
+    void setKeypadAppearance(QAction*);
+    void applyKeypadAppearance();
     void setEditorDisplayStyle(QAction*);
     void setKeypadZoom(QAction*);
     void setKeypadVisible(bool);
@@ -535,6 +537,8 @@ private:
         QAction* settingsMenuAppearanceSpeedCrunch;
         QAction* settingsDockAppearanceSystem;
         QAction* settingsDockAppearanceSpeedCrunch;
+        QAction* settingsKeypadAppearanceClassic;
+        QAction* settingsKeypadAppearanceModern;
         QAction* settingsEditorDisplayClassic;
         QAction* settingsEditorDisplayModern;
         QVector<QAction*> settingsDisplayColorSchemes;
@@ -559,6 +563,7 @@ private:
         QActionGroup* colorScheme;
         QActionGroup* menuAppearance;
         QActionGroup* dockAppearance;
+        QActionGroup* keypadAppearance;
         QActionGroup* editorDisplayStyle;
         QActionGroup* digits;
         QActionGroup* resultRoundingMode;
@@ -586,6 +591,7 @@ private:
         QMenu* display;
         QMenu* menuAppearance;
         QMenu* dockAppearance;
+        QMenu* keypadAppearance;
         QMenu* editorDisplayStyle;
         QMenu* edit;
         QMenu* results;

@@ -507,11 +507,13 @@ QString keypadButtonStyleSheet(const QPalette& palette,
                                const QColor& hoverBackground,
                                const QColor& hoverForeground,
                                const QColor& pressedBackground,
-                               const QColor& pressedForeground);
+                               const QColor& pressedForeground,
+                               bool classic);
 
 void applyKeypadButtonStyle(QPushButton* button,
                             const QPalette& sourcePalette,
-                            const KeypadButtonColors& colors)
+                            const KeypadButtonColors& colors,
+                            bool classic)
 {
     if (button == nullptr)
         return;
@@ -526,7 +528,8 @@ void applyKeypadButtonStyle(QPushButton* button,
                                                  colors.hoverBackground,
                                                  colors.hoverForeground,
                                                  colors.pressedBackground,
-                                                 colors.pressedForeground));
+                                                 colors.pressedForeground,
+                                                 classic));
     button->setPalette(keypadButtonPalette(sourcePalette,
                                            colors.background,
                                            colors.foreground));
@@ -549,8 +552,9 @@ QString keypadButtonStyleSheet(const QPalette& palette,
                                const QColor& hoverBackground,
                                const QColor& hoverForeground,
                                const QColor& pressedBackground,
-                               const QColor& pressedForeground);
-QString keypadButtonStyleSheet(const QPalette& palette)
+                               const QColor& pressedForeground,
+                               bool classic);
+QString keypadButtonStyleSheet(const QPalette& palette, bool classic = false)
 {
     return keypadButtonStyleSheet(palette,
                                   palette.color(QPalette::Button),
@@ -558,7 +562,8 @@ QString keypadButtonStyleSheet(const QPalette& palette)
                                   palette.color(QPalette::Highlight),
                                   palette.color(QPalette::HighlightedText),
                                   palette.color(QPalette::Mid),
-                                  palette.color(QPalette::ButtonText));
+                                  palette.color(QPalette::ButtonText),
+                                  classic);
 }
 
 QString keypadButtonStyleSheet(const QPalette& palette,
@@ -567,12 +572,16 @@ QString keypadButtonStyleSheet(const QPalette& palette,
                                const QColor& hoverBackground,
                                const QColor& hoverForeground,
                                const QColor& pressedBackground,
-                               const QColor& pressedForeground)
+                               const QColor& pressedForeground,
+                               bool classic)
 {
     Q_UNUSED(palette);
-    const QString margin = QString::number(UiConfig::KeypadButtonMargin);
-    const QString cornerRadius = QString::number(UiConfig::KeypadButtonCornerRadius);
-    const QString padding = QString::number(UiConfig::KeypadButtonPadding);
+    const QString margin = QString::number(classic
+        ? UiConfig::ClassicKeypadButtonMargin : UiConfig::KeypadButtonMargin);
+    const QString cornerRadius = QString::number(classic
+        ? UiConfig::ClassicKeypadButtonCornerRadius : UiConfig::KeypadButtonCornerRadius);
+    const QString padding = QString::number(classic
+        ? UiConfig::ClassicKeypadButtonPadding : UiConfig::KeypadButtonPadding);
     return QString::fromLatin1(
         "QPushButton {"
         " border: none;"
@@ -602,6 +611,21 @@ QString keypadButtonStyleSheet(const QPalette& palette,
              keypadButtonBackgroundStyle(pressedBackground),
              pressedForeground.name());
 }
+
+QSize compactButtonSize(const QList<QPushButton*>& buttons)
+{
+    QSize textSize;
+    for (QPushButton* button : buttons) {
+        button->ensurePolished();
+        const QFontMetrics metrics = button->fontMetrics();
+        textSize = textSize.expandedTo(QSize(metrics.horizontalAdvance(button->text()),
+                                             metrics.lineSpacing()));
+    }
+    const int inset = 2 * (UiConfig::ClassicKeypadButtonMargin + UiConfig::ClassicKeypadButtonPadding);
+    const int height = textSize.height() + inset;
+    // Keep short labels rectangular too, using the old keypad's proportions.
+    return QSize(qMax(textSize.width() + inset + 6, height * 162 / 100), height);
+}
 } // namespace
 
 Keypad::Keypad(LayoutMode layoutMode, QWidget* parent, int scalePercent)
@@ -630,6 +654,22 @@ Keypad::Keypad(const QList<CustomButtonDescription>& customButtons, QWidget* par
     layoutCustomButtons();
     disableButtonFocus();
     setLayoutDirection(Qt::LeftToRight);
+}
+
+void Keypad::setAppearance(Appearance appearance)
+{
+    if (m_appearance == appearance)
+        return;
+    m_appearance = appearance;
+    updateButtonStyleSheets();
+    const int margin = appearance == Classic
+        ? UiConfig::ClassicKeypadButtonMargin : UiConfig::KeypadButtonMargin;
+    layout()->setContentsMargins(margin, margin, margin, margin);
+    if (m_isCustom)
+        sizeCustomButtons();
+    else
+        sizeButtons();
+    updateGeometry();
 }
 
 QList<Keypad::CustomButtonDescription> Keypad::presetCustomButtons(LayoutMode layoutMode,
@@ -829,7 +869,8 @@ void Keypad::updateButtonStyleSheets()
         m_buttonPressedBackground,
         m_buttonPressedForeground
     };
-    const QString fallbackStyleSheet = keypadButtonStyleSheet(palette());
+    const bool classic = m_appearance == Classic;
+    const QString fallbackStyleSheet = keypadButtonStyleSheet(palette(), classic);
     QHashIterator<Button, QPair<QPushButton*, const KeyDescription*> > i(keys);
     while (i.hasNext()) {
         i.next();
@@ -837,7 +878,7 @@ void Keypad::updateButtonStyleSheets()
         if (hasThemeButtonColors) {
             const KeypadButtonColors colors = keypadButtonColorsForRole(
                 normalColors, m_primaryBackground, visualRoleForButton(i.key()));
-            applyKeypadButtonStyle(button, palette(), colors);
+            applyKeypadButtonStyle(button, palette(), colors, classic);
         } else {
             button->setStyleSheet(fallbackStyleSheet);
         }
@@ -850,7 +891,7 @@ void Keypad::updateButtonStyleSheets()
                 : KeypadButtonVisualRole::Normal;
             const KeypadButtonColors colors = keypadButtonColorsForRole(
                 normalColors, m_primaryBackground, role);
-            applyKeypadButtonStyle(button, palette(), colors);
+            applyKeypadButtonStyle(button, palette(), colors, classic);
         } else {
             button->setStyleSheet(fallbackStyleSheet);
         }
@@ -1051,6 +1092,19 @@ void Keypad::sizeButtons()
     if (m_isCustom)
         return;
 
+    if (m_appearance == Classic) {
+        QList<QPushButton*> buttons;
+        const auto positions = createLayoutMap(m_layoutMode);
+        for (auto i = keys.cbegin(); i != keys.cend(); ++i) {
+            if (positions.contains(i.key()))
+                buttons.append(i.value().first);
+        }
+        const QSize size = compactButtonSize(buttons);
+        for (QPushButton* button : buttons)
+            button->setFixedSize(size);
+        return;
+    }
+
     // Resolve the stylesheet font before measuring. Otherwise an initial keypad
     // and one rebuilt under an already polished window can use different metrics.
     key(Key0)->ensurePolished();
@@ -1095,6 +1149,13 @@ void Keypad::sizeCustomButtons()
 {
     if (!m_isCustom || m_customWidgets.isEmpty())
         return;
+
+    if (m_appearance == Classic) {
+        const QSize size = compactButtonSize(m_customWidgets);
+        for (QPushButton* button : m_customWidgets)
+            button->setFixedSize(size);
+        return;
+    }
 
     m_customWidgets.first()->ensurePolished();
 
