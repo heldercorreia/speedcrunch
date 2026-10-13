@@ -47,6 +47,11 @@ public:
         DockAppearanceSpeedCrunch = 1
     };
 
+    enum StatusBarAppearance {
+        StatusBarAppearanceSystem = 0,
+        StatusBarAppearanceSpeedCrunch = 1
+    };
+
     enum EditorDisplayStyle {
         EditorDisplayModern = 0,
         EditorDisplayClassic = 1
@@ -212,6 +217,7 @@ public:
     QString colorScheme;
     MenuAppearance menuAppearance;
     DockAppearance dockAppearance;
+    StatusBarAppearance statusBarAppearance;
     EditorDisplayStyle editorDisplayStyle;
     KeypadAppearance keypadAppearance;
     QString customColorSchemeJson;

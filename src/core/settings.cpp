@@ -604,6 +604,8 @@ void Settings::load()
         == MenuAppearanceSpeedCrunch ? MenuAppearanceSpeedCrunch : MenuAppearanceSystem;
     dockAppearance = settings->value(key + QLatin1String("DockAppearance"), DockAppearanceSpeedCrunch).toInt()
         == DockAppearanceSystem ? DockAppearanceSystem : DockAppearanceSpeedCrunch;
+    statusBarAppearance = settings->value(key + QLatin1String("StatusBarAppearance"), StatusBarAppearanceSpeedCrunch).toInt()
+        == StatusBarAppearanceSystem ? StatusBarAppearanceSystem : StatusBarAppearanceSpeedCrunch;
     editorDisplayStyle = settings->value(key + QLatin1String("EditorDisplayStyle"), EditorDisplayModern).toInt()
         == EditorDisplayClassic ? EditorDisplayClassic : EditorDisplayModern;
     keypadAppearance = settings->value(key + QLatin1String("KeypadAppearance"), KeypadAppearanceModern).toInt()
@@ -729,6 +731,7 @@ void Settings::save()
     settings->setValue(key + QLatin1String("ColorSchemeName"), colorScheme);
     settings->setValue(key + QLatin1String("MenuAppearance"), static_cast<int>(menuAppearance));
     settings->setValue(key + QLatin1String("DockAppearance"), static_cast<int>(dockAppearance));
+    settings->setValue(key + QLatin1String("StatusBarAppearance"), static_cast<int>(statusBarAppearance));
     settings->setValue(key + QLatin1String("EditorDisplayStyle"), static_cast<int>(editorDisplayStyle));
     settings->setValue(key + QLatin1String("KeypadAppearance"), static_cast<int>(keypadAppearance));
     settings->setValue(key + QLatin1String("CustomColorSchemeJson"), customColorSchemeJson);

@@ -674,6 +674,7 @@ struct MainWindowStateGuard {
     QString oldCustomColorSchemeJson = settings->customColorSchemeJson;
     Settings::MenuAppearance oldMenuAppearance = settings->menuAppearance;
     Settings::DockAppearance oldDockAppearance = settings->dockAppearance;
+    Settings::StatusBarAppearance oldStatusBarAppearance = settings->statusBarAppearance;
     QString oldSessionLayoutJson = settings->sessionLayoutJson;
     QString oldConstantsDockDomain = settings->constantsDockDomain;
     QString oldConstantsDockSubdomain = settings->constantsDockSubdomain;
@@ -712,6 +713,7 @@ struct MainWindowStateGuard {
         settings->customColorSchemeJson = oldCustomColorSchemeJson;
         settings->menuAppearance = oldMenuAppearance;
         settings->dockAppearance = oldDockAppearance;
+        settings->statusBarAppearance = oldStatusBarAppearance;
         settings->sessionLayoutJson = oldSessionLayoutJson;
         settings->constantsDockDomain = oldConstantsDockDomain;
         settings->constantsDockSubdomain = oldConstantsDockSubdomain;
@@ -913,6 +915,9 @@ private slots:
     void menu_bar_keeps_themed_contrast_with_platform_palette_data();
     void menu_bar_keeps_themed_contrast_with_platform_palette();
     void dock_appearance_defaults_to_theme_and_persists();
+    void status_bar_appearance_defaults_to_theme_and_persists();
+    void status_bar_appearance_switches_all_windows_data();
+    void status_bar_appearance_switches_all_windows();
     void dock_appearance_switches_all_windows_data();
     void dock_appearance_switches_all_windows();
     void dock_tabs_follow_appearance_data();
@@ -5645,6 +5650,215 @@ void TestDisplayUi::editor_context_menu_paints_system_background()
     QScopedPointer<QMenu> fresh(openContextMenu());
     QVERIFY(fresh != nullptr);
     verifyBackground(fresh.data());
+}
+
+void TestDisplayUi::status_bar_appearance_defaults_to_theme_and_persists()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    Settings* settings = guard.settings;
+    QCOMPARE(settings->statusBarAppearance, Settings::StatusBarAppearanceSpeedCrunch);
+    const QString scheme = settings->colorScheme;
+    const auto menus = settings->menuAppearance;
+    const auto docks = settings->dockAppearance;
+    for (const auto appearance : {Settings::StatusBarAppearanceSystem,
+                                  Settings::StatusBarAppearanceSpeedCrunch}) {
+        settings->statusBarAppearance = appearance;
+        settings->save();
+        settings->statusBarAppearance = appearance == Settings::StatusBarAppearanceSystem
+            ? Settings::StatusBarAppearanceSpeedCrunch : Settings::StatusBarAppearanceSystem;
+        settings->load();
+        QCOMPARE(settings->statusBarAppearance, appearance);
+        QCOMPARE(settings->colorScheme, scheme);
+        QCOMPARE(settings->menuAppearance, menus);
+        QCOMPARE(settings->dockAppearance, docks);
+    }
+    QSettings persisted(Settings::getConfigPath() + QStringLiteral("/SpeedCrunch.ini"),
+                        QSettings::IniFormat);
+    const QString key = QStringLiteral("SpeedCrunch/Display/StatusBarAppearance");
+    persisted.remove(key);
+    persisted.sync();
+    settings->load();
+    QCOMPARE(settings->statusBarAppearance, Settings::StatusBarAppearanceSpeedCrunch);
+    persisted.setValue(key, 99);
+    persisted.sync();
+    settings->load();
+    QCOMPARE(settings->statusBarAppearance, Settings::StatusBarAppearanceSpeedCrunch);
+    settings->statusBarAppearance = Settings::StatusBarAppearanceSystem;
+    settings->save();
+    QVERIFY(settings->resetToDefaults());
+    QCOMPARE(settings->statusBarAppearance, Settings::StatusBarAppearanceSpeedCrunch);
+}
+
+void TestDisplayUi::status_bar_appearance_switches_all_windows_data()
+{
+    QTest::addColumn<bool>("systemAtStartup");
+    QTest::addColumn<bool>("darkSystem");
+    QTest::addColumn<bool>("themedMenus");
+    for (bool startup : {false, true}) {
+        for (bool dark : {false, true}) {
+            for (bool menus : {false, true}) {
+                const QString name = QStringLiteral("%1-%2-%3")
+                    .arg(startup ? "system-startup" : "theme-startup",
+                         dark ? "dark" : "light", menus ? "theme-menus" : "system-menus");
+                QTest::newRow(qPrintable(name)) << startup << dark << menus;
+            }
+        }
+    }
+}
+
+void TestDisplayUi::status_bar_appearance_switches_all_windows()
+{
+    QFETCH(bool, systemAtStartup);
+    QFETCH(bool, darkSystem);
+    QFETCH(bool, themedMenus);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    const QPalette oldPalette = QApplication::palette();
+    const auto restorePalette = qScopeGuard([oldPalette]() { QApplication::setPalette(oldPalette); });
+    QPalette native = oldPalette;
+    native.setColor(QPalette::Window, QColor(darkSystem ? "#262626" : "#eeeeee"));
+    native.setColor(QPalette::WindowText, QColor(darkSystem ? "#eeeeee" : "#252525"));
+    native.setColor(QPalette::Button, native.color(QPalette::Window));
+    native.setColor(QPalette::ButtonText, native.color(QPalette::WindowText));
+    QApplication::setPalette(native);
+    guard.settings->statusBarVisible = true;
+    guard.settings->statusBarAppearance = systemAtStartup
+        ? Settings::StatusBarAppearanceSystem : Settings::StatusBarAppearanceSpeedCrunch;
+    guard.settings->menuAppearance = themedMenus
+        ? Settings::MenuAppearanceSpeedCrunch : Settings::MenuAppearanceSystem;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    QColor themeBackground(QStringLiteral("#631840"));
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), themeBackground.name()}});
+    MainWindow first(false);
+    MainWindow second(false);
+    for (MainWindow* window : {&first, &second}) {
+        window->resize(1000, 600);
+        window->show();
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+    }
+    QMenu* appearance = first.findChild<QMenu*>(QStringLiteral("StatusBarAppearanceMenu"));
+    QVERIFY(appearance);
+    QCOMPARE(appearance->title(), QStringLiteral("&Status Bar"));
+    QCOMPARE(appearance->actions().size(), 2);
+    QCOMPARE(appearance->actions().at(0)->text(), QStringLiteral("&System"));
+    QCOMPARE(appearance->actions().at(1)->text(), QStringLiteral("&SpeedCrunch Theme"));
+    const auto docks = guard.settings->dockAppearance;
+    const auto verify = [&](MainWindow* window, bool system) {
+        QMenu* menu = window->findChild<QMenu*>(QStringLiteral("StatusBarAppearanceMenu"));
+        QVERIFY(menu);
+        QVERIFY(menu->actions().at(system ? 0 : 1)->isChecked());
+        QVERIFY(!menu->actions().at(system ? 1 : 0)->isChecked());
+        QStatusBar* bar = window->findChild<QStatusBar*>(QString(), Qt::FindDirectChildrenOnly);
+        QVERIFY(bar);
+        QVERIFY(bar->isVisible());
+        QCoreApplication::processEvents();
+        const QColor background = system ? native.color(QPalette::Window)
+            : generateOklchShades(themeBackground, 6, ThemePolarity::Dark)
+                  .at(UiConfig::StatusBarBackgroundShade);
+        QTRY_COMPARE(bar->palette().color(QPalette::Window).rgba(), background.rgba());
+        QCOMPARE(bar->styleSheet().isEmpty(), system);
+        QCOMPARE(bar->findChildren<QPushButton*>().size(), 3);
+        for (QWidget* child : bar->findChildren<QWidget*>()) {
+            if (system) {
+                const QPalette expected = MenuStyle::systemPalette(child);
+                for (auto group : {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
+                    QCOMPARE(child->palette().color(group, QPalette::WindowText),
+                             expected.color(group, QPalette::WindowText));
+                    QCOMPARE(child->palette().color(group, QPalette::ButtonText),
+                             expected.color(group, QPalette::ButtonText));
+                }
+            }
+        }
+        for (QPushButton* button : bar->findChildren<QPushButton*>()) {
+            QVERIFY(button->isVisible());
+            QCOMPARE(button->cursor().shape(), Qt::PointingHandCursor);
+            QVERIFY(button->isFlat());
+            if (!system) {
+                QCOMPARE(button->palette().color(QPalette::ButtonText).name(),
+                         aaForegroundForBackground(background).name());
+            }
+        }
+        const QImage image = bar->grab().toImage();
+        const QPoint sample(image.width() * 3 / 4, image.height() / 2);
+        if (system) {
+            QStatusBar reference;
+            reference.setPalette(MenuStyle::systemPalette(&reference));
+            reference.setAutoFillBackground(true);
+            reference.resize(bar->size());
+            const QImage expected = reference.grab().toImage();
+            QCOMPARE(image.pixelColor(sample), expected.pixelColor(sample));
+        } else {
+            QCOMPARE(image.pixelColor(sample).rgba(), background.rgba());
+        }
+    };
+    verify(&first, systemAtStartup);
+    verify(&second, systemAtStartup);
+    if (QTest::currentTestFailed())
+        return;
+    for (bool system : {true, false, true}) {
+        appearance->actions().at(system ? 0 : 1)->trigger();
+        for (MainWindow* window : {&first, &second})
+            verify(window, system);
+        if (QTest::currentTestFailed())
+            return;
+        QCOMPARE(guard.settings->dockAppearance, docks);
+        QCOMPARE(guard.settings->menuAppearance,
+                 themedMenus ? Settings::MenuAppearanceSpeedCrunch : Settings::MenuAppearanceSystem);
+    }
+    native.setColor(QPalette::Window, QColor(darkSystem ? "#353535" : "#dddddd"));
+    native.setColor(QPalette::Button, native.color(QPalette::Window));
+    QApplication::setPalette(native);
+    verify(&first, true);
+    verify(&second, true);
+    if (QTest::currentTestFailed())
+        return;
+    themeBackground = QColor(QStringLiteral("#0a3048"));
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), themeBackground.name()}});
+    first.colorSchemeChanged();
+    second.colorSchemeChanged();
+    verify(&first, true);
+    verify(&second, true);
+    if (QTest::currentTestFailed())
+        return;
+    QVERIFY(QMetaObject::invokeMethod(&second, "setStatusBarVisible", Q_ARG(bool, false)));
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QVERIFY(!second.findChild<QStatusBar*>(QString(), Qt::FindDirectChildrenOnly));
+    appearance->actions().at(1)->trigger();
+    QVERIFY(!second.findChild<QStatusBar*>(QString(), Qt::FindDirectChildrenOnly));
+    QVERIFY(QMetaObject::invokeMethod(&second, "setStatusBarVisible", Q_ARG(bool, true)));
+    verify(&second, false);
+    if (QTest::currentTestFailed())
+        return;
+    appearance->actions().at(0)->trigger();
+    QVERIFY(QMetaObject::invokeMethod(&second, "setStatusBarVisible", Q_ARG(bool, false)));
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QVERIFY(QMetaObject::invokeMethod(&second, "setStatusBarVisible", Q_ARG(bool, true)));
+    verify(&second, true);
+    MainWindow third(false);
+    third.resize(1000, 600);
+    third.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&third));
+    verify(&third, true);
+    if (QTest::currentTestFailed())
+        return;
+    QPushButton* angleButton = nullptr;
+    for (QPushButton* button : first.statusBar()->findChildren<QPushButton*>()) {
+        if (button->text() == QStringLiteral("Radian"))
+            angleButton = button;
+    }
+    QVERIFY(angleButton);
+    QTest::mouseClick(angleButton, Qt::LeftButton);
+    QMenu* popup = qobject_cast<QMenu*>(QApplication::activePopupWidget());
+    QVERIFY(popup);
+    QCOMPARE(popup->styleSheet().isEmpty(), !themedMenus);
+    if (!themedMenus) {
+        QCOMPARE(popup->palette().color(QPalette::Window),
+                 MenuStyle::systemPalette(popup).color(QPalette::Window));
+    }
+    popup->hide();
 }
 
 void TestDisplayUi::dock_appearance_defaults_to_theme_and_persists()

@@ -982,10 +982,33 @@ ThemeSurfaceColors themeSurfaceForShadeIndex(const GeneratedThemeSurfaces& surfa
     };
 }
 
-void applyThemeSurfaceToStatusBar(QStatusBar* bar, const GeneratedThemeSurfaces& surfaces)
+void applyStatusBarAppearance(QStatusBar* bar, const GeneratedThemeSurfaces& surfaces)
 {
     if (bar == nullptr)
         return;
+
+    if (!bar->property("speedcrunchNativeStatusBarStyledBackground").isValid()) {
+        bar->setProperty("speedcrunchNativeStatusBarStyledBackground",
+                         bar->testAttribute(Qt::WA_StyledBackground));
+    }
+    if (Settings::instance()->statusBarAppearance == Settings::StatusBarAppearanceSystem) {
+        bar->setStyleSheet(QString());
+        QList<QWidget*> widgets = bar->findChildren<QWidget*>();
+        widgets.prepend(bar);
+        for (QWidget* widget : widgets) {
+            widget->style()->unpolish(widget);
+            widget->setPalette(MenuStyle::systemPalette(widget));
+            widget->style()->polish(widget);
+            widget->updateGeometry();
+            widget->update();
+        }
+        // Fill styles that leave the status bar transparent so the window's
+        // SpeedCrunch theme cannot show through the system surface.
+        bar->setAutoFillBackground(true);
+        bar->setAttribute(Qt::WA_StyledBackground,
+                          bar->property("speedcrunchNativeStatusBarStyledBackground").toBool());
+        return;
+    }
 
     const ThemeSurfaceColors surface =
         themeSurfaceForShadeIndex(surfaces, UiConfig::StatusBarBackgroundShade);
@@ -3729,6 +3752,12 @@ void MainWindow::createActions()
     m_actions.settingsDockAppearanceSystem->setData(Settings::DockAppearanceSystem);
     m_actions.settingsDockAppearanceSpeedCrunch->setCheckable(true);
     m_actions.settingsDockAppearanceSpeedCrunch->setData(Settings::DockAppearanceSpeedCrunch);
+    m_actions.settingsStatusBarAppearanceSystem = new QAction(this);
+    m_actions.settingsStatusBarAppearanceSpeedCrunch = new QAction(this);
+    m_actions.settingsStatusBarAppearanceSystem->setCheckable(true);
+    m_actions.settingsStatusBarAppearanceSystem->setData(Settings::StatusBarAppearanceSystem);
+    m_actions.settingsStatusBarAppearanceSpeedCrunch->setCheckable(true);
+    m_actions.settingsStatusBarAppearanceSpeedCrunch->setData(Settings::StatusBarAppearanceSpeedCrunch);
     m_actions.settingsKeypadAppearanceClassic = new QAction(this);
     m_actions.settingsKeypadAppearanceClassic->setCheckable(true);
     m_actions.settingsKeypadAppearanceClassic->setData(Settings::KeypadAppearanceClassic);
@@ -4056,6 +4085,26 @@ void MainWindow::setDockAppearance(QAction* action)
     }
 }
 
+void MainWindow::setStatusBarAppearance(QAction* action)
+{
+    if (action == nullptr)
+        return;
+    m_settings->statusBarAppearance = action->data().toInt() == Settings::StatusBarAppearanceSystem
+        ? Settings::StatusBarAppearanceSystem : Settings::StatusBarAppearanceSpeedCrunch;
+    const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (!window)
+            continue;
+        window->m_actions.settingsStatusBarAppearanceSystem->setChecked(
+            m_settings->statusBarAppearance == Settings::StatusBarAppearanceSystem);
+        window->m_actions.settingsStatusBarAppearanceSpeedCrunch->setChecked(
+            m_settings->statusBarAppearance == Settings::StatusBarAppearanceSpeedCrunch);
+        applyStatusBarAppearance(window->findChild<QStatusBar*>(QString(), Qt::FindDirectChildrenOnly),
+                                 surfaces);
+        window->updateStatusBarSectionVisibility();
+    }
+}
+
 void MainWindow::setKeypadAppearance(QAction* action)
 {
     if (action == nullptr)
@@ -4282,6 +4331,8 @@ void MainWindow::setActionsText()
     m_actions.settingsMenuAppearanceSpeedCrunch->setText(MainWindow::tr("&SpeedCrunch Theme"));
     m_actions.settingsDockAppearanceSystem->setText(MainWindow::tr("&System"));
     m_actions.settingsDockAppearanceSpeedCrunch->setText(MainWindow::tr("&SpeedCrunch Theme"));
+    m_actions.settingsStatusBarAppearanceSystem->setText(MainWindow::tr("&System"));
+    m_actions.settingsStatusBarAppearanceSpeedCrunch->setText(MainWindow::tr("&SpeedCrunch Theme"));
     m_actions.settingsKeypadAppearanceClassic->setText(MainWindow::tr("&Classic"));
     m_actions.settingsKeypadAppearanceModern->setText(MainWindow::tr("&Modern"));
     m_actions.settingsEditorDisplayClassic->setText(MainWindow::tr("&Classic"));
@@ -4362,6 +4413,9 @@ void MainWindow::createActionGroups()
     m_actionGroups.dockAppearance = new QActionGroup(this);
     m_actionGroups.dockAppearance->addAction(m_actions.settingsDockAppearanceSystem);
     m_actionGroups.dockAppearance->addAction(m_actions.settingsDockAppearanceSpeedCrunch);
+    m_actionGroups.statusBarAppearance = new QActionGroup(this);
+    m_actionGroups.statusBarAppearance->addAction(m_actions.settingsStatusBarAppearanceSystem);
+    m_actionGroups.statusBarAppearance->addAction(m_actions.settingsStatusBarAppearanceSpeedCrunch);
     m_actionGroups.keypadAppearance = new QActionGroup(this);
     m_actionGroups.keypadAppearance->addAction(m_actions.settingsKeypadAppearanceClassic);
     m_actionGroups.keypadAppearance->addAction(m_actions.settingsKeypadAppearanceModern);
@@ -4531,6 +4585,10 @@ void MainWindow::createMenus()
     m_menus.keypadAppearance->setObjectName(QStringLiteral("KeypadAppearanceMenu"));
     m_menus.keypadAppearance->addAction(m_actions.settingsKeypadAppearanceClassic);
     m_menus.keypadAppearance->addAction(m_actions.settingsKeypadAppearanceModern);
+    m_menus.statusBarAppearance = m_menus.display->addMenu("");
+    m_menus.statusBarAppearance->setObjectName(QStringLiteral("StatusBarAppearanceMenu"));
+    m_menus.statusBarAppearance->addAction(m_actions.settingsStatusBarAppearanceSystem);
+    m_menus.statusBarAppearance->addAction(m_actions.settingsStatusBarAppearanceSpeedCrunch);
     m_menus.display->addAction(m_actions.settingsDisplayFont);
     m_menus.display->addSeparator();
     m_menus.display->addAction(m_actions.settingsBehaviorSyntaxHighlighting);
@@ -4671,6 +4729,7 @@ void MainWindow::setMenusText()
     m_menus.display->setTitle(MainWindow::tr("&Appearance"));
     m_menus.menuAppearance->setTitle(MainWindow::tr("&Menus"));
     m_menus.dockAppearance->setTitle(MainWindow::tr("&Docks"));
+    m_menus.statusBarAppearance->setTitle(MainWindow::tr("&Status Bar"));
     m_menus.keypadAppearance->setTitle(MainWindow::tr("&Keypad"));
     m_menus.editorDisplayStyle->setTitle(MainWindow::tr("&Editor"));
     m_menus.help->setTitle(MainWindow::tr("&Help"));
@@ -4711,7 +4770,7 @@ void MainWindow::createStatusBar()
 {
     QStatusBar* bar = statusBar();
     if (m_status.angleUnitSection != nullptr) {
-        applyThemeSurfaceToStatusBar(bar, generatedSurfaceColors(m_settings));
+        applyStatusBarAppearance(bar, generatedSurfaceColors(m_settings));
         bar->show();
         setStatusBarText();
         updateStatusBarSectionVisibility();
@@ -4804,7 +4863,7 @@ void MainWindow::createStatusBar()
     bar->addWidget(m_status.resultPrecisionSection);
     bar->addWidget(m_status.angleUnitSeparator);
     bar->addWidget(m_status.angleUnitSection);
-    applyThemeSurfaceToStatusBar(bar, generatedSurfaceColors(m_settings));
+    applyStatusBarAppearance(bar, generatedSurfaceColors(m_settings));
     bar->show();
 
     setStatusBarText();
@@ -6928,8 +6987,8 @@ void MainWindow::applyThemeSurfacePalette()
     if (m_widgets.root)
         applyThemeBackgroundRoleToWidget(m_widgets.root, surface.background);
     applyKeypadThemeSurfacePalette();
-    applyThemeSurfaceToStatusBar(findChild<QStatusBar*>(QString(), Qt::FindDirectChildrenOnly),
-                                 surfaces);
+    applyStatusBarAppearance(findChild<QStatusBar*>(QString(), Qt::FindDirectChildrenOnly),
+                             surfaces);
     for (QDockWidget* dock : m_allDocks) {
         if (dock == nullptr)
             continue;
@@ -7636,6 +7695,8 @@ void MainWindow::createFixedConnections()
             this, &MainWindow::setMenuAppearance);
     connect(m_actionGroups.dockAppearance, &QActionGroup::triggered,
             this, &MainWindow::setDockAppearance);
+    connect(m_actionGroups.statusBarAppearance, &QActionGroup::triggered,
+            this, &MainWindow::setStatusBarAppearance);
     connect(m_actionGroups.keypadAppearance, &QActionGroup::triggered,
             this, &MainWindow::setKeypadAppearance);
     connect(m_actionGroups.editorDisplayStyle, &QActionGroup::triggered,
@@ -8014,6 +8075,10 @@ void MainWindow::applySettings(bool initializing)
         m_settings->dockAppearance == Settings::DockAppearanceSystem);
     m_actions.settingsDockAppearanceSpeedCrunch->setChecked(
         m_settings->dockAppearance == Settings::DockAppearanceSpeedCrunch);
+    m_actions.settingsStatusBarAppearanceSystem->setChecked(
+        m_settings->statusBarAppearance == Settings::StatusBarAppearanceSystem);
+    m_actions.settingsStatusBarAppearanceSpeedCrunch->setChecked(
+        m_settings->statusBarAppearance == Settings::StatusBarAppearanceSpeedCrunch);
     applyEditorDisplayStyle();
     m_actions.settingsMenuAppearanceSystem->setChecked(
         m_settings->menuAppearance == Settings::MenuAppearanceSystem);
@@ -11866,6 +11931,19 @@ void MainWindow::setFullScreenEnabled(bool b)
 
 bool MainWindow::event(QEvent* e)
 {
+    if (e != nullptr && m_settings != nullptr
+        && m_settings->statusBarAppearance == Settings::StatusBarAppearanceSystem
+        && (e->type() == QEvent::ApplicationPaletteChange || e->type() == QEvent::ThemeChange
+            || e->type() == QEvent::StyleChange)
+        && !property("speedcrunchStatusBarRefreshPending").toBool()) {
+        setProperty("speedcrunchStatusBarRefreshPending", true);
+        QTimer::singleShot(0, this, [this]() {
+            applyStatusBarAppearance(findChild<QStatusBar*>(QString(), Qt::FindDirectChildrenOnly),
+                                     generatedSurfaceColors(m_settings));
+            updateStatusBarSectionVisibility();
+            setProperty("speedcrunchStatusBarRefreshPending", false);
+        });
+    }
     if (e != nullptr && !m_allDocks.isEmpty()
         && m_settings->dockAppearance == Settings::DockAppearanceSystem
         && (e->type() == QEvent::ApplicationPaletteChange || e->type() == QEvent::ThemeChange

@@ -182,6 +182,7 @@ private slots:
     void setKeypadMode(QAction*);
     void setMenuAppearance(QAction*);
     void setDockAppearance(QAction*);
+    void setStatusBarAppearance(QAction*);
     void setKeypadAppearance(QAction*);
     void applyKeypadAppearance();
     void setEditorDisplayStyle(QAction*);
@@ -538,6 +539,8 @@ private:
         QAction* settingsMenuAppearanceSpeedCrunch;
         QAction* settingsDockAppearanceSystem;
         QAction* settingsDockAppearanceSpeedCrunch;
+        QAction* settingsStatusBarAppearanceSystem;
+        QAction* settingsStatusBarAppearanceSpeedCrunch;
         QAction* settingsKeypadAppearanceClassic;
         QAction* settingsKeypadAppearanceModern;
         QAction* settingsEditorDisplayClassic;
@@ -564,6 +567,7 @@ private:
         QActionGroup* colorScheme;
         QActionGroup* menuAppearance;
         QActionGroup* dockAppearance;
+        QActionGroup* statusBarAppearance;
         QActionGroup* keypadAppearance;
         QActionGroup* editorDisplayStyle;
         QActionGroup* digits;
@@ -592,6 +596,7 @@ private:
         QMenu* display;
         QMenu* menuAppearance;
         QMenu* dockAppearance;
+        QMenu* statusBarAppearance;
         QMenu* keypadAppearance;
         QMenu* editorDisplayStyle;
         QMenu* edit;
@@ -682,7 +687,7 @@ private:
     Constants* m_constants;
     Evaluator* m_evaluator;
     FunctionRepo* m_functions;
-    Settings* m_settings;
+    Settings* m_settings = nullptr;
     Settings::KeypadMode m_keypadMode;
     int m_keypadZoomPercent;
     Session* m_session;

@@ -794,6 +794,21 @@ User Interface Settings
 
     .. versionadded:: 1.1
 
+* :menuselection:`Settings --> Appearance --> Status Bar`
+    Choose how the status bar looks:
+
+    * :guilabel:`System` uses the system's palette and widget styles for the
+      status bar, its labels, and its buttons. Colors follow changes to the
+      system theme while SpeedCrunch is running.
+    * :guilabel:`SpeedCrunch Theme` (the default) uses the selected SpeedCrunch
+      theme for the status bar background and text.
+
+    The choice applies immediately to all SpeedCrunch windows and is saved
+    between launches. Popup menus follow the :menuselection:`Menus` setting.
+    Show or hide the status bar with :menuselection:`View --> Status Bar`.
+
+    .. versionadded:: 1.1
+
 * :menuselection:`Settings --> Appearance --> Editor`
     Choose the layout of the expression editor and result display:
 
