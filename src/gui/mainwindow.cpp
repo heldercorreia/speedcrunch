@@ -14677,5 +14677,10 @@ void MainWindow::showKeypadContextMenu(const QPoint& point)
 {
     if (!m_widgets.keypad)
         return;
-    m_menus.keypad->popup(m_widgets.keypad->mapToGlobal(point));
+    QMenu menu(this);
+    menu.addActions(m_menus.keypad->actions());
+    menu.addSeparator();
+    menu.addMenu(m_menus.keypadZoom);
+    MenuStyle::apply(&menu);
+    menu.exec(m_widgets.keypad->mapToGlobal(point));
 }

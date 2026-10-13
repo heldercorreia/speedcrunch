@@ -106,6 +106,7 @@ main window again.
     The zoom level scales the keypad buttons, including their text. Each window
     keeps its own zoom level. The Zoom submenu is unavailable while the keypad
     is disabled.
+    You can also right-click the keypad and choose :menuselection:`Zoom`.
 
     ``Custom...`` opens a dialog where you can define the keypad matrix size (rows and columns)
     and configure each button individually. For each position in the matrix, you can set:
