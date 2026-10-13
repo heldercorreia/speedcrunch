@@ -93,6 +93,19 @@ If the left-hand side is parenthesized, the bracket applies to the whole parenth
     (5+6)[ly]
     = 11 [ly]
 
+To raise a quantity to a power, put the value and its unit inside parentheses::
+
+    (2[m])²
+    = 4 m²
+
+    (2[m])^(-2)
+    = 0.25 m⁻²
+
+The power applies to both the value and the unit. Parentheses also let you
+raise a compound expression to a power, such as ``(2[m]/1[m])^(-2) = 0.25``.
+Input such as ``2[m]^2`` is rejected because it is ambiguous. Use ``(2[m])^2``
+to square the whole quantity, or ``2[m^2]`` to enter two square metres.
+
 By default SpeedCrunch converts the quantity into SI units::
 
     60[mi/h]

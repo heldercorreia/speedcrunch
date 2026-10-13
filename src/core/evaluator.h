@@ -69,6 +69,8 @@ public:
     Type type() const { return m_type; }
     int minPrecedence() const { return m_minPrecedence; }
     void setMinPrecedence(int value) { m_minPrecedence = value; }
+    bool hasExplicitUnitAttachment() const { return m_explicitUnitAttachment; }
+    void setExplicitUnitAttachment(bool value) { m_explicitUnitAttachment = value; }
 
     Token& operator=(const Token&);
 
@@ -86,6 +88,9 @@ protected:
     // represents a single token).
     QString m_text;
     Type m_type;
+    // True only for a value followed directly by a unit block. Grouping or
+    // another completed operation makes its meaning as a power base explicit.
+    bool m_explicitUnitAttachment;
 };
 
 class Tokens : public QVector<Token> {

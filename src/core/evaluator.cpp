@@ -390,20 +390,6 @@ static bool s_isClosingListBraceToken(const Token& token)
            && token.text() == QLatin1String("}");
 }
 
-static bool s_tokenSourceContainsExplicitUnitAttachment(const Token& token,
-                                                        const QString& expression)
-{
-    if (!token.isOperand())
-        return false;
-    if (token.pos() < 0 || token.size() <= 0)
-        return false;
-    if (token.pos() + token.size() > expression.size())
-        return false;
-
-    const QString source = expression.mid(token.pos(), token.size());
-    return source.contains(MathDsl::UnitStart) && source.contains(MathDsl::UnitEnd);
-}
-
 static QHash<QString, Quantity> s_buildBuiltInUnitLookup(char angleMode)
 {
     return Units::builtInUnitLookup(angleMode);
@@ -1111,6 +1097,7 @@ Token::Token(Type type, const QString& text, int pos, int size)
     m_pos = pos;
     m_size = size;
     m_minPrecedence = MAX_PRECEDENCE;
+    m_explicitUnitAttachment = false;
 }
 
 Token::Token(const Token& token)
@@ -1120,6 +1107,7 @@ Token::Token(const Token& token)
     m_pos = token.m_pos;
     m_size = token.m_size;
     m_minPrecedence = token.m_minPrecedence;
+    m_explicitUnitAttachment = token.m_explicitUnitAttachment;
 }
 
 Token& Token::operator=(const Token& token)
@@ -1129,6 +1117,7 @@ Token& Token::operator=(const Token& token)
     m_pos = token.m_pos;
     m_size = token.m_size;
     m_minPrecedence = token.m_minPrecedence;
+    m_explicitUnitAttachment = token.m_explicitUnitAttachment;
     return*this;
 }
 
@@ -5942,6 +5931,7 @@ void Evaluator::compile(const Tokens& tokens)
                    && s_isOpeningUnitBracketToken(left))
                {
                    ruleFound = true;
+                   lhs.setExplicitUnitAttachment(true);
                    syntaxStack.reduce(3, std::move(lhs), MAX_PRECEDENCE);
 #ifdef EVALUATOR_DEBUG
                    dbg << "\tRule for empty unit attachment X[] -> X\n";
@@ -5961,6 +5951,7 @@ void Evaluator::compile(const Tokens& tokens)
                    && s_isOpeningUnitBracketToken(left))
                {
                    ruleFound = true;
+                   lhs.setExplicitUnitAttachment(true);
                    syntaxStack.reduce(4, std::move(lhs), MAX_PRECEDENCE);
                    m_codes.append(Opcode(Opcode::Unit));
 #ifdef EVALUATOR_DEBUG
@@ -5990,6 +5981,7 @@ void Evaluator::compile(const Tokens& tokens)
                        && innerSource.endsWith(MathDsl::UnitEnd))
                    {
                        ruleFound = true;
+                       lhs.setExplicitUnitAttachment(true);
                        syntaxStack.reduce(5, std::move(lhs), MAX_PRECEDENCE);
                        m_codes.append(Opcode(Opcode::Unit));
 #ifdef EVALUATOR_DEBUG
@@ -6188,7 +6180,7 @@ void Evaluator::compile(const Tokens& tokens)
                Token a = syntaxStack.top(2);
                const bool disallowPowerWithExplicitUnitAttachment =
                    op.asOperator() == Token::Exponentiation
-                   && s_tokenSourceContainsExplicitUnitAttachment(a, m_expression);
+                   && a.hasExplicitUnitAttachment();
                if (disallowPowerWithExplicitUnitAttachment) {
                    m_error = tr("syntax error");
                    m_valid = false;

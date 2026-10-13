@@ -1661,6 +1661,52 @@ void test_units()
     CHECK_EVAL("numval(3 [km/s] -> [cm/s])", "300000");
 }
 
+void test_unit_expression_powers()
+{
+    CHECK_EVAL("(2[m])^2", u8"4 metre²");
+    CHECK_EVAL(QString::fromUtf8("(2[m])²"), u8"4 metre²");
+    CHECK_EVAL("((2[m]))**2", u8"4 metre²");
+    CHECK_EVAL("(2[m])^-2", u8"0.25 metre⁻²");
+    CHECK_EVAL(QString::fromUtf8("(2[m])⁻²"), u8"0.25 metre⁻²");
+    CHECK_EVAL("(2[m]+3[m])^2", u8"25 metre²");
+    CHECK_EVAL("(2[m]/1[m])^2", "4");
+    CHECK_EVAL("(2[m]/1[m])^(-2)", "0.25");
+    CHECK_EVAL("[m]^2", u8"1 metre²");
+    CHECK_EVAL("sqrt(4[m^2])^2", u8"4 metre²");
+    CHECK_EVAL("((2[m/s])^2)/(4[m^2/s^2])", "1");
+    CHECK_EVAL(QString::fromUtf8("(2[m])²+(3[m])²"), u8"13 metre²");
+    CHECK_EVAL(QString::fromUtf8("1 × 10⁻³ + (2[m]/1[m])²"), "4.001");
+
+    CHECK_EVAL_FAIL("2[m]^(-2)");
+    CHECK_EVAL_FAIL(QString::fromUtf8("2[m]⁻²"));
+    CHECK_EVAL_FAIL("(2[m])[s]^2");
+    CHECK_EVAL_FAIL("2[]^2");
+
+    Session reportSession;
+    Evaluator* reportEvaluator = reportSession.evaluator();
+    const auto checkReportExpression = [&](const QString& expression, const char* expected) {
+        ++eval_total_tests;
+        reportEvaluator->setExpression(expression);
+        const Quantity result = reportEvaluator->evalUpdateAns();
+        const QString actual = reportEvaluator->error().isEmpty()
+            ? DMath::format(result, Format::Fixed()) : reportEvaluator->error();
+        DisplayErrorOnMismatch(__FILE__, __LINE__, qPrintable(expression),
+                               actual.toStdString(), expected,
+                               eval_failed_tests, eval_new_failed_tests);
+    };
+    checkReportExpression(QStringLiteral("c=299792458[m/s]"), u8"299792458 metre·second⁻¹");
+    checkReportExpression(
+        QStringLiteral("1+1.602e-19[coulomb]*1[kV]/(9.109e-31[kg]*c^2)"),
+        "1.00195681786123383108");
+    checkReportExpression(
+        QStringLiteral("c*sqrt(1-(1+1.602e-19[coulomb]*1[kV]/(9.109e-31[kg]*c^2))^-2)"),
+        u8"18727260.54958148079607995581 metre·second⁻¹");
+    checkReportExpression(
+        QString::fromUtf8("c × sqrt(1 − (1 + (1.602 × 10⁻¹⁹[coulomb] × 1[kV])"
+                          " / (9.109 × 10⁻³¹[kg] × c²))⁻²)"),
+        u8"18727260.54958148079607995581 metre·second⁻¹");
+}
+
 void test_percent_operator()
 {
     CHECK_EVAL("50%", "0.5");
@@ -10638,6 +10684,7 @@ int main(int argc, char* argv[])
     test_unary();
     test_binary();
     test_units();
+    test_unit_expression_powers();
     test_percent_operator();
     test_bitwise_complement_operator();
 
