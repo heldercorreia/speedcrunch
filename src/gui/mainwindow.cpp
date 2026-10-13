@@ -5802,7 +5802,7 @@ void MainWindow::copyWindowLayoutFrom(const MainWindow* source)
     if (source == nullptr)
         return;
 
-    restoreState(source->saveState(DockLayoutStateVersion), DockLayoutStateVersion);
+    restoreWindowLayoutState(source->saveState(DockLayoutStateVersion));
 
     const auto dockIsVisible = [](QDockWidget* dock) {
         return dock != nullptr && dock->isVisible();
@@ -8102,7 +8102,7 @@ void MainWindow::applySettings(bool initializing)
         move(screenGeometry.center() - rect().center());
     }
     if (!hasSavedWindowLayout)
-        restoreState(m_settings->windowState, DockLayoutStateVersion);
+        restoreWindowLayoutState(m_settings->windowState);
     if (!hasSavedWindowLayout
         && m_settings->windowState.isEmpty()
         && constantsDockVisible
@@ -8908,6 +8908,7 @@ MainWindow::MainWindow(bool restorePreviousSession)
     , m_restorePreviousSessionOnStartup(restorePreviousSession)
 {
     qApp->setQuitOnLastWindowClosed(false);
+    applyDockCornerLayout();
     setAttribute(Qt::WA_Hover, true);
     setMouseTracking(true);
     if (primaryMainWindow().isNull())
@@ -13634,9 +13635,20 @@ void MainWindow::showRestoredWindow(const QByteArray& geometry)
     });
 }
 
+void MainWindow::applyDockCornerLayout()
+{
+    setCorner(Qt::TopLeftCorner, Qt::LeftDockWidgetArea);
+    setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
+    setCorner(Qt::TopRightCorner, Qt::RightDockWidgetArea);
+    setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
+}
+
 void MainWindow::restoreWindowLayoutState(const QByteArray& state)
 {
     restoreState(state, DockLayoutStateVersion);
+    // Saved layouts include corner ownership. Keep side docks at full height
+    // even when restoring a layout saved with top or bottom corners.
+    applyDockCornerLayout();
 }
 
 void MainWindow::restoreWindowKeypadLayout(bool visible, int modeValue)

@@ -946,6 +946,8 @@ private slots:
     void restored_session_layout_reapplies_generated_theme_surfaces();
     void saved_window_ui_state_overrides_defaults_before_show();
     void visible_window_applies_restored_dock_and_keypad_layout();
+    void side_docks_keep_full_height_data();
+    void side_docks_keep_full_height();
     void always_on_top_toggles_preserve_window_geometry();
     void dock_surfaces_use_successive_generated_shades();
     void dock_search_rows_use_configured_vertical_padding_data();
@@ -7333,6 +7335,118 @@ void TestDisplayUi::visible_window_applies_restored_dock_and_keypad_layout()
     QTRY_VERIFY(!compactConstantsDock->isVisible());
     QTRY_VERIFY(compactWindow.findChild<Keypad*>() == nullptr);
     QTRY_COMPARE(compactWindow.size(), compactSize);
+}
+
+void TestDisplayUi::side_docks_keep_full_height_data()
+{
+    QTest::addColumn<int>("restorePath");
+    QTest::newRow("fresh-layout") << 0;
+    QTest::newRow("saved-settings") << 1;
+    QTest::newRow("session-layout") << 2;
+    QTest::newRow("new-window") << 3;
+}
+
+void TestDisplayUi::side_docks_keep_full_height()
+{
+    QFETCH(int, restorePath);
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->keypadMode = Settings::KeypadModeBasicWide;
+    settings->keypadVisible = true;
+
+    MainWindow source(false);
+    for (QDockWidget* dock : source.findChildren<QDockWidget*>())
+        dock->hide();
+
+    struct DockSpec {
+        const char* name;
+        Qt::DockWidgetArea area;
+    };
+    const DockSpec docks[] = {
+        { "ConstantsDock", Qt::LeftDockWidgetArea },
+        { "FunctionsDock", Qt::RightDockWidgetArea },
+        { "HistoryDock", Qt::TopDockWidgetArea },
+        { "BitfieldDock", Qt::BottomDockWidgetArea }
+    };
+    for (const DockSpec& spec : docks) {
+        QDockWidget* dock = source.findChild<QDockWidget*>(QString::fromLatin1(spec.name));
+        QVERIFY(dock != nullptr);
+        source.removeDockWidget(dock);
+        source.addDockWidget(spec.area, dock);
+        dock->show();
+    }
+    source.resize(1500, 1000);
+    source.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&source));
+
+    QPointer<MainWindow> restored;
+    const auto cleanup = qScopeGuard([&restored]() { delete restored.data(); });
+    MainWindow* window = &source;
+    if (restorePath != 0) {
+        // Older layouts can give the top and bottom docks all four corners.
+        source.setCorner(Qt::TopLeftCorner, Qt::TopDockWidgetArea);
+        source.setCorner(Qt::TopRightCorner, Qt::TopDockWidgetArea);
+        source.setCorner(Qt::BottomLeftCorner, Qt::BottomDockWidgetArea);
+        source.setCorner(Qt::BottomRightCorner, Qt::BottomDockWidgetArea);
+        const QByteArray state = source.saveState(1);
+        if (restorePath == 3) {
+            const QList<MainWindow*> windowsBefore = topLevelMainWindows();
+            QVERIFY(QMetaObject::invokeMethod(&source, "showNewSessionWindow", Qt::DirectConnection));
+            QTRY_VERIFY(([&]() {
+                for (MainWindow* candidate : topLevelMainWindows()) {
+                    if (!windowsBefore.contains(candidate)) {
+                        restored = candidate;
+                        return true;
+                    }
+                }
+                return false;
+            }()));
+        } else {
+            if (restorePath == 1)
+                settings->windowState = state;
+            restored = new MainWindow(false);
+            if (restorePath == 2) {
+                QVERIFY(QMetaObject::invokeMethod(restored.data(), "restoreWindowLayoutState",
+                                                  Qt::DirectConnection, Q_ARG(QByteArray, state)));
+            }
+        }
+        window = restored.data();
+        window->resize(1500, 1000);
+        window->show();
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+    }
+
+    QCOMPARE(window->corner(Qt::TopLeftCorner), Qt::LeftDockWidgetArea);
+    QCOMPARE(window->corner(Qt::BottomLeftCorner), Qt::LeftDockWidgetArea);
+    QCOMPARE(window->corner(Qt::TopRightCorner), Qt::RightDockWidgetArea);
+    QCOMPARE(window->corner(Qt::BottomRightCorner), Qt::RightDockWidgetArea);
+
+    QList<QDockWidget*> attached;
+    for (const DockSpec& spec : docks) {
+        QDockWidget* dock = window->findChild<QDockWidget*>(QString::fromLatin1(spec.name));
+        QVERIFY(dock != nullptr);
+        QTRY_VERIFY(dock->isVisible());
+        QVERIFY(!dock->isFloating());
+        QCOMPARE(window->dockWidgetArea(dock), spec.area);
+        attached.append(dock);
+    }
+    QVERIFY(window->findChild<Keypad*>() != nullptr);
+    QDockWidget* left = attached.at(0);
+    QDockWidget* right = attached.at(1);
+    QDockWidget* top = attached.at(2);
+    QDockWidget* bottom = attached.at(3);
+    for (QDockWidget* side : { left, right }) {
+        QTRY_COMPARE(side->geometry().top(), top->geometry().top());
+        QTRY_COMPARE(side->geometry().bottom(), bottom->geometry().bottom());
+    }
+    for (QDockWidget* horizontal : { top, bottom }) {
+        QTRY_VERIFY(horizontal->geometry().left() > left->geometry().right());
+        QTRY_VERIFY(horizontal->geometry().right() < right->geometry().left());
+        QTRY_COMPARE(horizontal->geometry().left(), window->centralWidget()->geometry().left());
+        QTRY_COMPARE(horizontal->geometry().right(), window->centralWidget()->geometry().right());
+    }
 }
 
 void TestDisplayUi::dock_and_popup_text_meet_contrast_target_across_themes()

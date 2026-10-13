@@ -274,6 +274,7 @@ private:
     void clearTextEditSelection(QPlainTextEdit*);
     void hideCurrentResultPreview();
     void addTabifiedDock(QDockWidget*, bool takeFocus, Qt::DockWidgetArea = Qt::RightDockWidgetArea);
+    void applyDockCornerLayout();
     void deleteDock(QDockWidget*);
     void createUi();
     void createActions();
