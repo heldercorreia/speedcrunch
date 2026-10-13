@@ -18,6 +18,11 @@ class Keypad : public QWidget {
     Q_OBJECT
 
 public:
+    enum Appearance {
+        Modern,
+        Classic
+    };
+
     enum LayoutMode {
         LayoutModeScientificWide = 0,
         LayoutModeBasicWide = 1,
@@ -48,6 +53,7 @@ public:
 
     explicit Keypad(LayoutMode layoutMode = LayoutModeScientificWide, QWidget* parent = 0, int scalePercent = 100);
     explicit Keypad(const QList<CustomButtonDescription>& customButtons, QWidget* parent = 0, int scalePercent = 100);
+    void setAppearance(Appearance appearance);
     void setThemeButtonColors(const QColor& background,
                               const QColor& foreground,
                               const QColor& hoverBackground,
@@ -104,6 +110,7 @@ private:
     LayoutMode m_layoutMode;
     bool m_isCustom;
     int m_scalePercent;
+    Appearance m_appearance = Modern;
     QColor m_buttonBackground;
     QColor m_buttonForeground;
     QColor m_buttonHoverBackground;

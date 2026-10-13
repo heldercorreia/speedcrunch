@@ -813,6 +813,19 @@ User Interface Settings
 
     .. versionadded:: 1.1
 
+* :menuselection:`Settings --> Appearance --> Keypad`
+    Choose the shape and spacing of the keypad buttons:
+
+    * :guilabel:`Classic` uses shallow rectangular buttons with smaller gaps,
+      similar to the keypad in SpeedCrunch 0.12.
+    * :guilabel:`Modern` (the default) keeps the larger square buttons.
+
+    The choice applies immediately to all windows and is saved between launches.
+    It works with every preset and custom keypad. Each window keeps its own
+    layout and zoom level, selected from :menuselection:`View --> Keypad`.
+
+    .. versionadded:: 1.1
+
 * :menuselection:`Settings --> Appearance --> Font`
     Select the font to use for the expression editor and result display.
 * :menuselection:`Settings --> Appearance --> Syntax Highlighting`

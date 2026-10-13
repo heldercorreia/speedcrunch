@@ -606,6 +606,8 @@ void Settings::load()
         == DockAppearanceSystem ? DockAppearanceSystem : DockAppearanceSpeedCrunch;
     editorDisplayStyle = settings->value(key + QLatin1String("EditorDisplayStyle"), EditorDisplayModern).toInt()
         == EditorDisplayClassic ? EditorDisplayClassic : EditorDisplayModern;
+    keypadAppearance = settings->value(key + QLatin1String("KeypadAppearance"), KeypadAppearanceModern).toInt()
+        == KeypadAppearanceClassic ? KeypadAppearanceClassic : KeypadAppearanceModern;
     customColorSchemeJson = settings->value(key + QLatin1String("CustomColorSchemeJson"), QString()).toString();
 
     delete settings;
@@ -728,6 +730,7 @@ void Settings::save()
     settings->setValue(key + QLatin1String("MenuAppearance"), static_cast<int>(menuAppearance));
     settings->setValue(key + QLatin1String("DockAppearance"), static_cast<int>(dockAppearance));
     settings->setValue(key + QLatin1String("EditorDisplayStyle"), static_cast<int>(editorDisplayStyle));
+    settings->setValue(key + QLatin1String("KeypadAppearance"), static_cast<int>(keypadAppearance));
     settings->setValue(key + QLatin1String("CustomColorSchemeJson"), customColorSchemeJson);
 
 

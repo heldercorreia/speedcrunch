@@ -896,6 +896,9 @@ private slots:
     void keypad_fifty_percent_zoom_scales_and_restores_data();
     void keypad_fifty_percent_zoom_scales_and_restores();
     void keypad_fifty_percent_zoom_survives_settings_reload();
+    void keypad_appearance_defaults_to_modern_and_persists();
+    void keypad_appearance_switches_all_windows_data();
+    void keypad_appearance_switches_all_windows();
     void keypad_input_stays_in_own_window_data();
     void keypad_input_stays_in_own_window();
     void functions_dock_retranslates_domain_label_after_language_change();
@@ -11494,6 +11497,163 @@ void TestDisplayUi::view_dock_menu_tracks_and_changes_only_active_window()
         QVERIFY(!firstAction->isChecked());
         QVERIFY(!secondAction->isChecked());
     }
+}
+
+void TestDisplayUi::keypad_appearance_defaults_to_modern_and_persists()
+{
+    const auto resetSettings = qScopeGuard([]() { UiTestFixture::resetSettings(); });
+    UiTestFixture::resetSettings();
+    Settings* settings = Settings::instance();
+    QCOMPARE(settings->keypadAppearance, Settings::KeypadAppearanceModern);
+    for (const auto appearance : {Settings::KeypadAppearanceClassic, Settings::KeypadAppearanceModern}) {
+        settings->keypadAppearance = appearance;
+        settings->save();
+        settings->keypadAppearance = appearance == Settings::KeypadAppearanceClassic
+            ? Settings::KeypadAppearanceModern : Settings::KeypadAppearanceClassic;
+        settings->load();
+        QCOMPARE(settings->keypadAppearance, appearance);
+    }
+    QSettings persisted(Settings::getConfigPath() + QStringLiteral("/SpeedCrunch.ini"),
+                        QSettings::IniFormat);
+    persisted.setValue(QStringLiteral("SpeedCrunch/Display/KeypadAppearance"), 99);
+    persisted.sync();
+    settings->load();
+    QCOMPARE(settings->keypadAppearance, Settings::KeypadAppearanceModern);
+    settings->keypadAppearance = Settings::KeypadAppearanceClassic;
+    settings->resetToDefaults();
+    QCOMPARE(settings->keypadAppearance, Settings::KeypadAppearanceModern);
+}
+
+void TestDisplayUi::keypad_appearance_switches_all_windows_data()
+{
+    QTest::addColumn<int>("mode");
+    QTest::newRow("scientific-wide") << int(Settings::KeypadModeScientificWide);
+    QTest::newRow("scientific-narrow") << int(Settings::KeypadModeScientificNarrow);
+    QTest::newRow("basic") << int(Settings::KeypadModeBasicWide);
+    QTest::newRow("custom") << int(Settings::KeypadModeCustom);
+}
+
+void TestDisplayUi::keypad_appearance_switches_all_windows()
+{
+    QFETCH(int, mode);
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    const auto oldAppearance = settings->keypadAppearance;
+    const auto oldCustomKeypad = settings->customKeypad;
+    const auto restoreKeypad = qScopeGuard([=]() {
+        settings->keypadAppearance = oldAppearance;
+        settings->customKeypad = oldCustomKeypad;
+    });
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    settings->keypadAppearance = Settings::KeypadAppearanceModern;
+    settings->keypadMode = static_cast<Settings::KeypadMode>(mode);
+    settings->keypadZoomPercent = 100;
+    settings->colorScheme = QStringLiteral("Terminal");
+    settings->customKeypad.rows = 1;
+    settings->customKeypad.columns = 2;
+    settings->customKeypad.buttons.clear();
+    Settings::CustomKeypadButton description;
+    description.label = QStringLiteral("7");
+    description.text = QStringLiteral("7");
+    description.action = Settings::CustomKeypadActionInsertText;
+    description.row = 0;
+    description.column = 0;
+    settings->customKeypad.buttons.append(description);
+    description.label = QStringLiteral("long custom label");
+    description.column = 1;
+    settings->customKeypad.buttons.append(description);
+
+    MainWindow first;
+    MainWindow second;
+    first.show();
+    second.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&first));
+    QVERIFY(QTest::qWaitForWindowExposed(&second));
+    QAction zoom;
+    zoom.setData(150);
+    QVERIFY(QMetaObject::invokeMethod(&second, "setKeypadZoom", Qt::DirectConnection,
+                                      Q_ARG(QAction*, &zoom)));
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+    auto* firstKeypad = first.findChild<Keypad*>();
+    auto* secondKeypad = second.findChild<Keypad*>();
+    QVERIFY(firstKeypad != nullptr);
+    QVERIFY(secondKeypad != nullptr);
+    auto* firstButton = keypadButtonWithText(firstKeypad, QStringLiteral("7"));
+    auto* secondButton = keypadButtonWithText(secondKeypad, QStringLiteral("7"));
+    QVERIFY(firstButton != nullptr);
+    QVERIFY(secondButton != nullptr);
+    const QSize firstModernSize = firstButton->size();
+    const QSize secondModernSize = secondButton->size();
+    const QFont firstFont = firstButton->font();
+    const QColor firstColor = firstButton->palette().color(QPalette::Button);
+    auto* menu = first.findChild<QMenu*>(QStringLiteral("KeypadAppearanceMenu"));
+    auto* secondMenu = second.findChild<QMenu*>(QStringLiteral("KeypadAppearanceMenu"));
+    QVERIFY(menu != nullptr);
+    QVERIFY(secondMenu != nullptr);
+    auto* settingsMenu = menuWithTitle(first.menuBar(), QStringLiteral("Se&ttings"));
+    QVERIFY(settingsMenu != nullptr);
+    auto* appearanceMenu = directSubmenuWithTitle(settingsMenu, QStringLiteral("&Appearance"));
+    QVERIFY(appearanceMenu != nullptr);
+    QCOMPARE(directSubmenuWithTitle(appearanceMenu, QStringLiteral("&Keypad")), menu);
+    QCOMPARE(menu->actions().size(), 2);
+    QCOMPARE(menu->actions().at(0)->text(), QStringLiteral("&Classic"));
+    QCOMPARE(menu->actions().at(1)->text(), QStringLiteral("&Modern"));
+    QVERIFY(menu->actions().at(1)->isChecked());
+    QVERIFY(menu->actions().at(0)->actionGroup()->isExclusive());
+    menu->actions().at(0)->trigger();
+    QCoreApplication::processEvents();
+    QCOMPARE(settings->keypadAppearance, Settings::KeypadAppearanceClassic);
+    QVERIFY(secondMenu->actions().at(0)->isChecked());
+    QVERIFY(!secondMenu->actions().at(1)->isChecked());
+    QVERIFY(firstButton->height() < firstModernSize.height());
+    QVERIFY(secondButton->height() < secondModernSize.height());
+    QVERIFY(firstButton->width() > firstButton->height());
+    QVERIFY(secondButton->height() > firstButton->height());
+    QCOMPARE(firstButton->font(), firstFont);
+    QCOMPARE(firstButton->palette().color(QPalette::Button), firstColor);
+    const QSize classicSize = firstButton->size();
+    for (QPushButton* button : firstKeypad->findChildren<QPushButton*>()) {
+        if (button->isHidden())
+            continue;
+        QCOMPARE(button->size(), classicSize);
+        QVERIFY(button->width() >= button->fontMetrics().horizontalAdvance(button->text()) + 4);
+        QVERIFY(button->height() >= button->fontMetrics().lineSpacing() + 4);
+    }
+    for (int percent : {50, 150, 200, 100}) {
+        zoom.setData(percent);
+        QVERIFY(QMetaObject::invokeMethod(&first, "setKeypadZoom", Qt::DirectConnection,
+                                          Q_ARG(QAction*, &zoom)));
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
+        firstKeypad = first.findChild<Keypad*>();
+        firstButton = keypadButtonWithText(firstKeypad, QStringLiteral("7"));
+        QVERIFY(firstButton != nullptr);
+        QVERIFY(firstButton->width() > firstButton->height());
+        if (percent == 100)
+            QCOMPARE(firstButton->size(), classicSize);
+        else if (percent == 50)
+            QVERIFY(firstButton->height() < classicSize.height());
+        else
+            QVERIFY(firstButton->height() > classicSize.height());
+    }
+    MainWindow third;
+    auto* thirdButton = keypadButtonWithText(third.findChild<Keypad*>(), QStringLiteral("7"));
+    QVERIFY(thirdButton != nullptr);
+    QCOMPARE(thirdButton->size(), classicSize);
+    QSignalSpy pressed(firstKeypad, mode == Settings::KeypadModeCustom
+        ? SIGNAL(customButtonPressed(int,QString)) : SIGNAL(buttonPressed(Keypad::Button)));
+    firstButton->click();
+    QCOMPARE(pressed.count(), 1);
+    menu->actions().at(1)->trigger();
+    QCoreApplication::processEvents();
+    QCOMPARE(firstButton->size(), firstModernSize);
+    QCOMPARE(secondButton->size(), secondModernSize);
+    QCOMPARE(thirdButton->size(), firstModernSize);
+    QCOMPARE(firstButton->font(), firstFont);
+    QVERIFY(secondMenu->actions().at(1)->isChecked());
 }
 
 void TestDisplayUi::keypad_zoom_round_trip_restores_button_sizes_data()

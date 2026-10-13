@@ -26,6 +26,9 @@ constexpr int SessionTabHorizontalPadding = 36;
 constexpr int KeypadButtonMargin = 3;
 constexpr int KeypadButtonPadding = 3;
 constexpr int KeypadButtonCornerRadius = ControlCornerRadius;
+constexpr int ClassicKeypadButtonMargin = 1;
+constexpr int ClassicKeypadButtonPadding = 1;
+constexpr int ClassicKeypadButtonCornerRadius = 3;
 // 0 keeps keyed buttons on the normal button surface; 100 gives them the full
 // primary fill. Intermediate values blend in OKLCH while using the primary hue.
 constexpr int KeypadDigitPrimaryHueChromaPercent = 25;

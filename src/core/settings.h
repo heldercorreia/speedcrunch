@@ -52,6 +52,11 @@ public:
         EditorDisplayClassic = 1
     };
 
+    enum KeypadAppearance {
+        KeypadAppearanceModern = 0,
+        KeypadAppearanceClassic = 1
+    };
+
     enum NumberFormatStyle {
         NumberFormatSystem = 0, // Legacy value kept for migration compatibility.
         NumberFormatNoGroupingDot = 1,
@@ -208,6 +213,7 @@ public:
     MenuAppearance menuAppearance;
     DockAppearance dockAppearance;
     EditorDisplayStyle editorDisplayStyle;
+    KeypadAppearance keypadAppearance;
     QString customColorSchemeJson;
     QString displayFont;
     QString sessionLayoutJson;
