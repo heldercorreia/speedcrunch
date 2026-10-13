@@ -4892,7 +4892,6 @@ void MainWindow::createFixedWidgets()
     m_widgets.display->setFrameStyle(QFrame::NoFrame);
     m_widgets.editor = new Editor();
     m_widgets.editor->setFrameStyle(QFrame::NoFrame);
-    m_widgets.editor->setFocus();
     m_widgets.editor->installEventFilter(this);
     m_widgets.editor->viewport()->installEventFilter(this);
     m_widgets.splitContainer->addWidget(createEditorDisplayPane(m_widgets.display, m_widgets.editor));
@@ -9040,6 +9039,8 @@ MainWindow::MainWindow(bool restorePreviousSession)
     refreshPaneThemes();
     ensureDockChromeStyleInstalled();
     updatePaneLoadedSessionCounts();
+    // Set the initial focus after parenting the editor and restoring the docks.
+    m_widgets.editor->setFocus(Qt::OtherFocusReason);
 
     if (!m_settings->hasNumberFormatStyleSetting)
         QTimer::singleShot(0, this, SLOT(showNumberFormatDialog()));
@@ -9195,25 +9196,30 @@ void MainWindow::showNewPrivateSession()
 
 void MainWindow::finishStartupSessionRestore(bool restoredSession)
 {
-    if (!m_startupPrivateTabPending)
-        return;
-    const bool emptyUntitledSession = untitledSessionNumber(m_session->name()) > 0
-        && !sessionHasPersistableContent(m_session)
-        && m_widgets.editor->text().trimmed().isEmpty();
-    if (restoredSession && !emptyUntitledSession) {
-        showNewPrivateSession();
-    } else {
-        // Reuse a blank tab instead of opening an extra empty ordinary session.
-        m_session->setPrivate(true);
-        renameLoadedSession(m_session, firstAvailableSessionNameAcrossWindows(true));
-        applyUserDefinitions();
+    if (m_startupPrivateTabPending) {
+        const bool emptyUntitledSession = untitledSessionNumber(m_session->name()) > 0
+            && !sessionHasPersistableContent(m_session)
+            && m_widgets.editor->text().trimmed().isEmpty();
+        if (restoredSession && !emptyUntitledSession) {
+            showNewPrivateSession();
+        } else {
+            // Reuse a blank tab instead of opening an extra empty ordinary session.
+            m_session->setPrivate(true);
+            renameLoadedSession(m_session, firstAvailableSessionNameAcrossWindows(true));
+            applyUserDefinitions();
+        }
+        m_startupPrivateTabPending = false;
+        if (isVisible()) {
+            raise();
+            activateWindow();
+        }
     }
-    m_startupPrivateTabPending = false;
-    if (isVisible()) {
-        raise();
-        activateWindow();
-    }
-    m_widgets.editor->setFocus();
+    // Startup always ends in the active editor, even if a dock input took focus
+    // while the saved window layout was being restored.
+    if (isActiveWindow())
+        setActiveEditorDisplayPane(m_widgets.display, m_widgets.editor, true);
+    else
+        m_widgets.editor->setFocus(Qt::OtherFocusReason);
 }
 
 void MainWindow::renameLoadedSession(Session* session, const QString& name)
