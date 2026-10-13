@@ -190,7 +190,6 @@ private slots:
     void setKeypadVisible(bool);
     void setLeaveLastExpressionEnabled(bool);
     void setUpDownArrowBehavior(QAction*);
-    void setEmptyHistoryHintEnabled(bool);
     void setRadixCharacterAutomatic();
     void setRadixCharacter(char);
     void setRadixCharacterComma();
@@ -248,7 +247,6 @@ private slots:
     void showResultSlotsDialog();
     void showCustomThemeDialog();
     void showContextHelp();
-    void showReadyMessage();
     void showAngleModeContextMenu(const QPoint&);
     void showPrecisionContextMenu(const QPoint&);
     void showKeypadContextMenu(const QPoint&);
@@ -511,7 +509,6 @@ private:
         QAction* settingsEditingInputDigitGrouping;
         QAction* settingsEditingCursorBlinking;
         QAction* settingsBehaviorHoverHighlightResults;
-        QAction* settingsBehaviorEmptyHistoryHint;
         QAction* settingsBehaviorDigitGroupingNone;
         QAction* settingsBehaviorDigitGroupingOneSpace;
         QAction* settingsBehaviorDigitGroupingTwoSpaces;

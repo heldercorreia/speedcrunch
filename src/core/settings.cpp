@@ -370,7 +370,6 @@ void Settings::load()
         upDownArrowBehavior = UpDownArrowBehaviorAlways;
     }
     leaveLastExpression = settings->value(key + QLatin1String("LeaveLastExpression"), false).toBool();
-    showEmptyHistoryHint = settings->value(key + QLatin1String("ShowEmptyHistoryHint"), true).toBool();
     language = settings->value(key + QLatin1String("Language"), "C").toString();
     syntaxHighlighting = settings->value(key + QLatin1String("SyntaxHighlighting"), true).toBool();
     inputDigitGrouping = settings->value(key + QLatin1String("InputDigitGrouping"), true).toBool();
@@ -626,7 +625,6 @@ void Settings::save()
     QString key = KEY + QLatin1String("/General/");
 
     settings->setValue(key + QLatin1String("LeaveLastExpression"), leaveLastExpression);
-    settings->setValue(key + QLatin1String("ShowEmptyHistoryHint"), showEmptyHistoryHint);
     settings->setValue(key + QLatin1String("AutoCompletion"), autoCompletion);
     settings->setValue(key + QLatin1String("AutoCompletionBuiltInFunctions"), autoCompletionBuiltInFunctions);
     settings->setValue(key + QLatin1String("AutoCompletionBuiltInVariables"), autoCompletionBuiltInVariables);

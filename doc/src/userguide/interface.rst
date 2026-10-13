@@ -681,8 +681,6 @@ Editing
 
     .. versionadded:: 1.1
 
-* :menuselection:`Show Empty History Hint`
-    Show or hide the ``Type an expression here`` hint when there are no calculations in history.
 * :menuselection:`Keep Entered Expression After Evaluate`
     If selected, the entered expression remains in the editor after evaluating it.
 * :menuselection:`Up/Down Arrow History`

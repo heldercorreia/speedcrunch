@@ -177,7 +177,6 @@ public:
     NumberFormatStyle numberFormatStyle;
     bool hasNumberFormatStyleSetting;
     bool leaveLastExpression;
-    bool showEmptyHistoryHint;
     bool syntaxHighlighting;
     bool inputDigitGrouping;
     bool cursorBlinking;

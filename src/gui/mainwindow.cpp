@@ -3713,7 +3713,6 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorAutoCompletionLongFormUnits = new QAction(this);
     m_actions.settingsBehaviorAutoCompletionUserFunctions = new QAction(this);
     m_actions.settingsBehaviorAutoCompletionUserVariables = new QAction(this);
-    m_actions.settingsBehaviorEmptyHistoryHint = new QAction(this);
     m_actions.settingsBehaviorLeaveLastExpression = new QAction(this);
     m_actions.settingsBehaviorNumberFormat = new QAction(this);
     m_actions.settingsResetAll = new QAction(this);
@@ -3831,7 +3830,6 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorAutoCompletionLongFormUnits->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletionUserFunctions->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletionUserVariables->setCheckable(true);
-    m_actions.settingsBehaviorEmptyHistoryHint->setCheckable(true);
     m_actions.settingsBehaviorLeaveLastExpression->setCheckable(true);
     m_actions.settingsBehaviorUpDownArrowNever->setCheckable(true);
     m_actions.settingsBehaviorUpDownArrowNever->setData(Settings::UpDownArrowBehaviorNever);
@@ -4252,9 +4250,6 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorAutoCompletionLongFormUnits->setText(MainWindow::tr("&Units"));
     m_actions.settingsBehaviorAutoCompletionUserFunctions->setText(MainWindow::tr("User &functions"));
     m_actions.settingsBehaviorAutoCompletionUserVariables->setText(MainWindow::tr("User &variables"));
-    m_actions.settingsBehaviorEmptyHistoryHint->setText(MainWindow::tr("Show Empty History &Hint"));
-    m_actions.settingsBehaviorEmptyHistoryHint->setToolTip(MainWindow::tr("When history is empty, show a hint in the status area."));
-    m_actions.settingsBehaviorEmptyHistoryHint->setStatusTip(MainWindow::tr("When history is empty, show a hint in the status area."));
     m_actions.settingsBehaviorPartialResults->setText(MainWindow::tr("Show Live Result &Preview"));
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setText(MainWindow::tr("Save &Window Position on Exit"));
     m_actions.settingsOpenPrivateTabOnStartup->setText(tr("Open a Private Tab on Startup"));
@@ -4604,7 +4599,6 @@ void MainWindow::createMenus()
     m_menus.editing->addAction(m_actions.settingsBehaviorAutoAns);
     m_menus.editing->addAction(m_actions.settingsEditingInputDigitGrouping);
     m_menus.editing->addAction(m_actions.settingsEditingCursorBlinking);
-    m_menus.editing->addAction(m_actions.settingsBehaviorEmptyHistoryHint);
     m_menus.editing->addAction(m_actions.settingsBehaviorLeaveLastExpression);
     m_menus.upDownArrowBehavior = m_menus.editing->addMenu("");
     m_menus.upDownArrowBehavior->addAction(m_actions.settingsBehaviorUpDownArrowNever);
@@ -7859,7 +7853,6 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsBehaviorAutoCompletionUserFunctions, SIGNAL(toggled(bool)), SLOT(setAutoCompletionUserFunctionsEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoCompletionUserVariables, SIGNAL(toggled(bool)), SLOT(setAutoCompletionUserVariablesEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoAns, SIGNAL(toggled(bool)), SLOT(setAutoAnsEnabled(bool)));
-    connect(m_actions.settingsBehaviorEmptyHistoryHint, SIGNAL(toggled(bool)), SLOT(setEmptyHistoryHintEnabled(bool)));
     connect(m_actions.settingsBehaviorPartialResults, SIGNAL(toggled(bool)), SLOT(setAutoCalcEnabled(bool)));
     connect(m_actions.settingsBehaviorHistorySizeLimit, SIGNAL(triggered()), SLOT(setHistorySizeLimit()));
     connect(m_actions.settingsBehaviorSaveWindowPositionOnExit, SIGNAL(toggled(bool)), SLOT(setWindowPositionSaveEnabled(bool)));
@@ -8218,7 +8211,6 @@ void MainWindow::applySettings(bool initializing)
         m_actions.settingsBehaviorUpDownArrowAlways->setChecked(true);
         break;
     }
-    m_actions.settingsBehaviorEmptyHistoryHint->setChecked(m_settings->showEmptyHistoryHint);
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setChecked(m_settings->windowPositionSave);
     m_actions.settingsOpenPrivateTabOnStartup->setChecked(m_settings->openPrivateTabOnStartup);
 
@@ -8311,9 +8303,6 @@ void MainWindow::applySettings(bool initializing)
 
     updateColorSchemeActionState();
     updateSplitterStyleSheet();
-
-    if (m_widgets.display != nullptr && m_widgets.display->isEmpty())
-        QTimer::singleShot(0, this, SLOT(showReadyMessage()));
 }
 
 void MainWindow::resetAllSettings()
@@ -8436,13 +8425,6 @@ void MainWindow::showContextHelp()
             }
         }
     }
-}
-
-void MainWindow::showReadyMessage()
-{
-    if (!m_settings->showEmptyHistoryHint)
-        return;
-    showStateLabel(tr("Type an expression here"));
 }
 
 void MainWindow::checkInitialResultFormat()
@@ -11324,15 +11306,6 @@ void MainWindow::setUpDownArrowBehavior(QAction* action)
         static_cast<Settings::UpDownArrowBehavior>(action->data().toInt());
 }
 
-void MainWindow::setEmptyHistoryHintEnabled(bool b)
-{
-    m_settings->showEmptyHistoryHint = b;
-    if (b && m_widgets.display != nullptr && m_widgets.display->isEmpty())
-        showReadyMessage();
-    else if (!b)
-        hideStateLabel();
-}
-
 void MainWindow::setWindowPositionSaveEnabled(bool b)
 {
     m_settings->windowPositionSave = b;
@@ -14013,7 +13986,7 @@ void MainWindow::cancelHistoryEntryEdit()
     m_widgets.editor->setHistoryArrowNavigationEnabled(true);
     m_widgets.display->verticalScrollBar()->setValue(previousDisplayScrollValue);
     m_widgets.editor->clear();
-    showReadyMessage();
+    hideStateLabel();
 }
 
 QList<HistoryEntry> MainWindow::historyEntries() const
