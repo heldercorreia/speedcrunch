@@ -159,14 +159,16 @@ private slots:
     void completes_arc_units_in_unit_context();
     void tooltip_does_not_duplicate_degree_symbol_for_explicit_angle_conversion();
     void tooltip_does_not_append_angle_mode_symbol_after_explicit_arcsecond_unit();
-    void tooltip_compacts_bracketed_arcminute_and_arcsecond_expression_units();
+    void tooltip_formats_arcminute_and_arcsecond_results_without_expression();
     void tooltip_rewrites_composite_canonical_angle_symbols_to_aliases();
     void tooltip_shows_radian_suffix_for_negative_sexagesimal_literal();
     void tooltip_trig_output_does_not_append_angle_mode_suffix();
-    void tooltip_shows_interpreted_expression_for_non_trig_sexagesimal_expression();
-    void tooltip_shows_simplified_line_for_repeated_trig_with_degree_sign();
-    void tooltip_shows_simplified_line_for_mixed_revolution_aliases();
-    void tooltip_uses_cross_for_literal_number_products_in_simplified_line();
+    void tooltip_shows_only_result_for_non_trig_sexagesimal_expression();
+    void tooltip_shows_only_result_for_repeated_trig_with_degree_sign();
+    void tooltip_shows_only_result_for_mixed_revolution_aliases();
+    void tooltip_shows_only_result_for_literal_number_products();
+    void tooltip_shows_only_result_data();
+    void tooltip_shows_only_result();
     void tooltip_keeps_quantsp_before_degree_celsius();
     void tooltip_handles_affine_temperature_units_without_arrow_and_with_conversion();
     void tooltip_shows_selection_result_when_selecting_with_shift_arrows();
@@ -3436,8 +3438,7 @@ void TestEditorUi::tooltip_does_not_duplicate_degree_symbol_for_explicit_angle_c
 
     QVERIFY(!spy.isEmpty());
     const QString message = spy.takeLast().at(0).toString();
-    QVERIFY(message.contains(QString::fromUtf8("= 360°")));
-    QVERIFY(!message.contains(QString::fromUtf8("= 360°°")));
+    QCOMPARE(message, QString::fromUtf8("Current result:<br/>360°"));
 
     settings->angleUnit = oldAngleUnit;
     settings->resultFormat = oldResultFormat;
@@ -3475,7 +3476,7 @@ void TestEditorUi::tooltip_does_not_append_angle_mode_symbol_after_explicit_arcs
     Evaluator::instance()->initializeAngleUnits();
 }
 
-void TestEditorUi::tooltip_compacts_bracketed_arcminute_and_arcsecond_expression_units()
+void TestEditorUi::tooltip_formats_arcminute_and_arcsecond_results_without_expression()
 {
     Editor editor;
     editor.show();
@@ -3498,10 +3499,10 @@ void TestEditorUi::tooltip_compacts_bracketed_arcminute_and_arcsecond_expression
 
     QVERIFY(!spy.isEmpty());
     const QString arcminuteMessage = spy.takeLast().at(0).toString();
-    QVERIFY2(arcminuteMessage.contains(QString::fromUtf8("1′")),
+    QVERIFY2(arcminuteMessage.contains(QString(MathDsl::QuantSp) + Units::angleModeUnitSymbol('r')),
              qPrintable(QStringLiteral("Arcminute tooltip: %1").arg(arcminuteMessage)));
-    QVERIFY2(!arcminuteMessage.contains(QString::fromUtf8("1 [′]")),
-             qPrintable(QStringLiteral("Arcminute tooltip: %1").arg(arcminuteMessage)));
+    QVERIFY(!arcminuteMessage.contains(UnicodeChars::Prime));
+    QVERIFY(!arcminuteMessage.contains(QLatin1Char('=')));
 
     editor.setText(QStringLiteral("1 [arcsec]"));
     editor.setCursorPosition(editor.text().size());
@@ -3510,10 +3511,10 @@ void TestEditorUi::tooltip_compacts_bracketed_arcminute_and_arcsecond_expression
 
     QVERIFY(!spy.isEmpty());
     const QString arcsecondMessage = spy.takeLast().at(0).toString();
-    QVERIFY2(arcsecondMessage.contains(QString::fromUtf8("1″")),
+    QVERIFY2(arcsecondMessage.contains(QString(MathDsl::QuantSp) + Units::angleModeUnitSymbol('r')),
              qPrintable(QStringLiteral("Arcsecond tooltip: %1").arg(arcsecondMessage)));
-    QVERIFY2(!arcsecondMessage.contains(QString::fromUtf8("1 [″]")),
-             qPrintable(QStringLiteral("Arcsecond tooltip: %1").arg(arcsecondMessage)));
+    QVERIFY(!arcsecondMessage.contains(UnicodeChars::DoublePrime));
+    QVERIFY(!arcsecondMessage.contains(QLatin1Char('=')));
 
     settings->angleUnit = oldAngleUnit;
     settings->resultFormat = oldResultFormat;
@@ -3536,7 +3537,7 @@ void TestEditorUi::tooltip_rewrites_composite_canonical_angle_symbols_to_aliases
 
     QSignalSpy spy(&editor, SIGNAL(autoCalcMessageAvailable(const QString&)));
 
-    editor.setText(QString::fromUtf8("1 [″/m]"));
+    editor.setText(QString::fromUtf8("1 [rad/m] -> [″/m]"));
     editor.setCursorPosition(editor.text().size());
     editor.refreshAutoCalc();
     QCoreApplication::processEvents();
@@ -3547,7 +3548,7 @@ void TestEditorUi::tooltip_rewrites_composite_canonical_angle_symbols_to_aliases
     QVERIFY2(!arcsecondMessage.contains(QString::fromUtf8("″/m")),
              qPrintable(QStringLiteral("Arcsecond composite tooltip: %1").arg(arcsecondMessage)));
 
-    editor.setText(QString::fromUtf8("1 [′/m]"));
+    editor.setText(QString::fromUtf8("1 [rad/m] -> [′/m]"));
     editor.setCursorPosition(editor.text().size());
     editor.refreshAutoCalc();
     QCoreApplication::processEvents();
@@ -3558,7 +3559,7 @@ void TestEditorUi::tooltip_rewrites_composite_canonical_angle_symbols_to_aliases
     QVERIFY2(!arcminuteMessage.contains(QString::fromUtf8("′/m")),
              qPrintable(QStringLiteral("Arcminute composite tooltip: %1").arg(arcminuteMessage)));
 
-    editor.setText(QString::fromUtf8("1 [°/m]"));
+    editor.setText(QString::fromUtf8("1 [rad/m] -> [°/m]"));
     editor.setCursorPosition(editor.text().size());
     editor.refreshAutoCalc();
     QCoreApplication::processEvents();
@@ -3640,16 +3641,9 @@ void TestEditorUi::tooltip_trig_output_does_not_append_angle_mode_suffix()
         const QString message = spy.takeLast().at(0).toString();
         QString normalizedMessage = message;
         normalizedMessage.replace(QString(MathDsl::SubOp), QString(MathDsl::SubOpAl1));
-        QVERIFY2(normalizedMessage.contains(QStringLiteral("= -1")),
+        QCOMPARE(normalizedMessage, QStringLiteral("Current result:<br/>-1"));
+        QVERIFY2(!message.contains(QStringLiteral("cos(")),
                  qPrintable(QStringLiteral("Expected scalar trig result, got: %1").arg(message)));
-        const bool hasBracketedDegreeArg =
-            message.contains(QString::fromUtf8("cos(180"))
-            && message.contains(QString::fromUtf8("[°])"));
-        const bool hasCompactDegreeArg =
-            message.contains(QString::fromUtf8("cos(180"))
-            && message.contains(QString::fromUtf8("°)"));
-        QVERIFY2(hasBracketedDegreeArg || hasCompactDegreeArg,
-                 qPrintable(QStringLiteral("Expected interpreted expression line, got: %1").arg(message)));
         const QStringList lines = normalizedMessage.split(QStringLiteral("<br/>"));
         QVERIFY2(!lines.isEmpty(),
                  qPrintable(QStringLiteral("Unexpected empty tooltip message: %1").arg(message)));
@@ -3665,7 +3659,7 @@ void TestEditorUi::tooltip_trig_output_does_not_append_angle_mode_suffix()
     Evaluator::instance()->initializeAngleUnits();
 }
 
-void TestEditorUi::tooltip_shows_interpreted_expression_for_non_trig_sexagesimal_expression()
+void TestEditorUi::tooltip_shows_only_result_for_non_trig_sexagesimal_expression()
 {
     Editor editor;
     editor.show();
@@ -3690,18 +3684,14 @@ void TestEditorUi::tooltip_shows_interpreted_expression_for_non_trig_sexagesimal
 
     QVERIFY(!spy.isEmpty());
     const QString message = spy.takeLast().at(0).toString();
-    QVERIFY2(message.contains(QString::fromUtf8("round(2.8"))
-             && message.contains(QString::fromUtf8("[°])")),
-             qPrintable(QStringLiteral("Expected interpreted expression line, got: %1").arg(message)));
-    QVERIFY2(message.contains(QString::fromUtf8("= 9°")),
-             qPrintable(QStringLiteral("Expected degree result line, got: %1").arg(message)));
+    QCOMPARE(message, QString::fromUtf8("Current result:<br/>9°"));
 
     settings->angleUnit = oldAngleUnit;
     settings->resultFormat = oldResultFormat;
     Evaluator::instance()->initializeAngleUnits();
 }
 
-void TestEditorUi::tooltip_shows_simplified_line_for_repeated_trig_with_degree_sign()
+void TestEditorUi::tooltip_shows_only_result_for_repeated_trig_with_degree_sign()
 {
     Editor editor;
     editor.show();
@@ -3730,16 +3720,7 @@ void TestEditorUi::tooltip_shows_simplified_line_for_repeated_trig_with_degree_s
     const QString message = spy.takeLast().at(0).toString();
     QString normalizedMessage = message;
     normalizedMessage.replace(QString(MathDsl::SubOp), QString(MathDsl::SubOpAl1));
-    const bool hasBracketedDegreeSimplifiedLine =
-        message.contains(QString::fromUtf8("= 4 · cos(180"))
-        && message.contains(QString::fromUtf8("[°])"));
-    const bool hasCompactDegreeSimplifiedLine =
-        message.contains(QString::fromUtf8("= 4 · cos(180"))
-        && message.contains(QString::fromUtf8("°)"));
-    QVERIFY2(hasBracketedDegreeSimplifiedLine || hasCompactDegreeSimplifiedLine,
-             qPrintable(QStringLiteral("Expected simplified line, got: %1").arg(message)));
-    QVERIFY2(normalizedMessage.contains(QStringLiteral("= -4")),
-             qPrintable(QStringLiteral("Expected result line, got: %1").arg(message)));
+    QCOMPARE(normalizedMessage, QStringLiteral("Current result:<br/>-4"));
 
     settings->angleUnit = oldAngleUnit;
     settings->resultFormat = oldResultFormat;
@@ -3747,7 +3728,7 @@ void TestEditorUi::tooltip_shows_simplified_line_for_repeated_trig_with_degree_s
     Evaluator::instance()->initializeAngleUnits();
 }
 
-void TestEditorUi::tooltip_shows_simplified_line_for_mixed_revolution_aliases()
+void TestEditorUi::tooltip_shows_only_result_for_mixed_revolution_aliases()
 {
     Editor editor;
     editor.show();
@@ -3774,14 +3755,7 @@ void TestEditorUi::tooltip_shows_simplified_line_for_mixed_revolution_aliases()
 
     QVERIFY(!spy.isEmpty());
     const QString message = spy.takeLast().at(0).toString();
-    QString compactMessage = message;
-    compactMessage.remove(QRegularExpression(QStringLiteral("\\s+")));
-    compactMessage.remove(MathDsl::QuantSp);
-    compactMessage.remove(UnicodeChars::NoBreakSpace);
-    QVERIFY2(!message.contains(QString::fromUtf8("3 · cos(180")),
-             qPrintable(QStringLiteral("Expected folded repeated term, got: %1").arg(message)));
-    QVERIFY2(compactMessage.contains(QString::fromUtf8("=4·cos(180[rev])")),
-             qPrintable(QStringLiteral("Expected unified simplified line, got: %1").arg(message)));
+    QCOMPARE(message, QStringLiteral("Current result:<br/>4"));
 
     settings->angleUnit = oldAngleUnit;
     settings->resultFormat = oldResultFormat;
@@ -3789,7 +3763,7 @@ void TestEditorUi::tooltip_shows_simplified_line_for_mixed_revolution_aliases()
     Evaluator::instance()->initializeAngleUnits();
 }
 
-void TestEditorUi::tooltip_uses_cross_for_literal_number_products_in_simplified_line()
+void TestEditorUi::tooltip_shows_only_result_for_literal_number_products()
 {
     Editor editor;
     editor.show();
@@ -3811,12 +3785,11 @@ void TestEditorUi::tooltip_uses_cross_for_literal_number_products_in_simplified_
 
     QVERIFY(!spy.isEmpty());
     const QString message = spy.takeLast().at(0).toString();
-    const bool hasParenthesizedPowerTerm =
-        message.contains(QString::fromUtf8("= π² · (2⁻²) + (3²) × 4"));
-    const bool hasUnparenthesizedPowerTerm =
-        message.contains(QString::fromUtf8("= π² · (2⁻²) + 3² × 4"));
-    QVERIFY2(hasParenthesizedPowerTerm || hasUnparenthesizedPowerTerm,
-             qPrintable(QStringLiteral("Expected cross between literal numbers in simplified line, got: %1").arg(message)));
+    const QStringList lines = message.split(QStringLiteral("<br/>"));
+    QCOMPARE(lines.size(), 2);
+    QCOMPARE(lines.first(), QStringLiteral("Current result:"));
+    QVERIFY(lines.last().startsWith(QStringLiteral("38.467")));
+    QVERIFY(!message.contains(QLatin1Char('=')));
 
     QSignalSpy interpretedSpy(&editor, SIGNAL(autoCalcMessageAvailable(const QString&)));
     editor.setText(QStringLiteral("pi*2^(-2)*pi+3^2*4"));
@@ -3826,16 +3799,66 @@ void TestEditorUi::tooltip_uses_cross_for_literal_number_products_in_simplified_
 
     QVERIFY(!interpretedSpy.isEmpty());
     const QString interpretedMessage = interpretedSpy.takeLast().at(0).toString();
-    const bool interpretedHasParenthesizedPowerTerm =
-        interpretedMessage.contains(QString::fromUtf8("π · (2⁻²) · π + (3²) × 4"));
-    const bool interpretedHasUnparenthesizedPowerTerm =
-        interpretedMessage.contains(QString::fromUtf8("π · (2⁻²) · π + 3² × 4"));
-    QVERIFY2(interpretedHasParenthesizedPowerTerm || interpretedHasUnparenthesizedPowerTerm,
-             qPrintable(QStringLiteral("Expected interpreted line to use cross for numeric-literal product, got: %1")
-                 .arg(interpretedMessage)));
+    QCOMPARE(interpretedMessage, message);
 
     settings->resultFormat = oldResultFormat;
     settings->simplifyResultExpressions = oldSimplify;
+}
+
+void TestEditorUi::tooltip_shows_only_result_data()
+{
+    QTest::addColumn<bool>("selection");
+    QTest::addColumn<bool>("simplify");
+    QTest::addColumn<bool>("extraResult");
+    QTest::addColumn<QString>("expression");
+    QTest::addColumn<QString>("expectedResult");
+
+    for (bool selection : {false, true}) {
+        for (bool simplify : {false, true}) {
+            const QString prefix = QStringLiteral("%1-%2")
+                .arg(selection ? QStringLiteral("selection") : QStringLiteral("current"),
+                     simplify ? QStringLiteral("simplify") : QStringLiteral("plain"));
+            QTest::newRow(qPrintable(prefix + QStringLiteral("-complete")))
+                << selection << simplify << false << QStringLiteral("1+24") << QStringLiteral("25");
+            QTest::newRow(qPrintable(prefix + QStringLiteral("-incomplete")))
+                << selection << simplify << false << QStringLiteral("1+24+") << QStringLiteral("25");
+            QTest::newRow(qPrintable(prefix + QStringLiteral("-extra-result")))
+                << selection << simplify << true << QStringLiteral("1+24")
+                << QString::fromUtf8("25<br/>2.5 × 10¹");
+        }
+    }
+}
+
+void TestEditorUi::tooltip_shows_only_result()
+{
+    QFETCH(bool, selection);
+    QFETCH(bool, simplify);
+    QFETCH(bool, extraResult);
+    QFETCH(QString, expression);
+    QFETCH(QString, expectedResult);
+
+    Settings* settings = Settings::instance();
+    settings->resultFormat = 'f';
+    settings->resultPrecision = -1;
+    settings->simplifyResultExpressions = simplify;
+    settings->multipleResultLinesEnabled = extraResult;
+    settings->secondaryResultEnabled = extraResult;
+    settings->alternativeResultFormat = 'e';
+    settings->secondaryResultPrecision = -1;
+
+    Editor editor;
+    editor.setText(expression);
+    QSignalSpy spy(&editor, SIGNAL(autoCalcMessageAvailable(const QString&)));
+    if (selection)
+        editor.autoCalcSelection(expression);
+    else
+        editor.refreshAutoCalc();
+
+    QVERIFY(!spy.isEmpty());
+    const QString message = spy.takeLast().at(0).toString();
+    const QString title = selection ? QStringLiteral("Selection result:")
+                                    : QStringLiteral("Current result:");
+    QCOMPARE(message, title + QStringLiteral("<br/>") + expectedResult);
 }
 
 void TestEditorUi::tooltip_keeps_quantsp_before_degree_celsius()
@@ -3858,8 +3881,9 @@ void TestEditorUi::tooltip_keeps_quantsp_before_degree_celsius()
 
     QVERIFY(!spy.isEmpty());
     const QString message = spy.takeLast().at(0).toString();
-    const QString expected = QStringLiteral("= 25") + QString(MathDsl::QuantSp) + QString::fromUtf8("°C");
-    QVERIFY(message.contains(expected));
+    const QString expected = QStringLiteral("Current result:<br/>25")
+        + QString(MathDsl::QuantSp) + QString::fromUtf8("°C");
+    QCOMPARE(message, expected);
 
     settings->resultFormat = oldResultFormat;
 }
@@ -3881,20 +3905,16 @@ void TestEditorUi::tooltip_handles_affine_temperature_units_without_arrow_and_wi
     };
     const QList<Case> cases = {
         {QString::fromUtf8("100 [°C]"),
-         QStringLiteral("= 100") + QString(MathDsl::QuantSp) + QString::fromUtf8("°C")},
+         QStringLiteral("100") + QString(MathDsl::QuantSp) + QString::fromUtf8("°C")},
         {QString::fromUtf8("203 [°F]"),
-         QStringLiteral("= 203") + QString(MathDsl::QuantSp) + QString::fromUtf8("°F")},
+         QStringLiteral("203") + QString(MathDsl::QuantSp) + QString::fromUtf8("°F")},
         {QString::fromUtf8("1 [K] -> [°C]"),
-         QString(MathDsl::Equals)
-             + QStringLiteral(" ")
-             + QString(MathDsl::SubOp)
+         QString(MathDsl::SubOp)
              + QStringLiteral("272.15")
              + QString(MathDsl::QuantSp)
              + QString::fromUtf8("°C")},
         {QString::fromUtf8("1 [K] -> [°F]"),
-         QString(MathDsl::Equals)
-             + QStringLiteral(" ")
-             + QString(MathDsl::SubOp)
+         QString(MathDsl::SubOp)
              + QStringLiteral("457.87")
              + QString(MathDsl::QuantSp)
              + QString::fromUtf8("°F")}
@@ -3909,9 +3929,7 @@ void TestEditorUi::tooltip_handles_affine_temperature_units_without_arrow_and_wi
 
         QVERIFY(!spy.isEmpty());
         const QString message = spy.takeLast().at(0).toString();
-        QVERIFY2(message.contains(c.expected),
-                 qPrintable(QStringLiteral("Expression: %1\nMessage: %2\nExpected fragment: %3")
-                                .arg(c.expression, message, c.expected)));
+        QCOMPARE(message, QStringLiteral("Current result:<br/>") + c.expected);
     }
 
     settings->resultFormat = oldResultFormat;
@@ -3937,8 +3955,7 @@ void TestEditorUi::tooltip_shows_selection_result_when_selecting_with_shift_arro
     const QString message = spy.takeLast().at(0).toString();
     QVERIFY2(message.contains(QStringLiteral("Selection result:")),
              qPrintable(QStringLiteral("Expected selection result message, got: %1").arg(message)));
-    QVERIFY2(message.contains(QStringLiteral("= 4")),
-             qPrintable(QStringLiteral("Expected selected value 4 in message, got: %1").arg(message)));
+    QCOMPARE(message, QStringLiteral("Selection result:<br/>4"));
 }
 
 void TestEditorUi::tooltip_shows_selection_result_when_selecting_all_with_keyboard_shortcut()
@@ -3968,8 +3985,7 @@ void TestEditorUi::tooltip_shows_selection_result_when_selecting_all_with_keyboa
     const QString message = spy.takeLast().at(0).toString();
     QVERIFY2(message.contains(QStringLiteral("Selection result:")),
              qPrintable(QStringLiteral("Expected selection result message, got: %1").arg(message)));
-    QVERIFY2(message.contains(QStringLiteral("= 25")),
-             qPrintable(QStringLiteral("Expected selected value 25 in message, got: %1").arg(message)));
+    QCOMPARE(message, QStringLiteral("Selection result:<br/>25"));
 }
 
 void TestEditorUi::tooltip_shows_selection_result_when_selecting_with_mouse()
@@ -4007,8 +4023,7 @@ void TestEditorUi::tooltip_shows_selection_result_when_selecting_with_mouse()
     const QString message = spy.takeLast().at(0).toString();
     QVERIFY2(message.contains(QStringLiteral("Selection result:")),
              qPrintable(QStringLiteral("Expected selection result message, got: %1").arg(message)));
-    QVERIFY2(message.contains(QStringLiteral("= 4")),
-             qPrintable(QStringLiteral("Expected selected value 4 in message, got: %1").arg(message)));
+    QCOMPARE(message, QStringLiteral("Selection result:<br/>4"));
 }
 
 void TestEditorUi::tooltip_does_not_refresh_current_result_on_caret_arrow_move()
@@ -4079,8 +4094,7 @@ void TestEditorUi::tooltip_refreshes_current_result_on_char_deletion()
     const QString message = spy.takeLast().at(0).toString();
     QVERIFY2(message.contains(QStringLiteral("Current result:")),
              qPrintable(QStringLiteral("Expected current result message after deletion, got: %1").arg(message)));
-    QVERIFY2(message.contains(QStringLiteral("= 3")),
-             qPrintable(QStringLiteral("Expected updated value 3 in message, got: %1").arg(message)));
+    QCOMPARE(message, QStringLiteral("Current result:<br/>3"));
 }
 
 void TestEditorUi::enter_evaluates_when_completion_popup_has_no_explicit_interaction()

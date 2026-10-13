@@ -2346,8 +2346,10 @@ void TestDisplayUi::editor_popups_follow_style_padding()
                 selection.setPosition(1, QTextCursor::KeepAnchor);
                 editor->setTextCursor(selection);
                 QTRY_VERIFY(popup->text().contains(QStringLiteral("Selection result:")));
+                QCOMPARE(popup->text(), QStringLiteral("Selection result:<br/>1"));
             } else {
                 QTRY_VERIFY(popup->text().contains(QStringLiteral("Current result:")));
+                QCOMPARE(popup->text(), QStringLiteral("Current result:<br/>%1").arg(operand));
             }
         }
         QTRY_VERIFY(popup->isVisible());
