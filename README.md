@@ -34,6 +34,9 @@ application data and preferences/configuration are all stored in the same direct
 the portable application.
 
 ## Contributing
+
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before participating.
+
 - Report bugs, request features or implement a ticket from the [issue tracker](https://speedcrunch.org/issues.html).
 - Be part of the [community](https://speedcrunch.org/community.html).
 - [Donate](https://www.speedcrunch.org/donate.html) to help supporting the expenses of server hosting, internet domain and computers for further development.
