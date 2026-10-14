@@ -13617,7 +13617,8 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
         m_paneSessionNames.insert(display, activeName);
         m_paneSessionTabs.insert(display, loadedNames);
         Session* paneSession = m_loadedSessions.value(activeName, nullptr);
-        display->setSession(paneSession);
+        // The final historyChanged signal renders after settings and themes are ready.
+        display->setSession(paneSession, false);
         if (paneSession != nullptr)
             editor->setSession(paneSession);
         restoreEditorState(editor,

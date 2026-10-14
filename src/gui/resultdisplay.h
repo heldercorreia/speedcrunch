@@ -45,7 +45,8 @@ public:
     void setEditingHistoryIndex(int index);
     void setLoadedSessionCount(int count);
     void setCloseSessionEnabled(bool enabled);
-    void setSession(const Session* session);
+    // With deferred rendering, call refresh() before restoring the viewport.
+    void setSession(const Session* session, bool renderHistory = true);
     void setThemeSurfaceColor(const QColor& color);
     void applyEditorDisplayStyle();
     void setThemeToolTipColors(const QColor& background,

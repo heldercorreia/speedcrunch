@@ -566,7 +566,7 @@ void ResultDisplay::setCloseSessionEnabled(bool enabled)
     viewport()->update();
 }
 
-void ResultDisplay::setSession(const Session* session)
+void ResultDisplay::setSession(const Session* session, bool renderHistory)
 {
     if (m_session == session)
         return;
@@ -574,7 +574,8 @@ void ResultDisplay::setSession(const Session* session)
     m_session = session;
     m_highlighter->setEvaluator(m_session ? m_session->evaluator() : nullptr);
     clear();
-    refresh();
+    if (renderHistory)
+        refresh();
     viewport()->update();
 }
 
