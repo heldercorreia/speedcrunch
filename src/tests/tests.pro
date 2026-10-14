@@ -16,7 +16,6 @@ SUBDIRS = testhmath.pro \
           testdocklayoutui.pro \
           testfocusui.pro \
           testmenusui.pro \
-          testdiagnosticsui.pro \
           testdockappearanceui.pro \
           teststatusbarui.pro \
           testsessionsui.pro \
