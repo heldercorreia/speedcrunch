@@ -650,6 +650,7 @@ private:
     QList<QDockWidget*> m_allDocks;
     bool m_initializingUi = true;
     bool m_dockAppearanceRefreshPending = false;
+    bool m_dockVisibilityRefreshPending = false;
     QHash<ResultDisplay*, QString> m_paneSessionNames;
     QHash<ResultDisplay*, QStringList> m_paneSessionTabs;
     QHash<ResultDisplay*, QTabBar*> m_paneTabBars;

@@ -14424,7 +14424,15 @@ void MainWindow::handleDockWidgetVisibilityChanged(bool visible)
     if (activeMainWindowForMenuAction(nullptr) == this)
         syncViewMenuActionState();
 
+    if (m_dockVisibilityRefreshPending)
+        return;
+
+    m_dockVisibilityRefreshPending = true;
     QTimer::singleShot(0, this, [this]() {
+        // Changes during the refresh can schedule another pass.
+        m_dockVisibilityRefreshPending = false;
+        StartupDiagnostics::AppearanceContext context("Deferred dock visibility refresh");
+        StartupDiagnostics::AppearanceScope timing("Refresh deferred dock visibility appearance", this);
         updateSplitterStyleSheet();
         applyDockTabBarAppearance();
     });
