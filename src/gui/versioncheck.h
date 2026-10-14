@@ -10,7 +10,6 @@
 #include <QNetworkReply>
 #include <QString>
 #include <QThread>
-#include <QVector>
 
 class QWidget;
 class VersionCheckWorker;
@@ -35,22 +34,17 @@ protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
-    void handleReplyFinished(QNetworkReply::NetworkError error, const QByteArray& payload,
-                             int httpStatus, const QString& errorString);
-    static bool compareVersions(const QString& left, const QString& right, int* result);
-    static bool tryParseVersion(const QString& version, QVector<qulonglong>* components);
-    static void showUpdateDialog(QWidget* parent, const QString& latestVersion);
+    void handleReplyFinished(QNetworkReply::NetworkError error, const QString& latestVersion,
+                             int httpStatus, const QString& errorString,
+                             bool comparable, int comparison, bool shouldNotify);
+    static void showUpdateDialog(QWidget* parent, const QString& latestVersion,
+                                 VersionCheckWorker* notificationWorker);
     static void showUpToDateDialog(QWidget* parent, const QString& currentVersion);
     static void showNoConnectivityDialog(QWidget* parent);
     static void showVerificationFailedDialog(QWidget* parent);
     static bool isConnectivityError(QNetworkReply::NetworkError error);
 
-    void markCheckAttempted();
-    bool isCheckDue() const;
     void startRequest(CheckTrigger trigger);
-    void storeFetchedVersion(const QString& version);
-    bool shouldNotifyForVersion(const QString& version) const;
-    void markVersionNotified(const QString& version);
 
     QPointer<QWidget> m_parentWindow;
     QPointer<QThread> m_networkThread;

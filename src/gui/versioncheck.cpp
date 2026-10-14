@@ -14,6 +14,8 @@
 #include <QEvent>
 #include <QLabel>
 #include <QLoggingCategory>
+#include <QMutex>
+#include <QMutexLocker>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
@@ -33,6 +35,15 @@ static const char LAST_FETCHED_VERSION_KEY[] = "updates/lastFetchedVersion";
 static const char LAST_NOTIFIED_VERSION_KEY[] = "updates/lastNotifiedVersion";
 const qint64 CHECK_INTERVAL_MSECS = 24LL * 60LL * 60LL * 1000LL;
 Q_LOGGING_CATEGORY(lcVersionCheck, "speedcrunch.updatecheck")
+
+bool compareVersions(const QString& left, const QString& right, int* result);
+bool tryParseVersion(const QString& version, QVector<qulonglong>* components);
+
+QMutex& updateScheduleMutex()
+{
+    static QMutex mutex;
+    return mutex;
+}
 
 static QDebug versionCheckDebug()
 {
@@ -58,10 +69,24 @@ void deleteStoppedThread(QThread* thread)
 class VersionCheckWorker : public QObject {
     Q_OBJECT
 public:
-    void startRequest()
+    void startRequest(VersionCheck::CheckTrigger trigger)
     {
         if (QThread::currentThread()->isInterruptionRequested())
             return;
+        {
+            // Claim the automatic attempt before another window checks the schedule.
+            QMutexLocker lock(&updateScheduleMutex());
+            if (trigger == VersionCheck::CheckTriggerAutomatic && !isCheckDue()) {
+                versionCheckDebug() << "Update check skipped: next check not due yet.";
+                emit requestSkipped();
+                return;
+            }
+            markCheckAttempted();
+        }
+        if (QThread::currentThread()->isInterruptionRequested())
+            return;
+        versionCheckDebug() << "Starting update check request to" << QString::fromLatin1(VERSION_URL)
+                            << "; trigger =" << (trigger == VersionCheck::CheckTriggerManual ? "manual" : "automatic");
         if (!m_manager) {
             StartupDiagnostics::Scope timing("Initialize update network manager");
             m_manager = new QNetworkAccessManager(this);
@@ -76,22 +101,41 @@ public:
             StartupDiagnostics::Scope timing("Dispatch update network request");
             reply = m_manager->get(request);
         }
-        connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        connect(reply, &QNetworkReply::finished, this, [this, reply, trigger]() {
             const auto error = reply->error();
             const QByteArray payload = reply->readAll();
             const int httpStatus = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
             const QString errorString = reply->errorString();
             reply->deleteLater();
-            emit requestFinished(error, payload, httpStatus, errorString);
+            QString latestVersion;
+            int comparison = 0;
+            bool comparable = false;
+            bool notify = false;
+            if (error == QNetworkReply::NoError) {
+                latestVersion = QString::fromUtf8(payload).trimmed().section('\n', 0, 0).trimmed();
+                comparable = compareVersions(latestVersion, QString::fromLatin1(SPEEDCRUNCH_VERSION), &comparison);
+                storeFetchedVersion(latestVersion);
+                if (comparable && comparison > 0)
+                    notify = trigger == VersionCheck::CheckTriggerManual || shouldNotifyForVersion(latestVersion);
+            }
+            emit requestFinished(error, latestVersion, httpStatus, errorString, comparable, comparison, notify);
         });
     }
 
+    void markVersionNotified(const QString& version);
+
 signals:
     void requestDispatched();
-    void requestFinished(QNetworkReply::NetworkError error, const QByteArray& payload,
-                         int httpStatus, const QString& errorString);
+    void requestSkipped();
+    void requestFinished(QNetworkReply::NetworkError error, const QString& latestVersion,
+                         int httpStatus, const QString& errorString,
+                         bool comparable, int comparison, bool shouldNotify);
 
 private:
+    void markCheckAttempted();
+    bool isCheckDue() const;
+    void storeFetchedVersion(const QString& version);
+    bool shouldNotifyForVersion(const QString& version) const;
     QNetworkAccessManager* m_manager = nullptr;
 };
 
@@ -104,8 +148,10 @@ VersionCheck::VersionCheck(QWidget* parentWindow, QObject* parent)
 VersionCheck::~VersionCheck()
 {
     if (m_networkThread) {
-        m_networkThread->requestInterruption();
-        m_networkThread->quit();
+        QThread* thread = m_networkThread;
+        thread->requestInterruption();
+        // Finish notification writes already queued before stopping the worker.
+        QMetaObject::invokeMethod(m_networkWorker, [thread]() { thread->quit(); }, Qt::QueuedConnection);
     }
 }
 
@@ -128,7 +174,7 @@ bool VersionCheck::eventFilter(QObject* watched, QEvent* event)
             // Let the paint finish and its diagnostics callback run before dispatch.
             QTimer::singleShot(0, this, [this, startupTask]() {
                 QTimer::singleShot(0, this, [this, startupTask]() {
-                    StartupDiagnostics::Scope timing("Check update schedule and dispatch request");
+                    StartupDiagnostics::Scope timing("Queue automatic update check");
                     checkForUpdateIfDue();
                 });
             });
@@ -146,11 +192,6 @@ void VersionCheck::checkForUpdateIfDue()
         versionCheckDebug() << "Update check skipped: request already in progress.";
         return;
     }
-    if (!isCheckDue()) {
-        versionCheckDebug() << "Update check skipped: next check not due yet.";
-        return;
-    }
-
     startRequest(CheckTriggerAutomatic);
 }
 
@@ -165,8 +206,9 @@ void VersionCheck::checkForUpdateNow()
     startRequest(CheckTriggerManual);
 }
 
-void VersionCheck::handleReplyFinished(QNetworkReply::NetworkError error, const QByteArray& payload,
-                                      int httpStatus, const QString& errorString)
+void VersionCheck::handleReplyFinished(QNetworkReply::NetworkError error, const QString& latestVersion,
+                                      int httpStatus, const QString& errorString,
+                                      bool comparable, int comparison, bool shouldNotify)
 {
     m_requestPending = false;
 
@@ -186,11 +228,7 @@ void VersionCheck::handleReplyFinished(QNetworkReply::NetworkError error, const 
         return;
     }
 
-    const QString latestVersion = QString::fromUtf8(payload).trimmed().section('\n', 0, 0).trimmed();
     const QString currentVersion = QString::fromLatin1(SPEEDCRUNCH_VERSION);
-    int comparison = 0;
-    const bool comparable = compareVersions(latestVersion, currentVersion, &comparison);
-    storeFetchedVersion(latestVersion);
 
     versionCheckDebug() << "Parsed versions:"
                             << "remote =" << latestVersion
@@ -203,12 +241,10 @@ void VersionCheck::handleReplyFinished(QNetworkReply::NetworkError error, const 
         if (m_trigger == CheckTriggerManual)
             showVerificationFailedDialog(m_parentWindow);
     } else if (comparison > 0) {
-        const bool shouldNotify = (m_trigger == CheckTriggerManual) || shouldNotifyForVersion(latestVersion);
         if (shouldNotify) {
             versionCheckDebug() << "Newer version found; showing update dialog.";
-            showUpdateDialog(m_parentWindow, latestVersion);
-            if (m_trigger == CheckTriggerAutomatic)
-                markVersionNotified(latestVersion);
+            showUpdateDialog(m_parentWindow, latestVersion,
+                             m_trigger == CheckTriggerAutomatic ? m_networkWorker : nullptr);
         } else {
             versionCheckDebug() << "Newer version found, but user was already notified for this version.";
         }
@@ -219,7 +255,8 @@ void VersionCheck::handleReplyFinished(QNetworkReply::NetworkError error, const 
     }
 }
 
-bool VersionCheck::compareVersions(const QString& left, const QString& right, int* result)
+namespace {
+bool compareVersions(const QString& left, const QString& right, int* result)
 {
     if (!result)
         return false;
@@ -245,7 +282,7 @@ bool VersionCheck::compareVersions(const QString& left, const QString& right, in
     return true;
 }
 
-bool VersionCheck::tryParseVersion(const QString& version, QVector<qulonglong>* components)
+bool tryParseVersion(const QString& version, QVector<qulonglong>* components)
 {
     if (!components)
         return false;
@@ -274,8 +311,10 @@ bool VersionCheck::tryParseVersion(const QString& version, QVector<qulonglong>* 
 
     return !components->isEmpty();
 }
+}
 
-void VersionCheck::showUpdateDialog(QWidget* parent, const QString& latestVersion)
+void VersionCheck::showUpdateDialog(QWidget* parent, const QString& latestVersion,
+                                   VersionCheckWorker* notificationWorker)
 {
     versionCheckDebug() << "Displaying update dialog for version" << latestVersion;
 
@@ -299,6 +338,12 @@ void VersionCheck::showUpdateDialog(QWidget* parent, const QString& latestVersio
     QObject::connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
     layout->addWidget(buttons);
 
+    if (notificationWorker) {
+        QObject::connect(&dialog, &QDialog::finished, notificationWorker,
+                         [notificationWorker, latestVersion]() {
+            notificationWorker->markVersionNotified(latestVersion);
+        }, Qt::QueuedConnection);
+    }
     dialog.exec();
 }
 
@@ -381,7 +426,7 @@ bool VersionCheck::isConnectivityError(QNetworkReply::NetworkError error)
         || error == QNetworkReply::UnknownProxyError;
 }
 
-void VersionCheck::markCheckAttempted()
+void VersionCheckWorker::markCheckAttempted()
 {
     StartupDiagnostics::Scope timing("Save update check timestamp");
     QSettings settings;
@@ -390,7 +435,7 @@ void VersionCheck::markCheckAttempted()
     versionCheckDebug() << "Recorded update check timestamp (UTC msecs):" << now;
 }
 
-bool VersionCheck::isCheckDue() const
+bool VersionCheckWorker::isCheckDue() const
 {
     StartupDiagnostics::Scope timing("Check update schedule");
     QSettings settings;
@@ -413,10 +458,9 @@ void VersionCheck::startRequest(CheckTrigger trigger)
     m_trigger = trigger;
     m_requestPending = true;
 
-    versionCheckDebug() << "Starting update check request to" << QString::fromLatin1(VERSION_URL)
-                           << "; trigger =" << (trigger == CheckTriggerManual ? "manual" : "automatic");
-    markCheckAttempted();
-    const auto startupTask = StartupDiagnostics::task("Update request setup (async total)");
+    versionCheckDebug() << "Queuing update check; trigger ="
+                       << (trigger == CheckTriggerManual ? "manual" : "automatic");
+    const auto startupTask = StartupDiagnostics::task("Update schedule and request setup (async total)");
     if (!m_networkWorker) {
         // Neither object belongs to the window. They survive until cleanup ends.
         QThread* thread = new QThread;
@@ -428,28 +472,30 @@ void VersionCheck::startRequest(CheckTrigger trigger)
                 Qt::QueuedConnection);
         connect(m_networkWorker, &VersionCheckWorker::requestFinished,
                 this, &VersionCheck::handleReplyFinished, Qt::QueuedConnection);
+        connect(m_networkWorker, &VersionCheckWorker::requestSkipped,
+                this, [this]() { m_requestPending = false; }, Qt::QueuedConnection);
         // Wake diagnostics after setup without retaining a pointer to the window.
         connect(m_networkWorker, &VersionCheckWorker::requestDispatched,
                 qApp, []() {}, Qt::QueuedConnection);
         thread->start();
     }
     VersionCheckWorker* worker = m_networkWorker;
-    QMetaObject::invokeMethod(worker, [worker, startupTask]() {
-        worker->startRequest();
+    QMetaObject::invokeMethod(worker, [worker, startupTask, trigger]() {
+        worker->startRequest(trigger);
         if (startupTask)
             startupTask->finish();
         emit worker->requestDispatched();
     }, Qt::QueuedConnection);
 }
 
-void VersionCheck::storeFetchedVersion(const QString& version)
+void VersionCheckWorker::storeFetchedVersion(const QString& version)
 {
     QSettings settings;
     settings.setValue(QString::fromLatin1(LAST_FETCHED_VERSION_KEY), version);
     versionCheckDebug() << "Recorded latest fetched version:" << version;
 }
 
-bool VersionCheck::shouldNotifyForVersion(const QString& version) const
+bool VersionCheckWorker::shouldNotifyForVersion(const QString& version) const
 {
     QSettings settings;
     const QString lastNotified = settings.value(QString::fromLatin1(LAST_NOTIFIED_VERSION_KEY)).toString().trimmed();
@@ -467,7 +513,7 @@ bool VersionCheck::shouldNotifyForVersion(const QString& version) const
     return comparison > 0;
 }
 
-void VersionCheck::markVersionNotified(const QString& version)
+void VersionCheckWorker::markVersionNotified(const QString& version)
 {
     QSettings settings;
     settings.setValue(QString::fromLatin1(LAST_NOTIFIED_VERSION_KEY), version);
