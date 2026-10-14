@@ -6,6 +6,7 @@
 #define GUI_FUNCTIONSWIDGET_H
 
 #include <QList>
+#include <QStringList>
 #include <QWidget>
 
 class QEvent;
@@ -49,6 +50,9 @@ protected slots:
 private:
     Q_DISABLE_COPY(FunctionsWidget)
 
+    enum class ListUpdate { DeferPopulation, Populate };
+
+    void translateControls(ListUpdate mode);
     void updateControlLabelWidths();
 
     QTimer* m_filterTimer;
@@ -59,7 +63,7 @@ private:
     QLabel* m_noMatchLabel;
     QLineEdit* m_searchFilter;
     QLabel* m_searchLabel;
-    bool m_initializingList = true;
+    QStringList m_populatedInputs;
 };
 
 #endif // GUI_FUNCTIONSWIDGET_H

@@ -6,6 +6,7 @@
 #define GUI_CONSTANTSWIDGET_H
 
 #include <QColor>
+#include <QStringList>
 #include <QWidget>
 
 class QSize;
@@ -64,6 +65,10 @@ protected:
     void resizeEvent(QResizeEvent* event) override;
 
 private:
+    enum class ListUpdate { DeferPopulation, Populate };
+
+    void translateControls(ListUpdate mode);
+    void refreshList(ListUpdate mode);
     void applySummaryPopupTheme();
     void ensureSummaryPopup();
     void hideSummaryPopup();
@@ -98,7 +103,7 @@ private:
     bool m_isCompactDomainLayout = false;
     bool m_domainLayoutInitialized = false;
     bool m_emptyHeaderStretchQueued = false;
-    bool m_initializingList = true;
+    QStringList m_populatedInputs;
 };
 
 #endif

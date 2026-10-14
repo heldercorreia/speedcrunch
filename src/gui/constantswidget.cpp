@@ -36,6 +36,7 @@
 #include <QVBoxLayout>
 
 #include <algorithm>
+#include <utility>
 
 static QString constantExpression(const Constant& constant)
 {
@@ -167,13 +168,12 @@ ConstantsWidget::ConstantsWidget(QWidget* parent, const InitialState& state)
     m_noMatchLabel->adjustSize();
     m_noMatchLabel->hide();
 
-    retranslateText();
+    translateControls(ListUpdate::DeferPopulation);
     updateDomainLayout();
 
     QWidget::setTabOrder(m_filter, m_list);
     setFocusProxy(m_filter);
 
-    m_initializingList = false;
     restoreState(state.domain, state.subdomain, state.searchText);
 }
 
@@ -195,6 +195,7 @@ QString ConstantsWidget::selectedSubdomain() const { return m_subdomain->current
 QString ConstantsWidget::searchText() const { return m_filter->text(); }
 void ConstantsWidget::restoreState(const QString& domain, const QString& subdomain, const QString& searchText)
 {
+    StartupDiagnostics::AppearanceContext context("Restore constants dock filters");
     const QSignalBlocker searchBlocker(m_filter);
     if (!searchText.isNull())
         m_filter->setText(searchText);
@@ -226,10 +227,16 @@ void ConstantsWidget::setSummaryPopupThemeColors(const QColor& background,
 
 void ConstantsWidget::handleRadixCharacterChange()
 {
+    StartupDiagnostics::AppearanceContext context("Constants dock radix change");
     updateList();
 }
 
 void ConstantsWidget::retranslateText()
+{
+    translateControls(ListUpdate::Populate);
+}
+
+void ConstantsWidget::translateControls(ListUpdate mode)
 {
     m_domainLabel->setText(tr("Domain"));
     m_subdomainLabel->setText(tr("Subdomain"));
@@ -247,25 +254,35 @@ void ConstantsWidget::retranslateText()
     m_list->setHeaderLabels(titles);
 
     updateDomainLabelAlignment();
-    updateList();
+    refreshList(mode);
 }
 
 void ConstantsWidget::filter()
 {
-    // Build the first list after the constructor has applied its saved filters.
-    if (m_initializingList)
-        return;
-    StartupDiagnostics::Scope timing("Populate constants dock list");
     const QList<Constant> &clist = Constants::instance()->list();
     const char radixChar = Settings::instance()->radixCharacter();
     QString term = m_filter->text();
 
     m_filterTimer->stop();
-    setUpdatesEnabled(false);
 
     const QString chosenDomain = m_domain->currentText();
     const QString chosenSubdomain = m_subdomain->currentText();
 
+    // Compare the translated content itself, including fallback translations.
+    QStringList inputs {tr("All"), chosenDomain, chosenSubdomain, term,
+                        QString(QChar::fromLatin1(radixChar)), QString::number(layoutDirection())};
+    inputs.reserve(inputs.size() + clist.size() * 6);
+    for (const Constant& constant : clist) {
+        inputs << constant.name << constant.domain << constant.subdomain
+               << constant.value << constant.unit << QString::number(int(constant.domainType));
+    }
+    const bool unchanged = inputs == m_populatedInputs;
+    StartupDiagnostics::AppearanceScope timing(unchanged
+        ? "Skip unchanged constants dock list" : "Populate constants dock list", this);
+    if (unchanged)
+        return;
+
+    setUpdatesEnabled(false);
     hideSummaryPopup();
     m_list->clear();
     for (int k = 0; k < clist.count(); ++k) {
@@ -345,6 +362,7 @@ void ConstantsWidget::filter()
         DockListStyle::showCenteredNoMatchLabel(m_list, m_noMatchLabel);
     }
 
+    m_populatedInputs = std::move(inputs);
     setUpdatesEnabled(true);
 }
 
@@ -360,6 +378,11 @@ void ConstantsWidget::triggerFilter()
 }
 
 void ConstantsWidget::updateList()
+{
+    refreshList(ListUpdate::Populate);
+}
+
+void ConstantsWidget::refreshList(ListUpdate mode)
 {
     const int chosenDomainIndex = m_domain->currentIndex();
     const QString chosenDomain = m_domain->currentText();
@@ -396,11 +419,13 @@ void ConstantsWidget::updateList()
     if (subdomainIndex >= 0)
         m_subdomain->setCurrentIndex(subdomainIndex);
 
-    filter();
+    if (mode == ListUpdate::Populate)
+        filter();
 }
 
 void ConstantsWidget::handleDomainChanged()
 {
+    StartupDiagnostics::AppearanceContext context("Constants dock domain change");
     refreshSubdomains();
     filter();
 }
@@ -432,11 +457,13 @@ void ConstantsWidget::refreshSubdomains()
 void ConstantsWidget::changeEvent(QEvent* e)
 {
     if (e->type() == QEvent::LanguageChange) {
-        Constants::instance()->retranslateText();
+        StartupDiagnostics::AppearanceContext context("Constants dock LanguageChange");
         retranslateText();
     }
     else {
         QWidget::changeEvent(e);
+        if (e->type() == QEvent::LayoutDirectionChange)
+            retranslateText();
         if (e->type() == QEvent::FontChange)
             QTimer::singleShot(0, this, [this]() { updateDomainLayout(); });
     }
