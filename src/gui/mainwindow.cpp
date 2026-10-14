@@ -4597,8 +4597,14 @@ void MainWindow::createActionShortcuts()
 void MainWindow::createMenus()
 {
     StartupDiagnostics::Scope timing("Create menus");
+    QMenuBar* bar;
+    {
+        StartupDiagnostics::Scope menuBarTiming("Create menu bar");
+        bar = menuBar();
+    }
+    StartupDiagnostics::Scope contents("Populate application menus");
     m_menus.session = new QMenu("", this);
-    menuBar()->addMenu(m_menus.session);
+    bar->addMenu(m_menus.session);
     m_menus.session->addAction(m_actions.sessionNewTab);
     m_menus.session->addAction(m_actions.sessionNewPrivate);
     m_menus.session->addAction(m_actions.sessionNewWindow);
@@ -4623,7 +4629,7 @@ void MainWindow::createMenus()
     });
 
     m_menus.edit = new QMenu("", this);
-    menuBar()->addMenu(m_menus.edit);
+    bar->addMenu(m_menus.edit);
     m_menus.edit->addAction(m_actions.editCopy);
     m_menus.edit->addAction(m_actions.editCopyLastResult);
     m_menus.edit->addAction(m_actions.editPaste);
@@ -4633,7 +4639,7 @@ void MainWindow::createMenus()
     m_menus.edit->addAction(m_actions.editWrapSelection);
 
     m_menus.view = new QMenu("", this);
-    menuBar()->addMenu(m_menus.view);
+    bar->addMenu(m_menus.view);
     m_menus.keypad = m_menus.view->addMenu("");
     m_menus.keypad->addAction(m_actions.viewKeypadDisabled);
     m_menus.keypad->addAction(m_actions.viewKeypadBasicWide);
@@ -4658,7 +4664,7 @@ void MainWindow::createMenus()
     m_menus.view->addAction(m_actions.viewFullScreenMode);
 #endif
     m_menus.settings = new QMenu("", this);
-    menuBar()->addMenu(m_menus.settings);
+    bar->addMenu(m_menus.settings);
     m_menus.settings->addAction(m_actions.settingsBehaviorNumberFormat);
     m_menus.settings->addAction(m_actions.settingsLanguage);
     m_menus.settings->addSeparator();
@@ -4787,7 +4793,7 @@ void MainWindow::createMenus()
     m_menus.settings->addAction(m_actions.settingsResetAll);
 
     m_menus.help = new QMenu("", this);
-    menuBar()->addMenu(m_menus.help);
+    bar->addMenu(m_menus.help);
     m_menus.help->addAction(m_actions.helpManual);
     m_menus.help->addAction(m_actions.contextHelp);
     m_menus.help->addSeparator();
@@ -4802,7 +4808,7 @@ void MainWindow::createMenus()
     m_menus.help->addAction(m_actions.helpDiagnostics);
     m_menus.help->addAction(m_actions.helpAbout);
 
-    addActions(menuBar()->actions());
+    addActions(bar->actions());
 }
 
 void MainWindow::setMenusText()

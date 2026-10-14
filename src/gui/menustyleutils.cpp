@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "gui/menustyleutils.h"
+#include "core/startupdiagnostics.h"
 
 #include "core/colorscheme.h"
 #include "core/settings.h"
@@ -236,14 +237,32 @@ struct MenuColors {
     QColor selectedForeground;
 };
 
+struct CachedThemeColors {
+    QString key;
+    QColor fallbackBackground;
+    MenuColors menu;
+    MenuColors bar;
+    bool valid = false;
+};
+CachedThemeColors cachedThemeColors;
+
 MenuColors themeColors(const QWidget* widget)
 {
     const QVariantList saved = widget->property(ThemeColorsProperty).toList();
-    if (saved.size() == 4 && widget->property(ThemeSchemeProperty).toString() == themeKey()) {
+    const QString key = themeKey();
+    if (saved.size() == 4 && widget->property(ThemeSchemeProperty).toString() == key) {
         return {saved.at(0).value<QColor>(), saved.at(1).value<QColor>(),
                 saved.at(2).value<QColor>(), saved.at(3).value<QColor>()};
     }
 
+    const QColor fallback = QApplication::palette().color(QPalette::Base);
+    CachedThemeColors& cached = cachedThemeColors;
+    const bool isBar = qobject_cast<const QMenuBar*>(widget) != nullptr;
+    if (cached.valid && cached.key == key && cached.fallbackBackground == fallback) {
+        StartupDiagnostics::Scope timing("Reuse menu theme colors");
+        return isBar ? cached.bar : cached.menu;
+    }
+    StartupDiagnostics::Scope timing("Generate menu theme colors");
     const Settings* settings = Settings::instance();
     ColorScheme scheme = settings->colorScheme == QLatin1String("Custom")
         ? ColorScheme(QJsonDocument::fromJson(settings->customColorSchemeJson.toUtf8()))
@@ -251,13 +270,20 @@ MenuColors themeColors(const QWidget* widget)
     if (!scheme.isValid())
         scheme = ColorScheme::loadByName(QStringLiteral("Terminal"));
     const QColor base = scheme.isValid() ? scheme.colorForRole(ColorScheme::Background)
-                                        : QApplication::palette().color(QPalette::Base);
+                                        : fallback;
     const QVector<QColor> shades = generateOklchShades(base, 6, themePolarityForBackground(base));
-    const QColor background = shades.at(qobject_cast<const QMenuBar*>(widget)
-                                        ? UiConfig::WindowBackgroundShade : UiConfig::DockHeaderShade);
     const QColor selected = shades.at(UiConfig::DockUnfocusedSelectedItemShade);
-    return {background, aaForegroundForBackground(background),
-            selected, aaForegroundForBackground(selected)};
+    const QColor selectedText = aaForegroundForBackground(selected);
+    const auto colors = [&](int shade) {
+        const QColor background = shades.at(shade);
+        return MenuColors{background, aaForegroundForBackground(background), selected, selectedText};
+    };
+    cached.key = key;
+    cached.fallbackBackground = fallback;
+    cached.menu = colors(UiConfig::DockHeaderShade);
+    cached.bar = colors(UiConfig::WindowBackgroundShade);
+    cached.valid = true;
+    return isBar ? cached.bar : cached.menu;
 }
 
 QPalette fullyResolvedPalette(QPalette palette)
@@ -361,6 +387,7 @@ private:
         auto* bar = qobject_cast<QMenuBar*>(widget);
         if (bar == nullptr && !qobject_cast<QMenu*>(widget))
             return;
+        StartupDiagnostics::Scope timing("Apply menu appearance");
 
         if (Settings::instance()->menuAppearance == Settings::MenuAppearanceSystem
             || (bar != nullptr && bar->isNativeMenuBar())) {
@@ -463,6 +490,8 @@ void MenuStyle::install()
 
 void MenuStyle::refresh()
 {
+    // A theme file can change without changing its saved name.
+    cachedThemeColors.valid = false;
     GtkMenuPalette::invalidate();
     install();
     if (appearanceFilter()) {

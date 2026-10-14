@@ -870,6 +870,11 @@ Help
     Startup timings cover application setup, settings, built-in repositories,
     UI construction, docks, themes, and session restoration. File reads on worker
     threads, queued UI restoration, and startup painting are measured too.
+    Menu timings separate creating the menu bar from filling the menus with
+    actions. Native menu-bar creation can also create the platform window.
+    Menu appearance reuses generated colors across menus with the same theme.
+    Theme and system palette changes refresh those colors. Generation and reuse
+    appear separately in the report.
     When update checks are enabled, automatic dispatch waits until the window
     has painted. Its timings separate the schedule check, saving the attempt
     timestamp, and network request setup. The network manager and request setup

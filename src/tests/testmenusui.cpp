@@ -35,7 +35,85 @@ private slots:
     void dock_context_menus_follow_menu_theme();
     void precision_menu_editor_uses_themed_colors_data();
     void precision_menu_editor_uses_themed_colors();
+    void menu_theme_cache_keeps_bar_and_popup_colors_separate();
+    void menu_theme_cache_reloads_named_themes_on_refresh();
+    void menu_theme_cache_follows_the_fallback_palette();
 };
+
+void TestMenusUi::menu_theme_cache_keeps_bar_and_popup_colors_separate()
+{
+    MainWindowStateGuard guard;
+    guard.settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    QMenu popup;
+    QMenuBar bar;
+    bar.setNativeMenuBar(false);
+    for (const QColor base : {QColor("#232136"), QColor("#e5eee8")}) {
+        guard.settings->customColorSchemeJson = themeJsonString(
+            QJsonObject{{QStringLiteral("background"), base.name()}});
+        MenuStyle::apply(&popup);
+        MenuStyle::apply(&bar);
+        const auto shades = generateOklchShades(base, 6, themePolarityForBackground(base));
+        QCOMPARE(popup.palette().color(QPalette::Window), shades.at(UiConfig::DockHeaderShade));
+        QCOMPARE(bar.palette().color(QPalette::Window), shades.at(UiConfig::WindowBackgroundShade));
+        QCOMPARE(popup.palette().color(QPalette::Highlight), shades.at(UiConfig::DockUnfocusedSelectedItemShade));
+        QCOMPARE(bar.palette().color(QPalette::Highlight), popup.palette().color(QPalette::Highlight));
+        QMenu override;
+        const QColor overrideFill("#123456");
+        MenuStyle::setThemeColors(&override, overrideFill, Qt::white, Qt::blue, Qt::white);
+        QCOMPARE(override.palette().color(QPalette::Window), overrideFill);
+        MenuStyle::apply(&popup);
+        MenuStyle::apply(&bar);
+        QCOMPARE(popup.palette().color(QPalette::Window), shades.at(UiConfig::DockHeaderShade));
+        QCOMPARE(bar.palette().color(QPalette::Window), shades.at(UiConfig::WindowBackgroundShade));
+    }
+}
+
+void TestMenusUi::menu_theme_cache_reloads_named_themes_on_refresh()
+{
+    MainWindowStateGuard guard;
+    guard.settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
+    guard.settings->colorScheme = QStringLiteral("Menu cache test");
+    const QString directory = ColorScheme::fileSystemSearchPaths().first();
+    QVERIFY(QDir().mkpath(directory));
+    const QString path = QDir(directory).filePath(guard.settings->colorScheme + QStringLiteral(".json"));
+    const auto removeTheme = qScopeGuard([&]() { QFile::remove(path); });
+    QMenu popup;
+    for (const QColor base : {QColor("#232136"), QColor("#e5eee8")}) {
+        QFile file(path);
+        QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Truncate));
+        const QByteArray json = themeJsonString(
+            QJsonObject{{QStringLiteral("background"), base.name()}}).toUtf8();
+        QCOMPARE(file.write(json), qint64(json.size()));
+        file.close();
+        MenuStyle::refresh();
+        MenuStyle::apply(&popup);
+        const auto shades = generateOklchShades(base, 6, themePolarityForBackground(base));
+        QCOMPARE(popup.palette().color(QPalette::Window), shades.at(UiConfig::DockHeaderShade));
+    }
+}
+
+void TestMenusUi::menu_theme_cache_follows_the_fallback_palette()
+{
+    MainWindowStateGuard guard;
+    guard.settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(QJsonObject());
+    const QPalette original = QApplication::palette();
+    const auto restorePalette = qScopeGuard([&]() {
+        QApplication::setPalette(original);
+        MenuStyle::refresh();
+    });
+    QMenu popup;
+    for (const QColor base : {QColor("#232136"), QColor("#e5eee8")}) {
+        QPalette palette = original;
+        palette.setColor(QPalette::Base, base);
+        QApplication::setPalette(palette);
+        MenuStyle::apply(&popup);
+        const auto shades = generateOklchShades(base, 6, themePolarityForBackground(base));
+        QCOMPARE(popup.palette().color(QPalette::Window), shades.at(UiConfig::DockHeaderShade));
+    }
+}
 
 void TestMenusUi::initTestCase()
 {
