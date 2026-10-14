@@ -162,11 +162,36 @@ if(BUILD_TESTING)
     target_link_libraries(testdocksui ${QT_LIBRARIES} Qt6::Test)
     add_test(NAME testdocksui COMMAND testdocksui)
 
-    add_executable(testdisplayui ${testdisplayui_SOURCES})
-    target_link_libraries(testdisplayui ${QT_LIBRARIES} Qt6::Test)
-    add_test(NAME testdisplayui COMMAND testdisplayui)
-    foreach(ui_test IN ITEMS testeditorui testdocksui testdisplayui)
+    # Compile the application code and resources once for the component suites.
+    # An object library also keeps the Qt resource objects in every executable.
+    add_library(mainwindowuitest OBJECT ${mainwindowuitest_SOURCES})
+    target_link_libraries(mainwindowuitest PUBLIC ${QT_LIBRARIES} Qt6::Test)
+    target_compile_definitions(mainwindowuitest PUBLIC SPEEDCRUNCH_UI_TEST)
+    # Start the longer suites first on a build without CTest timing history.
+    set(mainwindow_ui_tests
+        testfocusui
+        testdockappearanceui
+        testdocklayoutui
+        testprivatesessionsui
+        testthemesui
+        testkeypadui
+        testeditorappearanceui
+        testsettingsui
+        teststatusbarui
+        testmenusui
+        testbitfieldui
+        testsessionsui
+        testdisplayui
+    )
+    foreach(ui_test IN LISTS mainwindow_ui_tests)
+        add_executable(${ui_test} tests/${ui_test}.cpp)
+        target_link_libraries(${ui_test} PRIVATE mainwindowuitest)
+        add_test(NAME ${ui_test} COMMAND ${ui_test})
+        set_tests_properties(${ui_test} PROPERTIES LABELS "ui")
+    endforeach()
+    foreach(ui_test IN ITEMS testeditorui testdocksui)
         target_compile_definitions(${ui_test} PRIVATE SPEEDCRUNCH_UI_TEST)
+        set_tests_properties(${ui_test} PROPERTIES LABELS "ui")
     endforeach()
 endif()
 

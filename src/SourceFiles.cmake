@@ -428,7 +428,7 @@ core/unitdisplayformat.cpp
 tests/testdocksui.cpp
 )
 
-set(testdisplayui_SOURCES
+set(mainwindowuitest_SOURCES
 gui/menustyleutils.cpp
 core/book.cpp
 core/constants.cpp
@@ -497,13 +497,13 @@ math/quantity.cpp
 core/units.cpp
 core/unitdisplayformat.cpp
 resources/speedcrunch.qrc
-tests/testdisplayui.cpp
+tests/mainwindowtesthelpers.cpp
 )
 
 if(ENABLE_UPDATE_CHECKS)
     list(APPEND speedcrunch_HEADERS gui/versioncheck.h)
     list(APPEND speedcrunch_SOURCES gui/versioncheck.cpp)
-    list(APPEND testdisplayui_SOURCES gui/versioncheck.cpp)
+    list(APPEND mainwindowuitest_SOURCES gui/versioncheck.cpp)
 endif()
 
 set(testserial_SOURCES
