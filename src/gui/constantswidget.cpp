@@ -69,6 +69,12 @@ static QString displayValue(const Constant& constant)
     return constant.value.left(qMin(constant.value.length(), dotPos + 16));
 }
 
+static bool hasLineBreak(const QString& text)
+{
+    return text.contains(QLatin1Char('\n')) || text.contains(QLatin1Char('\r'))
+        || text.contains(QChar::LineSeparator) || text.contains(QChar::ParagraphSeparator);
+}
+
 ConstantsWidget::ConstantsWidget(QWidget* parent, const InitialState& state)
     : QWidget(parent)
 {
@@ -261,15 +267,17 @@ void ConstantsWidget::filter()
 {
     const QList<Constant> &clist = Constants::instance()->list();
     const char radixChar = Settings::instance()->radixCharacter();
-    QString term = m_filter->text();
+    const QString term = m_filter->text();
 
     m_filterTimer->stop();
 
     const QString chosenDomain = m_domain->currentText();
     const QString chosenSubdomain = m_subdomain->currentText();
+    const QString all = tr("All");
+    const bool rightToLeft = layoutDirection() == Qt::RightToLeft;
 
     // Compare the translated content itself, including fallback translations.
-    QStringList inputs {tr("All"), chosenDomain, chosenSubdomain, term,
+    QStringList inputs {all, chosenDomain, chosenSubdomain, term,
                         QString(QChar::fromLatin1(radixChar)), QString::number(layoutDirection())};
     inputs.reserve(inputs.size() + clist.size() * 6);
     for (const Constant& constant : clist) {
@@ -284,50 +292,60 @@ void ConstantsWidget::filter()
 
     setUpdatesEnabled(false);
     hideSummaryPopup();
-    m_list->clear();
-    for (int k = 0; k < clist.count(); ++k) {
-        QStringList str;
-        str << clist.at(k).name;
-        const QString value = displayValue(clist.at(k));
-        QString radCh = (radixChar != MathDsl::DotSep) ?
-            QString(value).replace(MathDsl::DotSep, radixChar)
-            : value;
+    {
+        StartupDiagnostics::AppearanceScope phase("Clear constants dock rows", this);
+        m_list->clear();
+    }
+    struct PreparedRow {
+        const Constant* constant;
+        QStringList text;
+    };
+    QList<PreparedRow> rows;
+    bool uniformRowHeights = true;
+    {
+        StartupDiagnostics::AppearanceScope phase("Filter and format constants dock rows", this);
+        rows.reserve(clist.size());
+        for (const Constant& constant : clist) {
+            if ((chosenDomain != all && constant.domain != chosenDomain)
+                || (chosenSubdomain != all && constant.subdomain != chosenSubdomain)
+                || (!term.isEmpty() && !constant.name.contains(term, Qt::CaseInsensitive))) {
+                continue;
+            }
 
-        if (layoutDirection() == Qt::RightToLeft) {
-            QString normalizedUnit = clist.at(k).unit;
+            const QString value = displayValue(constant);
+            const QString radCh = (radixChar != MathDsl::DotSep)
+                ? QString(value).replace(MathDsl::DotSep, radixChar) : value;
+            QString normalizedUnit = constant.unit;
             normalizedUnit.replace(UnicodeChars::MiddleDot, MathDsl::MulDotOp);
-            str << normalizedUnit + UnicodeChars::LeftToRightMark;
-            str << radCh;
-        } else {
-            str << radCh;
-            QString normalizedUnit = clist.at(k).unit;
-            normalizedUnit.replace(UnicodeChars::MiddleDot, MathDsl::MulDotOp);
-            str << normalizedUnit;
+            QStringList str {constant.name};
+            if (rightToLeft)
+                str << normalizedUnit + UnicodeChars::LeftToRightMark << radCh;
+            else
+                str << radCh << normalizedUnit;
+
+            // Keep variable heights if a translation introduces multiple lines.
+            if (uniformRowHeights)
+                uniformRowHeights = std::none_of(str.cbegin(), str.cend(), hasLineBreak);
+            rows.append({&constant, std::move(str)});
         }
-
-        bool include = (chosenDomain == tr("All")) ?
-            true : (clist.at(k).domain == chosenDomain);
-        if (include && chosenSubdomain != tr("All"))
-            include = (clist.at(k).subdomain == chosenSubdomain);
-
-        if (!include)
-            continue;
-
-        QTreeWidgetItem* item = nullptr;
-        if (term.isEmpty())
-            item = new QTreeWidgetItem(m_list, str);
-        else if (clist.at(k).name.contains(term, Qt::CaseInsensitive))
-            item = new QTreeWidgetItem(m_list, str);
-        if (item) {
-            item->setData(0, Qt::UserRole, constantExpression(clist.at(k)));
+    }
+    {
+        StartupDiagnostics::AppearanceScope phase("Create constants dock rows and tooltips", this);
+        // Single-line rows share a font and have no icons or per-item size hints.
+        // Reuse their height during layout without changing content-based widths.
+        m_list->setUniformRowHeights(uniformRowHeights);
+        for (const auto& row : rows) {
+            const Constant& constant = *row.constant;
+            QTreeWidgetItem* item = new QTreeWidgetItem(m_list, row.text);
+            item->setData(0, Qt::UserRole, constantExpression(constant));
 
             QString tip;
             tip += QString(UnicodeChars::LeftToRightMark);
             tip += QString("<b>%1</b><br>%2")
-                .arg(clist.at(k).name, clist.at(k).value);
+                .arg(constant.name, constant.value);
             tip += QString(UnicodeChars::LeftToRightMark);
-            if (!clist.at(k).unit.isEmpty())
-                tip.append(" ").append(QString(clist.at(k).unit).replace(
+            if (!constant.unit.isEmpty())
+                tip.append(" ").append(QString(constant.unit).replace(
                     UnicodeChars::MiddleDot, MathDsl::MulDotOp));
             if (radixChar != MathDsl::DotSep)
                 tip.replace(MathDsl::DotSep, radixChar);
@@ -336,7 +354,7 @@ void ConstantsWidget::filter()
             item->setToolTip(1, tip);
             item->setToolTip(2, tip);
 
-            if (layoutDirection() == Qt::RightToLeft) {
+            if (rightToLeft) {
                 item->setTextAlignment(1, Qt::AlignRight);
                 item->setTextAlignment(2, Qt::AlignLeft);
             } else {
@@ -347,14 +365,18 @@ void ConstantsWidget::filter()
     }
 
     const bool hasMatches = m_list->topLevelItemCount() > 0;
-    m_list->header()->setStretchLastSection(false);
-    m_list->header()->setSectionResizeMode(2, QHeaderView::Interactive);
-    m_list->resizeColumnToContents(0);
-    m_list->resizeColumnToContents(1);
-    m_list->resizeColumnToContents(2);
+    {
+        StartupDiagnostics::AppearanceScope phase("Size constants dock columns", this);
+        m_list->header()->setStretchLastSection(false);
+        m_list->header()->setSectionResizeMode(2, QHeaderView::Interactive);
+        m_list->resizeColumnToContents(0);
+        m_list->resizeColumnToContents(1);
+        m_list->resizeColumnToContents(2);
+    }
 
     if (hasMatches) {
         m_noMatchLabel->hide();
+        StartupDiagnostics::AppearanceScope phase("Sort constants dock rows", this);
         m_list->sortItems(0, Qt::AscendingOrder);
     } else {
         updateEmptyHeaderStretch();

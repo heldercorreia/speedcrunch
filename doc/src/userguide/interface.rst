@@ -870,9 +870,13 @@ Help
     Startup timings cover application setup, settings, built-in repositories,
     UI construction, docks, themes, and session restoration. File reads on worker
     threads, queued UI restoration, and startup painting are measured too.
-    Constants and Functions list population is measured separately. The detailed
-    records identify calls from saved-filter restoration and language-change
-    events. Calls that skip an unchanged list appear separately from population.
+    Constants and Functions list population is measured separately. Constants
+    timings also separate clearing the list, filtering and formatting, creating
+    rows and tooltips, sizing columns, and sorting. Column sizing includes any
+    pending row layout that Qt performs while measuring the contents.
+    The detailed records identify calls from saved-filter restoration and
+    language-change events. Calls that skip an unchanged list appear separately
+    from population.
     The checks compare the translated list content, search and domain filters,
     and layout direction. Constants also compare the radix character. Search
     text and list content are not included in the report.
