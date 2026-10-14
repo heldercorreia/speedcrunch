@@ -7566,7 +7566,9 @@ void MainWindow::createConstantsDock(bool takeFocus)
         return;
     }
 
-    m_docks.constants = new GenericDock<ConstantsWidget>("MainWindow", QT_TR_NOOP("Constants"), this);
+    const ConstantsWidget::InitialState state {m_settings->constantsDockDomain,
+        m_settings->constantsDockSubdomain, m_settings->constantsDockSearchText};
+    m_docks.constants = new GenericDock<ConstantsWidget>("MainWindow", QT_TR_NOOP("Constants"), this, state);
     m_docks.constants->setObjectName("ConstantsDock");
     m_docks.constants->setMinimumWidth(UiConfig::ConstantsDockMinimumWidth);
     m_docks.constants->installEventFilter(this);
@@ -7578,10 +7580,6 @@ void MainWindow::createConstantsDock(bool takeFocus)
             m_docks.constants->widget(), &ConstantsWidget::handleRadixCharacterChange);
 
     addTabifiedDock(m_docks.constants, takeFocus);
-    m_docks.constants->widget()->restoreState(
-        m_settings->constantsDockDomain,
-        m_settings->constantsDockSubdomain,
-        m_settings->constantsDockSearchText);
     m_settings->constantsDockVisible = true;
 }
 
@@ -7597,7 +7595,9 @@ void MainWindow::createFunctionsDock(bool takeFocus)
         return;
     }
 
-    m_docks.functions = new GenericDock<FunctionsWidget>("MainWindow", QT_TR_NOOP("Functions"), this);
+    const FunctionsWidget::InitialState state {m_settings->functionsDockDomain,
+        m_settings->functionsDockSearchText};
+    m_docks.functions = new GenericDock<FunctionsWidget>("MainWindow", QT_TR_NOOP("Functions"), this, state);
     m_docks.functions->setObjectName("FunctionsDock");
     m_docks.functions->installEventFilter(this);
     m_docks.functions->setAllowedAreas(Qt::AllDockWidgetAreas);
@@ -7606,8 +7606,6 @@ void MainWindow::createFunctionsDock(bool takeFocus)
             this, &MainWindow::insertFunctionIntoEditor);
 
     addTabifiedDock(m_docks.functions, takeFocus);
-    m_docks.functions->widget()->setSelectedDomain(m_settings->functionsDockDomain);
-    m_docks.functions->widget()->setSearchText(m_settings->functionsDockSearchText);
     m_settings->functionsDockVisible = true;
 }
 

@@ -25,7 +25,13 @@ class ConstantsWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ConstantsWidget(QWidget* parent = nullptr);
+    struct InitialState {
+        QString domain;
+        QString subdomain;
+        QString searchText;
+    };
+
+    explicit ConstantsWidget(QWidget* parent = nullptr, const InitialState& state = {});
     ~ConstantsWidget();
     QSize minimumSizeHint() const override;
     QString selectedDomain() const;
@@ -92,6 +98,7 @@ private:
     bool m_isCompactDomainLayout = false;
     bool m_domainLayoutInitialized = false;
     bool m_emptyHeaderStretchQueued = false;
+    bool m_initializingList = true;
 };
 
 #endif

@@ -19,7 +19,12 @@ class FunctionsWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit FunctionsWidget(QWidget* parent = 0);
+    struct InitialState {
+        QString domain;
+        QString searchText;
+    };
+
+    explicit FunctionsWidget(QWidget* parent = nullptr, const InitialState& state = {});
     ~FunctionsWidget();
 
     const QTreeWidgetItem* currentItem() const;
@@ -28,6 +33,7 @@ public:
     void setSearchText(const QString& text);
     QString selectedDomain() const;
     void setSelectedDomain(const QString& domain);
+    void restoreState(const QString& domain, const QString& searchText);
 
 signals:
     void functionSelected(const QString&);
@@ -53,6 +59,7 @@ private:
     QLabel* m_noMatchLabel;
     QLineEdit* m_searchFilter;
     QLabel* m_searchLabel;
+    bool m_initializingList = true;
 };
 
 #endif // GUI_FUNCTIONSWIDGET_H

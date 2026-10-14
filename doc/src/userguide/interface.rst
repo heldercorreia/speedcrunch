@@ -870,6 +870,8 @@ Help
     Startup timings cover application setup, settings, built-in repositories,
     UI construction, docks, themes, and session restoration. File reads on worker
     threads, queued UI restoration, and startup painting are measured too.
+    Constants and Functions list population is measured separately within dock
+    construction.
     Recording starts at ``main()`` and finishes once the UI has painted and the
     startup tasks have completed. It does not include process loading before
     ``main()`` or time waiting for an update-check response.

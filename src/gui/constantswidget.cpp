@@ -6,6 +6,7 @@
 
 #include "core/constants.h"
 #include "core/settings.h"
+#include "core/startupdiagnostics.h"
 #include "core/unicodechars.h"
 #include "core/mathdsl.h"
 #include "gui/dockliststyle.h"
@@ -22,6 +23,7 @@
 #include <QPalette>
 #include <QResizeEvent>
 #include <QScrollBar>
+#include <QSignalBlocker>
 #include <QTimer>
 #include <QComboBox>
 #include <QHBoxLayout>
@@ -66,7 +68,7 @@ static QString displayValue(const Constant& constant)
     return constant.value.left(qMin(constant.value.length(), dotPos + 16));
 }
 
-ConstantsWidget::ConstantsWidget(QWidget* parent)
+ConstantsWidget::ConstantsWidget(QWidget* parent, const InitialState& state)
     : QWidget(parent)
 {
     constexpr int kControlRowHorizontalPadding = 8;
@@ -171,7 +173,8 @@ ConstantsWidget::ConstantsWidget(QWidget* parent)
     QWidget::setTabOrder(m_filter, m_list);
     setFocusProxy(m_filter);
 
-    filter();
+    m_initializingList = false;
+    restoreState(state.domain, state.subdomain, state.searchText);
 }
 
 ConstantsWidget::~ConstantsWidget()
@@ -192,6 +195,7 @@ QString ConstantsWidget::selectedSubdomain() const { return m_subdomain->current
 QString ConstantsWidget::searchText() const { return m_filter->text(); }
 void ConstantsWidget::restoreState(const QString& domain, const QString& subdomain, const QString& searchText)
 {
+    const QSignalBlocker searchBlocker(m_filter);
     if (!searchText.isNull())
         m_filter->setText(searchText);
     if (!domain.isEmpty()) {
@@ -248,6 +252,10 @@ void ConstantsWidget::retranslateText()
 
 void ConstantsWidget::filter()
 {
+    // Build the first list after the constructor has applied its saved filters.
+    if (m_initializingList)
+        return;
+    StartupDiagnostics::Scope timing("Populate constants dock list");
     const QList<Constant> &clist = Constants::instance()->list();
     const char radixChar = Settings::instance()->radixCharacter();
     QString term = m_filter->text();

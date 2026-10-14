@@ -6,6 +6,7 @@
 
 #include "core/functions.h"
 #include "core/settings.h"
+#include "core/startupdiagnostics.h"
 #include "gui/dockliststyle.h"
 #include "gui/themedlineedit.h"
 #include "gui/uiconfig.h"
@@ -20,10 +21,11 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QShortcut>
+#include <QSignalBlocker>
 #include <QTreeWidget>
 #include <QVBoxLayout>
 
-FunctionsWidget::FunctionsWidget(QWidget* parent)
+FunctionsWidget::FunctionsWidget(QWidget* parent, const InitialState& state)
     : QWidget(parent)
     , m_filterTimer(new QTimer(this))
     , m_domain(new QComboBox(this))
@@ -108,7 +110,8 @@ FunctionsWidget::FunctionsWidget(QWidget* parent)
             emit functionSelected(current->text(0));
     });
 
-    updateList();
+    m_initializingList = false;
+    restoreState(state.domain, state.searchText);
 }
 
 FunctionsWidget::~FunctionsWidget()
@@ -118,6 +121,9 @@ FunctionsWidget::~FunctionsWidget()
 
 void FunctionsWidget::updateList()
 {
+    if (m_initializingList)
+        return;
+    StartupDiagnostics::Scope timing("Populate functions dock list");
     setUpdatesEnabled(false);
 
     m_filterTimer->stop();
@@ -202,6 +208,17 @@ const QTreeWidgetItem* FunctionsWidget::currentItem() const
 QString FunctionsWidget::searchText() const { return m_searchFilter->text(); }
 void FunctionsWidget::setSearchText(const QString& text) { m_searchFilter->setText(text); }
 QString FunctionsWidget::selectedDomain() const { return m_domain->currentText(); }
+void FunctionsWidget::restoreState(const QString& domain, const QString& searchText)
+{
+    const QSignalBlocker searchBlocker(m_searchFilter);
+    const int index = m_domain->findText(domain);
+    if (index >= 0)
+        m_domain->setCurrentIndex(index);
+    if (!searchText.isNull())
+        m_searchFilter->setText(searchText);
+    updateList();
+}
+
 void FunctionsWidget::setSelectedDomain(const QString& domain)
 {
     const int index = m_domain->findText(domain);
