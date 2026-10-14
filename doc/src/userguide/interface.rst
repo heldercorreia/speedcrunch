@@ -885,7 +885,10 @@ Help
     including panes that are replaced during restoration. The report compares
     inputs for theme generation and highlighting, and counts palette and
     stylesheet assignments with changed or unchanged values. It also counts
-    identical stylesheet assignments that existing checks skip.
+    identical palette and stylesheet assignments that checks skip. Deferred
+    native dock refreshes can skip polishing when the widget's style, palette,
+    and stylesheet still match. Native theme and palette changes request a full
+    refresh.
 
     Highlighting comparisons use document revisions and sizes, theme inputs,
     selected settings, and evaluator identity. They do not track changes to the

@@ -231,7 +231,8 @@ QString appDiagnosticsReport(const QString& workload)
             << "Counts cover instrumented setters inside recorded appearance calls.\n"
             << "Assignments belong to the innermost call.\n"
             << "Changed and unchanged compare requested values before invoking the setter.\n"
-            << "Skipped counts existing guards that avoid identical stylesheet assignments.\n"
+            << "Skipped counts guards that avoid identical palette or stylesheet assignments.\n"
+            << "Native palettes can be skipped when no style polish is needed.\n"
             << "Call | Widget | Assignment | Changed | Unchanged | Skipped\n";
         for (const auto& assignment : startup.appearanceAssignments) {
             out << assignment.call << " | " << assignment.widgetId << " | "

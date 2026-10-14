@@ -1220,7 +1220,7 @@ QString scrollBarStyleSheet(const ThemeScrollBarColors& colors)
 }
 
 void saveNativeDockSurface(QWidget* widget);
-void restoreNativeDockSurface(QWidget* widget);
+void restoreNativeDockSurface(QWidget* widget, bool forceNativePolish = true);
 
 void applyScrollCornerColorToScrollArea(QAbstractScrollArea* area, const QColor& color)
 {
@@ -1712,17 +1712,31 @@ void saveNativeDockSurface(QWidget* widget)
     }
 }
 
-void restoreNativeDockSurface(QWidget* widget)
+void restoreNativeDockSurface(QWidget* widget, bool forceNativePolish)
 {
     const QVariantList state = widget->property("speedcrunchNativeDockSurface").toList();
     if (state.size() < 3)
         return;
     const QString styleSheet = widget->property("dockListNoMatchLabel").toBool()
         ? QStringLiteral("QLabel { background: transparent; }") : state.at(0).toString();
-    setStyleSheetIfChanged(widget, styleSheet);
-    widget->style()->unpolish(widget);
-    StartupDiagnostics::setAppearancePalette(widget, MenuStyle::systemPalette(widget));
-    widget->style()->polish(widget);
+    const bool styleSheetChanged = setStyleSheetIfChanged(widget, styleSheet);
+    bool needsPolish = forceNativePolish || styleSheetChanged;
+    if (!needsPolish) {
+        const QPointer<QStyle> lastPolishedStyle =
+            widget->property("speedcrunchNativeDockPolishedStyle").value<QPointer<QStyle>>();
+        needsPolish = lastPolishedStyle != widget->style()
+            || widget->palette() != MenuStyle::systemPalette(widget);
+    }
+    if (needsPolish) {
+        StartupDiagnostics::Scope timing("Restore native dock style");
+        widget->style()->unpolish(widget);
+        StartupDiagnostics::setAppearancePalette(widget, MenuStyle::systemPalette(widget));
+        widget->style()->polish(widget);
+        widget->setProperty("speedcrunchNativeDockPolishedStyle",
+                            QVariant::fromValue(QPointer<QStyle>(widget->style())));
+    } else {
+        StartupDiagnostics::appearanceAssignment(widget, true, false, true);
+    }
     widget->setAutoFillBackground(state.at(1).toBool());
     widget->setAttribute(Qt::WA_StyledBackground, state.at(2).toBool());
     if (QFrame* frame = qobject_cast<QFrame*>(widget)) {
@@ -1776,7 +1790,8 @@ void alignDockSearchRow(QWidget* content)
     layout->setContentsMargins(margins);
 }
 
-void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock, const GeneratedThemeSurfaces& surfaces)
+void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
+                                const GeneratedThemeSurfaces& surfaces, bool forceNativePolish = true)
 {
     StartupDiagnostics::AppearanceScope timing("Apply dock content appearance", dock);
     StartupDiagnostics::observeAppearanceSettings(timing);
@@ -1793,7 +1808,7 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock, const Gene
     if (Settings::instance()->dockAppearance == Settings::DockAppearanceSystem) {
         for (QWidget* widget : widgets) {
             if (!qobject_cast<QMenu*>(widget))
-                restoreNativeDockSurface(widget);
+                restoreNativeDockSurface(widget, forceNativePolish);
         }
         dockContent->setAutoFillBackground(true);
         if (BookDock* book = qobject_cast<BookDock*>(dock)) {
@@ -7098,6 +7113,8 @@ void MainWindow::applyThemeSurfacePalette()
                                            bitfieldButtonPressed.background,
                                            bitfieldButtonPressed.foreground);
     }
+    // The direct pass has already polished the controls for the current style.
+    m_dockNativePolishPending = false;
     scheduleDockAppearanceRefresh();
 }
 
@@ -7115,9 +7132,12 @@ void MainWindow::restoreWindowThemeBackgrounds()
     scheduleDockAppearanceRefresh();
 }
 
-void MainWindow::scheduleDockAppearanceRefresh()
+void MainWindow::scheduleDockAppearanceRefresh(bool forceNativePolish)
 {
-    if (m_initializingUi || m_dockAppearanceRefreshPending)
+    if (m_initializingUi)
+        return;
+    m_dockNativePolishPending = m_dockNativePolishPending || forceNativePolish;
+    if (m_dockAppearanceRefreshPending)
         return;
 
     m_dockAppearanceRefreshPending = true;
@@ -7126,16 +7146,20 @@ void MainWindow::scheduleDockAppearanceRefresh()
         StartupDiagnostics::AppearanceScope timing("Refresh deferred dock appearance", this);
         timing.observeInputs("theme", StartupDiagnostics::configuredThemeInputs());
         StartupDiagnostics::observeAppearanceSettings(timing);
+        const bool forceNativePolish = m_dockNativePolishPending;
+        m_dockNativePolishPending = false;
         const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
         MenuStyle::refresh();
         const QList<QDockWidget*> docks = m_allDocks;
         for (QDockWidget* dock : docks) {
-            applyDockContentAppearance(this, dock, surfaces);
+            applyDockContentAppearance(this, dock, surfaces, forceNativePolish);
             applyDockChromeAppearance(this, dock, surfaces);
         }
         applyDockTabBarAppearance();
         updateSplitterStyleSheet();
         m_dockAppearanceRefreshPending = false;
+        if (m_dockNativePolishPending)
+            scheduleDockAppearanceRefresh(true);
     });
 }
 
@@ -12099,7 +12123,7 @@ bool MainWindow::event(QEvent* e)
         && m_settings->dockAppearance == Settings::DockAppearanceSystem
         && (e->type() == QEvent::ApplicationPaletteChange || e->type() == QEvent::ThemeChange
             || e->type() == QEvent::StyleChange)) {
-        scheduleDockAppearanceRefresh();
+        scheduleDockAppearanceRefresh(true);
     }
     if (e != nullptr) {
         const bool updateDockSeparators =
