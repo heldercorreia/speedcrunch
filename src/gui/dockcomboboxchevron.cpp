@@ -341,8 +341,12 @@ void DockComboBoxChevron::stylePopupChrome()
         "QComboBox QAbstractItemView { background-color: %1; color: %2; border: 0; outline: 0; }")
         .arg(m_popupTheme.palette.color(QPalette::Base).name(),
              m_popupTheme.palette.color(QPalette::Text).name()));
-    if (m_comboBox->styleSheet() != comboStyle)
+    if (m_comboBox->styleSheet() != comboStyle) {
+        // Popup rules also repolish the button. Keep its dock colors intact.
+        const QPalette buttonPalette = m_comboBox->palette();
         m_comboBox->setStyleSheet(comboStyle);
+        m_comboBox->setPalette(buttonPalette);
+    }
     setVisible(!systemDock);
 
     if (system) {
@@ -356,7 +360,8 @@ void DockComboBoxChevron::stylePopupChrome()
         if (m_popupWindow != nullptr)
             m_nativePopup.restore(m_popupWindow, palette);
         for (QScrollBar* bar : {m_view->verticalScrollBar(), m_view->horizontalScrollBar()}) {
-            bar->setStyleSheet(QString());
+            if (!bar->styleSheet().isEmpty())
+                bar->setStyleSheet(QString());
             bar->setPalette(MenuStyle::systemPalette(bar));
         }
         return;
@@ -387,11 +392,13 @@ void DockComboBoxChevron::stylePopupChrome()
     popupChrome->setAttribute(Qt::WA_StyledBackground, true);
     if (popupChrome != m_view) {
         popupChrome->setObjectName(QStringLiteral("speedcrunchDockComboBoxPopupChrome"));
-        popupChrome->setStyleSheet(QStringLiteral(
+        const QString style = QStringLiteral(
             "QWidget#speedcrunchDockComboBoxPopupChrome,"
             "QFrame#speedcrunchDockComboBoxPopupChrome {"
             " background: transparent; border: 0;"
-            "}"));
+            "}");
+        if (popupChrome->styleSheet() != style)
+            popupChrome->setStyleSheet(style);
     }
     applyRoundedMask(popupChrome);
 }

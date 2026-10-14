@@ -19,6 +19,7 @@ private slots:
     void system_bitfield_background_is_visible_in_window_data();
     void system_bitfield_background_is_visible_in_window();
     void bitfield_buttons_use_configured_generated_shades();
+    void repeated_bit_theme_keeps_state_repainting();
 };
 
 void TestBitfieldUi::initTestCase()
@@ -388,6 +389,43 @@ void TestBitfieldUi::bitfield_buttons_use_configured_generated_shades()
                                                     .arg(UiConfig::PopupOutlineStrokeWidth)
                                                     .arg(popupOutline.name())));
     QVERIFY(!summaryPopup->mask().isEmpty());
+}
+
+void TestBitfieldUi::repeated_bit_theme_keeps_state_repainting()
+{
+    class StyleCounter : public QObject {
+    public:
+        int changes = 0;
+        bool eventFilter(QObject*, QEvent* event) override
+        {
+            if (event->type() == QEvent::StyleChange)
+                ++changes;
+            return false;
+        }
+    } counter;
+    const QColor background("#202124");
+    const QColor selected("#2f80ed");
+    BitWidget bit(3);
+    const auto applyColors = [&]() {
+        bit.setThemeColors(background, QColor("#d6d8dc"), background,
+                           QColor("#ffffff"), selected, QColor("#ffffff"));
+    };
+    applyColors();
+    bit.resize(48, 48);
+    bit.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&bit));
+    QCoreApplication::processEvents();
+    bit.installEventFilter(&counter);
+    for (int i = 0; i < 5; ++i)
+        applyColors();
+    QCOMPARE(counter.changes, 0);
+
+    bit.setState(true);
+    QCOMPARE(bit.grab().toImage().pixelColor(4, 4).name(), selected.name());
+    applyColors();
+    QCOMPARE(bit.grab().toImage().pixelColor(4, 4).name(), selected.name());
+    bit.setState(false);
+    QCOMPARE(bit.grab().toImage().pixelColor(4, 4).name(), background.name());
 }
 
 int main(int argc, char** argv)

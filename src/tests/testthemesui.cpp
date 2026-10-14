@@ -23,6 +23,7 @@ private slots:
     void main_window_uses_generated_theme_surface_for_chrome_and_editor();
     void restored_session_layout_reapplies_generated_theme_surfaces();
     void dock_surfaces_use_successive_generated_shades();
+    void repeated_theme_refresh_keeps_structural_styles();
     void dock_and_popup_text_meet_contrast_target_across_themes();
 };
 
@@ -1916,6 +1917,41 @@ void TestThemesUi::dock_surfaces_use_successive_generated_shades()
     QCOMPARE(table->viewport()->palette().color(QPalette::Base).name(),
              changedContentFill.name());
     QVERIFY(table->styleSheet().contains(changedContentFill.name()));
+}
+
+void TestThemesUi::repeated_theme_refresh_keeps_structural_styles()
+{
+    class StyleCounter : public QObject {
+    public:
+        int changes = 0;
+        bool eventFilter(QObject*, QEvent* event) override
+        {
+            if (event->type() == QEvent::StyleChange)
+                ++changes;
+            return false;
+        }
+    } counter;
+    MainWindowStateGuard guard;
+    guard.settings->dockAppearance = Settings::DockAppearanceSpeedCrunch;
+    guard.settings->sessionLayoutJson.clear();
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QCoreApplication::processEvents();
+    window.installEventFilter(&counter);
+    int surfaces = 0;
+    for (QWidget* widget : window.findChildren<QWidget*>()) {
+        if (widget->property("speedcrunchDockSurface").toBool()) {
+            widget->installEventFilter(&counter);
+            ++surfaces;
+        }
+    }
+    QVERIFY(surfaces > 0);
+
+    for (int i = 0; i < 3; ++i)
+        QVERIFY(QMetaObject::invokeMethod(&window, "colorSchemeChanged", Qt::DirectConnection));
+    QCoreApplication::processEvents();
+    QCOMPARE(counter.changes, 0);
 }
 
 int main(int argc, char** argv)

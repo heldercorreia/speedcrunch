@@ -138,6 +138,13 @@ void BitWidget::setThemeColors(const QColor& background,
                                const QColor& selectedBackground,
                                const QColor& selectedForeground)
 {
+    if (background.isValid() && m_themeBackground == background
+        && m_themeForeground == foreground && m_themeHoverBackground == hoverBackground
+        && m_themeHoverForeground == hoverForeground
+        && m_themeSelectedBackground == selectedBackground
+        && m_themeSelectedForeground == selectedForeground) {
+        return;
+    }
     m_themeBackground = background;
     m_themeForeground = foreground;
     m_themeHoverBackground = hoverBackground;
@@ -379,7 +386,7 @@ void BitFieldWidget::refreshTheme()
         .arg(borderColor.blue())
         .arg(0.5);
 
-    setStyleSheet(QString("QWidget#BitFieldWidget {"
+    const QString style = QString("QWidget#BitFieldWidget {"
                           " background-color: %1; color: %2;"
                           "}"
                           "QLabel#BitWidget, QLabel#FirstBitWidget {"
@@ -395,7 +402,9 @@ void BitFieldWidget::refreshTheme()
                           "}")
                       .arg(background.name(),
                            foreground.name(),
-                           cssBorderColor));
+                           cssBorderColor);
+    if (styleSheet() != style)
+        setStyleSheet(style);
     // Paint the container too, otherwise the parent window shows through.
     setAttribute(Qt::WA_StyledBackground, true);
     const QString buttonStyle = bitFieldButtonStyleSheet(buttonBackground,
@@ -411,7 +420,8 @@ void BitFieldWidget::refreshTheme()
         if (button == nullptr)
             continue;
         if (Settings::instance()->dockAppearance == Settings::DockAppearanceSystem) {
-            button->setStyleSheet(QString());
+            if (!button->styleSheet().isEmpty())
+                button->setStyleSheet(QString());
             button->setPalette(MenuStyle::systemPalette(button));
             continue;
         }
@@ -421,7 +431,8 @@ void BitFieldWidget::refreshTheme()
         buttonPalette.setColor(QPalette::Highlight, buttonHoverBackground);
         buttonPalette.setColor(QPalette::HighlightedText, buttonHoverForeground);
         button->setPalette(buttonPalette);
-        button->setStyleSheet(buttonStyle);
+        if (button->styleSheet() != buttonStyle)
+            button->setStyleSheet(buttonStyle);
     }
     const QColor selectedBackground = m_themeSelectedBackground.isValid()
         ? m_themeSelectedBackground

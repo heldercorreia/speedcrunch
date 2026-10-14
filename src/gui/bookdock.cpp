@@ -15,7 +15,9 @@
 #include <QEvent>
 #include <QPalette>
 #include <QRegularExpression>
+#include <QScopedValueRollback>
 #include <QTextBrowser>
+#include <QTimer>
 #include <QVBoxLayout>
 
 namespace {
@@ -93,7 +95,7 @@ BookDock::BookDock(QWidget* parent)
     updatePaletteStyle();
 
     connect(m_browser, SIGNAL(anchorClicked(const QUrl&)), SLOT(handleAnchorClick(const QUrl&)));
-    connect(m_browser, SIGNAL(paletteStyleChanged()), SLOT(refreshCurrentPage()));
+    connect(m_browser, SIGNAL(paletteStyleChanged()), SLOT(schedulePaletteStyleRefresh()));
 
     bookLayout->addWidget(m_browser);
     widget->setLayout(bookLayout);
@@ -110,7 +112,7 @@ void BookDock::setContentSurfaceColors(const QColor& background, const QColor& f
 
     m_contentBackground = background;
     m_contentForeground = foreground;
-    refreshCurrentPage();
+    schedulePaletteStyleRefresh();
 }
 
 void BookDock::handleAnchorClick(const QUrl& url)
@@ -141,18 +143,22 @@ void BookDock::handleAnchorClick(const QUrl& url)
 void BookDock::openPage(const QUrl& url)
 {
     const QString page = url.toString().isEmpty() ? QStringLiteral("index") : url.toString();
-    QString content = m_book->getPageContent(page);
-    if (!content.isNull())
-        m_browser->setHtml(applyPaletteStyle(content));
+    const QString content = m_book->getPageContent(page);
+    if (!content.isNull()) {
+        m_pageContent = content;
+        refreshCurrentPage();
+    }
     m_currentPage = page;
 }
 
 void BookDock::retranslateText()
 {
     setWindowTitle(tr("Formula Book"));
-    QString content = m_book->getCurrentPageContent();
-    if (!content.isNull())
-        m_browser->setHtml(applyPaletteStyle(content));
+    const QString content = m_book->getCurrentPageContent();
+    if (!content.isNull()) {
+        m_pageContent = content;
+        refreshCurrentPage();
+    }
 }
 
 void BookDock::changeEvent(QEvent* event)
@@ -162,7 +168,7 @@ void BookDock::changeEvent(QEvent* event)
     } else if (event->type() == QEvent::PaletteChange
                || event->type() == QEvent::ApplicationPaletteChange
                || event->type() == QEvent::StyleChange) {
-        refreshCurrentPage();
+        schedulePaletteStyleRefresh();
     } else {
         QDockWidget::changeEvent(event);
     }
@@ -173,17 +179,35 @@ QString BookDock::currentPage() const
     return m_currentPage.isEmpty() ? QStringLiteral("index") : m_currentPage;
 }
 
+void BookDock::schedulePaletteStyleRefresh()
+{
+    if (m_refreshingPaletteStyle || m_paletteStyleRefreshPending)
+        return;
+
+    // Parent polishing sends several palette and style events in one pass.
+    // Render the current page once after those changes settle.
+    m_paletteStyleRefreshPending = true;
+    QTimer::singleShot(0, this, [this]() {
+        m_paletteStyleRefreshPending = false;
+        refreshCurrentPage();
+    });
+}
+
 void BookDock::refreshCurrentPage()
 {
     if (m_refreshingPaletteStyle)
         return;
 
-    m_refreshingPaletteStyle = true;
+    QScopedValueRollback<bool> refreshing(m_refreshingPaletteStyle, true);
     updatePaletteStyle();
-    const QString content = m_book->getCurrentPageContent();
-    if (!content.isNull())
-        m_browser->setHtml(applyPaletteStyle(content));
-    m_refreshingPaletteStyle = false;
+    if (m_pageContent.isNull())
+        return;
+
+    const QString styledContent = applyPaletteStyle(m_pageContent);
+    if (styledContent == m_styledContent)
+        return;
+    m_styledContent = styledContent;
+    m_browser->setHtml(styledContent);
 }
 
 QString BookDock::applyPaletteStyle(const QString& content) const

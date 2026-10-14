@@ -982,6 +982,15 @@ ThemeSurfaceColors themeSurfaceForShadeIndex(const GeneratedThemeSurfaces& surfa
     };
 }
 
+bool setStyleSheetIfChanged(QWidget* widget, const QString& styleSheet)
+{
+    // Even an identical stylesheet makes Qt repolish the widget's children.
+    if (widget->styleSheet() == styleSheet)
+        return false;
+    widget->setStyleSheet(styleSheet);
+    return true;
+}
+
 void applyStatusBarAppearance(QStatusBar* bar, const GeneratedThemeSurfaces& surfaces)
 {
     if (bar == nullptr)
@@ -992,7 +1001,7 @@ void applyStatusBarAppearance(QStatusBar* bar, const GeneratedThemeSurfaces& sur
                          bar->testAttribute(Qt::WA_StyledBackground));
     }
     if (Settings::instance()->statusBarAppearance == Settings::StatusBarAppearanceSystem) {
-        bar->setStyleSheet(QString());
+        setStyleSheetIfChanged(bar, QString());
         QList<QWidget*> widgets = bar->findChildren<QWidget*>();
         widgets.prepend(bar);
         for (QWidget* widget : widgets) {
@@ -1015,7 +1024,7 @@ void applyStatusBarAppearance(QStatusBar* bar, const GeneratedThemeSurfaces& sur
     bar->setPalette(paletteForThemeSurface(bar->palette(), surface));
     bar->setAutoFillBackground(true);
     bar->setAttribute(Qt::WA_StyledBackground, true);
-    bar->setStyleSheet(QStringLiteral(
+    setStyleSheetIfChanged(bar, QStringLiteral(
         "QStatusBar { background-color: %1; color: %2; }"
         "QStatusBar::item { border: none; }"
         "QStatusBar QLabel { background: transparent; color: %2; }"
@@ -1225,7 +1234,7 @@ void applyScrollCornerColorToScrollArea(QAbstractScrollArea* area, const QColor&
     corner->setPalette(palette);
     corner->setAutoFillBackground(true);
     corner->setAttribute(Qt::WA_StyledBackground, true);
-    corner->setStyleSheet(QStringLiteral("QWidget { background-color: %1; border: 0; }")
+    setStyleSheetIfChanged(corner, QStringLiteral("QWidget { background-color: %1; border: 0; }")
                               .arg(color.name()));
 }
 
@@ -1239,7 +1248,7 @@ public:
         setStyleSheet(QString());
         setPalette(MenuStyle::systemPalette(this));
         if (QLineEdit* editor = lineEdit()) {
-            editor->setStyleSheet(QString());
+            setStyleSheetIfChanged(editor, QString());
             editor->setPalette(MenuStyle::systemPalette(editor));
         }
         update();
@@ -1269,7 +1278,7 @@ public:
 
         if (QLineEdit* editor = lineEdit()) {
             editor->setPalette(paletteForThemeSurface(editor->palette(), surface));
-            editor->setStyleSheet(QStringLiteral(
+            setStyleSheetIfChanged(editor, QStringLiteral(
                 "QLineEdit { background: transparent; color: %1; border: none; }")
                                       .arg(surface.foreground.name()));
         }
@@ -1322,9 +1331,9 @@ void applyScrollBarColorsToScrollArea(QAbstractScrollArea* area, const ThemeScro
 
     const QString styleSheet = scrollBarStyleSheet(colors);
     if (QScrollBar* bar = area->verticalScrollBar())
-        bar->setStyleSheet(styleSheet);
+        setStyleSheetIfChanged(bar, styleSheet);
     if (QScrollBar* bar = area->horizontalScrollBar())
-        bar->setStyleSheet(styleSheet);
+        setStyleSheetIfChanged(bar, styleSheet);
     applyScrollCornerColorToScrollArea(area, colors.track);
 }
 
@@ -1451,7 +1460,7 @@ void applySurfaceToLabel(QLabel* label, const ThemeSurfaceColors& surface)
         return;
 
     label->setPalette(paletteForThemeSurface(label->palette(), surface));
-    label->setStyleSheet(QStringLiteral(
+    setStyleSheetIfChanged(label, QStringLiteral(
         "QLabel { background-color: %1; color: %2; }")
                              .arg(surface.background.name(),
                                   surface.foreground.name()));
@@ -1465,8 +1474,8 @@ void applyNoMatchLabelSurface(QAbstractItemView* view, const ThemeSurfaceColors&
     for (QLabel* label : view->viewport()->findChildren<QLabel*>(QString(), Qt::FindDirectChildrenOnly)) {
         if (!label->property("dockListNoMatchLabel").toBool())
             continue;
-        applySurfaceToLabel(label, surface);
-        label->setStyleSheet(QStringLiteral("QLabel { background: transparent; color: %1; }")
+        label->setPalette(paletteForThemeSurface(label->palette(), surface));
+        setStyleSheetIfChanged(label, QStringLiteral("QLabel { background: transparent; color: %1; }")
                                  .arg(surface.foreground.name()));
     }
 }
@@ -1481,7 +1490,9 @@ bool isStructuralDockBackgroundWidget(QWidget* widget)
         || qobject_cast<QHeaderView*>(widget)
         || qobject_cast<QLabel*>(widget)
         || qobject_cast<QLineEdit*>(widget)
-        || qobject_cast<QMenu*>(widget)) {
+        || qobject_cast<QMenu*>(widget)
+        || qobject_cast<QScrollBar*>(widget)
+        || qobject_cast<BitFieldWidget*>(widget)) {
         return false;
     }
     if (qobject_cast<QAbstractScrollArea*>(widget->parentWidget()))
@@ -1500,7 +1511,7 @@ void applySurfaceToStructuralDockWidget(QWidget* widget, const ThemeSurfaceColor
     // Dock containers share their stylesheet with child menus. Limit these
     // colors to the structural surfaces so the menu setting controls popups.
     widget->setProperty("speedcrunchDockSurface", true);
-    widget->setStyleSheet(QStringLiteral(
+    setStyleSheetIfChanged(widget, QStringLiteral(
         "QWidget[speedcrunchDockSurface=\"true\"] { background-color: %1; color: %2; }")
                               .arg(surface.background.name(),
                                    surface.foreground.name()));
@@ -1599,7 +1610,7 @@ void applyDockChromeAppearance(MainWindow* owner,
     const ThemeSurfaceColors titleButtonHover =
         themeSurfaceForShadeIndex(surfaces, UiConfig::DockHeaderButtonHoverFillShade);
     dock->setPalette(paletteForThemeSurface(dock->palette(), surfaces.headersAndBorders));
-    dock->setStyleSheet(QStringLiteral(
+    const bool styleChanged = setStyleSheetIfChanged(dock, QStringLiteral(
         "QDockWidget {"
         " color: %2;"
         "}"
@@ -1627,10 +1638,12 @@ void applyDockChromeAppearance(MainWindow* owner,
                                  titleButton.foreground.name(),
                                  titleButtonHover.background.name(),
                                  titleButtonHover.foreground.name()));
-    dock->style()->unpolish(dock);
-    dock->style()->polish(dock);
-    dock->setWindowTitle(dock->windowTitle());
-    dock->update();
+    if (styleChanged) {
+        dock->style()->unpolish(dock);
+        dock->style()->polish(dock);
+        dock->setWindowTitle(dock->windowTitle());
+        dock->update();
+    }
     for (QAbstractButton* button : titleButtons) {
         const bool closeButton = button->objectName() == QLatin1String("qt_dockwidget_closebutton");
         button->setProperty("speedcrunchDockHeaderButton", true);
@@ -1647,7 +1660,7 @@ void applyDockChromeAppearance(MainWindow* owner,
         button->setAttribute(Qt::WA_Hover, true);
         button->setFixedSize(QSize(18, 18));
         button->setIconSize(QSize(18, 18));
-        button->setStyleSheet(QStringLiteral(
+        setStyleSheetIfChanged(button, QStringLiteral(
             "QAbstractButton {"
             " background-color: %1; color: %2;"
             " border: none; border-radius: 9px; padding: 0px;"
@@ -1690,9 +1703,9 @@ void restoreNativeDockSurface(QWidget* widget)
     const QVariantList state = widget->property("speedcrunchNativeDockSurface").toList();
     if (state.size() < 3)
         return;
-    widget->setStyleSheet(state.at(0).toString());
-    if (widget->property("dockListNoMatchLabel").toBool())
-        widget->setStyleSheet(QStringLiteral("QLabel { background: transparent; }"));
+    const QString styleSheet = widget->property("dockListNoMatchLabel").toBool()
+        ? QStringLiteral("QLabel { background: transparent; }") : state.at(0).toString();
+    setStyleSheetIfChanged(widget, styleSheet);
     widget->style()->unpolish(widget);
     widget->setPalette(MenuStyle::systemPalette(widget));
     widget->style()->polish(widget);
@@ -1942,7 +1955,7 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock, const Gene
         searchBox->setPalette(paletteForThemeSurface(searchBox->palette(), dockTextInput));
         if (ThemedLineEdit* themedSearchBox = dynamic_cast<ThemedLineEdit*>(searchBox))
             themedSearchBox->setCursorColor(surfaces.primary.background);
-        searchBox->setStyleSheet(QStringLiteral(
+        setStyleSheetIfChanged(searchBox, QStringLiteral(
             "QLineEdit {"
             " background-color: %1; color: %2;"
             " border: %5px solid %3; border-radius: %7px; padding: 4px 8px;"
@@ -1977,7 +1990,7 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock, const Gene
         view->setProperty("dockListActiveSelectionForeground", surfaces.primary.foreground);
         view->setProperty("dockListInactiveSelectionBackground", dockUnfocusedSelection.background);
         view->setProperty("dockListInactiveSelectionForeground", dockUnfocusedSelection.foreground);
-        view->setStyleSheet(QStringLiteral(
+        setStyleSheetIfChanged(view, QStringLiteral(
             "QAbstractItemView {"
             " background-color: %1; color: %2;"
             " border: 0;"
@@ -2002,7 +2015,7 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock, const Gene
         // Keep the native height, including the two themed border strokes.
         const int headerContentHeight = qMax(0, header->sizeHint().height() - 2);
         header->setPalette(paletteForThemeSurface(header->palette(), dockBackground));
-        header->setStyleSheet(QStringLiteral(
+        setStyleSheetIfChanged(header, QStringLiteral(
             "QHeaderView { background-color: %1; color: %2; border: 0; padding: 0; }"
             "QHeaderView::section {"
             " background-color: %1; color: %2;"
@@ -2048,7 +2061,7 @@ void applyThemeBackgroundRoleToWidget(QWidget* widget, const QColor& background)
         // Keep the surface color local. An unqualified stylesheet also paints
         // child menus, even when they have a complete system palette.
         widget->setProperty("speedcrunchThemeSurfaceBackground", true);
-        widget->setStyleSheet(QStringLiteral(
+        setStyleSheetIfChanged(widget, QStringLiteral(
             "QWidget[speedcrunchThemeSurfaceBackground=\"true\"] { background-color: %1; }")
                                  .arg(background.name()));
     }
@@ -2063,7 +2076,7 @@ void applyDockTabBarBackgroundToWidget(QWidget* widget, const ThemeSurfaceColors
     widget->setPalette(paletteForThemeSurface(widget->palette(), surface));
     widget->setAutoFillBackground(true);
     widget->setAttribute(Qt::WA_StyledBackground, true);
-    widget->setStyleSheet(QStringLiteral(
+    setStyleSheetIfChanged(widget, QStringLiteral(
         "QWidget[speedcrunchDockTabBackground=\"true\"] {"
         " background-color: %1; border: 0;"
         "}")
@@ -6802,7 +6815,7 @@ void MainWindow::updateSplitterStyleSheet()
         QSplitter* splitter, const auto& applyStyleRef) -> void {
         if (splitter == nullptr)
             return;
-        splitter->setStyleSheet(classic && splitter->orientation() == Qt::Horizontal
+        setStyleSheetIfChanged(splitter, classic && splitter->orientation() == Qt::Horizontal
             ? classicVerticalStyleSheet : styleSheet);
         for (int i = 0; i < splitter->count(); ++i) {
             if (QSplitter* childSplitter = qobject_cast<QSplitter*>(splitter->widget(i)))
@@ -6816,7 +6829,7 @@ void MainWindow::updateSplitterStyleSheet()
         const bool classicVerticalDivider = classic
             && splitterHandle->orientation() == Qt::Horizontal
             && m_widgets.splitContainer->isAncestorOf(splitterHandle);
-        splitterHandle->setStyleSheet(splitterHandleStyleSheet(
+        setStyleSheetIfChanged(splitterHandle, splitterHandleStyleSheet(
             classicVerticalDivider ? classicPaneDivider : handle, hoveredHandle));
         splitterHandle->update();
     }
@@ -6923,7 +6936,7 @@ void MainWindow::applyDockTabBarAppearance()
         updateDockSystemTabCursor(tabBar, tabBar->mapFromGlobal(QCursor::pos()));
         tabBar->setDrawBase(false);
         tabBar->setPalette(tabBarPalette);
-        tabBar->setStyleSheet(QStringLiteral(
+        setStyleSheetIfChanged(tabBar, QStringLiteral(
             "QTabBar { background-color: %1; }"
             "QTabBar::tab {"
             " background-color: transparent; color: %2;"
@@ -6974,7 +6987,7 @@ void MainWindow::applyThemeSurfacePalette()
     setPalette(paletteForThemeSurface(palette(), surface));
     setAutoFillBackground(true);
     setAttribute(Qt::WA_StyledBackground, true);
-    setStyleSheet(QStringLiteral("QMainWindow { background-color: %1; }")
+    setStyleSheetIfChanged(this, QStringLiteral("QMainWindow { background-color: %1; }")
                       .arg(surface.background.name()));
     MenuStyle::refresh();
 
@@ -7030,6 +7043,15 @@ void MainWindow::applyThemeSurfacePalette()
                                            bitfieldButtonPressed.background,
                                            bitfieldButtonPressed.foreground);
     }
+    scheduleDockAppearanceRefresh();
+}
+
+void MainWindow::scheduleDockAppearanceRefresh()
+{
+    if (m_initializingUi || m_dockAppearanceRefreshPending)
+        return;
+
+    m_dockAppearanceRefreshPending = true;
     QTimer::singleShot(0, this, [this]() {
         const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
         MenuStyle::refresh();
@@ -7039,6 +7061,8 @@ void MainWindow::applyThemeSurfacePalette()
             applyDockChromeAppearance(this, dock, surfaces);
         }
         applyDockTabBarAppearance();
+        updateSplitterStyleSheet();
+        m_dockAppearanceRefreshPending = false;
     });
 }
 
@@ -7635,21 +7659,16 @@ void MainWindow::addTabifiedDock(QDockWidget* newDock, bool takeFocus, Qt::DockW
     m_allDocks.append(newDock);
     newDock->show();
     newDock->raise();
-    const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
-    applyDockContentAppearance(this, newDock, surfaces);
-    applyDockChromeAppearance(this, newDock, surfaces);
-    applyDockTabBarAppearance();
-    updateSplitterStyleSheet();
-    QPointer<QDockWidget> guardedDock(newDock);
-    QTimer::singleShot(0, newDock, [this, guardedDock]() {
-        if (guardedDock == nullptr)
-            return;
+    // Startup creates every dock for layout restoration. Apply their final
+    // appearance together once the window and its dock layout are ready.
+    if (!m_initializingUi) {
         const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
-        applyDockContentAppearance(this, guardedDock, surfaces);
-        applyDockChromeAppearance(this, guardedDock, surfaces);
+        applyDockContentAppearance(this, newDock, surfaces);
+        applyDockChromeAppearance(this, newDock, surfaces);
         applyDockTabBarAppearance();
         updateSplitterStyleSheet();
-    });
+        scheduleDockAppearanceRefresh();
+    }
     if (takeFocus)
         newDock->setFocus();
 }
@@ -9035,6 +9054,7 @@ MainWindow::MainWindow(bool restorePreviousSession)
 
     createUi();
     applySettings();
+    m_initializingUi = false;
     applyThemeSurfacePalette();
     refreshPaneThemes();
     ensureDockChromeStyleInstalled();
@@ -11927,18 +11947,8 @@ bool MainWindow::event(QEvent* e)
     if (e != nullptr && !m_allDocks.isEmpty()
         && m_settings->dockAppearance == Settings::DockAppearanceSystem
         && (e->type() == QEvent::ApplicationPaletteChange || e->type() == QEvent::ThemeChange
-            || e->type() == QEvent::StyleChange)
-        && !property("speedcrunchDockRefreshPending").toBool()) {
-        setProperty("speedcrunchDockRefreshPending", true);
-        QTimer::singleShot(0, this, [this]() {
-            const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
-            for (QDockWidget* dock : m_allDocks) {
-                applyDockContentAppearance(this, dock, surfaces);
-                applyDockChromeAppearance(this, dock, surfaces);
-            }
-            applyDockTabBarAppearance();
-            setProperty("speedcrunchDockRefreshPending", false);
-        });
+            || e->type() == QEvent::StyleChange)) {
+        scheduleDockAppearanceRefresh();
     }
     if (e != nullptr) {
         const bool updateDockSeparators =

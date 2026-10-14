@@ -369,6 +369,7 @@ private:
     void removePaneForDisplay(ResultDisplay* display);
     void normalizeSplitContainerTree();
     void applyThemeSurfacePalette();
+    void scheduleDockAppearanceRefresh();
     void applyDockTabBarAppearance();
     void applyKeypadThemeSurfacePalette();
     void scheduleThemeRuntimeDiagnosticsReport();
@@ -645,6 +646,8 @@ private:
         GenericDock<BitFieldWidget>* bitField;
     } m_docks;
     QList<QDockWidget*> m_allDocks;
+    bool m_initializingUi = true;
+    bool m_dockAppearanceRefreshPending = false;
     QHash<ResultDisplay*, QString> m_paneSessionNames;
     QHash<ResultDisplay*, QStringList> m_paneSessionTabs;
     QHash<ResultDisplay*, QTabBar*> m_paneTabBars;

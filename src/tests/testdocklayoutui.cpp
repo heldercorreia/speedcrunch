@@ -27,6 +27,11 @@ private slots:
     void formula_book_text_scales_with_zoom();
     void formula_book_links_follow_dock_appearance_data();
     void formula_book_links_follow_dock_appearance();
+    void formula_book_ignores_repeated_appearance_events_data();
+    void formula_book_ignores_repeated_appearance_events();
+    void formula_book_combines_palette_changes();
+    void startup_styling_keeps_formula_book_document();
+    void formula_book_retranslation_refreshes_cached_page();
     void restored_constants_dock_empty_filter_fills_header();
     void dock_scroll_corner_uses_scrollbar_track_fill();
     void dock_separator_style_uses_primary_while_hovered_or_dragged();
@@ -1356,6 +1361,143 @@ void TestDockLayoutUi::closing_and_reopening_docks_keeps_attached_widgets()
         QVERIFY(bitfield != nullptr);
         QVERIFY(bitfield->isVisible());
     }
+}
+
+void TestDockLayoutUi::formula_book_ignores_repeated_appearance_events_data()
+{
+    QTest::addColumn<bool>("system");
+    QTest::newRow("theme") << false;
+    QTest::newRow("system") << true;
+}
+
+void TestDockLayoutUi::formula_book_ignores_repeated_appearance_events()
+{
+    QFETCH(bool, system);
+    MainWindowStateGuard guard;
+    guard.settings->dockAppearance = system ? Settings::DockAppearanceSystem
+                                            : Settings::DockAppearanceSpeedCrunch;
+    BookDock dock;
+    dock.resize(400, 240);
+    dock.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&dock));
+    dock.openPage(QUrl(QStringLiteral("electronics/ohmslaw")));
+    QCoreApplication::processEvents();
+    auto* browser = dock.findChild<QTextBrowser*>();
+    QVERIFY(browser);
+    QTextCursor selection = browser->document()->find(QStringLiteral("Index"));
+    QVERIFY(!selection.isNull());
+    browser->setTextCursor(selection);
+    const QString selectedText = browser->textCursor().selectedText();
+    const int revision = browser->document()->revision();
+    const int scroll = browser->verticalScrollBar()->value();
+    QSignalSpy contents(browser->document(), &QTextDocument::contentsChanged);
+
+    for (int i = 0; i < 12; ++i) {
+        for (QWidget* widget : {static_cast<QWidget*>(&dock), static_cast<QWidget*>(browser)}) {
+            QEvent style(QEvent::StyleChange);
+            QCoreApplication::sendEvent(widget, &style);
+            QEvent palette(QEvent::PaletteChange);
+            QCoreApplication::sendEvent(widget, &palette);
+        }
+    }
+    QCoreApplication::processEvents();
+
+    QCOMPARE(contents.count(), 0);
+    QCOMPARE(browser->document()->revision(), revision);
+    QCOMPARE(browser->textCursor().selectedText(), selectedText);
+    QCOMPARE(browser->verticalScrollBar()->value(), scroll);
+    QCOMPARE(dock.currentPage(), QStringLiteral("electronics/ohmslaw"));
+}
+
+void TestDockLayoutUi::formula_book_combines_palette_changes()
+{
+    MainWindowStateGuard guard;
+    guard.settings->dockAppearance = Settings::DockAppearanceSpeedCrunch;
+    BookDock dock;
+    dock.openPage(QUrl(QStringLiteral("electronics/ohmslaw")));
+    QCoreApplication::processEvents();
+    auto* browser = dock.findChild<QTextBrowser*>();
+    QVERIFY(browser);
+    const QString text = browser->toPlainText();
+    browser->zoomIn(3);
+    const QFont font = browser->document()->defaultFont();
+    QSignalSpy contents(browser->document(), &QTextDocument::contentsChanged);
+
+    dock.setContentSurfaceColors(QColor("#202020"), QColor("#dddddd"));
+    dock.setContentSurfaceColors(QColor("#303030"), QColor("#eeeeee"));
+    dock.setContentSurfaceColors(QColor("#404040"), QColor("#ffffff"));
+    QCOMPARE(contents.count(), 0);
+    QCoreApplication::processEvents();
+
+    QVERIFY(contents.count() > 0);
+    QVERIFY2(contents.count() <= 2, "A palette burst should rebuild the document once");
+    QCOMPARE(browser->palette().color(QPalette::Base), QColor("#404040"));
+    QCOMPARE(browser->palette().color(QPalette::Text), QColor("#ffffff"));
+    QCOMPARE(browser->document()->defaultFont(), font);
+    QCOMPARE(browser->toPlainText(), text);
+    QCOMPARE(dock.currentPage(), QStringLiteral("electronics/ohmslaw"));
+
+    // A pending appearance refresh must not bring back the previous page.
+    dock.setContentSurfaceColors(QColor("#505050"), QColor("#eeeeee"));
+    dock.openPage(QUrl(QStringLiteral("index")));
+    QCOMPARE(dock.currentPage(), QStringLiteral("index"));
+    const QString indexText = browser->toPlainText();
+    QCoreApplication::processEvents();
+    QCOMPARE(browser->toPlainText(), indexText);
+}
+
+void TestDockLayoutUi::startup_styling_keeps_formula_book_document()
+{
+    MainWindowStateGuard guard;
+    guard.settings->dockAppearance = Settings::DockAppearanceSpeedCrunch;
+    guard.settings->formulaBookDockVisible = false;
+    guard.settings->sessionLayoutJson.clear();
+    guard.settings->windowState.clear();
+    MainWindow window(false);
+    auto* dock = window.findChild<BookDock*>(QStringLiteral("BookDock"));
+    QVERIFY(dock);
+    auto* browser = dock->findChild<QTextBrowser*>();
+    QVERIFY(browser);
+    QSignalSpy contents(browser->document(), &QTextDocument::contentsChanged);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QCoreApplication::processEvents();
+    QVERIFY2(contents.count() <= 2, "Startup should render the final book palette once");
+    QVERIFY(!browser->toPlainText().isEmpty());
+    QVERIFY(dock->isHidden());
+    const int settledCount = contents.count();
+    QCoreApplication::processEvents();
+    QCOMPARE(contents.count(), settledCount);
+    QCOMPARE(window.findChildren<QDockWidget*>().size(), 8);
+}
+
+void TestDockLayoutUi::formula_book_retranslation_refreshes_cached_page()
+{
+    class BookTranslator : public QTranslator {
+    public:
+        QString translate(const char* context, const char* source,
+                          const char* = nullptr, int = -1) const override
+        {
+            if (qstrcmp(context, "Book") == 0 && qstrcmp(source, "Index") == 0)
+                return QStringLiteral("Translated book index");
+            return QString();
+        }
+    } translator;
+    BookDock dock;
+    dock.openPage(QUrl(QStringLiteral("electronics/ohmslaw")));
+    QCoreApplication::processEvents();
+    auto* browser = dock.findChild<QTextBrowser*>();
+    QVERIFY(browser);
+    QVERIFY(!browser->toPlainText().contains(QStringLiteral("Translated book index")));
+    QCoreApplication::installTranslator(&translator);
+    const auto removeTranslator = qScopeGuard([&]() {
+        QCoreApplication::removeTranslator(&translator);
+    });
+    dock.retranslateText();
+    QVERIFY(browser->toPlainText().contains(QStringLiteral("Translated book index")));
+    QCOMPARE(dock.currentPage(), QStringLiteral("electronics/ohmslaw"));
+    QCoreApplication::processEvents();
+    QVERIFY(browser->toPlainText().contains(QStringLiteral("Translated book index")));
 }
 
 int main(int argc, char** argv)

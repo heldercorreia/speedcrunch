@@ -45,6 +45,7 @@ protected:
 
 private slots:
     void handleAnchorClick(const QUrl&);
+    void schedulePaletteStyleRefresh();
     void refreshCurrentPage();
 
 private:
@@ -55,9 +56,12 @@ private:
     Book* m_book;
     TextBrowser* m_browser;
     QString m_currentPage;
+    QString m_pageContent;
+    QString m_styledContent;
     QColor m_contentBackground;
     QColor m_contentForeground;
     bool m_refreshingPaletteStyle = false;
+    bool m_paletteStyleRefreshPending = false;
 };
 
 #endif // GUI_BOOKDOCK_H
