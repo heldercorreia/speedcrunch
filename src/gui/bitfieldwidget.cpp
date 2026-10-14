@@ -7,6 +7,7 @@
 #include "core/mathdsl.h"
 #include "core/settings.h"
 #include "gui/menustyleutils.h"
+#include "gui/startupappearance.h"
 #include "gui/tooltipstyleutils.h"
 #include "gui/uiconfig.h"
 #include "math/quantity.h"
@@ -24,6 +25,7 @@
 #include <QPaintEvent>
 #include <QPushButton>
 #include <QRegularExpression>
+#include <QStyle>
 
 namespace {
 
@@ -76,7 +78,7 @@ BitWidget::BitWidget(int bitPosition, QWidget* parent)
     setCursor(Qt::PointingHandCursor);
     setMouseTracking(true);
     setAttribute(Qt::WA_Hover, true);
-    updateStyle();
+    updateStyle(StyleUpdateReason::Theme);
 }
 
 void BitWidget::setState(bool state)
@@ -84,12 +86,12 @@ void BitWidget::setState(bool state)
     if (state != m_state) {
         m_state = state;
         setProperty("bitState", m_state);
-        updateStyle();
+        updateStyle(StyleUpdateReason::Interaction);
         update();
     }
 }
 
-void BitWidget::updateStyle()
+void BitWidget::updateStyle(StyleUpdateReason reason)
 {
     const QPalette palette = m_themeBackground.isValid() ? this->palette() : MenuStyle::systemPalette(this);
     const QColor background = m_themeBackground.isValid()
@@ -112,7 +114,7 @@ void BitWidget::updateStyle()
         : palette.color(QPalette::HighlightedText);
     setProperty("bitState", m_state);
     setProperty("bitPressed", m_pressed);
-    setStyleSheet(
+    const QString style =
         QString("QLabel { background-color: %1; color: %2; }"
                 "QLabel[bitState=\"true\"], QLabel[bitPressed=\"true\"] {"
                 " background-color: %5; color: %6;"
@@ -127,8 +129,18 @@ void BitWidget::updateStyle()
                  hoverBackground.name(),
                  hoverForeground.name(),
                  selectedBackground.name(),
-                 selectedForeground.name())
-    );
+                 selectedForeground.name());
+    if (styleSheet() != style) {
+        StartupDiagnostics::setAppearanceStyleSheet(this, style);
+    } else {
+        StartupDiagnostics::appearanceAssignment(this, false, false, true);
+        if (reason == StyleUpdateReason::Interaction) {
+            // Property selectors must still update when a bit is selected or pressed.
+            this->style()->unpolish(this);
+            this->style()->polish(this);
+            update();
+        }
+    }
 }
 
 void BitWidget::setThemeColors(const QColor& background,
@@ -151,7 +163,7 @@ void BitWidget::setThemeColors(const QColor& background,
     m_themeHoverForeground = hoverForeground;
     m_themeSelectedBackground = selectedBackground;
     m_themeSelectedForeground = selectedForeground;
-    updateStyle();
+    updateStyle(StyleUpdateReason::Theme);
 }
 
 void BitWidget::setToolTipThemeColors(const QColor& background,
@@ -188,7 +200,7 @@ void BitWidget::mousePressEvent(QMouseEvent*)
 {
     hideSummaryPopup();
     m_pressed = true;
-    updateStyle();
+    updateStyle(StyleUpdateReason::Interaction);
 }
 
 void BitWidget::mouseReleaseEvent(QMouseEvent*)

@@ -1724,16 +1724,21 @@ void restoreNativeDockSurface(QWidget* widget, bool forceNativePolish)
     if (!needsPolish) {
         const QPointer<QStyle> lastPolishedStyle =
             widget->property("speedcrunchNativeDockPolishedStyle").value<QPointer<QStyle>>();
+        const QVariant sourcePalette = widget->property("speedcrunchNativeDockSourcePalette");
+        const QVariant restoredPalette = widget->property("speedcrunchNativeDockRestoredPalette");
+        // Stylesheets can alter native palette roles during polish.
         needsPolish = lastPolishedStyle != widget->style()
-            || widget->palette() != MenuStyle::systemPalette(widget);
+            || !sourcePalette.isValid() || !restoredPalette.isValid()
+            || sourcePalette.value<QPalette>() != MenuStyle::systemPalette(widget)
+            || widget->palette() != restoredPalette.value<QPalette>();
     }
     if (needsPolish) {
         StartupDiagnostics::Scope timing("Restore native dock style");
         widget->style()->unpolish(widget);
-        StartupDiagnostics::setAppearancePalette(widget, MenuStyle::systemPalette(widget));
+        const QPalette nativePalette = MenuStyle::systemPalette(widget);
+        StartupDiagnostics::setAppearancePalette(widget, nativePalette);
         widget->style()->polish(widget);
-        widget->setProperty("speedcrunchNativeDockPolishedStyle",
-                            QVariant::fromValue(QPointer<QStyle>(widget->style())));
+        widget->setProperty("speedcrunchNativeDockSourcePalette", nativePalette);
     } else {
         StartupDiagnostics::appearanceAssignment(widget, true, false, true);
     }
@@ -1761,6 +1766,11 @@ void restoreNativeDockSurface(QWidget* widget, bool forceNativePolish)
     if (QLineEdit* edit = qobject_cast<QLineEdit*>(widget)) {
         for (QAction* action : edit->actions())
             action->setIcon(action->property("speedcrunchNativeDockIcon").value<QIcon>());
+    }
+    if (needsPolish) {
+        widget->setProperty("speedcrunchNativeDockPolishedStyle",
+                            QVariant::fromValue(QPointer<QStyle>(widget->style())));
+        widget->setProperty("speedcrunchNativeDockRestoredPalette", widget->palette());
     }
     widget->update();
 }
