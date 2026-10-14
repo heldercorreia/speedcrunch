@@ -5,6 +5,7 @@
 #include "core/startupdiagnostics.h"
 
 #include "gui/resultdisplay.h"
+#include "gui/startupappearance.h"
 #include "gui/menustyleutils.h"
 
 #include "gui/displayformatutils.h"
@@ -660,6 +661,12 @@ QString ResultDisplay::exportHtml() const
 
 void ResultDisplay::rehighlight()
 {
+    StartupDiagnostics::AppearanceScope timing("Refresh result highlighting and appearance", this);
+    if (StartupDiagnostics::isRecording()) {
+        StartupDiagnostics::observeHighlightInputs(timing, this,
+            StartupDiagnostics::configuredThemeInputs(), {m_themeSurfaceColor},
+            m_session ? m_session->evaluator() : Evaluator::instance());
+    }
     m_highlighter->update();
     const QColor backgroundColor = themeSurfaceBackground();
     QPalette palette = this->palette();
@@ -669,7 +676,7 @@ void ResultDisplay::rehighlight()
     palette.setColor(QPalette::Active, QPalette::Window, backgroundColor);
     palette.setColor(QPalette::Inactive, QPalette::Window, backgroundColor);
     palette.setColor(QPalette::Disabled, QPalette::Window, backgroundColor);
-    setPalette(palette);
+    StartupDiagnostics::setAppearancePalette(this, palette);
     setAutoFillBackground(true);
     setAttribute(Qt::WA_StyledBackground, true);
 
@@ -680,7 +687,7 @@ void ResultDisplay::rehighlight()
     viewportPalette.setColor(QPalette::Active, QPalette::Window, backgroundColor);
     viewportPalette.setColor(QPalette::Inactive, QPalette::Window, backgroundColor);
     viewportPalette.setColor(QPalette::Disabled, QPalette::Window, backgroundColor);
-    viewport()->setPalette(viewportPalette);
+    StartupDiagnostics::setAppearancePalette(viewport(), viewportPalette);
     viewport()->setAutoFillBackground(true);
     viewport()->setAttribute(Qt::WA_StyledBackground, true);
 
@@ -719,9 +726,9 @@ void ResultDisplay::setThemeToolTipColors(const QColor& background,
 void ResultDisplay::updateSurfaceStyleSheet()
 {
     const QString background = themeSurfaceBackground().name();
-    setStyleSheet(QStringLiteral("QPlainTextEdit { background-color: %1; }")
+    StartupDiagnostics::setAppearanceStyleSheet(this, QStringLiteral("QPlainTextEdit { background-color: %1; }")
                       .arg(background));
-    viewport()->setStyleSheet(QStringLiteral("QWidget { background-color: %1; }")
+    StartupDiagnostics::setAppearanceStyleSheet(viewport(), QStringLiteral("QWidget { background-color: %1; }")
                                   .arg(background));
 }
 
@@ -908,7 +915,7 @@ QColor ResultDisplay::hoverActionIconColor(HoveredActionBadge badge) const
 
 void ResultDisplay::refresh()
 {
-    StartupDiagnostics::Scope timing("Render session history");
+    StartupDiagnostics::AppearanceScope timing("Render session history", this);
     const Session* session = displaySession(this);
     if (session == nullptr) {
         clear();
@@ -1839,7 +1846,7 @@ void ResultDisplay::updateScrollBarStyleSheet()
     const ResultDisplayScrollBarColors colors =
         scrollBarColorsForResultBackground(themeSurfaceBackground());
 
-    verticalScrollBar()->setStyleSheet(QString(
+    StartupDiagnostics::setAppearanceStyleSheet(verticalScrollBar(), QString(
         "QScrollBar:vertical {"
         "   border: 0;"
         "   margin: 0 0 0 0;"

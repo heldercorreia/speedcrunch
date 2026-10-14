@@ -5,6 +5,7 @@
 #include "gui/mainwindow.h"
 #include "gui/diagnosticsdialog.h"
 #include "core/startupdiagnostics.h"
+#include "gui/startupappearance.h"
 #include "gui/menustyleutils.h"
 
 #include "core/complexform.h"
@@ -912,6 +913,8 @@ struct GeneratedThemeSurfaces
 
 GeneratedThemeSurfaces generatedSurfaceColorsForScheme(const ColorScheme& scheme)
 {
+    StartupDiagnostics::AppearanceScope timing("Generate theme surface colors", nullptr,
+                                              StartupDiagnostics::themeInputs(scheme));
     const QColor base = scheme.isValid()
         ? scheme.colorForRole(ColorScheme::Background)
         : QApplication::palette().color(QPalette::Base);
@@ -987,9 +990,11 @@ ThemeSurfaceColors themeSurfaceForShadeIndex(const GeneratedThemeSurfaces& surfa
 bool setStyleSheetIfChanged(QWidget* widget, const QString& styleSheet)
 {
     // Even an identical stylesheet makes Qt repolish the widget's children.
-    if (widget->styleSheet() == styleSheet)
+    if (widget->styleSheet() == styleSheet) {
+        StartupDiagnostics::appearanceAssignment(widget, false, false, true);
         return false;
-    widget->setStyleSheet(styleSheet);
+    }
+    StartupDiagnostics::setAppearanceStyleSheet(widget, styleSheet);
     return true;
 }
 
@@ -1008,7 +1013,7 @@ void applyStatusBarAppearance(QStatusBar* bar, const GeneratedThemeSurfaces& sur
         widgets.prepend(bar);
         for (QWidget* widget : widgets) {
             widget->style()->unpolish(widget);
-            widget->setPalette(MenuStyle::systemPalette(widget));
+            StartupDiagnostics::setAppearancePalette(widget, MenuStyle::systemPalette(widget));
             widget->style()->polish(widget);
             widget->updateGeometry();
             widget->update();
@@ -1023,7 +1028,7 @@ void applyStatusBarAppearance(QStatusBar* bar, const GeneratedThemeSurfaces& sur
 
     const ThemeSurfaceColors surface =
         themeSurfaceForShadeIndex(surfaces, UiConfig::StatusBarBackgroundShade);
-    bar->setPalette(paletteForThemeSurface(bar->palette(), surface));
+    StartupDiagnostics::setAppearancePalette(bar, paletteForThemeSurface(bar->palette(), surface));
     bar->setAutoFillBackground(true);
     bar->setAttribute(Qt::WA_StyledBackground, true);
     setStyleSheetIfChanged(bar, QStringLiteral(
@@ -1044,7 +1049,7 @@ void applyStatusBarAppearance(QStatusBar* bar, const GeneratedThemeSurfaces& sur
                                 surface.foreground.name()));
 
     for (QWidget* child : bar->findChildren<QWidget*>())
-        child->setPalette(paletteForThemeSurface(child->palette(), surface));
+        StartupDiagnostics::setAppearancePalette(child, paletteForThemeSurface(child->palette(), surface));
 }
 
 ThemeScrollBarColors scrollBarColorsForSurfaceIndex(const GeneratedThemeSurfaces& surfaces, int surfaceIndex)
@@ -1154,6 +1159,9 @@ public:
 
 void ensureDockChromeStyleInstalled()
 {
+    StartupDiagnostics::AppearanceScope timing("Install dock chrome style", qApp);
+    timing.observeInputs("installed", StartupDiagnostics::appearanceInputs({
+        QApplication::style()->property(DockChromeStyleInstalledProperty).toBool()}));
     if (QApplication::style()->property(DockChromeStyleInstalledProperty).toBool())
         return;
 
@@ -1233,7 +1241,7 @@ void applyScrollCornerColorToScrollArea(QAbstractScrollArea* area, const QColor&
         palette.setColor(group, QPalette::Base, color);
         palette.setColor(group, QPalette::Button, color);
     }
-    corner->setPalette(palette);
+    StartupDiagnostics::setAppearancePalette(corner, palette);
     corner->setAutoFillBackground(true);
     corner->setAttribute(Qt::WA_StyledBackground, true);
     setStyleSheetIfChanged(corner, QStringLiteral("QWidget { background-color: %1; border: 0; }")
@@ -1248,10 +1256,10 @@ public:
     {
         m_arrowColor = QColor();
         setStyleSheet(QString());
-        setPalette(MenuStyle::systemPalette(this));
+        StartupDiagnostics::setAppearancePalette(this, MenuStyle::systemPalette(this));
         if (QLineEdit* editor = lineEdit()) {
             setStyleSheetIfChanged(editor, QString());
-            editor->setPalette(MenuStyle::systemPalette(editor));
+            StartupDiagnostics::setAppearancePalette(editor, MenuStyle::systemPalette(editor));
         }
         update();
     }
@@ -1259,7 +1267,7 @@ public:
     void setThemeSurface(const ThemeSurfaceColors& surface)
     {
         m_arrowColor = surface.foreground;
-        setPalette(paletteForThemeSurface(palette(), surface));
+        StartupDiagnostics::setAppearancePalette(this, paletteForThemeSurface(palette(), surface));
         setStyleSheet(QStringLiteral(
             "QSpinBox {"
             " background-color: %1; color: %2; border: none; border-radius: 7px;"
@@ -1279,7 +1287,7 @@ public:
                                    surface.foreground.name()));
 
         if (QLineEdit* editor = lineEdit()) {
-            editor->setPalette(paletteForThemeSurface(editor->palette(), surface));
+            StartupDiagnostics::setAppearancePalette(editor, paletteForThemeSurface(editor->palette(), surface));
             setStyleSheetIfChanged(editor, QStringLiteral(
                 "QLineEdit { background: transparent; color: %1; border: none; }")
                                       .arg(surface.foreground.name()));
@@ -1461,7 +1469,7 @@ void applySurfaceToLabel(QLabel* label, const ThemeSurfaceColors& surface)
     if (label == nullptr)
         return;
 
-    label->setPalette(paletteForThemeSurface(label->palette(), surface));
+    StartupDiagnostics::setAppearancePalette(label, paletteForThemeSurface(label->palette(), surface));
     setStyleSheetIfChanged(label, QStringLiteral(
         "QLabel { background-color: %1; color: %2; }")
                              .arg(surface.background.name(),
@@ -1476,7 +1484,7 @@ void applyNoMatchLabelSurface(QAbstractItemView* view, const ThemeSurfaceColors&
     for (QLabel* label : view->viewport()->findChildren<QLabel*>(QString(), Qt::FindDirectChildrenOnly)) {
         if (!label->property("dockListNoMatchLabel").toBool())
             continue;
-        label->setPalette(paletteForThemeSurface(label->palette(), surface));
+        StartupDiagnostics::setAppearancePalette(label, paletteForThemeSurface(label->palette(), surface));
         setStyleSheetIfChanged(label, QStringLiteral("QLabel { background: transparent; color: %1; }")
                                  .arg(surface.foreground.name()));
     }
@@ -1507,7 +1515,7 @@ void applySurfaceToStructuralDockWidget(QWidget* widget, const ThemeSurfaceColor
     if (!isStructuralDockBackgroundWidget(widget))
         return;
 
-    widget->setPalette(paletteForThemeSurface(widget->palette(), surface));
+    StartupDiagnostics::setAppearancePalette(widget, paletteForThemeSurface(widget->palette(), surface));
     widget->setAutoFillBackground(true);
     widget->setAttribute(Qt::WA_StyledBackground, true);
     // Dock containers share their stylesheet with child menus. Limit these
@@ -1565,6 +1573,9 @@ void applyDockChromeAppearance(MainWindow* owner,
     if (dock == nullptr)
         return;
 
+    StartupDiagnostics::AppearanceScope timing("Apply dock chrome appearance", dock);
+    StartupDiagnostics::observeAppearanceSettings(timing);
+
     saveNativeDockSurface(dock);
     QList<QAbstractButton*> titleButtons;
     for (QAbstractButton* button : dock->findChildren<QAbstractButton*>(
@@ -1611,7 +1622,7 @@ void applyDockChromeAppearance(MainWindow* owner,
         themeSurfaceForShadeIndex(surfaces, UiConfig::DockHeaderButtonFillShade);
     const ThemeSurfaceColors titleButtonHover =
         themeSurfaceForShadeIndex(surfaces, UiConfig::DockHeaderButtonHoverFillShade);
-    dock->setPalette(paletteForThemeSurface(dock->palette(), surfaces.headersAndBorders));
+    StartupDiagnostics::setAppearancePalette(dock, paletteForThemeSurface(dock->palette(), surfaces.headersAndBorders));
     const bool styleChanged = setStyleSheetIfChanged(dock, QStringLiteral(
         "QDockWidget {"
         " color: %2;"
@@ -1675,7 +1686,7 @@ void applyDockChromeAppearance(MainWindow* owner,
                      titleButton.foreground.name(),
                      titleButtonHover.background.name(),
                      titleButtonHover.foreground.name()));
-        button->setPalette(paletteForThemeSurface(button->palette(), titleButton));
+        StartupDiagnostics::setAppearancePalette(button, paletteForThemeSurface(button->palette(), titleButton));
         applyDockTitleButtonIcon(button, button->underMouse());
     }
 }
@@ -1709,7 +1720,7 @@ void restoreNativeDockSurface(QWidget* widget)
         ? QStringLiteral("QLabel { background: transparent; }") : state.at(0).toString();
     setStyleSheetIfChanged(widget, styleSheet);
     widget->style()->unpolish(widget);
-    widget->setPalette(MenuStyle::systemPalette(widget));
+    StartupDiagnostics::setAppearancePalette(widget, MenuStyle::systemPalette(widget));
     widget->style()->polish(widget);
     widget->setAutoFillBackground(state.at(1).toBool());
     widget->setAttribute(Qt::WA_StyledBackground, state.at(2).toBool());
@@ -1766,6 +1777,8 @@ void alignDockSearchRow(QWidget* content)
 
 void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock, const GeneratedThemeSurfaces& surfaces)
 {
+    StartupDiagnostics::AppearanceScope timing("Apply dock content appearance", dock);
+    StartupDiagnostics::observeAppearanceSettings(timing);
     QWidget* dockContent = dock->widget();
     if (dockContent == nullptr)
         return;
@@ -1833,7 +1846,7 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock, const Gene
     Q_UNUSED(hasListOrTable);
     const ThemeSurfaceColors& dockSurface = dockBackground;
 
-    dockContent->setPalette(paletteForThemeSurface(dockContent->palette(), dockSurface));
+    StartupDiagnostics::setAppearancePalette(dockContent, paletteForThemeSurface(dockContent->palette(), dockSurface));
     dockContent->setAutoFillBackground(true);
     applySurfaceToStructuralDockWidget(dockContent, dockSurface);
     for (QWidget* child : dockContent->findChildren<QWidget*>())
@@ -1897,7 +1910,7 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock, const Gene
 
     for (QComboBox* comboBox : comboBoxes) {
         applySurfaceToContainingRow(dockContent, comboBox, dockSurface);
-        comboBox->setPalette(paletteForThemeSurface(comboBox->palette(), dockTextInput));
+        StartupDiagnostics::setAppearancePalette(comboBox, paletteForThemeSurface(comboBox->palette(), dockTextInput));
         DockComboBoxChevron::PopupTheme popupTheme;
         popupTheme.buttonStyle = QStringLiteral(
             "QComboBox {"
@@ -1954,7 +1967,7 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock, const Gene
         searchBox->setProperty("speedcrunchDockTextInput", true);
         if (owner != nullptr)
             searchBox->installEventFilter(owner);
-        searchBox->setPalette(paletteForThemeSurface(searchBox->palette(), dockTextInput));
+        StartupDiagnostics::setAppearancePalette(searchBox, paletteForThemeSurface(searchBox->palette(), dockTextInput));
         if (ThemedLineEdit* themedSearchBox = dynamic_cast<ThemedLineEdit*>(searchBox))
             themedSearchBox->setCursorColor(surfaces.primary.background);
         setStyleSheetIfChanged(searchBox, QStringLiteral(
@@ -2002,8 +2015,8 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock, const Gene
                                      dockBackground.foreground.name())
                                 .arg(UiConfig::DockListPadding)
                             + scrollBarStyleSheet(listScrollBars));
-        view->setPalette(palette);
-        view->viewport()->setPalette(palette);
+        StartupDiagnostics::setAppearancePalette(view, palette);
+        StartupDiagnostics::setAppearancePalette(view->viewport(), palette);
         applyScrollBarColorsToScrollArea(view, listScrollBars);
         applyNoMatchLabelSurface(view, dockBackground);
     }
@@ -2016,7 +2029,7 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock, const Gene
             QStyle::PM_HeaderMargin, &option, header));
         // Keep the native height, including the two themed border strokes.
         const int headerContentHeight = qMax(0, header->sizeHint().height() - 2);
-        header->setPalette(paletteForThemeSurface(header->palette(), dockBackground));
+        StartupDiagnostics::setAppearancePalette(header, paletteForThemeSurface(header->palette(), dockBackground));
         setStyleSheetIfChanged(header, QStringLiteral(
             "QHeaderView { background-color: %1; color: %2; border: 0; padding: 0; }"
             "QHeaderView::section {"
@@ -2056,7 +2069,7 @@ void applyThemeBackgroundRoleToWidget(QWidget* widget, const QColor& background)
         pal.setColor(group, QPalette::Base, background);
         pal.setColor(group, QPalette::Button, background);
     }
-    widget->setPalette(pal);
+    StartupDiagnostics::setAppearancePalette(widget, pal);
     widget->setAutoFillBackground(true);
     widget->setAttribute(Qt::WA_StyledBackground, true);
     if (!qobject_cast<QSplitter*>(widget)) {
@@ -2075,7 +2088,7 @@ void applyDockTabBarBackgroundToWidget(QWidget* widget, const ThemeSurfaceColors
         return;
 
     widget->setProperty("speedcrunchDockTabBackground", true);
-    widget->setPalette(paletteForThemeSurface(widget->palette(), surface));
+    StartupDiagnostics::setAppearancePalette(widget, paletteForThemeSurface(widget->palette(), surface));
     widget->setAutoFillBackground(true);
     widget->setAttribute(Qt::WA_StyledBackground, true);
     setStyleSheetIfChanged(widget, QStringLiteral(
@@ -6814,7 +6827,7 @@ void MainWindow::normalizeSplitContainerTree()
 
 void MainWindow::updateSplitterStyleSheet()
 {
-    StartupDiagnostics::Scope timing("Style session splitters");
+    StartupDiagnostics::AppearanceScope timing("Style session splitters", this);
     if (m_widgets.splitContainer == nullptr)
         return;
 
@@ -6858,7 +6871,17 @@ void MainWindow::updateSplitterStyleSheet()
 
 void MainWindow::refreshPaneThemes()
 {
-    StartupDiagnostics::Scope timing("Apply pane themes");
+    StartupDiagnostics::AppearanceScope timing("Apply pane themes", this);
+    timing.observeInputs("theme", StartupDiagnostics::configuredThemeInputs());
+    StartupDiagnostics::observeAppearanceSettings(timing);
+    if (StartupDiagnostics::isRecording()) {
+        QVariantList panes;
+        for (ResultDisplay* display : splitPaneDisplays())
+            panes.append(StartupDiagnostics::appearanceObjectId(display));
+        for (Editor* editor : splitPaneEditors())
+            panes.append(StartupDiagnostics::appearanceObjectId(editor));
+        timing.observeInputs("panes", StartupDiagnostics::appearanceInputs(panes));
+    }
     const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
     applyThemeBackgroundRoleToWidget(m_widgets.splitContainer, surfaces.window.background);
     const ThemeSurfaceColors resultToolTip =
@@ -6912,6 +6935,7 @@ void MainWindow::refreshPaneThemes()
 
 void MainWindow::applyDockTabBarAppearance()
 {
+    StartupDiagnostics::AppearanceScope timing("Apply dock tab bar appearance", this);
     const GeneratedThemeSurfaces tabSurfaces = generatedSurfaceColors(m_settings);
     for (QTabBar* tabBar : findChildren<QTabBar*>()) {
         if (m_tabBarDisplays.contains(tabBar))
@@ -6957,7 +6981,7 @@ void MainWindow::applyDockTabBarAppearance()
         }
         updateDockSystemTabCursor(tabBar, tabBar->mapFromGlobal(QCursor::pos()));
         tabBar->setDrawBase(false);
-        tabBar->setPalette(tabBarPalette);
+        StartupDiagnostics::setAppearancePalette(tabBar, tabBarPalette);
         setStyleSheetIfChanged(tabBar, QStringLiteral(
             "QTabBar { background-color: %1; }"
             "QTabBar::tab {"
@@ -6978,13 +7002,15 @@ void MainWindow::applyDockTabBarAppearance()
                                        tabSurfaces.result.foreground.name(),
                                        tabSurfaces.headersAndBorders.background.name(),
                                        tabSurfaces.headersAndBorders.foreground.name()));
-        tabBar->setPalette(tabBarPalette);
+        StartupDiagnostics::setAppearancePalette(tabBar, tabBarPalette);
     }
 }
 
 void MainWindow::applyThemeSurfacePalette()
 {
-    StartupDiagnostics::Scope timing("Apply window theme palette");
+    StartupDiagnostics::AppearanceScope timing("Apply window theme palette", this);
+    timing.observeInputs("theme", StartupDiagnostics::configuredThemeInputs());
+    StartupDiagnostics::observeAppearanceSettings(timing);
     const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
     if (UiConfig::OklchThemeDebugReportEnabled) {
         const QString reportKey = oklchThemeReportKey(surfaces);
@@ -7007,7 +7033,7 @@ void MainWindow::applyThemeSurfacePalette()
         }
     }
     const ThemeSurfaceColors& surface = surfaces.window;
-    setPalette(paletteForThemeSurface(palette(), surface));
+    StartupDiagnostics::setAppearancePalette(this, paletteForThemeSurface(palette(), surface));
     setAutoFillBackground(true);
     setAttribute(Qt::WA_StyledBackground, true);
     setStyleSheetIfChanged(this, QStringLiteral("QMainWindow { background-color: %1; }")
@@ -7045,7 +7071,7 @@ void MainWindow::applyThemeSurfacePalette()
             themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupOutlineShade);
         const QPalette bitFieldPalette =
             paletteForThemeSurface(m_widgets.bitField->palette(), bitfieldBackground);
-        m_widgets.bitField->setPalette(bitFieldPalette);
+        StartupDiagnostics::setAppearancePalette(m_widgets.bitField, bitFieldPalette);
         m_widgets.bitField->setAutoFillBackground(true);
         m_widgets.bitField->setToolTipThemeColors(bitfieldToolTip.background,
                                                   bitfieldToolTip.foreground,
@@ -7076,6 +7102,10 @@ void MainWindow::scheduleDockAppearanceRefresh()
 
     m_dockAppearanceRefreshPending = true;
     QTimer::singleShot(0, this, [this]() {
+        StartupDiagnostics::AppearanceContext context("Deferred dock refresh");
+        StartupDiagnostics::AppearanceScope timing("Refresh deferred dock appearance", this);
+        timing.observeInputs("theme", StartupDiagnostics::configuredThemeInputs());
+        StartupDiagnostics::observeAppearanceSettings(timing);
         const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
         MenuStyle::refresh();
         const QList<QDockWidget*> docks = m_allDocks;
@@ -7091,6 +7121,7 @@ void MainWindow::scheduleDockAppearanceRefresh()
 
 void MainWindow::applyKeypadThemeSurfacePalette()
 {
+    StartupDiagnostics::AppearanceScope timing("Apply keypad theme palette", m_widgets.keypad);
     if (!m_widgets.keypad)
         return;
 
@@ -7110,13 +7141,15 @@ void MainWindow::applyKeypadThemeSurfacePalette()
         themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupOutlineShade);
 
     applyThemeBackgroundRoleToWidget(m_widgets.keypadContainer, keypadBackground.background);
-    m_widgets.keypad->setPalette(keypadPalette);
+    StartupDiagnostics::setAppearancePalette(m_widgets.keypad, keypadPalette);
     m_widgets.keypad->setAutoFillBackground(true);
     const QPointer<Keypad> keypad = m_widgets.keypad;
     QTimer::singleShot(0, this, [keypad, keypadPalette]() {
         if (!keypad)
             return;
-        keypad->setPalette(keypadPalette);
+        StartupDiagnostics::AppearanceContext context("Deferred keypad refresh");
+        StartupDiagnostics::AppearanceScope timing("Refresh deferred keypad palette", keypad);
+        StartupDiagnostics::setAppearancePalette(keypad, keypadPalette);
         keypad->setAutoFillBackground(true);
         QEvent paletteChange(QEvent::PaletteChange);
         QApplication::sendEvent(keypad, &paletteChange);
@@ -8117,6 +8150,7 @@ void MainWindow::createFixedConnections()
 
 void MainWindow::applySettings(bool initializing)
 {
+    StartupDiagnostics::AppearanceContext context("Apply startup settings");
     StartupDiagnostics::Scope timing("Apply appearance and language");
     applyKeypadAppearance();
     m_actions.settingsDockAppearanceSystem->setChecked(
@@ -8886,6 +8920,7 @@ void MainWindow::openImportedSession(Session* session)
 
 void MainWindow::activateSession(Session* session)
 {
+    StartupDiagnostics::AppearanceContext context("Activate session");
     if (session == nullptr)
         return;
 
@@ -9014,6 +9049,7 @@ MainWindow::MainWindow(bool restorePreviousSession)
     : QMainWindow()
     , m_restorePreviousSessionOnStartup(restorePreviousSession)
 {
+    StartupDiagnostics::AppearanceContext context("Initial window construction");
     StartupDiagnostics::Scope windowTiming("Construct main window (total)");
     StartupDiagnostics::Scope timing("Register window");
     qApp->setQuitOnLastWindowClosed(false);
@@ -9104,6 +9140,7 @@ MainWindow::MainWindow(bool restorePreviousSession)
     timing.next("Apply startup settings (total)");
     applySettings();
     timing.next("Finalize theme and editor focus");
+    StartupDiagnostics::AppearanceContext finalThemeContext("Finalize window theme");
     m_initializingUi = false;
     applyThemeSurfacePalette();
     refreshPaneThemes();
@@ -13432,6 +13469,7 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
                                             QHash<QString, QPair<int, int>> viewportAnchors,
                                             QHash<QString, int> scrollValues)
 {
+    StartupDiagnostics::AppearanceContext context("Restore session panes");
     StartupDiagnostics::Scope timing("Deserialize saved sessions (total)");
     const QJsonArray windows = layout.value(QStringLiteral("windows")).toArray();
     const QString rootType = root.value(QStringLiteral("type")).toString();
@@ -13715,6 +13753,7 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
 
 void MainWindow::restoreWindowUiState(const QJsonObject& window)
 {
+    StartupDiagnostics::AppearanceScope timing("Restore window UI state", this);
     const QString restoredAngleUnit =
         window.value(QStringLiteral("statusBarAngleUnit")).toString();
     if (restoredAngleUnit.size() == 1

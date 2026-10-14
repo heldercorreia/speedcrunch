@@ -3,6 +3,7 @@
 
 
 #include "gui/syntaxhighlighter.h"
+#include "gui/startupappearance.h"
 
 #include "core/evaluator.h"
 #include "core/functions.h"
@@ -81,8 +82,13 @@ const Evaluator* SyntaxHighlighter::evaluator() const
 
 void SyntaxHighlighter::setEvaluator(const Evaluator* evaluator)
 {
+    StartupDiagnostics::AppearanceScope timing("Bind syntax highlighter evaluator", parent());
     m_evaluator = evaluator ? evaluator : Evaluator::instance();
-    rehighlight();
+    {
+        StartupDiagnostics::AppearanceScope highlightTiming(
+            m_inputEditor ? "Highlight editor document" : "Highlight result document", parent());
+        rehighlight();
+    }
 }
 
 void SyntaxHighlighter::setColorScheme(ColorScheme&& colorScheme) {
@@ -439,6 +445,7 @@ void SyntaxHighlighter::highlightSyntaxBlock(const QString& text)
 
 void SyntaxHighlighter::update()
 {
+    StartupDiagnostics::AppearanceScope timing("Update syntax highlighter", parent());
     const Settings* settings = Settings::instance();
     const QString name = settings->colorScheme;
     if (name == QLatin1String("Custom")) {
@@ -457,9 +464,13 @@ void SyntaxHighlighter::update()
     QPalette pal = parentWidget->palette();
     pal.setColor(QPalette::Active, QPalette::Base, backgroundColor);
     pal.setColor(QPalette::Inactive, QPalette::Base, backgroundColor);
-    parentWidget->setPalette(pal);
+    StartupDiagnostics::setAppearancePalette(parentWidget, pal);
 
-    rehighlight();
+    {
+        StartupDiagnostics::AppearanceScope highlightTiming(
+            m_inputEditor ? "Highlight editor document" : "Highlight result document", parent());
+        rehighlight();
+    }
 }
 
 void SyntaxHighlighter::formatDigitsGroup(const QString& text, int start, int end, bool invert, int size)

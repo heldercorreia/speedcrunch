@@ -879,6 +879,21 @@ Help
     Repeated phases show their call count, total time, and longest call.
     If startup is still running, reopen the dialog later for the complete report.
 
+    Startup appearance details show individual calls, their parent calls, and
+    whether they run during window construction, session restoration, or a
+    deferred refresh. Temporary numeric IDs identify widgets across calls,
+    including panes that are replaced during restoration. The report compares
+    inputs for theme generation and highlighting, and counts palette and
+    stylesheet assignments with changed or unchanged values. It also counts
+    identical stylesheet assignments that existing checks skip.
+
+    Highlighting comparisons use document revisions and sizes, theme inputs,
+    selected settings, and evaluator identity. They do not track changes to the
+    evaluator's symbols. Matching inputs help identify repeated work, but do
+    not prove that a call can be skipped. Detailed records have fixed limits,
+    and the report shows how many records are omitted when those limits are
+    reached. These measurements add some overhead while startup is recorded.
+
     The measurements stay in memory until you quit. SpeedCrunch does not log or
     send them anywhere. The report excludes calculation text, session names,
     and file paths. Copying it puts the report on your system clipboard.

@@ -196,6 +196,52 @@ QString appDiagnosticsReport(const QString& workload)
             out << " (" << phase.running << " running)";
         out << '\n';
     }
+    if (!startup.appearanceCalls.isEmpty()) {
+        out << "\nStartup appearance calls\n"
+            << "Widget IDs are temporary numeric IDs, not names or addresses.\n"
+            << "Style installation uses the application object as its target.\n"
+            << "Widget 0 means no target. Widget -1 means the identity limit is reached.\n"
+            << "Input comparisons refer to the preceding call of the same kind and target.\n"
+            << "Document comparisons use revision and size, without reading calculation text.\n"
+            << "Document revisions can also change when formatting changes.\n"
+            << "Settings comparisons cover highlighting, grouping, radix, editor style and font.\n"
+            << "Evaluator comparisons check identity, not changes to its symbols.\n"
+            << "Unchanged inputs alone do not establish that a call is safe to skip.\n"
+            << "Call | Parent | Start ms | Duration ms | Widget | Context | Operation | Inputs\n";
+        int callNumber = 0;
+        for (const auto& call : startup.appearanceCalls) {
+            out << ++callNumber << " | " << call.parentCall << " | "
+                << milliseconds(call.startNs) << " | " << milliseconds(call.durationNs)
+                << " | " << call.widgetId << " | " << call.context << " | " << call.name;
+            if (!call.finished)
+                out << " (running)";
+            out << " | ";
+            if (call.inputs >= 0) {
+                out << "inputs=" << (call.inputs == 0 ? "first"
+                    : call.inputs == 1 ? "changed" : "unchanged");
+            }
+            if (!call.inputChanges.isEmpty()) {
+                if (call.inputs >= 0)
+                    out << ' ';
+                out << call.inputChanges;
+            }
+            out << '\n';
+        }
+        out << "\nStartup appearance assignments\n"
+            << "Counts cover instrumented setters inside recorded appearance calls.\n"
+            << "Assignments belong to the innermost call.\n"
+            << "Changed and unchanged compare requested values before invoking the setter.\n"
+            << "Skipped counts existing guards that avoid identical stylesheet assignments.\n"
+            << "Call | Widget | Assignment | Changed | Unchanged | Skipped\n";
+        for (const auto& assignment : startup.appearanceAssignments) {
+            out << assignment.call << " | " << assignment.widgetId << " | "
+                << (assignment.palette ? "palette" : "stylesheet") << " | "
+                << assignment.changed << " | " << assignment.unchanged << " | "
+                << assignment.skipped << '\n';
+        }
+        out << "Appearance recording limits: 512 calls, 2048 identities, 2048 assignment rows.\n"
+            << "Omitted appearance records: " << startup.omittedAppearanceRecords << '\n';
+    }
     out << "\nTimings start at main() and exclude process loading before main().\n"
         << "Measurements stay in memory and are discarded when the app exits.\n";
     return report;

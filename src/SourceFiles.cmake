@@ -28,6 +28,7 @@ gui/aboutbox.h
 gui/diagnosticsdialog.h
 gui/diagnosticapplication.h
 core/startupdiagnostics.h
+gui/startupappearance.h
 gui/bitfieldwidget.h
 gui/bookdock.h
 gui/constantswidget.h

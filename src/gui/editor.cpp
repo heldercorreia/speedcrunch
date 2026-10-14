@@ -3,6 +3,7 @@
 
 
 #include "gui/editor.h"
+#include "gui/startupappearance.h"
 #include "gui/displayformatutils.h"
 #include "gui/editorutils.h"
 #include "gui/functiontooltiputils.h"
@@ -4170,6 +4171,15 @@ void Editor::wheelEvent(QWheelEvent* event)
 
 void Editor::rehighlight()
 {
+    StartupDiagnostics::AppearanceScope timing("Refresh editor highlighting and appearance", this);
+    if (StartupDiagnostics::isRecording()) {
+        const QByteArray theme = m_themePreviewColorScheme.has_value()
+            ? StartupDiagnostics::themeInputs(*m_themePreviewColorScheme)
+            : StartupDiagnostics::configuredThemeInputs();
+        StartupDiagnostics::observeHighlightInputs(timing, this, theme,
+            {m_themeSurfaceColor, m_themeOuterSurfaceColor, m_themePrimaryColor, m_usePrimaryOutline},
+            m_evaluator);
+    }
     // Qt can emit textChanged while applying styles and highlighting.
     // A theme refresh must not act like an edit or clear a result selection.
     const QSignalBlocker blocker(this);
@@ -4210,7 +4220,7 @@ void Editor::rehighlight()
         pal.setColor(group, QPalette::Window, classic ? color : outerColor);
         pal.setColor(group, QPalette::Text, primaryColor);
     }
-    setPalette(pal);
+    StartupDiagnostics::setAppearancePalette(this, pal);
     setAutoFillBackground(false);
     setAttribute(Qt::WA_StyledBackground, true);
 
@@ -4222,7 +4232,7 @@ void Editor::rehighlight()
         viewportPalette.setColor(group, QPalette::Window, color);
         viewportPalette.setColor(group, QPalette::Text, primaryColor);
     }
-    viewport()->setPalette(viewportPalette);
+    StartupDiagnostics::setAppearancePalette(viewport(), viewportPalette);
     viewport()->setAutoFillBackground(false);
     viewport()->setAttribute(Qt::WA_StyledBackground, true);
     if (classic) {
@@ -4231,7 +4241,7 @@ void Editor::rehighlight()
         // Keep the text in place when the focus line changes thickness.
         const int topPadding = UiConfig::ClassicEditorVerticalPadding
             + UiConfig::OutlineStrokeWidth - separatorWidth;
-        setStyleSheet(QStringLiteral(R"(
+        StartupDiagnostics::setAppearanceStyleSheet(this, QStringLiteral(R"(
             QPlainTextEdit {
                 background-color: %1;
                 color: %2;
@@ -4247,7 +4257,7 @@ void Editor::rehighlight()
            .arg(UiConfig::ClassicEditorVerticalPadding)
            .arg(topPadding));
     } else {
-        setStyleSheet(QStringLiteral(R"(
+        StartupDiagnostics::setAppearanceStyleSheet(this, QStringLiteral(R"(
             QPlainTextEdit {
                 background-color: %1;
                 color: %2;
@@ -4268,14 +4278,17 @@ void Editor::rehighlight()
            .arg(kEditorHorizontalPadding)
            .arg(UiConfig::OutlineStrokeWidth));
     }
-    setPalette(pal);
+    StartupDiagnostics::setAppearancePalette(this, pal);
     document()->setDocumentMargin(kEditorDocumentMargin);
     // Qt parents the right-click menu to the viewport. Keep transparency
     // scoped to the viewport so system menus can paint their own background.
-    viewport()->setStyleSheet(QStringLiteral("QWidget#editorViewport { background: transparent; }"));
-    viewport()->setPalette(viewportPalette);
+    StartupDiagnostics::setAppearanceStyleSheet(viewport(), QStringLiteral("QWidget#editorViewport { background: transparent; }"));
+    StartupDiagnostics::setAppearancePalette(viewport(), viewportPalette);
     clearMask();
-    m_highlighter->rehighlight();
+    {
+        StartupDiagnostics::AppearanceScope highlightTiming("Highlight editor document", this);
+        m_highlighter->rehighlight();
+    }
     updateHeightAndEnsureCursorVisible();
 }
 
