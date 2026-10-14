@@ -7,12 +7,13 @@
 
 #include <QObject>
 #include <QPointer>
-#include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QString>
+#include <QThread>
 #include <QVector>
 
 class QWidget;
+class VersionCheckWorker;
 
 class VersionCheck : public QObject {
     Q_OBJECT
@@ -24,6 +25,7 @@ public:
     };
 
     explicit VersionCheck(QWidget* parentWindow, QObject* parent = 0);
+    ~VersionCheck() override;
 
     void checkForUpdateAfterFirstPaint();
     void checkForUpdateIfDue();
@@ -32,10 +34,9 @@ public:
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
 
-private slots:
-    void handleReplyFinished();
-
 private:
+    void handleReplyFinished(QNetworkReply::NetworkError error, const QByteArray& payload,
+                             int httpStatus, const QString& errorString);
     static bool compareVersions(const QString& left, const QString& right, int* result);
     static bool tryParseVersion(const QString& version, QVector<qulonglong>* components);
     static void showUpdateDialog(QWidget* parent, const QString& latestVersion);
@@ -52,8 +53,9 @@ private:
     void markVersionNotified(const QString& version);
 
     QPointer<QWidget> m_parentWindow;
-    QNetworkAccessManager m_networkAccessManager;
-    QPointer<QNetworkReply> m_pendingReply;
+    QThread m_networkThread;
+    VersionCheckWorker* m_networkWorker = nullptr;
+    bool m_requestPending = false;
     CheckTrigger m_trigger = CheckTriggerAutomatic;
     bool m_automaticCheckScheduled = false;
 };

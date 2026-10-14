@@ -14,6 +14,7 @@
 #include <QEvent>
 #include <QLabel>
 #include <QLoggingCategory>
+#include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QSettings>
@@ -43,10 +44,51 @@ static QDebug versionCheckDebug()
 
 }
 
+class VersionCheckWorker : public QObject {
+    Q_OBJECT
+public:
+    void startRequest()
+    {
+        if (!m_manager) {
+            StartupDiagnostics::Scope timing("Initialize update network manager");
+            m_manager = new QNetworkAccessManager(this);
+        }
+        QNetworkRequest request(QUrl(QString::fromLatin1(VERSION_URL)));
+        request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
+        request.setTransferTimeout(5000);
+        QNetworkReply* reply;
+        {
+            StartupDiagnostics::Scope timing("Dispatch update network request");
+            reply = m_manager->get(request);
+        }
+        connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+            const auto error = reply->error();
+            const QByteArray payload = reply->readAll();
+            const int httpStatus = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+            const QString errorString = reply->errorString();
+            reply->deleteLater();
+            emit requestFinished(error, payload, httpStatus, errorString);
+        });
+    }
+
+signals:
+    void requestFinished(QNetworkReply::NetworkError error, const QByteArray& payload,
+                         int httpStatus, const QString& errorString);
+
+private:
+    QNetworkAccessManager* m_manager = nullptr;
+};
+
 VersionCheck::VersionCheck(QWidget* parentWindow, QObject* parent)
     : QObject(parent),
       m_parentWindow(parentWindow)
 {
+}
+
+VersionCheck::~VersionCheck()
+{
+    m_networkThread.quit();
+    m_networkThread.wait();
 }
 
 void VersionCheck::checkForUpdateAfterFirstPaint()
@@ -82,7 +124,7 @@ void VersionCheck::checkForUpdateIfDue()
     if (qEnvironmentVariableIsSet("SPEEDCRUNCH_TEST_SKIP_UPDATE_CHECK"))
         return;
 
-    if (m_pendingReply) {
+    if (m_requestPending) {
         versionCheckDebug() << "Update check skipped: request already in progress.";
         return;
     }
@@ -96,7 +138,7 @@ void VersionCheck::checkForUpdateIfDue()
 
 void VersionCheck::checkForUpdateNow()
 {
-    if (m_pendingReply) {
+    if (m_requestPending) {
         versionCheckDebug() << "Manual update check requested while another request is running.";
         showVerificationFailedDialog(m_parentWindow);
         return;
@@ -105,25 +147,18 @@ void VersionCheck::checkForUpdateNow()
     startRequest(CheckTriggerManual);
 }
 
-void VersionCheck::handleReplyFinished()
+void VersionCheck::handleReplyFinished(QNetworkReply::NetworkError error, const QByteArray& payload,
+                                      int httpStatus, const QString& errorString)
 {
-    QNetworkReply* reply = m_pendingReply;
-    m_pendingReply = 0;
-
-    if (!reply)
-        return;
+    m_requestPending = false;
 
     versionCheckDebug() << "Update check response received."
-                            << "HTTP status:"
-                            << reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+                            << "HTTP status:" << httpStatus;
 
-    const QNetworkReply::NetworkError error = reply->error();
     const bool ok = (error == QNetworkReply::NoError);
-    const QByteArray payload = reply->readAll();
-    reply->deleteLater();
 
     if (!ok) {
-        versionCheckDebug() << "Update check failed:" << reply->errorString();
+        versionCheckDebug() << "Update check failed:" << errorString;
         if (m_trigger == CheckTriggerManual) {
             if (isConnectivityError(error))
                 showNoConnectivityDialog(m_parentWindow);
@@ -358,19 +393,26 @@ bool VersionCheck::isCheckDue() const
 void VersionCheck::startRequest(CheckTrigger trigger)
 {
     m_trigger = trigger;
-
-    QNetworkRequest request(QUrl(QString::fromLatin1(VERSION_URL)));
-    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
-    request.setTransferTimeout(5000);
+    m_requestPending = true;
 
     versionCheckDebug() << "Starting update check request to" << QString::fromLatin1(VERSION_URL)
                            << "; trigger =" << (trigger == CheckTriggerManual ? "manual" : "automatic");
     markCheckAttempted();
-    {
-        StartupDiagnostics::Scope timing("Dispatch update network request");
-        m_pendingReply = m_networkAccessManager.get(request);
+    const auto startupTask = StartupDiagnostics::task("Update request setup (async total)");
+    if (!m_networkWorker) {
+        m_networkWorker = new VersionCheckWorker;
+        m_networkWorker->moveToThread(&m_networkThread);
+        connect(&m_networkThread, &QThread::finished, m_networkWorker, &QObject::deleteLater);
+        connect(m_networkWorker, &VersionCheckWorker::requestFinished,
+                this, &VersionCheck::handleReplyFinished, Qt::QueuedConnection);
+        m_networkThread.start();
     }
-    connect(m_pendingReply, SIGNAL(finished()), this, SLOT(handleReplyFinished()));
+    VersionCheckWorker* worker = m_networkWorker;
+    QMetaObject::invokeMethod(worker, [this, worker, startupTask]() {
+        worker->startRequest();
+        // Wake the UI after setup so diagnostics can finish without a response.
+        QMetaObject::invokeMethod(this, [startupTask]() {}, Qt::QueuedConnection);
+    }, Qt::QueuedConnection);
 }
 
 void VersionCheck::storeFetchedVersion(const QString& version)
@@ -404,3 +446,5 @@ void VersionCheck::markVersionNotified(const QString& version)
     settings.setValue(QString::fromLatin1(LAST_NOTIFIED_VERSION_KEY), version);
     versionCheckDebug() << "Recorded notified version:" << version;
 }
+
+#include "versioncheck.moc"

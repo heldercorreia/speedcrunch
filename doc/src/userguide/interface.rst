@@ -872,7 +872,9 @@ Help
     threads, queued UI restoration, and startup painting are measured too.
     When update checks are enabled, automatic dispatch waits until the window
     has painted. Its timings separate the schedule check, saving the attempt
-    timestamp, and network request setup. Waiting for the response is excluded.
+    timestamp, and network request setup. The network manager and request setup
+    run on a worker thread. The asynchronous setup total includes queue waiting,
+    but waiting for the response is excluded.
     Constants and Functions list population is measured separately. Constants
     timings also separate clearing the list, filtering and formatting, creating
     rows and tooltips, sizing columns, and sorting. Column sizing includes any
