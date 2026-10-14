@@ -7,6 +7,7 @@
 
 #include <QApplication>
 #include <QDateTime>
+#include <QDeadlineTimer>
 #include <QDebug>
 #include <QDesktopServices>
 #include <QDialog>
@@ -37,11 +38,14 @@ static const char LAST_FETCHED_VERSION_KEY[] = "updates/lastFetchedVersion";
 static const char LAST_NOTIFIED_VERSION_KEY[] = "updates/lastNotifiedVersion";
 const qint64 CHECK_INTERVAL_MSECS = 24LL * 60LL * 60LL * 1000LL;
 constexpr qint64 MAX_VERSION_RESPONSE_BYTES = 1024;
+constexpr int VERSION_REQUEST_TIMEOUT_MSECS = 5000;
 Q_LOGGING_CATEGORY(lcVersionCheck, "speedcrunch.updatecheck")
 
 struct VersionResponse {
     QByteArray payload;
+    QDeadlineTimer deadline{VERSION_REQUEST_TIMEOUT_MSECS, Qt::PreciseTimer};
     bool tooLarge = false;
+    bool timedOut = false;
 
     void readAvailable(QNetworkReply* reply)
     {
@@ -118,20 +122,28 @@ public:
             return;
         QNetworkRequest request(QUrl(QString::fromLatin1(VERSION_URL)));
         request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
-        request.setTransferTimeout(5000);
+        request.setTransferTimeout(VERSION_REQUEST_TIMEOUT_MSECS);
+        const auto response = std::make_shared<VersionResponse>();
         QNetworkReply* reply;
         {
             StartupDiagnostics::Scope timing("Dispatch update network request");
             reply = m_manager->get(request);
         }
         reply->setReadBufferSize(MAX_VERSION_RESPONSE_BYTES + 1);
-        const auto response = std::make_shared<VersionResponse>();
-        connect(reply, &QNetworkReply::finished, this, [this, reply, trigger, response]() {
+        auto* timeout = new QTimer(reply);
+        timeout->setSingleShot(true);
+        timeout->setTimerType(Qt::PreciseTimer);
+        connect(reply, &QNetworkReply::finished, this, [this, reply, trigger, response, timeout]() {
+            timeout->stop();
+            response->timedOut = response->timedOut || response->deadline.hasExpired();
             response->readAvailable(reply);
-            const auto error = response->tooLarge ? QNetworkReply::UnknownContentError : reply->error();
+            const auto error = response->tooLarge ? QNetworkReply::UnknownContentError
+                : response->timedOut ? QNetworkReply::TimeoutError : reply->error();
             const int httpStatus = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
             const QString errorString = response->tooLarge
-                ? QStringLiteral("Update response exceeds the 1024-byte limit.") : reply->errorString();
+                ? QStringLiteral("Update response exceeds the 1024-byte limit.")
+                : response->timedOut ? QStringLiteral("Update request exceeds the five-second deadline.")
+                                    : reply->errorString();
             reply->deleteLater();
             QString latestVersion;
             int comparison = 0;
@@ -146,6 +158,11 @@ public:
             }
             emit requestFinished(error, latestVersion, httpStatus, errorString, comparable, comparison, notify);
         });
+        connect(timeout, &QTimer::timeout, this, [reply, response]() {
+            response->timedOut = true;
+            response->payload.clear();
+            reply->abort();
+        });
         connect(reply, &QNetworkReply::readyRead, this, [reply, response]() {
             response->readAvailable(reply);
             if (response->tooLarge)
@@ -159,6 +176,8 @@ public:
                 reply->abort();
             }
         });
+        // Keep one deadline across redirects and incoming data.
+        timeout->start(response->deadline.remainingTime());
     }
 
     void markVersionNotified(const QString& version);

@@ -944,6 +944,8 @@ Help
     can choose whether to enable them. When enabled, this menu entry is available
     and SpeedCrunch also checks for updates after the window first paints,
     at most once every 24 hours.
+    Each network request has a five-second deadline, including redirects.
+    Receiving data does not extend that deadline.
     Oversized update responses are rejected before their contents are parsed
     or saved.
     Closing a window requests that its update worker stop. Cleanup finishes
