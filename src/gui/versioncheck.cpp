@@ -26,6 +26,8 @@
 #include <QVBoxLayout>
 #include <QVector>
 
+#include <memory>
+
 namespace {
 
 static const char WEBSITE_URL[] = "https://speedcrunch.org";
@@ -34,7 +36,28 @@ static const char LAST_CHECK_KEY[] = "updates/lastVersionCheckUtcMsecs";
 static const char LAST_FETCHED_VERSION_KEY[] = "updates/lastFetchedVersion";
 static const char LAST_NOTIFIED_VERSION_KEY[] = "updates/lastNotifiedVersion";
 const qint64 CHECK_INTERVAL_MSECS = 24LL * 60LL * 60LL * 1000LL;
+constexpr qint64 MAX_VERSION_RESPONSE_BYTES = 1024;
 Q_LOGGING_CATEGORY(lcVersionCheck, "speedcrunch.updatecheck")
+
+struct VersionResponse {
+    QByteArray payload;
+    bool tooLarge = false;
+
+    void readAvailable(QNetworkReply* reply)
+    {
+        if (tooLarge || reply->bytesAvailable() == 0)
+            return;
+        const qint64 remaining = MAX_VERSION_RESPONSE_BYTES - payload.size();
+        // Read one extra byte to detect overflow even without Content-Length.
+        const QByteArray chunk = reply->read(remaining + 1);
+        if (chunk.size() > remaining) {
+            tooLarge = true;
+            payload.clear();
+            return;
+        }
+        payload.append(chunk);
+    }
+};
 
 bool compareVersions(const QString& left, const QString& right, int* result);
 bool tryParseVersion(const QString& version, QVector<qulonglong>* components);
@@ -101,24 +124,40 @@ public:
             StartupDiagnostics::Scope timing("Dispatch update network request");
             reply = m_manager->get(request);
         }
-        connect(reply, &QNetworkReply::finished, this, [this, reply, trigger]() {
-            const auto error = reply->error();
-            const QByteArray payload = reply->readAll();
+        reply->setReadBufferSize(MAX_VERSION_RESPONSE_BYTES + 1);
+        const auto response = std::make_shared<VersionResponse>();
+        connect(reply, &QNetworkReply::finished, this, [this, reply, trigger, response]() {
+            response->readAvailable(reply);
+            const auto error = response->tooLarge ? QNetworkReply::UnknownContentError : reply->error();
             const int httpStatus = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-            const QString errorString = reply->errorString();
+            const QString errorString = response->tooLarge
+                ? QStringLiteral("Update response exceeds the 1024-byte limit.") : reply->errorString();
             reply->deleteLater();
             QString latestVersion;
             int comparison = 0;
             bool comparable = false;
             bool notify = false;
             if (error == QNetworkReply::NoError) {
-                latestVersion = QString::fromUtf8(payload).trimmed().section('\n', 0, 0).trimmed();
+                latestVersion = QString::fromUtf8(response->payload).trimmed().section('\n', 0, 0).trimmed();
                 comparable = compareVersions(latestVersion, QString::fromLatin1(SPEEDCRUNCH_VERSION), &comparison);
                 storeFetchedVersion(latestVersion);
                 if (comparable && comparison > 0)
                     notify = trigger == VersionCheck::CheckTriggerManual || shouldNotifyForVersion(latestVersion);
             }
             emit requestFinished(error, latestVersion, httpStatus, errorString, comparable, comparison, notify);
+        });
+        connect(reply, &QNetworkReply::readyRead, this, [reply, response]() {
+            response->readAvailable(reply);
+            if (response->tooLarge)
+                reply->abort();
+        });
+        connect(reply, &QNetworkReply::metaDataChanged, this, [reply, response]() {
+            if (!response->tooLarge
+                && reply->header(QNetworkRequest::ContentLengthHeader).toLongLong() > MAX_VERSION_RESPONSE_BYTES) {
+                response->tooLarge = true;
+                response->payload.clear();
+                reply->abort();
+            }
         });
     }
 
