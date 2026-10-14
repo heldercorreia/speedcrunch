@@ -870,6 +870,9 @@ Help
     Startup timings cover application setup, settings, built-in repositories,
     UI construction, docks, themes, and session restoration. File reads on worker
     threads, queued UI restoration, and startup painting are measured too.
+    When update checks are enabled, automatic dispatch waits until the window
+    has painted. Its timings separate the schedule check, saving the attempt
+    timestamp, and network request setup. Waiting for the response is excluded.
     Constants and Functions list population is measured separately. Constants
     timings also separate clearing the list, filtering and formatting, creating
     rows and tooltips, sizing columns, and sorting. Column sizing includes any
@@ -931,7 +934,8 @@ Help
     Trigger an update check and show information when a newer version is available.
     Update checks are enabled in official SpeedCrunch builds. Other distributors
     can choose whether to enable them. When enabled, this menu entry is available
-    and SpeedCrunch also checks for updates on launch, at most once every 24 hours.
+    and SpeedCrunch also checks for updates after the window first paints,
+    at most once every 24 hours.
     See :file:`BUILDING.md` at the repository root for build options and
     package provider guidance.
 

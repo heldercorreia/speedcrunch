@@ -9205,11 +9205,7 @@ MainWindow::MainWindow(bool restorePreviousSession)
 #ifdef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
     timing.next("Initialize update checker");
     m_versionCheck = new VersionCheck(this, this);
-    QTimer::singleShot(0, this, [this]() {
-        StartupDiagnostics::Scope timing("Check update schedule and dispatch request");
-        if (m_versionCheck)
-            m_versionCheck->checkForUpdateIfDue();
-    });
+    m_versionCheck->checkForUpdateAfterFirstPaint();
 #endif
 
     timing.next("Initialize manual server");

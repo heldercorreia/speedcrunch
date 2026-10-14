@@ -3,18 +3,22 @@
 
 
 #include "gui/versioncheck.h"
+#include "core/startupdiagnostics.h"
 
+#include <QApplication>
 #include <QDateTime>
 #include <QDebug>
 #include <QDesktopServices>
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QEvent>
 #include <QLabel>
 #include <QLoggingCategory>
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QSettings>
 #include <QStringList>
+#include <QTimer>
 #include <QUrl>
 #include <QVBoxLayout>
 #include <QVector>
@@ -43,6 +47,34 @@ VersionCheck::VersionCheck(QWidget* parentWindow, QObject* parent)
     : QObject(parent),
       m_parentWindow(parentWindow)
 {
+}
+
+void VersionCheck::checkForUpdateAfterFirstPaint()
+{
+    if (qEnvironmentVariableIsSet("SPEEDCRUNCH_TEST_SKIP_UPDATE_CHECK")
+        || m_automaticCheckScheduled || !m_parentWindow)
+        return;
+    m_automaticCheckScheduled = true;
+    qApp->installEventFilter(this);
+}
+
+bool VersionCheck::eventFilter(QObject* watched, QEvent* event)
+{
+    if (event->type() == QEvent::Paint) {
+        QWidget* widget = qobject_cast<QWidget*>(watched);
+        if (widget && widget->isVisible() && widget->window() == m_parentWindow) {
+            qApp->removeEventFilter(this);
+            const auto startupTask = StartupDiagnostics::task("Deferred automatic update check");
+            // Let the paint finish and its diagnostics callback run before dispatch.
+            QTimer::singleShot(0, this, [this, startupTask]() {
+                QTimer::singleShot(0, this, [this, startupTask]() {
+                    StartupDiagnostics::Scope timing("Check update schedule and dispatch request");
+                    checkForUpdateIfDue();
+                });
+            });
+        }
+    }
+    return QObject::eventFilter(watched, event);
 }
 
 void VersionCheck::checkForUpdateIfDue()
@@ -298,6 +330,7 @@ bool VersionCheck::isConnectivityError(QNetworkReply::NetworkError error)
 
 void VersionCheck::markCheckAttempted()
 {
+    StartupDiagnostics::Scope timing("Save update check timestamp");
     QSettings settings;
     const qint64 now = QDateTime::currentMSecsSinceEpoch();
     settings.setValue(QString::fromLatin1(LAST_CHECK_KEY), now);
@@ -306,6 +339,7 @@ void VersionCheck::markCheckAttempted()
 
 bool VersionCheck::isCheckDue() const
 {
+    StartupDiagnostics::Scope timing("Check update schedule");
     QSettings settings;
     const qint64 lastCheck = settings.value(QString::fromLatin1(LAST_CHECK_KEY), 0).toLongLong();
     if (lastCheck <= 0) {
@@ -332,7 +366,10 @@ void VersionCheck::startRequest(CheckTrigger trigger)
     versionCheckDebug() << "Starting update check request to" << QString::fromLatin1(VERSION_URL)
                            << "; trigger =" << (trigger == CheckTriggerManual ? "manual" : "automatic");
     markCheckAttempted();
-    m_pendingReply = m_networkAccessManager.get(request);
+    {
+        StartupDiagnostics::Scope timing("Dispatch update network request");
+        m_pendingReply = m_networkAccessManager.get(request);
+    }
     connect(m_pendingReply, SIGNAL(finished()), this, SLOT(handleReplyFinished()));
 }
 

@@ -25,8 +25,12 @@ public:
 
     explicit VersionCheck(QWidget* parentWindow, QObject* parent = 0);
 
+    void checkForUpdateAfterFirstPaint();
     void checkForUpdateIfDue();
     void checkForUpdateNow();
+
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override;
 
 private slots:
     void handleReplyFinished();
@@ -51,6 +55,7 @@ private:
     QNetworkAccessManager m_networkAccessManager;
     QPointer<QNetworkReply> m_pendingReply;
     CheckTrigger m_trigger = CheckTriggerAutomatic;
+    bool m_automaticCheckScheduled = false;
 };
 
 #endif
