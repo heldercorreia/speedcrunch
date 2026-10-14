@@ -3,6 +3,7 @@
 
 
 #include "hmath.h"
+#include "core/startupdiagnostics.h"
 
 #include "floatnum/floatcommon.h"
 #include "floatnum/floatconst.h"
@@ -71,6 +72,7 @@ static void h_init()
 {
     static bool h_initialized = false;
     if (!h_initialized) {
+        StartupDiagnostics::Scope timing("Initialize math engine");
         h_initialized = true;
         //TODO related to formats, get rid of it.
         float_stdconvert();

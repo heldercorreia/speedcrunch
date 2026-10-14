@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
+#include "core/startupdiagnostics.h"
+
 #include "core/units.h"
 
 #include "core/unicodechars.h"
@@ -1536,6 +1538,7 @@ void Units::pushUnit(Quantity q, QString name)
 // Initialize the lookup table for automatic matching.
 void Units::initTable()
 {
+    StartupDiagnostics::Scope timing("Initialize unit lookup tables");
     // Base canonicalization map derived from unit specs.
     // Entries in this map are preferred renderings for matching dimensions.
     m_matchLookup = s_unitRegistry().canonicalMatchLookup;
@@ -2151,6 +2154,7 @@ namespace {
 // identifiers, display symbols, affine converters and canonical matches.
 static UnitRegistry s_buildUnitRegistry()
 {
+    StartupDiagnostics::Scope timing("Build built-in unit registry");
     UnitRegistry registry;
     QList<UnitAliasSpec> unitAliasSpecs;
 

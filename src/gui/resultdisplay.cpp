@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
+#include "core/startupdiagnostics.h"
+
 #include "gui/resultdisplay.h"
 #include "gui/menustyleutils.h"
 
@@ -906,6 +908,7 @@ QColor ResultDisplay::hoverActionIconColor(HoveredActionBadge badge) const
 
 void ResultDisplay::refresh()
 {
+    StartupDiagnostics::Scope timing("Render session history");
     const Session* session = displaySession(this);
     if (session == nullptr) {
         clear();

@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
+#include "core/startupdiagnostics.h"
+
 #include "session.h"
 #include "sessionhistory.h"
 #include "variable.h"
@@ -402,6 +404,7 @@ void Session::serialize(QJsonObject &json) const
 
 int Session::deSerialize(const QJsonObject &json, bool merge=false)
 {
+    StartupDiagnostics::Scope timing("Deserialize session");
     return SessionSerialization::deserialize(*this, json, merge);
 }
 

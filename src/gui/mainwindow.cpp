@@ -3,6 +3,8 @@
 
 
 #include "gui/mainwindow.h"
+#include "gui/diagnosticsdialog.h"
+#include "core/startupdiagnostics.h"
 #include "gui/menustyleutils.h"
 
 #include "core/complexform.h"
@@ -3672,6 +3674,7 @@ void MainWindow::createUi()
 
 void MainWindow::createActions()
 {
+    StartupDiagnostics::Scope timing("Create actions");
     m_actions.sessionExportHtml = new QAction(this);
     m_actions.sessionExportJson = new QAction(this);
     m_actions.sessionExportPlainText = new QAction(this);
@@ -3827,6 +3830,9 @@ void MainWindow::createActions()
     m_actions.helpSource = new QAction(this);
     m_actions.helpDonate = new QAction(this);
     m_actions.helpAbout = new QAction(this);
+    m_actions.helpDiagnostics = new QAction(this);
+    m_actions.helpDiagnostics->setObjectName(QStringLiteral("AppDiagnosticsAction"));
+    m_actions.helpDiagnostics->setMenuRole(QAction::NoRole);
     m_actions.contextHelp = new QAction(this);
 
     m_actions.settingsAngleUnitDegree->setCheckable(true);
@@ -3953,6 +3959,7 @@ void MainWindow::createActions()
 
 void MainWindow::retranslateText()
 {
+    StartupDiagnostics::Scope timing("Load translations and translate UI");
     QTranslator* tr = 0;
     tr = createTranslator(m_settings->language);
     if (tr) {
@@ -3963,6 +3970,10 @@ void MainWindow::retranslateText()
 
         qApp->installTranslator(tr);
         m_translator = tr;
+        const QString translationLanguage = tr->language().isEmpty()
+            ? QFileInfo(tr->filePath()).completeBaseName() : tr->language();
+        qApp->setProperty("speedcrunchTranslationLanguage", tr->isEmpty()
+                          ? QStringLiteral("English (fallback)") : translationLanguage);
     } else {
         qApp->removeTranslator(m_translator);
         m_translator = 0;
@@ -4130,6 +4141,7 @@ void MainWindow::setKeypadAppearance(QAction* action)
 
 void MainWindow::applyKeypadAppearance()
 {
+    StartupDiagnostics::Scope timing("Apply keypad appearance");
     const bool classic = m_settings->keypadAppearance == Settings::KeypadAppearanceClassic;
     m_actions.settingsKeypadAppearanceClassic->setChecked(classic);
     m_actions.settingsKeypadAppearanceModern->setChecked(!classic);
@@ -4152,6 +4164,7 @@ void MainWindow::setEditorDisplayStyle(QAction* action)
 
 void MainWindow::applyEditorDisplayStyle()
 {
+    StartupDiagnostics::Scope timing("Apply editor and display appearance");
     m_actions.settingsEditorDisplayClassic->setChecked(
         m_settings->editorDisplayStyle == Settings::EditorDisplayClassic);
     m_actions.settingsEditorDisplayModern->setChecked(
@@ -4357,10 +4370,12 @@ void MainWindow::setActionsText()
     m_actions.helpSource->setText(MainWindow::tr("Source Code"));
     m_actions.helpDonate->setText(MainWindow::tr("&Donate"));
     m_actions.helpAbout->setText(MainWindow::tr("About &SpeedCrunch"));
+    m_actions.helpDiagnostics->setText(MainWindow::tr("App &Diagnostics"));
 }
 
 void MainWindow::createActionGroups()
 {
+    StartupDiagnostics::Scope timing("Create action groups");
     m_actionGroups.resultFormat = new QActionGroup(this);
     m_actionGroups.resultFormat->addAction(m_actions.settingsResultFormatBinary);
     m_actionGroups.resultFormat->addAction(m_actions.settingsResultFormatGeneral);
@@ -4467,6 +4482,7 @@ void MainWindow::createActionGroups()
 
 void MainWindow::createActionShortcuts()
 {
+    StartupDiagnostics::Scope timing("Create shortcuts");
     m_actions.sessionNewTab->setShortcuts(QKeySequence::AddTab);
     m_actions.sessionNewPrivate->setShortcut(Qt::CTRL | Qt::SHIFT | Qt::Key_N);
     // Let this QAction own Quit; a separate standard-key QShortcut would
@@ -4503,6 +4519,7 @@ void MainWindow::createActionShortcuts()
 
 void MainWindow::createMenus()
 {
+    StartupDiagnostics::Scope timing("Create menus");
     m_menus.session = new QMenu("", this);
     menuBar()->addMenu(m_menus.session);
     m_menus.session->addAction(m_actions.sessionNewTab);
@@ -4705,6 +4722,7 @@ void MainWindow::createMenus()
 #ifdef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
     m_menus.help->addAction(m_actions.helpUpdates);
 #endif
+    m_menus.help->addAction(m_actions.helpDiagnostics);
     m_menus.help->addAction(m_actions.helpAbout);
 
     addActions(menuBar()->actions());
@@ -4776,6 +4794,7 @@ void MainWindow::updateKeypadModeActionState()
 
 void MainWindow::createStatusBar()
 {
+    StartupDiagnostics::Scope timing("Create status bar");
     QStatusBar* bar = statusBar();
     if (m_status.angleUnitSection != nullptr) {
         applyStatusBarAppearance(bar, generatedSurfaceColors(m_settings));
@@ -4885,6 +4904,7 @@ void MainWindow::createStatusBar()
 
 void MainWindow::createFixedWidgets()
 {
+    StartupDiagnostics::Scope timing("Create editor and result display");
     m_widgets.root = new QWidget(this);
     setCentralWidget(m_widgets.root);
 
@@ -6794,6 +6814,7 @@ void MainWindow::normalizeSplitContainerTree()
 
 void MainWindow::updateSplitterStyleSheet()
 {
+    StartupDiagnostics::Scope timing("Style session splitters");
     if (m_widgets.splitContainer == nullptr)
         return;
 
@@ -6837,6 +6858,7 @@ void MainWindow::updateSplitterStyleSheet()
 
 void MainWindow::refreshPaneThemes()
 {
+    StartupDiagnostics::Scope timing("Apply pane themes");
     const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
     applyThemeBackgroundRoleToWidget(m_widgets.splitContainer, surfaces.window.background);
     const ThemeSurfaceColors resultToolTip =
@@ -6962,6 +6984,7 @@ void MainWindow::applyDockTabBarAppearance()
 
 void MainWindow::applyThemeSurfacePalette()
 {
+    StartupDiagnostics::Scope timing("Apply window theme palette");
     const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
     if (UiConfig::OklchThemeDebugReportEnabled) {
         const QString reportKey = oklchThemeReportKey(surfaces);
@@ -7318,6 +7341,7 @@ void MainWindow::captureVisibleSessionViewports()
 
 void MainWindow::restoreVisibleSessionViewports()
 {
+    StartupDiagnostics::Scope timing("Restore visible history viewports");
     for (ResultDisplay* display : splitPaneDisplays()) {
         if (display == nullptr)
             continue;
@@ -7338,6 +7362,7 @@ void MainWindow::restoreVisibleSessionViewports()
 }
 
 void MainWindow::createBitField() {
+    StartupDiagnostics::Scope timing("Create bitfield dock");
     if (m_docks.bitField) {
         m_docks.bitField->show();
         m_docks.bitField->raise();
@@ -7359,6 +7384,7 @@ void MainWindow::createBitField() {
 
 void MainWindow::createKeypad()
 {
+    StartupDiagnostics::Scope timing("Create keypad");
     if (m_widgets.keypad)
         return;
 
@@ -7417,6 +7443,7 @@ void MainWindow::createKeypad()
 
 void MainWindow::createBookDock(bool)
 {
+    StartupDiagnostics::Scope timing("Create formula book dock");
     if (m_docks.book) {
         m_docks.book->show();
         m_docks.book->raise();
@@ -7442,6 +7469,7 @@ void MainWindow::createBookDock(bool)
 
 void MainWindow::createConstantsDock(bool takeFocus)
 {
+    StartupDiagnostics::Scope timing("Create constants dock");
     if (m_docks.constants) {
         m_docks.constants->show();
         m_docks.constants->raise();
@@ -7472,6 +7500,7 @@ void MainWindow::createConstantsDock(bool takeFocus)
 
 void MainWindow::createFunctionsDock(bool takeFocus)
 {
+    StartupDiagnostics::Scope timing("Create functions dock");
     if (m_docks.functions) {
         m_docks.functions->show();
         m_docks.functions->raise();
@@ -7497,6 +7526,7 @@ void MainWindow::createFunctionsDock(bool takeFocus)
 
 void MainWindow::createHistoryDock(bool)
 {
+    StartupDiagnostics::Scope timing("Create history dock");
     if (m_docks.history) {
         m_docks.history->show();
         m_docks.history->raise();
@@ -7528,6 +7558,7 @@ void MainWindow::createHistoryDock(bool)
 
 void MainWindow::createVariablesDock(bool takeFocus)
 {
+    StartupDiagnostics::Scope timing("Create variables dock");
     if (m_docks.variables) {
         m_docks.variables->show();
         m_docks.variables->raise();
@@ -7565,6 +7596,7 @@ void MainWindow::createVariablesDock(bool takeFocus)
 
 void MainWindow::createUserFunctionsDock(bool takeFocus)
 {
+    StartupDiagnostics::Scope timing("Create user functions dock");
     if (m_docks.userFunctions) {
         m_docks.userFunctions->show();
         m_docks.userFunctions->raise();
@@ -7602,6 +7634,7 @@ void MainWindow::createUserFunctionsDock(bool takeFocus)
 
 void MainWindow::createUserUnitsDock(bool takeFocus)
 {
+    StartupDiagnostics::Scope timing("Create user units dock");
     if (m_docks.userUnits) {
         m_docks.userUnits->show();
         m_docks.userUnits->raise();
@@ -7683,6 +7716,7 @@ void MainWindow::deleteDock(QDockWidget* dock)
 
 void MainWindow::createFixedConnections()
 {
+    StartupDiagnostics::Scope timing("Connect UI signals");
     ResultDisplay* initialDisplay = m_widgets.display;
     Editor* initialEditor = m_widgets.editor;
     connect(initialEditor, &Editor::textChanged, this, [this, initialDisplay, initialEditor]() {
@@ -7939,6 +7973,7 @@ void MainWindow::createFixedConnections()
     connect(m_actions.helpSource, SIGNAL(triggered()), SLOT(openSourceURL()));
     connect(m_actions.helpDonate, SIGNAL(triggered()), SLOT(openDonateURL()));
     connect(m_actions.helpAbout, SIGNAL(triggered()), SLOT(showAboutDialog()));
+    connect(m_actions.helpDiagnostics, &QAction::triggered, this, &MainWindow::showDiagnosticsDialog);
 
     connect(m_widgets.editor, &Editor::autoCalcDisabled, this, [this]() {
         if (sender() == m_widgets.editor)
@@ -8082,6 +8117,7 @@ void MainWindow::createFixedConnections()
 
 void MainWindow::applySettings(bool initializing)
 {
+    StartupDiagnostics::Scope timing("Apply appearance and language");
     applyKeypadAppearance();
     m_actions.settingsDockAppearanceSystem->setChecked(
         m_settings->dockAppearance == Settings::DockAppearanceSystem);
@@ -8113,6 +8149,7 @@ void MainWindow::applySettings(bool initializing)
     const bool userUnitsDockVisible = m_settings->userUnitsDockVisible;
     const bool bitfieldVisible = m_settings->bitfieldVisible;
 
+    timing.next("Create and configure docks (total)");
     createBookDock(false);
     setFormulaBookDockVisible(formulaBookDockVisible, false);
     m_actions.viewFormulaBook->setChecked(formulaBookDockVisible);
@@ -8144,6 +8181,7 @@ void MainWindow::applySettings(bool initializing)
     createBitField();
     setBitfieldVisible(bitfieldVisible);
     m_actions.viewBitfield->setChecked(bitfieldVisible);
+    timing.next("Configure keypad, status bar and menu bar");
     updateKeypadModeActionState();
     switch (m_keypadZoomPercent) {
     case 50:
@@ -8169,6 +8207,7 @@ void MainWindow::applySettings(bool initializing)
     m_actions.viewMenuBar->setChecked(m_settings->menuBarVisible);
 #endif
 
+    timing.next("Restore window geometry and dock layout");
     const bool hasSavedWindowLayout = !m_settings->sessionLayoutJson.isEmpty();
     if (hasSavedWindowLayout || !restoreGeometry(m_settings->windowGeometry)) {
         int defaultWidth = 640;
@@ -8209,6 +8248,7 @@ void MainWindow::applySettings(bool initializing)
     else if (m_settings->angleUnit == 'v')
         m_actions.settingsAngleUnitRevolution->setChecked(true);
 
+    timing.next("Load global definitions and schedule session restore");
     if (initializing) {
         UserDefinitions::loadInto(m_settings);
         if (m_restorePreviousSessionOnStartup)
@@ -8216,6 +8256,7 @@ void MainWindow::applySettings(bool initializing)
         applyUserDefinitions();
     }
 
+    timing.next("Apply calculation, editing and display preferences");
     m_actions.settingsBehaviorLeaveLastExpression->setChecked(m_settings->leaveLastExpression);
     switch (m_settings->upDownArrowBehavior) {
     case Settings::UpDownArrowBehaviorNever:
@@ -8973,6 +9014,8 @@ MainWindow::MainWindow(bool restorePreviousSession)
     : QMainWindow()
     , m_restorePreviousSessionOnStartup(restorePreviousSession)
 {
+    StartupDiagnostics::Scope windowTiming("Construct main window (total)");
+    StartupDiagnostics::Scope timing("Register window");
     qApp->setQuitOnLastWindowClosed(false);
     applyDockCornerLayout();
     setAttribute(Qt::WA_Hover, true);
@@ -8984,14 +9027,18 @@ MainWindow::MainWindow(bool restorePreviousSession)
         setObjectName(QStringLiteral("window-%1").arg(QUuid::createUuid().toString(QUuid::WithoutBraces)));
     windowIds().insert(objectName(), QPointer<MainWindow>(this));
 
+    timing.next("Create initial session and evaluator");
     m_session = new Session();
     m_session->setName(firstAvailableUntitledSessionName(m_loadedSessions));
     m_loadedSessions.insert(m_session->name(), m_session);
+    timing.next("Load constants repository");
     m_constants = Constants::instance();
     m_evaluator = m_session->evaluator();
+    timing.next("Load functions repository");
     m_functions = FunctionRepo::instance();
     m_evaluator->initializeBuiltInVariables();
 
+    timing.next("Initialize window state and menu style");
     m_translator = 0;
     m_settings = Settings::instance();
     m_startupPrivateTabPending = restorePreviousSession && this == primaryMainWindow()
@@ -9052,8 +9099,11 @@ MainWindow::MainWindow(bool restorePreviousSession)
     connect(qApp, &QApplication::focusChanged, this, &MainWindow::handleApplicationFocusChanged);
     qApp->installEventFilter(this);
 
+    timing.next("Create main UI (total)");
     createUi();
+    timing.next("Apply startup settings (total)");
     applySettings();
+    timing.next("Finalize theme and editor focus");
     m_initializingUi = false;
     applyThemeSurfacePalette();
     refreshPaneThemes();
@@ -9066,13 +9116,16 @@ MainWindow::MainWindow(bool restorePreviousSession)
         QTimer::singleShot(0, this, SLOT(showNumberFormatDialog()));
 
 #ifdef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
+    timing.next("Initialize update checker");
     m_versionCheck = new VersionCheck(this, this);
     QTimer::singleShot(0, this, [this]() {
+        StartupDiagnostics::Scope timing("Check update schedule and dispatch request");
         if (m_versionCheck)
             m_versionCheck->checkForUpdateIfDue();
     });
 #endif
 
+    timing.next("Initialize manual server");
     m_manualServer = ManualServer::instance();
     connect(this, SIGNAL(languageChanged()), m_manualServer, SLOT(ensureCorrectLanguage()));
 }
@@ -9106,6 +9159,37 @@ void MainWindow::showAboutDialog()
 {
     AboutBox dialog(this);
     dialog.resize(480, 640);
+    dialog.exec();
+}
+
+void MainWindow::showDiagnosticsDialog()
+{
+    int windows = 0;
+    int panes = 0;
+    int sessions = 0;
+    qint64 historyEntries = 0;
+    qint64 variables = 0;
+    qint64 functions = 0;
+    qint64 units = 0;
+    for (const auto& pointer : allMainWindows()) {
+        if (MainWindow* window = pointer.data()) {
+            ++windows;
+            panes += window->splitPaneDisplays().size();
+            sessions += window->m_loadedSessions.size();
+            for (const Session* session : window->m_loadedSessions) {
+                historyEntries += session->historySize();
+                variables += session->variablesToList().size();
+                functions += session->UserFunctionsToList().size();
+                units += session->userUnitsToList().size();
+            }
+        }
+    }
+    const QString workload = QStringLiteral(
+        "Open windows: %1\nVisible session panes: %2\nLoaded sessions: %3\n"
+        "Loaded history entries: %4\nVariables: %5\nUser functions: %6\nUser units: %7\n")
+        .arg(windows).arg(panes).arg(sessions).arg(historyEntries)
+        .arg(variables).arg(functions).arg(units);
+    DiagnosticsDialog dialog(appDiagnosticsReport(workload), this);
     dialog.exec();
 }
 
@@ -9216,6 +9300,7 @@ void MainWindow::showNewPrivateSession()
 
 void MainWindow::finishStartupSessionRestore(bool restoredSession)
 {
+    StartupDiagnostics::Scope timing("Finalize startup session and focus");
     if (m_startupPrivateTabPending) {
         const bool emptyUntitledSession = untitledSessionNumber(m_session->name()) > 0
             && !sessionHasPersistableContent(m_session)
@@ -11023,6 +11108,7 @@ void MainWindow::applyUserDefinitions(int* importedVariables,
                                       int* ignoredLines,
                                       QList<int>* ignoredLineNumbers)
 {
+    StartupDiagnostics::Scope timing("Apply global definitions");
     const QString definitionsText = m_settings->startupUserDefinitions.trimmed();
     const int previousImportedVariables = importedVariables ? *importedVariables : 0;
     const int previousImportedFunctions = importedFunctions ? *importedFunctions : 0;
@@ -13113,6 +13199,7 @@ void MainWindow::copy()
 }
 
 void MainWindow::restoreSession(bool restoreHistory) {
+    StartupDiagnostics::Scope timing("Migrate history and schedule session restore");
     migrateLegacyHistoryIfNeeded();
     ensureSessionsPath();
 
@@ -13122,7 +13209,9 @@ void MainWindow::restoreSession(bool restoreHistory) {
     const QString name = m_session->name();
     const QString filePath = sessionFilePath(name);
     QPointer<MainWindow> windowGuard(this);
-    QThread* thread = QThread::create([windowGuard, filePath, name, restoreHistory]() {
+    const auto startupTask = StartupDiagnostics::task("Restore single session (async total)");
+    QThread* thread = QThread::create([windowGuard, filePath, name, restoreHistory, startupTask]() {
+        StartupDiagnostics::Scope timing("Read single session JSON");
         QJsonObject json;
         const bool ok = readValidSessionJson(filePath, &json);
         if (ok && !restoreHistory)
@@ -13131,7 +13220,9 @@ void MainWindow::restoreSession(bool restoreHistory) {
         if (!windowGuard)
             return;
 
-        QMetaObject::invokeMethod(windowGuard.data(), [windowGuard, ok, json, name, restoreHistory]() mutable {
+        timing.finish();
+        QMetaObject::invokeMethod(windowGuard.data(), [windowGuard, ok, json, name, restoreHistory, startupTask]() mutable {
+            StartupDiagnostics::Scope timing("Apply restored single session");
             if (!windowGuard)
                 return;
             if (!ok) {
@@ -13179,6 +13270,7 @@ void MainWindow::restoreSession(bool restoreHistory) {
 
 bool MainWindow::restoreSessionLayout(bool restoreHistory)
 {
+    StartupDiagnostics::Scope timing("Parse saved window layout");
     if (m_settings->sessionLayoutJson.isEmpty())
         return false;
 
@@ -13272,13 +13364,16 @@ bool MainWindow::restoreSessionLayout(bool restoreHistory)
         return false;
 
     QPointer<MainWindow> windowGuard(this);
+    const auto startupTask = StartupDiagnostics::task("Restore window sessions (async total)");
     QThread* thread = QThread::create([windowGuard, sessionLoadSpecs, activeSessionName,
-                                       layout, window, root, tabs, restoreHistory]() {
+                                       layout, window, root, tabs, restoreHistory, startupTask]() {
+        StartupDiagnostics::Scope timing("Read saved session files (worker total)");
         QHash<QString, QJsonObject> sessionJsons;
         QHash<QString, QPair<int, int>> viewportAnchors;
         QHash<QString, int> scrollValues;
 
         for (const SessionLoadSpec& spec : sessionLoadSpecs) {
+            StartupDiagnostics::Scope fileTiming("Read and parse session JSON");
             QJsonObject sessionJson;
             if (!readValidSessionJson(spec.filePath, &sessionJson))
                 continue;
@@ -13302,10 +13397,12 @@ bool MainWindow::restoreSessionLayout(bool restoreHistory)
         if (!windowGuard)
             return;
 
+        timing.finish();
         QMetaObject::invokeMethod(windowGuard.data(), [windowGuard, layout, window, root, tabs,
                                                        activeSessionName, restoreHistory,
                                                        sessionJsons, viewportAnchors,
-                                                       scrollValues]() mutable {
+                                                       scrollValues, startupTask]() mutable {
+            StartupDiagnostics::Scope timing("Apply restored window sessions (total)");
             if (!windowGuard)
                 return;
             windowGuard->finishRestoreSessionLayout(layout, window, root, tabs, activeSessionName,
@@ -13335,6 +13432,7 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
                                             QHash<QString, QPair<int, int>> viewportAnchors,
                                             QHash<QString, int> scrollValues)
 {
+    StartupDiagnostics::Scope timing("Deserialize saved sessions (total)");
     const QJsonArray windows = layout.value(QStringLiteral("windows")).toArray();
     const QString rootType = root.value(QStringLiteral("type")).toString();
 
@@ -13351,6 +13449,7 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
         restoredSessions.insert(it.key(), session);
     }
 
+    timing.next("Rebuild session panes and tabs");
     m_sessionViewportAnchors = viewportAnchors;
     m_sessionScrollValues = scrollValues;
 
@@ -13572,6 +13671,7 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
     activateSession(activeSession);
     m_conditions.autoAns = restoreHistory && !m_session->historyIsEmpty();
     updatePaneEditorCursorVisibility();
+    timing.next("Restore per-window settings and theme");
     restoreWindowUiState(window);
     applyThemeSurfacePalette();
     refreshPaneThemes();
@@ -13580,10 +13680,12 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
     emit functionsChanged();
     emit unitsChanged();
     restoreVisibleSessionViewports();
-    QTimer::singleShot(0, this, [this]() {
+    const auto viewportTask = StartupDiagnostics::task("Deferred history viewport restoration");
+    QTimer::singleShot(0, this, [this, viewportTask]() {
         restoreVisibleSessionViewports();
     });
 
+    timing.next("Restore additional windows");
     if (this == primaryMainWindow() && !g_restoringExtraWindows && !g_multiWindowSpawnDone && windows.size() > 1) {
         g_multiWindowSpawnDone = true;
         g_restoringExtraWindows = true;

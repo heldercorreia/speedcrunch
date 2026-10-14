@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
+#include "core/startupdiagnostics.h"
+
 #include "core/settings.h"
 
 #include "core/complexform.h"
@@ -313,6 +315,7 @@ Settings::Settings()
 
 void Settings::load()
 {
+    StartupDiagnostics::Scope timing("Read and migrate settings");
     const char* KEY = "SpeedCrunch";
 
     QSettings* settings = createQSettings(KEY);

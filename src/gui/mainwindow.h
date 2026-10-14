@@ -239,6 +239,7 @@ private slots:
     void setOpenPrivateTabOnStartupEnabled(bool);
     void setWidgetsDirection();
     void showAboutDialog();
+    void showDiagnosticsDialog();
     void showStateLabel(const QString&);
     void showFontDialog();
     void showLanguageChooserDialog();
@@ -557,6 +558,7 @@ private:
         QAction* helpSource;
         QAction* helpDonate;
         QAction* helpAbout;
+        QAction* helpDiagnostics;
         QAction* contextHelp;
     } m_actions;
 

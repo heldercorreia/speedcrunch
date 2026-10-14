@@ -100,6 +100,9 @@ HEADERS += core/book.h \
            core/userfunction.h \
            core/userunit.h \
            gui/aboutbox.h \
+           gui/diagnosticsdialog.h \
+           gui/diagnosticapplication.h \
+           core/startupdiagnostics.h \
            gui/bitfieldwidget.h \
            gui/bookdock.h \
            gui/constantswidget.h \
@@ -172,6 +175,7 @@ SOURCES += main.cpp \
            core/userunit.cpp \
            core/opcode.cpp \
            gui/aboutbox.cpp \
+           gui/diagnosticsdialog.cpp \
            gui/bitfieldwidget.cpp \
            gui/bookdock.cpp \
            gui/constantswidget.cpp \

@@ -179,6 +179,7 @@ if(BUILD_TESTING)
         testsettingsui
         teststatusbarui
         testmenusui
+        testdiagnosticsui
         testbitfieldui
         testsessionsui
         testdisplayui

@@ -857,6 +857,34 @@ User Interface Settings
 Help
 ----
 
+* :menuselection:`Help --> App Diagnostics`
+    Open a plain text report that you can share with the developers when reporting
+    a slow startup or a compatibility problem. Use :guilabel:`Copy to Clipboard`
+    to copy the whole report.
+
+    The report includes the app version and Portable status, operating system,
+    Qt versions, selected and system languages, display scaling, and widget style.
+    It also shows process memory and CPU time where available, counts of open
+    windows, sessions and history entries, and relevant calculation preferences.
+
+    Startup timings cover application setup, settings, built-in repositories,
+    UI construction, docks, themes, and session restoration. File reads on worker
+    threads, queued UI restoration, and startup painting are measured too.
+    Recording starts at ``main()`` and finishes once the UI has painted and the
+    startup tasks have completed. It does not include process loading before
+    ``main()`` or time waiting for an update-check response.
+
+    Times are measured in milliseconds. Nested phases and asynchronous work can
+    overlap, so adding the phase totals will not give the overall startup time.
+    Repeated phases show their call count, total time, and longest call.
+    If startup is still running, reopen the dialog later for the complete report.
+
+    The measurements stay in memory until you quit. SpeedCrunch does not log or
+    send them anywhere. The report excludes calculation text, session names,
+    and file paths. Copying it puts the report on your system clipboard.
+
+    .. versionadded:: 1.1
+
 * :menuselection:`Help --> About SpeedCrunch`
     Show the SpeedCrunch version, the operating system and its version, and the Qt
     version. Portable builds display ``Portable`` next to the SpeedCrunch

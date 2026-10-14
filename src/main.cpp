@@ -3,7 +3,9 @@
 
 
 #include "gui/mainwindow.h"
+#include "gui/diagnosticapplication.h"
 #include "core/settings.h"
+#include "core/startupdiagnostics.h"
 
 #include <QCoreApplication>
 #include <QApplication>
@@ -228,11 +230,15 @@ BOOL WINAPI handleWindowsConsoleControl(DWORD controlType)
 
 int main(int argc, char* argv[])
 {
+    StartupDiagnostics::begin();
+    StartupDiagnostics::Scope timing("Configure surface format");
     QSurfaceFormat surfaceFormat = QSurfaceFormat::defaultFormat();
     surfaceFormat.setColorSpace(QColorSpace::SRgb);
     QSurfaceFormat::setDefaultFormat(surfaceFormat);
 
-    QApplication application(argc, argv);
+    timing.next("Initialize QApplication and platform plugin");
+    DiagnosticApplication application(argc, argv);
+    timing.next("Configure application identity");
     ShutdownEventFilter shutdownEventFilter(&application);
     application.installEventFilter(&shutdownEventFilter);
 
@@ -240,7 +246,9 @@ int main(int argc, char* argv[])
     QCoreApplication::setOrganizationDomain("speedcrunch.org");
     QGuiApplication::setDesktopFileName("org.speedcrunch.SpeedCrunch");
 
+    timing.next("Load application settings (total)");
     Settings::instance();
+    timing.next("Install shutdown handlers");
     QLocalServer singletonServer;
     bool pendingActivation = false;
 
@@ -285,6 +293,7 @@ int main(int argc, char* argv[])
         qWarning() << "Could not install Windows console termination handler.";
 #endif
 
+    timing.next("Check and register single instance");
     const QString serverName = singletonServerName();
     if (notifyRunningInstance(serverName))
         return 0;
@@ -328,8 +337,10 @@ int main(int argc, char* argv[])
         return 0;
     }
 
+    timing.next("Initialize main window (total)");
     MainWindow window;
     g_mainWindow = &window;
+    timing.next("Show main window");
     window.show();
 
     if (pendingActivation)
@@ -340,6 +351,7 @@ int main(int argc, char* argv[])
             application.quit();
     });
 
+    timing.finish();
     g_eventLoopRunning.store(true);
     const int result = application.exec();
     g_eventLoopRunning.store(false);

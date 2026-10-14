@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
+#include "core/startupdiagnostics.h"
+
 #include "core/evaluator.h"
 #include "core/constants.h"
 #include "core/regexpatterns.h"
@@ -392,6 +394,7 @@ static bool s_isClosingListBraceToken(const Token& token)
 
 static QHash<QString, Quantity> s_buildBuiltInUnitLookup(char angleMode)
 {
+    StartupDiagnostics::Scope timing("Build evaluator unit lookup");
     return Units::builtInUnitLookup(angleMode);
 }
 
@@ -5071,6 +5074,7 @@ Evaluator::Evaluator()
 
 void Evaluator::initializeBuiltInVariables()
 {
+    StartupDiagnostics::Scope timing("Initialize evaluator built-in variables");
     setVariable(QLatin1String("e"), DMath::e(), Variable::BuiltIn);
     setVariable(QString::fromUtf8("ℯ"), DMath::e(), Variable::BuiltIn);
 

@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 
+#include "core/startupdiagnostics.h"
+
 #include "core/functions.h"
 
 #include "core/mathdsl.h"
@@ -2187,6 +2189,7 @@ FunctionRepo* FunctionRepo::instance()
 
 FunctionRepo::FunctionRepo()
 {
+    StartupDiagnostics::Scope timing("Initialize built-in functions");
     createFunctions();
     setNonTranslatableFunctionUsages();
     retranslateText();

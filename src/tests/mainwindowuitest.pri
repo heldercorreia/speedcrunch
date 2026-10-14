@@ -11,6 +11,7 @@ contains(CONFIG, enable_update_checks) {
 SOURCES += ../gui/menustyleutils.cpp \
            ../core/userdefinitions.cpp \
            ../gui/aboutbox.cpp \
+           ../gui/diagnosticsdialog.cpp \
            ../gui/bitfieldwidget.cpp \
            ../gui/bookdock.cpp \
            ../gui/constantswidget.cpp \
@@ -35,6 +36,9 @@ SOURCES += ../gui/menustyleutils.cpp \
 
 HEADERS += ../core/userdefinitions.h \
            ../gui/aboutbox.h \
+           ../gui/diagnosticsdialog.h \
+           ../gui/diagnosticapplication.h \
+           ../core/startupdiagnostics.h \
            ../gui/bitfieldwidget.h \
            ../gui/bookdock.h \
            ../gui/constantswidget.h \
