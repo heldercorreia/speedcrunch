@@ -123,7 +123,7 @@ private slots:
     void restoreWindowLayoutState(const QByteArray& state);
     void restoreWindowKeypadLayout(bool visible, int mode);
     void restoreWindowKeypadZoom(int zoomPercent);
-    void restoreWindowUiState(const QJsonObject& window);
+    void restoreWindowUiState(const QJsonObject& window, bool restoreLayout = true);
     void showRestoredWindow(const QByteArray& geometry);
     void cycleFocusForward();
     void cycleFocusBackward();

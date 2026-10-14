@@ -13720,7 +13720,9 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
     m_conditions.autoAns = restoreHistory && !m_session->historyIsEmpty();
     updatePaneEditorCursorVisibility();
     timing.next("Restore per-window settings and theme");
-    restoreWindowUiState(window);
+    // Pane rebuilding keeps the docks and keypad restored before session loading.
+    // Reapply selections and geometry after the central layout changes.
+    restoreWindowUiState(window, false);
     applyThemeSurfacePalette();
     refreshPaneThemes();
     emit historyChanged();
@@ -13761,9 +13763,10 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
     finishStartupSessionRestore(true);
 }
 
-void MainWindow::restoreWindowUiState(const QJsonObject& window)
+void MainWindow::restoreWindowUiState(const QJsonObject& window, bool restoreLayout)
 {
-    StartupDiagnostics::AppearanceScope timing("Restore window UI state", this);
+    StartupDiagnostics::AppearanceScope timing(restoreLayout
+        ? "Restore window UI state" : "Restore window selections and geometry", this);
     const QString restoredAngleUnit =
         window.value(QStringLiteral("statusBarAngleUnit")).toString();
     if (restoredAngleUnit.size() == 1
@@ -13782,26 +13785,28 @@ void MainWindow::restoreWindowUiState(const QJsonObject& window)
         if (restoredPrecision >= -1 && restoredPrecision <= 50)
             m_status.selectedResultPrecision = restoredPrecision;
     }
-    if (window.contains(QStringLiteral("statusBarVisible")))
+    if (restoreLayout && window.contains(QStringLiteral("statusBarVisible")))
         setStatusBarVisible(window.value(QStringLiteral("statusBarVisible")).toBool(true));
     else
         setStatusBarText();
     if (QApplication::activeWindow() == this)
         applyStatusBarSelectionState();
-    const QString windowStateBase64 = window.value(QStringLiteral("windowState")).toString();
-    restoreWindowLayoutState(windowStateBase64.isEmpty()
-        ? m_settings->windowState
-        : QByteArray::fromBase64(windowStateBase64.toLatin1()));
-    if (window.contains(QStringLiteral("bitfieldVisible")))
-        setBitfieldVisible(window.value(QStringLiteral("bitfieldVisible")).toBool(false));
-    if (window.contains(QStringLiteral("keypadVisible"))) {
-        restoreWindowKeypadLayout(
-            window.value(QStringLiteral("keypadVisible")).toBool(false),
-            window.value(QStringLiteral("keypadMode")).toInt(static_cast<int>(m_keypadMode)));
-    }
-    if (window.contains(QStringLiteral("keypadZoomPercent"))) {
-        restoreWindowKeypadZoom(
-            window.value(QStringLiteral("keypadZoomPercent")).toInt(m_keypadZoomPercent));
+    if (restoreLayout) {
+        const QString windowStateBase64 = window.value(QStringLiteral("windowState")).toString();
+        restoreWindowLayoutState(windowStateBase64.isEmpty()
+            ? m_settings->windowState
+            : QByteArray::fromBase64(windowStateBase64.toLatin1()));
+        if (window.contains(QStringLiteral("bitfieldVisible")))
+            setBitfieldVisible(window.value(QStringLiteral("bitfieldVisible")).toBool(false));
+        if (window.contains(QStringLiteral("keypadVisible"))) {
+            restoreWindowKeypadLayout(
+                window.value(QStringLiteral("keypadVisible")).toBool(false),
+                window.value(QStringLiteral("keypadMode")).toInt(static_cast<int>(m_keypadMode)));
+        }
+        if (window.contains(QStringLiteral("keypadZoomPercent"))) {
+            restoreWindowKeypadZoom(
+                window.value(QStringLiteral("keypadZoomPercent")).toInt(m_keypadZoomPercent));
+        }
     }
     const QString geometryBase64 = window.value(QStringLiteral("geometry")).toString();
     if (!geometryBase64.isEmpty())
