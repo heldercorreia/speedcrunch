@@ -1159,11 +1159,12 @@ public:
 
 void ensureDockChromeStyleInstalled()
 {
+    if (QApplication::style()->property(DockChromeStyleInstalledProperty).toBool())
+        return;
+
     StartupDiagnostics::AppearanceScope timing("Install dock chrome style", qApp);
     timing.observeInputs("installed", StartupDiagnostics::appearanceInputs({
         QApplication::style()->property(DockChromeStyleInstalledProperty).toBool()}));
-    if (QApplication::style()->property(DockChromeStyleInstalledProperty).toBool())
-        return;
 
     QStyle* style = new DockChromeStyle(QApplication::style());
     style->setProperty(DockChromeStyleInstalledProperty, true);
@@ -9045,6 +9046,13 @@ void MainWindow::restoreEditorTextFromCurrentSession()
     m_widgets.editor->setFocus();
 }
 
+void MainWindow::initializeApplicationStyle()
+{
+    StartupDiagnostics::AppearanceContext context("Initialize application style");
+    // Set the application style before any main-window widgets are created.
+    ensureDockChromeStyleInstalled();
+}
+
 MainWindow::MainWindow(bool restorePreviousSession)
     : QMainWindow()
     , m_restorePreviousSessionOnStartup(restorePreviousSession)
@@ -9144,6 +9152,7 @@ MainWindow::MainWindow(bool restorePreviousSession)
     m_initializingUi = false;
     applyThemeSurfacePalette();
     refreshPaneThemes();
+    // Keep direct window construction working without the startup initializer.
     ensureDockChromeStyleInstalled();
     updatePaneLoadedSessionCounts();
     // Set the initial focus after parenting the editor and restoring the docks.

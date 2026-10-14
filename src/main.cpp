@@ -337,6 +337,8 @@ int main(int argc, char* argv[])
         return 0;
     }
 
+    timing.next("Initialize application widget style");
+    MainWindow::initializeApplicationStyle();
     timing.next("Initialize main window (total)");
     MainWindow window;
     g_mainWindow = &window;

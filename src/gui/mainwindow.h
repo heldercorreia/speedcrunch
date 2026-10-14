@@ -60,6 +60,7 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
+    static void initializeApplicationStyle();
     explicit MainWindow(bool restorePreviousSession = true);
     ~MainWindow();
     void persistSessionAndSettingsForShutdown();
