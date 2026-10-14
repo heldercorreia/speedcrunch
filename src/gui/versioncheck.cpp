@@ -42,6 +42,17 @@ static QDebug versionCheckDebug()
                           lcVersionCheck().categoryName()).debug();
 }
 
+void deleteStoppedThread(QThread* thread)
+{
+    // finished() precedes deferred deletion and thread-local cleanup. Deleting
+    // a thread still in that stage can make its destructor wait indefinitely.
+    if (thread->wait(0)) {
+        delete thread;
+        return;
+    }
+    QTimer::singleShot(10, thread, [thread]() { deleteStoppedThread(thread); });
+}
+
 }
 
 class VersionCheckWorker : public QObject {
@@ -49,10 +60,14 @@ class VersionCheckWorker : public QObject {
 public:
     void startRequest()
     {
+        if (QThread::currentThread()->isInterruptionRequested())
+            return;
         if (!m_manager) {
             StartupDiagnostics::Scope timing("Initialize update network manager");
             m_manager = new QNetworkAccessManager(this);
         }
+        if (QThread::currentThread()->isInterruptionRequested())
+            return;
         QNetworkRequest request(QUrl(QString::fromLatin1(VERSION_URL)));
         request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
         request.setTransferTimeout(5000);
@@ -72,6 +87,7 @@ public:
     }
 
 signals:
+    void requestDispatched();
     void requestFinished(QNetworkReply::NetworkError error, const QByteArray& payload,
                          int httpStatus, const QString& errorString);
 
@@ -87,8 +103,10 @@ VersionCheck::VersionCheck(QWidget* parentWindow, QObject* parent)
 
 VersionCheck::~VersionCheck()
 {
-    m_networkThread.quit();
-    m_networkThread.wait();
+    if (m_networkThread) {
+        m_networkThread->requestInterruption();
+        m_networkThread->quit();
+    }
 }
 
 void VersionCheck::checkForUpdateAfterFirstPaint()
@@ -400,18 +418,27 @@ void VersionCheck::startRequest(CheckTrigger trigger)
     markCheckAttempted();
     const auto startupTask = StartupDiagnostics::task("Update request setup (async total)");
     if (!m_networkWorker) {
+        // Neither object belongs to the window. They survive until cleanup ends.
+        QThread* thread = new QThread;
+        m_networkThread = thread;
         m_networkWorker = new VersionCheckWorker;
-        m_networkWorker->moveToThread(&m_networkThread);
-        connect(&m_networkThread, &QThread::finished, m_networkWorker, &QObject::deleteLater);
+        m_networkWorker->moveToThread(thread);
+        connect(thread, &QThread::finished, m_networkWorker, &QObject::deleteLater);
+        connect(thread, &QThread::finished, thread, [thread]() { deleteStoppedThread(thread); },
+                Qt::QueuedConnection);
         connect(m_networkWorker, &VersionCheckWorker::requestFinished,
                 this, &VersionCheck::handleReplyFinished, Qt::QueuedConnection);
-        m_networkThread.start();
+        // Wake diagnostics after setup without retaining a pointer to the window.
+        connect(m_networkWorker, &VersionCheckWorker::requestDispatched,
+                qApp, []() {}, Qt::QueuedConnection);
+        thread->start();
     }
     VersionCheckWorker* worker = m_networkWorker;
-    QMetaObject::invokeMethod(worker, [this, worker, startupTask]() {
+    QMetaObject::invokeMethod(worker, [worker, startupTask]() {
         worker->startRequest();
-        // Wake the UI after setup so diagnostics can finish without a response.
-        QMetaObject::invokeMethod(this, [startupTask]() {}, Qt::QueuedConnection);
+        if (startupTask)
+            startupTask->finish();
+        emit worker->requestDispatched();
     }, Qt::QueuedConnection);
 }
 

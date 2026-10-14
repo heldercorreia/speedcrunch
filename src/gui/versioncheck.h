@@ -53,7 +53,7 @@ private:
     void markVersionNotified(const QString& version);
 
     QPointer<QWidget> m_parentWindow;
-    QThread m_networkThread;
+    QPointer<QThread> m_networkThread;
     VersionCheckWorker* m_networkWorker = nullptr;
     bool m_requestPending = false;
     CheckTrigger m_trigger = CheckTriggerAutomatic;

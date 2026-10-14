@@ -943,6 +943,8 @@ Help
     can choose whether to enable them. When enabled, this menu entry is available
     and SpeedCrunch also checks for updates after the window first paints,
     at most once every 24 hours.
+    Closing a window requests that its update worker stop. Cleanup finishes
+    in the background, without making the window wait for network setup.
     See :file:`BUILDING.md` at the repository root for build options and
     package provider guidance.
 
