@@ -31,7 +31,32 @@ private slots:
     void dock_header_buttons_stay_centered_in_title_bar();
     void dock_header_buttons_keep_theme_after_redocking_data();
     void dock_header_buttons_keep_theme_after_redocking();
+    void themed_headers_keep_native_scrollbar_styles();
 };
+
+void TestDockAppearanceUi::themed_headers_keep_native_scrollbar_styles()
+{
+    MainWindowStateGuard guard;
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QMenu* appearance = window.findChild<QMenu*>(QStringLiteral("DockAppearanceMenu"));
+    QVERIFY(appearance);
+    for (int mode : {1, 0, 1}) {
+        appearance->actions().at(mode)->trigger();
+        QCoreApplication::processEvents();
+        int headersChecked = 0;
+        for (QDockWidget* dock : window.findChildren<QDockWidget*>()) {
+            for (QHeaderView* header : dock->widget()->findChildren<QHeaderView*>()) {
+                QVERIFY(header->horizontalScrollBar()->styleSheet().isEmpty());
+                QVERIFY(header->verticalScrollBar()->styleSheet().isEmpty());
+                QVERIFY(header->cornerWidget() == nullptr);
+                ++headersChecked;
+            }
+        }
+        QVERIFY(headersChecked > 0);
+    }
+}
 
 void TestDockAppearanceUi::initTestCase()
 {

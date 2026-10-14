@@ -23,7 +23,34 @@ private slots:
     void startup_batches_pane_themes_data();
     void startup_batches_pane_themes();
     void hidden_constants_defer_column_measurements_until_shown();
+    void startup_styles_dock_headers_once();
 };
+
+void TestDiagnosticsUi::startup_styles_dock_headers_once()
+{
+    MainWindowStateGuard guard;
+    guard.settings->dockAppearance = Settings::DockAppearanceSpeedCrunch;
+    StartupDiagnostics::begin();
+    const auto finishRecording = qScopeGuard([]() {
+        StartupDiagnostics::firstPaintFinished();
+        StartupDiagnostics::finishWhenIdle();
+    });
+    MainWindow window(false);
+    int headersChecked = 0;
+    for (QDockWidget* dock : window.findChildren<QDockWidget*>()) {
+        for (QHeaderView* header : dock->widget()->findChildren<QHeaderView*>()) {
+            const int id = StartupDiagnostics::appearanceObjectId(header);
+            int changedStyleSheets = 0;
+            for (const auto& assignment : StartupDiagnostics::snapshot().appearanceAssignments) {
+                if (assignment.widgetId == id && !assignment.palette)
+                    changedStyleSheets += assignment.changed;
+            }
+            QCOMPARE(changedStyleSheets, 1);
+            ++headersChecked;
+        }
+    }
+    QVERIFY(headersChecked > 0);
+}
 
 void TestDiagnosticsUi::hidden_constants_defer_column_measurements_until_shown()
 {

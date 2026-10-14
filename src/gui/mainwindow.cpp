@@ -1821,7 +1821,8 @@ void alignDockSearchRow(QWidget* content)
 }
 
 void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
-                                const GeneratedThemeSurfaces& surfaces, bool forceNativePolish = true)
+                                const GeneratedThemeSurfaces& surfaces,
+                                const QList<QWidget*>& widgets, bool forceNativePolish)
 {
     StartupDiagnostics::AppearanceScope timing("Apply dock content appearance", dock);
     StartupDiagnostics::observeAppearanceSettings(timing);
@@ -1829,12 +1830,6 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
     if (dockContent == nullptr)
         return;
 
-    QList<QWidget*> widgets = dockContent->findChildren<QWidget*>();
-    widgets.prepend(dockContent);
-    for (QWidget* widget : widgets) {
-        if (!qobject_cast<QMenu*>(widget))
-            saveNativeDockSurface(widget);
-    }
     if (Settings::instance()->dockAppearance == Settings::DockAppearanceSystem) {
         for (QWidget* widget : widgets) {
             if (!qobject_cast<QMenu*>(widget))
@@ -1882,14 +1877,6 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
         themeSurfaceForShadeIndex(surfaces, UiConfig::DockUnfocusedSelectedItemShade);
     BitFieldWidget* bitField = qobject_cast<BitFieldWidget*>(dockContent);
     const QList<QComboBox*> comboBoxes = dockContent->findChildren<QComboBox*>();
-    bool hasListOrTable = false;
-    for (QAbstractItemView* view : dockContent->findChildren<QAbstractItemView*>()) {
-        if (!isComboBoxPopupView(view, comboBoxes)) {
-            hasListOrTable = true;
-            break;
-        }
-    }
-    Q_UNUSED(hasListOrTable);
     const ThemeSurfaceColors& dockSurface = dockBackground;
 
     StartupDiagnostics::setAppearancePalette(dockContent, paletteForThemeSurface(dockContent->palette(), dockSurface));
@@ -1898,6 +1885,8 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
     for (QWidget* child : dockContent->findChildren<QWidget*>())
         applySurfaceToStructuralDockWidget(child, dockSurface);
     if (bitField != nullptr) {
+        const ThemeSurfaceColors bitfieldHover =
+            themeSurfaceForShadeIndex(surfaces, UiConfig::BitfieldBitHoverShade);
         const ThemeSurfaceColors bitfieldButton =
             themeSurfaceForShadeIndex(surfaces, UiConfig::BitfieldButtonFillShade);
         const ThemeSurfaceColors bitfieldButtonHover =
@@ -1914,8 +1903,8 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
                                         UiConfig::CompletionPopupCornerRadius);
         bitField->setThemeColors(dockBackground.background,
                                  dockBackground.foreground,
-                                 dockHeader.background,
-                                 dockHeader.foreground,
+                                 bitfieldHover.background,
+                                 bitfieldHover.foreground,
                                  dockUnfocusedSelection.background,
                                  dockUnfocusedSelection.foreground,
                                  surfaces.primary.background,
@@ -2035,7 +2024,7 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
     }
 
     for (QAbstractItemView* view : dockContent->findChildren<QAbstractItemView*>()) {
-        if (isComboBoxPopupView(view, comboBoxes))
+        if (qobject_cast<QHeaderView*>(view) || isComboBoxPopupView(view, comboBoxes))
             continue;
         view->setFrameShape(QFrame::NoFrame);
         QPalette palette = paletteForThemeSurface(view->palette(), dockBackground);
@@ -2100,6 +2089,27 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
                                   .arg(headerContentHeight));
     }
     alignDockSearchRow(dockContent);
+}
+
+void applyDockAppearance(MainWindow* owner, QDockWidget* dock,
+                         const GeneratedThemeSurfaces& surfaces, bool forceNativePolish = true)
+{
+    if (dock == nullptr)
+        return;
+    StartupDiagnostics::AppearanceScope timing("Apply dock appearance", dock);
+    QList<QWidget*> widgets;
+    if (QWidget* content = dock->widget()) {
+        widgets = content->findChildren<QWidget*>();
+        widgets.prepend(content);
+        // Capture native state before the parent's stylesheet can polish children.
+        for (QWidget* widget : widgets) {
+            if (!qobject_cast<QMenu*>(widget))
+                saveNativeDockSurface(widget);
+        }
+    }
+    // Set the parent style first so it does not repolish freshly styled contents.
+    applyDockChromeAppearance(owner, dock, surfaces);
+    applyDockContentAppearance(owner, dock, surfaces, widgets, forceNativePolish);
 }
 
 void applyThemeBackgroundRoleToWidget(QWidget* widget, const QColor& background)
@@ -4168,8 +4178,7 @@ void MainWindow::setDockAppearance(QAction* action)
         window->m_actions.settingsDockAppearanceSpeedCrunch->setChecked(
             m_settings->dockAppearance == Settings::DockAppearanceSpeedCrunch);
         for (QDockWidget* dock : window->m_allDocks) {
-            applyDockContentAppearance(window, dock, surfaces);
-            applyDockChromeAppearance(window, dock, surfaces);
+            applyDockAppearance(window, dock, surfaces);
         }
         window->applyDockTabBarAppearance();
     }
@@ -7103,50 +7112,9 @@ void MainWindow::applyThemeSurfacePalette()
     for (QDockWidget* dock : m_allDocks) {
         if (dock == nullptr)
             continue;
-        applyDockContentAppearance(this, dock, surfaces);
-        applyDockChromeAppearance(this, dock, surfaces);
+        applyDockAppearance(this, dock, surfaces);
     }
     applyDockTabBarAppearance();
-    if (m_widgets.bitField && m_settings->dockAppearance == Settings::DockAppearanceSpeedCrunch) {
-        const ThemeSurfaceColors bitfieldBackground =
-            themeSurfaceForShadeIndex(surfaces, UiConfig::DockBackgroundShade);
-        const ThemeSurfaceColors bitfieldHover =
-            themeSurfaceForShadeIndex(surfaces, UiConfig::BitfieldBitHoverShade);
-        const ThemeSurfaceColors bitfieldPressed =
-            themeSurfaceForShadeIndex(surfaces, UiConfig::DockUnfocusedSelectedItemShade);
-        const ThemeSurfaceColors bitfieldButton =
-            themeSurfaceForShadeIndex(surfaces, UiConfig::BitfieldButtonFillShade);
-        const ThemeSurfaceColors bitfieldButtonHover =
-            themeSurfaceForShadeIndex(surfaces, UiConfig::BitfieldButtonHoverFillShade);
-        const ThemeSurfaceColors bitfieldButtonPressed =
-            themeSurfaceForShadeIndex(surfaces, UiConfig::BitfieldButtonPressedFillShade);
-        const ThemeSurfaceColors bitfieldToolTip =
-            themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupBackgroundShade);
-        const ThemeSurfaceColors bitfieldToolTipOutline =
-            themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupOutlineShade);
-        const QPalette bitFieldPalette =
-            paletteForThemeSurface(m_widgets.bitField->palette(), bitfieldBackground);
-        StartupDiagnostics::setAppearancePalette(m_widgets.bitField, bitFieldPalette);
-        m_widgets.bitField->setAutoFillBackground(true);
-        m_widgets.bitField->setToolTipThemeColors(bitfieldToolTip.background,
-                                                  bitfieldToolTip.foreground,
-                                                  bitfieldToolTipOutline.background,
-                                                  UiConfig::CompletionPopupCornerRadius);
-        m_widgets.bitField->setThemeColors(bitfieldBackground.background,
-                                           bitfieldBackground.foreground,
-                                           bitfieldHover.background,
-                                           bitfieldHover.foreground,
-                                           bitfieldPressed.background,
-                                           bitfieldPressed.foreground,
-                                           surfaces.primary.background,
-                                           surfaces.primary.foreground,
-                                           bitfieldButton.background,
-                                           bitfieldButton.foreground,
-                                           bitfieldButtonHover.background,
-                                           bitfieldButtonHover.foreground,
-                                           bitfieldButtonPressed.background,
-                                           bitfieldButtonPressed.foreground);
-    }
     // The direct pass has already polished the controls for the current style.
     m_dockNativePolishPending = false;
     scheduleDockAppearanceRefresh();
@@ -7186,8 +7154,7 @@ void MainWindow::scheduleDockAppearanceRefresh(bool forceNativePolish)
         MenuStyle::refresh();
         const QList<QDockWidget*> docks = m_allDocks;
         for (QDockWidget* dock : docks) {
-            applyDockContentAppearance(this, dock, surfaces, forceNativePolish);
-            applyDockChromeAppearance(this, dock, surfaces);
+            applyDockAppearance(this, dock, surfaces, forceNativePolish);
         }
         applyDockTabBarAppearance();
         updateSplitterStyleSheet();
@@ -7805,8 +7772,7 @@ void MainWindow::addTabifiedDock(QDockWidget* newDock, bool takeFocus, Qt::DockW
     // appearance together once the window and its dock layout are ready.
     if (!m_initializingUi) {
         const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
-        applyDockContentAppearance(this, newDock, surfaces);
-        applyDockChromeAppearance(this, newDock, surfaces);
+        applyDockAppearance(this, newDock, surfaces);
         applyDockTabBarAppearance();
         updateSplitterStyleSheet();
         scheduleDockAppearanceRefresh();

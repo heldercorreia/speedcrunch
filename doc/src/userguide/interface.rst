@@ -904,6 +904,10 @@ Help
     unchanged and both the system palette and the palette produced by the last
     restoration still match. Native theme and palette changes request a full
     refresh.
+    ``Apply dock appearance`` includes saving native widget state, styling the
+    dock title, and styling its contents. Titles are styled first so changing
+    the parent stylesheet does not repeat work on the contents. Table headers
+    receive their own styling without the list scrollbar styles.
 
     Highlighting comparisons use document revisions and sizes, theme inputs,
     selected settings, and evaluator identity. They do not track changes to the
