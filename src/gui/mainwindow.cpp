@@ -913,20 +913,38 @@ struct GeneratedThemeSurfaces
 
 GeneratedThemeSurfaces generatedSurfaceColorsForScheme(const ColorScheme& scheme)
 {
-    StartupDiagnostics::AppearanceScope timing("Generate theme surface colors", nullptr,
-                                              StartupDiagnostics::themeInputs(scheme));
     const QColor base = scheme.isValid()
         ? scheme.colorForRole(ColorScheme::Background)
         : QApplication::palette().color(QPalette::Base);
     const QColor configuredPrimary = scheme.isValid() && scheme.hasColorForRole(ColorScheme::Primary)
         ? scheme.colorForRole(ColorScheme::Primary)
         : QColor();
-    const QColor generatedPrimary = generatePrimaryFromBackground(base);
+    const QColor fallbackText = QApplication::palette().color(QPalette::Text);
+    // Only these colors affect generated surfaces. Keep one entry per thread
+    // so repeated widget refreshes share the shades without growing the cache.
+    struct SurfaceCache {
+        QColor base;
+        QColor primary;
+        QColor fallbackText;
+        GeneratedThemeSurfaces surfaces;
+        bool valid = false;
+    };
+    static thread_local SurfaceCache cache;
+    const bool unchanged = cache.valid && cache.base == base
+        && cache.primary == configuredPrimary && cache.fallbackText == fallbackText;
+    StartupDiagnostics::AppearanceScope timing(unchanged
+        ? "Reuse theme surface colors" : "Generate theme surface colors", nullptr,
+        StartupDiagnostics::appearanceInputs({base, configuredPrimary, fallbackText}));
+    if (unchanged)
+        return cache.surfaces;
+
+    const QColor generatedPrimary = configuredPrimary.isValid()
+        ? QColor() : generatePrimaryFromBackground(base);
     const QColor primary = configuredPrimary.isValid()
         ? configuredPrimary
         : (generatedPrimary.isValid()
               ? generatedPrimary
-              : QApplication::palette().color(QPalette::Text));
+              : fallbackText);
     const ThemePolarity polarity = themePolarityForBackground(base);
     const QVector<QColor> shades = generateOklchShades(base,
                                                        kThemeGeneratedShadeCount,
@@ -939,7 +957,7 @@ GeneratedThemeSurfaces generatedSurfaceColorsForScheme(const ColorScheme& scheme
             foregrounds.value(index, fallbackForeground)
         };
     };
-    return {
+    const GeneratedThemeSurfaces surfaces {
         base,
         ThemeSurfaceColors { primary, aaForegroundForBackground(primary) },
         polarity,
@@ -952,6 +970,8 @@ GeneratedThemeSurfaces generatedSurfaceColorsForScheme(const ColorScheme& scheme
         surface(UiConfig::DockUnfocusedSelectedItemShade),
         surface(UiConfig::Shade600)
     };
+    cache = {base, configuredPrimary, fallbackText, surfaces, true};
+    return surfaces;
 }
 
 GeneratedThemeSurfaces generatedSurfaceColors(const Settings* settings)
@@ -6906,6 +6926,10 @@ void MainWindow::updateSplitterStyleSheet()
 
 void MainWindow::refreshPaneThemes()
 {
+    // Settings actions can emit several appearance signals during startup.
+    // The constructor applies the final pane theme once those settings settle.
+    if (m_initializingUi)
+        return;
     StartupDiagnostics::AppearanceScope timing("Apply pane themes", this);
     timing.observeInputs("theme", StartupDiagnostics::configuredThemeInputs());
     StartupDiagnostics::observeAppearanceSettings(timing);

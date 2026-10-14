@@ -874,6 +874,10 @@ Help
     timings also separate clearing the list, filtering and formatting, creating
     rows and tooltips, sizing columns, and sorting. Column sizing includes any
     pending row layout that Qt performs while measuring the contents.
+    Hidden constants lists keep their rows ready but wait until they are shown
+    to measure column widths. Repeated theme surface requests reuse the last
+    generated colors when their inputs match. These calls appear as
+    ``Reuse theme surface colors``.
     The detailed records identify calls from saved-filter restoration and
     language-change events. Calls that skip an unchanged list appear separately
     from population.

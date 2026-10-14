@@ -78,6 +78,7 @@ private:
                                                const QPoint& globalPos);
     void updateSummaryPopupMask();
     void updateEmptyHeaderStretch();
+    void resizeColumnsToContents();
     void updateDomainLayout();
     void updateDomainLabelAlignment();
 
@@ -103,6 +104,7 @@ private:
     bool m_isCompactDomainLayout = false;
     bool m_domainLayoutInitialized = false;
     bool m_emptyHeaderStretchQueued = false;
+    bool m_columnsNeedResize = false;
     QStringList m_populatedInputs;
 };
 

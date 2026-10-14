@@ -24,8 +24,63 @@ private slots:
     void restored_session_layout_reapplies_generated_theme_surfaces();
     void dock_surfaces_use_successive_generated_shades();
     void repeated_theme_refresh_keeps_structural_styles();
+    void generated_surface_cache_tracks_custom_color_edits();
     void dock_and_popup_text_meet_contrast_target_across_themes();
 };
+
+void TestThemesUi::generated_surface_cache_tracks_custom_color_edits()
+{
+    MainWindowStateGuard guard;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(QJsonObject{
+        {QStringLiteral("background"), QStringLiteral("#182332")},
+        {QStringLiteral("primary"), QStringLiteral("#e7a840")}
+    });
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    Editor* editor = window.findChild<Editor*>();
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    QVERIFY(editor);
+    QVERIFY(display);
+    const auto refresh = [&]() {
+        QVERIFY(QMetaObject::invokeMethod(&window, "colorSchemeChanged", Qt::DirectConnection));
+        QCoreApplication::processEvents();
+    };
+    const auto verify = [&](const QColor& background) {
+        const auto shades = generateOklchShades(background, UiConfig::Shade600 + 1,
+                                              themePolarityForBackground(background));
+        QVERIFY(colorsAreClose(window.palette().color(QPalette::Window),
+                               shades.at(UiConfig::WindowBackgroundShade), 1));
+        QVERIFY(colorsAreClose(display->palette().color(QPalette::Base),
+                               shades.at(UiConfig::ResultDisplayShade), 1));
+        QVERIFY(colorsAreClose(editor->palette().color(QPalette::Base),
+                               shades.at(UiConfig::DockBackgroundShade), 1));
+    };
+    verify(QColor("#182332"));
+    const QColor originalPrimary = editor->palette().color(QPalette::Text);
+    guard.settings->customColorSchemeJson = themeJsonString(QJsonObject{
+        {QStringLiteral("background"), QStringLiteral("#f2e4c8")},
+        {QStringLiteral("primary"), QStringLiteral("#1258ad")}
+    });
+    refresh();
+    verify(QColor("#f2e4c8"));
+    QVERIFY(editor->palette().color(QPalette::Text) != originalPrimary);
+    guard.settings->customColorSchemeJson = themeJsonString(QJsonObject{
+        {QStringLiteral("background"), QStringLiteral("#f2e4c8")},
+        {QStringLiteral("primary"), QStringLiteral("#ad2258")}
+    });
+    refresh();
+    verify(QColor("#f2e4c8"));
+    QCOMPARE(editor->palette().color(QPalette::Text), QColor("#ad2258"));
+    guard.settings->customColorSchemeJson = themeJsonString(QJsonObject{
+        {QStringLiteral("background"), QStringLiteral("#182332")}
+    });
+    refresh();
+    verify(QColor("#182332"));
+    const QColor generatedPrimary = generatePrimaryFromBackground(QColor("#182332"));
+    QVERIFY(colorsAreClose(editor->palette().color(QPalette::Text), generatedPrimary, 1));
+}
 
 void TestThemesUi::initTestCase()
 {

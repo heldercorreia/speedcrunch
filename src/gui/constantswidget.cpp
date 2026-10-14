@@ -365,14 +365,9 @@ void ConstantsWidget::filter()
     }
 
     const bool hasMatches = m_list->topLevelItemCount() > 0;
-    {
-        StartupDiagnostics::AppearanceScope phase("Size constants dock columns", this);
-        m_list->header()->setStretchLastSection(false);
-        m_list->header()->setSectionResizeMode(2, QHeaderView::Interactive);
-        m_list->resizeColumnToContents(0);
-        m_list->resizeColumnToContents(1);
-        m_list->resizeColumnToContents(2);
-    }
+    m_columnsNeedResize = true;
+    if (m_list->isVisible())
+        resizeColumnsToContents();
 
     if (hasMatches) {
         m_noMatchLabel->hide();
@@ -493,6 +488,8 @@ void ConstantsWidget::changeEvent(QEvent* e)
 
 bool ConstantsWidget::eventFilter(QObject* watched, QEvent* event)
 {
+    if (watched == m_list && event->type() == QEvent::Show && m_columnsNeedResize)
+        resizeColumnsToContents();
     if (watched == m_list || watched == m_list->viewport()) {
         switch (event->type()) {
         case QEvent::ToolTip: {
@@ -660,6 +657,17 @@ void ConstantsWidget::updateEmptyHeaderStretch()
         return;
 
     header->resizeSection(2, qMax(header->sectionSizeHint(2), targetWidth - fixedWidth));
+}
+
+void ConstantsWidget::resizeColumnsToContents()
+{
+    StartupDiagnostics::AppearanceScope phase("Size constants dock columns", this);
+    m_columnsNeedResize = false;
+    m_list->header()->setStretchLastSection(false);
+    m_list->header()->setSectionResizeMode(2, QHeaderView::Interactive);
+    for (int column = 0; column < m_list->columnCount(); ++column)
+        m_list->resizeColumnToContents(column);
+    updateEmptyHeaderStretch();
 }
 
 void ConstantsWidget::updateDomainLayout()

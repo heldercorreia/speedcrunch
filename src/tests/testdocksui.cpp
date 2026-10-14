@@ -15,6 +15,7 @@
 #include <QSignalSpy>
 #include <QTest>
 #include <QCoreApplication>
+#include <QComboBox>
 #include <QFrame>
 #include <QHeaderView>
 #include <QHelpEvent>
@@ -82,12 +83,50 @@ private slots:
     void floating_wayland_dock_uses_system_move();
     void floating_wayland_dock_keeps_title_controls();
     void constants_dock_inserts_pi_symbol_with_translated_name();
+    void constants_columns_fit_after_hidden_filter_changes();
     void constants_summary_popup_ignores_header_and_padding_data();
     void constants_summary_popup_ignores_header_and_padding();
     void user_units_dock_shows_rhs_and_description_after_definition();
     void user_variables_dock_keeps_existing_value_text_after_new_definition();
     void splitter_normalization_removes_single_child_nested_splitter_after_pane_close_shape();
 };
+
+void TestDocksUi::constants_columns_fit_after_hidden_filter_changes()
+{
+    TestableConstantsWidget widget;
+    QTreeWidget* list = widget.findChild<QTreeWidget*>();
+    QVERIFY(list);
+    QVERIFY(list->topLevelItemCount() > 0);
+    QComboBox* domain = widget.findChild<QComboBox*>();
+    QVERIFY(domain);
+    const QString allDomains = domain->itemText(0);
+    widget.restoreState(allDomains, QString(), QStringLiteral("pi"));
+    QVERIFY(list->topLevelItemCount() > 0);
+    widget.resize(500, 400);
+    widget.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&widget));
+    const auto verifyColumnWidths = [list]() {
+        for (int column = 0; column < list->columnCount(); ++column) {
+            const int width = list->columnWidth(column);
+            list->resizeColumnToContents(column);
+            QCOMPARE(list->columnWidth(column), width);
+        }
+    };
+    verifyColumnWidths();
+    widget.hide();
+    widget.restoreState(QString(), QString(), QStringLiteral("no-such-constant"));
+    QCOMPARE(list->topLevelItemCount(), 0);
+    widget.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&widget));
+    QTRY_VERIFY(list->header()->length() >= list->viewport()->width());
+    widget.restoreState(QString(), QString(), QStringLiteral(""));
+    QVERIFY(list->topLevelItemCount() > 0);
+    verifyColumnWidths();
+    const QByteArray headerState = list->header()->saveState();
+    widget.hide();
+    widget.show();
+    QCOMPARE(list->header()->saveState(), headerState);
+}
 
 void TestDocksUi::floating_wayland_dock_uses_system_move_data()
 {

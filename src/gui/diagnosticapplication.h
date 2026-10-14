@@ -25,7 +25,9 @@ public:
             return QApplication::notify(receiver, event);
         StartupDiagnostics::Scope timing("Paint startup widgets");
         const bool result = QApplication::notify(receiver, event);
-        if (!m_firstPaintQueued && qobject_cast<MainWindow*>(receiver)) {
+        QWidget* widget = qobject_cast<QWidget*>(receiver);
+        if (!m_firstPaintQueued && widget && widget->isVisible()
+            && qobject_cast<MainWindow*>(widget->window())) {
             m_firstPaintQueued = true;
             QTimer::singleShot(0, this, []() { StartupDiagnostics::firstPaintFinished(); });
         }

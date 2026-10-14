@@ -20,7 +20,105 @@ private slots:
     void help_action_opens_plain_text_report_and_copies_everything();
     void saved_session_restore_records_worker_and_ui_phases();
     void application_finishes_recording_after_paint_and_restore();
+    void startup_batches_pane_themes_data();
+    void startup_batches_pane_themes();
+    void hidden_constants_defer_column_measurements_until_shown();
 };
+
+void TestDiagnosticsUi::hidden_constants_defer_column_measurements_until_shown()
+{
+    StartupDiagnostics::begin();
+    const auto finishRecording = qScopeGuard([]() {
+        StartupDiagnostics::firstPaintFinished();
+        StartupDiagnostics::finishWhenIdle();
+    });
+    const auto measurements = []() {
+        for (const auto& phase : StartupDiagnostics::snapshot().phases) {
+            if (phase.name == QStringLiteral("Size constants dock columns"))
+                return phase.calls;
+        }
+        return 0;
+    };
+    ConstantsWidget widget;
+    QComboBox* domain = widget.findChild<QComboBox*>();
+    QVERIFY(domain);
+    QCOMPARE(measurements(), 0);
+    widget.restoreState(domain->itemText(0), QString(), QStringLiteral("pi"));
+    QCOMPARE(measurements(), 0);
+    widget.resize(500, 400);
+    widget.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&widget));
+    QCOMPARE(measurements(), 1);
+    widget.hide();
+    widget.restoreState(QString(), QString(), QStringLiteral("no-such-constant"));
+    QCOMPARE(measurements(), 1);
+    widget.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&widget));
+    QCOMPARE(measurements(), 2);
+    widget.restoreState(QString(), QString(), QStringLiteral(""));
+    QCOMPARE(measurements(), 3);
+    widget.hide();
+    widget.show();
+    QCOMPARE(measurements(), 3);
+}
+
+void TestDiagnosticsUi::startup_batches_pane_themes_data()
+{
+    QTest::addColumn<bool>("highlighting");
+    QTest::addColumn<bool>("grouping");
+    for (bool highlighting : {false, true}) {
+        for (bool grouping : {false, true}) {
+            const QByteArray name = QByteArray(highlighting ? "highlight" : "plain")
+                + (grouping ? "-grouped" : "-ungrouped");
+            QTest::newRow(name.constData()) << highlighting << grouping;
+        }
+    }
+}
+
+void TestDiagnosticsUi::startup_batches_pane_themes()
+{
+    QFETCH(bool, highlighting);
+    QFETCH(bool, grouping);
+    MainWindowStateGuard guard;
+    guard.settings->syntaxHighlighting = highlighting;
+    guard.settings->numberFormatStyle = Settings::NumberFormatSIDot;
+    guard.settings->applyNumberFormatStyle();
+    guard.settings->inputDigitGrouping = grouping;
+    StartupDiagnostics::begin();
+    MainWindow window(false);
+    int paneRefreshes = 0;
+    int surfaceGenerations = 0;
+    int surfaceReuses = 0;
+    int columnMeasurements = 0;
+    for (const auto& phase : StartupDiagnostics::snapshot().phases) {
+        if (phase.name == QStringLiteral("Apply pane themes"))
+            paneRefreshes += phase.calls;
+        if (phase.name == QStringLiteral("Generate theme surface colors"))
+            surfaceGenerations += phase.calls;
+        if (phase.name == QStringLiteral("Reuse theme surface colors"))
+            surfaceReuses += phase.calls;
+        if (phase.name == QStringLiteral("Size constants dock columns"))
+            columnMeasurements += phase.calls;
+    }
+    QCOMPARE(paneRefreshes, 1);
+    QVERIFY(surfaceGenerations <= 1);
+    QVERIFY(surfaceReuses > 0);
+    QCOMPARE(columnMeasurements, 0);
+    Editor* editor = window.findChild<Editor*>();
+    QVERIFY(editor);
+    editor->setText(QStringLiteral("1234567"));
+    QCOMPARE(guard.settings->syntaxHighlighting, highlighting);
+    QCOMPARE(guard.settings->inputDigitGrouping, grouping);
+    QCOMPARE(editor->text(), QStringLiteral("1234567"));
+    bool hasGrouping = false;
+    for (const auto& range : editor->document()->firstBlock().layout()->formats()) {
+        hasGrouping = hasGrouping
+            || !range.format.stringProperty(SyntaxHighlighter::InputDigitSeparator).isEmpty();
+    }
+    QCOMPARE(hasGrouping, grouping);
+    StartupDiagnostics::firstPaintFinished();
+    StartupDiagnostics::finishWhenIdle();
+}
 
 void TestDiagnosticsUi::timings_aggregate_calls_and_freeze_after_startup()
 {
