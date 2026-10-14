@@ -2083,6 +2083,15 @@ void applyThemeBackgroundRoleToWidget(QWidget* widget, const QColor& background)
     }
 }
 
+void applyWindowThemeBackground(QWidget* window, const ThemeSurfaceColors& surface)
+{
+    StartupDiagnostics::setAppearancePalette(window, paletteForThemeSurface(window->palette(), surface));
+    window->setAutoFillBackground(true);
+    window->setAttribute(Qt::WA_StyledBackground, true);
+    setStyleSheetIfChanged(window, QStringLiteral("QMainWindow { background-color: %1; }")
+                      .arg(surface.background.name()));
+}
+
 void applyDockTabBarBackgroundToWidget(QWidget* widget, const ThemeSurfaceColors& surface)
 {
     if (widget == nullptr)
@@ -7034,11 +7043,7 @@ void MainWindow::applyThemeSurfacePalette()
         }
     }
     const ThemeSurfaceColors& surface = surfaces.window;
-    StartupDiagnostics::setAppearancePalette(this, paletteForThemeSurface(palette(), surface));
-    setAutoFillBackground(true);
-    setAttribute(Qt::WA_StyledBackground, true);
-    setStyleSheetIfChanged(this, QStringLiteral("QMainWindow { background-color: %1; }")
-                      .arg(surface.background.name()));
+    applyWindowThemeBackground(this, surface);
     MenuStyle::refresh();
 
     if (m_widgets.root)
@@ -7093,6 +7098,20 @@ void MainWindow::applyThemeSurfacePalette()
                                            bitfieldButtonPressed.background,
                                            bitfieldButtonPressed.foreground);
     }
+    scheduleDockAppearanceRefresh();
+}
+
+void MainWindow::restoreWindowThemeBackgrounds()
+{
+    StartupDiagnostics::AppearanceScope timing("Restore window theme backgrounds", this);
+    timing.observeInputs("theme", StartupDiagnostics::configuredThemeInputs());
+    StartupDiagnostics::observeAppearanceSettings(timing);
+    const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
+    // Native polishing can change inherited palettes after the window is shown.
+    applyWindowThemeBackground(this, surfaces.window);
+    MenuStyle::refresh();
+    applyThemeBackgroundRoleToWidget(m_widgets.root, surfaces.window.background);
+    // Keep the deferred dock pass after native layout and palette updates settle.
     scheduleDockAppearanceRefresh();
 }
 
@@ -13723,7 +13742,8 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
     // Pane rebuilding keeps the docks and keypad restored before session loading.
     // Reapply selections and geometry after the central layout changes.
     restoreWindowUiState(window, false);
-    applyThemeSurfacePalette();
+    // Existing controls keep their theme. Refresh the new panes below.
+    restoreWindowThemeBackgrounds();
     refreshPaneThemes();
     emit historyChanged();
     emit variablesChanged();

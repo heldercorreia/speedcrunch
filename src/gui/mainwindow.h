@@ -371,6 +371,7 @@ private:
     void removePaneForDisplay(ResultDisplay* display);
     void normalizeSplitContainerTree();
     void applyThemeSurfacePalette();
+    void restoreWindowThemeBackgrounds();
     void scheduleDockAppearanceRefresh();
     void applyDockTabBarAppearance();
     void applyKeypadThemeSurfacePalette();
