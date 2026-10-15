@@ -5099,17 +5099,26 @@ void MainWindow::createFixedWidgets()
     updateSplitterStyleSheet();
     m_layouts.root->addWidget(m_widgets.splitContainer, 1);
 
-    m_widgets.display = new ResultDisplay();
-    m_widgets.display->setFrameStyle(QFrame::NoFrame);
-    m_widgets.editor = new Editor();
-    m_widgets.editor->setFrameStyle(QFrame::NoFrame);
-    m_widgets.editor->installEventFilter(this);
-    m_widgets.editor->viewport()->installEventFilter(this);
-    m_widgets.splitContainer->addWidget(createEditorDisplayPane(m_widgets.display, m_widgets.editor));
-    m_paneSessionNames.insert(m_widgets.display, m_session ? m_session->name() : QString());
-    m_paneSessionTabs.insert(m_widgets.display, QStringList(m_session ? m_session->name() : QString()));
-    m_widgets.display->setSession(m_session);
-    m_widgets.editor->setSession(m_session);
+    {
+        StartupDiagnostics::Scope displayTiming("Construct initial result display");
+        m_widgets.display = new ResultDisplay();
+        m_widgets.display->setFrameStyle(QFrame::NoFrame);
+    }
+    {
+        StartupDiagnostics::Scope editorTiming("Construct initial expression editor");
+        m_widgets.editor = new Editor();
+        m_widgets.editor->setFrameStyle(QFrame::NoFrame);
+        m_widgets.editor->installEventFilter(this);
+        m_widgets.editor->viewport()->installEventFilter(this);
+    }
+    {
+        StartupDiagnostics::Scope paneTiming("Create and bind initial session pane");
+        m_widgets.splitContainer->addWidget(createEditorDisplayPane(m_widgets.display, m_widgets.editor));
+        m_paneSessionNames.insert(m_widgets.display, m_session ? m_session->name() : QString());
+        m_paneSessionTabs.insert(m_widgets.display, QStringList(m_session ? m_session->name() : QString()));
+        m_widgets.display->setSession(m_session);
+        m_widgets.editor->setSession(m_session);
+    }
 
     m_widgets.state = new QLabel(this);
     m_widgets.state->setObjectName(QStringLiteral("EditorStatePopup"));

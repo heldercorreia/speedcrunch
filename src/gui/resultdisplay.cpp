@@ -422,6 +422,7 @@ ResultDisplay::ResultDisplay(QWidget* parent)
     , m_scrollToBottomButtonHovered(false)
     , m_scrollToBottomButton(new QToolButton(this))
 {
+    StartupDiagnostics::Scope timing("Initialize result display controls");
     applyEditorDisplayStyle();
     MenuStyle::install();
     setBackgroundRole(QPalette::Base);

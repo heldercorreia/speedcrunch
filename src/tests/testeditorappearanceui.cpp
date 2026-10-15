@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "mainwindowtesthelpers.h"
+#include "core/startupdiagnostics.h"
+#include "gui/startupfontpreparation.h"
 
 using namespace MainWindowTestHelpers;
 
@@ -11,6 +13,9 @@ class TestEditorAppearanceUi : public QObject {
 private slots:
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
+    void startup_font_preparation_finishes_before_teardown_data();
+    void startup_font_preparation_finishes_before_teardown();
+    void first_result_display_records_constructor_stages();
     void editor_display_style_defaults_to_modern_and_persists();
     void editor_display_style_switches_all_windows_and_preserves_work();
     void editor_display_style_preserves_result_selection_and_copy();
@@ -41,6 +46,92 @@ void TestEditorAppearanceUi::initTestCase()
                  qPrintable(QStringLiteral("Cannot write test storage at %1: %2")
                                 .arg(path, probe.errorString())));
     }
+}
+
+void TestEditorAppearanceUi::startup_font_preparation_finishes_before_teardown_data()
+{
+    QTest::addColumn<bool>("explicitWait");
+    QTest::newRow("scope-exit") << false;
+    QTest::newRow("repeated-wait") << true;
+}
+
+void TestEditorAppearanceUi::startup_font_preparation_finishes_before_teardown()
+{
+    QFETCH(bool, explicitWait);
+    StartupDiagnostics::begin();
+    const auto finishRecording = qScopeGuard([]() {
+        StartupDiagnostics::firstPaintFinished();
+        StartupDiagnostics::finishWhenIdle();
+    });
+    {
+        StartupFontPreparation preparation;
+        if (explicitWait) {
+            preparation.wait();
+            preparation.wait();
+        }
+    }
+    const auto snapshot = StartupDiagnostics::snapshot();
+    int workerCalls = 0;
+    int waitCalls = 0;
+    int asyncCalls = 0;
+    for (const auto& phase : snapshot.phases) {
+        if (phase.name == QStringLiteral("Prepare font database")) {
+            workerCalls += phase.calls;
+            QVERIFY(phase.worker);
+        } else if (phase.name == QStringLiteral("Wait for font preparation")) {
+            waitCalls += phase.calls;
+            QVERIFY(!phase.worker);
+        } else if (phase.name == QStringLiteral("Prepare font database (async total)")) {
+            asyncCalls += phase.calls;
+        }
+        QCOMPARE(phase.running, 0);
+    }
+    const int expected = QApplication::platformName() == QLatin1String("cocoa") ? 1 : 0;
+    QCOMPARE(workerCalls, expected);
+    QCOMPARE(waitCalls, expected);
+    QCOMPARE(asyncCalls, expected);
+    StartupDiagnostics::firstPaintFinished();
+    StartupDiagnostics::finishWhenIdle();
+    QVERIFY(StartupDiagnostics::snapshot().complete);
+}
+
+void TestEditorAppearanceUi::first_result_display_records_constructor_stages()
+{
+    StartupDiagnostics::begin();
+    const auto finishRecording = qScopeGuard([]() {
+        StartupDiagnostics::firstPaintFinished();
+        StartupDiagnostics::finishWhenIdle();
+    });
+    MainWindow window(false);
+    const auto snapshot = StartupDiagnostics::snapshot();
+    const auto findPhase = [&](const QString& name) -> const StartupDiagnostics::Phase* {
+        for (const auto& phase : snapshot.phases) {
+            if (phase.name == name)
+                return &phase;
+        }
+        return nullptr;
+    };
+    const auto* display = findPhase(QStringLiteral("Construct initial result display"));
+    const auto* controls = findPhase(QStringLiteral("Initialize result display controls"));
+    const auto* editor = findPhase(QStringLiteral("Construct initial expression editor"));
+    const auto* highlighter = findPhase(QStringLiteral("Initialize syntax highlighter"));
+    const auto* pane = findPhase(QStringLiteral("Create and bind initial session pane"));
+    QVERIFY(display);
+    QVERIFY(controls);
+    QVERIFY(editor);
+    QVERIFY(highlighter);
+    QVERIFY(pane);
+    QCOMPARE(display->calls, 1);
+    QCOMPARE(controls->calls, 1);
+    QCOMPARE(editor->calls, 1);
+    QCOMPARE(highlighter->calls, 2);
+    QCOMPARE(pane->calls, 1);
+    QVERIFY(display->firstStartNs <= highlighter->firstStartNs);
+    QVERIFY(highlighter->firstStartNs <= controls->firstStartNs);
+    QVERIFY(controls->firstStartNs + controls->totalNs
+            <= display->firstStartNs + display->totalNs);
+    QVERIFY(display->firstStartNs + display->totalNs <= editor->firstStartNs);
+    QVERIFY(editor->firstStartNs + editor->totalNs <= pane->firstStartNs);
 }
 
 void TestEditorAppearanceUi::editor_display_style_defaults_to_modern_and_persists()

@@ -71,6 +71,7 @@ SyntaxHighlighter::SyntaxHighlighter(QPlainTextEdit* edit, bool inputEditor)
     , m_evaluator(Evaluator::instance())
     , m_inputEditor(inputEditor)
 {
+    StartupDiagnostics::Scope timing("Initialize syntax highlighter");
     setDocument(edit->document());
     update();
 }

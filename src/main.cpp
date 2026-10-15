@@ -4,6 +4,7 @@
 
 #include "gui/mainwindow.h"
 #include "gui/diagnosticapplication.h"
+#include "gui/startupfontpreparation.h"
 #include "core/settings.h"
 #include "core/startupdiagnostics.h"
 
@@ -339,8 +340,10 @@ int main(int argc, char* argv[])
 
     timing.next("Initialize application widget style");
     MainWindow::initializeApplicationStyle();
+    StartupFontPreparation fontPreparation;
     timing.next("Initialize main window (total)");
     MainWindow window;
+    fontPreparation.wait();
     g_mainWindow = &window;
     timing.next("Show main window");
     window.show();
