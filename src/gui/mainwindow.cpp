@@ -6087,6 +6087,7 @@ void MainWindow::copyWindowLayoutFrom(const MainWindow* source)
     if (source == nullptr)
         return;
 
+    restoreDockColumnOrders(source->dockColumnOrders());
     restoreDockLayout(source->saveState(DockLayoutStateVersion), source->openDockNames());
 
     const auto dockIsVisible = [](QDockWidget* dock) {
@@ -7888,6 +7889,7 @@ void MainWindow::addTabifiedDock(QDockWidget* newDock, bool takeFocus, Qt::DockW
         }
     }
     m_allDocks.append(newDock);
+    restoreDockColumnOrder(newDock);
     newDock->show();
     newDock->raise();
     // Startup styles the restored docks together once their layout is ready.
@@ -8549,6 +8551,7 @@ void MainWindow::resetAllSettings()
             continue;
 
         std::vector<std::unique_ptr<QSignalBlocker>> blockers;
+        window->restoreDockColumnOrders(QJsonObject());
         QDockWidget* previousDock = nullptr;
         for (QDockWidget* dock : window->m_allDocks) {
             blockers.push_back(std::make_unique<QSignalBlocker>(dock));
@@ -8743,6 +8746,8 @@ void MainWindow::saveSettings()
         ? defaultWindow->saveGeometry()
         : QByteArray();
     m_settings->windowState = defaultWindow->saveState(DockLayoutStateVersion);
+    m_settings->dockColumnOrdersJson = QString::fromUtf8(
+        QJsonDocument(defaultWindow->dockColumnOrders()).toJson(QJsonDocument::Compact));
     const QStringList openDocks = defaultWindow->openDockNames();
     m_settings->formulaBookDockVisible = openDocks.contains(QStringLiteral("BookDock"));
     m_settings->constantsDockVisible = openDocks.contains(QStringLiteral("ConstantsDock"));
@@ -8990,6 +8995,7 @@ void MainWindow::saveSessionLayout(bool captureCurrentViewport, bool captureEdit
         window.insert(QStringLiteral("bitfieldVisible"),
                       windowObject->m_docks.bitField != nullptr && !windowObject->m_docks.bitField->isHidden());
         window.insert(QStringLiteral("openDocks"), QJsonArray::fromStringList(windowObject->openDockNames()));
+        window.insert(QStringLiteral("dockColumnOrders"), windowObject->dockColumnOrders());
         const bool keypadVisible = windowObject->m_widgets.keypad != nullptr;
         window.insert(QStringLiteral("keypadVisible"), keypadVisible);
         if (keypadVisible)
@@ -9219,6 +9225,7 @@ MainWindow::MainWindow(bool restorePreviousSession)
     timing.next("Initialize window state and menu style");
     m_translator = 0;
     m_settings = Settings::instance();
+    m_dockColumnOrders = QJsonDocument::fromJson(m_settings->dockColumnOrdersJson.toUtf8()).object();
     m_startupPrivateTabPending = restorePreviousSession && this == primaryMainWindow()
         && !g_restoringExtraWindows && m_settings->openPrivateTabOnStartup;
     if (g_restoringExtraWindows && primaryMainWindow()
@@ -13998,6 +14005,8 @@ void MainWindow::restoreWindowUiState(const QJsonObject& window, bool restoreLay
     if (QApplication::activeWindow() == this)
         applyStatusBarSelectionState();
     if (restoreLayout) {
+        if (window.value(QStringLiteral("dockColumnOrders")).isObject())
+            restoreDockColumnOrders(window.value(QStringLiteral("dockColumnOrders")).toObject());
         const QString windowStateBase64 = window.value(QStringLiteral("windowState")).toString();
         const QByteArray state = windowStateBase64.isEmpty()
             ? m_settings->windowState
@@ -14078,6 +14087,54 @@ void MainWindow::applyDockCornerLayout()
     setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
     setCorner(Qt::TopRightCorner, Qt::RightDockWidgetArea);
     setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
+}
+
+QJsonObject MainWindow::dockColumnOrders() const
+{
+    // Keep unopened docks too. Their widgets may not exist yet on this launch.
+    QJsonObject orders = m_dockColumnOrders;
+    for (QDockWidget* dock : m_allDocks) {
+        const QTreeWidget* table = dock->findChild<QTreeWidget*>();
+        if (!table)
+            continue;
+        const QHeaderView* header = table->header();
+        QJsonArray order;
+        for (int visual = 0; visual < header->count(); ++visual)
+            order.append(header->logicalIndex(visual));
+        orders.insert(dock->objectName(), order);
+    }
+    return orders;
+}
+
+void MainWindow::restoreDockColumnOrders(const QJsonObject& orders)
+{
+    m_dockColumnOrders = orders;
+    for (QDockWidget* dock : m_allDocks)
+        restoreDockColumnOrder(dock);
+}
+
+void MainWindow::restoreDockColumnOrder(QDockWidget* dock)
+{
+    QTreeWidget* table = dock->findChild<QTreeWidget*>();
+    if (!table)
+        return;
+    QHeaderView* header = table->header();
+    const QJsonArray order = m_dockColumnOrders.value(dock->objectName()).toArray();
+    QSet<int> columns;
+    bool valid = order.size() == header->count();
+    for (const QJsonValue& value : order) {
+        const int column = value.toInt(-1);
+        if (column < 0 || column >= header->count() || columns.contains(column)) {
+            valid = false;
+            break;
+        }
+        columns.insert(column);
+    }
+    // Ignore stale or malformed orders instead of applying a partial layout.
+    for (int visual = 0; visual < header->count(); ++visual) {
+        const int logical = valid ? order.at(visual).toInt() : visual;
+        header->moveSection(header->visualIndex(logical), visual);
+    }
 }
 
 void MainWindow::restoreWindowLayoutState(const QByteArray& state)

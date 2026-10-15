@@ -380,6 +380,9 @@ private:
     QStringList configuredOpenDockNames() const;
     void applyOpenDocks(const QStringList& names);
     void restoreDockLayout(const QByteArray& state, const QStringList& names);
+    QJsonObject dockColumnOrders() const;
+    void restoreDockColumnOrders(const QJsonObject& orders);
+    void restoreDockColumnOrder(QDockWidget* dock);
     void applyKeypadThemeSurfacePalette();
     void scheduleThemeRuntimeDiagnosticsReport();
     void writeThemeRuntimeDiagnosticsReport();
@@ -658,6 +661,7 @@ private:
         GenericDock<BitFieldWidget>* bitField;
     } m_docks;
     QList<QDockWidget*> m_allDocks;
+    QJsonObject m_dockColumnOrders;
     bool m_initializingUi = true;
     bool m_hasRestoredDockLayout = false;
     bool m_dockAppearanceRefreshPending = false;

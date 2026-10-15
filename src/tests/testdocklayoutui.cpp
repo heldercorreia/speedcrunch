@@ -44,7 +44,141 @@ private slots:
     void constants_dock_uses_configured_narrow_minimum_width();
     void view_dock_menu_tracks_and_changes_only_active_window();
     void closing_and_reopening_docks_keeps_attached_widgets();
+    void dock_column_orders_survive_relaunch_data();
+    void dock_column_orders_survive_relaunch();
+    void dock_column_orders_are_per_window();
+    void invalid_dock_column_orders_use_defaults_data();
+    void invalid_dock_column_orders_use_defaults();
 };
+
+void TestDockLayoutUi::dock_column_orders_survive_relaunch_data()
+{
+    QTest::addColumn<bool>("workspaceLayout");
+    QTest::addColumn<bool>("hidden");
+    QTest::newRow("open-workspace") << true << false;
+    QTest::newRow("hidden-workspace") << true << true;
+    QTest::newRow("open-settings") << false << false;
+    QTest::newRow("hidden-settings") << false << true;
+}
+
+void TestDockLayoutUi::dock_column_orders_survive_relaunch()
+{
+    QFETCH(bool, workspaceLayout);
+    QFETCH(bool, hidden);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    const QStringList names {QStringLiteral("ConstantsDock"), QStringLiteral("FunctionsDock"),
+        QStringLiteral("VariablesDock"), QStringLiteral("UserFunctionsDock"), QStringLiteral("UserUnitsDock")};
+    const QList<QByteArray> setters {"setConstantsDockVisible", "setFunctionsDockVisible",
+        "setVariablesDockVisible", "setUserFunctionsDockVisible", "setUserUnitsDockVisible"};
+    for (int launch = 0; launch < 3; ++launch) {
+        if (launch != 0) {
+            guard.settings->load();
+            if (!workspaceLayout)
+                guard.settings->sessionLayoutJson.clear();
+        }
+        MainWindow window(launch != 0);
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        // Save once without ever opening the hidden panels on this launch.
+        if (hidden && launch == 1) {
+            QCOMPARE(window.findChildren<QDockWidget*>().size(), 0);
+        } else {
+            for (int i = 0; i < names.size(); ++i) {
+                QVERIFY(QMetaObject::invokeMethod(&window, setters.at(i).constData(), Qt::DirectConnection,
+                                                 Q_ARG(bool, true), Q_ARG(bool, false)));
+                QDockWidget* dock = window.findChild<QDockWidget*>(names.at(i));
+                QVERIFY(dock);
+                QTreeWidget* table = dock->findChild<QTreeWidget*>();
+                QVERIFY(table);
+                QHeaderView* header = table->header();
+                if (launch == 0) {
+                    for (int visual = 0; visual < header->count(); ++visual)
+                        QCOMPARE(header->logicalIndex(visual), visual);
+                    header->moveSection(header->count() - 1, 0);
+                    QEvent languageChange(QEvent::LanguageChange);
+                    QCoreApplication::sendEvent(table->parentWidget(), &languageChange);
+                    QCoreApplication::processEvents();
+                }
+                for (int visual = 0; visual < header->count(); ++visual)
+                    QCOMPARE(header->logicalIndex(visual), (visual + header->count() - 1) % header->count());
+                if (hidden)
+                    dock->hide();
+            }
+        }
+        window.persistSessionAndSettingsForShutdown();
+    }
+}
+
+void TestDockLayoutUi::dock_column_orders_are_per_window()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    {
+        MainWindow first(false);
+        MainWindow second(false);
+        for (MainWindow* window : {&first, &second}) {
+            QVERIFY(QMetaObject::invokeMethod(window, "setVariablesDockVisible", Qt::DirectConnection,
+                                             Q_ARG(bool, true), Q_ARG(bool, false)));
+            QHeaderView* header = window->findChild<VariableListWidget*>()->findChild<QTreeWidget*>()->header();
+            header->moveSection(window == &first ? 2 : 1, 0);
+            window->findChild<Editor*>()->setText(QStringLiteral("2+3"));
+            QVERIFY(QMetaObject::invokeMethod(window, "evaluateEditorExpression", Qt::DirectConnection));
+        }
+        first.persistSessionAndSettingsForShutdown();
+    }
+    guard.settings->load();
+    QJsonObject layout = QJsonDocument::fromJson(guard.settings->sessionLayoutJson.toUtf8()).object();
+    const QJsonArray windows = layout.value(QStringLiteral("windows")).toArray();
+    QCOMPARE(windows.size(), 2);
+    const auto selectWindow = [&](int index) {
+        const QJsonObject record = windows.at(index).toObject();
+        layout.insert(QStringLiteral("windows"), QJsonArray{record});
+        layout.insert(QStringLiteral("activeWindow"), record.value(QStringLiteral("id")));
+        guard.settings->sessionLayoutJson = QString::fromUtf8(QJsonDocument(layout).toJson(QJsonDocument::Compact));
+    };
+    // Restore each record without relying on the once-per-process window spawn.
+    selectWindow(0);
+    MainWindow restored;
+    selectWindow(1);
+    MainWindow other;
+    restored.show();
+    other.show();
+    for (MainWindow* window : {&restored, &other}) {
+        QTRY_COMPARE(window->findChild<ResultDisplay*>()->session()->historySize(), 1);
+        VariableListWidget* variables = window->findChild<VariableListWidget*>();
+        QVERIFY(variables);
+        QHeaderView* header = variables->findChild<QTreeWidget*>()->header();
+        const QList<int> expected = window == &restored ? QList<int>{2, 0, 1} : QList<int>{1, 0, 2};
+        for (int visual = 0; visual < expected.size(); ++visual)
+            QCOMPARE(header->logicalIndex(visual), expected.at(visual));
+    }
+}
+
+void TestDockLayoutUi::invalid_dock_column_orders_use_defaults_data()
+{
+    QTest::addColumn<QJsonArray>("order");
+    QTest::newRow("duplicate") << QJsonArray{1, 1, 0};
+    QTest::newRow("negative") << QJsonArray{2, -1, 0};
+    QTest::newRow("out-of-range") << QJsonArray{2, 3, 0};
+    QTest::newRow("missing-column") << QJsonArray{2, 0};
+    QTest::newRow("extra-column") << QJsonArray{2, 0, 1, 3};
+    QTest::newRow("text") << QJsonArray{2, QStringLiteral("1"), 0};
+    QTest::newRow("fraction") << QJsonArray{2, 0.5, 0};
+}
+
+void TestDockLayoutUi::invalid_dock_column_orders_use_defaults()
+{
+    QFETCH(QJsonArray, order);
+    Settings::instance()->dockColumnOrdersJson = QString::fromUtf8(QJsonDocument(
+        QJsonObject{{QStringLiteral("VariablesDock"), order}}).toJson(QJsonDocument::Compact));
+    MainWindow window(false);
+    QVERIFY(QMetaObject::invokeMethod(&window, "setVariablesDockVisible", Qt::DirectConnection,
+                                     Q_ARG(bool, true), Q_ARG(bool, false)));
+    QTreeWidget* table = window.findChild<VariableListWidget*>()->findChild<QTreeWidget*>();
+    for (int visual = 0; visual < table->columnCount(); ++visual)
+        QCOMPARE(table->header()->logicalIndex(visual), visual);
+}
 
 void TestDockLayoutUi::initTestCase()
 {

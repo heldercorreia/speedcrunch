@@ -597,6 +597,7 @@ void Settings::load()
     userUnitsDockSearchText = settings->value(key + QLatin1String("UserUnitsDockSearchText"), QString()).toString();
     variablesDockSearchText = settings->value(key + QLatin1String("VariablesDockSearchText"), QString()).toString();
     formulaBookActivePage = settings->value(key + QLatin1String("FormulaBookActivePage"), QStringLiteral("index")).toString();
+    dockColumnOrdersJson = settings->value(key + QLatin1String("DockColumnOrders"), QString()).toString();
 
     windowState = settings->value(key + QLatin1String("State")).toByteArray();
     windowGeometry = settings->value(key + QLatin1String("WindowGeometry")).toByteArray();
@@ -731,6 +732,7 @@ void Settings::save()
     settings->setValue(key + QLatin1String("UserUnitsDockSearchText"), userUnitsDockSearchText);
     settings->setValue(key + QLatin1String("VariablesDockSearchText"), variablesDockSearchText);
     settings->setValue(key + QLatin1String("FormulaBookActivePage"), formulaBookActivePage);
+    settings->setValue(key + QLatin1String("DockColumnOrders"), dockColumnOrdersJson);
 
     key = KEY + QLatin1String("/Display/");
 

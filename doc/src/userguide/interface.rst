@@ -26,6 +26,9 @@ On Linux with Wayland, drag a floating panel by its title bar to move it.
 Use its square button or double-click the title bar to attach it to the
 main window again.
 
+Drag a table's column headers to change their order. Each window keeps its
+column order between launches, including for panels that are hidden.
+
 * Formula Book
     The formula book provides access to commonly used formulas and calculations. Simply insert
     a formula into the expression editor by clicking on it.

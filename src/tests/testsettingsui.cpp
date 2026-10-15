@@ -34,6 +34,7 @@ private slots:
     void settings_reset_can_be_cancelled_data();
     void settings_reset_can_be_cancelled();
     void settings_reset_updates_all_windows_and_preserves_sessions();
+    void settings_reset_restores_dock_column_orders();
     void manual_preserves_text_weights_and_emphasis();
     void calculation_settings_dialog_matches_notation_precision_layout();
     void user_definitions_menu_opens_working_dialog_data();
@@ -54,6 +55,56 @@ void TestSettingsUi::initTestCase()
         QVERIFY2(probe.open(),
                  qPrintable(QStringLiteral("Cannot write test storage at %1: %2")
                                 .arg(path, probe.errorString())));
+    }
+}
+
+void TestSettingsUi::settings_reset_restores_dock_column_orders()
+{
+    MainWindow first(false);
+    MainWindow second(false);
+    QList<QHeaderView*> headers;
+    for (MainWindow* window : {&first, &second}) {
+        window->show();
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+        for (const char* setter : {"setConstantsDockVisible", "setFunctionsDockVisible",
+                                  "setVariablesDockVisible", "setUserFunctionsDockVisible",
+                                  "setUserUnitsDockVisible"}) {
+            QVERIFY(QMetaObject::invokeMethod(window, setter, Qt::DirectConnection,
+                                             Q_ARG(bool, true), Q_ARG(bool, false)));
+        }
+        for (QDockWidget* dock : window->findChildren<QDockWidget*>()) {
+            QTreeWidget* table = dock->findChild<QTreeWidget*>();
+            if (!table)
+                continue;
+            QHeaderView* header = table->header();
+            header->moveSection(header->count() - 1, 0);
+            headers.append(header);
+        }
+    }
+    QCOMPARE(headers.size(), 10);
+    QTimer::singleShot(0, &first, []() {
+        auto* confirmation = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        QVERIFY(confirmation);
+        confirmation->button(QMessageBox::Yes)->click();
+    });
+    QVERIFY(QMetaObject::invokeMethod(&first, "resetAllSettings", Qt::DirectConnection));
+    for (QHeaderView* header : headers) {
+        for (int visual = 0; visual < header->count(); ++visual)
+            QCOMPARE(header->logicalIndex(visual), visual);
+    }
+    Settings::instance()->load();
+    QVERIFY(Settings::instance()->dockColumnOrdersJson.isEmpty());
+    const QJsonArray windows = QJsonDocument::fromJson(Settings::instance()->sessionLayoutJson.toUtf8())
+                                  .object().value(QStringLiteral("windows")).toArray();
+    QCOMPARE(windows.size(), 2);
+    for (const QJsonValue& window : windows) {
+        const QJsonObject orders = window.toObject().value(QStringLiteral("dockColumnOrders")).toObject();
+        QCOMPARE(orders.size(), 5);
+        for (auto it = orders.begin(); it != orders.end(); ++it) {
+            const QJsonArray order = it.value().toArray();
+            for (int visual = 0; visual < order.size(); ++visual)
+                QCOMPARE(order.at(visual).toInt(-1), visual);
+        }
     }
 }
 

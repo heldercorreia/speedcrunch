@@ -214,6 +214,7 @@ public:
     QString userUnitsDockSearchText;
     QString variablesDockSearchText;
     QString formulaBookActivePage;
+    QString dockColumnOrdersJson;
 
     QString colorScheme;
     MenuAppearance menuAppearance;
