@@ -158,8 +158,9 @@ another pane. Dropping a dragged tab outside the current window creates a new
 window for that session; dropping it on a pane in another SpeedCrunch window
 moves it there.
 Use :menuselection:`Session --> Rename Session...` to rename the active session.
-You can also double-click its tab or choose :menuselection:`Rename Session`
-from the tab or result display context menu.
+You can also double-click its tab, choose :menuselection:`Rename Session`
+from the tab context menu, or choose :menuselection:`Session --> Rename`
+from the result display context menu.
 Use :menuselection:`Session --> New Window` to open a blank
 session in a new window that copies the current window and dock layout.
 When SpeedCrunch restores multiple windows after a restart, each window keeps
@@ -196,6 +197,8 @@ close it or exit. If the file cannot be deleted, the session remains ordinary.
 If a private session cannot be saved during conversion, it remains private.
 
 These actions are also available from the tab and result display context menus.
+In the result display, open the :guilabel:`Session` submenu and choose
+:guilabel:`Keep` or :guilabel:`Make Private...`.
 Privacy belongs to the session, so renaming it does not change whether it is
 saved. Ordinary sessions can remain open alongside private ones.
 
@@ -349,6 +352,8 @@ The result display supports mouse-driven interactions for navigation and editing
     This menu includes an entry to toggle the main menu bar visibility.
     Use its :guilabel:`Split` submenu to add a pane to the left, right, above,
     or below the current pane.
+    The :guilabel:`Session` submenu groups actions to duplicate, rename, change
+    privacy, clear, delete, or close the current session.
 
     .. versionadded:: 1.0
 

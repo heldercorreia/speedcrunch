@@ -1411,31 +1411,33 @@ QMenu* ResultDisplay::createContextMenu(const QPoint& pos)
         emit exportSessionHtmlRequested();
     });
     menu->addSeparator();
-    QAction* duplicateSessionAction = menu->addAction(tr("Duplicate Session"));
+    QMenu* sessionMenu = menu->addMenu(tr("Session"));
+    QAction* duplicateSessionAction = sessionMenu->addAction(tr("Duplicate"));
     connect(duplicateSessionAction, &QAction::triggered, this, [this]() {
         emit duplicateSessionRequested();
     });
-    QAction* renameSessionAction = menu->addAction(tr("Rename Session"));
-    QAction* convertPrivacyAction = menu->addAction(m_session && m_session->isPrivate()
-        ? tr("Keep Session") : tr("Make Session Private..."));
+    QAction* renameSessionAction = sessionMenu->addAction(tr("Rename"));
+    QAction* convertPrivacyAction = sessionMenu->addAction(m_session && m_session->isPrivate()
+        ? tr("Keep") : tr("Make Private..."));
     connect(convertPrivacyAction, &QAction::triggered, this, &ResultDisplay::convertSessionPrivacyRequested);
     connect(renameSessionAction, &QAction::triggered, this, [this]() {
         emit renameSessionRequested();
     });
-    menu->addSeparator();
-    QAction* clearSessionAction = menu->addAction(tr("Clear Session"));
+    sessionMenu->addSeparator();
+    QAction* clearSessionAction = sessionMenu->addAction(tr("Clear"));
     connect(clearSessionAction, &QAction::triggered, this, [this]() {
         emit clearSessionRequested();
     });
-    QAction* deleteSessionAction = menu->addAction(tr("Delete Session"));
+    QAction* deleteSessionAction = sessionMenu->addAction(tr("Delete"));
     connect(deleteSessionAction, &QAction::triggered, this, [this]() {
         emit deleteSessionRequested();
     });
-    menu->addSeparator();
-    QAction* closeSessionAction = menu->addAction(tr("Close Session"));
+    sessionMenu->addSeparator();
+    QAction* closeSessionAction = sessionMenu->addAction(tr("Close"));
     connect(closeSessionAction, &QAction::triggered, this, [this]() {
         emit closeSessionRequested();
     });
+    menu->addSeparator();
     QAction* closePaneAction = menu->addAction(tr("Close Pane"));
     connect(closePaneAction, &QAction::triggered, this, [this]() {
         emit closePaneRequested();
