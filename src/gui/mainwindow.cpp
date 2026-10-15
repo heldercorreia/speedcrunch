@@ -13553,6 +13553,17 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
 
     const QFont displayFont = m_widgets.display->font();
     const QFont editorFont = m_widgets.editor->font();
+    QWidget* initialPane = paneWidgetForDisplay(m_widgets.display);
+    std::unique_ptr<QWidget> reusablePane(
+        m_widgets.splitContainer->count() == 1
+            && initialPane == m_widgets.splitContainer->widget(0) ? initialPane : nullptr);
+    ResultDisplay* initialDisplay = reusablePane ? m_widgets.display : nullptr;
+    Editor* initialEditor = reusablePane ? m_widgets.editor : nullptr;
+    QTabBar* initialTabBar = m_paneTabBars.value(initialDisplay, nullptr);
+    if (initialEditor != nullptr) {
+        initialEditor->stopAutoCalc();
+        initialEditor->stopAutoComplete();
+    }
     const QList<Session*> oldSessions = m_loadedSessions.values();
     m_loadedSessions = restoredSessions;
     m_session = nullptr;
@@ -13564,19 +13575,14 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
     while (m_widgets.splitContainer != nullptr && m_widgets.splitContainer->count() > 0) {
         QWidget* child = m_widgets.splitContainer->widget(0);
         child->setParent(nullptr);
-        delete child;
+        if (child != reusablePane.get())
+            delete child;
     }
 
     m_paneSessionNames.clear();
     m_paneSessionTabs.clear();
     m_paneTabBars.clear();
     m_tabBarDisplays.clear();
-
-    const QList<Session*> retainedSessions = restoredSessions.values();
-    for (Session* oldSession : oldSessions) {
-        if (!retainedSessions.contains(oldSession))
-            delete oldSession;
-    }
 
     ResultDisplay* activeDisplay = nullptr;
     Editor* activeEditor = nullptr;
@@ -13622,6 +13628,7 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
 
     const auto createPane = [this, &displayFont, &editorFont, &activeSessionNameToRestore, &paneNamesFromNode,
                              &activeDisplay, &activeEditor, &firstDisplay, &firstEditor,
+                             &reusablePane, initialDisplay, initialEditor, initialTabBar,
                              &firstLoadedName, &editorStateFromNode](const QJsonObject& node) -> QWidget* {
         const QStringList names = paneNamesFromNode(node);
         QStringList loadedNames;
@@ -13640,26 +13647,41 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
         if (!loadedNames.contains(activeName, Qt::CaseInsensitive))
             loadedNames.prepend(activeName);
 
-        ResultDisplay* display = new ResultDisplay();
-        display->setFrameStyle(QFrame::NoFrame);
-        display->setFont(displayFont);
-        display->setHoverHighlightEnabled(m_settings->hoverHighlightResults);
-        display->setLoadedSessionCount(1);
-        display->rehighlight();
+        ResultDisplay* display = nullptr;
+        Editor* editor = nullptr;
+        QWidget* pane = nullptr;
+        if (reusablePane) {
+            StartupDiagnostics::Scope reuseTiming("Reuse initial session pane");
+            pane = reusablePane.release();
+            display = initialDisplay;
+            editor = initialEditor;
+            // Keep the existing signal connections and the configured controls.
+            m_paneTabBars.insert(display, initialTabBar);
+            m_tabBarDisplays.insert(initialTabBar, display);
+        } else {
+            display = new ResultDisplay();
+            display->setFrameStyle(QFrame::NoFrame);
+            display->setFont(displayFont);
+            display->setHoverHighlightEnabled(m_settings->hoverHighlightResults);
+            display->setLoadedSessionCount(1);
+            display->rehighlight();
 
-        Editor* editor = new Editor();
-        editor->setFrameStyle(QFrame::NoFrame);
-        editor->setFont(editorFont);
-        editor->setAutoCalcEnabled(m_settings->autoCalc);
-        editor->setAutoCompletionEnabled(m_settings->autoCompletion);
-        editor->rehighlight();
+            editor = new Editor();
+            editor->setFrameStyle(QFrame::NoFrame);
+            editor->setFont(editorFont);
+            editor->setAutoCalcEnabled(m_settings->autoCalc);
+            editor->setAutoCompletionEnabled(m_settings->autoCompletion);
+            editor->rehighlight();
 
-        QWidget* pane = createEditorDisplayPane(display, editor);
-        configureEditorDisplayPane(display, editor);
+            pane = createEditorDisplayPane(display, editor);
+            configureEditorDisplayPane(display, editor);
+        }
 
         m_paneSessionNames.insert(display, activeName);
         m_paneSessionTabs.insert(display, loadedNames);
         Session* paneSession = m_loadedSessions.value(activeName, nullptr);
+        const QSignalBlocker displaySignals(display);
+        const QSignalBlocker editorSignals(editor);
         // The final historyChanged signal renders after settings and themes are ready.
         display->setSession(paneSession, false);
         if (paneSession != nullptr)
@@ -13760,6 +13782,12 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
     updatePaneLoadedSessionCounts();
     m_session = nullptr;
     activateSession(activeSession);
+    // Rebind retained widgets and docks before releasing the initial session.
+    const QList<Session*> retainedSessions = restoredSessions.values();
+    for (Session* oldSession : oldSessions) {
+        if (!retainedSessions.contains(oldSession))
+            delete oldSession;
+    }
     m_conditions.autoAns = restoreHistory && !m_session->historyIsEmpty();
     updatePaneEditorCursorVisibility();
     timing.next("Restore per-window settings and theme");

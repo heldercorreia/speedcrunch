@@ -14,6 +14,8 @@ public slots:
 private slots:
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
+    void startup_reuses_initial_pane_data();
+    void startup_reuses_initial_pane();
     void saved_window_ui_state_overrides_defaults_before_show();
     void visible_window_applies_restored_dock_and_keypad_layout();
     void always_on_top_toggles_preserve_window_geometry();
@@ -50,6 +52,131 @@ void TestSessionsUi::initTestCase()
         QVERIFY2(probe.open(),
                  qPrintable(QStringLiteral("Cannot write test storage at %1: %2")
                                 .arg(path, probe.errorString())));
+    }
+}
+
+void TestSessionsUi::startup_reuses_initial_pane_data()
+{
+    QTest::addColumn<int>("layoutKind");
+    QTest::addColumn<bool>("classic");
+    const QStringList layouts { QStringLiteral("single"), QStringLiteral("tabs"),
+        QStringLiteral("split"), QStringLiteral("nested"),
+        QStringLiteral("missing-first-session") };
+    for (int kind = 0; kind < layouts.size(); ++kind) {
+        QTest::newRow(qPrintable(layouts.at(kind) + QStringLiteral("-modern"))) << kind << false;
+        QTest::newRow(qPrintable(layouts.at(kind) + QStringLiteral("-classic"))) << kind << true;
+    }
+}
+
+void TestSessionsUi::startup_reuses_initial_pane()
+{
+    QFETCH(int, layoutKind);
+    QFETCH(bool, classic);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    Settings* settings = guard.settings;
+    settings->editorDisplayStyle = classic ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern;
+    settings->openPrivateTabOnStartup = false;
+    settings->hasNumberFormatStyleSetting = true;
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    const QString activeName = QStringLiteral("Saved-Active");
+    const QString firstName = QStringLiteral("Saved-First");
+    const QString otherName = QStringLiteral("Saved-Other");
+    QVERIFY(QDir().mkpath(QFileInfo(storage.path(activeName)).path()));
+    for (const QString& name : {activeName, firstName, otherName})
+        writeFile(storage.path(name), QJsonDocument(sessionJson(name)).toJson());
+
+    const auto savedPane = [](const QString& name) {
+        return QJsonObject {
+            { QStringLiteral("type"), QStringLiteral("pane") },
+            { QStringLiteral("active"), name },
+            { QStringLiteral("tabs"), QJsonArray { QJsonObject {
+                { QStringLiteral("name"), name },
+                { QStringLiteral("editor"), QJsonObject {
+                    { QStringLiteral("text"), QStringLiteral("12+34") },
+                    { QStringLiteral("cursor"), 3 }
+                } }
+            } } }
+        };
+    };
+    QJsonObject root = savedPane(activeName);
+    root.insert(QStringLiteral("type"), QStringLiteral("tabs"));
+    if (layoutKind == 1) {
+        QJsonArray tabs = root.value(QStringLiteral("tabs")).toArray();
+        tabs.append(QJsonObject { { QStringLiteral("name"), otherName } });
+        root.insert(QStringLiteral("tabs"), tabs);
+    } else if (layoutKind >= 2) {
+        QJsonObject firstPane = savedPane(layoutKind == 4
+            ? QStringLiteral("Missing") : firstName);
+        QJsonObject activePane = savedPane(activeName);
+        if (layoutKind == 3) {
+            firstPane = QJsonObject {
+                { QStringLiteral("type"), QStringLiteral("split") },
+                { QStringLiteral("orientation"), QStringLiteral("vertical") },
+                { QStringLiteral("children"), QJsonArray { firstPane, savedPane(otherName) } },
+                { QStringLiteral("sizes"), QJsonArray { 200, 100 } }
+            };
+        }
+        root = QJsonObject {
+            { QStringLiteral("type"), QStringLiteral("split") },
+            { QStringLiteral("active"), activeName },
+            { QStringLiteral("orientation"), QStringLiteral("horizontal") },
+            { QStringLiteral("children"), QJsonArray { firstPane, activePane } },
+            { QStringLiteral("sizes"), QJsonArray { 320, 480 } }
+        };
+    }
+    settings->sessionLayoutJson = QString::fromUtf8(QJsonDocument(QJsonObject {
+        { QStringLiteral("scheme"), 1 },
+        { QStringLiteral("kind"), QStringLiteral("session-layout") },
+        { QStringLiteral("windows"), QJsonArray { QJsonObject {
+            { QStringLiteral("id"), QStringLiteral("saved") },
+            { QStringLiteral("root"), root }
+        } } }
+    }).toJson(QJsonDocument::Compact));
+
+    MainWindow window;
+    QPointer<ResultDisplay> initialDisplay = window.findChild<ResultDisplay*>();
+    QPointer<Editor> initialEditor = editorForDisplay(initialDisplay);
+    QPointer<QWidget> initialPane = paneWidgetForDisplay(initialDisplay);
+    QPointer<QTabBar> initialTabBar = tabBarForDisplay(initialDisplay);
+    QVERIFY(initialDisplay && initialEditor && initialPane && initialTabBar);
+    window.resize(960, 640);
+    window.show();
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    const int expectedPanes = layoutKind == 2 ? 2 : layoutKind == 3 ? 3 : 1;
+    QTRY_COMPARE(window.findChildren<Editor*>().size(), expectedPanes);
+    const QString reusedSession = layoutKind == 2 || layoutKind == 3 ? firstName : activeName;
+    QTRY_VERIFY(initialDisplay && initialDisplay->session()->name() == reusedSession);
+    QVERIFY(initialEditor && initialPane && initialTabBar);
+    QCOMPARE(editorForDisplay(initialDisplay), initialEditor.data());
+    QCOMPARE(paneWidgetForDisplay(initialDisplay), initialPane.data());
+    QCOMPARE(tabBarForDisplay(initialDisplay), initialTabBar.data());
+    QVERIFY(initialEditor->isVisible());
+    QCOMPARE(initialEditor->text(), QStringLiteral("12+34"));
+    QCOMPARE(initialEditor->textCursor().position(), 3);
+    QCOMPARE(initialTabBar->count(), layoutKind == 1 ? 2 : 1);
+
+    const QList<ResultDisplay*> displays = window.findChildren<ResultDisplay*>();
+    for (ResultDisplay* display : displays) {
+        Editor* editor = editorForDisplay(display);
+        QVERIFY(editor != nullptr);
+        QCOMPARE(display->session()->historySize(), 1);
+        QVERIFY(display->toPlainText().contains(QStringLiteral("42")));
+        QTest::mouseClick(editor->viewport(), Qt::LeftButton);
+        QTRY_VERIFY(editor->hasFocus());
+        editor->setText(QStringLiteral("10+1"));
+        QTest::keyClick(editor, Qt::Key_Return);
+        QCOMPARE(display->session()->historySize(), 2);
+        QVERIFY(display->toPlainText().contains(QStringLiteral("11")));
+    }
+    if (layoutKind == 1) {
+        initialTabBar->setCurrentIndex(1);
+        QCOMPARE(initialDisplay->session()->name(), otherName);
+        initialTabBar->setCurrentIndex(0);
+        QCOMPARE(initialDisplay->session()->name(), activeName);
+        QCOMPARE(initialDisplay->session()->historySize(), 2);
     }
 }
 

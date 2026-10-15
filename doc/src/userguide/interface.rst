@@ -911,9 +911,11 @@ Help
     Startup appearance details show individual calls, their parent calls, and
     whether they run during window construction, session restoration, or a
     deferred refresh. Temporary numeric IDs identify widgets across calls,
-    including panes that are replaced during restoration. The report compares
-    inputs for theme generation and highlighting, and counts palette and
-    stylesheet assignments with changed or unchanged values. It also counts
+    including panes added during restoration. Saved layouts reuse the initial
+    pane and its editor, result display, and tab bar. Only additional panes need
+    new controls. This appears as ``Reuse initial session pane`` in the timings.
+    The report compares inputs for theme generation and highlighting, and counts
+    palette and stylesheet assignments with changed or unchanged values. It also counts
     identical palette and stylesheet assignments that checks skip. Deferred
     native dock refreshes can skip polishing when the style and stylesheet are
     unchanged and both the system palette and the palette produced by the last
