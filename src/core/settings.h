@@ -181,6 +181,7 @@ public:
     bool automaticInputAdjustments;
     bool inputDigitGrouping;
     bool cursorBlinking;
+    bool escapeClearsEditor;
     bool hoverHighlightResults;
     bool windowAlwaysOnTop;
     bool autoResultToClipboard;

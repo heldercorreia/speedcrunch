@@ -23,6 +23,8 @@ private slots:
     void raw_input_preserves_multiline_paste_evaluation_data();
     void raw_input_preserves_multiline_paste_evaluation();
     void editing_cursor_blinking_updates_all_open_editors();
+    void editing_escape_clears_editor_is_shared_and_resets_to_off();
+    void escape_clears_editor_survives_settings_reload();
     void number_format_is_shared_and_refreshes_all_input_panes();
     void display_font_changes_update_all_sessions_and_windows_data();
     void display_font_changes_update_all_sessions_and_windows();
@@ -378,6 +380,67 @@ void TestSettingsUi::editing_cursor_blinking_updates_all_open_editors()
         QVERIFY(window->findChild<QAction*>(QStringLiteral("CursorBlinkingAction"))->isChecked());
         for (Editor* editor : window->findChildren<Editor*>())
             QVERIFY(editor->isCursorBlinkingEnabled());
+    }
+}
+
+void TestSettingsUi::editing_escape_clears_editor_is_shared_and_resets_to_off()
+{
+    MainWindow first;
+    MainWindow second;
+    QAction* action = first.findChild<QAction*>(QStringLiteral("EscapeClearsEditorAction"));
+    QAction* secondAction = second.findChild<QAction*>(QStringLiteral("EscapeClearsEditorAction"));
+    QVERIFY(action);
+    QVERIFY(secondAction);
+    QVERIFY(action->isCheckable());
+    QVERIFY(!action->isChecked());
+    QVERIFY(!Settings::instance()->escapeClearsEditor);
+    bool inEditingMenu = false;
+    for (QMenu* menu : first.findChildren<QMenu*>()) {
+        if (menu->title() == MainWindow::tr("&Editing") && menu->actions().contains(action))
+            inEditingMenu = true;
+    }
+    QVERIFY(inEditingMenu);
+    Editor* editor = first.findChild<Editor*>();
+    QVERIFY(editor);
+    editor->setText(QStringLiteral("123"));
+    action->trigger();
+    QVERIFY(Settings::instance()->escapeClearsEditor);
+    QVERIFY(secondAction->isChecked());
+    QCOMPARE(editor->text(), QStringLiteral("123"));
+    MainWindow third;
+    QAction* thirdAction = third.findChild<QAction*>(QStringLiteral("EscapeClearsEditorAction"));
+    QVERIFY(thirdAction);
+    QVERIFY(thirdAction->isChecked());
+    secondAction->trigger();
+    QVERIFY(!action->isChecked());
+    QVERIFY(!thirdAction->isChecked());
+    thirdAction->trigger();
+
+    QAction* reset = first.findChild<QAction*>(QStringLiteral("ResetAllSettingsAction"));
+    QVERIFY(reset);
+    QTimer::singleShot(0, &first, []() {
+        auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        QVERIFY(dialog);
+        dialog->button(QMessageBox::Yes)->click();
+    });
+    reset->trigger();
+    QVERIFY(!Settings::instance()->escapeClearsEditor);
+    QVERIFY(!action->isChecked());
+    QVERIFY(!secondAction->isChecked());
+    QVERIFY(!thirdAction->isChecked());
+    QCOMPARE(editor->text(), QStringLiteral("123"));
+}
+
+void TestSettingsUi::escape_clears_editor_survives_settings_reload()
+{
+    Settings* settings = Settings::instance();
+    QVERIFY(!settings->escapeClearsEditor);
+    for (bool enabled : {true, false}) {
+        settings->escapeClearsEditor = enabled;
+        settings->save();
+        settings->escapeClearsEditor = !enabled;
+        settings->load();
+        QCOMPARE(settings->escapeClearsEditor, enabled);
     }
 }
 

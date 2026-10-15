@@ -277,6 +277,7 @@ Settings::Settings()
 {
     inputDigitGrouping = true;
     cursorBlinking = true;
+    escapeClearsEditor = false;
     digitGroupingIntegerPartOnly = true;
     numberFormatStyle = NumberFormatNoGroupingDot;
     hasNumberFormatStyleSetting = false;
@@ -379,6 +380,7 @@ void Settings::load()
         key + QLatin1String("AutomaticInputAdjustments"), true).toBool();
     inputDigitGrouping = settings->value(key + QLatin1String("InputDigitGrouping"), true).toBool();
     cursorBlinking = settings->value(key + QLatin1String("CursorBlinking"), true).toBool();
+    escapeClearsEditor = settings->value(key + QLatin1String("EscapeClearsEditor"), false).toBool();
     hoverHighlightResults = settings->value(key + QLatin1String("HoverHighlightResults"), true).toBool();
     autoResultToClipboard = settings->value(key + QLatin1String("AutoResultToClipboard"), false).toBool();
     simplifyResultExpressions = settings->value(key + QLatin1String("SimplifyResultExpressions"), true).toBool();
@@ -644,6 +646,7 @@ void Settings::save()
     settings->setValue(key + QLatin1String("AutomaticInputAdjustments"), automaticInputAdjustments);
     settings->setValue(key + QLatin1String("InputDigitGrouping"), inputDigitGrouping);
     settings->setValue(key + QLatin1String("CursorBlinking"), cursorBlinking);
+    settings->setValue(key + QLatin1String("EscapeClearsEditor"), escapeClearsEditor);
     settings->setValue(key + QLatin1String("HoverHighlightResults"), hoverHighlightResults);
     settings->setValue(key + QLatin1String("DigitGrouping"), digitGrouping);
     settings->setValue(key + QLatin1String("DigitGroupingIntegerPartOnly"), digitGroupingIntegerPartOnly);

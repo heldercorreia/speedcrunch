@@ -685,6 +685,15 @@ Editing
 
     .. versionadded:: 1.1
 
+* :menuselection:`Escape Clears Editor`
+    Press :kbd:`Escape` to clear the focused expression editor. If a popup or
+    result preview is open, Escape dismisses it first. Press Escape again to
+    clear the expression. Cancelling a history edit still works as usual.
+    This option is off by default and is saved between launches. Changes apply
+    to all session panes and windows.
+
+    .. versionadded:: 1.1
+
 * :menuselection:`Keep Entered Expression After Evaluate`
     If selected, the entered expression remains in the editor after evaluating it.
 

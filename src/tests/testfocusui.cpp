@@ -31,7 +31,143 @@ private slots:
     void clipboard_actions_follow_active_pane_data();
     void clipboard_actions_follow_active_pane();
     void copy_shortcut_preserves_display_selection_in_other_pane();
+    void escape_clears_only_the_focused_editor_data();
+    void escape_clears_only_the_focused_editor();
+    void escape_dismisses_completion_and_preview_before_clearing();
+    void escape_still_cancels_history_edit_data();
+    void escape_still_cancels_history_edit();
 };
+
+void TestFocusUi::escape_clears_only_the_focused_editor_data()
+{
+    QTest::addColumn<bool>("enabled");
+    QTest::newRow("default-off") << false;
+    QTest::newRow("enabled") << true;
+}
+
+void TestFocusUi::escape_clears_only_the_focused_editor()
+{
+    QFETCH(bool, enabled);
+    Settings::instance()->autoCalc = false;
+    Settings::instance()->escapeClearsEditor = enabled;
+    MainWindow first;
+    MainWindow second;
+    QVERIFY(QMetaObject::invokeMethod(&first, "splitActivePaneRight", Qt::DirectConnection));
+    first.show();
+    second.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&first));
+    QVERIFY(QTest::qWaitForWindowExposed(&second));
+    const QList<Editor*> editors = first.findChildren<Editor*>() + second.findChildren<Editor*>();
+    QVERIFY(editors.size() >= 3);
+    for (Editor* target : editors) {
+        for (Editor* editor : editors) {
+            editor->setAutoCompletionEnabled(false);
+            editor->setText(QStringLiteral("123\n456"));
+        }
+        target->window()->activateWindow();
+        target->setFocus();
+        QTRY_VERIFY(target->hasFocus());
+        QTest::keyClick(target, Qt::Key_Escape);
+        for (Editor* editor : editors) {
+            QCOMPARE(editor->text(), enabled && editor == target
+                         ? QString() : QStringLiteral("123\n456"));
+        }
+        QVERIFY(target->hasFocus());
+        QTest::keyClick(target, Qt::Key_Escape);
+        QCOMPARE(target->text(), enabled ? QString() : QStringLiteral("123\n456"));
+    }
+
+    first.activateWindow();
+    QLineEdit search(&first);
+    search.show();
+    search.setFocus();
+    QTRY_VERIFY(search.hasFocus());
+    for (Editor* editor : editors)
+        editor->setText(QStringLiteral("789"));
+    QTest::keyClick(&search, Qt::Key_Escape);
+    for (Editor* editor : editors)
+        QCOMPARE(editor->text(), QStringLiteral("789"));
+}
+
+void TestFocusUi::escape_dismisses_completion_and_preview_before_clearing()
+{
+    Settings::instance()->escapeClearsEditor = true;
+    Settings::instance()->autoCalc = false;
+    MainWindow window;
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    Editor* editor = window.findChild<Editor*>();
+    QVERIFY(editor);
+    editor->setFocus();
+    QTRY_VERIFY(editor->hasFocus());
+    editor->setText(QStringLiteral("co"));
+    editor->setCursorPosition(editor->text().size());
+    QVERIFY(QMetaObject::invokeMethod(editor, "triggerAutoComplete", Qt::DirectConnection));
+    auto completionPopup = []() -> QTreeWidget* {
+        for (QWidget* widget : QApplication::topLevelWidgets()) {
+            if (auto* tree = qobject_cast<QTreeWidget*>(widget)) {
+                if (tree->isVisible())
+                    return tree;
+            }
+        }
+        return nullptr;
+    };
+    QTRY_VERIFY(completionPopup());
+    QTreeWidget* popup = completionPopup();
+    QTest::keyClick(popup, Qt::Key_Escape);
+    QVERIFY(!popup->isVisible());
+    QCOMPARE(editor->text(), QStringLiteral("co"));
+    QTRY_VERIFY(editor->hasFocus());
+    QTest::keyClick(editor, Qt::Key_Escape);
+    QVERIFY(editor->text().isEmpty());
+
+    editor->setAutoCompletionEnabled(false);
+    editor->setAutoCalcEnabled(true);
+    editor->setText(QStringLiteral("1+24"));
+    editor->refreshAutoCalc();
+    QTRY_VERIFY(visibleResultPreviewText(window).contains(QStringLiteral("Current result:")));
+    QTest::keyClick(editor, Qt::Key_Escape);
+    QTRY_VERIFY(visibleResultPreviewText(window).isEmpty());
+    QCOMPARE(editor->text(), QStringLiteral("1+24"));
+    QTest::keyClick(editor, Qt::Key_Escape);
+    QVERIFY(editor->text().isEmpty());
+}
+
+void TestFocusUi::escape_still_cancels_history_edit_data()
+{
+    escape_clears_only_the_focused_editor_data();
+}
+
+void TestFocusUi::escape_still_cancels_history_edit()
+{
+    QFETCH(bool, enabled);
+    Settings::instance()->escapeClearsEditor = enabled;
+    Settings::instance()->autoCalc = false;
+    MainWindow window;
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    Editor* editor = window.findChild<Editor*>();
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    QVERIFY(editor);
+    QVERIFY(display);
+    editor->setAutoCompletionEnabled(false);
+    editor->setFocus();
+    editor->setText(QStringLiteral("2+3"));
+    QTest::keyClick(editor, Qt::Key_Return);
+    const int count = display->session()->historySize();
+    QVERIFY(count > 0);
+    QVERIFY(QMetaObject::invokeMethod(&window, "startHistoryEntryEdit", Qt::DirectConnection,
+                                     Q_ARG(int, count - 1)));
+    editor->setText(QStringLiteral("6+7"));
+    QTest::keyClick(editor, Qt::Key_Escape);
+    QCOMPARE(editor->text(), QStringLiteral("6+7"));
+    QTest::keyClick(editor, Qt::Key_Escape);
+    QVERIFY(editor->text().isEmpty());
+    QCOMPARE(display->session()->historySize(), count);
+    editor->setText(QStringLiteral("8+9"));
+    QTest::keyClick(editor, Qt::Key_Return);
+    QCOMPARE(display->session()->historySize(), count + 1);
+}
 
 void TestFocusUi::initTestCase()
 {

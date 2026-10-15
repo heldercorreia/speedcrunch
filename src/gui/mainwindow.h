@@ -229,6 +229,7 @@ private slots:
     void setInputDigitGroupingEnabled(bool);
     void setAutomaticInputAdjustmentsEnabled(bool);
     void setCursorBlinkingEnabled(bool);
+    void setEscapeClearsEditorEnabled(bool);
     void setDigitGrouping(QAction*);
     void setDigitGroupingIntegerPartOnlyEnabled(bool);
     void setAutoResultToClipboardEnabled(bool);
@@ -518,6 +519,7 @@ private:
         QAction* settingsEditingInputDigitGrouping;
         QAction* settingsEditingAutomaticInputAdjustments;
         QAction* settingsEditingCursorBlinking;
+        QAction* settingsEditingEscapeClearsEditor;
         QAction* settingsBehaviorHoverHighlightResults;
         QAction* settingsBehaviorDigitGroupingNone;
         QAction* settingsBehaviorDigitGroupingOneSpace;

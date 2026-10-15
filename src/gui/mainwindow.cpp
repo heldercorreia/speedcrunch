@@ -3919,6 +3919,8 @@ void MainWindow::createActions()
     m_actions.settingsEditingInputDigitGrouping->setObjectName(QStringLiteral("InputDigitGroupingAction"));
     m_actions.settingsEditingCursorBlinking = new QAction(this);
     m_actions.settingsEditingCursorBlinking->setObjectName(QStringLiteral("CursorBlinkingAction"));
+    m_actions.settingsEditingEscapeClearsEditor = new QAction(this);
+    m_actions.settingsEditingEscapeClearsEditor->setObjectName(QStringLiteral("EscapeClearsEditorAction"));
     m_actions.settingsBehaviorHoverHighlightResults = new QAction(this);
     m_actions.settingsBehaviorDigitGroupingNone = new QAction(this);
     m_actions.settingsBehaviorDigitGroupingOneSpace = new QAction(this);
@@ -4037,6 +4039,7 @@ void MainWindow::createActions()
     m_actions.settingsEditingInputDigitGrouping->setCheckable(true);
     m_actions.settingsEditingAutomaticInputAdjustments->setCheckable(true);
     m_actions.settingsEditingCursorBlinking->setCheckable(true);
+    m_actions.settingsEditingEscapeClearsEditor->setCheckable(true);
     m_actions.settingsBehaviorHoverHighlightResults->setCheckable(true);
     m_actions.settingsBehaviorDigitGroupingNone->setCheckable(true);
     m_actions.settingsBehaviorDigitGroupingNone->setData(0);
@@ -4463,6 +4466,8 @@ void MainWindow::setActionsText()
     m_actions.settingsEditingInputDigitGrouping->setToolTip(MainWindow::tr("Group input digits using the selected number format."));
     m_actions.settingsEditingCursorBlinking->setText(MainWindow::tr("&Blinking Cursor"));
     m_actions.settingsEditingCursorBlinking->setToolTip(MainWindow::tr("Blink the cursor in the expression editor."));
+    m_actions.settingsEditingEscapeClearsEditor->setText(MainWindow::tr("&Escape Clears Editor"));
+    m_actions.settingsEditingEscapeClearsEditor->setToolTip(MainWindow::tr("Clear the focused expression editor with Escape after dismissing any popup or preview."));
     m_actions.settingsBehaviorHoverHighlightResults->setText(MainWindow::tr("Hover Highlighting"));
     m_actions.settingsBehaviorDigitGroupingNone->setText(MainWindow::tr("Disabled"));
     m_actions.settingsBehaviorDigitGroupingOneSpace->setText(MainWindow::tr("Small Space"));
@@ -4807,6 +4812,7 @@ void MainWindow::createMenus()
     m_menus.editing->addAction(m_actions.settingsBehaviorAutoAns);
     m_menus.editing->addAction(m_actions.settingsEditingInputDigitGrouping);
     m_menus.editing->addAction(m_actions.settingsEditingCursorBlinking);
+    m_menus.editing->addAction(m_actions.settingsEditingEscapeClearsEditor);
     m_menus.editing->addAction(m_actions.settingsBehaviorLeaveLastExpression);
     m_menus.autoCompletion = m_menus.editing->addMenu("");
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionBuiltInFunctions);
@@ -8107,6 +8113,8 @@ void MainWindow::createFixedConnections()
             this, &MainWindow::setAutomaticInputAdjustmentsEnabled);
     connect(m_actions.settingsEditingCursorBlinking, &QAction::toggled,
             this, &MainWindow::setCursorBlinkingEnabled);
+    connect(m_actions.settingsEditingEscapeClearsEditor, &QAction::toggled,
+            this, &MainWindow::setEscapeClearsEditorEnabled);
     connect(m_actions.settingsBehaviorHoverHighlightResults, SIGNAL(toggled(bool)), SLOT(setHoverHighlightResultsEnabled(bool)));
     connect(m_actionGroups.digitGrouping, SIGNAL(triggered(QAction*)), SLOT(setDigitGrouping(QAction*)));
     connect(m_actions.settingsBehaviorDigitGroupingIntegerPartOnly, SIGNAL(toggled(bool)), SLOT(setDigitGroupingIntegerPartOnlyEnabled(bool)));
@@ -8475,6 +8483,7 @@ void MainWindow::applySettings(bool initializing)
     m_actions.settingsEditingInputDigitGrouping->setChecked(m_settings->inputDigitGrouping);
     setAutomaticInputAdjustmentsEnabled(m_settings->automaticInputAdjustments);
     setCursorBlinkingEnabled(m_settings->cursorBlinking);
+    setEscapeClearsEditorEnabled(m_settings->escapeClearsEditor);
 
     if (m_settings->hoverHighlightResults)
         m_actions.settingsBehaviorHoverHighlightResults->setChecked(true);
@@ -10839,6 +10848,10 @@ void MainWindow::handleEditorEscapePressed()
     }
 
     cancelHistoryEntryEdit();
+    if (m_settings->escapeClearsEditor
+        && (m_widgets.editor->hasFocus() || m_widgets.editor->viewport()->hasFocus())) {
+        clearEditor();
+    }
 }
 
 void MainWindow::wrapSelection()
@@ -11695,6 +11708,20 @@ void MainWindow::setCursorBlinkingEnabled(bool enabled)
         window->m_actions.settingsEditingCursorBlinking->setChecked(enabled);
         for (Editor* editor : window->findChildren<Editor*>())
             editor->setCursorBlinkingEnabled(enabled);
+    }
+}
+
+void MainWindow::setEscapeClearsEditorEnabled(bool enabled)
+{
+    m_settings->escapeClearsEditor = enabled;
+    QList<QPointer<MainWindow>> windows = allMainWindows();
+    if (!windows.contains(QPointer<MainWindow>(this)))
+        windows.append(QPointer<MainWindow>(this));
+    for (const QPointer<MainWindow>& window : windows) {
+        if (!window)
+            continue;
+        const QSignalBlocker blocker(window->m_actions.settingsEditingEscapeClearsEditor);
+        window->m_actions.settingsEditingEscapeClearsEditor->setChecked(enabled);
     }
 }
 
