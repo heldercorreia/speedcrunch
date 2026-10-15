@@ -35,6 +35,10 @@ private slots:
     void result_display_copy_single_line_ignores_empty_areas();
     void result_display_groups_calculation_copy_actions_data();
     void result_display_groups_calculation_copy_actions();
+    void result_display_context_menu_groups_actions_data();
+    void result_display_context_menu_groups_actions();
+    void result_display_context_menu_copies_selection();
+    void result_display_remove_menu_targets_clicked_calculation();
 };
 
 void TestDisplayUi::user_definition_comments_survive_creation_and_editing_data()
@@ -528,7 +532,9 @@ void TestDisplayUi::result_display_copy_calculation_ignores_empty_areas()
     QVERIFY(QTest::qWaitForWindowExposed(&display));
     {
         QScopedPointer<QMenu> menu(display.createContextMenu(QPoint(20, 20)));
-        QVERIFY(directSubmenuWithTitle(menu.data(), QStringLiteral("Copy")) == nullptr);
+        QMenu* copyMenu = directSubmenuWithTitle(menu.data(), QStringLiteral("Copy"));
+        QVERIFY(copyMenu != nullptr);
+        QVERIFY(directMenuActionWithText(copyMenu, QStringLiteral("Calculation")) == nullptr);
         QVERIFY(directMenuActionWithText(menu.data(), QStringLiteral("Calculation")) == nullptr);
     }
 
@@ -536,7 +542,9 @@ void TestDisplayUi::result_display_copy_calculation_ignores_empty_areas()
     display.refresh();
     QTextCursor separator(display.document()->lastBlock());
     QScopedPointer<QMenu> menu(display.createContextMenu(display.cursorRect(separator).center()));
-    QVERIFY(directSubmenuWithTitle(menu.data(), QStringLiteral("Copy")) == nullptr);
+    QMenu* copyMenu = directSubmenuWithTitle(menu.data(), QStringLiteral("Copy"));
+    QVERIFY(copyMenu != nullptr);
+    QVERIFY(directMenuActionWithText(copyMenu, QStringLiteral("Calculation")) == nullptr);
     QVERIFY(directMenuActionWithText(menu.data(), QStringLiteral("Calculation")) == nullptr);
 }
 
@@ -629,7 +637,9 @@ void TestDisplayUi::result_display_copy_single_line_ignores_empty_areas()
     QVERIFY(QTest::qWaitForWindowExposed(&display));
     {
         QScopedPointer<QMenu> menu(display.createContextMenu(QPoint(20, 20)));
-        QVERIFY(directSubmenuWithTitle(menu.data(), QStringLiteral("Copy")) == nullptr);
+        QMenu* copyMenu = directSubmenuWithTitle(menu.data(), QStringLiteral("Copy"));
+        QVERIFY(copyMenu != nullptr);
+        QVERIFY(directMenuActionWithText(copyMenu, QStringLiteral("Calculation as Single Line")) == nullptr);
         QVERIFY(directMenuActionWithText(menu.data(), QStringLiteral("Calculation as Single Line")) == nullptr);
     }
 
@@ -637,7 +647,9 @@ void TestDisplayUi::result_display_copy_single_line_ignores_empty_areas()
     display.refresh();
     QTextCursor separator(display.document()->lastBlock());
     QScopedPointer<QMenu> menu(display.createContextMenu(display.cursorRect(separator).center()));
-    QVERIFY(directSubmenuWithTitle(menu.data(), QStringLiteral("Copy")) == nullptr);
+    QMenu* copyMenu = directSubmenuWithTitle(menu.data(), QStringLiteral("Copy"));
+    QVERIFY(copyMenu != nullptr);
+    QVERIFY(directMenuActionWithText(copyMenu, QStringLiteral("Calculation as Single Line")) == nullptr);
     QVERIFY(directMenuActionWithText(menu.data(), QStringLiteral("Calculation as Single Line")) == nullptr);
 }
 
@@ -668,24 +680,149 @@ void TestDisplayUi::result_display_groups_calculation_copy_actions()
     QScopedPointer<QMenu> menu(display.createContextMenu(display.cursorRect(expressionCursor).center()));
     QMenu* copyMenu = directSubmenuWithTitle(menu.data(), QStringLiteral("Copy"));
     QVERIFY(copyMenu != nullptr);
-    const QStringList labels = {QStringLiteral("Expression"), QStringLiteral("Result"),
+    const QStringList labels = {QStringLiteral("Selection"), QString(),
+                                QStringLiteral("Expression"), QStringLiteral("Result"),
                                 QStringLiteral("Calculation"), QStringLiteral("Calculation as Single Line")};
     QCOMPARE(copyMenu->actions().size(), labels.size());
     for (int i = 0; i < labels.size(); ++i) {
+        QAction* action = copyMenu->actions().at(i);
+        QCOMPARE(action->isSeparator(), labels.at(i).isEmpty());
+        if (action->isSeparator())
+            continue;
         QVERIFY(directMenuActionWithText(menu.data(), labels.at(i)) == nullptr);
-        QCOMPARE(copyMenu->actions().at(i)->text(), labels.at(i));
-        QCOMPARE(copyMenu->actions().at(i)->isEnabled(), i != 1 || !failed);
+        QCOMPARE(action->text().section(QLatin1Char('\t'), 0, 0), labels.at(i));
+        QCOMPARE(action->isEnabled(), i != 0 && (i != 3 || !failed));
     }
-    copyMenu->actions().first()->trigger();
+    copyMenu->actions().at(2)->trigger();
     QCOMPARE(QApplication::clipboard()->text(), expression);
     if (!failed) {
-        copyMenu->actions().at(1)->trigger();
+        copyMenu->actions().at(3)->trigger();
         QCOMPARE(QApplication::clipboard()->text(), QStringLiteral("5"));
     }
 
     const QTextCursor separator(display.document()->lastBlock());
     QScopedPointer<QMenu> emptyMenu(display.createContextMenu(display.cursorRect(separator).center()));
-    QVERIFY(directSubmenuWithTitle(emptyMenu.data(), QStringLiteral("Copy")) == nullptr);
+    QMenu* emptyCopyMenu = directSubmenuWithTitle(emptyMenu.data(), QStringLiteral("Copy"));
+    QVERIFY(emptyCopyMenu != nullptr);
+    QVERIFY(directMenuActionWithText(emptyCopyMenu, QStringLiteral("Calculation")) == nullptr);
+}
+
+void TestDisplayUi::result_display_context_menu_groups_actions_data()
+{
+    QTest::addColumn<bool>("hasCalculation");
+    QTest::addColumn<bool>("isPrivate");
+    QTest::newRow("empty") << false << false;
+    QTest::newRow("calculation") << true << false;
+    QTest::newRow("private-calculation") << true << true;
+}
+
+void TestDisplayUi::result_display_context_menu_groups_actions()
+{
+    QFETCH(bool, hasCalculation);
+    QFETCH(bool, isPrivate);
+    Session session;
+    session.setPrivate(isPrivate);
+    if (hasCalculation)
+        session.addHistoryEntry(HistoryEntry(QStringLiteral("2 + 3"), Quantity(5)));
+    MenuTestResultDisplay display;
+    display.resize(400, 200);
+    display.setSession(&session);
+    display.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&display));
+    const QTextCursor cursor(display.document()->firstBlock());
+    QScopedPointer<QMenu> menu(display.createContextMenu(display.cursorRect(cursor).center()));
+    QStringList expected = {QStringLiteral("Copy"), QStringLiteral("Select All"), QString()};
+    if (hasCalculation)
+        expected << QStringLiteral("Edit Expression") << QStringLiteral("Change Settings")
+                 << QStringLiteral("Remove") << QString();
+    expected << QStringLiteral("New Tab") << QStringLiteral("New Private Tab") << QStringLiteral("Session")
+             << QString() << QStringLiteral("Split") << QStringLiteral("Close Pane");
+    QStringList actual;
+    for (QAction* action : menu->actions())
+        actual << (action->isSeparator() ? QString() : action->text().section(QLatin1Char('\t'), 0, 0));
+    QCOMPARE(actual, expected);
+    QCOMPARE(menu->actions().first()->isEnabled(), hasCalculation);
+    QCOMPARE(menu->actions().at(1)->isEnabled(), hasCalculation);
+    QMenu* sessionMenu = directSubmenuWithTitle(menu.data(), QStringLiteral("Session"));
+    QVERIFY(sessionMenu != nullptr);
+    const QStringList sessionLabels = {QStringLiteral("Open..."), QStringLiteral("&Import..."),
+                                       QStringLiteral("&Export"), QString(), QStringLiteral("Duplicate"),
+                                       QStringLiteral("Rename"), isPrivate ? QStringLiteral("Keep") : QStringLiteral("Make Private..."),
+                                       QString(), QStringLiteral("Clear"), QStringLiteral("Delete"),
+                                       QString(), QStringLiteral("Close")};
+    actual.clear();
+    for (QAction* action : sessionMenu->actions())
+        actual << (action->isSeparator() ? QString() : action->text());
+    QCOMPARE(actual, sessionLabels);
+    QSignalSpy openSpy(&display, &ResultDisplay::openSessionRequested);
+    sessionMenu->actions().first()->trigger();
+    QCOMPARE(openSpy.count(), 1);
+}
+
+void TestDisplayUi::result_display_context_menu_copies_selection()
+{
+    const QString oldClipboard = QApplication::clipboard()->text();
+    const auto restoreClipboard = qScopeGuard([oldClipboard]() {
+        QApplication::clipboard()->setText(oldClipboard);
+    });
+    Session session;
+    session.addHistoryEntry(HistoryEntry(QStringLiteral("2 + 3"), Quantity(5)));
+    MenuTestResultDisplay display;
+    display.resize(400, 200);
+    display.setSession(&session);
+    display.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&display));
+    QTextCursor cursor(display.document()->firstBlock());
+    cursor.select(QTextCursor::BlockUnderCursor);
+    display.setTextCursor(cursor);
+    QScopedPointer<QMenu> menu(display.createContextMenu(display.cursorRect(cursor).center()));
+    QMenu* copyMenu = directSubmenuWithTitle(menu.data(), QStringLiteral("Copy"));
+    QVERIFY(copyMenu != nullptr);
+    QAction* selectionAction = copyMenu->actions().first();
+    QVERIFY(selectionAction->isEnabled());
+    QVERIFY(selectionAction->text().endsWith(QKeySequence(QKeySequence::Copy).toString(QKeySequence::NativeText)));
+    selectionAction->trigger();
+    QCOMPARE(QApplication::clipboard()->text(), QStringLiteral("2 + 3"));
+    QCOMPARE(display.textCursor().selectedText(), QStringLiteral("2 + 3"));
+    QAction* selectAll = menu->actions().at(1);
+    QVERIFY(selectAll->text().endsWith(QKeySequence(QKeySequence::SelectAll).toString(QKeySequence::NativeText)));
+    selectAll->trigger();
+    QCOMPARE(display.textCursor().selectionStart(), 0);
+    QCOMPARE(display.textCursor().selectionEnd(), display.document()->characterCount() - 1);
+}
+
+void TestDisplayUi::result_display_remove_menu_targets_clicked_calculation()
+{
+    Session session;
+    for (int i = 0; i < 3; ++i)
+        session.addHistoryEntry(HistoryEntry(QString::number(i), Quantity(i)));
+    MenuTestResultDisplay display;
+    display.resize(400, 300);
+    display.setSession(&session);
+    display.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&display));
+    QTextCursor clicked = display.document()->find(QStringLiteral("1"));
+    QVERIFY(!clicked.isNull());
+    QScopedPointer<QMenu> menu(display.createContextMenu(display.cursorRect(clicked).center()));
+    QMenu* removeMenu = directSubmenuWithTitle(menu.data(), QStringLiteral("Remove"));
+    QVERIFY(removeMenu != nullptr);
+    QSignalSpy removeSpy(&display, &ResultDisplay::removeHistoryEntryRequested);
+    QSignalSpy aboveSpy(&display, &ResultDisplay::removeHistoryEntriesAboveRequested);
+    QSignalSpy belowSpy(&display, &ResultDisplay::removeHistoryEntriesBelowRequested);
+    const QList<QSignalSpy*> spies = {&removeSpy, &aboveSpy, &belowSpy};
+    const QStringList labels = {QStringLiteral("This Calculation"), QStringLiteral("All Calculations Above"),
+                                QStringLiteral("All Calculations Below")};
+    QCOMPARE(removeMenu->actions().size(), labels.size());
+    for (int i = 0; i < labels.size(); ++i) {
+        QCOMPARE(removeMenu->actions().at(i)->text(), labels.at(i));
+        removeMenu->actions().at(i)->trigger();
+        for (int j = 0; j < spies.size(); ++j) {
+            QCOMPARE(spies.at(j)->count(), i == j ? 1 : 0);
+            if (i == j)
+                QCOMPARE(spies.at(j)->first().first().toInt(), 1);
+            spies.at(j)->clear();
+        }
+    }
 }
 
 void TestDisplayUi::result_display_hover_action_badges_trigger_when_clicked()
@@ -813,9 +950,11 @@ void TestDisplayUi::result_display_context_menu_hides_main_menu_when_menu_bar_vi
     QMenu* menu = display->createContextMenu(display->rect().center());
     QVERIFY(directMenuActionWithText(menu, QStringLiteral("New Tab")) != nullptr);
     QVERIFY(directMenuActionWithText(menu, QStringLiteral("New Session")) == nullptr);
-    QAction* importAction = directMenuActionWithText(menu, QStringLiteral("&Import..."));
+    QMenu* sessionMenu = directSubmenuWithTitle(menu, QStringLiteral("Session"));
+    QVERIFY(sessionMenu != nullptr);
+    QAction* importAction = directMenuActionWithText(sessionMenu, QStringLiteral("&Import..."));
     QVERIFY(importAction != nullptr);
-    QMenu* exportMenu = directSubmenuWithTitle(menu, QStringLiteral("&Export"));
+    QMenu* exportMenu = directSubmenuWithTitle(sessionMenu, QStringLiteral("&Export"));
     QVERIFY(exportMenu != nullptr);
     QVERIFY(directMenuActionWithText(menu, QStringLiteral("Import Session")) == nullptr);
     QVERIFY(directMenuActionWithText(menu, QStringLiteral("Export Session")) == nullptr);

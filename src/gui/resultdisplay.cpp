@@ -35,6 +35,7 @@
 #include <QFrame>
 #include <QHoverEvent>
 #include <QIcon>
+#include <QKeySequence>
 #include <QLabel>
 #include <QMainWindow>
 #include <QMenu>
@@ -1284,14 +1285,24 @@ void ResultDisplay::mousePressEvent(QMouseEvent* event)
 
 QMenu* ResultDisplay::createContextMenu(const QPoint& pos)
 {
-    QMenu* menu = createStandardContextMenu();
+    QMenu* menu = new QMenu(this);
+    QMenu* copyMenu = menu->addMenu(tr("Copy"));
+    QAction* copySelectionAction = copyMenu->addAction(
+        tr("Selection") + QLatin1Char('\t') + QKeySequence(QKeySequence::Copy).toString(QKeySequence::NativeText));
+    copySelectionAction->setEnabled(textCursor().hasSelection());
+    copyMenu->setEnabled(copySelectionAction->isEnabled());
+    connect(copySelectionAction, &QAction::triggered, this, &ResultDisplay::copy);
+    QAction* selectAllAction = menu->addAction(QIcon::fromTheme(QStringLiteral("edit-select-all")),
+        tr("Select All") + QLatin1Char('\t') + QKeySequence(QKeySequence::SelectAll).toString(QKeySequence::NativeText));
+    selectAllAction->setEnabled(!document()->isEmpty());
+    connect(selectAllAction, &QAction::triggered, this, &ResultDisplay::selectAll);
     const int historyIndex = historyIndexAtPosition(pos);
     if (historyIndex >= 0) {
         const Session* session = displaySession(this);
         if (session == nullptr)
             return menu;
-        menu->addSeparator();
-        QMenu* copyMenu = menu->addMenu(tr("Copy"));
+        copyMenu->setEnabled(true);
+        copyMenu->addSeparator();
         QAction* copyExpressionAction = copyMenu->addAction(tr("Expression"));
         connect(copyExpressionAction, &QAction::triggered, this, [session, historyIndex]() {
             if (historyIndex < 0 || historyIndex >= session->historySize())
@@ -1348,16 +1359,16 @@ QMenu* ResultDisplay::createContextMenu(const QPoint& pos)
         connect(editSettingsAction, &QAction::triggered, this, [this, historyIndex]() {
             emit editHistoryEntryContextRequested(historyIndex);
         });
-        QAction* removeAction = menu->addAction(tr("Remove Calculation"));
+        QMenu* removeMenu = menu->addMenu(tr("Remove"));
+        QAction* removeAction = removeMenu->addAction(tr("This Calculation"));
         connect(removeAction, &QAction::triggered, this, [this, historyIndex]() {
             emit removeHistoryEntryRequested(historyIndex);
         });
-        menu->addSeparator();
-        QAction* removeAboveAction = menu->addAction(tr("Remove All Calculations Above"));
+        QAction* removeAboveAction = removeMenu->addAction(tr("All Calculations Above"));
         connect(removeAboveAction, &QAction::triggered, this, [this, historyIndex]() {
             emit removeHistoryEntriesAboveRequested(historyIndex);
         });
-        QAction* removeBelowAction = menu->addAction(tr("Remove All Calculations Below"));
+        QAction* removeBelowAction = removeMenu->addAction(tr("All Calculations Below"));
         connect(removeBelowAction, &QAction::triggered, this, [this, historyIndex]() {
             emit removeHistoryEntriesBelowRequested(historyIndex);
         });
@@ -1368,36 +1379,18 @@ QMenu* ResultDisplay::createContextMenu(const QPoint& pos)
     connect(newSessionAction, &QAction::triggered, this, [this]() {
         emit newSessionRequested();
     });
-    QAction* openSessionAction = menu->addAction(tr("Open Session"));
     QAction* privateSessionAction = menu->addAction(tr("New Private Tab"));
     connect(privateSessionAction, &QAction::triggered, this, &ResultDisplay::newPrivateSessionRequested);
+    QMenu* sessionMenu = menu->addMenu(tr("Session"));
+    QAction* openSessionAction = sessionMenu->addAction(tr("Open..."));
     connect(openSessionAction, &QAction::triggered, this, [this]() {
         emit openSessionRequested();
     });
-    menu->addSeparator();
-    QMenu* splitMenu = menu->addMenu(tr("Split"));
-    QAction* splitLeftAction = splitMenu->addAction(tr("Left"));
-    connect(splitLeftAction, &QAction::triggered, this, [this]() {
-        emit splitLeftRequested();
-    });
-    QAction* splitRightAction = splitMenu->addAction(tr("Right"));
-    connect(splitRightAction, &QAction::triggered, this, [this]() {
-        emit splitRightRequested();
-    });
-    QAction* splitUpAction = splitMenu->addAction(tr("Up"));
-    connect(splitUpAction, &QAction::triggered, this, [this]() {
-        emit splitUpRequested();
-    });
-    QAction* splitDownAction = splitMenu->addAction(tr("Down"));
-    connect(splitDownAction, &QAction::triggered, this, [this]() {
-        emit splitDownRequested();
-    });
-    menu->addSeparator();
-    QAction* importSessionAction = menu->addAction(tr("&Import..."));
+    QAction* importSessionAction = sessionMenu->addAction(tr("&Import..."));
     connect(importSessionAction, &QAction::triggered, this, [this]() {
         emit importSessionRequested();
     });
-    QMenu* exportSessionMenu = menu->addMenu(tr("&Export"));
+    QMenu* exportSessionMenu = sessionMenu->addMenu(tr("&Export"));
     QAction* exportJsonAction = exportSessionMenu->addAction(QStringLiteral("JSON"));
     connect(exportJsonAction, &QAction::triggered, this, [this]() {
         emit exportSessionJsonRequested();
@@ -1410,8 +1403,7 @@ QMenu* ResultDisplay::createContextMenu(const QPoint& pos)
     connect(exportHtmlAction, &QAction::triggered, this, [this]() {
         emit exportSessionHtmlRequested();
     });
-    menu->addSeparator();
-    QMenu* sessionMenu = menu->addMenu(tr("Session"));
+    sessionMenu->addSeparator();
     QAction* duplicateSessionAction = sessionMenu->addAction(tr("Duplicate"));
     connect(duplicateSessionAction, &QAction::triggered, this, [this]() {
         emit duplicateSessionRequested();
@@ -1438,6 +1430,23 @@ QMenu* ResultDisplay::createContextMenu(const QPoint& pos)
         emit closeSessionRequested();
     });
     menu->addSeparator();
+    QMenu* splitMenu = menu->addMenu(tr("Split"));
+    QAction* splitLeftAction = splitMenu->addAction(tr("Left"));
+    connect(splitLeftAction, &QAction::triggered, this, [this]() {
+        emit splitLeftRequested();
+    });
+    QAction* splitRightAction = splitMenu->addAction(tr("Right"));
+    connect(splitRightAction, &QAction::triggered, this, [this]() {
+        emit splitRightRequested();
+    });
+    QAction* splitUpAction = splitMenu->addAction(tr("Up"));
+    connect(splitUpAction, &QAction::triggered, this, [this]() {
+        emit splitUpRequested();
+    });
+    QAction* splitDownAction = splitMenu->addAction(tr("Down"));
+    connect(splitDownAction, &QAction::triggered, this, [this]() {
+        emit splitDownRequested();
+    });
     QAction* closePaneAction = menu->addAction(tr("Close Pane"));
     connect(closePaneAction, &QAction::triggered, this, [this]() {
         emit closePaneRequested();

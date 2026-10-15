@@ -343,17 +343,23 @@ The result display supports mouse-driven interactions for navigation and editing
 * Right-click context menu
     Right-clicking an expression/calculation block in the result display opens a context menu
     for that specific block.
+    The :guilabel:`Copy` submenu starts with :guilabel:`Selection` to copy the
+    selected text. :guilabel:`Select All` selects all text in the display.
     Open the :guilabel:`Copy` submenu and choose :guilabel:`Calculation`
     to copy all displayed lines of the calculation at once, including the
     expression, any simplification, and every result format.
     The lines are copied as plain text in the order shown, without the blank
     line between calculations. :guilabel:`Expression` and
     :guilabel:`Result` let you copy either part separately.
+    :guilabel:`Remove` offers :guilabel:`This Calculation`,
+    :guilabel:`All Calculations Above`, and :guilabel:`All Calculations Below`.
     This menu includes an entry to toggle the main menu bar visibility.
     Use its :guilabel:`Split` submenu to add a pane to the left, right, above,
     or below the current pane.
-    The :guilabel:`Session` submenu groups actions to duplicate, rename, change
-    privacy, clear, delete, or close the current session.
+    :guilabel:`New Tab` and :guilabel:`New Private Tab` create sessions directly.
+    The :guilabel:`Session` submenu starts with :guilabel:`Open...`,
+    :guilabel:`Import...`, and :guilabel:`Export`. It also groups actions to
+    duplicate, rename, change privacy, clear, delete, or close the current session.
 
     .. versionadded:: 1.0
 
