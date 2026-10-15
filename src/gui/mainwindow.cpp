@@ -13167,7 +13167,9 @@ void MainWindow::insertTextIntoEditor(const QString& s)
     if (s.isEmpty())
         return;
 
-    const QString normalized = EditorUtils::normalizeExpressionOperatorsForEditorInput(s);
+    const QString prefix = m_widgets.editor->text().left(m_widgets.editor->textCursor().selectionStart());
+    const QString normalized = prefix.contains(MathDsl::CommentSep)
+        ? s : EditorUtils::normalizeExpressionOperatorsForEditorInput(s);
     const bool atExpressionStart = [&]() {
         const QString text = m_widgets.editor->text();
         int i = m_widgets.editor->textCursor().position() - 1;

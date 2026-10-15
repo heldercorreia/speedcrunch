@@ -1495,6 +1495,14 @@ void Editor::setText(const QString& text)
 
 void Editor::insert(const QString& text)
 {
+    // Inserted fragments may belong to an existing comment even without a '?'.
+    // Use the start of a selection, since the selected delimiter may be removed.
+    if (isInsideCommentFromQuestionMark(this->text(), textCursor().selectionStart())) {
+        insertPlainText(text);
+        updateHeightAndEnsureCursorVisible();
+        return;
+    }
+
     QString normalized = normalizeExpressionTypedInEditor(text);
     const QString normalizedTrimmed = normalized.trimmed();
     const int pos = textCursor().position();
@@ -2254,12 +2262,21 @@ void Editor::autoComplete(const QString& item)
 
 void Editor::insertFromMimeData(const QMimeData* source)
 {
-    const QStringList expressions = EditorUtils::parsePastedExpressionsForEditorInput(source->text());
+    if (!source->text().contains(RegExpPatterns::lineBreak())
+        && isInsideCommentFromQuestionMark(text(), textCursor().selectionStart())) {
+        insert(source->text());
+        return;
+    }
+
+    const QStringList expressions = EditorUtils::parsePastedExpressionsImpl(
+        source->text(), [](const QString& text) { return text; });
 
     if (expressions.isEmpty())
         return;
 
-    auto normalizedPastedExpression = [](const QString& expression) {
+    auto normalizedPastedExpression = [this](const QString& expression) {
+        if (isInsideCommentFromQuestionMark(text(), textCursor().selectionStart()))
+            return expression;
         QString formattedNumericLiteral;
         if (NumberFormatter::tryFormatStandaloneNumericLiteralForDisplay(expression, &formattedNumericLiteral))
             return normalizeExpressionTypedInEditor(formattedNumericLiteral);
@@ -2718,6 +2735,14 @@ void Editor::focusOutEvent(QFocusEvent* event)
 
 void Editor::inputMethodEvent(QInputMethodEvent* event)
 {
+    const int replacementPosition = event->replacementLength() > 0
+        ? textCursor().position() + event->replacementStart()
+        : textCursor().selectionStart();
+    if (isInsideCommentFromQuestionMark(text(), replacementPosition)) {
+        QPlainTextEdit::inputMethodEvent(event);
+        return;
+    }
+
     // Composed input can also rewrite existing text, such as an exponent.
     // Keep that rewrite in the same undo step as the committed characters.
     const bool hasCommittedEdit = !event->commitString().isEmpty() || event->replacementLength() > 0;
@@ -3056,6 +3081,13 @@ void Editor::keyPressEvent(QKeyEvent* event)
         break;
     }
     const int cursorPosition = textCursor().position();
+    if (isInsideCommentFromQuestionMark(text(), textCursor().selectionStart())
+        && !(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))
+        && hasPrintableTextPayload) {
+        QPlainTextEdit::keyPressEvent(event);
+        return;
+    }
+
     const bool squareBracketContext = isInsideUnmatchedSquareBracketContext(
         text(),
         cursorPosition);
@@ -3108,12 +3140,6 @@ void Editor::keyPressEvent(QKeyEvent* event)
         return;
     }
 
-    if (isInsideCommentFromQuestionMark(text(), cursorPosition)
-        && !(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))
-        && hasPrintableTextPayload) {
-        QPlainTextEdit::keyPressEvent(event);
-        return;
-    }
     if (!textCursor().hasSelection()
         && (hasPrintableTextPayload || isDeadKey(key))
         && hasOnlyWhitespaceToLeft(text(), cursorPosition)) {

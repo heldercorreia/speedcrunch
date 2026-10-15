@@ -31,6 +31,7 @@
 #include <QPushButton>
 #include <QScrollBar>
 #include <QScreen>
+#include <QScopeGuard>
 #include <QSignalSpy>
 #include <QTest>
 #include <QTextLayout>
@@ -58,6 +59,9 @@ class TestEditorUi : public QObject {
 
 private slots:
     void init() { UiTestFixture::resetSettings(); }
+    void preserves_comment_text_during_input_data();
+    void preserves_comment_text_during_input();
+    void normalizes_only_expression_text_when_replacing_comment_selection();
     void blocks_consecutive_plus();
     void respects_keyboard_layout_for_equals_and_plus_data();
     void respects_keyboard_layout_for_equals_and_plus();
@@ -2867,6 +2871,77 @@ void TestEditorUi::auto_inserts_zero_before_dot_in_configured_contexts()
     editor.setCursorPosition(editor.text().size());
     QTest::keyClick(&editor, Qt::Key_Comma, Qt::NoModifier);
     QCOMPARE(editor.document()->toRawText(), QStringLiteral("0,"));
+}
+
+void TestEditorUi::preserves_comment_text_during_input_data()
+{
+    QTest::addColumn<QString>("comment");
+    QTest::newRow("multiplication") << QStringLiteral("2*2");
+    QTest::newRow("expression-aliases")
+        << QStringLiteral("pi sqrt(4) cbrt(8) summation(k) 2/3-1 'quoted' \"text\" Ω μ º 𝛑");
+    QTest::newRow("units-and-conversions")
+        << QStringLiteral("10000 [m * s^2] -> [km] 2*[m] ? pi");
+    QTest::newRow("unfinished-syntax") << QStringLiteral("[sqrt(2^ + + ^^ --");
+    QTest::newRow("spacing") << QStringLiteral("2*2  pi\t10000 [m/s]");
+}
+
+void TestEditorUi::preserves_comment_text_during_input()
+{
+    QFETCH(QString, comment);
+    const QString prefix = QStringLiteral("examplevar = 2*2");
+    const QString suffix = QStringLiteral(" ? ") + comment;
+    const QString expression = prefix + suffix;
+    Session session;
+    QCOMPARE(session.evaluator()->autoFix(QStringLiteral("4") + suffix),
+             QStringLiteral("4") + suffix);
+    QCOMPARE(EditorUtils::normalizeExpressionOperators(expression),
+             EditorUtils::normalizeExpressionOperators(prefix) + suffix);
+    QCOMPARE(EditorUtils::normalizeExpressionOperatorsForEditorInput(expression),
+             EditorUtils::normalizeExpressionOperatorsForEditorInput(prefix) + suffix);
+
+    Editor editor;
+    editor.setText(expression);
+    QCOMPARE(editor.text(), EditorUtils::normalizeExpressionOperatorsForEditorInput(prefix) + suffix);
+
+    editor.setText(QStringLiteral("4 ? "));
+    editor.setCursorPosition(editor.text().size());
+    editor.insert(comment);
+    QCOMPARE(editor.text(), QStringLiteral("4 ? ") + comment);
+
+    const QString oldClipboard = QApplication::clipboard()->text();
+    const auto restoreClipboard = qScopeGuard([&]() {
+        QApplication::clipboard()->setText(oldClipboard);
+    });
+    editor.setText(QStringLiteral("4 ? "));
+    editor.setCursorPosition(editor.text().size());
+    QApplication::clipboard()->setText(comment);
+    editor.paste();
+    QCOMPARE(editor.text(), QStringLiteral("4 ? ") + comment);
+
+    editor.setText(QStringLiteral("4 ? "));
+    editor.setCursorPosition(editor.text().size());
+    QInputMethodEvent commit;
+    commit.setCommitString(comment);
+    QApplication::sendEvent(&editor, &commit);
+    QCOMPARE(editor.text(), QStringLiteral("4 ? ") + comment);
+}
+
+void TestEditorUi::normalizes_only_expression_text_when_replacing_comment_selection()
+{
+    Editor editor;
+    editor.setText(QStringLiteral("4 ? old"));
+    QTextCursor cursor = editor.textCursor();
+    cursor.setPosition(4);
+    cursor.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
+    editor.setTextCursor(cursor);
+    editor.insert(QStringLiteral("2*2"));
+    QCOMPARE(editor.text(), QStringLiteral("4 ? 2*2"));
+
+    cursor.setPosition(2);
+    cursor.movePosition(QTextCursor::End, QTextCursor::KeepAnchor);
+    editor.setTextCursor(cursor);
+    editor.insert(QStringLiteral("*2 ? 3*3"));
+    QCOMPARE(editor.text(), QStringLiteral("4 ×2 ? 3*3"));
 }
 
 void TestEditorUi::allows_unrestricted_typing_inside_question_comment_context()

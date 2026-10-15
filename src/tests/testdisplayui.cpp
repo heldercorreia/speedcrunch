@@ -9,6 +9,10 @@ class TestDisplayUi : public QObject {
     Q_OBJECT
 
 private slots:
+    void user_definition_comments_survive_creation_and_editing_data();
+    void user_definition_comments_survive_creation_and_editing();
+    void result_display_keeps_comments_literal_data();
+    void result_display_keeps_comments_literal();
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
     void result_display_insets_viewport_horizontally();
@@ -27,6 +31,128 @@ private slots:
     void result_display_reduces_combinable_quotient_factors();
     void result_display_copy_calculation_ignores_empty_areas();
 };
+
+void TestDisplayUi::user_definition_comments_survive_creation_and_editing_data()
+{
+    QTest::addColumn<QString>("definition");
+    QTest::addColumn<QString>("dockName");
+    QTest::addColumn<bool>("paste");
+    for (bool paste : {false, true}) {
+        const QByteArray mode = paste ? "paste" : "type";
+        QTest::newRow(QByteArray("variable-").append(mode).constData())
+            << QStringLiteral("examplevar = 4") << QStringLiteral("VariablesDock") << paste;
+        QTest::newRow(QByteArray("function-").append(mode).constData())
+            << QStringLiteral("examplefunc(x) = x*2") << QStringLiteral("UserFunctionsDock") << paste;
+        QTest::newRow(QByteArray("unit-").append(mode).constData())
+            << QStringLiteral("[exampleunit] = 4[m]") << QStringLiteral("UserUnitsDock") << paste;
+    }
+}
+
+void TestDisplayUi::user_definition_comments_survive_creation_and_editing()
+{
+    QFETCH(QString, definition);
+    QFETCH(QString, dockName);
+    QFETCH(bool, paste);
+    MainWindowStateGuard guard;
+    Settings* settings = Settings::instance();
+    settings->variablesDockVisible = true;
+    settings->userFunctionsDockVisible = true;
+    settings->userUnitsDockVisible = true;
+    settings->leaveLastExpression = false;
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    Editor* editor = window.findChild<Editor*>();
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    QDockWidget* dock = window.findChild<QDockWidget*>(dockName);
+    QVERIFY(editor);
+    QVERIFY(display);
+    QVERIFY(dock);
+    dock->show();
+    dock->raise();
+    QWidget* widget = dock->widget();
+    QTreeWidget* tree = widget->findChild<QTreeWidget*>();
+    QVERIFY(tree);
+    const QString comment = QStringLiteral("2*2 pi sqrt(4) 10000 [m * s^2] -> [km] 'note' ? 3/2-1");
+    const QString suffix = QStringLiteral(" ? ") + comment;
+    const QString oldClipboard = QApplication::clipboard()->text();
+    const auto restoreClipboard = qScopeGuard([&]() {
+        QApplication::clipboard()->setText(oldClipboard);
+    });
+    editor->clear();
+    if (paste) {
+        QApplication::clipboard()->setText(definition + suffix);
+        editor->paste();
+    } else {
+        editor->setText(definition);
+        editor->setCursorPosition(editor->text().size());
+        QTest::keyClicks(editor, QStringLiteral("?") + comment);
+    }
+    QVERIFY2(editor->text().endsWith(suffix), qPrintable(editor->text()));
+    QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
+
+    for (int edit = 0; edit < 2; ++edit) {
+        QVERIFY(QMetaObject::invokeMethod(widget, "updateList"));
+        QTreeWidgetItem* item = nullptr;
+        for (int i = 0; i < tree->topLevelItemCount(); ++i) {
+            if (tree->topLevelItem(i)->text(0).startsWith(QStringLiteral("example")))
+                item = tree->topLevelItem(i);
+        }
+        QVERIFY(item);
+        const QString expectedComment = comment + (edit ? QStringLiteral(" 5*5") : QString());
+        QCOMPARE(item->text(2), expectedComment);
+        QVERIFY(!item->text(1).contains(QLatin1Char('?')));
+        QVERIFY2(display->toPlainText().contains(QStringLiteral(" ? ") + expectedComment),
+                 qPrintable(display->toPlainText()));
+        display->setSession(display->session());
+        QVERIFY(display->toPlainText().contains(QStringLiteral(" ? ") + expectedComment));
+        tree->setCurrentItem(item);
+        item->setSelected(true);
+        editor->clear();
+        QVERIFY(QMetaObject::invokeMethod(widget, "editItem"));
+        QVERIFY2(editor->text().endsWith(QStringLiteral(" ? ") + expectedComment),
+                 qPrintable(editor->text()));
+        if (edit == 0) {
+            editor->setCursorPosition(editor->text().size());
+            editor->insert(QStringLiteral(" 5*5"));
+            QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
+        }
+    }
+}
+
+void TestDisplayUi::result_display_keeps_comments_literal_data()
+{
+    QTest::addColumn<QString>("expression");
+    QTest::newRow("arithmetic") << QStringLiteral("2*2");
+    QTest::newRow("unit") << QStringLiteral("2*[m]");
+    QTest::newRow("conversion") << QStringLiteral("2[m] -> [cm]");
+    QTest::newRow("angle") << QStringLiteral("1°");
+    QTest::newRow("angle-conversion") << QStringLiteral("1° in [rad]");
+    QTest::newRow("list") << QStringLiteral("{2*2;3}");
+    QTest::newRow("comment-only") << QString();
+}
+
+void TestDisplayUi::result_display_keeps_comments_literal()
+{
+    QFETCH(QString, expression);
+    const QString comment = QStringLiteral("2*2 pi sqrt(4) 10000 [m * s^2] -> [km] 'note' ? 3/2-1\tµ");
+    const QString source = expression + QStringLiteral(" ? ") + comment;
+    Session session;
+    Evaluator* evaluator = session.evaluator();
+    evaluator->setExpression(source);
+    Quantity result = evaluator->evalUpdateAns();
+    QVERIFY2(evaluator->error().isEmpty(), qPrintable(evaluator->error()));
+    const QString interpreted = evaluator->interpretedExpression();
+    if (!interpreted.isEmpty())
+        QCOMPARE(interpreted.mid(interpreted.indexOf(QLatin1Char('?')) + 2), comment);
+    for (const QString& displayInterpreted : {QString(), interpreted}) {
+        ResultDisplay display;
+        display.setSession(&session);
+        display.append(source, result, displayInterpreted);
+        const QString line = display.document()->firstBlock().text();
+        QCOMPARE(line.mid(line.indexOf(QLatin1Char('?')) + 2), comment);
+    }
+}
 
 void TestDisplayUi::initTestCase()
 {

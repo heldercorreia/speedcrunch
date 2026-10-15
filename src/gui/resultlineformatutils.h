@@ -833,6 +833,23 @@ inline QString formattedExpressionLineForDisplay(const QString& sourceExpression
                                                  const QString& interpretedExpression,
                                                  const Evaluator* evaluator = nullptr)
 {
+    // Keep prose outside every expression-formatting pass, including unit and
+    // conversion formatting that runs after the evaluator restores the comment.
+    const int sourceCommentPos = sourceExpression.indexOf(MathDsl::CommentSep);
+    const int interpretedCommentPos = interpretedExpression.indexOf(MathDsl::CommentSep);
+    const QString& expression = sourceCommentPos >= 0 ? sourceExpression : interpretedExpression;
+    const int commentPos = sourceCommentPos >= 0 ? sourceCommentPos : interpretedCommentPos;
+    if (commentPos >= 0) {
+        const QString comment = expression.mid(commentPos + 1).trimmed();
+        const QString displayed = formattedExpressionLineForDisplay(
+            sourceCommentPos >= 0 ? sourceExpression.left(sourceCommentPos).trimmed() : sourceExpression,
+            interpretedCommentPos >= 0
+                ? interpretedExpression.left(interpretedCommentPos).trimmed() : interpretedExpression,
+            evaluator);
+        return displayed + (displayed.isEmpty() ? QStringLiteral("?") : QStringLiteral(" ?"))
+            + (comment.isEmpty() ? QString() : QStringLiteral(" ") + comment);
+    }
+
     const QString sourceConversionTargetSuffix =
         conversionTargetSuffixForDisplay(sourceExpression);
     if (!sourceConversionTargetSuffix.isEmpty()) {

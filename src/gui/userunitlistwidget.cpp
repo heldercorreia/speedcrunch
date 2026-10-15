@@ -127,7 +127,7 @@ void UserUnitListWidget::updateList()
         QString displayExpression = userUnit.interpretedExpression().isEmpty()
             ? userUnit.expression()
             : userUnit.interpretedExpression();
-        const int commentPos = displayExpression.lastIndexOf(MathDsl::CommentSep);
+        const int commentPos = displayExpression.indexOf(MathDsl::CommentSep);
         if (commentPos >= 0)
             displayExpression = displayExpression.left(commentPos).trimmed();
         // Keep only the right-hand-side expression in the Value column:

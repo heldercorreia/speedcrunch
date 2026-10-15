@@ -7013,6 +7013,10 @@ Quantity Evaluator::evalNoAssign()
                 m_assignVarDescription = description;
             }
         }
+        // Fallback interpreted text (such as standalone angles) must not
+        // include a comment that will be appended again below.
+        if (commentPos >= 0)
+            expressionToParse = expressionToParse.left(commentPos).trimmed();
         replacePowerOfTenScientificNotationWithDecimalExponent(expressionToParse);
         replaceSuperscriptPowersWithCaretEquivalent(expressionToParse);
         Tokens tokens = scan(expressionToParse);
@@ -8455,9 +8459,14 @@ bool Evaluator::tryGetAnyUnitQuantity(const QString& identifier, Quantity* value
 QString Evaluator::autoFix(const QString& expr)
 {
     QString result;
+    // Only expression text needs character cleanup. Preserve whitespace and
+    // symbols inside comments just as they were entered.
+    const int commentPos = expr.indexOf(MathDsl::CommentSep);
+    const QString commentText = commentPos >= 0 ? expr.mid(commentPos + 1).trimmed() : QString();
+    const int expressionLength = commentPos >= 0 ? commentPos : expr.length();
 
     // Strip off all funny characters.
-    for (int c = 0; c < expr.length(); ++c) {
+    for (int c = 0; c < expressionLength; ++c) {
         const QChar ch = expr.at(c);
         if (ch.isSpace()) {
             result.append(QLatin1Char(' '));
@@ -8469,14 +8478,6 @@ QString Evaluator::autoFix(const QString& expr)
 
     // No extra whitespaces at the beginning and at the end.
     result = result.trimmed();
-
-    // Keep comments untouched by expression normalization.
-    QString commentText;
-    const int commentPos = result.indexOf(MathDsl::CommentSep);
-    if (commentPos >= 0) {
-        commentText = result.mid(commentPos + 1).trimmed();
-        result = result.left(commentPos).trimmed();
-    }
 
     // Strip trailing equal sign (=).
     while (result.endsWith("="))

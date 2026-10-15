@@ -295,6 +295,11 @@ The question mark character ``?`` starts a comment. Everything from ``?`` to the
     1 + 2 ? simple sum
     = 3
 
+Comment text is kept as written, including in the result window and when editing
+user definitions. For example, ``examplevar = 4 ? 2*2`` keeps ``2*2`` in the
+Description column of the User Variables dock, without changing it to ``2×2``.
+The same rule applies to user functions and user units.
+
 A line can also be comment-only. If the first non-space character is ``?``, the whole line is treated as a comment::
 
     ? start algorithm
