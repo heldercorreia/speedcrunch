@@ -11,6 +11,10 @@ class TestDockLayoutUi : public QObject {
 private slots:
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
+    void lazy_docks_stay_uncreated_until_opened();
+    void lazy_docks_restore_saved_layouts_data();
+    void lazy_docks_restore_saved_layouts();
+    void lazy_docks_restore_each_windows_open_panels();
     void dock_list_selected_row_keeps_primary_fill_while_hovered();
     void functions_dock_retranslates_domain_label_after_language_change();
     void side_docks_keep_full_height_data();
@@ -51,6 +55,162 @@ void TestDockLayoutUi::initTestCase()
         QVERIFY2(probe.open(),
                  qPrintable(QStringLiteral("Cannot write test storage at %1: %2")
                                 .arg(path, probe.errorString())));
+    }
+}
+
+void TestDockLayoutUi::lazy_docks_stay_uncreated_until_opened()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    MainWindow window(false);
+    QCOMPARE(window.findChildren<QDockWidget*>().size(), 0);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    Editor* editor = window.findChild<Editor*>();
+    QVERIFY(editor);
+    editor->setText(QStringLiteral("6*7"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression", Qt::DirectConnection));
+    QCOMPARE(window.findChild<ResultDisplay*>()->session()->historySize(), 1);
+    QCOMPARE(window.findChildren<QDockWidget*>().size(), 0);
+    const QStringList setters {QStringLiteral("setFormulaBookDockVisible"), QStringLiteral("setConstantsDockVisible"),
+        QStringLiteral("setFunctionsDockVisible"), QStringLiteral("setHistoryDockVisible"),
+        QStringLiteral("setVariablesDockVisible"), QStringLiteral("setUserFunctionsDockVisible"),
+        QStringLiteral("setUserUnitsDockVisible"), QStringLiteral("setBitfieldVisible")};
+    for (int i = 0; i < setters.size(); ++i) {
+        const QByteArray setter = setters.at(i).toLatin1();
+        const auto setVisible = [&](bool visible) {
+            return i == 7
+                ? QMetaObject::invokeMethod(&window, setter.constData(), Qt::DirectConnection, Q_ARG(bool, visible))
+                : QMetaObject::invokeMethod(&window, setter.constData(), Qt::DirectConnection,
+                                           Q_ARG(bool, visible), Q_ARG(bool, false));
+        };
+        QVERIFY(setVisible(true));
+        QCoreApplication::processEvents();
+        QCOMPARE(window.findChildren<QDockWidget*>().size(), i + 1);
+        QVERIFY(setVisible(false));
+        QVERIFY(setVisible(true));
+        QCOMPARE(window.findChildren<QDockWidget*>().size(), i + 1);
+        QVERIFY(setVisible(false));
+    }
+}
+
+void TestDockLayoutUi::lazy_docks_restore_saved_layouts_data()
+{
+    QTest::addColumn<int>("format");
+    QTest::newRow("workspace-open-dock-list") << 0;
+    QTest::newRow("older-workspace") << 1;
+    QTest::newRow("older-window-state") << 2;
+}
+
+void TestDockLayoutUi::lazy_docks_restore_saved_layouts()
+{
+    QFETCH(int, format);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    QByteArray state;
+    QString layout;
+    QPoint floatingPosition;
+    {
+        MainWindow source(false);
+        source.resize(960, 640);
+        source.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&source));
+        for (const char* setter : {"setConstantsDockVisible", "setFunctionsDockVisible", "setUserUnitsDockVisible"})
+            QVERIFY(QMetaObject::invokeMethod(&source, setter, Qt::DirectConnection, Q_ARG(bool, true), Q_ARG(bool, false)));
+        QDockWidget* units = source.findChild<QDockWidget*>(QStringLiteral("UserUnitsDock"));
+        QVERIFY(units);
+        units->setFloating(true);
+        units->move(160, 120);
+        units->resize(350, 280);
+        floatingPosition = units->pos();
+        units->hide();
+        source.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"))->raise();
+        QCoreApplication::processEvents();
+        source.persistSessionAndSettingsForShutdown();
+        state = source.saveState(1);
+        layout = guard.settings->sessionLayoutJson;
+    }
+    UiTestFixture::resetSettings();
+    guard.settings->windowState = state;
+    if (format != 2) {
+        if (format == 1) {
+            QJsonObject saved = QJsonDocument::fromJson(layout.toUtf8()).object();
+            QJsonArray windows = saved.value(QStringLiteral("windows")).toArray();
+            QJsonObject window = windows.first().toObject();
+            window.remove(QStringLiteral("openDocks"));
+            windows[0] = window;
+            saved.insert(QStringLiteral("windows"), windows);
+            layout = QString::fromUtf8(QJsonDocument(saved).toJson(QJsonDocument::Compact));
+        }
+        guard.settings->sessionLayoutJson = layout;
+    }
+    {
+        MainWindow restored;
+        restored.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&restored));
+        QTRY_COMPARE(restored.findChildren<QDockWidget*>().size(), 2);
+        QDockWidget* constants = restored.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+        QDockWidget* functions = restored.findChild<QDockWidget*>(QStringLiteral("FunctionsDock"));
+        QVERIFY(constants && functions);
+        QVERIFY(!constants->isHidden() && !functions->isHidden());
+        QVERIFY(restored.tabifiedDockWidgets(constants).contains(functions));
+        QTabBar* dockTabs = nullptr;
+        for (QTabBar* bar : restored.findChildren<QTabBar*>()) {
+            for (int i = 0; i < bar->count(); ++i) {
+                if (bar->tabText(i) == constants->windowTitle())
+                    dockTabs = bar;
+            }
+        }
+        QVERIFY(dockTabs);
+        QCOMPARE(dockTabs->tabText(dockTabs->currentIndex()), constants->windowTitle());
+        QVERIFY(!restored.findChild<QDockWidget*>(QStringLiteral("UserUnitsDock")));
+        // Saving before opening the absent dock must retain its saved placement.
+        restored.persistSessionAndSettingsForShutdown();
+    }
+    {
+        MainWindow reopened;
+        reopened.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&reopened));
+        QTRY_COMPARE(reopened.findChildren<QDockWidget*>().size(), 2);
+        QVERIFY(QMetaObject::invokeMethod(&reopened, "setUserUnitsDockVisible", Qt::DirectConnection,
+                                         Q_ARG(bool, true), Q_ARG(bool, false)));
+        QDockWidget* units = reopened.findChild<QDockWidget*>(QStringLiteral("UserUnitsDock"));
+        QVERIFY(units);
+        QVERIFY(units->isFloating());
+        QCOMPARE(units->pos(), floatingPosition);
+        QVERIFY(units->findChild<QLineEdit*>());
+        QCOMPARE(reopened.findChildren<QDockWidget*>().size(), 3);
+    }
+}
+
+void TestDockLayoutUi::lazy_docks_restore_each_windows_open_panels()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    {
+        MainWindow first(false);
+        QVERIFY(QMetaObject::invokeMethod(&first, "setConstantsDockVisible", Qt::DirectConnection,
+                                         Q_ARG(bool, true), Q_ARG(bool, false)));
+        MainWindow second(false);
+        QVERIFY(QMetaObject::invokeMethod(&second, "setConstantsDockVisible", Qt::DirectConnection,
+                                         Q_ARG(bool, false), Q_ARG(bool, false)));
+        QVERIFY(QMetaObject::invokeMethod(&second, "setFunctionsDockVisible", Qt::DirectConnection,
+                                         Q_ARG(bool, true), Q_ARG(bool, false)));
+        first.persistSessionAndSettingsForShutdown();
+    }
+    MainWindow restored;
+    const auto cleanup = qScopeGuard([&]() {
+        for (MainWindow* window : topLevelMainWindows()) {
+            if (window != &restored)
+                delete window;
+        }
+    });
+    restored.show();
+    QTRY_COMPARE(topLevelMainWindows().size(), 2);
+    for (MainWindow* window : topLevelMainWindows()) {
+        QCOMPARE(window->findChildren<QDockWidget*>().size(), 1);
+        const QString name = window->findChild<QDockWidget*>()->objectName();
+        QCOMPARE(name, window == &restored ? QStringLiteral("ConstantsDock") : QStringLiteral("FunctionsDock"));
     }
 }
 
@@ -169,6 +329,10 @@ void TestDockLayoutUi::side_docks_keep_full_height()
     settings->windowState.clear();
     settings->keypadMode = Settings::KeypadModeBasicWide;
     settings->keypadVisible = true;
+    settings->constantsDockVisible = true;
+    settings->functionsDockVisible = true;
+    settings->historyDockVisible = true;
+    settings->bitfieldVisible = true;
 
     MainWindow source(false);
     for (QDockWidget* dock : source.findChildren<QDockWidget*>())
@@ -1297,12 +1461,14 @@ void TestDockLayoutUi::closing_and_reopening_docks_keeps_attached_widgets()
         for (const DockSpec& spec : dockSpecs) {
             const QString objectName = QString::fromLatin1(spec.objectName);
             QPointer<QDockWidget> originalDock = window.findChild<QDockWidget*>(objectName);
-            QVERIFY(originalDock != nullptr);
-            QVERIFY(!originalDock->isVisible());
-            QCOMPARE(dockCount(objectName), 1);
+            QVERIFY(originalDock == nullptr);
+            QCOMPARE(dockCount(objectName), 0);
 
             QVERIFY(invokeVisible(spec, true));
             QCoreApplication::processEvents();
+            originalDock = window.findChild<QDockWidget*>(objectName);
+            QVERIFY(originalDock != nullptr);
+            QCOMPARE(dockCount(objectName), 1);
 
             originalDock->close();
             QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
@@ -1341,8 +1507,7 @@ void TestDockLayoutUi::closing_and_reopening_docks_keeps_attached_widgets()
         QCoreApplication::processEvents();
 
         QDockWidget* bitfield = legacyStateWindow.findChild<QDockWidget*>(QStringLiteral("BitfieldDock"));
-        QVERIFY(bitfield != nullptr);
-        QVERIFY(!bitfield->isVisible());
+        QVERIFY(bitfield == nullptr);
     }
 
     {
@@ -1450,12 +1615,13 @@ void TestDockLayoutUi::startup_styling_keeps_formula_book_document()
 {
     MainWindowStateGuard guard;
     guard.settings->dockAppearance = Settings::DockAppearanceSpeedCrunch;
-    guard.settings->formulaBookDockVisible = false;
+    guard.settings->formulaBookDockVisible = true;
     guard.settings->sessionLayoutJson.clear();
     guard.settings->windowState.clear();
     MainWindow window(false);
     auto* dock = window.findChild<BookDock*>(QStringLiteral("BookDock"));
     QVERIFY(dock);
+    dock->hide();
     auto* browser = dock->findChild<QTextBrowser*>();
     QVERIFY(browser);
     QSignalSpy contents(browser->document(), &QTextDocument::contentsChanged);
@@ -1468,7 +1634,7 @@ void TestDockLayoutUi::startup_styling_keeps_formula_book_document()
     const int settledCount = contents.count();
     QCoreApplication::processEvents();
     QCOMPARE(contents.count(), settledCount);
-    QCOMPARE(window.findChildren<QDockWidget*>().size(), 8);
+    QCOMPARE(window.findChildren<QDockWidget*>().size(), 1);
 }
 
 void TestDockLayoutUi::formula_book_retranslation_refreshes_cached_page()

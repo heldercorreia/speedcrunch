@@ -50,6 +50,7 @@ void TestDockAppearanceUi::dock_refresh_reuses_unchanged_appearance_work()
 {
     QFETCH(bool, system);
     MainWindowStateGuard guard;
+    guard.settings->constantsDockVisible = true;
     guard.settings->dockAppearance = system ? Settings::DockAppearanceSystem : Settings::DockAppearanceSpeedCrunch;
     guard.settings->sessionLayoutJson.clear();
     guard.settings->windowState.clear();
@@ -95,6 +96,7 @@ void TestDockAppearanceUi::themed_header_metrics_refresh_after_font_change()
 {
     QFETCH(bool, modelFont);
     MainWindowStateGuard guard;
+    guard.settings->constantsDockVisible = true;
     guard.settings->dockAppearance = Settings::DockAppearanceSpeedCrunch;
     guard.settings->sessionLayoutJson.clear();
     guard.settings->windowState.clear();
@@ -137,6 +139,11 @@ void TestDockAppearanceUi::themed_header_metrics_refresh_after_font_change()
 void TestDockAppearanceUi::themed_headers_keep_native_scrollbar_styles()
 {
     MainWindowStateGuard guard;
+    guard.settings->constantsDockVisible = true;
+    guard.settings->functionsDockVisible = true;
+    guard.settings->variablesDockVisible = true;
+    guard.settings->userFunctionsDockVisible = true;
+    guard.settings->userUnitsDockVisible = true;
     MainWindow window(false);
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));

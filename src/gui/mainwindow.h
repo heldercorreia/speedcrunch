@@ -374,6 +374,10 @@ private:
     void restoreWindowThemeBackgrounds();
     void scheduleDockAppearanceRefresh(bool forceNativePolish = false);
     void applyDockTabBarAppearance();
+    QStringList openDockNames() const;
+    QStringList configuredOpenDockNames() const;
+    void applyOpenDocks(const QStringList& names);
+    void restoreDockLayout(const QByteArray& state, const QStringList& names);
     void applyKeypadThemeSurfacePalette();
     void scheduleThemeRuntimeDiagnosticsReport();
     void writeThemeRuntimeDiagnosticsReport();
@@ -651,6 +655,7 @@ private:
     } m_docks;
     QList<QDockWidget*> m_allDocks;
     bool m_initializingUi = true;
+    bool m_hasRestoredDockLayout = false;
     bool m_dockAppearanceRefreshPending = false;
     bool m_dockNativePolishPending = false;
     bool m_dockVisibilityRefreshPending = false;

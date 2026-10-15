@@ -311,8 +311,7 @@ void TestSessionsUi::saved_window_ui_state_overrides_defaults_before_show()
         restoredWindow.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
     QVERIFY(statusBar == nullptr || statusBar->isHidden());
     QVERIFY(restoredWindow.findChild<Keypad*>() == nullptr);
-    QVERIFY(constantsDock != nullptr);
-    QVERIFY(constantsDock->isHidden());
+    QVERIFY(constantsDock == nullptr);
     QCOMPARE(restoredWindow.size(), compactSize);
 }
 

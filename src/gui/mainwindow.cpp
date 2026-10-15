@@ -334,6 +334,41 @@ bool g_restoringExtraWindows = false;
 bool g_multiWindowSpawnDone = false;
 constexpr int DockLayoutStateVersion = 1;
 
+QStringList allDockNames()
+{
+    return {QStringLiteral("BookDock"), QStringLiteral("ConstantsDock"),
+        QStringLiteral("FunctionsDock"), QStringLiteral("HistoryDock"),
+        QStringLiteral("VariablesDock"), QStringLiteral("UserFunctionsDock"),
+        QStringLiteral("UserUnitsDock"), QStringLiteral("BitfieldDock")};
+}
+
+QStringList legacyOpenDockNames(const QByteArray& state, bool* valid)
+{
+    StartupDiagnostics::Scope timing("Read legacy dock layout visibility");
+    // Let Qt read its own layout format using empty docks, without building
+    // formula pages, lists, search controls, or other application dock contents.
+    QMainWindow probe;
+    probe.setAttribute(Qt::WA_DontShowOnScreen);
+    QList<QDockWidget*> docks;
+    for (const QString& name : allDockNames()) {
+        auto* dock = new QDockWidget(&probe);
+        dock->setObjectName(name);
+        dock->setAttribute(Qt::WA_DontShowOnScreen);
+        probe.addDockWidget(Qt::RightDockWidgetArea, dock);
+        dock->hide();
+        docks.append(dock);
+    }
+    *valid = probe.restoreState(state, DockLayoutStateVersion);
+    QStringList names;
+    if (*valid) {
+        for (QDockWidget* dock : docks) {
+            if (!dock->isHidden())
+                names.append(dock->objectName());
+        }
+    }
+    return names;
+}
+
 bool asyncSessionSaveIsCurrent(const QString& filePath, quint64 generation)
 {
     QMutexLocker locker(&asyncSessionIoMutex());
@@ -6029,10 +6064,10 @@ void MainWindow::copyWindowLayoutFrom(const MainWindow* source)
     if (source == nullptr)
         return;
 
-    restoreWindowLayoutState(source->saveState(DockLayoutStateVersion));
+    restoreDockLayout(source->saveState(DockLayoutStateVersion), source->openDockNames());
 
     const auto dockIsVisible = [](QDockWidget* dock) {
-        return dock != nullptr && dock->isVisible();
+        return dock != nullptr && !dock->isHidden();
     };
     const auto statusBarIsVisible = [](const MainWindow* window) {
         const QStatusBar* statusBar = window != nullptr
@@ -7822,18 +7857,18 @@ void MainWindow::addTabifiedDock(QDockWidget* newDock, bool takeFocus, Qt::DockW
                 applyDockTitleButtonIcon(button, button->underMouse());
         }
     });
-    addDockWidget(area, newDock);
-    // Try to find an existing dock we can tabify with.
-    const auto allDocks = m_allDocks; // TODO: Use Qt 5.7's qAsConst().
-    for (auto& d : allDocks) {
-        if (dockWidgetArea(d) == area)
-            tabifyDockWidget(d, newDock);
+    const bool restored = m_hasRestoredDockLayout && restoreDockWidget(newDock);
+    if (!restored) {
+        addDockWidget(area, newDock);
+        for (QDockWidget* dock : m_allDocks) {
+            if (dockWidgetArea(dock) == area)
+                tabifyDockWidget(dock, newDock);
+        }
     }
     m_allDocks.append(newDock);
     newDock->show();
     newDock->raise();
-    // Startup creates every dock for layout restoration. Apply their final
-    // appearance together once the window and its dock layout are ready.
+    // Startup styles the restored docks together once their layout is ready.
     if (!m_initializingUi) {
         const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
         applyDockAppearance(this, newDock, surfaces);
@@ -8277,50 +8312,12 @@ void MainWindow::applySettings(bool initializing)
     m_status.selectedResultFormat = m_settings->resultFormat;
     m_status.selectedResultPrecision = m_settings->resultPrecision;
 
-    // QMainWindow state restoration expects every named dock in a saved layout
-    // to exist before restoreState() runs. Instantiate docks up front and keep
-    // closed panels hidden instead of inserting them after layout restoration.
-    const bool formulaBookDockVisible = m_settings->formulaBookDockVisible;
-    const bool constantsDockVisible = m_settings->constantsDockVisible;
-    const bool functionsDockVisible = m_settings->functionsDockVisible;
-    const bool historyDockVisible = m_settings->historyDockVisible;
-    const bool variablesDockVisible = m_settings->variablesDockVisible;
-    const bool userFunctionsDockVisible = m_settings->userFunctionsDockVisible;
-    const bool userUnitsDockVisible = m_settings->userUnitsDockVisible;
-    const bool bitfieldVisible = m_settings->bitfieldVisible;
-
-    timing.next("Create and configure docks (total)");
-    createBookDock(false);
-    setFormulaBookDockVisible(formulaBookDockVisible, false);
-    m_actions.viewFormulaBook->setChecked(formulaBookDockVisible);
-
-    createConstantsDock(false);
-    setConstantsDockVisible(constantsDockVisible, false);
-    m_actions.viewConstants->setChecked(constantsDockVisible);
-
-    createFunctionsDock(false);
-    setFunctionsDockVisible(functionsDockVisible, false);
-    m_actions.viewFunctions->setChecked(functionsDockVisible);
-
-    createHistoryDock(false);
-    setHistoryDockVisible(historyDockVisible, false);
-    m_actions.viewHistory->setChecked(historyDockVisible);
-
-    createVariablesDock(false);
-    setVariablesDockVisible(variablesDockVisible, false);
-    m_actions.viewVariables->setChecked(variablesDockVisible);
-
-    createUserFunctionsDock(false);
-    setUserFunctionsDockVisible(userFunctionsDockVisible, false);
-    m_actions.viewUserFunctions->setChecked(userFunctionsDockVisible);
-
-    createUserUnitsDock(false);
-    setUserUnitsDockVisible(userUnitsDockVisible, false);
-    m_actions.viewUserUnits->setChecked(userUnitsDockVisible);
-
-    createBitField();
-    setBitfieldVisible(bitfieldVisible);
-    m_actions.viewBitfield->setChecked(bitfieldVisible);
+    // Saved workspaces choose their own docks before session files are read.
+    // Other windows use the configured defaults without constructing closed panels.
+    if (!initializing)
+        applyOpenDocks(configuredOpenDockNames());
+    else if (!m_restorePreviousSessionOnStartup)
+        restoreWindowLayoutState(m_settings->windowState);
     timing.next("Configure keypad, status bar and menu bar");
     updateKeypadModeActionState();
     switch (m_keypadZoomPercent) {
@@ -8356,21 +8353,6 @@ void MainWindow::applySettings(bool initializing)
         resize(defaultWidth, 480);
         QRect screenGeometry = QGuiApplication::primaryScreen()->availableGeometry();
         move(screenGeometry.center() - rect().center());
-    }
-    if (!hasSavedWindowLayout)
-        restoreWindowLayoutState(m_settings->windowState);
-    if (!hasSavedWindowLayout
-        && m_settings->windowState.isEmpty()
-        && constantsDockVisible
-        && m_docks.constants != nullptr) {
-        QPointer<QDockWidget> constantsDock(m_docks.constants);
-        QTimer::singleShot(0, this, [this, constantsDock]() {
-            if (constantsDock == nullptr || !constantsDock->isVisible())
-                return;
-            resizeDocks(QList<QDockWidget*> { constantsDock },
-                        QList<int> { UiConfig::ConstantsDockDefaultWidth },
-                        Qt::Horizontal);
-        });
     }
 
     m_actions.viewFullScreenMode->setChecked(m_settings->windowOnfullScreen);
@@ -8554,6 +8536,7 @@ void MainWindow::resetAllSettings()
         }
 
         window->deleteKeypad();
+        window->m_hasRestoredDockLayout = false;
         window->m_keypadMode = m_settings->keypadMode;
         window->m_keypadZoomPercent = m_settings->keypadZoomPercent;
         window->applySettings(false);
@@ -8561,16 +8544,24 @@ void MainWindow::resetAllSettings()
             window->setAlwaysOnTopEnabled(m_settings->windowAlwaysOnTop);
         window->setFullScreenEnabled(m_settings->windowOnfullScreen);
 
-        for (QComboBox* combo : window->m_docks.constants->widget()->findChildren<QComboBox*>())
-            combo->setCurrentIndex(0);
-        window->m_docks.constants->widget()->restoreState(QString(), QString(), QStringLiteral(""));
-        for (QComboBox* combo : window->m_docks.functions->widget()->findChildren<QComboBox*>())
-            combo->setCurrentIndex(0);
-        window->m_docks.functions->widget()->setSearchText(QString());
-        window->m_docks.variables->widget()->setSearchText(QString());
-        window->m_docks.userFunctions->widget()->setSearchText(QString());
-        window->m_docks.userUnits->widget()->setSearchText(QString());
-        window->m_docks.book->openPage(QUrl(m_settings->formulaBookActivePage));
+        if (window->m_docks.constants) {
+            for (QComboBox* combo : window->m_docks.constants->widget()->findChildren<QComboBox*>())
+                combo->setCurrentIndex(0);
+            window->m_docks.constants->widget()->restoreState(QString(), QString(), QStringLiteral(""));
+        }
+        if (window->m_docks.functions) {
+            for (QComboBox* combo : window->m_docks.functions->widget()->findChildren<QComboBox*>())
+                combo->setCurrentIndex(0);
+            window->m_docks.functions->widget()->setSearchText(QString());
+        }
+        if (window->m_docks.variables)
+            window->m_docks.variables->widget()->setSearchText(QString());
+        if (window->m_docks.userFunctions)
+            window->m_docks.userFunctions->widget()->setSearchText(QString());
+        if (window->m_docks.userUnits)
+            window->m_docks.userUnits->widget()->setSearchText(QString());
+        if (window->m_docks.book)
+            window->m_docks.book->openPage(QUrl(m_settings->formulaBookActivePage));
         if (window->m_widgets.manual)
             window->m_widgets.manual->resize(640, 480);
 
@@ -8724,6 +8715,15 @@ void MainWindow::saveSettings()
         ? defaultWindow->saveGeometry()
         : QByteArray();
     m_settings->windowState = defaultWindow->saveState(DockLayoutStateVersion);
+    const QStringList openDocks = defaultWindow->openDockNames();
+    m_settings->formulaBookDockVisible = openDocks.contains(QStringLiteral("BookDock"));
+    m_settings->constantsDockVisible = openDocks.contains(QStringLiteral("ConstantsDock"));
+    m_settings->functionsDockVisible = openDocks.contains(QStringLiteral("FunctionsDock"));
+    m_settings->historyDockVisible = openDocks.contains(QStringLiteral("HistoryDock"));
+    m_settings->variablesDockVisible = openDocks.contains(QStringLiteral("VariablesDock"));
+    m_settings->userFunctionsDockVisible = openDocks.contains(QStringLiteral("UserFunctionsDock"));
+    m_settings->userUnitsDockVisible = openDocks.contains(QStringLiteral("UserUnitsDock"));
+    m_settings->bitfieldVisible = openDocks.contains(QStringLiteral("BitfieldDock"));
     m_settings->keypadMode = defaultWindow->m_keypadMode;
     m_settings->keypadVisible = defaultWindow->m_widgets.keypad != nullptr;
     m_settings->keypadZoomPercent = defaultWindow->m_keypadZoomPercent;
@@ -8960,7 +8960,8 @@ void MainWindow::saveSessionLayout(bool captureCurrentViewport, bool captureEdit
         window.insert(QStringLiteral("statusBarResultPrecision"),
                       windowObject->m_status.selectedResultPrecision);
         window.insert(QStringLiteral("bitfieldVisible"),
-                      windowObject->m_docks.bitField != nullptr && windowObject->m_docks.bitField->isVisible());
+                      windowObject->m_docks.bitField != nullptr && !windowObject->m_docks.bitField->isHidden());
+        window.insert(QStringLiteral("openDocks"), QJsonArray::fromStringList(windowObject->openDockNames()));
         const bool keypadVisible = windowObject->m_widgets.keypad != nullptr;
         window.insert(QStringLiteral("keypadVisible"), keypadVisible);
         if (keypadVisible)
@@ -9204,6 +9205,7 @@ MainWindow::MainWindow(bool restorePreviousSession)
 
     m_widgets.manual = 0;
     m_widgets.keypad  = 0;
+    m_widgets.bitField = nullptr;
     m_widgets.keypadContainer = 0;
 
     m_conditions.autoAns = false;
@@ -10222,7 +10224,7 @@ void MainWindow::deleteVariables()
 {
     m_session->clearVariables();
 
-    if (m_settings->variablesDockVisible)
+    if (m_docks.variables)
         m_docks.variables->widget()->updateList();
 }
 
@@ -10230,7 +10232,7 @@ void MainWindow::deleteUserFunctions()
 {
     m_session->clearUserFunctions();
 
-    if (m_settings->userFunctionsDockVisible)
+    if (m_docks.userFunctions)
         m_docks.userFunctions->widget()->updateList();
 }
 
@@ -12152,7 +12154,7 @@ void MainWindow::handleAutoCalcQuantityAvailable(const Quantity& quantity)
 {
     if (Editor* editor = qobject_cast<Editor*>(sender()); editor != nullptr && editor != m_widgets.editor)
         return;
-    if (m_settings->bitfieldVisible)
+    if (m_widgets.bitField && m_docks.bitField && !m_docks.bitField->isHidden())
         m_widgets.bitField->updateBits(quantity);
 }
 
@@ -13353,6 +13355,8 @@ void MainWindow::restoreSession(bool restoreHistory) {
     if (restoreSessionLayout(restoreHistory))
         return;
 
+    restoreWindowLayoutState(m_settings->windowState);
+
     const QString name = m_session->name();
     const QString filePath = sessionFilePath(name);
     QPointer<MainWindow> windowGuard(this);
@@ -13923,10 +13927,20 @@ void MainWindow::restoreWindowUiState(const QJsonObject& window, bool restoreLay
         applyStatusBarSelectionState();
     if (restoreLayout) {
         const QString windowStateBase64 = window.value(QStringLiteral("windowState")).toString();
-        restoreWindowLayoutState(windowStateBase64.isEmpty()
+        const QByteArray state = windowStateBase64.isEmpty()
             ? m_settings->windowState
-            : QByteArray::fromBase64(windowStateBase64.toLatin1()));
-        if (window.contains(QStringLiteral("bitfieldVisible")))
+            : QByteArray::fromBase64(windowStateBase64.toLatin1());
+        if (window.value(QStringLiteral("openDocks")).isArray()) {
+            QStringList names;
+            for (const QJsonValue& value : window.value(QStringLiteral("openDocks")).toArray()) {
+                if (value.isString())
+                    names.append(value.toString());
+            }
+            restoreDockLayout(state, names);
+        } else {
+            restoreWindowLayoutState(state);
+        }
+        if (!window.contains(QStringLiteral("openDocks")) && window.contains(QStringLiteral("bitfieldVisible")))
             setBitfieldVisible(window.value(QStringLiteral("bitfieldVisible")).toBool(false));
         if (window.contains(QStringLiteral("keypadVisible"))) {
             restoreWindowKeypadLayout(
@@ -13950,10 +13964,9 @@ void MainWindow::restoreWindowGeometry(const QByteArray& geometry)
 
     restoreGeometry(geometry);
 
-    // A restored window initially inherits the primary window's docks and
-    // keypad. Removing those widgets can update size constraints on later
-    // event-loop turns, so reapply this window's own geometry after both the
-    // deferred deletions and the resulting layout pass have completed.
+    // Restoring window controls and rebuilding session panes can change size
+    // constraints on later event-loop turns. Reapply the saved geometry once
+    // those layout passes have completed.
     QTimer::singleShot(0, this, [this, geometry]() {
         restoreGeometry(geometry);
         QTimer::singleShot(0, this, [this, geometry]() {
@@ -13964,10 +13977,8 @@ void MainWindow::restoreWindowGeometry(const QByteArray& geometry)
 
 void MainWindow::showRestoredWindow(const QByteArray& geometry)
 {
-    // Keep restored secondary windows hidden until deferred dock/keypad
-    // deletions and their follow-up layout pass have completed. Showing only
-    // the settled widget tree avoids flashing the primary window's inherited
-    // layout before this window's saved layout appears.
+    // Keep restored secondary windows hidden until their controls and central
+    // layout have settled, so the first visible frame uses the saved layout.
     QTimer::singleShot(0, this, [this, geometry]() {
         QTimer::singleShot(0, this, [this, geometry]() {
             if (!geometry.isEmpty())
@@ -13999,10 +14010,73 @@ void MainWindow::applyDockCornerLayout()
 
 void MainWindow::restoreWindowLayoutState(const QByteArray& state)
 {
-    restoreState(state, DockLayoutStateVersion);
+    bool valid = false;
+    const QStringList names = state.isEmpty() ? QStringList() : legacyOpenDockNames(state, &valid);
+    restoreDockLayout(state, valid ? names : configuredOpenDockNames());
+}
+
+QStringList MainWindow::openDockNames() const
+{
+    QStringList names;
+    for (const QDockWidget* dock : m_allDocks) {
+        // A panel behind another tab is open even when it is not exposed.
+        if (!dock->isHidden())
+            names.append(dock->objectName());
+    }
+    return names;
+}
+
+QStringList MainWindow::configuredOpenDockNames() const
+{
+    const bool enabled[] = {m_settings->formulaBookDockVisible, m_settings->constantsDockVisible,
+        m_settings->functionsDockVisible, m_settings->historyDockVisible,
+        m_settings->variablesDockVisible, m_settings->userFunctionsDockVisible,
+        m_settings->userUnitsDockVisible, m_settings->bitfieldVisible};
+    QStringList names;
+    const QStringList available = allDockNames();
+    for (int i = 0; i < available.size(); ++i) {
+        if (enabled[i])
+            names.append(available.at(i));
+    }
+    return names;
+}
+
+void MainWindow::applyOpenDocks(const QStringList& names)
+{
+    StartupDiagnostics::Scope timing("Create and configure open docks (total)");
+    setFormulaBookDockVisible(names.contains(QStringLiteral("BookDock")), false);
+    setConstantsDockVisible(names.contains(QStringLiteral("ConstantsDock")), false);
+    setFunctionsDockVisible(names.contains(QStringLiteral("FunctionsDock")), false);
+    setHistoryDockVisible(names.contains(QStringLiteral("HistoryDock")), false);
+    setVariablesDockVisible(names.contains(QStringLiteral("VariablesDock")), false);
+    setUserFunctionsDockVisible(names.contains(QStringLiteral("UserFunctionsDock")), false);
+    setUserUnitsDockVisible(names.contains(QStringLiteral("UserUnitsDock")), false);
+    setBitfieldVisible(names.contains(QStringLiteral("BitfieldDock")));
+    syncViewMenuActionState();
+}
+
+void MainWindow::restoreDockLayout(const QByteArray& state, const QStringList& names)
+{
+    m_hasRestoredDockLayout = restoreState(state, DockLayoutStateVersion);
+    applyOpenDocks(names);
+    // Reapply the final sizes and selected tabs after adding the required docks.
+    if (m_hasRestoredDockLayout)
+        restoreState(state, DockLayoutStateVersion);
+    for (QDockWidget* dock : m_allDocks) {
+        if (!names.contains(dock->objectName()))
+            dock->hide();
+    }
     // Saved layouts include corner ownership. Keep side docks at full height
     // even when restoring a layout saved with top or bottom corners.
     applyDockCornerLayout();
+    syncViewMenuActionState();
+    if (m_initializingUi && state.isEmpty() && m_docks.constants != nullptr) {
+        QPointer<QDockWidget> constantsDock(m_docks.constants);
+        QTimer::singleShot(0, this, [this, constantsDock]() {
+            if (constantsDock && !constantsDock->isHidden())
+                resizeDocks({constantsDock}, {UiConfig::ConstantsDockDefaultWidth}, Qt::Horizontal);
+        });
+    }
 }
 
 void MainWindow::restoreWindowKeypadLayout(bool visible, int modeValue)
@@ -14153,7 +14227,7 @@ void MainWindow::evaluateEditorExpression()
             emit unitsChanged();
     }
 
-    if (m_settings->bitfieldVisible)
+    if (m_widgets.bitField && m_docks.bitField && !m_docks.bitField->isHidden())
         m_widgets.bitField->updateBits(result);
 
     if (m_settings->autoResultToClipboard)

@@ -1293,6 +1293,7 @@ void TestThemesUi::dock_and_popup_text_meet_contrast_target_across_themes()
 
 void TestThemesUi::dock_surfaces_use_successive_generated_shades()
 {
+    MainWindowStateGuard dockGuard;
     Settings* settings = Settings::instance();
     const Settings::MenuAppearance oldMenuAppearance = settings->menuAppearance;
     const auto restoreMenuAppearance = qScopeGuard([settings, oldMenuAppearance]() {
@@ -1337,6 +1338,13 @@ void TestThemesUi::dock_surfaces_use_successive_generated_shades()
     settings->customColorSchemeJson = themeJsonString(QJsonObject{{QStringLiteral("background"), QStringLiteral("#1f3229")}});
     settings->windowState.clear();
     settings->constantsDockVisible = true;
+    settings->functionsDockVisible = true;
+    settings->historyDockVisible = true;
+    settings->formulaBookDockVisible = true;
+    settings->variablesDockVisible = true;
+    settings->userFunctionsDockVisible = true;
+    settings->userUnitsDockVisible = true;
+    settings->bitfieldVisible = true;
     settings->hasNumberFormatStyleSetting = true;
 
     const QVector<QColor> shades =
@@ -1345,6 +1353,10 @@ void TestThemesUi::dock_surfaces_use_successive_generated_shades()
     const QColor primary = generatePrimaryFromBackground(QColor(QStringLiteral("#1f3229")));
 
     MainWindow window;
+    for (QDockWidget* dock : window.findChildren<QDockWidget*>()) {
+        if (dock->objectName() != QStringLiteral("ConstantsDock"))
+            dock->hide();
+    }
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     QCoreApplication::processEvents();
@@ -1989,6 +2001,14 @@ void TestThemesUi::repeated_theme_refresh_keeps_structural_styles()
     MainWindowStateGuard guard;
     guard.settings->dockAppearance = Settings::DockAppearanceSpeedCrunch;
     guard.settings->sessionLayoutJson.clear();
+    guard.settings->constantsDockVisible = true;
+    guard.settings->functionsDockVisible = true;
+    guard.settings->historyDockVisible = true;
+    guard.settings->formulaBookDockVisible = true;
+    guard.settings->variablesDockVisible = true;
+    guard.settings->userFunctionsDockVisible = true;
+    guard.settings->userUnitsDockVisible = true;
+    guard.settings->bitfieldVisible = true;
     MainWindow window(false);
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
