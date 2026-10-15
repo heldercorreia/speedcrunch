@@ -12358,6 +12358,14 @@ bool MainWindow::event(QEvent* e)
 
 bool MainWindow::eventFilter(QObject* o, QEvent* e)
 {
+    if (o == qApp && e != nullptr && e->type() == QEvent::Quit
+        && primaryMainWindow() == this) {
+        // QApplication closes top-level windows in an unspecified order.
+        // Save all windows before floating docks receive Close and hide.
+        qApp->setProperty("speedcrunchShutdownInProgress", true);
+        persistSessionAndSettingsForShutdown();
+    }
+
     if (e != nullptr && e->type() == QEvent::KeyPress) {
         if (QWidget* widget = qobject_cast<QWidget*>(o);
             widget != nullptr

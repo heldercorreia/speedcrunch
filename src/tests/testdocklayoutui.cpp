@@ -15,6 +15,8 @@ private slots:
     void lazy_docks_restore_saved_layouts_data();
     void lazy_docks_restore_saved_layouts();
     void lazy_docks_restore_each_windows_open_panels();
+    void floating_docks_survive_repeated_quit_data();
+    void floating_docks_survive_repeated_quit();
     void dock_list_selected_row_keeps_primary_fill_while_hovered();
     void functions_dock_retranslates_domain_label_after_language_change();
     void side_docks_keep_full_height_data();
@@ -211,6 +213,126 @@ void TestDockLayoutUi::lazy_docks_restore_each_windows_open_panels()
         QCOMPARE(window->findChildren<QDockWidget*>().size(), 1);
         const QString name = window->findChild<QDockWidget*>()->objectName();
         QCOMPARE(name, window == &restored ? QStringLiteral("ConstantsDock") : QStringLiteral("FunctionsDock"));
+    }
+}
+
+void TestDockLayoutUi::floating_docks_survive_repeated_quit_data()
+{
+    QTest::addColumn<bool>("mixedLayout");
+    QTest::addColumn<bool>("workspaceLayout");
+    QTest::newRow("all-floating-workspace") << false << true;
+    QTest::newRow("mixed-workspace") << true << true;
+    QTest::newRow("all-floating-settings") << false << false;
+    QTest::newRow("mixed-settings") << true << false;
+}
+
+void TestDockLayoutUi::floating_docks_survive_repeated_quit()
+{
+    QFETCH(bool, mixedLayout);
+    QFETCH(bool, workspaceLayout);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    const QVariant previousShutdown = qApp->property("speedcrunchShutdownInProgress");
+    const auto restoreShutdown = qScopeGuard([&]() {
+        qApp->setProperty("speedcrunchShutdownInProgress", previousShutdown);
+    });
+
+    class CloseFloatingDocksFirst : public QObject {
+    public:
+        bool receivedQuit = false;
+        bool eventFilter(QObject* watched, QEvent* event) override
+        {
+            if (watched == qApp && event->type() == QEvent::Quit) {
+                receivedQuit = true;
+                // Qt can close floating windows before the main window. Force
+                // that order so the regression does not depend on widget order.
+                for (QWidget* widget : QApplication::topLevelWidgets()) {
+                    if (auto* dock = qobject_cast<QDockWidget*>(widget))
+                        dock->close();
+                }
+            }
+            return false;
+        }
+    } closeDocksFirst;
+    // Application filters run in reverse installation order. MainWindow must
+    // handle Quit before this filter starts closing the floating docks.
+    qApp->installEventFilter(&closeDocksFirst);
+
+    const QStringList names {QStringLiteral("BookDock"), QStringLiteral("ConstantsDock"),
+        QStringLiteral("FunctionsDock"), QStringLiteral("HistoryDock"),
+        QStringLiteral("VariablesDock"), QStringLiteral("UserFunctionsDock"),
+        QStringLiteral("UserUnitsDock"), QStringLiteral("BitfieldDock")};
+    const QList<QByteArray> setters {"setFormulaBookDockVisible", "setConstantsDockVisible",
+        "setFunctionsDockVisible", "setHistoryDockVisible", "setVariablesDockVisible",
+        "setUserFunctionsDockVisible", "setUserUnitsDockVisible", "setBitfieldVisible"};
+    QStringList expectedOpen = names;
+    if (mixedLayout)
+        expectedOpen.removeAll(QStringLiteral("UserUnitsDock"));
+    QHash<QString, QRect> floatingGeometry;
+
+    // Save and relaunch twice, then check the third launch as well.
+    for (int launch = 0; launch < 3; ++launch) {
+        if (launch != 0) {
+            guard.settings->load();
+            if (!workspaceLayout)
+                guard.settings->sessionLayoutJson.clear();
+        }
+        MainWindow window(launch != 0);
+        window.resize(960, 640);
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        if (launch == 0) {
+            for (int i = 0; i < names.size(); ++i) {
+                const bool opened = i == 7
+                    ? QMetaObject::invokeMethod(&window, setters.at(i).constData(), Qt::DirectConnection,
+                                                Q_ARG(bool, true))
+                    : QMetaObject::invokeMethod(&window, setters.at(i).constData(), Qt::DirectConnection,
+                                                Q_ARG(bool, true), Q_ARG(bool, false));
+                QVERIFY(opened);
+                QDockWidget* dock = window.findChild<QDockWidget*>(names.at(i));
+                QVERIFY(dock);
+                dock->setFloating(!mixedLayout || i >= 2);
+                if (dock->isFloating()) {
+                    dock->move(160 + i * 20, 120 + i * 15);
+                    dock->resize(480, 360);
+                }
+                if (!expectedOpen.contains(names.at(i)))
+                    dock->close();
+            }
+            QCoreApplication::processEvents();
+            for (QDockWidget* dock : window.findChildren<QDockWidget*>()) {
+                if (dock->isFloating())
+                    floatingGeometry.insert(dock->objectName(), dock->geometry());
+            }
+        } else {
+            QTRY_COMPARE(window.findChildren<QDockWidget*>().size(), expectedOpen.size());
+        }
+        for (int i = 0; i < names.size(); ++i) {
+            QDockWidget* dock = window.findChild<QDockWidget*>(names.at(i));
+            if (!expectedOpen.contains(names.at(i))) {
+                QVERIFY(!dock || dock->isHidden());
+                continue;
+            }
+            QVERIFY(dock);
+            QTRY_VERIFY(dock->isVisible());
+            QCOMPARE(dock->isFloating(), !mixedLayout || i >= 2);
+            if (dock->isFloating())
+                QTRY_COMPARE(dock->geometry(), floatingGeometry.value(names.at(i)));
+        }
+
+        // main.cpp also publishes this flag before QApplication handles Quit.
+        qApp->setProperty("speedcrunchShutdownInProgress", true);
+        closeDocksFirst.receivedQuit = false;
+        QEvent quit(QEvent::Quit);
+        QCoreApplication::sendEvent(qApp, &quit);
+        QVERIFY(closeDocksFirst.receivedQuit);
+        QVERIFY(!window.isVisible());
+        const QJsonArray windows = QJsonDocument::fromJson(guard.settings->sessionLayoutJson.toUtf8())
+                                       .object().value(QStringLiteral("windows")).toArray();
+        QCOMPARE(windows.size(), 1);
+        QCOMPARE(windows.first().toObject().value(QStringLiteral("openDocks")).toArray(),
+                 QJsonArray::fromStringList(expectedOpen));
+        qApp->setProperty("speedcrunchShutdownInProgress", previousShutdown);
     }
 }
 
