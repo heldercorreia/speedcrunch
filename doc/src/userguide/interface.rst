@@ -347,6 +347,8 @@ The result display supports mouse-driven interactions for navigation and editing
     line between calculations. :guilabel:`Expression` and
     :guilabel:`Result` let you copy either part separately.
     This menu includes an entry to toggle the main menu bar visibility.
+    Use its :guilabel:`Split` submenu to add a pane to the left, right, above,
+    or below the current pane.
 
     .. versionadded:: 1.0
 

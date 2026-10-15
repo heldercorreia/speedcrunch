@@ -1375,19 +1375,20 @@ QMenu* ResultDisplay::createContextMenu(const QPoint& pos)
         emit openSessionRequested();
     });
     menu->addSeparator();
-    QAction* splitLeftAction = menu->addAction(tr("Split Left"));
+    QMenu* splitMenu = menu->addMenu(tr("Split"));
+    QAction* splitLeftAction = splitMenu->addAction(tr("Left"));
     connect(splitLeftAction, &QAction::triggered, this, [this]() {
         emit splitLeftRequested();
     });
-    QAction* splitRightAction = menu->addAction(tr("Split Right"));
+    QAction* splitRightAction = splitMenu->addAction(tr("Right"));
     connect(splitRightAction, &QAction::triggered, this, [this]() {
         emit splitRightRequested();
     });
-    QAction* splitUpAction = menu->addAction(tr("Split Up"));
+    QAction* splitUpAction = splitMenu->addAction(tr("Up"));
     connect(splitUpAction, &QAction::triggered, this, [this]() {
         emit splitUpRequested();
     });
-    QAction* splitDownAction = menu->addAction(tr("Split Down"));
+    QAction* splitDownAction = splitMenu->addAction(tr("Down"));
     connect(splitDownAction, &QAction::triggered, this, [this]() {
         emit splitDownRequested();
     });
