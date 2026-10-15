@@ -157,7 +157,7 @@ reorder them within the pane, or drag a tab away from the tab bar to move it to
 another pane. Dropping a dragged tab outside the current window creates a new
 window for that session; dropping it on a pane in another SpeedCrunch window
 moves it there.
-Use :menuselection:`Session --> Rename Session...` to rename the active session.
+Use :menuselection:`Session --> Rename...` to rename the active session.
 You can also double-click its tab, choose :menuselection:`Rename Session`
 from the tab context menu, or choose :menuselection:`Session --> Rename`
 from the result display context menu.
@@ -190,7 +190,7 @@ Choose :menuselection:`Session --> Keep Session` to save a private
 session, including its current contents. It receives the first available
 ``Untitled-XXX`` name and behaves like an ordinary session from then on.
 
-Choose :menuselection:`Session --> Make Session Private...` to convert an ordinary
+Choose :menuselection:`Session --> Make Private...` to convert an ordinary
 session. SpeedCrunch asks for confirmation before deleting its saved JSON file.
 Its contents stay open under the first available ``Private-XXX`` name until you
 close it or exit. If the file cannot be deleted, the session remains ordinary.

@@ -310,7 +310,7 @@ void TestPrivateSessionsUi::private_session_menu_targets_active_window_and_keeps
     QVERIFY(display->session()->isPrivate());
     QVERIFY(first.windowTitle().contains(QStringLiteral("[Private]")));
 
-    QAction* convert = directMenuActionWithText(menu, QStringLiteral("Make Session Private..."));
+    QAction* convert = directMenuActionWithText(menu, QStringLiteral("Make Private..."));
     QVERIFY(convert);
     convert->trigger();
     QVERIFY(!display->session()->isPrivate());

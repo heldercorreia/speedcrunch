@@ -4403,10 +4403,10 @@ void MainWindow::setActionsText()
     m_actions.sessionNewTab->setText(MainWindow::tr("New &Tab"));
     m_actions.sessionNewPrivate->setText(MainWindow::tr("New &Private Tab"));
     m_actions.sessionConvertPrivacy->setText(m_session && m_session->isPrivate()
-        ? tr("Keep Session") : tr("Make Session Private..."));
+        ? tr("Keep Session") : tr("Make Private..."));
     m_actions.sessionNewWindow->setText(MainWindow::tr("New &Window"));
     m_actions.sessionOpen->setText(MainWindow::tr("&Open..."));
-    m_actions.sessionRename->setText(MainWindow::tr("&Rename Session..."));
+    m_actions.sessionRename->setText(MainWindow::tr("&Rename..."));
     m_actions.sessionOpenSessionsFolder->setText(MainWindow::tr("Open Sessions &Folder"));
     m_actions.sessionQuit->setText(MainWindow::tr("&Quit"));
 
@@ -4713,6 +4713,7 @@ void MainWindow::createMenus()
     m_menus.session->addAction(m_actions.sessionNewTab);
     m_menus.session->addAction(m_actions.sessionNewPrivate);
     m_menus.session->addAction(m_actions.sessionNewWindow);
+    m_menus.session->addSeparator();
     m_menus.session->addAction(m_actions.sessionOpen);
     m_menus.session->addAction(m_actions.sessionRename);
     m_menus.session->addAction(m_actions.sessionConvertPrivacy);
@@ -4730,7 +4731,7 @@ void MainWindow::createMenus()
     connect(m_menus.session, &QMenu::aboutToShow, this, [this]() {
         const MainWindow* window = activeMainWindowForMenuAction(this);
         m_actions.sessionConvertPrivacy->setText(window->m_session && window->m_session->isPrivate()
-            ? tr("Keep Session") : tr("Make Session Private..."));
+            ? tr("Keep Session") : tr("Make Private..."));
     });
 
     m_menus.edit = new QMenu("", this);
@@ -6989,7 +6990,7 @@ void MainWindow::updatePaneTabBars()
 void MainWindow::updateSessionWindowTitle()
 {
     m_actions.sessionConvertPrivacy->setText(m_session && m_session->isPrivate()
-        ? tr("Keep Session") : tr("Make Session Private..."));
+        ? tr("Keep Session") : tr("Make Private..."));
     if (m_session && m_session->isPrivate()) {
         setWindowTitle(tr("SpeedCrunch - %1 [Private]").arg(m_session->name()));
         return;
