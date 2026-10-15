@@ -10656,6 +10656,57 @@ void test_non_informative_numeric_simplified_row_suppression()
 }
 
 
+void test_unit_lookup_registry_aliases()
+{
+    const auto check = [](bool passed, const QString& message) {
+        ++eval_total_tests;
+        if (!passed) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << "Unit lookup: " << message.toUtf8().constData() << "\t[NEW]" << endl;
+        }
+    };
+    const auto& registered = Units::builtInUnitValues();
+    const QStringList identifiers {QStringLiteral("Pa"), QStringLiteral("pA"),
+        QStringLiteral("hPa"), QStringLiteral("hectopascal"), QStringLiteral("KiB"),
+        QStringLiteral("sr")};
+    const QHash<QString, QString> displayNames {
+        {QStringLiteral("Pa"), QStringLiteral("pascal")},
+        {QStringLiteral("hPa"), QStringLiteral("hPa")},
+        {QStringLiteral("hectopascal"), QStringLiteral("hectopascal")},
+        {QStringLiteral("KiB"), QStringLiteral("KiB")},
+        {QStringLiteral("sr"), QStringLiteral("sr")}
+    };
+    for (const char mode : {'r', 'd', 'g', 't', 'v'}) {
+        const auto lookup = Units::builtInUnitLookup(mode);
+        const QString context = QStringLiteral("angle mode %1: ").arg(QLatin1Char(mode));
+        QStringList missing;
+        for (auto it = registered.constBegin(); it != registered.constEnd(); ++it) {
+            if (!lookup.contains(it.key()))
+                missing.append(it.key());
+        }
+        check(missing.isEmpty(), context + QStringLiteral("missing identifiers: ")
+              + missing.join(QLatin1Char(' ')));
+        for (const QString& identifier : identifiers) {
+            const auto actual = lookup.constFind(identifier);
+            const auto expected = registered.constFind(identifier);
+            check(actual != lookup.constEnd() && expected != registered.constEnd()
+                  && actual.value() == expected.value(),
+                  context + identifier + QStringLiteral(" changes value or dimension"));
+        }
+        for (auto it = displayNames.constBegin(); it != displayNames.constEnd(); ++it) {
+            const auto actual = lookup.constFind(it.key());
+            check(actual != lookup.constEnd() && actual.value().hasUnit()
+                  && actual.value().unitName() == it.value()
+                  && actual.value().unit() == actual.value().numericValue(),
+                  context + it.key() + QStringLiteral(" loses its display unit"));
+        }
+        check(!lookup.value(QStringLiteral("Pa")).sameDimension(lookup.value(QStringLiteral("pA"))),
+              context + QStringLiteral("Pa and pA must remain distinct"));
+    }
+    Units::builtInUnitLookup(Settings::instance()->angleUnit);
+}
+
 int main(int argc, char* argv[])
 {
     if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM"))
@@ -10684,6 +10735,7 @@ int main(int argc, char* argv[])
     test_unary();
     test_binary();
     test_units();
+    test_unit_lookup_registry_aliases();
     test_unit_expression_powers();
     test_percent_operator();
     test_bitwise_complement_operator();

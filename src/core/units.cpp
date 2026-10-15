@@ -2327,14 +2327,16 @@ QHash<QString, Quantity> Units::builtInUnitLookup(char angleMode)
     s_runtimeAngleModeForUnits = angleMode;
     QHash<QString, Quantity> lookup;
 
-    const auto& unitValues = Units::builtInUnitValues();
+    const UnitRegistry& registry = s_unitRegistry();
+    const auto& unitValues = registry.valuesByIdentifier;
+    lookup.reserve(unitValues.size());
     for (auto it = unitValues.constBegin(); it != unitValues.constEnd(); ++it) {
         const QString& identifier = it.key();
         const Quantity& value = it.value();
         Quantity unitValue = value;
-        const UnitId id = s_unitRegistry().idsByIdentifier.value(
-            identifier,
-            unitId(normalizeUnitName(identifier)));
+        const auto idIt = registry.idsByIdentifier.constFind(identifier);
+        const UnitId id = idIt != registry.idsByIdentifier.constEnd()
+            ? idIt.value() : unitId(normalizeUnitName(identifier));
         const bool isCanonicalIdentifier =
             id != UnitId::Unknown && identifier == unitName(id);
         const bool isInformationUnit =
@@ -2351,7 +2353,7 @@ QHash<QString, Quantity> Units::builtInUnitLookup(char angleMode)
             && id != UnitId::Week;
         const bool keepDisplayUnit =
             (id == UnitId::Steradian)
-            || s_unitRegistry().prefixedIdentifiers.contains(identifier)
+            || registry.prefixedIdentifiers.contains(identifier)
             || ((id == UnitId::Hertz
               || id == UnitId::Becquerel
               || id == UnitId::Gray
