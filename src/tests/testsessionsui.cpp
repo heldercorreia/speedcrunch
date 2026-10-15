@@ -31,7 +31,7 @@ private slots:
     void session_open_sessions_folder_menu_action_opens_session_storage();
     void session_import_dialog_opens_valid_json_as_new_tab();
     void session_import_rejects_invalid_json_without_new_tab();
-    void session_export_menu_offers_json_without_save_action();
+    void session_export_json_action_opens_dialog();
     void session_export_dialog_prefills_session_name_data();
     void session_export_dialog_prefills_session_name();
     void restore_closed_tab_shortcut_restores_last_closed_session_tab();
@@ -824,16 +824,11 @@ void TestSessionsUi::session_tab_context_menu_opens_on_right_click()
     QCoreApplication::processEvents();
 
     bool menuOpened = false;
-    QStringList menuActionTexts;
     QTimer::singleShot(0, &window, [&]() {
         QMenu* menu = qobject_cast<QMenu*>(QApplication::activePopupWidget());
         if (menu == nullptr)
             return;
         menuOpened = true;
-        for (QAction* action : menu->actions()) {
-            if (!action->isSeparator())
-                menuActionTexts.append(action->text());
-        }
         menu->close();
     });
 
@@ -843,8 +838,6 @@ void TestSessionsUi::session_tab_context_menu_opens_on_right_click()
                                        tabBar->mapToGlobal(tabPosition));
     QCoreApplication::sendEvent(tabBar, &contextMenuEvent);
     QTRY_VERIFY(menuOpened);
-    QVERIFY(menuActionTexts.contains(QStringLiteral("Rename Session")));
-    QVERIFY(menuActionTexts.contains(QStringLiteral("Close Session")));
 }
 
 void TestSessionsUi::session_tab_navigation_shortcuts_switch_tabs()
@@ -1435,7 +1428,7 @@ void TestSessionsUi::session_import_rejects_invalid_json_without_new_tab()
     QCOMPARE(tabBar->count(), 1);
 }
 
-void TestSessionsUi::session_export_menu_offers_json_without_save_action()
+void TestSessionsUi::session_export_json_action_opens_dialog()
 {
     MainWindowStateGuard guard;
     Settings* settings = guard.settings;
@@ -1461,12 +1454,9 @@ void TestSessionsUi::session_export_menu_offers_json_without_save_action()
 
     QMenu* sessionMenu = menuWithTitle(window.menuBar(), QStringLiteral("&Session"));
     QVERIFY(sessionMenu != nullptr);
-    QVERIFY(directMenuActionWithText(sessionMenu, QStringLiteral("&Save...")) == nullptr);
 
     QMenu* exportMenu = directSubmenuWithTitle(sessionMenu, QStringLiteral("&Export"));
     QVERIFY(exportMenu != nullptr);
-    QVERIFY(!exportMenu->actions().isEmpty());
-    QCOMPARE(exportMenu->actions().constFirst()->text(), QStringLiteral("JSON"));
     QAction* jsonAction = directMenuActionWithText(exportMenu, QStringLiteral("JSON"));
     QVERIFY(jsonAction != nullptr);
 

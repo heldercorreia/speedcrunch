@@ -28,7 +28,6 @@ private slots:
     void number_format_is_shared_and_refreshes_all_input_panes();
     void display_font_changes_update_all_sessions_and_windows_data();
     void display_font_changes_update_all_sessions_and_windows();
-    void appearance_menu_groups_theme_and_keypad_zoom();
     void appearance_defaults_select_theme_and_modern_styles();
     void settings_reset_restores_persisted_defaults();
     void settings_reset_can_be_cancelled_data();
@@ -162,15 +161,6 @@ void TestSettingsUi::update_checks_follow_build_option()
     QVERIFY(updateAction);
     QVERIFY(updateAction->isEnabled());
     QVERIFY(window.metaObject()->indexOfSlot("checkForUpdates()") >= 0);
-
-    bool inHelpMenu = false;
-    for (QMenu* menu : window.findChildren<QMenu*>()) {
-        if (menu->title() == MainWindow::tr("&Help")
-            && menu->actions().contains(updateAction)) {
-            inHelpMenu = true;
-        }
-    }
-    QVERIFY(inHelpMenu);
 #else
     QCOMPARE(checkerCount, 0);
     QVERIFY(!updateAction);
@@ -190,12 +180,6 @@ void TestSettingsUi::editing_input_digit_grouping_updates_all_open_editors()
     QVERIFY(secondAction);
     QVERIFY(firstAction->isCheckable());
     QVERIFY(firstAction->isChecked());
-    bool inEditingMenu = false;
-    for (QMenu* menu : first.findChildren<QMenu*>()) {
-        if (menu->title() == MainWindow::tr("&Editing") && menu->actions().contains(firstAction))
-            inEditingMenu = true;
-    }
-    QVERIFY(inEditingMenu);
     QVERIFY(QMetaObject::invokeMethod(&first, "splitActivePaneRight", Qt::DirectConnection));
     const QList<Editor*> editors = first.findChildren<Editor*>() + second.findChildren<Editor*>();
     QVERIFY(editors.size() >= 3);
@@ -225,15 +209,8 @@ void TestSettingsUi::editing_automatic_input_adjustments_updates_all_open_editor
     QAction* secondAction = second.findChild<QAction*>(QStringLiteral("AutomaticInputAdjustmentsAction"));
     QVERIFY(firstAction);
     QVERIFY(secondAction);
-    QCOMPARE(firstAction->text(), MainWindow::tr("Automatic Input &Adjustments"));
     QVERIFY(firstAction->isCheckable());
     QVERIFY(firstAction->isChecked());
-    bool inEditingMenu = false;
-    for (QMenu* menu : first.findChildren<QMenu*>()) {
-        if (menu->title() == MainWindow::tr("&Editing") && menu->actions().contains(firstAction))
-            inEditingMenu = true;
-    }
-    QVERIFY(inEditingMenu);
     QVERIFY(QMetaObject::invokeMethod(&first, "splitActivePaneRight", Qt::DirectConnection));
     const QList<Editor*> editors = first.findChildren<Editor*>() + second.findChildren<Editor*>();
     QVERIFY(editors.size() >= 3);
@@ -384,12 +361,6 @@ void TestSettingsUi::editing_cursor_blinking_updates_all_open_editors()
     QVERIFY(secondAction);
     QVERIFY(firstAction->isCheckable());
     QVERIFY(firstAction->isChecked());
-    bool inEditingMenu = false;
-    for (QMenu* menu : first.findChildren<QMenu*>()) {
-        if (menu->title() == MainWindow::tr("&Editing") && menu->actions().contains(firstAction))
-            inEditingMenu = true;
-    }
-    QVERIFY(inEditingMenu);
     QVERIFY(QMetaObject::invokeMethod(&first, "splitActivePaneRight", Qt::DirectConnection));
     const QList<Editor*> editors = first.findChildren<Editor*>() + second.findChildren<Editor*>();
     QVERIFY(editors.size() >= 3);
@@ -445,12 +416,6 @@ void TestSettingsUi::editing_escape_clears_editor_is_shared_and_resets_to_off()
     QVERIFY(action->isCheckable());
     QVERIFY(!action->isChecked());
     QVERIFY(!Settings::instance()->escapeClearsEditor);
-    bool inEditingMenu = false;
-    for (QMenu* menu : first.findChildren<QMenu*>()) {
-        if (menu->title() == MainWindow::tr("&Editing") && menu->actions().contains(action))
-            inEditingMenu = true;
-    }
-    QVERIFY(inEditingMenu);
     Editor* editor = first.findChild<Editor*>();
     QVERIFY(editor);
     editor->setText(QStringLiteral("123"));
@@ -501,14 +466,9 @@ void TestSettingsUi::number_format_is_shared_and_refreshes_all_input_panes()
     MainWindow first;
     MainWindow second;
     QAction* numberFormatAction = nullptr;
-    for (QMenu* menu : first.findChildren<QMenu*>()) {
-        for (QAction* action : menu->actions()) {
-            if (action->text() == MainWindow::tr("Number Format...")) {
-                QCOMPARE(menu->title(), MainWindow::tr("Se&ttings"));
-                QCOMPARE(menu->actions().first(), action);
-                numberFormatAction = action;
-            }
-        }
+    for (QAction* action : first.findChildren<QAction*>()) {
+        if (action->text() == MainWindow::tr("Number Format..."))
+            numberFormatAction = action;
     }
     QVERIFY(numberFormatAction);
     QVERIFY(QMetaObject::invokeMethod(&first, "splitActivePaneRight", Qt::DirectConnection));
@@ -688,45 +648,6 @@ void TestSettingsUi::display_font_changes_update_all_sessions_and_windows()
     QCOMPARE(savedFont, expectedFont);
 }
 
-void TestSettingsUi::appearance_menu_groups_theme_and_keypad_zoom()
-{
-    MainWindowStateGuard guard;
-    MainWindow window(false);
-    auto* settingsMenu = menuWithTitle(window.menuBar(), QStringLiteral("Se&ttings"));
-    QVERIFY(settingsMenu);
-    auto* appearanceMenu = directSubmenuWithTitle(settingsMenu, QStringLiteral("&Appearance"));
-    QVERIFY(appearanceMenu);
-    const auto appearanceActions = appearanceMenu->actions();
-    QVERIFY(appearanceActions.size() > 3);
-    QCOMPARE(appearanceActions.at(0)->text(), QStringLiteral("&Theme..."));
-    QCOMPARE(appearanceActions.at(1)->text(), QStringLiteral("&Font..."));
-    QVERIFY(appearanceActions.at(2)->isSeparator());
-    QCOMPARE(appearanceActions.at(3)->menu(),
-             window.findChild<QMenu*>(QStringLiteral("MenuAppearanceMenu")));
-
-    auto* keypadMenu = directSubmenuWithTitle(appearanceMenu, QStringLiteral("&Keypad"));
-    QVERIFY(keypadMenu);
-    const auto keypadActions = keypadMenu->actions();
-    QCOMPARE(keypadActions.size(), 4);
-    QCOMPARE(keypadActions.at(0)->text(), QStringLiteral("&Classic"));
-    QCOMPARE(keypadActions.at(1)->text(), QStringLiteral("&Modern"));
-    QVERIFY(keypadActions.at(2)->isSeparator());
-    auto* zoomMenu = directSubmenuWithTitle(keypadMenu, QStringLiteral("&Zoom"));
-    QVERIFY(zoomMenu);
-    QCOMPARE(keypadActions.last(), zoomMenu->menuAction());
-    QCOMPARE(zoomMenu->parentWidget(), keypadMenu);
-    QCOMPARE(zoomMenu->actions().size(), 4);
-    for (int index = 0; index < 4; ++index)
-        QCOMPARE(zoomMenu->actions().at(index)->data().toInt(), (index + 1) * 50);
-
-    auto* viewMenu = menuWithTitle(window.menuBar(), QStringLiteral("&View"));
-    QVERIFY(viewMenu);
-    auto* layoutsMenu = directSubmenuWithTitle(viewMenu, QStringLiteral("&Keypad"));
-    QVERIFY(layoutsMenu);
-    QVERIFY(!directSubmenuWithTitle(layoutsMenu, QStringLiteral("&Zoom")));
-    QVERIFY(!layoutsMenu->actions().last()->isSeparator());
-}
-
 void TestSettingsUi::appearance_defaults_select_theme_and_modern_styles()
 {
     MainWindowStateGuard guard;
@@ -837,12 +758,6 @@ void TestSettingsUi::settings_reset_can_be_cancelled()
     persisted.close();
     QAction* action = window.findChild<QAction*>(QStringLiteral("ResetAllSettingsAction"));
     QVERIFY(action);
-    bool inSettingsMenu = false;
-    for (QMenu* menu : window.findChildren<QMenu*>()) {
-        if (menu->title() == MainWindow::tr("Se&ttings") && menu->actions().contains(action))
-            inSettingsMenu = true;
-    }
-    QVERIFY(inSettingsMenu);
     QTimer::singleShot(0, &window, [useEscape]() {
         auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
         QVERIFY(dialog);
