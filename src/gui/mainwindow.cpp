@@ -4776,6 +4776,7 @@ void MainWindow::createMenus()
 
     m_menus.display = m_menus.settings->addMenu("");
     m_menus.display->addAction(m_actions.settingsDisplayColorSchemeCustom);
+    m_menus.display->addAction(m_actions.settingsDisplayFont);
     m_menus.display->addSeparator();
     m_menus.menuAppearance = m_menus.display->addMenu("");
     m_menus.menuAppearance->setObjectName(QStringLiteral("MenuAppearanceMenu"));
@@ -4803,7 +4804,6 @@ void MainWindow::createMenus()
     m_menus.statusBarAppearance->setObjectName(QStringLiteral("StatusBarAppearanceMenu"));
     m_menus.statusBarAppearance->addAction(m_actions.settingsStatusBarAppearanceSystem);
     m_menus.statusBarAppearance->addAction(m_actions.settingsStatusBarAppearanceSpeedCrunch);
-    m_menus.display->addAction(m_actions.settingsDisplayFont);
     m_menus.display->addSeparator();
     m_menus.display->addAction(m_actions.settingsBehaviorSyntaxHighlighting);
     m_menus.display->addAction(m_actions.settingsBehaviorHoverHighlightResults);
@@ -11944,7 +11944,7 @@ void MainWindow::setWidgetsDirection()
 void MainWindow::showFontDialog()
 {
     bool ok;
-    QFont f = QFontDialog::getFont(&ok, m_widgets.display->font(), this, tr("Display font"));
+    QFont f = QFontDialog::getFont(&ok, m_widgets.display->font(), this, tr("Editor and Results Font"));
     if (!ok)
         return;
     setDisplayFont(f);

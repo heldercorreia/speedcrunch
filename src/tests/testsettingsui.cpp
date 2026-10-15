@@ -697,10 +697,11 @@ void TestSettingsUi::appearance_menu_groups_theme_and_keypad_zoom()
     auto* appearanceMenu = directSubmenuWithTitle(settingsMenu, QStringLiteral("&Appearance"));
     QVERIFY(appearanceMenu);
     const auto appearanceActions = appearanceMenu->actions();
-    QVERIFY(appearanceActions.size() > 2);
+    QVERIFY(appearanceActions.size() > 3);
     QCOMPARE(appearanceActions.at(0)->text(), QStringLiteral("&Theme..."));
-    QVERIFY(appearanceActions.at(1)->isSeparator());
-    QCOMPARE(appearanceActions.at(2)->menu(),
+    QCOMPARE(appearanceActions.at(1)->text(), QStringLiteral("&Font..."));
+    QVERIFY(appearanceActions.at(2)->isSeparator());
+    QCOMPARE(appearanceActions.at(3)->menu(),
              window.findChild<QMenu*>(QStringLiteral("MenuAppearanceMenu")));
 
     auto* keypadMenu = directSubmenuWithTitle(appearanceMenu, QStringLiteral("&Keypad"));

@@ -781,6 +781,9 @@ User Interface Settings
     .. versionadded:: 1.0
        The :menuselection:`Theme...` dialog, including live preview and JSON import/export.
 
+* :menuselection:`Settings --> Appearance --> Font...`
+    Select the font to use for the expression editor and result display.
+
 * :menuselection:`Settings --> Appearance --> Menus`
     Choose how menus look:
 
@@ -875,8 +878,6 @@ User Interface Settings
 
     .. versionadded:: 1.1
 
-* :menuselection:`Settings --> Appearance --> Font`
-    Select the font to use for the expression editor and result display.
 * :menuselection:`Settings --> Appearance --> Syntax Highlighting`
     Enable or disable syntax highlighting.
 * :menuselection:`Settings --> Appearance --> Hover Highlighting`
