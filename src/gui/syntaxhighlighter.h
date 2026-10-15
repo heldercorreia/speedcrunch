@@ -31,6 +31,8 @@ public:
     QColor colorForRole(ColorScheme::Role role) const { return m_colorScheme.colorForRole(role); }
 
     void update();
+    // Load colors without changing the widget palette or document formatting.
+    void updateColorScheme();
     virtual void highlightBlock(const QString&);
     void asHtml(QString& html);
 

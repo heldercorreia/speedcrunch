@@ -6871,7 +6871,6 @@ void MainWindow::updatePaneEditorCursorVisibility()
                 continue;
             editor->setCustomCursorVisible(false);
             editor->setThemePrimaryColor(surfaces.primary.background, false);
-            editor->rehighlight();
         }
         window->updateActiveSessionPaneTabColor();
     }

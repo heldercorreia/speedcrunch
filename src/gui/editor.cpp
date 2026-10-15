@@ -4187,8 +4187,21 @@ void Editor::rehighlight()
         m_highlighter->setColorScheme(
             ColorScheme::fromJsonObject(m_themePreviewColorScheme->toJsonObject()));
     else
-        m_highlighter->update();
+        m_highlighter->updateColorScheme();
     updateMatchedParenthesisColors();
+    updateAppearance();
+    {
+        StartupDiagnostics::AppearanceScope highlightTiming("Highlight editor document", this);
+        m_highlighter->rehighlight();
+    }
+    updateHeightAndEnsureCursorVisible();
+}
+
+void Editor::updateAppearance()
+{
+    StartupDiagnostics::AppearanceScope timing("Refresh editor appearance", this);
+    // Style changes must preserve the expression and any result selection.
+    const QSignalBlocker blocker(this);
     const QColor themeBackground = m_highlighter->colorForRole(ColorScheme::Background);
     const QColor generatedPrimary = generatePrimaryFromBackground(themeBackground);
     // Editors can rehighlight before MainWindow injects the resolved theme
@@ -4285,11 +4298,6 @@ void Editor::rehighlight()
     StartupDiagnostics::setAppearanceStyleSheet(viewport(), QStringLiteral("QWidget#editorViewport { background: transparent; }"));
     StartupDiagnostics::setAppearancePalette(viewport(), viewportPalette);
     clearMask();
-    {
-        StartupDiagnostics::AppearanceScope highlightTiming("Highlight editor document", this);
-        m_highlighter->rehighlight();
-    }
-    updateHeightAndEnsureCursorVisible();
 }
 
 void Editor::setThemeSurfaceColor(const QColor& color, const QColor& outerColor)
@@ -4328,8 +4336,10 @@ void Editor::setThemePrimaryColor(const QColor& color, bool usePrimaryOutline)
         || viewport()->palette().color(QPalette::Base) != palette().color(QPalette::Base);
     m_themePrimaryColor = color;
     m_usePrimaryOutline = usePrimaryOutline;
-    if (themeChanged)
-        rehighlight();
+    if (themeChanged) {
+        updateAppearance();
+        updateHeightAndEnsureCursorVisible();
+    }
     if (shouldPaintThemedCursor())
         showThemedCursorAndRestartBlink();
     else

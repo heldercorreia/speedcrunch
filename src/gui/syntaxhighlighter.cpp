@@ -446,18 +446,7 @@ void SyntaxHighlighter::highlightSyntaxBlock(const QString& text)
 void SyntaxHighlighter::update()
 {
     StartupDiagnostics::AppearanceScope timing("Update syntax highlighter", parent());
-    const Settings* settings = Settings::instance();
-    const QString name = settings->colorScheme;
-    if (name == QLatin1String("Custom")) {
-        const QJsonDocument customDoc = QJsonDocument::fromJson(settings->customColorSchemeJson.toUtf8());
-        ColorScheme customScheme(customDoc);
-        if (customScheme.isValid())
-            setColorScheme(std::move(customScheme));
-        else
-            setColorScheme(ColorScheme::loadByName(DefaultColorSchemeName));
-    } else {
-        setColorScheme(ColorScheme::loadByName(name));
-    }
+    updateColorScheme();
 
     QColor backgroundColor = colorForRole(ColorScheme::Background);
     QWidget* parentWidget = static_cast<QWidget*>(parent());
@@ -470,6 +459,22 @@ void SyntaxHighlighter::update()
         StartupDiagnostics::AppearanceScope highlightTiming(
             m_inputEditor ? "Highlight editor document" : "Highlight result document", parent());
         rehighlight();
+    }
+}
+
+void SyntaxHighlighter::updateColorScheme()
+{
+    const Settings* settings = Settings::instance();
+    const QString name = settings->colorScheme;
+    if (name == QLatin1String("Custom")) {
+        const QJsonDocument customDoc = QJsonDocument::fromJson(settings->customColorSchemeJson.toUtf8());
+        ColorScheme customScheme(customDoc);
+        if (customScheme.isValid())
+            setColorScheme(std::move(customScheme));
+        else
+            setColorScheme(ColorScheme::loadByName(DefaultColorSchemeName));
+    } else {
+        setColorScheme(ColorScheme::loadByName(name));
     }
 }
 

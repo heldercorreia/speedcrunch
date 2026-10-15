@@ -188,6 +188,7 @@ private:
     Session* m_session;
 
     void updateHeightForWrappedText();
+    void updateAppearance();
     void updateHeightAndEnsureCursorVisible();
     void showThemedCursorAndRestartBlink();
     void hideThemedCursorAndStopBlink();

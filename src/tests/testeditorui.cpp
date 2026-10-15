@@ -108,6 +108,10 @@ private slots:
     void copy_shortcut_preserves_editor_state_data();
     void copy_shortcut_preserves_editor_state();
     void highlight_refresh_preserves_text_and_selection_without_edit_signals();
+    void primary_theme_changes_preserve_document_highlighting_data();
+    void primary_theme_changes_preserve_document_highlighting();
+    void highlight_refresh_updates_document_once_data();
+    void highlight_refresh_updates_document_once();
     void editor_text_line_is_vertically_centered_data();
     void editor_text_line_is_vertically_centered();
     void unchanged_primary_theme_avoids_editor_style_refresh_data();
@@ -1700,6 +1704,109 @@ void TestEditorUi::highlight_refresh_preserves_text_and_selection_without_edit_s
     QCOMPARE(editor.textCursor().position(), cursor.position());
     QCOMPARE(editor.textCursor().anchor(), cursor.anchor());
     QVERIFY(!editor.document()->isUndoAvailable());
+}
+
+void TestEditorUi::primary_theme_changes_preserve_document_highlighting_data()
+{
+    QTest::addColumn<bool>("classic");
+    QTest::newRow("modern") << false;
+    QTest::newRow("classic") << true;
+}
+
+void TestEditorUi::primary_theme_changes_preserve_document_highlighting()
+{
+    QFETCH(bool, classic);
+    Settings* settings = Settings::instance();
+    settings->editorDisplayStyle = classic
+        ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern;
+    settings->inputDigitGrouping = true;
+    Editor editor;
+    editor.setAutoCalcEnabled(false);
+    editor.setAutoCompletionEnabled(false);
+    editor.setThemePrimaryColor(QColor(QStringLiteral("#334455")), false);
+    editor.insertPlainText(QStringLiteral("123456 + sin(2)"));
+    editor.rehighlight();
+    QCoreApplication::processEvents();
+    QTextCursor cursor = editor.textCursor();
+    cursor.setPosition(2);
+    cursor.setPosition(8, QTextCursor::KeepAnchor);
+    editor.setTextCursor(cursor);
+    const auto formats = editor.document()->firstBlock().layout()->formats();
+    QVERIFY(!formats.isEmpty());
+    const int revision = editor.document()->revision();
+    QSignalSpy documentChanged(editor.document(), &QTextDocument::contentsChanged);
+    QSignalSpy textChanged(&editor, &Editor::textChanged);
+
+    const QString inactiveStyle = editor.styleSheet();
+    editor.setThemePrimaryColor(QColor(QStringLiteral("#334455")), true);
+    QVERIFY(editor.styleSheet() != inactiveStyle);
+    editor.setThemePrimaryColor(QColor(QStringLiteral("#556677")), true);
+    QCOMPARE(editor.cursorColor(), QColor(QStringLiteral("#556677")));
+    editor.setThemePrimaryColor(QColor(QStringLiteral("#556677")), false);
+    QPalette viewportPalette = editor.viewport()->palette();
+    viewportPalette.setColor(QPalette::Base, Qt::transparent);
+    editor.viewport()->setPalette(viewportPalette);
+    editor.setThemePrimaryColor(QColor(QStringLiteral("#556677")), false);
+    QCOMPARE(editor.viewport()->palette().color(QPalette::Base),
+             editor.palette().color(QPalette::Base));
+
+    QCOMPARE(documentChanged.count(), 0);
+    QCOMPARE(textChanged.count(), 0);
+    QCOMPARE(editor.document()->revision(), revision);
+    QCOMPARE(editor.document()->firstBlock().layout()->formats(), formats);
+    QCOMPARE(editor.textCursor().position(), cursor.position());
+    QCOMPARE(editor.textCursor().anchor(), cursor.anchor());
+    QVERIFY(editor.document()->isUndoAvailable());
+    editor.undo();
+    QVERIFY(editor.text().isEmpty());
+}
+
+void TestEditorUi::highlight_refresh_updates_document_once_data()
+{
+    QTest::addColumn<bool>("preview");
+    QTest::newRow("configured-theme") << false;
+    QTest::newRow("preview-theme") << true;
+}
+
+void TestEditorUi::highlight_refresh_updates_document_once()
+{
+    QFETCH(bool, preview);
+    Settings* settings = Settings::instance();
+    settings->colorScheme = QStringLiteral("Custom");
+    settings->customColorSchemeJson = themeJsonString(QJsonObject{
+        {QStringLiteral("number"), QStringLiteral("#123456")},
+        {QStringLiteral("background"), QStringLiteral("#102030")}
+    });
+    Editor editor;
+    editor.setAutoCalcEnabled(false);
+    editor.setAutoCompletionEnabled(false);
+    editor.setText(QStringLiteral("123456"));
+    const auto refreshTheme = [&]() {
+        if (preview) {
+            editor.setThemePreviewColorScheme(ColorScheme(QJsonDocument::fromJson(
+                settings->customColorSchemeJson.toUtf8())));
+        } else {
+            editor.rehighlight();
+        }
+    };
+    refreshTheme();
+    QCoreApplication::processEvents();
+    QCOMPARE(editor.document()->firstBlock().layout()->formats().first().format.foreground().color(),
+             QColor(QStringLiteral("#123456")));
+    QSignalSpy documentChanged(editor.document(), &QTextDocument::contentsChanged);
+    QSignalSpy textChanged(&editor, &Editor::textChanged);
+    settings->customColorSchemeJson = themeJsonString(QJsonObject{
+        {QStringLiteral("number"), QStringLiteral("#abcdef")},
+        {QStringLiteral("background"), QStringLiteral("#102030")}
+    });
+
+    refreshTheme();
+
+    QCOMPARE(documentChanged.count(), 1);
+    QCOMPARE(textChanged.count(), 0);
+    QCOMPARE(editor.document()->firstBlock().layout()->formats().first().format.foreground().color(),
+             QColor(QStringLiteral("#abcdef")));
+    QCOMPARE(editor.text(), QStringLiteral("123456"));
 }
 
 void TestEditorUi::unchanged_primary_theme_avoids_editor_style_refresh_data()
