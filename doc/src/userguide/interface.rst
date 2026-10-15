@@ -158,11 +158,29 @@ another pane. Dropping a dragged tab outside the current window creates a new
 window for that session; dropping it on a pane in another SpeedCrunch window
 moves it there.
 Use :menuselection:`Session --> Rename...` to rename the active session.
-You can also double-click its tab, choose :menuselection:`Rename Session`
-from the tab context menu, or choose :menuselection:`Session --> Rename`
+You can also double-click its tab, choose :menuselection:`Rename...`
+from the tab context menu, or choose :menuselection:`Session --> Rename...`
 from the result display context menu.
+Choose :menuselection:`Session --> Clone...` to copy the active session under
+a new name, including its unfinished expression. This command is also available
+as :menuselection:`Clone...` in the tab context menu and
+:menuselection:`Session --> Clone...` in the result display context menu.
 Use :menuselection:`Session --> New Window` to open a blank
 session in a new window that copies the current window and dock layout.
+Choose :menuselection:`Session --> Close Tab` to close the active tab, or
+:menuselection:`Session --> Reopen Closed Tab` to restore the last ordinary tab
+you closed. Private tabs cannot be reopened.
+Both commands are also available from the tab context menu.
+When a floating dock has focus, session commands apply to its window.
+Use :menuselection:`View --> Split` to add a pane in any direction, and
+:menuselection:`View --> Close Pane` to close the active pane.
+The tab context menu also provides :menuselection:`Split` and
+:menuselection:`Close Pane`.
+
+The tab context menu's :menuselection:`Clear` command removes the session's
+calculations, unfinished expression, variables, functions, and units after
+confirmation. Global user definitions are kept. :menuselection:`Delete` removes
+the session itself after confirmation.
 When SpeedCrunch restores multiple windows after a restart, each window keeps
 its own dock layout, dock visibility, keypad visibility, layout and zoom,
 and—when window position saving is enabled—its own size and position.
@@ -183,10 +201,10 @@ Private sessions do not save their history, unfinished expressions, variables,
 functions, or units automatically. They are excluded from the workspace
 restored at the next launch. Closing a private session discards its contents,
 and it cannot be reopened with the Restore Closed Tab shortcut. Copying and
-explicit export remain available. Duplicating a private session creates another
+explicit export remain available. Cloning a private session creates another
 private session.
 
-Choose :menuselection:`Session --> Keep Session` to save a private
+Choose :menuselection:`Session --> Keep` to save a private
 session, including its current contents. It receives the first available
 ``Untitled-XXX`` name and behaves like an ordinary session from then on.
 
@@ -224,12 +242,18 @@ to enter text without automatic text adjustments or character restrictions.
 The expression editor provides some advanced features:
 
 * Undo and redo
+    Choose :menuselection:`Edit --> Undo` or :menuselection:`Edit --> Redo`.
     Press :kbd:`Ctrl+Z` to undo the last edit. On Windows/Linux, use
     :kbd:`Ctrl+Shift+Z` or :kbd:`Ctrl+Y` to redo it. On macOS, use
     :kbd:`Cmd+Shift+Z`. Each key press is a separate undo step.
     Automatic changes made by that key, such as inserting a closing bracket
     or converting an exponent to superscript, are undone together. Text
     committed through an input method is undone as a single edit.
+
+    :menuselection:`Edit --> Cut` cuts selected input text. Copy also works on
+    selected result text. These actions are disabled when unavailable.
+    :menuselection:`Edit --> Wrap in Parentheses` wraps the selected input, or
+    the whole expression if nothing is selected.
 
 * Automatic closing parentheses and square brackets
     Typing ``(`` or ``[`` with no text selected inserts the matching closing
@@ -295,7 +319,7 @@ User Definitions
 .. versionadded:: 1.0
 
 To define user variables, user functions and user units that are loaded globally, use
-:menuselection:`Settings --> Symbols --> User Definitions...`.
+:menuselection:`Settings --> User Definitions...`.
 
 This dialog provides:
 
@@ -467,23 +491,23 @@ determines the angle format of the arguments.
 Complex Numbers
 +++++++++++++++
 
-Configure global complex-number behavior via
-:menuselection:`Settings --> Results --> Complex Numbers`.
+Choose a result form via :menuselection:`Settings --> Results --> Complex Form`
+and a symbol via :menuselection:`Settings --> Results --> Imaginary Unit`.
 Complex numbers are always enabled.
 
 * :menuselection:`Imaginary Unit --> i`
     Use ``i`` as the imaginary unit symbol.
 * :menuselection:`Imaginary Unit --> j`
     Use ``j`` as the imaginary unit symbol.
-* :menuselection:`Form --> Rectangular (a + bi)`
+* :menuselection:`Complex Form --> Rectangular (a + bi)`
     Display complex results in rectangular form.
-* :menuselection:`Form --> Exponential (reⁱᶿ)`
+* :menuselection:`Complex Form --> Exponential (reⁱᶿ)`
     Display complex results in exponential form.
-* :menuselection:`Form --> Trigonometric (r(cos θ + i·sin θ))`
+* :menuselection:`Complex Form --> Trigonometric (r(cos θ + i·sin θ))`
     Display complex results in trigonometric form.
-* :menuselection:`Form --> Cis (r·cis(θ))`
+* :menuselection:`Complex Form --> Cis (r·cis(θ))`
     Display complex results in cis form.
-* :menuselection:`Form --> Phasor (r∠θ)`
+* :menuselection:`Complex Form --> Phasor (r∠θ)`
     Display complex results in phasor form.
 
 When the angle mode is set to radians, simple phase multiples of ``pi`` are
@@ -628,14 +652,13 @@ This section contains settings that control result output and post-evaluation be
     result-format settings, changes apply to subsequent calculations and
     previews; already stored history entries keep their original display.
 
-* :menuselection:`Complex Numbers`
-    Configure the imaginary unit and complex result form. See
-    :ref:`complex_numbers`.
+* :menuselection:`Complex Form` and :menuselection:`Imaginary Unit`
+    Configure the complex result form and imaginary unit. See :ref:`complex_numbers`.
 
 * :menuselection:`Unit Notation`
     Configure whether unit results use exponential notation, such as
     ``m·s⁻¹``, or fractional notation, such as ``m/s``.
-* :menuselection:`Automatically Copy New Results to Clipboard`
+* :menuselection:`Copy New Results Automatically`
     Automatically copy each newly evaluated result to the clipboard.
 * :menuselection:`Simplify Displayed Expressions`
     When enabled (default), SpeedCrunch adds an extra symbolic line before
@@ -680,7 +703,7 @@ Editing
 
 .. _automatic_result_reuse:
 
-* :menuselection:`Auto-Insert "ans" When Starting with an Operator`
+* :menuselection:`Auto-Insert ans`
     If a new expression starts with ``+``, ``-``, ``*``, or ``/``, SpeedCrunch inserts ``ans`` first.
 * :menuselection:`Group Digits in Input`
     Group digits as you type, using the separator and grouping pattern selected
@@ -717,7 +740,7 @@ Editing
 
     .. versionadded:: 1.1
 
-* :menuselection:`Keep Entered Expression After Evaluate`
+* :menuselection:`Keep Expression After Evaluation`
     If selected, the entered expression remains in the editor after evaluating it.
 
 * :menuselection:`Autocomplete`
@@ -801,9 +824,6 @@ User Interface Settings
     .. versionadded:: 1.0
        The :menuselection:`Theme...` dialog, including live preview and JSON import/export.
 
-* :menuselection:`Settings --> Appearance --> Font...`
-    Select the font to use for the expression editor and result display.
-
 * :menuselection:`Settings --> Appearance --> Menus`
     Choose how menus look:
 
@@ -862,7 +882,7 @@ User Interface Settings
 
     .. versionadded:: 1.1
 
-* :menuselection:`Settings --> Appearance --> Editor`
+* :menuselection:`Settings --> Appearance --> Input and Results`
     Choose the layout of the expression editor and result display:
 
     * :guilabel:`Modern` (the default) uses a rounded input box with compact
@@ -883,6 +903,9 @@ User Interface Settings
     and is saved between launches.
 
     .. versionadded:: 1.1
+
+* :menuselection:`Settings --> Appearance --> Input and Results --> Font...`
+    Select the font to use for the expression editor and result display.
 
 * :menuselection:`Settings --> Appearance --> Keypad`
     Choose the shape and spacing of the keypad buttons:
@@ -953,6 +976,8 @@ Editing
     Create a new private tab in the current session pane.
 * :kbd:`Ctrl+Shift+T` (:kbd:`Cmd+Shift+T` on macOS)
     Reopen the most recently closed session tab.
+* :kbd:`Ctrl+W` (:kbd:`Cmd+W` on macOS)
+    Close the active session tab.
 * :kbd:`Ctrl+C`
     Copy selected text to clipboard.
 * :kbd:`Ctrl+R`

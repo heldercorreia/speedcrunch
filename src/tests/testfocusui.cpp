@@ -30,6 +30,8 @@ private slots:
     void focusing_loaded_pane_preserves_its_current_scroll_position();
     void clipboard_actions_follow_active_pane_data();
     void clipboard_actions_follow_active_pane();
+    void edit_commands_follow_active_editor_data();
+    void edit_commands_follow_active_editor();
     void copy_shortcut_preserves_display_selection_in_other_pane();
     void escape_clears_only_the_focused_editor_data();
     void escape_clears_only_the_focused_editor();
@@ -1491,6 +1493,100 @@ void TestFocusUi::clipboard_actions_follow_active_pane()
         QCOMPARE(editor->text(), QStringLiteral("123456"));
         editor->clear();
     }
+}
+
+void TestFocusUi::edit_commands_follow_active_editor_data()
+{
+    QTest::addColumn<bool>("split");
+    QTest::addColumn<bool>("shortcut");
+    QTest::addColumn<bool>("foreignMenu");
+    QTest::newRow("menu") << false << false << false;
+    QTest::newRow("shortcuts") << false << true << false;
+    QTest::newRow("split-menu") << true << false << false;
+    QTest::newRow("split-shortcuts") << true << true << false;
+    QTest::newRow("another-windows-menu") << true << false << true;
+}
+
+void TestFocusUi::edit_commands_follow_active_editor()
+{
+    QFETCH(bool, split);
+    QFETCH(bool, shortcut);
+    QFETCH(bool, foreignMenu);
+    MainWindowStateGuard guard;
+    guard.settings->autoCalc = false;
+    const QString oldClipboard = QApplication::clipboard()->text();
+    const auto restoreClipboard = qScopeGuard([oldClipboard]() {
+        QApplication::clipboard()->setText(oldClipboard);
+    });
+    MainWindow window(false);
+    MainWindow other(false);
+    window.show();
+    other.show();
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    if (split)
+        QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
+    Editor* editor = window.findChildren<Editor*>().last();
+    ResultDisplay* display = window.findChildren<ResultDisplay*>().last();
+    QVERIFY(editor && display);
+    editor->setFocus();
+    QTRY_VERIFY(editor->hasFocus());
+    QMenu* menu = menuWithTitle((foreignMenu ? other : window).menuBar(), QStringLiteral("&Edit"));
+    QVERIFY(menu);
+    QAction* undo = directMenuActionWithText(menu, QStringLiteral("&Undo"));
+    QAction* redo = directMenuActionWithText(menu, QStringLiteral("&Redo"));
+    QAction* cut = directMenuActionWithText(menu, QStringLiteral("Cu&t"));
+    QAction* copy = directMenuActionWithText(menu, QStringLiteral("&Copy"));
+    QVERIFY(undo && redo && cut && copy);
+    const auto invoke = [shortcut, &window](QAction* action, QKeySequence::StandardKey standardKey) {
+        if (shortcut) {
+            const QKeyCombination key = QKeySequence(standardKey)[0];
+            QTest::keyClick(&window, key.key(), key.keyboardModifiers());
+        } else {
+            action->trigger();
+        }
+    };
+    editor->setText(QStringLiteral("12"));
+    QVERIFY(!undo->isEnabled());
+    QVERIFY(!redo->isEnabled());
+    QVERIFY(!cut->isEnabled());
+    QVERIFY(!copy->isEnabled());
+    editor->setCursorPosition(2);
+    editor->insertPlainText(QStringLiteral("3"));
+    QVERIFY(undo->isEnabled());
+    invoke(undo, QKeySequence::Undo);
+    QCOMPARE(editor->text(), QStringLiteral("12"));
+    QVERIFY(redo->isEnabled());
+    invoke(redo, QKeySequence::Redo);
+    QCOMPARE(editor->text(), QStringLiteral("123"));
+    QTextCursor cursor = editor->textCursor();
+    cursor.setPosition(1);
+    cursor.setPosition(2, QTextCursor::KeepAnchor);
+    editor->setTextCursor(cursor);
+    QVERIFY(cut->isEnabled());
+    QVERIFY(copy->isEnabled());
+    invoke(cut, QKeySequence::Cut);
+    QCOMPARE(editor->text(), QStringLiteral("13"));
+    QCOMPARE(QApplication::clipboard()->text(), QStringLiteral("2"));
+    invoke(undo, QKeySequence::Undo);
+    QCOMPARE(editor->text(), QStringLiteral("123"));
+    cursor = editor->textCursor();
+    cursor.clearSelection();
+    editor->setTextCursor(cursor);
+    display->setPlainText(QStringLiteral("9876"));
+    cursor = display->textCursor();
+    cursor.setPosition(1);
+    cursor.setPosition(3, QTextCursor::KeepAnchor);
+    display->setTextCursor(cursor);
+    QVERIFY(copy->isEnabled());
+    QVERIFY(!cut->isEnabled());
+    invoke(copy, QKeySequence::Copy);
+    QCOMPARE(QApplication::clipboard()->text(), QStringLiteral("87"));
+    QCOMPARE(display->textCursor().selectedText(), QStringLiteral("87"));
+    cursor.clearSelection();
+    display->setTextCursor(cursor);
+    QVERIFY(!copy->isEnabled());
+    QVERIFY(other.findChild<Editor*>()->text().isEmpty());
 }
 
 void TestFocusUi::copy_shortcut_preserves_display_selection_in_other_pane()

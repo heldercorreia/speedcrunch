@@ -450,9 +450,9 @@ Syntax note: ``5j`` means ``5*j``, while ``j5`` is a variable named ``j5``.
 Write ``j*5`` explicitly if needed.
 
 The displayed imaginary-unit symbol is configurable in
-:menuselection:`Settings --> Results --> Complex Numbers --> Imaginary Unit`.
+:menuselection:`Settings --> Results --> Imaginary Unit`.
 The displayed complex form is configurable in
-:menuselection:`Settings --> Results --> Complex Numbers --> Form`.
+:menuselection:`Settings --> Results --> Complex Form`.
 
 You can enter complex numbers in phasor notation with ``∠``. The expression
 ``r ∠ θ`` is interpreted as ``r * cis(θ)``. The phase follows the current angle

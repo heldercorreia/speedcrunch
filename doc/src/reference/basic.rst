@@ -656,7 +656,7 @@ Complex Numbers
 
 The complex-form functions in this section format one result in a specific
 complex representation. They override the global
-:menuselection:`Settings --> Results --> Complex Numbers --> Form` setting for
+:menuselection:`Settings --> Results --> Complex Form` setting for
 that result only.
 
 Complex numbers can also be entered in phasor notation as ``r ∠ θ``. This is
@@ -705,7 +705,7 @@ form continues to use radians.
     (``i`` or ``j``).
 
     This corresponds to
-    :menuselection:`Settings --> Results --> Complex Numbers --> Form -->
+    :menuselection:`Settings --> Results --> Complex Form -->
     Rectangular (a + bi)`.
 
 .. function:: trigform(x)
@@ -715,7 +715,7 @@ form continues to use radians.
     (``i`` or ``j``). The angle ɸ follows the global angle mode.
 
     This corresponds to
-    :menuselection:`Settings --> Results --> Complex Numbers --> Form -->
+    :menuselection:`Settings --> Results --> Complex Form -->
     Trigonometric (r(cos θ + i·sin θ))`.
 
 .. function:: expform(x)
@@ -725,7 +725,7 @@ form continues to use radians.
     (``i`` or ``j``), and ɸ is in radians.
 
     This corresponds to
-    :menuselection:`Settings --> Results --> Complex Numbers --> Form -->
+    :menuselection:`Settings --> Results --> Complex Form -->
     Exponential (reⁱᶿ)`.
 
 .. function:: cisform(x)
@@ -734,7 +734,7 @@ form continues to use radians.
     angle ɸ follows the global angle mode.
 
     This corresponds to
-    :menuselection:`Settings --> Results --> Complex Numbers --> Form -->
+    :menuselection:`Settings --> Results --> Complex Form -->
     Cis (r·cis(θ))`.
 
 .. function:: phasorform(x)
@@ -746,7 +746,7 @@ form continues to use radians.
     complex number from magnitude ``r`` and phase ``θ``.
 
     This corresponds to
-    :menuselection:`Settings --> Results --> Complex Numbers --> Form -->
+    :menuselection:`Settings --> Results --> Complex Form -->
     Phasor (r∠θ)`.
 
 

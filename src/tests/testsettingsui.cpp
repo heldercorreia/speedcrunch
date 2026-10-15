@@ -1063,9 +1063,7 @@ void TestSettingsUi::user_definitions_menu_opens_working_dialog()
 
     QMenu* settingsMenu = menuWithTitle(window.menuBar(), QStringLiteral("Se&ttings"));
     QVERIFY(settingsMenu != nullptr);
-    QMenu* symbolsMenu = directSubmenuWithTitle(settingsMenu, QStringLiteral("&Symbols"));
-    QVERIFY(symbolsMenu != nullptr);
-    QAction* action = directMenuActionWithText(symbolsMenu, QStringLiteral("User &Definitions..."));
+    QAction* action = directMenuActionWithText(settingsMenu, QStringLiteral("User &Definitions..."));
     QVERIFY(action != nullptr);
 
     bool visitedDialog = false;

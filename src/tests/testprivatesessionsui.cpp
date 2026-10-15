@@ -107,11 +107,11 @@ void TestPrivateSessionsUi::private_session_keep_action_is_discoverable()
     QVERIFY(tabs);
     QCOMPARE(tabs->tabToolTip(tabs->currentIndex()),
              QStringLiteral("%1\nPrivate session: contents are discarded when closed.\n"
-                            "Choose Keep Session to turn it into a regular session.").arg(display->session()->name()));
+                            "Choose Session > Keep to turn it into a regular session.").arg(display->session()->name()));
 
     QMenu* menu = menuWithTitle(window.menuBar(), QStringLiteral("&Session"));
     QVERIFY(menu);
-    QAction* keep = directMenuActionWithText(menu, QStringLiteral("Keep Session"));
+    QAction* keep = directMenuActionWithText(menu, QStringLiteral("Keep"));
     QVERIFY(keep);
     window.activateWindow();
     window.findChild<Editor*>()->setFocus();
@@ -310,7 +310,7 @@ void TestPrivateSessionsUi::private_session_menu_targets_active_window_and_keeps
     QVERIFY(display->session()->isPrivate());
     QVERIFY(first.windowTitle().contains(QStringLiteral("[Private]")));
 
-    QAction* convert = directMenuActionWithText(menu, QStringLiteral("Make Private..."));
+    QAction* convert = directMenuActionWithText(menu, QStringLiteral("Keep"));
     QVERIFY(convert);
     convert->trigger();
     QVERIFY(!display->session()->isPrivate());

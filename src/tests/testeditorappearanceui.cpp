@@ -290,7 +290,11 @@ void TestEditorAppearanceUi::editor_display_style_preserves_result_selection_and
     QSignalSpy edits(editor, &Editor::textChanged);
     QMenu* menu = window.findChild<QMenu*>(QStringLiteral("EditorDisplayStyleMenu"));
     QVERIFY(menu);
-    for (QAction* action : menu->actions()) {
+    QAction* classic = directMenuActionWithText(menu, QStringLiteral("&Classic"));
+    QVERIFY(classic);
+    QActionGroup* styles = classic->actionGroup();
+    QVERIFY(styles);
+    for (QAction* action : styles->actions()) {
         action->trigger();
         QCOMPARE(display->textCursor().selectedText(), selectedText);
         QCOMPARE(editor->text(), QStringLiteral("123+456"));

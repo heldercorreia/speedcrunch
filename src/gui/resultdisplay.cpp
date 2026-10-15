@@ -1404,11 +1404,11 @@ QMenu* ResultDisplay::createContextMenu(const QPoint& pos)
         emit exportSessionHtmlRequested();
     });
     sessionMenu->addSeparator();
-    QAction* duplicateSessionAction = sessionMenu->addAction(tr("Duplicate"));
+    QAction* duplicateSessionAction = sessionMenu->addAction(tr("Clone..."));
     connect(duplicateSessionAction, &QAction::triggered, this, [this]() {
         emit duplicateSessionRequested();
     });
-    QAction* renameSessionAction = sessionMenu->addAction(tr("Rename"));
+    QAction* renameSessionAction = sessionMenu->addAction(tr("Rename..."));
     QAction* convertPrivacyAction = sessionMenu->addAction(m_session && m_session->isPrivate()
         ? tr("Keep") : tr("Make Private..."));
     connect(convertPrivacyAction, &QAction::triggered, this, &ResultDisplay::convertSessionPrivacyRequested);

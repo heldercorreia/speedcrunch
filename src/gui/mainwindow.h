@@ -403,6 +403,8 @@ private:
                                           int resultPrecision);
     void syncStatusBarSelectionMenuActionState();
     void syncViewMenuActionState();
+    void syncEditMenuActionState();
+    void syncSessionMenuActionState();
     void updateStatusBarSectionVisibility();
     void updateColorSchemeActionState();
     QString statusBarAngleUnitValue() const;
@@ -431,6 +433,9 @@ private:
     struct {
         QAction* sessionOpen;
         QAction* sessionRename;
+        QAction* sessionClone;
+        QAction* sessionClose;
+        QAction* sessionReopen;
         QAction* sessionNewTab;
         QAction* sessionNewPrivate;
         QAction* sessionConvertPrivacy;
@@ -442,6 +447,9 @@ private:
         QAction* sessionExportHtml;
         QAction* sessionExportPlainText;
         QAction* sessionQuit;
+        QAction* editUndo;
+        QAction* editRedo;
+        QAction* editCut;
         QAction* editCopy;
         QAction* editCopyLastResult;
         QAction* editPaste;
@@ -474,6 +482,11 @@ private:
         QAction* viewMenuBar;
         QAction* viewFullScreenMode;
         QAction* viewBitfield;
+        QAction* viewSplitLeft;
+        QAction* viewSplitRight;
+        QAction* viewSplitUp;
+        QAction* viewSplitDown;
+        QAction* viewClosePane;
         QAction* settingsResultFormatGeneral;
         QAction* settingsResultFormatFixed;
         QAction* settingsResultFormatEngineering;
@@ -573,7 +586,7 @@ private:
         QAction* helpAbout;
         QAction* helpDiagnostics;
         QAction* contextHelp;
-    } m_actions;
+    } m_actions{};
 
     struct {
         QActionGroup* angle;
@@ -600,7 +613,6 @@ private:
         QMenu* angleUnit;
         QMenu* complexForm;
         QMenu* imaginaryUnit;
-        QMenu* complexNumbers;
         QMenu* editing;
         QMenu* autoCompletion;
         QMenu* colorScheme;
@@ -625,8 +637,8 @@ private:
         QMenu* session;
         QMenu* sessionExport;
         QMenu* settings;
-        QMenu* symbols;
         QMenu* view;
+        QMenu* split;
         QMenu* keypad;
         QMenu* keypadZoom;
         QMenu* window;
@@ -648,7 +660,7 @@ private:
         QWidget* root;
         ManualWindow* manual = nullptr;
         BitFieldWidget* bitField = nullptr;
-    } m_widgets;
+    } m_widgets{};
 
     struct {
         BookDock* book;
@@ -714,7 +726,7 @@ private:
     QHash<QString, QPair<int, int>> m_sessionViewportAnchors;
     QHash<QString, int> m_sessionScrollValues;
     QTranslator* m_translator;
-    QPlainTextEdit* m_copyWidget;
+    QPlainTextEdit* m_copyWidget = nullptr;
     ManualServer* m_manualServer;
 #ifdef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
     VersionCheck* m_versionCheck;

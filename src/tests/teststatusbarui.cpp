@@ -563,7 +563,7 @@ void TestStatusBarUi::status_bar_setting_selectors_update_only_active_window()
         menuWithTitle(secondWindow.menuBar(), QStringLiteral("Se&ttings"));
     QVERIFY(secondSettingsMenu != nullptr);
     QMenu* secondAngleMenu =
-        directSubmenuWithTitle(secondSettingsMenu, QStringLiteral("&Angle Mode"));
+        directSubmenuWithTitle(secondSettingsMenu, QStringLiteral("Angle &Mode"));
     QVERIFY(secondAngleMenu != nullptr);
     QAction* staleRadianAction =
         directMenuActionWithText(secondAngleMenu, QStringLiteral("&Radian"));

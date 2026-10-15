@@ -2533,15 +2533,27 @@ void cancelWindowActivationRestore()
 
 MainWindow* activeMainWindowForMenuAction(MainWindow* fallback)
 {
-    MainWindow* targetWindow = qobject_cast<MainWindow*>(QApplication::activeWindow());
-    if (targetWindow == nullptr) {
-        if (QWidget* focusWidget = QApplication::focusWidget())
-            targetWindow = qobject_cast<MainWindow*>(focusWidget->window());
-    }
-    if (targetWindow == nullptr) {
-        if (QWidget* focusWidget = lastFocusWidgetInActiveWindow())
-            targetWindow = qobject_cast<MainWindow*>(focusWidget->window());
-    }
+    const auto windowForWidget = [](QWidget* widget) -> MainWindow* {
+        if (widget == nullptr)
+            return nullptr;
+        if (auto* window = qobject_cast<MainWindow*>(widget->window()))
+            return window;
+        // Floating docks are windows too, but retain their MainWindow parent.
+        for (QWidget* ancestor = widget; ancestor != nullptr; ancestor = ancestor->parentWidget()) {
+            if (auto* dock = qobject_cast<QDockWidget*>(ancestor)) {
+                for (QWidget* owner = dock->parentWidget(); owner != nullptr; owner = owner->parentWidget()) {
+                    if (auto* window = qobject_cast<MainWindow*>(owner))
+                        return window;
+                }
+            }
+        }
+        return nullptr;
+    };
+    MainWindow* targetWindow = windowForWidget(QApplication::activeWindow());
+    if (targetWindow == nullptr)
+        targetWindow = windowForWidget(QApplication::focusWidget());
+    if (targetWindow == nullptr)
+        targetWindow = windowForWidget(lastFocusWidgetInActiveWindow());
     return targetWindow != nullptr ? targetWindow : fallback;
 }
 
@@ -3843,6 +3855,8 @@ void MainWindow::createUi()
     setWindowIcon(QPixmap(":/speedcrunch.png"));
 
     m_copyWidget = m_widgets.editor;
+    syncEditMenuActionState();
+    syncSessionMenuActionState();
 }
 
 void MainWindow::createActions()
@@ -3859,8 +3873,14 @@ void MainWindow::createActions()
     m_actions.sessionNewWindow = new QAction(this);
     m_actions.sessionOpen = new QAction(this);
     m_actions.sessionRename = new QAction(this);
+    m_actions.sessionClone = new QAction(this);
+    m_actions.sessionClose = new QAction(this);
+    m_actions.sessionReopen = new QAction(this);
     m_actions.sessionOpenSessionsFolder = new QAction(this);
     m_actions.sessionQuit = new QAction(this);
+    m_actions.editUndo = new QAction(this);
+    m_actions.editRedo = new QAction(this);
+    m_actions.editCut = new QAction(this);
     m_actions.editClearExpression = new QAction(this);
     m_actions.editClearHistory = new QAction(this);
     m_actions.editCopyLastResult = new QAction(this);
@@ -3886,6 +3906,11 @@ void MainWindow::createActions()
     m_actions.viewMenuBar = new QAction(this);
     m_actions.viewVariables = new QAction(this);
     m_actions.viewBitfield = new QAction(this);
+    m_actions.viewSplitLeft = new QAction(this);
+    m_actions.viewSplitRight = new QAction(this);
+    m_actions.viewSplitUp = new QAction(this);
+    m_actions.viewSplitDown = new QAction(this);
+    m_actions.viewClosePane = new QAction(this);
     m_actions.viewUserFunctions = new QAction(this);
     m_actions.viewUserUnits = new QAction(this);
     m_actions.settingsAngleUnitDegree = new QAction(this);
@@ -4403,23 +4428,29 @@ void MainWindow::setActionsText()
     m_actions.sessionNewTab->setText(MainWindow::tr("New &Tab"));
     m_actions.sessionNewPrivate->setText(MainWindow::tr("New &Private Tab"));
     m_actions.sessionConvertPrivacy->setText(m_session && m_session->isPrivate()
-        ? tr("Keep Session") : tr("Make Private..."));
+        ? tr("Keep") : tr("Make Private..."));
     m_actions.sessionNewWindow->setText(MainWindow::tr("New &Window"));
     m_actions.sessionOpen->setText(MainWindow::tr("&Open..."));
     m_actions.sessionRename->setText(MainWindow::tr("&Rename..."));
+    m_actions.sessionClone->setText(tr("Clo&ne..."));
+    m_actions.sessionClose->setText(tr("&Close Tab"));
+    m_actions.sessionReopen->setText(tr("Reopen Clo&sed Tab"));
     m_actions.sessionOpenSessionsFolder->setText(MainWindow::tr("Open Sessions &Folder"));
     m_actions.sessionQuit->setText(MainWindow::tr("&Quit"));
 
     m_actions.editClearExpression->setText(MainWindow::tr("Clear E&xpression"));
+    m_actions.editUndo->setText(tr("&Undo"));
+    m_actions.editRedo->setText(tr("&Redo"));
+    m_actions.editCut->setText(tr("Cu&t"));
     m_actions.editClearHistory->setText(MainWindow::tr("Clear &History"));
-    m_actions.editCopyLastResult->setText(MainWindow::tr("Copy Last &Result"));
+    m_actions.editCopyLastResult->setText(MainWindow::tr("Copy &Last Result"));
     m_actions.editCopy->setText(MainWindow::tr("&Copy"));
     m_actions.editPaste->setText(MainWindow::tr("&Paste"));
     m_actions.editSelectExpression->setText(MainWindow::tr("&Select Expression"));
-    m_actions.editWrapSelection->setText(MainWindow::tr("&Wrap Selection in Parentheses"));
+    m_actions.editWrapSelection->setText(MainWindow::tr("&Wrap in Parentheses"));
 
     m_actions.viewConstants->setText(MainWindow::tr("&Constants"));
-    m_actions.viewFullScreenMode->setText(MainWindow::tr("F&ull Screen Mode"));
+    m_actions.viewFullScreenMode->setText(MainWindow::tr("Full Scr&een Mode"));
     m_actions.viewFunctions->setText(MainWindow::tr("&Functions"));
     m_actions.viewHistory->setText(MainWindow::tr("&History"));
     updateKeypadDisabledActionText();
@@ -4436,6 +4467,11 @@ void MainWindow::setActionsText()
     m_actions.viewMenuBar->setText(MainWindow::tr("Main &Menu"));
     m_actions.viewVariables->setText(MainWindow::tr("User &Variables"));
     m_actions.viewBitfield->setText(MainWindow::tr("Bitfield"));
+    m_actions.viewSplitLeft->setText(tr("&Left"));
+    m_actions.viewSplitRight->setText(tr("&Right"));
+    m_actions.viewSplitUp->setText(tr("&Up"));
+    m_actions.viewSplitDown->setText(tr("&Down"));
+    m_actions.viewClosePane->setText(tr("Close Pa&ne"));
     m_actions.viewUserFunctions->setText(MainWindow::tr("Use&r Functions"));
     m_actions.viewUserUnits->setText(MainWindow::tr("User &Units"));
 
@@ -4443,17 +4479,17 @@ void MainWindow::setActionsText()
     m_actions.settingsAngleUnitRadian->setText(MainWindow::tr("&Radian"));
     m_actions.settingsAngleUnitGradian->setText(MainWindow::tr("&Gradian"));
     m_actions.settingsAngleUnitTurn->setText(MainWindow::tr("&Turn"));
-    m_actions.settingsAngleUnitRevolution->setText(MainWindow::tr("&Revolution"));
+    m_actions.settingsAngleUnitRevolution->setText(MainWindow::tr("Re&volution"));
     m_actions.settingsBehaviorAlwaysOnTop->setText(MainWindow::tr("Always on &Top"));
-    m_actions.settingsBehaviorAutoAns->setText(MainWindow::tr("Auto-Insert \"ans\" When Starting with an Operator"));
+    m_actions.settingsBehaviorAutoAns->setText(MainWindow::tr("Auto-Insert a&ns"));
     m_actions.settingsBehaviorAutoAns->setToolTip(MainWindow::tr("If a new expression starts with +, -, *, or /, SpeedCrunch inserts \"ans\" first."));
     m_actions.settingsBehaviorAutoAns->setStatusTip(MainWindow::tr("If a new expression starts with +, -, *, or /, SpeedCrunch inserts \"ans\" first."));
     m_actions.settingsBehaviorAutoCompletion->setText(MainWindow::tr("Automatic &Completion"));
-    m_actions.settingsBehaviorAutoCompletionBuiltInFunctions->setText(MainWindow::tr("Built-in &functions"));
-    m_actions.settingsBehaviorAutoCompletionBuiltInVariables->setText(MainWindow::tr("Built-in &variables"));
+    m_actions.settingsBehaviorAutoCompletionBuiltInFunctions->setText(MainWindow::tr("&Built-in Functions"));
+    m_actions.settingsBehaviorAutoCompletionBuiltInVariables->setText(MainWindow::tr("Built-in &Variables"));
     m_actions.settingsBehaviorAutoCompletionLongFormUnits->setText(MainWindow::tr("&Units"));
-    m_actions.settingsBehaviorAutoCompletionUserFunctions->setText(MainWindow::tr("User &functions"));
-    m_actions.settingsBehaviorAutoCompletionUserVariables->setText(MainWindow::tr("User &variables"));
+    m_actions.settingsBehaviorAutoCompletionUserFunctions->setText(MainWindow::tr("User &Functions"));
+    m_actions.settingsBehaviorAutoCompletionUserVariables->setText(MainWindow::tr("User Va&riables"));
     m_actions.settingsBehaviorPartialResults->setText(MainWindow::tr("Show Live Result &Preview"));
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setText(MainWindow::tr("Save &Window Position on Exit"));
     m_actions.settingsOpenPrivateTabOnStartup->setText(tr("Open a Private Tab on Startup"));
@@ -4474,7 +4510,7 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorDigitGroupingTwoSpaces->setText(MainWindow::tr("Medium Space"));
     m_actions.settingsBehaviorDigitGroupingThreeSpaces->setText(MainWindow::tr("Large Space"));
     m_actions.settingsBehaviorDigitGroupingIntegerPartOnly->setText(MainWindow::tr("Group Integer Part Only"));
-    m_actions.settingsBehaviorLeaveLastExpression->setText(MainWindow::tr("Keep Entered Expression After Evaluate"));
+    m_actions.settingsBehaviorLeaveLastExpression->setText(MainWindow::tr("Keep Expression After Evaluation"));
     m_actions.settingsBehaviorNumberFormat->setText(MainWindow::tr("Number Format..."));
     m_actions.settingsBehaviorResultSlots->setText(MainWindow::tr("Notation && Precision..."));
     m_actions.settingsBehaviorLeaveLastExpression->setToolTip(MainWindow::tr("After pressing Enter, keep the entered expression selected in the editor."));
@@ -4482,7 +4518,7 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorUpDownArrowNever->setText(MainWindow::tr("Never"));
     m_actions.settingsBehaviorUpDownArrowAlways->setText(MainWindow::tr("Always"));
     m_actions.settingsBehaviorUpDownArrowSingleLineOnly->setText(MainWindow::tr("Only for Single-Line Expressions"));
-    m_actions.settingsBehaviorAutoResultToClipboard->setText(MainWindow::tr("Automatically Copy New Results to Clipboard"));
+    m_actions.settingsBehaviorAutoResultToClipboard->setText(MainWindow::tr("Copy New Results Automatically"));
     m_actions.settingsBehaviorSimplifyResultExpressions->setText(MainWindow::tr("Simplify Displayed Expressions"));
     m_actions.settingsBehaviorHistorySizeLimit->setText(MainWindow::tr("History Size &Limit..."));
     m_actions.settingsRadixCharComma->setText(MainWindow::tr("&Comma"));
@@ -4502,9 +4538,9 @@ void MainWindow::setActionsText()
         MainWindow::tr("Nearest, Half &Even (roundeven)"));
     m_actions.settingsResultRoundingTowardZero->setText(MainWindow::tr("Toward &Zero (trunc)"));
     m_actions.settingsResultRoundingTowardPositiveInfinity->setText(
-        MainWindow::tr("Toward +&∞ (ceil)"));
+        MainWindow::tr("Toward +∞ (&ceil)"));
     m_actions.settingsResultRoundingTowardNegativeInfinity->setText(
-        MainWindow::tr("Toward −&∞ (floor)"));
+        MainWindow::tr("Toward −∞ (&floor)"));
     m_actions.settingsResultFormatAutoPrecision->setText(MainWindow::tr("&Automatic"));
     m_actions.settingsResultFormatGeneral->setText(MainWindow::tr("&Automatic"));
     m_actions.settingsResultFormatFixed->setText(MainWindow::tr("&Fixed-Point"));
@@ -4531,11 +4567,11 @@ void MainWindow::setActionsText()
     m_actions.settingsResetAll->setText(MainWindow::tr("Reset All Settings..."));
     m_actions.settingsDisplayColorSchemeCustom->setText(MainWindow::tr("&Theme..."));
     m_actions.settingsMenuAppearanceSystem->setText(MainWindow::tr("&System"));
-    m_actions.settingsMenuAppearanceSpeedCrunch->setText(MainWindow::tr("&SpeedCrunch Theme"));
+    m_actions.settingsMenuAppearanceSpeedCrunch->setText(MainWindow::tr("SpeedCrunch &Theme"));
     m_actions.settingsDockAppearanceSystem->setText(MainWindow::tr("&System"));
-    m_actions.settingsDockAppearanceSpeedCrunch->setText(MainWindow::tr("&SpeedCrunch Theme"));
+    m_actions.settingsDockAppearanceSpeedCrunch->setText(MainWindow::tr("SpeedCrunch &Theme"));
     m_actions.settingsStatusBarAppearanceSystem->setText(MainWindow::tr("&System"));
-    m_actions.settingsStatusBarAppearanceSpeedCrunch->setText(MainWindow::tr("&SpeedCrunch Theme"));
+    m_actions.settingsStatusBarAppearanceSpeedCrunch->setText(MainWindow::tr("SpeedCrunch &Theme"));
     m_actions.settingsKeypadAppearanceClassic->setText(MainWindow::tr("&Classic"));
     m_actions.settingsKeypadAppearanceModern->setText(MainWindow::tr("&Modern"));
     m_actions.settingsEditorDisplayClassic->setText(MainWindow::tr("&Classic"));
@@ -4547,12 +4583,12 @@ void MainWindow::setActionsText()
 #ifdef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
     m_actions.helpUpdates->setText(MainWindow::tr("Check for &Updates"));
 #endif
-    m_actions.helpFeedback->setText(MainWindow::tr("Issue Tracker"));
+    m_actions.helpFeedback->setText(MainWindow::tr("Issues and &Feedback"));
     m_actions.helpCommunity->setText(MainWindow::tr("Community"));
     m_actions.helpSource->setText(MainWindow::tr("Source Code"));
     m_actions.helpDonate->setText(MainWindow::tr("&Donate"));
-    m_actions.helpAbout->setText(MainWindow::tr("About &SpeedCrunch"));
-    m_actions.helpDiagnostics->setText(MainWindow::tr("App &Diagnostics"));
+    m_actions.helpAbout->setText(MainWindow::tr("&About SpeedCrunch"));
+    m_actions.helpDiagnostics->setText(MainWindow::tr("App Diag&nostics"));
 }
 
 void MainWindow::createActionGroups()
@@ -4665,7 +4701,18 @@ void MainWindow::createActionGroups()
 void MainWindow::createActionShortcuts()
 {
     StartupDiagnostics::Scope timing("Create shortcuts");
-    m_actions.sessionNewTab->setShortcuts(QKeySequence::AddTab);
+    QList<QKeySequence> newTabBindings = QKeySequence::keyBindings(QKeySequence::AddTab);
+    for (const QKeySequence& binding : QKeySequence::keyBindings(QKeySequence::New)) {
+        if (!newTabBindings.contains(binding))
+            newTabBindings.append(binding);
+    }
+    m_actions.sessionNewTab->setShortcuts(newTabBindings);
+    m_actions.sessionOpen->setShortcuts(QKeySequence::Open);
+    m_actions.sessionClose->setShortcuts(QKeySequence::Close);
+    m_actions.sessionReopen->setShortcut(Qt::CTRL | Qt::SHIFT | Qt::Key_T);
+    m_actions.editUndo->setShortcuts(QKeySequence::Undo);
+    m_actions.editRedo->setShortcuts(QKeySequence::Redo);
+    m_actions.editCut->setShortcuts(QKeySequence::Cut);
     m_actions.sessionNewPrivate->setShortcut(Qt::CTRL | Qt::SHIFT | Qt::Key_N);
     // Let this QAction own Quit; a separate standard-key QShortcut would
     // duplicate Ctrl+Q on Linux and make the shortcut ambiguous.
@@ -4716,6 +4763,7 @@ void MainWindow::createMenus()
     m_menus.session->addSeparator();
     m_menus.session->addAction(m_actions.sessionOpen);
     m_menus.session->addAction(m_actions.sessionRename);
+    m_menus.session->addAction(m_actions.sessionClone);
     m_menus.session->addAction(m_actions.sessionConvertPrivacy);
     m_menus.session->addSeparator();
     m_menus.session->addAction(m_actions.sessionImport);
@@ -4727,22 +4775,30 @@ void MainWindow::createMenus()
     m_menus.session->addSeparator();
     m_menus.session->addAction(m_actions.settingsBehaviorHistorySizeLimit);
     m_menus.session->addSeparator();
+    m_menus.session->addAction(m_actions.sessionClose);
+    m_menus.session->addAction(m_actions.sessionReopen);
+    m_menus.session->addSeparator();
     m_menus.session->addAction(m_actions.sessionQuit);
     connect(m_menus.session, &QMenu::aboutToShow, this, [this]() {
-        const MainWindow* window = activeMainWindowForMenuAction(this);
-        m_actions.sessionConvertPrivacy->setText(window->m_session && window->m_session->isPrivate()
-            ? tr("Keep Session") : tr("Make Private..."));
+        syncSessionMenuActionState();
     });
 
     m_menus.edit = new QMenu("", this);
     bar->addMenu(m_menus.edit);
+    m_menus.edit->addAction(m_actions.editUndo);
+    m_menus.edit->addAction(m_actions.editRedo);
+    m_menus.edit->addSeparator();
+    m_menus.edit->addAction(m_actions.editCut);
     m_menus.edit->addAction(m_actions.editCopy);
-    m_menus.edit->addAction(m_actions.editCopyLastResult);
     m_menus.edit->addAction(m_actions.editPaste);
+    m_menus.edit->addAction(m_actions.editCopyLastResult);
+    m_menus.edit->addSeparator();
     m_menus.edit->addAction(m_actions.editSelectExpression);
-    m_menus.edit->addAction(m_actions.editClearExpression);
-    m_menus.edit->addAction(m_actions.editClearHistory);
     m_menus.edit->addAction(m_actions.editWrapSelection);
+    m_menus.edit->addAction(m_actions.editClearExpression);
+    m_menus.edit->addSeparator();
+    m_menus.edit->addAction(m_actions.editClearHistory);
+    connect(m_menus.edit, &QMenu::aboutToShow, this, &MainWindow::syncEditMenuActionState);
 
     m_menus.view = new QMenu("", this);
     bar->addMenu(m_menus.view);
@@ -4765,7 +4821,14 @@ void MainWindow::createMenus()
     m_menus.view->addAction(m_actions.viewHistory);
     m_menus.view->addAction(m_actions.viewBitfield);
     m_menus.view->addSeparator();
+    m_menus.split = m_menus.view->addMenu("");
+    m_menus.split->addAction(m_actions.viewSplitLeft);
+    m_menus.split->addAction(m_actions.viewSplitRight);
+    m_menus.split->addAction(m_actions.viewSplitUp);
+    m_menus.split->addAction(m_actions.viewSplitDown);
+    m_menus.view->addAction(m_actions.viewClosePane);
 #if !defined(Q_OS_MACOS)
+    m_menus.view->addSeparator();
     m_menus.view->addAction(m_actions.viewMenuBar);
     m_menus.view->addAction(m_actions.viewFullScreenMode);
 #endif
@@ -4777,7 +4840,6 @@ void MainWindow::createMenus()
 
     m_menus.display = m_menus.settings->addMenu("");
     m_menus.display->addAction(m_actions.settingsDisplayColorSchemeCustom);
-    m_menus.display->addAction(m_actions.settingsDisplayFont);
     m_menus.display->addSeparator();
     m_menus.menuAppearance = m_menus.display->addMenu("");
     m_menus.menuAppearance->setObjectName(QStringLiteral("MenuAppearanceMenu"));
@@ -4791,6 +4853,8 @@ void MainWindow::createMenus()
     m_menus.editorDisplayStyle->setObjectName(QStringLiteral("EditorDisplayStyleMenu"));
     m_menus.editorDisplayStyle->addAction(m_actions.settingsEditorDisplayClassic);
     m_menus.editorDisplayStyle->addAction(m_actions.settingsEditorDisplayModern);
+    m_menus.editorDisplayStyle->addSeparator();
+    m_menus.editorDisplayStyle->addAction(m_actions.settingsDisplayFont);
     m_menus.keypadAppearance = m_menus.display->addMenu("");
     m_menus.keypadAppearance->setObjectName(QStringLiteral("KeypadAppearanceMenu"));
     m_menus.keypadAppearance->addAction(m_actions.settingsKeypadAppearanceClassic);
@@ -4815,6 +4879,8 @@ void MainWindow::createMenus()
     m_menus.editing->addAction(m_actions.settingsEditingCursorBlinking);
     m_menus.editing->addAction(m_actions.settingsEditingEscapeClearsEditor);
     m_menus.editing->addAction(m_actions.settingsBehaviorLeaveLastExpression);
+    m_menus.editing->setToolTipsVisible(true);
+    m_menus.editing->addSeparator();
     m_menus.autoCompletion = m_menus.editing->addMenu("");
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionBuiltInFunctions);
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionBuiltInVariables);
@@ -4835,14 +4901,13 @@ void MainWindow::createMenus()
     m_menus.resultRoundingMode->addAction(m_actions.settingsResultRoundingTowardZero);
     m_menus.resultRoundingMode->addAction(m_actions.settingsResultRoundingTowardPositiveInfinity);
     m_menus.resultRoundingMode->addAction(m_actions.settingsResultRoundingTowardNegativeInfinity);
-    m_menus.complexNumbers = m_menus.results->addMenu("");
-    m_menus.complexForm = m_menus.complexNumbers->addMenu("");
+    m_menus.complexForm = m_menus.results->addMenu("");
     m_menus.complexForm->addAction(m_actions.settingsResultFormatCartesian);
     m_menus.complexForm->addAction(m_actions.settingsResultFormatPolar);
     m_menus.complexForm->addAction(m_actions.settingsResultFormatTrigonometric);
     m_menus.complexForm->addAction(m_actions.settingsResultFormatCis);
     m_menus.complexForm->addAction(m_actions.settingsResultFormatPolarAngle);
-    m_menus.imaginaryUnit = m_menus.complexNumbers->addMenu("");
+    m_menus.imaginaryUnit = m_menus.results->addMenu("");
     m_menus.imaginaryUnit->addAction(m_actions.settingsImaginaryUnitI);
     m_menus.imaginaryUnit->addAction(m_actions.settingsImaginaryUnitJ);
     m_menus.unitNegativeExponentStyle = m_menus.results->addMenu("");
@@ -4881,9 +4946,6 @@ void MainWindow::createMenus()
     m_menus.results->addAction(m_actions.settingsBehaviorSimplifyResultExpressions);
     m_menus.results->addAction(m_actions.settingsBehaviorAutoResultToClipboard);
 
-    m_menus.symbols = m_menus.settings->addMenu("");
-    m_menus.symbols->addAction(m_actions.sessionImportUserDefinitions);
-
     m_menus.angleUnit = m_menus.settings->addMenu("");
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitDegree);
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitRadian);
@@ -4897,6 +4959,8 @@ void MainWindow::createMenus()
     if (!isWaylandPlatform())
         m_menus.window->addAction(m_actions.settingsBehaviorAlwaysOnTop);
 
+    m_menus.settings->addSeparator();
+    m_menus.settings->addAction(m_actions.sessionImportUserDefinitions);
     m_menus.settings->addSeparator();
     m_menus.settings->addAction(m_actions.settingsResetAll);
 
@@ -4926,18 +4990,17 @@ void MainWindow::setMenusText()
     m_menus.edit->setTitle(MainWindow::tr("&Edit"));
     m_menus.view->setTitle(MainWindow::tr("&View"));
     m_menus.keypad->setTitle(MainWindow::tr("&Keypad"));
+    m_menus.split->setTitle(tr("S&plit"));
     m_menus.keypadZoom->setTitle(MainWindow::tr("&Zoom"));
     m_menus.settings->setTitle(MainWindow::tr("Se&ttings"));
     m_menus.results->setTitle(MainWindow::tr("&Results"));
-    m_menus.symbols->setTitle(MainWindow::tr("&Symbols"));
     m_menus.unitNegativeExponentStyle->setTitle(MainWindow::tr("Unit Notation"));
     m_menus.resultRoundingMode->setTitle(MainWindow::tr("Rounding Mode"));
     m_menus.resultFormat->setTitle(MainWindow::tr("&Notation"));
     m_menus.decimal->setTitle(MainWindow::tr("&Decimal"));
     m_menus.precision->setTitle(MainWindow::tr("&Precision"));
-    m_menus.angleUnit->setTitle(MainWindow::tr("&Angle Mode"));
-    m_menus.complexNumbers->setTitle(MainWindow::tr("Complex &Numbers"));
-    m_menus.complexForm->setTitle(MainWindow::tr("&Form"));
+    m_menus.angleUnit->setTitle(MainWindow::tr("Angle &Mode"));
+    m_menus.complexForm->setTitle(MainWindow::tr("&Complex Form"));
     m_menus.imaginaryUnit->setTitle(MainWindow::tr("&Imaginary Unit"));
     m_menus.window->setTitle(MainWindow::tr("&Window"));
     m_menus.editing->setTitle(MainWindow::tr("&Editing"));
@@ -4948,7 +5011,7 @@ void MainWindow::setMenusText()
     m_menus.dockAppearance->setTitle(MainWindow::tr("&Docks"));
     m_menus.statusBarAppearance->setTitle(MainWindow::tr("&Status Bar"));
     m_menus.keypadAppearance->setTitle(MainWindow::tr("&Keypad"));
-    m_menus.editorDisplayStyle->setTitle(MainWindow::tr("&Editor"));
+    m_menus.editorDisplayStyle->setTitle(MainWindow::tr("&Input and Results"));
     m_menus.help->setTitle(MainWindow::tr("&Help"));
 }
 
@@ -5285,14 +5348,17 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
         switchPaneToSession(display, sessionName);
 
         QMenu menu(this);
+        QAction* renameSessionAction = menu.addAction(tr("Rename..."));
+        QAction* duplicateSessionAction = menu.addAction(tr("Clone..."));
+        QAction* convertPrivacyAction = menu.addAction(m_session->isPrivate()
+            ? tr("Keep") : tr("Make Private..."));
+        QAction* closeSessionAction = menu.addAction(tr("Close Tab"));
+        menu.addSeparator();
         QAction* newSessionAction = menu.addAction(tr("New Tab"));
         QAction* newPrivateAction = menu.addAction(tr("New Private Tab"));
-        QAction* openSessionAction = menu.addAction(tr("Open Session"));
-        menu.addSeparator();
-        QAction* splitLeftAction = menu.addAction(tr("Split Left"));
-        QAction* splitRightAction = menu.addAction(tr("Split Right"));
-        QAction* splitUpAction = menu.addAction(tr("Split Up"));
-        QAction* splitDownAction = menu.addAction(tr("Split Down"));
+        QAction* openSessionAction = menu.addAction(tr("Open..."));
+        QAction* reopenSessionAction = menu.addAction(tr("Reopen Closed Tab"));
+        reopenSessionAction->setEnabled(!m_closedSessionTabs.isEmpty());
         menu.addSeparator();
         menu.addAction(m_actions.sessionImport);
         QMenu* exportMenu = menu.addMenu(m_menus.sessionExport->title());
@@ -5300,16 +5366,15 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
         exportMenu->addAction(m_actions.sessionExportPlainText);
         exportMenu->addAction(m_actions.sessionExportHtml);
         menu.addSeparator();
-        QAction* duplicateSessionAction = menu.addAction(tr("Duplicate Session"));
-        QAction* renameSessionAction = menu.addAction(tr("Rename Session"));
-        QAction* convertPrivacyAction = menu.addAction(m_session->isPrivate()
-            ? tr("Keep Session") : tr("Make Session Private..."));
-        menu.addSeparator();
-        QAction* clearSessionAction = menu.addAction(tr("Clear Session"));
-        QAction* deleteSessionAction = menu.addAction(tr("Delete Session"));
-        menu.addSeparator();
-        QAction* closeSessionAction = menu.addAction(tr("Close Session"));
+        QMenu* splitMenu = menu.addMenu(tr("Split"));
+        QAction* splitLeftAction = splitMenu->addAction(tr("Left"));
+        QAction* splitRightAction = splitMenu->addAction(tr("Right"));
+        QAction* splitUpAction = splitMenu->addAction(tr("Up"));
+        QAction* splitDownAction = splitMenu->addAction(tr("Down"));
         QAction* closePaneAction = menu.addAction(tr("Close Pane"));
+        menu.addSeparator();
+        QAction* clearSessionAction = menu.addAction(tr("Clear"));
+        QAction* deleteSessionAction = menu.addAction(tr("Delete"));
 
         MenuStyle::apply(&menu);
         QAction* selectedAction = menu.exec(globalPos);
@@ -5325,6 +5390,8 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
             convertSessionPrivacy();
         else if (selectedAction == openSessionAction)
             showOpenSessionDialog();
+        else if (selectedAction == reopenSessionAction)
+            restoreClosedSessionTab();
         else if (selectedAction == duplicateSessionAction)
             showDuplicateSessionDialog();
         else if (selectedAction == splitLeftAction)
@@ -5520,6 +5587,7 @@ void MainWindow::setActiveEditorDisplayPane(ResultDisplay* display, Editor* edit
     }
     updatePaneEditorCursorVisibility();
     updateActiveSessionPaneTabColor();
+    syncEditMenuActionState();
     if (!dockWidgetHasFocus && !dockTextInputHasFocus && m_widgets.state != nullptr && m_widgets.state->isVisible())
         showStateLabel(m_widgets.state->text());
 }
@@ -5754,11 +5822,18 @@ void MainWindow::deactivateActiveEditorForTextInputFocus()
 
 void MainWindow::handleApplicationFocusChanged(QWidget* previous, QWidget* focused)
 {
-    if (focused != nullptr && focused->window() == this)
-        lastFocusWidgetInActiveWindow() = focused;
-    else if (previous != nullptr && previous->window() == this)
+    if (!allMainWindows().contains(QPointer<MainWindow>(this)))
+        return;
+    if (focused != nullptr) {
+        if (focused->window() == this || isDockWidgetDescendant(focused))
+            lastFocusWidgetInActiveWindow() = focused;
+    } else if (previous != nullptr
+               && (previous->window() == this || isDockWidgetDescendant(previous))) {
         lastFocusWidgetInActiveWindow() = previous;
+    }
 
+    syncEditMenuActionState();
+    syncSessionMenuActionState();
     if (!isDockTextInput(focused))
         return;
 
@@ -5827,6 +5902,8 @@ void MainWindow::configureEditorDisplayPane(ResultDisplay* display, Editor* edit
         }
     });
     connect(editor, &Editor::copyAvailable, this, &MainWindow::handleCopyAvailable);
+    connect(editor, &Editor::undoAvailable, this, &MainWindow::syncEditMenuActionState);
+    connect(editor, &Editor::redoAvailable, this, &MainWindow::syncEditMenuActionState);
     connect(editor, &Editor::copySequencePressed, this, &MainWindow::copy);
     connect(this, &MainWindow::historyChanged, editor, &Editor::updateHistory);
 
@@ -6502,6 +6579,7 @@ void MainWindow::rememberClosedSessionTab(ResultDisplay* display, const QString&
     closedTab.display = display;
     closedTab.tabIndex = paneSessionNames(display).indexOf(name);
     m_closedSessionTabs.append(closedTab);
+    syncSessionMenuActionState();
 }
 
 void MainWindow::restoreClosedSessionTab()
@@ -6525,6 +6603,7 @@ void MainWindow::restoreClosedSessionTab()
         return;
 
     m_closedSessionTabs.removeLast();
+    syncSessionMenuActionState();
 
     Session* session = m_loadedSessions.value(closedTab.name, nullptr);
     if (session == nullptr) {
@@ -6973,7 +7052,7 @@ void MainWindow::updatePaneTabBars()
             tabBar->setTabIcon(i, isPrivate ? privateSessionIcon(selectedSessionTab.foreground) : QIcon());
             tabBar->setTabToolTip(i, isPrivate
                 ? tr("%1\nPrivate session: contents are discarded when closed.\n"
-                     "Choose Keep Session to turn it into a regular session."
+                     "Choose Session > Keep to turn it into a regular session."
                     ).arg(names.at(i)) : QString());
         }
 
@@ -6989,8 +7068,7 @@ void MainWindow::updatePaneTabBars()
 
 void MainWindow::updateSessionWindowTitle()
 {
-    m_actions.sessionConvertPrivacy->setText(m_session && m_session->isPrivate()
-        ? tr("Keep Session") : tr("Make Private..."));
+    syncSessionMenuActionState();
     if (m_session && m_session->isPrivate()) {
         setWindowTitle(tr("SpeedCrunch - %1 [Private]").arg(m_session->name()));
         return;
@@ -8003,21 +8081,46 @@ void MainWindow::createFixedConnections()
     connect(m_actions.sessionConvertPrivacy, &QAction::triggered, this, [this]() {
         activeMainWindowForMenuAction(this)->convertSessionPrivacy();
     });
-    connect(m_actions.sessionOpen, SIGNAL(triggered()), SLOT(showOpenSessionDialog()));
-    connect(m_actions.sessionRename, &QAction::triggered, this, &MainWindow::showRenameSessionDialog);
+    const auto connectWindowAction = [this](QAction* action, void (MainWindow::*operation)()) {
+        connect(action, &QAction::triggered, this, [this, operation]() {
+            (activeMainWindowForMenuAction(this)->*operation)();
+        });
+    };
+    connectWindowAction(m_actions.sessionOpen, &MainWindow::showOpenSessionDialog);
+    connectWindowAction(m_actions.sessionRename, &MainWindow::showRenameSessionDialog);
+    connectWindowAction(m_actions.sessionClone, &MainWindow::showDuplicateSessionDialog);
+    connectWindowAction(m_actions.sessionClose, &MainWindow::closeCurrentSession);
+    connect(m_actions.sessionReopen, &QAction::triggered, this, [this]() {
+        MainWindow* target = activeMainWindowForMenuAction(this);
+        QTimer::singleShot(0, target, &MainWindow::restoreClosedSessionTab);
+    });
     connect(m_actions.sessionOpenSessionsFolder, SIGNAL(triggered()), SLOT(openSessionsFolder()));
     connect(m_actions.sessionQuit, &QAction::triggered, qApp, &QCoreApplication::quit);
 
-    connect(m_actions.editClearExpression, SIGNAL(triggered()), SLOT(clearEditorAndBitfield()));
-    connect(m_actions.editClearHistory, SIGNAL(triggered()), SLOT(clearHistory()));
-    connect(m_actions.editCopyLastResult, SIGNAL(triggered()), SLOT(copyResultToClipboard()));
-    connect(m_actions.editCopy, SIGNAL(triggered()), SLOT(copy()));
-    connect(m_actions.editPaste, &QAction::triggered, this, [this]() {
-        if (m_widgets.editor != nullptr)
-            m_widgets.editor->paste();
-    });
-    connect(m_actions.editSelectExpression, SIGNAL(triggered()), SLOT(selectEditorExpression()));
-    connect(m_actions.editWrapSelection, SIGNAL(triggered()), SLOT(wrapSelection()));
+    connectWindowAction(m_actions.editClearExpression, &MainWindow::clearEditorAndBitfield);
+    connectWindowAction(m_actions.editClearHistory, &MainWindow::clearHistory);
+    connectWindowAction(m_actions.editCopyLastResult, &MainWindow::copyResultToClipboard);
+    connectWindowAction(m_actions.editCopy, &MainWindow::copy);
+    connectWindowAction(m_actions.editSelectExpression, &MainWindow::selectEditorExpression);
+    connectWindowAction(m_actions.editWrapSelection, &MainWindow::wrapSelection);
+    const auto connectEditorAction = [this](QAction* action, void (QPlainTextEdit::*operation)()) {
+        connect(action, &QAction::triggered, this, [this, operation]() {
+            MainWindow* target = activeMainWindowForMenuAction(this);
+            if (target->m_widgets.editor != nullptr)
+                (target->m_widgets.editor->*operation)();
+            target->syncEditMenuActionState();
+        });
+    };
+    connectEditorAction(m_actions.editUndo, &QPlainTextEdit::undo);
+    connectEditorAction(m_actions.editRedo, &QPlainTextEdit::redo);
+    connectEditorAction(m_actions.editCut, &QPlainTextEdit::cut);
+    connectEditorAction(m_actions.editPaste, &QPlainTextEdit::paste);
+    connectWindowAction(m_actions.viewSplitLeft, &MainWindow::splitActivePaneLeft);
+    connectWindowAction(m_actions.viewSplitRight, &MainWindow::splitActivePaneRight);
+    connectWindowAction(m_actions.viewSplitUp, &MainWindow::splitActivePaneUp);
+    connectWindowAction(m_actions.viewSplitDown, &MainWindow::splitActivePaneDown);
+    connectWindowAction(m_actions.viewClosePane, &MainWindow::closeCurrentPane);
+    connect(QApplication::clipboard(), &QClipboard::dataChanged, this, &MainWindow::syncEditMenuActionState);
 
     const auto connectViewToggleToActiveWindow =
         [this](QAction* action, auto apply) {
@@ -8202,6 +8305,8 @@ void MainWindow::createFixedConnections()
         }
     });
     connect(m_widgets.editor, SIGNAL(copyAvailable(bool)), SLOT(handleCopyAvailable(bool)));
+    connect(initialEditor, &Editor::undoAvailable, this, &MainWindow::syncEditMenuActionState);
+    connect(initialEditor, &Editor::redoAvailable, this, &MainWindow::syncEditMenuActionState);
     connect(m_widgets.editor, SIGNAL(copySequencePressed()), SLOT(copy()));
     connect(m_widgets.editor, SIGNAL(selectionChanged()), SLOT(handleEditorSelectionChange()));
     connect(this, SIGNAL(historyChanged()), m_widgets.editor, SLOT(updateHistory()));
@@ -8264,22 +8369,12 @@ void MainWindow::createFixedConnections()
 
     connect(this, SIGNAL(languageChanged()), SLOT(retranslateText()));
 
-    const auto bindStandardKey = [this](QKeySequence::StandardKey key, const std::function<void()>& handler) {
-        const QList<QKeySequence> bindings = QKeySequence::keyBindings(key);
-        for (const QKeySequence& sequence : bindings) {
-            QShortcut* shortcut = new QShortcut(sequence, this);
-            connect(shortcut, &QShortcut::activated, this, handler);
-        }
-    };
     const auto bindApplicationShortcut = [this](const QKeySequence& sequence,
                                                 const std::function<void()>& handler) {
         QShortcut* shortcut = new QShortcut(sequence, this);
         shortcut->setContext(Qt::ApplicationShortcut);
         connect(shortcut, &QShortcut::activated, this, handler);
     };
-    bindStandardKey(QKeySequence::New, [this]() { showNewSessionDialog(); });
-    bindStandardKey(QKeySequence::Open, [this]() { showOpenSessionDialog(); });
-    bindStandardKey(QKeySequence::Close, [this]() { closeCurrentSession(); });
 
 #if defined(Q_OS_MACOS)
     bindApplicationShortcut(QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_Right),
@@ -8292,12 +8387,6 @@ void MainWindow::createFixedConnections()
     bindApplicationShortcut(QKeySequence(Qt::CTRL | Qt::Key_PageUp),
                             [this]() { activatePreviousChild(); });
 #endif
-
-    QShortcut* restoreClosedSessionTabShortcut =
-        new QShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_T), this);
-    restoreClosedSessionTabShortcut->setContext(Qt::ApplicationShortcut);
-    connect(restoreClosedSessionTabShortcut, &QShortcut::activated,
-            this, &MainWindow::restoreClosedSessionTab);
 
     QShortcut* cycleFocusForwardShortcut = new QShortcut(QKeySequence(Qt::Key_F6), this);
     // Each window owns its focus cycle. Application-wide bindings conflict
@@ -9410,14 +9499,16 @@ void MainWindow::clearSession()
     if (m_session->historyIsEmpty()
             && m_session->variablesToList().isEmpty()
             && m_session->UserFunctionsToList().isEmpty()
-            && m_session->userUnitsToList().isEmpty()) {
+            && m_session->userUnitsToList().isEmpty()
+            && m_widgets.editor->text().isEmpty()) {
         return;
     }
 
     QMessageBox confirmation(this);
     confirmation.setIcon(QMessageBox::Question);
-    confirmation.setWindowTitle(tr("Clear History"));
-    confirmation.setText(tr("Are you sure you want to clear the calculation history?"));
+    confirmation.setWindowTitle(tr("Clear Session"));
+    confirmation.setText(tr("Clear this session's calculations, unfinished expression, variables, functions, and units?"));
+    confirmation.setInformativeText(tr("Global user definitions are kept."));
     confirmation.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
     confirmation.setDefaultButton(QMessageBox::No);
     confirmation.setEscapeButton(QMessageBox::No);
@@ -9780,7 +9871,7 @@ void MainWindow::showDuplicateSessionDialog()
         bool accepted = false;
         const QString enteredName = QInputDialog::getText(
             this,
-            tr("Duplicate Session"),
+            tr("Clone Session"),
             tr("Session name:"),
             QLineEdit::Normal,
             m_session->isPrivate() ? firstAvailableSessionNameAcrossWindows(true)
@@ -9792,7 +9883,7 @@ void MainWindow::showDuplicateSessionDialog()
         const QString name = normalizedSessionName(enteredName);
         if (loadedSessionNameExists(m_loadedSessions, name) || QFileInfo::exists(sessionFilePath(name))) {
             QMessageBox::warning(this,
-                                 tr("Duplicate Session"),
+                                 tr("Clone Session"),
                                  tr("A session named %1 already exists.").arg(name));
             continue;
         }
@@ -9813,7 +9904,7 @@ void MainWindow::showDuplicateSessionDialog()
         QFile duplicateFile(duplicatePath);
         if (!duplicateFile.open(QIODevice::WriteOnly)) {
             QMessageBox::warning(this,
-                                 tr("Duplicate Session"),
+                                 tr("Clone Session"),
                                  tr("Could not create session file %1.").arg(duplicatePath));
             continue;
         }
@@ -9823,7 +9914,7 @@ void MainWindow::showDuplicateSessionDialog()
             duplicateFile.close();
             QFile::remove(duplicatePath);
             QMessageBox::warning(this,
-                                 tr("Duplicate Session"),
+                                 tr("Clone Session"),
                                  tr("Could not write session file %1.").arg(duplicatePath));
             continue;
         }
@@ -9832,6 +9923,7 @@ void MainWindow::showDuplicateSessionDialog()
         Session* duplicateSession = new Session();
         duplicateSession->deSerialize(duplicateJson, false);
         duplicateSession->setName(name);
+        duplicateSession->setEditorText(m_session->editorText());
         m_loadedSessions.insert(name, duplicateSession);
         updatePaneLoadedSessionCounts();
 
@@ -11971,6 +12063,52 @@ void MainWindow::setDisplayFont(const QFont& font)
 void MainWindow::setStatusBarVisible(bool b)
 {
     b ? createStatusBar() : deleteStatusBar();
+}
+
+void MainWindow::syncEditMenuActionState()
+{
+    MainWindow* target = activeMainWindowForMenuAction(this);
+    // Focus can change while a window's child widgets are being destroyed.
+    if (!allMainWindows().contains(QPointer<MainWindow>(target)))
+        return;
+    Editor* editor = target->m_widgets.editor;
+    if (editor == nullptr)
+        return;
+
+    const bool dockInput = target->isDockTextInput(QApplication::focusWidget());
+    const bool editing = !editor->isReadOnly() && !dockInput;
+    const bool canCopy = target->m_copyWidget != nullptr
+        && target->m_copyWidget->textCursor().hasSelection()
+        && !dockInput;
+    const QMimeData* clipboardData = QApplication::clipboard()->mimeData();
+    const bool canPaste = editing && clipboardData != nullptr && clipboardData->hasText();
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (window == nullptr || window->m_widgets.editor == nullptr)
+            continue;
+        window->m_actions.editUndo->setEnabled(editing && editor->document()->isUndoAvailable());
+        window->m_actions.editRedo->setEnabled(editing && editor->document()->isRedoAvailable());
+        window->m_actions.editCut->setEnabled(editing && editor->textCursor().hasSelection());
+        window->m_actions.editCopy->setEnabled(canCopy);
+        window->m_actions.editPaste->setEnabled(canPaste);
+    }
+}
+
+void MainWindow::syncSessionMenuActionState()
+{
+    MainWindow* target = activeMainWindowForMenuAction(this);
+    if (!allMainWindows().contains(QPointer<MainWindow>(target)))
+        return;
+    const bool canClose = target->m_session != nullptr;
+    const bool canReopen = !target->m_closedSessionTabs.isEmpty();
+    const QString privacyLabel = canClose && target->m_session->isPrivate()
+        ? tr("Keep") : tr("Make Private...");
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (window == nullptr || window->m_actions.sessionClose == nullptr)
+            continue;
+        window->m_actions.sessionClose->setEnabled(canClose);
+        window->m_actions.sessionReopen->setEnabled(canReopen);
+        window->m_actions.sessionConvertPrivacy->setText(privacyLabel);
+    }
 }
 
 void MainWindow::syncViewMenuActionState()
@@ -14706,11 +14844,10 @@ void MainWindow::handleEditorSelectionChange()
 
 void MainWindow::handleCopyAvailable(bool copyAvailable)
 {
-    if (!copyAvailable)
-        return;
     QPlainTextEdit* const textEdit = static_cast<QPlainTextEdit*>(sender());
-    if (textEdit)
+    if (copyAvailable && textEdit)
         m_copyWidget = textEdit;
+    syncEditMenuActionState();
 }
 
 void MainWindow::handleBitsChanged(const QString& str)

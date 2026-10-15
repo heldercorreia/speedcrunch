@@ -3,7 +3,46 @@
 
 #include "mainwindowtesthelpers.h"
 
+#include <functional>
+
 using namespace MainWindowTestHelpers;
+
+namespace {
+
+void chooseTabContextAction(QTabBar* tabs, int index, const QStringList& path,
+                            const std::function<void(QAction*)>& beforeTrigger = {})
+{
+    QTimer::singleShot(0, tabs, [path, beforeTrigger]() {
+        QMenu* menu = qobject_cast<QMenu*>(QApplication::activePopupWidget());
+        QVERIFY(menu);
+        QPointer<QMenu> root = menu;
+        const auto dismissMenu = qScopeGuard([root]() {
+            if (root && root->isVisible())
+                root->close();
+        });
+        for (int i = 0; i + 1 < path.size(); ++i) {
+            QMenu* submenu = directSubmenuWithTitle(menu, path.at(i));
+            QVERIFY(submenu);
+            menu->setActiveAction(submenu->menuAction());
+            QTest::keyClick(menu, Qt::Key_Right);
+            QTRY_VERIFY(submenu->isVisible());
+            menu = submenu;
+        }
+        QAction* action = directMenuActionWithText(menu, path.last());
+        QVERIFY(action);
+        if (beforeTrigger)
+            beforeTrigger(action);
+        if (action->isEnabled()) {
+            menu->setActiveAction(action);
+            QTest::keyClick(menu, Qt::Key_Return);
+        }
+    });
+    const QPoint position = tabs->tabRect(index).center();
+    QContextMenuEvent event(QContextMenuEvent::Mouse, position, tabs->mapToGlobal(position));
+    QCoreApplication::sendEvent(tabs, &event);
+}
+
+} // namespace
 
 class TestSessionsUi : public QObject {
     Q_OBJECT
@@ -20,6 +59,14 @@ private slots:
     void visible_window_applies_restored_dock_and_keypad_layout();
     void always_on_top_toggles_preserve_window_geometry();
     void session_tab_context_menu_opens_on_right_click();
+    void tab_context_reopen_recovers_only_regular_tabs_data();
+    void tab_context_reopen_recovers_only_regular_tabs();
+    void tab_context_privacy_targets_clicked_pane_data();
+    void tab_context_privacy_targets_clicked_pane();
+    void tab_context_split_targets_clicked_pane_data();
+    void tab_context_split_targets_clicked_pane();
+    void tab_context_clear_preserves_other_sessions_data();
+    void tab_context_clear_preserves_other_sessions();
     void persisting_layout_captures_visible_scroll_positions_for_all_panes();
     void switching_session_tabs_preserves_each_editor_text();
     void session_tabs_show_full_name_tooltip_on_hover();
@@ -28,6 +75,10 @@ private slots:
     void new_tab_menu_action_targets_focused_window_when_native_menu_uses_last_window_action();
     void new_session_window_menu_action_copies_layout_with_single_fresh_session();
     void session_open_menu_action_uses_open_dialog();
+    void session_clone_menu_action_follows_active_pane_data();
+    void session_clone_menu_action_follows_active_pane();
+    void session_commands_follow_floating_dock_owner_data();
+    void session_commands_follow_floating_dock_owner();
     void session_open_sessions_folder_menu_action_opens_session_storage();
     void session_import_dialog_opens_valid_json_as_new_tab();
     void session_import_rejects_invalid_json_without_new_tab();
@@ -35,11 +86,210 @@ private slots:
     void session_export_dialog_prefills_session_name_data();
     void session_export_dialog_prefills_session_name();
     void restore_closed_tab_shortcut_restores_last_closed_session_tab();
+    void close_and_reopen_commands_preserve_regular_tabs_data();
+    void close_and_reopen_commands_preserve_regular_tabs();
+    void view_commands_split_and_close_active_pane_data();
+    void view_commands_split_and_close_active_pane();
     void session_tabs_reorder_with_horizontal_drag();
 
 private:
     QUrl m_capturedUrl;
 };
+
+void TestSessionsUi::session_commands_follow_floating_dock_owner_data()
+{
+    QTest::addColumn<QString>("command");
+    QTest::addColumn<bool>("shortcut");
+    QTest::addColumn<bool>("searchFocus");
+    for (bool searchFocus : {false, true}) {
+        const QByteArray focus = searchFocus ? "search-" : "list-";
+        QTest::addRow("%sclose-shortcut", focus.constData()) << QStringLiteral("close") << true << searchFocus;
+        QTest::addRow("%sclose-menu", focus.constData()) << QStringLiteral("close") << false << searchFocus;
+        QTest::addRow("%sreopen-shortcut", focus.constData()) << QStringLiteral("reopen") << true << searchFocus;
+        QTest::addRow("%sreopen-menu", focus.constData()) << QStringLiteral("reopen") << false << searchFocus;
+        QTest::addRow("%sclone-menu", focus.constData()) << QStringLiteral("clone") << false << searchFocus;
+    }
+}
+
+void TestSessionsUi::session_commands_follow_floating_dock_owner()
+{
+    QFETCH(QString, command);
+    QFETCH(bool, shortcut);
+    QFETCH(bool, searchFocus);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    guard.settings->constantsDockVisible = true;
+    guard.settings->autoCalc = false;
+    MainWindow owner(false);
+    MainWindow other(false);
+    owner.show();
+    other.show();
+    owner.activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(&owner));
+    Editor* editor = owner.findChild<Editor*>();
+    QVERIFY(editor);
+    editor->setFocus();
+    QTRY_VERIFY(editor->hasFocus());
+    QVERIFY(QMetaObject::invokeMethod(&owner, "showNewSessionDialog"));
+    QVERIFY(QMetaObject::invokeMethod(&owner, "showNewSessionDialog"));
+    ResultDisplay* display = owner.findChild<ResultDisplay*>();
+    QTabBar* tabs = tabBarForDisplay(display);
+    QVERIFY(tabs);
+    editor->setText(QStringLiteral("111"));
+    const QString closedName = display->session()->name();
+    QVERIFY(QMetaObject::invokeMethod(&owner, "closeCurrentSession"));
+    QCOMPARE(tabs->count(), 2);
+    other.activateWindow();
+    Editor* otherEditor = other.findChild<Editor*>();
+    QVERIFY(otherEditor);
+    otherEditor->setFocus();
+    QTRY_VERIFY(otherEditor->hasFocus());
+    QVERIFY(QMetaObject::invokeMethod(&other, "showNewPrivateSession"));
+    otherEditor->setText(QStringLiteral("private draft"));
+    ResultDisplay* otherDisplay = other.findChild<ResultDisplay*>();
+    const Session* otherSession = otherDisplay->session();
+    const QString otherName = otherSession->name();
+    QTabBar* otherTabs = tabBarForDisplay(otherDisplay);
+    QVERIFY(otherTabs);
+    QCOMPARE(otherTabs->count(), 2);
+
+    QDockWidget* dock = owner.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(dock);
+    dock->setFloating(true);
+    dock->show();
+    dock->activateWindow();
+    QWidget* control = searchFocus
+        ? static_cast<QWidget*>(dock->findChild<QLineEdit*>())
+        : static_cast<QWidget*>(dock->findChild<QTreeWidget*>());
+    QVERIFY(control);
+    control->setFocus();
+    QTRY_VERIFY(control->hasFocus());
+    QMenu* sessionMenu = menuWithTitle(other.menuBar(), QStringLiteral("&Session"));
+    QVERIFY(sessionMenu);
+    QAction* reopen = directMenuActionWithText(sessionMenu, QStringLiteral("Reopen Clo&sed Tab"));
+    QVERIFY(reopen);
+    QTRY_VERIFY(reopen->isEnabled());
+    QAction* action = command == QLatin1String("reopen") ? reopen
+        : directMenuActionWithText(sessionMenu, command == QLatin1String("close")
+            ? QStringLiteral("&Close Tab") : QStringLiteral("Clo&ne..."));
+    QVERIFY(action);
+    if (command == QLatin1String("clone")) {
+        QTimer::singleShot(0, &owner, []() {
+            auto* dialog = qobject_cast<QInputDialog*>(QApplication::activeModalWidget());
+            QVERIFY(dialog);
+            dialog->setTextValue(QStringLiteral("Dock clone"));
+            dialog->accept();
+        });
+    }
+    if (shortcut) {
+        const QKeyCombination key = command == QLatin1String("reopen")
+            ? restoreClosedTabShortcut() : QKeySequence(QKeySequence::Close)[0];
+        QTest::keyClick(control, key.key(), key.keyboardModifiers());
+    } else {
+        QMenu menu;
+        menu.addAction(action);
+        menu.popup(control->mapToGlobal(QPoint(10, 10)));
+        menu.setActiveAction(action);
+        QTest::keyClick(&menu, Qt::Key_Return);
+    }
+    QTRY_COMPARE(tabs->count(), command == QLatin1String("close") ? 1 : 3);
+    if (command == QLatin1String("reopen")) {
+        QCOMPARE(display->session()->name(), closedName);
+        QCOMPARE(editor->text(), QStringLiteral("111"));
+    } else if (command == QLatin1String("clone")) {
+        QCOMPARE(display->session()->name(), QStringLiteral("Dock clone"));
+        QVERIFY(!display->session()->isPrivate());
+    }
+    QCOMPARE(otherTabs->count(), 2);
+    QCOMPARE(otherDisplay->session(), otherSession);
+    QCOMPARE(otherSession->name(), otherName);
+    QVERIFY(otherSession->isPrivate());
+    QCOMPARE(otherEditor->text(), QStringLiteral("private draft"));
+}
+
+void TestSessionsUi::session_clone_menu_action_follows_active_pane_data()
+{
+    QTest::addColumn<bool>("privateTab");
+    QTest::addColumn<bool>("foreignMenu");
+    QTest::addColumn<bool>("accept");
+    QTest::newRow("regular") << false << false << true;
+    QTest::newRow("private") << true << false << true;
+    QTest::newRow("regular-other-windows-menu") << false << true << true;
+    QTest::newRow("private-other-windows-menu") << true << true << true;
+    QTest::newRow("cancel") << false << false << false;
+}
+
+void TestSessionsUi::session_clone_menu_action_follows_active_pane()
+{
+    QFETCH(bool, privateTab);
+    QFETCH(bool, foreignMenu);
+    QFETCH(bool, accept);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    guard.settings->autoCalc = false;
+    MainWindow window(false);
+    MainWindow other(false);
+    window.show();
+    other.show();
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    Editor* inactiveEditor = window.findChild<Editor*>();
+    QVERIFY(inactiveEditor);
+    inactiveEditor->setText(QStringLiteral("456"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight"));
+    if (privateTab)
+        QVERIFY(QMetaObject::invokeMethod(&window, "showNewPrivateSession"));
+    const QList<Editor*> editors = window.findChildren<Editor*>();
+    QCOMPARE(editors.size(), 2);
+    Editor* editor = editors.first() == inactiveEditor ? editors.last() : editors.first();
+    QVERIFY(editor);
+    ResultDisplay* display = editor->parentWidget()->findChild<ResultDisplay*>();
+    QVERIFY(display);
+    QTest::mouseClick(editor->viewport(), Qt::LeftButton);
+    QTRY_VERIFY(editor->hasFocus());
+    QCOMPARE(display->session()->isPrivate(), privateTab);
+    editor->setText(QStringLiteral("clonevalue=123"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
+    editor->setText(QStringLiteral("clonevalue +"));
+    const Session* source = display->session();
+    const QString sourceName = source->name();
+    QTabBar* tabs = tabBarForDisplay(display);
+    QVERIFY(tabs);
+    const int initialTabs = tabs->count();
+    QMenu* menu = menuWithTitle((foreignMenu ? other : window).menuBar(), QStringLiteral("&Session"));
+    QVERIFY(menu);
+    QAction* clone = directMenuActionWithText(menu, QStringLiteral("Clo&ne..."));
+    QVERIFY(clone);
+    bool visitedDialog = false;
+    const QString cloneName = QStringLiteral("Menu clone");
+    QTimer::singleShot(0, &window, [&]() {
+        auto* dialog = qobject_cast<QInputDialog*>(QApplication::activeModalWidget());
+        QVERIFY(dialog);
+        visitedDialog = true;
+        dialog->setTextValue(cloneName);
+        if (accept)
+            dialog->accept();
+        else
+            dialog->reject();
+    });
+    clone->trigger();
+    QVERIFY(visitedDialog);
+    QCOMPARE(tabs->count(), initialTabs + (accept ? 1 : 0));
+    QCOMPARE(display->session()->name(), accept ? cloneName : sourceName);
+    QCOMPARE(display->session()->isPrivate(), privateTab);
+    QCOMPARE(display->session()->historySize(), 1);
+    QVERIFY(display->session()->hasVariable(QStringLiteral("clonevalue")));
+    QCOMPARE(editor->text(), QStringLiteral("clonevalue +"));
+    QCOMPARE(source->name(), sourceName);
+    QCOMPARE(source->historySize(), 1);
+    QCOMPARE(source->editorText(), QStringLiteral("clonevalue +"));
+    if (accept) {
+        QVERIFY(display->session() != source);
+        QCOMPARE(QFileInfo::exists(storage.path(cloneName)), !privateTab);
+    }
+    QCOMPARE(inactiveEditor->text(), QStringLiteral("456"));
+    QVERIFY(other.findChild<Editor*>()->text().isEmpty());
+}
 
 void TestSessionsUi::initTestCase()
 {
@@ -786,6 +1036,238 @@ void TestSessionsUi::session_tabs_show_full_name_tooltip_on_hover()
     tabBar->setTabText(0, QStringLiteral("Short"));
     QCoreApplication::sendEvent(tabBar, &moveEvent);
     QTRY_VERIFY(!toolTipPopup->isVisible());
+}
+
+void TestSessionsUi::tab_context_reopen_recovers_only_regular_tabs_data()
+{
+    QTest::addColumn<bool>("privateTab");
+    QTest::newRow("regular") << false;
+    QTest::newRow("private") << true;
+}
+
+void TestSessionsUi::tab_context_reopen_recovers_only_regular_tabs()
+{
+    QFETCH(bool, privateTab);
+    MainWindowStateGuard guard;
+    MainWindow window(false);
+    window.show();
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    Editor* editor = editorForDisplay(display);
+    QTabBar* tabs = tabBarForDisplay(display);
+    QVERIFY(editor && tabs);
+    QVERIFY(QMetaObject::invokeMethod(&window, "showNewSessionDialog"));
+    QVERIFY(QMetaObject::invokeMethod(&window,
+        privateTab ? "showNewPrivateSession" : "showNewSessionDialog"));
+    QCOMPARE(tabs->count(), 3);
+    editor->setText(QStringLiteral("321"));
+    const QString closedName = display->session()->name();
+    chooseTabContextAction(tabs, 2, {QStringLiteral("Close Tab")});
+    QTRY_COMPARE(tabs->count(), 2);
+    bool canReopen = false;
+    chooseTabContextAction(tabs, 0, {QStringLiteral("Reopen Closed Tab")},
+        [&canReopen](QAction* action) { canReopen = action->isEnabled(); });
+    QCOMPARE(canReopen, !privateTab);
+    QCOMPARE(tabs->count(), privateTab ? 2 : 3);
+    if (!privateTab) {
+        QCOMPARE(display->session()->name(), closedName);
+        QCOMPARE(editor->text(), QStringLiteral("321"));
+    }
+    chooseTabContextAction(tabs, 0, {QStringLiteral("Reopen Closed Tab")},
+        [](QAction* action) { QVERIFY(!action->isEnabled()); });
+}
+
+void TestSessionsUi::tab_context_privacy_targets_clicked_pane_data()
+{
+    QTest::addColumn<bool>("privateTab");
+    QTest::newRow("make-private") << false;
+    QTest::newRow("keep") << true;
+}
+
+void TestSessionsUi::tab_context_privacy_targets_clicked_pane()
+{
+    QFETCH(bool, privateTab);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    MainWindow window(false);
+    window.show();
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    QVERIFY(QMetaObject::invokeMethod(&window,
+        privateTab ? "showNewPrivateSession" : "showNewSessionDialog"));
+    const Session* target = display->session();
+    QTabBar* tabs = tabBarForDisplay(display);
+    QVERIFY(tabs);
+    Editor* editor = editorForDisplay(display);
+    editor->setText(QStringLiteral("123"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight"));
+    const QList<ResultDisplay*> displays = window.findChildren<ResultDisplay*>();
+    QCOMPARE(displays.size(), 2);
+    ResultDisplay* other = displays.first() == display ? displays.last() : displays.first();
+    const Session* otherSession = other->session();
+    editorForDisplay(other)->setText(QStringLiteral("456"));
+    QTRY_VERIFY(editorForDisplay(other)->hasFocus());
+    chooseTabContextAction(tabs, 1,
+        {privateTab ? QStringLiteral("Keep") : QStringLiteral("Make Private...")},
+        [&window, privateTab](QAction*) {
+            if (!privateTab) {
+                QTimer::singleShot(0, &window, []() {
+                    auto* confirmation = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+                    QVERIFY(confirmation);
+                    confirmation->done(QMessageBox::Yes);
+                });
+            }
+        });
+    QCOMPARE(display->session(), target);
+    QCOMPARE(target->isPrivate(), !privateTab);
+    QCOMPARE(target->historySize(), 1);
+    QCOMPARE(QFileInfo::exists(storage.path(target->name())), privateTab);
+    QCOMPARE(other->session(), otherSession);
+    QVERIFY(!otherSession->isPrivate());
+    QCOMPARE(editorForDisplay(other)->text(), QStringLiteral("456"));
+}
+
+void TestSessionsUi::tab_context_split_targets_clicked_pane_data()
+{
+    QTest::addColumn<QString>("direction");
+    for (const QString& direction : {QStringLiteral("Left"), QStringLiteral("Right"),
+                                    QStringLiteral("Up"), QStringLiteral("Down")})
+        QTest::newRow(qPrintable(direction)) << direction;
+}
+
+void TestSessionsUi::tab_context_split_targets_clicked_pane()
+{
+    QFETCH(QString, direction);
+    MainWindowStateGuard guard;
+    MainWindow window(false);
+    window.resize(1000, 700);
+    window.show();
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    Editor* first = editorForDisplay(display);
+    QVERIFY(first);
+    QVERIFY(QMetaObject::invokeMethod(&window, "showNewSessionDialog"));
+    first->setText(QStringLiteral("11"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight"));
+    const QList<Editor*> originalEditors = window.findChildren<Editor*>();
+    QCOMPARE(originalEditors.size(), 2);
+    Editor* other = originalEditors.first() == first ? originalEditors.last() : originalEditors.first();
+    other->setText(QStringLiteral("22"));
+    QTRY_VERIFY(other->hasFocus());
+    chooseTabContextAction(tabBarForDisplay(display), 1, {QStringLiteral("Split"), direction});
+    QTRY_COMPARE(window.findChildren<Editor*>().size(), 3);
+    Editor* added = nullptr;
+    for (Editor* editor : window.findChildren<Editor*>()) {
+        if (!originalEditors.contains(editor))
+            added = editor;
+    }
+    QVERIFY(added);
+    // The offscreen plugin leaves no active window after dismissing a submenu.
+    window.activateWindow();
+    QTRY_VERIFY(added->hasFocus());
+    const QPoint firstPosition = first->mapTo(&window, first->rect().center());
+    const QPoint addedPosition = added->mapTo(&window, added->rect().center());
+    if (direction == QLatin1String("Left"))
+        QVERIFY(addedPosition.x() < firstPosition.x());
+    else if (direction == QLatin1String("Right"))
+        QVERIFY(addedPosition.x() > firstPosition.x());
+    else if (direction == QLatin1String("Up"))
+        QVERIFY(addedPosition.y() < firstPosition.y());
+    else
+        QVERIFY(addedPosition.y() > firstPosition.y());
+    QCOMPARE(first->text(), QStringLiteral("11"));
+    QCOMPARE(other->text(), QStringLiteral("22"));
+}
+
+void TestSessionsUi::tab_context_clear_preserves_other_sessions_data()
+{
+    QTest::addColumn<bool>("confirm");
+    QTest::addColumn<bool>("draftOnly");
+    QTest::newRow("cancel") << false << false;
+    QTest::newRow("confirm") << true << false;
+    QTest::newRow("unfinished-expression") << true << true;
+}
+
+void TestSessionsUi::tab_context_clear_preserves_other_sessions()
+{
+    QFETCH(bool, confirm);
+    QFETCH(bool, draftOnly);
+    MainWindowStateGuard guard;
+    guard.settings->autoCalc = false;
+    const QString oldDefinitions = guard.settings->startupUserDefinitions;
+    const QString definitionsPath = QDir(Settings::getDataPath()).filePath(QStringLiteral("definitions.json"));
+    QFile definitionsFile(definitionsPath);
+    const bool hadDefinitionsFile = definitionsFile.exists();
+    QByteArray oldFileContents;
+    if (hadDefinitionsFile) {
+        QVERIFY(definitionsFile.open(QIODevice::ReadOnly));
+        oldFileContents = definitionsFile.readAll();
+        definitionsFile.close();
+    }
+    const auto restoreDefinitions = qScopeGuard([&]() {
+        guard.settings->startupUserDefinitions = oldDefinitions;
+        if (hadDefinitionsFile)
+            writeFile(definitionsPath, oldFileContents);
+        else
+            QFile::remove(definitionsPath);
+    });
+    guard.settings->startupUserDefinitions = draftOnly ? QString() : QStringLiteral("sharedvalue=99");
+    UserDefinitions::saveFrom(guard.settings);
+    MainWindow window(false);
+    window.show();
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    Editor* editor = editorForDisplay(display);
+    QVERIFY(editor);
+    const Session* target = display->session();
+    if (!draftOnly)
+        QVERIFY(target->hasVariable(QStringLiteral("sharedvalue")));
+    if (!draftOnly) {
+        for (const QString& expression : {QStringLiteral("localvalue=12"),
+                                         QStringLiteral("localfunc(x)=x+1"),
+                                         QStringLiteral("[localunit]=[metre]")}) {
+            editor->setText(expression);
+            QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
+        }
+        QVERIFY(target->hasVariable(QStringLiteral("localvalue")));
+        QCOMPARE(target->UserFunctionsToList().size(), 1);
+        QCOMPARE(target->userUnitsToList().size(), 1);
+    }
+    const int historySize = target->historySize();
+    editor->setText(QStringLiteral("unfinished +"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "showNewSessionDialog"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight"));
+    const QList<ResultDisplay*> displays = window.findChildren<ResultDisplay*>();
+    QCOMPARE(displays.size(), 2);
+    ResultDisplay* other = displays.first() == display ? displays.last() : displays.first();
+    editorForDisplay(other)->setText(QStringLiteral("456"));
+    QTRY_VERIFY(editorForDisplay(other)->hasFocus());
+    bool confirmationShown = false;
+    chooseTabContextAction(tabBarForDisplay(display), 0, {QStringLiteral("Clear")},
+        [&window, confirm, &confirmationShown](QAction*) {
+            QTimer::singleShot(0, &window, [confirm, &confirmationShown]() {
+                auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+                QVERIFY(dialog);
+                confirmationShown = true;
+                dialog->done(confirm ? QMessageBox::Yes : QMessageBox::No);
+            });
+        });
+    QVERIFY(confirmationShown);
+    QCOMPARE(display->session(), target);
+    QCOMPARE(target->historySize(), confirm ? 0 : historySize);
+    QCOMPARE(editor->text(), confirm ? QString() : QStringLiteral("unfinished +"));
+    if (!draftOnly) {
+        QCOMPARE(target->hasVariable(QStringLiteral("localvalue")), !confirm);
+        QCOMPARE(target->UserFunctionsToList().size(), confirm ? 0 : 1);
+        QCOMPARE(target->userUnitsToList().size(), confirm ? 0 : 1);
+        QVERIFY(target->hasVariable(QStringLiteral("sharedvalue")));
+    }
+    QCOMPARE(editorForDisplay(other)->text(), QStringLiteral("456"));
 }
 
 void TestSessionsUi::session_tab_context_menu_opens_on_right_click()
@@ -1545,6 +2027,134 @@ void TestSessionsUi::session_export_dialog_prefills_session_name()
     QCOMPARE(defaultSuffix, extension);
     QCOMPARE(acceptMode, QFileDialog::AcceptSave);
     QCOMPARE(selectedName, baseName);
+}
+
+void TestSessionsUi::close_and_reopen_commands_preserve_regular_tabs_data()
+{
+    QTest::addColumn<bool>("privateTab");
+    QTest::addColumn<bool>("shortcut");
+    QTest::addColumn<bool>("foreignMenu");
+    QTest::newRow("regular-menu") << false << false << false;
+    QTest::newRow("regular-shortcut") << false << true << false;
+    QTest::newRow("private-menu") << true << false << false;
+    QTest::newRow("private-shortcut") << true << true << false;
+    QTest::newRow("regular-other-window") << false << false << true;
+    QTest::newRow("private-other-window") << true << false << true;
+}
+
+void TestSessionsUi::close_and_reopen_commands_preserve_regular_tabs()
+{
+    QFETCH(bool, privateTab);
+    QFETCH(bool, shortcut);
+    QFETCH(bool, foreignMenu);
+    MainWindowStateGuard guard;
+    MainWindow window(false);
+    MainWindow other(false);
+    other.show();
+    window.show();
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    Editor* editor = editorForDisplay(display);
+    QTabBar* tabs = tabBarForDisplay(display);
+    QVERIFY(editor && tabs);
+    QMenu* menu = menuWithTitle((foreignMenu ? other : window).menuBar(), QStringLiteral("&Session"));
+    QVERIFY(menu);
+    QAction* close = directMenuActionWithText(menu, QStringLiteral("&Close Tab"));
+    QAction* reopen = directMenuActionWithText(menu, QStringLiteral("Reopen Clo&sed Tab"));
+    QVERIFY(close && reopen);
+    QVERIFY(!reopen->isEnabled());
+    QVERIFY(QMetaObject::invokeMethod(&window,
+        privateTab ? "showNewPrivateSession" : "showNewSessionDialog", Qt::DirectConnection));
+    QTRY_COMPARE(tabs->count(), 2);
+    editor->setFocus();
+    QTRY_VERIFY(editor->hasFocus());
+    editor->setText(QStringLiteral("321"));
+    const QString name = display->session()->name();
+    if (shortcut) {
+        const QKeyCombination key = QKeySequence(QKeySequence::Close)[0];
+        QTest::keyClick(&window, key.key(), key.keyboardModifiers());
+    } else {
+        close->trigger();
+    }
+    QTRY_COMPARE(tabs->count(), 1);
+    QCOMPARE(reopen->isEnabled(), !privateTab);
+    other.activateWindow();
+    other.findChild<Editor*>()->setFocus();
+    QTRY_VERIFY(other.findChild<Editor*>()->hasFocus());
+    QVERIFY(!reopen->isEnabled());
+    window.activateWindow();
+    editor->setFocus();
+    QTRY_VERIFY(editor->hasFocus());
+    QCOMPARE(reopen->isEnabled(), !privateTab);
+    if (shortcut) {
+        const QKeyCombination key = restoreClosedTabShortcut();
+        QTest::keyClick(&window, key.key(), key.keyboardModifiers());
+    } else if (foreignMenu) {
+        reopen->trigger();
+    } else if (!privateTab) {
+        // Exercise a real popup dismissal before the queued restore runs.
+        menu->popup(window.mapToGlobal(QPoint(20, 20)));
+        menu->setActiveAction(reopen);
+        QTest::keyClick(menu, Qt::Key_Return);
+    }
+    QTRY_COMPARE(tabs->count(), privateTab ? 1 : 2);
+    if (!privateTab) {
+        QCOMPARE(display->session()->name(), name);
+        QCOMPARE(editor->text(), QStringLiteral("321"));
+    }
+    QVERIFY(!reopen->isEnabled());
+}
+
+void TestSessionsUi::view_commands_split_and_close_active_pane_data()
+{
+    QTest::addColumn<QString>("direction");
+    for (const QString& direction : {QStringLiteral("&Left"), QStringLiteral("&Right"),
+                                    QStringLiteral("&Up"), QStringLiteral("&Down")})
+        QTest::newRow(qPrintable(direction)) << direction;
+}
+
+void TestSessionsUi::view_commands_split_and_close_active_pane()
+{
+    QFETCH(QString, direction);
+    MainWindowStateGuard guard;
+    MainWindow window(false);
+    window.resize(900, 600);
+    window.show();
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    Editor* first = window.findChild<Editor*>();
+    QVERIFY(first);
+    first->setFocus();
+    QTRY_VERIFY(first->hasFocus());
+    first->setText(QStringLiteral("11"));
+    QMenu* view = menuWithTitle(window.menuBar(), QStringLiteral("&View"));
+    QVERIFY(view);
+    QMenu* split = directSubmenuWithTitle(view, QStringLiteral("S&plit"));
+    QVERIFY(split);
+    QAction* action = directMenuActionWithText(split, direction);
+    QAction* close = directMenuActionWithText(view, QStringLiteral("Close Pa&ne"));
+    QVERIFY(action && close);
+    action->trigger();
+    QTRY_COMPARE(window.findChildren<Editor*>().size(), 2);
+    const QList<Editor*> editors = window.findChildren<Editor*>();
+    Editor* added = editors.first() == first ? editors.last() : editors.first();
+    QTRY_VERIFY(added->hasFocus());
+    const QPoint firstPosition = first->mapTo(&window, first->rect().center());
+    const QPoint addedPosition = added->mapTo(&window, added->rect().center());
+    if (direction == QLatin1String("&Left"))
+        QVERIFY(addedPosition.x() < firstPosition.x());
+    else if (direction == QLatin1String("&Right"))
+        QVERIFY(addedPosition.x() > firstPosition.x());
+    else if (direction == QLatin1String("&Up"))
+        QVERIFY(addedPosition.y() < firstPosition.y());
+    else
+        QVERIFY(addedPosition.y() > firstPosition.y());
+    added->setText(QStringLiteral("22"));
+    close->trigger();
+    QTRY_COMPARE(window.findChildren<Editor*>().size(), 1);
+    QCOMPARE(window.findChild<Editor*>(), first);
+    QCOMPARE(first->text(), QStringLiteral("11"));
 }
 
 void TestSessionsUi::restore_closed_tab_shortcut_restores_last_closed_session_tab()
