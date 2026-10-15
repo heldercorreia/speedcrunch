@@ -925,6 +925,13 @@ Help
     dock title, and styling its contents. Titles are styled first so changing
     the parent stylesheet does not repeat work on the contents. Table headers
     receive their own styling without the list scrollbar styles.
+    Docks are created at startup even when closed, so saved positions and tab
+    groups can be restored. Closed docks stay hidden. Repeated themed palette
+    assignments are skipped when their colors and explicit roles match.
+    Deferred refreshes reuse native table-header measurements when the style,
+    font, system palette, display DPI, layout direction, and header stylesheet
+    are unchanged. Header data changes and model resets discard the saved
+    measurements. Measurement and reuse appear separately in the timings.
 
     Highlighting comparisons use document revisions and sizes, theme inputs,
     selected settings, and evaluator identity. They do not track changes to the

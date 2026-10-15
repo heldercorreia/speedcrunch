@@ -1018,6 +1018,18 @@ bool setStyleSheetIfChanged(QWidget* widget, const QString& styleSheet)
     return true;
 }
 
+void setDockPaletteIfChanged(QWidget* widget, const QPalette& palette)
+{
+    const QPalette current = widget->palette();
+    // Matching colors must also keep the same explicit palette roles.
+    if (widget->testAttribute(Qt::WA_SetPalette) && current == palette
+        && current.resolveMask() == palette.resolveMask()) {
+        StartupDiagnostics::appearanceAssignment(widget, true, false, true);
+        return;
+    }
+    StartupDiagnostics::setAppearancePalette(widget, palette);
+}
+
 void applyStatusBarAppearance(QStatusBar* bar, const GeneratedThemeSurfaces& surfaces)
 {
     if (bar == nullptr)
@@ -1490,7 +1502,7 @@ void applySurfaceToLabel(QLabel* label, const ThemeSurfaceColors& surface)
     if (label == nullptr)
         return;
 
-    StartupDiagnostics::setAppearancePalette(label, paletteForThemeSurface(label->palette(), surface));
+    setDockPaletteIfChanged(label, paletteForThemeSurface(label->palette(), surface));
     setStyleSheetIfChanged(label, QStringLiteral(
         "QLabel { background-color: %1; color: %2; }")
                              .arg(surface.background.name(),
@@ -1505,7 +1517,7 @@ void applyNoMatchLabelSurface(QAbstractItemView* view, const ThemeSurfaceColors&
     for (QLabel* label : view->viewport()->findChildren<QLabel*>(QString(), Qt::FindDirectChildrenOnly)) {
         if (!label->property("dockListNoMatchLabel").toBool())
             continue;
-        StartupDiagnostics::setAppearancePalette(label, paletteForThemeSurface(label->palette(), surface));
+        setDockPaletteIfChanged(label, paletteForThemeSurface(label->palette(), surface));
         setStyleSheetIfChanged(label, QStringLiteral("QLabel { background: transparent; color: %1; }")
                                  .arg(surface.foreground.name()));
     }
@@ -1536,7 +1548,7 @@ void applySurfaceToStructuralDockWidget(QWidget* widget, const ThemeSurfaceColor
     if (!isStructuralDockBackgroundWidget(widget))
         return;
 
-    StartupDiagnostics::setAppearancePalette(widget, paletteForThemeSurface(widget->palette(), surface));
+    setDockPaletteIfChanged(widget, paletteForThemeSurface(widget->palette(), surface));
     widget->setAutoFillBackground(true);
     widget->setAttribute(Qt::WA_StyledBackground, true);
     // Dock containers share their stylesheet with child menus. Limit these
@@ -1589,7 +1601,8 @@ void updateDockSystemTabCursor(QTabBar* tabBar, const QPoint& pos)
 
 void applyDockChromeAppearance(MainWindow* owner,
                                QDockWidget* dock,
-                               const GeneratedThemeSurfaces& surfaces)
+                               const GeneratedThemeSurfaces& surfaces,
+                               bool forceNativePolish)
 {
     if (dock == nullptr)
         return;
@@ -1618,7 +1631,7 @@ void applyDockChromeAppearance(MainWindow* owner,
             button->setProperty("speedcrunchDockHeaderButton", false);
             if (owner != nullptr)
                 button->removeEventFilter(owner);
-            restoreNativeDockSurface(button);
+            restoreNativeDockSurface(button, forceNativePolish);
             const QVariantList state = button->property("speedcrunchNativeDockHeaderButton").toList();
             button->setMinimumSize(state.at(0).toSize());
             button->setMaximumSize(state.at(1).toSize());
@@ -1627,7 +1640,7 @@ void applyDockChromeAppearance(MainWindow* owner,
             button->setMouseTracking(state.at(4).toBool());
             button->setAttribute(Qt::WA_Hover, state.at(5).toBool());
         }
-        restoreNativeDockSurface(dock);
+        restoreNativeDockSurface(dock, forceNativePolish);
         // Some system styles leave the title background transparent. Fill the
         // dock with its system palette so the main window theme cannot show through.
         dock->setAutoFillBackground(true);
@@ -1643,7 +1656,7 @@ void applyDockChromeAppearance(MainWindow* owner,
         themeSurfaceForShadeIndex(surfaces, UiConfig::DockHeaderButtonFillShade);
     const ThemeSurfaceColors titleButtonHover =
         themeSurfaceForShadeIndex(surfaces, UiConfig::DockHeaderButtonHoverFillShade);
-    StartupDiagnostics::setAppearancePalette(dock, paletteForThemeSurface(dock->palette(), surfaces.headersAndBorders));
+    setDockPaletteIfChanged(dock, paletteForThemeSurface(dock->palette(), surfaces.headersAndBorders));
     const bool styleChanged = setStyleSheetIfChanged(dock, QStringLiteral(
         "QDockWidget {"
         " color: %2;"
@@ -1707,7 +1720,7 @@ void applyDockChromeAppearance(MainWindow* owner,
                      titleButton.foreground.name(),
                      titleButtonHover.background.name(),
                      titleButtonHover.foreground.name()));
-        StartupDiagnostics::setAppearancePalette(button, paletteForThemeSurface(button->palette(), titleButton));
+        setDockPaletteIfChanged(button, paletteForThemeSurface(button->palette(), titleButton));
         applyDockTitleButtonIcon(button, button->underMouse());
     }
 }
@@ -1879,7 +1892,7 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
     const QList<QComboBox*> comboBoxes = dockContent->findChildren<QComboBox*>();
     const ThemeSurfaceColors& dockSurface = dockBackground;
 
-    StartupDiagnostics::setAppearancePalette(dockContent, paletteForThemeSurface(dockContent->palette(), dockSurface));
+    setDockPaletteIfChanged(dockContent, paletteForThemeSurface(dockContent->palette(), dockSurface));
     dockContent->setAutoFillBackground(true);
     applySurfaceToStructuralDockWidget(dockContent, dockSurface);
     for (QWidget* child : dockContent->findChildren<QWidget*>())
@@ -1945,7 +1958,7 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
 
     for (QComboBox* comboBox : comboBoxes) {
         applySurfaceToContainingRow(dockContent, comboBox, dockSurface);
-        StartupDiagnostics::setAppearancePalette(comboBox, paletteForThemeSurface(comboBox->palette(), dockTextInput));
+        setDockPaletteIfChanged(comboBox, paletteForThemeSurface(comboBox->palette(), dockTextInput));
         DockComboBoxChevron::PopupTheme popupTheme;
         popupTheme.buttonStyle = QStringLiteral(
             "QComboBox {"
@@ -2002,7 +2015,7 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
         searchBox->setProperty("speedcrunchDockTextInput", true);
         if (owner != nullptr)
             searchBox->installEventFilter(owner);
-        StartupDiagnostics::setAppearancePalette(searchBox, paletteForThemeSurface(searchBox->palette(), dockTextInput));
+        setDockPaletteIfChanged(searchBox, paletteForThemeSurface(searchBox->palette(), dockTextInput));
         if (ThemedLineEdit* themedSearchBox = dynamic_cast<ThemedLineEdit*>(searchBox))
             themedSearchBox->setCursorColor(surfaces.primary.background);
         setStyleSheetIfChanged(searchBox, QStringLiteral(
@@ -2050,21 +2063,60 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
                                      dockBackground.foreground.name())
                                 .arg(UiConfig::DockListPadding)
                             + scrollBarStyleSheet(listScrollBars));
-        StartupDiagnostics::setAppearancePalette(view, palette);
-        StartupDiagnostics::setAppearancePalette(view->viewport(), palette);
+        setDockPaletteIfChanged(view, palette);
+        setDockPaletteIfChanged(view->viewport(), palette);
         applyScrollBarColorsToScrollArea(view, listScrollBars);
         applyNoMatchLabelSurface(view, dockBackground);
     }
 
     for (QHeaderView* header : dockContent->findChildren<QHeaderView*>()) {
-        restoreNativeDockSurface(header);
-        QStyleOptionHeader option;
-        option.initFrom(header);
-        const int headerMargin = qMax(0, header->style()->pixelMetric(
-            QStyle::PM_HeaderMargin, &option, header));
-        // Keep the native height, including the two themed border strokes.
-        const int headerContentHeight = qMax(0, header->sizeHint().height() - 2);
-        StartupDiagnostics::setAppearancePalette(header, paletteForThemeSurface(header->palette(), dockBackground));
+        const QPointer<QAbstractItemModel> measuredModel =
+            header->property("speedcrunchNativeHeaderModel").value<QPointer<QAbstractItemModel>>();
+        if (measuredModel != header->model()) {
+            header->setProperty("speedcrunchNativeHeaderMetrics", QVariant());
+            QAbstractItemModel* model = header->model();
+            if (model != nullptr) {
+                const auto invalidateMetrics = [header, model]() {
+                    if (header->model() == model)
+                        header->setProperty("speedcrunchNativeHeaderMetrics", QVariant());
+                };
+                QObject::connect(model, &QAbstractItemModel::headerDataChanged, header,
+                    [header, invalidateMetrics](Qt::Orientation orientation, int, int) {
+                        if (orientation == header->orientation())
+                            invalidateMetrics();
+                    });
+                QObject::connect(model, &QAbstractItemModel::modelReset, header, invalidateMetrics);
+            }
+            header->setProperty("speedcrunchNativeHeaderModel",
+                                QVariant::fromValue(QPointer<QAbstractItemModel>(model)));
+        }
+        const auto metricInputs = [header]() {
+            return QVariantList {header->font(), MenuStyle::systemPalette(header),
+                header->logicalDpiX(), header->logicalDpiY(), int(header->layoutDirection()), header->count()};
+        };
+        const QVariantList metrics = header->property("speedcrunchNativeHeaderMetrics").toList();
+        const QPointer<QStyle> measuredStyle =
+            header->property("speedcrunchNativeHeaderStyle").value<QPointer<QStyle>>();
+        const bool reuseMetrics = !forceNativePolish && metrics.size() == 2
+            && measuredStyle == header->style()
+            && header->property("speedcrunchNativeHeaderInputs").toList() == metricInputs()
+            && header->property("speedcrunchThemedHeaderStyleSheet").toString() == header->styleSheet();
+        int headerMargin;
+        int headerContentHeight;
+        if (reuseMetrics) {
+            StartupDiagnostics::Scope timing("Reuse native dock header metrics");
+            headerMargin = metrics.at(0).toInt();
+            headerContentHeight = metrics.at(1).toInt();
+        } else {
+            StartupDiagnostics::Scope timing("Measure native dock header metrics");
+            restoreNativeDockSurface(header);
+            QStyleOptionHeader option;
+            option.initFrom(header);
+            headerMargin = qMax(0, header->style()->pixelMetric(QStyle::PM_HeaderMargin, &option, header));
+            // Keep the native height, including the two themed border strokes.
+            headerContentHeight = qMax(0, header->sizeHint().height() - 2);
+        }
+        setDockPaletteIfChanged(header, paletteForThemeSurface(header->palette(), dockBackground));
         setStyleSheetIfChanged(header, QStringLiteral(
             "QHeaderView { background-color: %1; color: %2; border: 0; padding: 0; }"
             "QHeaderView::section {"
@@ -2087,6 +2139,12 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
                                        dockHeader.background.name())
                                   .arg(headerMargin)
                                   .arg(headerContentHeight));
+        if (!reuseMetrics) {
+            header->setProperty("speedcrunchNativeHeaderMetrics", QVariantList {headerMargin, headerContentHeight});
+            header->setProperty("speedcrunchNativeHeaderStyle", QVariant::fromValue(QPointer<QStyle>(header->style())));
+            header->setProperty("speedcrunchNativeHeaderInputs", metricInputs());
+            header->setProperty("speedcrunchThemedHeaderStyleSheet", header->styleSheet());
+        }
     }
     alignDockSearchRow(dockContent);
 }
@@ -2108,7 +2166,7 @@ void applyDockAppearance(MainWindow* owner, QDockWidget* dock,
         }
     }
     // Set the parent style first so it does not repolish freshly styled contents.
-    applyDockChromeAppearance(owner, dock, surfaces);
+    applyDockChromeAppearance(owner, dock, surfaces, forceNativePolish);
     applyDockContentAppearance(owner, dock, surfaces, widgets, forceNativePolish);
 }
 

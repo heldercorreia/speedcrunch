@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "mainwindowtesthelpers.h"
+#include "core/startupdiagnostics.h"
 
 using namespace MainWindowTestHelpers;
 
@@ -11,6 +12,10 @@ class TestDockAppearanceUi : public QObject {
 private slots:
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
+    void dock_refresh_reuses_unchanged_appearance_work_data();
+    void dock_refresh_reuses_unchanged_appearance_work();
+    void themed_header_metrics_refresh_after_font_change_data();
+    void themed_header_metrics_refresh_after_font_change();
     void dock_appearance_defaults_to_theme_and_persists();
     void dock_appearance_switches_all_windows_data();
     void dock_appearance_switches_all_windows();
@@ -33,6 +38,101 @@ private slots:
     void dock_header_buttons_keep_theme_after_redocking();
     void themed_headers_keep_native_scrollbar_styles();
 };
+
+void TestDockAppearanceUi::dock_refresh_reuses_unchanged_appearance_work_data()
+{
+    QTest::addColumn<bool>("system");
+    QTest::newRow("theme") << false;
+    QTest::newRow("system") << true;
+}
+
+void TestDockAppearanceUi::dock_refresh_reuses_unchanged_appearance_work()
+{
+    QFETCH(bool, system);
+    MainWindowStateGuard guard;
+    guard.settings->dockAppearance = system ? Settings::DockAppearanceSystem : Settings::DockAppearanceSpeedCrunch;
+    guard.settings->sessionLayoutJson.clear();
+    guard.settings->windowState.clear();
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QCoreApplication::processEvents();
+    StartupDiagnostics::begin();
+    const auto finishRecording = qScopeGuard([]() {
+        StartupDiagnostics::firstPaintFinished();
+        StartupDiagnostics::finishWhenIdle();
+    });
+    QVERIFY(QMetaObject::invokeMethod(&window, "colorSchemeChanged", Qt::DirectConnection));
+    QCoreApplication::processEvents();
+    const auto snapshot = StartupDiagnostics::snapshot();
+    int skippedChromePalettes = 0;
+    for (const auto& assignment : snapshot.appearanceAssignments) {
+        const auto& call = snapshot.appearanceCalls.at(assignment.call - 1);
+        if (call.name == QLatin1String("Apply dock chrome appearance")
+            && call.context == QLatin1String("Deferred dock refresh") && assignment.palette) {
+            skippedChromePalettes += assignment.skipped;
+        }
+    }
+    QVERIFY(skippedChromePalettes > 0);
+    if (!system) {
+        int reusedHeaders = 0;
+        for (const auto& phase : snapshot.phases) {
+            if (phase.name == QLatin1String("Reuse native dock header metrics"))
+                reusedHeaders += phase.calls;
+        }
+        QVERIFY(reusedHeaders > 0);
+    }
+}
+
+void TestDockAppearanceUi::themed_header_metrics_refresh_after_font_change_data()
+{
+    QTest::addColumn<bool>("modelFont");
+    QTest::newRow("widget-font") << false;
+    QTest::newRow("model-font") << true;
+}
+
+void TestDockAppearanceUi::themed_header_metrics_refresh_after_font_change()
+{
+    QFETCH(bool, modelFont);
+    MainWindowStateGuard guard;
+    guard.settings->dockAppearance = Settings::DockAppearanceSpeedCrunch;
+    guard.settings->sessionLayoutJson.clear();
+    guard.settings->windowState.clear();
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QCoreApplication::processEvents();
+    QDockWidget* constants = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(constants);
+    QTreeWidget* table = constants->findChild<QTreeWidget*>();
+    QVERIFY(table);
+    QHeaderView* header = table->header();
+    const int oldHeight = header->sizeHint().height();
+    StartupDiagnostics::begin();
+    const auto finishRecording = qScopeGuard([]() {
+        StartupDiagnostics::firstPaintFinished();
+        StartupDiagnostics::finishWhenIdle();
+    });
+    QVERIFY(QMetaObject::invokeMethod(&window, "colorSchemeChanged", Qt::DirectConnection));
+    const auto measuredHeaders = []() {
+        for (const auto& phase : StartupDiagnostics::snapshot().phases) {
+            if (phase.name == QLatin1String("Measure native dock header metrics"))
+                return phase.calls;
+        }
+        return 0;
+    };
+    const int initialMeasurements = measuredHeaders();
+    QVERIFY(initialMeasurements > 0);
+    QFont font = header->font();
+    font.setPixelSize(header->fontMetrics().height() + 12);
+    if (modelFont)
+        table->headerItem()->setFont(0, font);
+    else
+        header->setFont(font);
+    QCoreApplication::processEvents();
+    QVERIFY(measuredHeaders() > initialMeasurements);
+    QVERIFY(header->sizeHint().height() > oldHeight);
+}
 
 void TestDockAppearanceUi::themed_headers_keep_native_scrollbar_styles()
 {
