@@ -1291,14 +1291,15 @@ QMenu* ResultDisplay::createContextMenu(const QPoint& pos)
         if (session == nullptr)
             return menu;
         menu->addSeparator();
-        QAction* copyExpressionAction = menu->addAction(tr("Copy Expression"));
+        QMenu* copyMenu = menu->addMenu(tr("Copy"));
+        QAction* copyExpressionAction = copyMenu->addAction(tr("Expression"));
         connect(copyExpressionAction, &QAction::triggered, this, [session, historyIndex]() {
             if (historyIndex < 0 || historyIndex >= session->historySize())
                 return;
 
             QApplication::clipboard()->setText(session->historyEntryAtRef(historyIndex).expr(), QClipboard::Clipboard);
         });
-        QAction* copyResultAction = menu->addAction(tr("Copy Result"));
+        QAction* copyResultAction = copyMenu->addAction(tr("Result"));
         const bool canCopyResult = historyIndex >= 0
             && historyIndex < session->historySize()
             && !session->historyEntryAtRef(historyIndex).result().isNan();
@@ -1313,7 +1314,7 @@ QMenu* ResultDisplay::createContextMenu(const QPoint& pos)
 
             QApplication::clipboard()->setText(formatResultForClipboard(value), QClipboard::Clipboard);
         });
-        QAction* copyCalculationAction = menu->addAction(tr("Copy Calculation"));
+        QAction* copyCalculationAction = copyMenu->addAction(tr("Calculation"));
         int startBlock = -1;
         int endBlock = -1;
         QString calculationText;
@@ -1331,7 +1332,7 @@ QMenu* ResultDisplay::createContextMenu(const QPoint& pos)
         connect(copyCalculationAction, &QAction::triggered, this, [calculationText]() {
             QApplication::clipboard()->setText(calculationText, QClipboard::Clipboard);
         });
-        QAction* copySingleLineAction = menu->addAction(tr("Copy as Single Line"));
+        QAction* copySingleLineAction = copyMenu->addAction(tr("Calculation as Single Line"));
         copySingleLineAction->setEnabled(!calculationText.isEmpty());
         connect(copySingleLineAction, &QAction::triggered, this, [calculationText]() {
             QString singleLineText = calculationText;
