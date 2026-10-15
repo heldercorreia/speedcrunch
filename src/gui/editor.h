@@ -109,6 +109,7 @@ public slots:
     void rehighlight();
     void updateHistory();
     void refreshAutoCalc();
+    void refreshInputMode();
 
 protected slots:
     void insertFromMimeData(const QMimeData*) override;

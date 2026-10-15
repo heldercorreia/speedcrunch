@@ -212,9 +212,9 @@ void SyntaxHighlighter::highlightSyntaxBlock(const QString& text)
     const SyntaxHighlightBlockData* blockData =
         dynamic_cast<SyntaxHighlightBlockData*>(currentBlockUserData());
 
-    if (text.startsWith(QLatin1String("="))) {
+    if (text.startsWith(MathDsl::Equals)) {
         setFormat(0, 1, colorForRole(ColorScheme::Operator));
-        const int expressionOffset = text.startsWith(QLatin1String("= ")) ? 2 : 1;
+        const int expressionOffset = text.size() > 1 && text.at(1) == UnicodeChars::Space ? 2 : 1;
         const QString expressionText = text.mid(expressionOffset);
         const bool highlightResultExpressionSyntax =
             blockData && blockData->highlightResultExpressionSyntax;

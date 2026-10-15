@@ -227,6 +227,7 @@ private slots:
     void setStatusBarVisible(bool);
     void setSyntaxHighlightingEnabled(bool);
     void setInputDigitGroupingEnabled(bool);
+    void setAutomaticInputAdjustmentsEnabled(bool);
     void setCursorBlinkingEnabled(bool);
     void setDigitGrouping(QAction*);
     void setDigitGroupingIntegerPartOnlyEnabled(bool);
@@ -515,6 +516,7 @@ private:
         QAction* settingsBehaviorAutoCompletionUserVariables;
         QAction* settingsBehaviorSyntaxHighlighting;
         QAction* settingsEditingInputDigitGrouping;
+        QAction* settingsEditingAutomaticInputAdjustments;
         QAction* settingsEditingCursorBlinking;
         QAction* settingsBehaviorHoverHighlightResults;
         QAction* settingsBehaviorDigitGroupingNone;

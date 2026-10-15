@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "mainwindowtesthelpers.h"
+#include "core/numberformatter.h"
+#include "core/mathdsl.h"
 
 using namespace MainWindowTestHelpers;
 
@@ -15,6 +17,11 @@ private slots:
     void update_checks_follow_build_option();
     void ui_test_fixture_resets_persisted_layout_and_first_run_preference();
     void editing_input_digit_grouping_updates_all_open_editors();
+    void editing_automatic_input_adjustments_updates_all_open_editors();
+    void raw_input_preserves_auto_ans_setting_data();
+    void raw_input_preserves_auto_ans_setting();
+    void raw_input_preserves_multiline_paste_evaluation_data();
+    void raw_input_preserves_multiline_paste_evaluation();
     void editing_cursor_blinking_updates_all_open_editors();
     void number_format_is_shared_and_refreshes_all_input_panes();
     void display_font_changes_update_all_sessions_and_windows_data();
@@ -153,6 +160,165 @@ void TestSettingsUi::editing_input_digit_grouping_updates_all_open_editors()
             QCOMPARE(editor->text(), QStringLiteral("1000"));
         }
     }
+}
+
+void TestSettingsUi::editing_automatic_input_adjustments_updates_all_open_editors()
+{
+    Settings::instance()->numberFormatStyle = Settings::NumberFormatThreeDigitSpaceDot;
+    Settings::instance()->applyNumberFormatStyle();
+    MainWindow first;
+    MainWindow second;
+    QAction* firstAction = first.findChild<QAction*>(QStringLiteral("AutomaticInputAdjustmentsAction"));
+    QAction* secondAction = second.findChild<QAction*>(QStringLiteral("AutomaticInputAdjustmentsAction"));
+    QVERIFY(firstAction);
+    QVERIFY(secondAction);
+    QCOMPARE(firstAction->text(), MainWindow::tr("Automatic Input &Adjustments"));
+    QVERIFY(firstAction->isCheckable());
+    QVERIFY(firstAction->isChecked());
+    bool inEditingMenu = false;
+    for (QMenu* menu : first.findChildren<QMenu*>()) {
+        if (menu->title() == MainWindow::tr("&Editing") && menu->actions().contains(firstAction))
+            inEditingMenu = true;
+    }
+    QVERIFY(inEditingMenu);
+    QVERIFY(QMetaObject::invokeMethod(&first, "splitActivePaneRight", Qt::DirectConnection));
+    const QList<Editor*> editors = first.findChildren<Editor*>() + second.findChildren<Editor*>();
+    QVERIFY(editors.size() >= 3);
+    for (Editor* editor : editors) {
+        editor->setAutoCompletionEnabled(false);
+        editor->setText(QStringLiteral("1000"));
+        editor->setCursorPosition(4);
+    }
+    firstAction->trigger();
+    QVERIFY(!Settings::instance()->automaticInputAdjustments);
+    QVERIFY(!secondAction->isChecked());
+    for (Editor* editor : editors) {
+        QCOMPARE(editor->text(), QStringLiteral("1000"));
+        QCOMPARE(editor->cursorPosition(), 4);
+        bool hasSeparator = false;
+        for (const auto& range : editor->document()->firstBlock().layout()->formats())
+            hasSeparator |= range.format.hasProperty(SyntaxHighlighter::InputDigitSeparator);
+        QVERIFY(hasSeparator);
+        QTest::keyClicks(editor, "+2^3@");
+        QCOMPARE(editor->text(), QStringLiteral("1000+2^3@"));
+    }
+    QVERIFY(QMetaObject::invokeMethod(&first, "splitActivePaneDown", Qt::DirectConnection));
+    MainWindow third;
+    QVERIFY(!third.findChild<QAction*>(QStringLiteral("AutomaticInputAdjustmentsAction"))->isChecked());
+    for (MainWindow* window : {&first, &second, &third}) {
+        for (Editor* editor : window->findChildren<Editor*>()) {
+            editor->clear();
+            QTest::keyClicks(editor, "2^3");
+            QCOMPARE(editor->text(), QStringLiteral("2^3"));
+        }
+    }
+    secondAction->trigger();
+    QVERIFY(Settings::instance()->automaticInputAdjustments);
+    for (MainWindow* window : {&first, &second, &third}) {
+        QVERIFY(window->findChild<QAction*>(QStringLiteral("AutomaticInputAdjustmentsAction"))->isChecked());
+        for (Editor* editor : window->findChildren<Editor*>()) {
+            QCOMPARE(editor->text(), QStringLiteral("2^3"));
+            editor->clear();
+            QTest::keyClicks(editor, "2^3");
+            QCOMPARE(editor->text(), QString::fromUtf8("2³"));
+        }
+    }
+    firstAction->trigger();
+    QAction* resetAction = first.findChild<QAction*>(QStringLiteral("ResetAllSettingsAction"));
+    QVERIFY(resetAction);
+    QTimer::singleShot(0, &first, []() {
+        auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        QVERIFY(dialog);
+        dialog->button(QMessageBox::Yes)->click();
+    });
+    resetAction->trigger();
+    QVERIFY(Settings::instance()->automaticInputAdjustments);
+    for (MainWindow* window : {&first, &second, &third})
+        QVERIFY(window->findChild<QAction*>(QStringLiteral("AutomaticInputAdjustmentsAction"))->isChecked());
+}
+
+void TestSettingsUi::raw_input_preserves_auto_ans_setting_data()
+{
+    QTest::addColumn<bool>("autoAns");
+    QTest::newRow("auto-ans-enabled") << true;
+    QTest::newRow("auto-ans-disabled") << false;
+}
+
+void TestSettingsUi::raw_input_preserves_auto_ans_setting()
+{
+    QFETCH(bool, autoAns);
+    Settings::instance()->automaticInputAdjustments = false;
+    Settings::instance()->autoAns = autoAns;
+    MainWindow window;
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QCoreApplication::processEvents();
+    Editor* editor = window.findChild<Editor*>();
+    QVERIFY(editor);
+    editor->setAutoCompletionEnabled(false);
+    editor->setText(QStringLiteral("2+3"));
+    QTest::keyClick(editor, Qt::Key_Return);
+    QVERIFY(editor->evaluator()->getVariable(QStringLiteral("ans")).value() == Quantity(5));
+    editor->clear();
+    QTest::keyClicks(editor, "+2");
+    const QString entered = QString(MathDsl::AddOp) + MathDsl::Dig2;
+    QCOMPARE(editor->text(), autoAns ? QStringLiteral("ans") + entered : entered);
+    editor->clear();
+    QVERIFY(QMetaObject::invokeMethod(&window, "insertTextIntoEditor", Qt::DirectConnection,
+                                     Q_ARG(QString, QStringLiteral("@**+"))));
+    QCOMPARE(editor->text(), QStringLiteral("@**+"));
+    editor->setText(QStringLiteral("2^3"));
+    QCOMPARE(editor->text(), QStringLiteral("2^3"));
+    editor->evaluate();
+    QCOMPARE(editor->evaluator()->error(), QString());
+    QCOMPARE(NumberFormatter::format(editor->evaluator()->getVariable(QStringLiteral("ans")).value()),
+             QStringLiteral("8"));
+}
+
+void TestSettingsUi::raw_input_preserves_multiline_paste_evaluation_data()
+{
+    QTest::addColumn<bool>("rawInput");
+    QTest::newRow("automatic-editing") << false;
+    QTest::newRow("raw-input") << true;
+}
+
+void TestSettingsUi::raw_input_preserves_multiline_paste_evaluation()
+{
+    QFETCH(bool, rawInput);
+    Settings::instance()->automaticInputAdjustments = !rawInput;
+    Settings::instance()->leaveLastExpression = false;
+    MainWindow window;
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QCoreApplication::processEvents();
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    QVERIFY(display);
+    Editor* editor = editorForDisplay(display);
+    QVERIFY(editor);
+    editor->setAutoCompletionEnabled(false);
+    editor->clear();
+    const int previousCount = display->session()->historySize();
+    QSignalSpy started(editor, &Editor::bulkEvaluationStarted);
+    QSignalSpy finished(editor, &Editor::bulkEvaluationFinished);
+    QSignalSpy evaluated(editor, &Editor::returnPressed);
+    const QString previousClipboard = QApplication::clipboard()->text();
+    const auto restoreClipboard = qScopeGuard([&]() {
+        QApplication::clipboard()->setText(previousClipboard);
+    });
+    QApplication::clipboard()->setText(QStringLiteral("2+3\n\n4*5\n2^3\n"));
+    editor->paste();
+    QCOMPARE(started.count(), 1);
+    QCOMPARE(finished.count(), 1);
+    QCOMPARE(evaluated.count(), 3);
+    QCOMPARE(display->session()->historySize(), previousCount + 3);
+    const QStringList expectedResults {QStringLiteral("5"), QStringLiteral("20"), QStringLiteral("8")};
+    for (int i = 0; i < expectedResults.size(); ++i) {
+        const HistoryEntry entry = display->session()->historyEntryAt(previousCount + i);
+        QCOMPARE(NumberFormatter::format(entry.result()), expectedResults.at(i));
+    }
+    QCOMPARE(NumberFormatter::format(editor->evaluator()->getVariable(QStringLiteral("ans")).value()),
+             expectedResults.last());
+    QVERIFY(editor->text().isEmpty());
 }
 
 void TestSettingsUi::editing_cursor_blinking_updates_all_open_editors()

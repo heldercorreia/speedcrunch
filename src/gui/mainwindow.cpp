@@ -3914,6 +3914,8 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorSaveWindowPositionOnExit = new QAction(this);
     m_actions.settingsBehaviorSyntaxHighlighting = new QAction(this);
     m_actions.settingsEditingInputDigitGrouping = new QAction(this);
+    m_actions.settingsEditingAutomaticInputAdjustments = new QAction(this);
+    m_actions.settingsEditingAutomaticInputAdjustments->setObjectName(QStringLiteral("AutomaticInputAdjustmentsAction"));
     m_actions.settingsEditingInputDigitGrouping->setObjectName(QStringLiteral("InputDigitGroupingAction"));
     m_actions.settingsEditingCursorBlinking = new QAction(this);
     m_actions.settingsEditingCursorBlinking->setObjectName(QStringLiteral("CursorBlinkingAction"));
@@ -4033,6 +4035,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setCheckable(true);
     m_actions.settingsBehaviorSyntaxHighlighting->setCheckable(true);
     m_actions.settingsEditingInputDigitGrouping->setCheckable(true);
+    m_actions.settingsEditingAutomaticInputAdjustments->setCheckable(true);
     m_actions.settingsEditingCursorBlinking->setCheckable(true);
     m_actions.settingsBehaviorHoverHighlightResults->setCheckable(true);
     m_actions.settingsBehaviorDigitGroupingNone->setCheckable(true);
@@ -4455,6 +4458,8 @@ void MainWindow::setActionsText()
     m_actions.settingsOpenPrivateTabOnStartup->setStatusTip(m_actions.settingsOpenPrivateTabOnStartup->toolTip());
     m_actions.settingsBehaviorSyntaxHighlighting->setText(MainWindow::tr("Syntax &Highlighting"));
     m_actions.settingsEditingInputDigitGrouping->setText(MainWindow::tr("Group Digits in &Input"));
+    m_actions.settingsEditingAutomaticInputAdjustments->setText(MainWindow::tr("Automatic Input &Adjustments"));
+    m_actions.settingsEditingAutomaticInputAdjustments->setToolTip(MainWindow::tr("Automatically adjust operators, spacing, brackets, and powers, and restrict input to valid characters."));
     m_actions.settingsEditingInputDigitGrouping->setToolTip(MainWindow::tr("Group input digits using the selected number format."));
     m_actions.settingsEditingCursorBlinking->setText(MainWindow::tr("&Blinking Cursor"));
     m_actions.settingsEditingCursorBlinking->setToolTip(MainWindow::tr("Blink the cursor in the expression editor."));
@@ -4798,6 +4803,7 @@ void MainWindow::createMenus()
     m_menus.display->addAction(m_actions.settingsBehaviorSyntaxHighlighting);
     m_menus.display->addAction(m_actions.settingsBehaviorHoverHighlightResults);
     m_menus.editing = m_menus.settings->addMenu("");
+    m_menus.editing->addAction(m_actions.settingsEditingAutomaticInputAdjustments);
     m_menus.autoCompletion = m_menus.editing->addMenu("");
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionBuiltInFunctions);
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionBuiltInVariables);
@@ -8097,6 +8103,8 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsBehaviorSyntaxHighlighting, SIGNAL(toggled(bool)), SLOT(setSyntaxHighlightingEnabled(bool)));
     connect(m_actions.settingsEditingInputDigitGrouping, &QAction::toggled,
             this, &MainWindow::setInputDigitGroupingEnabled);
+    connect(m_actions.settingsEditingAutomaticInputAdjustments, &QAction::toggled,
+            this, &MainWindow::setAutomaticInputAdjustmentsEnabled);
     connect(m_actions.settingsEditingCursorBlinking, &QAction::toggled,
             this, &MainWindow::setCursorBlinkingEnabled);
     connect(m_actions.settingsBehaviorHoverHighlightResults, SIGNAL(toggled(bool)), SLOT(setHoverHighlightResultsEnabled(bool)));
@@ -8465,6 +8473,7 @@ void MainWindow::applySettings(bool initializing)
     else
         setSyntaxHighlightingEnabled(false);
     m_actions.settingsEditingInputDigitGrouping->setChecked(m_settings->inputDigitGrouping);
+    setAutomaticInputAdjustmentsEnabled(m_settings->automaticInputAdjustments);
     setCursorBlinkingEnabled(m_settings->cursorBlinking);
 
     if (m_settings->hoverHighlightResults)
@@ -11642,6 +11651,22 @@ void MainWindow::setSyntaxHighlightingEnabled(bool b)
     emit syntaxHighlightingChanged();
 }
 
+void MainWindow::setAutomaticInputAdjustmentsEnabled(bool enabled)
+{
+    m_settings->automaticInputAdjustments = enabled;
+    QList<QPointer<MainWindow>> windows = allMainWindows();
+    if (!windows.contains(QPointer<MainWindow>(this)))
+        windows.append(QPointer<MainWindow>(this));
+    for (const QPointer<MainWindow>& window : windows) {
+        if (!window)
+            continue;
+        const QSignalBlocker blocker(window->m_actions.settingsEditingAutomaticInputAdjustments);
+        window->m_actions.settingsEditingAutomaticInputAdjustments->setChecked(enabled);
+        for (Editor* editor : window->findChildren<Editor*>())
+            editor->refreshInputMode();
+    }
+}
+
 void MainWindow::setInputDigitGroupingEnabled(bool enabled)
 {
     m_settings->inputDigitGrouping = enabled;
@@ -13168,7 +13193,7 @@ void MainWindow::insertTextIntoEditor(const QString& s)
         return;
 
     const QString prefix = m_widgets.editor->text().left(m_widgets.editor->textCursor().selectionStart());
-    const QString normalized = prefix.contains(MathDsl::CommentSep)
+    const QString normalized = !m_settings->automaticInputAdjustments || prefix.contains(MathDsl::CommentSep)
         ? s : EditorUtils::normalizeExpressionOperatorsForEditorInput(s);
     const bool atExpressionStart = [&]() {
         const QString text = m_widgets.editor->text();
@@ -13177,7 +13202,7 @@ void MainWindow::insertTextIntoEditor(const QString& s)
             --i;
         return i < 0;
     }();
-    if (atExpressionStart && !normalized.isEmpty()) {
+    if (m_settings->automaticInputAdjustments && atExpressionStart && !normalized.isEmpty()) {
         int firstNonSpace = 0;
         while (firstNonSpace < normalized.size() && normalized.at(firstNonSpace).isSpace())
             ++firstNonSpace;

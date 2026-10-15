@@ -375,6 +375,8 @@ void Settings::load()
     leaveLastExpression = settings->value(key + QLatin1String("LeaveLastExpression"), false).toBool();
     language = settings->value(key + QLatin1String("Language"), "C").toString();
     syntaxHighlighting = settings->value(key + QLatin1String("SyntaxHighlighting"), true).toBool();
+    automaticInputAdjustments = settings->value(
+        key + QLatin1String("AutomaticInputAdjustments"), true).toBool();
     inputDigitGrouping = settings->value(key + QLatin1String("InputDigitGrouping"), true).toBool();
     cursorBlinking = settings->value(key + QLatin1String("CursorBlinking"), true).toBool();
     hoverHighlightResults = settings->value(key + QLatin1String("HoverHighlightResults"), true).toBool();
@@ -639,6 +641,7 @@ void Settings::save()
     settings->setValue(
         key + QLatin1String("UpDownArrowBehavior"), static_cast<int>(upDownArrowBehavior));
     settings->setValue(key + QLatin1String("SyntaxHighlighting"), syntaxHighlighting);
+    settings->setValue(key + QLatin1String("AutomaticInputAdjustments"), automaticInputAdjustments);
     settings->setValue(key + QLatin1String("InputDigitGrouping"), inputDigitGrouping);
     settings->setValue(key + QLatin1String("CursorBlinking"), cursorBlinking);
     settings->setValue(key + QLatin1String("HoverHighlightResults"), hoverHighlightResults);

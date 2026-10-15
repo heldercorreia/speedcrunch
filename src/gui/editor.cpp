@@ -1489,7 +1489,7 @@ void Editor::dismissCurrentAutoCalc()
 
 void Editor::setText(const QString& text)
 {
-    setPlainText(normalizeExpressionTypedInEditor(text));
+    setPlainText(Settings::instance()->automaticInputAdjustments ? normalizeExpressionTypedInEditor(text) : text);
     updateHeightAndEnsureCursorVisible();
 }
 
@@ -1497,7 +1497,8 @@ void Editor::insert(const QString& text)
 {
     // Inserted fragments may belong to an existing comment even without a '?'.
     // Use the start of a selection, since the selected delimiter may be removed.
-    if (isInsideCommentFromQuestionMark(this->text(), textCursor().selectionStart())) {
+    if (!Settings::instance()->automaticInputAdjustments
+        || isInsideCommentFromQuestionMark(this->text(), textCursor().selectionStart())) {
         insertPlainText(text);
         updateHeightAndEnsureCursorVisible();
         return;
@@ -1555,7 +1556,7 @@ void Editor::doBackspace()
 {
     QTextCursor cursor = textCursor();
 
-    const int groupedLength = !cursor.hasSelection()
+    const int groupedLength = Settings::instance()->automaticInputAdjustments && !cursor.hasSelection()
         ? groupedTokenLengthBefore(toPlainText(), cursor.position())
         : 0;
     if (groupedLength > 0) {
@@ -1573,7 +1574,7 @@ void Editor::doDelete()
 {
     QTextCursor cursor = textCursor();
 
-    const int groupedLength = !cursor.hasSelection()
+    const int groupedLength = Settings::instance()->automaticInputAdjustments && !cursor.hasSelection()
         ? groupedTokenLengthAfter(toPlainText(), cursor.position())
         : 0;
     if (groupedLength > 0) {
@@ -2129,7 +2130,7 @@ void Editor::triggerAutoComplete()
             if (tokens[i].asOperator() == Token::ListSeparator)
                 continue;
             if (tokens[i].asOperator() == Token::AssociationEnd
-                && tokens[i].text() == QLatin1String(")"))
+                && tokens[i].text() == QString(MathDsl::GroupEnd))
                 break;
             if (tokens[i].isIdentifier()) {
                 auto arg = tokens[i].text();
@@ -2244,14 +2245,14 @@ void Editor::autoComplete(const QString& item)
                                                 QTextCursor::KeepAnchor);
     if (hasParensAlready) {
         auto nextChar = cursor.selectedText();
-        hasParensAlready = (nextChar == "(");
+        hasParensAlready = (nextChar == QString(MathDsl::GroupStart));
     }
     bool isFunction = !unitContext
                       && (FunctionRepo::instance()->find(str.at(0))
                           || m_evaluator->hasUserFunction(str.at(0)));
     bool shouldAutoInsertParens = isFunction && !hasParensAlready;
     if (shouldAutoInsertParens) {
-        insert(QString::fromLatin1("()"));
+        insert(QString(MathDsl::GroupStart) + MathDsl::GroupEnd);
         cursor = textCursor();
         cursor.movePosition(QTextCursor::PreviousCharacter);
         setTextCursor(cursor);
@@ -2275,7 +2276,8 @@ void Editor::insertFromMimeData(const QMimeData* source)
         return;
 
     auto normalizedPastedExpression = [this](const QString& expression) {
-        if (isInsideCommentFromQuestionMark(text(), textCursor().selectionStart()))
+        if (!Settings::instance()->automaticInputAdjustments
+            || isInsideCommentFromQuestionMark(text(), textCursor().selectionStart()))
             return expression;
         QString formattedNumericLiteral;
         if (NumberFormatter::tryFormatStandaloneNumericLiteralForDisplay(expression, &formattedNumericLiteral))
@@ -2735,6 +2737,10 @@ void Editor::focusOutEvent(QFocusEvent* event)
 
 void Editor::inputMethodEvent(QInputMethodEvent* event)
 {
+    if (!Settings::instance()->automaticInputAdjustments) {
+        QPlainTextEdit::inputMethodEvent(event);
+        return;
+    }
     const int replacementPosition = event->replacementLength() > 0
         ? textCursor().position() + event->replacementStart()
         : textCursor().selectionStart();
@@ -3080,6 +3086,116 @@ void Editor::keyPressEvent(QKeyEvent* event)
     default:
         break;
     }
+    switch (key) {
+    case Qt::Key_Tab:
+        // setTabChangesFocus() still allows entering a Tab character when
+        // there's no other widgets to change focus to. To avoid that,
+        // explicitly consume any Tabs that make it here.
+        event->accept();
+        return;
+
+    case Qt::Key_Enter:
+    case Qt::Key_Return:
+        triggerEnter();
+        event->accept();
+        return;
+
+    case Qt::Key_Escape:
+        m_currentAutoCalcDismissed = true;
+        emit escapePressed();
+        event->accept();
+        return;
+
+    case Qt::Key_Up:
+        if (!m_historyArrowNavigationEnabled) {
+            QPlainTextEdit::keyPressEvent(event);
+            event->accept();
+            return;
+        }
+        if (event->modifiers() & Qt::ShiftModifier)
+            emit shiftUpPressed();
+        else if (Settings::instance()->upDownArrowBehavior == Settings::UpDownArrowBehaviorAlways
+                 || (Settings::instance()->upDownArrowBehavior == Settings::UpDownArrowBehaviorSingleLineOnly
+                     && height() <= sizeHint().height()))
+            historyBack();
+        else
+            QPlainTextEdit::keyPressEvent(event);
+        event->accept();
+        return;
+
+    case Qt::Key_Down:
+        if (!m_historyArrowNavigationEnabled) {
+            QPlainTextEdit::keyPressEvent(event);
+            event->accept();
+            return;
+        }
+        if (event->modifiers() & Qt::ShiftModifier)
+            emit shiftDownPressed();
+        else if (Settings::instance()->upDownArrowBehavior == Settings::UpDownArrowBehaviorAlways
+                 || (Settings::instance()->upDownArrowBehavior == Settings::UpDownArrowBehaviorSingleLineOnly
+                     && height() <= sizeHint().height()))
+            historyForward();
+        else
+            QPlainTextEdit::keyPressEvent(event);
+        event->accept();
+        return;
+
+    case Qt::Key_PageUp:
+        if (event->modifiers() & Qt::ShiftModifier)
+            emit shiftPageUpPressed();
+        else if (event->modifiers() & Qt::ControlModifier)
+            emit controlPageUpPressed();
+        else
+            emit pageUpPressed();
+        event->accept();
+        return;
+
+    case Qt::Key_PageDown:
+        if (event->modifiers() & Qt::ShiftModifier)
+            emit shiftPageDownPressed();
+        else if (event->modifiers() & Qt::ControlModifier)
+            emit controlPageDownPressed();
+        else
+            emit pageDownPressed();
+        event->accept();
+        return;
+
+    case Qt::Key_Space:
+        if (event->modifiers() == Qt::ControlModifier
+            && !m_constantCompletion)
+        {
+            m_constantCompletion = new ConstantCompletion(this);
+            m_constantCompletion->setThemeColors(m_completionBackgroundColor,
+                                                 m_completionForegroundColor,
+                                                 m_completionScrollbarThumbColor,
+                                                 m_completionScrollbarThumbForegroundColor,
+                                                 m_completionSelectedRowColor,
+                                                 m_completionSelectedRowForegroundColor,
+                                                 m_completionOutlineColor,
+                                                 m_completionCornerRadius);
+            connect(m_constantCompletion,
+                    SIGNAL(selectedCompletion(const QString&)),
+                    SLOT(insertConstant(const QString&)));
+            connect(m_constantCompletion,
+                    &ConstantCompletion::canceledCompletion,
+                    this, &Editor::cancelConstantCompletion);
+            m_constantCompletion->showCompletion();
+            event->accept();
+            return;
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    if (!Settings::instance()->automaticInputAdjustments) {
+        // Keep calculator commands above, but let Qt edit every character as
+        // ordinary text, including operators and incomplete expressions.
+        QPlainTextEdit::keyPressEvent(event);
+        return;
+    }
+
     const int cursorPosition = textCursor().position();
     if (isInsideCommentFromQuestionMark(text(), textCursor().selectionStart())
         && !(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))
@@ -3654,79 +3770,6 @@ void Editor::keyPressEvent(QKeyEvent* event)
     }
 
     switch (key) {
-    case Qt::Key_Tab:
-        // setTabChangesFocus() still allows entering a Tab character when
-        // there's no other widgets to change focus to. To avoid that,
-        // explicitly consume any Tabs that make it here.
-        event->accept();
-        return;
-
-    case Qt::Key_Enter:
-    case Qt::Key_Return:
-        triggerEnter();
-        event->accept();
-        return;
-
-    case Qt::Key_Escape:
-        m_currentAutoCalcDismissed = true;
-        emit escapePressed();
-        event->accept();
-        return;
-
-    case Qt::Key_Up:
-        if (!m_historyArrowNavigationEnabled) {
-            QPlainTextEdit::keyPressEvent(event);
-            event->accept();
-            return;
-        }
-        if (event->modifiers() & Qt::ShiftModifier)
-            emit shiftUpPressed();
-        else if (Settings::instance()->upDownArrowBehavior == Settings::UpDownArrowBehaviorAlways
-                 || (Settings::instance()->upDownArrowBehavior == Settings::UpDownArrowBehaviorSingleLineOnly
-                     && height() <= sizeHint().height()))
-            historyBack();
-        else
-            QPlainTextEdit::keyPressEvent(event);
-        event->accept();
-        return;
-
-    case Qt::Key_Down:
-        if (!m_historyArrowNavigationEnabled) {
-            QPlainTextEdit::keyPressEvent(event);
-            event->accept();
-            return;
-        }
-        if (event->modifiers() & Qt::ShiftModifier)
-            emit shiftDownPressed();
-        else if (Settings::instance()->upDownArrowBehavior == Settings::UpDownArrowBehaviorAlways
-                 || (Settings::instance()->upDownArrowBehavior == Settings::UpDownArrowBehaviorSingleLineOnly
-                     && height() <= sizeHint().height()))
-            historyForward();
-        else
-            QPlainTextEdit::keyPressEvent(event);
-        event->accept();
-        return;
-
-    case Qt::Key_PageUp:
-        if (event->modifiers() & Qt::ShiftModifier)
-            emit shiftPageUpPressed();
-        else if (event->modifiers() & Qt::ControlModifier)
-            emit controlPageUpPressed();
-        else
-            emit pageUpPressed();
-        event->accept();
-        return;
-
-    case Qt::Key_PageDown:
-        if (event->modifiers() & Qt::ShiftModifier)
-            emit shiftPageDownPressed();
-        else if (event->modifiers() & Qt::ControlModifier)
-            emit controlPageDownPressed();
-        else
-            emit pageDownPressed();
-        event->accept();
-        return;
-
     case Qt::Key_Left:
     case Qt::Key_Right:
         {
@@ -3876,28 +3919,6 @@ void Editor::keyPressEvent(QKeyEvent* event)
         return;
 
     case Qt::Key_Space:
-        if (event->modifiers() == Qt::ControlModifier
-            && !m_constantCompletion)
-        {
-            m_constantCompletion = new ConstantCompletion(this);
-            m_constantCompletion->setThemeColors(m_completionBackgroundColor,
-                                                 m_completionForegroundColor,
-                                                 m_completionScrollbarThumbColor,
-                                                 m_completionScrollbarThumbForegroundColor,
-                                                 m_completionSelectedRowColor,
-                                                 m_completionSelectedRowForegroundColor,
-                                                 m_completionOutlineColor,
-                                                 m_completionCornerRadius);
-            connect(m_constantCompletion,
-                    SIGNAL(selectedCompletion(const QString&)),
-                    SLOT(insertConstant(const QString&)));
-            connect(m_constantCompletion,
-                    &ConstantCompletion::canceledCompletion,
-                    this, &Editor::cancelConstantCompletion);
-            m_constantCompletion->showCompletion();
-            event->accept();
-            return;
-        }
         if (event->modifiers() == Qt::NoModifier) {
             const int pos = textCursor().position();
             if (pos > 0 && text().at(pos - 1).isSpace()) {
@@ -4011,7 +4032,7 @@ void Editor::keyPressEvent(QKeyEvent* event)
             insert(EditorUtils::adjustedTypedTextForImplicitMultiplicationAfterDigit(
                 text(),
                 textCursor().position(),
-                QStringLiteral("=")));
+                QString(MathDsl::Equals)));
             event->accept();
             return;
         }
@@ -4193,6 +4214,13 @@ void Editor::wheelEvent(QWheelEvent* event)
     else if (event->angleDelta().y() < 0)
         historyForward();
     event->accept();
+}
+
+void Editor::refreshInputMode()
+{
+    // A dead caret from the previous mode must not affect the next edit.
+    m_pendingDeadCaretPreedit = false;
+    rehighlight();
 }
 
 void Editor::rehighlight()

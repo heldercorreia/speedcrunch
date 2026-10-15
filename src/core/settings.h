@@ -178,6 +178,7 @@ public:
     bool hasNumberFormatStyleSetting;
     bool leaveLastExpression;
     bool syntaxHighlighting;
+    bool automaticInputAdjustments;
     bool inputDigitGrouping;
     bool cursorBlinking;
     bool hoverHighlightResults;

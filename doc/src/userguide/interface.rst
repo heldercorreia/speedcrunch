@@ -212,6 +212,9 @@ the app is running still creates an ordinary session.
 Expression Editor Features
 --------------------------
 
+Turn off :menuselection:`Settings --> Editing --> Automatic Input Adjustments`
+to enter text without automatic text adjustments or character restrictions.
+
 The expression editor provides some advanced features:
 
 * Undo and redo
@@ -636,6 +639,21 @@ This section contains settings that control result output and post-evaluation be
 
 Editing
 +++++++
+
+* :menuselection:`Automatic Input Adjustments`
+    Automatically replace operators, adjust spacing, insert closing brackets,
+    convert powers to superscripts, and restrict input to valid characters.
+    Turn it off to keep typed and pasted characters as entered.
+    Tab still accepts the selected completion. Digit grouping
+    and automatic insertion of ``ans`` follow their own settings. Pasting
+    several lines evaluates each expression as usual.
+    Invalid expressions can be entered, but still report an error when evaluated.
+
+    This option is enabled by default. Changes apply immediately to all open
+    editors and are saved between launches. Switching modes leaves existing
+    text unchanged.
+
+    .. versionadded:: 1.1
 
 * :menuselection:`Autocomplete`
     Controls which entities are included in editor autocompletion.

@@ -59,6 +59,15 @@ class TestEditorUi : public QObject {
 
 private slots:
     void init() { UiTestFixture::resetSettings(); }
+    void raw_input_preserves_text_data();
+    void raw_input_preserves_text();
+    void raw_input_keeps_character_navigation_and_deletion();
+    void raw_input_preserves_calculator_commands();
+    void raw_input_switch_preserves_document_and_restores_adjustments();
+    void raw_input_preserves_visible_digit_grouping();
+    void raw_input_preserves_tab_completion_data();
+    void raw_input_preserves_tab_completion();
+    void automatic_input_adjustments_survive_settings_reload();
     void preserves_comment_text_during_input_data();
     void preserves_comment_text_during_input();
     void normalizes_only_expression_text_when_replacing_comment_selection();
@@ -6123,6 +6132,234 @@ void TestEditorUi::input_digit_grouping_paints_separator_glyphs()
         const QImage withoutSeparators = editor.viewport()->grab().toImage();
         QVERIFY2(withSeparators != withoutSeparators, "Input separators must paint glyphs, not just gaps");
     }
+}
+
+void TestEditorUi::raw_input_preserves_text_data()
+{
+    QTest::addColumn<QString>("input");
+    QTest::newRow("operators") << QStringLiteral("1+2*3/4--5**2");
+    QTest::newRow("powers") << QStringLiteral("2^3 + 2[m^2]");
+    QTest::newRow("spaces-and-brackets") << QStringLiteral("  2 (3)  [m] ?text");
+    QTest::newRow("invalid-characters") << QStringLiteral("@|++^^[ +3?{}]");
+    QTest::newRow("decimal-and-units") << QStringLiteral(".5[m / s^2]");
+    QTest::newRow("unicode") << QString::fromUtf8("2 × 3 ÷ 4 − 5 → [µm²]");
+}
+
+void TestEditorUi::raw_input_preserves_text()
+{
+    QFETCH(QString, input);
+    Settings::instance()->automaticInputAdjustments = false;
+    for (int source = 0; source < 4; ++source) {
+        Editor editor;
+        editor.setAutoCompletionEnabled(false);
+        editor.setAutoCalcEnabled(false);
+        switch (source) {
+        case 0:
+            // Qt's keyClicks only supports ASCII. Send Unicode text through
+            // key events too, as keyboard layouts can produce these glyphs.
+            for (QChar ch : input) {
+                QKeyEvent key(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QString(ch));
+                QApplication::sendEvent(&editor, &key);
+            }
+            break;
+        case 1:
+            for (QChar ch : input) {
+                QInputMethodEvent commit;
+                commit.setCommitString(QString(ch));
+                QApplication::sendEvent(&editor, &commit);
+            }
+            break;
+        case 2:
+            editor.insert(input);
+            break;
+        case 3:
+            editor.setText(input);
+            break;
+        }
+        QCOMPARE(editor.text(), input);
+        editor.setCursorPosition(editor.text().size());
+        QInputMethodEvent replacement;
+        replacement.setCommitString(QStringLiteral("*^@"), -1, 1);
+        QApplication::sendEvent(&editor, &replacement);
+        QCOMPARE(editor.text(), input.chopped(1) + QStringLiteral("*^@"));
+        editor.selectAll();
+        QApplication::clipboard()->setText(input);
+        QSignalSpy bulkEvaluation(&editor, &Editor::bulkEvaluationStarted);
+        editor.paste();
+        QCOMPARE(editor.text(), input.trimmed());
+        QCOMPARE(bulkEvaluation.count(), 0);
+        editor.undo();
+        QCOMPARE(editor.text(), input.chopped(1) + QStringLiteral("*^@"));
+        editor.redo();
+        QCOMPARE(editor.text(), input.trimmed());
+    }
+}
+
+void TestEditorUi::raw_input_keeps_character_navigation_and_deletion()
+{
+    Settings::instance()->automaticInputAdjustments = false;
+    Editor editor;
+    editor.setText(QStringLiteral("1 + 2"));
+    editor.setCursorPosition(4);
+    QTest::keyClick(&editor, Qt::Key_Left);
+    QCOMPARE(editor.cursorPosition(), 3);
+    QTest::keyClick(&editor, Qt::Key_Right);
+    QCOMPARE(editor.cursorPosition(), 4);
+    QTest::keyClick(&editor, Qt::Key_Backspace);
+    QCOMPARE(editor.text(), QStringLiteral("1 +2"));
+    editor.undo();
+    editor.setCursorPosition(1);
+    editor.doDelete();
+    QCOMPARE(editor.text(), QStringLiteral("1+ 2"));
+    editor.undo();
+    editor.setCursorPosition(4);
+    editor.doBackspace();
+    QCOMPARE(editor.text(), QStringLiteral("1 +2"));
+    editor.undo();
+    editor.setCursorPosition(1);
+    QTest::keyClick(&editor, Qt::Key_Delete);
+    QCOMPARE(editor.text(), QStringLiteral("1+ 2"));
+}
+
+void TestEditorUi::raw_input_preserves_calculator_commands()
+{
+    Settings::instance()->automaticInputAdjustments = false;
+    Editor editor;
+    editor.setAutoCompletionEnabled(false);
+    QTest::keyClicks(&editor, "2^3");
+    QCOMPARE(editor.text(), QStringLiteral("2^3"));
+    QSignalSpy enter(&editor, &Editor::returnPressed);
+    QSignalSpy escape(&editor, &Editor::escapePressed);
+    QTest::keyClick(&editor, Qt::Key_Return);
+    QCOMPARE(enter.count(), 1);
+    QCOMPARE(editor.text(), QStringLiteral("2^3"));
+    QTest::keyClick(&editor, Qt::Key_Escape);
+    QCOMPARE(escape.count(), 1);
+    QTest::keyClick(&editor, Qt::Key_Tab);
+    QCOMPARE(editor.text(), QStringLiteral("2^3"));
+    editor.setHistoryArrowNavigationEnabled(false);
+    QTest::keyClick(&editor, Qt::Key_Home);
+    QTest::keyClick(&editor, Qt::Key_Right, Qt::ShiftModifier);
+    QCOMPARE(editor.textCursor().selectedText(), QStringLiteral("2"));
+    QTest::keyClicks(&editor, "@");
+    QCOMPARE(editor.text(), QStringLiteral("@^3"));
+}
+
+void TestEditorUi::raw_input_switch_preserves_document_and_restores_adjustments()
+{
+    Settings::instance()->automaticInputAdjustments = false;
+    Editor editor;
+    editor.setAutoCompletionEnabled(false);
+    editor.setAutoCalcEnabled(false);
+    editor.setText(QStringLiteral("1+2*3^4"));
+    editor.setCursorPosition(3);
+    QTextCursor cursor = editor.textCursor();
+    cursor.setPosition(5, QTextCursor::KeepAnchor);
+    editor.setTextCursor(cursor);
+    QSignalSpy changed(&editor, &Editor::textChanged);
+    Settings::instance()->automaticInputAdjustments = true;
+    editor.refreshInputMode();
+    QCOMPARE(changed.count(), 0);
+    QCOMPARE(editor.text(), QStringLiteral("1+2*3^4"));
+    QCOMPARE(editor.textCursor().position(), 5);
+    QCOMPARE(editor.textCursor().anchor(), 3);
+    editor.clear();
+    QTest::keyClicks(&editor, "2^3");
+    QCOMPARE(editor.text(), QString::fromUtf8("2³"));
+    Settings::instance()->automaticInputAdjustments = false;
+    editor.refreshInputMode();
+    QTest::keyClicks(&editor, "+4");
+    QCOMPARE(editor.text(), QString::fromUtf8("2³+4"));
+}
+
+void TestEditorUi::raw_input_preserves_visible_digit_grouping()
+{
+    Settings* settings = Settings::instance();
+    settings->automaticInputAdjustments = false;
+    settings->inputDigitGrouping = true;
+    settings->digitGrouping = 3;
+    settings->numberFormatStyle = Settings::NumberFormatThreeDigitCommaDot;
+    settings->applyNumberFormatStyle();
+    Editor editor;
+    editor.setAutoCompletionEnabled(false);
+    editor.setAutoCalcEnabled(false);
+    editor.setText(QStringLiteral("1234567.123456"));
+    editor.setCustomCursorVisible(false);
+    editor.refreshInputMode();
+    editor.setFixedWidth(500);
+    editor.show();
+    QCoreApplication::processEvents();
+    bool hasSeparator = false;
+    for (const auto& range : editor.document()->firstBlock().layout()->formats()) {
+        hasSeparator |= range.format.hasProperty(SyntaxHighlighter::InputDigitSeparator);
+    }
+    QVERIFY(hasSeparator);
+    const QImage raw = editor.viewport()->grab().toImage();
+    settings->automaticInputAdjustments = true;
+    editor.refreshInputMode();
+    QCOMPARE(raw, editor.viewport()->grab().toImage());
+    settings->automaticInputAdjustments = false;
+    editor.refreshInputMode();
+    QCOMPARE(raw, editor.viewport()->grab().toImage());
+    settings->inputDigitGrouping = false;
+    settings->digitGrouping = 0;
+    editor.rehighlight();
+    QVERIFY(raw != editor.viewport()->grab().toImage());
+    for (const auto& range : editor.document()->firstBlock().layout()->formats())
+        QVERIFY(!range.format.hasProperty(SyntaxHighlighter::InputDigitSeparator));
+    QCOMPARE(editor.text(), QStringLiteral("1234567.123456"));
+}
+
+void TestEditorUi::raw_input_preserves_tab_completion_data()
+{
+    QTest::addColumn<bool>("rawInput");
+    QTest::newRow("automatic-editing") << false;
+    QTest::newRow("raw-input") << true;
+}
+
+void TestEditorUi::raw_input_preserves_tab_completion()
+{
+    QFETCH(bool, rawInput);
+    Settings::instance()->automaticInputAdjustments = !rawInput;
+    Editor editor;
+    editor.setAutoCalcEnabled(false);
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+    QTest::keyClicks(&editor, "co");
+    QVERIFY(QMetaObject::invokeMethod(&editor, "triggerAutoComplete", Qt::DirectConnection));
+    QTreeWidget* popup = nullptr;
+    QTRY_VERIFY_WITH_TIMEOUT((popup = s_completionPopupTree()) != nullptr, 1000);
+    QTreeWidgetItem* selected = nullptr;
+    for (int i = 0; i < popup->topLevelItemCount(); ++i) {
+        QTreeWidgetItem* item = popup->topLevelItem(i);
+        if (item->text(1) == QStringLiteral("cos")) {
+            selected = item;
+            break;
+        }
+    }
+    QVERIFY(selected);
+    popup->setCurrentItem(selected);
+    QTest::keyClick(&editor, Qt::Key_Tab);
+    QCOMPARE(editor.text(), QStringLiteral("cos") + MathDsl::GroupStart + MathDsl::GroupEnd);
+    QCOMPARE(editor.cursorPosition(), editor.text().size() - 1);
+    QTRY_VERIFY_WITH_TIMEOUT(s_editorOrViewportHasFocus(&editor), 1000);
+}
+
+void TestEditorUi::automatic_input_adjustments_survive_settings_reload()
+{
+    Settings* settings = Settings::instance();
+    QVERIFY(settings->automaticInputAdjustments);
+    for (bool enabled : {true, false}) {
+        settings->automaticInputAdjustments = enabled;
+        settings->save();
+        settings->automaticInputAdjustments = !enabled;
+        settings->load();
+        QCOMPARE(settings->automaticInputAdjustments, enabled);
+    }
+    settings->automaticInputAdjustments = false;
+    QVERIFY(settings->resetToDefaults());
+    QVERIFY(settings->automaticInputAdjustments);
 }
 
 void TestEditorUi::input_digit_grouping_survives_settings_reload()
