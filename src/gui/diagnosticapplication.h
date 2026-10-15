@@ -10,10 +10,11 @@
 #include <QApplication>
 #include <QEvent>
 #include <QTimer>
+#include <type_traits>
 
-class DiagnosticApplication : public QApplication {
+class RecordingDiagnosticApplication : public QApplication {
 public:
-    DiagnosticApplication(int& argc, char** argv) : QApplication(argc, argv)
+    RecordingDiagnosticApplication(int& argc, char** argv) : QApplication(argc, argv)
     {
         connect(QAbstractEventDispatcher::instance(), &QAbstractEventDispatcher::aboutToBlock,
                 this, []() { StartupDiagnostics::finishWhenIdle(); });
@@ -37,5 +38,8 @@ public:
 private:
     bool m_firstPaintQueued = false;
 };
+
+using DiagnosticApplication = std::conditional_t<StartupDiagnostics::isEnabled(),
+    RecordingDiagnosticApplication, QApplication>;
 
 #endif

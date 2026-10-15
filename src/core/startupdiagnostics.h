@@ -15,6 +15,7 @@
 #include <QVector>
 #include <atomic>
 #include <memory>
+#include <type_traits>
 
 // Only startup is measured. Fixed phase names keep the report free of user data.
 // Repeated phases are aggregated so restoring many sessions uses bounded memory.
@@ -62,6 +63,10 @@ struct Snapshot {
     bool started = false;
     bool complete = false;
 };
+
+#ifdef SPEEDCRUNCH_ENABLE_STARTUP_DIAGNOSTICS
+
+inline constexpr bool isEnabled() { return true; }
 
 namespace Detail {
 struct State {
@@ -267,6 +272,11 @@ public:
         Detail::appearanceCall = m_index;
         m_active = true;
     }
+    template <typename Factory,
+              std::enable_if_t<std::is_invocable_r_v<QByteArray, Factory>, int> = 0>
+    AppearanceScope(const char* name, QObject* widget, Factory&& inputs)
+        : AppearanceScope(name, widget, isRecording() ? inputs() : QByteArray())
+    {}
     ~AppearanceScope()
     {
         if (!m_active)
@@ -303,6 +313,13 @@ public:
         if (!call.inputChanges.isEmpty())
             call.inputChanges += QLatin1Char(' ');
         call.inputChanges += label + QLatin1Char('=') + change;
+    }
+    template <typename Factory,
+              std::enable_if_t<std::is_invocable_r_v<QByteArray, Factory>, int> = 0>
+    void observeInputs(const char* category, Factory&& inputs)
+    {
+        if (m_index >= 0)
+            observeInputs(category, inputs());
     }
 private:
     Scope m_timing;
@@ -387,6 +404,51 @@ inline Snapshot snapshot()
     result.firstPaintNs = state.firstPaintNs;
     return result;
 }
+
+#else
+
+inline constexpr bool isEnabled() { return false; }
+inline constexpr bool isRecording() { return false; }
+inline void begin() {}
+inline int appearanceObjectId(const QObject*) { return -1; }
+
+class Scope {
+public:
+    explicit Scope(const char*) {}
+    Scope(const Scope&) = delete;
+    Scope& operator=(const Scope&) = delete;
+    void next(const char*) {}
+    void finish() {}
+};
+
+class AppearanceContext {
+public:
+    explicit AppearanceContext(const char*) {}
+    AppearanceContext(const AppearanceContext&) = delete;
+    AppearanceContext& operator=(const AppearanceContext&) = delete;
+};
+
+class AppearanceScope {
+public:
+    explicit AppearanceScope(const char*, QObject* = nullptr, const QByteArray& = {}) {}
+    template <typename Factory,
+              std::enable_if_t<std::is_invocable_r_v<QByteArray, Factory>, int> = 0>
+    AppearanceScope(const char*, QObject*, Factory&&) {}
+    AppearanceScope(const AppearanceScope&) = delete;
+    AppearanceScope& operator=(const AppearanceScope&) = delete;
+    void observeInputs(const char*, const QByteArray&) {}
+    template <typename Factory,
+              std::enable_if_t<std::is_invocable_r_v<QByteArray, Factory>, int> = 0>
+    void observeInputs(const char*, Factory&&) {}
+};
+
+inline void appearanceAssignment(QObject*, bool, bool, bool) {}
+inline std::shared_ptr<Scope> task(const char*) { return {}; }
+inline void firstPaintFinished() {}
+inline void finishWhenIdle() {}
+inline Snapshot snapshot() { return {}; }
+
+#endif
 
 }
 

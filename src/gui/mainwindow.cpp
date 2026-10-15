@@ -969,7 +969,7 @@ GeneratedThemeSurfaces generatedSurfaceColorsForScheme(const ColorScheme& scheme
         && cache.primary == configuredPrimary && cache.fallbackText == fallbackText;
     StartupDiagnostics::AppearanceScope timing(unchanged
         ? "Reuse theme surface colors" : "Generate theme surface colors", nullptr,
-        StartupDiagnostics::appearanceInputs({base, configuredPrimary, fallbackText}));
+        [&]() { return StartupDiagnostics::appearanceInputs({base, configuredPrimary, fallbackText}); });
     if (unchanged)
         return cache.surfaces;
 
@@ -1230,8 +1230,10 @@ void ensureDockChromeStyleInstalled()
         return;
 
     StartupDiagnostics::AppearanceScope timing("Install dock chrome style", qApp);
-    timing.observeInputs("installed", StartupDiagnostics::appearanceInputs({
-        QApplication::style()->property(DockChromeStyleInstalledProperty).toBool()}));
+    timing.observeInputs("installed", []() {
+        return StartupDiagnostics::appearanceInputs({
+            QApplication::style()->property(DockChromeStyleInstalledProperty).toBool()});
+    });
 
     QStyle* style = new DockChromeStyle(QApplication::style());
     style->setProperty(DockChromeStyleInstalledProperty, true);

@@ -18,3 +18,8 @@ format prompt. An unexpected prompt fails the test instead of blocking the suite
 
 CMake saves this option in the build directory's cache. Configure again with
 `-DBUILD_TESTING=OFF` to return to application-only builds.
+
+The shared window test library enables startup recording so appearance tests can
+inspect the recorded work. This does not enable recording in the application.
+Set `ENABLE_STARTUP_DIAGNOSTICS` explicitly for that, as described in
+[DIAGNOSTICS.md](DIAGNOSTICS.md).

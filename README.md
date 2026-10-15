@@ -19,6 +19,9 @@ for building the manual.
 
 See [TESTING.md](TESTING.md) for instructions on building and running the tests.
 
+See [DIAGNOSTICS.md](DIAGNOSTICS.md) for details about App Diagnostics,
+startup timings, and the information included in diagnostic reports.
+
 ## File locations
 SpeedCrunch uses [Qt's standard per-user locations](https://doc.qt.io/qt-6/qstandardpaths.html)
 for persistent application data and configuration:

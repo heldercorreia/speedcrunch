@@ -82,6 +82,10 @@ running CMake, in the form `cmake -S . -B build -Dvariable=value`.
   them with CTest. Defaults to `OFF`. See [TESTING.md](TESTING.md).
 - **ENABLE_UPDATE_CHECKS**: Set this to `ON` to enable update checks on launch
   and the `Help > Check for Updates` menu entry. Defaults to `OFF`.
+- **ENABLE_STARTUP_DIAGNOSTICS**: Set this to `ON` to record startup timings and
+  detailed appearance diagnostics. Defaults to `OFF`. System information and
+  settings remain available in `Help > App Diagnostics` in either build.
+  See [DIAGNOSTICS.md](DIAGNOSTICS.md) for diagnostic beta build instructions.
 - **PORTABLE_SPEEDCRUNCH**: Set this to `on` to have the application settings stored
   in the same location as the executable, e.g. for running from a USB drive without
   requiring installation.

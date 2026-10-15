@@ -20,6 +20,7 @@ message("Build type: ${CMAKE_BUILD_TYPE}")
 
 option(BUILD_TESTING "Build the test executables and enable CTest" OFF)
 option(ENABLE_UPDATE_CHECKS "Enable launch-time and manual update checks" OFF)
+option(ENABLE_STARTUP_DIAGNOSTICS "Record startup timings and detailed appearance diagnostics" OFF)
 if(ENABLE_UPDATE_CHECKS)
     add_compile_definitions(SPEEDCRUNCH_ENABLE_UPDATE_CHECKS)
 endif()
@@ -111,6 +112,7 @@ endif()
 
 target_compile_definitions(${APPLICATION_NAME}
     PRIVATE
+        $<$<BOOL:${ENABLE_STARTUP_DIAGNOSTICS}>:SPEEDCRUNCH_ENABLE_STARTUP_DIAGNOSTICS>
         $<$<NOT:$<CONFIG:Debug>>:QT_NO_DEBUG_OUTPUT>
         $<$<NOT:$<CONFIG:Debug>>:QT_NO_INFO_OUTPUT>
         $<$<NOT:$<CONFIG:Debug>>:QT_NO_WARNING_OUTPUT>
@@ -166,7 +168,10 @@ if(BUILD_TESTING)
     # An object library also keeps the Qt resource objects in every executable.
     add_library(mainwindowuitest OBJECT ${mainwindowuitest_SOURCES})
     target_link_libraries(mainwindowuitest PUBLIC ${QT_LIBRARIES} Qt6::Test)
-    target_compile_definitions(mainwindowuitest PUBLIC SPEEDCRUNCH_UI_TEST)
+    target_compile_definitions(mainwindowuitest PUBLIC
+        SPEEDCRUNCH_UI_TEST
+        SPEEDCRUNCH_ENABLE_STARTUP_DIAGNOSTICS
+    )
     # Start the longer suites first on a build without CTest timing history.
     set(mainwindow_ui_tests
         testfocusui

@@ -183,6 +183,10 @@ QString appDiagnosticsReport(const QString& workload)
 #endif
     const auto startup = StartupDiagnostics::snapshot();
     out << "\nStartup timings\n";
+    if (!StartupDiagnostics::isEnabled()) {
+        out << "Startup recording disabled in this build.\n";
+        return report;
+    }
     if (!startup.started) {
         out << "Unavailable (startup recording did not run).\n";
         return report;
