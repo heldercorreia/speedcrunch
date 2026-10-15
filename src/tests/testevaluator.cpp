@@ -3998,6 +3998,95 @@ void test_comments()
     CHECK_EVAL("1+ans", "22");
 }
 
+void test_comments_do_not_change_result_formatting()
+{
+    Settings* settings = Settings::instance();
+    const char oldAngleUnit = settings->angleUnit;
+    const char oldResultFormat = settings->resultFormat;
+    const bool oldSimplify = settings->simplifyResultExpressions;
+    const bool oldMultipleResultLines = settings->multipleResultLinesEnabled;
+    settings->resultFormat = 'g';
+    settings->simplifyResultExpressions = true;
+
+    Session session;
+    Evaluator* evaluator = session.evaluator();
+    const struct {
+        const char* expression;
+        const char* comment;
+    } cases[] = {
+        { "2", "\"" },
+        { "2", "'" },
+        { "2", u8"° ′ ″" },
+        { "2", "[rad]" },
+        { "2", "sin(pi)" },
+        { "pi", "\"" },
+        { "pi", "arctan(1) -> [rad]" },
+        { u8"180°", u8"∠" },
+        { u8"180°", "sin(pi)" },
+        { u8"180° -> [rad]", "-> [degree]" },
+        { "arctan(1)", "-> [degree]" },
+        { "1:30", "-> [s]" },
+        { "2[m]", "[rad] \"" },
+        { "cos(pi)*cos(pi)", "? \" [rad] -> [degree]" },
+        { "2", "([} = 1/0 ? \"" }
+    };
+
+    for (char angleUnit : {'r', 'd'}) {
+        settings->angleUnit = angleUnit;
+        evaluator->initializeBuiltInVariables();
+        for (bool multipleLines : {false, true}) {
+            settings->multipleResultLinesEnabled = multipleLines;
+            for (const auto& tc : cases) {
+                const QString expression = QString::fromUtf8(tc.expression);
+                evaluator->setExpression(expression);
+                const Quantity expectedValue = evaluator->evalUpdateAns();
+                const QString expectedInterpreted = evaluator->interpretedExpression();
+                const QStringList expectedLines = ResultLineFormatUtils::formatResultLinesForDisplay(
+                    expression, expectedInterpreted, expectedValue, false, true, evaluator);
+                const QStringList expectedResultOnly = ResultLineFormatUtils::formatResultLinesForDisplay(
+                    expression, expectedInterpreted, expectedValue, false, true, evaluator, true);
+                const QString expectedSimplified = ResultLineFormatUtils::simplifiedExpressionLineForDisplay(
+                    expectedInterpreted, expression, true, evaluator);
+
+                // Match compact comments too, since whitespace is optional before '?'.
+                for (const QString& separator : {QStringLiteral("?"), QStringLiteral(" ? ")}) {
+                    const QString commented = expression + separator + QString::fromUtf8(tc.comment);
+                    evaluator->setExpression(evaluator->autoFix(commented));
+                    const Quantity value = evaluator->evalUpdateAns();
+                    const QString interpreted = evaluator->interpretedExpression();
+                    const QStringList lines = ResultLineFormatUtils::formatResultLinesForDisplay(
+                        commented, interpreted, value, true, true, evaluator);
+                    const QStringList resultOnly = ResultLineFormatUtils::formatResultLinesForDisplay(
+                        commented, interpreted, value, false, true, evaluator, true);
+                    const QString simplified = ResultLineFormatUtils::simplifiedExpressionLineForDisplay(
+                        interpreted, commented, true, evaluator);
+
+                    ++eval_total_tests;
+                    if (!evaluator->error().isEmpty()
+                        || DMath::format(value, Format::Fixed()) != DMath::format(expectedValue, Format::Fixed())
+                        || lines.mid(1) != expectedLines
+                        || resultOnly != expectedResultOnly
+                        || simplified != expectedSimplified
+                        || !lines.first().endsWith(QString::fromUtf8(tc.comment))) {
+                        ++eval_failed_tests;
+                        ++eval_new_failed_tests;
+                        cerr << __FILE__ << "[" << __LINE__ << "]\tcomments leave results unchanged\t[NEW]" << endl
+                             << "\tExpression: " << commented.toUtf8().constData() << endl
+                             << "\tError     : " << qPrintable(evaluator->error()) << endl
+                             << "\tResult    : " << lines.join(QLatin1Char('\n')).toUtf8().constData() << endl
+                             << "\tExpected  : " << expectedLines.join(QLatin1Char('\n')).toUtf8().constData() << endl;
+                    }
+                }
+            }
+        }
+    }
+
+    settings->angleUnit = oldAngleUnit;
+    settings->resultFormat = oldResultFormat;
+    settings->simplifyResultExpressions = oldSimplify;
+    settings->multipleResultLinesEnabled = oldMultipleResultLines;
+}
+
 void test_comment_and_description_edge_cases()
 {
     // Autofix should normalize spacing before comments while preserving comment text.
@@ -10773,6 +10862,7 @@ int main(int argc, char* argv[])
     test_auto_fix_untouch();
 
     test_comments();
+    test_comments_do_not_change_result_formatting();
     test_comment_and_description_edge_cases();
     test_result_display_history_mapping_after_multiple_lines_toggle_with_comment_only_entry();
     test_result_display_scroll_edge_gradient_height_scales_with_font_zoom();

@@ -685,13 +685,16 @@ inline QString foldRepeatedAdditiveTermsForDisplay(const QString& text)
     return rebuilt.isEmpty() ? text : rebuilt;
 }
 
-inline QString simplifiedExpressionLineForDisplay(const QString& interpretedExpression,
-                                                  const QString& sourceExpression,
+inline QString simplifiedExpressionLineForDisplay(const QString& commentedInterpretedExpression,
+                                                  const QString& commentedSourceExpression,
                                                   bool simplifyResultExpressions,
                                                   const Evaluator* evaluator = nullptr)
 {
     if (!simplifyResultExpressions)
         return QString();
+
+    const QString interpretedExpression = commentedInterpretedExpression.section(MathDsl::CommentSep, 0, 0);
+    const QString sourceExpression = commentedSourceExpression.section(MathDsl::CommentSep, 0, 0);
 
     auto splitConversionSides = [](const QString& expression,
                                    QString* leftOut,
@@ -1377,8 +1380,8 @@ inline QString formatNumericResultLine(const Quantity& value,
     return stripUnitBrackets ? stripDisplayedUnitBrackets(formattedText) : formattedText;
 }
 
-inline QStringList formatResultLinesForDisplay(const QString& sourceExpression,
-                                               const QString& interpretedExpression,
+inline QStringList formatResultLinesForDisplay(const QString& commentedSourceExpression,
+                                               const QString& commentedInterpretedExpression,
                                                const Quantity& value,
                                                bool includeExpressionLine,
                                                bool stripUnitBracketsInNumericLines,
@@ -1394,7 +1397,13 @@ inline QStringList formatResultLinesForDisplay(const QString& sourceExpression,
     };
 
     if (includeExpressionLine && !resultOnly)
-        appendUniqueLine(formattedExpressionLineForDisplay(sourceExpression, interpretedExpression, evaluator));
+        appendUniqueLine(formattedExpressionLineForDisplay(
+            commentedSourceExpression, commentedInterpretedExpression, evaluator));
+
+    // Comments belong on the expression line, but must not supply angle,
+    // conversion, or function hints for any result line.
+    const QString sourceExpression = commentedSourceExpression.section(MathDsl::CommentSep, 0, 0);
+    const QString interpretedExpression = commentedInterpretedExpression.section(MathDsl::CommentSep, 0, 0);
 
     if (!resultOnly) {
         const QString simplifiedLine = simplifiedExpressionLineForDisplay(
