@@ -158,6 +158,14 @@ QString appDiagnosticsReport(const QString& workload)
     }
     out << "Theme: " << (settings->colorScheme == QLatin1String("Custom")
                             ? QStringLiteral("Custom") : settings->colorScheme) << '\n'
+        << "Editor appearance: " << (settings->editorDisplayStyle == Settings::EditorDisplayClassic
+                                        ? "Classic" : "Modern") << '\n'
+        << "Dock appearance: " << (settings->dockAppearance == Settings::DockAppearanceSystem
+                                      ? "System" : "SpeedCrunch Theme") << '\n'
+        << "Menu appearance: " << (settings->menuAppearance == Settings::MenuAppearanceSystem
+                                      ? "System" : "SpeedCrunch Theme") << '\n'
+        << "Status bar appearance: " << (settings->statusBarAppearance == Settings::StatusBarAppearanceSystem
+                                            ? "System" : "SpeedCrunch Theme") << '\n'
         << "Automatic calculation: " << (settings->autoCalc ? "on" : "off") << '\n'
         << "Syntax highlighting: " << (settings->syntaxHighlighting ? "on" : "off") << '\n'
         << "Automatic completion: " << (settings->autoCompletion ? "on" : "off") << '\n'

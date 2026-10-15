@@ -228,7 +228,7 @@ bool VersionCheck::eventFilter(QObject* watched, QEvent* event)
         QWidget* widget = qobject_cast<QWidget*>(watched);
         if (widget && widget->isVisible() && widget->window() == m_parentWindow) {
             qApp->removeEventFilter(this);
-            const auto startupTask = StartupDiagnostics::task("Deferred automatic update check");
+            const auto startupTask = StartupDiagnostics::task("Deferred automatic update check (async total)");
             // Let the paint finish and its diagnostics callback run before dispatch.
             QTimer::singleShot(0, this, [this, startupTask]() {
                 QTimer::singleShot(0, this, [this, startupTask]() {

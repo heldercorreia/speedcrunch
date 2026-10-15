@@ -866,6 +866,8 @@ Help
     Qt versions, selected and system languages, display scaling, and widget style.
     It also shows process memory and CPU time where available, counts of open
     windows, sessions and history entries, and relevant calculation preferences.
+    The editor, dock, menu, and status-bar appearance modes show the current
+    choices each time you open the report.
 
     Startup timings cover application setup, settings, built-in repositories,
     UI construction, docks, themes, and session restoration. File reads on worker
@@ -876,7 +878,9 @@ Help
     Theme and system palette changes refresh those colors. Generation and reuse
     appear separately in the report.
     When update checks are enabled, automatic dispatch waits until the window
-    has painted. Its timings separate the schedule check, saving the attempt
+    has painted. ``Deferred automatic update check (async total)`` includes
+    waiting for queued UI callbacks, rather than measuring only active work.
+    Its timings separate the schedule check, saving the attempt
     timestamp, and network request setup. Update settings access, version
     comparison, and network setup run on a worker thread. The asynchronous
     schedule and setup total includes queue waiting, but excludes waiting
