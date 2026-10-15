@@ -30,6 +30,9 @@ private slots:
     void result_display_reduces_combinable_quotient_factors_data();
     void result_display_reduces_combinable_quotient_factors();
     void result_display_copy_calculation_ignores_empty_areas();
+    void result_display_copies_calculation_as_single_line_data();
+    void result_display_copies_calculation_as_single_line();
+    void result_display_copy_single_line_ignores_empty_areas();
 };
 
 void TestDisplayUi::user_definition_comments_survive_creation_and_editing_data()
@@ -527,6 +530,103 @@ void TestDisplayUi::result_display_copy_calculation_ignores_empty_areas()
     QTextCursor separator(display.document()->lastBlock());
     QScopedPointer<QMenu> menu(display.createContextMenu(display.cursorRect(separator).center()));
     QVERIFY(directMenuActionWithText(menu.data(), QStringLiteral("Copy Calculation")) == nullptr);
+}
+
+void TestDisplayUi::result_display_copies_calculation_as_single_line_data()
+{
+    QTest::addColumn<QStringList>("lines");
+    QTest::addColumn<QString>("expected");
+    QTest::addColumn<bool>("failed");
+    QTest::newRow("simple")
+        << QStringList({QStringLiteral("120 / 8"), QStringLiteral("= 15")})
+        << QStringLiteral("120 / 8 = 15") << false;
+    QTest::newRow("simplification-and-formats")
+        << QStringList({QStringLiteral("1:120:3600"), QStringLiteral("= 4:00:00"),
+                        QStringLiteral("= 14400 s"), QStringLiteral("= 1.44 × 10⁴ s")})
+        << QStringLiteral("1:120:3600 = 4:00:00 = 14400 s = 1.44 × 10⁴ s") << false;
+    QTest::newRow("wrapped-unicode-and-spacing")
+        << QStringList({QStringLiteral("123456789 [m] − 98765432 [m] + 1 [m] + 2 [m]"),
+                        QStringLiteral("= 24\u2009567\u2009360 m"),
+                        QStringLiteral("= 2.456736 × 10⁷ m")})
+        << QStringLiteral("123456789 [m] − 98765432 [m] + 1 [m] + 2 [m] = 24\u2009567\u2009360 m = 2.456736 × 10⁷ m")
+        << false;
+    QTest::newRow("failed")
+        << QStringList({QStringLiteral("1 / 0")}) << QStringLiteral("1 / 0") << true;
+}
+
+void TestDisplayUi::result_display_copies_calculation_as_single_line()
+{
+    QFETCH(QStringList, lines);
+    QFETCH(QString, expected);
+    QFETCH(bool, failed);
+    const QString oldClipboard = QApplication::clipboard()->text();
+    const auto restoreClipboard = qScopeGuard([oldClipboard]() {
+        QApplication::clipboard()->setText(oldClipboard);
+    });
+
+    Session session;
+    session.addHistoryEntry(HistoryEntry(QStringLiteral("2 + 3"), Quantity(5)));
+    HistoryEntry entry(lines.first(), failed ? DMath::nan() : Quantity(15));
+    entry.setRenderedLines(lines);
+    session.addHistoryEntry(entry);
+    session.addHistoryEntry(HistoryEntry(QStringLiteral("7 + 8"), Quantity(15)));
+
+    MenuTestResultDisplay display;
+    display.resize(250, 350);
+    display.setSession(&session);
+    display.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&display));
+
+    QTextCursor selection(display.document()->firstBlock());
+    selection.select(QTextCursor::BlockUnderCursor);
+    display.setTextCursor(selection);
+    const int selectionStart = selection.selectionStart();
+    const int selectionEnd = selection.selectionEnd();
+    if (qstrcmp(QTest::currentDataTag(), "wrapped-unicode-and-spacing") == 0)
+        QVERIFY(display.document()->find(lines.first()).block().layout()->lineCount() > 1);
+
+    // Copy the recorded text even after the current display settings change.
+    Settings::instance()->resultFormat = 'h';
+    Settings::instance()->simplifyResultExpressions = false;
+    for (const QString& line : lines) {
+        QTextCursor clickedLine = display.document()->find(line);
+        QVERIFY(!clickedLine.isNull());
+        clickedLine.movePosition(QTextCursor::StartOfBlock);
+        display.verticalScrollBar()->setValue(clickedLine.blockNumber());
+        QCoreApplication::processEvents();
+        QScopedPointer<QMenu> menu(display.createContextMenu(display.cursorRect(clickedLine).center()));
+        QAction* action = directMenuActionWithText(menu.data(), QStringLiteral("Copy as Single Line"));
+        QAction* copyCalculation = directMenuActionWithText(menu.data(), QStringLiteral("Copy Calculation"));
+        QVERIFY(action != nullptr);
+        QVERIFY(copyCalculation != nullptr);
+        QVERIFY(action->isEnabled());
+        QCOMPARE(menu->actions().indexOf(action), menu->actions().indexOf(copyCalculation) + 1);
+        QApplication::clipboard()->setText(QStringLiteral("unchanged"));
+        action->trigger();
+        QCOMPARE(QApplication::clipboard()->text(), expected);
+        QCOMPARE(display.textCursor().selectionStart(), selectionStart);
+        QCOMPARE(display.textCursor().selectionEnd(), selectionEnd);
+    }
+}
+
+void TestDisplayUi::result_display_copy_single_line_ignores_empty_areas()
+{
+    Session session;
+    MenuTestResultDisplay display;
+    display.resize(400, 200);
+    display.setSession(&session);
+    display.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&display));
+    {
+        QScopedPointer<QMenu> menu(display.createContextMenu(QPoint(20, 20)));
+        QVERIFY(directMenuActionWithText(menu.data(), QStringLiteral("Copy as Single Line")) == nullptr);
+    }
+
+    session.addHistoryEntry(HistoryEntry(QStringLiteral("2 + 3"), Quantity(5)));
+    display.refresh();
+    QTextCursor separator(display.document()->lastBlock());
+    QScopedPointer<QMenu> menu(display.createContextMenu(display.cursorRect(separator).center()));
+    QVERIFY(directMenuActionWithText(menu.data(), QStringLiteral("Copy as Single Line")) == nullptr);
 }
 
 void TestDisplayUi::result_display_hover_action_badges_trigger_when_clicked()

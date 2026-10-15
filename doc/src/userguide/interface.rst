@@ -349,6 +349,11 @@ The result display supports mouse-driven interactions for navigation and editing
 
     .. versionadded:: 1.0
 
+    Choose :guilabel:`Copy as Single Line` to join all displayed lines of the
+    calculation with spaces, for example ``120 / 8 = 15``.
+
+    .. versionadded:: 1.1
+
 * Hover highlighting of calculation blocks
     When :menuselection:`Settings --> Appearance --> Hover Highlighting` is enabled, moving the mouse over
     the result display highlights the calculation block under the cursor.

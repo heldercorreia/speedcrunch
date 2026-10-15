@@ -1331,6 +1331,13 @@ QMenu* ResultDisplay::createContextMenu(const QPoint& pos)
         connect(copyCalculationAction, &QAction::triggered, this, [calculationText]() {
             QApplication::clipboard()->setText(calculationText, QClipboard::Clipboard);
         });
+        QAction* copySingleLineAction = menu->addAction(tr("Copy as Single Line"));
+        copySingleLineAction->setEnabled(!calculationText.isEmpty());
+        connect(copySingleLineAction, &QAction::triggered, this, [calculationText]() {
+            QString singleLineText = calculationText;
+            singleLineText.replace(QLatin1Char('\n'), QLatin1Char(' '));
+            QApplication::clipboard()->setText(singleLineText, QClipboard::Clipboard);
+        });
         menu->addSeparator();
         QAction* editAction = menu->addAction(tr("Edit Expression"));
         connect(editAction, &QAction::triggered, this, [this, historyIndex]() {
