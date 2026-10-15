@@ -655,20 +655,6 @@ Editing
 
     .. versionadded:: 1.1
 
-* :menuselection:`Autocomplete`
-    Controls which entities are included in editor autocompletion.
-    All options are enabled by default.
-
-    * ``Built-in functions`` includes built-in function names.
-    * ``Built-in variables`` includes built-in constant names.
-    * ``Units`` includes spelled-out unit names (for example, ``meter``).
-    * ``User functions`` includes user-defined function names.
-    * ``User variables`` includes user-defined variable names.
-
-    The autocomplete popup also shows category icons for suggestions.
-
-    .. versionadded:: 1.0
-
 .. _automatic_result_reuse:
 
 * :menuselection:`Auto-Insert "ans" When Starting with an Operator`
@@ -701,6 +687,21 @@ Editing
 
 * :menuselection:`Keep Entered Expression After Evaluate`
     If selected, the entered expression remains in the editor after evaluating it.
+
+* :menuselection:`Autocomplete`
+    Controls which entities are included in editor autocompletion.
+    All options are enabled by default.
+
+    * ``Built-in functions`` includes built-in function names.
+    * ``Built-in variables`` includes built-in constant names.
+    * ``Units`` includes spelled-out unit names (for example, ``meter``).
+    * ``User functions`` includes user-defined function names.
+    * ``User variables`` includes user-defined variable names.
+
+    The autocomplete popup also shows category icons for suggestions.
+
+    .. versionadded:: 1.0
+
 * :menuselection:`Up/Down Arrow History`
     Controls whether :kbd:`Up` and :kbd:`Down` in the editor navigate history:
 
