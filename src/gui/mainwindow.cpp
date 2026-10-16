@@ -5925,7 +5925,7 @@ void MainWindow::configureEditorDisplayPane(ResultDisplay* display, Editor* edit
     connect(display, &ResultDisplay::copyAvailable, this, &MainWindow::handleCopyAvailable);
     connect(display, &ResultDisplay::expressionSelected, this, [this, display, editor](const QString& text) {
         setActiveEditorDisplayPane(display, editor, true);
-        insertTextIntoEditor(text);
+        insertHistoryExpressionIntoEditor(text);
     });
     connect(display, &ResultDisplay::editHistoryEntryRequested, this, &MainWindow::startHistoryEntryEdit);
     connect(display, &ResultDisplay::editHistoryEntryContextRequested, this, &MainWindow::editHistoryEntryContext);
@@ -7828,7 +7828,7 @@ void MainWindow::createHistoryDock(bool)
     m_docks.history->setAllowedAreas(Qt::AllDockWidgetAreas);
 
     connect(m_docks.history->widget(), &HistoryWidget::expressionSelected,
-            this, &MainWindow::insertTextIntoEditor);
+            this, &MainWindow::insertHistoryExpressionIntoEditor);
     connect(m_docks.history->widget(), &HistoryWidget::removeHistoryEntryRequested,
             this, &MainWindow::removeHistoryEntryAt);
     connect(m_docks.history->widget(), &HistoryWidget::removeHistoryEntriesAboveRequested,
@@ -8324,7 +8324,7 @@ void MainWindow::createFixedConnections()
 
     connect(m_widgets.display, SIGNAL(copyAvailable(bool)), SLOT(handleCopyAvailable(bool)));
     connect(m_widgets.display, SIGNAL(clicked()), SLOT(hideStateLabel()));
-    connect(m_widgets.display, SIGNAL(expressionSelected(const QString&)), SLOT(insertTextIntoEditor(const QString&)));
+    connect(m_widgets.display, SIGNAL(expressionSelected(const QString&)), SLOT(insertHistoryExpressionIntoEditor(const QString&)));
     connect(m_widgets.display, SIGNAL(editHistoryEntryRequested(int)), SLOT(startHistoryEntryEdit(int)));
     connect(m_widgets.display, SIGNAL(editHistoryEntryContextRequested(int)), SLOT(editHistoryEntryContext(int)));
     connect(m_widgets.display, SIGNAL(cancelHistoryEditRequested()), SLOT(cancelHistoryEntryEdit()));
@@ -13379,6 +13379,13 @@ void MainWindow::insertConstantIntoEditor(const QString& c)
     insertTextIntoEditor(s);
 }
 
+void MainWindow::insertHistoryExpressionIntoEditor(const QString& text)
+{
+    const QString prefix = m_widgets.editor->text().left(m_widgets.editor->textCursor().selectionStart());
+    insertTextIntoEditor(prefix.contains(MathDsl::CommentSep)
+        ? text : Editor::historyExpressionForInput(text));
+}
+
 void MainWindow::insertTextIntoEditor(const QString& s)
 {
     if (s.isEmpty())
@@ -14543,7 +14550,7 @@ void MainWindow::startHistoryEntryEdit(int index)
     m_pendingHistoryEditIndex = index;
     m_widgets.display->setEditingHistoryIndex(index);
     m_widgets.editor->setHistoryArrowNavigationEnabled(false);
-    m_widgets.editor->setText(m_session->historyEntryAt(index).expr());
+    m_widgets.editor->setText(Editor::historyExpressionForInput(m_session->historyEntryAt(index).expr()));
     m_widgets.editor->setFocus();
     m_widgets.editor->setCursorPosition(m_widgets.editor->text().size());
     showStateLabel(tr("Editing calculation. Press Esc twice to cancel."));

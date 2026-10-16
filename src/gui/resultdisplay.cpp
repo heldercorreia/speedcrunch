@@ -1185,6 +1185,18 @@ void ResultDisplay::mouseDoubleClickEvent(QMouseEvent* event)
     cursor.movePosition(QTextCursor::StartOfBlock);
     cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
     setTextCursor(cursor);
+    const int selectedHistoryIndex = historyIndexAtPosition(event->pos());
+    const Session* selectedSession = displaySession(this);
+    int expressionBlock = -1;
+    int lastBlock = -1;
+    if (selectedSession != nullptr && selectedHistoryIndex >= 0
+        && selectedHistoryIndex < selectedSession->historySize()
+        && blockRangeForHistoryIndex(selectedHistoryIndex, expressionBlock, lastBlock)
+        && cursor.blockNumber() == expressionBlock) {
+        // Reuse the source expression, including any literal comment text.
+        emit expressionSelected(selectedSession->historyEntryAtRef(selectedHistoryIndex).expr());
+        return;
+    }
     QString text = cursor.selectedText();
     QString resultMarker = QLatin1String("= ");
     if (text.startsWith(resultMarker)) {

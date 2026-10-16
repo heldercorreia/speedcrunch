@@ -1493,6 +1493,32 @@ void Editor::setText(const QString& text)
     updateHeightAndEnsureCursorVisible();
 }
 
+QString Editor::historyExpressionForInput(const QString& text)
+{
+    if (Settings::instance()->automaticInputAdjustments)
+        return text;
+
+    // Older entries can contain adjustments made before the option was disabled.
+    const int commentPos = text.indexOf(MathDsl::CommentSep);
+    const QString expression = Evaluator::expandSuperscriptPowers(
+        commentPos >= 0 ? text.left(commentPos) : text);
+    QString raw;
+    raw.reserve(expression.size());
+    for (QChar ch : expression) {
+        if (MathDsl::isMultiplicationOperator(ch) || MathDsl::isMultiplicationOperatorAlias(ch))
+            raw += MathDsl::MulOpAl1;
+        else if (MathDsl::isDivisionOperatorAlias(ch) || ch == UnicodeChars::BigSolidus)
+            raw += MathDsl::DivOp;
+        else if (MathDsl::isSubtractionOperatorAlias(ch))
+            raw += MathDsl::SubOpAl1;
+        else if (ch == MathDsl::TransOp)
+            raw += QStringLiteral("->");
+        else
+            raw += ch;
+    }
+    return commentPos >= 0 ? raw + text.mid(commentPos) : raw;
+}
+
 void Editor::insert(const QString& text)
 {
     // Inserted fragments may belong to an existing comment even without a '?'.
@@ -2659,7 +2685,7 @@ void Editor::historyBack()
     if (m_currentHistoryIndex == m_history.count())
         m_savedCurrentEditor = toPlainText();
     --m_currentHistoryIndex;
-    setText(m_history.at(m_currentHistoryIndex).expr());
+    setText(historyExpressionForInput(m_history.at(m_currentHistoryIndex).expr()));
     moveCursorToEnd(this);
     ensureCursorVisible();
 }
@@ -2681,7 +2707,7 @@ void Editor::historyForward()
     if (m_currentHistoryIndex == m_history.count())
         setText(m_savedCurrentEditor);
     else
-        setText(m_history.at(m_currentHistoryIndex).expr());
+        setText(historyExpressionForInput(m_history.at(m_currentHistoryIndex).expr()));
     moveCursorToEnd(this);
     ensureCursorVisible();
 }

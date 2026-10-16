@@ -61,6 +61,8 @@ private slots:
     void init() { UiTestFixture::resetSettings(); }
     void raw_input_preserves_text_data();
     void raw_input_preserves_text();
+    void history_recall_respects_input_adjustments_data();
+    void history_recall_respects_input_adjustments();
     void raw_input_keeps_character_navigation_and_deletion();
     void raw_input_preserves_calculator_commands();
     void raw_input_switch_preserves_document_and_restores_adjustments();
@@ -6132,6 +6134,67 @@ void TestEditorUi::input_digit_grouping_paints_separator_glyphs()
         const QImage withoutSeparators = editor.viewport()->grab().toImage();
         QVERIFY2(withSeparators != withoutSeparators, "Input separators must paint glyphs, not just gaps");
     }
+}
+
+void TestEditorUi::history_recall_respects_input_adjustments_data()
+{
+    QTest::addColumn<QString>("stored");
+    QTest::addColumn<QString>("raw");
+    QTest::addColumn<bool>("adjustments");
+    const QList<QPair<QString, QString>> expressions {
+        {QString::fromUtf8("2³"), QStringLiteral("2^3")},
+        {QString::fromUtf8("2¹²"), QStringLiteral("2^12")},
+        {QString::fromUtf8("2⁻³"), QStringLiteral("2^(-3)")},
+        {QString::fromUtf8("sin²(1)"), QStringLiteral("sin(1)^2")},
+        {QString::fromUtf8("sin²(1)³"), QStringLiteral("(sin(1)^2)^3")},
+        {QString::fromUtf8("2[m²/s⁻³]"), QStringLiteral("2[m^2/s^(-3)]")},
+        {QString::fromUtf8("2 × 3 · 4 / 2 − 1"), QStringLiteral("2 * 3 * 4 / 2 - 1")},
+        {QString::fromUtf8("2[m] → [cm]"), QStringLiteral("2[m] -> [cm]")},
+        {QString::fromUtf8("2³ ?  4² × pi -> [m] ?\t"),
+         QString::fromUtf8("2^3 ?  4² × pi -> [m] ?\t")}
+    };
+    for (int i = 0; i < expressions.size(); ++i) {
+        for (bool adjustments : {false, true}) {
+            QTest::newRow(qPrintable(QStringLiteral("%1-%2").arg(i).arg(adjustments)))
+                << expressions.at(i).first << expressions.at(i).second << adjustments;
+        }
+    }
+}
+
+void TestEditorUi::history_recall_respects_input_adjustments()
+{
+    QFETCH(QString, stored);
+    QFETCH(QString, raw);
+    QFETCH(bool, adjustments);
+    Settings::instance()->automaticInputAdjustments = adjustments;
+    Session session;
+    session.addHistoryEntry(HistoryEntry(QStringLiteral("7"), Quantity(7)));
+    session.addHistoryEntry(HistoryEntry(stored, Quantity(8)));
+    Editor editor;
+    editor.setSession(&session);
+    editor.setAutoCompletionEnabled(false);
+    editor.setAutoCalcEnabled(false);
+    const QString draft = QString::fromUtf8("unfinished² ? keep ×");
+    editor.setText(draft);
+    QVERIFY(QMetaObject::invokeMethod(&editor, "historyBack"));
+    const QString expected = adjustments ? stored : raw;
+    QCOMPARE(editor.text(), expected);
+    QCOMPARE(editor.cursorPosition(), expected.size());
+    QVERIFY(QMetaObject::invokeMethod(&editor, "historyBack"));
+    QCOMPARE(editor.text(), QStringLiteral("7"));
+    QVERIFY(QMetaObject::invokeMethod(&editor, "historyForward"));
+    QCOMPARE(editor.text(), expected);
+    QVERIFY(QMetaObject::invokeMethod(&editor, "historyForward"));
+    QCOMPARE(editor.text(), draft);
+    QCOMPARE(session.historyEntryAtRef(1).expr(), stored);
+
+    Evaluator evaluator;
+    evaluator.setExpression(evaluator.autoFix(stored));
+    const QString originalResult = NumberFormatter::format(evaluator.eval());
+    QVERIFY2(evaluator.error().isEmpty(), qPrintable(evaluator.error()));
+    evaluator.setExpression(evaluator.autoFix(expected));
+    QCOMPARE(NumberFormatter::format(evaluator.eval()), originalResult);
+    QVERIFY2(evaluator.error().isEmpty(), qPrintable(evaluator.error()));
 }
 
 void TestEditorUi::raw_input_preserves_text_data()

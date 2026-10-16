@@ -147,6 +147,7 @@ private slots:
     void insertConstantIntoEditor(const QString&);
     void insertFunctionIntoEditor(const QString&);
     void insertTextIntoEditor(const QString&);
+    void insertHistoryExpressionIntoEditor(const QString&);
     void insertVariableIntoEditor(const QString&);
     void insertUserFunctionIntoEditor(const QString&);
     void insertUserUnitIntoEditor(const QString&);

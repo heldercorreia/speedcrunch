@@ -129,6 +129,7 @@ public:
     static QString formatInterpretedExpressionSimplifiedForDisplay(const QString&);
     static QString formatInterpretedExpressionSimplifiedForDisplay(const QString&, const Evaluator*);
     static QString fixNumberRadix(const QString&);
+    static QString expandSuperscriptPowers(const QString&);
     static QString fixSexagesimal(const QString&, QString& unit);
     static QStringList builtInUnitIdentifiers();
 

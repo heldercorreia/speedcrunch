@@ -8231,6 +8231,14 @@ static void replaceSuperscriptPowersWithCaretEquivalent(QString& expr)
     }
 }
 
+QString Evaluator::expandSuperscriptPowers(const QString& expr)
+{
+    const int commentPos = expr.indexOf(MathDsl::CommentSep);
+    QString expression = commentPos >= 0 ? expr.left(commentPos) : expr;
+    replaceSuperscriptPowersWithCaretEquivalent(expression);
+    return commentPos >= 0 ? expression + expr.mid(commentPos) : expression;
+}
+
 static void normalizeFunctionCaretPowers(QString& expr)
 {
     auto isIdentifierChar = [](const QChar& ch) {

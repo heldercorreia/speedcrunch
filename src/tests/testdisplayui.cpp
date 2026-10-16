@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "mainwindowtesthelpers.h"
+#include "core/numberformatter.h"
 
 using namespace MainWindowTestHelpers;
 
@@ -9,6 +10,8 @@ class TestDisplayUi : public QObject {
     Q_OBJECT
 
 private slots:
+    void history_reuse_respects_input_adjustments_data();
+    void history_reuse_respects_input_adjustments();
     void user_definition_comments_survive_creation_and_editing_data();
     void user_definition_comments_survive_creation_and_editing();
     void result_display_keeps_comments_literal_data();
@@ -38,6 +41,90 @@ private slots:
     void result_display_context_menu_copies_selection();
     void result_display_remove_menu_targets_clicked_calculation();
 };
+
+void TestDisplayUi::history_reuse_respects_input_adjustments_data()
+{
+    QTest::addColumn<bool>("adjustments");
+    QTest::addColumn<int>("source");
+    for (bool adjustments : {false, true}) {
+        for (int source = 0; source < 5; ++source) {
+            QTest::newRow(qPrintable(QStringLiteral("%1-%2").arg(adjustments).arg(source)))
+                << adjustments << source;
+        }
+    }
+}
+
+void TestDisplayUi::history_reuse_respects_input_adjustments()
+{
+    QFETCH(bool, adjustments);
+    QFETCH(int, source);
+    MainWindowStateGuard guard;
+    Settings::instance()->autoCalc = false;
+    Settings::instance()->historyDockVisible = true;
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    QVERIFY(display);
+    Editor* editor = editorForDisplay(display);
+    QVERIFY(editor);
+    editor->setAutoCompletionEnabled(false);
+    const QString stored = QString::fromUtf8("2³ × 3 ? keep ² × ->\t");
+    editor->setText(stored);
+    QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
+    const Session* session = display->session();
+    QCOMPARE(session->historySize(), 1);
+    const QString rendered = display->toPlainText();
+    QAction* action = window.findChild<QAction*>(QStringLiteral("AutomaticInputAdjustmentsAction"));
+    QVERIFY(action);
+    action->setChecked(adjustments);
+    QCOMPARE(Settings::instance()->automaticInputAdjustments, adjustments);
+    editor->clear();
+    if (source == 0 || source == 3) {
+        if (source == 3) {
+            QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight"));
+            editor = editorForDisplay(display);
+            QVERIFY(editor);
+        }
+        QTextCursor cursor(display->document()->firstBlock());
+        display->setTextCursor(cursor);
+        const QPoint point = display->cursorRect(cursor).center();
+        QTest::mouseDClick(display->viewport(), Qt::LeftButton, Qt::NoModifier, point);
+        QTest::mouseRelease(display->viewport(), Qt::LeftButton, Qt::NoModifier, point);
+    } else if (source == 1 || source == 4) {
+        HistoryWidget* history = window.findChild<HistoryWidget*>();
+        QVERIFY(history);
+        QListWidget* list = history->findChild<QListWidget*>();
+        QVERIFY(list);
+        QCOMPARE(list->count(), 1);
+        if (source == 4) {
+            editor->setText(QStringLiteral("? keep "));
+            editor->setCursorPosition(editor->text().size());
+        }
+        QVERIFY(QMetaObject::invokeMethod(list, "itemActivated", Qt::DirectConnection,
+                                         Q_ARG(QListWidgetItem*, list->item(0))));
+    } else {
+        QVERIFY(QMetaObject::invokeMethod(&window, "startHistoryEntryEdit", Qt::DirectConnection,
+                                         Q_ARG(int, 0)));
+    }
+    const QString expected = source == 4 ? QStringLiteral("? keep ") + stored
+        : adjustments ? stored : QString::fromUtf8("2^3 * 3 ? keep ² × ->\t");
+    QCOMPARE(editor->text(), expected);
+    QCOMPARE(session->historyEntryAtRef(0).expr(), stored);
+    QCOMPARE(display->toPlainText(), rendered);
+    if (source != 2) {
+        editor->undo();
+        QCOMPARE(editor->text(), source == 4 ? QStringLiteral("? keep ") : QString());
+    } else if (!adjustments) {
+        editor->selectAll();
+        QTest::keyClicks(editor, "2^4");
+        QCOMPARE(editor->text(), QStringLiteral("2^4"));
+        QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
+        QCOMPARE(session->historySize(), 1);
+        QCOMPARE(session->historyEntryAtRef(0).expr(), QStringLiteral("2^4"));
+        QCOMPARE(NumberFormatter::format(session->historyEntryAtRef(0).result()), QStringLiteral("16"));
+    }
+}
 
 void TestDisplayUi::user_definition_comments_survive_creation_and_editing_data()
 {

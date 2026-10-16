@@ -47,6 +47,7 @@ public:
     bool isCursorBlinkingEnabled() const { return m_cursorBlinkingEnabled; }
     Evaluator* evaluator() const { return m_evaluator; }
     static Editor* completionMouseSelectionOwner();
+    static QString historyExpressionForInput(const QString&);
     void clearHistory();
     QColor cursorColor() const { return m_themePrimaryColor; }
     int cursorPosition() const;
