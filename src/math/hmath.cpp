@@ -632,6 +632,7 @@ HNumber::Format::Format(const HNumber::Format& other)
     , radixChar(other.radixChar)
     , mode(other.mode)
     , precision(other.precision)
+    , removeTrailingZeroes(other.removeTrailingZeroes)
     , paddedBits(other.paddedBits)
     , forcedExponent(other.forcedExponent)
 {
@@ -644,6 +645,7 @@ HNumber::Format HNumber::Format::operator+(const HNumber::Format& other) const
     result.radixChar = (this->radixChar != RadixChar::Null) ? this->radixChar : other.radixChar;
     result.mode = (this->mode != Mode::Null) ? this->mode : other.mode;
     result.precision = (this->precision != PrecisionNull) ? this->precision : other.precision;
+    result.removeTrailingZeroes = this->removeTrailingZeroes || other.removeTrailingZeroes;
     result.paddedBits = this->paddedBits != 0 ? this->paddedBits : other.paddedBits;
     result.forcedExponent = this->forcedExponent != ForcedExponentNull ? this->forcedExponent : other.forcedExponent;
     return result;
@@ -851,9 +853,11 @@ char* _doFormat(cfloatnum x, signed char base, signed char expbase, char outmode
  * Formats the given number as string, using specified decimal digits.
  * Note that the returned string must be freed.
  */
-char* formatFixed(cfloatnum x, int prec, int base = 10)
+char* formatFixed(cfloatnum x, int prec, int base, bool removeTrailingZeroes)
 {
     unsigned flags = IO_FLAG_SUPPRESS_PLUS + IO_FLAG_SUPPRESS_DOT + IO_FLAG_SUPPRESS_EXPZERO;
+    if (removeTrailingZeroes)
+        flags |= IO_FLAG_SUPPRESS_TRL_ZERO;
     if (base != 10)
         flags += IO_FLAG_SHOW_BASE + IO_FLAG_SHOW_EXPBASE;
     if (prec < 0) {
@@ -868,9 +872,11 @@ char* formatFixed(cfloatnum x, int prec, int base = 10)
  * Formats the given number as string, in scientific format.
  * Note that the returned string must be freed.
  */
-char* formatScientific(cfloatnum x, int prec, int base = 10)
+char* formatScientific(cfloatnum x, int prec, int base, bool removeTrailingZeroes)
 {
     unsigned flags = IO_FLAG_SUPPRESS_PLUS + IO_FLAG_SUPPRESS_DOT + IO_FLAG_SUPPRESS_EXPPLUS;
+    if (removeTrailingZeroes)
+        flags |= IO_FLAG_SUPPRESS_TRL_ZERO;
     if (base != 10)
         flags += IO_FLAG_SHOW_BASE + IO_FLAG_SHOW_EXPBASE;
     if (prec < 0) {
@@ -884,9 +890,11 @@ char* formatScientific(cfloatnum x, int prec, int base = 10)
  * Formats the given number as string, in engineering notation.
  * Note that the returned string must be freed.
  */
-char* formatEngineering(cfloatnum x, int prec, int base = 10)
+char* formatEngineering(cfloatnum x, int prec, int base, bool removeTrailingZeroes)
 {
     unsigned flags = IO_FLAG_SUPPRESS_PLUS + IO_FLAG_SUPPRESS_EXPPLUS;
+    if (removeTrailingZeroes)
+        flags |= IO_FLAG_SUPPRESS_TRL_ZERO | IO_FLAG_SUPPRESS_DOT;
     if (base != 10)
         flags += IO_FLAG_SHOW_BASE + IO_FLAG_SHOW_EXPBASE;
     if (prec <= 1) {
@@ -900,20 +908,20 @@ char* formatEngineering(cfloatnum x, int prec, int base = 10)
  * Formats the given number as string, using specified decimal digits.
  * Note that the returned string must be freed.
  */
-char* formatGeneral(cfloatnum x, int prec, int base = 10)
+char* formatGeneral(cfloatnum x, int prec, int base, bool removeTrailingZeroes)
 {
     // find the exponent and the factor
     int expd = float_getexponent(x);
 
     char* str;
     if (expd > 14)
-        str = formatScientific(x, prec, base);
+        str = formatScientific(x, prec, base, removeTrailingZeroes);
     else if (expd < -9)
-        str = formatScientific(x, prec, base);
+        str = formatScientific(x, prec, base, removeTrailingZeroes);
     else if ((expd < 0) && (prec >= 0) && (expd < -prec))
-        str = formatScientific(x, prec, base);
+        str = formatScientific(x, prec, base, removeTrailingZeroes);
     else
-        str = formatFixed(x, prec, base);
+        str = formatFixed(x, prec, base, removeTrailingZeroes);
 
     return str;
 }
@@ -969,20 +977,20 @@ QString HMath::format(const HNumber& hn, HNumber::Format format)
 
     switch (format.mode) {
     case HNumber::Format::Mode::Fixed:
-        rs = formatFixed(&hn.d->fnum, format.precision, base);
+        rs = formatFixed(&hn.d->fnum, format.precision, base, format.removeTrailingZeroes);
         break;
     case HNumber::Format::Mode::Scientific:
-        rs = formatScientific(&hn.d->fnum, format.precision, base) ;
+        rs = formatScientific(&hn.d->fnum, format.precision, base, format.removeTrailingZeroes);
         break;
     case HNumber::Format::Mode::Engineering:
-        rs = formatEngineering(&hn.d->fnum, format.precision, base);
+        rs = formatEngineering(&hn.d->fnum, format.precision, base, format.removeTrailingZeroes);
         break;
     case HNumber::Format::Mode::Sexagesimal:
-        rs = formatFixed(&hn.d->fnum, format.precision, base);
+        rs = formatFixed(&hn.d->fnum, format.precision, base, format.removeTrailingZeroes);
         break;
     case HNumber::Format::Mode::General:
     default:
-        rs = formatGeneral(&hn.d->fnum, format.precision, base);
+        rs = formatGeneral(&hn.d->fnum, format.precision, base, format.removeTrailingZeroes);
     }
 
     QString result(rs);

@@ -224,6 +224,7 @@ private slots:
     void setResultPrecisionCustom();
     void setResultPrecision(int);
     void setResultRoundingMode(QAction*);
+    void setRemoveTrailingZeroesEnabled(bool);
     void setMenuBarVisible(bool);
     void setStatusBarVisible(bool);
     void setSyntaxHighlightingEnabled(bool);
@@ -502,6 +503,7 @@ private:
         QAction* settingsResultFormat50Digits;
         QAction* settingsResultFormatCustomDigits;
         QAction* settingsResultRoundingHalfAwayFromZero;
+        QAction* settingsRemoveTrailingZeroes;
         QAction* settingsResultRoundingHalfEven;
         QAction* settingsResultRoundingTowardZero;
         QAction* settingsResultRoundingTowardPositiveInfinity;

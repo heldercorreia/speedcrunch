@@ -291,6 +291,7 @@ Settings::Settings()
     autoCompletionUserVariables = true;
     secondaryResultPrecision = -1;
     resultRoundingMode = ResultRoundingHalfAwayFromZero;
+    removeTrailingZeroes = false;
     unitNegativeExponentStyle = UnitNegativeExponentSuperscript;
     tertiaryResultPrecision = -1;
     quaternaryResultPrecision = -1;
@@ -478,6 +479,7 @@ void Settings::load()
         settings->value(key + QLatin1String("MainComplexForm"),
                         ComplexForm::toString(ComplexForm::Default)).toString());
 
+    removeTrailingZeroes = settings->value(key + QLatin1String("RemoveTrailingZeroes"), false).toBool();
     resultPrecision = settings->value(key + QLatin1String("MainPrecision"), -1).toInt();
     if (!settings->contains(key + QLatin1String("MainPrecision"))) {
         // Backward compatibility with legacy key.
@@ -679,6 +681,7 @@ void Settings::save()
     settings->setValue(key + QLatin1String("MultipleLinesEnabled"), multipleResultLinesEnabled);
     settings->setValue(key + QLatin1String("MainComplexForm"), ComplexForm::toString(resultComplexForm));
     settings->setValue(key + QLatin1String("MainPrecision"), resultPrecision);
+    settings->setValue(key + QLatin1String("RemoveTrailingZeroes"), removeTrailingZeroes);
     settings->setValue(key + QLatin1String("ResultRoundingMode"),
         QString(QChar(resultRoundingMode)));
     settings->setValue(key + QLatin1String("UnitNegativeExponentStyle"),

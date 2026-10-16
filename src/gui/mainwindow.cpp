@@ -4008,6 +4008,9 @@ void MainWindow::createActions()
     m_actions.settingsResultFormatAutoPrecision = new QAction(this);
     m_actions.settingsResultFormatBinary = new QAction(this);
     m_actions.settingsResultFormatEngineering = new QAction(this);
+    m_actions.settingsRemoveTrailingZeroes = new QAction(this);
+    m_actions.settingsRemoveTrailingZeroes->setObjectName(QStringLiteral("RemoveTrailingZeroesAction"));
+    m_actions.settingsRemoveTrailingZeroes->setCheckable(true);
     m_actions.settingsResultFormatFixed = new QAction(this);
     m_actions.settingsResultFormatGeneral = new QAction(this);
     m_actions.settingsResultFormatHexadecimal = new QAction(this);
@@ -4533,6 +4536,7 @@ void MainWindow::setActionsText()
     m_actions.settingsResultFormat50Digits->setText(MainWindow::tr("&50 Digits"));
     m_actions.settingsResultFormat8Digits->setText(MainWindow::tr("&8 Digits"));
     m_actions.settingsResultFormatCustomDigits->setText(MainWindow::tr("&Custom..."));
+    m_actions.settingsRemoveTrailingZeroes->setText(MainWindow::tr("Remove Trailing &Zeroes"));
     m_actions.settingsResultRoundingHalfAwayFromZero->setText(
         MainWindow::tr("Nearest, Half &Away (round)"));
     m_actions.settingsResultRoundingHalfEven->setText(
@@ -4906,6 +4910,7 @@ void MainWindow::createMenus()
 
     m_menus.results = m_menus.settings->addMenu("");
     m_menus.results->addAction(m_actions.settingsBehaviorResultSlots);
+    m_menus.results->addAction(m_actions.settingsRemoveTrailingZeroes);
     m_menus.results->addSeparator();
     m_menus.resultRoundingMode = m_menus.results->addMenu("");
     m_menus.resultRoundingMode->addAction(m_actions.settingsResultRoundingHalfAwayFromZero);
@@ -8277,6 +8282,8 @@ void MainWindow::createFixedConnections()
             SLOT(setUnitNegativeExponentStyle(QAction*)));
     connect(m_actionGroups.resultRoundingMode, SIGNAL(triggered(QAction*)),
             SLOT(setResultRoundingMode(QAction*)));
+    connect(m_actions.settingsRemoveTrailingZeroes, &QAction::toggled,
+            this, &MainWindow::setRemoveTrailingZeroesEnabled);
 
     connect(m_actions.settingsLanguage, SIGNAL(triggered()), SLOT(showLanguageChooserDialog()));
     connectToActiveWindow(m_actions.settingsResetAll, &MainWindow::resetAllSettings);
@@ -8530,6 +8537,7 @@ void MainWindow::applySettings(bool initializing)
     checkInitialResultPrecision();
     checkInitialComplexFormat();
     checkInitialImaginaryUnit();
+    m_actions.settingsRemoveTrailingZeroes->setChecked(m_settings->removeTrailingZeroes);
     switch (m_settings->resultRoundingMode) {
     case Settings::ResultRoundingHalfEven:
         m_actions.settingsResultRoundingHalfEven->setChecked(true);
@@ -15120,6 +15128,22 @@ void MainWindow::setUnitNegativeExponentStyle(QAction* action)
     // Unit exponent style changes should affect only future evaluations and
     // live editor previews, not previously displayed history entries.
     m_widgets.editor->refreshAutoCalc();
+}
+
+void MainWindow::setRemoveTrailingZeroesEnabled(bool enabled)
+{
+    m_settings->removeTrailingZeroes = enabled;
+    QList<QPointer<MainWindow>> windows = allMainWindows();
+    if (!windows.contains(QPointer<MainWindow>(this)))
+        windows.append(QPointer<MainWindow>(this));
+    for (const QPointer<MainWindow>& window : windows) {
+        if (!window)
+            continue;
+        const QSignalBlocker blocker(window->m_actions.settingsRemoveTrailingZeroes);
+        window->m_actions.settingsRemoveTrailingZeroes->setChecked(enabled);
+        for (Editor* editor : window->findChildren<Editor*>())
+            editor->refreshAutoCalc();
+    }
 }
 
 void MainWindow::setResultRoundingMode(QAction* action)

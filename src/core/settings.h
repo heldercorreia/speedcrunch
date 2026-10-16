@@ -147,6 +147,7 @@ public:
     bool quinaryResultEnabled;
     bool multipleResultLinesEnabled; // UI toggle: show/use extra result lines.
     int resultPrecision; // Main precision. See HMath documentation.
+    bool removeTrailingZeroes;
     char resultRoundingMode;
     char unitNegativeExponentStyle;
     int secondaryResultPrecision; // Secondary precision.

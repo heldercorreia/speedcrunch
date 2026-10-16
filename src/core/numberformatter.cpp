@@ -505,6 +505,7 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride,
 
     if (format.precision == Quantity::Format::PrecisionNull)
         format.precision = precisionOverride;
+    format.removeTrailingZeroes = settings->removeTrailingZeroes;
     if (format.notation == Quantity::Format::Notation::Null) {
         if (useComplexNotation) {
             if (complexNotationOverride == ComplexForm::Rectangular)

@@ -13,6 +13,10 @@ class TestSettingsUi : public QObject {
     Q_OBJECT
 
 private slots:
+    void trailing_zeroes_formatting_data();
+    void trailing_zeroes_formatting();
+    void trailing_zeroes_setting_survives_reload();
+    void trailing_zeroes_action_updates_windows_and_preserves_history();
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
     void about_box_shows_os_between_application_and_qt_versions();
@@ -49,6 +53,153 @@ private slots:
     void notation_shortcuts_change_only_active_window_data();
     void notation_shortcuts_change_only_active_window();
 };
+
+void TestSettingsUi::trailing_zeroes_formatting_data()
+{
+    QTest::addColumn<QString>("expression");
+    QTest::addColumn<char>("notation");
+    QTest::addColumn<int>("precision");
+    QTest::addColumn<QString>("padded");
+    QTest::addColumn<QString>("trimmed");
+    auto row = [](const char* name, const char* expression, char notation, int precision,
+                  const char* padded, const char* trimmed) {
+        QTest::newRow(name) << QString::fromUtf8(expression) << notation << precision
+                           << QString::fromUtf8(padded) << QString::fromUtf8(trimmed);
+    };
+    row("fixed", "3.14", 'f', 3, "3.140", "3.14");
+    row("integer", "1200", 'f', 3, "1200.000", "1200");
+    row("negative", "-3.14", 'f', 3, "-3.140", "-3.14");
+    row("zero", "0", 'f', 3, "0", "0");
+    row("round-to-zero", "0.0001", 'f', 3, "0.000", "0");
+    row("rounding-carry", "1.9999", 'f', 3, "2.000", "2");
+    row("keep-fractional-zeroes", "1.2003", 'f', 3, "1.200", "1.2");
+    row("keep-internal-zeroes", "1.203", 'f', 3, "1.203", "1.203");
+    row("zero-precision", "12.3", 'f', 0, "12", "12");
+    row("automatic-precision", "3.14", 'f', -1, "3.14", "3.14");
+    row("general", "3.14", 'g', 3, "3.140", "3.14");
+    row("scientific", "1200", 'e', 3, "1.200e3", "1.2e3");
+    row("scientific-negative-exponent", "0.0012", 'e', 3, "1.200e-3", "1.2e-3");
+    row("scientific-exponent-zeroes", "1e20", 'e', 3, "1.000e20", "1e20");
+    row("engineering", "1200", 'n', 3, "1.200e3", "1.2e3");
+    row("engineering-integer", "100000", 'n', 2, "100.e3", "100e3");
+    row("binary", "1.5", 'b', 4, "0b1.1000", "0b1.1");
+    row("octal", "1.5", 'o', 4, "0o1.4000", "0o1.4");
+    row("hexadecimal", "1.625", 'h', 4, "0x1.A000", "0x1.A");
+    row("complex", "1.5+2.25j", 'f', 3, "1.500+2.250j", "1.5+2.25j");
+    row("unit", "1.5[m]", 'f', 3, "1.500[m]", "1.5[m]");
+    row("list", "{1.5; 20}", 'f', 3, "{1.500; 20.000}", "{1.5; 20}");
+    row("rational", "1/2", 'r', 3, "1 / 2", "1 / 2");
+    row("sexagesimal", "1.5[s]", 's', 3, "0:00:01.500", "0:00:01.5");
+}
+
+void TestSettingsUi::trailing_zeroes_formatting()
+{
+    QFETCH(QString, expression);
+    QFETCH(char, notation);
+    QFETCH(int, precision);
+    QFETCH(QString, padded);
+    QFETCH(QString, trimmed);
+    Settings* settings = Settings::instance();
+    settings->imaginaryUnit = 'j';
+    settings->numberFormatStyle = Settings::NumberFormatNoGroupingDot;
+    settings->applyNumberFormatStyle();
+    DMath::complexMode = true;
+    Evaluator evaluator;
+    evaluator.initializeBuiltInVariables();
+    evaluator.setExpression(expression);
+    const Quantity value = evaluator.eval();
+    QVERIFY2(evaluator.error().isEmpty(), qPrintable(evaluator.error()));
+    auto formatted = [&]() {
+        return NumberFormatter::format(value, notation, precision, true, ComplexForm::Rectangular)
+            .replace(QChar(0x2212), QLatin1Char('-'));
+    };
+    QCOMPARE(formatted(), padded);
+    settings->removeTrailingZeroes = true;
+    QCOMPARE(formatted(), trimmed);
+    settings->numberFormatStyle = Settings::NumberFormatNoGroupingComma;
+    settings->applyNumberFormatStyle();
+    QCOMPARE(formatted(), QString(trimmed).replace(QLatin1Char('.'), QLatin1Char(',')));
+    // The setting affects presentation, including per-line precision overrides.
+    settings->numberFormatStyle = Settings::NumberFormatNoGroupingDot;
+    settings->applyNumberFormatStyle();
+    settings->resultFormat = notation;
+    settings->resultPrecision = precision;
+    QCOMPARE(NumberFormatter::format(value).replace(QChar(0x2212), QLatin1Char('-')), trimmed);
+    settings->removeTrailingZeroes = false;
+    QCOMPARE(formatted(), padded);
+}
+
+void TestSettingsUi::trailing_zeroes_setting_survives_reload()
+{
+    Settings* settings = Settings::instance();
+    QVERIFY(!settings->removeTrailingZeroes);
+    for (bool enabled : {true, false}) {
+        settings->removeTrailingZeroes = enabled;
+        settings->save();
+        settings->removeTrailingZeroes = !enabled;
+        settings->load();
+        QCOMPARE(settings->removeTrailingZeroes, enabled);
+    }
+}
+
+void TestSettingsUi::trailing_zeroes_action_updates_windows_and_preserves_history()
+{
+    Settings::instance()->resultFormat = 'f';
+    Settings::instance()->resultPrecision = 3;
+    QList<QString> previews;
+    MainWindow first(false);
+    MainWindow second(false);
+    QVERIFY(QMetaObject::invokeMethod(&first, "splitActivePaneRight"));
+    QAction* action = first.findChild<QAction*>(QStringLiteral("RemoveTrailingZeroesAction"));
+    QAction* secondAction = second.findChild<QAction*>(QStringLiteral("RemoveTrailingZeroesAction"));
+    QVERIFY(action);
+    QVERIFY(secondAction);
+    QVERIFY(!action->isChecked());
+    ResultDisplay* display = first.findChild<ResultDisplay*>();
+    QVERIFY(display);
+    Editor* historyEditor = editorForDisplay(display);
+    QVERIFY(historyEditor);
+    historyEditor->setText(QStringLiteral("3.14"));
+    QVERIFY(QMetaObject::invokeMethod(&first, "evaluateEditorExpression"));
+    const QString history = display->toPlainText();
+    QVERIFY(history.contains(QStringLiteral("3.140")));
+
+    const QList<Editor*> editors = first.findChildren<Editor*>() + second.findChildren<Editor*>();
+    for (Editor* editor : editors) {
+        editor->setAutoCalcEnabled(true);
+        editor->setText(QStringLiteral("1+0.5"));
+        connect(editor, &Editor::autoCalcMessageAvailable, &first,
+                [&previews](const QString& text) { previews.append(text); });
+    }
+    action->trigger();
+    QVERIFY(Settings::instance()->removeTrailingZeroes);
+    QVERIFY(secondAction->isChecked());
+    QTRY_VERIFY(previews.size() >= editors.size());
+    for (const QString& preview : previews) {
+        QVERIFY2(preview.contains(QStringLiteral("1.5")), qPrintable(preview));
+        QVERIFY2(!preview.contains(QStringLiteral("1.500")), qPrintable(preview));
+    }
+    QCOMPARE(display->toPlainText(), history);
+    MainWindow third(false);
+    QAction* thirdAction = third.findChild<QAction*>(QStringLiteral("RemoveTrailingZeroesAction"));
+    QVERIFY(thirdAction);
+    QVERIFY(thirdAction->isChecked());
+    secondAction->trigger();
+    QVERIFY(!action->isChecked());
+    QVERIFY(!thirdAction->isChecked());
+    action->trigger();
+    QTimer::singleShot(0, &first, []() {
+        auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        QVERIFY(dialog);
+        dialog->button(QMessageBox::Yes)->click();
+    });
+    QVERIFY(QMetaObject::invokeMethod(&first, "resetAllSettings"));
+    QVERIFY(!Settings::instance()->removeTrailingZeroes);
+    QVERIFY(!action->isChecked());
+    QVERIFY(!secondAction->isChecked());
+    QVERIFY(!thirdAction->isChecked());
+    QCOMPARE(display->toPlainText(), history);
+}
 
 void TestSettingsUi::initTestCase()
 {

@@ -612,6 +612,15 @@ This section contains settings that control result output and post-evaluation be
     immediately (live/selection) without rewriting already displayed
     calculation history.
 
+* :menuselection:`Remove Trailing Zeroes`
+    Hide trailing fractional zeroes after rounding to the selected decimal
+    places. For example, at three decimal places, ``3.140`` becomes ``3.14``
+    and ``12.000`` becomes ``12``. This option is off by default and applies
+    to the main and extra result lines. Changing it refreshes editor previews
+    without rewriting displayed history.
+
+    .. versionadded:: 1.1
+
 * :menuselection:`Rounding Mode`
     Choose how displayed results are rounded when formatting to a finite number
     of digits. The default is :menuselection:`Nearest, Half Away (round)`.
