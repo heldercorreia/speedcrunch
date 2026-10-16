@@ -45,6 +45,7 @@ public:
 
     bool isAutoCalcEnabled() const;
     bool isAutoCompletionEnabled() const;
+    bool isConstantSearchVisible() const;
     bool isCursorBlinkingEnabled() const { return m_cursorBlinkingEnabled; }
     Evaluator* evaluator() const { return m_evaluator; }
     static Editor* completionMouseSelectionOwner();
@@ -69,7 +70,9 @@ public:
                                   const QColor& selectedRow,
                                   const QColor& selectedRowForeground,
                                   const QColor& outline,
-                                  int cornerRadius);
+                                  int cornerRadius,
+                                  const QColor& searchButtonFill = QColor(),
+                                  const QColor& searchButtonCross = QColor());
     void setThemeSurfaceColor(const QColor& color, const QColor& outerColor = QColor());
     void setSession(Session* session);
     void setHistoryArrowNavigationEnabled(bool enabled);
@@ -99,6 +102,7 @@ signals:
     void shiftPageUpPressed();
     void bulkEvaluationStarted();
     void bulkEvaluationFinished();
+    void constantSearchVisibilityChanged();
 
 public slots:
     void autoCalcSelection(const QString& custom = QString());
@@ -184,6 +188,8 @@ private:
     QColor m_completionSelectedRowColor;
     QColor m_completionSelectedRowForegroundColor;
     QColor m_completionOutlineColor;
+    QColor m_completionSearchButtonFill;
+    QColor m_completionSearchButtonCross;
     int m_completionCornerRadius = 0;
     std::optional<ColorScheme> m_themePreviewColorScheme;
     bool m_usePrimaryOutline = false;
@@ -264,12 +270,16 @@ public:
                         const QColor& selectedRow,
                         const QColor& selectedRowForeground,
                         const QColor& outline,
-                        int cornerRadius);
+                        int cornerRadius,
+                        const QColor& searchButtonFill = QColor(),
+                        const QColor& searchButtonCross = QColor());
     void showCompletion();
+    bool isVisible() const;
 
 signals:
     void canceledCompletion();
     void selectedCompletion(const QString&);
+    void visibilityChanged();
 
 public slots:
     void doneCompletion();
@@ -291,9 +301,12 @@ private:
     QColor m_selectedRowColor;
     QColor m_selectedRowForegroundColor;
     QColor m_outlineColor;
+    QColor m_searchButtonFill;
+    QColor m_searchButtonCross;
     int m_cornerRadius = 0;
 
     void applyThemeColors();
+    void updateSearchClearButton(bool focused);
     void filter();
     void restoreEditorFocus();
 };

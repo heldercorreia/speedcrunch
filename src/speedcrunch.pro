@@ -105,6 +105,7 @@ HEADERS += core/book.h \
            core/startupdiagnostics.h \
            gui/bitfieldwidget.h \
            gui/bookdock.h \
+           gui/constantbrowserutils.h \
            gui/constantswidget.h \
            gui/customkeypaddialog.h \
            gui/displayformatutils.h \
@@ -118,6 +119,7 @@ HEADERS += core/book.h \
            gui/historywidget.h \
            gui/genericdock.h \
            gui/keypad.h \
+           gui/lineeditstyleutils.h \
            gui/variablelistwidget.h \
            gui/userfunctionlistwidget.h \
            gui/userunitlistwidget.h \

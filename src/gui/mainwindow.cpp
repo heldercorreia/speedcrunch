@@ -50,6 +50,7 @@
 #include "gui/resultlineformatutils.h"
 #include "gui/syntaxhighlighter.h"
 #include "gui/themedlineedit.h"
+#include "gui/lineeditstyleutils.h"
 #include "gui/tooltipstyleutils.h"
 #include "gui/uiconfig.h"
 #include "math/cmath.h"
@@ -1469,51 +1470,6 @@ void applyDockTitleButtonIcon(QAbstractButton* button, bool hovered)
     button->setIcon(dockTitleButtonIcon(closeButton, fill, foreground));
 }
 
-QIcon dockSearchClearButtonIcon(const QColor& fill, const QColor& cross)
-{
-    const auto pixmapForScale = [&fill, &cross](qreal scale) {
-        constexpr int logicalSize = 16;
-        const int physicalSize = qRound(logicalSize * scale);
-        QPixmap pixmap(physicalSize, physicalSize);
-        pixmap.setDevicePixelRatio(scale);
-        pixmap.fill(Qt::transparent);
-
-        QPainter painter(&pixmap);
-        painter.setRenderHint(QPainter::Antialiasing, true);
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(fill);
-        painter.drawEllipse(QRectF(1.5, 1.5, 13.0, 13.0));
-
-        QPen pen(cross, 1.45, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-        painter.setPen(pen);
-        painter.drawLine(QPointF(5.25, 5.25), QPointF(10.75, 10.75));
-        painter.drawLine(QPointF(10.75, 5.25), QPointF(5.25, 10.75));
-        return pixmap;
-    };
-
-    QIcon icon;
-    icon.addPixmap(pixmapForScale(1.0));
-    icon.addPixmap(pixmapForScale(2.0));
-    icon.addPixmap(pixmapForScale(3.0));
-    return icon;
-}
-
-void applyDockSearchClearButtonIcon(QLineEdit* searchBox, const QIcon& icon)
-{
-    if (searchBox == nullptr)
-        return;
-
-    for (QAction* action : searchBox->actions())
-        action->setIcon(icon);
-
-    for (QToolButton* button : searchBox->findChildren<QToolButton*>()) {
-        if (QAction* action = button->defaultAction())
-            action->setIcon(icon);
-        button->setIcon(icon);
-        button->setIconSize(QSize(16, 16));
-    }
-}
-
 void applyDockSearchClearButtonIcon(QLineEdit* searchBox,
                                     const GeneratedThemeSurfaces& surfaces,
                                     bool focused)
@@ -1524,9 +1480,8 @@ void applyDockSearchClearButtonIcon(QLineEdit* searchBox,
     const ThemeSurfaceColors clearButtonSurface = focused
         ? surfaces.primary
         : themeSurfaceForShadeIndex(surfaces, UiConfig::DockTextInputOutlineShade);
-    applyDockSearchClearButtonIcon(searchBox,
-                                   dockSearchClearButtonIcon(clearButtonSurface.background,
-                                                             clearButtonSurface.foreground));
+    LineEditStyleUtils::applyClearButtonColors(searchBox, clearButtonSurface.background,
+                                              clearButtonSurface.foreground);
 }
 
 void applyDockSearchClearButtonIcon(QLineEdit* searchBox,
@@ -5243,6 +5198,9 @@ void MainWindow::createFixedWidgets()
 
 QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* editor)
 {
+    connect(editor, &Editor::constantSearchVisibilityChanged,
+            this, &MainWindow::updatePaneEditorCursorVisibility);
+
     const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
     SessionPane* pane = new SessionPane(m_widgets.splitContainer);
     applyThemeBackgroundRoleToWidget(pane, surfaces.result.background);
@@ -5296,7 +5254,9 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
                                      completionSelectedRow.background,
                                      completionSelectedRow.foreground,
                                      completionOutline.background,
-                                     UiConfig::CompletionPopupCornerRadius);
+                                     UiConfig::CompletionPopupCornerRadius,
+                                     surfaces.primary.background,
+                                     surfaces.primary.foreground);
     editor->rehighlight();
     QVBoxLayout* pageLayout = new QVBoxLayout(page);
     pageLayout->setSpacing(0);
@@ -6980,8 +6940,9 @@ void MainWindow::updatePaneEditorCursorVisibility()
                 && editor == activeEditor;
             if (editor != nullptr) {
                 updatedEditors.insert(editor);
-                editor->setCustomCursorVisible(active);
-                editor->setThemePrimaryColor(surfaces.primary.background, active && showActiveOutline);
+                const bool editorFocused = active && !editor->isConstantSearchVisible();
+                editor->setCustomCursorVisible(editorFocused);
+                editor->setThemePrimaryColor(surfaces.primary.background, editorFocused && showActiveOutline);
             }
         }
         for (Editor* editor : window->splitPaneEditors()) {
@@ -7210,7 +7171,9 @@ void MainWindow::refreshPaneThemes()
                                          completionSelectedRow.background,
                                          completionSelectedRow.foreground,
                                          completionOutline.background,
-                                         UiConfig::CompletionPopupCornerRadius);
+                                         UiConfig::CompletionPopupCornerRadius,
+                                         surfaces.primary.background,
+                                         surfaces.primary.foreground);
         editor->rehighlight();
     }
     updatePaneEditorCursorVisibility();

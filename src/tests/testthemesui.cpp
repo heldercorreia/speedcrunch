@@ -26,7 +26,95 @@ private slots:
     void repeated_theme_refresh_keeps_structural_styles();
     void generated_surface_cache_tracks_custom_color_edits();
     void dock_and_popup_text_meet_contrast_target_across_themes();
+    void constant_popup_clear_button_matches_dock_search_data();
+    void constant_popup_clear_button_matches_dock_search();
 };
+
+void TestThemesUi::constant_popup_clear_button_matches_dock_search_data()
+{
+    QTest::addColumn<QString>("background");
+    QTest::newRow("dark") << QStringLiteral("#454257");
+    QTest::newRow("light") << QStringLiteral("#f4e8ee");
+}
+
+void TestThemesUi::constant_popup_clear_button_matches_dock_search()
+{
+    QFETCH(QString, background);
+    MainWindowStateGuard guard;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->constantsDockVisible = true;
+    guard.settings->dockAppearance = Settings::DockAppearanceSpeedCrunch;
+    guard.settings->windowState.clear();
+    guard.settings->sessionLayoutJson.clear();
+    guard.settings->customColorSchemeJson = themeJsonString(QJsonObject{
+        {QStringLiteral("background"), background},
+        {QStringLiteral("primary"), QStringLiteral("#8cb4e8")}
+    });
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    auto* editor = window.findChild<Editor*>();
+    auto* dock = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(editor && dock);
+    dock->show();
+    dock->raise();
+    auto* dockSearch = dock->findChild<QLineEdit*>();
+    QVERIFY(dockSearch);
+    dockSearch->setText(QStringLiteral("electron"));
+    auto* dockButton = dockSearch->findChild<QToolButton*>();
+    QVERIFY(dockButton);
+    editor->setText(QStringLiteral("12+34"));
+
+    for (const QString& primary : {QStringLiteral("#8cb4e8"), QStringLiteral("#e7a840")}) {
+        guard.settings->customColorSchemeJson = themeJsonString(QJsonObject{
+            {QStringLiteral("background"), background},
+            {QStringLiteral("primary"), primary}
+        });
+        window.colorSchemeChanged();
+        dockSearch->setFocus();
+        QTRY_VERIFY(dockSearch->hasFocus());
+        const QIcon focusedIcon = dockButton->icon();
+        QCOMPARE(focusedIcon.pixmap(QSize(16, 16), 1.0).toImage().pixelColor(8, 3), QColor(primary));
+        editor->setFocus();
+        QTRY_VERIFY(!dockSearch->hasFocus());
+        const QIcon unfocusedIcon = dockButton->icon();
+        QTest::keyClick(editor, Qt::Key_Space, Qt::ControlModifier);
+        QPointer<QWidget> popup = QApplication::activePopupWidget();
+        QVERIFY(popup);
+        auto* search = popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch"));
+        auto* list = popup->findChild<QTreeWidget*>();
+        QVERIFY(search && list);
+        QTRY_VERIFY(search->hasFocus());
+        search->setText(QStringLiteral("no matching constant 987654321"));
+        auto* button = search->findChild<QToolButton*>();
+        QVERIFY(button && button->isVisible());
+        for (qreal scale : {1.0, 2.0, 3.0}) {
+            QCOMPARE(button->icon().pixmap(QSize(16, 16), scale).toImage(),
+                     focusedIcon.pixmap(QSize(16, 16), scale).toImage());
+        }
+        // Moving focus within the popup uses the dock's unfocused shade.
+        list->setFocus();
+        QTRY_VERIFY(!search->hasFocus());
+        QCOMPARE(button->icon().pixmap(16, 16).toImage(), unfocusedIcon.pixmap(16, 16).toImage());
+        search->setFocus();
+        QTRY_VERIFY(search->hasFocus());
+        QCOMPARE(button->icon().pixmap(16, 16).toImage(), focusedIcon.pixmap(16, 16).toImage());
+        guard.settings->customColorSchemeJson = themeJsonString(QJsonObject{
+            {QStringLiteral("background"), background},
+            {QStringLiteral("primary"), QStringLiteral("#4caf87")}
+        });
+        window.colorSchemeChanged();
+        QCOMPARE(button->icon().pixmap(QSize(16, 16), 1.0).toImage().pixelColor(8, 3),
+                 QColor(QStringLiteral("#4caf87")));
+        QTest::mouseClick(button, Qt::LeftButton);
+        QVERIFY(search->text().isEmpty());
+        QVERIFY(list->topLevelItemCount() > 0);
+        QCOMPARE(editor->text(), QStringLiteral("12+34"));
+        QTest::keyClick(search, Qt::Key_Escape);
+        QVERIFY(!popup || !popup->isVisible());
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    }
+}
 
 void TestThemesUi::generated_surface_cache_tracks_custom_color_edits()
 {

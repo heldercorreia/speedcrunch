@@ -6,6 +6,7 @@
 #include "gui/constantbrowserutils.h"
 #include "gui/dockliststyle.h"
 #include "gui/themedlineedit.h"
+#include "gui/lineeditstyleutils.h"
 #include "gui/startupappearance.h"
 #include "gui/displayformatutils.h"
 #include "gui/editorutils.h"
@@ -3078,13 +3079,17 @@ void Editor::keyPressEvent(QKeyEvent* event)
                                              m_completionSelectedRowColor,
                                              m_completionSelectedRowForegroundColor,
                                              m_completionOutlineColor,
-                                             m_completionCornerRadius);
+                                             m_completionCornerRadius,
+                                             m_completionSearchButtonFill,
+                                             m_completionSearchButtonCross);
         connect(m_constantCompletion,
                 SIGNAL(selectedCompletion(const QString&)),
                 SLOT(insertConstant(const QString&)));
         connect(m_constantCompletion,
                 &ConstantCompletion::canceledCompletion,
                 this, &Editor::cancelConstantCompletion);
+        connect(m_constantCompletion, &ConstantCompletion::visibilityChanged,
+                this, &Editor::constantSearchVisibilityChanged);
         m_constantCompletion->showCompletion();
         event->accept();
         return;
@@ -4433,6 +4438,11 @@ void Editor::setThemePrimaryColor(const QColor& color, bool usePrimaryOutline)
         hideThemedCursorAndStopBlink();
 }
 
+bool Editor::isConstantSearchVisible() const
+{
+    return m_constantCompletion && m_constantCompletion->isVisible();
+}
+
 void Editor::setThemeCompletionColors(const QColor& background,
                                       const QColor& foreground,
                                       const QColor& scrollbarThumb,
@@ -4440,7 +4450,9 @@ void Editor::setThemeCompletionColors(const QColor& background,
                                       const QColor& selectedRow,
                                       const QColor& selectedRowForeground,
                                       const QColor& outline,
-                                      int cornerRadius)
+                                      int cornerRadius,
+                                      const QColor& searchButtonFill,
+                                      const QColor& searchButtonCross)
 {
     m_completionBackgroundColor = background;
     m_completionForegroundColor = foreground;
@@ -4450,6 +4462,8 @@ void Editor::setThemeCompletionColors(const QColor& background,
     m_completionSelectedRowForegroundColor = selectedRowForeground;
     m_completionOutlineColor = outline;
     m_completionCornerRadius = cornerRadius;
+    m_completionSearchButtonFill = searchButtonFill;
+    m_completionSearchButtonCross = searchButtonCross;
     m_completion->setThemeColors(background,
                                  foreground,
                                  scrollbarThumb,
@@ -4466,7 +4480,9 @@ void Editor::setThemeCompletionColors(const QColor& background,
                                              selectedRow,
                                              selectedRowForeground,
                                              outline,
-                                             cornerRadius);
+                                             cornerRadius,
+                                             searchButtonFill,
+                                             searchButtonCross);
     }
 }
 
@@ -5067,6 +5083,11 @@ ConstantCompletion::~ConstantCompletion()
     delete m_popup;
 }
 
+bool ConstantCompletion::isVisible() const
+{
+    return m_popup->isVisible();
+}
+
 void ConstantCompletion::setThemeColors(const QColor& background,
                                         const QColor& foreground,
                                         const QColor& scrollbarThumb,
@@ -5074,7 +5095,9 @@ void ConstantCompletion::setThemeColors(const QColor& background,
                                         const QColor& selectedRow,
                                         const QColor& selectedRowForeground,
                                         const QColor& outline,
-                                        int cornerRadius)
+                                        int cornerRadius,
+                                        const QColor& searchButtonFill,
+                                        const QColor& searchButtonCross)
 {
     m_backgroundColor = background;
     m_foregroundColor = foreground;
@@ -5084,6 +5107,8 @@ void ConstantCompletion::setThemeColors(const QColor& background,
     m_selectedRowForegroundColor = selectedRowForeground;
     m_outlineColor = outline;
     m_cornerRadius = cornerRadius;
+    m_searchButtonFill = searchButtonFill.isValid() ? searchButtonFill : foreground;
+    m_searchButtonCross = searchButtonCross.isValid() ? searchButtonCross : background;
     applyThemeColors();
 }
 
@@ -5110,14 +5135,19 @@ void ConstantCompletion::applyThemeColors()
         "QFrame#constantCompletionPopup { background: %1; border: %2px solid %3; border-radius: %4px; }")
         .arg(m_backgroundColor.name()).arg(UiConfig::PopupOutlineStrokeWidth)
         .arg(m_outlineColor.name()).arg(m_cornerRadius));
-    static_cast<ThemedLineEdit*>(m_search)->setCursorColor(m_foregroundColor);
+    static_cast<ThemedLineEdit*>(m_search)->setCursorColor(m_searchButtonFill);
+    const int focusInset = UiConfig::OutlineStrokeWidth - 1;
     m_search->setStyleSheet(QStringLiteral(
         "QLineEdit { background: %1; color: %2; border: 1px solid %3;"
         " border-radius: %4px; padding: 4px 6px; selection-background-color: %5; selection-color: %6; }"
-        "QLineEdit:focus { border-color: %2; }")
+        "QLineEdit:focus { border: %7px solid %8; padding: %9px %10px; }")
         .arg(m_backgroundColor.name(), m_foregroundColor.name(), m_outlineColor.name())
         .arg(UiConfig::ControlCornerRadius)
-        .arg(m_selectedRowColor.name(), m_selectedRowForegroundColor.name()));
+        .arg(m_selectedRowColor.name(), m_selectedRowForegroundColor.name())
+        .arg(UiConfig::OutlineStrokeWidth).arg(m_searchButtonFill.name())
+        .arg(4 - focusInset).arg(6 - focusInset));
+
+    updateSearchClearButton(m_search->hasFocus());
 
     ToolTipStyleUtils::applyTreePopupTheme(m_constantWidget,
         {m_backgroundColor, m_foregroundColor,
@@ -5126,6 +5156,15 @@ void ConstantCompletion::applyThemeColors()
     m_constantWidget->setStyleSheet(m_constantWidget->styleSheet() + QStringLiteral(
         "QTreeWidget { border: 0; border-radius: 0; }"
         "QTreeWidget::item { padding: 5px 6px; border-radius: 3px; }"));
+}
+
+void ConstantCompletion::updateSearchClearButton(bool focused)
+{
+    if (!m_backgroundColor.isValid() || !m_foregroundColor.isValid())
+        return;
+    LineEditStyleUtils::applyClearButtonColors(m_search,
+        focused ? m_searchButtonFill : m_backgroundColor,
+        focused ? m_searchButtonCross : m_foregroundColor);
 }
 
 void ConstantCompletion::filter()
@@ -5171,9 +5210,14 @@ bool ConstantCompletion::eventFilter(QObject* object, QEvent* event)
         DockListStyle::showCenteredNoMatchLabel(m_constantWidget, m_noMatchLabel);
     }
     if (object == m_popup) {
+        if (event->type() == QEvent::Show || event->type() == QEvent::Hide)
+            emit visibilityChanged();
         if (event->type() == QEvent::Hide && !m_finishing)
             emit canceledCompletion();
         return false;
+    }
+    if (object == m_search && (event->type() == QEvent::FocusIn || event->type() == QEvent::FocusOut)) {
+        updateSearchClearButton(event->type() == QEvent::FocusIn);
     }
     if (event->type() != QEvent::KeyPress)
         return false;

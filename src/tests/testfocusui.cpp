@@ -23,6 +23,9 @@ private slots:
     void constants_dock_activation_returns_to_active_editor_data();
     void constants_dock_activation_returns_to_active_editor();
     void constant_popup_inserts_into_owning_pane();
+    void constant_search_takes_primary_focus_from_editor_data();
+    void constant_search_takes_primary_focus_from_editor();
+    void constant_search_paints_editor_without_focus_ring();
     void dock_selection_inserts_into_active_session_pane_after_focus_transfer();
     void clicking_tab_activates_own_pane_in_nested_split_layout();
     void active_pane_survives_window_reactivation_focus_replay();
@@ -42,6 +45,120 @@ private slots:
     void escape_still_cancels_history_edit_data();
     void escape_still_cancels_history_edit();
 };
+
+void TestFocusUi::constant_search_paints_editor_without_focus_ring()
+{
+    MainWindowStateGuard guard;
+    guard.settings->editorDisplayStyle = Settings::EditorDisplayModern;
+    guard.settings->autoCalc = false;
+    guard.settings->constantsDockVisible = true;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(QJsonObject{
+        {QStringLiteral("background"), QStringLiteral("#454257")},
+        {QStringLiteral("primary"), QStringLiteral("#e7a840")}
+    });
+    MainWindow window;
+    window.resize(1000, 600);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    auto* editor = window.findChild<Editor*>();
+    auto* dock = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(editor && dock);
+    editor->setText(QString());
+    dock->show();
+    dock->raise();
+    auto* dockSearch = dock->findChild<QLineEdit*>();
+    QVERIFY(dockSearch);
+    dockSearch->setFocus();
+    QTRY_VERIFY(dockSearch->hasFocus());
+    QTest::qWait(150);
+    const QRect editorRect = QRect(editor->mapTo(&window, QPoint()), editor->size())
+        .adjusted(-2, -2, 2, 2).intersected(window.rect());
+    const QImage unfocused = window.grab(editorRect).toImage();
+    QTest::mouseClick(editor->viewport(), Qt::LeftButton);
+    QTRY_VERIFY(editor->hasFocus());
+    QTRY_VERIFY(editorHasPrimaryOutline(editor, QColor(QStringLiteral("#e7a840"))));
+    QVERIFY(window.grab(editorRect).toImage() != unfocused);
+    QTest::keyClick(editor, Qt::Key_Space, Qt::ControlModifier);
+    QPointer<QWidget> popup = QApplication::activePopupWidget();
+    QVERIFY(popup);
+    auto* search = popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch"));
+    QVERIFY(search);
+    QTRY_VERIFY(search->hasFocus());
+    QTest::qWait(400);
+    QCOMPARE(window.grab(editorRect).toImage(), unfocused);
+    QTest::keyClick(search, Qt::Key_Escape);
+    QTRY_VERIFY(editor->hasFocus());
+    QVERIFY(window.grab(editorRect).toImage() != unfocused);
+}
+
+void TestFocusUi::constant_search_takes_primary_focus_from_editor_data()
+{
+    QTest::addColumn<bool>("classic");
+    QTest::addColumn<int>("closeKey");
+    for (bool classic : {false, true}) {
+        for (Qt::Key key : {Qt::Key_Escape, Qt::Key_Return, Qt::Key_Tab}) {
+            const QString name = QStringLiteral("%1-%2").arg(classic ? "classic" : "modern").arg(key);
+            QTest::newRow(qPrintable(name)) << classic << int(key);
+        }
+    }
+}
+
+void TestFocusUi::constant_search_takes_primary_focus_from_editor()
+{
+    QFETCH(bool, classic);
+    QFETCH(int, closeKey);
+    MainWindowStateGuard guard;
+    guard.settings->editorDisplayStyle = classic ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern;
+    guard.settings->autoCalc = false;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    const QColor primary(QStringLiteral("#e7a840"));
+    guard.settings->customColorSchemeJson = themeJsonString(QJsonObject{
+        {QStringLiteral("background"), QStringLiteral("#454257")},
+        {QStringLiteral("primary"), primary.name()}
+    });
+    const auto hasPrimaryOutline = [classic, primary](const Editor* editor) {
+        return editor->styleSheet().contains(QStringLiteral("%1: %2px solid %3")
+            .arg(classic ? "border-top" : "border").arg(UiConfig::OutlineStrokeWidth).arg(primary.name()));
+    };
+    MainWindow window;
+    MainWindow otherWindow;
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
+    otherWindow.show();
+    window.show();
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    const auto editors = window.findChildren<Editor*>();
+    QCOMPARE(editors.size(), 2);
+    Editor* target = editors.first();
+    target->setAutoCompletionEnabled(false);
+    target->setText(QStringLiteral("12+34"));
+    QTest::mouseClick(target->viewport(), Qt::LeftButton);
+    QTRY_VERIFY(hasPrimaryOutline(target));
+    QTest::keyClick(target, Qt::Key_Space, Qt::ControlModifier);
+    QPointer<QWidget> popup = QApplication::activePopupWidget();
+    QVERIFY(popup);
+    auto* search = dynamic_cast<ThemedLineEdit*>(popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch")));
+    QVERIFY(search);
+    QTRY_VERIFY(search->hasFocus());
+    QCOMPARE(search->cursorColor(), primary);
+    QVERIFY(search->styleSheet().contains(QStringLiteral("QLineEdit:focus { border: %1px solid %2")
+        .arg(UiConfig::OutlineStrokeWidth).arg(primary.name())));
+    for (Editor* editor : editors + otherWindow.findChildren<Editor*>())
+        QVERIFY(!hasPrimaryOutline(editor));
+    search->setText(QStringLiteral("Euler's number"));
+    QTest::keyClick(search, Qt::Key_Down);
+    window.colorSchemeChanged();
+    QTRY_VERIFY(search->hasFocus());
+    QVERIFY(!hasPrimaryOutline(target));
+    QTest::keyClick(search, static_cast<Qt::Key>(closeKey));
+    QVERIFY(!popup || !popup->isVisible());
+    QTRY_VERIFY(target->hasFocus());
+    QTRY_VERIFY(hasPrimaryOutline(target));
+    QCOMPARE(target->text(), closeKey == Qt::Key_Escape ? QStringLiteral("12+34") : QStringLiteral("12+34e"));
+    QVERIFY(editors.last()->text().isEmpty());
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+}
 
 void TestFocusUi::constants_dock_activation_returns_to_active_editor_data()
 {

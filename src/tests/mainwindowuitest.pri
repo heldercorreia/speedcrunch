@@ -41,6 +41,7 @@ HEADERS += ../core/userdefinitions.h \
            ../core/startupdiagnostics.h \
            ../gui/bitfieldwidget.h \
            ../gui/bookdock.h \
+           ../gui/constantbrowserutils.h \
            ../gui/constantswidget.h \
            ../gui/customkeypaddialog.h \
            ../gui/dockcomboboxchevron.h \
@@ -49,6 +50,7 @@ HEADERS += ../core/userdefinitions.h \
            ../gui/functionswidget.h \
            ../gui/historywidget.h \
            ../gui/keypad.h \
+           ../gui/lineeditstyleutils.h \
            ../gui/mainwindow.h \
            ../gui/numberformatdialog.h \
            ../gui/notationandprecisiondialog.h \

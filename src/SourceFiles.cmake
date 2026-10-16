@@ -45,6 +45,7 @@ gui/historywidget.h
 gui/genericdock.h
 gui/gtkmenupalette.h
 gui/keypad.h
+gui/lineeditstyleutils.h
 gui/mainwindow.h
 gui/menustyleutils.h
 gui/manualwindow.h
