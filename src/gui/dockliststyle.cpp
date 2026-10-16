@@ -262,14 +262,13 @@ namespace DockListStyle {
 
 void apply(QAbstractItemView* view)
 {
-    view->setProperty("dockListNativeFrameShape", int(view->frameShape()));
+    // The dock already provides a boundary around its content.
+    view->setFrameShape(QFrame::NoFrame);
     view->setAlternatingRowColors(false);
     view->setMouseTracking(true);
     view->viewport()->setMouseTracking(true);
     view->viewport()->setAttribute(Qt::WA_Hover, true);
     view->viewport()->setCursor(Qt::ArrowCursor);
-    if (Settings::instance()->dockAppearance != Settings::DockAppearanceSystem)
-        view->setFrameShape(QFrame::NoFrame);
     view->setProperty("dockListHoveredRow", -1);
     view->setItemDelegate(new DockListItemDelegate(view));
     DockListCursorFilter* cursorFilter = new DockListCursorFilter(view);

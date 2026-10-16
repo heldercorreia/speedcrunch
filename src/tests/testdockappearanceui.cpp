@@ -294,8 +294,7 @@ void TestDockAppearanceUi::dock_appearance_switches_all_windows()
         QVERIFY(search->styleSheet().isEmpty());
         QVERIFY(combo->styleSheet().isEmpty());
         QVERIFY(table->styleSheet().isEmpty());
-        QTreeWidget nativeTable;
-        QCOMPARE(table->frameShape(), nativeTable.frameShape());
+        QCOMPARE(table->frameShape(), QFrame::NoFrame);
         QVERIFY(table->verticalScrollBar()->styleSheet().isEmpty());
         QVERIFY(table->cornerWidget());
         QVERIFY(table->cornerWidget()->styleSheet().isEmpty());

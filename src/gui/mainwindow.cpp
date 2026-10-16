@@ -1822,9 +1822,6 @@ void restoreNativeDockSurface(QWidget* widget, bool forceNativePolish)
             frame->setLineWidth(state.at(5).toInt());
             frame->setMidLineWidth(state.at(6).toInt());
         }
-        const QVariant nativeListFrame = frame->property("dockListNativeFrameShape");
-        if (nativeListFrame.isValid())
-            frame->setFrameShape(static_cast<QFrame::Shape>(nativeListFrame.toInt()));
     }
     if (QAbstractButton* button = qobject_cast<QAbstractButton*>(widget))
         button->setIcon(button->property("speedcrunchNativeDockIcon").value<QIcon>());
