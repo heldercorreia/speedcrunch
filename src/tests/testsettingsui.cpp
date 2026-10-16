@@ -38,6 +38,8 @@ private slots:
     void calculation_settings_dialog_matches_notation_precision_layout();
     void user_definitions_menu_opens_working_dialog_data();
     void user_definitions_menu_opens_working_dialog();
+    void user_definitions_load_after_session_restore_data();
+    void user_definitions_load_after_session_restore();
     void user_definitions_hint_follows_theme_contrast_data();
     void user_definitions_hint_follows_theme_contrast();
     void quit_shortcut_triggers_menu_action_from_editor_and_window();
@@ -1133,6 +1135,167 @@ void TestSettingsUi::user_definitions_menu_opens_working_dialog()
     QCOMPARE(settings->startupUserDefinitions, saved ? edited : original);
     UserDefinitions::loadInto(settings);
     QCOMPARE(settings->startupUserDefinitions, saved ? edited : original);
+}
+
+void TestSettingsUi::user_definitions_load_after_session_restore_data()
+{
+    QTest::addColumn<QString>("layoutKind");
+    QTest::newRow("single-session") << QStringLiteral("single");
+    QTest::newRow("tabs") << QStringLiteral("tabs");
+    QTest::newRow("split-panes") << QStringLiteral("split");
+    QTest::newRow("multiple-windows") << QStringLiteral("windows");
+}
+
+void TestSettingsUi::user_definitions_load_after_session_restore()
+{
+    QFETCH(QString, layoutKind);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    Settings* settings = guard.settings;
+    const QString oldDefinitions = settings->startupUserDefinitions;
+    const auto restoreDefinitions = qScopeGuard([&]() {
+        settings->startupUserDefinitions = oldDefinitions;
+    });
+    settings->startupUserDefinitions.clear();
+    settings->sessionLayoutJson.clear();
+    settings->openPrivateTabOnStartup = false;
+    settings->variablesDockVisible = true;
+    settings->userFunctionsDockVisible = true;
+    settings->userUnitsDockVisible = true;
+
+    const QStringList names = layoutKind == QLatin1String("single")
+        ? QStringList { QStringLiteral("Untitled-1") }
+        : QStringList { QStringLiteral("Saved-A"), QStringLiteral("Saved-B") };
+    QVERIFY(QDir().mkpath(QFileInfo(storage.path(names.first())).absolutePath()));
+    for (const QString& name : names) {
+        Session saved;
+        QVERIFY(saved.deSerialize(sessionJson(name), false));
+        Evaluator* evaluator = saved.evaluator();
+        for (const QString& expression : {QStringLiteral("startupvalue=7"),
+                                         QStringLiteral("startupfunction(x)=x+1"),
+                                         QStringLiteral("[startupunit]=2[metre]"),
+                                         QStringLiteral("localonly=19")}) {
+            evaluator->setExpression(expression);
+            evaluator->setAllowGlobalUserDefinitionsOverride(true);
+            evaluator->eval();
+            QVERIFY2(evaluator->error().isEmpty(), qPrintable(evaluator->error()));
+        }
+        evaluator->setAllowGlobalUserDefinitionsOverride(false);
+        QJsonObject json;
+        saved.serialize(json);
+        const QString path = layoutKind == QLatin1String("single")
+            ? QDir(Settings::getDataPath()).filePath(QStringLiteral("history.json"))
+            : storage.path(name);
+        writeFile(path, QJsonDocument(json).toJson());
+    }
+
+    if (layoutKind != QLatin1String("single")) {
+        QJsonObject first = startupSessionWindow(names.first(), QStringLiteral("first"));
+        const QJsonObject second = startupSessionWindow(names.last(), QStringLiteral("second"));
+        QJsonArray windows;
+        if (layoutKind == QLatin1String("windows")) {
+            windows = QJsonArray { first, second };
+        } else {
+            QJsonObject firstRoot = first.value(QStringLiteral("root")).toObject();
+            const QJsonObject secondRoot = second.value(QStringLiteral("root")).toObject();
+            if (layoutKind == QLatin1String("tabs")) {
+                QJsonArray tabs = firstRoot.value(QStringLiteral("tabs")).toArray();
+                tabs.append(secondRoot.value(QStringLiteral("tabs")).toArray().first());
+                firstRoot.insert(QStringLiteral("tabs"), tabs);
+            } else {
+                firstRoot.insert(QStringLiteral("type"), QStringLiteral("pane"));
+                QJsonObject secondPane = secondRoot;
+                secondPane.insert(QStringLiteral("type"), QStringLiteral("pane"));
+                firstRoot = QJsonObject {
+                    { QStringLiteral("type"), QStringLiteral("split") },
+                    { QStringLiteral("orientation"), QStringLiteral("horizontal") },
+                    { QStringLiteral("active"), names.first() },
+                    { QStringLiteral("children"), QJsonArray { firstRoot, secondPane } }
+                };
+            }
+            first.insert(QStringLiteral("root"), firstRoot);
+            windows.append(first);
+        }
+        settings->sessionLayoutJson = QString::fromUtf8(QJsonDocument(QJsonObject {
+            { QStringLiteral("scheme"), 1 },
+            { QStringLiteral("kind"), QStringLiteral("session-layout") },
+            { QStringLiteral("activeWindow"), QStringLiteral("first") },
+            { QStringLiteral("windows"), windows }
+        }).toJson());
+    }
+
+    settings->startupUserDefinitions = QStringLiteral(
+        "startupvalue=42\nstartupfunction(x)=2*x\n[startupunit]=3[metre]");
+    UserDefinitions::saveFrom(settings);
+    MainWindow restored;
+    const auto cleanupWindows = qScopeGuard([&]() {
+        for (MainWindow* window : topLevelMainWindows()) {
+            if (window != &restored)
+                delete window;
+        }
+    });
+    restored.show();
+    QTRY_COMPARE(topLevelMainWindows().size(), layoutKind == QLatin1String("windows") ? 2 : 1);
+    QStringList checkedNames;
+    for (MainWindow* window : topLevelMainWindows()) {
+        QTRY_COMPARE(window->findChild<ResultDisplay*>()->session()->historySize(), 1);
+        const int paneCount = layoutKind == QLatin1String("split") ? 2 : 1;
+        QCOMPARE(window->findChildren<ResultDisplay*>().size(), paneCount);
+        for (ResultDisplay* display : window->findChildren<ResultDisplay*>()) {
+            QTabBar* tabs = tabBarForDisplay(display);
+            QVERIFY(tabs);
+            for (int index = 0; index < tabs->count(); ++index) {
+                tabs->setCurrentIndex(index);
+                Session* session = const_cast<Session*>(display->session());
+                checkedNames.append(session->name());
+                QCOMPARE(session->historySize(), 1);
+                Evaluator* evaluator = session->evaluator();
+                const QStringList expressions {
+                    QStringLiteral("startupvalue"), QStringLiteral("startupfunction(startupvalue)"),
+                    QStringLiteral("[startupunit]/[metre]"), QStringLiteral("localonly"),
+                    QStringLiteral("ans")
+                };
+                const QList<int> expected { 42, 84, 3, 19, 42 };
+                for (int i = 0; i < expressions.size(); ++i) {
+                    evaluator->setExpression(expressions.at(i));
+                    const Quantity result = evaluator->eval();
+                    QVERIFY2(evaluator->error().isEmpty(), qPrintable(evaluator->error()));
+                    QCOMPARE(result, Quantity(expected.at(i)));
+                }
+                evaluator->setExpression(QStringLiteral("startupvalue=1"));
+                evaluator->eval();
+                QVERIFY(!evaluator->error().isEmpty());
+            }
+        }
+        VariableListWidget* variables = window->findChild<VariableListWidget*>();
+        UserFunctionListWidget* functions = window->findChild<UserFunctionListWidget*>();
+        UserUnitListWidget* units = window->findChild<UserUnitListWidget*>();
+        QVERIFY(variables);
+        QVERIFY(functions);
+        QVERIFY(units);
+        const QList<QPair<QWidget*, QString>> panels {
+            { variables, QStringLiteral("startupvalue") },
+            { functions, QStringLiteral("startupfunction") },
+            { units, QStringLiteral("startupunit") }
+        };
+        for (const auto& panel : panels) {
+            QWidget* parent = panel.first->parentWidget();
+            while (parent && !qobject_cast<QDockWidget*>(parent))
+                parent = parent->parentWidget();
+            auto* dock = qobject_cast<QDockWidget*>(parent);
+            QVERIFY(dock);
+            dock->show();
+            dock->raise();
+            QTRY_VERIFY(panel.first->isVisible());
+            QTreeWidget* list = panel.first->findChild<QTreeWidget*>();
+            QVERIFY(list);
+            QTRY_VERIFY(!list->findItems(panel.second, Qt::MatchContains).isEmpty());
+        }
+    }
+    checkedNames.sort();
+    QStringList expectedNames = names;
+    expectedNames.sort();
+    QCOMPARE(checkedNames, expectedNames);
 }
 
 void TestSettingsUi::user_definitions_hint_follows_theme_contrast_data()

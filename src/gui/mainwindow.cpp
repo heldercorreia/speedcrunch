@@ -13606,17 +13606,12 @@ void MainWindow::restoreSession(bool restoreHistory) {
             Session* oldSession = window->m_session;
             window->m_loadedSessions.remove(oldSession ? oldSession->name() : QString());
             window->m_loadedSessions.insert(name, loadedSession);
-            window->m_session = loadedSession;
-            window->m_evaluator = loadedSession->evaluator();
-            if (window->m_widgets.display)
-                window->m_widgets.display->setSession(loadedSession);
-            if (window->m_widgets.editor)
-                window->m_widgets.editor->setSession(loadedSession);
-            if (window->m_docks.history)
-                window->m_docks.history->widget()->setSession(loadedSession);
+            window->activateSession(loadedSession);
             if (oldSession != nullptr)
                 delete oldSession;
 
+            // The initial session receives globals before this async load finishes.
+            window->applyUserDefinitions();
             emit window->historyChanged();
             emit window->variablesChanged();
             emit window->functionsChanged();
@@ -14062,6 +14057,8 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
     updatePaneLoadedSessionCounts();
     m_session = nullptr;
     activateSession(activeSession);
+    // Apply globals to every restored tab after replacing the initial sessions.
+    applyUserDefinitions();
     // Rebind retained widgets and docks before releasing the initial session.
     const QList<Session*> retainedSessions = restoredSessions.values();
     for (Session* oldSession : oldSessions) {
