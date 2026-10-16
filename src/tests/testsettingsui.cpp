@@ -5,6 +5,8 @@
 #include "core/numberformatter.h"
 #include "core/mathdsl.h"
 
+#include <QOperatingSystemVersion>
+
 using namespace MainWindowTestHelpers;
 
 class TestSettingsUi : public QObject {
@@ -28,6 +30,7 @@ private slots:
     void number_format_is_shared_and_refreshes_all_input_panes();
     void display_font_changes_update_all_sessions_and_windows_data();
     void display_font_changes_update_all_sessions_and_windows();
+    void font_dialog_uses_platform_appropriate_options();
     void appearance_defaults_select_theme_and_modern_styles();
     void settings_reset_restores_persisted_defaults();
     void settings_reset_can_be_cancelled_data();
@@ -516,6 +519,39 @@ void TestSettingsUi::number_format_is_shared_and_refreshes_all_input_panes()
             QCOMPARE(editor->text(), QStringLiteral("12345678.1234567"));
         }
     }
+}
+
+void TestSettingsUi::font_dialog_uses_platform_appropriate_options()
+{
+    const bool nativeDialogsDisabled = QApplication::testAttribute(Qt::AA_DontUseNativeDialogs);
+    QApplication::setAttribute(Qt::AA_DontUseNativeDialogs, true);
+    const auto restoreDialogs = qScopeGuard([nativeDialogsDisabled]() {
+        QApplication::setAttribute(Qt::AA_DontUseNativeDialogs, nativeDialogsDisabled);
+    });
+
+    MainWindow window(false);
+    const QString initialFont = Settings::instance()->displayFont;
+    bool handledDialog = false;
+    QFontDialog::FontDialogOptions actualOptions;
+    QTimer::singleShot(0, &window, [&]() {
+        auto* dialog = qobject_cast<QFontDialog*>(QApplication::activeModalWidget());
+        QVERIFY(dialog);
+        actualOptions = dialog->options();
+        dialog->reject();
+        handledDialog = true;
+    });
+    QVERIFY(QMetaObject::invokeMethod(&window, "showFontDialog", Qt::DirectConnection));
+    QVERIFY(handledDialog);
+
+    QFontDialog::FontDialogOptions expectedOptions;
+#if defined(Q_OS_MACOS)
+    if (QOperatingSystemVersion::current()
+        >= QOperatingSystemVersion(QOperatingSystemVersion::MacOS, 27)) {
+        expectedOptions |= QFontDialog::DontUseNativeDialog;
+    }
+#endif
+    QCOMPARE(actualOptions, expectedOptions);
+    QCOMPARE(Settings::instance()->displayFont, initialFont);
 }
 
 void TestSettingsUi::display_font_changes_update_all_sessions_and_windows_data()

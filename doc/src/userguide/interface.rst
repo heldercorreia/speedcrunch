@@ -906,6 +906,7 @@ User Interface Settings
 
 * :menuselection:`Settings --> Appearance --> Input and Results --> Font...`
     Select the font to use for the expression editor and result display.
+    On macOS 27 and later, SpeedCrunch uses Qt's font dialog.
 
 * :menuselection:`Settings --> Appearance --> Keypad`
     Choose the shape and spacing of the keypad buttons:

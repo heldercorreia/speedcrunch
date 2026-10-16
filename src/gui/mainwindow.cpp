@@ -108,6 +108,7 @@
 #include <QMimeData>
 #include <QMutex>
 #include <QMutexLocker>
+#include <QOperatingSystemVersion>
 #include <QPainter>
 #include <QPainterPath>
 #include <QPlainTextEdit>
@@ -12047,8 +12048,18 @@ void MainWindow::setWidgetsDirection()
 
 void MainWindow::showFontDialog()
 {
+    QFontDialog::FontDialogOptions options;
+#if defined(Q_OS_MACOS)
+    // QTBUG-151608: macOS 27 breaks the native font panel's OK/Cancel buttons.
+    // Revisit this workaround when https://bugreports.qt.io/browse/QTBUG-151608 is fixed upstream.
+    if (QOperatingSystemVersion::current()
+        >= QOperatingSystemVersion(QOperatingSystemVersion::MacOS, 27)) {
+        options |= QFontDialog::DontUseNativeDialog;
+    }
+#endif
     bool ok;
-    QFont f = QFontDialog::getFont(&ok, m_widgets.display->font(), this, tr("Editor and Results Font"));
+    QFont f = QFontDialog::getFont(&ok, m_widgets.display->font(), this,
+                                 tr("Editor and Results Font"), options);
     if (!ok)
         return;
     setDisplayFont(f);
