@@ -43,6 +43,8 @@ private slots:
     void user_definitions_hint_follows_theme_contrast_data();
     void user_definitions_hint_follows_theme_contrast();
     void quit_shortcut_triggers_menu_action_from_editor_and_window();
+    void notation_shortcuts_change_only_active_window_data();
+    void notation_shortcuts_change_only_active_window();
 };
 
 void TestSettingsUi::initTestCase()
@@ -1370,6 +1372,58 @@ void TestSettingsUi::user_definitions_hint_follows_theme_contrast()
     });
     QVERIFY(QMetaObject::invokeMethod(&window, "showUserDefinitionsImportDialog", Qt::DirectConnection));
     QVERIFY(visitedDialog);
+}
+
+void TestSettingsUi::notation_shortcuts_change_only_active_window_data()
+{
+    QTest::addColumn<bool>("statusBarVisible");
+    QTest::newRow("status-bar-shown") << true;
+    QTest::newRow("status-bar-hidden") << false;
+}
+
+void TestSettingsUi::notation_shortcuts_change_only_active_window()
+{
+    QFETCH(bool, statusBarVisible);
+    MainWindowStateGuard guard;
+    guard.settings->sessionLayoutJson.clear();
+    guard.settings->windowState.clear();
+    guard.settings->windowGeometry.clear();
+    guard.settings->statusBarVisible = statusBarVisible;
+    guard.settings->resultFormat = 'r';
+
+    MainWindow first(false);
+    MainWindow second(false);
+    for (MainWindow* window : {&first, &second}) {
+        window->show();
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+        QCOMPARE(window->statusBar()->isVisible(), statusBarVisible);
+    }
+    QSignalSpy firstChanges(&first, &MainWindow::resultFormatChanged);
+    QSignalSpy secondChanges(&second, &MainWindow::resultFormatChanged);
+
+    const QList<QPair<Qt::Key, char>> shortcuts {
+        {Qt::Key_F2, 'g'}, {Qt::Key_F3, 'f'}, {Qt::Key_F4, 'n'}, {Qt::Key_F5, 'e'},
+        {Qt::Key_F7, 'o'}, {Qt::Key_F8, 'h'}, {Qt::Key_F9, 's'}, {Qt::Key_F10, 'b'}
+    };
+    for (MainWindow* window : {&first, &second}) {
+        window->raise();
+        window->activateWindow();
+        QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(window));
+        Editor* editor = window->findChild<Editor*>();
+        QVERIFY(editor);
+        editor->setFocus();
+        QTRY_VERIFY(editor->hasFocus());
+        QSignalSpy& activeChanges = window == &first ? firstChanges : secondChanges;
+        QSignalSpy& inactiveChanges = window == &first ? secondChanges : firstChanges;
+        const qsizetype inactiveCount = inactiveChanges.count();
+        for (const auto& shortcut : shortcuts) {
+            const qsizetype activeCount = activeChanges.count();
+            QTest::keyClick(editor, shortcut.first);
+            QCOMPARE(guard.settings->resultFormat, shortcut.second);
+            QCOMPARE(activeChanges.count(), activeCount + 1);
+            QCOMPARE(inactiveChanges.count(), inactiveCount);
+        }
+    }
 }
 
 void TestSettingsUi::quit_shortcut_triggers_menu_action_from_editor_and_window()

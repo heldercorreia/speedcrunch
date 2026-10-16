@@ -4744,6 +4744,17 @@ void MainWindow::createActionShortcuts()
     m_actions.settingsResultFormatSexagesimal->setShortcut(Qt::Key_F9);
     m_actions.settingsResultFormatBinary->setShortcut(Qt::Key_F10);
     m_actions.contextHelp->setShortcut(Qt::Key_F1);
+
+    // The notation menus are standalone popups, so register their shortcuts
+    // with the window even when those menus and the status bar are hidden.
+    addActions({m_actions.settingsResultFormatGeneral,
+                m_actions.settingsResultFormatFixed,
+                m_actions.settingsResultFormatEngineering,
+                m_actions.settingsResultFormatScientific,
+                m_actions.settingsResultFormatOctal,
+                m_actions.settingsResultFormatHexadecimal,
+                m_actions.settingsResultFormatSexagesimal,
+                m_actions.settingsResultFormatBinary});
 }
 
 void MainWindow::createMenus()
