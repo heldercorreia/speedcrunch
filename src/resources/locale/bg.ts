@@ -2664,12 +2664,12 @@
     <message>
         <location filename="../../gui/diagnosticsdialog.cpp" line="267"/>
         <source>App Diagnostics</source>
-        <translation type="unfinished"></translation>
+        <translation>Диагностика на приложението</translation>
     </message>
     <message>
         <location filename="../../gui/diagnosticsdialog.cpp" line="276"/>
         <source>Copy to Clipboard</source>
-        <translation type="unfinished"></translation>
+        <translation>Копиране в клипборда</translation>
     </message>
 </context>
 <context>
@@ -4246,7 +4246,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="2559"/>
         <source>Nth Root</source>
-        <translation type="unfinished"></translation>
+        <translation>Корен от n-та степен</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2560"/>
@@ -4537,17 +4537,17 @@
     <message>
         <location filename="../../gui/keypad.cpp" line="968"/>
         <source>Nth root</source>
-        <translation type="unfinished"></translation>
+        <translation>Корен от n-та степен</translation>
     </message>
     <message>
         <location filename="../../gui/keypad.cpp" line="979"/>
         <source>Argument separator</source>
-        <translation type="unfinished"></translation>
+        <translation>Разделител на аргументи</translation>
     </message>
     <message>
         <location filename="../../gui/keypad.cpp" line="980"/>
         <source>Square</source>
-        <translation type="unfinished"></translation>
+        <translation>Квадрат</translation>
     </message>
     <message>
         <location filename="../../gui/keypad.cpp" line="969"/>
@@ -4603,528 +4603,528 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4392"/>
+        <location filename="../../gui/mainwindow.cpp" line="4395"/>
         <source>Radian</source>
         <translation>Радиан</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4396"/>
+        <location filename="../../gui/mainwindow.cpp" line="4399"/>
         <source>Degree</source>
         <translation>Градус</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4393"/>
+        <location filename="../../gui/mainwindow.cpp" line="4396"/>
         <source>Gradian</source>
         <translation>Град</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4402"/>
+        <location filename="../../gui/mainwindow.cpp" line="4405"/>
         <source>Binary</source>
         <translation>Двоичен</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4403"/>
+        <location filename="../../gui/mainwindow.cpp" line="4406"/>
         <source>Octal</source>
         <translation>Осмична</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4404"/>
+        <location filename="../../gui/mainwindow.cpp" line="4407"/>
         <source>Hexadecimal</source>
         <translation>Шестнадесетична</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4405"/>
+        <location filename="../../gui/mainwindow.cpp" line="4408"/>
         <source>Sexagesimal</source>
         <translation>Шейсетична</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4407"/>
+        <location filename="../../gui/mainwindow.cpp" line="4410"/>
         <source>Engineering decimal</source>
         <translation>Инженерна десетична</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4408"/>
+        <location filename="../../gui/mainwindow.cpp" line="4411"/>
         <source>Scientific decimal</source>
         <translation>Научна десетична</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4427"/>
+        <location filename="../../gui/mainwindow.cpp" line="4430"/>
         <source>&amp;Import...</source>
         <translation>&amp;Импортиране...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4440"/>
+        <location filename="../../gui/mainwindow.cpp" line="4443"/>
         <source>&amp;Quit</source>
         <translation>&amp;Излизане</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4442"/>
+        <location filename="../../gui/mainwindow.cpp" line="4445"/>
         <source>Clear E&amp;xpression</source>
         <translation>Изчисти &amp;израза</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4446"/>
+        <location filename="../../gui/mainwindow.cpp" line="4449"/>
         <source>Clear &amp;History</source>
         <translation>Изчисти &amp;Историята</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4448"/>
+        <location filename="../../gui/mainwindow.cpp" line="4451"/>
         <source>&amp;Copy</source>
         <translation>&amp;Копиране</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4449"/>
+        <location filename="../../gui/mainwindow.cpp" line="4452"/>
         <source>&amp;Paste</source>
         <translation>&amp;Поставяне</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4450"/>
+        <location filename="../../gui/mainwindow.cpp" line="4453"/>
         <source>&amp;Select Expression</source>
         <translation>&amp;Избери израз</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4453"/>
+        <location filename="../../gui/mainwindow.cpp" line="4456"/>
         <source>&amp;Constants</source>
         <translation>&amp;Константи</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4455"/>
+        <location filename="../../gui/mainwindow.cpp" line="4458"/>
         <source>&amp;Functions</source>
         <translation>&amp;Функции</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4456"/>
+        <location filename="../../gui/mainwindow.cpp" line="4459"/>
         <source>&amp;History</source>
         <translation>&amp;История</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4467"/>
-        <location filename="../../gui/mainwindow.cpp" line="5024"/>
+        <location filename="../../gui/mainwindow.cpp" line="4470"/>
+        <location filename="../../gui/mainwindow.cpp" line="5029"/>
         <source>&amp;Status Bar</source>
         <translation>&amp;Статус лента</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4470"/>
-        <location filename="../../gui/mainwindow.cpp" line="7664"/>
+        <location filename="../../gui/mainwindow.cpp" line="4473"/>
+        <location filename="../../gui/mainwindow.cpp" line="7669"/>
         <source>Bitfield</source>
         <translation>Битово поле</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4476"/>
+        <location filename="../../gui/mainwindow.cpp" line="4479"/>
         <source>Use&amp;r Functions</source>
         <translation>&amp;Ръчно-дефинирани функции</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4479"/>
+        <location filename="../../gui/mainwindow.cpp" line="4482"/>
         <source>&amp;Degree</source>
         <translation>&amp;Градуси</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4480"/>
+        <location filename="../../gui/mainwindow.cpp" line="4483"/>
         <source>&amp;Radian</source>
         <translation>&amp;Радиани</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4481"/>
+        <location filename="../../gui/mainwindow.cpp" line="4484"/>
         <source>&amp;Gradian</source>
         <translation>&amp;Гради</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4483"/>
+        <location filename="../../gui/mainwindow.cpp" line="4486"/>
         <source>Re&amp;volution</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="4485"/>
-        <source>Auto-Insert a&amp;ns</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Завъртане</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4488"/>
+        <source>Auto-Insert a&amp;ns</source>
+        <translation>Автоматично вмъкване на a&amp;ns</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4491"/>
         <source>Automatic &amp;Completion</source>
         <translation>Автоматично &amp;завършване</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4489"/>
-        <source>&amp;Built-in Functions</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="4490"/>
-        <source>Built-in &amp;Variables</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../../gui/mainwindow.cpp" line="4492"/>
-        <source>User &amp;Functions</source>
-        <translation type="unfinished"></translation>
+        <source>&amp;Built-in Functions</source>
+        <translation>&amp;Вградени функции</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4493"/>
-        <source>User Va&amp;riables</source>
-        <translation type="unfinished"></translation>
+        <source>Built-in &amp;Variables</source>
+        <translation>В&amp;градени променливи</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4495"/>
+        <source>User &amp;Functions</source>
+        <translation>&amp;Ръчно-дефинирани функции</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4496"/>
-        <source>Open a Private Tab on Startup</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="4497"/>
-        <source>Open and focus a new private tab whenever SpeedCrunch starts.</source>
-        <translation type="unfinished"></translation>
+        <source>User Va&amp;riables</source>
+        <translation>&amp;Потребителски променливи</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4499"/>
+        <source>Open a Private Tab on Startup</source>
+        <translation>Отваряне на частен раздел при стартиране</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4500"/>
+        <source>Open and focus a new private tab whenever SpeedCrunch starts.</source>
+        <translation>Отваряне и фокусиране на нов частен раздел при всяко стартиране на SpeedCrunch.</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4502"/>
         <source>Syntax &amp;Highlighting</source>
         <translation>&amp;Оцветяване на изразите</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4500"/>
-        <source>Group Digits in &amp;Input</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="4501"/>
-        <source>Automatic Input &amp;Adjustments</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="4502"/>
-        <source>Automatically adjust operators, spacing, brackets, and powers, and restrict input to valid characters.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../../gui/mainwindow.cpp" line="4503"/>
-        <source>Group input digits using the selected number format.</source>
-        <translation type="unfinished"></translation>
+        <source>Group Digits in &amp;Input</source>
+        <translation>&amp;Групиране на цифрите при въвеждане</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4504"/>
-        <source>&amp;Blinking Cursor</source>
-        <translation type="unfinished"></translation>
+        <source>Automatic Input &amp;Adjustments</source>
+        <translation>&amp;Автоматични корекции на входа</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4505"/>
-        <source>Blink the cursor in the expression editor.</source>
-        <translation type="unfinished"></translation>
+        <source>Automatically adjust operators, spacing, brackets, and powers, and restrict input to valid characters.</source>
+        <translation>Автоматично коригиране на операторите, интервалите, скобите и степените и ограничаване на входа до валидни знаци.</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4506"/>
-        <source>&amp;Escape Clears Editor</source>
-        <translation type="unfinished"></translation>
+        <source>Group input digits using the selected number format.</source>
+        <translation>Групиране на въведените цифри според избрания числов формат.</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4507"/>
+        <source>&amp;Blinking Cursor</source>
+        <translation>&amp;Мигащ курсор</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4508"/>
+        <source>Blink the cursor in the expression editor.</source>
+        <translation>Мигане на курсора в редактора на изрази.</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4509"/>
+        <source>&amp;Escape Clears Editor</source>
+        <translation>&amp;Escape изчиства редактора</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4510"/>
         <source>Clear the focused expression editor with Escape after dismissing any popup or preview.</source>
-        <translation type="unfinished"></translation>
+        <translation>Изчистване на активния редактор на изрази с Escape след затваряне на изскачащите прозорци или визуализации.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4514"/>
+        <location filename="../../gui/mainwindow.cpp" line="4517"/>
         <source>Keep Expression After Evaluation</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="4522"/>
-        <source>Copy New Results Automatically</source>
-        <translation type="unfinished"></translation>
+        <translation>Запазване на израза след изчисляване</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4525"/>
+        <source>Copy New Results Automatically</source>
+        <translation>Автоматично копиране на новите резултати</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4528"/>
         <source>&amp;Comma</source>
         <translation>&amp;Десетична Запетая</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4526"/>
+        <location filename="../../gui/mainwindow.cpp" line="4529"/>
         <source>&amp;System Default</source>
         <translation>&amp;Системно подразбиране</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4527"/>
+        <location filename="../../gui/mainwindow.cpp" line="4530"/>
         <source>&amp;Dot</source>
         <translation>&amp;Десетична точка</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4528"/>
+        <location filename="../../gui/mainwindow.cpp" line="4531"/>
         <source>Dot &amp;And Comma</source>
         <translation>Точка &amp;и запетая</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4542"/>
+        <location filename="../../gui/mainwindow.cpp" line="4546"/>
         <source>Toward +∞ (&amp;ceil)</source>
-        <translation type="unfinished"></translation>
+        <translation>Към +∞ (&amp;ceil)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4544"/>
+        <location filename="../../gui/mainwindow.cpp" line="4548"/>
         <source>Toward −∞ (&amp;floor)</source>
-        <translation type="unfinished"></translation>
+        <translation>Към −∞ (&amp;floor)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4551"/>
+        <location filename="../../gui/mainwindow.cpp" line="4555"/>
         <source>&amp;Binary</source>
         <translation>&amp;Бинарна</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4548"/>
+        <location filename="../../gui/mainwindow.cpp" line="4552"/>
         <source>&amp;Engineering</source>
         <translation>&amp;Инженерен</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4553"/>
+        <location filename="../../gui/mainwindow.cpp" line="4557"/>
         <source>&amp;Hexadecimal</source>
         <translation>&amp;Шестнадесетична</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4552"/>
+        <location filename="../../gui/mainwindow.cpp" line="4556"/>
         <source>&amp;Octal</source>
         <translation>&amp;Осмична</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4549"/>
+        <location filename="../../gui/mainwindow.cpp" line="4553"/>
         <source>&amp;Scientific</source>
         <translation>&amp;Научен</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4582"/>
+        <location filename="../../gui/mainwindow.cpp" line="4586"/>
         <source>User &amp;Manual</source>
         <translation>Наръчник</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4587"/>
+        <location filename="../../gui/mainwindow.cpp" line="4591"/>
         <source>Issues and &amp;Feedback</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Проблеми и отзиви</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4590"/>
+        <location filename="../../gui/mainwindow.cpp" line="4594"/>
         <source>&amp;Donate</source>
         <translation>&amp;Дари</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4591"/>
+        <location filename="../../gui/mainwindow.cpp" line="4595"/>
         <source>&amp;About SpeedCrunch</source>
-        <translation type="unfinished"></translation>
+        <translation>О&amp;тносно SpeedCrunch</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4592"/>
+        <location filename="../../gui/mainwindow.cpp" line="4596"/>
         <source>App Diag&amp;nostics</source>
-        <translation type="unfinished"></translation>
+        <translation>Д&amp;иагностика на приложението</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5005"/>
+        <location filename="../../gui/mainwindow.cpp" line="5010"/>
         <source>S&amp;plit</source>
-        <translation type="unfinished"></translation>
+        <translation>Р&amp;азделяне</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5014"/>
+        <location filename="../../gui/mainwindow.cpp" line="5019"/>
         <source>Angle &amp;Mode</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Ъглов режим</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5015"/>
+        <location filename="../../gui/mainwindow.cpp" line="5020"/>
         <source>&amp;Complex Form</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Комплексна форма</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5369"/>
+        <location filename="../../gui/mainwindow.cpp" line="5374"/>
         <source>New Tab</source>
         <translation>Нов раздел</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7775"/>
+        <location filename="../../gui/mainwindow.cpp" line="7780"/>
         <source>Constants</source>
         <translation>Константи</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7804"/>
+        <location filename="../../gui/mainwindow.cpp" line="7809"/>
         <source>Functions</source>
         <translation>Функции</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7826"/>
+        <location filename="../../gui/mainwindow.cpp" line="7831"/>
         <source>History</source>
         <translation>История</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7898"/>
+        <location filename="../../gui/mainwindow.cpp" line="7903"/>
         <source>User Functions</source>
         <translation>Ръчно-дефинирани функции</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4567"/>
+        <location filename="../../gui/mainwindow.cpp" line="4571"/>
         <source>&amp;Font...</source>
         <translation>&amp;Шрифт</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4580"/>
+        <location filename="../../gui/mainwindow.cpp" line="4584"/>
         <source>&amp;Language...</source>
         <translation>&amp;Език...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5000"/>
+        <location filename="../../gui/mainwindow.cpp" line="5005"/>
         <source>&amp;Session</source>
         <translation>&amp;Сесия</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5002"/>
+        <location filename="../../gui/mainwindow.cpp" line="5007"/>
         <source>&amp;Edit</source>
         <translation>&amp;Редактиране</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5003"/>
+        <location filename="../../gui/mainwindow.cpp" line="5008"/>
         <source>&amp;View</source>
         <translation>&amp;Изглед</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5007"/>
+        <location filename="../../gui/mainwindow.cpp" line="5012"/>
         <source>Se&amp;ttings</source>
         <translation>&amp;Свойства</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5012"/>
+        <location filename="../../gui/mainwindow.cpp" line="5017"/>
         <source>&amp;Decimal</source>
         <translation>&amp;Десетичен</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5004"/>
-        <location filename="../../gui/mainwindow.cpp" line="5025"/>
+        <location filename="../../gui/mainwindow.cpp" line="5009"/>
+        <location filename="../../gui/mainwindow.cpp" line="5030"/>
         <source>&amp;Keypad</source>
         <translation>&amp;Цифрова клавиатура</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4484"/>
+        <location filename="../../gui/mainwindow.cpp" line="4487"/>
         <source>Always on &amp;Top</source>
         <translation>Винаги най-отгоре</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4509"/>
+        <location filename="../../gui/mainwindow.cpp" line="4512"/>
         <source>Disabled</source>
         <translation>Изключен</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4510"/>
+        <location filename="../../gui/mainwindow.cpp" line="4513"/>
         <source>Small Space</source>
         <translation>Малко разстояние</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4511"/>
+        <location filename="../../gui/mainwindow.cpp" line="4514"/>
         <source>Medium Space</source>
         <translation>Средно разстояние</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4512"/>
+        <location filename="../../gui/mainwindow.cpp" line="4515"/>
         <source>Large Space</source>
         <translation>Голямо разстояние</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4529"/>
+        <location filename="../../gui/mainwindow.cpp" line="4532"/>
         <source>&amp;0 Digits</source>
         <translation>&amp;0 Цифри</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4530"/>
+        <location filename="../../gui/mainwindow.cpp" line="4533"/>
         <source>&amp;15 Digits</source>
         <translation>&amp;15 Цифри</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4531"/>
+        <location filename="../../gui/mainwindow.cpp" line="4534"/>
         <source>&amp;2 Digits</source>
         <translation>&amp;2 Цифри</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4532"/>
+        <location filename="../../gui/mainwindow.cpp" line="4535"/>
         <source>&amp;3 Digits</source>
         <translation>&amp;3 Цифри</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4533"/>
+        <location filename="../../gui/mainwindow.cpp" line="4536"/>
         <source>&amp;50 Digits</source>
         <translation>&amp;50 Цифри</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4534"/>
+        <location filename="../../gui/mainwindow.cpp" line="4537"/>
         <source>&amp;8 Digits</source>
         <translation>&amp;8 Цифри</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4554"/>
+        <location filename="../../gui/mainwindow.cpp" line="4558"/>
         <source>&amp;Sexagesimal</source>
         <translation>&amp;Шейсетична</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4568"/>
-        <source>Reset All Settings...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="4570"/>
         <location filename="../../gui/mainwindow.cpp" line="4572"/>
+        <source>Reset All Settings...</source>
+        <translation>Нулиране на всички настройки...</translation>
+    </message>
+    <message>
         <location filename="../../gui/mainwindow.cpp" line="4574"/>
-        <source>&amp;System</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="4571"/>
-        <location filename="../../gui/mainwindow.cpp" line="4573"/>
-        <location filename="../../gui/mainwindow.cpp" line="4575"/>
-        <source>SpeedCrunch &amp;Theme</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../../gui/mainwindow.cpp" line="4576"/>
         <location filename="../../gui/mainwindow.cpp" line="4578"/>
-        <source>&amp;Classic</source>
-        <translation type="unfinished"></translation>
+        <source>&amp;System</source>
+        <translation>&amp;Система</translation>
     </message>
     <message>
+        <location filename="../../gui/mainwindow.cpp" line="4575"/>
         <location filename="../../gui/mainwindow.cpp" line="4577"/>
         <location filename="../../gui/mainwindow.cpp" line="4579"/>
-        <source>&amp;Modern</source>
-        <translation type="unfinished"></translation>
+        <source>SpeedCrunch &amp;Theme</source>
+        <translation>&amp;Тема на SpeedCrunch</translation>
     </message>
     <message>
+        <location filename="../../gui/mainwindow.cpp" line="4580"/>
+        <location filename="../../gui/mainwindow.cpp" line="4582"/>
+        <source>&amp;Classic</source>
+        <translation>&amp;Класически</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4581"/>
         <location filename="../../gui/mainwindow.cpp" line="4583"/>
+        <source>&amp;Modern</source>
+        <translation>М&amp;одерен</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4587"/>
         <source>Context Help</source>
         <translation>Контекстна помощ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5027"/>
+        <location filename="../../gui/mainwindow.cpp" line="5032"/>
         <source>&amp;Help</source>
         <translation>&amp;Помощ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10803"/>
-        <location filename="../../gui/mainwindow.cpp" line="10809"/>
+        <location filename="../../gui/mainwindow.cpp" line="10811"/>
         <location filename="../../gui/mainwindow.cpp" line="10817"/>
-        <location filename="../../gui/mainwindow.cpp" line="10823"/>
-        <location filename="../../gui/mainwindow.cpp" line="10839"/>
-        <location filename="../../gui/mainwindow.cpp" line="10845"/>
-        <location filename="../../gui/mainwindow.cpp" line="10896"/>
-        <location filename="../../gui/mainwindow.cpp" line="10902"/>
-        <location filename="../../gui/mainwindow.cpp" line="11005"/>
-        <location filename="../../gui/mainwindow.cpp" line="11983"/>
-        <location filename="../../gui/mainwindow.cpp" line="12022"/>
+        <location filename="../../gui/mainwindow.cpp" line="10825"/>
+        <location filename="../../gui/mainwindow.cpp" line="10831"/>
+        <location filename="../../gui/mainwindow.cpp" line="10847"/>
+        <location filename="../../gui/mainwindow.cpp" line="10853"/>
+        <location filename="../../gui/mainwindow.cpp" line="10904"/>
+        <location filename="../../gui/mainwindow.cpp" line="10910"/>
+        <location filename="../../gui/mainwindow.cpp" line="11013"/>
+        <location filename="../../gui/mainwindow.cpp" line="11991"/>
+        <location filename="../../gui/mainwindow.cpp" line="12030"/>
         <source>Error</source>
         <translation>Грешка</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10803"/>
-        <location filename="../../gui/mainwindow.cpp" line="11039"/>
+        <location filename="../../gui/mainwindow.cpp" line="10811"/>
+        <location filename="../../gui/mainwindow.cpp" line="11047"/>
         <source>Can&apos;t read from file %1</source>
         <translation>Не може се прочете от файл %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11021"/>
-        <location filename="../../gui/mainwindow.cpp" line="11039"/>
+        <location filename="../../gui/mainwindow.cpp" line="11029"/>
         <location filename="../../gui/mainwindow.cpp" line="11047"/>
-        <location filename="../../gui/mainwindow.cpp" line="11054"/>
+        <location filename="../../gui/mainwindow.cpp" line="11055"/>
         <location filename="../../gui/mainwindow.cpp" line="11062"/>
         <location filename="../../gui/mainwindow.cpp" line="11070"/>
-        <location filename="../../gui/mainwindow.cpp" line="11076"/>
+        <location filename="../../gui/mainwindow.cpp" line="11078"/>
         <location filename="../../gui/mainwindow.cpp" line="11084"/>
-        <location filename="../../gui/mainwindow.cpp" line="11090"/>
+        <location filename="../../gui/mainwindow.cpp" line="11092"/>
         <location filename="../../gui/mainwindow.cpp" line="11098"/>
-        <location filename="../../gui/mainwindow.cpp" line="11104"/>
+        <location filename="../../gui/mainwindow.cpp" line="11106"/>
         <location filename="../../gui/mainwindow.cpp" line="11112"/>
+        <location filename="../../gui/mainwindow.cpp" line="11120"/>
         <source>Import Session</source>
         <translation>Импортирай сесия</translation>
     </message>
@@ -5134,893 +5134,900 @@
         <translation>Затваряне на сесия</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4199"/>
+        <location filename="../../gui/mainwindow.cpp" line="4202"/>
         <source>Angle Mode:</source>
         <translation>Ъглов режим:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4200"/>
+        <location filename="../../gui/mainwindow.cpp" line="4203"/>
         <source>Notation:</source>
         <translation>Нотация:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4201"/>
+        <location filename="../../gui/mainwindow.cpp" line="4204"/>
         <source>Precision:</source>
         <translation>Точност:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4394"/>
+        <location filename="../../gui/mainwindow.cpp" line="4397"/>
         <source>Turn</source>
         <translation>Оборот</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4395"/>
+        <location filename="../../gui/mainwindow.cpp" line="4398"/>
         <source>Revolution</source>
         <translation>Завъртане</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4406"/>
+        <location filename="../../gui/mainwindow.cpp" line="4409"/>
         <source>Fixed-point decimal</source>
         <translation>Десетичен с фиксирана запетая</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4409"/>
+        <location filename="../../gui/mainwindow.cpp" line="4412"/>
         <source>Rational</source>
         <translation>Рационален</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4410"/>
+        <location filename="../../gui/mainwindow.cpp" line="4413"/>
         <source>Automatic decimal</source>
         <translation>Автоматичен десетичен</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4418"/>
-        <location filename="../../gui/mainwindow.cpp" line="15265"/>
+        <location filename="../../gui/mainwindow.cpp" line="4421"/>
+        <location filename="../../gui/mainwindow.cpp" line="15289"/>
         <source>Automatic</source>
         <translation>Автоматично</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4428"/>
+        <location filename="../../gui/mainwindow.cpp" line="4431"/>
         <source>User &amp;Definitions...</source>
         <translation>Потребителски &amp;дефиниции...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4429"/>
+        <location filename="../../gui/mainwindow.cpp" line="4432"/>
         <source>New &amp;Tab</source>
         <translation>Нов &amp;раздел</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4430"/>
-        <source>New &amp;Private Tab</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="4432"/>
-        <location filename="../../gui/mainwindow.cpp" line="5366"/>
-        <location filename="../../gui/mainwindow.cpp" line="12126"/>
-        <source>Keep</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="4432"/>
-        <location filename="../../gui/mainwindow.cpp" line="5366"/>
-        <location filename="../../gui/mainwindow.cpp" line="12126"/>
-        <source>Make Private...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../../gui/mainwindow.cpp" line="4433"/>
+        <source>New &amp;Private Tab</source>
+        <translation>&amp;Нов частен раздел</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4435"/>
+        <location filename="../../gui/mainwindow.cpp" line="5371"/>
+        <location filename="../../gui/mainwindow.cpp" line="12134"/>
+        <source>Keep</source>
+        <translation>Запазване</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4435"/>
+        <location filename="../../gui/mainwindow.cpp" line="5371"/>
+        <location filename="../../gui/mainwindow.cpp" line="12134"/>
+        <source>Make Private...</source>
+        <translation>Преобразуване в частна...</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4436"/>
         <source>New &amp;Window</source>
         <translation>Нов &amp;прозорец</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4434"/>
+        <location filename="../../gui/mainwindow.cpp" line="4437"/>
         <source>&amp;Open...</source>
         <translation>&amp;Отваряне...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4435"/>
-        <source>&amp;Rename...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="4436"/>
-        <source>Clo&amp;ne...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="4437"/>
-        <source>&amp;Close Tab</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../../gui/mainwindow.cpp" line="4438"/>
-        <source>Reopen Clo&amp;sed Tab</source>
-        <translation type="unfinished"></translation>
+        <source>&amp;Rename...</source>
+        <translation>Преи&amp;менуване...</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4439"/>
+        <source>Clo&amp;ne...</source>
+        <translation>&amp;Клониране...</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4440"/>
+        <source>&amp;Close Tab</source>
+        <translation>&amp;Затваряне на раздела</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4441"/>
+        <source>Reopen Clo&amp;sed Tab</source>
+        <translation>По&amp;вторно отваряне на затворения раздел</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4442"/>
         <source>Open Sessions &amp;Folder</source>
         <translation>Отваряне на &amp;папка със сесии</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4443"/>
+        <location filename="../../gui/mainwindow.cpp" line="4446"/>
         <source>&amp;Undo</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="4444"/>
-        <source>&amp;Redo</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="4445"/>
-        <source>Cu&amp;t</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Отмяна</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4447"/>
-        <source>Copy &amp;Last Result</source>
-        <translation type="unfinished"></translation>
+        <source>&amp;Redo</source>
+        <translation>&amp;Възстановяване</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4451"/>
-        <source>&amp;Wrap in Parentheses</source>
-        <translation type="unfinished"></translation>
+        <location filename="../../gui/mainwindow.cpp" line="4448"/>
+        <source>Cu&amp;t</source>
+        <translation>И&amp;зрязване</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4450"/>
+        <source>Copy &amp;Last Result</source>
+        <translation>Копи&amp;ране на последния резултат</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4454"/>
-        <source>Full Scr&amp;een Mode</source>
-        <translation type="unfinished"></translation>
+        <source>&amp;Wrap in Parentheses</source>
+        <translation>О&amp;граждане със скоби</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4458"/>
+        <location filename="../../gui/mainwindow.cpp" line="4457"/>
+        <source>Full Scr&amp;een Mode</source>
+        <translation>Ре&amp;жим на цял екран</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4461"/>
         <source>&amp;Basic</source>
         <translation>&amp;Основна</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4459"/>
+        <location filename="../../gui/mainwindow.cpp" line="4462"/>
         <source>&amp;Scientific (wide)</source>
         <translation>&amp;Научна (широка)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4460"/>
+        <location filename="../../gui/mainwindow.cpp" line="4463"/>
         <source>Scientific (narrow)</source>
         <translation>Научна (тясна)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4461"/>
-        <location filename="../../gui/mainwindow.cpp" line="4535"/>
+        <location filename="../../gui/mainwindow.cpp" line="4464"/>
+        <location filename="../../gui/mainwindow.cpp" line="4538"/>
         <source>&amp;Custom...</source>
         <translation>&amp;Потребителски...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4468"/>
+        <location filename="../../gui/mainwindow.cpp" line="4471"/>
         <source>Main &amp;Menu</source>
         <translation>Главно &amp;меню</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4469"/>
+        <location filename="../../gui/mainwindow.cpp" line="4472"/>
         <source>User &amp;Variables</source>
         <translation>Потребителски &amp;променливи</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4471"/>
-        <source>&amp;Left</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="4472"/>
-        <source>&amp;Right</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="4473"/>
-        <source>&amp;Up</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../../gui/mainwindow.cpp" line="4474"/>
-        <source>&amp;Down</source>
-        <translation type="unfinished"></translation>
+        <source>&amp;Left</source>
+        <translation>&amp;Наляво</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4475"/>
-        <source>Close Pa&amp;ne</source>
-        <translation type="unfinished"></translation>
+        <source>&amp;Right</source>
+        <translation>Н&amp;адясно</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4476"/>
+        <source>&amp;Up</source>
+        <translation>На&amp;горе</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4477"/>
+        <source>&amp;Down</source>
+        <translation>На&amp;долу</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4478"/>
+        <source>Close Pa&amp;ne</source>
+        <translation>&amp;Затваряне на панела</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4480"/>
         <source>User &amp;Units</source>
         <translation>Потребителски &amp;единици</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4482"/>
+        <location filename="../../gui/mainwindow.cpp" line="4485"/>
         <source>&amp;Turn</source>
         <translation>&amp;Оборот</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4486"/>
-        <location filename="../../gui/mainwindow.cpp" line="4487"/>
+        <location filename="../../gui/mainwindow.cpp" line="4489"/>
+        <location filename="../../gui/mainwindow.cpp" line="4490"/>
         <source>If a new expression starts with +, -, *, or /, SpeedCrunch inserts &quot;ans&quot; first.</source>
         <translation>Ако нов израз започва с +, -, * или /, SpeedCrunch първо вмъква &quot;ans&quot;.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4491"/>
+        <location filename="../../gui/mainwindow.cpp" line="4494"/>
         <source>&amp;Units</source>
         <translation>&amp;Единици</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4494"/>
+        <location filename="../../gui/mainwindow.cpp" line="4497"/>
         <source>Show Live Result &amp;Preview</source>
         <translation>Показване на &amp;предварителен преглед на резултата</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4495"/>
+        <location filename="../../gui/mainwindow.cpp" line="4498"/>
         <source>Save &amp;Window Position on Exit</source>
         <translation>Запазване на позицията на &amp;прозореца при изход</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4508"/>
+        <location filename="../../gui/mainwindow.cpp" line="4511"/>
         <source>Hover Highlighting</source>
         <translation>Открояване при посочване</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4513"/>
+        <location filename="../../gui/mainwindow.cpp" line="4516"/>
         <source>Group Integer Part Only</source>
         <translation>Групиране само на цялата част</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4515"/>
+        <location filename="../../gui/mainwindow.cpp" line="4518"/>
         <source>Number Format...</source>
         <translation>Формат на числата...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4516"/>
+        <location filename="../../gui/mainwindow.cpp" line="4519"/>
         <source>Notation &amp;&amp; Precision...</source>
         <translation>Нотация и точност...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4517"/>
-        <location filename="../../gui/mainwindow.cpp" line="4518"/>
+        <location filename="../../gui/mainwindow.cpp" line="4520"/>
+        <location filename="../../gui/mainwindow.cpp" line="4521"/>
         <source>After pressing Enter, keep the entered expression selected in the editor.</source>
         <translation>След натискане на Enter въведеният израз остава избран в редактора.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4519"/>
+        <location filename="../../gui/mainwindow.cpp" line="4522"/>
         <source>Never</source>
         <translation>Никога</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4520"/>
+        <location filename="../../gui/mainwindow.cpp" line="4523"/>
         <source>Always</source>
         <translation>Винаги</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4521"/>
+        <location filename="../../gui/mainwindow.cpp" line="4524"/>
         <source>Only for Single-Line Expressions</source>
         <translation>Само за едноредови изрази</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4523"/>
+        <location filename="../../gui/mainwindow.cpp" line="4526"/>
         <source>Simplify Displayed Expressions</source>
         <translation>Опростяване на показваните изрази</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4524"/>
+        <location filename="../../gui/mainwindow.cpp" line="4527"/>
         <source>History Size &amp;Limit...</source>
         <translation>&amp;Ограничение на размера на историята...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4537"/>
+        <location filename="../../gui/mainwindow.cpp" line="4539"/>
+        <source>Remove Trailing &amp;Zeroes</source>
+        <translation>П&amp;ремахване на крайните нули</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4541"/>
         <source>Nearest, Half &amp;Away (round)</source>
         <translation>Най-близко, половината &amp;навън (round)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4539"/>
+        <location filename="../../gui/mainwindow.cpp" line="4543"/>
         <source>Nearest, Half &amp;Even (roundeven)</source>
         <translation>Най-близко, половината &amp;четно (roundeven)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4540"/>
+        <location filename="../../gui/mainwindow.cpp" line="4544"/>
         <source>Toward &amp;Zero (trunc)</source>
         <translation>Към &amp;нула (trunc)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4547"/>
+        <location filename="../../gui/mainwindow.cpp" line="4551"/>
         <source>&amp;Fixed-Point</source>
         <translation>&amp;Фиксирана запетая</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4550"/>
+        <location filename="../../gui/mainwindow.cpp" line="4554"/>
         <source>&amp;Rational</source>
         <translation>&amp;Рационален</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4556"/>
+        <location filename="../../gui/mainwindow.cpp" line="4560"/>
         <source>&amp;Exponential (m·s⁻¹)</source>
         <translation>&amp;Експоненциална (m·s⁻¹)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4558"/>
+        <location filename="../../gui/mainwindow.cpp" line="4562"/>
         <source>&amp;Fractional (m/s)</source>
         <translation>&amp;Дробна (m/s)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4559"/>
+        <location filename="../../gui/mainwindow.cpp" line="4563"/>
         <source>&amp;Rectangular (a + bi)</source>
         <translation>&amp;Правоъгълна (a + bi)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4560"/>
+        <location filename="../../gui/mainwindow.cpp" line="4564"/>
         <source>Exponential (reⁱᶿ)</source>
         <translation>Експоненциална (reⁱᶿ)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4562"/>
+        <location filename="../../gui/mainwindow.cpp" line="4566"/>
         <source>Trigonometric (r(cos θ + i·sin θ))</source>
         <translation>Тригонометрична (r(cos θ + i·sin θ))</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4564"/>
+        <location filename="../../gui/mainwindow.cpp" line="4568"/>
         <source>Phasor (r∠θ)</source>
         <translation>Фазорна (r∠θ)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4569"/>
+        <location filename="../../gui/mainwindow.cpp" line="4573"/>
         <source>&amp;Theme...</source>
         <translation>&amp;Тема...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4585"/>
+        <location filename="../../gui/mainwindow.cpp" line="4589"/>
         <source>Check for &amp;Updates</source>
         <translation>Проверка за &amp;обновления</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4589"/>
+        <location filename="../../gui/mainwindow.cpp" line="4593"/>
         <source>Source Code</source>
         <translation>Изходен код</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5006"/>
+        <location filename="../../gui/mainwindow.cpp" line="5011"/>
         <source>&amp;Zoom</source>
         <translation>&amp;Мащаб</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5008"/>
+        <location filename="../../gui/mainwindow.cpp" line="5013"/>
         <source>&amp;Results</source>
         <translation>&amp;Резултати</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5009"/>
+        <location filename="../../gui/mainwindow.cpp" line="5014"/>
         <source>Unit Notation</source>
         <translation>Нотация на единиците</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5010"/>
+        <location filename="../../gui/mainwindow.cpp" line="5015"/>
         <source>Rounding Mode</source>
         <translation>Режим на закръгляване</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5011"/>
+        <location filename="../../gui/mainwindow.cpp" line="5016"/>
         <source>&amp;Notation</source>
         <translation>&amp;Нотация</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5016"/>
+        <location filename="../../gui/mainwindow.cpp" line="5021"/>
         <source>&amp;Imaginary Unit</source>
         <translation>&amp;Имагинерна единица</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5017"/>
+        <location filename="../../gui/mainwindow.cpp" line="5022"/>
         <source>&amp;Window</source>
         <translation>&amp;Прозорец</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5018"/>
+        <location filename="../../gui/mainwindow.cpp" line="5023"/>
         <source>&amp;Editing</source>
         <translation>&amp;Редактиране</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5019"/>
+        <location filename="../../gui/mainwindow.cpp" line="5024"/>
         <source>A&amp;utocomplete</source>
         <translation>A&amp;втодовършване</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5020"/>
+        <location filename="../../gui/mainwindow.cpp" line="5025"/>
         <source>Up/Down Arrow History</source>
         <translation>История със стрелки нагоре/надолу</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5021"/>
+        <location filename="../../gui/mainwindow.cpp" line="5026"/>
         <source>&amp;Appearance</source>
         <translation>&amp;Външен вид</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5022"/>
+        <location filename="../../gui/mainwindow.cpp" line="5027"/>
         <source>&amp;Menus</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Менюта</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5023"/>
+        <location filename="../../gui/mainwindow.cpp" line="5028"/>
         <source>&amp;Docks</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Прикрепващи се панели</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5026"/>
+        <location filename="../../gui/mainwindow.cpp" line="5031"/>
         <source>&amp;Input and Results</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Вход и резултати</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5033"/>
+        <location filename="../../gui/mainwindow.cpp" line="5038"/>
         <source>&amp;Disabled</source>
         <translation>&amp;Изключено</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5035"/>
+        <location filename="../../gui/mainwindow.cpp" line="5040"/>
         <source>&amp;Disable</source>
         <translation>&amp;Изключване</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5220"/>
+        <location filename="../../gui/mainwindow.cpp" line="5225"/>
         <source>Close preview</source>
         <translation>Затваряне на прегледа</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5363"/>
+        <location filename="../../gui/mainwindow.cpp" line="5368"/>
         <source>Rename...</source>
-        <translation type="unfinished"></translation>
+        <translation>Преименуване...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5364"/>
+        <location filename="../../gui/mainwindow.cpp" line="5369"/>
         <source>Clone...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="5367"/>
-        <source>Close Tab</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="5370"/>
-        <source>New Private Tab</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="5371"/>
-        <source>Open...</source>
-        <translation type="unfinished"></translation>
+        <translation>Клониране...</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5372"/>
+        <source>Close Tab</source>
+        <translation>Затваряне на раздела</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="5375"/>
+        <source>New Private Tab</source>
+        <translation>Нов частен раздел</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="5376"/>
+        <source>Open...</source>
+        <translation>Отваряне...</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="5377"/>
         <source>Reopen Closed Tab</source>
-        <translation type="unfinished"></translation>
+        <translation>Повторно отваряне на затворения раздел</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5381"/>
+        <location filename="../../gui/mainwindow.cpp" line="5386"/>
         <source>Split</source>
-        <translation type="unfinished"></translation>
+        <translation>Разделяне</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5382"/>
+        <location filename="../../gui/mainwindow.cpp" line="5387"/>
         <source>Left</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="5383"/>
-        <source>Right</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="5384"/>
-        <source>Up</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="5385"/>
-        <source>Down</source>
-        <translation type="unfinished"></translation>
+        <translation>Наляво</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5388"/>
-        <source>Clear</source>
-        <translation type="unfinished"></translation>
+        <source>Right</source>
+        <translation>Надясно</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5389"/>
-        <source>Delete</source>
-        <translation type="unfinished">Изтриване</translation>
+        <source>Up</source>
+        <translation>Нагоре</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7066"/>
+        <location filename="../../gui/mainwindow.cpp" line="5390"/>
+        <source>Down</source>
+        <translation>Надолу</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="5393"/>
+        <source>Clear</source>
+        <translation>Изчистване</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="5394"/>
+        <source>Delete</source>
+        <translation>Изтриване</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="7071"/>
         <source>%1
 Private session: contents are discarded when closed.
 Choose Session &gt; Keep to turn it into a regular session.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1
+Частна сесия: съдържанието се изхвърля при затваряне.
+Изберете Сесия &gt; Запазване, за да я превърнете в обикновена сесия.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7085"/>
+        <location filename="../../gui/mainwindow.cpp" line="7090"/>
         <source>SpeedCrunch - %1 [Private]</source>
-        <translation type="unfinished"></translation>
+        <translation>SpeedCrunch - %1 [Частна]</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8625"/>
-        <location filename="../../gui/mainwindow.cpp" line="8637"/>
+        <location filename="../../gui/mainwindow.cpp" line="8633"/>
+        <location filename="../../gui/mainwindow.cpp" line="8645"/>
         <source>Reset All Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Нулиране на всички настройки</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8626"/>
+        <location filename="../../gui/mainwindow.cpp" line="8634"/>
         <source>Reset all settings to their default values?</source>
-        <translation type="unfinished"></translation>
+        <translation>Да се възстановят ли стандартните стойности на всички настройки?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8627"/>
+        <location filename="../../gui/mainwindow.cpp" line="8635"/>
         <source>This includes appearance, editing, result formats, and window preferences. Your calculations, open sessions, and user definitions will be kept.</source>
-        <translation type="unfinished"></translation>
+        <translation>Това включва външния вид, редактирането, форматите на резултатите и предпочитанията за прозорците. Изчисленията, отворените сесии и потребителските дефиниции ще бъдат запазени.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8637"/>
+        <location filename="../../gui/mainwindow.cpp" line="8645"/>
         <source>The settings file could not be written.</source>
-        <translation type="unfinished"></translation>
+        <translation>Файлът с настройките не може да бъде записан.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9522"/>
+        <location filename="../../gui/mainwindow.cpp" line="9530"/>
         <source>Clear this session&apos;s calculations, unfinished expression, variables, functions, and units?</source>
-        <translation type="unfinished"></translation>
+        <translation>Да се изчистят ли изчисленията, недовършеният израз, променливите, функциите и единиците в тази сесия?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9523"/>
+        <location filename="../../gui/mainwindow.cpp" line="9531"/>
         <source>Global user definitions are kept.</source>
-        <translation type="unfinished"></translation>
+        <translation>Глобалните потребителски дефиниции се запазват.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9659"/>
-        <location filename="../../gui/mainwindow.cpp" line="9679"/>
+        <location filename="../../gui/mainwindow.cpp" line="9667"/>
+        <location filename="../../gui/mainwindow.cpp" line="9687"/>
         <source>Make Session Private</source>
-        <translation type="unfinished"></translation>
+        <translation>Преобразуване на сесията в частна</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9660"/>
+        <location filename="../../gui/mainwindow.cpp" line="9668"/>
         <source>The saved session %1 will be deleted. Its contents will stay open in a private session and will be discarded when that session is closed or SpeedCrunch exits.</source>
-        <translation type="unfinished"></translation>
+        <translation>Запазената сесия %1 ще бъде изтрита. Съдържанието ѝ ще остане отворено в частна сесия и ще бъде изхвърлено при затваряне на сесията или изход от SpeedCrunch.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9665"/>
+        <location filename="../../gui/mainwindow.cpp" line="9673"/>
         <source>Make Private</source>
-        <translation type="unfinished"></translation>
+        <translation>Преобразуване в частна</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9680"/>
+        <location filename="../../gui/mainwindow.cpp" line="9688"/>
         <source>Could not delete the saved session %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Запазената сесия %1 не може да бъде изтрита.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9689"/>
+        <location filename="../../gui/mainwindow.cpp" line="9697"/>
         <source>Keep Session</source>
-        <translation type="unfinished"></translation>
+        <translation>Запазване на сесията</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9690"/>
+        <location filename="../../gui/mainwindow.cpp" line="9698"/>
         <source>Could not save the session. It remains private.</source>
-        <translation type="unfinished"></translation>
+        <translation>Сесията не може да бъде запазена. Тя остава частна.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9886"/>
-        <location filename="../../gui/mainwindow.cpp" line="9898"/>
-        <location filename="../../gui/mainwindow.cpp" line="9919"/>
-        <location filename="../../gui/mainwindow.cpp" line="9929"/>
+        <location filename="../../gui/mainwindow.cpp" line="9894"/>
+        <location filename="../../gui/mainwindow.cpp" line="9906"/>
+        <location filename="../../gui/mainwindow.cpp" line="9927"/>
+        <location filename="../../gui/mainwindow.cpp" line="9937"/>
         <source>Clone Session</source>
-        <translation type="unfinished"></translation>
+        <translation>Клониране на сесията</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9987"/>
+        <location filename="../../gui/mainwindow.cpp" line="9995"/>
         <source>Could not save session file %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Файлът на сесията %1 не може да бъде записан.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9994"/>
+        <location filename="../../gui/mainwindow.cpp" line="10002"/>
         <source>Could not delete session file %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Файлът на сесията %1 не може да бъде изтрит.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10979"/>
-        <location filename="../../gui/mainwindow.cpp" line="11020"/>
+        <location filename="../../gui/mainwindow.cpp" line="10987"/>
+        <location filename="../../gui/mainwindow.cpp" line="11028"/>
         <source>JSON file (*.json);;Any file (*.*)</source>
         <translation>JSON файл (*.json);;Всеки файл (*.*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10983"/>
+        <location filename="../../gui/mainwindow.cpp" line="10991"/>
         <source>Export session as JSON</source>
         <translation>Експортиране на сесията като JSON</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11048"/>
+        <location filename="../../gui/mainwindow.cpp" line="11056"/>
         <source>The selected file is not valid JSON: %1</source>
         <translation>Избраният файл не е валиден JSON: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11055"/>
+        <location filename="../../gui/mainwindow.cpp" line="11063"/>
         <source>The selected file is not a SpeedCrunch session JSON file.</source>
         <translation>Избраният файл не е JSON файл на сесия на SpeedCrunch.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11063"/>
+        <location filename="../../gui/mainwindow.cpp" line="11071"/>
         <source>This file uses an obsolete SpeedCrunch session format and cannot be imported.</source>
         <translation>Този файл използва остарял формат на сесия на SpeedCrunch и не може да бъде импортиран.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11071"/>
+        <location filename="../../gui/mainwindow.cpp" line="11079"/>
         <source>The selected JSON file is missing the required $schema field.</source>
         <translation>В избрания JSON файл липсва задължителното поле $schema.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11077"/>
+        <location filename="../../gui/mainwindow.cpp" line="11085"/>
         <source>The selected JSON file uses an unsupported JSON schema: %1</source>
         <translation>Избраният JSON файл използва неподдържана JSON схема: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11085"/>
+        <location filename="../../gui/mainwindow.cpp" line="11093"/>
         <source>The selected JSON file is missing the SpeedCrunch session schema identifier ($id).</source>
         <translation>В избрания JSON файл липсва идентификаторът на схемата на сесията на SpeedCrunch ($id).</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11091"/>
+        <location filename="../../gui/mainwindow.cpp" line="11099"/>
         <source>The selected JSON file uses an unsupported SpeedCrunch session format: %1</source>
         <translation>Избраният JSON файл използва неподдържан формат на сесия на SpeedCrunch: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11099"/>
+        <location filename="../../gui/mainwindow.cpp" line="11107"/>
         <source>The selected JSON file is missing the required session name.</source>
         <translation>В избрания JSON файл липсва задължителното име на сесията.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11105"/>
+        <location filename="../../gui/mainwindow.cpp" line="11113"/>
         <source>The selected JSON file has an empty session name.</source>
         <translation>Избраният JSON файл има празно име на сесия.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11113"/>
+        <location filename="../../gui/mainwindow.cpp" line="11121"/>
         <source>The selected JSON file has invalid or incomplete SpeedCrunch session data.</source>
         <translation>Избраният JSON файл съдържа невалидни или непълни данни за сесия на SpeedCrunch.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11124"/>
         <location filename="../../gui/mainwindow.cpp" line="11132"/>
+        <location filename="../../gui/mainwindow.cpp" line="11140"/>
         <source>Open Sessions Folder</source>
         <translation>Отваряне на папката със сесии</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11125"/>
+        <location filename="../../gui/mainwindow.cpp" line="11133"/>
         <source>Could not create the sessions folder: %1</source>
         <translation>Папката със сесии не можа да бъде създадена: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11133"/>
+        <location filename="../../gui/mainwindow.cpp" line="11141"/>
         <source>Could not open the sessions folder: %1</source>
         <translation>Папката със сесии не можа да бъде отворена: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12062"/>
+        <location filename="../../gui/mainwindow.cpp" line="12070"/>
         <source>Editor and Results Font</source>
-        <translation type="unfinished"></translation>
+        <translation>Шрифт на редактора и резултатите</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9805"/>
+        <location filename="../../gui/mainwindow.cpp" line="9813"/>
         <source>Open Session</source>
         <translation>Отваряне на сесия</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4588"/>
+        <location filename="../../gui/mainwindow.cpp" line="4592"/>
         <source>Community</source>
         <translation>Общност</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9958"/>
-        <location filename="../../gui/mainwindow.cpp" line="9972"/>
-        <location filename="../../gui/mainwindow.cpp" line="9986"/>
-        <location filename="../../gui/mainwindow.cpp" line="9993"/>
+        <location filename="../../gui/mainwindow.cpp" line="9966"/>
+        <location filename="../../gui/mainwindow.cpp" line="9980"/>
+        <location filename="../../gui/mainwindow.cpp" line="9994"/>
+        <location filename="../../gui/mainwindow.cpp" line="10001"/>
         <source>Rename Session</source>
         <translation>Преименуване на сесия</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9521"/>
+        <location filename="../../gui/mainwindow.cpp" line="9529"/>
         <source>Clear Session</source>
         <translation>Изчистване на сесия</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10239"/>
+        <location filename="../../gui/mainwindow.cpp" line="10247"/>
         <source>Delete Session</source>
         <translation>Изтриване на сесия</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5386"/>
+        <location filename="../../gui/mainwindow.cpp" line="5391"/>
         <source>Close Pane</source>
         <translation>Затваряне на панела</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7860"/>
+        <location filename="../../gui/mainwindow.cpp" line="7865"/>
         <source>User Variables</source>
         <translation>Потребителски променливи</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7936"/>
+        <location filename="../../gui/mainwindow.cpp" line="7941"/>
         <source>User Units</source>
         <translation>Потребителски единици</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9489"/>
+        <location filename="../../gui/mainwindow.cpp" line="9497"/>
         <source>Clear History</source>
         <translation>Изчистване на историята</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9490"/>
+        <location filename="../../gui/mainwindow.cpp" line="9498"/>
         <source>Are you sure you want to clear the calculation history?</source>
         <translation>Сигурни ли сте, че искате да изчистите историята на изчисленията?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9887"/>
-        <location filename="../../gui/mainwindow.cpp" line="9958"/>
+        <location filename="../../gui/mainwindow.cpp" line="9895"/>
+        <location filename="../../gui/mainwindow.cpp" line="9966"/>
         <source>Session name:</source>
         <translation>Име на сесията:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9899"/>
-        <location filename="../../gui/mainwindow.cpp" line="9973"/>
+        <location filename="../../gui/mainwindow.cpp" line="9907"/>
+        <location filename="../../gui/mainwindow.cpp" line="9981"/>
         <source>A session named %1 already exists.</source>
         <translation>Вече съществува сесия с име %1.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9920"/>
+        <location filename="../../gui/mainwindow.cpp" line="9928"/>
         <source>Could not create session file %1.</source>
         <translation>Не може да се създаде файлът на сесията %1.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9930"/>
+        <location filename="../../gui/mainwindow.cpp" line="9938"/>
         <source>Could not write session file %1.</source>
         <translation>Не може да се запише файлът на сесията %1.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10240"/>
+        <location filename="../../gui/mainwindow.cpp" line="10248"/>
         <source>Are you sure you want to delete this session?</source>
         <translation>Сигурни ли сте, че искате да изтриете тази сесия?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10414"/>
+        <location filename="../../gui/mainwindow.cpp" line="10422"/>
         <source>Custom Precision</source>
         <translation>Потребителска точност</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10415"/>
+        <location filename="../../gui/mainwindow.cpp" line="10423"/>
         <source>Fractional digits:</source>
         <translation>Дробни цифри:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10432"/>
+        <location filename="../../gui/mainwindow.cpp" line="10440"/>
         <source>Theme</source>
         <translation>Тема</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10441"/>
+        <location filename="../../gui/mainwindow.cpp" line="10449"/>
         <source>Light Themes</source>
         <translation>Светли теми</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10448"/>
+        <location filename="../../gui/mainwindow.cpp" line="10456"/>
         <source>Dark Themes</source>
         <translation>Тъмни теми</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10456"/>
+        <location filename="../../gui/mainwindow.cpp" line="10464"/>
         <source>Preview</source>
         <translation>Преглед</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10518"/>
+        <location filename="../../gui/mainwindow.cpp" line="10526"/>
         <source>Colors</source>
         <translation>Цветове</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10710"/>
+        <location filename="../../gui/mainwindow.cpp" line="10718"/>
         <source>Select color for %1</source>
         <translation>Избор на цвят за %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10766"/>
+        <location filename="../../gui/mainwindow.cpp" line="10774"/>
         <source>Import...</source>
         <translation>Импортиране...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10767"/>
+        <location filename="../../gui/mainwindow.cpp" line="10775"/>
         <source>Export...</source>
         <translation>Експортиране...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10797"/>
+        <location filename="../../gui/mainwindow.cpp" line="10805"/>
         <source>Import Theme</source>
         <translation>Импортиране на тема</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10798"/>
-        <location filename="../../gui/mainwindow.cpp" line="10887"/>
+        <location filename="../../gui/mainwindow.cpp" line="10806"/>
+        <location filename="../../gui/mainwindow.cpp" line="10895"/>
         <source>Theme file (*.json);;All files (*)</source>
         <translation>Файл на тема (*.json);;Всички файлове (*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10809"/>
+        <location filename="../../gui/mainwindow.cpp" line="10817"/>
         <source>Invalid theme file.</source>
         <translation>Невалиден файл на тема.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10818"/>
+        <location filename="../../gui/mainwindow.cpp" line="10826"/>
         <source>Can&apos;t import theme &quot;%1&quot; because it conflicts with a built-in theme.</source>
         <translation>Темата &quot;%1&quot; не може да се импортира, защото е в конфликт с вградена тема.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10823"/>
+        <location filename="../../gui/mainwindow.cpp" line="10831"/>
         <source>Can&apos;t find a writable theme folder.</source>
         <translation>Не може да се намери папка за теми с право на запис.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10830"/>
+        <location filename="../../gui/mainwindow.cpp" line="10838"/>
         <source>Overwrite Theme</source>
         <translation>Презаписване на тема</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10831"/>
+        <location filename="../../gui/mainwindow.cpp" line="10839"/>
         <source>A custom theme named &quot;%1&quot; already exists. Do you want to overwrite it?</source>
         <translation>Вече съществува потребителска тема с име &quot;%1&quot;. Искате ли да я презапишете?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10839"/>
+        <location filename="../../gui/mainwindow.cpp" line="10847"/>
         <source>Can&apos;t overwrite theme file %1</source>
         <translation>Файлът на темата %1 не може да се презапише</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10845"/>
+        <location filename="../../gui/mainwindow.cpp" line="10853"/>
         <source>Can&apos;t copy theme file to %1</source>
         <translation>Файлът на темата не може да се копира в %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10886"/>
+        <location filename="../../gui/mainwindow.cpp" line="10894"/>
         <source>Export Theme</source>
         <translation>Експортиране на тема</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10897"/>
+        <location filename="../../gui/mainwindow.cpp" line="10905"/>
         <source>Can&apos;t export theme as &quot;%1&quot; because it conflicts with a built-in theme.</source>
         <translation>Темата не може да се експортира като &quot;%1&quot;, защото е в конфликт с вградена тема.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10902"/>
-        <location filename="../../gui/mainwindow.cpp" line="11005"/>
-        <location filename="../../gui/mainwindow.cpp" line="11983"/>
-        <location filename="../../gui/mainwindow.cpp" line="12022"/>
+        <location filename="../../gui/mainwindow.cpp" line="10910"/>
+        <location filename="../../gui/mainwindow.cpp" line="11013"/>
+        <location filename="../../gui/mainwindow.cpp" line="11991"/>
+        <location filename="../../gui/mainwindow.cpp" line="12030"/>
         <source>Can&apos;t write to file %1</source>
         <translation>Не може да се запише във файл %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11142"/>
+        <location filename="../../gui/mainwindow.cpp" line="11150"/>
         <source>Global User Variable</source>
         <translation>Глобална потребителска променлива</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11143"/>
+        <location filename="../../gui/mainwindow.cpp" line="11151"/>
         <source>Global User Function</source>
         <translation>Глобална потребителска функция</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11144"/>
+        <location filename="../../gui/mainwindow.cpp" line="11152"/>
         <source>Global User Unit</source>
         <translation>Глобална потребителска единица</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11488"/>
+        <location filename="../../gui/mainwindow.cpp" line="11496"/>
         <source>User Definitions</source>
         <translation>Потребителски дефиниции</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11494"/>
+        <location filename="../../gui/mainwindow.cpp" line="11502"/>
         <source>These definitions are global and are loaded into every session.
 They are immutable for sessions and override same-name definitions from the session editor.
 Enter one definition per line.</source>
@@ -6029,7 +6036,7 @@ Enter one definition per line.</source>
 Въвеждайте по една дефиниция на ред.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11504"/>
+        <location filename="../../gui/mainwindow.cpp" line="11512"/>
         <source>Examples:
 my_rate=1.25
 f(x)=x^2+1
@@ -6040,23 +6047,23 @@ f(x)=x^2+1
 [cm_s]=[centimetre/second]</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11566"/>
+        <location filename="../../gui/mainwindow.cpp" line="11574"/>
         <source>Apply</source>
         <translation>Прилагане</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11567"/>
+        <location filename="../../gui/mainwindow.cpp" line="11575"/>
         <source>Validate</source>
         <translation>Проверка</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11603"/>
+        <location filename="../../gui/mainwindow.cpp" line="11611"/>
         <source>Test Results</source>
         <translation>Резултати от проверката</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11604"/>
-        <location filename="../../gui/mainwindow.cpp" line="11636"/>
+        <location filename="../../gui/mainwindow.cpp" line="11612"/>
+        <location filename="../../gui/mainwindow.cpp" line="11644"/>
         <source>Imported variables: %1
 Imported functions: %2
 Imported units: %3
@@ -6067,130 +6074,130 @@ Line numbers with errors: %4</source>
 Номера на редовете с грешки: %4</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11608"/>
-        <location filename="../../gui/mainwindow.cpp" line="11640"/>
+        <location filename="../../gui/mainwindow.cpp" line="11616"/>
+        <location filename="../../gui/mainwindow.cpp" line="11648"/>
         <source>none</source>
         <translation>няма</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11635"/>
+        <location filename="../../gui/mainwindow.cpp" line="11643"/>
         <source>Apply Results</source>
         <translation>Резултати от прилагането</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11649"/>
+        <location filename="../../gui/mainwindow.cpp" line="11657"/>
         <source>User definitions saved.</source>
         <translation>Потребителските дефиниции са запазени.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11684"/>
+        <location filename="../../gui/mainwindow.cpp" line="11692"/>
         <source>History Size Limit</source>
         <translation>Ограничение на размера на историята</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11685"/>
+        <location filename="../../gui/mainwindow.cpp" line="11693"/>
         <source>Maximum number of history entries for this session (0 = unlimited):</source>
         <translation>Максимален брой записи в историята за тази сесия (0 = без ограничение):</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12000"/>
+        <location filename="../../gui/mainwindow.cpp" line="12008"/>
         <source>Text file (*.txt);;Any file (*.*)</source>
         <translation>Текстов файл (*.txt);;Всеки файл (*.*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="14454"/>
-        <location filename="../../gui/mainwindow.cpp" line="14627"/>
+        <location filename="../../gui/mainwindow.cpp" line="14462"/>
+        <location filename="../../gui/mainwindow.cpp" line="14635"/>
         <source>Could not recalculate from calculation %1: %2</source>
         <translation>Не може да се преизчисли от изчисление %1: %2</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="14543"/>
+        <location filename="../../gui/mainwindow.cpp" line="14551"/>
         <source>History Size Limit Reached</source>
         <translation>Достигнато е ограничението на размера на историята</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="14544"/>
+        <location filename="../../gui/mainwindow.cpp" line="14552"/>
         <source>This calculation fills the last available history slot. Future calculations will remove the oldest calculation from history. You can increase the limit from Session &gt; History Size Limit.</source>
         <translation>Това изчисление запълва последното свободно място в историята. Следващите изчисления ще премахват най-старото изчисление от историята. Можете да увеличите ограничението от Сесия &gt; Ограничение на размера на историята.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="14567"/>
+        <location filename="../../gui/mainwindow.cpp" line="14575"/>
         <source>Editing calculation. Press Esc twice to cancel.</source>
         <translation>Редактиране на изчисление. Натиснете Esc два пъти за отказ.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="14608"/>
+        <location filename="../../gui/mainwindow.cpp" line="14616"/>
         <source>Calculation Settings</source>
         <translation>Настройки на изчислението</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="14684"/>
+        <location filename="../../gui/mainwindow.cpp" line="14692"/>
         <source>Invalid recalculation start index</source>
         <translation>Невалиден начален индекс за преизчисляване</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15239"/>
+        <location filename="../../gui/mainwindow.cpp" line="15263"/>
         <source>System Default</source>
         <translation>Системно по подразбиране</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15243"/>
+        <location filename="../../gui/mainwindow.cpp" line="15267"/>
         <source>Language</source>
         <translation>Език</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15243"/>
+        <location filename="../../gui/mainwindow.cpp" line="15267"/>
         <source>Select the language:</source>
         <translation>Избери език:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15273"/>
+        <location filename="../../gui/mainwindow.cpp" line="15297"/>
         <source>Custom</source>
         <translation>Потребителски</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15285"/>
+        <location filename="../../gui/mainwindow.cpp" line="15309"/>
         <source>Decimal places:</source>
         <translation>Десетични знаци:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4545"/>
-        <location filename="../../gui/mainwindow.cpp" line="4546"/>
+        <location filename="../../gui/mainwindow.cpp" line="4549"/>
+        <location filename="../../gui/mainwindow.cpp" line="4550"/>
         <source>&amp;Automatic</source>
         <translation>&amp;Автоматично</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5013"/>
+        <location filename="../../gui/mainwindow.cpp" line="5018"/>
         <source>&amp;Precision</source>
         <translation>&amp;Точност</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4426"/>
+        <location filename="../../gui/mainwindow.cpp" line="4429"/>
         <source>Plain &amp;text</source>
         <translation>Обикновен &amp;текст</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4466"/>
+        <location filename="../../gui/mainwindow.cpp" line="4469"/>
         <source>Formula &amp;Book</source>
         <translation>Книга с &amp;формули</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5001"/>
+        <location filename="../../gui/mainwindow.cpp" line="5006"/>
         <source>&amp;Export</source>
         <translation>&amp;Експортиране</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11961"/>
+        <location filename="../../gui/mainwindow.cpp" line="11969"/>
         <source>Export session as HTML</source>
         <translation>Експортиране на сесията като HTML</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11961"/>
+        <location filename="../../gui/mainwindow.cpp" line="11969"/>
         <source>HTML file (*.html)</source>
         <translation>HTML файл (*.html)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11999"/>
+        <location filename="../../gui/mainwindow.cpp" line="12007"/>
         <source>Export session as plain text</source>
         <translation>Експортиране на сесията като обикновен текст</translation>
     </message>
@@ -6218,7 +6225,7 @@ Line numbers with errors: %4</source>
     <message>
         <location filename="../../gui/numberformatdialog.cpp" line="21"/>
         <source>&lt;b&gt;Select the number format for results and input digit grouping.&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;Note: for input numbers, obvious formats are accepted even when they differ from the selected display format.&lt;br/&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;Изберете числовия формат за резултатите и групирането на въведените цифри.&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;Забележка: при въвеждане на числа се приемат недвусмислени формати, дори когато се различават от избрания формат за показване.&lt;br/&gt;</translation>
     </message>
 </context>
 <context>
@@ -6378,132 +6385,132 @@ Line numbers with errors: %4</source>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1301"/>
         <source>Copy</source>
-        <translation type="unfinished"></translation>
+        <translation>Копиране</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1303"/>
         <source>Selection</source>
-        <translation type="unfinished"></translation>
+        <translation>Избраното</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1308"/>
         <source>Select All</source>
-        <translation type="unfinished"></translation>
+        <translation>Избиране на всичко</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1318"/>
         <source>Expression</source>
-        <translation type="unfinished"></translation>
+        <translation>Израз</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1325"/>
         <source>Result</source>
-        <translation type="unfinished"></translation>
+        <translation>Резултат</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1340"/>
         <source>Calculation</source>
-        <translation type="unfinished"></translation>
+        <translation>Изчисление</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1358"/>
         <source>Calculation as Single Line</source>
-        <translation type="unfinished"></translation>
+        <translation>Изчисление на един ред</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1374"/>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>Премахване</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1375"/>
         <source>This Calculation</source>
-        <translation type="unfinished"></translation>
+        <translation>Това изчисление</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1379"/>
         <source>All Calculations Above</source>
-        <translation type="unfinished"></translation>
+        <translation>Всички изчисления отгоре</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1383"/>
         <source>All Calculations Below</source>
-        <translation type="unfinished"></translation>
+        <translation>Всички изчисления отдолу</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1394"/>
         <source>New Private Tab</source>
-        <translation type="unfinished"></translation>
+        <translation>Нов частен раздел</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1396"/>
         <source>Session</source>
-        <translation type="unfinished"></translation>
+        <translation>Сесия</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1397"/>
         <source>Open...</source>
-        <translation type="unfinished"></translation>
+        <translation>Отваряне...</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1419"/>
         <source>Clone...</source>
-        <translation type="unfinished"></translation>
+        <translation>Клониране...</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1423"/>
         <source>Rename...</source>
-        <translation type="unfinished"></translation>
+        <translation>Преименуване...</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1425"/>
         <source>Keep</source>
-        <translation type="unfinished"></translation>
+        <translation>Запазване</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1425"/>
         <source>Make Private...</source>
-        <translation type="unfinished"></translation>
+        <translation>Преобразуване в частна...</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1431"/>
         <source>Clear</source>
-        <translation type="unfinished"></translation>
+        <translation>Изчистване</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1435"/>
         <source>Delete</source>
-        <translation type="unfinished">Изтриване</translation>
+        <translation>Изтриване</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1440"/>
         <source>Close</source>
-        <translation type="unfinished">Затвори</translation>
+        <translation>Затвори</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1445"/>
         <source>Split</source>
-        <translation type="unfinished"></translation>
+        <translation>Разделяне</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1446"/>
         <source>Left</source>
-        <translation type="unfinished"></translation>
+        <translation>Наляво</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1450"/>
         <source>Right</source>
-        <translation type="unfinished"></translation>
+        <translation>Надясно</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1454"/>
         <source>Up</source>
-        <translation type="unfinished"></translation>
+        <translation>Нагоре</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1458"/>
         <source>Down</source>
-        <translation type="unfinished"></translation>
+        <translation>Надолу</translation>
     </message>
     <message>
         <location filename="../../gui/resultdisplay.cpp" line="1462"/>
