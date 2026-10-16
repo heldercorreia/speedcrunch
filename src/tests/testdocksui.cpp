@@ -21,6 +21,7 @@
 #include <QHelpEvent>
 #include <QHoverEvent>
 #include <QLabel>
+#include <QLineEdit>
 #include <QMouseEvent>
 #include <QMainWindow>
 #include <QTranslator>
@@ -83,6 +84,7 @@ private slots:
     void floating_wayland_dock_uses_system_move();
     void floating_wayland_dock_keeps_title_controls();
     void constants_dock_inserts_pi_symbol_with_translated_name();
+    void constants_search_navigates_and_flushes_pending_filter();
     void constants_columns_fit_after_hidden_filter_changes();
     void constants_summary_popup_ignores_header_and_padding_data();
     void constants_summary_popup_ignores_header_and_padding();
@@ -90,6 +92,48 @@ private slots:
     void user_variables_dock_keeps_existing_value_text_after_new_definition();
     void splitter_normalization_removes_single_child_nested_splitter_after_pane_close_shape();
 };
+
+void TestDocksUi::constants_search_navigates_and_flushes_pending_filter()
+{
+    TestableConstantsWidget widget;
+    auto* search = widget.findChild<QLineEdit*>();
+    auto* list = widget.findChild<QTreeWidget*>();
+    auto* domain = widget.findChild<QComboBox*>();
+    QVERIFY(search && list && domain);
+    widget.restoreState(domain->itemText(0), QString(), QString());
+    widget.resize(600, 400);
+    widget.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&widget));
+    search->setFocus();
+    QSignalSpy inserted(&widget, &ConstantsWidget::constantSelected);
+    QTest::keyClicks(search, "PROTON");
+    QTest::keyClick(search, Qt::Key_Down);
+    QVERIFY(search->hasFocus());
+    QVERIFY(list->topLevelItemCount() > 1);
+    QCOMPARE(list->indexOfTopLevelItem(list->currentItem()), 1);
+    for (int i = 0; i < list->topLevelItemCount(); ++i)
+        QVERIFY(list->topLevelItem(i)->text(0).contains(QStringLiteral("proton"), Qt::CaseInsensitive));
+    QTest::keyClick(search, Qt::Key_Up);
+    QCOMPARE(list->indexOfTopLevelItem(list->currentItem()), 0);
+    search->setText(QStringLiteral("Euler's number"));
+    QTest::keyClick(search, Qt::Key_Return);
+    QCOMPARE(inserted.count(), 1);
+    QCOMPARE(inserted.takeFirst().at(0).toString(), QStringLiteral("e"));
+    search->setText(QStringLiteral("kg"));
+    QTest::keyClick(search, Qt::Key_Down);
+    QVERIFY(list->topLevelItemCount() > 0);
+    for (int i = 0; i < list->topLevelItemCount(); ++i) {
+        auto* item = list->topLevelItem(i);
+        QVERIFY(item->text(0).contains(QStringLiteral("kg"), Qt::CaseInsensitive)
+                || item->text(2).contains(QStringLiteral("kg"), Qt::CaseInsensitive));
+    }
+    search->setText(QStringLiteral("no such constant 49236"));
+    QTest::keyClick(search, Qt::Key_Return);
+    QCOMPARE(list->topLevelItemCount(), 0);
+    QCOMPARE(inserted.count(), 0);
+    QTest::keyClick(search, Qt::Key_Up);
+    QVERIFY(list->currentItem() == nullptr);
+}
 
 void TestDocksUi::constants_columns_fit_after_hidden_filter_changes()
 {

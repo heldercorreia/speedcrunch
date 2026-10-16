@@ -8,6 +8,7 @@
 #include "gui/syntaxhighlighter.h"
 #include "gui/uiconfig.h"
 #include "core/colorscheme.h"
+#include "core/constants.h"
 #include "core/evaluator.h"
 #include "core/session.h"
 #include "core/settings.h"
@@ -20,9 +21,14 @@
 #include "uitestfixture.h"
 
 #include <QApplication>
+#include <QAbstractItemDelegate>
 #include <QClipboard>
+#include <QLabel>
+#include <QLineEdit>
+#include <QPointer>
 #include <QInputMethodEvent>
 #include <QFontDatabase>
+#include <QHeaderView>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QKeyEvent>
@@ -33,6 +39,7 @@
 #include <QScreen>
 #include <QScopeGuard>
 #include <QSignalSpy>
+#include <QStyleOptionViewItem>
 #include <QTest>
 #include <QTextLayout>
 #include <QElapsedTimer>
@@ -222,7 +229,15 @@ private slots:
     void completion_popups_configure_editor_anchor();
     void completion_popup_compositor_geometry_data();
     void completion_popup_compositor_geometry();
-    void constant_completion_pages_follow_popup_resize();
+    void constant_search_filters_without_editing_expression();
+    void constant_search_inserts_selected_result_data();
+    void constant_search_inserts_selected_result();
+    void constant_search_closes_without_stealing_outside_focus();
+    void constant_search_layout_follows_popup_resize();
+    void constant_search_inline_units_preserve_full_insertion_data();
+    void constant_search_inline_units_preserve_full_insertion();
+    void constant_search_renders_units_in_secondary_shade_data();
+    void constant_search_renders_units_in_secondary_shade();
     void constant_completion_popup_follows_wrapped_editor_cursor();
     void completion_popup_uses_configured_surface_colors();
     void constant_completion_popup_uses_configured_surface_colors();
@@ -5085,7 +5100,169 @@ void TestEditorUi::completion_popup_compositor_geometry()
     }
 }
 
-void TestEditorUi::constant_completion_pages_follow_popup_resize()
+void TestEditorUi::constant_search_filters_without_editing_expression()
+{
+    Editor editor;
+    editor.setAutoCompletionEnabled(false);
+    editor.setText(QStringLiteral("12+34"));
+    QTextCursor cursor = editor.textCursor();
+    cursor.setPosition(3);
+    cursor.setPosition(5, QTextCursor::KeepAnchor);
+    editor.setTextCursor(cursor);
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+    QSignalSpy evaluated(&editor, &Editor::returnPressed);
+    QSignalSpy changed(&editor, &Editor::textChanged);
+    QTest::keyClick(&editor, Qt::Key_Space, Qt::ControlModifier);
+    QPointer<QWidget> popup = QApplication::activePopupWidget();
+    QVERIFY(popup);
+    auto* search = popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch"));
+    auto* list = popup->findChild<QTreeWidget*>();
+    QVERIFY(search && list);
+    QTRY_VERIFY(search->hasFocus());
+    QCOMPARE(list->topLevelItemCount(), Constants::instance()->list().size());
+    QTest::keyClick(search, Qt::Key_Tab, Qt::ShiftModifier);
+    QVERIFY(list->hasFocus());
+    QTest::keyClick(list, Qt::Key_Tab, Qt::ShiftModifier);
+    QVERIFY(search->hasFocus());
+    QTest::keyClick(search, Qt::Key_Tab, Qt::ShiftModifier);
+    QVERIFY(list->hasFocus());
+    QTest::keyClick(list, Qt::Key_P);
+    QVERIFY(search->hasFocus());
+    QCOMPARE(search->text(), QStringLiteral("p"));
+    search->clear();
+    QTest::keyClicks(search, "PROTON");
+    QVERIFY(list->topLevelItemCount() > 1);
+    for (int i = 0; i < list->topLevelItemCount(); ++i)
+        QVERIFY(list->topLevelItem(i)->text(0).contains(QStringLiteral("proton"), Qt::CaseInsensitive));
+    QTest::keyClick(search, Qt::Key_Down);
+    QCOMPARE(list->indexOfTopLevelItem(list->currentItem()), 1);
+    QTest::keyClick(search, Qt::Key_Up);
+    QCOMPARE(list->indexOfTopLevelItem(list->currentItem()), 0);
+    QVERIFY(search->hasFocus());
+    QTest::keyClick(search, Qt::Key_Backspace);
+    QCOMPARE(search->text(), QStringLiteral("PROTO"));
+    search->setText(QStringLiteral("kg"));
+    QVERIFY(list->topLevelItemCount() > 0);
+    for (int i = 0; i < list->topLevelItemCount(); ++i) {
+        auto* item = list->topLevelItem(i);
+        QVERIFY(item->data(0, Qt::AccessibleTextRole).toString().contains(QStringLiteral("kg"), Qt::CaseInsensitive));
+    }
+    search->clear();
+    QCOMPARE(list->topLevelItemCount(), Constants::instance()->list().size());
+    search->setText(QStringLiteral("no such constant 49236"));
+    QCOMPARE(list->topLevelItemCount(), 0);
+    QTest::keyClick(search, Qt::Key_Down);
+    QTest::keyClick(search, Qt::Key_Return);
+    QTest::keyClick(search, Qt::Key_Tab);
+    QVERIFY(popup->isVisible());
+    QVERIFY(search->hasFocus());
+    QVERIFY(list->currentItem() == nullptr);
+    QCOMPARE(evaluated.count(), 0);
+    QCOMPARE(changed.count(), 0);
+    QCOMPARE(editor.text(), QStringLiteral("12+34"));
+    QTest::keyClick(search, Qt::Key_Escape);
+    QVERIFY(!popup || !popup->isVisible());
+    QTRY_VERIFY(s_editorOrViewportHasFocus(&editor));
+    QCOMPARE(editor.textCursor().selectionStart(), 3);
+    QCOMPARE(editor.textCursor().selectionEnd(), 5);
+    QCOMPARE(editor.text(), QStringLiteral("12+34"));
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QVERIFY(popup.isNull());
+}
+
+void TestEditorUi::constant_search_inserts_selected_result_data()
+{
+    QTest::addColumn<QString>("query");
+    QTest::addColumn<QString>("expected");
+    QTest::addColumn<bool>("mouse");
+    QTest::addColumn<int>("acceptKey");
+    QTest::addColumn<bool>("listFocus");
+    QTest::newRow("pi") << QStringLiteral("pi (π)") << QString(UnicodeChars::Pi) << false << int(Qt::Key_Return) << false;
+    QTest::newRow("e-click") << QStringLiteral("Euler's number") << QStringLiteral("e") << true << int(Qt::Key_Return) << false;
+    QTest::newRow("unit") << QStringLiteral("speed of light in vacuum")
+        << QStringLiteral("299792458 [m·s⁻¹]") << false << int(Qt::Key_Return) << false;
+    QTest::newRow("pi-tab") << QStringLiteral("pi (π)") << QString(UnicodeChars::Pi) << false << int(Qt::Key_Tab) << false;
+    QTest::newRow("unit-tab") << QStringLiteral("speed of light in vacuum")
+        << QStringLiteral("299792458 [m·s⁻¹]") << false << int(Qt::Key_Tab) << false;
+    QTest::newRow("e-tab-from-list") << QStringLiteral("Euler's number") << QStringLiteral("e") << false << int(Qt::Key_Tab) << true;
+}
+
+void TestEditorUi::constant_search_inserts_selected_result()
+{
+    QFETCH(QString, query);
+    QFETCH(QString, expected);
+    QFETCH(bool, mouse);
+    QFETCH(int, acceptKey);
+    QFETCH(bool, listFocus);
+    QWidget window;
+    QVBoxLayout layout(&window);
+    Editor editor;
+    Editor other;
+    layout.addWidget(&editor);
+    layout.addWidget(&other);
+    editor.setAutoCompletionEnabled(false);
+    editor.setText(QStringLiteral("12+34"));
+    QSignalSpy evaluated(&editor, &Editor::returnPressed);
+    QTextCursor cursor = editor.textCursor();
+    cursor.setPosition(3);
+    cursor.setPosition(5, QTextCursor::KeepAnchor);
+    editor.setTextCursor(cursor);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    editor.setFocus();
+    QTest::keyClick(&editor, Qt::Key_Space, Qt::ControlModifier);
+    QPointer<QWidget> popup = QApplication::activePopupWidget();
+    QVERIFY(popup);
+    auto* search = popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch"));
+    auto* list = popup->findChild<QTreeWidget*>();
+    QVERIFY(search && list);
+    search->setText(query);
+    QCOMPARE(list->topLevelItemCount(), 1);
+    if (mouse) {
+        QTest::mouseClick(list->viewport(), Qt::LeftButton, Qt::NoModifier,
+                          list->visualItemRect(list->currentItem()).center());
+    } else {
+        if (listFocus) {
+            QTest::keyClick(search, Qt::Key_Tab, Qt::ShiftModifier);
+            QVERIFY(list->hasFocus());
+        }
+        QTest::keyClick(listFocus ? static_cast<QWidget*>(list) : search, static_cast<Qt::Key>(acceptKey));
+    }
+    QCOMPARE(editor.text(), QStringLiteral("12+") + expected);
+    QCOMPARE(evaluated.count(), 0);
+    QVERIFY(other.text().isEmpty());
+    QTRY_VERIFY(s_editorOrViewportHasFocus(&editor));
+    editor.undo();
+    QCOMPARE(editor.text(), QStringLiteral("12+34"));
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QVERIFY(popup.isNull());
+}
+
+void TestEditorUi::constant_search_closes_without_stealing_outside_focus()
+{
+    QWidget window;
+    QVBoxLayout layout(&window);
+    Editor editor;
+    QLineEdit other;
+    layout.addWidget(&editor);
+    layout.addWidget(&other);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    editor.setFocus();
+    QTest::keyClick(&editor, Qt::Key_Space, Qt::ControlModifier);
+    QPointer<QWidget> popup = QApplication::activePopupWidget();
+    QVERIFY(popup);
+    popup->hide();
+    other.setFocus();
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QVERIFY(popup.isNull());
+    QVERIFY(other.hasFocus());
+    QVERIFY(editor.text().isEmpty());
+}
+
+void TestEditorUi::constant_search_layout_follows_popup_resize()
 {
     Editor editor;
     editor.setAutoCompletionEnabled(false);
@@ -5095,26 +5272,153 @@ void TestEditorUi::constant_completion_pages_follow_popup_resize()
     completion.showCompletion();
     QWidget* popup = QApplication::activePopupWidget();
     QVERIFY(popup);
-    QTreeWidget* category = popup->findChild<QTreeWidget*>(QStringLiteral("constantCompletionCategoryPopup"));
-    QTreeWidget* constants = popup->findChild<QTreeWidget*>(QStringLiteral("constantCompletionConstantsPopup"));
-    QVERIFY(category);
-    QVERIFY(constants);
-    popup->resize(320, 40);
-    QCOMPARE(category->size(), popup->size());
-    QCOMPARE(constants->size(), popup->size());
-    QCOMPARE(category->x(), 0);
-    QCOMPARE(constants->x(), popup->width());
-    QTRY_VERIFY(category->verticalScrollBar()->maximum() > 0);
-
-    QVERIFY(QMetaObject::invokeMethod(&completion, "showConstants", Qt::DirectConnection));
-    QTRY_COMPARE(category->x(), -popup->width());
-    popup->resize(300, 30);
-    QCOMPARE(category->size(), popup->size());
-    QCOMPARE(constants->size(), popup->size());
-    QCOMPARE(category->x(), -popup->width());
-    QCOMPARE(constants->x(), 0);
+    auto* search = popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch"));
+    auto* constants = popup->findChild<QTreeWidget*>();
+    QVERIFY(search && constants);
+    popup->resize(340, 150);
+    QCoreApplication::processEvents();
+    QVERIFY(popup->rect().contains(search->geometry()));
+    QVERIFY(popup->rect().contains(constants->geometry()));
+    QVERIFY(constants->height() > constants->sizeHintForRow(0));
     QTRY_VERIFY(constants->verticalScrollBar()->maximum() > 0);
+    search->setText(QStringLiteral("no such constant 49236"));
+    popup->resize(300, 130);
+    QCoreApplication::processEvents();
+    QLabel* empty = nullptr;
+    for (auto* label : popup->findChildren<QLabel*>()) {
+        if (label->property("dockListNoMatchLabel").toBool())
+            empty = label;
+    }
+    QVERIFY(empty);
+    QVERIFY(empty->isVisible());
+    QCOMPARE(empty->geometry(), constants->viewport()->rect());
+    QVERIFY(popup->rect().contains(constants->geometry()));
     popup->hide();
+}
+
+void TestEditorUi::constant_search_inline_units_preserve_full_insertion_data()
+{
+    QTest::addColumn<bool>("rightToLeft");
+    QTest::newRow("left-to-right") << false;
+    QTest::newRow("right-to-left") << true;
+}
+
+void TestEditorUi::constant_search_inline_units_preserve_full_insertion()
+{
+    QFETCH(bool, rightToLeft);
+    Editor editor;
+    editor.setAutoCompletionEnabled(false);
+    editor.setLayoutDirection(rightToLeft ? Qt::RightToLeft : Qt::LeftToRight);
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    ConstantCompletion completion(&editor);
+    QSignalSpy inserted(&completion, &ConstantCompletion::selectedCompletion);
+    completion.showCompletion();
+    QWidget* popup = QApplication::activePopupWidget();
+    QVERIFY(popup);
+    auto* search = popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch"));
+    auto* list = popup->findChild<QTreeWidget*>();
+    QVERIFY(search && list);
+    const QString name = QStringLiteral("electron mass energy equivalent in MeV");
+    search->setText(name);
+    QCOMPARE(list->topLevelItemCount(), 1);
+    auto* item = list->currentItem();
+    QVERIFY(item);
+    QCOMPARE(item->data(0, Qt::AccessibleTextRole).toString(), name + QStringLiteral(" MeV"));
+    QVERIFY(item->toolTip(0).contains(QStringLiteral("MeV")));
+    popup->resize(230, 140);
+    QFont font = list->font();
+    font.setPointSizeF(font.pointSizeF() * 1.5);
+    list->setFont(font);
+    QCoreApplication::processEvents();
+    const QPixmap rendered = list->viewport()->grab();
+    QVERIFY(!rendered.isNull());
+    // A narrow row may elide the label, but insertion keeps the full quantity.
+    QTest::keyClick(search, Qt::Key_Return);
+    QCOMPARE(inserted.count(), 1);
+    QCOMPARE(inserted.first().first().toString(),
+             QStringLiteral("0.51099895069%1[MeV]").arg(QChar(MathDsl::QuantSp)));
+}
+
+void TestEditorUi::constant_search_renders_units_in_secondary_shade_data()
+{
+    QTest::addColumn<QColor>("background");
+    QTest::addColumn<QColor>("foreground");
+    QTest::addColumn<bool>("selected");
+    QTest::addColumn<QColor>("expected");
+    QTest::newRow("dark") << QColor(QStringLiteral("#454257")) << QColor(QStringLiteral("#f7f5fc"))
+        << false << QColor(QStringLiteral("#cdcbe0"));
+    QTest::newRow("light") << QColor(QStringLiteral("#f3f3f3")) << QColor(QStringLiteral("#202025"))
+        << false << QColor(QStringLiteral("#282828"));
+    QTest::newRow("selected") << QColor(QStringLiteral("#5c586f")) << QColor(QStringLiteral("#f7f5fc"))
+        << true << QColor(QStringLiteral("#cdcbe0"));
+    QTest::newRow("neutral") << QColor(Qt::white) << QColor(Qt::black)
+        << false << QColor(QStringLiteral("#606060"));
+}
+
+void TestEditorUi::constant_search_renders_units_in_secondary_shade()
+{
+    QFETCH(QColor, background);
+    QFETCH(QColor, foreground);
+    QFETCH(bool, selected);
+    QFETCH(QColor, expected);
+    Editor editor;
+    editor.setThemePreviewColorScheme(ColorScheme::fromJsonObject(themeJson({
+        {QStringLiteral("background"), background.name()},
+        {QStringLiteral("unit"), expected.name()}
+    })));
+    ConstantCompletion completion(&editor);
+    auto* popup = editor.findChild<QWidget*>(QStringLiteral("constantCompletionPopup"));
+    QVERIFY(popup);
+    auto* list = popup->findChild<QTreeWidget*>();
+    auto* search = popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch"));
+    QVERIFY(list && search);
+    search->setText(QStringLiteral("electron mass energy equivalent in MeV"));
+    QCOMPARE(list->topLevelItemCount(), 1);
+    auto* item = list->topLevelItem(0);
+    // Paint the unit alone so name antialiasing cannot mimic its secondary color.
+    item->setText(0, QStringLiteral(" "));
+    QFont font = list->font();
+    font.setPixelSize(32);
+    list->setFont(font);
+    QPalette palette = list->palette();
+    for (auto group : {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
+        palette.setColor(group, QPalette::Base, background);
+        palette.setColor(group, QPalette::Highlight, background);
+        palette.setColor(group, QPalette::Text, foreground);
+        palette.setColor(group, QPalette::HighlightedText, foreground);
+    }
+    list->setPalette(palette);
+    QStyleOptionViewItem option;
+    option.initFrom(list);
+    option.rect = QRect(0, 0, 400, 64);
+    option.state = QStyle::State_Enabled | QStyle::State_Active;
+    if (selected)
+        option.state |= QStyle::State_Selected;
+    option.font = font;
+    option.fontMetrics = QFontMetrics(font);
+    for (const QColor& unitColor : {expected, QColor(QStringLiteral("#789abc"))}) {
+        editor.setThemePreviewColorScheme(ColorScheme::fromJsonObject(themeJson({
+            {QStringLiteral("background"), background.name()},
+            {QStringLiteral("unit"), unitColor.name()}
+        })));
+        QImage image(option.rect.size(), QImage::Format_ARGB32_Premultiplied);
+        image.fill(background);
+        QPainter painter(&image);
+        list->itemDelegate()->paint(&painter, option, list->model()->index(0, 0));
+        painter.end();
+        int unitPixels = 0;
+        int mainTextPixels = 0;
+        for (int y = 0; y < image.height(); ++y) {
+            for (int x = 0; x < image.width(); ++x) {
+                const QRgb pixel = image.pixel(x, y);
+                unitPixels += pixel == unitColor.rgba();
+                mainTextPixels += pixel == foreground.rgba();
+            }
+        }
+        QVERIFY(unitPixels > 20);
+        QCOMPARE(mainTextPixels, 0);
+    }
 }
 
 void TestEditorUi::constant_completion_popup_follows_wrapped_editor_cursor()
@@ -5228,7 +5532,7 @@ void TestEditorUi::constant_completion_popup_uses_configured_surface_colors()
 
     QList<QTreeWidget*> popupTrees;
     QTRY_VERIFY_WITH_TIMEOUT(!(popupTrees = s_constantCompletionPopupTrees()).isEmpty(), 1000);
-    QCOMPARE(popupTrees.count(), 2);
+    QCOMPARE(popupTrees.count(), 1);
     for (QTreeWidget* popup : popupTrees) {
         QCOMPARE(popup->palette().color(QPalette::Base), background);
         QCOMPARE(popup->palette().color(QPalette::Text), foreground);

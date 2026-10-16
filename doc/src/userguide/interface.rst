@@ -39,18 +39,11 @@ column order between launches, including for panels that are hidden.
     The constants widget shows a large list of scientific constants (including CODATA-based entries),
     grouped by category and subcategory.
 
-    The list columns are:
-
-    * ``Name``
-    * ``Symbol`` (when available)
-    * ``Value``
-    * ``Unit`` (when available)
-    * ``Identifier`` (built-in constant key, typically ``k_*``)
-
-    Use the ``Category`` and ``Subcategory`` selectors to narrow the list.
-    The search field matches by name, symbol, and identifier.
-
-    Double-clicking an entry inserts its ``Identifier`` into the editor.
+    The columns show each constant's name, value, and unit.
+    Use the ``Domain`` and ``Subdomain`` selectors to narrow the list, or search by name or unit.
+    Press :kbd:`Up` and :kbd:`Down` in the search field to select a result while continuing to type.
+    Press :kbd:`Enter` or double-click an entry to insert its value and unit and return to the editor.
+    The mathematical constants pi and Euler's number are inserted as ``π`` and ``e``.
 
 * User Variables
     The variables widget lists all :ref:`user-defined variables <variables>`. Any of them can be inserted into the editor by double-clicking it.
@@ -276,10 +269,15 @@ The expression editor provides some advanced features:
     This also works for user-defined functions. Pressing :kbd:`Escape` will dismiss the tooltip.
 
 * Quick constant insertion
-    Press :kbd:`Ctrl+Space` to open a list of constants that allows quick access to the same constants as the constants widget (see above).
-    Use the arrow keys to navigate the list. Pressing :kbd:`Escape` will dismiss this popup.
+    Press :kbd:`Ctrl+Space` to search the same constants as the constants widget (see above).
+    Type a name or unit to filter the list. Each result shows its unit beside the name using the theme's unit color.
+    Press :kbd:`Up` and :kbd:`Down` to select a result. Press :kbd:`Tab` or :kbd:`Enter`, or click a result, to insert it and return to the editor.
+    :kbd:`Shift+Tab` moves focus backward. With no matches, :kbd:`Tab` leaves the popup open.
+    Press :kbd:`Escape` to cancel. Search text does not change the expression.
     The list follows the cursor's horizontal position and uses the same below-or-above placement rules as autocompletion.
-    Selecting an entry inserts its identifier (for example ``k_speed_of_light_in_vacuum``).
+
+    .. versionadded:: 1.1
+       Search in the quick constant popup and select dock search results with :kbd:`Up` and :kbd:`Down`.
 
   .. _context-help:
 * Context help

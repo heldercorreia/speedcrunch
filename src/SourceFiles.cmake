@@ -31,6 +31,7 @@ core/startupdiagnostics.h
 gui/startupappearance.h
 gui/bitfieldwidget.h
 gui/bookdock.h
+gui/constantbrowserutils.h
 gui/constantswidget.h
 gui/customkeypaddialog.h
 gui/displayformatutils.h
@@ -325,6 +326,8 @@ tests/testdmath.cpp
 )
 
 set(testeditorui_SOURCES
+gui/dockliststyle.cpp
+gui/themedlineedit.cpp
 gui/dockcomboboxchevron.cpp
 gui/menustyleutils.cpp
 core/constants.cpp

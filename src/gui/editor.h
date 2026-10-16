@@ -26,9 +26,10 @@ class QEvent;
 class QFocusEvent;
 class QInputMethodEvent;
 class QKeyEvent;
+class QLabel;
+class QLineEdit;
 class QMimeData;
 class QMouseEvent;
-class QTimeLine;
 class QTimer;
 class QTreeWidget;
 class QWheelEvent;
@@ -273,22 +274,16 @@ signals:
 public slots:
     void doneCompletion();
 
-protected slots:
-    void setHorizontalPosition(int);
-    void showCategory();
-    void showConstants();
-
 private:
     Q_DISABLE_COPY(ConstantCompletion)
 
-    QTreeWidget* m_categoryWidget;
-    QList<Constant> m_constantList;
     Editor* m_editor;
-    QString m_lastDomain;
+    QLineEdit* m_search;
     QTreeWidget* m_constantWidget;
+    QLabel* m_noMatchLabel;
     QFrame* m_popup;
     QSize m_popupSize;
-    QTimeLine* m_slider;
+    bool m_finishing = false;
     QColor m_backgroundColor;
     QColor m_foregroundColor;
     QColor m_scrollbarThumbColor;
@@ -299,6 +294,8 @@ private:
     int m_cornerRadius = 0;
 
     void applyThemeColors();
+    void filter();
+    void restoreEditorFocus();
 };
 
 #endif

@@ -5587,14 +5587,16 @@ void MainWindow::setActiveEditorDisplayPane(ResultDisplay* display, Editor* edit
         if (paneSession != nullptr && paneSession != m_session)
             activateSession(paneSession);
     }
-    if (!dockWidgetHasFocus && !dockTextInputHasFocus) {
+    if (!dockWidgetHasFocus && !dockTextInputHasFocus
+        && QApplication::activePopupWidget() == nullptr) {
         editor->setFocus(Qt::OtherFocusReason);
         QPointer<Editor> editorGuard(editor);
         QTimer::singleShot(0, editor, [editorGuard]() {
             if (editorGuard != nullptr
                 && globallyActiveEditor() == editorGuard
                 && pendingDockFocusTarget() == nullptr
-                && pendingDockTextInputFocusTarget() == nullptr) {
+                && pendingDockTextInputFocusTarget() == nullptr
+                && QApplication::activePopupWidget() == nullptr) {
                 editorGuard->setFocus(Qt::OtherFocusReason);
             }
         });
@@ -12511,7 +12513,8 @@ bool MainWindow::event(QEvent* e)
         const int restoreGeneration = ++windowActivationRestoreGeneration();
         const auto restoreWindowFocus = [this, activeEditor, focusWidget, restoreGeneration]() {
             if (activeEditor == nullptr
-                || windowActivationRestoreGeneration() != restoreGeneration)
+                || windowActivationRestoreGeneration() != restoreGeneration
+                || QApplication::activePopupWidget() != nullptr)
                 return;
             QWidget* pane = activeEditor->parentWidget();
             ResultDisplay* display = pane
@@ -12647,8 +12650,10 @@ bool MainWindow::eventFilter(QObject* o, QEvent* e)
             widget->setFocus(Qt::MouseFocusReason);
             deactivateActiveEditorForTextInputFocus();
             QPointer<QWidget> textInput(widget);
-            QTimer::singleShot(0, widget, [textInput]() {
-                if (textInput != nullptr)
+            QTimer::singleShot(0, widget, [textInput, textInputGeneration]() {
+                if (textInput != nullptr
+                    && pendingDockTextInputFocusTargetGeneration() == textInputGeneration
+                    && pendingDockTextInputFocusTarget() == textInput)
                     textInput->setFocus(Qt::MouseFocusReason);
             });
             QTimer::singleShot(100, widget, [textInput, textInputGeneration]() {
@@ -12695,8 +12700,10 @@ bool MainWindow::eventFilter(QObject* o, QEvent* e)
                 }
                 focusTarget->setFocus(Qt::MouseFocusReason);
                 QPointer<QWidget> focusTargetGuard(focusTarget);
-                const auto restoreDockFocus = [focusTargetGuard]() {
-                    if (focusTargetGuard != nullptr)
+                const auto restoreDockFocus = [focusTargetGuard, focusGeneration]() {
+                    if (focusTargetGuard != nullptr
+                        && pendingDockFocusTargetGeneration() == focusGeneration
+                        && pendingDockFocusTarget() == focusTargetGuard)
                         focusTargetGuard->setFocus(Qt::MouseFocusReason);
                 };
                 QTimer::singleShot(0, focusTarget, restoreDockFocus);
@@ -13390,6 +13397,9 @@ void MainWindow::insertConstantIntoEditor(const QString& c)
     if (c.isEmpty())
         return;
 
+    // Insertion takes precedence over focus recovery from the dock click.
+    setPendingDockFocusTarget(nullptr);
+    setPendingDockTextInputFocusTarget(nullptr);
     QString s = c;
     s.replace(MathDsl::DotSep, m_settings->radixCharacter());
     insertTextIntoEditor(s);

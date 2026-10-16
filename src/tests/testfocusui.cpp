@@ -20,6 +20,9 @@ private slots:
     void f6_cycles_focus_with_another_main_window_visible();
     void f6_cycles_focus_with_another_main_window_visible_data();
     void dock_search_focus_suppresses_editor_primary_outline_across_panes();
+    void constants_dock_activation_returns_to_active_editor_data();
+    void constants_dock_activation_returns_to_active_editor();
+    void constant_popup_inserts_into_owning_pane();
     void dock_selection_inserts_into_active_session_pane_after_focus_transfer();
     void clicking_tab_activates_own_pane_in_nested_split_layout();
     void active_pane_survives_window_reactivation_focus_replay();
@@ -39,6 +42,114 @@ private slots:
     void escape_still_cancels_history_edit_data();
     void escape_still_cancels_history_edit();
 };
+
+void TestFocusUi::constants_dock_activation_returns_to_active_editor_data()
+{
+    QTest::addColumn<bool>("mouse");
+    QTest::addColumn<bool>("floating");
+    QTest::newRow("enter-docked") << false << false;
+    QTest::newRow("double-click-docked") << true << false;
+    QTest::newRow("enter-floating") << false << true;
+    QTest::newRow("double-click-floating") << true << true;
+}
+
+void TestFocusUi::constants_dock_activation_returns_to_active_editor()
+{
+    QFETCH(bool, mouse);
+    QFETCH(bool, floating);
+    Settings::instance()->constantsDockVisible = true;
+    MainWindow window;
+    MainWindow otherWindow;
+    window.resize(950, 650);
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
+    otherWindow.show();
+    window.show();
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    auto editors = window.findChildren<Editor*>();
+    QCOMPARE(editors.size(), 2);
+    Editor* target = editors.last();
+    Editor* other = editors.first();
+    for (Editor* editor : editors) {
+        editor->setAutoCompletionEnabled(false);
+        editor->setText(QString());
+    }
+    QTest::mouseClick(target->viewport(), Qt::LeftButton);
+    QTRY_VERIFY(target->hasFocus());
+    auto* constants = window.findChild<ConstantsWidget*>();
+    auto* dock = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(constants && dock);
+    auto* list = constants->findChild<QTreeWidget*>();
+    auto* search = constants->findChild<QLineEdit*>();
+    auto* domain = constants->findChild<QComboBox*>();
+    QVERIFY(list && search && domain);
+    constants->restoreState(domain->itemText(0), QString(), QStringLiteral("Euler's number"));
+    dock->show();
+    dock->raise();
+    dock->setFloating(floating);
+    QCoreApplication::processEvents();
+    QCOMPARE(list->topLevelItemCount(), 1);
+    auto* otherEditor = otherWindow.findChild<Editor*>();
+    QVERIFY(otherEditor);
+    const QString otherText = otherEditor->text();
+    const QPoint row = list->visualItemRect(list->topLevelItem(0)).center();
+    if (mouse) {
+        QTest::mouseClick(list->viewport(), Qt::LeftButton, Qt::NoModifier, row);
+        QVERIFY(target->text().isEmpty());
+        QTest::mouseDClick(list->viewport(), Qt::LeftButton, Qt::NoModifier, row);
+    } else {
+        // Leave the dock click's delayed focus recovery pending during insertion.
+        QTest::mouseClick(search, Qt::LeftButton);
+        QTest::keyClick(search, Qt::Key_Down);
+        QVERIFY(search->hasFocus());
+        QTest::keyClick(search, Qt::Key_Return);
+    }
+    QTRY_COMPARE(target->text(), QStringLiteral("e"));
+    QVERIFY(other->text().isEmpty());
+    QCOMPARE(otherEditor->text(), otherText);
+    QTRY_VERIFY(target->hasFocus());
+    QTest::qWait(300);
+    QVERIFY(target->hasFocus());
+    QTest::keyClicks(target, "+1");
+    QCOMPARE(target->text(), QStringLiteral("e + 1"));
+}
+
+void TestFocusUi::constant_popup_inserts_into_owning_pane()
+{
+    MainWindow window;
+    MainWindow otherWindow;
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
+    otherWindow.show();
+    window.show();
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    const auto editors = window.findChildren<Editor*>();
+    QCOMPARE(editors.size(), 2);
+    for (Editor* editor : editors) {
+        editor->setAutoCompletionEnabled(false);
+        editor->setText(QString());
+    }
+    Editor* target = editors.first();
+    QTest::mouseClick(target->viewport(), Qt::LeftButton);
+    QTest::keyClick(target, Qt::Key_Space, Qt::ControlModifier);
+    QPointer<QWidget> popup = QApplication::activePopupWidget();
+    QVERIFY(popup);
+    auto* search = popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch"));
+    auto* list = popup->findChild<QTreeWidget*>();
+    QVERIFY(search && list);
+    QTest::qWait(400);
+    QVERIFY(search->hasFocus());
+    search->setText(QStringLiteral("Euler's number"));
+    QCOMPARE(list->topLevelItemCount(), 1);
+    QTest::mouseClick(list->viewport(), Qt::LeftButton, Qt::NoModifier,
+                      list->visualItemRect(list->currentItem()).center());
+    QTRY_COMPARE(target->text(), QStringLiteral("e"));
+    QVERIFY(editors.last()->text().isEmpty());
+    QTRY_VERIFY(target->hasFocus());
+    QTest::qWait(300);
+    QVERIFY(target->hasFocus());
+    QVERIFY(otherWindow.findChild<Editor*>()->text().isEmpty());
+}
 
 void TestFocusUi::escape_clears_only_the_focused_editor_data()
 {

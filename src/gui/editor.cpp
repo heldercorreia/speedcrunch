@@ -3,6 +3,9 @@
 
 
 #include "gui/editor.h"
+#include "gui/constantbrowserutils.h"
+#include "gui/dockliststyle.h"
+#include "gui/themedlineedit.h"
 #include "gui/startupappearance.h"
 #include "gui/displayformatutils.h"
 #include "gui/editorutils.h"
@@ -30,6 +33,7 @@
 #include <QFont>
 #include <QFontMetricsF>
 #include <QFrame>
+#include <QLabel>
 #include <QHeaderView>
 #include <QInputMethodEvent>
 #include <QKeyEvent>
@@ -47,13 +51,15 @@
 #include <QSignalBlocker>
 #include <QRegularExpression>
 #include <QStyle>
+#include <QStyledItemDelegate>
+#include <QStyleOptionViewItem>
 #include <QResizeEvent>
-#include <QTimeLine>
 #include <QTimer>
 #include <QTextBlock>
 #include <QTextLayout>
 #include <QTreeWidget>
 #include <QVersionNumber>
+#include <QVBoxLayout>
 #include <QWheelEvent>
 #include <QWindow>
 
@@ -3059,6 +3065,31 @@ void Editor::keyPressEvent(QKeyEvent* event)
     if (m_completion->handleEditorKeyPress(event))
         return;
 
+    // Opening a picker must not start an empty document edit block. Finishing
+    // that block emits textChanged and the active pane then takes focus back.
+    if (event->key() == Qt::Key_Space && event->modifiers() == Qt::ControlModifier
+        && !m_constantCompletion) {
+        m_completionTimer->stop();
+        m_constantCompletion = new ConstantCompletion(this);
+        m_constantCompletion->setThemeColors(m_completionBackgroundColor,
+                                             m_completionForegroundColor,
+                                             m_completionScrollbarThumbColor,
+                                             m_completionScrollbarThumbForegroundColor,
+                                             m_completionSelectedRowColor,
+                                             m_completionSelectedRowForegroundColor,
+                                             m_completionOutlineColor,
+                                             m_completionCornerRadius);
+        connect(m_constantCompletion,
+                SIGNAL(selectedCompletion(const QString&)),
+                SLOT(insertConstant(const QString&)));
+        connect(m_constantCompletion,
+                &ConstantCompletion::canceledCompletion,
+                this, &Editor::cancelConstantCompletion);
+        m_constantCompletion->showCompletion();
+        event->accept();
+        return;
+    }
+
     // Shortcut text can contain control characters or printable letters.
     // Let Qt perform the edit before any expression insertion rules run.
     if (event->matches(QKeySequence::Undo)
@@ -3186,30 +3217,6 @@ void Editor::keyPressEvent(QKeyEvent* event)
         event->accept();
         return;
 
-    case Qt::Key_Space:
-        if (event->modifiers() == Qt::ControlModifier
-            && !m_constantCompletion)
-        {
-            m_constantCompletion = new ConstantCompletion(this);
-            m_constantCompletion->setThemeColors(m_completionBackgroundColor,
-                                                 m_completionForegroundColor,
-                                                 m_completionScrollbarThumbColor,
-                                                 m_completionScrollbarThumbForegroundColor,
-                                                 m_completionSelectedRowColor,
-                                                 m_completionSelectedRowForegroundColor,
-                                                 m_completionOutlineColor,
-                                                 m_completionCornerRadius);
-            connect(m_constantCompletion,
-                    SIGNAL(selectedCompletion(const QString&)),
-                    SLOT(insertConstant(const QString&)));
-            connect(m_constantCompletion,
-                    &ConstantCompletion::canceledCompletion,
-                    this, &Editor::cancelConstantCompletion);
-            m_constantCompletion->showCompletion();
-            event->accept();
-            return;
-        }
-        break;
 
     default:
         break;
@@ -4920,104 +4927,144 @@ void EditorCompletion::selectItem(const QString& item)
         m_popup->setCurrentItem(targets.at(0));
 }
 
+namespace {
+constexpr int constantUnitRole = Qt::UserRole + 1;
+
+class ConstantCompletionDelegate : public QStyledItemDelegate {
+public:
+    ConstantCompletionDelegate(SyntaxHighlighter* highlighter, QObject* parent)
+        : QStyledItemDelegate(parent), m_highlighter(highlighter)
+    {
+        Q_ASSERT(m_highlighter);
+    }
+
+    void paint(QPainter* painter, const QStyleOptionViewItem& option,
+               const QModelIndex& index) const override
+    {
+        QStyleOptionViewItem item(option);
+        initStyleOption(&item, index);
+        const QString name = item.text;
+        item.text.clear();
+        const QStyle* style = item.widget ? item.widget->style() : QApplication::style();
+        style->drawControl(QStyle::CE_ItemViewItem, &item, painter, item.widget);
+        const QRect textRect = style->subElementRect(QStyle::SE_ItemViewItemText, &item, item.widget);
+        if (textRect.isEmpty())
+            return;
+
+        const QPalette::ColorGroup group = !(item.state & QStyle::State_Enabled)
+            ? QPalette::Disabled : (item.state & QStyle::State_Active) ? QPalette::Active : QPalette::Inactive;
+        const bool selected = item.state & QStyle::State_Selected;
+        const QColor foreground = item.palette.color(group, selected ? QPalette::HighlightedText : QPalette::Text);
+        const QColor unitColor = m_highlighter->colorForRole(ColorScheme::Unit);
+        QFont unitFont(item.font);
+        if (unitFont.pointSizeF() > 0)
+            unitFont.setPointSizeF(unitFont.pointSizeF() * 0.93);
+        else if (unitFont.pixelSize() > 0)
+            unitFont.setPixelSize(qMax(1, qRound(unitFont.pixelSize() * 0.93)));
+
+        const QFontMetrics unitMetrics(unitFont);
+        const QString rawUnit = index.data(constantUnitRole).toString();
+        const QString unit = unitMetrics.elidedText(rawUnit, Qt::ElideRight, textRect.width() / 2);
+        const QString gap = unit.isEmpty() ? QString() : QStringLiteral("    ");
+        const int unitWidth = unitMetrics.horizontalAdvance(unit) + item.fontMetrics.horizontalAdvance(gap);
+        const QString displayName = item.fontMetrics.elidedText(name, Qt::ElideRight,
+                                                               qMax(0, textRect.width() - unitWidth));
+        // Isolate the unit so mixed-direction names do not reorder its symbols.
+        const QString text = unit.isEmpty() ? displayName
+            : displayName + gap + QChar(0x2066) + unit + QChar(0x2069);
+        if (text.isEmpty())
+            return;
+        QTextLayout layout(text, item.font);
+        QTextOption textOption;
+        textOption.setTextDirection(item.direction);
+        textOption.setAlignment(QStyle::visualAlignment(item.direction, Qt::AlignLeft));
+        textOption.setWrapMode(QTextOption::NoWrap);
+        layout.setTextOption(textOption);
+        QTextLayout::FormatRange unitFormat;
+        unitFormat.start = displayName.size() + gap.size();
+        unitFormat.length = text.size() - unitFormat.start;
+        unitFormat.format.setFont(unitFont);
+        unitFormat.format.setForeground(unitColor);
+        layout.setFormats({unitFormat});
+        layout.beginLayout();
+        QTextLine line = layout.createLine();
+        line.setLineWidth(textRect.width());
+        layout.endLayout();
+        painter->save();
+        painter->setClipRect(textRect, Qt::IntersectClip);
+        painter->setPen(foreground);
+        layout.draw(painter, QPointF(textRect.left(), textRect.top() + (textRect.height() - line.height()) / 2));
+        painter->restore();
+    }
+
+private:
+    SyntaxHighlighter* m_highlighter;
+};
+} // namespace
+
 ConstantCompletion::ConstantCompletion(Editor* editor)
     : QObject(editor)
+    , m_editor(editor)
 {
-    m_editor = editor;
-
     m_popup = new CompletionPopup<QFrame>;
     m_popup->setObjectName(QStringLiteral("constantCompletionPopup"));
     m_popup->setParent(editor, Qt::Popup | Qt::FramelessWindowHint);
-    m_popup->setFocusPolicy(Qt::NoFocus);
-    m_popup->setFocusProxy(editor);
+    m_popup->setAttribute(Qt::WA_NoMouseReplay, true);
     m_popup->setFrameStyle(QFrame::NoFrame);
     m_popup->setAutoFillBackground(true);
 
-    m_categoryWidget = new QTreeWidget(m_popup);
-    m_categoryWidget->setObjectName(QStringLiteral("constantCompletionCategoryPopup"));
-    m_categoryWidget->setFrameShape(QFrame::NoFrame);
-    m_categoryWidget->setColumnCount(1);
-    m_categoryWidget->setRootIsDecorated(false);
-    m_categoryWidget->header()->hide();
-    m_categoryWidget->setEditTriggers(QTreeWidget::NoEditTriggers);
-    m_categoryWidget->setSelectionBehavior(QTreeWidget::SelectRows);
-    m_categoryWidget->setMouseTracking(true);
-    m_categoryWidget->installEventFilter(this);
-    m_categoryWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-
-    connect(m_categoryWidget, SIGNAL(itemClicked(QTreeWidgetItem*, int)),
-                              SLOT(showConstants()));
+    m_search = new ThemedLineEdit(m_popup);
+    m_search->setObjectName(QStringLiteral("constantCompletionSearch"));
+    m_search->setPlaceholderText(tr("Search constants"));
+    m_search->setAccessibleName(tr("Search constants"));
+    m_search->setClearButtonEnabled(true);
+    m_popup->setFocusProxy(m_search);
 
     m_constantWidget = new QTreeWidget(m_popup);
     m_constantWidget->setObjectName(QStringLiteral("constantCompletionConstantsPopup"));
     m_constantWidget->setFrameShape(QFrame::NoFrame);
-    m_constantWidget->setColumnCount(2);
-    m_constantWidget->setColumnHidden(1, true);
-    m_constantWidget->setRootIsDecorated(false);
+    m_constantWidget->setColumnCount(1);
     m_constantWidget->header()->hide();
+    m_constantWidget->setItemDelegate(new ConstantCompletionDelegate(editor->findChild<SyntaxHighlighter*>(), m_constantWidget));
+    m_constantWidget->setRootIsDecorated(false);
     m_constantWidget->setEditTriggers(QTreeWidget::NoEditTriggers);
     m_constantWidget->setSelectionBehavior(QTreeWidget::SelectRows);
+    m_constantWidget->setSelectionMode(QTreeWidget::SingleSelection);
     m_constantWidget->setMouseTracking(true);
+    m_constantWidget->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+
+    m_noMatchLabel = new QLabel(tr("No match found"), m_popup);
+    m_noMatchLabel->setAlignment(Qt::AlignCenter);
+    m_noMatchLabel->hide();
+
+    auto* layout = new QVBoxLayout(m_popup);
+    layout->setContentsMargins(8, 8, 8, 8);
+    layout->setSpacing(6);
+    layout->addWidget(m_search);
+    layout->addWidget(m_constantWidget, 1);
+    QWidget::setTabOrder(m_search, m_constantWidget);
+
+    connect(m_search, &QLineEdit::textChanged, this, &ConstantCompletion::filter);
+    connect(m_constantWidget, &QTreeWidget::itemClicked, this, &ConstantCompletion::doneCompletion);
+    filter();
+
+    const int rowHeight = qMax(m_constantWidget->sizeHintForRow(0), m_constantWidget->fontMetrics().height());
+    m_popupSize = QSize(qMax(480, m_search->fontMetrics().horizontalAdvance(QLatin1Char('M')) * 48),
+                       rowHeight * 7 + m_search->sizeHint().height() + 22);
+    // Let the compositor shorten the list on small outputs.
+    layout->setSizeConstraint(QLayout::SetNoConstraint);
+    m_constantWidget->setMinimumSize(0, 0);
+    m_popup->resize(m_popupSize);
+    m_search->installEventFilter(this);
     m_constantWidget->installEventFilter(this);
-    m_constantWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-
-    connect(m_constantWidget, SIGNAL(itemClicked(QTreeWidgetItem*, int)),
-                              SLOT(doneCompletion()));
-
-    m_slider = new QTimeLine(100, m_popup);
-    m_slider->setEasingCurve(QEasingCurve(QEasingCurve::Linear));
-    connect(m_slider, SIGNAL(frameChanged(int)),
-                      SLOT(setHorizontalPosition(int)));
-
-    const Constants* constants = Constants::instance();
-    m_constantList = constants->list();
-
-    // Populate categories.
-    QStringList domainList;
-    domainList << tr("All");
-    QTreeWidgetItem* all = new QTreeWidgetItem(m_categoryWidget, domainList);
-    for (int i = 0; i < constants->domains().count(); ++i) {
-        domainList.clear();
-        domainList << constants->domains().at(i);
-        new QTreeWidgetItem(m_categoryWidget, domainList);
-    }
-    m_categoryWidget->setCurrentItem(all);
-
-    // Populate constants.
-    m_lastDomain = tr("All");
-    for (int i = 0; i < constants->list().count(); ++i) {
-        QStringList names;
-        names << constants->list().at(i).name;
-        names << constants->list().at(i).name.toUpper();
-        new QTreeWidgetItem(m_constantWidget, names);
-    }
-    m_constantWidget->sortItems(0, Qt::AscendingOrder);
-
-    // Find size, the biggest between both.
-    m_constantWidget->resizeColumnToContents(0);
-    m_categoryWidget->resizeColumnToContents(0);
-    int width = qMax(m_constantWidget->width(), m_categoryWidget->width());
-    const int constantsHeight =
-        m_constantWidget->sizeHintForRow(0)
-            * qMin(7, m_constantList.count()) + 3;
-    const int domainsHeight =
-        m_categoryWidget->sizeHintForRow(0)
-            * qMin(7, constants->domains().count()) + 3;
-    const int height = qMax(constantsHeight, domainsHeight);
-    width += 200; // Extra space (FIXME: scrollbar size?).
-
-    // Adjust dimensions.
-    m_popupSize = QSize(width, height);
-    m_popup->resize(width, height);
-    m_constantWidget->resize(width, height);
-    m_categoryWidget->resize(width, height);
+    m_constantWidget->viewport()->installEventFilter(this);
     m_popup->installEventFilter(this);
 }
 
 ConstantCompletion::~ConstantCompletion()
 {
-    // The editor owns the popup through Qt parent-child deletion.
-    m_editor->setFocus();
+    m_popup->removeEventFilter(this);
+    delete m_popup;
 }
 
 void ConstantCompletion::setThemeColors(const QColor& background,
@@ -5046,211 +5093,150 @@ void ConstantCompletion::applyThemeColors()
         return;
 
     QPalette palette = m_popup->palette();
-    for (const QPalette::ColorGroup group : {QPalette::Active,
-                                             QPalette::Inactive,
-                                             QPalette::Disabled}) {
+    for (const QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
         palette.setColor(group, QPalette::Window, m_backgroundColor);
         palette.setColor(group, QPalette::WindowText, m_foregroundColor);
+        palette.setColor(group, QPalette::Base, m_backgroundColor);
+        palette.setColor(group, QPalette::Text, m_foregroundColor);
+        palette.setColor(group, QPalette::PlaceholderText, m_foregroundColor);
+        palette.setColor(group, QPalette::Button, m_backgroundColor);
+        palette.setColor(group, QPalette::ButtonText, m_foregroundColor);
+        palette.setColor(group, QPalette::Highlight, m_selectedRowColor);
+        palette.setColor(group, QPalette::HighlightedText, m_selectedRowForegroundColor);
     }
     m_popup->setPalette(palette);
-    m_popup->setStyleSheet(QStringLiteral("QFrame#constantCompletionPopup { background: %1; }")
-                               .arg(m_backgroundColor.name()));
+    m_search->setPalette(palette);
+    m_popup->setStyleSheet(QStringLiteral(
+        "QFrame#constantCompletionPopup { background: %1; border: %2px solid %3; border-radius: %4px; }")
+        .arg(m_backgroundColor.name()).arg(UiConfig::PopupOutlineStrokeWidth)
+        .arg(m_outlineColor.name()).arg(m_cornerRadius));
+    static_cast<ThemedLineEdit*>(m_search)->setCursorColor(m_foregroundColor);
+    m_search->setStyleSheet(QStringLiteral(
+        "QLineEdit { background: %1; color: %2; border: 1px solid %3;"
+        " border-radius: %4px; padding: 4px 6px; selection-background-color: %5; selection-color: %6; }"
+        "QLineEdit:focus { border-color: %2; }")
+        .arg(m_backgroundColor.name(), m_foregroundColor.name(), m_outlineColor.name())
+        .arg(UiConfig::ControlCornerRadius)
+        .arg(m_selectedRowColor.name(), m_selectedRowForegroundColor.name()));
 
-    const ToolTipStyleUtils::TreePopupTheme theme {
-        m_backgroundColor,
-        m_foregroundColor,
-        m_scrollbarThumbColor,
-        m_scrollbarThumbForegroundColor,
-        m_selectedRowColor,
-        m_selectedRowForegroundColor,
-        m_outlineColor,
-        m_cornerRadius
-    };
-    ToolTipStyleUtils::applyTreePopupTheme(m_categoryWidget, theme);
-    ToolTipStyleUtils::applyTreePopupTheme(m_constantWidget, theme);
+    ToolTipStyleUtils::applyTreePopupTheme(m_constantWidget,
+        {m_backgroundColor, m_foregroundColor,
+         m_scrollbarThumbColor, m_scrollbarThumbForegroundColor,
+         m_selectedRowColor, m_selectedRowForegroundColor, m_outlineColor, m_cornerRadius});
+    m_constantWidget->setStyleSheet(m_constantWidget->styleSheet() + QStringLiteral(
+        "QTreeWidget { border: 0; border-radius: 0; }"
+        "QTreeWidget::item { padding: 5px 6px; border-radius: 3px; }"));
 }
 
-void ConstantCompletion::showCategory()
+void ConstantCompletion::filter()
 {
-    m_slider->setFrameRange(m_popup->width(), 0);
-    m_slider->stop();
-    m_slider->start();
-    m_categoryWidget->setFocus();
-}
-
-void ConstantCompletion::showConstants()
-{
-    m_slider->setFrameRange(0, m_popup->width());
-    m_slider->stop();
-    m_slider->start();
-    m_constantWidget->setFocus();
-
-    QString chosenDomain;
-    if (m_categoryWidget->currentItem())
-        chosenDomain = m_categoryWidget->currentItem()->text(0);
-
-    if (m_lastDomain == chosenDomain)
-        return;
-
     m_constantWidget->clear();
-
-    for (int i = 0; i < m_constantList.count(); ++i) {
-        QStringList names;
-        names << m_constantList.at(i).name;
-        names << m_constantList.at(i).name.toUpper();
-
-        const bool include = (chosenDomain == tr("All")) ?
-            true : (m_constantList.at(i).domain == chosenDomain);
-
-        if (!include)
+    const auto& constants = Constants::instance()->list();
+    for (const Constant& constant : constants) {
+        if (!ConstantBrowserUtils::matches(constant, m_search->text()))
             continue;
-
-        new QTreeWidgetItem(m_constantWidget, names);
+        auto* item = new QTreeWidgetItem(m_constantWidget,
+            {constant.name});
+        const QString unit = ConstantBrowserUtils::unit(constant);
+        item->setData(0, constantUnitRole, unit);
+        item->setData(0, Qt::AccessibleTextRole,
+                      unit.isEmpty() ? constant.name : constant.name + QLatin1Char(' ') + unit);
+        item->setData(0, Qt::UserRole, ConstantBrowserUtils::expression(constant));
+        const QString tip = constant.name + QLatin1Char('\n') + constant.value
+            + (unit.isEmpty() ? QString() : QLatin1Char(' ') + unit);
+        item->setToolTip(0, tip);
     }
-
     m_constantWidget->sortItems(0, Qt::AscendingOrder);
-    m_constantWidget->setCurrentItem(m_constantWidget->itemAt(0, 0));
-    m_lastDomain = chosenDomain;
+    m_constantWidget->setCurrentItem(m_constantWidget->topLevelItem(0));
+    m_noMatchLabel->hide();
+    if (m_constantWidget->topLevelItemCount() == 0)
+        DockListStyle::showCenteredNoMatchLabel(m_constantWidget, m_noMatchLabel);
+}
+
+void ConstantCompletion::restoreEditorFocus()
+{
+    m_editor->window()->activateWindow();
+    m_editor->setFocus(Qt::OtherFocusReason);
+    QTimer::singleShot(0, m_editor, [editor = m_editor]() {
+        editor->window()->activateWindow();
+        editor->setFocus(Qt::OtherFocusReason);
+        editor->viewport()->setFocus(Qt::OtherFocusReason);
+    });
 }
 
 bool ConstantCompletion::eventFilter(QObject* object, QEvent* event)
 {
+    if (object == m_constantWidget->viewport() && event->type() == QEvent::Resize
+        && m_constantWidget->topLevelItemCount() == 0) {
+        DockListStyle::showCenteredNoMatchLabel(m_constantWidget, m_noMatchLabel);
+    }
     if (object == m_popup) {
-        if (event->type() == QEvent::Resize) {
-            // A Wayland compositor can shorten a popup to fit the output. Keep
-            // both sliding pages fitted to that actual size, including scrollbars.
-            const int oldWidth = static_cast<QResizeEvent*>(event)->oldSize().width();
-            const int position = oldWidth > 0
-                ? -m_categoryWidget->x() * m_popup->width() / oldWidth : 0;
-            m_categoryWidget->resize(m_popup->size());
-            m_constantWidget->resize(m_popup->size());
-            setHorizontalPosition(position);
-        }
+        if (event->type() == QEvent::Hide && !m_finishing)
+            emit canceledCompletion();
         return false;
     }
+    if (event->type() != QEvent::KeyPress)
+        return false;
 
-    if (event->type() == QEvent::Hide) {
-        emit canceledCompletion();
+    auto* keyEvent = static_cast<QKeyEvent*>(event);
+    const int key = keyEvent->key();
+    if (key == Qt::Key_Escape) {
+        m_popup->hide();
+        restoreEditorFocus();
         return true;
     }
-
-    if (object == m_constantWidget) {
-
-        if (event->type() == QEvent::KeyPress) {
-            int key = static_cast<QKeyEvent*>(event)->key();
-
-            switch (key) {
-            case Qt::Key_Enter:
-            case Qt::Key_Return:
-            case Qt::Key_Tab:
-                doneCompletion();
-                return true;
-
-            case Qt::Key_Left:
-                showCategory();
-                return true;
-
-            case Qt::Key_Right:
-            case Qt::Key_Up:
-            case Qt::Key_Down:
-            case Qt::Key_Home:
-            case Qt::Key_End:
-            case Qt::Key_PageUp:
-            case Qt::Key_PageDown:
-                return false;
-            }
-
-            if (key != Qt::Key_Escape)
-                QApplication::sendEvent(m_editor, event);
-            m_popup->hide();
-            emit canceledCompletion();
-            return true;
-        }
+    if (key == Qt::Key_Return || key == Qt::Key_Enter
+        || (key == Qt::Key_Tab && keyEvent->modifiers() == Qt::NoModifier)) {
+        doneCompletion();
+        return true;
     }
-
-    if (object == m_categoryWidget) {
-
-        if (event->type() == QEvent::KeyPress) {
-            int key = static_cast<QKeyEvent*>(event)->key();
-
-            switch (key) {
-            case Qt::Key_Enter:
-            case Qt::Key_Return:
-            case Qt::Key_Right:
-                showConstants();
-                return true;
-
-            case Qt::Key_Up:
-            case Qt::Key_Down:
-            case Qt::Key_Home:
-            case Qt::Key_End:
-            case Qt::Key_PageUp:
-            case Qt::Key_PageDown:
-                return false;
-            }
-
-            if (key != Qt::Key_Escape)
-                QApplication::sendEvent(m_editor, event);
-            m_popup->hide();
-            emit canceledCompletion();
-            return true;
-        }
+    if (object == m_search && (key == Qt::Key_Up || key == Qt::Key_Down)) {
+        ConstantBrowserUtils::moveSelection(m_constantWidget, key);
+        return true;
     }
-
+    const bool editsSearch = (!keyEvent->text().isEmpty() && keyEvent->text().front().isPrint())
+        || key == Qt::Key_Backspace || key == Qt::Key_Delete;
+    if (object == m_constantWidget && editsSearch
+        && !(keyEvent->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))) {
+        m_search->setFocus();
+        QApplication::sendEvent(m_search, event);
+        return true;
+    }
     return false;
 }
 
 void ConstantCompletion::doneCompletion()
 {
-    m_popup->hide();
-    m_editor->setFocus();
     const auto* item = m_constantWidget->currentItem();
-    if (!item) {
-        emit selectedCompletion(QString());
+    if (!item || m_finishing)
         return;
-    }
-
-    auto found = std::find_if(m_constantList.begin(), m_constantList.end(),
-        [&](const Constant& c) { return item->text(0) == c.name; }
-    );
-    if (found == m_constantList.end()) {
-        emit selectedCompletion(QString());
-        return;
-    }
-
-    QString normalizedUnit = found->unit;
-    normalizedUnit.replace(UnicodeChars::MiddleDot, MathDsl::MulDotOp);
-    const QString expression = found->unit.isEmpty()
-        ? found->value
-        : QStringLiteral("%1%2[%3]")
-            .arg(found->value, QString(MathDsl::QuantSp), normalizedUnit);
+    const QString expression = item->data(0, Qt::UserRole).toString();
+    m_finishing = true;
+    s_completionMouseSelectionOwner = m_editor;
+    QTimer::singleShot(250, m_editor, [editor = m_editor]() {
+        if (s_completionMouseSelectionOwner == editor)
+            s_completionMouseSelectionOwner = nullptr;
+    });
+    m_popup->hide();
     emit selectedCompletion(expression);
+    restoreEditorFocus();
 }
 
 void ConstantCompletion::showCompletion()
 {
+    m_finishing = false;
     applyThemeColors();
-
+    m_popup->ensurePolished();
+    const int rowHeight = qMax(m_constantWidget->sizeHintForRow(0), m_constantWidget->fontMetrics().height());
+    m_popupSize.setHeight(rowHeight * 7 + m_search->sizeHint().height() + 22);
     prepareCompletionPopup(m_popup, m_editor, m_editor->textCursor(), m_popupSize, m_cornerRadius);
     const QRect geometry = completionPopupGeometry(m_editor, m_editor->textCursor(), m_popupSize);
     if (!geometry.isValid()) {
-        m_popup->hide();
+        emit canceledCompletion();
         return;
     }
-
-    // Start with category.
-    m_categoryWidget->setFocus();
-    setHorizontalPosition(0);
-
     m_popup->setGeometry(geometry);
-    m_categoryWidget->resize(geometry.size());
-    m_constantWidget->resize(geometry.size());
     ToolTipStyleUtils::applyRoundedPopupMask(m_popup, m_cornerRadius);
     m_popup->show();
-}
-
-void ConstantCompletion::setHorizontalPosition(int x)
-{
-    m_categoryWidget->move(-x, 0);
-    m_constantWidget->move(m_popup->width() - x, 0);
+    m_search->setFocus(Qt::PopupFocusReason);
 }

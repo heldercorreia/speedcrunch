@@ -3,6 +3,7 @@
 
 
 #include "gui/constantswidget.h"
+#include "gui/constantbrowserutils.h"
 
 #include "core/constants.h"
 #include "core/settings.h"
@@ -30,6 +31,7 @@
 #include <QGridLayout>
 #include <QHeaderView>
 #include <QLabel>
+#include <QKeyEvent>
 #include <QLineEdit>
 #include <QShortcut>
 #include <QTreeWidget>
@@ -37,25 +39,6 @@
 
 #include <algorithm>
 #include <utility>
-
-static QString constantExpression(const Constant& constant)
-{
-    if (constant.domainType == ConstantDomain::Mathematics
-        && constant.unit.isEmpty()
-        && constant.value == QStringLiteral("3.14159265358979323846264338327950288419716939937511"))
-        return QString(UnicodeChars::Pi);
-    if (constant.domainType == ConstantDomain::Mathematics
-        && constant.unit.isEmpty()
-        && constant.value == QStringLiteral("2.71828182845904523536028747135266249775724709369996"))
-        return QStringLiteral("e");
-
-    QString unit = constant.unit;
-    unit.replace(UnicodeChars::MiddleDot, MathDsl::MulDotOp);
-    return constant.unit.isEmpty()
-        ? constant.value
-        : QStringLiteral("%1%2[%3]")
-            .arg(constant.value, QString(MathDsl::QuantSp), unit);
-}
 
 static QString displayValue(const Constant& constant)
 {
@@ -145,16 +128,16 @@ ConstantsWidget::ConstantsWidget(QWidget* parent, const InitialState& state)
     connect(m_list, SIGNAL(itemActivated(QTreeWidgetItem*, int)), SLOT(handleItem(QTreeWidgetItem*)));
     QShortcut* returnShortcut = new QShortcut(QKeySequence(Qt::Key_Return), this);
     returnShortcut->setContext(Qt::WidgetWithChildrenShortcut);
-    connect(returnShortcut, &QShortcut::activated, this, [this]() {
+    const auto activateCurrent = [this]() {
+        if (m_filterTimer->isActive())
+            filter();
         if (QTreeWidgetItem* current = m_list->currentItem())
             handleItem(current);
-    });
+    };
+    connect(returnShortcut, &QShortcut::activated, this, activateCurrent);
     QShortcut* enterShortcut = new QShortcut(QKeySequence(Qt::Key_Enter), this);
     enterShortcut->setContext(Qt::WidgetWithChildrenShortcut);
-    connect(enterShortcut, &QShortcut::activated, this, [this]() {
-        if (QTreeWidgetItem* current = m_list->currentItem())
-            handleItem(current);
-    });
+    connect(enterShortcut, &QShortcut::activated, this, activateCurrent);
 
     QVBoxLayout* layout = new QVBoxLayout;
     setLayout(layout);
@@ -181,6 +164,7 @@ ConstantsWidget::ConstantsWidget(QWidget* parent, const InitialState& state)
     setFocusProxy(m_filter);
 
     restoreState(state.domain, state.subdomain, state.searchText);
+    m_filter->installEventFilter(this);
 }
 
 ConstantsWidget::~ConstantsWidget()
@@ -306,17 +290,16 @@ void ConstantsWidget::filter()
         StartupDiagnostics::AppearanceScope phase("Filter and format constants dock rows", this);
         rows.reserve(clist.size());
         for (const Constant& constant : clist) {
-            if ((chosenDomain != all && constant.domain != chosenDomain)
-                || (chosenSubdomain != all && constant.subdomain != chosenSubdomain)
-                || (!term.isEmpty() && !constant.name.contains(term, Qt::CaseInsensitive))) {
+            if (!ConstantBrowserUtils::matches(constant, term,
+                    chosenDomain == all ? QString() : chosenDomain,
+                    chosenSubdomain == all ? QString() : chosenSubdomain)) {
                 continue;
             }
 
             const QString value = displayValue(constant);
             const QString radCh = (radixChar != MathDsl::DotSep)
                 ? QString(value).replace(MathDsl::DotSep, radixChar) : value;
-            QString normalizedUnit = constant.unit;
-            normalizedUnit.replace(UnicodeChars::MiddleDot, MathDsl::MulDotOp);
+            const QString normalizedUnit = ConstantBrowserUtils::unit(constant);
             QStringList str {constant.name};
             if (rightToLeft)
                 str << normalizedUnit + UnicodeChars::LeftToRightMark << radCh;
@@ -337,7 +320,7 @@ void ConstantsWidget::filter()
         for (const auto& row : rows) {
             const Constant& constant = *row.constant;
             QTreeWidgetItem* item = new QTreeWidgetItem(m_list, row.text);
-            item->setData(0, Qt::UserRole, constantExpression(constant));
+            item->setData(0, Qt::UserRole, ConstantBrowserUtils::expression(constant));
 
             QString tip;
             tip += QString(UnicodeChars::LeftToRightMark);
@@ -373,6 +356,7 @@ void ConstantsWidget::filter()
         m_noMatchLabel->hide();
         StartupDiagnostics::AppearanceScope phase("Sort constants dock rows", this);
         m_list->sortItems(0, Qt::AscendingOrder);
+        m_list->setCurrentItem(m_list->topLevelItem(0));
     } else {
         updateEmptyHeaderStretch();
         scheduleEmptyHeaderStretch();
@@ -488,6 +472,15 @@ void ConstantsWidget::changeEvent(QEvent* e)
 
 bool ConstantsWidget::eventFilter(QObject* watched, QEvent* event)
 {
+    if (watched == m_filter && event->type() == QEvent::KeyPress) {
+        const int key = static_cast<QKeyEvent*>(event)->key();
+        if (key == Qt::Key_Up || key == Qt::Key_Down) {
+            if (m_filterTimer->isActive())
+                filter();
+            ConstantBrowserUtils::moveSelection(m_list, key);
+            return true;
+        }
+    }
     if (watched == m_list && event->type() == QEvent::Show && m_columnsNeedResize)
         resizeColumnsToContents();
     if (watched == m_list || watched == m_list->viewport()) {
