@@ -44,6 +44,8 @@ Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before participating.
 - Be part of the [community](https://speedcrunch.org/community.html).
 - [Donate](https://www.speedcrunch.org/donate.html) to help supporting the expenses of server hosting, internet domain and computers for further development.
 
+![SpeedCrunch contributors](https://contrib.rocks/image?repo=heldercorreia/speedcrunch)
+
 ## License
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
