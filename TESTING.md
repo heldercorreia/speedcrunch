@@ -12,6 +12,24 @@ By default, only the application is built. To also build and run the tests, enab
     cmake --build build --config Release --parallel
     ctest --test-dir build -C Release --parallel --output-on-failure
 
+On Windows, CTest adds the configured Qt kit's DLL directory to each test's
+`PATH`. This lets the tests find libraries such as `Qt6Core.dll` without copying
+them beside every executable. Rerun the configure command after updating an
+existing checkout to apply this setting.
+
+When running a test executable directly, add the matching Qt kit's `bin`
+directory to `PATH` in that shell first. With `QT_ROOT` set as described in
+[BUILDING.md](BUILDING.md), use this in Command Prompt:
+
+    set "PATH=%QT_ROOT%\bin;%PATH%"
+
+Or, for the example installation in Git Bash:
+
+    export PATH="/c/Qt/6.12.0/msvc2022_64/bin:$PATH"
+
+Adjust the path to match your installation. A Windows dialog reporting a missing
+Qt DLL means the test could not start, rather than that a test assertion failed.
+
 The UI test suites use temporary configuration, session and cache directories,
 and reset settings before each test case. They suppress the first-run number
 format prompt. An unexpected prompt fails the test instead of blocking the suite.

@@ -219,6 +219,19 @@ if(BUILD_TESTING)
         target_compile_definitions(${ui_test} PRIVATE SPEEDCRUNCH_UI_TEST)
         set_tests_properties(${ui_test} PROPERTIES LABELS "ui")
     endforeach()
+
+    if(WIN32)
+        get_property(speedcrunch_tests DIRECTORY PROPERTY TESTS)
+        if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.22")
+            set_property(TEST ${speedcrunch_tests} APPEND PROPERTY ENVIRONMENT_MODIFICATION
+                "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>")
+        else()
+            # Older CTest versions require the full PATH as one escaped list entry.
+            string(REPLACE ";" "\\;" speedcrunch_test_path "$ENV{PATH}")
+            set_property(TEST ${speedcrunch_tests} APPEND PROPERTY ENVIRONMENT
+                "PATH=$<TARGET_FILE_DIR:Qt6::Core>\\;${speedcrunch_test_path}")
+        endif()
+    endif()
 endif()
 
 # Embed the same generated catalogs in the application and test executables.
