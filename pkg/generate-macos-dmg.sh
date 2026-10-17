@@ -12,6 +12,7 @@ require_cmd() {
   fi
 }
 
+require_cmd qt-cmake
 require_cmd cmake
 require_cmd cpack
 require_cmd strip
@@ -28,7 +29,7 @@ if [[ -z "${JOBS:-}" ]]; then
 fi
 
 echo "Configuring arm64 build..."
-cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
+qt-cmake -S "$ROOT_DIR" -B "$BUILD_DIR" \
   -DCMAKE_OSX_ARCHITECTURES="arm64" \
   -DCMAKE_BUILD_TYPE=Release
 
