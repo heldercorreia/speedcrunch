@@ -6,6 +6,8 @@ equals(QT_MAJOR_VERSION, 6) {
 
 QT += widgets network
 CONFIG += c++17
+CONFIG += lrelease embed_translations
+QM_FILES_RESOURCE_PREFIX = /locale
 QMAKE_CXXFLAGS += "-Wall -pedantic"
 
 CONFIG(debug, debug|release) {

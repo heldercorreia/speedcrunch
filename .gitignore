@@ -13,4 +13,5 @@ src/tests/*.o
 src/tests/moc_*
 src/tests/Makefile
 src/tests/testevaluator.app
+src/resources/locale/*.qm
 Testing/

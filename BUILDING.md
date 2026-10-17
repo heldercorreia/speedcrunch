@@ -5,8 +5,13 @@
 To build SpeedCrunch, you need:
 
 - A compiler toolchain with C17 and C++17 support
-- [Qt](https://www.qt.io/) 6.x (Core, Widgets, Help, Network)
+- [Qt](https://www.qt.io/) 6.4 or later (Core, Widgets, Help, Network, LinguistTools)
 - [CMake](https://cmake.org/) 3.16 or later
+
+Qt LinguistTools provides the `lrelease` tool. CMake uses it to compile the TS
+sources in `src/resources/locale` into QM files in the build directory and embeds
+them in the application. The generated QM files do not need to be installed
+separately or kept in Git. Changes to a TS file take effect on the next build.
 
 ## Getting the source
 
@@ -81,8 +86,8 @@ for the Windows versions and compilers supported by your chosen Qt release.
    build tools and a Windows SDK. See Microsoft's
    [C++ command-line tools guide](https://learn.microsoft.com/en-us/cpp/build/building-on-the-command-line?view=msvc-170).
 2. Install Qt through the Qt Online Installer. Select the **MSVC 2022 64-bit**
-   desktop kit for your Qt 6 version, with the Core, Widgets, Help, and Network
-   modules. A MinGW kit cannot be used with the MSVC commands below.
+   desktop kit for your Qt 6 version, with the Core, Widgets, Help, Network, and
+   LinguistTools components. A MinGW kit cannot be used with the MSVC commands below.
 3. Select **CMake** under **Developer and Designer Tools** in the Qt Online
    Installer. You can also install it separately from [cmake.org](https://cmake.org/download/).
    The Visual Studio 2022 generator requires CMake 3.21 or later, even though the
