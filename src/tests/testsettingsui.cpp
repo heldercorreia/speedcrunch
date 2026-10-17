@@ -31,6 +31,8 @@ private slots:
     void editing_cursor_blinking_updates_all_open_editors();
     void editing_escape_clears_editor_is_shared_and_resets_to_off();
     void escape_clears_editor_survives_settings_reload();
+    void accept_completion_with_enter_is_shared_and_resets_to_off();
+    void accept_completion_with_enter_survives_settings_reload();
     void number_format_is_shared_and_refreshes_all_input_panes();
     void display_font_changes_update_all_sessions_and_windows_data();
     void display_font_changes_update_all_sessions_and_windows();
@@ -615,6 +617,64 @@ void TestSettingsUi::escape_clears_editor_survives_settings_reload()
         settings->escapeClearsEditor = !enabled;
         settings->load();
         QCOMPARE(settings->escapeClearsEditor, enabled);
+    }
+}
+
+void TestSettingsUi::accept_completion_with_enter_is_shared_and_resets_to_off()
+{
+    MainWindow first;
+    MainWindow second;
+    QAction* action = first.findChild<QAction*>(QStringLiteral("AutoCompletionAcceptWithEnterAction"));
+    QAction* secondAction = second.findChild<QAction*>(QStringLiteral("AutoCompletionAcceptWithEnterAction"));
+    QVERIFY(action);
+    QVERIFY(secondAction);
+    QVERIFY(action->isCheckable());
+    QVERIFY(!action->isChecked());
+    QVERIFY(!Settings::instance()->autoCompletionAcceptWithEnter);
+    Editor* editor = first.findChild<Editor*>();
+    QVERIFY(editor);
+    editor->setText(QStringLiteral("cos"));
+    action->trigger();
+    QVERIFY(Settings::instance()->autoCompletionAcceptWithEnter);
+    QVERIFY(secondAction->isChecked());
+    QCOMPARE(editor->text(), QStringLiteral("cos"));
+
+    QVERIFY(QMetaObject::invokeMethod(&first, "splitActivePaneRight"));
+    MainWindow third;
+    QAction* thirdAction = third.findChild<QAction*>(QStringLiteral("AutoCompletionAcceptWithEnterAction"));
+    QVERIFY(thirdAction);
+    QVERIFY(thirdAction->isChecked());
+    secondAction->trigger();
+    QVERIFY(!Settings::instance()->autoCompletionAcceptWithEnter);
+    QVERIFY(!action->isChecked());
+    QVERIFY(!thirdAction->isChecked());
+    thirdAction->trigger();
+
+    QAction* reset = first.findChild<QAction*>(QStringLiteral("ResetAllSettingsAction"));
+    QVERIFY(reset);
+    QTimer::singleShot(0, &first, []() {
+        auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        QVERIFY(dialog);
+        dialog->button(QMessageBox::Yes)->click();
+    });
+    reset->trigger();
+    QVERIFY(!Settings::instance()->autoCompletionAcceptWithEnter);
+    QVERIFY(!action->isChecked());
+    QVERIFY(!secondAction->isChecked());
+    QVERIFY(!thirdAction->isChecked());
+    QCOMPARE(editor->text(), QStringLiteral("cos"));
+}
+
+void TestSettingsUi::accept_completion_with_enter_survives_settings_reload()
+{
+    Settings* settings = Settings::instance();
+    QVERIFY(!settings->autoCompletionAcceptWithEnter);
+    for (bool enabled : {true, false}) {
+        settings->autoCompletionAcceptWithEnter = enabled;
+        settings->save();
+        settings->autoCompletionAcceptWithEnter = !enabled;
+        settings->load();
+        QCOMPARE(settings->autoCompletionAcceptWithEnter, enabled);
     }
 }
 

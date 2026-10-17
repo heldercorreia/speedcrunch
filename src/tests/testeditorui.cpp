@@ -204,6 +204,11 @@ private slots:
     void tooltip_does_not_refresh_current_result_on_mouse_caret_reposition();
     void tooltip_refreshes_current_result_on_char_deletion();
     void enter_evaluates_when_completion_popup_has_no_explicit_interaction();
+    void completion_popup_enter_respects_accept_with_enter_data();
+    void completion_popup_enter_respects_accept_with_enter();
+    void enter_accepts_completion_for_names_and_units_data();
+    void enter_accepts_completion_for_names_and_units();
+    void enter_evaluates_without_completion_when_accept_with_enter_is_enabled();
     void completion_popup_arrow_keys_change_selection();
     void completion_popup_tab_accepts_selected_item();
     void completion_popup_closes_when_clicking_elsewhere();
@@ -4331,6 +4336,128 @@ void TestEditorUi::enter_evaluates_when_completion_popup_has_no_explicit_interac
 
     QCOMPARE(returnPressedSpy.count(), 1);
     QCOMPARE(editor.text(), input);
+}
+
+void TestEditorUi::completion_popup_enter_respects_accept_with_enter_data()
+{
+    QTest::addColumn<bool>("enabled");
+    QTest::addColumn<bool>("navigated");
+    QTest::addColumn<bool>("sendToPopup");
+    QTest::addColumn<int>("key");
+    for (bool enabled : {false, true}) {
+        for (bool navigated : {false, true}) {
+            for (bool sendToPopup : {false, true}) {
+                for (int key : {Qt::Key_Return, Qt::Key_Enter}) {
+                    const QString name = QStringLiteral("%1-%2-%3-%4")
+                        .arg(enabled ? "enabled" : "disabled")
+                        .arg(navigated ? "arrow-selection" : "first-suggestion")
+                        .arg(sendToPopup ? "popup" : "editor")
+                        .arg(key == Qt::Key_Return ? "return" : "keypad-enter");
+                    QTest::newRow(qPrintable(name)) << enabled << navigated << sendToPopup << key;
+                }
+            }
+        }
+    }
+}
+
+void TestEditorUi::completion_popup_enter_respects_accept_with_enter()
+{
+    QFETCH(bool, enabled);
+    QFETCH(bool, navigated);
+    QFETCH(bool, sendToPopup);
+    QFETCH(int, key);
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+    editor.setText(QStringLiteral("cos"));
+    editor.setCursorPosition(editor.text().size());
+    QSignalSpy returnPressedSpy(&editor, &Editor::returnPressed);
+    QVERIFY(QMetaObject::invokeMethod(&editor, "triggerAutoComplete", Qt::DirectConnection));
+    QTreeWidget* popup = nullptr;
+    QTRY_VERIFY_WITH_TIMEOUT((popup = s_completionPopupTree()) != nullptr, 1000);
+    QWidget* target = sendToPopup ? static_cast<QWidget*>(popup) : &editor;
+    if (navigated)
+        QTest::keyClick(target, Qt::Key_Down);
+    QVERIFY(popup->currentItem());
+    const QString completion = popup->currentItem()->text(1) + QStringLiteral("()");
+    Settings::instance()->autoCompletionAcceptWithEnter = enabled;
+    QTest::keyClick(target, Qt::Key(key));
+    QVERIFY(!popup->isVisible());
+    if (enabled || navigated) {
+        QCOMPARE(returnPressedSpy.count(), 0);
+        QCOMPARE(editor.text(), completion);
+        QCOMPARE(editor.textCursor().position(), completion.size() - 1);
+        QTRY_VERIFY(s_editorOrViewportHasFocus(&editor));
+        QTest::keyClick(&editor, Qt::Key(key));
+        QCOMPARE(returnPressedSpy.count(), 1);
+    } else {
+        QCOMPARE(returnPressedSpy.count(), 1);
+        QCOMPARE(editor.text(), QStringLiteral("cos"));
+    }
+}
+
+void TestEditorUi::enter_accepts_completion_for_names_and_units_data()
+{
+    QTest::addColumn<QString>("input");
+    QTest::addColumn<QString>("expected");
+    QTest::addColumn<bool>("inputAdjustments");
+    QTest::addColumn<int>("key");
+    for (bool inputAdjustments : {false, true}) {
+        for (int key : {Qt::Key_Return, Qt::Key_Tab}) {
+            const QByteArray prefix = QByteArray(inputAdjustments ? "adjusted-" : "raw-")
+                + (key == Qt::Key_Return ? "enter-" : "tab-");
+            QTest::newRow(QByteArray(prefix + "user-variable").constData())
+                << QStringLiteral("entervar") << QStringLiteral("entervariable") << inputAdjustments << key;
+            QTest::newRow(QByteArray(prefix + "user-function").constData())
+                << QStringLiteral("enterfun") << QStringLiteral("enterfunction()") << inputAdjustments << key;
+            QTest::newRow(QByteArray(prefix + "unit").constData())
+                << QStringLiteral("[met") << QStringLiteral("[m") << inputAdjustments << key;
+        }
+    }
+}
+
+void TestEditorUi::enter_accepts_completion_for_names_and_units()
+{
+    QFETCH(QString, input);
+    QFETCH(QString, expected);
+    QFETCH(bool, inputAdjustments);
+    QFETCH(int, key);
+    Settings::instance()->autoCompletionAcceptWithEnter = true;
+    Settings::instance()->automaticInputAdjustments = inputAdjustments;
+    Editor editor;
+    editor.evaluator()->setVariable(QStringLiteral("entervariable"), Quantity(42));
+    editor.evaluator()->setUserFunction(UserFunction(
+        QStringLiteral("enterfunction"), QStringList{QStringLiteral("x")}, QStringLiteral("x")));
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+    editor.setText(input);
+    editor.setCursorPosition(editor.text().size());
+    QSignalSpy returnPressedSpy(&editor, &Editor::returnPressed);
+    QVERIFY(QMetaObject::invokeMethod(&editor, "triggerAutoComplete", Qt::DirectConnection));
+    QTreeWidget* popup = nullptr;
+    QTRY_VERIFY_WITH_TIMEOUT((popup = s_completionPopupTree()) != nullptr, 1000);
+    QTest::keyClick(&editor, Qt::Key(key));
+    QCOMPARE(editor.text(), expected);
+    QCOMPARE(returnPressedSpy.count(), 0);
+    QVERIFY(!popup->isVisible());
+}
+
+void TestEditorUi::enter_evaluates_without_completion_when_accept_with_enter_is_enabled()
+{
+    Settings::instance()->autoCompletionAcceptWithEnter = true;
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+    editor.setText(QStringLiteral("2+2"));
+    editor.setCursorPosition(editor.text().size());
+    QSignalSpy returnPressedSpy(&editor, &Editor::returnPressed);
+    QVERIFY(!s_completionPopupTree());
+    QTest::keyClick(&editor, Qt::Key_Return);
+    QCOMPARE(returnPressedSpy.count(), 1);
+    QCOMPARE(editor.text(), QStringLiteral("2+2"));
 }
 
 void TestEditorUi::completion_popup_arrow_keys_change_selection()

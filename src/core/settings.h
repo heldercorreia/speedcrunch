@@ -167,6 +167,7 @@ public:
     bool autoAns;
     bool autoCalc;
     bool autoCompletion;
+    bool autoCompletionAcceptWithEnter;
     bool autoCompletionBuiltInFunctions;
     bool autoCompletionBuiltInVariables;
     bool autoCompletionLongFormUnits;

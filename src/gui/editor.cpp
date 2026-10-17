@@ -4771,7 +4771,7 @@ bool EditorCompletion::handleCompletionKey(QKeyEvent* event)
     switch (key) {
     case Qt::Key_Enter:
     case Qt::Key_Return:
-        if (m_popupInteracted) {
+        if (m_popupInteracted || Settings::instance()->autoCompletionAcceptWithEnter) {
             doneCompletion();
             return true;
         }

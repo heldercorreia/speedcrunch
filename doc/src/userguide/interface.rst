@@ -263,7 +263,10 @@ The expression editor provides some advanced features:
     With older Qt versions on Wayland, the list stays within the application window.
     Alignment follows the visible text even when the expression wraps or scrolls. Press :kbd:`Tab` to insert the current
     suggestion. Pressing :kbd:`Enter` evaluates the expression by default. If you explicitly navigate the popup with arrow/page/home/end keys or click a
-    suggestion with the mouse, then :kbd:`Enter` accepts that selected suggestion. Pressing :kbd:`Escape` dismisses the autocomplete popup.
+    suggestion with the mouse, then :kbd:`Enter` accepts that selected suggestion.
+    Enable :menuselection:`Settings --> Editing --> Autocomplete --> Accept with Enter`
+    to accept the current suggestion with :kbd:`Enter` immediately, without
+    first using the arrow keys. Pressing :kbd:`Escape` dismisses the autocomplete popup.
 
 * Function signature tooltip
     While typing a function call, the live result area can show the function signature (parameter list). The parameter currently being edited is highlighted.
@@ -752,8 +755,18 @@ Editing
     If selected, the entered expression remains in the editor after evaluating it.
 
 * :menuselection:`Autocomplete`
-    Controls which entities are included in editor autocompletion.
-    All options are enabled by default.
+    Controls how suggestions are accepted and which names appear in editor
+    autocompletion.
+
+    * ``Accept with Enter`` lets :kbd:`Enter` insert the current suggestion
+      without first selecting it with the arrow keys. It is off by default.
+      When no autocomplete popup is open, Enter still evaluates the expression.
+      Tab always accepts the current suggestion. The setting is saved between
+      launches and applies to all session panes and windows.
+
+      .. versionadded:: 1.1
+
+    The following suggestion categories are all enabled by default:
 
     * ``Built-in functions`` includes built-in function names.
     * ``Built-in variables`` includes built-in constant names.

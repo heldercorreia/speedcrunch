@@ -3875,6 +3875,8 @@ void MainWindow::createActions()
     m_actions.settingsOpenPrivateTabOnStartup = new QAction(this);
     m_actions.settingsBehaviorAutoAns = new QAction(this);
     m_actions.settingsBehaviorAutoCompletion = new QAction(this);
+    m_actions.settingsBehaviorAutoCompletionAcceptWithEnter = new QAction(this);
+    m_actions.settingsBehaviorAutoCompletionAcceptWithEnter->setObjectName(QStringLiteral("AutoCompletionAcceptWithEnterAction"));
     m_actions.settingsBehaviorAutoCompletionBuiltInFunctions = new QAction(this);
     m_actions.settingsBehaviorAutoCompletionBuiltInVariables = new QAction(this);
     m_actions.settingsBehaviorAutoCompletionLongFormUnits = new QAction(this);
@@ -4002,6 +4004,7 @@ void MainWindow::createActions()
     m_actions.settingsOpenPrivateTabOnStartup->setCheckable(true);
     m_actions.settingsBehaviorAutoAns->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletion->setCheckable(true);
+    m_actions.settingsBehaviorAutoCompletionAcceptWithEnter->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletionBuiltInFunctions->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletionBuiltInVariables->setCheckable(true);
     m_actions.settingsBehaviorAutoCompletionLongFormUnits->setCheckable(true);
@@ -4441,6 +4444,9 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorAutoAns->setToolTip(MainWindow::tr("If a new expression starts with +, -, *, or /, SpeedCrunch inserts \"ans\" first."));
     m_actions.settingsBehaviorAutoAns->setStatusTip(MainWindow::tr("If a new expression starts with +, -, *, or /, SpeedCrunch inserts \"ans\" first."));
     m_actions.settingsBehaviorAutoCompletion->setText(MainWindow::tr("Automatic &Completion"));
+    m_actions.settingsBehaviorAutoCompletionAcceptWithEnter->setText(tr("&Accept with Enter"));
+    m_actions.settingsBehaviorAutoCompletionAcceptWithEnter->setToolTip(tr("Accept the current autocomplete suggestion with Enter without first selecting it with the arrow keys."));
+    m_actions.settingsBehaviorAutoCompletionAcceptWithEnter->setStatusTip(m_actions.settingsBehaviorAutoCompletionAcceptWithEnter->toolTip());
     m_actions.settingsBehaviorAutoCompletionBuiltInFunctions->setText(MainWindow::tr("&Built-in Functions"));
     m_actions.settingsBehaviorAutoCompletionBuiltInVariables->setText(MainWindow::tr("Built-in &Variables"));
     m_actions.settingsBehaviorAutoCompletionLongFormUnits->setText(MainWindow::tr("&Units"));
@@ -4850,6 +4856,9 @@ void MainWindow::createMenus()
     m_menus.editing->setToolTipsVisible(true);
     m_menus.editing->addSeparator();
     m_menus.autoCompletion = m_menus.editing->addMenu("");
+    m_menus.autoCompletion->setToolTipsVisible(true);
+    m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionAcceptWithEnter);
+    m_menus.autoCompletion->addSeparator();
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionBuiltInFunctions);
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionBuiltInVariables);
     m_menus.autoCompletion->addAction(m_actions.settingsBehaviorAutoCompletionLongFormUnits);
@@ -8181,6 +8190,8 @@ void MainWindow::createFixedConnections()
     if (!isWaylandPlatform())
         connect(m_actions.settingsBehaviorAlwaysOnTop, SIGNAL(toggled(bool)), SLOT(setAlwaysOnTopEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoCompletion, SIGNAL(toggled(bool)), SLOT(setAutoCompletionEnabled(bool)));
+    connect(m_actions.settingsBehaviorAutoCompletionAcceptWithEnter, &QAction::toggled,
+            this, &MainWindow::setAutoCompletionAcceptWithEnterEnabled);
     connect(m_actions.settingsBehaviorAutoCompletionBuiltInFunctions, SIGNAL(toggled(bool)), SLOT(setAutoCompletionBuiltInFunctionsEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoCompletionBuiltInVariables, SIGNAL(toggled(bool)), SLOT(setAutoCompletionBuiltInVariablesEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoCompletionLongFormUnits, SIGNAL(toggled(bool)), SLOT(setAutoCompletionLongFormUnitsEnabled(bool)));
@@ -8540,6 +8551,7 @@ void MainWindow::applySettings(bool initializing)
         m_actions.settingsBehaviorAutoCompletion->setChecked(true);
     else
         setAutoCompletionEnabled(false);
+    setAutoCompletionAcceptWithEnterEnabled(m_settings->autoCompletionAcceptWithEnter);
     m_actions.settingsBehaviorAutoCompletionBuiltInFunctions->setChecked(
         m_settings->autoCompletionBuiltInFunctions);
     m_actions.settingsBehaviorAutoCompletionBuiltInVariables->setChecked(
@@ -11706,6 +11718,20 @@ void MainWindow::setAutoCompletionEnabled(bool b)
     m_settings->autoCompletion = b;
     if (m_widgets.editor != nullptr)
         m_widgets.editor->setAutoCompletionEnabled(b);
+}
+
+void MainWindow::setAutoCompletionAcceptWithEnterEnabled(bool enabled)
+{
+    m_settings->autoCompletionAcceptWithEnter = enabled;
+    QList<QPointer<MainWindow>> windows = allMainWindows();
+    if (!windows.contains(QPointer<MainWindow>(this)))
+        windows.append(QPointer<MainWindow>(this));
+    for (const QPointer<MainWindow>& window : windows) {
+        if (!window)
+            continue;
+        const QSignalBlocker blocker(window->m_actions.settingsBehaviorAutoCompletionAcceptWithEnter);
+        window->m_actions.settingsBehaviorAutoCompletionAcceptWithEnter->setChecked(enabled);
+    }
 }
 
 void MainWindow::setAutoCompletionBuiltInFunctionsEnabled(bool b)

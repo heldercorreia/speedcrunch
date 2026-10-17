@@ -284,6 +284,7 @@ Settings::Settings()
     simplifyResultExpressions = true;
     complexNumbers = true;
     imaginaryUnit = 'i';
+    autoCompletionAcceptWithEnter = false;
     autoCompletionBuiltInFunctions = true;
     autoCompletionBuiltInVariables = true;
     autoCompletionLongFormUnits = true;
@@ -344,6 +345,8 @@ void Settings::load()
     autoAns = settings->value(key + QLatin1String("AutoAns"), false).toBool();
     autoCalc = settings->value(key + QLatin1String("AutoCalc"), true).toBool();
     autoCompletion = settings->value(key + QLatin1String("AutoCompletion"), true).toBool();
+    autoCompletionAcceptWithEnter = settings->value(
+        key + QLatin1String("AutoCompletionAcceptWithEnter"), false).toBool();
     autoCompletionBuiltInFunctions = settings->value(
         key + QLatin1String("AutoCompletionBuiltInFunctions"), true).toBool();
     autoCompletionBuiltInVariables = settings->value(
@@ -636,6 +639,7 @@ void Settings::save()
 
     settings->setValue(key + QLatin1String("LeaveLastExpression"), leaveLastExpression);
     settings->setValue(key + QLatin1String("AutoCompletion"), autoCompletion);
+    settings->setValue(key + QLatin1String("AutoCompletionAcceptWithEnter"), autoCompletionAcceptWithEnter);
     settings->setValue(key + QLatin1String("AutoCompletionBuiltInFunctions"), autoCompletionBuiltInFunctions);
     settings->setValue(key + QLatin1String("AutoCompletionBuiltInVariables"), autoCompletionBuiltInVariables);
     settings->setValue(key + QLatin1String("AutoCompletionLongFormUnits"), autoCompletionLongFormUnits);
