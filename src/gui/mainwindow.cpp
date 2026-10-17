@@ -2094,11 +2094,11 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
         int headerMargin;
         int headerContentHeight;
         if (reuseMetrics) {
-            StartupDiagnostics::Scope timing("Reuse native dock header metrics");
+            StartupDiagnostics::Scope headerMetricsTiming("Reuse native dock header metrics");
             headerMargin = metrics.at(0).toInt();
             headerContentHeight = metrics.at(1).toInt();
         } else {
-            StartupDiagnostics::Scope timing("Measure native dock header metrics");
+            StartupDiagnostics::Scope headerMetricsTiming("Measure native dock header metrics");
             restoreNativeDockSurface(header);
             QStyleOptionHeader option;
             option.initFrom(header);
@@ -9109,9 +9109,9 @@ void MainWindow::saveSessionLayout(bool captureCurrentViewport, bool captureEdit
     QJsonArray persistentWindows;
     for (const QJsonValue& value : windows) {
         QJsonObject window = value.toObject();
-        const QJsonObject root = persistentSessionLayout(window.value(QStringLiteral("root")).toObject(), privateNames);
-        if (!root.isEmpty()) {
-            window.insert(QStringLiteral("root"), root);
+        const QJsonObject persistentRoot = persistentSessionLayout(window.value(QStringLiteral("root")).toObject(), privateNames);
+        if (!persistentRoot.isEmpty()) {
+            window.insert(QStringLiteral("root"), persistentRoot);
             persistentWindows.append(window);
         }
     }
