@@ -64,6 +64,97 @@ When building against a Qt version that is not the system default Qt installatio
 point CMake towards the Qt installation to use by setting `CMAKE_PREFIX_PATH` or
 `Qt6_DIR` when running CMake.
 
+Alternatively, Qt 6 provides a `qt-cmake` wrapper in the selected kit's `bin`
+directory (`qt-cmake.bat` on Windows, `qt-cmake` on macOS and Linux). It forwards
+the Qt installation location to CMake, so you do not need to set
+`CMAKE_PREFIX_PATH` yourself. See Qt's
+[CMake setup guide](https://doc.qt.io/qt-6/cmake-making-qt-available.html).
+
+### Windows
+
+The steps below build a 64-bit application with Visual Studio 2022 and the
+matching Qt desktop kit. See the [Qt for Windows guide](https://doc.qt.io/qt-6/windows.html)
+for the Windows versions and compilers supported by your chosen Qt release.
+
+1. Install Visual Studio 2022 or Build Tools for Visual Studio 2022. Select the
+   **Desktop development with C++** workload, including the MSVC v143 x64/x86
+   build tools and a Windows SDK. See Microsoft's
+   [C++ command-line tools guide](https://learn.microsoft.com/en-us/cpp/build/building-on-the-command-line?view=msvc-170).
+2. Install Qt through the Qt Online Installer. Select the **MSVC 2022 64-bit**
+   desktop kit for your Qt 6 version, with the Core, Widgets, Help, and Network
+   modules. A MinGW kit cannot be used with the MSVC commands below.
+3. Select **CMake** under **Developer and Designer Tools** in the Qt Online
+   Installer. You can also install it separately from [cmake.org](https://cmake.org/download/).
+   The Visual Studio 2022 generator requires CMake 3.21 or later, even though the
+   project itself accepts older CMake versions. Install Git as well if you want
+   to clone the repository using the commands above.
+
+Open **x64 Native Tools Command Prompt for VS 2022** from the Start menu. This
+sets up the compiler and Windows SDK tools, including `rc.exe`. Change to the
+repository root, then run these commands in that prompt (`cmd.exe` syntax):
+
+    set "QT_ROOT=C:\Qt\6.12.0\msvc2022_64"
+    set "PATH=C:\Qt\Tools\CMake_64\bin;%QT_ROOT%\bin;%PATH%"
+    cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="%QT_ROOT%"
+    cmake --build build --config Release --parallel
+
+Adjust `QT_ROOT` and the CMake directory on `PATH` to match your installation.
+If CMake is already on `PATH`, you only need to add Qt's `bin` directory. The
+compiler, Qt kit, and target architecture must match. Use a fresh build directory
+when switching compilers, architectures, or Qt installations so CMake does not
+reuse cached paths.
+
+The executable is `build\Release\speedcrunch.exe`. You can run it from the same
+prompt, where Qt's DLLs are on `PATH`:
+
+    build\Release\speedcrunch.exe
+
+To prepare a separate application folder, install into a local directory and
+run `windeployqt` from the same Qt kit to collect any additional Qt dependencies:
+
+    cmake --install build --config Release --prefix "%CD%\build\install"
+    "%QT_ROOT%\bin\windeployqt.exe" --release --no-compiler-runtime build\install\speedcrunch.exe
+    build\install\speedcrunch.exe
+
+The install step copies the application, Qt libraries and plugins, and the MSVC
+runtime files selected by CMake through `InstallRequiredSystemLibraries`.
+`--no-compiler-runtime` tells `windeployqt` to leave compiler runtime deployment
+to CMake, while still collecting Qt dependencies. It does not remove the
+application's dependency on the MSVC runtime. When distributing the folder,
+also ensure the target machine has the matching
+[Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170).
+
+To generate an installer from the Release build above, install
+[NSIS](https://nsis.sourceforge.io/) and make `makensis.exe` available on `PATH`.
+The default Windows package generator is NSIS. From the repository root, change
+to the build directory and run the Visual Studio `PACKAGE` target:
+
+    cd build
+    cmake --build . --config Release --target PACKAGE
+    cd ..
+
+The installer is written to `build`.
+
+To generate a portable ZIP archive instead, configure a separate build directory
+with `-DPORTABLE_SPEEDCRUNCH=ON -DCPACK_GENERATOR=ZIP`. From the repository root,
+build the application, then run the same `PACKAGE` target in that build directory:
+
+    cmake -S . -B build-portable -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="%QT_ROOT%" -DPORTABLE_SPEEDCRUNCH=ON -DCPACK_GENERATOR=ZIP
+    cmake --build build-portable --config Release --parallel
+    cd build-portable
+    cmake --build . --config Release --target PACKAGE
+    cd ..
+
+The ZIP archive is written to `build-portable`. CPack assembles it using the
+project's install rules, so a separate `cmake --install` command is not needed.
+Portable mode stores settings and user data beside the executable. Selecting
+the ZIP generator explicitly avoids requiring NSIS to create this package.
+
+Check the application on a Windows machine without Qt installed before release,
+including the embedded manual and update checks if enabled. See Qt's
+[Windows deployment guide](https://doc.qt.io/qt-6/windows-deployment.html)
+for details.
+
 ### macOS
 
 SpeedCrunch targets macOS 14.4 (Sonoma) and later. Official macOS releases build
@@ -93,9 +184,23 @@ The `qt-cmake` wrapper selects its own Qt installation automatically. Use a fres
 build directory when switching from Homebrew's Qt, since CMake caches the paths
 to individual Qt modules. Adjust the kit path above to match your installation.
 
-When packaging, use `macdeployqt` from the same official Qt installation. Check
-the finished bundle's library requirements and test it on the oldest supported
-macOS version before release.
+When packaging, use `macdeployqt` from the same official Qt installation.
+
+To generate an Apple Silicon DMG, use [pkg/generate-macos-dmg.sh](pkg/generate-macos-dmg.sh).
+The script configures and builds an arm64 Release application in `build-arm64`,
+bundles Qt with `macdeployqt`, applies and verifies an ad hoc signature, then
+creates the DMG with CPack. From the repository root, put the official Qt kit's
+`bin` directory on `PATH` so `qt-cmake` and `macdeployqt` use the same kit:
+
+    export PATH="$HOME/Qt/6.12.0/macos/bin:$PATH"
+    bash pkg/generate-macos-dmg.sh
+
+The script configures with `qt-cmake`, which selects its Qt installation
+automatically. It still uses `cmake` to build and `cpack` to package, so both
+must also be on `PATH`. Adjust the Qt path to match your installation, and start
+with a fresh `build-arm64` directory when switching Qt installations.
+The output is `build/dmg/SpeedCrunch-<version>-arm64.dmg`.
+The script does not notarize the application.
 
 ## Build options
 
