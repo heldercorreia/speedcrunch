@@ -98,6 +98,22 @@ repository root, then run these commands in that prompt (`cmd.exe` syntax):
     cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="%QT_ROOT%"
     cmake --build build --config Release --parallel
 
+For Git Bash or another Bash-compatible shell, use `export` and `$QT_ROOT`
+instead of `set` and `%QT_ROOT%`. Start the shell from the Visual Studio
+developer prompt if it needs to inherit the compiler and Windows SDK environment.
+For example, the equivalent Git Bash commands are:
+
+    export QT_ROOT='C:/Qt/6.12.0/msvc2022_64'
+    export PATH="/c/Qt/Tools/CMake_64/bin:/c/Qt/6.12.0/msvc2022_64/bin:$PATH"
+    cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="$QT_ROOT"
+    cmake --build build --config Release --parallel
+
+Git Bash uses `/c/` for the C: drive in `PATH`, with colons between entries.
+The remaining Windows examples use `cmd.exe` syntax. In Git Bash, replace
+`%QT_ROOT%` with `$QT_ROOT`, `%CD%` with `$PWD`, and path separators with forward
+slashes. For example, run the application with `build/Release/speedcrunch.exe`
+and the deployment tool with `"$QT_ROOT/bin/windeployqt.exe"`.
+
 Adjust `QT_ROOT` and the CMake directory on `PATH` to match your installation.
 If CMake is already on `PATH`, you only need to add Qt's `bin` directory. The
 compiler, Qt kit, and target architecture must match. Use a fresh build directory
