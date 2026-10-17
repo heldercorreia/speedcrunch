@@ -185,6 +185,9 @@ build directory when switching from Homebrew's Qt, since CMake caches the paths
 to individual Qt modules. Adjust the kit path above to match your installation.
 
 When packaging, use `macdeployqt` from the same official Qt installation.
+The DMG script and CMake install step bundle only the SQLite SQL driver needed
+by Qt Help, while preserving the other plugin groups used by the application.
+This avoids pulling in unrelated database client libraries.
 
 To generate an Apple Silicon DMG, use [pkg/generate-macos-dmg.sh](pkg/generate-macos-dmg.sh).
 The script configures and builds an arm64 Release application in `build-arm64`,

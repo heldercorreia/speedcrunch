@@ -49,7 +49,9 @@ echo "Stripping app binary..."
 strip -x "$APP_BIN"
 
 echo "Bundling Qt frameworks with macdeployqt..."
-macdeployqt "$APP_BUNDLE" -always-overwrite
+cmake "-DAPP_BUNDLE=$APP_BUNDLE" \
+  "-DMACDEPLOYQT=$(command -v macdeployqt)" \
+  -P "$ROOT_DIR/src/cmake/DeployMacOS.cmake"
 
 if [[ ! -d "$APP_FRAMEWORKS_DIR" ]] || [[ ! -e "$APP_FRAMEWORKS_DIR/QtCore.framework" ]]; then
   echo "Qt deployment failed (missing $APP_FRAMEWORKS_DIR/QtCore.framework)." >&2
