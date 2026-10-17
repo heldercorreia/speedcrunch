@@ -161,6 +161,12 @@ Examples that preserve composite intent:
   authored speed forms when they match a supported named unit.
 * ``nmi/h`` displays as ``knot`` for the same reason.
 
+Dividing energy by area or volume keeps the ``J/m²`` or ``J/m³`` form.
+For example, ``4[TJ/m^3]`` is expressed in joules per cubic metre, with a
+numeric value of ``4000000000000``. Prefixes and scaled area or volume units
+are included in the conversion. To keep a particular unit expression, use
+an explicit target such as ``4[TJ/m^3] in [TJ/m^3]``.
+
 Preserved display forms are still normal units. Use explicit conversion when
 you want another expression:
 

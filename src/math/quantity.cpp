@@ -2253,11 +2253,13 @@ Quantity Quantity::operator/(const Quantity& other) const
         // unless conversion is explicitly requested, to avoid context loss:
         // J/m² (energy/area) vs N/m (force/length), and
         // J/m³ (energy density) vs Pa (pressure).
+        // These unprefixed SI labels need an SI scale. Keeping the operands'
+        // scale would hide their conversion factor from the displayed value.
         if (((this->hasUnit() && u1 == UnitId::Joule)
              || isExactDimension(*this, dimensionJoule()))
             && isExactDimension(other, dimensionSquareMetre()))
         {
-            result.setDisplayUnit(this->unit() / other.unit(),
+            result.setDisplayUnit(CNumber(1),
                                   QString(unitPhrase(UnitPhraseId::JoulePerSquareMetre)));
             return result;
         }
@@ -2265,7 +2267,7 @@ Quantity Quantity::operator/(const Quantity& other) const
              || isExactDimension(*this, dimensionJoule()))
             && isExactDimension(other, dimensionCubicMetre()))
         {
-            result.setDisplayUnit(this->unit() / other.unit(),
+            result.setDisplayUnit(CNumber(1),
                                   QString(unitPhrase(UnitPhraseId::JoulePerCubicMetre)));
             return result;
         }

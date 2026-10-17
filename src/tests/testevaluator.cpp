@@ -1284,6 +1284,29 @@ void test_units_short_aliases_and_si_prefixes()
     CHECK_EVAL_FORMAT("[J/(K*mol)]", u8"1[J·mol⁻¹·K⁻¹]");
 }
 
+void test_units_energy_per_geometry_display_scale()
+{
+    CHECK_EVAL("4[J/m^3]", u8"4 joule / metre³");
+    CHECK_EVAL("7[J/m^2]", u8"7 joule / metre²");
+    CHECK_EVAL("4[TJ/m^3]", u8"4000000000000 joule / metre³");
+    CHECK_EVAL("ans in [J/m^3]", u8"4000000000000 J·m⁻³");
+    CHECK_EVAL("7[TJ/m^2]", u8"7000000000000 joule / metre²");
+    CHECK_EVAL("4[mJ/m^3]", u8"0.004 joule / metre³");
+    CHECK_EVAL("7[mJ/m^2]", u8"0.007 joule / metre²");
+    CHECK_EVAL("4[J/cm^3]", u8"4000000 joule / metre³");
+    CHECK_EVAL("7[J/cm^2]", u8"70000 joule / metre²");
+    CHECK_EVAL("4[kJ/cm^3]", u8"4000000000 joule / metre³");
+    CHECK_EVAL("7[kJ/cm^2]", u8"70000000 joule / metre²");
+    CHECK_EVAL("2[kWh/m^3]", u8"7200000 joule / metre³");
+    CHECK_EVAL("2[kWh/m^2]", u8"7200000 joule / metre²");
+    CHECK_EVAL("4[TJ] / 2[m^3]", u8"2000000000000 joule / metre³");
+    CHECK_EVAL("7[TJ] / 2[m^2]", u8"3500000000000 joule / metre²");
+    CHECK_EVAL_FORMAT("4[TJ/m^3]", u8"4000000000000[J / m³]");
+    CHECK_EVAL_FORMAT("7[TJ/m^2]", u8"7000000000000[J / m²]");
+    CHECK_EVAL("4[TJ/m^3] in [TJ/m^3]", u8"4 TJ·m⁻³");
+    CHECK_EVAL("7[TJ/m^2] in [TJ/m^2]", u8"7 TJ·m⁻²");
+}
+
 void test_units_named_derived_canonicalization()
 {
     CHECK_EVAL_FORMAT("[kg*m^2/s^2]", "1[J]");
@@ -1627,6 +1650,7 @@ void test_units()
     test_units_conversion_parentheses();
     test_units_display_propagation();
     test_units_short_aliases_and_si_prefixes();
+    test_units_energy_per_geometry_display_scale();
     test_units_named_derived_canonicalization();
     test_units_derived_si_recognition_and_disambiguation();
     test_units_conversion_compatibility_and_canonicalization();
