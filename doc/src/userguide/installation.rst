@@ -29,6 +29,8 @@ there.
 macOS
 -----
 
+SpeedCrunch requires macOS 14.4 (Sonoma) or later.
+
 Download the macOS disk image from `the SpeedCrunch website <sc_>`_, open it, and
 drag :guilabel:`SpeedCrunch` to the :guilabel:`Applications` folder.
 

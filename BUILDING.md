@@ -64,11 +64,38 @@ When building against a Qt version that is not the system default Qt installatio
 point CMake towards the Qt installation to use by setting `CMAKE_PREFIX_PATH` or
 `Qt6_DIR` when running CMake.
 
-Example (Homebrew on macOS):
+### macOS
 
-    brew install qt
-    cmake -S . -B build -DCMAKE_PREFIX_PATH="$(brew --prefix qt)"
+SpeedCrunch targets macOS 14.4 (Sonoma) and later. Official macOS releases build
+against the official Qt libraries from the Qt Online Installer and ship those
+same libraries and the required plugins in the application bundle. This keeps
+the libraries' minimum macOS requirements aligned with SpeedCrunch's supported
+versions.
+
+Follow the [official Qt for macOS guide](https://doc.qt.io/qt-6/macos.html)
+to install Xcode and Qt, then select the macOS desktop kit in the Qt Online
+Installer. The SDK used to compile SpeedCrunch can be newer than the deployment
+target. For example, a build using the macOS 27 SDK can still target macOS 14.4.
+
+Homebrew's Qt libraries and their dependencies may require a newer macOS version.
+During compatibility checks, Homebrew's QtHelp 6.12.0 library declared macOS 26.0
+as its minimum, while the official QtHelp library declared 14.4. Lowering
+SpeedCrunch's deployment target does not lower the requirements of its bundled
+libraries. Use the official Qt installation for release builds to avoid these
+dependency mismatches.
+
+For example, if the official Qt kit is installed at `$HOME/Qt/6.12.0/macos`, run:
+
+    "$HOME/Qt/6.12.0/macos/bin/qt-cmake" -S . -B build
     cmake --build build --config Release --parallel
+
+The `qt-cmake` wrapper selects its own Qt installation automatically. Use a fresh
+build directory when switching from Homebrew's Qt, since CMake caches the paths
+to individual Qt modules. Adjust the kit path above to match your installation.
+
+When packaging, use `macdeployqt` from the same official Qt installation. Check
+the finished bundle's library requirements and test it on the oldest supported
+macOS version before release.
 
 ## Build options
 
@@ -78,6 +105,10 @@ running CMake, in the form `cmake -S . -B build -Dvariable=value`.
 - **CMAKE_BUILD_TYPE**: Select the configuration for Makefiles or ordinary Ninja,
   such as `Release`, `Debug`, or `RelWithDebInfo`. Defaults to `Release` in this
   project. Multi-configuration generators use `--config` when building instead.
+- **CMAKE_OSX_DEPLOYMENT_TARGET**: Set the minimum macOS version for the build.
+  Defaults to `14.4` unless an explicit target or the `MACOSX_DEPLOYMENT_TARGET`
+  environment variable is supplied. Qt and all bundled dependencies must support
+  the selected version or earlier.
 - **BUILD_TESTING**: Set this to `ON` to build the test executables and register
   them with CTest. Defaults to `OFF`. See [TESTING.md](TESTING.md).
 - **ENABLE_UPDATE_CHECKS**: Set this to `ON` to enable update checks on launch
