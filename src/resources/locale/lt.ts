@@ -414,13 +414,13 @@
 <context>
     <name>ConstantCompletion</name>
     <message>
-        <location filename="../../gui/editor.cpp" line="5018"/>
-        <location filename="../../gui/editor.cpp" line="5019"/>
+        <location filename="../../gui/editor.cpp" line="5034"/>
+        <location filename="../../gui/editor.cpp" line="5035"/>
         <source>Search constants</source>
         <translation>Ieškoti konstantų</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="5036"/>
+        <location filename="../../gui/editor.cpp" line="5052"/>
         <source>No match found</source>
         <translation>Nerasta atitikmens</translation>
     </message>
@@ -2679,45 +2679,45 @@
 <context>
     <name>Editor</name>
     <message>
-        <location filename="../../gui/editor.cpp" line="1991"/>
+        <location filename="../../gui/editor.cpp" line="1992"/>
         <source>Unit</source>
         <translation>Vienetas</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="1995"/>
+        <location filename="../../gui/editor.cpp" line="1996"/>
         <source>User unit</source>
         <translation>Naudotojo vienetas</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="2050"/>
+        <location filename="../../gui/editor.cpp" line="2051"/>
         <source>User function</source>
         <translation>Naudotojo funkcija</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="2177"/>
+        <location filename="../../gui/editor.cpp" line="2178"/>
         <source>Argument</source>
         <translation>Argumentas</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="2357"/>
-        <location filename="../../gui/editor.cpp" line="2386"/>
+        <location filename="../../gui/editor.cpp" line="2358"/>
+        <location filename="../../gui/editor.cpp" line="2387"/>
         <source>Current result:&lt;br/&gt;%1</source>
         <translation>Dabartinis rezultatas:&lt;br/&gt;%1</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="2454"/>
-        <location filename="../../gui/editor.cpp" line="2478"/>
+        <location filename="../../gui/editor.cpp" line="2455"/>
+        <location filename="../../gui/editor.cpp" line="2479"/>
         <source>Selection result:&lt;br/&gt;%1</source>
         <translation>Pažymėjimo rezultatas:&lt;br/&gt;%1</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="2448"/>
-        <location filename="../../gui/editor.cpp" line="2472"/>
+        <location filename="../../gui/editor.cpp" line="2449"/>
+        <location filename="../../gui/editor.cpp" line="2473"/>
         <source>Selection result: n/a</source>
         <translation>Žymėjimo rezultatas: n/d</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="2485"/>
+        <location filename="../../gui/editor.cpp" line="2486"/>
         <source>Selection result: %1</source>
         <translation>Pažymėjimo rezultatas: %1</translation>
     </message>
@@ -4607,1041 +4607,1051 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4392"/>
+        <location filename="../../gui/mainwindow.cpp" line="4350"/>
         <source>Radian</source>
         <translation>Radianai</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4396"/>
+        <location filename="../../gui/mainwindow.cpp" line="4354"/>
         <source>Degree</source>
         <translation>Laipsniai</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4393"/>
+        <location filename="../../gui/mainwindow.cpp" line="4351"/>
         <source>Gradian</source>
         <translation>Gradianas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4402"/>
+        <location filename="../../gui/mainwindow.cpp" line="4360"/>
         <source>Binary</source>
         <translation>Dvejetainis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4403"/>
+        <location filename="../../gui/mainwindow.cpp" line="4361"/>
         <source>Octal</source>
         <translation>Aštuonetainis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4404"/>
+        <location filename="../../gui/mainwindow.cpp" line="4362"/>
         <source>Hexadecimal</source>
         <translation>Šešioliktainis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4405"/>
+        <location filename="../../gui/mainwindow.cpp" line="4363"/>
         <source>Sexagesimal</source>
         <translation>Šešiasdešimtainis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4407"/>
+        <location filename="../../gui/mainwindow.cpp" line="4365"/>
         <source>Engineering decimal</source>
         <translation>Inžinerinis dešimtainis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4408"/>
+        <location filename="../../gui/mainwindow.cpp" line="4366"/>
         <source>Scientific decimal</source>
         <translation>Mokslinis dešimtainis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4427"/>
+        <location filename="../../gui/mainwindow.cpp" line="4385"/>
         <source>&amp;Import...</source>
         <translation>&amp;Importuoti...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4440"/>
+        <location filename="../../gui/mainwindow.cpp" line="4398"/>
         <source>&amp;Quit</source>
         <translation>&amp;Išeiti</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4442"/>
+        <location filename="../../gui/mainwindow.cpp" line="4400"/>
         <source>Clear E&amp;xpression</source>
         <translation>Išvalyti reiški&amp;nį</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4446"/>
+        <location filename="../../gui/mainwindow.cpp" line="4404"/>
         <source>Clear &amp;History</source>
         <translation>Išvalyti ž&amp;urnalą</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4448"/>
+        <location filename="../../gui/mainwindow.cpp" line="4406"/>
         <source>&amp;Copy</source>
         <translation>K&amp;opijuoti</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4449"/>
+        <location filename="../../gui/mainwindow.cpp" line="4407"/>
         <source>&amp;Paste</source>
         <translation>Į&amp;dėti</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4450"/>
+        <location filename="../../gui/mainwindow.cpp" line="4408"/>
         <source>&amp;Select Expression</source>
         <translation>Ž&amp;ymėti reiškinį</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4453"/>
+        <location filename="../../gui/mainwindow.cpp" line="4411"/>
         <source>&amp;Constants</source>
         <translation>&amp;Konstantos</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4455"/>
+        <location filename="../../gui/mainwindow.cpp" line="4413"/>
         <source>&amp;Functions</source>
         <translation>F&amp;unkcijos</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4456"/>
+        <location filename="../../gui/mainwindow.cpp" line="4414"/>
         <source>&amp;History</source>
         <translation>Žurna&amp;las</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4467"/>
-        <location filename="../../gui/mainwindow.cpp" line="5026"/>
+        <location filename="../../gui/mainwindow.cpp" line="4425"/>
+        <location filename="../../gui/mainwindow.cpp" line="4990"/>
         <source>&amp;Status Bar</source>
         <translation>&amp;Būsenos juosta</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4470"/>
-        <location filename="../../gui/mainwindow.cpp" line="7668"/>
+        <location filename="../../gui/mainwindow.cpp" line="4428"/>
+        <location filename="../../gui/mainwindow.cpp" line="7640"/>
         <source>Bitfield</source>
         <translation>Bitų laukas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4476"/>
+        <location filename="../../gui/mainwindow.cpp" line="4434"/>
         <source>Use&amp;r Functions</source>
         <translation>Naudo&amp;tojo funkcijos</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4479"/>
+        <location filename="../../gui/mainwindow.cpp" line="4437"/>
         <source>&amp;Degree</source>
         <translation>&amp;Laipsniai</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4480"/>
+        <location filename="../../gui/mainwindow.cpp" line="4438"/>
         <source>&amp;Radian</source>
         <translation>&amp;Radianai</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4481"/>
+        <location filename="../../gui/mainwindow.cpp" line="4439"/>
         <source>&amp;Gradian</source>
         <translation>&amp;Gradianas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4483"/>
+        <location filename="../../gui/mainwindow.cpp" line="4441"/>
         <source>Re&amp;volution</source>
         <translation>A&amp;psisukimas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4485"/>
+        <location filename="../../gui/mainwindow.cpp" line="4443"/>
         <source>Auto-Insert a&amp;ns</source>
         <translation>Automatiškai įterpti a&amp;ns</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4488"/>
+        <location filename="../../gui/mainwindow.cpp" line="4446"/>
         <source>Automatic &amp;Completion</source>
         <translation>Automatinis &amp;užbaigimas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4489"/>
+        <location filename="../../gui/mainwindow.cpp" line="4450"/>
         <source>&amp;Built-in Functions</source>
         <translation>&amp;Įtaisytosios funkcijos</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4490"/>
+        <location filename="../../gui/mainwindow.cpp" line="4451"/>
         <source>Built-in &amp;Variables</source>
         <translation>Į&amp;taisytieji kintamieji</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4492"/>
+        <location filename="../../gui/mainwindow.cpp" line="4453"/>
         <source>User &amp;Functions</source>
         <translation>Naudotojo &amp;funkcijos</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4493"/>
+        <location filename="../../gui/mainwindow.cpp" line="4454"/>
         <source>User Va&amp;riables</source>
         <translation>&amp;Naudotojo kintamieji</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4496"/>
+        <location filename="../../gui/mainwindow.cpp" line="4457"/>
         <source>Open a Private Tab on Startup</source>
         <translation>Paleidžiant atverti privatų skirtuką</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4497"/>
+        <location filename="../../gui/mainwindow.cpp" line="4458"/>
         <source>Open and focus a new private tab whenever SpeedCrunch starts.</source>
         <translation>Kiekvieną kartą paleidžiant SpeedCrunch atverti ir aktyvuoti naują privatų skirtuką.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4499"/>
+        <location filename="../../gui/mainwindow.cpp" line="4460"/>
         <source>Syntax &amp;Highlighting</source>
         <translation>Sintaksės par&amp;yškinimas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4500"/>
+        <location filename="../../gui/mainwindow.cpp" line="4461"/>
         <source>Group Digits in &amp;Input</source>
         <translation>Grupuot&amp;i įvesties skaitmenis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4501"/>
+        <location filename="../../gui/mainwindow.cpp" line="4462"/>
         <source>Automatic Input &amp;Adjustments</source>
         <translation>&amp;Automatiniai įvesties taisymai</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4502"/>
+        <location filename="../../gui/mainwindow.cpp" line="4463"/>
         <source>Automatically adjust operators, spacing, brackets, and powers, and restrict input to valid characters.</source>
         <translation>Automatiškai taisyti operatorius, tarpus, skliaustus ir laipsnius bei leisti įvesti tik tinkamus simbolius.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4503"/>
+        <location filename="../../gui/mainwindow.cpp" line="4464"/>
         <source>Group input digits using the selected number format.</source>
         <translation>Grupuoti įvestus skaitmenis pagal pasirinktą skaičių formatą.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4504"/>
+        <location filename="../../gui/mainwindow.cpp" line="4465"/>
         <source>&amp;Blinking Cursor</source>
         <translation>&amp;Mirksintis žymeklis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4505"/>
+        <location filename="../../gui/mainwindow.cpp" line="4466"/>
         <source>Blink the cursor in the expression editor.</source>
         <translation>Įjungti žymeklio mirksėjimą reiškinių rengyklėje.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4506"/>
+        <location filename="../../gui/mainwindow.cpp" line="4467"/>
         <source>&amp;Escape Clears Editor</source>
         <translation>&amp;Escape išvalo rengyklę</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4507"/>
+        <location filename="../../gui/mainwindow.cpp" line="4468"/>
         <source>Clear the focused expression editor with Escape after dismissing any popup or preview.</source>
         <translation>Išvalyti aktyvią reiškinių rengyklę klavišu Escape, užvėrus iškylančiuosius langus ar peržiūras.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4514"/>
+        <location filename="../../gui/mainwindow.cpp" line="4475"/>
         <source>Keep Expression After Evaluation</source>
         <translation>Palikti reiškinį po skaičiavimo</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4522"/>
+        <location filename="../../gui/mainwindow.cpp" line="4483"/>
         <source>Copy New Results Automatically</source>
         <translation>Automatiškai kopijuoti naujus rezultatus</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4525"/>
+        <location filename="../../gui/mainwindow.cpp" line="4486"/>
         <source>&amp;Comma</source>
         <translation>&amp;Kablelis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4526"/>
+        <location filename="../../gui/mainwindow.cpp" line="4487"/>
         <source>&amp;System Default</source>
         <translation>&amp;Sistemos numatytasis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4527"/>
+        <location filename="../../gui/mainwindow.cpp" line="4488"/>
         <source>&amp;Dot</source>
         <translation>&amp;Taškas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4528"/>
+        <location filename="../../gui/mainwindow.cpp" line="4489"/>
         <source>Dot &amp;And Comma</source>
         <translation>Taškas &amp;ir kablelis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4543"/>
+        <location filename="../../gui/mainwindow.cpp" line="4504"/>
         <source>Toward +∞ (&amp;ceil)</source>
         <translation>Link +∞ (&amp;ceil)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4545"/>
+        <location filename="../../gui/mainwindow.cpp" line="4506"/>
         <source>Toward −∞ (&amp;floor)</source>
         <translation>Link −∞ (&amp;floor)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4552"/>
+        <location filename="../../gui/mainwindow.cpp" line="4513"/>
         <source>&amp;Binary</source>
         <translation>D&amp;vejetainis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4549"/>
+        <location filename="../../gui/mainwindow.cpp" line="4510"/>
         <source>&amp;Engineering</source>
         <translation>&amp;Inžinerinis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4554"/>
+        <location filename="../../gui/mainwindow.cpp" line="4515"/>
         <source>&amp;Hexadecimal</source>
         <translation>Š&amp;ešioliktainis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4553"/>
+        <location filename="../../gui/mainwindow.cpp" line="4514"/>
         <source>&amp;Octal</source>
         <translation>&amp;Aštuonetainis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4550"/>
+        <location filename="../../gui/mainwindow.cpp" line="4511"/>
         <source>&amp;Scientific</source>
         <translation>&amp;Mokslinis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4583"/>
+        <location filename="../../gui/mainwindow.cpp" line="4544"/>
         <source>User &amp;Manual</source>
         <translation>Naudoto&amp;jo vadovas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4588"/>
+        <location filename="../../gui/mainwindow.cpp" line="4549"/>
         <source>Issues and &amp;Feedback</source>
         <translation>P&amp;roblemos ir atsiliepimai</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4591"/>
+        <location filename="../../gui/mainwindow.cpp" line="4552"/>
         <source>&amp;Donate</source>
         <translation>&amp;Paaukoti</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4592"/>
+        <location filename="../../gui/mainwindow.cpp" line="4553"/>
         <source>&amp;About SpeedCrunch</source>
         <translation>&amp;Apie SpeedCrunch</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4593"/>
+        <location filename="../../gui/mainwindow.cpp" line="4554"/>
         <source>App Diag&amp;nostics</source>
         <translation>Pr&amp;ogramos diagnostika</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5007"/>
+        <location filename="../../gui/mainwindow.cpp" line="4971"/>
         <source>S&amp;plit</source>
         <translation>P&amp;adalyti</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5016"/>
+        <location filename="../../gui/mainwindow.cpp" line="4980"/>
         <source>Angle &amp;Mode</source>
         <translation>Ka&amp;mpų veiksena</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5017"/>
+        <location filename="../../gui/mainwindow.cpp" line="4981"/>
         <source>&amp;Complex Form</source>
         <translation>&amp;Kompleksinė forma</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5371"/>
+        <location filename="../../gui/mainwindow.cpp" line="5340"/>
         <source>New Tab</source>
         <translation>Nauja kortelė</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7779"/>
+        <location filename="../../gui/mainwindow.cpp" line="7751"/>
         <source>Constants</source>
         <translation>Konstantos</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7808"/>
+        <location filename="../../gui/mainwindow.cpp" line="7780"/>
         <source>Functions</source>
         <translation>Funkcijos</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7830"/>
+        <location filename="../../gui/mainwindow.cpp" line="7802"/>
         <source>History</source>
         <translation>Žurnalas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7902"/>
+        <location filename="../../gui/mainwindow.cpp" line="7874"/>
         <source>User Functions</source>
         <translation>Naudotojo funkcijos</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4568"/>
+        <location filename="../../gui/mainwindow.cpp" line="4529"/>
         <source>&amp;Font...</source>
         <translation>Šri&amp;ftas...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4581"/>
+        <location filename="../../gui/mainwindow.cpp" line="4542"/>
         <source>&amp;Language...</source>
         <translation>Ka&amp;lba...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5002"/>
+        <location filename="../../gui/mainwindow.cpp" line="4966"/>
         <source>&amp;Session</source>
         <translation>&amp;Seansas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5004"/>
+        <location filename="../../gui/mainwindow.cpp" line="4968"/>
         <source>&amp;Edit</source>
         <translation>&amp;Taisa</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5005"/>
+        <location filename="../../gui/mainwindow.cpp" line="4969"/>
         <source>&amp;View</source>
         <translation>&amp;Rodinys</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5009"/>
+        <location filename="../../gui/mainwindow.cpp" line="4973"/>
         <source>Se&amp;ttings</source>
         <translation>&amp;Nustatymai</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5014"/>
+        <location filename="../../gui/mainwindow.cpp" line="4978"/>
         <source>&amp;Decimal</source>
         <translation>&amp;Dešimtainis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5006"/>
-        <location filename="../../gui/mainwindow.cpp" line="5027"/>
+        <location filename="../../gui/mainwindow.cpp" line="4970"/>
+        <location filename="../../gui/mainwindow.cpp" line="4991"/>
         <source>&amp;Keypad</source>
         <translation>&amp;Pagalbinė klaviatūra</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4484"/>
+        <location filename="../../gui/mainwindow.cpp" line="4442"/>
         <source>Always on &amp;Top</source>
         <translation>Visada &amp;viršuje</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4509"/>
+        <location filename="../../gui/mainwindow.cpp" line="4470"/>
         <source>Disabled</source>
         <translation>Išjungta</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4510"/>
+        <location filename="../../gui/mainwindow.cpp" line="4471"/>
         <source>Small Space</source>
         <translation>Mažas tarpas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4511"/>
+        <location filename="../../gui/mainwindow.cpp" line="4472"/>
         <source>Medium Space</source>
         <translation>Vidutinis tarpas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4512"/>
+        <location filename="../../gui/mainwindow.cpp" line="4473"/>
         <source>Large Space</source>
         <translation>Didelis tarpas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4529"/>
+        <location filename="../../gui/mainwindow.cpp" line="4490"/>
         <source>&amp;0 Digits</source>
         <translation>&amp;0 skaitmenų</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4530"/>
+        <location filename="../../gui/mainwindow.cpp" line="4491"/>
         <source>&amp;15 Digits</source>
         <translation>&amp;15 skaitmenų</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4531"/>
+        <location filename="../../gui/mainwindow.cpp" line="4492"/>
         <source>&amp;2 Digits</source>
         <translation>&amp;2 skaitmenys</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4532"/>
+        <location filename="../../gui/mainwindow.cpp" line="4493"/>
         <source>&amp;3 Digits</source>
         <translation>&amp;3 skaitmenys</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4533"/>
+        <location filename="../../gui/mainwindow.cpp" line="4494"/>
         <source>&amp;50 Digits</source>
         <translation>&amp;50 skaitmenų</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4534"/>
+        <location filename="../../gui/mainwindow.cpp" line="4495"/>
         <source>&amp;8 Digits</source>
         <translation>&amp;8 skaitmenys</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4555"/>
+        <location filename="../../gui/mainwindow.cpp" line="4516"/>
         <source>&amp;Sexagesimal</source>
         <translation>&amp;Šešiasdešimtainis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4569"/>
+        <location filename="../../gui/mainwindow.cpp" line="4530"/>
         <source>Reset All Settings...</source>
         <translation>Atkurti visas nuostatas...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4571"/>
-        <location filename="../../gui/mainwindow.cpp" line="4573"/>
-        <location filename="../../gui/mainwindow.cpp" line="4575"/>
+        <location filename="../../gui/mainwindow.cpp" line="4532"/>
+        <location filename="../../gui/mainwindow.cpp" line="4534"/>
+        <location filename="../../gui/mainwindow.cpp" line="4536"/>
         <source>&amp;System</source>
         <translation>&amp;Sistema</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4572"/>
-        <location filename="../../gui/mainwindow.cpp" line="4574"/>
-        <location filename="../../gui/mainwindow.cpp" line="4576"/>
+        <location filename="../../gui/mainwindow.cpp" line="4533"/>
+        <location filename="../../gui/mainwindow.cpp" line="4535"/>
+        <location filename="../../gui/mainwindow.cpp" line="4537"/>
         <source>SpeedCrunch &amp;Theme</source>
         <translation>S&amp;peedCrunch apipavidalinimas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4577"/>
-        <location filename="../../gui/mainwindow.cpp" line="4579"/>
+        <location filename="../../gui/mainwindow.cpp" line="4538"/>
+        <location filename="../../gui/mainwindow.cpp" line="4540"/>
         <source>&amp;Classic</source>
         <translation>&amp;Klasikinis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4578"/>
-        <location filename="../../gui/mainwindow.cpp" line="4580"/>
+        <location filename="../../gui/mainwindow.cpp" line="4539"/>
+        <location filename="../../gui/mainwindow.cpp" line="4541"/>
         <source>&amp;Modern</source>
         <translation>&amp;Šiuolaikinis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4584"/>
+        <location filename="../../gui/mainwindow.cpp" line="4545"/>
         <source>Context Help</source>
         <translation>Konteksto pagalba</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5029"/>
+        <location filename="../../gui/mainwindow.cpp" line="4993"/>
         <source>&amp;Help</source>
         <translation>&amp;Pagalba</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10810"/>
-        <location filename="../../gui/mainwindow.cpp" line="10816"/>
-        <location filename="../../gui/mainwindow.cpp" line="10824"/>
-        <location filename="../../gui/mainwindow.cpp" line="10830"/>
-        <location filename="../../gui/mainwindow.cpp" line="10846"/>
-        <location filename="../../gui/mainwindow.cpp" line="10852"/>
-        <location filename="../../gui/mainwindow.cpp" line="10903"/>
-        <location filename="../../gui/mainwindow.cpp" line="10909"/>
-        <location filename="../../gui/mainwindow.cpp" line="11012"/>
-        <location filename="../../gui/mainwindow.cpp" line="11990"/>
-        <location filename="../../gui/mainwindow.cpp" line="12029"/>
+        <location filename="../../gui/mainwindow.cpp" line="10786"/>
+        <location filename="../../gui/mainwindow.cpp" line="10792"/>
+        <location filename="../../gui/mainwindow.cpp" line="10800"/>
+        <location filename="../../gui/mainwindow.cpp" line="10806"/>
+        <location filename="../../gui/mainwindow.cpp" line="10822"/>
+        <location filename="../../gui/mainwindow.cpp" line="10828"/>
+        <location filename="../../gui/mainwindow.cpp" line="10879"/>
+        <location filename="../../gui/mainwindow.cpp" line="10885"/>
+        <location filename="../../gui/mainwindow.cpp" line="10988"/>
+        <location filename="../../gui/mainwindow.cpp" line="11980"/>
+        <location filename="../../gui/mainwindow.cpp" line="12019"/>
         <source>Error</source>
         <translation>Klaida</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10810"/>
-        <location filename="../../gui/mainwindow.cpp" line="11046"/>
+        <location filename="../../gui/mainwindow.cpp" line="10786"/>
+        <location filename="../../gui/mainwindow.cpp" line="11022"/>
         <source>Can&apos;t read from file %1</source>
         <translation>Nepavyksta perskaityti iš failo %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11028"/>
-        <location filename="../../gui/mainwindow.cpp" line="11046"/>
-        <location filename="../../gui/mainwindow.cpp" line="11054"/>
-        <location filename="../../gui/mainwindow.cpp" line="11061"/>
-        <location filename="../../gui/mainwindow.cpp" line="11069"/>
-        <location filename="../../gui/mainwindow.cpp" line="11077"/>
-        <location filename="../../gui/mainwindow.cpp" line="11083"/>
-        <location filename="../../gui/mainwindow.cpp" line="11091"/>
-        <location filename="../../gui/mainwindow.cpp" line="11097"/>
-        <location filename="../../gui/mainwindow.cpp" line="11105"/>
-        <location filename="../../gui/mainwindow.cpp" line="11111"/>
-        <location filename="../../gui/mainwindow.cpp" line="11119"/>
+        <location filename="../../gui/mainwindow.cpp" line="11004"/>
+        <location filename="../../gui/mainwindow.cpp" line="11022"/>
+        <location filename="../../gui/mainwindow.cpp" line="11030"/>
+        <location filename="../../gui/mainwindow.cpp" line="11037"/>
+        <location filename="../../gui/mainwindow.cpp" line="11045"/>
+        <location filename="../../gui/mainwindow.cpp" line="11053"/>
+        <location filename="../../gui/mainwindow.cpp" line="11059"/>
+        <location filename="../../gui/mainwindow.cpp" line="11067"/>
+        <location filename="../../gui/mainwindow.cpp" line="11073"/>
+        <location filename="../../gui/mainwindow.cpp" line="11081"/>
+        <location filename="../../gui/mainwindow.cpp" line="11087"/>
+        <location filename="../../gui/mainwindow.cpp" line="11095"/>
         <source>Import Session</source>
         <translation>Importuoti seansą</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3231"/>
+        <location filename="../../gui/mainwindow.cpp" line="3186"/>
         <source>Close Session</source>
         <translation>Užverti seansą</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4199"/>
+        <location filename="../../gui/mainwindow.cpp" line="4157"/>
         <source>Angle Mode:</source>
         <translation>Kampų veiksena:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4200"/>
+        <location filename="../../gui/mainwindow.cpp" line="4158"/>
         <source>Notation:</source>
         <translation>Žymėjimas:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4201"/>
+        <location filename="../../gui/mainwindow.cpp" line="4159"/>
         <source>Precision:</source>
         <translation>Tikslumas:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4394"/>
+        <location filename="../../gui/mainwindow.cpp" line="4352"/>
         <source>Turn</source>
         <translation>Apsisukimas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4395"/>
+        <location filename="../../gui/mainwindow.cpp" line="4353"/>
         <source>Revolution</source>
         <translation>Apsisukimas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4406"/>
+        <location filename="../../gui/mainwindow.cpp" line="4364"/>
         <source>Fixed-point decimal</source>
         <translation>Fiksuoto kablelio dešimtainis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4409"/>
+        <location filename="../../gui/mainwindow.cpp" line="4367"/>
         <source>Rational</source>
         <translation>Racionalusis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4410"/>
+        <location filename="../../gui/mainwindow.cpp" line="4368"/>
         <source>Automatic decimal</source>
         <translation>Automatinis dešimtainis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4418"/>
-        <location filename="../../gui/mainwindow.cpp" line="15296"/>
+        <location filename="../../gui/mainwindow.cpp" line="4376"/>
+        <location filename="../../gui/mainwindow.cpp" line="15286"/>
         <source>Automatic</source>
         <translation>Automatinis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4428"/>
+        <location filename="../../gui/mainwindow.cpp" line="4386"/>
         <source>User &amp;Definitions...</source>
         <translation>Naudotojo &amp;apibrėžimai...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4429"/>
+        <location filename="../../gui/mainwindow.cpp" line="4387"/>
         <source>New &amp;Tab</source>
         <translation>Nauja &amp;kortelė</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4430"/>
+        <location filename="../../gui/mainwindow.cpp" line="4388"/>
         <source>New &amp;Private Tab</source>
         <translation>Naujas &amp;privatus skirtukas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4432"/>
-        <location filename="../../gui/mainwindow.cpp" line="5368"/>
-        <location filename="../../gui/mainwindow.cpp" line="12133"/>
+        <location filename="../../gui/mainwindow.cpp" line="4390"/>
+        <location filename="../../gui/mainwindow.cpp" line="5337"/>
+        <location filename="../../gui/mainwindow.cpp" line="12123"/>
         <source>Keep</source>
         <translation>Išsaugoti</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4432"/>
-        <location filename="../../gui/mainwindow.cpp" line="5368"/>
-        <location filename="../../gui/mainwindow.cpp" line="12133"/>
+        <location filename="../../gui/mainwindow.cpp" line="4390"/>
+        <location filename="../../gui/mainwindow.cpp" line="5337"/>
+        <location filename="../../gui/mainwindow.cpp" line="12123"/>
         <source>Make Private...</source>
         <translation>Padaryti privatų...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4433"/>
+        <location filename="../../gui/mainwindow.cpp" line="4391"/>
         <source>New &amp;Window</source>
         <translation>Naujas &amp;langas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4434"/>
+        <location filename="../../gui/mainwindow.cpp" line="4392"/>
         <source>&amp;Open...</source>
         <translation>&amp;Atverti...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4435"/>
+        <location filename="../../gui/mainwindow.cpp" line="4393"/>
         <source>&amp;Rename...</source>
         <translation>Per&amp;vadinti...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4436"/>
+        <location filename="../../gui/mainwindow.cpp" line="4394"/>
         <source>Clo&amp;ne...</source>
         <translation>Klo&amp;nuoti...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4437"/>
+        <location filename="../../gui/mainwindow.cpp" line="4395"/>
         <source>&amp;Close Tab</source>
         <translation>&amp;Užverti skirtuką</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4438"/>
+        <location filename="../../gui/mainwindow.cpp" line="4396"/>
         <source>Reopen Clo&amp;sed Tab</source>
         <translation>Vėl atverti užvertą &amp;skirtuką</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4439"/>
+        <location filename="../../gui/mainwindow.cpp" line="4397"/>
         <source>Open Sessions &amp;Folder</source>
         <translation>Atverti seansų &amp;aplanką</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4443"/>
+        <location filename="../../gui/mainwindow.cpp" line="4401"/>
         <source>&amp;Undo</source>
         <translation>&amp;Atšaukti</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4444"/>
+        <location filename="../../gui/mainwindow.cpp" line="4402"/>
         <source>&amp;Redo</source>
         <translation>G&amp;rąžinti</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4445"/>
+        <location filename="../../gui/mainwindow.cpp" line="4403"/>
         <source>Cu&amp;t</source>
         <translation>Iškirp&amp;ti</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4447"/>
+        <location filename="../../gui/mainwindow.cpp" line="4405"/>
         <source>Copy &amp;Last Result</source>
         <translation>Kopijuoti paskutinį rezu&amp;ltatą</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4451"/>
+        <location filename="../../gui/mainwindow.cpp" line="4409"/>
         <source>&amp;Wrap in Parentheses</source>
         <translation>A&amp;pskliausti</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4454"/>
+        <location filename="../../gui/mainwindow.cpp" line="4412"/>
         <source>Full Scr&amp;een Mode</source>
         <translation>Viso &amp;ekrano veiksena</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4458"/>
+        <location filename="../../gui/mainwindow.cpp" line="4416"/>
         <source>&amp;Basic</source>
         <translation>&amp;Pagrindinis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4459"/>
+        <location filename="../../gui/mainwindow.cpp" line="4417"/>
         <source>&amp;Scientific (wide)</source>
         <translation>&amp;Mokslinis (platus)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4460"/>
+        <location filename="../../gui/mainwindow.cpp" line="4418"/>
         <source>Scientific (narrow)</source>
         <translation>Mokslinis (siauras)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4461"/>
-        <location filename="../../gui/mainwindow.cpp" line="4535"/>
+        <location filename="../../gui/mainwindow.cpp" line="4419"/>
+        <location filename="../../gui/mainwindow.cpp" line="4496"/>
         <source>&amp;Custom...</source>
         <translation>&amp;Pasirinktinis...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4468"/>
+        <location filename="../../gui/mainwindow.cpp" line="4426"/>
         <source>Main &amp;Menu</source>
         <translation>Pagrindinis &amp;meniu</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4469"/>
+        <location filename="../../gui/mainwindow.cpp" line="4427"/>
         <source>User &amp;Variables</source>
         <translation>Naudotojo &amp;kintamieji</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4471"/>
+        <location filename="../../gui/mainwindow.cpp" line="4429"/>
         <source>&amp;Left</source>
         <translation>&amp;Kairėn</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4472"/>
+        <location filename="../../gui/mainwindow.cpp" line="4430"/>
         <source>&amp;Right</source>
         <translation>&amp;Dešinėn</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4473"/>
+        <location filename="../../gui/mainwindow.cpp" line="4431"/>
         <source>&amp;Up</source>
         <translation>A&amp;ukštyn</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4474"/>
+        <location filename="../../gui/mainwindow.cpp" line="4432"/>
         <source>&amp;Down</source>
         <translation>&amp;Žemyn</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4475"/>
+        <location filename="../../gui/mainwindow.cpp" line="4433"/>
         <source>Close Pa&amp;ne</source>
         <translation>Užverti pola&amp;ngį</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4477"/>
+        <location filename="../../gui/mainwindow.cpp" line="4435"/>
         <source>User &amp;Units</source>
         <translation>Naudotojo &amp;vienetai</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4482"/>
+        <location filename="../../gui/mainwindow.cpp" line="4440"/>
         <source>&amp;Turn</source>
         <translation>&amp;Apsisukimas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4486"/>
-        <location filename="../../gui/mainwindow.cpp" line="4487"/>
+        <location filename="../../gui/mainwindow.cpp" line="4444"/>
+        <location filename="../../gui/mainwindow.cpp" line="4445"/>
         <source>If a new expression starts with +, -, *, or /, SpeedCrunch inserts &quot;ans&quot; first.</source>
         <translation>Jei naujas reiškinys prasideda +, -, * arba /, SpeedCrunch pirmiausia įterpia „ans“.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4491"/>
+        <location filename="../../gui/mainwindow.cpp" line="4447"/>
+        <source>&amp;Accept with Enter</source>
+        <translation>&amp;Priimti klavišu Enter</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4448"/>
+        <source>Accept the current autocomplete suggestion with Enter without first selecting it with the arrow keys.</source>
+        <translation>Priimti dabartinį automatinio užbaigimo pasiūlymą klavišu Enter, prieš tai jo nepasirinkus rodyklių klavišais.</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4452"/>
         <source>&amp;Units</source>
         <translation>&amp;Vienetai</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4494"/>
+        <location filename="../../gui/mainwindow.cpp" line="4455"/>
         <source>Show Live Result &amp;Preview</source>
         <translation>Rodyti tiesioginę rezultato &amp;peržiūrą</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4495"/>
+        <location filename="../../gui/mainwindow.cpp" line="4456"/>
         <source>Save &amp;Window Position on Exit</source>
         <translation>Išeinant įrašyti &amp;lango padėtį</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4508"/>
+        <location filename="../../gui/mainwindow.cpp" line="4469"/>
         <source>Hover Highlighting</source>
         <translation>Paryškinimas užvedus</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4513"/>
+        <location filename="../../gui/mainwindow.cpp" line="4474"/>
         <source>Group Integer Part Only</source>
         <translation>Grupuoti tik sveikąją dalį</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4515"/>
+        <location filename="../../gui/mainwindow.cpp" line="4476"/>
         <source>Number Format...</source>
         <translation>Skaičių formatas...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4516"/>
+        <location filename="../../gui/mainwindow.cpp" line="4477"/>
         <source>Notation &amp;&amp; Precision...</source>
         <translation>Žymėjimas ir tikslumas...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4517"/>
-        <location filename="../../gui/mainwindow.cpp" line="4518"/>
+        <location filename="../../gui/mainwindow.cpp" line="4478"/>
+        <location filename="../../gui/mainwindow.cpp" line="4479"/>
         <source>After pressing Enter, keep the entered expression selected in the editor.</source>
         <translation>Paspaudus Enter, palikti įvestą reiškinį pažymėtą rengyklėje.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4519"/>
+        <location filename="../../gui/mainwindow.cpp" line="4480"/>
         <source>Never</source>
         <translation>Niekada</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4520"/>
+        <location filename="../../gui/mainwindow.cpp" line="4481"/>
         <source>Always</source>
         <translation>Visada</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4521"/>
+        <location filename="../../gui/mainwindow.cpp" line="4482"/>
         <source>Only for Single-Line Expressions</source>
         <translation>Tik vienos eilutės reiškiniams</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4523"/>
+        <location filename="../../gui/mainwindow.cpp" line="4484"/>
         <source>Simplify Displayed Expressions</source>
         <translation>Supaprastinti rodomus reiškinius</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4524"/>
+        <location filename="../../gui/mainwindow.cpp" line="4485"/>
         <source>History Size &amp;Limit...</source>
         <translation>Istorijos dydžio &amp;riba...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4536"/>
+        <location filename="../../gui/mainwindow.cpp" line="4497"/>
         <source>Remove Trailing &amp;Zeroes</source>
         <translation>&amp;Šalinti galinius nulius</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4538"/>
+        <location filename="../../gui/mainwindow.cpp" line="4499"/>
         <source>Nearest, Half &amp;Away (round)</source>
         <translation>Artimiausias, pusė &amp;nuo nulio (round)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4540"/>
+        <location filename="../../gui/mainwindow.cpp" line="4501"/>
         <source>Nearest, Half &amp;Even (roundeven)</source>
         <translation>Artimiausias, pusė į &amp;lyginį (roundeven)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4541"/>
+        <location filename="../../gui/mainwindow.cpp" line="4502"/>
         <source>Toward &amp;Zero (trunc)</source>
         <translation>Link &amp;nulio (trunc)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4548"/>
+        <location filename="../../gui/mainwindow.cpp" line="4509"/>
         <source>&amp;Fixed-Point</source>
         <translation>&amp;Fiksuoto kablelio</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4551"/>
+        <location filename="../../gui/mainwindow.cpp" line="4512"/>
         <source>&amp;Rational</source>
         <translation>&amp;Racionalusis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4557"/>
+        <location filename="../../gui/mainwindow.cpp" line="4518"/>
         <source>&amp;Exponential (m·s⁻¹)</source>
         <translation>&amp;Eksponentinis (m·s⁻¹)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4559"/>
+        <location filename="../../gui/mainwindow.cpp" line="4520"/>
         <source>&amp;Fractional (m/s)</source>
         <translation>&amp;Trupmeninis (m/s)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4560"/>
+        <location filename="../../gui/mainwindow.cpp" line="4521"/>
         <source>&amp;Rectangular (a + bi)</source>
         <translation>&amp;Stačiakampis (a + bi)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4561"/>
+        <location filename="../../gui/mainwindow.cpp" line="4522"/>
         <source>Exponential (reⁱᶿ)</source>
         <translation>Eksponentinis (reⁱᶿ)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4563"/>
+        <location filename="../../gui/mainwindow.cpp" line="4524"/>
         <source>Trigonometric (r(cos θ + i·sin θ))</source>
         <translation>Trigonometrinis (r(cos θ + i·sin θ))</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4565"/>
+        <location filename="../../gui/mainwindow.cpp" line="4526"/>
         <source>Phasor (r∠θ)</source>
         <translation>Fazorius (r∠θ)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4570"/>
+        <location filename="../../gui/mainwindow.cpp" line="4531"/>
         <source>&amp;Theme...</source>
         <translation>&amp;Tema...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4586"/>
+        <location filename="../../gui/mainwindow.cpp" line="4547"/>
         <source>Check for &amp;Updates</source>
         <translation>Tikrinti, ar yra &amp;naujinimų</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4590"/>
+        <location filename="../../gui/mainwindow.cpp" line="4551"/>
         <source>Source Code</source>
         <translation>Pirminis kodas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5008"/>
+        <location filename="../../gui/mainwindow.cpp" line="4972"/>
         <source>&amp;Zoom</source>
         <translation>&amp;Mastelis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5010"/>
+        <location filename="../../gui/mainwindow.cpp" line="4974"/>
         <source>&amp;Results</source>
         <translation>&amp;Rezultatai</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5011"/>
+        <location filename="../../gui/mainwindow.cpp" line="4975"/>
         <source>Unit Notation</source>
         <translation>Vienetų žymėjimas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5012"/>
+        <location filename="../../gui/mainwindow.cpp" line="4976"/>
         <source>Rounding Mode</source>
         <translation>Apvalinimo veiksena</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5013"/>
+        <location filename="../../gui/mainwindow.cpp" line="4977"/>
         <source>&amp;Notation</source>
         <translation>&amp;Žymėjimas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5018"/>
+        <location filename="../../gui/mainwindow.cpp" line="4982"/>
         <source>&amp;Imaginary Unit</source>
         <translation>&amp;Menamasis vienetas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5019"/>
+        <location filename="../../gui/mainwindow.cpp" line="4983"/>
         <source>&amp;Window</source>
         <translation>&amp;Langas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5020"/>
+        <location filename="../../gui/mainwindow.cpp" line="4984"/>
         <source>&amp;Editing</source>
         <translation>&amp;Redagavimas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5021"/>
+        <location filename="../../gui/mainwindow.cpp" line="4985"/>
         <source>A&amp;utocomplete</source>
         <translation>A&amp;utomatinis užbaigimas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5022"/>
+        <location filename="../../gui/mainwindow.cpp" line="4986"/>
         <source>Up/Down Arrow History</source>
         <translation>Rodyklių aukštyn/žemyn istorija</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5023"/>
+        <location filename="../../gui/mainwindow.cpp" line="4987"/>
         <source>&amp;Appearance</source>
         <translation>&amp;Išvaizda</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5024"/>
+        <location filename="../../gui/mainwindow.cpp" line="4988"/>
         <source>&amp;Menus</source>
         <translation>&amp;Meniu</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5025"/>
+        <location filename="../../gui/mainwindow.cpp" line="4989"/>
         <source>&amp;Docks</source>
         <translation>Prikabinami sky&amp;deliai</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5028"/>
+        <location filename="../../gui/mainwindow.cpp" line="4992"/>
         <source>&amp;Input and Results</source>
         <translation>Įvest&amp;is ir rezultatai</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5035"/>
+        <location filename="../../gui/mainwindow.cpp" line="4999"/>
         <source>&amp;Disabled</source>
         <translation>&amp;Išjungta</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5037"/>
+        <location filename="../../gui/mainwindow.cpp" line="5001"/>
         <source>&amp;Disable</source>
         <translation>&amp;Išjungti</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5222"/>
+        <location filename="../../gui/mainwindow.cpp" line="5186"/>
         <source>Close preview</source>
         <translation>Užverti peržiūrą</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5365"/>
+        <location filename="../../gui/mainwindow.cpp" line="5334"/>
         <source>Rename...</source>
         <translation>Pervadinti...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5366"/>
+        <location filename="../../gui/mainwindow.cpp" line="5335"/>
         <source>Clone...</source>
         <translation>Klonuoti...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5369"/>
+        <location filename="../../gui/mainwindow.cpp" line="5338"/>
         <source>Close Tab</source>
         <translation>Užverti skirtuką</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5372"/>
+        <location filename="../../gui/mainwindow.cpp" line="5341"/>
         <source>New Private Tab</source>
         <translation>Naujas privatus skirtukas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5373"/>
+        <location filename="../../gui/mainwindow.cpp" line="5342"/>
         <source>Open...</source>
         <translation>Atverti...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5374"/>
+        <location filename="../../gui/mainwindow.cpp" line="5343"/>
         <source>Reopen Closed Tab</source>
         <translation>Vėl atverti užvertą skirtuką</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5383"/>
+        <location filename="../../gui/mainwindow.cpp" line="5352"/>
         <source>Split</source>
         <translation>Padalyti</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5384"/>
+        <location filename="../../gui/mainwindow.cpp" line="5353"/>
         <source>Left</source>
         <translation>Kairėn</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5385"/>
+        <location filename="../../gui/mainwindow.cpp" line="5354"/>
         <source>Right</source>
         <translation>Dešinėn</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5386"/>
+        <location filename="../../gui/mainwindow.cpp" line="5355"/>
         <source>Up</source>
         <translation>Aukštyn</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5387"/>
+        <location filename="../../gui/mainwindow.cpp" line="5356"/>
         <source>Down</source>
         <translation>Žemyn</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5390"/>
+        <location filename="../../gui/mainwindow.cpp" line="5359"/>
         <source>Clear</source>
         <translation>Išvalyti</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5391"/>
+        <location filename="../../gui/mainwindow.cpp" line="5360"/>
         <source>Delete</source>
         <translation>Ištrinti</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7070"/>
+        <location filename="../../gui/mainwindow.cpp" line="7040"/>
         <source>%1
 Private session: contents are discarded when closed.
 Choose Session &gt; Keep to turn it into a regular session.</source>
@@ -5650,388 +5660,388 @@ Privatus seansas: užvėrus jo turinys pašalinamas.
 Pasirinkite Seansas &gt; Išsaugoti, kad jis taptų įprastu seansu.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7089"/>
+        <location filename="../../gui/mainwindow.cpp" line="7059"/>
         <source>SpeedCrunch - %1 [Private]</source>
         <translation>SpeedCrunch - %1 [Privatus]</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8632"/>
-        <location filename="../../gui/mainwindow.cpp" line="8644"/>
+        <location filename="../../gui/mainwindow.cpp" line="8608"/>
+        <location filename="../../gui/mainwindow.cpp" line="8620"/>
         <source>Reset All Settings</source>
         <translation>Atkurti visas nuostatas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8633"/>
+        <location filename="../../gui/mainwindow.cpp" line="8609"/>
         <source>Reset all settings to their default values?</source>
         <translation>Atkurti visų nuostatų numatytąsias reikšmes?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8634"/>
+        <location filename="../../gui/mainwindow.cpp" line="8610"/>
         <source>This includes appearance, editing, result formats, and window preferences. Your calculations, open sessions, and user definitions will be kept.</source>
         <translation>Tai apima išvaizdą, redagavimą, rezultatų formatus ir langų nuostatas. Skaičiavimai, atverti seansai ir naudotojo apibrėžtys bus išsaugoti.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8644"/>
+        <location filename="../../gui/mainwindow.cpp" line="8620"/>
         <source>The settings file could not be written.</source>
         <translation>Nepavyko įrašyti nuostatų failo.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9529"/>
+        <location filename="../../gui/mainwindow.cpp" line="9505"/>
         <source>Clear this session&apos;s calculations, unfinished expression, variables, functions, and units?</source>
         <translation>Išvalyti šio seanso skaičiavimus, nebaigtą reiškinį, kintamuosius, funkcijas ir vienetus?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9530"/>
+        <location filename="../../gui/mainwindow.cpp" line="9506"/>
         <source>Global user definitions are kept.</source>
         <translation>Visuotinės naudotojo apibrėžtys išsaugomos.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9666"/>
-        <location filename="../../gui/mainwindow.cpp" line="9686"/>
+        <location filename="../../gui/mainwindow.cpp" line="9642"/>
+        <location filename="../../gui/mainwindow.cpp" line="9662"/>
         <source>Make Session Private</source>
         <translation>Padaryti seansą privatų</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9667"/>
+        <location filename="../../gui/mainwindow.cpp" line="9643"/>
         <source>The saved session %1 will be deleted. Its contents will stay open in a private session and will be discarded when that session is closed or SpeedCrunch exits.</source>
         <translation>Įrašytas seansas %1 bus pašalintas. Jo turinys liks atvertas privačiame seanse ir bus pašalintas užvėrus tą seansą arba išėjus iš SpeedCrunch.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9672"/>
+        <location filename="../../gui/mainwindow.cpp" line="9648"/>
         <source>Make Private</source>
         <translation>Padaryti privatų</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9687"/>
+        <location filename="../../gui/mainwindow.cpp" line="9663"/>
         <source>Could not delete the saved session %1.</source>
         <translation>Nepavyko pašalinti įrašyto seanso %1.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9696"/>
+        <location filename="../../gui/mainwindow.cpp" line="9672"/>
         <source>Keep Session</source>
         <translation>Išsaugoti seansą</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9697"/>
+        <location filename="../../gui/mainwindow.cpp" line="9673"/>
         <source>Could not save the session. It remains private.</source>
         <translation>Nepavyko įrašyti seanso. Jis lieka privatus.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9893"/>
-        <location filename="../../gui/mainwindow.cpp" line="9905"/>
-        <location filename="../../gui/mainwindow.cpp" line="9926"/>
-        <location filename="../../gui/mainwindow.cpp" line="9936"/>
+        <location filename="../../gui/mainwindow.cpp" line="9869"/>
+        <location filename="../../gui/mainwindow.cpp" line="9881"/>
+        <location filename="../../gui/mainwindow.cpp" line="9902"/>
+        <location filename="../../gui/mainwindow.cpp" line="9912"/>
         <source>Clone Session</source>
         <translation>Klonuoti seansą</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9994"/>
+        <location filename="../../gui/mainwindow.cpp" line="9970"/>
         <source>Could not save session file %1.</source>
         <translation>Nepavyko įrašyti seanso failo %1.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10001"/>
+        <location filename="../../gui/mainwindow.cpp" line="9977"/>
         <source>Could not delete session file %1.</source>
         <translation>Nepavyko pašalinti seanso failo %1.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10986"/>
-        <location filename="../../gui/mainwindow.cpp" line="11027"/>
+        <location filename="../../gui/mainwindow.cpp" line="10962"/>
+        <location filename="../../gui/mainwindow.cpp" line="11003"/>
         <source>JSON file (*.json);;Any file (*.*)</source>
         <translation>JSON failas (*.json);;Bet koks failas (*.*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10990"/>
+        <location filename="../../gui/mainwindow.cpp" line="10966"/>
         <source>Export session as JSON</source>
         <translation>Eksportuoti seansą kaip JSON</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11055"/>
+        <location filename="../../gui/mainwindow.cpp" line="11031"/>
         <source>The selected file is not valid JSON: %1</source>
         <translation>Pasirinktas failas nėra tinkamas JSON: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11062"/>
+        <location filename="../../gui/mainwindow.cpp" line="11038"/>
         <source>The selected file is not a SpeedCrunch session JSON file.</source>
         <translation>Pasirinktas failas nėra SpeedCrunch seanso JSON failas.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11070"/>
+        <location filename="../../gui/mainwindow.cpp" line="11046"/>
         <source>This file uses an obsolete SpeedCrunch session format and cannot be imported.</source>
         <translation>Šis failas naudoja pasenusį SpeedCrunch seanso formatą ir negali būti importuotas.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11078"/>
+        <location filename="../../gui/mainwindow.cpp" line="11054"/>
         <source>The selected JSON file is missing the required $schema field.</source>
         <translation>Pasirinktame JSON faile trūksta privalomo $schema lauko.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11084"/>
+        <location filename="../../gui/mainwindow.cpp" line="11060"/>
         <source>The selected JSON file uses an unsupported JSON schema: %1</source>
         <translation>Pasirinktas JSON failas naudoja nepalaikomą JSON schemą: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11092"/>
+        <location filename="../../gui/mainwindow.cpp" line="11068"/>
         <source>The selected JSON file is missing the SpeedCrunch session schema identifier ($id).</source>
         <translation>Pasirinktame JSON faile trūksta SpeedCrunch seanso schemos identifikatoriaus ($id).</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11098"/>
+        <location filename="../../gui/mainwindow.cpp" line="11074"/>
         <source>The selected JSON file uses an unsupported SpeedCrunch session format: %1</source>
         <translation>Pasirinktas JSON failas naudoja nepalaikomą SpeedCrunch seanso formatą: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11106"/>
+        <location filename="../../gui/mainwindow.cpp" line="11082"/>
         <source>The selected JSON file is missing the required session name.</source>
         <translation>Pasirinktame JSON faile trūksta privalomo seanso pavadinimo.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11112"/>
+        <location filename="../../gui/mainwindow.cpp" line="11088"/>
         <source>The selected JSON file has an empty session name.</source>
         <translation>Pasirinktame JSON faile seanso pavadinimas yra tuščias.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11120"/>
+        <location filename="../../gui/mainwindow.cpp" line="11096"/>
         <source>The selected JSON file has invalid or incomplete SpeedCrunch session data.</source>
         <translation>Pasirinktame JSON faile yra neteisingų arba neišsamių SpeedCrunch seanso duomenų.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11131"/>
-        <location filename="../../gui/mainwindow.cpp" line="11139"/>
+        <location filename="../../gui/mainwindow.cpp" line="11107"/>
+        <location filename="../../gui/mainwindow.cpp" line="11115"/>
         <source>Open Sessions Folder</source>
         <translation>Atverti seansų aplanką</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11132"/>
+        <location filename="../../gui/mainwindow.cpp" line="11108"/>
         <source>Could not create the sessions folder: %1</source>
         <translation>Nepavyko sukurti seansų aplanko: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11140"/>
+        <location filename="../../gui/mainwindow.cpp" line="11116"/>
         <source>Could not open the sessions folder: %1</source>
         <translation>Nepavyko atverti seansų aplanko: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12069"/>
+        <location filename="../../gui/mainwindow.cpp" line="12059"/>
         <source>Editor and Results Font</source>
         <translation>Rengyklės ir rezultatų šriftas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9812"/>
+        <location filename="../../gui/mainwindow.cpp" line="9788"/>
         <source>Open Session</source>
         <translation>Atverti seansą</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4589"/>
+        <location filename="../../gui/mainwindow.cpp" line="4550"/>
         <source>Community</source>
         <translation>Bendruomenė</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9965"/>
-        <location filename="../../gui/mainwindow.cpp" line="9979"/>
-        <location filename="../../gui/mainwindow.cpp" line="9993"/>
-        <location filename="../../gui/mainwindow.cpp" line="10000"/>
+        <location filename="../../gui/mainwindow.cpp" line="9941"/>
+        <location filename="../../gui/mainwindow.cpp" line="9955"/>
+        <location filename="../../gui/mainwindow.cpp" line="9969"/>
+        <location filename="../../gui/mainwindow.cpp" line="9976"/>
         <source>Rename Session</source>
         <translation>Pervadinti seansą</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9528"/>
+        <location filename="../../gui/mainwindow.cpp" line="9504"/>
         <source>Clear Session</source>
         <translation>Išvalyti seansą</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10246"/>
+        <location filename="../../gui/mainwindow.cpp" line="10222"/>
         <source>Delete Session</source>
         <translation>Ištrinti seansą</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5388"/>
+        <location filename="../../gui/mainwindow.cpp" line="5357"/>
         <source>Close Pane</source>
         <translation>Užverti polangį</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7864"/>
+        <location filename="../../gui/mainwindow.cpp" line="7836"/>
         <source>User Variables</source>
         <translation>Naudotojo kintamieji</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7940"/>
+        <location filename="../../gui/mainwindow.cpp" line="7912"/>
         <source>User Units</source>
         <translation>Naudotojo vienetai</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9496"/>
+        <location filename="../../gui/mainwindow.cpp" line="9472"/>
         <source>Clear History</source>
         <translation>Išvalyti istoriją</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9497"/>
+        <location filename="../../gui/mainwindow.cpp" line="9473"/>
         <source>Are you sure you want to clear the calculation history?</source>
         <translation>Ar tikrai norite išvalyti skaičiavimų istoriją?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9894"/>
-        <location filename="../../gui/mainwindow.cpp" line="9965"/>
+        <location filename="../../gui/mainwindow.cpp" line="9870"/>
+        <location filename="../../gui/mainwindow.cpp" line="9941"/>
         <source>Session name:</source>
         <translation>Seanso pavadinimas:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9906"/>
-        <location filename="../../gui/mainwindow.cpp" line="9980"/>
+        <location filename="../../gui/mainwindow.cpp" line="9882"/>
+        <location filename="../../gui/mainwindow.cpp" line="9956"/>
         <source>A session named %1 already exists.</source>
         <translation>Seansas pavadinimu %1 jau yra.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9927"/>
+        <location filename="../../gui/mainwindow.cpp" line="9903"/>
         <source>Could not create session file %1.</source>
         <translation>Nepavyko sukurti seanso failo %1.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9937"/>
+        <location filename="../../gui/mainwindow.cpp" line="9913"/>
         <source>Could not write session file %1.</source>
         <translation>Nepavyko įrašyti seanso failo %1.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10247"/>
+        <location filename="../../gui/mainwindow.cpp" line="10223"/>
         <source>Are you sure you want to delete this session?</source>
         <translation>Ar tikrai norite ištrinti šį seansą?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10421"/>
+        <location filename="../../gui/mainwindow.cpp" line="10397"/>
         <source>Custom Precision</source>
         <translation>Pasirinktinis tikslumas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10422"/>
+        <location filename="../../gui/mainwindow.cpp" line="10398"/>
         <source>Fractional digits:</source>
         <translation>Trupmeninės dalies skaitmenys:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10439"/>
+        <location filename="../../gui/mainwindow.cpp" line="10415"/>
         <source>Theme</source>
         <translation>Tema</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10448"/>
+        <location filename="../../gui/mainwindow.cpp" line="10424"/>
         <source>Light Themes</source>
         <translation>Šviesios temos</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10455"/>
+        <location filename="../../gui/mainwindow.cpp" line="10431"/>
         <source>Dark Themes</source>
         <translation>Tamsios temos</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10463"/>
+        <location filename="../../gui/mainwindow.cpp" line="10439"/>
         <source>Preview</source>
         <translation>Peržiūra</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10525"/>
+        <location filename="../../gui/mainwindow.cpp" line="10501"/>
         <source>Colors</source>
         <translation>Spalvos</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10717"/>
+        <location filename="../../gui/mainwindow.cpp" line="10693"/>
         <source>Select color for %1</source>
         <translation>Pasirinkite spalvą elementui %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10773"/>
+        <location filename="../../gui/mainwindow.cpp" line="10749"/>
         <source>Import...</source>
         <translation>Importuoti...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10774"/>
+        <location filename="../../gui/mainwindow.cpp" line="10750"/>
         <source>Export...</source>
         <translation>Eksportuoti...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10804"/>
+        <location filename="../../gui/mainwindow.cpp" line="10780"/>
         <source>Import Theme</source>
         <translation>Importuoti temą</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10805"/>
-        <location filename="../../gui/mainwindow.cpp" line="10894"/>
+        <location filename="../../gui/mainwindow.cpp" line="10781"/>
+        <location filename="../../gui/mainwindow.cpp" line="10870"/>
         <source>Theme file (*.json);;All files (*)</source>
         <translation>Temos failas (*.json);;Visi failai (*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10816"/>
+        <location filename="../../gui/mainwindow.cpp" line="10792"/>
         <source>Invalid theme file.</source>
         <translation>Netinkamas temos failas.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10825"/>
+        <location filename="../../gui/mainwindow.cpp" line="10801"/>
         <source>Can&apos;t import theme &quot;%1&quot; because it conflicts with a built-in theme.</source>
         <translation>Nepavyksta importuoti temos „%1“, nes ji konfliktuoja su įtaisytąja tema.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10830"/>
+        <location filename="../../gui/mainwindow.cpp" line="10806"/>
         <source>Can&apos;t find a writable theme folder.</source>
         <translation>Nepavyksta rasti įrašomo temos aplanko.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10837"/>
+        <location filename="../../gui/mainwindow.cpp" line="10813"/>
         <source>Overwrite Theme</source>
         <translation>Perrašyti temą</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10838"/>
+        <location filename="../../gui/mainwindow.cpp" line="10814"/>
         <source>A custom theme named &quot;%1&quot; already exists. Do you want to overwrite it?</source>
         <translation>Pasirinktinė tema pavadinimu „%1“ jau yra. Ar norite ją perrašyti?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10846"/>
+        <location filename="../../gui/mainwindow.cpp" line="10822"/>
         <source>Can&apos;t overwrite theme file %1</source>
         <translation>Nepavyksta perrašyti temos failo %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10852"/>
+        <location filename="../../gui/mainwindow.cpp" line="10828"/>
         <source>Can&apos;t copy theme file to %1</source>
         <translation>Nepavyksta nukopijuoti temos failo į %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10893"/>
+        <location filename="../../gui/mainwindow.cpp" line="10869"/>
         <source>Export Theme</source>
         <translation>Eksportuoti temą</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10904"/>
+        <location filename="../../gui/mainwindow.cpp" line="10880"/>
         <source>Can&apos;t export theme as &quot;%1&quot; because it conflicts with a built-in theme.</source>
         <translation>Nepavyksta eksportuoti temos kaip „%1“, nes ji konfliktuoja su įtaisytąja tema.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10909"/>
-        <location filename="../../gui/mainwindow.cpp" line="11012"/>
-        <location filename="../../gui/mainwindow.cpp" line="11990"/>
-        <location filename="../../gui/mainwindow.cpp" line="12029"/>
+        <location filename="../../gui/mainwindow.cpp" line="10885"/>
+        <location filename="../../gui/mainwindow.cpp" line="10988"/>
+        <location filename="../../gui/mainwindow.cpp" line="11980"/>
+        <location filename="../../gui/mainwindow.cpp" line="12019"/>
         <source>Can&apos;t write to file %1</source>
         <translation>Nepavyksta įrašyti į failą %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11149"/>
+        <location filename="../../gui/mainwindow.cpp" line="11125"/>
         <source>Global User Variable</source>
         <translation>Globalus naudotojo kintamasis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11150"/>
+        <location filename="../../gui/mainwindow.cpp" line="11126"/>
         <source>Global User Function</source>
         <translation>Globali naudotojo funkcija</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11151"/>
+        <location filename="../../gui/mainwindow.cpp" line="11127"/>
         <source>Global User Unit</source>
         <translation>Globalus naudotojo vienetas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11495"/>
+        <location filename="../../gui/mainwindow.cpp" line="11471"/>
         <source>User Definitions</source>
         <translation>Naudotojo apibrėžimai</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11501"/>
+        <location filename="../../gui/mainwindow.cpp" line="11477"/>
         <source>These definitions are global and are loaded into every session.
 They are immutable for sessions and override same-name definitions from the session editor.
 Enter one definition per line.</source>
@@ -6040,7 +6050,7 @@ Seansuose jų keisti negalima, ir jie turi pirmenybę prieš seanso rengyklės a
 Kiekvienoje eilutėje įveskite po vieną apibrėžimą.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11511"/>
+        <location filename="../../gui/mainwindow.cpp" line="11487"/>
         <source>Examples:
 my_rate=1.25
 f(x)=x^2+1
@@ -6051,23 +6061,23 @@ f(x)=x^2+1
 [cm_s]=[centimetre/second]</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11573"/>
+        <location filename="../../gui/mainwindow.cpp" line="11549"/>
         <source>Apply</source>
         <translation>Taikyti</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11574"/>
+        <location filename="../../gui/mainwindow.cpp" line="11550"/>
         <source>Validate</source>
         <translation>Tikrinti</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11610"/>
+        <location filename="../../gui/mainwindow.cpp" line="11586"/>
         <source>Test Results</source>
         <translation>Bandymo rezultatai</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11611"/>
-        <location filename="../../gui/mainwindow.cpp" line="11643"/>
+        <location filename="../../gui/mainwindow.cpp" line="11587"/>
+        <location filename="../../gui/mainwindow.cpp" line="11619"/>
         <source>Imported variables: %1
 Imported functions: %2
 Imported units: %3
@@ -6078,130 +6088,130 @@ Importuoti vienetai: %3
 Eilučių su klaidomis numeriai: %4</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11615"/>
-        <location filename="../../gui/mainwindow.cpp" line="11647"/>
+        <location filename="../../gui/mainwindow.cpp" line="11591"/>
+        <location filename="../../gui/mainwindow.cpp" line="11623"/>
         <source>none</source>
         <translation>nėra</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11642"/>
+        <location filename="../../gui/mainwindow.cpp" line="11618"/>
         <source>Apply Results</source>
         <translation>Taikymo rezultatai</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11656"/>
+        <location filename="../../gui/mainwindow.cpp" line="11632"/>
         <source>User definitions saved.</source>
         <translation>Naudotojo apibrėžimai išsaugoti.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11691"/>
+        <location filename="../../gui/mainwindow.cpp" line="11667"/>
         <source>History Size Limit</source>
         <translation>Istorijos dydžio riba</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11692"/>
+        <location filename="../../gui/mainwindow.cpp" line="11668"/>
         <source>Maximum number of history entries for this session (0 = unlimited):</source>
         <translation>Didžiausias šio seanso istorijos įrašų skaičius (0 = neribota):</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12007"/>
+        <location filename="../../gui/mainwindow.cpp" line="11997"/>
         <source>Text file (*.txt);;Any file (*.*)</source>
         <translation>Tekstinis failas (*.txt);;Bet koks failas (*.*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="14469"/>
-        <location filename="../../gui/mainwindow.cpp" line="14642"/>
+        <location filename="../../gui/mainwindow.cpp" line="14459"/>
+        <location filename="../../gui/mainwindow.cpp" line="14632"/>
         <source>Could not recalculate from calculation %1: %2</source>
         <translation>Nepavyko perskaičiuoti nuo skaičiavimo %1: %2</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="14558"/>
+        <location filename="../../gui/mainwindow.cpp" line="14548"/>
         <source>History Size Limit Reached</source>
         <translation>Pasiekta istorijos dydžio riba</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="14559"/>
+        <location filename="../../gui/mainwindow.cpp" line="14549"/>
         <source>This calculation fills the last available history slot. Future calculations will remove the oldest calculation from history. You can increase the limit from Session &gt; History Size Limit.</source>
         <translation>Šis skaičiavimas užpildo paskutinę laisvą istorijos vietą. Būsimi skaičiavimai pašalins seniausią skaičiavimą iš istorijos. Ribą galite padidinti meniu Seansas &gt; Istorijos dydžio riba.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="14582"/>
+        <location filename="../../gui/mainwindow.cpp" line="14572"/>
         <source>Editing calculation. Press Esc twice to cancel.</source>
         <translation>Skaičiavimas redaguojamas. Norėdami atšaukti, du kartus paspauskite Esc.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="14623"/>
+        <location filename="../../gui/mainwindow.cpp" line="14613"/>
         <source>Calculation Settings</source>
         <translation>Skaičiavimo nustatymai</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="14699"/>
+        <location filename="../../gui/mainwindow.cpp" line="14689"/>
         <source>Invalid recalculation start index</source>
         <translation>Netinkamas perskaičiavimo pradžios indeksas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15270"/>
+        <location filename="../../gui/mainwindow.cpp" line="15260"/>
         <source>System Default</source>
         <translation>Sistemos numatytoji</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15274"/>
+        <location filename="../../gui/mainwindow.cpp" line="15264"/>
         <source>Language</source>
         <translation>Kalba</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15274"/>
+        <location filename="../../gui/mainwindow.cpp" line="15264"/>
         <source>Select the language:</source>
         <translation>Pasirinkite kalbą:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15304"/>
+        <location filename="../../gui/mainwindow.cpp" line="15294"/>
         <source>Custom</source>
         <translation>Pasirinktinis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15316"/>
+        <location filename="../../gui/mainwindow.cpp" line="15306"/>
         <source>Decimal places:</source>
         <translation>Dešimtainės vietos:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4546"/>
-        <location filename="../../gui/mainwindow.cpp" line="4547"/>
+        <location filename="../../gui/mainwindow.cpp" line="4507"/>
+        <location filename="../../gui/mainwindow.cpp" line="4508"/>
         <source>&amp;Automatic</source>
         <translation>&amp;Automatiškai</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5015"/>
+        <location filename="../../gui/mainwindow.cpp" line="4979"/>
         <source>&amp;Precision</source>
         <translation>&amp;Tikslumas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4426"/>
+        <location filename="../../gui/mainwindow.cpp" line="4384"/>
         <source>Plain &amp;text</source>
         <translation>Grynasis &amp;tekstas</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4466"/>
+        <location filename="../../gui/mainwindow.cpp" line="4424"/>
         <source>Formula &amp;Book</source>
         <translation>&amp;Formulių knyga</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5003"/>
+        <location filename="../../gui/mainwindow.cpp" line="4967"/>
         <source>&amp;Export</source>
         <translation>&amp;Eksportuoti</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11968"/>
+        <location filename="../../gui/mainwindow.cpp" line="11958"/>
         <source>Export session as HTML</source>
         <translation>Eksportuoti seansą kaip HTML</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11968"/>
+        <location filename="../../gui/mainwindow.cpp" line="11958"/>
         <source>HTML file (*.html)</source>
         <translation>HTML failas (*.html)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12006"/>
+        <location filename="../../gui/mainwindow.cpp" line="11996"/>
         <source>Export session as plain text</source>
         <translation>Eksportuoti seansą kaip grynąjį tekstą</translation>
     </message>

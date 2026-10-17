@@ -414,13 +414,13 @@
 <context>
     <name>ConstantCompletion</name>
     <message>
-        <location filename="../../gui/editor.cpp" line="5018"/>
-        <location filename="../../gui/editor.cpp" line="5019"/>
+        <location filename="../../gui/editor.cpp" line="5034"/>
+        <location filename="../../gui/editor.cpp" line="5035"/>
         <source>Search constants</source>
         <translation>Hledat konstanty</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="5036"/>
+        <location filename="../../gui/editor.cpp" line="5052"/>
         <source>No match found</source>
         <translation>Nenalezena žádná shoda</translation>
     </message>
@@ -2679,45 +2679,45 @@
 <context>
     <name>Editor</name>
     <message>
-        <location filename="../../gui/editor.cpp" line="1991"/>
+        <location filename="../../gui/editor.cpp" line="1992"/>
         <source>Unit</source>
         <translation>Jednotka</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="1995"/>
+        <location filename="../../gui/editor.cpp" line="1996"/>
         <source>User unit</source>
         <translation>Uživatelská jednotka</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="2050"/>
+        <location filename="../../gui/editor.cpp" line="2051"/>
         <source>User function</source>
         <translation>Uživatelská funkce</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="2177"/>
+        <location filename="../../gui/editor.cpp" line="2178"/>
         <source>Argument</source>
         <translation>Argument</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="2357"/>
-        <location filename="../../gui/editor.cpp" line="2386"/>
+        <location filename="../../gui/editor.cpp" line="2358"/>
+        <location filename="../../gui/editor.cpp" line="2387"/>
         <source>Current result:&lt;br/&gt;%1</source>
         <translation>Aktuální výsledek:&lt;br/&gt;%1</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="2454"/>
-        <location filename="../../gui/editor.cpp" line="2478"/>
+        <location filename="../../gui/editor.cpp" line="2455"/>
+        <location filename="../../gui/editor.cpp" line="2479"/>
         <source>Selection result:&lt;br/&gt;%1</source>
         <translation>Výsledek výběru:&lt;br/&gt;%1</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="2448"/>
-        <location filename="../../gui/editor.cpp" line="2472"/>
+        <location filename="../../gui/editor.cpp" line="2449"/>
+        <location filename="../../gui/editor.cpp" line="2473"/>
         <source>Selection result: n/a</source>
         <translation>Vybraný výsledek: nedostupný</translation>
     </message>
     <message>
-        <location filename="../../gui/editor.cpp" line="2485"/>
+        <location filename="../../gui/editor.cpp" line="2486"/>
         <source>Selection result: %1</source>
         <translation>Vybraný výsledek: %1</translation>
     </message>
@@ -4607,1041 +4607,1051 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4392"/>
+        <location filename="../../gui/mainwindow.cpp" line="4350"/>
         <source>Radian</source>
         <translation>Radián</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4396"/>
+        <location filename="../../gui/mainwindow.cpp" line="4354"/>
         <source>Degree</source>
         <translation>Stupeň</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4393"/>
+        <location filename="../../gui/mainwindow.cpp" line="4351"/>
         <source>Gradian</source>
         <translation>Gradián</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4402"/>
+        <location filename="../../gui/mainwindow.cpp" line="4360"/>
         <source>Binary</source>
         <translation>Binární</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4403"/>
+        <location filename="../../gui/mainwindow.cpp" line="4361"/>
         <source>Octal</source>
         <translation>Osmičkový</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4404"/>
+        <location filename="../../gui/mainwindow.cpp" line="4362"/>
         <source>Hexadecimal</source>
         <translation>Šestnáctková</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4405"/>
+        <location filename="../../gui/mainwindow.cpp" line="4363"/>
         <source>Sexagesimal</source>
         <translation>Šedesátkový</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4407"/>
+        <location filename="../../gui/mainwindow.cpp" line="4365"/>
         <source>Engineering decimal</source>
         <translation>Technická desítková</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4408"/>
+        <location filename="../../gui/mainwindow.cpp" line="4366"/>
         <source>Scientific decimal</source>
         <translation>Vědecká desítková</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4427"/>
+        <location filename="../../gui/mainwindow.cpp" line="4385"/>
         <source>&amp;Import...</source>
         <translation>&amp;Importovat...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4440"/>
+        <location filename="../../gui/mainwindow.cpp" line="4398"/>
         <source>&amp;Quit</source>
         <translation>U&amp;končit</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4442"/>
+        <location filename="../../gui/mainwindow.cpp" line="4400"/>
         <source>Clear E&amp;xpression</source>
         <translation>Smazat vý&amp;raz</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4446"/>
+        <location filename="../../gui/mainwindow.cpp" line="4404"/>
         <source>Clear &amp;History</source>
         <translation>Smazat &amp;historii</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4448"/>
+        <location filename="../../gui/mainwindow.cpp" line="4406"/>
         <source>&amp;Copy</source>
         <translation>K&amp;opírovat</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4449"/>
+        <location filename="../../gui/mainwindow.cpp" line="4407"/>
         <source>&amp;Paste</source>
         <translation>&amp;Vložit</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4450"/>
+        <location filename="../../gui/mainwindow.cpp" line="4408"/>
         <source>&amp;Select Expression</source>
         <translation>&amp;Vybrat výraz</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4453"/>
+        <location filename="../../gui/mainwindow.cpp" line="4411"/>
         <source>&amp;Constants</source>
         <translation>&amp;Konstanty</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4455"/>
+        <location filename="../../gui/mainwindow.cpp" line="4413"/>
         <source>&amp;Functions</source>
         <translation>&amp;Funkce</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4456"/>
+        <location filename="../../gui/mainwindow.cpp" line="4414"/>
         <source>&amp;History</source>
         <translation>&amp;Historie</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4467"/>
-        <location filename="../../gui/mainwindow.cpp" line="5026"/>
+        <location filename="../../gui/mainwindow.cpp" line="4425"/>
+        <location filename="../../gui/mainwindow.cpp" line="4990"/>
         <source>&amp;Status Bar</source>
         <translation>&amp;Stavový řádek</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4470"/>
-        <location filename="../../gui/mainwindow.cpp" line="7668"/>
+        <location filename="../../gui/mainwindow.cpp" line="4428"/>
+        <location filename="../../gui/mainwindow.cpp" line="7640"/>
         <source>Bitfield</source>
         <translation>Bitové pole</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4476"/>
+        <location filename="../../gui/mainwindow.cpp" line="4434"/>
         <source>Use&amp;r Functions</source>
         <translation>&amp;Uživatelské funkce</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4479"/>
+        <location filename="../../gui/mainwindow.cpp" line="4437"/>
         <source>&amp;Degree</source>
         <translation>&amp;Stupeň</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4480"/>
+        <location filename="../../gui/mainwindow.cpp" line="4438"/>
         <source>&amp;Radian</source>
         <translation>&amp;Radián</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4481"/>
+        <location filename="../../gui/mainwindow.cpp" line="4439"/>
         <source>&amp;Gradian</source>
         <translation>&amp;Gradián</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4483"/>
+        <location filename="../../gui/mainwindow.cpp" line="4441"/>
         <source>Re&amp;volution</source>
         <translation>O&amp;táčka</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4485"/>
+        <location filename="../../gui/mainwindow.cpp" line="4443"/>
         <source>Auto-Insert a&amp;ns</source>
         <translation>Automaticky vložit a&amp;ns</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4488"/>
+        <location filename="../../gui/mainwindow.cpp" line="4446"/>
         <source>Automatic &amp;Completion</source>
         <translation>Automatické &amp;dokončování</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4489"/>
+        <location filename="../../gui/mainwindow.cpp" line="4450"/>
         <source>&amp;Built-in Functions</source>
         <translation>&amp;Vestavěné funkce</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4490"/>
+        <location filename="../../gui/mainwindow.cpp" line="4451"/>
         <source>Built-in &amp;Variables</source>
         <translation>V&amp;estavěné proměnné</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4492"/>
+        <location filename="../../gui/mainwindow.cpp" line="4453"/>
         <source>User &amp;Functions</source>
         <translation>Uživatelské &amp;funkce</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4493"/>
+        <location filename="../../gui/mainwindow.cpp" line="4454"/>
         <source>User Va&amp;riables</source>
         <translation>Uživatelské p&amp;roměnné</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4496"/>
+        <location filename="../../gui/mainwindow.cpp" line="4457"/>
         <source>Open a Private Tab on Startup</source>
         <translation>Při spuštění otevřít soukromou kartu</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4497"/>
+        <location filename="../../gui/mainwindow.cpp" line="4458"/>
         <source>Open and focus a new private tab whenever SpeedCrunch starts.</source>
         <translation>Při každém spuštění SpeedCrunch otevřít a aktivovat novou soukromou kartu.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4499"/>
+        <location filename="../../gui/mainwindow.cpp" line="4460"/>
         <source>Syntax &amp;Highlighting</source>
         <translation>&amp;Zvýrazňování syntaxe</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4500"/>
+        <location filename="../../gui/mainwindow.cpp" line="4461"/>
         <source>Group Digits in &amp;Input</source>
         <translation>Seskupovat čísl&amp;ice na vstupu</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4501"/>
+        <location filename="../../gui/mainwindow.cpp" line="4462"/>
         <source>Automatic Input &amp;Adjustments</source>
         <translation>&amp;Automatické úpravy vstupu</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4502"/>
+        <location filename="../../gui/mainwindow.cpp" line="4463"/>
         <source>Automatically adjust operators, spacing, brackets, and powers, and restrict input to valid characters.</source>
         <translation>Automaticky upravovat operátory, mezery, závorky a mocniny a omezit vstup na platné znaky.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4503"/>
+        <location filename="../../gui/mainwindow.cpp" line="4464"/>
         <source>Group input digits using the selected number format.</source>
         <translation>Seskupovat zadané číslice podle vybraného číselného formátu.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4504"/>
+        <location filename="../../gui/mainwindow.cpp" line="4465"/>
         <source>&amp;Blinking Cursor</source>
         <translation>&amp;Blikající kurzor</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4505"/>
+        <location filename="../../gui/mainwindow.cpp" line="4466"/>
         <source>Blink the cursor in the expression editor.</source>
         <translation>Nechat kurzor v editoru výrazů blikat.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4506"/>
+        <location filename="../../gui/mainwindow.cpp" line="4467"/>
         <source>&amp;Escape Clears Editor</source>
         <translation>&amp;Escape vymaže editor</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4507"/>
+        <location filename="../../gui/mainwindow.cpp" line="4468"/>
         <source>Clear the focused expression editor with Escape after dismissing any popup or preview.</source>
         <translation>Klávesou Escape vymazat aktivní editor výrazů po zavření případných vyskakovacích oken či náhledů.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4514"/>
+        <location filename="../../gui/mainwindow.cpp" line="4475"/>
         <source>Keep Expression After Evaluation</source>
         <translation>Ponechat výraz po vyhodnocení</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4522"/>
+        <location filename="../../gui/mainwindow.cpp" line="4483"/>
         <source>Copy New Results Automatically</source>
         <translation>Automaticky kopírovat nové výsledky</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4525"/>
+        <location filename="../../gui/mainwindow.cpp" line="4486"/>
         <source>&amp;Comma</source>
         <translation>Čár&amp;ka</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4526"/>
+        <location filename="../../gui/mainwindow.cpp" line="4487"/>
         <source>&amp;System Default</source>
         <translation>Výchozí nastavení &amp;systému</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4527"/>
+        <location filename="../../gui/mainwindow.cpp" line="4488"/>
         <source>&amp;Dot</source>
         <translation>&amp;Tečka</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4528"/>
+        <location filename="../../gui/mainwindow.cpp" line="4489"/>
         <source>Dot &amp;And Comma</source>
         <translation>Tečka &amp;a čárka</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4543"/>
+        <location filename="../../gui/mainwindow.cpp" line="4504"/>
         <source>Toward +∞ (&amp;ceil)</source>
         <translation>Směrem k +∞ (&amp;ceil)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4545"/>
+        <location filename="../../gui/mainwindow.cpp" line="4506"/>
         <source>Toward −∞ (&amp;floor)</source>
         <translation>Směrem k −∞ (&amp;floor)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4552"/>
+        <location filename="../../gui/mainwindow.cpp" line="4513"/>
         <source>&amp;Binary</source>
         <translation>&amp;Binární</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4549"/>
+        <location filename="../../gui/mainwindow.cpp" line="4510"/>
         <source>&amp;Engineering</source>
         <translation>&amp;Technický</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4554"/>
+        <location filename="../../gui/mainwindow.cpp" line="4515"/>
         <source>&amp;Hexadecimal</source>
         <translation>&amp;Šestnáctkový</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4553"/>
+        <location filename="../../gui/mainwindow.cpp" line="4514"/>
         <source>&amp;Octal</source>
         <translation>&amp;Osmičkový</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4550"/>
+        <location filename="../../gui/mainwindow.cpp" line="4511"/>
         <source>&amp;Scientific</source>
         <translation>&amp;Vědecký</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4583"/>
+        <location filename="../../gui/mainwindow.cpp" line="4544"/>
         <source>User &amp;Manual</source>
         <translation>Uživatelská &amp;příručka</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4588"/>
+        <location filename="../../gui/mainwindow.cpp" line="4549"/>
         <source>Issues and &amp;Feedback</source>
         <translation>P&amp;roblémy a připomínky</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4591"/>
+        <location filename="../../gui/mainwindow.cpp" line="4552"/>
         <source>&amp;Donate</source>
         <translation>&amp;Darovat</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4592"/>
+        <location filename="../../gui/mainwindow.cpp" line="4553"/>
         <source>&amp;About SpeedCrunch</source>
         <translation>&amp;O programu SpeedCrunch</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4593"/>
+        <location filename="../../gui/mainwindow.cpp" line="4554"/>
         <source>App Diag&amp;nostics</source>
         <translation>Diag&amp;nostika aplikace</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5007"/>
+        <location filename="../../gui/mainwindow.cpp" line="4971"/>
         <source>S&amp;plit</source>
         <translation>&amp;Rozdělit</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5016"/>
+        <location filename="../../gui/mainwindow.cpp" line="4980"/>
         <source>Angle &amp;Mode</source>
         <translation>Reži&amp;m úhlů</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5017"/>
+        <location filename="../../gui/mainwindow.cpp" line="4981"/>
         <source>&amp;Complex Form</source>
         <translation>&amp;Komplexní tvar</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5371"/>
+        <location filename="../../gui/mainwindow.cpp" line="5340"/>
         <source>New Tab</source>
         <translation>Nová karta</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7779"/>
+        <location filename="../../gui/mainwindow.cpp" line="7751"/>
         <source>Constants</source>
         <translation>Konstanty</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7808"/>
+        <location filename="../../gui/mainwindow.cpp" line="7780"/>
         <source>Functions</source>
         <translation>Funkce</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7830"/>
+        <location filename="../../gui/mainwindow.cpp" line="7802"/>
         <source>History</source>
         <translation>Historie</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7902"/>
+        <location filename="../../gui/mainwindow.cpp" line="7874"/>
         <source>User Functions</source>
         <translation>Uživatelské funkce</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4568"/>
+        <location filename="../../gui/mainwindow.cpp" line="4529"/>
         <source>&amp;Font...</source>
         <translation>&amp;Písmo...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4581"/>
+        <location filename="../../gui/mainwindow.cpp" line="4542"/>
         <source>&amp;Language...</source>
         <translation>&amp;Jazyk...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5002"/>
+        <location filename="../../gui/mainwindow.cpp" line="4966"/>
         <source>&amp;Session</source>
         <translation>&amp;Relace</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5004"/>
+        <location filename="../../gui/mainwindow.cpp" line="4968"/>
         <source>&amp;Edit</source>
         <translation>Úp&amp;ravy</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5005"/>
+        <location filename="../../gui/mainwindow.cpp" line="4969"/>
         <source>&amp;View</source>
         <translation>&amp;Zobrazení</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5009"/>
+        <location filename="../../gui/mainwindow.cpp" line="4973"/>
         <source>Se&amp;ttings</source>
         <translation>Nas&amp;tavení</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5014"/>
+        <location filename="../../gui/mainwindow.cpp" line="4978"/>
         <source>&amp;Decimal</source>
         <translation>&amp;Desítkový</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5006"/>
-        <location filename="../../gui/mainwindow.cpp" line="5027"/>
+        <location filename="../../gui/mainwindow.cpp" line="4970"/>
+        <location filename="../../gui/mainwindow.cpp" line="4991"/>
         <source>&amp;Keypad</source>
         <translation>&amp;Klávesnice</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4484"/>
+        <location filename="../../gui/mainwindow.cpp" line="4442"/>
         <source>Always on &amp;Top</source>
         <translation>Vždy na&amp;hoře</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4509"/>
+        <location filename="../../gui/mainwindow.cpp" line="4470"/>
         <source>Disabled</source>
         <translation>Zakázáno</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4510"/>
+        <location filename="../../gui/mainwindow.cpp" line="4471"/>
         <source>Small Space</source>
         <translation>Úzká mezera</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4511"/>
+        <location filename="../../gui/mainwindow.cpp" line="4472"/>
         <source>Medium Space</source>
         <translation>Střední mezera</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4512"/>
+        <location filename="../../gui/mainwindow.cpp" line="4473"/>
         <source>Large Space</source>
         <translation>Široká mezera</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4529"/>
+        <location filename="../../gui/mainwindow.cpp" line="4490"/>
         <source>&amp;0 Digits</source>
         <translation>&amp;0 míst</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4530"/>
+        <location filename="../../gui/mainwindow.cpp" line="4491"/>
         <source>&amp;15 Digits</source>
         <translation>&amp;15 míst</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4531"/>
+        <location filename="../../gui/mainwindow.cpp" line="4492"/>
         <source>&amp;2 Digits</source>
         <translation>&amp;2 místa</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4532"/>
+        <location filename="../../gui/mainwindow.cpp" line="4493"/>
         <source>&amp;3 Digits</source>
         <translation>&amp;3 místa</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4533"/>
+        <location filename="../../gui/mainwindow.cpp" line="4494"/>
         <source>&amp;50 Digits</source>
         <translation>&amp;50 míst</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4534"/>
+        <location filename="../../gui/mainwindow.cpp" line="4495"/>
         <source>&amp;8 Digits</source>
         <translation>&amp;8 míst</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4555"/>
+        <location filename="../../gui/mainwindow.cpp" line="4516"/>
         <source>&amp;Sexagesimal</source>
         <translation>&amp;Šedesátkový</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4569"/>
+        <location filename="../../gui/mainwindow.cpp" line="4530"/>
         <source>Reset All Settings...</source>
         <translation>Obnovit všechna nastavení...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4571"/>
-        <location filename="../../gui/mainwindow.cpp" line="4573"/>
-        <location filename="../../gui/mainwindow.cpp" line="4575"/>
+        <location filename="../../gui/mainwindow.cpp" line="4532"/>
+        <location filename="../../gui/mainwindow.cpp" line="4534"/>
+        <location filename="../../gui/mainwindow.cpp" line="4536"/>
         <source>&amp;System</source>
         <translation>&amp;Systém</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4572"/>
-        <location filename="../../gui/mainwindow.cpp" line="4574"/>
-        <location filename="../../gui/mainwindow.cpp" line="4576"/>
+        <location filename="../../gui/mainwindow.cpp" line="4533"/>
+        <location filename="../../gui/mainwindow.cpp" line="4535"/>
+        <location filename="../../gui/mainwindow.cpp" line="4537"/>
         <source>SpeedCrunch &amp;Theme</source>
         <translation>Mo&amp;tiv SpeedCrunch</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4577"/>
-        <location filename="../../gui/mainwindow.cpp" line="4579"/>
+        <location filename="../../gui/mainwindow.cpp" line="4538"/>
+        <location filename="../../gui/mainwindow.cpp" line="4540"/>
         <source>&amp;Classic</source>
         <translation>Klasi&amp;cký</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4578"/>
-        <location filename="../../gui/mainwindow.cpp" line="4580"/>
+        <location filename="../../gui/mainwindow.cpp" line="4539"/>
+        <location filename="../../gui/mainwindow.cpp" line="4541"/>
         <source>&amp;Modern</source>
         <translation>&amp;Moderní</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4584"/>
+        <location filename="../../gui/mainwindow.cpp" line="4545"/>
         <source>Context Help</source>
         <translation>Související nápověda</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5029"/>
+        <location filename="../../gui/mainwindow.cpp" line="4993"/>
         <source>&amp;Help</source>
         <translation>&amp;Nápověda</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10810"/>
-        <location filename="../../gui/mainwindow.cpp" line="10816"/>
-        <location filename="../../gui/mainwindow.cpp" line="10824"/>
-        <location filename="../../gui/mainwindow.cpp" line="10830"/>
-        <location filename="../../gui/mainwindow.cpp" line="10846"/>
-        <location filename="../../gui/mainwindow.cpp" line="10852"/>
-        <location filename="../../gui/mainwindow.cpp" line="10903"/>
-        <location filename="../../gui/mainwindow.cpp" line="10909"/>
-        <location filename="../../gui/mainwindow.cpp" line="11012"/>
-        <location filename="../../gui/mainwindow.cpp" line="11990"/>
-        <location filename="../../gui/mainwindow.cpp" line="12029"/>
+        <location filename="../../gui/mainwindow.cpp" line="10786"/>
+        <location filename="../../gui/mainwindow.cpp" line="10792"/>
+        <location filename="../../gui/mainwindow.cpp" line="10800"/>
+        <location filename="../../gui/mainwindow.cpp" line="10806"/>
+        <location filename="../../gui/mainwindow.cpp" line="10822"/>
+        <location filename="../../gui/mainwindow.cpp" line="10828"/>
+        <location filename="../../gui/mainwindow.cpp" line="10879"/>
+        <location filename="../../gui/mainwindow.cpp" line="10885"/>
+        <location filename="../../gui/mainwindow.cpp" line="10988"/>
+        <location filename="../../gui/mainwindow.cpp" line="11980"/>
+        <location filename="../../gui/mainwindow.cpp" line="12019"/>
         <source>Error</source>
         <translation>Chyba</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10810"/>
-        <location filename="../../gui/mainwindow.cpp" line="11046"/>
+        <location filename="../../gui/mainwindow.cpp" line="10786"/>
+        <location filename="../../gui/mainwindow.cpp" line="11022"/>
         <source>Can&apos;t read from file %1</source>
         <translation>Nelze číst ze souboru %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11028"/>
-        <location filename="../../gui/mainwindow.cpp" line="11046"/>
-        <location filename="../../gui/mainwindow.cpp" line="11054"/>
-        <location filename="../../gui/mainwindow.cpp" line="11061"/>
-        <location filename="../../gui/mainwindow.cpp" line="11069"/>
-        <location filename="../../gui/mainwindow.cpp" line="11077"/>
-        <location filename="../../gui/mainwindow.cpp" line="11083"/>
-        <location filename="../../gui/mainwindow.cpp" line="11091"/>
-        <location filename="../../gui/mainwindow.cpp" line="11097"/>
-        <location filename="../../gui/mainwindow.cpp" line="11105"/>
-        <location filename="../../gui/mainwindow.cpp" line="11111"/>
-        <location filename="../../gui/mainwindow.cpp" line="11119"/>
+        <location filename="../../gui/mainwindow.cpp" line="11004"/>
+        <location filename="../../gui/mainwindow.cpp" line="11022"/>
+        <location filename="../../gui/mainwindow.cpp" line="11030"/>
+        <location filename="../../gui/mainwindow.cpp" line="11037"/>
+        <location filename="../../gui/mainwindow.cpp" line="11045"/>
+        <location filename="../../gui/mainwindow.cpp" line="11053"/>
+        <location filename="../../gui/mainwindow.cpp" line="11059"/>
+        <location filename="../../gui/mainwindow.cpp" line="11067"/>
+        <location filename="../../gui/mainwindow.cpp" line="11073"/>
+        <location filename="../../gui/mainwindow.cpp" line="11081"/>
+        <location filename="../../gui/mainwindow.cpp" line="11087"/>
+        <location filename="../../gui/mainwindow.cpp" line="11095"/>
         <source>Import Session</source>
         <translation>Importovat relaci</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3231"/>
+        <location filename="../../gui/mainwindow.cpp" line="3186"/>
         <source>Close Session</source>
         <translation>Zavřít relaci</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4199"/>
+        <location filename="../../gui/mainwindow.cpp" line="4157"/>
         <source>Angle Mode:</source>
         <translation>Režim úhlů:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4200"/>
+        <location filename="../../gui/mainwindow.cpp" line="4158"/>
         <source>Notation:</source>
         <translation>Zápis:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4201"/>
+        <location filename="../../gui/mainwindow.cpp" line="4159"/>
         <source>Precision:</source>
         <translation>Přesnost:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4394"/>
+        <location filename="../../gui/mainwindow.cpp" line="4352"/>
         <source>Turn</source>
         <translation>Otočka</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4395"/>
+        <location filename="../../gui/mainwindow.cpp" line="4353"/>
         <source>Revolution</source>
         <translation>Otáčka</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4406"/>
+        <location filename="../../gui/mainwindow.cpp" line="4364"/>
         <source>Fixed-point decimal</source>
         <translation>Desetinný zápis s pevnou řádovou čárkou</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4409"/>
+        <location filename="../../gui/mainwindow.cpp" line="4367"/>
         <source>Rational</source>
         <translation>Racionální</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4410"/>
+        <location filename="../../gui/mainwindow.cpp" line="4368"/>
         <source>Automatic decimal</source>
         <translation>Automatický desetinný zápis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4418"/>
-        <location filename="../../gui/mainwindow.cpp" line="15296"/>
+        <location filename="../../gui/mainwindow.cpp" line="4376"/>
+        <location filename="../../gui/mainwindow.cpp" line="15286"/>
         <source>Automatic</source>
         <translation>Automaticky</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4428"/>
+        <location filename="../../gui/mainwindow.cpp" line="4386"/>
         <source>User &amp;Definitions...</source>
         <translation>Uživatelské &amp;definice...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4429"/>
+        <location filename="../../gui/mainwindow.cpp" line="4387"/>
         <source>New &amp;Tab</source>
         <translation>Nová &amp;karta</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4430"/>
+        <location filename="../../gui/mainwindow.cpp" line="4388"/>
         <source>New &amp;Private Tab</source>
         <translation>&amp;Nová soukromá karta</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4432"/>
-        <location filename="../../gui/mainwindow.cpp" line="5368"/>
-        <location filename="../../gui/mainwindow.cpp" line="12133"/>
+        <location filename="../../gui/mainwindow.cpp" line="4390"/>
+        <location filename="../../gui/mainwindow.cpp" line="5337"/>
+        <location filename="../../gui/mainwindow.cpp" line="12123"/>
         <source>Keep</source>
         <translation>Ponechat</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4432"/>
-        <location filename="../../gui/mainwindow.cpp" line="5368"/>
-        <location filename="../../gui/mainwindow.cpp" line="12133"/>
+        <location filename="../../gui/mainwindow.cpp" line="4390"/>
+        <location filename="../../gui/mainwindow.cpp" line="5337"/>
+        <location filename="../../gui/mainwindow.cpp" line="12123"/>
         <source>Make Private...</source>
         <translation>Změnit na soukromou...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4433"/>
+        <location filename="../../gui/mainwindow.cpp" line="4391"/>
         <source>New &amp;Window</source>
         <translation>Nové &amp;okno</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4434"/>
+        <location filename="../../gui/mainwindow.cpp" line="4392"/>
         <source>&amp;Open...</source>
         <translation>&amp;Otevřít...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4435"/>
+        <location filename="../../gui/mainwindow.cpp" line="4393"/>
         <source>&amp;Rename...</source>
         <translation>&amp;Přejmenovat...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4436"/>
+        <location filename="../../gui/mainwindow.cpp" line="4394"/>
         <source>Clo&amp;ne...</source>
         <translation>Klono&amp;vat...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4437"/>
+        <location filename="../../gui/mainwindow.cpp" line="4395"/>
         <source>&amp;Close Tab</source>
         <translation>&amp;Zavřít kartu</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4438"/>
+        <location filename="../../gui/mainwindow.cpp" line="4396"/>
         <source>Reopen Clo&amp;sed Tab</source>
         <translation>Znov&amp;u otevřít zavřenou kartu</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4439"/>
+        <location filename="../../gui/mainwindow.cpp" line="4397"/>
         <source>Open Sessions &amp;Folder</source>
         <translation>Otevřít &amp;složku relací</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4443"/>
+        <location filename="../../gui/mainwindow.cpp" line="4401"/>
         <source>&amp;Undo</source>
         <translation>&amp;Zpět</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4444"/>
+        <location filename="../../gui/mainwindow.cpp" line="4402"/>
         <source>&amp;Redo</source>
         <translation>Z&amp;novu</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4445"/>
+        <location filename="../../gui/mainwindow.cpp" line="4403"/>
         <source>Cu&amp;t</source>
         <translation>Vyjmou&amp;t</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4447"/>
+        <location filename="../../gui/mainwindow.cpp" line="4405"/>
         <source>Copy &amp;Last Result</source>
         <translation>Kopírovat pos&amp;lední výsledek</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4451"/>
+        <location filename="../../gui/mainwindow.cpp" line="4409"/>
         <source>&amp;Wrap in Parentheses</source>
         <translation>&amp;Uzavřít do závorek</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4454"/>
+        <location filename="../../gui/mainwindow.cpp" line="4412"/>
         <source>Full Scr&amp;een Mode</source>
         <translation>R&amp;ežim celé obrazovky</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4458"/>
+        <location filename="../../gui/mainwindow.cpp" line="4416"/>
         <source>&amp;Basic</source>
         <translation>&amp;Základní</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4459"/>
+        <location filename="../../gui/mainwindow.cpp" line="4417"/>
         <source>&amp;Scientific (wide)</source>
         <translation>&amp;Vědecké (široké)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4460"/>
+        <location filename="../../gui/mainwindow.cpp" line="4418"/>
         <source>Scientific (narrow)</source>
         <translation>Vědecké (úzké)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4461"/>
-        <location filename="../../gui/mainwindow.cpp" line="4535"/>
+        <location filename="../../gui/mainwindow.cpp" line="4419"/>
+        <location filename="../../gui/mainwindow.cpp" line="4496"/>
         <source>&amp;Custom...</source>
         <translation>&amp;Vlastní...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4468"/>
+        <location filename="../../gui/mainwindow.cpp" line="4426"/>
         <source>Main &amp;Menu</source>
         <translation>Hlavní &amp;nabídka</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4469"/>
+        <location filename="../../gui/mainwindow.cpp" line="4427"/>
         <source>User &amp;Variables</source>
         <translation>Uživatelské &amp;proměnné</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4471"/>
+        <location filename="../../gui/mainwindow.cpp" line="4429"/>
         <source>&amp;Left</source>
         <translation>V&amp;levo</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4472"/>
+        <location filename="../../gui/mainwindow.cpp" line="4430"/>
         <source>&amp;Right</source>
         <translation>Vp&amp;ravo</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4473"/>
+        <location filename="../../gui/mainwindow.cpp" line="4431"/>
         <source>&amp;Up</source>
         <translation>Nahor&amp;u</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4474"/>
+        <location filename="../../gui/mainwindow.cpp" line="4432"/>
         <source>&amp;Down</source>
         <translation>&amp;Dolů</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4475"/>
+        <location filename="../../gui/mainwindow.cpp" line="4433"/>
         <source>Close Pa&amp;ne</source>
         <translation>&amp;Zavřít panel</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4477"/>
+        <location filename="../../gui/mainwindow.cpp" line="4435"/>
         <source>User &amp;Units</source>
         <translation>Uživatelské &amp;jednotky</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4482"/>
+        <location filename="../../gui/mainwindow.cpp" line="4440"/>
         <source>&amp;Turn</source>
         <translation>&amp;Otočka</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4486"/>
-        <location filename="../../gui/mainwindow.cpp" line="4487"/>
+        <location filename="../../gui/mainwindow.cpp" line="4444"/>
+        <location filename="../../gui/mainwindow.cpp" line="4445"/>
         <source>If a new expression starts with +, -, *, or /, SpeedCrunch inserts &quot;ans&quot; first.</source>
         <translation>Pokud nový výraz začíná na +, -, * nebo /, SpeedCrunch nejprve vloží „ans“.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4491"/>
+        <location filename="../../gui/mainwindow.cpp" line="4447"/>
+        <source>&amp;Accept with Enter</source>
+        <translation>&amp;Přijmout klávesou Enter</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4448"/>
+        <source>Accept the current autocomplete suggestion with Enter without first selecting it with the arrow keys.</source>
+        <translation>Přijmout aktuální návrh automatického doplňování klávesou Enter bez předchozího výběru pomocí šipek.</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="4452"/>
         <source>&amp;Units</source>
         <translation>&amp;Jednotky</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4494"/>
+        <location filename="../../gui/mainwindow.cpp" line="4455"/>
         <source>Show Live Result &amp;Preview</source>
         <translation>Zobrazit živý &amp;náhled výsledku</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4495"/>
+        <location filename="../../gui/mainwindow.cpp" line="4456"/>
         <source>Save &amp;Window Position on Exit</source>
         <translation>Uložit polohu &amp;okna při ukončení</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4508"/>
+        <location filename="../../gui/mainwindow.cpp" line="4469"/>
         <source>Hover Highlighting</source>
         <translation>Zvýraznění při přejetí myší</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4513"/>
+        <location filename="../../gui/mainwindow.cpp" line="4474"/>
         <source>Group Integer Part Only</source>
         <translation>Seskupovat pouze celočíselnou část</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4515"/>
+        <location filename="../../gui/mainwindow.cpp" line="4476"/>
         <source>Number Format...</source>
         <translation>Formát čísla...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4516"/>
+        <location filename="../../gui/mainwindow.cpp" line="4477"/>
         <source>Notation &amp;&amp; Precision...</source>
         <translation>Zápis a přesnost...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4517"/>
-        <location filename="../../gui/mainwindow.cpp" line="4518"/>
+        <location filename="../../gui/mainwindow.cpp" line="4478"/>
+        <location filename="../../gui/mainwindow.cpp" line="4479"/>
         <source>After pressing Enter, keep the entered expression selected in the editor.</source>
         <translation>Po stisknutí klávesy Enter ponechat zadaný výraz vybraný v editoru.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4519"/>
+        <location filename="../../gui/mainwindow.cpp" line="4480"/>
         <source>Never</source>
         <translation>Nikdy</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4520"/>
+        <location filename="../../gui/mainwindow.cpp" line="4481"/>
         <source>Always</source>
         <translation>Vždy</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4521"/>
+        <location filename="../../gui/mainwindow.cpp" line="4482"/>
         <source>Only for Single-Line Expressions</source>
         <translation>Pouze pro jednořádkové výrazy</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4523"/>
+        <location filename="../../gui/mainwindow.cpp" line="4484"/>
         <source>Simplify Displayed Expressions</source>
         <translation>Zjednodušit zobrazené výrazy</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4524"/>
+        <location filename="../../gui/mainwindow.cpp" line="4485"/>
         <source>History Size &amp;Limit...</source>
         <translation>&amp;Limit velikosti historie...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4536"/>
+        <location filename="../../gui/mainwindow.cpp" line="4497"/>
         <source>Remove Trailing &amp;Zeroes</source>
         <translation>&amp;Odstranit koncové nuly</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4538"/>
+        <location filename="../../gui/mainwindow.cpp" line="4499"/>
         <source>Nearest, Half &amp;Away (round)</source>
         <translation>Nejbližší, polovina &amp;od nuly (round)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4540"/>
+        <location filename="../../gui/mainwindow.cpp" line="4501"/>
         <source>Nearest, Half &amp;Even (roundeven)</source>
         <translation>Nejbližší, polovina na &amp;sudé (roundeven)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4541"/>
+        <location filename="../../gui/mainwindow.cpp" line="4502"/>
         <source>Toward &amp;Zero (trunc)</source>
         <translation>Směrem k &amp;nule (trunc)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4548"/>
+        <location filename="../../gui/mainwindow.cpp" line="4509"/>
         <source>&amp;Fixed-Point</source>
         <translation>S &amp;pevnou řádovou čárkou</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4551"/>
+        <location filename="../../gui/mainwindow.cpp" line="4512"/>
         <source>&amp;Rational</source>
         <translation>&amp;Racionální</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4557"/>
+        <location filename="../../gui/mainwindow.cpp" line="4518"/>
         <source>&amp;Exponential (m·s⁻¹)</source>
         <translation>&amp;Exponenciální (m·s⁻¹)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4559"/>
+        <location filename="../../gui/mainwindow.cpp" line="4520"/>
         <source>&amp;Fractional (m/s)</source>
         <translation>&amp;Zlomkový (m/s)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4560"/>
+        <location filename="../../gui/mainwindow.cpp" line="4521"/>
         <source>&amp;Rectangular (a + bi)</source>
         <translation>&amp;Pravouhlý (a + bi)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4561"/>
+        <location filename="../../gui/mainwindow.cpp" line="4522"/>
         <source>Exponential (reⁱᶿ)</source>
         <translation>Exponenciální (reⁱᶿ)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4563"/>
+        <location filename="../../gui/mainwindow.cpp" line="4524"/>
         <source>Trigonometric (r(cos θ + i·sin θ))</source>
         <translation>Trigonometrický (r(cos θ + i·sin θ))</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4565"/>
+        <location filename="../../gui/mainwindow.cpp" line="4526"/>
         <source>Phasor (r∠θ)</source>
         <translation>Fázor (r∠θ)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4570"/>
+        <location filename="../../gui/mainwindow.cpp" line="4531"/>
         <source>&amp;Theme...</source>
         <translation>&amp;Motiv...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4586"/>
+        <location filename="../../gui/mainwindow.cpp" line="4547"/>
         <source>Check for &amp;Updates</source>
         <translation>Zkontrolovat &amp;aktualizace</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4590"/>
+        <location filename="../../gui/mainwindow.cpp" line="4551"/>
         <source>Source Code</source>
         <translation>Zdrojový kód</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5008"/>
+        <location filename="../../gui/mainwindow.cpp" line="4972"/>
         <source>&amp;Zoom</source>
         <translation>&amp;Přiblížení</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5010"/>
+        <location filename="../../gui/mainwindow.cpp" line="4974"/>
         <source>&amp;Results</source>
         <translation>&amp;Výsledky</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5011"/>
+        <location filename="../../gui/mainwindow.cpp" line="4975"/>
         <source>Unit Notation</source>
         <translation>Zápis jednotek</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5012"/>
+        <location filename="../../gui/mainwindow.cpp" line="4976"/>
         <source>Rounding Mode</source>
         <translation>Režim zaokrouhlování</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5013"/>
+        <location filename="../../gui/mainwindow.cpp" line="4977"/>
         <source>&amp;Notation</source>
         <translation>&amp;Zápis</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5018"/>
+        <location filename="../../gui/mainwindow.cpp" line="4982"/>
         <source>&amp;Imaginary Unit</source>
         <translation>&amp;Imaginární jednotka</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5019"/>
+        <location filename="../../gui/mainwindow.cpp" line="4983"/>
         <source>&amp;Window</source>
         <translation>&amp;Okno</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5020"/>
+        <location filename="../../gui/mainwindow.cpp" line="4984"/>
         <source>&amp;Editing</source>
         <translation>&amp;Úpravy</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5021"/>
+        <location filename="../../gui/mainwindow.cpp" line="4985"/>
         <source>A&amp;utocomplete</source>
         <translation>A&amp;utomatické doplňování</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5022"/>
+        <location filename="../../gui/mainwindow.cpp" line="4986"/>
         <source>Up/Down Arrow History</source>
         <translation>Historie šipkami nahoru/dolů</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5023"/>
+        <location filename="../../gui/mainwindow.cpp" line="4987"/>
         <source>&amp;Appearance</source>
         <translation>&amp;Vzhled</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5024"/>
+        <location filename="../../gui/mainwindow.cpp" line="4988"/>
         <source>&amp;Menus</source>
         <translation>&amp;Nabídky</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5025"/>
+        <location filename="../../gui/mainwindow.cpp" line="4989"/>
         <source>&amp;Docks</source>
         <translation>&amp;Dokovatelné panely</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5028"/>
+        <location filename="../../gui/mainwindow.cpp" line="4992"/>
         <source>&amp;Input and Results</source>
         <translation>&amp;Vstup a výsledky</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5035"/>
+        <location filename="../../gui/mainwindow.cpp" line="4999"/>
         <source>&amp;Disabled</source>
         <translation>&amp;Vypnuté</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5037"/>
+        <location filename="../../gui/mainwindow.cpp" line="5001"/>
         <source>&amp;Disable</source>
         <translation>&amp;Vypnout</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5222"/>
+        <location filename="../../gui/mainwindow.cpp" line="5186"/>
         <source>Close preview</source>
         <translation>Zavřít náhled</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5365"/>
+        <location filename="../../gui/mainwindow.cpp" line="5334"/>
         <source>Rename...</source>
         <translation>Přejmenovat...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5366"/>
+        <location filename="../../gui/mainwindow.cpp" line="5335"/>
         <source>Clone...</source>
         <translation>Klonovat...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5369"/>
+        <location filename="../../gui/mainwindow.cpp" line="5338"/>
         <source>Close Tab</source>
         <translation>Zavřít kartu</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5372"/>
+        <location filename="../../gui/mainwindow.cpp" line="5341"/>
         <source>New Private Tab</source>
         <translation>Nová soukromá karta</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5373"/>
+        <location filename="../../gui/mainwindow.cpp" line="5342"/>
         <source>Open...</source>
         <translation>Otevřít...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5374"/>
+        <location filename="../../gui/mainwindow.cpp" line="5343"/>
         <source>Reopen Closed Tab</source>
         <translation>Znovu otevřít zavřenou kartu</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5383"/>
+        <location filename="../../gui/mainwindow.cpp" line="5352"/>
         <source>Split</source>
         <translation>Rozdělit</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5384"/>
+        <location filename="../../gui/mainwindow.cpp" line="5353"/>
         <source>Left</source>
         <translation>Vlevo</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5385"/>
+        <location filename="../../gui/mainwindow.cpp" line="5354"/>
         <source>Right</source>
         <translation>Vpravo</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5386"/>
+        <location filename="../../gui/mainwindow.cpp" line="5355"/>
         <source>Up</source>
         <translation>Nahoru</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5387"/>
+        <location filename="../../gui/mainwindow.cpp" line="5356"/>
         <source>Down</source>
         <translation>Dolů</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5390"/>
+        <location filename="../../gui/mainwindow.cpp" line="5359"/>
         <source>Clear</source>
         <translation>Vymazat</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5391"/>
+        <location filename="../../gui/mainwindow.cpp" line="5360"/>
         <source>Delete</source>
         <translation>Smazat</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7070"/>
+        <location filename="../../gui/mainwindow.cpp" line="7040"/>
         <source>%1
 Private session: contents are discarded when closed.
 Choose Session &gt; Keep to turn it into a regular session.</source>
@@ -5650,388 +5660,388 @@ Soukromé relace: obsah se při zavření zahodí.
 Volbou Relace &gt; Ponechat jej změníte na běžné relace.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7089"/>
+        <location filename="../../gui/mainwindow.cpp" line="7059"/>
         <source>SpeedCrunch - %1 [Private]</source>
         <translation>SpeedCrunch - %1 [Soukromé]</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8632"/>
-        <location filename="../../gui/mainwindow.cpp" line="8644"/>
+        <location filename="../../gui/mainwindow.cpp" line="8608"/>
+        <location filename="../../gui/mainwindow.cpp" line="8620"/>
         <source>Reset All Settings</source>
         <translation>Obnovit všechna nastavení</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8633"/>
+        <location filename="../../gui/mainwindow.cpp" line="8609"/>
         <source>Reset all settings to their default values?</source>
         <translation>Obnovit výchozí hodnoty všech nastavení?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8634"/>
+        <location filename="../../gui/mainwindow.cpp" line="8610"/>
         <source>This includes appearance, editing, result formats, and window preferences. Your calculations, open sessions, and user definitions will be kept.</source>
         <translation>Zahrnuje to vzhled, úpravy, formáty výsledků a předvolby oken. Vaše výpočty, otevřená relace a uživatelské definice zůstanou zachovány.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8644"/>
+        <location filename="../../gui/mainwindow.cpp" line="8620"/>
         <source>The settings file could not be written.</source>
         <translation>Soubor nastavení se nepodařilo zapsat.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9529"/>
+        <location filename="../../gui/mainwindow.cpp" line="9505"/>
         <source>Clear this session&apos;s calculations, unfinished expression, variables, functions, and units?</source>
         <translation>Vymazat výpočty, nedokončený výraz, proměnné, funkce a jednotky tohoto relace?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9530"/>
+        <location filename="../../gui/mainwindow.cpp" line="9506"/>
         <source>Global user definitions are kept.</source>
         <translation>Globální uživatelské definice zůstanou zachovány.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9666"/>
-        <location filename="../../gui/mainwindow.cpp" line="9686"/>
+        <location filename="../../gui/mainwindow.cpp" line="9642"/>
+        <location filename="../../gui/mainwindow.cpp" line="9662"/>
         <source>Make Session Private</source>
         <translation>Změnit relace na soukromé</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9667"/>
+        <location filename="../../gui/mainwindow.cpp" line="9643"/>
         <source>The saved session %1 will be deleted. Its contents will stay open in a private session and will be discarded when that session is closed or SpeedCrunch exits.</source>
         <translation>Uložené relace %1 bude odstraněno. Jeho obsah zůstane otevřený v soukromém relace a bude zahozen při zavření tohoto relace nebo ukončení SpeedCrunch.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9672"/>
+        <location filename="../../gui/mainwindow.cpp" line="9648"/>
         <source>Make Private</source>
         <translation>Změnit na soukromou</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9687"/>
+        <location filename="../../gui/mainwindow.cpp" line="9663"/>
         <source>Could not delete the saved session %1.</source>
         <translation>Uložené relace %1 se nepodařilo odstranit.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9696"/>
+        <location filename="../../gui/mainwindow.cpp" line="9672"/>
         <source>Keep Session</source>
         <translation>Ponechat relace</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9697"/>
+        <location filename="../../gui/mainwindow.cpp" line="9673"/>
         <source>Could not save the session. It remains private.</source>
         <translation>Relace se nepodařilo uložit. Zůstává soukromé.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9893"/>
-        <location filename="../../gui/mainwindow.cpp" line="9905"/>
-        <location filename="../../gui/mainwindow.cpp" line="9926"/>
-        <location filename="../../gui/mainwindow.cpp" line="9936"/>
+        <location filename="../../gui/mainwindow.cpp" line="9869"/>
+        <location filename="../../gui/mainwindow.cpp" line="9881"/>
+        <location filename="../../gui/mainwindow.cpp" line="9902"/>
+        <location filename="../../gui/mainwindow.cpp" line="9912"/>
         <source>Clone Session</source>
         <translation>Klonovat relace</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9994"/>
+        <location filename="../../gui/mainwindow.cpp" line="9970"/>
         <source>Could not save session file %1.</source>
         <translation>Soubor relace %1 se nepodařilo uložit.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10001"/>
+        <location filename="../../gui/mainwindow.cpp" line="9977"/>
         <source>Could not delete session file %1.</source>
         <translation>Soubor relace %1 se nepodařilo odstranit.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10986"/>
-        <location filename="../../gui/mainwindow.cpp" line="11027"/>
+        <location filename="../../gui/mainwindow.cpp" line="10962"/>
+        <location filename="../../gui/mainwindow.cpp" line="11003"/>
         <source>JSON file (*.json);;Any file (*.*)</source>
         <translation>Soubor JSON (*.json);;Libovolný soubor (*.*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10990"/>
+        <location filename="../../gui/mainwindow.cpp" line="10966"/>
         <source>Export session as JSON</source>
         <translation>Exportovat relaci jako JSON</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11055"/>
+        <location filename="../../gui/mainwindow.cpp" line="11031"/>
         <source>The selected file is not valid JSON: %1</source>
         <translation>Vybraný soubor není platný JSON: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11062"/>
+        <location filename="../../gui/mainwindow.cpp" line="11038"/>
         <source>The selected file is not a SpeedCrunch session JSON file.</source>
         <translation>Vybraný soubor není soubor JSON relace SpeedCrunch.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11070"/>
+        <location filename="../../gui/mainwindow.cpp" line="11046"/>
         <source>This file uses an obsolete SpeedCrunch session format and cannot be imported.</source>
         <translation>Tento soubor používá zastaralý formát relace SpeedCrunch a nelze jej importovat.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11078"/>
+        <location filename="../../gui/mainwindow.cpp" line="11054"/>
         <source>The selected JSON file is missing the required $schema field.</source>
         <translation>Ve vybraném souboru JSON chybí povinné pole $schema.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11084"/>
+        <location filename="../../gui/mainwindow.cpp" line="11060"/>
         <source>The selected JSON file uses an unsupported JSON schema: %1</source>
         <translation>Vybraný soubor JSON používá nepodporované schéma JSON: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11092"/>
+        <location filename="../../gui/mainwindow.cpp" line="11068"/>
         <source>The selected JSON file is missing the SpeedCrunch session schema identifier ($id).</source>
         <translation>Ve vybraném souboru JSON chybí identifikátor schématu relace SpeedCrunch ($id).</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11098"/>
+        <location filename="../../gui/mainwindow.cpp" line="11074"/>
         <source>The selected JSON file uses an unsupported SpeedCrunch session format: %1</source>
         <translation>Vybraný soubor JSON používá nepodporovaný formát relace SpeedCrunch: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11106"/>
+        <location filename="../../gui/mainwindow.cpp" line="11082"/>
         <source>The selected JSON file is missing the required session name.</source>
         <translation>Ve vybraném souboru JSON chybí povinný název relace.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11112"/>
+        <location filename="../../gui/mainwindow.cpp" line="11088"/>
         <source>The selected JSON file has an empty session name.</source>
         <translation>Vybraný soubor JSON má prázdný název relace.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11120"/>
+        <location filename="../../gui/mainwindow.cpp" line="11096"/>
         <source>The selected JSON file has invalid or incomplete SpeedCrunch session data.</source>
         <translation>Vybraný soubor JSON obsahuje neplatná nebo neúplná data relace SpeedCrunch.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11131"/>
-        <location filename="../../gui/mainwindow.cpp" line="11139"/>
+        <location filename="../../gui/mainwindow.cpp" line="11107"/>
+        <location filename="../../gui/mainwindow.cpp" line="11115"/>
         <source>Open Sessions Folder</source>
         <translation>Otevřít složku relací</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11132"/>
+        <location filename="../../gui/mainwindow.cpp" line="11108"/>
         <source>Could not create the sessions folder: %1</source>
         <translation>Nelze vytvořit složku relací: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11140"/>
+        <location filename="../../gui/mainwindow.cpp" line="11116"/>
         <source>Could not open the sessions folder: %1</source>
         <translation>Nelze otevřít složku relací: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12069"/>
+        <location filename="../../gui/mainwindow.cpp" line="12059"/>
         <source>Editor and Results Font</source>
         <translation>Písmo editoru a výsledků</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9812"/>
+        <location filename="../../gui/mainwindow.cpp" line="9788"/>
         <source>Open Session</source>
         <translation>Otevřít relaci</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4589"/>
+        <location filename="../../gui/mainwindow.cpp" line="4550"/>
         <source>Community</source>
         <translation>Komunita</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9965"/>
-        <location filename="../../gui/mainwindow.cpp" line="9979"/>
-        <location filename="../../gui/mainwindow.cpp" line="9993"/>
-        <location filename="../../gui/mainwindow.cpp" line="10000"/>
+        <location filename="../../gui/mainwindow.cpp" line="9941"/>
+        <location filename="../../gui/mainwindow.cpp" line="9955"/>
+        <location filename="../../gui/mainwindow.cpp" line="9969"/>
+        <location filename="../../gui/mainwindow.cpp" line="9976"/>
         <source>Rename Session</source>
         <translation>Přejmenovat relaci</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9528"/>
+        <location filename="../../gui/mainwindow.cpp" line="9504"/>
         <source>Clear Session</source>
         <translation>Vymazat relaci</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10246"/>
+        <location filename="../../gui/mainwindow.cpp" line="10222"/>
         <source>Delete Session</source>
         <translation>Odstranit relaci</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5388"/>
+        <location filename="../../gui/mainwindow.cpp" line="5357"/>
         <source>Close Pane</source>
         <translation>Zavřít panel</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7864"/>
+        <location filename="../../gui/mainwindow.cpp" line="7836"/>
         <source>User Variables</source>
         <translation>Uživatelské proměnné</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7940"/>
+        <location filename="../../gui/mainwindow.cpp" line="7912"/>
         <source>User Units</source>
         <translation>Uživatelské jednotky</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9496"/>
+        <location filename="../../gui/mainwindow.cpp" line="9472"/>
         <source>Clear History</source>
         <translation>Vymazat historii</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9497"/>
+        <location filename="../../gui/mainwindow.cpp" line="9473"/>
         <source>Are you sure you want to clear the calculation history?</source>
         <translation>Opravdu chcete vymazat historii výpočtů?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9894"/>
-        <location filename="../../gui/mainwindow.cpp" line="9965"/>
+        <location filename="../../gui/mainwindow.cpp" line="9870"/>
+        <location filename="../../gui/mainwindow.cpp" line="9941"/>
         <source>Session name:</source>
         <translation>Název relace:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9906"/>
-        <location filename="../../gui/mainwindow.cpp" line="9980"/>
+        <location filename="../../gui/mainwindow.cpp" line="9882"/>
+        <location filename="../../gui/mainwindow.cpp" line="9956"/>
         <source>A session named %1 already exists.</source>
         <translation>Relace s názvem %1 již existuje.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9927"/>
+        <location filename="../../gui/mainwindow.cpp" line="9903"/>
         <source>Could not create session file %1.</source>
         <translation>Nepodařilo se vytvořit soubor relace %1.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9937"/>
+        <location filename="../../gui/mainwindow.cpp" line="9913"/>
         <source>Could not write session file %1.</source>
         <translation>Nepodařilo se zapsat soubor relace %1.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10247"/>
+        <location filename="../../gui/mainwindow.cpp" line="10223"/>
         <source>Are you sure you want to delete this session?</source>
         <translation>Opravdu chcete odstranit tuto relaci?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10421"/>
+        <location filename="../../gui/mainwindow.cpp" line="10397"/>
         <source>Custom Precision</source>
         <translation>Vlastní přesnost</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10422"/>
+        <location filename="../../gui/mainwindow.cpp" line="10398"/>
         <source>Fractional digits:</source>
         <translation>Desetinná místa:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10439"/>
+        <location filename="../../gui/mainwindow.cpp" line="10415"/>
         <source>Theme</source>
         <translation>Motiv</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10448"/>
+        <location filename="../../gui/mainwindow.cpp" line="10424"/>
         <source>Light Themes</source>
         <translation>Světlé motivy</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10455"/>
+        <location filename="../../gui/mainwindow.cpp" line="10431"/>
         <source>Dark Themes</source>
         <translation>Tmavé motivy</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10463"/>
+        <location filename="../../gui/mainwindow.cpp" line="10439"/>
         <source>Preview</source>
         <translation>Náhled</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10525"/>
+        <location filename="../../gui/mainwindow.cpp" line="10501"/>
         <source>Colors</source>
         <translation>Barvy</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10717"/>
+        <location filename="../../gui/mainwindow.cpp" line="10693"/>
         <source>Select color for %1</source>
         <translation>Vybrat barvu pro %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10773"/>
+        <location filename="../../gui/mainwindow.cpp" line="10749"/>
         <source>Import...</source>
         <translation>Importovat...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10774"/>
+        <location filename="../../gui/mainwindow.cpp" line="10750"/>
         <source>Export...</source>
         <translation>Exportovat...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10804"/>
+        <location filename="../../gui/mainwindow.cpp" line="10780"/>
         <source>Import Theme</source>
         <translation>Importovat motiv</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10805"/>
-        <location filename="../../gui/mainwindow.cpp" line="10894"/>
+        <location filename="../../gui/mainwindow.cpp" line="10781"/>
+        <location filename="../../gui/mainwindow.cpp" line="10870"/>
         <source>Theme file (*.json);;All files (*)</source>
         <translation>Soubor motivu (*.json);;Všechny soubory (*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10816"/>
+        <location filename="../../gui/mainwindow.cpp" line="10792"/>
         <source>Invalid theme file.</source>
         <translation>Neplatný soubor motivu.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10825"/>
+        <location filename="../../gui/mainwindow.cpp" line="10801"/>
         <source>Can&apos;t import theme &quot;%1&quot; because it conflicts with a built-in theme.</source>
         <translation>Motiv „%1“ nelze importovat, protože je v konfliktu s vestavěným motivem.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10830"/>
+        <location filename="../../gui/mainwindow.cpp" line="10806"/>
         <source>Can&apos;t find a writable theme folder.</source>
         <translation>Nelze najít zapisovatelnou složku motivů.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10837"/>
+        <location filename="../../gui/mainwindow.cpp" line="10813"/>
         <source>Overwrite Theme</source>
         <translation>Přepsat motiv</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10838"/>
+        <location filename="../../gui/mainwindow.cpp" line="10814"/>
         <source>A custom theme named &quot;%1&quot; already exists. Do you want to overwrite it?</source>
         <translation>Vlastní motiv s názvem „%1“ již existuje. Chcete jej přepsat?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10846"/>
+        <location filename="../../gui/mainwindow.cpp" line="10822"/>
         <source>Can&apos;t overwrite theme file %1</source>
         <translation>Nelze přepsat soubor motivu %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10852"/>
+        <location filename="../../gui/mainwindow.cpp" line="10828"/>
         <source>Can&apos;t copy theme file to %1</source>
         <translation>Nelze zkopírovat soubor motivu do %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10893"/>
+        <location filename="../../gui/mainwindow.cpp" line="10869"/>
         <source>Export Theme</source>
         <translation>Exportovat motiv</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10904"/>
+        <location filename="../../gui/mainwindow.cpp" line="10880"/>
         <source>Can&apos;t export theme as &quot;%1&quot; because it conflicts with a built-in theme.</source>
         <translation>Motiv nelze exportovat jako „%1“, protože je v konfliktu s vestavěným motivem.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10909"/>
-        <location filename="../../gui/mainwindow.cpp" line="11012"/>
-        <location filename="../../gui/mainwindow.cpp" line="11990"/>
-        <location filename="../../gui/mainwindow.cpp" line="12029"/>
+        <location filename="../../gui/mainwindow.cpp" line="10885"/>
+        <location filename="../../gui/mainwindow.cpp" line="10988"/>
+        <location filename="../../gui/mainwindow.cpp" line="11980"/>
+        <location filename="../../gui/mainwindow.cpp" line="12019"/>
         <source>Can&apos;t write to file %1</source>
         <translation>Nelze zapisovat do souboru %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11149"/>
+        <location filename="../../gui/mainwindow.cpp" line="11125"/>
         <source>Global User Variable</source>
         <translation>Globální uživatelská proměnná</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11150"/>
+        <location filename="../../gui/mainwindow.cpp" line="11126"/>
         <source>Global User Function</source>
         <translation>Globální uživatelská funkce</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11151"/>
+        <location filename="../../gui/mainwindow.cpp" line="11127"/>
         <source>Global User Unit</source>
         <translation>Globální uživatelská jednotka</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11495"/>
+        <location filename="../../gui/mainwindow.cpp" line="11471"/>
         <source>User Definitions</source>
         <translation>Uživatelské definice</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11501"/>
+        <location filename="../../gui/mainwindow.cpp" line="11477"/>
         <source>These definitions are global and are loaded into every session.
 They are immutable for sessions and override same-name definitions from the session editor.
 Enter one definition per line.</source>
@@ -6040,7 +6050,7 @@ V relacích je nelze měnit a mají přednost před definicemi se stejným názv
 Zadejte jednu definici na řádek.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11511"/>
+        <location filename="../../gui/mainwindow.cpp" line="11487"/>
         <source>Examples:
 my_rate=1.25
 f(x)=x^2+1
@@ -6051,23 +6061,23 @@ f(x)=x^2+1
 [cm_s]=[centimetre/second]</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11573"/>
+        <location filename="../../gui/mainwindow.cpp" line="11549"/>
         <source>Apply</source>
         <translation>Použít</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11574"/>
+        <location filename="../../gui/mainwindow.cpp" line="11550"/>
         <source>Validate</source>
         <translation>Ověřit</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11610"/>
+        <location filename="../../gui/mainwindow.cpp" line="11586"/>
         <source>Test Results</source>
         <translation>Výsledky testu</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11611"/>
-        <location filename="../../gui/mainwindow.cpp" line="11643"/>
+        <location filename="../../gui/mainwindow.cpp" line="11587"/>
+        <location filename="../../gui/mainwindow.cpp" line="11619"/>
         <source>Imported variables: %1
 Imported functions: %2
 Imported units: %3
@@ -6078,130 +6088,130 @@ Importované jednotky: %3
 Čísla řádků s chybami: %4</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11615"/>
-        <location filename="../../gui/mainwindow.cpp" line="11647"/>
+        <location filename="../../gui/mainwindow.cpp" line="11591"/>
+        <location filename="../../gui/mainwindow.cpp" line="11623"/>
         <source>none</source>
         <translation>žádné</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11642"/>
+        <location filename="../../gui/mainwindow.cpp" line="11618"/>
         <source>Apply Results</source>
         <translation>Výsledky použití</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11656"/>
+        <location filename="../../gui/mainwindow.cpp" line="11632"/>
         <source>User definitions saved.</source>
         <translation>Uživatelské definice byly uloženy.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11691"/>
+        <location filename="../../gui/mainwindow.cpp" line="11667"/>
         <source>History Size Limit</source>
         <translation>Limit velikosti historie</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11692"/>
+        <location filename="../../gui/mainwindow.cpp" line="11668"/>
         <source>Maximum number of history entries for this session (0 = unlimited):</source>
         <translation>Maximální počet položek historie pro tuto relaci (0 = neomezeno):</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12007"/>
+        <location filename="../../gui/mainwindow.cpp" line="11997"/>
         <source>Text file (*.txt);;Any file (*.*)</source>
         <translation>Textové soubory (*.txt);;Všechny soubory (*.*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="14469"/>
-        <location filename="../../gui/mainwindow.cpp" line="14642"/>
+        <location filename="../../gui/mainwindow.cpp" line="14459"/>
+        <location filename="../../gui/mainwindow.cpp" line="14632"/>
         <source>Could not recalculate from calculation %1: %2</source>
         <translation>Nepodařilo se přepočítat od výpočtu %1: %2</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="14558"/>
+        <location filename="../../gui/mainwindow.cpp" line="14548"/>
         <source>History Size Limit Reached</source>
         <translation>Dosažen limit velikosti historie</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="14559"/>
+        <location filename="../../gui/mainwindow.cpp" line="14549"/>
         <source>This calculation fills the last available history slot. Future calculations will remove the oldest calculation from history. You can increase the limit from Session &gt; History Size Limit.</source>
         <translation>Tento výpočet zaplňuje poslední dostupné místo v historii. Budoucí výpočty odstraní z historie nejstarší výpočet. Limit můžete zvýšit v Relace &gt; Limit velikosti historie.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="14582"/>
+        <location filename="../../gui/mainwindow.cpp" line="14572"/>
         <source>Editing calculation. Press Esc twice to cancel.</source>
         <translation>Upravuje se výpočet. Zrušíte jej dvojitým stisknutím Esc.</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="14623"/>
+        <location filename="../../gui/mainwindow.cpp" line="14613"/>
         <source>Calculation Settings</source>
         <translation>Nastavení výpočtu</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="14699"/>
+        <location filename="../../gui/mainwindow.cpp" line="14689"/>
         <source>Invalid recalculation start index</source>
         <translation>Neplatný počáteční index přepočtu</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15270"/>
+        <location filename="../../gui/mainwindow.cpp" line="15260"/>
         <source>System Default</source>
         <translation>Výchozí nastavení systému</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15274"/>
+        <location filename="../../gui/mainwindow.cpp" line="15264"/>
         <source>Language</source>
         <translation>Jazyk</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15274"/>
+        <location filename="../../gui/mainwindow.cpp" line="15264"/>
         <source>Select the language:</source>
         <translation>Vyberte jazyk:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15304"/>
+        <location filename="../../gui/mainwindow.cpp" line="15294"/>
         <source>Custom</source>
         <translation>Vlastní</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15316"/>
+        <location filename="../../gui/mainwindow.cpp" line="15306"/>
         <source>Decimal places:</source>
         <translation>Desetinná místa:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4546"/>
-        <location filename="../../gui/mainwindow.cpp" line="4547"/>
+        <location filename="../../gui/mainwindow.cpp" line="4507"/>
+        <location filename="../../gui/mainwindow.cpp" line="4508"/>
         <source>&amp;Automatic</source>
         <translation>&amp;Automaticky</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5015"/>
+        <location filename="../../gui/mainwindow.cpp" line="4979"/>
         <source>&amp;Precision</source>
         <translation>&amp;Přesnost</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4426"/>
+        <location filename="../../gui/mainwindow.cpp" line="4384"/>
         <source>Plain &amp;text</source>
         <translation>Prostý &amp;text</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4466"/>
+        <location filename="../../gui/mainwindow.cpp" line="4424"/>
         <source>Formula &amp;Book</source>
         <translation>&amp;Sbírka vzorců</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5003"/>
+        <location filename="../../gui/mainwindow.cpp" line="4967"/>
         <source>&amp;Export</source>
         <translation>&amp;Exportovat</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11968"/>
+        <location filename="../../gui/mainwindow.cpp" line="11958"/>
         <source>Export session as HTML</source>
         <translation>Exportovat relaci jako HTML</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11968"/>
+        <location filename="../../gui/mainwindow.cpp" line="11958"/>
         <source>HTML file (*.html)</source>
         <translation>Soubor HTML (*.html)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12006"/>
+        <location filename="../../gui/mainwindow.cpp" line="11996"/>
         <source>Export session as plain text</source>
         <translation>Exportovat relaci jako prostý text</translation>
     </message>
