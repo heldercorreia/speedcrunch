@@ -108,6 +108,12 @@ For example, the equivalent Git Bash commands are:
     cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="$QT_ROOT"
     cmake --build build --config Release --parallel
 
+With the Visual Studio generator, `--parallel` lets MSBuild build separate
+projects concurrently. SpeedCrunch also enables MSVC's `/MP` option so source
+files within each project can compile concurrently. After updating an existing
+checkout, rerun the configure command to apply this setting to the generated
+Visual Studio projects.
+
 Git Bash uses `/c/` for the C: drive in `PATH`, with colons between entries.
 The remaining Windows examples use `cmd.exe` syntax. In Git Bash, replace
 `%QT_ROOT%` with `$QT_ROOT`, `%CD%` with `$PWD`, and path separators with forward

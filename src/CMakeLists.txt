@@ -40,6 +40,13 @@ if (MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
     # MSVC's /Wall also enables normally disabled padding and inlining reports.
     add_compile_options(/W4)
+    if(CMAKE_GENERATOR MATCHES "^Visual Studio")
+        # MSBuild parallelizes projects. /MP also parallelizes files within each project.
+        add_compile_options(
+            "$<$<COMPILE_LANG_AND_ID:C,MSVC>:/MP>"
+            "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/MP>"
+        )
+    endif()
 else()
     add_compile_options(-Wno-shift-negative-value -Wall -pedantic)
 endif()
