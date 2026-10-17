@@ -9,6 +9,7 @@ namespace UiConfig {
 
 constexpr int SessionPaneSplitterWidth = 1;
 constexpr int DockSplitterStrokeWidth = 2;
+constexpr int SystemDockSplitterStrokeWidth = 1;
 constexpr int OutlineStrokeWidth = 2;
 constexpr int ControlCornerRadius = 8;
 constexpr int ModernEditorHorizontalMargin = 8;

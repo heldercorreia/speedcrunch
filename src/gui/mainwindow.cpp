@@ -1136,27 +1136,29 @@ ThemeScrollBarColors scrollBarColorsForSurfaceIndex(const GeneratedThemeSurfaces
 
 constexpr auto DockSeparatorNormalColorProperty = "speedcrunchDockSeparatorNormalColor";
 constexpr auto DockSeparatorActiveColorProperty = "speedcrunchDockSeparatorActiveColor";
+constexpr auto DockSeparatorBackgroundColorProperty = "speedcrunchDockSeparatorBackgroundColor";
+constexpr auto DockSeparatorStrokeWidthProperty = "speedcrunchDockSeparatorStrokeWidth";
 constexpr auto DockChromeStyleInstalledProperty = "speedcrunchDockChromeStyleInstalled";
 
-QColor dockSeparatorColorForWidget(const QWidget* widget, const char* propertyName)
+QVariant dockSeparatorPropertyForWidget(const QWidget* widget, const char* propertyName)
 {
     for (const QWidget* current = widget; current != nullptr; current = current->parentWidget()) {
-        const QColor color = current->property(propertyName).value<QColor>();
-        if (color.isValid())
-            return color;
+        const QVariant value = current->property(propertyName);
+        if (value.isValid())
+            return value;
     }
-    return QColor();
+    return QVariant();
 }
 
-QRect dockSeparatorStrokeRect(const QRect& separatorRect)
+QRect dockSeparatorStrokeRect(const QRect& separatorRect, int strokeWidth)
 {
     QRect strokeRect = separatorRect;
     if (strokeRect.width() > strokeRect.height()) {
-        const int height = qMax(1, UiConfig::DockSplitterStrokeWidth);
+        const int height = qMax(1, strokeWidth);
         strokeRect.setTop(strokeRect.center().y() - (height - 1) / 2);
         strokeRect.setHeight(height);
     } else {
-        const int width = qMax(1, UiConfig::DockSplitterStrokeWidth);
+        const int width = qMax(1, strokeWidth);
         strokeRect.setLeft(strokeRect.center().x() - (width - 1) / 2);
         strokeRect.setWidth(width);
     }
@@ -1209,14 +1211,20 @@ public:
             return;
         }
 
-        const QColor normalColor = dockSeparatorColorForWidget(widget, DockSeparatorNormalColorProperty);
-        const QColor activeColor = dockSeparatorColorForWidget(widget, DockSeparatorActiveColorProperty);
+        const QColor normalColor = dockSeparatorPropertyForWidget(widget, DockSeparatorNormalColorProperty).value<QColor>();
+        const QColor activeColor = dockSeparatorPropertyForWidget(widget, DockSeparatorActiveColorProperty).value<QColor>();
         if (!normalColor.isValid() || !activeColor.isValid()) {
             QProxyStyle::drawPrimitive(element, option, painter, widget);
             return;
         }
 
-        const QRect strokeRect = dockSeparatorStrokeRect(option->rect);
+        const QColor backgroundColor = dockSeparatorPropertyForWidget(widget, DockSeparatorBackgroundColorProperty).value<QColor>();
+        if (backgroundColor.isValid())
+            painter->fillRect(option->rect, backgroundColor);
+
+        const QVariant strokeWidth = dockSeparatorPropertyForWidget(widget, DockSeparatorStrokeWidthProperty);
+        const QRect strokeRect = dockSeparatorStrokeRect(option->rect,
+            strokeWidth.isValid() ? strokeWidth.toInt() : UiConfig::DockSplitterStrokeWidth);
         const QPoint cursorPosition = widget->mapFromGlobal(QCursor::pos());
         const bool cursorOverStroke = strokeRect.contains(cursorPosition);
         const bool active = option->state.testFlag(State_MouseOver)
@@ -4266,6 +4274,8 @@ void MainWindow::setDockAppearance(QAction* action)
             applyDockAppearance(window, dock, surfaces);
         }
         window->applyDockTabBarAppearance();
+        window->updateSplitterStyleSheet();
+        window->update();
     }
 }
 
@@ -7089,8 +7099,13 @@ void MainWindow::updateSplitterStyleSheet()
     const QColor hoveredHandle = UiConfig::SplitterHoverUsesPrimary
         ? surfaces.primary.background
         : themeSurfaceForShadeIndex(surfaces, UiConfig::SplitterHoverShade).background;
-    setProperty(DockSeparatorNormalColorProperty, handle);
-    setProperty(DockSeparatorActiveColorProperty, hoveredHandle);
+    const bool systemDocks = m_settings->dockAppearance == Settings::DockAppearanceSystem;
+    const QPalette systemPalette = MenuStyle::systemPalette(this);
+    setProperty(DockSeparatorNormalColorProperty, systemDocks ? systemPalette.color(QPalette::Mid) : handle);
+    setProperty(DockSeparatorActiveColorProperty, systemDocks ? systemPalette.color(QPalette::Highlight) : hoveredHandle);
+    setProperty(DockSeparatorBackgroundColorProperty, systemDocks ? systemPalette.color(QPalette::Window) : QColor());
+    setProperty(DockSeparatorStrokeWidthProperty,
+                systemDocks ? UiConfig::SystemDockSplitterStrokeWidth : UiConfig::DockSplitterStrokeWidth);
 
     const QColor classicPaneDivider = themeSurfaceForShadeIndex(
         surfaces, UiConfig::ClassicVerticalPaneDividerShade).background;

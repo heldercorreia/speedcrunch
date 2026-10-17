@@ -22,6 +22,8 @@ private slots:
     void dock_tabs_follow_appearance_data();
     void dock_tabs_follow_appearance();
     void system_docks_follow_palette_and_theme_changes();
+    void system_dock_separators_use_thin_system_colors_data();
+    void system_dock_separators_use_thin_system_colors();
     void dock_headers_follow_appearance_data();
     void dock_headers_follow_appearance();
     void system_dock_headers_paint_system_background_data();
@@ -177,6 +179,143 @@ void TestDockAppearanceUi::initTestCase()
                  qPrintable(QStringLiteral("Cannot write test storage at %1: %2")
                                 .arg(path, probe.errorString())));
     }
+}
+
+void TestDockAppearanceUi::system_dock_separators_use_thin_system_colors_data()
+{
+    QTest::addColumn<bool>("systemAtStartup");
+    QTest::addColumn<bool>("classic");
+    for (bool system : {false, true}) {
+        for (bool classic : {false, true}) {
+            const QString name = QStringLiteral("%1-%2")
+                .arg(system ? "system-startup" : "theme-startup", classic ? "classic" : "modern");
+            QTest::newRow(qPrintable(name)) << system << classic;
+        }
+    }
+}
+
+void TestDockAppearanceUi::system_dock_separators_use_thin_system_colors()
+{
+    QFETCH(bool, systemAtStartup);
+    QFETCH(bool, classic);
+    MainWindowStateGuard guard;
+    const QPalette original = QApplication::palette();
+    const auto restorePalette = qScopeGuard([original]() { QApplication::setPalette(original); });
+    QPalette native = original;
+    native.setColor(QPalette::Window, QColor("#eeeeee"));
+    native.setColor(QPalette::Mid, QColor("#999999"));
+    native.setColor(QPalette::Highlight, QColor("#2878b8"));
+    QApplication::setPalette(native);
+    guard.settings->dockAppearance = systemAtStartup
+        ? Settings::DockAppearanceSystem : Settings::DockAppearanceSpeedCrunch;
+    guard.settings->editorDisplayStyle = classic ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern;
+    guard.settings->constantsDockVisible = true;
+    guard.settings->functionsDockVisible = true;
+    guard.settings->windowState.clear();
+    guard.settings->sessionLayoutJson.clear();
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), QStringLiteral("#631840")}});
+    MainWindow first(false);
+    MainWindow second(false);
+    first.setAnimated(false);
+    second.setAnimated(false);
+    first.resize(1100, 760);
+    first.show();
+    second.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&first));
+    QVERIFY(QTest::qWaitForWindowExposed(&second));
+    auto* constants = first.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    auto* functions = first.findChild<QDockWidget*>(QStringLiteral("FunctionsDock"));
+    QVERIFY(constants);
+    QVERIFY(functions);
+    first.removeDockWidget(functions);
+    first.addDockWidget(Qt::RightDockWidgetArea, functions);
+    first.splitDockWidget(constants, functions, Qt::Vertical);
+    functions->show();
+    QMenu* appearance = first.findChild<QMenu*>(QStringLiteral("DockAppearanceMenu"));
+    QVERIFY(appearance);
+    QCursor::setPos(first.mapToGlobal(QPoint(-20, -20)));
+    QCoreApplication::processEvents();
+
+    const auto verify = [&](bool system) {
+        for (MainWindow* window : {&first, &second}) {
+            const QColor normal = system ? native.color(QPalette::Mid)
+                : window->property("speedcrunchDockSeparatorNormalColor").value<QColor>();
+            const QColor active = system ? native.color(QPalette::Highlight)
+                : window->property("speedcrunchDockSeparatorActiveColor").value<QColor>();
+            const int width = system ? 1 : UiConfig::DockSplitterStrokeWidth;
+            // Include a native one-pixel handle so painting outside its bounds is visible.
+            for (int extent : {1, 8}) {
+                for (bool horizontal : {false, true}) {
+                    const QSize size = horizontal ? QSize(32, extent) : QSize(extent, 32);
+                    for (QStyle::State state : {QStyle::State(QStyle::State_None),
+                                                QStyle::State(QStyle::State_MouseOver),
+                                                QStyle::State(QStyle::State_Sunken)}) {
+                        const QImage image = dockSeparatorPrimitiveImage(window, state,
+                            QRect(QPoint(0, 0), size), size + QSize(2, 2));
+                        const int start = (extent - 1) / 2 - (width - 1) / 2;
+                        for (int offset = 0; offset < extent + 2; ++offset) {
+                            const QColor pixel = horizontal ? image.pixelColor(16, offset)
+                                                           : image.pixelColor(offset, 16);
+                            if (offset >= start && offset < start + width)
+                                QCOMPARE(pixel.rgba(), (state == QStyle::State_None ? normal : active).rgba());
+                            else if (system && offset < extent)
+                                QCOMPARE(pixel, native.color(QPalette::Window));
+                            else
+                                QCOMPARE(pixel.alpha(), 0);
+                        }
+                    }
+                }
+            }
+        }
+        if (!system)
+            return;
+        // Check actual window painting at the dock/editor and dock/dock boundaries.
+        const QRect upper = constants->geometry();
+        const QRect lower = functions->geometry();
+        const QRect center = first.centralWidget()->geometry();
+        const QRect vertical(center.right() + 1, upper.top(), upper.left() - center.right() - 1, upper.height());
+        const QRect horizontal(upper.left(), upper.bottom() + 1, upper.width(), lower.top() - upper.bottom() - 1);
+        const QImage image = first.grab().toImage();
+        for (const QRect& gap : {vertical, horizontal}) {
+            QVERIFY(!gap.isEmpty());
+            const QPoint sample = gap.center();
+            const qreal ratio = image.devicePixelRatio();
+            QCOMPARE(image.pixelColor(qRound(sample.x() * ratio), qRound(sample.y() * ratio)),
+                     native.color(QPalette::Mid));
+            if (gap.width() > 1 && gap.height() > 1) {
+                const QPoint edge = gap.width() > gap.height()
+                    ? QPoint(sample.x(), gap.top()) : QPoint(gap.left(), sample.y());
+                QCOMPARE(image.pixelColor(qRound(edge.x() * ratio), qRound(edge.y() * ratio)),
+                         native.color(QPalette::Window));
+            }
+        }
+    };
+    verify(systemAtStartup);
+    if (QTest::currentTestFailed())
+        return;
+    for (bool system : {true, false, true}) {
+        appearance->actions().at(system ? 0 : 1)->trigger();
+        QCoreApplication::processEvents();
+        verify(system);
+        if (QTest::currentTestFailed())
+            return;
+    }
+    constants->setFloating(true);
+    QCoreApplication::processEvents();
+    constants->setFloating(false);
+    QTRY_COMPARE(constants->geometry().left(), functions->geometry().left());
+    verify(true);
+    if (QTest::currentTestFailed())
+        return;
+    native.setColor(QPalette::Window, QColor("#252525"));
+    native.setColor(QPalette::Mid, QColor("#686868"));
+    native.setColor(QPalette::Highlight, QColor("#6cb5ee"));
+    QApplication::setPalette(native);
+    for (MainWindow* window : {&first, &second})
+        QTRY_COMPARE(window->property("speedcrunchDockSeparatorNormalColor").value<QColor>(), native.color(QPalette::Mid));
+    verify(true);
 }
 
 void TestDockAppearanceUi::dock_appearance_defaults_to_theme_and_persists()
