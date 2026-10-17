@@ -7942,7 +7942,8 @@ void MainWindow::addTabifiedDock(QDockWidget* newDock, bool takeFocus, Qt::DockW
     if (!restored) {
         addDockWidget(area, newDock);
         for (QDockWidget* dock : m_allDocks) {
-            if (dockWidgetArea(dock) == area)
+            // Keep floating panels independent when opening another dock.
+            if (!dock->isFloating() && dockWidgetArea(dock) == area)
                 tabifyDockWidget(dock, newDock);
         }
     }

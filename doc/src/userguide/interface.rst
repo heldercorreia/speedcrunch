@@ -20,7 +20,8 @@ or below the display and keypad fit between the side panels.
 
 Use the cross in a dock panel's title bar to hide the panel, or the square
 to detach it into a floating window. Hidden panels can be shown again via
-the :menuselection:`View` menu.
+the :menuselection:`View` menu. Opening another panel leaves floating panels
+in their own windows.
 
 On Linux with Wayland, drag a floating panel by its title bar to move it.
 Use its square button or double-click the title bar to attach it to the

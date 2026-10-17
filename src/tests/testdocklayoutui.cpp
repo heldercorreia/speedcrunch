@@ -15,6 +15,7 @@ private slots:
     void lazy_docks_restore_saved_layouts_data();
     void lazy_docks_restore_saved_layouts();
     void lazy_docks_restore_each_windows_open_panels();
+    void opening_docks_keeps_floating_panels_independent();
     void floating_docks_survive_repeated_quit_data();
     void floating_docks_survive_repeated_quit();
     void dock_list_selected_row_keeps_primary_fill_while_hovered();
@@ -348,6 +349,57 @@ void TestDockLayoutUi::lazy_docks_restore_each_windows_open_panels()
         const QString name = window->findChild<QDockWidget*>()->objectName();
         QCOMPARE(name, window == &restored ? QStringLiteral("ConstantsDock") : QStringLiteral("FunctionsDock"));
     }
+}
+
+void TestDockLayoutUi::opening_docks_keeps_floating_panels_independent()
+{
+    MainWindowStateGuard guard;
+    guard.settings->sessionLayoutJson.clear();
+    guard.settings->windowState.clear();
+    guard.settings->formulaBookDockVisible = false;
+    guard.settings->constantsDockVisible = false;
+    guard.settings->functionsDockVisible = false;
+    guard.settings->historyDockVisible = false;
+    guard.settings->variablesDockVisible = false;
+    guard.settings->userFunctionsDockVisible = false;
+    guard.settings->userUnitsDockVisible = false;
+    guard.settings->bitfieldVisible = false;
+    MainWindow window(false);
+    window.resize(960, 640);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QVERIFY(QMetaObject::invokeMethod(&window, "setConstantsDockVisible", Qt::DirectConnection,
+                                     Q_ARG(bool, true), Q_ARG(bool, false)));
+    QDockWidget* constants = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(constants);
+    constants->setFloating(true);
+    constants->move(180, 140);
+    constants->resize(480, 360);
+    QCoreApplication::processEvents();
+    const QRect floatingGeometry = constants->geometry();
+
+    QVERIFY(QMetaObject::invokeMethod(&window, "setFunctionsDockVisible", Qt::DirectConnection,
+                                     Q_ARG(bool, true), Q_ARG(bool, false)));
+    QDockWidget* functions = window.findChild<QDockWidget*>(QStringLiteral("FunctionsDock"));
+    QVERIFY(functions);
+    QTRY_VERIFY(functions->isVisible());
+    QVERIFY(!functions->isFloating());
+    QVERIFY(constants->isFloating());
+    QCOMPARE(constants->parentWidget(), &window);
+    QTRY_VERIFY(constants->isVisible());
+    QCOMPARE(constants->geometry(), floatingGeometry);
+
+    // New docked panels should still join the existing docked tab group.
+    QVERIFY(QMetaObject::invokeMethod(&window, "setVariablesDockVisible", Qt::DirectConnection,
+                                     Q_ARG(bool, true), Q_ARG(bool, false)));
+    QDockWidget* variables = window.findChild<QDockWidget*>(QStringLiteral("VariablesDock"));
+    QVERIFY(variables);
+    QVERIFY(window.tabifiedDockWidgets(functions).contains(variables));
+    QVERIFY(!window.tabifiedDockWidgets(functions).contains(constants));
+    QCOMPARE(constants->parentWidget(), &window);
+    QTRY_VERIFY(constants->isVisible());
+    QCOMPARE(constants->geometry(), floatingGeometry);
 }
 
 void TestDockLayoutUi::floating_docks_survive_repeated_quit_data()
