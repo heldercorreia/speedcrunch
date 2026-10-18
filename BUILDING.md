@@ -23,6 +23,12 @@ To clone the repository:
 
 ## Build and install
 
+The default build is intended for third-party package providers. In a fresh build
+directory, no feature or build-variant toggles are needed. Update checks, test
+executables, startup recording, and portable mode are all disabled by default.
+This lets providers use their usual packaging workflow and deliver updates
+through their own channels.
+
 To build SpeedCrunch in a dedicated build directory and install it, run the following
 commands from the root of the source directory:
 
@@ -57,6 +63,39 @@ These build output locations do not change the installation directories.
 
 Use a fresh build directory if an existing one was configured before the root
 CMake entry point was added. CMake saves the source directory in its cache.
+
+### Build variants
+
+Build variants apply a fixed group of settings. All three default to `OFF`.
+Enable one when configuring, for example:
+
+    cmake -S . -B build-official -DBUILD_VARIANT_OFFICIAL_RELEASE=ON
+    cmake --build build-official --config Release --parallel
+
+    cmake -S . -B build-portable -DBUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE=ON
+    cmake --build build-portable --config Release --parallel
+
+    cmake -S . -B build-debug -DBUILD_VARIANT_DEV_DEBUG=ON
+    cmake --build build-debug --config Debug --parallel
+
+| Toggle | Forced settings |
+| --- | --- |
+| `BUILD_VARIANT_OFFICIAL_RELEASE` | `BUILD_TESTING=OFF`, `ENABLE_UPDATE_CHECKS=ON`, `CMAKE_BUILD_TYPE=Release` |
+| `BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE` | `BUILD_TESTING=OFF`, `ENABLE_UPDATE_CHECKS=ON`, `CMAKE_BUILD_TYPE=Release`, `PORTABLE_SPEEDCRUNCH=ON`, `CPACK_GENERATOR=ZIP` |
+| `BUILD_VARIANT_DEV_DEBUG` | `BUILD_TESTING=ON`, `ENABLE_UPDATE_CHECKS=ON`, `ENABLE_STARTUP_DIAGNOSTICS=ON`, `CMAKE_BUILD_TYPE=Debug` |
+
+Only one variant can be enabled at a time. CMake stops with an error if more
+than one is `ON`. A variant overrides its listed settings on every configure,
+including conflicting `-D` arguments and values already in the cache.
+
+For Visual Studio, Xcode, and Ninja Multi-Config, a variant also restricts
+`CMAKE_CONFIGURATION_TYPES` to its configuration, either `Release` or `Debug`.
+Use the matching `--config` value when building, installing, or packaging.
+
+Settings outside a variant's list keep their usual defaults or cached values.
+Turning a variant off does not restore the values it overrides. Use separate
+build directories, as above, or disable the old variant and explicitly reset
+the affected settings when switching in an existing directory.
 
 ## Building and running tests
 
@@ -162,11 +201,11 @@ to the build directory and run the Visual Studio `PACKAGE` target:
 
 The installer is written to `build`.
 
-To generate a portable ZIP archive instead, configure a separate build directory
-with `-DPORTABLE_SPEEDCRUNCH=ON -DCPACK_GENERATOR=ZIP`. From the repository root,
+To generate an official portable ZIP archive instead, configure a separate build
+directory with `-DBUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE=ON`. From the repository root,
 build the application, then run the same `PACKAGE` target in that build directory:
 
-    cmake -S . -B build-portable -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="%QT_ROOT%" -DPORTABLE_SPEEDCRUNCH=ON -DCPACK_GENERATOR=ZIP
+    cmake -S . -B build-portable -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="%QT_ROOT%" -DBUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE=ON
     cmake --build build-portable --config Release --parallel
     cd build-portable
     cmake --build . --config Release --target PACKAGE
@@ -237,9 +276,18 @@ The script does not notarize the application.
 You can customize the build using the following variables. These are specified when
 running CMake, in the form `cmake -S . -B build -Dvariable=value`.
 
+- **BUILD_VARIANT_OFFICIAL_RELEASE**: Force the official Release settings listed
+  under [Build variants](#build-variants). Defaults to `OFF`.
+- **BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE**: Force the official portable Release
+  settings, including ZIP packaging. Defaults to `OFF`.
+- **BUILD_VARIANT_DEV_DEBUG**: Force the developer Debug settings, including test
+  builds and startup diagnostics. Defaults to `OFF`.
 - **CMAKE_BUILD_TYPE**: Select the configuration for Makefiles or ordinary Ninja,
   such as `Release`, `Debug`, or `RelWithDebInfo`. Defaults to `Release` in this
   project. Multi-configuration generators use `--config` when building instead.
+- **CMAKE_CONFIGURATION_TYPES**: Set the available configurations for Visual
+  Studio, Xcode, and Ninja Multi-Config. Defaults depend on the generator.
+  An enabled build variant restricts this list to its required configuration.
 - **CMAKE_OSX_DEPLOYMENT_TARGET**: Set the minimum macOS version for the build.
   Defaults to `14.4` unless an explicit target or the `MACOSX_DEPLOYMENT_TARGET`
   environment variable is supplied. Qt and all bundled dependencies must support
@@ -252,10 +300,15 @@ running CMake, in the form `cmake -S . -B build -Dvariable=value`.
   detailed appearance diagnostics. Defaults to `OFF`. System information and
   settings remain available in `Help > App Diagnostics` in either build.
   See [DIAGNOSTICS.md](DIAGNOSTICS.md) for diagnostic beta build instructions.
-- **PORTABLE_SPEEDCRUNCH**: Set this to `on` to have the application settings stored
+- **PORTABLE_SPEEDCRUNCH**: Set this to `ON` to have the application settings stored
   in the same location as the executable, e.g. for running from a USB drive without
-  requiring installation.
+  requiring installation. Defaults to `OFF`.
+- **CPACK_GENERATOR**: Select the package generator, such as `NSIS`, `ZIP`, or
+  `DragNDrop`. On Windows, defaults to `NSIS`, or `ZIP` when portable mode is on.
+  On macOS, defaults to `DragNDrop`. Other platforms use CPack's defaults.
+  The official portable variant forces `ZIP` on every platform.
 - **CMAKE_INSTALL_PREFIX**: Change the installation prefix for SpeedCrunch.
+  On macOS, the project uses `<build-directory>/install`.
 - **CMAKE_INSTALL_BINDIR**: Change the executable directory on Unix systems except
   macOS and Haiku. Defaults to `bin` under the installation prefix.
 - **CMAKE_INSTALL_DATAROOTDIR**: Change the shared data root on Unix systems except
@@ -263,17 +316,20 @@ running CMake, in the form `cmake -S . -B build -Dvariable=value`.
 - **HTML_DOCS_DIR**: Change the path to the HTML manual that's embedded in the binary
   by the build. By default, a bundled prebuilt copy is used to minimize dependencies.
 
-Official SpeedCrunch builds enable update checks explicitly:
+Official SpeedCrunch builds use the release variant to enable update checks
+and apply the other release settings:
 
-    cmake -S . -B build -DENABLE_UPDATE_CHECKS=ON
+    cmake -S . -B build -DBUILD_VARIANT_OFFICIAL_RELEASE=ON
 
 These builds check for updates on launch at most once every 24 hours. Checks
 report upstream releases and link to the SpeedCrunch website. They do not
 install updates.
 
-Package providers should leave this option off so users update through their
-provider. CMake saves the option in the build directory's cache. Configure again
-with `-DENABLE_UPDATE_CHECKS=OFF` to disable it in an existing build directory.
+Third-party package providers do not need to pass any toggles to keep update
+checks off. Leave all build variants off so users update through their provider.
+CMake saves these options in the build directory's cache. To disable update
+checks in an existing directory, turn off any active variant and configure
+again with `-DENABLE_UPDATE_CHECKS=OFF`.
 
 For qmake builds, add `CONFIG+=enable_update_checks` to enable the feature.
 

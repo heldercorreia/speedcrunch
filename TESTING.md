@@ -35,9 +35,12 @@ and reset settings before each test case. They suppress the first-run number
 format prompt. An unexpected prompt fails the test instead of blocking the suite.
 
 CMake saves this option in the build directory's cache. Configure again with
-`-DBUILD_TESTING=OFF` to return to application-only builds.
+`-DBUILD_TESTING=OFF` to return to application-only builds. The
+`BUILD_VARIANT_DEV_DEBUG` variant forces testing on, while the two official
+release variants force it off. Disable any active variant before changing
+`BUILD_TESTING` independently. See [BUILDING.md](BUILDING.md#build-variants).
 
 The shared window test library enables startup recording so appearance tests can
 inspect the recorded work. This does not enable recording in the application.
-Set `ENABLE_STARTUP_DIAGNOSTICS` explicitly for that, as described in
-[DIAGNOSTICS.md](DIAGNOSTICS.md).
+Set `ENABLE_STARTUP_DIAGNOSTICS` explicitly or use `BUILD_VARIANT_DEV_DEBUG`
+for that, as described in [DIAGNOSTICS.md](DIAGNOSTICS.md).

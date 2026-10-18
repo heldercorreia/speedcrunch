@@ -17,10 +17,12 @@ cmake -S . -B build -DENABLE_STARTUP_DIAGNOSTICS=ON
 cmake --build build --config Release --parallel
 ```
 
-Enable this option explicitly for the beta builds you want to share. It does
-not turn on automatically based on the version or build type. CMake saves the
-option in the build directory's cache. Configure again with
-`-DENABLE_STARTUP_DIAGNOSTICS=OFF` to disable it.
+Enable this option explicitly for the beta builds you want to share. The
+`BUILD_VARIANT_DEV_DEBUG` variant also forces it on. The version and build type
+alone do not enable it. See [BUILDING.md](BUILDING.md#build-variants) for the
+variant settings. CMake saves the option in the build directory's cache.
+To disable it, turn off the developer variant if active and configure again
+with `-DENABLE_STARTUP_DIAGNOSTICS=OFF`.
 
 With the option off, the diagnostics layer uses no-op recording functions and
 the application uses Qt's normal event dispatch. The report still includes

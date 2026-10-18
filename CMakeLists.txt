@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
+include("${CMAKE_CURRENT_LIST_DIR}/src/cmake/BuildVariants.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/src/cmake/MacOSDeploymentTarget.cmake")
 project(speedcrunch)
 
