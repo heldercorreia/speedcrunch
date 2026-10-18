@@ -117,6 +117,22 @@ else()
     add_executable(${APPLICATION_NAME} ${speedcrunch_SOURCES} ${speedcrunch_RESOURCES})
 endif()
 
+if(APPLE)
+    if(NOT CMAKE_STRIP)
+        message(FATAL_ERROR "The macOS toolchain must provide CMAKE_STRIP for Release builds")
+    endif()
+    # Native strip preserves the symbols needed by the dynamic loader.
+    add_custom_command(TARGET ${APPLICATION_NAME} POST_BUILD
+        COMMAND "$<$<CONFIG:Release>:${CMAKE_STRIP}>"
+                "$<$<CONFIG:Release>:$<TARGET_FILE:${APPLICATION_NAME}>>"
+        VERBATIM
+    )
+elseif(MSVC)
+    target_link_options(${APPLICATION_NAME} PRIVATE "$<$<CONFIG:Release>:/DEBUG:NONE>")
+else()
+    target_link_options(${APPLICATION_NAME} PRIVATE "$<$<CONFIG:Release>:LINKER:-s>")
+endif()
+
 file(GLOB speedcrunch_TS_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/resources/locale/*.ts")
 qt_add_translations(${APPLICATION_NAME}

@@ -45,6 +45,14 @@ that support several configurations in one build directory, such as Xcode,
 Visual Studio, and Ninja Multi-Config. It has no effect with Makefiles or
 ordinary Ninja.
 
+CMake strips the application binary in every `Release` build, including the
+default build and both official release variants. On macOS, the native strip
+tool runs after linking and before deployment and final bundle signing. GNU-style
+toolchains strip during linking. MSVC links without debug information or a PDB.
+This applies to the executable in the build directory, so installed copies and
+packages also receive the stripped binary. `Debug`, `RelWithDebInfo`, and
+`MinSizeRel` keep their usual symbol settings. Test executables are unaffected.
+
 With Makefiles or ordinary Ninja, application and test executables are placed
 directly under the chosen build directory. The application is `build/speedcrunch`
 on Linux or `build/SpeedCrunch.app` on macOS. Multi-configuration generators add
