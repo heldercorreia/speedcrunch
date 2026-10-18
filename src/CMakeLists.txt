@@ -273,6 +273,7 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}" thirdparty core gui math)
 if(UNIX AND NOT APPLE AND NOT HAIKU)
     include(GNUInstallDirs)
     set(BIN_INSTALL_DIR "${CMAKE_INSTALL_BINDIR}")
+    set(DOC_INSTALL_DIR "${CMAKE_INSTALL_DOCDIR}")
 
     set(MENU_DIR "${CMAKE_INSTALL_DATAROOTDIR}/applications")
     set(APP_DATA_DIR "${CMAKE_INSTALL_DATAROOTDIR}/metainfo")
@@ -311,6 +312,11 @@ endif()
 
 if(WIN32)
     include(QtWin32Deploy)
+endif()
+
+include(InstallLicenses)
+
+if(WIN32)
     qtwin32_deploy_modules(${BIN_INSTALL_DIR} qtwin32_Qt6Widgets qtwin32_Qt6Help qtwin32_Qt6Network)
     qtwin32_deploy_default_qt_conf(${BIN_INSTALL_DIR})
 elseif(APPLE)

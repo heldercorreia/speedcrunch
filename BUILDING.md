@@ -119,6 +119,42 @@ Turning a variant off does not restore the values it overrides. Use separate
 build directories, as above, or disable the old variant and explicitly reset
 the affected settings when switching in an existing directory.
 
+### License files in installed packages
+
+Every platform installs SpeedCrunch's GPL text and a notice describing its use
+of Qt. CPack includes these files through the same install rules, for both
+portable and non-portable packages.
+
+| Platform | License directory |
+| --- | --- |
+| Windows | `Licenses` beside `speedcrunch.exe` |
+| macOS | `SpeedCrunch.app/Contents/Resources/Licenses` |
+| Linux and other Unix systems | `<prefix>/share/doc/speedcrunch/Licenses` by default |
+| Haiku | `<prefix>/documentation/SpeedCrunch/Licenses` |
+
+Windows and macOS packages also bundle Qt license texts and the SDK's component
+copyright notices. On macOS, these files are installed before the app is signed.
+Install **Sources** for the same Qt version in the Qt Online Installer. CMake
+looks for them in the `Src` directory beside the selected desktop kit. For
+another location, set `-DSPEEDCRUNCH_QT_SOURCE_DIR=/path/to/qt/sources`.
+
+The SDK must include `sbom/<module>-<version>.spdx` files for `qtbase` and
+`qttools`. macOS also requires `qtsvg` and `qtimageformats`. Windows includes
+notices for those optional modules when their SPDX files are present in the
+selected kit, covering plugins added by `windeployqt` as well. These files are
+available in recent official Qt kits. Installation and packaging stop if the
+required license texts, versions or notices are missing. Ordinary application
+builds do not need these files.
+
+Linux and Haiku installations use system Qt libraries and do not bundle Qt.
+Their Qt packages provide the corresponding licenses and notices, so installing
+SpeedCrunch there does not require a Qt source tree or SDK SPDX files.
+
+License copies and notices are distribution requirements. Publish matching
+SpeedCrunch source archives alongside binary downloads. When bundling Qt, also
+provide its matching sources to meet the applicable source distribution
+requirements. Including the license files does not replace this step.
+
 ## Updating translations
 
 After configuring a build directory, update the TS catalogs from the source
@@ -168,6 +204,7 @@ for the Windows versions and compilers supported by your chosen Qt release.
 2. Install Qt through the Qt Online Installer. Select the **MSVC 2022 64-bit**
    desktop kit for your Qt 6 version, with the Core, Widgets, Help, Network, and
    LinguistTools components. A MinGW kit cannot be used with the MSVC commands below.
+   Select **Sources** for the same version if you will install or package the app.
 3. Select **CMake** under **Developer and Designer Tools** in the Qt Online
    Installer. You can also install it separately from [cmake.org](https://cmake.org/download/).
    The Visual Studio 2022 generator requires CMake 3.21 or later, even though the
@@ -223,8 +260,9 @@ run `windeployqt` from the same Qt kit to collect any additional Qt dependencies
     "%QT_ROOT%\bin\windeployqt.exe" --release --no-compiler-runtime build\install\speedcrunch.exe
     build\install\speedcrunch.exe
 
-The install step copies the application, Qt libraries and plugins, and the MSVC
-runtime files selected by CMake through `InstallRequiredSystemLibraries`.
+The install step copies the application, Qt libraries and plugins, license
+files, and the MSVC runtime files selected by CMake through
+`InstallRequiredSystemLibraries`.
 `--no-compiler-runtime` tells `windeployqt` to leave compiler runtime deployment
 to CMake, while still collecting Qt dependencies. It does not remove the
 application's dependency on the MSVC runtime. When distributing the folder,
@@ -305,6 +343,9 @@ in unrelated database client libraries. After deployment, CMake verifies the
 bundle's ad hoc signature and stops if verification fails. This applies to
 both DMG and ZIP packages, as well as `cmake --install`.
 
+Install matching Qt Sources before packaging, as described under
+[license files in installed packages](#license-files-in-installed-packages).
+
 ### macOS DMG
 
 CMake generates a DMG using the default `DragNDrop` package generator. No
@@ -378,6 +419,10 @@ running CMake, in the form `cmake -S . -B build -Dvariable=value`.
   macOS build. Explicit values are preserved. Intel and universal builds are
   not supported. The Qt kit must support `arm64`.
   This value also supplies the architecture suffix in DMG filenames.
+- **SPEEDCRUNCH_QT_SOURCE_DIR**: Set the matching Qt source tree used to collect
+  license texts when bundling Qt on Windows and macOS. Defaults to `Src` beside
+  the selected Qt desktop kit. It is not needed for ordinary application builds
+  or installations that use system Qt on Linux and Haiku.
 - **BUILD_TESTING**: Set this to `ON` to build the test executables and register
   them with CTest. Defaults to `OFF`. See [TESTING.md](TESTING.md).
 - **ENABLE_UPDATE_CHECKS**: Set this to `ON` to enable update checks on launch
@@ -404,6 +449,9 @@ running CMake, in the form `cmake -S . -B build -Dvariable=value`.
   macOS and Haiku. Defaults to `bin` under the installation prefix.
 - **CMAKE_INSTALL_DATAROOTDIR**: Change the shared data root on Unix systems except
   macOS and Haiku. Defaults to `share` under the installation prefix.
+- **CMAKE_INSTALL_DOCDIR**: Change the documentation directory on Unix systems
+  except macOS and Haiku. Defaults to `share/doc/speedcrunch` under the
+  installation prefix. License files are installed in its `Licenses` subdirectory.
 - **HTML_DOCS_DIR**: Change the path to the HTML manual that's embedded in the binary
   by the build. By default, a bundled prebuilt copy is used to minimize dependencies.
 
@@ -438,6 +486,8 @@ configured as absolute paths. For example:
 the example above, the executable is staged under
 `/tmp/speedcrunch-package/usr/bin`. Desktop entries and application metadata are
 installed under `applications` and `metainfo` within the shared data root.
+SpeedCrunch's license and Qt usage notice are installed under
+`share/doc/speedcrunch/Licenses`, unless `CMAKE_INSTALL_DOCDIR` is overridden.
 
 Desktop icons are installed in the `hicolor` theme: the SVG in
 `icons/hicolor/scalable/apps` and PNGs in

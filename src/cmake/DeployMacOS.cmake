@@ -8,6 +8,7 @@ endif()
 
 get_filename_component(MACDEPLOYQT "${MACDEPLOYQT}" REALPATH)
 get_filename_component(qt_bin_dir "${MACDEPLOYQT}" DIRECTORY)
+
 execute_process(
     COMMAND "${qt_bin_dir}/qtpaths" --query QT_INSTALL_PLUGINS
     OUTPUT_VARIABLE qt_plugins_dir
