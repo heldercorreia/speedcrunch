@@ -140,6 +140,7 @@ file(GLOB speedcrunch_TS_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/resources/locale/*.ts")
 qt_add_translations(${APPLICATION_NAME}
     TS_FILES ${speedcrunch_TS_SOURCES}
+    LUPDATE_OPTIONS -no-obsolete
     QM_FILES_OUTPUT_VARIABLE speedcrunch_QM_FILES
 )
 set(speedcrunch_TRANSLATION_TARGETS ${APPLICATION_NAME})

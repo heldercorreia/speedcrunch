@@ -8,10 +8,11 @@ To build SpeedCrunch, you need:
 - [Qt](https://www.qt.io/) 6.4 or later (Core, Widgets, Help, Network, LinguistTools)
 - [CMake](https://cmake.org/) 3.16 or later
 
-Qt LinguistTools provides the `lrelease` tool. CMake uses it to compile the TS
-sources in `src/resources/locale` into QM files in the build directory and embeds
-them in the application. The generated QM files do not need to be installed
-separately or kept in Git. Changes to a TS file take effect on the next build.
+Qt LinguistTools provides `lupdate` and `lrelease`. CMake uses `lrelease` to
+compile the TS sources in `src/resources/locale` into QM files in the build
+directory and embeds them in the application. The generated QM files do not
+need to be installed separately or kept in Git. Changes to a TS file take
+effect on the next build.
 
 ## Getting the source
 
@@ -115,6 +116,25 @@ Settings outside a variant's list keep their usual defaults or cached values.
 Turning a variant off does not restore the values it overrides. Use separate
 build directories, as above, or disable the old variant and explicitly reset
 the affected settings when switching in an existing directory.
+
+## Updating translations
+
+After configuring a build directory, update the TS catalogs from the source
+strings with:
+
+    cmake --build build --target update_translations
+
+This runs `lupdate` on the application sources and updates the catalogs in
+`src/resources/locale`. It passes `-no-obsolete` to remove entries that are no
+longer used in the source. New messages remain unfinished until translated.
+
+To compile the catalogs into QM files, run:
+
+    cmake --build build --target release_translations
+
+Normal application builds also compile changed catalogs automatically and embed
+the generated QM files. Replace `build` with your configured directory, such as
+`build-dmg`. Neither command requires qmake or a separate shell script.
 
 ## Building and running tests
 
