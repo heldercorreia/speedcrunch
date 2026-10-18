@@ -1,5 +1,7 @@
 # Building SpeedCrunch
 
+SpeedCrunch uses CMake as its build system.
+
 ## Requirements
 
 To build SpeedCrunch, you need:
@@ -134,7 +136,7 @@ To compile the catalogs into QM files, run:
 
 Normal application builds also compile changed catalogs automatically and embed
 the generated QM files. Replace `build` with your configured directory, such as
-`build-dmg`. Neither command requires qmake or a separate shell script.
+`build-dmg`.
 
 ## Building and running tests
 
@@ -419,8 +421,6 @@ checks off. Leave all build variants off so users update through their provider.
 CMake saves these options in the build directory's cache. To disable update
 checks in an existing directory, turn off any active variant and configure
 again with `-DENABLE_UPDATE_CHECKS=OFF`.
-
-For qmake builds, add `CONFIG+=enable_update_checks` to enable the feature.
 
 ## Unix installation and packaging
 

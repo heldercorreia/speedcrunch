@@ -82,8 +82,7 @@ cover, such as keypad zoom or status bar persistence.
 window, menu, rendering and session helpers. CMake compiles the common application
 sources and resources once in the `mainwindowuitest` object library, then
 links them into each executable. The object library carries the
-`SPEEDCRUNCH_UI_TEST` definition to each suite. qmake projects share their
-source list through `mainwindowuitest.pri`.
+`SPEEDCRUNCH_UI_TEST` definition to each suite.
 
 When adding a component suite, register it in CMake's `mainwindow_ui_tests`
-list and in `tests.pro`, and give it a matching `.pro` file.
+list.
