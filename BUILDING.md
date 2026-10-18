@@ -92,6 +92,17 @@ Enable one when configuring, for example:
 | `BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE` | `BUILD_TESTING=OFF`, `ENABLE_UPDATE_CHECKS=ON`, `CMAKE_BUILD_TYPE=Release`, `PORTABLE_SPEEDCRUNCH=ON`, `CPACK_GENERATOR=ZIP` |
 | `BUILD_VARIANT_DEV_DEBUG` | `BUILD_TESTING=ON`, `ENABLE_UPDATE_CHECKS=ON`, `ENABLE_STARTUP_DIAGNOSTICS=ON`, `CMAKE_BUILD_TYPE=Debug` |
 
+With `BUILD_VARIANT_OFFICIAL_RELEASE=ON` in a fresh build directory, packaging
+defaults to `NSIS` on Windows and `DragNDrop` (DMG) on macOS. There is no need to
+pass `-DCPACK_GENERATOR` explicitly. This variant does not override an explicit
+or cached generator, or turn off portable mode from an earlier configuration.
+Use a separate build directory when switching from a portable build.
+
+A normal build creates the application. To create the installer or archive,
+run the `package` target, or uppercase `PACKAGE` with Visual Studio:
+
+    cmake --build build-official --config Release --target package
+
 Only one variant can be enabled at a time. CMake stops with an error if more
 than one is `ON`. A variant overrides its listed settings on every configure,
 including conflicting `-D` arguments and values already in the cache.
@@ -233,11 +244,16 @@ for details.
 
 ### macOS
 
-SpeedCrunch targets macOS 14.4 (Sonoma) and later. Official macOS releases build
-against the official Qt libraries from the Qt Online Installer and ship those
-same libraries and the required plugins in the application bundle. This keeps
-the libraries' minimum macOS requirements aligned with SpeedCrunch's supported
-versions.
+SpeedCrunch supports Apple Silicon (`arm64`) Macs running macOS 14.4 (Sonoma)
+or later. Official macOS releases build against the official Qt libraries from
+the Qt Online Installer and ship those same libraries and the required plugins
+in the application bundle. This keeps the libraries' minimum macOS requirements
+aligned with SpeedCrunch's supported versions.
+
+CMake defaults the macOS target architecture to `arm64` before detecting the
+compiler, so no `-DCMAKE_OSX_ARCHITECTURES` argument is needed. Explicit values
+already supplied or cached are preserved. Use a fresh build directory if an
+existing one selects a different architecture.
 
 Follow the [official Qt for macOS guide](https://doc.qt.io/qt-6/macos.html)
 to install Xcode and Qt, then select the macOS desktop kit in the Qt Online
@@ -260,26 +276,30 @@ The `qt-cmake` wrapper selects its own Qt installation automatically. Use a fres
 build directory when switching from Homebrew's Qt, since CMake caches the paths
 to individual Qt modules. Adjust the kit path above to match your installation.
 
-When packaging, use `macdeployqt` from the same official Qt installation.
-The DMG script and CMake install step bundle only the SQLite SQL driver needed
-by Qt Help, while preserving the other plugin groups used by the application.
-This avoids pulling in unrelated database client libraries.
+When packaging, CMake uses `macdeployqt` from the Qt installation selected at
+configure time. It bundles only the SQLite SQL driver needed by Qt Help, while
+preserving the other plugin groups used by the application. This avoids pulling
+in unrelated database client libraries. After deployment, CMake verifies the
+bundle's ad hoc signature and stops if verification fails. This applies to
+both DMG and ZIP packages, as well as `cmake --install`.
 
-To generate an Apple Silicon DMG, use [pkg/generate-macos-dmg.sh](pkg/generate-macos-dmg.sh).
-The script configures and builds an arm64 Release application in `build-arm64`,
-bundles Qt with `macdeployqt`, applies and verifies an ad hoc signature, then
-creates the DMG with CPack. From the repository root, put the official Qt kit's
-`bin` directory on `PATH` so `qt-cmake` and `macdeployqt` use the same kit:
+### macOS DMG
 
-    export PATH="$HOME/Qt/6.12.0/macos/bin:$PATH"
-    bash pkg/generate-macos-dmg.sh
+CMake generates a DMG using the default `DragNDrop` package generator. No
+`-DCPACK_GENERATOR` argument is needed for the official release variant in a
+fresh build directory. From the repository root, configure with the official
+Qt kit, then run the package target:
 
-The script configures with `qt-cmake`, which selects its Qt installation
-automatically. It still uses `cmake` to build and `cpack` to package, so both
-must also be on `PATH`. Adjust the Qt path to match your installation, and start
-with a fresh `build-arm64` directory when switching Qt installations.
-The output is `build/dmg/SpeedCrunch-<version>-arm64.dmg`.
-The script does not notarize the application.
+    "$HOME/Qt/6.12.0/macos/bin/qt-cmake" -S . -B build-dmg -DBUILD_VARIANT_OFFICIAL_RELEASE=ON
+    cmake --build build-dmg --config Release --target package --parallel
+
+Adjust the Qt path to match your installation. CMake and CPack must be on
+`PATH`. The package target builds the application, bundles Qt, applies and
+verifies an ad hoc signature, then creates the DMG. No separate packaging
+script or `cmake --install` command is needed.
+
+The output is `build-dmg/SpeedCrunch-<version>-arm64.dmg`, for example
+`SpeedCrunch-1.0-arm64.dmg`. This workflow does not notarize the app.
 
 ### Portable macOS ZIP
 
@@ -332,6 +352,10 @@ running CMake, in the form `cmake -S . -B build -Dvariable=value`.
   Defaults to `14.4` unless an explicit target or the `MACOSX_DEPLOYMENT_TARGET`
   environment variable is supplied. Qt and all bundled dependencies must support
   the selected version or earlier.
+- **CMAKE_OSX_ARCHITECTURES**: Defaults to `arm64` for the supported Apple Silicon
+  macOS build. Explicit values are preserved. Intel and universal builds are
+  not supported. The Qt kit must support `arm64`.
+  This value also supplies the architecture suffix in DMG filenames.
 - **BUILD_TESTING**: Set this to `ON` to build the test executables and register
   them with CTest. Defaults to `OFF`. See [TESTING.md](TESTING.md).
 - **ENABLE_UPDATE_CHECKS**: Set this to `ON` to enable update checks on launch
@@ -347,6 +371,10 @@ running CMake, in the form `cmake -S . -B build -Dvariable=value`.
 - **CPACK_GENERATOR**: Select the package generator, such as `NSIS`, `ZIP`, or
   `DragNDrop`. On Windows, defaults to `NSIS`, or `ZIP` when portable mode is on.
   On macOS, defaults to `DragNDrop`. Other platforms use CPack's defaults.
+  These defaults apply when no generator is explicitly supplied or cached.
+  The official release variant keeps these defaults and preserves any selected
+  generator. Setting this option does not create a package during a normal
+  build. Run the `package` target, or `PACKAGE` with Visual Studio, to create it.
   The official portable variant forces `ZIP` on every platform.
 - **CMAKE_INSTALL_PREFIX**: Change the installation prefix for SpeedCrunch.
   On macOS, the project uses `<build-directory>/install`.
