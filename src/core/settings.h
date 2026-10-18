@@ -112,6 +112,7 @@ public:
     static QString getConfigPath();
     static QString getDataPath();
     static QString getCachePath();
+    static bool preparePortableStorage(QString* errorMessage);
     static CustomKeypad defaultCustomKeypad();
 
     void load();

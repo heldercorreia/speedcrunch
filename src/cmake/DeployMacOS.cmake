@@ -43,7 +43,7 @@ endforeach()
 # macdeployqt scans the copied plugins and deploys their framework dependencies.
 # Disable its plugin selection so it cannot bring back the unused SQL drivers.
 execute_process(
-    COMMAND "${MACDEPLOYQT}" "${APP_BUNDLE}" -no-plugins -always-overwrite
+    COMMAND "${MACDEPLOYQT}" "${APP_BUNDLE}" -no-plugins -always-overwrite ${MACDEPLOYQT_SIGNING_OPTIONS}
     OUTPUT_VARIABLE deploy_output
     ERROR_VARIABLE deploy_error
     RESULT_VARIABLE deploy_result
@@ -51,4 +51,16 @@ execute_process(
 message("${deploy_output}${deploy_error}")
 if(NOT deploy_result STREQUAL "0" OR "${deploy_output}${deploy_error}" MATCHES "(^|\n)ERROR:")
     message(FATAL_ERROR "Qt deployment failed for ${APP_BUNDLE}")
+endif()
+
+if(MACDEPLOYQT_SIGNING_OPTIONS)
+    execute_process(
+        COMMAND /usr/bin/codesign --verify --deep --strict "${APP_BUNDLE}"
+        OUTPUT_VARIABLE signing_output
+        ERROR_VARIABLE signing_error
+        RESULT_VARIABLE signing_result
+    )
+    if(NOT signing_result STREQUAL "0")
+        message(FATAL_ERROR "Portable bundle signature verification failed: ${signing_output}${signing_error}")
+    endif()
 endif()

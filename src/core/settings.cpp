@@ -19,6 +19,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QTemporaryFile>
 #include <QtCore/QStandardPaths>
 
 #include <filesystem>
@@ -130,6 +131,27 @@ bool shouldUseNonAtomicSettingsSync(const QString& fileName)
         std::filesystem::path(fileName.toStdU16String()), error);
     return !error && linkCount > 1;
 }
+
+#if defined(SPEEDCRUNCH_PORTABLE) && !defined(SPEEDCRUNCH_UI_TEST)
+QString portableStoragePath()
+{
+    QDir directory(QApplication::applicationDirPath());
+#ifdef Q_OS_MACOS
+    // Keep writable data outside the signed application bundle.
+    QDir bundle(directory);
+    if (bundle.dirName() == QLatin1String("MacOS")
+            && bundle.cdUp() && bundle.dirName() == QLatin1String("Contents")
+            && bundle.cdUp() && bundle.dirName().endsWith(QLatin1String(".app"), Qt::CaseInsensitive)) {
+        directory = bundle;
+        directory.cdUp();
+    }
+    return directory.filePath(QStringLiteral("SpeedCrunch-data"));
+#else
+    return directory.absolutePath();
+#endif
+}
+
+#endif
 } // namespace
 
 #ifdef SPEEDCRUNCH_UI_TEST
@@ -147,7 +169,7 @@ QString Settings::getConfigPath()
 #ifdef SPEEDCRUNCH_UI_TEST
     return uiTestStoragePath(QStringLiteral("config"));
 #elif defined(SPEEDCRUNCH_PORTABLE)
-    return QApplication::applicationDirPath();
+    return portableStoragePath();
 #elif defined(Q_OS_WIN)
     // On Windows, use AppData/Roaming/SpeedCrunch, the same path as getDataPath.
     return getDataPath();
@@ -165,7 +187,7 @@ QString Settings::getDataPath()
 #ifdef SPEEDCRUNCH_UI_TEST
     return uiTestStoragePath(QStringLiteral("data"));
 #elif defined(SPEEDCRUNCH_PORTABLE)
-    return QApplication::applicationDirPath();
+    return portableStoragePath();
 #elif QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
     return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
 #elif defined(Q_OS_WIN)
@@ -197,10 +219,30 @@ QString Settings::getCachePath()
 #ifdef SPEEDCRUNCH_UI_TEST
     return uiTestStoragePath(QStringLiteral("cache"));
 #elif defined(SPEEDCRUNCH_PORTABLE)
-    return QApplication::applicationDirPath();
+    return portableStoragePath();
 #else
     return QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
 #endif
+}
+
+bool Settings::preparePortableStorage(QString* errorMessage)
+{
+#if defined(SPEEDCRUNCH_PORTABLE) && defined(Q_OS_MACOS) && !defined(SPEEDCRUNCH_UI_TEST)
+    const QString path = portableStoragePath();
+    if (!QDir().mkpath(path)) {
+        *errorMessage = QObject::tr("Could not create %1.").arg(path);
+        return false;
+    }
+
+    QTemporaryFile probe(QDir(path).filePath(QStringLiteral(".write-check-XXXXXX")));
+    if (!probe.open() || probe.write("1", 1) != 1 || !probe.flush()) {
+        *errorMessage = probe.errorString();
+        return false;
+    }
+#else
+    Q_UNUSED(errorMessage);
+#endif
+    return true;
 }
 
 static Settings* s_settingsInstance = 0;

@@ -213,6 +213,8 @@ build the application, then run the same `PACKAGE` target in that build director
 
 The ZIP archive is written to `build-portable`. CPack assembles it using the
 project's install rules, so a separate `cmake --install` command is not needed.
+The filename follows `SpeedCrunch-<version>-<system>.zip`, for example
+`SpeedCrunch-1.0-win64.zip` for a 64-bit Windows build.
 Portable mode stores settings and user data beside the executable. Selecting
 the ZIP generator explicitly avoids requiring NSIS to create this package.
 
@@ -271,6 +273,36 @@ with a fresh `build-arm64` directory when switching Qt installations.
 The output is `build/dmg/SpeedCrunch-<version>-arm64.dmg`.
 The script does not notarize the application.
 
+### Portable macOS ZIP
+
+To build a portable ZIP with the official Qt kit, configure a separate directory:
+
+    "$HOME/Qt/6.12.0/macos/bin/qt-cmake" -S . -B build-portable -DBUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE=ON
+    cmake --build build-portable --config Release --parallel
+    cmake --build build-portable --config Release --target package
+
+The archive is written to `build-portable` using the same filename pattern as
+Windows: `SpeedCrunch-<version>-<system>.zip`. For example, version 1.0 produces
+`SpeedCrunch-1.0-Darwin.zip` on macOS.
+
+The ZIP contains `SpeedCrunch.app` with its Qt libraries and plugins. Extract it
+into a writable folder. On first launch, SpeedCrunch creates `SpeedCrunch-data`
+beside the app for settings, sessions, user definitions, custom color schemes,
+update-check state, and the manual cache. Move or back up the app and this folder
+together. When updating, replace the app and keep the data folder.
+
+Portable mode never writes user data inside the app bundle. If the data folder
+cannot be created or written, startup stops with an error instead of opening
+with settings that cannot be saved. This can happen on read-only media or when
+macOS launches a downloaded app from a randomized, read-only location. Use
+Finder to move the app to its intended writable folder, keep any existing data
+folder beside it, then launch it again. See Apple's
+[App Translocation Notes](https://developer.apple.com/forums/thread/724969).
+
+The packaging step signs the portable bundle with an ad hoc signature and
+verifies it before creating the archive. Public distribution still needs
+Developer ID signing and notarization for normal Gatekeeper approval.
+
 ## Build options
 
 You can customize the build using the following variables. These are specified when
@@ -302,7 +334,8 @@ running CMake, in the form `cmake -S . -B build -Dvariable=value`.
   See [DIAGNOSTICS.md](DIAGNOSTICS.md) for diagnostic beta build instructions.
 - **PORTABLE_SPEEDCRUNCH**: Set this to `ON` to have the application settings stored
   in the same location as the executable, e.g. for running from a USB drive without
-  requiring installation. Defaults to `OFF`.
+  requiring installation. On macOS, all portable data goes in `SpeedCrunch-data`
+  beside the `.app` bundle. Defaults to `OFF`.
 - **CPACK_GENERATOR**: Select the package generator, such as `NSIS`, `ZIP`, or
   `DragNDrop`. On Windows, defaults to `NSIS`, or `ZIP` when portable mode is on.
   On macOS, defaults to `DragNDrop`. Other platforms use CPack's defaults.

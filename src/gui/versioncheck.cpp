@@ -4,6 +4,7 @@
 
 #include "gui/versioncheck.h"
 #include "core/startupdiagnostics.h"
+#include "core/settings.h"
 
 #include <QApplication>
 #include <QDateTime>
@@ -12,6 +13,7 @@
 #include <QDesktopServices>
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QDir>
 #include <QEvent>
 #include <QLabel>
 #include <QLoggingCategory>
@@ -70,6 +72,16 @@ QMutex& updateScheduleMutex()
 {
     static QMutex mutex;
     return mutex;
+}
+
+QSettings updateCheckSettings()
+{
+#ifdef SPEEDCRUNCH_PORTABLE
+    return QSettings(QDir(Settings::getConfigPath()).filePath(QStringLiteral("updates.ini")),
+                     QSettings::IniFormat);
+#else
+    return QSettings();
+#endif
 }
 
 static QDebug versionCheckDebug()
@@ -487,7 +499,7 @@ bool VersionCheck::isConnectivityError(QNetworkReply::NetworkError error)
 void VersionCheckWorker::markCheckAttempted()
 {
     StartupDiagnostics::Scope timing("Save update check timestamp");
-    QSettings settings;
+    QSettings settings = updateCheckSettings();
     const qint64 now = QDateTime::currentMSecsSinceEpoch();
     settings.setValue(QString::fromLatin1(LAST_CHECK_KEY), now);
     versionCheckDebug() << "Recorded update check timestamp (UTC msecs):" << now;
@@ -496,7 +508,7 @@ void VersionCheckWorker::markCheckAttempted()
 bool VersionCheckWorker::isCheckDue() const
 {
     StartupDiagnostics::Scope timing("Check update schedule");
-    QSettings settings;
+    QSettings settings = updateCheckSettings();
     const qint64 lastCheck = settings.value(QString::fromLatin1(LAST_CHECK_KEY), 0).toLongLong();
     if (lastCheck <= 0) {
         versionCheckDebug() << "No previous update check timestamp found; check is due.";
@@ -548,14 +560,14 @@ void VersionCheck::startRequest(CheckTrigger trigger)
 
 void VersionCheckWorker::storeFetchedVersion(const QString& version)
 {
-    QSettings settings;
+    QSettings settings = updateCheckSettings();
     settings.setValue(QString::fromLatin1(LAST_FETCHED_VERSION_KEY), version);
     versionCheckDebug() << "Recorded latest fetched version:" << version;
 }
 
 bool VersionCheckWorker::shouldNotifyForVersion(const QString& version) const
 {
-    QSettings settings;
+    QSettings settings = updateCheckSettings();
     const QString lastNotified = settings.value(QString::fromLatin1(LAST_NOTIFIED_VERSION_KEY)).toString().trimmed();
     if (lastNotified.isEmpty())
         return true;
@@ -573,7 +585,7 @@ bool VersionCheckWorker::shouldNotifyForVersion(const QString& version) const
 
 void VersionCheckWorker::markVersionNotified(const QString& version)
 {
-    QSettings settings;
+    QSettings settings = updateCheckSettings();
     settings.setValue(QString::fromLatin1(LAST_NOTIFIED_VERSION_KEY), version);
     versionCheckDebug() << "Recorded notified version:" << version;
 }

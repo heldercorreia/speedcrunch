@@ -18,9 +18,11 @@
 #include <QLocalServer>
 #include <QLocalSocket>
 #include <QMetaObject>
+#include <QMessageBox>
 #include <QSurfaceFormat>
 #include <QEvent>
 #include <QThread>
+#include <QTimer>
 #include <QVariant>
 
 #include <atomic>
@@ -246,6 +248,22 @@ int main(int argc, char* argv[])
     QCoreApplication::setApplicationName("SpeedCrunch");
     QCoreApplication::setOrganizationDomain("speedcrunch.org");
     QGuiApplication::setDesktopFileName("org.speedcrunch.SpeedCrunch");
+
+    QString storageError;
+    if (!Settings::preparePortableStorage(&storageError)) {
+        // Let macOS finish launching before opening a native modal alert.
+        QTimer::singleShot(0, &application, [&]() {
+            QMessageBox message(QMessageBox::Critical, QObject::tr("Portable Data Folder Unavailable"),
+                QObject::tr("SpeedCrunch cannot prepare its portable data folder:\n%1\n\n%2\n\n"
+                            "Use Finder to move SpeedCrunch.app and any SpeedCrunch-data folder "
+                            "to a writable location, then open the app again.")
+                    .arg(Settings::getConfigPath(), storageError));
+            message.setTextFormat(Qt::PlainText);
+            message.exec();
+            application.exit(1);
+        });
+        return application.exec();
+    }
 
     timing.next("Load application settings (total)");
     Settings::instance();
