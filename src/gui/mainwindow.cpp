@@ -9416,6 +9416,11 @@ MainWindow::MainWindow(bool restorePreviousSession)
 
 MainWindow::~MainWindow()
 {
+    // QWidget's destructor can change focus and hide docks before QObject
+    // disconnects us. Stop these callbacks while MainWindow is still alive.
+    disconnect(qApp, &QApplication::focusChanged, this, &MainWindow::handleApplicationFocusChanged);
+    for (QDockWidget* dock : std::as_const(m_allDocks))
+        disconnect(dock, nullptr, this, nullptr);
     qApp->removeEventFilter(this);
     windowIds().remove(objectName());
     allMainWindows().removeAll(QPointer<MainWindow>(this));

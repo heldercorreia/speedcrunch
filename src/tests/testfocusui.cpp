@@ -11,6 +11,8 @@ class TestFocusUi : public QObject {
 private slots:
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
+    void destroying_focused_window_handles_focus_change_safely_data();
+    void destroying_focused_window_handles_focus_change_safely();
     void main_window_applies_primary_role_to_active_editor_and_dock_selection();
     void current_result_tooltip_stays_hidden_after_escape_and_arrow_caret_move();
     void current_result_tooltip_stays_hidden_after_escape_and_mouse_caret_move();
@@ -45,6 +47,43 @@ private slots:
     void escape_still_cancels_history_edit_data();
     void escape_still_cancels_history_edit();
 };
+
+void TestFocusUi::destroying_focused_window_handles_focus_change_safely_data()
+{
+    QTest::addColumn<bool>("bitfield");
+    QTest::addColumn<bool>("floating");
+    QTest::newRow("editor") << false << false;
+    QTest::newRow("attached-bitfield") << true << false;
+    QTest::newRow("floating-bitfield") << true << true;
+}
+
+void TestFocusUi::destroying_focused_window_handles_focus_change_safely()
+{
+    QFETCH(bool, bitfield);
+    QFETCH(bool, floating);
+    Settings::instance()->bitfieldVisible = bitfield;
+    QSignalSpy focusChanges(qApp, &QApplication::focusChanged);
+    {
+        MainWindow window;
+        window.show();
+        if (bitfield) {
+            auto* dock = window.findChild<QDockWidget*>(QStringLiteral("BitfieldDock"));
+            QVERIFY(dock != nullptr);
+            dock->setFloating(floating);
+            dock->show();
+            QTRY_VERIFY(dock->isVisible());
+        }
+        window.activateWindow();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        Editor* editor = window.findChild<Editor*>();
+        QVERIFY(editor != nullptr);
+        editor->setFocus();
+        QTRY_VERIFY(editor->hasFocus());
+        focusChanges.clear();
+    }
+    QVERIFY(!focusChanges.isEmpty());
+    QCOMPARE(QApplication::focusWidget(), nullptr);
+}
 
 void TestFocusUi::constant_search_paints_editor_without_focus_ring()
 {
