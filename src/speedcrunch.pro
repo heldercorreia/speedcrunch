@@ -76,7 +76,6 @@ win32-msvc*:LIBS += User32.lib
 
 macx {
     ICON = resources/speedcrunch.icns
-    QMAKE_INFO_PLIST = ../pkg/Info.plist
     TARGET = SpeedCrunch
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 14.4
     QMAKE_CXXFLAGS += -std=c++17
