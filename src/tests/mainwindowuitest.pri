@@ -1,9 +1,6 @@
 include(common.pri)
 QT += testlib network
 CONFIG += c++17
-CONFIG += lrelease embed_translations
-QM_FILES_RESOURCE_PREFIX = /locale
-TRANSLATIONS += $$files($$PWD/../resources/locale/*.ts)
 DEFINES += SPEEDCRUNCH_UI_TEST
 contains(CONFIG, enable_update_checks) {
     DEFINES += SPEEDCRUNCH_ENABLE_UPDATE_CHECKS

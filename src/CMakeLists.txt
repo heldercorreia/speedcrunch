@@ -27,7 +27,6 @@ if(ENABLE_UPDATE_CHECKS)
 endif()
 
 find_package(Qt6 6.4 REQUIRED COMPONENTS Core Widgets Help Network LinguistTools)
-qt_standard_project_setup()
 message(STATUS "Found Qt version: ${Qt6_VERSION}")
 
 if(BUILD_TESTING)
@@ -56,6 +55,7 @@ endif()
 
 set(speedcrunch_VERSION "1.0")
 
+set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_COLOR_MAKEFILE ON)
 set(CMAKE_VERBOSE_MAKEFILE OFF)
@@ -67,16 +67,6 @@ ADD_DEFINITIONS("-DSPEEDCRUNCH_VERSION=\"${speedcrunch_VERSION}\"")
 ADD_DEFINITIONS(-DQT_USE_QSTRINGBUILDER)
 
 include(SourceFiles.cmake)
-
-# Keep generated catalogs in the build tree and share their resource objects.
-file(GLOB speedcrunch_TS_SOURCES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/resources/locale/*.ts")
-qt_add_library(speedcrunch_translations OBJECT)
-target_link_libraries(speedcrunch_translations PRIVATE Qt6::Core)
-qt_add_translations(speedcrunch_translations
-    TS_FILES ${speedcrunch_TS_SOURCES}
-    RESOURCE_PREFIX "/locale"
-)
 
 if(BUILD_TESTING AND CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
     set_source_files_properties(tests/testfloatnum.c PROPERTIES
@@ -126,6 +116,14 @@ else()
     add_executable(${APPLICATION_NAME} ${speedcrunch_SOURCES} ${speedcrunch_RESOURCES})
 endif()
 
+file(GLOB speedcrunch_TS_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/resources/locale/*.ts")
+qt_add_translations(${APPLICATION_NAME}
+    TS_FILES ${speedcrunch_TS_SOURCES}
+    QM_FILES_OUTPUT_VARIABLE speedcrunch_QM_FILES
+)
+set(speedcrunch_TRANSLATION_TARGETS ${APPLICATION_NAME})
+
 target_compile_definitions(${APPLICATION_NAME}
     PRIVATE
         $<$<BOOL:${ENABLE_STARTUP_DIAGNOSTICS}>:SPEEDCRUNCH_ENABLE_STARTUP_DIAGNOSTICS>
@@ -139,16 +137,17 @@ add_custom_target(confclean
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
 
 set(QT_LIBRARIES Qt6::Widgets Qt6::Help Qt6::Network Qt6::Core)
-target_link_libraries(${APPLICATION_NAME} PRIVATE ${QT_LIBRARIES} speedcrunch_translations)
+target_link_libraries(${APPLICATION_NAME} PRIVATE ${QT_LIBRARIES})
 
 if(BUILD_TESTING)
     enable_testing()
 
     qt_add_executable(testtranslations tests/testtranslations.cpp)
-    target_link_libraries(testtranslations PRIVATE Qt6::Test speedcrunch_translations)
+    target_link_libraries(testtranslations PRIVATE Qt6::Test)
     target_compile_definitions(testtranslations PRIVATE
         SPEEDCRUNCH_TS_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/resources/locale")
     add_test(NAME testtranslations COMMAND testtranslations)
+    list(APPEND speedcrunch_TRANSLATION_TARGETS testtranslations)
 
     add_executable(testhmath ${testhmath_SOURCES})
     target_link_libraries(testhmath ${QT_LIBRARIES})
@@ -212,7 +211,7 @@ if(BUILD_TESTING)
     )
     foreach(ui_test IN LISTS mainwindow_ui_tests)
         add_executable(${ui_test} tests/${ui_test}.cpp)
-        target_link_libraries(${ui_test} PRIVATE mainwindowuitest speedcrunch_translations)
+        target_link_libraries(${ui_test} PRIVATE mainwindowuitest)
         add_test(NAME ${ui_test} COMMAND ${ui_test})
         set_tests_properties(${ui_test} PROPERTIES LABELS "ui")
     endforeach()
@@ -221,6 +220,15 @@ if(BUILD_TESTING)
         set_tests_properties(${ui_test} PROPERTIES LABELS "ui")
     endforeach()
 endif()
+
+# Embed the same generated catalogs in the application and test executables.
+foreach(translation_target IN LISTS speedcrunch_TRANSLATION_TARGETS)
+    qt_add_resources(${translation_target} "${translation_target}_translations"
+        PREFIX "/locale"
+        BASE "${CMAKE_CURRENT_BINARY_DIR}"
+        FILES ${speedcrunch_QM_FILES}
+    )
+endforeach()
 
 set_property(TARGET ${APPLICATION_NAME} APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>:EVALUATOR_DEBUG>)
 
