@@ -117,6 +117,9 @@ else()
     add_executable(${APPLICATION_NAME} ${speedcrunch_SOURCES} ${speedcrunch_RESOURCES})
 endif()
 
+# lupdate needs an explicit source include path to resolve translation contexts.
+target_include_directories(${APPLICATION_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+
 if(APPLE)
     if(NOT CMAKE_STRIP)
         message(FATAL_ERROR "The macOS toolchain must provide CMAKE_STRIP for Release builds")
