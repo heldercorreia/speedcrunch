@@ -264,8 +264,6 @@ foreach(translation_target IN LISTS speedcrunch_TRANSLATION_TARGETS)
     )
 endforeach()
 
-set_property(TARGET ${APPLICATION_NAME} APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>:EVALUATOR_DEBUG>)
-
 include_directories("${CMAKE_CURRENT_BINARY_DIR}" thirdparty core gui math)
 
 ################################# INSTALL ######################################

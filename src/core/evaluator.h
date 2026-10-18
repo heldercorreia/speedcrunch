@@ -5,6 +5,9 @@
 #ifndef CORE_EVALUATOR_H
 #define CORE_EVALUATOR_H
 
+// Uncomment to trace scanning and parsing to the terminal and eval.log.
+// #define EVALUATOR_DEBUG
+
 #include "core/functions.h"
 #include "core/opcode.h"
 #include "core/symbolcontext.h"
