@@ -20,7 +20,7 @@
   <tr>
     <td width="50%">
       <a class="nav-item nav-item-0"
-         href="../contents.html">SpeedCrunch 1.0 documentation</a> &#187; <a class="nav-item nav-item-1"
+         href="../contents.html">SpeedCrunch 1.1 documentation</a> &#187; <a class="nav-item nav-item-1"
              href="index.html">User Guide</a>
           
     </td>
@@ -72,7 +72,8 @@ Most of them are dockable panels that can be moved around the main window and en
 or below the display and keypad fit between the side panels.</p>
 <p>Use the cross in a dock panel’s title bar to hide the panel, or the square
 to detach it into a floating window. Hidden panels can be shown again via
-the <span class="menuselection">View</span> menu.</p>
+the <span class="menuselection">View</span> menu. Opening another panel leaves floating panels
+in their own windows.</p>
 <p>On Linux with Wayland, drag a floating panel by its title bar to move it.
 Use its square button or double-click the title bar to attach it to the
 main window again.</p>
@@ -89,17 +90,11 @@ a formula into the expression editor by clicking on it.</p>
 <li><dl>
 <dt>Constants</dt><dd><p>The constants widget shows a large list of scientific constants (including CODATA-based entries),
 grouped by category and subcategory.</p>
-<p>The list columns are:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Name</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Symbol</span></code> (when available)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Value</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Unit</span></code> (when available)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Identifier</span></code> (built-in constant key, typically <code class="docutils literal notranslate"><span class="pre">k_*</span></code>)</p></li>
-</ul>
-<p>Use the <code class="docutils literal notranslate"><span class="pre">Category</span></code> and <code class="docutils literal notranslate"><span class="pre">Subcategory</span></code> selectors to narrow the list.
-The search field matches by name, symbol, and identifier.</p>
-<p>Double-clicking an entry inserts its <code class="docutils literal notranslate"><span class="pre">Identifier</span></code> into the editor.</p>
+<p>The columns show each constant’s name, value, and unit.
+Use the <code class="docutils literal notranslate"><span class="pre">Domain</span></code> and <code class="docutils literal notranslate"><span class="pre">Subdomain</span></code> selectors to narrow the list, or search by name or unit.
+Press <kbd class="kbd docutils literal notranslate">Up</kbd> and <kbd class="kbd docutils literal notranslate">Down</kbd> in the search field to select a result while continuing to type.
+Press <kbd class="kbd docutils literal notranslate">Enter</kbd> or double-click an entry to insert its value and unit and return to the editor.
+The mathematical constants pi and Euler’s number are inserted as <code class="docutils literal notranslate"><span class="pre">π</span></code> and <code class="docutils literal notranslate"><span class="pre">e</span></code>.</p>
 </dd>
 </dl>
 </li>
@@ -319,7 +314,10 @@ On Wayland with Qt 6.6 or later, the compositor chooses below or above according
 With older Qt versions on Wayland, the list stays within the application window.
 Alignment follows the visible text even when the expression wraps or scrolls. Press <kbd class="kbd docutils literal notranslate">Tab</kbd> to insert the current
 suggestion. Pressing <kbd class="kbd docutils literal notranslate">Enter</kbd> evaluates the expression by default. If you explicitly navigate the popup with arrow/page/home/end keys or click a
-suggestion with the mouse, then <kbd class="kbd docutils literal notranslate">Enter</kbd> accepts that selected suggestion. Pressing <kbd class="kbd docutils literal notranslate">Escape</kbd> dismisses the autocomplete popup.</p>
+suggestion with the mouse, then <kbd class="kbd docutils literal notranslate">Enter</kbd> accepts that selected suggestion.
+Enable <span class="menuselection">Settings ‣ Editing ‣ Autocomplete ‣ Accept with Enter</span>
+to accept the current suggestion with <kbd class="kbd docutils literal notranslate">Enter</kbd> immediately, without
+first using the arrow keys. Pressing <kbd class="kbd docutils literal notranslate">Escape</kbd> dismisses the autocomplete popup.</p>
 </dd>
 </dl>
 </li>
@@ -329,11 +327,16 @@ This also works for user-defined functions. Pressing <kbd class="kbd docutils li
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
-<dt>Quick constant insertion</dt><dd><p>Press <kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">Space</kbd> to open a list of constants that allows quick access to the same constants as the constants widget (see above).
-Use the arrow keys to navigate the list. Pressing <kbd class="kbd docutils literal notranslate">Escape</kbd> will dismiss this popup.
-The list follows the cursor’s horizontal position and uses the same below-or-above placement rules as autocompletion.
-Selecting an entry inserts its identifier (for example <code class="docutils literal notranslate"><span class="pre">k_speed_of_light_in_vacuum</span></code>).</p>
+<li><dl>
+<dt>Quick constant insertion</dt><dd><p>Press <kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">Space</kbd> to search the same constants as the constants widget (see above).
+Type a name or unit to filter the list. Each result shows its unit beside the name using the theme’s unit color.
+Press <kbd class="kbd docutils literal notranslate">Up</kbd> and <kbd class="kbd docutils literal notranslate">Down</kbd> to select a result. Press <kbd class="kbd docutils literal notranslate">Tab</kbd> or <kbd class="kbd docutils literal notranslate">Enter</kbd>, or click a result, to insert it and return to the editor.
+<kbd class="kbd docutils literal notranslate">Shift</kbd>+<kbd class="kbd docutils literal notranslate">Tab</kbd> moves focus backward. With no matches, <kbd class="kbd docutils literal notranslate">Tab</kbd> leaves the popup open.
+Press <kbd class="kbd docutils literal notranslate">Escape</kbd> to cancel. Search text does not change the expression.
+The list follows the cursor’s horizontal position and uses the same below-or-above placement rules as autocompletion.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 1.1: </span>Search in the quick constant popup and select dock search results with <kbd class="kbd docutils literal notranslate">Up</kbd> and <kbd class="kbd docutils literal notranslate">Down</kbd>.</p>
+</div>
 </dd>
 </dl>
 </li>
@@ -737,6 +740,18 @@ calculation history.</p>
 </dl>
 </li>
 <li><dl>
+<dt><span class="menuselection">Remove Trailing Zeroes</span></dt><dd><p>Hide trailing fractional zeroes after rounding to the selected decimal
+places. For example, at three decimal places, <code class="docutils literal notranslate"><span class="pre">3.140</span></code> becomes <code class="docutils literal notranslate"><span class="pre">3.14</span></code>
+and <code class="docutils literal notranslate"><span class="pre">12.000</span></code> becomes <code class="docutils literal notranslate"><span class="pre">12</span></code>. This option is off by default and applies
+to the main and extra result lines. Changing it refreshes editor previews
+without rewriting displayed history.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 1.1.</span></p>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl>
 <dt><span class="menuselection">Rounding Mode</span></dt><dd><p>Choose how displayed results are rounded when formatting to a finite number
 of digits. The default is <span class="menuselection">Nearest, Half Away (round)</span>.
 Available modes are:
@@ -908,8 +923,20 @@ to all session panes and windows.</p>
 </dl>
 </li>
 <li><dl>
-<dt><span class="menuselection">Autocomplete</span></dt><dd><p>Controls which entities are included in editor autocompletion.
-All options are enabled by default.</p>
+<dt><span class="menuselection">Autocomplete</span></dt><dd><p>Controls how suggestions are accepted and which names appear in editor
+autocompletion.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">Accept</span> <span class="pre">with</span> <span class="pre">Enter</span></code> lets <kbd class="kbd docutils literal notranslate">Enter</kbd> insert the current suggestion
+without first selecting it with the arrow keys. It is off by default.
+When no autocomplete popup is open, Enter still evaluates the expression.
+Tab always accepts the current suggestion. The setting is saved between
+launches and applies to all session panes and windows.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 1.1.</span></p>
+</div>
+</li>
+</ul>
+<p>The following suggestion categories are all enabled by default:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Built-in</span> <span class="pre">functions</span></code> includes built-in function names.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Built-in</span> <span class="pre">variables</span></code> includes built-in constant names.</p></li>
@@ -1434,7 +1461,7 @@ versions used a simple custom text format.</p>
   <tr>
     <td width="50%">
       <a class="nav-item nav-item-0"
-         href="../contents.html">SpeedCrunch 1.0 documentation</a> &#187; <a class="nav-item nav-item-1"
+         href="../contents.html">SpeedCrunch 1.1 documentation</a> &#187; <a class="nav-item nav-item-1"
              href="index.html">User Guide</a>
           
     </td>

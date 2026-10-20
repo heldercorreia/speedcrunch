@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <QtHelpProject version="1.0">
-    <namespace>org.sphinx.manual-enus.1.0</namespace>
+    <namespace>org.sphinx.manual-enus.1.1</namespace>
     <virtualFolder>doc</virtualFolder>
-    <customFilter name="SpeedCrunch 1.0">
+    <customFilter name="SpeedCrunch 1.1">
         <filterAttribute>manual-en_US</filterAttribute>
-        <filterAttribute>1.0</filterAttribute>
+        <filterAttribute>1.1</filterAttribute>
     </customFilter>
     <filterSection>
         <filterAttribute>manual-en_US</filterAttribute>
-        <filterAttribute>1.0</filterAttribute>
+        <filterAttribute>1.1</filterAttribute>
         <toc>
-            <section title="SpeedCrunch 1.0 documentation" ref="contents.html">
+            <section title="SpeedCrunch 1.1 documentation" ref="contents.html">
                 <section title="Introduction" ref="introduction.html"/>
                 <section title="User Guide" ref="userguide/index.html">
                     <section title="Installation" ref="userguide/installation.html">
