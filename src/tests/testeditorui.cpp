@@ -19,6 +19,7 @@
 #include "core/userfunction.h"
 #include "core/userunit.h"
 #include "uitestfixture.h"
+#include "editorgeometrytesthelpers.h"
 
 #include <QApplication>
 #include <QAbstractItemDelegate>
@@ -1906,12 +1907,22 @@ void TestEditorUi::editor_text_line_is_vertically_centered_data()
     QTest::addColumn<bool>("classic");
     QTest::addColumn<int>("pixelSize");
     QTest::addColumn<int>("lineCount");
+    QTest::addColumn<bool>("fixedFont");
+    QTest::addColumn<bool>("wrapped");
     for (const bool classic : {false, true}) {
         for (const int pixelSize : {16, 24, 32}) {
             for (const int lineCount : {1, 5}) {
                 const QByteArray name = QByteArray(classic ? "classic-" : "modern-")
                     + QByteArray::number(pixelSize) + '-' + QByteArray::number(lineCount);
-                QTest::newRow(name.constData()) << classic << pixelSize << lineCount;
+                QTest::newRow(name.constData()) << classic << pixelSize << lineCount << false << false;
+                QTest::newRow(QByteArray(name + "-fixed").constData())
+                    << classic << pixelSize << lineCount << true << false;
+                if (lineCount > 1) {
+                    QTest::newRow(QByteArray(name + "-wrapped").constData())
+                        << classic << pixelSize << lineCount << false << true;
+                    QTest::newRow(QByteArray(name + "-fixed-wrapped").constData())
+                        << classic << pixelSize << lineCount << true << true;
+                }
             }
         }
     }
@@ -1922,10 +1933,13 @@ void TestEditorUi::editor_text_line_is_vertically_centered()
     QFETCH(bool, classic);
     QFETCH(int, pixelSize);
     QFETCH(int, lineCount);
+    QFETCH(bool, fixedFont);
+    QFETCH(bool, wrapped);
     Settings::instance()->editorDisplayStyle = classic
         ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern;
+    Settings::instance()->inputDigitGrouping = false;
     Editor editor;
-    QFont font = editor.font();
+    QFont font = fixedFont ? QFontDatabase::systemFont(QFontDatabase::FixedFont) : editor.font();
     font.setPixelSize(pixelSize);
     editor.setFont(font);
     editor.setFixedWidth(400);
@@ -1937,7 +1951,14 @@ void TestEditorUi::editor_text_line_is_vertically_centered()
     editor.setText(lines.join(QLatin1Char('\n')));
     editor.show();
     QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    if (wrapped) {
+        const int decorations = editor.width() - editor.viewport()->width();
+        editor.setFixedWidth(decorations + qCeil(QFontMetricsF(font).horizontalAdvance(lines.first()))
+            + 2 * int(editor.document()->documentMargin()) + 1);
+        editor.setText(lines.join(QString()));
+    }
     QCoreApplication::processEvents();
+    QCOMPARE(editor.document()->lineCount(), lineCount);
     QTextCursor first(editor.document());
     QTextCursor last(editor.document());
     last.movePosition(QTextCursor::End);
@@ -5955,14 +5976,17 @@ void TestEditorUi::classic_editor_keeps_wrapped_input_visible_and_preserves_undo
     editor.setText(QStringLiteral("2 [gypq]"));
     editor.setCursorPosition(editor.text().size());
     const int singleLineHeight = editor.height();
+    const int singleLineTextHeight = EditorGeometryTestHelpers::visibleTextHeight(editor);
     QVERIFY(editor.cursorRect().bottom() < editor.viewport()->height());
     editor.setText(QStringLiteral("1\n2\n3\n4\n5"));
-    QCOMPARE(editor.height() - singleLineHeight, 4 * editor.fontMetrics().lineSpacing());
+    QCOMPARE(editor.height() - singleLineHeight,
+             EditorGeometryTestHelpers::visibleTextHeight(editor) - singleLineTextHeight);
     const QString input = QStringLiteral("1234567890+").repeated(30);
     editor.setText(input);
     editor.setCursorPosition(input.size());
     QTRY_VERIFY(editor.document()->firstBlock().layout()->lineCount() > 5);
-    QTRY_COMPARE(editor.height() - singleLineHeight, 4 * editor.fontMetrics().lineSpacing());
+    QTRY_COMPARE(editor.height() - singleLineHeight,
+                 EditorGeometryTestHelpers::visibleTextHeight(editor) - singleLineTextHeight);
     QTRY_VERIFY(editor.cursorRect().top() >= 0);
     QTRY_VERIFY(editor.cursorRect().bottom() < editor.viewport()->height());
     QTest::keyClicks(&editor, QStringLiteral("2"));
@@ -6030,9 +6054,11 @@ void TestEditorUi::editor_height_adds_only_one_line_height_per_visible_line()
 
     editor.setText(QStringLiteral("1"));
     const int singleLineHeight = editor.height();
+    const int singleLineTextHeight = EditorGeometryTestHelpers::visibleTextHeight(editor);
 
     editor.setText(QStringLiteral("1\n2\n3\n4\n5"));
-    QCOMPARE(editor.height() - singleLineHeight, 4 * editor.fontMetrics().lineSpacing());
+    QCOMPARE(editor.height() - singleLineHeight,
+             EditorGeometryTestHelpers::visibleTextHeight(editor) - singleLineTextHeight);
 }
 
 void TestEditorUi::editor_keeps_unit_descenders_inside_viewport()
@@ -6550,9 +6576,13 @@ void TestEditorUi::input_digit_grouping_paints_separator_glyphs()
             }
             return qreal(0);
         };
-        const qreal previousWidth = separatorWidth();
+        const QString separator = settings->digitGroupingSeparator();
+        QCOMPARE(separatorWidth(), QFontMetricsF(editor.font()).horizontalAdvance(separator));
         editor.increaseFontPointSize();
-        QVERIFY(separatorWidth() > previousWidth);
+        // Hinting can give adjacent point sizes the same glyph width.
+        // The gap must follow the current font's metrics in either case.
+        QCOMPARE(separatorWidth(), QFontMetricsF(editor.font()).horizontalAdvance(separator));
+        QVERIFY(separatorWidth() > 0);
         const QImage withSeparators = editor.viewport()->grab().toImage();
         QTextLayout* layout = editor.document()->firstBlock().layout();
         auto formats = layout->formats();

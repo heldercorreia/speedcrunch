@@ -920,8 +920,10 @@ User Interface Settings
       Vertical pane dividers remain visible through the input area.
 
     Both styles keep the same editing features, including input that grows as
-    expressions wrap. The choice applies immediately to every window and pane
-    and is saved between launches.
+    expressions wrap. The input grows to five visible lines, then scrolls to
+    keep the cursor in view. Line spacing follows the selected font.
+    The choice applies immediately to every window and pane and is saved
+    between launches.
 
     .. versionadded:: 1.1
 

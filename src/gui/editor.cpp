@@ -4206,28 +4206,31 @@ void Editor::scrollContentsBy(int dx, int dy)
 
 void Editor::updateHeightForWrappedText()
 {
-    const int lineHeight = editorLineHeight(font());
     int visualLineCount = 0;
+    qreal blockTop = 0;
+    qreal textHeight = 0;
 
     for (QTextBlock block = document()->begin(); block.isValid(); block = block.next()) {
         // Highlighting can invalidate wrapping before Qt lays the block out again.
         // Resolve it before counting lines so the editor does not briefly shrink.
-        blockBoundingRect(block);
+        const QRectF bounds = blockBoundingRect(block);
         const QTextLayout* layout = block.layout();
-        if (!layout) {
-            visualLineCount += 1;
-            continue;
+        if (layout) {
+            for (int i = 0; i < layout->lineCount() && visualLineCount + i < 5; ++i) {
+                const QTextLine line = layout->lineAt(i);
+                textHeight = qMax(textHeight, blockTop + line.y() + line.height());
+            }
         }
-
-        visualLineCount += std::max(1, layout->lineCount());
+        visualLineCount += layout ? std::max(1, layout->lineCount()) : 1;
+        blockTop += bounds.height();
     }
 
-    if (visualLineCount <= 0)
-        visualLineCount = 1;
-
-    const int clampedLines = std::max(1, std::min(5, visualLineCount));
-    m_canScrollWrappedText = visualLineCount > clampedLines;
-    setFixedHeight(lineHeight * clampedLines + editorVerticalDecorationHeight());
+    // Use Qt's laid-out span, including leading and font fallback. Multiplying
+    // font metrics by the line count can leave extra space or clip the text.
+    if (textHeight <= 0)
+        textHeight = editorLineHeight(font());
+    m_canScrollWrappedText = visualLineCount > 5;
+    setFixedHeight(int(std::ceil(textHeight)) + editorVerticalDecorationHeight());
     if (!m_canScrollWrappedText)
         verticalScrollBar()->setValue(verticalScrollBar()->minimum());
 }

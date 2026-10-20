@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "mainwindowtesthelpers.h"
+#include "editorgeometrytesthelpers.h"
 #include "core/startupdiagnostics.h"
 #include "gui/startupfontpreparation.h"
 
@@ -730,7 +731,8 @@ void TestEditorAppearanceUi::typing_long_expressions_keeps_editor_height_stable(
     editor->setText(QString());
     QCoreApplication::processEvents();
     const int singleLineHeight = editor->height();
-    const int cappedHeight = singleLineHeight + 4 * editor->fontMetrics().lineSpacing();
+    const int singleLineTextHeight = EditorGeometryTestHelpers::visibleTextHeight(*editor);
+    int cappedHeight = -1;
 
     class ResizeRecorder : public QObject {
     public:
@@ -768,10 +770,17 @@ void TestEditorAppearanceUi::typing_long_expressions_keeps_editor_height_stable(
         recorder.heights.clear();
         recorder.viewportHeights.clear();
         const int visibleLines = qBound(1, editor->document()->begin().layout()->lineCount(), 5);
-        QCOMPARE(editor->height(), singleLineHeight + (visibleLines - 1) * editor->fontMetrics().lineSpacing());
+        QCOMPARE(editor->height(), singleLineHeight
+            + EditorGeometryTestHelpers::visibleTextHeight(*editor) - singleLineTextHeight);
+        if (visibleLines == 5) {
+            if (cappedHeight < 0)
+                cappedHeight = editor->height();
+            QCOMPARE(editor->height(), cappedHeight);
+        }
         QVERIFY(editor->cursorRect().top() >= 0);
         QVERIFY(editor->cursorRect().bottom() < editor->viewport()->height());
     }
+    QVERIFY(cappedHeight > singleLineHeight);
     QCOMPARE(editor->height(), cappedHeight);
     QVERIFY(editor->document()->begin().layout()->lineCount() > 5);
     editor->selectAll();
