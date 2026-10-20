@@ -304,8 +304,6 @@ if(UNIX AND NOT APPLE AND NOT HAIKU)
             DESTINATION "${ICON_DIR}/${ICON_SIZE}x${ICON_SIZE}/apps")
     endforeach()
     install(FILES ../pkg/org.speedcrunch.SpeedCrunch.metainfo.xml DESTINATION "${APP_DATA_DIR}")
-elseif(WIN32)
-    install(FILES ../pkg/COPYING.rtf DESTINATION ${DOC_INSTALL_DIR})
 endif()
 
 if(WIN32)

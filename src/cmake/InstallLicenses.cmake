@@ -1,4 +1,15 @@
+option(INSTALL_LICENSES "Install license texts and notices" OFF)
+if(NOT INSTALL_LICENSES)
+    return()
+endif()
+
 set(speedcrunch_license_dir "${DOC_INSTALL_DIR}/Licenses")
+
+if(WIN32)
+    install(FILES "${CMAKE_CURRENT_LIST_DIR}/../../pkg/COPYING.rtf"
+        DESTINATION "${DOC_INSTALL_DIR}")
+endif()
+
 set(speedcrunch_qt_notice [[
 Qt is supplied by the operating system or package provider. Its license texts,
 copyright notices and source information accompany the Qt packages.]])
@@ -52,7 +63,7 @@ endif()
 string(STRIP "${speedcrunch_qt_notice}" speedcrunch_qt_notice)
 configure_file("${CMAKE_CURRENT_LIST_DIR}/LICENSES.txt.in"
     "${CMAKE_CURRENT_BINARY_DIR}/LICENSES.txt" @ONLY)
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE"
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../../LICENSE"
     DESTINATION "${speedcrunch_license_dir}" RENAME SpeedCrunch-GPL-2.0.txt)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/LICENSES.txt"
     DESTINATION "${speedcrunch_license_dir}" RENAME README.txt)

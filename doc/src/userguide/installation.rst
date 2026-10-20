@@ -94,4 +94,21 @@ The SpeedCrunch source code is maintained on `GitHub`_ in a Git repository.
 For build requirements and instructions on compiling, running the tests, and
 installing from source, see :file:`BUILDING.md` at the repository root.
 
+License installation is optional on every platform. The CMake option
+``INSTALL_LICENSES`` defaults to ``OFF``. Set ``-DINSTALL_LICENSES=ON`` to install
+SpeedCrunch's license text and Qt usage notice. On Windows and macOS, this also
+installs the license texts and notices for bundled Qt components. Windows also
+installs :file:`COPYING.rtf` beside the application.
+
+Both ``BUILD_VARIANT_OFFICIAL_RELEASE`` and
+``BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE`` force ``INSTALL_LICENSES=ON``, even
+when ``-DINSTALL_LICENSES=OFF`` is supplied. ``BUILD_VARIANT_DEV_DEBUG`` leaves
+the option unchanged. CMake keeps the value in its cache when a variant is
+disabled. To stop installing license files in an existing build directory,
+disable the official variant and set ``-DINSTALL_LICENSES=OFF``.
+
+Package providers can leave license installation disabled and use their own
+packaging tools to include the required license files, such as Fedora's
+``%license LICENSE`` directive.
+
 .. _GitHub: https://github.com/heldercorreia/speedcrunch

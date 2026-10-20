@@ -31,6 +31,7 @@ if(BUILD_VARIANT_DEV_DEBUG)
 else()
     set(speedcrunch_variant_configuration Release)
     set(BUILD_TESTING OFF CACHE BOOL "Build the test executables and enable CTest" FORCE)
+    set(INSTALL_LICENSES ON CACHE BOOL "Install license texts and notices" FORCE)
 endif()
 
 set(ENABLE_UPDATE_CHECKS ON CACHE BOOL "Enable launch-time and manual update checks" FORCE)

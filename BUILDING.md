@@ -28,7 +28,8 @@ To clone the repository:
 
 The default build is intended for third-party package providers. In a fresh build
 directory, no feature or build-variant toggles are needed. Update checks, test
-executables, startup recording, and portable mode are all disabled by default.
+executables, startup recording, portable mode, and license installation are all
+disabled by default.
 This lets providers use their usual packaging workflow and deliver updates
 through their own channels.
 
@@ -91,8 +92,8 @@ Enable one when configuring, for example:
 
 | Toggle | Forced settings |
 | --- | --- |
-| `BUILD_VARIANT_OFFICIAL_RELEASE` | `BUILD_TESTING=OFF`, `ENABLE_UPDATE_CHECKS=ON`, `CMAKE_BUILD_TYPE=Release` |
-| `BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE` | `BUILD_TESTING=OFF`, `ENABLE_UPDATE_CHECKS=ON`, `CMAKE_BUILD_TYPE=Release`, `PORTABLE_SPEEDCRUNCH=ON`, `CPACK_GENERATOR=ZIP` |
+| `BUILD_VARIANT_OFFICIAL_RELEASE` | `BUILD_TESTING=OFF`, `ENABLE_UPDATE_CHECKS=ON`, `INSTALL_LICENSES=ON`, `CMAKE_BUILD_TYPE=Release` |
+| `BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE` | `BUILD_TESTING=OFF`, `ENABLE_UPDATE_CHECKS=ON`, `INSTALL_LICENSES=ON`, `CMAKE_BUILD_TYPE=Release`, `PORTABLE_SPEEDCRUNCH=ON`, `CPACK_GENERATOR=ZIP` |
 | `BUILD_VARIANT_DEV_DEBUG` | `BUILD_TESTING=ON`, `ENABLE_UPDATE_CHECKS=ON`, `ENABLE_STARTUP_DIAGNOSTICS=ON`, `CMAKE_BUILD_TYPE=Debug` |
 
 With `BUILD_VARIANT_OFFICIAL_RELEASE=ON` in a fresh build directory, packaging
@@ -121,9 +122,20 @@ the affected settings when switching in an existing directory.
 
 ### License files in installed packages
 
-Every platform installs SpeedCrunch's GPL text and a notice describing its use
-of Qt. CPack includes these files through the same install rules, for both
-portable and non-portable packages.
+License installation defaults to `OFF` on every platform. Set
+`-DINSTALL_LICENSES=ON` to install SpeedCrunch's GPL text and a notice describing
+its use of Qt. Both official release variants force this option to `ON`, even
+when `-DINSTALL_LICENSES=OFF` is supplied. The developer Debug variant leaves
+it unchanged. CPack includes the enabled license files through the same install
+rules, for both portable and non-portable packages.
+
+Package providers can leave this option off and include the required license
+files through their own packaging tools, such as Fedora's `%license LICENSE`
+directive. When switching an existing build directory away from an official
+variant, disable that variant and set `-DINSTALL_LICENSES=OFF` to clear the
+cached value.
+
+When enabled, the license files are installed in these directories:
 
 | Platform | License directory |
 | --- | --- |
@@ -132,8 +144,10 @@ portable and non-portable packages.
 | Linux and other Unix systems | `<prefix>/share/doc/speedcrunch/Licenses` by default |
 | Haiku | `<prefix>/documentation/SpeedCrunch/Licenses` |
 
-Windows and macOS packages also bundle Qt license texts and the SDK's component
-copyright notices. On macOS, these files are installed before the app is signed.
+With `INSTALL_LICENSES=ON`, Windows and macOS packages also bundle Qt license
+texts and the SDK's component copyright notices. Windows also installs
+`COPYING.rtf` beside the executable. On macOS, the license files are installed
+before the app is signed.
 Install **Sources** for the same Qt version in the Qt Online Installer. CMake
 looks for them in the `Src` directory beside the selected desktop kit. For
 another location, set `-DSPEEDCRUNCH_QT_SOURCE_DIR=/path/to/qt/sources`.
@@ -142,9 +156,9 @@ The SDK must include `sbom/<module>-<version>.spdx` files for `qtbase` and
 `qttools`. macOS also requires `qtsvg` and `qtimageformats`. Windows includes
 notices for those optional modules when their SPDX files are present in the
 selected kit, covering plugins added by `windeployqt` as well. These files are
-available in recent official Qt kits. Installation and packaging stop if the
-required license texts, versions or notices are missing. Ordinary application
-builds do not need these files.
+available in recent official Qt kits. With license installation enabled,
+installation and packaging stop if the required license texts, versions or
+notices are missing. Ordinary application builds do not need these files.
 
 Linux and Haiku installations use system Qt libraries and do not bundle Qt.
 Their Qt packages provide the corresponding licenses and notices, so installing
@@ -260,9 +274,9 @@ run `windeployqt` from the same Qt kit to collect any additional Qt dependencies
     "%QT_ROOT%\bin\windeployqt.exe" --release --no-compiler-runtime build\install\speedcrunch.exe
     build\install\speedcrunch.exe
 
-The install step copies the application, Qt libraries and plugins, license
-files, and the MSVC runtime files selected by CMake through
-`InstallRequiredSystemLibraries`.
+The install step copies the application, Qt libraries and plugins, and the
+MSVC runtime files selected by CMake through `InstallRequiredSystemLibraries`.
+It also copies license files when `INSTALL_LICENSES=ON`.
 `--no-compiler-runtime` tells `windeployqt` to leave compiler runtime deployment
 to CMake, while still collecting Qt dependencies. It does not remove the
 application's dependency on the MSVC runtime. When distributing the folder,
@@ -419,10 +433,14 @@ running CMake, in the form `cmake -S . -B build -Dvariable=value`.
   macOS build. Explicit values are preserved. Intel and universal builds are
   not supported. The Qt kit must support `arm64`.
   This value also supplies the architecture suffix in DMG filenames.
+- **INSTALL_LICENSES**: Install SpeedCrunch's license text and Qt usage notice,
+  plus bundled Qt license files on Windows and macOS. Defaults to `OFF` on all
+  platforms. Both official release variants force it to `ON`. Windows also
+  installs `COPYING.rtf` when this option is enabled.
 - **SPEEDCRUNCH_QT_SOURCE_DIR**: Set the matching Qt source tree used to collect
-  license texts when bundling Qt on Windows and macOS. Defaults to `Src` beside
-  the selected Qt desktop kit. It is not needed for ordinary application builds
-  or installations that use system Qt on Linux and Haiku.
+  license texts when `INSTALL_LICENSES=ON` on Windows and macOS. Defaults to
+  `Src` beside the selected Qt desktop kit. It is not needed for ordinary
+  application builds or installations that use system Qt on Linux and Haiku.
 - **BUILD_TESTING**: Set this to `ON` to build the test executables and register
   them with CTest. Defaults to `OFF`. See [TESTING.md](TESTING.md).
 - **ENABLE_UPDATE_CHECKS**: Set this to `ON` to enable update checks on launch
@@ -451,7 +469,8 @@ running CMake, in the form `cmake -S . -B build -Dvariable=value`.
   macOS and Haiku. Defaults to `share` under the installation prefix.
 - **CMAKE_INSTALL_DOCDIR**: Change the documentation directory on Unix systems
   except macOS and Haiku. Defaults to `share/doc/speedcrunch` under the
-  installation prefix. License files are installed in its `Licenses` subdirectory.
+  installation prefix. With `INSTALL_LICENSES=ON`, license files are installed
+  in its `Licenses` subdirectory.
 - **HTML_DOCS_DIR**: Change the path to the HTML manual that's embedded in the binary
   by the build. By default, a bundled prebuilt copy is used to minimize dependencies.
 
@@ -486,8 +505,9 @@ configured as absolute paths. For example:
 the example above, the executable is staged under
 `/tmp/speedcrunch-package/usr/bin`. Desktop entries and application metadata are
 installed under `applications` and `metainfo` within the shared data root.
-SpeedCrunch's license and Qt usage notice are installed under
-`share/doc/speedcrunch/Licenses`, unless `CMAKE_INSTALL_DOCDIR` is overridden.
+With `INSTALL_LICENSES=ON`, SpeedCrunch's license and Qt usage notice are
+installed under `share/doc/speedcrunch/Licenses`, unless `CMAKE_INSTALL_DOCDIR`
+is overridden. License installation is disabled by default.
 
 Desktop icons are installed in the `hicolor` theme: the SVG in
 `icons/hicolor/scalable/apps` and PNGs in
