@@ -2,6 +2,18 @@
 
 SpeedCrunch uses CMake as its build system.
 
+Set the release version in `project(speedcrunch VERSION ...)` in
+the root `CMakeLists.txt`. This is the only version value to edit for a new release.
+CMake uses it for the application, macOS bundle, packages, and license notices.
+It also generates the Windows version resource in the build directory.
+Changing the version or its resource template refreshes the generated file on
+the next build. Unchanged files are not rewritten.
+
+The manual reads the same version directly from CMake when Sphinx runs, so it
+can still be built separately. Application builds use the prebuilt manual and
+do not regenerate documentation. Published download links and historical
+`versionadded` entries stay tied to their respective releases.
+
 ## Requirements
 
 To build SpeedCrunch, you need:

@@ -1,7 +1,18 @@
 cmake_minimum_required(VERSION 3.16)
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/BuildVariants.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/MacOSDeploymentTarget.cmake")
-project(speedcrunch)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    # Keep direct src builds using the version declared at the repository root.
+    set(speedcrunch_root_cmake "${CMAKE_CURRENT_SOURCE_DIR}/../CMakeLists.txt")
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${speedcrunch_root_cmake}")
+    file(STRINGS "${speedcrunch_root_cmake}" speedcrunch_project_declaration
+        REGEX "^project\\(speedcrunch VERSION [0-9.]+\\)")
+    string(REGEX MATCH "[0-9]+(\\.[0-9]+)*" speedcrunch_VERSION "${speedcrunch_project_declaration}")
+    if(speedcrunch_VERSION STREQUAL "")
+        message(FATAL_ERROR "Cannot read the SpeedCrunch version from the root CMakeLists.txt")
+    endif()
+endif()
+project(speedcrunch VERSION "${speedcrunch_VERSION}")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -54,7 +65,17 @@ if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 endif()
 
-set(speedcrunch_VERSION "1.0")
+# Windows resources require four numeric version components.
+set(speedcrunch_VERSION_RC)
+foreach(component IN ITEMS MAJOR MINOR PATCH TWEAK)
+    set(version_component "${speedcrunch_VERSION_${component}}")
+    if(version_component STREQUAL "")
+        set(version_component 0)
+    endif()
+    list(APPEND speedcrunch_VERSION_RC "${version_component}")
+endforeach()
+string(REPLACE ";" "," speedcrunch_VERSION_RC "${speedcrunch_VERSION_RC}")
+configure_file(resources/speedcrunch.rc.in speedcrunch.rc @ONLY)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -94,10 +115,16 @@ if(WIN32)
     set(WIN32_RES_FILE ${CMAKE_CURRENT_BINARY_DIR}/speedcrunch.rc.obj)
     if(MINGW)
         add_custom_command(OUTPUT ${WIN32_RES_FILE}
-                           COMMAND windres.exe ${CMAKE_CURRENT_SOURCE_DIR}/resources/speedcrunch.rc ${WIN32_RES_FILE})
+                           COMMAND windres.exe ${CMAKE_CURRENT_BINARY_DIR}/speedcrunch.rc ${WIN32_RES_FILE}
+                           DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/speedcrunch.rc"
+                                   "${CMAKE_CURRENT_SOURCE_DIR}/resources/speedcrunch.ico"
+                           VERBATIM)
     else()
         add_custom_command(OUTPUT ${WIN32_RES_FILE}
-                           COMMAND rc.exe /fo ${WIN32_RES_FILE} ${CMAKE_CURRENT_SOURCE_DIR}/resources/speedcrunch.rc)
+                           COMMAND rc.exe /fo ${WIN32_RES_FILE} ${CMAKE_CURRENT_BINARY_DIR}/speedcrunch.rc
+                           DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/speedcrunch.rc"
+                                   "${CMAKE_CURRENT_SOURCE_DIR}/resources/speedcrunch.ico"
+                           VERBATIM)
     endif()
 endif()
 

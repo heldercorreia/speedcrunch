@@ -4,11 +4,11 @@
 #  include <winver.h>
 # endif
 
-SPEEDCRUNCH_ICON ICON DISCARDABLE "speedcrunch.ico"
+SPEEDCRUNCH_ICON ICON DISCARDABLE "@CMAKE_CURRENT_SOURCE_DIR@/resources/speedcrunch.ico"
 
 VS_VERSION_INFO VERSIONINFO
-	FILEVERSION 1,0,0,0
-	PRODUCTVERSION 1,0,0,0
+	FILEVERSION @speedcrunch_VERSION_RC@
+	PRODUCTVERSION @speedcrunch_VERSION_RC@
 	FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
 	FILEFLAGS VS_FF_DEBUG
@@ -24,7 +24,8 @@ VS_VERSION_INFO VERSIONINFO
 			BLOCK "040904B0"
 			BEGIN
 				VALUE "CompanyName", "http://SpeedCrunch.org\0"
-				VALUE "FileVersion", "1.0\0"
+				VALUE "FileVersion", "@speedcrunch_VERSION@\0"
+				VALUE "ProductVersion", "@speedcrunch_VERSION@\0"
 				VALUE "LegalCopyright", "Copyright 2004-2009 http://SpeedCrunch.org\0"
 			END
 		END
