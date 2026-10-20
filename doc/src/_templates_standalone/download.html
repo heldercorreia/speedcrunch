@@ -30,7 +30,7 @@
         {% if osx -%}
           <p>
             {% for (name, path) in osx -%}
-              <a class="btn btn-primary btn-md dl-button" href="{{ path }}"><i class="fa fa-laptop fa-lg" style="vertical-align:middle;"></i>&nbsp;{{ name }}</a>
+              <a class="btn btn-primary btn-md dl-button" href="{{ path }}"><i class="fa fa-{{ 'usb' if name == _('Portable') else 'laptop' }} fa-lg" style="vertical-align:middle;"></i>&nbsp;{{ name }}</a>
             {%- endfor %}
           </p>
         {%- else %}
@@ -121,7 +121,7 @@
             (_('Portable'), 'https://github.com/heldercorreia/speedcrunch/releases/download/v1.1.0/SpeedCrunch-1.1-windows-x64.zip'),],
 
           osx=[
-            (_('Download'), 'https://github.com/heldercorreia/speedcrunch/releases/download/v1.1.0/SpeedCrunch-1.1-macos-arm64.dmg'),
+            (_('Installer'), 'https://github.com/heldercorreia/speedcrunch/releases/download/v1.1.0/SpeedCrunch-1.1-macos-arm64.dmg'),
             (_('Portable'), 'https://github.com/heldercorreia/speedcrunch/releases/download/v1.1.0/SpeedCrunch-1.1-macos-arm64.zip'),],
 
           linux=[('Flathub', 'https://flathub.org/apps/details/org.speedcrunch.SpeedCrunch'),],
