@@ -9,9 +9,18 @@ Installation
 Microsoft Windows
 -----------------
 
-SpeedCrunch for Windows requires Windows Vista or newer (32-bit and 64-bit versions).
-You can use choose to use either the installer or the portable
-version of SpeedCrunch. Both of these are available from `the SpeedCrunch website <sc_>`_.
+SpeedCrunch requires 64-bit Windows 10 (version 1809 or later) or Windows 11.
+Windows 7, 8 and 8.1 are not supported by SpeedCrunch 1.0 or later.
+
+.. note::
+
+   For older Windows versions, use SpeedCrunch 0.12, available in the
+   "Older Versions" section of the
+   `download page <https://www.speedcrunch.org/download.html>`_.
+
+You can choose either the installer or the portable version of SpeedCrunch.
+Both have the same system requirements and are available from
+`the SpeedCrunch website <sc_>`_.
 
 .. _sc: http://speedcrunch.org
 
