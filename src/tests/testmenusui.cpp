@@ -38,7 +38,336 @@ private slots:
     void menu_theme_cache_keeps_bar_and_popup_colors_separate();
     void menu_theme_cache_reloads_named_themes_on_refresh();
     void menu_theme_cache_follows_the_fallback_palette();
+    void themed_menu_icons_preserve_shape_and_follow_item_state_data();
+    void themed_menu_icons_preserve_shape_and_follow_item_state();
+    void context_menu_icons_follow_theme_changes_data();
+    void context_menu_icons_follow_theme_changes();
+    void disabled_menu_icons_keep_visible_state_data();
+    void disabled_menu_icons_keep_visible_state();
+    void disabled_context_menu_labels_are_dimmed_data();
+    void disabled_context_menu_labels_are_dimmed();
 };
+
+void TestMenusUi::disabled_context_menu_labels_are_dimmed_data()
+{
+    QTest::addColumn<QString>("styleName");
+    QTest::addColumn<QString>("background");
+    for (const QString& style : {QStringLiteral("Fusion"), QStringLiteral("Windows")}) {
+        QTest::newRow(qPrintable(style + QStringLiteral("-dark"))) << style << QStringLiteral("#232136");
+        QTest::newRow(qPrintable(style + QStringLiteral("-light"))) << style << QStringLiteral("#e5eee8");
+    }
+}
+
+void TestMenusUi::disabled_context_menu_labels_are_dimmed()
+{
+    QFETCH(QString, styleName);
+    QFETCH(QString, background);
+    MainWindowStateGuard guard;
+    guard.settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), background}});
+    QScopedPointer<QStyle> style(QStyleFactory::create(styleName));
+    QVERIFY(style != nullptr);
+    QMenu menu;
+    menu.setStyle(style.data());
+    menu.setFont(QFont(menu.font().family(), 16));
+    QPixmap glyph(16, 16);
+    glyph.fill(Qt::transparent);
+    QPainter painter(&glyph);
+    painter.fillRect(QRect(3, 3, 10, 10), Qt::black);
+    painter.end();
+    const QIcon original(glyph);
+    QAction* action = menu.addAction(original, QStringLiteral("Copy selected expression\tCtrl+C"));
+    menu.ensurePolished();
+    MenuStyle::apply(&menu);
+    menu.popup(QPoint(20, 20));
+    QCoreApplication::processEvents();
+    const auto coverage = [&](const QImage& image, const QRect& rect) {
+        const QColor foreground = menu.palette().color(QPalette::WindowText);
+        const QColor fill = menu.palette().color(QPalette::Window);
+        const int dr = foreground.red() - fill.red();
+        const int dg = foreground.green() - fill.green();
+        const int db = foreground.blue() - fill.blue();
+        const int distance = dr * dr + dg * dg + db * db;
+        qreal maximum = 0;
+        const QRect bounded = imageRectForWidgetRect(image, rect).intersected(image.rect());
+        for (int y = bounded.top(); y <= bounded.bottom(); ++y) {
+            for (int x = bounded.left(); x <= bounded.right(); ++x) {
+                const QColor pixel = image.pixelColor(x, y);
+                const qreal value = qreal((pixel.red() - fill.red()) * dr
+                    + (pixel.green() - fill.green()) * dg + (pixel.blue() - fill.blue()) * db) / distance;
+                maximum = qMax(maximum, value);
+            }
+        }
+        return maximum;
+    };
+    const QRect row = menu.actionGeometry(action);
+    const int shortcutWidth = menu.fontMetrics().horizontalAdvance(QStringLiteral("Ctrl+C")) + 20;
+    const QRect label = row.adjusted(36, 2, -shortcutWidth, -2);
+    const QRect shortcut(row.right() - shortcutWidth + 4, row.top() + 2,
+                         shortcutWidth - 12, row.height() - 4);
+    const QImage enabled = menu.grab().toImage();
+    for (const QRect& rect : {label, shortcut})
+        QVERIFY(coverage(enabled, rect) > 0.8);
+    action->setEnabled(false);
+    const QImage disabled = menu.grab().toImage();
+    for (const QRect& rect : {label, shortcut}) {
+        const qreal disabledCoverage = coverage(disabled, rect);
+        QVERIFY2(disabledCoverage > 0.25 && disabledCoverage < 0.65,
+                 qPrintable(QStringLiteral("Disabled text coverage: %1").arg(disabledCoverage)));
+    }
+    action->setEnabled(true);
+    const QImage restored = menu.grab().toImage();
+    for (const QRect& rect : {label, shortcut})
+        QVERIFY(coverage(restored, rect) > 0.8);
+    menu.hide();
+    guard.settings->menuAppearance = Settings::MenuAppearanceSystem;
+    MenuStyle::refresh();
+    QCOMPARE(action->icon().cacheKey(), original.cacheKey());
+}
+
+void TestMenusUi::disabled_menu_icons_keep_visible_state_data()
+{
+    QTest::addColumn<QString>("background");
+    QTest::addColumn<bool>("sourceFadesDisabled");
+    QTest::addColumn<qreal>("scale");
+    for (const bool dark : {false, true}) {
+        for (const bool sourceFadesDisabled : {false, true}) {
+            for (const qreal scale : {1.0, 1.25, 2.0}) {
+                const QByteArray name = QStringLiteral("dark-%1-native-fade-%2-scale-%3")
+                    .arg(dark).arg(sourceFadesDisabled).arg(scale).toLatin1();
+                QTest::newRow(name.constData())
+                    << (dark ? QStringLiteral("#232136") : QStringLiteral("#e5eee8"))
+                    << sourceFadesDisabled << scale;
+            }
+        }
+    }
+}
+
+void TestMenusUi::disabled_menu_icons_keep_visible_state()
+{
+    QFETCH(QString, background);
+    QFETCH(bool, sourceFadesDisabled);
+    QFETCH(qreal, scale);
+    MainWindowStateGuard guard;
+    guard.settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), background}});
+    QIcon source;
+    for (const QIcon::Mode mode : {QIcon::Normal, QIcon::Disabled}) {
+        QPixmap glyph(32, 32);
+        glyph.setDevicePixelRatio(2.0);
+        glyph.fill(Qt::transparent);
+        QPainter painter(&glyph);
+        // Windows font icons use an opaque gray tint. Other engines can
+        // reduce opacity, which must survive recoloring without another fade.
+        const QColor color = mode == QIcon::Disabled
+            ? QColor(128, 128, 128, sourceFadesDisabled ? 96 : 255) : QColor(Qt::black);
+        painter.fillRect(QRect(3, 3, 10, 10), color);
+        painter.end();
+        source.addPixmap(glyph, mode);
+    }
+    QMenu menu;
+    QAction* action = menu.addAction(source, QStringLiteral("Copy"));
+    menu.ensurePolished();
+    MenuStyle::apply(&menu);
+    const QImage enabled = action->icon().pixmap(QSize(16, 16), scale, QIcon::Normal).toImage();
+    const QImage disabled = action->icon().pixmap(QSize(16, 16), scale, QIcon::Disabled).toImage();
+    const QPoint center(disabled.width() / 2, disabled.height() / 2);
+    QCOMPARE(enabled.pixelColor(center).alpha(), 255);
+    QCOMPARE(disabled.pixelColor(center).alpha(), sourceFadesDisabled ? 96 : 128);
+    QCOMPARE(disabled.pixelColor(0, 0).alpha(), 0);
+    const auto composite = [&](const QImage& glyph) {
+        QImage surface(glyph.size(), QImage::Format_ARGB32_Premultiplied);
+        surface.setDevicePixelRatio(glyph.devicePixelRatio());
+        surface.fill(menu.palette().color(QPalette::Window));
+        QPainter painter(&surface);
+        painter.drawImage(QPointF(), glyph);
+        return surface;
+    };
+    const QColor enabledPixel = composite(enabled).pixelColor(center);
+    const QColor disabledPixel = composite(disabled).pixelColor(center);
+    const QColor fill = menu.palette().color(QPalette::Window);
+    QVERIFY(disabledPixel != enabledPixel);
+    QVERIFY(qAbs(qGray(disabledPixel.rgb()) - qGray(fill.rgb()))
+            < qAbs(qGray(enabledPixel.rgb()) - qGray(fill.rgb())));
+    action->setEnabled(false);
+    menu.popup(QPoint(20, 20));
+    QCoreApplication::processEvents();
+    const QImage rendered = menu.grab().toImage();
+    const QRect row = imageRectForWidgetRect(rendered, menu.actionGeometry(action));
+    const QRect iconArea(row.x(), row.y(), qRound(24 * rendered.devicePixelRatio()), row.height());
+    QVERIFY(firstPixelMatchingColor(rendered, iconArea, disabledPixel, 4) != QPoint(-1, -1));
+    action->setEnabled(true);
+    const QImage restored = menu.grab().toImage();
+    QVERIFY(firstPixelMatchingColor(restored, iconArea, enabledPixel, 4) != QPoint(-1, -1));
+    menu.hide();
+    guard.settings->menuAppearance = Settings::MenuAppearanceSystem;
+    MenuStyle::refresh();
+    QCOMPARE(action->icon().cacheKey(), source.cacheKey());
+}
+
+void TestMenusUi::themed_menu_icons_preserve_shape_and_follow_item_state_data()
+{
+    QTest::addColumn<int>("mode");
+    QTest::addColumn<bool>("checked");
+    QTest::addColumn<qreal>("scale");
+    for (const QIcon::Mode mode : {QIcon::Normal, QIcon::Active, QIcon::Selected, QIcon::Disabled}) {
+        for (const bool checked : {false, true}) {
+            for (const qreal scale : {1.0, 1.25, 2.0}) {
+                const QByteArray name = QStringLiteral("mode-%1-checked-%2-scale-%3")
+                    .arg(int(mode)).arg(checked).arg(scale).toLatin1();
+                QTest::newRow(name.constData()) << int(mode) << checked << scale;
+            }
+        }
+    }
+}
+
+void TestMenusUi::themed_menu_icons_preserve_shape_and_follow_item_state()
+{
+    QFETCH(int, mode);
+    QFETCH(bool, checked);
+    QFETCH(qreal, scale);
+    const auto iconMode = static_cast<QIcon::Mode>(mode);
+    const auto state = checked ? QIcon::On : QIcon::Off;
+    QIcon source;
+    for (const QIcon::State sourceState : {QIcon::Off, QIcon::On}) {
+        QPixmap mask(32, 32);
+        mask.setDevicePixelRatio(2.0);
+        mask.fill(Qt::transparent);
+        QPainter painter(&mask);
+        painter.fillRect(sourceState == QIcon::On ? QRect(3, 2, 4, 12) : QRect(2, 3, 12, 4), Qt::black);
+        painter.fillRect(QRect(10, 10, 3, 3), QColor(0, 0, 0, 128));
+        painter.end();
+        for (const QIcon::Mode sourceMode : {QIcon::Normal, QIcon::Active, QIcon::Selected, QIcon::Disabled})
+            source.addPixmap(mask, sourceMode, sourceState);
+    }
+    const qint64 sourceKey = source.cacheKey();
+    const QPixmap original = source.pixmap(QSize(16, 16), scale, iconMode, state);
+    QPalette palette;
+    palette.setColor(QPalette::Active, QPalette::WindowText, QColor("#ecf4fa"));
+    palette.setColor(QPalette::Disabled, QPalette::WindowText, QColor("#a9afb9"));
+    palette.setColor(QPalette::Active, QPalette::HighlightedText, QColor("#292035"));
+    const QIcon themed = MenuStyle::themedIcon(source, palette);
+    const QPixmap actual = themed.pixmap(QSize(16, 16), scale, iconMode, state);
+    QCOMPARE(actual.size(), original.size());
+    QCOMPARE(actual.devicePixelRatio(), original.devicePixelRatio());
+    const QColor expected = palette.color(iconMode == QIcon::Disabled ? QPalette::Disabled : QPalette::Active,
+        iconMode == QIcon::Active || iconMode == QIcon::Selected ? QPalette::HighlightedText : QPalette::WindowText);
+    const QImage image = actual.toImage();
+    const QImage mask = original.toImage();
+    int opaquePixels = 0;
+    for (int y = 0; y < image.height(); ++y) {
+        for (int x = 0; x < image.width(); ++x) {
+            const QColor pixel = image.pixelColor(x, y);
+            QCOMPARE(pixel.alpha(), mask.pixelColor(x, y).alpha());
+            if (pixel.alpha() == 255) {
+                QCOMPARE(pixel, expected);
+                ++opaquePixels;
+            }
+        }
+    }
+    QVERIFY(opaquePixels > 0);
+    QImage painted(actual.size(), QImage::Format_ARGB32_Premultiplied);
+    painted.setDevicePixelRatio(actual.devicePixelRatio());
+    painted.fill(Qt::transparent);
+    QPainter painter(&painted);
+    themed.paint(&painter, QRect(QPoint(), actual.deviceIndependentSize().toSize()), Qt::AlignCenter, iconMode, state);
+    painter.end();
+    QCOMPARE(painted, image.convertToFormat(QImage::Format_ARGB32_Premultiplied));
+    QCOMPARE(source.cacheKey(), sourceKey);
+    QCOMPARE(source.pixmap(QSize(16, 16), scale, iconMode, state).toImage(), mask);
+    QVERIFY(MenuStyle::themedIcon(QIcon(), palette).isNull());
+}
+
+void TestMenusUi::context_menu_icons_follow_theme_changes_data()
+{
+    QTest::addColumn<QString>("styleName");
+    QTest::addColumn<bool>("classic");
+    QTest::newRow("fusion-modern") << QStringLiteral("Fusion") << false;
+    QTest::newRow("fusion-classic") << QStringLiteral("Fusion") << true;
+    QTest::newRow("windows-modern") << QStringLiteral("Windows") << false;
+    QTest::newRow("windows-classic") << QStringLiteral("Windows") << true;
+}
+
+void TestMenusUi::context_menu_icons_follow_theme_changes()
+{
+    QFETCH(QString, styleName);
+    QFETCH(bool, classic);
+    MainWindowStateGuard guard;
+    guard.settings->menuAppearance = Settings::MenuAppearanceSystem;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->editorDisplayStyle = classic ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern;
+    QScopedPointer<QStyle> style(QStyleFactory::create(styleName));
+    QVERIFY(style != nullptr);
+    Editor editor;
+    editor.insert(QStringLiteral("123"));
+    editor.selectAll();
+    QScopedPointer<QMenu> menu(editor.createStandardContextMenu());
+    menu->setStyle(style.data());
+    menu->ensurePolished();
+    MenuStyle::apply(menu.data());
+    QAction* copy = menu->findChild<QAction*>(QStringLiteral("edit-copy"));
+    QVERIFY(copy != nullptr);
+    const QIcon native = copy->icon();
+    // Supply a glyph on offscreen platforms without native icons.
+    QPixmap glyph(16, 16);
+    glyph.fill(Qt::transparent);
+    QPainter painter(&glyph);
+    painter.fillRect(QRect(4, 3, 8, 10), Qt::black);
+    painter.end();
+    if (copy->icon().isNull())
+        copy->setIcon(QIcon(glyph));
+    const QIcon original = copy->icon();
+    const auto verify = [&](QAction* action) {
+        QVERIFY(!action->icon().isNull());
+        for (const QIcon::Mode mode : {QIcon::Normal, QIcon::Active, QIcon::Selected, QIcon::Disabled}) {
+            const QImage image = action->icon().pixmap(QSize(16, 16), mode).toImage();
+            const QColor expected = menu->palette().color(mode == QIcon::Disabled ? QPalette::Disabled : QPalette::Active,
+                mode == QIcon::Active || mode == QIcon::Selected ? QPalette::HighlightedText : QPalette::WindowText);
+            QVERIFY(firstPixelMatchingColor(image, image.rect(), expected, 4) != QPoint(-1, -1));
+        }
+        menu->popup(QPoint(20, 20));
+        QCoreApplication::processEvents();
+        for (const bool selected : {false, true}) {
+            menu->setActiveAction(selected ? action : nullptr);
+            const QImage rendered = menu->grab().toImage();
+            const qreal dpr = rendered.devicePixelRatio();
+            const QRect row = menu->actionGeometry(action);
+            const QRect iconArea(qRound(row.x() * dpr), qRound(row.y() * dpr),
+                                 qRound(qMin(24, row.width()) * dpr), qRound(row.height() * dpr));
+            QVERIFY(firstPixelMatchingColor(rendered, iconArea,
+                menu->palette().color(selected ? QPalette::HighlightedText : QPalette::WindowText), 4)
+                != QPoint(-1, -1));
+        }
+        menu->setActiveAction(nullptr);
+        menu->hide();
+    };
+    for (const QString& background : {QStringLiteral("#232136"), QStringLiteral("#e5eee8")}) {
+        guard.settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
+        guard.settings->customColorSchemeJson = themeJsonString(
+            QJsonObject{{QStringLiteral("background"), background}});
+        MenuStyle::refresh();
+        QCoreApplication::processEvents();
+        verify(copy);
+        const qint64 themedKey = copy->icon().cacheKey();
+        MenuStyle::apply(menu.data());
+        QCOMPARE(copy->icon().cacheKey(), themedKey);
+        QIcon replacement(glyph);
+        copy->setIcon(replacement);
+        verify(copy);
+        QAction* added = menu->addAction(QIcon(glyph), QStringLiteral("Later action"));
+        verify(added);
+        guard.settings->menuAppearance = Settings::MenuAppearanceSystem;
+        MenuStyle::refresh();
+        QCOMPARE(copy->icon().cacheKey(), replacement.cacheKey());
+        copy->setIcon(original);
+    }
+    if (!native.isNull())
+        QCOMPARE(copy->icon().cacheKey(), native.cacheKey());
+}
 
 void TestMenusUi::menu_theme_cache_keeps_bar_and_popup_colors_separate()
 {

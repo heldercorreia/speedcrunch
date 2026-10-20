@@ -7,6 +7,7 @@
 #include <QColor>
 
 class QMenu;
+class QIcon;
 class QComboBox;
 class QPalette;
 class QWidget;
@@ -15,6 +16,7 @@ namespace MenuStyle {
 void install();
 void refresh();
 void apply(QWidget* widget);
+QIcon themedIcon(const QIcon& source, const QPalette& palette);
 QPalette systemPalette(const QWidget* widget);
 QPalette systemComboPopupPalette(const QComboBox* combo);
 void setThemeColors(QMenu* menu, const QColor& background, const QColor& foreground,

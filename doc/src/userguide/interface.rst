@@ -853,6 +853,8 @@ User Interface Settings
       system theme while SpeedCrunch is running.
     * :guilabel:`SpeedCrunch Theme` (the default) uses the selected SpeedCrunch
       theme for menu backgrounds and text, including highlighted items.
+      Menu icons also follow the theme's text colors. In popup menus, disabled
+      labels, shortcut hints, and icons appear dimmed.
 
     This setting applies to the menu bar shown inside the application window,
     dropdown menus, context menus, and dropdown lists in attached and floating

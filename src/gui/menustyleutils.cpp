@@ -15,12 +15,14 @@
 #include <QAbstractItemView>
 #include <QComboBox>
 #include <QEvent>
+#include <QIconEngine>
 #include <QJsonDocument>
 #include <QImage>
 #include <QLabel>
 #include <QLibrary>
 #include <QMenu>
 #include <QMenuBar>
+#include <QPainter>
 #include <QPointer>
 #include <QScopedValueRollback>
 #include <QProxyStyle>
@@ -246,6 +248,109 @@ struct CachedThemeColors {
 };
 CachedThemeColors cachedThemeColors;
 
+class MenuIconEngine : public QIconEngine {
+public:
+    MenuIconEngine(const QIcon& source, const QPalette& palette)
+        : m_source(source), m_palette(palette) {}
+
+    QIconEngine* clone() const override { return new MenuIconEngine(m_source, m_palette); }
+    bool isNull() override { return m_source.isNull(); }
+    QString iconName() override { return m_source.name(); }
+    QSize actualSize(const QSize& size, QIcon::Mode mode, QIcon::State state) override
+    {
+        return m_source.actualSize(size, mode, state);
+    }
+    QList<QSize> availableSizes(QIcon::Mode mode, QIcon::State state) override
+    {
+        return m_source.availableSizes(mode, state);
+    }
+    QPixmap pixmap(const QSize& size, QIcon::Mode mode, QIcon::State state) override
+    {
+        return scaledPixmap(size, mode, state, 1.0);
+    }
+    QPixmap scaledPixmap(const QSize& size, QIcon::Mode mode, QIcon::State state,
+                         qreal scale) override
+    {
+        QPixmap result = m_source.pixmap(size, scale, mode, state);
+        if (result.isNull())
+            return result;
+        const QPalette::ColorGroup group = mode == QIcon::Disabled ? QPalette::Disabled : QPalette::Active;
+        const QPalette::ColorRole role = mode == QIcon::Active || mode == QIcon::Selected
+            ? QPalette::HighlightedText : QPalette::WindowText;
+        QColor foreground = m_palette.color(group, role);
+        if (mode == QIcon::Disabled
+            && foreground == m_palette.color(QPalette::Active, QPalette::WindowText)) {
+            const auto maximumAlpha = [](const QPixmap& pixmap) {
+                const QImage image = pixmap.toImage().convertToFormat(QImage::Format_ARGB32);
+                int maximum = 0;
+                for (int y = 0; y < image.height(); ++y) {
+                    const auto* row = reinterpret_cast<const QRgb*>(image.constScanLine(y));
+                    for (int x = 0; x < image.width(); ++x) {
+                        maximum = qMax(maximum, qAlpha(row[x]));
+                        if (maximum == 255)
+                            return maximum;
+                    }
+                }
+                return maximum;
+            };
+            const QPixmap enabled = m_source.pixmap(size, scale, QIcon::Normal, state);
+            // Recoloring removes gray disabled tints from opaque glyphs.
+            // Fade those, but preserve opacity supplied by the source icon.
+            if (maximumAlpha(result) >= maximumAlpha(enabled))
+                foreground.setAlphaF(foreground.alphaF() * 0.5);
+        }
+        QPainter painter(&result);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+        painter.fillRect(QRectF(QPointF(), result.deviceIndependentSize()), foreground);
+        return result;
+    }
+    void paint(QPainter* painter, const QRect& rect, QIcon::Mode mode, QIcon::State state) override
+    {
+        const QPixmap image = scaledPixmap(rect.size(), mode, state, painter->device()->devicePixelRatioF());
+        const QRectF target(QRectF(rect).center() - QPointF(image.deviceIndependentSize().width() / 2,
+                                                         image.deviceIndependentSize().height() / 2),
+                            image.deviceIndependentSize());
+        painter->drawPixmap(target, image, QRectF(image.rect()));
+    }
+
+private:
+    QIcon m_source;
+    QPalette m_palette;
+};
+
+void updateMenuIcons(QMenu* menu, const QPalette* palette)
+{
+    if (menu == nullptr)
+        return;
+    for (QAction* action : menu->actions()) {
+        constexpr auto SourceProperty = "speedcrunchMenuIconSource";
+        constexpr auto ThemedKeyProperty = "speedcrunchMenuIconKey";
+        constexpr auto PaletteProperty = "speedcrunchMenuIconPalette";
+        const QIcon current = action->icon();
+        const bool hasSource = action->property(SourceProperty).isValid();
+        const bool usesThemedIcon = hasSource
+            && current.cacheKey() == action->property(ThemedKeyProperty).toLongLong();
+        const QIcon source = usesThemedIcon ? action->property(SourceProperty).value<QIcon>() : current;
+        if (palette != nullptr && !source.isNull()) {
+            if (usesThemedIcon && action->property(PaletteProperty).value<QPalette>() == *palette)
+                continue;
+            // Platform icons can ignore the menu's palette. Keep the original
+            // so System appearance can restore it.
+            const QIcon themed = MenuStyle::themedIcon(source, *palette);
+            action->setProperty(SourceProperty, source);
+            action->setProperty(ThemedKeyProperty, themed.cacheKey());
+            action->setProperty(PaletteProperty, *palette);
+            action->setIcon(themed);
+        } else if (hasSource) {
+            action->setProperty(SourceProperty, QVariant());
+            action->setProperty(ThemedKeyProperty, QVariant());
+            action->setProperty(PaletteProperty, QVariant());
+            if (usesThemedIcon)
+                action->setIcon(source);
+        }
+    }
+}
+
 MenuColors themeColors(const QWidget* widget)
 {
     const QVariantList saved = widget->property(ThemeColorsProperty).toList();
@@ -358,6 +463,7 @@ protected:
             scheduleRefresh();
         }
         if (event->type() == QEvent::Polish || event->type() == QEvent::Show
+            || event->type() == QEvent::ActionAdded || event->type() == QEvent::ActionChanged
             || event->type() == QEvent::ApplicationPaletteChange
             || event->type() == QEvent::PaletteChange || event->type() == QEvent::StyleChange) {
             QWidget* widget = qobject_cast<QWidget*>(watched);
@@ -420,6 +526,7 @@ private:
                 bar->update();
             }
             if (auto* menu = qobject_cast<QMenu*>(widget)) {
+                updateMenuIcons(menu, nullptr);
                 for (QAction* action : menu->actions()) {
                     auto* widgetAction = qobject_cast<QWidgetAction*>(action);
                     QWidget* content = widgetAction != nullptr ? widgetAction->defaultWidget() : nullptr;
@@ -461,12 +568,18 @@ private:
                 "QMenu::item:selected { background-color: %3; color: %4; }"))
             .arg(colors.background.name(), colors.foreground.name(),
                  colors.selectedBackground.name(), colors.selectedForeground.name());
-        if (bar == nullptr)
+        if (bar == nullptr) {
             style = style.arg(UiConfig::ControlCornerRadius);
+            QColor disabledForeground = colors.foreground;
+            disabledForeground.setAlphaF(disabledForeground.alphaF() * 0.5);
+            style += QStringLiteral("QMenu::item:disabled { color: %1; }")
+                         .arg(disabledForeground.name(QColor::HexArgb));
+        }
         if (widget->styleSheet() != style)
             widget->setStyleSheet(style);
         if (widget->palette() != palette)
             widget->setPalette(palette);
+        updateMenuIcons(qobject_cast<QMenu*>(widget), &palette);
     }
 
     bool m_updating = false;
@@ -506,6 +619,11 @@ void MenuStyle::apply(QWidget* widget)
     install();
     if (appearanceFilter())
         appearanceFilter()->apply(widget);
+}
+
+QIcon MenuStyle::themedIcon(const QIcon& source, const QPalette& palette)
+{
+    return source.isNull() ? QIcon() : QIcon(new MenuIconEngine(source, palette));
 }
 
 QPalette MenuStyle::systemPalette(const QWidget* widget)
