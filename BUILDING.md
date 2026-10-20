@@ -316,7 +316,8 @@ to the build directory and run the Visual Studio `PACKAGE` target:
     cmake --build . --config Release --target PACKAGE
     cd ..
 
-The installer is written to `build`.
+The installer is written to `build` as `SpeedCrunch-1.1-windows-x64.exe`
+for the 64-bit Windows build above.
 
 To generate an official portable ZIP archive instead, configure a separate build
 directory with `-DBUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE=ON`. From the repository root,
@@ -330,8 +331,10 @@ build the application, then run the same `PACKAGE` target in that build director
 
 The ZIP archive is written to `build-portable`. CPack assembles it using the
 project's install rules, so a separate `cmake --install` command is not needed.
-The filename follows `SpeedCrunch-<version>-<system>.zip`, for example
-`SpeedCrunch-1.0-win64.zip` for a 64-bit Windows build.
+The filename follows `SpeedCrunch-<version>-<platform>-<architecture>.zip`,
+for example `SpeedCrunch-1.1-windows-x64.zip` for a 64-bit Windows build.
+Windows packages use `windows-x64` for 64-bit builds or `windows-x86` for
+32-bit builds, for both installers and ZIP archives.
 Portable mode stores settings and user data beside the executable. Selecting
 the ZIP generator explicitly avoids requiring NSIS to create this package.
 
@@ -399,8 +402,8 @@ Adjust the Qt path to match your installation. CMake and CPack must be on
 verifies an ad hoc signature, then creates the DMG. No separate packaging
 script or `cmake --install` command is needed.
 
-The output is `build-dmg/SpeedCrunch-<version>-arm64.dmg`, for example
-`SpeedCrunch-1.0-arm64.dmg`. This workflow does not notarize the app.
+The output is `build-dmg/SpeedCrunch-<version>-macos-arm64.dmg`, for example
+`SpeedCrunch-1.1-macos-arm64.dmg`. This workflow does not notarize the app.
 
 ### Portable macOS ZIP
 
@@ -411,8 +414,10 @@ To build a portable ZIP with the official Qt kit, configure a separate directory
     cmake --build build-portable --config Release --target package
 
 The archive is written to `build-portable` using the same filename pattern as
-Windows: `SpeedCrunch-<version>-<system>.zip`. For example, version 1.0 produces
-`SpeedCrunch-1.0-Darwin.zip` on macOS.
+Windows: `SpeedCrunch-<version>-<platform>-<architecture>.zip`. For example,
+version 1.1 produces `SpeedCrunch-1.1-macos-arm64.zip` on macOS. Both macOS
+package formats use the `macos-arm64` suffix, while 64-bit Windows packages
+use `windows-x64`.
 
 The ZIP contains `SpeedCrunch.app` with its Qt libraries and plugins. Extract it
 into a writable folder. On first launch, SpeedCrunch creates `SpeedCrunch-data`
@@ -456,7 +461,7 @@ running CMake, in the form `cmake -S . -B build -Dvariable=value`.
 - **CMAKE_OSX_ARCHITECTURES**: Defaults to `arm64` for the supported Apple Silicon
   macOS build. Explicit values are preserved. Intel and universal builds are
   not supported. The Qt kit must support `arm64`.
-  This value also supplies the architecture suffix in DMG filenames.
+  This value also supplies the architecture in macOS DMG and ZIP filenames.
 - **INSTALL_LICENSES**: Install SpeedCrunch's license text and Qt usage notice,
   plus bundled Qt license files on Windows and macOS. Defaults to `OFF` on all
   platforms. Both official release variants force it to `ON`. Windows also
