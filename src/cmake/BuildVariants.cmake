@@ -32,6 +32,7 @@ else()
     set(speedcrunch_variant_configuration Release)
     set(BUILD_TESTING OFF CACHE BOOL "Build the test executables and enable CTest" FORCE)
     set(INSTALL_LICENSES ON CACHE BOOL "Install license texts and notices" FORCE)
+    set(STRIP_BINARY ON CACHE BOOL "Remove debug symbols from the application binary" FORCE)
 endif()
 
 set(ENABLE_UPDATE_CHECKS ON CACHE BOOL "Enable launch-time and manual update checks" FORCE)

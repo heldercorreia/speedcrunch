@@ -61,13 +61,25 @@ that support several configurations in one build directory, such as Xcode,
 Visual Studio, and Ninja Multi-Config. It has no effect with Makefiles or
 ordinary Ninja.
 
-CMake strips the application binary in every `Release` build, including the
-default build and both official release variants. On macOS, the native strip
-tool runs after linking and before deployment and final bundle signing. GNU-style
-toolchains strip during linking. MSVC links without debug information or a PDB.
-This applies to the executable in the build directory, so installed copies and
-packages also receive the stripped binary. `Debug`, `RelWithDebInfo`, and
-`MinSizeRel` keep their usual symbol settings. Test executables are unaffected.
+Stripping is disabled by default on every platform, including ordinary `Release`
+builds. Both official release variants force `STRIP_BINARY=ON`, so the
+official Windows installer and ZIP, and macOS DMG and ZIP, contain application
+binaries without debug symbols. You can also enable stripping explicitly with
+`-DSTRIP_BINARY=ON`. The option controls stripping directly, regardless
+of the selected configuration. The developer Debug variant leaves it unchanged.
+
+When enabled, the native macOS strip tool runs after linking and before deployment
+and final bundle signing. GNU-style toolchains strip during linking. MSVC links
+without debug information or a PDB. This applies to the executable in the build
+directory, so installed copies and packages also receive the stripped binary.
+Test executables are unaffected.
+
+Package providers should leave stripping disabled so their packaging tools can
+extract debug information before stripping the installed binaries. SpeedCrunch
+keeps the compiler flags supplied by the toolchain or package provider. Disabling
+stripping preserves generated symbols but does not enable debug information by
+itself. If you turn off an official variant in an existing build directory, also
+set `-DSTRIP_BINARY=OFF` to reset its cached value.
 
 With Makefiles or ordinary Ninja, application and test executables are placed
 directly under the chosen build directory. The application is `build/speedcrunch`
@@ -104,8 +116,8 @@ Enable one when configuring, for example:
 
 | Toggle | Forced settings |
 | --- | --- |
-| `BUILD_VARIANT_OFFICIAL_RELEASE` | `BUILD_TESTING=OFF`, `ENABLE_UPDATE_CHECKS=ON`, `INSTALL_LICENSES=ON`, `CMAKE_BUILD_TYPE=Release` |
-| `BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE` | `BUILD_TESTING=OFF`, `ENABLE_UPDATE_CHECKS=ON`, `INSTALL_LICENSES=ON`, `CMAKE_BUILD_TYPE=Release`, `PORTABLE_SPEEDCRUNCH=ON`, `CPACK_GENERATOR=ZIP` |
+| `BUILD_VARIANT_OFFICIAL_RELEASE` | `BUILD_TESTING=OFF`, `ENABLE_UPDATE_CHECKS=ON`, `INSTALL_LICENSES=ON`, `STRIP_BINARY=ON`, `CMAKE_BUILD_TYPE=Release` |
+| `BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE` | `BUILD_TESTING=OFF`, `ENABLE_UPDATE_CHECKS=ON`, `INSTALL_LICENSES=ON`, `STRIP_BINARY=ON`, `CMAKE_BUILD_TYPE=Release`, `PORTABLE_SPEEDCRUNCH=ON`, `CPACK_GENERATOR=ZIP` |
 | `BUILD_VARIANT_DEV_DEBUG` | `BUILD_TESTING=ON`, `ENABLE_UPDATE_CHECKS=ON`, `ENABLE_STARTUP_DIAGNOSTICS=ON`, `CMAKE_BUILD_TYPE=Debug` |
 
 With `BUILD_VARIANT_OFFICIAL_RELEASE=ON` in a fresh build directory, packaging
@@ -449,6 +461,11 @@ running CMake, in the form `cmake -S . -B build -Dvariable=value`.
   plus bundled Qt license files on Windows and macOS. Defaults to `OFF` on all
   platforms. Both official release variants force it to `ON`. Windows also
   installs `COPYING.rtf` when this option is enabled.
+- **STRIP_BINARY**: Remove debug symbols from the application binary.
+  Defaults to `OFF` on every platform. Both official release variants force it
+  to `ON`. This option applies to any selected configuration.
+  Package providers should leave it off to preserve symbols for their own
+  debuginfo packages. It does not affect test executables.
 - **SPEEDCRUNCH_QT_SOURCE_DIR**: Set the matching Qt source tree used to collect
   license texts when `INSTALL_LICENSES=ON` on Windows and macOS. Defaults to
   `Src` beside the selected Qt desktop kit. It is not needed for ordinary

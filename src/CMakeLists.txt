@@ -34,6 +34,7 @@ message("Build type: ${CMAKE_BUILD_TYPE}")
 option(BUILD_TESTING "Build the test executables and enable CTest" OFF)
 option(ENABLE_UPDATE_CHECKS "Enable launch-time and manual update checks" OFF)
 option(ENABLE_STARTUP_DIAGNOSTICS "Record startup timings and detailed appearance diagnostics" OFF)
+option(STRIP_BINARY "Remove debug symbols from the application binary" OFF)
 if(ENABLE_UPDATE_CHECKS)
     add_compile_definitions(SPEEDCRUNCH_ENABLE_UPDATE_CHECKS)
 endif()
@@ -147,20 +148,21 @@ endif()
 # lupdate needs an explicit source include path to resolve translation contexts.
 target_include_directories(${APPLICATION_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 
-if(APPLE)
-    if(NOT CMAKE_STRIP)
-        message(FATAL_ERROR "The macOS toolchain must provide CMAKE_STRIP for Release builds")
+if(STRIP_BINARY)
+    if(APPLE)
+        if(NOT CMAKE_STRIP)
+            message(FATAL_ERROR "The macOS toolchain must provide CMAKE_STRIP when STRIP_BINARY is ON")
+        endif()
+        # Native strip preserves the symbols needed by the dynamic loader.
+        add_custom_command(TARGET ${APPLICATION_NAME} POST_BUILD
+            COMMAND "${CMAKE_STRIP}" "$<TARGET_FILE:${APPLICATION_NAME}>"
+            VERBATIM
+        )
+    elseif(MSVC)
+        target_link_options(${APPLICATION_NAME} PRIVATE /DEBUG:NONE)
+    else()
+        target_link_options(${APPLICATION_NAME} PRIVATE "LINKER:-s")
     endif()
-    # Native strip preserves the symbols needed by the dynamic loader.
-    add_custom_command(TARGET ${APPLICATION_NAME} POST_BUILD
-        COMMAND "$<$<CONFIG:Release>:${CMAKE_STRIP}>"
-                "$<$<CONFIG:Release>:$<TARGET_FILE:${APPLICATION_NAME}>>"
-        VERBATIM
-    )
-elseif(MSVC)
-    target_link_options(${APPLICATION_NAME} PRIVATE "$<$<CONFIG:Release>:/DEBUG:NONE>")
-else()
-    target_link_options(${APPLICATION_NAME} PRIVATE "$<$<CONFIG:Release>:LINKER:-s>")
 endif()
 
 file(GLOB speedcrunch_TS_SOURCES CONFIGURE_DEPENDS
