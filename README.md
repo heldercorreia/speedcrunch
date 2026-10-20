@@ -9,6 +9,8 @@ Visit the [SpeedCrunch website](https://www.speedcrunch.org/) for
 [downloads](https://www.speedcrunch.org/download.html) and the
 [online manual](https://www.speedcrunch.org/introduction.html).
 
+See the [changelog](CHANGELOG.md) for release highlights and fixes.
+
 ![SpeedCrunch screenshot](doc/src/screen1.png)
 
 ## Building and testing
