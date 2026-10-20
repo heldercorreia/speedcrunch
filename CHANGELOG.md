@@ -20,6 +20,8 @@
 ### Input
 
 - Fix undo and redo, and copy and paste.
+- Fix clipped text and excess space in wrapped input with different fonts.
+- Fix crashes when typing operators in long, wrapped expressions.
 - Restore digit grouping while typing, following the selected number format.
 - Add an option to turn off automatic input adjustments, such as operator
   replacements and closing brackets.
@@ -36,6 +38,8 @@
   across multiple lines or as a single line.
 - Add optional removal of trailing decimal zeroes.
 - Simplify live previews to show just the results.
+- Keep live result previews above the editor when recalling long expressions
+  from history.
 - Avoid unnecessary extra simplification lines.
 - Restore the F2-F5 and F7-F10 notation shortcuts.
 
@@ -64,6 +68,7 @@
 - Add a compact **Classic** layout for input and results. Modern remains
   the default.
 - Improve text contrast, menu readability, and panel button visibility.
+- Match menu icons to the theme and dim disabled menu items and shortcuts.
 - Tidy panel spacing, borders, and rounded corners.
 - Keep side panels at full height and remember table column order.
 - Preserve floating panel positions and visibility across restarts, and

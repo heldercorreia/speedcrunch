@@ -167,6 +167,8 @@
           <h4 id="release-1-1-input" style="scroll-margin-top: 80px;">{% trans %}Input{% endtrans %}</h4>
           <ul>
             <li>{% trans %}Fix undo and redo, and copy and paste.{% endtrans %}</li>
+            <li>{% trans %}Fix clipped text and excess space in wrapped input with different fonts.{% endtrans %}</li>
+            <li>{% trans %}Fix crashes when typing operators in long, wrapped expressions.{% endtrans %}</li>
             <li>{% trans %}Restore{% endtrans %} <a href="{{ pathto('userguide/interface') }}#editing">{% trans %}digit grouping while typing{% endtrans %}</a>, {% trans %}following the selected number format.{% endtrans %}</li>
             <li>{% trans %}Add an option to turn off{% endtrans %} <a href="{{ pathto('userguide/interface') }}#editing">{% trans %}automatic input adjustments{% endtrans %}</a>, {% trans %}such as operator replacements and closing brackets.{% endtrans %}</li>
             <li>{% trans %}Add optional{% endtrans %} <a href="{{ pathto('userguide/interface') }}#editing">{% trans %}Enter-to-accept autocomplete and Escape-to-clear behavior{% endtrans %}</a>.</li>
@@ -182,6 +184,7 @@
             <li><a href="{{ pathto('userguide/interface') }}#result-display-interactions">{% trans %}Copy a whole calculation{% endtrans %}</a>, {% trans %}including all displayed result formats, either across multiple lines or as a single line.{% endtrans %}</li>
             <li>{% trans %}Add optional{% endtrans %} <a href="{{ pathto('userguide/interface') }}#results">{% trans %}removal of trailing decimal zeroes{% endtrans %}</a>.</li>
             <li>{% trans %}Simplify live previews to show just the results.{% endtrans %}</li>
+            <li>{% trans %}Keep live result previews above the editor when recalling long expressions from history.{% endtrans %}</li>
             <li>{% trans %}Avoid unnecessary extra simplification lines.{% endtrans %}</li>
             <li>{% trans %}Restore the{% endtrans %} <a href="{{ pathto('userguide/interface') }}#keyboard-shortcuts">{% trans %}F2-F5 and F7-F10 notation shortcuts{% endtrans %}</a>.</li>
           </ul>
@@ -204,6 +207,7 @@
             <li>{% trans %}Add separate{% endtrans %} <a href="{{ pathto('userguide/interface') }}#user-interface-settings">{% trans %}system and SpeedCrunch theme choices{% endtrans %}</a> {% trans %}for menus, panels, and the status bar.{% endtrans %}</li>
             <li>{% trans %}Add a compact{% endtrans %} <a href="{{ pathto('userguide/interface') }}#user-interface-settings">{% trans %}Classic layout for input and results{% endtrans %}</a>. {% trans %}Modern remains the default.{% endtrans %}</li>
             <li>{% trans %}Improve text contrast, menu readability, and panel button visibility.{% endtrans %}</li>
+            <li>{% trans %}Match menu icons to the theme and dim disabled menu items and shortcuts.{% endtrans %}</li>
             <li>{% trans %}Tidy panel spacing, borders, and rounded corners.{% endtrans %}</li>
             <li>{% trans %}Keep side panels at full height and remember table column order.{% endtrans %}</li>
             <li>{% trans %}Preserve floating panel positions and visibility across restarts, and prevent floating panels from being grouped unexpectedly.{% endtrans %}</li>
