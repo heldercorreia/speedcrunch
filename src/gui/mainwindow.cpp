@@ -12739,6 +12739,14 @@ bool MainWindow::eventFilter(QObject* o, QEvent* e)
         if (editor->window() != this)
             return QMainWindow::eventFilter(o, e);
 
+        // Recalling wrapped input can move the editor after its result appears.
+        // Keep the preview above the editor as the pane layout catches up.
+        if (o == editor && editor == m_widgets.editor
+            && (e->type() == QEvent::Move || e->type() == QEvent::Resize)
+            && m_widgets.state != nullptr && m_widgets.state->isVisible()) {
+            showStateLabel(m_widgets.state->text());
+        }
+
         if (e->type() == QEvent::FocusIn && pendingDockFocusTarget() != nullptr) {
             // A dock click is explicit focus intent. Handle it before editor
             // completion focus recovery, otherwise a pending completion owner can

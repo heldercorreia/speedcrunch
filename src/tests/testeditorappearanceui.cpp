@@ -33,6 +33,8 @@ private slots:
     void typing_long_expressions_keeps_editor_height_stable();
     void editor_popups_follow_style_padding_data();
     void editor_popups_follow_style_padding();
+    void live_result_follows_editor_height_on_history_recall_data();
+    void live_result_follows_editor_height_on_history_recall();
 };
 
 void TestEditorAppearanceUi::initTestCase()
@@ -870,6 +872,61 @@ void TestEditorAppearanceUi::editor_popups_follow_style_padding()
             QVERIFY(popup->isVisible());
         }
     }
+}
+
+void TestEditorAppearanceUi::live_result_follows_editor_height_on_history_recall_data()
+{
+    QTest::addColumn<bool>("classic");
+    QTest::addColumn<bool>("split");
+    QTest::newRow("modern-single-pane") << false << false;
+    QTest::newRow("modern-split-panes") << false << true;
+    QTest::newRow("classic-single-pane") << true << false;
+    QTest::newRow("classic-split-panes") << true << true;
+}
+
+void TestEditorAppearanceUi::live_result_follows_editor_height_on_history_recall()
+{
+    QFETCH(bool, classic);
+    QFETCH(bool, split);
+    MainWindowStateGuard guard;
+    guard.settings->editorDisplayStyle = classic
+        ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern;
+    guard.settings->upDownArrowBehavior = Settings::UpDownArrowBehaviorAlways;
+    MainWindow window(false);
+    window.resize(700, 600);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    if (split)
+        QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
+    Editor* editor = window.findChildren<Editor*>().last();
+    editor->setAutoCompletionEnabled(false);
+    editor->setAutoCalcEnabled(false);
+    QTest::mouseClick(editor->viewport(), Qt::LeftButton);
+    editor->setText(QStringLiteral("1+2+").repeated(300) + QStringLiteral("3"));
+    const QString expression = editor->document()->toRawText();
+    QTest::keyClick(editor, Qt::Key_Return);
+    QTRY_VERIFY(editor->text().isEmpty());
+    QCoreApplication::processEvents();
+    const int singleLineHeight = editor->height();
+    editor->setAutoCalcEnabled(true);
+
+    QTest::keyClick(editor, Qt::Key_Up);
+    QCOMPARE(editor->document()->toRawText(), expression);
+    auto* popup = window.findChild<QLabel*>(QStringLiteral("EditorStatePopup"));
+    QVERIFY(popup);
+    QTRY_VERIFY(popup->isVisible());
+    QVERIFY(popup->text().contains(QStringLiteral("Current result:")));
+    QCoreApplication::processEvents();
+    QVERIFY(editor->height() > singleLineHeight);
+    QVERIFY(editor->document()->firstBlock().layout()->lineCount() > 5);
+    const int inset = classic ? UiConfig::ClassicTextInset : UiConfig::ResultTooltipStartMargin;
+    QCOMPARE(popup->mapToGlobal(QPoint(0, popup->height())),
+             editor->mapToGlobal(QPoint(inset, 0)));
+
+    QTest::keyClick(editor, Qt::Key_Down);
+    QTRY_VERIFY(editor->text().isEmpty());
+    QTRY_COMPARE(editor->height(), singleLineHeight);
+    QVERIFY(!popup->isVisible());
 }
 
 int main(int argc, char** argv)
