@@ -145,6 +145,7 @@ protected:
     void paintEvent(QPaintEvent*) override;
     void resizeEvent(QResizeEvent*) override;
     void scrollContentsBy(int, int) override;
+    void doSetTextCursor(const QTextCursor&) override;
     QSize sizeHint() const override;
     void wheelEvent(QWheelEvent*) override;
 
@@ -153,6 +154,7 @@ private:
     friend class EditorCompletion;
 
     bool m_isAutoCalcEnabled;
+    bool m_inputEditInProgress = false;
     bool m_shouldBlockAutoCompletionOnce = false;
     bool m_isAutoCompletionEnabled;
     EditorCompletion* m_completion;

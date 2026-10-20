@@ -1638,6 +1638,16 @@ void Editor::setCursorPosition(int position)
     setTextCursor(cursor);
 }
 
+void Editor::doSetTextCursor(const QTextCursor& cursor)
+{
+    // An edit block delays Qt's layout update. Automatic rewrites can move
+    // past the old line ends before it finishes, so refresh the block before
+    // Qt tries to scroll the new cursor into view.
+    if (m_inputEditInProgress)
+        cursor.block().clearLayout();
+    QPlainTextEdit::doSetTextCursor(cursor);
+}
+
 QSize Editor::sizeHint() const
 {
     ensurePolished();
@@ -2785,6 +2795,7 @@ void Editor::inputMethodEvent(QInputMethodEvent* event)
     // Composed input can also rewrite existing text, such as an exponent.
     // Keep that rewrite in the same undo step as the committed characters.
     const bool hasCommittedEdit = !event->commitString().isEmpty() || event->replacementLength() > 0;
+    const QScopedValueRollback<bool> inputEdit(m_inputEditInProgress, hasCommittedEdit);
     QTextCursor editCursor = textCursor();
     if (hasCommittedEdit)
         editCursor.beginEditBlock();
@@ -3127,6 +3138,7 @@ void Editor::keyPressEvent(QKeyEvent* event)
 
     // Keep a typed key and its automatic rewrites together, while preventing
     // consecutive digits from merging into one undo step.
+    const QScopedValueRollback<bool> inputEdit(m_inputEditInProgress, hasPrintableTextPayload);
     QTextCursor editCursor = textCursor();
     if (hasPrintableTextPayload)
         editCursor.beginEditBlock();

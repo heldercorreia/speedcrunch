@@ -254,6 +254,8 @@ private slots:
     void wrap_selection_method_wraps_whole_expression_without_selection();
     void matching_parentheses_use_parens_and_generated_foreground_colors();
     void keeps_wrapped_cursor_line_visible_at_height_cap();
+    void rewrites_operators_in_scrolled_expression_data();
+    void rewrites_operators_in_scrolled_expression();
     void classic_editor_keeps_wrapped_input_visible_and_preserves_undo();
     void classic_completion_popups_follow_text_inset_data();
     void classic_completion_popups_follow_text_inset();
@@ -5960,6 +5962,81 @@ void TestEditorUi::keeps_wrapped_cursor_line_visible_at_height_cap()
     QTRY_VERIFY(editor.document()->begin().layout()->lineCount() > 5);
     QTRY_VERIFY(editor.cursorRect().top() >= editor.viewport()->rect().top());
     QTRY_VERIFY(editor.cursorRect().bottom() <= editor.viewport()->rect().bottom());
+}
+
+void TestEditorUi::rewrites_operators_in_scrolled_expression_data()
+{
+    QTest::addColumn<QString>("input");
+    QTest::addColumn<QString>("token");
+    QTest::addColumn<int>("cursorOffset");
+    QTest::addColumn<bool>("inputMethod");
+    QTest::addColumn<int>("style");
+    const QString conversion = MathDsl::buildWrappedToken(MathDsl::TransOp, MathDsl::SubWrapSp)
+        + QStringLiteral("[]");
+    for (int style : {int(Settings::EditorDisplayModern), int(Settings::EditorDisplayClassic)}) {
+        const QByteArray prefix = style == Settings::EditorDisplayModern ? "modern-" : "classic-";
+        QTest::newRow(QByteArray(prefix + "double-minus").constData())
+            << QStringLiteral("--") << conversion << 1 << false << style;
+        QTest::newRow(QByteArray(prefix + "arrow").constData())
+            << QStringLiteral("->") << conversion << 1 << false << style;
+        QTest::newRow(QByteArray(prefix + "power").constData())
+            << QStringLiteral("**") << QStringLiteral("^") << 0 << false << style;
+        QTest::newRow(QByteArray(prefix + "superscript").constData())
+            << QStringLiteral("^2") << QString(MathDsl::Pow2) << 0 << false << style;
+        QTest::newRow(QByteArray(prefix + "ime-superscript").constData())
+            << QStringLiteral("^2") << QString(MathDsl::Pow2) << 0 << true << style;
+    }
+}
+
+void TestEditorUi::rewrites_operators_in_scrolled_expression()
+{
+    QFETCH(QString, input);
+    QFETCH(QString, token);
+    QFETCH(int, cursorOffset);
+    QFETCH(bool, inputMethod);
+    QFETCH(int, style);
+    Settings::instance()->editorDisplayStyle = Settings::EditorDisplayStyle(style);
+    Editor editor;
+    editor.setAutoCompletionEnabled(false);
+    editor.setAutoCalcEnabled(false);
+    editor.setFixedWidth(220);
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+
+    const QString expression = QStringLiteral("1234567890+").repeated(40) + QStringLiteral("1");
+    editor.setText(expression);
+    editor.setCursorPosition(editor.text().size());
+    QVERIFY(editor.document()->firstBlock().layout()->lineCount() > 5);
+    QVERIFY(editor.verticalScrollBar()->value() > 0);
+
+    const auto type = [&](const QString& text) {
+        if (inputMethod) {
+            QInputMethodEvent event;
+            event.setCommitString(text);
+            QApplication::sendEvent(&editor, &event);
+        } else {
+            QTest::keyClicks(&editor, text);
+        }
+    };
+    type(input.left(1));
+    const QString beforeRewrite = editor.document()->toRawText();
+    type(input.mid(1));
+    const QString afterRewrite = editor.document()->toRawText();
+    QCOMPARE(afterRewrite, expression + token);
+    QCOMPARE(editor.textCursor().position(), afterRewrite.size() - cursorOffset);
+    QVERIFY(editor.cursorRect().top() >= 0);
+    QVERIFY(editor.cursorRect().bottom() < editor.viewport()->height());
+
+    editor.undo();
+    QCOMPARE(editor.document()->toRawText(), beforeRewrite);
+    editor.undo();
+    QCOMPARE(editor.document()->toRawText(), expression);
+    editor.redo();
+    editor.redo();
+    QCOMPARE(editor.document()->toRawText(), afterRewrite);
+    QVERIFY(editor.cursorRect().top() >= 0);
+    QVERIFY(editor.cursorRect().bottom() < editor.viewport()->height());
 }
 
 void TestEditorUi::classic_editor_keeps_wrapped_input_visible_and_preserves_undo()
