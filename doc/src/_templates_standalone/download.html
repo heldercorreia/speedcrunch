@@ -4,7 +4,7 @@
   <div class="container-fluid">
     <div class="row">
       {% if win -%}
-        <div class="col-lg-4 center-div">
+        <div class="col-lg-{{ 4 if linux else 6 }} center-div">
           <p><i class="fa fa-windows" style="vertical-align:middle; font-size:8em;"></i></p>
           <p><b>Windows</b></p>
           <p>
@@ -24,7 +24,7 @@
         </div>
       {%- endif %}
 
-      <div class="col-lg-4 center-div">
+      <div class="col-lg-{{ 4 if linux else 6 }} center-div">
         <p><i class="fa fa-apple" style="vertical-align:middle; font-size:8em;"></i></p>
         <p><b>macOS</b></p>
         {% if osx -%}
@@ -44,18 +44,16 @@
         </div>
       </div>
 
-      <div class="col-lg-4 center-div">
-        <p><i class="fa fa-linux" style="vertical-align:middle; font-size:8em;"></i></p>
-        <p><b>Linux</b></p>
+      {% if linux -%}
+        <div class="col-lg-4 center-div">
+          <p><i class="fa fa-linux" style="vertical-align:middle; font-size:8em;"></i></p>
+          <p><b>Linux</b></p>
 
-        {% if linux -%}
           <p>
             {% if not linux_dropdown -%}
               {% for (name, path) in linux -%}
                 {% if name == 'Flathub' -%}
-                  <img width="180" alt="{{ _('Download on Flathub') }}" src='https://flathub.org/assets/badges/flathub-badge-en.png'/>
-                  <br/>
-                  <small>{% trans %}Currently unavailable.{% endtrans %}</small>
+                  <a href="{{ path }}"><img width="180" alt="{{ _('Download on Flathub') }}" src='https://flathub.org/assets/badges/flathub-badge-en.png'/></a>
                 {%- else -%}
                   <a class="btn btn-primary btn-md dl-button" href="{{ path }}"><i class="fa fa-laptop fa-lg" style="vertical-align:middle;"></i>&nbsp;{{ name }}</a>
                 {%- endif %}
@@ -73,17 +71,12 @@
               </div>
             {%- endif %}
           </p>
-        {%- else -%}
-          <p>
-            <a class="btn btn-primary btn-md dl-button disabled"><i class="fa fa-laptop fa-lg" style="vertical-align:middle;"></i>&nbsp;Download</a>
-          </p>
-        {%- endif %}
 
-        <p>
-          {% trans %}If available, we recommend installing SpeedCrunch directly via your distribution's package manager.{% endtrans %}
-          {% trans %}Note that the latest version may not be available.{% endtrans %}
-        </p>
-      </div>
+          <p>
+            {% trans %}If available, you can also install this SpeedCrunch version directly with your distribution's package manager.{% endtrans %}
+          </p>
+        </div>
+      {%- endif %}
     </div><!-- /.row -->
   </div>
 {%- endmacro %}
@@ -124,7 +117,7 @@
             (_('Installer'), 'https://github.com/heldercorreia/speedcrunch/releases/download/v1.1.0/SpeedCrunch-1.1-macos-arm64.dmg'),
             (_('Portable'), 'https://github.com/heldercorreia/speedcrunch/releases/download/v1.1.0/SpeedCrunch-1.1-macos-arm64.zip'),],
 
-          linux=[('Flathub', 'https://flathub.org/apps/details/org.speedcrunch.SpeedCrunch'),],
+          linux=[('Flathub', 'https://flathub.org/apps/org.speedcrunch.SpeedCrunch'),],
           linux_dropdown=False,
         ) }}
         <hr/>
@@ -255,8 +248,6 @@
 
               osx=[(_('Download'), 'https://github.com/heldercorreia/speedcrunch/releases/download/v1.0.0/SpeedCrunch-1.0-arm64.dmg')],
 
-              linux=[('Flathub', 'https://flathub.org/apps/details/org.speedcrunch.SpeedCrunch'),],
-              linux_dropdown=False,
             ) }}
             <hr/>
             <h3 id="whats-new-in-1-0" style="scroll-margin-top: 80px;">{% trans %}What's new in 1.0{% endtrans %}</h3>

@@ -93,7 +93,7 @@ Flatpak and Flathub. Then install SpeedCrunch from its `store page <flathub-sc_>
 .. _flatpak: https://flatpak.org/
 .. _flathub: https://flathub.org/
 .. _flathub-setup: https://flatpak.org/setup/
-.. _flathub-sc: https://flathub.org/apps/details/org.speedcrunch.SpeedCrunch
+.. _flathub-sc: https://flathub.org/apps/org.speedcrunch.SpeedCrunch
 
 
 Building from Source
