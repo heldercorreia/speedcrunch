@@ -5,6 +5,10 @@
   <project_license>GPL-2.0+</project_license>
   <update_contact>speedcrunch@googlegroups.com</update_contact>
   <content_rating type="oars-1.1"/>
+  <branding>
+    <color type="primary" scheme_preference="light">#c4a7e7</color>
+    <color type="primary" scheme_preference="dark">#6b527f</color>
+  </branding>
   <developer id="org.speedcrunch">
     <name>The SpeedCrunch Developers</name>
   </developer>
@@ -59,7 +63,7 @@
   <name xml:lang="zh_CN">SpeedCrunch</name>
   <name xml:lang="zh_TW">SpeedCrunch</name>
   
-  <summary>A high-precision scientific calculator</summary>
+  <summary>High-precision calculator</summary>
   <summary xml:lang="ar">آلة حاسبة علمية عالية الدقة</summary>
   <summary xml:lang="bg">Научен калкулатор с висока точност</summary>
   <summary xml:lang="bn">উচ্চ-নির্ভুল বৈজ্ঞানিক ক্যালকুলেটর</summary>
@@ -68,8 +72,8 @@
   <summary xml:lang="da">En videnskabelig lommeregner med høj præcision</summary>
   <summary xml:lang="de">Ein hochpräziser wissenschaftlicher Taschenrechner</summary>
   <summary xml:lang="el">Επιστημονική αριθμομηχανή υψηλής ακρίβειας</summary>
-  <summary xml:lang="en_GB">A high-precision scientific calculator</summary>
-  <summary xml:lang="en_US">A high-precision scientific calculator</summary>
+  <summary xml:lang="en_GB">High-precision calculator</summary>
+  <summary xml:lang="en_US">High-precision calculator</summary>
   <summary xml:lang="es">Una calculadora científica de alta precisión</summary>
   <summary xml:lang="es_ES">Una calculadora científica de alta precisión</summary>
   <summary xml:lang="et">Kõrgtäpne teaduslik kalkulaator</summary>
