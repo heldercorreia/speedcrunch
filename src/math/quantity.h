@@ -125,6 +125,9 @@ public:
     Quantity& setFormat(Format);
 
 private:
+    Quantity& setCoherentSiDisplayUnit(const QString& name);
+    Quantity& setAnglePerSecondDisplayUnit(const Quantity& angle);
+
     CNumber m_numericValue;
     QMap<UnitQuantity, Rational> m_dimension;
     CNumber* m_unit;

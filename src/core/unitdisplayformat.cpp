@@ -40,6 +40,15 @@ const QHash<QString, QString>& shortNamesByIdentifier()
             UnitId id = unitId(normalizeUnitName(identifier));
             if (id == UnitId::Unknown)
                 continue;
+            // Case folding can confuse symbols such as kT with kt, or fT
+            // with ft. Only shorten identifiers that still mean the same unit.
+            const auto canonical = values.constFind(unitName(id));
+            if (canonical == values.constEnd()
+                || !it.value().sameDimension(canonical.value())
+                || it.value().numericValue() != canonical.value().numericValue())
+            {
+                continue;
+            }
             const QString symbol = unitSymbol(id);
             if (!symbol.isEmpty())
                 map.insert(identifier, symbol);

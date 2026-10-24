@@ -1307,6 +1307,111 @@ void test_units_energy_per_geometry_display_scale()
     CHECK_EVAL("7[TJ/m^2] in [TJ/m^2]", u8"7 TJ·m⁻²");
 }
 
+void test_units_canonical_display_scale()
+{
+    CHECK_EVAL("150[MJ] / 1[s]", "150000000 watt");
+    CHECK_EVAL("ans -> [W]", "150000000 W");
+    CHECK_EVAL_FORMAT("150[MJ] / 1[s]", "150000000[W]");
+    CHECK_EVAL("1[mJ] / 2[ms]", "0.5 watt");
+    CHECK_EVAL("1[kWh] / 2[h]", "500 watt");
+    CHECK_EVAL("-2[kJ] / 4[s]", "-500 watt");
+    CHECK_EVAL("0[MJ] / 1[s]", "0 watt");
+
+    CHECK_EVAL("2[kN] * 3[cm]", u8"60 newton·metre");
+    CHECK_EVAL("ans -> [J]", "60 J");
+    CHECK_EVAL("3[cm] * 2[kN]", u8"60 newton·metre");
+    CHECK_EVAL("2[kPa] * 3[cm^3]", "6 mJ");
+    CHECK_EVAL("3[cm^3] * 2[kPa]", "6 mJ");
+    CHECK_EVAL("2[kW] * 3[ms]", u8"6 watt·second");
+    CHECK_EVAL("3[ms] * 2[kW]", u8"6 watt·second");
+    CHECK_EVAL("2[mC] * 3[kV]", "6 joule");
+    CHECK_EVAL("3[kV] * 2[mC]", "6 joule");
+    CHECK_EVAL("2[kV] * 3[ms]", "6 weber");
+    CHECK_EVAL("3[ms] * 2[kV]", "6 weber");
+    CHECK_EVAL("2[kV] * 3[A]", "6000 watt");
+    CHECK_EVAL("3[A] * 2[kV]", "6000 watt");
+    CHECK_EVAL("2[mF] * 3[kV]", "6 coulomb");
+    CHECK_EVAL("3[kV] * 2[mF]", "6 coulomb");
+    CHECK_EVAL("2[mT] * 3[cm^2]", "0.0000006 weber");
+    CHECK_EVAL("3[cm^2] * 2[mT]", "0.0000006 weber");
+    CHECK_EVAL("2[kPa] * 3[cm^2]", "0.6 newton");
+    CHECK_EVAL("3[cm^2] * 2[kPa]", "0.6 newton");
+    CHECK_EVAL("2[kW] * 3[mV]", u8"6 volt²·ampere");
+    CHECK_EVAL("3[mV] * 2[kW]", u8"6 volt²·ampere");
+    CHECK_EVAL("2[kcd] * 3[sr]", "6000 lumen");
+    CHECK_EVAL("3[sr] * 2[kcd]", "6000 lumen");
+
+    CHECK_EVAL_FORMAT("2[kV] * 3[A]", "6000[W]");
+    CHECK_EVAL_FORMAT("2[kN] * 3[cm]", u8"60[N·m]");
+    CHECK_EVAL_FORMAT("2[kW] * 3[ms]", u8"6[W·s]");
+    CHECK_EVAL_FORMAT("[kT]", "1[kT]");
+    CHECK_EVAL_FORMAT("[fT]", "1[fT]");
+    CHECK_EVAL_FORMAT("[pA]", "1[pA]");
+    CHECK_EVAL_FORMAT("2[kW*h]", u8"2[kW·h]");
+    CHECK_EVAL("ans -> [J]", "7200000 J");
+    CHECK_EVAL("2[kW] * 3[ms] -> [kW*ms]", "6 kW*ms");
+    CHECK_EVAL("2[kN] * 3[cm] -> [kN*cm]", "6 kN*cm");
+}
+
+void test_units_angular_rate_display_scale()
+{
+    CHECK_EVAL("120[rad] / 2[min]", u8"1 rad·second⁻¹");
+    CHECK_EVAL("ans -> [rad/s]", u8"1 rad·s⁻¹");
+    CHECK_EVAL("2[rad] / 4[ms]", u8"500 rad·second⁻¹");
+    CHECK_EVAL("2[rad] * 3[1/ms]", u8"6000 rad·second⁻¹");
+    CHECK_EVAL("3[1/ms] * 2[rad]", u8"6000 rad·second⁻¹");
+}
+
+void test_units_display_scale_round_trip()
+{
+    struct Operation {
+        const char* left;
+        const char* op;
+        const char* right;
+    };
+    const Operation operations[] = {
+        {"N", "*", "m"}, {"Pa", "*", "m^3"}, {"W", "*", "s"},
+        {"C", "*", "V"}, {"V", "*", "s"}, {"V", "*", "A"},
+        {"W", "*", "V"}, {"F", "*", "V"}, {"T", "*", "m^2"},
+        {"Pa", "*", "m^2"}, {"cd", "*", "sr"}, {"J", "/", "s"},
+        {"J", "/", "m^2"}, {"J", "/", "m^3"}, {"V", "/", "A"},
+        {"A", "/", "V"}, {"C", "/", "V"}, {"Wb", "/", "m^2"},
+        {"Wb", "/", "A"}, {"lm", "/", "m^2"}, {"mol", "/", "s"},
+        {"J", "*", "Pa"}, {"N", "*", "W"}, {"rad", "/", "s"}
+    };
+    const QStringList prefixes = {QString(), QStringLiteral("m"),
+                                  QStringLiteral("k"), QStringLiteral("M")};
+    for (const Operation& operation : operations) {
+        for (const QString& leftPrefix : prefixes) {
+            for (const QString& rightPrefix : prefixes) {
+                const QString expression = QStringLiteral("2[%1%2] %3 4[%4%5]")
+                    .arg(leftPrefix, QLatin1String(operation.left), QLatin1String(operation.op),
+                         rightPrefix, QLatin1String(operation.right));
+                ++eval_total_tests;
+                eval->setExpression(expression);
+                const Quantity original = eval->evalUpdateAns();
+                const QString originalError = eval->error();
+                const QString display = NumberFormatter::format(
+                    original, 'g', 50, false, ComplexForm::Rectangular);
+                eval->setExpression(display);
+                const Quantity recalled = eval->evalUpdateAns();
+                if (originalError.isEmpty() && eval->error().isEmpty()
+                    && original.sameDimension(recalled)
+                    && original.numericValue() == recalled.numericValue())
+                {
+                    continue;
+                }
+                ++eval_failed_tests;
+                ++eval_new_failed_tests;
+                cerr << __FILE__ << "[" << __LINE__ << "]\tunit display scale round trip\t[NEW]" << endl
+                     << "\tExpression: " << qPrintable(expression) << endl
+                     << "\tDisplay: " << qPrintable(display) << endl
+                     << "\tError: " << qPrintable(originalError + eval->error()) << endl;
+            }
+        }
+    }
+}
+
 void test_units_named_derived_canonicalization()
 {
     CHECK_EVAL_FORMAT("[kg*m^2/s^2]", "1[J]");
@@ -1651,6 +1756,9 @@ void test_units()
     test_units_display_propagation();
     test_units_short_aliases_and_si_prefixes();
     test_units_energy_per_geometry_display_scale();
+    test_units_canonical_display_scale();
+    test_units_angular_rate_display_scale();
+    test_units_display_scale_round_trip();
     test_units_named_derived_canonicalization();
     test_units_derived_si_recognition_and_disambiguation();
     test_units_conversion_compatibility_and_canonicalization();
