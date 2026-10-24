@@ -103,6 +103,10 @@ The SpeedCrunch source code is maintained on `GitHub`_ in a Git repository.
 For build requirements and instructions on compiling, running the tests, and
 installing from source, see :file:`BUILDING.md` at the repository root.
 
+When Qt includes X11 support, building SpeedCrunch also requires ``pkg-config``
+and the libxcb development headers and library. These provide the X11 launch
+activation support. A Qt build with only Wayland support does not need libxcb.
+
 License installation is optional on every platform. The CMake option
 ``INSTALL_LICENSES`` defaults to ``OFF``. Set ``-DINSTALL_LICENSES=ON`` to install
 SpeedCrunch's license text and Qt usage notice. On Windows and macOS, this also

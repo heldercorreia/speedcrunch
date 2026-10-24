@@ -40,7 +40,19 @@ if(ENABLE_UPDATE_CHECKS)
 endif()
 
 find_package(Qt6 6.4 REQUIRED COMPONENTS Core Widgets Help Network LinguistTools)
+qt_standard_project_setup()
 message(STATUS "Found Qt version: ${Qt6_VERSION}")
+
+if(APPLE)
+    enable_language(OBJCXX)
+    set(CMAKE_OBJCXX_STANDARD 17)
+    set(CMAKE_OBJCXX_STANDARD_REQUIRED ON)
+endif()
+
+if(UNIX AND NOT APPLE AND NOT HAIKU AND QT_FEATURE_xcb)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(XCB REQUIRED IMPORTED_TARGET xcb)
+endif()
 
 if(BUILD_TESTING)
     find_package(Qt6 COMPONENTS Test REQUIRED)
@@ -78,7 +90,6 @@ endforeach()
 string(REPLACE ";" "," speedcrunch_VERSION_RC "${speedcrunch_VERSION_RC}")
 configure_file(resources/speedcrunch.rc.in speedcrunch.rc @ONLY)
 
-set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_COLOR_MAKEFILE ON)
 set(CMAKE_VERBOSE_MAKEFILE OFF)
@@ -147,6 +158,16 @@ endif()
 
 # lupdate needs an explicit source include path to resolve translation contexts.
 target_include_directories(${APPLICATION_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+
+if(APPLE)
+    target_sources(${APPLICATION_NAME} PRIVATE gui/maclaunchhandler.mm)
+    target_link_libraries(${APPLICATION_NAME} PRIVATE "-framework AppKit")
+elseif(WIN32)
+    target_link_libraries(${APPLICATION_NAME} PRIVATE user32)
+elseif(TARGET PkgConfig::XCB)
+    target_compile_definitions(${APPLICATION_NAME} PRIVATE SPEEDCRUNCH_X11_ACTIVATION)
+    target_link_libraries(${APPLICATION_NAME} PRIVATE PkgConfig::XCB)
+endif()
 
 if(STRIP_BINARY)
     if(APPLE)
@@ -239,6 +260,15 @@ if(BUILD_TESTING)
     # An object library also keeps the Qt resource objects in every executable.
     add_library(mainwindowuitest OBJECT ${mainwindowuitest_SOURCES})
     target_link_libraries(mainwindowuitest PUBLIC ${QT_LIBRARIES} Qt6::Test)
+    if(APPLE)
+        target_sources(mainwindowuitest PRIVATE gui/maclaunchhandler.mm)
+        target_link_libraries(mainwindowuitest PUBLIC "-framework AppKit")
+    elseif(WIN32)
+        target_link_libraries(mainwindowuitest PUBLIC user32)
+    elseif(TARGET PkgConfig::XCB)
+        target_compile_definitions(mainwindowuitest PRIVATE SPEEDCRUNCH_X11_ACTIVATION)
+        target_link_libraries(mainwindowuitest PUBLIC PkgConfig::XCB)
+    endif()
     target_compile_definitions(mainwindowuitest PUBLIC
         SPEEDCRUNCH_UI_TEST
         SPEEDCRUNCH_ENABLE_STARTUP_DIAGNOSTICS
@@ -258,6 +288,7 @@ if(BUILD_TESTING)
         testbitfieldui
         testsessionsui
         testdisplayui
+        testlaunchui
     )
     foreach(ui_test IN LISTS mainwindow_ui_tests)
         add_executable(${ui_test} tests/${ui_test}.cpp)
@@ -265,6 +296,10 @@ if(BUILD_TESTING)
         add_test(NAME ${ui_test} COMMAND ${ui_test})
         set_tests_properties(${ui_test} PROPERTIES LABELS "ui")
     endforeach()
+    if(APPLE)
+        target_sources(testlaunchui PRIVATE tests/maclaunchtesthelpers.mm)
+        target_link_libraries(testlaunchui PRIVATE "-framework Carbon")
+    endif()
     foreach(ui_test IN ITEMS testeditorui testdocksui)
         target_compile_definitions(${ui_test} PRIVATE SPEEDCRUNCH_UI_TEST)
         set_tests_properties(${ui_test} PROPERTIES LABELS "ui")

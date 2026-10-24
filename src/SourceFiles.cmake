@@ -16,6 +16,7 @@ core/errors.h
 core/numberformatter.h
 core/pageserver.h
 core/settings.h
+core/singleinstance.h
 core/opcode.h
 core/sessionhistory.h
 core/sessionjsonkeys.h
@@ -47,6 +48,8 @@ gui/gtkmenupalette.h
 gui/keypad.h
 gui/lineeditstyleutils.h
 gui/mainwindow.h
+gui/launchcontroller.h
+gui/platformactivation.h
 gui/menustyleutils.h
 gui/manualwindow.h
 gui/numberformatdialog.h
@@ -98,6 +101,7 @@ core/manualserver.cpp
 core/numberformatter.cpp
 core/pageserver.cpp
 core/settings.cpp
+core/singleinstance.cpp
 core/session.cpp
 core/sessionhistory.cpp
 core/userdefinitions.cpp
@@ -123,6 +127,8 @@ gui/historywidget.cpp
 gui/genericdock.h
 gui/keypad.cpp
 gui/mainwindow.cpp
+gui/launchcontroller.cpp
+gui/platformactivation.cpp
 gui/menustyleutils.cpp
 gui/manualwindow.cpp
 gui/numberformatdialog.cpp
@@ -438,6 +444,9 @@ tests/testdocksui.cpp
 )
 
 set(mainwindowuitest_SOURCES
+core/singleinstance.cpp
+gui/launchcontroller.cpp
+gui/platformactivation.cpp
 gui/menustyleutils.cpp
 core/book.cpp
 core/constants.cpp

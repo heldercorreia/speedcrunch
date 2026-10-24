@@ -64,6 +64,10 @@ public:
     explicit MainWindow(bool restorePreviousSession = true);
     ~MainWindow();
     void persistSessionAndSettingsForShutdown();
+    static MainWindow* subsequentLaunchWindow();
+    static bool sessionRestoreInProgress();
+    MainWindow* createNewSessionWindow(bool activate = true);
+    void createNewSessionTab();
 
 signals:
     void angleUnitChanged();
@@ -244,6 +248,7 @@ private slots:
     void setUserUnitsDockVisible(bool, bool takeFocus = true);
     void setWindowPositionSaveEnabled(bool);
     void setOpenPrivateTabOnStartupEnabled(bool);
+    void setSubsequentLaunchAction(QAction*);
     void setWidgetsDirection();
     void showAboutDialog();
     void showDiagnosticsDialog();
@@ -558,6 +563,9 @@ private:
         QAction* settingsBehaviorUpDownArrowSingleLineOnly;
         QAction* settingsBehaviorAlwaysOnTop;
         QAction* settingsOpenPrivateTabOnStartup;
+        QAction* settingsLaunchActivate;
+        QAction* settingsLaunchNewWindow;
+        QAction* settingsLaunchNewTab;
         QAction* settingsBehaviorAutoResultToClipboard;
         QAction* settingsBehaviorSimplifyResultExpressions;
         QAction* settingsBehaviorHistorySizeLimit;
@@ -614,6 +622,7 @@ private:
         QActionGroup* radixChar;
         QActionGroup* digitGrouping;
         QActionGroup* upDownArrowBehavior;
+        QActionGroup* subsequentLaunch;
         QActionGroup* keypad;
         QActionGroup* keypadZoom;
         QActionGroup* unitNegativeExponentStyle;
@@ -653,6 +662,7 @@ private:
         QMenu* keypad;
         QMenu* keypadZoom;
         QMenu* window;
+        QMenu* subsequentLaunch;
     } m_menus;
 
     struct {
@@ -745,6 +755,7 @@ private:
     int m_pendingHistoryEditIndex;
     bool m_shutdownStateSaved;
     bool m_restorePreviousSessionOnStartup;
+    bool m_sessionRestorePending = false;
     bool m_startupPrivateTabPending = false;
     QTimer* m_deferredSessionSaveTimer;
     bool m_sessionSavePending;

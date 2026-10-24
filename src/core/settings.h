@@ -15,6 +15,12 @@
 
 class Settings {
 public:
+    enum SubsequentLaunchAction {
+        ActivateExistingWindow = 0,
+        OpenNewWindow = 1,
+        OpenNewTab = 2
+    };
+
     enum UpDownArrowBehavior {
         UpDownArrowBehaviorNever = 0,
         UpDownArrowBehaviorAlways = 1,
@@ -197,6 +203,7 @@ public:
     bool simplifyResultExpressions;
     bool windowPositionSave;
     bool openPrivateTabOnStartup;
+    SubsequentLaunchAction subsequentLaunchAction;
     QString startupUserDefinitions;
 
     bool constantsDockVisible;

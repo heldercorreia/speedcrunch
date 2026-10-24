@@ -432,6 +432,9 @@ void Settings::load()
     simplifyResultExpressions = settings->value(key + QLatin1String("SimplifyResultExpressions"), true).toBool();
     windowPositionSave = settings->value(key + QLatin1String("WindowPositionSave"), true).toBool();
     openPrivateTabOnStartup = settings->value(key + QLatin1String("OpenPrivateTabOnStartup"), false).toBool();
+    const int launchAction = settings->value(key + QLatin1String("SubsequentLaunchAction"), 0).toInt();
+    subsequentLaunchAction = launchAction >= ActivateExistingWindow && launchAction <= OpenNewTab
+        ? static_cast<SubsequentLaunchAction>(launchAction) : ActivateExistingWindow;
     complexNumbers = true;
     QString imaginaryUnitStr = settings->value(key + QLatin1String("ImaginaryUnit"), 'i').toString();
     if (imaginaryUnitStr != QLatin1String("i") && imaginaryUnitStr != QLatin1String("j"))
@@ -710,6 +713,7 @@ void Settings::save()
     settings->setValue(key + QLatin1String("Language"), language);
     settings->setValue(key + QLatin1String("WindowPositionSave"), windowPositionSave);
     settings->setValue(key + QLatin1String("OpenPrivateTabOnStartup"), openPrivateTabOnStartup);
+    settings->setValue(key + QLatin1String("SubsequentLaunchAction"), int(subsequentLaunchAction));
     settings->setValue(key + QLatin1String("ComplexNumbers"), true);
     settings->setValue(key + QLatin1String("ImaginaryUnit"), QString(QChar(imaginaryUnit)));
     settings->setValue(key + QLatin1String("AngleMode"), QString(QChar(angleUnit)));

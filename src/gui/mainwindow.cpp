@@ -3882,6 +3882,18 @@ void MainWindow::createActions()
     m_actions.settingsAngleUnitRevolution = new QAction(this);
     m_actions.settingsBehaviorAlwaysOnTop = new QAction(this);
     m_actions.settingsOpenPrivateTabOnStartup = new QAction(this);
+    m_actions.settingsLaunchActivate = new QAction(this);
+    m_actions.settingsLaunchNewWindow = new QAction(this);
+    m_actions.settingsLaunchNewTab = new QAction(this);
+    m_actions.settingsLaunchActivate->setObjectName(QStringLiteral("SubsequentLaunchActivateAction"));
+    m_actions.settingsLaunchNewWindow->setObjectName(QStringLiteral("SubsequentLaunchNewWindowAction"));
+    m_actions.settingsLaunchNewTab->setObjectName(QStringLiteral("SubsequentLaunchNewTabAction"));
+    for (QAction* action : {m_actions.settingsLaunchActivate, m_actions.settingsLaunchNewWindow,
+                            m_actions.settingsLaunchNewTab})
+        action->setCheckable(true);
+    m_actions.settingsLaunchActivate->setData(Settings::ActivateExistingWindow);
+    m_actions.settingsLaunchNewWindow->setData(Settings::OpenNewWindow);
+    m_actions.settingsLaunchNewTab->setData(Settings::OpenNewTab);
     m_actions.settingsBehaviorAutoAns = new QAction(this);
     m_actions.settingsBehaviorAutoCompletion = new QAction(this);
     m_actions.settingsBehaviorAutoCompletionAcceptWithEnter = new QAction(this);
@@ -4520,6 +4532,9 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorPartialResults->setText(MainWindow::tr("Show Live Result &Preview"));
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setText(MainWindow::tr("Save &Window Position on Exit"));
     m_actions.settingsOpenPrivateTabOnStartup->setText(tr("Open a Private Tab on Startup"));
+    m_actions.settingsLaunchActivate->setText(tr("Activate Existing Window"));
+    m_actions.settingsLaunchNewWindow->setText(tr("Open New Window"));
+    m_actions.settingsLaunchNewTab->setText(tr("Open New Tab"));
     m_actions.settingsOpenPrivateTabOnStartup->setToolTip(tr("Open and focus a new private tab whenever SpeedCrunch starts."));
     m_actions.settingsOpenPrivateTabOnStartup->setStatusTip(m_actions.settingsOpenPrivateTabOnStartup->toolTip());
     m_actions.settingsBehaviorSyntaxHighlighting->setText(MainWindow::tr("Syntax &Highlighting"));
@@ -4624,6 +4639,10 @@ void MainWindow::setActionsText()
 
 void MainWindow::createActionGroups()
 {
+    m_actionGroups.subsequentLaunch = new QActionGroup(this);
+    m_actionGroups.subsequentLaunch->addAction(m_actions.settingsLaunchActivate);
+    m_actionGroups.subsequentLaunch->addAction(m_actions.settingsLaunchNewWindow);
+    m_actionGroups.subsequentLaunch->addAction(m_actions.settingsLaunchNewTab);
     StartupDiagnostics::Scope timing("Create action groups");
     m_actionGroups.resultFormat = new QActionGroup(this);
     m_actionGroups.resultFormat->addAction(m_actions.settingsResultFormatBinary);
@@ -5010,6 +5029,9 @@ void MainWindow::createMenus()
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitRevolution);
 
     m_menus.window = m_menus.settings->addMenu("");
+    m_menus.subsequentLaunch = m_menus.window->addMenu("");
+    m_menus.subsequentLaunch->setObjectName(QStringLiteral("SubsequentLaunchMenu"));
+    m_menus.subsequentLaunch->addActions(m_actionGroups.subsequentLaunch->actions());
     m_menus.window->addAction(m_actions.settingsOpenPrivateTabOnStartup);
     m_menus.window->addAction(m_actions.settingsBehaviorSaveWindowPositionOnExit);
     if (!isWaylandPlatform())
@@ -5041,6 +5063,7 @@ void MainWindow::createMenus()
 
 void MainWindow::setMenusText()
 {
+    m_menus.subsequentLaunch->setTitle(tr("On Subsequent Launch"));
     m_menus.session->setTitle(MainWindow::tr("&Session"));
     m_menus.sessionExport->setTitle(MainWindow::tr("&Export"));
     m_menus.edit->setTitle(MainWindow::tr("&Edit"));
@@ -6332,7 +6355,7 @@ Session* MainWindow::createUntitledSession(bool activateCreatedSession)
         return recycledSession;
     }
 
-    const QString name = firstAvailableUntitledSessionName(m_loadedSessions);
+    const QString name = firstAvailableUntitledSessionNameAcrossWindows();
     Session* session = new Session();
     session->setName(name);
     m_loadedSessions.insert(name, session);
@@ -8289,6 +8312,8 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsBehaviorSaveWindowPositionOnExit, SIGNAL(toggled(bool)), SLOT(setWindowPositionSaveEnabled(bool)));
     connect(m_actions.settingsOpenPrivateTabOnStartup, &QAction::toggled,
             this, &MainWindow::setOpenPrivateTabOnStartupEnabled);
+    connect(m_actionGroups.subsequentLaunch, &QActionGroup::triggered,
+            this, &MainWindow::setSubsequentLaunchAction);
     connect(m_actions.settingsBehaviorSyntaxHighlighting, SIGNAL(toggled(bool)), SLOT(setSyntaxHighlightingEnabled(bool)));
     connect(m_actions.settingsEditingInputDigitGrouping, &QAction::toggled,
             this, &MainWindow::setInputDigitGroupingEnabled);
@@ -8594,6 +8619,8 @@ void MainWindow::applySettings(bool initializing)
     }
     m_actions.settingsBehaviorSaveWindowPositionOnExit->setChecked(m_settings->windowPositionSave);
     m_actions.settingsOpenPrivateTabOnStartup->setChecked(m_settings->openPrivateTabOnStartup);
+    for (QAction* action : m_actionGroups.subsequentLaunch->actions())
+        action->setChecked(action->data().toInt() == int(m_settings->subsequentLaunchAction));
 
 
     checkInitialResultFormat();
@@ -9371,6 +9398,7 @@ void MainWindow::initializeApplicationStyle()
 MainWindow::MainWindow(bool restorePreviousSession)
     : QMainWindow()
     , m_restorePreviousSessionOnStartup(restorePreviousSession)
+    , m_sessionRestorePending(restorePreviousSession)
 {
     StartupDiagnostics::AppearanceContext context("Initial window construction");
     StartupDiagnostics::Scope windowTiming("Construct main window (total)");
@@ -9691,6 +9719,7 @@ void MainWindow::finishStartupSessionRestore(bool restoredSession)
         setActiveEditorDisplayPane(m_widgets.display, m_widgets.editor, true);
     else
         m_widgets.editor->setFocus(Qt::OtherFocusReason);
+    m_sessionRestorePending = false;
 }
 
 void MainWindow::renameLoadedSession(Session* session, const QString& name)
@@ -9794,8 +9823,13 @@ void MainWindow::discardUnusedPrivateSessions()
 
 void MainWindow::showNewSessionWindow()
 {
+    createNewSessionWindow();
+}
+
+MainWindow* MainWindow::createNewSessionWindow(bool activate)
+{
     if (m_shutdownStateSaved)
-        return;
+        return nullptr;
 
     MainWindow* window = new MainWindow(false);
     window->setAttribute(Qt::WA_DeleteOnClose, true);
@@ -9845,10 +9879,43 @@ void MainWindow::showNewSessionWindow()
         targetPos = availableGeometry.center() - QRect(QPoint(0, 0), window->size()).center();
     }
     window->move(targetPos);
+    window->setAttribute(Qt::WA_ShowWithoutActivating, !activate);
     window->show();
-    window->raise();
-    window->activateWindow();
+    window->setAttribute(Qt::WA_ShowWithoutActivating, false);
+    if (activate) {
+        window->raise();
+        window->activateWindow();
+    }
     window->saveSessionLayout(false);
+    return window;
+}
+
+void MainWindow::createNewSessionTab()
+{
+    if (!m_shutdownStateSaved)
+        showNewSessionDialog();
+}
+
+MainWindow* MainWindow::subsequentLaunchWindow()
+{
+    MainWindow* target = activeMainWindowForMenuAction(primaryMainWindow());
+    if (target && allMainWindows().contains(QPointer<MainWindow>(target))
+        && !target->m_shutdownStateSaved)
+        return target;
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (window && !window->m_shutdownStateSaved)
+            return window;
+    }
+    return nullptr;
+}
+
+bool MainWindow::sessionRestoreInProgress()
+{
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (window && window->m_sessionRestorePending)
+            return true;
+    }
+    return false;
 }
 
 void MainWindow::showOpenSessionDialog()
@@ -11804,6 +11871,23 @@ void MainWindow::setOpenPrivateTabOnStartupEnabled(bool enabled)
             continue;
         const QSignalBlocker blocker(window->m_actions.settingsOpenPrivateTabOnStartup);
         window->m_actions.settingsOpenPrivateTabOnStartup->setChecked(enabled);
+    }
+    m_settings->save();
+}
+
+void MainWindow::setSubsequentLaunchAction(QAction* action)
+{
+    if (!action)
+        return;
+    m_settings->subsequentLaunchAction =
+        static_cast<Settings::SubsequentLaunchAction>(action->data().toInt());
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (!window)
+            continue;
+        for (QAction* choice : window->m_actionGroups.subsequentLaunch->actions()) {
+            const QSignalBlocker blocker(choice);
+            choice->setChecked(choice->data().toInt() == int(m_settings->subsequentLaunchAction));
+        }
     }
     m_settings->save();
 }

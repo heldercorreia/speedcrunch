@@ -145,6 +145,9 @@ column order between launches, including for panels that are hidden.
 Session Tabs and Panes
 ----------------------
 
+New blank tabs receive an ``Untitled-XXX`` name that is not already used in any
+open window, including by empty tabs that have not been saved.
+
 When a pane contains more than one session, SpeedCrunch shows a tab bar above
 the result display. Click a tab to switch sessions, drag tabs horizontally to
 reorder them within the pane, or drag a tab away from the tab bar to move it to
@@ -581,6 +584,25 @@ Window
 
 This section contains settings that control the main window behavior.
 
+* :menuselection:`On Subsequent Launch`
+    Choose what happens when you launch SpeedCrunch while it is already running.
+    :menuselection:`Activate Existing Window` is the default.
+    :menuselection:`Open New Window` opens a blank session in another window.
+    :menuselection:`Open New Tab` opens a blank session in the most recently
+    active calculator window, using its active pane if the window is split.
+    The choice applies to all windows and is saved between launches.
+
+    This setting works on Windows, macOS, and Linux with X11 or Wayland.
+    On macOS, reopening the app from Finder or clicking its Dock icon also
+    follows this choice. Switching between apps or clicking an existing window
+    does not create a window or tab. On other desktops, the launcher or taskbar
+    action must launch the application again to use this setting.
+
+    If SpeedCrunch is not running, it starts normally and restores saved
+    sessions regardless of this choice. Requests received during restoration
+    wait until it finishes. If a modal dialog is open, finish or dismiss it
+    before SpeedCrunch creates the requested window or tab. The desktop's
+    focus policy still determines whether a window can come to the foreground.
 * :menuselection:`Open a Private Tab on Startup`
     Open and focus a fresh private tab after restoring saved sessions. If there
     are no sessions to restore, or the active session is an empty
