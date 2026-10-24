@@ -845,12 +845,30 @@ User Interface Settings
     .. versionadded:: 1.0
        The :menuselection:`Theme...` dialog, including live preview and JSON import/export.
 
+* :menuselection:`Settings --> Appearance --> System Color Mode`
+    Choose the light or dark appearance for controls that use the system style:
+
+    * :guilabel:`Follow System` (the default) follows the operating system's
+      current appearance, including automatic light and dark changes.
+    * :guilabel:`Light` keeps the system controls light.
+    * :guilabel:`Dark` keeps the system controls dark.
+
+    It affects menus, docks, and the status bar when their appearance is set to
+    :guilabel:`System`, along with other native controls and dialogs. It does not
+    change the selected SpeedCrunch theme or the Input and Results appearance.
+
+    A system high-contrast accessibility theme may take precedence over the
+    selected light or dark mode, depending on platform support.
+
+    .. versionadded:: 1.2
+
 * :menuselection:`Settings --> Appearance --> Menus`
     Choose how menus look:
 
     * :guilabel:`System` uses the system's menu colors and styling,
-      including highlighted and disabled items. Menus follow changes to the
-      system theme while SpeedCrunch is running.
+      including highlighted and disabled items. With :guilabel:`Follow System`
+      selected under :menuselection:`System Color Mode`, menus follow changes
+      to the system theme while SpeedCrunch is running.
     * :guilabel:`SpeedCrunch Theme` (the default) uses the selected SpeedCrunch
       theme for menu backgrounds and text, including highlighted items.
       Menu icons also follow the theme's text colors. In popup menus, disabled
@@ -863,7 +881,8 @@ User Interface Settings
     The macOS system menu bar keeps its native appearance.
     Popup menus drawn by Qt can look slightly different from native macOS menus.
     On GNOME, popup menus use the GTK theme's popup hover colors when GTK is
-    available. Otherwise they use Qt's system palette.
+    available and System Color Mode is set to :guilabel:`Follow System`.
+    Otherwise they use Qt's system palette.
     The choice applies to all SpeedCrunch windows and is saved between launches.
 
     Selections in the expression editor and result display use the SpeedCrunch
@@ -885,8 +904,9 @@ User Interface Settings
       search fields.
 
     The choice applies immediately to all SpeedCrunch windows and is saved
-    between launches. System colors follow changes to the system theme while
-    SpeedCrunch is running.
+    between launches. With :guilabel:`Follow System` selected under
+    :menuselection:`System Color Mode`, system colors follow changes to the
+    system theme while SpeedCrunch is running.
 
     .. versionadded:: 1.1
 
@@ -894,8 +914,9 @@ User Interface Settings
     Choose how the status bar looks:
 
     * :guilabel:`System` uses the system's palette and widget styles for the
-      status bar, its labels, and its buttons. Colors follow changes to the
-      system theme while SpeedCrunch is running.
+      status bar, its labels, and its buttons. With :guilabel:`Follow System`
+      selected under :menuselection:`System Color Mode`, colors follow changes
+      to the system theme while SpeedCrunch is running.
     * :guilabel:`SpeedCrunch Theme` (the default) uses the selected SpeedCrunch
       theme for the status bar background and text.
 

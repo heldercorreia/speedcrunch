@@ -184,6 +184,7 @@ private slots:
     void setHistoryDockVisible(bool, bool takeFocus = true);
     void setKeypadMode(QAction*);
     void setMenuAppearance(QAction*);
+    void setSystemColorMode(QAction*);
     void setDockAppearance(QAction*);
     void setStatusBarAppearance(QAction*);
     void setKeypadAppearance(QAction*);
@@ -565,6 +566,9 @@ private:
         QAction* settingsDisplayZoomOut;
         QAction* settingsDisplayFont;
         QAction* settingsDisplayColorSchemeCustom;
+        QAction* settingsSystemColorModeFollowSystem;
+        QAction* settingsSystemColorModeLight;
+        QAction* settingsSystemColorModeDark;
         QAction* settingsMenuAppearanceSystem;
         QAction* settingsMenuAppearanceSpeedCrunch;
         QAction* settingsDockAppearanceSystem;
@@ -597,6 +601,7 @@ private:
         QActionGroup* angle;
         QActionGroup* colorScheme;
         QActionGroup* menuAppearance;
+        QActionGroup* systemColorMode;
         QActionGroup* dockAppearance;
         QActionGroup* statusBarAppearance;
         QActionGroup* keypadAppearance;
@@ -625,6 +630,7 @@ private:
         QMenu* digitGrouping;
         QMenu* display;
         QMenu* menuAppearance;
+        QMenu* systemColorMode;
         QMenu* dockAppearance;
         QMenu* statusBarAppearance;
         QMenu* keypadAppearance;

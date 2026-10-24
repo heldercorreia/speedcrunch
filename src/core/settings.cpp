@@ -654,6 +654,11 @@ void Settings::load()
     key = KEY + QLatin1String("/Display/");
     displayFont = settings->value(key + QLatin1String("DisplayFont"), QFont().toString()).toString();
     colorScheme = settings->value(key + QLatin1String("ColorSchemeName"), DefaultColorScheme).toString();
+    const int systemColorModeValue = settings->value(key + QLatin1String("SystemColorMode"),
+                                                   SystemColorModeFollowSystem).toInt();
+    systemColorMode = systemColorModeValue >= SystemColorModeFollowSystem
+            && systemColorModeValue <= SystemColorModeDark
+        ? static_cast<SystemColorMode>(systemColorModeValue) : SystemColorModeFollowSystem;
     menuAppearance = settings->value(key + QLatin1String("MenuAppearance"), MenuAppearanceSpeedCrunch).toInt()
         == MenuAppearanceSystem ? MenuAppearanceSystem : MenuAppearanceSpeedCrunch;
     dockAppearance = settings->value(key + QLatin1String("DockAppearance"), DockAppearanceSpeedCrunch).toInt()
@@ -787,6 +792,7 @@ void Settings::save()
 
     settings->setValue(key + QLatin1String("DisplayFont"), displayFont);
     settings->setValue(key + QLatin1String("ColorSchemeName"), colorScheme);
+    settings->setValue(key + QLatin1String("SystemColorMode"), static_cast<int>(systemColorMode));
     settings->setValue(key + QLatin1String("MenuAppearance"), static_cast<int>(menuAppearance));
     settings->setValue(key + QLatin1String("DockAppearance"), static_cast<int>(dockAppearance));
     settings->setValue(key + QLatin1String("StatusBarAppearance"), static_cast<int>(statusBarAppearance));

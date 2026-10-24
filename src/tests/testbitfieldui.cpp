@@ -20,6 +20,8 @@ private slots:
     void system_bitfield_background_is_visible_in_window();
     void bitfield_buttons_use_configured_generated_shades();
     void repeated_bit_theme_keeps_state_repainting();
+    void system_bitfield_repeated_theme_refresh_keeps_current_bit_colors_data();
+    void system_bitfield_repeated_theme_refresh_keeps_current_bit_colors();
 };
 
 void TestBitfieldUi::initTestCase()
@@ -426,6 +428,77 @@ void TestBitfieldUi::repeated_bit_theme_keeps_state_repainting()
     QCOMPARE(bit.grab().toImage().pixelColor(4, 4).name(), selected.name());
     bit.setState(false);
     QCOMPARE(bit.grab().toImage().pixelColor(4, 4).name(), background.name());
+}
+
+void TestBitfieldUi::system_bitfield_repeated_theme_refresh_keeps_current_bit_colors_data()
+{
+    QTest::addColumn<bool>("floating");
+    QTest::newRow("attached") << false;
+    QTest::newRow("floating") << true;
+}
+
+void TestBitfieldUi::system_bitfield_repeated_theme_refresh_keeps_current_bit_colors()
+{
+    QFETCH(bool, floating);
+    MainWindowStateGuard guard;
+    const QPalette original = QApplication::palette();
+    const auto restorePalette = qScopeGuard([original]() { QApplication::setPalette(original); });
+    guard.settings->dockAppearance = Settings::DockAppearanceSystem;
+    guard.settings->bitfieldVisible = true;
+    guard.settings->sessionLayoutJson.clear();
+    guard.settings->windowState.clear();
+    MainWindow window(false);
+    window.resize(1000, 700);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    auto* field = window.findChild<BitFieldWidget*>();
+    auto* dock = window.findChild<QDockWidget*>(QStringLiteral("BitfieldDock"));
+    QVERIFY(field);
+    QVERIFY(dock);
+    dock->setFloating(floating);
+    dock->show();
+    QVERIFY(QTest::qWaitForWindowExposed(dock->window()));
+    BitWidget* onBit = nullptr;
+    BitWidget* offBit = nullptr;
+    for (BitWidget* bit : field->findChildren<BitWidget*>()) {
+        if (bit->text() == QLatin1String("0"))
+            onBit = bit;
+        if (bit->text() == QLatin1String("1"))
+            offBit = bit;
+    }
+    QVERIFY(onBit);
+    QVERIFY(offBit);
+    onBit->setState(true);
+    offBit->setState(false);
+    QWidget* root = field->window();
+    QTest::mouseMove(root->windowHandle(), QPoint(1, 1));
+    QCoreApplication::processEvents();
+    for (bool dark : {true, false, true}) {
+        QPalette current = original;
+        current.setColor(QPalette::Window, QColor(dark ? "#202020" : "#eeeeee"));
+        current.setColor(QPalette::WindowText, dark ? Qt::white : Qt::black);
+        current.setColor(QPalette::Highlight, QColor(dark ? "#246fc0" : "#185ca8"));
+        current.setColor(QPalette::HighlightedText, Qt::white);
+        QApplication::setPalette(current);
+        QCoreApplication::processEvents();
+        for (int pass = 0; pass < 3; ++pass) {
+            // Reproduce the native dock restoration that follows a mode change.
+            window.colorSchemeChanged();
+            QCoreApplication::processEvents();
+            const QImage image = root->grab().toImage();
+            const auto fill = [&](BitWidget* bit) {
+                const QPoint point = bit->mapTo(root, QPoint(3, 3));
+                return image.pixelColor(qRound(point.x() * root->devicePixelRatioF()),
+                                        qRound(point.y() * root->devicePixelRatioF()));
+            };
+            QCOMPARE(fill(onBit), current.color(QPalette::Highlight));
+            QCOMPARE(fill(offBit), current.color(QPalette::Window));
+            QCOMPARE(onBit->palette().color(QPalette::WindowText), current.color(QPalette::HighlightedText));
+            QCOMPARE(offBit->palette().color(QPalette::WindowText), current.color(QPalette::WindowText));
+            QVERIFY(onBit->state());
+            QVERIFY(!offBit->state());
+        }
+    }
 }
 
 int main(int argc, char** argv)

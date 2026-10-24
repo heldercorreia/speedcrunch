@@ -4,8 +4,10 @@
 #include "mainwindowtesthelpers.h"
 #include "core/numberformatter.h"
 #include "core/mathdsl.h"
+#include "gui/diagnosticsdialog.h"
 
 #include <QOperatingSystemVersion>
+#include <QStyleHints>
 
 using namespace MainWindowTestHelpers;
 
@@ -13,6 +15,12 @@ class TestSettingsUi : public QObject {
     Q_OBJECT
 
 private slots:
+    void system_color_mode_persistence_data();
+    void system_color_mode_persistence();
+    void system_color_mode_actions_update_windows_and_preserve_theme();
+    void system_color_mode_updates_native_palettes();
+    void system_color_mode_refreshes_controls_without_platform_notifications();
+    void system_color_mode_replaces_stale_fusion_palette_and_releases_override();
     void trailing_zeroes_formatting_data();
     void trailing_zeroes_formatting();
     void trailing_zeroes_setting_survives_reload();
@@ -55,6 +63,319 @@ private slots:
     void notation_shortcuts_change_only_active_window_data();
     void notation_shortcuts_change_only_active_window();
 };
+
+void TestSettingsUi::system_color_mode_persistence_data()
+{
+    QTest::addColumn<QVariant>("stored");
+    QTest::addColumn<int>("expected");
+    QTest::newRow("missing") << QVariant() << 0;
+    QTest::newRow("follow-system") << QVariant(0) << 0;
+    QTest::newRow("light") << QVariant(1) << 1;
+    QTest::newRow("dark") << QVariant(2) << 2;
+    QTest::newRow("negative") << QVariant(-1) << 0;
+    QTest::newRow("unknown") << QVariant(3) << 0;
+    QTest::newRow("invalid") << QVariant(QStringLiteral("invalid")) << 0;
+}
+
+void TestSettingsUi::system_color_mode_persistence()
+{
+    QFETCH(QVariant, stored);
+    QFETCH(int, expected);
+    Settings* settings = Settings::instance();
+    QSettings persisted(Settings::getConfigPath() + QStringLiteral("/SpeedCrunch.ini"),
+                        QSettings::IniFormat);
+    const QString key = QStringLiteral("SpeedCrunch/Display/SystemColorMode");
+    if (stored.isValid())
+        persisted.setValue(key, stored);
+    else
+        persisted.remove(key);
+    persisted.sync();
+    settings->load();
+    QCOMPARE(int(settings->systemColorMode), expected);
+    settings->save();
+    persisted.sync();
+    QCOMPARE(persisted.value(key).toInt(), expected);
+    settings->systemColorMode = Settings::SystemColorModeDark;
+    QVERIFY(settings->resetToDefaults());
+    QCOMPARE(settings->systemColorMode, Settings::SystemColorModeFollowSystem);
+}
+
+void TestSettingsUi::system_color_mode_actions_update_windows_and_preserve_theme()
+{
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    const auto restoreMode = qScopeGuard([settings]() {
+        settings->systemColorMode = Settings::SystemColorModeFollowSystem;
+        MainWindow::initializeApplicationStyle();
+    });
+    settings->colorScheme = QStringLiteral("Tomorrow");
+    MainWindow first(false);
+    MainWindow second(false);
+    auto* editor = first.findChild<Editor*>();
+    auto* display = first.findChild<ResultDisplay*>();
+    QVERIFY(editor);
+    QVERIFY(display);
+    editor->setText(QStringLiteral("12 + 34"));
+    QVERIFY(QMetaObject::invokeMethod(&first, "evaluateEditorExpression", Qt::DirectConnection));
+    editor->setText(QStringLiteral("56 + 78"));
+    const QString history = display->toPlainText();
+    const QColor editorBackground = editor->palette().color(QPalette::Base);
+    const QColor displayBackground = display->palette().color(QPalette::Base);
+    const QStringList labels {QStringLiteral("Follow System"), QStringLiteral("Light"),
+                              QStringLiteral("Dark")};
+    for (int mode : {1, 2, 0}) {
+        auto* menu = first.findChild<QMenu*>(QStringLiteral("SystemColorModeMenu"));
+        QVERIFY(menu);
+#if QT_VERSION < QT_VERSION_CHECK(6, 8, 0)
+        QVERIFY(!menu->menuAction()->isVisible());
+        return;
+#endif
+        QAction* selected = nullptr;
+        for (QAction* action : menu->actions()) {
+            if (action->data().toInt() == mode)
+                selected = action;
+        }
+        QVERIFY(selected);
+        selected->trigger();
+        QCOMPARE(int(settings->systemColorMode), mode);
+        QCoreApplication::processEvents();
+        MainWindow third(false);
+        for (MainWindow* window : {&first, &second, &third}) {
+            auto* choices = window->findChild<QMenu*>(QStringLiteral("SystemColorModeMenu"));
+            QVERIFY(choices);
+            for (QAction* action : choices->actions())
+                QCOMPARE(action->isChecked(), action->data().toInt() == mode);
+        }
+        QCOMPARE(settings->colorScheme, QStringLiteral("Tomorrow"));
+        QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSpeedCrunch);
+        QCOMPARE(settings->dockAppearance, Settings::DockAppearanceSpeedCrunch);
+        QCOMPARE(settings->statusBarAppearance, Settings::StatusBarAppearanceSpeedCrunch);
+        QCOMPARE(editor->text(), QStringLiteral("56 + 78"));
+        QCOMPARE(display->toPlainText(), history);
+        QCOMPARE(editor->palette().color(QPalette::Base), editorBackground);
+        QCOMPARE(display->palette().color(QPalette::Base), displayBackground);
+        QVERIFY(appDiagnosticsReport(QString()).contains(
+            QStringLiteral("System color mode: ") + labels.at(mode) + QLatin1Char('\n')));
+        settings->save();
+        settings->systemColorMode = Settings::SystemColorModeFollowSystem;
+        settings->load();
+        QCOMPARE(int(settings->systemColorMode), mode);
+    }
+}
+
+void TestSettingsUi::system_color_mode_updates_native_palettes()
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+    const QString platform = QGuiApplication::platformName();
+    if (platform != QLatin1String("cocoa") && platform != QLatin1String("windows")) {
+        QTest::qSkip("Requires native Windows or macOS appearance support", __FILE__, __LINE__);
+        return;
+    }
+    if (QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Unknown) {
+        QTest::qSkip("System color scheme unavailable, for example with a contrast theme",
+                     __FILE__, __LINE__);
+        return;
+    }
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    const auto restoreMode = qScopeGuard([settings]() {
+        settings->systemColorMode = Settings::SystemColorModeFollowSystem;
+        MainWindow::initializeApplicationStyle();
+    });
+    const Qt::ColorScheme systemScheme = QGuiApplication::styleHints()->colorScheme();
+    settings->menuAppearance = Settings::MenuAppearanceSystem;
+    settings->dockAppearance = Settings::DockAppearanceSystem;
+    settings->statusBarAppearance = Settings::StatusBarAppearanceSystem;
+    settings->statusBarVisible = true;
+    settings->constantsDockVisible = true;
+    // A saved override must take effect before the first window is created.
+    settings->systemColorMode = Settings::SystemColorModeDark;
+    settings->save();
+    settings->load();
+    MainWindow::initializeApplicationStyle();
+    QTRY_COMPARE(QGuiApplication::styleHints()->colorScheme(), Qt::ColorScheme::Dark);
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    auto* menu = window.findChild<QMenu*>(QStringLiteral("SystemColorModeMenu"));
+    auto* dock = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    auto* status = window.findChild<QStatusBar*>();
+    QVERIFY(menu);
+    QVERIFY(dock);
+    QVERIFY(status);
+    for (int mode : {1, 2, 0}) {
+        const Qt::ColorScheme expected = mode == 1 ? Qt::ColorScheme::Light
+            : mode == 2 ? Qt::ColorScheme::Dark : systemScheme;
+        for (QAction* action : menu->actions()) {
+            if (action->data().toInt() == mode)
+                action->trigger();
+        }
+        QTRY_COMPARE(QGuiApplication::styleHints()->colorScheme(), expected);
+        QTRY_COMPARE(dock->palette().color(QPalette::Window).rgba(),
+                     MenuStyle::systemPalette(dock).color(QPalette::Window).rgba());
+        QTRY_COMPARE(status->palette().color(QPalette::Window).rgba(),
+                     MenuStyle::systemPalette(status).color(QPalette::Window).rgba());
+        QCOMPARE(QApplication::palette().color(QPalette::Window).lightness() < 128,
+                 expected == Qt::ColorScheme::Dark);
+    }
+    // Resetting settings must also remove a live override in every window.
+    menu->actions().at(2)->trigger();
+    QTimer::singleShot(0, []() {
+        auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        QVERIFY(dialog);
+        dialog->button(QMessageBox::Yes)->click();
+    });
+    QVERIFY(QMetaObject::invokeMethod(&window, "resetAllSettings", Qt::DirectConnection));
+    QCOMPARE(settings->systemColorMode, Settings::SystemColorModeFollowSystem);
+    QTRY_COMPARE(QGuiApplication::styleHints()->colorScheme(), systemScheme);
+#else
+    QTest::qSkip("Requires Qt 6.8 or newer", __FILE__, __LINE__);
+#endif
+}
+
+void TestSettingsUi::system_color_mode_refreshes_controls_without_platform_notifications()
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+    class SuppressAppearanceNotifications : public QObject {
+        bool eventFilter(QObject* object, QEvent* event) override
+        {
+            return qobject_cast<MainWindow*>(object)
+                && (event->type() == QEvent::ApplicationPaletteChange
+                    || event->type() == QEvent::ThemeChange);
+        }
+    } suppress;
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    const QPalette originalPalette = QApplication::palette();
+    const auto restoreAppearance = qScopeGuard([settings, originalPalette]() {
+        settings->systemColorMode = Settings::SystemColorModeFollowSystem;
+        MainWindow::initializeApplicationStyle();
+        QApplication::setPalette(originalPalette);
+    });
+    settings->dockAppearance = Settings::DockAppearanceSystem;
+    settings->statusBarAppearance = Settings::StatusBarAppearanceSystem;
+    settings->statusBarVisible = true;
+    settings->constantsDockVisible = true;
+    QPalette dark = originalPalette;
+    dark.setColor(QPalette::Window, QColor("#202020"));
+    dark.setColor(QPalette::WindowText, Qt::white);
+    QApplication::setPalette(dark);
+    MainWindow first(false);
+    MainWindow second(false);
+    first.show();
+    second.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&first));
+    QVERIFY(QTest::qWaitForWindowExposed(&second));
+    QCoreApplication::processEvents();
+    qApp->installEventFilter(&suppress);
+    const auto removeFilter = qScopeGuard([&suppress]() { qApp->removeEventFilter(&suppress); });
+
+    for (int mode : {1, 2, 0}) {
+        const QColor background = mode == 1 ? QColor("#eeeeee") : QColor("#202020");
+        QPalette source = originalPalette;
+        source.setColor(QPalette::Window, background);
+        source.setColor(QPalette::WindowText, mode == 1 ? Qt::black : Qt::white);
+        QApplication::setPalette(source);
+        QCoreApplication::processEvents();
+        auto* menu = first.findChild<QMenu*>(QStringLiteral("SystemColorModeMenu"));
+        QVERIFY(menu);
+        for (QAction* action : menu->actions()) {
+            if (action->data().toInt() == mode)
+                action->trigger();
+        }
+        QCOMPARE(int(settings->systemColorMode), mode);
+        for (MainWindow* window : {&first, &second}) {
+            auto* dock = window->findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+            auto* status = window->findChild<QStatusBar*>();
+            QVERIFY(dock);
+            QVERIFY(status);
+            QTRY_COMPARE(dock->palette().color(QPalette::Window).rgba(), background.rgba());
+            QTRY_COMPARE(status->palette().color(QPalette::Window).rgba(), background.rgba());
+        }
+    }
+#else
+    QTest::qSkip("Requires Qt 6.8 or newer", __FILE__, __LINE__);
+#endif
+}
+
+void TestSettingsUi::system_color_mode_replaces_stale_fusion_palette_and_releases_override()
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+    class ModeStyle : public QProxyStyle {
+    public:
+        ModeStyle() : QProxyStyle(QStringLiteral("Fusion")) {}
+        QPalette standardPalette() const override
+        {
+            QPalette palette = QProxyStyle::standardPalette();
+            const bool dark = Settings::instance()->systemColorMode != Settings::SystemColorModeLight;
+            palette.setColor(QPalette::Window, dark ? QColor("#202020") : QColor("#eeeeee"));
+            palette.setColor(QPalette::WindowText, dark ? Qt::white : Qt::black);
+            return palette;
+        }
+    };
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    QStyle* originalStyle = QApplication::style();
+    const QPalette originalPalette = QApplication::palette();
+    originalStyle->setParent(nullptr);
+    QApplication::setStyle(new ModeStyle);
+    const auto restoreAppearance = qScopeGuard([settings, originalStyle, originalPalette]() {
+        settings->systemColorMode = Settings::SystemColorModeFollowSystem;
+        MenuStyle::refresh();
+        QApplication::setStyle(originalStyle);
+        QApplication::setPalette(originalPalette);
+    });
+    QPalette desktop = originalPalette;
+    desktop.setColor(QPalette::Window, QColor("#202020"));
+    desktop.setColor(QPalette::WindowText, Qt::white);
+    QApplication::setPalette(desktop);
+    settings->menuAppearance = Settings::MenuAppearanceSystem;
+    settings->dockAppearance = Settings::DockAppearanceSystem;
+    settings->statusBarAppearance = Settings::StatusBarAppearanceSystem;
+    settings->statusBarVisible = true;
+    settings->constantsDockVisible = true;
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    auto* menu = window.findChild<QMenu*>(QStringLiteral("SystemColorModeMenu"));
+    auto* dock = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    auto* status = window.findChild<QStatusBar*>();
+    QVERIFY(menu);
+    QVERIFY(dock);
+    QVERIFY(status);
+    auto* editor = window.findChild<Editor*>();
+    auto* display = window.findChild<ResultDisplay*>();
+    QVERIFY(editor);
+    QVERIFY(display);
+    const QColor editorBackground = editor->palette().color(QPalette::Base);
+    const QColor displayBackground = display->palette().color(QPalette::Base);
+    for (int mode : {1, 2, 1, 0}) {
+        // Emulate GTK's stale cached palette while Fusion can generate the new mode.
+        for (QAction* action : menu->actions()) {
+            if (action->data().toInt() == mode)
+                action->trigger();
+        }
+        const QColor expected = mode == 1 ? QColor("#eeeeee") : QColor("#202020");
+        QTRY_COMPARE(QApplication::palette().color(QPalette::Window), expected);
+        QTRY_COMPARE(menu->palette().color(QPalette::Window), expected);
+        QTRY_COMPARE(dock->palette().color(QPalette::Window), expected);
+        QTRY_COMPARE(status->palette().color(QPalette::Window), expected);
+        QCOMPARE(editor->palette().color(QPalette::Base), editorBackground);
+        QCOMPARE(display->palette().color(QPalette::Base), displayBackground);
+        QVERIFY(appDiagnosticsReport(QString()).contains(
+            QStringLiteral("Application colors (background / text): ") + expected.name()
+            + QStringLiteral(" / ") + QApplication::palette().color(QPalette::WindowText).name()));
+    }
+    QCOMPARE(QApplication::palette().resolveMask(), desktop.resolveMask());
+    desktop.setColor(QPalette::Window, QColor("#eeeeee"));
+    desktop.setColor(QPalette::WindowText, Qt::black);
+    QApplication::setPalette(desktop);
+    QTRY_COMPARE(dock->palette().color(QPalette::Window), QColor("#eeeeee"));
+    QTRY_COMPARE(status->palette().color(QPalette::Window), QColor("#eeeeee"));
+#else
+    QTest::qSkip("Requires Qt 6.8 or newer", __FILE__, __LINE__);
+#endif
+}
 
 void TestSettingsUi::trailing_zeroes_formatting_data()
 {

@@ -16,6 +16,7 @@
 #include <QProxyStyle>
 #include <QScreen>
 #include <QStyle>
+#include <QStyleHints>
 #include <QSysInfo>
 #include <QTextStream>
 #include <QVBoxLayout>
@@ -142,6 +143,17 @@ QString appDiagnosticsReport(const QString& workload)
                                    ? QString::fromLatin1(platformStyle->metaObject()->className())
                                    : platformStyle->objectName()) << '\n'
         << "CPU threads available: " << QThread::idealThreadCount() << '\n';
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    const Qt::ColorScheme scheme = QGuiApplication::styleHints()->colorScheme();
+    out << "Effective Qt color scheme: " << (scheme == Qt::ColorScheme::Light ? "Light"
+        : scheme == Qt::ColorScheme::Dark ? "Dark" : "Unknown") << '\n';
+#endif
+    const QPalette appPalette = QApplication::palette();
+    const QPalette menuPalette = QApplication::palette("QMenu");
+    out << "Application colors (background / text): " << appPalette.color(QPalette::Window).name()
+        << " / " << appPalette.color(QPalette::WindowText).name() << '\n'
+        << "Menu colors (background / text): " << menuPalette.color(QPalette::Window).name()
+        << " / " << menuPalette.color(QPalette::WindowText).name() << '\n';
     int screenIndex = 0;
     for (const QScreen* screen : QGuiApplication::screens()) {
         const QSize size = screen->size();
@@ -158,6 +170,9 @@ QString appDiagnosticsReport(const QString& workload)
     }
     out << "Theme: " << (settings->colorScheme == QLatin1String("Custom")
                             ? QStringLiteral("Custom") : settings->colorScheme) << '\n'
+        << "System color mode: " << (settings->systemColorMode == Settings::SystemColorModeLight
+                                         ? "Light" : settings->systemColorMode == Settings::SystemColorModeDark
+                                             ? "Dark" : "Follow System") << '\n'
         << "Editor appearance: " << (settings->editorDisplayStyle == Settings::EditorDisplayClassic
                                         ? "Classic" : "Modern") << '\n'
         << "Dock appearance: " << (settings->dockAppearance == Settings::DockAppearanceSystem

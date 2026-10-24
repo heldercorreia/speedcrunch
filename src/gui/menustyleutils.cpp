@@ -27,6 +27,10 @@
 #include <QScopedValueRollback>
 #include <QProxyStyle>
 #include <QStyle>
+#include <QStyleHints>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
+#include <QAccessibilityHints>
+#endif
 #include <QStyleOptionComboBox>
 #include <QTimer>
 #include <QSysInfo>
@@ -56,6 +60,11 @@ CachedPalette cachedPalette;
 
 bool usesGtkColors()
 {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+    // GTK's global palette can disagree with the application's explicit mode.
+    if (Settings::instance()->systemColorMode != Settings::SystemColorModeFollowSystem)
+        return false;
+#endif
     if (QSysInfo::kernelType() != QLatin1String("linux"))
         return false;
     const QString platform = QApplication::platformName();
@@ -416,6 +425,69 @@ QPalette fullyResolvedSystemPalette(const QWidget* widget)
     return fullyResolvedPalette(palette);
 }
 
+void refreshSystemColorModePalette()
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+    struct Override {
+        QPalette original;
+        Settings::SystemColorMode mode;
+    };
+    static std::optional<Override> activeOverride;
+    const auto release = []() {
+        if (!activeOverride)
+            return;
+        const QPalette original = activeOverride->original;
+        activeOverride.reset();
+        // Keep the original resolve mask so system colors can change again.
+        QApplication::setPalette(original);
+    };
+    const auto mode = Settings::instance()->systemColorMode;
+    if (activeOverride && activeOverride->mode != mode)
+        release();
+    if (mode == Settings::SystemColorModeFollowSystem)
+        return;
+
+    QStyle* style = QApplication::style();
+    while (auto* proxy = qobject_cast<QProxyStyle*>(style))
+        style = proxy->baseStyle();
+    if (style->objectName().compare(QLatin1String("fusion"), Qt::CaseInsensitive) != 0) {
+        release();
+        return;
+    }
+#if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
+    if (QGuiApplication::styleHints()->accessibility()->contrastPreference()
+        == Qt::ContrastPreference::HighContrast) {
+        release();
+        return;
+    }
+#else
+    // Earlier Windows backends report Unknown for a contrast theme.
+    if (QGuiApplication::platformName() == QLatin1String("windows")
+        && QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Unknown) {
+        release();
+        return;
+    }
+#endif
+    const bool dark = mode == Settings::SystemColorModeDark;
+    const auto isDark = [](const QPalette& palette) {
+        return palette.color(QPalette::Window).lightness()
+            < palette.color(QPalette::WindowText).lightness();
+    };
+    // Qt 6.8/6.9 GTK caches its fallback palette across color-mode changes.
+    // Fusion's standard palette is generated afresh from the requested mode.
+    const QPalette fresh = QApplication::style()->standardPalette();
+    if (isDark(fresh) != dark) {
+        release();
+        return; // The platform does not support this override.
+    }
+    if (!activeOverride && isDark(QApplication::palette()) == dark)
+        return;
+    if (!activeOverride)
+        activeOverride = Override {QApplication::palette(), mode};
+    QApplication::setPalette(fresh);
+#endif
+}
+
 class MenuAppearanceFilter : public QObject {
 public:
     explicit MenuAppearanceFilter(QObject* parent) : QObject(parent) {}
@@ -435,6 +507,7 @@ public:
         if (m_updating)
             return;
         QScopedValueRollback<bool> guard(m_updating, true);
+        refreshSystemColorModePalette();
         for (QWidget* widget : QApplication::allWidgets())
             applyWidget(widget);
     }

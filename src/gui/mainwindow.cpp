@@ -70,6 +70,7 @@
 #include <QAbstractItemView>
 #include <QAbstractScrollArea>
 #include <QApplication>
+#include <QStyleHints>
 #include <QClipboard>
 #include <QCloseEvent>
 #include <QCheckBox>
@@ -3920,6 +3921,15 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorHistorySizeLimit = new QAction(this);
     m_actions.settingsDisplayFont = new QAction(this);
     m_actions.settingsDisplayColorSchemeCustom = new QAction(this);
+    m_actions.settingsSystemColorModeFollowSystem = new QAction(this);
+    m_actions.settingsSystemColorModeFollowSystem->setCheckable(true);
+    m_actions.settingsSystemColorModeFollowSystem->setData(Settings::SystemColorModeFollowSystem);
+    m_actions.settingsSystemColorModeLight = new QAction(this);
+    m_actions.settingsSystemColorModeLight->setCheckable(true);
+    m_actions.settingsSystemColorModeLight->setData(Settings::SystemColorModeLight);
+    m_actions.settingsSystemColorModeDark = new QAction(this);
+    m_actions.settingsSystemColorModeDark->setCheckable(true);
+    m_actions.settingsSystemColorModeDark->setData(Settings::SystemColorModeDark);
     m_actions.settingsMenuAppearanceSystem = new QAction(this);
     m_actions.settingsMenuAppearanceSpeedCrunch = new QAction(this);
     m_actions.settingsMenuAppearanceSystem->setCheckable(true);
@@ -4238,6 +4248,51 @@ void MainWindow::updateColorSchemeActionState()
                                                            && m_settings->colorScheme == QLatin1String("Custom"));
 }
 
+namespace {
+void applySystemColorMode(Settings::SystemColorMode mode)
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+    Qt::ColorScheme scheme = Qt::ColorScheme::Unknown;
+    if (mode == Settings::SystemColorModeLight)
+        scheme = Qt::ColorScheme::Light;
+    else if (mode == Settings::SystemColorModeDark)
+        scheme = Qt::ColorScheme::Dark;
+    // Unknown removes the override, even when the effective colors are unchanged.
+    QGuiApplication::styleHints()->setColorScheme(scheme);
+#else
+    Q_UNUSED(mode);
+#endif
+}
+}
+
+void MainWindow::setSystemColorMode(QAction* action)
+{
+    if (action == nullptr)
+        return;
+    const int mode = action->data().toInt();
+    if (mode < Settings::SystemColorModeFollowSystem || mode > Settings::SystemColorModeDark)
+        return;
+    m_settings->systemColorMode = static_cast<Settings::SystemColorMode>(mode);
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (!window)
+            continue;
+        for (QAction* choice : window->m_actionGroups.systemColorMode->actions())
+            choice->setChecked(choice->data().toInt() == mode);
+    }
+    applySystemColorMode(m_settings->systemColorMode);
+    MenuStyle::refresh();
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (!window)
+            continue;
+        // Some platform themes change their control palettes without notifying
+        // every window. Refresh after Qt finishes applying the requested mode.
+        QTimer::singleShot(0, window, [window]() {
+            window->applyThemeSurfacePalette();
+            window->updateSplitterStyleSheet();
+        });
+    }
+}
+
 void MainWindow::setMenuAppearance(QAction* action)
 {
     if (action == nullptr)
@@ -4539,6 +4594,9 @@ void MainWindow::setActionsText()
     m_actions.settingsDisplayFont->setText(MainWindow::tr("&Font..."));
     m_actions.settingsResetAll->setText(MainWindow::tr("Reset All Settings..."));
     m_actions.settingsDisplayColorSchemeCustom->setText(MainWindow::tr("&Theme..."));
+    m_actions.settingsSystemColorModeFollowSystem->setText(MainWindow::tr("&Follow System"));
+    m_actions.settingsSystemColorModeLight->setText(MainWindow::tr("&Light"));
+    m_actions.settingsSystemColorModeDark->setText(MainWindow::tr("&Dark"));
     m_actions.settingsMenuAppearanceSystem->setText(MainWindow::tr("&System"));
     m_actions.settingsMenuAppearanceSpeedCrunch->setText(MainWindow::tr("SpeedCrunch &Theme"));
     m_actions.settingsDockAppearanceSystem->setText(MainWindow::tr("&System"));
@@ -4621,6 +4679,10 @@ void MainWindow::createActionGroups()
     m_actionGroups.angle->addAction(m_actions.settingsAngleUnitRevolution);
 
     m_actionGroups.colorScheme = new QActionGroup(this);
+    m_actionGroups.systemColorMode = new QActionGroup(this);
+    m_actionGroups.systemColorMode->addAction(m_actions.settingsSystemColorModeFollowSystem);
+    m_actionGroups.systemColorMode->addAction(m_actions.settingsSystemColorModeLight);
+    m_actionGroups.systemColorMode->addAction(m_actions.settingsSystemColorModeDark);
     m_actionGroups.menuAppearance = new QActionGroup(this);
     m_actionGroups.menuAppearance->addAction(m_actions.settingsMenuAppearanceSystem);
     m_actionGroups.menuAppearance->addAction(m_actions.settingsMenuAppearanceSpeedCrunch);
@@ -4824,6 +4886,12 @@ void MainWindow::createMenus()
 
     m_menus.display = m_menus.settings->addMenu("");
     m_menus.display->addAction(m_actions.settingsDisplayColorSchemeCustom);
+    m_menus.systemColorMode = m_menus.display->addMenu("");
+    m_menus.systemColorMode->setObjectName(QStringLiteral("SystemColorModeMenu"));
+    m_menus.systemColorMode->addActions(m_actionGroups.systemColorMode->actions());
+#if QT_VERSION < QT_VERSION_CHECK(6, 8, 0)
+    m_menus.systemColorMode->menuAction()->setVisible(false);
+#endif
     m_menus.display->addSeparator();
     m_menus.menuAppearance = m_menus.display->addMenu("");
     m_menus.menuAppearance->setObjectName(QStringLiteral("MenuAppearanceMenu"));
@@ -4995,6 +5063,7 @@ void MainWindow::setMenusText()
     m_menus.autoCompletion->setTitle(MainWindow::tr("A&utocomplete"));
     m_menus.upDownArrowBehavior->setTitle(MainWindow::tr("Up/Down Arrow History"));
     m_menus.display->setTitle(MainWindow::tr("&Appearance"));
+    m_menus.systemColorMode->setTitle(MainWindow::tr("System &Color Mode"));
     m_menus.menuAppearance->setTitle(MainWindow::tr("&Menus"));
     m_menus.dockAppearance->setTitle(MainWindow::tr("&Docks"));
     m_menus.statusBarAppearance->setTitle(MainWindow::tr("&Status Bar"));
@@ -8021,6 +8090,8 @@ void MainWindow::createFixedConnections()
     connect(this, &MainWindow::colorSchemeChanged, this, &MainWindow::refreshPaneThemes);
     connect(m_actionGroups.menuAppearance, &QActionGroup::triggered,
             this, &MainWindow::setMenuAppearance);
+    connect(m_actionGroups.systemColorMode, &QActionGroup::triggered,
+            this, &MainWindow::setSystemColorMode);
     connect(m_actionGroups.dockAppearance, &QActionGroup::triggered,
             this, &MainWindow::setDockAppearance);
     connect(m_actionGroups.statusBarAppearance, &QActionGroup::triggered,
@@ -8419,6 +8490,9 @@ void MainWindow::applySettings(bool initializing)
 {
     StartupDiagnostics::AppearanceContext context("Apply startup settings");
     StartupDiagnostics::Scope timing("Apply appearance and language");
+    for (QAction* choice : m_actionGroups.systemColorMode->actions())
+        choice->setChecked(choice->data().toInt() == m_settings->systemColorMode);
+    applySystemColorMode(m_settings->systemColorMode);
     applyKeypadAppearance();
     m_actions.settingsDockAppearanceSystem->setChecked(
         m_settings->dockAppearance == Settings::DockAppearanceSystem);
@@ -9290,6 +9364,7 @@ void MainWindow::initializeApplicationStyle()
 {
     StartupDiagnostics::AppearanceContext context("Initialize application style");
     // Set the application style before any main-window widgets are created.
+    applySystemColorMode(Settings::instance()->systemColorMode);
     ensureDockChromeStyleInstalled();
 }
 

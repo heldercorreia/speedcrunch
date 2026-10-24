@@ -150,19 +150,13 @@ void BitWidget::setThemeColors(const QColor& background,
                                const QColor& selectedBackground,
                                const QColor& selectedForeground)
 {
-    if (background.isValid() && m_themeBackground == background
-        && m_themeForeground == foreground && m_themeHoverBackground == hoverBackground
-        && m_themeHoverForeground == hoverForeground
-        && m_themeSelectedBackground == selectedBackground
-        && m_themeSelectedForeground == selectedForeground) {
-        return;
-    }
     m_themeBackground = background;
     m_themeForeground = foreground;
     m_themeHoverBackground = hoverBackground;
     m_themeHoverForeground = hoverForeground;
     m_themeSelectedBackground = selectedBackground;
     m_themeSelectedForeground = selectedForeground;
+    // Native dock restoration can replace the stylesheet without changing these colors.
     updateStyle(StyleUpdateReason::Theme);
 }
 

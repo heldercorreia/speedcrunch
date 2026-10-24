@@ -37,6 +37,12 @@ public:
         CustomKeypadActionEvaluateExpression = 3
     };
 
+    enum SystemColorMode {
+        SystemColorModeFollowSystem = 0,
+        SystemColorModeLight = 1,
+        SystemColorModeDark = 2
+    };
+
     enum MenuAppearance {
         MenuAppearanceSystem = 0,
         MenuAppearanceSpeedCrunch = 1
@@ -220,6 +226,7 @@ public:
     QString dockColumnOrdersJson;
 
     QString colorScheme;
+    SystemColorMode systemColorMode;
     MenuAppearance menuAppearance;
     DockAppearance dockAppearance;
     StatusBarAppearance statusBarAppearance;
