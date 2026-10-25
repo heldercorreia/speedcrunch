@@ -2173,6 +2173,7 @@ void applyThemeBackgroundRoleToWidget(QWidget* widget, const QColor& background)
 {
     if (widget == nullptr)
         return;
+    StartupDiagnostics::AppearanceScope timing("Apply themed widget background", widget);
 
     QPalette pal = widget->palette();
     for (const QPalette::ColorGroup group : {QPalette::Active,
@@ -2197,6 +2198,7 @@ void applyThemeBackgroundRoleToWidget(QWidget* widget, const QColor& background)
 
 void applyWindowThemeBackground(QWidget* window, const ThemeSurfaceColors& surface)
 {
+    StartupDiagnostics::AppearanceScope timing("Apply window background", window);
     StartupDiagnostics::setAppearancePalette(window, paletteForThemeSurface(window->palette(), surface));
     window->setAutoFillBackground(true);
     window->setAttribute(Qt::WA_StyledBackground, true);
@@ -2633,6 +2635,7 @@ public:
                     const QColor& toolTipOutline = QColor(),
                     int toolTipCornerRadius = 0)
     {
+        StartupDiagnostics::AppearanceScope timing("Style session tab bar", this);
         const QColor fg = selectedText.isValid()
             ? selectedText
             : palette().color(QPalette::WindowText);
@@ -2669,7 +2672,7 @@ public:
         m_toolTipCornerRadius = qMax(0, toolTipCornerRadius);
         applyToolTipTheme();
 
-        setStyleSheet(QStringLiteral(R"(
+        setStyleSheetIfChanged(this, QStringLiteral(R"(
                 QToolButton {
                     background: transparent;
                     border: none;
@@ -2691,11 +2694,11 @@ public:
                 rowPalette.setColor(group, QPalette::Window, m_tabStripColor);
                 rowPalette.setColor(group, QPalette::Base, m_tabStripColor);
             }
-            row->setPalette(rowPalette);
+            StartupDiagnostics::setAppearancePalette(row, rowPalette);
             row->setAutoFillBackground(true);
             row->setAttribute(Qt::WA_StyledBackground, true);
-            row->setStyleSheet(QStringLiteral("background-color: %1;")
-                                   .arg(m_tabStripColor.name()));
+            setStyleSheetIfChanged(row, QStringLiteral("background-color: %1;")
+                                            .arg(m_tabStripColor.name()));
         }
         QPalette tabPalette = palette();
         for (const QPalette::ColorGroup group : {QPalette::Active,
@@ -2704,7 +2707,7 @@ public:
             tabPalette.setColor(group, QPalette::Window, m_tabStripColor);
             tabPalette.setColor(group, QPalette::Base, m_tabStripColor);
         }
-        setPalette(tabPalette);
+        StartupDiagnostics::setAppearancePalette(this, tabPalette);
         setAutoFillBackground(true);
         updateGeometry();
         update();
@@ -5240,6 +5243,9 @@ void MainWindow::createFixedWidgets()
 {
     StartupDiagnostics::Scope timing("Create editor and result display");
     m_widgets.root = new QWidget(this);
+    // Install parent backgrounds before controls inherit their styles.
+    applyThemeBackgroundRoleToWidget(m_widgets.root,
+                                     generatedSurfaceColors(m_settings).window.background);
     setCentralWidget(m_widgets.root);
 
     m_layouts.root = new QVBoxLayout(m_widgets.root);
@@ -5319,10 +5325,12 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
     layout->setSpacing(0);
     layout->setContentsMargins(0, 0, 0, 0);
 
-    SessionTabBar* tabBar = new SessionTabBar(pane);
+    QWidget* tabBarRow = new QWidget(pane);
+    // The tab strip styles its parent. Give it the final row immediately so
+    // construction does not install a temporary stylesheet on the whole pane.
+    SessionTabBar* tabBar = new SessionTabBar(tabBarRow);
     tabBar->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
-    QWidget* tabBarRow = new QWidget(pane);
     QHBoxLayout* tabBarRowLayout = new QHBoxLayout(tabBarRow);
     tabBarRowLayout->setSpacing(0);
     tabBarRowLayout->setContentsMargins(0, 0, 0, 0);
@@ -7251,6 +7259,12 @@ void MainWindow::refreshPaneThemes()
     const ThemeSurfaceColors resultToolTipOutline =
         themeSurfaceForShadeIndex(surfaces, UiConfig::ResultTooltipOutlineShade);
     for (ResultDisplay* display : splitPaneDisplays()) {
+        QWidget* page = display->parentWidget();
+        applyThemeBackgroundRoleToWidget(paneWidgetForDisplay(display),
+                                         surfaces.result.background);
+        applyThemeBackgroundRoleToWidget(page ? page->parentWidget() : nullptr,
+                                         surfaces.result.background);
+        applyThemeBackgroundRoleToWidget(page, surfaces.result.background);
         display->setThemeSurfaceColor(surfaces.result.background);
         display->setThemeToolTipColors(resultToolTip.background,
                                        resultToolTip.foreground,
@@ -7262,12 +7276,6 @@ void MainWindow::refreshPaneThemes()
                                            surfaces.inputs.background,
                                            surfaces.inputs.foreground);
         display->rehighlight();
-        QWidget* page = display->parentWidget();
-        applyThemeBackgroundRoleToWidget(page, surfaces.result.background);
-        applyThemeBackgroundRoleToWidget(page ? page->parentWidget() : nullptr,
-                                         surfaces.result.background);
-        applyThemeBackgroundRoleToWidget(paneWidgetForDisplay(display),
-                                         surfaces.result.background);
     }
     for (Editor* editor : splitPaneEditors()) {
         editor->setThemeSurfaceColor(surfaces.editorAndLists.background,
@@ -9488,6 +9496,10 @@ MainWindow::MainWindow(bool restorePreviousSession)
     connect(qApp, &QApplication::focusChanged, this, &MainWindow::handleApplicationFocusChanged);
     qApp->installEventFilter(this);
 
+    timing.next("Initialize window theme background");
+    // A late parent stylesheet repolishes every menu, pane and editor below it.
+    // Final theme application still refreshes palettes after settings restore.
+    applyWindowThemeBackground(this, generatedSurfaceColors(m_settings).window);
     timing.next("Create main UI (total)");
     createUi();
     timing.next("Apply startup settings (total)");

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "mainwindowtesthelpers.h"
+#include "core/startupdiagnostics.h"
 
 using namespace MainWindowTestHelpers;
 
@@ -11,6 +12,10 @@ class TestThemesUi : public QObject {
 private slots:
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
+    void startup_styles_parent_surfaces_before_controls_data();
+    void startup_styles_parent_surfaces_before_controls();
+    void repeated_pane_theme_refresh_avoids_repolishing_data();
+    void repeated_pane_theme_refresh_avoids_repolishing();
     void color_scheme_roles_exclude_obsolete_scrollbar();
     void color_scheme_reads_optional_display_name();
     void color_scheme_preserves_rose_pine_names_with_ascii_resources();
@@ -29,6 +34,160 @@ private slots:
     void constant_popup_clear_button_matches_dock_search_data();
     void constant_popup_clear_button_matches_dock_search();
 };
+
+void TestThemesUi::startup_styles_parent_surfaces_before_controls_data()
+{
+    QTest::addColumn<bool>("restore");
+    QTest::addColumn<bool>("classic");
+    QTest::addColumn<QString>("background");
+    for (bool restore : {false, true}) {
+        for (bool classic : {false, true}) {
+            for (const QString& background : {QStringLiteral("#182332"), QStringLiteral("#f2e4c8")}) {
+                QTest::addRow("restore-%d-classic-%d-%s", restore, classic, qPrintable(background))
+                    << restore << classic << background;
+            }
+        }
+    }
+}
+
+void TestThemesUi::startup_styles_parent_surfaces_before_controls()
+{
+    QFETCH(bool, restore);
+    QFETCH(bool, classic);
+    QFETCH(QString, background);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(QJsonObject {
+        {QStringLiteral("background"), background}
+    });
+    guard.settings->editorDisplayStyle = classic
+        ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern;
+    guard.settings->keypadMode = Settings::KeypadModeDisabled;
+    guard.settings->sessionLayoutJson.clear();
+    const QString name = QStringLiteral("ParentStyles");
+    if (restore) {
+        QVERIFY(QDir().mkpath(QFileInfo(storage.path(name)).path()));
+        writeFile(storage.path(name), QJsonDocument(sessionJson(name)).toJson());
+        const QJsonObject layout {
+            {QStringLiteral("scheme"), 1},
+            {QStringLiteral("kind"), QStringLiteral("session-layout")},
+            {QStringLiteral("windows"), QJsonArray {startupSessionWindow(name, QStringLiteral("styles"))}}
+        };
+        guard.settings->sessionLayoutJson = QString::fromUtf8(QJsonDocument(layout).toJson());
+    }
+    MainWindow::initializeApplicationStyle();
+    StartupDiagnostics::begin();
+    const auto finishRecording = qScopeGuard([] {
+        StartupDiagnostics::firstPaintFinished();
+        StartupDiagnostics::finishWhenIdle();
+    });
+    MainWindow window(restore);
+    window.showWhenReady();
+    QTRY_VERIFY(window.isVisible());
+    auto* display = window.findChild<ResultDisplay*>();
+    QVERIFY(display);
+    if (restore)
+        QCOMPARE(display->session()->name(), name);
+    QWidget* pane = paneWidgetForDisplay(display);
+    QVERIFY(pane);
+    const auto snapshot = StartupDiagnostics::snapshot();
+    qint64 firstControlStart = -1;
+    for (const auto& phase : snapshot.phases) {
+        if (phase.name == QLatin1String("Construct initial result display"))
+            firstControlStart = phase.firstStartNs;
+    }
+    QVERIFY(firstControlStart >= 0);
+    const QList<QWidget*> parents {&window, window.centralWidget(), pane};
+    for (QWidget* parent : parents) {
+        const int id = StartupDiagnostics::appearanceObjectId(parent);
+        int changes = 0;
+        for (const auto& assignment : snapshot.appearanceAssignments) {
+            if (assignment.palette || assignment.widgetId != id || assignment.changed == 0)
+                continue;
+            changes += assignment.changed;
+            if (parent != pane) {
+                const auto& call = snapshot.appearanceCalls.at(assignment.call - 1);
+                QVERIFY(call.startNs < firstControlStart);
+            }
+        }
+        // Restoration and the final theme pass must reuse the installed styles.
+        QCOMPARE(changes, 1);
+    }
+}
+
+void TestThemesUi::repeated_pane_theme_refresh_avoids_repolishing_data()
+{
+    QTest::addColumn<bool>("classic");
+    QTest::newRow("modern") << false;
+    QTest::newRow("classic") << true;
+}
+
+void TestThemesUi::repeated_pane_theme_refresh_avoids_repolishing()
+{
+    MainWindowStateGuard guard;
+    QFETCH(bool, classic);
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(QJsonObject {
+        {QStringLiteral("background"), QStringLiteral("#182332")}
+    });
+    guard.settings->editorDisplayStyle = classic
+        ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern;
+    guard.settings->keypadMode = Settings::KeypadModeDisabled;
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QCoreApplication::processEvents();
+    auto* display = window.findChild<ResultDisplay*>();
+    Editor* editor = editorForDisplay(display);
+    QVERIFY(editor);
+    editor->setText(QStringLiteral("12+34"));
+    editor->selectAll();
+    QWidget* pane = paneWidgetForDisplay(display);
+    QVERIFY(pane);
+    auto* tabs = pane->findChild<QTabBar*>();
+    QVERIFY(tabs);
+    class StyleCounter : public QObject {
+    public:
+        int changes = 0;
+        bool eventFilter(QObject*, QEvent* event) override
+        {
+            if (event->type() == QEvent::StyleChange)
+                ++changes;
+            return false;
+        }
+    } counter;
+    const QList<QWidget*> widgets {&window, window.centralWidget(), pane,
+                                   tabs->parentWidget(), tabs, display, editor};
+    QStringList styles;
+    for (QWidget* widget : widgets) {
+        widget->installEventFilter(&counter);
+        styles.append(widget->styleSheet());
+    }
+    for (int i = 0; i < 3; ++i)
+        window.colorSchemeChanged();
+    QCoreApplication::processEvents();
+    QCOMPARE(counter.changes, 0);
+    for (int i = 0; i < widgets.size(); ++i)
+        QCOMPARE(widgets.at(i)->styleSheet(), styles.at(i));
+
+    const QColor background(QStringLiteral("#f2e4c8"));
+    guard.settings->customColorSchemeJson = themeJsonString(QJsonObject {
+        {QStringLiteral("background"), background.name()}
+    });
+    window.colorSchemeChanged();
+    QCoreApplication::processEvents();
+    QVERIFY(counter.changes > 0);
+    const auto shades = generateOklchShades(background, UiConfig::Shade600 + 1,
+                                          themePolarityForBackground(background));
+    QCOMPARE(pane->palette().color(QPalette::Window).name(),
+             shades.at(UiConfig::ResultDisplayShade).name());
+    QCOMPARE(tabs->parentWidget()->palette().color(QPalette::Window).name(),
+             shades.at(UiConfig::WindowBackgroundShade).name());
+    QCOMPARE(display->viewport()->palette().color(QPalette::Base).name(),
+             shades.at(UiConfig::ResultDisplayShade).name());
+    QCOMPARE(editor->textCursor().selectedText(), QStringLiteral("12+34"));
+}
 
 void TestThemesUi::constant_popup_clear_button_matches_dock_search_data()
 {
