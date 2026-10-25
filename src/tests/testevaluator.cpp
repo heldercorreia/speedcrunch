@@ -10928,6 +10928,107 @@ void test_unit_lookup_registry_aliases()
     Units::builtInUnitLookup(Settings::instance()->angleUnit);
 }
 
+void test_unit_registry_prefix_values_and_display_units()
+{
+    const auto& registered = Units::builtInUnitValues();
+    const auto checkPrefixes = [&](const QList<UnitPrefixSpec>& prefixes, bool binary) {
+        for (int index = int(UnitId::Second); index <= int(UnitId::YearTropical); ++index) {
+            const UnitId id = static_cast<UnitId>(index);
+            if (id == UnitId::SquareMetre || id == UnitId::CubicMetre)
+                continue;
+            const QString name = unitName(id);
+            const auto base = registered.constFind(name);
+            if (base == registered.constEnd())
+                continue;
+            for (const UnitPrefixSpec& prefix : prefixes) {
+                if (!unitPrefixPolicyAllows(unitPrefixPolicy(id), prefix, binary))
+                    continue;
+                const QString identifier = prefix.longName + name;
+                const Quantity expected = prefix.value * base.value();
+                const Quantity actual = registered.value(identifier);
+                QJsonObject expectedJson;
+                QJsonObject actualJson;
+                expected.serialize(expectedJson);
+                actual.serialize(actualJson);
+                ++eval_total_tests;
+                if (actualJson != expectedJson) {
+                    ++eval_failed_tests;
+                    ++eval_new_failed_tests;
+                    cerr << "Unit prefix changes value or display metadata: "
+                         << identifier.toUtf8().constData() << "\t[NEW]" << endl;
+                }
+            }
+        }
+    };
+    checkPrefixes(siPrefixes(), false);
+    checkPrefixes(binaryIecPrefixes(), true);
+}
+
+void test_unit_lookup_angle_changes_and_caller_isolation()
+{
+    const auto check = [](bool passed, const QString& message) {
+        ++eval_total_tests;
+        if (!passed) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << "Unit lookup: " << message.toUtf8().constData() << "\t[NEW]" << endl;
+        }
+    };
+    const auto serializeLookup = [](const QHash<QString, Quantity>& lookup) {
+        QJsonObject json;
+        for (auto it = lookup.constBegin(); it != lookup.constEnd(); ++it) {
+            QJsonObject value;
+            it.value().serialize(value);
+            json.insert(it.key(), value);
+        }
+        return json;
+    };
+    QHash<char, QJsonObject> initialLookups;
+    for (char mode : {'r', 'd', 'g', 't', 'v'})
+        initialLookups.insert(mode, serializeLookup(Units::builtInUnitLookup(mode)));
+
+    for (char mode : {'v', 't', 'g', 'd', 'r', 'd', 'r'}) {
+        auto lookup = Units::builtInUnitLookup(mode);
+        const QString context = QStringLiteral("angle mode %1: ").arg(QLatin1Char(mode));
+        check(serializeLookup(lookup) == initialLookups.value(mode),
+              context + QStringLiteral("mode switching changes values or display metadata"));
+        Quantity reference = Units::radian();
+        if (mode == 'd')
+            reference = Units::degree();
+        else if (mode == 'g')
+            reference = Units::gradian();
+        else if (mode == 't' || mode == 'v')
+            reference = Units::turn();
+        Quantity radian = Units::radian() / reference;
+        radian.setDisplayUnit(CNumber(1), Units::angleModeUnitSymbol(mode));
+        check(lookup.value(QStringLiteral("rad")) == radian,
+              context + QStringLiteral("radian has the wrong scale"));
+        for (const UnitPrefixSpec& prefix : siPrefixes()) {
+            if (!unitPrefixPolicyAllows(unitPrefixPolicy(UnitId::Radian), prefix))
+                continue;
+            const Quantity expected = prefix.value * radian;
+            for (const QString& suffix : {QStringLiteral("rad"), QStringLiteral("radian")}) {
+                const QString identifier = (suffix == QLatin1String("rad")
+                    ? prefix.symbol : prefix.longName) + suffix;
+                const Quantity actual = lookup.value(identifier);
+                check(actual == expected && actual.hasUnit()
+                      && actual.unit() == expected.unit()
+                      && actual.unitName() == expected.unitName(),
+                      context + identifier + QStringLiteral(" has the wrong scale or display unit"));
+            }
+        }
+
+        // Callers receive an independent table, including its Quantity values.
+        lookup.remove(QStringLiteral("mrad"));
+        lookup.insert(QStringLiteral("caller_only"), Quantity(123));
+        lookup[QStringLiteral("metre")] = Quantity(456);
+        lookup[QStringLiteral("Pa")].setDisplayUnit(CNumber(7), QStringLiteral("caller display"));
+        check(serializeLookup(Units::builtInUnitLookup(mode)) == initialLookups.value(mode),
+              context + QStringLiteral("caller changes leak into another lookup"));
+    }
+    Units::builtInUnitLookup(Settings::instance()->angleUnit);
+}
+
 int main(int argc, char* argv[])
 {
     if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM"))
@@ -10957,6 +11058,8 @@ int main(int argc, char* argv[])
     test_binary();
     test_units();
     test_unit_lookup_registry_aliases();
+    test_unit_registry_prefix_values_and_display_units();
+    test_unit_lookup_angle_changes_and_caller_isolation();
     test_unit_expression_powers();
     test_percent_operator();
     test_bitwise_complement_operator();
