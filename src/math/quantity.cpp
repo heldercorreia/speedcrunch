@@ -713,10 +713,11 @@ bool tryNamedSpeedDisplayUnit(const CNumber& displayUnitValue,
         UnitId::Knot
     };
 
-    const auto& units = Units::builtInUnitValues();
     for (const UnitId id : candidates) {
         const QString name = unitName(id);
-        const Quantity value = units.value(name);
+        Quantity value;
+        if (!Units::tryGetBuiltInUnitValue(name, &value))
+            continue;
         if (value.numericValue() != displayUnitValue)
             continue;
 

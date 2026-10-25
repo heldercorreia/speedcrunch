@@ -4865,8 +4865,7 @@ void EditorCompletion::showCompletion(const QStringList& choices)
     // Performance: compute these once per popup render (not per row) because
     // unit completion can contain many entries and this function runs often.
     Evaluator* evaluator = m_editor->evaluator();
-    const QList<QString> builtInUnitKeys =
-        Units::builtInUnitLookup(Settings::instance()->angleUnit).keys();
+    const QStringList& builtInUnitKeys = Units::builtInUnitIdentifiers();
     const QSet<QString> builtInUnits(
         builtInUnitKeys.constBegin(),
         builtInUnitKeys.constEnd());

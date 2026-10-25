@@ -335,6 +335,15 @@ public:
     static QString arcsecondAliasSymbol();
     static QStringList affineUnitAliases(UnitId id);
     static void findUnit(Quantity& q);
+    // Names and membership checks do not construct unit quantities.
+    static const QStringList& builtInUnitIdentifiers();
+    static bool isBuiltInUnitIdentifier(const QString& identifier);
+    // Raw values retain their base scale. Evaluator quantities also apply
+    // display rules and the active angle mode. Missing names leave output alone.
+    static bool tryGetBuiltInUnitValue(const QString& identifier, Quantity* valueOut);
+    static bool tryGetBuiltInUnitQuantity(const QString& identifier, char angleMode,
+                                         Quantity* valueOut);
+    static void setRuntimeAngleMode(char angleMode);
     static const QHash<QString, Quantity>& builtInUnitValues();
     static QHash<QString, Quantity> builtInUnitLookup(char angleMode);
     static bool isAffineUnitName(const QString& unitName);

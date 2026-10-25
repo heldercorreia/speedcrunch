@@ -3,6 +3,7 @@
 
 #include "mainwindowtesthelpers.h"
 #include "core/startupdiagnostics.h"
+#include "core/units.h"
 
 #include <functional>
 
@@ -54,6 +55,7 @@ public slots:
 private slots:
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
+    void startup_initializes_only_requested_units();
     void startup_reuses_initial_pane_data();
     void startup_reuses_initial_pane();
     void startup_shows_restored_session_on_first_show_data();
@@ -306,6 +308,52 @@ void TestSessionsUi::initTestCase()
         QVERIFY2(probe.open(),
                  qPrintable(QStringLiteral("Cannot write test storage at %1: %2")
                                 .arg(path, probe.errorString())));
+    }
+}
+
+void TestSessionsUi::startup_initializes_only_requested_units()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    StartupDiagnostics::begin();
+    const auto stopDiagnostics = qScopeGuard([] {
+        StartupDiagnostics::firstPaintFinished();
+        StartupDiagnostics::finishWhenIdle();
+    });
+    const QStringList identifiers = Evaluator::builtInUnitIdentifiers();
+    QVERIFY(identifiers.contains(QStringLiteral("km")));
+    QVERIFY(identifiers.contains(QStringLiteral("KiB")));
+    QVERIFY(Units::isBuiltInUnitIdentifier(QStringLiteral("mrad")));
+    QVERIFY(Units::tryGetBuiltInUnitValue(QStringLiteral("km"), nullptr));
+    QVERIFY(Units::tryGetBuiltInUnitQuantity(QStringLiteral("mrad"), 'd', nullptr));
+    for (const auto& phase : StartupDiagnostics::snapshot().phases)
+        QVERIFY(phase.name != QLatin1String("Construct built-in unit value"));
+
+    MainWindow window(false);
+    Editor* editor = window.findChild<Editor*>();
+    QVERIFY(editor);
+    Session session;
+    Evaluator* evaluator = session.evaluator();
+    evaluator->setExpression(QStringLiteral("6*7"));
+    QCOMPARE(evaluator->evalUpdateAns(), Quantity(42));
+    QVERIFY(evaluator->error().isEmpty());
+    editor->setText(QStringLiteral("kilo"));
+    EditorCompletion* completion = editor->findChild<EditorCompletion*>();
+    QVERIFY(completion);
+    completion->showCompletion({QStringLiteral("kilometre:Kilometre")});
+    QVERIFY(completion->isVisible());
+    for (const auto& phase : StartupDiagnostics::snapshot().phases)
+        QVERIFY(phase.name != QLatin1String("Initialize requested built-in unit"));
+
+    evaluator->setExpression(QStringLiteral("2[km] in [m]"));
+    const Quantity converted = evaluator->evalUpdateAns();
+    QVERIFY2(evaluator->error().isEmpty(), qPrintable(evaluator->error()));
+    QCOMPARE(converted.numericValue(), CNumber(2000));
+    QVERIFY(converted.sameDimension(Units::metre()));
+    for (const auto& phase : StartupDiagnostics::snapshot().phases) {
+        QVERIFY(phase.name != QLatin1String("Materialize all built-in unit values"));
+        QVERIFY(phase.name != QLatin1String("Prepare built-in unit display lookup"));
+        QVERIFY(phase.name != QLatin1String("Apply angle mode to unit lookup"));
     }
 }
 

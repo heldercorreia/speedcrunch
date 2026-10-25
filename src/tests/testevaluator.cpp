@@ -11029,6 +11029,66 @@ void test_unit_lookup_angle_changes_and_caller_isolation()
     Units::builtInUnitLookup(Settings::instance()->angleUnit);
 }
 
+void test_on_demand_unit_lookup_matches_complete_tables()
+{
+    const auto check = [](bool passed, const QString& message) {
+        ++eval_total_tests;
+        if (!passed) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << "On-demand units: " << message.toUtf8().constData() << "\t[NEW]" << endl;
+        }
+    };
+    const QStringList identifiers = Units::builtInUnitIdentifiers();
+    for (char mode : {'r', 'd', 'g', 't', 'v', 'd', 'r'}) {
+        QHash<QString, QJsonObject> requested;
+        for (const QString& identifier : identifiers) {
+            Quantity value;
+            check(Units::tryGetBuiltInUnitQuantity(identifier, mode, &value), identifier);
+            QJsonObject json;
+            value.serialize(json);
+            requested.insert(identifier, json);
+        }
+        const auto complete = Units::builtInUnitLookup(mode);
+        check(requested.size() == complete.size(), QStringLiteral("identifier list differs"));
+        for (auto it = complete.constBegin(); it != complete.constEnd(); ++it) {
+            QJsonObject expected;
+            it.value().serialize(expected);
+            check(requested.value(it.key()) == expected,
+                  QStringLiteral("%1 in mode %2").arg(it.key(), QLatin1Char(mode)));
+        }
+    }
+    const auto& rawValues = Units::builtInUnitValues();
+    for (auto it = rawValues.constBegin(); it != rawValues.constEnd(); ++it) {
+        Quantity value;
+        check(Units::tryGetBuiltInUnitValue(it.key(), &value), it.key());
+        QJsonObject actual;
+        QJsonObject expected;
+        value.serialize(actual);
+        it.value().serialize(expected);
+        check(actual == expected, it.key() + QStringLiteral(" raw value differs"));
+    }
+    Quantity value(123);
+    check(!Units::tryGetBuiltInUnitQuantity(QStringLiteral("unknown_unit"), 'r', &value)
+          && value == Quantity(123), QStringLiteral("unknown lookup changes the output"));
+    check(!Units::tryGetBuiltInUnitValue(QStringLiteral("unknown_unit"), &value)
+          && value == Quantity(123), QStringLiteral("unknown raw lookup changes the output"));
+    check(!Units::isBuiltInUnitIdentifier(QStringLiteral("unknown_unit")),
+          QStringLiteral("unknown identifier is accepted"));
+    for (const QString& identifier : {QStringLiteral("Pa"), QStringLiteral("pA"),
+                                      QStringLiteral("mrad"), QStringLiteral("deg")}) {
+        check(Units::tryGetBuiltInUnitQuantity(identifier, 'r', &value), identifier);
+        QJsonObject original;
+        value.serialize(original);
+        value.setDisplayUnit(CNumber(7), QStringLiteral("caller display"));
+        check(Units::tryGetBuiltInUnitQuantity(identifier, 'r', &value), identifier);
+        QJsonObject restored;
+        value.serialize(restored);
+        check(restored == original, identifier + QStringLiteral(" cache changes with caller"));
+    }
+    Units::setRuntimeAngleMode(Settings::instance()->angleUnit);
+}
+
 int main(int argc, char* argv[])
 {
     if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM"))
@@ -11051,6 +11111,8 @@ int main(int argc, char* argv[])
     eval = evalSession->evaluator();
 
     eval->initializeBuiltInVariables();
+
+    test_on_demand_unit_lookup_matches_complete_tables();
 
     test_constants();
     test_exponentiation();

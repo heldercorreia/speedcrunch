@@ -392,40 +392,14 @@ static bool s_isClosingListBraceToken(const Token& token)
            && token.text() == QLatin1String("}");
 }
 
-static QHash<QString, Quantity> s_buildBuiltInUnitLookup(char angleMode)
-{
-    StartupDiagnostics::Scope timing("Build evaluator unit lookup");
-    return Units::builtInUnitLookup(angleMode);
-}
-
-static const QHash<QString, Quantity>& s_builtInUnitLookup()
-{
-    static char cachedAngleMode = '\0';
-    static QHash<QString, Quantity> cache;
-
-    const char angleMode = Settings::instance()->angleUnit;
-    if (cache.isEmpty() || cachedAngleMode != angleMode) {
-        cache = s_buildBuiltInUnitLookup(angleMode);
-        cachedAngleMode = angleMode;
-    }
-
-    return cache;
-}
-
 static bool s_tryGetBuiltInUnitQuantity(const QString& identifier, Quantity* valueOut)
 {
-    const auto& lookup = s_builtInUnitLookup();
-    const auto it = lookup.constFind(identifier);
-    if (it == lookup.constEnd())
-        return false;
-    if (valueOut)
-        *valueOut = it.value();
-    return true;
+    return Units::tryGetBuiltInUnitQuantity(identifier, Settings::instance()->angleUnit, valueOut);
 }
 
 static bool s_isBuiltInUnitIdentifier(const QString& identifier)
 {
-    return s_builtInUnitLookup().contains(identifier);
+    return Units::isBuiltInUnitIdentifier(identifier);
 }
 
 static QString rewriteListBracesToInternalCalls(const QString& text)
@@ -5062,9 +5036,7 @@ Evaluator* Evaluator::instance()
 
 QStringList Evaluator::builtInUnitIdentifiers()
 {
-    QStringList identifiers = s_builtInUnitLookup().keys();
-    identifiers.sort();
-    return identifiers;
+    return Units::builtInUnitIdentifiers();
 }
 
 Evaluator::Evaluator()
@@ -5095,9 +5067,8 @@ void Evaluator::initializeBuiltInVariables()
 
 void Evaluator::initializeAngleUnits()
 {
-    // Angle-dependent built-in unit values are resolved from the dedicated
-    // unit lookup table (not from reserved variable names).
-    s_builtInUnitLookup();
+    // Keep formatting in sync without constructing unused unit values.
+    Units::setRuntimeAngleMode(Settings::instance()->angleUnit);
 }
 
 void Evaluator::setExpression(const QString& expr)
