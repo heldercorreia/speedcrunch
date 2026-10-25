@@ -340,8 +340,41 @@ QString formattedExpressionForDisplay(const HistoryEntry& entry, const Evaluator
         evaluator);
 }
 
-QString simplifiedExpressionLineForDisplay(const HistoryEntry& entry, const Evaluator* evaluator)
+QString simplifiedExpressionLineForDisplay(const HistoryEntry& entry, const Evaluator* evaluator,
+                                          const QStringList& renderedLines)
 {
+    if (!Settings::instance()->simplifyResultExpressions || renderedLines.size() < 2)
+        return QString();
+
+    const QString interpreted = entry.interpretedExpr().section(MathDsl::CommentSep, 0, 0);
+    const QString source = entry.expr().section(MathDsl::CommentSep, 0, 0);
+    if (SimplifiedExpressionUtils::isPlainNumericArithmeticExpression(interpreted)
+        && SimplifiedExpressionUtils::isPlainNumericArithmeticExpression(source))
+        return QString();
+
+    const int assignment = interpreted.indexOf(MathDsl::Equals);
+    const int sourceAssignment = source.indexOf(MathDsl::Equals);
+    if (assignment > 0 && sourceAssignment > 0
+        && source.left(sourceAssignment).trimmed() == interpreted.left(assignment).trimmed()) {
+        const Evaluator* scanner = evaluator ? evaluator : Evaluator::instance();
+        const Tokens left = scanner->scan(interpreted.left(assignment));
+        if (left.valid() && left.size() == 1 && left.first().isIdentifier()) {
+            // A simplified variable assignment keeps its '='. If the recorded
+            // result rows contain none, there is no symbolic row to highlight.
+            bool hasAssignmentRow = false;
+            for (int i = 1; i < renderedLines.size(); ++i) {
+                if (renderedLines.at(i).startsWith(QLatin1String("= "))
+                    && renderedLines.at(i).indexOf(MathDsl::Equals, 2) >= 0) {
+                    hasAssignmentRow = true;
+                    break;
+                }
+            }
+            if (!hasAssignmentRow)
+                return QString();
+        }
+    }
+
+    StartupDiagnostics::Scope timing("Rebuild simplified history expression");
     const QString simplifiedLine = ResultLineFormatUtils::simplifiedExpressionLineForDisplay(
         entry.interpretedExpr(),
         entry.expr(),
@@ -601,8 +634,8 @@ void ResultDisplay::append(const QString& expression, Quantity& value,
         ctx.round = settings->resultRoundingMode;
         const HistoryEntry entry(expression, value, interpretedExpression, ctx);
         const QStringList resultLines = formatResultLines(entry, evaluator);
-        const QString simplifiedLine = simplifiedExpressionLineForDisplay(entry, evaluator);
         const QStringList renderedLines = QStringList({ formattedExpressionForDisplay(entry, evaluator) }) + resultLines;
+        const QString simplifiedLine = simplifiedExpressionLineForDisplay(entry, evaluator, renderedLines);
         for (int i = 0; i < resultLines.size(); ++i) {
             const QString& line = resultLines.at(i);
             appendPlainText(line);
@@ -932,7 +965,7 @@ void ResultDisplay::refresh()
         const HistoryEntry& lastEntry = session->historyEntryAtRef(historyIndex);
         const Evaluator* evaluator = session->evaluator();
         const QStringList renderedLines = renderedHistoryLinesForDisplay(lastEntry, evaluator);
-        const QString simplifiedLine = simplifiedExpressionLineForDisplay(lastEntry, evaluator);
+        const QString simplifiedLine = simplifiedExpressionLineForDisplay(lastEntry, evaluator, renderedLines);
         for (int i = 0; i < renderedLines.size(); ++i) {
             const QString& line = renderedLines.at(i);
             appendPlainText(line);
@@ -2239,7 +2272,7 @@ void ResultDisplay::markSimplifiedExpressionBlocks(const QVector<QStringList>& r
     for (int i = firstDisplayedHistoryIndex; i < historySize && block.isValid(); ++i) {
         const HistoryEntry& entry = session->historyEntryAtRef(i);
         const QStringList& renderedLines = renderedEntries.at(i - firstDisplayedHistoryIndex);
-        const QString simplifiedLine = simplifiedExpressionLineForDisplay(entry, session->evaluator());
+        const QString simplifiedLine = simplifiedExpressionLineForDisplay(entry, session->evaluator(), renderedLines);
         int lineIndex = 0;
 
         while (block.isValid()) {

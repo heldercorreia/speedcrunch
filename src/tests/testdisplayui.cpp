@@ -3,6 +3,7 @@
 
 #include "mainwindowtesthelpers.h"
 #include "core/numberformatter.h"
+#include "core/startupdiagnostics.h"
 #include "gui/resultlineformatutils.h"
 
 using namespace MainWindowTestHelpers;
@@ -11,6 +12,9 @@ class TestDisplayUi : public QObject {
     Q_OBJECT
 
 private slots:
+    void history_classification_matches_full_formatting_data();
+    void history_classification_matches_full_formatting();
+    void history_classification_skips_plain_and_assignment_results();
     void restored_history_preserves_text_and_highlighting_data();
     void restored_history_preserves_text_and_highlighting();
     void history_reuse_respects_input_adjustments_data();
@@ -45,6 +49,125 @@ private slots:
     void result_display_remove_menu_targets_clicked_calculation();
     void function_identifier_cache_tracks_insertions();
 };
+
+void TestDisplayUi::history_classification_matches_full_formatting_data()
+{
+    QTest::addColumn<QString>("expression");
+    QTest::addColumn<bool>("printed");
+    const QStringList expressions {
+        QStringLiteral("1+2-3/2"),
+        QStringLiteral("213+12312+123+123*123/1*(312.12312312^3)"),
+        QStringLiteral("a=1/3"),
+        QStringLiteral("a=2*7"),
+        QStringLiteral("a=2*2*2"),
+        QStringLiteral("a=sqrt(2)"),
+        QStringLiteral("a=0*cos(pi)*cos(pi)"),
+        QStringLiteral("a=-2*cos(pi)*cos(pi)"),
+        QStringLiteral("a=2*cos(pi)*sin(pi)*cos(pi)"),
+        QStringLiteral("2*cos(pi)*sin(pi)*cos(pi)"),
+        QStringLiteral("2*cos(pi)+2*cos(pi)"),
+        QStringLiteral("1:120:3600"),
+        QStringLiteral("a=1:120:3600"),
+        QStringLiteral("2[metre]/3[second]"),
+        QStringLiteral("a=2[metre]/3[second]"),
+        QStringLiteral("pi[rad] -> [degree]"),
+        QStringLiteral("a=pi[rad] -> [degree]"),
+        QStringLiteral("sin(30[degree])+sin(30[degree])"),
+        QStringLiteral("a=1/3 ? comment with = and cos(pi)")
+    };
+    for (const QString& expression : expressions) {
+        for (bool printed : {false, true})
+            QTest::addRow("%s-printed-%d", qPrintable(expression), printed) << expression << printed;
+    }
+}
+
+void TestDisplayUi::history_classification_matches_full_formatting()
+{
+    QFETCH(QString, expression);
+    QFETCH(bool, printed);
+    Settings* settings = Settings::instance();
+    settings->simplifyResultExpressions = true;
+    settings->multipleResultLinesEnabled = true;
+    settings->secondaryResultEnabled = true;
+    settings->alternativeResultFormat = 'e';
+    Session source;
+    Evaluator* evaluator = source.evaluator();
+    evaluator->setExpression(expression);
+    const Quantity result = evaluator->evalUpdateAns();
+    QVERIFY2(evaluator->error().isEmpty(), qPrintable(evaluator->error()));
+    HistoryEntry entry(expression, result, evaluator->interpretedExpression());
+    if (printed)
+        entry.setRenderedLines(ResultLineFormatUtils::formatResultLinesForDisplay(
+            expression, entry.interpretedExpr(), result, true, true, evaluator));
+    source.addHistoryEntry(entry);
+    QJsonObject saved;
+    source.serialize(saved);
+    Session restored;
+    restored.deSerialize(saved, false);
+    const QString simplified = ResultLineFormatUtils::simplifiedExpressionLineForDisplay(
+        entry.interpretedExpr(), expression, true, restored.evaluator());
+    const QString expectedLine = simplified.isEmpty() ? QString() : QStringLiteral("= ") + simplified;
+    ResultDisplay display;
+    display.setSession(&restored);
+    const QString text = display.toPlainText();
+    const auto checkBlocks = [&] {
+        int index = 0;
+        for (QTextBlock block = display.document()->firstBlock(); block.isValid(); block = block.next(), ++index) {
+            const auto* data = dynamic_cast<SyntaxHighlightBlockData*>(block.userData());
+            const bool expected = index > 0 && !expectedLine.isEmpty() && block.text() == expectedLine;
+            QCOMPARE(data && data->highlightResultExpressionSyntax, expected);
+        }
+    };
+    checkBlocks();
+    display.refresh();
+    QCOMPARE(display.toPlainText(), text);
+    checkBlocks();
+    display.refreshLastHistoryEntry();
+    QCOMPARE(display.toPlainText(), text);
+    checkBlocks();
+    restored.addHistoryEntry(entry);
+    display.refresh();
+    QVERIFY(display.toPlainText().startsWith(text));
+    checkBlocks();
+}
+
+void TestDisplayUi::history_classification_skips_plain_and_assignment_results()
+{
+    Settings::instance()->simplifyResultExpressions = true;
+    Session session;
+    const QStringList expressions {
+        QStringLiteral("1+2-3/2"), QStringLiteral("a=1/3"),
+        QStringLiteral("b=2*7"), QStringLiteral("c=3^4"),
+        QStringLiteral("d=123456789"), QStringLiteral("evar=4+5"),
+        QStringLiteral("fvar=7/13"), QStringLiteral("gvar=sqrt(2)")
+    };
+    for (const QString& expression : expressions) {
+        Evaluator* evaluator = session.evaluator();
+        evaluator->setExpression(expression);
+        const Quantity result = evaluator->evalUpdateAns();
+        QVERIFY2(evaluator->error().isEmpty(), qPrintable(evaluator->error()));
+        HistoryEntry entry(expression, result, evaluator->interpretedExpression());
+        entry.setRenderedLines(ResultLineFormatUtils::formatResultLinesForDisplay(
+            expression, entry.interpretedExpr(), result, true, true, evaluator));
+        QCOMPARE(entry.renderedLines().size(), 2);
+        session.addHistoryEntry(entry);
+    }
+    ResultDisplay display;
+    StartupDiagnostics::begin();
+    const auto finishRecording = qScopeGuard([] {
+        StartupDiagnostics::firstPaintFinished();
+        StartupDiagnostics::finishWhenIdle();
+    });
+    display.setSession(&session);
+    display.refresh();
+    display.refreshLastHistoryEntry();
+    for (const auto& phase : StartupDiagnostics::snapshot().phases)
+        QVERIFY(phase.name != QLatin1String("Rebuild simplified history expression"));
+    for (QTextBlock block = display.document()->firstBlock(); block.isValid(); block = block.next()) {
+        const auto* data = dynamic_cast<SyntaxHighlightBlockData*>(block.userData());
+        QVERIFY(!data || !data->highlightResultExpressionSyntax);
+    }
+}
 
 void TestDisplayUi::restored_history_preserves_text_and_highlighting_data()
 {
