@@ -2201,6 +2201,7 @@ void FunctionRepo::insert(Function* function)
         return;
     function->setDomain(domainToDisplay(function->domainType()));
     m_functions.insert(function->identifier().toUpper(), function);
+    m_identifiers.clear();
 }
 
 Function* FunctionRepo::find(const QString& identifier) const
@@ -2238,12 +2239,15 @@ QString FunctionRepo::displayIdentifier(const QString& identifier) const
 
 QStringList FunctionRepo::getIdentifiers() const
 {
-    QStringList result = m_functions.keys();
-    std::transform(result.begin(), result.end(), result.begin(), [this](const QString& s) {
-        return displayIdentifier(s);
-    });
-    result.removeDuplicates();
-    return result;
+    // Highlighting asks for these names repeatedly. They only change when
+    // a function is inserted, and QStringList shares the cached strings.
+    if (m_identifiers.isEmpty()) {
+        m_identifiers = m_functions.keys();
+        std::transform(m_identifiers.begin(), m_identifiers.end(), m_identifiers.begin(),
+                       [this](const QString& s) { return displayIdentifier(s); });
+        m_identifiers.removeDuplicates();
+    }
+    return m_identifiers;
 }
 
 const QStringList& FunctionRepo::domains() const

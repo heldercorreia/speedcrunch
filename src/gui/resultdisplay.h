@@ -160,6 +160,7 @@ protected:
     void markHistoryBlockIndexCacheDirty();
     void markSimplifiedExpressionBlock(int blockNumber);
     void markSimplifiedExpressionBlocks();
+    void markSimplifiedExpressionBlocks(const QVector<QStringList>& renderedEntries);
     void ensureHistoryBlockIndexCache() const;
 
 private:

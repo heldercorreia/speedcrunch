@@ -253,11 +253,12 @@ void SyntaxHighlighter::highlightSyntaxBlock(const QString& text)
 
         const QString normalizedExpressionText = textNormalizedForHighlighting(expressionText);
         Tokens tokens = evaluator()->scan(normalizedExpressionText);
+        const QStringList functionNames = tokens.isEmpty()
+            ? QStringList() : FunctionRepo::instance()->getIdentifiers();
         int unitBracketDepth = 0;
         for (int i = 0; i < tokens.count(); ++i) {
             const Token& token = tokens.at(i);
             const QString tokenText = token.text().toLower();
-            QStringList functionNames = FunctionRepo::instance()->getIdentifiers();
             QColor color;
             const bool insideUnitBrackets = unitBracketDepth > 0;
 
@@ -335,12 +336,13 @@ void SyntaxHighlighter::highlightSyntaxBlock(const QString& text)
 
     const QString normalizedText = textNormalizedForHighlighting(text);
     Tokens tokens = evaluator()->scan(normalizedText);
+    const QStringList functionNames = tokens.isEmpty()
+        ? QStringList() : FunctionRepo::instance()->getIdentifiers();
     int unitBracketDepth = 0;
 
     for (int i = 0; i < tokens.count(); ++i) {
         const Token& token = tokens.at(i);
         const QString tokenText = token.text().toLower();
-        QStringList functionNames = FunctionRepo::instance()->getIdentifiers();
         QColor color;
         const bool insideUnitBrackets = unitBracketDepth > 0;
 

@@ -1020,16 +1020,23 @@ void ResultDisplay::refresh()
     m_count = historyCount;
     m_firstDisplayedHistoryIndex = firstDisplayedHistoryIndex;
 
+    StartupDiagnostics::Scope phaseTiming("Prepare history display text");
     QStringList allLines;
+    QVector<QStringList> renderedEntries;
+    renderedEntries.reserve(m_count - m_firstDisplayedHistoryIndex);
     allLines.reserve(qMax(1, (m_count - m_firstDisplayedHistoryIndex) * 3));
     for (int i = m_firstDisplayedHistoryIndex; i < m_count; ++i) {
         const HistoryEntry& historyEntry = session->historyEntryAtRef(i);
-        allLines.append(renderedHistoryLinesForDisplay(historyEntry, session->evaluator()));
+        renderedEntries.append(renderedHistoryLinesForDisplay(historyEntry, session->evaluator()));
+        allLines.append(renderedEntries.constLast());
         allLines.append(QLatin1String(""));
     }
 
+    phaseTiming.next("Install history text document");
     setPlainText(allLines.join(QLatin1String("\n")));
-    markSimplifiedExpressionBlocks();
+    phaseTiming.next("Identify simplified history lines");
+    markSimplifiedExpressionBlocks(renderedEntries);
+    phaseTiming.next("Restore history scroll and controls");
     verticalScrollBar()->setValue(previousScrollValue);
 
     markHistoryBlockIndexCacheDirty();
@@ -2211,10 +2218,27 @@ void ResultDisplay::markSimplifiedExpressionBlocks()
     const int historySize = session->historySize();
     const int firstDisplayedHistoryIndex = firstDisplayedHistoryIndexForCount(historySize, session);
 
+    QVector<QStringList> renderedEntries;
+    renderedEntries.reserve(historySize - firstDisplayedHistoryIndex);
+    for (int i = firstDisplayedHistoryIndex; i < historySize; ++i) {
+        renderedEntries.append(renderedHistoryLinesForDisplay(
+            session->historyEntryAtRef(i), session->evaluator()));
+    }
+    markSimplifiedExpressionBlocks(renderedEntries);
+}
+
+void ResultDisplay::markSimplifiedExpressionBlocks(const QVector<QStringList>& renderedEntries)
+{
+    const Session* session = displaySession(this);
+    if (session == nullptr)
+        return;
+    const int historySize = session->historySize();
+    const int firstDisplayedHistoryIndex = firstDisplayedHistoryIndexForCount(historySize, session);
+
     QTextBlock block = document()->firstBlock();
     for (int i = firstDisplayedHistoryIndex; i < historySize && block.isValid(); ++i) {
         const HistoryEntry& entry = session->historyEntryAtRef(i);
-        const QStringList renderedLines = renderedHistoryLinesForDisplay(entry, session->evaluator());
+        const QStringList& renderedLines = renderedEntries.at(i - firstDisplayedHistoryIndex);
         const QString simplifiedLine = simplifiedExpressionLineForDisplay(entry, session->evaluator());
         int lineIndex = 0;
 

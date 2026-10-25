@@ -3,6 +3,7 @@
 
 #include "mainwindowtesthelpers.h"
 #include "core/numberformatter.h"
+#include "gui/resultlineformatutils.h"
 
 using namespace MainWindowTestHelpers;
 
@@ -10,6 +11,8 @@ class TestDisplayUi : public QObject {
     Q_OBJECT
 
 private slots:
+    void restored_history_preserves_text_and_highlighting_data();
+    void restored_history_preserves_text_and_highlighting();
     void history_reuse_respects_input_adjustments_data();
     void history_reuse_respects_input_adjustments();
     void user_definition_comments_survive_creation_and_editing_data();
@@ -40,7 +43,131 @@ private slots:
     void result_display_context_menu_tracks_session_state();
     void result_display_context_menu_copies_selection();
     void result_display_remove_menu_targets_clicked_calculation();
+    void function_identifier_cache_tracks_insertions();
 };
+
+void TestDisplayUi::restored_history_preserves_text_and_highlighting_data()
+{
+    QTest::addColumn<bool>("printed");
+    QTest::addColumn<bool>("extraFormats");
+    QTest::newRow("legacy-single") << false << false;
+    QTest::newRow("legacy-extra-formats") << false << true;
+    QTest::newRow("printed-single") << true << false;
+    QTest::newRow("printed-extra-formats") << true << true;
+}
+
+void TestDisplayUi::restored_history_preserves_text_and_highlighting()
+{
+    QFETCH(bool, printed);
+    QFETCH(bool, extraFormats);
+    Settings* settings = Settings::instance();
+    settings->simplifyResultExpressions = true;
+    settings->syntaxHighlighting = true;
+    settings->angleUnit = 'd';
+    settings->multipleResultLinesEnabled = extraFormats;
+    settings->secondaryResultEnabled = extraFormats;
+    settings->alternativeResultFormat = 'e';
+    settings->secondaryResultPrecision = 4;
+    settings->colorScheme = QStringLiteral("Custom");
+    settings->customColorSchemeJson = themeJsonString(QJsonObject {
+        {QStringLiteral("number"), QStringLiteral("#101010")},
+        {QStringLiteral("function"), QStringLiteral("#123456")},
+        {QStringLiteral("operator"), QStringLiteral("#654321")},
+        {QStringLiteral("result"), QStringLiteral("#abcdef")}
+    });
+    Session source;
+    const QString expression = QStringLiteral("2 * cos(pi) * sin(pi) * cos(pi)");
+    Evaluator* evaluator = source.evaluator();
+    evaluator->setExpression(expression);
+    const Quantity result = evaluator->evalUpdateAns();
+    QVERIFY2(evaluator->error().isEmpty(), qPrintable(evaluator->error()));
+    HistoryEntry calculation(expression, result, evaluator->interpretedExpression());
+    if (printed) {
+        calculation.setRenderedLines(ResultLineFormatUtils::formatResultLinesForDisplay(
+            expression, evaluator->interpretedExpression(), result, true, true, evaluator));
+    }
+    source.addHistoryEntry(calculation);
+    source.addHistoryEntry(HistoryEntry(QStringLiteral("6*7"), Quantity(42)));
+    QJsonObject saved;
+    source.serialize(saved);
+    Session restored;
+    restored.deSerialize(saved, false);
+
+    ResultDisplay display;
+    display.resize(180, 150);
+    display.setSession(&restored);
+    const QString initialText = display.toPlainText();
+    QVERIFY(initialText.contains(QStringLiteral("cos²")));
+    QVERIFY(initialText.contains(QStringLiteral("= 42")));
+    if (printed)
+        QVERIFY(initialText.startsWith(calculation.renderedLines().join(QLatin1Char('\n'))));
+
+    const auto colorAt = [](const QTextBlock& block, int position) {
+        for (const auto& range : block.layout()->formats()) {
+            if (position >= range.start && position < range.start + range.length)
+                return range.format.foreground().color();
+        }
+        return QColor();
+    };
+    const auto checkHighlighting = [&]() {
+        int simplifiedLines = 0;
+        int numericLines = 0;
+        for (QTextBlock block = display.document()->firstBlock(); block.isValid(); block = block.next()) {
+            const auto* data = dynamic_cast<SyntaxHighlightBlockData*>(block.userData());
+            if (data && data->highlightResultExpressionSyntax) {
+                ++simplifiedLines;
+                const int function = block.text().indexOf(QStringLiteral("cos²"));
+                QVERIFY(function >= 0);
+                QCOMPARE(colorAt(block, function), QColor(QStringLiteral("#123456")));
+                QCOMPARE(colorAt(block, function + 3), QColor(QStringLiteral("#101010")));
+            } else if (block.text().startsWith(QLatin1String("= "))) {
+                ++numericLines;
+                QCOMPARE(colorAt(block, 2), QColor(QStringLiteral("#abcdef")));
+            }
+        }
+        QCOMPARE(simplifiedLines, 1);
+        QVERIFY(numericLines >= (extraFormats ? 4 : 2));
+    };
+    checkHighlighting();
+    display.refresh();
+    QCOMPARE(display.toPlainText(), initialText);
+    checkHighlighting();
+    display.refreshLastHistoryEntry();
+    QCOMPARE(display.toPlainText(), initialText);
+    checkHighlighting();
+
+    restored.addHistoryEntry(HistoryEntry(QStringLiteral("3+4"), Quantity(7)));
+    display.refresh();
+    QVERIFY(display.toPlainText().startsWith(initialText));
+    QVERIFY(display.toPlainText().contains(QStringLiteral("= 7")));
+    checkHighlighting();
+}
+
+void TestDisplayUi::function_identifier_cache_tracks_insertions()
+{
+    FunctionRepo* functions = FunctionRepo::instance();
+    const QStringList before = functions->getIdentifiers();
+    QCOMPARE(functions->getIdentifiers(), before);
+    QVERIFY(before.contains(QStringLiteral("rat")));
+    QVERIFY(!before.contains(QStringLiteral("ratio"), Qt::CaseInsensitive));
+    QVERIFY(before.contains(QString(UnicodeChars::SquareRoot)));
+    QVERIFY(before.contains(QString(UnicodeChars::Summation)));
+    QStringList copy = functions->getIdentifiers();
+    copy.clear();
+    QCOMPARE(functions->getIdentifiers(), before);
+
+    const QString name = QStringLiteral("historycacheprobe");
+    QVERIFY(functions->find(name) == nullptr);
+    auto* function = new Function(name,
+        [](Function*, const Function::ArgumentList&) { return Quantity(0); },
+        FunctionDomain::Arithmetic, functions);
+    functions->insert(function);
+    const QStringList after = functions->getIdentifiers();
+    QCOMPARE(after.size(), before.size() + 1);
+    QVERIFY(after.contains(name));
+    QVERIFY(!before.contains(name));
+    QCOMPARE(functions->find(name), function);
+}
 
 void TestDisplayUi::history_reuse_respects_input_adjustments_data()
 {
