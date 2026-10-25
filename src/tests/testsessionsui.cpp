@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "mainwindowtesthelpers.h"
+#include "core/startupdiagnostics.h"
 
 #include <functional>
 
@@ -55,6 +56,9 @@ private slots:
     void init() { UiTestFixture::resetSettings(); }
     void startup_reuses_initial_pane_data();
     void startup_reuses_initial_pane();
+    void startup_shows_restored_session_on_first_show_data();
+    void startup_shows_restored_session_on_first_show();
+    void startup_hide_cancels_pending_show();
     void saved_window_ui_state_overrides_defaults_before_show();
     void visible_window_applies_restored_dock_and_keypad_layout();
     void always_on_top_toggles_preserve_window_geometry();
@@ -316,6 +320,117 @@ void TestSessionsUi::startup_reuses_initial_pane_data()
         QTest::newRow(qPrintable(layouts.at(kind) + QStringLiteral("-modern"))) << kind << false;
         QTest::newRow(qPrintable(layouts.at(kind) + QStringLiteral("-classic"))) << kind << true;
     }
+}
+
+void TestSessionsUi::startup_shows_restored_session_on_first_show_data()
+{
+    QTest::addColumn<bool>("savedLayout");
+    QTest::addColumn<bool>("savedSession");
+    QTest::addColumn<bool>("alwaysOnTop");
+    for (bool layout : {false, true}) {
+        for (bool session : {false, true}) {
+            if (!layout && session)
+                continue;
+            for (bool onTop : {false, true}) {
+                QTest::addRow("layout-%d-session-%d-on-top-%d", layout, session, onTop)
+                    << layout << session << onTop;
+            }
+        }
+    }
+}
+
+void TestSessionsUi::startup_shows_restored_session_on_first_show()
+{
+    QFETCH(bool, savedLayout);
+    QFETCH(bool, savedSession);
+    QFETCH(bool, alwaysOnTop);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    Settings* settings = guard.settings;
+    settings->hasNumberFormatStyleSetting = true;
+    settings->openPrivateTabOnStartup = false;
+    settings->windowAlwaysOnTop = alwaysOnTop;
+    settings->windowOnfullScreen = false;
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    settings->sessionLayoutJson.clear();
+    const QString name = savedLayout ? QStringLiteral("Saved-Startup") : QStringLiteral("Untitled-1");
+    if (savedSession) {
+        QVERIFY(QDir().mkpath(QFileInfo(storage.path(name)).path()));
+        writeFile(storage.path(name), QJsonDocument(sessionJson(name)).toJson());
+    }
+    if (savedLayout) {
+        settings->sessionLayoutJson = QString::fromUtf8(QJsonDocument(QJsonObject {
+            { QStringLiteral("scheme"), 1 },
+            { QStringLiteral("kind"), QStringLiteral("session-layout") },
+            { QStringLiteral("windows"), QJsonArray { QJsonObject {
+                { QStringLiteral("id"), QStringLiteral("saved") },
+                { QStringLiteral("root"), QJsonObject {
+                    { QStringLiteral("type"), QStringLiteral("tabs") },
+                    { QStringLiteral("active"), name },
+                    { QStringLiteral("tabs"), QJsonArray { QJsonObject {
+                        { QStringLiteral("name"), name }
+                    } } }
+                } }
+            } } }
+        }).toJson(QJsonDocument::Compact));
+    }
+    class StartupWindow : public MainWindow {
+    public:
+        int showCount = 0;
+        int firstHistorySize = -1;
+        QString firstName;
+        QString firstText;
+    protected:
+        void showEvent(QShowEvent* event) override
+        {
+            if (showCount++ == 0) {
+                const auto* display = findChild<ResultDisplay*>();
+                firstHistorySize = display->session()->historySize();
+                firstName = display->session()->name();
+                firstText = display->toPlainText();
+            }
+            MainWindow::showEvent(event);
+        }
+    };
+    StartupDiagnostics::begin();
+    const auto finishRecording = qScopeGuard([]() {
+        StartupDiagnostics::firstPaintFinished();
+        StartupDiagnostics::finishWhenIdle();
+    });
+    StartupWindow window;
+    QVERIFY(!window.isVisible());
+    window.showWhenReady();
+    QVERIFY(!window.isVisible());
+    QCOMPARE(window.showCount, 0);
+    QTRY_VERIFY(window.isVisible());
+    QCOMPARE(window.showCount, 1);
+    QCOMPARE(window.firstHistorySize, savedSession ? 1 : 0);
+    QCOMPARE(window.firstName, savedSession ? name : QStringLiteral("Untitled-1"));
+    if (savedSession)
+        QVERIFY(window.firstText.contains(QStringLiteral("42")));
+    QCOMPARE(window.windowFlags().testFlag(Qt::WindowStaysOnTopHint), alwaysOnTop);
+    int themeCalls = 0;
+    for (const auto& phase : StartupDiagnostics::snapshot().phases) {
+        if (phase.name == QLatin1String("Apply pane themes"))
+            themeCalls += phase.calls;
+    }
+    QCOMPARE(themeCalls, 1);
+}
+
+void TestSessionsUi::startup_hide_cancels_pending_show()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    guard.settings->hasNumberFormatStyleSetting = true;
+    guard.settings->sessionLayoutJson.clear();
+    MainWindow window;
+    window.showWhenReady();
+    window.hide();
+    QTRY_VERIFY(!MainWindow::sessionRestoreInProgress());
+    QVERIFY(!window.isVisible());
+    window.show();
+    QVERIFY(window.isVisible());
 }
 
 void TestSessionsUi::startup_reuses_initial_pane()

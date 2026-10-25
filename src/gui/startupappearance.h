@@ -82,7 +82,6 @@ inline void observeAppearanceSettings(AppearanceScope& scope)
         int(settings->keypadAppearance), int(settings->editorDisplayStyle)}));
 }
 
-// Keep the existing setter calls, including identical assignments.
 inline void setAppearancePalette(QWidget* widget, const QPalette& palette)
 {
     if (isRecording())
@@ -92,9 +91,13 @@ inline void setAppearancePalette(QWidget* widget, const QPalette& palette)
 
 inline void setAppearanceStyleSheet(QWidget* widget, const QString& styleSheet)
 {
+    // Reassigning the same stylesheet makes Qt repolish the widget tree.
+    // Palette updates still run because polishing can reset viewport colors.
+    const bool changed = widget->styleSheet() != styleSheet;
     if (isRecording())
-        appearanceAssignment(widget, false, widget->styleSheet() != styleSheet, false);
-    widget->setStyleSheet(styleSheet);
+        appearanceAssignment(widget, false, changed, !changed);
+    if (changed)
+        widget->setStyleSheet(styleSheet);
 }
 
 }

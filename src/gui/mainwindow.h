@@ -63,6 +63,7 @@ public:
     static void initializeApplicationStyle();
     explicit MainWindow(bool restorePreviousSession = true);
     ~MainWindow();
+    void showWhenReady();
     void persistSessionAndSettingsForShutdown();
     static MainWindow* subsequentLaunchWindow();
     static bool sessionRestoreInProgress();
@@ -86,6 +87,7 @@ signals:
     void unitsChanged();
 
 public slots:
+    void setVisible(bool visible) override;
     void copy();
 
 private slots:
@@ -756,6 +758,7 @@ private:
     bool m_shutdownStateSaved;
     bool m_restorePreviousSessionOnStartup;
     bool m_sessionRestorePending = false;
+    bool m_showAfterSessionRestore = false;
     bool m_startupPrivateTabPending = false;
     QTimer* m_deferredSessionSaveTimer;
     bool m_sessionSavePending;

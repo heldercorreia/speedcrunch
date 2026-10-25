@@ -7230,7 +7230,7 @@ void MainWindow::updateSplitterStyleSheet()
 void MainWindow::refreshPaneThemes()
 {
     // Settings actions can emit several appearance signals during startup.
-    // The constructor applies the final pane theme once those settings settle.
+    // Apply the final pane theme once settings and session restoration settle.
     if (m_initializingUi)
         return;
     StartupDiagnostics::AppearanceScope timing("Apply pane themes", this);
@@ -9496,7 +9496,8 @@ MainWindow::MainWindow(bool restorePreviousSession)
     StartupDiagnostics::AppearanceContext finalThemeContext("Finalize window theme");
     m_initializingUi = false;
     applyThemeSurfacePalette();
-    refreshPaneThemes();
+    if (!m_sessionRestorePending)
+        refreshPaneThemes();
     // Keep direct window construction working without the startup initializer.
     ensureDockChromeStyleInstalled();
     updatePaneLoadedSessionCounts();
@@ -9695,6 +9696,9 @@ void MainWindow::showNewPrivateSession()
 void MainWindow::finishStartupSessionRestore(bool restoredSession)
 {
     StartupDiagnostics::Scope timing("Finalize startup session and focus");
+    // A failed load keeps the initial pane, which still needs its final theme.
+    if (!restoredSession)
+        refreshPaneThemes();
     if (m_startupPrivateTabPending) {
         const bool emptyUntitledSession = untitledSessionNumber(m_session->name()) > 0
             && !sessionHasPersistableContent(m_session)
@@ -9720,6 +9724,38 @@ void MainWindow::finishStartupSessionRestore(bool restoredSession)
     else
         m_widgets.editor->setFocus(Qt::OtherFocusReason);
     m_sessionRestorePending = false;
+    if (m_showAfterSessionRestore)
+        showWhenReady();
+}
+
+void MainWindow::showWhenReady()
+{
+    // File I/O runs in a worker. Showing the placeholder before its reply
+    // exposes an empty tab and lets native styles paint an unfinished layout.
+    if (m_sessionRestorePending) {
+        m_showAfterSessionRestore = true;
+        return;
+    }
+    const bool preserveStartupFocus = testAttribute(Qt::WA_ShowWithoutActivating);
+    show();
+    setAttribute(Qt::WA_ShowWithoutActivating, false);
+    if (preserveStartupFocus && primaryMainWindow()) {
+        MainWindow* startupWindow = primaryMainWindow();
+        QTimer::singleShot(0, startupWindow, [startupWindow]() {
+            if (!startupWindow->m_session || !startupWindow->m_session->isPrivate())
+                return;
+            startupWindow->raise();
+            startupWindow->activateWindow();
+            startupWindow->m_widgets.editor->setFocus();
+        });
+    }
+}
+
+void MainWindow::setVisible(bool visible)
+{
+    // An explicit show or hide cancels a display request waiting for disk I/O.
+    m_showAfterSessionRestore = false;
+    QMainWindow::setVisible(visible);
 }
 
 void MainWindow::renameLoadedSession(Session* session, const QString& name)
@@ -11799,13 +11835,15 @@ void MainWindow::setAlwaysOnTopEnabled(bool b)
     m_settings->windowAlwaysOnTop = b;
 
     // move() uses the outer frame position, not the global client-area origin.
+    const bool wasVisible = isVisible();
     const QPoint cur = pos();
     if (b)
         setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
     else
         setWindowFlags(windowFlags() & (~ Qt::WindowStaysOnTopHint));
     move(cur);
-    show();
+    if (wasVisible)
+        show();
 }
 
 void MainWindow::setAutoAnsEnabled(bool b)
@@ -13833,6 +13871,7 @@ void MainWindow::restoreSession(bool restoreHistory) {
 
             // The initial session receives globals before this async load finishes.
             window->applyUserDefinitions();
+            window->refreshPaneThemes();
             emit window->historyChanged();
             emit window->variablesChanged();
             emit window->functionsChanged();
@@ -14421,19 +14460,7 @@ void MainWindow::showRestoredWindow(const QByteArray& geometry)
         QTimer::singleShot(0, this, [this, geometry]() {
             if (!geometry.isEmpty())
                 restoreGeometry(geometry);
-            const bool preserveStartupFocus = testAttribute(Qt::WA_ShowWithoutActivating);
-            show();
-            setAttribute(Qt::WA_ShowWithoutActivating, false);
-            if (preserveStartupFocus && primaryMainWindow()) {
-                MainWindow* startupWindow = primaryMainWindow();
-                QTimer::singleShot(0, startupWindow, [startupWindow]() {
-                    if (!startupWindow->m_session || !startupWindow->m_session->isPrivate())
-                        return;
-                    startupWindow->raise();
-                    startupWindow->activateWindow();
-                    startupWindow->m_widgets.editor->setFocus();
-                });
-            }
+            showWhenReady();
         });
     });
 }

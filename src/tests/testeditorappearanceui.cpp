@@ -17,6 +17,8 @@ private slots:
     void startup_font_preparation_finishes_before_teardown_data();
     void startup_font_preparation_finishes_before_teardown();
     void first_result_display_records_constructor_stages();
+    void repeated_highlighting_preserves_styles_without_repolishing_data();
+    void repeated_highlighting_preserves_styles_without_repolishing();
     void editor_display_style_defaults_to_modern_and_persists();
     void editor_display_style_switches_all_windows_and_preserves_work();
     void editor_display_style_preserves_result_selection_and_copy();
@@ -135,6 +137,69 @@ void TestEditorAppearanceUi::first_result_display_records_constructor_stages()
             <= display->firstStartNs + display->totalNs);
     QVERIFY(display->firstStartNs + display->totalNs <= editor->firstStartNs);
     QVERIFY(editor->firstStartNs + editor->totalNs <= pane->firstStartNs);
+}
+
+void TestEditorAppearanceUi::repeated_highlighting_preserves_styles_without_repolishing_data()
+{
+    QTest::addColumn<bool>("classic");
+    QTest::newRow("modern") << false;
+    QTest::newRow("classic") << true;
+}
+
+void TestEditorAppearanceUi::repeated_highlighting_preserves_styles_without_repolishing()
+{
+    QFETCH(bool, classic);
+    MainWindowStateGuard guard;
+    guard.settings->editorDisplayStyle = classic
+        ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern;
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    auto* display = window.findChild<ResultDisplay*>();
+    Editor* editor = editorForDisplay(display);
+    editor->setText(QStringLiteral("12+34"));
+    editor->selectAll();
+    display->rehighlight();
+    editor->rehighlight();
+    class StyleChangeCounter : public QObject {
+    public:
+        int changes = 0;
+        bool eventFilter(QObject*, QEvent* event) override
+        {
+            if (event->type() == QEvent::StyleChange)
+                ++changes;
+            return false;
+        }
+    } counter;
+    const QList<QWidget*> widgets {display, display->viewport(), editor, editor->viewport()};
+    QStringList styles;
+    QList<QPalette> palettes;
+    for (QWidget* widget : widgets) {
+        widget->installEventFilter(&counter);
+        styles.append(widget->styleSheet());
+        palettes.append(widget->palette());
+    }
+    for (int i = 0; i < 3; ++i) {
+        display->rehighlight();
+        editor->rehighlight();
+    }
+    QCOMPARE(counter.changes, 0);
+    for (int i = 0; i < widgets.size(); ++i) {
+        QCOMPARE(widgets.at(i)->styleSheet(), styles.at(i));
+        QCOMPARE(widgets.at(i)->palette(), palettes.at(i));
+    }
+    QCOMPARE(editor->textCursor().selectedText(), QStringLiteral("12+34"));
+
+    // Changed surface colors must still reach the existing controls.
+    const QColor surface(QStringLiteral("#123456"));
+    display->setThemeSurfaceColor(surface);
+    display->rehighlight();
+    editor->setThemeSurfaceColor(surface, surface);
+    editor->rehighlight();
+    QVERIFY(counter.changes > 0);
+    QCOMPARE(display->viewport()->palette().color(QPalette::Base), surface);
+    QCOMPARE(editor->viewport()->palette().color(QPalette::Base), surface);
+    QCOMPARE(editor->textCursor().selectedText(), QStringLiteral("12+34"));
 }
 
 void TestEditorAppearanceUi::editor_display_style_defaults_to_modern_and_persists()

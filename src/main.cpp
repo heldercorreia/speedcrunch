@@ -282,8 +282,8 @@ int main(int argc, char* argv[])
     MainWindow window;
     fontPreparation.wait();
     g_mainWindow = &window;
-    timing.next("Show main window");
-    window.show();
+    timing.next("Schedule main window display");
+    window.showWhenReady();
 
     launchController.setInitialWindow(&window);
 
