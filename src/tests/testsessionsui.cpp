@@ -376,7 +376,7 @@ void TestSessionsUi::startup_applies_window_flags_before_polishing_panes()
 {
     QFETCH(bool, alwaysOnTop);
     if (QGuiApplication::platformName().startsWith(QLatin1String("wayland")))
-        QSKIP("Wayland does not support the always-on-top window setting");
+        QSKIP("Wayland does not support the always-on-top window setting", );
     MainWindowStateGuard guard;
     PrivateSessionStorage storage;
     guard.settings->windowAlwaysOnTop = alwaysOnTop;
