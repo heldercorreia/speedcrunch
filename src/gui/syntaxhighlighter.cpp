@@ -170,6 +170,12 @@ void SyntaxHighlighter::groupInputDigits(const QString& text)
         if (next > end && next < limit && isDigit(text.at(next)))
             continue;
 
+        // Multiple dots or commas include grouping marks. Keep the typed
+        // punctuation instead of painting the first mark as a decimal point.
+        const QString sourceNumber = text.mid(start, limit - start);
+        if (sourceNumber.count(MathDsl::DotSep) + sourceNumber.count(MathDsl::CommaSep) > 1)
+            continue;
+
         const int groupSize = base == 2 || base == 16 ? 4 : 3;
         if (end < limit && QString(text.at(end)) == separator) {
             // A pasted number may already contain the selected grouping marks.

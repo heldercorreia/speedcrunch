@@ -33,6 +33,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QKeyEvent>
+#include <QMimeData>
 #include <QPalette>
 #include <QPainter>
 #include <QPushButton>
@@ -101,6 +102,11 @@ private slots:
     void input_digit_grouping_follows_number_format();
     void input_digit_grouping_paints_separator_glyphs_data();
     void input_digit_grouping_paints_separator_glyphs();
+    void typing_hex_separators_preserves_number_data();
+    void typing_hex_separators_preserves_number();
+    void spaced_hex_decode_live_preview();
+    void manual_grouping_keeps_punctuation_data();
+    void manual_grouping_keeps_punctuation();
     void auto_ans_rewrite_helper_handles_tilde_and_factorial();
     void blocks_operator_right_after_open_square_bracket();
     void inserts_value_unit_space_brackets_after_number_or_symbol();
@@ -945,6 +951,131 @@ void TestEditorUi::auto_inserts_space_before_question_comment_only_with_non_spac
     QKeyEvent questionByText(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, QStringLiteral("?"));
     QApplication::sendEvent(&editor, &questionByText);
     QCOMPARE(editor.document()->toRawText(), QStringLiteral("2+2 ? "));
+}
+
+void TestEditorUi::typing_hex_separators_preserves_number_data()
+{
+    QTest::addColumn<QString>("expression");
+    QTest::addColumn<QString>("expected");
+    QTest::newRow("spaces") << QStringLiteral("0xffef ffff ffff ffff")
+        << QStringLiteral("18442240474082181119");
+    QTest::newRow("commas") << QStringLiteral("0xffef,ffff,ffff,ffff")
+        << QStringLiteral("18442240474082181119");
+    QTest::newRow("uppercase") << QStringLiteral("0XFFEF,FFFF,FFFF,FFFF")
+        << QStringLiteral("18442240474082181119");
+    QTest::newRow("fraction") << QStringLiteral("0xf.a") << QStringLiteral("15.625");
+    QTest::newRow("alternate-prefix") << QStringLiteral("#F.A") << QStringLiteral("15.625");
+    QTest::newRow("after-operator") << QStringLiteral("1 + 0xf.a") << QStringLiteral("16.625");
+}
+
+void TestEditorUi::typing_hex_separators_preserves_number()
+{
+    QFETCH(QString, expression);
+    QFETCH(QString, expected);
+    Settings* settings = Settings::instance();
+    settings->automaticInputAdjustments = true;
+    Session session;
+    for (const auto style : {Settings::NumberFormatThreeDigitSpaceDot,
+                             Settings::NumberFormatThreeDigitCommaDot,
+                             Settings::NumberFormatThreeDigitDotComma}) {
+        settings->numberFormatStyle = style;
+        settings->applyNumberFormatStyle();
+        Editor editor;
+        editor.setSession(&session);
+        editor.setAutoCompletionEnabled(false);
+        editor.setAutoCalcEnabled(false);
+        QTest::keyClicks(&editor, expression);
+        QCOMPARE(editor.text(), expression);
+        session.evaluator()->setExpression(editor.text());
+        const Quantity result = session.evaluator()->evalNoAssign();
+        QVERIFY2(session.evaluator()->error().isEmpty(), qPrintable(session.evaluator()->error()));
+        QCOMPARE(DMath::format(result, Quantity::Format::Fixed()), expected);
+    }
+}
+
+void TestEditorUi::spaced_hex_decode_live_preview()
+{
+    class PasteEditor : public Editor {
+    public:
+        using Editor::insertFromMimeData;
+    };
+
+    Settings* settings = Settings::instance();
+    settings->automaticInputAdjustments = true;
+    Session session;
+    for (const auto style : {Settings::NumberFormatThreeDigitSpaceDot,
+                             Settings::NumberFormatThreeDigitCommaDot,
+                             Settings::NumberFormatThreeDigitDotComma}) {
+        settings->numberFormatStyle = style;
+        settings->applyNumberFormatStyle();
+        for (const bool paste : {false, true}) {
+            PasteEditor editor;
+            editor.setSession(&session);
+            editor.setAutoCalcEnabled(true);
+            editor.setAutoCompletionEnabled(true);
+            editor.setText(QStringLiteral("ieee754_double_decode()"));
+            editor.setCursorPosition(editor.text().size() - 1);
+            const QString hex = QStringLiteral("0xffef ffff ffff ffff");
+            if (paste) {
+                QMimeData mime;
+                mime.setText(hex);
+                editor.insertFromMimeData(&mime);
+            } else {
+                QTest::keyClicks(&editor, hex);
+            }
+            QCOMPARE(editor.text(), QStringLiteral("ieee754_double_decode(0xffef ffff ffff ffff)"));
+            bool hasPreview = false;
+            Quantity preview;
+            connect(&editor, &Editor::autoCalcQuantityAvailable, &editor, [&](const Quantity& value) {
+                hasPreview = true;
+                preview = value;
+            });
+            editor.refreshAutoCalc();
+            QVERIFY2(hasPreview, qPrintable(session.evaluator()->error()));
+            QCOMPARE(DMath::format(preview, Quantity::Format::Scientific()),
+                     QStringLiteral("-1.79769313486231570815e308"));
+        }
+    }
+}
+
+void TestEditorUi::manual_grouping_keeps_punctuation_data()
+{
+    QTest::addColumn<QString>("input");
+    for (const auto& input : {QStringLiteral("0xffef,ffff,ffff,ffff"),
+                              QStringLiteral("0xffef.ffff.ffff.ffff"),
+                              QStringLiteral("1,234,567"),
+                              QStringLiteral("1.234.567"),
+                              QStringLiteral("1,234,567.89"),
+                              QStringLiteral("1.234.567,89"),
+                              QStringLiteral("1,234.56"),
+                              QStringLiteral("1.234,56")}) {
+        QTest::newRow(qPrintable(input)) << input;
+    }
+}
+
+void TestEditorUi::manual_grouping_keeps_punctuation()
+{
+    QFETCH(QString, input);
+    Settings* settings = Settings::instance();
+    settings->inputDigitGrouping = true;
+    for (const auto style : {Settings::NumberFormatNoGroupingDot,
+                             Settings::NumberFormatNoGroupingComma}) {
+        settings->numberFormatStyle = style;
+        settings->applyNumberFormatStyle();
+        Editor editor;
+        editor.setAutoCalcEnabled(false);
+        editor.setAutoCompletionEnabled(false);
+        editor.setText(input);
+        for (const bool highlighting : {true, false}) {
+            settings->syntaxHighlighting = highlighting;
+            editor.rehighlight();
+            for (const auto& range : editor.document()->firstBlock().layout()->formats()) {
+                QVERIFY2(!range.format.hasProperty(SyntaxHighlighter::InputRadixReplacement),
+                         qPrintable(input));
+            }
+            QCOMPARE(editor.text(), input);
+        }
+    }
 }
 
 void TestEditorUi::inserts_middle_dot_on_space_after_identifier_or_closed_group()

@@ -8820,6 +8820,16 @@ QString Evaluator::autoFix(const QString& expr)
             if (!match.hasMatch())
                 break;
 
+            // A-F groups separated by spaces can belong to one hex number.
+            // Check the lexer before treating them as adjacent identifiers.
+            const Tokens matchedTokens = scan(result.left(match.capturedEnd()));
+            if (!matchedTokens.isEmpty() && matchedTokens.last().isNumber()
+                && matchedTokens.last().pos() <= match.capturedStart()
+                && matchedTokens.last().pos() + matchedTokens.last().size() >= match.capturedEnd()) {
+                offset = match.capturedStart(2);
+                continue;
+            }
+
             const QString left = match.captured(1);
             const QString right = match.captured(2);
             const bool keepAsUnitConversionAlias =

@@ -539,6 +539,9 @@ menus with a single combined Number Format selection.
 The default option is no digit grouping with dot decimal separator
 (``1234567.12345``).
 
+A manually entered grouped number such as ``1,234,567`` keeps its grouping
+marks in the input field, even with this default format selected.
+
 Additional options let you choose:
 
 * no digit grouping with dot or comma decimal separator

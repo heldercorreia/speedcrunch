@@ -84,6 +84,9 @@ You can enter a number in any of these bases by marking it with the correspondin
 * ``0d`` or ``0D`` for **decimal**. These can be omitted since decimal is the default base.
 * ``0x``, ``0X``, or ``#`` for **hexadecimal**. The additional six digits are represented by the upper or lower case letters ``a`` to ``f``, e.g. ``0xdeadbeef`` or ``0xDEADBEEF``.
 
+Spaces can separate hexadecimal digit groups, including groups made entirely
+of letters. For example, ``0xAB CD`` has the same value as ``0xABCD`` (43981).
+
 You may even enter fractional values in any of these bases. Note that scientific notation is not
 supported for non-decimal bases, however. Examples::
 

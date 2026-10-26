@@ -3611,6 +3611,18 @@ void Editor::keyPressEvent(QKeyEvent* event)
         || normalizedEventText == QLatin1String(",");
     if (isTypedRadixSeparator) {
         if (!(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))) {
+            const QString left = text().left(textCursor().selectionStart());
+            const Tokens tokens = evaluator()->scan(left);
+            if (!squareBracketContext && !tokens.isEmpty()
+                && tokens.last().isNumber()
+                && tokens.last().pos() + tokens.last().size() == left.size()
+                && tokens.last().text().startsWith(MathDsl::HexPrefix, Qt::CaseInsensitive)) {
+                // Hex digits A-F belong to the number, so punctuation after
+                // them must not start an implicit multiplication.
+                insert(normalizedEventText.isEmpty() ? QString(QChar(radixChar())) : normalizedEventText);
+                event->accept();
+                return;
+            }
             const QString radix = QString(QChar(this->radixChar()));
             if (rewriteTrailingSuperscriptExponentToParenthesizedAscii(this, radix)) {
                 event->accept();

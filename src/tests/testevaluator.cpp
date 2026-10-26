@@ -3334,6 +3334,23 @@ void test_function_basic()
     CHECK_EVAL("sum(10;1;abs(-100))", "111");
 
     CHECK_EVAL("ieee754_half_decode(0x7E00)", "NaN");
+    // Scaling makes these checks independent of fixed-point display rounding.
+    CHECK_EVAL("ieee754_double_decode(0x0010000000000000) / 2^(-1022)", "1");
+    CHECK_EVAL("ieee754_double_decode(0x8010000000000000) / 2^(-1022)", "-1");
+    CHECK_EVAL("ieee754_double_decode(0x0000000000000001) / 2^(-1074)", "1");
+    CHECK_EVAL("ieee754_double_decode(0x8000000000000001) / 2^(-1074)", "-1");
+    CHECK_EVAL("ieee754_double_decode(0x000fffffffffffff) / ((2^52-1)*2^(-1074))", "1");
+    CHECK_EVAL("ieee754_double_decode(0x800fffffffffffff) / ((2^52-1)*2^(-1074))", "-1");
+    CHECK_EVAL_FORMAT("sci(ieee754_double_decode(0x0000000000000001))", "4.94065645841246544177e-324");
+    CHECK_EVAL("ieee754_double_decode(0xffef ffff ffff ffff) / ieee754_double_decode(0xffefffffffffffff)", "1");
+    CHECK_EVAL("ieee754_double_decode(0xffef,ffff,ffff,ffff) / ieee754_double_decode(0xffefffffffffffff)", "1");
+    CHECK_EVAL("ieee754_double_decode(0xfff0000000000000)", "NaN");
+    CHECK_EVAL("ieee754_double_decode(0x7ff0000000000000)", "NaN");
+    CHECK_EVAL("ieee754_double_decode(0x8000000000000000)", "0");
+    CHECK_EVAL("ieee754_double_decode(0xfff8000000000001)", "NaN");
+    CHECK_EVAL("ieee754_double_decode(0xfff0000000000001)", "NaN");
+    CHECK_EVAL("ieee754_double_decode(0xfff4000000000001)", "NaN");
+    CHECK_EVAL("ieee754_double_decode(0xfff8000000000000)", "NaN");
     CHECK_EVAL("hex(ieee754_half_encode(1))", "0x3C00");
     CHECK_EVAL("hex(ieee754_half_encode(0.99951171875))", "0x3BFF");
     CHECK_EVAL("hex(ieee754_half_encode(0.999755859375))", "0x3C00");
@@ -4181,6 +4198,20 @@ void test_auto_fix_powers()
                  << "\tAutoFix  : " << fixedCaretFunctionPower.toUtf8().constData() << endl;
         }
     }
+}
+
+void test_auto_fix_hex_grouping()
+{
+    CHECK_AUTOFIX("0xffef ffff ffff ffff", "0xffef ffff ffff ffff");
+    CHECK_AUTOFIX("ieee754_double_decode(0xffef ffff ffff ffff)",
+                  "ieee754_double_decode(0xffef ffff ffff ffff)");
+    CHECK_AUTOFIX("0XAB CD EF", "0XAB CD EF");
+    CHECK_AUTOFIX("#AB CD EF", "#AB CD EF");
+    CHECK_AUTOFIX("0x12AB CD34 EF56", "0x12AB CD34 EF56");
+    CHECK_AUTOFIX("0xab cd + pi pi", "0xab cd + pi·pi");
+    CHECK_AUTOFIX("0xab cd pi", "0xab cd·pi");
+    CHECK_EVAL(eval->autoFix("0xab cd"), "43981");
+    CHECK_EVAL(eval->autoFix("ieee754_double_decode(0xffef ffff ffff ffff) / ieee754_double_decode(0xffefffffffffffff)"), "1");
 }
 
 void test_auto_fix_shift_add_sub()
@@ -11228,6 +11259,7 @@ int main(int argc, char* argv[])
     test_auto_fix_ans();
     test_auto_fix_trailing_equal();
     test_auto_fix_powers();
+    test_auto_fix_hex_grouping();
     test_auto_fix_shift_add_sub();
     test_auto_fix_untouch();
 
