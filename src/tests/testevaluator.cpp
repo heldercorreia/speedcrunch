@@ -1750,8 +1750,81 @@ void test_binary()
     test_binary_arithmetic_operator_variants();
 }
 
+void test_unit_division_uses_numerator_quantity()
+{
+    Session session;
+    Evaluator* evaluator = session.evaluator();
+    const auto check = [&](const QString& expression, const QString& expectedExpression) {
+        evaluator->setExpression(expectedExpression);
+        const Quantity expected = evaluator->evalNoAssign();
+        const QString expectedError = evaluator->error();
+        for (bool adjustInput : {false, true}) {
+            ++eval_total_tests;
+            evaluator->setExpression(adjustInput ? evaluator->autoFix(expression) : expression);
+            const Quantity actual = evaluator->evalNoAssign();
+            const QString actualText = evaluator->error().isEmpty()
+                ? DMath::format(actual, Format::Fixed()) : evaluator->error();
+            const QString expectedText = expectedError.isEmpty()
+                ? DMath::format(expected, Format::Fixed()) : expectedError;
+            DisplayErrorOnMismatch(__FILE__, __LINE__, qPrintable(expression),
+                                   actualText.toStdString(), qPrintable(expectedText),
+                                   eval_failed_tests, eval_new_failed_tests);
+        }
+    };
+    const auto define = [&](const QString& expression) {
+        ++eval_total_tests;
+        evaluator->setExpression(evaluator->autoFix(expression));
+        evaluator->evalUpdateAns();
+        DisplayErrorOnMismatch(__FILE__, __LINE__, qPrintable(expression),
+                               evaluator->error().toStdString(), "",
+                               eval_failed_tests, eval_new_failed_tests);
+    };
+
+    define(QStringLiteral("c = 299792458 [m/s]"));
+    check(QStringLiteral("c / 10 [MHz]"), QStringLiteral("29.9792458 [m]"));
+    check(QString::fromUtf8("c ⧸ 10 [MHz]"), QStringLiteral("29.9792458 [m]"));
+    check(QStringLiteral("299792458 [m/s] / 10 [MHz]"), QStringLiteral("29.9792458 [m]"));
+    check(QStringLiteral("(c) / 10 [MHz]"), QStringLiteral("29.9792458 [m]"));
+    check(QStringLiteral("abs(c) / 10 [MHz]"), QStringLiteral("29.9792458 [m]"));
+    define(QStringLiteral("velocity(x) = x [m/s]"));
+    check(QStringLiteral("velocity(299792458) / 10 [MHz]"), QStringLiteral("29.9792458 [m]"));
+
+    // A function's argument can carry units on one call and be scalar on another.
+    define(QStringLiteral("divide(x) = x / 4 [lb]"));
+    define(QStringLiteral("a = 1 [lb]"));
+    check(QStringLiteral("a / 4 [lb]"), QStringLiteral("0.25"));
+    check(QStringLiteral("divide(a)"), QStringLiteral("0.25"));
+    define(QStringLiteral("a = 1"));
+    check(QStringLiteral("a / 4 [lb]"), QStringLiteral("0.25 [lb]"));
+    check(QStringLiteral("1 / 4 [lb]"), QStringLiteral("0.25 [lb]"));
+    check(QStringLiteral("divide(a)"), QStringLiteral("0.25 [lb]"));
+    check(QStringLiteral("a / -4 [lb]"), QStringLiteral("-0.25 [lb]"));
+    check(QStringLiteral("a / 4e0 [lb]"), QStringLiteral("0.25 [lb]"));
+    check(QStringLiteral("a / (2 + 2) [lb]"), QStringLiteral("0.25 [lb]"));
+    check(QStringLiteral("a / [lb]"), QStringLiteral("1 / (1 [lb])"));
+
+    // Use the value of the whole numerator, including unit cancellation.
+    check(QStringLiteral("2 * c / 10 [MHz]"), QStringLiteral("59.9584916 [m]"));
+    check(QStringLiteral("(c / c) / 4 [lb]"), QStringLiteral("0.25 [lb]"));
+    check(QStringLiteral("1 + 4 [m] / 2 [m]"), QStringLiteral("3"));
+    check(QStringLiteral("c / 2 / 10 [MHz]"), QStringLiteral("14.9896229 [m]"));
+    check(QStringLiteral("c / 1e1 [MHz]"), QStringLiteral("29.9792458 [m]"));
+    check(QStringLiteral("c / (5 + 5) [MHz]"), QStringLiteral("29.9792458 [m]"));
+    check(QStringLiteral("c / -10 [MHz]"), QStringLiteral("-29.9792458 [m]"));
+    check(QStringLiteral("c / 10 [MHz] / 2"), QStringLiteral("14.9896229 [m]"));
+    define(QStringLiteral("frequency = 10 [MHz]"));
+    check(QStringLiteral("c / frequency"), QStringLiteral("29.9792458 [m]"));
+
+    // Parentheses and explicit multiplication always keep their stated grouping.
+    check(QStringLiteral("a / (4 [lb])"), QStringLiteral("1 / (4 [lb])"));
+    check(QStringLiteral("(c / 10) [MHz]"), QStringLiteral("c * 0.1 * [MHz]"));
+    check(QStringLiteral("c / 10 * [MHz]"), QStringLiteral("c * 0.1 * [MHz]"));
+    check(QStringLiteral("c / (10 [MHz])"), QStringLiteral("29.9792458 [m]"));
+}
+
 void test_units()
 {
+    test_unit_division_uses_numerator_quantity();
     test_units_conversion_parentheses();
     test_units_display_propagation();
     test_units_short_aliases_and_si_prefixes();

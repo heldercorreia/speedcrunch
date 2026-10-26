@@ -6213,9 +6213,25 @@ void Evaluator::compile(const Tokens& tokens)
                    case Token::Multiplication:
                        m_codes.append(Opcode::Mul);
                        break;
-                   case Token::Division:
-                       m_codes.append(Opcode::Div);
+                   case Token::Division: {
+                       // Keep an unparenthesized denominator's unit separate
+                       // until the numerator's value is known at runtime.
+                       int unitIndex = m_codes.size() - 1;
+                       unsigned negateDivisor = 0;
+                       while (unitIndex >= 0 && m_codes.at(unitIndex).type == Opcode::Neg) {
+                           negateDivisor ^= 1;
+                           --unitIndex;
+                       }
+                       if (b.hasExplicitUnitAttachment()
+                           && unitIndex >= 0
+                           && m_codes.at(unitIndex).type == Opcode::Unit) {
+                           m_codes.resize(unitIndex + 1);
+                           m_codes.last() = Opcode(Opcode::DivUnit, negateDivisor);
+                       } else {
+                           m_codes.append(Opcode::Div);
+                       }
                        break;
+                   }
                    case Token::Phasor:
                        m_codes.append(Opcode::Phasor);
                        break;
@@ -6330,7 +6346,9 @@ void Evaluator::compile(const Tokens& tokens)
                    else if (op2.asOperator() == Token::BitwiseLogicalNOT)
                        m_codes.append(Opcode(Opcode::BNot));
 
-                   syntaxStack.reduce(2);
+                   Token reduced(Token::stxAbstract);
+                   reduced.setExplicitUnitAttachment(x.hasExplicitUnitAttachment());
+                   syntaxStack.reduce(2, std::move(reduced));
 #ifdef EVALUATOR_DEBUG
                    dbg << "\tRule for unary operator" << op2.text() << "\n";
 #endif
@@ -6365,7 +6383,9 @@ void Evaluator::compile(const Tokens& tokens)
 #ifdef EVALUATOR_DEBUG
                    dbg << "\tRule for unary operator (auxiliary)" << "\n";
 #endif
-                   syntaxStack.reduce(2);
+                   Token reduced(Token::stxAbstract);
+                   reduced.setExplicitUnitAttachment(x.hasExplicitUnitAttachment());
+                   syntaxStack.reduce(2, std::move(reduced));
                }
            }
 
@@ -6750,6 +6770,19 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
                 operand.isNumericOnly,
                 false
             });
+            break;
+        }
+        case Opcode::DivUnit: {
+            if (stack.size() < 3)
+                return QString();
+            const RenderNode unit = stack.takeLast();
+            const RenderNode divisor = stack.takeLast();
+            const RenderNode numerator = stack.takeLast();
+            RenderNode denominator = makeBinaryNode(divisor, unit, Opcode::Unit, opcodeIndex);
+            if (opcode.index)
+                denominator = makeUnaryNode(QStringLiteral("-"), denominator,
+                                            opPrecedence(Token::Multiplication));
+            stack.append(makeBinaryNode(numerator, denominator, Opcode::Div, opcodeIndex));
             break;
         }
         case Opcode::Add:
@@ -7204,6 +7237,19 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
         }
         return checkOperatorResult(result);
     };
+    auto attachUnit = [&checkOperatorResultWithDeferredNoOperand](const Quantity& value, const Quantity& unit) {
+        HNumber affineBaseValue;
+        if (value.isDimensionless()
+            && value.numericValue().isNearReal()
+            && Units::tryConvertAffineToBase(
+                unit.unitName(), value.numericValue().real, &affineBaseValue))
+        {
+            Quantity absolute = Quantity(affineBaseValue) * Units::kelvin();
+            absolute.setDisplayUnit(CNumber(1), unit.unitName());
+            return checkOperatorResultWithDeferredNoOperand(absolute);
+        }
+        return checkOperatorResultWithDeferredNoOperand(value * unit);
+    };
 
     for (int pc = 0; pc < opcodes.count(); ++pc) {
         const Opcode& opcode = opcodes.at(pc);
@@ -7303,22 +7349,33 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 }
                 popStackValue(val1);
                 popStackValue(val2);
-                {
-                    HNumber affineBaseValue;
-                    if (val2.isDimensionless()
-                        && val2.numericValue().isNearReal()
-                        && Units::tryConvertAffineToBase(
-                            val1.unitName(), val2.numericValue().real, &affineBaseValue))
-                    {
-                        Quantity absolute = Quantity(affineBaseValue) * Units::kelvin();
-                        absolute.setDisplayUnit(CNumber(1), val1.unitName());
-                        val2 = checkOperatorResultWithDeferredNoOperand(absolute);
-                    } else {
-                        val2 = checkOperatorResultWithDeferredNoOperand(val2 * val1);
-                    }
+                val2 = attachUnit(val2, val1);
+                pushStackValue(val2);
+                break;
+
+            case Opcode::DivUnit: {
+                if (stack.count() < 3) {
+                    m_error = tr("invalid expression");
+                    return CMath::nan();
+                }
+                Quantity unit;
+                popStackValue(unit);
+                popStackValue(val1);
+                popStackValue(val2);
+                if (val2.hasUnit() || val2.hasDimension()) {
+                    val1 = attachUnit(val1, unit);
+                    if (index)
+                        val1 = -val1;
+                    val2 = checkOperatorResultWithDeferredNoOperand(val2 / val1);
+                } else {
+                    if (index)
+                        val1 = -val1;
+                    val2 = checkOperatorResultWithDeferredNoOperand(val2 / val1);
+                    val2 = attachUnit(val2, unit);
                 }
                 pushStackValue(val2);
                 break;
+            }
 
             case Opcode::Div:
                 if (stack.count() < 2) {
@@ -8596,10 +8653,8 @@ QString Evaluator::autoFix(const QString& expr)
     };
     normalizeParenthesizedUnitAttachment();
 
-    // Normalize "X / N[U]" into "X / N·[U]" when X is not already a
-    // unit-attached term in source text. This aligns editor-entered
-    // "4/2[s]" with implicit-multiplication grouping while preserving
-    // "6[W]/2[s]" as unit-division.
+    // Keep the familiar scalar-literal spelling "4/2·[s]". For other
+    // numerators, evaluation decides the grouping from the value's units.
     auto normalizeDivisionByValueUnitAttachment = [&]() {
         QString rewritten;
         rewritten.reserve(result.size() + 8);
@@ -8611,10 +8666,13 @@ QString Evaluator::autoFix(const QString& expr)
                 continue;
             }
 
-            int left = cursor - 1;
-            while (left >= 0 && result.at(left).isSpace())
-                --left;
-            if (left >= 0 && result.at(left) == MathDsl::UnitEnd) {
+            const Tokens numerator = scan(result.left(cursor));
+            const bool scalarLiteral =
+                (numerator.size() == 1 && numerator.first().isNumber())
+                || (numerator.size() == 2 && numerator.last().isNumber()
+                    && (numerator.first().asOperator() == Token::Addition
+                        || numerator.first().asOperator() == Token::Subtraction));
+            if (!scalarLiteral) {
                 rewritten += result.at(cursor);
                 ++cursor;
                 continue;
@@ -8953,6 +9011,9 @@ QString Evaluator::dump()
                 break;
             case Opcode::Div:
                 code = "Div";
+                break;
+            case Opcode::DivUnit:
+                code = "DivUnit";
                 break;
             case Opcode::Phasor:
                 code = "Phasor";
