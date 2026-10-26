@@ -7,6 +7,9 @@
 #include "gui/platformactivation.h"
 
 #include <QLocalSocket>
+#include <QCryptographicHash>
+#include <QProcess>
+#include <QProcessEnvironment>
 #include <QThread>
 #include <QUuid>
 
@@ -72,6 +75,12 @@ private slots:
     void secondary_instance_exits_after_acceptance();
     void retries_do_not_duplicate_launches();
     void busy_startup_keeps_single_instance();
+    void startup_lock_is_released_on_close();
+    void startup_lock_recovers_after_process_death();
+    void ipc_lock_process_helper();
+#ifdef Q_OS_WIN
+    void startup_lock_excludes_legacy_lock_files();
+#endif
     void activation_restores_minimized_window();
 #ifdef Q_OS_MACOS
     void native_reopen_follows_preference_data();
@@ -550,6 +559,89 @@ void TestLaunchUi::busy_startup_keeps_single_instance()
     QCOMPARE(result, SingleInstance::SecondaryInstance);
     QCOMPARE(received, 1);
 }
+
+void TestLaunchUi::startup_lock_is_released_on_close()
+{
+    const QString name = serverName();
+    SingleInstance first;
+    QCOMPARE(first.start(name, {}), SingleInstance::PrimaryInstance);
+    first.close();
+    first.close();
+    SingleInstance replacement;
+    QCOMPARE(replacement.start(name, {}), SingleInstance::PrimaryInstance);
+}
+
+void TestLaunchUi::ipc_lock_process_helper()
+{
+    const QString name = qEnvironmentVariable("SPEEDCRUNCH_TEST_LOCK_SERVER");
+    if (name.isEmpty()) {
+        QTest::qSkip("Only run by the process recovery test", __FILE__, __LINE__);
+        return;
+    }
+    SingleInstance server;
+    QCOMPARE(server.start(name, {}), SingleInstance::PrimaryInstance);
+    qInfo("singleton-helper-ready");
+    QEventLoop loop;
+    QTimer::singleShot(10000, &loop, &QEventLoop::quit);
+    loop.exec();
+}
+
+void TestLaunchUi::startup_lock_recovers_after_process_death()
+{
+    const QString name = serverName();
+    QProcess child;
+    child.setProcessChannelMode(QProcess::MergedChannels);
+    auto environment = QProcessEnvironment::systemEnvironment();
+    environment.insert(QStringLiteral("SPEEDCRUNCH_TEST_LOCK_SERVER"), name);
+    child.setProcessEnvironment(environment);
+    const auto stopChild = qScopeGuard([&child] {
+        if (child.state() != QProcess::NotRunning) {
+            child.kill();
+            child.waitForFinished(3000);
+        }
+    });
+    child.start(QCoreApplication::applicationFilePath(), {QStringLiteral("ipc_lock_process_helper")});
+    QVERIFY(child.waitForStarted(3000));
+    QByteArray output;
+    const auto ready = [&] {
+        output += child.readAll();
+        return output.contains("singleton-helper-ready");
+    };
+    QTRY_VERIFY_WITH_TIMEOUT(ready(), 5000);
+    child.kill();
+    QVERIFY(child.waitForFinished(3000));
+    SingleInstance replacement;
+    QCOMPARE(replacement.start(name, {}), SingleInstance::PrimaryInstance);
+}
+
+#ifdef Q_OS_WIN
+void TestLaunchUi::startup_lock_excludes_legacy_lock_files()
+{
+    const QString name = serverName();
+    const QByteArray hash = QCryptographicHash::hash(name.toUtf8(), QCryptographicHash::Sha256).toHex();
+    QLockFile legacy(QDir::temp().filePath(
+        QStringLiteral("speedcrunch-instance-%1.lock").arg(QString::fromLatin1(hash))));
+    legacy.setStaleLockTime(0);
+    SingleInstance server;
+    QCOMPARE(server.start(name, {}), SingleInstance::PrimaryInstance);
+    QVERIFY(!legacy.tryLock());
+    QCOMPARE(legacy.error(), QLockFile::LockFailedError);
+    server.close();
+    QVERIFY(legacy.tryLock());
+    SingleInstance::StartResult result = SingleInstance::ServerUnavailable;
+    QThread* thread = QThread::create([&result, name] {
+        SingleInstance contender;
+        result = contender.start(name, {});
+    });
+    const auto join = qScopeGuard([thread] { thread->wait(); delete thread; });
+    thread->start();
+    // With no server to contact, a live older lock must block a new primary.
+    QTRY_VERIFY_WITH_TIMEOUT(thread->isFinished(), 8000);
+    QCOMPARE(result, SingleInstance::ServerUnavailable);
+    legacy.unlock();
+    QCOMPARE(server.start(name, {}), SingleInstance::PrimaryInstance);
+}
+#endif
 
 #ifdef Q_OS_MACOS
 void TestLaunchUi::native_reopen_follows_preference_data()

@@ -46,6 +46,7 @@
 #include <QPolygonF>
 #include <QLinearGradient>
 #include <QScrollBar>
+#include <QSet>
 #include <QTextDocumentFragment>
 #include <QToolButton>
 
@@ -219,7 +220,8 @@ QString formatResultForClipboard(const Quantity& value)
     return textToCopy;
 }
 
-QStringList formatResultLines(const HistoryEntry& entry, const Evaluator* evaluator)
+QStringList formatResultLines(const HistoryEntry& entry, const Evaluator* evaluator,
+                              bool includeSimplifiedExpression = true)
 {
     Settings* settings = Settings::instance();
     const bool oldComplexNumbers = settings->complexNumbers;
@@ -300,7 +302,9 @@ QStringList formatResultLines(const HistoryEntry& entry, const Evaluator* evalua
         entry.result(),
         false,
         true,
-        evaluator);
+        evaluator,
+        false,
+        !includeSimplifiedExpression);
 
     settings->complexNumbers = oldComplexNumbers;
     settings->imaginaryUnit = oldImaginaryUnit;
@@ -343,7 +347,9 @@ QString formattedExpressionForDisplay(const HistoryEntry& entry, const Evaluator
 QString simplifiedExpressionLineForDisplay(const HistoryEntry& entry, const Evaluator* evaluator,
                                           const QStringList& renderedLines)
 {
-    if (!Settings::instance()->simplifyResultExpressions || renderedLines.size() < 2)
+    // Every successful calculation has a numeric result. A single saved output
+    // row therefore cannot be a separate simplified expression.
+    if (!Settings::instance()->simplifyResultExpressions || renderedLines.size() < 3)
         return QString();
 
     const QString interpreted = entry.interpretedExpr().section(MathDsl::CommentSep, 0, 0);
@@ -374,13 +380,55 @@ QString simplifiedExpressionLineForDisplay(const HistoryEntry& entry, const Eval
         }
     }
 
-    StartupDiagnostics::Scope timing("Rebuild simplified history expression");
-    const QString simplifiedLine = ResultLineFormatUtils::simplifiedExpressionLineForDisplay(
-        entry.interpretedExpr(),
-        entry.expr(),
-        Settings::instance()->simplifyResultExpressions,
-        evaluator);
-    return simplifiedLine.isEmpty() ? QString() : QStringLiteral("= ") + simplifiedLine;
+    // The formatter puts the optional simplified expression before all result
+    // formats. Compare that saved row with results formatted from the saved
+    // value and context, without simplifying the original expression again.
+    const QString& candidate = renderedLines.at(1);
+    if (!candidate.startsWith(QLatin1String("= ")))
+        return QString();
+    if (SimplifiedExpressionUtils::isStandaloneSexagesimalTimeLiteral(candidate.mid(2)))
+        return QString();
+    StartupDiagnostics::Scope timing("Infer simplified history line from saved results");
+    if (candidate.indexOf(MathDsl::Equals, 2) >= 0)
+        return candidate;
+    // Scalar result notation can contain constants, complex notation and
+    // radicals, but cannot introduce variable names or arbitrary functions.
+    // Inspect the saved text before formatting any numerical comparison.
+    const Quantity value = entry.result();
+    if (!value.isCollection() && value.isDimensionless() && value.unitName().isEmpty()
+        && value.numericValue().imag.isZero()) {
+        static const QSet<QString> resultIdentifiers {
+            QStringLiteral("i"), QStringLiteral("j"), QStringLiteral("e"),
+            QStringLiteral("pi"), QString(UnicodeChars::Pi),
+            QStringLiteral("nan"), QStringLiteral("inf"), QStringLiteral("infinity"),
+            QStringLiteral("sqrt"), QStringLiteral("exp"), QStringLiteral("cis"),
+            QStringLiteral("√"), QStringLiteral("∛"),
+            QStringLiteral("rad"), QStringLiteral("deg"), QStringLiteral("gon"),
+            QStringLiteral("turn"), QStringLiteral("rev")
+        };
+        const Evaluator* scanner = evaluator ? evaluator : Evaluator::instance();
+        for (const Token& token : scanner->scan(candidate.mid(2))) {
+            if (token.isIdentifier() && !resultIdentifiers.contains(token.text().toLower()))
+                return candidate;
+        }
+    }
+    const QStringList results = formatResultLines(entry, evaluator, false);
+    if (results.contains(candidate))
+        return QString();
+    // Digit grouping and decimal separators are application preferences, not
+    // part of a saved calculation's format context. Ignore their presentation
+    // differences when matching a saved result to its numerical counterpart.
+    const auto comparisonText = [](QString text) {
+        text = ResultLineFormatUtils::normalizeResultLineForComparison(text);
+        text.remove(QRegularExpression(QStringLiteral("[\\s\\p{Zs}.,]+")));
+        return text;
+    };
+    const QString normalized = comparisonText(candidate);
+    for (const QString& result : results) {
+        if (comparisonText(result) == normalized)
+            return QString();
+    }
+    return candidate;
 }
 
 bool isSimplifiedExpressionRenderLine(const QStringList& renderedLines, int lineIndex, const QString& simplifiedLine)

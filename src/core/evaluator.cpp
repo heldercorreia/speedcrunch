@@ -4497,12 +4497,14 @@ QString Evaluator::formatInterpretedExpressionForDisplay(const QString& expressi
 
 QString Evaluator::formatInterpretedExpressionSimplifiedForDisplay(const QString& expression)
 {
+    StartupDiagnostics::Scope timing("Simplify expression for display");
     return formatInterpretedExpressionForDisplayImpl(expression, true, nullptr);
 }
 
 QString Evaluator::formatInterpretedExpressionSimplifiedForDisplay(const QString& expression,
                                                                    const Evaluator* evaluator)
 {
+    StartupDiagnostics::Scope timing("Simplify expression for display");
     return formatInterpretedExpressionForDisplayImpl(expression, true, evaluator);
 }
 

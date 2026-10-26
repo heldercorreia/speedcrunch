@@ -12,6 +12,8 @@ class TestDisplayUi : public QObject {
     Q_OBJECT
 
 private slots:
+    void saved_history_infers_highlighting_without_simplifying_data();
+    void saved_history_infers_highlighting_without_simplifying();
     void history_classification_matches_full_formatting_data();
     void history_classification_matches_full_formatting();
     void history_classification_skips_plain_and_assignment_results();
@@ -49,6 +51,98 @@ private slots:
     void result_display_remove_menu_targets_clicked_calculation();
     void function_identifier_cache_tracks_insertions();
 };
+
+void TestDisplayUi::saved_history_infers_highlighting_without_simplifying_data()
+{
+    QTest::addColumn<QString>("expression");
+    QTest::addColumn<char>("format");
+    QTest::addColumn<char>("complexForm");
+    const QStringList expressions {
+        QStringLiteral("1/3"), QStringLiteral("sqrt(4)"),
+        QStringLiteral("0*cos(pi)"), QStringLiteral("sin(pi)-sin(pi)"),
+        QStringLiteral("sqrt(2)"), QStringLiteral("sin(pi/6)"),
+        QStringLiteral("cos(pi)/11"), QStringLiteral("pi/2"),
+        QStringLiteral("2*cos(pi)+2*cos(pi)"),
+        QStringLiteral("2*cos(pi)*sin(pi)*cos(pi)"),
+        QStringLiteral("a=2*cos(pi)*sin(pi)*cos(pi)"),
+        QStringLiteral("a=1/3 ? cos(pi) = comment"),
+        QStringLiteral("2[metre]/3[second]"),
+        QStringLiteral("pi[rad] -> [degree]"),
+        QStringLiteral("1:120:3600"), QStringLiteral("a=1:120:3600"),
+        QStringLiteral("1+i"), QStringLiteral("{1;2;3}")
+    };
+    for (const QString& expression : expressions) {
+        for (char format : {'g', 'f', 'e', 'r', 'h'}) {
+            const QByteArray forms = expression == QLatin1String("1+i") ? QByteArray("retcp") : QByteArray("r");
+            for (char form : forms)
+                QTest::addRow("%s-format-%c-complex-%c", qPrintable(expression), format, form)
+                    << expression << format << form;
+        }
+    }
+}
+
+void TestDisplayUi::saved_history_infers_highlighting_without_simplifying()
+{
+    QFETCH(QString, expression);
+    QFETCH(char, format);
+    QFETCH(char, complexForm);
+    Settings* settings = Settings::instance();
+    settings->simplifyResultExpressions = true;
+    settings->complexNumbers = true;
+    settings->resultFormat = format;
+    settings->resultComplexForm = complexForm;
+    settings->multipleResultLinesEnabled = true;
+    settings->secondaryResultEnabled = true;
+    settings->alternativeResultFormat = 'e';
+    settings->tertiaryResultEnabled = true;
+    settings->tertiaryResultFormat = 'r';
+    Session source;
+    Evaluator* evaluator = source.evaluator();
+    evaluator->setExpression(expression);
+    const Quantity value = evaluator->evalUpdateAns();
+    QVERIFY2(evaluator->error().isEmpty(), qPrintable(evaluator->error()));
+    HistoryEntry entry(expression, value, evaluator->interpretedExpression());
+    entry.setRenderedLines(ResultLineFormatUtils::formatResultLinesForDisplay(
+        expression, entry.interpretedExpr(), value, true, true, evaluator));
+    const QString simplified = ResultLineFormatUtils::simplifiedExpressionLineForDisplay(
+        entry.interpretedExpr(), expression, true, evaluator);
+    const QString expected = (simplified.isEmpty() ? QString() : QStringLiteral("= ") + simplified)
+        .replace(QChar(0x00a0), QLatin1Char(' '));
+    source.addHistoryEntry(entry);
+    QJsonObject saved;
+    source.serialize(saved);
+    Session restored;
+    restored.deSerialize(saved, false);
+    settings->resultFormat = 'b';
+    settings->resultComplexForm = ComplexForm::Rectangular;
+    settings->multipleResultLinesEnabled = false;
+    settings->digitGrouping = 3;
+    StartupDiagnostics::begin();
+    const auto stopDiagnostics = qScopeGuard([] {
+        StartupDiagnostics::firstPaintFinished();
+        StartupDiagnostics::finishWhenIdle();
+    });
+    ResultDisplay display;
+    display.setSession(&restored);
+    const auto check = [&] {
+        QCOMPARE(display.toPlainText().trimmed(), entry.renderedLines().join(QLatin1Char('\n'))
+            .replace(QChar(0x00a0), QLatin1Char(' ')));
+        for (QTextBlock block = display.document()->firstBlock(); block.isValid(); block = block.next()) {
+            const auto* data = dynamic_cast<SyntaxHighlightBlockData*>(block.userData());
+            QCOMPARE(bool(data && data->highlightResultExpressionSyntax),
+                     !expected.isEmpty() && block.text() == expected);
+        }
+    };
+    check();
+    display.refreshLastHistoryEntry();
+    check();
+    restored.addHistoryEntry(entry);
+    display.refresh();
+    for (const auto& phase : StartupDiagnostics::snapshot().phases)
+        QVERIFY(phase.name != QLatin1String("Simplify expression for display"));
+    QCOMPARE(settings->resultFormat, 'b');
+    QVERIFY(!settings->multipleResultLinesEnabled);
+}
 
 void TestDisplayUi::history_classification_matches_full_formatting_data()
 {

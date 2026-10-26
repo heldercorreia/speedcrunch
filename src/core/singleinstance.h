@@ -38,6 +38,9 @@ signals:
 
 private:
     QLocalServer m_server;
+#ifdef Q_OS_WIN
+    void* m_nativeLock = nullptr;
+#endif
     std::unique_ptr<QLockFile> m_lock;
     QSet<QString> m_acceptedRequests;
     QQueue<QString> m_requestOrder;

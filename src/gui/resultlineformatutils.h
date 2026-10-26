@@ -1386,7 +1386,8 @@ inline QStringList formatResultLinesForDisplay(const QString& commentedSourceExp
                                                bool includeExpressionLine,
                                                bool stripUnitBracketsInNumericLines,
                                                const Evaluator* evaluator = nullptr,
-                                               bool resultOnly = false)
+                                               bool resultOnly = false,
+                                               bool classifySavedLine = false)
 {
     const Settings* settings = Settings::instance();
     const QString resultPrefix = resultOnly ? QString() : QStringLiteral("= ");
@@ -1405,7 +1406,7 @@ inline QStringList formatResultLinesForDisplay(const QString& commentedSourceExp
     const QString sourceExpression = commentedSourceExpression.section(MathDsl::CommentSep, 0, 0);
     const QString interpretedExpression = commentedInterpretedExpression.section(MathDsl::CommentSep, 0, 0);
 
-    if (!resultOnly) {
+    if (!resultOnly && !classifySavedLine) {
         const QString simplifiedLine = simplifiedExpressionLineForDisplay(
             interpretedExpression, sourceExpression, settings->simplifyResultExpressions, evaluator);
         if (!simplifiedLine.isEmpty())
@@ -1441,6 +1442,11 @@ inline QStringList formatResultLinesForDisplay(const QString& commentedSourceExp
         stripUnitBracketsInNumericLines,
         settings,
         evaluator));
+
+    // A saved simplified row precedes the first numeric result. Later formats
+    // cannot change that boundary and need not be regenerated to identify it.
+    if (classifySavedLine)
+        return lines;
 
     if (settings->multipleResultLinesEnabled && settings->secondaryResultEnabled
         && settings->alternativeResultFormat != '\0') {
