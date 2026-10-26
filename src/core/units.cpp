@@ -501,6 +501,7 @@ QString applySuperscriptStyleToUnitName(QString unitName)
         QString shortName;
         QString alternateShortName;
         int prefixPolicy;
+        bool planeAngle;
     };
 
     struct AffineDefinition {
@@ -2152,19 +2153,19 @@ static UnitRegistry s_buildUnitRegistry()
     StartupDiagnostics::Scope timing("Build built-in unit registry");
     UnitRegistry registry;
     QList<UnitAliasSpec> unitAliasSpecs;
+    const QHash<UnitId, UnitSpec>& specs = s_unitSpecs();
+    unitAliasSpecs.reserve(specs.size());
 
     const auto addUnique = [&](const QString& name,
                                UnitDefinition definition,
                                const QString& localizedName = QString(),
-                               bool prefixedIdentifier = false) {
+                               bool prefixedIdentifier = false,
+                               bool planeAngle = false) {
         if (name.isEmpty() || registry.definitionsByIdentifier.contains(name))
             return;
         registry.definitionsByIdentifier.insert(name, definition);
-        const auto spec = s_unitSpecs().constFind(definition.id);
-        if (spec != s_unitSpecs().constEnd()
-            && spec.value().quantities.contains(UnitQuantity::PlaneAngle)) {
+        if (planeAngle)
             registry.angleIdentifiers.insert(name);
-        }
         if (!localizedName.isEmpty())
             registry.localizedByIdentifier.insert(name, localizedName);
         if (prefixedIdentifier)
@@ -2178,27 +2179,25 @@ static UnitRegistry s_buildUnitRegistry()
     const auto prefixedLocalizedName = [](const QString& prefix, const QString& base) -> QString {
         if (prefix.isEmpty() || base.isEmpty())
             return QString();
-        QString loweredBase = base;
-        loweredBase[0] = loweredBase.at(0).toLower();
-        return prefix + loweredBase;
+        return prefix + base;
     };
 
     StartupDiagnostics::Scope phaseTiming("Register built-in unit definitions");
-    const QHash<UnitId, UnitSpec>& specs = s_unitSpecs();
     for (const UnitId id : s_unitSpecOrder()) {
         const UnitSpec& spec = specs.constFind(id).value();
         // Spec -> runtime registry:
         // canonical name/symbol/aliases are all registered from this single source.
         const QString localized = localizedFromSpec(spec);
-        addUnique(spec.name, {id}, localized);
+        const bool planeAngle = spec.quantities.contains(UnitQuantity::PlaneAngle);
+        addUnique(spec.name, {id}, localized, false, planeAngle);
         const QString symbol = spec.symbol;
 
         if (!symbol.isEmpty())
-            addUnique(symbol, {id}, localized);
+            addUnique(symbol, {id}, localized, false, planeAngle);
         for (const QString& alias : spec.aliases) {
             if (alias.isEmpty())
                 continue;
-            addUnique(alias, {id}, localized);
+            addUnique(alias, {id}, localized, false, planeAngle);
         }
 
         // Prefix generation currently consumes one alternate short alias
@@ -2206,13 +2205,17 @@ static UnitRegistry s_buildUnitRegistry()
         const QString primaryAlias = spec.aliases.isEmpty()
             ? QString()
             : spec.aliases.first();
+        QString prefixLocalized = localized;
+        if (!prefixLocalized.isEmpty())
+            prefixLocalized[0] = prefixLocalized.at(0).toLower();
         unitAliasSpecs.append({
             id,
             spec.name,
-            localized,
+            prefixLocalized,
             symbol,
             primaryAlias,
-            spec.prefixPolicy
+            spec.prefixPolicy,
+            planeAngle
         });
 
         if (spec.affine.toBase && spec.affine.fromBase) {
@@ -2240,14 +2243,14 @@ static UnitRegistry s_buildUnitRegistry()
             const QString localized = prefixedLocalizedName(prefix.longName, unit.localized);
             const bool keepPrefixedDisplay = prefix.power > 0 && prefix.power < 3;
             // Long form: kilo + metre => kilometre
-            addUnique(prefix.longName + unit.longName, {unit.id, &prefix}, localized, keepPrefixedDisplay);
+            addUnique(prefix.longName + unit.longName, {unit.id, &prefix}, localized, keepPrefixedDisplay, unit.planeAngle);
             if (!unit.shortName.isEmpty()
                 && shouldAddSiPrefixedShortAlias(prefix.symbol, unit.shortName))
                 // Symbol form: k + m => km; k + m² => km²; k + m³ => km³
-                addUnique(prefix.symbol + unit.shortName, {unit.id, &prefix}, localized, keepPrefixedDisplay);
+                addUnique(prefix.symbol + unit.shortName, {unit.id, &prefix}, localized, keepPrefixedDisplay, unit.planeAngle);
             if (!unit.alternateShortName.isEmpty()
                 && shouldAddSiPrefixedShortAlias(prefix.symbol, unit.alternateShortName))
-                addUnique(prefix.symbol + unit.alternateShortName, {unit.id, &prefix}, localized, keepPrefixedDisplay);
+                addUnique(prefix.symbol + unit.alternateShortName, {unit.id, &prefix}, localized, keepPrefixedDisplay, unit.planeAngle);
         }
     }
 
@@ -2259,9 +2262,9 @@ static UnitRegistry s_buildUnitRegistry()
             if (!unitPrefixPolicyAllows(unit.prefixPolicy, prefix, true))
                 continue;
             const QString localized = prefixedLocalizedName(prefix.longName, unit.localized);
-            addUnique(prefix.longName + unit.longName, {unit.id, &prefix}, localized);
+            addUnique(prefix.longName + unit.longName, {unit.id, &prefix}, localized, false, unit.planeAngle);
             if (!unit.shortName.isEmpty())
-                addUnique(prefix.symbol + unit.shortName, {unit.id, &prefix}, localized);
+                addUnique(prefix.symbol + unit.shortName, {unit.id, &prefix}, localized, false, unit.planeAngle);
         }
     }
 

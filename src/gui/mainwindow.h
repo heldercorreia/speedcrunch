@@ -757,6 +757,7 @@ private:
     int m_pendingHistoryEditIndex;
     bool m_shutdownStateSaved;
     bool m_restorePreviousSessionOnStartup;
+    bool m_savedWindowGeometryRestored = false;
     bool m_sessionRestorePending = false;
     bool m_showAfterSessionRestore = false;
     bool m_startupPrivateTabPending = false;

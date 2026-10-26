@@ -363,10 +363,12 @@ void Settings::load()
     StartupDiagnostics::Scope timing("Read and migrate settings");
     const char* KEY = "SpeedCrunch";
 
+    StartupDiagnostics::Scope phaseTiming("Open settings storage and migrate schema");
     QSettings* settings = createQSettings(KEY);
     if (!settings)
         return;
 
+    phaseTiming.next("Decode general settings");
     QString key = QString::fromLatin1(KEY) + QLatin1String("/General/");
 
     // Angle mode special case.
@@ -458,6 +460,7 @@ void Settings::load()
     if (numberFormatStyle == NumberFormatSystem)
         numberFormatStyle = NumberFormatNoGroupingDot;
     applyNumberFormatStyle();
+    phaseTiming.next("Decode result format settings");
     key = KEY + QLatin1String("/Format/");
 
     // Format special case.
@@ -593,6 +596,7 @@ void Settings::load()
     if (quinaryResultPrecision > DECPRECISION)
         quinaryResultPrecision = DECPRECISION;
 
+    phaseTiming.next("Decode window layout settings");
     key = KEY + QLatin1String("/Layout/");
     customKeypad = defaultCustomKeypad();
     windowOnfullScreen = settings->value(key + QLatin1String("WindowOnFullScreen"), false).toBool();
@@ -654,6 +658,7 @@ void Settings::load()
     manualWindowGeometry = settings->value(key + QLatin1String("ManualWindowGeometry")).toByteArray();
     sessionLayoutJson = settings->value(key + QLatin1String("SessionLayoutJson"), QString()).toString();
 
+    phaseTiming.next("Decode display settings");
     key = KEY + QLatin1String("/Display/");
     displayFont = settings->value(key + QLatin1String("DisplayFont"), QFont().toString()).toString();
     colorScheme = settings->value(key + QLatin1String("ColorSchemeName"), DefaultColorScheme).toString();
@@ -674,6 +679,7 @@ void Settings::load()
         == KeypadAppearanceClassic ? KeypadAppearanceClassic : KeypadAppearanceModern;
     customColorSchemeJson = settings->value(key + QLatin1String("CustomColorSchemeJson"), QString()).toString();
 
+    phaseTiming.next("Close settings storage");
     delete settings;
 }
 
@@ -1063,6 +1069,8 @@ QSettings* createQSettings(const QString& KEY)
         migrateSettings_legacyTo1200(settings, KEY);
         break;
     }
-    settings->setValue("ConfigVersion", ConfigVersion);
+    // Loading a current file should not mark it dirty and flush it on close.
+    if (ver != ConfigVersion)
+        settings->setValue("ConfigVersion", ConfigVersion);
     return settings;
 }

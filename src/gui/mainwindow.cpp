@@ -8578,15 +8578,9 @@ void MainWindow::applySettings(bool initializing)
 #endif
 
     timing.next("Restore window geometry and dock layout");
-    const bool hasSavedWindowLayout = !m_settings->sessionLayoutJson.isEmpty();
-    if (hasSavedWindowLayout || !restoreGeometry(m_settings->windowGeometry)) {
-        int defaultWidth = 640;
-        if (m_widgets.keypad)
-            defaultWidth = m_widgets.keypad->sizeHint().width();
-        resize(defaultWidth, 480);
-        QRect screenGeometry = QGuiApplication::primaryScreen()->availableGeometry();
-        move(screenGeometry.center() - rect().center());
-    }
+    // A saved workspace restores its geometry while scheduling session I/O.
+    // Wait for that result before choosing a fallback size and position.
+    m_savedWindowGeometryRestored = false;
 
     m_actions.viewFullScreenMode->setChecked(m_settings->windowOnfullScreen);
     if (!isWaylandPlatform())
@@ -8609,6 +8603,16 @@ void MainWindow::applySettings(bool initializing)
         if (m_restorePreviousSessionOnStartup)
             restoreSession();
         applyUserDefinitions();
+    }
+
+    timing.next("Restore fallback window geometry");
+    if (!m_savedWindowGeometryRestored && !restoreGeometry(m_settings->windowGeometry)) {
+        int defaultWidth = 640;
+        if (m_widgets.keypad)
+            defaultWidth = m_widgets.keypad->sizeHint().width();
+        resize(defaultWidth, 480);
+        if (QScreen* screen = QGuiApplication::primaryScreen())
+            move(screen->availableGeometry().center() - rect().center());
     }
 
     timing.next("Apply calculation, editing and display preferences");
@@ -8687,12 +8691,23 @@ void MainWindow::applySettings(bool initializing)
     m_actions.settingsBehaviorAutoCompletionUserVariables->setChecked(
         m_settings->autoCompletionUserVariables);
 
-    if (m_settings->syntaxHighlighting)
-        m_actions.settingsBehaviorSyntaxHighlighting->setChecked(true);
-    else
-        setSyntaxHighlightingEnabled(false);
-    m_actions.settingsEditingInputDigitGrouping->setChecked(m_settings->inputDigitGrouping);
-    setAutomaticInputAdjustmentsEnabled(m_settings->automaticInputAdjustments);
+    if (initializing) {
+        // The editors already read these preferences during construction.
+        // Refresh once after the restored sessions and final palette are ready.
+        const QSignalBlocker highlighting(m_actions.settingsBehaviorSyntaxHighlighting);
+        const QSignalBlocker grouping(m_actions.settingsEditingInputDigitGrouping);
+        const QSignalBlocker adjustments(m_actions.settingsEditingAutomaticInputAdjustments);
+        m_actions.settingsBehaviorSyntaxHighlighting->setChecked(m_settings->syntaxHighlighting);
+        m_actions.settingsEditingInputDigitGrouping->setChecked(m_settings->inputDigitGrouping);
+        m_actions.settingsEditingAutomaticInputAdjustments->setChecked(m_settings->automaticInputAdjustments);
+    } else {
+        if (m_settings->syntaxHighlighting)
+            m_actions.settingsBehaviorSyntaxHighlighting->setChecked(true);
+        else
+            setSyntaxHighlightingEnabled(false);
+        m_actions.settingsEditingInputDigitGrouping->setChecked(m_settings->inputDigitGrouping);
+        setAutomaticInputAdjustmentsEnabled(m_settings->automaticInputAdjustments);
+    }
     setCursorBlinkingEnabled(m_settings->cursorBlinking);
     setEscapeClearsEditorEnabled(m_settings->escapeClearsEditor);
 
@@ -9731,10 +9746,13 @@ void MainWindow::finishStartupSessionRestore(bool restoredSession)
     }
     // Startup always ends in the active editor, even if a dock input took focus
     // while the saved window layout was being restored.
-    if (isActiveWindow())
-        setActiveEditorDisplayPane(m_widgets.display, m_widgets.editor, true);
-    else
-        m_widgets.editor->setFocus(Qt::OtherFocusReason);
+    {
+        StartupDiagnostics::Scope focusTiming("Restore startup editor focus");
+        if (isActiveWindow())
+            setActiveEditorDisplayPane(m_widgets.display, m_widgets.editor, true);
+        else
+            m_widgets.editor->setFocus(Qt::OtherFocusReason);
+    }
     m_sessionRestorePending = false;
     if (m_showAfterSessionRestore)
         showWhenReady();
@@ -9748,8 +9766,13 @@ void MainWindow::showWhenReady()
         m_showAfterSessionRestore = true;
         return;
     }
+    StartupDiagnostics::Scope timing("Show restored window");
     const bool preserveStartupFocus = testAttribute(Qt::WA_ShowWithoutActivating);
-    show();
+    {
+        StartupDiagnostics::Scope showTiming("Show native window and activate layout");
+        show();
+    }
+    timing.next("Restore activation after showing window");
     setAttribute(Qt::WA_ShowWithoutActivating, false);
     if (preserveStartupFocus && primaryMainWindow()) {
         MainWindow* startupWindow = primaryMainWindow();
@@ -14119,9 +14142,10 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
     m_widgets.display = nullptr;
     m_widgets.editor = nullptr;
     m_copyWidget = nullptr;
-    while (m_widgets.splitContainer != nullptr && m_widgets.splitContainer->count() > 0) {
-        QWidget* child = m_widgets.splitContainer->widget(0);
-        child->setParent(nullptr);
+    // Keep the retained pane parented. A split layout can transfer it directly
+    // to its new splitter without turning the whole pane into a top-level widget.
+    for (int i = m_widgets.splitContainer->count() - 1; i >= 0; --i) {
+        QWidget* child = m_widgets.splitContainer->widget(i);
         if (child != reusablePane.get())
             delete child;
     }
@@ -14285,27 +14309,36 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
         return splitter;
     };
 
-    if (rootType == QLatin1String("split")) {
+    if (rootType == QLatin1String("tabs")) {
+        if (QWidget* pane = createPane(root)) {
+            if (m_widgets.splitContainer->indexOf(pane) < 0)
+                m_widgets.splitContainer->addWidget(pane);
+        }
+    } else if (rootType == QLatin1String("split")) {
         m_widgets.splitContainer->setOrientation(
             root.value(QStringLiteral("orientation")).toString() == QLatin1String("vertical")
                 ? Qt::Vertical
                 : Qt::Horizontal);
         const QJsonArray children = root.value(QStringLiteral("children")).toArray();
+        int restoredIndex = 0;
         for (const QJsonValue& childValue : children) {
             if (!childValue.isObject())
                 continue;
             QWidget* child = restoreNode(childValue.toObject(), restoreNode);
-            if (child != nullptr)
-                m_widgets.splitContainer->addWidget(child);
+            if (child != nullptr) {
+                if (m_widgets.splitContainer->indexOf(child) != restoredIndex)
+                    m_widgets.splitContainer->insertWidget(restoredIndex, child);
+                ++restoredIndex;
+            }
         }
         restoreSplitterSizes(m_widgets.splitContainer, root);
     }
 
     if (m_widgets.splitContainer->count() == 0 || firstDisplay == nullptr) {
-        while (m_widgets.splitContainer->count() > 0) {
-            QWidget* child = m_widgets.splitContainer->widget(0);
-            child->setParent(nullptr);
-            delete child;
+        for (int i = m_widgets.splitContainer->count() - 1; i >= 0; --i) {
+            QWidget* child = m_widgets.splitContainer->widget(i);
+            if (child != reusablePane.get())
+                delete child;
         }
         m_paneSessionNames.clear();
         m_paneSessionTabs.clear();
@@ -14341,7 +14374,7 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
     updatePaneEditorCursorVisibility();
     timing.next("Restore per-window settings and theme");
     // Pane rebuilding keeps the docks and keypad restored before session loading.
-    // Reapply selections and geometry after the central layout changes.
+    // Reapply selections after the central layout changes.
     restoreWindowUiState(window, false);
     // Existing controls keep their theme. Refresh the new panes below.
     restoreWindowThemeBackgrounds();
@@ -14442,7 +14475,7 @@ void MainWindow::restoreWindowUiState(const QJsonObject& window, bool restoreLay
         }
     }
     const QString geometryBase64 = window.value(QStringLiteral("geometry")).toString();
-    if (!geometryBase64.isEmpty())
+    if (restoreLayout && !geometryBase64.isEmpty())
         restoreWindowGeometry(QByteArray::fromBase64(geometryBase64.toLatin1()));
 }
 
@@ -14451,14 +14484,19 @@ void MainWindow::restoreWindowGeometry(const QByteArray& geometry)
     if (geometry.isEmpty())
         return;
 
-    restoreGeometry(geometry);
+    StartupDiagnostics::Scope timing("Restore saved window geometry");
+    if (!restoreGeometry(geometry))
+        return;
+    m_savedWindowGeometryRestored = true;
 
     // Restoring window controls and rebuilding session panes can change size
     // constraints on later event-loop turns. Reapply the saved geometry once
     // those layout passes have completed.
     QTimer::singleShot(0, this, [this, geometry]() {
+        StartupDiagnostics::Scope timing("Restore geometry after layout events");
         restoreGeometry(geometry);
         QTimer::singleShot(0, this, [this, geometry]() {
+            StartupDiagnostics::Scope timing("Restore geometry after native events");
             restoreGeometry(geometry);
         });
     });

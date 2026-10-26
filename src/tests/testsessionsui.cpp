@@ -56,6 +56,10 @@ private slots:
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
     void startup_initializes_only_requested_units();
+    void startup_keeps_reused_pane_parented_data();
+    void startup_keeps_reused_pane_parented();
+    void startup_geometry_fallback_data();
+    void startup_geometry_fallback();
     void startup_reuses_initial_pane_data();
     void startup_reuses_initial_pane();
     void startup_shows_restored_session_on_first_show_data();
@@ -354,6 +358,132 @@ void TestSessionsUi::startup_initializes_only_requested_units()
         QVERIFY(phase.name != QLatin1String("Materialize all built-in unit values"));
         QVERIFY(phase.name != QLatin1String("Prepare built-in unit display lookup"));
         QVERIFY(phase.name != QLatin1String("Apply angle mode to unit lookup"));
+    }
+}
+
+void TestSessionsUi::startup_keeps_reused_pane_parented_data()
+{
+    QTest::addColumn<int>("layoutKind");
+    QTest::newRow("tabs") << 0;
+    QTest::newRow("nested-split") << 1;
+    QTest::newRow("empty-split-before-pane") << 2;
+}
+
+void TestSessionsUi::startup_keeps_reused_pane_parented()
+{
+    QFETCH(int, layoutKind);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    const QString name = QStringLiteral("Retained");
+    QVERIFY(QDir().mkpath(QFileInfo(storage.path(name)).path()));
+    writeFile(storage.path(name), QJsonDocument(sessionJson(name)).toJson());
+    QJsonObject windowState = startupSessionWindow(name, QStringLiteral("saved"));
+    if (layoutKind != 0) {
+        QJsonObject pane = windowState.value(QStringLiteral("root")).toObject();
+        pane.insert(QStringLiteral("type"), QStringLiteral("pane"));
+        QJsonObject nested {
+            { QStringLiteral("type"), QStringLiteral("split") },
+            { QStringLiteral("children"), QJsonArray {pane} }
+        };
+        if (layoutKind == 2)
+            nested.insert(QStringLiteral("children"), QJsonArray());
+        windowState.insert(QStringLiteral("root"), QJsonObject {
+            { QStringLiteral("type"), QStringLiteral("split") },
+            { QStringLiteral("children"), layoutKind == 2 ? QJsonArray {nested, pane} : QJsonArray {nested} }
+        });
+    }
+    guard.settings->sessionLayoutJson = QString::fromUtf8(QJsonDocument(QJsonObject {
+        { QStringLiteral("scheme"), 1 },
+        { QStringLiteral("kind"), QStringLiteral("session-layout") },
+        { QStringLiteral("windows"), QJsonArray {windowState} }
+    }).toJson());
+    class ParentObserver : public QObject {
+    public:
+        int detached = 0;
+        int changes = 0;
+        bool eventFilter(QObject* object, QEvent* event) override
+        {
+            if (event->type() == QEvent::ParentChange) {
+                ++changes;
+                if (!object->parent())
+                    ++detached;
+            }
+            return false;
+        }
+    } observer;
+    MainWindow window;
+    QPointer<ResultDisplay> display = window.findChild<ResultDisplay*>();
+    QPointer<QWidget> pane = paneWidgetForDisplay(display);
+    QVERIFY(pane);
+    pane->installEventFilter(&observer);
+    window.showWhenReady();
+    QTRY_VERIFY(display && display->session()->name() == name);
+    QTRY_VERIFY(window.isVisible());
+    QCOMPARE(observer.detached, 0);
+    QCOMPARE(observer.changes, layoutKind == 1 ? 1 : 0);
+    if (layoutKind == 2) {
+        auto* splitter = qobject_cast<QSplitter*>(pane->parentWidget());
+        QVERIFY(splitter);
+        QCOMPARE(splitter->indexOf(pane), 1);
+    }
+    QCOMPARE(editorForDisplay(display)->text(), QStringLiteral("saved draft"));
+    QCOMPARE(display->session()->historySize(), 1);
+}
+
+void TestSessionsUi::startup_geometry_fallback_data()
+{
+    QTest::addColumn<int>("geometryKind");
+    QTest::newRow("saved") << 0;
+    QTest::newRow("missing") << 1;
+    QTest::newRow("corrupt") << 2;
+    QTest::newRow("off-screen") << 3;
+    QTest::newRow("maximized") << 4;
+}
+
+void TestSessionsUi::startup_geometry_fallback()
+{
+    QFETCH(int, geometryKind);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    QWidget source;
+    source.setGeometry(100, 100, 700, 500);
+    if (geometryKind == 3)
+        source.move(-20000, -20000);
+    if (geometryKind == 4)
+        source.setWindowState(Qt::WindowMaximized);
+    QByteArray geometry = source.saveGeometry();
+    if (geometryKind == 1)
+        geometry.clear();
+    if (geometryKind == 2)
+        geometry = QByteArrayLiteral("invalid geometry");
+    const QString name = QStringLiteral("Geometry");
+    QVERIFY(QDir().mkpath(QFileInfo(storage.path(name)).path()));
+    writeFile(storage.path(name), QJsonDocument(sessionJson(name)).toJson());
+    QJsonObject saved = startupSessionWindow(name, QStringLiteral("saved"));
+    saved.insert(QStringLiteral("geometry"), QString::fromLatin1(geometry.toBase64()));
+    guard.settings->windowGeometry.clear();
+    guard.settings->keypadVisible = false;
+    guard.settings->keypadMode = Settings::KeypadModeDisabled;
+    guard.settings->sessionLayoutJson = QString::fromUtf8(QJsonDocument(QJsonObject {
+        { QStringLiteral("scheme"), 1 },
+        { QStringLiteral("kind"), QStringLiteral("session-layout") },
+        { QStringLiteral("windows"), QJsonArray {saved} }
+    }).toJson());
+    MainWindow window;
+    if (geometryKind == 0)
+        QCOMPARE(window.size(), QSize(700, 500));
+    if (geometryKind == 1 || geometryKind == 2)
+        QCOMPARE(window.size(), QSize(640, 480));
+    window.showWhenReady();
+    QTRY_VERIFY(window.isVisible());
+    QTRY_COMPARE(window.findChild<ResultDisplay*>()->session()->name(), name);
+    if (geometryKind == 4) {
+        QTRY_VERIFY(window.isMaximized());
+    } else {
+        const QSize expected = geometryKind == 1 || geometryKind == 2
+            ? QSize(640, 480) : QSize(700, 500);
+        QTRY_COMPARE(window.size(), expected);
+        QVERIFY(QGuiApplication::primaryScreen()->availableGeometry().intersects(window.frameGeometry()));
     }
 }
 

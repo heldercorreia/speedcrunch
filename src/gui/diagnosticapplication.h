@@ -22,7 +22,13 @@ public:
 
     bool notify(QObject* receiver, QEvent* event) override
     {
-        if (event->type() != QEvent::Paint || !StartupDiagnostics::isRecording())
+        if (!StartupDiagnostics::isRecording())
+            return QApplication::notify(receiver, event);
+        if (event->type() == QEvent::LayoutRequest) {
+            StartupDiagnostics::Scope timing("Process startup layout requests");
+            return QApplication::notify(receiver, event);
+        }
+        if (event->type() != QEvent::Paint)
             return QApplication::notify(receiver, event);
         StartupDiagnostics::Scope timing("Paint startup widgets");
         const bool result = QApplication::notify(receiver, event);

@@ -15,6 +15,9 @@ class TestSettingsUi : public QObject {
     Q_OBJECT
 
 private slots:
+    void loading_current_settings_does_not_rewrite_storage();
+    void startup_editor_preferences_data();
+    void startup_editor_preferences();
     void system_color_mode_persistence_data();
     void system_color_mode_persistence();
     void system_color_mode_actions_update_windows_and_preserve_theme();
@@ -63,6 +66,88 @@ private slots:
     void notation_shortcuts_change_only_active_window_data();
     void notation_shortcuts_change_only_active_window();
 };
+
+void TestSettingsUi::loading_current_settings_does_not_rewrite_storage()
+{
+    PrivateSessionStorage storage;
+    Settings* settings = Settings::instance();
+    settings->colorScheme = QStringLiteral("Duskfox");
+    settings->save();
+    const QString path = Settings::getConfigPath() + QStringLiteral("/SpeedCrunch.ini");
+    QFile file(path);
+    QVERIFY(file.open(QIODevice::ReadWrite));
+    const QByteArray original = file.readAll();
+    const QDateTime timestamp = QDateTime::fromSecsSinceEpoch(1000000000);
+    QVERIFY(file.setFileTime(timestamp, QFileDevice::FileModificationTime));
+    file.close();
+    const QDateTime before = QFileInfo(path).lastModified();
+    settings->colorScheme.clear();
+    settings->load();
+    QCOMPARE(settings->colorScheme, QStringLiteral("Duskfox"));
+    QCOMPARE(QFileInfo(path).lastModified(), before);
+    QVERIFY(file.open(QIODevice::ReadOnly));
+    QCOMPARE(file.readAll(), original);
+}
+
+void TestSettingsUi::startup_editor_preferences_data()
+{
+    QTest::addColumn<bool>("highlighting");
+    QTest::addColumn<bool>("grouping");
+    QTest::addColumn<bool>("adjustments");
+    for (bool highlighting : {false, true}) {
+        for (bool grouping : {false, true}) {
+            for (bool adjustments : {false, true}) {
+                QTest::addRow("highlight-%d-group-%d-adjust-%d", highlighting, grouping, adjustments)
+                    << highlighting << grouping << adjustments;
+            }
+        }
+    }
+}
+
+void TestSettingsUi::startup_editor_preferences()
+{
+    QFETCH(bool, highlighting);
+    QFETCH(bool, grouping);
+    QFETCH(bool, adjustments);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    auto* settings = guard.settings;
+    settings->syntaxHighlighting = highlighting;
+    settings->inputDigitGrouping = grouping;
+    settings->automaticInputAdjustments = adjustments;
+    settings->numberFormatStyle = Settings::NumberFormatThreeDigitSpaceDot;
+    settings->applyNumberFormatStyle();
+    MainWindow window(false);
+    Editor* editor = window.findChild<Editor*>();
+    QVERIFY(editor);
+    auto* groupingAction = window.findChild<QAction*>(QStringLiteral("InputDigitGroupingAction"));
+    auto* adjustmentsAction = window.findChild<QAction*>(QStringLiteral("AutomaticInputAdjustmentsAction"));
+    QVERIFY(groupingAction && adjustmentsAction);
+    QCOMPARE(groupingAction->isChecked(), grouping);
+    QCOMPARE(adjustmentsAction->isChecked(), adjustments);
+    QCOMPARE(settings->syntaxHighlighting, highlighting);
+    editor->setText(QStringLiteral("1000"));
+    const auto hasGrouping = [editor]() {
+        for (const auto& range : editor->document()->firstBlock().layout()->formats()) {
+            if (range.format.hasProperty(SyntaxHighlighter::InputDigitSeparator))
+                return true;
+        }
+        return false;
+    };
+    QCOMPARE(hasGrouping(), grouping);
+    groupingAction->trigger();
+    QCOMPARE(hasGrouping(), !grouping);
+    QCOMPARE(editor->text(), QStringLiteral("1000"));
+    adjustmentsAction->trigger();
+    QCOMPARE(settings->automaticInputAdjustments, !adjustments);
+    editor->clear();
+    editor->setAutoCompletionEnabled(false);
+    QTest::keyClicks(editor, "2^3");
+    if (adjustments)
+        QCOMPARE(editor->text(), QStringLiteral("2^3"));
+    else
+        QVERIFY(editor->text() != QStringLiteral("2^3"));
+}
 
 void TestSettingsUi::system_color_mode_persistence_data()
 {
