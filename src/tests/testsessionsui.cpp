@@ -55,6 +55,9 @@ public slots:
 private slots:
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
+    void startup_numeric_history_keeps_unit_registry_unloaded();
+    void startup_applies_window_flags_before_polishing_panes_data();
+    void startup_applies_window_flags_before_polishing_panes();
     void startup_initializes_only_requested_units();
     void startup_keeps_reused_pane_parented_data();
     void startup_keeps_reused_pane_parented();
@@ -313,6 +316,91 @@ void TestSessionsUi::initTestCase()
                  qPrintable(QStringLiteral("Cannot write test storage at %1: %2")
                                 .arg(path, probe.errorString())));
     }
+}
+
+void TestSessionsUi::startup_numeric_history_keeps_unit_registry_unloaded()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    const QString name = QStringLiteral("NumericHistory");
+    QVERIFY(QDir().mkpath(QFileInfo(storage.path(name)).path()));
+    writeFile(storage.path(name), QJsonDocument(sessionJson(name)).toJson());
+    guard.settings->autoCalc = false;
+    guard.settings->hasNumberFormatStyleSetting = true;
+    guard.settings->sessionLayoutJson = QString::fromUtf8(QJsonDocument(QJsonObject {
+        { QStringLiteral("scheme"), 1 },
+        { QStringLiteral("kind"), QStringLiteral("session-layout") },
+        { QStringLiteral("windows"), QJsonArray {startupSessionWindow(name, QStringLiteral("saved"))} }
+    }).toJson());
+
+    StartupDiagnostics::begin();
+    const auto stopDiagnostics = qScopeGuard([] {
+        StartupDiagnostics::firstPaintFinished();
+        StartupDiagnostics::finishWhenIdle();
+    });
+    for (const QString& emptyName : {QString(), QStringLiteral(" \t\n")}) {
+        HNumber output(123);
+        QVERIFY(!Units::isAffineUnitName(emptyName));
+        QVERIFY(!Units::tryConvertAffineToBase(emptyName, HNumber(42), &output));
+        QCOMPARE(output, HNumber(123));
+        QVERIFY(!Units::tryConvertAffineFromBase(emptyName, HNumber(42), &output));
+        QCOMPARE(output, HNumber(123));
+    }
+    MainWindow window;
+    window.showWhenReady();
+    QTRY_VERIFY(window.isVisible());
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    QVERIFY(display);
+    QCOMPARE(display->session()->name(), name);
+    QCOMPARE(display->session()->historySize(), 1);
+    QVERIFY(display->toPlainText().contains(QStringLiteral("42")));
+    for (const auto& phase : StartupDiagnostics::snapshot().phases)
+        QVERIFY(phase.name != QLatin1String("Build built-in unit registry"));
+
+    // The first temperature conversion must still initialize and use the units.
+    HNumber temperature;
+    QVERIFY(Units::tryConvertAffineToBase(QStringLiteral(" degC "), HNumber(0), &temperature));
+    QCOMPARE(temperature, HNumber("273.15"));
+    QVERIFY(Units::tryConvertAffineFromBase(QStringLiteral("degF"), temperature, &temperature));
+    QCOMPARE(temperature, HNumber(32));
+}
+
+void TestSessionsUi::startup_applies_window_flags_before_polishing_panes_data()
+{
+    QTest::addColumn<bool>("alwaysOnTop");
+    QTest::newRow("normal") << false;
+    QTest::newRow("always-on-top") << true;
+}
+
+void TestSessionsUi::startup_applies_window_flags_before_polishing_panes()
+{
+    QFETCH(bool, alwaysOnTop);
+    if (QGuiApplication::platformName().startsWith(QLatin1String("wayland")))
+        QSKIP("Wayland does not support the always-on-top window setting");
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    guard.settings->windowAlwaysOnTop = alwaysOnTop;
+    class PanePolishObserver : public QObject {
+    public:
+        bool observed = false;
+        bool flagAtFirstPolish = false;
+        bool eventFilter(QObject* object, QEvent* event) override
+        {
+            if (!observed && event->type() == QEvent::Polish) {
+                if (auto* display = qobject_cast<ResultDisplay*>(object)) {
+                    observed = true;
+                    flagAtFirstPolish = display->window()->windowFlags().testFlag(Qt::WindowStaysOnTopHint);
+                }
+            }
+            return false;
+        }
+    } observer;
+    qApp->installEventFilter(&observer);
+    MainWindow window(false);
+    QVERIFY(observer.observed);
+    QCOMPARE(observer.flagAtFirstPolish, alwaysOnTop);
+    QCOMPARE(window.windowFlags().testFlag(Qt::WindowStaysOnTopHint), alwaysOnTop);
+    QVERIFY(!window.isVisible());
 }
 
 void TestSessionsUi::startup_initializes_only_requested_units()

@@ -2549,8 +2549,8 @@ bool Units::isExplicitAngleUnitName(const QString& unitName)
 
 bool Units::isAffineUnitName(const QString& unitName)
 {
-    return s_unitRegistry().affineByIdentifier.contains(
-        UnicodeChars::normalizeUnitSymbolAliases(unitName.trimmed()));
+    const QString normalized = UnicodeChars::normalizeUnitSymbolAliases(unitName.trimmed());
+    return !normalized.isEmpty() && s_unitRegistry().affineByIdentifier.contains(normalized);
 }
 
 bool Units::tryConvertAffineToBase(const QString& unitName,
@@ -2561,6 +2561,8 @@ bool Units::tryConvertAffineToBase(const QString& unitName,
         return false;
 
     const QString normalized = UnicodeChars::normalizeUnitSymbolAliases(unitName.trimmed());
+    if (normalized.isEmpty())
+        return false;
     const auto it = s_unitRegistry().affineByIdentifier.constFind(normalized);
     if (it == s_unitRegistry().affineByIdentifier.constEnd() || !it.value().toBase)
         return false;
@@ -2576,6 +2578,8 @@ bool Units::tryConvertAffineFromBase(const QString& unitName,
         return false;
 
     const QString normalized = UnicodeChars::normalizeUnitSymbolAliases(unitName.trimmed());
+    if (normalized.isEmpty())
+        return false;
     const auto it = s_unitRegistry().affineByIdentifier.constFind(normalized);
     if (it == s_unitRegistry().affineByIdentifier.constEnd() || !it.value().fromBase)
         return false;

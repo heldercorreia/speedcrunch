@@ -8577,15 +8577,18 @@ void MainWindow::applySettings(bool initializing)
     m_actions.viewMenuBar->setChecked(m_settings->menuBarVisible);
 #endif
 
-    timing.next("Restore window geometry and dock layout");
+    timing.next("Restore window option actions");
     // A saved workspace restores its geometry while scheduling session I/O.
     // Wait for that result before choosing a fallback size and position.
     m_savedWindowGeometryRestored = false;
 
+    StartupDiagnostics::Scope optionTiming("Restore fullscreen action state");
     m_actions.viewFullScreenMode->setChecked(m_settings->windowOnfullScreen);
+    optionTiming.next("Restore always-on-top action state");
     if (!isWaylandPlatform())
         m_actions.settingsBehaviorAlwaysOnTop->setChecked(m_settings->windowAlwaysOnTop);
 
+    optionTiming.next("Restore angle action state");
     if (m_settings->angleUnit == 'r')
         m_actions.settingsAngleUnitRadian->setChecked(true);
     else if (m_settings->angleUnit == 'd')
@@ -8596,6 +8599,7 @@ void MainWindow::applySettings(bool initializing)
         m_actions.settingsAngleUnitTurn->setChecked(true);
     else if (m_settings->angleUnit == 'v')
         m_actions.settingsAngleUnitRevolution->setChecked(true);
+    optionTiming.finish();
 
     timing.next("Load global definitions and schedule session restore");
     if (initializing) {
@@ -9451,6 +9455,10 @@ MainWindow::MainWindow(bool restorePreviousSession)
     timing.next("Initialize window state and menu style");
     m_translator = 0;
     m_settings = Settings::instance();
+    // Changing flags later can recreate the native window and repolish its
+    // children. Choose the saved flag before constructing the interface.
+    if (!isWaylandPlatform() && m_settings->windowAlwaysOnTop)
+        setWindowFlag(Qt::WindowStaysOnTopHint);
     m_dockColumnOrders = QJsonDocument::fromJson(m_settings->dockColumnOrdersJson.toUtf8()).object();
     m_startupPrivateTabPending = restorePreviousSession && this == primaryMainWindow()
         && !g_restoringExtraWindows && m_settings->openPrivateTabOnStartup;
@@ -11868,6 +11876,8 @@ void MainWindow::showUserDefinitionsImportDialog()
 void MainWindow::setAlwaysOnTopEnabled(bool b)
 {
     m_settings->windowAlwaysOnTop = b;
+    if (windowFlags().testFlag(Qt::WindowStaysOnTopHint) == b)
+        return;
 
     // move() uses the outer frame position, not the global client-area origin.
     const bool wasVisible = isVisible();
