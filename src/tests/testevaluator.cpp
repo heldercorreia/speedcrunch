@@ -20,6 +20,8 @@
 #include "core/mathdsl.h"
 #include "core/units.h"
 #include "tests/testcommon.h"
+#include "tests/numberformatcases.h"
+#include "tests/fractionalgroupingcases.h"
 
 #include <QApplication>
 #include <QFontMetrics>
@@ -2461,12 +2463,136 @@ void test_tolerant_number_input_all_styles()
     for (const auto style : styles) {
         settings->numberFormatStyle = style;
         settings->applyNumberFormatStyle();
-        for (const auto& c : cases)
-            CHECK_EVAL(c.expr, c.expected);
+        for (const auto& c : cases) {
+            const bool selectedFraction =
+                (style == Settings::NumberFormatThreeDigitCommaDotFraction && QString::fromLatin1(c.expr) == QStringLiteral("1.234,56"))
+                || (style == Settings::NumberFormatThreeDigitDotCommaFraction && QString::fromLatin1(c.expr) == QStringLiteral("1,234.56"));
+            CHECK_EVAL(c.expr, selectedFraction ? "1.23456" : c.expected);
+        }
     }
 
     settings->numberFormatStyle = oldNumberFormatStyle;
     settings->applyNumberFormatStyle();
+}
+
+void test_single_grouping_separator_uses_number_format()
+{
+    Settings* settings = Settings::instance();
+    const auto oldStyle = settings->numberFormatStyle;
+    const bool oldIntegerOnly = settings->digitGroupingIntegerPartOnly;
+    for (const auto style : {Settings::NumberFormatThreeDigitCommaDot,
+                             Settings::NumberFormatThreeDigitCommaDotFraction,
+                             Settings::NumberFormatIndianCommaDot,
+                             Settings::NumberFormatThreeDigitDotComma,
+                             Settings::NumberFormatThreeDigitDotCommaFraction}) {
+        settings->numberFormatStyle = style;
+        settings->applyNumberFormatStyle();
+        const QString grouping = settings->digitGroupingSeparator();
+        const QString decimal(QChar(settings->decimalSeparator()));
+        CHECK_EVAL("1" + grouping + "000*2", "2000");
+        CHECK_EVAL("-12" + grouping + "345", "-12345");
+        CHECK_EVAL("1" + grouping + "234e2", "123400");
+        CHECK_EVAL("0d1" + grouping + "234", "1234");
+        CHECK_EVAL("1" + grouping + "000 [m] / [m]", "1000");
+        CHECK_EVAL("1" + grouping + "000:00 -> [h]", "1000 h");
+        CHECK_EVAL("1" + grouping + QString::fromUtf8("000° -> [degree]"), "1000°");
+        CHECK_EVAL("1" + decimal + "234", "1.234");
+        CHECK_EVAL("0" + decimal + "123", "0.123");
+        CHECK_EVAL(grouping + "123", "0.123");
+        CHECK_EVAL("1" + grouping + "23", "1.23");
+        CHECK_EVAL("1" + grouping + "23456", "1.23456");
+        CHECK_EVAL("1" + grouping + "000" + decimal + "0*2", "2000");
+        CHECK_EVAL("1" + decimal + "000" + grouping + "23",
+                   settings->digitGroupingIntegerPartOnly ? "1000.23" : "1.00023");
+        CHECK_EVAL("1" + decimal + "234" + decimal + "567" + grouping + "12345",
+                   "1234567.12345");
+    }
+    settings->numberFormatStyle = oldStyle;
+    settings->applyNumberFormatStyle();
+    settings->digitGroupingIntegerPartOnly = oldIntegerOnly;
+}
+
+void test_grouped_input_without_display_grouping()
+{
+    Settings* settings = Settings::instance();
+    const auto oldStyle = settings->numberFormatStyle;
+    const bool oldIntegerOnly = settings->digitGroupingIntegerPartOnly;
+    for (const auto style : {Settings::NumberFormatNoGroupingDot,
+                             Settings::NumberFormatNoGroupingComma,
+                             Settings::NumberFormatSIDot,
+                             Settings::NumberFormatSIComma,
+                             Settings::NumberFormatThreeDigitSpaceDot,
+                             Settings::NumberFormatThreeDigitSpaceComma,
+                             Settings::NumberFormatThreeDigitUnderscoreDot,
+                             Settings::NumberFormatThreeDigitUnderscoreDotFraction,
+                             Settings::NumberFormatThreeDigitUnderscoreComma,
+                             Settings::NumberFormatThreeDigitUnderscoreCommaFraction}) {
+        settings->numberFormatStyle = style;
+        settings->applyNumberFormatStyle();
+        const QString decimal(QChar(settings->decimalSeparator()));
+        const QString grouping = decimal == QStringLiteral(".") ? QStringLiteral(",") : QStringLiteral(".");
+        CHECK_EVAL("1" + grouping + QString::fromUtf8("000 × 2"), "2000");
+        CHECK_EVAL("1" + decimal + QString::fromUtf8("000 × 2"), "2");
+        CHECK_EVAL("12" + grouping + "345e2", "1234500");
+        CHECK_EVAL("1" + grouping + "23", "1.23");
+        CHECK_EVAL("1" + grouping + "000" + decimal + "23", "1000.23");
+        CHECK_EVAL("1" + decimal + "000" + grouping + "23", "1000.23");
+    }
+    settings->numberFormatStyle = oldStyle;
+    settings->applyNumberFormatStyle();
+    settings->digitGroupingIntegerPartOnly = oldIntegerOnly;
+}
+
+void test_validated_number_format_examples()
+{
+    Settings* settings = Settings::instance();
+    const auto oldStyle = settings->numberFormatStyle;
+    const bool oldIntegerOnly = settings->digitGroupingIntegerPartOnly;
+    for (const auto& format : NumberFormatCases::formats) {
+        settings->numberFormatStyle = format.style;
+        settings->applyNumberFormatStyle();
+        for (size_t i = 0; i <= NumberFormatCases::inputs.size(); ++i) {
+            const bool example = i == NumberFormatCases::inputs.size();
+            const char* input = example ? format.example : NumberFormatCases::inputs.at(i);
+            const char* expectedValue = example ? "1234567.12345" : NumberFormatCases::numericValue(format, i);
+            const char* expectedOutput = example ? format.example : format.outputs.at(i);
+            CHECK_EVAL(QString::fromUtf8(input), expectedValue);
+            const Quantity value = eval->getVariable(QStringLiteral("ans")).value();
+            ++eval_total_tests;
+            const QString displayed = DisplayFormatUtils::applyDigitGroupingForDisplay(
+                NumberFormatter::format(value, 'f', -1, false, ComplexForm::Rectangular));
+            const QByteArray label = QStringLiteral("format %1: %2")
+                .arg(QString::fromUtf8(format.example), QString::fromUtf8(input)).toUtf8();
+            DisplayErrorOnMismatch(__FILE__, __LINE__, label.constData(), displayed.toStdString(),
+                                   expectedOutput, eval_failed_tests, eval_new_failed_tests);
+        }
+    }
+    settings->numberFormatStyle = oldStyle;
+    settings->applyNumberFormatStyle();
+    settings->digitGroupingIntegerPartOnly = oldIntegerOnly;
+}
+
+void test_ambiguous_fractional_grouping_prefers_ungrouped()
+{
+    Settings* settings = Settings::instance();
+    const auto oldStyle = settings->numberFormatStyle;
+    const bool oldIntegerOnly = settings->digitGroupingIntegerPartOnly;
+    for (const auto& item : FractionalGroupingCases::cases) {
+        settings->numberFormatStyle = item.style;
+        settings->applyNumberFormatStyle();
+        CHECK_EVAL(QString::fromUtf8(item.input), item.value);
+        const Quantity value = eval->getVariable(QStringLiteral("ans")).value();
+        const QString displayed = DisplayFormatUtils::applyDigitGroupingForDisplay(
+            NumberFormatter::format(value, 'f', -1, false, ComplexForm::Rectangular));
+        const QByteArray label = QStringLiteral("fractional grouping style %1: %2")
+            .arg(int(item.style)).arg(QString::fromUtf8(item.input)).toUtf8();
+        ++eval_total_tests;
+        DisplayErrorOnMismatch(__FILE__, __LINE__, label.constData(), displayed.toStdString(),
+                               item.output, eval_failed_tests, eval_new_failed_tests);
+    }
+    settings->numberFormatStyle = oldStyle;
+    settings->applyNumberFormatStyle();
+    settings->digitGroupingIntegerPartOnly = oldIntegerOnly;
 }
 
 void test_settings_default_result_line_behavior()
@@ -11239,6 +11365,10 @@ int main(int argc, char* argv[])
     test_tolerant_number_input_with_dot_style();
     test_number_format_style_behavior_all_supported_styles();
     test_tolerant_number_input_all_styles();
+    test_single_grouping_separator_uses_number_format();
+    test_grouped_input_without_display_grouping();
+    test_validated_number_format_examples();
+    test_ambiguous_fractional_grouping_prefers_ungrouped();
     test_settings_default_result_line_behavior();
     test_extra_result_lines_profile_formatting();
     test_sexagesimal();

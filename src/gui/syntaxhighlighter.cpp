@@ -180,8 +180,15 @@ void SyntaxHighlighter::groupInputDigits(const QString& text)
         if (end < limit && QString(text.at(end)) == separator) {
             // A pasted number may already contain the selected grouping marks.
             // Do not mistake those marks for an alternate decimal separator.
-            const QString tail = text.mid(end + 1, limit - end - 1).trimmed();
-            bool groupedTail = tail.size() == groupSize && end - start <= groupSize;
+            QString mantissa = sourceNumber.trimmed();
+            if (base == 10) {
+                const int exponentPos = mantissa.indexOf(RegExpPatterns::decimalExponentSuffix());
+                if (exponentPos >= 0)
+                    mantissa.truncate(exponentPos);
+            }
+            const QString tail = mantissa.mid(end - start + 1);
+            bool groupedTail = base == 10 ? NumberFormatter::isSingleGroupedInteger(mantissa)
+                : tail.size() == groupSize && end - start <= groupSize;
             for (QChar ch : tail)
                 groupedTail = groupedTail && isDigit(ch);
             if (groupedTail || tail.contains(QChar(settings->decimalSeparator()))
@@ -190,14 +197,6 @@ void SyntaxHighlighter::groupInputDigits(const QString& text)
         }
         groupPart(start, end, groupSize, false);
         if (end < limit && Evaluator::isRadixChar(text.at(end))) {
-            if (text.at(end) != QChar(settings->decimalSeparator())) {
-                // Decimal separator changes are also visual. Editor paints the
-                // selected separator over this character, leaving the typed
-                // separator in the source expression and on the clipboard.
-                QTextCharFormat fmt = format(end);
-                fmt.setProperty(InputRadixReplacement, QString(QChar(settings->decimalSeparator())));
-                setFormat(end, 1, fmt);
-            }
             const int fractionalStart = end + 1;
             int fractionalEnd = fractionalStart;
             while (fractionalEnd < limit && isDigit(text.at(fractionalEnd)))

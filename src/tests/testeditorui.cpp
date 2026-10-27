@@ -15,6 +15,9 @@
 #include "core/unicodechars.h"
 #include "core/mathdsl.h"
 #include "core/numberformatter.h"
+#include "gui/displayformatutils.h"
+#include "numberformatcases.h"
+#include "fractionalgroupingcases.h"
 #include "core/units.h"
 #include "core/userfunction.h"
 #include "core/userunit.h"
@@ -100,6 +103,12 @@ private slots:
     void input_digit_grouping_survives_settings_reload();
     void input_digit_grouping_follows_number_format_data();
     void input_digit_grouping_follows_number_format();
+    void number_separators_keep_value_when_typed_or_pasted();
+    void input_preserves_typed_and_pasted_number_separators();
+    void validated_number_format_examples_data();
+    void validated_number_format_examples();
+    void ambiguous_fractional_grouping_prefers_ungrouped_data();
+    void ambiguous_fractional_grouping_prefers_ungrouped();
     void input_digit_grouping_paints_separator_glyphs_data();
     void input_digit_grouping_paints_separator_glyphs();
     void typing_hex_separators_preserves_number_data();
@@ -991,6 +1000,235 @@ void TestEditorUi::typing_hex_separators_preserves_number()
         QVERIFY2(session.evaluator()->error().isEmpty(), qPrintable(session.evaluator()->error()));
         QCOMPARE(DMath::format(result, Quantity::Format::Fixed()), expected);
     }
+}
+
+void TestEditorUi::number_separators_keep_value_when_typed_or_pasted()
+{
+    class PasteEditor : public Editor {
+    public:
+        using Editor::insertFromMimeData;
+    };
+    Settings* settings = Settings::instance();
+    settings->automaticInputAdjustments = true;
+    Session session;
+    for (const auto style : {Settings::NumberFormatNoGroupingDot,
+                             Settings::NumberFormatNoGroupingComma,
+                             Settings::NumberFormatSIDot,
+                             Settings::NumberFormatSIComma,
+                             Settings::NumberFormatThreeDigitSpaceDot,
+                             Settings::NumberFormatThreeDigitSpaceComma,
+                             Settings::NumberFormatThreeDigitUnderscoreDot,
+                             Settings::NumberFormatThreeDigitUnderscoreDotFraction,
+                             Settings::NumberFormatThreeDigitUnderscoreComma,
+                             Settings::NumberFormatThreeDigitUnderscoreCommaFraction,
+                             Settings::NumberFormatThreeDigitCommaDot,
+                             Settings::NumberFormatThreeDigitCommaDotFraction,
+                             Settings::NumberFormatIndianCommaDot,
+                             Settings::NumberFormatThreeDigitDotComma,
+                             Settings::NumberFormatThreeDigitDotCommaFraction}) {
+        settings->numberFormatStyle = style;
+        settings->applyNumberFormatStyle();
+        const QString grouping = settings->digitGroupingSeparator();
+        const bool commaGroups = settings->decimalSeparator() == '.';
+        const bool dotGroups = settings->decimalSeparator() == ',';
+        const struct {
+            const char* expression;
+            const char* expected;
+        } cases[] = {
+            {"1,000*2", commaGroups ? "2000" : "2"},
+            {"1,234", commaGroups ? "1234" : "1.234"},
+            {"1.234", dotGroups ? "1234" : "1.234"},
+            {"1,234e2", commaGroups ? "123400" : "123.4"},
+            {"1.234e2", dotGroups ? "123400" : "123.4"},
+            {"1,000.0*2", style == Settings::NumberFormatThreeDigitDotCommaFraction ? "2" : "2000"},
+            {"1.000,23", style == Settings::NumberFormatThreeDigitCommaDotFraction ? "1.00023" : "1000.23"},
+            {"1,000.23", style == Settings::NumberFormatThreeDigitDotCommaFraction ? "1.00023" : "1000.23"},
+            {"1.234.567,12345", "1234567.12345"},
+            {"1,234,567.12345", "1234567.12345"},
+            {"1,23", "1.23"},
+            {"1.23", "1.23"}
+        };
+        for (const auto& item : cases) {
+            for (bool paste : {false, true}) {
+                PasteEditor editor;
+                editor.setSession(&session);
+                editor.setAutoCompletionEnabled(false);
+                editor.setAutoCalcEnabled(false);
+                if (paste) {
+                    QMimeData mime;
+                    mime.setText(QString::fromLatin1(item.expression));
+                    editor.insertFromMimeData(&mime);
+                } else {
+                    QTest::keyClicks(&editor, item.expression);
+                }
+                session.evaluator()->setExpression(editor.text());
+                const Quantity result = session.evaluator()->evalNoAssign();
+                QVERIFY2(session.evaluator()->error().isEmpty(), qPrintable(session.evaluator()->error()));
+                QCOMPARE(DMath::format(result, Quantity::Format::Fixed()),
+                         QString::fromLatin1(item.expected));
+                const QString source = QString::fromLatin1(item.expression);
+                const QChar decimal(settings->decimalSeparator());
+                if (!paste && (commaGroups || dotGroups)
+                    && source.contains(grouping) && !source.contains(decimal)
+                    && QString::fromLatin1(item.expected) != QStringLiteral("1.23")) {
+                    editor.rehighlight();
+                    for (const auto& range : editor.document()->firstBlock().layout()->formats()) {
+                        QVERIFY2(!range.format.hasProperty(SyntaxHighlighter::InputRadixReplacement),
+                                 "A grouping mark must keep its appearance, including before an exponent");
+                    }
+                }
+            }
+        }
+    }
+}
+
+void TestEditorUi::input_preserves_typed_and_pasted_number_separators()
+{
+    class PasteEditor : public Editor {
+    public:
+        using Editor::insertFromMimeData;
+    };
+    Settings* settings = Settings::instance();
+    for (const auto style : {Settings::NumberFormatNoGroupingDot,
+                             Settings::NumberFormatNoGroupingComma,
+                             Settings::NumberFormatThreeDigitCommaDot,
+                             Settings::NumberFormatThreeDigitDotComma}) {
+        settings->numberFormatStyle = style;
+        settings->applyNumberFormatStyle();
+        for (bool adjustments : {false, true}) {
+            settings->automaticInputAdjustments = adjustments;
+            for (bool grouping : {false, true}) {
+                settings->inputDigitGrouping = grouping;
+                for (const QString& number : {QStringLiteral("1,000"), QStringLiteral("1.000"),
+                                              QStringLiteral("1,234e2"), QStringLiteral("1.234e2"),
+                                              QStringLiteral("1.000,23"), QStringLiteral("1,000.23")}) {
+                    PasteEditor editor;
+                    editor.setAutoCompletionEnabled(false);
+                    editor.setAutoCalcEnabled(false);
+                    QString prefix;
+                    for (QChar ch : number) {
+                        QTest::keyClicks(&editor, QString(ch));
+                        prefix += ch;
+                        editor.rehighlight();
+                        QCOMPARE(editor.text(), prefix);
+                        for (const auto& range : editor.document()->firstBlock().layout()->formats())
+                            QVERIFY(!range.format.hasProperty(SyntaxHighlighter::InputRadixReplacement));
+                    }
+                    editor.clear();
+                    QMimeData mime;
+                    mime.setText(number);
+                    editor.insertFromMimeData(&mime);
+                    QCOMPARE(editor.text(), number);
+                    editor.rehighlight();
+                    for (const auto& range : editor.document()->firstBlock().layout()->formats())
+                        QVERIFY(!range.format.hasProperty(SyntaxHighlighter::InputRadixReplacement));
+                }
+                if (adjustments) {
+                    for (QChar separator : {QLatin1Char('.'), QLatin1Char(',')}) {
+                        PasteEditor editor;
+                        editor.setAutoCompletionEnabled(false);
+                        editor.setAutoCalcEnabled(false);
+                        QTest::keyClicks(&editor, QString(separator));
+                        QCOMPARE(editor.text(), QStringLiteral("0") + separator);
+                        editor.setText(QStringLiteral("1"));
+                        editor.setCursorPosition(1);
+                        QKeyEvent event(QEvent::KeyPress, Qt::Key_Period, Qt::KeypadModifier,
+                                        QString(separator));
+                        QApplication::sendEvent(&editor, &event);
+                        QCOMPARE(editor.text(), QStringLiteral("1") + separator);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void TestEditorUi::validated_number_format_examples_data()
+{
+    QTest::addColumn<int>("style");
+    QTest::addColumn<QString>("input");
+    QTest::addColumn<QString>("expectedValue");
+    QTest::addColumn<QString>("expectedOutput");
+    QTest::addColumn<bool>("paste");
+    for (const auto& format : NumberFormatCases::formats) {
+        for (size_t i = 0; i <= NumberFormatCases::inputs.size(); ++i) {
+            const bool example = i == NumberFormatCases::inputs.size();
+            const QString input = QString::fromUtf8(example ? format.example : NumberFormatCases::inputs.at(i));
+            const QString value = QString::fromLatin1(example ? "1234567.12345" : NumberFormatCases::numericValue(format, i));
+            const QString output = QString::fromUtf8(example ? format.example : format.outputs.at(i));
+            for (bool paste : {false, true}) {
+                const QByteArray label = QStringLiteral("%1/%2/%3")
+                    .arg(QString::fromUtf8(format.example), input, paste ? QStringLiteral("paste") : QStringLiteral("type"))
+                    .toUtf8();
+                QTest::newRow(label.constData()) << int(format.style) << input << value << output << paste;
+            }
+        }
+    }
+}
+
+void TestEditorUi::validated_number_format_examples()
+{
+    QFETCH(int, style);
+    QFETCH(QString, input);
+    QFETCH(QString, expectedValue);
+    QFETCH(QString, expectedOutput);
+    QFETCH(bool, paste);
+    class PasteEditor : public Editor {
+    public:
+        using Editor::insertFromMimeData;
+    };
+    Settings* settings = Settings::instance();
+    settings->numberFormatStyle = static_cast<Settings::NumberFormatStyle>(style);
+    settings->applyNumberFormatStyle();
+    settings->automaticInputAdjustments = true;
+    Session session;
+    PasteEditor editor;
+    editor.setSession(&session);
+    editor.setAutoCompletionEnabled(false);
+    editor.setAutoCalcEnabled(false);
+    if (paste) {
+        QMimeData mime;
+        mime.setText(input);
+        editor.insertFromMimeData(&mime);
+    } else {
+        QString keys = input;
+        keys.replace(MathDsl::MulCrossOp, QLatin1Char('*'));
+        QTest::keyClicks(&editor, keys);
+    }
+    if (!input.contains(MathDsl::MulCrossOp))
+        QCOMPARE(editor.text(), input);
+    session.evaluator()->setExpression(editor.text());
+    const Quantity value = session.evaluator()->evalNoAssign();
+    QVERIFY2(session.evaluator()->error().isEmpty(), qPrintable(session.evaluator()->error()));
+    QCOMPARE(DMath::format(value, Quantity::Format::Fixed()), expectedValue);
+    QCOMPARE(DisplayFormatUtils::applyDigitGroupingForDisplay(
+                 NumberFormatter::format(value, 'f', -1, false, ComplexForm::Rectangular)), expectedOutput);
+    editor.rehighlight();
+    for (const auto& range : editor.document()->firstBlock().layout()->formats())
+        QVERIFY(!range.format.hasProperty(SyntaxHighlighter::InputRadixReplacement));
+}
+
+void TestEditorUi::ambiguous_fractional_grouping_prefers_ungrouped_data()
+{
+    QTest::addColumn<int>("style");
+    QTest::addColumn<QString>("input");
+    QTest::addColumn<QString>("expectedValue");
+    QTest::addColumn<QString>("expectedOutput");
+    QTest::addColumn<bool>("paste");
+    for (const auto& item : FractionalGroupingCases::cases) {
+        for (bool paste : {false, true}) {
+            const QByteArray label = QStringLiteral("%1/%2/%3")
+                .arg(int(item.style)).arg(QString::fromUtf8(item.input),
+                    paste ? QStringLiteral("paste") : QStringLiteral("type")).toUtf8();
+            QTest::newRow(label.constData()) << int(item.style) << QString::fromUtf8(item.input)
+                << QString::fromLatin1(item.value) << QString::fromUtf8(item.output) << paste;
+        }
+    }
+}
+
+void TestEditorUi::ambiguous_fractional_grouping_prefers_ungrouped()
+{
+    validated_number_format_examples();
 }
 
 void TestEditorUi::spaced_hex_decode_live_preview()
@@ -2910,7 +3148,7 @@ void TestEditorUi::rewrites_superscript_exponent_for_radix_and_inserts_mul_space
     editor.setText(QString::fromUtf8("pi⁴"));
     editor.setCursorPosition(editor.text().size());
     QTest::keyClick(&editor, Qt::Key_Comma, Qt::NoModifier);
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("pi^(4.)"));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("pi^(4,)"));
     QCOMPARE(editor.textCursor().position(),
              editor.document()->toRawText().size() - 1);
 
@@ -3045,7 +3283,7 @@ void TestEditorUi::auto_inserts_zero_before_dot_in_configured_contexts()
     editor.setText(QStringLiteral("pi  "));
     editor.setCursorPosition(editor.text().size());
     QTest::keyClick(&editor, Qt::Key_Comma, Qt::NoModifier);
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("pi  × 0."));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("pi  × 0,"));
 
     editor.setText(QStringLiteral("12"));
     editor.setCursorPosition(editor.text().size());
@@ -6729,7 +6967,7 @@ void TestEditorUi::input_digit_grouping_follows_number_format()
     if (settings->decimalSeparator() == ',') {
         editor.setText(QStringLiteral("1234567.1234567"));
         editor.rehighlight();
-        QCOMPARE(displayedText(), expected);
+        QCOMPARE(displayedText(), QString(expected).replace(QLatin1Char(','), QLatin1Char('.')));
     }
     editor.setText(expected);
     editor.rehighlight();

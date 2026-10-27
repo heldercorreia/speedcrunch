@@ -562,6 +562,40 @@ copy/paste from other applications. In clear mixed-separator cases, it
 accepts the number and normalizes it by ignoring non-digit grouping
 characters as needed.
 
+When a single comma or dot could be either a decimal point or a grouping
+mark, the selected decimal separator takes priority. In any dot-decimal
+format, ``1,234`` means ``1234`` and ``1.234`` means ``1.234``. This also
+applies to ``1234567.12345``, which displays numbers without grouping.
+In comma-decimal formats, the roles are reversed. A grouping mark must
+separate one to three leading digits from a group of three digits.
+Other lengths, such as ``1,23``, are still accepted as decimal input.
+These rules also apply when pasting a number or entering scientific notation.
+Clear mixed-separator input such as ``1.000,23`` is accepted as ``1000.23``
+when it does not also match the selected fractional-grouping format.
+
+When input contains both commas and dots and has two possible readings,
+SpeedCrunch assumes the fractional part is not grouped unless the selected
+format explicitly groups fractional digits with those marks. For example,
+with ``1234567.12345``
+selected, ``1.000,000 * 2`` means ``1000 * 2`` and gives ``2000``.
+The same applies to ``1,000.000 * 2``.
+
+For formats that group fractional digits with commas or dots, valid input in
+the selected format takes priority. With ``1,234,567.123,45`` selected,
+``1.234,56`` means ``1.23456``. With ``1.234.567,123.45`` selected,
+``1,234.56`` has that same value. Other formats read these inputs as
+``1234.56``. Spaces can separate groups on either side of the decimal point,
+for example ``1 234.567 89`` means ``1234.56789``.
+
+With ``1,234,567.123,45`` selected, ``1.000,000 * 2`` instead gives ``2``
+because the comma groups fractional digits. The matching case with
+``1.234.567,123.45`` selected is ``1,000.000 * 2``, which also gives ``2``.
+
+The editor keeps commas and dots as you type or paste them, even when they
+differ from the selected format. The interpreted expression and results use
+the selected number format. Digit grouping in the editor can add visual
+separators, but does not replace punctuation you enter.
+
 History Size Limit
 ++++++++++++++++++
 

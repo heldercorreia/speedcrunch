@@ -4848,10 +4848,20 @@ QString Evaluator::fixNumberRadix(const QString& number)
     bool ignoreDot = dotCount != 1;
     bool ignoreComma = commaCount != 1;
     if (!ignoreDot && !ignoreComma) {
-        // If both radix characters are present once,
-        // consider the last one as the radix point.
-        ignoreDot = lastRadixChar != MathDsl::DotSep;
-        ignoreComma = lastRadixChar != ',';
+        // A valid fractional group in the selected format takes priority.
+        // Otherwise the last mark identifies the copied decimal convention.
+        const QChar radix = NumberFormatter::hasFormattedFractionalGrouping(number)
+            ? QChar(Settings::instance()->decimalSeparator()) : lastRadixChar;
+        ignoreDot = radix != MathDsl::DotSep;
+        ignoreComma = radix != MathDsl::CommaSep;
+    }
+
+    // A single mark can also be a thousands separator. Let the selected
+    // format decide when it forms a three-digit group. Keep accepting other
+    // lengths as alternate decimals, such as "1,56" in a dot-decimal format.
+    if (dotCount + commaCount == 1 && NumberFormatter::isSingleGroupedInteger(number)) {
+        ignoreDot = true;
+        ignoreComma = true;
     }
 
     QChar radixChar; // Null character by default.

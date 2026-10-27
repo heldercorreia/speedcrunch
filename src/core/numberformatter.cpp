@@ -223,8 +223,7 @@ bool isValidGroupedIntegerPart(const QString& part, QChar separator, int base, i
     return true;
 }
 
-bool canonicalizeLiteralMantissa(const QString& input, int base, int groupingSize,
-                                 bool allowGroupingHeuristic, QString* output)
+bool canonicalizeLiteralMantissa(const QString& input, int base, int groupingSize, QString* output)
 {
     const int dotCount = input.count(MathDsl::DotSep);
     const int commaCount = input.count(MathDsl::CommaSep);
@@ -248,6 +247,8 @@ bool canonicalizeLiteralMantissa(const QString& input, int base, int groupingSiz
         const int lastComma = input.lastIndexOf(MathDsl::CommaSep);
         hasRadix = true;
         radixSep = (lastDot > lastComma) ? MathDsl::DotSep : MathDsl::CommaSep;
+        if (base == 10 && NumberFormatter::hasFormattedFractionalGrouping(input))
+            radixSep = QChar(Settings::instance()->decimalSeparator());
         groupingSep = (radixSep == MathDsl::DotSep) ? MathDsl::CommaSep : MathDsl::DotSep;
         if (input.count(radixSep) > 1)
             return false;
@@ -255,20 +256,10 @@ bool canonicalizeLiteralMantissa(const QString& input, int base, int groupingSiz
         const QChar sep = (dotCount > 0) ? MathDsl::DotSep : MathDsl::CommaSep;
         const int sepCount = input.count(sep);
         if (sepCount == 1) {
-            const int sepPos = input.indexOf(sep);
-            const QString left = input.left(sepPos);
-            const QString right = input.mid(sepPos + 1);
-            const Settings* settings = Settings::instance();
-            const QChar configuredDecimalSep(settings->decimalSeparator());
-            const bool separatorIsConfiguredDecimal = sep == configuredDecimalSep;
-            const bool looksGroupedInteger = allowGroupingHeuristic
-                && !separatorIsConfiguredDecimal
-                && !left.isEmpty()
-                && right.size() == groupingSize
-                && std::all_of(left.cbegin(), left.cend(),
-                               [base](QChar ch) { return isValidDigitForBase(ch, base); })
-                && std::all_of(right.cbegin(), right.cend(),
-                               [base](QChar ch) { return isValidDigitForBase(ch, base); });
+            // Pasting a standalone value must use the same separator rules
+            // as typing it, including the mantissa of scientific notation.
+            const bool looksGroupedInteger = base == 10
+                && NumberFormatter::isSingleGroupedInteger(input);
             if (looksGroupedInteger) {
                 hasRadix = false;
                 groupingSep = sep;
@@ -348,25 +339,21 @@ bool canonicalizeStandaloneNumericLiteral(const QString& input, QString* output)
     QString exponent;
     int base = 10;
     int groupingSize = 3;
-    bool allowGroupingHeuristic = true;
 
     QString prefix;
     if (trimmed.startsWith(MathDsl::HexPrefix, Qt::CaseInsensitive)) {
         base = 16;
         groupingSize = 4;
-        allowGroupingHeuristic = false;
         prefix = trimmed.left(2);
         mantissa = trimmed.mid(2);
     } else if (trimmed.startsWith(MathDsl::OctPrefix, Qt::CaseInsensitive)) {
         base = 8;
         groupingSize = 3;
-        allowGroupingHeuristic = false;
         prefix = trimmed.left(2);
         mantissa = trimmed.mid(2);
     } else if (trimmed.startsWith(MathDsl::BinPrefix, Qt::CaseInsensitive)) {
         base = 2;
         groupingSize = 4;
-        allowGroupingHeuristic = false;
         prefix = trimmed.left(2);
         mantissa = trimmed.mid(2);
     } else {
@@ -374,7 +361,6 @@ bool canonicalizeStandaloneNumericLiteral(const QString& input, QString* output)
         if (exponentPos >= 0) {
             exponent = mantissa.mid(exponentPos);
             mantissa = mantissa.left(exponentPos);
-            allowGroupingHeuristic = false;
         }
     }
 
@@ -382,8 +368,7 @@ bool canonicalizeStandaloneNumericLiteral(const QString& input, QString* output)
         return false;
 
     QString canonicalMantissa;
-    if (!canonicalizeLiteralMantissa(mantissa, base, groupingSize,
-                                     allowGroupingHeuristic, &canonicalMantissa)) {
+    if (!canonicalizeLiteralMantissa(mantissa, base, groupingSize, &canonicalMantissa)) {
         return false;
     }
 
@@ -652,6 +637,70 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride,
     }
 
     return result;
+}
+
+bool NumberFormatter::isSingleGroupedInteger(const QString& input)
+{
+    // Grouped input remains valid even when the display uses spaces,
+    // underscores, or no grouping. The selected decimal mark takes priority.
+    const QString separator = Settings::instance()->decimalSeparator() == MathDsl::DotSep.toLatin1()
+        ? QString(MathDsl::CommaSep) : QString(MathDsl::DotSep);
+    const int separatorPos = input.indexOf(separator);
+    if (separatorPos < 0 || input.size() - separatorPos - 1 != 3)
+        return false;
+
+    int start = input.startsWith(QLatin1Char('+')) || input.startsWith(QLatin1Char('-')) ? 1 : 0;
+    if (input.mid(start, 2).compare(QStringLiteral("0d"), Qt::CaseInsensitive) == 0)
+        start += 2;
+    if (separatorPos <= start || separatorPos - start > 3)
+        return false;
+    for (int i = start; i < input.size(); ++i) {
+        if (i != separatorPos && !input.at(i).isDigit())
+            return false;
+    }
+    return true;
+}
+
+bool NumberFormatter::hasFormattedFractionalGrouping(const QString& input)
+{
+    const Settings* settings = Settings::instance();
+    const QString separator = settings->digitGroupingSeparator();
+    const QChar decimal(settings->decimalSeparator());
+    if (settings->digitGroupingIntegerPartOnly
+        || (separator != QString(MathDsl::DotSep) && separator != QString(MathDsl::CommaSep))
+        || input.count(decimal) != 1)
+        return false;
+
+    const int radixPos = input.indexOf(decimal);
+    int start = input.startsWith(QLatin1Char('+')) || input.startsWith(QLatin1Char('-')) ? 1 : 0;
+    if (input.mid(start, 2).compare(QStringLiteral("0d"), Qt::CaseInsensitive) == 0)
+        start += 2;
+    const QString integral = input.mid(start, radixPos - start);
+    if (integral.contains(separator)) {
+        if (!isValidGroupedIntegerPart(integral, separator.at(0), 10, 3))
+            return false;
+    } else {
+        if (integral.isEmpty())
+            return false;
+        for (QChar ch : integral) {
+            if (!isValidDigitForBase(ch, 10))
+                return false;
+        }
+    }
+
+    const QStringList groups = input.mid(radixPos + 1).split(separator, Qt::KeepEmptyParts);
+    if (groups.size() < 2)
+        return false;
+    for (int i = 0; i < groups.size(); ++i) {
+        const QString& group = groups.at(i);
+        if (group.isEmpty() || group.size() > 3 || (i < groups.size() - 1 && group.size() != 3))
+            return false;
+        for (QChar ch : group) {
+            if (!isValidDigitForBase(ch, 10))
+                return false;
+        }
+    }
+    return true;
 }
 
 QList<int> NumberFormatter::digitGroupingPositions(int digitCount, int groupSize, bool fractional)

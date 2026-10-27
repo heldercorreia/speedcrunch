@@ -2318,24 +2318,14 @@ void Editor::insertFromMimeData(const QMimeData* source)
     if (expressions.isEmpty())
         return;
 
-    auto normalizedPastedExpression = [this](const QString& expression) {
-        if (!Settings::instance()->automaticInputAdjustments
-            || isInsideCommentFromQuestionMark(text(), textCursor().selectionStart()))
-            return expression;
-        QString formattedNumericLiteral;
-        if (NumberFormatter::tryFormatStandaloneNumericLiteralForDisplay(expression, &formattedNumericLiteral))
-            return normalizeExpressionTypedInEditor(formattedNumericLiteral);
-        return expression;
-    };
-
     if (expressions.size() == 1) {
         // Insert text manually to make sure expression does not contain new line characters
-        insert(normalizedPastedExpression(expressions.at(0)));
+        insert(expressions.at(0));
         return;
     }
     emit bulkEvaluationStarted();
     for (int i = 0; i < expressions.size(); ++i) {
-        insert(normalizedPastedExpression(expressions.at(i)));
+        insert(expressions.at(i));
         evaluate();
     }
     emit bulkEvaluationFinished();
@@ -3610,6 +3600,9 @@ void Editor::keyPressEvent(QKeyEvent* event)
         || normalizedEventText == QLatin1String(".")
         || normalizedEventText == QLatin1String(",");
     if (isTypedRadixSeparator) {
+        const QChar typed = normalizedTypedCharFromEvent(event, normalizedEventText);
+        const QString radix(typed == MathDsl::CommaSep || typed == MathDsl::DotSep
+                            ? typed : key == Qt::Key_Comma ? MathDsl::CommaSep : MathDsl::DotSep);
         if (!(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))) {
             const QString left = text().left(textCursor().selectionStart());
             const Tokens tokens = evaluator()->scan(left);
@@ -3619,11 +3612,10 @@ void Editor::keyPressEvent(QKeyEvent* event)
                 && tokens.last().text().startsWith(MathDsl::HexPrefix, Qt::CaseInsensitive)) {
                 // Hex digits A-F belong to the number, so punctuation after
                 // them must not start an implicit multiplication.
-                insert(normalizedEventText.isEmpty() ? QString(QChar(radixChar())) : normalizedEventText);
+                insert(radix);
                 event->accept();
                 return;
             }
-            const QString radix = QString(QChar(this->radixChar()));
             if (rewriteTrailingSuperscriptExponentToParenthesizedAscii(this, radix)) {
                 event->accept();
                 return;
@@ -3672,7 +3664,7 @@ void Editor::keyPressEvent(QKeyEvent* event)
             }
         }
         if (event->modifiers() == Qt::KeypadModifier) {
-            insert(QChar(this->radixChar()));
+            insert(radix);
             event->accept();
             return;
         }

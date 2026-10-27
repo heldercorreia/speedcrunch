@@ -18,6 +18,10 @@ with either a period (``.``) or a comma (``,``) as the decimal separator.
 Accepted decimal separator and grouping conventions depend on the selected
 :ref:`Number Format <radix_character>`.
 
+For example, with either ``1234567.12345`` or ``1,234,567.12345`` selected,
+``1,000 * 2`` evaluates to ``2000`` because the comma groups thousands.
+With a comma-decimal format selected, the same rule applies to ``1.000 * 2``.
+
 Trailing zeros after the decimal point (like in ``12.300``) or leading zeros before it (``0012.3``) are redundant and can be included or omitted to the user's preference. Expressions like ``.5`` as a shorthand notation for ``0.5`` are also permitted.
 
 .. _digit_grouping_separators:
