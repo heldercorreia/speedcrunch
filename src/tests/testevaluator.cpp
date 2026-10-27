@@ -25,6 +25,7 @@
 #include "tests/numbergroupingedgecases.h"
 #include "tests/malformednumbergroupingcases.h"
 #include "tests/decimalinputcases.h"
+#include "tests/interpretednumbercases.h"
 
 #include <QApplication>
 #include <QFontMetrics>
@@ -2695,6 +2696,32 @@ void test_decimal_input_all_number_formats()
             ++eval_total_tests;
             DisplayErrorOnMismatch(__FILE__, __LINE__, label.constData(), displayed.toStdString(),
                                    format.outputs.at(i), eval_failed_tests, eval_new_failed_tests);
+        }
+    }
+    settings->numberFormatStyle = oldStyle;
+    settings->applyNumberFormatStyle();
+    settings->digitGroupingIntegerPartOnly = oldIntegerOnly;
+}
+
+void test_number_input_interpreted_expressions_all_formats()
+{
+    Settings* settings = Settings::instance();
+    const auto oldStyle = settings->numberFormatStyle;
+    const bool oldIntegerOnly = settings->digitGroupingIntegerPartOnly;
+    for (size_t index = 0; index < NumberFormatCases::formats.size(); ++index) {
+        const auto& format = NumberFormatCases::formats.at(index);
+        settings->numberFormatStyle = format.style;
+        settings->applyNumberFormatStyle();
+        for (const auto& item : InterpretedNumberCases::forFormat(index)) {
+            const QByteArray label = QStringLiteral("interpreted number, format %1: %2")
+                .arg(QString::fromUtf8(format.example), item.input).toUtf8();
+            const QByteArray expected = item.interpreted.toUtf8();
+            checkInterpreted(__FILE__, __LINE__, label.constData(), item.input, expected.constData());
+            ++eval_total_tests;
+            const QString displayed = ResultLineFormatUtils::formattedExpressionLineForDisplay(
+                item.input, eval->interpretedExpression(), eval);
+            DisplayErrorOnMismatch(__FILE__, __LINE__, label.constData(), displayed.toStdString(),
+                                   item.displayed.toUtf8().constData(), eval_failed_tests, eval_new_failed_tests);
         }
     }
     settings->numberFormatStyle = oldStyle;
@@ -11480,6 +11507,7 @@ int main(int argc, char* argv[])
     test_malformed_number_grouping_all_formats();
     test_decimal_input_without_display_grouping();
     test_decimal_input_all_number_formats();
+    test_number_input_interpreted_expressions_all_formats();
     test_settings_default_result_line_behavior();
     test_extra_result_lines_profile_formatting();
     test_sexagesimal();

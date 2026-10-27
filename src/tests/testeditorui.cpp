@@ -21,6 +21,8 @@
 #include "numbergroupingedgecases.h"
 #include "malformednumbergroupingcases.h"
 #include "decimalinputcases.h"
+#include "interpretednumbercases.h"
+#include "gui/resultdisplay.h"
 #include "core/units.h"
 #include "core/userfunction.h"
 #include "core/userunit.h"
@@ -120,6 +122,8 @@ private slots:
     void decimal_input_without_display_grouping();
     void decimal_input_all_number_formats_data();
     void decimal_input_all_number_formats();
+    void number_input_interpreted_expressions_all_formats_data();
+    void number_input_interpreted_expressions_all_formats();
     void input_digit_grouping_paints_separator_glyphs_data();
     void input_digit_grouping_paints_separator_glyphs();
     void typing_hex_separators_preserves_number_data();
@@ -1296,6 +1300,67 @@ void TestEditorUi::number_grouping_edge_cases()
     QCOMPARE(!session.evaluator()->error().isEmpty(), shouldFail);
     if (!shouldFail)
         QCOMPARE(DMath::format(value, Quantity::Format::Fixed()), expectedValue);
+}
+
+void TestEditorUi::number_input_interpreted_expressions_all_formats_data()
+{
+    QTest::addColumn<int>("style");
+    QTest::addColumn<QString>("input");
+    QTest::addColumn<QString>("interpreted");
+    QTest::addColumn<QString>("displayed");
+    QTest::addColumn<bool>("paste");
+    for (size_t index = 0; index < NumberFormatCases::formats.size(); ++index) {
+        const auto& format = NumberFormatCases::formats.at(index);
+        for (const auto& item : InterpretedNumberCases::forFormat(index)) {
+            for (bool paste : {false, true}) {
+                const QByteArray label = QStringLiteral("%1/%2/%3").arg(int(format.style))
+                    .arg(item.input, paste ? QStringLiteral("paste") : QStringLiteral("type")).toUtf8();
+                QTest::newRow(label.constData()) << int(format.style) << item.input
+                    << item.interpreted << item.displayed << paste;
+            }
+        }
+    }
+}
+
+void TestEditorUi::number_input_interpreted_expressions_all_formats()
+{
+    QFETCH(int, style);
+    QFETCH(QString, input);
+    QFETCH(QString, interpreted);
+    QFETCH(QString, displayed);
+    QFETCH(bool, paste);
+    class PasteEditor : public Editor {
+    public:
+        using Editor::insertFromMimeData;
+    };
+    Settings* settings = Settings::instance();
+    settings->numberFormatStyle = static_cast<Settings::NumberFormatStyle>(style);
+    settings->applyNumberFormatStyle();
+    settings->automaticInputAdjustments = true;
+    Session session;
+    PasteEditor editor;
+    editor.setSession(&session);
+    editor.setAutoCompletionEnabled(false);
+    editor.setAutoCalcEnabled(false);
+    if (paste) {
+        QMimeData mime;
+        mime.setText(input);
+        editor.insertFromMimeData(&mime);
+    } else {
+        QTest::keyClicks(&editor, input);
+    }
+    QString expectedInput = input;
+    expectedInput.replace(QLatin1String("*"), paste ? QString::fromUtf8("×") : QString::fromUtf8(" × "));
+    QCOMPARE(editor.text(), expectedInput);
+    Evaluator* evaluator = session.evaluator();
+    evaluator->setExpression(editor.text());
+    Quantity value = evaluator->evalNoAssign();
+    QVERIFY2(evaluator->error().isEmpty(), qPrintable(evaluator->error()));
+    QCOMPARE(evaluator->interpretedExpression(), interpreted);
+    ResultDisplay display;
+    display.setSession(&session);
+    display.append(editor.text(), value, evaluator->interpretedExpression());
+    QCOMPARE(display.document()->firstBlock().text(), displayed);
 }
 
 void TestEditorUi::malformed_number_grouping_all_formats_data()

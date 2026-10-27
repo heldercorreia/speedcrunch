@@ -619,6 +619,12 @@ differ from the selected format. The interpreted expression and results use
 the selected number format. Digit grouping in the editor can add visual
 separators, but does not replace punctuation you enter.
 
+The interpreted expression keeps leading and trailing zeroes from the input.
+With ``1234567.12345`` selected, ``0,123`` is shown as ``0123`` and evaluates
+to ``123``. With ``1234567,12345`` selected, the same input is shown as
+``0,123`` and evaluates to ``0,123``. Scientific notation keeps its exponent
+in the interpreted expression, using the selected decimal and grouping marks.
+
 History Size Limit
 ++++++++++++++++++
 

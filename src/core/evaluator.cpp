@@ -3660,14 +3660,11 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
             || hasTrigFunction);
 
     auto scanForDisplay = [](const QString& text) {
-        // Interpreted expressions are internally dot-based. For comma-based
-        // display styles, scanning with a strict single-radix setting can
-        // misclassify '.' as grouping separator and corrupt token structure.
-        // For display-only tokenization we temporarily enable "both radix
-        // chars accepted" mode, scan, then restore the previous setting.
-        // This keeps display formatting stable without changing evaluation
-        // behavior or persisted style.
+        // Interpreted expressions already use ungrouped dot-decimal numbers.
+        // Scan with that format so a comma-decimal display cannot reinterpret
+        // an internal value such as 0.123 as the grouped integer 0123.
         Settings* settings = Settings::instance();
+        const auto previousStyle = settings->numberFormatStyle;
         char previousRadix = 0;
         if (settings->isRadixCharacterBoth()) {
             previousRadix = MathDsl::MulOpAl1.toLatin1();
@@ -3675,8 +3672,10 @@ static QString formatInterpretedExpressionForDisplayImpl(const QString& expressi
             previousRadix = settings->radixCharacter();
         }
 
+        settings->numberFormatStyle = Settings::NumberFormatNoGroupingDot;
         settings->setRadixCharacter(MathDsl::MulOpAl1.toLatin1());
         const Tokens tokens = Evaluator::instance()->scan(text);
+        settings->numberFormatStyle = previousStyle;
         settings->setRadixCharacter(previousRadix);
         return tokens;
     };
@@ -4408,10 +4407,9 @@ QString Evaluator::simplifyInterpretedExpression(const QString& expression)
     }
 
     auto scanForDisplay = [](const QString& text) {
-        // Same display-tokenization strategy as above:
-        // force temporary dual-radix scan mode so internal dot-decimal
-        // interpreted text is tokenized correctly under comma-style displays.
+        // Simplification also scans internal, ungrouped dot-decimal text.
         Settings* settings = Settings::instance();
+        const auto previousStyle = settings->numberFormatStyle;
         char previousRadix = 0;
         if (settings->isRadixCharacterBoth()) {
             previousRadix = MathDsl::MulOpAl1.toLatin1();
@@ -4419,8 +4417,10 @@ QString Evaluator::simplifyInterpretedExpression(const QString& expression)
             previousRadix = settings->radixCharacter();
         }
 
+        settings->numberFormatStyle = Settings::NumberFormatNoGroupingDot;
         settings->setRadixCharacter(MathDsl::MulOpAl1.toLatin1());
         const Tokens tokens = Evaluator::instance()->scan(text);
+        settings->numberFormatStyle = previousStyle;
         settings->setRadixCharacter(previousRadix);
         return tokens;
     };
