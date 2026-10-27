@@ -32,7 +32,8 @@ for persistent application data and configuration:
 | --- | --- | --- |
 | macOS | `~/Library/Application Support/SpeedCrunch/` | `~/Library/Preferences/SpeedCrunch/` |
 | Windows | `%APPDATA%\SpeedCrunch\` | `%APPDATA%\SpeedCrunch\` |
-| Linux | `$XDG_DATA_HOME/SpeedCrunch/` (usually `~/.local/share/SpeedCrunch/`) | `$XDG_CONFIG_HOME/SpeedCrunch/` (usually `~/.config/SpeedCrunch/`) |
+| Linux (distribution packages) | `$XDG_DATA_HOME/SpeedCrunch/` (usually `~/.local/share/SpeedCrunch/`) | `$XDG_CONFIG_HOME/SpeedCrunch/` (usually `~/.config/SpeedCrunch/`) |
+| Linux (Flatpak) | `~/.var/app/org.speedcrunch.SpeedCrunch/data/SpeedCrunch/` | `~/.var/app/org.speedcrunch.SpeedCrunch/config/SpeedCrunch/` |
 
 Qt respects system-specific overrides to these locations. In the Windows portable build,
 application data and preferences/configuration are all stored in the same directory as
