@@ -19,6 +19,7 @@
 #include "numberformatcases.h"
 #include "fractionalgroupingcases.h"
 #include "numbergroupingedgecases.h"
+#include "malformednumbergroupingcases.h"
 #include "decimalinputcases.h"
 #include "core/units.h"
 #include "core/userfunction.h"
@@ -113,6 +114,8 @@ private slots:
     void ambiguous_fractional_grouping_prefers_ungrouped();
     void number_grouping_edge_cases_data();
     void number_grouping_edge_cases();
+    void malformed_number_grouping_all_formats_data();
+    void malformed_number_grouping_all_formats();
     void decimal_input_without_display_grouping_data();
     void decimal_input_without_display_grouping();
     void decimal_input_all_number_formats_data();
@@ -1293,6 +1296,35 @@ void TestEditorUi::number_grouping_edge_cases()
     QCOMPARE(!session.evaluator()->error().isEmpty(), shouldFail);
     if (!shouldFail)
         QCOMPARE(DMath::format(value, Quantity::Format::Fixed()), expectedValue);
+}
+
+void TestEditorUi::malformed_number_grouping_all_formats_data()
+{
+    QTest::addColumn<int>("style");
+    QTest::addColumn<QString>("input");
+    QTest::addColumn<QString>("expectedValue");
+    QTest::addColumn<bool>("shouldFail");
+    QTest::addColumn<bool>("paste");
+    for (const auto& format : NumberFormatCases::formats) {
+        const auto addCases = [&](const auto& cases) {
+            for (const char* input : cases) {
+                for (bool paste : {false, true}) {
+                    const QByteArray label = QStringLiteral("%1/%2/%3").arg(int(format.style))
+                        .arg(QString::fromLatin1(input),
+                             paste ? QStringLiteral("paste") : QStringLiteral("type")).toUtf8();
+                    QTest::newRow(label.constData()) << int(format.style) << QString::fromLatin1(input)
+                        << QString() << true << paste;
+                }
+            }
+        };
+        addCases(MalformedNumberGroupingCases::decimal);
+        addCases(MalformedNumberGroupingCases::nondecimal);
+    }
+}
+
+void TestEditorUi::malformed_number_grouping_all_formats()
+{
+    number_grouping_edge_cases();
 }
 
 void TestEditorUi::decimal_input_without_display_grouping_data()

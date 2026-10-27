@@ -23,6 +23,7 @@
 #include "tests/numberformatcases.h"
 #include "tests/fractionalgroupingcases.h"
 #include "tests/numbergroupingedgecases.h"
+#include "tests/malformednumbergroupingcases.h"
 #include "tests/decimalinputcases.h"
 
 #include <QApplication>
@@ -2631,6 +2632,34 @@ void test_number_grouping_edge_cases()
     }
     settings->numberFormatStyle = oldStyle;
     settings->applyNumberFormatStyle();
+}
+
+void test_malformed_number_grouping_all_formats()
+{
+    Settings* settings = Settings::instance();
+    const auto oldStyle = settings->numberFormatStyle;
+    const bool oldIntegerOnly = settings->digitGroupingIntegerPartOnly;
+    for (const auto& format : NumberFormatCases::formats) {
+        settings->numberFormatStyle = format.style;
+        settings->applyNumberFormatStyle();
+        for (const char* input : MalformedNumberGroupingCases::decimal)
+            CHECK_EVAL_FAIL(input);
+        for (const char* input : MalformedNumberGroupingCases::nondecimal) {
+            CHECK_EVAL_FAIL(input);
+            QString formatted;
+            const bool ok = NumberFormatter::tryFormatStandaloneNumericLiteralForDisplay(
+                QString::fromLatin1(input), &formatted);
+            const QByteArray label = QStringLiteral("malformed standalone grouping, style %1: %2")
+                .arg(int(format.style)).arg(QString::fromLatin1(input)).toUtf8();
+            ++eval_total_tests;
+            DisplayErrorOnMismatch(__FILE__, __LINE__, label.constData(),
+                                   ok ? "accepted" : "rejected", "rejected",
+                                   eval_failed_tests, eval_new_failed_tests);
+        }
+    }
+    settings->numberFormatStyle = oldStyle;
+    settings->applyNumberFormatStyle();
+    settings->digitGroupingIntegerPartOnly = oldIntegerOnly;
 }
 
 void test_decimal_input_without_display_grouping()
@@ -11448,6 +11477,7 @@ int main(int argc, char* argv[])
     test_validated_number_format_examples();
     test_ambiguous_fractional_grouping_prefers_ungrouped();
     test_number_grouping_edge_cases();
+    test_malformed_number_grouping_all_formats();
     test_decimal_input_without_display_grouping();
     test_decimal_input_all_number_formats();
     test_settings_default_result_line_behavior();
