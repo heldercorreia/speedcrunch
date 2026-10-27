@@ -276,6 +276,8 @@ bool canonicalizeLiteralMantissa(const QString& input, int base, int groupingSiz
     }
 
     if (!hasRadix) {
+        if (!NumberFormatter::hasValidNumberGrouping(input, QChar(), base))
+            return false;
         QString integral = input;
         if (!groupingSep.isNull())
             integral.remove(groupingSep);
@@ -290,6 +292,8 @@ bool canonicalizeLiteralMantissa(const QString& input, int base, int groupingSiz
     }
 
     const int radixPos = input.lastIndexOf(radixSep);
+    if (!NumberFormatter::hasValidNumberGrouping(input, radixSep, base))
+        return false;
     if (radixPos <= 0 || radixPos >= input.size() - 1)
         return false;
 
@@ -699,6 +703,76 @@ bool NumberFormatter::hasFormattedFractionalGrouping(const QString& input)
             if (!isValidDigitForBase(ch, 10))
                 return false;
         }
+    }
+    return true;
+}
+
+bool NumberFormatter::hasValidNumberGrouping(const QString& input, QChar radix, int base)
+{
+    QString body = input;
+    if (body.startsWith(QLatin1Char('+')) || body.startsWith(QLatin1Char('-')))
+        body.remove(0, 1);
+    if (base == 10 && body.startsWith(QLatin1Char('#'))) {
+        base = 16;
+        body.remove(0, 1);
+    } else if (base == 10 && body.size() >= 2 && body.at(0) == QLatin1Char('0')) {
+        const QChar prefix = body.at(1).toLower();
+        if (prefix == QLatin1Char('x') || prefix == QLatin1Char('b')
+            || prefix == QLatin1Char('o') || prefix == QLatin1Char('d')) {
+            base = prefix == QLatin1Char('x') ? 16 : prefix == QLatin1Char('b') ? 2
+                : prefix == QLatin1Char('o') ? 8 : 10;
+            body.remove(0, 2);
+        }
+    }
+    if (base == 10) {
+        const int exponent = body.indexOf(QLatin1Char('e'), 0, Qt::CaseInsensitive);
+        if (exponent >= 0)
+            body.truncate(exponent);
+    }
+
+    if (!body.contains(MathDsl::DotSep) && !body.contains(MathDsl::CommaSep))
+        return true;
+    const QChar grouping = radix.isNull()
+        ? (body.contains(MathDsl::DotSep) ? MathDsl::DotSep : MathDsl::CommaSep)
+        : (radix == MathDsl::DotSep ? MathDsl::CommaSep : MathDsl::DotSep);
+    const int groupSize = base == 2 || base == 16 ? 4 : 3;
+    const auto digits = [base](const QString& part) {
+        return std::all_of(part.cbegin(), part.cend(), [base](QChar ch) {
+            return isValidDigitForBase(ch, base);
+        });
+    };
+    const auto integralGroups = [&](const QString& part) {
+        if (!part.contains(grouping))
+            return digits(part);
+        if (isValidGroupedIntegerPart(part, grouping, base, groupSize))
+            return true;
+        // Indian grouping is also accepted in copied decimal values.
+        const QStringList groups = part.split(grouping, Qt::KeepEmptyParts);
+        if (base != 10 || groups.size() < 2 || groups.first().isEmpty()
+            || groups.first().size() > 2 || groups.last().size() != 3)
+            return false;
+        for (int i = 0; i < groups.size(); ++i) {
+            if (!digits(groups.at(i)) || (i > 0 && i < groups.size() - 1 && groups.at(i).size() != 2))
+                return false;
+        }
+        return true;
+    };
+    if (radix.isNull())
+        return integralGroups(body);
+    if (body.count(radix) != 1)
+        return false;
+    const int point = body.indexOf(radix);
+    if (!integralGroups(body.left(point)))
+        return false;
+    const QString fractional = body.mid(point + 1);
+    if (!fractional.contains(grouping))
+        return digits(fractional);
+    const QStringList groups = fractional.split(grouping, Qt::KeepEmptyParts);
+    for (int i = 0; i < groups.size(); ++i) {
+        const QString& group = groups.at(i);
+        if (group.isEmpty() || group.size() > groupSize
+            || (i < groups.size() - 1 && group.size() != groupSize) || !digits(group))
+            return false;
     }
     return true;
 }

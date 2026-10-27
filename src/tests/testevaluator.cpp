@@ -22,6 +22,8 @@
 #include "tests/testcommon.h"
 #include "tests/numberformatcases.h"
 #include "tests/fractionalgroupingcases.h"
+#include "tests/numbergroupingedgecases.h"
+#include "tests/decimalinputcases.h"
 
 #include <QApplication>
 #include <QFontMetrics>
@@ -2117,8 +2119,8 @@ void test_radix_char()
     // Test automatic detection of radix point when multiple choices are possible
     CHECK_EVAL("1,234.567", "1234.567");
     CHECK_EVAL("1.234,567", "1234.567");
-    CHECK_EVAL("1,2,3", "123");
-    CHECK_EVAL("1.2.3", "123");
+    CHECK_EVAL_FAIL("1,2,3");
+    CHECK_EVAL_FAIL("1.2.3");
     CHECK_EVAL("1,234,567.89", "1234567.89");
     CHECK_EVAL("1.234.567,89", "1234567.89");
     CHECK_EVAL("1,234.567,89", "1234.56789");
@@ -2132,8 +2134,8 @@ void test_radix_char()
     CHECK_EVAL("1/,1", "10");
     CHECK_EVAL("1,234.567", "1234.567");
     CHECK_EVAL("1.234,567", "1234.567");
-    CHECK_EVAL("1,2,3", "123");
-    CHECK_EVAL("1.2.3", "123");
+    CHECK_EVAL_FAIL("1,2,3");
+    CHECK_EVAL_FAIL("1.2.3");
     CHECK_EVAL("1,234,567.89", "1234567.89");
     CHECK_EVAL("1.234.567,89", "1234567.89");
     CHECK_EVAL("1,234.567,89", "1234.56789");
@@ -2147,8 +2149,8 @@ void test_radix_char()
     CHECK_EVAL("1/,1", "10");
     CHECK_EVAL("1,234.567", "1234.567");
     CHECK_EVAL("1.234,567", "1234.567");
-    CHECK_EVAL("1,2,3", "123");
-    CHECK_EVAL("1.2.3", "123");
+    CHECK_EVAL_FAIL("1,2,3");
+    CHECK_EVAL_FAIL("1.2.3");
     CHECK_EVAL("1,234,567.89", "1234567.89");
     CHECK_EVAL("1.234.567,89", "1234567.89");
     CHECK_EVAL("1,234.567,89", "1234.56789");
@@ -2453,17 +2455,21 @@ void test_tolerant_number_input_all_styles()
         {"1.23456", "1.23456"},
         {"1,234,566.789,012", "1234566.789012"},
         {"1.234.566,789.012", "1234566.789012"},
-        // Ambiguous mixed separators: keep parsing permissive for copy/paste.
-        {"1.123123,123123,32", "1.12312312312332"},
-        {"1,234,566.564,454545,45.23", "12345665644545454523"},
-        {"1.23.23,42342 242.4", "12323.423422424"},
-        {"12,3.23,42342 242.4", "12323423422424"}
+        // Malformed punctuation groups must report an error.
+        {"1.123123,123123,32", nullptr},
+        {"1,234,566.564,454545,45.23", nullptr},
+        {"1.23.23,42342 242.4", nullptr},
+        {"12,3.23,42342 242.4", nullptr}
     };
 
     for (const auto style : styles) {
         settings->numberFormatStyle = style;
         settings->applyNumberFormatStyle();
         for (const auto& c : cases) {
+            if (!c.expected) {
+                CHECK_EVAL_FAIL(c.expr);
+                continue;
+            }
             const bool selectedFraction =
                 (style == Settings::NumberFormatThreeDigitCommaDotFraction && QString::fromLatin1(c.expr) == QStringLiteral("1.234,56"))
                 || (style == Settings::NumberFormatThreeDigitDotCommaFraction && QString::fromLatin1(c.expr) == QStringLiteral("1,234.56"));
@@ -2589,6 +2595,78 @@ void test_ambiguous_fractional_grouping_prefers_ungrouped()
         ++eval_total_tests;
         DisplayErrorOnMismatch(__FILE__, __LINE__, label.constData(), displayed.toStdString(),
                                item.output, eval_failed_tests, eval_new_failed_tests);
+    }
+    settings->numberFormatStyle = oldStyle;
+    settings->applyNumberFormatStyle();
+    settings->digitGroupingIntegerPartOnly = oldIntegerOnly;
+}
+
+void test_number_grouping_edge_cases()
+{
+    Settings* settings = Settings::instance();
+    const auto oldStyle = settings->numberFormatStyle;
+    for (auto style : {Settings::NumberFormatNoGroupingDot, Settings::NumberFormatNoGroupingComma}) {
+        settings->numberFormatStyle = style;
+        settings->applyNumberFormatStyle();
+        const auto& cases = style == Settings::NumberFormatNoGroupingDot
+            ? NumberGroupingEdgeCases::dotCases : NumberGroupingEdgeCases::commaCases;
+        for (const auto& item : cases) {
+            if (item.value)
+                CHECK_EVAL(item.input, item.value);
+            else
+                CHECK_EVAL_FAIL(item.input);
+        }
+        CHECK_EVAL_FAIL("1,,234:00");
+        CHECK_EVAL("0xffef,ffff,ffff,ffff", "18442240474082181119");
+        CHECK_EVAL("0b1010,1010,1010", "2730");
+        CHECK_EVAL("0o123,456,701", "21913025");
+        QString formatted;
+        const bool ok = NumberFormatter::tryFormatStandaloneNumericLiteralForDisplay(
+            QStringLiteral("0x0bad.f"), &formatted);
+        ++eval_total_tests;
+        DisplayErrorOnMismatch(__FILE__, __LINE__, "hexadecimal mantissa starting with 0b",
+                               ok ? formatted.toStdString() : "<invalid>",
+                               style == Settings::NumberFormatNoGroupingDot ? "0x0bad.f" : "0x0bad,f",
+                               eval_failed_tests, eval_new_failed_tests);
+    }
+    settings->numberFormatStyle = oldStyle;
+    settings->applyNumberFormatStyle();
+}
+
+void test_decimal_input_without_display_grouping()
+{
+    Settings* settings = Settings::instance();
+    const auto oldStyle = settings->numberFormatStyle;
+    const bool oldIntegerOnly = settings->digitGroupingIntegerPartOnly;
+    settings->numberFormatStyle = Settings::NumberFormatNoGroupingDot;
+    settings->applyNumberFormatStyle();
+    for (const auto& item : DecimalInputCases::cases)
+        CHECK_EVAL(item.input, item.value);
+    settings->numberFormatStyle = oldStyle;
+    settings->applyNumberFormatStyle();
+    settings->digitGroupingIntegerPartOnly = oldIntegerOnly;
+}
+
+void test_decimal_input_all_number_formats()
+{
+    Settings* settings = Settings::instance();
+    const auto oldStyle = settings->numberFormatStyle;
+    const bool oldIntegerOnly = settings->digitGroupingIntegerPartOnly;
+    for (const auto& format : DecimalInputCases::formats) {
+        settings->numberFormatStyle = format.style;
+        settings->applyNumberFormatStyle();
+        for (size_t i = 0; i < DecimalInputCases::cases.size(); ++i) {
+            const auto& item = DecimalInputCases::cases.at(i);
+            CHECK_EVAL(item.input, item.value);
+            const Quantity value = eval->getVariable(QStringLiteral("ans")).value();
+            const QString displayed = DisplayFormatUtils::applyDigitGroupingForDisplay(
+                NumberFormatter::format(value, 'f', -1, false, ComplexForm::Rectangular));
+            const QByteArray label = QStringLiteral("decimal format %1: %2")
+                .arg(QString::fromUtf8(format.example), QString::fromLatin1(item.input)).toUtf8();
+            ++eval_total_tests;
+            DisplayErrorOnMismatch(__FILE__, __LINE__, label.constData(), displayed.toStdString(),
+                                   format.outputs.at(i), eval_failed_tests, eval_new_failed_tests);
+        }
     }
     settings->numberFormatStyle = oldStyle;
     settings->applyNumberFormatStyle();
@@ -11369,6 +11447,9 @@ int main(int argc, char* argv[])
     test_grouped_input_without_display_grouping();
     test_validated_number_format_examples();
     test_ambiguous_fractional_grouping_prefers_ungrouped();
+    test_number_grouping_edge_cases();
+    test_decimal_input_without_display_grouping();
+    test_decimal_input_all_number_formats();
     test_settings_default_result_line_behavior();
     test_extra_result_lines_profile_formatting();
     test_sexagesimal();

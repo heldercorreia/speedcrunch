@@ -18,6 +18,8 @@
 #include "gui/displayformatutils.h"
 #include "numberformatcases.h"
 #include "fractionalgroupingcases.h"
+#include "numbergroupingedgecases.h"
+#include "decimalinputcases.h"
 #include "core/units.h"
 #include "core/userfunction.h"
 #include "core/userunit.h"
@@ -109,6 +111,12 @@ private slots:
     void validated_number_format_examples();
     void ambiguous_fractional_grouping_prefers_ungrouped_data();
     void ambiguous_fractional_grouping_prefers_ungrouped();
+    void number_grouping_edge_cases_data();
+    void number_grouping_edge_cases();
+    void decimal_input_without_display_grouping_data();
+    void decimal_input_without_display_grouping();
+    void decimal_input_all_number_formats_data();
+    void decimal_input_all_number_formats();
     void input_digit_grouping_paints_separator_glyphs_data();
     void input_digit_grouping_paints_separator_glyphs();
     void typing_hex_separators_preserves_number_data();
@@ -1227,6 +1235,111 @@ void TestEditorUi::ambiguous_fractional_grouping_prefers_ungrouped_data()
 }
 
 void TestEditorUi::ambiguous_fractional_grouping_prefers_ungrouped()
+{
+    validated_number_format_examples();
+}
+
+void TestEditorUi::number_grouping_edge_cases_data()
+{
+    QTest::addColumn<int>("style");
+    QTest::addColumn<QString>("input");
+    QTest::addColumn<QString>("expectedValue");
+    QTest::addColumn<bool>("shouldFail");
+    QTest::addColumn<bool>("paste");
+    for (auto style : {Settings::NumberFormatNoGroupingDot, Settings::NumberFormatNoGroupingComma}) {
+        const auto& cases = style == Settings::NumberFormatNoGroupingDot
+            ? NumberGroupingEdgeCases::dotCases : NumberGroupingEdgeCases::commaCases;
+        for (const auto& item : cases) {
+            for (bool paste : {false, true}) {
+                const QByteArray label = QStringLiteral("%1/%2/%3").arg(int(style))
+                    .arg(QString::fromLatin1(item.input), paste ? QStringLiteral("paste") : QStringLiteral("type")).toUtf8();
+                QTest::newRow(label.constData()) << int(style) << QString::fromLatin1(item.input)
+                    << QString::fromLatin1(item.value ? item.value : "") << !item.value << paste;
+            }
+        }
+    }
+}
+
+void TestEditorUi::number_grouping_edge_cases()
+{
+    QFETCH(int, style);
+    QFETCH(QString, input);
+    QFETCH(QString, expectedValue);
+    QFETCH(bool, shouldFail);
+    QFETCH(bool, paste);
+    class PasteEditor : public Editor {
+    public:
+        using Editor::insertFromMimeData;
+    };
+    Settings* settings = Settings::instance();
+    settings->numberFormatStyle = static_cast<Settings::NumberFormatStyle>(style);
+    settings->applyNumberFormatStyle();
+    settings->automaticInputAdjustments = true;
+    Session session;
+    PasteEditor editor;
+    editor.setSession(&session);
+    editor.setAutoCompletionEnabled(false);
+    editor.setAutoCalcEnabled(false);
+    if (paste) {
+        QMimeData mime;
+        mime.setText(input);
+        editor.insertFromMimeData(&mime);
+    } else {
+        QTest::keyClicks(&editor, input);
+    }
+    QCOMPARE(editor.text(), input);
+    session.evaluator()->setExpression(editor.text());
+    const Quantity value = session.evaluator()->evalNoAssign();
+    QCOMPARE(!session.evaluator()->error().isEmpty(), shouldFail);
+    if (!shouldFail)
+        QCOMPARE(DMath::format(value, Quantity::Format::Fixed()), expectedValue);
+}
+
+void TestEditorUi::decimal_input_without_display_grouping_data()
+{
+    QTest::addColumn<int>("style");
+    QTest::addColumn<QString>("input");
+    QTest::addColumn<QString>("expectedValue");
+    QTest::addColumn<QString>("expectedOutput");
+    QTest::addColumn<bool>("paste");
+    for (const auto& item : DecimalInputCases::cases) {
+        for (bool paste : {false, true}) {
+            const QByteArray label = QStringLiteral("%1/%2").arg(QString::fromLatin1(item.input),
+                paste ? QStringLiteral("paste") : QStringLiteral("type")).toUtf8();
+            const QString value = QString::fromLatin1(item.value);
+            QTest::newRow(label.constData()) << int(Settings::NumberFormatNoGroupingDot)
+                << QString::fromLatin1(item.input) << value << value << paste;
+        }
+    }
+}
+
+void TestEditorUi::decimal_input_without_display_grouping()
+{
+    validated_number_format_examples();
+}
+
+void TestEditorUi::decimal_input_all_number_formats_data()
+{
+    QTest::addColumn<int>("style");
+    QTest::addColumn<QString>("input");
+    QTest::addColumn<QString>("expectedValue");
+    QTest::addColumn<QString>("expectedOutput");
+    QTest::addColumn<bool>("paste");
+    for (const auto& format : DecimalInputCases::formats) {
+        for (size_t i = 0; i < DecimalInputCases::cases.size(); ++i) {
+            const auto& item = DecimalInputCases::cases.at(i);
+            for (bool paste : {false, true}) {
+                const QByteArray label = QStringLiteral("%1/%2/%3")
+                    .arg(QString::fromUtf8(format.example), QString::fromLatin1(item.input),
+                         paste ? QStringLiteral("paste") : QStringLiteral("type")).toUtf8();
+                QTest::newRow(label.constData()) << int(format.style) << QString::fromLatin1(item.input)
+                    << QString::fromLatin1(item.value) << QString::fromUtf8(format.outputs.at(i)) << paste;
+            }
+        }
+    }
+}
+
+void TestEditorUi::decimal_input_all_number_formats()
 {
     validated_number_format_examples();
 }
@@ -3293,7 +3406,7 @@ void TestEditorUi::auto_inserts_zero_before_dot_in_configured_contexts()
     editor.setText(QStringLiteral("0,"));
     editor.setCursorPosition(editor.text().size());
     QTest::keyClick(&editor, Qt::Key_Comma, Qt::NoModifier);
-    QCOMPARE(editor.document()->toRawText(), QStringLiteral("0,"));
+    QCOMPARE(editor.document()->toRawText(), QStringLiteral("0,,"));
 }
 
 void TestEditorUi::preserves_comment_text_during_input_data()

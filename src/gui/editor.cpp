@@ -3621,12 +3621,6 @@ void Editor::keyPressEvent(QKeyEvent* event)
                 return;
             }
             const QChar prev = previousNonSpaceChar(text(), textCursor().position());
-            if (prev == QChar(this->radixChar())
-                || prev == MathDsl::DotSep
-                || prev == MathDsl::CommaSep) {
-                event->accept();
-                return;
-            }
             const bool startsNewDecimalAfterOperator =
                 prev.isNull()
                 || prev == MathDsl::AddOp
@@ -3658,7 +3652,7 @@ void Editor::keyPressEvent(QKeyEvent* event)
                 event->accept();
                 return;
             }
-            if (!prev.isDigit()) {
+            if (!prev.isDigit() && prev != MathDsl::DotSep && prev != MathDsl::CommaSep) {
                 event->accept();
                 return;
             }

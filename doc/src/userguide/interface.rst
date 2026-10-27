@@ -568,7 +568,24 @@ format, ``1,234`` means ``1234`` and ``1.234`` means ``1.234``. This also
 applies to ``1234567.12345``, which displays numbers without grouping.
 In comma-decimal formats, the roles are reversed. A grouping mark must
 separate one to three leading digits from a group of three digits.
-Other lengths, such as ``1,23``, are still accepted as decimal input.
+For numbers with only one comma or dot, the selected decimal mark remains
+a decimal point regardless of how many digits follow it. The other mark is
+also accepted as a decimal point when the number does not match the
+thousands-grouping pattern. With ``1234567.12345`` selected, for example,
+``1,2``, ``35,6``, ``987,1``, and ``2,34567`` mean ``1.2``, ``35.6``,
+``987.1``, and ``2.34567``. These inputs are accepted without changing their
+commas in the editor.
+This applies to every number format, including styles that display spaces,
+underscores, or fractional grouping. Accepted decimal values are displayed
+with the selected decimal separator and grouping pattern. For example,
+``2,34567`` has the same value in every format, but appears as ``2.345 67``
+with ``1 234 567.123 45`` selected or ``2,345.67`` with
+``1.234.567,123.45`` selected.
+With a dot-decimal format selected, ``0,123`` means ``123``. Leading zeroes
+do not change the grouping rule. In contrast, ``1234,567`` means
+``1234.567`` because four leading digits do not form a conventional single
+thousands group. Comma-decimal formats apply the same rules with the marks
+reversed.
 These rules also apply when pasting a number or entering scientific notation.
 Clear mixed-separator input such as ``1.000,23`` is accepted as ``1000.23``
 when it does not also match the selected fractional-grouping format.
@@ -590,6 +607,12 @@ for example ``1 234.567 89`` means ``1234.56789``.
 With ``1,234,567.123,45`` selected, ``1.000,000 * 2`` instead gives ``2``
 because the comma groups fractional digits. The matching case with
 ``1.234.567,123.45`` selected is ``1,000.000 * 2``, which also gives ``2``.
+
+Repeated commas or dots used for integer grouping must follow three-digit
+grouping or Indian 3-2-2 grouping. Empty groups are rejected. For example,
+``1,2,3``, ``1.2.3``, and ``1,,234`` report an error instead of having their
+punctuation removed. Spaces remain permissive, so ``12 34`` and ``1 2 3``
+mean ``1234`` and ``123`` respectively.
 
 The editor keeps commas and dots as you type or paste them, even when they
 differ from the selected format. The interpreted expression and results use

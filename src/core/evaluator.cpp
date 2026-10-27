@@ -4870,6 +4870,9 @@ QString Evaluator::fixNumberRadix(const QString& number)
     else if (!ignoreComma)
         radixChar = ',';
 
+    if (!NumberFormatter::hasValidNumberGrouping(number, radixChar))
+        return QString();
+
     // Second pass: write the result.
     QString result = "";
     for (int i = 0 ; i < number.size() ; ++i) {
@@ -4892,9 +4895,8 @@ HNumber getNumber(const QString& number) {
     int endPos = number.indexOf(QRegularExpression(sexagesimalStopChars)); // Stop at sexagesimal separators/markers.
     if (endPos == 0)
         return HNumber(0);
-    if (endPos > 0)
-        return HNumber(Evaluator::fixNumberRadix(number.left(endPos)).toStdString().c_str());
-    return HNumber(Evaluator::fixNumberRadix(number).toStdString().c_str());
+    const QString normalized = Evaluator::fixNumberRadix(endPos > 0 ? number.left(endPos) : number);
+    return normalized.isNull() ? HMath::nan() : HNumber(normalized.toStdString().c_str());
 }
 
 QString Evaluator::fixSexagesimal(const QString& number, QString& unit)
@@ -5010,6 +5012,8 @@ QString Evaluator::fixSexagesimal(const QString& number, QString& unit)
                 }
             }
         }
+        if (mains.isNan() || minutes.isNan() || seconds.isNan())
+            return bad;
         int unitPos = number.indexOf(QRegularExpression(secondMarkClass));  // check digits after seconds unit
         if (unitPos >= 0 && !getNumber(number.mid(unitPos + 1)).isZero())
             return bad;

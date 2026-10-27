@@ -31,6 +31,12 @@ Digit Grouping Separators
 
 To improve readability, SpeedCrunch accepts grouping separators inside number literals. Grouping separators are optional and ignored during evaluation.
 
+Commas and dots also serve as decimal separators, so their placement is
+checked according to the :ref:`Number Format rules <radix_character>`.
+Malformed punctuation groups such as ``1,2,3``, ``1.2.3``, and ``1,,234``
+are rejected. Spaces do not have a decimal meaning and can be placed freely
+between digits, so ``12 34`` is accepted as ``1234``.
+
 Allowed grouping separators are characters that are **not** letters or digits and are **not** number operators. In practice, this includes many punctuation and symbol characters, for example:
 
 * ``_`` (underscore): ``12_345_678``
