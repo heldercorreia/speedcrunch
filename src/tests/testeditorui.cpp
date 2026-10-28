@@ -2543,12 +2543,19 @@ void TestEditorUi::editor_text_line_is_vertically_centered()
     QTextCursor first(editor.document());
     QTextCursor last(editor.document());
     last.movePosition(QTextCursor::End);
-    const QRect firstLine = editor.cursorRect(first).translated(editor.viewport()->pos());
-    const QRect lastLine = editor.cursorRect(last).translated(editor.viewport()->pos());
     const int top = classic ? UiConfig::OutlineStrokeWidth : UiConfig::ModernEditorTopMargin;
-    const int bottom = editor.height()
-        - (classic ? 0 : UiConfig::ModernEditorBottomMargin);
-    QVERIFY2(qAbs((firstLine.top() + lastLine.bottom() + 1) - (top + bottom)) <= 1,
+    QRect firstLine;
+    QRect lastLine;
+    int bottom = 0;
+    const auto textIsCentered = [&]() {
+        firstLine = editor.cursorRect(first).translated(editor.viewport()->pos());
+        lastLine = editor.cursorRect(last).translated(editor.viewport()->pos());
+        bottom = editor.height() - (classic ? 0 : UiConfig::ModernEditorBottomMargin);
+        return qAbs((firstLine.top() + lastLine.bottom() + 1) - (top + bottom)) <= 1;
+    };
+    // X11 can deliver an earlier window resize after the text has rewrapped.
+    // Measure fresh geometry until the final resize and text layout agree.
+    QTRY_VERIFY2(textIsCentered(),
         qPrintable(QStringLiteral("Text spans %1..%2 inside editor area %3..%4")
             .arg(firstLine.top()).arg(lastLine.bottom() + 1).arg(top).arg(bottom)));
 }
