@@ -67,7 +67,7 @@ jobs:
         env:
           QT_QPA_PLATFORM: xcb
         run: |
-          xvfb-run -a sh -c '
+          xvfb-run -a -s "-screen 0 1280x1024x24" sh -c '
             openbox >/dev/null 2>&1 &
             wm_ready=false
             for attempt in $(seq 1 100); do
