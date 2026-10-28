@@ -15,6 +15,8 @@ See the [changelog](CHANGELOG.md) for release highlights and fixes.
 
 ## Building and testing
 
+[![Windows MSVC](https://github.com/heldercorreia/speedcrunch/actions/workflows/windows-msvc.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/windows-msvc.yaml)
+[![macOS 15](https://github.com/heldercorreia/speedcrunch/actions/workflows/macos-15.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/macos-15.yaml)
 [![Ubuntu 24.04 LTS](https://github.com/heldercorreia/speedcrunch/actions/workflows/ubuntu-24_04.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/ubuntu-24_04.yaml)
 [![Ubuntu 26.04 LTS](https://github.com/heldercorreia/speedcrunch/actions/workflows/ubuntu-26_04.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/ubuntu-26_04.yaml)
 [![Debian Unstable](https://github.com/heldercorreia/speedcrunch/actions/workflows/debian-unstable.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/debian-unstable.yaml)
