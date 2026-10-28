@@ -35,8 +35,9 @@ jobs:
           sudo apt-get --print-uris install -y "${packages[@]}" > "$RUNNER_TEMP/apt-packages.txt"
           echo "hash=$(sha256sum "$RUNNER_TEMP/apt-packages.txt" | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
 
-      - name: Cache dependency downloads
-        uses: actions/cache@v6
+      - name: Restore dependency downloads
+        id: apt-cache
+        uses: actions/cache/restore@v6
         with:
           path: .cache/apt/archives/*.deb
           key: ubuntu-26.04-${{ runner.arch }}-apt-v1-${{ steps.apt-dependencies.outputs.hash }}
@@ -48,6 +49,13 @@ jobs:
           read -r -a packages <<< "$APT_PACKAGES"
           sudo apt-get -o Dir::Cache::archives="$GITHUB_WORKSPACE/.cache/apt/archives" \
             -o APT::Keep-Downloaded-Packages=true install -y "${packages[@]}"
+
+      - name: Save dependency downloads
+        if: steps.apt-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: .cache/apt/archives/*.deb
+          key: ${{ steps.apt-cache.outputs.cache-primary-key }}
 
       - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
