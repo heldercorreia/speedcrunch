@@ -1,4 +1,4 @@
-name: Linux CI
+name: Ubuntu 24.04 LTS
 
 on:
   push:
@@ -29,11 +29,24 @@ jobs:
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
 
       - name: Build
-        run: cmake --build build --parallel
+        run: cmake --build build --parallel 4
 
       - name: Run tests
+        env:
+          QT_QPA_PLATFORM: xcb
         run: |
           xvfb-run -a sh -c '
             openbox >/dev/null 2>&1 &
-            ctest --test-dir build --output-on-failure
+            ctest --test-dir build --output-on-failure --test-output-size-failed 0 \
+              --output-junit "$GITHUB_WORKSPACE/test-results.xml"
           '
+
+      - name: Upload test logs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: linux-test-logs
+          path: |
+            build/Testing/Temporary/LastTest.log
+            test-results.xml
+          if-no-files-found: ignore

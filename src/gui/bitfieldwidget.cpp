@@ -767,7 +767,7 @@ void BitFieldWidget::onBitChanged()
     while (bitsIterator.hasNext())
         expression.prepend(bitsIterator.next()->state() ? "1" : "0");
 
-    QRegularExpression leadingZerosPattern(QString("^0{,%1}").arg(NumberOfBits - 1));
+    QRegularExpression leadingZerosPattern(QString("^0{0,%1}").arg(NumberOfBits - 1));
     expression.remove(leadingZerosPattern);
     expression.prepend(MathDsl::BinPrefix);
 

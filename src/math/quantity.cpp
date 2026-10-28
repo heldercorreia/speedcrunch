@@ -1901,7 +1901,7 @@ Quantity Quantity::operator*(const Quantity& other) const
             // Keep N·m explicit by default because it is semantically ambiguous:
             // energy is expressed in J, while torque is commonly expressed as N·m.
             // Users can still request an explicit conversion target ("-> joule").
-            result.setCoherentSiDisplayUnit(QString(unitPhrase(UnitPhraseId::NewtonMetre)));
+            result.setCoherentSiDisplayUnit(unitPhrase(UnitPhraseId::NewtonMetre).toString());
         } else if (!hasExplicitAngleFactorOperand
                    && ((u1 == UnitId::Pascal
                     && isExactDimension(other, dimensionCubicMetre()))
@@ -1923,7 +1923,7 @@ Quantity Quantity::operator*(const Quantity& other) const
             // it often conveys time-integration context (power over time).
             // Auto-collapsing to J can hide that intent unless user requests
             // an explicit conversion ("-> joule").
-            result.setCoherentSiDisplayUnit(QString(unitPhrase(UnitPhraseId::WattSecond)));
+            result.setCoherentSiDisplayUnit(unitPhrase(UnitPhraseId::WattSecond).toString());
         } else if (!hasExplicitAngleFactorOperand
                    && ((u1 == UnitId::Coulomb && u2 == UnitId::Volt)
                        || (u2 == UnitId::Coulomb && u1 == UnitId::Volt)))
@@ -1949,7 +1949,7 @@ Quantity Quantity::operator*(const Quantity& other) const
                    || (isExactDimension(other, dimensionWatt())
                        && isExactDimension(*this, dimensionVolt()))))
         {
-            result.setCoherentSiDisplayUnit(QString(unitPhrase(UnitPhraseId::VoltSquaredAmpere)));
+            result.setCoherentSiDisplayUnit(unitPhrase(UnitPhraseId::VoltSquaredAmpere).toString());
         } else if (!hasExplicitAngleFactorOperand
                    && ((isExactDimension(*this, dimensionFarad())
                     && isExactDimension(other, dimensionVolt()))
@@ -2268,14 +2268,14 @@ Quantity Quantity::operator/(const Quantity& other) const
              || isExactDimension(*this, dimensionJoule()))
             && isExactDimension(other, dimensionSquareMetre()))
         {
-            result.setCoherentSiDisplayUnit(QString(unitPhrase(UnitPhraseId::JoulePerSquareMetre)));
+            result.setCoherentSiDisplayUnit(unitPhrase(UnitPhraseId::JoulePerSquareMetre).toString());
             return result;
         }
         if (((this->hasUnit() && u1 == UnitId::Joule)
              || isExactDimension(*this, dimensionJoule()))
             && isExactDimension(other, dimensionCubicMetre()))
         {
-            result.setCoherentSiDisplayUnit(QString(unitPhrase(UnitPhraseId::JoulePerCubicMetre)));
+            result.setCoherentSiDisplayUnit(unitPhrase(UnitPhraseId::JoulePerCubicMetre).toString());
             return result;
         }
 

@@ -15,7 +15,7 @@ See the [changelog](CHANGELOG.md) for release highlights and fixes.
 
 ## Build status
 
-[![Linux CI](https://github.com/heldercorreia/speedcrunch/actions/workflows/linux.yml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/linux.yml)
+[![Ubuntu 24.04 LTS](https://github.com/heldercorreia/speedcrunch/actions/workflows/ubuntu-24_04.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/ubuntu-24_04.yaml)
 
 ## Building and testing
 

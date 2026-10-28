@@ -3293,14 +3293,14 @@ void test_rational_format()
     const QString dotOperator(MathDsl::MulDotOp);
     const QString dotSpacing = QString(MathDsl::MulDotWrapSp);
     const QString piSymbol = QStringLiteral("pi");
-    const auto piOver = [&](int denominator) {
+    const auto piOver = [&](int denominator) -> QString {
         return piSymbol + slash + QString::number(denominator);
     };
-    const auto nPiOver = [&](int numerator, int denominator) {
+    const auto nPiOver = [&](int numerator, int denominator) -> QString {
         return QString::number(numerator) + dotSpacing + dotOperator + dotSpacing + piSymbol
             + slash + QString::number(denominator);
     };
-    const auto nPi = [&](int numerator) {
+    const auto nPi = [&](int numerator) -> QString {
         return QString::number(numerator) + dotSpacing + dotOperator + dotSpacing + piSymbol;
     };
     const auto signedPiOver = [&](int numerator, int denominator) -> QString {
@@ -11419,7 +11419,7 @@ void test_on_demand_unit_lookup_matches_complete_tables()
             QJsonObject expected;
             it.value().serialize(expected);
             check(requested.value(it.key()) == expected,
-                  QStringLiteral("%1 in mode %2").arg(it.key(), QLatin1Char(mode)));
+                  QStringLiteral("%1 in mode %2").arg(it.key()).arg(QLatin1Char(mode)));
         }
     }
     const auto& rawValues = Units::builtInUnitValues();

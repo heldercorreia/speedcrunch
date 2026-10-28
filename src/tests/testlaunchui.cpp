@@ -688,6 +688,8 @@ void TestLaunchUi::new_tabs_use_unique_names_across_windows()
     MainWindow* second = first.createNewSessionWindow();
     QVERIFY(second);
     const auto deleteSecond = qScopeGuard([second]() { delete second; });
+    QVERIFY(QTest::qWaitForWindowExposed(&first));
+    QVERIFY(QTest::qWaitForWindowActive(second));
     QSignalSpy handled(&controller, &LaunchController::requestHandled);
     int expectedTabs = 2;
     int expectedRequests = 0;

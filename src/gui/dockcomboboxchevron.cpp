@@ -42,6 +42,7 @@ public:
         QStyleOptionViewItem item(option);
         initStyleOption(&item, index);
         if (!usesMenuItems()) {
+            item.showDecorationSelected = true;
             QApplication::style()->drawControl(QStyle::CE_ItemViewItem, &item, painter, option.widget);
             return;
         }

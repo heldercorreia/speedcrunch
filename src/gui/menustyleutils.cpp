@@ -275,10 +275,29 @@ public:
     }
     QPixmap pixmap(const QSize& size, QIcon::Mode mode, QIcon::State state) override
     {
-        return scaledPixmap(size, mode, state, 1.0);
+        return themedPixmap(size, mode, state, 1.0);
     }
     QPixmap scaledPixmap(const QSize& size, QIcon::Mode mode, QIcon::State state,
                          qreal scale) override
+    {
+#if QT_VERSION < QT_VERSION_CHECK(6, 8, 0)
+        // Older QIcon versions pass physical pixels to the engine.
+        return themedPixmap(size / scale, mode, state, scale);
+#else
+        return themedPixmap(size, mode, state, scale);
+#endif
+    }
+    void paint(QPainter* painter, const QRect& rect, QIcon::Mode mode, QIcon::State state) override
+    {
+        const QPixmap image = themedPixmap(rect.size(), mode, state, painter->device()->devicePixelRatioF());
+        const QRectF target(QRectF(rect).center() - QPointF(image.deviceIndependentSize().width() / 2,
+                                                         image.deviceIndependentSize().height() / 2),
+                            image.deviceIndependentSize());
+        painter->drawPixmap(target, image, QRectF(image.rect()));
+    }
+
+private:
+    QPixmap themedPixmap(const QSize& size, QIcon::Mode mode, QIcon::State state, qreal scale)
     {
         QPixmap result = m_source.pixmap(size, scale, mode, state);
         if (result.isNull())
@@ -313,16 +332,6 @@ public:
         painter.fillRect(QRectF(QPointF(), result.deviceIndependentSize()), foreground);
         return result;
     }
-    void paint(QPainter* painter, const QRect& rect, QIcon::Mode mode, QIcon::State state) override
-    {
-        const QPixmap image = scaledPixmap(rect.size(), mode, state, painter->device()->devicePixelRatioF());
-        const QRectF target(QRectF(rect).center() - QPointF(image.deviceIndependentSize().width() / 2,
-                                                         image.deviceIndependentSize().height() / 2),
-                            image.deviceIndependentSize());
-        painter->drawPixmap(target, image, QRectF(image.rect()));
-    }
-
-private:
     QIcon m_source;
     QPalette m_palette;
 };

@@ -4971,6 +4971,8 @@ public:
     {
         QStyleOptionViewItem item(option);
         initStyleOption(&item, index);
+        // Keep the full text area for the name and unit we draw below.
+        item.showDecorationSelected = true;
         const QString name = item.text;
         item.text.clear();
         const QStyle* style = item.widget ? item.widget->style() : QApplication::style();

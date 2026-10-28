@@ -59,6 +59,15 @@ enum class UnitQuantity {
     DimensionlessRatio
 };
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 8, 0)
+inline size_t qHash(const QMap<UnitQuantity, Rational>& dimension, size_t seed = 0) noexcept
+{
+    for (auto it = dimension.cbegin(); it != dimension.cend(); ++it)
+        seed = qHashMulti(seed, static_cast<int>(it.key()), it.value());
+    return seed;
+}
+#endif
+
 enum class UnitId {
     Unknown,
     Second,

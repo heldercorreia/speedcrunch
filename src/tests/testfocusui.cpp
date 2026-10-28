@@ -252,6 +252,10 @@ void TestFocusUi::constants_dock_activation_returns_to_active_editor()
         QVERIFY(target->text().isEmpty());
         QTest::mouseDClick(list->viewport(), Qt::LeftButton, Qt::NoModifier, row);
     } else {
+        if (floating) {
+            dock->activateWindow();
+            QTRY_COMPARE(QApplication::activeWindow(), dock);
+        }
         // Leave the dock click's delayed focus recovery pending during insertion.
         QTest::mouseClick(search, Qt::LeftButton);
         QTest::keyClick(search, Qt::Key_Down);
@@ -776,8 +780,11 @@ void TestFocusUi::f6_cycles_focus_with_another_main_window_visible()
 
         QTest::keyClick(editor, Qt::Key_F6);
         QTRY_VERIFY(focusIsWithin(searchBox));
-        if (floatingDock)
+        if (floatingDock) {
             dock->activateWindow();
+            QTRY_COMPARE(QApplication::activeWindow(), dock);
+            QCoreApplication::processEvents();
+        }
         QTest::keyClick(searchBox, Qt::Key_F6);
         QTRY_VERIFY(focusIsWithin(table));
         QTest::keyClick(table, Qt::Key_F6);
