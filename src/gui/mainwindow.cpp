@@ -8780,19 +8780,24 @@ void MainWindow::resetAllSettings()
 
         std::vector<std::unique_ptr<QSignalBlocker>> blockers;
         window->restoreDockColumnOrders(QJsonObject());
-        QDockWidget* previousDock = nullptr;
-        for (QDockWidget* dock : window->m_allDocks) {
+        for (QDockWidget* dock : window->m_allDocks)
             blockers.push_back(std::make_unique<QSignalBlocker>(dock));
-            window->removeDockWidget(dock);
-            const bool bitfield = dock == window->m_docks.bitField;
-            window->addDockWidget(bitfield ? Qt::BottomDockWidgetArea : Qt::RightDockWidgetArea, dock);
-            dock->setFloating(false);
+        // Restore a complete layout to avoid removing live tab groups on Qt 6.10.
+        QMainWindow defaultLayout;
+        QDockWidget* previousDock = nullptr;
+        for (QDockWidget* source : window->m_allDocks) {
+            auto* dock = new QDockWidget(&defaultLayout);
+            dock->setObjectName(source->objectName());
+            const bool bitfield = source == window->m_docks.bitField;
+            defaultLayout.addDockWidget(bitfield ? Qt::BottomDockWidgetArea : Qt::RightDockWidgetArea, dock);
             if (!bitfield) {
                 if (previousDock)
-                    window->tabifyDockWidget(previousDock, dock);
+                    defaultLayout.tabifyDockWidget(previousDock, dock);
                 previousDock = dock;
             }
         }
+        window->restoreState(defaultLayout.saveState(DockLayoutStateVersion), DockLayoutStateVersion);
+        window->applyDockCornerLayout();
 
         window->deleteKeypad();
         window->m_hasRestoredDockLayout = false;
