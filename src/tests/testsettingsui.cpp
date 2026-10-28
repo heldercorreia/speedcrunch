@@ -1086,6 +1086,11 @@ void TestSettingsUi::accept_completion_with_enter_survives_settings_reload()
 
 void TestSettingsUi::number_format_is_shared_and_refreshes_all_input_panes()
 {
+    const QVariant previousExpected = qApp->property("speedcrunchExpectedNumberFormatDialog");
+    qApp->setProperty("speedcrunchExpectedNumberFormatDialog", true);
+    const auto restoreExpected = qScopeGuard([previousExpected]() {
+        qApp->setProperty("speedcrunchExpectedNumberFormatDialog", previousExpected);
+    });
     Settings::instance()->inputDigitGrouping = true;
     MainWindow first;
     MainWindow second;
@@ -1103,9 +1108,13 @@ void TestSettingsUi::number_format_is_shared_and_refreshes_all_input_panes()
     for (auto style : {Settings::NumberFormatIndianCommaDot,
                        Settings::NumberFormatThreeDigitUnderscoreDotFraction,
                        Settings::NumberFormatNoGroupingDot}) {
-        QTimer::singleShot(0, &first, [style]() {
+        QTimer dialogTimer;
+        dialogTimer.setInterval(20);
+        connect(&dialogTimer, &QTimer::timeout, &first, [style, &dialogTimer]() {
             auto* dialog = qobject_cast<QDialog*>(QApplication::activeModalWidget());
-            QVERIFY(dialog);
+            if (!dialog || !dialog->isVisible())
+                return;
+            dialogTimer.stop();
             auto* combo = dialog->findChild<QComboBox*>();
             QVERIFY(combo);
             // Select by example because the dialog's ordering differs from the enum.
@@ -1118,7 +1127,9 @@ void TestSettingsUi::number_format_is_shared_and_refreshes_all_input_panes()
             combo->setCurrentIndex(index);
             dialog->accept();
         });
+        dialogTimer.start();
         numberFormatAction->trigger();
+        dialogTimer.stop();
         QCOMPARE(Settings::instance()->numberFormatStyle, style);
         const QList<int> expected = style == Settings::NumberFormatIndianCommaDot
             ? QList<int>{0, 2, 4}

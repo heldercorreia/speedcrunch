@@ -171,6 +171,7 @@ void TestMenusUi::disabled_menu_icons_keep_visible_state()
     }
     QMenu menu;
     QAction* action = menu.addAction(source, QStringLiteral("Copy"));
+    action->setIconVisibleInMenu(true);
     menu.ensurePolished();
     MenuStyle::apply(&menu);
     const QImage enabled = action->icon().pixmap(QSize(16, 16), scale, QIcon::Normal).toImage();
@@ -311,6 +312,7 @@ void TestMenusUi::context_menu_icons_follow_theme_changes()
     MenuStyle::apply(menu.data());
     QAction* copy = menu->findChild<QAction*>(QStringLiteral("edit-copy"));
     QVERIFY(copy != nullptr);
+    copy->setIconVisibleInMenu(true);
     const QIcon native = copy->icon();
     // Supply a glyph on offscreen platforms without native icons.
     QPixmap glyph(16, 16);
@@ -338,8 +340,9 @@ void TestMenusUi::context_menu_icons_follow_theme_changes()
             const QRect row = menu->actionGeometry(action);
             const QRect iconArea(qRound(row.x() * dpr), qRound(row.y() * dpr),
                                  qRound(qMin(24, row.width()) * dpr), qRound(row.height() * dpr));
-            QVERIFY(firstPixelMatchingColor(rendered, iconArea,
-                menu->palette().color(selected ? QPalette::HighlightedText : QPalette::WindowText), 4)
+            QVERIFY(firstPixelMatchingColorBlend(rendered, iconArea,
+                menu->palette().color(selected ? QPalette::HighlightedText : QPalette::WindowText),
+                menu->palette().color(QPalette::Window), 4)
                 != QPoint(-1, -1));
         }
         menu->setActiveAction(nullptr);
@@ -359,6 +362,7 @@ void TestMenusUi::context_menu_icons_follow_theme_changes()
         copy->setIcon(replacement);
         verify(copy);
         QAction* added = menu->addAction(QIcon(glyph), QStringLiteral("Later action"));
+        added->setIconVisibleInMenu(true);
         verify(added);
         guard.settings->menuAppearance = Settings::MenuAppearanceSystem;
         MenuStyle::refresh();
@@ -625,6 +629,16 @@ void TestMenusUi::dock_dropdowns_follow_menu_appearance_data()
 
 void TestMenusUi::dock_dropdowns_follow_menu_appearance()
 {
+    class WidgetPopupStyle : public QProxyStyle {
+    public:
+        int styleHint(StyleHint hint, const QStyleOption* option, const QWidget* widget,
+                      QStyleHintReturn* result) const override
+        {
+            if (hint == SH_ComboBox_UseNativePopup)
+                return 0;
+            return QProxyStyle::styleHint(hint, option, widget, result);
+        }
+    };
     QFETCH(bool, darkSystem);
     QFETCH(bool, floating);
     MainWindowStateGuard guard;
@@ -661,8 +675,14 @@ void TestMenusUi::dock_dropdowns_follow_menu_appearance()
         QVERIFY(dock != nullptr);
         dock->setFloating(floating);
         dock->show();
+        if (floating)
+            dock->move(window.frameGeometry().topLeft() + QPoint(40, 40));
         QComboBox* combo = dock->findChild<QComboBox*>();
         QVERIFY(combo != nullptr);
+        // Exercise the widget popup so its frame and palette can be inspected.
+        auto* popupStyle = new WidgetPopupStyle;
+        popupStyle->setParent(combo);
+        combo->setStyle(popupStyle);
         QCoreApplication::processEvents();
         QAbstractItemView* view = combo->view();
         const auto nativeFrame = view->frameShape();
@@ -670,10 +690,15 @@ void TestMenusUi::dock_dropdowns_follow_menu_appearance()
         const QPalette closedPalette = combo->palette();
         for (const int mode : {0, 1, 0, 1, 0}) {
             appearance->actions().at(mode)->trigger();
+            dock->window()->activateWindow();
+            dock->raise();
+            QVERIFY(QTest::qWaitForWindowActive(dock->window()));
+            combo->setFocus();
+            QCoreApplication::processEvents();
             combo->showPopup();
             const auto closePopup = qScopeGuard([combo]() { combo->hidePopup(); });
             QCoreApplication::processEvents();
-            QVERIFY(view->isVisible());
+            QTRY_VERIFY((combo->showPopup(), view->isVisible()));
             QWidget* popup = view->window();
             QCOMPARE(combo->palette(), closedPalette);
             if (mode == 0) {

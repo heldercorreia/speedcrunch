@@ -98,6 +98,8 @@ void TestFocusUi::constant_search_paints_editor_without_focus_ring()
     window.resize(1000, 600);
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     auto* editor = window.findChild<Editor*>();
     auto* dock = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
     QVERIFY(editor && dock);

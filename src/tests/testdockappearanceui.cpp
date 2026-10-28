@@ -111,7 +111,6 @@ void TestDockAppearanceUi::themed_header_metrics_refresh_after_font_change()
     QTreeWidget* table = constants->findChild<QTreeWidget*>();
     QVERIFY(table);
     QHeaderView* header = table->header();
-    const int oldHeight = header->sizeHint().height();
     StartupDiagnostics::begin();
     const auto finishRecording = qScopeGuard([]() {
         StartupDiagnostics::firstPaintFinished();
@@ -135,7 +134,11 @@ void TestDockAppearanceUi::themed_header_metrics_refresh_after_font_change()
         header->setFont(font);
     QCoreApplication::processEvents();
     QVERIFY(measuredHeaders() > initialMeasurements);
-    QVERIFY(header->sizeHint().height() > oldHeight);
+    QHeaderView nativeHeader(Qt::Horizontal, header->parentWidget());
+    nativeHeader.setModel(table->model());
+    nativeHeader.setFont(header->font());
+    nativeHeader.ensurePolished();
+    QCOMPARE(header->sizeHint().height(), nativeHeader.sizeHint().height());
 }
 
 void TestDockAppearanceUi::themed_headers_keep_native_scrollbar_styles()
@@ -272,6 +275,7 @@ void TestDockAppearanceUi::system_dock_separators_use_thin_system_colors()
         if (!system)
             return;
         // Check actual window painting at the dock/editor and dock/dock boundaries.
+        QTRY_VERIFY(functions->geometry().top() > constants->geometry().bottom());
         const QRect upper = constants->geometry();
         const QRect lower = functions->geometry();
         const QRect center = first.centralWidget()->geometry();
@@ -724,13 +728,15 @@ void TestDockAppearanceUi::dock_headers_follow_appearance()
             QCOMPARE(button->iconSize(), referenceButton->iconSize());
             QCOMPARE(button->cursor().shape(), referenceButton->cursor().shape());
             const auto standard = name == names.first() ? QStyle::SP_TitleBarCloseButton : QStyle::SP_TitleBarNormalButton;
-            const QImage icon = button->icon().pixmap(QSize(24, 24)).toImage();
-            const QImage nativeIcon = QApplication::style()->standardIcon(standard, &option, dock).pixmap(QSize(24, 24)).toImage();
+            QTRY_COMPARE(button->icon().pixmap(QSize(24, 24), 1.0).toImage(),
+                QApplication::style()->standardIcon(standard, &option, dock).pixmap(QSize(24, 24), 1.0).toImage());
+            const QImage icon = button->icon().pixmap(QSize(24, 24), 1.0).toImage();
+            const QImage nativeIcon = QApplication::style()->standardIcon(standard, &option, dock).pixmap(QSize(24, 24), 1.0).toImage();
             QCOMPARE(icon, nativeIcon);
             const QPoint center = button->rect().center();
             QEnterEvent enter(center, button->mapTo(button->window(), center), button->mapToGlobal(center));
             QCoreApplication::sendEvent(button, &enter);
-            QCOMPARE(button->icon().pixmap(QSize(24, 24)).toImage(), nativeIcon);
+            QCOMPARE(button->icon().pixmap(QSize(24, 24), 1.0).toImage(), nativeIcon);
         }
     };
     for (bool system : {systemAtStartup, !systemAtStartup, systemAtStartup, true}) {
@@ -856,7 +862,7 @@ void TestDockAppearanceUi::system_dock_headers_paint_system_background()
         // Preserve any background the native title painter adds, such as the
         // Windows style's gradient, over the system window surface.
         QImage expected(option.rect.size(), QImage::Format_ARGB32_Premultiplied);
-        expected.fill(native.color(QPalette::Window));
+        expected.fill(dock->palette().color(QPalette::Window));
         QPainter painter(&expected);
         QApplication::style()->drawControl(QStyle::CE_DockWidgetTitle, &option, &painter, dock);
         painter.end();
@@ -1223,7 +1229,8 @@ void TestDockAppearanceUi::dock_header_buttons_keep_theme_after_redocking()
         QCoreApplication::sendEvent(button, &leaveEvent);
         const QImage icon = button->icon().pixmap(button->iconSize()).toImage();
         QVERIFY(!icon.isNull());
-        QVERIFY(colorsAreClose(icon.pixelColor(2, 9),
+        QVERIFY(colorsAreClose(icon.pixelColor(qRound(2 * icon.devicePixelRatio()),
+                                               qRound(9 * icon.devicePixelRatio())),
                                button->property("speedcrunchDockHeaderButtonFill").value<QColor>()));
         buttons.append(button);
         expectedIcons.append(icon);

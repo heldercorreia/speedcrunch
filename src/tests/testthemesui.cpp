@@ -1758,9 +1758,11 @@ void TestThemesUi::dock_surfaces_use_successive_generated_shades()
         const QImage iconImage = button->icon().pixmap(QSize(18, 18)).toImage();
         QVERIFY(!iconImage.isNull());
         QVERIFY(iconImage.pixelColor(0, 0).alpha() < 32);
-        QVERIFY2(colorsAreClose(iconImage.pixelColor(2, 9), headerButtonFill, 3),
+        QVERIFY2(colorsAreClose(iconImage.pixelColor(qRound(2 * iconImage.devicePixelRatio()),
+                                                  qRound(9 * iconImage.devicePixelRatio())), headerButtonFill, 3),
                  qPrintable(QStringLiteral("icon fill %1 expected %2")
-                                .arg(iconImage.pixelColor(2, 9).name(),
+                                .arg(iconImage.pixelColor(qRound(2 * iconImage.devicePixelRatio()),
+                                                  qRound(9 * iconImage.devicePixelRatio())).name(),
                                      headerButtonFill.name())));
         const QPoint buttonCenter = button->rect().center();
         QMouseEvent buttonMoveEvent(QEvent::MouseMove,
@@ -1772,9 +1774,11 @@ void TestThemesUi::dock_surfaces_use_successive_generated_shades()
         QCoreApplication::sendEvent(button, &buttonMoveEvent);
         const QImage hoverIconImage = button->icon().pixmap(QSize(18, 18)).toImage();
         QVERIFY(!hoverIconImage.isNull());
-        QVERIFY2(colorsAreClose(hoverIconImage.pixelColor(2, 9), headerButtonHoverFill, 3),
+        QVERIFY2(colorsAreClose(hoverIconImage.pixelColor(qRound(2 * hoverIconImage.devicePixelRatio()),
+                                                       qRound(9 * hoverIconImage.devicePixelRatio())), headerButtonHoverFill, 3),
                  qPrintable(QStringLiteral("hover icon fill %1 expected %2")
-                                .arg(hoverIconImage.pixelColor(2, 9).name(),
+                                .arg(hoverIconImage.pixelColor(qRound(2 * hoverIconImage.devicePixelRatio()),
+                                                       qRound(9 * hoverIconImage.devicePixelRatio())).name(),
                                      headerButtonHoverFill.name())));
         QEvent leaveEvent(QEvent::Leave);
         QCoreApplication::sendEvent(button, &leaveEvent);
@@ -1864,12 +1868,13 @@ void TestThemesUi::dock_surfaces_use_successive_generated_shades()
     const QRect editorNativeCursorRect = editor->cursorRect();
     QVERIFY(editorNativeCursorRect.isValid());
     QVERIFY(editorNativeCursorRect.height() > 0);
-    const QRect editorCursorRect(
+    const QRect editorLogicalCursorRect(
         editorNativeCursorRect.x() + (editorNativeCursorRect.width() - 2) / 2,
         editorNativeCursorRect.y(),
         2,
         editorNativeCursorRect.height());
     const QImage focusedEditorImage = editor->viewport()->grab().toImage();
+    const QRect editorCursorRect = imageRectForWidgetRect(focusedEditorImage, editorLogicalCursorRect);
     QVERIFY(focusedEditorImage.rect().contains(editorCursorRect.center()));
     for (int x = editorCursorRect.left(); x <= editorCursorRect.right(); ++x)
         QCOMPARE(focusedEditorImage.pixelColor(x, editorCursorRect.center().y()).name(), primary.name());
@@ -1920,11 +1925,12 @@ void TestThemesUi::dock_surfaces_use_successive_generated_shades()
         themedSearchBox->inputMethodQuery(Qt::ImCursorRectangle).toRect();
     QVERIFY(nativeCursorRect.isValid());
     QVERIFY(nativeCursorRect.height() > 0);
-    const QRect cursorRect(nativeCursorRect.x() + (nativeCursorRect.width() - 2) / 2 + 1,
+    const QRect logicalCursorRect(nativeCursorRect.x() + (nativeCursorRect.width() - 2) / 2 + 1,
                            nativeCursorRect.y(),
                            2,
                            nativeCursorRect.height());
     const QImage focusedSearchImage = themedSearchBox->grab().toImage();
+    const QRect cursorRect = imageRectForWidgetRect(focusedSearchImage, logicalCursorRect);
     QVERIFY(focusedSearchImage.rect().contains(cursorRect.center()));
     for (int x = cursorRect.left(); x <= cursorRect.right(); ++x)
         QCOMPARE(focusedSearchImage.pixelColor(x, cursorRect.center().y()).name(), primary.name());

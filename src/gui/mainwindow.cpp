@@ -2113,7 +2113,13 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
             option.initFrom(header);
             headerMargin = qMax(0, header->style()->pixelMetric(QStyle::PM_HeaderMargin, &option, header));
             // Keep the native height, including the two themed border strokes.
-            headerContentHeight = qMax(0, header->sizeHint().height() - 2);
+            // Preserve native size variants without reusing themed size hints.
+            QHeaderView nativeHeader(header->orientation(), header->parentWidget());
+            nativeHeader.setStyle(header->style());
+            nativeHeader.setFont(header->font());
+            nativeHeader.setModel(header->model());
+            nativeHeader.ensurePolished();
+            headerContentHeight = qMax(0, nativeHeader.sizeHint().height() - 2);
         }
         setDockPaletteIfChanged(header, paletteForThemeSurface(header->palette(), dockBackground));
         setStyleSheetIfChanged(header, QStringLiteral(
@@ -13261,8 +13267,11 @@ void MainWindow::deleteStatusBar()
         m_status.angleUnitSeparator->deleteLater();
     m_status.angleUnitSeparator = 0;
 
-    if (existingStatusBar != nullptr)
+    if (existingStatusBar != nullptr) {
         setStatusBar(0);
+        // Deferred deletion must not leave the old bar in state lookups.
+        existingStatusBar->setParent(nullptr);
+    }
 }
 
 void MainWindow::deleteBitField()
