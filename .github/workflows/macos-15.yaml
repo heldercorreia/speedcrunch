@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      run_ui_tests:
+        description: Run native macOS UI tests
+        type: boolean
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -63,19 +68,34 @@ jobs:
       - name: Build
         run: cmake --build build --parallel 4
 
-      # Keep compiling UI tests, but do not run them on this runner yet.
       - name: Run non-UI tests
         run: >-
           ctest --test-dir build -C Release -LE '^ui$'
           --no-tests=error --output-on-failure --test-output-size-failed 0
+          --output-log "$GITHUB_WORKSPACE/non-ui-tests.log"
           --output-junit "$GITHUB_WORKSPACE/test-results.xml"
 
+      - name: Run native macOS UI tests
+        if: github.event_name == 'workflow_dispatch' && inputs.run_ui_tests
+        timeout-minutes: 15
+        env:
+          QT_QPA_PLATFORM: cocoa
+        run: >-
+          ctest --test-dir build -C Release -L '^ui$' --parallel 1
+          --timeout 180 --no-tests=error --output-on-failure
+          --test-output-size-failed 0
+          --output-log "$GITHUB_WORKSPACE/ui-tests.log"
+          --output-junit "$GITHUB_WORKSPACE/ui-test-results.xml"
+
       - name: Upload test logs
-        if: failure()
+        if: failure() || (github.event_name == 'workflow_dispatch' && inputs.run_ui_tests)
         uses: actions/upload-artifact@v7
         with:
           name: macos-15-test-logs
           path: |
             build/Testing/Temporary/LastTest.log
+            non-ui-tests.log
             test-results.xml
+            ui-tests.log
+            ui-test-results.xml
           if-no-files-found: ignore
