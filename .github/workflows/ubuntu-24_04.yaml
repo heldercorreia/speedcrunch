@@ -18,16 +18,36 @@ jobs:
   build-and-test:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    env:
+      APT_PACKAGES: >-
+        libxcb1-dev openbox pkg-config qt6-base-dev qt6-l10n-tools
+        qt6-tools-dev qt6-tools-dev-tools xauth xvfb
     steps:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Resolve dependencies
+        id: apt-dependencies
+        shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            libxcb1-dev openbox pkg-config qt6-base-dev qt6-l10n-tools \
-            qt6-tools-dev qt6-tools-dev-tools xauth xvfb
+          read -r -a packages <<< "$APT_PACKAGES"
+          sudo apt-get --print-uris install -y "${packages[@]}" > "$RUNNER_TEMP/apt-packages.txt"
+          echo "hash=$(sha256sum "$RUNNER_TEMP/apt-packages.txt" | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache dependency downloads
+        uses: actions/cache@v6
+        with:
+          path: .cache/apt/archives/*.deb
+          key: ubuntu-24.04-${{ runner.arch }}-apt-v1-${{ steps.apt-dependencies.outputs.hash }}
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          mkdir -p .cache/apt/archives/partial
+          read -r -a packages <<< "$APT_PACKAGES"
+          sudo apt-get -o Dir::Cache::archives="$GITHUB_WORKSPACE/.cache/apt/archives" \
+            -o APT::Keep-Downloaded-Packages=true install -y "${packages[@]}"
 
       - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
