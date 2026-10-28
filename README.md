@@ -17,6 +17,8 @@ See the [changelog](CHANGELOG.md) for release highlights and fixes.
 
 [![Ubuntu 24.04 LTS](https://github.com/heldercorreia/speedcrunch/actions/workflows/ubuntu-24_04.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/ubuntu-24_04.yaml)
 [![Ubuntu 26.04 LTS](https://github.com/heldercorreia/speedcrunch/actions/workflows/ubuntu-26_04.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/ubuntu-26_04.yaml)
+[![Debian Unstable](https://github.com/heldercorreia/speedcrunch/actions/workflows/debian-unstable.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/debian-unstable.yaml)
+[![Fedora Rawhide](https://github.com/heldercorreia/speedcrunch/actions/workflows/fedora-rawhide.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/fedora-rawhide.yaml)
 
 See [BUILDING.md](BUILDING.md) for requirements and instructions on building,
 installing SpeedCrunch, and packaging it. The guide also links to instructions
