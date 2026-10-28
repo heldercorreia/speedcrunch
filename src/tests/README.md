@@ -21,12 +21,13 @@ executables, grouped by component:
 | `testdockappearanceui` | Dock appearance, tabs, headers and header buttons |
 | `testdocklayoutui` | Dock layout, spacing, scrolling and Formula Book |
 | `testfocusui` | Focus, active panes, clipboard routing and tooltips |
+| `teststartupfocusui` | Editor and dock focus during startup and session restoration |
 | `testsettingsui` | Settings, dialogs, shared fonts and manual formatting |
 | `teststatusbarui` | Status bar appearance, controls and persistence |
 | `testsessionsui` | Session tabs, layout, import, export and shortcuts |
 | `testprivatesessionsui` | Private sessions and startup restoration |
 
-All 15 UI suites share one label, `ui`. This includes the component suites
+All 17 UI suites share one label, `ui`. This includes the component suites
 above and the existing editor and dock widget suites. Run them in parallel:
 
 ```sh

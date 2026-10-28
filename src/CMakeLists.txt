@@ -275,6 +275,7 @@ if(BUILD_TESTING)
     )
     # Start the longer suites first on a build without CTest timing history.
     set(mainwindow_ui_tests
+        teststartupfocusui
         testfocusui
         testdockappearanceui
         testdocklayoutui
@@ -296,6 +297,9 @@ if(BUILD_TESTING)
         add_test(NAME ${ui_test} COMMAND ${ui_test})
         set_tests_properties(${ui_test} PROPERTIES LABELS "ui")
     endforeach()
+    # Start the longer focus suite early when tests run in parallel.
+    set_tests_properties(teststartupfocusui PROPERTIES COST 30)
+    set_tests_properties(testfocusui PROPERTIES COST 10)
     if(APPLE)
         target_sources(testlaunchui PRIVATE tests/maclaunchtesthelpers.mm)
         target_link_libraries(testlaunchui PRIVATE "-framework Carbon")
