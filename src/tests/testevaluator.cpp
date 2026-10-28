@@ -1773,7 +1773,7 @@ void test_unit_division_uses_numerator_quantity()
             const QString expectedText = expectedError.isEmpty()
                 ? DMath::format(expected, Format::Fixed()) : expectedError;
             DisplayErrorOnMismatch(__FILE__, __LINE__, qPrintable(expression),
-                                   actualText.toStdString(), qPrintable(expectedText),
+                                   actualText.toStdString(), qUtf8Printable(expectedText),
                                    eval_failed_tests, eval_new_failed_tests);
         }
     };
