@@ -21,7 +21,7 @@ jobs:
     env:
       APT_PACKAGES: >-
         libxcb1-dev openbox pkg-config qt6-base-dev qt6-l10n-tools
-        qt6-tools-dev qt6-tools-dev-tools xauth xvfb
+        qt6-tools-dev qt6-tools-dev-tools x11-utils xauth xvfb
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -61,6 +61,18 @@ jobs:
         run: |
           xvfb-run -a sh -c '
             openbox >/dev/null 2>&1 &
+            wm_ready=false
+            for attempt in $(seq 1 100); do
+              if xprop -root _NET_SUPPORTING_WM_CHECK 2>/dev/null | grep -q "window id #"; then
+                wm_ready=true
+                break
+              fi
+              sleep 0.1
+            done
+            if [ "$wm_ready" != true ]; then
+              echo "Openbox did not become ready" >&2
+              exit 1
+            fi
             ctest --test-dir build --output-on-failure --test-output-size-failed 0 \
               --output-junit "$GITHUB_WORKSPACE/test-results.xml"
           '

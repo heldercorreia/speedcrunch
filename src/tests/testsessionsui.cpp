@@ -5,6 +5,8 @@
 #include "core/startupdiagnostics.h"
 #include "core/units.h"
 
+#include <QElapsedTimer>
+
 #include <functional>
 
 using namespace MainWindowTestHelpers;
@@ -2268,26 +2270,42 @@ void TestSessionsUi::session_import_rejects_invalid_json_without_new_tab()
     QAction* importAction = directMenuActionWithText(sessionMenu, QStringLiteral("&Import..."));
     QVERIFY(importAction != nullptr);
 
-    bool sawImportDialog = false;
-    QTimer::singleShot(0, &window, [&sawImportDialog, &importFilePath, &window]() {
-        QFileDialog* dialog = qobject_cast<QFileDialog*>(QApplication::activeModalWidget());
-        if (dialog == nullptr)
-            return;
-
-        sawImportDialog = dialog->windowTitle() == QStringLiteral("Import Session")
-            && dialog->defaultSuffix() == QStringLiteral("json");
-        dialog->selectFile(importFilePath);
-        const auto acceptMessageBox = []() {
-            QMessageBox* messageBox = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
-            if (messageBox != nullptr)
-                messageBox->accept();
-        };
-        QTimer::singleShot(20, &window, acceptMessageBox);
-        QTimer::singleShot(100, &window, acceptMessageBox);
-        static_cast<QDialog*>(dialog)->accept();
+    const bool nativeDialogsDisabled = QApplication::testAttribute(Qt::AA_DontUseNativeDialogs);
+    QApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
+    const auto restoreDialogMode = qScopeGuard([nativeDialogsDisabled]() {
+        QApplication::setAttribute(Qt::AA_DontUseNativeDialogs, nativeDialogsDisabled);
     });
+
+    bool sawImportDialog = false;
+    bool sawImportError = false;
+    QElapsedTimer dialogWait;
+    dialogWait.start();
+    QTimer dialogDriver;
+    connect(&dialogDriver, &QTimer::timeout, &window, [&]() {
+        QDialog* modal = qobject_cast<QDialog*>(QApplication::activeModalWidget());
+        if (dialogWait.elapsed() > 5000) {
+            if (modal != nullptr)
+                modal->reject();
+            return;
+        }
+        if (auto* dialog = qobject_cast<QFileDialog*>(modal)) {
+            if (!sawImportDialog) {
+                sawImportDialog = dialog->windowTitle() == QStringLiteral("Import Session")
+                    && dialog->defaultSuffix() == QStringLiteral("json");
+                if (QLineEdit* fileNameEdit = dialog->findChild<QLineEdit*>(QStringLiteral("fileNameEdit")))
+                    fileNameEdit->setText(importFilePath);
+            }
+            static_cast<QDialog*>(dialog)->accept();
+        } else if (auto* messageBox = qobject_cast<QMessageBox*>(modal)) {
+            sawImportError = messageBox->text().contains(QStringLiteral("not valid JSON"));
+            messageBox->accept();
+        }
+    });
+    dialogDriver.start(20);
     importAction->trigger();
+    dialogDriver.stop();
     QVERIFY(sawImportDialog);
+    QVERIFY(sawImportError);
     QCOMPARE(tabBar->count(), 1);
 }
 
