@@ -16,7 +16,8 @@ permissions:
 
 jobs:
   build-and-test:
-    runs-on: windows-2025
+    # This image includes VS 2022 for Qt's MSVC 2022 kit.
+    runs-on: windows-2022
     timeout-minutes: 30
     defaults:
       run:
@@ -29,7 +30,6 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
-          vsversion: '2022'
 
       - name: Install Qt 6.12.0
         uses: jurplel/install-qt-action@v4
@@ -39,7 +39,7 @@ jobs:
           target: desktop
           arch: win64_msvc2022_64
           cache: 'true'
-          cache-key-prefix: windows-2025-qt-v1
+          cache-key-prefix: windows-2022-qt-v1
 
       - name: Verify toolchain
         run: |
