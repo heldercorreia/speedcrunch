@@ -13,11 +13,10 @@ See the [changelog](CHANGELOG.md) for release highlights and fixes.
 
 ![SpeedCrunch screenshot](doc/src/screen1.png)
 
-## Build status
+## Building and testing
 
 [![Ubuntu 24.04 LTS](https://github.com/heldercorreia/speedcrunch/actions/workflows/ubuntu-24_04.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/ubuntu-24_04.yaml)
-
-## Building and testing
+[![Ubuntu 26.04 LTS](https://github.com/heldercorreia/speedcrunch/actions/workflows/ubuntu-26_04.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/ubuntu-26_04.yaml)
 
 See [BUILDING.md](BUILDING.md) for requirements and instructions on building,
 installing SpeedCrunch, and packaging it. The guide also links to instructions
