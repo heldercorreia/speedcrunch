@@ -4,6 +4,8 @@
 #include "mainwindowtesthelpers.h"
 #include "core/startupdiagnostics.h"
 
+#include <algorithm>
+
 using namespace MainWindowTestHelpers;
 
 class TestDockAppearanceUi : public QObject {
@@ -728,15 +730,23 @@ void TestDockAppearanceUi::dock_headers_follow_appearance()
             QCOMPARE(button->iconSize(), referenceButton->iconSize());
             QCOMPARE(button->cursor().shape(), referenceButton->cursor().shape());
             const auto standard = name == names.first() ? QStyle::SP_TitleBarCloseButton : QStyle::SP_TitleBarNormalButton;
-            QTRY_COMPARE(button->icon().pixmap(QSize(24, 24), 1.0).toImage(),
-                QApplication::style()->standardIcon(standard, &option, dock).pixmap(QSize(24, 24), 1.0).toImage());
-            const QImage icon = button->icon().pixmap(QSize(24, 24), 1.0).toImage();
-            const QImage nativeIcon = QApplication::style()->standardIcon(standard, &option, dock).pixmap(QSize(24, 24), 1.0).toImage();
+            const QIcon native = QApplication::style()->standardIcon(standard, &option, dock);
+            const QList<QSize> sizes = native.availableSizes();
+            QCOMPARE(button->icon().availableSizes(), sizes);
+            const QSize baseSize = sizes.isEmpty() ? button->iconSize()
+                : *std::min_element(sizes.cbegin(), sizes.cend(), [](QSize a, QSize b) {
+                    return a.width() * a.height() < b.width() * b.height();
+                });
+            // Exercise a previously rendered Retina icon too. Qt's raster choice
+            // for arbitrary downscaled sizes can depend on earlier DPR requests.
+            QVERIFY(!button->icon().pixmap(button->iconSize(), button->devicePixelRatioF()).isNull());
+            const QImage icon = button->icon().pixmap(baseSize, 1.0).toImage();
+            const QImage nativeIcon = native.pixmap(baseSize, 1.0).toImage();
             QCOMPARE(icon, nativeIcon);
             const QPoint center = button->rect().center();
             QEnterEvent enter(center, button->mapTo(button->window(), center), button->mapToGlobal(center));
             QCoreApplication::sendEvent(button, &enter);
-            QCOMPARE(button->icon().pixmap(QSize(24, 24), 1.0).toImage(), nativeIcon);
+            QCOMPARE(button->icon().pixmap(baseSize, 1.0).toImage(), nativeIcon);
         }
     };
     for (bool system : {systemAtStartup, !systemAtStartup, systemAtStartup, true}) {

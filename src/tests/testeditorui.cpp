@@ -4971,6 +4971,8 @@ void TestEditorUi::completion_popup_enter_respects_accept_with_enter()
     Editor editor;
     editor.show();
     QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.activateWindow();
+    QVERIFY(QTest::qWaitForWindowActive(&editor));
     editor.setFocus();
     editor.setText(QStringLiteral("cos"));
     editor.setCursorPosition(editor.text().size());
@@ -6813,6 +6815,12 @@ void TestEditorUi::themed_cursor_has_only_two_states_at_display_scale_data()
 void TestEditorUi::themed_cursor_has_only_two_states_at_display_scale()
 {
     QFETCH(qreal, scale);
+    const int originalFlashTime = QApplication::cursorFlashTime();
+    const auto restoreFlashTime = qScopeGuard([originalFlashTime]() {
+        QApplication::setCursorFlashTime(originalFlashTime);
+    });
+    // Keep the same blink-cycle coverage without waiting for desktop defaults.
+    QApplication::setCursorFlashTime(200);
     Editor editor;
     editor.setAutoCalcEnabled(false);
     editor.setAutoCompletionEnabled(false);
@@ -6854,7 +6862,7 @@ void TestEditorUi::themed_cursor_has_only_two_states_at_display_scale()
     QVERIFY(hiddenSample != visibleSample);
     // Even a hidden custom cursor must not leave Qt's independently blinking
     // zero-width cursor behind at fractional display scales.
-    const int flashTime = qMax(1000, QApplication::cursorFlashTime());
+    const int flashTime = QApplication::cursorFlashTime();
     QElapsedTimer elapsed;
     elapsed.start();
     while (elapsed.elapsed() < flashTime) {
@@ -6889,6 +6897,11 @@ void TestEditorUi::non_blinking_cursor_stays_visible_data()
 void TestEditorUi::non_blinking_cursor_stays_visible()
 {
     QFETCH(qreal, scale);
+    const int originalFlashTime = QApplication::cursorFlashTime();
+    const auto restoreFlashTime = qScopeGuard([originalFlashTime]() {
+        QApplication::setCursorFlashTime(originalFlashTime);
+    });
+    QApplication::setCursorFlashTime(200);
     Editor editor;
     editor.setAutoCalcEnabled(false);
     editor.setAutoCompletionEnabled(false);
@@ -6915,7 +6928,7 @@ void TestEditorUi::non_blinking_cursor_stays_visible()
         const int cursorX = cursor.x() + (cursor.width() - 2) / 2 + 1;
         return image.pixelColor(qFloor(cursorX * scale), qFloor(cursor.center().y() * scale));
     };
-    const int flashTime = qMax(1000, QApplication::cursorFlashTime());
+    const int flashTime = QApplication::cursorFlashTime();
     QTRY_VERIFY_WITH_TIMEOUT(cursorPixel().rgba() != primary.rgba(), flashTime * 2);
     editor.setCursorBlinkingEnabled(false);
     QCOMPARE(cursorPixel().rgba(), primary.rgba());
