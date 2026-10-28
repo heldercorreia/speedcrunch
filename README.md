@@ -13,6 +13,10 @@ See the [changelog](CHANGELOG.md) for release highlights and fixes.
 
 ![SpeedCrunch screenshot](doc/src/screen1.png)
 
+## Build status
+
+[![Linux CI](https://github.com/heldercorreia/speedcrunch/actions/workflows/linux.yml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/linux.yml)
+
 ## Building and testing
 
 See [BUILDING.md](BUILDING.md) for requirements and instructions on building,
