@@ -1486,7 +1486,8 @@ void TestFocusUi::startup_focuses_editor_with_visible_dock_input()
     // Once startup finishes, choosing the dock search must still work normally.
     QTest::mouseClick(search, Qt::LeftButton);
     QTRY_VERIFY(search->hasFocus());
-    QTest::qWait(400);
+    // The dock input's delayed focus handling ends after 100 ms.
+    QTest::qWait(150);
     QVERIFY(search->hasFocus());
 }
 
