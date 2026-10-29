@@ -823,6 +823,9 @@ void TestMenusUi::system_dropdowns_use_the_native_popup_selection_palette()
         selected.initFrom(combo->view());
         selected.rect = QRect(0, 0, 240, 40);
         selected.state = QStyle::State_Active | QStyle::State_Enabled | QStyle::State_Selected;
+        // Match the popup view's full-row selection, including Qt 6.4's
+        // QItemDelegate, which otherwise only highlights the text area.
+        selected.showDecorationSelected = true;
         selected.palette.setCurrentColorGroup(QPalette::Active);
         QImage image(selected.rect.size(), QImage::Format_ARGB32_Premultiplied);
         image.fill(Qt::transparent);
