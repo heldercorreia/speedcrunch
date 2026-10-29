@@ -388,18 +388,22 @@ QRect sessionTabPillRect(const QTabBar* tabBar)
 
 QColor selectedSessionTabFillColor(QTabBar* tabBar)
 {
-    const QRect pill = sessionTabPillRect(tabBar);
     const QImage image = tabBar->grab().toImage();
-    return image.pixelColor(pill.left() + 6, pill.center().y());
+    const QPoint sample = sessionTabPillRect(tabBar).topLeft()
+        + QPoint(6, sessionTabPillRect(tabBar).height() / 2);
+    const qreal scale = image.devicePixelRatio();
+    return image.pixelColor(qRound(sample.x() * scale), qRound(sample.y() * scale));
 }
 
 bool selectedSessionTabHasBottomIndicator(QTabBar* tabBar, const QColor& color)
 {
-    const QRect pill = sessionTabPillRect(tabBar);
     const QImage image = tabBar->grab().toImage();
-    const int firstY = qMax(pill.top(), pill.bottom() - UiConfig::ActiveSessionTabIndicatorStrokeWidth);
+    const QRect pill = imageRectForWidgetRect(image, sessionTabPillRect(tabBar));
+    const qreal scale = image.devicePixelRatio();
+    const int firstY = qMax(pill.top(), pill.bottom()
+        - qRound(UiConfig::ActiveSessionTabIndicatorStrokeWidth * scale));
     for (int y = firstY; y <= pill.bottom(); ++y) {
-        for (int x = pill.left() + 4; x <= pill.right() - 4; ++x) {
+        for (int x = pill.left() + qRound(4 * scale); x <= pill.right() - qRound(4 * scale); ++x) {
             if (image.rect().contains(x, y) && colorsAreClose(image.pixelColor(x, y), color))
                 return true;
         }

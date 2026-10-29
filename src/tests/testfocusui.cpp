@@ -98,6 +98,8 @@ void TestFocusUi::constant_search_paints_editor_without_focus_ring()
     window.resize(1000, 600);
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     auto* editor = window.findChild<Editor*>();
     auto* dock = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
     QVERIFY(editor && dock);
@@ -771,6 +773,7 @@ void TestFocusUi::f6_cycles_focus_with_another_main_window_visible()
         QVERIFY(dock != nullptr);
         dock->setFloating(floatingDock);
         window->activateWindow();
+        QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(window));
         QLineEdit* searchBox = dock->findChild<QLineEdit*>();
         QTreeWidget* table = dock->findChild<QTreeWidget*>();
         QVERIFY(searchBox != nullptr);
@@ -1636,6 +1639,8 @@ void TestFocusUi::clipboard_actions_follow_active_pane()
         QCOMPARE(editor->text(), QStringLiteral("123456"));
 
         QApplication::clipboard()->setText(QStringLiteral("78"));
+        // The Windows clipboard notification updates the action asynchronously.
+        QTRY_VERIFY(pasteAction->isEnabled());
         if (shortcut) {
             const QKeyCombination key = QKeySequence(QKeySequence::Paste)[0];
             // Exercise the menu shortcut path as well as the widget's own handler.

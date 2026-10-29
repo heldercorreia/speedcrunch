@@ -189,12 +189,17 @@ void TestSessionsUi::session_commands_follow_floating_dock_owner()
             ? QStringLiteral("&Close Tab") : QStringLiteral("Clo&ne..."));
     QVERIFY(action);
     if (command == QLatin1String("clone")) {
-        QTimer::singleShot(0, &owner, []() {
+        auto* timer = new QTimer(&owner);
+        timer->setInterval(20);
+        connect(timer, &QTimer::timeout, &owner, [timer]() {
             auto* dialog = qobject_cast<QInputDialog*>(QApplication::activeModalWidget());
-            QVERIFY(dialog);
+            if (!dialog || !dialog->isVisible())
+                return;
+            timer->stop();
             dialog->setTextValue(QStringLiteral("Dock clone"));
             dialog->accept();
         });
+        timer->start();
     }
     if (shortcut) {
         const QKeyCombination key = command == QLatin1String("reopen")
@@ -277,9 +282,13 @@ void TestSessionsUi::session_clone_menu_action_follows_active_pane()
     QVERIFY(clone);
     bool visitedDialog = false;
     const QString cloneName = QStringLiteral("Menu clone");
-    QTimer::singleShot(0, &window, [&]() {
+    QTimer cloneTimer;
+    cloneTimer.setInterval(20);
+    connect(&cloneTimer, &QTimer::timeout, &window, [&]() {
         auto* dialog = qobject_cast<QInputDialog*>(QApplication::activeModalWidget());
-        QVERIFY(dialog);
+        if (!dialog || !dialog->isVisible())
+            return;
+        cloneTimer.stop();
         visitedDialog = true;
         dialog->setTextValue(cloneName);
         if (accept)
@@ -287,7 +296,9 @@ void TestSessionsUi::session_clone_menu_action_follows_active_pane()
         else
             dialog->reject();
     });
+    cloneTimer.start();
     clone->trigger();
+    cloneTimer.stop();
     QVERIFY(visitedDialog);
     QCOMPARE(tabs->count(), initialTabs + (accept ? 1 : 0));
     QCOMPARE(display->session()->name(), accept ? cloneName : sourceName);
@@ -308,6 +319,8 @@ void TestSessionsUi::session_clone_menu_action_follows_active_pane()
 
 void TestSessionsUi::initTestCase()
 {
+    // These tests drive QFileDialog widgets rather than external system panels.
+    QApplication::setAttribute(Qt::AA_DontUseNativeDialogs, true);
     // Fail before a file-operation test can open an unhandled error dialog.
     for (const QString& path : {Settings::getConfigPath(), Settings::getDataPath(),
                                 Settings::getCachePath()}) {
@@ -1493,17 +1506,24 @@ void TestSessionsUi::tab_context_privacy_targets_clicked_pane()
     const Session* otherSession = other->session();
     editorForDisplay(other)->setText(QStringLiteral("456"));
     QTRY_VERIFY(editorForDisplay(other)->hasFocus());
+    QTimer confirmationTimer;
+    confirmationTimer.setInterval(20);
+    bool confirmed = false;
+    connect(&confirmationTimer, &QTimer::timeout, &window, [&]() {
+        auto* confirmation = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        if (confirmation) {
+            confirmed = true;
+            confirmationTimer.stop();
+            confirmation->done(QMessageBox::Yes);
+        }
+    });
     chooseTabContextAction(tabs, 1,
         {privateTab ? QStringLiteral("Keep") : QStringLiteral("Make Private...")},
-        [&window, privateTab](QAction*) {
-            if (!privateTab) {
-                QTimer::singleShot(0, &window, []() {
-                    auto* confirmation = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
-                    QVERIFY(confirmation);
-                    confirmation->done(QMessageBox::Yes);
-                });
-            }
+        [&](QAction*) {
+            if (!privateTab)
+                confirmationTimer.start();
         });
+    QCOMPARE(confirmed, !privateTab);
     QCOMPARE(display->session(), target);
     QCOMPARE(target->isPrivate(), !privateTab);
     QCOMPARE(target->historySize(), 1);
@@ -1633,12 +1653,17 @@ void TestSessionsUi::tab_context_clear_preserves_other_sessions()
     bool confirmationShown = false;
     chooseTabContextAction(tabBarForDisplay(display), 0, {QStringLiteral("Clear")},
         [&window, confirm, &confirmationShown](QAction*) {
-            QTimer::singleShot(0, &window, [confirm, &confirmationShown]() {
+            auto* timer = new QTimer(&window);
+            timer->setInterval(20);
+            connect(timer, &QTimer::timeout, &window, [timer, confirm, &confirmationShown]() {
                 auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
-                QVERIFY(dialog);
+                if (!dialog || !dialog->isVisible())
+                    return;
+                timer->stop();
                 confirmationShown = true;
                 dialog->done(confirm ? QMessageBox::Yes : QMessageBox::No);
             });
+            timer->start();
         });
     QVERIFY(confirmationShown);
     QCOMPARE(display->session(), target);
@@ -1945,6 +1970,7 @@ void TestSessionsUi::new_tab_menu_action_targets_focused_window_when_native_menu
 
     firstWindow.raise();
     firstWindow.activateWindow();
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&firstWindow));
     firstEditor->setFocus(Qt::OtherFocusReason);
     QTRY_VERIFY(([firstEditor]() {
         QWidget* focused = QApplication::focusWidget();
@@ -2205,19 +2231,29 @@ void TestSessionsUi::session_import_dialog_opens_valid_json_as_new_tab()
     QVERIFY(importAction != nullptr);
 
     bool sawImportDialog = false;
-    QTimer::singleShot(0, &window, [&sawImportDialog, &importFilePath]() {
+    QElapsedTimer dialogWait;
+    dialogWait.start();
+    QTimer dialogDriver;
+    connect(&dialogDriver, &QTimer::timeout, &window, [&]() {
         QFileDialog* dialog = qobject_cast<QFileDialog*>(QApplication::activeModalWidget());
-        if (dialog == nullptr)
+        if (dialog == nullptr || !dialog->isVisible())
             return;
 
+        if (dialogWait.elapsed() > 5000) {
+            dialog->reject();
+            return;
+        }
         sawImportDialog = dialog->windowTitle() == QStringLiteral("Import Session")
             && dialog->acceptMode() == QFileDialog::AcceptOpen
             && dialog->fileMode() == QFileDialog::ExistingFile
             && dialog->defaultSuffix() == QStringLiteral("json");
-        dialog->selectFile(importFilePath);
+        if (QLineEdit* fileNameEdit = dialog->findChild<QLineEdit*>(QStringLiteral("fileNameEdit")))
+            fileNameEdit->setText(importFilePath);
         static_cast<QDialog*>(dialog)->accept();
     });
+    dialogDriver.start(20);
     importAction->trigger();
+    dialogDriver.stop();
     QVERIFY(sawImportDialog);
 
     QTRY_COMPARE(tabBar->count(), 2);
@@ -2342,11 +2378,13 @@ void TestSessionsUi::session_export_json_action_opens_dialog()
     QVERIFY(jsonAction != nullptr);
 
     bool sawJsonDialog = false;
-    QTimer::singleShot(0, &window, [&sawJsonDialog]() {
+    QTimer dialogDriver;
+    connect(&dialogDriver, &QTimer::timeout, &window, [&]() {
         QFileDialog* dialog = qobject_cast<QFileDialog*>(QApplication::activeModalWidget());
-        if (dialog == nullptr)
+        if (dialog == nullptr || !dialog->isVisible())
             return;
 
+        dialogDriver.stop();
         const QStringList files = dialog->selectedFiles();
         const QString selectedFile = files.isEmpty() ? QString() : files.constFirst();
         const QFileInfo fileInfo(selectedFile);
@@ -2356,6 +2394,7 @@ void TestSessionsUi::session_export_json_action_opens_dialog()
             && QDir::cleanPath(fileInfo.absolutePath()) == QDir::cleanPath(QDir::homePath());
         dialog->reject();
     });
+    dialogDriver.start(20);
     jsonAction->trigger();
     QVERIFY(sawJsonDialog);
 }
@@ -2402,11 +2441,13 @@ void TestSessionsUi::session_export_dialog_prefills_session_name()
     QString defaultSuffix;
     QString selectedName;
     QFileDialog::AcceptMode acceptMode = QFileDialog::AcceptOpen;
-    QTimer::singleShot(0, &window, [&]() {
+    QTimer dialogDriver;
+    connect(&dialogDriver, &QTimer::timeout, &window, [&]() {
         QFileDialog* dialog = qobject_cast<QFileDialog*>(QApplication::activeModalWidget());
-        if (dialog == nullptr)
+        if (dialog == nullptr || !dialog->isVisible())
             return;
 
+        dialogDriver.stop();
         // Let the export dialog's filename-selection timer run first.
         QTimer::singleShot(0, dialog, [&, dialog]() {
             sawDialog = true;
@@ -2420,6 +2461,7 @@ void TestSessionsUi::session_export_dialog_prefills_session_name()
             dialog->reject();
         });
     });
+    dialogDriver.start(20);
     QVERIFY(QMetaObject::invokeMethod(&window, qPrintable(exportSlot), Qt::DirectConnection));
     QVERIFY(sawDialog);
     QCOMPARE(suggestedFileName, baseName + QLatin1Char('.') + extension);
@@ -2479,10 +2521,12 @@ void TestSessionsUi::close_and_reopen_commands_preserve_regular_tabs()
     QTRY_COMPARE(tabs->count(), 1);
     QCOMPARE(reopen->isEnabled(), !privateTab);
     other.activateWindow();
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&other));
     other.findChild<Editor*>()->setFocus();
     QTRY_VERIFY(other.findChild<Editor*>()->hasFocus());
-    QVERIFY(!reopen->isEnabled());
+    QTRY_VERIFY(!reopen->isEnabled());
     window.activateWindow();
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&window));
     editor->setFocus();
     QTRY_VERIFY(editor->hasFocus());
     QCOMPARE(reopen->isEnabled(), !privateTab);

@@ -328,6 +328,7 @@ void TestStatusBarUi::status_bar_menu_tracks_and_changes_only_active_window()
     firstStatusBarAction->trigger();
     QCoreApplication::processEvents();
     QVERIFY(!statusBarIsVisible(firstWindow));
+    QTRY_COMPARE(secondWindow.findChildren<QStatusBar*>(QString(), Qt::FindDirectChildrenOnly).size(), 1);
     QStatusBar* recreatedSecondStatusBar =
         secondWindow.findChild<QStatusBar*>(QString(), Qt::FindDirectChildrenOnly);
     QVERIFY(recreatedSecondStatusBar != nullptr);

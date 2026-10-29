@@ -77,7 +77,8 @@ int run(int argc, char** argv)
     QTimer startupDialogWatchdog;
     QObject::connect(&startupDialogWatchdog, &QTimer::timeout, &app, []() {
         QDialog* dialog = qobject_cast<QDialog*>(QApplication::activeModalWidget());
-        if (dialog && dialog->inherits("NumberFormatDialog")) {
+        if (dialog && dialog->inherits("NumberFormatDialog")
+            && !qApp->property("speedcrunchExpectedNumberFormatDialog").toBool()) {
             QTest::qFail("Unexpected first-run number format dialog", __FILE__, __LINE__);
             dialog->reject();
         }

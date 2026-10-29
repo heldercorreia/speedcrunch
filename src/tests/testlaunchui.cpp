@@ -13,6 +13,8 @@
 #include <QThread>
 #include <QUuid>
 
+#include <cstdio>
+
 using namespace MainWindowTestHelpers;
 
 #ifdef Q_OS_MACOS
@@ -259,7 +261,7 @@ void TestLaunchUi::launches_target_last_active_window_and_pane()
     const QList<Editor*> editors = second.findChildren<Editor*>();
     QCOMPARE(editors.size(), 2);
     second.activateWindow();
-    QTRY_VERIFY(second.isActiveWindow());
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&second));
     QTest::mouseClick(editors.last(), Qt::LeftButton);
     QTRY_VERIFY(editors.last()->hasFocus());
     ResultDisplay* target = editors.last()->parentWidget()->findChild<ResultDisplay*>();
@@ -580,7 +582,9 @@ void TestLaunchUi::ipc_lock_process_helper()
     }
     SingleInstance server;
     QCOMPARE(server.start(name, {}), SingleInstance::PrimaryInstance);
-    qInfo("singleton-helper-ready");
+    // This is a process handshake. Qt logging may go to the Windows debugger.
+    std::fputs("singleton-helper-ready\n", stdout);
+    std::fflush(stdout);
     QEventLoop loop;
     QTimer::singleShot(10000, &loop, &QEventLoop::quit);
     loop.exec();
@@ -696,7 +700,8 @@ void TestLaunchUi::new_tabs_use_unique_names_across_windows()
     for (int round = 0; round != 3; ++round) {
         for (MainWindow* window : {&first, second}) {
             window->activateWindow();
-            QTRY_VERIFY(window->isActiveWindow());
+            // Native Windows activation can precede Qt's WindowActivate event.
+            QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(window));
             if (subsequentLaunch) {
                 controller.request();
                 ++expectedRequests;

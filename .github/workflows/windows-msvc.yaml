@@ -19,12 +19,18 @@ jobs:
     # This image includes VS 2022 for Qt's MSVC 2022 kit.
     runs-on: windows-2022
     timeout-minutes: 30
+    env:
+      # CTest captures pipes, which Qt does not recognize as a Windows console.
+      QT_FORCE_STDERR_LOGGING: '1'
     defaults:
       run:
         shell: pwsh
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+
+      - name: Record source revision
+        run: git rev-parse HEAD > source-revision.txt
 
       - name: Set up MSVC 2022 x64
         uses: ilammy/msvc-dev-cmd@v1
@@ -69,12 +75,23 @@ jobs:
       - name: Build
         run: cmake --build build --parallel 4
 
-      # Keep compiling UI tests, but do not run them on this runner yet.
       - name: Run non-UI tests
         run: >-
-          ctest --test-dir build -C Release -LE '^ui$'
+          ctest --test-dir build -C Release -LE '^ui$' --parallel 4
           --no-tests=error --output-on-failure --test-output-size-failed 0
+          --output-log "$env:GITHUB_WORKSPACE/non-ui-tests.log"
           --output-junit "$env:GITHUB_WORKSPACE/test-results.xml"
+
+      - name: Run native Windows UI tests
+        timeout-minutes: 15
+        env:
+          QT_QPA_PLATFORM: windows
+        run: >-
+          ctest --test-dir build -C Release -L '^ui$' --parallel 1
+          --timeout 180 --no-tests=error --output-on-failure
+          --test-output-size-failed 0
+          --output-log "$env:GITHUB_WORKSPACE/ui-tests.log"
+          --output-junit "$env:GITHUB_WORKSPACE/ui-test-results.xml"
 
       - name: Upload test logs
         if: failure()
@@ -82,6 +99,10 @@ jobs:
         with:
           name: windows-msvc-test-logs
           path: |
+            source-revision.txt
             build/Testing/Temporary/LastTest.log
+            non-ui-tests.log
             test-results.xml
+            ui-tests.log
+            ui-test-results.xml
           if-no-files-found: ignore

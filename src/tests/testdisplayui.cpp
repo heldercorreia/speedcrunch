@@ -680,6 +680,8 @@ void TestDisplayUi::result_display_hover_action_badges_use_hover_and_primary_col
     display.resize(420, 120);
     display.show();
     QVERIFY(QTest::qWaitForWindowExposed(&display));
+    display.activateWindow();
+    QVERIFY(QTest::qWaitForWindowActive(&display));
 
     const QRect copyRect = display.copyBadgeRect(0);
     const QRect editRect = display.editBadgeRect(0);
@@ -687,15 +689,19 @@ void TestDisplayUi::result_display_hover_action_badges_use_hover_and_primary_col
     QVERIFY(editRect.isValid());
 
     // A preceding data row can leave the cursor at the target position.
-    QTest::mouseMove(display.viewport(), QPoint(1, 1));
-    QTest::mouseMove(display.viewport(), QPoint(18, copyRect.center().y()));
+    QTest::mouseMove(display.windowHandle(), display.viewport()->mapTo(&display, QPoint(1, 1)));
+    QTest::mouseMove(display.windowHandle(),
+                     display.viewport()->mapTo(&display, QPoint(18, copyRect.center().y())));
     QTRY_VERIFY(display.viewport()->cursor().shape() != Qt::PointingHandCursor);
     QCOMPARE(display.viewport()->toolTip(), QString());
-    QImage rowHoverImage = display.viewport()->grab().toImage();
-    // The center can lie on a copy-glyph stroke at some font sizes.
-    QVERIFY2(firstPixelMatchingColor(rowHoverImage,
+    QImage rowHoverImage;
+    QTRY_VERIFY((rowHoverImage = display.viewport()->grab().toImage(),
+        firstPixelMatchingColorBlend(rowHoverImage, imageRectForWidgetRect(rowHoverImage, copyRect),
+                                     expectedBadgeFill, hoverColor, 3) != QPoint(-1, -1)));
+    // Small antialiased circles may have no fully covered fill pixel.
+    QVERIFY2(firstPixelMatchingColorBlend(rowHoverImage,
                                      imageRectForWidgetRect(rowHoverImage, copyRect),
-                                     expectedBadgeFill, 3) != QPoint(-1, -1),
+                                     expectedBadgeFill, hoverColor, 3) != QPoint(-1, -1),
              qPrintable(QStringLiteral("badge fill did not use %1")
                             .arg(expectedBadgeFill.name())));
     const QPoint defaultIconPixel =
@@ -706,7 +712,7 @@ void TestDisplayUi::result_display_hover_action_badges_use_hover_and_primary_col
              qPrintable(QStringLiteral("copy glyph did not use hover color %1")
                             .arg(hoverColor.name())));
 
-    QTest::mouseMove(display.viewport(), copyRect.center());
+    QTest::mouseMove(display.windowHandle(), display.viewport()->mapTo(&display, copyRect.center()));
     QTRY_COMPARE(display.viewport()->cursor().shape(), Qt::PointingHandCursor);
     QCOMPARE(display.viewport()->toolTip(), QString());
     QFrame* actionPopup = display.findChild<QFrame*>(QStringLiteral("resultActionPopup"));
@@ -738,7 +744,8 @@ void TestDisplayUi::result_display_hover_action_badges_use_hover_and_primary_col
              qPrintable(QStringLiteral("non-hovered edit glyph did not keep hover color %1")
                             .arg(hoverColor.name())));
 
-    QTest::mouseMove(display.viewport(), QPoint(18, copyRect.center().y()));
+    QTest::mouseMove(display.windowHandle(),
+                     display.viewport()->mapTo(&display, QPoint(18, copyRect.center().y())));
     QTRY_VERIFY(display.viewport()->cursor().shape() != Qt::PointingHandCursor);
     QCOMPARE(display.viewport()->toolTip(), QString());
     QTRY_VERIFY(actionPopup == nullptr || !actionPopup->isVisible());
@@ -1287,6 +1294,7 @@ void TestDisplayUi::result_display_context_menu_hides_main_menu_when_menu_bar_vi
     MainWindowStateGuard guard;
     guard.settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
     QMainWindow window;
+    window.menuBar()->setNativeMenuBar(false);
     window.menuBar()->addMenu(QStringLiteral("File"))->addAction(QStringLiteral("Dummy"));
     MenuTestResultDisplay* display = new MenuTestResultDisplay(&window);
     display->setThemeInteractionColors(QColor(QStringLiteral("#333333")),

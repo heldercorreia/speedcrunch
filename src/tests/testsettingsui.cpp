@@ -288,6 +288,12 @@ void TestSettingsUi::system_color_mode_updates_native_palettes()
     QVERIFY(menu);
     QVERIFY(dock);
     QVERIFY(status);
+    QStyle* nativeStyle = QApplication::style();
+    while (auto* proxy = qobject_cast<QProxyStyle*>(nativeStyle))
+        nativeStyle = proxy->baseStyle();
+    // Qt deliberately keeps the Vista style light, even with a dark override.
+    const bool supportsDarkPalette = nativeStyle->objectName().compare(
+        QLatin1String("windowsvista"), Qt::CaseInsensitive) != 0;
     for (int mode : {1, 2, 0}) {
         const Qt::ColorScheme expected = mode == 1 ? Qt::ColorScheme::Light
             : mode == 2 ? Qt::ColorScheme::Dark : systemScheme;
@@ -300,8 +306,8 @@ void TestSettingsUi::system_color_mode_updates_native_palettes()
                      MenuStyle::systemPalette(dock).color(QPalette::Window).rgba());
         QTRY_COMPARE(status->palette().color(QPalette::Window).rgba(),
                      MenuStyle::systemPalette(status).color(QPalette::Window).rgba());
-        QCOMPARE(QApplication::palette().color(QPalette::Window).lightness() < 128,
-                 expected == Qt::ColorScheme::Dark);
+        QTRY_COMPARE(QApplication::palette().color(QPalette::Window).lightness() < 128,
+                     supportsDarkPalette && expected == Qt::ColorScheme::Dark);
     }
     // Resetting settings must also remove a live override in every window.
     menu->actions().at(2)->trigger();
@@ -1086,6 +1092,11 @@ void TestSettingsUi::accept_completion_with_enter_survives_settings_reload()
 
 void TestSettingsUi::number_format_is_shared_and_refreshes_all_input_panes()
 {
+    const QVariant previousExpected = qApp->property("speedcrunchExpectedNumberFormatDialog");
+    qApp->setProperty("speedcrunchExpectedNumberFormatDialog", true);
+    const auto restoreExpected = qScopeGuard([previousExpected]() {
+        qApp->setProperty("speedcrunchExpectedNumberFormatDialog", previousExpected);
+    });
     Settings::instance()->inputDigitGrouping = true;
     MainWindow first;
     MainWindow second;
@@ -1103,9 +1114,13 @@ void TestSettingsUi::number_format_is_shared_and_refreshes_all_input_panes()
     for (auto style : {Settings::NumberFormatIndianCommaDot,
                        Settings::NumberFormatThreeDigitUnderscoreDotFraction,
                        Settings::NumberFormatNoGroupingDot}) {
-        QTimer::singleShot(0, &first, [style]() {
+        QTimer dialogTimer;
+        dialogTimer.setInterval(20);
+        connect(&dialogTimer, &QTimer::timeout, &first, [style, &dialogTimer]() {
             auto* dialog = qobject_cast<QDialog*>(QApplication::activeModalWidget());
-            QVERIFY(dialog);
+            if (!dialog || !dialog->isVisible())
+                return;
+            dialogTimer.stop();
             auto* combo = dialog->findChild<QComboBox*>();
             QVERIFY(combo);
             // Select by example because the dialog's ordering differs from the enum.
@@ -1118,7 +1133,9 @@ void TestSettingsUi::number_format_is_shared_and_refreshes_all_input_panes()
             combo->setCurrentIndex(index);
             dialog->accept();
         });
+        dialogTimer.start();
         numberFormatAction->trigger();
+        dialogTimer.stop();
         QCOMPARE(Settings::instance()->numberFormatStyle, style);
         const QList<int> expected = style == Settings::NumberFormatIndianCommaDot
             ? QList<int>{0, 2, 4}

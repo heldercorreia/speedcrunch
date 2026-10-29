@@ -40,6 +40,9 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
+      - name: Record source revision
+        run: git rev-parse HEAD > source-revision.txt
+
       - name: Resolve dependencies
         id: apt-dependencies
         shell: bash
@@ -76,7 +79,15 @@ jobs:
       - name: Build
         run: cmake --build build --parallel 4
 
-      - name: Run tests
+      - name: Run non-UI tests
+        run: >-
+          ctest --test-dir build -C Release -LE '^ui$' --parallel 4
+          --no-tests=error --output-on-failure --test-output-size-failed 0
+          --output-log "$GITHUB_WORKSPACE/non-ui-tests.log"
+          --output-junit "$GITHUB_WORKSPACE/test-results.xml"
+
+      - name: Run UI tests
+        timeout-minutes: 15
         env:
           QT_QPA_PLATFORM: xcb
         run: |
@@ -94,8 +105,10 @@ jobs:
               echo "Openbox did not become ready" >&2
               exit 1
             fi
-            ctest --test-dir build --output-on-failure --test-output-size-failed 0 \
-              --output-junit "$GITHUB_WORKSPACE/test-results.xml"
+            ctest --test-dir build -C Release -L "^ui$" --parallel 1 \
+              --timeout 180 --no-tests=error --output-on-failure --test-output-size-failed 0 \
+              --output-log "$GITHUB_WORKSPACE/ui-tests.log" \
+              --output-junit "$GITHUB_WORKSPACE/ui-test-results.xml"
           '
 
       - name: Upload test logs
@@ -104,6 +117,10 @@ jobs:
         with:
           name: debian-unstable-test-logs
           path: |
+            source-revision.txt
             build/Testing/Temporary/LastTest.log
+            non-ui-tests.log
             test-results.xml
+            ui-tests.log
+            ui-test-results.xml
           if-no-files-found: ignore

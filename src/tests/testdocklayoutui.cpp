@@ -561,6 +561,8 @@ void TestDockLayoutUi::dock_list_selected_row_keeps_primary_fill_while_hovered()
     table.resize(260, 80);
     table.show();
     QVERIFY(QTest::qWaitForWindowExposed(&table));
+    table.activateWindow();
+    QVERIFY(QTest::qWaitForWindowActive(&table));
 
     const QModelIndex index = table.indexFromItem(item, 0);
     const QModelIndex secondColumnIndex = table.indexFromItem(item, 1);
@@ -568,11 +570,15 @@ void TestDockLayoutUi::dock_list_selected_row_keeps_primary_fill_while_hovered()
     const QRect secondColumnRect = table.visualRect(secondColumnIndex);
     QVERIFY(itemRect.isValid());
     QVERIFY(secondColumnRect.isValid());
-    const QPoint sampledFill(itemRect.right() - 4, itemRect.center().y());
-    const QPoint sampledColumnBoundary(secondColumnRect.left() + 1, itemRect.top() + 2);
-    const QPoint sampledRoundedCorner(itemRect.left() + 1, itemRect.top() + 1);
+    const auto imagePoint = [&table](QPoint point) {
+        const qreal scale = table.viewport()->devicePixelRatioF();
+        return QPoint(qRound(point.x() * scale), qRound(point.y() * scale));
+    };
+    const QPoint sampledFill = imagePoint(QPoint(itemRect.right() - 4, itemRect.center().y()));
+    const QPoint sampledColumnBoundary = imagePoint(QPoint(secondColumnRect.left() + 1, itemRect.top() + 2));
+    const QPoint sampledRoundedCorner = imagePoint(QPoint(itemRect.left() + 1, itemRect.top() + 1));
 
-    QTest::mouseMove(table.viewport(), itemRect.center());
+    QTest::mouseMove(table.windowHandle(), table.viewport()->mapTo(&table, itemRect.center()));
     QTRY_COMPARE(table.property("dockListHoveredRow").toInt(), 0);
     QImage hoveredImage = table.viewport()->grab().toImage();
     QVERIFY2(colorsAreClose(hoveredImage.pixelColor(sampledFill), hoverBackground, 24),
@@ -1375,11 +1381,13 @@ void TestDockLayoutUi::dock_separator_style_uses_primary_while_hovered_or_dragge
     QVERIFY(QTest::qWaitForWindowExposed(&propertyOwner));
 
     QCursor::setPos(styleHost.mapToGlobal(QPoint(50, 24)));
+    QTRY_COMPARE(QCursor::pos(), styleHost.mapToGlobal(QPoint(50, 24)));
     QCoreApplication::processEvents();
     QCOMPARE(dockSeparatorPrimitiveColor(&styleHost, QStyle::State_None).name(),
              normal.name());
 
     QCursor::setPos(styleHost.mapToGlobal(QPoint(4, 4)));
+    QTRY_COMPARE(QCursor::pos(), styleHost.mapToGlobal(QPoint(4, 4)));
     QCoreApplication::processEvents();
     QCOMPARE(dockSeparatorPrimitiveColor(&styleHost, QStyle::State_None).name(),
              primary.name());
@@ -1416,6 +1424,7 @@ void TestDockLayoutUi::dock_separator_style_uses_primary_while_hovered_or_dragge
                                               verticalSeparator.height() / 2).alpha(), 0);
 
     QCursor::setPos(styleHost.mapToGlobal(QPoint(4, 1)));
+    QTRY_COMPARE(QCursor::pos(), styleHost.mapToGlobal(QPoint(4, 1)));
     QCoreApplication::processEvents();
     QImage thinHorizontalSeparator = dockSeparatorPrimitiveImage(&styleHost,
                                                                 QStyle::State_None,
@@ -1427,6 +1436,7 @@ void TestDockLayoutUi::dock_separator_style_uses_primary_while_hovered_or_dragge
              0);
 
     QCursor::setPos(styleHost.mapToGlobal(QPoint(1, 4)));
+    QTRY_COMPARE(QCursor::pos(), styleHost.mapToGlobal(QPoint(1, 4)));
     QCoreApplication::processEvents();
     QImage thinVerticalSeparator = dockSeparatorPrimitiveImage(&styleHost,
                                                               QStyle::State_None,
@@ -1438,6 +1448,7 @@ void TestDockLayoutUi::dock_separator_style_uses_primary_while_hovered_or_dragge
              0);
 
     QCursor::setPos(styleHost.mapToGlobal(QPoint(50, 24)));
+    QTRY_COMPARE(QCursor::pos(), styleHost.mapToGlobal(QPoint(50, 24)));
     QCoreApplication::processEvents();
     QCOMPARE(dockSeparatorPrimitiveColor(&styleHost, QStyle::State_Sunken).name(),
              primary.name());
