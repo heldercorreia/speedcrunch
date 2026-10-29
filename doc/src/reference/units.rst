@@ -146,6 +146,9 @@ Examples that canonicalize:
 * ``Pa*m^2 -> N``
 * ``J/s -> W``
 
+Quotients that reduce to a duration use a time unit. For example,
+``1[J] / 1[W]`` gives ``1 s``, and ``1[mJ] / 1[W]`` gives ``1 ms``.
+
 When a product or quotient is rewritten in SI units, the numeric value includes
 the prefixes and conversion factors from both operands. For example,
 ``150[MJ] / 1[s]`` gives ``150000000 W``, and ``2[kV] * 3[A]`` gives ``6000 W``.
@@ -169,6 +172,17 @@ Examples that preserve composite intent:
   usually chosen for domain readability, so SpeedCrunch preserves common
   authored speed forms when they match a supported named unit.
 * ``nmi/h`` displays as ``knot`` for the same reason.
+
+Repeated factors cancel in the displayed unit. For example,
+``1[B/h] * 1[h]`` gives ``1 B``, just like
+``1[B/hour] * 1[hour]``.
+
+Some equivalent unit forms remain distinct to preserve context.
+``1 / (10[ms])`` gives ``100 s⁻¹`` because inverse time alone does not say
+whether a quantity is a frequency (``Hz``) or a radioactive activity (``Bq``).
+Likewise, ``1[W] * 1[s]`` stays ``1 W⋅s`` to retain the power-over-time form.
+Use ``1 / (10[ms]) -> [Hz]`` or ``1[W] * 1[s] -> [J]`` to request those
+specific units.
 
 Angular rates expressed per second also include the input time unit's
 conversion factor. For example, ``120[rad] / 2[min]`` gives ``1 rad⋅s⁻¹``.

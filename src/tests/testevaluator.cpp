@@ -19,6 +19,7 @@
 #include "math/cmath.h"
 #include "core/mathdsl.h"
 #include "core/units.h"
+#include "core/unitdisplayformat.h"
 #include "tests/testcommon.h"
 #include "tests/numberformatcases.h"
 #include "tests/fractionalgroupingcases.h"
@@ -1828,8 +1829,96 @@ void test_unit_division_uses_numerator_quantity()
     check(QStringLiteral("c / (10 [MHz])"), QStringLiteral("29.9792458 [m]"));
 }
 
+void test_unit_cancellation_and_duration_display()
+{
+    // Whitespace cannot change which factor belongs to the denominator.
+    const QStringList gaps = {QString(), QStringLiteral(" "), QStringLiteral("  "),
+                              QStringLiteral("\t"), QString(QChar(0x2009))};
+    for (const QString& before : gaps) {
+        for (const QString& after : gaps) {
+            const auto checkUnitText = [&](const QString& expression, const char* expected) {
+                ++eval_total_tests;
+                DisplayErrorOnMismatch(__FILE__, __LINE__, qPrintable(expression),
+                    UnitDisplayFormat::normalizeUnitTextForDisplay(expression).toStdString(),
+                    expected, eval_failed_tests, eval_new_failed_tests);
+            };
+            checkUnitText(QStringLiteral("byte%1/%2h h").arg(before, after), "B");
+            checkUnitText(QStringLiteral("h byte%1/%2h").arg(before, after), "B");
+            checkUnitText(QString::fromUtf8("byte%1/%2h² h").arg(before, after), "B/h");
+            checkUnitText(QStringLiteral("byte%1/%2h * h").arg(before, after), "B");
+            checkUnitText(QString::fromUtf8("byte%1/%2h · h").arg(before, after), "B");
+            checkUnitText(QString::fromUtf8("byte%1/%2h × h").arg(before, after), "B");
+        }
+    }
+
+    // Short and long spellings must cancel identically in the displayed result.
+    for (const QString& information : {QStringLiteral("B"), QStringLiteral("byte"),
+                                       QStringLiteral("bit")}) {
+        const QByteArray expected = (QStringLiteral("1[")
+            + (information == QLatin1String("bit") ? QStringLiteral("b") : QStringLiteral("B"))
+            + QLatin1Char(']')).toUtf8();
+        for (const QString& divisor : {QStringLiteral("h"), QStringLiteral("hour")}) {
+            for (const QString& multiplier : {QStringLiteral("h"), QStringLiteral("hour")}) {
+                const QString expression = QStringLiteral("1 [%1/%2] × 1 [%3]")
+                    .arg(information, divisor, multiplier);
+                CHECK_EVAL_FORMAT(expression, expected.constData());
+                CHECK_EVAL_FORMAT(QStringLiteral("1 [%3] × 1 [%1/%2]")
+                    .arg(information, divisor, multiplier), expected.constData());
+                // Recalling a displayed result must keep its value and dimension.
+                eval->setExpression(expression);
+                const Quantity original = eval->evalNoAssign();
+                const QString display = NumberFormatter::format(original);
+                CHECK_EVAL_FORMAT(display, expected.constData());
+                CHECK_EVAL(QStringLiteral("(%1) -> [%2]").arg(expression, information),
+                           (QStringLiteral("1 ") + information).toUtf8().constData());
+            }
+        }
+    }
+
+    CHECK_EVAL_FORMAT("1 / (10 [Hz])", "100[ms]");
+    // Inverse time does not imply frequency rather than radioactive activity.
+    CHECK_EVAL_FORMAT("1 / (10 [ms])", u8"100[s⁻¹]");
+    CHECK_EVAL_FORMAT("1 / (10 [ms]) -> [Hz]", "100[Hz]");
+    CHECK_EVAL_FORMAT("1 [J] / 1 [s]", "1[W]");
+    CHECK_EVAL_FORMAT("1 [J] / 1 [W]", "1[s]");
+    CHECK_EVAL_FORMAT("6 [mJ] / 2 [W]", "3[ms]");
+    CHECK_EVAL_FORMAT("6 [kJ] / 2 [kW]", "3[s]");
+    CHECK_EVAL_FORMAT("-2 [J] / 4 [W]", "-500[ms]");
+    CHECK_EVAL_FORMAT("0 [MJ] / 1 [kW]", "0[s]");
+    CHECK_EVAL_FORMAT("2 [W*h] / 4 [W]", "1800[s]");
+    CHECK_EVAL_FORMAT("2 [J] / 4 [W] -> [min]", "0.00833333333333333333[min]");
+    CHECK_EVAL_FORMAT("1 [J] / 1 [W] -> [s]", "1[s]");
+    // W·s deliberately keeps the power-over-time context unless converted.
+    CHECK_EVAL_FORMAT("1 [W] × 1 [s]", u8"1[W·s]");
+    CHECK_EVAL_FORMAT("1 [W] × 1 [s] -> [J]", "1[J]");
+
+    Settings* settings = Settings::instance();
+    const bool oldComplexNumbers = settings->complexNumbers;
+    const bool oldComplexMode = DMath::complexMode;
+    const char oldImaginaryUnit = settings->imaginaryUnit;
+    settings->complexNumbers = true;
+    DMath::complexMode = true;
+    for (char imaginaryUnit : {'i', 'j'}) {
+        settings->imaginaryUnit = imaginaryUnit;
+        CMath::setImaginaryUnitSymbol(QChar(imaginaryUnit));
+        eval->initializeBuiltInVariables();
+        for (const QString& unit : {QString::fromUtf8("Ω"), QStringLiteral("ohm")}) {
+            const QString expression = QStringLiteral("(50 [%1] + 77%2 [%1]) / 50 [%1]")
+                .arg(unit, QString(QChar(imaginaryUnit)));
+            CHECK_EVAL_FORMAT(expression,
+                (QStringLiteral("1+1.54") + QChar(imaginaryUnit)).toUtf8().constData());
+        }
+    }
+    settings->complexNumbers = oldComplexNumbers;
+    DMath::complexMode = oldComplexMode;
+    settings->imaginaryUnit = oldImaginaryUnit;
+    CMath::setImaginaryUnitSymbol(QChar(oldImaginaryUnit));
+    eval->initializeBuiltInVariables();
+}
+
 void test_units()
 {
+    test_unit_cancellation_and_duration_display();
     test_unit_division_uses_numerator_quantity();
     test_units_conversion_parentheses();
     test_units_display_propagation();

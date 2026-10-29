@@ -205,11 +205,17 @@ QString simplifyCompositeUnitText(const QString& text)
             continue;
         }
 
-        appendFactor(currentToken.trimmed(), denominatorForNextToken);
-        currentToken.clear();
-        // '/' only affects the immediately following factor; multiplication
-        // separators start a new factor in numerator context.
-        denominatorForNextToken = isDiv;
+        if (!currentToken.isEmpty()) {
+            appendFactor(currentToken, denominatorForNextToken);
+            currentToken.clear();
+            denominatorForNextToken = false;
+        }
+        // Spaces around '/' must not consume its denominator. The division
+        // applies to the next factor, then multiplication resumes normally.
+        if (isDiv)
+            denominatorForNextToken = true;
+        else if (isMul)
+            denominatorForNextToken = false;
     }
     appendFactor(currentToken.trimmed(), denominatorForNextToken);
     if (!hasRepeatedBase)

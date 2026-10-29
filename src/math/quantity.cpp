@@ -2332,7 +2332,8 @@ Quantity Quantity::operator/(const Quantity& other) const
             }
             const UnitId canonicalId =
                 unitId(normalizeUnitName(canonical.unitName()));
-            if (isPreferredCanonicalDisplayUnit(canonicalId))
+            if (isPreferredCanonicalDisplayUnit(canonicalId)
+                || isPureTimeQuantity(result))
             {
                 result.setDisplayUnit(canonical.unit(), canonical.unitName());
             } else if (isSpeedDimension(result.getDimensionByQuantity())) {
