@@ -9,6 +9,15 @@ It also generates the Windows version resource in the build directory.
 Changing the version or its resource template refreshes the generated file on
 the next build. Unchanged files are not rewritten.
 
+CMake also records the source commit from Git. About shows its first eight
+characters in parentheses, and App Diagnostics includes the full hash and
+whether tracked files have local changes. Commits, checkouts, and tracked edits refresh this
+information on the next build. Untracked files do not mark a build as dirty.
+When building a source archive without Git metadata, pass
+`-DSPEEDCRUNCH_SOURCE_REVISION=<full-40-character-SHA>` to record its origin.
+Otherwise the commit and source tree state appear as `unknown`. An explicit
+revision also leaves the source tree state as `unknown`.
+
 The manual reads the same version directly from CMake when Sphinx runs, so it
 can still be built separately. Application builds use the prebuilt manual and
 do not regenerate documentation. Published download links and historical
@@ -505,10 +514,23 @@ integrity. It does not replace trying the apps on their target systems.
 
 The publisher updates one prerelease named **Development builds**, using the
 `development` tag. It uploads the Windows installer and portable ZIP, the
-macOS DMG and portable ZIP, a combined checksum file, and build details with
-links to all six CI runs. Download filenames stay the same between updates.
+macOS DMG and portable ZIP, and build details with links to all six CI runs.
+Checksums stay in CI artifacts for verification and are not published as release
+assets. Download filenames include the application version
+and the first eight characters of the source commit, for example
+`SpeedCrunch-1.2-dev-1ff7284f-windows-x64.zip`. The publisher keeps these names
+and checks that their hashes match the selected commit.
 The release is always marked as a prerelease and explicitly excluded from
 Latest, so it does not replace the highlighted official release.
+
+The packaging workflows add `dev` and the hash by renaming the finished files.
+The embedded application version, installer metadata, and archive contents
+keep the numeric version, such as `1.2`. After testing the chosen build, remove
+`-dev-<hash>` from the four filenames and upload those same files to the official
+release. No rebuild or repackaging is needed. The commit remains visible in
+About and App Diagnostics. File hashes stay the same after renaming.
+The Windows packages remain unsigned, and macOS packages retain their ad hoc
+signatures without notarization.
 
 During an update, the development release is kept as a draft until every asset
 is uploaded. If uploading fails, it stays unpublished until a successful retry.

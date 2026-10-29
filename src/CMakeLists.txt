@@ -100,6 +100,72 @@ set(CMAKE_MACOSX_RPATH ON)
 ADD_DEFINITIONS("-DSPEEDCRUNCH_VERSION=\"${speedcrunch_VERSION}\"")
 ADD_DEFINITIONS(-DQT_USE_QSTRINGBUILDER)
 
+# Keep source identity separate from the numeric version used by installers.
+set(SPEEDCRUNCH_SOURCE_REVISION "" CACHE STRING "Full source commit SHA for builds without Git metadata")
+set(speedcrunch_source_revision "${SPEEDCRUNCH_SOURCE_REVISION}")
+set(speedcrunch_source_state "unknown")
+get_filename_component(speedcrunch_source_root "${CMAKE_CURRENT_SOURCE_DIR}/.." REALPATH)
+find_package(Git QUIET)
+if(GIT_FOUND AND NOT SPEEDCRUNCH_SOURCE_REVISION)
+    execute_process(COMMAND "${GIT_EXECUTABLE}" rev-parse --show-toplevel
+        WORKING_DIRECTORY "${speedcrunch_source_root}"
+        OUTPUT_VARIABLE speedcrunch_git_root OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+    if(speedcrunch_git_root STREQUAL speedcrunch_source_root)
+        execute_process(COMMAND "${GIT_EXECUTABLE}" rev-parse HEAD
+            WORKING_DIRECTORY "${speedcrunch_source_root}"
+            OUTPUT_VARIABLE speedcrunch_source_revision OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+        execute_process(COMMAND "${GIT_EXECUTABLE}" diff --quiet HEAD --
+            WORKING_DIRECTORY "${speedcrunch_source_root}"
+            RESULT_VARIABLE speedcrunch_git_changes ERROR_QUIET)
+        if(speedcrunch_git_changes EQUAL 0)
+            set(speedcrunch_source_state "clean")
+        elseif(speedcrunch_git_changes EQUAL 1)
+            set(speedcrunch_source_state "dirty")
+        endif()
+
+        # Refresh identity after commits, checkouts, staging or tracked edits.
+        execute_process(COMMAND "${GIT_EXECUTABLE}" symbolic-ref -q HEAD
+            WORKING_DIRECTORY "${speedcrunch_source_root}"
+            OUTPUT_VARIABLE speedcrunch_git_ref OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+        foreach(git_file IN ITEMS HEAD index packed-refs "${speedcrunch_git_ref}")
+            if(git_file STREQUAL "")
+                continue()
+            endif()
+            execute_process(COMMAND "${GIT_EXECUTABLE}" rev-parse --git-path "${git_file}"
+                WORKING_DIRECTORY "${speedcrunch_source_root}"
+                OUTPUT_VARIABLE speedcrunch_git_path OUTPUT_STRIP_TRAILING_WHITESPACE)
+            get_filename_component(speedcrunch_git_path "${speedcrunch_git_path}" ABSOLUTE
+                BASE_DIR "${speedcrunch_source_root}")
+            if(EXISTS "${speedcrunch_git_path}")
+                set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${speedcrunch_git_path}")
+            endif()
+        endforeach()
+        execute_process(COMMAND "${GIT_EXECUTABLE}" ls-files
+            WORKING_DIRECTORY "${speedcrunch_source_root}"
+            OUTPUT_VARIABLE speedcrunch_tracked_files OUTPUT_STRIP_TRAILING_WHITESPACE)
+        string(REPLACE "\n" ";" speedcrunch_tracked_files "${speedcrunch_tracked_files}")
+        foreach(tracked_file IN LISTS speedcrunch_tracked_files)
+            set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+                "${speedcrunch_source_root}/${tracked_file}")
+        endforeach()
+    endif()
+endif()
+if(speedcrunch_source_revision)
+    string(LENGTH "${speedcrunch_source_revision}" speedcrunch_revision_length)
+    if(NOT speedcrunch_source_revision MATCHES "^[0-9a-fA-F]+$"
+            OR NOT speedcrunch_revision_length EQUAL 40)
+        message(FATAL_ERROR "SPEEDCRUNCH_SOURCE_REVISION must be a full 40-character commit SHA")
+    endif()
+    string(TOLOWER "${speedcrunch_source_revision}" speedcrunch_source_revision)
+    string(SUBSTRING "${speedcrunch_source_revision}" 0 8 speedcrunch_source_revision_short)
+else()
+    set(speedcrunch_source_revision "unknown")
+    set(speedcrunch_source_revision_short "unknown")
+endif()
+message(STATUS "Source commit: ${speedcrunch_source_revision}")
+message(STATUS "Source tree: ${speedcrunch_source_state}")
+configure_file(core/buildversion.h.in buildversion.h @ONLY)
+
 include(SourceFiles.cmake)
 
 if(BUILD_TESTING AND CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")

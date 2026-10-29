@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "gui/diagnosticsdialog.h"
+#include "buildversion.h"
 #include "core/settings.h"
 #include "core/startupdiagnostics.h"
 
@@ -111,7 +112,9 @@ QString appDiagnosticsReport(const QString& workload)
 #else
     out << "\nPortable: no\n";
 #endif
-    out << "OS: " << QSysInfo::prettyProductName() << '\n'
+    out << "Source commit: " SPEEDCRUNCH_SOURCE_REVISION "\n"
+        << "Source tree: " SPEEDCRUNCH_SOURCE_STATE "\n"
+        << "OS: " << QSysInfo::prettyProductName() << '\n'
         << "OS version: " << QSysInfo::productVersion() << '\n'
         << "Kernel: " << QSysInfo::kernelType() << ' ' << QSysInfo::kernelVersion() << '\n'
         << "Architecture (build / CPU): " << QSysInfo::buildCpuArchitecture()

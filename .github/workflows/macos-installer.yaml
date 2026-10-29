@@ -104,7 +104,10 @@ jobs:
           shopt -s nullglob
           packages=(dist/SpeedCrunch-*-macos-arm64.dmg)
           test "${#packages[@]}" = 1
-          package="${packages[0]}"
+          revision=$(cat source-revision.txt)
+          short_revision=${revision:0:8}
+          package="${packages[0]/-macos-arm64/-dev-$short_revision-macos-arm64}"
+          mv "${packages[0]}" "$package"
           test -s "$package"
           hdiutil verify "$package"
           mount_dir="$RUNNER_TEMP/speedcrunch-dmg"

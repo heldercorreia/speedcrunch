@@ -53,10 +53,10 @@ jobs:
               throw new Error('The selected commit is not on main.');
             }
             const formats = {
-              'windows-installer': ['windows-x64\\.exe', 'windows-x64.exe'],
-              'windows-portable': ['windows-x64\\.zip', 'windows-x64.zip'],
-              'macos-installer': ['macos-arm64\\.dmg', 'macos-arm64.dmg'],
-              'macos-portable': ['macos-arm64\\.zip', 'macos-arm64.zip']
+              'windows-installer': 'windows-x64\\.exe',
+              'windows-portable': 'windows-x64\\.zip',
+              'macos-installer': 'macos-arm64\\.dmg',
+              'macos-portable': 'macos-arm64\\.zip'
             };
             const selection = {sha, runs: [], packages: []};
             for (const key of ['windows-debug', 'macos-debug', ...Object.keys(formats)]) {
@@ -79,8 +79,9 @@ jobs:
               const artifacts = await github.paginate(
                 github.rest.actions.listWorkflowRunArtifacts,
                 {...repo, run_id: run.id, per_page: 100});
-              const pattern = new RegExp('^SpeedCrunch-([0-9]+(?:\\.[0-9]+)*)-'
-                + formats[key][0] + '$');
+              const pattern = new RegExp('^SpeedCrunch-([0-9]+(?:\\.[0-9]+)*)-dev-'
+                + sha.slice(0, 8) + '-'
+                + formats[key] + '$');
               const packages = artifacts.filter(item => !item.expired && pattern.test(item.name));
               const metadata = artifacts.filter(item => !item.expired
                 && item.name === key + '-metadata');
@@ -90,7 +91,7 @@ jobs:
               const packageArtifact = packages[0];
               selection.packages.push({
                 key, name: packageArtifact.name, version: packageArtifact.name.match(pattern)[1],
-                asset: 'SpeedCrunch-development-' + formats[key][1]
+                asset: packageArtifact.name
               });
               core.setOutput(key + '-run', String(run.id));
               core.setOutput(key + '-package', String(packageArtifact.id));
@@ -282,15 +283,32 @@ jobs:
             const path = require('node:path');
             const crypto = require('node:crypto');
             const info = JSON.parse(fs.readFileSync('candidate/build-info.json', 'utf8'));
-            const expected = [
-              'SpeedCrunch-development-windows-x64.exe',
-              'SpeedCrunch-development-windows-x64.zip',
-              'SpeedCrunch-development-macos-arm64.dmg',
-              'SpeedCrunch-development-macos-arm64.zip'
-            ];
             if (info.sha !== process.env.EXPECTED_SHA || !/^[0-9a-f]{40}$/.test(info.sha)) {
               throw new Error('Unexpected candidate source revision.');
             }
+            const formats = {
+              'windows-installer': 'windows-x64.exe',
+              'windows-portable': 'windows-x64.zip',
+              'macos-installer': 'macos-arm64.dmg',
+              'macos-portable': 'macos-arm64.zip'
+            };
+            if (!Array.isArray(info.packages) || info.packages.length !== 4
+                || new Set(info.packages.map(item => item.version)).size !== 1) {
+              throw new Error('Expected four packages with the same application version.');
+            }
+            const expected = Object.entries(formats).map(([key, suffix]) => {
+              const matches = info.packages.filter(item => item.key === key);
+              if (matches.length !== 1 || !/^[0-9]+(?:\.[0-9]+)*$/.test(matches[0].version)) {
+                throw new Error('Invalid package version or format: ' + key);
+              }
+              const item = matches[0];
+              const name = 'SpeedCrunch-' + item.version + '-dev-'
+                + info.sha.slice(0, 8) + '-' + suffix;
+              if (item.name !== name || item.asset !== name) {
+                throw new Error('Package filename does not match its source commit: ' + key);
+              }
+              return name;
+            });
             const manifest = fs.readFileSync('candidate/SHA256SUMS.txt', 'utf8').trim().split('\n');
             if (manifest.length !== 4) throw new Error('Expected four package checksums.');
             for (const name of expected) {
@@ -300,9 +318,10 @@ jobs:
                 throw new Error('Invalid candidate package: ' + name);
               }
             }
-            const assets = [...expected, 'SHA256SUMS.txt', 'build-info.json'];
+            const assets = [...expected, 'build-info.json'];
+            const candidateFiles = [...assets, 'SHA256SUMS.txt'];
             const local = fs.readdirSync('candidate').sort();
-            if (JSON.stringify(local) !== JSON.stringify([...assets].sort())) {
+            if (JSON.stringify(local) !== JSON.stringify(candidateFiles.sort())) {
               throw new Error('The candidate contains unexpected files.');
             }
             const repo = context.repo;
@@ -350,7 +369,7 @@ jobs:
               'Prepared: ' + info.prepared_at,
               '',
               'All four packages come from this commit. Both Debug test workflows pass.',
-              'SHA256SUMS.txt contains their checksums. build-info.json links to all six CI runs.',
+              'CI verifies package checksums before publishing. build-info.json links to all six CI runs.',
               '',
               'The macOS packages have ad hoc signatures and are not notarized.',
               '',

@@ -5,6 +5,7 @@
 #include "core/numberformatter.h"
 #include "core/mathdsl.h"
 #include "gui/diagnosticsdialog.h"
+#include "buildversion.h"
 
 #include <QOperatingSystemVersion>
 #include <QStyleHints>
@@ -30,7 +31,9 @@ private slots:
     void trailing_zeroes_action_updates_windows_and_preserves_history();
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
-    void about_box_shows_os_between_application_and_qt_versions();
+    void about_box_shows_version_commit_qt_and_os_in_order();
+    void about_box_identifies_source_commit();
+    void diagnostics_identifies_source_commit();
     void update_checks_follow_build_option();
     void ui_test_fixture_resets_persisted_layout_and_first_run_preference();
     void editing_input_digit_grouping_updates_all_open_editors();
@@ -679,7 +682,7 @@ void TestSettingsUi::settings_reset_restores_dock_column_orders()
     }
 }
 
-void TestSettingsUi::about_box_shows_os_between_application_and_qt_versions()
+void TestSettingsUi::about_box_shows_version_commit_qt_and_os_in_order()
 {
     AboutBox dialog;
     const QTextEdit* textEdit = dialog.findChild<QTextEdit*>();
@@ -694,11 +697,44 @@ void TestSettingsUi::about_box_shows_os_between_application_and_qt_versions()
     const QStringList lines = textEdit->toPlainText().split(QLatin1Char('\n'));
     const int versionLine = lines.indexOf(applicationVersion);
     QVERIFY(versionLine >= 0);
-    QVERIFY(lines.size() > versionLine + 2);
+    QVERIFY(lines.size() > versionLine + 3);
+    QString commitLine = QStringLiteral("(" SPEEDCRUNCH_SOURCE_REVISION_SHORT ")");
+    if (QLatin1String(SPEEDCRUNCH_SOURCE_STATE) == QLatin1String("dirty"))
+        commitLine += QStringLiteral(" (dirty)");
     const QString osName = QSysInfo::prettyProductName()
         .remove(QLatin1Char('(')).remove(QLatin1Char(')'));
-    QCOMPARE(lines.at(versionLine + 1), osName);
+    QCOMPARE(lines.at(versionLine + 1), commitLine);
     QCOMPARE(lines.at(versionLine + 2), QStringLiteral("Qt " QT_VERSION_STR));
+    QCOMPARE(lines.at(versionLine + 3), osName);
+}
+
+void TestSettingsUi::about_box_identifies_source_commit()
+{
+    AboutBox dialog;
+    const QTextEdit* textEdit = dialog.findChild<QTextEdit*>();
+    QVERIFY(textEdit);
+    QString commitLine = QStringLiteral("(" SPEEDCRUNCH_SOURCE_REVISION_SHORT ")");
+    if (QLatin1String(SPEEDCRUNCH_SOURCE_STATE) == QLatin1String("dirty"))
+        commitLine += QStringLiteral(" (dirty)");
+    QVERIFY(textEdit->toPlainText().split(QLatin1Char('\n')).contains(commitLine));
+    QVERIFY(!textEdit->toPlainText().contains(QStringLiteral("Commit: ")));
+    QVERIFY(!textEdit->toPlainText().contains(QStringLiteral(SPEEDCRUNCH_VERSION "-dev")));
+}
+
+void TestSettingsUi::diagnostics_identifies_source_commit()
+{
+    const QString report = appDiagnosticsReport(QString());
+    const QStringList lines = report.split(QLatin1Char('\n'));
+    QVERIFY(lines.contains(QStringLiteral("Source commit: " SPEEDCRUNCH_SOURCE_REVISION)));
+    QVERIFY(lines.contains(QStringLiteral("Source tree: " SPEEDCRUNCH_SOURCE_STATE)));
+    QVERIFY(!lines.first().contains(QStringLiteral("-dev")));
+    const QString revision = QStringLiteral(SPEEDCRUNCH_SOURCE_REVISION);
+    if (revision != QLatin1String("unknown")) {
+        QCOMPARE(revision.size(), 40);
+        QCOMPARE(revision.left(8), QStringLiteral(SPEEDCRUNCH_SOURCE_REVISION_SHORT));
+    } else {
+        QCOMPARE(QStringLiteral(SPEEDCRUNCH_SOURCE_REVISION_SHORT), QStringLiteral("unknown"));
+    }
 }
 
 void TestSettingsUi::update_checks_follow_build_option()

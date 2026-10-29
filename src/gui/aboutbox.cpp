@@ -3,6 +3,7 @@
 
 
 #include "gui/aboutbox.h"
+#include "buildversion.h"
 
 #include <QGridLayout>
 #include <QLabel>
@@ -26,10 +27,14 @@ AboutBox::AboutBox(QWidget* parent, Qt::WindowFlags f)
     msg += " Portable";
 #endif
     msg += "</b><br>";
+    msg += "(" SPEEDCRUNCH_SOURCE_REVISION_SHORT ")";
+    if (QLatin1String(SPEEDCRUNCH_SOURCE_STATE) == QLatin1String("dirty"))
+        msg += " (dirty)";
+    msg += "<br>";
+    msg += "Qt " + QLatin1String(QT_VERSION_STR) + "<br>";
     const QString osName = QSysInfo::prettyProductName()
         .remove(QLatin1Char('(')).remove(QLatin1Char(')'));
     msg += osName.toHtmlEscaped() + "<br>";
-    msg += "Qt " + QLatin1String(QT_VERSION_STR) + "<br>";
 
     const QString authors = "<p><b>%1</b><br>%2";
     msg += authors.arg(tr("Main author | Logo | Maintainer"), "Helder Correia");

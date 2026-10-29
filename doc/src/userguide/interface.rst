@@ -1072,9 +1072,9 @@ Help
     to share the report when reporting a problem.
 
 * :menuselection:`Help --> About SpeedCrunch`
-    Show the SpeedCrunch version, the operating system and its version, and the Qt
-    version. Portable builds display ``Portable`` next to the SpeedCrunch
-    version.
+    Show the SpeedCrunch version, the short source commit hash in parentheses,
+    the Qt version, and the operating system and its version, in that order. Portable builds
+    display ``Portable`` next to the SpeedCrunch version.
 
 * :menuselection:`Help --> Check for Updates`
     Trigger an update check and show information when a newer version is available.
