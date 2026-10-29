@@ -19,12 +19,18 @@ jobs:
     # This image includes VS 2022 for Qt's MSVC 2022 kit.
     runs-on: windows-2022
     timeout-minutes: 30
+    env:
+      # CTest captures pipes, which Qt does not recognize as a Windows console.
+      QT_FORCE_STDERR_LOGGING: '1'
     defaults:
       run:
         shell: pwsh
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+
+      - name: Record source revision
+        run: git rev-parse HEAD > source-revision.txt
 
       - name: Set up MSVC 2022 x64
         uses: ilammy/msvc-dev-cmd@v1
@@ -93,6 +99,7 @@ jobs:
         with:
           name: windows-msvc-test-logs
           path: |
+            source-revision.txt
             build/Testing/Temporary/LastTest.log
             non-ui-tests.log
             test-results.xml

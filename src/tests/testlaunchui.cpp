@@ -13,6 +13,8 @@
 #include <QThread>
 #include <QUuid>
 
+#include <cstdio>
+
 using namespace MainWindowTestHelpers;
 
 #ifdef Q_OS_MACOS
@@ -580,7 +582,9 @@ void TestLaunchUi::ipc_lock_process_helper()
     }
     SingleInstance server;
     QCOMPARE(server.start(name, {}), SingleInstance::PrimaryInstance);
-    qInfo("singleton-helper-ready");
+    // This is a process handshake. Qt logging may go to the Windows debugger.
+    std::fputs("singleton-helper-ready\n", stdout);
+    std::fflush(stdout);
     QEventLoop loop;
     QTimer::singleShot(10000, &loop, &QEventLoop::quit);
     loop.exec();

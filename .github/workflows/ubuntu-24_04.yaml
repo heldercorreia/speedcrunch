@@ -26,6 +26,9 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
+      - name: Record source revision
+        run: git rev-parse HEAD > source-revision.txt
+
       - name: Resolve dependencies
         id: apt-dependencies
         shell: bash
@@ -101,6 +104,7 @@ jobs:
         with:
           name: linux-test-logs
           path: |
+            source-revision.txt
             build/Testing/Temporary/LastTest.log
             non-ui-tests.log
             test-results.xml

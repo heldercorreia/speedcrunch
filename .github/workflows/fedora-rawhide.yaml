@@ -37,6 +37,9 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
+      - name: Record source revision
+        run: git rev-parse HEAD > source-revision.txt
+
       - name: Resolve dependencies
         id: dnf-dependencies
         run: |
@@ -116,6 +119,7 @@ jobs:
         with:
           name: fedora-rawhide-test-logs
           path: |
+            source-revision.txt
             build/Testing/Temporary/LastTest.log
             non-ui-tests.log
             test-results.xml

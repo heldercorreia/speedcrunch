@@ -27,6 +27,9 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
+      - name: Record source revision
+        run: git rev-parse HEAD > source-revision.txt
+
       - name: Install Qt 6.12.0
         uses: jurplel/install-qt-action@v4
         with:
@@ -87,6 +90,7 @@ jobs:
         with:
           name: macos-15-test-logs
           path: |
+            source-revision.txt
             build/Testing/Temporary/LastTest.log
             non-ui-tests.log
             test-results.xml
