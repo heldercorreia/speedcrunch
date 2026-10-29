@@ -846,6 +846,8 @@ void TestDockAppearanceUi::system_dock_headers_paint_system_background()
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     QDockWidget* dock = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
     QVERIFY(dock);
+    // Keep the background sample clear of native title text.
+    dock->setWindowTitle(QString());
     if (switchFromTheme) {
         QMenu* appearance = window.findChild<QMenu*>(QStringLiteral("DockAppearanceMenu"));
         QVERIFY(appearance);
@@ -859,9 +861,12 @@ void TestDockAppearanceUi::system_dock_headers_paint_system_background()
         const QAbstractButton* button = dock->findChild<QAbstractButton*>(
             QStringLiteral("qt_dockwidget_floatbutton"), Qt::FindDirectChildrenOnly);
         QVERIFY(button);
-        const QPoint sample(button->geometry().left() - 8, button->geometry().center().y());
+        const QPoint sample(dock->rect().center().x(), button->geometry().center().y());
         QVERIFY(dock->rect().contains(sample));
         QVERIFY(sample.y() < dock->widget()->geometry().top());
+        for (const auto* titleButton : dock->findChildren<QAbstractButton*>(QString(), Qt::FindDirectChildrenOnly))
+            QVERIFY2(!titleButton->isVisible() || !titleButton->geometry().contains(sample),
+                     "The header background sample overlaps a title button");
         QStyleOptionDockWidget option;
         option.initFrom(dock);
         option.rect = QRect(0, 0, dock->width(), dock->widget()->geometry().top());
