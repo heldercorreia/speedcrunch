@@ -149,7 +149,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: macos-portable-logs
+          name: macos-15-portable-logs
           path: |
             source-revision.txt
             build/CMakeFiles/CMakeConfigureLog.yaml

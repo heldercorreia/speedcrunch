@@ -88,7 +88,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: macos-debug-test-logs
+          name: macos-15-debug-test-logs
           path: |
             source-revision.txt
             build/Testing/Temporary/LastTest.log

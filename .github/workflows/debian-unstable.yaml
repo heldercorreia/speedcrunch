@@ -40,6 +40,10 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
+      - name: Trust source directory
+        # Checkout uses a temporary Git config that later shell steps do not share.
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: Record source revision
         run: git rev-parse HEAD > source-revision.txt
 

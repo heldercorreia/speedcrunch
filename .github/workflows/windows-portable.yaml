@@ -153,7 +153,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: windows-portable-logs
+          name: windows-2022-portable-logs
           path: |
             source-revision.txt
             build/CMakeFiles/CMakeConfigureLog.yaml
