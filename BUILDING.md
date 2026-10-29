@@ -343,6 +343,32 @@ including the embedded manual and update checks if enabled. See Qt's
 [Windows deployment guide](https://doc.qt.io/qt-6/windows-deployment.html)
 for details.
 
+### Windows CI builds
+
+GitHub Actions provides three separate Windows workflows, all using the Qt
+6.12.0 MSVC 2022 x64 kit:
+
+| Workflow | Build variant | Result |
+| --- | --- | --- |
+| [Windows Debug](https://github.com/heldercorreia/speedcrunch/actions/workflows/windows-debug.yaml) | `BUILD_VARIANT_DEV_DEBUG=ON` | Debug build and all tests, including native Windows UI tests |
+| [Windows Installer](https://github.com/heldercorreia/speedcrunch/actions/workflows/windows-installer.yaml) | `BUILD_VARIANT_OFFICIAL_RELEASE=ON` | NSIS installer, without tests |
+| [Windows Portable](https://github.com/heldercorreia/speedcrunch/actions/workflows/windows-portable.yaml) | `BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE=ON` | Portable ZIP, without tests |
+
+They run on pushes to `main`, pull requests targeting `main`, and manual runs
+from the Actions page. Each workflow builds independently.
+
+The packaging workflows install matching Qt sources for license texts, stage
+the application with CMake, and run `windeployqt` to collect Qt dependencies.
+CPack packages that staged folder, including the added plugins. Each workflow
+checks that the required runtime files and license notices are present.
+
+After a successful packaging run, download the installer or ZIP from its
+Artifacts section or the link in the run summary. The package is uploaded
+directly, without an extra ZIP wrapper. A separate metadata artifact contains
+the source commit and a SHA-256 checksum. Artifacts are retained for 90 days,
+and downloading them requires signing into GitHub. Public development downloads
+are published separately, as described below.
+
 ### macOS
 
 SpeedCrunch supports Apple Silicon (`arm64`) Macs running macOS 14.4 (Sonoma)
@@ -436,6 +462,58 @@ folder beside it, then launch it again. See Apple's
 The packaging step signs the portable bundle with an ad hoc signature and
 verifies it before creating the archive. Public distribution still needs
 Developer ID signing and notarization for normal Gatekeeper approval.
+
+### macOS CI builds
+
+GitHub Actions provides three macOS workflows using macOS 15, Xcode 16.4,
+and the official Qt 6.12.0 kit. They build for Apple Silicon (`arm64`) and
+target macOS 14.4 or later.
+
+| Workflow | Build variant | Result |
+| --- | --- | --- |
+| [macOS Debug](https://github.com/heldercorreia/speedcrunch/actions/workflows/macos-debug.yaml) | `BUILD_VARIANT_DEV_DEBUG=ON` | Debug build and all tests, including native Cocoa UI tests |
+| [macOS Installer](https://github.com/heldercorreia/speedcrunch/actions/workflows/macos-installer.yaml) | `BUILD_VARIANT_OFFICIAL_RELEASE=ON` | DMG, without tests |
+| [macOS Portable](https://github.com/heldercorreia/speedcrunch/actions/workflows/macos-portable.yaml) | `BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE=ON` | Portable ZIP, without tests |
+
+Like the Windows workflows, they run independently on pushes to `main`, pull
+requests targeting `main`, and manual runs. The packaging jobs bundle Qt and
+license notices, verify the app's ad hoc signature, then inspect the finished
+DMG or extracted ZIP before uploading it. Packages and metadata are retained
+for 90 days. The macOS packages are not notarized.
+
+### Publishing development builds
+
+The [Publish Development Build](https://github.com/heldercorreia/speedcrunch/actions/workflows/publish-development.yaml)
+workflow runs only when started manually. It collects existing packages and
+does not compile the application or rerun its tests.
+
+1. Wait for all six Windows and macOS workflows to succeed for the same commit
+   on `main`.
+2. Open **Publish Development Build** in Actions and choose **Run workflow**
+   from `main`.
+3. Enter the full commit SHA, or leave it empty to use the current `main` commit.
+4. Leave **Publish development build** unchecked to validate the packages and
+   download a `development-candidate` artifact for inspection. Check it when
+   you want to publish. Both modes perform the same validation.
+
+Publication requires successful latest runs of both Debug workflows and all
+four packaging workflows for that commit. Missing or expired artifacts, a
+different source revision or application version, and checksum failures stop
+the workflow before it changes a release. ZIP contents and package headers
+are checked as well. Validation confirms the recorded CI results and package
+integrity. It does not replace trying the apps on their target systems.
+
+The publisher updates one prerelease named **Development builds**, using the
+`development` tag. It uploads the Windows installer and portable ZIP, the
+macOS DMG and portable ZIP, a combined checksum file, and build details with
+links to all six CI runs. Download filenames stay the same between updates.
+The release is always marked as a prerelease and explicitly excluded from
+Latest, so it does not replace the highlighted official release.
+
+During an update, the development release is kept as a draft until every asset
+is uploaded. If uploading fails, it stays unpublished until a successful retry.
+The publisher refuses to replace an official release or modify an immutable
+release. The rolling development release therefore needs editable assets.
 
 ## Build options
 

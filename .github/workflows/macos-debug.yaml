@@ -1,4 +1,4 @@
-name: macOS 15
+name: macOS Debug
 
 on:
   push:
@@ -56,7 +56,7 @@ jobs:
       - name: Configure
         run: >-
           cmake -S . -B build -G Ninja
-          -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+          -DBUILD_VARIANT_DEV_DEBUG=ON
           -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=14.4
           "-DCMAKE_C_COMPILER=$(xcrun --find clang)"
           "-DCMAKE_CXX_COMPILER=$(xcrun --find clang++)"
@@ -68,7 +68,7 @@ jobs:
 
       - name: Run non-UI tests
         run: >-
-          ctest --test-dir build -C Release -LE '^ui$' --parallel 4
+          ctest --test-dir build -C Debug -LE '^ui$' --parallel 4
           --no-tests=error --output-on-failure --test-output-size-failed 0
           --output-log "$GITHUB_WORKSPACE/non-ui-tests.log"
           --output-junit "$GITHUB_WORKSPACE/test-results.xml"
@@ -78,7 +78,7 @@ jobs:
         env:
           QT_QPA_PLATFORM: cocoa
         run: >-
-          ctest --test-dir build -C Release -L '^ui$' --parallel 1
+          ctest --test-dir build -C Debug -L '^ui$' --parallel 1
           --timeout 180 --no-tests=error --output-on-failure
           --test-output-size-failed 0
           --output-log "$GITHUB_WORKSPACE/ui-tests.log"
@@ -88,7 +88,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: macos-15-test-logs
+          name: macos-debug-test-logs
           path: |
             source-revision.txt
             build/Testing/Temporary/LastTest.log
