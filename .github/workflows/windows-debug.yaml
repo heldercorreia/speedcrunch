@@ -18,7 +18,7 @@ jobs:
   build-and-test:
     # This image includes VS 2022 for Qt's MSVC 2022 kit.
     runs-on: windows-2022
-    timeout-minutes: 30
+    timeout-minutes: 75
     env:
       # CTest captures pipes, which Qt does not recognize as a Windows console.
       QT_FORCE_STDERR_LOGGING: '1'
@@ -83,15 +83,18 @@ jobs:
           --output-junit "$env:GITHUB_WORKSPACE/test-results.xml"
 
       - name: Run native Windows UI tests
-        timeout-minutes: 15
+        timeout-minutes: 60
         env:
           QT_QPA_PLATFORM: windows
-        run: >-
-          ctest --test-dir build -C Debug -L '^ui$' --parallel 1
-          --timeout 180 --no-tests=error --output-on-failure
-          --test-output-size-failed 0
-          --output-log "$env:GITHUB_WORKSPACE/ui-tests.log"
-          --output-junit "$env:GITHUB_WORKSPACE/ui-test-results.xml"
+        # Native Debug suites can take several minutes on this runner.
+        # CTest's timeout applies to a whole suite, including all data rows.
+        run: |
+          ctest --test-dir build -C Debug -L '^ui$' --parallel 1 `
+            --timeout 600 --no-tests=error --verbose `
+            --test-output-size-failed 0 `
+            --output-junit "$env:GITHUB_WORKSPACE/ui-test-results.xml" `
+            2>&1 | Tee-Object -FilePath "$env:GITHUB_WORKSPACE/ui-tests.log"
+          exit $LASTEXITCODE
 
       - name: Upload test logs
         if: failure()
@@ -100,7 +103,7 @@ jobs:
           name: windows-2022-debug-test-logs
           path: |
             source-revision.txt
-            build/Testing/Temporary/LastTest.log
+            build/Testing/Temporary/LastTest.log*
             non-ui-tests.log
             test-results.xml
             ui-tests.log
