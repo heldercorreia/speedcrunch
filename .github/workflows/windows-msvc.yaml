@@ -69,12 +69,23 @@ jobs:
       - name: Build
         run: cmake --build build --parallel 4
 
-      # Keep compiling UI tests, but do not run them on this runner yet.
       - name: Run non-UI tests
         run: >-
-          ctest --test-dir build -C Release -LE '^ui$'
+          ctest --test-dir build -C Release -LE '^ui$' --parallel 4
           --no-tests=error --output-on-failure --test-output-size-failed 0
+          --output-log "$env:GITHUB_WORKSPACE/non-ui-tests.log"
           --output-junit "$env:GITHUB_WORKSPACE/test-results.xml"
+
+      - name: Run native Windows UI tests
+        timeout-minutes: 15
+        env:
+          QT_QPA_PLATFORM: windows
+        run: >-
+          ctest --test-dir build -C Release -L '^ui$' --parallel 1
+          --timeout 180 --no-tests=error --output-on-failure
+          --test-output-size-failed 0
+          --output-log "$env:GITHUB_WORKSPACE/ui-tests.log"
+          --output-junit "$env:GITHUB_WORKSPACE/ui-test-results.xml"
 
       - name: Upload test logs
         if: failure()
@@ -83,5 +94,8 @@ jobs:
           name: windows-msvc-test-logs
           path: |
             build/Testing/Temporary/LastTest.log
+            non-ui-tests.log
             test-results.xml
+            ui-tests.log
+            ui-test-results.xml
           if-no-files-found: ignore
