@@ -12,6 +12,8 @@
 class MainWindow;
 class QWidget;
 
+Q_MOC_INCLUDE("gui/mainwindow.h")
+
 class LaunchController : public QObject {
     Q_OBJECT
 public:
