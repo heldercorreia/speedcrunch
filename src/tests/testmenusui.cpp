@@ -829,7 +829,24 @@ void TestMenusUi::system_dropdowns_use_the_native_popup_selection_palette()
         QPainter painter(&image);
         combo->itemDelegate()->paint(&painter, selected, combo->model()->index(0, combo->modelColumn()));
         painter.end();
-        QCOMPARE(image.pixelColor(220, 20).name(), expected.color(QPalette::Active, QPalette::Highlight).name());
+        // Windows' native selection painter can use theme colors instead of
+        // the palette's Highlight brush. Compare with an unthemed dropdown.
+        QComboBox reference;
+        reference.setEditable(editable);
+        reference.setFont(combo->font());
+        reference.setModel(combo->model());
+        reference.setModelColumn(combo->modelColumn());
+        reference.ensurePolished();
+        reference.view()->setPalette(expected);
+        QStyleOptionViewItem nativeSelected = selected;
+        nativeSelected.palette = reference.view()->palette();
+        QImage nativeImage(image.size(), image.format());
+        nativeImage.fill(Qt::transparent);
+        QPainter nativePainter(&nativeImage);
+        reference.itemDelegate()->paint(&nativePainter, nativeSelected,
+            reference.model()->index(0, reference.modelColumn()));
+        nativePainter.end();
+        QCOMPARE(image.pixelColor(220, 20), nativeImage.pixelColor(220, 20));
     }
 }
 
@@ -906,17 +923,21 @@ void TestMenusUi::editor_context_menu_paints_system_background()
     QVERIFY(context != nullptr);
     QCOMPARE(context->parentWidget(), editor->viewport());
 
-    // Palette checks alone miss inherited stylesheets that suppress painting.
+    // Paint a complete item. Windows leaves PE_PanelMenu transparent and
+    // paints the native background as part of CE_MenuItem instead.
     const auto panelImage = [](QMenu* menu) {
         menu->ensurePolished();
         QImage image(180, 120, QImage::Format_ARGB32_Premultiplied);
         image.fill(Qt::transparent);
-        QStyleOption option;
+        QStyleOptionMenuItem option;
         option.initFrom(menu);
         option.rect = image.rect();
         option.state = QStyle::State_Enabled | QStyle::State_Active;
+        option.menuItemType = QStyleOptionMenuItem::Normal;
+        option.checkType = QStyleOptionMenuItem::NotCheckable;
         QPainter painter(&image);
         menu->style()->drawPrimitive(QStyle::PE_PanelMenu, &option, &painter, menu);
+        menu->style()->drawControl(QStyle::CE_MenuItem, &option, &painter, menu);
         painter.end();
         return image;
     };
@@ -1296,15 +1317,23 @@ void TestMenusUi::system_menus_preserve_platform_roles_and_follow_palette_change
         option.palette.setCurrentColorGroup(enabled ? QPalette::Active : QPalette::Disabled);
         option.font = editorMenu->font();
         const QColor fill = menuPalette.color(enabled ? QPalette::Highlight : QPalette::Window);
-        const QColor text = enabled ? menuPalette.color(QPalette::HighlightedText)
-                                   : menuPalette.color(QPalette::Disabled, QPalette::Text);
         QImage image(option.rect.size(), QImage::Format_ARGB32_Premultiplied);
         image.fill(fill);
         QPainter painter(&image);
         painter.setFont(option.font);
         editorMenu->style()->drawControl(QStyle::CE_MenuItem, &option, &painter, editorMenu.data());
         painter.end();
-        QVERIFY(firstPixelMatchingColor(image, image.rect(), text, 12) != QPoint(-1, -1));
+        // Native Windows text colors can come from UxTheme rather than the
+        // palette. Keep the rendering check against a menu without a parent.
+        QMenu reference;
+        reference.ensurePolished();
+        QImage nativeImage(image.size(), image.format());
+        nativeImage.fill(fill);
+        QPainter nativePainter(&nativeImage);
+        nativePainter.setFont(option.font);
+        reference.style()->drawControl(QStyle::CE_MenuItem, &option, &nativePainter, &reference);
+        nativePainter.end();
+        QCOMPARE(image, nativeImage);
     }
 
     menuPalette = platformPalette(!darkPlatform);
@@ -1444,17 +1473,21 @@ void TestMenusUi::dock_context_menus_follow_menu_theme()
                     const QImage image = menu->grab().toImage();
                     QColor paintedBackground = expectedBackground;
                     if (mode == 0) {
-                        // Native styles may shade the palette's background.
-                        // Compare with the same style without a themed parent.
+                        // Windows paints native backgrounds per item rather
+                        // than in PE_PanelMenu. Include both painting steps.
                         QMenu reference;
                         reference.ensurePolished();
-                        QStyleOption option;
+                        QStyleOptionMenuItem option;
                         option.initFrom(&reference);
                         option.rect = image.rect();
+                        option.state = QStyle::State_Enabled;
+                        option.menuItemType = QStyleOptionMenuItem::Normal;
+                        option.checkType = QStyleOptionMenuItem::NotCheckable;
                         QImage nativeBackground(image.size(), QImage::Format_ARGB32_Premultiplied);
                         nativeBackground.fill(native.color(QPalette::Window));
                         QPainter painter(&nativeBackground);
                         reference.style()->drawPrimitive(QStyle::PE_PanelMenu, &option, &painter, &reference);
+                        reference.style()->drawControl(QStyle::CE_MenuItem, &option, &painter, &reference);
                         painter.end();
                         paintedBackground = nativeBackground.pixelColor(nativeBackground.rect().center());
                     }

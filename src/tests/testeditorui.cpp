@@ -2519,7 +2519,10 @@ void TestEditorUi::editor_text_line_is_vertically_centered()
     Settings::instance()->editorDisplayStyle = classic
         ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern;
     Settings::instance()->inputDigitGrouping = false;
-    Editor editor;
+    // A native Windows top-level window cannot be as narrow as these wrap cases.
+    QWidget host;
+    host.resize(500, 400);
+    Editor editor(&host);
     QFont font = fixedFont ? QFontDatabase::systemFont(QFontDatabase::FixedFont) : editor.font();
     font.setPixelSize(pixelSize);
     editor.setFont(font);
@@ -2530,8 +2533,8 @@ void TestEditorUi::editor_text_line_is_vertically_centered()
     for (int i = 0; i < lineCount; ++i)
         lines.append(QStringLiteral("23323323"));
     editor.setText(lines.join(QLatin1Char('\n')));
-    editor.show();
-    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    host.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&host));
     if (wrapped) {
         const int decorations = editor.width() - editor.viewport()->width();
         editor.setFixedWidth(decorations + qCeil(QFontMetricsF(font).horizontalAdvance(lines.first()))
@@ -2539,7 +2542,7 @@ void TestEditorUi::editor_text_line_is_vertically_centered()
         editor.setText(lines.join(QString()));
     }
     QCoreApplication::processEvents();
-    QCOMPARE(editor.document()->lineCount(), lineCount);
+    QTRY_COMPARE(editor.document()->lineCount(), lineCount);
     QTextCursor first(editor.document());
     QTextCursor last(editor.document());
     last.movePosition(QTextCursor::End);

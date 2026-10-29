@@ -288,6 +288,12 @@ void TestSettingsUi::system_color_mode_updates_native_palettes()
     QVERIFY(menu);
     QVERIFY(dock);
     QVERIFY(status);
+    QStyle* nativeStyle = QApplication::style();
+    while (auto* proxy = qobject_cast<QProxyStyle*>(nativeStyle))
+        nativeStyle = proxy->baseStyle();
+    // Qt deliberately keeps the Vista style light, even with a dark override.
+    const bool supportsDarkPalette = nativeStyle->objectName().compare(
+        QLatin1String("windowsvista"), Qt::CaseInsensitive) != 0;
     for (int mode : {1, 2, 0}) {
         const Qt::ColorScheme expected = mode == 1 ? Qt::ColorScheme::Light
             : mode == 2 ? Qt::ColorScheme::Dark : systemScheme;
@@ -300,8 +306,8 @@ void TestSettingsUi::system_color_mode_updates_native_palettes()
                      MenuStyle::systemPalette(dock).color(QPalette::Window).rgba());
         QTRY_COMPARE(status->palette().color(QPalette::Window).rgba(),
                      MenuStyle::systemPalette(status).color(QPalette::Window).rgba());
-        QCOMPARE(QApplication::palette().color(QPalette::Window).lightness() < 128,
-                 expected == Qt::ColorScheme::Dark);
+        QTRY_COMPARE(QApplication::palette().color(QPalette::Window).lightness() < 128,
+                     supportsDarkPalette && expected == Qt::ColorScheme::Dark);
     }
     // Resetting settings must also remove a live override in every window.
     menu->actions().at(2)->trigger();

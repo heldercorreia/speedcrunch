@@ -1970,6 +1970,7 @@ void TestSessionsUi::new_tab_menu_action_targets_focused_window_when_native_menu
 
     firstWindow.raise();
     firstWindow.activateWindow();
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&firstWindow));
     firstEditor->setFocus(Qt::OtherFocusReason);
     QTRY_VERIFY(([firstEditor]() {
         QWidget* focused = QApplication::focusWidget();
@@ -2520,10 +2521,12 @@ void TestSessionsUi::close_and_reopen_commands_preserve_regular_tabs()
     QTRY_COMPARE(tabs->count(), 1);
     QCOMPARE(reopen->isEnabled(), !privateTab);
     other.activateWindow();
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&other));
     other.findChild<Editor*>()->setFocus();
     QTRY_VERIFY(other.findChild<Editor*>()->hasFocus());
-    QVERIFY(!reopen->isEnabled());
+    QTRY_VERIFY(!reopen->isEnabled());
     window.activateWindow();
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&window));
     editor->setFocus();
     QTRY_VERIFY(editor->hasFocus());
     QCOMPARE(reopen->isEnabled(), !privateTab);

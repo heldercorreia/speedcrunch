@@ -261,7 +261,7 @@ void TestLaunchUi::launches_target_last_active_window_and_pane()
     const QList<Editor*> editors = second.findChildren<Editor*>();
     QCOMPARE(editors.size(), 2);
     second.activateWindow();
-    QTRY_VERIFY(second.isActiveWindow());
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&second));
     QTest::mouseClick(editors.last(), Qt::LeftButton);
     QTRY_VERIFY(editors.last()->hasFocus());
     ResultDisplay* target = editors.last()->parentWidget()->findChild<ResultDisplay*>();
@@ -700,7 +700,8 @@ void TestLaunchUi::new_tabs_use_unique_names_across_windows()
     for (int round = 0; round != 3; ++round) {
         for (MainWindow* window : {&first, second}) {
             window->activateWindow();
-            QTRY_VERIFY(window->isActiveWindow());
+            // Native Windows activation can precede Qt's WindowActivate event.
+            QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(window));
             if (subsequentLaunch) {
                 controller.request();
                 ++expectedRequests;
