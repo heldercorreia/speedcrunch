@@ -82,6 +82,8 @@ private slots:
     void tab_context_split_targets_clicked_pane();
     void tab_context_clear_preserves_other_sessions_data();
     void tab_context_clear_preserves_other_sessions();
+    void clear_session_commands_data();
+    void clear_session_commands();
     void persisting_layout_captures_visible_scroll_positions_for_all_panes();
     void switching_session_tabs_preserves_each_editor_text();
     void session_tabs_show_full_name_tooltip_on_hover();
@@ -1676,6 +1678,120 @@ void TestSessionsUi::tab_context_clear_preserves_other_sessions()
         QVERIFY(target->hasVariable(QStringLiteral("sharedvalue")));
     }
     QCOMPARE(editorForDisplay(other)->text(), QStringLiteral("456"));
+}
+
+void TestSessionsUi::clear_session_commands_data()
+{
+    QTest::addColumn<QString>("command");
+    QTest::addColumn<int>("response");
+    for (const char* command : {"editor-shortcut", "display-shortcut", "menu",
+                                "tab-context", "display-request"}) {
+        QTest::addRow("%s-confirm", command) << QString::fromLatin1(command) << int(QMessageBox::Yes);
+        QTest::addRow("%s-cancel", command) << QString::fromLatin1(command) << int(QMessageBox::No);
+        QTest::addRow("%s-escape", command) << QString::fromLatin1(command) << int(QMessageBox::Cancel);
+        QTest::addRow("%s-skip", command) << QString::fromLatin1(command) << 0;
+    }
+}
+
+void TestSessionsUi::clear_session_commands()
+{
+    QFETCH(QString, command);
+    QFETCH(int, response);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    Settings* settings = guard.settings;
+    settings->autoCalc = false;
+    settings->skipClearSessionConfirmation = response == 0;
+    settings->startupUserDefinitions = QStringLiteral("sharedvalue=99");
+    UserDefinitions::saveFrom(settings);
+    MainWindow otherWindow(false);
+    Editor* otherWindowEditor = otherWindow.findChild<Editor*>();
+    QVERIFY(otherWindowEditor);
+    otherWindowEditor->setText(QStringLiteral("other window"));
+    MainWindow window(false);
+    window.show();
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    ResultDisplay* untouchedDisplay = window.findChild<ResultDisplay*>();
+    QVERIFY(untouchedDisplay);
+    Editor* untouchedEditor = editorForDisplay(untouchedDisplay);
+    untouchedEditor->setText(QStringLiteral("other pane"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight"));
+    const auto displays = window.findChildren<ResultDisplay*>();
+    QCOMPARE(displays.size(), 2);
+    ResultDisplay* display = displays.first() == untouchedDisplay ? displays.last() : displays.first();
+    Editor* editor = editorForDisplay(display);
+    QVERIFY(editor);
+    editor->setFocus();
+    QTRY_VERIFY(editor->hasFocus());
+    for (const QString& expression : {QStringLiteral("localvalue=12"),
+                                     QStringLiteral("localfunc(x)=x+1"),
+                                     QStringLiteral("[localunit]=[metre]")}) {
+        editor->setText(expression);
+        QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
+    }
+    const Session* session = display->session();
+    const int historySize = session->historySize();
+    QVERIFY(historySize > 0);
+    QVERIFY(session->hasVariable(QStringLiteral("localvalue")));
+    QCOMPARE(session->UserFunctionsToList().size(), 1);
+    QCOMPARE(session->userUnitsToList().size(), 1);
+    editor->setText(QStringLiteral("unfinished +"));
+    QAction* action = window.findChild<QAction*>(QStringLiteral("ClearSessionAction"));
+    QVERIFY(action);
+    QCOMPARE(action->shortcut(), QKeySequence(Qt::CTRL | Qt::Key_L));
+    QMenu* sessionMenu = menuWithTitle(window.menuBar(), QStringLiteral("&Session"));
+    QVERIFY(sessionMenu);
+    QVERIFY(sessionMenu->actions().contains(action));
+
+    bool confirmationShown = false;
+    QTimer confirmationTimer;
+    connect(&confirmationTimer, &QTimer::timeout, &window, [&]() {
+        auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        if (!dialog)
+            return;
+        confirmationTimer.stop();
+        const auto closeDialog = qScopeGuard([dialog]() {
+            if (dialog->isVisible())
+                dialog->reject();
+        });
+        confirmationShown = true;
+        QVERIFY(dialog->text().contains(QStringLiteral("Clear this session's calculations")));
+        QCOMPARE(dialog->defaultButton(), dialog->button(QMessageBox::No));
+        if (response == int(QMessageBox::Cancel))
+            QTest::keyClick(dialog, Qt::Key_Escape);
+        else
+            dialog->done(response == 0 ? QMessageBox::No : response);
+    });
+    confirmationTimer.start(10);
+    if (command.endsWith(QLatin1String("shortcut"))) {
+        QWidget* focus = command.startsWith(QLatin1String("editor"))
+            ? static_cast<QWidget*>(editor) : static_cast<QWidget*>(display);
+        focus->setFocus();
+        QTRY_VERIFY(focus->hasFocus());
+        QTest::keyClick(focus, Qt::Key_L, Qt::ControlModifier);
+    } else if (command == QLatin1String("menu")) {
+        // Native menus can dispatch an action owned by another window.
+        otherWindow.findChild<QAction*>(QStringLiteral("ClearSessionAction"))->trigger();
+    } else if (command == QLatin1String("tab-context")) {
+        QTabBar* tabs = tabBarForDisplay(display);
+        QVERIFY(tabs);
+        chooseTabContextAction(tabs, tabs->currentIndex(), {QStringLiteral("Clear")});
+    } else {
+        QVERIFY(QMetaObject::invokeMethod(display, "clearSessionRequested"));
+    }
+    QCoreApplication::processEvents();
+    QCOMPARE(confirmationShown, response != 0);
+    const bool cleared = response == 0 || response == int(QMessageBox::Yes);
+    QCOMPARE(display->session(), session);
+    QCOMPARE(session->historySize(), cleared ? 0 : historySize);
+    QCOMPARE(editor->text(), cleared ? QString() : QStringLiteral("unfinished +"));
+    QCOMPARE(session->hasVariable(QStringLiteral("localvalue")), !cleared);
+    QCOMPARE(session->UserFunctionsToList().size(), cleared ? 0 : 1);
+    QCOMPARE(session->userUnitsToList().size(), cleared ? 0 : 1);
+    QVERIFY(session->hasVariable(QStringLiteral("sharedvalue")));
+    QCOMPARE(untouchedEditor->text(), QStringLiteral("other pane"));
+    QCOMPARE(otherWindowEditor->text(), QStringLiteral("other window"));
 }
 
 void TestSessionsUi::session_tab_context_menu_opens_on_right_click()

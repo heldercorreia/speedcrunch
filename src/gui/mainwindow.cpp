@@ -3845,6 +3845,8 @@ void MainWindow::createActions()
     m_actions.sessionOpen = new QAction(this);
     m_actions.sessionRename = new QAction(this);
     m_actions.sessionClone = new QAction(this);
+    m_actions.sessionClear = new QAction(this);
+    m_actions.sessionClear->setObjectName(QStringLiteral("ClearSessionAction"));
     m_actions.sessionClose = new QAction(this);
     m_actions.sessionReopen = new QAction(this);
     m_actions.sessionOpenSessionsFolder = new QAction(this);
@@ -3938,6 +3940,8 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorDigitGroupingThreeSpaces = new QAction(this);
     m_actions.settingsBehaviorDigitGroupingIntegerPartOnly = new QAction(this);
     m_actions.settingsBehaviorAutoResultToClipboard = new QAction(this);
+    m_actions.settingsSkipClearSessionConfirmation = new QAction(this);
+    m_actions.settingsSkipClearSessionConfirmation->setObjectName(QStringLiteral("SkipClearSessionConfirmationAction"));
     m_actions.settingsBehaviorSimplifyResultExpressions = new QAction(this);
     m_actions.settingsBehaviorHistorySizeLimit = new QAction(this);
     m_actions.settingsDisplayFont = new QAction(this);
@@ -4074,6 +4078,7 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorDigitGroupingThreeSpaces->setData(3);
     m_actions.settingsBehaviorDigitGroupingIntegerPartOnly->setCheckable(true);
     m_actions.settingsBehaviorAutoResultToClipboard->setCheckable(true);
+    m_actions.settingsSkipClearSessionConfirmation->setCheckable(true);
     m_actions.settingsBehaviorSimplifyResultExpressions->setCheckable(true);
     m_actions.settingsRadixCharComma->setCheckable(true);
     m_actions.settingsRadixCharDefault->setCheckable(true);
@@ -4478,6 +4483,7 @@ void MainWindow::setActionsText()
     m_actions.sessionOpen->setText(MainWindow::tr("&Open..."));
     m_actions.sessionRename->setText(MainWindow::tr("&Rename..."));
     m_actions.sessionClone->setText(tr("Clo&ne..."));
+    m_actions.sessionClear->setText(tr("C&lear Session"));
     m_actions.sessionClose->setText(tr("&Close Tab"));
     m_actions.sessionReopen->setText(tr("Reopen Clo&sed Tab"));
     m_actions.sessionOpenSessionsFolder->setText(MainWindow::tr("Open Sessions &Folder"));
@@ -4570,6 +4576,7 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorUpDownArrowAlways->setText(MainWindow::tr("Always"));
     m_actions.settingsBehaviorUpDownArrowSingleLineOnly->setText(MainWindow::tr("Only for Single-Line Expressions"));
     m_actions.settingsBehaviorAutoResultToClipboard->setText(MainWindow::tr("Copy New Results Automatically"));
+    m_actions.settingsSkipClearSessionConfirmation->setText(tr("Skip Clear Session Confirmation"));
     m_actions.settingsBehaviorSimplifyResultExpressions->setText(MainWindow::tr("Simplify Displayed Expressions"));
     m_actions.settingsBehaviorHistorySizeLimit->setText(MainWindow::tr("History Size &Limit..."));
     m_actions.settingsRadixCharComma->setText(MainWindow::tr("&Comma"));
@@ -4772,6 +4779,7 @@ void MainWindow::createActionShortcuts()
     m_actions.sessionNewTab->setShortcuts(newTabBindings);
     m_actions.sessionOpen->setShortcuts(QKeySequence::Open);
     m_actions.sessionClose->setShortcuts(QKeySequence::Close);
+    m_actions.sessionClear->setShortcut(Qt::CTRL | Qt::Key_L);
     m_actions.sessionReopen->setShortcut(Qt::CTRL | Qt::SHIFT | Qt::Key_T);
     m_actions.editUndo->setShortcuts(QKeySequence::Undo);
     m_actions.editRedo->setShortcuts(QKeySequence::Redo);
@@ -4839,6 +4847,7 @@ void MainWindow::createMenus()
     m_menus.session->addAction(m_actions.sessionRename);
     m_menus.session->addAction(m_actions.sessionClone);
     m_menus.session->addAction(m_actions.sessionConvertPrivacy);
+    m_menus.session->addAction(m_actions.sessionClear);
     m_menus.session->addSeparator();
     m_menus.session->addAction(m_actions.sessionImport);
     m_menus.sessionExport = m_menus.session->addMenu("");
@@ -5029,6 +5038,7 @@ void MainWindow::createMenus()
     m_menus.results->addAction(m_actions.settingsBehaviorPartialResults);
     m_menus.results->addAction(m_actions.settingsBehaviorSimplifyResultExpressions);
     m_menus.results->addAction(m_actions.settingsBehaviorAutoResultToClipboard);
+    m_menus.results->addAction(m_actions.settingsSkipClearSessionConfirmation);
 
     m_menus.angleUnit = m_menus.settings->addMenu("");
     m_menus.angleUnit->addAction(m_actions.settingsAngleUnitDegree);
@@ -8201,6 +8211,7 @@ void MainWindow::createFixedConnections()
     connectWindowAction(m_actions.sessionOpen, &MainWindow::showOpenSessionDialog);
     connectWindowAction(m_actions.sessionRename, &MainWindow::showRenameSessionDialog);
     connectWindowAction(m_actions.sessionClone, &MainWindow::showDuplicateSessionDialog);
+    connectWindowAction(m_actions.sessionClear, &MainWindow::clearSession);
     connectWindowAction(m_actions.sessionClose, &MainWindow::closeCurrentSession);
     connect(m_actions.sessionReopen, &QAction::triggered, this, [this]() {
         MainWindow* target = activeMainWindowForMenuAction(this);
@@ -8345,6 +8356,8 @@ void MainWindow::createFixedConnections()
     connectToActiveWindow(m_actions.settingsBehaviorResultSlots, &MainWindow::showResultSlotsDialog);
     connect(m_actionGroups.upDownArrowBehavior, SIGNAL(triggered(QAction*)), SLOT(setUpDownArrowBehavior(QAction*)));
     connect(m_actions.settingsBehaviorAutoResultToClipboard, SIGNAL(toggled(bool)), SLOT(setAutoResultToClipboardEnabled(bool)));
+    connect(m_actions.settingsSkipClearSessionConfirmation, &QAction::toggled,
+            this, &MainWindow::setSkipClearSessionConfirmationEnabled);
     connect(m_actions.settingsBehaviorSimplifyResultExpressions, SIGNAL(toggled(bool)), SLOT(setSimplifyResultExpressionsEnabled(bool)));
     connect(m_actions.settingsRadixCharComma, SIGNAL(triggered()), SLOT(setRadixCharacterComma()));
     connect(m_actions.settingsRadixCharDefault, SIGNAL(triggered()), SLOT(setRadixCharacterAutomatic()));
@@ -8720,6 +8733,7 @@ void MainWindow::applySettings(bool initializing)
     }
     setCursorBlinkingEnabled(m_settings->cursorBlinking);
     setEscapeClearsEditorEnabled(m_settings->escapeClearsEditor);
+    setSkipClearSessionConfirmationEnabled(m_settings->skipClearSessionConfirmation);
 
     if (m_settings->hoverHighlightResults)
         m_actions.settingsBehaviorHoverHighlightResults->setChecked(true);
@@ -9669,18 +9683,20 @@ void MainWindow::clearSession()
         return;
     }
 
-    QMessageBox confirmation(this);
-    confirmation.setIcon(QMessageBox::Question);
-    confirmation.setWindowTitle(tr("Clear Session"));
-    confirmation.setText(tr("Clear this session's calculations, unfinished expression, variables, functions, and units?"));
-    confirmation.setInformativeText(tr("Global user definitions are kept."));
-    confirmation.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
-    confirmation.setDefaultButton(QMessageBox::No);
-    confirmation.setEscapeButton(QMessageBox::No);
-    QShortcut clearSessionEscape(QKeySequence(Qt::Key_Escape), &confirmation);
-    connect(&clearSessionEscape, &QShortcut::activated, &confirmation, &QMessageBox::reject);
-    if (confirmation.exec() != QMessageBox::Yes)
-        return;
+    if (!m_settings->skipClearSessionConfirmation) {
+        QMessageBox confirmation(this);
+        confirmation.setIcon(QMessageBox::Question);
+        confirmation.setWindowTitle(tr("Clear Session"));
+        confirmation.setText(tr("Clear this session's calculations, unfinished expression, variables, functions, and units?"));
+        confirmation.setInformativeText(tr("Global user definitions are kept."));
+        confirmation.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        confirmation.setDefaultButton(QMessageBox::No);
+        confirmation.setEscapeButton(QMessageBox::No);
+        QShortcut clearSessionEscape(QKeySequence(Qt::Key_Escape), &confirmation);
+        connect(&clearSessionEscape, &QShortcut::activated, &confirmation, &QMessageBox::reject);
+        if (confirmation.exec() != QMessageBox::Yes)
+            return;
+    }
 
     m_session->clearHistory();
     m_session->clearVariables();
@@ -12128,6 +12144,20 @@ void MainWindow::setDigitGroupingIntegerPartOnlyEnabled(bool b)
 void MainWindow::setAutoResultToClipboardEnabled(bool b)
 {
     m_settings->autoResultToClipboard = b;
+}
+
+void MainWindow::setSkipClearSessionConfirmationEnabled(bool enabled)
+{
+    m_settings->skipClearSessionConfirmation = enabled;
+    QList<QPointer<MainWindow>> windows = allMainWindows();
+    if (!windows.contains(QPointer<MainWindow>(this)))
+        windows.append(QPointer<MainWindow>(this));
+    for (const QPointer<MainWindow>& window : windows) {
+        if (!window)
+            continue;
+        const QSignalBlocker blocker(window->m_actions.settingsSkipClearSessionConfirmation);
+        window->m_actions.settingsSkipClearSessionConfirmation->setChecked(enabled);
+    }
 }
 
 void MainWindow::setSimplifyResultExpressionsEnabled(bool b)

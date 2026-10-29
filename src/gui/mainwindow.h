@@ -243,6 +243,7 @@ private slots:
     void setDigitGrouping(QAction*);
     void setDigitGroupingIntegerPartOnlyEnabled(bool);
     void setAutoResultToClipboardEnabled(bool);
+    void setSkipClearSessionConfirmationEnabled(bool);
     void setSimplifyResultExpressionsEnabled(bool);
     void setHoverHighlightResultsEnabled(bool);
     void setVariablesDockVisible(bool, bool takeFocus = true);
@@ -445,6 +446,7 @@ private:
         QAction* sessionOpen;
         QAction* sessionRename;
         QAction* sessionClone;
+        QAction* sessionClear;
         QAction* sessionClose;
         QAction* sessionReopen;
         QAction* sessionNewTab;
@@ -569,6 +571,7 @@ private:
         QAction* settingsLaunchNewWindow;
         QAction* settingsLaunchNewTab;
         QAction* settingsBehaviorAutoResultToClipboard;
+        QAction* settingsSkipClearSessionConfirmation;
         QAction* settingsBehaviorSimplifyResultExpressions;
         QAction* settingsBehaviorHistorySizeLimit;
         QAction* settingsRadixCharBoth;

@@ -174,10 +174,14 @@ Use :menuselection:`View --> Split` to add a pane in any direction, and
 The tab context menu also provides :menuselection:`Split` and
 :menuselection:`Close Pane`.
 
-The tab context menu's :menuselection:`Clear` command removes the session's
-calculations, unfinished expression, variables, functions, and units after
-confirmation. Global user definitions are kept. :menuselection:`Delete` removes
-the session itself after confirmation.
+Choose :menuselection:`Session --> Clear Session` or press :kbd:`Ctrl+L`
+(:kbd:`Cmd+L` on macOS) to clear the active session's calculations, unfinished
+expression, variables, functions, and units. Global user definitions are kept.
+The tab context menu's :menuselection:`Clear` command does the same for that tab.
+SpeedCrunch asks for confirmation by default. To skip this dialog, check
+:menuselection:`Settings --> Results --> Skip Clear Session Confirmation`.
+:menuselection:`Delete` in the tab context menu removes the session itself
+after confirmation.
 When SpeedCrunch restores multiple windows after a restart, each window keeps
 its own dock layout, dock visibility, keypad visibility, layout and zoom,
 and—when window position saving is enabled—its own size and position.
@@ -759,6 +763,11 @@ This section contains settings that control result output and post-evaluation be
     ``m·s⁻¹``, or fractional notation, such as ``m/s``.
 * :menuselection:`Copy New Results Automatically`
     Automatically copy each newly evaluated result to the clipboard.
+* :menuselection:`Skip Clear Session Confirmation`
+    Clear a session without asking for confirmation. This applies to
+    :menuselection:`Session --> Clear Session`, :kbd:`Ctrl+L` (:kbd:`Cmd+L`
+    on macOS), and the clear commands in the tab and result display context
+    menus. This option is off by default and is shared by all windows.
 * :menuselection:`Simplify Displayed Expressions`
     When enabled (default), SpeedCrunch adds an extra symbolic line before
     numeric results, simplifying the interpreted expression for readability
@@ -1113,6 +1122,10 @@ Editing
     Reopen the most recently closed session tab.
 * :kbd:`Ctrl+W` (:kbd:`Cmd+W` on macOS)
     Close the active session tab.
+* :kbd:`Ctrl+L` (:kbd:`Cmd+L` on macOS)
+    Clear the active session, keeping global user definitions. Ask for
+    confirmation unless :menuselection:`Settings --> Results --> Skip Clear
+    Session Confirmation` is checked.
 * :kbd:`Ctrl+C`
     Copy selected text to clipboard.
 * :kbd:`Ctrl+R`

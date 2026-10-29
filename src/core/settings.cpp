@@ -320,6 +320,7 @@ Settings::Settings()
     inputDigitGrouping = true;
     cursorBlinking = true;
     escapeClearsEditor = false;
+    skipClearSessionConfirmation = false;
     digitGroupingIntegerPartOnly = true;
     numberFormatStyle = NumberFormatNoGroupingDot;
     hasNumberFormatStyleSetting = false;
@@ -431,6 +432,8 @@ void Settings::load()
     escapeClearsEditor = settings->value(key + QLatin1String("EscapeClearsEditor"), false).toBool();
     hoverHighlightResults = settings->value(key + QLatin1String("HoverHighlightResults"), true).toBool();
     autoResultToClipboard = settings->value(key + QLatin1String("AutoResultToClipboard"), false).toBool();
+    skipClearSessionConfirmation = settings->value(
+        key + QLatin1String("SkipClearSessionConfirmation"), false).toBool();
     simplifyResultExpressions = settings->value(key + QLatin1String("SimplifyResultExpressions"), true).toBool();
     windowPositionSave = settings->value(key + QLatin1String("WindowPositionSave"), true).toBool();
     openPrivateTabOnStartup = settings->value(key + QLatin1String("OpenPrivateTabOnStartup"), false).toBool();
@@ -715,6 +718,7 @@ void Settings::save()
     settings->setValue(key + QLatin1String("DigitGroupingIntegerPartOnly"), digitGroupingIntegerPartOnly);
     settings->setValue(key + QLatin1String("NumberFormatStyle"), static_cast<int>(numberFormatStyle));
     settings->setValue(key + QLatin1String("AutoResultToClipboard"), autoResultToClipboard);
+    settings->setValue(key + QLatin1String("SkipClearSessionConfirmation"), skipClearSessionConfirmation);
     settings->setValue(key + QLatin1String("SimplifyResultExpressions"), simplifyResultExpressions);
     settings->setValue(key + QLatin1String("Language"), language);
     settings->setValue(key + QLatin1String("WindowPositionSave"), windowPositionSave);

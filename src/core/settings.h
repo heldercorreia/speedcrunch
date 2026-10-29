@@ -200,6 +200,7 @@ public:
     bool hoverHighlightResults;
     bool windowAlwaysOnTop;
     bool autoResultToClipboard;
+    bool skipClearSessionConfirmation;
     bool simplifyResultExpressions;
     bool windowPositionSave;
     bool openPrivateTabOnStartup;

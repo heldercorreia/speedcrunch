@@ -17,6 +17,8 @@ class TestSettingsUi : public QObject {
 
 private slots:
     void loading_current_settings_does_not_rewrite_storage();
+    void skip_clear_session_confirmation_is_shared_and_resets();
+    void skip_clear_session_confirmation_survives_reload();
     void startup_editor_preferences_data();
     void startup_editor_preferences();
     void system_color_mode_persistence_data();
@@ -90,6 +92,72 @@ void TestSettingsUi::loading_current_settings_does_not_rewrite_storage()
     QCOMPARE(QFileInfo(path).lastModified(), before);
     QVERIFY(file.open(QIODevice::ReadOnly));
     QCOMPARE(file.readAll(), original);
+}
+
+void TestSettingsUi::skip_clear_session_confirmation_is_shared_and_resets()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    Settings* settings = guard.settings;
+    QVERIFY(!settings->skipClearSessionConfirmation);
+    MainWindow first(false);
+    MainWindow second(false);
+    QAction* action = first.findChild<QAction*>(QStringLiteral("SkipClearSessionConfirmationAction"));
+    QAction* secondAction = second.findChild<QAction*>(QStringLiteral("SkipClearSessionConfirmationAction"));
+    QVERIFY(action && secondAction);
+    QVERIFY(action->isCheckable());
+    QVERIFY(!action->isChecked());
+    QMenu* settingsMenu = menuWithTitle(first.menuBar(), QStringLiteral("Se&ttings"));
+    QVERIFY(settingsMenu);
+    QMenu* resultsMenu = directSubmenuWithTitle(settingsMenu, QStringLiteral("&Results"));
+    QVERIFY(resultsMenu);
+    QVERIFY(resultsMenu->actions().contains(action));
+    Editor* editor = first.findChild<Editor*>();
+    QVERIFY(editor);
+    editor->setText(QStringLiteral("unfinished expression"));
+    action->trigger();
+    QVERIFY(settings->skipClearSessionConfirmation);
+    QVERIFY(secondAction->isChecked());
+    MainWindow third(false);
+    QAction* thirdAction = third.findChild<QAction*>(QStringLiteral("SkipClearSessionConfirmationAction"));
+    QVERIFY(thirdAction);
+    QVERIFY(thirdAction->isChecked());
+    secondAction->trigger();
+    QVERIFY(!settings->skipClearSessionConfirmation);
+    QVERIFY(!action->isChecked());
+    QVERIFY(!thirdAction->isChecked());
+    thirdAction->trigger();
+    auto* reset = first.findChild<QAction*>(QStringLiteral("ResetAllSettingsAction"));
+    QVERIFY(reset);
+    QTimer::singleShot(0, &first, []() {
+        auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        QVERIFY(dialog);
+        dialog->button(QMessageBox::Yes)->click();
+    });
+    reset->trigger();
+    QVERIFY(!settings->skipClearSessionConfirmation);
+    for (QAction* preference : {action, secondAction, thirdAction})
+        QVERIFY(!preference->isChecked());
+    QCOMPARE(editor->text(), QStringLiteral("unfinished expression"));
+}
+
+void TestSettingsUi::skip_clear_session_confirmation_survives_reload()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    Settings* settings = guard.settings;
+    QVERIFY(!settings->skipClearSessionConfirmation);
+    for (bool enabled : {true, false}) {
+        settings->skipClearSessionConfirmation = enabled;
+        settings->save();
+        settings->skipClearSessionConfirmation = !enabled;
+        settings->load();
+        QCOMPARE(settings->skipClearSessionConfirmation, enabled);
+        MainWindow window(false);
+        QAction* action = window.findChild<QAction*>(QStringLiteral("SkipClearSessionConfirmationAction"));
+        QVERIFY(action);
+        QCOMPARE(action->isChecked(), enabled);
+    }
 }
 
 void TestSettingsUi::startup_editor_preferences_data()
