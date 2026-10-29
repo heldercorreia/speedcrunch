@@ -189,6 +189,7 @@ private slots:
     void setFunctionsDockVisible(bool, bool takeFocus = true);
     void setHistoryDockVisible(bool, bool takeFocus = true);
     void setKeypadMode(QAction*);
+    void setAppearancePreset(bool classic);
     void setMenuAppearance(QAction*);
     void setSystemColorMode(QAction*);
     void setDockAppearance(QAction*);
@@ -311,6 +312,7 @@ private:
     void applySettings(bool initializing = true);
     void setDisplayFont(const QFont& font);
     void applyEditorDisplayStyle();
+    void updateAppearancePresetActions();
     void checkInitialResultFormat();
     void checkInitialComplexFormat();
     void checkInitialImaginaryUnit();
@@ -579,6 +581,9 @@ private:
         QAction* settingsDisplayZoomOut;
         QAction* settingsDisplayFont;
         QAction* settingsDisplayColorSchemeCustom;
+        QAction* settingsAppearancePresetClassic;
+        QAction* settingsAppearancePresetModern;
+        QAction* settingsAppearancePresetCustom;
         QAction* settingsSystemColorModeFollowSystem;
         QAction* settingsSystemColorModeLight;
         QAction* settingsSystemColorModeDark;
@@ -613,6 +618,7 @@ private:
     struct {
         QActionGroup* angle;
         QActionGroup* colorScheme;
+        QActionGroup* appearancePreset;
         QActionGroup* menuAppearance;
         QActionGroup* systemColorMode;
         QActionGroup* dockAppearance;
@@ -643,6 +649,7 @@ private:
         QMenu* decimal;
         QMenu* digitGrouping;
         QMenu* display;
+        QMenu* appearancePreset;
         QMenu* menuAppearance;
         QMenu* systemColorMode;
         QMenu* dockAppearance;

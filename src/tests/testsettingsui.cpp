@@ -54,6 +54,12 @@ private slots:
     void display_font_changes_update_all_sessions_and_windows();
     void font_dialog_uses_platform_appropriate_options();
     void appearance_defaults_select_theme_and_modern_styles();
+    void appearance_presets_identify_saved_combinations_data();
+    void appearance_presets_identify_saved_combinations();
+    void appearance_presets_apply_to_all_windows_and_preserve_preferences();
+    void appearance_presets_track_individual_changes_data();
+    void appearance_presets_track_individual_changes();
+    void appearance_presets_follow_settings_reset();
     void settings_reset_restores_persisted_defaults();
     void settings_reset_can_be_cancelled_data();
     void settings_reset_can_be_cancelled();
@@ -1452,6 +1458,200 @@ void TestSettingsUi::appearance_defaults_select_theme_and_modern_styles()
         QVERIFY(menu);
         QVERIFY2(menu->actions().at(1)->isChecked(), qPrintable(name));
         QVERIFY2(!menu->actions().at(0)->isChecked(), qPrintable(name));
+    }
+}
+
+void TestSettingsUi::appearance_presets_identify_saved_combinations_data()
+{
+    QTest::addColumn<int>("combination");
+    for (int combination = 0; combination < 32; ++combination)
+        QTest::newRow(qPrintable(QString::number(combination, 2))) << combination;
+}
+
+void TestSettingsUi::appearance_presets_identify_saved_combinations()
+{
+    QFETCH(int, combination);
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    const auto menus = combination & 1 ? Settings::MenuAppearanceSystem : Settings::MenuAppearanceSpeedCrunch;
+    const auto docks = combination & 2 ? Settings::DockAppearanceSystem : Settings::DockAppearanceSpeedCrunch;
+    const auto statusBar = combination & 4 ? Settings::StatusBarAppearanceSystem : Settings::StatusBarAppearanceSpeedCrunch;
+    const auto editor = combination & 8 ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern;
+    const auto keypad = combination & 16 ? Settings::KeypadAppearanceClassic : Settings::KeypadAppearanceModern;
+    settings->menuAppearance = menus;
+    settings->dockAppearance = docks;
+    settings->statusBarAppearance = statusBar;
+    settings->editorDisplayStyle = editor;
+    settings->keypadAppearance = keypad;
+    settings->save();
+    settings->load();
+
+    MainWindow window(false);
+    auto* presets = window.findChild<QMenu*>(QStringLiteral("AppearancePresetMenu"));
+    QVERIFY(presets);
+    QCOMPARE(presets->actions().size(), 3);
+    QCOMPARE(presets->actions().at(0)->isChecked(), combination == 31);
+    QCOMPARE(presets->actions().at(1)->isChecked(), combination == 0);
+    QCOMPARE(presets->actions().at(2)->isChecked(), combination != 0 && combination != 31);
+    QVERIFY(!presets->actions().at(2)->isEnabled());
+    QCOMPARE(settings->menuAppearance, menus);
+    QCOMPARE(settings->dockAppearance, docks);
+    QCOMPARE(settings->statusBarAppearance, statusBar);
+    QCOMPARE(settings->editorDisplayStyle, editor);
+    QCOMPARE(settings->keypadAppearance, keypad);
+
+    QMenu* appearance = nullptr;
+    for (QMenu* menu : window.findChildren<QMenu*>()) {
+        if (menu->actions().contains(presets->menuAction()))
+            appearance = menu;
+    }
+    QVERIFY(appearance);
+    QCOMPARE(appearance->actions().indexOf(presets->menuAction()), 1);
+    QVERIFY(appearance->actions().first()->text().contains(QStringLiteral("Theme")));
+}
+
+void TestSettingsUi::appearance_presets_apply_to_all_windows_and_preserve_preferences()
+{
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    settings->colorScheme = QStringLiteral("Custom");
+    settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), QStringLiteral("#213c31")}});
+    settings->systemColorMode = Settings::SystemColorModeLight;
+    settings->displayFont = QFont(QStringLiteral("Monospace"), 17).toString();
+    settings->keypadMode = Settings::KeypadModeBasicWide;
+    settings->keypadZoomPercent = 150;
+    settings->statusBarVisible = false;
+    MainWindow first(false);
+    MainWindow second(false);
+    QVERIFY(QMetaObject::invokeMethod(&second, "restoreWindowKeypadLayout", Qt::DirectConnection,
+        Q_ARG(bool, false), Q_ARG(int, int(Settings::KeypadModeDisabled))));
+    QAction zoomAction;
+    zoomAction.setData(200);
+    QVERIFY(QMetaObject::invokeMethod(&second, "setKeypadZoom", Qt::DirectConnection,
+        Q_ARG(QAction*, &zoomAction)));
+    const QString theme = settings->customColorSchemeJson;
+    const QString font = settings->displayFont;
+    QMap<QDockWidget*, QPair<Qt::DockWidgetArea, bool>> dockStates;
+    for (MainWindow* window : {&first, &second}) {
+        for (QDockWidget* dock : window->findChildren<QDockWidget*>())
+            dockStates.insert(dock, qMakePair(window->dockWidgetArea(dock), dock->isHidden()));
+    }
+
+    for (int preset : {0, 1, 0, 1}) {
+        auto* presets = (preset == 0 ? &first : &second)->findChild<QMenu*>(
+            QStringLiteral("AppearancePresetMenu"));
+        QVERIFY(presets);
+        presets->actions().at(preset)->trigger();
+        for (MainWindow* window : {&first, &second}) {
+            auto* choices = window->findChild<QMenu*>(QStringLiteral("AppearancePresetMenu"));
+            QVERIFY(choices->actions().at(preset)->isChecked());
+            QVERIFY(!choices->actions().at(2)->isChecked());
+            for (const QString& name : {QStringLiteral("MenuAppearanceMenu"),
+                                        QStringLiteral("DockAppearanceMenu"),
+                                        QStringLiteral("StatusBarAppearanceMenu"),
+                                        QStringLiteral("EditorDisplayStyleMenu"),
+                                        QStringLiteral("KeypadAppearanceMenu")}) {
+                auto* menu = window->findChild<QMenu*>(name);
+                QVERIFY(menu);
+                QVERIFY2(menu->actions().at(preset)->isChecked(), qPrintable(name));
+                QVERIFY2(!menu->actions().at(1 - preset)->isChecked(), qPrintable(name));
+            }
+            auto* keypadMenu = window->findChild<QMenu*>(QStringLiteral("KeypadAppearanceMenu"));
+            QMenu* zoom = keypadMenu->actions().last()->menu();
+            QVERIFY(zoom);
+            // View actions mirror the active window into every menu copy.
+            QEvent activation(QEvent::WindowActivate);
+            QApplication::sendEvent(window, &activation);
+            QVERIFY(zoom->actions().at(window == &first ? 2 : 3)->isChecked());
+            for (QDockWidget* dock : window->findChildren<QDockWidget*>()) {
+                QVERIFY(dockStates.contains(dock));
+                QCOMPARE(window->dockWidgetArea(dock), dockStates.value(dock).first);
+                QCOMPARE(dock->isHidden(), dockStates.value(dock).second);
+            }
+        }
+        QVERIFY(first.findChild<Keypad*>());
+        QVERIFY(!second.findChild<Keypad*>());
+        QCOMPARE(settings->keypadMode, Settings::KeypadModeBasicWide);
+        QCOMPARE(settings->keypadZoomPercent, 200);
+        QCOMPARE(settings->colorScheme, QStringLiteral("Custom"));
+        QCOMPARE(settings->customColorSchemeJson, theme);
+        QCOMPARE(settings->displayFont, font);
+        QCOMPARE(settings->systemColorMode, Settings::SystemColorModeLight);
+        QVERIFY(!settings->statusBarVisible);
+        for (Editor* editor : first.findChildren<Editor*>())
+            QCOMPARE(editor->font().pointSize(), 17);
+    }
+    settings->save();
+    settings->load();
+    MainWindow third(false);
+    auto* presets = third.findChild<QMenu*>(QStringLiteral("AppearancePresetMenu"));
+    QVERIFY(presets);
+    QVERIFY(presets->actions().at(1)->isChecked());
+}
+
+void TestSettingsUi::appearance_presets_track_individual_changes_data()
+{
+    QTest::addColumn<QString>("menuName");
+    QTest::addColumn<int>("preset");
+    for (const QString& name : {QStringLiteral("MenuAppearanceMenu"),
+                                QStringLiteral("DockAppearanceMenu"),
+                                QStringLiteral("StatusBarAppearanceMenu"),
+                                QStringLiteral("EditorDisplayStyleMenu"),
+                                QStringLiteral("KeypadAppearanceMenu")}) {
+        for (int preset : {0, 1})
+            QTest::newRow(qPrintable(name + QString::number(preset))) << name << preset;
+    }
+}
+
+void TestSettingsUi::appearance_presets_track_individual_changes()
+{
+    QFETCH(QString, menuName);
+    QFETCH(int, preset);
+    MainWindowStateGuard guard;
+    MainWindow first(false);
+    MainWindow second(false);
+    auto* presets = first.findChild<QMenu*>(QStringLiteral("AppearancePresetMenu"));
+    QVERIFY(presets);
+    presets->actions().at(preset)->trigger();
+    auto* individual = second.findChild<QMenu*>(menuName);
+    QVERIFY(individual);
+    individual->actions().at(1 - preset)->trigger();
+    for (MainWindow* window : {&first, &second}) {
+        auto* choices = window->findChild<QMenu*>(QStringLiteral("AppearancePresetMenu"));
+        QVERIFY(!choices->actions().at(0)->isChecked());
+        QVERIFY(!choices->actions().at(1)->isChecked());
+        QVERIFY(choices->actions().at(2)->isChecked());
+    }
+    individual->actions().at(preset)->trigger();
+    for (MainWindow* window : {&first, &second}) {
+        auto* choices = window->findChild<QMenu*>(QStringLiteral("AppearancePresetMenu"));
+        QVERIFY(choices->actions().at(preset)->isChecked());
+        QVERIFY(!choices->actions().at(2)->isChecked());
+    }
+}
+
+void TestSettingsUi::appearance_presets_follow_settings_reset()
+{
+    MainWindowStateGuard guard;
+    MainWindow first(false);
+    MainWindow second(false);
+    auto* presets = first.findChild<QMenu*>(QStringLiteral("AppearancePresetMenu"));
+    QVERIFY(presets);
+    presets->actions().first()->trigger();
+    auto* reset = first.findChild<QAction*>(QStringLiteral("ResetAllSettingsAction"));
+    QVERIFY(reset);
+    QTimer::singleShot(0, &first, []() {
+        auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        QVERIFY(dialog);
+        dialog->button(QMessageBox::Yes)->click();
+    });
+    reset->trigger();
+    for (MainWindow* window : {&first, &second}) {
+        auto* choices = window->findChild<QMenu*>(QStringLiteral("AppearancePresetMenu"));
+        QVERIFY(choices->actions().at(1)->isChecked());
+        QVERIFY(!choices->actions().at(0)->isChecked());
+        QVERIFY(!choices->actions().at(2)->isChecked());
     }
 }
 

@@ -3946,6 +3946,14 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorHistorySizeLimit = new QAction(this);
     m_actions.settingsDisplayFont = new QAction(this);
     m_actions.settingsDisplayColorSchemeCustom = new QAction(this);
+    m_actions.settingsAppearancePresetClassic = new QAction(this);
+    m_actions.settingsAppearancePresetModern = new QAction(this);
+    m_actions.settingsAppearancePresetCustom = new QAction(this);
+    for (QAction* action : {m_actions.settingsAppearancePresetClassic,
+                            m_actions.settingsAppearancePresetModern,
+                            m_actions.settingsAppearancePresetCustom})
+        action->setCheckable(true);
+    m_actions.settingsAppearancePresetCustom->setEnabled(false);
     m_actions.settingsSystemColorModeFollowSystem = new QAction(this);
     m_actions.settingsSystemColorModeFollowSystem->setCheckable(true);
     m_actions.settingsSystemColorModeFollowSystem->setData(Settings::SystemColorModeFollowSystem);
@@ -4319,6 +4327,37 @@ void MainWindow::setSystemColorMode(QAction* action)
     }
 }
 
+void MainWindow::setAppearancePreset(bool classic)
+{
+    setMenuAppearance(classic ? m_actions.settingsMenuAppearanceSystem
+                              : m_actions.settingsMenuAppearanceSpeedCrunch);
+    setDockAppearance(classic ? m_actions.settingsDockAppearanceSystem
+                              : m_actions.settingsDockAppearanceSpeedCrunch);
+    setStatusBarAppearance(classic ? m_actions.settingsStatusBarAppearanceSystem
+                                   : m_actions.settingsStatusBarAppearanceSpeedCrunch);
+    setKeypadAppearance(classic ? m_actions.settingsKeypadAppearanceClassic
+                                : m_actions.settingsKeypadAppearanceModern);
+    setEditorDisplayStyle(classic ? m_actions.settingsEditorDisplayClassic
+                                  : m_actions.settingsEditorDisplayModern);
+}
+
+void MainWindow::updateAppearancePresetActions()
+{
+    const bool classic = m_settings->menuAppearance == Settings::MenuAppearanceSystem
+        && m_settings->dockAppearance == Settings::DockAppearanceSystem
+        && m_settings->statusBarAppearance == Settings::StatusBarAppearanceSystem
+        && m_settings->keypadAppearance == Settings::KeypadAppearanceClassic
+        && m_settings->editorDisplayStyle == Settings::EditorDisplayClassic;
+    const bool modern = m_settings->menuAppearance == Settings::MenuAppearanceSpeedCrunch
+        && m_settings->dockAppearance == Settings::DockAppearanceSpeedCrunch
+        && m_settings->statusBarAppearance == Settings::StatusBarAppearanceSpeedCrunch
+        && m_settings->keypadAppearance == Settings::KeypadAppearanceModern
+        && m_settings->editorDisplayStyle == Settings::EditorDisplayModern;
+    m_actions.settingsAppearancePresetClassic->setChecked(classic);
+    m_actions.settingsAppearancePresetModern->setChecked(modern);
+    m_actions.settingsAppearancePresetCustom->setChecked(!classic && !modern);
+}
+
 void MainWindow::setMenuAppearance(QAction* action)
 {
     if (action == nullptr)
@@ -4333,6 +4372,7 @@ void MainWindow::setMenuAppearance(QAction* action)
             m_settings->menuAppearance == Settings::MenuAppearanceSystem);
         window->m_actions.settingsMenuAppearanceSpeedCrunch->setChecked(
             m_settings->menuAppearance == Settings::MenuAppearanceSpeedCrunch);
+        window->updateAppearancePresetActions();
         emit window->menuAppearanceChanged();
     }
 }
@@ -4351,6 +4391,7 @@ void MainWindow::setDockAppearance(QAction* action)
             m_settings->dockAppearance == Settings::DockAppearanceSystem);
         window->m_actions.settingsDockAppearanceSpeedCrunch->setChecked(
             m_settings->dockAppearance == Settings::DockAppearanceSpeedCrunch);
+        window->updateAppearancePresetActions();
         for (QDockWidget* dock : window->m_allDocks) {
             applyDockAppearance(window, dock, surfaces);
         }
@@ -4374,6 +4415,7 @@ void MainWindow::setStatusBarAppearance(QAction* action)
             m_settings->statusBarAppearance == Settings::StatusBarAppearanceSystem);
         window->m_actions.settingsStatusBarAppearanceSpeedCrunch->setChecked(
             m_settings->statusBarAppearance == Settings::StatusBarAppearanceSpeedCrunch);
+        window->updateAppearancePresetActions();
         applyStatusBarAppearance(window->findChild<QStatusBar*>(QString(), Qt::FindDirectChildrenOnly),
                                  surfaces);
         window->updateStatusBarSectionVisibility();
@@ -4398,6 +4440,7 @@ void MainWindow::applyKeypadAppearance()
     const bool classic = m_settings->keypadAppearance == Settings::KeypadAppearanceClassic;
     m_actions.settingsKeypadAppearanceClassic->setChecked(classic);
     m_actions.settingsKeypadAppearanceModern->setChecked(!classic);
+    updateAppearancePresetActions();
     if (m_widgets.keypad)
         m_widgets.keypad->setAppearance(classic ? Keypad::Classic : Keypad::Modern);
 }
@@ -4422,6 +4465,7 @@ void MainWindow::applyEditorDisplayStyle()
         m_settings->editorDisplayStyle == Settings::EditorDisplayClassic);
     m_actions.settingsEditorDisplayModern->setChecked(
         m_settings->editorDisplayStyle == Settings::EditorDisplayModern);
+    updateAppearancePresetActions();
     for (ResultDisplay* display : splitPaneDisplays())
         display->applyEditorDisplayStyle();
     for (Editor* editor : splitPaneEditors())
@@ -4625,6 +4669,13 @@ void MainWindow::setActionsText()
     m_actions.settingsDisplayFont->setText(MainWindow::tr("&Font..."));
     m_actions.settingsResetAll->setText(MainWindow::tr("Reset All Settings..."));
     m_actions.settingsDisplayColorSchemeCustom->setText(MainWindow::tr("&Theme..."));
+    m_actions.settingsAppearancePresetClassic->setText(MainWindow::tr("&Classic"));
+    m_actions.settingsAppearancePresetClassic->setStatusTip(
+        MainWindow::tr("Use an appearance similar to SpeedCrunch 0.12"));
+    m_actions.settingsAppearancePresetModern->setText(MainWindow::tr("&Modern"));
+    m_actions.settingsAppearancePresetModern->setStatusTip(
+        MainWindow::tr("Use the default SpeedCrunch appearance"));
+    m_actions.settingsAppearancePresetCustom->setText(MainWindow::tr("C&ustom"));
     m_actions.settingsSystemColorModeFollowSystem->setText(MainWindow::tr("&Follow System"));
     m_actions.settingsSystemColorModeLight->setText(MainWindow::tr("&Light"));
     m_actions.settingsSystemColorModeDark->setText(MainWindow::tr("&Dark"));
@@ -4714,6 +4765,10 @@ void MainWindow::createActionGroups()
     m_actionGroups.angle->addAction(m_actions.settingsAngleUnitRevolution);
 
     m_actionGroups.colorScheme = new QActionGroup(this);
+    m_actionGroups.appearancePreset = new QActionGroup(this);
+    m_actionGroups.appearancePreset->addAction(m_actions.settingsAppearancePresetClassic);
+    m_actionGroups.appearancePreset->addAction(m_actions.settingsAppearancePresetModern);
+    m_actionGroups.appearancePreset->addAction(m_actions.settingsAppearancePresetCustom);
     m_actionGroups.systemColorMode = new QActionGroup(this);
     m_actionGroups.systemColorMode->addAction(m_actions.settingsSystemColorModeFollowSystem);
     m_actionGroups.systemColorMode->addAction(m_actions.settingsSystemColorModeLight);
@@ -4923,6 +4978,9 @@ void MainWindow::createMenus()
 
     m_menus.display = m_menus.settings->addMenu("");
     m_menus.display->addAction(m_actions.settingsDisplayColorSchemeCustom);
+    m_menus.appearancePreset = m_menus.display->addMenu("");
+    m_menus.appearancePreset->setObjectName(QStringLiteral("AppearancePresetMenu"));
+    m_menus.appearancePreset->addActions(m_actionGroups.appearancePreset->actions());
     m_menus.systemColorMode = m_menus.display->addMenu("");
     m_menus.systemColorMode->setObjectName(QStringLiteral("SystemColorModeMenu"));
     m_menus.systemColorMode->addActions(m_actionGroups.systemColorMode->actions());
@@ -5105,6 +5163,7 @@ void MainWindow::setMenusText()
     m_menus.autoCompletion->setTitle(MainWindow::tr("A&utocomplete"));
     m_menus.upDownArrowBehavior->setTitle(MainWindow::tr("Up/Down Arrow History"));
     m_menus.display->setTitle(MainWindow::tr("&Appearance"));
+    m_menus.appearancePreset->setTitle(MainWindow::tr("Style &Presets"));
     m_menus.systemColorMode->setTitle(MainWindow::tr("System &Color Mode"));
     m_menus.menuAppearance->setTitle(MainWindow::tr("&Menus"));
     m_menus.dockAppearance->setTitle(MainWindow::tr("&Docks"));
@@ -8137,6 +8196,12 @@ void MainWindow::createFixedConnections()
     connect(this, &MainWindow::colorSchemeChanged, this, &MainWindow::refreshPaneThemes);
     connect(m_actionGroups.menuAppearance, &QActionGroup::triggered,
             this, &MainWindow::setMenuAppearance);
+    connect(m_actions.settingsAppearancePresetClassic, &QAction::triggered,
+            this, [this]() { setAppearancePreset(true); });
+    connect(m_actions.settingsAppearancePresetModern, &QAction::triggered,
+            this, [this]() { setAppearancePreset(false); });
+    connect(m_menus.appearancePreset, &QMenu::aboutToShow,
+            this, &MainWindow::updateAppearancePresetActions);
     connect(m_actionGroups.systemColorMode, &QActionGroup::triggered,
             this, &MainWindow::setSystemColorMode);
     connect(m_actionGroups.dockAppearance, &QActionGroup::triggered,

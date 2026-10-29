@@ -942,6 +942,30 @@ User Interface Settings
     .. versionadded:: 1.0
        The :menuselection:`Theme...` dialog, including live preview and JSON import/export.
 
+* :menuselection:`Settings --> Appearance --> Style Presets`
+    Apply a set of appearance choices in one step:
+
+    * :guilabel:`Classic` uses the system appearance for menus, docks, and the
+      status bar, with Classic input, results, and keypad styles. It gives
+      SpeedCrunch an appearance similar to version 0.12.
+    * :guilabel:`Modern` uses the SpeedCrunch theme for menus, docks, and the
+      status bar, with Modern input, results, and keypad styles. This matches
+      the defaults for new 1.x installations.
+
+    The checkmark reflects the current combination of these five settings.
+    :guilabel:`Custom` is checked when neither preset matches. It is an
+    indicator, not a selectable preset. Changing an individual setting updates
+    the checkmark automatically, including when you restore a matching
+    combination by hand.
+
+    Presets apply immediately to all windows. They keep the selected color
+    theme, System Color Mode, fonts, keypad layouts and zoom levels, dock
+    positions, and visibility choices. Existing settings stay as they are when
+    you upgrade. SpeedCrunch identifies the matching preset without changing
+    your appearance.
+
+    .. versionadded:: 1.2
+
 * :menuselection:`Settings --> Appearance --> System Color Mode`
     Choose the light or dark appearance for controls that use the system style:
 
