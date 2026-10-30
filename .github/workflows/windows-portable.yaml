@@ -18,7 +18,7 @@ jobs:
   build-and-package:
     # This image includes VS 2022 for Qt's MSVC 2022 kit.
     runs-on: windows-2022
-    timeout-minutes: 75
+    timeout-minutes: 45
     env:
       # CTest captures pipes, which Qt does not recognize as a Windows console.
       QT_FORCE_STDERR_LOGGING: '1'
