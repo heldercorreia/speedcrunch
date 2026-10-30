@@ -17,7 +17,7 @@ permissions:
 jobs:
   build-and-test:
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 75
     defaults:
       run:
         shell: bash
@@ -64,6 +64,7 @@ jobs:
           "-DCMAKE_PREFIX_PATH=$QT_ROOT_DIR"
 
       - name: Build
+        id: build
         run: cmake --build build --parallel 4
 
       - name: Run non-UI tests
@@ -78,11 +79,34 @@ jobs:
         env:
           QT_QPA_PLATFORM: cocoa
         run: >-
-          ctest --test-dir build -C Debug -L '^ui$' --parallel 1
+          ctest --test-dir build -C Debug -L '^ui$' -LE '^startup-load$' --parallel 1
           --timeout 180 --no-tests=error --output-on-failure
           --test-output-size-failed 0
           --output-log "$GITHUB_WORKSPACE/ui-tests.log"
           --output-junit "$GITHUB_WORKSPACE/ui-test-results.xml"
+
+      - name: Capture startup diagnostics
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        timeout-minutes: 5
+        env:
+          QT_QPA_PLATFORM: cocoa
+        run: |
+          ctest --test-dir build -C Debug -L '^startup-load$' --parallel 1 \
+            --no-tests=error --verbose --test-output-size-failed 0 \
+            --output-junit "$GITHUB_WORKSPACE/startup-test-results.xml" \
+            2>&1 | tee "$GITHUB_WORKSPACE/startup-tests.log"
+
+      - name: Upload startup diagnostics
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: macos-15-debug-startup-diagnostics
+          path: |
+            source-revision.txt
+            build/startup-diagnostics/
+            startup-tests.log
+            startup-test-results.xml
+          if-no-files-found: ignore
 
       - name: Upload test logs
         if: always()

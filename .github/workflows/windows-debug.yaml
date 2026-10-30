@@ -97,7 +97,7 @@ jobs:
             2>&1 | Tee-Object -FilePath "$env:GITHUB_WORKSPACE/ui-tests.log"
           exit $LASTEXITCODE
 
-      - name: Capture Classic and Modern startup diagnostics
+      - name: Capture startup diagnostics
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         timeout-minutes: 5
         env:
