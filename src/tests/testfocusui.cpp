@@ -128,7 +128,9 @@ void TestFocusUi::constant_search_paints_editor_without_focus_ring()
     QCOMPARE(window.grab(editorRect).toImage(), unfocused);
     QTest::keyClick(search, Qt::Key_Escape);
     QTRY_VERIFY(editor->hasFocus());
-    QVERIFY(window.grab(editorRect).toImage() != unfocused);
+    QTRY_VERIFY(editorHasPrimaryOutline(editor, QColor(QStringLiteral("#e7a840"))));
+    // Cocoa can restore keyboard focus before the editor's appearance catches up.
+    QTRY_VERIFY(window.grab(editorRect).toImage() != unfocused);
 }
 
 void TestFocusUi::constant_search_takes_primary_focus_from_editor_data()
