@@ -6,6 +6,7 @@
 #include "core/complexform.h"
 #include "core/settings.h"
 #include "core/sessionjsonkeys.h"
+#include "core/startupdiagnostics.h"
 #include "math/cmath.h"
 #include <QDateTime>
 
@@ -226,26 +227,32 @@ void HistoryEntry::serialize(QJsonObject & json) const
 
 void HistoryEntry::deSerialize(const QJsonObject & json)
 {
+    StartupDiagnostics::BatchedScope timing("Initialize restored history entry");
     *this = HistoryEntry();
     m_result = CMath::nan();
 
+    timing.next("Read saved history expressions");
     if (json.contains(QLatin1String(SessionJsonKeys::HistoryEntry::Expression)))
         m_expr = json[QLatin1String(SessionJsonKeys::HistoryEntry::Expression)].toString();
     if (json.contains(QLatin1String(SessionJsonKeys::HistoryEntry::InterpretedExpression)))
         m_interpretedExpr = json[QLatin1String(SessionJsonKeys::HistoryEntry::InterpretedExpression)].toString();
+    timing.next("Deserialize saved history result");
     if (json.contains(QLatin1String(SessionJsonKeys::HistoryEntry::Result))
             && json[QLatin1String(SessionJsonKeys::HistoryEntry::Result)].isObject())
         m_result = Quantity::deSerialize(json[QLatin1String(SessionJsonKeys::HistoryEntry::Result)].toObject());
 
+    timing.next("Deserialize saved history context");
     if (json.contains(QLatin1String(SessionJsonKeys::HistoryEntry::Context))) {
         m_ctx.deSerialize(json[QLatin1String(SessionJsonKeys::HistoryEntry::Context)].toObject());
         m_hasCtx = true;
     }
+    timing.next("Read saved history timestamp");
     if (json.contains(QLatin1String(SessionJsonKeys::HistoryEntry::EditTimestamp)))
         m_editTimestamp = json[QLatin1String(SessionJsonKeys::HistoryEntry::EditTimestamp)].toVariant().toLongLong();
     else
         m_editTimestamp = currentEditTimestampMs();
 
+    timing.next("Read saved history display lines");
     if (json.contains(QLatin1String(SessionJsonKeys::HistoryEntry::PrintedLines))) {
         const QJsonArray renderedLines = json[QLatin1String(SessionJsonKeys::HistoryEntry::PrintedLines)].toArray();
         for (const QJsonValue& value : renderedLines) {

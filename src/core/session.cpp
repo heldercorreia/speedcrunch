@@ -183,6 +183,8 @@ void SessionSerialization::serialize(const Session& session, QJsonObject& json)
 
 int SessionSerialization::deserialize(Session& session, const QJsonObject& json, bool merge)
 {
+    StartupDiagnostics::Batch batch;
+    StartupDiagnostics::Scope timing("Validate saved session JSON");
     auto hasType = [&json](const char* key, bool (QJsonValue::*predicate)() const) {
         const QJsonValue value = json.value(QLatin1String(key));
         return value.isUndefined() || (value.*predicate)();
@@ -227,6 +229,7 @@ int SessionSerialization::deserialize(Session& session, const QJsonObject& json,
         return false;
     }
 
+    timing.next("Prepare session for deserialization");
     if (!merge) {
         session.clearHistory();
         session.clearVariables();
@@ -242,13 +245,18 @@ int SessionSerialization::deserialize(Session& session, const QJsonObject& json,
 
     session.evaluator()->initializeBuiltInVariables();
 
+    timing.next("Restore saved history entries (total)");
     QJsonArray hist_obj = json[QLatin1String(SessionJsonKeys::History)].toArray();
     int n = hist_obj.size();
     const int limit = session.historyLimit();
     const int firstHistoryIndex = limit > 0 ? std::max(0, n - limit) : 0;
-    for (int i = firstHistoryIndex; i < n; ++i)
-        session.addHistoryEntry(HistoryEntry(hist_obj[i].toObject()));
+    for (int i = firstHistoryIndex; i < n; ++i) {
+        const HistoryEntry entry(hist_obj[i].toObject());
+        StartupDiagnostics::BatchedScope insertion("Append restored history entry");
+        session.addHistoryEntry(entry);
+    }
 
+    timing.next("Restore saved session variables");
     QJsonArray var_obj = json[QLatin1String(SessionJsonKeys::Variables)].toArray();
     n = var_obj.size();
     for (int i = 0; i < n; ++i) {
@@ -258,6 +266,7 @@ int SessionSerialization::deserialize(Session& session, const QJsonObject& json,
         session.addVariable(variable);
     }
 
+    timing.next("Restore saved session functions");
     QJsonArray func_obj = json[QLatin1String(SessionJsonKeys::Functions)].toArray();
     n = func_obj.size();
     for (int i = 0; i < n; ++i) {
@@ -265,6 +274,7 @@ int SessionSerialization::deserialize(Session& session, const QJsonObject& json,
         session.addUserFunction(func);
     }
 
+    timing.next("Restore saved session units");
     if (json.contains(QLatin1String(SessionJsonKeys::Units))) {
         QJsonArray unit_obj = json[QLatin1String(SessionJsonKeys::Units)].toArray();
         const int unitCount = unit_obj.size();
@@ -273,6 +283,7 @@ int SessionSerialization::deserialize(Session& session, const QJsonObject& json,
             session.addUserUnit(unit);
         }
     }
+    timing.next("Restore saved global definitions");
     if (!merge && json.contains(QLatin1String(SessionJsonKeys::Globals))) {
         const QJsonArray globalsObj = json[QLatin1String(SessionJsonKeys::Globals)].toArray();
         QStringList lines;
@@ -285,6 +296,7 @@ int SessionSerialization::deserialize(Session& session, const QJsonObject& json,
             Settings::instance()->startupUserDefinitions = lines.join(QLatin1Char('\n'));
     }
 
+    timing.next("Recover saved session ans");
     recoverAns(session);
     return true;
 }

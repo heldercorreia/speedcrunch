@@ -7,6 +7,7 @@
 
 #include <QElapsedTimer>
 
+#include <algorithm>
 #include <functional>
 
 using namespace MainWindowTestHelpers;
@@ -57,6 +58,8 @@ public slots:
 private slots:
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
+    void startup_deserialization_reports_history_phases();
+    void startup_batched_timings_finish_after_flush();
     void startup_numeric_history_keeps_unit_registry_unloaded();
     void startup_applies_window_flags_before_polishing_panes_data();
     void startup_applies_window_flags_before_polishing_panes();
@@ -333,6 +336,84 @@ void TestSessionsUi::initTestCase()
                  qPrintable(QStringLiteral("Cannot write test storage at %1: %2")
                                 .arg(path, probe.errorString())));
     }
+}
+
+void TestSessionsUi::startup_deserialization_reports_history_phases()
+{
+    Session source;
+    const QStringList lines {QStringLiteral("6*7"), QStringLiteral("= 42")};
+    for (int i = 0; i < 3; ++i) {
+        HistoryEntry entry(QStringLiteral("6*7"), Quantity(42), QStringLiteral("6*7"));
+        entry.setRenderedLines(lines);
+        source.addHistoryEntry(entry);
+    }
+    QJsonObject saved;
+    source.serialize(saved);
+    Session restored;
+
+    StartupDiagnostics::begin();
+    const auto stopDiagnostics = qScopeGuard([] {
+        StartupDiagnostics::firstPaintFinished();
+        StartupDiagnostics::finishWhenIdle();
+    });
+    for (int i = 0; i < 2; ++i)
+        QVERIFY(restored.deSerialize(saved, false));
+    StartupDiagnostics::firstPaintFinished();
+    StartupDiagnostics::finishWhenIdle();
+    const auto snapshot = StartupDiagnostics::snapshot();
+    QVERIFY(snapshot.complete);
+    const QStringList historyPhases {
+        QStringLiteral("Initialize restored history entry"),
+        QStringLiteral("Read saved history expressions"),
+        QStringLiteral("Deserialize saved history result"),
+        QStringLiteral("Deserialize saved history context"),
+        QStringLiteral("Read saved history timestamp"),
+        QStringLiteral("Read saved history display lines"),
+        QStringLiteral("Append restored history entry")
+    };
+    for (const QString& name : historyPhases) {
+        const auto phase = std::find_if(snapshot.phases.cbegin(), snapshot.phases.cend(),
+                                       [&name](const auto& item) { return item.name == name; });
+        QVERIFY2(phase != snapshot.phases.cend(), qPrintable(name));
+        QCOMPARE(phase->calls, 6);
+        QVERIFY(!phase->worker);
+        QVERIFY(phase->firstStartNs >= 0);
+        QVERIFY(phase->totalNs >= phase->longestNs);
+    }
+    QCOMPARE(restored.historySize(), 3);
+    QCOMPARE(restored.historyEntryAtRef(0).renderedLines(), lines);
+    QCOMPARE(restored.getVariable(QStringLiteral("ans")).value(), Quantity(42));
+}
+
+void TestSessionsUi::startup_batched_timings_finish_after_flush()
+{
+    StartupDiagnostics::begin();
+    const auto stopDiagnostics = qScopeGuard([] {
+        StartupDiagnostics::firstPaintFinished();
+        StartupDiagnostics::finishWhenIdle();
+    });
+    {
+        StartupDiagnostics::BatchedScope ignored("Outside startup timing batch");
+    }
+    {
+        StartupDiagnostics::Batch outer;
+        {
+            StartupDiagnostics::BatchedScope timing("Nested startup timing batch");
+        }
+        {
+            StartupDiagnostics::Batch inner;
+            StartupDiagnostics::BatchedScope timing("Nested startup timing batch");
+        }
+        StartupDiagnostics::firstPaintFinished();
+        StartupDiagnostics::finishWhenIdle();
+        QVERIFY(StartupDiagnostics::isRecording());
+    }
+    StartupDiagnostics::finishWhenIdle();
+    const auto snapshot = StartupDiagnostics::snapshot();
+    QVERIFY(snapshot.complete);
+    QCOMPARE(snapshot.phases.size(), 1);
+    QCOMPARE(snapshot.phases.first().name, QStringLiteral("Nested startup timing batch"));
+    QCOMPARE(snapshot.phases.first().calls, 2);
 }
 
 void TestSessionsUi::startup_numeric_history_keeps_unit_registry_unloaded()

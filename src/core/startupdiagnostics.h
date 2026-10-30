@@ -68,6 +68,8 @@ struct Snapshot {
 
 inline constexpr bool isEnabled() { return true; }
 
+class Batch;
+
 namespace Detail {
 struct State {
     QMutex mutex;
@@ -96,6 +98,7 @@ inline State& state()
 
 inline thread_local QString appearanceContext;
 inline thread_local int appearanceCall = -1;
+inline thread_local Batch* activeBatch = nullptr;
 
 inline int widgetId(State& state, const QObject* widget)
 {
@@ -207,6 +210,121 @@ private:
     }
 
     quint64 m_generation = 0;
+    qint64 m_startNs = 0;
+    int m_index = -1;
+};
+
+// Collect short, repeated phases locally. Merge once so each history field
+// does not need to lock or search the shared startup report.
+class Batch {
+public:
+    Batch()
+    {
+        auto& state = Detail::state();
+        if (!state.recording.load())
+            return;
+        QMutexLocker lock(&state.mutex);
+        if (!state.recording.load())
+            return;
+        m_generation = state.generation;
+        m_startNs = state.clock.nsecsElapsed();
+        m_clock.start();
+        ++state.openScopes;
+        m_previous = Detail::activeBatch;
+        Detail::activeBatch = this;
+        m_active = true;
+    }
+
+    ~Batch()
+    {
+        if (!m_active)
+            return;
+        Detail::activeBatch = m_previous;
+        auto& state = Detail::state();
+        QMutexLocker lock(&state.mutex);
+        if (m_generation != state.generation)
+            return;
+        for (const Phase& collected : m_phases) {
+            int index = 0;
+            while (index < state.phases.size()
+                   && (state.phases[index].name != collected.name
+                       || state.phases[index].worker != collected.worker))
+                ++index;
+            if (index == state.phases.size()) {
+                state.phases.append(collected);
+            } else {
+                auto& phase = state.phases[index];
+                phase.firstStartNs = qMin(phase.firstStartNs, collected.firstStartNs);
+                phase.totalNs += collected.totalNs;
+                phase.longestNs = qMax(phase.longestNs, collected.longestNs);
+                phase.calls += collected.calls;
+            }
+        }
+        --state.openScopes;
+    }
+
+    Batch(const Batch&) = delete;
+    Batch& operator=(const Batch&) = delete;
+
+private:
+    friend class BatchedScope;
+    QElapsedTimer m_clock;
+    QHash<const char*, int> m_indices;
+    QVector<Phase> m_phases;
+    Batch* m_previous = nullptr;
+    quint64 m_generation = 0;
+    qint64 m_startNs = 0;
+    bool m_active = false;
+};
+
+// A BatchedScope records only while a Batch is active on the same thread.
+// Names must be fixed string literals, as with Scope.
+class BatchedScope {
+public:
+    explicit BatchedScope(const char* name) { start(name); }
+    ~BatchedScope() { finish(); }
+    BatchedScope(const BatchedScope&) = delete;
+    BatchedScope& operator=(const BatchedScope&) = delete;
+
+    void next(const char* name)
+    {
+        finish();
+        start(name);
+    }
+
+private:
+    void start(const char* name)
+    {
+        m_batch = Detail::activeBatch;
+        if (!m_batch)
+            return;
+        m_index = m_batch->m_indices.value(name, -1);
+        if (m_index < 0) {
+            m_index = m_batch->m_phases.size();
+            const bool worker = QCoreApplication::instance()
+                && QThread::currentThread() != QCoreApplication::instance()->thread();
+            m_batch->m_phases.append(Phase{QString::fromLatin1(name), worker});
+            m_batch->m_indices.insert(name, m_index);
+        }
+        m_startNs = m_batch->m_clock.nsecsElapsed();
+        auto& phase = m_batch->m_phases[m_index];
+        if (phase.firstStartNs == 0)
+            phase.firstStartNs = m_batch->m_startNs + m_startNs;
+    }
+
+    void finish()
+    {
+        if (!m_batch)
+            return;
+        const qint64 elapsed = m_batch->m_clock.nsecsElapsed() - m_startNs;
+        auto& phase = m_batch->m_phases[m_index];
+        phase.totalNs += elapsed;
+        phase.longestNs = qMax(phase.longestNs, elapsed);
+        ++phase.calls;
+        m_batch = nullptr;
+    }
+
+    Batch* m_batch = nullptr;
     qint64 m_startNs = 0;
     int m_index = -1;
 };
@@ -419,6 +537,21 @@ public:
     Scope& operator=(const Scope&) = delete;
     void next(const char*) {}
     void finish() {}
+};
+
+class Batch {
+public:
+    Batch() {}
+    Batch(const Batch&) = delete;
+    Batch& operator=(const Batch&) = delete;
+};
+
+class BatchedScope {
+public:
+    explicit BatchedScope(const char*) {}
+    BatchedScope(const BatchedScope&) = delete;
+    BatchedScope& operator=(const BatchedScope&) = delete;
+    void next(const char*) {}
 };
 
 class AppearanceContext {
