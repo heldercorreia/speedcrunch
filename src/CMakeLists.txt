@@ -339,6 +339,27 @@ if(BUILD_TESTING)
         SPEEDCRUNCH_UI_TEST
         SPEEDCRUNCH_ENABLE_STARTUP_DIAGNOSTICS
     )
+    if(ENABLE_STARTUP_DIAGNOSTICS)
+        # Reuse the UI test objects, but enter the same main.cpp as the app in a
+        # fresh process. Fixture generation stays outside the startup recording.
+        qt_add_executable(teststartupload
+            main.cpp
+            tests/teststartupload.cpp
+            ${HTML_DOCS_DIR}/manual.qrc)
+        target_link_libraries(teststartupload PRIVATE mainwindowuitest)
+        target_compile_definitions(teststartupload PRIVATE SPEEDCRUNCH_STARTUP_LOAD_TEST)
+        foreach(workload IN ITEMS baseline heavy)
+            foreach(preset IN ITEMS classic modern)
+                add_test(NAME startup-load-${workload}-${preset}
+                    COMMAND teststartupload --workload ${workload} --preset ${preset}
+                        --report "${CMAKE_BINARY_DIR}/startup-diagnostics/${workload}-${preset}.txt")
+                set_tests_properties(startup-load-${workload}-${preset} PROPERTIES
+                    LABELS "ui;startup-load"
+                    RUN_SERIAL TRUE
+                    TIMEOUT 600)
+            endforeach()
+        endforeach()
+    endif()
     # Start the longer suites first on a build without CTest timing history.
     set(mainwindow_ui_tests
         teststartupfocusui

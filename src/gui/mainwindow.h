@@ -285,6 +285,9 @@ protected:
     bool eventFilter(QObject*, QEvent*) override;
 
 private:
+#ifdef SPEEDCRUNCH_UI_TEST
+    friend class StartupLoadTest;
+#endif
     Q_DISABLE_COPY(MainWindow)
 
     void clearTextEditSelection(QPlainTextEdit*);

@@ -9,6 +9,9 @@
 #include "core/startupdiagnostics.h"
 #include "core/singleinstance.h"
 #include "gui/launchcontroller.h"
+#ifdef SPEEDCRUNCH_STARTUP_LOAD_TEST
+#include "tests/startuploadtest.h"
+#endif
 
 #include <QCoreApplication>
 #include <QApplication>
@@ -175,7 +178,11 @@ BOOL WINAPI handleWindowsConsoleControl(DWORD controlType)
 
 }
 
+#ifdef SPEEDCRUNCH_STARTUP_LOAD_TEST
+int startupLoadApplicationMain(int argc, char* argv[])
+#else
 int main(int argc, char* argv[])
+#endif
 {
     // Capture launcher metadata before Qt initializes the platform plugin.
     const LaunchRequest launchRequest = LaunchRequest::fromEnvironment();
@@ -293,6 +300,9 @@ int main(int argc, char* argv[])
     });
 
     timing.finish();
+#ifdef SPEEDCRUNCH_STARTUP_LOAD_TEST
+    StartupLoadTest::watch(window);
+#endif
     g_eventLoopRunning.store(true);
     const int result = application.exec();
     g_eventLoopRunning.store(false);

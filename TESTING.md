@@ -28,6 +28,72 @@ inspect the recorded work. This does not enable recording in the application.
 Set `ENABLE_STARTUP_DIAGNOSTICS` explicitly or use `BUILD_VARIANT_DEV_DEBUG`
 for that, as described in [DIAGNOSTICS.md](DIAGNOSTICS.md).
 
+## Startup load tests
+
+Builds with both `BUILD_TESTING=ON` and `ENABLE_STARTUP_DIAGNOSTICS=ON` include
+four startup scenarios in every configuration, including Debug and Release.
+Each workload runs once with the Classic style preset and once with Modern:
+
+- `startup-load-baseline-classic`
+- `startup-load-baseline-modern`
+- `startup-load-heavy-classic`
+- `startup-load-heavy-modern`
+
+From the repository root, configure and run a Release build:
+
+    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON -DENABLE_STARTUP_DIAGNOSTICS=ON
+    cmake --build build --config Release --parallel
+    ctest --test-dir build -C Release -L "^startup-load$" --verbose
+
+Include your Qt selection options from [BUILDING.md](BUILDING.md) when configuring.
+Use the directory containing your CMake build in place of `build`. For a
+developer Debug build, use `BUILD_VARIANT_DEV_DEBUG=ON` when configuring and
+`Debug` in place of `Release` in the build and test commands. That variant
+enables both testing and startup diagnostics automatically.
+
+The baseline restores one tab with 10 history entries and hides the docks and
+keypad. The heavy workload restores 30 tabs with 1,000 entries each, spread
+across six panes in a two-column, three-row grid, with all eight docks and the
+scientific keypad enabled at 50% zoom. All four docking areas contain separate
+panels. The saved window targets 1,280 by 800 pixels and fits the available screen.
+
+Each preset sets the editor, keypad, menu, dock and status bar appearance before
+launch. The tests verify that the application recognizes the selected preset.
+The session data and saved layout are the same for both presets.
+
+The fixtures are generated on the fly by `prepareWorkload()` and `savedWindow()`
+in [src/tests/teststartupload.cpp](src/tests/teststartupload.cpp), rather than
+stored as predefined configuration files. Generation is deterministic: each
+workload and preset produces the same session data and configured settings.
+Window geometry adapts to the available screen and the controls' minimum sizes.
+Temporary directory paths vary, and measured timings naturally vary between runs.
+
+Each scenario writes its configuration and session files to a temporary
+directory, then starts a fresh process through the application's normal startup
+code. In the test build, `SPEEDCRUNCH_UI_TEST_STORAGE` redirects configuration,
+session and cache paths to that directory. Real user settings are untouched,
+and the temporary directory is removed after the run. Update checks are disabled
+for these runs. The scenarios use the native platform plugin unless
+`QT_QPA_PLATFORM` is already set.
+
+The tests check the restored sessions, history counts and control visibility.
+They also check pane visibility, dock placement and whether the window fits on
+screen. Each case writes a text diagnostic report, a JSON timing summary and a
+window screenshot under `startup-diagnostics` in the build directory, named for
+the workload and preset, such as `heavy-classic.txt`, `heavy-classic.json`
+and `heavy-classic.png`. The JSON summary includes the preset name.
+
+Compare Classic and Modern results for the same workload and build configuration.
+Single runs can vary, so repeat the tests before drawing performance conclusions.
+Timings include application initialization and session restoration.
+Fixture generation and report writing
+are outside the measurement. These are fresh-process launches, without clearing
+the operating system's file cache. Timings have no pass/fail threshold.
+
+Windows Debug CI runs all four scenarios with the native Windows platform plugin
+and uploads the reports and test logs even when a scenario fails. Ordinary
+application launches do not select either workload.
+
 ## Windows
 
 Follow the [Windows build setup](BUILDING.md#windows), including setting
