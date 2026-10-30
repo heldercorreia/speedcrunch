@@ -17,7 +17,7 @@ permissions:
 jobs:
   build-and-test:
     runs-on: ubuntu-24.04
-    timeout-minutes: 75
+    timeout-minutes: 15
     env:
       APT_PACKAGES: >-
         libxcb1-dev openbox pkg-config qt6-base-dev qt6-l10n-tools

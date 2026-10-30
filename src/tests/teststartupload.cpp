@@ -29,6 +29,7 @@
 #include <QSaveFile>
 #include <QScreen>
 #include <QSettings>
+#include <QSet>
 #include <QSplitter>
 #include <QTabBar>
 #include <QTemporaryDir>
@@ -54,6 +55,10 @@ Workload workload;
 QString stylePreset;
 QString reportPath;
 constexpr int startupRuns = 10;
+// Keep the fixture usable on the 1024x686 macOS CI display, including its
+// menu bar and window frame. Use the same layout on larger local displays.
+const QSize startupScreenSize(1024, 686);
+const QSize heavyWindowSize(960, 600);
 
 QString outputPath(const QString& suffix, const QString& path = reportPath)
 {
@@ -66,7 +71,9 @@ bool selectScenario(const QString& name, const QString& preset)
     if ((name != QLatin1String("baseline") && name != QLatin1String("heavy"))
         || (preset != QLatin1String("classic") && preset != QLatin1String("modern")))
         return false;
-    workload = name == QLatin1String("heavy") ? Workload {name, 30, 1000, 6, true}
+    // Three tabs per pane fit without changing the application's tab sizing.
+    // Keep the original 30,000 saved history entries across fewer sessions.
+    workload = name == QLatin1String("heavy") ? Workload {name, 12, 2500, 4, true}
                                               : Workload {name, 1, 10, 1, false};
     stylePreset = preset;
     return true;
@@ -80,12 +87,12 @@ struct DockPlacement {
 const DockPlacement dockPlacements[] = {
     {"BookDock", Qt::LeftDockWidgetArea},
     {"VariablesDock", Qt::LeftDockWidgetArea},
-    {"UserFunctionsDock", Qt::RightDockWidgetArea},
-    {"UserUnitsDock", Qt::RightDockWidgetArea},
-    {"ConstantsDock", Qt::TopDockWidgetArea},
-    {"FunctionsDock", Qt::TopDockWidgetArea},
-    {"HistoryDock", Qt::TopDockWidgetArea},
-    {"BitfieldDock", Qt::BottomDockWidgetArea}
+    {"UserFunctionsDock", Qt::LeftDockWidgetArea},
+    {"UserUnitsDock", Qt::LeftDockWidgetArea},
+    {"ConstantsDock", Qt::LeftDockWidgetArea},
+    {"FunctionsDock", Qt::LeftDockWidgetArea},
+    {"HistoryDock", Qt::LeftDockWidgetArea},
+    {"BitfieldDock", Qt::LeftDockWidgetArea}
 };
 
 QJsonObject savedWindow(const QJsonObject& node)
@@ -107,17 +114,18 @@ QJsonObject savedWindow(const QJsonObject& node)
             dock->setWidget(new QWidget(dock));
             dock->setMinimumSize(160, 120);
             layout.addDockWidget(placement.area, dock);
-            if (QDockWidget* first = previous.value(placement.area)) {
-                const Qt::Orientation orientation = placement.area == Qt::LeftDockWidgetArea
-                    || placement.area == Qt::RightDockWidgetArea ? Qt::Vertical : Qt::Horizontal;
-                layout.splitDockWidget(first, dock, orientation);
-            }
+            // All eight real docks still load in the measured process. Tabs
+            // leave enough room for the session panes on a small display.
+            if (QDockWidget* first = previous.value(placement.area))
+                layout.tabifyDockWidget(first, dock);
             previous.insert(placement.area, dock);
             openDocks.append(dock->objectName());
         }
+        for (QDockWidget* dock : previous)
+            dock->raise();
     }
     const QRect available = QGuiApplication::primaryScreen()->availableGeometry().adjusted(24, 32, -24, -24);
-    layout.resize(QSize(workload.docks ? 1280 : 640, workload.docks ? 800 : 480).boundedTo(available.size()));
+    layout.resize((workload.docks ? heavyWindowSize : QSize(640, 480)).boundedTo(available.size()));
     layout.move(available.center() - layout.rect().center());
     layout.layout()->activate();
     return QJsonObject {
@@ -223,7 +231,7 @@ bool prepareWorkload(const QString& root)
             {QStringLiteral("type"), QStringLiteral("split")},
             {QStringLiteral("orientation"), QStringLiteral("vertical")},
             {QStringLiteral("active"), sessionName(0)},
-            {QStringLiteral("sizes"), QJsonArray {1, 1, 1}},
+            {QStringLiteral("sizes"), QJsonArray {1, 1}},
             {QStringLiteral("children"), rows}
         };
     } else {
@@ -405,14 +413,31 @@ void StartupLoadTest::watch(MainWindow& window)
             error = QStringLiteral("Dock or keypad visibility differs from the workload");
         if (workload.docks && error.isEmpty()) {
             QList<QRect> dockRects;
+            QHash<Qt::DockWidgetArea, int> exposedDocks;
             for (const DockPlacement& placement : dockPlacements) {
                 QDockWidget* dock = window.findChild<QDockWidget*>(QString::fromLatin1(placement.name));
                 if (!dock || window.dockWidgetArea(dock) != placement.area || dock->isFloating()
-                    || !window.tabifiedDockWidgets(dock).isEmpty() || dock->visibleRegion().isEmpty()) {
-                    error = QStringLiteral("Dock is not separately visible in its saved area: %1")
+                    || !dock->isVisible()) {
+                    error = QStringLiteral("Dock is not open in its saved area: %1")
                         .arg(QString::fromLatin1(placement.name));
                     break;
                 }
+                QSet<QString> expectedTabs;
+                for (const DockPlacement& other : dockPlacements) {
+                    if (other.area == placement.area && &other != &placement)
+                        expectedTabs.insert(QString::fromLatin1(other.name));
+                }
+                QSet<QString> restoredTabs;
+                for (QDockWidget* tab : window.tabifiedDockWidgets(dock))
+                    restoredTabs.insert(tab->objectName());
+                if (restoredTabs != expectedTabs) {
+                    error = QStringLiteral("Dock tab group does not restore for %1").arg(dock->objectName());
+                    break;
+                }
+                // Inactive dock tabs are open but have no exposed geometry.
+                if (dock->visibleRegion().isEmpty())
+                    continue;
+                ++exposedDocks[placement.area];
                 const QRect rect(dock->mapTo(&window, QPoint()), dock->size());
                 if (!window.rect().contains(rect) && error.isEmpty())
                     error = QStringLiteral("A restored dock is clipped by the window");
@@ -422,12 +447,18 @@ void StartupLoadTest::watch(MainWindow& window)
                 }
                 dockRects.append(rect);
             }
-            const QRect available = window.screen()->availableGeometry();
-            if (!available.contains(window.frameGeometry())) {
-                error = QStringLiteral("Startup window extends outside the available screen");
-                qInfo() << "Frame" << window.frameGeometry() << "screen" << available
-                        << "minimum" << window.minimumSizeHint();
+            for (const DockPlacement& placement : dockPlacements) {
+                if (exposedDocks.value(placement.area) != 1 && error.isEmpty())
+                    error = QStringLiteral("A restored dock area does not expose exactly one panel");
             }
+        }
+        const QRect available = window.screen()->availableGeometry();
+        if (error.isEmpty() && (!available.contains(window.frameGeometry())
+                               || window.frameGeometry().width() > startupScreenSize.width()
+                               || window.frameGeometry().height() > startupScreenSize.height())) {
+            error = QStringLiteral("Startup window exceeds the screen or the 1024x686 CI display budget");
+            qInfo() << "Frame" << window.frameGeometry() << "screen" << available
+                    << "minimum" << window.minimumSizeHint();
         }
         if (error.isEmpty() && (!snapshot.started || !snapshot.complete || snapshot.firstPaintNs < 0))
             error = QStringLiteral("Startup diagnostics are incomplete");
