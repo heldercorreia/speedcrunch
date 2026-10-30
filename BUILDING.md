@@ -492,8 +492,9 @@ target macOS 14.4 or later.
 | [macOS Installer](https://github.com/heldercorreia/speedcrunch/actions/workflows/macos-installer.yaml) | `BUILD_VARIANT_OFFICIAL_RELEASE=ON` | DMG and all tests, including native Cocoa UI tests |
 | [macOS Portable](https://github.com/heldercorreia/speedcrunch/actions/workflows/macos-portable.yaml) | `BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE=ON` | Portable ZIP and all tests, including native UI tests |
 
-All three macOS workflows run independently on pushes to `main`, pull requests
-targeting `main`, and manual runs. Every build job explicitly sets
+macOS Debug runs only when started manually from the Actions page. The installer
+and portable workflows also run on pushes to `main` and pull requests targeting
+`main`. Every build job explicitly sets
 `BUILD_TESTING=ON` and runs non-UI tests in parallel, then native Cocoa UI tests
 one at a time. UI tests still run if a non-UI test fails, provided the build
 succeeds. After both test phases pass, the packaging jobs bundle Qt and
