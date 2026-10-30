@@ -381,6 +381,7 @@ if(BUILD_TESTING)
     set(mainwindow_ui_tests
         teststartupfocusui
         testfocusui
+        testeditorfocusui
         testdockappearanceui
         testdocklayoutui
         testprivatesessionsui

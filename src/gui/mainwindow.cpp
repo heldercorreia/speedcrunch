@@ -13185,8 +13185,10 @@ bool MainWindow::eventFilter(QObject* o, QEvent* e)
             }
             QWidget* pane = editor->parentWidget();
             ResultDisplay* display = pane ? pane->findChild<ResultDisplay*>(QString(), Qt::FindDirectChildrenOnly) : nullptr;
+            // A click selects the editor even before Qt moves focus away
+            // from a dock's text input.
             if (display != nullptr)
-                setActiveEditorDisplayPane(display, editor);
+                setActiveEditorDisplayPane(display, editor, e->type() == QEvent::MouseButtonPress);
         }
         return QMainWindow::eventFilter(o, e);
     }
