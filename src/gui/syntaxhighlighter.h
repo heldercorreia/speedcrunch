@@ -6,8 +6,11 @@
 #define GUI_SYNTAXHIGHLIGHTER_H
 
 #include "core/colorscheme.h"
+#include <QPair>
 #include <QSyntaxHighlighter>
+#include <QTextCharFormat>
 #include <QTextBlockUserData>
+#include <QVector>
 
 class QPlainTextEdit;
 class Evaluator;
@@ -36,6 +39,10 @@ public:
     virtual void highlightBlock(const QString&);
     void asHtml(QString& html);
 
+protected:
+    using QSyntaxHighlighter::setFormat;
+    void setFormat(int start, int count, const QColor& color);
+
 private:
     Q_DISABLE_COPY(SyntaxHighlighter)
     SyntaxHighlighter();
@@ -48,6 +55,7 @@ private:
     const Evaluator* evaluator() const;
 
     ColorScheme m_colorScheme;
+    QVector<QPair<QColor, QTextCharFormat>> m_colorFormats;
     const Evaluator* m_evaluator;
     const bool m_inputEditor;
 };

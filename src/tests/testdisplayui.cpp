@@ -12,6 +12,13 @@ class TestDisplayUi : public QObject {
     Q_OBJECT
 
 private slots:
+    void spaced_conversion_arrows_preserve_tokens_data();
+    void spaced_conversion_arrows_preserve_tokens();
+    void empty_blocks_clear_highlighting_data();
+    void empty_blocks_clear_highlighting();
+    void bulk_history_refresh_preserves_text_highlighting_and_scroll_data();
+    void bulk_history_refresh_preserves_text_highlighting_and_scroll();
+    void highlighting_refreshes_colors_after_theme_changes();
     void saved_history_infers_highlighting_without_simplifying_data();
     void saved_history_infers_highlighting_without_simplifying();
     void history_classification_matches_full_formatting_data();
@@ -51,6 +58,157 @@ private slots:
     void result_display_remove_menu_targets_clicked_calculation();
     void function_identifier_cache_tracks_insertions();
 };
+
+void TestDisplayUi::spaced_conversion_arrows_preserve_tokens_data()
+{
+    QTest::addColumn<QString>("arrow");
+    QTest::newRow("ascii-space") << QStringLiteral("- >");
+    QTest::newRow("unicode-space") << QStringLiteral("− >");
+    QTest::newRow("ascii-tab") << QStringLiteral("-\t>");
+    QTest::newRow("unicode-tab") << QStringLiteral("−\t>");
+    QTest::newRow("mixed-whitespace") << QStringLiteral("- \t >");
+    QTest::newRow("line-break") << QStringLiteral("-\r\n>");
+}
+
+void TestDisplayUi::spaced_conversion_arrows_preserve_tokens()
+{
+    QFETCH(QString, arrow);
+    Session session;
+    const Evaluator* evaluator = session.evaluator();
+    const Tokens expected = evaluator->scan(QStringLiteral("1[metre]->[centimetre]"));
+    QVERIFY(expected.valid());
+    for (int repeat = 0; repeat < 2; ++repeat) {
+        const Tokens actual = evaluator->scan(QStringLiteral("1[metre]%1[centimetre]").arg(arrow));
+        QVERIFY(actual.valid());
+        QCOMPARE(actual.size(), expected.size());
+        for (int i = 0; i < actual.size(); ++i) {
+            QCOMPARE(actual.at(i).type(), expected.at(i).type());
+            QCOMPARE(actual.at(i).text(), expected.at(i).text());
+            QCOMPARE(actual.at(i).pos(), expected.at(i).pos());
+            QCOMPARE(actual.at(i).size(), expected.at(i).size());
+            if (actual.at(i).isOperator())
+                QCOMPARE(actual.at(i).asOperator(), expected.at(i).asOperator());
+        }
+    }
+}
+
+void TestDisplayUi::empty_blocks_clear_highlighting_data()
+{
+    QTest::addColumn<bool>("inputEditor");
+    QTest::newRow("result-display") << false;
+    QTest::newRow("input-editor") << true;
+}
+
+void TestDisplayUi::empty_blocks_clear_highlighting()
+{
+    QFETCH(bool, inputEditor);
+    QPlainTextEdit edit;
+    SyntaxHighlighter highlighter(&edit, inputEditor);
+    edit.setPlainText(QStringLiteral("sin(1000)+x"));
+    highlighter.rehighlight();
+    QVERIFY(!edit.document()->firstBlock().layout()->formats().isEmpty());
+    QTextCursor cursor(edit.document());
+    cursor.select(QTextCursor::Document);
+    cursor.removeSelectedText();
+    highlighter.rehighlight();
+    QCOMPARE(edit.document()->blockCount(), 1);
+    QVERIFY(edit.document()->firstBlock().text().isEmpty());
+    QVERIFY(edit.document()->firstBlock().layout()->formats().isEmpty());
+    edit.setPlainText(QStringLiteral("cos(2000)"));
+    highlighter.rehighlight();
+    QVERIFY(!edit.document()->firstBlock().layout()->formats().isEmpty());
+}
+
+void TestDisplayUi::bulk_history_refresh_preserves_text_highlighting_and_scroll_data()
+{
+    QTest::addColumn<bool>("modern");
+    QTest::addColumn<bool>("highlighting");
+    QTest::newRow("classic-highlighted") << false << true;
+    QTest::newRow("modern-highlighted") << true << true;
+    QTest::newRow("classic-plain") << false << false;
+    QTest::newRow("modern-plain") << true << false;
+}
+
+void TestDisplayUi::bulk_history_refresh_preserves_text_highlighting_and_scroll()
+{
+    QFETCH(bool, modern);
+    QFETCH(bool, highlighting);
+    Settings* settings = Settings::instance();
+    settings->editorDisplayStyle = modern ? Settings::EditorDisplayModern : Settings::EditorDisplayClassic;
+    settings->syntaxHighlighting = highlighting;
+    settings->simplifyResultExpressions = true;
+    Session session;
+    QStringList expected;
+    for (int i = 0; i < 1000; ++i) {
+        const QString expression = i % 2 ? QStringLiteral("x+x") : QStringLiteral("%1*7").arg(i);
+        HistoryEntry entry(expression, Quantity(i * 7), expression);
+        QStringList lines {expression};
+        if (i % 2)
+            lines.append(QStringLiteral("= 2*x"));
+        lines.append(QStringLiteral("= %1").arg(i * 7));
+        entry.setRenderedLines(lines);
+        session.addHistoryEntry(entry);
+        if (i >= 200) {
+            expected.append(lines);
+            expected.append(QString());
+        }
+    }
+    ResultDisplay display;
+    display.resize(450, 200);
+    display.setSession(&session);
+    display.show();
+    QTRY_VERIFY(display.isVisible());
+    QTRY_VERIFY(display.verticalScrollBar()->maximum() > 0);
+    const QString expectedText = expected.join(QLatin1Char('\n'));
+    QCOMPARE(display.toPlainText(), expectedText);
+    display.verticalScrollBar()->setValue(display.verticalScrollBar()->maximum() / 2);
+    const int scroll = display.verticalScrollBar()->value();
+    display.refresh();
+    QCOMPARE(display.toPlainText(), expectedText);
+    QCOMPARE(display.verticalScrollBar()->value(), scroll);
+    QCOMPARE(display.document()->blockCount(), expected.size());
+    int simplified = 0;
+    for (QTextBlock block = display.document()->firstBlock(); block.isValid(); block = block.next()) {
+        const auto* data = dynamic_cast<SyntaxHighlightBlockData*>(block.userData());
+        const bool symbolic = block.text() == QLatin1String("= 2*x");
+        QCOMPARE(bool(data && data->highlightResultExpressionSyntax), symbolic);
+        if (symbolic)
+            ++simplified;
+        if (block.text().isEmpty())
+            QVERIFY(block.layout()->formats().isEmpty());
+    }
+    QCOMPARE(simplified, 400);
+}
+
+void TestDisplayUi::highlighting_refreshes_colors_after_theme_changes()
+{
+    QPlainTextEdit edit;
+    SyntaxHighlighter highlighter(&edit, true);
+    const auto colorAt = [&edit](int position) {
+        for (const auto& range : edit.document()->firstBlock().layout()->formats()) {
+            if (position >= range.start && position < range.start + range.length)
+                return range.format.foreground().color();
+        }
+        return QColor();
+    };
+    for (const QColor& color : {QColor("#123456"), QColor("#abcdef"), QColor("#123456")}) {
+        highlighter.setColorScheme(ColorScheme(QJsonDocument(themeJson(QJsonObject {
+            {QStringLiteral("number"), color.name()},
+            {QStringLiteral("function"), color.name()},
+            {QStringLiteral("variable"), color.name()},
+            {QStringLiteral("operator"), QStringLiteral("#765432")}
+        }))));
+        edit.setPlainText(QStringLiteral("sin(1000)+x"));
+        highlighter.rehighlight();
+        QCOMPARE(colorAt(0), color);
+        QCOMPARE(colorAt(4), color);
+        QCOMPARE(colorAt(10), color);
+        QCOMPARE(colorAt(9), QColor("#765432"));
+        edit.clear();
+        highlighter.rehighlight();
+        QVERIFY(edit.document()->firstBlock().layout()->formats().isEmpty());
+    }
+}
 
 void TestDisplayUi::saved_history_infers_highlighting_without_simplifying_data()
 {

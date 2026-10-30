@@ -16,6 +16,8 @@
 #include <QTextDocument>
 #include <QTextDocumentFragment>
 
+#include <utility>
+
 static const constexpr auto DefaultColorSchemeName = "Terminal";
 
 static QString textNormalizedForHighlighting(QString text)
@@ -94,10 +96,29 @@ void SyntaxHighlighter::setEvaluator(const Evaluator* evaluator)
 
 void SyntaxHighlighter::setColorScheme(ColorScheme&& colorScheme) {
     m_colorScheme = colorScheme;
+    m_colorFormats.clear();
+}
+
+void SyntaxHighlighter::setFormat(int start, int count, const QColor& color)
+{
+    if (count <= 0)
+        return;
+    for (const auto& cached : std::as_const(m_colorFormats)) {
+        if (cached.first == color) {
+            QSyntaxHighlighter::setFormat(start, count, cached.second);
+            return;
+        }
+    }
+    QTextCharFormat format;
+    format.setForeground(color);
+    m_colorFormats.append(qMakePair(color, format));
+    QSyntaxHighlighter::setFormat(start, count, format);
 }
 
 void SyntaxHighlighter::highlightBlock(const QString& text)
 {
+    if (text.isEmpty())
+        return;
     highlightSyntaxBlock(text);
     if (m_inputEditor && Settings::instance()->inputDigitGrouping)
         groupInputDigits(text);

@@ -5207,9 +5207,10 @@ Tokens Evaluator::scan(const QString& expr) const
     QString ex = UnicodeChars::normalizeUnitSymbolAliases(expr);
     // Accept editor-produced spacing in unit conversion aliases:
     // "− >" or "- >" should tokenize as "->".
-    ex.replace(
-        QRegularExpression(QStringLiteral("([\\-−])\\s+>")),
-        QStringLiteral("->"));
+    if (ex.contains(QLatin1Char('>'))) {
+        static const QRegularExpression spacedConversionArrow(QStringLiteral("([\\-−])\\s+>"));
+        ex.replace(spacedConversionArrow, QStringLiteral("->"));
+    }
     // Accept superscript shorthand aliases for unit symbols (m², mm³, etc.)
     // only inside explicit unit brackets.
     int superscriptUnitBracketDepth = 0;
