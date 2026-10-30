@@ -1507,10 +1507,9 @@ void Quantity::serialize(QJsonObject& json) const
 
 Quantity Quantity::deSerialize(const QJsonObject& json)
 {
-    Quantity result;
-    if (json.contains("matrix")) {
+    if (json.contains(QLatin1String("matrix"))) {
         QVector<QVector<Quantity>> rows;
-        const QJsonArray rowsJson = json["matrix"].toArray();
+        const QJsonArray rowsJson = json[QLatin1String("matrix")].toArray();
         for (const QJsonValue& rowValue : rowsJson) {
             QVector<Quantity> row;
             const QJsonArray rowJson = rowValue.toArray();
@@ -1518,26 +1517,27 @@ Quantity Quantity::deSerialize(const QJsonObject& json)
                 row.append(Quantity::deSerialize(value.toObject()));
             rows.append(row);
         }
-        if (json["matrix_kind"].toString() != QStringLiteral("matrix"))
+        if (json[QLatin1String("matrix_kind")].toString() != QStringLiteral("matrix"))
             return Quantity::list(rows.at(0));
         return Quantity::matrix(rows);
     }
 
-    if (json.contains("val")) {
-        QString str = json["val"].toString();
-        str.replace(",", ".");
+    Quantity result;
+    if (json.contains(QLatin1String("val"))) {
+        QString str = json[QLatin1String("val")].toString();
+        str.replace(QLatin1Char(','), QLatin1Char('.'));
         result.m_numericValue = CNumber(str.toLatin1().constData());
     }
     result.stripUnits();
-    if (json.contains("unit")) {
-        QJsonObject unit_json = json["unit"].toObject();
+    if (json.contains(QLatin1String("unit"))) {
+        QJsonObject unit_json = json[QLatin1String("unit")].toObject();
         result.m_unit = new CNumber(unit_json);
     }
-    if (json.contains("unit_name"))
-        result.m_unitName = json["unit_name"].toString();
+    if (json.contains(QLatin1String("unit_name")))
+        result.m_unitName = json[QLatin1String("unit_name")].toString();
 
-    if (json.contains("dim")) {
-        QJsonObject dim_json = json["dim"].toObject();
+    if (json.contains(QLatin1String("dim"))) {
+        QJsonObject dim_json = json[QLatin1String("dim")].toObject();
         for (int i = 0; i < dim_json.count(); ++i) {
             auto key = dim_json.keys().at(i);
             Rational val(dim_json[key].toString());
@@ -1546,8 +1546,8 @@ Quantity Quantity::deSerialize(const QJsonObject& json)
                 result.modifyDimension(quantity, val);
         }
     }
-    if (json.contains("format")) {
-        QJsonObject format_json = json["format"].toObject();
+    if (json.contains(QLatin1String("format"))) {
+        QJsonObject format_json = json[QLatin1String("format")].toObject();
         result.m_format = Quantity::Format::deSerialize(format_json);
     }
     return result;

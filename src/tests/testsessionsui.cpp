@@ -5,6 +5,7 @@
 #include "startuploadstatistics.h"
 #include "core/startupdiagnostics.h"
 #include "core/units.h"
+#include "math/cnumberparser.h"
 #include "math/rational.h"
 
 #include <QDateTime>
@@ -61,6 +62,10 @@ public slots:
 private slots:
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
+    void saved_number_parser_preserves_values_data();
+    void saved_number_parser_preserves_values();
+    void saved_real_parser_preserves_remainders_and_errors();
+    void quantity_json_preserves_scalars_and_collections();
     void startup_statistics_average_runs_and_optional_phases();
     void startup_statistics_reject_invalid_runs();
     void restored_history_preserves_limits_and_merge_order_data();
@@ -345,6 +350,140 @@ void TestSessionsUi::initTestCase()
         QVERIFY2(probe.open(),
                  qPrintable(QStringLiteral("Cannot write test storage at %1: %2")
                                 .arg(path, probe.errorString())));
+    }
+}
+
+void TestSessionsUi::saved_number_parser_preserves_values_data()
+{
+    QTest::addColumn<QByteArray>("input");
+    QTest::addColumn<QByteArray>("real");
+    QTest::addColumn<QByteArray>("imaginary");
+    QTest::addColumn<int>("realError");
+    QTest::addColumn<int>("imaginaryError");
+    QTest::addColumn<bool>("nullInput");
+    const auto add = [](const char* name, const char* input, const char* real, const char* imaginary,
+                        int realError = Success, int imaginaryError = Success) {
+        QTest::newRow(name) << QByteArray(input) << QByteArray(real) << QByteArray(imaginary)
+                           << realError << imaginaryError << (input == nullptr);
+    };
+    add("zero", "0", "0", "0");
+    add("negative-zero", "-0", "0", "0");
+    add("positive-zero", "+0", "0", "0");
+    add("negative-decimal-zero", "-0.0", "0", "0");
+    add("negative-exponent-zero", "-0.0e0", "0", "0");
+    add("integer", "7", "7", "0");
+    add("negative", "-7", "-7", "0");
+    add("positive", "+7", "7", "0");
+    add("fraction", ".5", "0.5", "0");
+    add("positive-exponent", "1e3", "1000", "0");
+    add("negative-exponent", "1e-3", "0.001", "0");
+    add("large-exponent", "1e309", "1e309", "0");
+    add("small-exponent", "1e-309", "1e-309", "0");
+    add("complex-i", "1+2i", "1", "2");
+    add("complex-j", "1-2j", "1", "-2");
+    add("prefixed-i", "i2", "0", "2");
+    add("postfixed-i", "2i", "0", "2");
+    add("prefixed-j", "j2", "0", "2");
+    add("postfixed-j", "2j", "0", "2");
+    add("complex-prefixed-i", "1+i2", "1", "2");
+    add("complex-prefixed-j", "1+j2", "1", "2");
+    add("complex-exponents", "1e-3-2e4j", "0.001", "-20000");
+    add("multiple-parts", "1+2+3i", "3", "3");
+    add("missing-imaginary-value", "i", "0", "NaN", Success, IONoSignificand);
+    add("negative-missing-imaginary-value", "-i", "NaN", "NaN", IONoSignificand, IONoSignificand);
+    add("nan", "NaN", "NaN", "NaN");
+    add("nan-suffix", "NaNj", "NaN", "NaN");
+    add("lowercase-nan", "nan", "NaN", "NaN");
+    add("inf", "inf", "0", "NaN", Success, IONoSignificand);
+    add("infinity", "infinity", "0", "NaN", Success, IONoSignificand);
+    add("empty", "", "NaN", "NaN");
+    add("null", nullptr, "NaN", "NaN");
+    add("missing-exponent", "1e", "NaN", "0", IOBadExp);
+    add("missing-signed-exponent", "1E+", "NaN", "0", IOBadExp);
+    add("leading-space", " 1", "NaN", "NaN");
+    add("trailing-space", "1 ", "1", "0");
+    add("trailing-text", "1garbage", "1", "0");
+    add("invalid-tail", "1+garbage", "NaN", "NaN", NoOperand);
+    add("comma-stops-number", "1,5", "1", "0");
+    add("high-precision", "12345678901234567890.123456789012345678901234567890123456789",
+        "12345678901234567890.123456789012345678901234567890123456789", "0");
+}
+
+void TestSessionsUi::saved_number_parser_preserves_values()
+{
+    QFETCH(QByteArray, input);
+    QFETCH(QByteArray, real);
+    QFETCH(QByteArray, imaginary);
+    QFETCH(int, realError);
+    QFETCH(int, imaginaryError);
+    QFETCH(bool, nullInput);
+    const char* text = nullInput ? nullptr : input.constData();
+    const CNumber fresh(text);
+    CNumber reused(HNumber(99), HNumber(-99));
+    CNumberParser parser(text);
+    parser.parse(&reused);
+    for (const CNumber* value : {&fresh, static_cast<const CNumber*>(&reused)}) {
+        QCOMPARE(int(value->real.error()), realError);
+        QCOMPARE(int(value->imag.error()), imaginaryError);
+        const auto compareComponent = [](const HNumber& actual, const QByteArray& expected) {
+            if (expected == "NaN") {
+                QVERIFY(actual.isNan());
+            } else {
+                const HNumber number(expected.constData());
+                QCOMPARE(actual, number);
+                QCOMPARE(actual.isNegative(), number.isNegative());
+            }
+        };
+        compareComponent(value->real, real);
+        compareComponent(value->imag, imaginary);
+    }
+}
+
+void TestSessionsUi::saved_real_parser_preserves_remainders_and_errors()
+{
+    const char* remainder = nullptr;
+    const HNumber invalid = HMath::parse_str("invalid", &remainder);
+    QVERIFY(invalid.isNan());
+    QCOMPARE(invalid.error(), IONoSignificand);
+    const HNumber real = HMath::parse_str("12.5rest", &remainder);
+    QCOMPARE(real, HNumber("12.5"));
+    QCOMPARE(real.error(), Success);
+    QCOMPARE(QByteArray(remainder), QByteArray("rest"));
+    const HNumber exponent = HMath::parse_str("1e-3+2j", &remainder);
+    QCOMPARE(exponent, HNumber("0.001"));
+    QCOMPARE(QByteArray(remainder), QByteArray("+2j"));
+    const HNumber invalidExponent = HMath::parse_str("1e", &remainder);
+    QVERIFY(invalidExponent.isNan());
+    QCOMPARE(invalidExponent.error(), IOBadExp);
+    QCOMPARE(HMath::parse_str("7.5", nullptr), HNumber("7.5"));
+}
+
+void TestSessionsUi::quantity_json_preserves_scalars_and_collections()
+{
+    QCOMPARE(Quantity::deSerialize(QJsonObject {}), Quantity(0));
+    for (const QJsonValue& value : {QJsonValue(), QJsonValue(42), QJsonValue(QStringLiteral("invalid"))})
+        QVERIFY(Quantity::deSerialize(QJsonObject {{QStringLiteral("val"), value}}).isNan());
+    const Quantity comma = Quantity::deSerialize(QJsonObject {{QStringLiteral("val"), QStringLiteral("1,25-2,5j")}});
+    QCOMPARE(comma.numericValue().real, HNumber("1.25"));
+    QCOMPARE(comma.numericValue().imag, HNumber("-2.5"));
+
+    Quantity length(42);
+    length.modifyDimension(UnitQuantity::Length, Rational(1, 1));
+    length.setDisplayUnit(CNumber("0.01"), QStringLiteral("centimetre"));
+    length.setFormat(Quantity::Format::Binary() + Quantity::Format::Fixed());
+    const QList<Quantity> values {
+        Quantity(0), Quantity(-7), Quantity(CNumber("1+2j")),
+        Quantity(HNumber("12345678901234567890.123456789012345678901234567890123456789")),
+        length, Quantity::list({Quantity(1), length}),
+        Quantity::matrix({{Quantity(1), Quantity(2)}, {length, Quantity(CNumber("3+4i"))}})
+    };
+    for (const Quantity& value : values) {
+        QJsonObject saved;
+        value.serialize(saved);
+        const Quantity restored = Quantity::deSerialize(saved);
+        QJsonObject actual;
+        restored.serialize(actual);
+        QCOMPARE(actual, saved);
     }
 }
 

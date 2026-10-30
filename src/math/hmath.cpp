@@ -2248,9 +2248,6 @@ HNumber HMath::parse_str(const char* str_in, const char** str_out) {
     t_itokens tokens;
 
     HNumber x;
-    delete x.d;
-
-    x.d = new HNumberPrivate;
     if ((x.d->error = parse(&tokens, &str)) == Success)
     x.d->error = float_in(&x.d->fnum, &tokens);
     float_geterror();

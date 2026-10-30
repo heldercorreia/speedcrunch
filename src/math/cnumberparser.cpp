@@ -49,6 +49,10 @@ CNumberParser::CNumberParser(const char * _str) :
 void CNumberParser::parse (CNumber * Number) {
   /* Parsing */
   CNumber a = part();
+  if (str == nullptr || *str == '\0') {
+    *Number = a;
+    return;
+  }
   CNumber b = suite();
   /* Processing */
   *Number  = a + b;
