@@ -1,10 +1,6 @@
 name: Windows Debug
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -18,7 +14,7 @@ jobs:
   build-and-test:
     # This image includes VS 2022 for Qt's MSVC 2022 kit.
     runs-on: windows-2022
-    timeout-minutes: 75
+    timeout-minutes: 90
     env:
       # CTest captures pipes, which Qt does not recognize as a Windows console.
       QT_FORCE_STDERR_LOGGING: '1'
@@ -101,7 +97,9 @@ jobs:
 
       - name: Capture startup diagnostics
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        timeout-minutes: 5
+        # Each scenario measures ten launches. Heavy Debug scenarios take
+        # several minutes each on this runner.
+        timeout-minutes: 15
         env:
           QT_QPA_PLATFORM: windows
         run: |

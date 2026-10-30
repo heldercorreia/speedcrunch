@@ -59,7 +59,7 @@ jobs:
               'macos-portable': 'macos-arm64\\.zip'
             };
             const selection = {sha, runs: [], packages: []};
-            for (const key of ['windows-debug', 'macos-debug', ...Object.keys(formats)]) {
+            for (const key of Object.keys(formats)) {
               const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
                 ...repo, workflow_id: key + '.yaml', branch: 'main',
                 head_sha: sha, per_page: 100
@@ -326,12 +326,12 @@ jobs:
             }
             const repo = context.repo;
             const workflows = [
-              'windows-debug', 'macos-debug', 'windows-installer',
+              'windows-installer',
               'windows-portable', 'macos-installer', 'macos-portable'
             ];
             if (info.runs.length !== workflows.length || workflows.some(key =>
                 info.runs.filter(run => run.key === key).length !== 1)) {
-              throw new Error('The candidate must identify all six CI runs.');
+              throw new Error('The candidate must identify all four CI runs.');
             }
             // A rerun can change a CI result while the candidate is downloading.
             for (const run of info.runs) {
@@ -368,8 +368,8 @@ jobs:
               'Application version: ' + info.packages[0].version,
               'Prepared: ' + info.prepared_at,
               '',
-              'All four packages come from this commit. Both Debug test workflows pass.',
-              'CI verifies package checksums before publishing. build-info.json links to all six CI runs.',
+              'All four packages come from this commit. All four packaging workflows pass their tests.',
+              'CI verifies package checksums before publishing. build-info.json links to all four CI runs.',
               '',
               'The macOS packages have ad hoc signatures and are not notarized.',
               '',

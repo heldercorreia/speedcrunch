@@ -367,8 +367,9 @@ GitHub Actions provides three separate Windows workflows, all using the Qt
 | [Windows Installer](https://github.com/heldercorreia/speedcrunch/actions/workflows/windows-installer.yaml) | `BUILD_VARIANT_OFFICIAL_RELEASE=ON` | NSIS installer and all tests, including native Windows UI tests |
 | [Windows Portable](https://github.com/heldercorreia/speedcrunch/actions/workflows/windows-portable.yaml) | `BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE=ON` | Portable ZIP and all tests, including native UI tests |
 
-They run on pushes to `main`, pull requests targeting `main`, and manual runs
-from the Actions page. Each workflow builds independently and explicitly sets
+Windows Debug runs only when started manually from the Actions page. The
+installer and portable workflows also run on pushes to `main` and pull requests
+targeting `main`. Each workflow builds independently and explicitly sets
 `BUILD_TESTING=ON`. Non-UI tests run in parallel, followed by native UI suites
 one at a time. UI tests still run if a non-UI test fails, provided the build
 succeeds. Packaging starts only after both test phases pass.
@@ -491,8 +492,8 @@ target macOS 14.4 or later.
 | [macOS Installer](https://github.com/heldercorreia/speedcrunch/actions/workflows/macos-installer.yaml) | `BUILD_VARIANT_OFFICIAL_RELEASE=ON` | DMG and all tests, including native Cocoa UI tests |
 | [macOS Portable](https://github.com/heldercorreia/speedcrunch/actions/workflows/macos-portable.yaml) | `BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE=ON` | Portable ZIP and all tests, including native UI tests |
 
-Like the Windows workflows, they run independently on pushes to `main`, pull
-requests targeting `main`, and manual runs. Every build job explicitly sets
+All three macOS workflows run independently on pushes to `main`, pull requests
+targeting `main`, and manual runs. Every build job explicitly sets
 `BUILD_TESTING=ON` and runs non-UI tests in parallel, then native Cocoa UI tests
 one at a time. UI tests still run if a non-UI test fails, provided the build
 succeeds. After both test phases pass, the packaging jobs bundle Qt and
@@ -506,8 +507,8 @@ The [Publish Development Build](https://github.com/heldercorreia/speedcrunch/act
 workflow runs only when started manually. It collects existing packages and
 does not compile the application or rerun its tests.
 
-1. Wait for all six Windows and macOS workflows to succeed for the same commit
-   on `main`.
+1. Wait for all four Windows and macOS packaging workflows to succeed for
+   the same commit on `main`.
 2. Open **Publish Development Build** in Actions and choose **Run workflow**
    from `main`.
 3. Enter the full commit SHA, or leave it empty to use the current `main` commit.
@@ -515,16 +516,18 @@ does not compile the application or rerun its tests.
    download a `development-candidate` artifact for inspection. Check it when
    you want to publish. Both modes perform the same validation.
 
-Publication requires successful latest runs of both Debug workflows and all
-four packaging workflows for that commit. Missing or expired artifacts, a
-different source revision or application version, and checksum failures stop
-the workflow before it changes a release. ZIP contents and package headers
+Publication requires successful latest runs of all four packaging workflows
+for that commit. Both Debug workflows are optional and do not block publication.
+Missing or expired artifacts, a different source revision or application version,
+and checksum failures stop the workflow before it changes a release.
+ZIP contents and package headers
 are checked as well. Validation confirms the recorded CI results and package
 integrity. It does not replace trying the apps on their target systems.
 
 The publisher updates one prerelease named **Development builds**, using the
 `development` tag. It uploads the Windows installer and portable ZIP, the
-macOS DMG and portable ZIP, and build details with links to all six CI runs.
+macOS DMG and portable ZIP, and build details with links to all four required
+CI runs.
 Checksums stay in CI artifacts for verification and are not published as release
 assets. Download filenames include the application version
 and the first eight characters of the source commit, for example

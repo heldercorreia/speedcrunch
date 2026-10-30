@@ -15,14 +15,11 @@ See the [changelog](CHANGELOG.md) for release highlights and fixes.
 
 ## Building and testing
 
-[![Windows Debug](https://github.com/heldercorreia/speedcrunch/actions/workflows/windows-debug.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/windows-debug.yaml)
 [![Windows Installer](https://github.com/heldercorreia/speedcrunch/actions/workflows/windows-installer.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/windows-installer.yaml)
 [![Windows Portable](https://github.com/heldercorreia/speedcrunch/actions/workflows/windows-portable.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/windows-portable.yaml)
-[![macOS Debug](https://github.com/heldercorreia/speedcrunch/actions/workflows/macos-debug.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/macos-debug.yaml)
 [![macOS Installer](https://github.com/heldercorreia/speedcrunch/actions/workflows/macos-installer.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/macos-installer.yaml)
 [![macOS Portable](https://github.com/heldercorreia/speedcrunch/actions/workflows/macos-portable.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/macos-portable.yaml)
-[![Ubuntu 24.04 Debug](https://github.com/heldercorreia/speedcrunch/actions/workflows/ubuntu-24_04-debug.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/ubuntu-24_04-debug.yaml)
-[![Ubuntu 26.04 LTS](https://github.com/heldercorreia/speedcrunch/actions/workflows/ubuntu-26_04.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/ubuntu-26_04.yaml)
+[![Ubuntu 26.04](https://github.com/heldercorreia/speedcrunch/actions/workflows/ubuntu-26_04.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/ubuntu-26_04.yaml)
 [![Debian Unstable](https://github.com/heldercorreia/speedcrunch/actions/workflows/debian-unstable.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/debian-unstable.yaml)
 [![Fedora Rawhide](https://github.com/heldercorreia/speedcrunch/actions/workflows/fedora-rawhide.yaml/badge.svg?branch=main)](https://github.com/heldercorreia/speedcrunch/actions/workflows/fedora-rawhide.yaml)
 

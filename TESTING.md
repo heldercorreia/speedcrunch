@@ -37,7 +37,8 @@ for that, as described in [DIAGNOSTICS.md](DIAGNOSTICS.md).
 
 Builds with both `BUILD_TESTING=ON` and `ENABLE_STARTUP_DIAGNOSTICS=ON` include
 four startup scenarios in every configuration, including Debug and Release.
-Each workload runs once with the Classic style preset and once with Modern:
+Each workload runs with the Classic style preset and with Modern. Each of these
+four scenarios measures ten fresh application launches:
 
 - `startup-load-baseline-classic`
 - `startup-load-baseline-modern`
@@ -96,9 +97,12 @@ Fixture generation and report writing
 are outside the measurement. These are fresh-process launches, without clearing
 the operating system's file cache. Timings have no pass/fail threshold.
 
-Windows Debug CI runs all four scenarios with the native Windows platform plugin
-and uploads the reports and test logs even when a scenario fails. Ordinary
-application launches do not select either workload.
+The manually triggered Windows Debug workflow runs all four scenarios with the
+native Windows platform plugin in a separate sequential step. This step allows
+15 minutes for the repeated launches, since the heavy Debug scenarios take
+several minutes each. It uploads
+the reports and test logs even when a scenario fails. Ordinary application
+launches do not select either workload.
 
 ## Windows
 
