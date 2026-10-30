@@ -64,6 +64,7 @@ jobs:
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
 
       - name: Build
+        id: build
         run: cmake --build build --parallel 4
 
       - name: Run non-UI tests
@@ -74,6 +75,7 @@ jobs:
           --output-junit "$GITHUB_WORKSPACE/test-results.xml"
 
       - name: Run UI tests
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         timeout-minutes: 15
         env:
           QT_QPA_PLATFORM: xcb

@@ -1,5 +1,6 @@
 include_guard(GLOBAL)
 
+option(BUILD_TESTING "Build the test executables and enable CTest" OFF)
 option(BUILD_VARIANT_OFFICIAL_RELEASE "Force the official Release build settings" OFF)
 option(BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE "Force the official portable Release build settings" OFF)
 option(BUILD_VARIANT_DEV_DEBUG "Force the developer Debug build settings" OFF)
@@ -25,12 +26,10 @@ endif()
 
 if(BUILD_VARIANT_DEV_DEBUG)
     set(speedcrunch_variant_configuration Debug)
-    set(BUILD_TESTING ON CACHE BOOL "Build the test executables and enable CTest" FORCE)
     set(ENABLE_STARTUP_DIAGNOSTICS ON CACHE BOOL
         "Record startup timings and detailed appearance diagnostics" FORCE)
 else()
     set(speedcrunch_variant_configuration Release)
-    set(BUILD_TESTING OFF CACHE BOOL "Build the test executables and enable CTest" FORCE)
     set(INSTALL_LICENSES ON CACHE BOOL "Install license texts and notices" FORCE)
     set(STRIP_BINARY ON CACHE BOOL "Remove debug symbols from the application binary" FORCE)
 endif()

@@ -61,7 +61,7 @@ jobs:
           key: ${{ steps.apt-cache.outputs.cache-primary-key }}
 
       - name: Configure
-        run: cmake -S . -B build -DBUILD_VARIANT_DEV_DEBUG=ON
+        run: cmake -S . -B build -DBUILD_VARIANT_DEV_DEBUG=ON -DBUILD_TESTING=ON
 
       - name: Build
         id: build
@@ -75,6 +75,7 @@ jobs:
           --output-junit "$GITHUB_WORKSPACE/test-results.xml"
 
       - name: Run UI tests
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         timeout-minutes: 15
         env:
           QT_QPA_PLATFORM: xcb

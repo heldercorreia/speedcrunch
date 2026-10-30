@@ -69,6 +69,7 @@ jobs:
         run: >-
           cmake -S . -B build -G Ninja
           -DBUILD_VARIANT_DEV_DEBUG=ON
+          -DBUILD_TESTING=ON
           -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
           "-DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR"
 
@@ -84,6 +85,7 @@ jobs:
           --output-junit "$env:GITHUB_WORKSPACE/test-results.xml"
 
       - name: Run native Windows UI tests
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         timeout-minutes: 60
         env:
           QT_QPA_PLATFORM: windows

@@ -31,7 +31,6 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 message("Build type: ${CMAKE_BUILD_TYPE}")
 
-option(BUILD_TESTING "Build the test executables and enable CTest" OFF)
 option(ENABLE_UPDATE_CHECKS "Enable launch-time and manual update checks" OFF)
 option(ENABLE_STARTUP_DIAGNOSTICS "Record startup timings and detailed appearance diagnostics" OFF)
 option(STRIP_BINARY "Remove debug symbols from the application binary" OFF)
@@ -278,6 +277,24 @@ target_link_libraries(${APPLICATION_NAME} PRIVATE ${QT_LIBRARIES})
 
 if(BUILD_TESTING)
     enable_testing()
+
+    foreach(variant IN ITEMS DEFAULT OFFICIAL_RELEASE OFFICIAL_PORTABLE_RELEASE DEV_DEBUG)
+        foreach(testing IN ITEMS DEFAULT ON OFF)
+            set(build_testing_argument "-DBUILD_TESTING:BOOL=${testing}")
+            set(expected_build_testing "${testing}")
+            if(testing STREQUAL "DEFAULT")
+                set(build_testing_argument "-UBUILD_TESTING")
+                set(expected_build_testing OFF)
+            endif()
+            add_test(NAME build-variant-${variant}-testing-${testing}
+                COMMAND "${CMAKE_COMMAND}"
+                    -S "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/buildvariants"
+                    -B "${CMAKE_CURRENT_BINARY_DIR}/tests/buildvariants/${variant}-${testing}"
+                    "-DTEST_BUILD_VARIANT=${variant}"
+                    "-DEXPECTED_BUILD_TESTING:BOOL=${expected_build_testing}"
+                    "${build_testing_argument}")
+        endforeach()
+    endforeach()
 
     qt_add_executable(testtranslations tests/testtranslations.cpp)
     target_link_libraries(testtranslations PRIVATE Qt6::Test)

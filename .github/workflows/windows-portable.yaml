@@ -18,7 +18,10 @@ jobs:
   build-and-package:
     # This image includes VS 2022 for Qt's MSVC 2022 kit.
     runs-on: windows-2022
-    timeout-minutes: 30
+    timeout-minutes: 75
+    env:
+      # CTest captures pipes, which Qt does not recognize as a Windows console.
+      QT_FORCE_STDERR_LOGGING: '1'
     defaults:
       run:
         shell: pwsh
@@ -68,11 +71,33 @@ jobs:
         run: >-
           cmake -S . -B build -G Ninja
           -DBUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE=ON
+          -DBUILD_TESTING=ON
           -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
           "-DCMAKE_PREFIX_PATH=$env:QT_ROOT_DIR"
 
       - name: Build
+        id: build
         run: cmake --build build --config Release --parallel 4
+
+      - name: Run non-UI tests
+        run: >-
+          ctest --test-dir build -C Release -LE '^ui$' --parallel 4
+          --no-tests=error --output-on-failure --test-output-size-failed 0
+          --output-log "$env:GITHUB_WORKSPACE/non-ui-tests.log"
+          --output-junit "$env:GITHUB_WORKSPACE/test-results.xml"
+
+      - name: Run native Windows UI tests
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        timeout-minutes: 60
+        env:
+          QT_QPA_PLATFORM: windows
+        run: |
+          ctest --test-dir build -C Release -L '^ui$' --parallel 1 `
+            --timeout 600 --no-tests=error --verbose `
+            --test-output-size-failed 0 `
+            --output-junit "$env:GITHUB_WORKSPACE/ui-test-results.xml" `
+            2>&1 | Tee-Object -FilePath "$env:GITHUB_WORKSPACE/ui-tests.log"
+          exit $LASTEXITCODE
 
       - name: Stage application
         run: cmake --install build --config Release --prefix "$env:GITHUB_WORKSPACE/stage"
@@ -149,7 +174,7 @@ jobs:
           "" | Add-Content $env:GITHUB_STEP_SUMMARY
           "Source commit: $(Get-Content source-revision.txt)" | Add-Content $env:GITHUB_STEP_SUMMARY
 
-      - name: Upload packaging logs
+      - name: Upload build, test and packaging logs
         if: failure()
         uses: actions/upload-artifact@v7
         with:
@@ -157,6 +182,11 @@ jobs:
           path: |
             source-revision.txt
             build/CMakeFiles/CMakeConfigureLog.yaml
+            build/Testing/Temporary/LastTest.log
+            non-ui-tests.log
+            test-results.xml
+            ui-tests.log
+            ui-test-results.xml
             dist/_CPack_Packages/**/*.log
           if-no-files-found: ignore
 

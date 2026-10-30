@@ -57,6 +57,7 @@ jobs:
         run: >-
           cmake -S . -B build -G Ninja
           -DBUILD_VARIANT_DEV_DEBUG=ON
+          -DBUILD_TESTING=ON
           -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=14.4
           "-DCMAKE_C_COMPILER=$(xcrun --find clang)"
           "-DCMAKE_CXX_COMPILER=$(xcrun --find clang++)"
@@ -75,6 +76,7 @@ jobs:
           --output-junit "$GITHUB_WORKSPACE/test-results.xml"
 
       - name: Run native macOS UI tests
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         timeout-minutes: 15
         env:
           QT_QPA_PLATFORM: cocoa

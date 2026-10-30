@@ -6,22 +6,27 @@ configurations. Building the tests also requires the Qt Test module.
 ## Building and running tests
 
 By default, only the application is built. To also build and run the tests, enable
-`BUILD_TESTING` when configuring. Run these commands from the repository root:
+`BUILD_TESTING` when configuring, including when using a build variant. Run these
+commands from the repository root:
 
     cmake -S . -B build -DBUILD_TESTING=ON
     cmake --build build --config Release --parallel
-    ctest --test-dir build -C Release --parallel --output-on-failure
+    ctest --test-dir build -C Release -LE "^ui$" --parallel 4 --output-on-failure
+    ctest --test-dir build -C Release -L "^ui$" --parallel 1 --output-on-failure
 
 The UI test suites use temporary configuration, session and cache directories,
 and reset settings before each test case. They suppress the first-run number
 format prompt. An unexpected prompt fails the test instead of blocking the suite.
 They use Qt's offscreen platform unless `QT_QPA_PLATFORM` is already set.
 
-CMake saves `BUILD_TESTING` in the build directory's cache. Configure again with
-`-DBUILD_TESTING=OFF` to return to application-only builds. The
-`BUILD_VARIANT_DEV_DEBUG` variant forces testing on, while the two official
-release variants force it off. Disable any active variant before changing
-`BUILD_TESTING` independently. See [BUILDING.md](BUILDING.md#build-variants).
+Run non-UI tests in parallel and UI tests one at a time so focus and the clipboard
+cannot interfere between suites. All CI build jobs use this split and explicitly
+set `BUILD_TESTING=ON`, including the Windows and macOS packaging jobs.
+
+CMake saves `BUILD_TESTING` in the build directory's cache. It defaults to `OFF`
+for every variant. Configure again with `-DBUILD_TESTING=OFF` to return to
+application-only builds. No variant overrides explicit or cached values.
+See [BUILDING.md](BUILDING.md#build-variants).
 
 The shared window test library enables startup recording so appearance tests can
 inspect the recorded work. This does not enable recording in the application.
@@ -43,13 +48,14 @@ From the repository root, configure and run a Release build:
 
     cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON -DENABLE_STARTUP_DIAGNOSTICS=ON
     cmake --build build --config Release --parallel
-    ctest --test-dir build -C Release -L "^startup-load$" --verbose
+    ctest --test-dir build -C Release -L "^startup-load$" --parallel 1 --verbose
 
 Include your Qt selection options from [BUILDING.md](BUILDING.md) when configuring.
 Use the directory containing your CMake build in place of `build`. For a
 developer Debug build, use `BUILD_VARIANT_DEV_DEBUG=ON` when configuring and
 `Debug` in place of `Release` in the build and test commands. That variant
-enables both testing and startup diagnostics automatically.
+enables startup diagnostics automatically. Keep `-DBUILD_TESTING=ON` to build
+the tests.
 
 The baseline restores one tab with 10 history entries and hides the docks and
 keypad. The heavy workload restores 30 tabs with 1,000 entries each, spread
@@ -100,14 +106,15 @@ Follow the [Windows build setup](BUILDING.md#windows), including setting
 `QT_ROOT` to your Qt MSVC kit. From the repository root in **x64 Native Tools
 Command Prompt for VS 2022**, configure a developer Debug build and run the tests:
 
-    cmake -S . -B build-dev -DCMAKE_PREFIX_PATH="%QT_ROOT%" -DBUILD_VARIANT_DEV_DEBUG=ON
+    cmake -S . -B build-dev -DCMAKE_PREFIX_PATH="%QT_ROOT%" -DBUILD_VARIANT_DEV_DEBUG=ON -DBUILD_TESTING=ON
     cmake --build build-dev --config Debug --parallel
-    ctest --test-dir build-dev -C Debug --parallel 4 --output-on-failure
+    ctest --test-dir build-dev -C Debug -LE "^ui$" --parallel 4 --output-on-failure
+    ctest --test-dir build-dev -C Debug -L "^ui$" --parallel 1 --output-on-failure
 
 Rebuild after pulling test or application changes. To rerun only the suites that
 failed in the previous CTest run, use:
 
-    ctest --test-dir build-dev -C Debug --rerun-failed --parallel 4 --output-on-failure
+    ctest --test-dir build-dev -C Debug --rerun-failed --parallel 1 --output-on-failure
 
 The build and test commands also work in Git Bash once the build is configured.
 The configure command above uses Command Prompt syntax for `QT_ROOT`.
@@ -142,11 +149,11 @@ contains font files. To select a different directory, set it before running
 CTest. For example, in Command Prompt:
 
     set "QT_QPA_FONTDIR=C:\Windows\Fonts"
-    ctest --test-dir build-dev -C Debug --parallel 4 --output-on-failure
+    ctest --test-dir build-dev -C Debug -L "^ui$" --parallel 1 --output-on-failure
 
 Or in Git Bash:
 
-    QT_QPA_FONTDIR=C:/Windows/Fonts ctest --test-dir build-dev -C Debug --parallel 4 --output-on-failure
+    QT_QPA_FONTDIR=C:/Windows/Fonts ctest --test-dir build-dev -C Debug -L "^ui$" --parallel 1 --output-on-failure
 
 Missing fonts can cause failures in text sizing, glyph rendering and font dialog
 tests. Offscreen warnings such as `This plugin does not support raise()` or

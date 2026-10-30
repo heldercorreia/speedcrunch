@@ -125,9 +125,13 @@ Enable one when configuring, for example:
 
 | Toggle | Forced settings |
 | --- | --- |
-| `BUILD_VARIANT_OFFICIAL_RELEASE` | `BUILD_TESTING=OFF`, `ENABLE_UPDATE_CHECKS=ON`, `INSTALL_LICENSES=ON`, `STRIP_BINARY=ON`, `CMAKE_BUILD_TYPE=Release` |
-| `BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE` | `BUILD_TESTING=OFF`, `ENABLE_UPDATE_CHECKS=ON`, `INSTALL_LICENSES=ON`, `STRIP_BINARY=ON`, `CMAKE_BUILD_TYPE=Release`, `PORTABLE_SPEEDCRUNCH=ON`, `CPACK_GENERATOR=ZIP` |
-| `BUILD_VARIANT_DEV_DEBUG` | `BUILD_TESTING=ON`, `ENABLE_UPDATE_CHECKS=ON`, `ENABLE_STARTUP_DIAGNOSTICS=ON`, `CMAKE_BUILD_TYPE=Debug` |
+| `BUILD_VARIANT_OFFICIAL_RELEASE` | `ENABLE_UPDATE_CHECKS=ON`, `INSTALL_LICENSES=ON`, `STRIP_BINARY=ON`, `CMAKE_BUILD_TYPE=Release` |
+| `BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE` | `ENABLE_UPDATE_CHECKS=ON`, `INSTALL_LICENSES=ON`, `STRIP_BINARY=ON`, `CMAKE_BUILD_TYPE=Release`, `PORTABLE_SPEEDCRUNCH=ON`, `CPACK_GENERATOR=ZIP` |
+| `BUILD_VARIANT_DEV_DEBUG` | `ENABLE_UPDATE_CHECKS=ON`, `ENABLE_STARTUP_DIAGNOSTICS=ON`, `CMAKE_BUILD_TYPE=Debug` |
+
+`BUILD_TESTING` defaults to `OFF` for every variant. Add `-DBUILD_TESTING=ON`
+to build and register the tests. Variants leave explicit and cached test settings
+unchanged.
 
 With `BUILD_VARIANT_OFFICIAL_RELEASE=ON` in a fresh build directory, packaging
 defaults to `NSIS` on Windows and `DragNDrop` (DMG) on macOS. There is no need to
@@ -360,11 +364,14 @@ GitHub Actions provides three separate Windows workflows, all using the Qt
 | Workflow | Build variant | Result |
 | --- | --- | --- |
 | [Windows Debug](https://github.com/heldercorreia/speedcrunch/actions/workflows/windows-debug.yaml) | `BUILD_VARIANT_DEV_DEBUG=ON` | Debug build and all tests, including native Windows UI tests |
-| [Windows Installer](https://github.com/heldercorreia/speedcrunch/actions/workflows/windows-installer.yaml) | `BUILD_VARIANT_OFFICIAL_RELEASE=ON` | NSIS installer, without tests |
-| [Windows Portable](https://github.com/heldercorreia/speedcrunch/actions/workflows/windows-portable.yaml) | `BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE=ON` | Portable ZIP, without tests |
+| [Windows Installer](https://github.com/heldercorreia/speedcrunch/actions/workflows/windows-installer.yaml) | `BUILD_VARIANT_OFFICIAL_RELEASE=ON` | NSIS installer and all tests, including native Windows UI tests |
+| [Windows Portable](https://github.com/heldercorreia/speedcrunch/actions/workflows/windows-portable.yaml) | `BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE=ON` | Portable ZIP and all tests, including native UI tests |
 
 They run on pushes to `main`, pull requests targeting `main`, and manual runs
-from the Actions page. Each workflow builds independently.
+from the Actions page. Each workflow builds independently and explicitly sets
+`BUILD_TESTING=ON`. Non-UI tests run in parallel, followed by native UI suites
+one at a time. UI tests still run if a non-UI test fails, provided the build
+succeeds. Packaging starts only after both test phases pass.
 
 The packaging workflows install matching Qt sources for license texts, stage
 the application with CMake, and run `windeployqt` to collect Qt dependencies.
@@ -481,11 +488,14 @@ target macOS 14.4 or later.
 | Workflow | Build variant | Result |
 | --- | --- | --- |
 | [macOS Debug](https://github.com/heldercorreia/speedcrunch/actions/workflows/macos-debug.yaml) | `BUILD_VARIANT_DEV_DEBUG=ON` | Debug build and all tests, including native Cocoa UI tests |
-| [macOS Installer](https://github.com/heldercorreia/speedcrunch/actions/workflows/macos-installer.yaml) | `BUILD_VARIANT_OFFICIAL_RELEASE=ON` | DMG, without tests |
-| [macOS Portable](https://github.com/heldercorreia/speedcrunch/actions/workflows/macos-portable.yaml) | `BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE=ON` | Portable ZIP, without tests |
+| [macOS Installer](https://github.com/heldercorreia/speedcrunch/actions/workflows/macos-installer.yaml) | `BUILD_VARIANT_OFFICIAL_RELEASE=ON` | DMG and all tests, including native Cocoa UI tests |
+| [macOS Portable](https://github.com/heldercorreia/speedcrunch/actions/workflows/macos-portable.yaml) | `BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE=ON` | Portable ZIP and all tests, including native UI tests |
 
 Like the Windows workflows, they run independently on pushes to `main`, pull
-requests targeting `main`, and manual runs. The packaging jobs bundle Qt and
+requests targeting `main`, and manual runs. Every build job explicitly sets
+`BUILD_TESTING=ON` and runs non-UI tests in parallel, then native Cocoa UI tests
+one at a time. UI tests still run if a non-UI test fails, provided the build
+succeeds. After both test phases pass, the packaging jobs bundle Qt and
 license notices, verify the app's ad hoc signature, then inspect the finished
 DMG or extracted ZIP before uploading it. Packages and metadata are retained
 for 90 days. The macOS packages are not notarized.
@@ -546,8 +556,8 @@ running CMake, in the form `cmake -S . -B build -Dvariable=value`.
   under [Build variants](#build-variants). Defaults to `OFF`.
 - **BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE**: Force the official portable Release
   settings, including ZIP packaging. Defaults to `OFF`.
-- **BUILD_VARIANT_DEV_DEBUG**: Force the developer Debug settings, including test
-  builds and startup diagnostics. Defaults to `OFF`.
+- **BUILD_VARIANT_DEV_DEBUG**: Force the developer Debug settings, including
+  startup diagnostics. Defaults to `OFF`.
 - **CMAKE_BUILD_TYPE**: Select the configuration for Makefiles or ordinary Ninja,
   such as `Release`, `Debug`, or `RelWithDebInfo`. Defaults to `Release` in this
   project. Multi-configuration generators use `--config` when building instead.
@@ -576,7 +586,8 @@ running CMake, in the form `cmake -S . -B build -Dvariable=value`.
   `Src` beside the selected Qt desktop kit. It is not needed for ordinary
   application builds or installations that use system Qt on Linux and Haiku.
 - **BUILD_TESTING**: Set this to `ON` to build the test executables and register
-  them with CTest. Defaults to `OFF`. See [TESTING.md](TESTING.md).
+  them with CTest. Defaults to `OFF` for every build, including all variants.
+  Explicit and cached values are preserved. See [TESTING.md](TESTING.md).
 - **ENABLE_UPDATE_CHECKS**: Set this to `ON` to enable update checks on launch
   and the `Help > Check for Updates` menu entry. Defaults to `OFF`.
 - **ENABLE_STARTUP_DIAGNOSTICS**: Set this to `ON` to record startup timings and

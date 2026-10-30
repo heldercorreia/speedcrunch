@@ -17,7 +17,7 @@ permissions:
 jobs:
   build-and-package:
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 45
     defaults:
       run:
         shell: bash
@@ -60,6 +60,7 @@ jobs:
         run: >-
           cmake -S . -B build -G Ninja
           -DBUILD_VARIANT_OFFICIAL_RELEASE=ON
+          -DBUILD_TESTING=ON
           -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=14.4
           "-DCMAKE_C_COMPILER=$(xcrun --find clang)"
           "-DCMAKE_CXX_COMPILER=$(xcrun --find clang++)"
@@ -67,7 +68,27 @@ jobs:
           "-DCMAKE_PREFIX_PATH=$QT_ROOT_DIR"
 
       - name: Build
+        id: build
         run: cmake --build build --config Release --parallel 4
+
+      - name: Run non-UI tests
+        run: >-
+          ctest --test-dir build -C Release -LE '^ui$' --parallel 4
+          --no-tests=error --output-on-failure --test-output-size-failed 0
+          --output-log "$GITHUB_WORKSPACE/non-ui-tests.log"
+          --output-junit "$GITHUB_WORKSPACE/test-results.xml"
+
+      - name: Run native macOS UI tests
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        timeout-minutes: 15
+        env:
+          QT_QPA_PLATFORM: cocoa
+        run: >-
+          ctest --test-dir build -C Release -L '^ui$' --parallel 1
+          --timeout 180 --no-tests=error --output-on-failure
+          --test-output-size-failed 0
+          --output-log "$GITHUB_WORKSPACE/ui-tests.log"
+          --output-junit "$GITHUB_WORKSPACE/ui-test-results.xml"
 
       - name: Stage and deploy application
         run: cmake --install build --config Release --prefix "$GITHUB_WORKSPACE/stage"
@@ -145,7 +166,7 @@ jobs:
           echo >> "$GITHUB_STEP_SUMMARY"
           echo "Source commit: $(cat source-revision.txt)" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload packaging logs
+      - name: Upload build, test and packaging logs
         if: failure()
         uses: actions/upload-artifact@v7
         with:
@@ -153,6 +174,11 @@ jobs:
           path: |
             source-revision.txt
             build/CMakeFiles/CMakeConfigureLog.yaml
+            build/Testing/Temporary/LastTest.log
+            non-ui-tests.log
+            test-results.xml
+            ui-tests.log
+            ui-test-results.xml
             dist/_CPack_Packages/**/*.log
           if-no-files-found: ignore
 
