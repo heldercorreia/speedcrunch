@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "mainwindowtesthelpers.h"
+#include "startuploadstatistics.h"
 #include "core/startupdiagnostics.h"
 #include "core/units.h"
 #include "math/rational.h"
@@ -60,6 +61,8 @@ public slots:
 private slots:
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
+    void startup_statistics_average_runs_and_optional_phases();
+    void startup_statistics_reject_invalid_runs();
     void restored_history_preserves_limits_and_merge_order_data();
     void restored_history_preserves_limits_and_merge_order();
     void restored_history_entries_replace_saved_fields();
@@ -343,6 +346,101 @@ void TestSessionsUi::initTestCase()
                  qPrintable(QStringLiteral("Cannot write test storage at %1: %2")
                                 .arg(path, probe.errorString())));
     }
+}
+
+void TestSessionsUi::startup_statistics_average_runs_and_optional_phases()
+{
+    const auto phase = [](const QString& name, bool worker, double total, int calls) {
+        return QJsonObject {
+            {QStringLiteral("name"), name}, {QStringLiteral("worker"), worker},
+            {QStringLiteral("totalMs"), total}, {QStringLiteral("startMs"), 1},
+            {QStringLiteral("maxMs"), total / calls}, {QStringLiteral("calls"), calls}
+        };
+    };
+    QJsonObject first {
+        {QStringLiteral("workload"), QStringLiteral("baseline")},
+        {QStringLiteral("preset"), QStringLiteral("classic")},
+        {QStringLiteral("passed"), true}, {QStringLiteral("complete"), true},
+        {QStringLiteral("elapsedMs"), 10}, {QStringLiteral("firstPaintMs"), 6},
+        {QStringLiteral("phases"), QJsonArray {
+            phase(QStringLiteral("Read"), false, 4, 2), phase(QStringLiteral("Read"), true, 8, 1)}}
+    };
+    QJsonObject second = first;
+    second.insert(QStringLiteral("elapsedMs"), 30);
+    second.insert(QStringLiteral("firstPaintMs"), 10);
+    second.insert(QStringLiteral("windowWidth"), 640);
+    second.insert(QStringLiteral("phases"), QJsonArray {
+        phase(QStringLiteral("Read"), false, 8, 4), phase(QStringLiteral("Optional"), false, 6, 2)});
+    const QJsonObject result = StartupLoadStatistics::summarize(QJsonArray {first, second});
+    QCOMPARE(result.value(QStringLiteral("runs")).toInt(), 2);
+    QCOMPARE(result.value(QStringLiteral("elapsedMs")).toDouble(), 20.0);
+    QCOMPARE(result.value(QStringLiteral("firstPaintMs")).toDouble(), 8.0);
+    QCOMPARE(result.value(QStringLiteral("representativeRun")).toInt(), 2);
+    QCOMPARE(result.value(QStringLiteral("windowWidth")).toInt(), 640);
+    QCOMPARE(result.value(QStringLiteral("samples")).toArray(), QJsonArray({first, second}));
+    const QJsonObject elapsed = result.value(QStringLiteral("statistics")).toObject()
+        .value(QStringLiteral("elapsedMs")).toObject();
+    QCOMPARE(elapsed.value(QStringLiteral("min")).toDouble(), 10.0);
+    QCOMPARE(elapsed.value(QStringLiteral("max")).toDouble(), 30.0);
+    QCOMPARE(elapsed.value(QStringLiteral("stddev")).toDouble(), 10.0);
+    const QJsonArray phases = result.value(QStringLiteral("phases")).toArray();
+    QCOMPARE(phases.size(), 3);
+    QCOMPARE(phases.at(0).toObject().value(QStringLiteral("totalMs")).toDouble(), 6.0);
+    QCOMPARE(phases.at(0).toObject().value(QStringLiteral("calls")).toDouble(), 3.0);
+    QCOMPARE(phases.at(0).toObject().value(QStringLiteral("maxMs")).toDouble(), 2.0);
+    QCOMPARE(phases.at(1).toObject().value(QStringLiteral("totalMs")).toDouble(), 4.0);
+    QVERIFY(phases.at(1).toObject().value(QStringLiteral("worker")).toBool());
+    const QJsonObject optional = phases.at(2).toObject();
+    QCOMPARE(optional.value(QStringLiteral("totalMs")).toDouble(), 3.0);
+    QCOMPARE(optional.value(QStringLiteral("runsPresent")).toInt(), 1);
+    QCOMPARE(optional.value(QStringLiteral("statistics")).toObject()
+        .value(QStringLiteral("min")).toDouble(), 0.0);
+    const QJsonObject single = StartupLoadStatistics::summarize(QJsonArray {first});
+    QCOMPARE(single.value(QStringLiteral("statistics")).toObject()
+        .value(QStringLiteral("elapsedMs")).toObject().value(QStringLiteral("stddev")).toDouble(), 0.0);
+}
+
+void TestSessionsUi::startup_statistics_reject_invalid_runs()
+{
+    QVERIFY(StartupLoadStatistics::summarize(QJsonArray {}).isEmpty());
+    QVERIFY(StartupLoadStatistics::statistics(QVector<double> {}).isEmpty());
+    const QJsonObject valid {
+        {QStringLiteral("workload"), QStringLiteral("baseline")},
+        {QStringLiteral("preset"), QStringLiteral("classic")},
+        {QStringLiteral("passed"), true}, {QStringLiteral("complete"), true},
+        {QStringLiteral("elapsedMs"), 10}, {QStringLiteral("firstPaintMs"), 6},
+        {QStringLiteral("phases"), QJsonArray {}}
+    };
+    for (const QString& field : {QStringLiteral("passed"), QStringLiteral("complete")}) {
+        QJsonObject invalid = valid;
+        invalid.insert(field, false);
+        QVERIFY(StartupLoadStatistics::summarize(QJsonArray {valid, invalid}).isEmpty());
+    }
+    for (const QString& field : {QStringLiteral("workload"), QStringLiteral("preset")}) {
+        QJsonObject invalid = valid;
+        invalid.insert(field, QStringLiteral("different"));
+        QVERIFY(StartupLoadStatistics::summarize(QJsonArray {valid, invalid}).isEmpty());
+    }
+    for (const QString& field : {QStringLiteral("elapsedMs"), QStringLiteral("firstPaintMs")}) {
+        QJsonObject invalid = valid;
+        invalid.remove(field);
+        QVERIFY(StartupLoadStatistics::summarize(QJsonArray {valid, invalid}).isEmpty());
+        invalid.insert(field, -1);
+        QVERIFY(StartupLoadStatistics::summarize(QJsonArray {valid, invalid}).isEmpty());
+    }
+    QJsonObject invalid = valid;
+    invalid.remove(QStringLiteral("phases"));
+    QVERIFY(StartupLoadStatistics::summarize(QJsonArray {valid, invalid}).isEmpty());
+    QJsonObject phase {
+        {QStringLiteral("name"), QStringLiteral("Read")}, {QStringLiteral("worker"), false},
+        {QStringLiteral("totalMs"), 2}, {QStringLiteral("startMs"), 1},
+        {QStringLiteral("maxMs"), 2}, {QStringLiteral("calls"), 1}
+    };
+    invalid.insert(QStringLiteral("phases"), QJsonArray {phase, phase});
+    QVERIFY(StartupLoadStatistics::summarize(QJsonArray {valid, invalid}).isEmpty());
+    phase.insert(QStringLiteral("totalMs"), -1);
+    invalid.insert(QStringLiteral("phases"), QJsonArray {phase});
+    QVERIFY(StartupLoadStatistics::summarize(QJsonArray {valid, invalid}).isEmpty());
 }
 
 void TestSessionsUi::restored_history_preserves_limits_and_merge_order_data()

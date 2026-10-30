@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "startuploadtest.h"
+#include "startuploadstatistics.h"
 #include "core/session.h"
 #include "core/sessionjsonkeys.h"
 #include "core/settings.h"
@@ -31,6 +32,7 @@
 #include <QSplitter>
 #include <QTabBar>
 #include <QTemporaryDir>
+#include <QTextStream>
 #include <QTimer>
 #include <QWindow>
 
@@ -51,10 +53,11 @@ struct Workload {
 Workload workload;
 QString stylePreset;
 QString reportPath;
+constexpr int startupRuns = 10;
 
-QString outputPath(const QString& suffix)
+QString outputPath(const QString& suffix, const QString& path = reportPath)
 {
-    const QFileInfo report(reportPath);
+    const QFileInfo report(path);
     return report.dir().filePath(report.completeBaseName() + suffix);
 }
 
@@ -262,6 +265,63 @@ bool prepareWorkload(const QString& root)
     return settings.status() == QSettings::NoError;
 }
 
+bool copyWorkload(const QString& source, const QString& destination)
+{
+    for (const QString& directory : {QStringLiteral("config"), QStringLiteral("data/sessions"),
+                                      QStringLiteral("cache")}) {
+        if (!QDir(destination).mkpath(directory))
+            return false;
+    }
+    QStringList files {QStringLiteral("config/SpeedCrunch.ini")};
+    for (int i = 0; i < workload.tabs; ++i)
+        files.append(QStringLiteral("data/sessions/%1.json").arg(sessionName(i)));
+    for (const QString& file : files) {
+        if (!QFile::copy(QDir(source).filePath(file), QDir(destination).filePath(file))) {
+            qCritical("Cannot copy startup fixture: %s", qPrintable(file));
+            return false;
+        }
+    }
+    return true;
+}
+
+QString averagesReport(const QJsonObject& summary)
+{
+    QString text;
+    QTextStream out(&text);
+    out << "Startup load averages\nWorkload: " << workload.name
+        << "\nStyle preset: " << stylePreset
+        << "\nRuns: " << summary.value(QStringLiteral("runs")).toInt() << "/" << startupRuns
+        << " passed\nEach run uses a fresh process and a fresh copy of the saved sessions.\n"
+        << "All runs count, including the first. OS caches can warm between launches.\n"
+        << "Times start at main(). Stddev describes the recorded runs.\n\n"
+        << "Metric | Average ms | Min ms | Max ms | Stddev ms\n";
+    const auto writeStats = [&out](const QJsonObject& stats) {
+        for (const QString& key : {QStringLiteral("mean"), QStringLiteral("min"),
+                                   QStringLiteral("max"), QStringLiteral("stddev")})
+            out << " | " << QString::number(stats.value(key).toDouble(), 'f', 3);
+    };
+    const QJsonObject stats = summary.value(QStringLiteral("statistics")).toObject();
+    out << "First window paint and event processing";
+    writeStats(stats.value(QStringLiteral("firstPaintMs")).toObject());
+    out << "\nStartup complete";
+    writeStats(stats.value(QStringLiteral("elapsedMs")).toObject());
+    out << "\n\nPhase averages across all runs. Missing phases count as zero.\n"
+        << "Nested phases and worker tasks overlap. Do not add their totals.\n"
+        << "Phase | Average ms | Min ms | Max ms | Stddev ms | Average calls | Runs present | Thread\n";
+    for (const QJsonValue& value : summary.value(QStringLiteral("phases")).toArray()) {
+        const QJsonObject phase = value.toObject();
+        out << phase.value(QStringLiteral("name")).toString();
+        writeStats(phase.value(QStringLiteral("statistics")).toObject());
+        out << " | " << QString::number(phase.value(QStringLiteral("calls")).toDouble(), 'f', 1)
+            << " | " << phase.value(QStringLiteral("runsPresent")).toInt()
+            << " | " << (phase.value(QStringLiteral("worker")).toBool() ? "worker" : "main") << '\n';
+    }
+    out << "\nIndividual reports: " << QFileInfo(outputPath(QStringLiteral("-run-01.txt"))).fileName()
+        << " through " << QFileInfo(outputPath(QStringLiteral("-run-10.txt"))).fileName()
+        << "\nThe overview screenshot and geometry describe run " << startupRuns << ".\n";
+    return text;
+}
+
 } // namespace
 
 void StartupLoadTest::watch(MainWindow& window)
@@ -445,22 +505,24 @@ int main(int argc, char* argv[])
     reportPath = QFileInfo(parser.value(QStringLiteral("report"))).absoluteFilePath();
     if (!QDir().mkpath(QFileInfo(reportPath).absolutePath()))
         return 1;
-    // Remove previous outputs so a crash cannot leave stale results.
-    for (const QString& path : QStringList {reportPath, outputPath(QStringLiteral(".json")),
-                                           outputPath(QStringLiteral(".png"))}) {
+    // Remove previous outputs so a failed run cannot leave stale averages.
+    QStringList outputs {reportPath, outputPath(QStringLiteral(".json")), outputPath(QStringLiteral(".png"))};
+    for (int run = 1; run <= startupRuns; ++run) {
+        for (const QString& extension : {QStringLiteral(".txt"), QStringLiteral(".json"), QStringLiteral(".png")})
+            outputs.append(outputPath(QStringLiteral("-run-%1").arg(run, 2, 10, QLatin1Char('0')) + extension));
+    }
+    for (const QString& path : outputs) {
         if (QFile::exists(path) && !QFile::remove(path)) {
             qCritical("Cannot remove previous report: %s", qPrintable(path));
             return 1;
         }
     }
-    QTemporaryDir storage(QDir::tempPath() + QStringLiteral("/speedcrunch-startup-load-XXXXXX"));
-    if (!storage.isValid() || !prepareWorkload(storage.path())) {
+    QTemporaryDir fixture(QDir::tempPath() + QStringLiteral("/speedcrunch-startup-fixture-XXXXXX"));
+    if (!fixture.isValid() || !prepareWorkload(fixture.path())) {
         qCritical("Cannot prepare isolated startup workload");
         return 1;
     }
-    QProcess child;
     auto environment = QProcessEnvironment::systemEnvironment();
-    environment.insert(QStringLiteral("SPEEDCRUNCH_UI_TEST_STORAGE"), storage.path());
     environment.insert(QStringLiteral("SPEEDCRUNCH_TEST_SKIP_UPDATE_CHECK"), QStringLiteral("1"));
     environment.insert(QStringLiteral("QT_FORCE_STDERR_LOGGING"), QStringLiteral("1"));
     if (environment.value(QStringLiteral("QT_QPA_PLATFORM")).isEmpty()) {
@@ -472,26 +534,63 @@ int main(int argc, char* argv[])
         environment.insert(QStringLiteral("QT_QPA_PLATFORM"), QStringLiteral("xcb"));
 #endif
     }
-    child.setProcessEnvironment(environment);
-    child.setProcessChannelMode(QProcess::ForwardedChannels);
-    child.start(QCoreApplication::applicationFilePath(),
-                {QStringLiteral("--startup-load-child"), name, stylePreset, reportPath});
-    if (!child.waitForStarted() || !child.waitForFinished(540000)) {
-        qCritical("Startup workload process fails: %s", qPrintable(child.errorString()));
-        child.kill();
-        child.waitForFinished();
+    qInfo("Measuring %s/%s over %d fresh launches", qPrintable(name), qPrintable(stylePreset), startupRuns);
+    QJsonArray samples;
+    QString lastRunReport;
+    for (int run = 1; run <= startupRuns; ++run) {
+        QTemporaryDir storage(QDir::tempPath() + QStringLiteral("/speedcrunch-startup-load-XXXXXX"));
+        if (!storage.isValid() || !copyWorkload(fixture.path(), storage.path()))
+            return 1;
+        const QString runReport = outputPath(QStringLiteral("-run-%1.txt").arg(run, 2, 10, QLatin1Char('0')));
+        environment.insert(QStringLiteral("SPEEDCRUNCH_UI_TEST_STORAGE"), storage.path());
+        QProcess child;
+        child.setProcessEnvironment(environment);
+        child.setProcessChannelMode(QProcess::MergedChannels);
+        child.start(QCoreApplication::applicationFilePath(),
+                    {QStringLiteral("--startup-load-child"), name, stylePreset, runReport});
+        if (!child.waitForStarted() || !child.waitForFinished(540000)) {
+            qCritical("Startup workload run %d fails: %s", run, qPrintable(child.errorString()));
+            child.kill();
+            child.waitForFinished();
+            qCritical().noquote() << child.readAll();
+            return 1;
+        }
+        if (child.exitStatus() != QProcess::NormalExit || child.exitCode() != 0) {
+            qCritical("Startup workload run %d fails", run);
+            qCritical().noquote() << child.readAll();
+            return 1;
+        }
+        QFile summaryFile(outputPath(QStringLiteral(".json"), runReport));
+        if (!QFileInfo(runReport).isFile() || !summaryFile.open(QIODevice::ReadOnly)) {
+            qCritical("Startup workload run %d exits without writing both reports", run);
+            return 1;
+        }
+        QJsonObject sample = QJsonDocument::fromJson(summaryFile.readAll()).object();
+        if (!sample.value(QStringLiteral("passed")).toBool()
+            || !sample.value(QStringLiteral("complete")).toBool()
+            || sample.value(QStringLiteral("workload")).toString() != name
+            || sample.value(QStringLiteral("preset")).toString() != stylePreset) {
+            qCritical("Startup workload run %d produces an invalid report", run);
+            return 1;
+        }
+        sample.insert(QStringLiteral("run"), run);
+        sample.insert(QStringLiteral("report"), QFileInfo(runReport).fileName());
+        samples.append(sample);
+        lastRunReport = runReport;
+    }
+    const QJsonObject summary = StartupLoadStatistics::summarize(samples);
+    if (summary.isEmpty()) {
+        qCritical("Cannot average incomplete startup measurements");
         return 1;
     }
-    if (child.exitStatus() != QProcess::NormalExit || child.exitCode() != 0)
-        return 1;
-    QFile summaryFile(outputPath(QStringLiteral(".json")));
-    if (!QFileInfo(reportPath).isFile() || !summaryFile.open(QIODevice::ReadOnly)) {
-        qCritical("Startup workload exits without writing both reports");
+    if (!QFile::copy(outputPath(QStringLiteral(".png"), lastRunReport), outputPath(QStringLiteral(".png")))) {
+        qCritical("Cannot copy the overview startup screenshot");
         return 1;
     }
-    const QJsonObject summary = QJsonDocument::fromJson(summaryFile.readAll()).object();
-    return summary.value(QStringLiteral("passed")).toBool()
-        && summary.value(QStringLiteral("complete")).toBool()
-        && summary.value(QStringLiteral("workload")).toString() == name
-        && summary.value(QStringLiteral("preset")).toString() == stylePreset ? 0 : 1;
+    const QString report = averagesReport(summary);
+    if (!writeFile(reportPath, report.toUtf8())
+        || !writeFile(outputPath(QStringLiteral(".json")), QJsonDocument(summary).toJson()))
+        return 1;
+    qInfo().noquote() << report;
+    return 0;
 }

@@ -99,7 +99,7 @@ jobs:
 
       - name: Capture Classic and Modern startup diagnostics
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        timeout-minutes: 2
+        timeout-minutes: 5
         env:
           QT_QPA_PLATFORM: windows
         run: |
