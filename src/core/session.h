@@ -64,6 +64,7 @@ public:
     bool isBuiltInVariable(const QString &id) const;
 
     void addHistoryEntry(const HistoryEntry & entry);
+    void appendSavedHistory(const QJsonArray& history);
     bool nextHistoryEntryReachesLimit() const;
     void insertHistoryEntry(const int index, const HistoryEntry & entry);
     void removeHistoryEntryAt(const int index);

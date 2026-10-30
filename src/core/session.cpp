@@ -246,19 +246,11 @@ int SessionSerialization::deserialize(Session& session, const QJsonObject& json,
     session.evaluator()->initializeBuiltInVariables();
 
     timing.next("Restore saved history entries (total)");
-    QJsonArray hist_obj = json[QLatin1String(SessionJsonKeys::History)].toArray();
-    int n = hist_obj.size();
-    const int limit = session.historyLimit();
-    const int firstHistoryIndex = limit > 0 ? std::max(0, n - limit) : 0;
-    for (int i = firstHistoryIndex; i < n; ++i) {
-        const HistoryEntry entry(hist_obj[i].toObject());
-        StartupDiagnostics::BatchedScope insertion("Append restored history entry");
-        session.addHistoryEntry(entry);
-    }
+    session.appendSavedHistory(json.value(QLatin1String(SessionJsonKeys::History)).toArray());
 
     timing.next("Restore saved session variables");
     QJsonArray var_obj = json[QLatin1String(SessionJsonKeys::Variables)].toArray();
-    n = var_obj.size();
+    int n = var_obj.size();
     for (int i = 0; i < n; ++i) {
         QJsonObject var = var_obj[i].toObject();
         Variable variable;
@@ -489,6 +481,31 @@ void Session::addHistoryEntry(const HistoryEntry &entry)
     }
 
     m_history.append(entry);
+}
+
+void Session::appendSavedHistory(const QJsonArray& history)
+{
+    const qsizetype first = m_historyLimit > 0
+        ? qMax(qsizetype(0), history.size() - m_historyLimit) : 0;
+    const qsizetype retained = history.size() - first;
+    const qsizetype growth = m_historyLimit > 0
+        ? qMin(retained, qsizetype(m_historyLimit) - m_history.size()) : retained;
+    if (growth > 0) {
+        StartupDiagnostics::Scope timing("Reserve restored history storage");
+        m_history.reserve(m_history.size() + growth);
+    }
+
+    for (qsizetype i = first; i < history.size(); ++i) {
+        // Parsing is part of insertion when constructing directly in storage.
+        StartupDiagnostics::BatchedScope timing("Append restored history entry");
+        const QJsonObject entry = history.at(i).toObject();
+        if (m_historyLimit > 0 && m_history.size() == m_historyLimit) {
+            m_history[m_historyHead].deSerialize(entry);
+            m_historyHead = (m_historyHead + 1) % m_historyLimit;
+        } else {
+            m_history.emplaceBack(entry);
+        }
+    }
 }
 
 bool Session::nextHistoryEntryReachesLimit() const

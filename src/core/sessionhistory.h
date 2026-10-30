@@ -47,6 +47,7 @@ private:
     bool m_hasCtx = false;
     QStringList m_renderedLines;
     qint64 m_editTimestamp = 0;
+    void readSavedFields(const QJsonObject& json);
 public:
     HistoryEntry() : m_expr(""), m_result(0) {}
     HistoryEntry(const QJsonObject & json);

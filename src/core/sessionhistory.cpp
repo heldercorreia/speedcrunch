@@ -11,6 +11,15 @@
 #include <QDateTime>
 
 namespace {
+Quantity savedHistoryResult(const QJsonObject& json)
+{
+    StartupDiagnostics::BatchedScope timing("Deserialize saved history result");
+    const QJsonValue result = json.value(QLatin1String(SessionJsonKeys::HistoryEntry::Result));
+    if (result.isObject())
+        return Quantity::deSerialize(result.toObject());
+    return Quantity(CMath::nan());
+}
+
 EvaluationContext contextFromCurrentSettings()
 {
     Settings* settings = Settings::instance();
@@ -131,8 +140,9 @@ void EvaluationContext::deSerialize(const QJsonObject& json)
 
 
 HistoryEntry::HistoryEntry(const QJsonObject & json)
+    : m_result(savedHistoryResult(json))
 {
-    deSerialize(json);
+    readSavedFields(json);
 }
 
 HistoryEntry::HistoryEntry(const QString & expr, const Quantity & num)
@@ -227,25 +237,25 @@ void HistoryEntry::serialize(QJsonObject & json) const
 
 void HistoryEntry::deSerialize(const QJsonObject & json)
 {
+    m_result = savedHistoryResult(json);
+    readSavedFields(json);
+}
+
+void HistoryEntry::readSavedFields(const QJsonObject& json)
+{
     StartupDiagnostics::BatchedScope timing("Initialize restored history entry");
-    *this = HistoryEntry();
-    m_result = CMath::nan();
+    m_renderedLines.clear();
 
     timing.next("Read saved history expressions");
-    if (json.contains(QLatin1String(SessionJsonKeys::HistoryEntry::Expression)))
-        m_expr = json[QLatin1String(SessionJsonKeys::HistoryEntry::Expression)].toString();
-    if (json.contains(QLatin1String(SessionJsonKeys::HistoryEntry::InterpretedExpression)))
-        m_interpretedExpr = json[QLatin1String(SessionJsonKeys::HistoryEntry::InterpretedExpression)].toString();
-    timing.next("Deserialize saved history result");
-    if (json.contains(QLatin1String(SessionJsonKeys::HistoryEntry::Result))
-            && json[QLatin1String(SessionJsonKeys::HistoryEntry::Result)].isObject())
-        m_result = Quantity::deSerialize(json[QLatin1String(SessionJsonKeys::HistoryEntry::Result)].toObject());
+    m_expr = json.value(QLatin1String(SessionJsonKeys::HistoryEntry::Expression)).toString();
+    m_interpretedExpr = json.value(QLatin1String(SessionJsonKeys::HistoryEntry::InterpretedExpression)).toString();
 
     timing.next("Deserialize saved history context");
-    if (json.contains(QLatin1String(SessionJsonKeys::HistoryEntry::Context))) {
+    m_hasCtx = json.contains(QLatin1String(SessionJsonKeys::HistoryEntry::Context));
+    if (m_hasCtx)
         m_ctx.deSerialize(json[QLatin1String(SessionJsonKeys::HistoryEntry::Context)].toObject());
-        m_hasCtx = true;
-    }
+    else
+        m_ctx = EvaluationContext();
     timing.next("Read saved history timestamp");
     if (json.contains(QLatin1String(SessionJsonKeys::HistoryEntry::EditTimestamp)))
         m_editTimestamp = json[QLatin1String(SessionJsonKeys::HistoryEntry::EditTimestamp)].toVariant().toLongLong();

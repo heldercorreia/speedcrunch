@@ -1441,6 +1441,12 @@ bool Quantity::sameDimension(const Quantity& other) const
 
 void Quantity::cleanDimension()
 {
+    auto firstZero = m_dimension.cbegin();
+    while (firstZero != m_dimension.cend() && !firstZero.value().isZero())
+        ++firstZero;
+    if (firstZero == m_dimension.cend())
+        return;
+
     auto i = m_dimension.begin();
     while (i != m_dimension.end()) {
         if (i.value().isZero())

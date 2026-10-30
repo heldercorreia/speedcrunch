@@ -4,7 +4,9 @@
 #include "mainwindowtesthelpers.h"
 #include "core/startupdiagnostics.h"
 #include "core/units.h"
+#include "math/rational.h"
 
+#include <QDateTime>
 #include <QElapsedTimer>
 
 #include <algorithm>
@@ -58,6 +60,11 @@ public slots:
 private slots:
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
+    void restored_history_preserves_limits_and_merge_order_data();
+    void restored_history_preserves_limits_and_merge_order();
+    void restored_history_entries_replace_saved_fields();
+    void restored_history_keeps_complex_and_quantity_results();
+    void quantity_copies_preserve_shared_dimensions();
     void startup_deserialization_reports_history_phases();
     void startup_batched_timings_finish_after_flush();
     void startup_numeric_history_keeps_unit_registry_unloaded();
@@ -336,6 +343,169 @@ void TestSessionsUi::initTestCase()
                  qPrintable(QStringLiteral("Cannot write test storage at %1: %2")
                                 .arg(path, probe.errorString())));
     }
+}
+
+void TestSessionsUi::restored_history_preserves_limits_and_merge_order_data()
+{
+    QTest::addColumn<bool>("merge");
+    QTest::addColumn<int>("limit");
+    QTest::addColumn<int>("savedCount");
+    QTest::addColumn<QStringList>("expected");
+    QTest::newRow("replace-limited") << false << 3 << 5 << QStringList {"3", "4", "5"};
+    QTest::newRow("replace-unlimited") << false << 0 << 5 << QStringList {"1", "2", "3", "4", "5"};
+    QTest::newRow("replace-empty") << false << 3 << 0 << QStringList {};
+    QTest::newRow("merge-wrapped") << true << 3 << 2 << QStringList {"105", "1", "2"};
+    QTest::newRow("merge-over-limit") << true << 3 << 5 << QStringList {"3", "4", "5"};
+    QTest::newRow("merge-reduce-limit") << true << 2 << 1 << QStringList {"105", "1"};
+    QTest::newRow("merge-increase-limit") << true << 5 << 2 << QStringList {"103", "104", "105", "1", "2"};
+    QTest::newRow("merge-unlimited") << true << 0 << 2 << QStringList {"103", "104", "105", "1", "2"};
+    QTest::newRow("merge-empty") << true << 3 << 0 << QStringList {"103", "104", "105"};
+}
+
+void TestSessionsUi::restored_history_preserves_limits_and_merge_order()
+{
+    QFETCH(bool, merge);
+    QFETCH(int, limit);
+    QFETCH(int, savedCount);
+    QFETCH(QStringList, expected);
+    Session target;
+    target.setName(QStringLiteral("Existing"));
+    target.setHistoryLimit(3);
+    target.setEditorText(QStringLiteral("unfinished"));
+    for (int i = 101; i <= 105; ++i)
+        target.addHistoryEntry(HistoryEntry(QString::number(i), Quantity(i)));
+    const Session untouched(target);
+
+    Session source;
+    source.setName(QStringLiteral("Saved"));
+    for (int i = 1; i <= savedCount; ++i) {
+        HistoryEntry entry(QString::number(i), Quantity(i));
+        entry.setRenderedLines({QString::number(i), QStringLiteral("= %1").arg(i)});
+        source.addHistoryEntry(entry);
+    }
+    QJsonObject saved;
+    source.serialize(saved);
+    saved[QLatin1String(SessionJsonKeys::Limit)] = limit;
+    QVERIFY(target.deSerialize(saved, merge));
+    QCOMPARE(target.historyLimit(), limit);
+    QCOMPARE(target.name(), merge ? QStringLiteral("Existing") : QStringLiteral("Saved"));
+    QCOMPARE(target.editorText(), merge ? QStringLiteral("unfinished") : QString());
+    QCOMPARE(target.historySize(), expected.size());
+    for (int i = 0; i < expected.size(); ++i) {
+        const HistoryEntry& entry = target.historyEntryAtRef(i);
+        QCOMPARE(entry.expr(), expected.at(i));
+        QCOMPARE(entry.result(), Quantity(expected.at(i).toInt()));
+        if (expected.at(i).toInt() < 100)
+            QCOMPARE(entry.renderedLines(), QStringList({expected.at(i), QStringLiteral("= ") + expected.at(i)}));
+    }
+    if (!expected.isEmpty())
+        QCOMPARE(target.getVariable(QStringLiteral("ans")).value(), Quantity(expected.last().toInt()));
+    QCOMPARE(untouched.historySize(), 3);
+    QCOMPARE(untouched.historyEntryAtRef(0).expr(), QStringLiteral("103"));
+    QCOMPARE(untouched.historyEntryAtRef(2).expr(), QStringLiteral("105"));
+
+    target.addHistoryEntry(HistoryEntry(QStringLiteral("99"), Quantity(99)));
+    expected.append(QStringLiteral("99"));
+    while (limit > 0 && expected.size() > limit)
+        expected.removeFirst();
+    QJsonObject roundTrip;
+    target.serialize(roundTrip);
+    const QJsonArray entries = roundTrip.value(QLatin1String(SessionJsonKeys::History)).toArray();
+    QCOMPARE(entries.size(), expected.size());
+    for (int i = 0; i < entries.size(); ++i)
+        QCOMPARE(HistoryEntry(entries.at(i).toObject()).expr(), expected.at(i));
+}
+
+void TestSessionsUi::restored_history_entries_replace_saved_fields()
+{
+    EvaluationContext context;
+    context.extras.append(ResultLineContext {'e', 4, ComplexForm::Default});
+    context.angle = 'd';
+    HistoryEntry original(QStringLiteral("old"), Quantity(7), QStringLiteral("old interpreted"), context);
+    original.setRenderedLines({QStringLiteral("old"), QStringLiteral("= 7")});
+    original.setEditTimestamp(123);
+    const QList<QJsonValue> results {
+        QJsonValue(QJsonValue::Undefined), QJsonValue(QJsonValue::Null),
+        QJsonValue(7), QJsonValue(QStringLiteral("invalid")), QJsonObject {}
+    };
+    for (const QJsonValue& result : results) {
+        QJsonObject saved {{QLatin1String(SessionJsonKeys::HistoryEntry::EditTimestamp), 0}};
+        if (!result.isUndefined())
+            saved[QLatin1String(SessionJsonKeys::HistoryEntry::Result)] = result;
+        const HistoryEntry fresh(saved);
+        HistoryEntry reused(original);
+        reused.deSerialize(saved);
+        for (const HistoryEntry* entry : {&fresh, static_cast<const HistoryEntry*>(&reused)}) {
+            QVERIFY(entry->expr().isEmpty());
+            QVERIFY(entry->interpretedExpr().isEmpty());
+            QVERIFY(!entry->hasContext());
+            QVERIFY(entry->contextRef().extras.isEmpty());
+            QCOMPARE(entry->contextRef().angle, 'r');
+            QVERIFY(!entry->hasRenderedLines());
+            QCOMPARE(entry->editTimestamp(), qint64(0));
+            if (result.isObject())
+                QCOMPARE(entry->result(), Quantity(0));
+            else
+                QVERIFY(entry->result().isNan());
+        }
+    }
+    const qint64 before = QDateTime::currentMSecsSinceEpoch();
+    HistoryEntry reused(original);
+    reused.deSerialize(QJsonObject {});
+    QVERIFY(reused.editTimestamp() >= before);
+    QVERIFY(reused.editTimestamp() <= QDateTime::currentMSecsSinceEpoch());
+}
+
+void TestSessionsUi::restored_history_keeps_complex_and_quantity_results()
+{
+    Quantity length(42);
+    length.modifyDimension(UnitQuantity::Length, Rational(1, 1));
+    length.setDisplayUnit(CNumber(100), QStringLiteral("centimetre"));
+    const QList<Quantity> values {
+        Quantity(CNumber("1+2i")), length,
+        Quantity::list({Quantity(1), Quantity(2)}),
+        Quantity::matrix({{Quantity(1), Quantity(2)}, {Quantity(3), Quantity(4)}})
+    };
+    for (const Quantity& value : values) {
+        HistoryEntry source(QStringLiteral("saved"), value, QStringLiteral("interpreted"));
+        source.setRenderedLines({QStringLiteral("saved"), QStringLiteral("= saved result")});
+        source.setEditTimestamp(17);
+        QJsonObject saved;
+        source.serialize(saved);
+        HistoryEntry fresh(saved);
+        HistoryEntry reused(QStringLiteral("old"), Quantity(99));
+        reused.deSerialize(saved);
+        QJsonObject freshJson;
+        QJsonObject reusedJson;
+        fresh.serialize(freshJson);
+        reused.serialize(reusedJson);
+        QCOMPARE(freshJson, saved);
+        QCOMPARE(reusedJson, saved);
+    }
+}
+
+void TestSessionsUi::quantity_copies_preserve_shared_dimensions()
+{
+    const QMap<UnitQuantity, Rational> empty;
+    Quantity scalar(42);
+    Quantity scalarCopy(scalar);
+    Quantity assigned(7);
+    assigned = scalar;
+    QVERIFY(scalarCopy.getDimensionByQuantity().isSharedWith(empty));
+    QVERIFY(assigned.getDimensionByQuantity().isSharedWith(empty));
+
+    Quantity source(42);
+    source.modifyDimension(UnitQuantity::Length, Rational(1, 1));
+    const auto originalDimensions = source.getDimensionByQuantity();
+    Quantity copy(source);
+    assigned = source;
+    QVERIFY(copy.getDimensionByQuantity().isSharedWith(originalDimensions));
+    QVERIFY(assigned.getDimensionByQuantity().isSharedWith(originalDimensions));
+    copy.modifyDimension(UnitQuantity::Time, Rational(-1, 1));
+    QVERIFY(!source.getDimensionByQuantity().contains(UnitQuantity::Time));
+    QVERIFY(!assigned.getDimensionByQuantity().contains(UnitQuantity::Time));
+    copy.modifyDimension(UnitQuantity::Length, Rational(0, 1));
+    QVERIFY(source.getDimensionByQuantity().contains(UnitQuantity::Length));
 }
 
 void TestSessionsUi::startup_deserialization_reports_history_phases()
