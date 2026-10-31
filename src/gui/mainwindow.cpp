@@ -138,6 +138,7 @@
 #include <QTabBar>
 #include <QToolButton>
 #include <QToolTip>
+#include <QWindow>
 #include <QTreeWidget>
 #include <QThread>
 #include <QVBoxLayout>
@@ -8635,6 +8636,10 @@ void MainWindow::applySettings(bool initializing)
     m_status.selectedResultFormat = m_settings->resultFormat;
     m_status.selectedResultPrecision = m_settings->resultPrecision;
 
+    // Qt needs the saved window state before restoring dock sizes, especially
+    // while a hidden window is waiting to become maximized.
+    m_savedWindowGeometryRestored = restoreGeometry(m_settings->windowGeometry);
+
     // Saved workspaces choose their own docks before session files are read.
     // Other windows use the configured defaults without constructing closed panels.
     if (!initializing)
@@ -8668,9 +8673,8 @@ void MainWindow::applySettings(bool initializing)
 #endif
 
     timing.next("Restore window option actions");
-    // A saved workspace restores its geometry while scheduling session I/O.
-    // Wait for that result before choosing a fallback size and position.
-    m_savedWindowGeometryRestored = false;
+    // A saved workspace can replace the fallback geometry while scheduling
+    // session I/O, before choosing a default size and position below.
 
     StartupDiagnostics::Scope optionTiming("Restore fullscreen action state");
     m_actions.viewFullScreenMode->setChecked(m_settings->windowOnfullScreen);
@@ -12925,6 +12929,21 @@ bool MainWindow::event(QEvent* e)
 
 bool MainWindow::eventFilter(QObject* o, QEvent* e)
 {
+    // The application filter also sees native window events. QWidget may
+    // already have the requested fullscreen state when macOS confirms it.
+    if (o == windowHandle() && e != nullptr
+        && e->type() == QEvent::WindowStateChange && e->spontaneous()
+        && !m_pendingFullscreenDockState.isEmpty()
+        && windowHandle()->windowState() == Qt::WindowFullScreen) {
+        QTimer::singleShot(0, this, [this]() {
+            if (m_pendingFullscreenDockState.isEmpty())
+                return;
+            const QByteArray state = m_pendingFullscreenDockState;
+            m_pendingFullscreenDockState.clear();
+            if (isFullScreen())
+                restoreDockLayout(state, openDockNames());
+        });
+    }
     if (o == qApp && e != nullptr && e->type() == QEvent::Quit
         && primaryMainWindow() == this) {
         // QApplication closes top-level windows in an unspecified order.
@@ -14574,6 +14593,7 @@ void MainWindow::restoreWindowUiState(const QJsonObject& window, bool restoreLay
         setStatusBarText();
     if (QApplication::activeWindow() == this)
         applyStatusBarSelectionState();
+    const QString geometryBase64 = window.value(QStringLiteral("geometry")).toString();
     if (restoreLayout) {
         if (window.value(QStringLiteral("dockColumnOrders")).isObject())
             restoreDockColumnOrders(window.value(QStringLiteral("dockColumnOrders")).toObject());
@@ -14581,6 +14601,8 @@ void MainWindow::restoreWindowUiState(const QJsonObject& window, bool restoreLay
         const QByteArray state = windowStateBase64.isEmpty()
             ? m_settings->windowState
             : QByteArray::fromBase64(windowStateBase64.toLatin1());
+        if (!geometryBase64.isEmpty())
+            restoreWindowGeometry(QByteArray::fromBase64(geometryBase64.toLatin1()), state);
         if (window.value(QStringLiteral("openDocks")).isArray()) {
             QStringList names;
             for (const QJsonValue& value : window.value(QStringLiteral("openDocks")).toArray()) {
@@ -14603,12 +14625,9 @@ void MainWindow::restoreWindowUiState(const QJsonObject& window, bool restoreLay
                 window.value(QStringLiteral("keypadZoomPercent")).toInt(m_keypadZoomPercent));
         }
     }
-    const QString geometryBase64 = window.value(QStringLiteral("geometry")).toString();
-    if (restoreLayout && !geometryBase64.isEmpty())
-        restoreWindowGeometry(QByteArray::fromBase64(geometryBase64.toLatin1()));
 }
 
-void MainWindow::restoreWindowGeometry(const QByteArray& geometry)
+void MainWindow::restoreWindowGeometry(const QByteArray& geometry, const QByteArray& dockState)
 {
     if (geometry.isEmpty())
         return;
@@ -14621,12 +14640,16 @@ void MainWindow::restoreWindowGeometry(const QByteArray& geometry)
     // Restoring window controls and rebuilding session panes can change size
     // constraints on later event-loop turns. Reapply the saved geometry once
     // those layout passes have completed.
-    QTimer::singleShot(0, this, [this, geometry]() {
+    QTimer::singleShot(0, this, [this, geometry, dockState]() {
         StartupDiagnostics::Scope timing("Restore geometry after layout events");
         restoreGeometry(geometry);
-        QTimer::singleShot(0, this, [this, geometry]() {
+        QTimer::singleShot(0, this, [this, geometry, dockState]() {
             StartupDiagnostics::Scope timing("Restore geometry after native events");
             restoreGeometry(geometry);
+            // Native maximization can fit the docks to the smaller normal
+            // geometry first. Recover their saved sizes at the final size.
+            if (m_hasRestoredDockLayout)
+                restoreDockLayout(dockState, openDockNames());
         });
     });
 }
@@ -14754,6 +14777,12 @@ void MainWindow::restoreDockLayout(const QByteArray& state, const QStringList& n
     // Reapply the final sizes and selected tabs after adding the required docks.
     if (m_hasRestoredDockLayout)
         restoreState(state, DockLayoutStateVersion);
+    if (m_initializingUi && m_hasRestoredDockLayout && isFullScreen()
+        && QGuiApplication::platformName() == QLatin1String("cocoa")) {
+        // macOS reports fullscreen completion after the startup layout turns.
+        // Keep the original sizes until that native transition has finished.
+        m_pendingFullscreenDockState = state;
+    }
     for (QDockWidget* dock : m_allDocks) {
         if (!names.contains(dock->objectName()))
             dock->hide();

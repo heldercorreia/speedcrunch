@@ -18,6 +18,10 @@ private slots:
     void opening_docks_keeps_floating_panels_independent();
     void floating_docks_survive_repeated_quit_data();
     void floating_docks_survive_repeated_quit();
+    void dock_sizes_survive_relaunch_data();
+    void dock_sizes_survive_relaunch();
+    void fullscreen_dock_widths_survive_relaunch_data();
+    void fullscreen_dock_widths_survive_relaunch();
     void dock_list_selected_row_keeps_primary_fill_while_hovered();
     void functions_dock_retranslates_domain_label_after_language_change();
     void side_docks_keep_full_height_data();
@@ -519,6 +523,158 @@ void TestDockLayoutUi::floating_docks_survive_repeated_quit()
         QCOMPARE(windows.first().toObject().value(QStringLiteral("openDocks")).toArray(),
                  QJsonArray::fromStringList(expectedOpen));
         qApp->setProperty("speedcrunchShutdownInProgress", previousShutdown);
+    }
+}
+
+void TestDockLayoutUi::dock_sizes_survive_relaunch_data()
+{
+    QTest::addColumn<bool>("maximized");
+    QTest::addColumn<bool>("workspaceLayout");
+    QTest::newRow("maximized-workspace") << true << true;
+    QTest::newRow("maximized-settings") << true << false;
+    QTest::newRow("normal-workspace") << false << true;
+    QTest::newRow("normal-settings") << false << false;
+}
+
+void TestDockLayoutUi::dock_sizes_survive_relaunch()
+{
+    QFETCH(bool, maximized);
+    QFETCH(bool, workspaceLayout);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    guard.settings->windowPositionSave = true;
+    guard.settings->keypadVisible = false;
+    guard.settings->keypadMode = Settings::KeypadModeDisabled;
+    QHash<QString, QSize> expectedSizes;
+    QSize expectedWindowSize;
+    const QStringList names {QStringLiteral("ConstantsDock"), QStringLiteral("FunctionsDock"),
+        QStringLiteral("VariablesDock")};
+
+    for (int launch = 0; launch < 3; ++launch) {
+        if (launch != 0) {
+            guard.settings->load();
+            if (!workspaceLayout)
+                guard.settings->sessionLayoutJson.clear();
+        }
+        MainWindow window(launch != 0);
+        if (launch == 0) {
+            window.resize(720, 540);
+            for (const char* setter : {"setConstantsDockVisible", "setFunctionsDockVisible", "setVariablesDockVisible"})
+                QVERIFY(QMetaObject::invokeMethod(&window, setter, Qt::DirectConnection,
+                                                 Q_ARG(bool, true), Q_ARG(bool, false)));
+            auto* constants = window.findChild<QDockWidget*>(names.at(0));
+            auto* functions = window.findChild<QDockWidget*>(names.at(1));
+            auto* variables = window.findChild<QDockWidget*>(names.at(2));
+            QVERIFY(constants && functions && variables);
+            window.addDockWidget(Qt::LeftDockWidgetArea, constants);
+            window.splitDockWidget(constants, functions, Qt::Vertical);
+            window.addDockWidget(Qt::RightDockWidgetArea, variables);
+            if (maximized)
+                window.showMaximized();
+        }
+        window.showWhenReady();
+        QTRY_VERIFY(window.isVisible());
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        QTRY_COMPARE(window.isMaximized(), maximized);
+        QTRY_COMPARE(window.findChildren<QDockWidget*>().size(), names.size());
+        if (launch == 0) {
+            auto* constants = window.findChild<QDockWidget*>(names.at(0));
+            auto* functions = window.findChild<QDockWidget*>(names.at(1));
+            auto* variables = window.findChild<QDockWidget*>(names.at(2));
+            window.resizeDocks({constants, variables},
+                               {window.width() / 4, window.width() / 3}, Qt::Horizontal);
+            window.resizeDocks({constants, functions}, {200, 300}, Qt::Vertical);
+            QTest::qWait(200);
+            expectedWindowSize = window.size();
+            for (const QString& name : names)
+                expectedSizes.insert(name, window.findChild<QDockWidget*>(name)->size());
+        } else {
+            if (!maximized)
+                QTRY_COMPARE(window.size(), expectedWindowSize);
+            for (const QString& name : names) {
+                auto* dock = window.findChild<QDockWidget*>(name);
+                QVERIFY(dock);
+                QVERIFY(!dock->isHidden());
+                QTRY_COMPARE(dock->width(), expectedSizes.value(name).width());
+                // Qt can round a stacked dock's height by one pixel when
+                // fitting the saved vertical split to the window again.
+                QTRY_VERIFY(qAbs(dock->height() - expectedSizes.value(name).height()) <= 1);
+                QCOMPARE(window.dockWidgetArea(dock), name == names.last()
+                    ? Qt::RightDockWidgetArea : Qt::LeftDockWidgetArea);
+            }
+        }
+        window.persistSessionAndSettingsForShutdown();
+    }
+}
+
+void TestDockLayoutUi::fullscreen_dock_widths_survive_relaunch_data()
+{
+    QTest::addColumn<bool>("workspaceLayout");
+    QTest::newRow("workspace") << true;
+    QTest::newRow("settings") << false;
+}
+
+void TestDockLayoutUi::fullscreen_dock_widths_survive_relaunch()
+{
+    if (QGuiApplication::platformName() == QLatin1String("offscreen")
+        || QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Requires a native window manager to restore fullscreen geometry.", );
+    QFETCH(bool, workspaceLayout);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    guard.settings->windowPositionSave = true;
+    guard.settings->keypadVisible = false;
+    guard.settings->keypadMode = Settings::KeypadModeDisabled;
+    const QStringList names {QStringLiteral("ConstantsDock"), QStringLiteral("VariablesDock")};
+    QHash<QString, int> widths;
+    QSize fullscreenSize;
+
+    for (int launch = 0; launch < 3; ++launch) {
+        if (launch != 0) {
+            guard.settings->load();
+            if (!workspaceLayout)
+                guard.settings->sessionLayoutJson.clear();
+        }
+        MainWindow window(launch != 0);
+        if (launch == 0) {
+            window.resize(720, 540);
+            for (const char* setter : {"setConstantsDockVisible", "setVariablesDockVisible"})
+                QVERIFY(QMetaObject::invokeMethod(&window, setter, Qt::DirectConnection,
+                                                 Q_ARG(bool, true), Q_ARG(bool, false)));
+            window.addDockWidget(Qt::LeftDockWidgetArea, window.findChild<QDockWidget*>(names.first()));
+            window.addDockWidget(Qt::RightDockWidgetArea, window.findChild<QDockWidget*>(names.last()));
+            window.showFullScreen();
+        } else {
+            window.showWhenReady();
+        }
+        QTRY_VERIFY(window.isVisible() && window.isFullScreen());
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        // A native macOS fullscreen transition continues after show() returns.
+        // Inspect the docks after the animation, rather than its first frame.
+        QTest::qWait(1500);
+        QTRY_COMPARE(window.findChildren<QDockWidget*>().size(), names.size());
+        if (launch == 0) {
+            window.resizeDocks({window.findChild<QDockWidget*>(names.first()),
+                                window.findChild<QDockWidget*>(names.last())},
+                               {window.width() / 4, window.width() / 3}, Qt::Horizontal);
+            QTest::qWait(200);
+            fullscreenSize = window.size();
+            for (const QString& name : names)
+                widths.insert(name, window.findChild<QDockWidget*>(name)->width());
+        } else {
+            QTRY_COMPARE(window.size(), fullscreenSize);
+            for (const QString& name : names) {
+                auto* dock = window.findChild<QDockWidget*>(name);
+                QVERIFY(dock && !dock->isHidden() && !dock->isFloating());
+                QTRY_COMPARE(dock->width(), widths.value(name));
+            }
+        }
+        window.persistSessionAndSettingsForShutdown();
+        // Leave the fullscreen Space before destroying the test window, so
+        // its exit animation does not affect the next launch or test case.
+        window.showNormal();
+        QTRY_VERIFY(!window.isFullScreen());
+        QTest::qWait(1500);
     }
 }
 

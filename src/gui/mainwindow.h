@@ -125,7 +125,7 @@ private slots:
     void showRenameSessionDialog();
     void closeCurrentSession();
     void restoreClosedSessionTab();
-    void restoreWindowGeometry(const QByteArray& geometry);
+    void restoreWindowGeometry(const QByteArray& geometry, const QByteArray& dockState);
     void restoreWindowLayoutState(const QByteArray& state);
     void restoreWindowKeypadLayout(bool visible, int mode);
     void restoreWindowKeypadZoom(int zoomPercent);
@@ -712,6 +712,7 @@ private:
     QJsonObject m_dockColumnOrders;
     bool m_initializingUi = true;
     bool m_hasRestoredDockLayout = false;
+    QByteArray m_pendingFullscreenDockState;
     bool m_dockAppearanceRefreshPending = false;
     bool m_dockNativePolishPending = false;
     bool m_dockVisibilityRefreshPending = false;
