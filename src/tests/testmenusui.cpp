@@ -675,10 +675,15 @@ void TestMenusUi::dock_dropdowns_follow_menu_appearance()
         appearance->actions().at(0)->trigger();
         QDockWidget* dock = window.findChild<QDockWidget*>(QString::fromLatin1(dockName));
         QVERIFY(dock != nullptr);
+        // Tabbed docks sit outside the window until their tab becomes current.
+        dock->show();
+        dock->raise();
+        QCoreApplication::processEvents();
         dock->setFloating(floating);
         dock->show();
         if (floating)
             dock->move(window.frameGeometry().topLeft() + QPoint(40, 40));
+        QVERIFY(QTest::qWaitForWindowExposed(dock));
         QComboBox* combo = dock->findChild<QComboBox*>();
         QVERIFY(combo != nullptr);
         // Exercise the widget popup so its frame and palette can be inspected.
@@ -743,6 +748,10 @@ void TestMenusUi::dock_dropdowns_follow_menu_appearance()
             appearance->actions().at(1 - mode)->trigger();
             QCoreApplication::processEvents();
             QCOMPARE(view->styleSheet().isEmpty(), mode == 1);
+            // Cocoa can delay hiding for its selection flash. Let that finish
+            // before reopening, or the old close timer can hide the new popup.
+            combo->hidePopup();
+            QTRY_VERIFY(!view->isVisible());
         }
         appearance->actions().at(0)->trigger();
         combo->showPopup();
@@ -761,6 +770,8 @@ void TestMenusUi::dock_dropdowns_follow_menu_appearance()
         QVERIFY(view->styleSheet().isEmpty());
         QCOMPARE(view->palette().color(QPalette::Base), native.color(QPalette::Base));
         QCOMPARE(view->viewport()->palette().color(QPalette::Base), native.color(QPalette::Base));
+        combo->hidePopup();
+        QTRY_VERIFY(!view->isVisible());
     }
 }
 

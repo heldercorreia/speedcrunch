@@ -2500,6 +2500,7 @@ void Editor::insertConstant(const QString& constant)
         disconnect(m_constantCompletion);
         m_constantCompletion->deleteLater();
         m_constantCompletion = 0;
+        emit constantSearchVisibilityChanged();
     }
 }
 
@@ -2509,6 +2510,9 @@ void Editor::cancelConstantCompletion()
         disconnect(m_constantCompletion);
         m_constantCompletion->deleteLater();
         m_constantCompletion = 0;
+        // Native hide events can arrive while the popup still reports visible.
+        // Refresh again after clearing the picker, before its deferred deletion.
+        emit constantSearchVisibilityChanged();
     }
 }
 
