@@ -517,7 +517,21 @@ public:
             return;
         QScopedValueRollback<bool> guard(m_updating, true);
         refreshSystemColorModePalette();
-        for (QWidget* widget : QApplication::allWidgets())
+        const auto widgets = QApplication::allWidgets();
+        // A parent's stylesheet also styles its submenus. Clear every menu
+        // first so polishing a child cannot cache inherited theme colors as
+        // its system palette, regardless of allWidgets() order.
+        for (QWidget* widget : widgets) {
+            auto* bar = qobject_cast<QMenuBar*>(widget);
+            if ((bar || qobject_cast<QMenu*>(widget))
+                && (Settings::instance()->menuAppearance == Settings::MenuAppearanceSystem
+                    || (bar && bar->isNativeMenuBar()))
+                && !widget->styleSheet().isEmpty()) {
+                widget->setStyleSheet(QString());
+                widget->setProperty(SystemPaletteSourceProperty, QVariant());
+            }
+        }
+        for (QWidget* widget : widgets)
             applyWidget(widget);
     }
 

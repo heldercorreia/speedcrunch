@@ -28,6 +28,8 @@ private slots:
     void editor_context_menu_paints_system_background_data();
     void editor_context_menu_paints_system_background();
     void menu_appearance_switches_all_windows_without_changing_other_controls();
+    void classic_preset_restores_nested_menu_colors_data();
+    void classic_preset_restores_nested_menu_colors();
     void system_menus_preserve_platform_roles_and_follow_palette_changes_data();
     void system_menus_preserve_platform_roles_and_follow_palette_changes();
     void precision_menu_editor_uses_system_colors();
@@ -1068,6 +1070,82 @@ void TestMenusUi::menu_appearance_switches_all_windows_without_changing_other_co
     QCOMPARE(display->palette(), displayPalette);
     QCOMPARE(constants->palette(), dockPalette);
     QCOMPARE(editor->styleSheet(), editorStyle);
+}
+
+void TestMenusUi::classic_preset_restores_nested_menu_colors_data()
+{
+    QTest::addColumn<QString>("styleName");
+    QTest::addColumn<bool>("darkSystem");
+    for (const QString& style : {QStringLiteral("Fusion"), QStringLiteral("Windows")}) {
+        QTest::newRow(qPrintable(style + QStringLiteral("-light-system"))) << style << false;
+        QTest::newRow(qPrintable(style + QStringLiteral("-dark-system"))) << style << true;
+    }
+}
+
+void TestMenusUi::classic_preset_restores_nested_menu_colors()
+{
+    QFETCH(QString, styleName);
+    QFETCH(bool, darkSystem);
+    MainWindowStateGuard guard;
+    const QPalette original = QApplication::palette();
+    const auto restorePalette = qScopeGuard([&]() {
+        QApplication::setPalette(original);
+        MenuStyle::refresh();
+    });
+    QPalette native = original;
+    for (const QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
+        for (const QPalette::ColorRole role : {QPalette::Window, QPalette::Base, QPalette::Button})
+            native.setColor(group, role, QColor(darkSystem ? "#202428" : "#eeeeee"));
+        for (const QPalette::ColorRole role : {QPalette::WindowText, QPalette::Text, QPalette::ButtonText})
+            native.setColor(group, role, QColor(group == QPalette::Disabled ? "#808890"
+                : darkSystem ? "#f0f0f0" : "#202020"));
+        native.setColor(group, QPalette::Highlight, QColor("#354faf"));
+        native.setColor(group, QPalette::HighlightedText, QColor("#ffffff"));
+    }
+    QApplication::setPalette(native);
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(QJsonObject{
+        {QStringLiteral("background"), darkSystem ? QStringLiteral("#e5eee8") : QStringLiteral("#232136")}
+    });
+    QScopedPointer<QStyle> style(QStyleFactory::create(styleName));
+    QVERIFY(style);
+    MainWindow window(false);
+    window.menuBar()->setNativeMenuBar(false);
+    const auto menus = window.findChildren<QMenu*>();
+    for (QMenu* menu : menus) {
+        menu->setStyle(style.data());
+        menu->ensurePolished();
+    }
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    auto* presets = window.findChild<QMenu*>(QStringLiteral("AppearancePresetMenu"));
+    QVERIFY(presets);
+    const auto verifyMenus = [&]() {
+        for (QMenu* menu : menus) {
+            QVERIFY(menu->styleSheet().isEmpty());
+            for (const QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
+                for (const QPalette::ColorRole role : {QPalette::Window, QPalette::WindowText,
+                        QPalette::Text, QPalette::ButtonText, QPalette::Highlight, QPalette::HighlightedText}) {
+                    QVERIFY2(menu->palette().color(group, role) == native.color(group, role),
+                        qPrintable(QStringLiteral("%1, group %2, role %3: %4 instead of %5")
+                            .arg(menu->title()).arg(group).arg(role)
+                            .arg(menu->palette().color(group, role).name(), native.color(group, role).name())));
+                }
+            }
+        }
+    };
+    for (int cycle = 0; cycle < 3; ++cycle) {
+        presets->actions().at(1)->trigger();
+        QCoreApplication::processEvents();
+        // Keep the nested preset popup open while its action changes every menu.
+        presets->popup(window.mapToGlobal(QPoint(30, 30)));
+        QCoreApplication::processEvents();
+        presets->actions().at(0)->trigger();
+        verifyMenus();
+        presets->hide();
+        QCoreApplication::processEvents();
+        verifyMenus();
+    }
 }
 
 void TestMenusUi::system_menus_restore_style_polished_foreground_and_hover_colors_data()
