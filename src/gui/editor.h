@@ -103,6 +103,7 @@ signals:
     void bulkEvaluationStarted();
     void bulkEvaluationFinished();
     void constantSearchVisibilityChanged();
+    void constantSearchFocusRequested();
 
 public slots:
     void autoCalcSelection(const QString& custom = QString());

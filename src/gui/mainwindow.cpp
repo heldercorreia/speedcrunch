@@ -5392,6 +5392,12 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
 {
     connect(editor, &Editor::constantSearchVisibilityChanged,
             this, &MainWindow::updatePaneEditorCursorVisibility);
+    connect(editor, &Editor::constantSearchFocusRequested, this, [this, display, editor]() {
+        // Finishing the picker is explicit pane-selection intent. Native focus
+        // restoration may have briefly activated a dock input while it was open.
+        setPendingDockFocusTarget(nullptr);
+        setActiveEditorDisplayPane(display, editor, true);
+    });
 
     const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
     SessionPane* pane = new SessionPane(m_widgets.splitContainer);
@@ -13020,7 +13026,9 @@ bool MainWindow::eventFilter(QObject* o, QEvent* e)
                     setPendingDockTextInputFocusTarget(nullptr);
                 }
             });
-        } else if (e->type() == QEvent::FocusIn) {
+        } else if (e->type() == QEvent::FocusIn && widget->hasFocus()) {
+            // Native activation can replay FocusIn for an unfocused dock input.
+            // Only real dock focus should clear the active editor and outline.
             deactivateActiveEditorForTextInputFocus();
             if (QLineEdit* lineEdit = qobject_cast<QLineEdit*>(widget);
                 lineEdit && m_settings->dockAppearance == Settings::DockAppearanceSpeedCrunch)

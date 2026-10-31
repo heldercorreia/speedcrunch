@@ -5213,12 +5213,8 @@ void ConstantCompletion::filter()
 void ConstantCompletion::restoreEditorFocus()
 {
     m_editor->window()->activateWindow();
+    emit m_editor->constantSearchFocusRequested();
     m_editor->setFocus(Qt::OtherFocusReason);
-    QTimer::singleShot(0, m_editor, [editor = m_editor]() {
-        editor->window()->activateWindow();
-        editor->setFocus(Qt::OtherFocusReason);
-        editor->viewport()->setFocus(Qt::OtherFocusReason);
-    });
 }
 
 bool ConstantCompletion::eventFilter(QObject* object, QEvent* event)

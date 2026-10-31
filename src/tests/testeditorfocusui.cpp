@@ -19,6 +19,8 @@ private slots:
     void editor_click_activates_pane_before_dock_focus_changes();
     void finishing_constant_search_restores_editor_outline_data();
     void finishing_constant_search_restores_editor_outline();
+    void constant_search_restores_owning_pane_after_dock_focus_replay_data();
+    void constant_search_restores_owning_pane_after_dock_focus_replay();
 };
 
 void TestEditorFocusUi::editor_click_activates_pane_before_dock_focus_changes_data()
@@ -114,6 +116,82 @@ void TestEditorFocusUi::finishing_constant_search_restores_editor_outline()
     QCOMPARE(editor->text(), accept ? QStringLiteral("e") : QString());
     // Check before deferred deletion can trigger another focus transition.
     QVERIFY(editorHasPrimaryOutline(editor, primary));
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QVERIFY(!popup);
+}
+
+void TestEditorFocusUi::constant_search_restores_owning_pane_after_dock_focus_replay_data()
+{
+    QTest::addColumn<int>("closeKey");
+    QTest::addColumn<bool>("transientFocus");
+    for (bool transient : {false, true}) {
+        const QString prefix = transient ? QStringLiteral("transient-") : QStringLiteral("passive-");
+        QTest::newRow(qPrintable(prefix + QStringLiteral("escape"))) << int(Qt::Key_Escape) << transient;
+        QTest::newRow(qPrintable(prefix + QStringLiteral("enter"))) << int(Qt::Key_Return) << transient;
+        QTest::newRow(qPrintable(prefix + QStringLiteral("tab"))) << int(Qt::Key_Tab) << transient;
+    }
+}
+
+void TestEditorFocusUi::constant_search_restores_owning_pane_after_dock_focus_replay()
+{
+    QFETCH(int, closeKey);
+    QFETCH(bool, transientFocus);
+    MainWindowStateGuard guard;
+    guard.settings->editorDisplayStyle = Settings::EditorDisplayModern;
+    guard.settings->autoCalc = false;
+    guard.settings->constantsDockVisible = true;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    const QColor primary(QStringLiteral("#e7a840"));
+    guard.settings->customColorSchemeJson = themeJsonString(QJsonObject{
+        {QStringLiteral("background"), QStringLiteral("#454257")},
+        {QStringLiteral("primary"), primary.name()}
+    });
+
+    MainWindow window;
+    window.resize(1000, 600);
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
+    window.show();
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+    const auto editors = window.findChildren<Editor*>();
+    QCOMPARE(editors.size(), 2);
+    Editor* editor = editors.first();
+    auto* dock = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(dock);
+    auto* dockSearch = dock->findChild<QLineEdit*>();
+    QVERIFY(dockSearch);
+    QTest::mouseClick(editor->viewport(), Qt::LeftButton);
+    QTRY_VERIFY(editorHasPrimaryOutline(editor, primary));
+    QTest::keyClick(editor, Qt::Key_Space, Qt::ControlModifier);
+    QPointer<QWidget> popup = QApplication::activePopupWidget();
+    QVERIFY(popup);
+    auto* search = popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch"));
+    QVERIFY(search);
+    QTRY_VERIFY(search->hasFocus());
+    search->setText(QStringLiteral("Euler's number"));
+
+    if (transientFocus) {
+        // Native focus restoration may briefly visit the previous dock input.
+        dockSearch->setFocus(Qt::ActiveWindowFocusReason);
+        QVERIFY(dockSearch->hasFocus());
+        search->setFocus(Qt::PopupFocusReason);
+    } else {
+        QFocusEvent replay(QEvent::FocusIn, Qt::ActiveWindowFocusReason);
+        QCoreApplication::sendEvent(dockSearch, &replay);
+    }
+    QVERIFY(search->hasFocus());
+    QTest::keyClick(search, static_cast<Qt::Key>(closeKey));
+    QTRY_VERIFY(editor->hasFocus());
+    QVERIFY2(editorHasPrimaryOutline(editor, primary), qPrintable(editor->styleSheet()));
+    // A late passive replay must not deactivate the editor after focus returns.
+    QFocusEvent lateReplay(QEvent::FocusIn, Qt::ActiveWindowFocusReason);
+    QCoreApplication::sendEvent(dockSearch, &lateReplay);
+    QVERIFY(editor->hasFocus());
+    QVERIFY(editorHasPrimaryOutline(editor, primary));
+    QVERIFY(!editorHasPrimaryOutline(editors.last(), primary));
+    QCOMPARE(editor->text(), closeKey == Qt::Key_Escape ? QString() : QStringLiteral("e"));
+    QVERIFY(editors.last()->text().isEmpty());
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QVERIFY(!popup);
 }
