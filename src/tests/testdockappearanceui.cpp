@@ -580,9 +580,29 @@ void TestDockAppearanceUi::dock_tabs_follow_appearance()
         if (!insideTab && bar->isVisible()) {
             const QImage image = window->grab().toImage();
             const QPoint mapped = bar->mapTo(window, unusedSpace);
+            // Native styles can paint the tab base with a different brush
+            // from Window. Compare with a plain Qt tab bar on a system surface.
+            QWidget referenceParent;
+            referenceParent.setPalette(MenuStyle::systemPalette(bar));
+            referenceParent.setAutoFillBackground(true);
+            QTabBar reference(&referenceParent);
+            reference.setAutoFillBackground(true);
+            reference.setFont(bar->font());
+            reference.setShape(bar->shape());
+            reference.setDocumentMode(bar->documentMode());
+            reference.setExpanding(bar->expanding());
+            reference.setUsesScrollButtons(bar->usesScrollButtons());
+            reference.setElideMode(bar->elideMode());
+            reference.setIconSize(bar->iconSize());
+            for (int index = 0; index < bar->count(); ++index)
+                reference.addTab(bar->tabIcon(index), bar->tabText(index));
+            reference.setCurrentIndex(bar->currentIndex());
+            reference.resize(bar->size());
+            const QImage expected = reference.grab().toImage();
             QCOMPARE(image.pixelColor(qRound(mapped.x() * window->devicePixelRatioF()),
                                        qRound(mapped.y() * window->devicePixelRatioF())).rgba(),
-                     MenuStyle::systemPalette(bar).color(QPalette::Window).rgba());
+                     expected.pixelColor(qRound(unusedSpace.x() * expected.devicePixelRatio()),
+                                         qRound(unusedSpace.y() * expected.devicePixelRatio())).rgba());
         }
         for (bool selected : {false, true}) {
             QStyleOptionTab option;

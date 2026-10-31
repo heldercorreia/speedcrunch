@@ -700,7 +700,8 @@ void TestMenusUi::dock_dropdowns_follow_menu_appearance()
             combo->showPopup();
             const auto closePopup = qScopeGuard([combo]() { combo->hidePopup(); });
             QCoreApplication::processEvents();
-            QTRY_VERIFY((combo->showPopup(), view->isVisible()));
+            // Reopening the popup in the wait condition restarts animations.
+            QTRY_VERIFY(view->isVisible());
             QWidget* popup = view->window();
             QCOMPARE(combo->palette(), closedPalette);
             if (mode == 0) {
@@ -928,8 +929,8 @@ void TestMenusUi::editor_context_menu_paints_system_background()
     QVERIFY(context != nullptr);
     QCOMPARE(context->parentWidget(), editor->viewport());
 
-    // Paint a complete item. Windows leaves PE_PanelMenu transparent and
-    // paints the native background as part of CE_MenuItem instead.
+    // Include the widget background before the style's panel and item passes.
+    // Native styles can leave either pass transparent for an unselected item.
     const auto panelImage = [](QMenu* menu) {
         menu->ensurePolished();
         QImage image(180, 120, QImage::Format_ARGB32_Premultiplied);
@@ -941,6 +942,7 @@ void TestMenusUi::editor_context_menu_paints_system_background()
         option.menuItemType = QStyleOptionMenuItem::Normal;
         option.checkType = QStyleOptionMenuItem::NotCheckable;
         QPainter painter(&image);
+        painter.fillRect(image.rect(), option.palette.brush(menu->backgroundRole()));
         menu->style()->drawPrimitive(QStyle::PE_PanelMenu, &option, &painter, menu);
         menu->style()->drawControl(QStyle::CE_MenuItem, &option, &painter, menu);
         painter.end();
@@ -1347,6 +1349,9 @@ void TestMenusUi::system_menus_preserve_platform_roles_and_follow_palette_change
     barPalette.setColor(QPalette::Highlight, QColor("#246044"));
     QApplication::setPalette(menuPalette, "QMenu");
     QApplication::setPalette(barPalette, "QMenuBar");
+    // QApplication lets the native style polish class palettes before use.
+    menuPalette = QApplication::palette("QMenu");
+    barPalette = QApplication::palette("QMenuBar");
     guard.settings->colorScheme = QStringLiteral("Custom");
     guard.settings->customColorSchemeJson = themeJsonString(QJsonObject{
         {QStringLiteral("background"), darkPlatform ? QStringLiteral("#e5eee8") : QStringLiteral("#232136")}
@@ -1422,6 +1427,8 @@ void TestMenusUi::system_menus_preserve_platform_roles_and_follow_palette_change
     barPalette.setColor(QPalette::Highlight, QColor("#246044"));
     QApplication::setPalette(menuPalette, "QMenu");
     QApplication::setPalette(barPalette, "QMenuBar");
+    menuPalette = QApplication::palette("QMenu");
+    barPalette = QApplication::palette("QMenuBar");
     QCoreApplication::processEvents();
     verifyPalette(window.menuBar(), barPalette);
     verifyPalette(editorMenu.data(), menuPalette);
@@ -1492,6 +1499,7 @@ void TestMenusUi::dock_context_menus_follow_menu_theme()
         native.setColor(group, QPalette::HighlightedText, QColor("#ffffff"));
     }
     QApplication::setPalette(native, "QMenu");
+    native = QApplication::palette("QMenu");
     const QColor calculatorBackground(darkSystem ? "#e5eee8" : "#232136");
     guard.settings->colorScheme = QStringLiteral("Custom");
     guard.settings->customColorSchemeJson = themeJsonString(

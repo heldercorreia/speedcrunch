@@ -63,7 +63,11 @@ void TestBitfieldUi::bitfield_selected_bit_keeps_primary_fill_while_hovered()
     QVERIFY(QTest::qWaitForWindowExposed(&bit));
 
     const QPoint sampledFill(4, 4);
-    QTest::mouseMove(&bit, bit.rect().center());
+    // Test the hover response without depending on desktop cursor placement
+    // or activation of this small top-level widget.
+    const QPoint center = bit.rect().center();
+    QEnterEvent enter(center, center, bit.mapToGlobal(center));
+    QApplication::sendEvent(&bit, &enter);
     QTRY_VERIFY(bit.underMouse());
     QCOMPARE(bit.toolTip(), QString());
     QFrame* summaryPopup = bit.findChild<QFrame*>(QStringLiteral("bitSummaryPopup"));
