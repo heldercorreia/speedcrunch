@@ -269,6 +269,19 @@ void TestFocusUi::constants_dock_activation_returns_to_active_editor()
     QTRY_COMPARE(target->text(), QStringLiteral("e"));
     QVERIFY(other->text().isEmpty());
     QCOMPARE(otherEditor->text(), otherText);
+    // The application chooses the pane that receives focus, independently of
+    // when its window becomes active again.
+    QTRY_COMPARE(window.focusWidget(), target);
+    if (floating && QGuiApplication::platformName() == QLatin1String("xcb")
+        && !QTest::qWaitFor([&window]() { return window.isActiveWindow(); }, 1000)) {
+        // A floating dock is a separate X11 window, and activating another
+        // window is up to the window manager. It can decline the request when
+        // no newer user input exists, and synthesized test input provides none.
+        // Activate the window as a user click would; focus must still follow.
+        window.activateWindow();
+        if (!QTest::qWaitFor([&window]() { return window.isActiveWindow(); }))
+            QSKIP("The window manager declined to activate the main window.", );
+    }
     QTRY_VERIFY(target->hasFocus());
     QTest::qWait(300);
     QVERIFY(target->hasFocus());

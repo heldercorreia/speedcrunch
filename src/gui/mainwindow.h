@@ -9,6 +9,7 @@
 #include "gui/keypad.h"
 #include "math/quantity.h"
 
+#include <QDeadlineTimer>
 #include <QHash>
 #include <QJsonArray>
 #include <QJsonObject>
@@ -125,7 +126,7 @@ private slots:
     void showRenameSessionDialog();
     void closeCurrentSession();
     void restoreClosedSessionTab();
-    void restoreWindowGeometry(const QByteArray& geometry, const QByteArray& dockState);
+    void restoreWindowGeometry(const QByteArray& geometry);
     void restoreWindowLayoutState(const QByteArray& state);
     void restoreWindowKeypadLayout(bool visible, int mode);
     void restoreWindowKeypadZoom(int zoomPercent);
@@ -397,6 +398,8 @@ private:
     QStringList configuredOpenDockNames() const;
     void applyOpenDocks(const QStringList& names);
     void restoreDockLayout(const QByteArray& state, const QStringList& names);
+    void keepRestoredDockLayoutUntilFinalSize();
+    void stopKeepingRestoredDockLayout();
     QJsonObject dockColumnOrders() const;
     void restoreDockColumnOrders(const QJsonObject& orders);
     void restoreDockColumnOrder(QDockWidget* dock);
@@ -712,7 +715,9 @@ private:
     QJsonObject m_dockColumnOrders;
     bool m_initializingUi = true;
     bool m_hasRestoredDockLayout = false;
-    QByteArray m_pendingFullscreenDockState;
+    QTimer* m_restoredDockLayoutTimer = nullptr;
+    QDeadlineTimer m_restoredDockLayoutDeadline;
+    QByteArray m_dockLayoutAwaitingFinalGeometry;
     bool m_dockAppearanceRefreshPending = false;
     bool m_dockNativePolishPending = false;
     bool m_dockVisibilityRefreshPending = false;
@@ -772,6 +777,7 @@ private:
     bool m_shutdownStateSaved;
     bool m_restorePreviousSessionOnStartup;
     bool m_savedWindowGeometryRestored = false;
+    int m_windowGeometryRestoreGeneration = 0;
     bool m_sessionRestorePending = false;
     bool m_showAfterSessionRestore = false;
     bool m_startupPrivateTabPending = false;
