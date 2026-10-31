@@ -1960,10 +1960,11 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
         applySurfaceToContainingRow(dockContent, comboBox, dockSurface);
         setDockPaletteIfChanged(comboBox, paletteForThemeSurface(comboBox->palette(), dockTextInput));
         DockComboBoxChevron::PopupTheme popupTheme;
+        const int chevronGap = 4;
         popupTheme.buttonStyle = QStringLiteral(
             "QComboBox {"
             " background-color: %1; color: %2;"
-            " border: 1px solid %3; border-radius: %6px; padding: 4px %4px 4px 8px;"
+            " border: %7px solid %3; border-radius: %6px; padding: %8px %4px %8px %9px;"
             "}"
             "QComboBox::drop-down {"
             " subcontrol-origin: border; subcontrol-position: top right;"
@@ -1975,9 +1976,12 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
                                     .arg(dockTextInput.background.name(),
                                          dockTextInput.foreground.name(),
                                          dockTextInputOutline.background.name())
-                                    .arg(DockComboBoxChevron::IndicatorWidth + 4)
+                                    .arg(DockComboBoxChevron::IndicatorWidth + chevronGap)
                                     .arg(DockComboBoxChevron::IndicatorWidth)
-                                    .arg(UiConfig::ControlCornerRadius);
+                                    .arg(UiConfig::ControlCornerRadius)
+                                    .arg(UiConfig::DockTextInputUnfocusedOutlineStrokeWidth)
+                                    .arg(UiConfig::DockTextInputVerticalPadding)
+                                    .arg(UiConfig::DockTextInputHorizontalPadding);
         if (QAbstractItemView* popupView = comboBox->view()) {
             QPalette popupPalette = paletteForThemeSurface(MenuStyle::systemPalette(popupView), dockComboPopup);
             popupPalette.setColor(QPalette::Highlight, dockHoveredItem.background);
@@ -2018,13 +2022,16 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
         setDockPaletteIfChanged(searchBox, paletteForThemeSurface(searchBox->palette(), dockTextInput));
         if (ThemedLineEdit* themedSearchBox = dynamic_cast<ThemedLineEdit*>(searchBox))
             themedSearchBox->setCursorColor(surfaces.primary.background);
+        // Shrink the padding by the extra focus ring width so the text doesn't shift on focus.
+        const int focusInset = UiConfig::OutlineStrokeWidth
+            - UiConfig::DockTextInputUnfocusedOutlineStrokeWidth;
         setStyleSheetIfChanged(searchBox, QStringLiteral(
             "QLineEdit {"
             " background-color: %1; color: %2;"
-            " border: %5px solid %3; border-radius: %7px; padding: 4px 8px;"
+            " border: %5px solid %3; border-radius: %7px; padding: %8px %9px;"
             "}"
             "QLineEdit:focus {"
-            " border: %6px solid %4;"
+            " border: %6px solid %4; padding: %10px %11px;"
             "}")
                                      .arg(dockTextInput.background.name(),
                                           dockTextInput.foreground.name(),
@@ -2032,7 +2039,11 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
                                           surfaces.primary.background.name())
                                      .arg(UiConfig::DockTextInputUnfocusedOutlineStrokeWidth)
                                      .arg(UiConfig::OutlineStrokeWidth)
-                                     .arg(UiConfig::ControlCornerRadius));
+                                     .arg(UiConfig::ControlCornerRadius)
+                                     .arg(UiConfig::DockTextInputVerticalPadding)
+                                     .arg(UiConfig::DockTextInputHorizontalPadding)
+                                     .arg(UiConfig::DockTextInputVerticalPadding - focusInset)
+                                     .arg(UiConfig::DockTextInputHorizontalPadding - focusInset));
         applyDockSearchClearButtonIcon(searchBox, surfaces);
     }
 

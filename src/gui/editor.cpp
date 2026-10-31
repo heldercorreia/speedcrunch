@@ -5157,13 +5157,16 @@ void ConstantCompletion::applyThemeColors()
     const int focusInset = UiConfig::OutlineStrokeWidth - 1;
     m_search->setStyleSheet(QStringLiteral(
         "QLineEdit { background: %1; color: %2; border: 1px solid %3;"
-        " border-radius: %4px; padding: 4px 6px; selection-background-color: %5; selection-color: %6; }"
+        " border-radius: %4px; padding: %11px %12px; selection-background-color: %5; selection-color: %6; }"
         "QLineEdit:focus { border: %7px solid %8; padding: %9px %10px; }")
         .arg(m_backgroundColor.name(), m_foregroundColor.name(), m_outlineColor.name())
         .arg(UiConfig::ControlCornerRadius)
         .arg(m_selectedRowColor.name(), m_selectedRowForegroundColor.name())
         .arg(UiConfig::OutlineStrokeWidth).arg(m_searchButtonFill.name())
-        .arg(4 - focusInset).arg(6 - focusInset));
+        .arg(UiConfig::ConstantSearchVerticalPadding - focusInset)
+        .arg(UiConfig::ConstantSearchHorizontalPadding - focusInset)
+        .arg(UiConfig::ConstantSearchVerticalPadding)
+        .arg(UiConfig::ConstantSearchHorizontalPadding));
 
     updateSearchClearButton(m_search->hasFocus());
 
