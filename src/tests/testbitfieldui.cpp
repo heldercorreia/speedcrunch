@@ -158,21 +158,37 @@ void TestBitfieldUi::system_bitfield_keeps_on_and_off_bits_distinct()
         const int inset = qRound(2 * bit->devicePixelRatioF());
         return image.pixelColor(inset, inset).rgba();
     };
+    // Hover the bits without depending on desktop cursor placement, as above.
+    // The floating dock is a separate native window, and crossing events for
+    // the real pointer, such as X11 sends while windows are mapped and stacked,
+    // can arrive after a synthesized move and undo its hover.
+    const auto hover = [onBit, offBit](BitWidget* bit) {
+        for (BitWidget* other : {onBit, offBit}) {
+            if (other != bit && other->underMouse()) {
+                QEvent leave(QEvent::Leave);
+                QApplication::sendEvent(other, &leave);
+            }
+        }
+        if (bit) {
+            const QPoint center = bit->rect().center();
+            QEnterEvent enter(center, center, bit->mapToGlobal(center));
+            QApplication::sendEvent(bit, &enter);
+        }
+        return onBit->underMouse() == (bit == onBit) && offBit->underMouse() == (bit == offBit);
+    };
     for (bool useDark : {dark, !dark}) {
         const QPalette palette = systemPalette(useDark);
         QApplication::setPalette(palette);
-        QTest::mouseMove(dock->windowHandle(), QPoint(1, 1));
+        QVERIFY(hover(nullptr));
         QTRY_COMPARE(fill(onBit), palette.color(QPalette::Highlight).rgba());
         QTRY_COMPARE(fill(offBit), palette.color(QPalette::Window).rgba());
         QVERIFY(fill(onBit) != fill(offBit));
         QCOMPARE(onBit->palette().color(QPalette::WindowText).rgba(), palette.color(QPalette::HighlightedText).rgba());
 
-        QTest::mouseMove(dock->windowHandle(), offBit->mapTo(dock, offBit->rect().center()));
-        QTRY_VERIFY(offBit->underMouse());
+        QVERIFY(hover(offBit));
         QTRY_COMPARE(fill(offBit), palette.color(QPalette::Button).rgba());
         QVERIFY(fill(onBit) != fill(offBit));
-        QTest::mouseMove(dock->windowHandle(), onBit->mapTo(dock, onBit->rect().center()));
-        QTRY_VERIFY(onBit->underMouse());
+        QVERIFY(hover(onBit));
         QTRY_COMPARE(fill(onBit), palette.color(QPalette::Highlight).rgba());
 
         QSignalSpy changes(field, &BitFieldWidget::bitsChanged);
