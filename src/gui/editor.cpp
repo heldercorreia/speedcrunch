@@ -601,6 +601,16 @@ static bool isAnyAdditionOperator(const QChar& ch)
            || MathDsl::isAdditionOperatorAlias(ch);
 }
 
+static bool acceptsUnaryMinusAfter(const QChar& ch)
+{
+    // A minus typed right after these binary operators negates the next
+    // operand, e.g. "2 × −3". A second minus after subtraction is still
+    // reserved for the unit conversion shortcut.
+    return isAnyAdditionOperator(ch)
+           || MathDsl::isDivisionOperatorAlias(ch)
+           || isAnyMultiplicationOperator(ch);
+}
+
 static QChar normalizedTypedCharFromEvent(const QKeyEvent* event, const QString& normalizedEventText)
 {
     // Editing keys can carry text (e.g. Backspace's U+0008), but must not
@@ -3002,10 +3012,7 @@ void Editor::inputMethodEvent(QInputMethodEvent* event)
             return;
         }
         const bool prevIsBlockingOperator =
-            isAnyAdditionOperator(prev)
-            || MathDsl::isSubtractionOperatorAlias(prev)
-            || MathDsl::isDivisionOperatorAlias(prev)
-            || isAnyMultiplicationOperator(prev)
+            MathDsl::isSubtractionOperatorAlias(prev)
             || prev == MathDsl::PowOp;
         if (prevIsBlockingOperator) {
             event->accept();
@@ -3730,9 +3737,13 @@ void Editor::keyPressEvent(QKeyEvent* event)
             const bool isUnitConversionTail =
                 MathDsl::isSubtractionOperatorAlias(prev)
                 && typedForRules == MathDsl::GreaterThanOp;
+            const bool isUnaryMinus =
+                acceptsUnaryMinusAfter(prev)
+                && MathDsl::isSubtractionOperatorAlias(typedForRules);
             if (!isGroupStartLetterDigitOrCurrency(typedForRules)
                 && !isRadixSeparator
-                && !isUnitConversionTail) {
+                && !isUnitConversionTail
+                && !isUnaryMinus) {
                 event->accept();
                 return;
             }
@@ -3751,7 +3762,8 @@ void Editor::keyPressEvent(QKeyEvent* event)
                 || typedForRules == MathDsl::ListStart
                 || typedForRules.isLetter()
                 || isCurrencySymbolChar(typedForRules)
-                || (typedForRules.isDigit() && !squareBracketContext)) {
+                || (typedForRules.isDigit() && !squareBracketContext)
+                || (MathDsl::isSubtractionOperatorAlias(typedForRules) && !squareBracketContext)) {
                 // Allowed as-is.
             } else if (isAnyMultiplicationOperator(typedForRules)) {
                 const int prevIndex = previousNonSpaceIndex(text(), cursorPosition);
@@ -4125,9 +4137,6 @@ void Editor::keyPressEvent(QKeyEvent* event)
         {
             const QChar prev = previousNonSpaceChar(text(), textCursor().position());
             if (MathDsl::isSubtractionOperatorAlias(prev)
-                || isAnyAdditionOperator(prev)
-                || MathDsl::isDivisionOperatorAlias(prev)
-                || isAnyMultiplicationOperator(prev)
                 || prev == MathDsl::PowOp) {
                 event->accept();
                 return;

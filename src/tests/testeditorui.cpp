@@ -91,6 +91,8 @@ private slots:
     void preserves_comment_text_during_input();
     void normalizes_only_expression_text_when_replacing_comment_selection();
     void blocks_consecutive_plus();
+    void allows_unary_minus_after_binary_operators_data();
+    void allows_unary_minus_after_binary_operators();
     void respects_keyboard_layout_for_equals_and_plus_data();
     void respects_keyboard_layout_for_equals_and_plus();
     void wraps_left_shift_operator_and_blocks_immediate_duplicate_less_than();
@@ -407,6 +409,53 @@ void TestEditorUi::blocks_consecutive_plus()
 
     QTest::keyClick(&editor, Qt::Key_Plus, Qt::NoModifier);
     QCOMPARE(editor.text(), afterFirstPlus);
+}
+
+void TestEditorUi::allows_unary_minus_after_binary_operators_data()
+{
+    QTest::addColumn<QString>("keys");
+    QTest::addColumn<QString>("reference");
+    QTest::addColumn<QString>("text");
+
+    QTest::newRow("addition") << QStringLiteral("2+-3") << QStringLiteral("2+(-3)")
+        << QStringLiteral("2 + \u22123");
+    QTest::newRow("multiplication") << QStringLiteral("2*-3") << QStringLiteral("2*(-3)")
+        << QStringLiteral("2 \u00D7 \u22123");
+    QTest::newRow("division") << QStringLiteral("2/-4") << QStringLiteral("2/(-4)")
+        << QStringLiteral("2 / \u22124");
+}
+
+void TestEditorUi::allows_unary_minus_after_binary_operators()
+{
+    // State: empty editor.
+    // Action: type a binary operator followed by a minus sign.
+    // Expected: minus is kept as a sign, a further minus is ignored.
+    QFETCH(QString, keys);
+    QFETCH(QString, reference);
+    QFETCH(QString, text);
+    Settings* settings = Settings::instance();
+    settings->automaticInputAdjustments = true;
+    Session session;
+    Editor editor;
+    editor.setSession(&session);
+    editor.setAutoCompletionEnabled(false);
+    editor.setAutoCalcEnabled(false);
+
+    QTest::keyClicks(&editor, keys.left(3));
+    const QString afterMinus = editor.text();
+    QCOMPARE(afterMinus.count(MathDsl::SubOp), 1);
+    QTest::keyClick(&editor, Qt::Key_Minus, Qt::NoModifier);
+    QCOMPARE(editor.text(), afterMinus);
+    QTest::keyClicks(&editor, keys.mid(3));
+    QCOMPARE(editor.text(), text);
+
+    session.evaluator()->setExpression(reference);
+    const QString expected =
+        DMath::format(session.evaluator()->evalNoAssign(), Quantity::Format::Fixed());
+    session.evaluator()->setExpression(editor.text());
+    const Quantity result = session.evaluator()->evalNoAssign();
+    QVERIFY2(session.evaluator()->error().isEmpty(), qPrintable(session.evaluator()->error()));
+    QCOMPARE(DMath::format(result, Quantity::Format::Fixed()), expected);
 }
 
 void TestEditorUi::respects_keyboard_layout_for_equals_and_plus_data()

@@ -758,6 +758,17 @@ void test_unary()
     CHECK_EVAL("2*−1", "-2");
     CHECK_EVAL("2e−1", "0.2");
 
+    // Unary minus right after a binary operator, as typed in the editor.
+    CHECK_EVAL("2+-3", "-1");
+    CHECK_EVAL("2 + −3", "-1");
+    CHECK_EVAL("2*-3", "-6");
+    CHECK_EVAL("2 × −3", "-6");
+    CHECK_EVAL("2 · −3", "-6");
+    CHECK_EVAL("2/-4", "-0.5");
+    CHECK_EVAL("2 / −4", "-0.5");
+    CHECK_EVAL("2 ÷ −4", "-0.5");
+    CHECK_EVAL("2 + −3 × −4", "14");
+
     CHECK_INTERPRETED("−pi", "-pi");
     CHECK_INTERPRETED("--pi", "pi");
     CHECK_INTERPRETED("---pi", "-pi");
