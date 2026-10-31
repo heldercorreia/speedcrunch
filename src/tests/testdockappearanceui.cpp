@@ -730,8 +730,8 @@ void TestDockAppearanceUi::dock_headers_follow_appearance()
             QCOMPARE(button->iconSize(), referenceButton->iconSize());
             QCOMPARE(button->cursor().shape(), referenceButton->cursor().shape());
             const auto standard = name == names.first() ? QStyle::SP_TitleBarCloseButton : QStyle::SP_TitleBarNormalButton;
-            const QIcon native = QApplication::style()->standardIcon(standard, &option, dock);
-            const QList<QSize> sizes = native.availableSizes();
+            const QIcon standardIcon = QApplication::style()->standardIcon(standard, &option, dock);
+            const QList<QSize> sizes = standardIcon.availableSizes();
             QCOMPARE(button->icon().availableSizes(), sizes);
             const QSize baseSize = sizes.isEmpty() ? button->iconSize()
                 : *std::min_element(sizes.cbegin(), sizes.cend(), [](QSize a, QSize b) {
@@ -741,7 +741,7 @@ void TestDockAppearanceUi::dock_headers_follow_appearance()
             // for arbitrary downscaled sizes can depend on earlier DPR requests.
             QVERIFY(!button->icon().pixmap(button->iconSize(), button->devicePixelRatioF()).isNull());
             const QImage icon = button->icon().pixmap(baseSize, 1.0).toImage();
-            const QImage nativeIcon = native.pixmap(baseSize, 1.0).toImage();
+            const QImage nativeIcon = standardIcon.pixmap(baseSize, 1.0).toImage();
             QCOMPARE(icon, nativeIcon);
             const QPoint center = button->rect().center();
             QEnterEvent enter(center, button->mapTo(button->window(), center), button->mapToGlobal(center));
