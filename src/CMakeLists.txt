@@ -422,6 +422,23 @@ if(BUILD_TESTING)
     endforeach()
 
     if(WIN32)
+        # Windows 10 defaults to the Vista style and Windows 11 to its own. The
+        # styles give dark mode different palettes, so test both on any Windows.
+        add_executable(testwindowframeui tests/testwindowframeui.cpp)
+        target_link_libraries(testwindowframeui PRIVATE mainwindowuitest dwmapi)
+        foreach(style IN ITEMS windowsvista windows11)
+            add_test(NAME testwindowframeui-${style} COMMAND testwindowframeui)
+            add_test(NAME testsettingsui-colormode-${style} COMMAND testsettingsui
+                system_color_mode_actions_update_windows_and_preserve_theme
+                system_color_mode_updates_native_palettes
+                system_color_mode_refreshes_controls_without_platform_notifications)
+            set_tests_properties(testwindowframeui-${style} testsettingsui-colormode-${style}
+                PROPERTIES
+                    LABELS "ui"
+                    RUN_SERIAL TRUE
+                    ENVIRONMENT "QT_QPA_PLATFORM=windows;QT_STYLE_OVERRIDE=${style}")
+        endforeach()
+
         get_property(speedcrunch_tests DIRECTORY PROPERTY TESTS)
         if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.22")
             set_property(TEST ${speedcrunch_tests} APPEND PROPERTY ENVIRONMENT_MODIFICATION

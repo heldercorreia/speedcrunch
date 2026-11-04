@@ -115,6 +115,14 @@ Command Prompt for VS 2022**, configure a developer Debug build and run the test
     ctest --test-dir build-dev -C Debug -LE "^ui$" --parallel 4 --output-on-failure
     ctest --test-dir build-dev -C Debug -L "^ui$" --parallel 1 --output-on-failure
 
+The UI tests also run the title bar and color mode tests once with each native
+style, `windowsvista` and `windows11`, using the native Windows platform plugin
+whatever `QT_QPA_PLATFORM` is set to. Windows 10 defaults to the first style and
+Windows 11 to the second, so these runs cover both defaults on either system.
+They do not replace testing on that system. To run only these tests:
+
+    ctest --test-dir build-dev -C Debug -R "windowsvista|windows11" --output-on-failure
+
 Rebuild after pulling test or application changes. To rerun only the suites that
 failed in the previous CTest run, use:
 

@@ -18,6 +18,7 @@ private slots:
     void startup_font_preparation_finishes_before_teardown();
     void first_result_display_records_constructor_stages();
     void maximized_geometry_restore_records_native_window_creation();
+    void native_window_is_created_with_theme_palette();
     void repeated_highlighting_preserves_styles_without_repolishing_data();
     void repeated_highlighting_preserves_styles_without_repolishing();
     void keypad_theme_reapply_keeps_unchanged_button_styles();
@@ -99,6 +100,50 @@ void TestEditorAppearanceUi::startup_font_preparation_finishes_before_teardown()
     StartupDiagnostics::firstPaintFinished();
     StartupDiagnostics::finishWhenIdle();
     QVERIFY(StartupDiagnostics::snapshot().complete);
+}
+
+void TestEditorAppearanceUi::native_window_is_created_with_theme_palette()
+{
+    // Qt reads the window palette once, when it creates the native window, to
+    // choose a dark or light Windows title bar.
+    class CreationPaletteRecorder : public QObject {
+    public:
+        QPalette palette;
+        bool recorded = false;
+
+    protected:
+        bool eventFilter(QObject* watched, QEvent* event) override
+        {
+            if (!recorded && event->type() == QEvent::WinIdChange) {
+                if (const auto* window = qobject_cast<MainWindow*>(watched)) {
+                    palette = window->palette();
+                    recorded = true;
+                }
+            }
+            return false;
+        }
+    };
+    const auto isDark = [](const QPalette& palette) {
+        return palette.color(QPalette::WindowText).lightness()
+            > palette.color(QPalette::Window).lightness();
+    };
+
+    MainWindowStateGuard guard;
+    // Use a theme that disagrees with the application palette.
+    const bool applicationIsDark = isDark(QApplication::palette());
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(QJsonObject {
+        {QStringLiteral("background"),
+         applicationIsDark ? QStringLiteral("#f0e8d8") : QStringLiteral("#1f3229")}});
+
+    CreationPaletteRecorder recorder;
+    qApp->installEventFilter(&recorder);
+    MainWindow window(false);
+    window.winId();
+    qApp->removeEventFilter(&recorder);
+
+    QVERIFY(recorder.recorded);
+    QCOMPARE(isDark(recorder.palette), !applicationIsDark);
 }
 
 void TestEditorAppearanceUi::maximized_geometry_restore_records_native_window_creation()

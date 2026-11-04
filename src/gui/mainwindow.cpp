@@ -9699,18 +9699,21 @@ MainWindow::MainWindow(bool restorePreviousSession)
     connect(qApp, &QApplication::focusChanged, this, &MainWindow::handleApplicationFocusChanged);
     qApp->installEventFilter(this);
 
-    if (this == primaryMainWindow() && canCreateNativeWindowDuringFontLoading()) {
-        // The first text widget below waits for the font list. Creating the
-        // hidden native window first lets that work overlap the font loading.
-        // The window flags and attributes that affect creation are set above.
-        timing.next("Create native window during font loading");
-        create();
-    }
-
     timing.next("Initialize window theme background");
     // Children created below inherit the window palette without a later pass.
     // Final theme application still refreshes palettes after settings restore.
     applyWindowThemeBackground(this, generatedSurfaceColors(m_settings).window);
+
+    if (this == primaryMainWindow() && canCreateNativeWindowDuringFontLoading()) {
+        // The first text widget below waits for the font list. Creating the
+        // hidden native window first lets that work overlap the font loading.
+        // The window flags and attributes that affect creation are set above.
+        // Qt chooses the Windows title bar color from the window palette here,
+        // so the theme palette must already be set.
+        timing.next("Create native window during font loading");
+        create();
+    }
+
     timing.next("Create main UI (total)");
     createUi();
     timing.next("Apply startup settings (total)");
