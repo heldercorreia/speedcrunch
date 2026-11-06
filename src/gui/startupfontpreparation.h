@@ -6,8 +6,11 @@
 
 #include "core/startupdiagnostics.h"
 
+#include <QChar>
 #include <QFontDatabase>
+#include <QStringList>
 #include <QThread>
+#include <QtGlobal>
 #include <memory>
 
 class StartupFontPreparation {
@@ -18,6 +21,7 @@ public:
         // Create it here, so the worker below cannot race the UI thread for it.
         // This call does not load the font list.
         QFontDatabase::standardSizes();
+        useSystemFontForIndicScripts();
 
         // The first text widget otherwise loads the font database on the UI
         // thread. QFontDatabase is thread-safe, so overlap that work with window
@@ -47,6 +51,21 @@ public:
     }
 
 private:
+    // Without this, Qt can pick a font like Adobe Blank for these scripts,
+    // and the text is invisible.
+    static void useSystemFontForIndicScripts()
+    {
+#if defined(Q_OS_WIN) && QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+        const QStringList families{QStringLiteral("Nirmala UI")};
+        for (const QChar::Script script : {QChar::Script_Bengali, QChar::Script_Devanagari,
+                 QChar::Script_Gujarati, QChar::Script_Gurmukhi, QChar::Script_Kannada,
+                 QChar::Script_Malayalam, QChar::Script_Oriya, QChar::Script_Sinhala,
+                 QChar::Script_Tamil, QChar::Script_Telugu}) {
+            QFontDatabase::setApplicationFallbackFontFamilies(script, families);
+        }
+#endif
+    }
+
     std::unique_ptr<QThread> m_thread;
 };
 
