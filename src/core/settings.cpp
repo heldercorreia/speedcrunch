@@ -109,6 +109,14 @@ bool deserializeCustomKeypad(const QJsonObject& json, Settings::CustomKeypad* ke
         button.label = buttonJson.value(QStringLiteral("label")).toString();
         button.text = buttonJson.value(QStringLiteral("text")).toString();
         button.action = static_cast<Settings::CustomKeypadButtonAction>(action);
+        // Older versions used symbols that common fonts lack on Windows.
+        if (button.action == Settings::CustomKeypadActionBackspace
+                && button.label == QStringLiteral("⌫")) {
+            button.label = QStringLiteral("DEL");
+        } else if (button.action == Settings::CustomKeypadActionClearExpression
+                && button.label == QStringLiteral("⌧")) {
+            button.label = QStringLiteral("C");
+        }
         parsed.buttons.append(button);
     }
 
@@ -283,12 +291,12 @@ Settings::CustomKeypad Settings::defaultCustomKeypad()
         {0, 1, QStringLiteral("8"), QStringLiteral("8"), Settings::CustomKeypadActionInsertText},
         {0, 2, QStringLiteral("9"), QStringLiteral("9"), Settings::CustomKeypadActionInsertText},
         {0, 3, QStringLiteral("÷"), QStringLiteral("÷"), Settings::CustomKeypadActionInsertText},
-        {0, 4, QStringLiteral("⌧"), QString(), Settings::CustomKeypadActionClearExpression},
+        {0, 4, QStringLiteral("C"), QString(), Settings::CustomKeypadActionClearExpression},
         {1, 0, QStringLiteral("4"), QStringLiteral("4"), Settings::CustomKeypadActionInsertText},
         {1, 1, QStringLiteral("5"), QStringLiteral("5"), Settings::CustomKeypadActionInsertText},
         {1, 2, QStringLiteral("6"), QStringLiteral("6"), Settings::CustomKeypadActionInsertText},
         {1, 3, QString(MathDsl::MulCrossOp), QString(MathDsl::MulCrossOp), Settings::CustomKeypadActionInsertText},
-        {1, 4, QStringLiteral("⌫"), QString(), Settings::CustomKeypadActionBackspace},
+        {1, 4, QStringLiteral("DEL"), QString(), Settings::CustomKeypadActionBackspace},
         {2, 0, QStringLiteral("1"), QStringLiteral("1"), Settings::CustomKeypadActionInsertText},
         {2, 1, QStringLiteral("2"), QStringLiteral("2"), Settings::CustomKeypadActionInsertText},
         {2, 2, QStringLiteral("3"), QStringLiteral("3"), Settings::CustomKeypadActionInsertText},

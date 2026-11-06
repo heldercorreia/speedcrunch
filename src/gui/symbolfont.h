@@ -20,8 +20,6 @@ inline bool isNeededFor(const QString& text)
         switch (c.unicode()) {
         case 0x221B: // ∛
         case 0x2220: // ∠
-        case 0x2327: // ⌧
-        case 0x232B: // ⌫
             return true;
         default:
             break;

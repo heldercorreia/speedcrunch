@@ -54,14 +54,14 @@ const Keypad::KeyDescription Keypad::keyDescriptions[] = {
     {QString::fromLatin1("ans"), KeyAns, false, 1, 9},
     {QString::fromLatin1("arcsin"), KeyAsin, false, 2, 5},
     {QString::fromLatin1("arctan"), KeyAtan, false, 3, 5},
-    {QString::fromUtf8("⌧"), KeyClear, false, 0, 8},
+    {QString::fromLatin1("C"), KeyClear, false, 0, 8},
     {QString::fromLatin1("cos"), KeyCos, false, 2, 6},
     {QString::fromLatin1("E"), KeyEE, false, 0, 6},
     {QString::fromLatin1("exp"), KeyExp, false, 0, 7},
     {QString::fromLatin1("!"), KeyFactorial, false, 3, 9},
     {QString::fromLatin1("ln"), KeyLn, false, 1, 6},
     {QString::fromLatin1("("), KeyLeftPar, false, 2, 8},
-    {QString::fromUtf8("⌫"), KeyBackspace, false, 0, 9},
+    {QString::fromLatin1("DEL"), KeyBackspace, false, 0, 9},
     {QString::fromLatin1("%"), KeyPercent, false, 3, 8},
     {QString::fromUtf8("xʸ"), KeyRaise, false, 1, 4},
     {QString::fromLatin1(")"), KeyRightPar, false, 2, 9},
@@ -196,7 +196,7 @@ QString customButtonLabel(Keypad::Button button, QChar radixCharacter)
     case Keypad::KeyTimes: return QString(MathDsl::MulCrossOp);
     case Keypad::KeyDivide: return QString::fromUtf8("÷");
     case Keypad::KeyRadixChar: return QString(radixCharacter);
-    case Keypad::KeyClear: return QString::fromUtf8("⌧");
+    case Keypad::KeyClear: return QString::fromLatin1("C");
     case Keypad::KeyEE: return QString::fromLatin1("E");
     case Keypad::KeyLeftPar: return QString::fromLatin1("(");
     case Keypad::KeyRightPar: return QString::fromLatin1(")");
@@ -205,7 +205,7 @@ QString customButtonLabel(Keypad::Button button, QChar radixCharacter)
     case Keypad::KeyRoot: return QString::fromUtf8("ⁿ√");
     case Keypad::KeyLog10: return QString::fromLatin1("log10");
     case Keypad::KeyMod: return QString::fromLatin1("mod");
-    case Keypad::KeyBackspace: return QString::fromUtf8("⌫");
+    case Keypad::KeyBackspace: return QString::fromLatin1("DEL");
     case Keypad::KeyPercent: return QString::fromLatin1("%");
     case Keypad::KeyFactorial: return QString::fromLatin1("!");
     case Keypad::KeyPi: return QString::fromUtf8("π");
@@ -773,8 +773,7 @@ void Keypad::createButtons()
         key->setMouseTracking(true);
         key->setAttribute(Qt::WA_Hover, true);
         key->setStyleSheet(keypadButtonStyleSheet(palette()));
-        key->setFont(SymbolFont::forText(description->boldFont ? emphasizedBoldFont : boldFont,
-                                         description->label));
+        key->setFont(description->boldFont ? emphasizedBoldFont : boldFont);
         key->installEventFilter(this);
         const QPair<QPushButton*, const KeyDescription*> hashValue(key, description);
         keys.insert(description->button, hashValue);

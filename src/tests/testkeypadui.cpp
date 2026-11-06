@@ -18,6 +18,7 @@ private slots:
     void custom_keypad_action_stays_checked_after_dialog_accepts();
     void keypad_power_button_uses_exponent_label_but_inserts_caret();
     void keypad_symbol_labels_use_font_with_their_glyphs();
+    void custom_keypad_replaces_old_symbol_labels_on_load();
     void keypad_nth_root_button_inserts_root_data();
     void keypad_nth_root_button_inserts_root();
     void keypad_zoom_round_trip_restores_button_sizes_data();
@@ -358,29 +359,48 @@ void TestKeypadUi::keypad_symbol_labels_use_font_with_their_glyphs()
 {
     // A missing glyph makes Qt load every installed font family on Windows,
     // which dominated startup on systems with many fonts.
-    const auto check = [](Keypad& keypad) {
-        QPushButton* reference = keypadButtonWithText(&keypad, QString::fromUtf8("π"));
-        QVERIFY(reference != nullptr);
-        for (const QString& label : {QString::fromUtf8("⌧"), QString::fromUtf8("⌫")}) {
-            QPushButton* button = keypadButtonWithText(&keypad, label);
-            QVERIFY2(button != nullptr, qPrintable(label));
-            QCOMPARE(button->font().bold(), reference->font().bold());
-            QCOMPARE(button->font().pointSizeF(), reference->font().pointSizeF());
+    const QString label = QString::fromUtf8("∛");
+    auto buttons = Keypad::presetCustomButtons(Keypad::LayoutModeScientificWide, QLatin1Char('.'));
+    QVERIFY(!buttons.isEmpty());
+    buttons.first().label = label;
+    Keypad keypad(buttons);
+    QPushButton* reference = keypadButtonWithText(&keypad, QString::fromUtf8("π"));
+    QPushButton* button = keypadButtonWithText(&keypad, label);
+    QVERIFY(reference != nullptr);
+    QVERIFY(button != nullptr);
+    QCOMPARE(button->font().bold(), reference->font().bold());
+    QCOMPARE(button->font().pointSizeF(), reference->font().pointSizeF());
 #ifdef Q_OS_WIN
-            QCOMPARE(button->font().family(), QStringLiteral("Segoe UI Symbol"));
+    QCOMPARE(button->font().family(), QStringLiteral("Segoe UI Symbol"));
 #else
-            QCOMPARE(button->font().family(), reference->font().family());
+    QCOMPARE(button->font().family(), reference->font().family());
 #endif
-        }
-    };
+}
 
-    Keypad preset(Keypad::LayoutModeScientificWide);
-    check(preset);
-    if (QTest::currentTestFailed())
-        return;
+void TestKeypadUi::custom_keypad_replaces_old_symbol_labels_on_load()
+{
+    const auto resetSettings = qScopeGuard([]() { UiTestFixture::resetSettings(); });
+    UiTestFixture::resetSettings();
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    const QString backspace = QString::fromUtf8("⌫");
+    const QString clear = QString::fromUtf8("⌧");
+    settings->customKeypad.rows = 1;
+    settings->customKeypad.columns = 4;
+    settings->customKeypad.buttons = {
+        {0, 0, backspace, QString(), Settings::CustomKeypadActionBackspace},
+        {0, 1, clear, QString(), Settings::CustomKeypadActionClearExpression},
+        {0, 2, QStringLiteral("Back"), QString(), Settings::CustomKeypadActionBackspace},
+        {0, 3, backspace, backspace, Settings::CustomKeypadActionInsertText}};
+    settings->save();
+    settings->load();
 
-    Keypad custom(Keypad::presetCustomButtons(Keypad::LayoutModeScientificWide, QLatin1Char('.')));
-    check(custom);
+    const auto& buttons = settings->customKeypad.buttons;
+    QCOMPARE(buttons.size(), 4);
+    QCOMPARE(buttons.at(0).label, QStringLiteral("DEL"));
+    QCOMPARE(buttons.at(1).label, QStringLiteral("C"));
+    QCOMPARE(buttons.at(2).label, QStringLiteral("Back"));
+    QCOMPARE(buttons.at(3).label, backspace);
 }
 
 void TestKeypadUi::keypad_nth_root_button_inserts_root_data()
@@ -467,13 +487,13 @@ void TestKeypadUi::keypad_nth_root_button_inserts_root()
     QVERIFY(keypad != nullptr);
     const QStringList expectedRows = wide
         ? QStringList{
-            QString::fromUtf8("7 8 9 ÷ √ x² E exp ⌧ ⌫"),
+            QString::fromUtf8("7 8 9 ÷ √ x² E exp C DEL"),
             QString::fromUtf8("4 5 6 × xʸ ⁿ√ ln log10 π ans"),
             QString::fromUtf8("1 2 3 − sin arcsin cos arccos ( )"),
             QString::fromUtf8("0 . = + tan arctan mod ; % !")}
         : QStringList{
-            QString::fromUtf8("7 8 9 ÷ ⌧"),
-            QString::fromUtf8("4 5 6 × ⌫"),
+            QString::fromUtf8("7 8 9 ÷ C"),
+            QString::fromUtf8("4 5 6 × DEL"),
             QString::fromUtf8("1 2 3 − ("),
             QStringLiteral("0 . = + )"),
             QString::fromUtf8("√ x² E exp π"),
@@ -590,7 +610,7 @@ void TestKeypadUi::keypad_input_stays_in_own_window()
         settings->customKeypad.buttons.append(
             { 0, 0, QStringLiteral("7"), QStringLiteral("7"), Settings::CustomKeypadActionInsertText });
         settings->customKeypad.buttons.append(
-            { 0, 1, QString::fromUtf8("⌫"), QString(), Settings::CustomKeypadActionBackspace });
+            { 0, 1, QStringLiteral("DEL"), QString(), Settings::CustomKeypadActionBackspace });
         settings->customKeypad.buttons.append(
             { 0, 2, QStringLiteral("="), QString(), Settings::CustomKeypadActionEvaluateExpression });
     }
@@ -613,7 +633,7 @@ void TestKeypadUi::keypad_input_stays_in_own_window()
     Keypad* secondKeypad = secondWindow.findChild<Keypad*>();
     QPushButton* firstDigit = keypadButtonWithText(firstKeypad, QStringLiteral("7"));
     QPushButton* secondDigit = keypadButtonWithText(secondKeypad, QStringLiteral("7"));
-    QPushButton* firstBackspace = keypadButtonWithText(firstKeypad, QString::fromUtf8("⌫"));
+    QPushButton* firstBackspace = keypadButtonWithText(firstKeypad, QStringLiteral("DEL"));
     QPushButton* firstEquals = keypadButtonWithText(firstKeypad, QStringLiteral("="));
     QVERIFY(firstDigit != nullptr);
     QVERIFY(secondDigit != nullptr);

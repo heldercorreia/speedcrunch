@@ -77,6 +77,10 @@ column order between launches, including for panels that are hidden.
     * ``Custom...``
     * ``Disable`` (shown as ``Disabled`` when selected)
 
+    ``DEL`` deletes the character before the cursor. Both scientific layouts
+    also include ``C``, which clears the expression. Custom layouts saved with
+    the older ``⌫`` and ``⌧`` labels switch to these labels automatically.
+
     Both scientific layouts include ``ln`` for the natural logarithm and
     ``log10`` for the common (base-10) logarithm. These buttons insert
     ``ln(`` and ``log10(``, respectively. Copying a scientific preset into a
