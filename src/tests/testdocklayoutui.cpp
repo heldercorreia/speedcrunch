@@ -5,6 +5,51 @@
 
 using namespace MainWindowTestHelpers;
 
+#ifdef Q_OS_WIN
+namespace {
+
+// Pads list rows but not tree rows, as the Windows 11 style does.
+class ListRowPaddingTestStyle : public QProxyStyle {
+public:
+    ListRowPaddingTestStyle()
+        : QProxyStyle(QStyleFactory::create(QStringLiteral("Fusion")))
+    {}
+
+    QSize sizeFromContents(ContentsType type, const QStyleOption* option, const QSize& size,
+                           const QWidget* widget) const override
+    {
+        QSize result = QProxyStyle::sizeFromContents(type, option, size, widget);
+        if (type == CT_ItemViewItem && qobject_cast<const QListView*>(widget))
+            result += QSize(6, 12);
+        return result;
+    }
+
+    QRect subElementRect(SubElement element, const QStyleOption* option,
+                         const QWidget* widget = nullptr) const override
+    {
+        QRect result = QProxyStyle::subElementRect(element, option, widget);
+        if (element == SE_ItemViewItemText && qobject_cast<const QListView*>(widget))
+            result.translate(6, 0);
+        return result;
+    }
+};
+
+int firstPaintedColumn(QAbstractItemView* view)
+{
+    const QImage image = view->viewport()->grab().toImage();
+    const QRgb background = image.pixel(image.width() - 1, image.height() - 1);
+    for (int x = 0; x < image.width(); ++x) {
+        for (int y = 0; y < image.height(); ++y) {
+            if (image.pixel(x, y) != background)
+                return x;
+        }
+    }
+    return -1;
+}
+
+} // namespace
+#endif
+
 class TestDockLayoutUi : public QObject {
     Q_OBJECT
 
@@ -32,6 +77,10 @@ private slots:
     void themed_dock_controls_have_equal_visible_gaps();
     void themed_dock_lists_use_compact_spacing_data();
     void themed_dock_lists_use_compact_spacing();
+#ifdef Q_OS_WIN
+    void dock_list_rows_match_tree_rows_data();
+    void dock_list_rows_match_tree_rows();
+#endif
     void dock_first_control_matches_shared_vertical_spacing_data();
     void dock_first_control_matches_shared_vertical_spacing();
     void formula_book_text_scales_with_zoom_data();
@@ -1034,6 +1083,59 @@ void TestDockLayoutUi::themed_dock_lists_use_compact_spacing()
             QCOMPARE(tree->header()->height(), nativeHeaderHeight);
     }
 }
+
+#ifdef Q_OS_WIN
+void TestDockLayoutUi::dock_list_rows_match_tree_rows_data()
+{
+    QTest::addColumn<bool>("windows11");
+    QTest::addColumn<bool>("styleSheet");
+    QTest::newRow("padded-style") << false << false;
+    QTest::newRow("padded-style-with-style-sheet") << false << true;
+    if (QStyleFactory::keys().contains(QStringLiteral("windows11"), Qt::CaseInsensitive)) {
+        QTest::newRow("windows11") << true << false;
+        QTest::newRow("windows11-with-style-sheet") << true << true;
+    }
+}
+
+void TestDockLayoutUi::dock_list_rows_match_tree_rows()
+{
+    QFETCH(bool, windows11);
+    QFETCH(bool, styleSheet);
+    QScopedPointer<QStyle> style(windows11 ? QStyleFactory::create(QStringLiteral("windows11"))
+                                           : new ListRowPaddingTestStyle);
+    QVERIFY(style);
+    const QString sheet = styleSheet ? QStringLiteral("QAbstractItemView { border: 0; }") : QString();
+
+    QTreeWidget tree;
+    tree.setStyle(style.data());
+    tree.setRootIsDecorated(false);
+    tree.header()->hide();
+    tree.setStyleSheet(sheet);
+    DockListStyle::apply(&tree);
+    QTreeWidgetItem* treeItem = new QTreeWidgetItem(&tree, QStringList{QStringLiteral("Sample")});
+
+    QListWidget list;
+    list.setStyle(style.data());
+    list.setStyleSheet(sheet);
+    DockListStyle::apply(&list);
+    list.addItem(QStringLiteral("Sample"));
+
+    tree.resize(200, 100);
+    list.resize(200, 100);
+    tree.show();
+    list.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&tree));
+    QVERIFY(QTest::qWaitForWindowExposed(&list));
+    tree.doItemsLayout();
+    list.doItemsLayout();
+
+    const QModelIndex listIndex = list.model()->index(0, 0);
+    QCOMPARE(list.visualRect(listIndex).height(), tree.visualItemRect(treeItem).height());
+    const int textStart = firstPaintedColumn(&tree);
+    QVERIFY(textStart >= 0);
+    QCOMPARE(firstPaintedColumn(&list), textStart);
+}
+#endif
 
 void TestDockLayoutUi::themed_dock_controls_have_equal_visible_gaps_data()
 {

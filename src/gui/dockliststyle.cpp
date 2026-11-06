@@ -13,6 +13,7 @@
 #include <QHeaderView>
 #include <QHoverEvent>
 #include <QLabel>
+#include <QListView>
 #include <QModelIndex>
 #include <QMouseEvent>
 #include <QObject>
@@ -156,7 +157,7 @@ public:
                const QModelIndex& index) const override
     {
         if (Settings::instance()->dockAppearance == Settings::DockAppearanceSystem) {
-            QStyledItemDelegate::paint(painter, option, index);
+            paintItem(painter, option, index);
             return;
         }
         QStyleOptionViewItem opt(option);
@@ -180,10 +181,47 @@ public:
             opt.backgroundBrush = Qt::NoBrush;
             opt.state &= ~QStyle::State_MouseOver;
         }
-        QStyledItemDelegate::paint(painter, opt, index);
+        paintItem(painter, opt, index);
+    }
+
+    QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override
+    {
+        if (!usesTreeRowLayout())
+            return QStyledItemDelegate::sizeHint(option, index);
+
+        QStyleOptionViewItem opt(option);
+        initStyleOption(&opt, index);
+        opt.widget = nullptr;
+        return m_view->style()->sizeFromContents(QStyle::CT_ItemViewItem, &opt, QSize(), nullptr);
     }
 
 private:
+    // The Windows 11 style makes list rows taller and moves their text right,
+    // but only when it is given the list view. Leaving the view out makes list
+    // rows use the same layout as the tree rows in other docks.
+    bool usesTreeRowLayout() const
+    {
+#ifdef Q_OS_WIN
+        return qobject_cast<const QListView*>(m_view) != nullptr;
+#else
+        return false;
+#endif
+    }
+
+    void paintItem(QPainter* painter, const QStyleOptionViewItem& option,
+                   const QModelIndex& index) const
+    {
+        if (!usesTreeRowLayout()) {
+            QStyledItemDelegate::paint(painter, option, index);
+            return;
+        }
+
+        QStyleOptionViewItem opt(option);
+        initStyleOption(&opt, index);
+        opt.widget = nullptr;
+        m_view->style()->drawControl(QStyle::CE_ItemViewItem, &opt, painter, nullptr);
+    }
+
     QAbstractItemView* m_view;
 };
 
