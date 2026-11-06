@@ -208,6 +208,10 @@ set(qtwin32_Qt6Gui_PLUGINS platforms/qwindows)
 set(qtwin32_Qt6Gui_DEPS qtwin32_Qt6Core)
 # qtwin32_Qt6Widgets - libraries and plugins for a basic Widgets application
 set(qtwin32_Qt6Widgets_LIBS Qt6Widgets)
+# Without a style plugin, Qt falls back to the plain Windows style. Older Qt has no modern style plugin.
+if(EXISTS ${qtwin32_QT_PLUGINDIR}/styles/qmodernwindowsstyle${qtwin32_DLL_SUFFIX_RELEASE})
+  set(qtwin32_Qt6Widgets_PLUGINS styles/qmodernwindowsstyle)
+endif()
 set(qtwin32_Qt6Widgets_DEPS qtwin32_Qt6Gui)
 # qtwin32_Qt6Sql - basic QtSql libraries
 set(qtwin32_Qt6Sql_LIBS Qt6Sql)
