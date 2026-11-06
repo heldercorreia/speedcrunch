@@ -62,6 +62,16 @@ QString bitFieldButtonStyleSheet(const QColor& background,
              pressedForeground.name());
 }
 
+// Windows 11 light mode uses white for both roles, which would hide the hover.
+QColor systemBitHoverBackground(const QPalette& palette)
+{
+    const QColor base = palette.color(QPalette::Base);
+    const QColor button = palette.color(QPalette::Button);
+    if (button.rgb() != base.rgb())
+        return button;
+    return base.lightness() < 128 ? base.lighter(135) : base.darker(108);
+}
+
 } // namespace
 
 BitWidget::BitWidget(int bitPosition, QWidget* parent)
@@ -96,13 +106,13 @@ void BitWidget::updateStyle(StyleUpdateReason reason)
     const QPalette palette = m_themeBackground.isValid() ? this->palette() : MenuStyle::systemPalette(this);
     const QColor background = m_themeBackground.isValid()
         ? m_themeBackground
-        : palette.color(QPalette::Window);
+        : palette.color(QPalette::Base);
     const QColor foreground = m_themeForeground.isValid()
         ? m_themeForeground
-        : palette.color(QPalette::WindowText);
+        : palette.color(QPalette::Text);
     const QColor hoverBackground = m_themeHoverBackground.isValid()
         ? m_themeHoverBackground
-        : palette.color(QPalette::Button);
+        : systemBitHoverBackground(palette);
     const QColor hoverForeground = m_themeHoverForeground.isValid()
         ? m_themeHoverForeground
         : palette.color(QPalette::ButtonText);
@@ -351,13 +361,13 @@ void BitFieldWidget::refreshTheme()
     const QPalette palette = m_themeBackground.isValid() ? this->palette() : MenuStyle::systemPalette(this);
     const QColor background = m_themeBackground.isValid()
         ? m_themeBackground
-        : palette.color(QPalette::Window);
+        : palette.color(QPalette::Base);
     const QColor foreground = m_themeForeground.isValid()
         ? m_themeForeground
-        : palette.color(QPalette::WindowText);
+        : palette.color(QPalette::Text);
     const QColor hoverBackground = m_themeHoverBackground.isValid()
         ? m_themeHoverBackground
-        : palette.color(QPalette::Button);
+        : systemBitHoverBackground(palette);
     const QColor hoverForeground = m_themeHoverForeground.isValid()
         ? m_themeHoverForeground
         : palette.color(QPalette::ButtonText);

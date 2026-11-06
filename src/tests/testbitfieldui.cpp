@@ -18,6 +18,7 @@ private slots:
     void system_bitfield_paints_background();
     void system_bitfield_background_is_visible_in_window_data();
     void system_bitfield_background_is_visible_in_window();
+    void system_bitfield_hover_shows_when_button_matches_base();
     void bitfield_buttons_use_configured_generated_shades();
     void repeated_bit_theme_keeps_state_repainting();
     void system_bitfield_repeated_theme_refresh_keeps_current_bit_colors_data();
@@ -111,6 +112,8 @@ void TestBitfieldUi::system_bitfield_keeps_on_and_off_bits_distinct()
         QPalette palette = originalPalette;
         palette.setColor(QPalette::Window, QColor(dark ? "#202020" : "#eeeeee"));
         palette.setColor(QPalette::WindowText, QColor(dark ? "#ffffff" : "#000000"));
+        palette.setColor(QPalette::Base, QColor(dark ? "#2b2b2b" : "#ffffff"));
+        palette.setColor(QPalette::Text, palette.color(QPalette::WindowText));
         // Some system palettes use the same neutral shade for both roles.
         palette.setColor(QPalette::Mid, palette.color(QPalette::Window));
         palette.setColor(QPalette::Button, QColor(dark ? "#383838" : "#dddddd"));
@@ -181,7 +184,7 @@ void TestBitfieldUi::system_bitfield_keeps_on_and_off_bits_distinct()
         QApplication::setPalette(palette);
         QVERIFY(hover(nullptr));
         QTRY_COMPARE(fill(onBit), palette.color(QPalette::Highlight).rgba());
-        QTRY_COMPARE(fill(offBit), palette.color(QPalette::Window).rgba());
+        QTRY_COMPARE(fill(offBit), palette.color(QPalette::Base).rgba());
         QVERIFY(fill(onBit) != fill(offBit));
         QCOMPARE(onBit->palette().color(QPalette::WindowText).rgba(), palette.color(QPalette::HighlightedText).rgba());
 
@@ -233,6 +236,7 @@ void TestBitfieldUi::system_bitfield_paints_background()
     QPalette native = original;
     native.setColor(QPalette::Window, QColor(dark ? "#202020" : "#eeeeee"));
     native.setColor(QPalette::WindowText, QColor(dark ? "#ffffff" : "#000000"));
+    native.setColor(QPalette::Base, QColor(dark ? "#2b2b2b" : "#ffffff"));
     QApplication::setPalette(native);
     guard.settings->dockAppearance = switchFromTheme ? Settings::DockAppearanceSpeedCrunch : Settings::DockAppearanceSystem;
     guard.settings->colorScheme = QStringLiteral("Custom");
@@ -259,17 +263,17 @@ void TestBitfieldUi::system_bitfield_paints_background()
         return image.pixelColor(inset, inset).rgba();
     };
     if (!switchFromTheme)
-        QTRY_COMPARE(background(), native.color(QPalette::Window).rgba());
+        QTRY_COMPARE(background(), native.color(QPalette::Base).rgba());
     else
-        QTRY_VERIFY(background() != native.color(QPalette::Window).rgba());
+        QTRY_VERIFY(background() != native.color(QPalette::Base).rgba());
     for (int cycle = 0; cycle < 2; ++cycle) {
         appearance->actions().at(0)->trigger();
-        QTRY_COMPARE(background(), native.color(QPalette::Window).rgba());
-        native.setColor(QPalette::Window, QColor(cycle ? "#303030" : "#dddddd"));
+        QTRY_COMPARE(background(), native.color(QPalette::Base).rgba());
+        native.setColor(QPalette::Base, QColor(cycle ? "#303030" : "#f8f8f8"));
         QApplication::setPalette(native);
-        QTRY_COMPARE(background(), native.color(QPalette::Window).rgba());
+        QTRY_COMPARE(background(), native.color(QPalette::Base).rgba());
         appearance->actions().at(1)->trigger();
-        QTRY_VERIFY(background() != native.color(QPalette::Window).rgba());
+        QTRY_VERIFY(background() != native.color(QPalette::Base).rgba());
     }
 }
 
@@ -289,6 +293,7 @@ void TestBitfieldUi::system_bitfield_background_is_visible_in_window()
     QPalette native = original;
     native.setColor(QPalette::Window, QColor(dark ? "#202020" : "#eeeeee"));
     native.setColor(QPalette::WindowText, QColor(dark ? "#ffffff" : "#000000"));
+    native.setColor(QPalette::Base, QColor(dark ? "#2b2b2b" : "#ffffff"));
     QApplication::setPalette(native);
     guard.settings->dockAppearance = switchFromTheme ? Settings::DockAppearanceSpeedCrunch : Settings::DockAppearanceSystem;
     guard.settings->colorScheme = QStringLiteral("Custom");
@@ -322,16 +327,46 @@ void TestBitfieldUi::system_bitfield_background_is_visible_in_window()
     };
     if (switchFromTheme)
         appearance->actions().at(0)->trigger();
-    QTRY_COMPARE(background(), native.color(QPalette::Window).rgba());
+    QTRY_COMPARE(background(), native.color(QPalette::Base).rgba());
     for (int cycle = 0; cycle < 2; ++cycle) {
         appearance->actions().at(1)->trigger();
-        QTRY_VERIFY(background() != native.color(QPalette::Window).rgba());
+        QTRY_VERIFY(background() != native.color(QPalette::Base).rgba());
         appearance->actions().at(0)->trigger();
-        QTRY_COMPARE(background(), native.color(QPalette::Window).rgba());
-        native.setColor(QPalette::Window, QColor(cycle ? "#303030" : "#dddddd"));
+        QTRY_COMPARE(background(), native.color(QPalette::Base).rgba());
+        native.setColor(QPalette::Base, QColor(cycle ? "#303030" : "#f8f8f8"));
         QApplication::setPalette(native);
-        QTRY_COMPARE(background(), native.color(QPalette::Window).rgba());
+        QTRY_COMPARE(background(), native.color(QPalette::Base).rgba());
     }
+}
+
+void TestBitfieldUi::system_bitfield_hover_shows_when_button_matches_base()
+{
+    const QPalette original = QApplication::palette();
+    const auto restorePalette = qScopeGuard([original]() { QApplication::setPalette(original); });
+    QPalette palette = original;
+    const QColor base("#ffffff");
+    palette.setColor(QPalette::Base, base);
+    palette.setColor(QPalette::Text, Qt::black);
+    // Windows 11 light mode uses translucent white for buttons.
+    palette.setColor(QPalette::Button, QColor(0xff, 0xff, 0xff, 0xb3));
+    QApplication::setPalette(palette);
+    BitFieldWidget field;
+    field.setThemeColors(QColor(), QColor());
+    field.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&field));
+    BitWidget* bit = field.findChild<BitWidget*>();
+    QVERIFY(bit);
+    const auto fill = [bit]() {
+        const QImage image = bit->grab().toImage();
+        const int inset = qRound(2 * bit->devicePixelRatioF());
+        return image.pixelColor(inset, inset).rgba();
+    };
+    QTRY_COMPARE(fill(), base.rgba());
+    const QPoint center = bit->rect().center();
+    QEnterEvent enter(center, center, bit->mapToGlobal(center));
+    QApplication::sendEvent(bit, &enter);
+    QVERIFY(bit->underMouse());
+    QTRY_COMPARE(fill(), base.darker(108).rgba());
 }
 
 void TestBitfieldUi::bitfield_buttons_use_configured_generated_shades()
@@ -497,6 +532,8 @@ void TestBitfieldUi::system_bitfield_repeated_theme_refresh_keeps_current_bit_co
         QPalette current = original;
         current.setColor(QPalette::Window, QColor(dark ? "#202020" : "#eeeeee"));
         current.setColor(QPalette::WindowText, dark ? Qt::white : Qt::black);
+        current.setColor(QPalette::Base, QColor(dark ? "#2b2b2b" : "#ffffff"));
+        current.setColor(QPalette::Text, dark ? Qt::white : Qt::black);
         current.setColor(QPalette::Highlight, QColor(dark ? "#246fc0" : "#185ca8"));
         current.setColor(QPalette::HighlightedText, Qt::white);
         QApplication::setPalette(current);
@@ -512,9 +549,9 @@ void TestBitfieldUi::system_bitfield_repeated_theme_refresh_keeps_current_bit_co
                                         qRound(point.y() * root->devicePixelRatioF()));
             };
             QCOMPARE(fill(onBit), current.color(QPalette::Highlight));
-            QCOMPARE(fill(offBit), current.color(QPalette::Window));
+            QCOMPARE(fill(offBit), current.color(QPalette::Base));
             QCOMPARE(onBit->palette().color(QPalette::WindowText), current.color(QPalette::HighlightedText));
-            QCOMPARE(offBit->palette().color(QPalette::WindowText), current.color(QPalette::WindowText));
+            QCOMPARE(offBit->palette().color(QPalette::WindowText), current.color(QPalette::Text));
             QVERIFY(onBit->state());
             QVERIFY(!offBit->state());
         }

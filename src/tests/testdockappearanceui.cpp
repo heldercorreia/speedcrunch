@@ -468,8 +468,12 @@ void TestDockAppearanceUi::dock_appearance_switches_all_windows()
         for (MainWindow* window : {&first, &second}) {
             for (QDockWidget* dock : window->findChildren<QDockWidget*>()) {
                 QVERIFY(dock->widget());
+                // The bitfield is content, so it uses the same surface as the dock lists.
+                const QPalette::ColorRole surface = qobject_cast<BitFieldWidget*>(dock->widget())
+                    ? QPalette::Base
+                    : QPalette::Window;
                 QCOMPARE(dock->widget()->palette().color(QPalette::Window).rgba(),
-                         MenuStyle::systemPalette(dock->widget()).color(QPalette::Window).rgba());
+                         MenuStyle::systemPalette(dock->widget()).color(surface).rgba());
                 for (QLineEdit* edit : dock->widget()->findChildren<QLineEdit*>()) {
                     QVERIFY(edit->styleSheet().isEmpty());
                     QCOMPARE(edit->palette().color(QPalette::Base).rgba(),
