@@ -652,7 +652,7 @@ void TestMenusUi::menu_bar_extension_button_stays_visible()
 {
     QFETCH(QString, background);
     MainWindowStateGuard guard;
-    guard.settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
+    guard.settings->menuAppearance = Settings::MenuAppearanceSystem;
     guard.settings->colorScheme = QStringLiteral("Custom");
     guard.settings->customColorSchemeJson = themeJsonString(
         QJsonObject{{QStringLiteral("background"), background}});
@@ -664,7 +664,10 @@ void TestMenusUi::menu_bar_extension_button_stays_visible()
     bar->addMenu(QStringLiteral("Help"));
     auto* button = bar->findChild<QToolButton*>(QStringLiteral("qt_menubar_ext_button"));
     QVERIFY(button != nullptr);
+    // On macOS, leaving the native menu bar shows the bar, which polishes it.
+    // Keep System appearance until here so the saved icon is not themed yet.
     const QIcon nativeIcon = button->icon();
+    guard.settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
     window.resize(bar->sizeHint().width() - 10, 200);
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
