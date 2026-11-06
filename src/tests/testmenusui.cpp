@@ -13,6 +13,8 @@ private slots:
     void init() { UiTestFixture::resetSettings(); }
     void menu_bar_keeps_themed_contrast_with_platform_palette_data();
     void menu_bar_keeps_themed_contrast_with_platform_palette();
+    void menu_bar_extension_button_stays_visible_data();
+    void menu_bar_extension_button_stays_visible();
     void menu_appearance_defaults_to_theme_and_persists();
     void menu_bar_restores_native_painting_after_theme_switch_data();
     void menu_bar_restores_native_painting_after_theme_switch();
@@ -637,6 +639,58 @@ void TestMenusUi::menu_bar_keeps_themed_contrast_with_platform_palette()
     window.colorSchemeChanged();
     QCoreApplication::processEvents();
     verifyTheme(switchedBackground);
+}
+
+void TestMenusUi::menu_bar_extension_button_stays_visible_data()
+{
+    QTest::addColumn<QString>("background");
+    QTest::newRow("dark-theme") << QStringLiteral("#232136");
+    QTest::newRow("light-theme") << QStringLiteral("#e5eee8");
+}
+
+void TestMenusUi::menu_bar_extension_button_stays_visible()
+{
+    QFETCH(QString, background);
+    MainWindowStateGuard guard;
+    guard.settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), background}});
+
+    QMainWindow window;
+    QMenuBar* bar = window.menuBar();
+    bar->setNativeMenuBar(false);
+    bar->addMenu(QStringLiteral("Session"));
+    bar->addMenu(QStringLiteral("Help"));
+    auto* button = bar->findChild<QToolButton*>(QStringLiteral("qt_menubar_ext_button"));
+    QVERIFY(button != nullptr);
+    const QIcon nativeIcon = button->icon();
+    window.resize(bar->sizeHint().width() - 10, 200);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    MenuStyle::apply(bar);
+    QTRY_VERIFY(button->isVisible());
+
+    const QColor text = bar->palette().color(QPalette::WindowText);
+    const auto textPixels = [&text](const QImage& image) {
+        int count = 0;
+        for (int y = 0; y < image.height(); ++y) {
+            for (int x = 0; x < image.width(); ++x) {
+                const QColor pixel = image.pixelColor(x, y);
+                if (qAbs(pixel.red() - text.red()) < 48
+                    && qAbs(pixel.green() - text.green()) < 48
+                    && qAbs(pixel.blue() - text.blue()) < 48)
+                    ++count;
+            }
+        }
+        return count;
+    };
+    QVERIFY2(textPixels(button->grab().toImage()) > 3,
+             "The menu bar overflow button does not contrast with the bar.");
+
+    guard.settings->menuAppearance = Settings::MenuAppearanceSystem;
+    MenuStyle::refresh();
+    QCOMPARE(button->icon().cacheKey(), nativeIcon.cacheKey());
 }
 
 void TestMenusUi::menu_bar_restores_native_painting_after_theme_switch_data()

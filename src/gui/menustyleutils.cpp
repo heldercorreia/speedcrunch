@@ -34,6 +34,7 @@
 #endif
 #include <QStyleOptionComboBox>
 #include <QTimer>
+#include <QToolButton>
 #include <QSysInfo>
 #include <QVariant>
 #include <QWidgetAction>
@@ -337,37 +338,51 @@ private:
     QPalette m_palette;
 };
 
+template <typename T>
+void updateThemedIcon(T* target, const QPalette* palette)
+{
+    constexpr auto SourceProperty = "speedcrunchMenuIconSource";
+    constexpr auto ThemedKeyProperty = "speedcrunchMenuIconKey";
+    constexpr auto PaletteProperty = "speedcrunchMenuIconPalette";
+    const QIcon current = target->icon();
+    const bool hasSource = target->property(SourceProperty).isValid();
+    const bool usesThemedIcon = hasSource
+        && current.cacheKey() == target->property(ThemedKeyProperty).toLongLong();
+    const QIcon source = usesThemedIcon ? qvariant_cast<QIcon>(target->property(SourceProperty)) : current;
+    if (palette != nullptr && !source.isNull()) {
+        if (usesThemedIcon && qvariant_cast<QPalette>(target->property(PaletteProperty)) == *palette)
+            return;
+        // Platform icons can ignore the menu's palette. Keep the original
+        // so System appearance can restore it.
+        const QIcon themed = MenuStyle::themedIcon(source, *palette);
+        target->setProperty(SourceProperty, source);
+        target->setProperty(ThemedKeyProperty, themed.cacheKey());
+        target->setProperty(PaletteProperty, *palette);
+        target->setIcon(themed);
+    } else if (hasSource) {
+        target->setProperty(SourceProperty, QVariant());
+        target->setProperty(ThemedKeyProperty, QVariant());
+        target->setProperty(PaletteProperty, QVariant());
+        if (usesThemedIcon)
+            target->setIcon(source);
+    }
+}
+
 void updateMenuIcons(QMenu* menu, const QPalette* palette)
 {
     if (menu == nullptr)
         return;
-    for (QAction* action : menu->actions()) {
-        constexpr auto SourceProperty = "speedcrunchMenuIconSource";
-        constexpr auto ThemedKeyProperty = "speedcrunchMenuIconKey";
-        constexpr auto PaletteProperty = "speedcrunchMenuIconPalette";
-        const QIcon current = action->icon();
-        const bool hasSource = action->property(SourceProperty).isValid();
-        const bool usesThemedIcon = hasSource
-            && current.cacheKey() == action->property(ThemedKeyProperty).toLongLong();
-        const QIcon source = usesThemedIcon ? action->property(SourceProperty).value<QIcon>() : current;
-        if (palette != nullptr && !source.isNull()) {
-            if (usesThemedIcon && action->property(PaletteProperty).value<QPalette>() == *palette)
-                continue;
-            // Platform icons can ignore the menu's palette. Keep the original
-            // so System appearance can restore it.
-            const QIcon themed = MenuStyle::themedIcon(source, *palette);
-            action->setProperty(SourceProperty, source);
-            action->setProperty(ThemedKeyProperty, themed.cacheKey());
-            action->setProperty(PaletteProperty, *palette);
-            action->setIcon(themed);
-        } else if (hasSource) {
-            action->setProperty(SourceProperty, QVariant());
-            action->setProperty(ThemedKeyProperty, QVariant());
-            action->setProperty(PaletteProperty, QVariant());
-            if (usesThemedIcon)
-                action->setIcon(source);
-        }
-    }
+    for (QAction* action : menu->actions())
+        updateThemedIcon(action, palette);
+}
+
+void updateExtensionButtonIcon(QMenuBar* bar, const QPalette* palette)
+{
+    // This is the button Qt shows when the bar is too narrow for all its menus.
+    auto* button = bar->findChild<QToolButton*>(QStringLiteral("qt_menubar_ext_button"),
+                                                Qt::FindDirectChildrenOnly);
+    if (button != nullptr)
+        updateThemedIcon(button, palette);
 }
 
 MenuColors themeColors(const QWidget* widget)
@@ -621,6 +636,7 @@ private:
                                       bar->property(NativeBarBackgroundProperty).toBool());
                 bar->setAutoFillBackground(true);
                 bar->update();
+                updateExtensionButtonIcon(bar, nullptr);
             }
             if (auto* menu = qobject_cast<QMenu*>(widget)) {
                 updateMenuIcons(menu, nullptr);
@@ -658,7 +674,10 @@ private:
                 "QMenuBar { background-color: %1; color: %2; border: none; }"
                 "QMenuBar::item { background: transparent; color: %2; }"
                 "QMenuBar::item:selected { background-color: %3; color: %4; }"
-                "QMenuBar::item:pressed { background-color: %3; color: %4; }")
+                "QMenuBar::item:pressed { background-color: %3; color: %4; }"
+                "#qt_menubar_ext_button { background: transparent; border: none; }"
+                "#qt_menubar_ext_button:hover, #qt_menubar_ext_button:pressed"
+                " { background-color: %3; }")
             : QStringLiteral(
                 "QMenu { background-color: %1; color: %2;"
                 " border: 1px solid %3; border-radius: %5px; }"
@@ -677,6 +696,8 @@ private:
         if (widget->palette() != palette)
             widget->setPalette(palette);
         updateMenuIcons(qobject_cast<QMenu*>(widget), &palette);
+        if (bar != nullptr)
+            updateExtensionButtonIcon(bar, &palette);
     }
 
     bool m_updating = false;
