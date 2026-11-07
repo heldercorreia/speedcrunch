@@ -5,6 +5,46 @@
 
 using namespace MainWindowTestHelpers;
 
+namespace {
+
+// isFullScreen() changes as soon as fullscreen is requested, but a macOS
+// fullscreen animation ends later. Qt ignores showNormal() until it ends, and
+// then reports the window as fullscreen again. Track what the platform
+// reports, so the test waits for the animation instead of a fixed time.
+class ReportedWindowState : public QObject {
+public:
+    explicit ReportedWindowState(QWidget* window) : m_window(window)
+    {
+        qApp->installEventFilter(this);
+    }
+
+    bool isFullScreen() const
+    {
+#ifdef Q_OS_MACOS
+        return m_states.testFlag(Qt::WindowFullScreen);
+#else
+        return m_window->isFullScreen();
+#endif
+    }
+
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override
+    {
+        // Only the platform sends spontaneous state changes to the QWindow.
+        QWindow* handle = m_window->windowHandle();
+        if (handle != nullptr && watched == handle && event->type() == QEvent::WindowStateChange
+            && event->spontaneous())
+            m_states = handle->windowStates();
+        return false;
+    }
+
+private:
+    QWidget* m_window;
+    Qt::WindowStates m_states = Qt::WindowNoState;
+};
+
+} // namespace
+
 #ifdef Q_OS_WIN
 namespace {
 
@@ -687,6 +727,7 @@ void TestDockLayoutUi::fullscreen_dock_widths_survive_relaunch()
                 guard.settings->sessionLayoutJson.clear();
         }
         MainWindow window(launch != 0);
+        const ReportedWindowState reported(&window);
         if (launch == 0) {
             window.resize(720, 540);
             for (const char* setter : {"setConstantsDockVisible", "setVariablesDockVisible"})
@@ -700,9 +741,9 @@ void TestDockLayoutUi::fullscreen_dock_widths_survive_relaunch()
         }
         QTRY_VERIFY(window.isVisible() && window.isFullScreen());
         QVERIFY(QTest::qWaitForWindowExposed(&window));
-        // A native macOS fullscreen transition continues after show() returns.
-        // Inspect the docks after the animation, rather than its first frame.
-        QTest::qWait(1500);
+        // The first fullscreen animation on a fresh CI machine can be slow.
+        QTRY_VERIFY_WITH_TIMEOUT(reported.isFullScreen(), 15000);
+        QTest::qWait(500);
         QTRY_COMPARE(window.findChildren<QDockWidget*>().size(), names.size());
         if (launch == 0) {
             window.resizeDocks({window.findChild<QDockWidget*>(names.first()),
@@ -713,8 +754,7 @@ void TestDockLayoutUi::fullscreen_dock_widths_survive_relaunch()
             for (const QString& name : names)
                 widths.insert(name, window.findChild<QDockWidget*>(name)->width());
         } else {
-            // Slow CI machines can take several seconds to finish the animation.
-            QTRY_COMPARE_WITH_TIMEOUT(window.size(), fullscreenSize, 15000);
+            QTRY_COMPARE(window.size(), fullscreenSize);
             for (const QString& name : names) {
                 auto* dock = window.findChild<QDockWidget*>(name);
                 QVERIFY(dock && !dock->isHidden() && !dock->isFloating());
@@ -724,11 +764,8 @@ void TestDockLayoutUi::fullscreen_dock_widths_survive_relaunch()
         window.persistSessionAndSettingsForShutdown();
         // Leave the fullscreen Space before destroying the test window, so
         // its exit animation does not affect the next launch or test case.
-        // isFullScreen() changes at once, but the window only gets its normal
-        // size back when the exit animation ends. macOS ignores a fullscreen
-        // request from the next window while that animation is still running.
         window.showNormal();
-        QTRY_VERIFY_WITH_TIMEOUT(!window.isFullScreen() && window.size() != fullscreenSize, 15000);
+        QTRY_VERIFY_WITH_TIMEOUT(!window.isFullScreen() && !reported.isFullScreen(), 15000);
         QTest::qWait(1500);
     }
 }
