@@ -757,6 +757,17 @@ QColor aaForegroundForBackground(const QColor& background,
     return bestBlackOrWhiteForeground(background);
 }
 
+QColor legibleForegroundForBackground(const QColor& background,
+                                      const QColor& preferred,
+                                      double minimumContrast)
+{
+    if (!background.isValid() || !preferred.isValid()
+        || meetsTextContrast(preferred, background, minimumContrast)) {
+        return preferred;
+    }
+    return aaForegroundForBackground(background, preferred, minimumContrast);
+}
+
 QVector<QColor> aaForegroundsForBackgrounds(const QVector<QColor>& backgrounds,
                                             double minimumContrast)
 {

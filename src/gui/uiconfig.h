@@ -41,6 +41,10 @@ constexpr double KeypadButtonGradientLightnessDelta = 0.035;
 // cannot reach this ratio, use whichever contrasts better, black or white.
 constexpr double GeneratedTextMinimumContrast = 10.0;
 
+// Secondary text, such as constant units, may be dimmer than body text, but
+// keeps at least this ratio when shown on a surface its color was not made for.
+constexpr double SecondaryTextMinimumContrast = 3.0;
+
 // Enables the temporary OKLCH HTML diagnostics report in the system temp
 // directory. Keep disabled for normal builds; it is only useful while tuning
 // generated theme surfaces.

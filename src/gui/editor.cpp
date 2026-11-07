@@ -5009,7 +5009,12 @@ public:
             ? QPalette::Disabled : (item.state & QStyle::State_Active) ? QPalette::Active : QPalette::Inactive;
         const bool selected = item.state & QStyle::State_Selected;
         const QColor foreground = item.palette.color(group, selected ? QPalette::HighlightedText : QPalette::Text);
-        const QColor unitColor = m_highlighter->colorForRole(ColorScheme::Unit);
+        // The scheme's unit color suits the editor background, which can differ
+        // from the popup's, e.g. a dark scheme in a light system popup.
+        const QColor background = item.palette.color(group, selected ? QPalette::Highlight : QPalette::Base);
+        const QColor unitColor = legibleForegroundForBackground(
+            background, m_highlighter->colorForRole(ColorScheme::Unit),
+            UiConfig::SecondaryTextMinimumContrast);
         QFont unitFont(item.font);
         if (unitFont.pointSizeF() > 0)
             unitFont.setPointSizeF(unitFont.pointSizeF() * 0.93);

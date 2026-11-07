@@ -6171,14 +6171,18 @@ void TestEditorUi::constant_search_renders_units_in_secondary_shade_data()
     QTest::addColumn<QColor>("foreground");
     QTest::addColumn<bool>("selected");
     QTest::addColumn<QColor>("expected");
+    QTest::addColumn<bool>("legible");
     QTest::newRow("dark") << QColor(QStringLiteral("#454257")) << QColor(QStringLiteral("#f7f5fc"))
-        << false << QColor(QStringLiteral("#cdcbe0"));
+        << false << QColor(QStringLiteral("#cdcbe0")) << true;
     QTest::newRow("light") << QColor(QStringLiteral("#f3f3f3")) << QColor(QStringLiteral("#202025"))
-        << false << QColor(QStringLiteral("#282828"));
+        << false << QColor(QStringLiteral("#282828")) << true;
     QTest::newRow("selected") << QColor(QStringLiteral("#5c586f")) << QColor(QStringLiteral("#f7f5fc"))
-        << true << QColor(QStringLiteral("#cdcbe0"));
+        << true << QColor(QStringLiteral("#cdcbe0")) << true;
     QTest::newRow("neutral") << QColor(Qt::white) << QColor(Qt::black)
-        << false << QColor(QStringLiteral("#606060"));
+        << false << QColor(QStringLiteral("#606060")) << true;
+    // A dark scheme's unit color in a light system popup.
+    QTest::newRow("dark scheme in light popup") << QColor(Qt::white) << QColor(Qt::black)
+        << false << QColor(QStringLiteral("#cdcbe0")) << false;
 }
 
 void TestEditorUi::constant_search_renders_units_in_secondary_shade()
@@ -6187,6 +6191,7 @@ void TestEditorUi::constant_search_renders_units_in_secondary_shade()
     QFETCH(QColor, foreground);
     QFETCH(bool, selected);
     QFETCH(QColor, expected);
+    QFETCH(bool, legible);
     Editor editor;
     editor.setThemePreviewColorScheme(ColorScheme::fromJsonObject(themeJson({
         {QStringLiteral("background"), background.name()},
@@ -6232,12 +6237,17 @@ void TestEditorUi::constant_search_renders_units_in_secondary_shade()
         QPainter painter(&image);
         list->itemDelegate()->paint(&painter, option, list->model()->index(0, 0));
         painter.end();
+        // Units keep the scheme color unless it is hard to read on the row.
+        const QColor paintedUnitColor = legibleForegroundForBackground(
+            background, unitColor, UiConfig::SecondaryTextMinimumContrast);
+        if (unitColor == expected)
+            QCOMPARE(paintedUnitColor == expected, legible);
         int unitPixels = 0;
         int mainTextPixels = 0;
         for (int y = 0; y < image.height(); ++y) {
             for (int x = 0; x < image.width(); ++x) {
                 const QRgb pixel = image.pixel(x, y);
-                unitPixels += pixel == unitColor.rgba();
+                unitPixels += pixel == paintedUnitColor.rgba();
                 mainTextPixels += pixel == foreground.rgba();
             }
         }

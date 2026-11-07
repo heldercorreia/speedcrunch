@@ -52,6 +52,11 @@ QColor aaForegroundForBackground(const QColor& background,
 QColor aaForegroundForBackground(const QColor& background,
                                  const QColor& preferredTint,
                                  double minimumContrast = UiConfig::GeneratedTextMinimumContrast);
+// Returns the preferred color when it is readable on the background. Otherwise
+// shifts its lightness, keeping the hue, until it meets the contrast.
+QColor legibleForegroundForBackground(const QColor& background,
+                                      const QColor& preferred,
+                                      double minimumContrast);
 
 QVector<QColor> aaForegroundsForBackgrounds(
     const QVector<QColor>& backgrounds,
