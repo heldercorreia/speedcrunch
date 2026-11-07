@@ -660,17 +660,21 @@ void TestMenusUi::menu_bar_extension_button_stays_visible()
     QMainWindow window;
     QMenuBar* bar = window.menuBar();
     bar->setNativeMenuBar(false);
-    bar->addMenu(QStringLiteral("Session"));
-    bar->addMenu(QStringLiteral("Help"));
+    // Use enough menus that half the bar is still wider than the smallest
+    // window Windows allows. A narrower window would grow and fit them all.
+    for (const char* title : {"Session", "Edit", "View", "Settings", "Help"})
+        bar->addMenu(QString::fromLatin1(title));
     auto* button = bar->findChild<QToolButton*>(QStringLiteral("qt_menubar_ext_button"));
     QVERIFY(button != nullptr);
     // On macOS, leaving the native menu bar shows the bar, which polishes it.
     // Keep System appearance until here so the saved icon is not themed yet.
     const QIcon nativeIcon = button->icon();
     guard.settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
-    window.resize(bar->sizeHint().width() - 10, 200);
+    const int menusWidth = bar->sizeHint().width();
+    window.resize(menusWidth / 2, 200);
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY2(window.width() < menusWidth, "The window is wide enough for every menu.");
     MenuStyle::apply(bar);
     QTRY_VERIFY(button->isVisible());
 

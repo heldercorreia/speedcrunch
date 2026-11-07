@@ -713,7 +713,8 @@ void TestDockLayoutUi::fullscreen_dock_widths_survive_relaunch()
             for (const QString& name : names)
                 widths.insert(name, window.findChild<QDockWidget*>(name)->width());
         } else {
-            QTRY_COMPARE(window.size(), fullscreenSize);
+            // Slow CI machines can take several seconds to finish the animation.
+            QTRY_COMPARE_WITH_TIMEOUT(window.size(), fullscreenSize, 15000);
             for (const QString& name : names) {
                 auto* dock = window.findChild<QDockWidget*>(name);
                 QVERIFY(dock && !dock->isHidden() && !dock->isFloating());
@@ -723,8 +724,11 @@ void TestDockLayoutUi::fullscreen_dock_widths_survive_relaunch()
         window.persistSessionAndSettingsForShutdown();
         // Leave the fullscreen Space before destroying the test window, so
         // its exit animation does not affect the next launch or test case.
+        // isFullScreen() changes at once, but the window only gets its normal
+        // size back when the exit animation ends. macOS ignores a fullscreen
+        // request from the next window while that animation is still running.
         window.showNormal();
-        QTRY_VERIFY(!window.isFullScreen());
+        QTRY_VERIFY_WITH_TIMEOUT(!window.isFullScreen() && window.size() != fullscreenSize, 15000);
         QTest::qWait(1500);
     }
 }
