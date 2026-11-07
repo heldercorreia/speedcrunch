@@ -708,7 +708,7 @@ form continues to use radians.
 
     This corresponds to
     :menuselection:`Settings --> Results --> Complex Form -->
-    Rectangular (a + bi)`.
+    Rectangular`.
 
 .. function:: trigform(x)
 
@@ -718,7 +718,7 @@ form continues to use radians.
 
     This corresponds to
     :menuselection:`Settings --> Results --> Complex Form -->
-    Trigonometric (r(cos θ + i·sin θ))`.
+    Trigonometric`.
 
 .. function:: expform(x)
 
@@ -728,7 +728,7 @@ form continues to use radians.
 
     This corresponds to
     :menuselection:`Settings --> Results --> Complex Form -->
-    Exponential (reⁱᶿ)`.
+    Exponential`.
 
 .. function:: cisform(x)
 
@@ -737,7 +737,7 @@ form continues to use radians.
 
     This corresponds to
     :menuselection:`Settings --> Results --> Complex Form -->
-    Cis (r·cis(θ))`.
+    Cis`.
 
 .. function:: phasorform(x)
 
@@ -749,7 +749,7 @@ form continues to use radians.
 
     This corresponds to
     :menuselection:`Settings --> Results --> Complex Form -->
-    Phasor (r∠θ)`.
+    Phasor`.
 
 
 Various

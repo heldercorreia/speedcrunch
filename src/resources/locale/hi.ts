@@ -5496,23 +5496,23 @@
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4521"/>
-        <source>&amp;Rectangular (a + bi)</source>
-        <translation>&amp;आयताकार (a + bi)</translation>
+        <source>&amp;Rectangular</source>
+        <translation>&amp;आयताकार</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4522"/>
-        <source>Exponential (reⁱᶿ)</source>
-        <translation>घातांकीय (reⁱᶿ)</translation>
+        <source>Exponential</source>
+        <translation>घातांकीय</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4524"/>
-        <source>Trigonometric (r(cos θ + i·sin θ))</source>
-        <translation>त्रिकोणमितीय (r(cos θ + i·sin θ))</translation>
+        <source>Trigonometric</source>
+        <translation>त्रिकोणमितीय</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4526"/>
-        <source>Phasor (r∠θ)</source>
-        <translation>फ़ेज़र (r∠θ)</translation>
+        <source>Phasor</source>
+        <translation>फ़ेज़र</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4531"/>

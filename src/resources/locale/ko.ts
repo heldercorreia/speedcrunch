@@ -5469,23 +5469,23 @@
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4521"/>
-        <source>&amp;Rectangular (a + bi)</source>
-        <translation>직교형(&amp;R) (a + bi)</translation>
+        <source>&amp;Rectangular</source>
+        <translation>직교형(&amp;R)</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4522"/>
-        <source>Exponential (reⁱᶿ)</source>
-        <translation>지수형 (reⁱᶿ)</translation>
+        <source>Exponential</source>
+        <translation>지수형</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4524"/>
-        <source>Trigonometric (r(cos θ + i·sin θ))</source>
-        <translation>삼각형 (r(cos θ + i·sin θ))</translation>
+        <source>Trigonometric</source>
+        <translation>삼각형</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4526"/>
-        <source>Phasor (r∠θ)</source>
-        <translation>페이저 (r∠θ)</translation>
+        <source>Phasor</source>
+        <translation>페이저</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4531"/>

@@ -5467,23 +5467,23 @@
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4521"/>
-        <source>&amp;Rectangular (a + bi)</source>
-        <translation>Dạng &amp;chữ nhật (a + bi)</translation>
+        <source>&amp;Rectangular</source>
+        <translation>Dạng &amp;chữ nhật</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4522"/>
-        <source>Exponential (reⁱᶿ)</source>
-        <translation>Dạng mũ (reⁱᶿ)</translation>
+        <source>Exponential</source>
+        <translation>Dạng mũ</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4524"/>
-        <source>Trigonometric (r(cos θ + i·sin θ))</source>
-        <translation>Dạng lượng giác (r(cos θ + i·sin θ))</translation>
+        <source>Trigonometric</source>
+        <translation>Dạng lượng giác</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4526"/>
-        <source>Phasor (r∠θ)</source>
-        <translation>Dạng phasor (r∠θ)</translation>
+        <source>Phasor</source>
+        <translation>Dạng phasor</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4531"/>

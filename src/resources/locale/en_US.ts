@@ -5283,22 +5283,22 @@ If no, current variables and display will be cleared.</source>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="3529"/>
-        <source>&amp;Rectangular (a + bi)</source>
+        <source>&amp;Rectangular</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="3530"/>
-        <source>Exponential (reⁱᶿ)</source>
+        <source>Exponential</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="3532"/>
-        <source>Trigonometric (r(cos θ + i·sin θ))</source>
+        <source>Trigonometric</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="3534"/>
-        <source>Phasor (r∠θ)</source>
+        <source>Phasor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

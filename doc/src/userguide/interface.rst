@@ -517,15 +517,15 @@ Complex numbers are always enabled.
     Use ``i`` as the imaginary unit symbol.
 * :menuselection:`Imaginary Unit --> j`
     Use ``j`` as the imaginary unit symbol.
-* :menuselection:`Complex Form --> Rectangular (a + bi)`
+* :menuselection:`Complex Form --> Rectangular`
     Display complex results in rectangular form.
-* :menuselection:`Complex Form --> Exponential (reⁱᶿ)`
+* :menuselection:`Complex Form --> Exponential`
     Display complex results in exponential form.
-* :menuselection:`Complex Form --> Trigonometric (r(cos θ + i·sin θ))`
+* :menuselection:`Complex Form --> Trigonometric`
     Display complex results in trigonometric form.
-* :menuselection:`Complex Form --> Cis (r·cis(θ))`
+* :menuselection:`Complex Form --> Cis`
     Display complex results in cis form.
-* :menuselection:`Complex Form --> Phasor (r∠θ)`
+* :menuselection:`Complex Form --> Phasor`
     Display complex results in phasor form.
 
 When the angle mode is set to radians, simple phase multiples of ``pi`` are

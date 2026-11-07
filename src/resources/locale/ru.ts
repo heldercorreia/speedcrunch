@@ -5467,23 +5467,23 @@
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4521"/>
-        <source>&amp;Rectangular (a + bi)</source>
-        <translation>&amp;Алгебраическая (a + bi)</translation>
+        <source>&amp;Rectangular</source>
+        <translation>&amp;Алгебраическая</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4522"/>
-        <source>Exponential (reⁱᶿ)</source>
-        <translation>Экспоненциальная (reⁱᶿ)</translation>
+        <source>Exponential</source>
+        <translation>Экспоненциальная</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4524"/>
-        <source>Trigonometric (r(cos θ + i·sin θ))</source>
-        <translation>Тригонометрическая (r(cos θ + i·sin θ))</translation>
+        <source>Trigonometric</source>
+        <translation>Тригонометрическая</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4526"/>
-        <source>Phasor (r∠θ)</source>
-        <translation>Фазорная (r∠θ)</translation>
+        <source>Phasor</source>
+        <translation>Фазорная</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4531"/>

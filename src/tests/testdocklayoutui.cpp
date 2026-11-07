@@ -92,7 +92,6 @@ private slots:
     void formula_book_combines_palette_changes();
     void formula_book_text_requests_single_font_family();
     void functions_dock_lists_cbrt_without_its_symbol();
-    void symbol_texts_use_font_with_their_glyphs();
     void startup_styling_keeps_formula_book_document();
     void formula_book_retranslation_refreshes_cached_page();
     void restored_constants_dock_empty_filter_fills_header();
@@ -2187,27 +2186,6 @@ void TestDockLayoutUi::functions_dock_lists_cbrt_without_its_symbol()
         identifiers << list->topLevelItem(i)->text(0);
     QVERIFY(identifiers.contains(QStringLiteral("cbrt")));
     QVERIFY(!identifiers.contains(QString::fromUtf8("∛")));
-}
-
-void TestDockLayoutUi::symbol_texts_use_font_with_their_glyphs()
-{
-    // A missing glyph makes Qt load every installed font family on Windows,
-    // which dominated startup on systems with many fonts.
-#ifdef Q_OS_WIN
-    const bool symbolFont = true;
-#else
-    const bool symbolFont = false;
-#endif
-    MainWindowStateGuard guard;
-    MainWindow window(false);
-    QAction* phasor = nullptr;
-    for (QAction* action : window.findChildren<QAction*>()) {
-        if (action->text() == QString::fromUtf8("Phasor (r∠θ)"))
-            phasor = action;
-    }
-    QVERIFY(phasor);
-    QCOMPARE(phasor->font().family() == QStringLiteral("Segoe UI Symbol"), symbolFont);
-    QCOMPARE(phasor->font().resolveMask() == QFont().resolveMask(), !symbolFont);
 }
 
 void TestDockLayoutUi::formula_book_combines_palette_changes()

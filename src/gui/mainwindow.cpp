@@ -49,7 +49,6 @@
 #include "core/manualserver.h"
 #include "gui/resultdisplay.h"
 #include "gui/resultlineformatutils.h"
-#include "gui/symbolfont.h"
 #include "gui/syntaxhighlighter.h"
 #include "gui/themedlineedit.h"
 #include "gui/lineeditstyleutils.h"
@@ -4724,16 +4723,11 @@ void MainWindow::setActionsText()
         MainWindow::tr("&Exponential (m·s⁻¹)"));
     m_actions.settingsUnitNegativeExponentFraction->setText(
         MainWindow::tr("&Fractional (m/s)"));
-    m_actions.settingsResultFormatCartesian->setText(MainWindow::tr("&Rectangular (a + bi)"));
-    m_actions.settingsResultFormatPolar->setText(MainWindow::tr("Exponential (reⁱᶿ)"));
-    m_actions.settingsResultFormatTrigonometric->setText(
-        MainWindow::tr("Trigonometric (r(cos θ + i·sin θ))"));
-    m_actions.settingsResultFormatCis->setText(QStringLiteral("Cis (r·cis(θ))"));
-    m_actions.settingsResultFormatPolarAngle->setText(MainWindow::tr("Phasor (r∠θ)"));
-    // Some UI fonts lack ∠, so a translation without it keeps the menu font.
-    m_actions.settingsResultFormatPolarAngle->setFont(
-        SymbolFont::isNeededFor(m_actions.settingsResultFormatPolarAngle->text())
-            ? SymbolFont::withSymbolFamily() : QFont());
+    m_actions.settingsResultFormatCartesian->setText(MainWindow::tr("&Rectangular"));
+    m_actions.settingsResultFormatPolar->setText(MainWindow::tr("Exponential"));
+    m_actions.settingsResultFormatTrigonometric->setText(MainWindow::tr("Trigonometric"));
+    m_actions.settingsResultFormatCis->setText(QStringLiteral("Cis"));
+    m_actions.settingsResultFormatPolarAngle->setText(MainWindow::tr("Phasor"));
     m_actions.settingsImaginaryUnitI->setText(QStringLiteral("&i"));
     m_actions.settingsImaginaryUnitJ->setText(QStringLiteral("&j"));
     m_actions.settingsDisplayFont->setText(MainWindow::tr("&Font..."));
