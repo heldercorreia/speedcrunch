@@ -13967,7 +13967,6 @@ void MainWindow::insertFunctionIntoEditor(const QString& f)
     const QString functionCall = f + QStringLiteral("()");
     const bool keepAsciiFunctionName =
         (f.compare(QStringLiteral("sqrt"), Qt::CaseInsensitive) == 0
-         || f.compare(QStringLiteral("cbrt"), Qt::CaseInsensitive) == 0
          || f.compare(QStringLiteral("summation"), Qt::CaseInsensitive) == 0);
     if (keepAsciiFunctionName) {
         bool shouldAutoComplete = m_widgets.editor->isAutoCompletionEnabled();

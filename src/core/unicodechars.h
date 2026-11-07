@@ -241,13 +241,21 @@ inline QString normalizePiForDisplay(QString text)
     return text;
 }
 
-// Rewrites root/summation function words to display symbols.
-// Example input/output: "sqrt(x)+cbrt(y)+summation(k)" -> "√(x)+∛(y)+∑(k)".
-inline QString normalizeRootFunctionAliasesForDisplay(QString text)
+// Rewrites sqrt/summation function words to their symbols.
+// Example input/output: "sqrt(x)+summation(k)" -> "√(x)+∑(k)".
+inline QString normalizeRootFunctionAliasesForInput(QString text)
 {
     text.replace(RegExpPatterns::summationWord(), QString(Summation));
     text.replace(RegExpPatterns::sqrtWord(), QString(SquareRoot));
-    text.replace(RegExpPatterns::cbrtWord(), QString(CubeRoot));
+    return text;
+}
+
+// Also rewrites ∛ to cbrt, since common Windows fonts lack its glyph.
+// Example input/output: "sqrt(x)+∛(y)" -> "√(x)+cbrt(y)".
+inline QString normalizeRootFunctionAliasesForDisplay(QString text)
+{
+    text = normalizeRootFunctionAliasesForInput(text);
+    text.replace(RegExpPatterns::cubeRootSymbol(), QStringLiteral("\\1cbrt"));
     return text;
 }
 

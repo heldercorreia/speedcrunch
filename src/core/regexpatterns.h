@@ -259,13 +259,13 @@ inline const QRegularExpression& sqrtWord()
     return pattern;
 }
 
-// Matches the standalone word "cbrt", case-insensitive.
-// Example input/output: "cbrt(x)" -> match; "mycbrtfn" -> no match.
-inline const QRegularExpression& cbrtWord()
+// Matches a standalone "∛", with any number before it in group 1. Next to other
+// identifier characters it stays part of one unknown name, so "∛8" stays invalid.
+// Example input/output: "2∛(x)" -> match; "∛8" and "a2∛(x)" -> no match.
+inline const QRegularExpression& cubeRootSymbol()
 {
     static const QRegularExpression pattern(
-        QStringLiteral(R"((?<![\p{L}\p{N}_$])cbrt(?![\p{L}\p{N}_$]))"),
-        QRegularExpression::CaseInsensitiveOption);
+        QStringLiteral(R"((?<![\p{L}\p{N}_$])(\p{N}*)∛(?![\p{L}\p{N}_$]))"));
     return pattern;
 }
 

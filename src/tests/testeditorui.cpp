@@ -202,6 +202,8 @@ private slots:
     void completes_identifier_immediately_after_digit();
     void completes_pi_identifier_as_pi_symbol();
     void accepts_degree_alias_in_unit_brackets_and_normalizes_to_degree_sign();
+    void completion_offers_cbrt_without_its_symbol();
+    void keeps_typed_and_pasted_cube_root_symbol();
     void offers_unit_completion_for_degree_symbol_in_unit_context();
     void matches_micro_units_when_typing_u_in_unit_context();
     void unit_context_completion_excludes_user_variables();
@@ -3897,6 +3899,39 @@ void TestEditorUi::accepts_degree_alias_in_unit_brackets_and_normalizes_to_degre
     // QTest::keyClicks() rejects U+02DA in qasciikey, so verify via setText().
     editor.setText(QString::fromUtf8("100 [˚C"));
     QCOMPARE(editor.text(), QString::fromUtf8("100 [°C"));
+}
+
+void TestEditorUi::completion_offers_cbrt_without_its_symbol()
+{
+    Editor editor;
+    QCOMPARE(editor.matchFragment(QString::fromUtf8("∛")), QStringList());
+    const QStringList choices = editor.matchFragment(QStringLiteral("cb"));
+    QCOMPARE(choices.size(), 1);
+    QVERIFY(choices.first().startsWith(QStringLiteral("cbrt:")));
+}
+
+void TestEditorUi::keeps_typed_and_pasted_cube_root_symbol()
+{
+    class PasteEditor : public Editor {
+    public:
+        using Editor::insertFromMimeData;
+    };
+    const QString symbol = QString::fromUtf8("∛");
+
+    PasteEditor typed;
+    typed.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&typed));
+    typed.setFocus();
+    QKeyEvent keyPress(QEvent::KeyPress, Qt::Key_unknown, Qt::NoModifier, symbol);
+    QApplication::sendEvent(&typed, &keyPress);
+    QCOMPARE(typed.text(), symbol);
+
+    PasteEditor pasted;
+    const QString expression = QString::fromUtf8("2∛(8)+∛(27)");
+    QMimeData mime;
+    mime.setText(expression);
+    pasted.insertFromMimeData(&mime);
+    QCOMPARE(pasted.text(), expression);
 }
 
 void TestEditorUi::offers_unit_completion_for_degree_symbol_in_unit_context()

@@ -40,9 +40,11 @@ General
 
     This function accepts any complex input. The result will generally be the first complex root, i.e. the one with a phase between 0 and π/3. Real negative arguments however will still yield a real (negative) result. Use ``x^(1/3)`` to get the first complex root.
 
-    Alias: ``∛(x)``.
-
     .. versionadded:: 1.0
+
+    .. versionchanged:: 1.2
+        Removed the ``∛(x)`` alias. A typed or pasted ``∛`` still works, and results
+        show ``cbrt``.
 
 .. function:: root(n; x)
 

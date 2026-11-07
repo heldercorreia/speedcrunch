@@ -1969,7 +1969,7 @@ QStringList Editor::matchFragment(const QString& id, bool unitContext) const
     QStringList choices;
 
     if (!unitContext && settings->autoCompletionBuiltInFunctions) {
-        const auto fnames = FunctionRepo::instance()->getIdentifiers();
+        const auto fnames = FunctionRepo::instance()->getListedIdentifiers();
         for (int i = 0; i < fnames.count(); ++i) {
             if (fnames.at(i).startsWith(id, Qt::CaseSensitive)) {
                 QString str = fnames.at(i);

@@ -132,7 +132,7 @@ inline QString normalizeExpressionOperatorsForEditorInput(QString text)
     text = UnicodeChars::normalizeUnitSymbolAliases(text);
     text = UnicodeChars::normalizeSexagesimalSymbolAliases(text);
     text = UnicodeChars::normalizePiAliasesToPi(text);
-    text = UnicodeChars::normalizeRootFunctionAliasesForDisplay(text);
+    text = UnicodeChars::normalizeRootFunctionAliasesForInput(text);
     text = normalizeMultiplicationOperators(text, true);
     text = normalizeDivisionOperatorsForEditorInput(text);
     text = normalizeAdditionOperators(text);

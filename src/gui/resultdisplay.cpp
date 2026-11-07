@@ -401,7 +401,7 @@ QString simplifiedExpressionLineForDisplay(const HistoryEntry& entry, const Eval
             QStringLiteral("i"), QStringLiteral("j"), QStringLiteral("e"),
             QStringLiteral("pi"), QString(UnicodeChars::Pi),
             QStringLiteral("nan"), QStringLiteral("inf"), QStringLiteral("infinity"),
-            QStringLiteral("sqrt"), QStringLiteral("exp"), QStringLiteral("cis"),
+            QStringLiteral("sqrt"), QStringLiteral("cbrt"), QStringLiteral("exp"), QStringLiteral("cis"),
             QStringLiteral("√"), QStringLiteral("∛"),
             QStringLiteral("rad"), QStringLiteral("deg"), QStringLiteral("gon"),
             QStringLiteral("turn"), QStringLiteral("rev")

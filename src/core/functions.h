@@ -82,6 +82,7 @@ public:
 
     void insert(Function*);
     QStringList getIdentifiers() const;
+    QStringList getListedIdentifiers() const;
     Function* find(const QString& identifier) const;
     bool isIdentifierAliasOf(const QString& identifier, const QString& canonicalIdentifier) const;
     QString displayIdentifier(const QString& identifier) const;

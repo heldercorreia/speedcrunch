@@ -8,7 +8,6 @@
 #include "core/settings.h"
 #include "core/startupdiagnostics.h"
 #include "gui/dockliststyle.h"
-#include "gui/symbolfont.h"
 #include "gui/themedlineedit.h"
 #include "gui/uiconfig.h"
 
@@ -125,7 +124,7 @@ void FunctionsWidget::updateList()
     m_filterTimer->stop();
     QString term = m_searchFilter->text();
     const QString selectedDomain = m_domain->currentText();
-    QStringList functionNames = FunctionRepo::instance()->getIdentifiers();
+    QStringList functionNames = FunctionRepo::instance()->getListedIdentifiers();
     FunctionRepo::instance()->retranslateText();
 
     QStringList inputs {tr("All"), selectedDomain, term, QString::number(layoutDirection())};
@@ -158,9 +157,6 @@ void FunctionsWidget::updateList()
         {
             if (domainMatches) {
                 QTreeWidgetItem* item = new QTreeWidgetItem(m_functions, str);
-                // Symbol aliases such as ∛ are missing from some UI fonts.
-                if (SymbolFont::isNeededFor(identifier))
-                    item->setFont(0, SymbolFont::withSymbolFamily());
                 if (layoutDirection() == Qt::LeftToRight) {
                     item->setTextAlignment(0, Qt::AlignLeft);
                     item->setTextAlignment(1, Qt::AlignLeft);

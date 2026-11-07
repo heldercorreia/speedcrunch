@@ -2250,6 +2250,14 @@ QStringList FunctionRepo::getIdentifiers() const
     return m_identifiers;
 }
 
+QStringList FunctionRepo::getListedIdentifiers() const
+{
+    // The ∛ alias is valid input, but common Windows fonts lack its glyph.
+    QStringList identifiers = getIdentifiers();
+    identifiers.removeOne(QString(UnicodeChars::CubeRoot));
+    return identifiers;
+}
+
 const QStringList& FunctionRepo::domains() const
 {
     static QStringList result;

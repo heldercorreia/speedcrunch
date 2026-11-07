@@ -3679,10 +3679,18 @@ void test_function_basic()
 
     CHECK_EVAL("√(81)", "9");
     CHECK_EVAL("∛(-27)", "-3");
+    CHECK_EVAL("cbrt(-27)", "-3");
+    CHECK_EVAL("2cbrt(8)", "4");
+    CHECK_EVAL("2∛(8)", "4");
+    CHECK_EVAL("CBRT(8)", "2");
     CHECK_INTERPRETED("sqrt(81)", "√(81)");
-    CHECK_INTERPRETED("cbrt(-27)", "∛(-27)");
+    CHECK_INTERPRETED("cbrt(-27)", "cbrt(-27)");
     CHECK_INTERPRETED("√(81)", "√(81)");
-    CHECK_INTERPRETED("∛(-27)", "∛(-27)");
+    CHECK_INTERPRETED("∛(-27)", "cbrt(-27)");
+    CHECK_EVAL("∛ 8", "2");
+    CHECK_EVAL("∛(8)+∛(27)", "5");
+    CHECK_EVAL_FAIL("∛8");
+    CHECK_EVAL_FAIL("∛∛(8)");
 
     // Test functions composition
     CHECK_EVAL("log(10;log(10;1e100))", "2");
@@ -4273,7 +4281,8 @@ void test_auto_fix_ans()
     CHECK_AUTOFIX("exp", "exp(ans)");
     CHECK_AUTOFIX("log10", "log10(ans)");
     CHECK_AUTOFIX("sqrt", "√(ans)");
-    CHECK_AUTOFIX("cbrt", "∛(ans)");
+    CHECK_AUTOFIX("cbrt", "cbrt(ans)");
+    CHECK_AUTOFIX("∛", "cbrt(ans)");
 }
 
 void test_auto_fix_trailing_equal()
@@ -4378,7 +4387,8 @@ void test_auto_fix_powers()
     CHECK_AUTOFIX("4/2[s]", "4/2·[s]");
     CHECK_AUTOFIX("1[metre] in [metre]", "1[metre] in [metre]");
     CHECK_AUTOFIX("1[metre] IN [metre]", "1[metre] IN [metre]");
-    CHECK_AUTOFIX("sqrt(16)+cbrt(27)", "√(16)+∛(27)");
+    CHECK_AUTOFIX("sqrt(16)+cbrt(27)", "√(16)+cbrt(27)");
+    CHECK_AUTOFIX("√(16)+∛(27)", "√(16)+cbrt(27)");
     CHECK_AUTOFIX("asqrt(16)+cbrtfoo(27)", "asqrt(16)+cbrtfoo(27)");
     CHECK_AUTOFIX("2 + 3^() + 4", "2 + 3 + 4");
     CHECK_AUTOFIX("2 + 3 ^ (   ) + 4", "2 + 3  + 4");
@@ -6717,12 +6727,12 @@ void test_expression_operator_normalization()
     }
 
     const QString editorNormalized = EditorUtils::normalizeExpressionOperatorsForEditorInput(
-        QString::fromUtf8("2·3 4·5 6*7 8/4 10÷2 9⧸3 𝜋 𝝅 𝞹 𝛑 Ω μ sqrt cbrt asqrt cbrtfoo"));
+        QString::fromUtf8("2·3 4·5 6*7 8/4 10÷2 9⧸3 𝜋 𝝅 𝞹 𝛑 Ω μ sqrt cbrt ∛ ∛8 asqrt cbrtfoo"));
     const std::string editorNormalizedStd = editorNormalized.toStdString();
     ++eval_total_tests;
     DisplayErrorOnMismatch(__FILE__, __LINE__, "normalizeExpressionOperatorsForEditorInput",
                            editorNormalizedStd,
-                           "2·3 4·5 6×7 8/4 10/2 9/3 π π π π Ω µ √ ∛ asqrt cbrtfoo",
+                           "2·3 4·5 6×7 8/4 10/2 9/3 π π π π Ω µ √ cbrt ∛ ∛8 asqrt cbrtfoo",
                            eval_failed_tests, eval_new_failed_tests);
 
     const QString implicitMulWithLatinLetter =
@@ -7208,14 +7218,14 @@ void test_expression_operator_normalization()
         || parsedForEditor.at(8) != QString::fromUtf8("π+1")
         || parsedForEditor.at(9) != QString::fromUtf8("π+1")
         || parsedForEditor.at(10) != QString::fromUtf8("√(4)")
-        || parsedForEditor.at(11) != QString::fromUtf8("∛(8)")
+        || parsedForEditor.at(11) != QStringLiteral("cbrt(8)")
         || parsedForEditor.at(12) != QString::fromUtf8("asqrt(4)")) {
         ++eval_total_tests;
         ++eval_failed_tests;
         ++eval_new_failed_tests;
         cerr << __FILE__ << "[" << __LINE__ << "]\tparsePastedExpressionsForEditorInput\t[NEW]" << endl
              << "\tResult   : " << parsedForEditor.join("|").toUtf8().constData() << endl
-             << "\tExpected : 2·3|4·5|6×7|8/4|10/2|9/3|π+1|π+1|π+1|π+1|√(4)|∛(8)|asqrt(4)" << endl;
+             << "\tExpected : 2·3|4·5|6×7|8/4|10/2|9/3|π+1|π+1|π+1|π+1|√(4)|cbrt(8)|asqrt(4)" << endl;
     } else {
         ++eval_total_tests;
     }
@@ -8222,12 +8232,23 @@ void test_display_root_aliases_for_result_lines()
     ++eval_total_tests;
     const QString cbrtDisplay =
         DisplayFormatUtils::applyDigitGroupingForDisplay(QStringLiteral("cbrt(8)"));
-    if (cbrtDisplay != QString::fromUtf8("∛(8)")) {
+    if (cbrtDisplay != QStringLiteral("cbrt(8)")) {
         ++eval_failed_tests;
         ++eval_new_failed_tests;
         cerr << __FILE__ << "[" << __LINE__ << "]\tformat cbrt alias for display\t[NEW]" << endl
              << "\tResult   : " << cbrtDisplay.toUtf8().constData() << endl
-             << "\tExpected : ∛(8)" << endl;
+             << "\tExpected : cbrt(8)" << endl;
+    }
+
+    ++eval_total_tests;
+    const QString cubeRootDisplay =
+        DisplayFormatUtils::applyDigitGroupingForDisplay(QString::fromUtf8("∛(8)"));
+    if (cubeRootDisplay != QStringLiteral("cbrt(8)")) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tformat ∛ as cbrt for display\t[NEW]" << endl
+             << "\tResult   : " << cubeRootDisplay.toUtf8().constData() << endl
+             << "\tExpected : cbrt(8)" << endl;
     }
 
     ++eval_total_tests;
