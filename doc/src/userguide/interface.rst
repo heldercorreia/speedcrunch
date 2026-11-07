@@ -989,6 +989,10 @@ User Interface Settings
     :guilabel:`System`, along with other native controls and dialogs. It does not
     change the selected SpeedCrunch theme or the Input and Results appearance.
 
+    Windows 10's native control style has no dark version. While the appearance
+    is dark there, SpeedCrunch draws its controls and dialogs with Qt's Fusion
+    style instead.
+
     A system high-contrast accessibility theme may take precedence over the
     selected light or dark mode, depending on platform support.
 

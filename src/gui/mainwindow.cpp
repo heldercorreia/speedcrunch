@@ -119,6 +119,7 @@
 #include <QPixmap>
 #include <QPointer>
 #include <QProxyStyle>
+#include <QStyleFactory>
 #include <QDropEvent>
 #include <QPushButton>
 #include <QScreen>
@@ -1372,9 +1373,55 @@ public:
     }
 };
 
-void ensureDockChromeStyleInstalled()
+QStyle* applicationBaseStyle()
 {
-    if (QApplication::style()->property(DockChromeStyleInstalledProperty).toBool())
+    QStyle* style = QApplication::style();
+    while (auto* proxy = qobject_cast<QProxyStyle*>(style))
+        style = proxy->baseStyle();
+    return style;
+}
+
+// The style Qt chose for the platform, before any dark mode replacement.
+QString& nativeBaseStyleName()
+{
+    static QString name;
+    return name;
+}
+
+// Windows 10 uses the Vista style, which draws light native controls. In dark
+// mode Qt keeps its palette light, so dialogs keep light contents and title
+// bars. Fusion can draw dark controls, so use it while the mode is dark.
+QString wantedBaseStyleName()
+{
+#if defined(Q_OS_WIN) && QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+    // A contrast theme reports no color scheme and keeps the native style.
+    if (nativeBaseStyleName().compare(QLatin1String("windowsvista"), Qt::CaseInsensitive) == 0
+        && QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark) {
+        return QStringLiteral("fusion");
+    }
+#endif
+    return nativeBaseStyleName();
+}
+
+// The Fusion style that replaced the native style for dark mode, if any.
+QPointer<QStyle>& darkModeBaseStyle()
+{
+    static QPointer<QStyle> style;
+    return style;
+}
+
+void ensureApplicationStyle()
+{
+    if (nativeBaseStyleName().isEmpty())
+        nativeBaseStyleName() = applicationBaseStyle()->objectName();
+    const bool installed = QApplication::style()->property(DockChromeStyleInstalledProperty).toBool();
+    // Replace only the native style or our own Fusion, never a chosen style.
+    const QStyle* currentBase = applicationBaseStyle();
+    const bool replaceable = currentBase == darkModeBaseStyle().data()
+        || currentBase->objectName().compare(nativeBaseStyleName(), Qt::CaseInsensitive) == 0;
+    const QString wantedBase = replaceable ? wantedBaseStyleName() : currentBase->objectName();
+    const bool switchBase = currentBase->objectName().compare(wantedBase, Qt::CaseInsensitive) != 0;
+    if (installed && !switchBase)
         return;
 
     StartupDiagnostics::AppearanceScope timing("Install dock chrome style", qApp);
@@ -1383,9 +1430,29 @@ void ensureDockChromeStyleInstalled()
             QApplication::style()->property(DockChromeStyleInstalledProperty).toBool()});
     });
 
-    QStyle* style = new DockChromeStyle(QApplication::style());
+    QStyle* base = QApplication::style();
+    if (switchBase) {
+        QStyle* created = QStyleFactory::create(wantedBase);
+        if (created == nullptr && installed)
+            return;
+        if (created != nullptr) {
+            base = created;
+            darkModeBaseStyle() = wantedBase == nativeBaseStyleName() ? nullptr : created;
+        }
+    }
+    QStyle* style = new DockChromeStyle(base);
     style->setProperty(DockChromeStyleInstalledProperty, true);
     QApplication::setStyle(style);
+
+#if defined(Q_OS_WIN) && QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+    // Follow System can turn dark mode on or off while SpeedCrunch runs.
+    static bool following = false;
+    if (!following) {
+        following = true;
+        QObject::connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, qApp,
+                         []() { ensureApplicationStyle(); }, Qt::QueuedConnection);
+    }
+#endif
 }
 
 QString splitterStyleSheet(const QColor& normal, const QColor& active)
@@ -4444,6 +4511,7 @@ void MainWindow::setSystemColorMode(QAction* action)
             choice->setChecked(choice->data().toInt() == mode);
     }
     applySystemColorMode(m_settings->systemColorMode);
+    ensureApplicationStyle();
     MenuStyle::refresh();
     for (const QPointer<MainWindow>& window : allMainWindows()) {
         if (!window)
@@ -9676,7 +9744,7 @@ void MainWindow::initializeApplicationStyle()
     StartupDiagnostics::AppearanceContext context("Initialize application style");
     // Set the application style before any main-window widgets are created.
     applySystemColorMode(Settings::instance()->systemColorMode);
-    ensureDockChromeStyleInstalled();
+    ensureApplicationStyle();
 }
 
 MainWindow::MainWindow(bool restorePreviousSession)
@@ -9802,7 +9870,7 @@ MainWindow::MainWindow(bool restorePreviousSession)
     if (!m_sessionRestorePending)
         refreshPaneThemes();
     // Keep direct window construction working without the startup initializer.
-    ensureDockChromeStyleInstalled();
+    ensureApplicationStyle();
     updatePaneLoadedSessionCounts();
     // Set the initial focus after parenting the editor and restoring the docks.
     m_widgets.editor->setFocus(Qt::OtherFocusReason);

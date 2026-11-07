@@ -36,6 +36,12 @@ std::optional<bool> hasDarkTitleBar(QWidget& window)
     return dark != FALSE;
 }
 
+bool isDark(const QPalette& palette)
+{
+    return palette.color(QPalette::WindowText).lightness()
+        > palette.color(QPalette::Window).lightness();
+}
+
 bool usesStyle(const QString& name)
 {
     QStyle* style = QApplication::style();
@@ -54,6 +60,7 @@ private slots:
     void cleanup();
     void title_bars_follow_color_mode_and_theme_data();
     void title_bars_follow_color_mode_and_theme();
+    void open_dialogs_follow_color_mode_changes();
 };
 
 void TestWindowFrameUi::initTestCase()
@@ -64,9 +71,13 @@ void TestWindowFrameUi::initTestCase()
     if (QGuiApplication::platformName() != QLatin1String("windows"))
         QSKIP("Requires the native Windows platform plugin");
     // A style that cannot load must fail here, not test the default style.
+    // Dark mode can replace the Vista style, so check it in light mode.
     const QString requestedStyle = qEnvironmentVariable("QT_STYLE_OVERRIDE");
-    if (!requestedStyle.isEmpty())
+    if (!requestedStyle.isEmpty()) {
+        Settings::instance()->systemColorMode = Settings::SystemColorModeLight;
+        MainWindow::initializeApplicationStyle();
         QVERIFY2(usesStyle(requestedStyle), qPrintable(requestedStyle));
+    }
 }
 
 void TestWindowFrameUi::cleanup()
@@ -120,9 +131,33 @@ void TestWindowFrameUi::title_bars_follow_color_mode_and_theme()
 
     const std::optional<bool> actualDialogDark = hasDarkTitleBar(dialog);
     QVERIFY(actualDialogDark.has_value());
-    if (dialogDark && usesStyle(QStringLiteral("windowsvista")))
-        QEXPECT_FAIL("", "The Vista style keeps dialog palettes light", Continue);
     QCOMPARE(*actualDialogDark, dialogDark);
+    // The dialog contents match its title bar.
+    QCOMPARE(isDark(dialog.palette()), dialogDark);
+}
+
+void TestWindowFrameUi::open_dialogs_follow_color_mode_changes()
+{
+    MainWindowStateGuard guard;
+    guard.settings->systemColorMode = Settings::SystemColorModeLight;
+    MainWindow::initializeApplicationStyle();
+
+    MainWindow window(false);
+    NumberFormatDialog dialog(&window);
+    auto* menu = window.findChild<QMenu*>(QStringLiteral("SystemColorModeMenu"));
+    QVERIFY(menu);
+    const auto choose = [menu](Settings::SystemColorMode mode) {
+        for (QAction* action : menu->actions()) {
+            if (action->data().toInt() == mode)
+                action->trigger();
+        }
+    };
+
+    for (const bool dark : {true, false}) {
+        choose(dark ? Settings::SystemColorModeDark : Settings::SystemColorModeLight);
+        QTRY_COMPARE(isDark(dialog.palette()), dark);
+        QTRY_COMPARE(hasDarkTitleBar(dialog), std::optional<bool>(dark));
+    }
 }
 
 int main(int argc, char** argv)
