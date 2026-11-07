@@ -3,6 +3,9 @@
 
 #include "mainwindowtesthelpers.h"
 
+#include <QFocusFrame>
+#include <QStyleHints>
+
 namespace MainWindowTestHelpers {
 
 QJsonObject themeJson(QJsonObject colors)
@@ -486,5 +489,89 @@ bool focusIsWithin(QWidget* target)
     }
     return false;
 }
+
+#ifdef Q_OS_MACOS
+QString liquidGlassLineEditSkipReason()
+{
+    if (QApplication::platformName() != QLatin1String("cocoa"))
+        return QStringLiteral("Native macOS line edits require the Cocoa backend.");
+    if (!MacLineEditStyle::runningWithLiquidGlass())
+        return QStringLiteral("Native macOS line edits are rounded only with Liquid Glass.");
+    return QString();
+}
+
+namespace {
+// Paints only the widget itself on a transparent image, so the alpha channel
+// shows the shape the style draws.
+QImage renderWithoutBackground(QWidget* widget)
+{
+    const qreal ratio = widget->devicePixelRatioF();
+    QImage image(widget->size() * ratio, QImage::Format_ARGB32_Premultiplied);
+    image.setDevicePixelRatio(ratio);
+    image.fill(Qt::transparent);
+    // render() puts the top-left of a masked widget's visible region, such as
+    // a focus frame's, at the target offset. Keep widget coordinates instead.
+    QPoint offset;
+    if (!widget->mask().isEmpty())
+        offset = (widget->mask() & widget->rect()).boundingRect().topLeft();
+    widget->render(&image, offset, QRegion(), QWidget::RenderFlags());
+    return image;
+}
+
+int alphaAt(const QImage& image, const QPointF& point)
+{
+    const qreal ratio = image.devicePixelRatio();
+    return qAlpha(image.pixel(int(point.x() * ratio), int(point.y() * ratio)));
+}
+} // namespace
+
+void verifyRoundedNativeLineEdit(QLineEdit* edit)
+{
+    QVERIFY(edit != nullptr);
+    QVERIFY(edit->isVisible());
+    QVERIFY2(edit->styleSheet().isEmpty(), qPrintable(edit->styleSheet()));
+    const QRectF field = MacLineEditStyle::fieldRect(edit);
+    const qreal radius = MacLineEditStyle::fieldCornerRadius(edit);
+    const QPointF corner = field.topLeft() + QPointF(0.5, 0.5);
+    const QPointF leftEdge(field.left() + 0.5, field.center().y());
+    const QPointF topEdge(field.center().x(), field.top() + 0.5);
+
+    const QImage fieldImage = renderWithoutBackground(edit);
+    // A square fill or a flat bordered field covers the corner of the field rectangle.
+    QVERIFY2(alphaAt(fieldImage, corner) < 0x40,
+             qPrintable(QStringLiteral("Square field corner, alpha %1").arg(alphaAt(fieldImage, corner))));
+    QVERIFY2(alphaAt(fieldImage, leftEdge) > 0x80,
+             qPrintable(QStringLiteral("Missing field edge, alpha %1").arg(alphaAt(fieldImage, leftEdge))));
+    QVERIFY2(alphaAt(fieldImage, topEdge) > 0x80,
+             qPrintable(QStringLiteral("Missing field edge, alpha %1").arg(alphaAt(fieldImage, topEdge))));
+
+    if (!edit->hasFocus())
+        return;
+    QFocusFrame* focusFrame = nullptr;
+    QTRY_VERIFY(([&]() {
+        for (QFocusFrame* frame : edit->window()->findChildren<QFocusFrame*>()) {
+            if (frame->widget() == edit && frame->isVisible())
+                focusFrame = frame;
+        }
+        return focusFrame != nullptr;
+    })());
+    const QImage ringImage = renderWithoutBackground(focusFrame);
+    const QPointF offset = edit->mapTo(edit->window(), QPoint())
+        - focusFrame->mapTo(focusFrame->window(), QPoint());
+    const auto ringAlpha = [&ringImage, &offset](const QPointF& point) {
+        return alphaAt(ringImage, point + offset);
+    };
+    // The ring hugs the rounded field, so it also covers the rounded-off corner...
+    QVERIFY2(ringAlpha(corner) > 0x40,
+             qPrintable(QStringLiteral("Focus ring leaves the corner, alpha %1").arg(ringAlpha(corner))));
+    const QPointF aboveField(field.center().x(), field.top() - MacLineEditStyle::FocusRingWidth / 2);
+    QVERIFY2(ringAlpha(aboveField) > 0x40,
+             qPrintable(QStringLiteral("Missing focus ring, alpha %1").arg(ringAlpha(aboveField))));
+    // ...but never the field itself, including inside its rounded corner.
+    const QPointF insideCorner = field.topLeft() + QPointF(radius, radius) * 0.6;
+    QCOMPARE(ringAlpha(insideCorner), 0);
+    QCOMPARE(ringAlpha(field.center()), 0);
+}
+#endif
 
 } // namespace MainWindowTestHelpers

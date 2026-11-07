@@ -52,6 +52,7 @@
 #include "gui/syntaxhighlighter.h"
 #include "gui/themedlineedit.h"
 #include "gui/lineeditstyleutils.h"
+#include "gui/maclineeditstyle.h"
 #include "gui/tooltipstyleutils.h"
 #include "gui/uiconfig.h"
 #include "math/cmath.h"
@@ -1324,11 +1325,25 @@ public:
         return type == CT_MenuItem ? MenuStyle::themedItemSize(option, size, result, widget) : result;
     }
 
+#ifdef Q_OS_MACOS
+    void drawControl(ControlElement element, const QStyleOption* option, QPainter* painter,
+                     const QWidget* widget = nullptr) const override
+    {
+        if (element == CE_FocusFrame && MacLineEditStyle::drawFocusFrame(option, painter, widget))
+            return;
+        QProxyStyle::drawControl(element, option, painter, widget);
+    }
+#endif
+
     void drawPrimitive(PrimitiveElement element,
                        const QStyleOption* option,
                        QPainter* painter,
                        const QWidget* widget = nullptr) const override
     {
+#ifdef Q_OS_MACOS
+        if (MacLineEditStyle::drawPrimitive(baseStyle(), element, option, painter, widget))
+            return;
+#endif
         if (element != PE_IndicatorDockWidgetResizeHandle || option == nullptr || widget == nullptr) {
             QProxyStyle::drawPrimitive(element, option, painter, widget);
             return;

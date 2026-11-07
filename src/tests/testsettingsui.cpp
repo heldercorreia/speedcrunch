@@ -72,6 +72,8 @@ private slots:
     void appearance_presets_follow_settings_reset();
     void tooltip_appearance_switches_result_preview_colors();
     void tooltip_appearance_switches_completion_popup_colors();
+    void macos_system_constant_popup_search_stays_rounded_data();
+    void macos_system_constant_popup_search_stays_rounded();
     void tooltip_popups_use_system_style_when_theme_is_empty();
     void settings_reset_restores_persisted_defaults();
     void settings_reset_can_be_cancelled_data();
@@ -1963,6 +1965,53 @@ void TestSettingsUi::tooltip_appearance_switches_completion_popup_colors()
     QCOMPARE(functions->frameShape(), QFrame::NoFrame);
     QVERIFY(functions->autoFillBackground());
     QVERIFY(functions->viewport()->autoFillBackground());
+}
+
+void TestSettingsUi::macos_system_constant_popup_search_stays_rounded_data()
+{
+    QTest::addColumn<int>("mode");
+    QTest::newRow("light") << int(Settings::SystemColorModeLight);
+    QTest::newRow("dark") << int(Settings::SystemColorModeDark);
+}
+
+void TestSettingsUi::macos_system_constant_popup_search_stays_rounded()
+{
+#ifdef Q_OS_MACOS
+    if (const QString reason = liquidGlassLineEditSkipReason(); !reason.isEmpty()) {
+        QTest::qSkip(qPrintable(reason), __FILE__, __LINE__);
+        return;
+    }
+    QFETCH(int, mode);
+    MainWindowStateGuard guard;
+    const auto restoreMode = qScopeGuard([&guard]() {
+        guard.settings->systemColorMode = Settings::SystemColorModeFollowSystem;
+        MainWindow::initializeApplicationStyle();
+    });
+    guard.settings->systemColorMode = static_cast<Settings::SystemColorMode>(mode);
+    MainWindow::initializeApplicationStyle();
+    guard.settings->toolTipAppearance = Settings::ToolTipAppearanceSystem;
+    MainWindow window(false);
+    window.resize(900, 600);
+    window.show();
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+    Editor* editor = window.findChild<Editor*>();
+    QVERIFY(editor);
+    editor->setFocus();
+    QTest::keyClick(editor, Qt::Key_Space, Qt::ControlModifier);
+    QPointer<QWidget> popup;
+    // Close the popup on failures too, before its window goes away.
+    const auto closePopup = qScopeGuard([&popup]() {
+        if (popup)
+            popup->hide();
+    });
+    QTRY_VERIFY((popup = QApplication::activePopupWidget()) != nullptr);
+    QCOMPARE(popup->objectName(), QStringLiteral("constantCompletionPopup"));
+    auto* search = popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch"));
+    QVERIFY(search);
+    QTRY_VERIFY(search->hasFocus());
+    verifyRoundedNativeLineEdit(search);
+#endif
 }
 
 void TestSettingsUi::tooltip_popups_use_system_style_when_theme_is_empty()

@@ -21,6 +21,7 @@
 #include "gui/gtkmenupalette.h"
 #include "gui/historywidget.h"
 #include "gui/keypad.h"
+#include "gui/maclineeditstyle.h"
 #include "gui/mainwindow.h"
 #include "gui/menustyleutils.h"
 #include "gui/manualwindow.h"
@@ -434,6 +435,17 @@ QKeyCombination nextSessionTabShortcut();
 QKeyCombination previousSessionTabShortcut();
 
 bool focusIsWithin(QWidget* target);
+
+#ifdef Q_OS_MACOS
+// Empty when native macOS line edits are drawn with Liquid Glass, otherwise
+// why a test of their shape cannot run.
+QString liquidGlassLineEditSkipReason();
+
+// Verifies that a native line edit paints a rounded field without square
+// corners. When it has focus, also verifies that its focus ring follows the
+// rounded corners. Reports failures through QTest.
+void verifyRoundedNativeLineEdit(QLineEdit* edit);
+#endif
 
 } // namespace MainWindowTestHelpers
 

@@ -6,6 +6,8 @@
 
 #include <algorithm>
 
+#include <QStyleHints>
+
 using namespace MainWindowTestHelpers;
 
 class TestDockAppearanceUi : public QObject {
@@ -42,6 +44,8 @@ private slots:
     void dock_header_buttons_keep_theme_after_redocking_data();
     void dock_header_buttons_keep_theme_after_redocking();
     void themed_headers_keep_native_scrollbar_styles();
+    void macos_system_dock_search_fields_stay_rounded_data();
+    void macos_system_dock_search_fields_stay_rounded();
 };
 
 void TestDockAppearanceUi::dock_refresh_reuses_unchanged_appearance_work_data()
@@ -213,6 +217,80 @@ void TestDockAppearanceUi::themed_headers_keep_native_scrollbar_styles()
         }
         QVERIFY(headersChecked > 0);
     }
+}
+
+void TestDockAppearanceUi::macos_system_dock_search_fields_stay_rounded_data()
+{
+    QTest::addColumn<int>("startMode");
+    QTest::addColumn<int>("switchMode");
+    QTest::newRow("light") << int(Settings::SystemColorModeLight) << -1;
+    QTest::newRow("dark") << int(Settings::SystemColorModeDark) << -1;
+    QTest::newRow("light-to-dark") << int(Settings::SystemColorModeLight)
+                                   << int(Settings::SystemColorModeDark);
+    QTest::newRow("dark-to-light") << int(Settings::SystemColorModeDark)
+                                   << int(Settings::SystemColorModeLight);
+}
+
+void TestDockAppearanceUi::macos_system_dock_search_fields_stay_rounded()
+{
+#ifdef Q_OS_MACOS
+    if (const QString reason = liquidGlassLineEditSkipReason(); !reason.isEmpty()) {
+        QTest::qSkip(qPrintable(reason), __FILE__, __LINE__);
+        return;
+    }
+    QFETCH(int, startMode);
+    QFETCH(int, switchMode);
+    MainWindowStateGuard guard;
+    const auto restoreMode = qScopeGuard([&guard]() {
+        guard.settings->systemColorMode = Settings::SystemColorModeFollowSystem;
+        MainWindow::initializeApplicationStyle();
+    });
+    guard.settings->systemColorMode = static_cast<Settings::SystemColorMode>(startMode);
+    MainWindow::initializeApplicationStyle();
+    guard.settings->dockAppearance = Settings::DockAppearanceSystem;
+    guard.settings->constantsDockVisible = true;
+    guard.settings->functionsDockVisible = true;
+    guard.settings->sessionLayoutJson.clear();
+    guard.settings->windowState.clear();
+    MainWindow window(false);
+    window.show();
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+    if (switchMode >= 0) {
+        QMenu* menu = window.findChild<QMenu*>(QStringLiteral("SystemColorModeMenu"));
+        QVERIFY(menu);
+        QAction* selected = nullptr;
+        for (QAction* action : menu->actions()) {
+            if (action->data().toInt() == switchMode)
+                selected = action;
+        }
+        QVERIFY(selected);
+        selected->trigger();
+    }
+    const bool dark = (switchMode >= 0 ? switchMode : startMode) == Settings::SystemColorModeDark;
+    QTRY_COMPARE(QGuiApplication::styleHints()->colorScheme(),
+                 dark ? Qt::ColorScheme::Dark : Qt::ColorScheme::Light);
+
+    for (const char* name : {"ConstantsDock", "FunctionsDock"}) {
+        QDockWidget* dock = window.findChild<QDockWidget*>(QString::fromLatin1(name));
+        QVERIFY(dock);
+        dock->raise();
+        QLineEdit* search = dock->widget()->findChild<QLineEdit*>();
+        QVERIFY(search);
+        QTRY_VERIFY(search->isVisible());
+        QTRY_COMPARE(search->palette().color(QPalette::Base), QApplication::palette(search).color(QPalette::Base));
+        window.findChild<Editor*>()->setFocus();
+        QTRY_VERIFY(!search->hasFocus());
+        verifyRoundedNativeLineEdit(search);
+        if (QTest::currentTestFailed())
+            return;
+        search->setFocus(Qt::TabFocusReason);
+        QTRY_VERIFY(search->hasFocus());
+        verifyRoundedNativeLineEdit(search);
+        if (QTest::currentTestFailed())
+            return;
+    }
+#endif
 }
 
 void TestDockAppearanceUi::initTestCase()

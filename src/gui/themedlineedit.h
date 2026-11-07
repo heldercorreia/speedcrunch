@@ -20,11 +20,13 @@ public:
     void setCursorColor(const QColor& color);
 
 protected:
+    void changeEvent(QEvent* event) override;
     void focusInEvent(QFocusEvent* event) override;
     void focusOutEvent(QFocusEvent* event) override;
     void paintEvent(QPaintEvent* event) override;
 
 private:
+    void restoreNativeFocusRing();
     void showCursorAndRestartBlink();
     void hideCursorAndStopBlink();
     QRect themedCursorRect() const;

@@ -61,7 +61,24 @@ void ThemedLineEdit::setCursorColor(const QColor& color)
 
     m_cursorColor = color;
     setStyle(color.isValid() ? m_cursorStyle : nullptr);
+    restoreNativeFocusRing();
     update();
+}
+
+void ThemedLineEdit::changeEvent(QEvent* event)
+{
+    QLineEdit::changeEvent(event);
+    if (event->type() == QEvent::StyleChange)
+        restoreNativeFocusRing();
+}
+
+void ThemedLineEdit::restoreNativeFocusRing()
+{
+    // Without a themed cursor and stylesheet, the field uses the system look.
+    // Stylesheets in its ancestors make Qt turn off the macOS focus ring
+    // whenever it polishes the field, and it never turns the ring back on.
+    if (!m_cursorColor.isValid() && styleSheet().isEmpty())
+        setAttribute(Qt::WA_MacShowFocusRect, true);
 }
 
 void ThemedLineEdit::focusInEvent(QFocusEvent* event)
