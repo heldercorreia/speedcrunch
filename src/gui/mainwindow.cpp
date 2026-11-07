@@ -1115,11 +1115,9 @@ ToolTipStyleUtils::PopupTheme toolTipTheme(const GeneratedThemeSurfaces& surface
                                            int backgroundShade, int outlineShade,
                                            int cornerRadius)
 {
-    if (Settings::instance()->toolTipAppearance == Settings::ToolTipAppearanceSystem) {
-        const QPalette palette = QApplication::palette();
-        return {palette.color(QPalette::ToolTipBase), palette.color(QPalette::ToolTipText),
-                palette.color(QPalette::Mid), 0};
-    }
+    // Invalid colors leave the tooltip to the system style.
+    if (Settings::instance()->toolTipAppearance == Settings::ToolTipAppearanceSystem)
+        return {};
     const ThemeSurfaceColors surface = themeSurfaceForShadeIndex(surfaces, backgroundShade);
     return {surface.background, surface.foreground,
             themeSurfaceForShadeIndex(surfaces, outlineShade).background, cornerRadius};
@@ -1153,18 +1151,15 @@ void applyDockToolTipAppearance(QWidget* dockContent, const GeneratedThemeSurfac
 void applyEditorCompletionAppearance(Editor* editor, const GeneratedThemeSurfaces& surfaces)
 {
     if (Settings::instance()->toolTipAppearance == Settings::ToolTipAppearanceSystem) {
-        // The function and constant lists use the system list colors.
-        const QPalette palette = QApplication::palette();
-        editor->setThemeCompletionColors(palette.color(QPalette::Base),
-                                         palette.color(QPalette::Text),
-                                         palette.color(QPalette::Mid),
-                                         palette.color(QPalette::Text),
-                                         palette.color(QPalette::Highlight),
-                                         palette.color(QPalette::HighlightedText),
-                                         palette.color(QPalette::Mid),
-                                         0,
-                                         palette.color(QPalette::Highlight),
-                                         palette.color(QPalette::HighlightedText));
+        // Invalid colors leave the lists to the system style. Native macOS
+        // popups have rounded corners, so keep them there.
+#ifdef Q_OS_MACOS
+        const int cornerRadius = UiConfig::CompletionPopupCornerRadius;
+#else
+        const int cornerRadius = 0;
+#endif
+        editor->setThemeCompletionColors(QColor(), QColor(), QColor(), QColor(), QColor(),
+                                         QColor(), QColor(), cornerRadius, QColor(), QColor());
         return;
     }
     const ThemeSurfaceColors completionPopup =
@@ -12860,12 +12855,23 @@ void MainWindow::setMenuBarVisible(bool b)
 void MainWindow::applyStateLabelTheme()
 {
     const ToolTipStyleUtils::PopupTheme theme = resultToolTipTheme(generatedSurfaceColors(m_settings));
-    m_widgets.state->setStyleSheet(ToolTipStyleUtils::labelToolTipStyleSheet(
-        QStringLiteral("QLabel"),
-        theme.background,
-        theme.foreground,
-        theme.outline,
-        theme.cornerRadius));
+    QColor foreground = theme.foreground;
+    if (!theme.background.isValid()) {
+        // The event filter paints the system tooltip panel under the text.
+        const QPalette palette = ToolTipStyleUtils::nativeToolTipPalette();
+        foreground = palette.color(QPalette::ToolTipText);
+        m_widgets.state->setStyleSheet(QString());
+        m_widgets.state->setPalette(palette);
+        ToolTipStyleUtils::applyNativeToolTipMask(m_widgets.state);
+    } else {
+        m_widgets.state->clearMask();
+        m_widgets.state->setStyleSheet(ToolTipStyleUtils::labelToolTipStyleSheet(
+            QStringLiteral("QLabel"),
+            theme.background,
+            theme.foreground,
+            theme.outline,
+            theme.cornerRadius));
+    }
     m_widgets.stateCloseButton->setStyleSheet(QStringLiteral(R"(
         QPushButton {
             border: none;
@@ -12885,7 +12891,7 @@ void MainWindow::applyStateLabelTheme()
             background: transparent;
             color: %1;
         }
-    )").arg(theme.foreground.name()));
+    )").arg(foreground.name()));
 }
 
 void MainWindow::showStateLabel(const QString& msg)
@@ -13134,6 +13140,15 @@ bool MainWindow::event(QEvent* e)
 
 bool MainWindow::eventFilter(QObject* o, QEvent* e)
 {
+    if (o == m_widgets.state && e != nullptr && m_settings != nullptr
+        && m_settings->toolTipAppearance == Settings::ToolTipAppearanceSystem) {
+        // Draw the result preview like a system tooltip. QLabel then draws the text.
+        if (e->type() == QEvent::Paint)
+            ToolTipStyleUtils::paintNativeToolTipPanel(m_widgets.state);
+        else if (e->type() == QEvent::Resize)
+            ToolTipStyleUtils::applyNativeToolTipMask(m_widgets.state);
+    }
+
     if (o == qApp && e != nullptr && e->type() == QEvent::Quit
         && primaryMainWindow() == this) {
         // QApplication closes top-level windows in an unspecified order.

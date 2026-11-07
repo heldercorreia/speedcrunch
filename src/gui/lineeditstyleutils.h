@@ -8,6 +8,7 @@
 #include <QIcon>
 #include <QLineEdit>
 #include <QPainter>
+#include <QStyle>
 #include <QToolButton>
 
 namespace LineEditStyleUtils {
@@ -46,6 +47,23 @@ inline void applyClearButtonColors(QLineEdit* searchBox, const QColor& fill, con
             action->setIcon(icon);
         button->setIcon(icon);
         button->setIconSize(QSize(16, 16));
+    }
+}
+
+// Shows the clear button icon of the current style again.
+inline void restoreClearButton(QLineEdit* searchBox)
+{
+    if (searchBox == nullptr)
+        return;
+
+    const QIcon icon = searchBox->style()->standardIcon(QStyle::SP_LineEditClearButton,
+                                                        nullptr, searchBox);
+    for (QAction* action : searchBox->actions())
+        action->setIcon(icon);
+    for (QToolButton* button : searchBox->findChildren<QToolButton*>()) {
+        if (QAction* action = button->defaultAction())
+            action->setIcon(icon);
+        button->setIcon(icon);
     }
 }
 

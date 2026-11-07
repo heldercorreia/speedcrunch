@@ -985,10 +985,9 @@ User Interface Settings
     * :guilabel:`Light` keeps the system controls light.
     * :guilabel:`Dark` keeps the system controls dark.
 
-    It affects menus, docks, the status bar, and tooltips when their appearance
-    is set to :guilabel:`System`, along with other native controls and dialogs.
-    It does not change the selected SpeedCrunch theme or the Input and Results
-    appearance.
+    It affects menus, docks, and the status bar when their appearance is set to
+    :guilabel:`System`, along with other native controls and dialogs. It does not
+    change the selected SpeedCrunch theme or the Input and Results appearance.
 
     A system high-contrast accessibility theme may take precedence over the
     selected light or dark mode, depending on platform support.
@@ -1064,11 +1063,10 @@ User Interface Settings
     function hints, the function and constant lists in the input field, and the
     tooltips in the keypad, session tabs, results, and docks:
 
-    * :guilabel:`System` uses the system colors and square corners. If
-      :menuselection:`System Color Mode` is set to :guilabel:`Follow System`,
-      the colors change when the system theme changes.
+    * :guilabel:`System` uses the system style. The tooltips and lists look
+      like those in other apps, and they change when the system theme changes.
     * :guilabel:`SpeedCrunch Theme` (the default) uses the colors of the
-      selected SpeedCrunch theme and rounded corners.
+      selected SpeedCrunch theme.
 
     The change applies at once to all SpeedCrunch windows. SpeedCrunch keeps
     it the next time it starts.

@@ -7,6 +7,7 @@
 #include "gui/dockliststyle.h"
 #include "gui/themedlineedit.h"
 #include "gui/lineeditstyleutils.h"
+#include "gui/menustyleutils.h"
 #include "gui/startupappearance.h"
 #include "gui/displayformatutils.h"
 #include "gui/editorutils.h"
@@ -4615,7 +4616,12 @@ EditorCompletion::EditorCompletion(Editor* editor)
     // Keyboard input stays with the editor; our event filter handles clicks.
     m_popup->setParent(editor, Qt::ToolTip | Qt::FramelessWindowHint);
     m_popup->setAutoFillBackground(true);
+#ifdef Q_OS_MACOS
+    // See-through, so the system style can draw smooth rounded corners.
+    m_popup->setAttribute(Qt::WA_TranslucentBackground, true);
+#else
     m_popup->setAttribute(Qt::WA_TranslucentBackground, false);
+#endif
     m_popup->setAttribute(Qt::WA_ShowWithoutActivating, true);
     m_popup->setAttribute(Qt::WA_NoMouseReplay, true);
     m_popup->setFocusPolicy(Qt::NoFocus);
@@ -4650,6 +4656,10 @@ void EditorCompletion::setThemeColors(const QColor& background,
 
 void EditorCompletion::applyThemeColors()
 {
+    // The theme draws its own outline. A square system popup needs a frame.
+    // A rounded one has none, because its corners would cut the frame.
+    m_popup->setFrameShape(m_backgroundColor.isValid() || m_cornerRadius > 0
+                               ? QFrame::NoFrame : QFrame::StyledPanel);
     ToolTipStyleUtils::applyTreePopupTheme(
         m_popup,
         {m_backgroundColor,
@@ -4660,6 +4670,7 @@ void EditorCompletion::applyThemeColors()
          m_selectedRowForegroundColor,
          m_outlineColor,
          m_cornerRadius});
+    ToolTipStyleUtils::setSmoothPopupCorners(m_popup, m_backgroundColor.isValid() ? 0 : m_cornerRadius);
 }
 
 void EditorCompletion::restoreEditorFocus()
@@ -5053,6 +5064,10 @@ ConstantCompletion::ConstantCompletion(Editor* editor)
     m_popup->setObjectName(QStringLiteral("constantCompletionPopup"));
     m_popup->setParent(editor, Qt::Popup | Qt::FramelessWindowHint);
     m_popup->setAttribute(Qt::WA_NoMouseReplay, true);
+#ifdef Q_OS_MACOS
+    // See-through, so the system style can draw smooth rounded corners.
+    m_popup->setAttribute(Qt::WA_TranslucentBackground, true);
+#endif
     m_popup->setFrameStyle(QFrame::NoFrame);
     m_popup->setAutoFillBackground(true);
 
@@ -5141,8 +5156,23 @@ void ConstantCompletion::setThemeColors(const QColor& background,
 
 void ConstantCompletion::applyThemeColors()
 {
-    if (!m_backgroundColor.isValid() || !m_foregroundColor.isValid())
+    if (!m_backgroundColor.isValid() || !m_foregroundColor.isValid()) {
+        // Leave the popup, search field and list to the system style.
+        m_popup->setFrameShape(m_cornerRadius > 0 ? QFrame::NoFrame : QFrame::StyledPanel);
+        m_popup->setStyleSheet(QString());
+        m_popup->setPalette(MenuStyle::systemPalette(m_popup));
+        m_search->setStyleSheet(QString());
+        m_search->setPalette(MenuStyle::systemPalette(m_search));
+        static_cast<ThemedLineEdit*>(m_search)->setCursorColor(QColor());
+        updateSearchClearButton(m_search->hasFocus());
+        ToolTipStyleUtils::applyTreePopupTheme(m_constantWidget, {});
+        m_constantWidget->setFrameShape(QFrame::NoFrame);
+        ToolTipStyleUtils::setSmoothPopupCorners(m_popup, m_cornerRadius);
         return;
+    }
+
+    m_popup->setFrameShape(QFrame::NoFrame);
+    ToolTipStyleUtils::setSmoothPopupCorners(m_popup, 0);
 
     QPalette palette = m_popup->palette();
     for (const QPalette::ColorGroup group : {QPalette::Active, QPalette::Inactive, QPalette::Disabled}) {
@@ -5169,7 +5199,7 @@ void ConstantCompletion::applyThemeColors()
         " border-radius: %4px; padding: %11px %12px; selection-background-color: %5; selection-color: %6; }"
         "QLineEdit:focus { border: %7px solid %8; padding: %9px %10px; }")
         .arg(m_backgroundColor.name(), m_foregroundColor.name(), m_outlineColor.name())
-        .arg(m_cornerRadius > 0 ? UiConfig::ControlCornerRadius : 0)
+        .arg(UiConfig::ControlCornerRadius)
         .arg(m_selectedRowColor.name(), m_selectedRowForegroundColor.name())
         .arg(UiConfig::OutlineStrokeWidth).arg(m_searchButtonFill.name())
         .arg(UiConfig::ConstantSearchVerticalPadding - focusInset)
@@ -5190,8 +5220,10 @@ void ConstantCompletion::applyThemeColors()
 
 void ConstantCompletion::updateSearchClearButton(bool focused)
 {
-    if (!m_backgroundColor.isValid() || !m_foregroundColor.isValid())
+    if (!m_backgroundColor.isValid() || !m_foregroundColor.isValid()) {
+        LineEditStyleUtils::restoreClearButton(m_search);
         return;
+    }
     LineEditStyleUtils::applyClearButtonColors(m_search,
         focused ? m_searchButtonFill : m_backgroundColor,
         focused ? m_searchButtonCross : m_foregroundColor);

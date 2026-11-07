@@ -7,6 +7,7 @@
 
 #include <QColor>
 #include <QMargins>
+#include <QPalette>
 #include <QPoint>
 #include <QString>
 #include <Qt>
@@ -37,7 +38,15 @@ struct TreePopupTheme {
     int cornerRadius = 0;
 };
 
+// A theme with an invalid background color means "use the system style".
 void applyRoundedPopupMask(QWidget* popup, int cornerRadius);
+QPalette nativeToolTipPalette();
+void applyNativeToolTipMask(QWidget* widget);
+void paintNativeToolTipPanel(QWidget* widget);
+// Draws smooth rounded corners instead of cutting them with a mask. This
+// needs a see-through popup (Qt::WA_TranslucentBackground set before it is
+// first shown). A radius of 0 turns it off.
+void setSmoothPopupCorners(QWidget* popup, int cornerRadius);
 void applyPopupTheme(QFrame* popup,
                      QLabel* label,
                      QWidget* paletteSource,

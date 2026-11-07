@@ -7,6 +7,7 @@
 #include "core/processlaunch.h"
 #include "gui/diagnosticsdialog.h"
 #include "gui/fontdialogstyles.h"
+#include "gui/tooltipstyleutils.h"
 #include "buildversion.h"
 
 #include <QFontDatabase>
@@ -14,6 +15,7 @@
 #include <QOperatingSystemVersion>
 #include <QStyleHints>
 #include <QStringListModel>
+#include <QToolTip>
 #include <QTreeWidget>
 
 using namespace MainWindowTestHelpers;
@@ -70,6 +72,7 @@ private slots:
     void appearance_presets_follow_settings_reset();
     void tooltip_appearance_switches_result_preview_colors();
     void tooltip_appearance_switches_completion_popup_colors();
+    void tooltip_popups_use_system_style_when_theme_is_empty();
     void settings_reset_restores_persisted_defaults();
     void settings_reset_can_be_cancelled_data();
     void settings_reset_can_be_cancelled();
@@ -1817,15 +1820,11 @@ void TestSettingsUi::tooltip_appearance_switches_result_preview_colors()
 
     toolTips->actions().at(0)->trigger();
     QCOMPARE(guard.settings->toolTipAppearance, Settings::ToolTipAppearanceSystem);
-    const QPalette system = QApplication::palette();
-    const QString native = popup->styleSheet();
-    QVERIFY2(native.contains(QStringLiteral("background-color: %1;")
-                                 .arg(system.color(QPalette::ToolTipBase).name())),
-             qPrintable(native));
-    QVERIFY2(native.contains(QStringLiteral("color: %1;")
-                                 .arg(system.color(QPalette::ToolTipText).name())),
-             qPrintable(native));
-    QVERIFY2(native.contains(QStringLiteral("border-radius: 0px")), qPrintable(native));
+    QVERIFY2(popup->styleSheet().isEmpty(), qPrintable(popup->styleSheet()));
+    QCOMPARE(popup->palette().color(QPalette::ToolTipBase),
+             QToolTip::palette().color(QPalette::ToolTipBase));
+    QCOMPARE(popup->palette().color(QPalette::WindowText),
+             QToolTip::palette().color(QPalette::ToolTipText));
 
     toolTips->actions().at(1)->trigger();
     QCOMPARE(popup->styleSheet(), themed);
@@ -1855,38 +1854,146 @@ void TestSettingsUi::tooltip_appearance_switches_completion_popup_colors()
                                       .arg(UiConfig::CompletionPopupCornerRadius)),
              qPrintable(themedStyle));
 
+#ifdef Q_OS_MACOS
+    // The corners are drawn with smooth edges, not cut with a 1-bit mask.
+    const auto checkSmoothCorners = [](QWidget* popup) {
+        QVERIFY(popup->testAttribute(Qt::WA_TranslucentBackground));
+        QVERIFY(popup->mask().isEmpty());
+        const QImage image = popup->grab().toImage();
+        QCOMPARE(image.pixelColor(0, 0).alpha(), 0);
+        QCOMPARE(image.pixelColor(image.width() / 2, image.height() / 2).alpha(), 255);
+        bool foundPartial = false;
+        for (int i = 0; i < image.width() && i < image.height() && !foundPartial; ++i) {
+            const int alpha = image.pixelColor(i, i).alpha();
+            foundPartial = alpha > 0 && alpha < 255;
+        }
+        QVERIFY(foundPartial);
+    };
+#endif
+
     auto* toolTips = window.findChild<QMenu*>(QStringLiteral("ToolTipAppearanceMenu"));
     QVERIFY(toolTips);
     toolTips->actions().at(0)->trigger();
-    const QPalette system = QApplication::palette();
+    const QPalette system = QApplication::palette(functions);
+    QVERIFY2(functions->styleSheet().isEmpty(), qPrintable(functions->styleSheet()));
     QCOMPARE(functions->palette().color(QPalette::Base), system.color(QPalette::Base));
     QCOMPARE(functions->palette().color(QPalette::Text), system.color(QPalette::Text));
+#ifdef Q_OS_MACOS
+    // Native macOS popups are rounded and show an inset, rounded selection.
+    QCOMPARE(functions->frameShape(), QFrame::NoFrame);
+    editor->setFocus();
+    editor->setText(QStringLiteral("si"));
+    editor->setCursorPosition(editor->text().size());
+    QVERIFY(QMetaObject::invokeMethod(editor, "triggerAutoComplete", Qt::DirectConnection));
+    QTRY_VERIFY(functions->isVisible() && functions->topLevelItemCount() > 0);
+    functions->setCurrentItem(functions->topLevelItem(0));
+    const QImage image = functions->viewport()->grab().toImage();
+    const qreal ratio = image.devicePixelRatio();
+    const QRect row = functions->visualItemRect(functions->topLevelItem(0));
+    const int y = qRound(row.center().y() * ratio);
+    // The selection uses the accent color, even when Qt treats the popup as inactive.
+    const QList<QColor> selectionColors {
+        functions->palette().color(QPalette::Active, QPalette::Accent)};
+    QCOMPARE(functions->palette().color(QPalette::Inactive, QPalette::Highlight),
+             selectionColors.first());
+    // System colors can be stored with more precision than the 8-bit image.
+    const auto isSelection = [&selectionColors](const QColor& pixel) {
+        for (const QColor& color : selectionColors) {
+            if (qAbs(pixel.red() - color.red()) <= 1 && qAbs(pixel.green() - color.green()) <= 1
+                && qAbs(pixel.blue() - color.blue()) <= 1)
+                return true;
+        }
+        return false;
+    };
+    QVERIFY(!isSelection(image.pixelColor(qRound(1 * ratio), y)));
+    bool foundSelection = false;
+    for (int x = 0; x < image.width() && !foundSelection; ++x)
+        foundSelection = isSelection(image.pixelColor(x, y));
+    QVERIFY(foundSelection);
+    // The text starts inside the bar, not under its rounded end.
+    QStyleOptionViewItem option;
+    option.initFrom(functions->viewport());
+    option.rect = functions->visualRect(functions->model()->index(0, 0));
+    option.viewItemPosition = QStyleOptionViewItem::Beginning;
+    option.features = QStyleOptionViewItem::HasDisplay;
+    option.text = QStringLiteral("sin");
+    const QRect textRect = functions->style()->subElementRect(QStyle::SE_ItemViewItemText,
+                                                              &option, functions);
+    QVERIFY2(textRect.left() >= option.rect.left() + 10,
+             qPrintable(QStringLiteral("%1 vs %2").arg(textRect.left()).arg(option.rect.left())));
+    checkSmoothCorners(functions);
+    if (QTest::currentTestFailed())
+        return;
+    functions->hide();
+    editor->setText(QString());
+#else
     QCOMPARE(functions->palette().color(QPalette::Highlight), system.color(QPalette::Highlight));
-    QCOMPARE(functions->palette().color(QPalette::HighlightedText),
-             system.color(QPalette::HighlightedText));
-    QVERIFY2(functions->styleSheet().contains(QStringLiteral("border-radius: 0px")),
-             qPrintable(functions->styleSheet()));
+    QCOMPARE(functions->frameShape(), QFrame::StyledPanel);
+#endif
 
     editor->setFocus();
     QTest::keyClick(editor, Qt::Key_Space, Qt::ControlModifier);
     QWidget* constants = nullptr;
     QTRY_VERIFY((constants = popupNamed(QStringLiteral("constantCompletionPopup"))) != nullptr
                 && constants->isVisible());
-    QCOMPARE(constants->palette().color(QPalette::Window), system.color(QPalette::Base));
-    QVERIFY2(constants->styleSheet().contains(QStringLiteral("background: %1;")
-                                                  .arg(system.color(QPalette::Base).name())),
-             qPrintable(constants->styleSheet()));
-    QVERIFY2(constants->styleSheet().contains(QStringLiteral("border-radius: 0px")),
-             qPrintable(constants->styleSheet()));
+    QVERIFY2(constants->styleSheet().isEmpty(), qPrintable(constants->styleSheet()));
+    QCOMPARE(constants->palette().color(QPalette::Window),
+             QApplication::palette(constants).color(QPalette::Window));
     auto* search = constants->findChild<QLineEdit*>();
     QVERIFY(search);
-    QVERIFY2(search->styleSheet().contains(QStringLiteral("border-radius: 0px")),
-             qPrintable(search->styleSheet()));
+    QVERIFY2(search->styleSheet().isEmpty(), qPrintable(search->styleSheet()));
+    auto* list = constants->findChild<QTreeWidget*>();
+    QVERIFY(list);
+    QVERIFY2(list->styleSheet().isEmpty(), qPrintable(list->styleSheet()));
+#ifdef Q_OS_MACOS
+    // The editor's stylesheet styles the list again, and the colors must stay.
+    QCOMPARE(list->palette().color(QPalette::Inactive, QPalette::Highlight),
+             list->palette().color(QPalette::Active, QPalette::Accent));
+    QCOMPARE(list->palette().color(QPalette::Inactive, QPalette::HighlightedText),
+             list->palette().color(QPalette::Active, QPalette::HighlightedText));
+    checkSmoothCorners(constants);
+    if (QTest::currentTestFailed())
+        return;
+#endif
     constants->hide();
 
     toolTips->actions().at(1)->trigger();
     QCOMPARE(functions->palette().color(QPalette::Base), themedBackground);
     QCOMPARE(functions->styleSheet(), themedStyle);
+    QCOMPARE(functions->frameShape(), QFrame::NoFrame);
+    QVERIFY(functions->autoFillBackground());
+    QVERIFY(functions->viewport()->autoFillBackground());
+}
+
+void TestSettingsUi::tooltip_popups_use_system_style_when_theme_is_empty()
+{
+    QWidget anchor;
+    QLabel* label = nullptr;
+    const QMargins margins(6, 4, 6, 4);
+    QFrame* popup = ToolTipStyleUtils::createPopup(&anchor, QStringLiteral("testPopup"),
+                                                   QStringLiteral("testPopupLabel"),
+                                                   Qt::PlainText, &label, false, margins);
+    QVERIFY(popup);
+    QVERIFY(label);
+    const ToolTipStyleUtils::PopupTheme themed {QColor(QStringLiteral("#203040")),
+                                                QColor(QStringLiteral("#f0f0f0")),
+                                                QColor(QStringLiteral("#405060")), 8};
+    ToolTipStyleUtils::applyPopupTheme(popup, label, &anchor, themed);
+    const QString themedStyle = popup->styleSheet();
+    QVERIFY(themedStyle.contains(QStringLiteral("#203040")));
+
+    ToolTipStyleUtils::applyPopupTheme(popup, label, &anchor, {});
+    QVERIFY2(popup->styleSheet().isEmpty(), qPrintable(popup->styleSheet()));
+    QCOMPARE(popup->palette().color(QPalette::ToolTipBase),
+             QToolTip::palette().color(QPalette::ToolTipBase));
+    QCOMPARE(label->palette().color(QPalette::WindowText),
+             QToolTip::palette().color(QPalette::ToolTipText));
+    QCOMPARE(popup->font(), QToolTip::font());
+
+    ToolTipStyleUtils::applyPopupTheme(popup, label, &anchor, themed);
+    QCOMPARE(popup->styleSheet(), themedStyle);
+    QCOMPARE(popup->layout()->contentsMargins(), margins);
+    QCOMPARE(popup->windowOpacity(), 1.0);
 }
 
 void TestSettingsUi::settings_reset_restores_persisted_defaults()
