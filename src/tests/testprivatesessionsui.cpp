@@ -192,18 +192,28 @@ void TestPrivateSessionsUi::private_session_conversion_handles_storage_failures(
     const Session* session = display->session();
     const QString name = session->name();
     QVERIFY(QDir().mkpath(storage.path(name)));
+    // The error box opens only after the confirmation's event loop returns. On
+    // Cocoa that loop can still run timers after done() hides the confirmation,
+    // so wait for the error box itself instead of assuming the next modal.
+    bool errorShown = false;
+    QTimer errorWatch;
+    errorWatch.setInterval(10);
+    connect(&errorWatch, &QTimer::timeout, &window, [&]() {
+        auto* error = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        if (error == nullptr || !error->text().contains(QStringLiteral("Could not delete")))
+            return;
+        errorWatch.stop();
+        errorShown = true;
+        error->accept();
+    });
     QTimer::singleShot(0, &window, [&]() {
         auto* confirmation = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
         QVERIFY(confirmation);
-        QTimer::singleShot(0, &window, []() {
-            auto* error = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
-            QVERIFY(error);
-            QVERIFY(error->text().contains(QStringLiteral("Could not delete")));
-            error->accept();
-        });
+        errorWatch.start();
         confirmation->done(QMessageBox::Yes);
     });
     QVERIFY(QMetaObject::invokeMethod(&window, "convertSessionPrivacy"));
+    QVERIFY(errorShown);
     QVERIFY(!session->isPrivate());
     QCOMPARE(session->name(), name);
     QVERIFY(QMetaObject::invokeMethod(&window, "showNewPrivateSession"));
