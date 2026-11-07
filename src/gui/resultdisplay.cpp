@@ -799,11 +799,13 @@ void ResultDisplay::setThemeSurfaceColor(const QColor& color)
 
 void ResultDisplay::setThemeToolTipColors(const QColor& background,
                                           const QColor& foreground,
-                                          const QColor& outline)
+                                          const QColor& outline,
+                                          int cornerRadius)
 {
     m_toolTipBackgroundColor = background;
     m_toolTipForegroundColor = foreground;
     m_toolTipOutlineColor = outline;
+    m_toolTipCornerRadius = qMax(0, cornerRadius);
     applyHoverActionPopupTheme();
 }
 
@@ -931,7 +933,7 @@ void ResultDisplay::applyHoverActionPopupTheme()
         {m_toolTipBackgroundColor,
          m_toolTipForegroundColor,
          m_toolTipOutlineColor,
-         UiConfig::ResultTooltipCornerRadius});
+         m_toolTipCornerRadius});
 }
 
 void ResultDisplay::ensureHoverActionPopup()
@@ -967,7 +969,7 @@ void ResultDisplay::showHoverActionPopup(const QString& text, QWidget* anchor, c
                                  text,
                                  anchor,
                                  globalPos,
-                                 UiConfig::ResultTooltipCornerRadius);
+                                 m_toolTipCornerRadius);
 }
 
 void ResultDisplay::updateHoverActionPopupMask()
@@ -975,8 +977,7 @@ void ResultDisplay::updateHoverActionPopupMask()
     if (m_hoverActionPopup == nullptr)
         return;
 
-    ToolTipStyleUtils::applyRoundedPopupMask(m_hoverActionPopup,
-                                             qMax(0, UiConfig::ResultTooltipCornerRadius));
+    ToolTipStyleUtils::applyRoundedPopupMask(m_hoverActionPopup, m_toolTipCornerRadius);
 }
 
 QColor ResultDisplay::hoverActionBadgeFillColor() const

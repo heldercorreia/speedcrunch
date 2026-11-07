@@ -196,6 +196,7 @@ private slots:
     void setSystemColorMode(QAction*);
     void setDockAppearance(QAction*);
     void setStatusBarAppearance(QAction*);
+    void setToolTipAppearance(QAction*);
     void setKeypadAppearance(QAction*);
     void applyKeypadAppearance();
     void setEditorDisplayStyle(QAction*);
@@ -318,6 +319,8 @@ private:
     void setDisplayFont(const QFont& font);
     void applyEditorDisplayStyle();
     void updateAppearancePresetActions();
+    void applyToolTipAppearance();
+    void applyStateLabelTheme();
     void checkInitialResultFormat();
     void checkInitialComplexFormat();
     void checkInitialImaginaryUnit();
@@ -600,6 +603,8 @@ private:
         QAction* settingsDockAppearanceSpeedCrunch;
         QAction* settingsStatusBarAppearanceSystem;
         QAction* settingsStatusBarAppearanceSpeedCrunch;
+        QAction* settingsToolTipAppearanceSystem;
+        QAction* settingsToolTipAppearanceSpeedCrunch;
         QAction* settingsKeypadAppearanceClassic;
         QAction* settingsKeypadAppearanceModern;
         QAction* settingsEditorDisplayClassic;
@@ -630,6 +635,7 @@ private:
         QActionGroup* systemColorMode;
         QActionGroup* dockAppearance;
         QActionGroup* statusBarAppearance;
+        QActionGroup* toolTipAppearance;
         QActionGroup* keypadAppearance;
         QActionGroup* editorDisplayStyle;
         QActionGroup* digits;
@@ -661,6 +667,7 @@ private:
         QMenu* systemColorMode;
         QMenu* dockAppearance;
         QMenu* statusBarAppearance;
+        QMenu* toolTipAppearance;
         QMenu* keypadAppearance;
         QMenu* editorDisplayStyle;
         QMenu* edit;

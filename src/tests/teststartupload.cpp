@@ -253,6 +253,8 @@ bool prepareWorkload(const QString& root)
         ? Settings::DockAppearanceSystem : Settings::DockAppearanceSpeedCrunch));
     settings.setValue(displayPrefix + QStringLiteral("StatusBarAppearance"), int(classic
         ? Settings::StatusBarAppearanceSystem : Settings::StatusBarAppearanceSpeedCrunch));
+    settings.setValue(displayPrefix + QStringLiteral("ToolTipAppearance"), int(classic
+        ? Settings::ToolTipAppearanceSystem : Settings::ToolTipAppearanceSpeedCrunch));
     settings.setValue(displayPrefix + QStringLiteral("EditorDisplayStyle"), int(classic
         ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern));
     settings.setValue(displayPrefix + QStringLiteral("KeypadAppearance"), int(classic

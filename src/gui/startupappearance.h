@@ -79,6 +79,7 @@ inline void observeAppearanceSettings(AppearanceScope& scope)
     const Settings* settings = Settings::instance();
     scope.observeInputs("appearance", appearanceInputs({int(settings->menuAppearance),
         int(settings->dockAppearance), int(settings->statusBarAppearance),
+        int(settings->toolTipAppearance),
         int(settings->keypadAppearance), int(settings->editorDisplayStyle)}));
 }
 

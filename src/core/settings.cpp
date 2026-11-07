@@ -688,6 +688,8 @@ void Settings::load()
         == EditorDisplayClassic ? EditorDisplayClassic : EditorDisplayModern;
     keypadAppearance = settings->value(key + QLatin1String("KeypadAppearance"), KeypadAppearanceModern).toInt()
         == KeypadAppearanceClassic ? KeypadAppearanceClassic : KeypadAppearanceModern;
+    toolTipAppearance = settings->value(key + QLatin1String("ToolTipAppearance"), ToolTipAppearanceSpeedCrunch).toInt()
+        == ToolTipAppearanceSystem ? ToolTipAppearanceSystem : ToolTipAppearanceSpeedCrunch;
     customColorSchemeJson = settings->value(key + QLatin1String("CustomColorSchemeJson"), QString()).toString();
 
     phaseTiming.next("Close settings storage");
@@ -818,6 +820,7 @@ void Settings::save()
     settings->setValue(key + QLatin1String("MenuAppearance"), static_cast<int>(menuAppearance));
     settings->setValue(key + QLatin1String("DockAppearance"), static_cast<int>(dockAppearance));
     settings->setValue(key + QLatin1String("StatusBarAppearance"), static_cast<int>(statusBarAppearance));
+    settings->setValue(key + QLatin1String("ToolTipAppearance"), static_cast<int>(toolTipAppearance));
     settings->setValue(key + QLatin1String("EditorDisplayStyle"), static_cast<int>(editorDisplayStyle));
     settings->setValue(key + QLatin1String("KeypadAppearance"), static_cast<int>(keypadAppearance));
     settings->setValue(key + QLatin1String("CustomColorSchemeJson"), customColorSchemeJson);

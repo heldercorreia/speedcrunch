@@ -1111,6 +1111,82 @@ void setDockPaletteIfChanged(QWidget* widget, const QPalette& palette)
     StartupDiagnostics::setAppearancePalette(widget, palette);
 }
 
+ToolTipStyleUtils::PopupTheme toolTipTheme(const GeneratedThemeSurfaces& surfaces,
+                                           int backgroundShade, int outlineShade,
+                                           int cornerRadius)
+{
+    if (Settings::instance()->toolTipAppearance == Settings::ToolTipAppearanceSystem) {
+        const QPalette palette = QApplication::palette();
+        return {palette.color(QPalette::ToolTipBase), palette.color(QPalette::ToolTipText),
+                palette.color(QPalette::Mid), 0};
+    }
+    const ThemeSurfaceColors surface = themeSurfaceForShadeIndex(surfaces, backgroundShade);
+    return {surface.background, surface.foreground,
+            themeSurfaceForShadeIndex(surfaces, outlineShade).background, cornerRadius};
+}
+
+ToolTipStyleUtils::PopupTheme popupToolTipTheme(const GeneratedThemeSurfaces& surfaces)
+{
+    return toolTipTheme(surfaces, UiConfig::CompletionPopupBackgroundShade,
+                        UiConfig::CompletionPopupOutlineShade,
+                        UiConfig::CompletionPopupCornerRadius);
+}
+
+ToolTipStyleUtils::PopupTheme resultToolTipTheme(const GeneratedThemeSurfaces& surfaces)
+{
+    return toolTipTheme(surfaces, UiConfig::ResultTooltipBackgroundShade,
+                        UiConfig::ResultTooltipOutlineShade,
+                        UiConfig::ResultTooltipCornerRadius);
+}
+
+void applyDockToolTipAppearance(QWidget* dockContent, const GeneratedThemeSurfaces& surfaces)
+{
+    const ToolTipStyleUtils::PopupTheme theme = popupToolTipTheme(surfaces);
+    if (BitFieldWidget* bitField = qobject_cast<BitFieldWidget*>(dockContent))
+        bitField->setToolTipThemeColors(theme.background, theme.foreground, theme.outline,
+                                        theme.cornerRadius);
+    if (ConstantsWidget* constants = qobject_cast<ConstantsWidget*>(dockContent))
+        constants->setSummaryPopupThemeColors(theme.background, theme.foreground, theme.outline,
+                                              theme.cornerRadius);
+}
+
+void applyEditorCompletionAppearance(Editor* editor, const GeneratedThemeSurfaces& surfaces)
+{
+    if (Settings::instance()->toolTipAppearance == Settings::ToolTipAppearanceSystem) {
+        // The function and constant lists use the system list colors.
+        const QPalette palette = QApplication::palette();
+        editor->setThemeCompletionColors(palette.color(QPalette::Base),
+                                         palette.color(QPalette::Text),
+                                         palette.color(QPalette::Mid),
+                                         palette.color(QPalette::Text),
+                                         palette.color(QPalette::Highlight),
+                                         palette.color(QPalette::HighlightedText),
+                                         palette.color(QPalette::Mid),
+                                         0,
+                                         palette.color(QPalette::Highlight),
+                                         palette.color(QPalette::HighlightedText));
+        return;
+    }
+    const ThemeSurfaceColors completionPopup =
+        themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupBackgroundShade);
+    const ThemeSurfaceColors completionScrollbarThumb =
+        themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupScrollbarThumbShade);
+    const ThemeSurfaceColors completionSelectedRow =
+        themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupSelectedRowShade);
+    const ThemeSurfaceColors completionOutline =
+        themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupOutlineShade);
+    editor->setThemeCompletionColors(completionPopup.background,
+                                     completionPopup.foreground,
+                                     completionScrollbarThumb.background,
+                                     completionScrollbarThumb.foreground,
+                                     completionSelectedRow.background,
+                                     completionSelectedRow.foreground,
+                                     completionOutline.background,
+                                     UiConfig::CompletionPopupCornerRadius,
+                                     surfaces.primary.background,
+                                     surfaces.primary.foreground);
+}
+
 void applyStatusBarAppearance(QStatusBar* bar, const GeneratedThemeSurfaces& surfaces)
 {
     if (bar == nullptr)
@@ -1903,19 +1979,9 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
             const QPalette palette = MenuStyle::systemPalette(book->findChild<QTextBrowser*>());
             book->setContentSurfaceColors(palette.color(QPalette::Base), palette.color(QPalette::Text));
         }
-        if (BitFieldWidget* bitField = qobject_cast<BitFieldWidget*>(dockContent)) {
+        if (BitFieldWidget* bitField = qobject_cast<BitFieldWidget*>(dockContent))
             bitField->setThemeColors(QColor(), QColor());
-            const QPalette palette = MenuStyle::systemPalette(bitField);
-            bitField->setToolTipThemeColors(palette.color(QPalette::ToolTipBase),
-                                           palette.color(QPalette::ToolTipText),
-                                           palette.color(QPalette::Mid), 0);
-        }
-        if (ConstantsWidget* constants = qobject_cast<ConstantsWidget*>(dockContent)) {
-            const QPalette palette = MenuStyle::systemPalette(constants);
-            constants->setSummaryPopupThemeColors(palette.color(QPalette::ToolTipBase),
-                                                  palette.color(QPalette::ToolTipText),
-                                                  palette.color(QPalette::Mid), 0);
-        }
+        applyDockToolTipAppearance(dockContent, surfaces);
         for (QComboBox* combo : dockContent->findChildren<QComboBox*>())
             DockComboBoxChevron::applySystemAppearance(combo);
         alignDockSearchRow(dockContent);
@@ -1956,14 +2022,6 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
             themeSurfaceForShadeIndex(surfaces, UiConfig::BitfieldButtonHoverFillShade);
         const ThemeSurfaceColors bitfieldButtonPressed =
             themeSurfaceForShadeIndex(surfaces, UiConfig::BitfieldButtonPressedFillShade);
-        const ThemeSurfaceColors bitfieldToolTip =
-            themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupBackgroundShade);
-        const ThemeSurfaceColors bitfieldToolTipOutline =
-            themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupOutlineShade);
-        bitField->setToolTipThemeColors(bitfieldToolTip.background,
-                                        bitfieldToolTip.foreground,
-                                        bitfieldToolTipOutline.background,
-                                        UiConfig::CompletionPopupCornerRadius);
         bitField->setThemeColors(dockBackground.background,
                                  dockBackground.foreground,
                                  bitfieldHover.background,
@@ -1989,16 +2047,7 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
                                           dockBackground.foreground);
     }
 
-    if (ConstantsWidget* constantsWidget = qobject_cast<ConstantsWidget*>(dockContent)) {
-        const ThemeSurfaceColors completionPopup =
-            themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupBackgroundShade);
-        const ThemeSurfaceColors completionOutline =
-            themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupOutlineShade);
-        constantsWidget->setSummaryPopupThemeColors(completionPopup.background,
-                                                    completionPopup.foreground,
-                                                    completionOutline.background,
-                                                    UiConfig::CompletionPopupCornerRadius);
-    }
+    applyDockToolTipAppearance(dockContent, surfaces);
 
     for (QAbstractScrollArea* scrollArea : dockContent->findChildren<QAbstractScrollArea*>()) {
         if (qobject_cast<QAbstractItemView*>(scrollArea))
@@ -4046,6 +4095,12 @@ void MainWindow::createActions()
     m_actions.settingsStatusBarAppearanceSystem->setData(Settings::StatusBarAppearanceSystem);
     m_actions.settingsStatusBarAppearanceSpeedCrunch->setCheckable(true);
     m_actions.settingsStatusBarAppearanceSpeedCrunch->setData(Settings::StatusBarAppearanceSpeedCrunch);
+    m_actions.settingsToolTipAppearanceSystem = new QAction(this);
+    m_actions.settingsToolTipAppearanceSpeedCrunch = new QAction(this);
+    m_actions.settingsToolTipAppearanceSystem->setCheckable(true);
+    m_actions.settingsToolTipAppearanceSystem->setData(Settings::ToolTipAppearanceSystem);
+    m_actions.settingsToolTipAppearanceSpeedCrunch->setCheckable(true);
+    m_actions.settingsToolTipAppearanceSpeedCrunch->setData(Settings::ToolTipAppearanceSpeedCrunch);
     m_actions.settingsKeypadAppearanceClassic = new QAction(this);
     m_actions.settingsKeypadAppearanceClassic->setCheckable(true);
     m_actions.settingsKeypadAppearanceClassic->setData(Settings::KeypadAppearanceClassic);
@@ -4400,6 +4455,8 @@ void MainWindow::setAppearancePreset(bool classic)
                               : m_actions.settingsDockAppearanceSpeedCrunch);
     setStatusBarAppearance(classic ? m_actions.settingsStatusBarAppearanceSystem
                                    : m_actions.settingsStatusBarAppearanceSpeedCrunch);
+    setToolTipAppearance(classic ? m_actions.settingsToolTipAppearanceSystem
+                                 : m_actions.settingsToolTipAppearanceSpeedCrunch);
     setKeypadAppearance(classic ? m_actions.settingsKeypadAppearanceClassic
                                 : m_actions.settingsKeypadAppearanceModern);
     setEditorDisplayStyle(classic ? m_actions.settingsEditorDisplayClassic
@@ -4411,11 +4468,13 @@ void MainWindow::updateAppearancePresetActions()
     const bool classic = m_settings->menuAppearance == Settings::MenuAppearanceSystem
         && m_settings->dockAppearance == Settings::DockAppearanceSystem
         && m_settings->statusBarAppearance == Settings::StatusBarAppearanceSystem
+        && m_settings->toolTipAppearance == Settings::ToolTipAppearanceSystem
         && m_settings->keypadAppearance == Settings::KeypadAppearanceClassic
         && m_settings->editorDisplayStyle == Settings::EditorDisplayClassic;
     const bool modern = m_settings->menuAppearance == Settings::MenuAppearanceSpeedCrunch
         && m_settings->dockAppearance == Settings::DockAppearanceSpeedCrunch
         && m_settings->statusBarAppearance == Settings::StatusBarAppearanceSpeedCrunch
+        && m_settings->toolTipAppearance == Settings::ToolTipAppearanceSpeedCrunch
         && m_settings->keypadAppearance == Settings::KeypadAppearanceModern
         && m_settings->editorDisplayStyle == Settings::EditorDisplayModern;
     m_actions.settingsAppearancePresetClassic->setChecked(classic);
@@ -4485,6 +4544,47 @@ void MainWindow::setStatusBarAppearance(QAction* action)
                                  surfaces);
         window->updateStatusBarSectionVisibility();
     }
+}
+
+void MainWindow::setToolTipAppearance(QAction* action)
+{
+    if (action == nullptr)
+        return;
+    m_settings->toolTipAppearance = action->data().toInt() == Settings::ToolTipAppearanceSystem
+        ? Settings::ToolTipAppearanceSystem : Settings::ToolTipAppearanceSpeedCrunch;
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (!window)
+            continue;
+        window->m_actions.settingsToolTipAppearanceSystem->setChecked(
+            m_settings->toolTipAppearance == Settings::ToolTipAppearanceSystem);
+        window->m_actions.settingsToolTipAppearanceSpeedCrunch->setChecked(
+            m_settings->toolTipAppearance == Settings::ToolTipAppearanceSpeedCrunch);
+        window->updateAppearancePresetActions();
+        window->applyToolTipAppearance();
+    }
+}
+
+void MainWindow::applyToolTipAppearance()
+{
+    const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
+    const ToolTipStyleUtils::PopupTheme resultToolTip = resultToolTipTheme(surfaces);
+    for (ResultDisplay* display : splitPaneDisplays())
+        display->setThemeToolTipColors(resultToolTip.background, resultToolTip.foreground,
+                                       resultToolTip.outline, resultToolTip.cornerRadius);
+    for (Editor* editor : splitPaneEditors())
+        applyEditorCompletionAppearance(editor, surfaces);
+    updatePaneTabBars();
+    if (m_widgets.keypad) {
+        const ToolTipStyleUtils::PopupTheme keypadToolTip = popupToolTipTheme(surfaces);
+        m_widgets.keypad->setToolTipThemeColors(keypadToolTip.background, keypadToolTip.foreground,
+                                                keypadToolTip.outline, keypadToolTip.cornerRadius);
+    }
+    for (QDockWidget* dock : m_allDocks) {
+        if (dock != nullptr)
+            applyDockToolTipAppearance(dock->widget(), surfaces);
+    }
+    if (m_widgets.state)
+        applyStateLabelTheme();
 }
 
 void MainWindow::setKeypadAppearance(QAction* action)
@@ -4749,6 +4849,8 @@ void MainWindow::setActionsText()
     m_actions.settingsDockAppearanceSpeedCrunch->setText(MainWindow::tr("SpeedCrunch &Theme"));
     m_actions.settingsStatusBarAppearanceSystem->setText(MainWindow::tr("&System"));
     m_actions.settingsStatusBarAppearanceSpeedCrunch->setText(MainWindow::tr("SpeedCrunch &Theme"));
+    m_actions.settingsToolTipAppearanceSystem->setText(MainWindow::tr("&System"));
+    m_actions.settingsToolTipAppearanceSpeedCrunch->setText(MainWindow::tr("SpeedCrunch &Theme"));
     m_actions.settingsKeypadAppearanceClassic->setText(MainWindow::tr("&Classic"));
     m_actions.settingsKeypadAppearanceModern->setText(MainWindow::tr("&Modern"));
     m_actions.settingsEditorDisplayClassic->setText(MainWindow::tr("&Classic"));
@@ -4846,6 +4948,9 @@ void MainWindow::createActionGroups()
     m_actionGroups.statusBarAppearance = new QActionGroup(this);
     m_actionGroups.statusBarAppearance->addAction(m_actions.settingsStatusBarAppearanceSystem);
     m_actionGroups.statusBarAppearance->addAction(m_actions.settingsStatusBarAppearanceSpeedCrunch);
+    m_actionGroups.toolTipAppearance = new QActionGroup(this);
+    m_actionGroups.toolTipAppearance->addAction(m_actions.settingsToolTipAppearanceSystem);
+    m_actionGroups.toolTipAppearance->addAction(m_actions.settingsToolTipAppearanceSpeedCrunch);
     m_actionGroups.keypadAppearance = new QActionGroup(this);
     m_actionGroups.keypadAppearance->addAction(m_actions.settingsKeypadAppearanceClassic);
     m_actionGroups.keypadAppearance->addAction(m_actions.settingsKeypadAppearanceModern);
@@ -5080,6 +5185,10 @@ void MainWindow::createMenus()
     m_menus.statusBarAppearance->setObjectName(QStringLiteral("StatusBarAppearanceMenu"));
     m_menus.statusBarAppearance->addAction(m_actions.settingsStatusBarAppearanceSystem);
     m_menus.statusBarAppearance->addAction(m_actions.settingsStatusBarAppearanceSpeedCrunch);
+    m_menus.toolTipAppearance = m_menus.display->addMenu("");
+    m_menus.toolTipAppearance->setObjectName(QStringLiteral("ToolTipAppearanceMenu"));
+    m_menus.toolTipAppearance->addAction(m_actions.settingsToolTipAppearanceSystem);
+    m_menus.toolTipAppearance->addAction(m_actions.settingsToolTipAppearanceSpeedCrunch);
     m_menus.display->addSeparator();
     m_menus.display->addAction(m_actions.settingsBehaviorSyntaxHighlighting);
     m_menus.display->addAction(m_actions.settingsBehaviorHoverHighlightResults);
@@ -5232,6 +5341,7 @@ void MainWindow::setMenusText()
     m_menus.menuAppearance->setTitle(MainWindow::tr("&Menus"));
     m_menus.dockAppearance->setTitle(MainWindow::tr("&Docks"));
     m_menus.statusBarAppearance->setTitle(MainWindow::tr("&Status Bar"));
+    m_menus.toolTipAppearance->setTitle(MainWindow::tr("&Tooltips"));
     m_menus.keypadAppearance->setTitle(MainWindow::tr("&Keypad"));
     m_menus.editorDisplayStyle->setTitle(MainWindow::tr("&Input and Results"));
     m_menus.help->setTitle(MainWindow::tr("&Help"));
@@ -5487,13 +5597,11 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
     QWidget* page = new QWidget(stack);
     applyThemeBackgroundRoleToWidget(page, surfaces.result.background);
     display->setThemeSurfaceColor(surfaces.result.background);
-    const ThemeSurfaceColors resultToolTip =
-        themeSurfaceForShadeIndex(surfaces, UiConfig::ResultTooltipBackgroundShade);
-    const ThemeSurfaceColors resultToolTipOutline =
-        themeSurfaceForShadeIndex(surfaces, UiConfig::ResultTooltipOutlineShade);
+    const ToolTipStyleUtils::PopupTheme resultToolTip = resultToolTipTheme(surfaces);
     display->setThemeToolTipColors(resultToolTip.background,
                                    resultToolTip.foreground,
-                                   resultToolTipOutline.background);
+                                   resultToolTip.outline,
+                                   resultToolTip.cornerRadius);
     display->setThemeInteractionColors(surfaces.editorAndLists.background,
                                        surfaces.primary.background,
                                        surfaces.headersAndBorders.background,
@@ -5503,24 +5611,7 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
     display->rehighlight();
     editor->setThemeSurfaceColor(surfaces.editorAndLists.background,
                                  surfaces.result.background);
-    const ThemeSurfaceColors completionPopup =
-        themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupBackgroundShade);
-    const ThemeSurfaceColors completionScrollbarThumb =
-        themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupScrollbarThumbShade);
-    const ThemeSurfaceColors completionSelectedRow =
-        themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupSelectedRowShade);
-    const ThemeSurfaceColors completionOutline =
-        themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupOutlineShade);
-    editor->setThemeCompletionColors(completionPopup.background,
-                                     completionPopup.foreground,
-                                     completionScrollbarThumb.background,
-                                     completionScrollbarThumb.foreground,
-                                     completionSelectedRow.background,
-                                     completionSelectedRow.foreground,
-                                     completionOutline.background,
-                                     UiConfig::CompletionPopupCornerRadius,
-                                     surfaces.primary.background,
-                                     surfaces.primary.foreground);
+    applyEditorCompletionAppearance(editor, surfaces);
     editor->rehighlight();
     QVBoxLayout* pageLayout = new QVBoxLayout(page);
     pageLayout->setSpacing(0);
@@ -7254,10 +7345,7 @@ void MainWindow::updatePaneTabBars()
         themeSurfaceForShadeIndex(surfaces, UiConfig::HoveredSessionTabFillShade);
     const ThemeSurfaceColors closeButtonHover =
         themeSurfaceForShadeIndex(surfaces, UiConfig::SessionTabCloseButtonHoverFillShade);
-    const ThemeSurfaceColors toolTip =
-        themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupBackgroundShade);
-    const ThemeSurfaceColors toolTipOutline =
-        themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupOutlineShade);
+    const ToolTipStyleUtils::PopupTheme toolTip = popupToolTipTheme(surfaces);
     for (ResultDisplay* display : displays) {
         QTabBar* tabBar = displayTabBar(display);
         if (tabBar == nullptr)
@@ -7273,8 +7361,8 @@ void MainWindow::updatePaneTabBars()
             closeButtonHover.background,
             toolTip.background,
             toolTip.foreground,
-            toolTipOutline.background,
-            UiConfig::CompletionPopupCornerRadius);
+            toolTip.outline,
+            toolTip.cornerRadius);
 
         const QSignalBlocker blocker(tabBar);
         const QStringList names = paneSessionNames(display);
@@ -7399,10 +7487,7 @@ void MainWindow::refreshPaneThemes()
     }
     const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
     applyThemeBackgroundRoleToWidget(m_widgets.splitContainer, surfaces.window.background);
-    const ThemeSurfaceColors resultToolTip =
-        themeSurfaceForShadeIndex(surfaces, UiConfig::ResultTooltipBackgroundShade);
-    const ThemeSurfaceColors resultToolTipOutline =
-        themeSurfaceForShadeIndex(surfaces, UiConfig::ResultTooltipOutlineShade);
+    const ToolTipStyleUtils::PopupTheme resultToolTip = resultToolTipTheme(surfaces);
     for (ResultDisplay* display : splitPaneDisplays()) {
         QWidget* page = display->parentWidget();
         applyThemeBackgroundRoleToWidget(paneWidgetForDisplay(display),
@@ -7413,7 +7498,8 @@ void MainWindow::refreshPaneThemes()
         display->setThemeSurfaceColor(surfaces.result.background);
         display->setThemeToolTipColors(resultToolTip.background,
                                        resultToolTip.foreground,
-                                       resultToolTipOutline.background);
+                                       resultToolTip.outline,
+                                       resultToolTip.cornerRadius);
         display->setThemeInteractionColors(surfaces.editorAndLists.background,
                                            surfaces.primary.background,
                                            surfaces.headersAndBorders.background,
@@ -7425,24 +7511,7 @@ void MainWindow::refreshPaneThemes()
     for (Editor* editor : splitPaneEditors()) {
         editor->setThemeSurfaceColor(surfaces.editorAndLists.background,
                                      surfaces.result.background);
-        const ThemeSurfaceColors completionPopup =
-            themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupBackgroundShade);
-        const ThemeSurfaceColors completionScrollbarThumb =
-            themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupScrollbarThumbShade);
-        const ThemeSurfaceColors completionSelectedRow =
-            themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupSelectedRowShade);
-        const ThemeSurfaceColors completionOutline =
-            themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupOutlineShade);
-        editor->setThemeCompletionColors(completionPopup.background,
-                                         completionPopup.foreground,
-                                         completionScrollbarThumb.background,
-                                         completionScrollbarThumb.foreground,
-                                         completionSelectedRow.background,
-                                         completionSelectedRow.foreground,
-                                         completionOutline.background,
-                                         UiConfig::CompletionPopupCornerRadius,
-                                         surfaces.primary.background,
-                                         surfaces.primary.foreground);
+        applyEditorCompletionAppearance(editor, surfaces);
         editor->rehighlight();
     }
     updatePaneEditorCursorVisibility();
@@ -7629,10 +7698,7 @@ void MainWindow::applyKeypadThemeSurfacePalette()
         themeSurfaceForShadeIndex(surfaces, UiConfig::KeypadButtonHoverShade);
     const ThemeSurfaceColors keypadButtonPressed =
         themeSurfaceForShadeIndex(surfaces, UiConfig::KeypadButtonPressedShade);
-    const ThemeSurfaceColors keypadToolTip =
-        themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupBackgroundShade);
-    const ThemeSurfaceColors keypadToolTipOutline =
-        themeSurfaceForShadeIndex(surfaces, UiConfig::CompletionPopupOutlineShade);
+    const ToolTipStyleUtils::PopupTheme keypadToolTip = popupToolTipTheme(surfaces);
 
     applyThemeBackgroundRoleToWidget(m_widgets.keypadContainer, keypadBackground.background);
     StartupDiagnostics::setAppearancePalette(m_widgets.keypad, keypadPalette);
@@ -7650,8 +7716,8 @@ void MainWindow::applyKeypadThemeSurfacePalette()
     });
     m_widgets.keypad->setToolTipThemeColors(keypadToolTip.background,
                                             keypadToolTip.foreground,
-                                            keypadToolTipOutline.background,
-                                            UiConfig::CompletionPopupCornerRadius);
+                                            keypadToolTip.outline,
+                                            keypadToolTip.cornerRadius);
     m_widgets.keypad->setThemeButtonColors(keypadButton.background,
                                            keypadButton.foreground,
                                            keypadButtonHover.background,
@@ -8288,6 +8354,8 @@ void MainWindow::createFixedConnections()
             this, &MainWindow::setDockAppearance);
     connect(m_actionGroups.statusBarAppearance, &QActionGroup::triggered,
             this, &MainWindow::setStatusBarAppearance);
+    connect(m_actionGroups.toolTipAppearance, &QActionGroup::triggered,
+            this, &MainWindow::setToolTipAppearance);
     connect(m_actionGroups.keypadAppearance, &QActionGroup::triggered,
             this, &MainWindow::setKeypadAppearance);
     connect(m_actionGroups.editorDisplayStyle, &QActionGroup::triggered,
@@ -8699,6 +8767,10 @@ void MainWindow::applySettings(bool initializing)
         m_settings->statusBarAppearance == Settings::StatusBarAppearanceSystem);
     m_actions.settingsStatusBarAppearanceSpeedCrunch->setChecked(
         m_settings->statusBarAppearance == Settings::StatusBarAppearanceSpeedCrunch);
+    m_actions.settingsToolTipAppearanceSystem->setChecked(
+        m_settings->toolTipAppearance == Settings::ToolTipAppearanceSystem);
+    m_actions.settingsToolTipAppearanceSpeedCrunch->setChecked(
+        m_settings->toolTipAppearance == Settings::ToolTipAppearanceSpeedCrunch);
     applyEditorDisplayStyle();
     m_actions.settingsMenuAppearanceSystem->setChecked(
         m_settings->menuAppearance == Settings::MenuAppearanceSystem);
@@ -8973,6 +9045,7 @@ void MainWindow::resetAllSettings()
         window->m_keypadMode = m_settings->keypadMode;
         window->m_keypadZoomPercent = m_settings->keypadZoomPercent;
         window->applySettings(false);
+        window->applyToolTipAppearance();
         if (!isWaylandPlatform())
             window->setAlwaysOnTopEnabled(m_settings->windowAlwaysOnTop);
         window->setFullScreenEnabled(m_settings->windowOnfullScreen);
@@ -12784,22 +12857,15 @@ void MainWindow::setMenuBarVisible(bool b)
     m_settings->menuBarVisible = b;
 }
 
-void MainWindow::showStateLabel(const QString& msg)
+void MainWindow::applyStateLabelTheme()
 {
-    if (msg.contains(QStringLiteral("Current result:")))
-        m_lastCurrentResultPreviewMessage = msg;
-
-    const GeneratedThemeSurfaces surfaces = generatedSurfaceColors(m_settings);
-    const ThemeSurfaceColors tooltipSurface =
-        themeSurfaceForShadeIndex(surfaces, UiConfig::ResultTooltipBackgroundShade);
-    const ThemeSurfaceColors tooltipOutline =
-        themeSurfaceForShadeIndex(surfaces, UiConfig::ResultTooltipOutlineShade);
+    const ToolTipStyleUtils::PopupTheme theme = resultToolTipTheme(generatedSurfaceColors(m_settings));
     m_widgets.state->setStyleSheet(ToolTipStyleUtils::labelToolTipStyleSheet(
         QStringLiteral("QLabel"),
-        tooltipSurface.background,
-        tooltipSurface.foreground,
-        tooltipOutline.background,
-        UiConfig::ResultTooltipCornerRadius));
+        theme.background,
+        theme.foreground,
+        theme.outline,
+        theme.cornerRadius));
     m_widgets.stateCloseButton->setStyleSheet(QStringLiteral(R"(
         QPushButton {
             border: none;
@@ -12819,7 +12885,15 @@ void MainWindow::showStateLabel(const QString& msg)
             background: transparent;
             color: %1;
         }
-    )").arg(tooltipSurface.foreground.name()));
+    )").arg(theme.foreground.name()));
+}
+
+void MainWindow::showStateLabel(const QString& msg)
+{
+    if (msg.contains(QStringLiteral("Current result:")))
+        m_lastCurrentResultPreviewMessage = msg;
+
+    applyStateLabelTheme();
 
     Editor* positionEditor = m_widgets.editor;
     if (positionEditor == nullptr || positionEditor->window() != this)
@@ -12903,6 +12977,16 @@ bool MainWindow::event(QEvent* e)
                                      generatedSurfaceColors(m_settings));
             updateStatusBarSectionVisibility();
             setProperty("speedcrunchStatusBarRefreshPending", false);
+        });
+    }
+    if (e != nullptr && m_settings != nullptr && !m_initializingUi
+        && m_settings->toolTipAppearance == Settings::ToolTipAppearanceSystem
+        && (e->type() == QEvent::ApplicationPaletteChange || e->type() == QEvent::ThemeChange)
+        && !property("speedcrunchToolTipRefreshPending").toBool()) {
+        setProperty("speedcrunchToolTipRefreshPending", true);
+        QTimer::singleShot(0, this, [this]() {
+            applyToolTipAppearance();
+            setProperty("speedcrunchToolTipRefreshPending", false);
         });
     }
     if (e != nullptr && !m_allDocks.isEmpty()

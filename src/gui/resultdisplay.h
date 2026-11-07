@@ -5,6 +5,8 @@
 #ifndef GUI_RESULTDISPLAY_H
 #define GUI_RESULTDISPLAY_H
 
+#include "gui/uiconfig.h"
+
 #include <QBasicTimer>
 #include <QColor>
 #include <QPlainTextEdit>
@@ -51,7 +53,8 @@ public:
     void applyEditorDisplayStyle();
     void setThemeToolTipColors(const QColor& background,
                                const QColor& foreground,
-                               const QColor& outline);
+                               const QColor& outline,
+                               int cornerRadius = UiConfig::ResultTooltipCornerRadius);
     void setThemeInteractionColors(const QColor& hoverBackground,
                                    const QColor& primaryColor,
                                    const QColor& menuBackground,
@@ -210,6 +213,7 @@ private:
     QColor m_toolTipBackgroundColor;
     QColor m_toolTipForegroundColor;
     QColor m_toolTipOutlineColor;
+    int m_toolTipCornerRadius = UiConfig::ResultTooltipCornerRadius;
     QFrame* m_hoverActionPopup;
     QLabel* m_hoverActionPopupLabel;
     QColor m_hoverHighlightColor;

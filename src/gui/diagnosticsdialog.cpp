@@ -190,6 +190,8 @@ QString appDiagnosticsReport(const QString& workload)
                                       ? "System" : "SpeedCrunch Theme") << '\n'
         << "Status bar appearance: " << (settings->statusBarAppearance == Settings::StatusBarAppearanceSystem
                                             ? "System" : "SpeedCrunch Theme") << '\n'
+        << "Tooltip appearance: " << (settings->toolTipAppearance == Settings::ToolTipAppearanceSystem
+                                         ? "System" : "SpeedCrunch Theme") << '\n'
         << "Automatic calculation: " << (settings->autoCalc ? "on" : "off") << '\n'
         << "Syntax highlighting: " << (settings->syntaxHighlighting ? "on" : "off") << '\n'
         << "Automatic completion: " << (settings->autoCompletion ? "on" : "off") << '\n'

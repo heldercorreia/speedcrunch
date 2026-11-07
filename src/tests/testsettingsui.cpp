@@ -14,6 +14,7 @@
 #include <QOperatingSystemVersion>
 #include <QStyleHints>
 #include <QStringListModel>
+#include <QTreeWidget>
 
 using namespace MainWindowTestHelpers;
 
@@ -67,6 +68,8 @@ private slots:
     void appearance_presets_track_individual_changes_data();
     void appearance_presets_track_individual_changes();
     void appearance_presets_follow_settings_reset();
+    void tooltip_appearance_switches_result_preview_colors();
+    void tooltip_appearance_switches_completion_popup_colors();
     void settings_reset_restores_persisted_defaults();
     void settings_reset_can_be_cancelled_data();
     void settings_reset_can_be_cancelled();
@@ -1571,12 +1574,14 @@ void TestSettingsUi::appearance_defaults_select_theme_and_modern_styles()
     settings->menuAppearance = Settings::MenuAppearanceSystem;
     settings->dockAppearance = Settings::DockAppearanceSystem;
     settings->statusBarAppearance = Settings::StatusBarAppearanceSystem;
+    settings->toolTipAppearance = Settings::ToolTipAppearanceSystem;
     settings->editorDisplayStyle = Settings::EditorDisplayClassic;
     settings->keypadAppearance = Settings::KeypadAppearanceClassic;
     QVERIFY(settings->resetToDefaults());
     QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSpeedCrunch);
     QCOMPARE(settings->dockAppearance, Settings::DockAppearanceSpeedCrunch);
     QCOMPARE(settings->statusBarAppearance, Settings::StatusBarAppearanceSpeedCrunch);
+    QCOMPARE(settings->toolTipAppearance, Settings::ToolTipAppearanceSpeedCrunch);
     QCOMPARE(settings->editorDisplayStyle, Settings::EditorDisplayModern);
     QCOMPARE(settings->keypadAppearance, Settings::KeypadAppearanceModern);
 
@@ -1584,6 +1589,7 @@ void TestSettingsUi::appearance_defaults_select_theme_and_modern_styles()
     for (const QString& name : {QStringLiteral("MenuAppearanceMenu"),
                                 QStringLiteral("DockAppearanceMenu"),
                                 QStringLiteral("StatusBarAppearanceMenu"),
+                                QStringLiteral("ToolTipAppearanceMenu"),
                                 QStringLiteral("EditorDisplayStyleMenu"),
                                 QStringLiteral("KeypadAppearanceMenu")}) {
         auto* menu = window.findChild<QMenu*>(name);
@@ -1596,7 +1602,7 @@ void TestSettingsUi::appearance_defaults_select_theme_and_modern_styles()
 void TestSettingsUi::appearance_presets_identify_saved_combinations_data()
 {
     QTest::addColumn<int>("combination");
-    for (int combination = 0; combination < 32; ++combination)
+    for (int combination = 0; combination < 64; ++combination)
         QTest::newRow(qPrintable(QString::number(combination, 2))) << combination;
 }
 
@@ -1610,11 +1616,13 @@ void TestSettingsUi::appearance_presets_identify_saved_combinations()
     const auto statusBar = combination & 4 ? Settings::StatusBarAppearanceSystem : Settings::StatusBarAppearanceSpeedCrunch;
     const auto editor = combination & 8 ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern;
     const auto keypad = combination & 16 ? Settings::KeypadAppearanceClassic : Settings::KeypadAppearanceModern;
+    const auto toolTips = combination & 32 ? Settings::ToolTipAppearanceSystem : Settings::ToolTipAppearanceSpeedCrunch;
     settings->menuAppearance = menus;
     settings->dockAppearance = docks;
     settings->statusBarAppearance = statusBar;
     settings->editorDisplayStyle = editor;
     settings->keypadAppearance = keypad;
+    settings->toolTipAppearance = toolTips;
     settings->save();
     settings->load();
 
@@ -1622,15 +1630,16 @@ void TestSettingsUi::appearance_presets_identify_saved_combinations()
     auto* presets = window.findChild<QMenu*>(QStringLiteral("AppearancePresetMenu"));
     QVERIFY(presets);
     QCOMPARE(presets->actions().size(), 3);
-    QCOMPARE(presets->actions().at(0)->isChecked(), combination == 31);
+    QCOMPARE(presets->actions().at(0)->isChecked(), combination == 63);
     QCOMPARE(presets->actions().at(1)->isChecked(), combination == 0);
-    QCOMPARE(presets->actions().at(2)->isChecked(), combination != 0 && combination != 31);
+    QCOMPARE(presets->actions().at(2)->isChecked(), combination != 0 && combination != 63);
     QVERIFY(!presets->actions().at(2)->isEnabled());
     QCOMPARE(settings->menuAppearance, menus);
     QCOMPARE(settings->dockAppearance, docks);
     QCOMPARE(settings->statusBarAppearance, statusBar);
     QCOMPARE(settings->editorDisplayStyle, editor);
     QCOMPARE(settings->keypadAppearance, keypad);
+    QCOMPARE(settings->toolTipAppearance, toolTips);
 
     QMenu* appearance = nullptr;
     for (QMenu* menu : window.findChildren<QMenu*>()) {
@@ -1682,6 +1691,7 @@ void TestSettingsUi::appearance_presets_apply_to_all_windows_and_preserve_prefer
             for (const QString& name : {QStringLiteral("MenuAppearanceMenu"),
                                         QStringLiteral("DockAppearanceMenu"),
                                         QStringLiteral("StatusBarAppearanceMenu"),
+                                        QStringLiteral("ToolTipAppearanceMenu"),
                                         QStringLiteral("EditorDisplayStyleMenu"),
                                         QStringLiteral("KeypadAppearanceMenu")}) {
                 auto* menu = window->findChild<QMenu*>(name);
@@ -1729,6 +1739,7 @@ void TestSettingsUi::appearance_presets_track_individual_changes_data()
     for (const QString& name : {QStringLiteral("MenuAppearanceMenu"),
                                 QStringLiteral("DockAppearanceMenu"),
                                 QStringLiteral("StatusBarAppearanceMenu"),
+                                QStringLiteral("ToolTipAppearanceMenu"),
                                 QStringLiteral("EditorDisplayStyleMenu"),
                                 QStringLiteral("KeypadAppearanceMenu")}) {
         for (int preset : {0, 1})
@@ -1785,6 +1796,97 @@ void TestSettingsUi::appearance_presets_follow_settings_reset()
         QVERIFY(!choices->actions().at(0)->isChecked());
         QVERIFY(!choices->actions().at(2)->isChecked());
     }
+}
+
+void TestSettingsUi::tooltip_appearance_switches_result_preview_colors()
+{
+    MainWindowStateGuard guard;
+    MainWindow window(false);
+    auto* popup = window.findChild<QLabel*>(QStringLiteral("EditorStatePopup"));
+    QVERIFY(popup);
+    auto* toolTips = window.findChild<QMenu*>(QStringLiteral("ToolTipAppearanceMenu"));
+    QVERIFY(toolTips);
+    QCOMPARE(toolTips->actions().size(), 2);
+    QVERIFY(toolTips->actions().at(1)->isChecked());
+    QVERIFY(QMetaObject::invokeMethod(&window, "showStateLabel", Qt::DirectConnection,
+        Q_ARG(QString, QStringLiteral("Current result:<br/>3"))));
+    const QString themed = popup->styleSheet();
+    QVERIFY2(themed.contains(QStringLiteral("border-radius: %1px")
+                                 .arg(UiConfig::ResultTooltipCornerRadius)),
+             qPrintable(themed));
+
+    toolTips->actions().at(0)->trigger();
+    QCOMPARE(guard.settings->toolTipAppearance, Settings::ToolTipAppearanceSystem);
+    const QPalette system = QApplication::palette();
+    const QString native = popup->styleSheet();
+    QVERIFY2(native.contains(QStringLiteral("background-color: %1;")
+                                 .arg(system.color(QPalette::ToolTipBase).name())),
+             qPrintable(native));
+    QVERIFY2(native.contains(QStringLiteral("color: %1;")
+                                 .arg(system.color(QPalette::ToolTipText).name())),
+             qPrintable(native));
+    QVERIFY2(native.contains(QStringLiteral("border-radius: 0px")), qPrintable(native));
+
+    toolTips->actions().at(1)->trigger();
+    QCOMPARE(popup->styleSheet(), themed);
+}
+
+void TestSettingsUi::tooltip_appearance_switches_completion_popup_colors()
+{
+    MainWindowStateGuard guard;
+    MainWindow window(false);
+    window.resize(900, 600);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    Editor* editor = window.findChild<Editor*>();
+    QVERIFY(editor);
+    const auto popupNamed = [](const QString& name) -> QWidget* {
+        for (QWidget* widget : QApplication::allWidgets()) {
+            if (widget->objectName() == name)
+                return widget;
+        }
+        return nullptr;
+    };
+    auto* functions = qobject_cast<QTreeWidget*>(popupNamed(QStringLiteral("editorCompletionPopup")));
+    QVERIFY(functions);
+    const QColor themedBackground = functions->palette().color(QPalette::Base);
+    const QString themedStyle = functions->styleSheet();
+    QVERIFY2(themedStyle.contains(QStringLiteral("border-radius: %1px")
+                                      .arg(UiConfig::CompletionPopupCornerRadius)),
+             qPrintable(themedStyle));
+
+    auto* toolTips = window.findChild<QMenu*>(QStringLiteral("ToolTipAppearanceMenu"));
+    QVERIFY(toolTips);
+    toolTips->actions().at(0)->trigger();
+    const QPalette system = QApplication::palette();
+    QCOMPARE(functions->palette().color(QPalette::Base), system.color(QPalette::Base));
+    QCOMPARE(functions->palette().color(QPalette::Text), system.color(QPalette::Text));
+    QCOMPARE(functions->palette().color(QPalette::Highlight), system.color(QPalette::Highlight));
+    QCOMPARE(functions->palette().color(QPalette::HighlightedText),
+             system.color(QPalette::HighlightedText));
+    QVERIFY2(functions->styleSheet().contains(QStringLiteral("border-radius: 0px")),
+             qPrintable(functions->styleSheet()));
+
+    editor->setFocus();
+    QTest::keyClick(editor, Qt::Key_Space, Qt::ControlModifier);
+    QWidget* constants = nullptr;
+    QTRY_VERIFY((constants = popupNamed(QStringLiteral("constantCompletionPopup"))) != nullptr
+                && constants->isVisible());
+    QCOMPARE(constants->palette().color(QPalette::Window), system.color(QPalette::Base));
+    QVERIFY2(constants->styleSheet().contains(QStringLiteral("background: %1;")
+                                                  .arg(system.color(QPalette::Base).name())),
+             qPrintable(constants->styleSheet()));
+    QVERIFY2(constants->styleSheet().contains(QStringLiteral("border-radius: 0px")),
+             qPrintable(constants->styleSheet()));
+    auto* search = constants->findChild<QLineEdit*>();
+    QVERIFY(search);
+    QVERIFY2(search->styleSheet().contains(QStringLiteral("border-radius: 0px")),
+             qPrintable(search->styleSheet()));
+    constants->hide();
+
+    toolTips->actions().at(1)->trigger();
+    QCOMPARE(functions->palette().color(QPalette::Base), themedBackground);
+    QCOMPARE(functions->styleSheet(), themedStyle);
 }
 
 void TestSettingsUi::settings_reset_restores_persisted_defaults()

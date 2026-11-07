@@ -333,6 +333,7 @@ struct MainWindowStateGuard {
     Settings::MenuAppearance oldMenuAppearance = settings->menuAppearance;
     Settings::DockAppearance oldDockAppearance = settings->dockAppearance;
     Settings::StatusBarAppearance oldStatusBarAppearance = settings->statusBarAppearance;
+    Settings::ToolTipAppearance oldToolTipAppearance = settings->toolTipAppearance;
     QString oldSessionLayoutJson = settings->sessionLayoutJson;
     QString oldConstantsDockDomain = settings->constantsDockDomain;
     QString oldConstantsDockSubdomain = settings->constantsDockSubdomain;
@@ -372,6 +373,7 @@ struct MainWindowStateGuard {
         settings->menuAppearance = oldMenuAppearance;
         settings->dockAppearance = oldDockAppearance;
         settings->statusBarAppearance = oldStatusBarAppearance;
+        settings->toolTipAppearance = oldToolTipAppearance;
         settings->sessionLayoutJson = oldSessionLayoutJson;
         settings->constantsDockDomain = oldConstantsDockDomain;
         settings->constantsDockSubdomain = oldConstantsDockSubdomain;
