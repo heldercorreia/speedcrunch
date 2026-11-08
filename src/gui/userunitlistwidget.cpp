@@ -7,6 +7,7 @@
 #include "core/evaluator.h"
 #include "core/mathdsl.h"
 #include "core/numberformatter.h"
+#include "core/startupdiagnostics.h"
 #include "gui/dockliststyle.h"
 #include "gui/themedlineedit.h"
 #include "gui/uiconfig.h"
@@ -111,16 +112,21 @@ UserUnitListWidget::~UserUnitListWidget()
 void UserUnitListWidget::updateList()
 {
     if (!isVisible()) {
+        StartupDiagnostics::AppearanceScope timing("Defer hidden user units dock list", this);
         m_pendingRefresh = true;
         return;
     }
 
+    StartupDiagnostics::AppearanceScope timing("Populate user units dock list", this);
     setUpdatesEnabled(false);
 
     m_filterTimer->stop();
+    StartupDiagnostics::Scope phase("Clear user units dock rows");
     m_userUnits->clear();
     const QString term = m_searchFilter->text();
+    phase.next("Read user units for dock list");
     const QList<UserUnit> userUnits = m_evaluator->getUserUnits();
+    phase.next("Format and create user units dock rows");
 
     for (int i = 0; i < userUnits.count(); ++i) {
         const UserUnit& userUnit = userUnits.at(i);
@@ -152,10 +158,12 @@ void UserUnitListWidget::updateList()
         }
     }
 
+    phase.next("Size user units dock columns");
     m_userUnits->resizeColumnToContents(0);
     m_userUnits->resizeColumnToContents(1);
     m_userUnits->resizeColumnToContents(2);
 
+    phase.next("Sort user units dock rows");
     if (m_userUnits->topLevelItemCount() > 0) {
         m_noMatchLabel->hide();
         m_userUnits->sortItems(0, Qt::AscendingOrder);
@@ -163,7 +171,9 @@ void UserUnitListWidget::updateList()
         DockListStyle::showCenteredNoMatchLabel(m_userUnits, m_noMatchLabel);
     }
 
+    phase.next("Re-enable user units dock updates");
     setUpdatesEnabled(true);
+    phase.finish();
     m_pendingRefresh = false;
 }
 

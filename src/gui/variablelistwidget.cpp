@@ -7,6 +7,7 @@
 #include "core/evaluator.h"
 #include "core/settings.h"
 #include "core/numberformatter.h"
+#include "core/startupdiagnostics.h"
 #include "gui/dockliststyle.h"
 #include "gui/themedlineedit.h"
 #include "gui/uiconfig.h"
@@ -114,15 +115,19 @@ VariableListWidget::~VariableListWidget()
 void VariableListWidget::updateList()
 {
     if (!isVisible()) {
+        StartupDiagnostics::AppearanceScope timing("Defer hidden variables dock list", this);
         m_pendingRefresh = true;
         return;
     }
 
+    StartupDiagnostics::AppearanceScope timing("Populate variables dock list", this);
     setUpdatesEnabled(false);
 
     m_filterTimer->stop();
     const QString term = m_searchFilter->text();
+    StartupDiagnostics::Scope phase("Read variables for dock list");
     const QList<Variable> variables = m_evaluator->getUserDefinedVariables();
+    phase.next("Format and update variables dock rows");
     QHash<QString, QTreeWidgetItem*> itemsByName;
     itemsByName.reserve(m_variables->topLevelItemCount());
     for (int i = 0; i < m_variables->topLevelItemCount(); ++i) {
@@ -157,16 +162,19 @@ void VariableListWidget::updateList()
         }
     }
 
+    phase.next("Remove stale variables dock rows");
     for (int i = m_variables->topLevelItemCount() - 1; i >= 0; --i) {
         QTreeWidgetItem* item = m_variables->topLevelItem(i);
         if (!visibleNames.contains(item->text(0)))
             delete m_variables->takeTopLevelItem(i);
     }
 
+    phase.next("Size variables dock columns");
     m_variables->resizeColumnToContents(0);
     m_variables->resizeColumnToContents(1);
     m_variables->resizeColumnToContents(2);
 
+    phase.next("Sort variables dock rows");
     if (m_variables->topLevelItemCount() > 0) {
         m_noMatchLabel->hide();
         m_variables->sortItems(0, Qt::AscendingOrder);
@@ -174,7 +182,9 @@ void VariableListWidget::updateList()
         DockListStyle::showCenteredNoMatchLabel(m_variables, m_noMatchLabel);
     }
 
+    phase.next("Re-enable variables dock updates");
     setUpdatesEnabled(true);
+    phase.finish();
     m_pendingRefresh = false;
 }
 

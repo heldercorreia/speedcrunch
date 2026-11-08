@@ -5,6 +5,7 @@
 #include "gui/userfunctionlistwidget.h"
 
 #include "core/evaluator.h"
+#include "core/startupdiagnostics.h"
 #include "gui/displayformatutils.h"
 #include "gui/dockliststyle.h"
 #include "gui/themedlineedit.h"
@@ -112,16 +113,21 @@ UserFunctionListWidget::~UserFunctionListWidget()
 void UserFunctionListWidget::updateList()
 {
     if (!isVisible()) {
+        StartupDiagnostics::AppearanceScope timing("Defer hidden user functions dock list", this);
         m_pendingRefresh = true;
         return;
     }
 
+    StartupDiagnostics::AppearanceScope timing("Populate user functions dock list", this);
     setUpdatesEnabled(false);
 
     m_filterTimer->stop();
+    StartupDiagnostics::Scope phase("Clear user functions dock rows");
     m_userFunctions->clear();
     QString term = m_searchFilter->text();
+    phase.next("Read user functions for dock list");
     QList<UserFunction> userFunctions = m_evaluator->getUserFunctions();
+    phase.next("Format and create user functions dock rows");
 
     for (int i = 0; i < userFunctions.count(); ++i) {
         QString fname = userFunctions.at(i).name() + "(" + userFunctions.at(i).arguments().join(";")  + ")";
@@ -151,10 +157,12 @@ void UserFunctionListWidget::updateList()
         }
     }
 
+    phase.next("Size user functions dock columns");
     m_userFunctions->resizeColumnToContents(0);
     m_userFunctions->resizeColumnToContents(1);
     m_userFunctions->resizeColumnToContents(2);
 
+    phase.next("Sort user functions dock rows");
     if (m_userFunctions->topLevelItemCount() > 0) {
         m_noMatchLabel->hide();
         m_userFunctions->sortItems(0, Qt::AscendingOrder);
@@ -162,7 +170,9 @@ void UserFunctionListWidget::updateList()
         DockListStyle::showCenteredNoMatchLabel(m_userFunctions, m_noMatchLabel);
     }
 
+    phase.next("Re-enable user functions dock updates");
     setUpdatesEnabled(true);
+    phase.finish();
     m_pendingRefresh = false;
 }
 
