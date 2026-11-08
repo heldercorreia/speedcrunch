@@ -7,8 +7,10 @@
 #include "mainwindowtesthelpers.h"
 #include "gui/numberformatdialog.h"
 
+#include <QHeaderView>
 #include <QProxyStyle>
 #include <QStyleHints>
+#include <QTreeWidget>
 
 #include <optional>
 
@@ -42,6 +44,20 @@ bool isDark(const QPalette& palette)
         > palette.color(QPalette::Window).lightness();
 }
 
+bool chooseColorMode(MainWindow& window, Settings::SystemColorMode mode)
+{
+    auto* menu = window.findChild<QMenu*>(QStringLiteral("SystemColorModeMenu"));
+    if (menu == nullptr)
+        return false;
+    for (QAction* action : menu->actions()) {
+        if (action->data().toInt() == mode) {
+            action->trigger();
+            return true;
+        }
+    }
+    return false;
+}
+
 bool usesStyle(const QString& name)
 {
     QStyle* style = QApplication::style();
@@ -61,6 +77,7 @@ private slots:
     void title_bars_follow_color_mode_and_theme_data();
     void title_bars_follow_color_mode_and_theme();
     void open_dialogs_follow_color_mode_changes();
+    void dark_mode_keeps_native_layout();
 };
 
 void TestWindowFrameUi::initTestCase()
@@ -139,25 +156,81 @@ void TestWindowFrameUi::title_bars_follow_color_mode_and_theme()
 void TestWindowFrameUi::open_dialogs_follow_color_mode_changes()
 {
     MainWindowStateGuard guard;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject {{QStringLiteral("background"), DarkThemeBackground}});
     guard.settings->systemColorMode = Settings::SystemColorModeLight;
     MainWindow::initializeApplicationStyle();
 
     MainWindow window(false);
     NumberFormatDialog dialog(&window);
-    auto* menu = window.findChild<QMenu*>(QStringLiteral("SystemColorModeMenu"));
-    QVERIFY(menu);
-    const auto choose = [menu](Settings::SystemColorMode mode) {
-        for (QAction* action : menu->actions()) {
-            if (action->data().toInt() == mode)
-                action->trigger();
-        }
-    };
+    QVERIFY(chooseColorMode(window, Settings::SystemColorModeLight));
 
     for (const bool dark : {true, false}) {
-        choose(dark ? Settings::SystemColorModeDark : Settings::SystemColorModeLight);
+        QVERIFY(chooseColorMode(window, dark ? Settings::SystemColorModeDark
+                                             : Settings::SystemColorModeLight));
         QTRY_COMPARE(isDark(dialog.palette()), dark);
         QTRY_COMPARE(hasDarkTitleBar(dialog), std::optional<bool>(dark));
+        // The main window has a dark theme, so its title bar follows the mode.
+        QTRY_COMPARE(hasDarkTitleBar(window), std::optional<bool>(dark));
     }
+}
+
+void TestWindowFrameUi::dark_mode_keeps_native_layout()
+{
+    MainWindowStateGuard guard;
+    guard.settings->constantsDockVisible = true;
+    guard.settings->historyDockVisible = true;
+    guard.settings->systemColorMode = Settings::SystemColorModeLight;
+    MainWindow::initializeApplicationStyle();
+
+    MainWindow window(false);
+    window.resize(1000, 700);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    auto* dock = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QVERIFY(dock);
+    auto* tree = dock->findChild<QTreeWidget*>();
+    QVERIFY(tree);
+    QTRY_VERIFY(tree->topLevelItemCount() > 0);
+    QMenu* sessionMenu = window.menuBar()->actions().value(0)->menu();
+    QVERIFY(sessionMenu);
+
+    // Fusion draws dark mode in place of the Vista style. Only the colors
+    // should change, not the sizes or when shortcuts are underlined.
+    const auto layout = [&]() {
+        QStringList result;
+        QMenuBar* bar = window.menuBar();
+        QStyleOptionMenuItem barOption;
+        barOption.initFrom(bar);
+        result << QStringLiteral("underline %1").arg(
+            bar->style()->styleHint(QStyle::SH_UnderlineShortcut, &barOption, bar));
+        for (QAction* action : bar->actions()) {
+            if (action->isVisible()) {
+                const QRect rect = bar->actionGeometry(action);
+                result << QStringLiteral("%1 %2,%3 %4x%5").arg(action->text()).arg(rect.x())
+                              .arg(rect.y()).arg(rect.width()).arg(rect.height());
+            }
+        }
+        const QSize menu = sessionMenu->sizeHint();
+        result << QStringLiteral("menu %1x%2").arg(menu.width()).arg(menu.height());
+        for (QDockWidget* shown : window.findChildren<QDockWidget*>()) {
+            if (!shown->isVisible())
+                continue;
+            const QRect rect = shown->geometry();
+            result << QStringLiteral("%1 %2,%3 %4x%5 contents %6").arg(shown->objectName()).arg(rect.x())
+                          .arg(rect.y()).arg(rect.width()).arg(rect.height())
+                          .arg(shown->widget() ? shown->widget()->height() : -1);
+        }
+        result << QStringLiteral("header %1").arg(tree->header()->sizeHint().height());
+        result << QStringLiteral("row %1").arg(tree->visualItemRect(tree->topLevelItem(0)).height());
+        return result;
+    };
+    const QStringList light = layout();
+    QVERIFY(chooseColorMode(window, Settings::SystemColorModeDark));
+    QTRY_COMPARE(QGuiApplication::styleHints()->colorScheme(), Qt::ColorScheme::Dark);
+    QTRY_VERIFY(isDark(QApplication::palette()));
+    QTRY_COMPARE(layout(), light);
 }
 
 int main(int argc, char** argv)

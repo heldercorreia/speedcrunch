@@ -1318,11 +1318,46 @@ public:
         return rect;
     }
 
+    // Use the native style for the layout of menus, docks, headers and lists,
+    // and for when shortcuts are underlined, while the base style draws. Dark
+    // mode on Windows 10 draws with Fusion, but should not move anything.
+    // Takes ownership.
+    void setLayoutStyle(QStyle* style)
+    {
+        m_layoutStyle = style;
+        if (style == nullptr)
+            return;
+        style->setParent(this);
+        // The Windows styles show shortcut underlines after Alt is pressed.
+        // They follow Alt with an application event filter.
+        qApp->installEventFilter(style);
+    }
+
+    int pixelMetric(PixelMetric metric, const QStyleOption* option = nullptr,
+                    const QWidget* widget = nullptr) const override
+    {
+        if (m_layoutStyle && usesLayoutStyle(metric))
+            return m_layoutStyle->pixelMetric(metric, option, widget);
+        return QProxyStyle::pixelMetric(metric, option, widget);
+    }
+
+    int styleHint(StyleHint hint, const QStyleOption* option = nullptr, const QWidget* widget = nullptr,
+                  QStyleHintReturn* returnData = nullptr) const override
+    {
+        if (m_layoutStyle && usesLayoutStyle(hint))
+            return m_layoutStyle->styleHint(hint, option, widget, returnData);
+        return QProxyStyle::styleHint(hint, option, widget, returnData);
+    }
+
     QSize sizeFromContents(ContentsType type, const QStyleOption* option, const QSize& size,
                            const QWidget* widget = nullptr) const override
     {
+        const bool layout = m_layoutStyle
+            && (type == CT_MenuBar || type == CT_MenuBarItem || type == CT_MenuItem
+                || type == CT_HeaderSection || type == CT_ItemViewItem);
+        const QSize result = layout ? m_layoutStyle->sizeFromContents(type, option, size, widget)
+                                    : QProxyStyle::sizeFromContents(type, option, size, widget);
         // This application-wide proxy also sizes themed menu items.
-        const QSize result = QProxyStyle::sizeFromContents(type, option, size, widget);
         return type == CT_MenuItem ? MenuStyle::themedItemSize(option, size, result, widget) : result;
     }
 
@@ -1371,6 +1406,52 @@ public:
             || cursorOverStroke;
         painter->fillRect(strokeRect, active ? activeColor : normalColor);
     }
+
+private:
+    static bool usesLayoutStyle(PixelMetric metric)
+    {
+        switch (metric) {
+        case PM_MenuBarItemSpacing:
+        case PM_MenuBarHMargin:
+        case PM_MenuBarVMargin:
+        case PM_MenuBarPanelWidth:
+        case PM_MenuHMargin:
+        case PM_MenuVMargin:
+        case PM_MenuPanelWidth:
+        case PM_SubMenuOverlap:
+        case PM_DockWidgetSeparatorExtent:
+        case PM_DockWidgetFrameWidth:
+        case PM_DockWidgetHandleExtent:
+        case PM_DockWidgetTitleMargin:
+        case PM_DockWidgetTitleBarButtonMargin:
+        case PM_TitleBarHeight:
+        case PM_HeaderMargin:
+        case PM_ListViewIconSize:
+        case PM_ScrollBarExtent:
+        case PM_ScrollView_ScrollBarSpacing:
+        case PM_SplitterWidth:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    static bool usesLayoutStyle(StyleHint hint)
+    {
+        switch (hint) {
+        case SH_UnderlineShortcut:
+        case SH_MainWindow_SpaceBelowMenuBar:
+        case SH_Menu_AllowActiveAndDisabled:
+        case SH_Menu_SupportsSections:
+        case SH_Menu_SubMenuPopupDelay:
+        case SH_Menu_SubMenuSloppyCloseTimeout:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    QPointer<QStyle> m_layoutStyle;
 };
 
 QStyle* applicationBaseStyle()
@@ -1440,8 +1521,12 @@ void ensureApplicationStyle()
             darkModeBaseStyle() = wantedBase == nativeBaseStyleName() ? nullptr : created;
         }
     }
-    QStyle* style = new DockChromeStyle(base);
+    auto* style = new DockChromeStyle(base);
     style->setProperty(DockChromeStyleInstalledProperty, true);
+    // Fusion replaces the native style only to draw dark mode. Keep the
+    // native layout, so changing the mode moves nothing.
+    if (base == darkModeBaseStyle().data())
+        style->setLayoutStyle(QStyleFactory::create(nativeBaseStyleName()));
     QApplication::setStyle(style);
 
 #if defined(Q_OS_WIN) && QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
@@ -4494,6 +4579,32 @@ void applySystemColorMode(Settings::SystemColorMode mode)
     Q_UNUSED(mode);
 #endif
 }
+
+// Qt sets each title bar's dark mode attribute when the color mode changes,
+// but Windows 10 keeps the old colors until the window is activated or
+// deactivated. Windows 11, and a change to the Windows theme, repaint the
+// title bars themselves. Redraw them in the other activation state and back.
+void redrawNativeTitleBars()
+{
+#ifdef Q_OS_WIN32
+    if (QOperatingSystemVersion::current() >= QOperatingSystemVersion::Windows11)
+        return;
+    const QWidgetList windows = QApplication::topLevelWidgets();
+    for (QWidget* window : windows) {
+        const Qt::WindowType type = window->windowType();
+        if (!window->isVisible() || !window->testAttribute(Qt::WA_WState_Created)
+            || window->windowFlags().testFlag(Qt::FramelessWindowHint)
+            || (type != Qt::Window && type != Qt::Dialog && type != Qt::Tool)) {
+            continue;
+        }
+        const HWND hwnd = reinterpret_cast<HWND>(window->winId());
+        const BOOL active = window->isActiveWindow() ? TRUE : FALSE;
+        // This only paints the title bar. It does not change the active window.
+        SendMessageW(hwnd, WM_NCACTIVATE, !active, 0);
+        SendMessageW(hwnd, WM_NCACTIVATE, active, 0);
+    }
+#endif
+}
 }
 
 void MainWindow::setSystemColorMode(QAction* action)
@@ -4523,6 +4634,8 @@ void MainWindow::setSystemColorMode(QAction* action)
             window->updateSplitterStyleSheet();
         });
     }
+    // After the queued style and palette updates above.
+    QTimer::singleShot(0, qApp, []() { redrawNativeTitleBars(); });
 }
 
 void MainWindow::setAppearancePreset(bool classic)

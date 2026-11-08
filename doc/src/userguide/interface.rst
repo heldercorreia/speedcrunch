@@ -991,7 +991,8 @@ User Interface Settings
 
     Windows 10's native control style has no dark version. While the appearance
     is dark there, SpeedCrunch draws its controls and dialogs with Qt's Fusion
-    style instead.
+    style instead. Menus, panels and lists keep the native sizes and spacing,
+    and shortcut letters are still underlined only after pressing :kbd:`Alt`.
 
     A system high-contrast accessibility theme may take precedence over the
     selected light or dark mode, depending on platform support.
