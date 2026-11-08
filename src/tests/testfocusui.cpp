@@ -798,7 +798,12 @@ void TestFocusUi::f6_cycles_focus_with_another_main_window_visible()
 
         QTest::keyClick(editor, Qt::Key_F6);
         QTRY_VERIFY(focusIsWithin(searchBox));
-        if (floatingDock) {
+        // F6 activates the floating dock itself where tool windows do not
+        // share activation with their main window. Activating it again makes
+        // an X11 window manager refocus it at a server time Qt has not seen
+        // yet, and Qt's next focus request for the main window then carries
+        // an older time, which the X server ignores.
+        if (floatingDock && QApplication::activeWindow() != dock) {
             dock->activateWindow();
             QTRY_COMPARE(QApplication::activeWindow(), dock);
             QCoreApplication::processEvents();
