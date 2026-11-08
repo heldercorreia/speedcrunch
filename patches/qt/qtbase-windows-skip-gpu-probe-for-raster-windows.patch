@@ -1,0 +1,36 @@
+From: Helder Correia <heldercorreia@users.noreply.github.com>
+Subject: [PATCH] Windows: detect the GPU only for windows rendered by it
+
+calcPosition() asks forcedScreenForGLWindow() for the screen of the GPU
+for every top-level window. The first call runs GpuDescription::detect(),
+which calls Direct3DCreate9() and GetAdapterIdentifier(). This loads the
+Direct3D 9 runtime and the user-mode display driver right before the first
+CreateWindowEx() of the process.
+
+On NVIDIA systems the driver enumerates every installed locale while it
+loads. Traces on two machines showed 170 ms and 201 ms inside the probe,
+before the first window of a widgets application could be created.
+On a third machine, creating the first window took 46 ms before this
+change and 7-8 ms after it, averaged over 40 launches.
+
+The workaround for QTBUG-50371 moves a window to the screen of the GPU so
+that OpenGL renders on the right adapter. A window rendered by the raster
+paint engine doesn't render on any adapter, so skip the detection unless
+the surface is accelerated, as done elsewhere in this file.
+
+---
+diff --git a/src/plugins/platforms/windows/qwindowswindow.cpp b/src/plugins/platforms/windows/qwindowswindow.cpp
+index 0c17d3b..8503f44 100644
+--- a/src/plugins/platforms/windows/qwindowswindow.cpp
++++ b/src/plugins/platforms/windows/qwindowswindow.cpp
+@@ -676,7 +676,9 @@ static QPoint calcPosition(const QWindow *w, const QWindowCreationContextPtr &co
+ {
+     const QPoint orgPos(context->frameX - invMargins.left(), context->frameY - invMargins.top());
+ 
+-    if (!w || w->type() != Qt::Window)
++    // Only windows rendered by the GPU need the screen of the GPU. Detecting
++    // the GPU loads its Direct3D 9 driver, which can take hundreds of ms.
++    if (!w || w->type() != Qt::Window || !windowIsAccelerated(w))
+         return orgPos;
+ 
+     // Workaround for QTBUG-50371
