@@ -515,7 +515,13 @@ elseif(APPLE)
 endif(WIN32)
 
 set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION ${BIN_INSTALL_DIR})
+# Install the MSVC runtime ourselves, without the redist DLLs that no bundled binary imports
+set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
 include(InstallRequiredSystemLibraries)
+list(FILTER CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS EXCLUDE REGEX "/(concrt140|msvcp140_atomic_wait|msvcp140_codecvt_ids)\\.dll$")
+if(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS)
+    install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION ${CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION})
+endif()
 set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE)
 
 include(SpeedCrunchCPack.cmake)
