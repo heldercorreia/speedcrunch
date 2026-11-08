@@ -412,6 +412,7 @@ gui/displayformatutils.cpp
 gui/constantswidget.cpp
 gui/dockliststyle.cpp
 gui/functiontooltiputils.cpp
+gui/historywidget.cpp
 gui/oklchutils.cpp
 gui/resultdisplay.cpp
 gui/splittertreeutils.cpp

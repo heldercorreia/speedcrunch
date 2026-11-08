@@ -886,6 +886,16 @@ QString NumberFormatter::formatNumericLiteralForDisplay(const QString& input)
     return output;
 }
 
+// Keep this in sync with the settings formatNumericLiteralForDisplay() reads.
+// The number format style sets the separators and the grouping pattern.
+// Callers compare keys to know whether formatted text can be reused.
+QString NumberFormatter::numericLiteralDisplayFormatKey()
+{
+    const Settings* settings = Settings::instance();
+    return QString::number(int(settings->numberFormatStyle))
+        + (settings->digitGroupingIntegerPartOnly ? QLatin1Char('i') : QLatin1Char('f'));
+}
+
 QString NumberFormatter::rewriteScientificNotationForDisplay(const QString& input)
 {
     QString output;

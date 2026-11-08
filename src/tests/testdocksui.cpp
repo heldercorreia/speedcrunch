@@ -3,15 +3,18 @@
 
 
 #include "core/evaluator.h"
+#include "core/numberformatter.h"
 #include "core/session.h"
 #include "core/settings.h"
 #include "gui/constantswidget.h"
 #include "gui/genericdock.h"
+#include "gui/historywidget.h"
 #include "gui/splittertreeutils.h"
 #include "gui/userunitlistwidget.h"
 #include "gui/variablelistwidget.h"
 #include "uitestfixture.h"
 
+#include <QScopeGuard>
 #include <QSignalSpy>
 #include <QTest>
 #include <QCoreApplication>
@@ -22,6 +25,7 @@
 #include <QHoverEvent>
 #include <QLabel>
 #include <QLineEdit>
+#include <QListWidget>
 #include <QMouseEvent>
 #include <QMainWindow>
 #include <QTranslator>
@@ -88,6 +92,7 @@ private slots:
     void constants_columns_fit_after_hidden_filter_changes();
     void constants_summary_popup_ignores_header_and_padding_data();
     void constants_summary_popup_ignores_header_and_padding();
+    void history_dock_updates_unchanged_history_in_place();
     void user_units_dock_shows_rhs_and_description_after_definition();
     void user_variables_dock_keeps_existing_value_text_after_new_definition();
     void splitter_normalization_removes_single_child_nested_splitter_after_pane_close_shape();
@@ -398,6 +403,73 @@ void TestDocksUi::constants_summary_popup_ignores_header_and_padding()
         sendPosition(outsidePos);
         QVERIFY(!popup->isVisible());
     }
+}
+
+void TestDocksUi::history_dock_updates_unchanged_history_in_place()
+{
+    Settings* settings = Settings::instance();
+    const Settings::NumberFormatStyle originalStyle = settings->numberFormatStyle;
+    const auto restoreStyle = qScopeGuard([settings, originalStyle]() {
+        settings->numberFormatStyle = originalStyle;
+    });
+    settings->numberFormatStyle = Settings::NumberFormatNoGroupingDot;
+    // The first two entries are equal, as an unchanged history can't be
+    // told apart from one that dropped its oldest entry by item 1 alone.
+    Session session;
+    for (const char* expression : {"1+1", "1+1", "12345", "2*3"})
+        session.addHistoryEntry(HistoryEntry(QString::fromLatin1(expression), Quantity(1)));
+
+    HistoryWidget widget;
+    widget.setSession(&session);
+    auto* list = widget.findChild<QListWidget*>();
+    QVERIFY(list);
+    const auto items = [list]() {
+        QList<QListWidgetItem*> result;
+        for (int i = 0; i < list->count(); ++i)
+            result.append(list->item(i));
+        return result;
+    };
+    const auto expressions = [list]() {
+        QStringList result;
+        for (int i = 0; i < list->count(); ++i)
+            result.append(list->item(i)->data(Qt::UserRole).toString());
+        return result;
+    };
+    const QList<QListWidgetItem*> original = items();
+    QCOMPARE(original.size(), 4);
+
+    // Notifications without changes reuse the items.
+    widget.updateHistory();
+    QCOMPARE(items(), original);
+    QCOMPARE(expressions(), QStringList({"1+1", "1+1", "12345", "2*3"}));
+    QCOMPARE(list->item(2)->text(), QStringLiteral("12345"));
+
+    // An entry replaced at the same index updates only its item.
+    session.removeHistoryEntryAt(3);
+    session.insertHistoryEntry(3, HistoryEntry(QStringLiteral("67890"), Quantity(1)));
+    widget.updateHistory();
+    QCOMPARE(items(), original);
+    QCOMPARE(expressions(), QStringList({"1+1", "1+1", "12345", "67890"}));
+    QCOMPARE(list->item(3)->text(), QStringLiteral("67890"));
+
+    // Grouping changes reformat every item, including unchanged entries.
+    settings->numberFormatStyle = Settings::NumberFormatThreeDigitCommaDot;
+    const QString grouped = NumberFormatter::formatNumericLiteralForDisplay(QStringLiteral("12345"));
+    QVERIFY(grouped != QStringLiteral("12345"));
+    widget.updateHistory();
+    QCOMPARE(items(), original);
+    QCOMPARE(list->item(2)->text(), grouped);
+    QCOMPARE(list->item(3)->text(),
+             NumberFormatter::formatNumericLiteralForDisplay(QStringLiteral("67890")));
+
+    // At the history limit, the oldest item is dropped as an entry is added.
+    session.setHistoryLimit(4);
+    session.addHistoryEntry(HistoryEntry(QStringLiteral("3*4"), Quantity(12)));
+    QCOMPARE(session.historySize(), 4);
+    widget.updateHistory();
+    QCOMPARE(list->item(0), original.at(1));
+    QCOMPARE(list->item(2), original.at(3));
+    QCOMPARE(expressions(), QStringList({"1+1", "12345", "67890", "3*4"}));
 }
 
 void TestDocksUi::user_units_dock_shows_rhs_and_description_after_definition()

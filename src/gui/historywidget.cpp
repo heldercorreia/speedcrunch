@@ -69,36 +69,61 @@ void HistoryWidget::updateHistory()
         return;
     }
 
-    if (historySize == m_list->count() + 1) {
+    // Items formatted with other grouping settings must all be formatted again.
+    const QString displayFormat = NumberFormatter::numericLiteralDisplayFormatKey();
+    const bool displayFormatChanged = displayFormat != m_displayFormat;
+    m_displayFormat = displayFormat;
+
+    if (!displayFormatChanged && historySize == m_list->count() + 1) {
         appendHistoryItem(historySize - 1);
         m_list->scrollToBottom();
         return;
     }
 
     if (historySize == m_list->count()) {
-        const int count = historySize;
-        if (count == 1) {
-            const QString expression = m_session->historyEntryAtRef(0).expr();
-            QListWidgetItem* item = m_list->item(0);
-            if (item != nullptr && item->data(Qt::UserRole).toString() != expression) {
-                item->setText(groupedExpressionForHistory(expression));
-                item->setData(Qt::UserRole, expression);
-            }
-            m_list->scrollToBottom();
-            return;
-        }
-
-        QListWidgetItem* secondItem = m_list->item(1);
-        if (secondItem != nullptr
-            && secondItem->data(Qt::UserRole).toString() == m_session->historyEntryAtRef(0).expr()) {
+        // At the history limit, the oldest entry is dropped as one is added.
+        if (!displayFormatChanged && historySize > 1 && historyShiftedByOne()) {
             delete m_list->takeItem(0);
             appendHistoryItem(historySize - 1);
             m_list->scrollToBottom();
             return;
         }
+
+        // Session switches, restores and settings changes notify without
+        // changing the entry count. Most items are then unchanged, and
+        // recreating thousands of them is much slower than comparing them.
+        updateHistoryItems(displayFormatChanged);
+        m_list->scrollToBottom();
+        return;
     }
 
     rebuildHistory();
+}
+
+// Comparing only the second item would also match an unchanged history
+// whose first two entries are equal.
+bool HistoryWidget::historyShiftedByOne() const
+{
+    const int count = m_list->count();
+    for (int i = 1; i < count; ++i) {
+        if (m_list->item(i)->data(Qt::UserRole).toString() != m_session->historyEntryAtRef(i - 1).expr())
+            return false;
+    }
+    return true;
+}
+
+void HistoryWidget::updateHistoryItems(bool reformatAll)
+{
+    for (int i = 0; i < m_list->count(); ++i) {
+        const QString& expression = m_session->historyEntryAtRef(i).expr();
+        QListWidgetItem* item = m_list->item(i);
+        if (!reformatAll && item->data(Qt::UserRole).toString() == expression)
+            continue;
+        const QString text = groupedExpressionForHistory(expression);
+        if (item->text() != text)
+            item->setText(text);
+        item->setData(Qt::UserRole, expression);
+    }
 }
 
 void HistoryWidget::appendHistoryItem(int index)

@@ -19,6 +19,7 @@ struct NumberFormatter {
                           bool useComplexNotation, char complexNotationOverride);
     static QString formatTrigSymbolic(Quantity);
     static QString formatNumericLiteralForDisplay(const QString& input);
+    static QString numericLiteralDisplayFormatKey();
     static bool isSingleGroupedInteger(const QString& input);
     static bool hasFormattedFractionalGrouping(const QString& input);
     static bool hasValidNumberGrouping(const QString& input, QChar radix, int base = 10);

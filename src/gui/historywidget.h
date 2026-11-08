@@ -42,9 +42,12 @@ private:
 
     void appendHistoryItem(int index);
     void rebuildHistory();
+    bool historyShiftedByOne() const;
+    void updateHistoryItems(bool reformatAll);
 
     QListWidget *m_list;
     const Session* m_session;
+    QString m_displayFormat;
 };
 
 #endif
