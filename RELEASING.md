@@ -4,9 +4,12 @@ Work through this checklist in order for each stable release.
 See [BUILDING.md](BUILDING.md) for toolchain setup and packaging details, and
 [TESTING.md](TESTING.md) for test instructions.
 
-The examples below use application version `X.Y` and Git tag `vX.Y.0`.
-Replace them with the intended release values. Package filenames use the CMake
-version, which can differ from the three-component Git tag.
+The examples below use application version `X.Y.Z` and Git tag `vX.Y.Z`.
+Replace them with the intended release values. Pre-releases append a SemVer
+suffix to both, such as `1.2.0-beta.1` and `v1.2.0-beta.1`. Package filenames use
+the full application version. Never publish a pre-release version to the
+`https://speedcrunch.org/version` endpoint: the update check expects final
+releases there.
 
 ## 1. Prepare the release metadata
 
@@ -15,7 +18,7 @@ version, which can differ from the three-component Git tag.
 - [ ] Set the application version in the root `CMakeLists.txt`:
 
   ```cmake
-  project(speedcrunch VERSION X.Y)
+  set(SPEEDCRUNCH_VERSION "X.Y.Z")
   ```
 
   This supplies the About dialog, Windows version resource, macOS bundle,
@@ -26,7 +29,7 @@ version, which can differ from the three-component Git tag.
   - `pkg/org.speedcrunch.SpeedCrunch.metainfo.xml`
 
   ```xml
-  <release version="X.Y" date="YYYY-MM-DD"/>
+  <release version="X.Y.Z" date="YYYY-MM-DD"/>
   ```
 
   Replace the date with the chosen publication date. Keep all previous release

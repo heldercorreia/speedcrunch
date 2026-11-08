@@ -1,18 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/BuildVariants.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/MacOSDeploymentTarget.cmake")
-if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    # Keep direct src builds using the version declared at the repository root.
-    set(speedcrunch_root_cmake "${CMAKE_CURRENT_SOURCE_DIR}/../CMakeLists.txt")
-    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${speedcrunch_root_cmake}")
-    file(STRINGS "${speedcrunch_root_cmake}" speedcrunch_project_declaration
-        REGEX "^project\\(speedcrunch VERSION [0-9.]+\\)")
-    string(REGEX MATCH "[0-9]+(\\.[0-9]+)*" speedcrunch_VERSION "${speedcrunch_project_declaration}")
-    if(speedcrunch_VERSION STREQUAL "")
-        message(FATAL_ERROR "Cannot read the SpeedCrunch version from the root CMakeLists.txt")
-    endif()
-endif()
-project(speedcrunch VERSION "${speedcrunch_VERSION}")
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/SpeedCrunchVersion.cmake")
+project(speedcrunch VERSION "${speedcrunch_version_core}")
+message(STATUS "SpeedCrunch version: ${SPEEDCRUNCH_VERSION}")
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -77,7 +68,8 @@ if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 endif()
 
-# Windows resources require four numeric version components.
+# Windows resources require four numeric version components, so they use the
+# version core. Their string values keep the full version.
 set(speedcrunch_VERSION_RC)
 foreach(component IN ITEMS MAJOR MINOR PATCH TWEAK)
     set(version_component "${speedcrunch_VERSION_${component}}")
@@ -96,7 +88,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(CMAKE_MACOSX_RPATH ON)
 
-ADD_DEFINITIONS("-DSPEEDCRUNCH_VERSION=\"${speedcrunch_VERSION}\"")
+ADD_DEFINITIONS("-DSPEEDCRUNCH_VERSION=\"${SPEEDCRUNCH_VERSION}\"")
 ADD_DEFINITIONS(-DQT_USE_QSTRINGBUILDER)
 
 # Keep source identity separate from the numeric version used by installers.
@@ -178,9 +170,10 @@ if(APPLE)
     set(APPLICATION_NAME SpeedCrunch)
     set(MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Info.plist.in")
     set(MACOSX_BUNDLE_ICON_FILE ${APP_ICON_FILE})
-    set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${speedcrunch_VERSION})
-    set(MACOSX_BUNDLE_BUNDLE_VERSION ${speedcrunch_VERSION})
-    set(MACOSX_BUNDLE_LONG_VERSION_STRING Version ${speedcrunch_VERSION})
+    # Bundle versions must be numeric, so pre-releases share their final release's.
+    set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${speedcrunch_version_core})
+    set(MACOSX_BUNDLE_BUNDLE_VERSION ${speedcrunch_version_core})
+    set(MACOSX_BUNDLE_LONG_VERSION_STRING "Version ${SPEEDCRUNCH_VERSION}")
     set_source_files_properties(${APP_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
 elseif(HAIKU)
     set(APPLICATION_NAME SpeedCrunch)

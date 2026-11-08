@@ -77,7 +77,7 @@ author = 'The SpeedCrunch Developers'
 with open(os.path.join(DOC_ROOT, '..', '..', 'CMakeLists.txt'),
           encoding='utf-8') as cmake_file:
     version_match = re.search(
-        r'^project\(speedcrunch\s+VERSION\s+([0-9]+(?:\.[0-9]+){1,3})\s*\)',
+        r'^set\(SPEEDCRUNCH_VERSION\s+"([0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?)"\s*\)',
         cmake_file.read(), re.MULTILINE)
 if version_match is None:
     raise RuntimeError('Cannot read the SpeedCrunch version from the root CMakeLists.txt')

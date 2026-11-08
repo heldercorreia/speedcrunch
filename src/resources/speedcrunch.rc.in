@@ -24,8 +24,8 @@ VS_VERSION_INFO VERSIONINFO
 			BLOCK "040904B0"
 			BEGIN
 				VALUE "CompanyName", "SpeedCrunch developers\0"
-				VALUE "FileVersion", "@speedcrunch_VERSION@\0"
-				VALUE "ProductVersion", "@speedcrunch_VERSION@\0"
+				VALUE "FileVersion", "@SPEEDCRUNCH_VERSION@\0"
+				VALUE "ProductVersion", "@SPEEDCRUNCH_VERSION@\0"
 				VALUE "LegalCopyright", "Copyright 2004-2026 SpeedCrunch developers\0"
 			END
 		END

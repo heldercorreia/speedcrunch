@@ -2,12 +2,15 @@
 
 SpeedCrunch uses CMake as its build system.
 
-Set the release version in `project(speedcrunch VERSION ...)` in
-the root `CMakeLists.txt`. This is the only version value to edit for a new release.
-CMake uses it for the application, macOS bundle, packages, and license notices.
-It also generates the Windows version resource in the build directory.
-Changing the version or its resource template refreshes the generated file on
-the next build. Unchanged files are not rewritten.
+Set the release version in `set(SPEEDCRUNCH_VERSION "...")` in the root
+`CMakeLists.txt`. This is the only version value to edit for a new release. It
+follows SemVer: `MAJOR.MINOR.PATCH` with an optional pre-release suffix, such as
+`1.2.0` or `1.2.0-beta.1`. Build metadata (`+...`) is not supported.
+Packages, About, and license notices show the full version. The Windows numeric
+version fields and the macOS bundle versions accept only numbers, so they use
+`MAJOR.MINOR.PATCH`. CMake also generates the Windows version resource in the
+build directory. Changing the version or its resource template refreshes the
+generated file on the next build. Unchanged files are not rewritten.
 
 CMake also records the source commit from Git. About shows its first eight
 characters in parentheses, and App Diagnostics includes the full hash and

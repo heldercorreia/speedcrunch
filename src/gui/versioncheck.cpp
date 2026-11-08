@@ -67,7 +67,7 @@ struct VersionResponse {
 };
 
 bool compareVersions(const QString& left, const QString& right, int* result);
-bool tryParseVersion(const QString& version, QVector<qulonglong>* components);
+bool tryParseVersion(const QString& version, QVector<qulonglong>* components, bool* prerelease);
 
 QMutex& updateScheduleMutex()
 {
@@ -341,7 +341,10 @@ bool compareVersions(const QString& left, const QString& right, int* result)
 
     QVector<qulonglong> leftComponents;
     QVector<qulonglong> rightComponents;
-    if (!tryParseVersion(left, &leftComponents) || !tryParseVersion(right, &rightComponents))
+    bool leftPrerelease = false;
+    bool rightPrerelease = false;
+    if (!tryParseVersion(left, &leftComponents, &leftPrerelease)
+        || !tryParseVersion(right, &rightComponents, &rightPrerelease))
         return false;
 
     const int count = qMax(leftComponents.size(), rightComponents.size());
@@ -356,16 +359,31 @@ bool compareVersions(const QString& left, const QString& right, int* result)
             return true;
     }
 
+    // A pre-release precedes the final release with the same numbers. Only
+    // final releases are published remotely, so pre-releases are not ordered.
+    if (leftPrerelease != rightPrerelease)
+        *result = leftPrerelease ? -1 : 1;
+
     return true;
 }
 
-bool tryParseVersion(const QString& version, QVector<qulonglong>* components)
+// Parses dot-separated numbers, optionally followed by a SemVer pre-release
+// suffix such as "-beta.1".
+bool tryParseVersion(const QString& version, QVector<qulonglong>* components, bool* prerelease)
 {
-    if (!components)
+    if (!components || !prerelease)
         return false;
     components->clear();
+    *prerelease = false;
 
-    const QString trimmed = version.trimmed();
+    QString trimmed = version.trimmed();
+    const int prereleaseStart = trimmed.indexOf(QLatin1Char('-'));
+    if (prereleaseStart >= 0) {
+        if (prereleaseStart == trimmed.size() - 1)
+            return false;
+        *prerelease = true;
+        trimmed.truncate(prereleaseStart);
+    }
     if (trimmed.isEmpty())
         return false;
 
