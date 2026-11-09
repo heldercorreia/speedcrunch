@@ -8,12 +8,14 @@
 
 #include <QAbstractItemView>
 #include <QAbstractItemModel>
+#include <QDockWidget>
 #include <QEvent>
 #include <QFrame>
 #include <QHeaderView>
 #include <QHoverEvent>
 #include <QLabel>
 #include <QListView>
+#include <QMainWindow>
 #include <QModelIndex>
 #include <QMouseEvent>
 #include <QObject>
@@ -21,6 +23,7 @@
 #include <QPainter>
 #include <QStyledItemDelegate>
 #include <QStyleOptionViewItem>
+#include <QTabBar>
 #include <QTreeView>
 #include <QVector>
 #include <QWidget>
@@ -297,6 +300,53 @@ private:
 } // namespace
 
 namespace DockListStyle {
+
+// Docks behind another dock's tab are moved off screen, not hidden, so check
+// the main window's dock tab bars. Qt tags each tab with its dock's address.
+bool dockIsOffScreen(const QMainWindow* window, QDockWidget* dock)
+{
+    if (dock->isHidden())
+        return true;
+    if (dock->isFloating() || window->tabifiedDockWidgets(dock).isEmpty())
+        return false;
+    const quintptr id = reinterpret_cast<quintptr>(dock);
+    for (const QTabBar* bar : window->findChildren<QTabBar*>(QString(), Qt::FindDirectChildrenOnly)) {
+        for (int i = 0; i < bar->count(); ++i) {
+            if (bar->tabData(i).value<quintptr>() == id)
+                return i != bar->currentIndex();
+        }
+    }
+    return false;
+}
+
+bool shouldDeferPopulation(const QWidget* content)
+{
+    auto* dock = qobject_cast<QDockWidget*>(content->parentWidget());
+    const auto* window = dock ? qobject_cast<const QMainWindow*>(dock->parentWidget()) : nullptr;
+    // Standalone widgets keep their immediate population behavior.
+    return window && (!dock->isVisible() || dockIsOffScreen(window, dock));
+}
+
+void refreshWhenExposed(QWidget* content, const std::function<void()>& refresh)
+{
+    auto* dock = qobject_cast<QDockWidget*>(content->parentWidget());
+    auto* window = dock ? qobject_cast<QMainWindow*>(dock->parentWidget()) : nullptr;
+    if (!window)
+        return;
+    QObject::connect(dock, &QDockWidget::visibilityChanged, content, [refresh](bool visible) {
+        if (visible)
+            refresh();
+    });
+    QObject::connect(dock, &QDockWidget::topLevelChanged, content, [refresh](bool floating) {
+        if (floating)
+            refresh();
+    });
+    QObject::connect(window, &QMainWindow::tabifiedDockWidgetActivated, content,
+                     [dock, refresh](QDockWidget* active) {
+        if (active == dock)
+            refresh();
+    });
+}
 
 void apply(QAbstractItemView* view)
 {

@@ -101,6 +101,10 @@ UserUnitListWidget::UserUnitListWidget(QWidget* parent)
     enterShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     connect(enterShortcut, &QShortcut::activated, this, [this]() { activateItem(); });
 
+    DockListStyle::refreshWhenExposed(this, [this]() {
+        if (m_pendingRefresh)
+            updateList();
+    });
     updateList();
 }
 
@@ -111,7 +115,8 @@ UserUnitListWidget::~UserUnitListWidget()
 
 void UserUnitListWidget::updateList()
 {
-    if (!isVisible()) {
+    m_filterTimer->stop();
+    if (!isVisible() || DockListStyle::shouldDeferPopulation(this)) {
         StartupDiagnostics::AppearanceScope timing("Defer hidden user units dock list", this);
         m_pendingRefresh = true;
         return;
@@ -120,7 +125,6 @@ void UserUnitListWidget::updateList()
     StartupDiagnostics::AppearanceScope timing("Populate user units dock list", this);
     setUpdatesEnabled(false);
 
-    m_filterTimer->stop();
     StartupDiagnostics::Scope phase("Clear user units dock rows");
     m_userUnits->clear();
     const QString term = m_searchFilter->text();
@@ -244,6 +248,10 @@ void UserUnitListWidget::deleteAllItems()
 void UserUnitListWidget::triggerFilter()
 {
     m_filterTimer->stop();
+    if (DockListStyle::shouldDeferPopulation(this)) {
+        m_pendingRefresh = true;
+        return;
+    }
     m_filterTimer->start();
 }
 

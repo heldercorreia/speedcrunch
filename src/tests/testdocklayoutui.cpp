@@ -7,6 +7,19 @@ using namespace MainWindowTestHelpers;
 
 namespace {
 
+bool selectDockTab(QMainWindow& window, QDockWidget* dock)
+{
+    for (QTabBar* bar : window.findChildren<QTabBar*>(QString(), Qt::FindDirectChildrenOnly)) {
+        for (int i = 0; i < bar->count(); ++i) {
+            if (bar->tabText(i) == dock->windowTitle()) {
+                QTest::mouseClick(bar, Qt::LeftButton, Qt::NoModifier, bar->tabRect(i).center());
+                return bar->currentIndex() == i;
+            }
+        }
+    }
+    return false;
+}
+
 // isFullScreen() changes as soon as fullscreen is requested, but a macOS
 // fullscreen animation ends later. Qt ignores showNormal() until it ends, and
 // then reports the window as fullscreen again. Track what the platform
@@ -145,7 +158,294 @@ private slots:
     void dock_column_orders_are_per_window();
     void invalid_dock_column_orders_use_defaults_data();
     void invalid_dock_column_orders_use_defaults();
+    void dock_lists_wait_until_exposed_data();
+    void dock_lists_wait_until_exposed();
+    void covered_functions_keep_pending_filters_and_language();
+    void covered_history_keeps_pending_session_and_format();
+    void restored_dock_lists_wait_behind_tabs_data();
+    void restored_dock_lists_wait_behind_tabs();
 };
+
+void TestDockLayoutUi::dock_lists_wait_until_exposed_data()
+{
+    QTest::addColumn<int>("kind");
+    QTest::addColumn<int>("exposure");
+    const QStringList names {QStringLiteral("constants"), QStringLiteral("functions"),
+        QStringLiteral("history"), QStringLiteral("variables"),
+        QStringLiteral("user-functions"), QStringLiteral("user-units")};
+    const QStringList exposures {QStringLiteral("tab"), QStringLiteral("float"), QStringLiteral("reopen")};
+    for (int kind = 0; kind < names.size(); ++kind) {
+        for (int exposure = 0; exposure < exposures.size(); ++exposure)
+            QTest::newRow(qPrintable(names.at(kind) + QLatin1Char('-') + exposures.at(exposure)))
+                << kind << exposure;
+    }
+}
+
+void TestDockLayoutUi::dock_lists_wait_until_exposed()
+{
+    QFETCH(int, kind);
+    QFETCH(int, exposure);
+    MainWindowStateGuard guard;
+    MainWindow::initializeApplicationStyle();
+    Session session;
+    session.addHistoryEntry(HistoryEntry(QStringLiteral("10000"), Quantity(10000)));
+    session.addVariable(Variable(QStringLiteral("dockvalue"), Quantity(42)));
+    session.addUserFunction(UserFunction(QStringLiteral("dockfunction"),
+                                        {QStringLiteral("x")}, QStringLiteral("x+1")));
+    session.addUserUnit(UserUnit(QStringLiteral("dockunit"), Quantity(2)));
+    QMainWindow window;
+    window.setCentralWidget(new QLabel(QStringLiteral("Editor")));
+    window.resize(800, 600);
+    auto* dock = new QDockWidget(QStringLiteral("List"), &window);
+    QWidget* content = nullptr;
+    switch (kind) {
+    case 0:
+        content = new ConstantsWidget(dock);
+        break;
+    case 1:
+        content = new FunctionsWidget(dock);
+        break;
+    case 2: {
+        auto* history = new HistoryWidget(dock);
+        history->setSession(&session);
+        content = history;
+        break;
+    }
+    case 3: {
+        auto* variables = new VariableListWidget(dock);
+        variables->setEvaluator(session.evaluator());
+        content = variables;
+        break;
+    }
+    case 4: {
+        auto* functions = new UserFunctionListWidget(dock);
+        functions->setEvaluator(session.evaluator());
+        content = functions;
+        break;
+    }
+    case 5: {
+        auto* units = new UserUnitListWidget(dock);
+        units->setEvaluator(session.evaluator());
+        content = units;
+        break;
+    }
+    }
+    QVERIFY(content);
+    dock->setWidget(content);
+    auto* covering = new QDockWidget(QStringLiteral("Cover"), &window);
+    covering->setWidget(new QLabel(QStringLiteral("Cover")));
+    window.addDockWidget(Qt::LeftDockWidgetArea, dock);
+    window.addDockWidget(Qt::LeftDockWidgetArea, covering);
+    window.tabifyDockWidget(dock, covering);
+    covering->raise();
+    const auto rowCount = [content]() {
+        if (auto* tree = content->findChild<QTreeWidget*>())
+            return tree->topLevelItemCount();
+        return content->findChild<QListWidget*>()->count();
+    };
+    QCOMPARE(rowCount(), 0);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QCoreApplication::processEvents();
+    QVERIFY(!covering->visibleRegion().isEmpty());
+    QVERIFY(dock->visibleRegion().isEmpty());
+    QCOMPARE(rowCount(), 0);
+
+    if (exposure == 1) {
+        dock->setFloating(true);
+        dock->resize(300, 300);
+        dock->move(window.mapToGlobal(QPoint(40, 40)));
+    } else {
+        if (exposure == 2) {
+            dock->hide();
+            dock->show();
+            dock->raise();
+        } else {
+            QVERIFY(selectDockTab(window, dock));
+        }
+    }
+    // Populate during activation, before the next paint or filter timer.
+    QVERIFY(rowCount() > 0);
+    auto* view = content->findChild<QAbstractItemView*>();
+    QVERIFY(view);
+    QTRY_VERIFY(!view->viewport()->visibleRegion().isEmpty());
+
+    if (dock->isFloating()) {
+        dock->setFloating(false);
+        window.tabifyDockWidget(dock, covering);
+    }
+    QVERIFY(selectDockTab(window, covering));
+    QVERIFY(dock->visibleRegion().isEmpty());
+    const int previousCount = rowCount();
+    const QString noMatch = QStringLiteral("no-matching-dock-entry");
+    if (auto* constants = qobject_cast<ConstantsWidget*>(content))
+        constants->restoreState(constants->selectedDomain(), constants->selectedSubdomain(), noMatch);
+    else if (auto* functions = qobject_cast<FunctionsWidget*>(content))
+        functions->setSearchText(noMatch);
+    else if (auto* variables = qobject_cast<VariableListWidget*>(content))
+        variables->setSearchText(noMatch);
+    else if (auto* userFunctions = qobject_cast<UserFunctionListWidget*>(content))
+        userFunctions->setSearchText(noMatch);
+    else if (auto* units = qobject_cast<UserUnitListWidget*>(content))
+        units->setSearchText(noMatch);
+    else {
+        session.addHistoryEntry(HistoryEntry(QStringLiteral("20000"), Quantity(20000)));
+        qobject_cast<HistoryWidget*>(content)->updateHistory();
+    }
+    QCOMPARE(rowCount(), previousCount);
+    QVERIFY(selectDockTab(window, dock));
+    QCOMPARE(rowCount(), kind == 2 ? previousCount + 1 : 0);
+}
+
+void TestDockLayoutUi::covered_functions_keep_pending_filters_and_language()
+{
+    MainWindowStateGuard guard;
+    MainWindow::initializeApplicationStyle();
+    QMainWindow window;
+    window.resize(800, 600);
+    auto* dock = new QDockWidget(QStringLiteral("Functions"), &window);
+    auto* functions = new FunctionsWidget(dock, {QStringLiteral("All"), QStringLiteral("sin")});
+    dock->setWidget(functions);
+    auto* covering = new QDockWidget(QStringLiteral("Cover"), &window);
+    covering->setWidget(new QLabel(QStringLiteral("Cover")));
+    window.addDockWidget(Qt::LeftDockWidgetArea, dock);
+    window.addDockWidget(Qt::LeftDockWidgetArea, covering);
+    window.tabifyDockWidget(dock, covering);
+    covering->raise();
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    auto* list = functions->findChild<QTreeWidget*>();
+    QCOMPARE(list->topLevelItemCount(), 0);
+    FunctionsTestTranslator translator;
+    QCoreApplication::installTranslator(&translator);
+    const auto removeTranslator = qScopeGuard([&]() { QCoreApplication::removeTranslator(&translator); });
+    QEvent languageChange(QEvent::LanguageChange);
+    QCoreApplication::sendEvent(functions, &languageChange);
+    bool translatedDomain = false;
+    for (const auto* label : functions->findChildren<QLabel*>())
+        translatedDomain |= label->text() == QStringLiteral("Translated Domain");
+    QVERIFY(translatedDomain);
+    functions->setSelectedDomain(FunctionRepo::instance()->find(QStringLiteral("cbrt"))->domain());
+    functions->setSearchText(QStringLiteral("cbrt"));
+    QCoreApplication::processEvents();
+    QCOMPARE(list->topLevelItemCount(), 0);
+    QVERIFY(selectDockTab(window, dock));
+    QCOMPARE(list->topLevelItemCount(), 1);
+    QCOMPARE(list->topLevelItem(0)->text(0), QStringLiteral("cbrt"));
+    QCOMPARE(functions->searchText(), QStringLiteral("cbrt"));
+
+    // Once populated, leave covered rows alone and refresh the latest filter
+    // immediately when returning, even before its usual debounce interval.
+    QVERIFY(selectDockTab(window, covering));
+    functions->setSearchText(QStringLiteral("sqrt"));
+    QCOMPARE(list->topLevelItem(0)->text(0), QStringLiteral("cbrt"));
+    QVERIFY(selectDockTab(window, dock));
+    QCOMPARE(list->topLevelItemCount(), 1);
+    QCOMPARE(list->topLevelItem(0)->text(0), QStringLiteral("sqrt"));
+}
+
+void TestDockLayoutUi::covered_history_keeps_pending_session_and_format()
+{
+    MainWindowStateGuard guard;
+    MainWindow::initializeApplicationStyle();
+    guard.settings->numberFormatStyle = Settings::NumberFormatNoGroupingDot;
+    guard.settings->applyNumberFormatStyle();
+    Session first;
+    first.addHistoryEntry(HistoryEntry(QStringLiteral("10000"), Quantity(10000)));
+    Session second;
+    second.addHistoryEntry(HistoryEntry(QStringLiteral("20000"), Quantity(20000)));
+    HistoryWidget standalone;
+    standalone.setSession(&first);
+    QCOMPARE(standalone.findChild<QListWidget*>()->count(), 1);
+    QMainWindow window;
+    window.resize(800, 600);
+    auto* dock = new QDockWidget(QStringLiteral("History"), &window);
+    auto* history = new HistoryWidget(dock);
+    history->setSession(&first);
+    dock->setWidget(history);
+    auto* covering = new QDockWidget(QStringLiteral("Cover"), &window);
+    covering->setWidget(new QLabel(QStringLiteral("Cover")));
+    window.addDockWidget(Qt::LeftDockWidgetArea, dock);
+    window.addDockWidget(Qt::LeftDockWidgetArea, covering);
+    window.tabifyDockWidget(dock, covering);
+    covering->raise();
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    auto* list = history->findChild<QListWidget*>();
+    QCOMPARE(list->count(), 0);
+    history->setSession(&second);
+    second.addHistoryEntry(HistoryEntry(QStringLiteral("30000"), Quantity(30000)));
+    history->updateHistory();
+    guard.settings->numberFormatStyle = Settings::NumberFormatThreeDigitCommaDot;
+    guard.settings->applyNumberFormatStyle();
+    history->updateHistory();
+    QCOMPARE(list->count(), 0);
+    QVERIFY(selectDockTab(window, dock));
+    QCOMPARE(list->count(), 2);
+    QCOMPARE(list->item(0)->text(), QStringLiteral("20,000"));
+    QCOMPARE(list->item(1)->text(), QStringLiteral("30,000"));
+    QCOMPARE(list->item(0)->data(Qt::UserRole).toString(), QStringLiteral("20000"));
+
+    QVERIFY(selectDockTab(window, covering));
+    second.clearHistory();
+    second.addHistoryEntry(HistoryEntry(QStringLiteral("40000"), Quantity(40000)));
+    history->updateHistory();
+    QCOMPARE(list->count(), 2);
+    QVERIFY(selectDockTab(window, dock));
+    QCOMPARE(list->count(), 1);
+    QCOMPARE(list->item(0)->text(), QStringLiteral("40,000"));
+}
+
+void TestDockLayoutUi::restored_dock_lists_wait_behind_tabs_data()
+{
+    QTest::addColumn<bool>("themed");
+    QTest::newRow("system") << false;
+    QTest::newRow("themed") << true;
+}
+
+void TestDockLayoutUi::restored_dock_lists_wait_behind_tabs()
+{
+    QFETCH(bool, themed);
+    MainWindowStateGuard guard;
+    guard.settings->dockAppearance = themed ? Settings::DockAppearanceSpeedCrunch : Settings::DockAppearanceSystem;
+    guard.settings->constantsDockVisible = true;
+    guard.settings->functionsDockVisible = true;
+    guard.settings->historyDockVisible = true;
+    guard.settings->variablesDockVisible = true;
+    guard.settings->userFunctionsDockVisible = true;
+    guard.settings->userUnitsDockVisible = true;
+    guard.settings->bitfieldVisible = false;
+    guard.settings->formulaBookDockVisible = false;
+    guard.settings->windowState.clear();
+    guard.settings->sessionLayoutJson.clear();
+    MainWindow window(false);
+    auto* functions = window.findChild<FunctionsWidget*>();
+    auto* constants = window.findChild<ConstantsWidget*>();
+    auto* history = window.findChild<HistoryWidget*>();
+    QVERIFY(functions);
+    QVERIFY(constants);
+    QVERIFY(history);
+    window.findChild<Editor*>()->setText(QStringLiteral("42"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression", Qt::DirectConnection));
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QCoreApplication::processEvents();
+    // User Units is the last created dock, above the other list tabs.
+    for (QWidget* content : {static_cast<QWidget*>(constants), static_cast<QWidget*>(functions),
+                             static_cast<QWidget*>(history)}) {
+        auto* dock = qobject_cast<QDockWidget*>(content->parentWidget());
+        QVERIFY(dock);
+        QVERIFY(dock->visibleRegion().isEmpty());
+        if (auto* tree = content->findChild<QTreeWidget*>())
+            QCOMPARE(tree->topLevelItemCount(), 0);
+        else
+            QCOMPARE(content->findChild<QListWidget*>()->count(), 0);
+    }
+    qobject_cast<QDockWidget*>(functions->parentWidget())->raise();
+    QVERIFY(functions->findChild<QTreeWidget*>()->topLevelItemCount() > 0);
+    qobject_cast<QDockWidget*>(history->parentWidget())->raise();
+    QCOMPARE(history->findChild<QListWidget*>()->count(), 1);
+}
 
 void TestDockLayoutUi::dock_column_orders_survive_relaunch_data()
 {

@@ -106,6 +106,7 @@ private:
     bool m_emptyHeaderStretchQueued = false;
     bool m_columnsNeedResize = false;
     QStringList m_populatedInputs;
+    bool m_pendingRefresh = false;
 };
 
 #endif

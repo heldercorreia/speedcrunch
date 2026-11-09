@@ -48,6 +48,7 @@ private:
     QListWidget *m_list;
     const Session* m_session;
     QString m_displayFormat;
+    bool m_pendingRefresh = false;
 };
 
 #endif

@@ -29,6 +29,7 @@
 #include "gui/constantswidget.h"
 #include "gui/customkeypaddialog.h"
 #include "gui/dockcomboboxchevron.h"
+#include "gui/dockliststyle.h"
 #include "gui/editorutils.h"
 #include "gui/fontdialogstyles.h"
 #include "gui/functionswidget.h"
@@ -2444,24 +2445,6 @@ void applyDockAppearance(MainWindow* owner, QDockWidget* dock,
     applyDockContentAppearance(owner, dock, surfaces, widgets, forceNativePolish);
 }
 
-// Docks behind another dock's tab are moved off screen, not hidden, so check
-// the main window's dock tab bars. Qt tags each tab with its dock's address.
-bool dockIsOffScreen(const QMainWindow* window, QDockWidget* dock)
-{
-    if (dock->isHidden())
-        return true;
-    if (dock->isFloating() || window->tabifiedDockWidgets(dock).isEmpty())
-        return false;
-    const quintptr id = reinterpret_cast<quintptr>(dock);
-    for (const QTabBar* bar : window->findChildren<QTabBar*>(QString(), Qt::FindDirectChildrenOnly)) {
-        for (int i = 0; i < bar->count(); ++i) {
-            if (bar->tabData(i).value<quintptr>() == id)
-                return i != bar->currentIndex();
-        }
-    }
-    return false;
-}
-
 // Styling a dock repolishes all of its contents, which is most of the cost of
 // a new window's theme. A new window styles the docks it shows, and the others
 // when they first come on screen. Refreshes leave those waiting docks alone.
@@ -2471,7 +2454,7 @@ void applyDockAppearanceWhenOnScreen(MainWindow* owner, QDockWidget* dock,
 {
     if (dock == nullptr || dock->property(DockAppearancePendingProperty).toBool())
         return;
-    if (deferOffScreen && dockIsOffScreen(owner, dock)) {
+    if (deferOffScreen && DockListStyle::dockIsOffScreen(owner, dock)) {
         StartupDiagnostics::AppearanceScope timing("Defer off-screen dock appearance", dock);
         dock->setProperty(DockAppearancePendingProperty, true);
         return;

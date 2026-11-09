@@ -6,6 +6,7 @@
 #include "core/sessionhistory.h"
 #include "core/numberformatter.h"
 #include "core/session.h"
+#include "core/startupdiagnostics.h"
 #include "gui/dockliststyle.h"
 
 #include <QAction>
@@ -56,11 +57,22 @@ HistoryWidget::HistoryWidget(QWidget *parent)
             handleItem(current);
     });
 
+    DockListStyle::refreshWhenExposed(this, [this]() {
+        if (m_pendingRefresh)
+            updateHistory();
+    });
     updateHistory();
 }
 
 void HistoryWidget::updateHistory()
 {
+    if (DockListStyle::shouldDeferPopulation(this)) {
+        StartupDiagnostics::AppearanceScope timing("Defer off-screen history dock list", this);
+        m_pendingRefresh = true;
+        return;
+    }
+    m_pendingRefresh = false;
+    StartupDiagnostics::AppearanceScope timing("Populate history dock list", this);
     const int historySize = m_session != nullptr ? m_session->historySize() : 0;
 
     if (historySize == 0) {

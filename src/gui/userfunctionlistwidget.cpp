@@ -102,6 +102,10 @@ UserFunctionListWidget::UserFunctionListWidget(QWidget* parent)
     enterShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     connect(enterShortcut, &QShortcut::activated, this, [this]() { activateItem(); });
 
+    DockListStyle::refreshWhenExposed(this, [this]() {
+        if (m_pendingRefresh)
+            updateList();
+    });
     updateList();
 }
 
@@ -112,7 +116,8 @@ UserFunctionListWidget::~UserFunctionListWidget()
 
 void UserFunctionListWidget::updateList()
 {
-    if (!isVisible()) {
+    m_filterTimer->stop();
+    if (!isVisible() || DockListStyle::shouldDeferPopulation(this)) {
         StartupDiagnostics::AppearanceScope timing("Defer hidden user functions dock list", this);
         m_pendingRefresh = true;
         return;
@@ -121,7 +126,6 @@ void UserFunctionListWidget::updateList()
     StartupDiagnostics::AppearanceScope timing("Populate user functions dock list", this);
     setUpdatesEnabled(false);
 
-    m_filterTimer->stop();
     StartupDiagnostics::Scope phase("Clear user functions dock rows");
     m_userFunctions->clear();
     QString term = m_searchFilter->text();
@@ -243,6 +247,10 @@ void UserFunctionListWidget::deleteAllItems()
 void UserFunctionListWidget::triggerFilter()
 {
     m_filterTimer->stop();
+    if (DockListStyle::shouldDeferPopulation(this)) {
+        m_pendingRefresh = true;
+        return;
+    }
     m_filterTimer->start();
 }
 

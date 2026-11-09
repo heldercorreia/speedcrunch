@@ -64,6 +64,7 @@ private:
     QLineEdit* m_searchFilter;
     QLabel* m_searchLabel;
     QStringList m_populatedInputs;
+    bool m_pendingRefresh = false;
 };
 
 #endif // GUI_FUNCTIONSWIDGET_H

@@ -111,6 +111,10 @@ FunctionsWidget::FunctionsWidget(QWidget* parent, const InitialState& state)
             emit functionSelected(current->text(0));
     });
 
+    DockListStyle::refreshWhenExposed(this, [this]() {
+        if (m_pendingRefresh)
+            updateList();
+    });
     restoreState(state.domain, state.searchText);
 }
 
@@ -122,6 +126,12 @@ FunctionsWidget::~FunctionsWidget()
 void FunctionsWidget::updateList()
 {
     m_filterTimer->stop();
+    if (DockListStyle::shouldDeferPopulation(this)) {
+        StartupDiagnostics::AppearanceScope timing("Defer off-screen functions dock list", this);
+        m_pendingRefresh = true;
+        return;
+    }
+    m_pendingRefresh = false;
     QString term = m_searchFilter->text();
     const QString selectedDomain = m_domain->currentText();
     QStringList functionNames = FunctionRepo::instance()->getListedIdentifiers();
@@ -262,6 +272,10 @@ void FunctionsWidget::clearSelection(QTreeWidgetItem*)
 void FunctionsWidget::triggerFilter()
 {
     m_filterTimer->stop();
+    if (DockListStyle::shouldDeferPopulation(this)) {
+        m_pendingRefresh = true;
+        return;
+    }
     m_filterTimer->start();
 }
 

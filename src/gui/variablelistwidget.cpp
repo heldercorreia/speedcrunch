@@ -104,6 +104,10 @@ VariableListWidget::VariableListWidget(QWidget* parent)
     enterShortcut->setContext(Qt::WidgetWithChildrenShortcut);
     connect(enterShortcut, &QShortcut::activated, this, [this]() { activateItem(); });
 
+    DockListStyle::refreshWhenExposed(this, [this]() {
+        if (m_pendingRefresh)
+            updateList();
+    });
     updateList();
 }
 
@@ -114,7 +118,8 @@ VariableListWidget::~VariableListWidget()
 
 void VariableListWidget::updateList()
 {
-    if (!isVisible()) {
+    m_filterTimer->stop();
+    if (!isVisible() || DockListStyle::shouldDeferPopulation(this)) {
         StartupDiagnostics::AppearanceScope timing("Defer hidden variables dock list", this);
         m_pendingRefresh = true;
         return;
@@ -123,7 +128,6 @@ void VariableListWidget::updateList()
     StartupDiagnostics::AppearanceScope timing("Populate variables dock list", this);
     setUpdatesEnabled(false);
 
-    m_filterTimer->stop();
     const QString term = m_searchFilter->text();
     StartupDiagnostics::Scope phase("Read variables for dock list");
     const QList<Variable> variables = m_evaluator->getUserDefinedVariables();
@@ -249,6 +253,10 @@ void VariableListWidget::deleteAllItems()
 void VariableListWidget::triggerFilter()
 {
     m_filterTimer->stop();
+    if (DockListStyle::shouldDeferPopulation(this)) {
+        m_pendingRefresh = true;
+        return;
+    }
     m_filterTimer->start();
 }
 

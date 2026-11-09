@@ -163,6 +163,10 @@ ConstantsWidget::ConstantsWidget(QWidget* parent, const InitialState& state)
     QWidget::setTabOrder(m_filter, m_list);
     setFocusProxy(m_filter);
 
+    DockListStyle::refreshWhenExposed(this, [this]() {
+        if (m_pendingRefresh)
+            filter();
+    });
     restoreState(state.domain, state.subdomain, state.searchText);
     m_filter->installEventFilter(this);
 }
@@ -249,11 +253,16 @@ void ConstantsWidget::translateControls(ListUpdate mode)
 
 void ConstantsWidget::filter()
 {
+    m_filterTimer->stop();
+    if (DockListStyle::shouldDeferPopulation(this)) {
+        StartupDiagnostics::AppearanceScope timing("Defer off-screen constants dock list", this);
+        m_pendingRefresh = true;
+        return;
+    }
+    m_pendingRefresh = false;
     const QList<Constant> &clist = Constants::instance()->list();
     const char radixChar = Settings::instance()->radixCharacter();
     const QString term = m_filter->text();
-
-    m_filterTimer->stop();
 
     const QString chosenDomain = m_domain->currentText();
     const QString chosenSubdomain = m_subdomain->currentText();
@@ -375,6 +384,10 @@ void ConstantsWidget::handleItem(QTreeWidgetItem* item)
 void ConstantsWidget::triggerFilter()
 {
     m_filterTimer->stop();
+    if (DockListStyle::shouldDeferPopulation(this)) {
+        m_pendingRefresh = true;
+        return;
+    }
     m_filterTimer->start();
 }
 

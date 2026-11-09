@@ -192,6 +192,8 @@ void TestWindowFrameUi::dark_mode_keeps_native_layout()
     QVERIFY(dock);
     auto* tree = dock->findChild<QTreeWidget*>();
     QVERIFY(tree);
+    // Constants opens behind the History tab and fills in when brought forward.
+    dock->raise();
     QTRY_VERIFY(tree->topLevelItemCount() > 0);
     QMenu* sessionMenu = window.menuBar()->actions().value(0)->menu();
     QVERIFY(sessionMenu);
