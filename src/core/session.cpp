@@ -341,7 +341,7 @@ Session::Session(QJsonObject& json)
 }
 
 Session::Session(const Session& other)
-    : m_history(other.m_history)
+    : m_history((other.loadDeferredFile(), other.m_history))
     , m_historyHead(other.m_historyHead)
     , m_savedHistory(other.m_savedHistory)
     , m_savedHistoryFirst(other.m_savedHistoryFirst)
@@ -360,6 +360,10 @@ Session& Session::operator=(const Session& other)
     if (this == &other)
         return *this;
 
+    other.loadDeferredFile();
+    // The copied contents replace the unread file.
+    m_deferredFileLoad = nullptr;
+    m_deferredFilePath.clear();
     m_history = other.m_history;
     m_historyHead = other.m_historyHead;
     m_savedHistory = other.m_savedHistory;
@@ -406,11 +410,14 @@ void Session::normalizeHistoryOrder()
 
 void Session::serialize(QJsonObject &json) const
 {
+    loadDeferredFile();
     SessionSerialization::serialize(*this, json);
 }
 
 int Session::deSerialize(const QJsonObject &json, bool merge=false)
 {
+    // An invalid document leaves the session unchanged, so read the file first.
+    loadDeferredFile();
     StartupDiagnostics::Scope timing("Deserialize session");
     return SessionSerialization::deserialize(*this, json, merge);
 }
@@ -423,8 +430,25 @@ void Session::setName(const QString& name)
         : trimmed;
 }
 
+void Session::deferFile(const QString& filePath, std::function<void(Session&)> load)
+{
+    m_deferredFilePath = filePath;
+    m_deferredFileLoad = std::move(load);
+}
+
+void Session::readDeferredFile() const
+{
+    // Clear first, so the loader can use the accessors that read the file.
+    const std::function<void(Session&)> load = std::move(m_deferredFileLoad);
+    m_deferredFileLoad = nullptr;
+    m_deferredFilePath.clear();
+    // Sessions are never const objects; constness only reflects lazy loading.
+    load(const_cast<Session&>(*this));
+}
+
 void Session::setHistoryLimit(int limit)
 {
+    loadDeferredFile();
     m_historyLimit = std::max(0, limit);
     applyHistoryLimit();
 }
@@ -640,6 +664,8 @@ void Session::applyHistoryLimit()
 
 void Session::clearHistory()
 {
+    // Keep the rest of an unread file's contents.
+    loadDeferredFile();
     m_history.clear();
     m_historyHead = 0;
     m_savedHistory = QJsonArray();

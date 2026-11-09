@@ -90,7 +90,8 @@ private slots:
     void startup_reuses_initial_pane();
     void startup_shows_restored_session_on_first_show_data();
     void startup_shows_restored_session_on_first_show();
-    void startup_converts_hidden_tab_history_when_opened();
+    void startup_reads_hidden_tab_file_when_opened();
+    void startup_keeps_unread_session_files_unchanged();
     void startup_hide_cancels_pending_show();
     void saved_window_ui_state_overrides_defaults_before_show();
     void visible_window_applies_restored_dock_and_keypad_layout();
@@ -1325,7 +1326,7 @@ void TestSessionsUi::startup_shows_restored_session_on_first_show()
     QVERIFY(layout->totalNs + system->totalNs <= show->totalNs);
 }
 
-void TestSessionsUi::startup_converts_hidden_tab_history_when_opened()
+void TestSessionsUi::startup_reads_hidden_tab_file_when_opened()
 {
     MainWindowStateGuard guard;
     PrivateSessionStorage storage;
@@ -1334,6 +1335,8 @@ void TestSessionsUi::startup_converts_hidden_tab_history_when_opened()
     settings->openPrivateTabOnStartup = false;
     settings->windowState.clear();
     settings->windowGeometry.clear();
+    settings->startupUserDefinitions = QStringLiteral("sharedvalue=99");
+    UserDefinitions::saveFrom(settings);
     const QString shown = QStringLiteral("Shown-Tab");
     const QString hidden = QStringLiteral("Hidden-Tab");
     for (const QString& name : {shown, hidden}) {
@@ -1360,9 +1363,9 @@ void TestSessionsUi::startup_converts_hidden_tab_history_when_opened()
         StartupDiagnostics::firstPaintFinished();
         StartupDiagnostics::finishWhenIdle();
     });
-    const auto loadedHistories = []() {
+    const auto phaseCalls = [](const char* name) {
         for (const auto& phase : StartupDiagnostics::snapshot().phases) {
-            if (phase.name == QLatin1String("Load deferred session history"))
+            if (phase.name == QLatin1String(name))
                 return phase.calls;
         }
         return 0;
@@ -1374,17 +1377,94 @@ void TestSessionsUi::startup_converts_hidden_tab_history_when_opened()
     QVERIFY(display);
     QTRY_COMPARE(display->session()->name(), shown);
     QCoreApplication::processEvents();
-    // Only the tab on screen converts its saved history.
-    QCOMPARE(loadedHistories(), 1);
+    // Only the tab on screen reads its file and converts its saved history.
+    QCOMPARE(phaseCalls("Read and parse session JSON"), 1);
+    QCOMPARE(phaseCalls("Read unread session file"), 0);
+    QCOMPARE(phaseCalls("Load deferred session history"), 1);
+    QVERIFY(display->session()->hasVariable(QStringLiteral("sharedvalue")));
 
     QTabBar* tabBar = paneWidgetForDisplay(display)->findChild<QTabBar*>();
     QVERIFY(tabBar);
     QTRY_COMPARE(tabBar->count(), 2);
     QTest::mouseClick(tabBar, Qt::LeftButton, Qt::NoModifier, tabBar->tabRect(1).center());
     QTRY_COMPARE(display->session()->name(), hidden);
-    QCOMPARE(loadedHistories(), 2);
+    QCOMPARE(phaseCalls("Read unread session file"), 1);
+    QCOMPARE(phaseCalls("Load deferred session history"), 2);
     QCOMPARE(display->session()->historySize(), 1);
     QVERIFY(display->toPlainText().contains(QStringLiteral("42")));
+    // Global definitions reach the session once its file is read.
+    QVERIFY(display->session()->hasVariable(QStringLiteral("sharedvalue")));
+    QCOMPARE(display->session()->getVariable(QStringLiteral("sharedvalue")).value(), Quantity(99));
+}
+
+void TestSessionsUi::startup_keeps_unread_session_files_unchanged()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    Settings* settings = guard.settings;
+    settings->hasNumberFormatStyleSetting = true;
+    settings->openPrivateTabOnStartup = false;
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    const QString shown = QStringLiteral("Shown-Tab");
+    const QString hidden = QStringLiteral("Hidden-Tab");
+    const QString broken = QStringLiteral("Broken-Tab");
+    const QHash<QString, QByteArray> savedFiles {
+        // Saving writes compact JSON, so indented files show whether a file was rewritten.
+        { shown, QJsonDocument(sessionJson(shown)).toJson(QJsonDocument::Indented) },
+        { hidden, QJsonDocument(sessionJson(hidden)).toJson(QJsonDocument::Indented) },
+        { broken, QByteArrayLiteral("{ not a session") }
+    };
+    for (auto it = savedFiles.cbegin(); it != savedFiles.cend(); ++it) {
+        QVERIFY(QDir().mkpath(QFileInfo(storage.path(it.key())).path()));
+        writeFile(storage.path(it.key()), it.value());
+    }
+    const auto fileContents = [&storage](const QString& name) {
+        QFile file(storage.path(name));
+        return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray();
+    };
+    settings->sessionLayoutJson = QString::fromUtf8(QJsonDocument(QJsonObject {
+        { QStringLiteral("scheme"), 1 },
+        { QStringLiteral("kind"), QStringLiteral("session-layout") },
+        { QStringLiteral("windows"), QJsonArray { QJsonObject {
+            { QStringLiteral("id"), QStringLiteral("saved") },
+            { QStringLiteral("root"), QJsonObject {
+                { QStringLiteral("type"), QStringLiteral("tabs") },
+                { QStringLiteral("active"), shown },
+                { QStringLiteral("tabs"), QJsonArray {
+                    QJsonObject { { QStringLiteral("name"), shown } },
+                    QJsonObject { { QStringLiteral("name"), hidden } },
+                    QJsonObject { { QStringLiteral("name"), broken } }
+                } }
+            } }
+        } } }
+    }).toJson(QJsonDocument::Compact));
+
+    MainWindow window;
+    window.showWhenReady();
+    QTRY_VERIFY(window.isVisible());
+    QTRY_VERIFY(!MainWindow::sessionRestoreInProgress());
+    auto* display = window.findChild<ResultDisplay*>();
+    QVERIFY(display);
+    QTabBar* tabBar = paneWidgetForDisplay(display)->findChild<QTabBar*>();
+    QVERIFY(tabBar);
+    QTRY_COMPARE(tabBar->count(), 3);
+
+    // A file that cannot be read leaves its tab empty and is never overwritten.
+    QTest::mouseClick(tabBar, Qt::LeftButton, Qt::NoModifier, tabBar->tabRect(2).center());
+    QTRY_COMPARE(display->session()->name(), broken);
+    QVERIFY(display->session()->historyIsEmpty());
+    QVERIFY(display->session()->isPrivate());
+    QTest::mouseClick(tabBar, Qt::LeftButton, Qt::NoModifier, tabBar->tabRect(0).center());
+    QTRY_COMPARE(display->session()->name(), shown);
+
+    window.persistSessionAndSettingsForShutdown();
+    // The shown session is saved again. The unread one keeps its file as it was.
+    QCOMPARE(fileContents(hidden), savedFiles.value(hidden));
+    QCOMPARE(fileContents(broken), savedFiles.value(broken));
+    QVERIFY(fileContents(shown) != savedFiles.value(shown));
+    const QJsonObject savedShown = QJsonDocument::fromJson(fileContents(shown)).object();
+    QCOMPARE(savedShown.value(QLatin1String(SessionJsonKeys::History)).toArray().size(), 1);
 }
 
 void TestSessionsUi::startup_hide_cancels_pending_show()

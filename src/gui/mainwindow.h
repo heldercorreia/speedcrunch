@@ -349,8 +349,10 @@ private:
                                     const QString& activeSessionName,
                                     bool restoreHistory,
                                     QHash<QString, QJsonObject> sessionJsons,
+                                    QHash<QString, QString> unreadSessionFiles,
                                     QHash<QString, QPair<int, int>> viewportAnchors,
                                     QHash<QString, int> scrollValues);
+    void deferSessionFile(Session* session, const QString& filePath, bool restoreHistory);
     void openImportedSession(Session* session);
     void activateSession(Session* session);
     void captureEditorTextInCurrentSession();
@@ -439,6 +441,7 @@ private:
                               int* importedUnits = nullptr,
                               int* ignoredLines = nullptr,
                               QList<int>* ignoredLineNumbers = nullptr);
+    void applyUserDefinitionsToSession(Session* session);
     void importUserDefinitionsFromText(const QString& text, bool overwriteExisting,
                                        int* importedVariables = nullptr,
                                        int* importedFunctions = nullptr,

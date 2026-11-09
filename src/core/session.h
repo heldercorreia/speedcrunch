@@ -13,6 +13,7 @@
 #include <QList>
 #include <QString>
 #include <QJsonArray>
+#include <functional>
 #include <memory>
 
 class Evaluator;
@@ -27,6 +28,10 @@ private:
     // m_history is empty while saved entries are waiting.
     mutable QJsonArray m_savedHistory;
     mutable qsizetype m_savedHistoryFirst = 0;
+    // Sessions in hidden tabs read their saved file when first used. Until
+    // then only the name is known, and every other accessor reads the file.
+    mutable std::function<void(Session&)> m_deferredFileLoad;
+    mutable QString m_deferredFilePath;
     std::unique_ptr<Evaluator> m_evaluator;
     QString m_name;
     QString m_editorText;
@@ -35,9 +40,16 @@ private:
     int physicalHistoryIndex(int logicalIndex) const;
     void normalizeHistoryOrder();
     void bindEvaluator();
-    bool hasSavedHistory() const { return m_savedHistory.size() > m_savedHistoryFirst; }
+    // Every history accessor checks for deferred entries first, so this also
+    // reads an unread file.
+    bool hasSavedHistory() const
+    {
+        loadDeferredFile();
+        return m_savedHistory.size() > m_savedHistoryFirst;
+    }
     void loadSavedHistory() const;
     void convertSavedHistory(const QJsonArray& history, qsizetype first) const;
+    void readDeferredFile() const;
 
 public:
     Session();
@@ -46,21 +58,29 @@ public:
     Session& operator=(const Session& other);
     ~Session();
 
-    Evaluator* evaluator() { return m_evaluator.get(); }
-    const Evaluator* evaluator() const { return m_evaluator.get(); }
+    Evaluator* evaluator() { loadDeferredFile(); return m_evaluator.get(); }
+    const Evaluator* evaluator() const { loadDeferredFile(); return m_evaluator.get(); }
 
     void load();
     void save();
+
+    // Leaves the saved file unread until something other than the name or
+    // the private flag is used. The loader fills the session from the file.
+    void deferFile(const QString& filePath, std::function<void(Session&)> load);
+    bool hasDeferredFile() const { return bool(m_deferredFileLoad); }
+    QString deferredFilePath() const { return m_deferredFilePath; }
+    void loadDeferredFile() const { if (m_deferredFileLoad) readDeferredFile(); }
 
     void serialize(QJsonObject &json) const;
     int deSerialize(const QJsonObject & json, bool merge);
     QString name() const { return m_name; }
     void setName(const QString& name);
+    // Private sessions are never saved, so a session with an unread file is not private.
     bool isPrivate() const { return m_private; }
-    void setPrivate(bool value) { m_private = value; }
-    QString editorText() const { return m_editorText; }
-    void setEditorText(const QString& text) { m_editorText = text; }
-    int historyLimit() const { return m_historyLimit; }
+    void setPrivate(bool value) { loadDeferredFile(); m_private = value; }
+    QString editorText() const { loadDeferredFile(); return m_editorText; }
+    void setEditorText(const QString& text) { loadDeferredFile(); m_editorText = text; }
+    int historyLimit() const { loadDeferredFile(); return m_historyLimit; }
     void setHistoryLimit(int limit);
 
 

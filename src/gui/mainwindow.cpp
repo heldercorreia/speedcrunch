@@ -6769,7 +6769,9 @@ Session* MainWindow::createUntitledSession(bool activateCreatedSession)
         const int number = untitledSessionNumber(name);
         if (number <= 0 || number >= recycledNumber)
             continue;
-        if (!isReusableUntitledSession(it.value()))
+        // Unread sessions belong to tabs, which are skipped below, so don't
+        // read their files to check them.
+        if (it.value()->hasDeferredFile() || !isReusableUntitledSession(it.value()))
             continue;
 
         bool alreadyAttachedToPane = false;
@@ -10050,6 +10052,7 @@ void MainWindow::showDiagnosticsDialog()
     int windows = 0;
     int panes = 0;
     int sessions = 0;
+    int unreadSessions = 0;
     qint64 historyEntries = 0;
     qint64 variables = 0;
     qint64 functions = 0;
@@ -10060,6 +10063,11 @@ void MainWindow::showDiagnosticsDialog()
             panes += window->splitPaneDisplays().size();
             sessions += window->m_loadedSessions.size();
             for (const Session* session : window->m_loadedSessions) {
+                // Reporting must not read files that are not open yet.
+                if (session->hasDeferredFile()) {
+                    ++unreadSessions;
+                    continue;
+                }
                 historyEntries += session->historySize();
                 variables += session->variablesToList().size();
                 functions += session->UserFunctionsToList().size();
@@ -10069,9 +10077,10 @@ void MainWindow::showDiagnosticsDialog()
     }
     const QString workload = QStringLiteral(
         "Open windows: %1\nVisible session panes: %2\nLoaded sessions: %3\n"
+        "Sessions not read yet: %8\n"
         "Loaded history entries: %4\nVariables: %5\nUser functions: %6\nUser units: %7\n")
         .arg(windows).arg(panes).arg(sessions).arg(historyEntries)
-        .arg(variables).arg(functions).arg(units);
+        .arg(variables).arg(functions).arg(units).arg(unreadSessions);
     DiagnosticsDialog dialog(appDiagnosticsReport(workload), this);
     dialog.exec();
 }
@@ -12121,10 +12130,14 @@ void MainWindow::applyUserDefinitions(int* importedVariables,
 
     Session* previousSession = m_session;
     const bool previousAutoAns = m_conditions.autoAns;
+    // Sessions read their file when first used and apply the definitions
+    // then. Callers that report counts get every session.
+    const bool skipUnreadSessions = importedVariables == nullptr && importedFunctions == nullptr
+        && importedUnits == nullptr && ignoredLines == nullptr && ignoredLineNumbers == nullptr;
 
     const QList<Session*> sessions = m_loadedSessions.values();
     for (Session* session : sessions) {
-        if (session == nullptr)
+        if (session == nullptr || (skipUnreadSessions && session->hasDeferredFile()))
             continue;
 
         m_session = session;
@@ -12184,6 +12197,22 @@ void MainWindow::applyUserDefinitions(int* importedVariables,
     emit variablesChanged();
     emit functionsChanged();
     emit unitsChanged();
+}
+
+void MainWindow::applyUserDefinitionsToSession(Session* session)
+{
+    // Importing works on the current session, so switch to it briefly.
+    Session* previousSession = m_session;
+    Evaluator* previousEvaluator = m_evaluator;
+    const bool previousAutoAns = m_conditions.autoAns;
+    m_session = session;
+    m_evaluator = session->evaluator();
+    m_evaluator->initializeBuiltInVariables();
+    importUserDefinitionsFromText(m_settings->startupUserDefinitions.trimmed(), true,
+                                  nullptr, nullptr, nullptr, nullptr, nullptr, false);
+    m_session = previousSession;
+    m_evaluator = previousEvaluator;
+    m_conditions.autoAns = previousAutoAns;
 }
 
 void MainWindow::showUserDefinitionsImportDialog()
@@ -14481,6 +14510,31 @@ void MainWindow::restoreSession(bool restoreHistory) {
     thread->start();
 }
 
+void MainWindow::deferSessionFile(Session* session, const QString& filePath, bool restoreHistory)
+{
+    QPointer<MainWindow> windowGuard(this);
+    session->deferFile(filePath, [windowGuard, filePath, restoreHistory](Session& loading) {
+        StartupDiagnostics::Scope timing("Read unread session file");
+        QJsonObject json;
+        if (!readValidSessionJson(filePath, &json)) {
+            // Startup used to leave out tabs whose files cannot be read. Keep
+            // the tab empty for now, and never write it over the file.
+            qWarning("Could not read session file %s", qPrintable(QDir::toNativeSeparators(filePath)));
+            loading.setPrivate(true);
+            return;
+        }
+        if (!restoreHistory)
+            json.remove(QLatin1String(SessionJsonKeys::History));
+        const QString name = loading.name();
+        json.insert(QLatin1String(SessionJsonKeys::Session), name);
+        loading.deSerialize(json, false);
+        loading.setName(name);
+        // Global definitions skip sessions until they are read.
+        if (windowGuard)
+            windowGuard->applyUserDefinitionsToSession(&loading);
+    });
+}
+
 bool MainWindow::restoreSessionLayout(bool restoreHistory)
 {
     StartupDiagnostics::Scope timing("Parse saved window layout");
@@ -14576,12 +14630,46 @@ bool MainWindow::restoreSessionLayout(bool restoreHistory)
     if (sessionLoadSpecs.isEmpty())
         return false;
 
+    // Only the selected tab of each pane is on screen. The other tabs read
+    // their files when they are first used.
+    QStringList shownNames;
+    const auto addShownName = [&shownNames, &loadNames](const QString& name) {
+        if (loadNames.contains(name, Qt::CaseInsensitive) && !shownNames.contains(name, Qt::CaseInsensitive))
+            shownNames.append(name);
+    };
+    const auto addShownPaneNames = [&addShownName, &loadNames](const QJsonObject& node,
+                                                                const auto& addShownPaneNamesRef) -> void {
+        const QString type = node.value(QStringLiteral("type")).toString();
+        if (type == QLatin1String("split")) {
+            for (const QJsonValue& childValue : node.value(QStringLiteral("children")).toArray()) {
+                if (childValue.isObject())
+                    addShownPaneNamesRef(childValue.toObject(), addShownPaneNamesRef);
+            }
+            return;
+        }
+        const QString activeName = normalizedSessionName(node.value(QStringLiteral("active")).toString());
+        if (loadNames.contains(activeName, Qt::CaseInsensitive)) {
+            addShownName(activeName);
+            return;
+        }
+        for (const QJsonValue& tabValue : node.value(QStringLiteral("tabs")).toArray()) {
+            const QString name = normalizedSessionName(tabValue.toObject().value(QStringLiteral("name")).toString());
+            if (loadNames.contains(name, Qt::CaseInsensitive)) {
+                addShownName(name);
+                return;
+            }
+        }
+    };
+    addShownPaneNames(root, addShownPaneNames);
+    addShownName(activeSessionName);
+
     QPointer<MainWindow> windowGuard(this);
     const auto startupTask = StartupDiagnostics::task("Restore window sessions (async total)");
-    QThread* thread = QThread::create([windowGuard, sessionLoadSpecs, activeSessionName,
+    QThread* thread = QThread::create([windowGuard, sessionLoadSpecs, shownNames, activeSessionName,
                                        layout, window, root, tabs, restoreHistory, startupTask]() {
         StartupDiagnostics::Scope timing("Read saved session files (worker total)");
         QHash<QString, QJsonObject> sessionJsons;
+        QHash<QString, QString> unreadSessionFiles;
         QHash<QString, QPair<int, int>> viewportAnchors;
         QHash<QString, int> scrollValues;
 
@@ -14590,36 +14678,62 @@ bool MainWindow::restoreSessionLayout(bool restoreHistory)
         const int specCount = int(sessionLoadSpecs.size());
         std::vector<QJsonObject> parsedJsons(specCount);
         std::vector<char> validJsons(specCount, 0);
-        std::atomic_int nextSpec{0};
-        const auto readSpecs = [&sessionLoadSpecs, &parsedJsons, &validJsons, &nextSpec, specCount]() {
-            for (int i = nextSpec++; i < specCount; i = nextSpec++) {
-                StartupDiagnostics::Scope fileTiming("Read and parse session JSON");
-                validJsons[i] = readValidSessionJson(sessionLoadSpecs.at(i).filePath, &parsedJsons[i]);
+        std::vector<char> readJsons(specCount, 0);
+        const auto readSpecs = [&sessionLoadSpecs, &parsedJsons, &validJsons, &readJsons](const QList<int>& specs) {
+            std::atomic_int nextSpec{0};
+            const int count = int(specs.size());
+            const auto readNext = [&]() {
+                for (int i = nextSpec++; i < count; i = nextSpec++) {
+                    StartupDiagnostics::Scope fileTiming("Read and parse session JSON");
+                    const int spec = specs.at(i);
+                    validJsons[spec] = readValidSessionJson(sessionLoadSpecs.at(spec).filePath, &parsedJsons[spec]);
+                    readJsons[spec] = 1;
+                }
+            };
+            // A few readers give most of the gain. More threads mostly contend
+            // for the allocator and slow the UI thread, so leave one core for it.
+            const int readerCount = qBound(1, qMin(QThread::idealThreadCount() - 1, 4), count);
+            std::vector<std::unique_ptr<QThread>> readers;
+            for (int i = 1; i < readerCount; ++i) {
+                readers.emplace_back(QThread::create(readNext));
+                readers.back()->start();
             }
+            readNext();
+            for (const auto& reader : readers)
+                reader->wait();
         };
-        // A few readers give most of the gain. More threads mostly contend
-        // for the allocator and slow the UI thread, so leave one core for it.
-        const int readerCount = qBound(1, qMin(QThread::idealThreadCount() - 1, 4), specCount);
-        std::vector<std::unique_ptr<QThread>> readers;
-        for (int i = 1; i < readerCount; ++i) {
-            readers.emplace_back(QThread::create(readSpecs));
-            readers.back()->start();
+
+        QList<int> shownSpecs;
+        QList<int> hiddenSpecs;
+        for (int i = 0; i < specCount; ++i) {
+            if (shownNames.contains(sessionLoadSpecs.at(i).name, Qt::CaseInsensitive))
+                shownSpecs.append(i);
+            else
+                hiddenSpecs.append(i);
         }
-        readSpecs();
-        for (const auto& reader : readers)
-            reader->wait();
+        readSpecs(shownSpecs);
+        // A pane whose selected file cannot be read shows another of its tabs
+        // instead, so read them all as before.
+        const bool shownFilesValid = std::all_of(shownSpecs.cbegin(), shownSpecs.cend(),
+                                                 [&validJsons](int i) { return validJsons[i] != 0; });
+        if (!shownFilesValid)
+            readSpecs(hiddenSpecs);
 
         for (int i = 0; i < specCount; ++i) {
-            if (!validJsons[i])
-                continue;
             const SessionLoadSpec& spec = sessionLoadSpecs.at(i);
-            QJsonObject sessionJson = parsedJsons[i];
+            if (!readJsons[i]) {
+                unreadSessionFiles.insert(spec.name, spec.filePath);
+            } else if (validJsons[i]) {
+                QJsonObject sessionJson = parsedJsons[i];
 
-            if (!restoreHistory)
-                sessionJson.remove(QLatin1String(SessionJsonKeys::History));
+                if (!restoreHistory)
+                    sessionJson.remove(QLatin1String(SessionJsonKeys::History));
 
-            sessionJson.insert(QLatin1String(SessionJsonKeys::Session), spec.name);
-            sessionJsons.insert(spec.name, sessionJson);
+                sessionJson.insert(QLatin1String(SessionJsonKeys::Session), spec.name);
+                sessionJsons.insert(spec.name, sessionJson);
+            } else {
+                continue;
+            }
 
             const QJsonObject scroll = spec.tab.value(QStringLiteral("scroll")).toObject();
             const int block = scroll.value(QStringLiteral("block")).toInt(-1);
@@ -14637,14 +14751,14 @@ bool MainWindow::restoreSessionLayout(bool restoreHistory)
         timing.finish();
         QMetaObject::invokeMethod(windowGuard.data(), [windowGuard, layout, window, root, tabs,
                                                        activeSessionName, restoreHistory,
-                                                       sessionJsons, viewportAnchors,
+                                                       sessionJsons, unreadSessionFiles, viewportAnchors,
                                                        scrollValues, startupTask]() mutable {
             StartupDiagnostics::Scope timing("Apply restored window sessions (total)");
             if (!windowGuard)
                 return;
             windowGuard->finishRestoreSessionLayout(layout, window, root, tabs, activeSessionName,
-                                                    restoreHistory, sessionJsons, viewportAnchors,
-                                                    scrollValues);
+                                                    restoreHistory, sessionJsons, unreadSessionFiles,
+                                                    viewportAnchors, scrollValues);
         }, Qt::QueuedConnection);
     });
     {
@@ -14666,6 +14780,7 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
                                             const QString& activeSessionName,
                                             bool restoreHistory,
                                             QHash<QString, QJsonObject> sessionJsons,
+                                            QHash<QString, QString> unreadSessionFiles,
                                             QHash<QString, QPair<int, int>> viewportAnchors,
                                             QHash<QString, int> scrollValues)
 {
@@ -14684,6 +14799,12 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
         Session* session = new Session();
         session->deSerialize(it.value(), false);
         session->setName(it.key());
+        restoredSessions.insert(it.key(), session);
+    }
+    for (auto it = unreadSessionFiles.constBegin(); it != unreadSessionFiles.constEnd(); ++it) {
+        Session* session = new Session();
+        session->setName(it.key());
+        deferSessionFile(session, it.value(), restoreHistory);
         restoredSessions.insert(it.key(), session);
     }
 
@@ -16008,7 +16129,11 @@ void MainWindow::persistSessionAndSettingsForShutdown()
                 continue;
             savedSessions.insert(session);
 
-            saveSessionAsync(*session, sessionFilePath(it.key()));
+            const QString filePath = sessionFilePath(it.key());
+            // A session whose file was never read has not changed since.
+            if (session->hasDeferredFile() && QFileInfo(session->deferredFilePath()) == QFileInfo(filePath))
+                continue;
+            saveSessionAsync(*session, filePath);
         }
     }
     waitForAsyncSessionIo();
