@@ -399,6 +399,7 @@ private:
     void applyThemeSurfacePalette();
     void restoreWindowThemeBackgrounds();
     void scheduleDockAppearanceRefresh(bool forceNativePolish = false);
+    void applyPendingDockAppearance(QDockWidget* dock);
     void applyDockTabBarAppearance();
     QStringList openDockNames() const;
     QStringList configuredOpenDockNames() const;

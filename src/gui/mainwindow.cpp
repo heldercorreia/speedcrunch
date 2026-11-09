@@ -2420,12 +2420,15 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
     alignDockSearchRow(dockContent);
 }
 
+constexpr char DockAppearancePendingProperty[] = "speedcrunchDockAppearancePending";
+
 void applyDockAppearance(MainWindow* owner, QDockWidget* dock,
                          const GeneratedThemeSurfaces& surfaces, bool forceNativePolish = true)
 {
     if (dock == nullptr)
         return;
     StartupDiagnostics::AppearanceScope timing("Apply dock appearance", dock);
+    dock->setProperty(DockAppearancePendingProperty, QVariant());
     QList<QWidget*> widgets;
     if (QWidget* content = dock->widget()) {
         widgets = content->findChildren<QWidget*>();
@@ -2439,6 +2442,41 @@ void applyDockAppearance(MainWindow* owner, QDockWidget* dock,
     // Set the parent style first so it does not repolish freshly styled contents.
     applyDockChromeAppearance(owner, dock, surfaces, forceNativePolish);
     applyDockContentAppearance(owner, dock, surfaces, widgets, forceNativePolish);
+}
+
+// Docks behind another dock's tab are moved off screen, not hidden, so check
+// the main window's dock tab bars. Qt tags each tab with its dock's address.
+bool dockIsOffScreen(const QMainWindow* window, QDockWidget* dock)
+{
+    if (dock->isHidden())
+        return true;
+    if (dock->isFloating() || window->tabifiedDockWidgets(dock).isEmpty())
+        return false;
+    const quintptr id = reinterpret_cast<quintptr>(dock);
+    for (const QTabBar* bar : window->findChildren<QTabBar*>(QString(), Qt::FindDirectChildrenOnly)) {
+        for (int i = 0; i < bar->count(); ++i) {
+            if (bar->tabData(i).value<quintptr>() == id)
+                return i != bar->currentIndex();
+        }
+    }
+    return false;
+}
+
+// Styling a dock repolishes all of its contents, which is most of the cost of
+// a new window's theme. A new window styles the docks it shows, and the others
+// when they first come on screen. Refreshes leave those waiting docks alone.
+void applyDockAppearanceWhenOnScreen(MainWindow* owner, QDockWidget* dock,
+                                     const GeneratedThemeSurfaces& surfaces, bool forceNativePolish,
+                                     bool deferOffScreen)
+{
+    if (dock == nullptr || dock->property(DockAppearancePendingProperty).toBool())
+        return;
+    if (deferOffScreen && dockIsOffScreen(owner, dock)) {
+        StartupDiagnostics::AppearanceScope timing("Defer off-screen dock appearance", dock);
+        dock->setProperty(DockAppearancePendingProperty, true);
+        return;
+    }
+    applyDockAppearance(owner, dock, surfaces, forceNativePolish);
 }
 
 void applyThemeBackgroundRoleToWidget(QWidget* widget, const QColor& background)
@@ -7823,10 +7861,17 @@ void MainWindow::applyThemeSurfacePalette()
     applyKeypadThemeSurfacePalette();
     applyStatusBarAppearance(findChild<QStatusBar*>(QString(), Qt::FindDirectChildrenOnly),
                              surfaces);
+    // A shown window restyles every dock, so a theme change reaches them all.
+    // Native docks are cheap to style and inherit the themed window palette
+    // until they are, so only themed docks wait.
+    const bool deferOffScreenDocks = !isVisible() && m_settings->dockAppearance != Settings::DockAppearanceSystem;
     for (QDockWidget* dock : m_allDocks) {
         if (dock == nullptr)
             continue;
-        applyDockAppearance(this, dock, surfaces);
+        if (deferOffScreenDocks)
+            applyDockAppearanceWhenOnScreen(this, dock, surfaces, true, true);
+        else
+            applyDockAppearance(this, dock, surfaces);
     }
     applyDockTabBarAppearance();
     // The direct pass has already polished the controls for the current style.
@@ -7868,7 +7913,7 @@ void MainWindow::scheduleDockAppearanceRefresh(bool forceNativePolish)
         MenuStyle::refresh();
         const QList<QDockWidget*> docks = m_allDocks;
         for (QDockWidget* dock : docks) {
-            applyDockAppearance(this, dock, surfaces, forceNativePolish);
+            applyDockAppearanceWhenOnScreen(this, dock, surfaces, forceNativePolish, false);
         }
         applyDockTabBarAppearance();
         updateSplitterStyleSheet();
@@ -7876,6 +7921,15 @@ void MainWindow::scheduleDockAppearanceRefresh(bool forceNativePolish)
         if (m_dockNativePolishPending)
             scheduleDockAppearanceRefresh(true);
     });
+}
+
+void MainWindow::applyPendingDockAppearance(QDockWidget* dock)
+{
+    if (dock == nullptr || !dock->property(DockAppearancePendingProperty).toBool())
+        return;
+    StartupDiagnostics::AppearanceContext context("Dock coming on screen");
+    dock->setProperty(DockAppearancePendingProperty, QVariant());
+    applyDockAppearance(this, dock, generatedSurfaceColors(m_settings));
 }
 
 void MainWindow::applyKeypadThemeSurfacePalette()
@@ -7897,6 +7951,26 @@ void MainWindow::applyKeypadThemeSurfacePalette()
     const ToolTipStyleUtils::PopupTheme keypadToolTip = popupToolTipTheme(surfaces);
 
     applyThemeBackgroundRoleToWidget(m_widgets.keypadContainer, keypadBackground.background);
+    // The window theme pass at startup repeats the keypad's own pass. When
+    // nothing changed, skip the palette event and the deferred refresh.
+    QStringList themeColors;
+    for (const QColor& color : {keypadButton.background, keypadButton.foreground,
+                                keypadButtonHover.background, keypadButtonHover.foreground,
+                                keypadButtonPressed.background, keypadButtonPressed.foreground,
+                                surfaces.primary.background, keypadToolTip.background,
+                                keypadToolTip.foreground, keypadToolTip.outline}) {
+        themeColors.append(color.name(QColor::HexArgb));
+    }
+    themeColors.append(QString::number(keypadToolTip.cornerRadius));
+    const QString themeKey = themeColors.join(QLatin1Char(' '));
+    if (m_widgets.keypad->property("speedcrunchKeypadThemeKey").toString() == themeKey
+        && m_widgets.keypad->palette() == keypadPalette
+        && m_widgets.keypad->palette().resolveMask() == keypadPalette.resolveMask()
+        && m_widgets.keypad->autoFillBackground()) {
+        StartupDiagnostics::appearanceAssignment(m_widgets.keypad, true, false, true);
+        return;
+    }
+    m_widgets.keypad->setProperty("speedcrunchKeypadThemeKey", themeKey);
     StartupDiagnostics::setAppearancePalette(m_widgets.keypad, keypadPalette);
     m_widgets.keypad->setAutoFillBackground(true);
     const QPointer<Keypad> keypad = m_widgets.keypad;
@@ -8470,7 +8544,12 @@ void MainWindow::createUserUnitsDock(bool takeFocus)
 void MainWindow::addTabifiedDock(QDockWidget* newDock, bool takeFocus, Qt::DockWidgetArea area)
 {
     connect(newDock, &QDockWidget::visibilityChanged, this, &MainWindow::handleDockWidgetVisibilityChanged);
-    connect(newDock, &QDockWidget::topLevelChanged, newDock, [newDock]() {
+    // Selecting a dock's tab moves it on screen without showing it again.
+    connect(this, &QMainWindow::tabifiedDockWidgetActivated,
+            this, &MainWindow::applyPendingDockAppearance, Qt::UniqueConnection);
+    connect(newDock, &QDockWidget::topLevelChanged, newDock, [this, newDock]() {
+        // A floating dock is on screen even when it was behind a tab.
+        applyPendingDockAppearance(newDock);
         // Qt replaces title button icons when changing between floating and
         // docked. Restore our themed icons after that reset, before any hover.
         for (QAbstractButton* button : newDock->findChildren<QAbstractButton*>(
@@ -15997,6 +16076,8 @@ void MainWindow::handleDockWidgetVisibilityChanged(bool visible)
     QDockWidget* dock = qobject_cast<QDockWidget*>(sender());
     if (!dock)
         return;
+    if (visible)
+        applyPendingDockAppearance(dock);
 
     // Pass the focus back to the editor if the dock that is being hidden has the focus.
     QWidget* focusWidget = dock->focusWidget();

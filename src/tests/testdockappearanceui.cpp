@@ -31,6 +31,8 @@ private slots:
     void system_dock_separators_use_thin_system_colors();
     void dock_headers_follow_appearance_data();
     void dock_headers_follow_appearance();
+    void docks_behind_tabs_are_styled_when_selected_data();
+    void docks_behind_tabs_are_styled_when_selected();
     void system_dock_headers_paint_system_background_data();
     void system_dock_headers_paint_system_background();
     void system_dock_controls_keep_aligned_rows_data();
@@ -1412,6 +1414,54 @@ void TestDockAppearanceUi::dock_header_buttons_keep_theme_after_redocking()
             }
         }
     }
+}
+
+void TestDockAppearanceUi::docks_behind_tabs_are_styled_when_selected_data()
+{
+    QTest::addColumn<bool>("floatIt");
+    QTest::newRow("tab") << false;
+    QTest::newRow("float") << true;
+}
+
+void TestDockAppearanceUi::docks_behind_tabs_are_styled_when_selected()
+{
+    QFETCH(bool, floatIt);
+    MainWindowStateGuard guard;
+    guard.settings->dockAppearance = Settings::DockAppearanceSpeedCrunch;
+    guard.settings->constantsDockVisible = true;
+    guard.settings->functionsDockVisible = true;
+    guard.settings->windowState.clear();
+    guard.settings->sessionLayoutJson.clear();
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QCoreApplication::processEvents();
+    QDockWidget* constants = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
+    QDockWidget* functions = window.findChild<QDockWidget*>(QStringLiteral("FunctionsDock"));
+    QVERIFY(constants);
+    QVERIFY(functions);
+    QVERIFY(window.tabifiedDockWidgets(constants).contains(functions));
+    QDockWidget* shown = constants->visibleRegion().isEmpty() ? functions : constants;
+    QDockWidget* behind = shown == constants ? functions : constants;
+    QVERIFY(!shown->visibleRegion().isEmpty());
+    QVERIFY(behind->visibleRegion().isEmpty());
+    // The window styles only the dock on screen.
+    QVERIFY(!shown->styleSheet().isEmpty());
+    QVERIFY(behind->styleSheet().isEmpty());
+    QLineEdit* search = behind->findChild<QLineEdit*>();
+    QVERIFY(search);
+    QVERIFY(search->styleSheet().isEmpty());
+
+    // It reaches the other dock before that dock paints.
+    if (floatIt)
+        behind->setFloating(true);
+    else
+        behind->raise();
+    QVERIFY(!behind->styleSheet().isEmpty());
+    QCOMPARE(behind->styleSheet(), shown->styleSheet());
+    QCOMPARE(behind->palette().color(QPalette::Window), shown->palette().color(QPalette::Window));
+    QVERIFY(!search->styleSheet().isEmpty());
+    QCOMPARE(search->styleSheet(), shown->findChild<QLineEdit*>()->styleSheet());
 }
 
 int main(int argc, char** argv)

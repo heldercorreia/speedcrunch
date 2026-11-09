@@ -1680,6 +1680,11 @@ void TestThemesUi::dock_surfaces_use_successive_generated_shades()
                                                             .arg(scrollToBottomOutlineFill.name())));
     QVERIFY(!scrollToBottomButton->icon().isNull());
     for (QDockWidget* dock : docks) {
+        // Docks that were closed or behind another tab when the window was
+        // built are styled when they come on screen.
+        dock->show();
+        dock->raise();
+        QCoreApplication::processEvents();
         QCOMPARE(dock->palette().color(QPalette::Window).name(), titleFill.name());
         QCOMPARE(dock->palette().color(QPalette::WindowText).name(), titleText.name());
         QVERIFY(dock->styleSheet().contains(titleFill.name()));

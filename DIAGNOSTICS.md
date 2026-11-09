@@ -119,6 +119,10 @@ including panels behind another dock tab and floating panels. Closed docks
 are created when you open them, using their saved placement when available.
 Older layouts without an open-dock list use empty temporary docks to read
 the saved visibility, without building application dock contents.
+With the SpeedCrunch dock appearance, a new window styles only the docks on
+screen. Docks behind another dock's tab appear as `Defer off-screen dock
+appearance` and are styled when their tab is selected, they are shown, or
+they start floating, which appears under `Dock coming on screen`.
 Repeated themed palette assignments are skipped when their colors and
 explicit roles match.
 
