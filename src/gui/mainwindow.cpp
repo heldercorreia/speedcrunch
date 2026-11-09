@@ -1288,6 +1288,24 @@ class DockChromeStyle : public QProxyStyle {
 public:
     using QProxyStyle::QProxyStyle;
 
+    QIcon standardIcon(StandardPixmap iconType, const QStyleOption* option = nullptr,
+                       const QWidget* widget = nullptr) const override
+    {
+        const auto* dock = qobject_cast<const QDockWidget*>(widget);
+        if (dock != nullptr
+            && (iconType == SP_TitleBarCloseButton || iconType == SP_TitleBarNormalButton)) {
+            const auto* button = dock->findChild<QAbstractButton*>(
+                iconType == SP_TitleBarCloseButton ? QStringLiteral("qt_dockwidget_closebutton")
+                                                  : QStringLiteral("qt_dockwidget_floatbutton"),
+                Qt::FindDirectChildrenOnly);
+            // Qt refreshes these icons after style and layout changes too.
+            // Keep the themed icon instead of waiting for hover to restore it.
+            if (button != nullptr && button->property("speedcrunchDockHeaderButton").toBool())
+                return button->icon();
+        }
+        return QProxyStyle::standardIcon(iconType, option, widget);
+    }
+
     QRect subElementRect(SubElement element, const QStyleOption* option,
                          const QWidget* widget = nullptr) const override
     {

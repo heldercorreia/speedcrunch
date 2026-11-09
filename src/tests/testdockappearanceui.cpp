@@ -45,6 +45,8 @@ private slots:
     void dock_header_buttons_stay_centered_in_title_bar();
     void dock_header_buttons_keep_theme_after_redocking_data();
     void dock_header_buttons_keep_theme_after_redocking();
+    void dock_header_buttons_keep_theme_before_hover_data();
+    void dock_header_buttons_keep_theme_before_hover();
     void themed_headers_keep_native_scrollbar_styles();
     void macos_system_dock_search_fields_stay_rounded_data();
     void macos_system_dock_search_fields_stay_rounded();
@@ -1413,6 +1415,100 @@ void TestDockAppearanceUi::dock_header_buttons_keep_theme_after_redocking()
                 QVERIFY2(icon == expectedIcons.at(i), qPrintable(buttonNames.at(i)));
             }
         }
+    }
+}
+
+void TestDockAppearanceUi::dock_header_buttons_keep_theme_before_hover_data()
+{
+    QTest::addColumn<QString>("background");
+    QTest::addColumn<bool>("maximized");
+    QTest::newRow("dark-normal") << QStringLiteral("#323146") << false;
+    QTest::newRow("dark-maximized") << QStringLiteral("#323146") << true;
+    QTest::newRow("light-normal") << QStringLiteral("#f4e8ee") << false;
+    QTest::newRow("light-maximized") << QStringLiteral("#f4e8ee") << true;
+}
+
+void TestDockAppearanceUi::dock_header_buttons_keep_theme_before_hover()
+{
+    QFETCH(QString, background);
+    QFETCH(bool, maximized);
+    MainWindowStateGuard guard;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), background}});
+    guard.settings->dockAppearance = Settings::DockAppearanceSpeedCrunch;
+    guard.settings->windowState.clear();
+    guard.settings->sessionLayoutJson.clear();
+    guard.settings->constantsDockVisible = true;
+    guard.settings->historyDockVisible = true;
+    guard.settings->variablesDockVisible = true;
+    guard.settings->userFunctionsDockVisible = true;
+    guard.settings->userUnitsDockVisible = true;
+    guard.settings->functionsDockVisible = false;
+    guard.settings->formulaBookDockVisible = false;
+    guard.settings->bitfieldVisible = false;
+    const QPoint cursorPosition = QCursor::pos();
+    const auto restoreCursor = qScopeGuard([cursorPosition]() { QCursor::setPos(cursorPosition); });
+    QCursor::setPos(0, 0);
+
+    const QStringList dockNames {QStringLiteral("UserUnitsDock"), QStringLiteral("UserFunctionsDock"),
+                                 QStringLiteral("VariablesDock"), QStringLiteral("HistoryDock"),
+                                 QStringLiteral("ConstantsDock")};
+    MainWindow window(false);
+    // Expose each header on the first show, as in a saved stacked layout.
+    QDockWidget* previous = nullptr;
+    for (const QString& name : dockNames) {
+        auto* dock = window.findChild<QDockWidget*>(name);
+        QVERIFY(dock);
+        window.removeDockWidget(dock);
+        window.addDockWidget(Qt::RightDockWidgetArea, dock);
+        if (previous)
+            window.splitDockWidget(previous, dock, Qt::Vertical);
+        dock->show();
+        previous = dock;
+    }
+    window.resize(960, 780);
+    maximized ? window.showMaximized() : window.showNormal();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QCoreApplication::processEvents();
+    const QStringList buttonNames {QStringLiteral("qt_dockwidget_closebutton"),
+                                   QStringLiteral("qt_dockwidget_floatbutton")};
+    for (const QString& dockName : dockNames) {
+        auto* dock = window.findChild<QDockWidget*>(dockName);
+        QVERIFY(dock);
+        QVERIFY(!dock->visibleRegion().isEmpty());
+        const auto verifyButtons = [&]() {
+            for (const QString& buttonName : buttonNames) {
+                auto* button = dock->findChild<QAbstractButton*>(buttonName);
+                QVERIFY(button);
+                QVERIFY(button->isVisible());
+                QVERIFY(!button->underMouse());
+                const QColor fill = button->property("speedcrunchDockHeaderButtonFill").value<QColor>();
+                const QImage rendered = button->grab().toImage();
+                const qreal dpr = rendered.devicePixelRatio();
+                QVERIFY2(colorsAreClose(rendered.pixelColor(qRound(2 * dpr), qRound(9 * dpr)), fill, 3),
+                         qPrintable(dockName + QLatin1Char('/') + buttonName));
+                const QImage icon = button->icon().pixmap(button->iconSize(), 1.0).toImage();
+                QVERIFY(colorsAreClose(icon.pixelColor(2, 9), fill, 3));
+            }
+        };
+        verifyButtons();
+        if (QTest::currentTestFailed())
+            return;
+        // Qt refreshes its private title icons during style and layout changes.
+        // Check synchronously, before a queued appearance pass or hover repairs them.
+        for (QEvent::Type type : {QEvent::StyleChange, QEvent::LayoutDirectionChange,
+                                  QEvent::ApplicationLayoutDirectionChange, QEvent::ParentChange}) {
+            QEvent event(type);
+            QCoreApplication::sendEvent(dock, &event);
+            verifyButtons();
+            if (QTest::currentTestFailed())
+                return;
+        }
+        dock->setFeatures(dock->features() ^ QDockWidget::DockWidgetMovable);
+        verifyButtons();
+        if (QTest::currentTestFailed())
+            return;
     }
 }
 
