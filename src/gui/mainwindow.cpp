@@ -55,6 +55,7 @@
 #include "gui/maclineeditstyle.h"
 #include "gui/tooltipstyleutils.h"
 #include "gui/uiconfig.h"
+#include "gui/uilanguagefont.h"
 #include "math/cmath.h"
 #include "math/floatnum/floatconfig.h"
 #include "core/mathdsl.h"
@@ -1528,6 +1529,7 @@ void ensureApplicationStyle()
     if (base == darkModeBaseStyle().data())
         style->setLayoutStyle(QStyleFactory::create(nativeBaseStyleName()));
     QApplication::setStyle(style);
+    UiLanguageFont::reapplyAfterStyleChange();
 
 #if defined(Q_OS_WIN) && QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
     // Follow System can turn dark mode on or off while SpeedCrunch runs.
@@ -4457,6 +4459,7 @@ void MainWindow::createActions()
 void MainWindow::retranslateText()
 {
     StartupDiagnostics::Scope timing("Load translations and translate UI");
+    UiLanguageFont::apply(m_settings->language);
     QTranslator* tr = 0;
     tr = createTranslator(m_settings->language);
     if (tr) {
@@ -9972,6 +9975,9 @@ MainWindow::MainWindow(bool restorePreviousSession)
         create();
     }
 
+    // Widgets created after this lay out their text in the final font.
+    timing.next("Apply UI language font");
+    UiLanguageFont::apply(m_settings->language);
     timing.next("Create main UI (total)");
     createUi();
     timing.next("Apply startup settings (total)");

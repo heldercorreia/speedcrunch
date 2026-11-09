@@ -53,6 +53,7 @@ struct Workload {
 
 Workload workload;
 QString stylePreset;
+QString uiLanguage;
 QString reportPath;
 constexpr int startupRuns = 10;
 // Keep the fixture usable on the 1024x686 macOS CI display, including its
@@ -245,6 +246,8 @@ bool prepareWorkload(const QString& root)
     };
     QSettings settings(QDir(root).filePath(QStringLiteral("config/SpeedCrunch.ini")), QSettings::IniFormat);
     settings.setValue(QStringLiteral("SpeedCrunch/General/OpenPrivateTabOnStartup"), false);
+    if (!uiLanguage.isEmpty())
+        settings.setValue(QStringLiteral("SpeedCrunch/General/Language"), uiLanguage);
     const bool classic = stylePreset == QLatin1String("classic");
     const QString displayPrefix = QStringLiteral("SpeedCrunch/Display/");
     settings.setValue(displayPrefix + QStringLiteral("MenuAppearance"), int(classic
@@ -530,12 +533,15 @@ int main(int argc, char* argv[])
     parser.addOption({QStringLiteral("workload"), QStringLiteral("baseline or heavy"), QStringLiteral("name")});
     parser.addOption({QStringLiteral("preset"), QStringLiteral("classic or modern"), QStringLiteral("name")});
     parser.addOption({QStringLiteral("report"), QStringLiteral("Diagnostic report path"), QStringLiteral("path")});
+    parser.addOption({QStringLiteral("language"), QStringLiteral("UI language code, such as zh_TW (default: system)"),
+                      QStringLiteral("code")});
     parser.process(application);
     const QString name = parser.value(QStringLiteral("workload"));
     if (!selectScenario(name, parser.value(QStringLiteral("preset")))
         || parser.value(QStringLiteral("report")).isEmpty())
         parser.showHelp(1);
     reportPath = QFileInfo(parser.value(QStringLiteral("report"))).absoluteFilePath();
+    uiLanguage = parser.value(QStringLiteral("language"));
     if (!QDir().mkpath(QFileInfo(reportPath).absolutePath()))
         return 1;
     // Remove previous outputs so a failed run cannot leave stale averages.

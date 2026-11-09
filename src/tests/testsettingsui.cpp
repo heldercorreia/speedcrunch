@@ -8,6 +8,7 @@
 #include "gui/diagnosticsdialog.h"
 #include "gui/fontdialogstyles.h"
 #include "gui/tooltipstyleutils.h"
+#include "gui/uilanguagefont.h"
 #include "buildversion.h"
 
 #include <QFontDatabase>
@@ -35,6 +36,7 @@ private slots:
     void system_color_mode_updates_native_palettes();
     void system_color_mode_refreshes_controls_without_platform_notifications();
     void system_color_mode_replaces_stale_fusion_palette_and_releases_override();
+    void ui_font_covers_language_script_on_windows();
     void trailing_zeroes_formatting_data();
     void trailing_zeroes_formatting();
     void trailing_zeroes_setting_survives_reload();
@@ -559,6 +561,55 @@ void TestSettingsUi::system_color_mode_replaces_stale_fusion_palette_and_release
     QTRY_COMPARE(status->palette().color(QPalette::Window), QColor("#eeeeee"));
 #else
     QTest::qSkip("Requires Qt 6.8 or newer", __FILE__, __LINE__);
+#endif
+}
+
+void TestSettingsUi::ui_font_covers_language_script_on_windows()
+{
+#ifndef Q_OS_WIN
+    QSKIP("Only Windows replaces the UI font for the language.");
+#else
+    const QString family = QStringLiteral("Microsoft JhengHei UI");
+    if (!QFontDatabase::hasFamily(family))
+        QSKIP("Microsoft JhengHei UI is not installed.");
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    const QString oldLanguage = settings->language;
+    const QFont systemFont = QApplication::font();
+    const QFont systemMenuFont = QApplication::font("QMenu");
+    const QFont systemMenuBarFont = QApplication::font("QMenuBar");
+    const QFont systemToolTipFont = QApplication::font("QTipLabel");
+    settings->language = QStringLiteral("zh_TW");
+    const auto restoreLanguage = qScopeGuard([settings, oldLanguage]() {
+        settings->language = oldLanguage;
+        UiLanguageFont::apply(oldLanguage);
+    });
+
+    // Segoe UI has no Chinese letters, and finding a fallback font for them
+    // makes Qt open every installed font file.
+    MainWindow window(false);
+    QCOMPARE(QApplication::font().family(), family);
+    QCOMPARE(QApplication::font().pointSizeF(), systemFont.pointSizeF());
+    QCOMPARE(QApplication::font("QMenu").family(), family);
+    QCOMPARE(QApplication::font("QMenu").pointSizeF(), systemMenuFont.pointSizeF());
+    QCOMPARE(QApplication::font("QTipLabel").family(), family);
+    // The window exists before the font changes. The menu bar must not
+    // inherit its previous font, which Qt would only update later.
+    QCOMPARE(window.menuBar()->font().family(), family);
+
+    settings->language = QStringLiteral("en_US");
+    emit window.languageChanged();
+    QCOMPARE(QApplication::font(), systemFont);
+    QCOMPARE(QApplication::font("QMenu"), systemMenuFont);
+    QCOMPARE(QApplication::font("QMenuBar"), systemMenuBarFont);
+    QCOMPARE(QApplication::font("QTipLabel"), systemToolTipFont);
+    QCOMPARE(window.menuBar()->font().family(), systemMenuBarFont.family());
+
+    // Widgets that already exist follow a later change too, including the
+    // menu bar with its theme style sheet.
+    settings->language = QStringLiteral("zh_TW");
+    emit window.languageChanged();
+    QCOMPARE(window.menuBar()->font().family(), family);
 #endif
 }
 

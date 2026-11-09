@@ -365,6 +365,8 @@ if(BUILD_TESTING)
             ${HTML_DOCS_DIR}/manual.qrc)
         target_link_libraries(teststartupload PRIVATE mainwindowuitest)
         target_compile_definitions(teststartupload PRIVATE SPEEDCRUNCH_STARTUP_LOAD_TEST)
+        # --language needs the catalogs the application embeds.
+        list(APPEND speedcrunch_TRANSLATION_TARGETS teststartupload)
         foreach(workload IN ITEMS baseline heavy)
             foreach(preset IN ITEMS classic modern)
                 add_test(NAME startup-load-${workload}-${preset}
