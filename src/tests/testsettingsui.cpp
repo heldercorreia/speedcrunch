@@ -567,11 +567,11 @@ void TestSettingsUi::system_color_mode_replaces_stale_fusion_palette_and_release
 void TestSettingsUi::ui_font_covers_language_script_on_windows()
 {
 #ifndef Q_OS_WIN
-    QSKIP("Only Windows replaces the UI font for the language.");
+    QSKIP("Only Windows replaces the UI font for the language.", );
 #else
     const QString family = QStringLiteral("Microsoft JhengHei UI");
     if (!QFontDatabase::hasFamily(family))
-        QSKIP("Microsoft JhengHei UI is not installed.");
+        QSKIP("Microsoft JhengHei UI is not installed.", );
     MainWindowStateGuard guard;
     Settings* settings = guard.settings;
     const QString oldLanguage = settings->language;

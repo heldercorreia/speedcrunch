@@ -1,0 +1,233 @@
+From: Helder Correia <heldercorreia@users.noreply.github.com>
+Subject: [PATCH] Windows: populate only fallback candidates for a writing system
+
+fallbacksForFamily() lists the families that support the writing system of
+the script. The default implementation populates every family to learn its
+writing systems, and populating opens the family's font files. The first
+text in a script such as Chinese, Japanese, Korean, Thai or Devanagari, or
+a glyph missing from the font of such text, therefore opened every
+installed font file on the GUI thread. With many fonts installed this took
+most of a second, also when the requested font had all other glyphs.
+
+DirectWrite reports the scripts that fonts declare as font set properties,
+which come from the system font cache. Populate only the families with a
+font that declares the script, and consider families already populated.
+Then apply the writing system check, order and scoring of the default
+implementation as before, so a family whose declaration is wrong costs
+only the time to populate it. Fonts that come with Windows declare their
+scripts. Fonts that declare none, as many other fonts, are no longer
+candidates unless they are already populated.
+
+With 1777 families installed, a UI in Chinese populated 28 families
+instead of all of them. The Chinese fallback list kept every Windows CJK
+font, and lost only fonts that declare no scripts, such as Adobe Blank,
+which has an empty glyph for every character. An application with a
+Chinese UI started in 0.49 s instead of 1.33 s, against 0.46 s in English.
+
+---
+diff --git a/src/gui/text/windows/qwindowsdirectwritefontdatabase.cpp b/src/gui/text/windows/qwindowsdirectwritefontdatabase.cpp
+index 059252ed..688ddca2 100644
+--- a/src/gui/text/windows/qwindowsdirectwritefontdatabase.cpp
++++ b/src/gui/text/windows/qwindowsdirectwritefontdatabase.cpp
+@@ -8,6 +8,7 @@
+ #include <QtCore/qendian.h>
+ #include <QtCore/qfile.h>
+ #include <QtCore/qstringbuilder.h>
++#include <QtCore/qstringtokenizer.h>
+ #include <QtCore/qvarlengtharray.h>
+ 
+ #include <dwrite_3.h>
+@@ -15,6 +16,8 @@
+ 
+ QT_BEGIN_NAMESPACE
+ 
++using namespace Qt::StringLiterals;
++
+ // Defined in gui/text/qfontdatabase.cpp
+ Q_GUI_EXPORT QFontDatabase::WritingSystem qt_writing_system_for_script(int script);
+ 
+@@ -380,6 +383,175 @@ QFontEngine *QWindowsDirectWriteFontDatabase::fontEngine(const QFontDef &fontDef
+     return fontEngine;
+ }
+ 
++// The ISO 15924 codes that DirectWrite reports for fonts supporting the
++// writing system. Chinese and Japanese share the codes, since the default
++// implementation accepts a family with any of these writing systems.
++static QList<QLatin1StringView> scriptTagsForWritingSystem(QFontDatabase::WritingSystem writingSystem)
++{
++    switch (writingSystem) {
++    case QFontDatabase::Latin:
++    case QFontDatabase::Vietnamese: return {"Latn"_L1};
++    case QFontDatabase::Greek: return {"Grek"_L1};
++    case QFontDatabase::Cyrillic: return {"Cyrl"_L1};
++    case QFontDatabase::Armenian: return {"Armn"_L1};
++    case QFontDatabase::Hebrew: return {"Hebr"_L1};
++    case QFontDatabase::Arabic: return {"Arab"_L1};
++    case QFontDatabase::Syriac: return {"Syrc"_L1};
++    case QFontDatabase::Thaana: return {"Thaa"_L1};
++    case QFontDatabase::Devanagari: return {"Deva"_L1};
++    case QFontDatabase::Bengali: return {"Beng"_L1};
++    case QFontDatabase::Gurmukhi: return {"Guru"_L1};
++    case QFontDatabase::Gujarati: return {"Gujr"_L1};
++    case QFontDatabase::Oriya: return {"Orya"_L1};
++    case QFontDatabase::Tamil: return {"Taml"_L1};
++    case QFontDatabase::Telugu: return {"Telu"_L1};
++    case QFontDatabase::Kannada: return {"Knda"_L1};
++    case QFontDatabase::Malayalam: return {"Mlym"_L1};
++    case QFontDatabase::Sinhala: return {"Sinh"_L1};
++    case QFontDatabase::Thai: return {"Thai"_L1};
++    case QFontDatabase::Lao: return {"Laoo"_L1};
++    case QFontDatabase::Tibetan: return {"Tibt"_L1};
++    case QFontDatabase::Myanmar: return {"Mymr"_L1};
++    case QFontDatabase::Georgian: return {"Geor"_L1, "Geok"_L1};
++    case QFontDatabase::Khmer: return {"Khmr"_L1};
++    case QFontDatabase::SimplifiedChinese:
++    case QFontDatabase::TraditionalChinese:
++    case QFontDatabase::Japanese:
++        return {"Hani"_L1, "Hans"_L1, "Hant"_L1, "Jpan"_L1, "Hira"_L1, "Kana"_L1, "Hrkt"_L1};
++    case QFontDatabase::Korean: return {"Kore"_L1, "Hang"_L1};
++    case QFontDatabase::Ogham: return {"Ogam"_L1};
++    case QFontDatabase::Runic: return {"Runr"_L1};
++    case QFontDatabase::Nko: return {"Nkoo"_L1};
++    default: return {};
++    }
++}
++
++// Whether a font of the family declares support for one of the scripts. The
++// declarations come from the system font cache, without opening font files.
++static bool declaresScript(IDWriteFontFamily *family, const QList<QLatin1StringView> &tags)
++{
++    DirectWriteScope<IDWriteFontFamily2> family2;
++    if (FAILED(family->QueryInterface(__uuidof(IDWriteFontFamily2),
++                                      reinterpret_cast<void **>(&family2)))) {
++        return false;
++    }
++    DirectWriteScope<IDWriteFontSet1> fontSet;
++    if (FAILED(family2->GetFontSet(&fontSet)))
++        return false;
++
++    IDWriteFontSet *familyFonts = *fontSet;
++    for (uint i = 0; i < familyFonts->GetFontCount(); ++i) {
++        BOOL exists = FALSE;
++        DirectWriteScope<IDWriteLocalizedStrings> values;
++        if (FAILED(familyFonts->GetPropertyValues(i, DWRITE_FONT_PROPERTY_ID_SUPPORTED_SCRIPT_LANGUAGE_TAG,
++                                                  &exists, &values))
++            || !exists || *values == nullptr) {
++            continue;
++        }
++        for (uint j = 0; j < values->GetCount(); ++j) {
++            uint length = 0;
++            if (FAILED(values->GetStringLength(j, &length)))
++                continue;
++            QVarLengthArray<wchar_t, 32> buffer(int(length) + 1);
++            if (FAILED(values->GetString(j, buffer.data(), length + 1)))
++                continue;
++            // Values can be script codes or language tags, such as "zh-Hant".
++            const QString value = QString::fromWCharArray(buffer.data(), int(length));
++            for (const QStringView subtag : QStringTokenizer(value, u'-')) {
++                for (const QLatin1StringView tag : tags) {
++                    if (subtag.compare(tag, Qt::CaseInsensitive) == 0)
++                        return true;
++                }
++            }
++        }
++    }
++    return false;
++}
++
++// Like QPlatformFontDatabase::fallbacksForFamily(), but it populates only the
++// families that may support the writing system. The default implementation
++// populates every family to learn its writing systems, which opens every font
++// file. With many fonts installed this takes most of a second, and the first
++// text in a script such as Chinese, or a glyph its font lacks, triggers it.
++//
++// A family is populated when one of its fonts declares one of the scripts in
++// the system font cache. Fonts that come with Windows declare their scripts,
++// while many other fonts don't, so families that are already populated are
++// considered too. The writing systems that populating reads, and the order
++// and scoring of the default implementation, still decide the result.
++static QStringList fallbacksForWritingSystem(const QHash<QString, IDWriteFontFamily *> &fonts,
++                                             QFontDatabase::WritingSystem writingSystem,
++                                             const QList<QLatin1StringView> &tags, QFont::Style style)
++{
++    QStringList preferredFallbacks;
++    QStringList otherFallbacks;
++    QStringList lastResort;
++
++    auto *db = QFontDatabasePrivate::instance();
++    for (int i = 0; i < db->count; ++i) {
++        QtFontFamily *f = db->families[i];
++        if (!f->populated) {
++            IDWriteFontFamily *fontFamily = fonts.value(f->name);
++            if (fontFamily == nullptr || !declaresScript(fontFamily, tags))
++                continue;
++            f->ensurePopulated();
++        }
++
++        // As in the default implementation, a family with a Chinese or
++        // Japanese writing system also counts for the ones listed after it.
++        bool supported = false;
++        int ws = writingSystem;
++        do {
++            supported = (f->writingSystems[ws] & QtFontFamily::Supported) != 0;
++        } while (!supported && writingSystem >= QFontDatabase::SimplifiedChinese
++                 && writingSystem <= QFontDatabase::Japanese && ++ws <= QFontDatabase::Japanese);
++        if (!supported)
++            continue;
++
++        for (int j = 0; j < f->count; ++j) {
++            QtFontFoundry *foundry = f->foundries[j];
++
++            QString name = foundry->name.isEmpty()
++                               ? f->name
++                               : f->name + " ["_L1 + foundry->name + u']';
++
++            enum class Score {
++                LastResort,
++                FirstLastResort,
++                Other,
++                Preferred
++            };
++            int score = int(Score::LastResort);
++            for (int k = 0; k < foundry->count; ++k) {
++                const bool styleMatch = style == foundry->styles[k]->key.style;
++                if (foundry->styles[k]->smoothScalable) {
++                    if (styleMatch) {
++                        score = int(Score::Preferred);
++                        break;
++                    } else {
++                        score = std::max(score, int(Score::Other));
++                    }
++                } else if (styleMatch) {
++                    score = std::max(score, int(Score::FirstLastResort));
++                }
++            }
++
++            switch (Score(score)) {
++            case Score::LastResort:
++                lastResort.append(name); break;
++            case Score::FirstLastResort:
++                lastResort.prepend(name); break;
++            case Score::Other:
++                otherFallbacks.append(name); break;
++            case Score::Preferred:
++                preferredFallbacks.append(name); break;
++            }
++        }
++    }
++
++    return preferredFallbacks + otherFallbacks + lastResort;
++}
++
+ QStringList QWindowsDirectWriteFontDatabase::fallbacksForFamily(const QString &family,
+                                                                 QFont::Style style,
+                                                                 QFont::StyleHint styleHint,
+@@ -410,6 +582,8 @@ QStringList QWindowsDirectWriteFontDatabase::fallbacksForFamily(const QString &f
+                 result.append(f->name);
+         }
+         result.append(bitmapFamilies);
++    } else if (const auto tags = scriptTagsForWritingSystem(writingSystem); !tags.isEmpty()) {
++        result.append(fallbacksForWritingSystem(m_populatedFonts, writingSystem, tags, style));
+     } else {
+         result.append(QPlatformFontDatabase::fallbacksForFamily(family, style, styleHint, script));
+     }

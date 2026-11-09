@@ -83,10 +83,10 @@ private slots:
 void TestWindowFrameUi::initTestCase()
 {
 #if QT_VERSION < QT_VERSION_CHECK(6, 8, 0)
-    QSKIP("Requires Qt 6.8 or newer");
+    QSKIP("Requires Qt 6.8 or newer", );
 #endif
     if (QGuiApplication::platformName() != QLatin1String("windows"))
-        QSKIP("Requires the native Windows platform plugin");
+        QSKIP("Requires the native Windows platform plugin", );
     // A style that cannot load must fail here, not test the default style.
     // Dark mode can replace the Vista style, so check it in light mode.
     const QString requestedStyle = qEnvironmentVariable("QT_STYLE_OVERRIDE");

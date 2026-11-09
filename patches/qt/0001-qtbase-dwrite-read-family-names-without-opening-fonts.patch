@@ -1,7 +1,5 @@
 From: Helder Correia <heldercorreia@users.noreply.github.com>
-Subject: [PATCH] Windows: stop opening every font in the DirectWrite font database
-
-Two code paths opened every installed font file, each once per process.
+Subject: [PATCH] Windows: read DirectWrite family names without opening fonts
 
 populateFontDatabase() created an IDWriteFont for every installed font to
 read its GDI-compatible and typographic family names. Creating a font opens
@@ -13,58 +11,10 @@ properties come from the system font cache. On the same machine and cold
 start this took 11.6 ms and registered the same 1777 family names.
 
 The style names collectAdditionalNames() also read were not used here.
-
-fallbacksForFamily() called the default implementation, which populates
-every family, and populating opens every font file. One requested family
-that isn't installed, or one glyph the font lacks, therefore opened all
-fonts on the GUI thread. It took 0.62 s for 359 font files and 0.35 s for
-528, in warm starts on two Windows machines.
-
-When the script has no writing system to filter by, every family is a
-candidate, so the list needs only the family names. These are known without
-populating, and QFontEngineMulti loads each fallback only when the ones
-before it lack a glyph. Scripts with a writing system still use the default
-implementation, which needs the writing system of each family.
-
-With both changes, a warm start with 1766 families went from 3.03 s to
-0.35 s and opened 16 font files instead of 1149, also when the requested
-family wasn't installed.
 ---
 --- a/src/gui/text/windows/qwindowsdirectwritefontdatabase.cpp
 +++ b/src/gui/text/windows/qwindowsdirectwritefontdatabase.cpp
-@@ -389,7 +389,30 @@ QStringList QWindowsDirectWriteFontDatabase::fallbacksForFamily(const QString &f
-     result.append(QWindowsFontDatabaseBase::familiesForScript(script));
-     result.append(familyForStyleHint(styleHint));
-     result.append(extraTryFontsForFamily(family));
--    result.append(QPlatformFontDatabase::fallbacksForFamily(family, style, styleHint, script));
-+
-+    const auto writingSystem = qt_writing_system_for_script(script);
-+    if (writingSystem == QFontDatabase::Any
-+        || writingSystem >= QFontDatabase::WritingSystemsCount) {
-+        // Every family is a candidate here, so no family needs populating.
-+        // QFontEngineMulti loads a fallback only when the ones before it lack
-+        // a glyph, while populating every family opens every font file, which
-+        // takes most of a second even when the first fallback has the glyph.
-+        // Bitmap fonts go last, as in the default implementation.
-+        auto *db = QFontDatabasePrivate::instance();
-+        QStringList bitmapFamilies;
-+        for (int i = 0; i < db->count; ++i) {
-+            const QtFontFamily *f = db->families[i];
-+            if (f->populated && f->count == 0)
-+                continue;
-+            if (m_populatedBitmapFonts.contains(f->name))
-+                bitmapFamilies.append(f->name);
-+            else
-+                result.append(f->name);
-+        }
-+        result.append(bitmapFamilies);
-+    } else {
-+        result.append(QPlatformFontDatabase::fallbacksForFamily(family, style, styleHint, script));
-+    }
- 
-     qCDebug(lcQpaFonts) << __FUNCTION__ << family << style << styleHint
-         << script << result;
-@@ -725,13 +748,36 @@ void QWindowsDirectWriteFontDatabase::populateFontDatabase()
+@@ -725,13 +725,36 @@ void QWindowsDirectWriteFontDatabase::populateFontDatabase()
                          registerFamily(englishLocaleName, QString{});
                  }
  
