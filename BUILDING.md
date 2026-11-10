@@ -114,7 +114,7 @@ CMake entry point was added. CMake saves the source directory in its cache.
 
 ### Build variants
 
-Build variants apply a fixed group of settings. All three default to `OFF`.
+Build variants apply a fixed group of settings. All of them default to `OFF`.
 Enable one when configuring, for example:
 
     cmake -S . -B build-official -DBUILD_VARIANT_OFFICIAL_RELEASE=ON
@@ -123,6 +123,9 @@ Enable one when configuring, for example:
     cmake -S . -B build-portable -DBUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE=ON
     cmake --build build-portable --config Release --parallel
 
+    cmake -S . -B build-store -DBUILD_VARIANT_MICROSOFT_STORE_RELEASE=ON
+    cmake --build build-store --config Release --parallel
+
     cmake -S . -B build-debug -DBUILD_VARIANT_DEV_DEBUG=ON
     cmake --build build-debug --config Debug --parallel
 
@@ -130,6 +133,7 @@ Enable one when configuring, for example:
 | --- | --- |
 | `BUILD_VARIANT_OFFICIAL_RELEASE` | `ENABLE_UPDATE_CHECKS=ON`, `INSTALL_LICENSES=ON`, `STRIP_BINARY=ON`, `CMAKE_BUILD_TYPE=Release` |
 | `BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE` | `ENABLE_UPDATE_CHECKS=ON`, `INSTALL_LICENSES=ON`, `STRIP_BINARY=ON`, `CMAKE_BUILD_TYPE=Release`, `PORTABLE_SPEEDCRUNCH=ON`, `CPACK_GENERATOR=ZIP` |
+| `BUILD_VARIANT_MICROSOFT_STORE_RELEASE` | `ENABLE_UPDATE_CHECKS=OFF`, `INSTALL_LICENSES=ON`, `STRIP_BINARY=ON`, `CMAKE_BUILD_TYPE=Release`, `SPEEDCRUNCH_MSIX=ON` |
 | `BUILD_VARIANT_DEV_DEBUG` | `ENABLE_UPDATE_CHECKS=ON`, `ENABLE_STARTUP_DIAGNOSTICS=ON`, `CMAKE_BUILD_TYPE=Debug` |
 
 `BUILD_TESTING` defaults to `OFF` for every variant. Add `-DBUILD_TESTING=ON`
@@ -159,6 +163,43 @@ Settings outside a variant's list keep their usual defaults or cached values.
 Turning a variant off does not restore the values it overrides. Use separate
 build directories, as above, or disable the old variant and explicitly reset
 the affected settings when switching in an existing directory.
+
+### Microsoft Store package
+
+The Store variant builds the MSIX package submitted to the Microsoft Store. It
+is Windows-only and needs the Windows SDK, which provides `makeappx` and
+`makepri`. Update checks are disabled because the Store delivers updates.
+From a Visual Studio developer prompt:
+
+    cmake -S . -B build-store -DBUILD_VARIANT_MICROSOFT_STORE_RELEASE=ON
+    cmake --build build-store --config Release --parallel
+    cmake --build build-store --config Release --target msix
+
+The `msix` target installs into `build-store/msix`, runs `windeployqt` with the
+same options as the installer workflow, adds `AppxManifest.xml` and the logos
+from `src/resources/msix/Assets`, indexes them into
+`resources.pri`, and writes `SpeedCrunch-<version>-<arch>.msix` to the build
+directory. Build x64 and arm64 in separate build directories.
+
+The package identity comes from Partner Center and defaults to the reserved
+product. `SPEEDCRUNCH_MSIX_IDENTITY_NAME`, `SPEEDCRUNCH_MSIX_PUBLISHER` and
+`SPEEDCRUNCH_MSIX_PUBLISHER_DISPLAY_NAME` override it, and must match the
+product's identity page exactly.
+
+MSIX versions have four numbers, and the Store requires the last one to be
+`0`, so the package is versioned `MAJOR.MINOR.PATCH.0`. A pre-release suffix
+cannot be expressed, and the Store rejects a version it has already received,
+so only final releases are submitted. Configuring a pre-release prints a
+warning; its package is only for local testing.
+
+Upload the package unsigned; the Store signs it. To install it locally first,
+sign it with a self-signed certificate whose subject equals the publisher:
+
+    signtool sign /fd SHA256 /a /f test.pfx /p <password> SpeedCrunch-<version>-x64.msix
+
+The certificate must be trusted under Local Machine, Trusted People. Then
+install the package and run the Windows App Certification Kit (`appcert.exe`)
+on it before submitting.
 
 ### License files in installed packages
 

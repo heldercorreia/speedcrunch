@@ -278,7 +278,7 @@ target_link_libraries(${APPLICATION_NAME} PRIVATE ${QT_LIBRARIES})
 if(BUILD_TESTING)
     enable_testing()
 
-    foreach(variant IN ITEMS DEFAULT OFFICIAL_RELEASE OFFICIAL_PORTABLE_RELEASE DEV_DEBUG)
+    foreach(variant IN ITEMS DEFAULT OFFICIAL_RELEASE OFFICIAL_PORTABLE_RELEASE MICROSOFT_STORE_RELEASE DEV_DEBUG)
         foreach(testing IN ITEMS DEFAULT ON OFF)
             set(build_testing_argument "-DBUILD_TESTING:BOOL=${testing}")
             set(expected_build_testing "${testing}")
@@ -529,6 +529,8 @@ if(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS)
     install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION ${CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION})
 endif()
 set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE)
+
+include(Msix)
 
 include(SpeedCrunchCPack.cmake)
 

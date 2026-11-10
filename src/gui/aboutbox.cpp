@@ -26,6 +26,9 @@ AboutBox::AboutBox(QWidget* parent, Qt::WindowFlags f)
 #ifdef SPEEDCRUNCH_PORTABLE
     msg += " Portable";
 #endif
+#ifdef SPEEDCRUNCH_MICROSOFT_STORE
+    msg += " (Microsoft Store)";
+#endif
     msg += "</b><br>";
     msg += "(" SPEEDCRUNCH_SOURCE_REVISION_SHORT ")";
     if (QLatin1String(SPEEDCRUNCH_SOURCE_STATE) == QLatin1String("dirty"))

@@ -3,12 +3,14 @@ include_guard(GLOBAL)
 option(BUILD_TESTING "Build the test executables and enable CTest" OFF)
 option(BUILD_VARIANT_OFFICIAL_RELEASE "Force the official Release build settings" OFF)
 option(BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE "Force the official portable Release build settings" OFF)
+option(BUILD_VARIANT_MICROSOFT_STORE_RELEASE "Force the official Microsoft Store (MSIX) Release build settings" OFF)
 option(BUILD_VARIANT_DEV_DEBUG "Force the developer Debug build settings" OFF)
 
 set(speedcrunch_build_variants)
 foreach(variant IN ITEMS
         BUILD_VARIANT_OFFICIAL_RELEASE
         BUILD_VARIANT_OFFICIAL_PORTABLE_RELEASE
+        BUILD_VARIANT_MICROSOFT_STORE_RELEASE
         BUILD_VARIANT_DEV_DEBUG)
     if(${variant})
         list(APPEND speedcrunch_build_variants ${variant})
@@ -34,7 +36,13 @@ else()
     set(STRIP_BINARY ON CACHE BOOL "Remove debug symbols from the application binary" FORCE)
 endif()
 
-set(ENABLE_UPDATE_CHECKS ON CACHE BOOL "Enable launch-time and manual update checks" FORCE)
+# The Store delivers updates itself and its policies forbid in-app update prompts.
+if(BUILD_VARIANT_MICROSOFT_STORE_RELEASE)
+    set(ENABLE_UPDATE_CHECKS OFF CACHE BOOL "Enable launch-time and manual update checks" FORCE)
+    set(SPEEDCRUNCH_MSIX ON CACHE BOOL "Install an MSIX manifest and assets and add the msix target" FORCE)
+else()
+    set(ENABLE_UPDATE_CHECKS ON CACHE BOOL "Enable launch-time and manual update checks" FORCE)
+endif()
 set(CMAKE_BUILD_TYPE "${speedcrunch_variant_configuration}" CACHE STRING
     "Build type (Debug, Release, RelWithDebInfo, MinSizeRel)" FORCE)
 

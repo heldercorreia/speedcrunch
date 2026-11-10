@@ -117,6 +117,9 @@ QString appDiagnosticsReport(const QString& workload)
 #else
     out << "\nPortable: no\n";
 #endif
+#ifdef SPEEDCRUNCH_MICROSOFT_STORE
+    out << "Distribution: Microsoft Store\n";
+#endif
     out << "Source commit: " SPEEDCRUNCH_SOURCE_REVISION "\n"
         << "Source tree: " SPEEDCRUNCH_SOURCE_STATE "\n"
         << "OS: " << QSysInfo::prettyProductName() << '\n'

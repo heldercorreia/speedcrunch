@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap rescap">
+
+  <Identity
+    Name="@SPEEDCRUNCH_MSIX_IDENTITY_NAME@"
+    Publisher="@SPEEDCRUNCH_MSIX_PUBLISHER@"
+    Version="@speedcrunch_msix_version@"
+    ProcessorArchitecture="@speedcrunch_msix_arch@" />
+
+  <Properties>
+    <DisplayName>SpeedCrunch</DisplayName>
+    <PublisherDisplayName>@SPEEDCRUNCH_MSIX_PUBLISHER_DISPLAY_NAME@</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <!-- Windows 10 1809 is the oldest release Qt 6 supports. -->
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+
+  <Applications>
+    <Application Id="SpeedCrunch" Executable="@APPLICATION_NAME@.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="SpeedCrunch"
+        Description="High-precision scientific calculator"
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png" />
+      <Extensions>
+        <!-- Matches the NSIS installer, which registers SpeedCrunch for calculator: links. -->
+        <uap:Extension Category="windows.protocol">
+          <uap:Protocol Name="calculator">
+            <uap:DisplayName>SpeedCrunch</uap:DisplayName>
+          </uap:Protocol>
+        </uap:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>
