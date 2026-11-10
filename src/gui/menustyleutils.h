@@ -6,6 +6,7 @@
 
 #include <QColor>
 #include <QSize>
+#include <QString>
 
 class QMenu;
 class QIcon;
@@ -18,6 +19,7 @@ namespace MenuStyle {
 void install();
 void refresh();
 void apply(QWidget* widget);
+void setTitle(QMenu* menu, const QString& title);
 QSize themedItemSize(const QStyleOption* option, const QSize& contents, const QSize& size,
                      const QWidget* widget);
 QIcon themedIcon(const QIcon& source, const QPalette& palette);

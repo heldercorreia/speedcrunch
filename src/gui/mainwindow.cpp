@@ -5546,38 +5546,38 @@ void MainWindow::createMenus()
 
 void MainWindow::setMenusText()
 {
-    m_menus.subsequentLaunch->setTitle(tr("On Subsequent Launch"));
-    m_menus.session->setTitle(MainWindow::tr("&Session"));
-    m_menus.sessionExport->setTitle(MainWindow::tr("&Export"));
-    m_menus.edit->setTitle(MainWindow::tr("&Edit"));
-    m_menus.view->setTitle(MainWindow::tr("&View"));
-    m_menus.keypad->setTitle(MainWindow::tr("&Keypad"));
-    m_menus.split->setTitle(tr("S&plit"));
-    m_menus.keypadZoom->setTitle(MainWindow::tr("&Zoom"));
-    m_menus.settings->setTitle(MainWindow::tr("Se&ttings"));
-    m_menus.results->setTitle(MainWindow::tr("&Results"));
-    m_menus.unitNegativeExponentStyle->setTitle(MainWindow::tr("Unit Notation"));
-    m_menus.resultRoundingMode->setTitle(MainWindow::tr("Rounding Mode"));
-    m_menus.resultFormat->setTitle(MainWindow::tr("&Notation"));
-    m_menus.decimal->setTitle(MainWindow::tr("&Decimal"));
-    m_menus.precision->setTitle(MainWindow::tr("&Precision"));
-    m_menus.angleUnit->setTitle(MainWindow::tr("Angle &Mode"));
-    m_menus.complexForm->setTitle(MainWindow::tr("&Complex Form"));
-    m_menus.imaginaryUnit->setTitle(MainWindow::tr("&Imaginary Unit"));
-    m_menus.window->setTitle(MainWindow::tr("&Window"));
-    m_menus.editing->setTitle(MainWindow::tr("&Editing"));
-    m_menus.autoCompletion->setTitle(MainWindow::tr("A&utocomplete"));
-    m_menus.upDownArrowBehavior->setTitle(MainWindow::tr("Up/Down Arrow History"));
-    m_menus.display->setTitle(MainWindow::tr("&Appearance"));
-    m_menus.appearancePreset->setTitle(MainWindow::tr("Style &Presets"));
-    m_menus.systemColorMode->setTitle(MainWindow::tr("System &Color Mode"));
-    m_menus.menuAppearance->setTitle(MainWindow::tr("&Menus"));
-    m_menus.dockAppearance->setTitle(MainWindow::tr("&Docks"));
-    m_menus.statusBarAppearance->setTitle(MainWindow::tr("&Status Bar"));
-    m_menus.toolTipAppearance->setTitle(MainWindow::tr("&Tooltips"));
-    m_menus.keypadAppearance->setTitle(MainWindow::tr("&Keypad"));
-    m_menus.editorDisplayStyle->setTitle(MainWindow::tr("&Input and Results"));
-    m_menus.help->setTitle(MainWindow::tr("&Help"));
+    MenuStyle::setTitle(m_menus.subsequentLaunch, tr("On Subsequent Launch"));
+    MenuStyle::setTitle(m_menus.session, MainWindow::tr("&Session"));
+    MenuStyle::setTitle(m_menus.sessionExport, MainWindow::tr("&Export"));
+    MenuStyle::setTitle(m_menus.edit, MainWindow::tr("&Edit"));
+    MenuStyle::setTitle(m_menus.view, MainWindow::tr("&View"));
+    MenuStyle::setTitle(m_menus.keypad, MainWindow::tr("&Keypad"));
+    MenuStyle::setTitle(m_menus.split, tr("S&plit"));
+    MenuStyle::setTitle(m_menus.keypadZoom, MainWindow::tr("&Zoom"));
+    MenuStyle::setTitle(m_menus.settings, MainWindow::tr("Se&ttings"));
+    MenuStyle::setTitle(m_menus.results, MainWindow::tr("&Results"));
+    MenuStyle::setTitle(m_menus.unitNegativeExponentStyle, MainWindow::tr("Unit Notation"));
+    MenuStyle::setTitle(m_menus.resultRoundingMode, MainWindow::tr("Rounding Mode"));
+    MenuStyle::setTitle(m_menus.resultFormat, MainWindow::tr("&Notation"));
+    MenuStyle::setTitle(m_menus.decimal, MainWindow::tr("&Decimal"));
+    MenuStyle::setTitle(m_menus.precision, MainWindow::tr("&Precision"));
+    MenuStyle::setTitle(m_menus.angleUnit, MainWindow::tr("Angle &Mode"));
+    MenuStyle::setTitle(m_menus.complexForm, MainWindow::tr("&Complex Form"));
+    MenuStyle::setTitle(m_menus.imaginaryUnit, MainWindow::tr("&Imaginary Unit"));
+    MenuStyle::setTitle(m_menus.window, MainWindow::tr("&Window"));
+    MenuStyle::setTitle(m_menus.editing, MainWindow::tr("&Editing"));
+    MenuStyle::setTitle(m_menus.autoCompletion, MainWindow::tr("A&utocomplete"));
+    MenuStyle::setTitle(m_menus.upDownArrowBehavior, MainWindow::tr("Up/Down Arrow History"));
+    MenuStyle::setTitle(m_menus.display, MainWindow::tr("&Appearance"));
+    MenuStyle::setTitle(m_menus.appearancePreset, MainWindow::tr("Style &Presets"));
+    MenuStyle::setTitle(m_menus.systemColorMode, MainWindow::tr("System &Color Mode"));
+    MenuStyle::setTitle(m_menus.menuAppearance, MainWindow::tr("&Menus"));
+    MenuStyle::setTitle(m_menus.dockAppearance, MainWindow::tr("&Docks"));
+    MenuStyle::setTitle(m_menus.statusBarAppearance, MainWindow::tr("&Status Bar"));
+    MenuStyle::setTitle(m_menus.toolTipAppearance, MainWindow::tr("&Tooltips"));
+    MenuStyle::setTitle(m_menus.keypadAppearance, MainWindow::tr("&Keypad"));
+    MenuStyle::setTitle(m_menus.editorDisplayStyle, MainWindow::tr("&Input and Results"));
+    MenuStyle::setTitle(m_menus.help, MainWindow::tr("&Help"));
 }
 
 void MainWindow::updateKeypadDisabledActionText()

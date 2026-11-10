@@ -711,6 +711,16 @@ QPointer<MenuAppearanceFilter>& appearanceFilter()
 }
 }
 
+void MenuStyle::setTitle(QMenu* menu, const QString& title)
+{
+    // Qt iterates this list while delivering ActionChanged. A menu bar can
+    // rebuild its overflow menu during delivery and invalidate that iteration.
+    // Keep the shared storage alive so changes detach from the original list.
+    const auto receivers = menu->menuAction()->associatedObjects();
+    Q_UNUSED(receivers);
+    menu->setTitle(title);
+}
+
 void MenuStyle::install()
 {
     if (appearanceFilter() || qApp == nullptr)

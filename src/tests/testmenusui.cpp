@@ -11,6 +11,7 @@ class TestMenusUi : public QObject {
 private slots:
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
+    void menu_title_changes_keep_overflow_receivers_valid();
     void menu_bar_keeps_themed_contrast_with_platform_palette_data();
     void menu_bar_keeps_themed_contrast_with_platform_palette();
     void menu_bar_extension_button_stays_visible_data();
@@ -52,6 +53,56 @@ private slots:
     void disabled_context_menu_labels_are_dimmed();
     void themed_menu_labels_leave_room_for_shortcuts();
 };
+
+void TestMenusUi::menu_title_changes_keep_overflow_receivers_valid()
+{
+    class Window : public QMainWindow {
+    public:
+        int titleChanges = 0;
+        void actionEvent(QActionEvent* event) override
+        {
+            if (event->type() == QEvent::ActionChanged)
+                ++titleChanges;
+            QMainWindow::actionEvent(event);
+        }
+    } window;
+    QMenuBar* bar = window.menuBar();
+    bar->setNativeMenuBar(false);
+    bar->setFixedWidth(256);
+    bar->setFixedHeight(bar->fontMetrics().height() + 16);
+    QMenu* menu = new QMenu(QString(), &window);
+    QMenu* other = new QMenu(QString(), &window);
+    bar->addMenu(menu);
+    bar->addMenu(other);
+    // Match the extra shortcut registration used by MainWindow::createMenus.
+    window.addActions(bar->actions());
+    window.resize(256, 120);
+    window.show();
+    QCoreApplication::processEvents();
+    QCOMPARE(menu->menuAction()->associatedObjects().size(), 2);
+
+    const QString longTitle = QStringLiteral("A menu title much wider than the available space ").repeated(4);
+    for (const QString& title : {longTitle, QStringLiteral("Short"), longTitle,
+                                 QStringLiteral("&Session"), longTitle}) {
+        const int previousChanges = window.titleChanges;
+        MenuStyle::setTitle(menu, title);
+        QCOMPARE(menu->title(), title);
+        QVERIFY(window.titleChanges > previousChanges);
+        const auto receivers = menu->menuAction()->associatedObjects();
+        QVERIFY(receivers.contains(bar));
+        QVERIFY(receivers.contains(&window));
+        if (title == longTitle) {
+            bool hasOverflowMenu = false;
+            for (QObject* receiver : receivers) {
+                if (auto* overflow = qobject_cast<QMenu*>(receiver)) {
+                    QVERIFY(overflow->actions().contains(menu->menuAction()));
+                    hasOverflowMenu = true;
+                }
+            }
+            QVERIFY(hasOverflowMenu);
+        }
+    }
+}
 
 void TestMenusUi::disabled_context_menu_labels_are_dimmed_data()
 {
