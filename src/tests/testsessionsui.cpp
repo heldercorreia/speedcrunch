@@ -21,8 +21,35 @@ namespace {
 void chooseTabContextAction(QTabBar* tabs, int index, const QStringList& path,
                             const std::function<void(QAction*)>& beforeTrigger = {})
 {
-    QTimer::singleShot(0, tabs, [path, beforeTrigger]() {
-        QMenu* menu = qobject_cast<QMenu*>(QApplication::activePopupWidget());
+    // Exercise QMenu::exec() and the selected action without mapping native
+    // menus. Synthetic context clicks have no Wayland serial for popup grabs.
+    class MenuEventFilter : public QObject {
+    public:
+        explicit MenuEventFilter(QWidget* owner) : m_owner(owner) {}
+        QPointer<QMenu> rootMenu;
+
+    private:
+        bool eventFilter(QObject* receiver, QEvent* event) override
+        {
+            if (event->type() != QEvent::Polish)
+                return false;
+            auto* menu = qobject_cast<QMenu*>(receiver);
+            if (menu == nullptr)
+                return false;
+            if (menu->parentWidget() == m_owner) {
+                rootMenu = menu;
+                menu->setAttribute(Qt::WA_DontShowOnScreen);
+            }
+            return false;
+        }
+
+        QWidget* m_owner;
+    } menuEventFilter(tabs->window());
+    qApp->installEventFilter(&menuEventFilter);
+    QTimer selectAction;
+    selectAction.setSingleShot(true);
+    QObject::connect(&selectAction, &QTimer::timeout, tabs, [&]() {
+        QMenu* menu = menuEventFilter.rootMenu;
         QVERIFY(menu);
         QPointer<QMenu> root = menu;
         const auto dismissMenu = qScopeGuard([root]() {
@@ -32,6 +59,7 @@ void chooseTabContextAction(QTabBar* tabs, int index, const QStringList& path,
         for (int i = 0; i + 1 < path.size(); ++i) {
             QMenu* submenu = directSubmenuWithTitle(menu, path.at(i));
             QVERIFY(submenu);
+            submenu->setAttribute(Qt::WA_DontShowOnScreen);
             menu->setActiveAction(submenu->menuAction());
             QTest::keyClick(menu, Qt::Key_Right);
             QTRY_VERIFY(submenu->isVisible());
@@ -46,6 +74,7 @@ void chooseTabContextAction(QTabBar* tabs, int index, const QStringList& path,
             QTest::keyClick(menu, Qt::Key_Return);
         }
     });
+    selectAction.start(0);
     const QPoint position = tabs->tabRect(index).center();
     QContextMenuEvent event(QContextMenuEvent::Mouse, position, tabs->mapToGlobal(position));
     QCoreApplication::sendEvent(tabs, &event);
@@ -216,7 +245,8 @@ void TestSessionsUi::session_commands_follow_floating_dock_owner()
     MainWindow other(false);
     owner.show();
     other.show();
-    owner.activateWindow();
+    if (!UiTestFixture::activateWindow(&owner))
+        return;
     QVERIFY(QTest::qWaitForWindowExposed(&owner));
     Editor* editor = owner.findChild<Editor*>();
     QVERIFY(editor);
@@ -231,7 +261,8 @@ void TestSessionsUi::session_commands_follow_floating_dock_owner()
     const QString closedName = display->session()->name();
     QVERIFY(QMetaObject::invokeMethod(&owner, "closeCurrentSession"));
     QCOMPARE(tabs->count(), 2);
-    other.activateWindow();
+    if (!UiTestFixture::activateWindow(&other))
+        return;
     Editor* otherEditor = other.findChild<Editor*>();
     QVERIFY(otherEditor);
     otherEditor->setFocus();
@@ -249,7 +280,8 @@ void TestSessionsUi::session_commands_follow_floating_dock_owner()
     QVERIFY(dock);
     dock->setFloating(true);
     dock->show();
-    dock->activateWindow();
+    if (!UiTestFixture::activateWindow(dock))
+        return;
     QWidget* control = searchFocus
         ? static_cast<QWidget*>(dock->findChild<QLineEdit*>())
         : static_cast<QWidget*>(dock->findChild<QTreeWidget*>());
@@ -1050,7 +1082,7 @@ void TestSessionsUi::startup_applies_window_flags_before_polishing_panes_data()
 void TestSessionsUi::startup_applies_window_flags_before_polishing_panes()
 {
     QFETCH(bool, alwaysOnTop);
-    if (QGuiApplication::platformName().startsWith(QLatin1String("wayland")))
+    if (UiTestFixture::isWayland())
         QSKIP("Wayland does not support the always-on-top window setting", );
     MainWindowStateGuard guard;
     PrivateSessionStorage storage;
@@ -1350,7 +1382,8 @@ void TestSessionsUi::startup_shows_restored_session_on_first_show()
     QCOMPARE(window.firstName, savedSession ? name : QStringLiteral("Untitled-1"));
     if (savedSession)
         QVERIFY(window.firstText.contains(QStringLiteral("42")));
-    QCOMPARE(window.windowFlags().testFlag(Qt::WindowStaysOnTopHint), alwaysOnTop);
+    QCOMPARE(window.windowFlags().testFlag(Qt::WindowStaysOnTopHint),
+             alwaysOnTop && !UiTestFixture::isWayland());
     int themeCalls = 0;
     const StartupDiagnostics::Phase* show = nullptr;
     const StartupDiagnostics::Phase* layout = nullptr;
@@ -1679,6 +1712,16 @@ void TestSessionsUi::always_on_top_toggles_preserve_window_geometry()
     }
     QVERIFY(alwaysOnTop != nullptr);
     QVERIFY(!alwaysOnTop->isChecked());
+    if (UiTestFixture::isWayland()) {
+        // The application omits this action from menus on Wayland and leaves
+        // it disconnected. It must not change the preference or window flags.
+        QVERIFY(alwaysOnTop->associatedObjects().isEmpty());
+        alwaysOnTop->trigger();
+        QVERIFY(!settings->windowAlwaysOnTop);
+        QVERIFY(!window.windowFlags().testFlag(Qt::WindowStaysOnTopHint));
+        return;
+    }
+    QVERIFY(alwaysOnTop->isEnabled());
     const QRect originalFrame = window.frameGeometry();
     const QRect originalGeometry = window.geometry();
     const Qt::WindowFlags originalFlags = window.windowFlags();
@@ -1817,6 +1860,7 @@ void TestSessionsUi::visible_window_applies_restored_dock_and_keypad_layout()
     MainWindow restoredWindow(false);
     restoredWindow.show();
     QVERIFY(QTest::qWaitForWindowExposed(&restoredWindow));
+    QVERIFY(QTest::qWaitForWindowActive(&restoredWindow));
 
     QDockWidget* constantsDock =
         restoredWindow.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
@@ -1831,12 +1875,18 @@ void TestSessionsUi::visible_window_applies_restored_dock_and_keypad_layout()
     QAction* restoredBasicAction =
         keypadModeAction(&restoredWindow, Settings::KeypadModeBasicWide);
     QVERIFY(restoredBasicAction != nullptr);
-    QVERIFY(restoredBasicAction->isChecked());
+    QTRY_VERIFY(restoredBasicAction->isChecked());
     QVERIFY(restoredWindow.findChild<Keypad*>() != nullptr);
     QVERIFY(QMetaObject::invokeMethod(&restoredWindow,
                                       "restoreWindowKeypadZoom",
                                       Qt::DirectConnection,
                                       Q_ARG(int, 150)));
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    const QPointer<Keypad> restoredKeypad = restoredWindow.findChild<Keypad*>();
+    QVERIFY(restoredKeypad);
+    const QPushButton* basicSin = keypadButtonWithText(restoredKeypad, QStringLiteral("sin"));
+    QVERIFY(basicSin != nullptr);
+    QVERIFY(basicSin->isHidden());
 
     MainWindow secondaryWindow(false);
     secondaryWindow.show();
@@ -1857,10 +1907,15 @@ void TestSessionsUi::visible_window_applies_restored_dock_and_keypad_layout()
     QAction* secondaryScientificNarrowAction =
         keypadModeAction(&secondaryWindow, Settings::KeypadModeScientificNarrow);
     QVERIFY(secondaryScientificNarrowAction != nullptr);
-    QVERIFY(secondaryScientificNarrowAction->isChecked());
-    QVERIFY(secondaryWindow.findChild<Keypad*>() != nullptr);
-    QVERIFY(restoredBasicAction->isChecked());
-    QVERIFY(restoredWindow.findChild<Keypad*>() != nullptr);
+    QTRY_VERIFY(secondaryScientificNarrowAction->isChecked());
+    Keypad* secondaryKeypad = secondaryWindow.findChild<Keypad*>();
+    QVERIFY(secondaryKeypad != nullptr);
+    const QPushButton* scientificSin = keypadButtonWithText(secondaryKeypad, QStringLiteral("sin"));
+    QVERIFY(scientificSin != nullptr);
+    QVERIFY(scientificSin->isVisible());
+    // The View menu follows the active window. Check the inactive keypad itself.
+    QVERIFY(restoredKeypad);
+    QCOMPARE(restoredWindow.findChild<Keypad*>(), restoredKeypad.data());
 
     restoredWindow.persistSessionAndSettingsForShutdown();
     const QJsonDocument savedLayout =
@@ -1899,9 +1954,9 @@ void TestSessionsUi::visible_window_applies_restored_dock_and_keypad_layout()
     QAction* secondaryDisabledAction =
         keypadModeAction(&secondaryWindow, Settings::KeypadModeDisabled);
     QVERIFY(secondaryDisabledAction != nullptr);
-    QVERIFY(secondaryDisabledAction->isChecked());
-    QVERIFY(restoredBasicAction->isChecked());
-    QVERIFY(restoredWindow.findChild<Keypad*>() != nullptr);
+    QTRY_VERIFY(secondaryDisabledAction->isChecked());
+    QVERIFY(restoredKeypad);
+    QCOMPARE(restoredWindow.findChild<Keypad*>(), restoredKeypad.data());
 
     QMainWindow compactGeometrySource;
     compactGeometrySource.resize(560, 380);
@@ -2585,6 +2640,9 @@ void TestSessionsUi::clear_session_commands()
     if (command.endsWith(QLatin1String("shortcut"))) {
         QWidget* focus = command.startsWith(QLatin1String("editor"))
             ? static_cast<QWidget*>(editor) : static_cast<QWidget*>(display);
+        if (!UiTestFixture::activateWindow(&window))
+            return;
+        QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&window));
         focus->setFocus();
         QTRY_VERIFY(focus->hasFocus());
         QTest::keyClick(focus, Qt::Key_L, Qt::ControlModifier);
@@ -2703,6 +2761,9 @@ void TestSessionsUi::session_tab_navigation_shortcuts_switch_tabs()
     QTRY_COMPARE(tabBar->count(), 3);
 
     tabBar->setCurrentIndex(0);
+    if (!UiTestFixture::activateWindow(&window))
+        return;
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&window));
     editor->setFocus();
     QTRY_VERIFY(editor->hasFocus());
     QCOMPARE(tabBar->currentIndex(), 0);
@@ -2794,6 +2855,7 @@ void TestSessionsUi::new_tab_menu_action_and_shortcut_create_session_in_active_p
     window.resize(900, 500);
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
     QCoreApplication::processEvents();
@@ -2863,13 +2925,12 @@ void TestSessionsUi::new_tab_menu_action_targets_focused_window_when_native_menu
 
     MainWindow firstWindow;
     firstWindow.resize(800, 500);
-    firstWindow.show();
-    QVERIFY(QTest::qWaitForWindowExposed(&firstWindow));
 
     MainWindow secondWindow;
     secondWindow.resize(800, 500);
     secondWindow.show();
     QVERIFY(QTest::qWaitForWindowExposed(&secondWindow));
+    QVERIFY(QTest::qWaitForWindowActive(&secondWindow));
 
     ResultDisplay* firstDisplay = firstWindow.findChild<ResultDisplay*>();
     ResultDisplay* secondDisplay = secondWindow.findChild<ResultDisplay*>();
@@ -2890,6 +2951,10 @@ void TestSessionsUi::new_tab_menu_action_targets_focused_window_when_native_menu
                       secondDisplay->viewport()->rect().center());
     QCoreApplication::processEvents();
 
+    firstWindow.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&firstWindow));
+    if (!UiTestFixture::activateWindow(&firstWindow))
+        return;
     QEvent secondWindowDeactivate(QEvent::WindowDeactivate);
     QCoreApplication::sendEvent(&secondWindow, &secondWindowDeactivate);
     QEvent firstWindowActivate(QEvent::WindowActivate);
@@ -2902,8 +2967,6 @@ void TestSessionsUi::new_tab_menu_action_targets_focused_window_when_native_menu
     QTRY_COMPARE(firstTabBar->count(), 2);
     QCOMPARE(secondTabBar->count(), 1);
 
-    firstWindow.raise();
-    firstWindow.activateWindow();
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&firstWindow));
     firstEditor->setFocus(Qt::OtherFocusReason);
     QTRY_VERIFY(([firstEditor]() {
@@ -3043,6 +3106,7 @@ void TestSessionsUi::session_open_menu_action_uses_open_dialog()
     window.resize(900, 500);
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QMenu* sessionMenu = menuWithTitle(window.menuBar(), QStringLiteral("&Session"));
     QVERIFY(sessionMenu != nullptr);
@@ -3426,8 +3490,10 @@ void TestSessionsUi::close_and_reopen_commands_preserve_regular_tabs()
     MainWindow window(false);
     MainWindow other(false);
     other.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&other));
     window.show();
-    window.activateWindow();
+    if (!UiTestFixture::activateWindow(&window))
+        return;
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     ResultDisplay* display = window.findChild<ResultDisplay*>();
     Editor* editor = editorForDisplay(display);
@@ -3454,12 +3520,14 @@ void TestSessionsUi::close_and_reopen_commands_preserve_regular_tabs()
     }
     QTRY_COMPARE(tabs->count(), 1);
     QCOMPARE(reopen->isEnabled(), !privateTab);
-    other.activateWindow();
+    if (!UiTestFixture::activateWindow(&other))
+        return;
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&other));
     other.findChild<Editor*>()->setFocus();
     QTRY_VERIFY(other.findChild<Editor*>()->hasFocus());
     QTRY_VERIFY(!reopen->isEnabled());
-    window.activateWindow();
+    if (!UiTestFixture::activateWindow(&window))
+        return;
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&window));
     editor->setFocus();
     QTRY_VERIFY(editor->hasFocus());
@@ -3609,6 +3677,7 @@ void TestSessionsUi::restore_closed_tab_shortcut_restores_last_closed_session_ta
     window.resize(900, 500);
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
     ResultDisplay* display = window.findChild<ResultDisplay*>();
     QVERIFY(display != nullptr);

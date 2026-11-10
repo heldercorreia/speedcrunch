@@ -327,6 +327,29 @@ QTabBar* tabBarForDisplay(ResultDisplay* display);
 
 QString visibleResultPreviewText(const MainWindow& window);
 
+struct QtMenuPaletteGuard {
+    QByteArray previousTheme = qgetenv("QT_QPA_PLATFORMTHEME");
+    bool hadTheme = qEnvironmentVariableIsSet("QT_QPA_PLATFORMTHEME");
+
+    QtMenuPaletteGuard()
+    {
+        // These tests supply their own Qt menu palettes. The platform plugin
+        // is already initialized, so this only suppresses SpeedCrunch's extra
+        // GTK palette lookup while those artificial colors are in use.
+        qputenv("QT_QPA_PLATFORMTHEME", "speedcrunch-palette-test");
+        GtkMenuPalette::invalidate();
+    }
+
+    ~QtMenuPaletteGuard()
+    {
+        if (hadTheme)
+            qputenv("QT_QPA_PLATFORMTHEME", previousTheme);
+        else
+            qunsetenv("QT_QPA_PLATFORMTHEME");
+        GtkMenuPalette::invalidate();
+    }
+};
+
 struct MainWindowStateGuard {
     Settings* settings = Settings::instance();
     QString oldColorScheme = settings->colorScheme;

@@ -90,9 +90,10 @@ void TestFocusUi::constant_search_paints_editor_without_focus_ring()
     guard.settings->autoCalc = false;
     guard.settings->constantsDockVisible = true;
     guard.settings->colorScheme = QStringLiteral("Custom");
+    const QColor primary(QStringLiteral("#e7a840"));
     guard.settings->customColorSchemeJson = themeJsonString(QJsonObject{
         {QStringLiteral("background"), QStringLiteral("#454257")},
-        {QStringLiteral("primary"), QStringLiteral("#e7a840")}
+        {QStringLiteral("primary"), primary.name()}
     });
     MainWindow window;
     window.resize(1000, 600);
@@ -111,26 +112,36 @@ void TestFocusUi::constant_search_paints_editor_without_focus_ring()
     dockSearch->setFocus();
     QTRY_VERIFY(dockSearch->hasFocus());
     QTest::qWait(150);
-    const QRect editorRect = QRect(editor->mapTo(&window, QPoint()), editor->size())
-        .adjusted(-2, -2, 2, 2).intersected(window.rect());
-    const QImage unfocused = window.grab(editorRect).toImage();
+    const auto paintsPrimaryOutline = [editor, primary]() {
+        const QImage image = editor->grab().toImage();
+        const int inset = UiConfig::ModernEditorHorizontalMargin + UiConfig::ModernEditorCornerRadius;
+        const QRect borderStrip(inset, UiConfig::ModernEditorTopMargin,
+                                editor->width() - 2 * inset, UiConfig::OutlineStrokeWidth);
+        return firstPixelMatchingColor(image, imageRectForWidgetRect(image, borderStrip), primary, 4)
+            != QPoint(-1, -1);
+    };
+    QVERIFY(!paintsPrimaryOutline());
     QTest::mouseClick(editor->viewport(), Qt::LeftButton);
     QTRY_VERIFY(editor->hasFocus());
-    QTRY_VERIFY(editorHasPrimaryOutline(editor, QColor(QStringLiteral("#e7a840"))));
-    QVERIFY(window.grab(editorRect).toImage() != unfocused);
+    QTRY_VERIFY(editorHasPrimaryOutline(editor, primary));
+    QTRY_VERIFY(paintsPrimaryOutline());
     QTest::keyClick(editor, Qt::Key_Space, Qt::ControlModifier);
     QPointer<QWidget> popup = QApplication::activePopupWidget();
     QVERIFY(popup);
-    auto* search = popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch"));
+    QPointer<QLineEdit> search = popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch"));
     QVERIFY(search);
-    QTRY_VERIFY(search->hasFocus());
+    QTRY_VERIFY(search && search->hasFocus());
+    QVERIFY(!paintsPrimaryOutline());
     QTest::qWait(400);
-    QCOMPARE(window.grab(editorRect).toImage(), unfocused);
+    if (UiTestFixture::isWayland() && (!popup || !popup->isVisible()))
+        QSKIP("The Wayland compositor dismisses a grabbing popup without native user input.", );
+    QVERIFY(popup && popup->isVisible() && search);
+    QVERIFY(!paintsPrimaryOutline());
     QTest::keyClick(search, Qt::Key_Escape);
     QTRY_VERIFY(editor->hasFocus());
-    QTRY_VERIFY(editorHasPrimaryOutline(editor, QColor(QStringLiteral("#e7a840"))));
+    QTRY_VERIFY(editorHasPrimaryOutline(editor, primary));
     // Cocoa can restore keyboard focus before the editor's appearance catches up.
-    QTRY_VERIFY(window.grab(editorRect).toImage() != unfocused);
+    QTRY_VERIFY(paintsPrimaryOutline());
 }
 
 void TestFocusUi::constant_search_takes_primary_focus_from_editor_data()
@@ -166,9 +177,11 @@ void TestFocusUi::constant_search_takes_primary_focus_from_editor()
     MainWindow otherWindow;
     QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
     otherWindow.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&otherWindow));
     window.show();
     window.activateWindow();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     const auto editors = window.findChildren<Editor*>();
     QCOMPARE(editors.size(), 2);
     Editor* target = editors.first();
@@ -221,9 +234,11 @@ void TestFocusUi::constants_dock_activation_returns_to_active_editor()
     window.resize(950, 650);
     QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
     otherWindow.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&otherWindow));
     window.show();
     window.activateWindow();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     auto editors = window.findChildren<Editor*>();
     QCOMPARE(editors.size(), 2);
     Editor* target = editors.last();
@@ -262,6 +277,7 @@ void TestFocusUi::constants_dock_activation_returns_to_active_editor()
         }
         // Leave the dock click's delayed focus recovery pending during insertion.
         QTest::mouseClick(search, Qt::LeftButton);
+        QTRY_VERIFY(search->hasFocus());
         QTest::keyClick(search, Qt::Key_Down);
         QVERIFY(search->hasFocus());
         QTest::keyClick(search, Qt::Key_Return);
@@ -272,6 +288,9 @@ void TestFocusUi::constants_dock_activation_returns_to_active_editor()
     // The application chooses the pane that receives focus, independently of
     // when its window becomes active again.
     QTRY_COMPARE(window.focusWidget(), target);
+    if (floating && UiTestFixture::isWayland()
+        && !UiTestFixture::activateWindow(&window))
+        return;
     if (floating && QGuiApplication::platformName() == QLatin1String("xcb")
         && !QTest::qWaitFor([&window]() { return window.isActiveWindow(); }, 1000)) {
         // A floating dock is a separate X11 window, and activating another
@@ -284,6 +303,9 @@ void TestFocusUi::constants_dock_activation_returns_to_active_editor()
     }
     QTRY_VERIFY(target->hasFocus());
     QTest::qWait(300);
+    if (floating && UiTestFixture::isWayland()
+        && QGuiApplication::focusWindow() != window.windowHandle())
+        QSKIP("The Wayland compositor moves focus away from the requested main window.", );
     QVERIFY(target->hasFocus());
     QTest::keyClicks(target, "+1");
     QCOMPARE(target->text(), QStringLiteral("e + 1"));
@@ -295,9 +317,11 @@ void TestFocusUi::constant_popup_inserts_into_owning_pane()
     MainWindow otherWindow;
     QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
     otherWindow.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&otherWindow));
     window.show();
     window.activateWindow();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     const auto editors = window.findChildren<Editor*>();
     QCOMPARE(editors.size(), 2);
     for (Editor* editor : editors) {
@@ -306,14 +330,17 @@ void TestFocusUi::constant_popup_inserts_into_owning_pane()
     }
     Editor* target = editors.first();
     QTest::mouseClick(target->viewport(), Qt::LeftButton);
+    QTRY_VERIFY(target->hasFocus());
     QTest::keyClick(target, Qt::Key_Space, Qt::ControlModifier);
     QPointer<QWidget> popup = QApplication::activePopupWidget();
     QVERIFY(popup);
-    auto* search = popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch"));
+    QPointer<QLineEdit> search = popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch"));
     auto* list = popup->findChild<QTreeWidget*>();
     QVERIFY(search && list);
     QTest::qWait(400);
-    QVERIFY(search->hasFocus());
+    if (UiTestFixture::isWayland() && (!popup || !popup->isVisible()))
+        QSKIP("The Wayland compositor dismisses a grabbing popup without native user input.", );
+    QVERIFY(search && search->hasFocus());
     search->setText(QStringLiteral("Euler's number"));
     QCOMPARE(list->topLevelItemCount(), 1);
     QTest::mouseClick(list->viewport(), Qt::LeftButton, Qt::NoModifier,
@@ -352,7 +379,8 @@ void TestFocusUi::escape_clears_only_the_focused_editor()
             editor->setAutoCompletionEnabled(false);
             editor->setText(QStringLiteral("123\n456"));
         }
-        target->window()->activateWindow();
+        if (!UiTestFixture::activateWindow(target->window()))
+            return;
         target->setFocus();
         QTRY_VERIFY(target->hasFocus());
         QTest::keyClick(target, Qt::Key_Escape);
@@ -700,6 +728,7 @@ void TestFocusUi::f6_cycles_focus_between_editor_and_visible_dock_controls()
     window.resize(900, 500);
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowActive(&window));
 
     Editor* editor = window.findChild<Editor*>();
     QVERIFY(editor != nullptr);
@@ -781,13 +810,15 @@ void TestFocusUi::f6_cycles_focus_with_another_main_window_visible()
     QVERIFY(QTest::qWaitForWindowExposed(&secondWindow));
 
     for (MainWindow* window : {&firstWindow, &secondWindow}) {
-        window->activateWindow();
+        if (!UiTestFixture::activateWindow(window))
+            return;
         Editor* editor = window->findChild<Editor*>();
         QDockWidget* dock = window->findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
         QVERIFY(editor != nullptr);
         QVERIFY(dock != nullptr);
         dock->setFloating(floatingDock);
-        window->activateWindow();
+        if (!UiTestFixture::activateWindow(window))
+            return;
         QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(window));
         QLineEdit* searchBox = dock->findChild<QLineEdit*>();
         QTreeWidget* table = dock->findChild<QTreeWidget*>();
@@ -804,13 +835,19 @@ void TestFocusUi::f6_cycles_focus_with_another_main_window_visible()
         // yet, and Qt's next focus request for the main window then carries
         // an older time, which the X server ignores.
         if (floatingDock && QApplication::activeWindow() != dock) {
-            dock->activateWindow();
+            if (!UiTestFixture::activateWindow(dock))
+                return;
             QTRY_COMPARE(QApplication::activeWindow(), dock);
             QCoreApplication::processEvents();
         }
         QTest::keyClick(searchBox, Qt::Key_F6);
         QTRY_VERIFY(focusIsWithin(table));
         QTest::keyClick(table, Qt::Key_F6);
+        if (floatingDock && UiTestFixture::isWayland()) {
+            QCOMPARE(window->focusWidget(), editor);
+            if (!UiTestFixture::activateWindow(window))
+                return;
+        }
         QTRY_VERIFY(focusIsWithin(editor));
 
         QTest::keyClick(editor, Qt::Key_F6, Qt::ShiftModifier);
@@ -1702,7 +1739,8 @@ void TestFocusUi::edit_commands_follow_active_editor()
     MainWindow other(false);
     window.show();
     other.show();
-    window.activateWindow();
+    if (!UiTestFixture::activateWindow(&window))
+        return;
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     if (split)
         QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));

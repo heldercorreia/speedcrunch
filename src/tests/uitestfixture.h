@@ -13,12 +13,54 @@
 #include <QApplication>
 #include <QDialog>
 #include <QDir>
+#include <QKeyEvent>
 #include <QSettings>
 #include <QTemporaryDir>
 #include <QTest>
 #include <QTimer>
 
 namespace UiTestFixture {
+
+inline bool isWayland()
+{
+    // The same Linux binary can use either xcb or Wayland at runtime.
+    return QGuiApplication::platformName().startsWith(QLatin1String("wayland"));
+}
+
+inline bool activateWindow(QWidget* window)
+{
+    window->activateWindow();
+    if (isWayland() && !QTest::qWaitFor([window]() {
+            return QApplication::activeWindow() == window
+                && QGuiApplication::focusWindow() == window->windowHandle();
+        }, 1000)) {
+        QTest::qSkip("The Wayland compositor declines test window activation without native user input.",
+                     __FILE__, __LINE__);
+        return false;
+    }
+    return true;
+}
+
+class Application : public QApplication {
+public:
+    using QApplication::QApplication;
+
+    bool notify(QObject* receiver, QEvent* event) override
+    {
+        if (receiver != nullptr && receiver->isWidgetType() && event->spontaneous()
+            && (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease)) {
+            const auto* key = static_cast<QKeyEvent*>(event);
+            if (key->timestamp() == 0 && key->nativeScanCode() == 0
+                && key->nativeVirtualKey() == 0 && key->nativeModifiers() == 0) {
+                // QtTest marks synthetic widget keys as spontaneous. Qt's
+                // AT-SPI bridge can queue them for asynchronous delivery.
+                // sendEvent keeps test input synchronous and dispatches shortcuts.
+                return QCoreApplication::sendEvent(receiver, event);
+            }
+        }
+        return QApplication::notify(receiver, event);
+    }
+};
 
 inline void resetSettings()
 {
@@ -62,7 +104,7 @@ int run(int argc, char** argv)
         }
     }
 #endif
-    QApplication app(argc, argv);
+    Application app(argc, argv);
     for (const QString& path : {Settings::getConfigPath(), Settings::getDataPath(),
                                 Settings::getCachePath()}) {
         if (!QDir().mkpath(path)) {

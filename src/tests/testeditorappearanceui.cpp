@@ -538,6 +538,7 @@ void TestEditorAppearanceUi::classic_editor_display_renders_and_tracks_active_pa
     window.resize(900, 600);
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
     QCoreApplication::processEvents();
     const auto displays = window.findChildren<ResultDisplay*>();
@@ -636,6 +637,7 @@ void TestEditorAppearanceUi::classic_editor_display_restores_split_panes()
     MainWindow restored;
     restored.show();
     QCoreApplication::processEvents();
+    QTRY_COMPARE(restored.findChildren<ResultDisplay*>().size(), 2);
     const auto displays = restored.findChildren<ResultDisplay*>();
     QCOMPARE(displays.size(), 2);
     QMenu* menu = restored.findChild<QMenu*>(QStringLiteral("EditorDisplayStyleMenu"));
@@ -1105,12 +1107,14 @@ void TestEditorAppearanceUi::live_result_follows_editor_height_on_history_recall
     window.resize(700, 600);
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     if (split)
         QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
     Editor* editor = window.findChildren<Editor*>().last();
     editor->setAutoCompletionEnabled(false);
     editor->setAutoCalcEnabled(false);
     QTest::mouseClick(editor->viewport(), Qt::LeftButton);
+    QTRY_VERIFY(editor->hasFocus());
     editor->setText(QStringLiteral("1+2+").repeated(300) + QStringLiteral("3"));
     const QString expression = editor->document()->toRawText();
     QTest::keyClick(editor, Qt::Key_Return);

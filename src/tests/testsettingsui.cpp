@@ -487,6 +487,7 @@ void TestSettingsUi::system_color_mode_refreshes_controls_without_platform_notif
 
 void TestSettingsUi::system_color_mode_replaces_stale_fusion_palette_and_releases_override()
 {
+    QtMenuPaletteGuard paletteSource;
 #if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
     class ModeStyle : public QProxyStyle {
     public:
@@ -2824,7 +2825,8 @@ void TestSettingsUi::notation_shortcuts_change_only_active_window()
     };
     for (MainWindow* window : {&first, &second}) {
         window->raise();
-        window->activateWindow();
+        if (!UiTestFixture::activateWindow(window))
+            return;
         QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(window));
         Editor* editor = window->findChild<Editor*>();
         QVERIFY(editor);

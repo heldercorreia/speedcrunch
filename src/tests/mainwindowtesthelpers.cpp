@@ -302,7 +302,13 @@ QAction* keypadModeAction(MainWindow* window, Settings::KeypadMode mode)
     if (window == nullptr)
         return nullptr;
 
-    for (QAction* action : window->findChildren<QAction*>()) {
+    QMenu* view = menuWithTitle(window->menuBar(), QStringLiteral("&View"));
+    if (view == nullptr)
+        return nullptr;
+    QMenu* keypad = directSubmenuWithTitle(view, QStringLiteral("&Keypad"));
+    if (keypad == nullptr)
+        return nullptr;
+    for (QAction* action : keypad->actions()) {
         if (action->isCheckable()
                 && action->data().isValid()
                 && action->data().toInt() == static_cast<int>(mode)) {

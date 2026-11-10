@@ -265,7 +265,8 @@ void TestLaunchUi::launches_target_last_active_window_and_pane()
     QVERIFY(QMetaObject::invokeMethod(&second, "splitActivePaneRight"));
     const QList<Editor*> editors = second.findChildren<Editor*>();
     QCOMPARE(editors.size(), 2);
-    second.activateWindow();
+    if (!UiTestFixture::activateWindow(&second))
+        return;
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&second));
     QTest::mouseClick(editors.last(), Qt::LeftButton);
     QTRY_VERIFY(editors.last()->hasFocus());
@@ -867,7 +868,8 @@ void TestLaunchUi::new_tabs_use_unique_names_across_windows()
     int expectedRequests = 0;
     for (int round = 0; round != 3; ++round) {
         for (MainWindow* window : {&first, second}) {
-            window->activateWindow();
+            if (!UiTestFixture::activateWindow(window))
+                return;
             // Native Windows activation can precede Qt's WindowActivate event.
             QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(window));
             if (subsequentLaunch) {

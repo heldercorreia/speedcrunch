@@ -76,6 +76,8 @@ class TestEditorUi : public QObject {
 
 private slots:
     void init() { UiTestFixture::resetSettings(); }
+    void synthetic_keys_edit_unfocused_widgets_data();
+    void synthetic_keys_edit_unfocused_widgets();
     void raw_input_preserves_text_data();
     void raw_input_preserves_text();
     void history_recall_respects_input_adjustments_data();
@@ -393,6 +395,43 @@ static bool s_editorOrViewportHasFocus(Editor* editor)
         || focusWidget == editor->viewport();
 }
 
+
+void TestEditorUi::synthetic_keys_edit_unfocused_widgets_data()
+{
+    QTest::addColumn<bool>("visible");
+    QTest::newRow("hidden") << false;
+    QTest::newRow("shown") << true;
+}
+
+void TestEditorUi::synthetic_keys_edit_unfocused_widgets()
+{
+    QFETCH(bool, visible);
+    Settings::instance()->automaticInputAdjustments = false;
+    Editor editor;
+    editor.setAutoCompletionEnabled(false);
+    editor.setAutoCalcEnabled(false);
+    QLineEdit search;
+    if (visible) {
+        editor.show();
+        search.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&editor));
+        QVERIFY(QTest::qWaitForWindowExposed(&search));
+    }
+    // These tests target a widget directly, without asking the compositor to
+    // move keyboard focus. Exercise that path for editors and dock search fields.
+    editor.clearFocus();
+    search.clearFocus();
+    QVERIFY(!editor.hasFocus());
+    QVERIFY(!search.hasFocus());
+    QTest::keyClicks(&editor, "123+4");
+    QTest::keyClicks(&search, "proton");
+    QCOMPARE(editor.text(), QStringLiteral("123+4"));
+    QCOMPARE(search.text(), QStringLiteral("proton"));
+    QTest::keyClick(&editor, Qt::Key_Backspace);
+    QTest::keyClick(&search, Qt::Key_Backspace);
+    QCOMPARE(editor.text(), QStringLiteral("123+"));
+    QCOMPARE(search.text(), QStringLiteral("proto"));
+}
 
 void TestEditorUi::blocks_consecutive_plus()
 {
@@ -2350,6 +2389,8 @@ void TestEditorUi::clipboard_shortcuts_do_not_insert_key_payloads()
     QFETCH(QString, cutPayload);
     QFETCH(QString, pastePayload);
     Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
     editor.setText(QStringLiteral("123456"));
     QTextCursor cursor = editor.textCursor();
     cursor.setPosition(2);
@@ -2388,6 +2429,8 @@ void TestEditorUi::copy_shortcut_preserves_editor_state()
     QFETCH(QString, payload);
     QFETCH(bool, selectText);
     Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
     // MainWindow routes this signal to the widget whose selection is copied.
     // Use the editor as that widget here to exercise the clipboard operation.
     connect(&editor, &Editor::copySequencePressed, &editor, &QPlainTextEdit::copy);
@@ -5693,7 +5736,9 @@ void TestEditorUi::completion_popup_uses_positionable_nonactivating_surface()
     firstLayout.addWidget(&editor);
     firstWindow.show();
     QVERIFY(QTest::qWaitForWindowExposed(&firstWindow));
+    QVERIFY(QTest::qWaitForWindowActive(&firstWindow));
     editor.setFocus();
+    QTRY_VERIFY(s_editorOrViewportHasFocus(&editor));
 
     EditorCompletion* completion = editor.findChild<EditorCompletion*>();
     QVERIFY(completion);
@@ -5712,7 +5757,9 @@ void TestEditorUi::completion_popup_uses_positionable_nonactivating_surface()
     firstWindow.hide();
     secondWindow.show();
     QVERIFY(QTest::qWaitForWindowExposed(&secondWindow));
+    QVERIFY(QTest::qWaitForWindowActive(&secondWindow));
     editor.setFocus();
+    QTRY_VERIFY(s_editorOrViewportHasFocus(&editor));
     completion->showCompletion({QStringLiteral("cos:Cosine")});
     QCOMPARE(popup->windowHandle()->transientParent(), secondWindow.windowHandle());
     QVERIFY(s_editorOrViewportHasFocus(&editor));
@@ -6154,7 +6201,9 @@ void TestEditorUi::constant_search_closes_without_stealing_outside_focus()
     layout.addWidget(&other);
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     editor.setFocus();
+    QTRY_VERIFY(editor.hasFocus());
     QTest::keyClick(&editor, Qt::Key_Space, Qt::ControlModifier);
     QPointer<QWidget> popup = QApplication::activePopupWidget();
     QVERIFY(popup);
@@ -6162,7 +6211,7 @@ void TestEditorUi::constant_search_closes_without_stealing_outside_focus()
     other.setFocus();
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QVERIFY(popup.isNull());
-    QVERIFY(other.hasFocus());
+    QTRY_VERIFY(other.hasFocus());
     QVERIFY(editor.text().isEmpty());
 }
 
@@ -6194,7 +6243,10 @@ void TestEditorUi::constant_search_layout_follows_popup_resize()
             empty = label;
     }
     QVERIFY(empty);
-    QVERIFY(empty->isVisible());
+    QTRY_COMPARE(constants->topLevelItemCount(), 0);
+    if (UiTestFixture::isWayland() && !popup->isVisible())
+        QSKIP("The Wayland compositor dismisses a grabbing popup without native user input.", );
+    QTRY_VERIFY(empty->isVisible());
     QCOMPARE(empty->geometry(), constants->viewport()->rect());
     QVERIFY(popup->rect().contains(constants->geometry()));
     popup->hide();
@@ -6476,11 +6528,14 @@ void TestEditorUi::inactive_editor_does_not_show_completion_popup()
     layout.addWidget(&secondEditor);
     container.show();
     QVERIFY(QTest::qWaitForWindowExposed(&container));
+    QVERIFY(QTest::qWaitForWindowActive(&container));
 
     firstEditor.setFocus();
+    QTRY_VERIFY(firstEditor.hasFocus());
     firstEditor.setText(QStringLiteral("co"));
     firstEditor.setCursorPosition(firstEditor.text().size());
     secondEditor.setFocus();
+    QTRY_VERIFY(secondEditor.hasFocus());
     QCoreApplication::processEvents();
 
     QVERIFY(QMetaObject::invokeMethod(

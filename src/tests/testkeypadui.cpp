@@ -98,11 +98,11 @@ void TestKeypadUi::classic_keypad_boundary_follows_bordering_panes()
     Editor* leftEditor = window.findChild<Editor*>();
     QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
     checkBoundary(2);
-    Editor* upperRightEditor = qobject_cast<Editor*>(QApplication::focusWidget());
+    Editor* upperRightEditor = qobject_cast<Editor*>(window.focusWidget());
     QVERIFY(upperRightEditor);
     QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneDown", Qt::DirectConnection));
     checkBoundary(2);
-    QPointer<Editor> lowerRightEditor = qobject_cast<Editor*>(QApplication::focusWidget());
+    QPointer<Editor> lowerRightEditor = qobject_cast<Editor*>(window.focusWidget());
     QVERIFY(lowerRightEditor);
     QTest::mouseClick(upperRightEditor->viewport(), Qt::LeftButton);
     QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight", Qt::DirectConnection));
@@ -1101,7 +1101,8 @@ void TestKeypadUi::keypad_view_menu_tracks_and_changes_only_active_window()
     };
 
     firstWindow.raise();
-    firstWindow.activateWindow();
+    if (!UiTestFixture::activateWindow(&firstWindow))
+        return;
     firstWindow.setFocus(Qt::OtherFocusReason);
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&firstWindow));
     QEvent firstWindowActivate(QEvent::WindowActivate);
@@ -1130,7 +1131,8 @@ void TestKeypadUi::keypad_view_menu_tracks_and_changes_only_active_window()
     QCOMPARE(checkedZoomCount(secondZoomMenu), 1);
 
     secondWindow.raise();
-    secondWindow.activateWindow();
+    if (!UiTestFixture::activateWindow(&secondWindow))
+        return;
     secondWindow.setFocus(Qt::OtherFocusReason);
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&secondWindow));
     QEvent secondWindowActivate(QEvent::WindowActivate);
@@ -1163,7 +1165,8 @@ void TestKeypadUi::keypad_view_menu_tracks_and_changes_only_active_window()
     QCOMPARE(checkedZoomCount(secondZoomMenu), 1);
 
     firstWindow.raise();
-    firstWindow.activateWindow();
+    if (!UiTestFixture::activateWindow(&firstWindow))
+        return;
     firstWindow.setFocus(Qt::OtherFocusReason);
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&firstWindow));
     QCoreApplication::sendEvent(&firstWindow, &firstWindowActivate);

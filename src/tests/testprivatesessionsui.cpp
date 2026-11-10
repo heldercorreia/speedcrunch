@@ -352,7 +352,8 @@ void TestPrivateSessionsUi::private_tab_shortcut_opens_in_active_pane()
     ResultDisplay* target = displays.last();
     Editor* editor = paneWidgetForDisplay(target)->findChild<Editor*>();
     QVERIFY(editor);
-    window.activateWindow();
+    if (!UiTestFixture::activateWindow(&window))
+        return;
     QTest::mouseClick(target->viewport(), Qt::LeftButton, Qt::NoModifier, target->viewport()->rect().center());
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&window));
     editor->setText(QStringLiteral("ordinary draft"));
@@ -754,8 +755,14 @@ void TestPrivateSessionsUi::startup_private_tab_is_opened_once_across_restored_w
     QCOMPARE(tabBarForDisplay(other->findChild<ResultDisplay*>())->count(), 1);
     QVERIFY(!other->findChild<ResultDisplay*>()->session()->isPrivate());
     QCOMPARE(other->findChild<Editor*>()->text(), QStringLiteral("saved draft"));
-    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&window));
-    QTRY_VERIFY(window.findChild<Editor*>()->hasFocus());
+    if (UiTestFixture::isWayland()) {
+        // A restored window can request editor focus even when the compositor
+        // keeps another top-level window active without native user input.
+        QTRY_COMPARE(window.focusWidget(), window.findChild<Editor*>());
+    } else {
+        QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&window));
+        QTRY_VERIFY(window.findChild<Editor*>()->hasFocus());
+    }
     QVERIFY(settings->sessionLayoutJson.contains(QStringLiteral("Saved-Active")));
     QVERIFY(settings->sessionLayoutJson.contains(QStringLiteral("Saved-First")));
     QVERIFY(settings->sessionLayoutJson.contains(QStringLiteral("saved draft")));

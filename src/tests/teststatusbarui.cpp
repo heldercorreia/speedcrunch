@@ -297,7 +297,8 @@ void TestStatusBarUi::status_bar_menu_tracks_and_changes_only_active_window()
     QVERIFY(secondStatusBarAction != nullptr);
 
     firstWindow.raise();
-    firstWindow.activateWindow();
+    if (!UiTestFixture::activateWindow(&firstWindow))
+        return;
     firstWindow.setFocus(Qt::OtherFocusReason);
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&firstWindow));
     QEvent firstWindowActivate(QEvent::WindowActivate);
@@ -318,7 +319,8 @@ void TestStatusBarUi::status_bar_menu_tracks_and_changes_only_active_window()
     QVERIFY(!secondStatusBarAction->isChecked());
 
     secondWindow.raise();
-    secondWindow.activateWindow();
+    if (!UiTestFixture::activateWindow(&secondWindow))
+        return;
     secondWindow.setFocus(Qt::OtherFocusReason);
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&secondWindow));
     QEvent secondWindowActivate(QEvent::WindowActivate);
@@ -337,7 +339,8 @@ void TestStatusBarUi::status_bar_menu_tracks_and_changes_only_active_window()
     QVERIFY(secondStatusBarAction->isChecked());
 
     firstWindow.raise();
-    firstWindow.activateWindow();
+    if (!UiTestFixture::activateWindow(&firstWindow))
+        return;
     firstWindow.setFocus(Qt::OtherFocusReason);
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&firstWindow));
     QCoreApplication::sendEvent(&firstWindow, &firstWindowActivate);
@@ -423,7 +426,8 @@ void TestStatusBarUi::status_bar_visibility_persists_for_every_window_during_shu
         QTRY_VERIFY(statusBarIsVisible(&secondWindow));
 
         secondWindow.raise();
-        secondWindow.activateWindow();
+        if (!UiTestFixture::activateWindow(&secondWindow))
+            return;
         secondWindow.setFocus(Qt::OtherFocusReason);
         QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&secondWindow));
         QVERIFY(QMetaObject::invokeMethod(&secondWindow,
@@ -439,7 +443,8 @@ void TestStatusBarUi::status_bar_visibility_persists_for_every_window_during_shu
                  QStringLiteral("Degree"));
 
         firstWindow.raise();
-        firstWindow.activateWindow();
+        if (!UiTestFixture::activateWindow(&firstWindow))
+            return;
         firstWindow.setFocus(Qt::OtherFocusReason);
         QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&firstWindow));
 
@@ -556,7 +561,8 @@ void TestStatusBarUi::status_bar_setting_selectors_update_only_active_window()
     QCOMPARE(secondPrecision->text(), firstPrecision->text());
 
     firstWindow.raise();
-    firstWindow.activateWindow();
+    if (!UiTestFixture::activateWindow(&firstWindow))
+        return;
     firstWindow.setFocus(Qt::OtherFocusReason);
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&firstWindow));
 

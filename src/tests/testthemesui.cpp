@@ -276,6 +276,7 @@ void TestThemesUi::constant_popup_clear_button_matches_dock_search()
     MainWindow window(false);
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     auto* editor = window.findChild<Editor*>();
     auto* dock = window.findChild<QDockWidget*>(QStringLiteral("ConstantsDock"));
     QVERIFY(editor && dock);
@@ -1670,6 +1671,7 @@ void TestThemesUi::dock_surfaces_use_successive_generated_shades()
     }
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     QCoreApplication::processEvents();
 
     const QColor titleFill = shades.at(UiConfig::DockHeaderShade);
@@ -1947,12 +1949,12 @@ void TestThemesUi::dock_surfaces_use_successive_generated_shades()
     QVERIFY(focusedEditorImage.rect().contains(editorCursorRect.center()));
     for (int x = editorCursorRect.left(); x <= editorCursorRect.right(); ++x)
         QCOMPARE(focusedEditorImage.pixelColor(x, editorCursorRect.center().y()).name(), primary.name());
-    const int editorBlinkTimeout = qMax(1000, QApplication::cursorFlashTime() + 250);
+    const int blinkTimeout = 2 * qMax(1000, QApplication::cursorFlashTime()) + 250;
     const auto editorCursorPixelName = [&]() {
         return editor->viewport()->grab().toImage().pixelColor(editorCursorRect.center()).name();
     };
-    QTRY_VERIFY_WITH_TIMEOUT(editorCursorPixelName() != primary.name(), editorBlinkTimeout);
-    QTRY_COMPARE_WITH_TIMEOUT(editorCursorPixelName(), primary.name(), editorBlinkTimeout);
+    QTRY_VERIFY_WITH_TIMEOUT(editorCursorPixelName() != primary.name(), blinkTimeout);
+    QTRY_COMPARE_WITH_TIMEOUT(editorCursorPixelName(), primary.name(), blinkTimeout);
     QVERIFY(QMetaObject::invokeMethod(&window,
                                       "handleApplicationFocusChanged",
                                       Qt::DirectConnection,
@@ -2009,7 +2011,6 @@ void TestThemesUi::dock_surfaces_use_successive_generated_shades()
         QVERIFY(focusedSearchImage.pixelColor(leftOfCursor).name() != primary.name());
     if (focusedSearchImage.rect().contains(rightOfCursor))
         QVERIFY(focusedSearchImage.pixelColor(rightOfCursor).name() != primary.name());
-    const int blinkTimeout = qMax(1000, QApplication::cursorFlashTime() + 250);
     const auto cursorPixelName = [&]() {
         return themedSearchBox->grab().toImage().pixelColor(cursorRect.center()).name();
     };

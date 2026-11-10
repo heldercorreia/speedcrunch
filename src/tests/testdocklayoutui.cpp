@@ -1118,7 +1118,21 @@ void TestDockLayoutUi::fullscreen_dock_widths_survive_relaunch()
                 guard.settings->sessionLayoutJson.clear();
         }
         MainWindow window(launch != 0);
-        const ReportedWindowState reported(&window);
+        ReportedWindowState reported(&window);
+        const auto exitFullscreen = [&]() {
+            if (!window.isFullScreen() && !reported.isFullScreen())
+                return true;
+            // Cocoa can ignore an exit request while entry is still animating.
+            (void)QTest::qWaitFor([&]() { return reported.isFullScreen(); }, 15000);
+            window.showNormal();
+            const bool exited = QTest::qWaitFor([&]() {
+                return !window.isFullScreen() && !reported.isFullScreen();
+            }, 15000);
+            if (exited)
+                QTest::qWait(1500);
+            return exited;
+        };
+        const auto cleanupFullscreen = qScopeGuard([&]() { exitFullscreen(); });
         if (launch == 0) {
             window.resize(720, 540);
             for (const char* setter : {"setConstantsDockVisible", "setVariablesDockVisible"})
@@ -1126,6 +1140,19 @@ void TestDockLayoutUi::fullscreen_dock_widths_survive_relaunch()
                                                  Q_ARG(bool, true), Q_ARG(bool, false)));
             window.addDockWidget(Qt::LeftDockWidgetArea, window.findChild<QDockWidget*>(names.first()));
             window.addDockWidget(Qt::RightDockWidgetArea, window.findChild<QDockWidget*>(names.last()));
+            window.show();
+            QVERIFY(QTest::qWaitForWindowExposed(&window));
+#ifdef Q_OS_MACOS
+            // Cocoa needs the application in front before entering fullscreen.
+            // activateWindow() alone only makes the native window key.
+            window.raise();
+            if (!QTest::qWaitFor([]() {
+                    return QGuiApplication::applicationState() == Qt::ApplicationActive;
+                }, 5000))
+                QSKIP("macOS declines test application activation in this desktop session.", );
+#endif
+            window.activateWindow();
+            QVERIFY(QTest::qWaitForWindowActive(&window));
             window.showFullScreen();
         } else {
             window.showWhenReady();
@@ -1133,7 +1160,11 @@ void TestDockLayoutUi::fullscreen_dock_widths_survive_relaunch()
         QTRY_VERIFY(window.isVisible() && window.isFullScreen());
         QVERIFY(QTest::qWaitForWindowExposed(&window));
         // The first fullscreen animation on a fresh CI machine can be slow.
-        QTRY_VERIFY_WITH_TIMEOUT(reported.isFullScreen(), 15000);
+        QTRY_VERIFY2_WITH_TIMEOUT(reported.isFullScreen(),
+            qPrintable(QStringLiteral("Launch %1: native fullscreen transition does not complete "
+                                      "(active=%2, exposed=%3)")
+                .arg(launch + 1).arg(window.isActiveWindow())
+                .arg(window.windowHandle()->isExposed())), 15000);
         QTest::qWait(500);
         QTRY_COMPARE(window.findChildren<QDockWidget*>().size(), names.size());
         if (launch == 0) {
@@ -1155,9 +1186,7 @@ void TestDockLayoutUi::fullscreen_dock_widths_survive_relaunch()
         window.persistSessionAndSettingsForShutdown();
         // Leave the fullscreen Space before destroying the test window, so
         // its exit animation does not affect the next launch or test case.
-        window.showNormal();
-        QTRY_VERIFY_WITH_TIMEOUT(!window.isFullScreen() && !reported.isFullScreen(), 15000);
-        QTest::qWait(1500);
+        QVERIFY2(exitFullscreen(), "Native fullscreen exit does not complete");
     }
 }
 
@@ -2068,19 +2097,18 @@ void TestDockLayoutUi::dock_separator_style_uses_primary_while_hovered_or_dragge
     propertyOwner.resize(96, 64);
     QWidget styleHost(&propertyOwner);
     styleHost.resize(64, 32);
-    styleHost.move(0, 0);
-    propertyOwner.show();
-    QVERIFY(QTest::qWaitForWindowExposed(&propertyOwner));
+    // Painting reads the cursor in widget coordinates. Move this hidden test
+    // widget instead of warping the desktop cursor, which Wayland forbids.
+    const auto placeCursorAt = [&](const QPoint& position) {
+        styleHost.move(propertyOwner.mapFromGlobal(QCursor::pos()) - position);
+        QCOMPARE(styleHost.mapFromGlobal(QCursor::pos()), position);
+    };
 
-    QCursor::setPos(styleHost.mapToGlobal(QPoint(50, 24)));
-    QTRY_COMPARE(QCursor::pos(), styleHost.mapToGlobal(QPoint(50, 24)));
-    QCoreApplication::processEvents();
+    placeCursorAt(QPoint(50, 24));
     QCOMPARE(dockSeparatorPrimitiveColor(&styleHost, QStyle::State_None).name(),
              normal.name());
 
-    QCursor::setPos(styleHost.mapToGlobal(QPoint(4, 4)));
-    QTRY_COMPARE(QCursor::pos(), styleHost.mapToGlobal(QPoint(4, 4)));
-    QCoreApplication::processEvents();
+    placeCursorAt(QPoint(4, 4));
     QCOMPARE(dockSeparatorPrimitiveColor(&styleHost, QStyle::State_None).name(),
              primary.name());
     QImage horizontalSeparator =
@@ -2115,9 +2143,7 @@ void TestDockLayoutUi::dock_separator_style_uses_primary_while_hovered_or_dragge
         QCOMPARE(verticalSeparator.pixelColor(verticalStrokeRight + 1,
                                               verticalSeparator.height() / 2).alpha(), 0);
 
-    QCursor::setPos(styleHost.mapToGlobal(QPoint(4, 1)));
-    QTRY_COMPARE(QCursor::pos(), styleHost.mapToGlobal(QPoint(4, 1)));
-    QCoreApplication::processEvents();
+    placeCursorAt(QPoint(4, 1));
     QImage thinHorizontalSeparator = dockSeparatorPrimitiveImage(&styleHost,
                                                                 QStyle::State_None,
                                                                 QRect(0, 0, 32, 1),
@@ -2127,9 +2153,7 @@ void TestDockLayoutUi::dock_separator_style_uses_primary_while_hovered_or_dragge
     QCOMPARE(thinHorizontalSeparator.pixelColor(thinHorizontalSeparator.width() / 2, 2).alpha(),
              0);
 
-    QCursor::setPos(styleHost.mapToGlobal(QPoint(1, 4)));
-    QTRY_COMPARE(QCursor::pos(), styleHost.mapToGlobal(QPoint(1, 4)));
-    QCoreApplication::processEvents();
+    placeCursorAt(QPoint(1, 4));
     QImage thinVerticalSeparator = dockSeparatorPrimitiveImage(&styleHost,
                                                               QStyle::State_None,
                                                               QRect(0, 0, 1, 32),
@@ -2139,9 +2163,7 @@ void TestDockLayoutUi::dock_separator_style_uses_primary_while_hovered_or_dragge
     QCOMPARE(thinVerticalSeparator.pixelColor(2, thinVerticalSeparator.height() / 2).alpha(),
              0);
 
-    QCursor::setPos(styleHost.mapToGlobal(QPoint(50, 24)));
-    QTRY_COMPARE(QCursor::pos(), styleHost.mapToGlobal(QPoint(50, 24)));
-    QCoreApplication::processEvents();
+    placeCursorAt(QPoint(50, 24));
     QCOMPARE(dockSeparatorPrimitiveColor(&styleHost, QStyle::State_Sunken).name(),
              primary.name());
 }
@@ -2255,8 +2277,6 @@ void TestDockLayoutUi::view_dock_menu_tracks_and_changes_only_active_window()
 
     MainWindow secondWindow;
     secondWindow.resize(800, 500);
-    secondWindow.show();
-    QVERIFY(QTest::qWaitForWindowExposed(&secondWindow));
 
     struct DockSpec {
         const char* setter;
@@ -2284,7 +2304,7 @@ void TestDockLayoutUi::view_dock_menu_tracks_and_changes_only_active_window()
     };
     const auto dockIsVisible = [](MainWindow* window, const DockSpec& spec) {
         QDockWidget* dock = window->findChild<QDockWidget*>(QString::fromLatin1(spec.objectName));
-        return dock != nullptr && dock->isVisible();
+        return dock != nullptr && !dock->isHidden();
     };
 
     QMenu* firstViewMenu = menuWithTitle(firstWindow.menuBar(), QStringLiteral("&View"));
@@ -2299,7 +2319,8 @@ void TestDockLayoutUi::view_dock_menu_tracks_and_changes_only_active_window()
     }
 
     firstWindow.raise();
-    firstWindow.activateWindow();
+    if (!UiTestFixture::activateWindow(&firstWindow))
+        return;
     firstWindow.setFocus(Qt::OtherFocusReason);
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&firstWindow));
     QEvent firstWindowActivate(QEvent::WindowActivate);
@@ -2307,14 +2328,15 @@ void TestDockLayoutUi::view_dock_menu_tracks_and_changes_only_active_window()
     QCoreApplication::processEvents();
 
     for (const DockSpec& spec : dockSpecs) {
+        QCOMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&firstWindow));
         QAction* firstAction = directMenuActionWithText(
             firstViewMenu, QString::fromLatin1(spec.actionText));
         QAction* secondAction = directMenuActionWithText(
             secondViewMenu, QString::fromLatin1(spec.actionText));
         QVERIFY(firstAction != nullptr);
         QVERIFY(secondAction != nullptr);
-        QVERIFY(firstAction->isChecked());
-        QVERIFY(secondAction->isChecked());
+        QTRY_VERIFY2(firstAction->isChecked(), spec.objectName);
+        QTRY_VERIFY2(secondAction->isChecked(), spec.objectName);
 
         // Simulate the native menu dispatching the inactive window's action.
         secondAction->trigger();
@@ -2331,8 +2353,12 @@ void TestDockLayoutUi::view_dock_menu_tracks_and_changes_only_active_window()
         QVERIFY(dockIsVisible(&secondWindow, spec));
     }
 
+    // Show the second window when its turn starts so it gets native focus on map.
+    secondWindow.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&secondWindow));
     secondWindow.raise();
-    secondWindow.activateWindow();
+    if (!UiTestFixture::activateWindow(&secondWindow))
+        return;
     secondWindow.setFocus(Qt::OtherFocusReason);
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&secondWindow));
     QEvent secondWindowActivate(QEvent::WindowActivate);
@@ -2340,12 +2366,15 @@ void TestDockLayoutUi::view_dock_menu_tracks_and_changes_only_active_window()
     QCoreApplication::processEvents();
 
     for (const DockSpec& spec : dockSpecs) {
+        QCOMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&secondWindow));
         QAction* firstAction = directMenuActionWithText(
             firstViewMenu, QString::fromLatin1(spec.actionText));
         QAction* secondAction = directMenuActionWithText(
             secondViewMenu, QString::fromLatin1(spec.actionText));
-        QVERIFY(firstAction->isChecked());
-        QVERIFY(secondAction->isChecked());
+        QVERIFY(firstAction != nullptr);
+        QVERIFY(secondAction != nullptr);
+        QTRY_VERIFY2(firstAction->isChecked(), spec.objectName);
+        QTRY_VERIFY2(secondAction->isChecked(), spec.objectName);
 
         firstAction->trigger();
         QCoreApplication::processEvents();

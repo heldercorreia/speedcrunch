@@ -365,11 +365,12 @@ void TestDockAppearanceUi::system_dock_separators_use_thin_system_colors()
     functions->show();
     QMenu* appearance = first.findChild<QMenu*>(QStringLiteral("DockAppearanceMenu"));
     QVERIFY(appearance);
-    QCursor::setPos(first.mapToGlobal(QPoint(-20, -20)));
     QCoreApplication::processEvents();
 
     const auto verify = [&](bool system) {
         for (MainWindow* window : {&first, &second}) {
+            QWidget styleHost(window);
+            styleHost.move(window->mapFromGlobal(QCursor::pos()) + QPoint(100, 100));
             const QColor normal = system ? native.color(QPalette::Mid)
                 : window->property("speedcrunchDockSeparatorNormalColor").value<QColor>();
             const QColor active = system ? native.color(QPalette::Highlight)
@@ -382,7 +383,7 @@ void TestDockAppearanceUi::system_dock_separators_use_thin_system_colors()
                     for (QStyle::State state : {QStyle::State(QStyle::State_None),
                                                 QStyle::State(QStyle::State_MouseOver),
                                                 QStyle::State(QStyle::State_Sunken)}) {
-                        const QImage image = dockSeparatorPrimitiveImage(window, state,
+                        const QImage image = dockSeparatorPrimitiveImage(&styleHost, state,
                             QRect(QPoint(0, 0), size), size + QSize(2, 2));
                         const int start = (extent - 1) / 2 - (width - 1) / 2;
                         for (int offset = 0; offset < extent + 2; ++offset) {
@@ -532,7 +533,18 @@ void TestDockAppearanceUi::dock_appearance_switches_all_windows()
     Editor* editor = first.findChild<Editor*>();
     QVERIFY(editor);
     const QPalette editorPalette = editor->palette();
-    const QString editorStyle = editor->styleSheet();
+    const auto editorAppearance = [editor]() {
+        // Opening a native popup can change focus. Compare the editor's
+        // appearance independently of its focus outline.
+        QString style = editor->styleSheet();
+        style.replace(QStringLiteral("border: %1px solid %2")
+                          .arg(UiConfig::OutlineStrokeWidth)
+                          .arg(editor->palette().color(QPalette::Text).name()),
+                      QStringLiteral("border: %1px solid transparent")
+                          .arg(UiConfig::OutlineStrokeWidth));
+        return style;
+    };
+    const QString editorStyle = editorAppearance();
     const QString dockTitleStyle = constants->styleSheet();
     for (int cycle = 0; cycle < 2; ++cycle) {
         firstAppearance->actions().at(0)->trigger();
@@ -545,7 +557,7 @@ void TestDockAppearanceUi::dock_appearance_switches_all_windows()
             for (const auto role : {QPalette::Base, QPalette::Text, QPalette::Highlight, QPalette::HighlightedText})
                 QCOMPARE(editor->palette().color(group, role).rgba(), editorPalette.color(group, role).rgba());
         }
-        QCOMPARE(editor->styleSheet(), editorStyle);
+        QCOMPARE(editorAppearance(), editorStyle);
         QVERIFY(constants->styleSheet().isEmpty());
         for (MainWindow* window : {&first, &second}) {
             for (QDockWidget* dock : window->findChildren<QDockWidget*>()) {

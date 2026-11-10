@@ -109,7 +109,9 @@ void TestDocksUi::constants_search_navigates_and_flushes_pending_filter()
     widget.resize(600, 400);
     widget.show();
     QVERIFY(QTest::qWaitForWindowExposed(&widget));
+    QVERIFY(QTest::qWaitForWindowActive(&widget));
     search->setFocus();
+    QTRY_VERIFY(search->hasFocus());
     QSignalSpy inserted(&widget, &ConstantsWidget::constantSelected);
     QTest::keyClicks(search, "PROTON");
     QTest::keyClick(search, Qt::Key_Down);

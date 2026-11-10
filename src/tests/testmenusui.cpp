@@ -820,6 +820,7 @@ void TestMenusUi::dock_dropdowns_follow_menu_appearance()
             return QProxyStyle::styleHint(hint, option, widget, result);
         }
     };
+    QtMenuPaletteGuard paletteSource;
     QFETCH(bool, darkSystem);
     QFETCH(bool, floating);
     MainWindowStateGuard guard;
@@ -884,6 +885,9 @@ void TestMenusUi::dock_dropdowns_follow_menu_appearance()
             combo->showPopup();
             const auto closePopup = qScopeGuard([combo]() { combo->hidePopup(); });
             QCoreApplication::processEvents();
+            if (UiTestFixture::isWayland()
+                && !QTest::qWaitFor([view]() { return view->isVisible(); }, 1000))
+                QSKIP("The Wayland compositor rejects a grabbing dropdown without native user input.", );
             // Reopening the popup in the wait condition restarts animations.
             QTRY_VERIFY(view->isVisible());
             QWidget* popup = view->window();
@@ -963,6 +967,7 @@ void TestMenusUi::system_dropdowns_use_the_native_popup_selection_palette_data()
 
 void TestMenusUi::system_dropdowns_use_the_native_popup_selection_palette()
 {
+    QtMenuPaletteGuard paletteSource;
     QFETCH(bool, editable);
     MainWindowStateGuard guard;
     const QPalette originalMenu = QApplication::palette("QMenu");
@@ -1276,6 +1281,7 @@ void TestMenusUi::classic_preset_restores_nested_menu_colors_data()
 
 void TestMenusUi::classic_preset_restores_nested_menu_colors()
 {
+    QtMenuPaletteGuard paletteSource;
     QFETCH(QString, styleName);
     QFETCH(bool, darkSystem);
     MainWindowStateGuard guard;
@@ -1507,6 +1513,7 @@ void TestMenusUi::system_menus_preserve_platform_roles_and_follow_palette_change
 
 void TestMenusUi::system_menus_preserve_platform_roles_and_follow_palette_changes()
 {
+    QtMenuPaletteGuard paletteSource;
     QFETCH(bool, darkPlatform);
     MainWindowStateGuard guard;
     guard.settings->menuAppearance = Settings::MenuAppearanceSystem;
@@ -1668,6 +1675,7 @@ void TestMenusUi::dock_context_menus_follow_menu_theme_data()
 
 void TestMenusUi::dock_context_menus_follow_menu_theme()
 {
+    QtMenuPaletteGuard paletteSource;
     QFETCH(bool, darkSystem);
     QFETCH(bool, floating);
     MainWindowStateGuard guard;
@@ -1698,16 +1706,16 @@ void TestMenusUi::dock_context_menus_follow_menu_theme()
     guard.settings->variablesDockVisible = true;
     guard.settings->userFunctionsDockVisible = true;
     guard.settings->userUnitsDockVisible = true;
-    Session historySession;
-    historySession.addHistoryEntry(HistoryEntry(QStringLiteral("1+1"), Quantity(2)));
     MainWindow window(false);
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     QMenu* appearance = window.findChild<QMenu*>(QStringLiteral("MenuAppearanceMenu"));
     QVERIFY(appearance != nullptr);
-    HistoryWidget* history = window.findChild<HistoryWidget*>();
-    QVERIFY(history != nullptr);
-    history->setSession(&historySession);
+    Editor* editor = window.findChild<Editor*>();
+    QVERIFY(editor != nullptr);
+    editor->setText(QStringLiteral("1+1"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
 
     const QVector<QColor> shades = generateOklchShades(
         calculatorBackground, 6, themePolarityForBackground(calculatorBackground));
@@ -1718,6 +1726,8 @@ void TestMenusUi::dock_context_menus_follow_menu_theme()
         dock->show();
         dock->raise();
         QCoreApplication::processEvents();
+        if (floating)
+            QVERIFY(QTest::qWaitForWindowActive(dock));
         QAbstractItemView* list = dock->findChild<QAbstractItemView*>();
         QVERIFY(list != nullptr);
         const QPalette listPalette = list->palette();
@@ -1726,12 +1736,17 @@ void TestMenusUi::dock_context_menus_follow_menu_theme()
             appearance->actions().at(mode)->trigger();
             const QColor expectedBackground = mode == 0 ? native.color(QPalette::Window)
                                                         : shades.at(UiConfig::DockHeaderShade);
+            bool popupDismissed = false;
             const auto inspectPopup = [&](QWidget* target, const QPoint& pos) {
                 bool inspected = false;
                 QTimer inspector;
                 inspector.setSingleShot(true);
                 connect(&inspector, &QTimer::timeout, &window, [&]() {
                     auto* menu = qobject_cast<QMenu*>(QApplication::activePopupWidget());
+                    if (menu == nullptr && UiTestFixture::isWayland()) {
+                        popupDismissed = true;
+                        return;
+                    }
                     QVERIFY2(menu != nullptr, dockName);
                     const auto closeMenu = qScopeGuard([menu]() { menu->close(); });
                     QVERIFY(!menu->actions().isEmpty());
@@ -1786,13 +1801,20 @@ void TestMenusUi::dock_context_menus_follow_menu_theme()
                 QCoreApplication::sendEvent(target, &event);
                 QCoreApplication::processEvents();
                 inspector.stop();
+                if (popupDismissed)
+                    return;
                 QVERIFY2(inspected, dockName);
             };
             const QPoint listPos = list->model()->rowCount() > 0
                 ? list->visualRect(list->model()->index(0, 0)).center() : QPoint(8, 8);
             inspectPopup(list->viewport(), listPos);
-            if (QLineEdit* search = dock->findChild<QLineEdit*>())
+            if (popupDismissed)
+                QSKIP("The Wayland compositor dismisses a grabbing context menu without native user input.", );
+            if (QLineEdit* search = dock->findChild<QLineEdit*>()) {
                 inspectPopup(search, QPoint(8, 8));
+                if (popupDismissed)
+                    QSKIP("The Wayland compositor dismisses a grabbing context menu without native user input.", );
+            }
             QCOMPARE(list->palette(), listPalette);
             QCOMPARE(list->styleSheet(), listStyle);
         }
