@@ -131,10 +131,62 @@ private slots:
     void view_commands_split_and_close_active_pane_data();
     void view_commands_split_and_close_active_pane();
     void session_tabs_reorder_with_horizontal_drag();
+    void startup_recovers_from_unreadable_selected_session_data();
+    void startup_recovers_from_unreadable_selected_session();
 
 private:
     QUrl m_capturedUrl;
 };
+
+void TestSessionsUi::startup_recovers_from_unreadable_selected_session_data()
+{
+    QTest::addColumn<bool>("corruptFile");
+    QTest::addColumn<bool>("hasFallback");
+    QTest::newRow("missing-without-fallback") << false << false;
+    QTest::newRow("corrupt-without-fallback") << true << false;
+    QTest::newRow("missing-with-hidden-fallback") << false << true;
+    QTest::newRow("corrupt-with-hidden-fallback") << true << true;
+}
+
+void TestSessionsUi::startup_recovers_from_unreadable_selected_session()
+{
+    QFETCH(bool, corruptFile);
+    QFETCH(bool, hasFallback);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    guard.settings->openPrivateTabOnStartup = false;
+    const QString selected = QStringLiteral("Unreadable");
+    const QString fallback = QStringLiteral("Fallback");
+    QVERIFY(QDir().mkpath(QFileInfo(storage.path(selected)).path()));
+    if (corruptFile)
+        writeFile(storage.path(selected), QByteArray("invalid JSON"));
+    if (hasFallback)
+        writeFile(storage.path(fallback), QJsonDocument(sessionJson(fallback)).toJson());
+    QJsonObject savedWindow = startupSessionWindow(selected, QStringLiteral("saved"));
+    if (hasFallback) {
+        QJsonObject root = savedWindow.value(QStringLiteral("root")).toObject();
+        QJsonArray tabs = root.value(QStringLiteral("tabs")).toArray();
+        tabs.append(QJsonObject {{QStringLiteral("name"), fallback}});
+        root.insert(QStringLiteral("tabs"), tabs);
+        savedWindow.insert(QStringLiteral("root"), root);
+    }
+    guard.settings->sessionLayoutJson = QString::fromUtf8(QJsonDocument(QJsonObject {
+        {QStringLiteral("scheme"), 1},
+        {QStringLiteral("kind"), QStringLiteral("session-layout")},
+        {QStringLiteral("windows"), QJsonArray {savedWindow}}
+    }).toJson(QJsonDocument::Compact));
+    MainWindow window;
+    window.showWhenReady();
+    QTRY_VERIFY(window.isVisible());
+    QVERIFY(!MainWindow::sessionRestoreInProgress());
+    const auto displays = window.findChildren<ResultDisplay*>();
+    QCOMPARE(displays.size(), 1);
+    ResultDisplay* display = displays.first();
+    QCOMPARE(display->session()->name(), hasFallback ? fallback : QStringLiteral("Untitled-1"));
+    QCOMPARE(display->session()->historySize(), hasFallback ? 1 : 0);
+    QCOMPARE(tabBarForDisplay(display)->count(), 1);
+    QVERIFY(editorForDisplay(display)->text().isEmpty());
+}
 
 void TestSessionsUi::session_commands_follow_floating_dock_owner_data()
 {

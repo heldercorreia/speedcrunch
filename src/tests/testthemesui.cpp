@@ -33,7 +33,68 @@ private slots:
     void dock_and_popup_text_meet_contrast_target_across_themes();
     void constant_popup_clear_button_matches_dock_search_data();
     void constant_popup_clear_button_matches_dock_search();
+    void dock_tab_scroll_buttons_use_theme_colors_data();
+    void dock_tab_scroll_buttons_use_theme_colors();
 };
+
+void TestThemesUi::dock_tab_scroll_buttons_use_theme_colors_data()
+{
+    QTest::addColumn<QString>("background");
+    QTest::addColumn<bool>("rightToLeft");
+    for (bool rightToLeft : {false, true}) {
+        QTest::addRow("dark-%s", rightToLeft ? "rtl" : "ltr")
+            << QStringLiteral("#1f3229") << rightToLeft;
+        QTest::addRow("light-%s", rightToLeft ? "rtl" : "ltr")
+            << QStringLiteral("#f2e4c8") << rightToLeft;
+    }
+}
+
+void TestThemesUi::dock_tab_scroll_buttons_use_theme_colors()
+{
+    QFETCH(QString, background);
+    QFETCH(bool, rightToLeft);
+    MainWindowStateGuard guard;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(QJsonObject {
+        {QStringLiteral("background"), background}
+    });
+    guard.settings->dockAppearance = Settings::DockAppearanceSpeedCrunch;
+    MainWindow::initializeApplicationStyle();
+    QScopedPointer<QStyle> fusion(QStyleFactory::create(QStringLiteral("Fusion")));
+    QVERIFY(fusion);
+    MainWindow window(false);
+    auto* tabs = new QTabBar(&window);
+    tabs->setStyle(fusion.data());
+    tabs->setLayoutDirection(rightToLeft ? Qt::RightToLeft : Qt::LeftToRight);
+    tabs->setUsesScrollButtons(true);
+    tabs->setElideMode(Qt::ElideNone);
+    tabs->setExpanding(false);
+    tabs->addTab(QStringLiteral("Constants"));
+    tabs->addTab(QStringLiteral("Functions"));
+    tabs->addTab(QStringLiteral("History"));
+    for (QToolButton* button : tabs->findChildren<QToolButton*>())
+        button->setStyle(fusion.data());
+    tabs->setGeometry(20, 20, 100, 40);
+    window.colorSchemeChanged();
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    tabs->show();
+    tabs->raise();
+    QCoreApplication::processEvents();
+    auto* forward = tabs->findChild<QToolButton*>(QStringLiteral("ScrollRightButton"));
+    QVERIFY(forward);
+    QVERIFY(forward->isVisible());
+    QVERIFY(forward->isEnabled());
+    const QColor chrome = window.palette().color(QPalette::Window);
+    const QImage image = tabs->grab().toImage();
+    QVERIFY(!image.isNull());
+    const int buttonEdge = rightToLeft ? 0 : image.width() - 1;
+    QCOMPARE(image.pixelColor(buttonEdge, image.height() / 2).name(), chrome.name());
+    QCOMPARE(image.pixelColor(buttonEdge, 0).name(), chrome.name());
+    const QRect lastTabBeforeScroll = tabs->tabRect(tabs->count() - 1);
+    forward->click();
+    QVERIFY(tabs->tabRect(tabs->count() - 1) != lastTabBeforeScroll);
+}
 
 void TestThemesUi::startup_styles_parent_surfaces_before_controls_data()
 {

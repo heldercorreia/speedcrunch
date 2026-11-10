@@ -7805,6 +7805,15 @@ void MainWindow::applyDockTabBarAppearance()
         StartupDiagnostics::setAppearancePalette(tabBar, tabBarPalette);
         setStyleSheetIfChanged(tabBar, QStringLiteral(
             "QTabBar { background-color: %1; }"
+            "QTabBar QToolButton {"
+            " background-color: %1; color: %2; border: 0;"
+            "}"
+            "QTabBar QToolButton:hover {"
+            " background-color: %3; color: %4;"
+            "}"
+            "QTabBar QToolButton:pressed {"
+            " background-color: %5; color: %6;"
+            "}"
             "QTabBar::tab {"
             " background-color: transparent; color: %2;"
             " padding: 5px 14px; margin: 2px 1px;"
@@ -14760,6 +14769,8 @@ bool MainWindow::restoreSessionLayout(bool restoreHistory)
         std::vector<char> validJsons(specCount, 0);
         std::vector<char> readJsons(specCount, 0);
         const auto readSpecs = [&sessionLoadSpecs, &parsedJsons, &validJsons, &readJsons](const QList<int>& specs) {
+            if (specs.isEmpty())
+                return;
             std::atomic_int nextSpec{0};
             const int count = int(specs.size());
             const auto readNext = [&]() {

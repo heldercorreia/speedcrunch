@@ -164,7 +164,98 @@ private slots:
     void covered_history_keeps_pending_session_and_format();
     void restored_dock_lists_wait_behind_tabs_data();
     void restored_dock_lists_wait_behind_tabs();
+    void reopened_dock_lists_refresh_with_retained_geometry_data();
+    void reopened_dock_lists_refresh_with_retained_geometry();
 };
+
+void TestDockLayoutUi::reopened_dock_lists_refresh_with_retained_geometry_data()
+{
+    QTest::addColumn<int>("kind");
+    const QStringList names {QStringLiteral("constants"), QStringLiteral("functions"),
+        QStringLiteral("history"), QStringLiteral("variables"),
+        QStringLiteral("user-functions"), QStringLiteral("user-units")};
+    for (int kind = 0; kind < names.size(); ++kind)
+        QTest::newRow(qPrintable(names.at(kind))) << kind;
+}
+
+void TestDockLayoutUi::reopened_dock_lists_refresh_with_retained_geometry()
+{
+    QFETCH(int, kind);
+    MainWindowStateGuard guard;
+    MainWindow::initializeApplicationStyle();
+    Session session;
+    session.addHistoryEntry(HistoryEntry(QStringLiteral("10000"), Quantity(10000)));
+    session.addVariable(Variable(QStringLiteral("dockvalue"), Quantity(42)));
+    session.addUserFunction(UserFunction(QStringLiteral("dockfunction"),
+                                        {QStringLiteral("x")}, QStringLiteral("x+1")));
+    session.addUserUnit(UserUnit(QStringLiteral("dockunit"), Quantity(2)));
+    QMainWindow window;
+    window.setCentralWidget(new QLabel(QStringLiteral("Editor")));
+    window.resize(800, 600);
+    auto* dock = new QDockWidget(QStringLiteral("List"), &window);
+    QWidget* content = nullptr;
+    switch (kind) {
+    case 0:
+        content = new ConstantsWidget(dock);
+        break;
+    case 1:
+        content = new FunctionsWidget(dock);
+        break;
+    case 2: {
+        auto* history = new HistoryWidget(dock);
+        history->setSession(&session);
+        content = history;
+        break;
+    }
+    case 3: {
+        auto* variables = new VariableListWidget(dock);
+        variables->setEvaluator(session.evaluator());
+        content = variables;
+        break;
+    }
+    case 4: {
+        auto* functions = new UserFunctionListWidget(dock);
+        functions->setEvaluator(session.evaluator());
+        content = functions;
+        break;
+    }
+    case 5: {
+        auto* units = new UserUnitListWidget(dock);
+        units->setEvaluator(session.evaluator());
+        content = units;
+        break;
+    }
+    }
+    QVERIFY(content);
+    dock->setWidget(content);
+    auto* covering = new QDockWidget(QStringLiteral("Cover"), &window);
+    covering->setWidget(new QLabel(QStringLiteral("Cover")));
+    window.addDockWidget(Qt::LeftDockWidgetArea, dock);
+    window.addDockWidget(Qt::LeftDockWidgetArea, covering);
+    window.tabifyDockWidget(dock, covering);
+    covering->raise();
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    const auto rowCount = [content]() {
+        if (auto* tree = content->findChild<QTreeWidget*>())
+            return tree->topLevelItemCount();
+        return content->findChild<QListWidget*>()->count();
+    };
+    QCOMPARE(rowCount(), 0);
+
+    dock->hide();
+    dock->show();
+    // Reproduce a covered dock that still has an on-screen rectangle during
+    // a layout change. Qt can then switch tabs without a visibility signal.
+    dock->setGeometry(covering->geometry());
+    covering->raise();
+    QVERIFY(DockListStyle::shouldDeferPopulation(content));
+    QCOMPARE(rowCount(), 0);
+    QVERIFY(selectDockTab(window, dock));
+    QVERIFY(!DockListStyle::shouldDeferPopulation(content));
+    // Rows must be ready before the next paint, without an event-loop wait.
+    QVERIFY(rowCount() > 0);
+}
 
 void TestDockLayoutUi::dock_lists_wait_until_exposed_data()
 {
@@ -259,7 +350,7 @@ void TestDockLayoutUi::dock_lists_wait_until_exposed()
         if (exposure == 2) {
             dock->hide();
             dock->show();
-            dock->raise();
+            QVERIFY(selectDockTab(window, dock));
         } else {
             QVERIFY(selectDockTab(window, dock));
         }

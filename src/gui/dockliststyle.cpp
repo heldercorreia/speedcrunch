@@ -297,6 +297,54 @@ private:
     QAbstractItemView* m_view;
 };
 
+class DockListExposureFilter : public QObject {
+public:
+    DockListExposureFilter(QWidget* content, QDockWidget* dock, QMainWindow* window,
+                           const std::function<void()>& refresh)
+        : QObject(content)
+        , m_content(content)
+        , m_window(window)
+        , m_refresh(refresh)
+    {
+        dock->installEventFilter(this);
+        QObject::connect(dock, &QDockWidget::visibilityChanged,
+                         this, &DockListExposureFilter::watchTabBars);
+        watchTabBars();
+    }
+
+protected:
+    bool eventFilter(QObject*, QEvent* event) override
+    {
+        if (event->type() == QEvent::Show) {
+            watchTabBars();
+            refresh();
+        }
+        return false;
+    }
+
+private:
+    void watchTabBars()
+    {
+        // Qt can switch tabs without emitting either dock activation signal
+        // when a covered dock already has an on-screen rectangle. Watch the
+        // tab selection too, including bars created after the content.
+        for (QTabBar* bar : m_window->findChildren<QTabBar*>(QString(), Qt::FindDirectChildrenOnly)) {
+            QObject::connect(bar, &QTabBar::currentChanged, this,
+                             &DockListExposureFilter::refresh, Qt::UniqueConnection);
+        }
+    }
+
+    void refresh()
+    {
+        if (!DockListStyle::shouldDeferPopulation(m_content))
+            m_refresh();
+    }
+
+    QWidget* m_content;
+    QMainWindow* m_window;
+    std::function<void()> m_refresh;
+};
+
 } // namespace
 
 namespace DockListStyle {
@@ -333,6 +381,7 @@ void refreshWhenExposed(QWidget* content, const std::function<void()>& refresh)
     auto* window = dock ? qobject_cast<QMainWindow*>(dock->parentWidget()) : nullptr;
     if (!window)
         return;
+    new DockListExposureFilter(content, dock, window, refresh);
     QObject::connect(dock, &QDockWidget::visibilityChanged, content, [refresh](bool visible) {
         if (visible)
             refresh();
