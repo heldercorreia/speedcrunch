@@ -39,6 +39,8 @@ private slots:
     void result_display_hover_action_badges_use_hover_and_primary_colors_data();
     void result_display_hover_action_badges_use_hover_and_primary_colors();
     void result_display_hover_action_badges_trigger_when_clicked();
+    void result_display_scroll_to_bottom_button_stays_inside_viewport_data();
+    void result_display_scroll_to_bottom_button_stays_inside_viewport();
     void result_display_scroll_to_bottom_button_uses_custom_tooltip();
     void result_display_context_menu_hides_main_menu_when_menu_bar_visible();
     void result_display_copies_entire_calculation_data();
@@ -1397,6 +1399,90 @@ void TestDisplayUi::result_display_hover_action_badges_trigger_when_clicked()
     QTest::mouseClick(display.viewport(), Qt::LeftButton, Qt::NoModifier, removeRect.center());
     QCOMPARE(removeSpy.count(), 1);
     QCOMPARE(removeSpy.takeFirst().at(0).toInt(), 0);
+}
+
+void TestDisplayUi::result_display_scroll_to_bottom_button_stays_inside_viewport_data()
+{
+    QTest::addColumn<bool>("modern");
+    QTest::addColumn<bool>("loadBeforeShow");
+    QTest::newRow("classic-restored-history") << false << true;
+    QTest::newRow("modern-restored-history") << true << true;
+    QTest::newRow("classic-new-history") << false << false;
+    QTest::newRow("modern-new-history") << true << false;
+}
+
+void TestDisplayUi::result_display_scroll_to_bottom_button_stays_inside_viewport()
+{
+    QFETCH(bool, modern);
+    QFETCH(bool, loadBeforeShow);
+    Settings::instance()->editorDisplayStyle = modern
+        ? Settings::EditorDisplayModern : Settings::EditorDisplayClassic;
+    Session session;
+    for (int i = 0; i < 40; ++i)
+        session.addHistoryEntry(HistoryEntry(QString(150, QLatin1Char('1')), Quantity(i)));
+
+    ResultDisplay display;
+    display.resize(360, 160);
+    if (loadBeforeShow)
+        display.setSession(&session);
+    display.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&display));
+    if (!loadBeforeShow) {
+        QVERIFY(!display.verticalScrollBar()->isVisible());
+        display.setSession(&session);
+    }
+
+    QScrollBar* verticalBar = display.verticalScrollBar();
+    QToolButton* button = display.findChild<QToolButton*>(QStringLiteral("ScrollToBottomButton"));
+    QVERIFY(button != nullptr);
+    QTRY_VERIFY(verticalBar->isVisible());
+    QVERIFY(verticalBar->maximum() > verticalBar->minimum());
+    verticalBar->setValue(verticalBar->minimum());
+    QTRY_VERIFY(button->isVisible());
+
+    const auto verifyButtonGeometry = [&]() {
+        const QRect buttonRect(button->mapTo(&display, QPoint()), button->size());
+        const QRect viewportRect(display.viewport()->mapTo(&display, QPoint()),
+                                 display.viewport()->size());
+        QVERIFY(viewportRect.contains(buttonRect));
+        QVERIFY(buttonRect.right() < viewportRect.right());
+        QVERIFY(buttonRect.bottom() < viewportRect.bottom());
+        for (QScrollBar* bar : {verticalBar, display.horizontalScrollBar()}) {
+            if (bar->isVisible()) {
+                const QRect barRect(bar->mapTo(&display, QPoint()), bar->size());
+                QVERIFY2(!buttonRect.intersects(barRect),
+                         qPrintable(QStringLiteral("Button (%1,%2 %3x%4) overlaps %5 scrollbar (%6,%7 %8x%9)")
+                             .arg(buttonRect.x()).arg(buttonRect.y())
+                             .arg(buttonRect.width()).arg(buttonRect.height())
+                             .arg(bar->orientation() == Qt::Vertical ? QStringLiteral("vertical")
+                                                                    : QStringLiteral("horizontal"))
+                             .arg(barRect.x()).arg(barRect.y()).arg(barRect.width()).arg(barRect.height())));
+            }
+        }
+    };
+    QCoreApplication::processEvents();
+    verifyButtonGeometry();
+
+    // A horizontal scrollbar also reduces the space available to the button.
+    display.setLineWrapMode(QPlainTextEdit::NoWrap);
+    QTRY_VERIFY(display.horizontalScrollBar()->isVisible());
+    verifyButtonGeometry();
+    for (const QSize& size : {QSize(240, 110), QSize(640, 300)}) {
+        display.resize(size);
+        QCoreApplication::processEvents();
+        QVERIFY(button->isVisible());
+        verifyButtonGeometry();
+    }
+
+    QTest::mouseClick(button, Qt::LeftButton);
+    QTRY_COMPARE(verticalBar->value(), verticalBar->maximum());
+    QTRY_VERIFY(!button->isVisible());
+    verticalBar->setValue(verticalBar->minimum());
+    QTRY_VERIFY(button->isVisible());
+
+    display.clear();
+    QTRY_VERIFY(!verticalBar->isVisible());
+    QVERIFY(!button->isVisible());
 }
 
 void TestDisplayUi::result_display_scroll_to_bottom_button_uses_custom_tooltip()

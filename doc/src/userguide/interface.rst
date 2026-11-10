@@ -382,6 +382,11 @@ Result Display Interactions
 
 The result display supports mouse-driven interactions for navigation and editing.
 
+* Scroll to bottom
+    When you scroll away from the bottom, a down-arrow button appears in the
+    lower-right corner of the result area, beside the scrollbar. Click it to
+    return to the latest calculation. The button hides when you reach the bottom.
+
 * Right-click context menu
     Right-clicking an expression/calculation block in the result display opens a context menu
     for that specific block.

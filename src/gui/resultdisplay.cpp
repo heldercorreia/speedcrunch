@@ -519,6 +519,7 @@ ResultDisplay::ResultDisplay(QWidget* parent)
     bar->setAttribute(Qt::WA_Hover, true);
     bar->setMouseTracking(true);
     bar->installEventFilter(this);
+    horizontalScrollBar()->installEventFilter(this);
     connect(bar, &QScrollBar::valueChanged, this, [this]() {
         updateScrollToBottomButtonVisibility();
         viewport()->update();
@@ -546,6 +547,12 @@ ResultDisplay::ResultDisplay(QWidget* parent)
 
 bool ResultDisplay::eventFilter(QObject* watched, QEvent* event)
 {
+    if (watched == verticalScrollBar() || watched == horizontalScrollBar()) {
+        if (event->type() == QEvent::Show || event->type() == QEvent::Hide
+            || event->type() == QEvent::Move || event->type() == QEvent::Resize)
+            repositionScrollToBottomButton();
+    }
+
     if (watched == verticalScrollBar()) {
         if (event->type() == QEvent::Enter || event->type() == QEvent::HoverEnter) {
             if (!m_scrollBarHovered) {
@@ -1910,11 +1917,18 @@ void ResultDisplay::repositionScrollToBottomButton()
 
     const int rightMargin = kResultDisplayHorizontalPadding;
     const int bottomMargin = 10;
-    const QRect contentRect = contentsRect();
-    const int x = contentRect.left()
-        + qMax(0, contentRect.width() - m_scrollToBottomButton->width() - rightMargin);
-    const int y = contentRect.top()
-        + qMax(0, contentRect.height() - m_scrollToBottomButton->height() - bottomMargin);
+    QRect viewportRect = viewport()->geometry();
+    // Some native styles draw scrollbars over the viewport.
+    if (verticalScrollBar()->isVisible())
+        viewportRect.setRight(qMin(viewportRect.right(),
+            verticalScrollBar()->mapTo(this, QPoint()).x() - 1));
+    if (horizontalScrollBar()->isVisible())
+        viewportRect.setBottom(qMin(viewportRect.bottom(),
+            horizontalScrollBar()->mapTo(this, QPoint()).y() - 1));
+    const int x = viewportRect.left()
+        + qMax(0, viewportRect.width() - m_scrollToBottomButton->width() - rightMargin);
+    const int y = viewportRect.top()
+        + qMax(0, viewportRect.height() - m_scrollToBottomButton->height() - bottomMargin);
     m_scrollToBottomButton->move(x, y);
     m_scrollToBottomButton->raise();
 }
