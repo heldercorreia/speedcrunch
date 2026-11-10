@@ -209,10 +209,9 @@ Use explicit conversion to request a specific target unit expression:
 * ``[J/s] -> [W]``
 * ``[V] -> [J/C]``
 * ``10[m] in [cm]``
-* ``10[m] -- [cm]``
 
-SpeedCrunch supports three equivalent conversion operators:
-``->``, ``in`` (keyword alias), and ``--`` (shortcut alias).
+Use ``->`` or the keyword alias ``in`` for unit conversion.
+The editor displays ``->`` as ``→``.
 
 If no explicit conversion target is requested, SpeedCrunch applies the
 canonicalization/display policy above.

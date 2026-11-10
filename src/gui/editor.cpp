@@ -604,9 +604,8 @@ static bool isAnyAdditionOperator(const QChar& ch)
 
 static bool acceptsUnaryMinusAfter(const QChar& ch)
 {
-    // A minus typed right after these binary operators negates the next
-    // operand, e.g. "2 × −3". A second minus after subtraction is still
-    // reserved for the unit conversion shortcut.
+    // A minus after these binary operators negates the next operand.
+    // Subtraction needs a separate check to distinguish it from a leading sign.
     return isAnyAdditionOperator(ch)
            || MathDsl::isDivisionOperatorAlias(ch)
            || isAnyMultiplicationOperator(ch);
@@ -710,17 +709,6 @@ static void replacePreviousSubtractionAtCursorWithUnitConversion(Editor* editor)
     cursor.insertText(insertion);
     cursor.setPosition(start + insertion.size() - 1);
     editor->setTextCursor(cursor);
-}
-
-static bool canEndUnitConversionLeftOperand(const QChar& ch)
-{
-    return ch.isLetterOrNumber()
-        || ch == MathDsl::GroupEnd
-        || ch == MathDsl::UnitEnd
-        || ch == MathDsl::Deg
-        || ch == UnicodeChars::MasculineOrdinalIndicator
-        || ch == UnicodeChars::Prime
-        || ch == UnicodeChars::DoublePrime;
 }
 
 static bool isBlockingBinaryOperator(const QChar& ch)
@@ -831,6 +819,25 @@ static int previousNonSpaceIndex(const QString& text, int cursorPosition)
     while (i >= 0 && text.at(i).isSpace())
         --i;
     return i;
+}
+
+static bool isAfterBinarySubtraction(const QString& text, int cursorPosition)
+{
+    const int signIndex = previousNonSpaceIndex(text, cursorPosition);
+    if (signIndex < 0 || !MathDsl::isSubtractionOperatorAlias(text.at(signIndex)))
+        return false;
+    const int operandIndex = previousNonSpaceIndex(text, signIndex);
+    if (operandIndex < 0)
+        return false;
+
+    const QChar ch = text.at(operandIndex);
+    return ch.isLetterOrNumber()
+        || ch == MathDsl::GroupEnd
+        || ch == MathDsl::UnitEnd
+        || ch == MathDsl::Deg
+        || ch == UnicodeChars::MasculineOrdinalIndicator
+        || ch == UnicodeChars::Prime
+        || ch == UnicodeChars::DoublePrime;
 }
 
 static bool isExponentTailBeforeIndex(const QString& text, int index)
@@ -3013,7 +3020,8 @@ void Editor::inputMethodEvent(QInputMethodEvent* event)
             return;
         }
         const bool prevIsBlockingOperator =
-            MathDsl::isSubtractionOperatorAlias(prev)
+            (MathDsl::isSubtractionOperatorAlias(prev)
+             && !isAfterBinarySubtraction(text(), cursorPosition))
             || prev == MathDsl::PowOp;
         if (prevIsBlockingOperator) {
             event->accept();
@@ -3699,13 +3707,8 @@ void Editor::keyPressEvent(QKeyEvent* event)
         }
         if (typedForRules == MathDsl::SubOp
             && MathDsl::isSubtractionOperatorAlias(prev)) {
-            const int prevIndex = previousNonSpaceIndex(text(), cursorPosition);
-            const int beforePrevIndex = previousNonSpaceIndex(text(), prevIndex);
-            if (beforePrevIndex < 0 || !canEndUnitConversionLeftOperand(text().at(beforePrevIndex))) {
-                event->accept();
-                return;
-            }
-            replacePreviousSubtractionAtCursorWithUnitConversion(this);
+            if (isAfterBinarySubtraction(text(), cursorPosition))
+                insert(QString(MathDsl::SubOp));
             event->accept();
             return;
         }

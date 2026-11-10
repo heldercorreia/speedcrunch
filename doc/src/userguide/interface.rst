@@ -249,6 +249,9 @@ Expression Editor Features
 Turn off :menuselection:`Settings --> Editing --> Automatic Input Adjustments`
 to enter text without automatic text adjustments or character restrictions.
 
+With automatic adjustments enabled, you can subtract a negative number by
+typing ``3--2``, which gives ``5``. For unit conversion, use ``->`` or ``in``.
+
 The expression editor provides some advanced features:
 
 * Undo and redo

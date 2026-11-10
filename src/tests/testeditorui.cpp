@@ -93,6 +93,8 @@ private slots:
     void blocks_consecutive_plus();
     void allows_unary_minus_after_binary_operators_data();
     void allows_unary_minus_after_binary_operators();
+    void subtracts_negative_operands_data();
+    void subtracts_negative_operands();
     void respects_keyboard_layout_for_equals_and_plus_data();
     void respects_keyboard_layout_for_equals_and_plus();
     void wraps_left_shift_operator_and_blocks_immediate_duplicate_less_than();
@@ -145,8 +147,8 @@ private slots:
     void does_not_insert_implicit_mul_sequence_before_open_paren_after_number_or_symbol();
     void does_not_insert_implicit_mul_for_zero_radix_prefix_letters();
     void allows_unit_conversion_tail_after_spaced_subtraction_operator();
-    void converts_double_minus_sequence_to_unit_conversion_with_placeholder();
-    void converts_double_minus_sequence_to_unit_conversion_after_masculine_ordinal_degree();
+    void converts_arrow_sequence_to_unit_conversion_with_placeholder();
+    void converts_arrow_sequence_to_unit_conversion_after_masculine_ordinal_degree();
     void inserts_unit_conversion_with_placeholder_when_typing_arrow_symbol();
     void treats_spaced_unit_conversion_as_atomic_navigation_and_edit_token();
     void treats_spaced_shift_operators_as_atomic_navigation_and_edit_tokens();
@@ -454,6 +456,83 @@ void TestEditorUi::allows_unary_minus_after_binary_operators()
     session.evaluator()->setExpression(reference);
     const QString expected =
         DMath::format(session.evaluator()->evalNoAssign(), Quantity::Format::Fixed());
+    session.evaluator()->setExpression(editor.text());
+    const Quantity result = session.evaluator()->evalNoAssign();
+    QVERIFY2(session.evaluator()->error().isEmpty(), qPrintable(session.evaluator()->error()));
+    QCOMPARE(DMath::format(result, Quantity::Format::Fixed()), expected);
+}
+
+void TestEditorUi::subtracts_negative_operands_data()
+{
+    QTest::addColumn<QString>("left");
+    QTest::addColumn<QString>("input");
+    QTest::addColumn<QString>("right");
+    QTest::addColumn<QString>("reference");
+    QTest::addColumn<bool>("inputMethod");
+    QTest::addColumn<int>("style");
+
+    struct Case {
+        const char* name;
+        QString left;
+        QString input;
+        QString right;
+        QString reference;
+    };
+    const Case cases[] = {
+        {"number", QStringLiteral("3"), QStringLiteral("--"), QStringLiteral("2"), QStringLiteral("5")},
+        {"number-at-end", QStringLiteral("3"), QStringLiteral("--2"), QString(), QStringLiteral("5")},
+        {"extra-minus", QStringLiteral("3"), QStringLiteral("---"), QStringLiteral("2"), QStringLiteral("5")},
+        {"spaced", QStringLiteral("3"), QStringLiteral("- -"), QStringLiteral("2"), QStringLiteral("5")},
+        {"group", QStringLiteral("(3)"), QStringLiteral("--"), QStringLiteral("2"), QStringLiteral("5")},
+        {"unit", QStringLiteral("3 [m]"), QStringLiteral("--"), QStringLiteral("2 [m]"), QStringLiteral("5[m]")},
+        {"symbol", QStringLiteral("pi"), QStringLiteral("--"), QStringLiteral("2"), QStringLiteral("pi+2")}
+    };
+    for (int style : {int(Settings::EditorDisplayModern), int(Settings::EditorDisplayClassic)}) {
+        for (bool inputMethod : {false, true}) {
+            const QByteArray prefix = (style == Settings::EditorDisplayModern ? "modern-" : "classic-")
+                + QByteArray(inputMethod ? "ime-" : "key-");
+            for (const Case& entry : cases) {
+                QTest::newRow(QByteArray(prefix + entry.name).constData())
+                    << entry.left << entry.input << entry.right << entry.reference << inputMethod << style;
+            }
+        }
+    }
+}
+
+void TestEditorUi::subtracts_negative_operands()
+{
+    QFETCH(QString, left);
+    QFETCH(QString, input);
+    QFETCH(QString, right);
+    QFETCH(QString, reference);
+    QFETCH(bool, inputMethod);
+    QFETCH(int, style);
+    Settings::instance()->automaticInputAdjustments = true;
+    Settings::instance()->editorDisplayStyle = Settings::EditorDisplayStyle(style);
+    Session session;
+    Editor editor;
+    editor.setSession(&session);
+    editor.setAutoCompletionEnabled(false);
+    editor.setAutoCalcEnabled(false);
+    editor.setText(left + right);
+    editor.setCursorPosition(left.size());
+
+    for (QChar ch : input) {
+        if (inputMethod) {
+            QInputMethodEvent event;
+            event.setCommitString(QString(ch));
+            QApplication::sendEvent(&editor, &event);
+        } else {
+            QTest::keyClicks(&editor, QString(ch));
+        }
+    }
+    QCOMPARE(editor.text().count(MathDsl::SubOp), 2);
+    QVERIFY(!editor.text().contains(MathDsl::TransOp));
+    QCOMPARE(editor.text().mid(editor.textCursor().position()), right);
+
+    session.evaluator()->setExpression(reference);
+    const QString expected = DMath::format(session.evaluator()->evalNoAssign(), Quantity::Format::Fixed());
+    QVERIFY2(session.evaluator()->error().isEmpty(), qPrintable(session.evaluator()->error()));
     session.evaluator()->setExpression(editor.text());
     const Quantity result = session.evaluator()->evalNoAssign();
     QVERIFY2(session.evaluator()->error().isEmpty(), qPrintable(session.evaluator()->error()));
@@ -1830,10 +1909,10 @@ void TestEditorUi::allows_unit_conversion_tail_after_spaced_subtraction_operator
     QVERIFY(hasUnitConversion);
 }
 
-void TestEditorUi::converts_double_minus_sequence_to_unit_conversion_with_placeholder()
+void TestEditorUi::converts_arrow_sequence_to_unit_conversion_with_placeholder()
 {
     // State: "1".
-    // Action: type '--'.
+    // Action: type '->'.
     // Expected: convert to spaced "→ []", cursor inside brackets, parser sees UnitConversion.
     Editor editor;
     editor.show();
@@ -1843,18 +1922,18 @@ void TestEditorUi::converts_double_minus_sequence_to_unit_conversion_with_placeh
     editor.setText(QStringLiteral("1"));
     editor.setCursorPosition(editor.text().size());
     QTest::keyClick(&editor, Qt::Key_Minus, Qt::NoModifier);
-    QTest::keyClick(&editor, Qt::Key_Minus, Qt::NoModifier);
+    QTest::keyClick(&editor, Qt::Key_Greater, Qt::NoModifier);
 
-    const QString afterDoubleMinus = editor.document()->toRawText();
+    const QString afterArrow = editor.document()->toRawText();
     const QString arrowSequence =
         QString(MathDsl::SubWrapSp)
         + QString(MathDsl::TransOp)
         + QString(MathDsl::SubWrapSp)
         + QStringLiteral("[]");
-    QVERIFY(afterDoubleMinus.contains(arrowSequence));
-    QCOMPARE(editor.textCursor().position(), afterDoubleMinus.size() - 1);
+    QVERIFY(afterArrow.contains(arrowSequence));
+    QCOMPARE(editor.textCursor().position(), afterArrow.size() - 1);
 
-    const Tokens tokens = Evaluator::instance()->scan(afterDoubleMinus);
+    const Tokens tokens = Evaluator::instance()->scan(afterArrow);
     bool hasUnitConversion = false;
     for (const Token& token : tokens) {
         if (token.isOperator() && token.asOperator() == Token::UnitConversion) {
@@ -1865,7 +1944,7 @@ void TestEditorUi::converts_double_minus_sequence_to_unit_conversion_with_placeh
     QVERIFY(hasUnitConversion);
 }
 
-void TestEditorUi::converts_double_minus_sequence_to_unit_conversion_after_masculine_ordinal_degree()
+void TestEditorUi::converts_arrow_sequence_to_unit_conversion_after_masculine_ordinal_degree()
 {
     Editor editor;
     editor.show();
@@ -1888,7 +1967,7 @@ void TestEditorUi::converts_double_minus_sequence_to_unit_conversion_after_mascu
         editor.setText(tc.first);
         editor.setCursorPosition(editor.text().size());
         QTest::keyClick(&editor, Qt::Key_Minus, Qt::NoModifier);
-        QTest::keyClick(&editor, Qt::Key_Minus, Qt::NoModifier);
+        QTest::keyClick(&editor, Qt::Key_Greater, Qt::NoModifier);
 
         const QString actual = editor.document()->toRawText();
         QCOMPARE(actual, tc.second);
@@ -2196,7 +2275,7 @@ void TestEditorUi::typing_undoes_one_key_at_a_time_data()
         QTest::newRow(QByteArray(prefix + "degrees").constData()) << QString::fromUtf8("12º34'56\"") << inputMethod;
         QTest::newRow(QByteArray(prefix + "superscript-rewrite").constData()) << QStringLiteral("12^34") << inputMethod;
         if (!inputMethod) {
-            QTest::newRow("key-unit-conversion-rewrite") << QStringLiteral("12--") << false;
+            QTest::newRow("key-unit-conversion-rewrite") << QStringLiteral("12->") << false;
             QTest::newRow("key-parenthesis-pair") << QStringLiteral("12+(34") << false;
         }
     }
@@ -6658,10 +6737,12 @@ void TestEditorUi::rewrites_operators_in_scrolled_expression_data()
     QTest::addColumn<int>("style");
     const QString conversion = MathDsl::buildWrappedToken(MathDsl::TransOp, MathDsl::SubWrapSp)
         + QStringLiteral("[]");
+    const QString doubleMinus = MathDsl::buildWrappedToken(MathDsl::SubOp, MathDsl::SubWrapSp)
+        + MathDsl::SubOp;
     for (int style : {int(Settings::EditorDisplayModern), int(Settings::EditorDisplayClassic)}) {
         const QByteArray prefix = style == Settings::EditorDisplayModern ? "modern-" : "classic-";
         QTest::newRow(QByteArray(prefix + "double-minus").constData())
-            << QStringLiteral("--") << conversion << 1 << false << style;
+            << QStringLiteral("--") << doubleMinus << 0 << false << style;
         QTest::newRow(QByteArray(prefix + "arrow").constData())
             << QStringLiteral("->") << conversion << 1 << false << style;
         QTest::newRow(QByteArray(prefix + "power").constData())

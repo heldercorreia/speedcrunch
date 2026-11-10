@@ -434,10 +434,9 @@ SpeedCrunch supports the following operators, listed in order of decreasing prec
 | ``a | b``                     | **Bitwise OR**                                                | ``0b10 | 0b01 = 0b11``  |
 |                               |   See also :func:`or`.                                        |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
-| ``->``, ``in``, ``--``        | **Unit conversion**                                           | ``10[m] in [mi]``       |
+| ``->``, ``in``                | **Unit conversion**                                           | ``10[m] in [mi]``       |
 |                               |   Convert the operand into the given                          |                         |
 |                               |   unit. Both forms are equivalent. See                        | ``10[m] -> [mi]``       |
-|                               |   ``--`` is a shortcut equivalent to ``->`` and ``in``.       | ``10[m] -- [mi]``       |
 |                               |   :ref:`units` for more information.                          |                         |
 +-------------------------------+---------------------------------------------------------------+-------------------------+
 
