@@ -1,4 +1,4 @@
-name: Debian Unstable
+name: Debian Unstable (X11)
 
 on:
   push:

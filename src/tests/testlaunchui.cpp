@@ -862,7 +862,11 @@ void TestLaunchUi::new_tabs_use_unique_names_across_windows()
     QVERIFY(second);
     const auto deleteSecond = qScopeGuard([second]() { delete second; });
     QVERIFY(QTest::qWaitForWindowExposed(&first));
-    QVERIFY(QTest::qWaitForWindowActive(second));
+    // Mutter does not focus a new window that has no activation token.
+    if (!UiTestFixture::isWayland())
+        QVERIFY(QTest::qWaitForWindowActive(second));
+    else if (!UiTestFixture::activateWindow(second))
+        return;
     QSignalSpy handled(&controller, &LaunchController::requestHandled);
     int expectedTabs = 2;
     int expectedRequests = 0;

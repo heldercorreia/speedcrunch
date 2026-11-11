@@ -296,6 +296,7 @@ void TestStatusBarUi::status_bar_menu_tracks_and_changes_only_active_window()
     QVERIFY(firstStatusBarAction != nullptr);
     QVERIFY(secondStatusBarAction != nullptr);
 
+    UiTestFixture::waitForActivationToSettle();
     firstWindow.raise();
     if (!UiTestFixture::activateWindow(&firstWindow))
         return;
@@ -560,6 +561,7 @@ void TestStatusBarUi::status_bar_setting_selectors_update_only_active_window()
     QCOMPARE(secondNotation->text(), firstNotation->text());
     QCOMPARE(secondPrecision->text(), firstPrecision->text());
 
+    UiTestFixture::waitForActivationToSettle();
     firstWindow.raise();
     if (!UiTestFixture::activateWindow(&firstWindow))
         return;
@@ -594,7 +596,12 @@ void TestStatusBarUi::status_bar_setting_selectors_update_only_active_window()
     QTimer::singleShot(0, &firstWindow, [&]() {
         ResultSlotsDialog* dialog =
             qobject_cast<ResultSlotsDialog*>(QApplication::activeModalWidget());
-        if (dialog == nullptr || dialog->parentWidget() != &firstWindow)
+        if (dialog == nullptr)
+            return;
+        // Close a dialog opened for the wrong window so the test fails
+        // instead of blocking in its event loop until the ctest timeout.
+        auto rejectDialog = qScopeGuard([dialog]() { dialog->reject(); });
+        if (dialog->parentWidget() != &firstWindow)
             return;
 
         const QList<QComboBox*> notationCombos = dialog->findChildren<QComboBox*>();
@@ -622,6 +629,7 @@ void TestStatusBarUi::status_bar_setting_selectors_update_only_active_window()
         mainAutoPrecision->setChecked(false);
         precisionSpins.constFirst()->setValue(3);
         configuredActiveWindowDialog = true;
+        rejectDialog.dismiss();
         buttons->button(QDialogButtonBox::Ok)->click();
     });
     staleResultSlotsAction->trigger();

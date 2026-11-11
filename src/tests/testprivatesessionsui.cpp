@@ -302,7 +302,8 @@ void TestPrivateSessionsUi::private_session_menu_targets_active_window_and_keeps
     QVERIFY(menu);
     QAction* create = directMenuActionWithText(menu, QStringLiteral("New &Private Tab"));
     QVERIFY(create);
-    first.activateWindow();
+    if (!UiTestFixture::activateWindow(&first))
+        return;
     first.findChild<Editor*>()->setFocus();
     QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&first));
     create->trigger();

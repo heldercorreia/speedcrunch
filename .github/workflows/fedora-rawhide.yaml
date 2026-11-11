@@ -1,4 +1,4 @@
-name: Fedora Rawhide
+name: Fedora Rawhide (Wayland, KWin)
 
 on:
   push:
@@ -19,7 +19,9 @@ jobs:
     runs-on: ubuntu-24.04
     container:
       image: fedora:rawhide
-      options: --shm-size=1g
+      # kwin_wayland carries the cap_sys_nice file capability, which execve
+      # refuses unless the container's bounding set includes it.
+      options: --shm-size=1g --cap-add=SYS_NICE
     defaults:
       run:
         shell: bash
@@ -28,8 +30,8 @@ jobs:
       DNF_PACKAGES: >-
         cmake gcc gcc-c++ make pkgconf-pkg-config libxcb-devel
         qt6-qtbase-devel qt6-qtbase-gui qt6-qttools-devel qt6-assistant
-        qt6-linguist qt6-doctools dejavu-sans-fonts dejavu-sans-mono-fonts
-        openbox xorg-x11-server-Xvfb xorg-x11-xauth xprop
+        qt6-linguist qt6-doctools qt6-qtwayland dejavu-sans-fonts
+        dejavu-sans-mono-fonts dbus-daemon kwin-wayland mesa-dri-drivers
     steps:
       - name: Prepare container
         run: dnf install -y --setopt=install_weak_deps=False git-core tar zstd findutils
@@ -93,30 +95,40 @@ jobs:
           --output-log "$GITHUB_WORKSPACE/non-ui-tests.log"
           --output-junit "$GITHUB_WORKSPACE/test-results.xml"
 
-      - name: Run UI tests
+      - name: Run UI tests (KWin)
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         timeout-minutes: 15
-        env:
-          QT_QPA_PLATFORM: xcb
         run: |
-          xvfb-run -a -s "-screen 0 1280x1024x24" sh -c '
-            openbox >/dev/null 2>&1 &
-            wm_ready=false
-            for attempt in $(seq 1 100); do
-              if xprop -root _NET_SUPPORTING_WM_CHECK 2>/dev/null | grep -q "window id #"; then
-                wm_ready=true
+          XDG_RUNTIME_DIR="$(mktemp -d)"
+          export XDG_RUNTIME_DIR
+          dbus-run-session -- sh -c '
+            kwin_wayland --virtual --width 1280 --height 1024 --socket wayland-ci \
+              --no-lockscreen --no-global-shortcuts >"$GITHUB_WORKSPACE/compositor.log" 2>&1 &
+            compositor_pid=$!
+            compositor_ready=false
+            for attempt in $(seq 1 300); do
+              if [ -S "$XDG_RUNTIME_DIR/wayland-ci" ]; then
+                compositor_ready=true
+                break
+              fi
+              if ! kill -0 "$compositor_pid" 2>/dev/null; then
                 break
               fi
               sleep 0.1
             done
-            if [ "$wm_ready" != true ]; then
-              echo "Openbox did not become ready" >&2
+            if [ "$compositor_ready" != true ]; then
+              echo "KWin did not become ready" >&2
+              cat "$GITHUB_WORKSPACE/compositor.log" >&2
               exit 1
             fi
-            ctest --test-dir build -C Release -L "^ui$" --parallel 1 \
+            WAYLAND_DISPLAY=wayland-ci QT_QPA_PLATFORM=wayland \
+              ctest --test-dir build -C Release -L "^ui$" --parallel 1 \
               --timeout 180 --no-tests=error --output-on-failure --test-output-size-failed 0 \
               --output-log "$GITHUB_WORKSPACE/ui-tests.log" \
               --output-junit "$GITHUB_WORKSPACE/ui-test-results.xml"
+            status=$?
+            kill "$compositor_pid" 2>/dev/null
+            exit "$status"
           '
 
       - name: Upload test logs
@@ -131,4 +143,5 @@ jobs:
             test-results.xml
             ui-tests.log
             ui-test-results.xml
+            compositor.log
           if-no-files-found: ignore

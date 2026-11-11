@@ -13,6 +13,7 @@
 #include <QApplication>
 #include <QDialog>
 #include <QDir>
+#include <QElapsedTimer>
 #include <QKeyEvent>
 #include <QSettings>
 #include <QTemporaryDir>
@@ -25,6 +26,26 @@ inline bool isWayland()
 {
     // The same Linux binary can use either xcb or Wayland at runtime.
     return QGuiApplication::platformName().startsWith(QLatin1String("wayland"));
+}
+
+inline void waitForActivationToSettle()
+{
+    // Wayland compositors may activate a newly mapped window some time after
+    // it is exposed. Let that land before a test moves activation elsewhere.
+    if (!isWayland())
+        return;
+    QElapsedTimer total;
+    QElapsedTimer stable;
+    total.start();
+    stable.start();
+    QWidget* active = QApplication::activeWindow();
+    while (stable.elapsed() < 250 && total.elapsed() < 2000) {
+        QTest::qWait(25);
+        if (QApplication::activeWindow() != active) {
+            active = QApplication::activeWindow();
+            stable.restart();
+        }
+    }
 }
 
 inline bool activateWindow(QWidget* window)

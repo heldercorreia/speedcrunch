@@ -71,8 +71,10 @@ void TestFocusUi::destroying_focused_window_handles_focus_change_safely()
             dock->show();
             QTRY_VERIFY(dock->isVisible());
         }
-        window.activateWindow();
         QVERIFY(QTest::qWaitForWindowExposed(&window));
+        UiTestFixture::waitForActivationToSettle();
+        if (!UiTestFixture::activateWindow(&window))
+            return;
         Editor* editor = window.findChild<Editor*>();
         QVERIFY(editor != nullptr);
         editor->setFocus();
@@ -179,8 +181,10 @@ void TestFocusUi::constant_search_takes_primary_focus_from_editor()
     otherWindow.show();
     QVERIFY(QTest::qWaitForWindowExposed(&otherWindow));
     window.show();
-    window.activateWindow();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    UiTestFixture::waitForActivationToSettle();
+    if (!UiTestFixture::activateWindow(&window))
+        return;
     QVERIFY(QTest::qWaitForWindowActive(&window));
     const auto editors = window.findChildren<Editor*>();
     QCOMPARE(editors.size(), 2);
@@ -393,7 +397,8 @@ void TestFocusUi::escape_clears_only_the_focused_editor()
         QCOMPARE(target->text(), enabled ? QString() : QStringLiteral("123\n456"));
     }
 
-    first.activateWindow();
+    if (!UiTestFixture::activateWindow(&first))
+        return;
     QLineEdit search(&first);
     search.show();
     search.setFocus();
@@ -1660,6 +1665,10 @@ void TestFocusUi::clipboard_actions_follow_active_pane()
     window.show();
     window.activateWindow();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    UiTestFixture::waitForActivationToSettle();
+    // Window shortcuts only dispatch to the active window.
+    if (shortcut && !UiTestFixture::activateWindow(&window))
+        return;
     if (restore) {
         QTRY_COMPARE(window.findChildren<Editor*>().size(), split ? 2 : 1);
         QTRY_VERIFY(window.findChildren<QTabBar*>().first()->count() > 0);
