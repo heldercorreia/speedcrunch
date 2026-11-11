@@ -9,6 +9,7 @@
 #include <QtCore/QSize>
 #include <QtCore/QStringList>
 #include <QtCore/QList>
+#include <QtCore/QMap>
 
 #include "core/complexform.h"
 #include "math/floatnum/floatconvert.h"
@@ -136,6 +137,9 @@ public:
     void save();
     bool resetToDefaults();
     void saveSessionLayoutJson();
+
+    // Missing actions use their defaults. An empty list disables a shortcut.
+    QMap<QString, QStringList> keyBindings;
 
     char radixCharacter() const; // 0 or '*': Automatic.
     void setRadixCharacter(char c = 0);

@@ -692,6 +692,12 @@ void Settings::load()
         == ToolTipAppearanceSystem ? ToolTipAppearanceSystem : ToolTipAppearanceSpeedCrunch;
     customColorSchemeJson = settings->value(key + QLatin1String("CustomColorSchemeJson"), QString()).toString();
 
+    keyBindings.clear();
+    settings->beginGroup(QStringLiteral("SpeedCrunch/KeyBindings"));
+    for (const QString& action : settings->childKeys())
+        keyBindings.insert(action, settings->value(action).toStringList());
+    settings->endGroup();
+
     phaseTiming.next("Close settings storage");
     delete settings;
 }
@@ -825,6 +831,11 @@ void Settings::save()
     settings->setValue(key + QLatin1String("KeypadAppearance"), static_cast<int>(keypadAppearance));
     settings->setValue(key + QLatin1String("CustomColorSchemeJson"), customColorSchemeJson);
 
+    settings->beginGroup(QStringLiteral("SpeedCrunch/KeyBindings"));
+    settings->remove(QString());
+    for (auto binding = keyBindings.cbegin(); binding != keyBindings.cend(); ++binding)
+        settings->setValue(binding.key(), binding.value());
+    settings->endGroup();
 
     delete settings;
 }

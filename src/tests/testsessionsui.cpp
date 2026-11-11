@@ -2471,7 +2471,7 @@ void TestSessionsUi::tab_context_clear_preserves_other_sessions()
     editorForDisplay(other)->setText(QStringLiteral("456"));
     QTRY_VERIFY(editorForDisplay(other)->hasFocus());
     bool confirmationShown = false;
-    chooseTabContextAction(tabBarForDisplay(display), 0, {QStringLiteral("Clear")},
+    chooseTabContextAction(tabBarForDisplay(display), 0, {QStringLiteral("Clear History")},
         [&window, confirm, &confirmationShown](QAction*) {
             auto* timer = new QTimer(&window);
             timer->setInterval(20);
@@ -2490,9 +2490,9 @@ void TestSessionsUi::tab_context_clear_preserves_other_sessions()
     QCOMPARE(target->historySize(), confirm ? 0 : historySize);
     QCOMPARE(editor->text(), confirm ? QString() : QStringLiteral("unfinished +"));
     if (!draftOnly) {
-        QCOMPARE(target->hasVariable(QStringLiteral("localvalue")), !confirm);
-        QCOMPARE(target->UserFunctionsToList().size(), confirm ? 0 : 1);
-        QCOMPARE(target->userUnitsToList().size(), confirm ? 0 : 1);
+        QVERIFY(target->hasVariable(QStringLiteral("localvalue")));
+        QCOMPARE(target->UserFunctionsToList().size(), 1);
+        QCOMPARE(target->userUnitsToList().size(), 1);
         QVERIFY(target->hasVariable(QStringLiteral("sharedvalue")));
     }
     QCOMPARE(editorForDisplay(other)->text(), QStringLiteral("456"));
@@ -2558,9 +2558,9 @@ void TestSessionsUi::clear_session_commands()
     QAction* action = window.findChild<QAction*>(QStringLiteral("ClearSessionAction"));
     QVERIFY(action);
     QCOMPARE(action->shortcut(), QKeySequence(Qt::CTRL | Qt::Key_L));
-    QMenu* sessionMenu = menuWithTitle(window.menuBar(), QStringLiteral("&Session"));
-    QVERIFY(sessionMenu);
-    QVERIFY(sessionMenu->actions().contains(action));
+    QMenu* editMenu = menuWithTitle(window.menuBar(), QStringLiteral("&Edit"));
+    QVERIFY(editMenu);
+    QVERIFY(editMenu->actions().contains(action));
 
     bool confirmationShown = false;
     QTimer confirmationTimer;
@@ -2594,7 +2594,7 @@ void TestSessionsUi::clear_session_commands()
     } else if (command == QLatin1String("tab-context")) {
         QTabBar* tabs = tabBarForDisplay(display);
         QVERIFY(tabs);
-        chooseTabContextAction(tabs, tabs->currentIndex(), {QStringLiteral("Clear")});
+        chooseTabContextAction(tabs, tabs->currentIndex(), {QStringLiteral("Clear History")});
     } else {
         QVERIFY(QMetaObject::invokeMethod(display, "clearSessionRequested"));
     }
@@ -2604,9 +2604,9 @@ void TestSessionsUi::clear_session_commands()
     QCOMPARE(display->session(), session);
     QCOMPARE(session->historySize(), cleared ? 0 : historySize);
     QCOMPARE(editor->text(), cleared ? QString() : QStringLiteral("unfinished +"));
-    QCOMPARE(session->hasVariable(QStringLiteral("localvalue")), !cleared);
-    QCOMPARE(session->UserFunctionsToList().size(), cleared ? 0 : 1);
-    QCOMPARE(session->userUnitsToList().size(), cleared ? 0 : 1);
+    QVERIFY(session->hasVariable(QStringLiteral("localvalue")));
+    QCOMPARE(session->UserFunctionsToList().size(), 1);
+    QCOMPARE(session->userUnitsToList().size(), 1);
     QVERIFY(session->hasVariable(QStringLiteral("sharedvalue")));
     QCOMPARE(untouchedEditor->text(), QStringLiteral("other pane"));
     QCOMPARE(otherWindowEditor->text(), QStringLiteral("other window"));

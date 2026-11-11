@@ -1524,7 +1524,7 @@ QMenu* ResultDisplay::createContextMenu(const QPoint& pos)
         emit renameSessionRequested();
     });
     sessionMenu->addSeparator();
-    QAction* clearSessionAction = sessionMenu->addAction(tr("Clear"));
+    QAction* clearSessionAction = sessionMenu->addAction(tr("Clear History"));
     connect(clearSessionAction, &QAction::triggered, this, [this]() {
         emit clearSessionRequested();
     });

@@ -48,6 +48,8 @@ gui/historywidget.h
 gui/genericdock.h
 gui/gtkmenupalette.h
 gui/keypad.h
+gui/keybindings.h
+gui/keybindingsdialog.h
 gui/symbolfont.h
 gui/lineeditstyleutils.h
 gui/mainwindow.h
@@ -131,6 +133,8 @@ gui/historywidget.cpp
 # added here explicitly so it shows up in QtCreator
 gui/genericdock.h
 gui/keypad.cpp
+gui/keybindings.cpp
+gui/keybindingsdialog.cpp
 gui/mainwindow.cpp
 gui/launchcontroller.cpp
 gui/platformactivation.cpp
@@ -338,6 +342,7 @@ tests/testdmath.cpp
 )
 
 set(testeditorui_SOURCES
+gui/keybindings.cpp
 gui/dockliststyle.cpp
 gui/themedlineedit.cpp
 gui/dockcomboboxchevron.cpp
@@ -394,6 +399,7 @@ tests/testoklch.cpp
 )
 
 set(testdocksui_SOURCES
+gui/keybindings.cpp
 gui/dockcomboboxchevron.cpp
 gui/menustyleutils.cpp
 core/constants.cpp
@@ -450,6 +456,8 @@ tests/testdocksui.cpp
 )
 
 set(mainwindowuitest_SOURCES
+gui/keybindings.cpp
+gui/keybindingsdialog.cpp
 core/singleinstance.cpp
 core/processlaunch.cpp
 gui/launchcontroller.cpp

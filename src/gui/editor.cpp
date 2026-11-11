@@ -3,6 +3,9 @@
 
 
 #include "gui/editor.h"
+#include "gui/keybindings.h"
+
+#include <QAction>
 #include "gui/constantbrowserutils.h"
 #include "gui/dockliststyle.h"
 #include "gui/themedlineedit.h"
@@ -1434,6 +1437,7 @@ Editor::Editor(QWidget* parent)
     m_cursorBlinkingEnabled = Settings::instance()->cursorBlinking;
     m_customCursorVisible = true;
     m_historyArrowNavigationEnabled = true;
+    refreshKeyBindings();
 
     setViewportMargins(0, 0, 0, 0);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
@@ -1767,6 +1771,7 @@ QRect Editor::themedCursorRect() const
 void Editor::setHistoryArrowNavigationEnabled(bool enabled)
 {
     m_historyArrowNavigationEnabled = enabled;
+    updateHistoryKeyBindings();
 }
 
 void Editor::checkAutoComplete()
@@ -2539,6 +2544,101 @@ void Editor::evaluate()
     triggerEnter();
 }
 
+void Editor::refreshKeyBindings()
+{
+    for (const KeyBindings::Action& definition : KeyBindings::editorActions()) {
+        QAction* action = m_keyBindingActions.value(definition.id);
+        if (!action) {
+            action = new QAction(this);
+            action->setObjectName(QStringLiteral("KeyBinding.") + definition.id);
+            action->setShortcutContext(Qt::WidgetShortcut);
+            addAction(action);
+            connect(action, &QAction::triggered, this, [this, id = definition.id]() {
+                triggerKeyBinding(id);
+            });
+            m_keyBindingActions.insert(definition.id, action);
+        }
+        action->setText(definition.label);
+        action->setShortcuts(KeyBindings::shortcuts(definition, Settings::instance()->keyBindings));
+    }
+    updateHistoryKeyBindings();
+}
+
+bool Editor::historyKeyBindingEnabled(const QString& id) const
+{
+    if (!m_historyArrowNavigationEnabled)
+        return false;
+    const Settings* settings = Settings::instance();
+    return settings->keyBindings.contains(id)
+        || settings->upDownArrowBehavior == Settings::UpDownArrowBehaviorAlways
+        || (settings->upDownArrowBehavior == Settings::UpDownArrowBehaviorSingleLineOnly
+            && height() <= sizeHint().height());
+}
+
+void Editor::updateHistoryKeyBindings()
+{
+    for (const QString& id : {QStringLiteral("editorHistoryPrevious"), QStringLiteral("editorHistoryNext")}) {
+        if (QAction* action = m_keyBindingActions.value(id))
+            action->setEnabled(historyKeyBindingEnabled(id));
+    }
+    for (const QString& id : {QStringLiteral("settingsDisplayZoomIn"), QStringLiteral("settingsDisplayZoomOut")}) {
+        if (QAction* action = m_keyBindingActions.value(id))
+            action->setEnabled(m_historyArrowNavigationEnabled);
+    }
+}
+
+void Editor::triggerKeyBinding(const QString& id)
+{
+    if (id == QLatin1String("editorConstants")) {
+        showConstantCompletion();
+    } else if (id == QLatin1String("editorHistoryPrevious")) {
+        m_currentAutoCalcDismissed = true;
+        historyBack();
+    } else if (id == QLatin1String("editorHistoryNext")) {
+        m_currentAutoCalcDismissed = true;
+        historyForward();
+    } else if (id == QLatin1String("settingsDisplayZoomIn")) {
+        emit shiftUpPressed();
+    } else if (id == QLatin1String("settingsDisplayZoomOut")) {
+        emit shiftDownPressed();
+    } else if (id == QLatin1String("resultsScrollPageUp")) {
+        emit pageUpPressed();
+    } else if (id == QLatin1String("resultsScrollPageDown")) {
+        emit pageDownPressed();
+    } else if (id == QLatin1String("resultsScrollLineUp")) {
+        emit shiftPageUpPressed();
+    } else if (id == QLatin1String("resultsScrollLineDown")) {
+        emit shiftPageDownPressed();
+    } else if (id == QLatin1String("resultsScrollTop")) {
+        emit controlPageUpPressed();
+    } else if (id == QLatin1String("resultsScrollBottom")) {
+        emit controlPageDownPressed();
+    }
+}
+
+void Editor::showConstantCompletion()
+{
+    if (m_constantCompletion)
+        return;
+    m_completionTimer->stop();
+    m_completion->hideCompletion();
+    m_constantCompletion = new ConstantCompletion(this);
+    m_constantCompletion->setThemeColors(m_completionBackgroundColor,
+                                         m_completionForegroundColor,
+                                         m_completionScrollbarThumbColor,
+                                         m_completionScrollbarThumbForegroundColor,
+                                         m_completionSelectedRowColor,
+                                         m_completionSelectedRowForegroundColor,
+                                         m_completionOutlineColor,
+                                         m_completionCornerRadius,
+                                         m_completionSearchButtonFill,
+                                         m_completionSearchButtonCross);
+    connect(m_constantCompletion, &ConstantCompletion::selectedCompletion, this, &Editor::insertConstant);
+    connect(m_constantCompletion, &ConstantCompletion::canceledCompletion, this, &Editor::cancelConstantCompletion);
+    connect(m_constantCompletion, &ConstantCompletion::visibilityChanged, this, &Editor::constantSearchVisibilityChanged);
+    m_constantCompletion->showCompletion();
+}
+
 static void paintInputDigitSeparators(QPainter& painter, const QTextBlock& block,
                                      const QPointF& offset,
                                      const QAbstractTextDocumentLayout::PaintContext& context)
@@ -2758,8 +2858,40 @@ void Editor::changeEvent(QEvent* event)
     }
 }
 
+bool Editor::reservesCompletionKey(const QKeyEvent* event) const
+{
+    if (!m_completion->isVisible())
+        return false;
+    switch (event->key()) {
+    case Qt::Key_Return: case Qt::Key_Enter: case Qt::Key_Tab: case Qt::Key_Backtab:
+    case Qt::Key_Escape: case Qt::Key_Up: case Qt::Key_Down:
+    case Qt::Key_Home: case Qt::Key_End: case Qt::Key_PageUp: case Qt::Key_PageDown:
+        return true;
+    default:
+        return false;
+    }
+}
+
 bool Editor::event(QEvent* event)
 {
+    if (event->type() == QEvent::ShortcutOverride) {
+        auto* keyEvent = static_cast<QKeyEvent*>(event);
+        updateHistoryKeyBindings();
+        if (reservesCompletionKey(keyEvent)) {
+            keyEvent->accept();
+            return true;
+        }
+        for (QAction* action : m_keyBindingActions) {
+            if (!action->isEnabled())
+                continue;
+            for (const QKeySequence& sequence : action->shortcuts()) {
+                if (KeyBindings::startsWith(sequence, keyEvent)) {
+                    keyEvent->ignore();
+                    return true;
+                }
+            }
+        }
+    }
     if (event->type() == QEvent::KeyPress) {
         QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
         if (keyEvent->key() == Qt::Key_Tab && m_completion->handleEditorKeyPress(keyEvent))
@@ -2773,6 +2905,7 @@ void Editor::resizeEvent(QResizeEvent* event)
 {
     QPlainTextEdit::resizeEvent(event);
     updateHeightAndEnsureCursorVisible();
+    updateHistoryKeyBindings();
 }
 
 void Editor::focusInEvent(QFocusEvent* event)
@@ -3087,31 +3220,18 @@ void Editor::keyPressEvent(QKeyEvent* event)
     if (m_completion->handleEditorKeyPress(event))
         return;
 
-    // Opening a picker must not start an empty document edit block. Finishing
-    // that block emits textChanged and the active pane then takes focus back.
-    if (event->key() == Qt::Key_Space && event->modifiers() == Qt::ControlModifier
-        && !m_constantCompletion) {
-        m_completionTimer->stop();
-        m_constantCompletion = new ConstantCompletion(this);
-        m_constantCompletion->setThemeColors(m_completionBackgroundColor,
-                                             m_completionForegroundColor,
-                                             m_completionScrollbarThumbColor,
-                                             m_completionScrollbarThumbForegroundColor,
-                                             m_completionSelectedRowColor,
-                                             m_completionSelectedRowForegroundColor,
-                                             m_completionOutlineColor,
-                                             m_completionCornerRadius,
-                                             m_completionSearchButtonFill,
-                                             m_completionSearchButtonCross);
-        connect(m_constantCompletion,
-                SIGNAL(selectedCompletion(const QString&)),
-                SLOT(insertConstant(const QString&)));
-        connect(m_constantCompletion,
-                &ConstantCompletion::canceledCompletion,
-                this, &Editor::cancelConstantCompletion);
-        connect(m_constantCompletion, &ConstantCompletion::visibilityChanged,
-                this, &Editor::constantSearchVisibilityChanged);
-        m_constantCompletion->showCompletion();
+    // Commands run before opening an edit block, so a popup cannot emit an
+    // unrelated textChanged signal and lose focus to the active pane.
+    updateHistoryKeyBindings();
+    for (auto action = m_keyBindingActions.cbegin(); action != m_keyBindingActions.cend(); ++action) {
+        if (action.value()->isEnabled()
+            && KeyBindings::matchesSingleKey(action.value()->shortcuts(), event)) {
+            triggerKeyBinding(action.key());
+            event->accept();
+            return;
+        }
+    }
+    if (KeyBindings::suppressStandardKey(Settings::instance()->keyBindings, event)) {
         event->accept();
         return;
     }
@@ -3191,56 +3311,14 @@ void Editor::keyPressEvent(QKeyEvent* event)
         return;
 
     case Qt::Key_Up:
-        if (!m_historyArrowNavigationEnabled) {
-            QPlainTextEdit::keyPressEvent(event);
-            event->accept();
-            return;
-        }
-        if (event->modifiers() & Qt::ShiftModifier)
-            emit shiftUpPressed();
-        else if (Settings::instance()->upDownArrowBehavior == Settings::UpDownArrowBehaviorAlways
-                 || (Settings::instance()->upDownArrowBehavior == Settings::UpDownArrowBehaviorSingleLineOnly
-                     && height() <= sizeHint().height()))
-            historyBack();
-        else
-            QPlainTextEdit::keyPressEvent(event);
-        event->accept();
-        return;
-
     case Qt::Key_Down:
-        if (!m_historyArrowNavigationEnabled) {
-            QPlainTextEdit::keyPressEvent(event);
-            event->accept();
-            return;
-        }
-        if (event->modifiers() & Qt::ShiftModifier)
-            emit shiftDownPressed();
-        else if (Settings::instance()->upDownArrowBehavior == Settings::UpDownArrowBehaviorAlways
-                 || (Settings::instance()->upDownArrowBehavior == Settings::UpDownArrowBehaviorSingleLineOnly
-                     && height() <= sizeHint().height()))
-            historyForward();
-        else
-            QPlainTextEdit::keyPressEvent(event);
+        QPlainTextEdit::keyPressEvent(event);
         event->accept();
         return;
 
     case Qt::Key_PageUp:
-        if (event->modifiers() & Qt::ShiftModifier)
-            emit shiftPageUpPressed();
-        else if (event->modifiers() & Qt::ControlModifier)
-            emit controlPageUpPressed();
-        else
-            emit pageUpPressed();
-        event->accept();
-        return;
-
     case Qt::Key_PageDown:
-        if (event->modifiers() & Qt::ShiftModifier)
-            emit shiftPageDownPressed();
-        else if (event->modifiers() & Qt::ControlModifier)
-            emit controlPageDownPressed();
-        else
-            emit pageDownPressed();
+        QPlainTextEdit::keyPressEvent(event);
         event->accept();
         return;
 
@@ -4724,6 +4802,12 @@ bool EditorCompletion::eventFilter(QObject* object, QEvent* event)
     if (object != m_popup && object != m_popup->viewport())
         return false;
 
+    if (event->type() == QEvent::ShortcutOverride
+        && m_editor->reservesCompletionKey(static_cast<QKeyEvent*>(event))) {
+        event->accept();
+        return true;
+    }
+
     if (object == m_popup && event->type() == QEvent::Hide) {
         m_editor->m_completionTimer->stop();
         m_editor->m_suppressedCompletionText = m_editor->text();
@@ -4761,6 +4845,11 @@ bool EditorCompletion::eventFilter(QObject* object, QEvent* event)
 bool EditorCompletion::isVisible() const
 {
     return m_popup->isVisible();
+}
+
+void EditorCompletion::hideCompletion()
+{
+    m_popup->hide();
 }
 
 bool EditorCompletion::handleEditorKeyPress(QKeyEvent* event)
@@ -5271,6 +5360,18 @@ void ConstantCompletion::restoreEditorFocus()
 
 bool ConstantCompletion::eventFilter(QObject* object, QEvent* event)
 {
+    if (event->type() == QEvent::ShortcutOverride && m_popup->isVisible()) {
+        auto* keyEvent = static_cast<QKeyEvent*>(event);
+        switch (keyEvent->key()) {
+        case Qt::Key_Return: case Qt::Key_Enter: case Qt::Key_Tab: case Qt::Key_Backtab:
+        case Qt::Key_Escape: case Qt::Key_Up: case Qt::Key_Down:
+        case Qt::Key_Home: case Qt::Key_End: case Qt::Key_PageUp: case Qt::Key_PageDown:
+            event->accept();
+            return true;
+        default:
+            break;
+        }
+    }
     if (object == m_constantWidget->viewport() && event->type() == QEvent::Resize
         && m_constantWidget->topLevelItemCount() == 0) {
         DockListStyle::showCenteredNoMatchLabel(m_constantWidget, m_noMatchLabel);

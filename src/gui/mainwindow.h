@@ -7,6 +7,7 @@
 
 #include "core/settings.h"
 #include "gui/keypad.h"
+#include "gui/keybindings.h"
 #include "math/quantity.h"
 
 #include <QDeadlineTimer>
@@ -48,6 +49,7 @@ class QActionGroup;
 class QDockWidget;
 class QHBoxLayout;
 class QLabel;
+class QKeyEvent;
 class QPlainTextEdit;
 class QPushButton;
 class QResizeEvent;
@@ -98,6 +100,7 @@ private slots:
     void clearHistory();
     void clearSession();
     void resetAllSettings();
+    void showKeyBindingsDialog();
     void copyResultToClipboard();
     void decreaseDisplayFontPointSize();
     void decreaseOpacity();
@@ -458,6 +461,12 @@ private:
 
     static QTranslator* createTranslator(const QString& langCode);
 
+    QAction* createKeyBindingAction(const QString& id);
+    void applyKeyBindings();
+    QList<KeyBindings::Action> keyBindingDefinitions() const;
+    bool matchesKeyBinding(const QString& id, const QKeyEvent* event) const;
+    QMap<QString, QAction*> m_keyBindingActions;
+
     struct {
         QAction* sessionOpen;
         QAction* sessionRename;
@@ -577,6 +586,7 @@ private:
         QAction* settingsBehaviorLeaveLastExpression;
         QAction* settingsBehaviorNumberFormat;
         QAction* settingsResetAll;
+        QAction* settingsKeyBindings;
         QAction* settingsBehaviorResultSlots;
         QAction* settingsBehaviorUpDownArrowNever;
         QAction* settingsBehaviorUpDownArrowAlways;
@@ -629,6 +639,10 @@ private:
         QAction* helpAbout;
         QAction* helpDiagnostics;
         QAction* contextHelp;
+        QAction* navigationNextTab;
+        QAction* navigationPreviousTab;
+        QAction* navigationNextFocus;
+        QAction* navigationPreviousFocus;
     } m_actions{};
 
     struct {

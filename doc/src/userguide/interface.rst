@@ -183,12 +183,15 @@ Use :menuselection:`View --> Split` to add a pane in any direction, and
 The tab context menu also provides :menuselection:`Split` and
 :menuselection:`Close Pane`.
 
-Choose :menuselection:`Session --> Clear Session` or press :kbd:`Ctrl+L`
-(:kbd:`Cmd+L` on macOS) to clear the active session's calculations, unfinished
-expression, variables, functions, and units. Global user definitions are kept.
-The tab context menu's :menuselection:`Clear` command does the same for that tab.
+Choose :menuselection:`Edit --> Clear History` or press :kbd:`Ctrl+L`
+(:kbd:`Cmd+L` on macOS) to clear the active session's calculations and unfinished
+expression. Session variables, functions, and units are kept.
+The tab context menu's :menuselection:`Clear History` command does the same for that tab.
 SpeedCrunch asks for confirmation by default. To skip this dialog, check
-:menuselection:`Settings --> Results --> Skip Clear Session Confirmation`.
+:menuselection:`Settings --> Results --> Skip Clear History Confirmation`.
+Choose :menuselection:`Session --> Reset` to clear the calculation history, current
+expression, and session variables, functions, and units. Reset always asks for
+confirmation. Global user definitions are kept.
 :menuselection:`Delete` in the tab context menu removes the session itself
 after confirmation.
 When SpeedCrunch restores multiple windows after a restart, each window keeps
@@ -293,6 +296,8 @@ The expression editor provides some advanced features:
 
 * Quick constant insertion
     Press :kbd:`Ctrl+Space` to search the same constants as the constants widget (see above).
+    If your system already uses that shortcut, choose another one for
+    :guilabel:`Search Constants` in :menuselection:`Settings --> Keyboard Shortcuts`.
     Type a name or unit to filter the list. Each result shows its unit beside the name using the theme's unit color.
     Press :kbd:`Up` and :kbd:`Down` to select a result. Press :kbd:`Tab` or :kbd:`Enter`, or click a result, to insert it and return to the editor.
     :kbd:`Shift+Tab` moves focus backward. With no matches, :kbd:`Tab` leaves the popup open.
@@ -782,9 +787,10 @@ This section contains settings that control result output and post-evaluation be
     ``m·s⁻¹``, or fractional notation, such as ``m/s``.
 * :menuselection:`Copy New Results Automatically`
     Automatically copy each newly evaluated result to the clipboard.
-* :menuselection:`Skip Clear Session Confirmation`
-    Clear a session without asking for confirmation. This applies to
-    :menuselection:`Session --> Clear Session`, :kbd:`Ctrl+L` (:kbd:`Cmd+L`
+* :menuselection:`Skip Clear History Confirmation`
+    Clear the history and unfinished expression without asking for confirmation.
+    Session variables, functions, and units are kept. This applies to
+    :menuselection:`Edit --> Clear History`, :kbd:`Ctrl+L` (:kbd:`Cmd+L`
     on macOS), and the clear commands in the tab and result display context
     menus. This option is off by default and is shared by all windows.
 * :menuselection:`Simplify Displayed Expressions`
@@ -1169,6 +1175,68 @@ Help
 Keyboard Shortcuts
 ------------------
 
+Choose :menuselection:`Settings --> Keyboard Shortcuts` to change keyboard
+shortcuts. Search by action name, menu category, or the shortcut shown in the
+list. Click an action's box in the :guilabel:`Custom` column, then press the keys
+you want to use. You can also double-click the action to focus its box.
+Recording finishes after a short pause or when you move to another box.
+Click :guilabel:`Apply` or :guilabel:`OK` to save your changes.
+
+The :guilabel:`Default` column shows the original bindings. The
+:guilabel:`Custom` boxes show :guilabel:`Use default` until you change an action's
+shortcut. They show :guilabel:`Disabled` when you explicitly clear the binding.
+Notation and precision shortcuts are grouped under :guilabel:`Settings / Results`
+in the list.
+
+Each action can have one custom shortcut. A shortcut may be a single key
+combination or a sequence of up to four combinations, such as :kbd:`Ctrl+K`
+followed by :kbd:`Ctrl+C`. Some existing defaults have alternatives, such as
+:kbd:`Ctrl+N` and :kbd:`Ctrl+T` for a new tab. Those alternatives remain available
+until you assign a custom shortcut to that action.
+
+If a shortcut is already assigned, SpeedCrunch lists the conflicting actions.
+Choose :guilabel:`Reassign` to remove their conflicting bindings and use the
+shortcut for the selected action. Sequences also conflict when one begins with
+the complete shortcut of another action. Other bindings for those actions are
+kept. SpeedCrunch cannot detect shortcuts that the operating system or another
+application intercepts before they reach it.
+
+Open the menu beside an action's box and choose :guilabel:`Disable Shortcut`
+to leave it without a binding, or :guilabel:`Restore Default` to restore its
+original shortcuts. Clearing a custom shortcut with the box's clear button
+also disables it. Use :guilabel:`Restore All Defaults` to restore every shortcut.
+Changes take effect in all open windows when you click :guilabel:`Apply` or
+:guilabel:`OK`, and are
+saved for later launches. :guilabel:`Cancel` discards changes made since the last
+click on :guilabel:`Apply`. :menuselection:`Settings --> Reset All Settings`
+also restores the default shortcuts.
+
+The configurable actions include session commands, clipboard and editing
+commands, dock visibility, keypad presets and zoom, pane splitting, tab
+navigation, focus navigation, selected calculation settings, and manual help.
+The expression editor also provides these actions:
+
+* :guilabel:`Search Constants`.
+* :guilabel:`Previous History Expression` and :guilabel:`Next History Expression`.
+  Their default arrow keys follow :menuselection:`Settings --> Editing -->
+  Up/Down Arrow History`. A custom shortcut recalls history directly.
+* :guilabel:`Zoom In` and :guilabel:`Zoom Out`, also available in the
+  :menuselection:`View` menu.
+* Result scrolling by page or line, and scrolling to the first or last result.
+
+The expression editor actions work while the expression editor has focus.
+Evaluation with :kbd:`Enter`, ordinary cursor movement, text selection, and
+popup controls keep their usual keys. For example, :kbd:`Escape` still dismisses
+a popup, and its arrow keys still move through the suggestions. Appearance
+preferences and other settings without configurable shortcuts remain available
+from their menus.
+
+The following list shows the default shortcuts. On macOS, the dialog displays
+the native Command and other modifier symbols.
+
+.. versionadded:: 1.2
+   Configurable keyboard shortcuts.
+
 Editing
 +++++++
 * :kbd:`Ctrl+O`
@@ -1186,9 +1254,10 @@ Editing
 * :kbd:`Ctrl+W` (:kbd:`Cmd+W` on macOS)
     Close the active session tab.
 * :kbd:`Ctrl+L` (:kbd:`Cmd+L` on macOS)
-    Clear the active session, keeping global user definitions. Ask for
-    confirmation unless :menuselection:`Settings --> Results --> Skip Clear
-    Session Confirmation` is checked.
+    Clear the active session's history and unfinished expression, keeping its
+    variables, functions, and units. Ask for confirmation unless
+    :menuselection:`Settings --> Results --> Skip Clear History Confirmation`
+    is checked.
 * :kbd:`Ctrl+C`
     Copy selected text to clipboard.
 * :kbd:`Ctrl+R`
@@ -1289,6 +1358,8 @@ Various
     Toggle full screen.
 * :kbd:`Ctrl` + mouse wheel, :kbd:`Shift` + mouse wheel, or :kbd:`Shift+Up` and :kbd:`Shift+Down`
     Change the font size.
+    The keyboard bindings can be changed with :guilabel:`Zoom In` and
+    :guilabel:`Zoom Out` in :menuselection:`Settings --> Keyboard Shortcuts`.
 * :kbd:`Ctrl+Shift` + mouse wheel
     Change the window opacity.
 

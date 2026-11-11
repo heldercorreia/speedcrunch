@@ -7,6 +7,7 @@
 
 #include "core/colorscheme.h"
 #include "core/sessionhistory.h"
+#include "gui/keybindings.h"
 
 #include <QColor>
 #include <QPlainTextEdit>
@@ -23,6 +24,7 @@ class CNumber;
 class SyntaxHighlighter;
 
 class QEvent;
+class QAction;
 class QFocusEvent;
 class QInputMethodEvent;
 class QKeyEvent;
@@ -46,6 +48,7 @@ public:
     bool isAutoCalcEnabled() const;
     bool isAutoCompletionEnabled() const;
     bool isConstantSearchVisible() const;
+    bool reservesCompletionKey(const QKeyEvent* event) const;
     bool isCursorBlinkingEnabled() const { return m_cursorBlinkingEnabled; }
     Evaluator* evaluator() const { return m_evaluator; }
     static Editor* completionMouseSelectionOwner();
@@ -117,6 +120,7 @@ public slots:
     void updateHistory();
     void refreshAutoCalc();
     void refreshInputMode();
+    void refreshKeyBindings();
 
 protected slots:
     void insertFromMimeData(const QMimeData*) override;
@@ -133,8 +137,13 @@ protected slots:
     void historyForward();
     void triggerAutoComplete();
     void triggerEnter();
+    void showConstantCompletion();
 
 protected:
+    void triggerKeyBinding(const QString& id);
+    bool historyKeyBindingEnabled(const QString& id) const;
+    void updateHistoryKeyBindings();
+    QMap<QString, QAction*> m_keyBindingActions;
     void changeEvent(QEvent*) override;
     bool event(QEvent*) override;
     void focusInEvent(QFocusEvent*) override;
@@ -220,6 +229,7 @@ public:
     bool eventFilter(QObject*, QEvent*);
     bool isVisible() const;
     bool handleEditorKeyPress(QKeyEvent* event);
+    void hideCompletion();
     bool handleEditorWheelEvent(QWheelEvent* event);
     void setThemeColors(const QColor& background,
                         const QColor& foreground,

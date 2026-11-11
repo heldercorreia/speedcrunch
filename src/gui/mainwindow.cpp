@@ -28,6 +28,7 @@
 #include "gui/genericdock.h"
 #include "gui/constantswidget.h"
 #include "gui/customkeypaddialog.h"
+#include "gui/keybindingsdialog.h"
 #include "gui/dockcomboboxchevron.h"
 #include "gui/dockliststyle.h"
 #include "gui/editorutils.h"
@@ -4147,72 +4148,81 @@ void MainWindow::createUi()
     syncSessionMenuActionState();
 }
 
+QAction* MainWindow::createKeyBindingAction(const QString& id)
+{
+    auto* action = new QAction(this);
+    action->setProperty("keyBindingId", id);
+    if (KeyBindings::isConfigurable(id))
+        m_keyBindingActions.insert(id, action);
+    return action;
+}
+
 void MainWindow::createActions()
 {
     StartupDiagnostics::Scope timing("Create actions");
-    m_actions.sessionExportHtml = new QAction(this);
-    m_actions.sessionExportJson = new QAction(this);
-    m_actions.sessionExportPlainText = new QAction(this);
-    m_actions.sessionImport = new QAction(this);
-    m_actions.sessionImportUserDefinitions = new QAction(this);
-    m_actions.sessionNewTab = new QAction(this);
-    m_actions.sessionNewPrivate = new QAction(this);
-    m_actions.sessionConvertPrivacy = new QAction(this);
-    m_actions.sessionNewWindow = new QAction(this);
-    m_actions.sessionOpen = new QAction(this);
-    m_actions.sessionRename = new QAction(this);
-    m_actions.sessionClone = new QAction(this);
-    m_actions.sessionClear = new QAction(this);
+    m_actions.sessionExportHtml = createKeyBindingAction(QStringLiteral("sessionExportHtml"));
+    m_actions.sessionExportJson = createKeyBindingAction(QStringLiteral("sessionExportJson"));
+    m_actions.sessionExportPlainText = createKeyBindingAction(QStringLiteral("sessionExportPlainText"));
+    m_actions.sessionImport = createKeyBindingAction(QStringLiteral("sessionImport"));
+    m_actions.sessionImportUserDefinitions = createKeyBindingAction(QStringLiteral("sessionImportUserDefinitions"));
+    m_actions.sessionNewTab = createKeyBindingAction(QStringLiteral("sessionNewTab"));
+    m_actions.sessionNewPrivate = createKeyBindingAction(QStringLiteral("sessionNewPrivate"));
+    m_actions.sessionConvertPrivacy = createKeyBindingAction(QStringLiteral("sessionConvertPrivacy"));
+    m_actions.sessionNewWindow = createKeyBindingAction(QStringLiteral("sessionNewWindow"));
+    m_actions.sessionOpen = createKeyBindingAction(QStringLiteral("sessionOpen"));
+    m_actions.sessionRename = createKeyBindingAction(QStringLiteral("sessionRename"));
+    m_actions.sessionClone = createKeyBindingAction(QStringLiteral("sessionClone"));
+    m_actions.sessionClear = createKeyBindingAction(QStringLiteral("sessionClear"));
     m_actions.sessionClear->setObjectName(QStringLiteral("ClearSessionAction"));
-    m_actions.sessionClose = new QAction(this);
-    m_actions.sessionReopen = new QAction(this);
-    m_actions.sessionOpenSessionsFolder = new QAction(this);
-    m_actions.sessionQuit = new QAction(this);
-    m_actions.editUndo = new QAction(this);
-    m_actions.editRedo = new QAction(this);
-    m_actions.editCut = new QAction(this);
-    m_actions.editClearExpression = new QAction(this);
-    m_actions.editClearHistory = new QAction(this);
-    m_actions.editCopyLastResult = new QAction(this);
-    m_actions.editCopy = new QAction(this);
-    m_actions.editPaste = new QAction(this);
-    m_actions.editSelectExpression = new QAction(this);
-    m_actions.editWrapSelection = new QAction(this);
-    m_actions.viewConstants = new QAction(this);
-    m_actions.viewFullScreenMode = new QAction(this);
-    m_actions.viewFunctions = new QAction(this);
-    m_actions.viewHistory = new QAction(this);
-    m_actions.viewKeypadDisabled = new QAction(this);
-    m_actions.viewKeypadBasicWide = new QAction(this);
-    m_actions.viewKeypadScientificWide = new QAction(this);
-    m_actions.viewKeypadScientificNarrow = new QAction(this);
-    m_actions.viewKeypadCustom = new QAction(this);
-    m_actions.viewKeypadZoom50 = new QAction(this);
-    m_actions.viewKeypadZoom100 = new QAction(this);
-    m_actions.viewKeypadZoom150 = new QAction(this);
-    m_actions.viewKeypadZoom200 = new QAction(this);
-    m_actions.viewFormulaBook = new QAction(this);
-    m_actions.viewStatusBar = new QAction(this);
-    m_actions.viewMenuBar = new QAction(this);
-    m_actions.viewVariables = new QAction(this);
-    m_actions.viewBitfield = new QAction(this);
-    m_actions.viewSplitLeft = new QAction(this);
-    m_actions.viewSplitRight = new QAction(this);
-    m_actions.viewSplitUp = new QAction(this);
-    m_actions.viewSplitDown = new QAction(this);
-    m_actions.viewClosePane = new QAction(this);
-    m_actions.viewUserFunctions = new QAction(this);
-    m_actions.viewUserUnits = new QAction(this);
-    m_actions.settingsAngleUnitDegree = new QAction(this);
-    m_actions.settingsAngleUnitRadian = new QAction(this);
-    m_actions.settingsAngleUnitGradian = new QAction(this);
-    m_actions.settingsAngleUnitTurn = new QAction(this);
-    m_actions.settingsAngleUnitRevolution = new QAction(this);
-    m_actions.settingsBehaviorAlwaysOnTop = new QAction(this);
-    m_actions.settingsOpenPrivateTabOnStartup = new QAction(this);
-    m_actions.settingsLaunchActivate = new QAction(this);
-    m_actions.settingsLaunchNewWindow = new QAction(this);
-    m_actions.settingsLaunchNewTab = new QAction(this);
+    m_actions.sessionClose = createKeyBindingAction(QStringLiteral("sessionClose"));
+    m_actions.sessionReopen = createKeyBindingAction(QStringLiteral("sessionReopen"));
+    m_actions.sessionOpenSessionsFolder = createKeyBindingAction(QStringLiteral("sessionOpenSessionsFolder"));
+    m_actions.sessionQuit = createKeyBindingAction(QStringLiteral("sessionQuit"));
+    m_actions.editUndo = createKeyBindingAction(QStringLiteral("editUndo"));
+    m_actions.editRedo = createKeyBindingAction(QStringLiteral("editRedo"));
+    m_actions.editCut = createKeyBindingAction(QStringLiteral("editCut"));
+    m_actions.editClearExpression = createKeyBindingAction(QStringLiteral("editClearExpression"));
+    m_actions.editClearHistory = createKeyBindingAction(QStringLiteral("editClearHistory"));
+    m_actions.editCopyLastResult = createKeyBindingAction(QStringLiteral("editCopyLastResult"));
+    m_actions.editCopy = createKeyBindingAction(QStringLiteral("editCopy"));
+    m_actions.editPaste = createKeyBindingAction(QStringLiteral("editPaste"));
+    m_actions.editSelectExpression = createKeyBindingAction(QStringLiteral("editSelectExpression"));
+    m_actions.editWrapSelection = createKeyBindingAction(QStringLiteral("editWrapSelection"));
+    m_actions.viewConstants = createKeyBindingAction(QStringLiteral("viewConstants"));
+    m_actions.viewFullScreenMode = createKeyBindingAction(QStringLiteral("viewFullScreenMode"));
+    m_actions.viewFunctions = createKeyBindingAction(QStringLiteral("viewFunctions"));
+    m_actions.viewHistory = createKeyBindingAction(QStringLiteral("viewHistory"));
+    m_actions.viewKeypadDisabled = createKeyBindingAction(QStringLiteral("viewKeypadDisabled"));
+    m_actions.viewKeypadBasicWide = createKeyBindingAction(QStringLiteral("viewKeypadBasicWide"));
+    m_actions.viewKeypadScientificWide = createKeyBindingAction(QStringLiteral("viewKeypadScientificWide"));
+    m_actions.viewKeypadScientificNarrow = createKeyBindingAction(QStringLiteral("viewKeypadScientificNarrow"));
+    m_actions.viewKeypadCustom = createKeyBindingAction(QStringLiteral("viewKeypadCustom"));
+    m_actions.viewKeypadZoom50 = createKeyBindingAction(QStringLiteral("viewKeypadZoom50"));
+    m_actions.viewKeypadZoom100 = createKeyBindingAction(QStringLiteral("viewKeypadZoom100"));
+    m_actions.viewKeypadZoom150 = createKeyBindingAction(QStringLiteral("viewKeypadZoom150"));
+    m_actions.viewKeypadZoom200 = createKeyBindingAction(QStringLiteral("viewKeypadZoom200"));
+    m_actions.viewFormulaBook = createKeyBindingAction(QStringLiteral("viewFormulaBook"));
+    m_actions.viewStatusBar = createKeyBindingAction(QStringLiteral("viewStatusBar"));
+    m_actions.viewMenuBar = createKeyBindingAction(QStringLiteral("viewMenuBar"));
+    m_actions.viewVariables = createKeyBindingAction(QStringLiteral("viewVariables"));
+    m_actions.viewBitfield = createKeyBindingAction(QStringLiteral("viewBitfield"));
+    m_actions.viewSplitLeft = createKeyBindingAction(QStringLiteral("viewSplitLeft"));
+    m_actions.viewSplitRight = createKeyBindingAction(QStringLiteral("viewSplitRight"));
+    m_actions.viewSplitUp = createKeyBindingAction(QStringLiteral("viewSplitUp"));
+    m_actions.viewSplitDown = createKeyBindingAction(QStringLiteral("viewSplitDown"));
+    m_actions.viewClosePane = createKeyBindingAction(QStringLiteral("viewClosePane"));
+    m_actions.viewUserFunctions = createKeyBindingAction(QStringLiteral("viewUserFunctions"));
+    m_actions.viewUserUnits = createKeyBindingAction(QStringLiteral("viewUserUnits"));
+    m_actions.settingsAngleUnitDegree = createKeyBindingAction(QStringLiteral("settingsAngleUnitDegree"));
+    m_actions.settingsAngleUnitRadian = createKeyBindingAction(QStringLiteral("settingsAngleUnitRadian"));
+    m_actions.settingsAngleUnitGradian = createKeyBindingAction(QStringLiteral("settingsAngleUnitGradian"));
+    m_actions.settingsAngleUnitTurn = createKeyBindingAction(QStringLiteral("settingsAngleUnitTurn"));
+    m_actions.settingsAngleUnitRevolution = createKeyBindingAction(QStringLiteral("settingsAngleUnitRevolution"));
+    m_actions.settingsBehaviorAlwaysOnTop = createKeyBindingAction(QStringLiteral("settingsBehaviorAlwaysOnTop"));
+    m_actions.settingsOpenPrivateTabOnStartup = createKeyBindingAction(QStringLiteral("settingsOpenPrivateTabOnStartup"));
+    m_actions.settingsLaunchActivate = createKeyBindingAction(QStringLiteral("settingsLaunchActivate"));
+    m_actions.settingsLaunchNewWindow = createKeyBindingAction(QStringLiteral("settingsLaunchNewWindow"));
+    m_actions.settingsLaunchNewTab = createKeyBindingAction(QStringLiteral("settingsLaunchNewTab"));
     m_actions.settingsLaunchActivate->setObjectName(QStringLiteral("SubsequentLaunchActivateAction"));
     m_actions.settingsLaunchNewWindow->setObjectName(QStringLiteral("SubsequentLaunchNewWindowAction"));
     m_actions.settingsLaunchNewTab->setObjectName(QStringLiteral("SubsequentLaunchNewTabAction"));
@@ -4222,152 +4232,159 @@ void MainWindow::createActions()
     m_actions.settingsLaunchActivate->setData(Settings::ActivateExistingWindow);
     m_actions.settingsLaunchNewWindow->setData(Settings::OpenNewWindow);
     m_actions.settingsLaunchNewTab->setData(Settings::OpenNewTab);
-    m_actions.settingsBehaviorAutoAns = new QAction(this);
-    m_actions.settingsBehaviorAutoCompletion = new QAction(this);
-    m_actions.settingsBehaviorAutoCompletionAcceptWithEnter = new QAction(this);
+    m_actions.settingsBehaviorAutoAns = createKeyBindingAction(QStringLiteral("settingsBehaviorAutoAns"));
+    m_actions.settingsBehaviorAutoCompletion = createKeyBindingAction(QStringLiteral("settingsBehaviorAutoCompletion"));
+    m_actions.settingsBehaviorAutoCompletionAcceptWithEnter = createKeyBindingAction(QStringLiteral("settingsBehaviorAutoCompletionAcceptWithEnter"));
     m_actions.settingsBehaviorAutoCompletionAcceptWithEnter->setObjectName(QStringLiteral("AutoCompletionAcceptWithEnterAction"));
-    m_actions.settingsBehaviorAutoCompletionBuiltInFunctions = new QAction(this);
-    m_actions.settingsBehaviorAutoCompletionBuiltInVariables = new QAction(this);
-    m_actions.settingsBehaviorAutoCompletionLongFormUnits = new QAction(this);
-    m_actions.settingsBehaviorAutoCompletionUserFunctions = new QAction(this);
-    m_actions.settingsBehaviorAutoCompletionUserVariables = new QAction(this);
-    m_actions.settingsBehaviorLeaveLastExpression = new QAction(this);
-    m_actions.settingsBehaviorNumberFormat = new QAction(this);
-    m_actions.settingsResetAll = new QAction(this);
+    m_actions.settingsBehaviorAutoCompletionBuiltInFunctions = createKeyBindingAction(QStringLiteral("settingsBehaviorAutoCompletionBuiltInFunctions"));
+    m_actions.settingsBehaviorAutoCompletionBuiltInVariables = createKeyBindingAction(QStringLiteral("settingsBehaviorAutoCompletionBuiltInVariables"));
+    m_actions.settingsBehaviorAutoCompletionLongFormUnits = createKeyBindingAction(QStringLiteral("settingsBehaviorAutoCompletionLongFormUnits"));
+    m_actions.settingsBehaviorAutoCompletionUserFunctions = createKeyBindingAction(QStringLiteral("settingsBehaviorAutoCompletionUserFunctions"));
+    m_actions.settingsBehaviorAutoCompletionUserVariables = createKeyBindingAction(QStringLiteral("settingsBehaviorAutoCompletionUserVariables"));
+    m_actions.settingsBehaviorLeaveLastExpression = createKeyBindingAction(QStringLiteral("settingsBehaviorLeaveLastExpression"));
+    m_actions.settingsBehaviorNumberFormat = createKeyBindingAction(QStringLiteral("settingsBehaviorNumberFormat"));
+    m_actions.settingsResetAll = createKeyBindingAction(QStringLiteral("settingsResetAll"));
     m_actions.settingsResetAll->setObjectName(QStringLiteral("ResetAllSettingsAction"));
-    m_actions.settingsBehaviorResultSlots = new QAction(this);
-    m_actions.settingsBehaviorUpDownArrowNever = new QAction(this);
-    m_actions.settingsBehaviorUpDownArrowAlways = new QAction(this);
-    m_actions.settingsBehaviorUpDownArrowSingleLineOnly = new QAction(this);
-    m_actions.settingsBehaviorPartialResults = new QAction(this);
-    m_actions.settingsBehaviorSaveWindowPositionOnExit = new QAction(this);
-    m_actions.settingsBehaviorSyntaxHighlighting = new QAction(this);
-    m_actions.settingsEditingInputDigitGrouping = new QAction(this);
-    m_actions.settingsEditingAutomaticInputAdjustments = new QAction(this);
+    m_actions.settingsKeyBindings = createKeyBindingAction(QStringLiteral("settingsKeyBindings"));
+    m_actions.settingsDisplayZoomIn = createKeyBindingAction(QStringLiteral("settingsDisplayZoomIn"));
+    m_actions.settingsDisplayZoomOut = createKeyBindingAction(QStringLiteral("settingsDisplayZoomOut"));
+    m_actions.navigationNextTab = createKeyBindingAction(QStringLiteral("navigationNextTab"));
+    m_actions.navigationPreviousTab = createKeyBindingAction(QStringLiteral("navigationPreviousTab"));
+    m_actions.navigationNextFocus = createKeyBindingAction(QStringLiteral("navigationNextFocus"));
+    m_actions.navigationPreviousFocus = createKeyBindingAction(QStringLiteral("navigationPreviousFocus"));
+    m_actions.settingsBehaviorResultSlots = createKeyBindingAction(QStringLiteral("settingsBehaviorResultSlots"));
+    m_actions.settingsBehaviorUpDownArrowNever = createKeyBindingAction(QStringLiteral("settingsBehaviorUpDownArrowNever"));
+    m_actions.settingsBehaviorUpDownArrowAlways = createKeyBindingAction(QStringLiteral("settingsBehaviorUpDownArrowAlways"));
+    m_actions.settingsBehaviorUpDownArrowSingleLineOnly = createKeyBindingAction(QStringLiteral("settingsBehaviorUpDownArrowSingleLineOnly"));
+    m_actions.settingsBehaviorPartialResults = createKeyBindingAction(QStringLiteral("settingsBehaviorPartialResults"));
+    m_actions.settingsBehaviorSaveWindowPositionOnExit = createKeyBindingAction(QStringLiteral("settingsBehaviorSaveWindowPositionOnExit"));
+    m_actions.settingsBehaviorSyntaxHighlighting = createKeyBindingAction(QStringLiteral("settingsBehaviorSyntaxHighlighting"));
+    m_actions.settingsEditingInputDigitGrouping = createKeyBindingAction(QStringLiteral("settingsEditingInputDigitGrouping"));
+    m_actions.settingsEditingAutomaticInputAdjustments = createKeyBindingAction(QStringLiteral("settingsEditingAutomaticInputAdjustments"));
     m_actions.settingsEditingAutomaticInputAdjustments->setObjectName(QStringLiteral("AutomaticInputAdjustmentsAction"));
     m_actions.settingsEditingInputDigitGrouping->setObjectName(QStringLiteral("InputDigitGroupingAction"));
-    m_actions.settingsEditingCursorBlinking = new QAction(this);
+    m_actions.settingsEditingCursorBlinking = createKeyBindingAction(QStringLiteral("settingsEditingCursorBlinking"));
     m_actions.settingsEditingCursorBlinking->setObjectName(QStringLiteral("CursorBlinkingAction"));
-    m_actions.settingsEditingEscapeClearsEditor = new QAction(this);
+    m_actions.settingsEditingEscapeClearsEditor = createKeyBindingAction(QStringLiteral("settingsEditingEscapeClearsEditor"));
     m_actions.settingsEditingEscapeClearsEditor->setObjectName(QStringLiteral("EscapeClearsEditorAction"));
-    m_actions.settingsBehaviorHoverHighlightResults = new QAction(this);
-    m_actions.settingsBehaviorDigitGroupingNone = new QAction(this);
-    m_actions.settingsBehaviorDigitGroupingOneSpace = new QAction(this);
-    m_actions.settingsBehaviorDigitGroupingTwoSpaces = new QAction(this);
-    m_actions.settingsBehaviorDigitGroupingThreeSpaces = new QAction(this);
-    m_actions.settingsBehaviorDigitGroupingIntegerPartOnly = new QAction(this);
-    m_actions.settingsBehaviorAutoResultToClipboard = new QAction(this);
-    m_actions.settingsSkipClearSessionConfirmation = new QAction(this);
+    m_actions.settingsBehaviorHoverHighlightResults = createKeyBindingAction(QStringLiteral("settingsBehaviorHoverHighlightResults"));
+    m_actions.settingsBehaviorDigitGroupingNone = createKeyBindingAction(QStringLiteral("settingsBehaviorDigitGroupingNone"));
+    m_actions.settingsBehaviorDigitGroupingOneSpace = createKeyBindingAction(QStringLiteral("settingsBehaviorDigitGroupingOneSpace"));
+    m_actions.settingsBehaviorDigitGroupingTwoSpaces = createKeyBindingAction(QStringLiteral("settingsBehaviorDigitGroupingTwoSpaces"));
+    m_actions.settingsBehaviorDigitGroupingThreeSpaces = createKeyBindingAction(QStringLiteral("settingsBehaviorDigitGroupingThreeSpaces"));
+    m_actions.settingsBehaviorDigitGroupingIntegerPartOnly = createKeyBindingAction(QStringLiteral("settingsBehaviorDigitGroupingIntegerPartOnly"));
+    m_actions.settingsBehaviorAutoResultToClipboard = createKeyBindingAction(QStringLiteral("settingsBehaviorAutoResultToClipboard"));
+    m_actions.settingsSkipClearSessionConfirmation = createKeyBindingAction(QStringLiteral("settingsSkipClearSessionConfirmation"));
     m_actions.settingsSkipClearSessionConfirmation->setObjectName(QStringLiteral("SkipClearSessionConfirmationAction"));
-    m_actions.settingsBehaviorSimplifyResultExpressions = new QAction(this);
-    m_actions.settingsBehaviorHistorySizeLimit = new QAction(this);
-    m_actions.settingsDisplayFont = new QAction(this);
-    m_actions.settingsDisplayColorSchemeCustom = new QAction(this);
-    m_actions.settingsAppearancePresetClassic = new QAction(this);
-    m_actions.settingsAppearancePresetModern = new QAction(this);
-    m_actions.settingsAppearancePresetCustom = new QAction(this);
+    m_actions.settingsBehaviorSimplifyResultExpressions = createKeyBindingAction(QStringLiteral("settingsBehaviorSimplifyResultExpressions"));
+    m_actions.settingsBehaviorHistorySizeLimit = createKeyBindingAction(QStringLiteral("settingsBehaviorHistorySizeLimit"));
+    m_actions.settingsDisplayFont = createKeyBindingAction(QStringLiteral("settingsDisplayFont"));
+    m_actions.settingsDisplayColorSchemeCustom = createKeyBindingAction(QStringLiteral("settingsDisplayColorSchemeCustom"));
+    m_actions.settingsAppearancePresetClassic = createKeyBindingAction(QStringLiteral("settingsAppearancePresetClassic"));
+    m_actions.settingsAppearancePresetModern = createKeyBindingAction(QStringLiteral("settingsAppearancePresetModern"));
+    m_actions.settingsAppearancePresetCustom = createKeyBindingAction(QStringLiteral("settingsAppearancePresetCustom"));
     for (QAction* action : {m_actions.settingsAppearancePresetClassic,
                             m_actions.settingsAppearancePresetModern,
                             m_actions.settingsAppearancePresetCustom})
         action->setCheckable(true);
     m_actions.settingsAppearancePresetCustom->setEnabled(false);
-    m_actions.settingsSystemColorModeFollowSystem = new QAction(this);
+    m_actions.settingsSystemColorModeFollowSystem = createKeyBindingAction(QStringLiteral("settingsSystemColorModeFollowSystem"));
     m_actions.settingsSystemColorModeFollowSystem->setCheckable(true);
     m_actions.settingsSystemColorModeFollowSystem->setData(Settings::SystemColorModeFollowSystem);
-    m_actions.settingsSystemColorModeLight = new QAction(this);
+    m_actions.settingsSystemColorModeLight = createKeyBindingAction(QStringLiteral("settingsSystemColorModeLight"));
     m_actions.settingsSystemColorModeLight->setCheckable(true);
     m_actions.settingsSystemColorModeLight->setData(Settings::SystemColorModeLight);
-    m_actions.settingsSystemColorModeDark = new QAction(this);
+    m_actions.settingsSystemColorModeDark = createKeyBindingAction(QStringLiteral("settingsSystemColorModeDark"));
     m_actions.settingsSystemColorModeDark->setCheckable(true);
     m_actions.settingsSystemColorModeDark->setData(Settings::SystemColorModeDark);
-    m_actions.settingsMenuAppearanceSystem = new QAction(this);
-    m_actions.settingsMenuAppearanceSpeedCrunch = new QAction(this);
+    m_actions.settingsMenuAppearanceSystem = createKeyBindingAction(QStringLiteral("settingsMenuAppearanceSystem"));
+    m_actions.settingsMenuAppearanceSpeedCrunch = createKeyBindingAction(QStringLiteral("settingsMenuAppearanceSpeedCrunch"));
     m_actions.settingsMenuAppearanceSystem->setCheckable(true);
     m_actions.settingsMenuAppearanceSystem->setData(Settings::MenuAppearanceSystem);
     m_actions.settingsMenuAppearanceSpeedCrunch->setCheckable(true);
     m_actions.settingsMenuAppearanceSpeedCrunch->setData(Settings::MenuAppearanceSpeedCrunch);
-    m_actions.settingsDockAppearanceSystem = new QAction(this);
-    m_actions.settingsDockAppearanceSpeedCrunch = new QAction(this);
+    m_actions.settingsDockAppearanceSystem = createKeyBindingAction(QStringLiteral("settingsDockAppearanceSystem"));
+    m_actions.settingsDockAppearanceSpeedCrunch = createKeyBindingAction(QStringLiteral("settingsDockAppearanceSpeedCrunch"));
     m_actions.settingsDockAppearanceSystem->setCheckable(true);
     m_actions.settingsDockAppearanceSystem->setData(Settings::DockAppearanceSystem);
     m_actions.settingsDockAppearanceSpeedCrunch->setCheckable(true);
     m_actions.settingsDockAppearanceSpeedCrunch->setData(Settings::DockAppearanceSpeedCrunch);
-    m_actions.settingsStatusBarAppearanceSystem = new QAction(this);
-    m_actions.settingsStatusBarAppearanceSpeedCrunch = new QAction(this);
+    m_actions.settingsStatusBarAppearanceSystem = createKeyBindingAction(QStringLiteral("settingsStatusBarAppearanceSystem"));
+    m_actions.settingsStatusBarAppearanceSpeedCrunch = createKeyBindingAction(QStringLiteral("settingsStatusBarAppearanceSpeedCrunch"));
     m_actions.settingsStatusBarAppearanceSystem->setCheckable(true);
     m_actions.settingsStatusBarAppearanceSystem->setData(Settings::StatusBarAppearanceSystem);
     m_actions.settingsStatusBarAppearanceSpeedCrunch->setCheckable(true);
     m_actions.settingsStatusBarAppearanceSpeedCrunch->setData(Settings::StatusBarAppearanceSpeedCrunch);
-    m_actions.settingsToolTipAppearanceSystem = new QAction(this);
-    m_actions.settingsToolTipAppearanceSpeedCrunch = new QAction(this);
+    m_actions.settingsToolTipAppearanceSystem = createKeyBindingAction(QStringLiteral("settingsToolTipAppearanceSystem"));
+    m_actions.settingsToolTipAppearanceSpeedCrunch = createKeyBindingAction(QStringLiteral("settingsToolTipAppearanceSpeedCrunch"));
     m_actions.settingsToolTipAppearanceSystem->setCheckable(true);
     m_actions.settingsToolTipAppearanceSystem->setData(Settings::ToolTipAppearanceSystem);
     m_actions.settingsToolTipAppearanceSpeedCrunch->setCheckable(true);
     m_actions.settingsToolTipAppearanceSpeedCrunch->setData(Settings::ToolTipAppearanceSpeedCrunch);
-    m_actions.settingsKeypadAppearanceClassic = new QAction(this);
+    m_actions.settingsKeypadAppearanceClassic = createKeyBindingAction(QStringLiteral("settingsKeypadAppearanceClassic"));
     m_actions.settingsKeypadAppearanceClassic->setCheckable(true);
     m_actions.settingsKeypadAppearanceClassic->setData(Settings::KeypadAppearanceClassic);
-    m_actions.settingsKeypadAppearanceModern = new QAction(this);
+    m_actions.settingsKeypadAppearanceModern = createKeyBindingAction(QStringLiteral("settingsKeypadAppearanceModern"));
     m_actions.settingsKeypadAppearanceModern->setCheckable(true);
     m_actions.settingsKeypadAppearanceModern->setData(Settings::KeypadAppearanceModern);
-    m_actions.settingsEditorDisplayClassic = new QAction(this);
+    m_actions.settingsEditorDisplayClassic = createKeyBindingAction(QStringLiteral("settingsEditorDisplayClassic"));
     m_actions.settingsEditorDisplayClassic->setCheckable(true);
     m_actions.settingsEditorDisplayClassic->setData(Settings::EditorDisplayClassic);
-    m_actions.settingsEditorDisplayModern = new QAction(this);
+    m_actions.settingsEditorDisplayModern = createKeyBindingAction(QStringLiteral("settingsEditorDisplayModern"));
     m_actions.settingsEditorDisplayModern->setCheckable(true);
     m_actions.settingsEditorDisplayModern->setData(Settings::EditorDisplayModern);
-    m_actions.settingsLanguage = new QAction(this);
-    m_actions.settingsRadixCharComma = new QAction(this);
-    m_actions.settingsRadixCharDefault = new QAction(this);
-    m_actions.settingsRadixCharDot = new QAction(this);
-    m_actions.settingsRadixCharBoth = new QAction(this);
-    m_actions.settingsResultFormat0Digits = new QAction(this);
-    m_actions.settingsResultFormat15Digits = new QAction(this);
-    m_actions.settingsResultFormat2Digits = new QAction(this);
-    m_actions.settingsResultFormat3Digits = new QAction(this);
-    m_actions.settingsResultFormat50Digits = new QAction(this);
-    m_actions.settingsResultFormat8Digits = new QAction(this);
-    m_actions.settingsResultFormatCustomDigits = new QAction(this);
-    m_actions.settingsResultRoundingHalfAwayFromZero = new QAction(this);
-    m_actions.settingsResultRoundingHalfEven = new QAction(this);
-    m_actions.settingsResultRoundingTowardZero = new QAction(this);
-    m_actions.settingsResultRoundingTowardPositiveInfinity = new QAction(this);
-    m_actions.settingsResultRoundingTowardNegativeInfinity = new QAction(this);
-    m_actions.settingsResultFormatAutoPrecision = new QAction(this);
-    m_actions.settingsResultFormatBinary = new QAction(this);
-    m_actions.settingsResultFormatEngineering = new QAction(this);
-    m_actions.settingsRemoveTrailingZeroes = new QAction(this);
+    m_actions.settingsLanguage = createKeyBindingAction(QStringLiteral("settingsLanguage"));
+    m_actions.settingsRadixCharComma = createKeyBindingAction(QStringLiteral("settingsRadixCharComma"));
+    m_actions.settingsRadixCharDefault = createKeyBindingAction(QStringLiteral("settingsRadixCharDefault"));
+    m_actions.settingsRadixCharDot = createKeyBindingAction(QStringLiteral("settingsRadixCharDot"));
+    m_actions.settingsRadixCharBoth = createKeyBindingAction(QStringLiteral("settingsRadixCharBoth"));
+    m_actions.settingsResultFormat0Digits = createKeyBindingAction(QStringLiteral("settingsResultFormat0Digits"));
+    m_actions.settingsResultFormat15Digits = createKeyBindingAction(QStringLiteral("settingsResultFormat15Digits"));
+    m_actions.settingsResultFormat2Digits = createKeyBindingAction(QStringLiteral("settingsResultFormat2Digits"));
+    m_actions.settingsResultFormat3Digits = createKeyBindingAction(QStringLiteral("settingsResultFormat3Digits"));
+    m_actions.settingsResultFormat50Digits = createKeyBindingAction(QStringLiteral("settingsResultFormat50Digits"));
+    m_actions.settingsResultFormat8Digits = createKeyBindingAction(QStringLiteral("settingsResultFormat8Digits"));
+    m_actions.settingsResultFormatCustomDigits = createKeyBindingAction(QStringLiteral("settingsResultFormatCustomDigits"));
+    m_actions.settingsResultRoundingHalfAwayFromZero = createKeyBindingAction(QStringLiteral("settingsResultRoundingHalfAwayFromZero"));
+    m_actions.settingsResultRoundingHalfEven = createKeyBindingAction(QStringLiteral("settingsResultRoundingHalfEven"));
+    m_actions.settingsResultRoundingTowardZero = createKeyBindingAction(QStringLiteral("settingsResultRoundingTowardZero"));
+    m_actions.settingsResultRoundingTowardPositiveInfinity = createKeyBindingAction(QStringLiteral("settingsResultRoundingTowardPositiveInfinity"));
+    m_actions.settingsResultRoundingTowardNegativeInfinity = createKeyBindingAction(QStringLiteral("settingsResultRoundingTowardNegativeInfinity"));
+    m_actions.settingsResultFormatAutoPrecision = createKeyBindingAction(QStringLiteral("settingsResultFormatAutoPrecision"));
+    m_actions.settingsResultFormatBinary = createKeyBindingAction(QStringLiteral("settingsResultFormatBinary"));
+    m_actions.settingsResultFormatEngineering = createKeyBindingAction(QStringLiteral("settingsResultFormatEngineering"));
+    m_actions.settingsRemoveTrailingZeroes = createKeyBindingAction(QStringLiteral("settingsRemoveTrailingZeroes"));
     m_actions.settingsRemoveTrailingZeroes->setObjectName(QStringLiteral("RemoveTrailingZeroesAction"));
     m_actions.settingsRemoveTrailingZeroes->setCheckable(true);
-    m_actions.settingsResultFormatFixed = new QAction(this);
-    m_actions.settingsResultFormatGeneral = new QAction(this);
-    m_actions.settingsResultFormatHexadecimal = new QAction(this);
-    m_actions.settingsResultFormatOctal = new QAction(this);
-    m_actions.settingsResultFormatRational = new QAction(this);
-    m_actions.settingsResultFormatScientific = new QAction(this);
-    m_actions.settingsResultFormatCartesian= new QAction(this);
-    m_actions.settingsResultFormatPolar = new QAction(this);
-    m_actions.settingsResultFormatTrigonometric = new QAction(this);
-    m_actions.settingsResultFormatCis = new QAction(this);
-    m_actions.settingsResultFormatPolarAngle = new QAction(this);
-    m_actions.settingsImaginaryUnitI = new QAction(this);
-    m_actions.settingsImaginaryUnitJ = new QAction(this);
-    m_actions.settingsResultFormatSexagesimal = new QAction(this);
-    m_actions.settingsUnitNegativeExponentSuperscript = new QAction(this);
-    m_actions.settingsUnitNegativeExponentFraction = new QAction(this);
-    m_actions.helpManual = new QAction(this);
+    m_actions.settingsResultFormatFixed = createKeyBindingAction(QStringLiteral("settingsResultFormatFixed"));
+    m_actions.settingsResultFormatGeneral = createKeyBindingAction(QStringLiteral("settingsResultFormatGeneral"));
+    m_actions.settingsResultFormatHexadecimal = createKeyBindingAction(QStringLiteral("settingsResultFormatHexadecimal"));
+    m_actions.settingsResultFormatOctal = createKeyBindingAction(QStringLiteral("settingsResultFormatOctal"));
+    m_actions.settingsResultFormatRational = createKeyBindingAction(QStringLiteral("settingsResultFormatRational"));
+    m_actions.settingsResultFormatScientific = createKeyBindingAction(QStringLiteral("settingsResultFormatScientific"));
+    m_actions.settingsResultFormatCartesian = createKeyBindingAction(QStringLiteral("settingsResultFormatCartesian"));
+    m_actions.settingsResultFormatPolar = createKeyBindingAction(QStringLiteral("settingsResultFormatPolar"));
+    m_actions.settingsResultFormatTrigonometric = createKeyBindingAction(QStringLiteral("settingsResultFormatTrigonometric"));
+    m_actions.settingsResultFormatCis = createKeyBindingAction(QStringLiteral("settingsResultFormatCis"));
+    m_actions.settingsResultFormatPolarAngle = createKeyBindingAction(QStringLiteral("settingsResultFormatPolarAngle"));
+    m_actions.settingsImaginaryUnitI = createKeyBindingAction(QStringLiteral("settingsImaginaryUnitI"));
+    m_actions.settingsImaginaryUnitJ = createKeyBindingAction(QStringLiteral("settingsImaginaryUnitJ"));
+    m_actions.settingsResultFormatSexagesimal = createKeyBindingAction(QStringLiteral("settingsResultFormatSexagesimal"));
+    m_actions.settingsUnitNegativeExponentSuperscript = createKeyBindingAction(QStringLiteral("settingsUnitNegativeExponentSuperscript"));
+    m_actions.settingsUnitNegativeExponentFraction = createKeyBindingAction(QStringLiteral("settingsUnitNegativeExponentFraction"));
+    m_actions.helpManual = createKeyBindingAction(QStringLiteral("helpManual"));
 #ifdef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
-    m_actions.helpUpdates = new QAction(this);
+    m_actions.helpUpdates = createKeyBindingAction(QStringLiteral("helpUpdates"));
 #endif
-    m_actions.helpFeedback = new QAction(this);
-    m_actions.helpCommunity = new QAction(this);
-    m_actions.helpSource = new QAction(this);
-    m_actions.helpDonate = new QAction(this);
-    m_actions.helpAbout = new QAction(this);
-    m_actions.helpDiagnostics = new QAction(this);
+    m_actions.helpFeedback = createKeyBindingAction(QStringLiteral("helpFeedback"));
+    m_actions.helpCommunity = createKeyBindingAction(QStringLiteral("helpCommunity"));
+    m_actions.helpSource = createKeyBindingAction(QStringLiteral("helpSource"));
+    m_actions.helpDonate = createKeyBindingAction(QStringLiteral("helpDonate"));
+    m_actions.helpAbout = createKeyBindingAction(QStringLiteral("helpAbout"));
+    m_actions.helpDiagnostics = createKeyBindingAction(QStringLiteral("helpDiagnostics"));
     m_actions.helpDiagnostics->setObjectName(QStringLiteral("AppDiagnosticsAction"));
     m_actions.helpDiagnostics->setMenuRole(QAction::NoRole);
-    m_actions.contextHelp = new QAction(this);
+    m_actions.contextHelp = createKeyBindingAction(QStringLiteral("contextHelp"));
 
     m_actions.settingsAngleUnitDegree->setCheckable(true);
     m_actions.settingsAngleUnitRadian->setCheckable(true);
@@ -4925,7 +4942,7 @@ void MainWindow::setActionsText()
     m_actions.sessionOpen->setText(MainWindow::tr("&Open..."));
     m_actions.sessionRename->setText(MainWindow::tr("&Rename..."));
     m_actions.sessionClone->setText(tr("Clo&ne..."));
-    m_actions.sessionClear->setText(tr("C&lear Session"));
+    m_actions.sessionClear->setText(tr("Clear &History"));
     m_actions.sessionClose->setText(tr("&Close Tab"));
     m_actions.sessionReopen->setText(tr("Reopen Clo&sed Tab"));
     m_actions.sessionOpenSessionsFolder->setText(MainWindow::tr("Open Sessions &Folder"));
@@ -4935,7 +4952,7 @@ void MainWindow::setActionsText()
     m_actions.editUndo->setText(tr("&Undo"));
     m_actions.editRedo->setText(tr("&Redo"));
     m_actions.editCut->setText(tr("Cu&t"));
-    m_actions.editClearHistory->setText(MainWindow::tr("Clear &History"));
+    m_actions.editClearHistory->setText(MainWindow::tr("R&eset"));
     m_actions.editCopyLastResult->setText(MainWindow::tr("Copy &Last Result"));
     m_actions.editCopy->setText(MainWindow::tr("&Copy"));
     m_actions.editPaste->setText(MainWindow::tr("&Paste"));
@@ -5018,7 +5035,7 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorUpDownArrowAlways->setText(MainWindow::tr("Always"));
     m_actions.settingsBehaviorUpDownArrowSingleLineOnly->setText(MainWindow::tr("Only for Single-Line Expressions"));
     m_actions.settingsBehaviorAutoResultToClipboard->setText(MainWindow::tr("Copy New Results Automatically"));
-    m_actions.settingsSkipClearSessionConfirmation->setText(tr("Skip Clear Session Confirmation"));
+    m_actions.settingsSkipClearSessionConfirmation->setText(tr("Skip Clear History Confirmation"));
     m_actions.settingsBehaviorSimplifyResultExpressions->setText(MainWindow::tr("Simplify Displayed Expressions"));
     m_actions.settingsBehaviorHistorySizeLimit->setText(MainWindow::tr("History Size &Limit..."));
     m_actions.settingsRadixCharComma->setText(MainWindow::tr("&Comma"));
@@ -5065,6 +5082,13 @@ void MainWindow::setActionsText()
     m_actions.settingsImaginaryUnitJ->setText(QStringLiteral("&j"));
     m_actions.settingsDisplayFont->setText(MainWindow::tr("&Font..."));
     m_actions.settingsResetAll->setText(MainWindow::tr("Reset All Settings..."));
+    m_actions.settingsKeyBindings->setText(tr("&Keyboard Shortcuts..."));
+    m_actions.settingsDisplayZoomIn->setText(tr("Zoom &In"));
+    m_actions.settingsDisplayZoomOut->setText(tr("Zoom &Out"));
+    m_actions.navigationNextTab->setText(tr("Next Session Tab or Pane"));
+    m_actions.navigationPreviousTab->setText(tr("Previous Session Tab or Pane"));
+    m_actions.navigationNextFocus->setText(tr("Focus Next Control"));
+    m_actions.navigationPreviousFocus->setText(tr("Focus Previous Control"));
     m_actions.settingsDisplayColorSchemeCustom->setText(MainWindow::tr("&Theme..."));
     m_actions.settingsAppearancePresetClassic->setText(MainWindow::tr("&Classic"));
     m_actions.settingsAppearancePresetClassic->setStatusTip(
@@ -5273,6 +5297,31 @@ void MainWindow::createActionShortcuts()
     m_actions.settingsResultFormatBinary->setShortcut(Qt::Key_F10);
     m_actions.contextHelp->setShortcut(Qt::Key_F1);
 
+    m_actions.viewSplitRight->setShortcut(QKeySequence(QStringLiteral("Ctrl+\\")));
+    m_actions.viewSplitDown->setShortcut(QKeySequence(QStringLiteral("Ctrl+Shift+\\")));
+#if defined(Q_OS_MACOS)
+    m_actions.navigationNextTab->setShortcut(Qt::CTRL | Qt::ALT | Qt::Key_Right);
+    m_actions.navigationPreviousTab->setShortcut(Qt::CTRL | Qt::ALT | Qt::Key_Left);
+#else
+    m_actions.navigationNextTab->setShortcut(Qt::CTRL | Qt::Key_PageDown);
+    m_actions.navigationPreviousTab->setShortcut(Qt::CTRL | Qt::Key_PageUp);
+#endif
+    m_actions.navigationNextFocus->setShortcut(Qt::Key_F6);
+    m_actions.navigationPreviousFocus->setShortcut(Qt::SHIFT | Qt::Key_F6);
+    for (const KeyBindings::Action& definition : KeyBindings::editorActions()) {
+        if (QAction* action = m_keyBindingActions.value(definition.id)) {
+            // The editor owns these bindings. Menus still show the same keys.
+            action->setShortcutContext(Qt::WidgetShortcut);
+            action->setShortcuts(definition.defaults);
+        }
+    }
+    for (QAction* action : m_keyBindingActions) {
+        action->setProperty("defaultShortcuts", QVariant::fromValue(action->shortcuts()));
+        if (action->shortcutContext() == Qt::WindowShortcut)
+            addAction(action);
+    }
+    applyKeyBindings();
+
     // The notation menus are standalone popups, so register their shortcuts
     // with the window even when those menus and the status bar are hidden.
     addActions({m_actions.settingsResultFormatGeneral,
@@ -5283,6 +5332,93 @@ void MainWindow::createActionShortcuts()
                 m_actions.settingsResultFormatHexadecimal,
                 m_actions.settingsResultFormatSexagesimal,
                 m_actions.settingsResultFormatBinary});
+}
+
+void MainWindow::applyKeyBindings()
+{
+    for (auto entry = m_settings->keyBindings.begin(); entry != m_settings->keyBindings.end();) {
+        if (!KeyBindings::isConfigurable(entry.key()))
+            entry = m_settings->keyBindings.erase(entry);
+        else
+            ++entry;
+    }
+    for (auto entry = m_keyBindingActions.cbegin(); entry != m_keyBindingActions.cend(); ++entry) {
+        QAction* action = entry.value();
+        const KeyBindings::Action definition = {
+            entry.key(), {}, {}, action->property("defaultShortcuts").value<QList<QKeySequence>>()
+        };
+        action->setShortcuts(KeyBindings::shortcuts(definition, m_settings->keyBindings));
+    }
+    for (Editor* editor : splitPaneEditors())
+        editor->refreshKeyBindings();
+}
+
+bool MainWindow::matchesKeyBinding(const QString& id, const QKeyEvent* event) const
+{
+    const QAction* action = m_keyBindingActions.value(id);
+    return action && action->isEnabled() && KeyBindings::matchesSingleKey(action->shortcuts(), event);
+}
+
+QList<KeyBindings::Action> MainWindow::keyBindingDefinitions() const
+{
+    QList<KeyBindings::Action> definitions;
+    QSet<QString> seen;
+    const auto append = [&](QAction* action, const QString& category) {
+        const QString id = action->property("keyBindingId").toString();
+        if (id.isEmpty() || !KeyBindings::isConfigurable(id)
+            || seen.contains(id) || action->text().isEmpty()
+            || action == m_actions.settingsAppearancePresetCustom)
+            return;
+        seen.insert(id);
+        const QString label = action == m_actions.viewKeypadDisabled
+            ? tr("Disable") : KeyBindings::plainText(action->text());
+        definitions.append({id, category, label,
+                            action->property("defaultShortcuts").value<QList<QKeySequence>>()});
+    };
+    std::function<void(QMenu*, const QString&)> visitMenu = [&](QMenu* menu, const QString& parent) {
+        const QString title = KeyBindings::plainText(menu->title());
+        const QString category = parent.isEmpty() ? title : parent + QStringLiteral(" / ") + title;
+        for (QAction* action : menu->actions()) {
+            if (QMenu* child = action->menu())
+                visitMenu(child, category);
+            else
+                append(action, category);
+        }
+    };
+    for (QAction* action : menuBar()->actions()) {
+        if (action->menu())
+            visitMenu(action->menu(), QString());
+    }
+    // These menus are used by context popups rather than the menu bar.
+    const QString resultsCategory = KeyBindings::plainText(m_menus.settings->title())
+        + QStringLiteral(" / ") + KeyBindings::plainText(m_menus.results->title());
+    visitMenu(m_menus.resultFormat, resultsCategory);
+    visitMenu(m_menus.precision, resultsCategory);
+    for (auto entry = m_keyBindingActions.cbegin(); entry != m_keyBindingActions.cend(); ++entry) {
+        const QString category = entry.key().startsWith(QLatin1String("navigation"))
+            ? tr("Navigation") : entry.key().startsWith(QLatin1String("view"))
+            ? tr("View") : tr("Other");
+        append(entry.value(), category);
+    }
+    for (const KeyBindings::Action& definition : KeyBindings::editorActions()) {
+        if (!seen.contains(definition.id))
+            definitions.append(definition);
+    }
+    return definitions;
+}
+
+void MainWindow::showKeyBindingsDialog()
+{
+    KeyBindingsDialog dialog(keyBindingDefinitions(), m_settings->keyBindings, this);
+    connect(&dialog, &KeyBindingsDialog::shortcutsApplied, this, [this](const KeyBindings::Overrides& overrides) {
+        m_settings->keyBindings = overrides;
+        m_settings->save();
+        for (const QPointer<MainWindow>& window : allMainWindows()) {
+            if (window)
+                window->applyKeyBindings();
+        }
+    });
+    dialog.exec();
 }
 
 void MainWindow::createMenus()
@@ -5304,7 +5440,7 @@ void MainWindow::createMenus()
     m_menus.session->addAction(m_actions.sessionRename);
     m_menus.session->addAction(m_actions.sessionClone);
     m_menus.session->addAction(m_actions.sessionConvertPrivacy);
-    m_menus.session->addAction(m_actions.sessionClear);
+    m_menus.session->addAction(m_actions.editClearHistory);
     m_menus.session->addSeparator();
     m_menus.session->addAction(m_actions.sessionImport);
     m_menus.sessionExport = m_menus.session->addMenu("");
@@ -5337,7 +5473,7 @@ void MainWindow::createMenus()
     m_menus.edit->addAction(m_actions.editWrapSelection);
     m_menus.edit->addAction(m_actions.editClearExpression);
     m_menus.edit->addSeparator();
-    m_menus.edit->addAction(m_actions.editClearHistory);
+    m_menus.edit->addAction(m_actions.sessionClear);
     connect(m_menus.edit, &QMenu::aboutToShow, this, &MainWindow::syncEditMenuActionState);
 
     m_menus.view = new QMenu("", this);
@@ -5367,6 +5503,9 @@ void MainWindow::createMenus()
     m_menus.split->addAction(m_actions.viewSplitUp);
     m_menus.split->addAction(m_actions.viewSplitDown);
     m_menus.view->addAction(m_actions.viewClosePane);
+    m_menus.view->addSeparator();
+    m_menus.view->addAction(m_actions.settingsDisplayZoomIn);
+    m_menus.view->addAction(m_actions.settingsDisplayZoomOut);
 #if !defined(Q_OS_MACOS)
     m_menus.view->addSeparator();
     m_menus.view->addAction(m_actions.viewMenuBar);
@@ -5522,6 +5661,7 @@ void MainWindow::createMenus()
 
     m_menus.settings->addSeparator();
     m_menus.settings->addAction(m_actions.sessionImportUserDefinitions);
+    m_menus.settings->addAction(m_actions.settingsKeyBindings);
     m_menus.settings->addSeparator();
     m_menus.settings->addAction(m_actions.settingsResetAll);
 
@@ -5935,7 +6075,7 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
         QAction* splitDownAction = splitMenu->addAction(tr("Down"));
         QAction* closePaneAction = menu.addAction(tr("Close Pane"));
         menu.addSeparator();
-        QAction* clearSessionAction = menu.addAction(tr("Clear"));
+        QAction* clearSessionAction = menu.addAction(tr("Clear History"));
         QAction* deleteSessionAction = menu.addAction(tr("Delete"));
 
         MenuStyle::apply(&menu);
@@ -5967,7 +6107,7 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
         else if (selectedAction == renameSessionAction)
             showRenameSessionDialog();
         else if (selectedAction == clearSessionAction)
-            clearSession();
+            clearHistory();
         else if (selectedAction == closeSessionAction)
             closeCurrentSession();
         else if (selectedAction == closePaneAction)
@@ -6500,7 +6640,7 @@ void MainWindow::configureEditorDisplayPane(ResultDisplay* display, Editor* edit
     connect(display, &ResultDisplay::splitUpRequested, this, &MainWindow::splitActivePaneUp);
     connect(display, &ResultDisplay::splitDownRequested, this, &MainWindow::splitActivePaneDown);
     connect(display, &ResultDisplay::renameSessionRequested, this, &MainWindow::showRenameSessionDialog);
-    connect(display, &ResultDisplay::clearSessionRequested, this, &MainWindow::clearSession);
+    connect(display, &ResultDisplay::clearSessionRequested, this, &MainWindow::clearHistory);
     connect(display, &ResultDisplay::closeSessionRequested, this, &MainWindow::closeCurrentSession);
     connect(display, &ResultDisplay::closePaneRequested, this, &MainWindow::closeCurrentPane);
     connect(display, &ResultDisplay::deleteSessionRequested, this, &MainWindow::deleteCurrentSession);
@@ -8578,6 +8718,10 @@ void MainWindow::addTabifiedDock(QDockWidget* newDock, bool takeFocus, Qt::DockW
         }
     }
     m_allDocks.append(newDock);
+    for (QAction* action : m_keyBindingActions) {
+        if (action->shortcutContext() == Qt::WindowShortcut)
+            newDock->addAction(action);
+    }
     restoreDockColumnOrder(newDock);
     newDock->show();
     newDock->raise();
@@ -8709,7 +8853,7 @@ void MainWindow::createFixedConnections()
     connectWindowAction(m_actions.sessionOpen, &MainWindow::showOpenSessionDialog);
     connectWindowAction(m_actions.sessionRename, &MainWindow::showRenameSessionDialog);
     connectWindowAction(m_actions.sessionClone, &MainWindow::showDuplicateSessionDialog);
-    connectWindowAction(m_actions.sessionClear, &MainWindow::clearSession);
+    connectWindowAction(m_actions.sessionClear, &MainWindow::clearHistory);
     connectWindowAction(m_actions.sessionClose, &MainWindow::closeCurrentSession);
     connect(m_actions.sessionReopen, &QAction::triggered, this, [this]() {
         MainWindow* target = activeMainWindowForMenuAction(this);
@@ -8719,7 +8863,7 @@ void MainWindow::createFixedConnections()
     connect(m_actions.sessionQuit, &QAction::triggered, qApp, &QCoreApplication::quit);
 
     connectWindowAction(m_actions.editClearExpression, &MainWindow::clearEditorAndBitfield);
-    connectWindowAction(m_actions.editClearHistory, &MainWindow::clearHistory);
+    connectWindowAction(m_actions.editClearHistory, &MainWindow::clearSession);
     connectWindowAction(m_actions.editCopyLastResult, &MainWindow::copyResultToClipboard);
     connectWindowAction(m_actions.editCopy, &MainWindow::copy);
     connectWindowAction(m_actions.editSelectExpression, &MainWindow::selectEditorExpression);
@@ -8897,6 +9041,9 @@ void MainWindow::createFixedConnections()
 
     connect(m_actions.settingsLanguage, SIGNAL(triggered()), SLOT(showLanguageChooserDialog()));
     connectToActiveWindow(m_actions.settingsResetAll, &MainWindow::resetAllSettings);
+    connectToActiveWindow(m_actions.settingsKeyBindings, &MainWindow::showKeyBindingsDialog);
+    connectToActiveWindow(m_actions.settingsDisplayZoomIn, &MainWindow::increaseDisplayFontPointSize);
+    connectToActiveWindow(m_actions.settingsDisplayZoomOut, &MainWindow::decreaseDisplayFontPointSize);
 
     connect(m_actions.helpManual, SIGNAL(triggered()), SLOT(showManualWindow()));
     connect(m_actions.contextHelp, SIGNAL(triggered()), SLOT(showContextHelp()));
@@ -8963,7 +9110,7 @@ void MainWindow::createFixedConnections()
     connect(m_widgets.display, SIGNAL(splitUpRequested()), SLOT(splitActivePaneUp()));
     connect(m_widgets.display, SIGNAL(splitDownRequested()), SLOT(splitActivePaneDown()));
     connect(m_widgets.display, SIGNAL(renameSessionRequested()), SLOT(showRenameSessionDialog()));
-    connect(m_widgets.display, SIGNAL(clearSessionRequested()), SLOT(clearSession()));
+    connect(m_widgets.display, SIGNAL(clearSessionRequested()), SLOT(clearHistory()));
     connect(m_widgets.display, SIGNAL(closeSessionRequested()), SLOT(closeCurrentSession()));
     connect(m_widgets.display, SIGNAL(closePaneRequested()), SLOT(closeCurrentPane()));
     connect(m_widgets.display, SIGNAL(deleteSessionRequested()), SLOT(deleteCurrentSession()));
@@ -8998,46 +9145,15 @@ void MainWindow::createFixedConnections()
 
     connect(this, SIGNAL(languageChanged()), SLOT(retranslateText()));
 
-    const auto bindApplicationShortcut = [this](const QKeySequence& sequence,
-                                                const std::function<void()>& handler) {
-        QShortcut* shortcut = new QShortcut(sequence, this);
-        shortcut->setContext(Qt::ApplicationShortcut);
-        connect(shortcut, &QShortcut::activated, this, handler);
-    };
-
-#if defined(Q_OS_MACOS)
-    bindApplicationShortcut(QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_Right),
-                            [this]() { activateNextChild(); });
-    bindApplicationShortcut(QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_Left),
-                            [this]() { activatePreviousChild(); });
-#else
-    bindApplicationShortcut(QKeySequence(Qt::CTRL | Qt::Key_PageDown),
-                            [this]() { activateNextChild(); });
-    bindApplicationShortcut(QKeySequence(Qt::CTRL | Qt::Key_PageUp),
-                            [this]() { activatePreviousChild(); });
-#endif
-
-    QShortcut* cycleFocusForwardShortcut = new QShortcut(QKeySequence(Qt::Key_F6), this);
-    // Each window owns its focus cycle. Application-wide bindings conflict
-    // when more than one main window is visible.
-    cycleFocusForwardShortcut->setContext(Qt::WindowShortcut);
-    connect(cycleFocusForwardShortcut, &QShortcut::activated,
-            this, &MainWindow::cycleFocusForward);
-
-    QShortcut* cycleFocusBackwardShortcut =
-        new QShortcut(QKeySequence(Qt::SHIFT | Qt::Key_F6), this);
-    cycleFocusBackwardShortcut->setContext(Qt::WindowShortcut);
-    connect(cycleFocusBackwardShortcut, &QShortcut::activated,
-            this, &MainWindow::cycleFocusBackward);
-
-    QShortcut* splitRightShortcut = new QShortcut(QKeySequence(QStringLiteral("Ctrl+\\")), this);
-    connect(splitRightShortcut, &QShortcut::activated, this, &MainWindow::splitActivePaneRight);
-    QShortcut* splitDownShortcut = new QShortcut(QKeySequence(QStringLiteral("Ctrl+Shift+\\")), this);
-    connect(splitDownShortcut, &QShortcut::activated, this, &MainWindow::splitActivePaneDown);
+    connect(m_actions.navigationNextTab, &QAction::triggered, this, &MainWindow::activateNextChild);
+    connect(m_actions.navigationPreviousTab, &QAction::triggered, this, &MainWindow::activatePreviousChild);
+    connect(m_actions.navigationNextFocus, &QAction::triggered, this, &MainWindow::cycleFocusForward);
+    connect(m_actions.navigationPreviousFocus, &QAction::triggered, this, &MainWindow::cycleFocusBackward);
 }
 
 void MainWindow::applySettings(bool initializing)
 {
+    applyKeyBindings();
     StartupDiagnostics::AppearanceContext context("Apply startup settings");
     StartupDiagnostics::Scope timing("Apply appearance and language");
     for (QAction* choice : m_actionGroups.systemColorMode->actions())
@@ -10176,20 +10292,23 @@ void MainWindow::showDiagnosticsDialog()
 
 void MainWindow::clearHistory()
 {
-    if (m_session->historyIsEmpty())
+    if (m_session->historyIsEmpty() && m_widgets.editor->text().isEmpty())
         return;
 
-    QMessageBox confirmation(this);
-    confirmation.setIcon(QMessageBox::Question);
-    confirmation.setWindowTitle(tr("Clear History"));
-    confirmation.setText(tr("Are you sure you want to clear the calculation history?"));
-    confirmation.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
-    confirmation.setDefaultButton(QMessageBox::No);
-    confirmation.setEscapeButton(QMessageBox::No);
-    QShortcut clearHistoryEscape(QKeySequence(Qt::Key_Escape), &confirmation);
-    connect(&clearHistoryEscape, &QShortcut::activated, &confirmation, &QMessageBox::reject);
-    if (confirmation.exec() != QMessageBox::Yes)
-        return;
+    if (!m_settings->skipClearSessionConfirmation) {
+        QMessageBox confirmation(this);
+        confirmation.setIcon(QMessageBox::Question);
+        confirmation.setWindowTitle(tr("Clear History"));
+        confirmation.setText(tr("Clear this session's calculations and unfinished expression?"));
+        confirmation.setInformativeText(tr("Session variables, functions, and units are kept."));
+        confirmation.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        confirmation.setDefaultButton(QMessageBox::No);
+        confirmation.setEscapeButton(QMessageBox::No);
+        QShortcut clearHistoryEscape(QKeySequence(Qt::Key_Escape), &confirmation);
+        connect(&clearHistoryEscape, &QShortcut::activated, &confirmation, &QMessageBox::reject);
+        if (confirmation.exec() != QMessageBox::Yes)
+            return;
+    }
 
     m_session->clearHistory();
     m_pendingHistoryEditIndex = -1;
@@ -10199,6 +10318,7 @@ void MainWindow::clearHistory()
     emit historyChanged();
 
     m_conditions.autoAns = false;
+    saveSessionToDefaultPath();
 }
 
 void MainWindow::clearSession()
@@ -10211,11 +10331,11 @@ void MainWindow::clearSession()
         return;
     }
 
-    if (!m_settings->skipClearSessionConfirmation) {
+    {
         QMessageBox confirmation(this);
         confirmation.setIcon(QMessageBox::Question);
-        confirmation.setWindowTitle(tr("Clear Session"));
-        confirmation.setText(tr("Clear this session's calculations, unfinished expression, variables, functions, and units?"));
+        confirmation.setWindowTitle(tr("Reset"));
+        confirmation.setText(tr("Reset this session's calculations, unfinished expression, variables, functions, and units?"));
         confirmation.setInformativeText(tr("Global user definitions are kept."));
         confirmation.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
         confirmation.setDefaultButton(QMessageBox::No);
@@ -13350,15 +13470,12 @@ bool MainWindow::event(QEvent* e)
     if (e != nullptr
         && (e->type() == QEvent::KeyPress || e->type() == QEvent::ShortcutOverride)) {
         QKeyEvent* keyEvent = static_cast<QKeyEvent*>(e);
-        const Qt::KeyboardModifiers shortcutModifiers =
-            keyEvent->modifiers() & ~(Qt::KeypadModifier);
         if (e->type() == QEvent::KeyPress
-            && keyEvent->key() == Qt::Key_F6
-            && (shortcutModifiers == Qt::NoModifier
-                || shortcutModifiers == Qt::ShiftModifier)
+            && (matchesKeyBinding(QStringLiteral("navigationNextFocus"), keyEvent)
+                || matchesKeyBinding(QStringLiteral("navigationPreviousFocus"), keyEvent))
             && qApp->activeModalWidget() == nullptr
             && qApp->activePopupWidget() == nullptr) {
-            if (shortcutModifiers == Qt::ShiftModifier)
+            if (matchesKeyBinding(QStringLiteral("navigationPreviousFocus"), keyEvent))
                 cycleFocusBackward();
             else
                 cycleFocusForward();
@@ -13460,6 +13577,42 @@ bool MainWindow::event(QEvent* e)
 
 bool MainWindow::eventFilter(QObject* o, QEvent* e)
 {
+    if (e && (e->type() == QEvent::ShortcutOverride || e->type() == QEvent::KeyPress)
+        && qApp->activeModalWidget() == nullptr && qApp->activePopupWidget() == nullptr) {
+        QWidget* widget = qobject_cast<QWidget*>(o);
+        if (widget && (widget->window() == this || isDockWidgetDescendant(widget))) {
+            auto* keyEvent = static_cast<QKeyEvent*>(e);
+            Editor* editor = qobject_cast<Editor*>(widget);
+            if (!editor)
+                editor = qobject_cast<Editor*>(widget->parentWidget());
+            const bool popupKey = editor && editor->reservesCompletionKey(keyEvent);
+            const bool dockEditingKey = isDockTextInput(widget)
+                && (keyEvent->matches(QKeySequence::Undo) || keyEvent->matches(QKeySequence::Redo)
+                    || keyEvent->matches(QKeySequence::Cut) || keyEvent->matches(QKeySequence::Copy)
+                    || keyEvent->matches(QKeySequence::Paste) || keyEvent->matches(QKeySequence::SelectAll));
+            if (e->type() == QEvent::ShortcutOverride && !popupKey && !dockEditingKey) {
+                for (QAction* action : m_keyBindingActions) {
+                    if (!action->isEnabled() || action->shortcutContext() != Qt::WindowShortcut)
+                        continue;
+                    for (const QKeySequence& sequence : action->shortcuts()) {
+                        if (KeyBindings::startsWith(sequence, keyEvent)) {
+                            // Let Qt's shortcut map see configured keys before a
+                            // text control claims them for its built-in bindings.
+                            keyEvent->ignore();
+                            return true;
+                        }
+                    }
+                }
+            }
+            if (e->type() == QEvent::KeyPress
+                && (qobject_cast<ResultDisplay*>(widget)
+                    || qobject_cast<ResultDisplay*>(widget->parentWidget()))
+                && KeyBindings::suppressStandardKey(m_settings->keyBindings, keyEvent)) {
+                keyEvent->accept();
+                return true;
+            }
+        }
+    }
     if (o == m_widgets.state && e != nullptr && m_settings != nullptr
         && m_settings->toolTipAppearance == Settings::ToolTipAppearanceSystem) {
         // Draw the result preview like a system tooltip. QLabel then draws the text.
@@ -13482,14 +13635,11 @@ bool MainWindow::eventFilter(QObject* o, QEvent* e)
             widget != nullptr
             && (widget->window() == this || isDockWidgetDescendant(widget))) {
             QKeyEvent* keyEvent = static_cast<QKeyEvent*>(e);
-            const Qt::KeyboardModifiers shortcutModifiers =
-                keyEvent->modifiers() & ~(Qt::KeypadModifier);
-            if (keyEvent->key() == Qt::Key_F6
-                && (shortcutModifiers == Qt::NoModifier
-                    || shortcutModifiers == Qt::ShiftModifier)
+            if ((matchesKeyBinding(QStringLiteral("navigationNextFocus"), keyEvent)
+                 || matchesKeyBinding(QStringLiteral("navigationPreviousFocus"), keyEvent))
                 && qApp->activeModalWidget() == nullptr
                 && qApp->activePopupWidget() == nullptr) {
-                if (shortcutModifiers == Qt::ShiftModifier)
+                if (matchesKeyBinding(QStringLiteral("navigationPreviousFocus"), keyEvent))
                     cycleFocusBackward();
                 else
                     cycleFocusForward();
