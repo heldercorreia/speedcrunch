@@ -7,6 +7,7 @@
 #include "gui/platformactivation.h"
 
 #include <QKeySequenceEdit>
+#include <QStyleHints>
 #include <QToolButton>
 
 using namespace MainWindowTestHelpers;
@@ -86,7 +87,13 @@ class TestKeyBindingsUi : public QObject {
     Q_OBJECT
 
 private slots:
-    void initTestCase() { qApp->setQuitOnLastWindowClosed(false); }
+    void initTestCase()
+    {
+        qApp->setQuitOnLastWindowClosed(false);
+        // Native macOS alerts are invisible to activeModalWidget(), so the
+        // tests could not answer them and would block until the timeout.
+        QApplication::setAttribute(Qt::AA_DontUseNativeDialogs, true);
+    }
     void init() { UiTestFixture::resetSettings(); }
     void inline_boxes_offer_default_custom_and_disabled_states();
     void inline_recording_stages_changes_and_keeps_apply_cancel_scope();
@@ -229,8 +236,11 @@ void TestKeyBindingsUi::inline_boxes_follow_filter_and_keyboard_focus()
     QVERIFY(input->hasFocus());
     QCOMPARE(input->findChild<QLineEdit*>()->placeholderText(), QStringLiteral("Press shortcut..."));
     QTest::keyClick(input, Qt::Key_Tab);
-    auto* options = dialog.findChild<QToolButton*>(QStringLiteral("ShortcutOptions.editorConstants"));
-    QVERIFY(options->hasFocus());
+    // macOS only tabs to buttons when Keyboard Navigation is turned on.
+    if (QGuiApplication::styleHints()->tabFocusBehavior() == Qt::TabFocusAllControls) {
+        auto* options = dialog.findChild<QToolButton*>(QStringLiteral("ShortcutOptions.editorConstants"));
+        QVERIFY(options->hasFocus());
+    }
     search->setFocus();
     search->clear();
     QTRY_VERIFY(other->isVisible());
@@ -330,7 +340,9 @@ void TestKeyBindingsUi::restore_all_discards_an_unfinished_inline_recording()
     QCoreApplication::processEvents();
     QVERIFY(dialog.overrides().isEmpty());
     QVERIFY(input->keySequence().isEmpty());
-    QCOMPARE(input->findChild<QLineEdit*>()->placeholderText(), QStringLiteral("Use default"));
+    // Clicking a push button on macOS leaves focus in the recorder.
+    QCOMPARE(input->findChild<QLineEdit*>()->placeholderText(),
+             input->hasFocus() ? QStringLiteral("Press shortcut...") : QStringLiteral("Use default"));
 }
 
 void TestKeyBindingsUi::recorder_accepts_a_multi_step_sequence()
