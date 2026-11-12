@@ -20,7 +20,7 @@
   <tr>
     <td width="50%">
       <a class="nav-item nav-item-0"
-         href="../contents.html">SpeedCrunch 1.1 documentation</a> &#187; <a class="nav-item nav-item-1"
+         href="../contents.html">SpeedCrunch 1.2.0-rc.1 documentation</a> &#187; <a class="nav-item nav-item-1"
              href="index.html">User Guide</a>
           
     </td>
@@ -62,9 +62,17 @@
 <h1>Installation</h1>
 <section id="microsoft-windows">
 <h2>Microsoft Windows</h2>
-<p>SpeedCrunch for Windows requires Windows Vista or newer (32-bit and 64-bit versions).
-You can use choose to use either the installer or the portable
-version of SpeedCrunch. Both of these are available from <a class="reference external" href="http://speedcrunch.org">the SpeedCrunch website</a>.</p>
+<p>SpeedCrunch requires 64-bit Windows 10 (version 1809 or later) or Windows 11.
+Windows 7, 8 and 8.1 are not supported by SpeedCrunch 1.0 or later.</p>
+<table class="-x-quark-box -x-quark-admonition -x-quark-note"><tbody><tr><td width="100%" class="-x-quark-box-td"><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For older Windows versions, use SpeedCrunch 0.12, available in the
+“Older Versions” section of the
+<a class="reference external" href="https://www.speedcrunch.org/download.html">download page</a>.</p>
+</div>
+</td></tr></tbody></table><p>You can choose either the installer or the portable version of SpeedCrunch.
+Both have the same system requirements and are available from
+<a class="reference external" href="http://speedcrunch.org">the SpeedCrunch website</a>.</p>
 <p>The installer installs SpeedCrunch on your system and creates an entry in the menu
 to launch it. This process requires administrator rights.</p>
 <p>Alternatively, you may use the portable version of SpeedCrunch, which is distributed
@@ -117,7 +125,7 @@ can be used to install SpeedCrunch.</p>
 <p><a class="reference external" href="https://flatpak.org/">Flatpak</a> is a distribution-independent packaging format for Linux desktop applications. The latest stable
 release of SpeedCrunch is available as a Flatpak package from <a class="reference external" href="https://flathub.org/">Flathub</a>.</p>
 <p>First, visit Flathub’s <a class="reference external" href="https://flatpak.org/setup/">setup page</a> and follow the instructions for your distribution to set up
-Flatpak and Flathub. Then install SpeedCrunch from its <a class="reference external" href="https://flathub.org/apps/details/org.speedcrunch.SpeedCrunch">store page</a> on Flathub.</p>
+Flatpak and Flathub. Then install SpeedCrunch from its <a class="reference external" href="https://flathub.org/apps/org.speedcrunch.SpeedCrunch">store page</a> on Flathub.</p>
 </section>
 </section>
 <section id="building-from-source">
@@ -125,6 +133,9 @@ Flatpak and Flathub. Then install SpeedCrunch from its <a class="reference exter
 <p>The SpeedCrunch source code is maintained on <a class="reference external" href="https://github.com/heldercorreia/speedcrunch">GitHub</a> in a Git repository.
 For build requirements and instructions on compiling, running the tests, and
 installing from source, see <code class="file docutils literal notranslate"><span class="pre">BUILDING.md</span></code> at the repository root.</p>
+<p>When Qt includes X11 support, building SpeedCrunch also requires <code class="docutils literal notranslate"><span class="pre">pkg-config</span></code>
+and the libxcb development headers and library. These provide the X11 launch
+activation support. A Qt build with only Wayland support does not need libxcb.</p>
 <p>License installation is optional on every platform. The CMake option
 <code class="docutils literal notranslate"><span class="pre">INSTALL_LICENSES</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">OFF</span></code>. Set <code class="docutils literal notranslate"><span class="pre">-DINSTALL_LICENSES=ON</span></code> to install
 SpeedCrunch’s license text and Qt usage notice. On Windows and macOS, this also
@@ -160,7 +171,7 @@ build directory, also set <code class="docutils literal notranslate"><span class
   <tr>
     <td width="50%">
       <a class="nav-item nav-item-0"
-         href="../contents.html">SpeedCrunch 1.1 documentation</a> &#187; <a class="nav-item nav-item-1"
+         href="../contents.html">SpeedCrunch 1.2.0-rc.1 documentation</a> &#187; <a class="nav-item nav-item-1"
              href="index.html">User Guide</a>
           
     </td>

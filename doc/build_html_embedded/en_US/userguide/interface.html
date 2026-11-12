@@ -20,7 +20,7 @@
   <tr>
     <td width="50%">
       <a class="nav-item nav-item-0"
-         href="../contents.html">SpeedCrunch 1.1 documentation</a> &#187; <a class="nav-item nav-item-1"
+         href="../contents.html">SpeedCrunch 1.2.0-rc.1 documentation</a> &#187; <a class="nav-item nav-item-1"
              href="index.html">User Guide</a>
           
     </td>
@@ -135,18 +135,22 @@ readability or touch area on touchscreens. For fast and full-featured input, Spe
 <li><p><code class="docutils literal notranslate"><span class="pre">Custom...</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Disable</span></code> (shown as <code class="docutils literal notranslate"><span class="pre">Disabled</span></code> when selected)</p></li>
 </ul>
+<p><code class="docutils literal notranslate"><span class="pre">DEL</span></code> deletes the character before the cursor. Both scientific layouts
+also include <code class="docutils literal notranslate"><span class="pre">C</span></code>, which clears the expression. Custom layouts saved with
+the older <code class="docutils literal notranslate"><span class="pre">⌫</span></code> and <code class="docutils literal notranslate"><span class="pre">⌧</span></code> labels switch to these labels automatically, and
+the older <code class="docutils literal notranslate"><span class="pre">xʸ</span></code> and <code class="docutils literal notranslate"><span class="pre">ⁿ√</span></code> labels switch to <code class="docutils literal notranslate"><span class="pre">x^y</span></code> and <code class="docutils literal notranslate"><span class="pre">root</span></code>.</p>
 <p>Both scientific layouts include <code class="docutils literal notranslate"><span class="pre">ln</span></code> for the natural logarithm and
 <code class="docutils literal notranslate"><span class="pre">log10</span></code> for the common (base-10) logarithm. These buttons insert
 <code class="docutils literal notranslate"><span class="pre">ln(</span></code> and <code class="docutils literal notranslate"><span class="pre">log10(</span></code>, respectively. Copying a scientific preset into a
 custom layout uses the same labels and function names.</p>
-<p>Since version 1.1, both scientific layouts show <code class="docutils literal notranslate"><span class="pre">ⁿ√</span></code> for the nth root
+<p>Since version 1.2, both scientific layouts show <code class="docutils literal notranslate"><span class="pre">root</span></code> for the nth root
 in place of the cube-root button. It inserts <code class="docutils literal notranslate"><span class="pre">root(</span></code> so you can enter
 a root index and a value, for example <code class="docutils literal notranslate"><span class="pre">root(5;</span> <span class="pre">32)</span></code>. Copying either
 scientific preset into a custom layout includes this button.</p>
 <p>The scientific layouts also include <code class="docutils literal notranslate"><span class="pre">x²</span></code>, which inserts <code class="docutils literal notranslate"><span class="pre">^2</span></code>, and
 <code class="docutils literal notranslate"><span class="pre">;</span></code> to separate function arguments. These replace the <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">x=</span></code>
 shortcuts in version 1.1. Related buttons sit together: <code class="docutils literal notranslate"><span class="pre">√</span></code> and <code class="docutils literal notranslate"><span class="pre">x²</span></code>,
-<code class="docutils literal notranslate"><span class="pre">xʸ</span></code> and <code class="docutils literal notranslate"><span class="pre">ⁿ√</span></code>, <code class="docutils literal notranslate"><span class="pre">E</span></code> and <code class="docutils literal notranslate"><span class="pre">exp</span></code>, <code class="docutils literal notranslate"><span class="pre">ln</span></code> and <code class="docutils literal notranslate"><span class="pre">log10</span></code>, and each
+<code class="docutils literal notranslate"><span class="pre">x^y</span></code> and <code class="docutils literal notranslate"><span class="pre">root</span></code>, <code class="docutils literal notranslate"><span class="pre">E</span></code> and <code class="docutils literal notranslate"><span class="pre">exp</span></code>, <code class="docutils literal notranslate"><span class="pre">ln</span></code> and <code class="docutils literal notranslate"><span class="pre">log10</span></code>, and each
 trigonometric function with its inverse.</p>
 <p>Available entries in <span class="menuselection">Settings ‣ Appearance ‣ Keypad ‣ Zoom</span> are:</p>
 <ul class="simple">
@@ -203,6 +207,8 @@ menu on the result-display.</p>
 </section>
 <section id="session-tabs-and-panes">
 <h2>Session Tabs and Panes</h2>
+<p>New blank tabs receive an <code class="docutils literal notranslate"><span class="pre">Untitled-XXX</span></code> name that is not already used in any
+open window, including by empty tabs that have not been saved.</p>
 <p>When a pane contains more than one session, SpeedCrunch shows a tab bar above
 the result display. Click a tab to switch sessions, drag tabs horizontally to
 reorder them within the pane, or drag a tab away from the tab bar to move it to
@@ -219,19 +225,31 @@ as <span class="menuselection">Clone…</span> in the tab context menu and
 <span class="menuselection">Session ‣ Clone…</span> in the result display context menu.
 Use <span class="menuselection">Session ‣ New Window</span> to open a blank
 session in a new window that copies the current window and dock layout.
+Closing a window closes only that window. SpeedCrunch exits when you close the
+last window or choose <span class="menuselection">Session ‣ Quit</span>, and its next start
+restores the windows that were open at that moment.
 Choose <span class="menuselection">Session ‣ Close Tab</span> to close the active tab, or
 <span class="menuselection">Session ‣ Reopen Closed Tab</span> to restore the last ordinary tab
 you closed. Private tabs cannot be reopened.
+Closing a window’s last tab also closes the window. In the only open window,
+SpeedCrunch opens a blank tab instead.
 Both commands are also available from the tab context menu.
 When a floating dock has focus, session commands apply to its window.
 Use <span class="menuselection">View ‣ Split</span> to add a pane in any direction, and
 <span class="menuselection">View ‣ Close Pane</span> to close the active pane.
 The tab context menu also provides <span class="menuselection">Split</span> and
 <span class="menuselection">Close Pane</span>.</p>
-<p>The tab context menu’s <span class="menuselection">Clear</span> command removes the session’s
-calculations, unfinished expression, variables, functions, and units after
-confirmation. Global user definitions are kept. <span class="menuselection">Delete</span> removes
-the session itself after confirmation.
+<p>Choose <span class="menuselection">Edit ‣ Clear History</span> or press <kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">L</kbd>
+(<kbd class="kbd docutils literal notranslate">Cmd</kbd>+<kbd class="kbd docutils literal notranslate">L</kbd> on macOS) to clear the active session’s calculations and unfinished
+expression. Session variables, functions, and units are kept.
+The tab context menu’s <span class="menuselection">Clear History</span> command does the same for that tab.
+SpeedCrunch asks for confirmation by default. To skip this dialog, check
+<span class="menuselection">Settings ‣ Results ‣ Skip Clear History Confirmation</span>.
+Choose <span class="menuselection">Session ‣ Reset</span> to clear the calculation history, current
+expression, and session variables, functions, and units. Reset always asks for
+confirmation. Global user definitions are kept.
+<span class="menuselection">Delete</span> in the tab context menu removes the session itself
+after confirmation.
 When SpeedCrunch restores multiple windows after a restart, each window keeps
 its own dock layout, dock visibility, keypad visibility, layout and zoom,
 and—when window position saving is enabled—its own size and position.</p>
@@ -281,6 +299,8 @@ the app is running still creates an ordinary session.</p>
 <h2>Expression Editor Features</h2>
 <p>Turn off <span class="menuselection">Settings ‣ Editing ‣ Automatic Input Adjustments</span>
 to enter text without automatic text adjustments or character restrictions.</p>
+<p>With automatic adjustments enabled, you can subtract a negative number by
+typing <code class="docutils literal notranslate"><span class="pre">3--2</span></code>, which gives <code class="docutils literal notranslate"><span class="pre">5</span></code>. For unit conversion, use <code class="docutils literal notranslate"><span class="pre">-&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">in</span></code>.</p>
 <p>The expression editor provides some advanced features:</p>
 <ul>
 <li><dl>
@@ -329,6 +349,8 @@ This also works for user-defined functions. Pressing <kbd class="kbd docutils li
 </li>
 <li><dl>
 <dt>Quick constant insertion</dt><dd><p>Press <kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">Space</kbd> to search the same constants as the constants widget (see above).
+If your system already uses that shortcut, choose another one for
+<span class="guilabel">Search Constants</span> in <span class="menuselection">Settings ‣ Keyboard Shortcuts</span>.
 Type a name or unit to filter the list. Each result shows its unit beside the name using the theme’s unit color.
 Press <kbd class="kbd docutils literal notranslate">Up</kbd> and <kbd class="kbd docutils literal notranslate">Down</kbd> to select a result. Press <kbd class="kbd docutils literal notranslate">Tab</kbd> or <kbd class="kbd docutils literal notranslate">Enter</kbd>, or click a result, to insert it and return to the editor.
 <kbd class="kbd docutils literal notranslate">Shift</kbd>+<kbd class="kbd docutils literal notranslate">Tab</kbd> moves focus backward. With no matches, <kbd class="kbd docutils literal notranslate">Tab</kbd> leaves the popup open.
@@ -417,6 +439,13 @@ and live previews use the default settings.</p>
 <h3>Result Display Interactions</h3>
 <p>The result display supports mouse-driven interactions for navigation and editing.</p>
 <ul>
+<li><dl class="simple">
+<dt>Scroll to bottom</dt><dd><p>When you scroll away from the bottom, a down-arrow button appears in the
+lower-right corner of the result area, beside the scrollbar. Click it to
+return to the latest calculation. The button hides when you reach the bottom.</p>
+</dd>
+</dl>
+</li>
 <li><dl>
 <dt>Right-click context menu</dt><dd><p>Right-clicking an expression/calculation block in the result display opens a context menu
 for that specific block.
@@ -613,27 +642,27 @@ Complex numbers are always enabled.</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><span class="menuselection">Complex Form ‣ Rectangular (a + bi)</span></dt><dd><p>Display complex results in rectangular form.</p>
+<dt><span class="menuselection">Complex Form ‣ Rectangular</span></dt><dd><p>Display complex results in rectangular form.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><span class="menuselection">Complex Form ‣ Exponential (reⁱᶿ)</span></dt><dd><p>Display complex results in exponential form.</p>
+<dt><span class="menuselection">Complex Form ‣ Exponential</span></dt><dd><p>Display complex results in exponential form.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><span class="menuselection">Complex Form ‣ Trigonometric (r(cos θ + i·sin θ))</span></dt><dd><p>Display complex results in trigonometric form.</p>
+<dt><span class="menuselection">Complex Form ‣ Trigonometric</span></dt><dd><p>Display complex results in trigonometric form.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><span class="menuselection">Complex Form ‣ Cis (r·cis(θ))</span></dt><dd><p>Display complex results in cis form.</p>
+<dt><span class="menuselection">Complex Form ‣ Cis</span></dt><dd><p>Display complex results in cis form.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><span class="menuselection">Complex Form ‣ Phasor (r∠θ)</span></dt><dd><p>Display complex results in phasor form.</p>
+<dt><span class="menuselection">Complex Form ‣ Phasor</span></dt><dd><p>Display complex results in phasor form.</p>
 </dd>
 </dl>
 </li>
@@ -656,6 +685,8 @@ digit grouping in the input field.</p>
 menus with a single combined Number Format selection.</p>
 <p>The default option is no digit grouping with dot decimal separator
 (<code class="docutils literal notranslate"><span class="pre">1234567.12345</span></code>).</p>
+<p>A manually entered grouped number such as <code class="docutils literal notranslate"><span class="pre">1,234,567</span></code> keeps its grouping
+marks in the input field, even with this default format selected.</p>
 <p>Additional options let you choose:</p>
 <ul class="simple">
 <li><p>no digit grouping with dot or comma decimal separator</p></li>
@@ -673,6 +704,62 @@ SpeedCrunch reserves it for <a class="reference internal" href="syntax.html#sexa
 copy/paste from other applications. In clear mixed-separator cases, it
 accepts the number and normalizes it by ignoring non-digit grouping
 characters as needed.</p>
+<p>When a single comma or dot could be either a decimal point or a grouping
+mark, the selected decimal separator takes priority. In any dot-decimal
+format, <code class="docutils literal notranslate"><span class="pre">1,234</span></code> means <code class="docutils literal notranslate"><span class="pre">1234</span></code> and <code class="docutils literal notranslate"><span class="pre">1.234</span></code> means <code class="docutils literal notranslate"><span class="pre">1.234</span></code>. This also
+applies to <code class="docutils literal notranslate"><span class="pre">1234567.12345</span></code>, which displays numbers without grouping.
+In comma-decimal formats, the roles are reversed. A grouping mark must
+separate one to three leading digits from a group of three digits.
+For numbers with only one comma or dot, the selected decimal mark remains
+a decimal point regardless of how many digits follow it. The other mark is
+also accepted as a decimal point when the number does not match the
+thousands-grouping pattern. With <code class="docutils literal notranslate"><span class="pre">1234567.12345</span></code> selected, for example,
+<code class="docutils literal notranslate"><span class="pre">1,2</span></code>, <code class="docutils literal notranslate"><span class="pre">35,6</span></code>, <code class="docutils literal notranslate"><span class="pre">987,1</span></code>, and <code class="docutils literal notranslate"><span class="pre">2,34567</span></code> mean <code class="docutils literal notranslate"><span class="pre">1.2</span></code>, <code class="docutils literal notranslate"><span class="pre">35.6</span></code>,
+<code class="docutils literal notranslate"><span class="pre">987.1</span></code>, and <code class="docutils literal notranslate"><span class="pre">2.34567</span></code>. These inputs are accepted without changing their
+commas in the editor.
+This applies to every number format, including styles that display spaces,
+underscores, or fractional grouping. Accepted decimal values are displayed
+with the selected decimal separator and grouping pattern. For example,
+<code class="docutils literal notranslate"><span class="pre">2,34567</span></code> has the same value in every format, but appears as <code class="docutils literal notranslate"><span class="pre">2.345</span> <span class="pre">67</span></code>
+with <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">234</span> <span class="pre">567.123</span> <span class="pre">45</span></code> selected or <code class="docutils literal notranslate"><span class="pre">2,345.67</span></code> with
+<code class="docutils literal notranslate"><span class="pre">1.234.567,123.45</span></code> selected.
+With a dot-decimal format selected, <code class="docutils literal notranslate"><span class="pre">0,123</span></code> means <code class="docutils literal notranslate"><span class="pre">123</span></code>. Leading zeroes
+do not change the grouping rule. In contrast, <code class="docutils literal notranslate"><span class="pre">1234,567</span></code> means
+<code class="docutils literal notranslate"><span class="pre">1234.567</span></code> because four leading digits do not form a conventional single
+thousands group. Comma-decimal formats apply the same rules with the marks
+reversed.
+These rules also apply when pasting a number or entering scientific notation.
+Clear mixed-separator input such as <code class="docutils literal notranslate"><span class="pre">1.000,23</span></code> is accepted as <code class="docutils literal notranslate"><span class="pre">1000.23</span></code>
+when it does not also match the selected fractional-grouping format.</p>
+<p>When input contains both commas and dots and has two possible readings,
+SpeedCrunch assumes the fractional part is not grouped unless the selected
+format explicitly groups fractional digits with those marks. For example,
+with <code class="docutils literal notranslate"><span class="pre">1234567.12345</span></code>
+selected, <code class="docutils literal notranslate"><span class="pre">1.000,000</span> <span class="pre">*</span> <span class="pre">2</span></code> means <code class="docutils literal notranslate"><span class="pre">1000</span> <span class="pre">*</span> <span class="pre">2</span></code> and gives <code class="docutils literal notranslate"><span class="pre">2000</span></code>.
+The same applies to <code class="docutils literal notranslate"><span class="pre">1,000.000</span> <span class="pre">*</span> <span class="pre">2</span></code>.</p>
+<p>For formats that group fractional digits with commas or dots, valid input in
+the selected format takes priority. With <code class="docutils literal notranslate"><span class="pre">1,234,567.123,45</span></code> selected,
+<code class="docutils literal notranslate"><span class="pre">1.234,56</span></code> means <code class="docutils literal notranslate"><span class="pre">1.23456</span></code>. With <code class="docutils literal notranslate"><span class="pre">1.234.567,123.45</span></code> selected,
+<code class="docutils literal notranslate"><span class="pre">1,234.56</span></code> has that same value. Other formats read these inputs as
+<code class="docutils literal notranslate"><span class="pre">1234.56</span></code>. Spaces can separate groups on either side of the decimal point,
+for example <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">234.567</span> <span class="pre">89</span></code> means <code class="docutils literal notranslate"><span class="pre">1234.56789</span></code>.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">1,234,567.123,45</span></code> selected, <code class="docutils literal notranslate"><span class="pre">1.000,000</span> <span class="pre">*</span> <span class="pre">2</span></code> instead gives <code class="docutils literal notranslate"><span class="pre">2</span></code>
+because the comma groups fractional digits. The matching case with
+<code class="docutils literal notranslate"><span class="pre">1.234.567,123.45</span></code> selected is <code class="docutils literal notranslate"><span class="pre">1,000.000</span> <span class="pre">*</span> <span class="pre">2</span></code>, which also gives <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p>
+<p>Repeated commas or dots used for integer grouping must follow three-digit
+grouping or Indian 3-2-2 grouping. Empty groups are rejected. For example,
+<code class="docutils literal notranslate"><span class="pre">1,2,3</span></code>, <code class="docutils literal notranslate"><span class="pre">1.2.3</span></code>, and <code class="docutils literal notranslate"><span class="pre">1,,234</span></code> report an error instead of having their
+punctuation removed. Spaces remain permissive, so <code class="docutils literal notranslate"><span class="pre">12</span> <span class="pre">34</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">2</span> <span class="pre">3</span></code>
+mean <code class="docutils literal notranslate"><span class="pre">1234</span></code> and <code class="docutils literal notranslate"><span class="pre">123</span></code> respectively.</p>
+<p>The editor keeps commas and dots as you type or paste them, even when they
+differ from the selected format. The interpreted expression and results use
+the selected number format. Digit grouping in the editor can add visual
+separators, but does not replace punctuation you enter.</p>
+<p>The interpreted expression keeps leading and trailing zeroes from the input.
+With <code class="docutils literal notranslate"><span class="pre">1234567.12345</span></code> selected, <code class="docutils literal notranslate"><span class="pre">0,123</span></code> is shown as <code class="docutils literal notranslate"><span class="pre">0123</span></code> and evaluates
+to <code class="docutils literal notranslate"><span class="pre">123</span></code>. With <code class="docutils literal notranslate"><span class="pre">1234567,12345</span></code> selected, the same input is shown as
+<code class="docutils literal notranslate"><span class="pre">0,123</span></code> and evaluates to <code class="docutils literal notranslate"><span class="pre">0,123</span></code>. Scientific notation keeps its exponent
+in the interpreted expression, using the selected decimal and grouping marks.</p>
 </section>
 <section id="history-size-limit">
 <h3>History Size Limit</h3>
@@ -693,8 +780,30 @@ to <code class="docutils literal notranslate"><span class="pre">0</span></code> 
 </section>
 <section id="window">
 <h3>Window</h3>
-<p>This section contains settings that control the main window behavior.</p>
-<ul class="simple">
+<p>This section contains settings that control window behavior.</p>
+<ul>
+<li><dl>
+<dt><span class="menuselection">On Subsequent Launch</span></dt><dd><p>Choose what happens when you launch SpeedCrunch while it is already running.
+<span class="menuselection">Activate Existing Window</span> is the default.
+<span class="menuselection">Open New Window</span> opens a blank session in another window.
+Each window closes on its own, and SpeedCrunch keeps running until you
+close the last one.
+<span class="menuselection">Open New Tab</span> opens a blank session in the most recently
+active calculator window, using its active pane if the window is split.
+The choice applies to all windows and is saved between launches.</p>
+<p>This setting works on Windows, macOS, and Linux with X11 or Wayland.
+On macOS, reopening the app from Finder or clicking its Dock icon also
+follows this choice. Switching between apps or clicking an existing window
+does not create a window or tab. On other desktops, the launcher or taskbar
+action must launch the application again to use this setting.</p>
+<p>If SpeedCrunch is not running, it starts normally and restores saved
+sessions regardless of this choice. Requests received during restoration
+wait until it finishes. If a modal dialog is open, finish or dismiss it
+before SpeedCrunch creates the requested window or tab. The desktop’s
+focus policy still determines whether a window can come to the foreground.</p>
+</dd>
+</dl>
+</li>
 <li><dl class="simple">
 <dt><span class="menuselection">Open a Private Tab on Startup</span></dt><dd><p>Open and focus a fresh private tab after restoring saved sessions. If there
 are no sessions to restore, or the active session is an empty
@@ -758,8 +867,8 @@ Available modes are:
 <span class="menuselection">Nearest, Half Away (round)</span>,
 <span class="menuselection">Nearest, Half Even (roundeven)</span>,
 <span class="menuselection">Toward Zero (trunc)</span>,
-<span class="menuselection">Toward +∞ (ceil)</span>,
-<span class="menuselection">Toward −∞ (floor)</span>.</p>
+<span class="menuselection">Round Up (ceil)</span>,
+<span class="menuselection">Round Down (floor)</span>.</p>
 <ul class="simple">
 <li><dl class="simple">
 <dt><span class="menuselection">Nearest, Half Away (round)</span></dt><dd><p>Round to nearest; ties increase magnitude. This matches the
@@ -786,14 +895,14 @@ Example at 1 fractional digit: <code class="docutils literal notranslate"><span 
 </dl>
 </li>
 <li><dl class="simple">
-<dt><span class="menuselection">Toward +∞ (ceil)</span></dt><dd><p>Always round upward. This matches the <a class="reference internal" href="../reference/integer.html#sc.ceil" title="ceil"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">ceil()</span></code></a> function.
+<dt><span class="menuselection">Round Up (ceil)</span></dt><dd><p>Always round upward. This matches the <a class="reference internal" href="../reference/integer.html#sc.ceil" title="ceil"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">ceil()</span></code></a> function.
 Example at 1 fractional digit: <code class="docutils literal notranslate"><span class="pre">2.210</span> <span class="pre">-&gt;</span> <span class="pre">2.3</span></code>,
 <code class="docutils literal notranslate"><span class="pre">-2.210</span> <span class="pre">-&gt;</span> <span class="pre">-2.2</span></code>.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><span class="menuselection">Toward −∞ (floor)</span></dt><dd><p>Always round downward. This matches the <a class="reference internal" href="../reference/integer.html#sc.floor" title="floor"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">floor()</span></code></a> function.
+<dt><span class="menuselection">Round Down (floor)</span></dt><dd><p>Always round downward. This matches the <a class="reference internal" href="../reference/integer.html#sc.floor" title="floor"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">floor()</span></code></a> function.
 Example at 1 fractional digit: <code class="docutils literal notranslate"><span class="pre">2.290</span> <span class="pre">-&gt;</span> <span class="pre">2.2</span></code>,
 <code class="docutils literal notranslate"><span class="pre">-2.210</span> <span class="pre">-&gt;</span> <span class="pre">-2.3</span></code>.</p>
 </dd>
@@ -821,6 +930,15 @@ previews; already stored history entries keep their original display.</p>
 </li>
 <li><dl class="simple">
 <dt><span class="menuselection">Copy New Results Automatically</span></dt><dd><p>Automatically copy each newly evaluated result to the clipboard.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><span class="menuselection">Skip Clear History Confirmation</span></dt><dd><p>Clear the history and unfinished expression without asking for confirmation.
+Session variables, functions, and units are kept. This applies to
+<span class="menuselection">Edit ‣ Clear History</span>, <kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">L</kbd> (<kbd class="kbd docutils literal notranslate">Cmd</kbd>+<kbd class="kbd docutils literal notranslate">L</kbd>
+on macOS), and the clear commands in the tab and result display context
+menus. This option is off by default and is shared by all windows.</p>
 </dd>
 </dl>
 </li>
@@ -944,7 +1062,9 @@ launches and applies to all session panes and windows.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">User</span> <span class="pre">functions</span></code> includes user-defined function names.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">User</span> <span class="pre">variables</span></code> includes user-defined variable names.</p></li>
 </ul>
-<p>The autocomplete popup also shows category icons for suggestions.</p>
+<p>Outside unit brackets, each suggestion is marked with a letter for its
+kind: <em>f</em> for functions, <em>x</em> for variables and <em>k</em> for built-in
+constants. Unit suggestions inside <code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">]</span></code> have no marker.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">Added in version 1.0.</span></p>
 </div>
@@ -974,7 +1094,7 @@ expression fits in one visual line; otherwise, it moves the cursor.</p></li>
 <dt><span class="menuselection">Settings ‣ Appearance ‣ Theme…</span></dt><dd><p>Open the theme dialog. Themes are listed in <span class="guilabel">Light Themes</span> and
 <span class="guilabel">Dark Themes</span> groups. Selecting a theme updates the preview
 immediately. When no saved theme preference exists, as on first launch,
-SpeedCrunch uses the <em>Duskfox</em> theme.</p>
+SpeedCrunch uses the <em>One Dark</em> theme.</p>
 <p>The <span class="guilabel">Preview</span> area shows representative result-display and
 editor content so that syntax-highlighting, result, and background colors
 are visible while editing. The selected <code class="docutils literal notranslate"><span class="pre">background</span></code> color generates
@@ -1022,13 +1142,65 @@ For the full schema, see <a class="reference internal" href="theme_json_schema.h
 </dl>
 </li>
 <li><dl>
+<dt><span class="menuselection">Settings ‣ Appearance ‣ Style Presets</span></dt><dd><p>Apply a set of appearance choices in one step:</p>
+<ul class="simple">
+<li><p><span class="guilabel">Classic</span> uses the system appearance for menus, docks, the
+status bar, and tooltips, with Classic input, results, and keypad styles.
+It gives SpeedCrunch an appearance similar to version 0.12.</p></li>
+<li><p><span class="guilabel">Modern</span> uses the SpeedCrunch theme for menus, docks, the
+status bar, and tooltips, with Modern input, results, and keypad styles.
+This matches the defaults for new 1.x installations.</p></li>
+</ul>
+<p>The checkmark shows which preset matches these six settings.
+<span class="guilabel">Custom</span> is checked when neither preset matches. It is an
+indicator, not a selectable preset. Changing an individual setting updates
+the checkmark automatically, including when you restore a matching
+combination by hand.</p>
+<p>Presets apply immediately to all windows. They keep the selected color
+theme, System Color Mode, fonts, keypad layouts and zoom levels, dock
+positions, and visibility choices. Existing settings stay as they are when
+you upgrade. SpeedCrunch identifies the matching preset without changing
+your appearance.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 1.2.</span></p>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><span class="menuselection">Settings ‣ Appearance ‣ System Color Mode</span></dt><dd><p>Choose the light or dark appearance for controls that use the system style:</p>
+<ul class="simple">
+<li><p><span class="guilabel">Follow System</span> (the default) follows the operating system’s
+current appearance, including automatic light and dark changes.</p></li>
+<li><p><span class="guilabel">Light</span> keeps the system controls light.</p></li>
+<li><p><span class="guilabel">Dark</span> keeps the system controls dark.</p></li>
+</ul>
+<p>It affects menus, docks, and the status bar when their appearance is set to
+<span class="guilabel">System</span>, along with other native controls and dialogs. It does not
+change the selected SpeedCrunch theme or the Input and Results appearance.</p>
+<p>Windows 10’s native control style has no dark version. While the appearance
+is dark there, SpeedCrunch draws its controls and dialogs with Qt’s Fusion
+style instead. Menus, panels and lists keep the native sizes and spacing,
+and shortcut letters are still underlined only after pressing <kbd class="kbd docutils literal notranslate">Alt</kbd>.</p>
+<p>A system high-contrast accessibility theme may take precedence over the
+selected light or dark mode, depending on platform support.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 1.2.</span></p>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl>
 <dt><span class="menuselection">Settings ‣ Appearance ‣ Menus</span></dt><dd><p>Choose how menus look:</p>
 <ul class="simple">
 <li><p><span class="guilabel">System</span> uses the system’s menu colors and styling,
-including highlighted and disabled items. Menus follow changes to the
-system theme while SpeedCrunch is running.</p></li>
+including highlighted and disabled items. With <span class="guilabel">Follow System</span>
+selected under <span class="menuselection">System Color Mode</span>, menus follow changes
+to the system theme while SpeedCrunch is running.</p></li>
 <li><p><span class="guilabel">SpeedCrunch Theme</span> (the default) uses the selected SpeedCrunch
-theme for menu backgrounds and text, including highlighted items.</p></li>
+theme for menu backgrounds and text, including highlighted items.
+Menu icons also follow the theme’s text colors. In popup menus, disabled
+labels, shortcut hints, and icons appear dimmed.</p></li>
 </ul>
 <p>This setting applies to the menu bar shown inside the application window,
 dropdown menus, context menus, and dropdown lists in attached and floating
@@ -1037,7 +1209,8 @@ docks that use the SpeedCrunch theme. Closed dropdown controls follow the
 The macOS system menu bar keeps its native appearance.
 Popup menus drawn by Qt can look slightly different from native macOS menus.
 On GNOME, popup menus use the GTK theme’s popup hover colors when GTK is
-available. Otherwise they use Qt’s system palette.
+available and System Color Mode is set to <span class="guilabel">Follow System</span>.
+Otherwise they use Qt’s system palette.
 The choice applies to all SpeedCrunch windows and is saved between launches.</p>
 <p>Selections in the expression editor and result display use the SpeedCrunch
 theme. Dock list selections follow the <span class="menuselection">Docks</span> setting.</p>
@@ -1060,8 +1233,9 @@ theme for dock content, title bars, and tabs, including list selections and
 search fields.</p></li>
 </ul>
 <p>The choice applies immediately to all SpeedCrunch windows and is saved
-between launches. System colors follow changes to the system theme while
-SpeedCrunch is running.</p>
+between launches. With <span class="guilabel">Follow System</span> selected under
+<span class="menuselection">System Color Mode</span>, system colors follow changes to the
+system theme while SpeedCrunch is running.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">Added in version 1.1.</span></p>
 </div>
@@ -1072,8 +1246,9 @@ SpeedCrunch is running.</p>
 <dt><span class="menuselection">Settings ‣ Appearance ‣ Status Bar</span></dt><dd><p>Choose how the status bar looks:</p>
 <ul class="simple">
 <li><p><span class="guilabel">System</span> uses the system’s palette and widget styles for the
-status bar, its labels, and its buttons. Colors follow changes to the
-system theme while SpeedCrunch is running.</p></li>
+status bar, its labels, and its buttons. With <span class="guilabel">Follow System</span>
+selected under <span class="menuselection">System Color Mode</span>, colors follow changes
+to the system theme while SpeedCrunch is running.</p></li>
 <li><p><span class="guilabel">SpeedCrunch Theme</span> (the default) uses the selected SpeedCrunch
 theme for the status bar background and text.</p></li>
 </ul>
@@ -1082,6 +1257,24 @@ between launches. Popup menus follow the <span class="menuselection">Menus</span
 Show or hide the status bar with <span class="menuselection">View ‣ Status Bar</span>.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">Added in version 1.1.</span></p>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><span class="menuselection">Settings ‣ Appearance ‣ Tooltips</span></dt><dd><p>Choose how tooltips and popup lists look. This includes the current result,
+function hints, the function and constant lists in the input field, and the
+tooltips in the keypad, session tabs, results, and docks:</p>
+<ul class="simple">
+<li><p><span class="guilabel">System</span> uses the system style. The tooltips and lists look
+like those in other apps, and they change when the system theme changes.</p></li>
+<li><p><span class="guilabel">SpeedCrunch Theme</span> (the default) uses the colors of the
+selected SpeedCrunch theme.</p></li>
+</ul>
+<p>The change applies at once to all SpeedCrunch windows. SpeedCrunch keeps
+it the next time it starts.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 1.2.</span></p>
 </div>
 </dd>
 </dl>
@@ -1103,8 +1296,10 @@ regardless of how many session tabs it contains.
 Vertical pane dividers remain visible through the input area.</p></li>
 </ul>
 <p>Both styles keep the same editing features, including input that grows as
-expressions wrap. The choice applies immediately to every window and pane
-and is saved between launches.</p>
+expressions wrap. The input grows to five visible lines, then scrolls to
+keep the cursor in view. Line spacing follows the selected font.
+The choice applies immediately to every window and pane and is saved
+between launches.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">Added in version 1.1.</span></p>
 </div>
@@ -1162,9 +1357,9 @@ to share the report when reporting a problem.</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><span class="menuselection">Help ‣ About SpeedCrunch</span></dt><dd><p>Show the SpeedCrunch version, the operating system and its version, and the Qt
-version. Portable builds display <code class="docutils literal notranslate"><span class="pre">Portable</span></code> next to the SpeedCrunch
-version.</p>
+<dt><span class="menuselection">Help ‣ About SpeedCrunch</span></dt><dd><p>Show the SpeedCrunch version, the short source commit hash in parentheses,
+the Qt version, and the operating system and its version, in that order. Portable builds
+display <code class="docutils literal notranslate"><span class="pre">Portable</span></code> next to the SpeedCrunch version.</p>
 </dd>
 </dl>
 </li>
@@ -1173,7 +1368,7 @@ version.</p>
 Update checks are enabled in official SpeedCrunch builds. Other distributors
 can choose whether to enable them. When enabled, this menu entry is available
 and SpeedCrunch also checks for updates after the window first paints,
-at most once every 24 hours.
+at most once a week.
 Each network request has a five-second deadline, including redirects.
 Receiving data does not extend that deadline.
 Oversized update responses are rejected before their contents are parsed
@@ -1192,6 +1387,61 @@ package provider guidance.</p>
 </section>
 <section id="keyboard-shortcuts">
 <h2>Keyboard Shortcuts</h2>
+<p>Choose <span class="menuselection">Settings ‣ Keyboard Shortcuts</span> to change keyboard
+shortcuts. Search by action name, menu category, or the shortcut shown in the
+list. Click an action’s box in the <span class="guilabel">Custom</span> column, then press the keys
+you want to use. You can also double-click the action to focus its box.
+Recording finishes after a short pause or when you move to another box.
+Click <span class="guilabel">Apply</span> or <span class="guilabel">OK</span> to save your changes.</p>
+<p>The <span class="guilabel">Default</span> column shows the original bindings. The
+<span class="guilabel">Custom</span> boxes show <span class="guilabel">Use default</span> until you change an action’s
+shortcut. They show <span class="guilabel">Disabled</span> when you explicitly clear the binding.
+Notation and precision shortcuts are grouped under <span class="guilabel">Settings / Results</span>
+in the list.</p>
+<p>Each action can have one custom shortcut. A shortcut may be a single key
+combination or a sequence of up to four combinations, such as <kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">K</kbd>
+followed by <kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">C</kbd>. Some existing defaults have alternatives, such as
+<kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">N</kbd> and <kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">T</kbd> for a new tab. Those alternatives remain available
+until you assign a custom shortcut to that action.</p>
+<p>If a shortcut is already assigned, SpeedCrunch lists the conflicting actions.
+Choose <span class="guilabel">Reassign</span> to remove their conflicting bindings and use the
+shortcut for the selected action. Sequences also conflict when one begins with
+the complete shortcut of another action. Other bindings for those actions are
+kept. SpeedCrunch cannot detect shortcuts that the operating system or another
+application intercepts before they reach it.</p>
+<p>Open the menu beside an action’s box and choose <span class="guilabel">Disable Shortcut</span>
+to leave it without a binding, or <span class="guilabel">Restore Default</span> to restore its
+original shortcuts. Clearing a custom shortcut with the box’s clear button
+also disables it. Use <span class="guilabel">Restore All Defaults</span> to restore every shortcut.
+Changes take effect in all open windows when you click <span class="guilabel">Apply</span> or
+<span class="guilabel">OK</span>, and are
+saved for later launches. <span class="guilabel">Cancel</span> discards changes made since the last
+click on <span class="guilabel">Apply</span>. <span class="menuselection">Settings ‣ Reset All Settings</span>
+also restores the default shortcuts.</p>
+<p>The configurable actions include session commands, clipboard and editing
+commands, dock visibility, keypad presets and zoom, pane splitting, tab
+navigation, focus navigation, selected calculation settings, and manual help.
+The expression editor also provides these actions:</p>
+<ul class="simple">
+<li><p><span class="guilabel">Search Constants</span>.</p></li>
+<li><p><span class="guilabel">Previous History Expression</span> and <span class="guilabel">Next History Expression</span>.
+Their default arrow keys follow <span class="menuselection">Settings ‣ Editing ‣
+Up/Down Arrow History</span>. A custom shortcut recalls history directly.</p></li>
+<li><p><span class="guilabel">Zoom In</span> and <span class="guilabel">Zoom Out</span>, also available in the
+<span class="menuselection">View</span> menu.</p></li>
+<li><p>Result scrolling by page or line, and scrolling to the first or last result.</p></li>
+</ul>
+<p>The expression editor actions work while the expression editor has focus.
+Evaluation with <kbd class="kbd docutils literal notranslate">Enter</kbd>, ordinary cursor movement, text selection, and
+popup controls keep their usual keys. For example, <kbd class="kbd docutils literal notranslate">Escape</kbd> still dismisses
+a popup, and its arrow keys still move through the suggestions. Appearance
+preferences and other settings without configurable shortcuts remain available
+from their menus.</p>
+<p>The following list shows the default shortcuts. On macOS, the dialog displays
+the native Command and other modifier symbols.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 1.2: </span>Configurable keyboard shortcuts.</p>
+</div>
 <section id="id3">
 <h3>Editing</h3>
 <ul class="simple">
@@ -1227,6 +1477,14 @@ package provider guidance.</p>
 </li>
 <li><dl class="simple">
 <dt><kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">W</kbd> (<kbd class="kbd docutils literal notranslate">Cmd</kbd>+<kbd class="kbd docutils literal notranslate">W</kbd> on macOS)</dt><dd><p>Close the active session tab.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">L</kbd> (<kbd class="kbd docutils literal notranslate">Cmd</kbd>+<kbd class="kbd docutils literal notranslate">L</kbd> on macOS)</dt><dd><p>Clear the active session’s history and unfinished expression, keeping its
+variables, functions, and units. Ask for confirmation unless
+<span class="menuselection">Settings ‣ Results ‣ Skip Clear History Confirmation</span>
+is checked.</p>
 </dd>
 </dl>
 </li>
@@ -1425,7 +1683,9 @@ Focus navigation applies to the current window, including its floating docks.</p
 </dl>
 </li>
 <li><dl class="simple">
-<dt><kbd class="kbd docutils literal notranslate">Ctrl</kbd> + mouse wheel, <kbd class="kbd docutils literal notranslate">Shift</kbd> + mouse wheel, or <kbd class="kbd docutils literal notranslate">Shift</kbd>+<kbd class="kbd docutils literal notranslate">Up</kbd> and <kbd class="kbd docutils literal notranslate">Shift</kbd>+<kbd class="kbd docutils literal notranslate">Down</kbd></dt><dd><p>Change the font size.</p>
+<dt><kbd class="kbd docutils literal notranslate">Ctrl</kbd> + mouse wheel, <kbd class="kbd docutils literal notranslate">Shift</kbd> + mouse wheel, or <kbd class="kbd docutils literal notranslate">Shift</kbd>+<kbd class="kbd docutils literal notranslate">Up</kbd> and <kbd class="kbd docutils literal notranslate">Shift</kbd>+<kbd class="kbd docutils literal notranslate">Down</kbd></dt><dd><p>Change the font size.
+The keyboard bindings can be changed with <span class="guilabel">Zoom In</span> and
+<span class="guilabel">Zoom Out</span> in <span class="menuselection">Settings ‣ Keyboard Shortcuts</span>.</p>
 </dd>
 </dl>
 </li>
@@ -1461,7 +1721,7 @@ versions used a simple custom text format.</p>
   <tr>
     <td width="50%">
       <a class="nav-item nav-item-0"
-         href="../contents.html">SpeedCrunch 1.1 documentation</a> &#187; <a class="nav-item nav-item-1"
+         href="../contents.html">SpeedCrunch 1.2.0-rc.1 documentation</a> &#187; <a class="nav-item nav-item-1"
              href="index.html">User Guide</a>
           
     </td>

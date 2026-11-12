@@ -19,7 +19,7 @@
   <tr>
     <td width="50%">
       <a class="nav-item nav-item-0"
-         href="../contents.html">SpeedCrunch 1.1 documentation</a> &#187; <a class="nav-item nav-item-1"
+         href="../contents.html">SpeedCrunch 1.2.0-rc.1 documentation</a> &#187; <a class="nav-item nav-item-1"
              href="index.html">Reference</a>
           
     </td>
@@ -182,6 +182,15 @@ possible, unless a clear canonical derived target is recognized.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">Pa*m^2</span> <span class="pre">-&gt;</span> <span class="pre">N</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">J/s</span> <span class="pre">-&gt;</span> <span class="pre">W</span></code></p></li>
 </ul>
+<p>Quotients that reduce to a duration use a time unit. For example,
+<code class="docutils literal notranslate"><span class="pre">1[J]</span> <span class="pre">/</span> <span class="pre">1[W]</span></code> gives <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">s</span></code>, and <code class="docutils literal notranslate"><span class="pre">1[mJ]</span> <span class="pre">/</span> <span class="pre">1[W]</span></code> gives <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">ms</span></code>.</p>
+<p>When a product or quotient is rewritten in SI units, the numeric value includes
+the prefixes and conversion factors from both operands. For example,
+<code class="docutils literal notranslate"><span class="pre">150[MJ]</span> <span class="pre">/</span> <span class="pre">1[s]</span></code> gives <code class="docutils literal notranslate"><span class="pre">150000000</span> <span class="pre">W</span></code>, and <code class="docutils literal notranslate"><span class="pre">2[kV]</span> <span class="pre">*</span> <span class="pre">3[A]</span></code> gives <code class="docutils literal notranslate"><span class="pre">6000</span> <span class="pre">W</span></code>.
+The same rule applies to preserved SI forms such as <code class="docutils literal notranslate"><span class="pre">N⋅m</span></code> and <code class="docutils literal notranslate"><span class="pre">W⋅s</span></code>:
+<code class="docutils literal notranslate"><span class="pre">2[kW]</span> <span class="pre">*</span> <span class="pre">3[ms]</span></code> gives <code class="docutils literal notranslate"><span class="pre">6</span> <span class="pre">W⋅s</span></code>.</p>
+<p>Unit symbols keep their case when shortened. For example, <code class="docutils literal notranslate"><span class="pre">kT</span></code> (kilotesla)
+stays distinct from <code class="docutils literal notranslate"><span class="pre">kt</span></code> (knot), and <code class="docutils literal notranslate"><span class="pre">fT</span></code> (femtotesla) from <code class="docutils literal notranslate"><span class="pre">ft</span></code> (foot).</p>
 <p>Examples that preserve composite intent:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">J*Pa</span></code> remains a composed derived expression, because there is no single
@@ -197,6 +206,17 @@ usually chosen for domain readability, so SpeedCrunch preserves common
 authored speed forms when they match a supported named unit.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">nmi/h</span></code> displays as <code class="docutils literal notranslate"><span class="pre">knot</span></code> for the same reason.</p></li>
 </ul>
+<p>Repeated factors cancel in the displayed unit. For example,
+<code class="docutils literal notranslate"><span class="pre">1[B/h]</span> <span class="pre">*</span> <span class="pre">1[h]</span></code> gives <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">B</span></code>, just like
+<code class="docutils literal notranslate"><span class="pre">1[B/hour]</span> <span class="pre">*</span> <span class="pre">1[hour]</span></code>.</p>
+<p>Some equivalent unit forms remain distinct to preserve context.
+<code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">/</span> <span class="pre">(10[ms])</span></code> gives <code class="docutils literal notranslate"><span class="pre">100</span> <span class="pre">s⁻¹</span></code> because inverse time alone does not say
+whether a quantity is a frequency (<code class="docutils literal notranslate"><span class="pre">Hz</span></code>) or a radioactive activity (<code class="docutils literal notranslate"><span class="pre">Bq</span></code>).
+Likewise, <code class="docutils literal notranslate"><span class="pre">1[W]</span> <span class="pre">*</span> <span class="pre">1[s]</span></code> stays <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">W⋅s</span></code> to retain the power-over-time form.
+Use <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">/</span> <span class="pre">(10[ms])</span> <span class="pre">-&gt;</span> <span class="pre">[Hz]</span></code> or <code class="docutils literal notranslate"><span class="pre">1[W]</span> <span class="pre">*</span> <span class="pre">1[s]</span> <span class="pre">-&gt;</span> <span class="pre">[J]</span></code> to request those
+specific units.</p>
+<p>Angular rates expressed per second also include the input time unit’s
+conversion factor. For example, <code class="docutils literal notranslate"><span class="pre">120[rad]</span> <span class="pre">/</span> <span class="pre">2[min]</span></code> gives <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">rad⋅s⁻¹</span></code>.</p>
 <p>Dividing energy by area or volume keeps the <code class="docutils literal notranslate"><span class="pre">J/m²</span></code> or <code class="docutils literal notranslate"><span class="pre">J/m³</span></code> form.
 For example, <code class="docutils literal notranslate"><span class="pre">4[TJ/m^3]</span></code> is expressed in joules per cubic metre, with a
 numeric value of <code class="docutils literal notranslate"><span class="pre">4000000000000</span></code>. Prefixes and scaled area or volume units
@@ -217,10 +237,9 @@ you want another expression:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">[J/s]</span> <span class="pre">-&gt;</span> <span class="pre">[W]</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">[V]</span> <span class="pre">-&gt;</span> <span class="pre">[J/C]</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">10[m]</span> <span class="pre">in</span> <span class="pre">[cm]</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">10[m]</span> <span class="pre">--</span> <span class="pre">[cm]</span></code></p></li>
 </ul>
-<p>SpeedCrunch supports three equivalent conversion operators:
-<code class="docutils literal notranslate"><span class="pre">-&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">in</span></code> (keyword alias), and <code class="docutils literal notranslate"><span class="pre">--</span></code> (shortcut alias).</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">-&gt;</span></code> or the keyword alias <code class="docutils literal notranslate"><span class="pre">in</span></code> for unit conversion.
+The editor displays <code class="docutils literal notranslate"><span class="pre">-&gt;</span></code> as <code class="docutils literal notranslate"><span class="pre">→</span></code>.</p>
 <p>If no explicit conversion target is requested, SpeedCrunch applies the
 canonicalization/display policy above.</p>
 </section>
@@ -1279,7 +1298,7 @@ canonicalization/display policy above.</p>
   <tr>
     <td width="50%">
       <a class="nav-item nav-item-0"
-         href="../contents.html">SpeedCrunch 1.1 documentation</a> &#187; <a class="nav-item nav-item-1"
+         href="../contents.html">SpeedCrunch 1.2.0-rc.1 documentation</a> &#187; <a class="nav-item nav-item-1"
              href="index.html">Reference</a>
           
     </td>

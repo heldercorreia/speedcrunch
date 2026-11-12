@@ -20,7 +20,7 @@
   <tr>
     <td width="50%">
       <a class="nav-item nav-item-0"
-         href="../contents.html">SpeedCrunch 1.1 documentation</a> &#187; <a class="nav-item nav-item-1"
+         href="../contents.html">SpeedCrunch 1.2.0-rc.1 documentation</a> &#187; <a class="nav-item nav-item-1"
              href="index.html">User Guide</a>
           
     </td>
@@ -136,7 +136,24 @@ your own functions can be very useful when you find yourself repeating a similar
 <span class="ge">= 11 [ly]</span>
 </pre></div>
 </div>
-</td></tr></tbody></table><p>To raise a quantity to a power, put the value and its unit inside parentheses:</p>
+</td></tr></tbody></table><p>For division written as <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">/</span> <span class="pre">b[U]</span></code>, the unit block stays with <code class="docutils literal notranslate"><span class="pre">b</span></code> when
+the numerator already has a unit. This also applies when the numerator is a
+variable or a function result:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">c</span> <span class="o">=</span> <span class="mi">299792458</span><span class="p">[</span><span class="n">m</span><span class="o">/</span><span class="n">s</span><span class="p">]</span>
+<span class="n">c</span> <span class="o">/</span> <span class="mi">10</span><span class="p">[</span><span class="n">MHz</span><span class="p">]</span>
+<span class="ge">= 29.9792458 m</span>
+
+<span class="mi">299792458</span><span class="p">[</span><span class="n">m</span><span class="o">/</span><span class="n">s</span><span class="p">]</span> <span class="o">/</span> <span class="mi">10</span><span class="p">[</span><span class="n">MHz</span><span class="p">]</span>
+<span class="ge">= 29.9792458 m</span>
+</pre></div>
+</div>
+</td></tr></tbody></table><p>With a scalar numerator, the trailing unit block applies to the quotient.
+For example, <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">/</span> <span class="pre">4[lb]</span></code> means <code class="docutils literal notranslate"><span class="pre">(1</span> <span class="pre">/</span> <span class="pre">4)[lb]</span></code>, giving <code class="docutils literal notranslate"><span class="pre">0.25</span> <span class="pre">lb</span></code>.
+A variable holding <code class="docutils literal notranslate"><span class="pre">1</span></code> follows the same rule.</p>
+<p>Use parentheses to make either grouping explicit. <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">/</span> <span class="pre">(b[U])</span></code> always
+divides by the quantity <code class="docutils literal notranslate"><span class="pre">b[U]</span></code>, while <code class="docutils literal notranslate"><span class="pre">(a</span> <span class="pre">/</span> <span class="pre">b)[U]</span></code> always applies the
+unit block to the quotient.</p>
+<p>To raise a quantity to a power, put the value and its unit inside parentheses:</p>
 <table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="mi">2</span><span class="p">[</span><span class="n">m</span><span class="p">])</span><span class="n">²</span>
 <span class="ge">= 4 m²</span>
 
@@ -307,7 +324,7 @@ Common examples include <code class="docutils literal notranslate"><span class="
   <tr>
     <td width="50%">
       <a class="nav-item nav-item-0"
-         href="../contents.html">SpeedCrunch 1.1 documentation</a> &#187; <a class="nav-item nav-item-1"
+         href="../contents.html">SpeedCrunch 1.2.0-rc.1 documentation</a> &#187; <a class="nav-item nav-item-1"
              href="index.html">User Guide</a>
           
     </td>

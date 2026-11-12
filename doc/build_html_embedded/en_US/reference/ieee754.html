@@ -20,7 +20,7 @@
   <tr>
     <td width="50%">
       <a class="nav-item nav-item-0"
-         href="../contents.html">SpeedCrunch 1.1 documentation</a> &#187; <a class="nav-item nav-item-1"
+         href="../contents.html">SpeedCrunch 1.2.0-rc.1 documentation</a> &#187; <a class="nav-item nav-item-1"
              href="index.html">Reference</a>
           
     </td>
@@ -108,7 +108,18 @@ See <a class="reference external" href="http://chrishecker.com/images/f/fb/Gdmfp
 </table>
 <p>In many programming languages, the <code class="docutils literal notranslate"><span class="pre">binary32</span></code> format is available as <code class="docutils literal notranslate"><span class="pre">float</span></code>
 and <code class="docutils literal notranslate"><span class="pre">binary64</span></code> is available as <code class="docutils literal notranslate"><span class="pre">double</span></code>.</p>
-<dl class="sc function">
+<p>These functions convert between bit patterns and SpeedCrunch’s own number
+format. They do not make SpeedCrunch use IEEE-754 arithmetic internally.
+Infinity decodes as <code class="docutils literal notranslate"><span class="pre">NaN</span></code>. Both signs of zero decode as <code class="docutils literal notranslate"><span class="pre">0</span></code>, and NaN signs,
+payloads and the distinction between quiet and signaling NaNs are not preserved.</p>
+<p>Very small finite values can appear as <code class="docutils literal notranslate"><span class="pre">0</span></code> in fixed-point notation because
+the displayed result is rounded. The stored value is still nonzero. Use
+<a class="reference internal" href="integer.html#sc.sci" title="sci"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">sci()</span></code></a> or select scientific notation to see these values, for example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">sci</span><span class="p">(</span><span class="n">ieee754_double_decode</span><span class="p">(</span><span class="mh">0x0000000000000001</span><span class="p">))</span>
+<span class="ge">= 4.94065645841246544177e-324</span>
+</pre></div>
+</div>
+</td></tr></tbody></table><dl class="sc function">
 <dt class="sig sig-object sc" id="sc.ieee754_encode">
 <span class="sig-name descname"><span class="pre">ieee754_encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em>; <em class="sig-param"><span class="pre">exponent_bits</span></em>; <em class="sig-param"><span class="pre">significand_bits</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">exponent_bias</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
 <dd><p>Encode a floating point number into a IEEE-754 binary representation.</p>
@@ -261,7 +272,7 @@ exponent if not specified.</p></li>
   <tr>
     <td width="50%">
       <a class="nav-item nav-item-0"
-         href="../contents.html">SpeedCrunch 1.1 documentation</a> &#187; <a class="nav-item nav-item-1"
+         href="../contents.html">SpeedCrunch 1.2.0-rc.1 documentation</a> &#187; <a class="nav-item nav-item-1"
              href="index.html">Reference</a>
           
     </td>

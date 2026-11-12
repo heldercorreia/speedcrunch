@@ -20,7 +20,7 @@
   <tr>
     <td width="50%">
       <a class="nav-item nav-item-0"
-         href="../contents.html">SpeedCrunch 1.1 documentation</a> &#187; <a class="nav-item nav-item-1"
+         href="../contents.html">SpeedCrunch 1.2.0-rc.1 documentation</a> &#187; <a class="nav-item nav-item-1"
              href="index.html">User Guide</a>
           
     </td>
@@ -69,11 +69,19 @@
 with either a period (<code class="docutils literal notranslate"><span class="pre">.</span></code>) or a comma (<code class="docutils literal notranslate"><span class="pre">,</span></code>) as the decimal separator.
 Accepted decimal separator and grouping conventions depend on the selected
 <a class="reference internal" href="interface.html#radix-character"><span class="std std-ref">Number Format</span></a>.</p>
+<p>For example, with either <code class="docutils literal notranslate"><span class="pre">1234567.12345</span></code> or <code class="docutils literal notranslate"><span class="pre">1,234,567.12345</span></code> selected,
+<code class="docutils literal notranslate"><span class="pre">1,000</span> <span class="pre">*</span> <span class="pre">2</span></code> evaluates to <code class="docutils literal notranslate"><span class="pre">2000</span></code> because the comma groups thousands.
+With a comma-decimal format selected, the same rule applies to <code class="docutils literal notranslate"><span class="pre">1.000</span> <span class="pre">*</span> <span class="pre">2</span></code>.</p>
 <p>Trailing zeros after the decimal point (like in <code class="docutils literal notranslate"><span class="pre">12.300</span></code>) or leading zeros before it (<code class="docutils literal notranslate"><span class="pre">0012.3</span></code>) are redundant and can be included or omitted to the user’s preference. Expressions like <code class="docutils literal notranslate"><span class="pre">.5</span></code> as a shorthand notation for <code class="docutils literal notranslate"><span class="pre">0.5</span></code> are also permitted.</p>
 </section>
 <section id="digit-grouping-separators">
 <span id="id1"></span><h3>Digit Grouping Separators</h3>
 <p>To improve readability, SpeedCrunch accepts grouping separators inside number literals. Grouping separators are optional and ignored during evaluation.</p>
+<p>Commas and dots also serve as decimal separators, so their placement is
+checked according to the <a class="reference internal" href="interface.html#radix-character"><span class="std std-ref">Number Format rules</span></a>.
+Malformed punctuation groups such as <code class="docutils literal notranslate"><span class="pre">1,2,3</span></code>, <code class="docutils literal notranslate"><span class="pre">1.2.3</span></code>, and <code class="docutils literal notranslate"><span class="pre">1,,234</span></code>
+are rejected. Spaces do not have a decimal meaning and can be placed freely
+between digits, so <code class="docutils literal notranslate"><span class="pre">12</span> <span class="pre">34</span></code> is accepted as <code class="docutils literal notranslate"><span class="pre">1234</span></code>.</p>
 <p>Allowed grouping separators are characters that are <strong>not</strong> letters or digits and are <strong>not</strong> number operators. In practice, this includes many punctuation and symbol characters, for example:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">_</span></code> (underscore): <code class="docutils literal notranslate"><span class="pre">12_345_678</span></code></p></li>
@@ -125,6 +133,8 @@ You can enter a number in any of these bases by marking it with the correspondin
 <li><p><code class="docutils literal notranslate"><span class="pre">0d</span></code> or <code class="docutils literal notranslate"><span class="pre">0D</span></code> for <strong>decimal</strong>. These can be omitted since decimal is the default base.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">0x</span></code>, <code class="docutils literal notranslate"><span class="pre">0X</span></code>, or <code class="docutils literal notranslate"><span class="pre">#</span></code> for <strong>hexadecimal</strong>. The additional six digits are represented by the upper or lower case letters <code class="docutils literal notranslate"><span class="pre">a</span></code> to <code class="docutils literal notranslate"><span class="pre">f</span></code>, e.g. <code class="docutils literal notranslate"><span class="pre">0xdeadbeef</span></code> or <code class="docutils literal notranslate"><span class="pre">0xDEADBEEF</span></code>.</p></li>
 </ul>
+<p>Spaces can separate hexadecimal digit groups, including groups made entirely
+of letters. For example, <code class="docutils literal notranslate"><span class="pre">0xAB</span> <span class="pre">CD</span></code> has the same value as <code class="docutils literal notranslate"><span class="pre">0xABCD</span></code> (43981).</p>
 <p>You may even enter fractional values in any of these bases. Note that scientific notation is not
 supported for non-decimal bases, however. Examples:</p>
 <table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="mb">0b1.01</span>
@@ -555,18 +565,16 @@ and <a class="reference internal" href="../reference/integer.html#sc.shr" title=
 </td>
 <td><p><code class="docutils literal notranslate"><span class="pre">0b10</span> <span class="pre">|</span> <span class="pre">0b01</span> <span class="pre">=</span> <span class="pre">0b11</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">in</span></code>, <code class="docutils literal notranslate"><span class="pre">--</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">in</span></code></p></td>
 <td><dl class="simple">
 <dt><strong>Unit conversion</strong></dt><dd><p>Convert the operand into the given
 unit. Both forms are equivalent. See
-<code class="docutils literal notranslate"><span class="pre">--</span></code> is a shortcut equivalent to <code class="docutils literal notranslate"><span class="pre">-&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">in</span></code>.
 <a class="reference internal" href="advanced.html#units"><span class="std std-ref">Units</span></a> for more information.</p>
 </dd>
 </dl>
 </td>
 <td><p><code class="docutils literal notranslate"><span class="pre">10[m]</span> <span class="pre">in</span> <span class="pre">[mi]</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">10[m]</span> <span class="pre">-&gt;</span> <span class="pre">[mi]</span></code>
-<code class="docutils literal notranslate"><span class="pre">10[m]</span> <span class="pre">--</span> <span class="pre">[mi]</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">10[m]</span> <span class="pre">-&gt;</span> <span class="pre">[mi]</span></code></p>
 </td>
 </tr>
 </tbody>
@@ -628,7 +636,7 @@ inputs with an even index return the principal complex root.</p>
   <tr>
     <td width="50%">
       <a class="nav-item nav-item-0"
-         href="../contents.html">SpeedCrunch 1.1 documentation</a> &#187; <a class="nav-item nav-item-1"
+         href="../contents.html">SpeedCrunch 1.2.0-rc.1 documentation</a> &#187; <a class="nav-item nav-item-1"
              href="index.html">User Guide</a>
           
     </td>
