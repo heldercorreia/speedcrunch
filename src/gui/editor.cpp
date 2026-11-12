@@ -4988,6 +4988,8 @@ void EditorCompletion::showCompletion(const QStringList& choices)
         m_editor->text(),
         m_editor->textCursor().position());
 
+    QFont markerFont = m_popup->font();
+    markerFont.setItalic(true);
     for (int i = 0; i < choices.count(); ++i) {
         const auto pair = choices.at(i).split(':');
         if (pair.count() < 2)
@@ -4995,23 +4997,23 @@ void EditorCompletion::showCompletion(const QStringList& choices)
 
         const auto identifier = pair.at(0);
         const auto description = pair.mid(1).join(":");
-        QString typeSymbol = QString::fromUtf8("👤 𝑥");
+        QString typeSymbol = QStringLiteral("x");
 
         if (FunctionRepo::instance()->find(identifier)) {
-            typeSymbol = QString::fromUtf8("📚 ƒ");
+            typeSymbol = QStringLiteral("f");
         // Reuse local evaluator pointer to avoid repeated singleton lookups
         // on every completion row.
         } else if (evaluator->hasUserFunction(identifier)) {
-            typeSymbol = QString::fromUtf8("👤 ƒ");
+            typeSymbol = QStringLiteral("f");
         } else if (!unitContextAtCursor && evaluator->hasVariable(identifier)) {
             const auto variable = evaluator->getVariable(identifier);
             if (variable.type() == Variable::BuiltIn)
-                typeSymbol = QString::fromUtf8("📏 𝑘");
+                typeSymbol = QStringLiteral("k");
         } else if (evaluator->hasUserUnit(identifier)) {
-            typeSymbol = QString::fromUtf8("👤 𝒖");
+            typeSymbol = QStringLiteral("u");
         // O(1) membership check against precomputed built-in unit identifiers.
         } else if (builtInUnits.contains(identifier)) {
-            typeSymbol = QString::fromUtf8("📚 𝒖");
+            typeSymbol = QStringLiteral("u");
         }
 
         QStringList columns;
@@ -5022,6 +5024,8 @@ void EditorCompletion::showCompletion(const QStringList& choices)
             item->setTextAlignment(1, Qt::AlignRight);
 
         item->setTextAlignment(0, Qt::AlignCenter);
+        // Plain letters in the popup's own font, styled like math variables.
+        item->setFont(0, markerFont);
     }
 
     m_popup->sortItems(2, Qt::AscendingOrder);

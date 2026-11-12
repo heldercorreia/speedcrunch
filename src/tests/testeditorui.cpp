@@ -6647,7 +6647,7 @@ void TestEditorUi::completion_popup_uses_expected_icons_for_all_symbol_types()
     QVERIFY(QMetaObject::invokeMethod(&editor, "triggerAutoComplete", Qt::DirectConnection));
     QTreeWidget* popup = nullptr;
     QTRY_VERIFY_WITH_TIMEOUT((popup = s_completionPopupTree()) != nullptr, 1000);
-    QCOMPARE(s_popupSymbolForIdentifier(popup, QStringLiteral("sin")), QString::fromUtf8("📚 ƒ"));
+    QCOMPARE(s_popupSymbolForIdentifier(popup, QStringLiteral("sin")), QStringLiteral("f"));
     popup->hide();
 
     editor.setText(QStringLiteral("icon_user_f"));
@@ -6655,7 +6655,7 @@ void TestEditorUi::completion_popup_uses_expected_icons_for_all_symbol_types()
     QVERIFY(QMetaObject::invokeMethod(&editor, "triggerAutoComplete", Qt::DirectConnection));
     popup = nullptr;
     QTRY_VERIFY_WITH_TIMEOUT((popup = s_completionPopupTree()) != nullptr, 1000);
-    QCOMPARE(s_popupSymbolForIdentifier(popup, QStringLiteral("icon_user_func")), QString::fromUtf8("👤 ƒ"));
+    QCOMPARE(s_popupSymbolForIdentifier(popup, QStringLiteral("icon_user_func")), QStringLiteral("f"));
     popup->hide();
 
     editor.setText(QStringLiteral("a"));
@@ -6663,7 +6663,7 @@ void TestEditorUi::completion_popup_uses_expected_icons_for_all_symbol_types()
     QVERIFY(QMetaObject::invokeMethod(&editor, "triggerAutoComplete", Qt::DirectConnection));
     popup = nullptr;
     QTRY_VERIFY_WITH_TIMEOUT((popup = s_completionPopupTree()) != nullptr, 1000);
-    QCOMPARE(s_popupSymbolForIdentifier(popup, QStringLiteral("ans")), QString::fromUtf8("📏 𝑘"));
+    QCOMPARE(s_popupSymbolForIdentifier(popup, QStringLiteral("ans")), QStringLiteral("k"));
     popup->hide();
 
     editor.setText(QStringLiteral("icon_user_"));
@@ -6671,7 +6671,7 @@ void TestEditorUi::completion_popup_uses_expected_icons_for_all_symbol_types()
     QVERIFY(QMetaObject::invokeMethod(&editor, "triggerAutoComplete", Qt::DirectConnection));
     popup = nullptr;
     QTRY_VERIFY_WITH_TIMEOUT((popup = s_completionPopupTree()) != nullptr, 1000);
-    QCOMPARE(s_popupSymbolForIdentifier(popup, QStringLiteral("icon_user_var")), QString::fromUtf8("👤 𝑥"));
+    QCOMPARE(s_popupSymbolForIdentifier(popup, QStringLiteral("icon_user_var")), QStringLiteral("x"));
     popup->hide();
 
     editor.setText(QStringLiteral("s"));
@@ -6679,7 +6679,7 @@ void TestEditorUi::completion_popup_uses_expected_icons_for_all_symbol_types()
     QVERIFY(QMetaObject::invokeMethod(&editor, "triggerAutoComplete", Qt::DirectConnection));
     popup = nullptr;
     QTRY_VERIFY_WITH_TIMEOUT((popup = s_completionPopupTree()) != nullptr, 1000);
-    QCOMPARE(s_popupSymbolForIdentifier(popup, QStringLiteral("s")), QString::fromUtf8("👤 𝑥"));
+    QCOMPARE(s_popupSymbolForIdentifier(popup, QStringLiteral("s")), QStringLiteral("x"));
     popup->hide();
 
     editor.setText(QStringLiteral("[met"));
@@ -6687,7 +6687,7 @@ void TestEditorUi::completion_popup_uses_expected_icons_for_all_symbol_types()
     QVERIFY(QMetaObject::invokeMethod(&editor, "triggerAutoComplete", Qt::DirectConnection));
     popup = nullptr;
     QTRY_VERIFY_WITH_TIMEOUT((popup = s_completionPopupTree()) != nullptr, 1000);
-    QCOMPARE(s_popupSymbolForIdentifier(popup, QStringLiteral("metre")), QString::fromUtf8("📚 𝒖"));
+    QCOMPARE(s_popupSymbolForIdentifier(popup, QStringLiteral("metre")), QStringLiteral("u"));
     popup->hide();
 
     editor.setText(QStringLiteral("[icon_user_u"));
@@ -6695,7 +6695,7 @@ void TestEditorUi::completion_popup_uses_expected_icons_for_all_symbol_types()
     QVERIFY(QMetaObject::invokeMethod(&editor, "triggerAutoComplete", Qt::DirectConnection));
     popup = nullptr;
     QTRY_VERIFY_WITH_TIMEOUT((popup = s_completionPopupTree()) != nullptr, 1000);
-    QCOMPARE(s_popupSymbolForIdentifier(popup, QStringLiteral("icon_user_unit")), QString::fromUtf8("👤 𝒖"));
+    QCOMPARE(s_popupSymbolForIdentifier(popup, QStringLiteral("icon_user_unit")), QStringLiteral("u"));
     popup->hide();
 
 }
