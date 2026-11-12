@@ -17,6 +17,7 @@
 #include "gui/functiontooltiputils.h"
 #include "gui/oklchutils.h"
 #include "gui/resultlineformatutils.h"
+#include "gui/scriptedtext.h"
 #include "gui/syntaxhighlighter.h"
 #include "gui/tooltipstyleutils.h"
 #include "gui/uiconfig.h"
@@ -5089,7 +5090,6 @@ public:
         initStyleOption(&item, index);
         // Keep the full text area for the name and unit we draw below.
         item.showDecorationSelected = true;
-        const QString name = item.text;
         item.text.clear();
         const QStyle* style = item.widget ? item.widget->style() : QApplication::style();
         style->drawControl(QStyle::CE_ItemViewItem, &item, painter, item.widget);
@@ -5113,16 +5113,27 @@ public:
         else if (unitFont.pixelSize() > 0)
             unitFont.setPixelSize(qMax(1, qRound(unitFont.pixelSize() * 0.93)));
 
-        const QFontMetrics unitMetrics(unitFont);
+        const QString name = index.data(Qt::DisplayRole).toString();
         const QString rawUnit = index.data(constantUnitRole).toString();
-        const QString unit = unitMetrics.elidedText(rawUnit, Qt::ElideRight, textRect.width() / 2);
+        const QString unit = ScriptedText::elided(rawUnit, unitFont, textRect.width() / 2);
         const QString gap = unit.isEmpty() ? QString() : QStringLiteral("    ");
-        const int unitWidth = unitMetrics.horizontalAdvance(unit) + item.fontMetrics.horizontalAdvance(gap);
-        const QString displayName = item.fontMetrics.elidedText(name, Qt::ElideRight,
-                                                               qMax(0, textRect.width() - unitWidth));
-        // Isolate the unit so mixed-direction names do not reorder its symbols.
-        const QString text = unit.isEmpty() ? displayName
-            : displayName + gap + QChar(0x2066) + unit + QChar(0x2069);
+        const qreal unitWidth = ScriptedText::width(unit, unitFont)
+            + item.fontMetrics.horizontalAdvance(gap);
+        const QString displayName = ScriptedText::elided(name, item.font,
+                                                         qMax<qreal>(0, textRect.width() - unitWidth));
+        // Draw scripts such as "μ₀" with the popup's own font.
+        QString text;
+        QList<QTextLayout::FormatRange> formats;
+        ScriptedText::append(displayName, QTextCharFormat(), item.font, &text, &formats);
+        if (!unit.isEmpty()) {
+            // Isolate the unit so mixed-direction names do not reorder its symbols.
+            text += gap + QChar(0x2066);
+            QTextCharFormat unitFormat;
+            unitFormat.setFont(unitFont);
+            unitFormat.setForeground(unitColor);
+            ScriptedText::append(unit, unitFormat, unitFont, &text, &formats);
+            text += QChar(0x2069);
+        }
         if (text.isEmpty())
             return;
         QTextLayout layout(text, item.font);
@@ -5131,12 +5142,7 @@ public:
         textOption.setAlignment(QStyle::visualAlignment(item.direction, Qt::AlignLeft));
         textOption.setWrapMode(QTextOption::NoWrap);
         layout.setTextOption(textOption);
-        QTextLayout::FormatRange unitFormat;
-        unitFormat.start = displayName.size() + gap.size();
-        unitFormat.length = text.size() - unitFormat.start;
-        unitFormat.format.setFont(unitFont);
-        unitFormat.format.setForeground(unitColor);
-        layout.setFormats({unitFormat});
+        layout.setFormats(formats);
         layout.beginLayout();
         QTextLine line = layout.createLine();
         line.setLineWidth(textRect.width());
@@ -5146,6 +5152,14 @@ public:
         painter->setPen(foreground);
         layout.draw(painter, QPointF(textRect.left(), textRect.top() + (textRect.height() - line.height()) / 2));
         painter->restore();
+    }
+
+protected:
+    void initStyleOption(QStyleOptionViewItem* option, const QModelIndex& index) const override
+    {
+        QStyledItemDelegate::initStyleOption(option, index);
+        // Measure scripted names by their stand-ins, which the font has.
+        option->text = ScriptedText::plain(option->text);
     }
 
 private:
@@ -5340,8 +5354,10 @@ void ConstantCompletion::filter()
         item->setData(0, Qt::AccessibleTextRole,
                       unit.isEmpty() ? constant.name : constant.name + QLatin1Char(' ') + unit);
         item->setData(0, Qt::UserRole, ConstantBrowserUtils::expression(constant));
-        const QString tip = constant.name + QLatin1Char('\n') + constant.value
-            + (unit.isEmpty() ? QString() : QLatin1Char(' ') + unit);
+        // Rich text draws scripts such as "μ₀" with the tooltip's own font.
+        const QString tip = ScriptedText::toHtml(constant.name) + QLatin1String("<br>")
+            + constant.value.toHtmlEscaped()
+            + (unit.isEmpty() ? QString() : QLatin1Char(' ') + ScriptedText::toHtml(unit));
         item->setToolTip(0, tip);
     }
     m_constantWidget->sortItems(0, Qt::AscendingOrder);

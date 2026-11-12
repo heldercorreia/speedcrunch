@@ -50,6 +50,7 @@ gui/gtkmenupalette.h
 gui/keypad.h
 gui/keybindings.h
 gui/keybindingsdialog.h
+gui/scriptedtext.h
 gui/symbolfont.h
 gui/lineeditstyleutils.h
 gui/mainwindow.h

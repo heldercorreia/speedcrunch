@@ -4,6 +4,7 @@
 #include "gui/dockliststyle.h"
 
 #include "core/settings.h"
+#include "gui/scriptedtext.h"
 #include "gui/uiconfig.h"
 
 #include <QAbstractItemView>
@@ -198,6 +199,15 @@ public:
         return m_view->style()->sizeFromContents(QStyle::CT_ItemViewItem, &opt, QSize(), nullptr);
     }
 
+protected:
+    void initStyleOption(QStyleOptionViewItem* option, const QModelIndex& index) const override
+    {
+        QStyledItemDelegate::initStyleOption(option, index);
+        // Measure scripted text by its stand-ins, which the font has.
+        if (usesScriptedText())
+            option->text = ScriptedText::plain(option->text);
+    }
+
 private:
     // The Windows 11 style makes list rows taller and moves their text right,
     // but only when it is given the list view. Leaving the view out makes list
@@ -211,9 +221,50 @@ private:
 #endif
     }
 
+    bool usesScriptedText() const
+    {
+        return m_view->property(ScriptedText::ViewProperty).toBool();
+    }
+
+    // Draws the item without its text, then draws the text with scripts.
+    void paintScriptedItem(QPainter* painter, const QStyleOptionViewItem& option,
+                           const QModelIndex& index, const QString& text) const
+    {
+        QStyleOptionViewItem opt(option);
+        initStyleOption(&opt, index);
+        opt.text.clear();
+        const QWidget* widget = usesTreeRowLayout() ? nullptr : opt.widget;
+        opt.widget = widget;
+        const QStyle* style = m_view->style();
+        style->drawControl(QStyle::CE_ItemViewItem, &opt, painter, widget);
+        // The style only reserves a text rectangle for items with text.
+        opt.text = ScriptedText::plain(text);
+        // Inset the text like the style does when it draws item text itself.
+        const int textMargin = style->pixelMetric(QStyle::PM_FocusFrameHMargin, nullptr, widget) + 1;
+        const QRect textRect = style->subElementRect(QStyle::SE_ItemViewItemText, &opt, widget)
+            .adjusted(textMargin, 0, -textMargin, 0);
+        if (textRect.isEmpty())
+            return;
+        const QPalette::ColorGroup group = !(opt.state & QStyle::State_Enabled)
+            ? QPalette::Disabled
+            : (opt.state & QStyle::State_Active) ? QPalette::Active : QPalette::Inactive;
+        const bool selected = opt.state & QStyle::State_Selected;
+        const QColor color = opt.palette.color(group,
+            selected ? QPalette::HighlightedText : QPalette::Text);
+        ScriptedText::draw(painter, textRect, text, opt.font, color,
+                           opt.displayAlignment, opt.direction);
+    }
+
     void paintItem(QPainter* painter, const QStyleOptionViewItem& option,
                    const QModelIndex& index) const
     {
+        if (usesScriptedText()) {
+            const QString text = index.data(Qt::DisplayRole).toString();
+            if (ScriptedText::needsLayout(text)) {
+                paintScriptedItem(painter, option, index, text);
+                return;
+            }
+        }
         if (!usesTreeRowLayout()) {
             QStyledItemDelegate::paint(painter, option, index);
             return;

@@ -11,6 +11,7 @@
 #include "core/unicodechars.h"
 #include "core/mathdsl.h"
 #include "gui/dockliststyle.h"
+#include "gui/scriptedtext.h"
 #include "gui/themedlineedit.h"
 #include "gui/tooltipstyleutils.h"
 #include "gui/uiconfig.h"
@@ -118,6 +119,7 @@ ConstantsWidget::ConstantsWidget(QWidget* parent, const InitialState& state)
     m_list->setSelectionBehavior(QTreeWidget::SelectRows);
     m_list->header()->setStretchLastSection(false);
     DockListStyle::apply(m_list);
+    m_list->setProperty(ScriptedText::ViewProperty, true);
     m_list->installEventFilter(this);
     m_list->viewport()->installEventFilter(this);
     connect(m_list->verticalScrollBar(), &QScrollBar::valueChanged,
@@ -334,11 +336,11 @@ void ConstantsWidget::filter()
             QString tip;
             tip += QString(UnicodeChars::LeftToRightMark);
             tip += QString("<b>%1</b><br>%2")
-                .arg(constant.name, constant.value);
+                .arg(ScriptedText::toHtml(constant.name), constant.value);
             tip += QString(UnicodeChars::LeftToRightMark);
             if (!constant.unit.isEmpty())
-                tip.append(" ").append(QString(constant.unit).replace(
-                    UnicodeChars::MiddleDot, MathDsl::MulDotOp));
+                tip.append(" ").append(ScriptedText::toHtml(QString(constant.unit).replace(
+                    UnicodeChars::MiddleDot, MathDsl::MulDotOp)));
             if (radixChar != MathDsl::DotSep)
                 tip.replace(MathDsl::DotSep, radixChar);
             tip += QString(UnicodeChars::LeftToRightMark);
