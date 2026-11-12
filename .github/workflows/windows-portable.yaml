@@ -103,18 +103,40 @@ jobs:
         run: cmake --install build --config Release --prefix "$env:GITHUB_WORKSPACE/stage"
 
       - name: Deploy Qt dependencies
+        # Match the official packages, whose Qt has no software OpenGL, D3D or
+        # DXC shader compilers, Qt SVG, help viewer plugin or client SQL
+        # drivers. The Qt installed here has them all, and the developer
+        # prompt lets windeployqt copy DXC from the Windows SDK.
         run: |
-          & "$env:QT_ROOT_DIR/bin/windeployqt.exe" --release --no-compiler-runtime --no-translations --skip-plugin-types generic,networkinformation,imageformats --exclude-plugins qsqlodbc stage/speedcrunch.exe
+          & "$env:QT_ROOT_DIR/bin/windeployqt.exe" --release --no-compiler-runtime --no-translations `
+            --no-opengl-sw --no-system-d3d-compiler --no-system-dxc-compiler `
+            --skip-plugin-types generic,help,iconengines,imageformats,networkinformation `
+            --exclude-plugins qsqlibase,qsqlmimer,qsqloci,qsqlodbc,qsqlpsql `
+            stage/speedcrunch.exe
           if ($LASTEXITCODE -ne 0) { throw 'Qt deployment fails' }
 
       - name: Verify staged files
         run: |
+          # The official installer, portable ZIP and MSIX ship exactly these DLLs.
+          $expectedDlls = @(
+            'Qt6Core.dll', 'Qt6Gui.dll', 'Qt6Help.dll', 'Qt6Network.dll',
+            'Qt6Sql.dll', 'Qt6Widgets.dll',
+            'platforms/qwindows.dll', 'sqldrivers/qsqlite.dll',
+            'styles/qmodernwindowsstyle.dll',
+            'tls/qcertonlybackend.dll', 'tls/qschannelbackend.dll',
+            'msvcp140.dll', 'msvcp140_1.dll', 'msvcp140_2.dll',
+            'vcruntime140.dll', 'vcruntime140_1.dll'
+          )
+          $stageRoot = (Resolve-Path stage).Path
+          $stagedDlls = @(Get-ChildItem -Path $stageRoot -Filter '*.dll' -File -Recurse |
+            ForEach-Object { [IO.Path]::GetRelativePath($stageRoot, $_.FullName).Replace('\', '/') })
+          $extra = @($stagedDlls | Where-Object { $_ -notin $expectedDlls } | Sort-Object)
+          $missing = @($expectedDlls | Where-Object { $_ -notin $stagedDlls })
+          if ($extra.Count -gt 0 -or $missing.Count -gt 0) {
+            throw "Staged DLLs differ from the official packages. Extra: $($extra -join ', '). Missing: $($missing -join ', ')."
+          }
           $required = @(
-            'speedcrunch.exe', 'Qt6Core.dll', 'Qt6Gui.dll', 'Qt6Widgets.dll',
-            'Qt6Help.dll', 'Qt6Network.dll', 'Qt6Sql.dll',
-            'platforms/qwindows.dll', 'styles/qmodernwindowsstyle.dll',
-            'sqldrivers/qsqlite.dll', 'tls/qschannelbackend.dll',
-            'msvcp140.dll', 'vcruntime140.dll',
+            'speedcrunch.exe', 'qt.conf',
             'Licenses/README.txt', 'Licenses/SpeedCrunch-GPL-2.0.txt',
             'Licenses/Qt/qtbase/qtbase-6.12.0.spdx',
             'Licenses/Qt/qttools/qttools-6.12.0.spdx'
