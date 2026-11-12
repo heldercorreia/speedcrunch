@@ -116,6 +116,12 @@ bool deserializeCustomKeypad(const QJsonObject& json, Settings::CustomKeypad* ke
         } else if (button.action == Settings::CustomKeypadActionClearExpression
                 && button.label == QStringLiteral("⌧")) {
             button.label = QStringLiteral("C");
+        } else if (button.action == Settings::CustomKeypadActionInsertText
+                && button.label == QStringLiteral("xʸ") && button.text == QStringLiteral("^")) {
+            button.label = QStringLiteral("x^y");
+        } else if (button.action == Settings::CustomKeypadActionInsertText
+                && button.label == QStringLiteral("ⁿ√") && button.text == QStringLiteral("root(")) {
+            button.label = QStringLiteral("root");
         }
         parsed.buttons.append(button);
     }

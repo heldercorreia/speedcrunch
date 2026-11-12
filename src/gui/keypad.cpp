@@ -63,13 +63,13 @@ const Keypad::KeyDescription Keypad::keyDescriptions[] = {
     {QString::fromLatin1("("), KeyLeftPar, false, 2, 8},
     {QString::fromLatin1("DEL"), KeyBackspace, false, 0, 9},
     {QString::fromLatin1("%"), KeyPercent, false, 3, 8},
-    {QString::fromUtf8("xʸ"), KeyRaise, false, 1, 4},
+    {QString::fromLatin1("x^y"), KeyRaise, false, 1, 4},
     {QString::fromLatin1(")"), KeyRightPar, false, 2, 9},
     {QString::fromLatin1("sin"), KeySin, false, 2, 4},
     {QString::fromLatin1("tan"), KeyTan, false, 3, 4},
     {QString::fromLatin1(";"), KeyArgumentSeparator, false, 3, 7},
     {QString::fromUtf8("x²"), KeySquare, false, 0, 5},
-    {QString::fromUtf8("ⁿ√"), KeyRoot, false, 1, 5},
+    {QString::fromLatin1("root"), KeyRoot, false, 1, 5},
     {QString::fromLatin1("log10"), KeyLog10, false, 1, 7},
     {QString::fromLatin1("mod"), KeyMod, false, 3, 6},
     {QString::fromUtf8("π"), KeyPi, false, 1, 8},
@@ -200,9 +200,9 @@ QString customButtonLabel(Keypad::Button button, QChar radixCharacter)
     case Keypad::KeyEE: return QString::fromLatin1("E");
     case Keypad::KeyLeftPar: return QString::fromLatin1("(");
     case Keypad::KeyRightPar: return QString::fromLatin1(")");
-    case Keypad::KeyRaise: return QString::fromUtf8("xʸ");
+    case Keypad::KeyRaise: return QString::fromLatin1("x^y");
     case Keypad::KeySqrt: return QString::fromUtf8("√");
-    case Keypad::KeyRoot: return QString::fromUtf8("ⁿ√");
+    case Keypad::KeyRoot: return QString::fromLatin1("root");
     case Keypad::KeyLog10: return QString::fromLatin1("log10");
     case Keypad::KeyMod: return QString::fromLatin1("mod");
     case Keypad::KeyBackspace: return QString::fromLatin1("DEL");

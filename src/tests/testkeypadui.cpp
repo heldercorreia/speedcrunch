@@ -309,7 +309,7 @@ void TestKeypadUi::custom_keypad_action_stays_checked_after_dialog_accepts()
 
 void TestKeypadUi::keypad_power_button_uses_exponent_label_but_inserts_caret()
 {
-    const QString powerLabel = QString::fromUtf8("xʸ");
+    const QString powerLabel = QStringLiteral("x^y");
 
     for (const Keypad::LayoutMode layoutMode : {
              Keypad::LayoutModeScientificWide,
@@ -386,21 +386,25 @@ void TestKeypadUi::custom_keypad_replaces_old_symbol_labels_on_load()
     const QString backspace = QString::fromUtf8("⌫");
     const QString clear = QString::fromUtf8("⌧");
     settings->customKeypad.rows = 1;
-    settings->customKeypad.columns = 4;
+    settings->customKeypad.columns = 6;
     settings->customKeypad.buttons = {
         {0, 0, backspace, QString(), Settings::CustomKeypadActionBackspace},
         {0, 1, clear, QString(), Settings::CustomKeypadActionClearExpression},
         {0, 2, QStringLiteral("Back"), QString(), Settings::CustomKeypadActionBackspace},
-        {0, 3, backspace, backspace, Settings::CustomKeypadActionInsertText}};
+        {0, 3, backspace, backspace, Settings::CustomKeypadActionInsertText},
+        {0, 4, QString::fromUtf8("xʸ"), QStringLiteral("^"), Settings::CustomKeypadActionInsertText},
+        {0, 5, QString::fromUtf8("ⁿ√"), QStringLiteral("root("), Settings::CustomKeypadActionInsertText}};
     settings->save();
     settings->load();
 
     const auto& buttons = settings->customKeypad.buttons;
-    QCOMPARE(buttons.size(), 4);
+    QCOMPARE(buttons.size(), 6);
     QCOMPARE(buttons.at(0).label, QStringLiteral("DEL"));
     QCOMPARE(buttons.at(1).label, QStringLiteral("C"));
     QCOMPARE(buttons.at(2).label, QStringLiteral("Back"));
     QCOMPARE(buttons.at(3).label, backspace);
+    QCOMPARE(buttons.at(4).label, QStringLiteral("x^y"));
+    QCOMPARE(buttons.at(5).label, QStringLiteral("root"));
 }
 
 void TestKeypadUi::keypad_nth_root_button_inserts_root_data()
@@ -432,7 +436,7 @@ void TestKeypadUi::keypad_nth_root_button_inserts_root()
 
     const auto layout = static_cast<Keypad::LayoutMode>(layoutMode);
     const bool wide = layout == Keypad::LayoutModeScientificWide;
-    const QString rootLabel = QString::fromUtf8("ⁿ√");
+    const QString rootLabel = QStringLiteral("root");
     int rows = 0;
     int columns = 0;
     const auto preset = Keypad::presetCustomButtons(layout, QLatin1Char('.'), &rows, &columns);
@@ -488,7 +492,7 @@ void TestKeypadUi::keypad_nth_root_button_inserts_root()
     const QStringList expectedRows = wide
         ? QStringList{
             QString::fromUtf8("7 8 9 ÷ √ x² E exp C DEL"),
-            QString::fromUtf8("4 5 6 × xʸ ⁿ√ ln log10 π ans"),
+            QString::fromUtf8("4 5 6 × x^y root ln log10 π ans"),
             QString::fromUtf8("1 2 3 − sin arcsin cos arccos ( )"),
             QString::fromUtf8("0 . = + tan arctan mod ; % !")}
         : QStringList{
@@ -497,7 +501,7 @@ void TestKeypadUi::keypad_nth_root_button_inserts_root()
             QString::fromUtf8("1 2 3 − ("),
             QStringLiteral("0 . = + )"),
             QString::fromUtf8("√ x² E exp π"),
-            QString::fromUtf8("xʸ ⁿ√ ln log10 ans"),
+            QString::fromUtf8("x^y root ln log10 ans"),
             QStringLiteral("sin arcsin cos arccos mod"),
             QStringLiteral("tan arctan % ! ;")};
     QGridLayout* grid = qobject_cast<QGridLayout*>(keypad->layout());

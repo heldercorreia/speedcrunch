@@ -79,14 +79,15 @@ column order between launches, including for panels that are hidden.
 
     ``DEL`` deletes the character before the cursor. Both scientific layouts
     also include ``C``, which clears the expression. Custom layouts saved with
-    the older ``⌫`` and ``⌧`` labels switch to these labels automatically.
+    the older ``⌫`` and ``⌧`` labels switch to these labels automatically, and
+    the older ``xʸ`` and ``ⁿ√`` labels switch to ``x^y`` and ``root``.
 
     Both scientific layouts include ``ln`` for the natural logarithm and
     ``log10`` for the common (base-10) logarithm. These buttons insert
     ``ln(`` and ``log10(``, respectively. Copying a scientific preset into a
     custom layout uses the same labels and function names.
 
-    Since version 1.1, both scientific layouts show ``ⁿ√`` for the nth root
+    Since version 1.2, both scientific layouts show ``root`` for the nth root
     in place of the cube-root button. It inserts ``root(`` so you can enter
     a root index and a value, for example ``root(5; 32)``. Copying either
     scientific preset into a custom layout includes this button.
@@ -94,7 +95,7 @@ column order between launches, including for panels that are hidden.
     The scientific layouts also include ``x²``, which inserts ``^2``, and
     ``;`` to separate function arguments. These replace the ``x`` and ``x=``
     shortcuts in version 1.1. Related buttons sit together: ``√`` and ``x²``,
-    ``xʸ`` and ``ⁿ√``, ``E`` and ``exp``, ``ln`` and ``log10``, and each
+    ``x^y`` and ``root``, ``E`` and ``exp``, ``ln`` and ``log10``, and each
     trigonometric function with its inverse.
 
     Available entries in :menuselection:`Settings --> Appearance --> Keypad --> Zoom` are:
