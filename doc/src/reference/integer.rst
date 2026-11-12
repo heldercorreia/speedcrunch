@@ -191,7 +191,7 @@ Rounding
     ``x``. For quantities with dimensions, the numeric value is rounded and the
     original dimensions are preserved.
 
-    This is the expression-level counterpart to the ``Toward +∞ (ceil)``
+    This is the expression-level counterpart to the ``Round Up (ceil)``
     rounding mode. Only real arguments are allowed.
 
 .. function:: floor(x)
@@ -200,7 +200,7 @@ Rounding
     ``x``. For quantities with dimensions, the numeric value is rounded and the
     original dimensions are preserved.
 
-    This is the expression-level counterpart to the ``Toward −∞ (floor)``
+    This is the expression-level counterpart to the ``Round Down (floor)``
     rounding mode. Only real arguments are allowed.
 
 

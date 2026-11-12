@@ -2466,7 +2466,7 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(binompmf, tr("Binomial Probability Mass Function"));
     FUNCTION_NAME(binomvar, tr("Binomial Distribution Variance"));
     FUNCTION_NAME(cbrt, tr("Cube Root"));
-    FUNCTION_NAME(ceil, tr("Round Toward +∞ (Ceiling)"));
+    FUNCTION_NAME(ceil, tr("Round Up (Ceiling)"));
     FUNCTION_NAME(cis, tr("Cosine plus Imaginary Sine"));
     FUNCTION_NAME(cisform, tr("Convert to Cis Complex Form"));
     FUNCTION_NAME(conj, tr("Complex Conjugate"));
@@ -2493,7 +2493,7 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(erfc, tr("Complementary Error Function"));
     FUNCTION_NAME(exp, tr("Exponential"));
     FUNCTION_NAME(expform, tr("Convert to Exponential Complex Form"));
-    FUNCTION_NAME(floor, tr("Round Toward −∞ (Floor)"));
+    FUNCTION_NAME(floor, tr("Round Down (Floor)"));
     FUNCTION_NAME(flatten, tr("Flatten Matrix"));
     FUNCTION_NAME(frac, tr("Fractional Part"));
     FUNCTION_NAME(gamma, tr("Extension of Factorials [= (x-1)!]"));

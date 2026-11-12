@@ -746,8 +746,8 @@ This section contains settings that control result output and post-evaluation be
     :menuselection:`Nearest, Half Away (round)`,
     :menuselection:`Nearest, Half Even (roundeven)`,
     :menuselection:`Toward Zero (trunc)`,
-    :menuselection:`Toward +∞ (ceil)`,
-    :menuselection:`Toward −∞ (floor)`.
+    :menuselection:`Round Up (ceil)`,
+    :menuselection:`Round Down (floor)`.
 
     * :menuselection:`Nearest, Half Away (round)`
         Round to nearest; ties increase magnitude. This matches the
@@ -764,11 +764,11 @@ This section contains settings that control result output and post-evaluation be
         :func:`trunc` function.
         Example at 1 fractional digit: ``2.290 -> 2.2``,
         ``-2.290 -> -2.2``.
-    * :menuselection:`Toward +∞ (ceil)`
+    * :menuselection:`Round Up (ceil)`
         Always round upward. This matches the :func:`ceil` function.
         Example at 1 fractional digit: ``2.210 -> 2.3``,
         ``-2.210 -> -2.2``.
-    * :menuselection:`Toward −∞ (floor)`
+    * :menuselection:`Round Down (floor)`
         Always round downward. This matches the :func:`floor` function.
         Example at 1 fractional digit: ``2.290 -> 2.2``,
         ``-2.210 -> -2.3``.

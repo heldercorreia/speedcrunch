@@ -5056,9 +5056,9 @@ void MainWindow::setActionsText()
         MainWindow::tr("Nearest, Half &Even (roundeven)"));
     m_actions.settingsResultRoundingTowardZero->setText(MainWindow::tr("Toward &Zero (trunc)"));
     m_actions.settingsResultRoundingTowardPositiveInfinity->setText(
-        MainWindow::tr("Toward +∞ (&ceil)"));
+        MainWindow::tr("Round Up (&ceil)"));
     m_actions.settingsResultRoundingTowardNegativeInfinity->setText(
-        MainWindow::tr("Toward −∞ (&floor)"));
+        MainWindow::tr("Round Down (&floor)"));
     m_actions.settingsResultFormatAutoPrecision->setText(MainWindow::tr("&Automatic"));
     m_actions.settingsResultFormatGeneral->setText(MainWindow::tr("&Automatic"));
     m_actions.settingsResultFormatFixed->setText(MainWindow::tr("&Fixed-Point"));
