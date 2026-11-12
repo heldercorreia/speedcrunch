@@ -43,7 +43,7 @@
 static const int ConfigVersion = 1200;
 
 
-static const char* DefaultColorScheme = "Duskfox";
+static const char* DefaultColorScheme = "One Dark";
 
 namespace {
 static const int MinCustomKeypadDimension = 1;

@@ -919,7 +919,7 @@ User Interface Settings
     Open the theme dialog. Themes are listed in :guilabel:`Light Themes` and
     :guilabel:`Dark Themes` groups. Selecting a theme updates the preview
     immediately. When no saved theme preference exists, as on first launch,
-    SpeedCrunch uses the *Duskfox* theme.
+    SpeedCrunch uses the *One Dark* theme.
 
     The :guilabel:`Preview` area shows representative result-display and
     editor content so that syntax-highlighting, result, and background colors

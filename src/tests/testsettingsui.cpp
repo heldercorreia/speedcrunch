@@ -2371,7 +2371,7 @@ void TestSettingsUi::settings_reset_updates_all_windows_and_preserves_sessions()
     QVERIFY(settings->syntaxHighlighting);
     QVERIFY(settings->hoverHighlightResults);
     QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSpeedCrunch);
-    QCOMPARE(settings->colorScheme, QStringLiteral("Duskfox"));
+    QCOMPARE(settings->colorScheme, QStringLiteral("One Dark"));
     QCOMPARE(CMath::imaginaryUnitSymbol(), QChar('i'));
     Keypad defaultKeypad(Keypad::LayoutModeBasicWide);
     for (MainWindow* window : {&first, &second}) {
