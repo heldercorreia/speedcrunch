@@ -4977,16 +4977,13 @@ void EditorCompletion::showCompletion(const QStringList& choices)
 
     m_popup->setUpdatesEnabled(false);
     m_popup->clear();
-    // Performance: compute these once per popup render (not per row) because
-    // unit completion can contain many entries and this function runs often.
     Evaluator* evaluator = m_editor->evaluator();
-    const QStringList& builtInUnitKeys = Units::builtInUnitIdentifiers();
-    const QSet<QString> builtInUnits(
-        builtInUnitKeys.constBegin(),
-        builtInUnitKeys.constEnd());
+    // Inside [] only units are offered, so their rows need no type marker.
+    // Unit names such as Gcd can also match functions case-insensitively.
     const bool unitContextAtCursor = isInsideUnmatchedSquareBracketContext(
         m_editor->text(),
         m_editor->textCursor().position());
+    m_popup->setColumnHidden(0, unitContextAtCursor);
 
     QFont markerFont = m_popup->font();
     markerFont.setItalic(true);
@@ -4997,23 +4994,16 @@ void EditorCompletion::showCompletion(const QStringList& choices)
 
         const auto identifier = pair.at(0);
         const auto description = pair.mid(1).join(":");
-        QString typeSymbol = QStringLiteral("x");
-
-        if (FunctionRepo::instance()->find(identifier)) {
-            typeSymbol = QStringLiteral("f");
-        // Reuse local evaluator pointer to avoid repeated singleton lookups
-        // on every completion row.
-        } else if (evaluator->hasUserFunction(identifier)) {
-            typeSymbol = QStringLiteral("f");
-        } else if (!unitContextAtCursor && evaluator->hasVariable(identifier)) {
-            const auto variable = evaluator->getVariable(identifier);
-            if (variable.type() == Variable::BuiltIn)
+        QString typeSymbol;
+        if (!unitContextAtCursor) {
+            typeSymbol = QStringLiteral("x");
+            if (FunctionRepo::instance()->find(identifier)
+                || evaluator->hasUserFunction(identifier)) {
+                typeSymbol = QStringLiteral("f");
+            } else if (evaluator->hasVariable(identifier)
+                       && evaluator->getVariable(identifier).type() == Variable::BuiltIn) {
                 typeSymbol = QStringLiteral("k");
-        } else if (evaluator->hasUserUnit(identifier)) {
-            typeSymbol = QStringLiteral("u");
-        // O(1) membership check against precomputed built-in unit identifiers.
-        } else if (builtInUnits.contains(identifier)) {
-            typeSymbol = QStringLiteral("u");
+            }
         }
 
         QStringList columns;
@@ -5033,8 +5023,10 @@ void EditorCompletion::showCompletion(const QStringList& choices)
     m_popup->setCurrentItem(m_popup->topLevelItem(0));
 
     // Size of the pop-up.
-    m_popup->resizeColumnToContents(0);
-    m_popup->setColumnWidth(0, m_popup->columnWidth(0) + 18);
+    if (!unitContextAtCursor) {
+        m_popup->resizeColumnToContents(0);
+        m_popup->setColumnWidth(0, m_popup->columnWidth(0) + 18);
+    }
     m_popup->resizeColumnToContents(1);
     m_popup->setColumnWidth(1, m_popup->columnWidth(1) + 25);
     m_popup->resizeColumnToContents(2);
@@ -5043,7 +5035,7 @@ void EditorCompletion::showCompletion(const QStringList& choices)
     const int maxVisibleItems = 8;
     const int height =
         m_popup->sizeHintForRow(0) * qMin(maxVisibleItems, choices.count()) + 3;
-    const int width = m_popup->columnWidth(0)
+    const int width = (unitContextAtCursor ? 0 : m_popup->columnWidth(0))
                       + m_popup->columnWidth(1)
                       + m_popup->columnWidth(2) + 1;
 

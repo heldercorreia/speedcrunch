@@ -896,7 +896,9 @@ Editing
     * ``User functions`` includes user-defined function names.
     * ``User variables`` includes user-defined variable names.
 
-    The autocomplete popup also shows category icons for suggestions.
+    Outside unit brackets, each suggestion is marked with a letter for its
+    kind: *f* for functions, *x* for variables and *k* for built-in
+    constants. Unit suggestions inside ``[ ]`` have no marker.
 
     .. versionadded:: 1.0
 

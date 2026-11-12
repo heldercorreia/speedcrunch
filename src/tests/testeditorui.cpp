@@ -6687,7 +6687,20 @@ void TestEditorUi::completion_popup_uses_expected_icons_for_all_symbol_types()
     QVERIFY(QMetaObject::invokeMethod(&editor, "triggerAutoComplete", Qt::DirectConnection));
     popup = nullptr;
     QTRY_VERIFY_WITH_TIMEOUT((popup = s_completionPopupTree()) != nullptr, 1000);
-    QCOMPARE(s_popupSymbolForIdentifier(popup, QStringLiteral("metre")), QStringLiteral("u"));
+    // Only units complete inside [], so their rows have no type marker.
+    QVERIFY(popup->isColumnHidden(0));
+    QVERIFY(s_popupSymbolForIdentifier(popup, QStringLiteral("metre")).isEmpty());
+    popup->hide();
+
+    // Gcd is a unit here, not the gcd function.
+    editor.setText(QStringLiteral("[Gc"));
+    editor.setCursorPosition(editor.text().size());
+    QVERIFY(QMetaObject::invokeMethod(&editor, "triggerAutoComplete", Qt::DirectConnection));
+    popup = nullptr;
+    QTRY_VERIFY_WITH_TIMEOUT((popup = s_completionPopupTree()) != nullptr, 1000);
+    QVERIFY(popup->isColumnHidden(0));
+    QVERIFY(!popup->findItems(QStringLiteral("Gcd"), Qt::MatchExactly, 1).isEmpty());
+    QVERIFY(s_popupSymbolForIdentifier(popup, QStringLiteral("Gcd")).isEmpty());
     popup->hide();
 
     editor.setText(QStringLiteral("[icon_user_u"));
@@ -6695,7 +6708,8 @@ void TestEditorUi::completion_popup_uses_expected_icons_for_all_symbol_types()
     QVERIFY(QMetaObject::invokeMethod(&editor, "triggerAutoComplete", Qt::DirectConnection));
     popup = nullptr;
     QTRY_VERIFY_WITH_TIMEOUT((popup = s_completionPopupTree()) != nullptr, 1000);
-    QCOMPARE(s_popupSymbolForIdentifier(popup, QStringLiteral("icon_user_unit")), QStringLiteral("u"));
+    QVERIFY(popup->isColumnHidden(0));
+    QVERIFY(s_popupSymbolForIdentifier(popup, QStringLiteral("icon_user_unit")).isEmpty());
     popup->hide();
 
 }
