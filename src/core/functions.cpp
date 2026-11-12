@@ -2252,8 +2252,11 @@ QStringList FunctionRepo::getIdentifiers() const
 
 QStringList FunctionRepo::getListedIdentifiers() const
 {
-    // The ∛ alias is valid input, but common Windows fonts lack its glyph.
+    // The symbol aliases are valid input, but some UI fonts lack their glyphs,
+    // and each one already has a named function in the list.
     QStringList identifiers = getIdentifiers();
+    identifiers.removeOne(QString(UnicodeChars::Summation));
+    identifiers.removeOne(QString(UnicodeChars::SquareRoot));
     identifiers.removeOne(QString(UnicodeChars::CubeRoot));
     return identifiers;
 }

@@ -529,11 +529,15 @@ void TestDisplayUi::function_identifier_cache_tracks_insertions()
     QVERIFY(!before.contains(QStringLiteral("ratio"), Qt::CaseInsensitive));
     QVERIFY(before.contains(QString(UnicodeChars::SquareRoot)));
     QVERIFY(before.contains(QString(UnicodeChars::Summation)));
-    // The ∛ alias is hidden from lists, but stays valid and highlighted.
+    // The symbol aliases are hidden from lists, but stay valid and highlighted.
     QVERIFY(before.contains(QString(UnicodeChars::CubeRoot)));
     const QStringList listed = functions->getListedIdentifiers();
-    QCOMPARE(listed.size(), before.size() - 1);
+    QCOMPARE(listed.size(), before.size() - 3);
+    QVERIFY(!listed.contains(QString(UnicodeChars::Summation)));
+    QVERIFY(!listed.contains(QString(UnicodeChars::SquareRoot)));
     QVERIFY(!listed.contains(QString(UnicodeChars::CubeRoot)));
+    QCOMPARE(functions->find(QString(UnicodeChars::Summation)), functions->find(QStringLiteral("summation")));
+    QCOMPARE(functions->find(QString(UnicodeChars::SquareRoot)), functions->find(QStringLiteral("sqrt")));
     QCOMPARE(functions->find(QString(UnicodeChars::CubeRoot)), functions->find(QStringLiteral("cbrt")));
     QStringList copy = functions->getIdentifiers();
     copy.clear();
