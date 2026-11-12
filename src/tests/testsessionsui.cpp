@@ -360,9 +360,12 @@ void TestSessionsUi::session_clone_menu_action_follows_active_pane()
     MainWindow other(false);
     window.show();
     other.show();
+    window.activateWindow();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     if (!UiTestFixture::activateWindow(&window))
         return;
+    // The clone action targets the active window, so wait until it is ours.
+    QTRY_COMPARE(QApplication::activeWindow(), static_cast<QWidget*>(&window));
     Editor* inactiveEditor = window.findChild<Editor*>();
     QVERIFY(inactiveEditor);
     inactiveEditor->setText(QStringLiteral("456"));
