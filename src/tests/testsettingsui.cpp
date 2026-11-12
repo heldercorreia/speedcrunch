@@ -16,6 +16,8 @@
 #include <QOperatingSystemVersion>
 #include <QStyleHints>
 #include <QStringListModel>
+#include <QTabBar>
+#include <QToolButton>
 #include <QToolTip>
 #include <QTreeWidget>
 
@@ -77,6 +79,7 @@ private slots:
     void macos_system_constant_popup_search_stays_rounded_data();
     void macos_system_constant_popup_search_stays_rounded();
     void tooltip_popups_use_system_style_when_theme_is_empty();
+    void session_close_button_tooltip_keeps_system_style();
     void settings_reset_restores_persisted_defaults();
     void settings_reset_can_be_cancelled_data();
     void settings_reset_can_be_cancelled();
@@ -2097,6 +2100,38 @@ void TestSettingsUi::tooltip_popups_use_system_style_when_theme_is_empty()
     QCOMPARE(popup->styleSheet(), themedStyle);
     QCOMPARE(popup->layout()->contentsMargins(), margins);
     QCOMPARE(popup->windowOpacity(), 1.0);
+}
+
+void TestSettingsUi::session_close_button_tooltip_keeps_system_style()
+{
+    MainWindowStateGuard guard;
+    guard.settings->toolTipAppearance = Settings::ToolTipAppearanceSystem;
+    MainWindow window(false);
+    window.show();
+    QCoreApplication::processEvents();
+
+    auto* closeButton = window.findChild<QToolButton*>(QStringLiteral("SessionTabCloseButton"));
+    QVERIFY(closeButton);
+    auto* tabBar = qobject_cast<QTabBar*>(closeButton->parentWidget());
+    QVERIFY(tabBar);
+    QEvent enter(QEvent::Enter);
+    QCoreApplication::sendEvent(closeButton, &enter);
+    QCoreApplication::processEvents();
+    auto* popup = tabBar->findChild<QFrame*>(QStringLiteral("sessionTabToolTipPopup"));
+    QVERIFY(popup);
+    const auto hidePopup = qScopeGuard([popup]() { popup->hide(); });
+    QVERIFY(popup->isVisible());
+    auto* label = popup->findChild<QLabel*>(QStringLiteral("sessionTabToolTipPopupLabel"));
+    QVERIFY(label);
+
+    // The tab strip styles its row. That rule must not reach the popup.
+    const QImage image = popup->grab().toImage();
+    QVERIFY(!image.isNull());
+    const QPoint inside = label->geometry().topLeft() + QPoint(1, 1);
+    QVERIFY(image.rect().contains(inside));
+    QVERIFY2(image.pixelColor(inside).name()
+                 != tabBar->palette().color(QPalette::Window).name(),
+             qPrintable(image.pixelColor(inside).name()));
 }
 
 void TestSettingsUi::settings_reset_restores_persisted_defaults()

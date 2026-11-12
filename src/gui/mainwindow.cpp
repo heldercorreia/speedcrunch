@@ -3021,7 +3021,9 @@ public:
             StartupDiagnostics::setAppearancePalette(row, rowPalette);
             row->setAutoFillBackground(true);
             row->setAttribute(Qt::WA_StyledBackground, true);
-            setStyleSheetIfChanged(row, QStringLiteral("background-color: %1;")
+            // Scope the rule to the row. An unscoped rule also reaches the tooltip
+            // popup, a child of this tab bar, and covers its system style.
+            setStyleSheetIfChanged(row, QStringLiteral("QWidget#SessionTabBarRow { background-color: %1; }")
                                             .arg(m_tabStripColor.name()));
         }
         QPalette tabPalette = palette();
@@ -5954,6 +5956,7 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
     layout->setContentsMargins(0, 0, 0, 0);
 
     QWidget* tabBarRow = new QWidget(pane);
+    tabBarRow->setObjectName(QStringLiteral("SessionTabBarRow"));
     // The tab strip styles its parent. Give it the final row immediately so
     // construction does not install a temporary stylesheet on the whole pane.
     SessionTabBar* tabBar = new SessionTabBar(tabBarRow);
