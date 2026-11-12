@@ -3,7 +3,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/src/cmake/BuildVariants.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/src/cmake/MacOSDeploymentTarget.cmake")
 # Application version in SemVer 2.0.0 form: MAJOR.MINOR.PATCH with an optional
 # pre-release suffix, such as 1.2.0 or 1.2.0-beta.1.
-set(SPEEDCRUNCH_VERSION "1.2.0-beta.1")
+set(SPEEDCRUNCH_VERSION "1.2.0-rc.1")
 include("${CMAKE_CURRENT_LIST_DIR}/src/cmake/SpeedCrunchVersion.cmake")
 project(speedcrunch VERSION ${speedcrunch_version_core})
 
