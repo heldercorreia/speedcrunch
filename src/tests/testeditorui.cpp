@@ -6514,6 +6514,15 @@ void TestEditorUi::constant_completion_popup_uses_configured_surface_colors()
         QVERIFY(popup->styleSheet().contains(QStringLiteral("border-radius: 11px")));
     }
 
+    // The frame around the search field and list shows the theme background,
+    // also when the popup window is see-through for the system style.
+    QWidget* frame = popupTrees.first()->window();
+    QCOMPARE(frame->objectName(), QStringLiteral("constantCompletionPopup"));
+    const QImage image = frame->grab().toImage();
+    const qreal ratio = image.devicePixelRatio();
+    const QPoint margin(qRound(5 * ratio), qRound(frame->height() / 2 * ratio));
+    QCOMPARE(image.pixelColor(margin).rgba(), background.rgba());
+
     if (QWidget* popup = QApplication::activePopupWidget())
         popup->hide();
 }

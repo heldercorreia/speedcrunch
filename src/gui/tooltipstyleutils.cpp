@@ -307,6 +307,10 @@ void setSmoothPopupCorners(QWidget* popup, int cornerRadius)
     // The painter draws the background. A filled background would cover
     // the see-through corners.
     popup->setAutoFillBackground(!smooth);
+    // A see-through window also skips its stylesheet background and border.
+    // Paint them whenever the painter does not.
+    if (popup->testAttribute(Qt::WA_TranslucentBackground))
+        popup->setAttribute(Qt::WA_NoSystemBackground, smooth);
     if (auto* area = qobject_cast<QAbstractScrollArea*>(popup))
         area->viewport()->setAutoFillBackground(!smooth);
     if (smooth)
