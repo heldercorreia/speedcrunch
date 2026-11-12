@@ -8,6 +8,7 @@
 #include "gui/uiconfig.h"
 
 #include <QAbstractItemView>
+#include <QApplication>
 #include <QBitmap>
 #include <QFrame>
 #include <QGuiApplication>
@@ -223,6 +224,25 @@ namespace ToolTipStyleUtils {
 QPalette nativeToolTipPalette()
 {
     QPalette palette = QToolTip::palette();
+    // In dark mode macOS gives a see-through white tooltip base with black
+    // text, and a forced color mode keeps the platform's tooltip colors. When
+    // the tooltip colors do not fit the system palette, use its text area
+    // colors, as the bitfield's bit tooltips already showed.
+    const QPalette system = QApplication::palette();
+    const auto isDark = [](const QColor& background, const QColor& foreground) {
+        return background.lightness() < foreground.lightness();
+    };
+    const QColor base = palette.color(QPalette::ToolTipBase);
+    if (base.alpha() < 255
+        || isDark(base, palette.color(QPalette::ToolTipText))
+            != isDark(system.color(QPalette::Window), system.color(QPalette::WindowText))) {
+        for (const QPalette::ColorGroup group : {QPalette::Active,
+                                                 QPalette::Inactive,
+                                                 QPalette::Disabled}) {
+            palette.setColor(group, QPalette::ToolTipBase, system.color(group, QPalette::Base));
+            palette.setColor(group, QPalette::ToolTipText, system.color(group, QPalette::Text));
+        }
+    }
     for (const QPalette::ColorGroup group : {QPalette::Active,
                                              QPalette::Inactive,
                                              QPalette::Disabled}) {

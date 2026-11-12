@@ -80,6 +80,7 @@ private slots:
     void macos_system_constant_popup_search_stays_rounded();
     void tooltip_popups_use_system_style_when_theme_is_empty();
     void session_close_button_tooltip_keeps_system_style();
+    void system_tooltip_palette_follows_color_mode();
     void settings_reset_restores_persisted_defaults();
     void settings_reset_can_be_cancelled_data();
     void settings_reset_can_be_cancelled();
@@ -2132,6 +2133,45 @@ void TestSettingsUi::session_close_button_tooltip_keeps_system_style()
     QVERIFY2(image.pixelColor(inside).name()
                  != tabBar->palette().color(QPalette::Window).name(),
              qPrintable(image.pixelColor(inside).name()));
+}
+
+void TestSettingsUi::system_tooltip_palette_follows_color_mode()
+{
+    const QPalette original = QToolTip::palette();
+    const auto restore = qScopeGuard([original]() { QToolTip::setPalette(original); });
+    const QPalette system = QApplication::palette();
+    const bool systemDark = system.color(QPalette::Window).lightness()
+        < system.color(QPalette::WindowText).lightness();
+
+    // macOS dark mode: a see-through white base with black text.
+    QPalette translucent = original;
+    translucent.setColor(QPalette::ToolTipBase, QColor(255, 255, 255, 64));
+    translucent.setColor(QPalette::ToolTipText, Qt::black);
+    QToolTip::setPalette(translucent);
+    QPalette palette = ToolTipStyleUtils::nativeToolTipPalette();
+    QCOMPARE(palette.color(QPalette::ToolTipBase), system.color(QPalette::Base));
+    QCOMPARE(palette.color(QPalette::Window), system.color(QPalette::Base));
+    QCOMPARE(palette.color(QPalette::ToolTipText), system.color(QPalette::Text));
+
+    // A forced color mode: tooltip colors from the other mode.
+    QPalette mismatched = original;
+    mismatched.setColor(QPalette::ToolTipBase, systemDark ? QColor(255, 255, 220) : QColor(30, 30, 30));
+    mismatched.setColor(QPalette::ToolTipText, systemDark ? Qt::black : Qt::white);
+    QToolTip::setPalette(mismatched);
+    palette = ToolTipStyleUtils::nativeToolTipPalette();
+    QCOMPARE(palette.color(QPalette::ToolTipBase), system.color(QPalette::Base));
+    QCOMPARE(palette.color(QPalette::ToolTipText), system.color(QPalette::Text));
+
+    // Matching opaque colors stay as the platform gives them.
+    QPalette matching = original;
+    const QColor base = systemDark ? QColor(40, 40, 40) : QColor(255, 255, 220);
+    const QColor text = systemDark ? QColor(Qt::white) : QColor(Qt::black);
+    matching.setColor(QPalette::ToolTipBase, base);
+    matching.setColor(QPalette::ToolTipText, text);
+    QToolTip::setPalette(matching);
+    palette = ToolTipStyleUtils::nativeToolTipPalette();
+    QCOMPARE(palette.color(QPalette::ToolTipBase), base);
+    QCOMPARE(palette.color(QPalette::ToolTipText), text);
 }
 
 void TestSettingsUi::settings_reset_restores_persisted_defaults()
