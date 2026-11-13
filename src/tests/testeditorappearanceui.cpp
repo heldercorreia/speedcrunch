@@ -369,10 +369,11 @@ void TestEditorAppearanceUi::editor_display_style_defaults_to_modern_and_persist
     persisted.sync();
     settings->load();
     QCOMPARE(settings->editorDisplayStyle, Settings::EditorDisplayModern);
-    settings->editorDisplayStyle = Settings::EditorDisplayClassic;
+    // Reset applies the Classic style preset, like a first launch.
+    settings->editorDisplayStyle = Settings::EditorDisplayModern;
     settings->save();
     QVERIFY(settings->resetToDefaults());
-    QCOMPARE(settings->editorDisplayStyle, Settings::EditorDisplayModern);
+    QCOMPARE(settings->editorDisplayStyle, Settings::EditorDisplayClassic);
 }
 
 void TestEditorAppearanceUi::editor_display_style_switches_all_windows_and_preserves_work()
@@ -474,9 +475,10 @@ void TestEditorAppearanceUi::editor_display_style_switches_all_windows_and_prese
         dialog->button(QMessageBox::Yes)->click();
     });
     first.findChild<QAction*>(QStringLiteral("ResetAllSettingsAction"))->trigger();
-    QCOMPARE(settings->editorDisplayStyle, Settings::EditorDisplayModern);
+    // Reset applies the Classic style preset, like a first launch.
+    QCOMPARE(settings->editorDisplayStyle, Settings::EditorDisplayClassic);
     for (MainWindow* window : {&first, &second, &third}) {
-        QVERIFY(window->findChild<QMenu*>(QStringLiteral("EditorDisplayStyleMenu"))->actions().at(1)->isChecked());
+        QVERIFY(window->findChild<QMenu*>(QStringLiteral("EditorDisplayStyleMenu"))->actions().at(0)->isChecked());
         for (ResultDisplay* display : window->findChildren<ResultDisplay*>())
             QVERIFY(display->viewport()->x() > 0);
     }

@@ -694,9 +694,9 @@ void TestKeypadUi::keypad_appearance_defaults_to_modern_and_persists()
     persisted.sync();
     settings->load();
     QCOMPARE(settings->keypadAppearance, Settings::KeypadAppearanceModern);
-    settings->keypadAppearance = Settings::KeypadAppearanceClassic;
+    // Reset applies the Classic style preset, like a first launch.
     settings->resetToDefaults();
-    QCOMPARE(settings->keypadAppearance, Settings::KeypadAppearanceModern);
+    QCOMPARE(settings->keypadAppearance, Settings::KeypadAppearanceClassic);
 }
 
 void TestKeypadUi::keypad_appearance_switches_all_windows_data()

@@ -979,7 +979,6 @@ User Interface Settings
       It gives SpeedCrunch an appearance similar to version 0.12.
     * :guilabel:`Modern` uses the SpeedCrunch theme for menus, docks, the
       status bar, and tooltips, with Modern input, results, and keypad styles.
-      This matches the defaults for new 1.x installations.
     * :guilabel:`Hybrid` matches :guilabel:`Classic`, except that docks use the
       SpeedCrunch theme.
 
@@ -991,8 +990,12 @@ User Interface Settings
 
     Presets apply immediately to all windows. They keep the selected color
     theme, System Color Mode, fonts, keypad layouts and zoom levels, dock
-    positions, and visibility choices. Existing settings stay as they are when
-    you upgrade. SpeedCrunch identifies the matching preset without changing
+    positions, and visibility choices.
+
+    SpeedCrunch starts with :guilabel:`Classic` the first time it runs, and
+    :menuselection:`Reset All Settings...` applies it again. Existing settings
+    stay as they are when you upgrade, so earlier installations keep their
+    appearance. SpeedCrunch identifies the matching preset without changing
     your appearance.
 
     .. versionadded:: 1.2
@@ -1026,7 +1029,7 @@ User Interface Settings
       including highlighted and disabled items. With :guilabel:`Follow System`
       selected under :menuselection:`System Color Mode`, menus follow changes
       to the system theme while SpeedCrunch is running.
-    * :guilabel:`SpeedCrunch Theme` (the default) uses the selected SpeedCrunch
+    * :guilabel:`SpeedCrunch Theme` uses the selected SpeedCrunch
       theme for menu backgrounds and text, including highlighted items.
       Menu icons also follow the theme's text colors. In popup menus, disabled
       labels, shortcut hints, and icons appear dimmed.
@@ -1056,7 +1059,7 @@ User Interface Settings
       The Formula Book and bitfield use system colors as well. Formula and
       navigation links use the system link color directly. On bits use the system
       selection colors, with a separate hover color for off bits.
-    * :guilabel:`SpeedCrunch Theme` (the default) uses the selected SpeedCrunch
+    * :guilabel:`SpeedCrunch Theme` uses the selected SpeedCrunch
       theme for dock content, title bars, and tabs, including list selections and
       search fields.
 
@@ -1074,7 +1077,7 @@ User Interface Settings
       status bar, its labels, and its buttons. With :guilabel:`Follow System`
       selected under :menuselection:`System Color Mode`, colors follow changes
       to the system theme while SpeedCrunch is running.
-    * :guilabel:`SpeedCrunch Theme` (the default) uses the selected SpeedCrunch
+    * :guilabel:`SpeedCrunch Theme` uses the selected SpeedCrunch
       theme for the status bar background and text.
 
     The choice applies immediately to all SpeedCrunch windows and is saved
@@ -1090,7 +1093,7 @@ User Interface Settings
 
     * :guilabel:`System` uses the system style. The tooltips and lists look
       like those in other apps, and they change when the system theme changes.
-    * :guilabel:`SpeedCrunch Theme` (the default) uses the colors of the
+    * :guilabel:`SpeedCrunch Theme` uses the colors of the
       selected SpeedCrunch theme.
 
     The change applies at once to all SpeedCrunch windows. SpeedCrunch keeps
@@ -1101,7 +1104,7 @@ User Interface Settings
 * :menuselection:`Settings --> Appearance --> Input and Results`
     Choose the layout of the expression editor and result display:
 
-    * :guilabel:`Modern` (the default) uses a rounded input box with compact
+    * :guilabel:`Modern` uses a rounded input box with compact
       padding and a small gap around it. History aligns with the left edge of
       the box.
     * :guilabel:`Classic` uses a compact, full-width editor directly below the
@@ -1131,7 +1134,7 @@ User Interface Settings
 
     * :guilabel:`Classic` uses shallow rectangular buttons with smaller gaps,
       similar to the keypad in SpeedCrunch 0.12.
-    * :guilabel:`Modern` (the default) keeps the larger square buttons.
+    * :guilabel:`Modern` keeps the larger square buttons.
 
     The choice applies immediately to all windows and is saved between launches.
     It works with every preset and custom keypad. Each window keeps its own

@@ -5106,7 +5106,7 @@ void MainWindow::setActionsText()
         MainWindow::tr("Use an appearance similar to SpeedCrunch 0.12"));
     m_actions.settingsAppearancePresetModern->setText(MainWindow::tr("&Modern"));
     m_actions.settingsAppearancePresetModern->setStatusTip(
-        MainWindow::tr("Use the default SpeedCrunch appearance"));
+        MainWindow::tr("Use the SpeedCrunch theme in all parts of the window"));
     m_actions.settingsAppearancePresetHybrid->setText(MainWindow::tr("&Hybrid"));
     m_actions.settingsAppearancePresetHybrid->setStatusTip(
         MainWindow::tr("Use the Classic appearance with SpeedCrunch-themed docks"));

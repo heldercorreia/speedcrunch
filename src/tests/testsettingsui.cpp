@@ -67,13 +67,15 @@ private slots:
     void display_font_changes_update_all_sessions_and_windows();
     void font_dialog_uses_platform_appropriate_options();
     void font_dialog_offers_synthesized_styles_of_single_face_families();
-    void appearance_defaults_select_theme_and_modern_styles();
+    void appearance_defaults_select_classic_styles();
     void appearance_presets_identify_saved_combinations_data();
     void appearance_presets_identify_saved_combinations();
     void appearance_presets_apply_to_all_windows_and_preserve_preferences();
     void appearance_presets_track_individual_changes_data();
     void appearance_presets_track_individual_changes();
     void appearance_presets_follow_settings_reset();
+    void appearance_presets_default_to_classic_on_first_launch_only_data();
+    void appearance_presets_default_to_classic_on_first_launch_only();
     void appearance_presets_hybrid_mixes_classic_and_modern_choices();
     void tooltip_appearance_switches_result_preview_colors();
     void tooltip_appearance_switches_completion_popup_colors();
@@ -1631,23 +1633,24 @@ void TestSettingsUi::display_font_changes_update_all_sessions_and_windows()
     QCOMPARE(savedFont, expectedFont);
 }
 
-void TestSettingsUi::appearance_defaults_select_theme_and_modern_styles()
+void TestSettingsUi::appearance_defaults_select_classic_styles()
 {
     MainWindowStateGuard guard;
     Settings* settings = guard.settings;
-    settings->menuAppearance = Settings::MenuAppearanceSystem;
-    settings->dockAppearance = Settings::DockAppearanceSystem;
-    settings->statusBarAppearance = Settings::StatusBarAppearanceSystem;
-    settings->toolTipAppearance = Settings::ToolTipAppearanceSystem;
-    settings->editorDisplayStyle = Settings::EditorDisplayClassic;
-    settings->keypadAppearance = Settings::KeypadAppearanceClassic;
+    // Reset applies the Classic style preset, like a first launch.
+    settings->menuAppearance = Settings::MenuAppearanceSpeedCrunch;
+    settings->dockAppearance = Settings::DockAppearanceSpeedCrunch;
+    settings->statusBarAppearance = Settings::StatusBarAppearanceSpeedCrunch;
+    settings->toolTipAppearance = Settings::ToolTipAppearanceSpeedCrunch;
+    settings->editorDisplayStyle = Settings::EditorDisplayModern;
+    settings->keypadAppearance = Settings::KeypadAppearanceModern;
     QVERIFY(settings->resetToDefaults());
-    QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSpeedCrunch);
-    QCOMPARE(settings->dockAppearance, Settings::DockAppearanceSpeedCrunch);
-    QCOMPARE(settings->statusBarAppearance, Settings::StatusBarAppearanceSpeedCrunch);
-    QCOMPARE(settings->toolTipAppearance, Settings::ToolTipAppearanceSpeedCrunch);
-    QCOMPARE(settings->editorDisplayStyle, Settings::EditorDisplayModern);
-    QCOMPARE(settings->keypadAppearance, Settings::KeypadAppearanceModern);
+    QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSystem);
+    QCOMPARE(settings->dockAppearance, Settings::DockAppearanceSystem);
+    QCOMPARE(settings->statusBarAppearance, Settings::StatusBarAppearanceSystem);
+    QCOMPARE(settings->toolTipAppearance, Settings::ToolTipAppearanceSystem);
+    QCOMPARE(settings->editorDisplayStyle, Settings::EditorDisplayClassic);
+    QCOMPARE(settings->keypadAppearance, Settings::KeypadAppearanceClassic);
 
     MainWindow window(false);
     for (const QString& name : {QStringLiteral("MenuAppearanceMenu"),
@@ -1658,8 +1661,8 @@ void TestSettingsUi::appearance_defaults_select_theme_and_modern_styles()
                                 QStringLiteral("KeypadAppearanceMenu")}) {
         auto* menu = window.findChild<QMenu*>(name);
         QVERIFY(menu);
-        QVERIFY2(menu->actions().at(1)->isChecked(), qPrintable(name));
-        QVERIFY2(!menu->actions().at(0)->isChecked(), qPrintable(name));
+        QVERIFY2(menu->actions().at(0)->isChecked(), qPrintable(name));
+        QVERIFY2(!menu->actions().at(1)->isChecked(), qPrintable(name));
     }
 }
 
@@ -1852,7 +1855,7 @@ void TestSettingsUi::appearance_presets_follow_settings_reset()
     MainWindow second(false);
     auto* presets = first.findChild<QMenu*>(QStringLiteral("AppearancePresetMenu"));
     QVERIFY(presets);
-    presets->actions().first()->trigger();
+    presets->actions().at(1)->trigger();
     auto* reset = first.findChild<QAction*>(QStringLiteral("ResetAllSettingsAction"));
     QVERIFY(reset);
     QTimer::singleShot(0, &first, []() {
@@ -1863,11 +1866,59 @@ void TestSettingsUi::appearance_presets_follow_settings_reset()
     reset->trigger();
     for (MainWindow* window : {&first, &second}) {
         auto* choices = window->findChild<QMenu*>(QStringLiteral("AppearancePresetMenu"));
-        QVERIFY(choices->actions().at(1)->isChecked());
-        QVERIFY(!choices->actions().at(0)->isChecked());
+        // Reset applies the same Classic preset as a first launch.
+        QVERIFY(choices->actions().at(0)->isChecked());
+        QVERIFY(!choices->actions().at(1)->isChecked());
         QVERIFY(!choices->actions().at(2)->isChecked());
         QVERIFY(!choices->actions().at(3)->isChecked());
     }
+}
+
+void TestSettingsUi::appearance_presets_default_to_classic_on_first_launch_only_data()
+{
+    QTest::addColumn<bool>("firstLaunch");
+    QTest::newRow("first-launch") << true;
+    QTest::newRow("existing-installation") << false;
+}
+
+void TestSettingsUi::appearance_presets_default_to_classic_on_first_launch_only()
+{
+    QFETCH(bool, firstLaunch);
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    {
+        QSettings persisted(Settings::getConfigPath() + QStringLiteral("/SpeedCrunch.ini"),
+                            QSettings::IniFormat);
+        persisted.clear();
+        persisted.setValue(QStringLiteral("ConfigVersion"), 1200);
+        // An installation from before the presets saved other settings but
+        // never its appearance, which then defaulted to Modern.
+        if (!firstLaunch)
+            persisted.setValue(QStringLiteral("SpeedCrunch/General/Language"), QStringLiteral("C"));
+        persisted.sync();
+        QCOMPARE(persisted.status(), QSettings::NoError);
+    }
+    // The second load checks that a first launch stored the preset.
+    for (int launch = 0; launch < 2; ++launch) {
+        settings->load();
+        QCOMPARE(settings->menuAppearance,
+                 firstLaunch ? Settings::MenuAppearanceSystem : Settings::MenuAppearanceSpeedCrunch);
+        QCOMPARE(settings->dockAppearance,
+                 firstLaunch ? Settings::DockAppearanceSystem : Settings::DockAppearanceSpeedCrunch);
+        QCOMPARE(settings->statusBarAppearance,
+                 firstLaunch ? Settings::StatusBarAppearanceSystem : Settings::StatusBarAppearanceSpeedCrunch);
+        QCOMPARE(settings->toolTipAppearance,
+                 firstLaunch ? Settings::ToolTipAppearanceSystem : Settings::ToolTipAppearanceSpeedCrunch);
+        QCOMPARE(settings->editorDisplayStyle,
+                 firstLaunch ? Settings::EditorDisplayClassic : Settings::EditorDisplayModern);
+        QCOMPARE(settings->keypadAppearance,
+                 firstLaunch ? Settings::KeypadAppearanceClassic : Settings::KeypadAppearanceModern);
+    }
+    MainWindow window(false);
+    auto* presets = window.findChild<QMenu*>(QStringLiteral("AppearancePresetMenu"));
+    QVERIFY(presets);
+    QCOMPARE(presets->actions().at(0)->isChecked(), firstLaunch);
+    QCOMPARE(presets->actions().at(1)->isChecked(), !firstLaunch);
 }
 
 void TestSettingsUi::appearance_presets_hybrid_mixes_classic_and_modern_choices()
@@ -2422,10 +2473,12 @@ void TestSettingsUi::settings_reset_updates_all_windows_and_preserves_sessions()
     QVERIFY(settings->autoCompletion);
     QVERIFY(settings->syntaxHighlighting);
     QVERIFY(settings->hoverHighlightResults);
-    QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSpeedCrunch);
+    QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSystem);
     QCOMPARE(settings->colorScheme, QStringLiteral("One Dark"));
     QCOMPARE(CMath::imaginaryUnitSymbol(), QChar('i'));
     Keypad defaultKeypad(Keypad::LayoutModeBasicWide);
+    // Reset applies the Classic style preset, like a first launch.
+    defaultKeypad.setAppearance(Keypad::Classic);
     for (MainWindow* window : {&first, &second}) {
         QVERIFY(window->findChild<QAction*>(QStringLiteral("InputDigitGroupingAction"))->isChecked());
         for (QActionGroup* group : window->findChildren<QActionGroup*>()) {

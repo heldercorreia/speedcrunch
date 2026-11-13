@@ -65,10 +65,11 @@ void TestStatusBarUi::status_bar_appearance_defaults_to_theme_and_persists()
     persisted.sync();
     settings->load();
     QCOMPARE(settings->statusBarAppearance, Settings::StatusBarAppearanceSpeedCrunch);
-    settings->statusBarAppearance = Settings::StatusBarAppearanceSystem;
+    // Reset applies the Classic style preset, like a first launch.
+    settings->statusBarAppearance = Settings::StatusBarAppearanceSpeedCrunch;
     settings->save();
     QVERIFY(settings->resetToDefaults());
-    QCOMPARE(settings->statusBarAppearance, Settings::StatusBarAppearanceSpeedCrunch);
+    QCOMPARE(settings->statusBarAppearance, Settings::StatusBarAppearanceSystem);
 }
 
 void TestStatusBarUi::status_bar_appearance_switches_all_windows_data()

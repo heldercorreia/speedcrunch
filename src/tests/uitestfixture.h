@@ -91,6 +91,17 @@ inline void resetSettings()
     // Start with the current schema so loading defaults cannot migrate the
     // user's legacy native settings into the isolated test directory.
     persisted.setValue(QStringLiteral("ConfigVersion"), 1200);
+    // An empty file is a first launch, which applies the Classic style preset.
+    // Most UI tests expect the Modern appearance of existing installations.
+    const QString display = QStringLiteral("SpeedCrunch/Display/");
+    persisted.setValue(display + QStringLiteral("MenuAppearance"), int(Settings::MenuAppearanceSpeedCrunch));
+    persisted.setValue(display + QStringLiteral("DockAppearance"), int(Settings::DockAppearanceSpeedCrunch));
+    persisted.setValue(display + QStringLiteral("StatusBarAppearance"),
+                       int(Settings::StatusBarAppearanceSpeedCrunch));
+    persisted.setValue(display + QStringLiteral("ToolTipAppearance"),
+                       int(Settings::ToolTipAppearanceSpeedCrunch));
+    persisted.setValue(display + QStringLiteral("EditorDisplayStyle"), int(Settings::EditorDisplayModern));
+    persisted.setValue(display + QStringLiteral("KeypadAppearance"), int(Settings::KeypadAppearanceModern));
     persisted.sync();
     if (persisted.status() != QSettings::NoError)
         qFatal("Cannot reset isolated UI test settings.");

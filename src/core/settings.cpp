@@ -382,6 +382,9 @@ void Settings::load()
     QSettings* settings = createQSettings(KEY);
     if (!settings)
         return;
+    // Existing installations keep their appearance, even when it was never
+    // saved, so only a new settings file gets the Classic style preset.
+    const bool firstLaunch = !settings->childGroups().contains(QLatin1String(KEY));
 
     phaseTiming.next("Decode general settings");
     QString key = QString::fromLatin1(KEY) + QLatin1String("/General/");
@@ -684,18 +687,35 @@ void Settings::load()
     systemColorMode = systemColorModeValue >= SystemColorModeFollowSystem
             && systemColorModeValue <= SystemColorModeDark
         ? static_cast<SystemColorMode>(systemColorModeValue) : SystemColorModeFollowSystem;
-    menuAppearance = settings->value(key + QLatin1String("MenuAppearance"), MenuAppearanceSpeedCrunch).toInt()
-        == MenuAppearanceSystem ? MenuAppearanceSystem : MenuAppearanceSpeedCrunch;
-    dockAppearance = settings->value(key + QLatin1String("DockAppearance"), DockAppearanceSpeedCrunch).toInt()
-        == DockAppearanceSystem ? DockAppearanceSystem : DockAppearanceSpeedCrunch;
-    statusBarAppearance = settings->value(key + QLatin1String("StatusBarAppearance"), StatusBarAppearanceSpeedCrunch).toInt()
-        == StatusBarAppearanceSystem ? StatusBarAppearanceSystem : StatusBarAppearanceSpeedCrunch;
-    editorDisplayStyle = settings->value(key + QLatin1String("EditorDisplayStyle"), EditorDisplayModern).toInt()
-        == EditorDisplayClassic ? EditorDisplayClassic : EditorDisplayModern;
-    keypadAppearance = settings->value(key + QLatin1String("KeypadAppearance"), KeypadAppearanceModern).toInt()
-        == KeypadAppearanceClassic ? KeypadAppearanceClassic : KeypadAppearanceModern;
-    toolTipAppearance = settings->value(key + QLatin1String("ToolTipAppearance"), ToolTipAppearanceSpeedCrunch).toInt()
-        == ToolTipAppearanceSystem ? ToolTipAppearanceSystem : ToolTipAppearanceSpeedCrunch;
+    if (firstLaunch) {
+        menuAppearance = MenuAppearanceSystem;
+        dockAppearance = DockAppearanceSystem;
+        statusBarAppearance = StatusBarAppearanceSystem;
+        editorDisplayStyle = EditorDisplayClassic;
+        keypadAppearance = KeypadAppearanceClassic;
+        toolTipAppearance = ToolTipAppearanceSystem;
+        // Store the preset now, so that a later launch cannot mistake this
+        // file for an existing installation and fall back to Modern.
+        settings->setValue(key + QLatin1String("MenuAppearance"), static_cast<int>(menuAppearance));
+        settings->setValue(key + QLatin1String("DockAppearance"), static_cast<int>(dockAppearance));
+        settings->setValue(key + QLatin1String("StatusBarAppearance"), static_cast<int>(statusBarAppearance));
+        settings->setValue(key + QLatin1String("ToolTipAppearance"), static_cast<int>(toolTipAppearance));
+        settings->setValue(key + QLatin1String("EditorDisplayStyle"), static_cast<int>(editorDisplayStyle));
+        settings->setValue(key + QLatin1String("KeypadAppearance"), static_cast<int>(keypadAppearance));
+    } else {
+        menuAppearance = settings->value(key + QLatin1String("MenuAppearance"), MenuAppearanceSpeedCrunch).toInt()
+            == MenuAppearanceSystem ? MenuAppearanceSystem : MenuAppearanceSpeedCrunch;
+        dockAppearance = settings->value(key + QLatin1String("DockAppearance"), DockAppearanceSpeedCrunch).toInt()
+            == DockAppearanceSystem ? DockAppearanceSystem : DockAppearanceSpeedCrunch;
+        statusBarAppearance = settings->value(key + QLatin1String("StatusBarAppearance"), StatusBarAppearanceSpeedCrunch).toInt()
+            == StatusBarAppearanceSystem ? StatusBarAppearanceSystem : StatusBarAppearanceSpeedCrunch;
+        editorDisplayStyle = settings->value(key + QLatin1String("EditorDisplayStyle"), EditorDisplayModern).toInt()
+            == EditorDisplayClassic ? EditorDisplayClassic : EditorDisplayModern;
+        keypadAppearance = settings->value(key + QLatin1String("KeypadAppearance"), KeypadAppearanceModern).toInt()
+            == KeypadAppearanceClassic ? KeypadAppearanceClassic : KeypadAppearanceModern;
+        toolTipAppearance = settings->value(key + QLatin1String("ToolTipAppearance"), ToolTipAppearanceSpeedCrunch).toInt()
+            == ToolTipAppearanceSystem ? ToolTipAppearanceSystem : ToolTipAppearanceSpeedCrunch;
+    }
     customColorSchemeJson = settings->value(key + QLatin1String("CustomColorSchemeJson"), QString()).toString();
 
     keyBindings.clear();
@@ -852,19 +872,21 @@ bool Settings::resetToDefaults()
     if (!settings)
         return false;
 
-    // The open sessions are work in progress, so keep their layout while
-    // removing preferences, including keys left behind by older versions.
+    // Remove preferences, including keys left behind by older versions.
     settings->remove(QStringLiteral("SpeedCrunch"));
-    settings->setValue(QStringLiteral("SpeedCrunch/Layout/SessionLayoutJson"), sessionLayoutJson);
     settings->sync();
     const bool success = settings->status() == QSettings::NoError;
     delete settings;
     if (!success)
         return false;
 
-    // Use the same defaults as a fresh installation instead of keeping a
-    // second list here. Save the number format to avoid a first-run prompt.
+    // Use the same defaults as a fresh installation, including the first
+    // launch style preset, instead of keeping a second list here. The open
+    // sessions are work in progress, so keep their layout. Save the number
+    // format to avoid a first-run prompt.
+    const QString layout = sessionLayoutJson;
     load();
+    sessionLayoutJson = layout;
     hasNumberFormatStyleSetting = true;
     save();
     return true;
