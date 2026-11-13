@@ -2958,6 +2958,15 @@ void TestSettingsUi::user_definitions_hint_follows_theme_contrast()
                 QVERIFY2(contrast >= 7.0, qPrintable(QStringLiteral("Hint contrast is %1:1").arg(contrast)));
                 QCOMPARE(hint.alpha(), 255);
                 QCOMPARE(editor->viewport()->palette().color(group, QPalette::PlaceholderText), hint);
+
+                // The text cursor uses the Text color.
+                const QColor text = editor->palette().color(group, QPalette::Text);
+                const double textLuminance = luminance(text);
+                const double textContrast = (qMax(baseLuminance, textLuminance) + 0.05)
+                    / (qMin(baseLuminance, textLuminance) + 0.05);
+                QVERIFY2(textContrast >= 7.0,
+                         qPrintable(QStringLiteral("Text contrast is %1:1").arg(textContrast)));
+                QCOMPARE(editor->viewport()->palette().color(group, QPalette::Text), text);
             }
         };
         verifyHint(background);

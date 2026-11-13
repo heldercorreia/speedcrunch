@@ -12584,8 +12584,11 @@ void MainWindow::showUserDefinitionsImportDialog()
         for (const QPalette::ColorGroup group : {QPalette::Active,
                                                 QPalette::Inactive,
                                                 QPalette::Disabled}) {
-            palette.setColor(group, QPalette::PlaceholderText,
-                             aaForegroundForBackground(palette.color(group, QPalette::Base)));
+            // The text cursor is painted with the Text color, so it must stay
+            // readable on the color scheme background, like the hint.
+            const QColor foreground = aaForegroundForBackground(palette.color(group, QPalette::Base));
+            palette.setColor(group, QPalette::Text, foreground);
+            palette.setColor(group, QPalette::PlaceholderText, foreground);
         }
         textEdit->setPalette(palette);
         textEdit->viewport()->setPalette(palette);
