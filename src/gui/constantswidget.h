@@ -39,6 +39,7 @@ public:
     QString selectedSubdomain() const;
     QString searchText() const;
     void restoreState(const QString& domain, const QString& subdomain, const QString& searchText);
+    int missingColumnsWidth();
     void setSummaryPopupThemeColors(const QColor& background,
                                     const QColor& foreground,
                                     const QColor& outline,

@@ -189,6 +189,14 @@ QSize ConstantsWidget::minimumSizeHint() const
 QString ConstantsWidget::selectedDomain() const { return m_domain->currentText(); }
 QString ConstantsWidget::selectedSubdomain() const { return m_subdomain->currentText(); }
 QString ConstantsWidget::searchText() const { return m_filter->text(); }
+
+int ConstantsWidget::missingColumnsWidth()
+{
+    if (m_pendingRefresh)
+        filter();
+    return DockListStyle::missingColumnsWidth(m_list);
+}
+
 void ConstantsWidget::restoreState(const QString& domain, const QString& subdomain, const QString& searchText)
 {
     StartupDiagnostics::AppearanceContext context("Restore constants dock filters");

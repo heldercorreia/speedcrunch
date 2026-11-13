@@ -249,6 +249,13 @@ void FunctionsWidget::restoreState(const QString& domain, const QString& searchT
     updateList();
 }
 
+int FunctionsWidget::missingColumnsWidth()
+{
+    if (m_pendingRefresh)
+        updateList();
+    return DockListStyle::missingColumnsWidth(m_functions);
+}
+
 void FunctionsWidget::setSelectedDomain(const QString& domain)
 {
     StartupDiagnostics::AppearanceContext context("Functions dock domain change");

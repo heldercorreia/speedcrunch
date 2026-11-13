@@ -8753,6 +8753,66 @@ void MainWindow::addTabifiedDock(QDockWidget* newDock, bool takeFocus, Qt::DockW
         newDock->setFocus();
 }
 
+void MainWindow::fitLoneSideDockToColumns(QDockWidget* dock)
+{
+    if (dock == nullptr || dock->isHidden() || dock->isFloating())
+        return;
+    const Qt::DockWidgetArea area = dockWidgetArea(dock);
+    if (area != Qt::LeftDockWidgetArea && area != Qt::RightDockWidgetArea)
+        return;
+    // Keep the width the user chose for docks that were already open there.
+    for (QDockWidget* other : std::as_const(m_allDocks)) {
+        if (other != dock && !other->isHidden() && !other->isFloating()
+            && dockWidgetArea(other) == area) {
+            return;
+        }
+    }
+    fitDockToColumns(dock, area, DockFitStep::ResizeDock);
+}
+
+void MainWindow::fitDockToColumns(QDockWidget* dock, Qt::DockWidgetArea area, DockFitStep step)
+{
+    // Each step measures again once the previous layout change has settled.
+    QPointer<QDockWidget> target(dock);
+    QTimer::singleShot(0, this, [this, target, area, step]() {
+        if (!target || target->isHidden() || target->isFloating() || dockWidgetArea(target) != area)
+            return;
+        int missingWidth = 0;
+        if (target == m_docks.constants)
+            missingWidth = m_docks.constants->widget()->missingColumnsWidth();
+        else if (target == m_docks.functions)
+            missingWidth = m_docks.functions->widget()->missingColumnsWidth();
+        if (missingWidth <= 0)
+            return;
+
+        if (step != DockFitStep::GrowWindow) {
+            resizeDocks({target}, {target->width() + missingWidth}, Qt::Horizontal);
+            if (step == DockFitStep::ResizeDock)
+                fitDockToColumns(target, area, DockFitStep::GrowWindow);
+            return;
+        }
+
+        // The editor and keypad keep their minimum width, so the window may
+        // need to grow. Never change a size that the system controls.
+        if (windowState() & (Qt::WindowMaximized | Qt::WindowFullScreen))
+            return;
+        QScreen* currentScreen = screen();
+        if (currentScreen == nullptr)
+            return;
+        const QRect available = currentScreen->availableGeometry();
+        const QRect frame = frameGeometry();
+        const int growth = qMin(missingWidth, available.width() - frame.width());
+        if (growth <= 0)
+            return;
+        // Keep the window on screen by moving it left when needed.
+        const int overflow = frame.right() + growth - available.right();
+        if (overflow > 0)
+            move(qMax(available.left(), frame.left() - overflow), frame.top());
+        resize(width() + growth, height());
+        fitDockToColumns(target, area, DockFitStep::FinalResizeDock);
+    });
+}
+
 void MainWindow::deleteDock(QDockWidget* dock)
 {
     // QMainWindow retains internal layout items for dock restoration and tab
@@ -8945,10 +9005,18 @@ void MainWindow::createFixedConnections()
         [](MainWindow* window, bool visible) { window->setBitfieldVisible(visible); });
     connectViewToggleToActiveWindow(
         m_actions.viewConstants,
-        [](MainWindow* window, bool visible) { window->setConstantsDockVisible(visible); });
+        [](MainWindow* window, bool visible) {
+            window->setConstantsDockVisible(visible);
+            if (visible)
+                window->fitLoneSideDockToColumns(window->m_docks.constants);
+        });
     connectViewToggleToActiveWindow(
         m_actions.viewFunctions,
-        [](MainWindow* window, bool visible) { window->setFunctionsDockVisible(visible); });
+        [](MainWindow* window, bool visible) {
+            window->setFunctionsDockVisible(visible);
+            if (visible)
+                window->fitLoneSideDockToColumns(window->m_docks.functions);
+        });
     connectViewToggleToActiveWindow(
         m_actions.viewHistory,
         [](MainWindow* window, bool visible) { window->setHistoryDockVisible(visible); });

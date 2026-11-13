@@ -35,6 +35,7 @@ public:
     QString selectedDomain() const;
     void setSelectedDomain(const QString& domain);
     void restoreState(const QString& domain, const QString& searchText);
+    int missingColumnsWidth();
 
 signals:
     void functionSelected(const QString&);

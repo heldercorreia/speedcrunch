@@ -10,6 +10,7 @@ class QAbstractItemView;
 class QDockWidget;
 class QLabel;
 class QMainWindow;
+class QTreeView;
 class QWidget;
 
 namespace DockListStyle {
@@ -19,6 +20,8 @@ void showCenteredNoMatchLabel(QAbstractItemView* view, QLabel* label);
 bool dockIsOffScreen(const QMainWindow* window, QDockWidget* dock);
 bool shouldDeferPopulation(const QWidget* content);
 void refreshWhenExposed(QWidget* content, const std::function<void()>& refresh);
+// Returns how many more pixels the view needs to show every column in full.
+int missingColumnsWidth(const QTreeView* view);
 
 } // namespace DockListStyle
 

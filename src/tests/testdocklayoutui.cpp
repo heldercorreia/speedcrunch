@@ -151,6 +151,8 @@ private slots:
     void dock_scroll_corner_uses_scrollbar_track_fill();
     void dock_separator_style_uses_primary_while_hovered_or_dragged();
     void constants_dock_uses_configured_narrow_minimum_width();
+    void lone_side_dock_opens_wide_enough_for_columns_data();
+    void lone_side_dock_opens_wide_enough_for_columns();
     void view_dock_menu_tracks_and_changes_only_active_window();
     void closing_and_reopening_docks_keeps_attached_widgets();
     void dock_column_orders_survive_relaunch_data();
@@ -2247,6 +2249,102 @@ void TestDockLayoutUi::constants_dock_uses_configured_narrow_minimum_width()
 
     QVERIFY(constantsDock->widget()->minimumSizeHint().width()
             <= UiConfig::ConstantsDockMinimumWidth);
+}
+
+void TestDockLayoutUi::lone_side_dock_opens_wide_enough_for_columns_data()
+{
+    QTest::addColumn<QString>("actionText");
+    QTest::addColumn<QString>("dockName");
+    QTest::addColumn<bool>("keypadVisible");
+    for (const bool keypadVisible : {false, true}) {
+        const char* keypad = keypadVisible ? "wide keypad" : "no keypad";
+        QTest::addRow("constants, %s", keypad)
+            << QStringLiteral("&Constants") << QStringLiteral("ConstantsDock") << keypadVisible;
+        QTest::addRow("functions, %s", keypad)
+            << QStringLiteral("&Functions") << QStringLiteral("FunctionsDock") << keypadVisible;
+    }
+}
+
+void TestDockLayoutUi::lone_side_dock_opens_wide_enough_for_columns()
+{
+    QFETCH(QString, actionText);
+    QFETCH(QString, dockName);
+    QFETCH(bool, keypadVisible);
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    settings->constantsDockVisible = false;
+    settings->functionsDockVisible = false;
+    settings->historyDockVisible = false;
+    settings->formulaBookDockVisible = false;
+    settings->variablesDockVisible = false;
+    settings->userFunctionsDockVisible = false;
+    settings->userUnitsDockVisible = false;
+    settings->bitfieldVisible = false;
+    settings->keypadMode = Settings::KeypadModeScientificWide;
+    settings->keypadVisible = keypadVisible;
+
+    MainWindow window;
+    window.resize(1400, 600);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    // The wide keypad leaves no spare width in the main area.
+    if (keypadVisible) {
+        window.resize(window.minimumSizeHint().width(), 600);
+        QTRY_COMPARE(window.width(), window.minimumSizeHint().width());
+    }
+    QMenu* viewMenu = menuWithTitle(window.menuBar(), QStringLiteral("&View"));
+    QVERIFY(viewMenu != nullptr);
+    QAction* action = nullptr;
+    for (QAction* candidate : viewMenu->actions()) {
+        if (candidate->text() == actionText)
+            action = candidate;
+    }
+    QVERIFY(action != nullptr);
+
+    const auto columnsWidth = [](const QTreeView* view) {
+        const QAbstractItemView* itemView = view;
+        int width = 0;
+        for (int column = 0; column < view->header()->count(); ++column) {
+            width += std::max(itemView->sizeHintForColumn(column),
+                              view->header()->sectionSizeHint(column));
+        }
+        return width;
+    };
+
+    // Alone in its area, the dock grows until every column fits. The window
+    // grows too, unless it already fills the screen.
+    action->trigger();
+    QDockWidget* dock = window.findChild<QDockWidget*>(dockName);
+    QVERIFY(dock != nullptr);
+    QTreeView* list = dock->widget()->findChild<QTreeView*>();
+    QVERIFY(list != nullptr);
+    QTRY_VERIFY(list->model()->rowCount() > 0);
+    const int availableWidth = window.screen()->availableGeometry().width();
+    QTRY_VERIFY(list->viewport()->width() >= columnsWidth(list)
+                || (keypadVisible && window.frameGeometry().width() >= availableWidth));
+
+    // The cramped window cannot give History the width this check needs.
+    if (keypadVisible)
+        return;
+
+    // A dock that joins an open area keeps the width the user chose.
+    action->trigger();
+    QTRY_VERIFY(dock->isHidden());
+    QVERIFY(QMetaObject::invokeMethod(&window, "setHistoryDockVisible", Qt::DirectConnection,
+                                      Q_ARG(bool, true), Q_ARG(bool, false)));
+    QDockWidget* history = window.findChild<QDockWidget*>(QStringLiteral("HistoryDock"));
+    QVERIFY(history != nullptr);
+    window.resizeDocks({history}, {dock->minimumSizeHint().width() + 10}, Qt::Horizontal);
+    QCoreApplication::processEvents();
+    const int historyWidth = history->width();
+    action->trigger();
+    QTRY_VERIFY(!dock->isHidden());
+    QTest::qWait(50);
+    QCOMPARE(history->width(), historyWidth);
+    QVERIFY(list->viewport()->width() < columnsWidth(list));
 }
 
 void TestDockLayoutUi::view_dock_menu_tracks_and_changes_only_active_window()

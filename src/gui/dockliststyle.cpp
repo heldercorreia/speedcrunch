@@ -7,6 +7,8 @@
 #include "gui/scriptedtext.h"
 #include "gui/uiconfig.h"
 
+#include <algorithm>
+
 #include <QAbstractItemView>
 #include <QAbstractItemModel>
 #include <QDockWidget>
@@ -446,6 +448,20 @@ void refreshWhenExposed(QWidget* content, const std::function<void()>& refresh)
         if (active == dock)
             refresh();
     });
+}
+
+int missingColumnsWidth(const QTreeView* view)
+{
+    const QHeaderView* header = view->header();
+    // QTreeView hides the public QAbstractItemView override.
+    const QAbstractItemView* itemView = view;
+    int contentWidth = 0;
+    // Measure the contents instead of the sections, which may be stretched.
+    for (int column = 0; column < header->count(); ++column) {
+        if (!header->isSectionHidden(column))
+            contentWidth += std::max(itemView->sizeHintForColumn(column), header->sectionSizeHint(column));
+    }
+    return std::max(0, contentWidth - view->viewport()->width());
 }
 
 void apply(QAbstractItemView* view)
