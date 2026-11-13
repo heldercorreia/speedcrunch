@@ -12,6 +12,7 @@ private slots:
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
     void bitfield_selected_bit_keeps_primary_fill_while_hovered();
+    void themed_bit_keeps_system_summary_popup_colors();
     void system_bitfield_keeps_on_and_off_bits_distinct_data();
     void system_bitfield_keeps_on_and_off_bits_distinct();
     void system_bitfield_paints_background_data();
@@ -89,6 +90,39 @@ void TestBitfieldUi::bitfield_selected_bit_keeps_primary_fill_while_hovered()
     bit.setState(true);
     QTRY_COMPARE(bit.grab().toImage().pixelColor(sampledFill).name(),
                  primaryBackground.name());
+}
+
+void TestBitfieldUi::themed_bit_keeps_system_summary_popup_colors()
+{
+    // Hybrid themes the bitfield but leaves tooltips to the system style.
+    const QColor background(QStringLiteral("#202124"));
+    const QColor hoverBackground(QStringLiteral("#4a5568"));
+    BitWidget bit(3);
+    bit.setThemeColors(background,
+                       QColor(QStringLiteral("#d6d8dc")),
+                       hoverBackground,
+                       QColor(QStringLiteral("#f8fafc")),
+                       QColor(QStringLiteral("#2f80ed")),
+                       QColor(QStringLiteral("#ffffff")));
+    bit.setToolTipThemeColors(QColor(), QColor(), QColor(), 0);
+    bit.resize(48, 48);
+    bit.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&bit));
+
+    const QPoint center = bit.rect().center();
+    QEnterEvent enter(center, center, bit.mapToGlobal(center));
+    QApplication::sendEvent(&bit, &enter);
+    QFrame* summaryPopup = bit.findChild<QFrame*>(QStringLiteral("bitSummaryPopup"));
+    QTRY_VERIFY(summaryPopup != nullptr && summaryPopup->isVisible());
+    QLabel* summaryPopupLabel =
+        summaryPopup->findChild<QLabel*>(QStringLiteral("bitSummaryPopupLabel"));
+    QVERIFY(summaryPopupLabel != nullptr);
+    QVERIFY(summaryPopup->styleSheet().isEmpty());
+    // The bit's own stylesheet must not reach the popup label.
+    const QColor labelFill = summaryPopup->grab().toImage().pixelColor(
+        summaryPopupLabel->geometry().topLeft() + QPoint(1, 1));
+    QVERIFY2(labelFill != background && labelFill != hoverBackground,
+             qPrintable(labelFill.name()));
 }
 
 void TestBitfieldUi::system_bitfield_keeps_on_and_off_bits_distinct_data()

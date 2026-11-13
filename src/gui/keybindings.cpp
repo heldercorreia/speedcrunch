@@ -92,6 +92,7 @@ bool isConfigurable(const QString& id)
         QStringLiteral("settingsEditorDisplayModern"),
         QStringLiteral("settingsAppearancePresetClassic"),
         QStringLiteral("settingsAppearancePresetModern"),
+        QStringLiteral("settingsAppearancePresetHybrid"),
         QStringLiteral("settingsAppearancePresetCustom"),
         QStringLiteral("settingsDisplayFont"),
         QStringLiteral("settingsSystemColorModeFollowSystem"),

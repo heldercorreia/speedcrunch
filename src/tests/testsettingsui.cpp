@@ -74,6 +74,7 @@ private slots:
     void appearance_presets_track_individual_changes_data();
     void appearance_presets_track_individual_changes();
     void appearance_presets_follow_settings_reset();
+    void appearance_presets_hybrid_mixes_classic_and_modern_choices();
     void tooltip_appearance_switches_result_preview_colors();
     void tooltip_appearance_switches_completion_popup_colors();
     void macos_system_constant_popup_search_stays_rounded_data();
@@ -1692,11 +1693,14 @@ void TestSettingsUi::appearance_presets_identify_saved_combinations()
     MainWindow window(false);
     auto* presets = window.findChild<QMenu*>(QStringLiteral("AppearancePresetMenu"));
     QVERIFY(presets);
-    QCOMPARE(presets->actions().size(), 3);
+    QCOMPARE(presets->actions().size(), 4);
     QCOMPARE(presets->actions().at(0)->isChecked(), combination == 63);
     QCOMPARE(presets->actions().at(1)->isChecked(), combination == 0);
-    QCOMPARE(presets->actions().at(2)->isChecked(), combination != 0 && combination != 63);
-    QVERIFY(!presets->actions().at(2)->isEnabled());
+    QCOMPARE(presets->actions().at(2)->isChecked(), combination == 61);
+    QCOMPARE(presets->actions().at(3)->isChecked(),
+             combination != 0 && combination != 61 && combination != 63);
+    QVERIFY(presets->actions().at(2)->isEnabled());
+    QVERIFY(!presets->actions().at(3)->isEnabled());
     QCOMPARE(settings->menuAppearance, menus);
     QCOMPARE(settings->dockAppearance, docks);
     QCOMPARE(settings->statusBarAppearance, statusBar);
@@ -1751,6 +1755,7 @@ void TestSettingsUi::appearance_presets_apply_to_all_windows_and_preserve_prefer
             auto* choices = window->findChild<QMenu*>(QStringLiteral("AppearancePresetMenu"));
             QVERIFY(choices->actions().at(preset)->isChecked());
             QVERIFY(!choices->actions().at(2)->isChecked());
+            QVERIFY(!choices->actions().at(3)->isChecked());
             for (const QString& name : {QStringLiteral("MenuAppearanceMenu"),
                                         QStringLiteral("DockAppearanceMenu"),
                                         QStringLiteral("StatusBarAppearanceMenu"),
@@ -1823,17 +1828,20 @@ void TestSettingsUi::appearance_presets_track_individual_changes()
     auto* individual = second.findChild<QMenu*>(menuName);
     QVERIFY(individual);
     individual->actions().at(1 - preset)->trigger();
+    // Classic with SpeedCrunch-themed docks is the Hybrid preset.
+    const bool hybrid = preset == 0 && menuName == QLatin1String("DockAppearanceMenu");
     for (MainWindow* window : {&first, &second}) {
         auto* choices = window->findChild<QMenu*>(QStringLiteral("AppearancePresetMenu"));
         QVERIFY(!choices->actions().at(0)->isChecked());
         QVERIFY(!choices->actions().at(1)->isChecked());
-        QVERIFY(choices->actions().at(2)->isChecked());
+        QCOMPARE(choices->actions().at(2)->isChecked(), hybrid);
+        QCOMPARE(choices->actions().at(3)->isChecked(), !hybrid);
     }
     individual->actions().at(preset)->trigger();
     for (MainWindow* window : {&first, &second}) {
         auto* choices = window->findChild<QMenu*>(QStringLiteral("AppearancePresetMenu"));
         QVERIFY(choices->actions().at(preset)->isChecked());
-        QVERIFY(!choices->actions().at(2)->isChecked());
+        QVERIFY(!choices->actions().at(3)->isChecked());
     }
 }
 
@@ -1858,7 +1866,51 @@ void TestSettingsUi::appearance_presets_follow_settings_reset()
         QVERIFY(choices->actions().at(1)->isChecked());
         QVERIFY(!choices->actions().at(0)->isChecked());
         QVERIFY(!choices->actions().at(2)->isChecked());
+        QVERIFY(!choices->actions().at(3)->isChecked());
     }
+}
+
+void TestSettingsUi::appearance_presets_hybrid_mixes_classic_and_modern_choices()
+{
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    MainWindow first(false);
+    MainWindow second(false);
+    auto* presets = first.findChild<QMenu*>(QStringLiteral("AppearancePresetMenu"));
+    QVERIFY(presets);
+    presets->actions().at(0)->trigger();
+    presets->actions().at(2)->trigger();
+    QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSystem);
+    QCOMPARE(settings->dockAppearance, Settings::DockAppearanceSpeedCrunch);
+    QCOMPARE(settings->statusBarAppearance, Settings::StatusBarAppearanceSystem);
+    QCOMPARE(settings->toolTipAppearance, Settings::ToolTipAppearanceSystem);
+    QCOMPARE(settings->editorDisplayStyle, Settings::EditorDisplayClassic);
+    QCOMPARE(settings->keypadAppearance, Settings::KeypadAppearanceClassic);
+    for (MainWindow* window : {&first, &second}) {
+        auto* choices = window->findChild<QMenu*>(QStringLiteral("AppearancePresetMenu"));
+        QVERIFY(!choices->actions().at(0)->isChecked());
+        QVERIFY(!choices->actions().at(1)->isChecked());
+        QVERIFY(choices->actions().at(2)->isChecked());
+        QVERIFY(!choices->actions().at(3)->isChecked());
+        auto* docks = window->findChild<QMenu*>(QStringLiteral("DockAppearanceMenu"));
+        QVERIFY(docks);
+        QVERIFY(docks->actions().at(1)->isChecked());
+        for (const QString& name : {QStringLiteral("MenuAppearanceMenu"),
+                                    QStringLiteral("StatusBarAppearanceMenu"),
+                                    QStringLiteral("ToolTipAppearanceMenu"),
+                                    QStringLiteral("EditorDisplayStyleMenu"),
+                                    QStringLiteral("KeypadAppearanceMenu")}) {
+            auto* menu = window->findChild<QMenu*>(name);
+            QVERIFY(menu);
+            QVERIFY2(menu->actions().at(0)->isChecked(), qPrintable(name));
+        }
+    }
+    settings->save();
+    settings->load();
+    MainWindow third(false);
+    auto* restored = third.findChild<QMenu*>(QStringLiteral("AppearancePresetMenu"));
+    QVERIFY(restored);
+    QVERIFY(restored->actions().at(2)->isChecked());
 }
 
 void TestSettingsUi::tooltip_appearance_switches_result_preview_colors()

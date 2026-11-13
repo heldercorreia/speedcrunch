@@ -980,9 +980,11 @@ User Interface Settings
     * :guilabel:`Modern` uses the SpeedCrunch theme for menus, docks, the
       status bar, and tooltips, with Modern input, results, and keypad styles.
       This matches the defaults for new 1.x installations.
+    * :guilabel:`Hybrid` matches :guilabel:`Classic`, except that docks use the
+      SpeedCrunch theme.
 
     The checkmark shows which preset matches these six settings.
-    :guilabel:`Custom` is checked when neither preset matches. It is an
+    :guilabel:`Custom` is checked when no preset matches. It is an
     indicator, not a selectable preset. Changing an individual setting updates
     the checkmark automatically, including when you restore a matching
     combination by hand.

@@ -124,14 +124,16 @@ void BitWidget::updateStyle(StyleUpdateReason reason)
         : palette.color(QPalette::HighlightedText);
     setProperty("bitState", m_state);
     setProperty("bitPressed", m_pressed);
+    // Select BitWidget rather than QLabel: the summary popup's label is a child
+    // and would otherwise inherit these colors instead of the tooltip style.
     const QString style =
-        QString("QLabel { background-color: %1; color: %2; }"
-                "QLabel[bitState=\"true\"], QLabel[bitPressed=\"true\"] {"
+        QString("BitWidget { background-color: %1; color: %2; }"
+                "BitWidget[bitState=\"true\"], BitWidget[bitPressed=\"true\"] {"
                 " background-color: %5; color: %6;"
                 "}"
-                "QLabel:hover { background-color: %3; color: %4; }"
+                "BitWidget:hover { background-color: %3; color: %4; }"
                 // Keep selected/pressed bits visually selected when they also match :hover.
-                "QLabel[bitState=\"true\"]:hover, QLabel[bitPressed=\"true\"]:hover {"
+                "BitWidget[bitState=\"true\"]:hover, BitWidget[bitPressed=\"true\"]:hover {"
                 " background-color: %5; color: %6;"
                 "}")
             .arg(background.name(),

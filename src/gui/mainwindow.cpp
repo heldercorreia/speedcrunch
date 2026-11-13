@@ -4284,9 +4284,11 @@ void MainWindow::createActions()
     m_actions.settingsDisplayColorSchemeCustom = createKeyBindingAction(QStringLiteral("settingsDisplayColorSchemeCustom"));
     m_actions.settingsAppearancePresetClassic = createKeyBindingAction(QStringLiteral("settingsAppearancePresetClassic"));
     m_actions.settingsAppearancePresetModern = createKeyBindingAction(QStringLiteral("settingsAppearancePresetModern"));
+    m_actions.settingsAppearancePresetHybrid = createKeyBindingAction(QStringLiteral("settingsAppearancePresetHybrid"));
     m_actions.settingsAppearancePresetCustom = createKeyBindingAction(QStringLiteral("settingsAppearancePresetCustom"));
     for (QAction* action : {m_actions.settingsAppearancePresetClassic,
                             m_actions.settingsAppearancePresetModern,
+                            m_actions.settingsAppearancePresetHybrid,
                             m_actions.settingsAppearancePresetCustom})
         action->setCheckable(true);
     m_actions.settingsAppearancePresetCustom->setEnabled(false);
@@ -4699,12 +4701,15 @@ void MainWindow::setSystemColorMode(QAction* action)
     QTimer::singleShot(0, qApp, []() { redrawNativeTitleBars(); });
 }
 
-void MainWindow::setAppearancePreset(bool classic)
+void MainWindow::setAppearancePreset(AppearancePreset preset)
 {
+    // Hybrid is Classic except for the docks, which keep the SpeedCrunch theme.
+    const bool classic = preset != AppearancePreset::Modern;
+    const bool systemDocks = preset == AppearancePreset::Classic;
     setMenuAppearance(classic ? m_actions.settingsMenuAppearanceSystem
                               : m_actions.settingsMenuAppearanceSpeedCrunch);
-    setDockAppearance(classic ? m_actions.settingsDockAppearanceSystem
-                              : m_actions.settingsDockAppearanceSpeedCrunch);
+    setDockAppearance(systemDocks ? m_actions.settingsDockAppearanceSystem
+                                  : m_actions.settingsDockAppearanceSpeedCrunch);
     setStatusBarAppearance(classic ? m_actions.settingsStatusBarAppearanceSystem
                                    : m_actions.settingsStatusBarAppearanceSpeedCrunch);
     setToolTipAppearance(classic ? m_actions.settingsToolTipAppearanceSystem
@@ -4717,21 +4722,25 @@ void MainWindow::setAppearancePreset(bool classic)
 
 void MainWindow::updateAppearancePresetActions()
 {
-    const bool classic = m_settings->menuAppearance == Settings::MenuAppearanceSystem
-        && m_settings->dockAppearance == Settings::DockAppearanceSystem
+    // Every setting except the docks; Classic and Hybrid differ only there.
+    const bool classicExceptDocks = m_settings->menuAppearance == Settings::MenuAppearanceSystem
         && m_settings->statusBarAppearance == Settings::StatusBarAppearanceSystem
         && m_settings->toolTipAppearance == Settings::ToolTipAppearanceSystem
         && m_settings->keypadAppearance == Settings::KeypadAppearanceClassic
         && m_settings->editorDisplayStyle == Settings::EditorDisplayClassic;
-    const bool modern = m_settings->menuAppearance == Settings::MenuAppearanceSpeedCrunch
-        && m_settings->dockAppearance == Settings::DockAppearanceSpeedCrunch
+    const bool modernExceptDocks = m_settings->menuAppearance == Settings::MenuAppearanceSpeedCrunch
         && m_settings->statusBarAppearance == Settings::StatusBarAppearanceSpeedCrunch
         && m_settings->toolTipAppearance == Settings::ToolTipAppearanceSpeedCrunch
         && m_settings->keypadAppearance == Settings::KeypadAppearanceModern
         && m_settings->editorDisplayStyle == Settings::EditorDisplayModern;
+    const bool systemDocks = m_settings->dockAppearance == Settings::DockAppearanceSystem;
+    const bool classic = classicExceptDocks && systemDocks;
+    const bool modern = modernExceptDocks && !systemDocks;
+    const bool hybrid = classicExceptDocks && !systemDocks;
     m_actions.settingsAppearancePresetClassic->setChecked(classic);
     m_actions.settingsAppearancePresetModern->setChecked(modern);
-    m_actions.settingsAppearancePresetCustom->setChecked(!classic && !modern);
+    m_actions.settingsAppearancePresetHybrid->setChecked(hybrid);
+    m_actions.settingsAppearancePresetCustom->setChecked(!classic && !modern && !hybrid);
 }
 
 void MainWindow::setMenuAppearance(QAction* action)
@@ -5098,6 +5107,9 @@ void MainWindow::setActionsText()
     m_actions.settingsAppearancePresetModern->setText(MainWindow::tr("&Modern"));
     m_actions.settingsAppearancePresetModern->setStatusTip(
         MainWindow::tr("Use the default SpeedCrunch appearance"));
+    m_actions.settingsAppearancePresetHybrid->setText(MainWindow::tr("&Hybrid"));
+    m_actions.settingsAppearancePresetHybrid->setStatusTip(
+        MainWindow::tr("Use the Classic appearance with SpeedCrunch-themed docks"));
     m_actions.settingsAppearancePresetCustom->setText(MainWindow::tr("C&ustom"));
     m_actions.settingsSystemColorModeFollowSystem->setText(MainWindow::tr("&Follow System"));
     m_actions.settingsSystemColorModeLight->setText(MainWindow::tr("&Light"));
@@ -5193,6 +5205,7 @@ void MainWindow::createActionGroups()
     m_actionGroups.appearancePreset = new QActionGroup(this);
     m_actionGroups.appearancePreset->addAction(m_actions.settingsAppearancePresetClassic);
     m_actionGroups.appearancePreset->addAction(m_actions.settingsAppearancePresetModern);
+    m_actionGroups.appearancePreset->addAction(m_actions.settingsAppearancePresetHybrid);
     m_actionGroups.appearancePreset->addAction(m_actions.settingsAppearancePresetCustom);
     m_actionGroups.systemColorMode = new QActionGroup(this);
     m_actionGroups.systemColorMode->addAction(m_actions.settingsSystemColorModeFollowSystem);
@@ -8775,9 +8788,11 @@ void MainWindow::createFixedConnections()
     connect(m_actionGroups.menuAppearance, &QActionGroup::triggered,
             this, &MainWindow::setMenuAppearance);
     connect(m_actions.settingsAppearancePresetClassic, &QAction::triggered,
-            this, [this]() { setAppearancePreset(true); });
+            this, [this]() { setAppearancePreset(AppearancePreset::Classic); });
     connect(m_actions.settingsAppearancePresetModern, &QAction::triggered,
-            this, [this]() { setAppearancePreset(false); });
+            this, [this]() { setAppearancePreset(AppearancePreset::Modern); });
+    connect(m_actions.settingsAppearancePresetHybrid, &QAction::triggered,
+            this, [this]() { setAppearancePreset(AppearancePreset::Hybrid); });
     connect(m_menus.appearancePreset, &QMenu::aboutToShow,
             this, &MainWindow::updateAppearancePresetActions);
     connect(m_actionGroups.systemColorMode, &QActionGroup::triggered,

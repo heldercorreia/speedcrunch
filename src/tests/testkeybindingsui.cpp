@@ -522,6 +522,7 @@ void TestKeyBindingsUi::settings_menu_offers_a_searchable_action_catalog()
              QStringLiteral("settingsEditorDisplayModern"),
              QStringLiteral("settingsAppearancePresetClassic"),
              QStringLiteral("settingsAppearancePresetModern"),
+             QStringLiteral("settingsAppearancePresetHybrid"),
              QStringLiteral("settingsAppearancePresetCustom"),
              QStringLiteral("settingsDisplayFont"),
              QStringLiteral("settingsSystemColorModeFollowSystem"),

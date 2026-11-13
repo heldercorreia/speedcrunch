@@ -63,6 +63,8 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
+    enum class AppearancePreset { Classic, Modern, Hybrid };
+
     static void initializeApplicationStyle();
     explicit MainWindow(bool restorePreviousSession = true);
     ~MainWindow();
@@ -194,7 +196,7 @@ private slots:
     void setFunctionsDockVisible(bool, bool takeFocus = true);
     void setHistoryDockVisible(bool, bool takeFocus = true);
     void setKeypadMode(QAction*);
-    void setAppearancePreset(bool classic);
+    void setAppearancePreset(AppearancePreset);
     void setMenuAppearance(QAction*);
     void setSystemColorMode(QAction*);
     void setDockAppearance(QAction*);
@@ -607,6 +609,7 @@ private:
         QAction* settingsDisplayColorSchemeCustom;
         QAction* settingsAppearancePresetClassic;
         QAction* settingsAppearancePresetModern;
+        QAction* settingsAppearancePresetHybrid;
         QAction* settingsAppearancePresetCustom;
         QAction* settingsSystemColorModeFollowSystem;
         QAction* settingsSystemColorModeLight;
