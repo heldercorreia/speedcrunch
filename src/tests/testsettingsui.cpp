@@ -74,6 +74,7 @@ private slots:
     void appearance_presets_track_individual_changes_data();
     void appearance_presets_track_individual_changes();
     void appearance_presets_follow_settings_reset();
+    void settings_reset_keeps_default_window_size();
     void appearance_presets_default_to_classic_on_first_launch_only_data();
     void appearance_presets_default_to_classic_on_first_launch_only();
     void appearance_presets_hybrid_mixes_classic_and_modern_choices();
@@ -1846,6 +1847,43 @@ void TestSettingsUi::appearance_presets_track_individual_changes()
         QVERIFY(choices->actions().at(preset)->isChecked());
         QVERIFY(!choices->actions().at(3)->isChecked());
     }
+}
+
+void TestSettingsUi::settings_reset_keeps_default_window_size()
+{
+    MainWindowStateGuard guard;
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    const QSize oldSize = window.size() + QSize(200, 150);
+    window.resize(oldSize);
+    QTRY_COMPARE(window.size(), oldSize);
+    auto* reset = window.findChild<QAction*>(QStringLiteral("ResetAllSettingsAction"));
+    QVERIFY(reset);
+    QTimer::singleShot(0, &window, []() {
+        auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        QVERIFY(dialog);
+        dialog->button(QMessageBox::Yes)->click();
+    });
+    reset->trigger();
+    const QSize defaultSize = window.size();
+    QVERIFY(defaultSize != oldSize);
+
+    // On Wayland, the compositor can send the old size after the reset, for
+    // example when the window becomes active again after the confirmation.
+    struct ResizeRecorder : QObject {
+        QList<QSize> spontaneousSizes;
+        bool eventFilter(QObject* object, QEvent* event) override
+        {
+            if (event->type() == QEvent::Resize && event->spontaneous())
+                spontaneousSizes.append(static_cast<QWidget*>(object)->size());
+            return QObject::eventFilter(object, event);
+        }
+    } recorder;
+    window.installEventFilter(&recorder);
+    window.windowHandle()->resize(oldSize);
+    QTRY_VERIFY(recorder.spontaneousSizes.contains(oldSize));
+    QTRY_COMPARE(window.size(), defaultSize);
 }
 
 void TestSettingsUi::appearance_presets_follow_settings_reset()

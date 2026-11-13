@@ -817,6 +817,11 @@ private:
     // Startup clock time of the latest Show event, or -1.
     qint64 m_showEventNs = -1;
     int m_windowGeometryRestoreGeneration = 0;
+    // The size chosen by Reset All Settings. For a short time after the reset,
+    // the window system can still send the old size, for example when the
+    // window becomes active again. The window then returns to this size.
+    QSize m_resetWindowSize;
+    QDeadlineTimer m_resetWindowSizeDeadline;
     bool m_sessionRestorePending = false;
     bool m_showAfterSessionRestore = false;
     bool m_startupPrivateTabPending = false;

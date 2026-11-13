@@ -9574,11 +9574,16 @@ void MainWindow::resetAllSettings()
         window->m_hasRestoredDockLayout = false;
         window->m_keypadMode = m_settings->keypadMode;
         window->m_keypadZoomPercent = m_settings->keypadZoomPercent;
+        // A maximized or full screen window keeps its size, so make it a normal
+        // window before applying the default size.
+        window->setWindowState(window->windowState() & ~(Qt::WindowMaximized | Qt::WindowFullScreen));
         window->applySettings(false);
         window->applyToolTipAppearance();
         if (!isWaylandPlatform())
             window->setAlwaysOnTopEnabled(m_settings->windowAlwaysOnTop);
         window->setFullScreenEnabled(m_settings->windowOnfullScreen);
+        window->m_resetWindowSize = window->size();
+        window->m_resetWindowSizeDeadline = QDeadlineTimer(2000);
 
         if (window->m_docks.constants) {
             for (QComboBox* combo : window->m_docks.constants->widget()->findChildren<QComboBox*>())
@@ -16476,6 +16481,23 @@ void MainWindow::resizeEvent(QResizeEvent* event)
 {
     QMainWindow::resizeEvent(event);
     updateStatusBarSectionVisibility();
+
+    // Keep the size from Reset All Settings. On Wayland, the compositor can
+    // send the old size after the reset, and Qt applies it. A size change made
+    // by the application itself, such as fitting a dock, becomes the new size.
+    if (!m_resetWindowSizeDeadline.hasExpired()) {
+        if (!event->spontaneous()) {
+            m_resetWindowSize = size();
+        } else if (size() != m_resetWindowSize) {
+            QTimer::singleShot(0, this, [this]() {
+                static constexpr Qt::WindowStates sizedBySystem = Qt::WindowMaximized | Qt::WindowFullScreen;
+                if (!m_resetWindowSizeDeadline.hasExpired() && !(windowState() & sizedBySystem)
+                    && size() != m_resetWindowSize) {
+                    resize(m_resetWindowSize);
+                }
+            });
+        }
+    }
 
     if (m_widgets.state->isVisible())
         showStateLabel(m_widgets.state->text());
