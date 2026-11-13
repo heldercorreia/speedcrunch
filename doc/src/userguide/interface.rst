@@ -296,7 +296,7 @@ The expression editor provides some advanced features:
     This also works for user-defined functions. Pressing :kbd:`Escape` will dismiss the tooltip.
 
 * Quick constant insertion
-    Press :kbd:`Ctrl+Space` to search the same constants as the constants widget (see above).
+    Press :kbd:`Ctrl+K` (:kbd:`Cmd+K` on macOS) to search the same constants as the constants widget (see above).
     If your system already uses that shortcut, choose another one for
     :guilabel:`Search Constants` in :menuselection:`Settings --> Keyboard Shortcuts`.
     Type a name or unit to filter the list. Each result shows its unit beside the name using the theme's unit color.

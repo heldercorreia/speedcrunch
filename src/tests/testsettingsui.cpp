@@ -1992,7 +1992,7 @@ void TestSettingsUi::tooltip_appearance_switches_completion_popup_colors()
 #endif
 
     editor->setFocus();
-    QTest::keyClick(editor, Qt::Key_Space, Qt::ControlModifier);
+    QTest::keyClick(editor, Qt::Key_K, Qt::ControlModifier);
     QWidget* constants = nullptr;
     QTRY_VERIFY((constants = popupNamed(QStringLiteral("constantCompletionPopup"))) != nullptr
                 && constants->isVisible());
@@ -2056,7 +2056,7 @@ void TestSettingsUi::macos_system_constant_popup_search_stays_rounded()
     Editor* editor = window.findChild<Editor*>();
     QVERIFY(editor);
     editor->setFocus();
-    QTest::keyClick(editor, Qt::Key_Space, Qt::ControlModifier);
+    QTest::keyClick(editor, Qt::Key_K, Qt::ControlModifier);
     QPointer<QWidget> popup;
     // Close the popup on failures too, before its window goes away.
     const auto closePopup = qScopeGuard([&popup]() {

@@ -5789,7 +5789,7 @@ void TestEditorUi::completion_popup_keeps_editor_widgets_non_native()
     QVERIFY(!editor.verticalScrollBar()->testAttribute(Qt::WA_NativeWindow));
 
     if (constants) {
-        QTest::keyClick(&editor, Qt::Key_Space, Qt::ControlModifier);
+        QTest::keyClick(&editor, Qt::Key_K, Qt::ControlModifier);
         QVERIFY(QApplication::activePopupWidget());
     } else {
         EditorCompletion* completion = editor.findChild<EditorCompletion*>();
@@ -5951,7 +5951,7 @@ void TestEditorUi::completion_popups_configure_editor_anchor()
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
 
-    // Constant completion is normally constructed lazily on Ctrl+Space.
+    // Constant completion is normally constructed lazily on Ctrl+K.
     ConstantCompletion* constantCompletion = constants ? new ConstantCompletion(&editor) : nullptr;
     QWidget* popup = editor.findChild<QWidget*>(constants
         ? QStringLiteral("constantCompletionPopup") : QStringLiteral("editorCompletionPopup"));
@@ -6065,7 +6065,7 @@ void TestEditorUi::constant_search_filters_without_editing_expression()
     editor.setFocus();
     QSignalSpy evaluated(&editor, &Editor::returnPressed);
     QSignalSpy changed(&editor, &Editor::textChanged);
-    QTest::keyClick(&editor, Qt::Key_Space, Qt::ControlModifier);
+    QTest::keyClick(&editor, Qt::Key_K, Qt::ControlModifier);
     QPointer<QWidget> popup = QApplication::activePopupWidget();
     QVERIFY(popup);
     auto* search = popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch"));
@@ -6163,7 +6163,7 @@ void TestEditorUi::constant_search_inserts_selected_result()
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     editor.setFocus();
-    QTest::keyClick(&editor, Qt::Key_Space, Qt::ControlModifier);
+    QTest::keyClick(&editor, Qt::Key_K, Qt::ControlModifier);
     QPointer<QWidget> popup = QApplication::activePopupWidget();
     QVERIFY(popup);
     auto* search = popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch"));
@@ -6204,7 +6204,7 @@ void TestEditorUi::constant_search_closes_without_stealing_outside_focus()
     QVERIFY(QTest::qWaitForWindowActive(&window));
     editor.setFocus();
     QTRY_VERIFY(editor.hasFocus());
-    QTest::keyClick(&editor, Qt::Key_Space, Qt::ControlModifier);
+    QTest::keyClick(&editor, Qt::Key_K, Qt::ControlModifier);
     QPointer<QWidget> popup = QApplication::activePopupWidget();
     QVERIFY(popup);
     popup->hide();
@@ -6407,7 +6407,7 @@ void TestEditorUi::constant_completion_popup_follows_wrapped_editor_cursor()
     QCoreApplication::processEvents();
     const int anchorX = editor.viewport()->mapToGlobal(editor.cursorRect().topLeft()).x();
 
-    QTest::keyClick(&editor, Qt::Key_Space, Qt::ControlModifier);
+    QTest::keyClick(&editor, Qt::Key_K, Qt::ControlModifier);
     QWidget* popup = QApplication::activePopupWidget();
     QVERIFY(popup);
     QCOMPARE(popup->objectName(), QStringLiteral("constantCompletionPopup"));
@@ -6494,7 +6494,7 @@ void TestEditorUi::constant_completion_popup_uses_configured_surface_colors()
     QVERIFY(QTest::qWaitForWindowExposed(&editor));
     editor.setFocus();
 
-    QTest::keyClick(&editor, Qt::Key_Space, Qt::ControlModifier);
+    QTest::keyClick(&editor, Qt::Key_K, Qt::ControlModifier);
 
     QList<QTreeWidget*> popupTrees;
     QTRY_VERIFY_WITH_TIMEOUT(!(popupTrees = s_constantCompletionPopupTrees()).isEmpty(), 1000);
@@ -6951,7 +6951,7 @@ void TestEditorUi::classic_completion_popups_follow_text_inset()
     QCoreApplication::processEvents();
     QWidget* popup = nullptr;
     if (constant) {
-        QTest::keyClick(&editor, Qt::Key_Space, Qt::ControlModifier);
+        QTest::keyClick(&editor, Qt::Key_K, Qt::ControlModifier);
         popup = QApplication::activePopupWidget();
     } else {
         auto* completion = editor.findChild<EditorCompletion*>();

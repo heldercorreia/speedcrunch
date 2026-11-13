@@ -302,7 +302,7 @@ void TestThemesUi::constant_popup_clear_button_matches_dock_search()
         editor->setFocus();
         QTRY_VERIFY(!dockSearch->hasFocus());
         const QIcon unfocusedIcon = dockButton->icon();
-        QTest::keyClick(editor, Qt::Key_Space, Qt::ControlModifier);
+        QTest::keyClick(editor, Qt::Key_K, Qt::ControlModifier);
         QPointer<QWidget> popup = QApplication::activePopupWidget();
         QVERIFY(popup);
         auto* search = popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch"));

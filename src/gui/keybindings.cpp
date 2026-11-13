@@ -117,7 +117,7 @@ QList<Action> editorActions()
     const QString view = QCoreApplication::translate("KeyBindings", "View");
     QList<Action> actions = {
         {QStringLiteral("editorConstants"), editing, QCoreApplication::translate("KeyBindings", "Search Constants"),
-         {QKeySequence(Qt::CTRL | Qt::Key_Space)}},
+         {QKeySequence(Qt::CTRL | Qt::Key_K)}},
         {QStringLiteral("editorHistoryPrevious"), editing, QCoreApplication::translate("KeyBindings", "Previous History Expression"),
          {QKeySequence(Qt::Key_Up)}},
         {QStringLiteral("editorHistoryNext"), editing, QCoreApplication::translate("KeyBindings", "Next History Expression"),

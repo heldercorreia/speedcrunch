@@ -399,7 +399,7 @@ void TestKeyBindingsUi::double_click_records_shortcut()
 void TestKeyBindingsUi::custom_column_only_shows_overrides()
 {
     const QString id = QStringLiteral("editorConstants");
-    const QKeySequence original(Qt::CTRL | Qt::Key_Space);
+    const QKeySequence original(Qt::CTRL | Qt::Key_K);
     const QKeySequence custom(QStringLiteral("Ctrl+Alt+K"));
     KeyBindingsDialog dialog(KeyBindings::editorActions(), {});
     auto* tree = dialog.findChild<QTreeWidget*>(QStringLiteral("ShortcutActions"));
@@ -778,7 +778,7 @@ void TestKeyBindingsUi::constants_support_a_custom_multi_step_shortcut()
     editor->setText(QStringLiteral("123"));
     editor->setFocus();
     QTRY_VERIFY(editor->hasFocus());
-    QTest::keyClick(editor, Qt::Key_Space, Qt::ControlModifier);
+    QTest::keyClick(editor, Qt::Key_K, Qt::ControlModifier);
     QVERIFY(!editor->isConstantSearchVisible());
     const QString before = editor->text();
     QTest::keyClick(editor, Qt::Key_K, Qt::ControlModifier | Qt::AltModifier);
@@ -1053,7 +1053,7 @@ void TestKeyBindingsUi::reset_all_settings_restores_shortcuts_in_open_windows()
                  QKeySequence::keyBindings(QKeySequence::Open));
         Editor* editor = window->findChild<Editor*>();
         QCOMPARE(editor->findChild<QAction*>(QStringLiteral("KeyBinding.editorConstants"))->shortcut(),
-                 QKeySequence(Qt::CTRL | Qt::Key_Space));
+                 QKeySequence(Qt::CTRL | Qt::Key_K));
     }
 }
 

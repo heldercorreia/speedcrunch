@@ -127,7 +127,7 @@ void TestFocusUi::constant_search_paints_editor_without_focus_ring()
     QTRY_VERIFY(editor->hasFocus());
     QTRY_VERIFY(editorHasPrimaryOutline(editor, primary));
     QTRY_VERIFY(paintsPrimaryOutline());
-    QTest::keyClick(editor, Qt::Key_Space, Qt::ControlModifier);
+    QTest::keyClick(editor, Qt::Key_K, Qt::ControlModifier);
     QPointer<QWidget> popup = QApplication::activePopupWidget();
     QVERIFY(popup);
     QPointer<QLineEdit> search = popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch"));
@@ -193,7 +193,7 @@ void TestFocusUi::constant_search_takes_primary_focus_from_editor()
     target->setText(QStringLiteral("12+34"));
     QTest::mouseClick(target->viewport(), Qt::LeftButton);
     QTRY_VERIFY(hasPrimaryOutline(target));
-    QTest::keyClick(target, Qt::Key_Space, Qt::ControlModifier);
+    QTest::keyClick(target, Qt::Key_K, Qt::ControlModifier);
     QPointer<QWidget> popup = QApplication::activePopupWidget();
     QVERIFY(popup);
     auto* search = dynamic_cast<ThemedLineEdit*>(popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch")));
@@ -335,7 +335,7 @@ void TestFocusUi::constant_popup_inserts_into_owning_pane()
     Editor* target = editors.first();
     QTest::mouseClick(target->viewport(), Qt::LeftButton);
     QTRY_VERIFY(target->hasFocus());
-    QTest::keyClick(target, Qt::Key_Space, Qt::ControlModifier);
+    QTest::keyClick(target, Qt::Key_K, Qt::ControlModifier);
     QPointer<QWidget> popup = QApplication::activePopupWidget();
     QVERIFY(popup);
     QPointer<QLineEdit> search = popup->findChild<QLineEdit*>(QStringLiteral("constantCompletionSearch"));
