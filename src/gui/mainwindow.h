@@ -303,7 +303,9 @@ private:
     void addTabifiedDock(QDockWidget*, bool takeFocus, Qt::DockWidgetArea = Qt::RightDockWidgetArea);
     void applyDockCornerLayout();
     void deleteDock(QDockWidget*);
+    bool dockIsAloneInArea(QDockWidget*);
     void fitLoneSideDockToColumns(QDockWidget*);
+    void shrinkLoneEdgeDockToMinimumHeight(QDockWidget*);
     enum class DockFitStep { ResizeDock, GrowWindow, FinalResizeDock };
     void fitDockToColumns(QDockWidget*, Qt::DockWidgetArea, DockFitStep);
     void createUi();

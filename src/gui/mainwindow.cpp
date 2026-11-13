@@ -8753,21 +8753,47 @@ void MainWindow::addTabifiedDock(QDockWidget* newDock, bool takeFocus, Qt::DockW
         newDock->setFocus();
 }
 
-void MainWindow::fitLoneSideDockToColumns(QDockWidget* dock)
+bool MainWindow::dockIsAloneInArea(QDockWidget* dock)
 {
     if (dock == nullptr || dock->isHidden() || dock->isFloating())
+        return false;
+    const Qt::DockWidgetArea area = dockWidgetArea(dock);
+    for (QDockWidget* other : std::as_const(m_allDocks)) {
+        if (other != dock && !other->isHidden() && !other->isFloating()
+            && dockWidgetArea(other) == area) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void MainWindow::fitLoneSideDockToColumns(QDockWidget* dock)
+{
+    // Keep the width the user chose for docks that were already open there.
+    if (!dockIsAloneInArea(dock))
         return;
     const Qt::DockWidgetArea area = dockWidgetArea(dock);
     if (area != Qt::LeftDockWidgetArea && area != Qt::RightDockWidgetArea)
         return;
-    // Keep the width the user chose for docks that were already open there.
-    for (QDockWidget* other : std::as_const(m_allDocks)) {
-        if (other != dock && !other->isHidden() && !other->isFloating()
-            && dockWidgetArea(other) == area) {
-            return;
-        }
-    }
     fitDockToColumns(dock, area, DockFitStep::ResizeDock);
+}
+
+void MainWindow::shrinkLoneEdgeDockToMinimumHeight(QDockWidget* dock)
+{
+    // Keep the height the user chose for docks that were already open there.
+    if (!dockIsAloneInArea(dock))
+        return;
+    const Qt::DockWidgetArea area = dockWidgetArea(dock);
+    if (area != Qt::TopDockWidgetArea && area != Qt::BottomDockWidgetArea)
+        return;
+    // Measure once the dock has its final width, which sets its number of rows.
+    QPointer<QDockWidget> target(dock);
+    QTimer::singleShot(0, this, [this, target, area]() {
+        if (!target || target->isHidden() || target->isFloating() || dockWidgetArea(target) != area)
+            return;
+        // The main window keeps the dock at its minimum height.
+        resizeDocks({target}, {1}, Qt::Vertical);
+    });
 }
 
 void MainWindow::fitDockToColumns(QDockWidget* dock, Qt::DockWidgetArea area, DockFitStep step)
@@ -9002,7 +9028,11 @@ void MainWindow::createFixedConnections()
 #endif
     connectViewToggleToActiveWindow(
         m_actions.viewBitfield,
-        [](MainWindow* window, bool visible) { window->setBitfieldVisible(visible); });
+        [](MainWindow* window, bool visible) {
+            window->setBitfieldVisible(visible);
+            if (visible)
+                window->shrinkLoneEdgeDockToMinimumHeight(window->m_docks.bitField);
+        });
     connectViewToggleToActiveWindow(
         m_actions.viewConstants,
         [](MainWindow* window, bool visible) {

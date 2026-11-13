@@ -28,6 +28,8 @@ private slots:
     void bitfield_rows_never_overlap();
     void bitfield_buttons_follow_dock_shape_data();
     void bitfield_buttons_follow_dock_shape();
+    void opened_bitfield_uses_minimum_height_data();
+    void opened_bitfield_uses_minimum_height();
 };
 
 void TestBitfieldUi::initTestCase()
@@ -722,6 +724,81 @@ void TestBitfieldUi::bitfield_buttons_follow_dock_shape()
     // The free space goes around the bits and buttons, not between them.
     QVERIFY(qAbs(contentRect.center().x() - field->rect().center().x()) <= 2);
     QVERIFY(qAbs(contentRect.center().y() - field->rect().center().y()) <= 2);
+}
+
+void TestBitfieldUi::opened_bitfield_uses_minimum_height_data()
+{
+    QTest::addColumn<bool>("relaunch");
+    QTest::newRow("first launch") << false;
+    // The saved layout remembers a taller Bitfield from the last session.
+    QTest::newRow("after a taller Bitfield") << true;
+}
+
+void TestBitfieldUi::opened_bitfield_uses_minimum_height()
+{
+    QFETCH(bool, relaunch);
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    Settings* settings = guard.settings;
+    {
+        // Start like a first launch, with the Classic style preset.
+        QSettings persisted(Settings::getConfigPath() + QStringLiteral("/SpeedCrunch.ini"),
+                            QSettings::IniFormat);
+        persisted.clear();
+        persisted.setValue(QStringLiteral("ConfigVersion"), 1200);
+        persisted.sync();
+        QCOMPARE(persisted.status(), QSettings::NoError);
+    }
+    settings->load();
+    settings->hasNumberFormatStyleSetting = true;
+
+    const auto bitfieldAction = [](MainWindow& window) -> QAction* {
+        QMenu* viewMenu = menuWithTitle(window.menuBar(), QStringLiteral("&View"));
+        if (viewMenu == nullptr)
+            return nullptr;
+        for (QAction* candidate : viewMenu->actions()) {
+            if (candidate->text() == QStringLiteral("Bitfield"))
+                return candidate;
+        }
+        return nullptr;
+    };
+
+    if (relaunch) {
+        MainWindow window(false);
+        window.resize(1060, 1000);
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        QAction* action = bitfieldAction(window);
+        QVERIFY(action != nullptr);
+        action->trigger();
+        QDockWidget* dock = window.findChild<QDockWidget*>(QStringLiteral("BitfieldDock"));
+        QVERIFY(dock);
+        QTest::qWait(50);
+        window.resizeDocks({dock}, {400}, Qt::Vertical);
+        QTRY_VERIFY(dock->height() > 300);
+        action->trigger();
+        QTRY_VERIFY(dock->isHidden());
+        window.close();
+        settings->load();
+    }
+
+    MainWindow window(relaunch);
+    window.resize(1060, 1000);
+    window.showWhenReady();
+    QTRY_VERIFY(window.isVisible());
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    // Let startup finish restoring the saved layout, as it does before a person
+    // can use the menu.
+    QTest::qWait(100);
+    QAction* action = bitfieldAction(window);
+    QVERIFY(action != nullptr);
+    action->trigger();
+    QDockWidget* dock = window.findChild<QDockWidget*>(QStringLiteral("BitfieldDock"));
+    BitFieldWidget* field = window.findChild<BitFieldWidget*>();
+    QVERIFY(dock);
+    QVERIFY(field);
+    QCOMPARE(window.dockWidgetArea(dock), Qt::BottomDockWidgetArea);
+    QTRY_COMPARE(field->height(), field->minimumSizeHint().height());
 }
 
 int main(int argc, char** argv)
