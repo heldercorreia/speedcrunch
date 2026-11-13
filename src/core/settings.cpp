@@ -621,7 +621,7 @@ void Settings::load()
     customKeypad = defaultCustomKeypad();
     windowOnfullScreen = settings->value(key + QLatin1String("WindowOnFullScreen"), false).toBool();
     historyDockVisible = settings->value(key + QLatin1String("HistoryDockVisible"), false).toBool();
-    int keypadModeValue = static_cast<int>(KeypadModeBasicWide);
+    int keypadModeValue = static_cast<int>(KeypadModeScientificWide);
     if (settings->contains(key + QLatin1String("KeypadMode"))) {
         keypadModeValue = settings->value(key + QLatin1String("KeypadMode")).toInt();
     } else if (settings->contains(key + QLatin1String("KeypadVisible"))) {
@@ -634,7 +634,7 @@ void Settings::load()
             && keypadModeValue <= static_cast<int>(KeypadModeCustom)) {
         keypadMode = static_cast<KeypadMode>(keypadModeValue);
     } else {
-        keypadMode = KeypadModeBasicWide;
+        keypadMode = KeypadModeScientificWide;
     }
     if (keypadMode == KeypadModeBasicNarrow)
         keypadMode = KeypadModeBasicWide;

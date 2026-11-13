@@ -71,8 +71,8 @@ column order between launches, including for panels that are hidden.
 
     Available entries in :menuselection:`View --> Keypad` are:
 
-    * ``Basic`` (**default**)
-    * ``Scientific (wide)``
+    * ``Basic``
+    * ``Scientific (wide)`` (**default**)
     * ``Scientific (narrow)``
     * ``Custom...``
     * ``Disable`` (shown as ``Disabled`` when selected)

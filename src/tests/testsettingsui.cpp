@@ -2476,7 +2476,7 @@ void TestSettingsUi::settings_reset_updates_all_windows_and_preserves_sessions()
     QCOMPARE(settings->menuAppearance, Settings::MenuAppearanceSystem);
     QCOMPARE(settings->colorScheme, QStringLiteral("One Dark"));
     QCOMPARE(CMath::imaginaryUnitSymbol(), QChar('i'));
-    Keypad defaultKeypad(Keypad::LayoutModeBasicWide);
+    Keypad defaultKeypad(Keypad::LayoutModeScientificWide);
     // Reset applies the Classic style preset, like a first launch.
     defaultKeypad.setAppearance(Keypad::Classic);
     for (MainWindow* window : {&first, &second}) {
@@ -2515,7 +2515,7 @@ void TestSettingsUi::settings_reset_updates_all_windows_and_preserves_sessions()
     QVERIFY(definitions.open(QIODevice::ReadOnly));
     QCOMPARE(definitions.readAll(), savedDefinitions);
     settings->load();
-    QCOMPARE(settings->keypadMode, Settings::KeypadModeBasicWide);
+    QCOMPARE(settings->keypadMode, Settings::KeypadModeScientificWide);
     QCOMPARE(settings->keypadZoomPercent, 100);
     QCOMPARE(settings->numberFormatStyle, Settings::NumberFormatNoGroupingDot);
     QVERIFY(settings->hasNumberFormatStyleSetting);

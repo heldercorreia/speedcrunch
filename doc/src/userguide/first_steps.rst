@@ -5,7 +5,7 @@ First Steps
 ===========
 
 SpeedCrunch is designed to be used via the keyboard. While an :ref:`on-screen keypad <keypad>` is available,
-it defaults to the **Basic** layout. The powerful keyboard interface is the recommended way to
+it defaults to the **Scientific (wide)** layout. The powerful keyboard interface is the recommended way to
 use SpeedCrunch to get the most out of it. The keypad layout can be configured from:
 :menuselection:`View --> Keypad`.
 
