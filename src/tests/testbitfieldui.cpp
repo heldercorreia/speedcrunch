@@ -26,6 +26,8 @@ private slots:
     void system_bitfield_repeated_theme_refresh_keeps_current_bit_colors();
     void bitfield_rows_never_overlap_data();
     void bitfield_rows_never_overlap();
+    void bitfield_buttons_follow_dock_shape_data();
+    void bitfield_buttons_follow_dock_shape();
 };
 
 void TestBitfieldUi::initTestCase()
@@ -643,6 +645,83 @@ void TestBitfieldUi::bitfield_rows_never_overlap()
         for (int j = i + 1; j < rects.size(); ++j)
             QVERIFY2(!rects.at(i).intersects(rects.at(j)), "Bits overlap");
     }
+}
+
+void TestBitfieldUi::bitfield_buttons_follow_dock_shape_data()
+{
+    // A width of 0 keeps the Bitfield docked at the bottom.
+    QTest::addColumn<int>("dockWidth");
+    QTest::addColumn<bool>("stacked");
+    QTest::newRow("wide") << 0 << false;
+    QTest::newRow("tall and narrow") << 316 << true;
+    QTest::newRow("tall") << 420 << true;
+}
+
+void TestBitfieldUi::bitfield_buttons_follow_dock_shape()
+{
+    QFETCH(int, dockWidth);
+    QFETCH(bool, stacked);
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    settings->windowState.clear();
+    settings->sessionLayoutJson.clear();
+    settings->bitfieldVisible = true;
+    settings->constantsDockVisible = false;
+    settings->functionsDockVisible = false;
+    settings->historyDockVisible = false;
+    settings->formulaBookDockVisible = false;
+    settings->variablesDockVisible = false;
+    settings->userFunctionsDockVisible = false;
+    settings->userUnitsDockVisible = false;
+    settings->keypadVisible = false;
+    MainWindow window(false);
+    window.resize(1200, 800);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QDockWidget* dock = window.findChild<QDockWidget*>(QStringLiteral("BitfieldDock"));
+    BitFieldWidget* field = window.findChild<BitFieldWidget*>();
+    QVERIFY(dock);
+    QVERIFY(field);
+    if (dockWidth > 0) {
+        window.addDockWidget(Qt::RightDockWidgetArea, dock);
+        dock->show();
+        window.resizeDocks({dock}, {dockWidth}, Qt::Horizontal);
+        QTRY_VERIFY(field->height() > field->width());
+    } else {
+        QTRY_VERIFY(field->width() > field->height());
+    }
+    QCoreApplication::processEvents();
+
+    const QList<BitWidget*> bits = field->findChildren<BitWidget*>();
+    QRect bitsRect;
+    QList<int> rowTops;
+    for (const BitWidget* bit : bits) {
+        const QRect rect(bit->mapTo(field, QPoint()), bit->size());
+        bitsRect |= rect;
+        if (!rowTops.contains(rect.top()))
+            rowTops.append(rect.top());
+    }
+    QVERIFY(field->rect().contains(bitsRect));
+    // Rows stay close together instead of spreading over the free height.
+    std::sort(rowTops.begin(), rowTops.end());
+    for (int i = 1; i < rowTops.size(); ++i)
+        QCOMPARE(rowTops.at(i) - rowTops.at(i - 1), bits.first()->height() + 5);
+
+    const QList<QPushButton*> buttons = field->findChildren<QPushButton*>();
+    QCOMPARE(buttons.size(), 4);
+    QRect contentRect = bitsRect;
+    for (const QPushButton* button : buttons) {
+        const QRect rect(button->mapTo(field, QPoint()), button->size());
+        QVERIFY(field->rect().contains(rect));
+        if (stacked)
+            QVERIFY2(rect.top() > bitsRect.bottom(), "Button is not below the bits");
+        else
+            QVERIFY2(rect.left() > bitsRect.right(), "Button is not right of the bits");
+        contentRect |= rect;
+    }
+    // The free space goes around the bits and buttons, not between them.
+    QVERIFY(qAbs(contentRect.center().x() - field->rect().center().x()) <= 2);
+    QVERIFY(qAbs(contentRect.center().y() - field->rect().center().y()) <= 2);
 }
 
 int main(int argc, char** argv)

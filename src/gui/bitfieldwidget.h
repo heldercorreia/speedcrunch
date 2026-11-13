@@ -14,6 +14,7 @@ class QEnterEvent;
 class QFrame;
 class QPushButton;
 class QGridLayout;
+class QBoxLayout;
 class QHBoxLayout;
 
 class BitWidget : public QLabel {
@@ -87,7 +88,6 @@ class BitFieldWidget : public QWidget {
 
 public:
     explicit BitFieldWidget(QWidget* parent = 0);
-    QSize minimumSizeHint() const override;
 
 signals:
     void bitsChanged(const QString&);
@@ -141,7 +141,11 @@ private:
     void updateButtonSummaryPopupMask();
 
     enum {
-        NumberOfBits = 64
+        NumberOfBits = 64,
+        // Gap between groups of four bits, both across and down.
+        GroupSpacing = 5,
+        // Wider gap between bytes in the same row.
+        ByteSpacing = 3 * GroupSpacing
     };
 
     Q_DISABLE_COPY(BitFieldWidget)
@@ -152,7 +156,7 @@ private:
     int m_fieldRows = 0;
     QGridLayout* m_fieldLayout = nullptr;
     QGridLayout* m_buttonsLayout;
-    QHBoxLayout* m_mainLayout;
+    QBoxLayout* m_mainLayout;
 
     QPushButton* m_resetButton = nullptr;
     QPushButton* m_invertButton = nullptr;

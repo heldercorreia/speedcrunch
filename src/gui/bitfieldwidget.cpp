@@ -286,15 +286,12 @@ BitFieldWidget::BitFieldWidget(QWidget* parent) :
         m_bitWidgets.append(bitWidget);
     }
 
-    // Gap between groups of four bits, both across and down.
-    constexpr int kGroupSpacing = 5;
-
     m_byteLayouts.reserve(NumberOfBits / 8);
     for (int i = 0; i < NumberOfBits; i += 8) {
       QHBoxLayout* byteLayout(new QHBoxLayout);
-      byteLayout->setSpacing(kGroupSpacing);
+      byteLayout->setSpacing(GroupSpacing);
 
-      // Each byte is drawn over 3 UI elements (1 for each nibble and 1 for space)
+      // Each byte is drawn as two nibbles
       for (int nibble = 1 ; nibble >= 0 ; --nibble) {
           // Draw each nibble (4-bits) in a single box
           QHBoxLayout* nibbleLayout(new QHBoxLayout);
@@ -312,10 +309,6 @@ BitFieldWidget::BitFieldWidget(QWidget* parent) :
 
           byteLayout->addLayout(nibbleLayout, Qt::AlignCenter);
         }
-
-        // Draw the space between each byte
-        QLabel* byteSpaceLabel = new QLabel;
-        byteLayout->addWidget(byteSpaceLabel);
 
         m_byteLayouts.append(byteLayout);
     }
@@ -343,13 +336,17 @@ BitFieldWidget::BitFieldWidget(QWidget* parent) :
     m_buttonsLayout->addWidget(m_shiftRightButton, 1, 1);
 
     m_fieldLayout = new QGridLayout;
-    m_fieldLayout->setVerticalSpacing(kGroupSpacing);
+    m_fieldLayout->setHorizontalSpacing(ByteSpacing);
+    m_fieldLayout->setVerticalSpacing(GroupSpacing);
 
-    m_mainLayout = new QHBoxLayout(this);
+    m_mainLayout = new QBoxLayout(QBoxLayout::LeftToRight, this);
     m_mainLayout->addStretch();
     m_mainLayout->addLayout(m_fieldLayout);
     m_mainLayout->addLayout(m_buttonsLayout);
     m_mainLayout->addStretch();
+    // Keep the bits and the buttons together in the middle.
+    m_mainLayout->setAlignment(m_fieldLayout, Qt::AlignCenter);
+    m_mainLayout->setAlignment(m_buttonsLayout, Qt::AlignCenter);
 
     this->updateFieldLayout();
 
@@ -526,17 +523,6 @@ void BitFieldWidget::setToolTipThemeColors(const QColor& background,
     applyButtonSummaryPopupTheme();
 }
 
-QSize BitFieldWidget::minimumSizeHint() const
-{
-    QSize hint = QWidget::minimumSizeHint();
-    // The width decides how many rows the bits use. Keep room for all of them.
-    const int fieldHeight = m_fieldLayout ? m_fieldLayout->minimumSize().height() : 0;
-    const int controlsHeight = m_buttonsLayout ? m_buttonsLayout->sizeHint().height() : 0;
-    const QMargins margins = contentsMargins() + m_mainLayout->contentsMargins();
-    hint.setHeight(qMax(fieldHeight, controlsHeight) + margins.top() + margins.bottom());
-    return hint;
-}
-
 /** Update the bitfield layout based on the size of BitFieldWidget and its children.
  * This method should be called during initialization (but only after all the BitFieldWidget
  * members have been set) and every time the size of BitFieldWidget is changed.
@@ -549,19 +535,33 @@ void BitFieldWidget::updateFieldLayout()
     }
 
     // Compute how much horizontal space we have to draw the bitfield
-    int widgetWidth = this->size().width();
-    int buttonsWidth = m_buttonsLayout->sizeHint().width();
-    int byteWidgetWidth = m_byteLayouts.at(0)->sizeHint().width();
-    auto contentMargins = this->contentsMargins() + m_mainLayout->contentsMargins();
-    int spacesWidth = contentMargins.left() + contentMargins.right() + m_mainLayout->spacing() * 3;
-    int availableWidth = widgetWidth - (buttonsWidth + spacesWidth);
+    const int widgetWidth = width();
+    const int buttonsWidth = m_buttonsLayout->sizeHint().width();
+    const int byteWidgetWidth = m_byteLayouts.at(0)->sizeHint().width();
+    const QMargins contentMargins = contentsMargins() + m_mainLayout->contentsMargins();
+    const int marginsWidth = contentMargins.left() + contentMargins.right();
+    const int sideBySideSpacesWidth = marginsWidth + m_mainLayout->spacing() * 3;
 
-    // Find out how much bytes per row can be shown within availableWidth
-    int bytesPerRow = 1;
-    if (byteWidgetWidth > 0 && byteWidgetWidth <= availableWidth) {
-        // Make it a power of 2 so that only 8/16/32/64 bits per row are possible
-        bytesPerRow = pow(2, floor(log2(availableWidth / byteWidgetWidth)));
-    }
+    // Find out how many bytes per row fit, with a gap between them. Use a power
+    // of 2, so that only 8/16/32/64 bits per row are possible.
+    const auto bytesPerRowFor = [byteWidgetWidth](int availableWidth) {
+        if (byteWidgetWidth <= 0 || byteWidgetWidth > availableWidth)
+            return 1;
+        const int fitting = (availableWidth + ByteSpacing) / (byteWidgetWidth + ByteSpacing);
+        return int(pow(2, floor(log2(fitting))));
+    };
+    const int sideBySideBytesPerRow =
+        bytesPerRowFor(widgetWidth - (buttonsWidth + sideBySideSpacesWidth));
+    const int stackedBytesPerRow = bytesPerRowFor(widgetWidth - marginsWidth);
+
+    // A tall bitfield puts the buttons below the bits.
+    const bool stacked = height() > width();
+    const QBoxLayout::Direction direction =
+        stacked ? QBoxLayout::TopToBottom : QBoxLayout::LeftToRight;
+    const bool directionChanged = m_mainLayout->direction() != direction;
+    if (directionChanged)
+        m_mainLayout->setDirection(direction);
+    const int bytesPerRow = stacked ? stackedBytesPerRow : sideBySideBytesPerRow;
 
     // Populate the field layout
     int maxRows = NumberOfBits / (8 * bytesPerRow);
@@ -577,11 +577,13 @@ void BitFieldWidget::updateFieldLayout()
     }
 
     // Update the minimum widget size so that its width can be reduced by the user
-    if (byteWidgetWidth + buttonsWidth > 0)
-        this->setMinimumWidth(byteWidgetWidth + buttonsWidth + spacesWidth);
+    if (stacked)
+        setMinimumWidth(qMax(byteWidgetWidth, buttonsWidth) + marginsWidth);
+    else if (byteWidgetWidth + buttonsWidth > 0)
+        setMinimumWidth(byteWidgetWidth + buttonsWidth + sideBySideSpacesWidth);
 
-    // A new number of rows changes the minimum height.
-    if (maxRows != m_fieldRows) {
+    // A new number of rows or a new direction changes the minimum height.
+    if (maxRows != m_fieldRows || directionChanged) {
         m_fieldRows = maxRows;
         updateGeometry();
     }
