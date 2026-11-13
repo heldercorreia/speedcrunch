@@ -149,7 +149,8 @@ private:
     QList<BitWidget*> m_bitWidgets;
     QList<QHBoxLayout*> m_byteLayouts;
 
-    QGridLayout* m_fieldLayout;
+    int m_fieldRows = 0;
+    QGridLayout* m_fieldLayout = nullptr;
     QGridLayout* m_buttonsLayout;
     QHBoxLayout* m_mainLayout;
 

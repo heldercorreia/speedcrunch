@@ -24,6 +24,8 @@ private slots:
     void repeated_bit_theme_keeps_state_repainting();
     void system_bitfield_repeated_theme_refresh_keeps_current_bit_colors_data();
     void system_bitfield_repeated_theme_refresh_keeps_current_bit_colors();
+    void bitfield_rows_never_overlap_data();
+    void bitfield_rows_never_overlap();
 };
 
 void TestBitfieldUi::initTestCase()
@@ -589,6 +591,57 @@ void TestBitfieldUi::system_bitfield_repeated_theme_refresh_keeps_current_bit_co
             QVERIFY(onBit->state());
             QVERIFY(!offBit->state());
         }
+    }
+}
+
+void TestBitfieldUi::bitfield_rows_never_overlap_data()
+{
+    QTest::addColumn<int>("windowWidth");
+    // Narrower windows put the bits in more rows.
+    for (const int width : {500, 700, 1000, 1600})
+        QTest::addRow("%d px", width) << width;
+}
+
+void TestBitfieldUi::bitfield_rows_never_overlap()
+{
+    QFETCH(int, windowWidth);
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    settings->windowState.clear();
+    settings->sessionLayoutJson.clear();
+    settings->bitfieldVisible = true;
+    settings->constantsDockVisible = false;
+    settings->functionsDockVisible = false;
+    settings->historyDockVisible = false;
+    settings->formulaBookDockVisible = false;
+    settings->variablesDockVisible = false;
+    settings->userFunctionsDockVisible = false;
+    settings->userUnitsDockVisible = false;
+    settings->keypadVisible = false;
+    MainWindow window(false);
+    window.resize(windowWidth, 700);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QDockWidget* dock = window.findChild<QDockWidget*>(QStringLiteral("BitfieldDock"));
+    BitFieldWidget* field = window.findChild<BitFieldWidget*>();
+    QVERIFY(dock);
+    QVERIFY(field);
+
+    // Ask for a dock shorter than any layout of the bits.
+    window.resizeDocks({dock}, {1}, Qt::Vertical);
+    QCoreApplication::processEvents();
+    QCoreApplication::processEvents();
+
+    const QList<BitWidget*> bits = field->findChildren<BitWidget*>();
+    QCOMPARE(bits.size(), 64);
+    QList<QRect> rects;
+    for (const BitWidget* bit : bits)
+        rects.append(QRect(bit->mapTo(field, QPoint()), bit->size()));
+    for (int i = 0; i < rects.size(); ++i) {
+        QVERIFY2(field->rect().contains(rects.at(i)),
+                 qPrintable(QStringLiteral("Bit outside the field at %1 px").arg(field->height())));
+        for (int j = i + 1; j < rects.size(); ++j)
+            QVERIFY2(!rects.at(i).intersects(rects.at(j)), "Bits overlap");
     }
 }
 

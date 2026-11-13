@@ -286,10 +286,13 @@ BitFieldWidget::BitFieldWidget(QWidget* parent) :
         m_bitWidgets.append(bitWidget);
     }
 
+    // Gap between groups of four bits, both across and down.
+    constexpr int kGroupSpacing = 5;
+
     m_byteLayouts.reserve(NumberOfBits / 8);
     for (int i = 0; i < NumberOfBits; i += 8) {
       QHBoxLayout* byteLayout(new QHBoxLayout);
-      byteLayout->setSpacing(5);
+      byteLayout->setSpacing(kGroupSpacing);
 
       // Each byte is drawn over 3 UI elements (1 for each nibble and 1 for space)
       for (int nibble = 1 ; nibble >= 0 ; --nibble) {
@@ -340,6 +343,7 @@ BitFieldWidget::BitFieldWidget(QWidget* parent) :
     m_buttonsLayout->addWidget(m_shiftRightButton, 1, 1);
 
     m_fieldLayout = new QGridLayout;
+    m_fieldLayout->setVerticalSpacing(kGroupSpacing);
 
     m_mainLayout = new QHBoxLayout(this);
     m_mainLayout->addStretch();
@@ -525,10 +529,11 @@ void BitFieldWidget::setToolTipThemeColors(const QColor& background,
 QSize BitFieldWidget::minimumSizeHint() const
 {
     QSize hint = QWidget::minimumSizeHint();
-    const int byteHeight = m_byteLayouts.isEmpty() ? 0 : m_byteLayouts.first()->sizeHint().height();
+    // The width decides how many rows the bits use. Keep room for all of them.
+    const int fieldHeight = m_fieldLayout ? m_fieldLayout->minimumSize().height() : 0;
     const int controlsHeight = m_buttonsLayout ? m_buttonsLayout->sizeHint().height() : 0;
     const QMargins margins = contentsMargins() + m_mainLayout->contentsMargins();
-    hint.setHeight(qMax(byteHeight, controlsHeight) + margins.top() + margins.bottom());
+    hint.setHeight(qMax(fieldHeight, controlsHeight) + margins.top() + margins.bottom());
     return hint;
 }
 
@@ -574,6 +579,12 @@ void BitFieldWidget::updateFieldLayout()
     // Update the minimum widget size so that its width can be reduced by the user
     if (byteWidgetWidth + buttonsWidth > 0)
         this->setMinimumWidth(byteWidgetWidth + buttonsWidth + spacesWidth);
+
+    // A new number of rows changes the minimum height.
+    if (maxRows != m_fieldRows) {
+        m_fieldRows = maxRows;
+        updateGeometry();
+    }
 }
 
 /** Update the size of each BitWidget so that it is the same, as well as the size of the buttons.
