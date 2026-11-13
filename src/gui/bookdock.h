@@ -31,6 +31,7 @@ class BookDock : public DockWidget {
 public:
     BookDock(QWidget* parent = 0);
     void setContentSurfaceColors(const QColor& background, const QColor& foreground);
+    int missingContentWidth() const;
 
 signals:
     void expressionSelected(const QString&);

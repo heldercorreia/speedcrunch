@@ -153,6 +153,7 @@ private slots:
     void constants_dock_uses_configured_narrow_minimum_width();
     void lone_side_dock_opens_wide_enough_for_columns_data();
     void lone_side_dock_opens_wide_enough_for_columns();
+    void lone_formula_book_opens_wide_enough_for_page();
     void view_dock_menu_tracks_and_changes_only_active_window();
     void closing_and_reopening_docks_keeps_attached_widgets();
     void dock_column_orders_survive_relaunch_data();
@@ -2345,6 +2346,52 @@ void TestDockLayoutUi::lone_side_dock_opens_wide_enough_for_columns()
     QTest::qWait(50);
     QCOMPARE(history->width(), historyWidth);
     QVERIFY(list->viewport()->width() < columnsWidth(list));
+}
+
+void TestDockLayoutUi::lone_formula_book_opens_wide_enough_for_page()
+{
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    settings->constantsDockVisible = false;
+    settings->functionsDockVisible = false;
+    settings->historyDockVisible = false;
+    settings->formulaBookDockVisible = false;
+    settings->formulaBookActivePage.clear();
+    settings->variablesDockVisible = false;
+    settings->userFunctionsDockVisible = false;
+    settings->userUnitsDockVisible = false;
+    settings->bitfieldVisible = false;
+    settings->keypadVisible = false;
+
+    MainWindow window;
+    window.resize(1400, 600);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    // At its minimum width, the window leaves no spare width for the book.
+    window.resize(window.minimumSizeHint().width(), 600);
+    QTRY_COMPARE(window.width(), window.minimumSizeHint().width());
+    QMenu* viewMenu = menuWithTitle(window.menuBar(), QStringLiteral("&View"));
+    QVERIFY(viewMenu != nullptr);
+    QAction* action = nullptr;
+    for (QAction* candidate : viewMenu->actions()) {
+        if (candidate->text() == QStringLiteral("Formula &Book"))
+            action = candidate;
+    }
+    QVERIFY(action != nullptr);
+
+    // Alone in its area, the book grows until its page needs no horizontal
+    // scrolling. The window grows too, unless it already fills the screen.
+    action->trigger();
+    QDockWidget* dock = window.findChild<QDockWidget*>(QStringLiteral("BookDock"));
+    QVERIFY(dock != nullptr);
+    QTextBrowser* browser = dock->findChild<QTextBrowser*>();
+    QVERIFY(browser != nullptr);
+    const int availableWidth = window.screen()->availableGeometry().width();
+    QTRY_VERIFY(browser->horizontalScrollBar()->maximum() == 0
+                || window.frameGeometry().width() >= availableWidth);
 }
 
 void TestDockLayoutUi::view_dock_menu_tracks_and_changes_only_active_window()

@@ -12,6 +12,7 @@
 #include "gui/menustyleutils.h"
 #include "gui/oklchutils.h"
 
+#include <QAbstractTextDocumentLayout>
 #include <QEvent>
 #include <QPalette>
 #include <QRegularExpression>
@@ -19,6 +20,7 @@
 #include <QTextBrowser>
 #include <QTimer>
 #include <QVBoxLayout>
+#include <QtMath>
 
 namespace {
 QString toSuperscriptDigits(const QString& text)
@@ -177,6 +179,14 @@ void BookDock::changeEvent(QEvent* event)
 QString BookDock::currentPage() const
 {
     return m_currentPage.isEmpty() ? QStringLiteral("index") : m_currentPage;
+}
+
+int BookDock::missingContentWidth() const
+{
+    // Pages do not wrap, so their widest line sets the width they need.
+    const QAbstractTextDocumentLayout* layout = m_browser->document()->documentLayout();
+    const int contentWidth = qCeil(layout->documentSize().width());
+    return qMax(0, contentWidth - m_browser->viewport()->width());
 }
 
 void BookDock::schedulePaletteStyleRefresh()

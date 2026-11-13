@@ -8818,6 +8818,8 @@ void MainWindow::fitDockToColumns(QDockWidget* dock, Qt::DockWidgetArea area, Do
             missingWidth = m_docks.constants->widget()->missingColumnsWidth();
         else if (target == m_docks.functions)
             missingWidth = m_docks.functions->widget()->missingColumnsWidth();
+        else if (target == m_docks.book)
+            missingWidth = m_docks.book->missingContentWidth();
         if (missingWidth <= 0)
             return;
 
@@ -9062,7 +9064,11 @@ void MainWindow::createFixedConnections()
         [](MainWindow* window, bool visible) { window->setHistoryDockVisible(visible); });
     connectViewToggleToActiveWindow(
         m_actions.viewFormulaBook,
-        [](MainWindow* window, bool visible) { window->setFormulaBookDockVisible(visible); });
+        [](MainWindow* window, bool visible) {
+            window->setFormulaBookDockVisible(visible);
+            if (visible)
+                window->fitLoneSideDockToColumns(window->m_docks.book);
+        });
     connectViewToggleToActiveWindow(
         m_actions.viewVariables,
         [](MainWindow* window, bool visible) { window->setVariablesDockVisible(visible); });
