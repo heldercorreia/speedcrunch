@@ -129,8 +129,8 @@ and a custom layout, so you can adapt it to your workflow. You can also adjust t
 readability or touch area on touchscreens. For fast and full-featured input, SpeedCrunch’s keyboard interface is still recommended.</p>
 <p>Available entries in <span class="menuselection">View ‣ Keypad</span> are:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Basic</span></code> (<strong>default</strong>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Scientific</span> <span class="pre">(wide)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Basic</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Scientific</span> <span class="pre">(wide)</span></code> (<strong>default</strong>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Scientific</span> <span class="pre">(narrow)</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Custom...</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Disable</span></code> (shown as <code class="docutils literal notranslate"><span class="pre">Disabled</span></code> when selected)</p></li>
@@ -155,6 +155,7 @@ trigonometric function with its inverse.</p>
 <p>Available entries in <span class="menuselection">Settings ‣ Appearance ‣ Keypad ‣ Zoom</span> are:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">50%</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">75%</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">100%</span></code> (<strong>default</strong>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">150%</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">200%</span></code></p></li>
@@ -348,7 +349,7 @@ This also works for user-defined functions. Pressing <kbd class="kbd docutils li
 </dl>
 </li>
 <li><dl>
-<dt>Quick constant insertion</dt><dd><p>Press <kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">Space</kbd> to search the same constants as the constants widget (see above).
+<dt>Quick constant insertion</dt><dd><p>Press <kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">K</kbd> (<kbd class="kbd docutils literal notranslate">Cmd</kbd>+<kbd class="kbd docutils literal notranslate">K</kbd> on macOS) to search the same constants as the constants widget (see above).
 If your system already uses that shortcut, choose another one for
 <span class="guilabel">Search Constants</span> in <span class="menuselection">Settings ‣ Keyboard Shortcuts</span>.
 Type a name or unit to filter the list. Each result shows its unit beside the name using the theme’s unit color.
@@ -427,7 +428,8 @@ In contrast to the HTML export option, the syntax highlighting will be lost.</p>
 preferences. SpeedCrunch asks for confirmation before making any changes.
 The reset applies to all open windows immediately and is saved for the next
 launch. It includes appearance, editing options, number and result formats,
-language, and window preferences, including dock visibility and keypad settings.</p>
+language, keyboard shortcuts, and window preferences, including dock visibility
+and keypad settings.</p>
 <p>Your calculation history, open session tabs and panes, and user definitions are
 kept. Existing calculations keep their recorded result formats. New calculations
 and live previews use the default settings.</p>
@@ -1148,18 +1150,22 @@ For the full schema, see <a class="reference internal" href="theme_json_schema.h
 status bar, and tooltips, with Classic input, results, and keypad styles.
 It gives SpeedCrunch an appearance similar to version 0.12.</p></li>
 <li><p><span class="guilabel">Modern</span> uses the SpeedCrunch theme for menus, docks, the
-status bar, and tooltips, with Modern input, results, and keypad styles.
-This matches the defaults for new 1.x installations.</p></li>
+status bar, and tooltips, with Modern input, results, and keypad styles.</p></li>
+<li><p><span class="guilabel">Hybrid</span> matches <span class="guilabel">Classic</span>, except that docks use the
+SpeedCrunch theme.</p></li>
 </ul>
 <p>The checkmark shows which preset matches these six settings.
-<span class="guilabel">Custom</span> is checked when neither preset matches. It is an
+<span class="guilabel">Custom</span> is checked when no preset matches. It is an
 indicator, not a selectable preset. Changing an individual setting updates
 the checkmark automatically, including when you restore a matching
 combination by hand.</p>
 <p>Presets apply immediately to all windows. They keep the selected color
 theme, System Color Mode, fonts, keypad layouts and zoom levels, dock
-positions, and visibility choices. Existing settings stay as they are when
-you upgrade. SpeedCrunch identifies the matching preset without changing
+positions, and visibility choices.</p>
+<p>SpeedCrunch starts with <span class="guilabel">Classic</span> the first time it runs, and
+<span class="menuselection">Reset All Settings…</span> applies it again. Existing settings
+stay as they are when you upgrade, so earlier installations keep their
+appearance. SpeedCrunch identifies the matching preset without changing
 your appearance.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">Added in version 1.2.</span></p>
@@ -1197,7 +1203,7 @@ selected light or dark mode, depending on platform support.</p>
 including highlighted and disabled items. With <span class="guilabel">Follow System</span>
 selected under <span class="menuselection">System Color Mode</span>, menus follow changes
 to the system theme while SpeedCrunch is running.</p></li>
-<li><p><span class="guilabel">SpeedCrunch Theme</span> (the default) uses the selected SpeedCrunch
+<li><p><span class="guilabel">SpeedCrunch Theme</span> uses the selected SpeedCrunch
 theme for menu backgrounds and text, including highlighted items.
 Menu icons also follow the theme’s text colors. In popup menus, disabled
 labels, shortcut hints, and icons appear dimmed.</p></li>
@@ -1228,7 +1234,7 @@ use the system appearance, regardless of the <span class="menuselection">Menus</
 The Formula Book and bitfield use system colors as well. Formula and
 navigation links use the system link color directly. On bits use the system
 selection colors, with a separate hover color for off bits.</p></li>
-<li><p><span class="guilabel">SpeedCrunch Theme</span> (the default) uses the selected SpeedCrunch
+<li><p><span class="guilabel">SpeedCrunch Theme</span> uses the selected SpeedCrunch
 theme for dock content, title bars, and tabs, including list selections and
 search fields.</p></li>
 </ul>
@@ -1249,7 +1255,7 @@ system theme while SpeedCrunch is running.</p>
 status bar, its labels, and its buttons. With <span class="guilabel">Follow System</span>
 selected under <span class="menuselection">System Color Mode</span>, colors follow changes
 to the system theme while SpeedCrunch is running.</p></li>
-<li><p><span class="guilabel">SpeedCrunch Theme</span> (the default) uses the selected SpeedCrunch
+<li><p><span class="guilabel">SpeedCrunch Theme</span> uses the selected SpeedCrunch
 theme for the status bar background and text.</p></li>
 </ul>
 <p>The choice applies immediately to all SpeedCrunch windows and is saved
@@ -1268,7 +1274,7 @@ tooltips in the keypad, session tabs, results, and docks:</p>
 <ul class="simple">
 <li><p><span class="guilabel">System</span> uses the system style. The tooltips and lists look
 like those in other apps, and they change when the system theme changes.</p></li>
-<li><p><span class="guilabel">SpeedCrunch Theme</span> (the default) uses the colors of the
+<li><p><span class="guilabel">SpeedCrunch Theme</span> uses the colors of the
 selected SpeedCrunch theme.</p></li>
 </ul>
 <p>The change applies at once to all SpeedCrunch windows. SpeedCrunch keeps
@@ -1282,7 +1288,7 @@ it the next time it starts.</p>
 <li><dl>
 <dt><span class="menuselection">Settings ‣ Appearance ‣ Input and Results</span></dt><dd><p>Choose the layout of the expression editor and result display:</p>
 <ul class="simple">
-<li><p><span class="guilabel">Modern</span> (the default) uses a rounded input box with compact
+<li><p><span class="guilabel">Modern</span> uses a rounded input box with compact
 padding and a small gap around it. History aligns with the left edge of
 the box.</p></li>
 <li><p><span class="guilabel">Classic</span> uses a compact, full-width editor directly below the
@@ -1317,7 +1323,7 @@ On macOS 27 and later, SpeedCrunch uses Qt’s font dialog.</p>
 <ul class="simple">
 <li><p><span class="guilabel">Classic</span> uses shallow rectangular buttons with smaller gaps,
 similar to the keypad in SpeedCrunch 0.12.</p></li>
-<li><p><span class="guilabel">Modern</span> (the default) keeps the larger square buttons.</p></li>
+<li><p><span class="guilabel">Modern</span> keeps the larger square buttons.</p></li>
 </ul>
 <p>The choice applies immediately to all windows and is saved between launches.
 It works with every preset and custom keypad. Each window keeps its own
