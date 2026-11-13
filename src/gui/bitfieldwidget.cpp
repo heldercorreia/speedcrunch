@@ -329,17 +329,16 @@ BitFieldWidget::BitFieldWidget(QWidget* parent) :
     setupButton(m_shiftRightButton);
     connect(m_shiftRightButton, SIGNAL(clicked()), this, SLOT(shiftBitsRight()));
 
+    // updateFieldLayout() places the buttons in this grid.
     m_buttonsLayout = new QGridLayout;
-    m_buttonsLayout->addWidget(m_resetButton, 0, 0);
-    m_buttonsLayout->addWidget(m_invertButton, 0, 1);
-    m_buttonsLayout->addWidget(m_shiftLeftButton, 1, 0);
-    m_buttonsLayout->addWidget(m_shiftRightButton, 1, 1);
+    m_buttonsLayout->setSpacing(ButtonSpacing);
 
     m_fieldLayout = new QGridLayout;
     m_fieldLayout->setHorizontalSpacing(ByteSpacing);
     m_fieldLayout->setVerticalSpacing(GroupSpacing);
 
     m_mainLayout = new QBoxLayout(QBoxLayout::LeftToRight, this);
+    m_mainLayout->setSpacing(ButtonSpacing);
     m_mainLayout->addStretch();
     m_mainLayout->addLayout(m_fieldLayout);
     m_mainLayout->addLayout(m_buttonsLayout);
@@ -529,64 +528,92 @@ void BitFieldWidget::setToolTipThemeColors(const QColor& background,
  */
 void BitFieldWidget::updateFieldLayout()
 {
-    // Empty current field layout
-    while (m_fieldLayout->count() > 0) {
-        m_fieldLayout->removeItem(m_fieldLayout->itemAt(0));
-    }
-
-    // Compute how much horizontal space we have to draw the bitfield
-    const int widgetWidth = width();
-    const int buttonsWidth = m_buttonsLayout->sizeHint().width();
-    const int byteWidgetWidth = m_byteLayouts.at(0)->sizeHint().width();
+    const QSize byteSize = m_byteLayouts.at(0)->sizeHint();
+    const QSize buttonSize = QWidgetItem(m_resetButton).sizeHint();
     const QMargins contentMargins = contentsMargins() + m_mainLayout->contentsMargins();
-    const int marginsWidth = contentMargins.left() + contentMargins.right();
-    const int sideBySideSpacesWidth = marginsWidth + m_mainLayout->spacing() * 3;
+    const int availableWidth = width() - (contentMargins.left() + contentMargins.right());
+
+    const auto buttonsSize = [buttonSize](int columns) {
+        const int rows = ButtonCount / columns;
+        return QSize(columns * buttonSize.width() + (columns - 1) * ButtonSpacing,
+                     rows * buttonSize.height() + (rows - 1) * ButtonSpacing);
+    };
+    const QSize buttonsGridSize = buttonsSize(2);
+    const QSize buttonsRowSize = buttonsSize(ButtonCount);
 
     // Find out how many bytes per row fit, with a gap between them. Use a power
     // of 2, so that only 8/16/32/64 bits per row are possible.
-    const auto bytesPerRowFor = [byteWidgetWidth](int availableWidth) {
-        if (byteWidgetWidth <= 0 || byteWidgetWidth > availableWidth)
+    const auto bytesPerRowFor = [byteSize](int width) {
+        if (byteSize.width() <= 0 || byteSize.width() > width)
             return 1;
-        const int fitting = (availableWidth + ByteSpacing) / (byteWidgetWidth + ByteSpacing);
+        const int fitting = (width + ByteSpacing) / (byteSize.width() + ByteSpacing);
         return int(pow(2, floor(log2(fitting))));
     };
-    const int sideBySideBytesPerRow =
-        bytesPerRowFor(widgetWidth - (buttonsWidth + sideBySideSpacesWidth));
-    const int stackedBytesPerRow = bytesPerRowFor(widgetWidth - marginsWidth);
+    const auto fieldHeight = [byteSize](int bytesPerRow) {
+        const int rows = NumberOfBits / (8 * bytesPerRow);
+        return rows * byteSize.height() + (rows - 1) * GroupSpacing;
+    };
 
-    // A tall bitfield puts the buttons below the bits.
-    const bool stacked = height() > width();
+    // Beside the bits, the buttons sit in two rows of two.
+    const int sideBySideWidth = availableWidth - buttonsGridSize.width() - ButtonSpacing;
+    const bool sideBySideFits = byteSize.width() <= sideBySideWidth;
+    const int sideBySideBytesPerRow = bytesPerRowFor(sideBySideWidth);
+    const int sideBySideHeight =
+        qMax(fieldHeight(sideBySideBytesPerRow), buttonsGridSize.height());
+
+    // Below the bits, the buttons sit in a single row when it fits.
+    const int stackedBytesPerRow = bytesPerRowFor(availableWidth);
+    const bool buttonsInRow = buttonsRowSize.width() <= availableWidth;
+    const int stackedHeight = fieldHeight(stackedBytesPerRow) + ButtonSpacing
+        + (buttonsInRow ? buttonsRowSize : buttonsGridSize).height();
+
+    // A tall bitfield puts the buttons below the bits. Otherwise the shorter
+    // layout wins, since moving the buttons below often leaves room for twice
+    // as many bits per row.
+    const bool stacked =
+        height() > width() || !sideBySideFits || stackedHeight < sideBySideHeight;
     const QBoxLayout::Direction direction =
         stacked ? QBoxLayout::TopToBottom : QBoxLayout::LeftToRight;
-    const bool directionChanged = m_mainLayout->direction() != direction;
-    if (directionChanged)
-        m_mainLayout->setDirection(direction);
     const int bytesPerRow = stacked ? stackedBytesPerRow : sideBySideBytesPerRow;
+    const int buttonColumns = stacked && buttonsInRow ? int(ButtonCount) : 2;
 
-    // Populate the field layout
-    int maxRows = NumberOfBits / (8 * bytesPerRow);
-    for (int col = 0 ; col < bytesPerRow ; ++col) {
-        const int colOffset = (bytesPerRow - col - 1);
+    // The narrowest layout has one byte per row, with the buttons below.
+    setMinimumWidth(qMax(byteSize.width(), buttonsGridSize.width())
+                    + contentMargins.left() + contentMargins.right());
 
-        for (int row = 0 ; row < maxRows ; ++row) {
-            int byteIndex = (maxRows - row - 1) * bytesPerRow + colOffset;
-            auto* byteLayout = m_byteLayouts.at(byteIndex);
+    if (direction == m_mainLayout->direction() && bytesPerRow == m_bytesPerRow
+        && buttonColumns == m_buttonColumns)
+        return;
 
-            m_fieldLayout->addLayout(byteLayout, row, col);
+    m_mainLayout->setDirection(direction);
+
+    if (bytesPerRow != m_bytesPerRow) {
+        m_bytesPerRow = bytesPerRow;
+        while (m_fieldLayout->count() > 0)
+            m_fieldLayout->removeItem(m_fieldLayout->itemAt(0));
+
+        const int rows = NumberOfBits / (8 * bytesPerRow);
+        for (int col = 0; col < bytesPerRow; ++col) {
+            const int colOffset = bytesPerRow - col - 1;
+            for (int row = 0; row < rows; ++row) {
+                const int byteIndex = (rows - row - 1) * bytesPerRow + colOffset;
+                m_fieldLayout->addLayout(m_byteLayouts.at(byteIndex), row, col);
+            }
         }
     }
 
-    // Update the minimum widget size so that its width can be reduced by the user
-    if (stacked)
-        setMinimumWidth(qMax(byteWidgetWidth, buttonsWidth) + marginsWidth);
-    else if (byteWidgetWidth + buttonsWidth > 0)
-        setMinimumWidth(byteWidgetWidth + buttonsWidth + sideBySideSpacesWidth);
-
-    // A new number of rows or a new direction changes the minimum height.
-    if (maxRows != m_fieldRows || directionChanged) {
-        m_fieldRows = maxRows;
-        updateGeometry();
+    if (buttonColumns != m_buttonColumns) {
+        m_buttonColumns = buttonColumns;
+        QPushButton* const buttons[ButtonCount] = {
+            m_resetButton, m_invertButton, m_shiftLeftButton, m_shiftRightButton};
+        for (QPushButton* button : buttons)
+            m_buttonsLayout->removeWidget(button);
+        for (int i = 0; i < ButtonCount; ++i)
+            m_buttonsLayout->addWidget(buttons[i], i / buttonColumns, i % buttonColumns);
     }
+
+    // A new layout changes the minimum height.
+    updateGeometry();
 }
 
 /** Update the size of each BitWidget so that it is the same, as well as the size of the buttons.

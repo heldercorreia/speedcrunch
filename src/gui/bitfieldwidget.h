@@ -145,7 +145,10 @@ private:
         // Gap between groups of four bits, both across and down.
         GroupSpacing = 5,
         // Wider gap between bytes in the same row.
-        ByteSpacing = 3 * GroupSpacing
+        ByteSpacing = 3 * GroupSpacing,
+        // Gap between the buttons, and between the bits and the buttons.
+        ButtonSpacing = ByteSpacing,
+        ButtonCount = 4
     };
 
     Q_DISABLE_COPY(BitFieldWidget)
@@ -153,7 +156,8 @@ private:
     QList<BitWidget*> m_bitWidgets;
     QList<QHBoxLayout*> m_byteLayouts;
 
-    int m_fieldRows = 0;
+    int m_bytesPerRow = 0;
+    int m_buttonColumns = 0;
     QGridLayout* m_fieldLayout = nullptr;
     QGridLayout* m_buttonsLayout;
     QBoxLayout* m_mainLayout;

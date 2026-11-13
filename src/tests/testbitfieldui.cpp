@@ -31,6 +31,7 @@ private slots:
     void opened_bitfield_uses_minimum_height_data();
     void opened_bitfield_uses_minimum_height();
     void side_bitfield_narrows_to_one_byte();
+    void bottom_bitfield_moves_buttons_below_for_fewer_rows();
 };
 
 void TestBitfieldUi::initTestCase()
@@ -844,6 +845,47 @@ void TestBitfieldUi::side_bitfield_narrows_to_one_byte()
     QVERIFY2(field->width() - contentRect.width() <= 30,
              qPrintable(QStringLiteral("Field %1 px wide for %2 px of content")
                             .arg(field->width()).arg(contentRect.width())));
+}
+
+void TestBitfieldUi::bottom_bitfield_moves_buttons_below_for_fewer_rows()
+{
+    BitFieldWidget widget;
+    BitFieldWidget* field = &widget;
+    const QList<BitWidget*> bits = field->findChildren<BitWidget*>();
+    QCOMPARE(bits.size(), 64);
+
+    // Make the field a little wider than two bytes of bits, and wider than it
+    // is tall. With the buttons beside the bits, only one byte fits per row.
+    const int byteWidth = 8 * bits.first()->width() + 5;
+    const QMargins margins = field->layout()->contentsMargins();
+    const int fieldWidth = 2 * byteWidth + 15 + margins.left() + margins.right() + 10;
+    field->resize(fieldWidth, fieldWidth * 2 / 3);
+    field->show();
+    QVERIFY(QTest::qWaitForWindowExposed(field));
+    QTRY_COMPARE(field->size(), QSize(fieldWidth, fieldWidth * 2 / 3));
+    QCoreApplication::processEvents();
+
+    QRect bitsRect;
+    QList<int> rowTops;
+    for (const BitWidget* bit : bits) {
+        const QRect rect(bit->mapTo(field, QPoint()), bit->size());
+        bitsRect |= rect;
+        if (!rowTops.contains(rect.top()))
+            rowTops.append(rect.top());
+    }
+    QCOMPARE(rowTops.size(), 4);
+    QVERIFY(field->rect().contains(bitsRect));
+
+    // The buttons go below the bits, all in one row.
+    const QList<QPushButton*> buttons = field->findChildren<QPushButton*>();
+    QCOMPARE(buttons.size(), 4);
+    const int buttonsTop = buttons.first()->mapTo(field, QPoint()).y();
+    for (const QPushButton* button : buttons) {
+        const QRect rect(button->mapTo(field, QPoint()), button->size());
+        QVERIFY(field->rect().contains(rect));
+        QVERIFY2(rect.top() > bitsRect.bottom(), "Button is not below the bits");
+        QCOMPARE(rect.top(), buttonsTop);
+    }
 }
 
 int main(int argc, char** argv)
