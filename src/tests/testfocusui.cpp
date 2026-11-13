@@ -269,7 +269,12 @@ void TestFocusUi::constants_dock_activation_returns_to_active_editor()
     auto* otherEditor = otherWindow.findChild<Editor*>();
     QVERIFY(otherEditor);
     const QString otherText = otherEditor->text();
-    const QPoint row = list->visualItemRect(list->topLevelItem(0)).center();
+    // A narrow dock can hide the middle of the first column, so click the
+    // part of the row that is visible.
+    const QRect visibleRow = list->visualItemRect(list->topLevelItem(0))
+        .intersected(list->viewport()->rect());
+    QVERIFY(!visibleRow.isEmpty());
+    const QPoint row = visibleRow.center();
     if (mouse) {
         QTest::mouseClick(list->viewport(), Qt::LeftButton, Qt::NoModifier, row);
         QVERIFY(target->text().isEmpty());
