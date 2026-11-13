@@ -345,8 +345,14 @@ void TestPrivateSessionsUi::private_tab_shortcut_opens_in_active_pane()
     PrivateSessionStorage storage;
     MainWindow window(false);
     MainWindow other(false);
-    window.show();
+    // A Wayland compositor can activate a new window some time after it is
+    // shown. Show the other window first, so it cannot take activation away
+    // from the window under test later.
     other.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&other));
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    UiTestFixture::waitForActivationToSettle();
     QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight"));
     const QList<ResultDisplay*> displays = window.findChildren<ResultDisplay*>();
     QCOMPARE(displays.size(), 2);

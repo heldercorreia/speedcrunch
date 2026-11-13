@@ -1881,6 +1881,10 @@ void TestSettingsUi::settings_reset_keeps_default_window_size()
         }
     } recorder;
     window.installEventFilter(&recorder);
+    // On X11, Qt joins window system replies that are still waiting. Without
+    // this, the reply to the reset size and the reply to the old size become
+    // one reply, and the window gets no Resize event.
+    QGuiApplication::sync();
     window.windowHandle()->resize(oldSize);
     QTRY_VERIFY(recorder.spontaneousSizes.contains(oldSize));
     QTRY_COMPARE(window.size(), defaultSize);

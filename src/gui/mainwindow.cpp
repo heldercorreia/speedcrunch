@@ -8788,6 +8788,65 @@ void MainWindow::fitLoneSideDockToColumns(QDockWidget* dock)
     fitDockToColumns(dock, area, DockFitStep::ResizeDock);
 }
 
+void MainWindow::keepWindowSize(KeptWindowSize kept)
+{
+    m_keptWindowSize = size();
+    m_replacedWindowSizes.clear();
+    // Showing a panel can make the window larger. Undo only a return to an
+    // older size, so that the user can still resize the window right away.
+    if (kept == KeptWindowSize::UndoOlderSizes)
+        m_replacedWindowSizes.append(size());
+    m_keptWindowSizeDeadline = QDeadlineTimer(2000);
+}
+
+bool MainWindow::shouldRestoreKeptWindowSize(const QSize& newSize) const
+{
+    if (m_keptWindowSizeDeadline.hasExpired() || newSize == m_keptWindowSize)
+        return false;
+    if (m_replacedWindowSizes.isEmpty())
+        return true;
+    const QSize minimum = minimumSize();
+    // A late startup size can predate the sizes recorded here. Restore the
+    // kept size if that request is too small for the panels now on screen.
+    if (newSize.width() < minimum.width() || newSize.height() < minimum.height())
+        return true;
+    // The window system can raise an older size to the current minimum size.
+    return std::any_of(m_replacedWindowSizes.cbegin(), m_replacedWindowSizes.cend(),
+                       [&](const QSize& older) { return older.expandedTo(minimum) == newSize; });
+}
+
+void MainWindow::rememberKeptDockSizes()
+{
+    m_keptDockSizes.clear();
+    for (QDockWidget* dock : std::as_const(m_allDocks)) {
+        // Qt moves the other tabs of a tab group above and left of the window,
+        // with the size they had before, so only the shown tab has the right
+        // size.
+        const QRect geometry = dock->geometry();
+        if (!dock->isHidden() && !dock->isFloating() && geometry.right() >= 0 && geometry.bottom() >= 0)
+            m_keptDockSizes.append({dock, dock->size()});
+    }
+}
+
+void MainWindow::restoreKeptDockSizes()
+{
+    QList<QDockWidget*> docks;
+    QList<int> widths;
+    QList<int> heights;
+    for (const auto& [dock, dockSize] : std::as_const(m_keptDockSizes)) {
+        if (dock && !dock->isHidden() && !dock->isFloating()) {
+            docks.append(dock);
+            widths.append(dockSize.width());
+            heights.append(dockSize.height());
+        }
+    }
+    m_keptDockSizes.clear();
+    if (docks.isEmpty())
+        return;
+    resizeDocks(docks, widths, Qt::Horizontal);
+    resizeDocks(docks, heights, Qt::Vertical);
+}
+
 void MainWindow::shrinkLoneEdgeDockToMinimumHeight(QDockWidget* dock)
 {
     // Keep the height the user chose for docks that were already open there.
@@ -8801,6 +8860,11 @@ void MainWindow::shrinkLoneEdgeDockToMinimumHeight(QDockWidget* dock)
     QTimer::singleShot(0, this, [this, target, area]() {
         if (!target || target->isHidden() || target->isFloating() || dockWidgetArea(target) != area)
             return;
+        // Wait until an older window size from the window system is undone.
+        if (m_keptWindowSizeRestorePending) {
+            shrinkLoneEdgeDockToMinimumHeight(target);
+            return;
+        }
         // The main window keeps the dock at its minimum height.
         resizeDocks({target}, {1}, Qt::Vertical);
     });
@@ -8813,6 +8877,11 @@ void MainWindow::fitDockToColumns(QDockWidget* dock, Qt::DockWidgetArea area, Do
     QTimer::singleShot(0, this, [this, target, area, step]() {
         if (!target || target->isHidden() || target->isFloating() || dockWidgetArea(target) != area)
             return;
+        // Wait until an older window size from the window system is undone.
+        if (m_keptWindowSizeRestorePending) {
+            fitDockToColumns(target, area, step);
+            return;
+        }
         int missingWidth = 0;
         if (target == m_docks.constants)
             missingWidth = m_docks.constants->widget()->missingColumnsWidth();
@@ -9003,20 +9072,26 @@ void MainWindow::createFixedConnections()
     connectWindowAction(m_actions.viewClosePane, &MainWindow::closeCurrentPane);
     connect(QApplication::clipboard(), &QClipboard::dataChanged, this, &MainWindow::syncEditMenuActionState);
 
+    connect(m_actions.viewFullScreenMode, &QAction::triggered, this, [this](bool enabled) {
+        MainWindow* targetWindow = activeMainWindowForMenuAction(this);
+        targetWindow->setFullScreenEnabled(enabled);
+        targetWindow->syncViewMenuActionState();
+    });
+    // Showing a panel can make the window larger, and the window system can
+    // then send the old size, so keep the new size for a short time.
     const auto connectViewToggleToActiveWindow =
         [this](QAction* action, auto apply) {
             connect(action, &QAction::triggered, this, [this, apply](bool checked) {
                 MainWindow* targetWindow = activeMainWindowForMenuAction(this);
+                targetWindow->keepWindowSize(KeptWindowSize::UndoOlderSizes);
                 apply(targetWindow, checked);
                 targetWindow->syncViewMenuActionState();
             });
         };
-    connectViewToggleToActiveWindow(
-        m_actions.viewFullScreenMode,
-        [](MainWindow* window, bool enabled) { window->setFullScreenEnabled(enabled); });
     connect(m_actionGroups.keypad, &QActionGroup::triggered, this,
             [this](QAction* action) {
                 MainWindow* targetWindow = activeMainWindowForMenuAction(this);
+                targetWindow->keepWindowSize(KeptWindowSize::UndoOlderSizes);
                 targetWindow->setKeypadMode(action);
                 targetWindow->syncViewMenuActionState();
             });
@@ -9027,6 +9102,7 @@ void MainWindow::createFixedConnections()
     connect(m_actionGroups.keypadZoom, &QActionGroup::triggered, this,
             [this](QAction* action) {
                 MainWindow* targetWindow = activeMainWindowForMenuAction(this);
+                targetWindow->keepWindowSize(KeptWindowSize::UndoOlderSizes);
                 targetWindow->setKeypadZoom(action);
                 targetWindow->syncViewMenuActionState();
             });
@@ -9588,8 +9664,7 @@ void MainWindow::resetAllSettings()
         if (!isWaylandPlatform())
             window->setAlwaysOnTopEnabled(m_settings->windowAlwaysOnTop);
         window->setFullScreenEnabled(m_settings->windowOnfullScreen);
-        window->m_resetWindowSize = window->size();
-        window->m_resetWindowSizeDeadline = QDeadlineTimer(2000);
+        window->keepWindowSize(KeptWindowSize::UndoAnyChange);
 
         if (window->m_docks.constants) {
             for (QComboBox* combo : window->m_docks.constants->widget()->findChildren<QComboBox*>())
@@ -13723,6 +13798,13 @@ bool MainWindow::event(QEvent* e)
 
 bool MainWindow::eventFilter(QObject* o, QEvent* e)
 {
+    // This filter is on the application, so it gets the window's own Resize
+    // event before the layout squeezes the docks for an older size.
+    if (o == this && e && e->type() == QEvent::Resize && e->spontaneous()
+        && !m_keptWindowSizeRestorePending
+        && shouldRestoreKeptWindowSize(static_cast<QResizeEvent*>(e)->size())) {
+        rememberKeptDockSizes();
+    }
     if (e && (e->type() == QEvent::ShortcutOverride || e->type() == QEvent::KeyPress)
         && qApp->activeModalWidget() == nullptr && qApp->activePopupWidget() == nullptr) {
         QWidget* widget = qobject_cast<QWidget*>(o);
@@ -16488,19 +16570,25 @@ void MainWindow::resizeEvent(QResizeEvent* event)
     QMainWindow::resizeEvent(event);
     updateStatusBarSectionVisibility();
 
-    // Keep the size from Reset All Settings. On Wayland, the compositor can
-    // send the old size after the reset, and Qt applies it. A size change made
-    // by the application itself, such as fitting a dock, becomes the new size.
-    if (!m_resetWindowSizeDeadline.hasExpired()) {
+    // Keep the size the application chose. On Wayland, the compositor can send
+    // an older size afterwards, and Qt applies it. A size change made by the
+    // application itself, such as fitting a dock, becomes the new size.
+    if (!m_keptWindowSizeDeadline.hasExpired()) {
         if (!event->spontaneous()) {
-            m_resetWindowSize = size();
-        } else if (size() != m_resetWindowSize) {
+            if (!m_replacedWindowSizes.isEmpty() && event->oldSize().isValid())
+                m_replacedWindowSizes.append(event->oldSize());
+            m_keptWindowSize = size();
+        } else if (!m_keptWindowSizeRestorePending && shouldRestoreKeptWindowSize(size())) {
+            m_keptWindowSizeRestorePending = true;
             QTimer::singleShot(0, this, [this]() {
+                m_keptWindowSizeRestorePending = false;
                 static constexpr Qt::WindowStates sizedBySystem = Qt::WindowMaximized | Qt::WindowFullScreen;
-                if (!m_resetWindowSizeDeadline.hasExpired() && !(windowState() & sizedBySystem)
-                    && size() != m_resetWindowSize) {
-                    resize(m_resetWindowSize);
+                if (!m_keptWindowSizeDeadline.hasExpired() && !(windowState() & sizedBySystem)) {
+                    if (size() != m_keptWindowSize)
+                        resize(m_keptWindowSize);
+                    restoreKeptDockSizes();
                 }
+                m_keptDockSizes.clear();
             });
         }
     }

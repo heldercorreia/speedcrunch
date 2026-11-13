@@ -295,6 +295,7 @@ protected:
 private:
 #ifdef SPEEDCRUNCH_UI_TEST
     friend class StartupLoadTest;
+    friend class TestDockLayoutUi;
 #endif
     Q_DISABLE_COPY(MainWindow)
 
@@ -306,6 +307,11 @@ private:
     bool dockIsAloneInArea(QDockWidget*);
     void fitLoneSideDockToColumns(QDockWidget*);
     void shrinkLoneEdgeDockToMinimumHeight(QDockWidget*);
+    enum class KeptWindowSize { UndoAnyChange, UndoOlderSizes };
+    void keepWindowSize(KeptWindowSize);
+    bool shouldRestoreKeptWindowSize(const QSize&) const;
+    void rememberKeptDockSizes();
+    void restoreKeptDockSizes();
     enum class DockFitStep { ResizeDock, GrowWindow, FinalResizeDock };
     void fitDockToColumns(QDockWidget*, Qt::DockWidgetArea, DockFitStep);
     void createUi();
@@ -817,11 +823,20 @@ private:
     // Startup clock time of the latest Show event, or -1.
     qint64 m_showEventNs = -1;
     int m_windowGeometryRestoreGeneration = 0;
-    // The size chosen by Reset All Settings. For a short time after the reset,
-    // the window system can still send the old size, for example when the
-    // window becomes active again. The window then returns to this size.
-    QSize m_resetWindowSize;
-    QDeadlineTimer m_resetWindowSizeDeadline;
+    // The size the application chose, for example after Reset All Settings or
+    // after showing a dock. For a short time, the window system can still send
+    // an older size, for example when the window becomes active again after a
+    // menu or dialog closes. The window then returns to the kept size.
+    QSize m_keptWindowSize;
+    // The sizes the window had before. When this is empty, the window returns
+    // to the kept size after any size change from the window system.
+    QList<QSize> m_replacedWindowSizes;
+    QDeadlineTimer m_keptWindowSizeDeadline;
+    // The docks squeeze when an older size comes back. Their sizes from just
+    // before then return with the kept size, because the main window would
+    // otherwise give the regained space to the editor area.
+    QList<QPair<QPointer<QDockWidget>, QSize>> m_keptDockSizes;
+    bool m_keptWindowSizeRestorePending = false;
     bool m_sessionRestorePending = false;
     bool m_showAfterSessionRestore = false;
     bool m_startupPrivateTabPending = false;

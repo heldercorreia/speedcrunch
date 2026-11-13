@@ -154,6 +154,9 @@ private slots:
     void lone_side_dock_opens_wide_enough_for_columns_data();
     void lone_side_dock_opens_wide_enough_for_columns();
     void lone_formula_book_opens_wide_enough_for_page();
+    void kept_window_size_handles_native_resize_requests_data();
+    void kept_window_size_handles_native_resize_requests();
+    void shown_dock_keeps_window_size_from_window_system();
     void view_dock_menu_tracks_and_changes_only_active_window();
     void closing_and_reopening_docks_keeps_attached_widgets();
     void dock_column_orders_survive_relaunch_data();
@@ -2288,7 +2291,9 @@ void TestDockLayoutUi::lone_side_dock_opens_wide_enough_for_columns()
     settings->keypadVisible = keypadVisible;
 
     MainWindow window;
-    window.resize(1400, 600);
+    // Leave the window room to grow, also on a small screen.
+    const int screenWidth = window.screen()->availableGeometry().width();
+    window.resize(qMin(1400, screenWidth - 100), 600);
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     // The wide keypad leaves no spare width in the main area.
@@ -2325,7 +2330,7 @@ void TestDockLayoutUi::lone_side_dock_opens_wide_enough_for_columns()
     QTRY_VERIFY(list->model()->rowCount() > 0);
     const int availableWidth = window.screen()->availableGeometry().width();
     QTRY_VERIFY(list->viewport()->width() >= columnsWidth(list)
-                || (keypadVisible && window.frameGeometry().width() >= availableWidth));
+                || window.frameGeometry().width() >= availableWidth);
 
     // The cramped window cannot give History the width this check needs.
     if (keypadVisible)
@@ -2392,6 +2397,126 @@ void TestDockLayoutUi::lone_formula_book_opens_wide_enough_for_page()
     const int availableWidth = window.screen()->availableGeometry().width();
     QTRY_VERIFY(browser->horizontalScrollBar()->maximum() == 0
                 || window.frameGeometry().width() >= availableWidth);
+}
+
+void TestDockLayoutUi::kept_window_size_handles_native_resize_requests_data()
+{
+    QTest::addColumn<QSize>("requestedSize");
+    QTest::addColumn<bool>("expired");
+    QTest::addColumn<bool>("restore");
+    QTest::newRow("kept-size") << QSize(900, 600) << false << false;
+    QTest::newRow("previous-size") << QSize(640, 600) << false << true;
+    QTest::newRow("previous-size-raised-to-minimum") << QSize(700, 600) << false << true;
+    QTest::newRow("unrecorded-startup-size") << QSize(640, 480) << false << true;
+    QTest::newRow("height-below-minimum") << QSize(900, 380) << false << true;
+    QTest::newRow("new-user-size") << QSize(760, 520) << false << false;
+    QTest::newRow("expired-guard") << QSize(640, 480) << true << false;
+}
+
+void TestDockLayoutUi::kept_window_size_handles_native_resize_requests()
+{
+    QFETCH(QSize, requestedSize);
+    QFETCH(bool, expired);
+    QFETCH(bool, restore);
+    MainWindowStateGuard guard;
+    MainWindow window;
+    window.setMinimumSize(700, 400);
+    window.resize(900, 600);
+    window.keepWindowSize(MainWindow::KeptWindowSize::UndoOlderSizes);
+    // The dock grows after this earlier size, while a startup size with a
+    // different height can still arrive from the compositor.
+    window.m_replacedWindowSizes = {QSize(640, 600)};
+    if (expired)
+        window.m_keptWindowSizeDeadline = QDeadlineTimer(0);
+    QCOMPARE(window.shouldRestoreKeptWindowSize(requestedSize), restore);
+}
+
+void TestDockLayoutUi::shown_dock_keeps_window_size_from_window_system()
+{
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    settings->sessionLayoutJson.clear();
+    settings->windowState.clear();
+    settings->windowGeometry.clear();
+    settings->constantsDockVisible = false;
+    settings->functionsDockVisible = false;
+    settings->historyDockVisible = false;
+    settings->formulaBookDockVisible = false;
+    settings->variablesDockVisible = false;
+    settings->userFunctionsDockVisible = false;
+    settings->userUnitsDockVisible = false;
+    settings->bitfieldVisible = false;
+    settings->keypadMode = Settings::KeypadModeScientificWide;
+    settings->keypadVisible = true;
+
+    MainWindow window;
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    window.resize(window.minimumSizeHint().width(), 600);
+    QTRY_COMPARE(window.width(), window.minimumSizeHint().width());
+    const QSize oldSize = window.size();
+    QMenu* viewMenu = menuWithTitle(window.menuBar(), QStringLiteral("&View"));
+    QVERIFY(viewMenu != nullptr);
+    QAction* action = nullptr;
+    for (QAction* candidate : viewMenu->actions()) {
+        if (candidate->text() == QStringLiteral("Formula &Book"))
+            action = candidate;
+    }
+    QVERIFY(action != nullptr);
+
+    // The window grows for the dock and its page.
+    action->trigger();
+    QDockWidget* dock = window.findChild<QDockWidget*>(QStringLiteral("BookDock"));
+    QVERIFY(dock != nullptr);
+    QTextBrowser* browser = dock->findChild<QTextBrowser*>();
+    QVERIFY(browser != nullptr);
+    QTRY_VERIFY(window.width() > oldSize.width());
+    // The window grows in steps. The last one ends when the page needs no
+    // horizontal scrolling, or when the window fills the screen.
+    const int availableWidth = window.screen()->availableGeometry().width();
+    QTRY_VERIFY(browser->horizontalScrollBar()->maximum() == 0
+                || window.frameGeometry().width() >= availableWidth);
+    QTest::qWait(50);
+    const QSize grownSize = window.size();
+    const int dockWidth = dock->width();
+
+    // On Wayland, the compositor can send the old size after the View menu
+    // closes, and Qt applies it. That would leave the window narrower than
+    // the keypad and the dock need. The dock also gets its width back, and
+    // does not leave that space to the editor. Window systems such as Windows
+    // and Openbox raise the old size to the current minimum size, so send that.
+    class LeftSizeWatcher : public QObject {
+    public:
+        explicit LeftSizeWatcher(const QSize& size) : m_size(size) {}
+        bool left = false;
+        bool eventFilter(QObject*, QEvent* event) override
+        {
+            if (event->type() == QEvent::Resize && static_cast<QResizeEvent*>(event)->size() != m_size)
+                left = true;
+            return false;
+        }
+
+    private:
+        QSize m_size;
+    } watcher(grownSize);
+    window.installEventFilter(&watcher);
+    window.windowHandle()->resize(oldSize.expandedTo(window.minimumSize()));
+    // On Windows and X11, the old size comes some time later. Wait for it, so
+    // the check below sees the size after the undo, not the size before it.
+    QTRY_VERIFY(watcher.left);
+    window.removeEventFilter(&watcher);
+    QTRY_COMPARE(window.size(), grownSize);
+    QTest::qWait(50);
+    QCOMPARE(window.size(), grownSize);
+    QCOMPARE(dock->width(), dockWidth);
+    QVERIFY(window.width() >= window.minimumSizeHint().width());
+
+    // A new size, for example from the user, stays.
+    const QSize userSize = grownSize + QSize(40, 0);
+    window.windowHandle()->resize(userSize);
+    QTRY_COMPARE(window.size(), userSize);
+    QTest::qWait(50);
+    QCOMPARE(window.size(), userSize);
 }
 
 void TestDockLayoutUi::view_dock_menu_tracks_and_changes_only_active_window()

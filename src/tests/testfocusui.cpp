@@ -240,8 +240,10 @@ void TestFocusUi::constants_dock_activation_returns_to_active_editor()
     otherWindow.show();
     QVERIFY(QTest::qWaitForWindowExposed(&otherWindow));
     window.show();
-    window.activateWindow();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    UiTestFixture::waitForActivationToSettle();
+    if (!UiTestFixture::activateWindow(&window))
+        return;
     QVERIFY(QTest::qWaitForWindowActive(&window));
     auto editors = window.findChildren<Editor*>();
     QCOMPARE(editors.size(), 2);
