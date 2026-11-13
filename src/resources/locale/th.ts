@@ -58,22 +58,22 @@
 <context>
     <name>BitFieldWidget</name>
     <message>
-        <location filename="../../gui/bitfieldwidget.cpp" line="679"/>
+        <location filename="../../gui/bitfieldwidget.cpp" line="694"/>
         <source>Reset bits to zero</source>
         <translation>รีเซ็ตบิตเป็นศูนย์</translation>
     </message>
     <message>
-        <location filename="../../gui/bitfieldwidget.cpp" line="681"/>
+        <location filename="../../gui/bitfieldwidget.cpp" line="696"/>
         <source>Invert bits</source>
         <translation>กลับค่าบิต</translation>
     </message>
     <message>
-        <location filename="../../gui/bitfieldwidget.cpp" line="683"/>
+        <location filename="../../gui/bitfieldwidget.cpp" line="698"/>
         <source>Shift bits left</source>
         <translation>เลื่อนบิตไปทางซ้าย</translation>
     </message>
     <message>
-        <location filename="../../gui/bitfieldwidget.cpp" line="685"/>
+        <location filename="../../gui/bitfieldwidget.cpp" line="700"/>
         <source>Shift bits right</source>
         <translation>เลื่อนบิตไปทางขวา</translation>
     </message>
@@ -4524,46 +4524,46 @@
 <context>
     <name>ConstantsWidget</name>
     <message>
-        <location filename="../../gui/constantswidget.cpp" line="237"/>
+        <location filename="../../gui/constantswidget.cpp" line="245"/>
         <source>Domain</source>
         <translation>โดเมน</translation>
     </message>
     <message>
-        <location filename="../../gui/constantswidget.cpp" line="238"/>
+        <location filename="../../gui/constantswidget.cpp" line="246"/>
         <source>Subdomain</source>
         <translation>โดเมนย่อย</translation>
     </message>
     <message>
-        <location filename="../../gui/constantswidget.cpp" line="239"/>
+        <location filename="../../gui/constantswidget.cpp" line="247"/>
         <source>Search</source>
         <translation>ค้นหา</translation>
     </message>
     <message>
-        <location filename="../../gui/constantswidget.cpp" line="240"/>
+        <location filename="../../gui/constantswidget.cpp" line="248"/>
         <source>No match found</source>
         <translation>ไม่พบรายการที่ตรงกัน</translation>
     </message>
     <message>
-        <location filename="../../gui/constantswidget.cpp" line="243"/>
+        <location filename="../../gui/constantswidget.cpp" line="251"/>
         <source>Name</source>
         <translation>ชื่อ</translation>
     </message>
     <message>
-        <location filename="../../gui/constantswidget.cpp" line="244"/>
+        <location filename="../../gui/constantswidget.cpp" line="252"/>
         <source>Value</source>
         <translation>ค่า</translation>
     </message>
     <message>
-        <location filename="../../gui/constantswidget.cpp" line="245"/>
+        <location filename="../../gui/constantswidget.cpp" line="253"/>
         <source>Unit</source>
         <translation>หน่วย</translation>
     </message>
     <message>
-        <location filename="../../gui/constantswidget.cpp" line="271"/>
-        <location filename="../../gui/constantswidget.cpp" line="411"/>
-        <location filename="../../gui/constantswidget.cpp" line="453"/>
-        <location filename="../../gui/constantswidget.cpp" line="454"/>
-        <location filename="../../gui/constantswidget.cpp" line="464"/>
+        <location filename="../../gui/constantswidget.cpp" line="279"/>
+        <location filename="../../gui/constantswidget.cpp" line="419"/>
+        <location filename="../../gui/constantswidget.cpp" line="461"/>
+        <location filename="../../gui/constantswidget.cpp" line="462"/>
+        <location filename="../../gui/constantswidget.cpp" line="472"/>
         <source>All</source>
         <translation>ทั้งหมด</translation>
     </message>
@@ -6428,72 +6428,72 @@
 <context>
     <name>KeyBindings</name>
     <message>
-        <location filename="../../gui/keybindings.cpp" line="115"/>
+        <location filename="../../gui/keybindings.cpp" line="117"/>
         <source>Expression Editor</source>
         <translation>ตัวแก้ไขนิพจน์</translation>
     </message>
     <message>
-        <location filename="../../gui/keybindings.cpp" line="116"/>
+        <location filename="../../gui/keybindings.cpp" line="118"/>
         <source>Result Scrolling</source>
         <translation>การเลื่อนผลลัพธ์</translation>
     </message>
     <message>
-        <location filename="../../gui/keybindings.cpp" line="117"/>
+        <location filename="../../gui/keybindings.cpp" line="119"/>
         <source>View</source>
         <translation>มุมมอง</translation>
     </message>
     <message>
-        <location filename="../../gui/keybindings.cpp" line="119"/>
+        <location filename="../../gui/keybindings.cpp" line="121"/>
         <source>Search Constants</source>
         <translation>ค้นหาค่าคงที่</translation>
     </message>
     <message>
-        <location filename="../../gui/keybindings.cpp" line="121"/>
+        <location filename="../../gui/keybindings.cpp" line="123"/>
         <source>Previous History Expression</source>
         <translation>นิพจน์ก่อนหน้าในประวัติ</translation>
     </message>
     <message>
-        <location filename="../../gui/keybindings.cpp" line="123"/>
+        <location filename="../../gui/keybindings.cpp" line="125"/>
         <source>Next History Expression</source>
         <translation>นิพจน์ถัดไปในประวัติ</translation>
     </message>
     <message>
-        <location filename="../../gui/keybindings.cpp" line="125"/>
+        <location filename="../../gui/keybindings.cpp" line="127"/>
         <source>Zoom In</source>
         <translation>ขยาย</translation>
     </message>
     <message>
-        <location filename="../../gui/keybindings.cpp" line="127"/>
+        <location filename="../../gui/keybindings.cpp" line="129"/>
         <source>Zoom Out</source>
         <translation>ย่อ</translation>
     </message>
     <message>
-        <location filename="../../gui/keybindings.cpp" line="129"/>
+        <location filename="../../gui/keybindings.cpp" line="131"/>
         <source>Scroll Results Up One Page</source>
         <translation>เลื่อนผลลัพธ์ขึ้นหนึ่งหน้า</translation>
     </message>
     <message>
-        <location filename="../../gui/keybindings.cpp" line="131"/>
+        <location filename="../../gui/keybindings.cpp" line="133"/>
         <source>Scroll Results Down One Page</source>
         <translation>เลื่อนผลลัพธ์ลงหนึ่งหน้า</translation>
     </message>
     <message>
-        <location filename="../../gui/keybindings.cpp" line="133"/>
+        <location filename="../../gui/keybindings.cpp" line="135"/>
         <source>Scroll Results Up One Line</source>
         <translation>เลื่อนผลลัพธ์ขึ้นหนึ่งบรรทัด</translation>
     </message>
     <message>
-        <location filename="../../gui/keybindings.cpp" line="135"/>
+        <location filename="../../gui/keybindings.cpp" line="137"/>
         <source>Scroll Results Down One Line</source>
         <translation>เลื่อนผลลัพธ์ลงหนึ่งบรรทัด</translation>
     </message>
     <message>
-        <location filename="../../gui/keybindings.cpp" line="137"/>
+        <location filename="../../gui/keybindings.cpp" line="139"/>
         <source>Scroll to First Result</source>
         <translation>เลื่อนไปยังผลลัพธ์แรก</translation>
     </message>
     <message>
-        <location filename="../../gui/keybindings.cpp" line="138"/>
+        <location filename="../../gui/keybindings.cpp" line="140"/>
         <source>Scroll to Last Result</source>
         <translation>เลื่อนไปยังผลลัพธ์สุดท้าย</translation>
     </message>
@@ -6752,7 +6752,7 @@
     </message>
     <message>
         <location filename="../../gui/keypad.cpp" line="984"/>
-        <location filename="../../tests/testkeypadui.cpp" line="534"/>
+        <location filename="../../tests/testkeypadui.cpp" line="538"/>
         <source>Nth root</source>
         <translation>รากที่ n</translation>
     </message>
@@ -6820,1231 +6820,1241 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4900"/>
+        <location filename="../../gui/mainwindow.cpp" line="4914"/>
         <source>Radian</source>
         <translation>เรเดียน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4901"/>
+        <location filename="../../gui/mainwindow.cpp" line="4915"/>
         <source>Gradian</source>
         <translation>เกรเดียน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4904"/>
+        <location filename="../../gui/mainwindow.cpp" line="4918"/>
         <source>Degree</source>
         <translation>องศา</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4910"/>
+        <location filename="../../gui/mainwindow.cpp" line="4924"/>
         <source>Binary</source>
         <translation>ฐานสอง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4911"/>
+        <location filename="../../gui/mainwindow.cpp" line="4925"/>
         <source>Octal</source>
         <translation>ฐานแปด</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4912"/>
+        <location filename="../../gui/mainwindow.cpp" line="4926"/>
         <source>Hexadecimal</source>
         <translation>ฐานสิบหก</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4913"/>
+        <location filename="../../gui/mainwindow.cpp" line="4927"/>
         <source>Sexagesimal</source>
         <translation>ฐานหกสิบ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4915"/>
+        <location filename="../../gui/mainwindow.cpp" line="4929"/>
         <source>Engineering decimal</source>
         <translation>ทศนิยมแบบวิศวกรรม</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4916"/>
+        <location filename="../../gui/mainwindow.cpp" line="4930"/>
         <source>Scientific decimal</source>
         <translation>ทศนิยมแบบวิทยาศาสตร์</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4934"/>
+        <location filename="../../gui/mainwindow.cpp" line="4948"/>
         <source>Plain &amp;text</source>
         <translation>ข้อความ&amp;ธรรมดา</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4935"/>
+        <location filename="../../gui/mainwindow.cpp" line="4949"/>
         <source>&amp;Import...</source>
         <translation>&amp;นำเข้า...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4949"/>
+        <location filename="../../gui/mainwindow.cpp" line="4963"/>
         <source>&amp;Quit</source>
         <translation>&amp;ออก</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4951"/>
+        <location filename="../../gui/mainwindow.cpp" line="4965"/>
         <source>Clear E&amp;xpression</source>
         <translation>ล้าง&amp;นิพจน์</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4945"/>
+        <location filename="../../gui/mainwindow.cpp" line="4959"/>
         <source>Clear &amp;History</source>
         <translation>ล้าง&amp;ประวัติ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4957"/>
+        <location filename="../../gui/mainwindow.cpp" line="4971"/>
         <source>&amp;Copy</source>
         <translation>&amp;คัดลอก</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4958"/>
+        <location filename="../../gui/mainwindow.cpp" line="4972"/>
         <source>&amp;Paste</source>
         <translation>&amp;วาง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4959"/>
+        <location filename="../../gui/mainwindow.cpp" line="4973"/>
         <source>&amp;Select Expression</source>
         <translation>&amp;เลือกนิพจน์</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4962"/>
+        <location filename="../../gui/mainwindow.cpp" line="4976"/>
         <source>&amp;Constants</source>
         <translation>&amp;ค่าคงที่</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4964"/>
+        <location filename="../../gui/mainwindow.cpp" line="4978"/>
         <source>&amp;Functions</source>
         <translation>&amp;ฟังก์ชัน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4965"/>
+        <location filename="../../gui/mainwindow.cpp" line="4979"/>
         <source>&amp;History</source>
         <translation>&amp;ประวัติ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5694"/>
-        <location filename="../../gui/mainwindow.cpp" line="5718"/>
+        <location filename="../../gui/mainwindow.cpp" line="5715"/>
+        <location filename="../../gui/mainwindow.cpp" line="5739"/>
         <source>&amp;Keypad</source>
         <translation>&amp;แป้นพิมพ์ตัวเลข</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4975"/>
+        <location filename="../../gui/mainwindow.cpp" line="4990"/>
         <source>Formula &amp;Book</source>
         <translation>หนังสือ&amp;สูตร</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4938"/>
+        <location filename="../../gui/mainwindow.cpp" line="4952"/>
         <source>New &amp;Private Tab</source>
         <translation>แ&amp;ท็บส่วนตัวใหม่</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4940"/>
-        <location filename="../../gui/mainwindow.cpp" line="6056"/>
-        <location filename="../../gui/mainwindow.cpp" line="13119"/>
+        <location filename="../../gui/mainwindow.cpp" line="4954"/>
+        <location filename="../../gui/mainwindow.cpp" line="6078"/>
+        <location filename="../../gui/mainwindow.cpp" line="13248"/>
         <source>Keep</source>
         <translation>เก็บไว้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4940"/>
-        <location filename="../../gui/mainwindow.cpp" line="6056"/>
-        <location filename="../../gui/mainwindow.cpp" line="13119"/>
+        <location filename="../../gui/mainwindow.cpp" line="4954"/>
+        <location filename="../../gui/mainwindow.cpp" line="6078"/>
+        <location filename="../../gui/mainwindow.cpp" line="13248"/>
         <source>Make Private...</source>
         <translation>ทำให้เป็นส่วนตัว...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4943"/>
+        <location filename="../../gui/mainwindow.cpp" line="4957"/>
         <source>&amp;Rename...</source>
         <translation>เ&amp;ปลี่ยนชื่อ...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4944"/>
+        <location filename="../../gui/mainwindow.cpp" line="4958"/>
         <source>Clo&amp;ne...</source>
         <translation>โ&amp;คลน...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4946"/>
+        <location filename="../../gui/mainwindow.cpp" line="4960"/>
         <source>&amp;Close Tab</source>
         <translation>ปิ&amp;ดแท็บ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4947"/>
+        <location filename="../../gui/mainwindow.cpp" line="4961"/>
         <source>Reopen Clo&amp;sed Tab</source>
         <translation>เปิดแท็&amp;บที่ปิดไปอีกครั้ง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4952"/>
+        <location filename="../../gui/mainwindow.cpp" line="4966"/>
         <source>&amp;Undo</source>
         <translation>เ&amp;ลิกทำ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4953"/>
+        <location filename="../../gui/mainwindow.cpp" line="4967"/>
         <source>&amp;Redo</source>
         <translation>&amp;ทำซ้ำ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4954"/>
+        <location filename="../../gui/mainwindow.cpp" line="4968"/>
         <source>Cu&amp;t</source>
         <translation>&amp;ตัด</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4956"/>
+        <location filename="../../gui/mainwindow.cpp" line="4970"/>
         <source>Copy &amp;Last Result</source>
         <translation>คั&amp;ดลอกผลลัพธ์ล่าสุด</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4960"/>
+        <location filename="../../gui/mainwindow.cpp" line="4974"/>
         <source>&amp;Wrap in Parentheses</source>
         <translation>ค&amp;รอบด้วยวงเล็บ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4963"/>
+        <location filename="../../gui/mainwindow.cpp" line="4977"/>
         <source>Full Scr&amp;een Mode</source>
         <translation>&amp;โหมดเต็มหน้าจอ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4976"/>
-        <location filename="../../gui/mainwindow.cpp" line="5716"/>
+        <location filename="../../gui/mainwindow.cpp" line="4991"/>
+        <location filename="../../gui/mainwindow.cpp" line="5737"/>
         <source>&amp;Status Bar</source>
         <translation>แถบ&amp;สถานะ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4979"/>
-        <location filename="../../gui/mainwindow.cpp" line="8386"/>
+        <location filename="../../gui/mainwindow.cpp" line="4994"/>
+        <location filename="../../gui/mainwindow.cpp" line="8408"/>
         <source>Bitfield</source>
         <translation>บิตฟิลด์</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4980"/>
+        <location filename="../../gui/mainwindow.cpp" line="4995"/>
         <source>&amp;Left</source>
         <translation>&amp;ซ้าย</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4981"/>
+        <location filename="../../gui/mainwindow.cpp" line="4996"/>
         <source>&amp;Right</source>
         <translation>&amp;ขวา</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4982"/>
+        <location filename="../../gui/mainwindow.cpp" line="4997"/>
         <source>&amp;Up</source>
         <translation>ขึ้&amp;น</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4983"/>
+        <location filename="../../gui/mainwindow.cpp" line="4998"/>
         <source>&amp;Down</source>
         <translation>&amp;ลง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4984"/>
+        <location filename="../../gui/mainwindow.cpp" line="4999"/>
         <source>Close Pa&amp;ne</source>
         <translation>ปิ&amp;ดบานหน้าต่าง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4985"/>
+        <location filename="../../gui/mainwindow.cpp" line="5000"/>
         <source>Use&amp;r Functions</source>
         <translation>ฟังก์ชัน&amp;ผู้ใช้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4988"/>
+        <location filename="../../gui/mainwindow.cpp" line="5003"/>
         <source>&amp;Degree</source>
         <translation>&amp;องศา</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4989"/>
+        <location filename="../../gui/mainwindow.cpp" line="5004"/>
         <source>&amp;Radian</source>
         <translation>&amp;เรเดียน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4990"/>
+        <location filename="../../gui/mainwindow.cpp" line="5005"/>
         <source>&amp;Gradian</source>
         <translation>&amp;เกรเดียน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4992"/>
+        <location filename="../../gui/mainwindow.cpp" line="5007"/>
         <source>Re&amp;volution</source>
         <translation>รอ&amp;บหมุน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4993"/>
+        <location filename="../../gui/mainwindow.cpp" line="5008"/>
         <source>Always on &amp;Top</source>
         <translation>อยู่&amp;บนสุดเสมอ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4994"/>
+        <location filename="../../gui/mainwindow.cpp" line="5009"/>
         <source>Auto-Insert a&amp;ns</source>
         <translation>แทรก a&amp;ns อัตโนมัติ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4997"/>
+        <location filename="../../gui/mainwindow.cpp" line="5012"/>
         <source>Automatic &amp;Completion</source>
         <translation>เติม&amp;ข้อความอัตโนมัติ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5001"/>
+        <location filename="../../gui/mainwindow.cpp" line="5016"/>
         <source>&amp;Built-in Functions</source>
         <translation>&amp;ฟังก์ชันในตัว</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5002"/>
+        <location filename="../../gui/mainwindow.cpp" line="5017"/>
         <source>Built-in &amp;Variables</source>
         <translation>&amp;ตัวแปรในตัว</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5004"/>
+        <location filename="../../gui/mainwindow.cpp" line="5019"/>
         <source>User &amp;Functions</source>
         <translation>ฟั&amp;งก์ชันผู้ใช้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5005"/>
+        <location filename="../../gui/mainwindow.cpp" line="5020"/>
         <source>User Va&amp;riables</source>
         <translation>ตั&amp;วแปรผู้ใช้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5008"/>
+        <location filename="../../gui/mainwindow.cpp" line="5023"/>
         <source>Open a Private Tab on Startup</source>
         <translation>เปิดแท็บส่วนตัวเมื่อเริ่มต้น</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5012"/>
+        <location filename="../../gui/mainwindow.cpp" line="5027"/>
         <source>Open and focus a new private tab whenever SpeedCrunch starts.</source>
         <translation>เปิดแท็บส่วนตัวใหม่และย้ายโฟกัสไปที่แท็บนั้นทุกครั้งที่เริ่ม SpeedCrunch</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5014"/>
+        <location filename="../../gui/mainwindow.cpp" line="5029"/>
         <source>Syntax &amp;Highlighting</source>
         <translation>ไฮไลต์&amp;ไวยากรณ์</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5015"/>
+        <location filename="../../gui/mainwindow.cpp" line="5030"/>
         <source>Group Digits in &amp;Input</source>
         <translation>&amp;จัดกลุ่มหลักของตัวเลขที่ป้อน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5016"/>
+        <location filename="../../gui/mainwindow.cpp" line="5031"/>
         <source>Automatic Input &amp;Adjustments</source>
         <translation>&amp;ปรับข้อมูลป้อนเข้าอัตโนมัติ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5017"/>
+        <location filename="../../gui/mainwindow.cpp" line="5032"/>
         <source>Automatically adjust operators, spacing, brackets, and powers, and restrict input to valid characters.</source>
         <translation>ปรับตัวดำเนินการ ระยะห่าง วงเล็บ และเลขยกกำลังโดยอัตโนมัติ และจำกัดให้ป้อนได้เฉพาะอักขระที่ถูกต้อง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5018"/>
+        <location filename="../../gui/mainwindow.cpp" line="5033"/>
         <source>Group input digits using the selected number format.</source>
         <translation>จัดกลุ่มหลักของตัวเลขที่ป้อนตามรูปแบบตัวเลขที่เลือก</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5019"/>
+        <location filename="../../gui/mainwindow.cpp" line="5034"/>
         <source>&amp;Blinking Cursor</source>
         <translation>&amp;เคอร์เซอร์กะพริบ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5020"/>
+        <location filename="../../gui/mainwindow.cpp" line="5035"/>
         <source>Blink the cursor in the expression editor.</source>
         <translation>ให้เคอร์เซอร์ในตัวแก้ไขนิพจน์กะพริบ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5021"/>
+        <location filename="../../gui/mainwindow.cpp" line="5036"/>
         <source>&amp;Escape Clears Editor</source>
         <translation>&amp;Escape ล้างตัวแก้ไข</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5022"/>
+        <location filename="../../gui/mainwindow.cpp" line="5037"/>
         <source>Clear the focused expression editor with Escape after dismissing any popup or preview.</source>
         <translation>ล้างตัวแก้ไขนิพจน์ที่มีโฟกัสด้วย Escape หลังจากปิดป๊อปอัปหรือภาพตัวอย่างแล้ว</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5024"/>
+        <location filename="../../gui/mainwindow.cpp" line="5039"/>
         <source>Disabled</source>
         <translation>ปิดใช้งาน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5025"/>
+        <location filename="../../gui/mainwindow.cpp" line="5040"/>
         <source>Small Space</source>
         <translation>เว้นวรรคเล็ก</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5026"/>
+        <location filename="../../gui/mainwindow.cpp" line="5041"/>
         <source>Medium Space</source>
         <translation>เว้นวรรคปานกลาง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5027"/>
+        <location filename="../../gui/mainwindow.cpp" line="5042"/>
         <source>Large Space</source>
         <translation>เว้นวรรคใหญ่</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5029"/>
+        <location filename="../../gui/mainwindow.cpp" line="5044"/>
         <source>Keep Expression After Evaluation</source>
         <translation>เก็บนิพจน์หลังคำนวณ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5037"/>
+        <location filename="../../gui/mainwindow.cpp" line="5052"/>
         <source>Copy New Results Automatically</source>
         <translation>คัดลอกผลลัพธ์ใหม่อัตโนมัติ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5041"/>
+        <location filename="../../gui/mainwindow.cpp" line="5056"/>
         <source>&amp;Comma</source>
         <translation>&amp;จุลภาค</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5042"/>
+        <location filename="../../gui/mainwindow.cpp" line="5057"/>
         <source>&amp;System Default</source>
         <translation>ค่าเริ่มต้น&amp;ระบบ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5043"/>
+        <location filename="../../gui/mainwindow.cpp" line="5058"/>
         <source>&amp;Dot</source>
         <translation>&amp;จุด</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5044"/>
+        <location filename="../../gui/mainwindow.cpp" line="5059"/>
         <source>Dot &amp;And Comma</source>
         <translation>จุดและ&amp;จุลภาค</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5045"/>
+        <location filename="../../gui/mainwindow.cpp" line="5060"/>
         <source>&amp;0 Digits</source>
         <translation>&amp;0 หลัก</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5046"/>
+        <location filename="../../gui/mainwindow.cpp" line="5061"/>
         <source>&amp;15 Digits</source>
         <translation>&amp;15 หลัก</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5047"/>
+        <location filename="../../gui/mainwindow.cpp" line="5062"/>
         <source>&amp;2 Digits</source>
         <translation>&amp;2 หลัก</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5048"/>
+        <location filename="../../gui/mainwindow.cpp" line="5063"/>
         <source>&amp;3 Digits</source>
         <translation>&amp;3 หลัก</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5049"/>
+        <location filename="../../gui/mainwindow.cpp" line="5064"/>
         <source>&amp;50 Digits</source>
         <translation>&amp;50 หลัก</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5050"/>
+        <location filename="../../gui/mainwindow.cpp" line="5065"/>
         <source>&amp;8 Digits</source>
         <translation>&amp;8 หลัก</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5062"/>
-        <location filename="../../gui/mainwindow.cpp" line="5063"/>
+        <location filename="../../gui/mainwindow.cpp" line="5077"/>
+        <location filename="../../gui/mainwindow.cpp" line="5078"/>
         <source>&amp;Automatic</source>
         <translation>&amp;อัตโนมัติ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5065"/>
+        <location filename="../../gui/mainwindow.cpp" line="5080"/>
         <source>&amp;Engineering</source>
         <translation>&amp;วิศวกรรม</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5066"/>
+        <location filename="../../gui/mainwindow.cpp" line="5081"/>
         <source>&amp;Scientific</source>
         <translation>&amp;วิทยาศาสตร์</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5068"/>
+        <location filename="../../gui/mainwindow.cpp" line="5083"/>
         <source>&amp;Binary</source>
         <translation>&amp;ฐานสอง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5069"/>
+        <location filename="../../gui/mainwindow.cpp" line="5084"/>
         <source>&amp;Octal</source>
         <translation>&amp;ฐานแปด</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5070"/>
+        <location filename="../../gui/mainwindow.cpp" line="5085"/>
         <source>&amp;Hexadecimal</source>
         <translation>&amp;ฐานสิบหก</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5071"/>
+        <location filename="../../gui/mainwindow.cpp" line="5086"/>
         <source>&amp;Sexagesimal</source>
         <translation>&amp;ฐานหกสิบ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5083"/>
+        <location filename="../../gui/mainwindow.cpp" line="5098"/>
         <source>&amp;Font...</source>
         <translation>&amp;แบบอักษร...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5084"/>
+        <location filename="../../gui/mainwindow.cpp" line="5099"/>
         <source>Reset All Settings...</source>
         <translation>รีเซ็ตการตั้งค่าทั้งหมด...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5103"/>
-        <location filename="../../gui/mainwindow.cpp" line="5105"/>
-        <location filename="../../gui/mainwindow.cpp" line="5107"/>
-        <location filename="../../gui/mainwindow.cpp" line="5109"/>
+        <location filename="../../gui/mainwindow.cpp" line="5113"/>
+        <source>Use the SpeedCrunch theme in all parts of the window</source>
+        <translation>ใช้ธีม SpeedCrunch ในทุกส่วนของหน้าต่าง</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="5114"/>
+        <source>&amp;Hybrid</source>
+        <translation>&amp;ผสม</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="5116"/>
+        <source>Use the Classic appearance with SpeedCrunch-themed docks</source>
+        <translation>ใช้รูปลักษณ์ดั้งเดิมร่วมกับแผงที่ยึดติดได้ในธีม SpeedCrunch</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="5121"/>
+        <location filename="../../gui/mainwindow.cpp" line="5123"/>
+        <location filename="../../gui/mainwindow.cpp" line="5125"/>
+        <location filename="../../gui/mainwindow.cpp" line="5127"/>
         <source>&amp;System</source>
         <translation>&amp;ระบบ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5104"/>
-        <location filename="../../gui/mainwindow.cpp" line="5106"/>
-        <location filename="../../gui/mainwindow.cpp" line="5108"/>
-        <location filename="../../gui/mainwindow.cpp" line="5110"/>
+        <location filename="../../gui/mainwindow.cpp" line="5122"/>
+        <location filename="../../gui/mainwindow.cpp" line="5124"/>
+        <location filename="../../gui/mainwindow.cpp" line="5126"/>
+        <location filename="../../gui/mainwindow.cpp" line="5128"/>
         <source>SpeedCrunch &amp;Theme</source>
         <translation>&amp;ชุดรูปแบบ SpeedCrunch</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5093"/>
-        <location filename="../../gui/mainwindow.cpp" line="5111"/>
-        <location filename="../../gui/mainwindow.cpp" line="5113"/>
+        <location filename="../../gui/mainwindow.cpp" line="5108"/>
+        <location filename="../../gui/mainwindow.cpp" line="5129"/>
+        <location filename="../../gui/mainwindow.cpp" line="5131"/>
         <source>&amp;Classic</source>
         <translation>&amp;ดั้งเดิม</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5096"/>
-        <location filename="../../gui/mainwindow.cpp" line="5112"/>
-        <location filename="../../gui/mainwindow.cpp" line="5114"/>
+        <location filename="../../gui/mainwindow.cpp" line="5111"/>
+        <location filename="../../gui/mainwindow.cpp" line="5130"/>
+        <location filename="../../gui/mainwindow.cpp" line="5132"/>
         <source>&amp;Modern</source>
         <translation>&amp;สมัยใหม่</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5115"/>
+        <location filename="../../gui/mainwindow.cpp" line="5133"/>
         <source>&amp;Language...</source>
         <translation>&amp;ภาษา...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5117"/>
+        <location filename="../../gui/mainwindow.cpp" line="5135"/>
         <source>User &amp;Manual</source>
         <translation>&amp;คู่มือผู้ใช้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5118"/>
+        <location filename="../../gui/mainwindow.cpp" line="5136"/>
         <source>Context Help</source>
         <translation>ความช่วยเหลือตามบริบท</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5122"/>
+        <location filename="../../gui/mainwindow.cpp" line="5140"/>
         <source>Issues and &amp;Feedback</source>
         <translation>&amp;ปัญหาและข้อเสนอแนะ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5125"/>
+        <location filename="../../gui/mainwindow.cpp" line="5143"/>
         <source>&amp;Donate</source>
         <translation>&amp;บริจาค</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="13053"/>
+        <location filename="../../gui/mainwindow.cpp" line="13182"/>
         <source>Editor and Results Font</source>
         <translation>แบบอักษรของตัวแก้ไขและผลลัพธ์</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5690"/>
+        <location filename="../../gui/mainwindow.cpp" line="5711"/>
         <source>&amp;Session</source>
         <translation>&amp;เซสชัน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5691"/>
+        <location filename="../../gui/mainwindow.cpp" line="5712"/>
         <source>&amp;Export</source>
         <translation>&amp;ส่งออก</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5692"/>
+        <location filename="../../gui/mainwindow.cpp" line="5713"/>
         <source>&amp;Edit</source>
         <translation>&amp;แก้ไข</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5693"/>
+        <location filename="../../gui/mainwindow.cpp" line="5714"/>
         <source>&amp;View</source>
         <translation>&amp;มุมมอง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5695"/>
+        <location filename="../../gui/mainwindow.cpp" line="5716"/>
         <source>S&amp;plit</source>
         <translation>แ&amp;บ่ง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5697"/>
+        <location filename="../../gui/mainwindow.cpp" line="5718"/>
         <source>Se&amp;ttings</source>
         <translation>&amp;การตั้งค่า</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5702"/>
+        <location filename="../../gui/mainwindow.cpp" line="5723"/>
         <source>&amp;Decimal</source>
         <translation>&amp;ทศนิยม</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5703"/>
+        <location filename="../../gui/mainwindow.cpp" line="5724"/>
         <source>&amp;Precision</source>
         <translation>&amp;ความแม่นยำ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5704"/>
+        <location filename="../../gui/mainwindow.cpp" line="5725"/>
         <source>Angle &amp;Mode</source>
         <translation>&amp;โหมดมุม</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5705"/>
+        <location filename="../../gui/mainwindow.cpp" line="5726"/>
         <source>&amp;Complex Form</source>
         <translation>&amp;รูปแบบจำนวนเชิงซ้อน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5720"/>
+        <location filename="../../gui/mainwindow.cpp" line="5741"/>
         <source>&amp;Help</source>
         <translation>&amp;ช่วยเหลือ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6059"/>
+        <location filename="../../gui/mainwindow.cpp" line="6081"/>
         <source>New Tab</source>
         <translation>แท็บใหม่</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8507"/>
+        <location filename="../../gui/mainwindow.cpp" line="8533"/>
         <source>Constants</source>
         <translation>ค่าคงที่</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8536"/>
+        <location filename="../../gui/mainwindow.cpp" line="8562"/>
         <source>Functions</source>
         <translation>ฟังก์ชัน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8558"/>
+        <location filename="../../gui/mainwindow.cpp" line="8584"/>
         <source>History</source>
         <translation>ประวัติ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8630"/>
+        <location filename="../../gui/mainwindow.cpp" line="8656"/>
         <source>User Functions</source>
         <translation>ฟังก์ชันผู้ใช้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10302"/>
+        <location filename="../../gui/mainwindow.cpp" line="10431"/>
         <source>Clear this session&apos;s calculations and unfinished expression?</source>
         <translation>ล้างการคำนวณและนิพจน์ที่ยังไม่เสร็จของเซสชันนี้หรือไม่?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10303"/>
+        <location filename="../../gui/mainwindow.cpp" line="10432"/>
         <source>Session variables, functions, and units are kept.</source>
         <translation>ตัวแปร ฟังก์ชัน และหน่วยของเซสชันจะยังคงอยู่</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10337"/>
+        <location filename="../../gui/mainwindow.cpp" line="10466"/>
         <source>Reset</source>
         <translation>รีเซ็ต</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10338"/>
+        <location filename="../../gui/mainwindow.cpp" line="10467"/>
         <source>Reset this session&apos;s calculations, unfinished expression, variables, functions, and units?</source>
         <translation>รีเซ็ตการคำนวณ นิพจน์ที่ยังไม่เสร็จ ตัวแปร ฟังก์ชัน และหน่วยของเซสชันนี้หรือไม่?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11726"/>
-        <location filename="../../gui/mainwindow.cpp" line="11732"/>
-        <location filename="../../gui/mainwindow.cpp" line="11740"/>
-        <location filename="../../gui/mainwindow.cpp" line="11746"/>
-        <location filename="../../gui/mainwindow.cpp" line="11762"/>
-        <location filename="../../gui/mainwindow.cpp" line="11768"/>
-        <location filename="../../gui/mainwindow.cpp" line="11819"/>
-        <location filename="../../gui/mainwindow.cpp" line="11825"/>
-        <location filename="../../gui/mainwindow.cpp" line="11928"/>
-        <location filename="../../gui/mainwindow.cpp" line="12975"/>
-        <location filename="../../gui/mainwindow.cpp" line="13014"/>
+        <location filename="../../gui/mainwindow.cpp" line="11855"/>
+        <location filename="../../gui/mainwindow.cpp" line="11861"/>
+        <location filename="../../gui/mainwindow.cpp" line="11869"/>
+        <location filename="../../gui/mainwindow.cpp" line="11875"/>
+        <location filename="../../gui/mainwindow.cpp" line="11891"/>
+        <location filename="../../gui/mainwindow.cpp" line="11897"/>
+        <location filename="../../gui/mainwindow.cpp" line="11948"/>
+        <location filename="../../gui/mainwindow.cpp" line="11954"/>
+        <location filename="../../gui/mainwindow.cpp" line="12057"/>
+        <location filename="../../gui/mainwindow.cpp" line="13104"/>
+        <location filename="../../gui/mainwindow.cpp" line="13143"/>
         <source>Error</source>
         <translation>ข้อผิดพลาด</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11726"/>
-        <location filename="../../gui/mainwindow.cpp" line="11962"/>
+        <location filename="../../gui/mainwindow.cpp" line="11855"/>
+        <location filename="../../gui/mainwindow.cpp" line="12091"/>
         <source>Can&apos;t read from file %1</source>
         <translation>ไม่สามารถอ่านจากไฟล์ %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11825"/>
-        <location filename="../../gui/mainwindow.cpp" line="11928"/>
-        <location filename="../../gui/mainwindow.cpp" line="12975"/>
-        <location filename="../../gui/mainwindow.cpp" line="13014"/>
+        <location filename="../../gui/mainwindow.cpp" line="11954"/>
+        <location filename="../../gui/mainwindow.cpp" line="12057"/>
+        <location filename="../../gui/mainwindow.cpp" line="13104"/>
+        <location filename="../../gui/mainwindow.cpp" line="13143"/>
         <source>Can&apos;t write to file %1</source>
         <translation>ไม่สามารถเขียนลงไฟล์ %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11944"/>
-        <location filename="../../gui/mainwindow.cpp" line="11962"/>
-        <location filename="../../gui/mainwindow.cpp" line="11970"/>
-        <location filename="../../gui/mainwindow.cpp" line="11977"/>
-        <location filename="../../gui/mainwindow.cpp" line="11985"/>
-        <location filename="../../gui/mainwindow.cpp" line="11993"/>
-        <location filename="../../gui/mainwindow.cpp" line="11999"/>
-        <location filename="../../gui/mainwindow.cpp" line="12007"/>
-        <location filename="../../gui/mainwindow.cpp" line="12013"/>
-        <location filename="../../gui/mainwindow.cpp" line="12021"/>
-        <location filename="../../gui/mainwindow.cpp" line="12027"/>
-        <location filename="../../gui/mainwindow.cpp" line="12035"/>
+        <location filename="../../gui/mainwindow.cpp" line="12073"/>
+        <location filename="../../gui/mainwindow.cpp" line="12091"/>
+        <location filename="../../gui/mainwindow.cpp" line="12099"/>
+        <location filename="../../gui/mainwindow.cpp" line="12106"/>
+        <location filename="../../gui/mainwindow.cpp" line="12114"/>
+        <location filename="../../gui/mainwindow.cpp" line="12122"/>
+        <location filename="../../gui/mainwindow.cpp" line="12128"/>
+        <location filename="../../gui/mainwindow.cpp" line="12136"/>
+        <location filename="../../gui/mainwindow.cpp" line="12142"/>
+        <location filename="../../gui/mainwindow.cpp" line="12150"/>
+        <location filename="../../gui/mainwindow.cpp" line="12156"/>
+        <location filename="../../gui/mainwindow.cpp" line="12164"/>
         <source>Import Session</source>
         <translation>นำเข้าเซสชัน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="3522"/>
+        <location filename="../../gui/mainwindow.cpp" line="3524"/>
         <source>Close Session</source>
         <translation>ปิดเซสชัน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4550"/>
+        <location filename="../../gui/mainwindow.cpp" line="4557"/>
         <source>Angle Mode:</source>
         <translation>โหมดมุม:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4551"/>
+        <location filename="../../gui/mainwindow.cpp" line="4558"/>
         <source>Notation:</source>
         <translation>สัญกรณ์:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4552"/>
+        <location filename="../../gui/mainwindow.cpp" line="4559"/>
         <source>Precision:</source>
         <translation>ความละเอียด:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4902"/>
+        <location filename="../../gui/mainwindow.cpp" line="4916"/>
         <source>Turn</source>
         <translation>รอบ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4903"/>
+        <location filename="../../gui/mainwindow.cpp" line="4917"/>
         <source>Revolution</source>
         <translation>รอบหมุน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4914"/>
+        <location filename="../../gui/mainwindow.cpp" line="4928"/>
         <source>Fixed-point decimal</source>
         <translation>ทศนิยมจุดคงที่</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4917"/>
+        <location filename="../../gui/mainwindow.cpp" line="4931"/>
         <source>Rational</source>
         <translation>ตรรกยะ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4918"/>
+        <location filename="../../gui/mainwindow.cpp" line="4932"/>
         <source>Automatic decimal</source>
         <translation>ทศนิยมอัตโนมัติ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4926"/>
-        <location filename="../../gui/mainwindow.cpp" line="16611"/>
+        <location filename="../../gui/mainwindow.cpp" line="4940"/>
+        <location filename="../../gui/mainwindow.cpp" line="16745"/>
         <source>Automatic</source>
         <translation>อัตโนมัติ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4936"/>
+        <location filename="../../gui/mainwindow.cpp" line="4950"/>
         <source>User &amp;Definitions...</source>
         <translation>&amp;นิยามผู้ใช้...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4937"/>
+        <location filename="../../gui/mainwindow.cpp" line="4951"/>
         <source>New &amp;Tab</source>
         <translation>&amp;แท็บใหม่</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4941"/>
+        <location filename="../../gui/mainwindow.cpp" line="4955"/>
         <source>New &amp;Window</source>
         <translation>&amp;หน้าต่างใหม่</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4942"/>
+        <location filename="../../gui/mainwindow.cpp" line="4956"/>
         <source>&amp;Open...</source>
         <translation>&amp;เปิด...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4948"/>
+        <location filename="../../gui/mainwindow.cpp" line="4962"/>
         <source>Open Sessions &amp;Folder</source>
         <translation>เปิด&amp;โฟลเดอร์เซสชัน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4955"/>
+        <location filename="../../gui/mainwindow.cpp" line="4969"/>
         <source>R&amp;eset</source>
         <translation>&amp;รีเซ็ต</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4967"/>
+        <location filename="../../gui/mainwindow.cpp" line="4981"/>
         <source>&amp;Basic</source>
         <translation>&amp;พื้นฐาน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4968"/>
+        <location filename="../../gui/mainwindow.cpp" line="4982"/>
         <source>&amp;Scientific (wide)</source>
         <translation>&amp;วิทยาศาสตร์ (กว้าง)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4969"/>
+        <location filename="../../gui/mainwindow.cpp" line="4983"/>
         <source>Scientific (narrow)</source>
         <translation>วิทยาศาสตร์ (แคบ)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4970"/>
-        <location filename="../../gui/mainwindow.cpp" line="5051"/>
+        <location filename="../../gui/mainwindow.cpp" line="4984"/>
+        <location filename="../../gui/mainwindow.cpp" line="5066"/>
         <source>&amp;Custom...</source>
         <translation>&amp;กำหนดเอง...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4977"/>
+        <location filename="../../gui/mainwindow.cpp" line="4992"/>
         <source>Main &amp;Menu</source>
         <translation>&amp;เมนูหลัก</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4978"/>
+        <location filename="../../gui/mainwindow.cpp" line="4993"/>
         <source>User &amp;Variables</source>
         <translation>&amp;ตัวแปรผู้ใช้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4986"/>
+        <location filename="../../gui/mainwindow.cpp" line="5001"/>
         <source>User &amp;Units</source>
         <translation>&amp;หน่วยผู้ใช้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4991"/>
+        <location filename="../../gui/mainwindow.cpp" line="5006"/>
         <source>&amp;Turn</source>
         <translation>&amp;รอบ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4995"/>
-        <location filename="../../gui/mainwindow.cpp" line="4996"/>
+        <location filename="../../gui/mainwindow.cpp" line="5010"/>
+        <location filename="../../gui/mainwindow.cpp" line="5011"/>
         <source>If a new expression starts with +, -, *, or /, SpeedCrunch inserts &quot;ans&quot; first.</source>
         <translation>ถ้านิพจน์ใหม่เริ่มด้วย +, -, *, หรือ / SpeedCrunch จะแทรก &quot;ans&quot; ก่อน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4998"/>
+        <location filename="../../gui/mainwindow.cpp" line="5013"/>
         <source>&amp;Accept with Enter</source>
         <translation>&amp;ยอมรับด้วย Enter</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="4999"/>
+        <location filename="../../gui/mainwindow.cpp" line="5014"/>
         <source>Accept the current autocomplete suggestion with Enter without first selecting it with the arrow keys.</source>
         <translation>ยอมรับคำแนะนำการเติมข้อความอัตโนมัติปัจจุบันด้วย Enter โดยไม่ต้องเลือกด้วยปุ่มลูกศรก่อน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5003"/>
+        <location filename="../../gui/mainwindow.cpp" line="5018"/>
         <source>&amp;Units</source>
         <translation>&amp;หน่วย</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5006"/>
+        <location filename="../../gui/mainwindow.cpp" line="5021"/>
         <source>Show Live Result &amp;Preview</source>
         <translation>แสดง&amp;ตัวอย่างผลลัพธ์สด</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5007"/>
+        <location filename="../../gui/mainwindow.cpp" line="5022"/>
         <source>Save &amp;Window Position on Exit</source>
         <translation>บันทึกตำแหน่ง&amp;หน้าต่างเมื่อออก</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5009"/>
+        <location filename="../../gui/mainwindow.cpp" line="5024"/>
         <source>Activate Existing Window</source>
         <translation>เปิดใช้งานหน้าต่างที่มีอยู่</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5010"/>
+        <location filename="../../gui/mainwindow.cpp" line="5025"/>
         <source>Open New Window</source>
         <translation>เปิดหน้าต่างใหม่</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5011"/>
+        <location filename="../../gui/mainwindow.cpp" line="5026"/>
         <source>Open New Tab</source>
         <translation>เปิดแท็บใหม่</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5023"/>
+        <location filename="../../gui/mainwindow.cpp" line="5038"/>
         <source>Hover Highlighting</source>
         <translation>เน้นเมื่อชี้เมาส์</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5028"/>
+        <location filename="../../gui/mainwindow.cpp" line="5043"/>
         <source>Group Integer Part Only</source>
         <translation>จัดกลุ่มเฉพาะส่วนจำนวนเต็ม</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5030"/>
-        <location filename="../../tests/testsettingsui.cpp" line="1319"/>
+        <location filename="../../gui/mainwindow.cpp" line="5045"/>
+        <location filename="../../tests/testsettingsui.cpp" line="1326"/>
         <source>Number Format...</source>
         <translation>รูปแบบตัวเลข...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5031"/>
+        <location filename="../../gui/mainwindow.cpp" line="5046"/>
         <source>Notation &amp;&amp; Precision...</source>
         <translation>สัญกรณ์และความละเอียด...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5032"/>
-        <location filename="../../gui/mainwindow.cpp" line="5033"/>
+        <location filename="../../gui/mainwindow.cpp" line="5047"/>
+        <location filename="../../gui/mainwindow.cpp" line="5048"/>
         <source>After pressing Enter, keep the entered expression selected in the editor.</source>
         <translation>หลังจากกด Enter ให้คงนิพจน์ที่ป้อนไว้โดยเลือกอยู่ในตัวแก้ไข</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5034"/>
+        <location filename="../../gui/mainwindow.cpp" line="5049"/>
         <source>Never</source>
         <translation>ไม่เลย</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5035"/>
+        <location filename="../../gui/mainwindow.cpp" line="5050"/>
         <source>Always</source>
         <translation>เสมอ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5036"/>
+        <location filename="../../gui/mainwindow.cpp" line="5051"/>
         <source>Only for Single-Line Expressions</source>
         <translation>เฉพาะนิพจน์บรรทัดเดียว</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5038"/>
+        <location filename="../../gui/mainwindow.cpp" line="5053"/>
         <source>Skip Clear History Confirmation</source>
         <translation>ข้ามการยืนยันการล้างประวัติ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5039"/>
+        <location filename="../../gui/mainwindow.cpp" line="5054"/>
         <source>Simplify Displayed Expressions</source>
         <translation>ทำให้นิพจน์ที่แสดงง่ายขึ้น</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5040"/>
+        <location filename="../../gui/mainwindow.cpp" line="5055"/>
         <source>History Size &amp;Limit...</source>
         <translation>&amp;ขีดจำกัดขนาดประวัติ...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5052"/>
+        <location filename="../../gui/mainwindow.cpp" line="5067"/>
         <source>Remove Trailing &amp;Zeroes</source>
         <translation>&amp;ลบศูนย์ท้ายตัวเลข</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5054"/>
+        <location filename="../../gui/mainwindow.cpp" line="5069"/>
         <source>Nearest, Half &amp;Away (round)</source>
         <translation>ใกล้สุด ครึ่ง&amp;ออกห่าง (round)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5056"/>
+        <location filename="../../gui/mainwindow.cpp" line="5071"/>
         <source>Nearest, Half &amp;Even (roundeven)</source>
         <translation>ใกล้สุด ครึ่ง&amp;คู่ (roundeven)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5057"/>
+        <location filename="../../gui/mainwindow.cpp" line="5072"/>
         <source>Toward &amp;Zero (trunc)</source>
         <translation>เข้าหา&amp;ศูนย์ (trunc)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5059"/>
+        <location filename="../../gui/mainwindow.cpp" line="5074"/>
         <source>Round Up (&amp;ceil)</source>
         <translation>ปัดขึ้น (&amp;ceil)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5061"/>
+        <location filename="../../gui/mainwindow.cpp" line="5076"/>
         <source>Round Down (&amp;floor)</source>
         <translation>ปัดลง (&amp;floor)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5064"/>
+        <location filename="../../gui/mainwindow.cpp" line="5079"/>
         <source>&amp;Fixed-Point</source>
         <translation>&amp;จุดคงที่</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5067"/>
+        <location filename="../../gui/mainwindow.cpp" line="5082"/>
         <source>&amp;Rational</source>
         <translation>&amp;ตรรกยะ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5073"/>
+        <location filename="../../gui/mainwindow.cpp" line="5088"/>
         <source>&amp;Exponential (m·s⁻¹)</source>
         <translation>&amp;เอ็กซ์โพเนนเชียล (m·s⁻¹)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5075"/>
+        <location filename="../../gui/mainwindow.cpp" line="5090"/>
         <source>&amp;Fractional (m/s)</source>
         <translation>&amp;เศษส่วน (m/s)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5076"/>
+        <location filename="../../gui/mainwindow.cpp" line="5091"/>
         <source>&amp;Rectangular</source>
         <translation>&amp;สี่เหลี่ยม</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5077"/>
+        <location filename="../../gui/mainwindow.cpp" line="5092"/>
         <source>Exponential</source>
         <translation>เอ็กซ์โพเนนเชียล</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5078"/>
+        <location filename="../../gui/mainwindow.cpp" line="5093"/>
         <source>Trigonometric</source>
         <translation>ตรีโกณมิติ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5080"/>
+        <location filename="../../gui/mainwindow.cpp" line="5095"/>
         <source>Phasor</source>
         <translation>เฟสเซอร์</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5085"/>
+        <location filename="../../gui/mainwindow.cpp" line="5100"/>
         <source>&amp;Keyboard Shortcuts...</source>
         <translation>แป้นพิมพ์&amp;ลัด...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5086"/>
+        <location filename="../../gui/mainwindow.cpp" line="5101"/>
         <source>Zoom &amp;In</source>
         <translation>&amp;ขยาย</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5087"/>
+        <location filename="../../gui/mainwindow.cpp" line="5102"/>
         <source>Zoom &amp;Out</source>
         <translation>&amp;ย่อ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5088"/>
+        <location filename="../../gui/mainwindow.cpp" line="5103"/>
         <source>Next Session Tab or Pane</source>
         <translation>แท็บหรือบานหน้าต่างเซสชันถัดไป</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5089"/>
+        <location filename="../../gui/mainwindow.cpp" line="5104"/>
         <source>Previous Session Tab or Pane</source>
         <translation>แท็บหรือบานหน้าต่างเซสชันก่อนหน้า</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5090"/>
+        <location filename="../../gui/mainwindow.cpp" line="5105"/>
         <source>Focus Next Control</source>
         <translation>ย้ายโฟกัสไปยังตัวควบคุมถัดไป</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5091"/>
+        <location filename="../../gui/mainwindow.cpp" line="5106"/>
         <source>Focus Previous Control</source>
         <translation>ย้ายโฟกัสไปยังตัวควบคุมก่อนหน้า</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5092"/>
+        <location filename="../../gui/mainwindow.cpp" line="5107"/>
         <source>&amp;Theme...</source>
         <translation>&amp;ธีม...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5095"/>
+        <location filename="../../gui/mainwindow.cpp" line="5110"/>
         <source>Use an appearance similar to SpeedCrunch 0.12</source>
         <translation>ใช้รูปลักษณ์คล้าย SpeedCrunch 0.12</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5098"/>
-        <source>Use the default SpeedCrunch appearance</source>
-        <translation>ใช้รูปลักษณ์เริ่มต้นของ SpeedCrunch</translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="5099"/>
+        <location filename="../../gui/mainwindow.cpp" line="5117"/>
         <source>C&amp;ustom</source>
         <translation>กำหนดเ&amp;อง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5100"/>
+        <location filename="../../gui/mainwindow.cpp" line="5118"/>
         <source>&amp;Follow System</source>
         <translation>&amp;ตามระบบ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5101"/>
+        <location filename="../../gui/mainwindow.cpp" line="5119"/>
         <source>&amp;Light</source>
         <translation>&amp;สว่าง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5102"/>
+        <location filename="../../gui/mainwindow.cpp" line="5120"/>
         <source>&amp;Dark</source>
         <translation>&amp;มืด</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5120"/>
-        <location filename="../../tests/testsettingsui.cpp" line="937"/>
+        <location filename="../../gui/mainwindow.cpp" line="5138"/>
+        <location filename="../../tests/testsettingsui.cpp" line="944"/>
         <source>Check for &amp;Updates</source>
         <translation>ตรวจสอบ&amp;อัปเดต</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5124"/>
+        <location filename="../../gui/mainwindow.cpp" line="5142"/>
         <source>Source Code</source>
         <translation>ซอร์สโค้ด</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5374"/>
+        <location filename="../../gui/mainwindow.cpp" line="5394"/>
         <source>Disable</source>
         <translation>ปิดใช้งาน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5399"/>
+        <location filename="../../gui/mainwindow.cpp" line="5419"/>
         <source>Navigation</source>
         <translation>การเลื่อนตำแหน่ง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5400"/>
+        <location filename="../../gui/mainwindow.cpp" line="5420"/>
         <source>View</source>
         <translation>มุมมอง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5400"/>
+        <location filename="../../gui/mainwindow.cpp" line="5420"/>
         <source>Other</source>
         <translation>อื่น ๆ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5689"/>
+        <location filename="../../gui/mainwindow.cpp" line="5710"/>
         <source>On Subsequent Launch</source>
         <translation>เมื่อเปิดครั้งถัดไป</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5696"/>
+        <location filename="../../gui/mainwindow.cpp" line="5717"/>
         <source>&amp;Zoom</source>
         <translation>&amp;ซูม</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5698"/>
+        <location filename="../../gui/mainwindow.cpp" line="5719"/>
         <source>&amp;Results</source>
         <translation>&amp;ผลลัพธ์</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5699"/>
+        <location filename="../../gui/mainwindow.cpp" line="5720"/>
         <source>Unit Notation</source>
         <translation>สัญกรณ์หน่วย</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5700"/>
+        <location filename="../../gui/mainwindow.cpp" line="5721"/>
         <source>Rounding Mode</source>
         <translation>โหมดการปัดเศษ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5701"/>
+        <location filename="../../gui/mainwindow.cpp" line="5722"/>
         <source>&amp;Notation</source>
         <translation>&amp;สัญกรณ์</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5706"/>
+        <location filename="../../gui/mainwindow.cpp" line="5727"/>
         <source>&amp;Imaginary Unit</source>
         <translation>&amp;หน่วยจินตภาพ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5707"/>
+        <location filename="../../gui/mainwindow.cpp" line="5728"/>
         <source>&amp;Window</source>
         <translation>&amp;หน้าต่าง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5708"/>
+        <location filename="../../gui/mainwindow.cpp" line="5729"/>
         <source>&amp;Editing</source>
         <translation>&amp;การแก้ไข</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5709"/>
+        <location filename="../../gui/mainwindow.cpp" line="5730"/>
         <source>A&amp;utocomplete</source>
         <translation>เ&amp;ติมข้อความอัตโนมัติ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5710"/>
+        <location filename="../../gui/mainwindow.cpp" line="5731"/>
         <source>Up/Down Arrow History</source>
         <translation>ประวัติด้วยลูกศรขึ้น/ลง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5711"/>
+        <location filename="../../gui/mainwindow.cpp" line="5732"/>
         <source>&amp;Appearance</source>
         <translation>&amp;รูปลักษณ์</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5712"/>
+        <location filename="../../gui/mainwindow.cpp" line="5733"/>
         <source>Style &amp;Presets</source>
         <translation>&amp;ชุดรูปแบบสำเร็จรูป</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5713"/>
+        <location filename="../../gui/mainwindow.cpp" line="5734"/>
         <source>System &amp;Color Mode</source>
         <translation>โหมด&amp;สีของระบบ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5714"/>
+        <location filename="../../gui/mainwindow.cpp" line="5735"/>
         <source>&amp;Menus</source>
         <translation>&amp;เมนู</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5715"/>
+        <location filename="../../gui/mainwindow.cpp" line="5736"/>
         <source>&amp;Docks</source>
         <translation>แ&amp;ผงที่ยึดติดได้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5717"/>
+        <location filename="../../gui/mainwindow.cpp" line="5738"/>
         <source>&amp;Tooltips</source>
         <translation>&amp;คำแนะนำเครื่องมือ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5719"/>
+        <location filename="../../gui/mainwindow.cpp" line="5740"/>
         <source>&amp;Input and Results</source>
         <translation>&amp;ข้อมูลป้อนเข้าและผลลัพธ์</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5726"/>
+        <location filename="../../gui/mainwindow.cpp" line="5747"/>
         <source>&amp;Disabled</source>
         <translation>&amp;ปิดใช้งาน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5728"/>
+        <location filename="../../gui/mainwindow.cpp" line="5749"/>
         <source>&amp;Disable</source>
         <translation>&amp;ปิดใช้งาน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5916"/>
+        <location filename="../../gui/mainwindow.cpp" line="5937"/>
         <source>Close preview</source>
         <translation>ปิดตัวอย่าง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6053"/>
+        <location filename="../../gui/mainwindow.cpp" line="6075"/>
         <source>Rename...</source>
         <translation>เปลี่ยนชื่อ...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6054"/>
+        <location filename="../../gui/mainwindow.cpp" line="6076"/>
         <source>Clone...</source>
         <translation>โคลน...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6057"/>
+        <location filename="../../gui/mainwindow.cpp" line="6079"/>
         <source>Close Tab</source>
         <translation>ปิดแท็บ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6060"/>
+        <location filename="../../gui/mainwindow.cpp" line="6082"/>
         <source>New Private Tab</source>
         <translation>แท็บส่วนตัวใหม่</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6061"/>
+        <location filename="../../gui/mainwindow.cpp" line="6083"/>
         <source>Open...</source>
         <translation>เปิด...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6062"/>
+        <location filename="../../gui/mainwindow.cpp" line="6084"/>
         <source>Reopen Closed Tab</source>
         <translation>เปิดแท็บที่ปิดไปอีกครั้ง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6071"/>
+        <location filename="../../gui/mainwindow.cpp" line="6093"/>
         <source>Split</source>
         <translation>แบ่ง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6072"/>
+        <location filename="../../gui/mainwindow.cpp" line="6094"/>
         <source>Left</source>
         <translation>ซ้าย</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6073"/>
+        <location filename="../../gui/mainwindow.cpp" line="6095"/>
         <source>Right</source>
         <translation>ขวา</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6074"/>
+        <location filename="../../gui/mainwindow.cpp" line="6096"/>
         <source>Up</source>
         <translation>ขึ้น</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6075"/>
+        <location filename="../../gui/mainwindow.cpp" line="6097"/>
         <source>Down</source>
         <translation>ลง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6079"/>
+        <location filename="../../gui/mainwindow.cpp" line="6101"/>
         <source>Delete</source>
         <translation>ลบ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7758"/>
+        <location filename="../../gui/mainwindow.cpp" line="7780"/>
         <source>%1
 Private session: contents are discarded when closed.
 Choose Session &gt; Keep to turn it into a regular session.</source>
@@ -8053,371 +8063,371 @@ Choose Session &gt; Keep to turn it into a regular session.</source>
 เลือก เซสชัน &gt; เก็บไว้ เพื่อเปลี่ยนเป็นเซสชันปกติ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="7777"/>
+        <location filename="../../gui/mainwindow.cpp" line="7799"/>
         <source>SpeedCrunch - %1 [Private]</source>
         <translation>SpeedCrunch - %1 [ส่วนตัว]</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9393"/>
-        <location filename="../../gui/mainwindow.cpp" line="9405"/>
+        <location filename="../../gui/mainwindow.cpp" line="9522"/>
+        <location filename="../../gui/mainwindow.cpp" line="9534"/>
         <source>Reset All Settings</source>
         <translation>รีเซ็ตการตั้งค่าทั้งหมด</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9394"/>
+        <location filename="../../gui/mainwindow.cpp" line="9523"/>
         <source>Reset all settings to their default values?</source>
         <translation>รีเซ็ตการตั้งค่าทั้งหมดเป็นค่าเริ่มต้นหรือไม่?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="9395"/>
-        <source>This includes appearance, editing, result formats, and window preferences. Your calculations, open sessions, and user definitions will be kept.</source>
-        <translation>รวมถึงรูปลักษณ์ การแก้ไข รูปแบบผลลัพธ์ และการตั้งค่าหน้าต่าง โดยจะเก็บการคำนวณ เซสชันที่เปิดอยู่ และนิยามของผู้ใช้ไว้</translation>
-    </message>
-    <message>
-        <location filename="../../gui/mainwindow.cpp" line="9405"/>
+        <location filename="../../gui/mainwindow.cpp" line="9534"/>
         <source>The settings file could not be written.</source>
         <translation>ไม่สามารถเขียนไฟล์การตั้งค่าได้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10339"/>
+        <location filename="../../gui/mainwindow.cpp" line="10468"/>
         <source>Global user definitions are kept.</source>
         <translation>นิยามส่วนกลางของผู้ใช้จะถูกเก็บไว้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10540"/>
-        <location filename="../../gui/mainwindow.cpp" line="10560"/>
+        <location filename="../../gui/mainwindow.cpp" line="10669"/>
+        <location filename="../../gui/mainwindow.cpp" line="10689"/>
         <source>Make Session Private</source>
         <translation>ทำให้เซสชันเป็นส่วนตัว</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10541"/>
+        <location filename="../../gui/mainwindow.cpp" line="10670"/>
         <source>The saved session %1 will be deleted. Its contents will stay open in a private session and will be discarded when that session is closed or SpeedCrunch exits.</source>
         <translation>เซสชันที่บันทึกไว้ %1 จะถูกลบ เนื้อหาจะยังคงเปิดอยู่ในเซสชันส่วนตัว และจะถูกทิ้งเมื่อปิดเซสชันนั้นหรือออกจาก SpeedCrunch</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10546"/>
+        <location filename="../../gui/mainwindow.cpp" line="10675"/>
         <source>Make Private</source>
         <translation>ทำให้เป็นส่วนตัว</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10561"/>
+        <location filename="../../gui/mainwindow.cpp" line="10690"/>
         <source>Could not delete the saved session %1.</source>
         <translation>ไม่สามารถลบเซสชันที่บันทึกไว้ %1 ได้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10570"/>
+        <location filename="../../gui/mainwindow.cpp" line="10699"/>
         <source>Keep Session</source>
         <translation>เก็บเซสชันไว้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10571"/>
+        <location filename="../../gui/mainwindow.cpp" line="10700"/>
         <source>Could not save the session. It remains private.</source>
         <translation>ไม่สามารถบันทึกเซสชันได้ เซสชันยังคงเป็นส่วนตัว</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10810"/>
-        <location filename="../../gui/mainwindow.cpp" line="10822"/>
-        <location filename="../../gui/mainwindow.cpp" line="10843"/>
-        <location filename="../../gui/mainwindow.cpp" line="10853"/>
+        <location filename="../../gui/mainwindow.cpp" line="10939"/>
+        <location filename="../../gui/mainwindow.cpp" line="10951"/>
+        <location filename="../../gui/mainwindow.cpp" line="10972"/>
+        <location filename="../../gui/mainwindow.cpp" line="10982"/>
         <source>Clone Session</source>
         <translation>โคลนเซสชัน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10911"/>
+        <location filename="../../gui/mainwindow.cpp" line="11040"/>
         <source>Could not save session file %1.</source>
         <translation>ไม่สามารถบันทึกไฟล์เซสชัน %1 ได้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10918"/>
+        <location filename="../../gui/mainwindow.cpp" line="11047"/>
         <source>Could not delete session file %1.</source>
         <translation>ไม่สามารถลบไฟล์เซสชัน %1 ได้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11902"/>
-        <location filename="../../gui/mainwindow.cpp" line="11943"/>
+        <location filename="../../gui/mainwindow.cpp" line="12031"/>
+        <location filename="../../gui/mainwindow.cpp" line="12072"/>
         <source>JSON file (*.json);;Any file (*.*)</source>
         <translation>ไฟล์ JSON (*.json);;ไฟล์ใดก็ได้ (*.*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11906"/>
+        <location filename="../../gui/mainwindow.cpp" line="12035"/>
         <source>Export session as JSON</source>
         <translation>ส่งออกเซสชันเป็น JSON</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11971"/>
+        <location filename="../../gui/mainwindow.cpp" line="12100"/>
         <source>The selected file is not valid JSON: %1</source>
         <translation>ไฟล์ที่เลือกไม่ใช่ JSON ที่ถูกต้อง: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11978"/>
+        <location filename="../../gui/mainwindow.cpp" line="12107"/>
         <source>The selected file is not a SpeedCrunch session JSON file.</source>
         <translation>ไฟล์ที่เลือกไม่ใช่ไฟล์ JSON ของเซสชัน SpeedCrunch</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11986"/>
+        <location filename="../../gui/mainwindow.cpp" line="12115"/>
         <source>This file uses an obsolete SpeedCrunch session format and cannot be imported.</source>
         <translation>ไฟล์นี้ใช้รูปแบบเซสชัน SpeedCrunch ที่ล้าสมัยและไม่สามารถนำเข้าได้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11994"/>
+        <location filename="../../gui/mainwindow.cpp" line="12123"/>
         <source>The selected JSON file is missing the required $schema field.</source>
         <translation>ไฟล์ JSON ที่เลือกไม่มีฟิลด์ $schema ที่จำเป็น</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12000"/>
+        <location filename="../../gui/mainwindow.cpp" line="12129"/>
         <source>The selected JSON file uses an unsupported JSON schema: %1</source>
         <translation>ไฟล์ JSON ที่เลือกใช้สคีมา JSON ที่ไม่รองรับ: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12008"/>
+        <location filename="../../gui/mainwindow.cpp" line="12137"/>
         <source>The selected JSON file is missing the SpeedCrunch session schema identifier ($id).</source>
         <translation>ไฟล์ JSON ที่เลือกไม่มีตัวระบุสคีมาเซสชัน SpeedCrunch ($id)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12014"/>
+        <location filename="../../gui/mainwindow.cpp" line="12143"/>
         <source>The selected JSON file uses an unsupported SpeedCrunch session format: %1</source>
         <translation>ไฟล์ JSON ที่เลือกใช้รูปแบบเซสชัน SpeedCrunch ที่ไม่รองรับ: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12022"/>
+        <location filename="../../gui/mainwindow.cpp" line="12151"/>
         <source>The selected JSON file is missing the required session name.</source>
         <translation>ไฟล์ JSON ที่เลือกไม่มีชื่อเซสชันที่จำเป็น</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12028"/>
+        <location filename="../../gui/mainwindow.cpp" line="12157"/>
         <source>The selected JSON file has an empty session name.</source>
         <translation>ไฟล์ JSON ที่เลือกมีชื่อเซสชันว่าง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12036"/>
+        <location filename="../../gui/mainwindow.cpp" line="12165"/>
         <source>The selected JSON file has invalid or incomplete SpeedCrunch session data.</source>
         <translation>ไฟล์ JSON ที่เลือกมีข้อมูลเซสชัน SpeedCrunch ที่ไม่ถูกต้องหรือไม่สมบูรณ์</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12047"/>
-        <location filename="../../gui/mainwindow.cpp" line="12055"/>
+        <location filename="../../gui/mainwindow.cpp" line="12176"/>
+        <location filename="../../gui/mainwindow.cpp" line="12184"/>
         <source>Open Sessions Folder</source>
         <translation>เปิดโฟลเดอร์เซสชัน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12048"/>
+        <location filename="../../gui/mainwindow.cpp" line="12177"/>
         <source>Could not create the sessions folder: %1</source>
         <translation>ไม่สามารถสร้างโฟลเดอร์เซสชันได้: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12056"/>
+        <location filename="../../gui/mainwindow.cpp" line="12185"/>
         <source>Could not open the sessions folder: %1</source>
         <translation>ไม่สามารถเปิดโฟลเดอร์เซสชันได้: %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10729"/>
+        <location filename="../../gui/mainwindow.cpp" line="10858"/>
         <source>Open Session</source>
         <translation>เปิดเซสชัน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5123"/>
+        <location filename="../../gui/mainwindow.cpp" line="5141"/>
         <source>Community</source>
         <translation>ชุมชน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10882"/>
-        <location filename="../../gui/mainwindow.cpp" line="10896"/>
-        <location filename="../../gui/mainwindow.cpp" line="10910"/>
-        <location filename="../../gui/mainwindow.cpp" line="10917"/>
+        <location filename="../../gui/mainwindow.cpp" line="11011"/>
+        <location filename="../../gui/mainwindow.cpp" line="11025"/>
+        <location filename="../../gui/mainwindow.cpp" line="11039"/>
+        <location filename="../../gui/mainwindow.cpp" line="11046"/>
         <source>Rename Session</source>
         <translation>เปลี่ยนชื่อเซสชัน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11162"/>
+        <location filename="../../gui/mainwindow.cpp" line="11291"/>
         <source>Delete Session</source>
         <translation>ลบเซสชัน</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6076"/>
+        <location filename="../../gui/mainwindow.cpp" line="6098"/>
         <source>Close Pane</source>
         <translation>ปิดบานหน้าต่าง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5126"/>
+        <location filename="../../gui/mainwindow.cpp" line="5144"/>
         <source>&amp;About SpeedCrunch</source>
         <translation>&amp;เกี่ยวกับ SpeedCrunch</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="5127"/>
+        <location filename="../../gui/mainwindow.cpp" line="5145"/>
         <source>App Diag&amp;nostics</source>
         <translation>&amp;การวินิจฉัยแอป</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8592"/>
+        <location filename="../../gui/mainwindow.cpp" line="8618"/>
         <source>User Variables</source>
         <translation>ตัวแปรผู้ใช้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="8668"/>
+        <location filename="../../gui/mainwindow.cpp" line="8694"/>
         <source>User Units</source>
         <translation>หน่วยผู้ใช้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="6078"/>
-        <location filename="../../gui/mainwindow.cpp" line="10301"/>
+        <location filename="../../gui/mainwindow.cpp" line="6100"/>
+        <location filename="../../gui/mainwindow.cpp" line="10430"/>
         <source>Clear History</source>
         <translation>ล้างประวัติ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10811"/>
-        <location filename="../../gui/mainwindow.cpp" line="10882"/>
+        <location filename="../../gui/mainwindow.cpp" line="9524"/>
+        <source>This includes appearance, editing, result formats, keyboard shortcuts, and window preferences. Your calculations, open sessions, and user definitions will be kept.</source>
+        <translation>ซึ่งรวมถึงรูปลักษณ์ การแก้ไข รูปแบบผลลัพธ์ แป้นพิมพ์ลัด และการตั้งค่าหน้าต่าง การคำนวณ เซสชันที่เปิดอยู่ และนิยามของผู้ใช้จะยังคงอยู่</translation>
+    </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="10940"/>
+        <location filename="../../gui/mainwindow.cpp" line="11011"/>
         <source>Session name:</source>
         <translation>ชื่อเซสชัน:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10823"/>
-        <location filename="../../gui/mainwindow.cpp" line="10897"/>
+        <location filename="../../gui/mainwindow.cpp" line="10952"/>
+        <location filename="../../gui/mainwindow.cpp" line="11026"/>
         <source>A session named %1 already exists.</source>
         <translation>มีเซสชันชื่อ %1 อยู่แล้ว</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10844"/>
+        <location filename="../../gui/mainwindow.cpp" line="10973"/>
         <source>Could not create session file %1.</source>
         <translation>ไม่สามารถสร้างไฟล์เซสชัน %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="10854"/>
+        <location filename="../../gui/mainwindow.cpp" line="10983"/>
         <source>Could not write session file %1.</source>
         <translation>ไม่สามารถเขียนไฟล์เซสชัน %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11163"/>
+        <location filename="../../gui/mainwindow.cpp" line="11292"/>
         <source>Are you sure you want to delete this session?</source>
         <translation>คุณแน่ใจหรือไม่ว่าต้องการลบเซสชันนี้?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11337"/>
+        <location filename="../../gui/mainwindow.cpp" line="11466"/>
         <source>Custom Precision</source>
         <translation>ความละเอียดกำหนดเอง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11338"/>
+        <location filename="../../gui/mainwindow.cpp" line="11467"/>
         <source>Fractional digits:</source>
         <translation>จำนวนหลักเศษส่วน:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11355"/>
+        <location filename="../../gui/mainwindow.cpp" line="11484"/>
         <source>Theme</source>
         <translation>ธีม</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11364"/>
+        <location filename="../../gui/mainwindow.cpp" line="11493"/>
         <source>Light Themes</source>
         <translation>ธีมสว่าง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11371"/>
+        <location filename="../../gui/mainwindow.cpp" line="11500"/>
         <source>Dark Themes</source>
         <translation>ธีมมืด</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11379"/>
+        <location filename="../../gui/mainwindow.cpp" line="11508"/>
         <source>Preview</source>
         <translation>ตัวอย่าง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11441"/>
+        <location filename="../../gui/mainwindow.cpp" line="11570"/>
         <source>Colors</source>
         <translation>สี</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11633"/>
+        <location filename="../../gui/mainwindow.cpp" line="11762"/>
         <source>Select color for %1</source>
         <translation>เลือกสีสำหรับ %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11689"/>
+        <location filename="../../gui/mainwindow.cpp" line="11818"/>
         <source>Import...</source>
         <translation>นำเข้า...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11690"/>
+        <location filename="../../gui/mainwindow.cpp" line="11819"/>
         <source>Export...</source>
         <translation>ส่งออก...</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11720"/>
+        <location filename="../../gui/mainwindow.cpp" line="11849"/>
         <source>Import Theme</source>
         <translation>นำเข้าธีม</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11721"/>
-        <location filename="../../gui/mainwindow.cpp" line="11810"/>
+        <location filename="../../gui/mainwindow.cpp" line="11850"/>
+        <location filename="../../gui/mainwindow.cpp" line="11939"/>
         <source>Theme file (*.json);;All files (*)</source>
         <translation>ไฟล์ธีม (*.json);;ไฟล์ทั้งหมด (*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11732"/>
+        <location filename="../../gui/mainwindow.cpp" line="11861"/>
         <source>Invalid theme file.</source>
         <translation>ไฟล์ธีมไม่ถูกต้อง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11741"/>
+        <location filename="../../gui/mainwindow.cpp" line="11870"/>
         <source>Can&apos;t import theme &quot;%1&quot; because it conflicts with a built-in theme.</source>
         <translation>ไม่สามารถนำเข้าธีม &quot;%1&quot; เพราะขัดแย้งกับธีมในตัว</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11746"/>
+        <location filename="../../gui/mainwindow.cpp" line="11875"/>
         <source>Can&apos;t find a writable theme folder.</source>
         <translation>ไม่พบโฟลเดอร์ธีมที่เขียนได้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11753"/>
+        <location filename="../../gui/mainwindow.cpp" line="11882"/>
         <source>Overwrite Theme</source>
         <translation>เขียนทับธีม</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11754"/>
+        <location filename="../../gui/mainwindow.cpp" line="11883"/>
         <source>A custom theme named &quot;%1&quot; already exists. Do you want to overwrite it?</source>
         <translation>มีธีมกำหนดเองชื่อ &quot;%1&quot; อยู่แล้ว คุณต้องการเขียนทับหรือไม่?</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11762"/>
+        <location filename="../../gui/mainwindow.cpp" line="11891"/>
         <source>Can&apos;t overwrite theme file %1</source>
         <translation>ไม่สามารถเขียนทับไฟล์ธีม %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11768"/>
+        <location filename="../../gui/mainwindow.cpp" line="11897"/>
         <source>Can&apos;t copy theme file to %1</source>
         <translation>ไม่สามารถคัดลอกไฟล์ธีมไปยัง %1</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11809"/>
+        <location filename="../../gui/mainwindow.cpp" line="11938"/>
         <source>Export Theme</source>
         <translation>ส่งออกธีม</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="11820"/>
+        <location filename="../../gui/mainwindow.cpp" line="11949"/>
         <source>Can&apos;t export theme as &quot;%1&quot; because it conflicts with a built-in theme.</source>
         <translation>ไม่สามารถส่งออกธีมเป็น &quot;%1&quot; เพราะขัดแย้งกับธีมในตัว</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12065"/>
+        <location filename="../../gui/mainwindow.cpp" line="12194"/>
         <source>Global User Variable</source>
         <translation>ตัวแปรผู้ใช้ส่วนกลาง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12066"/>
+        <location filename="../../gui/mainwindow.cpp" line="12195"/>
         <source>Global User Function</source>
         <translation>ฟังก์ชันผู้ใช้ส่วนกลาง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12067"/>
+        <location filename="../../gui/mainwindow.cpp" line="12196"/>
         <source>Global User Unit</source>
         <translation>หน่วยผู้ใช้ส่วนกลาง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12431"/>
+        <location filename="../../gui/mainwindow.cpp" line="12560"/>
         <source>User Definitions</source>
         <translation>นิยามของผู้ใช้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12437"/>
+        <location filename="../../gui/mainwindow.cpp" line="12566"/>
         <source>These definitions are global and are loaded into every session.
 They are immutable for sessions and override same-name definitions from the session editor.
 Enter one definition per line.</source>
@@ -8426,7 +8436,7 @@ Enter one definition per line.</source>
 ป้อนหนึ่งนิยามต่อหนึ่งบรรทัด</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12447"/>
+        <location filename="../../gui/mainwindow.cpp" line="12576"/>
         <source>Examples:
 my_rate=1.25
 f(x)=x^2+1
@@ -8437,23 +8447,23 @@ f(x)=x^2+1
 [cm_s]=[centimetre/second]</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12509"/>
+        <location filename="../../gui/mainwindow.cpp" line="12638"/>
         <source>Apply</source>
         <translation>ใช้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12510"/>
+        <location filename="../../gui/mainwindow.cpp" line="12639"/>
         <source>Validate</source>
         <translation>ตรวจสอบความถูกต้อง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12546"/>
+        <location filename="../../gui/mainwindow.cpp" line="12675"/>
         <source>Test Results</source>
         <translation>ผลการทดสอบ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12547"/>
-        <location filename="../../gui/mainwindow.cpp" line="12579"/>
+        <location filename="../../gui/mainwindow.cpp" line="12676"/>
+        <location filename="../../gui/mainwindow.cpp" line="12708"/>
         <source>Imported variables: %1
 Imported functions: %2
 Imported units: %3
@@ -8464,106 +8474,106 @@ Line numbers with errors: %4</source>
 หมายเลขบรรทัดที่มีข้อผิดพลาด: %4</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12551"/>
-        <location filename="../../gui/mainwindow.cpp" line="12583"/>
+        <location filename="../../gui/mainwindow.cpp" line="12680"/>
+        <location filename="../../gui/mainwindow.cpp" line="12712"/>
         <source>none</source>
         <translation>ไม่มี</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12578"/>
+        <location filename="../../gui/mainwindow.cpp" line="12707"/>
         <source>Apply Results</source>
         <translation>ผลการนำไปใช้</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12592"/>
+        <location filename="../../gui/mainwindow.cpp" line="12721"/>
         <source>User definitions saved.</source>
         <translation>บันทึกนิยามของผู้ใช้แล้ว</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12631"/>
+        <location filename="../../gui/mainwindow.cpp" line="12760"/>
         <source>History Size Limit</source>
         <translation>ขีดจำกัดขนาดประวัติ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12632"/>
+        <location filename="../../gui/mainwindow.cpp" line="12761"/>
         <source>Maximum number of history entries for this session (0 = unlimited):</source>
         <translation>จำนวนรายการประวัติสูงสุดสำหรับเซสชันนี้ (0 = ไม่จำกัด):</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12953"/>
+        <location filename="../../gui/mainwindow.cpp" line="13082"/>
         <source>Export session as HTML</source>
         <translation>ส่งออกเซสชันเป็น HTML</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12953"/>
+        <location filename="../../gui/mainwindow.cpp" line="13082"/>
         <source>HTML file (*.html)</source>
         <translation>ไฟล์ HTML (*.html)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12991"/>
+        <location filename="../../gui/mainwindow.cpp" line="13120"/>
         <source>Export session as plain text</source>
         <translation>ส่งออกเซสชันเป็นข้อความธรรมดา</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="12992"/>
+        <location filename="../../gui/mainwindow.cpp" line="13121"/>
         <source>Text file (*.txt);;Any file (*.*)</source>
         <translation>ไฟล์ข้อความ (*.txt);;ไฟล์ใดๆ (*.*)</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15765"/>
-        <location filename="../../gui/mainwindow.cpp" line="15938"/>
+        <location filename="../../gui/mainwindow.cpp" line="15899"/>
+        <location filename="../../gui/mainwindow.cpp" line="16072"/>
         <source>Could not recalculate from calculation %1: %2</source>
         <translation>ไม่สามารถคำนวณใหม่จากการคำนวณ %1: %2</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15854"/>
+        <location filename="../../gui/mainwindow.cpp" line="15988"/>
         <source>History Size Limit Reached</source>
         <translation>ถึงขีดจำกัดขนาดประวัติแล้ว</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15855"/>
+        <location filename="../../gui/mainwindow.cpp" line="15989"/>
         <source>This calculation fills the last available history slot. Future calculations will remove the oldest calculation from history. You can increase the limit from Session &gt; History Size Limit.</source>
         <translation>การคำนวณนี้ใช้ช่องประวัติสุดท้ายที่เหลืออยู่ การคำนวณต่อไปจะลบการคำนวณที่เก่าที่สุดออกจากประวัติ คุณสามารถเพิ่มขีดจำกัดได้จาก เซสชัน &gt; ขีดจำกัดขนาดประวัติ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15878"/>
+        <location filename="../../gui/mainwindow.cpp" line="16012"/>
         <source>Editing calculation. Press Esc twice to cancel.</source>
         <translation>กำลังแก้ไขการคำนวณ กด Esc สองครั้งเพื่อยกเลิก</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15919"/>
+        <location filename="../../gui/mainwindow.cpp" line="16053"/>
         <source>Calculation Settings</source>
         <translation>การตั้งค่าการคำนวณ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="15995"/>
+        <location filename="../../gui/mainwindow.cpp" line="16129"/>
         <source>Invalid recalculation start index</source>
         <translation>ดัชนีเริ่มคำนวณใหม่ไม่ถูกต้อง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="16585"/>
+        <location filename="../../gui/mainwindow.cpp" line="16719"/>
         <source>System Default</source>
         <translation>ค่าเริ่มต้นระบบ</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="16589"/>
+        <location filename="../../gui/mainwindow.cpp" line="16723"/>
         <location filename="../../tests/testtranslations.cpp" line="57"/>
         <location filename="../../tests/testtranslations.cpp" line="68"/>
         <source>Language</source>
         <translation>ภาษา</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="16589"/>
+        <location filename="../../gui/mainwindow.cpp" line="16723"/>
         <source>Select the language:</source>
         <translation>เลือกภาษา:</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="16619"/>
+        <location filename="../../gui/mainwindow.cpp" line="16753"/>
         <source>Custom</source>
         <translation>กำหนดเอง</translation>
     </message>
     <message>
-        <location filename="../../gui/mainwindow.cpp" line="16631"/>
+        <location filename="../../gui/mainwindow.cpp" line="16765"/>
         <source>Decimal places:</source>
         <translation>ตำแหน่งทศนิยม:</translation>
     </message>
@@ -8707,7 +8717,7 @@ Use Finder to move SpeedCrunch.app and any SpeedCrunch-data folder to a writable
         <translation>SpeedCrunch ไม่สามารถติดต่ออินสแตนซ์ที่กำลังทำงานหรือเริ่มเซิร์ฟเวอร์ภายในเครื่องได้ โปรดรอสักครู่แล้วลองอีกครั้ง</translation>
     </message>
     <message>
-        <location filename="../../core/settings.cpp" line="241"/>
+        <location filename="../../core/settings.cpp" line="247"/>
         <source>Could not create %1.</source>
         <translation>ไม่สามารถสร้าง %1 ได้</translation>
     </message>
