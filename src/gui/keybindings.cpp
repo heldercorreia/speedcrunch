@@ -17,6 +17,7 @@ bool isConfigurable(const QString& id)
         QStringLiteral("sessionImport"),
         QStringLiteral("viewKeypadCustom"),
         QStringLiteral("viewKeypadZoom50"),
+        QStringLiteral("viewKeypadZoom75"),
         QStringLiteral("viewKeypadZoom100"),
         QStringLiteral("viewKeypadZoom150"),
         QStringLiteral("viewKeypadZoom200"),

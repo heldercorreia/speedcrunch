@@ -101,6 +101,7 @@ column order between launches, including for panels that are hidden.
     Available entries in :menuselection:`Settings --> Appearance --> Keypad --> Zoom` are:
 
     * ``50%``
+    * ``75%``
     * ``100%`` (**default**)
     * ``150%``
     * ``200%``

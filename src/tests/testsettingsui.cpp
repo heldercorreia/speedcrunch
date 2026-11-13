@@ -1776,7 +1776,7 @@ void TestSettingsUi::appearance_presets_apply_to_all_windows_and_preserve_prefer
             // View actions mirror the active window into every menu copy.
             QEvent activation(QEvent::WindowActivate);
             QApplication::sendEvent(window, &activation);
-            QVERIFY(zoom->actions().at(window == &first ? 2 : 3)->isChecked());
+            QVERIFY(zoom->actions().at(window == &first ? 3 : 4)->isChecked());
             for (QDockWidget* dock : window->findChildren<QDockWidget*>()) {
                 QVERIFY(dockStates.contains(dock));
                 QCOMPARE(window->dockWidgetArea(dock), dockStates.value(dock).first);

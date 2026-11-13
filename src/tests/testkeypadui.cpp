@@ -946,7 +946,10 @@ void TestKeypadUi::keypad_fifty_percent_zoom_scales_and_restores()
         window.findChild<QMenu*>(QStringLiteral("KeypadAppearanceMenu")), QStringLiteral("&Zoom"));
     QVERIFY(zoomMenu != nullptr);
     const QList<QAction*> zoomActions = zoomMenu->actions();
-    QVERIFY(zoomActions.size() >= 3);
+    QVERIFY(zoomActions.size() >= 4);
+    QCOMPARE(zoomActions.at(0)->data().toInt(), 50);
+    QCOMPARE(zoomActions.at(1)->data().toInt(), 75);
+    QCOMPARE(zoomActions.at(2)->data().toInt(), 100);
     const auto flushEvents = []() {
         QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
         QCoreApplication::processEvents();
@@ -961,17 +964,26 @@ void TestKeypadUi::keypad_fifty_percent_zoom_scales_and_restores()
     QVERIFY(halfSize.height() < originalSize.height());
     QCOMPARE(halfFont.pointSizeF(), originalFont.pointSizeF() * 0.5);
     QVERIFY(zoomActions.at(0)->isChecked());
-    QVERIFY(!zoomActions.at(1)->isChecked());
+    QVERIFY(!zoomActions.at(2)->isChecked());
     QCOMPARE(settings->keypadZoomPercent, 50);
 
-    zoomActions.at(2)->trigger();
+    zoomActions.at(1)->trigger();
+    flushEvents();
+    QVERIFY(button() != nullptr);
+    QVERIFY(button()->width() > halfSize.width());
+    QVERIFY(button()->width() < originalSize.width());
+    QCOMPARE(button()->font().pointSizeF(), originalFont.pointSizeF() * 0.75);
+    QVERIFY(zoomActions.at(1)->isChecked());
+    QCOMPARE(settings->keypadZoomPercent, 75);
+
+    zoomActions.at(3)->trigger();
     flushEvents();
     zoomActions.at(0)->trigger();
     flushEvents();
     QVERIFY(button() != nullptr);
     QCOMPARE(button()->size(), halfSize);
     QCOMPARE(button()->font(), halfFont);
-    zoomActions.at(1)->trigger();
+    zoomActions.at(2)->trigger();
     flushEvents();
     QVERIFY(button() != nullptr);
     QCOMPARE(button()->size(), originalSize);

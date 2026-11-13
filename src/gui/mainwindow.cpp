@@ -4200,6 +4200,7 @@ void MainWindow::createActions()
     m_actions.viewKeypadScientificNarrow = createKeyBindingAction(QStringLiteral("viewKeypadScientificNarrow"));
     m_actions.viewKeypadCustom = createKeyBindingAction(QStringLiteral("viewKeypadCustom"));
     m_actions.viewKeypadZoom50 = createKeyBindingAction(QStringLiteral("viewKeypadZoom50"));
+    m_actions.viewKeypadZoom75 = createKeyBindingAction(QStringLiteral("viewKeypadZoom75"));
     m_actions.viewKeypadZoom100 = createKeyBindingAction(QStringLiteral("viewKeypadZoom100"));
     m_actions.viewKeypadZoom150 = createKeyBindingAction(QStringLiteral("viewKeypadZoom150"));
     m_actions.viewKeypadZoom200 = createKeyBindingAction(QStringLiteral("viewKeypadZoom200"));
@@ -4492,6 +4493,8 @@ void MainWindow::createActions()
     m_actions.viewKeypadCustom->setData(Settings::KeypadModeCustom);
     m_actions.viewKeypadZoom50->setCheckable(true);
     m_actions.viewKeypadZoom50->setData(50);
+    m_actions.viewKeypadZoom75->setCheckable(true);
+    m_actions.viewKeypadZoom75->setData(75);
     m_actions.viewKeypadZoom100->setCheckable(true);
     m_actions.viewKeypadZoom100->setData(100);
     m_actions.viewKeypadZoom150->setCheckable(true);
@@ -4980,6 +4983,7 @@ void MainWindow::setActionsText()
     m_actions.viewKeypadScientificNarrow->setText(MainWindow::tr("Scientific (narrow)"));
     m_actions.viewKeypadCustom->setText(MainWindow::tr("&Custom..."));
     m_actions.viewKeypadZoom50->setText(QStringLiteral("50%"));
+    m_actions.viewKeypadZoom75->setText(QStringLiteral("75%"));
     m_actions.viewKeypadZoom100->setText(QStringLiteral("100%"));
     m_actions.viewKeypadZoom150->setText(QStringLiteral("150%"));
     m_actions.viewKeypadZoom200->setText(QStringLiteral("200%"));
@@ -5253,6 +5257,7 @@ void MainWindow::createActionGroups()
 
     m_actionGroups.keypadZoom = new QActionGroup(this);
     m_actionGroups.keypadZoom->addAction(m_actions.viewKeypadZoom50);
+    m_actionGroups.keypadZoom->addAction(m_actions.viewKeypadZoom75);
     m_actionGroups.keypadZoom->addAction(m_actions.viewKeypadZoom100);
     m_actionGroups.keypadZoom->addAction(m_actions.viewKeypadZoom150);
     m_actionGroups.keypadZoom->addAction(m_actions.viewKeypadZoom200);
@@ -5565,6 +5570,7 @@ void MainWindow::createMenus()
     m_menus.keypadAppearance->addSeparator();
     m_menus.keypadZoom = m_menus.keypadAppearance->addMenu("");
     m_menus.keypadZoom->addAction(m_actions.viewKeypadZoom50);
+    m_menus.keypadZoom->addAction(m_actions.viewKeypadZoom75);
     m_menus.keypadZoom->addAction(m_actions.viewKeypadZoom100);
     m_menus.keypadZoom->addAction(m_actions.viewKeypadZoom150);
     m_menus.keypadZoom->addAction(m_actions.viewKeypadZoom200);
@@ -9318,6 +9324,9 @@ void MainWindow::applySettings(bool initializing)
     switch (m_keypadZoomPercent) {
     case 50:
         m_actions.viewKeypadZoom50->setChecked(true);
+        break;
+    case 75:
+        m_actions.viewKeypadZoom75->setChecked(true);
         break;
     case 150:
         m_actions.viewKeypadZoom150->setChecked(true);
@@ -13319,6 +13328,9 @@ void MainWindow::syncViewMenuActionState()
         case 50:
             setChecked(window->m_actions.viewKeypadZoom50, true);
             break;
+        case 75:
+            setChecked(window->m_actions.viewKeypadZoom75, true);
+            break;
         case 150:
             setChecked(window->m_actions.viewKeypadZoom150, true);
             break;
@@ -14373,8 +14385,9 @@ void MainWindow::setKeypadZoom(QAction* action)
         return;
 
     const int zoomPercent = action->data().toInt();
-    if (zoomPercent != 50 && zoomPercent != 100
-            && zoomPercent != 150 && zoomPercent != 200)
+    if (zoomPercent != 50 && zoomPercent != 75
+            && zoomPercent != 100 && zoomPercent != 150
+            && zoomPercent != 200)
         return;
     if (m_keypadZoomPercent == zoomPercent)
         return;
@@ -15826,8 +15839,9 @@ void MainWindow::restoreWindowKeypadLayout(bool visible, int modeValue)
 
 void MainWindow::restoreWindowKeypadZoom(int zoomPercent)
 {
-    if (zoomPercent != 50 && zoomPercent != 100
-            && zoomPercent != 150 && zoomPercent != 200)
+    if (zoomPercent != 50 && zoomPercent != 75
+            && zoomPercent != 100 && zoomPercent != 150
+            && zoomPercent != 200)
         return;
     if (m_keypadZoomPercent == zoomPercent)
         return;
