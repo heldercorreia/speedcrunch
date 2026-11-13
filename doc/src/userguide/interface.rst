@@ -378,7 +378,8 @@ Choose :menuselection:`Settings --> Reset All Settings...` to restore the defaul
 preferences. SpeedCrunch asks for confirmation before making any changes.
 The reset applies to all open windows immediately and is saved for the next
 launch. It includes appearance, editing options, number and result formats,
-language, and window preferences, including dock visibility and keypad settings.
+language, keyboard shortcuts, and window preferences, including dock visibility
+and keypad settings.
 
 Your calculation history, open session tabs and panes, and user definitions are
 kept. Existing calculations keep their recorded result formats. New calculations

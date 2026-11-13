@@ -9395,7 +9395,7 @@ void MainWindow::resetAllSettings()
     confirmation.setIcon(QMessageBox::Question);
     confirmation.setWindowTitle(tr("Reset All Settings"));
     confirmation.setText(tr("Reset all settings to their default values?"));
-    confirmation.setInformativeText(tr("This includes appearance, editing, result formats, and window preferences. "
+    confirmation.setInformativeText(tr("This includes appearance, editing, result formats, keyboard shortcuts, and window preferences. "
                                        "Your calculations, open sessions, and user definitions will be kept."));
     confirmation.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
     confirmation.setDefaultButton(QMessageBox::No);
