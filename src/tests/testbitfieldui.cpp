@@ -30,6 +30,7 @@ private slots:
     void bitfield_buttons_follow_dock_shape();
     void opened_bitfield_uses_minimum_height_data();
     void opened_bitfield_uses_minimum_height();
+    void side_bitfield_narrows_to_one_byte();
 };
 
 void TestBitfieldUi::initTestCase()
@@ -799,6 +800,50 @@ void TestBitfieldUi::opened_bitfield_uses_minimum_height()
     QVERIFY(field);
     QCOMPARE(window.dockWidgetArea(dock), Qt::BottomDockWidgetArea);
     QTRY_COMPARE(field->height(), field->minimumSizeHint().height());
+}
+
+void TestBitfieldUi::side_bitfield_narrows_to_one_byte()
+{
+    MainWindowStateGuard guard;
+    Settings* settings = guard.settings;
+    settings->windowState.clear();
+    settings->sessionLayoutJson.clear();
+    settings->bitfieldVisible = true;
+    settings->constantsDockVisible = false;
+    settings->functionsDockVisible = false;
+    settings->historyDockVisible = false;
+    settings->formulaBookDockVisible = false;
+    settings->variablesDockVisible = false;
+    settings->userFunctionsDockVisible = false;
+    settings->userUnitsDockVisible = false;
+    settings->keypadVisible = false;
+    MainWindow window(false);
+    window.resize(1200, 800);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QDockWidget* dock = window.findChild<QDockWidget*>(QStringLiteral("BitfieldDock"));
+    BitFieldWidget* field = window.findChild<BitFieldWidget*>();
+    QVERIFY(dock);
+    QVERIFY(field);
+    window.addDockWidget(Qt::RightDockWidgetArea, dock);
+    dock->show();
+    // At the bottom the buttons sat beside the bits, which needed more width.
+    QTRY_VERIFY(field->height() > field->width());
+
+    // Ask for a dock narrower than any layout of the bits.
+    window.resizeDocks({dock}, {1}, Qt::Horizontal);
+    QTest::qWait(50);
+
+    QRect contentRect;
+    for (const QWidget* widget : field->findChildren<QWidget*>()) {
+        if (qobject_cast<const BitWidget*>(widget) || qobject_cast<const QPushButton*>(widget))
+            contentRect |= QRect(widget->mapTo(field, QPoint()), widget->size());
+    }
+    QVERIFY(field->rect().contains(contentRect));
+    // Only a small margin is left beside the widest part, one byte of bits.
+    QVERIFY2(field->width() - contentRect.width() <= 30,
+             qPrintable(QStringLiteral("Field %1 px wide for %2 px of content")
+                            .arg(field->width()).arg(contentRect.width())));
 }
 
 int main(int argc, char** argv)

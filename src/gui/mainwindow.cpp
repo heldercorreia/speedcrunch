@@ -8401,6 +8401,10 @@ void MainWindow::createBitField() {
 
     m_docks.bitField = new GenericDock<BitFieldWidget>("MainWindow", QT_TR_NOOP("Bitfield"), this);
     m_docks.bitField->setObjectName("BitfieldDock");
+    // The bits set their own minimum width, which shrinks when the bytes move to
+    // more rows. A minimum set on the dock itself would make Qt keep the widest
+    // minimum the bits ever needed, so the dock could not get narrow again.
+    m_docks.bitField->setMinimumSize(0, 0);
     m_docks.bitField->installEventFilter(this);
     m_docks.bitField->setAllowedAreas(Qt::AllDockWidgetAreas);
     m_widgets.bitField = m_docks.bitField->widget();
