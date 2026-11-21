@@ -7,11 +7,10 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SpeedCrunch\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-10 15:46+0000\n"
+"POT-Creation-Date: 2026-11-21 09:07+0200\n"
 "PO-Revision-Date: 2016-07-18 23:45+0000\n"
 "Last-Translator: Felix Krull <f_krull@gmx.de>\n"
-"Language-Team: Swedish (Sweden) (http://www.transifex.com/heldercorreia/"
-"speedcrunch/language/sv_SE/)\n"
+"Language-Team: Swedish (Sweden) (http://www.transifex.com/heldercorreia/speedcrunch/language/sv_SE/)\n"
 "Language: sv_SE\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -24,20 +23,20 @@ msgstr ""
 msgid "SpeedCrunch"
 msgstr "SpeedCrunch"
 
-#. TRANSLATORS: Short one-line description.
 #: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:2
 msgid "A high-precision scientific calculator"
 msgstr "En vetenskaplig miniräknare med hög precision"
+
+#. TRANSLATORS: Extra keywords for finding the application in the desktop
+#. environment. The trailing ';' is important!
+#: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:4
+msgid "arithmetic;calculation;math;scientific;"
+msgstr "aritmetik;beräkning;matematik;vetenskaplig;"
 
 #. TRANSLATORS: Short app-store description. Keep it under 35 characters.
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:4
 msgid "High-precision calculator"
 msgstr "Miniräknare med hög precision"
-
-#. TRANSLATORS: Extra keywords for finding the application in the desktop environment. The trailing ';' is important!
-#: tmp/org.speedcrunch.SpeedCrunch.desktop.in.h:4
-msgid "arithmetic;calculation;math;scientific;"
-msgstr "aritmetik;beräkning;matematik;vetenskaplig;"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:5
 msgid ""
@@ -45,9 +44,9 @@ msgid ""
 "syntax-highlighted scrollable display and is designed to be fully used via "
 "keyboard."
 msgstr ""
-"SpeedCrunch är en snabb vetenskaplig miniräknare med hög precision. Den har "
-"en rullbar skärm med syntaxmarkering och är utformad för att kunna användas "
-"helt via tangentbordet."
+"SpeedCrunch är en snabb vetenskaplig miniräknare med hög precision. Du kan "
+"bläddra bland beräkningarna, se uttrycken med syntaxmarkering och använda "
+"hela programmet med tangentbordet."
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:6
 msgid ""
@@ -56,24 +55,23 @@ msgid ""
 "combined with a simple yet powerful user interface featuring on-the-fly "
 "results preview, syntax highlighting, and autocompletion."
 msgstr ""
-"Den innehåller många inbyggda matematiska funktioner och stöder avancerade "
-"funktioner som användardefinierade funktioner, komplexa tal och "
-"enhetsomvandlingar. Detta kombineras med ett enkelt men kraftfullt "
-"användargränssnitt med förhandsvisning av resultat i realtid, syntaxmarkering "
-"och automatisk komplettering."
+"Det finns många inbyggda matematiska funktioner. Du kan också definiera egna"
+" funktioner, räkna med komplexa tal och omvandla mellan enheter. Medan du "
+"skriver förhandsvisas resultatet, uttrycket syntaxmarkeras och du får "
+"förslag på kompletteringar."
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:7
 msgid ""
 "SpeedCrunch is available for several platforms in a number of languages."
-msgstr "SpeedCrunch finns tillgänglig för flera plattformar på ett antal språk."
+msgstr "SpeedCrunch finns för flera plattformar och på flera språk."
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:8
 msgid "Main window with optional keypad"
-msgstr "Huvudfönster med valfritt numeriskt tangentbord"
+msgstr "Huvudfönstret med knappsatsen aktiverad"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:9
 msgid "The constants list and formula book"
-msgstr "Listan över konstanter och formelboken"
+msgstr "Konstantlistan och formelsamlingen"
 
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:10
 msgid "Customizable user interface"
@@ -82,3 +80,30 @@ msgstr "Anpassningsbart användargränssnitt"
 #: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:11
 msgid "The built-in user manual"
 msgstr "Den inbyggda användarhandboken"
+
+#: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:12
+msgid "Start much faster on Windows, even with many saved tabs."
+msgstr ""
+"SpeedCrunch startar mycket snabbare i Windows, även om du har många sparade "
+"flikar."
+
+#: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:13
+msgid "Set your own keyboard shortcuts."
+msgstr "Välj egna kortkommandon."
+
+#: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:14
+msgid "Choose Classic, Modern, or Hybrid style presets."
+msgstr "Välj mellan de förinställda stilarna Klassisk, Modern och Hybrid."
+
+#: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:15
+msgid ""
+"Choose what happens when launching SpeedCrunch again: return to an open "
+"window, open a new window, or add a tab."
+msgstr ""
+"Välj vad som ska hända när du startar SpeedCrunch igen. Du kan gå tillbaka "
+"till ett öppet fönster, öppna ett nytt fönster eller lägga till en flik."
+
+#: tmp/org.speedcrunch.SpeedCrunch.metainfo.xml.in.h:16
+msgid "Find answers to common questions in the new FAQ in the user manual."
+msgstr ""
+"Du hittar nu svar på vanliga frågor i ett nytt avsnitt i användarhandboken."

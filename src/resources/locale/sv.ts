@@ -17,7 +17,7 @@
     <message>
         <location filename="../../gui/aboutbox.cpp" line="53"/>
         <source>Original author</source>
-        <translation>Ursprunglig författare</translation>
+        <translation>Ursprunglig upphovsperson</translation>
     </message>
     <message>
         <location filename="../../gui/aboutbox.cpp" line="169"/>
@@ -27,12 +27,12 @@
     <message>
         <location filename="../../gui/aboutbox.cpp" line="54"/>
         <source>Math engine</source>
-        <translation>Matematikmotor</translation>
+        <translation>Beräkningsmotor</translation>
     </message>
     <message>
         <location filename="../../gui/aboutbox.cpp" line="43"/>
         <source>Main author | Logo | Maintainer</source>
-        <translation>Huvudförfattare | Logotyp | Underhållare</translation>
+        <translation>Huvudutvecklare | Logotyp | Projektansvarig</translation>
     </message>
     <message>
         <location filename="../../gui/aboutbox.cpp" line="56"/>
@@ -47,12 +47,12 @@
     <message>
         <location filename="../../gui/aboutbox.cpp" line="150"/>
         <source>This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version</source>
-        <translation>Detta program är fri mjukvara; du får sprida det vidare och/eller ändra det enligt reglerna i GNU General Public License som publicerat av Free Software Foundation; antingen version 2 av licensen, eller (om du så önskar) valfri senare version</translation>
+        <translation>Det här programmet är fri programvara. Du får sprida det vidare och/eller ändra det enligt villkoren i GNU General Public License, som ges ut av Free Software Foundation. Du kan välja version 2 av licensen eller en senare version.</translation>
     </message>
     <message>
         <location filename="../../gui/aboutbox.cpp" line="156"/>
         <source>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.</source>
-        <translation>Detta program distribueras i hopp om att det skall vara användbart, men UTAN NÅGON FORM AV GARANTI; utan ens en underförstådd garanti vid KÖP eller LÄMPLIGHET FÖR NÅGOT SÄRSKILT SYFTE.   Detaljer återfinns i GNU General Public License.</translation>
+        <translation>Det här programmet distribueras i hopp om att det ska vara till nytta, men UTAN NÅGON GARANTI, inte ens en underförstådd garanti om SÄLJBARHET eller LÄMPLIGHET FÖR ETT VISST ÄNDAMÅL. Mer information finns i GNU General Public License.</translation>
     </message>
 </context>
 <context>
@@ -60,7 +60,7 @@
     <message>
         <location filename="../../gui/bitfieldwidget.cpp" line="721"/>
         <source>Reset bits to zero</source>
-        <translation>Återställ bitar till noll</translation>
+        <translation>Nollställ bitarna</translation>
     </message>
     <message>
         <location filename="../../gui/bitfieldwidget.cpp" line="723"/>
@@ -101,7 +101,7 @@
         <location filename="../../core/book.cpp" line="78"/>
         <location filename="../../core/book.cpp" line="117"/>
         <source>Logarithmic Base Conversion</source>
-        <translation>Logaritmisk baskonvertering</translation>
+        <translation>Basbyte för logaritmer</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="79"/>
@@ -118,13 +118,13 @@
         <location filename="../../core/book.cpp" line="81"/>
         <location filename="../../core/book.cpp" line="282"/>
         <source>Sector</source>
-        <translation>Sektor</translation>
+        <translation>Cirkelsektor</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="82"/>
         <location filename="../../core/book.cpp" line="300"/>
         <source>Sphere</source>
-        <translation>Sfär</translation>
+        <translation>Klot</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="83"/>
@@ -188,25 +188,25 @@
         <location filename="../../core/book.cpp" line="93"/>
         <location filename="../../core/book.cpp" line="334"/>
         <source>Characteristic Impedance (coax)</source>
-        <translation>Karakteristisk impedans (koax)</translation>
+        <translation>Karakteristisk impedans i en koaxialkabel</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="94"/>
         <location filename="../../core/book.cpp" line="349"/>
         <source>Velocity of Propagation (coax)</source>
-        <translation>Utbredningshastighet (koax)</translation>
+        <translation>Utbredningshastighet i en koaxialkabel</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="95"/>
         <location filename="../../core/book.cpp" line="366"/>
         <source>Standing Wave Ratio &amp; Return Loss</source>
-        <translation>Ståendevågsförhållande (SWR) och returförlust</translation>
+        <translation>Ståendevågförhållande (SWR) och returdämpning</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="96"/>
         <location filename="../../core/book.cpp" line="392"/>
         <source>Free Space Wavelength</source>
-        <translation>Frirymdsvåglängd</translation>
+        <translation>Våglängd i fri rymd</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="132"/>
@@ -269,7 +269,7 @@
         <location filename="../../core/book.cpp" line="287"/>
         <location filename="../../core/book.cpp" line="306"/>
         <source>area</source>
-        <translation>yta</translation>
+        <translation>area</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="214"/>
@@ -303,7 +303,7 @@
         <location filename="../../core/book.cpp" line="232"/>
         <location filename="../../core/book.cpp" line="252"/>
         <source>surface area</source>
-        <translation>mantelyta</translation>
+        <translation>total ytarea</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="234"/>
@@ -339,12 +339,12 @@
     <message>
         <location filename="../../core/book.cpp" line="290"/>
         <source>central angle (degrees)</source>
-        <translation>mittpunktsvinkel (i grader)</translation>
+        <translation>medelpunktsvinkel (grader)</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="376"/>
         <source>input power</source>
-        <translation>ingående effekt</translation>
+        <translation>infallande effekt</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="377"/>
@@ -359,13 +359,13 @@
     <message>
         <location filename="../../core/book.cpp" line="379"/>
         <source>return loss</source>
-        <translation>returförlust</translation>
+        <translation>returdämpning</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="337"/>
         <location filename="../../core/book.cpp" line="356"/>
         <source>dielectric constant</source>
-        <translation>dielektrisk konstant</translation>
+        <translation>relativ permittivitet</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="338"/>
@@ -380,7 +380,7 @@
     <message>
         <location filename="../../core/book.cpp" line="355"/>
         <source>speed of light</source>
-        <translation>ljushastigheten</translation>
+        <translation>ljusets hastighet</translation>
     </message>
     <message>
         <location filename="../../core/book.cpp" line="380"/>
@@ -417,7 +417,7 @@
         <location filename="../../gui/editor.cpp" line="5183"/>
         <location filename="../../gui/editor.cpp" line="5184"/>
         <source>Search constants</source>
-        <translation>Sök konstanter</translation>
+        <translation>Sök efter konstanter</translation>
     </message>
     <message>
         <location filename="../../gui/editor.cpp" line="5201"/>
@@ -460,77 +460,77 @@
     <message>
         <location filename="../../core/constants.cpp" line="61"/>
         <source>Atomic &amp; Nuclear — General</source>
-        <translation>Atom- och kärnfysik - allmänt</translation>
+        <translation>Atom- och kärnfysik – allmänt</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="63"/>
         <source>Atomic &amp; Nuclear — Electroweak</source>
-        <translation>Atom- och kärnfysik - elektrosvag</translation>
+        <translation>Atom- och kärnfysik – elektrosvag växelverkan</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="65"/>
         <source>Atomic &amp; Nuclear — Electron</source>
-        <translation>Atom- och kärnfysik - elektron</translation>
+        <translation>Atom- och kärnfysik – elektron</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="67"/>
         <source>Atomic &amp; Nuclear — Muon</source>
-        <translation>Atom- och kärnfysik - myon</translation>
+        <translation>Atom- och kärnfysik – myon</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="69"/>
         <source>Atomic &amp; Nuclear — Tau</source>
-        <translation>Atom- och kärnfysik - tau</translation>
+        <translation>Atom- och kärnfysik – taulepton</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="71"/>
         <source>Atomic &amp; Nuclear — Proton</source>
-        <translation>Atom- och kärnfysik - proton</translation>
+        <translation>Atom- och kärnfysik – proton</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="73"/>
         <source>Atomic &amp; Nuclear — Neutron</source>
-        <translation>Atom- och kärnfysik - neutron</translation>
+        <translation>Atom- och kärnfysik – neutron</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="75"/>
         <source>Atomic &amp; Nuclear — Deuteron</source>
-        <translation>Atom- och kärnfysik - deuteron</translation>
+        <translation>Atom- och kärnfysik – deuteron</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="77"/>
         <source>Atomic &amp; Nuclear — Triton</source>
-        <translation>Atom- och kärnfysik - triton</translation>
+        <translation>Atom- och kärnfysik – triton</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="79"/>
         <source>Atomic &amp; Nuclear — Helion</source>
-        <translation>Atom- och kärnfysik - helion</translation>
+        <translation>Atom- och kärnfysik – helion</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="81"/>
         <source>Atomic &amp; Nuclear — Alpha particle</source>
-        <translation>Atom- och kärnfysik - alfapartikel</translation>
+        <translation>Atom- och kärnfysik – alfapartikel</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="83"/>
         <source>Atomic &amp; Nuclear — Atomic units</source>
-        <translation>Atom- och kärnfysik - atomenheter</translation>
+        <translation>Atom- och kärnfysik – atomära enheter</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="85"/>
         <source>Atomic &amp; Nuclear — Energy conversion relationships</source>
-        <translation>Atom- och kärnfysik - energiomvandlingssamband</translation>
+        <translation>Atom- och kärnfysik – omräkning mellan energienheter</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="87"/>
         <source>Atomic &amp; Nuclear — X-ray units</source>
-        <translation>Atom- och kärnfysik - röntgenenheter</translation>
+        <translation>Atom- och kärnfysik – röntgenenheter</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="89"/>
         <source>Atomic &amp; Nuclear — Magnetic shielding corrections</source>
-        <translation>Atom- och kärnfysik - magnetiska skärmningskorrektioner</translation>
+        <translation>Atom- och kärnfysik – magnetiska skärmningskorrektioner</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="91"/>
@@ -540,7 +540,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="93"/>
         <source>Lifetimes</source>
-        <translation>Livstider</translation>
+        <translation>Livslängder</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="95"/>
@@ -565,22 +565,22 @@
     <message>
         <location filename="../../core/constants.cpp" line="103"/>
         <source>Current Best Estimates (IAU NSFA 2026-04)</source>
-        <translation>Aktuella bästa uppskattningar (IAU NSFA 2026-04)</translation>
+        <translation>Bästa tillgängliga uppskattningar (IAU NSFA 2026-04)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="155"/>
         <source>characteristic impedance of vacuum (Z₀)</source>
-        <translation>vakuums karakteristiska impedans (Z₀)</translation>
+        <translation>karakteristisk impedans i vakuum (Z₀)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="156"/>
         <source>reduced Planck constant (ℏ)</source>
-        <translation>reducerad Plancks konstant (ℏ)</translation>
+        <translation>reducerade Planckkonstanten (ℏ)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="157"/>
         <source>vacuum electric permittivity (ϵ₀)</source>
-        <translation>vakuums elektriska permittivitet (ϵ₀)</translation>
+        <translation>elektrisk permittivitet i vakuum (ϵ₀)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="158"/>
@@ -590,1990 +590,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="159"/>
         <source>vacuum magnetic permeability (μ₀)</source>
-        <translation>vakuums magnetiska permeabilitet (μ₀)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="160"/>
-        <source>Planck constant (h)</source>
-        <translation>Plancks konstant (h)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="161"/>
-        <source>speed of light in vacuum (c)</source>
-        <translation>ljusets hastighet i vakuum (c)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="162"/>
-        <source>standard acceleration of gravity (gₙ)</source>
-        <translation>standardtyngdacceleration (gₙ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="163"/>
-        <source>Newtonian constant of gravitation over h-bar c</source>
-        <translation>Newtons gravitationskonstant över h-streck c</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="164"/>
-        <source>Planck length</source>
-        <translation>Plancklängd</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="165"/>
-        <source>Planck constant in eV/Hz (h)</source>
-        <translation>Plancks konstant i eV/Hz (h)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="166"/>
-        <source>Planck mass</source>
-        <translation>Planckmassa</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="167"/>
-        <source>Planck mass energy equivalent in GeV</source>
-        <translation>Planckmassans energiekvivalent i GeV</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="168"/>
-        <source>Planck temperature</source>
-        <translation>Plancktemperatur</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="169"/>
-        <source>Planck time</source>
-        <translation>Plancktid</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="170"/>
-        <source>reduced Planck constant in eV·s (ℏ)</source>
-        <translation>reducerad Plancks konstant i eV·s (ℏ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="171"/>
-        <source>reduced Planck constant times c in MeV·fm</source>
-        <translation>reducerad Plancks konstant gånger c i MeV·fm</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="174"/>
-        <source>Bohr magneton</source>
-        <translation>Bohrmagneton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="175"/>
-        <source>conductance quantum (G₀)</source>
-        <translation>konduktanskvantum (G₀)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="176"/>
-        <source>Coulomb constant (kₑ)</source>
-        <translation>Coulombs konstant (kₑ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="177"/>
-        <source>elementary charge (e)</source>
-        <translation>elementarladdning (e)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="178"/>
-        <source>elementary charge over h-bar</source>
-        <translation>elementarladdning över h-streck</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="179"/>
-        <source>conventional value of Josephson constant</source>
-        <translation>konventionellt värde för Josephsons konstant</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="180"/>
-        <source>Josephson constant</source>
-        <translation>Josephsons konstant</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="181"/>
-        <source>conventional value of ampere-90</source>
-        <translation>konventionellt värde för ampere-90</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="182"/>
-        <source>conventional value of coulomb-90</source>
-        <translation>konventionellt värde för coulomb-90</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="183"/>
-        <source>conventional value of farad-90</source>
-        <translation>konventionellt värde för farad-90</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="184"/>
-        <source>conventional value of henry-90</source>
-        <translation>konventionellt värde för henry-90</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="185"/>
-        <source>conventional value of ohm-90</source>
-        <translation>konventionellt värde för ohm-90</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="186"/>
-        <source>conventional value of volt-90</source>
-        <translation>konventionellt värde för volt-90</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="187"/>
-        <source>conventional value of watt-90</source>
-        <translation>konventionellt värde för watt-90</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="188"/>
-        <source>magnetic flux quantum (Φ₀)</source>
-        <translation>magnetiskt flödeskvantum (Φ₀)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="189"/>
-        <source>nuclear magneton</source>
-        <translation>kärnmagneton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="190"/>
-        <source>inverse of conductance quantum</source>
-        <translation>inversen av konduktanskvantum</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="191"/>
-        <source>conventional value of von Klitzing constant</source>
-        <translation>konventionellt värde för von Klitzings konstant</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="192"/>
-        <source>von Klitzing constant</source>
-        <translation>von Klitzings konstant</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="193"/>
-        <source>atomic unit of magnetic dipole moment</source>
-        <translation>atomenhet för magnetiskt dipolmoment</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="194"/>
-        <source>atomic unit of magnetic flux density</source>
-        <translation>atomenhet för magnetisk flödestäthet</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="195"/>
-        <source>Bohr magneton in eV/T</source>
-        <translation>Bohrmagneton i eV/T</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="196"/>
-        <source>Bohr magneton in Hz/T</source>
-        <translation>Bohrmagneton i Hz/T</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="197"/>
-        <source>Bohr magneton in inverse meter per tesla</source>
-        <translation>Bohrmagneton i invers meter per tesla</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="198"/>
-        <source>Bohr magneton in K/T</source>
-        <translation>Bohrmagneton i K/T</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="199"/>
-        <source>nuclear magneton in eV/T</source>
-        <translation>kärnmagneton i eV/T</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="200"/>
-        <source>nuclear magneton in inverse meter per tesla</source>
-        <translation>kärnmagneton i invers meter per tesla</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="201"/>
-        <source>nuclear magneton in K/T</source>
-        <translation>kärnmagneton i K/T</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="202"/>
-        <source>nuclear magneton in MHz/T</source>
-        <translation>kärnmagneton i MHz/T</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="205"/>
-        <source>Bohr radius (a₀)</source>
-        <translation>Bohrradie (a₀)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="206"/>
-        <source>fine-structure constant (α)</source>
-        <translation>finstrukturkonstant (α)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="207"/>
-        <source>Hartree energy (Eₕ)</source>
-        <translation>Hartreeenergi (Eₕ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="208"/>
-        <source>Hartree energy in eV</source>
-        <translation>Hartreeenergi i eV</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="209"/>
-        <source>quantum of circulation</source>
-        <translation>cirkulationskvantum</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="210"/>
-        <source>quantum of circulation times 2</source>
-        <translation>cirkulationskvantum gånger 2</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="211"/>
-        <source>Rydberg constant (R∞)</source>
-        <translation>Rydbergs konstant (R∞)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="212"/>
-        <source>atomic mass unit-hartree relationship</source>
-        <translation>samband mellan atommassenhet och hartree</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="213"/>
-        <source>atomic mass unit-hertz relationship</source>
-        <translation>samband mellan atommassenhet och hertz</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="214"/>
-        <source>atomic mass unit-inverse meter relationship</source>
-        <translation>samband mellan atommassenhet och invers meter</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="215"/>
-        <source>atomic mass unit-joule relationship</source>
-        <translation>samband mellan atommassenhet och joule</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="216"/>
-        <source>atomic mass unit-kelvin relationship</source>
-        <translation>samband mellan atommassenhet och kelvin</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="217"/>
-        <source>atomic mass unit-kilogram relationship</source>
-        <translation>samband mellan atommassenhet och kilogram</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="218"/>
-        <source>atomic unit of 1st hyperpolarizability</source>
-        <translation>atomenhet för första hyperpolariserbarhet</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="219"/>
-        <source>atomic unit of 2nd hyperpolarizability</source>
-        <translation>atomenhet för andra hyperpolariserbarhet</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="220"/>
-        <source>atomic unit of charge (e)</source>
-        <translation>atomenhet för laddning (e)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="221"/>
-        <source>atomic unit of charge density</source>
-        <translation>atomenhet för laddningstäthet</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="222"/>
-        <source>atomic unit of current</source>
-        <translation>atomenhet för ström</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="223"/>
-        <source>atomic unit of electric dipole moment</source>
-        <translation>atomenhet för elektriskt dipolmoment</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="224"/>
-        <source>atomic unit of electric field</source>
-        <translation>atomenhet för elektriskt fält</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="225"/>
-        <source>atomic unit of electric field gradient</source>
-        <translation>atomenhet för elektrisk fältgradient</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="226"/>
-        <source>atomic unit of electric polarizability</source>
-        <translation>atomenhet för elektrisk polariserbarhet</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="227"/>
-        <source>atomic unit of electric potential</source>
-        <translation>atomenhet för elektrisk potential</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="228"/>
-        <source>atomic unit of electric quadrupole moment</source>
-        <translation>atomenhet för elektriskt kvadrupolmoment</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="229"/>
-        <source>atomic unit of action</source>
-        <translation>atomenhet för verkan</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="230"/>
-        <source>atomic unit of energy</source>
-        <translation>atomenhet för energi</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="231"/>
-        <source>atomic unit of force</source>
-        <translation>atomenhet för kraft</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="232"/>
-        <source>atomic unit of length</source>
-        <translation>atomenhet för längd</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="233"/>
-        <source>hertz-atomic mass unit relationship</source>
-        <translation>samband mellan hertz och atommassenhet</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="234"/>
-        <source>hertz-electron volt relationship</source>
-        <translation>samband mellan hertz och elektronvolt</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="235"/>
-        <source>hertz-hartree relationship</source>
-        <translation>samband mellan hertz och hartree</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="236"/>
-        <source>hertz-inverse meter relationship</source>
-        <translation>samband mellan hertz och invers meter</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="237"/>
-        <source>hertz-joule relationship</source>
-        <translation>samband mellan hertz och joule</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="238"/>
-        <source>hertz-kelvin relationship</source>
-        <translation>samband mellan hertz och kelvin</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="239"/>
-        <source>hertz-kilogram relationship</source>
-        <translation>samband mellan hertz och kilogram</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="240"/>
-        <source>hyperfine transition frequency of Cs-133</source>
-        <translation>hyperfin övergångsfrekvens för Cs-133</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="241"/>
-        <source>inverse fine-structure constant (α⁻¹)</source>
-        <translation>inverse finstrukturkonstant (α⁻¹)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="242"/>
-        <source>inverse meter-atomic mass unit relationship</source>
-        <translation>samband mellan invers meter och atommassenhet</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="243"/>
-        <source>inverse meter-electron volt relationship</source>
-        <translation>samband mellan invers meter och elektronvolt</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="244"/>
-        <source>inverse meter-hartree relationship</source>
-        <translation>samband mellan invers meter och hartree</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="245"/>
-        <source>inverse meter-hertz relationship</source>
-        <translation>samband mellan invers meter och hertz</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="246"/>
-        <source>inverse meter-joule relationship</source>
-        <translation>samband mellan invers meter och joule</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="247"/>
-        <source>inverse meter-kelvin relationship</source>
-        <translation>samband mellan invers meter och kelvin</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="248"/>
-        <source>inverse meter-kilogram relationship</source>
-        <translation>samband mellan invers meter och kilogram</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="249"/>
-        <source>joule-atomic mass unit relationship</source>
-        <translation>samband mellan joule och atommassenhet</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="250"/>
-        <source>joule-electron volt relationship</source>
-        <translation>samband mellan joule och elektronvolt</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="251"/>
-        <source>joule-hertz relationship</source>
-        <translation>samband mellan joule och hertz</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="252"/>
-        <source>joule-hartree relationship</source>
-        <translation>samband mellan joule och hartree</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="253"/>
-        <source>joule-inverse meter relationship</source>
-        <translation>samband mellan joule och invers meter</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="254"/>
-        <source>joule-kelvin relationship</source>
-        <translation>samband mellan joule och kelvin</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="255"/>
-        <source>joule-kilogram relationship</source>
-        <translation>samband mellan joule och kilogram</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="256"/>
-        <source>kelvin-atomic mass unit relationship</source>
-        <translation>samband mellan kelvin och atommassenhet</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="257"/>
-        <source>kelvin-electron volt relationship</source>
-        <translation>samband mellan kelvin och elektronvolt</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="258"/>
-        <source>kelvin-hertz relationship</source>
-        <translation>samband mellan kelvin och hertz</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="259"/>
-        <source>kelvin-hartree relationship</source>
-        <translation>samband mellan kelvin och hartree</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="260"/>
-        <source>kelvin-inverse meter relationship</source>
-        <translation>samband mellan kelvin och invers meter</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="261"/>
-        <source>kelvin-joule relationship</source>
-        <translation>samband mellan kelvin och joule</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="262"/>
-        <source>kelvin-kilogram relationship</source>
-        <translation>samband mellan kelvin och kilogram</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="263"/>
-        <source>kilogram-atomic mass unit relationship</source>
-        <translation>samband mellan kilogram och atommassenhet</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="264"/>
-        <source>kilogram-electron volt relationship</source>
-        <translation>samband mellan kilogram och elektronvolt</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="265"/>
-        <source>kilogram-hertz relationship</source>
-        <translation>samband mellan kilogram och hertz</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="266"/>
-        <source>kilogram-hartree relationship</source>
-        <translation>samband mellan kilogram och hartree</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="267"/>
-        <source>kilogram-inverse meter relationship</source>
-        <translation>samband mellan kilogram och invers meter</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="268"/>
-        <source>kilogram-joule relationship</source>
-        <translation>samband mellan kilogram och joule</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="269"/>
-        <source>kilogram-kelvin relationship</source>
-        <translation>samband mellan kilogram och kelvin</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="270"/>
-        <source>lattice parameter of silicon (a)</source>
-        <translation>gitterparameter för kisel (a)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="271"/>
-        <source>luminous efficacy</source>
-        <translation>ljusutbyte</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="272"/>
-        <source>natural unit of energy</source>
-        <translation>naturlig enhet för energi</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="273"/>
-        <source>natural unit of energy in MeV</source>
-        <translation>naturlig enhet för energi i MeV</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="274"/>
-        <source>natural unit of action (ℏ)</source>
-        <translation>naturlig enhet för verkan (ℏ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="275"/>
-        <source>natural unit of action in eV·s</source>
-        <translation>naturlig enhet för verkan i eV·s</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="276"/>
-        <source>natural unit of length</source>
-        <translation>naturlig enhet för längd</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="277"/>
-        <source>natural unit of mass</source>
-        <translation>natural unit ofmassa</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="278"/>
-        <source>natural unit of momentum</source>
-        <translation>naturlig enhet för rörelsemängd</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="279"/>
-        <source>natural unit of momentum in MeV/c</source>
-        <translation>naturlig enhet för rörelsemängd i MeV/c</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="280"/>
-        <source>natural unit of time</source>
-        <translation>naturlig enhet för tid</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="281"/>
-        <source>natural unit of velocity</source>
-        <translation>naturlig enhet för hastighet</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="282"/>
-        <source>Rydberg constant times c in Hz</source>
-        <translation>Rydbergs konstant gånger c i Hz</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="283"/>
-        <source>Rydberg constant times hc in eV</source>
-        <translation>Rydbergs konstant gånger hc i eV</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="284"/>
-        <source>Rydberg constant times hc in J</source>
-        <translation>Rydbergs konstant gånger hc i J</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="287"/>
-        <source>Fermi coupling constant</source>
-        <translation>Fermis kopplingskonstant</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="288"/>
-        <source>weak mixing angle</source>
-        <translation>svag blandningsvinkel</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="289"/>
-        <source>W to Z mass ratio</source>
-        <translation>massförhållande mellan W och Z</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="292"/>
-        <source>Thomson cross section (σₑ)</source>
-        <translation>Thomsons tvärsnitt (σₑ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="293"/>
-        <source>electron mass (mₑ)</source>
-        <translation>elektronmassa (mₑ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="294"/>
-        <source>electron mass in u</source>
-        <translation>elektronmassa i u</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="295"/>
-        <source>electron mass energy equivalent (mₑ·c²)</source>
-        <translation>massenergiekvivalent för elektron (mₑ·c²)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="296"/>
-        <source>electron mass energy equivalent in MeV</source>
-        <translation>massenergiekvivalent för elektron i MeV</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="298"/>
-        <source>reduced Compton wavelength</source>
-        <translation>Comptonvåglängd för reduced</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="299"/>
-        <source>classical electron radius (rₑ)</source>
-        <translation>klassisk elektronradie (rₑ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="300"/>
-        <source>electron charge to mass quotient</source>
-        <translation>laddning-massa-kvot för elektron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="301"/>
-        <source>electron-deuteron magnetic moment ratio</source>
-        <translation>förhållande mellan magnetiska moment för elektron och deuteron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="302"/>
-        <source>electron-deuteron mass ratio</source>
-        <translation>massförhållande elektron-deuteron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="303"/>
-        <source>electron g factor (gₑ)</source>
-        <translation>elektronens g-faktor (gₑ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="304"/>
-        <source>electron gyromagnetic ratio (γₑ)</source>
-        <translation>elektronens gyromagnetiska förhållande (γₑ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="305"/>
-        <source>electron gyromagnetic ratio in MHz/T</source>
-        <translation>elektronens gyromagnetiska förhållande i MHz/T</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="306"/>
-        <source>electron-helion mass ratio</source>
-        <translation>massförhållande elektron-helion</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="307"/>
-        <source>electron magnetic moment (μₑ)</source>
-        <translation>elektronens magnetiska moment (μₑ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="308"/>
-        <source>electron magnetic moment anomaly (aₑ)</source>
-        <translation>anomali hos elektronens magnetiska moment (aₑ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="309"/>
-        <source>electron magnetic moment to Bohr magneton ratio</source>
-        <translation>förhållande mellan elektronens magnetiska moment och Bohrmagnetonen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="310"/>
-        <source>electron magnetic moment to nuclear magneton ratio</source>
-        <translation>förhållande mellan elektronens magnetiska moment och kärnmagnetonen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="311"/>
-        <source>electron molar mass (Mₑ)</source>
-        <translation>electron molarmassa (Mₑ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="312"/>
-        <source>electron-muon magnetic moment ratio</source>
-        <translation>förhållande mellan magnetiska moment för elektron och myon</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="313"/>
-        <source>electron-muon mass ratio</source>
-        <translation>massförhållande elektron-myon</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="314"/>
-        <source>electron-neutron magnetic moment ratio</source>
-        <translation>förhållande mellan magnetiska moment för elektron och neutron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="315"/>
-        <source>electron-neutron mass ratio</source>
-        <translation>massförhållande elektron-neutron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="316"/>
-        <source>electron-proton magnetic moment ratio</source>
-        <translation>förhållande mellan magnetiska moment för elektron och proton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="317"/>
-        <source>electron-proton mass ratio</source>
-        <translation>massförhållande elektron-proton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="318"/>
-        <source>electron relative atomic mass (Ar(e))</source>
-        <translation>relativ atommassa för elektron (Ar(e))</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="319"/>
-        <source>electron-tau mass ratio</source>
-        <translation>massförhållande elektron-tau</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="320"/>
-        <source>electron to alpha particle mass ratio</source>
-        <translation>massförhållande mellan elektron och alfapartikel</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="321"/>
-        <source>electron to shielded helion magnetic moment ratio</source>
-        <translation>förhållande mellan elektronens och skärmade helionens magnetiska moment</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="322"/>
-        <source>electron to shielded proton magnetic moment ratio</source>
-        <translation>förhållande mellan elektronens och skärmade protonens magnetiska moment</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="323"/>
-        <source>electron-triton mass ratio</source>
-        <translation>massförhållande elektron-triton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="324"/>
-        <source>electron volt-atomic mass unit relationship</source>
-        <translation>samband mellan elektronvolt och atommassenhet</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="325"/>
-        <source>electron volt-hartree relationship</source>
-        <translation>samband mellan elektronvolt och hartree</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="326"/>
-        <source>electron volt-hertz relationship</source>
-        <translation>samband mellan elektronvolt och hertz</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="327"/>
-        <source>electron volt-inverse meter relationship</source>
-        <translation>samband mellan elektronvolt och invers meter</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="328"/>
-        <source>electron volt-joule relationship</source>
-        <translation>samband mellan elektronvolt och joule</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="329"/>
-        <source>electron volt-kelvin relationship</source>
-        <translation>samband mellan elektronvolt och kelvin</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="330"/>
-        <source>electron volt-kilogram relationship</source>
-        <translation>samband mellan elektronvolt och kilogram</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="331"/>
-        <source>hartree-atomic mass unit relationship</source>
-        <translation>samband mellan hartree och atommassenhet</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="332"/>
-        <source>hartree-electron volt relationship</source>
-        <translation>samband mellan hartree och elektronvolt</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="335"/>
-        <source>muon Compton wavelength</source>
-        <translation>Comptonvåglängd för myon</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="336"/>
-        <source>muon-electron mass ratio</source>
-        <translation>massförhållande myon-elektron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="337"/>
-        <source>muon g factor</source>
-        <translation>myonens g-faktor</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="338"/>
-        <source>muon magnetic moment</source>
-        <translation>myonens magnetiska moment</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="339"/>
-        <source>muon magnetic moment anomaly</source>
-        <translation>anomali hos myonens magnetiska moment</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="340"/>
-        <source>muon magnetic moment to Bohr magneton ratio</source>
-        <translation>förhållande mellan myonens magnetiska moment och Bohrmagnetonen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="341"/>
-        <source>muon magnetic moment to nuclear magneton ratio</source>
-        <translation>förhållande mellan myonens magnetiska moment och kärnmagnetonen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="342"/>
-        <source>muon mass</source>
-        <translation>myonmassa</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="343"/>
-        <source>muon mass energy equivalent</source>
-        <translation>massenergiekvivalent för myon</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="344"/>
-        <source>muon mass energy equivalent in MeV</source>
-        <translation>massenergiekvivalent för myon i MeV</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="345"/>
-        <source>muon mass in u</source>
-        <translation>myonmassa i u</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="346"/>
-        <source>muon molar mass</source>
-        <translation>muon molarmassa</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="347"/>
-        <source>muon-neutron mass ratio</source>
-        <translation>massförhållande myon-neutron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="348"/>
-        <source>muon-proton magnetic moment ratio</source>
-        <translation>förhållande mellan magnetiska moment för myon och proton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="349"/>
-        <source>muon-proton mass ratio</source>
-        <translation>massförhållande myon-proton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="350"/>
-        <source>muon-tau mass ratio</source>
-        <translation>massförhållande myon-tau</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="351"/>
-        <source>reduced muon Compton wavelength</source>
-        <translation>reducerad Comptonvåglängd för myon</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="354"/>
-        <source>reduced tau Compton wavelength</source>
-        <translation>reducerad Comptonvåglängd för tau</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="355"/>
-        <source>tau Compton wavelength</source>
-        <translation>Comptonvåglängd för tau</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="356"/>
-        <source>tau-electron mass ratio</source>
-        <translation>massförhållande tau-elektron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="357"/>
-        <source>tau mass</source>
-        <translation>taumassa</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="358"/>
-        <source>tau mass energy equivalent</source>
-        <translation>massenergiekvivalent för tau</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="359"/>
-        <source>tau mass in u</source>
-        <translation>taumassa i u</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="360"/>
-        <source>tau molar mass</source>
-        <translation>tau molarmassa</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="361"/>
-        <source>tau-muon mass ratio</source>
-        <translation>massförhållande tau-myon</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="362"/>
-        <source>tau-neutron mass ratio</source>
-        <translation>massförhållande tau-neutron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="363"/>
-        <source>tau-proton mass ratio</source>
-        <translation>massförhållande tau-proton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="366"/>
-        <source>proton charge to mass quotient</source>
-        <translation>laddning-massa-kvot för proton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="367"/>
-        <source>proton Compton wavelength</source>
-        <translation>Comptonvåglängd för proton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="368"/>
-        <source>proton-electron mass ratio</source>
-        <translation>massförhållande proton-elektron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="369"/>
-        <source>proton g factor (gₚ)</source>
-        <translation>protonens g-faktor (gₚ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="370"/>
-        <source>proton gyromagnetic ratio (γₚ)</source>
-        <translation>protonens gyromagnetiska förhållande (γₚ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="371"/>
-        <source>proton gyromagnetic ratio in MHz/T</source>
-        <translation>protonens gyromagnetiska förhållande i MHz/T</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="372"/>
-        <source>proton magnetic moment (μₚ)</source>
-        <translation>protonens magnetiska moment (μₚ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="373"/>
-        <source>proton magnetic moment to Bohr magneton ratio</source>
-        <translation>förhållande mellan protonens magnetiska moment och Bohrmagnetonen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="374"/>
-        <source>proton magnetic moment to nuclear magneton ratio</source>
-        <translation>förhållande mellan protonens magnetiska moment och kärnmagnetonen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="375"/>
-        <source>proton magnetic shielding correction</source>
-        <translation>magnetisk skärmningskorrektion för proton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="376"/>
-        <source>proton mass (mₚ)</source>
-        <translation>protonmassa (mₚ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="377"/>
-        <source>proton mass energy equivalent</source>
-        <translation>massenergiekvivalent för proton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="378"/>
-        <source>proton mass energy equivalent in MeV</source>
-        <translation>massenergiekvivalent för proton i MeV</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="379"/>
-        <source>proton mass in u</source>
-        <translation>protonmassa i u</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="380"/>
-        <source>proton molar mass (Mₚ)</source>
-        <translation>proton molarmassa (Mₚ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="381"/>
-        <source>proton-muon mass ratio</source>
-        <translation>massförhållande proton-myon</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="382"/>
-        <source>proton-neutron magnetic moment ratio</source>
-        <translation>förhållande mellan magnetiska moment för proton och neutron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="383"/>
-        <source>proton-neutron mass ratio</source>
-        <translation>massförhållande proton-neutron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="384"/>
-        <source>proton relative atomic mass (Ar(p))</source>
-        <translation>relativ atommassa för proton (Ar(p))</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="385"/>
-        <source>proton rms charge radius</source>
-        <translation>rms-laddningsradie för proton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="386"/>
-        <source>proton-tau mass ratio</source>
-        <translation>massförhållande proton-tau</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="387"/>
-        <source>reduced proton Compton wavelength</source>
-        <translation>reducerad Comptonvåglängd för proton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="388"/>
-        <source>shielded proton gyromagnetic ratio</source>
-        <translation>skärmad protonens gyromagnetiska förhållande</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="389"/>
-        <source>shielded proton gyromagnetic ratio in MHz/T</source>
-        <translation>skärmad protonens gyromagnetiska förhållande i MHz/T</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="390"/>
-        <source>shielded proton magnetic moment</source>
-        <translation>skärmad protonens magnetiska moment</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="391"/>
-        <source>shielded proton magnetic moment to Bohr magneton ratio</source>
-        <translation>förhållande mellan skärmad protonens magnetiska moment och Bohrmagnetonen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="392"/>
-        <source>shielded proton magnetic moment to nuclear magneton ratio</source>
-        <translation>förhållande mellan skärmad protonens magnetiska moment och kärnmagnetonen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="395"/>
-        <source>neutron Compton wavelength</source>
-        <translation>Comptonvåglängd för neutron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="396"/>
-        <source>neutron-electron magnetic moment ratio</source>
-        <translation>förhållande mellan magnetiska moment för neutron och elektron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="397"/>
-        <source>neutron-electron mass ratio</source>
-        <translation>massförhållande neutron-elektron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="398"/>
-        <source>neutron g factor (gₙ)</source>
-        <translation>neutronens g-faktor (gₙ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="399"/>
-        <source>neutron gyromagnetic ratio (γₙ)</source>
-        <translation>neutronens gyromagnetiska förhållande (γₙ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="400"/>
-        <source>neutron gyromagnetic ratio in MHz/T</source>
-        <translation>neutronens gyromagnetiska förhållande i MHz/T</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="401"/>
-        <source>neutron magnetic moment (μₙ)</source>
-        <translation>neutronens magnetiska moment (μₙ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="402"/>
-        <source>neutron magnetic moment to Bohr magneton ratio</source>
-        <translation>förhållande mellan neutronens magnetiska moment och Bohrmagnetonen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="403"/>
-        <source>neutron magnetic moment to nuclear magneton ratio</source>
-        <translation>förhållande mellan neutronens magnetiska moment och kärnmagnetonen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="404"/>
-        <source>neutron mass (mₙ)</source>
-        <translation>neutronmassa (mₙ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="405"/>
-        <source>neutron mass energy equivalent</source>
-        <translation>massenergiekvivalent för neutron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="406"/>
-        <source>neutron mass energy equivalent in MeV</source>
-        <translation>massenergiekvivalent för neutron i MeV</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="407"/>
-        <source>neutron mass in u</source>
-        <translation>neutronmassa i u</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="408"/>
-        <source>neutron molar mass (Mₙ)</source>
-        <translation>neutron molarmassa (Mₙ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="409"/>
-        <source>neutron-muon mass ratio</source>
-        <translation>massförhållande neutron-myon</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="410"/>
-        <source>neutron-proton magnetic moment ratio</source>
-        <translation>förhållande mellan magnetiska moment för neutron och proton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="411"/>
-        <source>neutron-proton mass difference</source>
-        <translation>masskillnad mellan neutron och proton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="412"/>
-        <source>neutron-proton mass difference energy equivalent</source>
-        <translation>massenergiekvivalent för masskillnad mellan neutron och proton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="413"/>
-        <source>neutron-proton mass difference energy equivalent in MeV</source>
-        <translation>massenergiekvivalent för masskillnad mellan neutron och proton i MeV</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="414"/>
-        <source>neutron-proton mass difference in u</source>
-        <translation>masskillnad mellan neutron och proton i u</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="415"/>
-        <source>neutron-proton mass ratio</source>
-        <translation>massförhållande neutron-proton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="416"/>
-        <source>neutron relative atomic mass (Ar(n))</source>
-        <translation>relativ atommassa för neutron (Ar(n))</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="417"/>
-        <source>neutron-tau mass ratio</source>
-        <translation>massförhållande neutron-tau</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="418"/>
-        <source>neutron to shielded proton magnetic moment ratio</source>
-        <translation>neutron till skärmad proton magnetiskt moment förhållande</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="419"/>
-        <source>reduced neutron Compton wavelength</source>
-        <translation>reducerad Comptonvåglängd för neutron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="422"/>
-        <source>deuteron-electron magnetic moment ratio</source>
-        <translation>förhållande mellan magnetiska moment för deuteron och elektron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="423"/>
-        <source>deuteron-electron mass ratio</source>
-        <translation>massförhållande deuteron-elektron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="424"/>
-        <source>deuteron g factor</source>
-        <translation>deuteronens g-faktor</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="425"/>
-        <source>deuteron magnetic moment</source>
-        <translation>deuteronens magnetiska moment</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="426"/>
-        <source>deuteron magnetic moment to Bohr magneton ratio</source>
-        <translation>förhållande mellan deuteronens magnetiska moment och Bohrmagnetonen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="427"/>
-        <source>deuteron magnetic moment to nuclear magneton ratio</source>
-        <translation>förhållande mellan deuteronens magnetiska moment och kärnmagnetonen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="428"/>
-        <source>deuteron mass</source>
-        <translation>deuteronmassa</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="429"/>
-        <source>deuteron mass energy equivalent</source>
-        <translation>massenergiekvivalent för deuteron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="430"/>
-        <source>deuteron mass energy equivalent in MeV</source>
-        <translation>massenergiekvivalent för deuteron i MeV</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="431"/>
-        <source>deuteron mass in u</source>
-        <translation>deuteronmassa i u</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="432"/>
-        <source>deuteron molar mass</source>
-        <translation>deuteron molarmassa</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="433"/>
-        <source>deuteron-neutron magnetic moment ratio</source>
-        <translation>förhållande mellan magnetiska moment för deuteron och neutron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="434"/>
-        <source>deuteron-proton magnetic moment ratio</source>
-        <translation>förhållande mellan magnetiska moment för deuteron och proton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="435"/>
-        <source>deuteron-proton mass ratio</source>
-        <translation>massförhållande deuteron-proton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="436"/>
-        <source>deuteron relative atomic mass (Ar(d))</source>
-        <translation>relativ atommassa för deuteron (Ar(d))</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="437"/>
-        <source>deuteron rms charge radius</source>
-        <translation>rms-laddningsradie för deuteron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="440"/>
-        <source>triton-electron mass ratio</source>
-        <translation>massförhållande triton-elektron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="441"/>
-        <source>triton g factor (gₜ)</source>
-        <translation>tritonens g-faktor (gₜ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="442"/>
-        <source>triton magnetic moment (μₜ)</source>
-        <translation>tritonens magnetiska moment (μₜ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="443"/>
-        <source>triton magnetic moment to Bohr magneton ratio</source>
-        <translation>förhållande mellan tritonens magnetiska moment och Bohrmagnetonen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="444"/>
-        <source>triton magnetic moment to nuclear magneton ratio</source>
-        <translation>förhållande mellan tritonens magnetiska moment och kärnmagnetonen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="445"/>
-        <source>triton mass (mₜ)</source>
-        <translation>tritonmassa (mₜ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="446"/>
-        <source>triton mass energy equivalent</source>
-        <translation>massenergiekvivalent för triton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="447"/>
-        <source>triton mass energy equivalent in MeV</source>
-        <translation>massenergiekvivalent för triton i MeV</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="448"/>
-        <source>triton mass in u</source>
-        <translation>tritonmassa i u</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="449"/>
-        <source>triton molar mass (Mₜ)</source>
-        <translation>triton molarmassa (Mₜ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="450"/>
-        <source>triton-proton mass ratio</source>
-        <translation>massförhållande triton-proton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="451"/>
-        <source>triton relative atomic mass (Ar(t))</source>
-        <translation>relativ atommassa för triton (Ar(t))</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="452"/>
-        <source>triton to proton magnetic moment ratio</source>
-        <translation>förhållande mellan tritonens och protonens magnetiska moment</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="455"/>
-        <source>helion-electron mass ratio</source>
-        <translation>massförhållande helion-elektron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="456"/>
-        <source>helion g factor (gₕ)</source>
-        <translation>helionens g-faktor (gₕ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="457"/>
-        <source>helion magnetic moment (μₕ)</source>
-        <translation>helionens magnetiska moment (μₕ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="458"/>
-        <source>helion magnetic moment to Bohr magneton ratio</source>
-        <translation>förhållande mellan helionens magnetiska moment och Bohrmagnetonen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="459"/>
-        <source>helion magnetic moment to nuclear magneton ratio</source>
-        <translation>förhållande mellan helionens magnetiska moment och kärnmagnetonen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="460"/>
-        <source>helion mass (mₕ)</source>
-        <translation>helionmassa (mₕ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="461"/>
-        <source>helion mass energy equivalent</source>
-        <translation>massenergiekvivalent för helion</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="462"/>
-        <source>helion mass energy equivalent in MeV</source>
-        <translation>massenergiekvivalent för helion i MeV</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="463"/>
-        <source>helion mass in u</source>
-        <translation>helionmassa i u</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="464"/>
-        <source>helion molar mass (Mₕ)</source>
-        <translation>helion molarmassa (Mₕ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="465"/>
-        <source>helion-proton mass ratio</source>
-        <translation>massförhållande helion-proton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="466"/>
-        <source>helion relative atomic mass (Ar(h))</source>
-        <translation>relativ atommassa för helion (Ar(h))</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="467"/>
-        <source>helion shielding shift</source>
-        <translation>helionens skärmningsförskjutning</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="468"/>
-        <source>shielded helion gyromagnetic ratio</source>
-        <translation>skärmad helionens gyromagnetiska förhållande</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="469"/>
-        <source>shielded helion gyromagnetic ratio in MHz/T</source>
-        <translation>skärmad helionens gyromagnetiska förhållande i MHz/T</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="470"/>
-        <source>shielded helion magnetic moment</source>
-        <translation>skärmad helionens magnetiska moment</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="471"/>
-        <source>shielded helion magnetic moment to Bohr magneton ratio</source>
-        <translation>förhållande mellan skärmad helionens magnetiska moment och Bohrmagnetonen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="472"/>
-        <source>shielded helion magnetic moment to nuclear magneton ratio</source>
-        <translation>förhållande mellan skärmad helionens magnetiska moment och kärnmagnetonen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="473"/>
-        <source>shielded helion to proton magnetic moment ratio</source>
-        <translation>förhållande mellan skärmade helionens och protonens magnetiska moment</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="474"/>
-        <source>shielded helion to shielded proton magnetic moment ratio</source>
-        <translation>förhållande mellan skärmade helionens och skärmade protonens magnetiska moment</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="477"/>
-        <source>alpha particle mass</source>
-        <translation>alfapartikelmassa</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="478"/>
-        <source>alpha particle mass in u</source>
-        <translation>alfapartikelmassa i u</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="479"/>
-        <source>alpha particle mass energy equivalent</source>
-        <translation>massenergiekvivalent för alfapartikel</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="480"/>
-        <source>alpha particle mass energy equivalent in MeV</source>
-        <translation>massenergiekvivalent för alfapartikel i MeV</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="481"/>
-        <source>alpha particle-electron mass ratio</source>
-        <translation>massförhållande alfapartikel-elektron</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="482"/>
-        <source>alpha particle-proton mass ratio</source>
-        <translation>massförhållande alfapartikel-proton</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="483"/>
-        <source>alpha particle rms charge radius</source>
-        <translation>rms-laddningsradie för alfapartikel</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="484"/>
-        <source>alpha particle molar mass</source>
-        <translation>alpha particle molarmassa</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="485"/>
-        <source>alpha particle relative atomic mass (Ar(α))</source>
-        <translation>relativ atommassa för alfapartikel (Ar(α))</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="488"/>
-        <source>atomic mass constant (mᵤ)</source>
-        <translation>atomic massa konstant (mᵤ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="489"/>
-        <source>Avogadro constant</source>
-        <translation>Avogadros konstant</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="490"/>
-        <source>Boltzmann constant (k)</source>
-        <translation>Boltzmanns konstant (k)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="491"/>
-        <source>Boltzmann constant in eV/K</source>
-        <translation>Boltzmanns konstant i eV/K</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="492"/>
-        <source>Boltzmann constant in Hz/K</source>
-        <translation>Boltzmanns konstant i Hz/K</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="493"/>
-        <source>Boltzmann constant in inverse meter per kelvin</source>
-        <translation>Boltzmanns konstant i invers meter per kelvin</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="494"/>
-        <source>electron volt (eV)</source>
-        <translation>elektronvolt (eV)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="495"/>
-        <source>Faraday constant (F)</source>
-        <translation>Faradays konstant (F)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="496"/>
-        <source>first radiation constant (c₁)</source>
-        <translation>första strålningskonstanten (c₁)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="497"/>
-        <source>first radiation constant for spectral radiance</source>
-        <translation>första strålningskonstanten för spektral radians</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="498"/>
-        <source>molar gas constant (R)</source>
-        <translation>molär gaskonstant (R)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="499"/>
-        <source>Loschmidt constant (n₀, 273.15 K, 100 kPa)</source>
-        <translation>Loschmidts konstant (n₀, 273.15 K, 100 kPa)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="500"/>
-        <source>Loschmidt constant (n₀, 273.15 K, 101.325 kPa)</source>
-        <translation>Loschmidts konstant (n₀, 273.15 K, 101.325 kPa)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="501"/>
-        <source>molar Planck constant</source>
-        <translation>molär Planckkonstant</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="502"/>
-        <source>second radiation constant (c₂)</source>
-        <translation>andra strålningskonstanten (c₂)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="503"/>
-        <source>Stefan-Boltzmann constant (σ)</source>
-        <translation>Stefan-Boltzmanns konstant (σ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="504"/>
-        <source>lattice spacing of ideal Si (d₂₂₀)</source>
-        <translation>gitteravstånd för idealt Si (d₂₂₀)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="505"/>
-        <source>atomic mass constant energy equivalent</source>
-        <translation>atomic massa konstant energi equivalent</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="506"/>
-        <source>atomic mass constant energy equivalent in MeV</source>
-        <translation>atomic massa konstant energi equivalent i MeV</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="507"/>
-        <source>atomic mass unit-electron volt relationship</source>
-        <translation>samband mellan atommassenhet och elektronvolt</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="508"/>
-        <source>molar mass constant (Mᵤ)</source>
-        <translation>molmasskonstant (Mᵤ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="509"/>
-        <source>molar mass of carbon-12</source>
-        <translation>molmassa för kol-12</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="510"/>
-        <source>molar volume of ideal gas (273.15 K, 100 kPa)</source>
-        <translation>molvolym för ideal gas (273.15 K, 100 kPa)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="511"/>
-        <source>molar volume of ideal gas (273.15 K, 101.325 kPa)</source>
-        <translation>molvolym för ideal gas (273.15 K, 101.325 kPa)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="512"/>
-        <source>molar volume of silicon</source>
-        <translation>molvolym för kisel</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="513"/>
-        <source>Sackur-Tetrode constant (1 K, 100 kPa)</source>
-        <translation>Sackur-Tetrodes konstant (1 K, 100 kPa)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="514"/>
-        <source>Sackur-Tetrode constant (1 K, 101.325 kPa)</source>
-        <translation>Sackur-Tetrodes konstant (1 K, 101.325 kPa)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="515"/>
-        <source>Wien frequency displacement law constant</source>
-        <translation>Wiens frekvensförskjutningskonstant</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="516"/>
-        <source>Wien wavelength displacement law constant</source>
-        <translation>Wiens våglängdsförskjutningskonstant</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="517"/>
-        <source>standard atmosphere (atm)</source>
-        <translation>standardatmosfär (atm)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="518"/>
-        <source>standard-state pressure (p°)</source>
-        <translation>standardtillståndstryck (p°)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="521"/>
-        <source>Angstrom star (Å*)</source>
-        <translation>ångströmstjärna (Å*)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="522"/>
-        <source>Copper x unit</source>
-        <translation>koppar-x-enhet</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="523"/>
-        <source>Molybdenum x unit</source>
-        <translation>molybden-x-enhet</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="526"/>
-        <source>atomic unit of magnetizability</source>
-        <translation>atomenhet för magnetiserbarhet</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="527"/>
-        <source>atomic unit of mass (mₑ)</source>
-        <translation>atomenhet för massa (mₑ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="528"/>
-        <source>atomic unit of momentum</source>
-        <translation>atomenhet för rörelsemängd</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="529"/>
-        <source>atomic unit of permittivity</source>
-        <translation>atomenhet för permittivitet</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="530"/>
-        <source>atomic unit of time</source>
-        <translation>atomenhet för tid</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="531"/>
-        <source>atomic unit of velocity</source>
-        <translation>atomenhet för hastighet</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="534"/>
-        <source>hartree-hertz relationship</source>
-        <translation>samband mellan hartree och hertz</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="535"/>
-        <source>hartree-inverse meter relationship</source>
-        <translation>samband mellan hartree och invers meter</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="536"/>
-        <source>hartree-joule relationship</source>
-        <translation>samband mellan hartree och joule</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="537"/>
-        <source>hartree-kelvin relationship</source>
-        <translation>samband mellan hartree och kelvin</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="538"/>
-        <source>hartree-kilogram relationship</source>
-        <translation>samband mellan hartree och kilogram</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="541"/>
-        <source>shielding difference of d and p in HD</source>
-        <translation>skärmningsskillnad mellan d och p i HD</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="542"/>
-        <source>shielding difference of t and p in HT</source>
-        <translation>skärmningsskillnad mellan t och p i HT</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="546"/>
-        <source>pi (π)</source>
-        <translation>pi (π)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="547"/>
-        <source>Euler&apos;s number (e)</source>
-        <translation>Eulers tal (e)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="548"/>
-        <source>golden ratio (φ)</source>
-        <translation>gyllene snittet (φ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="549"/>
-        <source>Euler-Mascheroni constant (γ)</source>
-        <translation>Euler-Mascheronis konstant (γ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="553"/>
-        <source>nominal solar radius</source>
-        <translation>nominell solradie</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="554"/>
-        <source>nominal solar total irradiance</source>
-        <translation>nominell total solirradians</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="555"/>
-        <source>nominal solar luminosity</source>
-        <translation>nominell solluminositet</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="556"/>
-        <source>nominal solar effective temperature</source>
-        <translation>nominell effektiv soltemperatur</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="557"/>
-        <source>nominal solar mass parameter</source>
-        <translation>nominell solmassparameter</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="558"/>
-        <source>nominal terrestrial equatorial radius</source>
-        <translation>nominell ekvatoriell jordradie</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="559"/>
-        <source>nominal terrestrial polar radius</source>
-        <translation>nominell polär jordradie</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="560"/>
-        <source>nominal terrestrial mass parameter</source>
-        <translation>nominell jordmassparameter</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="561"/>
-        <source>nominal jovian equatorial radius</source>
-        <translation>nominell ekvatoriell Jupiterradie</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="562"/>
-        <source>nominal jovian polar radius</source>
-        <translation>nominell polär Jupiterradie</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="563"/>
-        <source>nominal jovian mass parameter</source>
-        <translation>nominell Jupitermassparameter</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="565"/>
-        <source>average value of one minus the rate of TCG relative to TCB</source>
-        <translation>medelvärde av ett minus hastigheten för TCG relativt TCB</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="566"/>
-        <source>solar mass parameter (TCB-compatible)</source>
-        <translation>solmassparameter (TCB-kompatibel)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="567"/>
-        <source>solar mass parameter (TDB-compatible)</source>
-        <translation>solmassparameter (TDB-kompatibel)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="568"/>
-        <source>equatorial radius of the Earth (TT-compatible)</source>
-        <translation>jordens ekvatoriella radie (TT-kompatibel)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="569"/>
-        <source>dynamical form factor of the Earth</source>
-        <translation>jordens dynamiska formfaktor</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="570"/>
-        <source>time rate of change in the dynamical form factor of the Earth</source>
-        <translation>tidsderivata för jordens dynamiska formfaktor</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="571"/>
-        <source>geocentric gravitational constant (TCB-compatible)</source>
-        <translation>geocentrisk gravitationskonstant (TCB-kompatibel)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="572"/>
-        <source>geocentric gravitational constant (TT-compatible)</source>
-        <translation>geocentrisk gravitationskonstant (TT-kompatibel)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="573"/>
-        <source>geocentric gravitational constant (TDB-compatible)</source>
-        <translation>geocentrisk gravitationskonstant (TDB-kompatibel)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="574"/>
-        <source>potential of the geoid</source>
-        <translation>geoidens potential</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="575"/>
-        <source>nominal mean angular velocity of the Earth (TT-compatible)</source>
-        <translation>jordens nominella medelvinkelhastighet (TT-kompatibel)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="576"/>
-        <source>ratio mass of the Moon to the Earth</source>
-        <translation>massförhållande mellan månen och jorden</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="577"/>
-        <source>ratio of the mass of the Sun to Mercury</source>
-        <translation>massförhållande mellan solen och Merkurius</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="578"/>
-        <source>ratio of the mass of the Sun to Venus</source>
-        <translation>massförhållande mellan solen och Venus</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="579"/>
-        <source>ratio of the mass of the Sun to Mars</source>
-        <translation>massförhållande mellan solen och Mars</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="580"/>
-        <source>ratio of the mass of the Sun to Jupiter</source>
-        <translation>massförhållande mellan solen och Jupiter</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="581"/>
-        <source>ratio of the mass of the Sun to Saturn</source>
-        <translation>massförhållande mellan solen och Saturnus</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="582"/>
-        <source>ratio of the mass of the Sun to Uranus</source>
-        <translation>massförhållande mellan solen och Uranus</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="583"/>
-        <source>ratio of the mass of the Sun to Neptune</source>
-        <translation>massförhållande mellan solen och Neptunus</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="584"/>
-        <source>ratio of the mass of the Sun to (134340) Pluto</source>
-        <translation>massförhållande mellan solen och (134340) Pluto</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="585"/>
-        <source>ratio of the mass of the Sun to (136199) Eris</source>
-        <translation>massförhållande mellan solen och (136199) Eris</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="586"/>
-        <source>ratio of the mass of (1) Ceres to the Sun</source>
-        <translation>massförhållande mellan (1) Ceres och solen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="587"/>
-        <source>ratio of the mass of (2) Pallas to the Sun</source>
-        <translation>massförhållande mellan (2) Pallas och solen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="588"/>
-        <source>ratio of the mass of (4) Vesta to the Sun</source>
-        <translation>massförhållande mellan (4) Vesta och solen</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="589"/>
-        <source>mean obliquity of the ecliptic at J2000.0</source>
-        <translation>ekliptikans medellutning vid J2000.0</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="57"/>
-        <source>Electromagnetic</source>
-        <translation>Elektromagnetiska</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="297"/>
-        <source>Compton wavelength</source>
-        <translation>Comptonvåglängd</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="44"/>
-        <source>Astronomy</source>
-        <translation>Astronomi</translation>
-    </message>
-</context>
-<context>
-    <name>Constants::Private</name>
-    <message>
-        <location filename="../../core/constants.cpp" line="155"/>
-        <source>characteristic impedance of vacuum (Z₀)</source>
-        <translation>vakuums karakteristiska impedans (Z₀)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="156"/>
-        <source>reduced Planck constant (ℏ)</source>
-        <translation>reducerad Plancks konstant (ℏ)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="157"/>
-        <source>vacuum electric permittivity (ϵ₀)</source>
-        <translation>vakuums elektriska permittivitet (ϵ₀)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="158"/>
-        <source>Newtonian constant of gravitation (G)</source>
-        <translation>Newtons gravitationskonstant (G)</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="159"/>
-        <source>vacuum magnetic permeability (μ₀)</source>
-        <translation>vakuums magnetiska permeabilitet (μ₀)</translation>
+        <translation>magnetisk permeabilitet i vakuum (μ₀)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="160"/>
@@ -2628,12 +645,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="170"/>
         <source>reduced Planck constant in eV·s (ℏ)</source>
-        <translation>reducerad Plancks konstant i eV·s (ℏ)</translation>
+        <translation>reducerade Planckkonstanten i eV·s (ℏ)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="171"/>
         <source>reduced Planck constant times c in MeV·fm</source>
-        <translation>reducerad Plancks konstant gånger c i MeV·fm</translation>
+        <translation>reducerade Planckkonstanten gånger c i MeV·fm</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="174"/>
@@ -2753,7 +770,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="197"/>
         <source>Bohr magneton in inverse meter per tesla</source>
-        <translation>Bohrmagneton i invers meter per tesla</translation>
+        <translation>Bohrmagneton i m⁻¹ per tesla</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="198"/>
@@ -2768,7 +785,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="200"/>
         <source>nuclear magneton in inverse meter per tesla</source>
-        <translation>kärnmagneton i invers meter per tesla</translation>
+        <translation>kärnmagneton i m⁻¹ per tesla</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="201"/>
@@ -2818,32 +835,32 @@
     <message>
         <location filename="../../core/constants.cpp" line="212"/>
         <source>atomic mass unit-hartree relationship</source>
-        <translation>samband mellan atommassenhet och hartree</translation>
+        <translation>omräkning från atommassenhet till hartree</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="213"/>
         <source>atomic mass unit-hertz relationship</source>
-        <translation>samband mellan atommassenhet och hertz</translation>
+        <translation>omräkning från atommassenhet till hertz</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="214"/>
         <source>atomic mass unit-inverse meter relationship</source>
-        <translation>samband mellan atommassenhet och invers meter</translation>
+        <translation>omräkning från atommassenhet till invers meter</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="215"/>
         <source>atomic mass unit-joule relationship</source>
-        <translation>samband mellan atommassenhet och joule</translation>
+        <translation>omräkning från atommassenhet till joule</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="216"/>
         <source>atomic mass unit-kelvin relationship</source>
-        <translation>samband mellan atommassenhet och kelvin</translation>
+        <translation>omräkning från atommassenhet till kelvin</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="217"/>
         <source>atomic mass unit-kilogram relationship</source>
-        <translation>samband mellan atommassenhet och kilogram</translation>
+        <translation>omräkning från atommassenhet till kilogram</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="218"/>
@@ -2923,42 +940,42 @@
     <message>
         <location filename="../../core/constants.cpp" line="233"/>
         <source>hertz-atomic mass unit relationship</source>
-        <translation>samband mellan hertz och atommassenhet</translation>
+        <translation>omräkning från hertz till atommassenhet</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="234"/>
         <source>hertz-electron volt relationship</source>
-        <translation>samband mellan hertz och elektronvolt</translation>
+        <translation>omräkning från hertz till elektronvolt</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="235"/>
         <source>hertz-hartree relationship</source>
-        <translation>samband mellan hertz och hartree</translation>
+        <translation>omräkning från hertz till hartree</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="236"/>
         <source>hertz-inverse meter relationship</source>
-        <translation>samband mellan hertz och invers meter</translation>
+        <translation>omräkning från hertz till invers meter</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="237"/>
         <source>hertz-joule relationship</source>
-        <translation>samband mellan hertz och joule</translation>
+        <translation>omräkning från hertz till joule</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="238"/>
         <source>hertz-kelvin relationship</source>
-        <translation>samband mellan hertz och kelvin</translation>
+        <translation>omräkning från hertz till kelvin</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="239"/>
         <source>hertz-kilogram relationship</source>
-        <translation>samband mellan hertz och kilogram</translation>
+        <translation>omräkning från hertz till kilogram</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="240"/>
         <source>hyperfine transition frequency of Cs-133</source>
-        <translation>hyperfin övergångsfrekvens för Cs-133</translation>
+        <translation>frekvens för hyperfinövergången i Cs-133</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="241"/>
@@ -2968,142 +985,142 @@
     <message>
         <location filename="../../core/constants.cpp" line="242"/>
         <source>inverse meter-atomic mass unit relationship</source>
-        <translation>samband mellan invers meter och atommassenhet</translation>
+        <translation>omräkning från invers meter till atommassenhet</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="243"/>
         <source>inverse meter-electron volt relationship</source>
-        <translation>samband mellan invers meter och elektronvolt</translation>
+        <translation>omräkning från invers meter till elektronvolt</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="244"/>
         <source>inverse meter-hartree relationship</source>
-        <translation>samband mellan invers meter och hartree</translation>
+        <translation>omräkning från invers meter till hartree</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="245"/>
         <source>inverse meter-hertz relationship</source>
-        <translation>samband mellan invers meter och hertz</translation>
+        <translation>omräkning från invers meter till hertz</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="246"/>
         <source>inverse meter-joule relationship</source>
-        <translation>samband mellan invers meter och joule</translation>
+        <translation>omräkning från invers meter till joule</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="247"/>
         <source>inverse meter-kelvin relationship</source>
-        <translation>samband mellan invers meter och kelvin</translation>
+        <translation>omräkning från invers meter till kelvin</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="248"/>
         <source>inverse meter-kilogram relationship</source>
-        <translation>samband mellan invers meter och kilogram</translation>
+        <translation>omräkning från invers meter till kilogram</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="249"/>
         <source>joule-atomic mass unit relationship</source>
-        <translation>samband mellan joule och atommassenhet</translation>
+        <translation>omräkning från joule till atommassenhet</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="250"/>
         <source>joule-electron volt relationship</source>
-        <translation>samband mellan joule och elektronvolt</translation>
+        <translation>omräkning från joule till elektronvolt</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="251"/>
         <source>joule-hertz relationship</source>
-        <translation>samband mellan joule och hertz</translation>
+        <translation>omräkning från joule till hertz</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="252"/>
         <source>joule-hartree relationship</source>
-        <translation>samband mellan joule och hartree</translation>
+        <translation>omräkning från joule till hartree</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="253"/>
         <source>joule-inverse meter relationship</source>
-        <translation>samband mellan joule och invers meter</translation>
+        <translation>omräkning från joule till invers meter</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="254"/>
         <source>joule-kelvin relationship</source>
-        <translation>samband mellan joule och kelvin</translation>
+        <translation>omräkning från joule till kelvin</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="255"/>
         <source>joule-kilogram relationship</source>
-        <translation>samband mellan joule och kilogram</translation>
+        <translation>omräkning från joule till kilogram</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="256"/>
         <source>kelvin-atomic mass unit relationship</source>
-        <translation>samband mellan kelvin och atommassenhet</translation>
+        <translation>omräkning från kelvin till atommassenhet</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="257"/>
         <source>kelvin-electron volt relationship</source>
-        <translation>samband mellan kelvin och elektronvolt</translation>
+        <translation>omräkning från kelvin till elektronvolt</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="258"/>
         <source>kelvin-hertz relationship</source>
-        <translation>samband mellan kelvin och hertz</translation>
+        <translation>omräkning från kelvin till hertz</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="259"/>
         <source>kelvin-hartree relationship</source>
-        <translation>samband mellan kelvin och hartree</translation>
+        <translation>omräkning från kelvin till hartree</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="260"/>
         <source>kelvin-inverse meter relationship</source>
-        <translation>samband mellan kelvin och invers meter</translation>
+        <translation>omräkning från kelvin till invers meter</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="261"/>
         <source>kelvin-joule relationship</source>
-        <translation>samband mellan kelvin och joule</translation>
+        <translation>omräkning från kelvin till joule</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="262"/>
         <source>kelvin-kilogram relationship</source>
-        <translation>samband mellan kelvin och kilogram</translation>
+        <translation>omräkning från kelvin till kilogram</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="263"/>
         <source>kilogram-atomic mass unit relationship</source>
-        <translation>samband mellan kilogram och atommassenhet</translation>
+        <translation>omräkning från kilogram till atommassenhet</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="264"/>
         <source>kilogram-electron volt relationship</source>
-        <translation>samband mellan kilogram och elektronvolt</translation>
+        <translation>omräkning från kilogram till elektronvolt</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="265"/>
         <source>kilogram-hertz relationship</source>
-        <translation>samband mellan kilogram och hertz</translation>
+        <translation>omräkning från kilogram till hertz</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="266"/>
         <source>kilogram-hartree relationship</source>
-        <translation>samband mellan kilogram och hartree</translation>
+        <translation>omräkning från kilogram till hartree</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="267"/>
         <source>kilogram-inverse meter relationship</source>
-        <translation>samband mellan kilogram och invers meter</translation>
+        <translation>omräkning från kilogram till invers meter</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="268"/>
         <source>kilogram-joule relationship</source>
-        <translation>samband mellan kilogram och joule</translation>
+        <translation>omräkning från kilogram till joule</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="269"/>
         <source>kilogram-kelvin relationship</source>
-        <translation>samband mellan kilogram och kelvin</translation>
+        <translation>omräkning från kilogram till kelvin</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="270"/>
@@ -3188,12 +1205,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="288"/>
         <source>weak mixing angle</source>
-        <translation>svag blandningsvinkel</translation>
+        <translation>elektrosvag blandningsvinkel</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="289"/>
         <source>W to Z mass ratio</source>
-        <translation>massförhållande mellan W och Z</translation>
+        <translation>masskvot (W-boson/Z-boson)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="292"/>
@@ -3213,17 +1230,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="295"/>
         <source>electron mass energy equivalent (mₑ·c²)</source>
-        <translation>massenergiekvivalent för elektron (mₑ·c²)</translation>
+        <translation>energiekvivalent för elektronens massa (mₑ·c²)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="296"/>
         <source>electron mass energy equivalent in MeV</source>
-        <translation>massenergiekvivalent för elektron i MeV</translation>
-    </message>
-    <message>
-        <location filename="../../core/constants.cpp" line="297"/>
-        <source>Compton wavelength</source>
-        <translation>Comptonvåglängd</translation>
+        <translation>energiekvivalent för elektronens massa i MeV</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="298"/>
@@ -3238,7 +1250,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="300"/>
         <source>electron charge to mass quotient</source>
-        <translation>laddning-massa-kvot för elektron</translation>
+        <translation>elektronens laddning dividerad med dess massa</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="301"/>
@@ -3248,7 +1260,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="302"/>
         <source>electron-deuteron mass ratio</source>
-        <translation>massförhållande elektron-deuteron</translation>
+        <translation>masskvot (elektron/deuteron)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="303"/>
@@ -3258,17 +1270,17 @@
     <message>
         <location filename="../../core/constants.cpp" line="304"/>
         <source>electron gyromagnetic ratio (γₑ)</source>
-        <translation>elektronens gyromagnetiska förhållande (γₑ)</translation>
+        <translation>elektronens gyromagnetiska kvot (γₑ)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="305"/>
         <source>electron gyromagnetic ratio in MHz/T</source>
-        <translation>elektronens gyromagnetiska förhållande i MHz/T</translation>
+        <translation>elektronens gyromagnetiska kvot i MHz/T</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="306"/>
         <source>electron-helion mass ratio</source>
-        <translation>massförhållande elektron-helion</translation>
+        <translation>masskvot (elektron/helion)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="307"/>
@@ -3303,7 +1315,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="313"/>
         <source>electron-muon mass ratio</source>
-        <translation>massförhållande elektron-myon</translation>
+        <translation>masskvot (elektron/myon)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="314"/>
@@ -3313,7 +1325,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="315"/>
         <source>electron-neutron mass ratio</source>
-        <translation>massförhållande elektron-neutron</translation>
+        <translation>masskvot (elektron/neutron)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="316"/>
@@ -3323,7 +1335,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="317"/>
         <source>electron-proton mass ratio</source>
-        <translation>massförhållande elektron-proton</translation>
+        <translation>masskvot (elektron/proton)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="318"/>
@@ -3333,12 +1345,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="319"/>
         <source>electron-tau mass ratio</source>
-        <translation>massförhållande elektron-tau</translation>
+        <translation>masskvot (elektron/taulepton)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="320"/>
         <source>electron to alpha particle mass ratio</source>
-        <translation>massförhållande mellan elektron och alfapartikel</translation>
+        <translation>masskvot (elektron/alfapartikel)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="321"/>
@@ -3353,62 +1365,62 @@
     <message>
         <location filename="../../core/constants.cpp" line="323"/>
         <source>electron-triton mass ratio</source>
-        <translation>massförhållande elektron-triton</translation>
+        <translation>masskvot (elektron/triton)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="324"/>
         <source>electron volt-atomic mass unit relationship</source>
-        <translation>samband mellan elektronvolt och atommassenhet</translation>
+        <translation>omräkning från elektronvolt till atommassenhet</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="325"/>
         <source>electron volt-hartree relationship</source>
-        <translation>samband mellan elektronvolt och hartree</translation>
+        <translation>omräkning från elektronvolt till hartree</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="326"/>
         <source>electron volt-hertz relationship</source>
-        <translation>samband mellan elektronvolt och hertz</translation>
+        <translation>omräkning från elektronvolt till hertz</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="327"/>
         <source>electron volt-inverse meter relationship</source>
-        <translation>samband mellan elektronvolt och invers meter</translation>
+        <translation>omräkning från elektronvolt till invers meter</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="328"/>
         <source>electron volt-joule relationship</source>
-        <translation>samband mellan elektronvolt och joule</translation>
+        <translation>omräkning från elektronvolt till joule</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="329"/>
         <source>electron volt-kelvin relationship</source>
-        <translation>samband mellan elektronvolt och kelvin</translation>
+        <translation>omräkning från elektronvolt till kelvin</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="330"/>
         <source>electron volt-kilogram relationship</source>
-        <translation>samband mellan elektronvolt och kilogram</translation>
+        <translation>omräkning från elektronvolt till kilogram</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="331"/>
         <source>hartree-atomic mass unit relationship</source>
-        <translation>samband mellan hartree och atommassenhet</translation>
+        <translation>omräkning från hartree till atommassenhet</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="332"/>
         <source>hartree-electron volt relationship</source>
-        <translation>samband mellan hartree och elektronvolt</translation>
+        <translation>omräkning från hartree till elektronvolt</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="335"/>
         <source>muon Compton wavelength</source>
-        <translation>Comptonvåglängd för myon</translation>
+        <translation>Comptonvåglängd för myonen</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="336"/>
         <source>muon-electron mass ratio</source>
-        <translation>massförhållande myon-elektron</translation>
+        <translation>masskvot (myon/elektron)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="337"/>
@@ -3443,12 +1455,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="343"/>
         <source>muon mass energy equivalent</source>
-        <translation>massenergiekvivalent för myon</translation>
+        <translation>energiekvivalent för myonens massa</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="344"/>
         <source>muon mass energy equivalent in MeV</source>
-        <translation>massenergiekvivalent för myon i MeV</translation>
+        <translation>energiekvivalent för myonens massa i MeV</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="345"/>
@@ -3463,7 +1475,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="347"/>
         <source>muon-neutron mass ratio</source>
-        <translation>massförhållande myon-neutron</translation>
+        <translation>masskvot (myon/neutron)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="348"/>
@@ -3473,12 +1485,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="349"/>
         <source>muon-proton mass ratio</source>
-        <translation>massförhållande myon-proton</translation>
+        <translation>masskvot (myon/proton)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="350"/>
         <source>muon-tau mass ratio</source>
-        <translation>massförhållande myon-tau</translation>
+        <translation>masskvot (myon/taulepton)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="351"/>
@@ -3488,67 +1500,67 @@
     <message>
         <location filename="../../core/constants.cpp" line="354"/>
         <source>reduced tau Compton wavelength</source>
-        <translation>reducerad Comptonvåglängd för tauonen</translation>
+        <translation>reducerad Comptonvåglängd för tauleptonen</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="355"/>
         <source>tau Compton wavelength</source>
-        <translation>Comptonvåglängd för tau</translation>
+        <translation>Comptonvåglängd för tauleptonen</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="356"/>
         <source>tau-electron mass ratio</source>
-        <translation>massförhållande tau-elektron</translation>
+        <translation>masskvot (taulepton/elektron)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="357"/>
         <source>tau mass</source>
-        <translation>taumassa</translation>
+        <translation>tauleptonens massa</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="358"/>
         <source>tau mass energy equivalent</source>
-        <translation>massenergiekvivalent för tau</translation>
+        <translation>energiekvivalent för tauleptonens massa</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="359"/>
         <source>tau mass in u</source>
-        <translation>taumassa i u</translation>
+        <translation>tauleptonens massa i u</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="360"/>
         <source>tau molar mass</source>
-        <translation>tauonens molmassa</translation>
+        <translation>tauleptonens molmassa</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="361"/>
         <source>tau-muon mass ratio</source>
-        <translation>massförhållande tau-myon</translation>
+        <translation>masskvot (taulepton/myon)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="362"/>
         <source>tau-neutron mass ratio</source>
-        <translation>massförhållande tau-neutron</translation>
+        <translation>masskvot (taulepton/neutron)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="363"/>
         <source>tau-proton mass ratio</source>
-        <translation>massförhållande tau-proton</translation>
+        <translation>masskvot (taulepton/proton)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="366"/>
         <source>proton charge to mass quotient</source>
-        <translation>laddning-massa-kvot för proton</translation>
+        <translation>protonens laddning dividerad med dess massa</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="367"/>
         <source>proton Compton wavelength</source>
-        <translation>Comptonvåglängd för proton</translation>
+        <translation>Comptonvåglängd för protonen</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="368"/>
         <source>proton-electron mass ratio</source>
-        <translation>massförhållande proton-elektron</translation>
+        <translation>masskvot (proton/elektron)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="369"/>
@@ -3558,12 +1570,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="370"/>
         <source>proton gyromagnetic ratio (γₚ)</source>
-        <translation>protonens gyromagnetiska förhållande (γₚ)</translation>
+        <translation>protonens gyromagnetiska kvot (γₚ)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="371"/>
         <source>proton gyromagnetic ratio in MHz/T</source>
-        <translation>protonens gyromagnetiska förhållande i MHz/T</translation>
+        <translation>protonens gyromagnetiska kvot i MHz/T</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="372"/>
@@ -3593,12 +1605,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="377"/>
         <source>proton mass energy equivalent</source>
-        <translation>massenergiekvivalent för proton</translation>
+        <translation>energiekvivalent för protonens massa</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="378"/>
         <source>proton mass energy equivalent in MeV</source>
-        <translation>massenergiekvivalent för proton i MeV</translation>
+        <translation>energiekvivalent för protonens massa i MeV</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="379"/>
@@ -3613,7 +1625,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="381"/>
         <source>proton-muon mass ratio</source>
-        <translation>massförhållande proton-myon</translation>
+        <translation>masskvot (proton/myon)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="382"/>
@@ -3623,7 +1635,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="383"/>
         <source>proton-neutron mass ratio</source>
-        <translation>massförhållande proton-neutron</translation>
+        <translation>masskvot (proton/neutron)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="384"/>
@@ -3638,7 +1650,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="386"/>
         <source>proton-tau mass ratio</source>
-        <translation>massförhållande proton-tau</translation>
+        <translation>masskvot (proton/taulepton)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="387"/>
@@ -3648,12 +1660,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="388"/>
         <source>shielded proton gyromagnetic ratio</source>
-        <translation>den skärmade protonens gyromagnetiska förhållande</translation>
+        <translation>den skärmade protonens gyromagnetiska kvot</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="389"/>
         <source>shielded proton gyromagnetic ratio in MHz/T</source>
-        <translation>den skärmade protonens gyromagnetiska förhållande i MHz/T</translation>
+        <translation>den skärmade protonens gyromagnetiska kvot i MHz/T</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="390"/>
@@ -3673,7 +1685,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="395"/>
         <source>neutron Compton wavelength</source>
-        <translation>Comptonvåglängd för neutron</translation>
+        <translation>Comptonvåglängd för neutronen</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="396"/>
@@ -3683,7 +1695,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="397"/>
         <source>neutron-electron mass ratio</source>
-        <translation>massförhållande neutron-elektron</translation>
+        <translation>masskvot (neutron/elektron)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="398"/>
@@ -3693,12 +1705,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="399"/>
         <source>neutron gyromagnetic ratio (γₙ)</source>
-        <translation>neutronens gyromagnetiska förhållande (γₙ)</translation>
+        <translation>neutronens gyromagnetiska kvot (γₙ)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="400"/>
         <source>neutron gyromagnetic ratio in MHz/T</source>
-        <translation>neutronens gyromagnetiska förhållande i MHz/T</translation>
+        <translation>neutronens gyromagnetiska kvot i MHz/T</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="401"/>
@@ -3723,12 +1735,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="405"/>
         <source>neutron mass energy equivalent</source>
-        <translation>massenergiekvivalent för neutron</translation>
+        <translation>energiekvivalent för neutronens massa</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="406"/>
         <source>neutron mass energy equivalent in MeV</source>
-        <translation>massenergiekvivalent för neutron i MeV</translation>
+        <translation>energiekvivalent för neutronens massa i MeV</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="407"/>
@@ -3743,7 +1755,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="409"/>
         <source>neutron-muon mass ratio</source>
-        <translation>massförhållande neutron-myon</translation>
+        <translation>masskvot (neutron/myon)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="410"/>
@@ -3753,27 +1765,27 @@
     <message>
         <location filename="../../core/constants.cpp" line="411"/>
         <source>neutron-proton mass difference</source>
-        <translation>masskillnad mellan neutron och proton</translation>
+        <translation>masskillnad mellan neutronen och protonen</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="412"/>
         <source>neutron-proton mass difference energy equivalent</source>
-        <translation>massenergiekvivalent för masskillnad mellan neutron och proton</translation>
+        <translation>energiekvivalent för masskillnaden mellan neutronen och protonen</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="413"/>
         <source>neutron-proton mass difference energy equivalent in MeV</source>
-        <translation>massenergiekvivalent för masskillnad mellan neutron och proton i MeV</translation>
+        <translation>energiekvivalent för masskillnaden mellan neutronen och protonen i MeV</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="414"/>
         <source>neutron-proton mass difference in u</source>
-        <translation>masskillnad mellan neutron och proton i u</translation>
+        <translation>masskillnad mellan neutronen och protonen i u</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="415"/>
         <source>neutron-proton mass ratio</source>
-        <translation>massförhållande neutron-proton</translation>
+        <translation>masskvot (neutron/proton)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="416"/>
@@ -3783,7 +1795,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="417"/>
         <source>neutron-tau mass ratio</source>
-        <translation>massförhållande neutron-tau</translation>
+        <translation>masskvot (neutron/taulepton)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="418"/>
@@ -3803,7 +1815,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="423"/>
         <source>deuteron-electron mass ratio</source>
-        <translation>massförhållande deuteron-elektron</translation>
+        <translation>masskvot (deuteron/elektron)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="424"/>
@@ -3833,12 +1845,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="429"/>
         <source>deuteron mass energy equivalent</source>
-        <translation>massenergiekvivalent för deuteron</translation>
+        <translation>energiekvivalent för deuteronens massa</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="430"/>
         <source>deuteron mass energy equivalent in MeV</source>
-        <translation>massenergiekvivalent för deuteron i MeV</translation>
+        <translation>energiekvivalent för deuteronens massa i MeV</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="431"/>
@@ -3863,7 +1875,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="435"/>
         <source>deuteron-proton mass ratio</source>
-        <translation>massförhållande deuteron-proton</translation>
+        <translation>masskvot (deuteron/proton)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="436"/>
@@ -3878,7 +1890,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="440"/>
         <source>triton-electron mass ratio</source>
-        <translation>massförhållande triton-elektron</translation>
+        <translation>masskvot (triton/elektron)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="441"/>
@@ -3908,12 +1920,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="446"/>
         <source>triton mass energy equivalent</source>
-        <translation>massenergiekvivalent för triton</translation>
+        <translation>energiekvivalent för tritonens massa</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="447"/>
         <source>triton mass energy equivalent in MeV</source>
-        <translation>massenergiekvivalent för triton i MeV</translation>
+        <translation>energiekvivalent för tritonens massa i MeV</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="448"/>
@@ -3928,7 +1940,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="450"/>
         <source>triton-proton mass ratio</source>
-        <translation>massförhållande triton-proton</translation>
+        <translation>masskvot (triton/proton)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="451"/>
@@ -3943,7 +1955,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="455"/>
         <source>helion-electron mass ratio</source>
-        <translation>massförhållande helion-elektron</translation>
+        <translation>masskvot (helion/elektron)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="456"/>
@@ -3973,12 +1985,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="461"/>
         <source>helion mass energy equivalent</source>
-        <translation>massenergiekvivalent för helion</translation>
+        <translation>energiekvivalent för helionens massa</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="462"/>
         <source>helion mass energy equivalent in MeV</source>
-        <translation>massenergiekvivalent för helion i MeV</translation>
+        <translation>energiekvivalent för helionens massa i MeV</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="463"/>
@@ -3993,7 +2005,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="465"/>
         <source>helion-proton mass ratio</source>
-        <translation>massförhållande helion-proton</translation>
+        <translation>masskvot (helion/proton)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="466"/>
@@ -4008,12 +2020,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="468"/>
         <source>shielded helion gyromagnetic ratio</source>
-        <translation>den skärmade helionens gyromagnetiska förhållande</translation>
+        <translation>den skärmade helionens gyromagnetiska kvot</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="469"/>
         <source>shielded helion gyromagnetic ratio in MHz/T</source>
-        <translation>den skärmade helionens gyromagnetiska förhållande i MHz/T</translation>
+        <translation>den skärmade helionens gyromagnetiska kvot i MHz/T</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="470"/>
@@ -4053,22 +2065,22 @@
     <message>
         <location filename="../../core/constants.cpp" line="479"/>
         <source>alpha particle mass energy equivalent</source>
-        <translation>massenergiekvivalent för alfapartikel</translation>
+        <translation>energiekvivalent för alfapartikelns massa</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="480"/>
         <source>alpha particle mass energy equivalent in MeV</source>
-        <translation>massenergiekvivalent för alfapartikel i MeV</translation>
+        <translation>energiekvivalent för alfapartikelns massa i MeV</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="481"/>
         <source>alpha particle-electron mass ratio</source>
-        <translation>massförhållande alfapartikel-elektron</translation>
+        <translation>masskvot (alfapartikel/elektron)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="482"/>
         <source>alpha particle-proton mass ratio</source>
-        <translation>massförhållande alfapartikel-proton</translation>
+        <translation>masskvot (alfapartikel/proton)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="483"/>
@@ -4113,7 +2125,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="493"/>
         <source>Boltzmann constant in inverse meter per kelvin</source>
-        <translation>Boltzmanns konstant i invers meter per kelvin</translation>
+        <translation>Boltzmanns konstant i m⁻¹ per kelvin</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="494"/>
@@ -4138,22 +2150,22 @@
     <message>
         <location filename="../../core/constants.cpp" line="498"/>
         <source>molar gas constant (R)</source>
-        <translation>molär gaskonstant (R)</translation>
+        <translation>molära gaskonstanten (R)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="499"/>
         <source>Loschmidt constant (n₀, 273.15 K, 100 kPa)</source>
-        <translation>Loschmidts konstant (n₀, 273.15 K, 100 kPa)</translation>
+        <translation>Loschmidts konstant (n₀ vid 273,15 K och 100 kPa)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="500"/>
         <source>Loschmidt constant (n₀, 273.15 K, 101.325 kPa)</source>
-        <translation>Loschmidts konstant (n₀, 273.15 K, 101.325 kPa)</translation>
+        <translation>Loschmidts konstant (n₀ vid 273,15 K och 101,325 kPa)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="501"/>
         <source>molar Planck constant</source>
-        <translation>molär Planckkonstant</translation>
+        <translation>molära Planckkonstanten</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="502"/>
@@ -4163,7 +2175,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="503"/>
         <source>Stefan-Boltzmann constant (σ)</source>
-        <translation>Stefan-Boltzmanns konstant (σ)</translation>
+        <translation>Stefan–Boltzmanns konstant (σ)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="504"/>
@@ -4183,7 +2195,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="507"/>
         <source>atomic mass unit-electron volt relationship</source>
-        <translation>samband mellan atommassenhet och elektronvolt</translation>
+        <translation>omräkning från atommassenhet till elektronvolt</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="508"/>
@@ -4198,12 +2210,12 @@
     <message>
         <location filename="../../core/constants.cpp" line="510"/>
         <source>molar volume of ideal gas (273.15 K, 100 kPa)</source>
-        <translation>molvolym för ideal gas (273.15 K, 100 kPa)</translation>
+        <translation>molvolym för en ideal gas (273,15 K och 100 kPa)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="511"/>
         <source>molar volume of ideal gas (273.15 K, 101.325 kPa)</source>
-        <translation>molvolym för ideal gas (273.15 K, 101.325 kPa)</translation>
+        <translation>molvolym för en ideal gas (273,15 K och 101,325 kPa)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="512"/>
@@ -4213,22 +2225,22 @@
     <message>
         <location filename="../../core/constants.cpp" line="513"/>
         <source>Sackur-Tetrode constant (1 K, 100 kPa)</source>
-        <translation>Sackur-Tetrodes konstant (1 K, 100 kPa)</translation>
+        <translation>Sackur–Tetrodes konstant (1 K och 100 kPa)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="514"/>
         <source>Sackur-Tetrode constant (1 K, 101.325 kPa)</source>
-        <translation>Sackur-Tetrodes konstant (1 K, 101.325 kPa)</translation>
+        <translation>Sackur–Tetrodes konstant (1 K och 101,325 kPa)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="515"/>
         <source>Wien frequency displacement law constant</source>
-        <translation>Wiens frekvensförskjutningskonstant</translation>
+        <translation>konstanten i Wiens förskjutningslag för frekvens</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="516"/>
         <source>Wien wavelength displacement law constant</source>
-        <translation>Wiens våglängdsförskjutningskonstant</translation>
+        <translation>konstanten i Wiens förskjutningslag för våglängd</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="517"/>
@@ -4238,7 +2250,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="518"/>
         <source>standard-state pressure (p°)</source>
-        <translation>standardtillståndstryck (p°)</translation>
+        <translation>tryck i standardtillståndet (p°)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="521"/>
@@ -4288,27 +2300,27 @@
     <message>
         <location filename="../../core/constants.cpp" line="534"/>
         <source>hartree-hertz relationship</source>
-        <translation>samband mellan hartree och hertz</translation>
+        <translation>omräkning från hartree till hertz</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="535"/>
         <source>hartree-inverse meter relationship</source>
-        <translation>samband mellan hartree och invers meter</translation>
+        <translation>omräkning från hartree till invers meter</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="536"/>
         <source>hartree-joule relationship</source>
-        <translation>samband mellan hartree och joule</translation>
+        <translation>omräkning från hartree till joule</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="537"/>
         <source>hartree-kelvin relationship</source>
-        <translation>samband mellan hartree och kelvin</translation>
+        <translation>omräkning från hartree till kelvin</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="538"/>
         <source>hartree-kilogram relationship</source>
-        <translation>samband mellan hartree och kilogram</translation>
+        <translation>omräkning från hartree till kilogram</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="541"/>
@@ -4338,7 +2350,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="549"/>
         <source>Euler-Mascheroni constant (γ)</source>
-        <translation>Euler-Mascheronis konstant (γ)</translation>
+        <translation>Euler–Mascheronis konstant (γ)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="553"/>
@@ -4353,52 +2365,52 @@
     <message>
         <location filename="../../core/constants.cpp" line="555"/>
         <source>nominal solar luminosity</source>
-        <translation>nominell solluminositet</translation>
+        <translation>solens nominella luminositet</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="556"/>
         <source>nominal solar effective temperature</source>
-        <translation>nominell effektiv soltemperatur</translation>
+        <translation>solens nominella effektiva temperatur</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="557"/>
         <source>nominal solar mass parameter</source>
-        <translation>nominell solmassparameter</translation>
+        <translation>solens nominella massparameter</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="558"/>
         <source>nominal terrestrial equatorial radius</source>
-        <translation>nominell ekvatoriell jordradie</translation>
+        <translation>jordens nominella ekvatorsradie</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="559"/>
         <source>nominal terrestrial polar radius</source>
-        <translation>nominell polär jordradie</translation>
+        <translation>jordens nominella polradie</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="560"/>
         <source>nominal terrestrial mass parameter</source>
-        <translation>nominell jordmassparameter</translation>
+        <translation>jordens nominella massparameter</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="561"/>
         <source>nominal jovian equatorial radius</source>
-        <translation>nominell ekvatoriell Jupiterradie</translation>
+        <translation>Jupiters nominella ekvatorsradie</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="562"/>
         <source>nominal jovian polar radius</source>
-        <translation>nominell polär Jupiterradie</translation>
+        <translation>Jupiters nominella polradie</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="563"/>
         <source>nominal jovian mass parameter</source>
-        <translation>nominell Jupitermassparameter</translation>
+        <translation>Jupiters nominella massparameter</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="565"/>
         <source>average value of one minus the rate of TCG relative to TCB</source>
-        <translation>medelvärde av ett minus hastigheten för TCG relativt TCB</translation>
+        <translation>medelvärde av ett minus TCG:s gånghastighet i förhållande till TCB</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="566"/>
@@ -4423,7 +2435,7 @@
     <message>
         <location filename="../../core/constants.cpp" line="570"/>
         <source>time rate of change in the dynamical form factor of the Earth</source>
-        <translation>tidsderivata för jordens dynamiska formfaktor</translation>
+        <translation>tidsderivatan av jordens dynamiska formfaktor</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="571"/>
@@ -4453,67 +2465,2055 @@
     <message>
         <location filename="../../core/constants.cpp" line="576"/>
         <source>ratio mass of the Moon to the Earth</source>
-        <translation>massförhållande mellan månen och jorden</translation>
+        <translation>masskvot (månen/jorden)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="577"/>
         <source>ratio of the mass of the Sun to Mercury</source>
-        <translation>massförhållande mellan solen och Merkurius</translation>
+        <translation>masskvot (solen/Merkurius)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="578"/>
         <source>ratio of the mass of the Sun to Venus</source>
-        <translation>massförhållande mellan solen och Venus</translation>
+        <translation>masskvot (solen/Venus)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="579"/>
         <source>ratio of the mass of the Sun to Mars</source>
-        <translation>massförhållande mellan solen och Mars</translation>
+        <translation>masskvot (solen/Mars)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="580"/>
         <source>ratio of the mass of the Sun to Jupiter</source>
-        <translation>massförhållande mellan solen och Jupiter</translation>
+        <translation>masskvot (solen/Jupiter)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="581"/>
         <source>ratio of the mass of the Sun to Saturn</source>
-        <translation>massförhållande mellan solen och Saturnus</translation>
+        <translation>masskvot (solen/Saturnus)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="582"/>
         <source>ratio of the mass of the Sun to Uranus</source>
-        <translation>massförhållande mellan solen och Uranus</translation>
+        <translation>masskvot (solen/Uranus)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="583"/>
         <source>ratio of the mass of the Sun to Neptune</source>
-        <translation>massförhållande mellan solen och Neptunus</translation>
+        <translation>masskvot (solen/Neptunus)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="584"/>
         <source>ratio of the mass of the Sun to (134340) Pluto</source>
-        <translation>massförhållande mellan solen och (134340) Pluto</translation>
+        <translation>masskvot (solen/(134340) Pluto)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="585"/>
         <source>ratio of the mass of the Sun to (136199) Eris</source>
-        <translation>massförhållande mellan solen och (136199) Eris</translation>
+        <translation>masskvot (solen/(136199) Eris)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="586"/>
         <source>ratio of the mass of (1) Ceres to the Sun</source>
-        <translation>massförhållande mellan (1) Ceres och solen</translation>
+        <translation>masskvot ((1) Ceres/solen)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="587"/>
         <source>ratio of the mass of (2) Pallas to the Sun</source>
-        <translation>massförhållande mellan (2) Pallas och solen</translation>
+        <translation>masskvot ((2) Pallas/solen)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="588"/>
         <source>ratio of the mass of (4) Vesta to the Sun</source>
-        <translation>massförhållande mellan (4) Vesta och solen</translation>
+        <translation>masskvot ((4) Vesta/solen)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="589"/>
+        <source>mean obliquity of the ecliptic at J2000.0</source>
+        <translation>ekliptikans medellutning vid J2000.0</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="57"/>
+        <source>Electromagnetic</source>
+        <translation>Elektromagnetiska</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="297"/>
+        <source>Compton wavelength</source>
+        <translation>Comptonvåglängd för elektronen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="44"/>
+        <source>Astronomy</source>
+        <translation>Astronomi</translation>
+    </message>
+</context>
+<context>
+    <name>Constants::Private</name>
+    <message>
+        <location filename="../../core/constants.cpp" line="155"/>
+        <source>characteristic impedance of vacuum (Z₀)</source>
+        <translation>karakteristisk impedans i vakuum (Z₀)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="156"/>
+        <source>reduced Planck constant (ℏ)</source>
+        <translation>reducerade Planckkonstanten (ℏ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="157"/>
+        <source>vacuum electric permittivity (ϵ₀)</source>
+        <translation>elektrisk permittivitet i vakuum (ϵ₀)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="158"/>
+        <source>Newtonian constant of gravitation (G)</source>
+        <translation>Newtons gravitationskonstant (G)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="159"/>
+        <source>vacuum magnetic permeability (μ₀)</source>
+        <translation>magnetisk permeabilitet i vakuum (μ₀)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="160"/>
+        <source>Planck constant (h)</source>
+        <translation>Plancks konstant (h)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="161"/>
+        <source>speed of light in vacuum (c)</source>
+        <translation>ljusets hastighet i vakuum (c)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="162"/>
+        <source>standard acceleration of gravity (gₙ)</source>
+        <translation>standardtyngdacceleration (gₙ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="163"/>
+        <source>Newtonian constant of gravitation over h-bar c</source>
+        <translation>Newtons gravitationskonstant dividerad med ℏc</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="164"/>
+        <source>Planck length</source>
+        <translation>Plancklängd</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="165"/>
+        <source>Planck constant in eV/Hz (h)</source>
+        <translation>Plancks konstant i eV/Hz (h)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="166"/>
+        <source>Planck mass</source>
+        <translation>Planckmassa</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="167"/>
+        <source>Planck mass energy equivalent in GeV</source>
+        <translation>Planckmassans energiekvivalent i GeV</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="168"/>
+        <source>Planck temperature</source>
+        <translation>Plancktemperatur</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="169"/>
+        <source>Planck time</source>
+        <translation>Plancktid</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="170"/>
+        <source>reduced Planck constant in eV·s (ℏ)</source>
+        <translation>reducerade Planckkonstanten i eV·s (ℏ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="171"/>
+        <source>reduced Planck constant times c in MeV·fm</source>
+        <translation>reducerade Planckkonstanten gånger c i MeV·fm</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="174"/>
+        <source>Bohr magneton</source>
+        <translation>Bohrmagneton</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="175"/>
+        <source>conductance quantum (G₀)</source>
+        <translation>konduktanskvantum (G₀)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="176"/>
+        <source>Coulomb constant (kₑ)</source>
+        <translation>Coulombs konstant (kₑ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="177"/>
+        <source>elementary charge (e)</source>
+        <translation>elementarladdning (e)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="178"/>
+        <source>elementary charge over h-bar</source>
+        <translation>elementarladdning dividerad med ℏ</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="179"/>
+        <source>conventional value of Josephson constant</source>
+        <translation>konventionellt värde för Josephsons konstant</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="180"/>
+        <source>Josephson constant</source>
+        <translation>Josephsons konstant</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="181"/>
+        <source>conventional value of ampere-90</source>
+        <translation>konventionellt värde för ampere-90</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="182"/>
+        <source>conventional value of coulomb-90</source>
+        <translation>konventionellt värde för coulomb-90</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="183"/>
+        <source>conventional value of farad-90</source>
+        <translation>konventionellt värde för farad-90</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="184"/>
+        <source>conventional value of henry-90</source>
+        <translation>konventionellt värde för henry-90</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="185"/>
+        <source>conventional value of ohm-90</source>
+        <translation>konventionellt värde för ohm-90</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="186"/>
+        <source>conventional value of volt-90</source>
+        <translation>konventionellt värde för volt-90</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="187"/>
+        <source>conventional value of watt-90</source>
+        <translation>konventionellt värde för watt-90</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="188"/>
+        <source>magnetic flux quantum (Φ₀)</source>
+        <translation>magnetiskt flödeskvantum (Φ₀)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="189"/>
+        <source>nuclear magneton</source>
+        <translation>kärnmagneton</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="190"/>
+        <source>inverse of conductance quantum</source>
+        <translation>inversen av konduktanskvantumet</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="191"/>
+        <source>conventional value of von Klitzing constant</source>
+        <translation>konventionellt värde för von Klitzings konstant</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="192"/>
+        <source>von Klitzing constant</source>
+        <translation>von Klitzings konstant</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="193"/>
+        <source>atomic unit of magnetic dipole moment</source>
+        <translation>atomär enhet för magnetiskt dipolmoment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="194"/>
+        <source>atomic unit of magnetic flux density</source>
+        <translation>atomär enhet för magnetisk flödestäthet</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="195"/>
+        <source>Bohr magneton in eV/T</source>
+        <translation>Bohrmagneton i eV/T</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="196"/>
+        <source>Bohr magneton in Hz/T</source>
+        <translation>Bohrmagneton i Hz/T</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="197"/>
+        <source>Bohr magneton in inverse meter per tesla</source>
+        <translation>Bohrmagneton i m⁻¹ per tesla</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="198"/>
+        <source>Bohr magneton in K/T</source>
+        <translation>Bohrmagneton i K/T</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="199"/>
+        <source>nuclear magneton in eV/T</source>
+        <translation>kärnmagneton i eV/T</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="200"/>
+        <source>nuclear magneton in inverse meter per tesla</source>
+        <translation>kärnmagneton i m⁻¹ per tesla</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="201"/>
+        <source>nuclear magneton in K/T</source>
+        <translation>kärnmagneton i K/T</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="202"/>
+        <source>nuclear magneton in MHz/T</source>
+        <translation>kärnmagneton i MHz/T</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="205"/>
+        <source>Bohr radius (a₀)</source>
+        <translation>Bohrradie (a₀)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="206"/>
+        <source>fine-structure constant (α)</source>
+        <translation>finstrukturkonstant (α)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="207"/>
+        <source>Hartree energy (Eₕ)</source>
+        <translation>Hartreeenergi (Eₕ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="208"/>
+        <source>Hartree energy in eV</source>
+        <translation>Hartreeenergi i eV</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="209"/>
+        <source>quantum of circulation</source>
+        <translation>cirkulationskvantum</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="210"/>
+        <source>quantum of circulation times 2</source>
+        <translation>cirkulationskvantum gånger 2</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="211"/>
+        <source>Rydberg constant (R∞)</source>
+        <translation>Rydbergs konstant (R∞)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="212"/>
+        <source>atomic mass unit-hartree relationship</source>
+        <translation>omräkning från atommassenhet till hartree</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="213"/>
+        <source>atomic mass unit-hertz relationship</source>
+        <translation>omräkning från atommassenhet till hertz</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="214"/>
+        <source>atomic mass unit-inverse meter relationship</source>
+        <translation>omräkning från atommassenhet till invers meter</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="215"/>
+        <source>atomic mass unit-joule relationship</source>
+        <translation>omräkning från atommassenhet till joule</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="216"/>
+        <source>atomic mass unit-kelvin relationship</source>
+        <translation>omräkning från atommassenhet till kelvin</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="217"/>
+        <source>atomic mass unit-kilogram relationship</source>
+        <translation>omräkning från atommassenhet till kilogram</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="218"/>
+        <source>atomic unit of 1st hyperpolarizability</source>
+        <translation>atomär enhet för första ordningens hyperpolariserbarhet</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="219"/>
+        <source>atomic unit of 2nd hyperpolarizability</source>
+        <translation>atomär enhet för andra ordningens hyperpolariserbarhet</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="220"/>
+        <source>atomic unit of charge (e)</source>
+        <translation>atomär enhet för laddning (e)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="221"/>
+        <source>atomic unit of charge density</source>
+        <translation>atomär enhet för laddningstäthet</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="222"/>
+        <source>atomic unit of current</source>
+        <translation>atomär enhet för ström</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="223"/>
+        <source>atomic unit of electric dipole moment</source>
+        <translation>atomär enhet för elektriskt dipolmoment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="224"/>
+        <source>atomic unit of electric field</source>
+        <translation>atomär enhet för elektriskt fält</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="225"/>
+        <source>atomic unit of electric field gradient</source>
+        <translation>atomär enhet för elektrisk fältgradient</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="226"/>
+        <source>atomic unit of electric polarizability</source>
+        <translation>atomär enhet för elektrisk polariserbarhet</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="227"/>
+        <source>atomic unit of electric potential</source>
+        <translation>atomär enhet för elektrisk potential</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="228"/>
+        <source>atomic unit of electric quadrupole moment</source>
+        <translation>atomär enhet för elektriskt kvadrupolmoment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="229"/>
+        <source>atomic unit of action</source>
+        <translation>atomär enhet för verkan</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="230"/>
+        <source>atomic unit of energy</source>
+        <translation>atomär enhet för energi</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="231"/>
+        <source>atomic unit of force</source>
+        <translation>atomär enhet för kraft</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="232"/>
+        <source>atomic unit of length</source>
+        <translation>atomär enhet för längd</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="233"/>
+        <source>hertz-atomic mass unit relationship</source>
+        <translation>omräkning från hertz till atommassenhet</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="234"/>
+        <source>hertz-electron volt relationship</source>
+        <translation>omräkning från hertz till elektronvolt</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="235"/>
+        <source>hertz-hartree relationship</source>
+        <translation>omräkning från hertz till hartree</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="236"/>
+        <source>hertz-inverse meter relationship</source>
+        <translation>omräkning från hertz till invers meter</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="237"/>
+        <source>hertz-joule relationship</source>
+        <translation>omräkning från hertz till joule</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="238"/>
+        <source>hertz-kelvin relationship</source>
+        <translation>omräkning från hertz till kelvin</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="239"/>
+        <source>hertz-kilogram relationship</source>
+        <translation>omräkning från hertz till kilogram</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="240"/>
+        <source>hyperfine transition frequency of Cs-133</source>
+        <translation>frekvens för hyperfinövergången i Cs-133</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="241"/>
+        <source>inverse fine-structure constant (α⁻¹)</source>
+        <translation>inversen av finstrukturkonstanten (α⁻¹)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="242"/>
+        <source>inverse meter-atomic mass unit relationship</source>
+        <translation>omräkning från invers meter till atommassenhet</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="243"/>
+        <source>inverse meter-electron volt relationship</source>
+        <translation>omräkning från invers meter till elektronvolt</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="244"/>
+        <source>inverse meter-hartree relationship</source>
+        <translation>omräkning från invers meter till hartree</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="245"/>
+        <source>inverse meter-hertz relationship</source>
+        <translation>omräkning från invers meter till hertz</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="246"/>
+        <source>inverse meter-joule relationship</source>
+        <translation>omräkning från invers meter till joule</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="247"/>
+        <source>inverse meter-kelvin relationship</source>
+        <translation>omräkning från invers meter till kelvin</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="248"/>
+        <source>inverse meter-kilogram relationship</source>
+        <translation>omräkning från invers meter till kilogram</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="249"/>
+        <source>joule-atomic mass unit relationship</source>
+        <translation>omräkning från joule till atommassenhet</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="250"/>
+        <source>joule-electron volt relationship</source>
+        <translation>omräkning från joule till elektronvolt</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="251"/>
+        <source>joule-hertz relationship</source>
+        <translation>omräkning från joule till hertz</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="252"/>
+        <source>joule-hartree relationship</source>
+        <translation>omräkning från joule till hartree</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="253"/>
+        <source>joule-inverse meter relationship</source>
+        <translation>omräkning från joule till invers meter</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="254"/>
+        <source>joule-kelvin relationship</source>
+        <translation>omräkning från joule till kelvin</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="255"/>
+        <source>joule-kilogram relationship</source>
+        <translation>omräkning från joule till kilogram</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="256"/>
+        <source>kelvin-atomic mass unit relationship</source>
+        <translation>omräkning från kelvin till atommassenhet</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="257"/>
+        <source>kelvin-electron volt relationship</source>
+        <translation>omräkning från kelvin till elektronvolt</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="258"/>
+        <source>kelvin-hertz relationship</source>
+        <translation>omräkning från kelvin till hertz</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="259"/>
+        <source>kelvin-hartree relationship</source>
+        <translation>omräkning från kelvin till hartree</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="260"/>
+        <source>kelvin-inverse meter relationship</source>
+        <translation>omräkning från kelvin till invers meter</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="261"/>
+        <source>kelvin-joule relationship</source>
+        <translation>omräkning från kelvin till joule</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="262"/>
+        <source>kelvin-kilogram relationship</source>
+        <translation>omräkning från kelvin till kilogram</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="263"/>
+        <source>kilogram-atomic mass unit relationship</source>
+        <translation>omräkning från kilogram till atommassenhet</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="264"/>
+        <source>kilogram-electron volt relationship</source>
+        <translation>omräkning från kilogram till elektronvolt</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="265"/>
+        <source>kilogram-hertz relationship</source>
+        <translation>omräkning från kilogram till hertz</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="266"/>
+        <source>kilogram-hartree relationship</source>
+        <translation>omräkning från kilogram till hartree</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="267"/>
+        <source>kilogram-inverse meter relationship</source>
+        <translation>omräkning från kilogram till invers meter</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="268"/>
+        <source>kilogram-joule relationship</source>
+        <translation>omräkning från kilogram till joule</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="269"/>
+        <source>kilogram-kelvin relationship</source>
+        <translation>omräkning från kilogram till kelvin</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="270"/>
+        <source>lattice parameter of silicon (a)</source>
+        <translation>gitterparameter för kisel (a)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="271"/>
+        <source>luminous efficacy</source>
+        <translation>ljusutbyte</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="272"/>
+        <source>natural unit of energy</source>
+        <translation>naturlig enhet för energi</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="273"/>
+        <source>natural unit of energy in MeV</source>
+        <translation>naturlig enhet för energi i MeV</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="274"/>
+        <source>natural unit of action (ℏ)</source>
+        <translation>naturlig enhet för verkan (ℏ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="275"/>
+        <source>natural unit of action in eV·s</source>
+        <translation>naturlig enhet för verkan i eV·s</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="276"/>
+        <source>natural unit of length</source>
+        <translation>naturlig enhet för längd</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="277"/>
+        <source>natural unit of mass</source>
+        <translation>naturlig enhet för massa</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="278"/>
+        <source>natural unit of momentum</source>
+        <translation>naturlig enhet för rörelsemängd</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="279"/>
+        <source>natural unit of momentum in MeV/c</source>
+        <translation>naturlig enhet för rörelsemängd i MeV/c</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="280"/>
+        <source>natural unit of time</source>
+        <translation>naturlig enhet för tid</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="281"/>
+        <source>natural unit of velocity</source>
+        <translation>naturlig enhet för hastighet</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="282"/>
+        <source>Rydberg constant times c in Hz</source>
+        <translation>Rydbergs konstant gånger c i Hz</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="283"/>
+        <source>Rydberg constant times hc in eV</source>
+        <translation>Rydbergs konstant gånger hc i eV</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="284"/>
+        <source>Rydberg constant times hc in J</source>
+        <translation>Rydbergs konstant gånger hc i J</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="287"/>
+        <source>Fermi coupling constant</source>
+        <translation>Fermis kopplingskonstant</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="288"/>
+        <source>weak mixing angle</source>
+        <translation>elektrosvag blandningsvinkel</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="289"/>
+        <source>W to Z mass ratio</source>
+        <translation>masskvot (W-boson/Z-boson)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="292"/>
+        <source>Thomson cross section (σₑ)</source>
+        <translation>Thomsons tvärsnitt (σₑ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="293"/>
+        <source>electron mass (mₑ)</source>
+        <translation>elektronmassa (mₑ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="294"/>
+        <source>electron mass in u</source>
+        <translation>elektronmassa i u</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="295"/>
+        <source>electron mass energy equivalent (mₑ·c²)</source>
+        <translation>energiekvivalent för elektronens massa (mₑ·c²)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="296"/>
+        <source>electron mass energy equivalent in MeV</source>
+        <translation>energiekvivalent för elektronens massa i MeV</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="297"/>
+        <source>Compton wavelength</source>
+        <translation>Comptonvåglängd för elektronen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="298"/>
+        <source>reduced Compton wavelength</source>
+        <translation>reducerad Comptonvåglängd för elektronen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="299"/>
+        <source>classical electron radius (rₑ)</source>
+        <translation>klassisk elektronradie (rₑ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="300"/>
+        <source>electron charge to mass quotient</source>
+        <translation>elektronens laddning dividerad med dess massa</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="301"/>
+        <source>electron-deuteron magnetic moment ratio</source>
+        <translation>förhållande mellan elektronens och deuteronens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="302"/>
+        <source>electron-deuteron mass ratio</source>
+        <translation>masskvot (elektron/deuteron)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="303"/>
+        <source>electron g factor (gₑ)</source>
+        <translation>elektronens g-faktor (gₑ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="304"/>
+        <source>electron gyromagnetic ratio (γₑ)</source>
+        <translation>elektronens gyromagnetiska kvot (γₑ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="305"/>
+        <source>electron gyromagnetic ratio in MHz/T</source>
+        <translation>elektronens gyromagnetiska kvot i MHz/T</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="306"/>
+        <source>electron-helion mass ratio</source>
+        <translation>masskvot (elektron/helion)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="307"/>
+        <source>electron magnetic moment (μₑ)</source>
+        <translation>elektronens magnetiska moment (μₑ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="308"/>
+        <source>electron magnetic moment anomaly (aₑ)</source>
+        <translation>anomali hos elektronens magnetiska moment (aₑ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="309"/>
+        <source>electron magnetic moment to Bohr magneton ratio</source>
+        <translation>förhållande mellan elektronens magnetiska moment och Bohrmagnetonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="310"/>
+        <source>electron magnetic moment to nuclear magneton ratio</source>
+        <translation>förhållande mellan elektronens magnetiska moment och kärnmagnetonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="311"/>
+        <source>electron molar mass (Mₑ)</source>
+        <translation>elektronens molmassa (Mₑ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="312"/>
+        <source>electron-muon magnetic moment ratio</source>
+        <translation>förhållande mellan elektronens och myonens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="313"/>
+        <source>electron-muon mass ratio</source>
+        <translation>masskvot (elektron/myon)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="314"/>
+        <source>electron-neutron magnetic moment ratio</source>
+        <translation>förhållande mellan elektronens och neutronens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="315"/>
+        <source>electron-neutron mass ratio</source>
+        <translation>masskvot (elektron/neutron)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="316"/>
+        <source>electron-proton magnetic moment ratio</source>
+        <translation>förhållande mellan elektronens och protonens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="317"/>
+        <source>electron-proton mass ratio</source>
+        <translation>masskvot (elektron/proton)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="318"/>
+        <source>electron relative atomic mass (Ar(e))</source>
+        <translation>relativ atommassa för elektron (Ar(e))</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="319"/>
+        <source>electron-tau mass ratio</source>
+        <translation>masskvot (elektron/taulepton)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="320"/>
+        <source>electron to alpha particle mass ratio</source>
+        <translation>masskvot (elektron/alfapartikel)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="321"/>
+        <source>electron to shielded helion magnetic moment ratio</source>
+        <translation>förhållande mellan elektronens och den skärmade helionens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="322"/>
+        <source>electron to shielded proton magnetic moment ratio</source>
+        <translation>förhållande mellan elektronens och den skärmade protonens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="323"/>
+        <source>electron-triton mass ratio</source>
+        <translation>masskvot (elektron/triton)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="324"/>
+        <source>electron volt-atomic mass unit relationship</source>
+        <translation>omräkning från elektronvolt till atommassenhet</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="325"/>
+        <source>electron volt-hartree relationship</source>
+        <translation>omräkning från elektronvolt till hartree</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="326"/>
+        <source>electron volt-hertz relationship</source>
+        <translation>omräkning från elektronvolt till hertz</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="327"/>
+        <source>electron volt-inverse meter relationship</source>
+        <translation>omräkning från elektronvolt till invers meter</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="328"/>
+        <source>electron volt-joule relationship</source>
+        <translation>omräkning från elektronvolt till joule</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="329"/>
+        <source>electron volt-kelvin relationship</source>
+        <translation>omräkning från elektronvolt till kelvin</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="330"/>
+        <source>electron volt-kilogram relationship</source>
+        <translation>omräkning från elektronvolt till kilogram</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="331"/>
+        <source>hartree-atomic mass unit relationship</source>
+        <translation>omräkning från hartree till atommassenhet</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="332"/>
+        <source>hartree-electron volt relationship</source>
+        <translation>omräkning från hartree till elektronvolt</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="335"/>
+        <source>muon Compton wavelength</source>
+        <translation>Comptonvåglängd för myonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="336"/>
+        <source>muon-electron mass ratio</source>
+        <translation>masskvot (myon/elektron)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="337"/>
+        <source>muon g factor</source>
+        <translation>myonens g-faktor</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="338"/>
+        <source>muon magnetic moment</source>
+        <translation>myonens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="339"/>
+        <source>muon magnetic moment anomaly</source>
+        <translation>anomali hos myonens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="340"/>
+        <source>muon magnetic moment to Bohr magneton ratio</source>
+        <translation>förhållande mellan myonens magnetiska moment och Bohrmagnetonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="341"/>
+        <source>muon magnetic moment to nuclear magneton ratio</source>
+        <translation>förhållande mellan myonens magnetiska moment och kärnmagnetonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="342"/>
+        <source>muon mass</source>
+        <translation>myonmassa</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="343"/>
+        <source>muon mass energy equivalent</source>
+        <translation>energiekvivalent för myonens massa</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="344"/>
+        <source>muon mass energy equivalent in MeV</source>
+        <translation>energiekvivalent för myonens massa i MeV</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="345"/>
+        <source>muon mass in u</source>
+        <translation>myonmassa i u</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="346"/>
+        <source>muon molar mass</source>
+        <translation>myonens molmassa</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="347"/>
+        <source>muon-neutron mass ratio</source>
+        <translation>masskvot (myon/neutron)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="348"/>
+        <source>muon-proton magnetic moment ratio</source>
+        <translation>förhållande mellan myonens och protonens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="349"/>
+        <source>muon-proton mass ratio</source>
+        <translation>masskvot (myon/proton)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="350"/>
+        <source>muon-tau mass ratio</source>
+        <translation>masskvot (myon/taulepton)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="351"/>
+        <source>reduced muon Compton wavelength</source>
+        <translation>reducerad Comptonvåglängd för myonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="354"/>
+        <source>reduced tau Compton wavelength</source>
+        <translation>reducerad Comptonvåglängd för tauleptonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="355"/>
+        <source>tau Compton wavelength</source>
+        <translation>Comptonvåglängd för tauleptonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="356"/>
+        <source>tau-electron mass ratio</source>
+        <translation>masskvot (taulepton/elektron)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="357"/>
+        <source>tau mass</source>
+        <translation>tauleptonens massa</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="358"/>
+        <source>tau mass energy equivalent</source>
+        <translation>energiekvivalent för tauleptonens massa</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="359"/>
+        <source>tau mass in u</source>
+        <translation>tauleptonens massa i u</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="360"/>
+        <source>tau molar mass</source>
+        <translation>tauleptonens molmassa</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="361"/>
+        <source>tau-muon mass ratio</source>
+        <translation>masskvot (taulepton/myon)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="362"/>
+        <source>tau-neutron mass ratio</source>
+        <translation>masskvot (taulepton/neutron)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="363"/>
+        <source>tau-proton mass ratio</source>
+        <translation>masskvot (taulepton/proton)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="366"/>
+        <source>proton charge to mass quotient</source>
+        <translation>protonens laddning dividerad med dess massa</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="367"/>
+        <source>proton Compton wavelength</source>
+        <translation>Comptonvåglängd för protonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="368"/>
+        <source>proton-electron mass ratio</source>
+        <translation>masskvot (proton/elektron)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="369"/>
+        <source>proton g factor (gₚ)</source>
+        <translation>protonens g-faktor (gₚ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="370"/>
+        <source>proton gyromagnetic ratio (γₚ)</source>
+        <translation>protonens gyromagnetiska kvot (γₚ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="371"/>
+        <source>proton gyromagnetic ratio in MHz/T</source>
+        <translation>protonens gyromagnetiska kvot i MHz/T</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="372"/>
+        <source>proton magnetic moment (μₚ)</source>
+        <translation>protonens magnetiska moment (μₚ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="373"/>
+        <source>proton magnetic moment to Bohr magneton ratio</source>
+        <translation>förhållande mellan protonens magnetiska moment och Bohrmagnetonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="374"/>
+        <source>proton magnetic moment to nuclear magneton ratio</source>
+        <translation>förhållande mellan protonens magnetiska moment och kärnmagnetonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="375"/>
+        <source>proton magnetic shielding correction</source>
+        <translation>magnetisk skärmningskorrektion för proton</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="376"/>
+        <source>proton mass (mₚ)</source>
+        <translation>protonmassa (mₚ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="377"/>
+        <source>proton mass energy equivalent</source>
+        <translation>energiekvivalent för protonens massa</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="378"/>
+        <source>proton mass energy equivalent in MeV</source>
+        <translation>energiekvivalent för protonens massa i MeV</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="379"/>
+        <source>proton mass in u</source>
+        <translation>protonmassa i u</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="380"/>
+        <source>proton molar mass (Mₚ)</source>
+        <translation>protonens molmassa (Mₚ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="381"/>
+        <source>proton-muon mass ratio</source>
+        <translation>masskvot (proton/myon)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="382"/>
+        <source>proton-neutron magnetic moment ratio</source>
+        <translation>förhållande mellan protonens och neutronens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="383"/>
+        <source>proton-neutron mass ratio</source>
+        <translation>masskvot (proton/neutron)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="384"/>
+        <source>proton relative atomic mass (Ar(p))</source>
+        <translation>relativ atommassa för proton (Ar(p))</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="385"/>
+        <source>proton rms charge radius</source>
+        <translation>rms-laddningsradie för proton</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="386"/>
+        <source>proton-tau mass ratio</source>
+        <translation>masskvot (proton/taulepton)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="387"/>
+        <source>reduced proton Compton wavelength</source>
+        <translation>reducerad Comptonvåglängd för protonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="388"/>
+        <source>shielded proton gyromagnetic ratio</source>
+        <translation>den skärmade protonens gyromagnetiska kvot</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="389"/>
+        <source>shielded proton gyromagnetic ratio in MHz/T</source>
+        <translation>den skärmade protonens gyromagnetiska kvot i MHz/T</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="390"/>
+        <source>shielded proton magnetic moment</source>
+        <translation>den skärmade protonens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="391"/>
+        <source>shielded proton magnetic moment to Bohr magneton ratio</source>
+        <translation>förhållande mellan den skärmade protonens magnetiska moment och Bohrmagnetonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="392"/>
+        <source>shielded proton magnetic moment to nuclear magneton ratio</source>
+        <translation>förhållande mellan den skärmade protonens magnetiska moment och kärnmagnetonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="395"/>
+        <source>neutron Compton wavelength</source>
+        <translation>Comptonvåglängd för neutronen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="396"/>
+        <source>neutron-electron magnetic moment ratio</source>
+        <translation>förhållande mellan neutronens och elektronens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="397"/>
+        <source>neutron-electron mass ratio</source>
+        <translation>masskvot (neutron/elektron)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="398"/>
+        <source>neutron g factor (gₙ)</source>
+        <translation>neutronens g-faktor (gₙ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="399"/>
+        <source>neutron gyromagnetic ratio (γₙ)</source>
+        <translation>neutronens gyromagnetiska kvot (γₙ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="400"/>
+        <source>neutron gyromagnetic ratio in MHz/T</source>
+        <translation>neutronens gyromagnetiska kvot i MHz/T</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="401"/>
+        <source>neutron magnetic moment (μₙ)</source>
+        <translation>neutronens magnetiska moment (μₙ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="402"/>
+        <source>neutron magnetic moment to Bohr magneton ratio</source>
+        <translation>förhållande mellan neutronens magnetiska moment och Bohrmagnetonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="403"/>
+        <source>neutron magnetic moment to nuclear magneton ratio</source>
+        <translation>förhållande mellan neutronens magnetiska moment och kärnmagnetonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="404"/>
+        <source>neutron mass (mₙ)</source>
+        <translation>neutronmassa (mₙ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="405"/>
+        <source>neutron mass energy equivalent</source>
+        <translation>energiekvivalent för neutronens massa</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="406"/>
+        <source>neutron mass energy equivalent in MeV</source>
+        <translation>energiekvivalent för neutronens massa i MeV</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="407"/>
+        <source>neutron mass in u</source>
+        <translation>neutronmassa i u</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="408"/>
+        <source>neutron molar mass (Mₙ)</source>
+        <translation>neutronens molmassa (Mₙ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="409"/>
+        <source>neutron-muon mass ratio</source>
+        <translation>masskvot (neutron/myon)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="410"/>
+        <source>neutron-proton magnetic moment ratio</source>
+        <translation>förhållande mellan neutronens och protonens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="411"/>
+        <source>neutron-proton mass difference</source>
+        <translation>masskillnad mellan neutronen och protonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="412"/>
+        <source>neutron-proton mass difference energy equivalent</source>
+        <translation>energiekvivalent för masskillnaden mellan neutronen och protonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="413"/>
+        <source>neutron-proton mass difference energy equivalent in MeV</source>
+        <translation>energiekvivalent för masskillnaden mellan neutronen och protonen i MeV</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="414"/>
+        <source>neutron-proton mass difference in u</source>
+        <translation>masskillnad mellan neutronen och protonen i u</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="415"/>
+        <source>neutron-proton mass ratio</source>
+        <translation>masskvot (neutron/proton)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="416"/>
+        <source>neutron relative atomic mass (Ar(n))</source>
+        <translation>relativ atommassa för neutron (Ar(n))</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="417"/>
+        <source>neutron-tau mass ratio</source>
+        <translation>masskvot (neutron/taulepton)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="418"/>
+        <source>neutron to shielded proton magnetic moment ratio</source>
+        <translation>förhållande mellan neutronens och den skärmade protonens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="419"/>
+        <source>reduced neutron Compton wavelength</source>
+        <translation>reducerad Comptonvåglängd för neutronen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="422"/>
+        <source>deuteron-electron magnetic moment ratio</source>
+        <translation>förhållande mellan deuteronens och elektronens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="423"/>
+        <source>deuteron-electron mass ratio</source>
+        <translation>masskvot (deuteron/elektron)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="424"/>
+        <source>deuteron g factor</source>
+        <translation>deuteronens g-faktor</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="425"/>
+        <source>deuteron magnetic moment</source>
+        <translation>deuteronens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="426"/>
+        <source>deuteron magnetic moment to Bohr magneton ratio</source>
+        <translation>förhållande mellan deuteronens magnetiska moment och Bohrmagnetonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="427"/>
+        <source>deuteron magnetic moment to nuclear magneton ratio</source>
+        <translation>förhållande mellan deuteronens magnetiska moment och kärnmagnetonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="428"/>
+        <source>deuteron mass</source>
+        <translation>deuteronmassa</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="429"/>
+        <source>deuteron mass energy equivalent</source>
+        <translation>energiekvivalent för deuteronens massa</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="430"/>
+        <source>deuteron mass energy equivalent in MeV</source>
+        <translation>energiekvivalent för deuteronens massa i MeV</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="431"/>
+        <source>deuteron mass in u</source>
+        <translation>deuteronmassa i u</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="432"/>
+        <source>deuteron molar mass</source>
+        <translation>deuteronens molmassa</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="433"/>
+        <source>deuteron-neutron magnetic moment ratio</source>
+        <translation>förhållande mellan deuteronens och neutronens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="434"/>
+        <source>deuteron-proton magnetic moment ratio</source>
+        <translation>förhållande mellan deuteronens och protonens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="435"/>
+        <source>deuteron-proton mass ratio</source>
+        <translation>masskvot (deuteron/proton)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="436"/>
+        <source>deuteron relative atomic mass (Ar(d))</source>
+        <translation>relativ atommassa för deuteron (Ar(d))</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="437"/>
+        <source>deuteron rms charge radius</source>
+        <translation>rms-laddningsradie för deuteron</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="440"/>
+        <source>triton-electron mass ratio</source>
+        <translation>masskvot (triton/elektron)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="441"/>
+        <source>triton g factor (gₜ)</source>
+        <translation>tritonens g-faktor (gₜ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="442"/>
+        <source>triton magnetic moment (μₜ)</source>
+        <translation>tritonens magnetiska moment (μₜ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="443"/>
+        <source>triton magnetic moment to Bohr magneton ratio</source>
+        <translation>förhållande mellan tritonens magnetiska moment och Bohrmagnetonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="444"/>
+        <source>triton magnetic moment to nuclear magneton ratio</source>
+        <translation>förhållande mellan tritonens magnetiska moment och kärnmagnetonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="445"/>
+        <source>triton mass (mₜ)</source>
+        <translation>tritonmassa (mₜ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="446"/>
+        <source>triton mass energy equivalent</source>
+        <translation>energiekvivalent för tritonens massa</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="447"/>
+        <source>triton mass energy equivalent in MeV</source>
+        <translation>energiekvivalent för tritonens massa i MeV</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="448"/>
+        <source>triton mass in u</source>
+        <translation>tritonmassa i u</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="449"/>
+        <source>triton molar mass (Mₜ)</source>
+        <translation>tritonens molmassa (Mₜ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="450"/>
+        <source>triton-proton mass ratio</source>
+        <translation>masskvot (triton/proton)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="451"/>
+        <source>triton relative atomic mass (Ar(t))</source>
+        <translation>relativ atommassa för triton (Ar(t))</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="452"/>
+        <source>triton to proton magnetic moment ratio</source>
+        <translation>förhållande mellan tritonens och protonens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="455"/>
+        <source>helion-electron mass ratio</source>
+        <translation>masskvot (helion/elektron)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="456"/>
+        <source>helion g factor (gₕ)</source>
+        <translation>helionens g-faktor (gₕ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="457"/>
+        <source>helion magnetic moment (μₕ)</source>
+        <translation>helionens magnetiska moment (μₕ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="458"/>
+        <source>helion magnetic moment to Bohr magneton ratio</source>
+        <translation>förhållande mellan helionens magnetiska moment och Bohrmagnetonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="459"/>
+        <source>helion magnetic moment to nuclear magneton ratio</source>
+        <translation>förhållande mellan helionens magnetiska moment och kärnmagnetonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="460"/>
+        <source>helion mass (mₕ)</source>
+        <translation>helionmassa (mₕ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="461"/>
+        <source>helion mass energy equivalent</source>
+        <translation>energiekvivalent för helionens massa</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="462"/>
+        <source>helion mass energy equivalent in MeV</source>
+        <translation>energiekvivalent för helionens massa i MeV</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="463"/>
+        <source>helion mass in u</source>
+        <translation>helionmassa i u</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="464"/>
+        <source>helion molar mass (Mₕ)</source>
+        <translation>helionens molmassa (Mₕ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="465"/>
+        <source>helion-proton mass ratio</source>
+        <translation>masskvot (helion/proton)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="466"/>
+        <source>helion relative atomic mass (Ar(h))</source>
+        <translation>relativ atommassa för helion (Ar(h))</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="467"/>
+        <source>helion shielding shift</source>
+        <translation>helionens skärmningsförskjutning</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="468"/>
+        <source>shielded helion gyromagnetic ratio</source>
+        <translation>den skärmade helionens gyromagnetiska kvot</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="469"/>
+        <source>shielded helion gyromagnetic ratio in MHz/T</source>
+        <translation>den skärmade helionens gyromagnetiska kvot i MHz/T</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="470"/>
+        <source>shielded helion magnetic moment</source>
+        <translation>den skärmade helionens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="471"/>
+        <source>shielded helion magnetic moment to Bohr magneton ratio</source>
+        <translation>förhållande mellan den skärmade helionens magnetiska moment och Bohrmagnetonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="472"/>
+        <source>shielded helion magnetic moment to nuclear magneton ratio</source>
+        <translation>förhållande mellan den skärmade helionens magnetiska moment och kärnmagnetonen</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="473"/>
+        <source>shielded helion to proton magnetic moment ratio</source>
+        <translation>förhållande mellan den skärmade helionens och protonens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="474"/>
+        <source>shielded helion to shielded proton magnetic moment ratio</source>
+        <translation>förhållande mellan den skärmade helionens och den skärmade protonens magnetiska moment</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="477"/>
+        <source>alpha particle mass</source>
+        <translation>alfapartikelmassa</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="478"/>
+        <source>alpha particle mass in u</source>
+        <translation>alfapartikelmassa i u</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="479"/>
+        <source>alpha particle mass energy equivalent</source>
+        <translation>energiekvivalent för alfapartikelns massa</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="480"/>
+        <source>alpha particle mass energy equivalent in MeV</source>
+        <translation>energiekvivalent för alfapartikelns massa i MeV</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="481"/>
+        <source>alpha particle-electron mass ratio</source>
+        <translation>masskvot (alfapartikel/elektron)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="482"/>
+        <source>alpha particle-proton mass ratio</source>
+        <translation>masskvot (alfapartikel/proton)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="483"/>
+        <source>alpha particle rms charge radius</source>
+        <translation>rms-laddningsradie för alfapartikel</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="484"/>
+        <source>alpha particle molar mass</source>
+        <translation>alfapartikelns molmassa</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="485"/>
+        <source>alpha particle relative atomic mass (Ar(α))</source>
+        <translation>relativ atommassa för alfapartikel (Ar(α))</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="488"/>
+        <source>atomic mass constant (mᵤ)</source>
+        <translation>atommassekonstant (mᵤ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="489"/>
+        <source>Avogadro constant</source>
+        <translation>Avogadros konstant</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="490"/>
+        <source>Boltzmann constant (k)</source>
+        <translation>Boltzmanns konstant (k)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="491"/>
+        <source>Boltzmann constant in eV/K</source>
+        <translation>Boltzmanns konstant i eV/K</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="492"/>
+        <source>Boltzmann constant in Hz/K</source>
+        <translation>Boltzmanns konstant i Hz/K</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="493"/>
+        <source>Boltzmann constant in inverse meter per kelvin</source>
+        <translation>Boltzmanns konstant i m⁻¹ per kelvin</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="494"/>
+        <source>electron volt (eV)</source>
+        <translation>elektronvolt (eV)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="495"/>
+        <source>Faraday constant (F)</source>
+        <translation>Faradays konstant (F)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="496"/>
+        <source>first radiation constant (c₁)</source>
+        <translation>första strålningskonstanten (c₁)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="497"/>
+        <source>first radiation constant for spectral radiance</source>
+        <translation>första strålningskonstanten för spektral radians</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="498"/>
+        <source>molar gas constant (R)</source>
+        <translation>molära gaskonstanten (R)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="499"/>
+        <source>Loschmidt constant (n₀, 273.15 K, 100 kPa)</source>
+        <translation>Loschmidts konstant (n₀ vid 273,15 K och 100 kPa)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="500"/>
+        <source>Loschmidt constant (n₀, 273.15 K, 101.325 kPa)</source>
+        <translation>Loschmidts konstant (n₀ vid 273,15 K och 101,325 kPa)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="501"/>
+        <source>molar Planck constant</source>
+        <translation>molära Planckkonstanten</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="502"/>
+        <source>second radiation constant (c₂)</source>
+        <translation>andra strålningskonstanten (c₂)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="503"/>
+        <source>Stefan-Boltzmann constant (σ)</source>
+        <translation>Stefan–Boltzmanns konstant (σ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="504"/>
+        <source>lattice spacing of ideal Si (d₂₂₀)</source>
+        <translation>gitteravstånd för idealt Si (d₂₂₀)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="505"/>
+        <source>atomic mass constant energy equivalent</source>
+        <translation>atommassekonstantens energiekvivalent</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="506"/>
+        <source>atomic mass constant energy equivalent in MeV</source>
+        <translation>atommassekonstantens energiekvivalent i MeV</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="507"/>
+        <source>atomic mass unit-electron volt relationship</source>
+        <translation>omräkning från atommassenhet till elektronvolt</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="508"/>
+        <source>molar mass constant (Mᵤ)</source>
+        <translation>molmasskonstant (Mᵤ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="509"/>
+        <source>molar mass of carbon-12</source>
+        <translation>molmassa för kol-12</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="510"/>
+        <source>molar volume of ideal gas (273.15 K, 100 kPa)</source>
+        <translation>molvolym för en ideal gas (273,15 K och 100 kPa)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="511"/>
+        <source>molar volume of ideal gas (273.15 K, 101.325 kPa)</source>
+        <translation>molvolym för en ideal gas (273,15 K och 101,325 kPa)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="512"/>
+        <source>molar volume of silicon</source>
+        <translation>molvolym för kisel</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="513"/>
+        <source>Sackur-Tetrode constant (1 K, 100 kPa)</source>
+        <translation>Sackur–Tetrodes konstant (1 K och 100 kPa)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="514"/>
+        <source>Sackur-Tetrode constant (1 K, 101.325 kPa)</source>
+        <translation>Sackur–Tetrodes konstant (1 K och 101,325 kPa)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="515"/>
+        <source>Wien frequency displacement law constant</source>
+        <translation>konstanten i Wiens förskjutningslag för frekvens</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="516"/>
+        <source>Wien wavelength displacement law constant</source>
+        <translation>konstanten i Wiens förskjutningslag för våglängd</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="517"/>
+        <source>standard atmosphere (atm)</source>
+        <translation>standardatmosfär (atm)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="518"/>
+        <source>standard-state pressure (p°)</source>
+        <translation>tryck i standardtillståndet (p°)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="521"/>
+        <source>Angstrom star (Å*)</source>
+        <translation>ångströmstjärna (Å*)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="522"/>
+        <source>Copper x unit</source>
+        <translation>koppar-x-enhet</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="523"/>
+        <source>Molybdenum x unit</source>
+        <translation>molybden-x-enhet</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="526"/>
+        <source>atomic unit of magnetizability</source>
+        <translation>atomär enhet för magnetiserbarhet</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="527"/>
+        <source>atomic unit of mass (mₑ)</source>
+        <translation>atomär enhet för massa (mₑ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="528"/>
+        <source>atomic unit of momentum</source>
+        <translation>atomär enhet för rörelsemängd</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="529"/>
+        <source>atomic unit of permittivity</source>
+        <translation>atomär enhet för permittivitet</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="530"/>
+        <source>atomic unit of time</source>
+        <translation>atomär enhet för tid</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="531"/>
+        <source>atomic unit of velocity</source>
+        <translation>atomär enhet för hastighet</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="534"/>
+        <source>hartree-hertz relationship</source>
+        <translation>omräkning från hartree till hertz</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="535"/>
+        <source>hartree-inverse meter relationship</source>
+        <translation>omräkning från hartree till invers meter</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="536"/>
+        <source>hartree-joule relationship</source>
+        <translation>omräkning från hartree till joule</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="537"/>
+        <source>hartree-kelvin relationship</source>
+        <translation>omräkning från hartree till kelvin</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="538"/>
+        <source>hartree-kilogram relationship</source>
+        <translation>omräkning från hartree till kilogram</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="541"/>
+        <source>shielding difference of d and p in HD</source>
+        <translation>skärmningsskillnad mellan d och p i HD</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="542"/>
+        <source>shielding difference of t and p in HT</source>
+        <translation>skärmningsskillnad mellan t och p i HT</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="546"/>
+        <source>pi (π)</source>
+        <translation>pi (π)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="547"/>
+        <source>Euler&apos;s number (e)</source>
+        <translation>Eulers tal (e)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="548"/>
+        <source>golden ratio (φ)</source>
+        <translation>gyllene snittet (φ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="549"/>
+        <source>Euler-Mascheroni constant (γ)</source>
+        <translation>Euler–Mascheronis konstant (γ)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="553"/>
+        <source>nominal solar radius</source>
+        <translation>nominell solradie</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="554"/>
+        <source>nominal solar total irradiance</source>
+        <translation>nominell total solirradians</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="555"/>
+        <source>nominal solar luminosity</source>
+        <translation>solens nominella luminositet</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="556"/>
+        <source>nominal solar effective temperature</source>
+        <translation>solens nominella effektiva temperatur</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="557"/>
+        <source>nominal solar mass parameter</source>
+        <translation>solens nominella massparameter</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="558"/>
+        <source>nominal terrestrial equatorial radius</source>
+        <translation>jordens nominella ekvatorsradie</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="559"/>
+        <source>nominal terrestrial polar radius</source>
+        <translation>jordens nominella polradie</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="560"/>
+        <source>nominal terrestrial mass parameter</source>
+        <translation>jordens nominella massparameter</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="561"/>
+        <source>nominal jovian equatorial radius</source>
+        <translation>Jupiters nominella ekvatorsradie</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="562"/>
+        <source>nominal jovian polar radius</source>
+        <translation>Jupiters nominella polradie</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="563"/>
+        <source>nominal jovian mass parameter</source>
+        <translation>Jupiters nominella massparameter</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="565"/>
+        <source>average value of one minus the rate of TCG relative to TCB</source>
+        <translation>medelvärde av ett minus TCG:s gånghastighet i förhållande till TCB</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="566"/>
+        <source>solar mass parameter (TCB-compatible)</source>
+        <translation>solmassparameter (TCB-kompatibel)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="567"/>
+        <source>solar mass parameter (TDB-compatible)</source>
+        <translation>solmassparameter (TDB-kompatibel)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="568"/>
+        <source>equatorial radius of the Earth (TT-compatible)</source>
+        <translation>jordens ekvatoriella radie (TT-kompatibel)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="569"/>
+        <source>dynamical form factor of the Earth</source>
+        <translation>jordens dynamiska formfaktor</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="570"/>
+        <source>time rate of change in the dynamical form factor of the Earth</source>
+        <translation>tidsderivatan av jordens dynamiska formfaktor</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="571"/>
+        <source>geocentric gravitational constant (TCB-compatible)</source>
+        <translation>geocentrisk gravitationskonstant (TCB-kompatibel)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="572"/>
+        <source>geocentric gravitational constant (TT-compatible)</source>
+        <translation>geocentrisk gravitationskonstant (TT-kompatibel)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="573"/>
+        <source>geocentric gravitational constant (TDB-compatible)</source>
+        <translation>geocentrisk gravitationskonstant (TDB-kompatibel)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="574"/>
+        <source>potential of the geoid</source>
+        <translation>geoidens potential</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="575"/>
+        <source>nominal mean angular velocity of the Earth (TT-compatible)</source>
+        <translation>jordens nominella medelvinkelhastighet (TT-kompatibel)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="576"/>
+        <source>ratio mass of the Moon to the Earth</source>
+        <translation>masskvot (månen/jorden)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="577"/>
+        <source>ratio of the mass of the Sun to Mercury</source>
+        <translation>masskvot (solen/Merkurius)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="578"/>
+        <source>ratio of the mass of the Sun to Venus</source>
+        <translation>masskvot (solen/Venus)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="579"/>
+        <source>ratio of the mass of the Sun to Mars</source>
+        <translation>masskvot (solen/Mars)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="580"/>
+        <source>ratio of the mass of the Sun to Jupiter</source>
+        <translation>masskvot (solen/Jupiter)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="581"/>
+        <source>ratio of the mass of the Sun to Saturn</source>
+        <translation>masskvot (solen/Saturnus)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="582"/>
+        <source>ratio of the mass of the Sun to Uranus</source>
+        <translation>masskvot (solen/Uranus)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="583"/>
+        <source>ratio of the mass of the Sun to Neptune</source>
+        <translation>masskvot (solen/Neptunus)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="584"/>
+        <source>ratio of the mass of the Sun to (134340) Pluto</source>
+        <translation>masskvot (solen/(134340) Pluto)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="585"/>
+        <source>ratio of the mass of the Sun to (136199) Eris</source>
+        <translation>masskvot (solen/(136199) Eris)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="586"/>
+        <source>ratio of the mass of (1) Ceres to the Sun</source>
+        <translation>masskvot ((1) Ceres/solen)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="587"/>
+        <source>ratio of the mass of (2) Pallas to the Sun</source>
+        <translation>masskvot ((2) Pallas/solen)</translation>
+    </message>
+    <message>
+        <location filename="../../core/constants.cpp" line="588"/>
+        <source>ratio of the mass of (4) Vesta to the Sun</source>
+        <translation>masskvot ((4) Vesta/solen)</translation>
     </message>
     <message>
         <location filename="../../core/constants.cpp" line="589"/>
@@ -4526,12 +4526,12 @@
     <message>
         <location filename="../../gui/constantswidget.cpp" line="245"/>
         <source>Domain</source>
-        <translation>Domän</translation>
+        <translation>Kategori</translation>
     </message>
     <message>
         <location filename="../../gui/constantswidget.cpp" line="246"/>
         <source>Subdomain</source>
-        <translation>Underdomän</translation>
+        <translation>Underkategori</translation>
     </message>
     <message>
         <location filename="../../gui/constantswidget.cpp" line="248"/>
@@ -4638,7 +4638,7 @@
     <message>
         <location filename="../../gui/customkeypaddialog.cpp" line="160"/>
         <source>Click Copy Preset to replace the table with the selected layout.</source>
-        <translation>Klicka på Kopiera förval för att ersätta tabellen med den valda layouten.</translation>
+        <translation>Klicka på ”Kopiera förval” för att ersätta tabellen med den valda layouten.</translation>
     </message>
     <message>
         <location filename="../../gui/customkeypaddialog.cpp" line="164"/>
@@ -4669,12 +4669,12 @@
     <message>
         <location filename="../../gui/editor.cpp" line="2030"/>
         <source>User unit</source>
-        <translation>Användarenhet</translation>
+        <translation>Användardefinierad enhet</translation>
     </message>
     <message>
         <location filename="../../gui/editor.cpp" line="2085"/>
         <source>User function</source>
-        <translation>Användarfunktion</translation>
+        <translation>Användardefinierad funktion</translation>
     </message>
     <message>
         <location filename="../../gui/editor.cpp" line="2212"/>
@@ -4691,18 +4691,18 @@
         <location filename="../../gui/editor.cpp" line="2479"/>
         <location filename="../../gui/editor.cpp" line="2503"/>
         <source>Selection result:&lt;br/&gt;%1</source>
-        <translation>Markeringsresultat:&lt;br/&gt;%1</translation>
+        <translation>Resultat för markeringen:&lt;br/&gt;%1</translation>
     </message>
     <message>
         <location filename="../../gui/editor.cpp" line="2473"/>
         <location filename="../../gui/editor.cpp" line="2497"/>
         <source>Selection result: n/a</source>
-        <translation>Markeringsresultat: ej tillgängligt</translation>
+        <translation>Resultat för markeringen: ej tillgängligt</translation>
     </message>
     <message>
         <location filename="../../gui/editor.cpp" line="2510"/>
         <source>Selection result: %1</source>
-        <translation>Markeringsresultat: %1</translation>
+        <translation>Resultat för markeringen: %1</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="542"/>
@@ -4877,7 +4877,7 @@
     <message>
         <location filename="../../core/units.cpp" line="605"/>
         <source>carat</source>
-        <translation>carat</translation>
+        <translation>metrisk karat (ädelstensmassa)</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="606"/>
@@ -4887,17 +4887,17 @@
     <message>
         <location filename="../../core/units.cpp" line="607"/>
         <source>cup (Imperial)</source>
-        <translation>kopp (imperial)</translation>
+        <translation>brittisk kopp</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="608"/>
         <source>cup (Japanese)</source>
-        <translation>kopp (japansk)</translation>
+        <translation>japansk kopp</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="609"/>
         <source>cup (US)</source>
-        <translation>kopp (US)</translation>
+        <translation>amerikansk kopp</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="610"/>
@@ -4912,22 +4912,22 @@
     <message>
         <location filename="../../core/units.cpp" line="612"/>
         <source>fluid ounce (Imperial)</source>
-        <translation>vätskeunce (imperial)</translation>
+        <translation>brittiskt vätskeuns</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="613"/>
         <source>fluid ounce (US)</source>
-        <translation>vätskeunce (US)</translation>
+        <translation>amerikanskt vätskeuns</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="614"/>
         <source>fluid dram (Imperial)</source>
-        <translation>vätskedram (imperial)</translation>
+        <translation>brittisk vätskedram</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="615"/>
         <source>fluid dram (US)</source>
-        <translation>vätskedram (US)</translation>
+        <translation>amerikansk vätskedram</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="616"/>
@@ -4947,27 +4947,27 @@
     <message>
         <location filename="../../core/units.cpp" line="620"/>
         <source>gallon (Imperial)</source>
-        <translation>gallon (imperial)</translation>
+        <translation>brittisk gallon</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="621"/>
         <source>gallon (US)</source>
-        <translation>gallon (US)</translation>
+        <translation>amerikansk gallon</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="622"/>
         <source>gill (Imperial)</source>
-        <translation>gill (imperial)</translation>
+        <translation>brittisk gill</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="623"/>
         <source>gill (US)</source>
-        <translation>gill (US)</translation>
+        <translation>amerikansk gill</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="624"/>
         <source>gradian</source>
-        <translation>gradian</translation>
+        <translation>nygrad (gon)</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="625"/>
@@ -4992,7 +4992,7 @@
     <message>
         <location filename="../../core/units.cpp" line="629"/>
         <source>horsepower</source>
-        <translation>hästkraft</translation>
+        <translation>brittisk hästkraft (hp)</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="630"/>
@@ -5012,7 +5012,7 @@
     <message>
         <location filename="../../core/units.cpp" line="633"/>
         <source>karat</source>
-        <translation>karat</translation>
+        <translation>karat (guldhalt)</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="634"/>
@@ -5047,12 +5047,12 @@
     <message>
         <location filename="../../core/units.cpp" line="640"/>
         <source>square mile</source>
-        <translation>kvadratengelsk mil</translation>
+        <translation>kvadratmile</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="641"/>
         <source>cubic mile</source>
-        <translation>kubikengelsk mil</translation>
+        <translation>kubikmile</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="642"/>
@@ -5082,12 +5082,12 @@
     <message>
         <location filename="../../core/units.cpp" line="648"/>
         <source>pint (Imperial)</source>
-        <translation>pint (imperial)</translation>
+        <translation>brittisk pint</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="649"/>
         <source>pint (US)</source>
-        <translation>pint (US)</translation>
+        <translation>amerikansk pint</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="650"/>
@@ -5097,17 +5097,17 @@
     <message>
         <location filename="../../core/units.cpp" line="651"/>
         <source>pounds per square inch</source>
-        <translation>pund per kvadrattum</translation>
+        <translation>pundkraft per kvadrattum</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="652"/>
         <source>quart (Imperial)</source>
-        <translation>quart (imperial)</translation>
+        <translation>brittisk quart</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="653"/>
         <source>quart (US)</source>
-        <translation>quart (US)</translation>
+        <translation>amerikansk quart</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="654"/>
@@ -5117,7 +5117,7 @@
     <message>
         <location filename="../../core/units.cpp" line="655"/>
         <source>beer barrel (US)</source>
-        <translation>ölfat (US)</translation>
+        <translation>amerikanskt ölfat</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="657"/>
@@ -5142,17 +5142,17 @@
     <message>
         <location filename="../../core/units.cpp" line="662"/>
         <source>tablespoon (Australian)</source>
-        <translation>matsked (australisk)</translation>
+        <translation>australisk matsked</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="663"/>
         <source>tablespoon (Imperial)</source>
-        <translation>matsked (imperial)</translation>
+        <translation>brittisk matsked</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="664"/>
         <source>tablespoon (US)</source>
-        <translation>matsked (US)</translation>
+        <translation>amerikansk matsked</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="665"/>
@@ -5167,12 +5167,12 @@
     <message>
         <location filename="../../core/units.cpp" line="667"/>
         <source>teaspoon (Imperial)</source>
-        <translation>tesked (imperial)</translation>
+        <translation>brittisk tesked</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="668"/>
         <source>teaspoon (US)</source>
-        <translation>tesked (US)</translation>
+        <translation>amerikansk tesked</translation>
     </message>
     <message>
         <location filename="../../core/units.cpp" line="670"/>
@@ -5229,6 +5229,51 @@
         <source>tropical year</source>
         <translation>tropiskt år</translation>
     </message>
+    <message>
+        <location filename="../../core/units.cpp" line="714"/>
+        <source>dyne</source>
+        <translation>dyn</translation>
+    </message>
+    <message>
+        <location filename="../../core/units.cpp" line="715"/>
+        <source>erg</source>
+        <translation>erg</translation>
+    </message>
+    <message>
+        <location filename="../../core/units.cpp" line="716"/>
+        <source>barye</source>
+        <translation>barye</translation>
+    </message>
+    <message>
+        <location filename="../../core/units.cpp" line="717"/>
+        <source>poise</source>
+        <translation>poise</translation>
+    </message>
+    <message>
+        <location filename="../../core/units.cpp" line="718"/>
+        <source>stokes</source>
+        <translation>stok</translation>
+    </message>
+    <message>
+        <location filename="../../core/units.cpp" line="719"/>
+        <source>gal</source>
+        <translation>gal</translation>
+    </message>
+    <message>
+        <location filename="../../core/units.cpp" line="720"/>
+        <source>gauss</source>
+        <translation>gauss</translation>
+    </message>
+    <message>
+        <location filename="../../core/units.cpp" line="721"/>
+        <source>maxwell</source>
+        <translation>maxwell</translation>
+    </message>
+    <message>
+        <location filename="../../core/units.cpp" line="722"/>
+        <source>oersted</source>
+        <translation>örsted</translation>
+    </message>
 </context>
 <context>
     <name>Evaluator</name>
@@ -5271,30 +5316,30 @@
     <message>
         <location filename="../../core/evaluator.cpp" line="728"/>
         <source>too time consuming - computation was rejected</source>
-        <translation>för tidskrävande - beräkningen avvisades</translation>
+        <translation>beräkningen skulle ta för lång tid och avvisades</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="735"/>
         <location filename="../../core/evaluator.cpp" line="807"/>
         <location filename="../../core/evaluator.cpp" line="7131"/>
         <source>dimension mismatch - quantities with different dimensions cannot be compared, added, etc.</source>
-        <translation>dimensionsfel - storheter med olika dimensioner kan inte jämföras, adderas osv.</translation>
+        <translation>dimensionerna stämmer inte överens – storheter med olika dimensioner kan till exempel inte jämföras eller adderas</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="740"/>
         <source>invalid dimension - operation might require dimensionless arguments</source>
-        <translation>ogiltig dimension - operationen kan behöva dimensionslösa argument</translation>
+        <translation>ogiltig dimension – operationen kan kräva dimensionslösa argument</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="750"/>
         <location filename="../../core/evaluator.cpp" line="793"/>
         <source>Computation aborted - encountered numerical instability</source>
-        <translation>Beräkningen avbröts - numerisk instabilitet uppstod</translation>
+        <translation>Beräkningen avbröts på grund av numerisk instabilitet</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="803"/>
         <source>invalid dimension - function might require dimensionless arguments</source>
-        <translation>ogiltig dimension - funktionen kan behöva dimensionslösa argument</translation>
+        <translation>ogiltig dimension – funktionen kan kräva dimensionslösa argument</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="818"/>
@@ -5305,12 +5350,12 @@
         <location filename="../../core/evaluator.cpp" line="7574"/>
         <location filename="../../core/evaluator.cpp" line="8044"/>
         <source>unit must not be zero</source>
-        <translation>enhet kan inte vara noll</translation>
+        <translation>enhetens värde får inte vara noll</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="7578"/>
         <source>Conversion failed - dimension mismatch</source>
-        <translation>Konverteringen misslyckades - dimensionsfel</translation>
+        <translation>Omvandlingen misslyckades eftersom dimensionerna inte stämmer överens</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="7660"/>
@@ -5326,30 +5371,30 @@
     <message>
         <location filename="../../core/evaluator.cpp" line="702"/>
         <source>cannot operate on a NaN</source>
-        <translation>kan inte räkna med NaN (ogiltigt värde)</translation>
+        <translation>det går inte att räkna med NaN</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="705"/>
         <location filename="../../core/evaluator.cpp" line="779"/>
         <source>underflow - tiny result is out of SpeedCrunch&apos;s number range</source>
-        <translation>för litet värde - SpeedCrunch kan inte representera värdet</translation>
+        <translation>resultatets absolutbelopp är för litet för att SpeedCrunch ska kunna representera det</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="709"/>
         <location filename="../../core/evaluator.cpp" line="775"/>
         <source>overflow - huge result is out of SpeedCrunch&apos;s number range</source>
-        <translation>för stort värde - SpeedCrunch kan inte representera värdet</translation>
+        <translation>resultatets absolutbelopp är för stort för att SpeedCrunch ska kunna representera det</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="717"/>
         <location filename="../../core/evaluator.cpp" line="783"/>
         <source>overflow - logic result exceeds maximum of 256 bits</source>
-        <translation>för stort värde - det logiska resultatet innehåller mer än 256 bitar</translation>
+        <translation>resultatet av den logiska operationen kräver fler än 256 bitar</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="723"/>
         <source>overflow - integer result exceeds maximum limit for integers</source>
-        <translation>för stort värde - heltalsresultatet överskrider gränsen för heltal</translation>
+        <translation>heltalsresultatet ligger utanför det tillåtna intervallet för heltal</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="747"/>
@@ -5368,19 +5413,19 @@
     <message>
         <location filename="../../core/evaluator.cpp" line="772"/>
         <source>does not take NaN as an argument</source>
-        <translation>tar ej NaN som ett argument</translation>
+        <translation>NaN kan inte användas som argument</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="787"/>
         <source>result out of range</source>
-        <translation>resultat utanför området</translation>
+        <translation>resultatet ligger utanför det tillåtna intervallet</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="797"/>
         <location filename="../../core/evaluator.cpp" line="7766"/>
         <location filename="../../core/evaluator.cpp" line="7782"/>
         <source>undefined for argument domain</source>
-        <translation>odefinierat för argumentets domän</translation>
+        <translation>funktionen är inte definierad för det angivna argumentet</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="800"/>
@@ -5390,7 +5435,7 @@
     <message>
         <location filename="../../core/evaluator.cpp" line="815"/>
         <source>internal error, please report a bug</source>
-        <translation>internt fel, vänligen rapportera felet</translation>
+        <translation>internt fel. Rapportera gärna felet</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="6179"/>
@@ -5412,19 +5457,19 @@
         <location filename="../../core/evaluator.cpp" line="7963"/>
         <location filename="../../core/evaluator.cpp" line="8003"/>
         <source>%1 is a reserved name, please choose another</source>
-        <translation>%1 är ett reserverat namn, vänligen välj ett annat namn</translation>
+        <translation>namnet %1 är reserverat. Välj ett annat namn</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="7970"/>
         <location filename="../../core/evaluator.cpp" line="7975"/>
         <location filename="../../core/evaluator.cpp" line="7980"/>
         <source>%1 is a global user definition and cannot be overridden in this session.</source>
-        <translation>%1 är en global användardefinition och kan inte åsidosättas i den här sessionen.</translation>
+        <translation>%1 är en global användardefinition som inte kan ersättas i den här sessionen.</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="7987"/>
         <source>%1 is a variable name, please choose another or delete the variable</source>
-        <translation>%1 är ett variabelnamn, vänligen välj ett annat eller ta bort variabeln</translation>
+        <translation>det finns redan en variabel med namnet %1. Välj ett annat namn eller ta bort variabeln</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="7997"/>
@@ -5434,12 +5479,12 @@
     <message>
         <location filename="../../core/evaluator.cpp" line="8039"/>
         <source>%1 is a built-in unit name, please choose another</source>
-        <translation>%1 är namnet på en inbyggd enhet, välj ett annat</translation>
+        <translation>det finns en inbyggd enhet med namnet %1. Välj ett annat namn</translation>
     </message>
     <message>
         <location filename="../../core/evaluator.cpp" line="8052"/>
         <source>%1 is a user function name, please choose another or delete the function</source>
-        <translation>%1 är ett namn på en användardefinierad funktion, vänligen välj ett annat eller ta bort funktionen</translation>
+        <translation>det finns redan en användardefinierad funktion med namnet %1. Välj ett annat namn eller ta bort funktionen</translation>
     </message>
 </context>
 <context>
@@ -5447,7 +5492,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="2417"/>
         <source>max; trials; probability</source>
-        <translation>max; försök; sannolikhet</translation>
+        <translation>högsta antal träffar; antal försök; sannolikhet</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2418"/>
@@ -5458,23 +5503,23 @@
     <message>
         <location filename="../../core/functions.cpp" line="2419"/>
         <source>hits; trials; probability</source>
-        <translation>träffar; försök; sannolikhet</translation>
+        <translation>antal träffar; antal försök; sannolikhet</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2423"/>
         <source>max; total; hits; trials</source>
-        <translation>max; totalt; träffar; försök</translation>
+        <translation>högsta antal träffar; populationsstorlek; träffar i populationen; antal dragningar</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2424"/>
         <location filename="../../core/functions.cpp" line="2426"/>
         <source>total; hits; trials</source>
-        <translation>totalt; träffar; försök</translation>
+        <translation>populationsstorlek; träffar i populationen; antal dragningar</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2425"/>
         <source>count; total; hits; trials</source>
-        <translation>antal; totalt; träffar; försök</translation>
+        <translation>antal träffar; populationsstorlek; träffar i populationen; antal dragningar</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2427"/>
@@ -5485,7 +5530,7 @@
         <location filename="../../core/functions.cpp" line="2428"/>
         <location filename="../../core/functions.cpp" line="2429"/>
         <source>x; exponent_bits; significand_bits [; exponent_bias]</source>
-        <translation>x; exponentbitar; signifikandbitar [; exponentbias]</translation>
+        <translation>x; antal exponentbitar; antal signifikandbitar [; exponentförskjutning]</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2430"/>
@@ -5496,30 +5541,30 @@
         <location filename="../../core/functions.cpp" line="2434"/>
         <location filename="../../core/functions.cpp" line="2435"/>
         <source>value; modulo</source>
-        <translation>värde; modulo</translation>
+        <translation>värde; modul</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2436"/>
         <source>base; exponent; modulo</source>
-        <translation>bas; exponent; modulo</translation>
+        <translation>bas; exponent; modul</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2437"/>
         <location filename="../../core/functions.cpp" line="2439"/>
         <source>events; average_events</source>
-        <translation>händelser; genomsnitt_händelser</translation>
+        <translation>antal händelser; förväntat antal händelser</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2438"/>
         <location filename="../../core/functions.cpp" line="2440"/>
         <source>average_events</source>
-        <translation>genomsnitt_händelser</translation>
+        <translation>förväntat antal händelser</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2441"/>
         <location filename="../../core/functions.cpp" line="2442"/>
         <source>x [; precision]</source>
-        <translation>x [; noggrannhet]</translation>
+        <translation>x [; antal decimaler]</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2450"/>
@@ -5529,12 +5574,12 @@
     <message>
         <location filename="../../core/functions.cpp" line="2451"/>
         <source>Absolute Deviation</source>
-        <translation>Absolut avvikelse</translation>
+        <translation>Genomsnittlig absolut avvikelse från medelvärdet</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2453"/>
         <source>Arc Cosine</source>
-        <translation>Arkuscosinus</translation>
+        <translation>Arccosinus</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2454"/>
@@ -5544,57 +5589,57 @@
     <message>
         <location filename="../../core/functions.cpp" line="2455"/>
         <source>Area Hyperbolic Cosine</source>
-        <translation>Areahyperbolisk cosinus</translation>
+        <translation>Invers hyperbolisk cosinus</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2456"/>
         <source>Area Hyperbolic Sine</source>
-        <translation>Areahyperbolisk sinus</translation>
+        <translation>Invers hyperbolisk sinus</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2457"/>
         <source>Area Hyperbolic Tangent</source>
-        <translation>Areahyperbolisk tangens</translation>
+        <translation>Invers hyperbolisk tangens</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2458"/>
         <source>Arc Sine</source>
-        <translation>Arkussinus</translation>
+        <translation>Arcsinus</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2459"/>
         <source>Arc Tangent</source>
-        <translation>Arkustangens</translation>
+        <translation>Arctangens</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2460"/>
         <source>Arc Tangent with two Arguments</source>
-        <translation>arcus tangens tan⁻¹, med två argument</translation>
+        <translation>Arctangens med två argument</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2461"/>
         <source>Average (Arithmetic Mean)</source>
-        <translation>medelvärde (aritmetiskt medeltal)</translation>
+        <translation>Aritmetiskt medelvärde</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2464"/>
         <source>Binomial Cumulative Distribution Function</source>
-        <translation>Binomial kumulativ fördelningsfunktion</translation>
+        <translation>Binomialfördelningens fördelningsfunktion</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2465"/>
         <source>Binomial Distribution Mean</source>
-        <translation>binomialfördelningens medelvärde</translation>
+        <translation>Binomialfördelningens väntevärde</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2466"/>
         <source>Binomial Probability Mass Function</source>
-        <translation>Binomial sannolikhetsmassfunktion</translation>
+        <translation>Binomialfördelningens sannolikhetsfunktion</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2467"/>
         <source>Binomial Distribution Variance</source>
-        <translation>binomialfördelningens varians</translation>
+        <translation>Binomialfördelningens varians</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2468"/>
@@ -5664,17 +5709,17 @@
     <message>
         <location filename="../../core/functions.cpp" line="2498"/>
         <source>Fractional Part</source>
-        <translation>Bråkdel</translation>
+        <translation>Bråkdel av ett tal</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2499"/>
         <source>Extension of Factorials [= (x-1)!]</source>
-        <translation>Utvidgning av fakultet [= (x-1)!]</translation>
+        <translation>Gammafunktionen [= (x-1)!]</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2500"/>
         <source>Greatest Common Divisor</source>
-        <translation>Största gemensamma delare</translation>
+        <translation>Största gemensamma delaren</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2502"/>
@@ -5684,27 +5729,27 @@
     <message>
         <location filename="../../core/functions.cpp" line="2503"/>
         <source>Gradians of arc</source>
-        <translation>vinkel i gradianer 1/400 varv</translation>
+        <translation>Vinkel i nygrader (gon)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2506"/>
         <source>Hypergeometric Cumulative Distribution Function</source>
-        <translation>Hypergeometrisk kumulativ fördelningsfunktion</translation>
+        <translation>Den hypergeometriska fördelningens fördelningsfunktion</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2507"/>
         <source>Hypergeometric Distribution Mean</source>
-        <translation>Hypergeometriskt medelvärde</translation>
+        <translation>Den hypergeometriska fördelningens väntevärde</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2508"/>
         <source>Hypergeometric Probability Mass Function</source>
-        <translation>Hypergeometrisk sannolikhetsmassfunktion</translation>
+        <translation>Den hypergeometriska fördelningens sannolikhetsfunktion</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2509"/>
         <source>Hypergeometric Distribution Variance</source>
-        <translation>Hypergeometrisk varians</translation>
+        <translation>Den hypergeometriska fördelningens varians</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2510"/>
@@ -5724,67 +5769,67 @@
     <message>
         <location filename="../../core/functions.cpp" line="2514"/>
         <source>Decode IEEE-754 Binary Value</source>
-        <translation>Avkoda IEEE-754 binärt värde</translation>
+        <translation>Avkoda ett binärt flyttal enligt IEEE 754</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2515"/>
         <source>Encode IEEE-754 Binary Value</source>
-        <translation>Koda IEEE-754 binärt värde</translation>
+        <translation>Koda ett binärt flyttal enligt IEEE 754</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2516"/>
         <source>Decode 16-bit Half-Precision Value</source>
-        <translation>Avkoda 16-bitars halvprecision</translation>
+        <translation>Avkoda ett 16-bitars flyttal i halvprecision</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2517"/>
         <source>Encode 16-bit Half-Precision Value</source>
-        <translation>Koda 16-bitars halvprecision</translation>
+        <translation>Koda ett flyttal i halvprecision (16 bitar)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2518"/>
         <source>Decode 32-bit Single-Precision Value</source>
-        <translation>Avkoda 32-bitars enkelprecision</translation>
+        <translation>Avkoda ett 32-bitars flyttal i enkelprecision</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2519"/>
         <source>Encode 32-bit Single-Precision Value</source>
-        <translation>Koda 32-bitars enkelprecision</translation>
+        <translation>Koda ett flyttal i enkelprecision (32 bitar)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2520"/>
         <source>Decode 64-bit Double-Precision Value</source>
-        <translation>Avkoda 64-bitars dubbelprecision</translation>
+        <translation>Avkoda ett 64-bitars flyttal i dubbelprecision</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2521"/>
         <source>Encode 64-bit Double-Precision Value</source>
-        <translation>Koda 64-bitars dubbelprecision</translation>
+        <translation>Koda ett flyttal i dubbelprecision (64 bitar)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2522"/>
         <source>Decode 128-bit Quad-Precision Value</source>
-        <translation>Avkoda 128-bitars kvadrupelprecision</translation>
+        <translation>Avkoda ett 128-bitars flyttal i fyrdubbel precision</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2523"/>
         <source>Encode 128-bit Quad-Precision Value</source>
-        <translation>Koda 128-bitars kvadrupelprecision</translation>
+        <translation>Koda ett flyttal i fyrdubbel precision (128 bitar)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2532"/>
         <source>Binary Logarithm</source>
-        <translation>Logaritmen med bas 2</translation>
+        <translation>Binär logaritm (bas 2)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2533"/>
         <source>Common Logarithm</source>
-        <translation>Logaritmen med bas 10, tiologaritmen, briggska logaritmen</translation>
+        <translation>Tiologaritm (bas 10)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2534"/>
         <source>Natural Logarithm</source>
-        <translation>Logaritmen med bas e, naturliga logaritmen</translation>
+        <translation>Naturlig logaritm (bas e)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2539"/>
@@ -5794,7 +5839,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="2541"/>
         <source>Mask to a bit size</source>
-        <translation>Maska till en bitstorlek</translation>
+        <translation>Behåll angivet antal minst signifikanta bitar</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2542"/>
@@ -5889,7 +5934,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="43"/>
         <source>Base conversion</source>
-        <translation>Baskonvertering</translation>
+        <translation>Omvandling mellan talbaser</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="44"/>
@@ -5914,7 +5959,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="48"/>
         <source>Angle conversion</source>
-        <translation>Vinkelkonvertering</translation>
+        <translation>Omvandling av vinkelenheter</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="49"/>
@@ -5924,7 +5969,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="50"/>
         <source>Bitwise</source>
-        <translation>Bitvis</translation>
+        <translation>Bitvisa operationer</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="51"/>
@@ -5944,12 +5989,12 @@
     <message>
         <location filename="../../core/functions.cpp" line="2421"/>
         <source>unix_timestamp; x hours offset to GMT</source>
-        <translation>unix_tidsstämpel; x timmar avvikelse från GMT</translation>
+        <translation>Unix-tidsstämpel; tidsskillnad från GMT i timmar</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2422"/>
         <source>yyyymmdd.hhmmss; x hours offset to GMT</source>
-        <translation>yyyymmdd.hhmmss; x timmars avvikelse från GMT</translation>
+        <translation>yyyymmdd.hhmmss; tidsskillnad från GMT i timmar</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2431"/>
@@ -5969,7 +6014,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="2463"/>
         <source>Convert to Padded Binary Representation</source>
-        <translation>Konvertera till utfylld binär representation</translation>
+        <translation>Konvertera till binär representation med inledande nollor</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2470"/>
@@ -6054,7 +6099,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="2497"/>
         <source>Flatten Matrix</source>
-        <translation>Platta ut matris</translation>
+        <translation>Omvandla matrisens element till en lista</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2501"/>
@@ -6069,52 +6114,52 @@
     <message>
         <location filename="../../core/functions.cpp" line="2505"/>
         <source>Convert to Padded Hexadecimal Representation</source>
-        <translation>Konvertera till utfylld hexadecimal representation</translation>
+        <translation>Konvertera till hexadecimal representation med inledande nollor</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2513"/>
         <source>Inverse Matrix</source>
-        <translation>Invers matris</translation>
+        <translation>Inversmatris</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2524"/>
         <source>Round to 16-bit Half-Precision Value</source>
-        <translation>Avrunda till 16-bitars halvprecision</translation>
+        <translation>Avrunda till halvprecision (16 bitar)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2525"/>
         <source>Round to 32-bit Single-Precision Value</source>
-        <translation>Avrunda till 32-bitars enkelprecision</translation>
+        <translation>Avrunda till enkelprecision (32 bitar)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2526"/>
         <source>Round to 64-bit Double-Precision Value</source>
-        <translation>Avrunda till 64-bitars dubbelprecision</translation>
+        <translation>Avrunda till dubbelprecision (64 bitar)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2527"/>
         <source>Round to 128-bit Quad-Precision Value</source>
-        <translation>Avrunda till 128-bitars kvadrupelprecision</translation>
+        <translation>Avrunda till fyrdubbel precision (128 bitar)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2528"/>
         <source>Residual from 16-bit Half-Precision Rounding</source>
-        <translation>Rest från 16-bitars halvprecisionsavrundning</translation>
+        <translation>Residual efter avrundning till halvprecision (16 bitar)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2529"/>
         <source>Residual from 32-bit Single-Precision Rounding</source>
-        <translation>Rest från 32-bitars enkelprecisionsavrundning</translation>
+        <translation>Residual efter avrundning till enkelprecision (32 bitar)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2530"/>
         <source>Residual from 64-bit Double-Precision Rounding</source>
-        <translation>Rest från 64-bitars dubbelprecisionsavrundning</translation>
+        <translation>Residual efter avrundning till dubbelprecision (64 bitar)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2531"/>
         <source>Residual from 128-bit Quad-Precision Rounding</source>
-        <translation>Rest från 128-bitars kvadrupelprecisionsavrundning</translation>
+        <translation>Residual efter avrundning till fyrdubbel precision (128 bitar)</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2536"/>
@@ -6134,7 +6179,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="2540"/>
         <source>Median Absolute Deviation</source>
-        <translation>Median absolut avvikelse</translation>
+        <translation>Medianen av de absoluta avvikelserna från medianen</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2544"/>
@@ -6169,7 +6214,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="2557"/>
         <source>Convert to Padded Octal Representation</source>
-        <translation>Konvertera till utfylld oktal representation</translation>
+        <translation>Konvertera till oktal representation med inledande nollor</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2558"/>
@@ -6189,17 +6234,17 @@
     <message>
         <location filename="../../core/functions.cpp" line="2561"/>
         <source>Phase of Complex Number</source>
-        <translation>Komplext tals argument, vinkel i polär form</translation>
+        <translation>Argumentet för ett komplext tal</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2562"/>
         <source>Poissonian Cumulative Distribution Function</source>
-        <translation>Poisson kumulativ fördelningsfunktion</translation>
+        <translation>Poissonfördelningens fördelningsfunktion</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2563"/>
         <source>Poissonian Distribution Mean</source>
-        <translation>Poisson medelvärde</translation>
+        <translation>Poissonfördelningens väntevärde</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2564"/>
@@ -6224,12 +6269,12 @@
     <message>
         <location filename="../../core/functions.cpp" line="2572"/>
         <source>Round Half Away from Zero</source>
-        <translation>Avrunda halva bort från noll</translation>
+        <translation>Avrunda exakta mittpunkter bort från noll</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2573"/>
         <source>Round Half Even</source>
-        <translation>Avrunda halva till jämnt</translation>
+        <translation>Avrunda exakta mittpunkter till jämn slutsiffra</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2574"/>
@@ -6249,7 +6294,7 @@
     <message>
         <location filename="../../core/functions.cpp" line="2581"/>
         <source>List or Matrix Shape</source>
-        <translation>List- eller matrisform</translation>
+        <translation>Listans eller matrisens dimensioner</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2582"/>
@@ -6319,17 +6364,17 @@
     <message>
         <location filename="../../core/functions.cpp" line="2577"/>
         <source>Arithmetic Shift Left</source>
-        <translation>Aritmetisk skiftning vänster</translation>
+        <translation>Aritmetiskt vänsterskift</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2578"/>
         <source>Arithmetic Shift Right</source>
-        <translation>Aritmetisk skiftning höger</translation>
+        <translation>Aritmetiskt högerskift</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2579"/>
         <source>Signum</source>
-        <translation>tecken, returnerar +1, 0 eller -1</translation>
+        <translation>Teckenfunktion</translation>
     </message>
     <message>
         <location filename="../../core/functions.cpp" line="2583"/>
@@ -6387,7 +6432,7 @@
     <message>
         <location filename="../../gui/functionswidget.cpp" line="210"/>
         <source>Domain</source>
-        <translation>Domän</translation>
+        <translation>Kategori</translation>
     </message>
     <message>
         <location filename="../../gui/functionswidget.cpp" line="140"/>
@@ -6455,7 +6500,7 @@
     <message>
         <location filename="../../gui/keybindings.cpp" line="121"/>
         <source>Search Constants</source>
-        <translation>Sök konstanter</translation>
+        <translation>Sök efter konstanter</translation>
     </message>
     <message>
         <location filename="../../gui/keybindings.cpp" line="123"/>
@@ -6513,22 +6558,22 @@
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="49"/>
         <source>Restore All Defaults</source>
-        <translation>Återställ alla standardvärden</translation>
+        <translation>Återställ alla kortkommandon</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="54"/>
         <source>Keyboard Shortcuts</source>
-        <translation>Tangentbordsgenvägar</translation>
+        <translation>Kortkommandon</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="58"/>
         <source>&amp;Search actions:</source>
-        <translation>&amp;Sök åtgärder:</translation>
+        <translation>&amp;Sök efter åtgärder:</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="62"/>
         <source>Search by action, category, or shortcut</source>
-        <translation>Sök efter åtgärd, kategori eller genväg</translation>
+        <translation>Sök efter åtgärd, kategori eller kortkommando</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="64"/>
@@ -6548,22 +6593,22 @@
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="65"/>
         <source>Click a box and press a shortcut. Use the row menu to disable it or restore its default.</source>
-        <translation>Klicka i en ruta och tryck en genväg. Använd radens meny för att inaktivera den eller återställa standardvärdet.</translation>
+        <translation>Klicka i en ruta och tryck på de tangenter du vill använda. I radens meny kan du inaktivera kortkommandot eller återställa standardvärdet.</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="95"/>
         <source>Custom shortcut for %1</source>
-        <translation>Anpassad genväg för %1</translation>
+        <translation>Anpassat kortkommando för %1</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="102"/>
         <source>Shortcut options for %1</source>
-        <translation>Genvägsalternativ för %1</translation>
+        <translation>Alternativ för kortkommandot för %1</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="105"/>
         <source>Disable Shortcut</source>
-        <translation>Inaktivera genväg</translation>
+        <translation>Inaktivera kortkommando</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="107"/>
@@ -6573,17 +6618,17 @@
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="147"/>
         <source>Click a Custom box and press your shortcut. Use the row menu to disable a shortcut or restore its default. Sequences can contain up to four key combinations.</source>
-        <translation>Klicka i en anpassad ruta och tryck din genväg. Använd radens meny för att inaktivera en genväg eller återställa standardvärdet. Sekvenser kan innehålla upp till fyra tangentkombinationer.</translation>
+        <translation>Klicka i en ruta i kolumnen Anpassad och tryck på de tangenter du vill använda. I radens meny kan du inaktivera kortkommandot eller återställa standardvärdet. En sekvens kan innehålla upp till fyra tangentkombinationer.</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="244"/>
         <source>Press shortcut...</source>
-        <translation>Tryck genvägen...</translation>
+        <translation>Tryck på tangenterna …</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="245"/>
         <source>Disabled</source>
-        <translation>Inaktiverad</translation>
+        <translation>Inaktiverat</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="245"/>
@@ -6593,22 +6638,22 @@
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="256"/>
         <source>None</source>
-        <translation>Ingen</translation>
+        <translation>Inget</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="269"/>
         <source>This shortcut is disabled.</source>
-        <translation>Den här genvägen är inaktiverad.</translation>
+        <translation>Det här kortkommandot är inaktiverat.</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="269"/>
         <source>Custom shortcut: %1.</source>
-        <translation>Anpassad genväg: %1.</translation>
+        <translation>Anpassat kortkommando: %1.</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="270"/>
         <source>Uses the default shortcut: %1.</source>
-        <translation>Använder standardgenvägen: %1.</translation>
+        <translation>Förvalt kortkommando: %1.</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="271"/>
@@ -6623,17 +6668,17 @@
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="274"/>
         <source>Recording a shortcut replaces the existing alternatives.</source>
-        <translation>När du spelar in en genväg ersätts de befintliga alternativen.</translation>
+        <translation>När du anger ett nytt kortkommando ersätts de befintliga alternativen.</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="275"/>
         <source>System shortcuts may be intercepted before they reach SpeedCrunch.</source>
-        <translation>Systemgenvägar kan fångas upp innan de når SpeedCrunch.</translation>
+        <translation>Systemet kan fånga upp kortkommandon innan de når SpeedCrunch.</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="333"/>
         <source>Invalid Shortcut</source>
-        <translation>Ogiltig genväg</translation>
+        <translation>Ogiltigt kortkommando</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="333"/>
@@ -6648,24 +6693,24 @@
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="344"/>
         <source>Enter and Return evaluate expressions. Escape closes popups, and Tab moves focus. Choose another shortcut.</source>
-        <translation>Enter och Return beräknar uttryck. Escape stänger popupfönster och Tab flyttar fokus. Välj en annan genväg.</translation>
+        <translation>Enter och Retur beräknar uttryck. Esc stänger popupfönster och Tab flyttar fokus. Välj ett annat kortkommando.</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="370"/>
         <source>Shortcut Already Assigned</source>
-        <translation>Genvägen är redan tilldelad</translation>
+        <translation>Kortkommandot används redan</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="371"/>
         <source>This shortcut conflicts with:
 %1</source>
-        <translation>Den här genvägen står i konflikt med:
+        <translation>Det här kortkommandot krockar med:
 %1</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="373"/>
         <source>Reassign it and remove the conflicting bindings? A shorter sequence also conflicts with sequences that begin with the same keys.</source>
-        <translation>Tilldela den på nytt och ta bort de motstridiga kopplingarna? En kortare sekvens står också i konflikt med sekvenser som börjar med samma tangenter.</translation>
+        <translation>Vill du tilldela kortkommandot på nytt och ta bort de kopplingar det krockar med? En kortare sekvens krockar även med längre sekvenser som börjar med samma tangenter.</translation>
     </message>
     <message>
         <location filename="../../gui/keybindingsdialog.cpp" line="375"/>
@@ -6678,7 +6723,7 @@
     <message>
         <location filename="../../gui/keypad.cpp" line="967"/>
         <source>Inverse cosine</source>
-        <translation>Invers cosinus</translation>
+        <translation>Arccosinus</translation>
     </message>
     <message>
         <location filename="../../gui/keypad.cpp" line="968"/>
@@ -6688,12 +6733,12 @@
     <message>
         <location filename="../../gui/keypad.cpp" line="969"/>
         <source>Inverse sine</source>
-        <translation>Invers sinus</translation>
+        <translation>Arcsinus</translation>
     </message>
     <message>
         <location filename="../../gui/keypad.cpp" line="970"/>
         <source>Inverse tangent</source>
-        <translation>Invers tangens</translation>
+        <translation>Arctangens</translation>
     </message>
     <message>
         <location filename="../../gui/keypad.cpp" line="971"/>
@@ -6789,7 +6834,7 @@
     <message>
         <location filename="../../gui/keypad.cpp" line="987"/>
         <source>Contextual percentage</source>
-        <translation>Kontextuell procent</translation>
+        <translation>Procent beroende på sammanhang</translation>
     </message>
     <message>
         <location filename="../../gui/keypad.cpp" line="988"/>
@@ -6842,7 +6887,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4917"/>
         <source>Gradian</source>
-        <translation>Gradianer</translation>
+        <translation>Nygrader (gon)</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4926"/>
@@ -6867,12 +6912,12 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4931"/>
         <source>Engineering decimal</source>
-        <translation>Ingenjörsdecimal</translation>
+        <translation>Teknisk notation</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4932"/>
         <source>Scientific decimal</source>
-        <translation>Vetenskaplig decimal</translation>
+        <translation>Grundpotensform</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4951"/>
@@ -6954,12 +6999,12 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5007"/>
         <source>&amp;Gradian</source>
-        <translation>&amp;Gradianer</translation>
+        <translation>&amp;Nygrader (gon)</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5009"/>
         <source>Re&amp;volution</source>
-        <translation>V&amp;arv</translation>
+        <translation>V&amp;arv (rev)</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5011"/>
@@ -7014,7 +7059,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5033"/>
         <source>Automatic Input &amp;Adjustments</source>
-        <translation>&amp;Automatiska inmatningsjusteringar</translation>
+        <translation>Justera inmatningen &amp;automatiskt</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5034"/>
@@ -7039,12 +7084,12 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5038"/>
         <source>&amp;Escape Clears Editor</source>
-        <translation>&amp;Escape tömmer redigeraren</translation>
+        <translation>&amp;Esc tömmer redigeraren</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5039"/>
         <source>Clear the focused expression editor with Escape after dismissing any popup or preview.</source>
-        <translation>Töm den aktiva uttrycksredigeraren med Escape efter att eventuella popupfönster eller förhandsvisningar har stängts.</translation>
+        <translation>Töm den aktiva uttrycksredigeraren med Esc. Om ett popupfönster visas eller en förhandsvisning pågår stänger Esc först den vyn.</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5046"/>
@@ -7084,7 +7129,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5082"/>
         <source>&amp;Engineering</source>
-        <translation>&amp;Ingenjörsdecimaler</translation>
+        <translation>&amp;Teknisk notation</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5087"/>
@@ -7099,7 +7144,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5083"/>
         <source>&amp;Scientific</source>
-        <translation>&amp;Vetenskapligt</translation>
+        <translation>&amp;Grundpotensform</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5138"/>
@@ -7134,12 +7179,12 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5729"/>
         <source>Angle &amp;Mode</source>
-        <translation>&amp;Vinkelläge</translation>
+        <translation>&amp;Vinkelenhet</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5730"/>
         <source>&amp;Complex Form</source>
-        <translation>&amp;Komplex form</translation>
+        <translation>Visningsform för &amp;komplexa tal</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="6085"/>
@@ -7169,7 +7214,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5100"/>
         <source>&amp;Font...</source>
-        <translation>&amp;Typsnitt...</translation>
+        <translation>&amp;Teckensnitt...</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5136"/>
@@ -7205,7 +7250,7 @@
         <location filename="../../gui/mainwindow.cpp" line="5719"/>
         <location filename="../../gui/mainwindow.cpp" line="5743"/>
         <source>&amp;Keypad</source>
-        <translation>&amp;Knappsats</translation>
+        <translation>Kna&amp;ppsats</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5010"/>
@@ -7220,17 +7265,17 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5042"/>
         <source>Small Space</source>
-        <translation>Litet mellanrum</translation>
+        <translation>Smalt mellanrum</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5043"/>
         <source>Medium Space</source>
-        <translation>Medelstort mellanrum</translation>
+        <translation>Medelbrett mellanrum</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5044"/>
         <source>Large Space</source>
-        <translation>Stort mellanrum</translation>
+        <translation>Brett mellanrum</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5062"/>
@@ -7305,7 +7350,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5139"/>
         <source>Context Help</source>
-        <translation>Kontexthjälp</translation>
+        <translation>Sammanhangsberoende hjälp</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5745"/>
@@ -7315,7 +7360,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="10535"/>
         <source>Clear this session&apos;s calculations and unfinished expression?</source>
-        <translation>Rensa den här sessionens beräkningar och ofärdiga uttryck?</translation>
+        <translation>Vill du rensa beräkningarna och det påbörjade uttrycket i den här sessionen?</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="10536"/>
@@ -7330,7 +7375,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="10571"/>
         <source>Reset this session&apos;s calculations, unfinished expression, variables, functions, and units?</source>
-        <translation>Återställ den här sessionens beräkningar, ofärdiga uttryck, variabler, funktioner och enheter?</translation>
+        <translation>Vill du nollställa sessionen och ta bort beräkningarna, det påbörjade uttrycket samt sessionens variabler, funktioner och enheter?</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="11959"/>
@@ -7351,7 +7396,7 @@
         <location filename="../../gui/mainwindow.cpp" line="11959"/>
         <location filename="../../gui/mainwindow.cpp" line="12195"/>
         <source>Can&apos;t read from file %1</source>
-        <translation>Kan inte läsa från filen %1</translation>
+        <translation>Det gick inte att läsa filen %1</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12177"/>
@@ -7377,7 +7422,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4559"/>
         <source>Angle Mode:</source>
-        <translation>Vinkelläge:</translation>
+        <translation>Vinkelenhet:</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4560"/>
@@ -7392,12 +7437,12 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4918"/>
         <source>Turn</source>
-        <translation>Varv</translation>
+        <translation>Varv (tr)</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4919"/>
         <source>Revolution</source>
-        <translation>Varv</translation>
+        <translation>Varv (rev)</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4930"/>
@@ -7407,12 +7452,12 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4933"/>
         <source>Rational</source>
-        <translation>Rationell</translation>
+        <translation>Bråkform</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4934"/>
         <source>Automatic decimal</source>
-        <translation>Automatisk decimal</translation>
+        <translation>Automatisk decimalnotation</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4942"/>
@@ -7452,7 +7497,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4957"/>
         <source>New &amp;Window</source>
-        <translation>Nytt &amp;fönster</translation>
+        <translation>N&amp;ytt fönster</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4958"/>
@@ -7482,7 +7527,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4964"/>
         <source>Open Sessions &amp;Folder</source>
-        <translation>Öppna &amp;sessionsmapp</translation>
+        <translation>Öppna &amp;sessionsmappen</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="4968"/>
@@ -7582,18 +7627,18 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5003"/>
         <source>User &amp;Units</source>
-        <translation>Användar&amp;enheter</translation>
+        <translation>Användardefinierade &amp;enheter</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5008"/>
         <source>&amp;Turn</source>
-        <translation>&amp;Varv</translation>
+        <translation>&amp;Varv (tr)</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5012"/>
         <location filename="../../gui/mainwindow.cpp" line="5013"/>
         <source>If a new expression starts with +, -, *, or /, SpeedCrunch inserts &quot;ans&quot; first.</source>
-        <translation>Om ett nytt uttryck börjar med +, -, * eller / infogar SpeedCrunch först &quot;ans&quot;.</translation>
+        <translation>Om ett nytt uttryck börjar med +, -, * eller / sätter SpeedCrunch in ”ans” före operatorn.</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5015"/>
@@ -7603,7 +7648,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5016"/>
         <source>Accept the current autocomplete suggestion with Enter without first selecting it with the arrow keys.</source>
-        <translation>Godkänn det aktuella förslaget för automatisk komplettering med Retur utan att först välja det med piltangenterna.</translation>
+        <translation>Godkänn det aktuella kompletteringsförslaget med Retur direkt, utan att först välja det med piltangenterna.</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5020"/>
@@ -7613,12 +7658,12 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5023"/>
         <source>Show Live Result &amp;Preview</source>
-        <translation>Visa live&amp;förhandsvisning av resultat</translation>
+        <translation>&amp;Förhandsvisa resultat medan du skriver</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5024"/>
         <source>Save &amp;Window Position on Exit</source>
-        <translation>Spara &amp;fönsterposition vid avslut</translation>
+        <translation>Spara &amp;fönstrets placering när programmet avslutas</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5026"/>
@@ -7638,7 +7683,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5040"/>
         <source>Hover Highlighting</source>
-        <translation>Markering vid hovring</translation>
+        <translation>Markera resultat under muspekaren</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5045"/>
@@ -7660,7 +7705,7 @@
         <location filename="../../gui/mainwindow.cpp" line="5049"/>
         <location filename="../../gui/mainwindow.cpp" line="5050"/>
         <source>After pressing Enter, keep the entered expression selected in the editor.</source>
-        <translation>Behåll det inmatade uttrycket markerat i redigeraren efter Enter.</translation>
+        <translation>När du trycker på Retur förblir uttrycket markerat i redigeraren.</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5051"/>
@@ -7680,7 +7725,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5055"/>
         <source>Skip Clear History Confirmation</source>
-        <translation>Hoppa över bekräftelse när historiken rensas</translation>
+        <translation>Rensa historiken utan att fråga</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5056"/>
@@ -7690,7 +7735,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5057"/>
         <source>History Size &amp;Limit...</source>
-        <translation>Storleks&amp;gräns för historik...</translation>
+        <translation>&amp;Gräns för antalet historikposter...</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5069"/>
@@ -7700,12 +7745,12 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5071"/>
         <source>Nearest, Half &amp;Away (round)</source>
-        <translation>Närmaste, halva &amp;bort från noll (round)</translation>
+        <translation>Till närmaste, vid lika avstånd &amp;bort från noll (round)</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5073"/>
         <source>Nearest, Half &amp;Even (roundeven)</source>
-        <translation>Närmaste, halva till &amp;jämnt (roundeven)</translation>
+        <translation>Till närmaste, vid lika avstånd till &amp;jämn slutsiffra (roundeven)</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5074"/>
@@ -7730,12 +7775,12 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5084"/>
         <source>&amp;Rational</source>
-        <translation>&amp;Rationell</translation>
+        <translation>B&amp;råkform</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5090"/>
         <source>&amp;Exponential (m·s⁻¹)</source>
-        <translation>&amp;Exponentiell (m·s⁻¹)</translation>
+        <translation>&amp;Potensform (m·s⁻¹)</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5092"/>
@@ -7765,7 +7810,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5102"/>
         <source>&amp;Keyboard Shortcuts...</source>
-        <translation>&amp;Tangentbordsgenvägar...</translation>
+        <translation>&amp;Kortkommandon...</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5103"/>
@@ -7866,7 +7911,7 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5714"/>
         <source>On Subsequent Launch</source>
-        <translation>Vid senare starter</translation>
+        <translation>När programmet redan körs</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5721"/>
@@ -7911,12 +7956,12 @@
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5734"/>
         <source>A&amp;utocomplete</source>
-        <translation>A&amp;utokomplettering</translation>
+        <translation>Automatisk k&amp;omplettering</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5735"/>
         <source>Up/Down Arrow History</source>
-        <translation>Historik med upp-/nedpil</translation>
+        <translation>Bläddra i historiken med uppåt- och nedåtpil</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5736"/>
@@ -8051,7 +8096,7 @@ Välj Session &gt; Behåll för att göra den till en vanlig session.</translati
     <message>
         <location filename="../../gui/mainwindow.cpp" line="9623"/>
         <source>Reset all settings to their default values?</source>
-        <translation>Återställ alla inställningar till standardvärdena?</translation>
+        <translation>Vill du återställa alla inställningar till standardvärdena?</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="9634"/>
@@ -8116,7 +8161,7 @@ Välj Session &gt; Behåll för att göra den till en vanlig session.</translati
         <location filename="../../gui/mainwindow.cpp" line="12135"/>
         <location filename="../../gui/mainwindow.cpp" line="12176"/>
         <source>JSON file (*.json);;Any file (*.*)</source>
-        <translation>JSON-fil (*.json);;Valfri fil (*.*)</translation>
+        <translation>JSON-fil (*.json);;Alla filer (*.*)</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12139"/>
@@ -8136,12 +8181,12 @@ Välj Session &gt; Behåll för att göra den till en vanlig session.</translati
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12219"/>
         <source>This file uses an obsolete SpeedCrunch session format and cannot be imported.</source>
-        <translation>Den här filen använder ett föråldrat SpeedCrunch-sessionsformat och kan inte importeras.</translation>
+        <translation>Filen använder ett föråldrat sessionsformat för SpeedCrunch och kan inte importeras.</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12227"/>
         <source>The selected JSON file is missing the required $schema field.</source>
-        <translation>Den valda JSON-filen saknar det obligatoriska $schema-fältet.</translation>
+        <translation>Den valda JSON-filen saknar det obligatoriska fältet $schema.</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12233"/>
@@ -8151,12 +8196,12 @@ Välj Session &gt; Behåll för att göra den till en vanlig session.</translati
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12241"/>
         <source>The selected JSON file is missing the SpeedCrunch session schema identifier ($id).</source>
-        <translation>Den valda JSON-filen saknar SpeedCrunch-sessionens schemaidentifierare ($id).</translation>
+        <translation>Den valda JSON-filen saknar identifieraren för SpeedCrunchs sessionsschema ($id).</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12247"/>
         <source>The selected JSON file uses an unsupported SpeedCrunch session format: %1</source>
-        <translation>Den valda JSON-filen använder ett SpeedCrunch-sessionsformat som inte stöds: %1</translation>
+        <translation>Den valda JSON-filen använder ett sessionsformat som SpeedCrunch inte stöder: %1</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12255"/>
@@ -8171,28 +8216,28 @@ Välj Session &gt; Behåll för att göra den till en vanlig session.</translati
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12269"/>
         <source>The selected JSON file has invalid or incomplete SpeedCrunch session data.</source>
-        <translation>Den valda JSON-filen har ogiltiga eller ofullständiga SpeedCrunch-sessionsdata.</translation>
+        <translation>Den valda JSON-filen innehåller ogiltiga eller ofullständiga sessionsdata för SpeedCrunch.</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12280"/>
         <location filename="../../gui/mainwindow.cpp" line="12288"/>
         <source>Open Sessions Folder</source>
-        <translation>Öppna sessionsmapp</translation>
+        <translation>Öppna sessionsmappen</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12281"/>
         <source>Could not create the sessions folder: %1</source>
-        <translation>Kunde inte skapa sessionsmappen: %1</translation>
+        <translation>Det gick inte att skapa sessionsmappen: %1</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12289"/>
         <source>Could not open the sessions folder: %1</source>
-        <translation>Kunde inte öppna sessionsmappen: %1</translation>
+        <translation>Det gick inte att öppna sessionsmappen: %1</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="13289"/>
         <source>Editor and Results Font</source>
-        <translation>Teckensnitt för redigerare och resultat</translation>
+        <translation>Teckensnitt för redigeraren och resultaten</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="10962"/>
@@ -8230,7 +8275,7 @@ Välj Session &gt; Behåll för att göra den till en vanlig session.</translati
     <message>
         <location filename="../../gui/mainwindow.cpp" line="8698"/>
         <source>User Units</source>
-        <translation>Användarenheter</translation>
+        <translation>Användardefinierade enheter</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="6104"/>
@@ -8251,12 +8296,12 @@ Välj Session &gt; Behåll för att göra den till en vanlig session.</translati
     <message>
         <location filename="../../gui/mainwindow.cpp" line="5119"/>
         <source>Use the Classic appearance with SpeedCrunch-themed docks</source>
-        <translation>Använd det klassiska utseendet med dockningspaneler med SpeedCrunch-tema</translation>
+        <translation>Använd klassiskt utseende och låt dockningspanelerna följa SpeedCrunch-temat</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="9624"/>
         <source>This includes appearance, editing, result formats, keyboard shortcuts, and window preferences. Your calculations, open sessions, and user definitions will be kept.</source>
-        <translation>Detta omfattar utseende, redigering, resultatformat, tangentbordsgenvägar och fönsterinställningar. Dina beräkningar, öppna sessioner och användardefinitioner behålls.</translation>
+        <translation>Detta omfattar utseende, redigering, resultatformat, kortkommandon och fönsterinställningar. Dina beräkningar, öppna sessioner och användardefinitioner behålls.</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="11044"/>
@@ -8273,12 +8318,12 @@ Välj Session &gt; Behåll för att göra den till en vanlig session.</translati
     <message>
         <location filename="../../gui/mainwindow.cpp" line="11077"/>
         <source>Could not create session file %1.</source>
-        <translation>Kunde inte skapa sessionsfilen %1.</translation>
+        <translation>Det gick inte att skapa sessionsfilen %1.</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="11087"/>
         <source>Could not write session file %1.</source>
-        <translation>Kunde inte skriva sessionsfilen %1.</translation>
+        <translation>Det gick inte att skriva till sessionsfilen %1.</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="11396"/>
@@ -8354,12 +8399,12 @@ Välj Session &gt; Behåll för att göra den till en vanlig session.</translati
     <message>
         <location filename="../../gui/mainwindow.cpp" line="11974"/>
         <source>Can&apos;t import theme &quot;%1&quot; because it conflicts with a built-in theme.</source>
-        <translation>Kan inte importera temat &quot;%1&quot; eftersom det krockar med ett inbyggt tema.</translation>
+        <translation>Det går inte att importera temat ”%1” eftersom ett inbyggt tema har samma namn.</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="11979"/>
         <source>Can&apos;t find a writable theme folder.</source>
-        <translation>Kan inte hitta en skrivbar temamapp.</translation>
+        <translation>Det gick inte att hitta en temamapp som går att skriva till.</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="11986"/>
@@ -8369,17 +8414,17 @@ Välj Session &gt; Behåll för att göra den till en vanlig session.</translati
     <message>
         <location filename="../../gui/mainwindow.cpp" line="11987"/>
         <source>A custom theme named &quot;%1&quot; already exists. Do you want to overwrite it?</source>
-        <translation>Det finns redan ett anpassat tema med namnet &quot;%1&quot;. Vill du skriva över det?</translation>
+        <translation>Det finns redan ett anpassat tema med namnet ”%1”. Vill du skriva över det?</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="11995"/>
         <source>Can&apos;t overwrite theme file %1</source>
-        <translation>Kan inte skriva över temafilen %1</translation>
+        <translation>Det gick inte att skriva över temafilen %1</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12001"/>
         <source>Can&apos;t copy theme file to %1</source>
-        <translation>Kan inte kopiera temafilen till %1</translation>
+        <translation>Det gick inte att kopiera temafilen till %1</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12042"/>
@@ -8389,7 +8434,7 @@ Välj Session &gt; Behåll för att göra den till en vanlig session.</translati
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12053"/>
         <source>Can&apos;t export theme as &quot;%1&quot; because it conflicts with a built-in theme.</source>
-        <translation>Kan inte exportera temat som &quot;%1&quot; eftersom det krockar med ett inbyggt tema.</translation>
+        <translation>Det går inte att exportera temat som ”%1” eftersom ett inbyggt tema har samma namn.</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12058"/>
@@ -8397,7 +8442,7 @@ Välj Session &gt; Behåll för att göra den till en vanlig session.</translati
         <location filename="../../gui/mainwindow.cpp" line="13211"/>
         <location filename="../../gui/mainwindow.cpp" line="13250"/>
         <source>Can&apos;t write to file %1</source>
-        <translation>Kan inte skriva till filen %1</translation>
+        <translation>Det gick inte att skriva till filen %1</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12298"/>
@@ -8412,7 +8457,7 @@ Välj Session &gt; Behåll för att göra den till en vanlig session.</translati
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12300"/>
         <source>Global User Unit</source>
-        <translation>Global användarenhet</translation>
+        <translation>Global användardefinierad enhet</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12664"/>
@@ -8464,7 +8509,7 @@ Line numbers with errors: %4</source>
         <translation>Importerade variabler: %1
 Importerade funktioner: %2
 Importerade enheter: %3
-Radnummer med fel: %4</translation>
+Rader med fel: %4</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12787"/>
@@ -8480,12 +8525,12 @@ Radnummer med fel: %4</translation>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12828"/>
         <source>User definitions saved.</source>
-        <translation>Användardefinitioner sparade.</translation>
+        <translation>Användardefinitionerna har sparats.</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12867"/>
         <source>History Size Limit</source>
-        <translation>Storleksgräns för historik</translation>
+        <translation>Gräns för antalet historikposter</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="12868"/>
@@ -8501,17 +8546,17 @@ Radnummer med fel: %4</translation>
         <location filename="../../gui/mainwindow.cpp" line="16014"/>
         <location filename="../../gui/mainwindow.cpp" line="16187"/>
         <source>Could not recalculate from calculation %1: %2</source>
-        <translation>Kunde inte räkna om från beräkning %1: %2</translation>
+        <translation>Det gick inte att räkna om historiken från och med beräkning %1: %2</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="16103"/>
         <source>History Size Limit Reached</source>
-        <translation>Storleksgräns för historik nådd</translation>
+        <translation>Historiken är full</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="16104"/>
         <source>This calculation fills the last available history slot. Future calculations will remove the oldest calculation from history. You can increase the limit from Session &gt; History Size Limit.</source>
-        <translation>Den här beräkningen fyller den sista tillgängliga historikplatsen. Framtida beräkningar tar bort den äldsta beräkningen från historiken. Du kan öka gränsen via Session &gt; Storleksgräns för historik.</translation>
+        <translation>Den här beräkningen fyller den sista platsen i historiken. För varje ny beräkning tas den äldsta bort. Du kan höja gränsen under Session &gt; Gräns för antalet historikposter.</translation>
     </message>
     <message>
         <location filename="../../gui/mainwindow.cpp" line="16127"/>
@@ -8596,18 +8641,24 @@ Radnummer med fel: %4</translation>
         <source>Export session as plain text</source>
         <translation>Exportera session som ren text</translation>
     </message>
+    <message>
+        <location filename="../../gui/mainwindow.cpp" line="5140"/>
+        <location filename="../../tests/testmenusui.cpp" line="63"/>
+        <source>FA&amp;Q</source>
+        <translation>&amp;Vanliga frågor</translation>
+    </message>
 </context>
 <context>
     <name>ManualWindow</name>
     <message>
         <location filename="../../gui/manualwindow.cpp" line="53"/>
         <source>SpeedCrunch Manual</source>
-        <translation>SpeedCrunch-handbok</translation>
+        <translation>Handbok för SpeedCrunch</translation>
     </message>
     <message>
         <location filename="../../gui/manualwindow.cpp" line="55"/>
         <source>%1 - SpeedCrunch Manual</source>
-        <translation>%1 - SpeedCrunch-handbok</translation>
+        <translation>%1 – Handbok för SpeedCrunch</translation>
     </message>
 </context>
 <context>
@@ -8638,7 +8689,7 @@ Radnummer med fel: %4</translation>
     <message>
         <location filename="../../core/session.cpp" line="122"/>
         <source>Global User Unit</source>
-        <translation>Global användarenhet</translation>
+        <translation>Global användardefinierad enhet</translation>
     </message>
     <message>
         <location filename="../../gui/customkeypaddialog.cpp" line="32"/>
@@ -8663,7 +8714,7 @@ Radnummer med fel: %4</translation>
     <message>
         <location filename="../../gui/notationandprecisiondialog.cpp" line="40"/>
         <source>Automatic decimal</source>
-        <translation>Automatisk decimal</translation>
+        <translation>Automatisk decimalnotation</translation>
     </message>
     <message>
         <location filename="../../gui/notationandprecisiondialog.cpp" line="41"/>
@@ -8673,17 +8724,17 @@ Radnummer med fel: %4</translation>
     <message>
         <location filename="../../gui/notationandprecisiondialog.cpp" line="42"/>
         <source>Engineering decimal</source>
-        <translation>Ingenjörsdecimal</translation>
+        <translation>Teknisk notation</translation>
     </message>
     <message>
         <location filename="../../gui/notationandprecisiondialog.cpp" line="43"/>
         <source>Scientific decimal</source>
-        <translation>Vetenskaplig decimal</translation>
+        <translation>Grundpotensform</translation>
     </message>
     <message>
         <location filename="../../gui/notationandprecisiondialog.cpp" line="45"/>
         <source>Rational</source>
-        <translation>Rationell</translation>
+        <translation>Bråkform</translation>
     </message>
     <message>
         <location filename="../../gui/notationandprecisiondialog.cpp" line="46"/>
@@ -8708,7 +8759,7 @@ Radnummer med fel: %4</translation>
     <message>
         <location filename="../../main.cpp" line="210"/>
         <source>Portable Data Folder Unavailable</source>
-        <translation>Mappen för portabla data är inte tillgänglig</translation>
+        <translation>Datamappen för portabel körning är inte tillgänglig</translation>
     </message>
     <message>
         <location filename="../../main.cpp" line="211"/>
@@ -8718,12 +8769,12 @@ Radnummer med fel: %4</translation>
 %2
 
 Use Finder to move SpeedCrunch.app and any SpeedCrunch-data folder to a writable location, then open the app again.</source>
-        <translation>SpeedCrunch kan inte förbereda mappen för portabla data:
+        <translation>SpeedCrunch kan inte förbereda datamappen för portabel körning:
 %1
 
 %2
 
-Använd Finder för att flytta SpeedCrunch.app och en eventuell SpeedCrunch-data-mapp till en skrivbar plats. Öppna sedan appen igen.</translation>
+Använd Finder för att flytta SpeedCrunch.app och mappen SpeedCrunch-data, om den finns, till en plats där du har skrivbehörighet. Öppna sedan programmet igen.</translation>
     </message>
     <message>
         <location filename="../../main.cpp" line="278"/>
@@ -8733,12 +8784,44 @@ Använd Finder för att flytta SpeedCrunch.app och en eventuell SpeedCrunch-data
     <message>
         <location filename="../../main.cpp" line="279"/>
         <source>SpeedCrunch cannot contact the running instance or start its local server. Wait a moment and try again.</source>
-        <translation>SpeedCrunch kan inte kontakta den körande instansen eller starta sin lokala server. Vänta en stund och försök igen.</translation>
+        <translation>SpeedCrunch kan varken kontakta den instans som redan körs eller starta sin lokala server. Vänta en stund och försök igen.</translation>
     </message>
     <message>
         <location filename="../../core/settings.cpp" line="247"/>
         <source>Could not create %1.</source>
         <translation>Det gick inte att skapa %1.</translation>
+    </message>
+    <message>
+        <location filename="../../gui/versioncheck.cpp" line="417"/>
+        <source>Update Available</source>
+        <translation>En uppdatering är tillgänglig</translation>
+    </message>
+    <message>
+        <location filename="../../gui/versioncheck.cpp" line="421"/>
+        <source>A newer version (%1) is available.&lt;br/&gt;&lt;a href="%2"&gt;Visit website to download.&lt;/a&gt;</source>
+        <translation>Det finns en nyare version (%1).&lt;br/&gt;&lt;a href="%2"&gt;Ladda ned den från webbplatsen.&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <location filename="../../gui/versioncheck.cpp" line="444"/>
+        <location filename="../../gui/versioncheck.cpp" line="463"/>
+        <location filename="../../gui/versioncheck.cpp" line="482"/>
+        <source>Check for Updates</source>
+        <translation>Sök efter uppdateringar</translation>
+    </message>
+    <message>
+        <location filename="../../gui/versioncheck.cpp" line="448"/>
+        <source>SpeedCrunch %1 is up to date.</source>
+        <translation>Du har den senaste versionen av SpeedCrunch (%1).</translation>
+    </message>
+    <message>
+        <location filename="../../gui/versioncheck.cpp" line="467"/>
+        <source>No connectivity. Please check your internet connection and try again.</source>
+        <translation>Ingen nätverksanslutning. Kontrollera din internetanslutning och försök igen.</translation>
+    </message>
+    <message>
+        <location filename="../../gui/versioncheck.cpp" line="486"/>
+        <source>Could not verify the latest available version.</source>
+        <translation>Det gick inte att kontrollera vilken version som är den senaste.</translation>
     </message>
 </context>
 <context>
