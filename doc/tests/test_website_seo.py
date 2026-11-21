@@ -167,9 +167,16 @@ class WebsiteSEO(unittest.TestCase):
                          for label in labels}
             self.assertIn(anchor, heading_ids | label_ids, (path, anchor))
         download = self.render('download', 'download.html')
-        self.assertEqual(re.findall(r'<h1[^>]*>(.*?)</h1>', download), ['Download SpeedCrunch'])
-        self.assertIn('<h2>Version 1.0</h2>', download)
-        self.assertIn('<h2 id="older-versions"', download)
+        self.assertIn('<title>Download SpeedCrunch', download)
+        h1 = re.findall(r'<h1[^>]*>(.*?)</h1>', download)
+        self.assertEqual(len(h1), 1)
+        self.assertRegex(h1[0], r'^SpeedCrunch \d+\.\d+')
+        # Older releases are collapsible panels; each must still be an <h2>.
+        older = re.findall(r'<h2[^>]*>\s*<a[^>]*>(Version [^<]+)</a>\s*</h2>', download)
+        self.assertIn('Version 1.0', older)
+        self.assertIn('Version 0.12', older)
+        self.assertNotRegex(download, r'<h[3-6][^>]*>\s*<a[^>]*>Version ')
+        self.assertIn('id="older-versions"', download)
 
 
 if __name__ == '__main__':
