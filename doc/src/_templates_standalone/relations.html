@@ -1,26 +1,12 @@
-{# Switch to icon instead of text in `sm` view size for BS3 only. #}
-{%- if prev %}
-  <li>
-    <a href="{{ prev.link|e }}" data-toggle="tooltip" title="{{ _('Previous Page: ') + prev.title|striptags }}">
-      {%- if theme_bootstrap_version == "2" -%}<span class="icon-chevron-left"></span>{%- endif -%}
-      {%- if theme_bootstrap_version == "3" -%}<span class="glyphicon glyphicon-chevron-left"></span>{%- endif -%}
-      <span class="hidden-sm hidden-tablet"> {{ _('Previous')}}</span>
-    </a>
-  </li>
+{#- Links to the previous and next pages of the manual, at the end of the
+    breadcrumb row (see layout.html). #}
+{%- if prev or next %}
+<li class="breadcrumb-rel">
+  {%- if prev %}
+  <a href="{{ prev.link|e }}" rel="prev" title="{{ (_('Previous Page: ') ~ prev.title|striptags)|e }}"><i class="fa-solid fa-angle-left" aria-hidden="true"></i> {{ _('Previous') }}</a>
+  {%- endif %}
+  {%- if next %}
+  <a href="{{ next.link|e }}" rel="next" title="{{ (_('Next Page: ') ~ next.title|striptags)|e }}">{{ _('Next') }} <i class="fa-solid fa-angle-right" aria-hidden="true"></i></a>
+  {%- endif %}
+</li>
 {%- endif %}
-{%- if next %}
-  <li>
-    <a href="{{ next.link|e }}" data-toggle="tooltip" title="{{ _('Next Page: ') + next.title|striptags }}">
-      <span class="hidden-sm hidden-tablet">{{ _('Next') }}</span>
-      {%- if theme_bootstrap_version == "2" -%}<span class="icon-chevron-right"></span>{%- endif -%}
-      {%- if theme_bootstrap_version == "3" -%}<span class="glyphicon glyphicon-chevron-right"></span>{%- endif -%}
-
-    </a>
-  </li>
-{%- endif %}
-
-<script>
-$jqTheme(document).ready(function(){
-    $jqTheme('[data-toggle="tooltip"]').tooltip({placement: "bottom"});   
-});
-</script>

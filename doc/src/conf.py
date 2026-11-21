@@ -160,14 +160,14 @@ else:
     }
     html_sidebars = {'**': ['scrollspy.html']}
     html_static_path = ['_static_standalone']
-    html_extra_path = ['demo1.mp4', 'screen1.png', 'robots.txt', 'sitemap.xml']
+    html_extra_path = ['screen1.png', 'og-image.jpg', 'robots.txt', 'sitemap.xml']
     templates_path = ['_templates_standalone']
     html_logo = 'logo.png'
     html_context = {
         'languages': list(LANGUAGES.items()),
     }
     html_additional_pages = {
-        "index": "entrance.html",
+        "index": "home.html",
         "download": "download.html",
         "donate": "donate.html",
         "community": "community.html"

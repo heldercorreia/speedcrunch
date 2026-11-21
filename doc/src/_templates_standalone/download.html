@@ -1,112 +1,100 @@
 {% extends "entrance.html" %}
 
-{% macro downloads(win=[], osx=[], linux=[], linux_dropdown=True, macos_first_launch_warning=True, homebrew_cask=None, win_packages=[]) -%}
-  <div class="container-fluid">
-    <div class="row dl-platforms">
-      {% if win -%}
-        <div class="col-lg-6 center-div dl-column">
-          <div class="dl-platform">
-            <div class="dl-platform-logo">
-              <i class="fa fa-windows"></i>
-              <p><b>Windows</b></p>
-            </div>
-            <div class="dl-buttons">
-              {% for (name, path) in win -%}
-                {% if name == 'Microsoft Store' -%}
-                  <a class="btn btn-primary btn-md dl-button dl-badge dl-msstore" href="{{ path }}"><img alt="{{ _('Download from the Microsoft Store') }}" src="https://get.microsoft.com/images/en-us%20light.svg"/></a>
-                {%- else -%}
-                  <a class="btn btn-primary btn-md dl-button" href="{{ path }}"><i class="fa fa-{{ 'usb' if name == _('Portable') else 'laptop' }} fa-lg" style="vertical-align:middle;"></i>&nbsp;{{ name }}</a>
-                {%- endif %}
-              {%- endfor %}
-            </div>
-          </div>
-          {% if win_packages -%}
-            <div class="dl-note">
-              <div class="dl-note-title"><i class="fa fa-terminal"></i>&nbsp;{% trans %}Or install with a package manager{% endtrans %}</div>
-              {% for (name, url, commands) in win_packages -%}
-                <div class="dl-package">
-                  <a class="dl-package-name" href="{{ url }}">{{ name }}</a>
-                  <div class="dl-terminal">
-                    {% for command in commands -%}
-                      <code class="dl-cmd">{{ command }}</code>
-                    {%- endfor %}
-                  </div>
-                </div>
-              {%- endfor %}
-            </div>
-          {%- endif %}
+{#- One column per platform, side by side on wide screens: logo and name,
+    download buttons, then commands to install it from the terminal (each
+    list of commands is one box). The parts line up across the columns. #}
+{% macro terminals(packages) -%}
+  {% if packages -%}
+    <div class="dl-terminals">
+      <p class="dl-terminals-title"><i class="fa-solid fa-terminal" aria-hidden="true"></i>&nbsp;{% trans %}From the terminal{% endtrans %}</p>
+      {% for commands in packages -%}
+        <div class="dl-terminal">
+          {% for command in commands -%}
+            <code class="dl-cmd">{{ command }}</code>
+          {%- endfor %}
         </div>
-      {%- endif %}
+      {%- endfor %}
+    </div>
+  {%- endif %}
+{%- endmacro %}
 
-      {#- macOS and Linux share the right-hand column on wide screens. #}
-      <div class="col-lg-{{ 6 if win else 12 }} dl-column-group">
-      <div class="center-div dl-column">
-        <div class="dl-platform">
-          <div class="dl-platform-logo">
-            <i class="fa fa-apple"></i>
-            <p><b>macOS</b></p>
-          </div>
-          <div class="dl-buttons">
-            {% if osx -%}
-              {% for (name, path) in osx -%}
-                <a class="btn btn-primary btn-md dl-button" href="{{ path }}"><i class="fa fa-{{ 'usb' if name == _('Portable') else 'laptop' }} fa-lg" style="vertical-align:middle;"></i>&nbsp;{{ name }}</a>
-              {%- endfor %}
-            {%- else %}
-              <a class="btn btn-primary btn-md dl-button"><i class="fa fa-laptop fa-lg" style="vertical-align:middle;"></i>&nbsp;Download</a>
-            {%- endif %}
-          </div>
+{% macro button(name, path) -%}
+  <a class="btn btn-primary btn-md dl-button" href="{{ path }}"><i class="{{ 'fa-brands fa-usb' if name == _('Portable') else 'fa-solid fa-laptop' }} fa-lg" style="vertical-align:middle;"></i>&nbsp;{{ name }}</a>
+{%- endmacro %}
+
+{% macro downloads(win=[], osx=[], linux=[], linux_dropdown=True, macos_first_launch_warning=True, win_packages=[], osx_packages=[], linux_packages=[]) -%}
+  <div class="dl-platforms">
+    {% if win -%}
+      <div class="dl-platform" data-platform="windows">
+        <div class="dl-platform-head">
+          <i class="fa-brands fa-windows" aria-hidden="true"></i>
+          <p>Windows</p>
         </div>
-        {% if homebrew_cask -%}
-          <div class="dl-note">
-            <div class="dl-note-title"><i class="fa fa-terminal"></i>&nbsp;{% trans %}Or install with{% endtrans %} <a href="https://formulae.brew.sh/cask/{{ homebrew_cask }}">Homebrew</a></div>
-            <div class="dl-terminal">
-              <code class="dl-cmd">brew install --cask {{ homebrew_cask }}</code>
-            </div>
-          </div>
-        {%- endif %}
+        <div class="dl-buttons">
+          {% for (name, path) in win -%}
+            {% if name == 'Microsoft Store' -%}
+              <a class="btn btn-primary btn-md dl-button dl-badge dl-msstore" href="{{ path }}"><img alt="{{ _('Download from the Microsoft Store') }}" src="https://get.microsoft.com/images/en-us%20light.svg"/></a>
+            {%- else -%}
+              {{ button(name, path) }}
+            {%- endif %}
+          {%- endfor %}
+        </div>
+        {{ terminals(win_packages) }}
+      </div>
+    {%- endif %}
+
+    {% if osx -%}
+      <div class="dl-platform" data-platform="macos">
+        <div class="dl-platform-head">
+          <i class="fa-brands fa-apple" aria-hidden="true"></i>
+          <p>macOS</p>
+        </div>
+        <div class="dl-buttons">
+          {% for (name, path) in osx -%}
+            {{ button(name, path) }}
+          {%- endfor %}
+        </div>
+        {{ terminals(osx_packages) }}
         {% if macos_first_launch_warning -%}
-          <div class="alert alert-warning text-left" role="alert">
+          <div class="alert alert-warning" role="alert">
             <p><strong>{% trans %}macOS first launch{% endtrans %}</strong></p>
             <p>{% trans %}If macOS blocks SpeedCrunch, open System Settings &gt; Privacy &amp; Security and click Open Anyway.{% endtrans %} <a href="https://support.apple.com/en-am/guide/mac-help/mh40616/27/mac/27">{% trans %}Apple's instructions{% endtrans %}</a></p>
           </div>
         {%- endif %}
       </div>
+    {%- endif %}
 
-      {% if linux -%}
-        <div class="center-div dl-column">
-          <div class="dl-platform">
-            <div class="dl-platform-logo">
-              <i class="fa fa-linux"></i>
-              <p><b>Linux</b></p>
-            </div>
-            <div class="dl-buttons">
-              {% if not linux_dropdown -%}
-                {% for (name, path) in linux -%}
-                  {% if name == 'Flathub' -%}
-                    <a class="btn btn-primary btn-md dl-button dl-badge dl-flathub" href="{{ path }}"><img alt="{{ _('Get it on Flathub') }}" src="https://flathub.org/api/badge?locale=en&amp;light"/></a>
-                    <small>{% trans %}Official SpeedCrunch build.{% endtrans %}</small>
-                  {%- else -%}
-                    <a class="btn btn-primary btn-md dl-button" href="{{ path }}"><i class="fa fa-laptop fa-lg" style="vertical-align:middle;"></i>&nbsp;{{ name }}</a>
-                  {%- endif %}
-                {%- endfor %}
-              {%- else -%}
-                <div class="btn-group">
-                  <button type="button" class="btn btn-primary btn-md dl-button dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <i class="fa fa-laptop fa-lg" style="vertical-align:middle;"></i>&nbsp;{% trans %}Download{% endtrans %}&nbsp;<span class="caret"></span>
-                  </button>
-                  <ul class="dropdown-menu">
-                    {% for (name, path) in linux -%}
-                      <li><a href="{{ path }}">{{ name }}</a></li>
-                    {%- endfor %}
-                  </ul>
-                </div>
-              {%- endif %}
-            </div>
-          </div>
+    {% if linux -%}
+      <div class="dl-platform" data-platform="linux">
+        <div class="dl-platform-head">
+          <i class="fa-brands fa-linux" aria-hidden="true"></i>
+          <p>Linux</p>
         </div>
-      {%- endif %}
-      </div><!-- /.dl-column-group -->
-    </div><!-- /.row -->
+        <div class="dl-buttons">
+          {% if not linux_dropdown -%}
+            {% for (name, path) in linux -%}
+              {% if name == 'Flathub' -%}
+                <a class="btn btn-primary btn-md dl-button dl-badge dl-flathub" href="{{ path }}"><img alt="{{ _('Get it on Flathub') }}" src="https://flathub.org/api/badge?locale=en&amp;light"/></a>
+              {%- else -%}
+                {{ button(name, path) }}
+              {%- endif %}
+            {%- endfor %}
+          {%- else -%}
+            <div class="btn-group">
+              <button type="button" class="btn btn-primary btn-md dl-button dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fa-solid fa-laptop fa-lg" style="vertical-align:middle;"></i>&nbsp;{% trans %}Download{% endtrans %}&nbsp;<span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu">
+                {% for (name, path) in linux -%}
+                  <li><a href="{{ path }}">{{ name }}</a></li>
+                {%- endfor %}
+              </ul>
+            </div>
+          {%- endif %}
+        </div>
+        {{ terminals(linux_packages) }}
+      </div>
+    {%- endif %}
   </div>
 {%- endmacro %}
 
@@ -117,8 +105,10 @@
         <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapse{{ id }}" aria-expanded="false" aria-controls="collapse{{ id }}">{{ _('Version') }} {{ version }}</a>
       </h2>
     </div>
-    <div id="collapse{{ id }}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{ id }}" style="margin-top: 1em">
-      {{ downloads(*args, **kwargs) }}
+    <div id="collapse{{ id }}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{ id }}">
+      <div class="panel-body">
+        {{ downloads(*args, **kwargs) }}
+      </div>
     </div>
   </div>
 {%- endmacro %}
@@ -133,7 +123,7 @@
     </ul>
 
     <div class="container">
-      <h1 id="version-1-2" style="scroll-margin-top: 80px;">{% trans %}SpeedCrunch 1.2.0{% endtrans %}</h1>
+      <h1 id="version-1-2">{% trans %}SpeedCrunch 1.2{% endtrans %}</h1>
       <p>{% trans %}Free, open-source scientific calculator for Windows, macOS and Linux.{% endtrans %}</p>
       <hr/>
       <section aria-labelledby="version-1-2">
@@ -150,16 +140,20 @@
           linux=[('Flathub', 'https://flathub.org/apps/org.speedcrunch.SpeedCrunch'),],
           linux_dropdown=False,
           macos_first_launch_warning=False,
-          homebrew_cask='speedcrunch',
           win_packages=[
-            ('WinGet', 'https://winstall.app/apps/SpeedCrunch.SpeedCrunch', ['winget install SpeedCrunch.SpeedCrunch']),
-            ('Scoop', 'https://scoop.sh/#/apps?q=speedcrunch', ['scoop bucket add extras', 'scoop install extras/speedcrunch']),
-            ('Chocolatey', 'https://community.chocolatey.org/packages?q=speedcrunch', ['choco install speedcrunch']),],
+            ['winget install SpeedCrunch.SpeedCrunch'],
+            ['scoop bucket add extras', 'scoop install extras/speedcrunch'],
+            ['choco install speedcrunch.install'],
+            ['choco install speedcrunch.portable'],],
+          osx_packages=[
+            ['brew install --cask speedcrunch'],],
+          linux_packages=[
+            ['flatpak install flathub \\', '  org.speedcrunch.SpeedCrunch'],],
         ) }}
         <hr/>
 
         <section aria-labelledby="highlights-1-2">
-          <h3 id="highlights-1-2" style="scroll-margin-top: 80px;">{% trans %}Highlights{% endtrans %}</h3>
+          <h3 id="highlights-1-2">{% trans %}Highlights{% endtrans %}</h3>
           <ul>
             <li>{% trans %}SpeedCrunch starts much faster on Windows, even with many saved tabs.{% endtrans %}</li>
             <li>{% trans %}Set your own{% endtrans %} <a href="{{ pathto('userguide/interface') }}#keyboard-shortcuts">{% trans %}keyboard shortcuts{% endtrans %}</a> {% trans %}for common actions.{% endtrans %}</li>
@@ -171,7 +165,7 @@
         <hr/>
 
         <section aria-labelledby="whats-new-in-1-2">
-          <h3 id="whats-new-in-1-2" style="scroll-margin-top: 80px;">{% trans %}What's new in 1.2{% endtrans %}</h3>
+          <h3 id="whats-new-in-1-2">{% trans %}What's new in 1.2{% endtrans %}</h3>
           <ul class="list-inline">
             <li><a href="#release-1-2-constants-units">{% trans %}Constants and units{% endtrans %}</a></li>
             <li><a href="#release-1-2-input">{% trans %}Input{% endtrans %}</a></li>
@@ -182,7 +176,7 @@
             <li><a href="#release-1-2-other">{% trans %}Other improvements{% endtrans %}</a></li>
           </ul>
 
-          <h4 id="release-1-2-constants-units" style="scroll-margin-top: 80px;">{% trans %}Constants and units{% endtrans %}</h4>
+          <h4 id="release-1-2-constants-units">{% trans %}Constants and units{% endtrans %}</h4>
           <ul>
             <li><a href="{{ pathto('userguide/interface') }}#expression-editor-features">{% trans %}Search constants{% endtrans %}</a> {% trans %}with{% endtrans %} <kbd>Ctrl+K</kbd> (<kbd>Cmd+K</kbd> {% trans %}on macOS) by default.{% endtrans %}</li>
             <li>{% trans %}Correct the values shown when{% endtrans %} <a href="{{ pathto('reference/units') }}#composed-units">{% trans %}multiplying or dividing quantities with prefixed units{% endtrans %}</a>, {% trans %}including angular rates.{% endtrans %}</li>
@@ -191,7 +185,7 @@
             <li>{% trans %}Preserve the case of unit symbols, so{% endtrans %} <code>kT</code> {% trans %}(kilotesla) and{% endtrans %} <code>kt</code> {% trans %}(knot) stay distinct.{% endtrans %}</li>
           </ul>
 
-          <h4 id="release-1-2-input" style="scroll-margin-top: 80px;">{% trans %}Input{% endtrans %}</h4>
+          <h4 id="release-1-2-input">{% trans %}Input{% endtrans %}</h4>
           <ul>
             <li>{% trans %}Read decimal and grouping marks according to the selected{% endtrans %} <a href="{{ pathto('userguide/interface') }}#number-format">{% trans %}number format{% endtrans %}</a>, {% trans %}even when grouping is off for display.{% endtrans %}</li>
             <li>{% trans %}Preserve commas and dots when you type or paste numbers, and fix grouped{% endtrans %} <a href="{{ pathto('userguide/syntax') }}#non-decimal-bases">{% trans %}hexadecimal input{% endtrans %}</a> {% trans %}such as{% endtrans %} <code>0xAB CD</code>.</li>
@@ -200,14 +194,14 @@
             <li>{% trans %}Return focus to the correct input pane after searching a panel or inserting a constant.{% endtrans %}</li>
           </ul>
 
-          <h4 id="release-1-2-results" style="scroll-margin-top: 80px;">{% trans %}Results{% endtrans %}</h4>
+          <h4 id="release-1-2-results">{% trans %}Results{% endtrans %}</h4>
           <ul>
             <li>{% trans %}Show the correct decimal values in the interpreted expression.{% endtrans %}</li>
             <li>{% trans %}Keep the scroll-to-bottom button clear of scrollbars.{% endtrans %}</li>
             <li>{% trans %}Shorten the{% endtrans %} <a href="{{ pathto('userguide/interface') }}#complex-numbers">{% trans %}Complex Form{% endtrans %}</a> {% trans %}menu labels and give rounding up and down clearer names in{% endtrans %} <a href="{{ pathto('userguide/interface') }}#results">{% trans %}Results settings{% endtrans %}</a>.</li>
           </ul>
 
-          <h4 id="release-1-2-sessions" style="scroll-margin-top: 80px;">{% trans %}Sessions and settings{% endtrans %}</h4>
+          <h4 id="release-1-2-sessions">{% trans %}Sessions and settings{% endtrans %}</h4>
           <ul>
             <li>{% trans %}Use{% endtrans %} <a href="{{ pathto('userguide/interface') }}#keyboard-shortcuts"><strong>{% trans %}Settings → Keyboard Shortcuts{% endtrans %}</strong></a> {% trans %}to set shortcuts, including sequences of key combinations. SpeedCrunch checks for conflicts and saves your choices across all windows.{% endtrans %}</li>
             <li>{% trans %}Use{% endtrans %} <a href="{{ pathto('userguide/interface') }}#session-tabs-and-panes"><strong>{% trans %}Edit → Clear History{% endtrans %}</strong></a>, {% trans %}or press{% endtrans %} <kbd>Ctrl+L</kbd> (<kbd>Cmd+L</kbd> {% trans %}on macOS), to clear the active session's calculations and unfinished input while keeping its definitions. You can turn off the confirmation prompt in{% endtrans %} <a href="{{ pathto('userguide/interface') }}#results">{% trans %}Results settings{% endtrans %}</a>.</li>
@@ -219,7 +213,7 @@
             <li>{% trans %}Fix window size resets on Wayland and a crash when resetting panel layouts.{% endtrans %}</li>
           </ul>
 
-          <h4 id="release-1-2-appearance" style="scroll-margin-top: 80px;">{% trans %}Appearance and panels{% endtrans %}</h4>
+          <h4 id="release-1-2-appearance">{% trans %}Appearance and panels{% endtrans %}</h4>
           <ul>
             <li>{% trans %}Switch between{% endtrans %} <a href="{{ pathto('userguide/interface') }}#user-interface-settings">{% trans %}Classic, Modern, and Hybrid style presets{% endtrans %}</a>. {% trans %}Classic is the default on first launch and after resetting settings. Upgrades keep your saved appearance.{% endtrans %}</li>
             <li>{% trans %}Use{% endtrans %} <strong>One Dark</strong> {% trans %}as the default color theme.{% endtrans %}</li>
@@ -235,7 +229,7 @@
             <li>{% trans %}Fix menu spacing and show the overflow button when the menu runs out of room.{% endtrans %}</li>
           </ul>
 
-          <h4 id="release-1-2-keypad" style="scroll-margin-top: 80px;">{% trans %}Keypad{% endtrans %}</h4>
+          <h4 id="release-1-2-keypad">{% trans %}Keypad{% endtrans %}</h4>
           <ul>
             <li>{% trans %}Use{% endtrans %} <a href="{{ pathto('userguide/interface') }}#keypad"><strong>{% trans %}Scientific (wide){% endtrans %}</strong></a> {% trans %}by default on first launch and after resetting settings.{% endtrans %}</li>
             <li>{% trans %}Add a 75% keypad zoom level.{% endtrans %}</li>
@@ -245,7 +239,7 @@
             <li>{% trans %}Use{% endtrans %} <code>DEL</code>, <code>C</code>, <code>x^y</code>, {% trans %}and{% endtrans %} <code>root</code> {% trans %}to avoid missing symbols. Older custom layouts pick up these labels automatically.{% endtrans %}</li>
           </ul>
 
-          <h4 id="release-1-2-other" style="scroll-margin-top: 80px;">{% trans %}Other improvements{% endtrans %}</h4>
+          <h4 id="release-1-2-other">{% trans %}Other improvements{% endtrans %}</h4>
           <ul>
             <li>{% trans %}Speed up startup and history display, especially when you have many saved tabs.{% endtrans %}</li>
             <li>{% trans %}Check for updates automatically at most once a week. You can still use{% endtrans %} <a href="{{ pathto('userguide/interface') }}#help"><strong>{% trans %}Help → Check for Updates{% endtrans %}</strong></a> {% trans %}at any time.{% endtrans %}</li>
@@ -258,7 +252,7 @@
 
       <section class="panel panel-default" aria-labelledby="version-1-1">
         <div class="panel-heading">
-          <h2 id="version-1-1" class="panel-title" style="scroll-margin-top: 80px;">
+          <h2 id="version-1-1" class="panel-title">
             <a class="collapsed" role="button" data-toggle="collapse" href="#release-1-1" aria-expanded="false" aria-controls="release-1-1">{% trans %}Version 1.1{% endtrans %}</a>
           </h2>
         </div>
@@ -276,7 +270,7 @@
             <hr/>
 
             <section aria-labelledby="whats-new-in-1-1">
-              <h3 id="whats-new-in-1-1" style="scroll-margin-top: 80px;">{% trans %}What's new in 1.1{% endtrans %}</h3>
+              <h3 id="whats-new-in-1-1">{% trans %}What's new in 1.1{% endtrans %}</h3>
               <ul class="list-inline">
                 <li><a href="#release-1-1-functions">{% trans %}Functions{% endtrans %}</a></li>
                 <li><a href="#release-1-1-constants-units">{% trans %}Constants and units{% endtrans %}</a></li>
@@ -288,13 +282,13 @@
                 <li><a href="#release-1-1-other">{% trans %}Other improvements{% endtrans %}</a></li>
               </ul>
 
-              <h4 id="release-1-1-functions" style="scroll-margin-top: 80px;">{% trans %}Functions{% endtrans %}</h4>
+              <h4 id="release-1-1-functions">{% trans %}Functions{% endtrans %}</h4>
               <ul>
                 <li>{% trans %}Add{% endtrans %} <a href="{{ pathto('reference/basic') }}#sc.root"><code>root(n; x)</code></a> {% trans %}for nth roots, including negative values and quantities with units. For example,{% endtrans %} <code>root(5; -32)</code> {% trans %}returns{% endtrans %} <code>-2</code>.</li>
                 <li>{% trans %}Fix factorials in{% endtrans %} <a href="{{ pathto('userguide/advanced') }}#user-functions">{% trans %}user-defined functions{% endtrans %}</a>, {% trans %}such as{% endtrans %} <code>f(n) = n!</code>.</li>
               </ul>
 
-              <h4 id="release-1-1-constants-units" style="scroll-margin-top: 80px;">{% trans %}Constants and units{% endtrans %}</h4>
+              <h4 id="release-1-1-constants-units">{% trans %}Constants and units{% endtrans %}</h4>
               <ul>
                 <li><a href="{{ pathto('userguide/interface') }}#expression-editor-features">{% trans %}Search constants{% endtrans %}</a> {% trans %}by name or unit with{% endtrans %} <kbd>Ctrl+Space</kbd>. {% trans %}Select a result with the arrow keys and insert it with Enter, Tab, or a click. Change the shortcut in Settings > Keyboard Shortcuts if your system already uses it.{% endtrans %}</li>
                 <li>{% trans %}Improve searching and keyboard selection in the Constants panel.{% endtrans %}</li>
@@ -303,7 +297,7 @@
                 <li>{% trans %}Correct results shown in{% endtrans %} <code>J/m²</code> {% trans %}and{% endtrans %} <code>J/m³</code> {% trans %}when using prefixed units.{% endtrans %}</li>
               </ul>
 
-              <h4 id="release-1-1-input" style="scroll-margin-top: 80px;">{% trans %}Input{% endtrans %}</h4>
+              <h4 id="release-1-1-input">{% trans %}Input{% endtrans %}</h4>
               <ul>
                 <li>{% trans %}Fix undo and redo, and copy and paste.{% endtrans %}</li>
                 <li>{% trans %}Fix clipped text and excess space in wrapped input with different fonts.{% endtrans %}</li>
@@ -317,7 +311,7 @@
                 <li>{% trans %}Remove the empty-history hint.{% endtrans %}</li>
               </ul>
 
-              <h4 id="release-1-1-results" style="scroll-margin-top: 80px;">{% trans %}Results{% endtrans %}</h4>
+              <h4 id="release-1-1-results">{% trans %}Results{% endtrans %}</h4>
               <ul>
                 <li>{% trans %}Restore free copying.{% endtrans %}</li>
                 <li><a href="{{ pathto('userguide/interface') }}#result-display-interactions">{% trans %}Copy a whole calculation{% endtrans %}</a>, {% trans %}including all displayed result formats, either across multiple lines or as a single line.{% endtrans %}</li>
@@ -328,7 +322,7 @@
                 <li>{% trans %}Restore the{% endtrans %} <a href="{{ pathto('userguide/interface') }}#keyboard-shortcuts">{% trans %}F2-F5 and F7-F10 notation shortcuts{% endtrans %}</a>.</li>
               </ul>
 
-              <h4 id="release-1-1-sessions" style="scroll-margin-top: 80px;">{% trans %}Sessions and settings{% endtrans %}</h4>
+              <h4 id="release-1-1-sessions">{% trans %}Sessions and settings{% endtrans %}</h4>
               <ul>
                 <li>{% trans %}Add{% endtrans %} <a href="{{ pathto('userguide/interface') }}#private-sessions">{% trans %}private tabs{% endtrans %}</a> {% trans %}that discard their contents when closed and are not restored on the next launch. Use{% endtrans %} <kbd>Ctrl+Shift+N</kbd> (<kbd>Cmd+Shift+N</kbd> {% trans %}on macOS) to open one.{% endtrans %}</li>
                 <li>{% trans %}Allow switching between private and saved sessions, and optionally open a private tab at startup.{% endtrans %}</li>
@@ -341,7 +335,7 @@
                 <li>{% trans %}Fix commands acting on the wrong window when used from a floating panel.{% endtrans %}</li>
               </ul>
 
-              <h4 id="release-1-1-appearance" style="scroll-margin-top: 80px;">{% trans %}Appearance and panels{% endtrans %}</h4>
+              <h4 id="release-1-1-appearance">{% trans %}Appearance and panels{% endtrans %}</h4>
               <ul>
                 <li>{% trans %}Add separate{% endtrans %} <a href="{{ pathto('userguide/interface') }}#user-interface-settings">{% trans %}system and SpeedCrunch theme choices{% endtrans %}</a> {% trans %}for menus, panels, and the status bar.{% endtrans %}</li>
                 <li>{% trans %}Add a compact{% endtrans %} <a href="{{ pathto('userguide/interface') }}#user-interface-settings">{% trans %}Classic layout for input and results{% endtrans %}</a>. {% trans %}Modern remains the default.{% endtrans %}</li>
@@ -352,7 +346,7 @@
                 <li>{% trans %}Preserve floating panel positions and visibility across restarts, and prevent floating panels from being grouped unexpectedly.{% endtrans %}</li>
               </ul>
 
-              <h4 id="release-1-1-keypad" style="scroll-margin-top: 80px;">{% trans %}Keypad{% endtrans %}</h4>
+              <h4 id="release-1-1-keypad">{% trans %}Keypad{% endtrans %}</h4>
               <ul>
                 <li>{% trans %}Add a compact{% endtrans %} <a href="{{ pathto('userguide/interface') }}#user-interface-settings">{% trans %}Classic keypad appearance{% endtrans %}</a> {% trans %}and 50% zoom.{% endtrans %}</li>
                 <li>{% trans %}Restore Zoom in the keypad's right-click menu and fix inconsistent sizing when changing zoom levels.{% endtrans %}</li>
@@ -360,7 +354,7 @@
                 <li>{% trans %}Replace the obsolete{% endtrans %} <code>lg</code> {% trans %}button with{% endtrans %} <a href="{{ pathto('reference/basic') }}#sc.log10"><code>log10</code></a>.</li>
               </ul>
 
-              <h4 id="release-1-1-other" style="scroll-margin-top: 80px;">{% trans %}Other improvements{% endtrans %}</h4>
+              <h4 id="release-1-1-other">{% trans %}Other improvements{% endtrans %}</h4>
               <ul>
                 <li>{% trans %}Reduce startup delays when restoring sessions, history, and panels.{% endtrans %}</li>
                 <li>{% trans %}Make update checks more responsive and prevent them from delaying window closure.{% endtrans %}</li>
@@ -372,7 +366,7 @@
             </section>
             <hr/>
             <section aria-labelledby="contributors-1-1">
-              <h3 id="contributors-1-1" style="scroll-margin-top: 80px;">{% trans %}Contributors{% endtrans %}</h3>
+              <h3 id="contributors-1-1">{% trans %}Contributors{% endtrans %}</h3>
               <p>{% trans %}Thank you to everyone who contributed to SpeedCrunch 1.1.{% endtrans %}</p>
               <p>Helder Correia, Vitaly Zaitsev, Rodrigo Pedra, Pedro Montes Alcalde, Francis Tseng, Antonio Mannella, Benjamin Robin, Brian Hale, D.J.L. Sales, Matthias Prager, Rafael Fraga, Theodore R. Smith, @ddidderr, @FrankMountainFace, @jetp250, @Matth7878, @nfshr, @pandora1986, @playerofgames, @rafa4mat, @RedNova84, @Sacryn, @tosione.</p>
             </section>
@@ -383,7 +377,7 @@
 
       <section class="panel panel-default" aria-labelledby="version-1-0">
         <div class="panel-heading">
-          <h2 id="version-1-0" class="panel-title" style="scroll-margin-top: 80px;">
+          <h2 id="version-1-0" class="panel-title">
             <a class="collapsed" role="button" data-toggle="collapse" href="#release-1-0" aria-expanded="false" aria-controls="release-1-0">{% trans %}Version 1.0{% endtrans %}</a>
           </h2>
         </div>
@@ -398,7 +392,7 @@
 
             ) }}
             <hr/>
-            <h3 id="whats-new-in-1-0" style="scroll-margin-top: 80px;">{% trans %}What's new in 1.0{% endtrans %}</h3>
+            <h3 id="whats-new-in-1-0">{% trans %}What's new in 1.0{% endtrans %}</h3>
             <ul class="list-inline">
               <li><a href="#release-1-0-workspace">{% trans %}Workspace and history{% endtrans %}</a></li>
               <li><a href="#release-1-0-expressions">{% trans %}Expressions and editing{% endtrans %}</a></li>
@@ -408,7 +402,7 @@
               <li><a href="#release-1-0-settings">{% trans %}Appearance and settings{% endtrans %}</a></li>
             </ul>
 
-            <h4 id="release-1-0-workspace" style="scroll-margin-top: 80px;">{% trans %}Workspace and history{% endtrans %}</h4>
+            <h4 id="release-1-0-workspace">{% trans %}Workspace and history{% endtrans %}</h4>
             <ul>
               <li>{% trans %}Work in tabs and split panes to keep several calculations open side by side.{% endtrans %}</li>
               <li>{% trans %}Save calculation history between launches and set a history size limit.{% endtrans %}</li>
@@ -419,7 +413,7 @@
               <li>{% trans %}Check for updates from within the app.{% endtrans %}</li>
             </ul>
 
-            <h4 id="release-1-0-expressions" style="scroll-margin-top: 80px;">{% trans %}Expressions and editing{% endtrans %}</h4>
+            <h4 id="release-1-0-expressions">{% trans %}Expressions and editing{% endtrans %}</h4>
             <ul>
               <li>{% trans %}Use lists and matrices in expressions.{% endtrans %}</li>
               <li>{% trans %}See the interpreted expression alongside the result, with implicit multiplication made explicit.{% endtrans %}</li>
@@ -431,7 +425,7 @@
               <li>{% trans %}Insert constants and formula book entries with their units included.{% endtrans %}</li>
             </ul>
 
-            <h4 id="release-1-0-results" style="scroll-margin-top: 80px;">{% trans %}Results and formatting{% endtrans %}</h4>
+            <h4 id="release-1-0-results">{% trans %}Results and formatting{% endtrans %}</h4>
             <ul>
               <li>{% trans %}Show a calculation in several result formats at once. Number-format choices include Indian 3-2-2 digit grouping.{% endtrans %}</li>
               <li>{% trans %}Show rational results as fractions, or use sexagesimal notation for angles and time.{% endtrans %}</li>
@@ -442,7 +436,7 @@
               <li>{% trans %}Changing the primary result format updates only the last expression. Earlier history entries keep their formatting.{% endtrans %}</li>
             </ul>
 
-            <h4 id="release-1-0-functions" style="scroll-margin-top: 80px;">{% trans %}New functions{% endtrans %}</h4>
+            <h4 id="release-1-0-functions">{% trans %}New functions{% endtrans %}</h4>
             <ul>
               <li><strong>{% trans %}Integer arithmetic:{% endtrans %}</strong> <a href="{{ pathto('reference/integer') }}#sc.powmod"><code>powmod</code></a> {% trans %}for modular exponentiation,{% endtrans %} <a href="{{ pathto('reference/integer') }}#sc.emod"><code>emod</code></a> {% trans %}for Euclidean modulo,{% endtrans %} <a href="{{ pathto('reference/integer') }}#sc.lcm"><code>lcm</code></a> {% trans %}for least common multiples, and{% endtrans %} <a href="{{ pathto('reference/integer') }}#sc.popcount"><code>popcount</code></a> {% trans %}for counting set bits.{% endtrans %}</li>
               <li><strong>{% trans %}Number formatting:{% endtrans %}</strong> <a href="{{ pathto('reference/integer') }}#sc.binpad"><code>binpad</code></a>, <a href="{{ pathto('reference/integer') }}#sc.octpad"><code>octpad</code></a>, {% trans %}and{% endtrans %} <a href="{{ pathto('reference/integer') }}#sc.hexpad"><code>hexpad</code></a> {% trans %}for padded binary, octal, and hexadecimal output. Use{% endtrans %} <a href="{{ pathto('reference/integer') }}#sc.sci"><code>sci</code></a> {% trans %}and{% endtrans %} <a href="{{ pathto('reference/integer') }}#sc.eng"><code>eng</code></a> {% trans %}for scientific and engineering notation.{% endtrans %}</li>
@@ -456,7 +450,7 @@
               <li><strong>{% trans %}Statistics:{% endtrans %}</strong> <a href="{{ pathto('reference/statistical') }}#sc.stdevp"><code>stdevp</code></a>, <a href="{{ pathto('reference/statistical') }}#sc.stdevs"><code>stdevs</code></a>, <a href="{{ pathto('reference/statistical') }}#sc.varp"><code>varp</code></a>, <a href="{{ pathto('reference/statistical') }}#sc.vars"><code>vars</code></a>, {% trans %}and{% endtrans %} <a href="{{ pathto('reference/statistical') }}#sc.mad"><code>mad</code></a>, {% trans %}with list and matrix support.{% endtrans %}</li>
             </ul>
 
-            <h4 id="release-1-0-units" style="scroll-margin-top: 80px;">{% trans %}Units{% endtrans %}</h4>
+            <h4 id="release-1-0-units">{% trans %}Units{% endtrans %}</h4>
             <p>{% trans %}Use square brackets to identify units explicitly in expressions, such as{% endtrans %} <code>[m]</code> {% trans %}or{% endtrans %} <code>[s]</code>. {% trans %}New units and aliases include:{% endtrans %}</p>
             <ul>
               <li><strong>{% trans %}Angles:{% endtrans %}</strong> <a href="{{ pathto('reference/units') }}#plane-angle"><code>gradian</code></a> (<code>gon</code>), <a href="{{ pathto('reference/units') }}#plane-angle"><code>turn</code></a> (<code>tr</code>, <code>pla</code>), <a href="{{ pathto('reference/units') }}#plane-angle"><code>revolution</code></a> (<code>rev</code>), <a href="{{ pathto('reference/units') }}#plane-angle"><code>degree</code></a> (<code>°</code>), <a href="{{ pathto('reference/units') }}#plane-angle"><code>arcmin</code></a> (<code>′</code>), {% trans %}and{% endtrans %} <a href="{{ pathto('reference/units') }}#plane-angle"><code>arcsec</code></a> (<code>″</code>).</li>
@@ -466,14 +460,14 @@
               <li><strong>{% trans %}Energy:{% endtrans %}</strong> <a href="{{ pathto('reference/units') }}#amount-of-heat"><code>quad</code></a>, {% trans %}equal to{% endtrans %} 10<sup>15</sup> <code>[Btu]</code>.</li>
             </ul>
 
-            <h4 id="release-1-0-settings" style="scroll-margin-top: 80px;">{% trans %}Appearance and settings{% endtrans %}</h4>
+            <h4 id="release-1-0-settings">{% trans %}Appearance and settings{% endtrans %}</h4>
             <ul>
               <li>{% trans %}Choose from more built-in themes or create a custom theme.{% endtrans %}</li>
               <li>{% trans %}Interface scaling now applies to the expression editor too.{% endtrans %}</li>
             </ul>
             <hr/>
             <section aria-labelledby="contributors">
-              <h3 id="contributors" style="scroll-margin-top: 80px;">{% trans %}Contributors{% endtrans %}</h3>
+              <h3 id="contributors">{% trans %}Contributors{% endtrans %}</h3>
               <p>{% trans %}Thank you to the authors who have contributed since November 30, 2016.{% endtrans %}</p>
               <p>Helder Correia, Felix Krull, Mikko Syrjä, Tey / Teyut, Samuel Gaist, Hadrien Theveneau, Pol Welter, Matthew Di Nardo, Chris Roberts, Alan Birtles, Chuvke, Jean-Michel Frouin, Jonas Nyrup, Nikolay Zlatev, Roger Sachan, rewq.</p>
             </section>
@@ -482,7 +476,7 @@
       </section>
       <hr/>
 
-      <div id="older-versions" style="scroll-margin-top: 80px;">
+      <div id="older-versions">
       <div id="accordion" role="tablist" aria-multiselectable="true">
         {{ oldVersion('0.12', '012',
           win=[
@@ -504,4 +498,16 @@
       </div>
     </div>
   </div>
+  {#- The visitor's own platform gets its buttons in the top bar's color
+      (detected as on the home page, app.js setupDownload). #}
+  <script>
+    (function () {
+      var p = ((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent).toLowerCase();
+      var os = p.indexOf('mac') >= 0 ? 'macos' : p.indexOf('win') >= 0 ? 'windows' : p.indexOf('linux') >= 0 || p.indexOf('x11') >= 0 ? 'linux' : null;
+      if (!os) return;
+      document.querySelectorAll('.dl-platform[data-platform="' + os + '"]').forEach(function (el) {
+        el.classList.add('dl-yours');
+      });
+    })();
+  </script>
 {%- endblock %}

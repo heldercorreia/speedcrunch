@@ -1,3 +1,5 @@
+{#- Bump this when site.css, extra.css, site-nav.js, or home/style.css changes. #}
+{%- set site_assets = '19' %}
 {% set theme_css_files = [] %}
 {% if theme_bootstrap_version == "3" %}
   {% set bootstrap_version, bootstrap_additional_css, navbar_version = "3.4.1", "theme", "" %}
@@ -32,14 +34,15 @@
   %}
 {% endif %}
 
-{% set bootswatch_css_custom = ['_static/extra.css?home=4'] %}
+{% set bootswatch_css_custom = ['_static/site.css?v=' ~ site_assets, '_static/extra.css?v=' ~ site_assets] %}
 {% set css_files = css_files + theme_css_files + bootswatch_css_custom %}
 
 {% set script_files = script_files + [
     '_static/js/jquery-1.12.4.min.js',
     '_static/js/jquery-fix.js',
     '_static/bootstrap-' + bootstrap_version + '/js/bootstrap.js',
-    '_static/bootstrap-sphinx.js'
+    '_static/bootstrap-sphinx.js',
+    '_static/site-nav.js?v=' ~ site_assets
   ]
 %}
 
@@ -126,8 +129,11 @@
     {%- endfor %}
 {%- endmacro %}
 
+{#- Font Awesome Free 7.3.1, served with the website. #}
+{%- set fontawesome_css = pathto('_static/fontawesome/css/all.min.css', 1) %}
+
 {%- macro css() %}
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
+    <link rel="stylesheet" href="{{ fontawesome_css }}">
     {%- for cssfile in css_files %}
     {%- if cssfile|attr('filename') is defined %}
     {{ css_tag(cssfile) }}
@@ -138,7 +144,10 @@
 {%- endmacro %}
 
 
-<html xmlns="http://www.w3.org/1999/xhtml" lang="{{ language|default('en', true)|replace('_', '-')|e }}">
+{#- Sphinx 7.2+ search reads the site root from data-content_root, and takes
+    result previews from the element with role="main" in each page. #}
+<html xmlns="http://www.w3.org/1999/xhtml" lang="{{ language|default('en', true)|replace('_', '-')|e }}"
+      {%- if content_root is defined %} data-content_root="{{ content_root|e }}"{% endif %}>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset={{ encoding }}" />
     {{ metatags }}
@@ -162,8 +171,12 @@
     {%- endif %}
     {%- endif %}
     {%- if pagename == 'index' and pageurl %}
-    <meta property="og:image" content="{{ (canonical_url ~ 'screen1.png')|e }}" />
-    <meta property="og:image:alt" content="{{ _('SpeedCrunch scientific calculator with multiple sessions and reference panels')|e }}" />
+    {#- Link preview card (1200×630, kept under 300 KB for WhatsApp). #}
+    <meta property="og:image" content="{{ (canonical_url ~ 'og-image.jpg')|e }}" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="{{ _('SpeedCrunch: high-precision math at the speed of typing. The calculator with two sessions, the keypad and the functions dock.')|e }}" />
     <meta name="twitter:card" content="summary_large_image" />
     <script type="application/ld+json">
     {
@@ -194,9 +207,31 @@
     }
     </script>
     {%- endif %}
+    {#- Light or dark mode, before the page draws (styles in extra.css): the
+        visitor's choice from the top bar's toggle (light, dark or system),
+        and for system (the default) the system's mode, else light.
+        site-nav.js follows the system's later changes. #}
+    {%- block theme %}
+    <script>
+      (function () {
+        var choice = null;
+        try { choice = localStorage.getItem('sc-theme'); } catch (e) {}
+        if (choice !== 'light' && choice !== 'dark') choice = 'system';
+        var theme = choice !== 'system' ? choice :
+          window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme-choice', choice);
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
+    {%- endblock %}
+    {#- Pages with their own look (the home page) replace these three blocks. #}
+    {%- block css %}
     {{ css() }}
+    {%- endblock %}
     {%- if not embedded %}
+    {%- block scripts %}
     {{ script() }}
+    {%- endblock %}
     {%- if use_opensearch %}
     <link rel="search" type="application/opensearchdescription+xml"
           title="{% trans docstitle=docstitle|e %}Search within {{ docstitle }}{% endtrans %}"
@@ -260,7 +295,7 @@
     {%- endif %}
 {% endblock %}
   </head>
-  <body role="document" data-spy="scroll" data-target="#myScrollspy" data-offset="80">
+  <body{% if pagename == 'index' %} class="site-home"{% endif %} role="document" data-spy="scroll" data-target="#myScrollspy" data-offset="80">
 {%- block header %}{% endblock %}
 
 
@@ -275,9 +310,10 @@
       <li><a href="{{ parent.link | e }}">{{ parent.title }}</a></li>
       {%- endfor %}
       <li class="active">{{ title }}</li>
-    </ul> 
+      {%- include "relations.html" %}
+    </ul>
     {%- block sidebar1 %} {{ bsidebar() }} {% endblock %}
-    <div class="{{ bs_span_prefix }}{{ bs_content_width }} content">
+    <div class="{{ bs_span_prefix }}{{ bs_content_width }} content" role="main">
       {% block body %}{% endblock %}
     </div>
     {%- block sidebar2 %} {% endblock %}
@@ -286,24 +322,24 @@
 {%- endblock %}
 
 
+{#- The same footer on every page, home page included. Styles in site.css. #}
 {%- block footer %}
-<footer class="footer">
-  <div class="container">
-    <p>
+<footer class="footer site-footer">
+  <div class="site-footer-inner">
+    <span>
     {%- if show_copyright %}
-      {%- if hasdoc('copyright') %}
-        {% trans path=pathto('copyright'), copyright=copyright|e %}&copy; <a href="{{ path }}">Copyright</a> {{ copyright }}.{% endtrans %}<br/>
-      {%- else %}
-        {% trans copyright=copyright|e %}&copy; Copyright {{ copyright }}.{% endtrans %}<br/>
-      {%- endif %}
+      {% trans copyright=copyright|e %}&copy; Copyright {{ copyright }}.{% endtrans %}
+    {%- else %}
+      SpeedCrunch
     {%- endif %}
-    {%- if last_updated %}
-      {% trans last_updated=last_updated|e %}Last updated on {{ last_updated }}.{% endtrans %}<br/>
-    {%- endif %}
-    {%- if show_sphinx %}
-      {% trans sphinx_version=sphinx_version|e %}Created using <a href="http://sphinx-doc.org/">Sphinx</a> {{ sphinx_version }}.{% endtrans %}<br/>
-    {%- endif %}
-    </p>
+    </span>
+    <nav aria-label="{{ _('Footer')|e }}">
+      <a href="{{ pathto('introduction') }}">{{ _('User Manual') }}</a>
+      <a href="{{ pathto('faq') }}">{{ _('FAQ') }}</a>
+      <a href="https://speedcrunch.org/issues.html">{{ _('Issues and Feedback') }}</a>
+      <a href="https://speedcrunch.org/code.html">{{ _('Source Code') }}</a>
+      <a href="{{ pathto('donate') }}">{{ _('Donate') }}</a>
+    </nav>
   </div>
 </footer>
 {%- endblock %}

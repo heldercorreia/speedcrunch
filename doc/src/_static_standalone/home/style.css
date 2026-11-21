@@ -1,0 +1,384 @@
+/* SpeedCrunch home page (doc/src/_templates_standalone/home.html) */
+
+@property --glow-a { syntax: "<color>"; inherits: true; initial-value: #7dcfff; }
+@property --glow-b { syntax: "<color>"; inherits: true; initial-value: #e0af68; }
+
+/* The site's colors and fonts (--ink, --night, --accent, --font...) are
+   shared with the rest of the website: ../site.css. */
+:root {
+  /* Current SpeedCrunch color scheme (set from JS; Tokyo Night until then). */
+  --sc-background: #252634;
+  --sc-number: #e0af68;
+  --sc-unit: #a9b1d6;
+  --sc-function: #7dcfff;
+  --sc-variable: #bb9af7;
+  --sc-operator: #ff9e64;
+  --sc-parens: #aab1ca;
+  --sc-list: #c0caf5;
+  --sc-separator: #aab1cb;
+  --sc-comment: #565f89;
+  --sc-result: #9ece6a;
+  /* The app's generated window colors for the scheme (see Surfaces in app.js):
+     shades 100 to 600, text for shades 100, 300 and 400, and the accent. */
+  --sh-0: #202128;
+  --sh-1: #252634;
+  --sh-2: #353644;
+  --sh-3: #464856;
+  --sh-4: #585a67;
+  --sh-5: #6b6c7a;
+  --fg-0: #ffffff;
+  --fg-2: #e9eafc;
+  --fg-3: #ffffff;
+  --primary: #a0a3e9;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+}
+body.noscroll { overflow: hidden; }
+
+img { max-width: 100%; display: block; }
+a { color: var(--accent-ink); text-decoration: none; }
+a:hover { text-decoration: underline; }
+h1, h2, h3 { margin: 0; line-height: 1.15; letter-spacing: -0.02em; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+
+.wrap { width: min(1200px, 100% - 32px); margin-inline: auto; }
+
+.skip { position: absolute; left: -999px; top: 8px; background: #fff; padding: 8px 12px; z-index: 100; }
+.skip:focus { left: 8px; }
+
+/* The top bar and the footer are shared with the rest of the website:
+   ../site.css. The hero slides under the bar (61px: 60px plus its border). */
+
+/* ---------------------------------------------------------------- Buttons */
+
+.btn {
+  display: inline-flex; align-items: center; gap: 9px;
+  font: inherit; font-weight: 600; font-size: 16px;
+  padding: 12px 20px; border-radius: 11px; border: 1px solid transparent;
+  cursor: pointer; transition: transform 0.15s, background-color 0.15s, box-shadow 0.15s;
+}
+.btn:hover { text-decoration: none; transform: translateY(-1px); }
+.btn-primary { background: #fff; color: var(--ink); box-shadow: 0 6px 24px -8px rgba(124, 108, 255, 0.7); }
+.btn-primary:hover { box-shadow: 0 10px 30px -8px rgba(124, 108, 255, 0.9); }
+.btn-ghost { color: #fff; border-color: rgba(255, 255, 255, 0.22); background: rgba(255, 255, 255, 0.04); }
+.btn-ghost:hover { background: rgba(255, 255, 255, 0.1); }
+
+/* ---------------------------------------------------------------- Hero */
+
+.hero {
+  --glow-a: var(--sc-function);
+  --glow-b: var(--sc-number);
+  position: relative; overflow: hidden;
+  color: var(--night-ink);
+  background:
+    radial-gradient(900px 520px at 78% 38%, color-mix(in srgb, var(--glow-a) 12%, transparent), transparent 70%),
+    radial-gradient(700px 420px at 60% 85%, color-mix(in srgb, var(--glow-b) 8%, transparent), transparent 70%),
+    radial-gradient(800px 600px at 10% 0%, #1a191e, transparent 70%),
+    #0b0b0e;
+  transition: --glow-a 0.9s ease, --glow-b 0.9s ease;
+  padding: 72px 0 40px; /* 40px at the bottom, matching the gap under the nav */
+  margin-top: -61px; padding-top: 101px;
+}
+/* The demo column stretches to the height of the text column. */
+.hero-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: stretch; }
+@media (max-width: 980px) { .hero-grid { grid-template-columns: 1fr; gap: 44px; } }
+
+.eyebrow { margin: 0 0 14px; font-size: 13px; font-weight: 650; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-ink); }
+.eyebrow-dark { color: #b5abff; }
+.hero h1 { font-size: clamp(38px, 5.2vw, 60px); font-weight: 750; letter-spacing: -0.035em; color: #fff; }
+.lead { list-style: none; padding: 0; display: grid; gap: 6px; font-size: 18px; color: var(--night-muted); margin: 24px 0 30px; }
+.lead li { display: flex; align-items: baseline; gap: 12px; }
+.lead li::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; background: #b5abff; transform: translateY(-3px); }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.hero-meta { margin: 16px 0 0; font-size: 14px; color: var(--night-muted); }
+
+.stats { display: grid; grid-template-columns: repeat(5, auto); justify-content: space-between; gap: 8px 16px; margin: 40px 0 0; padding-top: 26px; border-top: 1px solid var(--night-line); }
+.stats div { margin: 0; }
+.stats dt { font-size: 26px; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+.stats dd { margin: 0; font-size: 13px; color: var(--night-muted); }
+@media (max-width: 520px) { .stats { grid-template-columns: repeat(3, auto); justify-content: start; gap: 14px 28px; } }
+
+/* App window */
+
+/* App window: session panes as SpeedCrunch draws them in the Classic input
+   style. Colors are the app's generated shades: 100 for the window and tab
+   rows, 200 for results, 300 for the input area, 400 for the selected tab and
+   the vertical pane divider. */
+.hero-demo { position: relative; display: flex; flex-direction: column; min-width: 0; }
+/* The pointer can leave the window to pick a color scheme below it. */
+.cursor-layer { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+.appwin {
+  position: relative; flex: 1 1 0; min-height: 0;
+  display: flex;
+  border-radius: 12px; overflow: hidden;
+  background: var(--sh-0);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 30px 80px -20px rgba(0, 0, 0, 0.7), 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  font-family: var(--font);
+}
+.appwin, .pane-col, .pane, .pane-tabs, .pane-body, .pane-editor { transition: background-color 0.5s, border-color 0.5s; }
+/* Two columns of panes; the right one only exists once a tab is dragged there. */
+.pane-col { flex: 1 1 0; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.pane-col:empty { display: none; }
+.pane-col + .pane-col { border-left: 1px solid var(--sh-3); }
+.pane { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+.pane + .pane { border-top: 1px solid var(--sh-2); }
+
+/* Tabs: 30px rows; each tab is inset 2px at the sides and 3px at the top,
+   with 8px top corners. */
+.pane-tabs { flex: none; display: flex; height: 30px; padding: 0 3px; background: var(--sh-0); overflow: hidden; }
+.tab {
+  position: relative; display: flex; align-items: center; flex: none;
+  height: 27px; margin: 3px 2px 0; padding: 0 7px 0 12px;
+  font-size: 13px; color: var(--fg-0); white-space: nowrap;
+  border-radius: 8px 8px 0 0;
+}
+.tab i { display: grid; place-items: center; width: 18px; height: 18px; margin-left: 20px; font-style: normal; font-size: 12px; visibility: hidden; }
+.tab.selected { background: var(--sh-3); color: var(--fg-3); }
+.tab.hovered { background: var(--sh-2); color: var(--fg-2); }
+.tab.selected i, .tab.hovered i { visibility: visible; }
+.pane[data-active] .tab.selected::after, .drag-ghost .tab.selected::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--primary);
+}
+
+.pane-body { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; background: var(--sh-1); }
+.pane-history { flex: 1 1 0; min-height: 0; overflow: hidden; padding: 0 12px 10px; font-size: 15px; line-height: 1.45; color: var(--sc-number); }
+.h-list > .h-entry:first-child .h-gap { height: 6px; }
+/* The Classic input area: one line plus padding, with a 2px accent line on top
+   in the active pane. */
+.pane-editor {
+  flex: none; min-height: calc(15px * 1.45 + 14px); padding: 8px 8px 6px;
+  font-size: 15px; line-height: 1.45; color: var(--primary);
+  white-space: pre-wrap; overflow-wrap: anywhere; background: var(--sh-2);
+}
+/* The text cursor shows in the active pane's input, and stays solid while typing. */
+.pane-editor .caret { display: none; background: var(--primary); }
+.pane[data-active] .pane-editor .caret { display: inline-block; }
+.pane-editor.typing .caret { animation: none; }
+.pane[data-active] .pane-editor { box-shadow: inset 0 2px 0 var(--primary); }
+/* With a single pane, the app shows no accent line above the input. */
+.appwin[data-panes="1"] .pane-editor { box-shadow: none; }
+
+.h-entry { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 0.35s ease, opacity 0.35s ease; }
+.h-entry > div { overflow: hidden; min-height: 0; }
+.h-entry.entering { grid-template-rows: 0fr; opacity: 0; }
+.h-line { overflow-wrap: anywhere; }
+.h-gap { height: 14px; }
+.caret { display: inline-block; width: 1.5px; height: 1.15em; vertical-align: -0.2em; margin-left: 1px; animation: blink 1.05s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* Tab dragging: the app dims the drop zone with black at 80/255 alpha. */
+.drag-layer { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.drop-overlay { position: absolute; display: none; background: rgba(0, 0, 0, 0.314); }
+.drag-ghost { position: absolute; left: 0; top: 0; display: flex; height: 30px; background: var(--sh-0); opacity: 0.85; }
+.drag-ghost .tab { margin: 3px 2px 0; }
+.cursor { position: absolute; left: 0; top: 0; opacity: 0; transition: opacity 0.25s; }
+.cursor.on { opacity: 1; }
+.cursor svg { position: absolute; width: 24px; height: 24px; filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.35)); }
+.cursor .c-arrow { left: -5px; top: -2.5px; }
+.cursor .c-hand { left: -9px; top: -3.2px; display: none; }
+.cursor[data-shape="hand"] .c-arrow { display: none; }
+.cursor[data-shape="hand"] .c-hand { display: block; }
+
+@media (max-width: 980px) { .appwin { flex: none; height: 480px; } }
+@media (max-width: 560px) {
+  /* Phones stack the right column under the left one. */
+  .appwin { flex-direction: column; height: 520px; }
+  .pane-col + .pane-col { border-left: 0; border-top: 1px solid var(--sh-2); }
+  .pane-history, .pane-editor { font-size: 14px; }
+  .pane-editor { min-height: calc(14px * 1.45 + 14px); }
+}
+
+/* Token colors (shared by the demo and every snippet on the page) */
+.k-number { color: var(--sc-number); }
+.k-unit { color: var(--sc-unit); }
+.k-function { color: var(--sc-function); }
+.k-variable { color: var(--sc-variable); }
+.k-operator { color: var(--sc-operator); }
+.k-parens { color: var(--sc-parens); }
+.k-list { color: var(--sc-list); }
+.k-separator { color: var(--sc-separator); }
+.k-comment { color: var(--sc-comment); }
+.k-result { color: var(--sc-result); }
+[class^="k-"], .pane-history { transition: color 0.5s, background-color 0.5s; }
+
+/* Scheme picker */
+
+.picker { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; margin-top: 18px; font-size: 14px; color: var(--night-muted); }
+.picker-label strong { color: #fff; font-weight: 600; }
+.swatches { display: flex; flex-wrap: wrap; gap: 7px; }
+.swatch {
+  width: 30px; height: 30px; padding: 0; border-radius: 8px; cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  display: grid; place-items: center; transition: transform 0.15s;
+}
+.swatch:hover, .swatch.hovered { transform: translateY(-2px); }
+.swatch[aria-pressed="true"] { outline: 2px solid #fff; outline-offset: 2px; }
+/* Three "code lines" of different lengths in the scheme's colors. */
+.swatch i {
+  display: block; width: 16px; height: 13px;
+  background:
+    linear-gradient(var(--a), var(--a)) 0 0 / 70% 3px no-repeat,
+    linear-gradient(var(--b), var(--b)) 0 5px / 100% 3px no-repeat,
+    linear-gradient(var(--c), var(--c)) 0 10px / 45% 3px no-repeat;
+}
+
+/* ---------------------------------------------------------------- Sections */
+
+.sec { padding: 104px 0; }
+.sec-light { background: var(--paper); }
+.sec-dark { background: var(--night); color: var(--night-ink); }
+.sec-head { max-width: 760px; margin-bottom: 48px; }
+.sec-head h2 { font-size: clamp(30px, 3.8vw, 44px); font-weight: 720; }
+.sec-head p:not(.eyebrow) { font-size: 18px; color: var(--ink-2); margin: 18px 0 0; }
+.sec-dark .sec-head p:not(.eyebrow) { color: var(--night-muted); }
+@media (max-width: 700px) { .sec { padding: 72px 0; } }
+
+/* ---------------------------------------------------------------- Fields */
+
+.field { animation: fieldIn 0.45s ease; }
+.field-stage { display: grid; }
+.field-stage > .field { grid-area: 1 / 1; }
+/* Hidden panels keep their space; showing one replays its entry animation. */
+.field[hidden] { display: block; visibility: hidden; animation: none; }
+@keyframes fieldIn { from { opacity: 0; transform: translateY(8px); } }
+
+/* Field examples: a SpeedCrunch result display in the field's own color
+   scheme (its variables are set on each .field), without tabs or input. */
+.rd-window {
+  border-radius: 12px; overflow: hidden; background: var(--sh-1);
+  box-shadow: 0 0 0 1px rgba(23, 20, 31, 0.08), 0 30px 60px -24px rgba(23, 20, 31, 0.45);
+}
+.rd { padding: 2px 12px 14px; font-size: 15px; line-height: 1.45; color: var(--sc-number); }
+.rd > .h-entry:first-child .h-gap { height: 8px; }
+@media (max-width: 560px) { .rd { font-size: 14px; } }
+
+/* The Bitfield dock, in the app's colors: shade 400 title bar, shade 300 body
+   and cells, the accent for set bits, and shade 400 buttons (500 hovered,
+   600 pressed). 64 bits in nibble boxes, two bytes per row. */
+.dock { background: var(--sh-2); color: var(--fg-2); }
+.dock-title { background: var(--sh-3); color: var(--fg-3); font-size: 13px; padding: 5px 10px; }
+.bitfield { --cell: 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 15px; padding: 12px; }
+.bf-field { display: grid; gap: 5px; }
+.bf-row, .bf-byte { display: flex; gap: 5px; }
+.bf-byte + .bf-byte { margin-left: 10px; }
+.bf-nibble { display: flex; }
+.bit {
+  width: var(--cell); height: calc(var(--cell) - 2px); padding: 0; cursor: pointer;
+  font: inherit; font-size: 11.5px; line-height: 1; color: var(--fg-2); background: var(--sh-2);
+  border: 1px solid color-mix(in srgb, var(--fg-2) 50%, transparent); border-left-width: 0;
+}
+.bf-nibble .bit:first-child { border-left-width: 1px; }
+.bit:hover { background: var(--sh-3); color: var(--fg-3); }
+.bit[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
+.bf-buttons { display: grid; grid-template-columns: repeat(2, auto); gap: 15px; }
+.bf-buttons button {
+  min-width: 54px; height: 32px; padding: 2px; border: 0; border-radius: 5px; cursor: pointer;
+  font: inherit; font-size: 14px; color: var(--fg-3); background: var(--sh-3);
+}
+.bf-buttons button:hover { background: var(--sh-4); }
+.bf-buttons button:active { background: var(--sh-5); }
+@media (max-width: 560px) { .bitfield { --cell: 17px; } .bit { font-size: 9px; } }
+
+/* Zoom overlay */
+.zoom { position: fixed; inset: 0; z-index: 100; }
+.zoom-backdrop { position: absolute; inset: 0; background: rgba(12, 10, 18, 0.86); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.zoom-img { position: fixed; transform-origin: 0 0; max-width: none; cursor: zoom-in; }
+.zoom-close {
+  position: fixed; top: 16px; right: 16px; width: 42px; height: 42px; border-radius: 50%;
+  font-size: 18px; color: #fff; background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.2); cursor: pointer;
+}
+.zoom-hint { position: fixed; left: 0; right: 0; bottom: 14px; text-align: center; color: rgba(255, 255, 255, 0.6); font-size: 13.5px; margin: 0; }
+
+/* ---------------------------------------------------------------- Galleries */
+
+/* A vertical list beside a stage, for Fields and Make it yours. The active
+   item shows its description, and its border fills as the timer runs (full
+   when the list does not advance on its own). On narrow screens the list
+   becomes a row of pills that scrolls sideways. */
+.gallery { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 48px; align-items: center; }
+@media (max-width: 980px) { .gallery { grid-template-columns: 1fr; } }
+.vlist {
+  --vl-ink: var(--ink); --vl-muted: var(--ink-2); --vl-line: var(--line);
+  --vl-accent: var(--accent); --vl-tint: rgba(124, 108, 255, 0.08); --vl-soft: rgba(124, 108, 255, 0.3);
+  list-style: none; margin: 0; padding: 0; display: grid; gap: 4px;
+}
+.sec-dark .vlist {
+  --vl-ink: var(--night-ink); --vl-muted: var(--night-muted); --vl-line: var(--night-line);
+  --vl-accent: #b5abff; --vl-tint: rgba(181, 171, 255, 0.08); --vl-soft: rgba(181, 171, 255, 0.3);
+}
+.vlist button {
+  position: relative;
+  width: 100%; text-align: left; font: inherit; color: var(--vl-muted);
+  background: none; border: 0; border-left: 2px solid var(--vl-line);
+  padding: 12px 18px; cursor: pointer; transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+}
+.vlist button strong { display: block; font-size: 17px; color: var(--vl-ink); opacity: 0.75; }
+.vlist button span { display: block; font-size: 14.5px; max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.35s ease, opacity 0.35s ease, margin 0.35s; }
+.vlist button:hover strong { opacity: 1; }
+.vlist button:is([aria-pressed="true"], [aria-selected="true"]) { border-left-color: var(--vl-soft); background: linear-gradient(90deg, var(--vl-tint), transparent); }
+.vlist button:is([aria-pressed="true"], [aria-selected="true"])::before {
+  content: ""; position: absolute; left: -2px; top: 0; width: 2px; height: 100%;
+  background: var(--vl-accent); transform-origin: top; transform: scaleY(var(--p, 1));
+}
+.vlist button:is([aria-pressed="true"], [aria-selected="true"]) strong { opacity: 1; }
+.vlist button:is([aria-pressed="true"], [aria-selected="true"]) span { max-height: 4em; opacity: 1; margin-top: 4px; }
+@media (max-width: 980px) {
+  .vlist {
+    grid-auto-flow: column; grid-auto-columns: max-content; overflow-x: auto; gap: 8px; padding-bottom: 10px;
+    scrollbar-width: thin; scrollbar-color: var(--vl-soft) transparent;
+  }
+  .vlist::-webkit-scrollbar { height: 6px; }
+  .vlist::-webkit-scrollbar-track { background: transparent; }
+  .vlist::-webkit-scrollbar-thumb { background: var(--vl-soft); border-radius: 3px; }
+  .vlist button { border: 1px solid var(--vl-line); border-radius: 999px; padding: 8px 14px; }
+  .vlist button span { display: none; }
+  .vlist button strong { font-size: 14.5px; }
+  .vlist button:is([aria-pressed="true"], [aria-selected="true"]) { background: var(--vl-tint); border-color: var(--vl-accent); }
+  .vlist button:is([aria-pressed="true"], [aria-selected="true"])::before {
+    left: 14px; right: 14px; top: auto; bottom: 3px; width: auto; height: 2px; border-radius: 2px;
+    transform-origin: left; transform: scaleX(var(--p, 0));
+  }
+}
+
+/* ---------------------------------------------------------------- Layouts */
+
+.stage { position: relative; aspect-ratio: 1.62; }
+.stage img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+  opacity: 0; transform: scale(0.97) translateY(10px);
+  transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  filter: drop-shadow(0 24px 40px rgba(0, 0, 0, 0.55));
+  cursor: zoom-in;
+}
+.stage img.active { opacity: 1; transform: none; }
+.stage-zoom {
+  position: absolute; right: 8px; bottom: -44px;
+  font: inherit; font-size: 13.5px; font-weight: 600; color: var(--night-muted);
+  background: none; border: 1px solid var(--night-line); border-radius: 999px; padding: 6px 14px; cursor: pointer;
+}
+.stage-zoom:hover { color: #fff; }
+
+/* ---------------------------------------------------------------- Closing */
+
+.closing {
+  color: var(--night-ink); text-align: center; padding: 104px 0;
+  background: radial-gradient(700px 360px at 50% 0%, #3a2f63, transparent 70%), var(--night);
+}
+.closing-inner { display: grid; justify-items: center; gap: 16px; }
+.closing img { border-radius: 18px; box-shadow: 0 12px 40px -8px rgba(124, 108, 255, 0.6); }
+.closing h2 { font-size: clamp(30px, 4vw, 44px); color: #fff; margin-top: 8px; }
+.closing p { color: var(--night-muted); font-size: 18px; margin: 0 0 12px; }
+.closing .hero-actions { justify-content: center; }

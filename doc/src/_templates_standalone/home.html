@@ -1,0 +1,199 @@
+{% extends "layout.html" %}
+{#- The home page has its own look and does not load Bootstrap. Its styles,
+    the live session demo and the field examples are in _static/home/. #}
+
+{%- set home_logo = logo_url or pathto('_static/logo.png', 1) %}
+{%- set version_label = _('Version %(version)s')|format(version=version) %}
+
+{%- set fields = [
+    ('physics', 'One Dark', _('Physics'),
+     _('Every value can carry a unit, and results land in the right unit on their own.')),
+    ('chemistry', 'Tokyo Night', _('Chemistry'),
+     _('Molar masses from formulas, and amounts and concentrations that keep their units.')),
+    ('electronics', 'Catppuccin Macchiato', _('Electronics'),
+     _('Complex numbers for AC circuits, and decibels for signal chains.')),
+    ('cgs', 'Gruvbox Dark', _('CGS units'),
+     _('Gauss, oersted, dyne, erg, poise and stokes, converted to SI in one step.')),
+    ('programming', 'Duskfox', _('Programming'),
+     _('Hex, binary and octal, bitwise operators, IEEE 754 tools, and the Bitfield.')),
+] %}
+
+{%- set layouts = [
+    ('windows-120-03.webp', 1333, 916, _('Keypad when you want it'),
+     _('An on-screen keypad next to your sessions and docks.'),
+     _('SpeedCrunch with the keypad and the functions dock')),
+    ('windows-120-02.webp', 1600, 1000, _('Your definitions at hand'),
+     _('User functions, units and variables, each in a searchable dock.'),
+     _('SpeedCrunch with user functions, units and variables docks')),
+    ('windows-120-01.webp', 2582, 1550, _('Everything in view'),
+     _('Formula book, three sessions, constants, functions and the bitfield, all in one window.'),
+     _('SpeedCrunch with the formula book, three sessions, constants, functions and bitfield docks')),
+    ('windows-120-04.webp', 1333, 916, _('Split into panes'),
+     _('Several sessions side by side or stacked, each with its own history.'),
+     _('SpeedCrunch with four sessions in split panes')),
+    ('windows-120-06.webp', 1600, 1000, _('Bitfield for programmers'),
+     _('Click bits to build a value, then shift, invert or clear it.'),
+     _('SpeedCrunch with the bitfield and formula book docks')),
+    ('windows-120-07.webp', 1600, 1000, _('Light and roomy'),
+     _('A light color scheme with a wide constants dock and a compact keypad.'),
+     _('SpeedCrunch in a light color scheme with the constants dock and keypad')),
+] %}
+
+{#- The home page has one look, whatever the visitor's mode. #}
+{%- block theme %}{% endblock %}
+
+{%- block css %}
+    <link rel="stylesheet" href="{{ fontawesome_css }}">
+    <link rel="stylesheet" href="{{ pathto('_static/site.css', 1) ~ '?v=' ~ site_assets }}" type="text/css" />
+    <link rel="stylesheet" href="{{ pathto('_static/home/style.css', 1) ~ '?v=' ~ site_assets }}" type="text/css" />
+{%- endblock %}
+
+{%- block scripts %}
+    <script defer src="{{ pathto('_static/site-nav.js', 1) ~ '?v=' ~ site_assets }}"></script>
+    <script defer src="{{ pathto('_static/home/schemes.js', 1) }}"></script>
+    <script defer src="{{ pathto('_static/home/app.js', 1) }}"></script>
+{%- endblock %}
+
+{%- block content %}
+<a class="skip" href="#main">{{ _('Skip to content') }}</a>
+
+{% include "navbar.html" %}
+
+<main id="main">
+
+{# ------------------------------------------------------------------ Hero #}
+<section class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow eyebrow-dark">{{ _('Free and open source') }} · Windows · macOS · Linux</p>
+      <h1>{% trans %}High-precision math at the speed of typing.{% endtrans %}</h1>
+      <ul class="lead">
+        <li>{{ _('For STEM professionals, students and teachers') }}</li>
+        <li>{{ _('Results and autocomplete as you type') }}</li>
+        <li>{{ _('Built-in functions, units and constants') }}</li>
+        <li>{{ _('User-defined functions, variables and units') }}</li>
+        <li>{{ _('Multiple sessions in tabs, panes and windows') }}</li>
+        <li>{{ _('Customizable layout, themes, keypad and more') }}</li>
+      </ul>
+      <div class="hero-actions">
+        {#- app.js picks the label and the line below for the visitor's system. #}
+        <a class="btn btn-primary" id="dl-main" href="{{ pathto('download') }}"
+           data-windows="{{ _('Download for Windows')|e }}"
+           data-macos="{{ _('Download for macOS')|e }}"
+           data-linux="{{ _('Download for Linux')|e }}"><i class="fa-solid fa-download" aria-hidden="true"></i> <span>{{ _('Download') }}</span></a>
+        <a class="btn btn-ghost" href="{{ pathto('introduction') }}"><i class="fa-solid fa-book" aria-hidden="true"></i> {{ _('User Manual') }}</a>
+      </div>
+      <p class="hero-meta" id="dl-other"
+         data-windows="{{ _('Also for macOS and Linux')|e }} · {{ version_label|e }}"
+         data-macos="{{ _('Also for Windows and Linux')|e }} · {{ version_label|e }}"
+         data-linux="{{ _('Also for Windows and macOS')|e }} · {{ version_label|e }}">{{ _('For Windows, macOS and Linux') }} · {{ version_label }}</p>
+      <dl class="stats">
+        <div><dt>50</dt><dd>{{ _('digits of precision') }}</dd></div>
+        <div><dt>140+</dt><dd>{{ _('functions') }}</dd></div>
+        <div><dt>390+</dt><dd>{{ _('constants') }}</dd></div>
+        <div><dt>40+</dt><dd>{{ _('color schemes') }}</dd></div>
+        <div><dt>40+</dt><dd>{{ _('languages') }}</dd></div>
+      </dl>
+    </div>
+
+    <div class="hero-demo">
+      <div class="appwin" id="appwin" role="img" aria-label="{{ _('SpeedCrunch with three sessions: Science and Electro as tabs in one pane, and Math in a second pane')|e }}">
+        <div class="pane-col" id="col-left"></div>
+        <div class="pane-col" id="col-right"></div>
+        <div class="drag-layer" aria-hidden="true">
+          <div class="drop-overlay"></div>
+        </div>
+      </div>
+      <div class="picker">
+        <span class="picker-label">{{ _('Color scheme:') }} <strong id="scheme-name">Tokyo Night</strong></span>
+        <div class="swatches" id="swatches" role="group" aria-label="{{ _('Try a color scheme')|e }}"></div>
+      </div>
+      <div class="cursor-layer" aria-hidden="true">
+        <div class="cursor" data-shape="arrow">
+          <svg class="c-arrow" viewBox="0 0 24 24"><path d="M5 2.5v17.2l4.3-4.1 2.8 6.4 2.7-1.2-2.8-6.3h6.1z" fill="#111" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
+          <svg class="c-hand" viewBox="0 0 24 24"><path d="M9 3.2c.8 0 1.5.7 1.5 1.5v6.1l.6-.1c.2-.6.8-1.1 1.5-1.1s1.2.4 1.4 1c.3-.4.8-.7 1.4-.7.7 0 1.3.5 1.5 1.1.3-.2.6-.3 1-.3.9 0 1.6.7 1.6 1.6v4.3c0 2.8-2.2 5.1-5 5.1h-1.7c-1.6 0-3.1-.8-4-2.1l-3.3-4.8c-.4-.6-.3-1.4.3-1.9.6-.4 1.4-.4 1.9.1l1 1V4.7c0-.8.7-1.5 1.5-1.5z" fill="#fff" stroke="#111" stroke-width="1.2" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ---------------------------------------------------------------- Fields #}
+<section class="sec sec-light" id="fields">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">{{ _('Built for your field') }}</p>
+      <h2>{% trans %}Write the math the way your field does.{% endtrans %}</h2>
+      <p>{% trans %}Units, constants and domain functions are built in, so a session reads like your notes, and the answers come out in units that make sense.{% endtrans %}</p>
+    </div>
+
+    <div class="gallery">
+      <div class="vlist" id="field-list" role="tablist" aria-label="{{ _('Fields')|e }}" aria-orientation="vertical">
+        {%- for id, scheme, name, text in fields %}
+        <button type="button" role="tab" aria-selected="{{ 'true' if loop.first else 'false' }}" aria-controls="field-{{ id }}" id="tab-{{ id }}"{% if not loop.first %} tabindex="-1"{% endif %}><strong>{{ name }}</strong><span>{{ text }}</span></button>
+        {%- endfor %}
+      </div>
+
+      {#- Each field shows a SpeedCrunch result display in its own color scheme;
+          the entries come from real sessions (FIELD_DISPLAYS in app.js). #}
+      <div class="field-stage">
+        {%- for id, scheme, name, text in fields %}
+        <div class="field" role="tabpanel" id="field-{{ id }}" aria-labelledby="tab-{{ id }}" data-scheme="{{ scheme }}"{% if not loop.first %} hidden{% endif %}>
+          <div class="rd-window">
+            <div class="rd" data-display="{{ id }}"></div>
+            {%- if id == 'programming' %}
+            <div class="dock">
+              <div class="dock-title">{{ _('Bitfield') }}</div>
+              <div class="bitfield" data-value="0x40533333"></div>
+            </div>
+            {%- endif %}
+          </div>
+        </div>
+        {%- endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{# --------------------------------------------------------------- Layouts #}
+<section class="sec sec-dark" id="layouts">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow eyebrow-dark">{{ _('Make it yours') }}</p>
+      <h2>{% trans %}Arrange it your way.{% endtrans %}</h2>
+      <p>{% trans %}Dock panels, float them or tab them together, and split sessions into panes. SpeedCrunch remembers your layout for next time.{% endtrans %}</p>
+    </div>
+    <div class="gallery layouts">
+      <ol class="vlist" id="layout-list">
+        {%- for file, width, height, name, text, alt in layouts %}
+        <li><button type="button" aria-pressed="{{ 'true' if loop.first else 'false' }}" data-i="{{ loop.index0 }}"><strong>{{ name }}</strong><span>{{ text }}</span></button></li>
+        {%- endfor %}
+      </ol>
+      <div class="stage" id="stage"
+           data-zoom-hint="{{ _('Click anywhere or press Esc to go back')|e }}"
+           data-zoom-close="{{ _('Close')|e }}">
+        {%- for file, width, height, name, text, alt in layouts %}
+        <img{% if loop.first %} class="active"{% endif %} src="{{ pathto('_static/home/img/' + file, 1) }}" width="{{ width }}" height="{{ height }}" alt="{{ alt|e }}"{% if not loop.first %} loading="lazy"{% endif %}>
+        {%- endfor %}
+        <button class="stage-zoom" type="button"><i class="fa-solid fa-expand" aria-hidden="true"></i> {{ _('Full size') }}</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# --------------------------------------------------------------- Closing #}
+<section class="closing">
+  <div class="wrap closing-inner">
+    <img src="{{ home_logo|e }}" alt="" width="72" height="72">
+    <h2>{% trans %}Free and open source. Always.{% endtrans %}</h2>
+    <p>{% trans %}SpeedCrunch is free software, made possible by its contributors and donors.{% endtrans %}</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="{{ pathto('download') }}"><i class="fa-solid fa-download" aria-hidden="true"></i> {{ _('Download') }}</a>
+      <a class="btn btn-ghost" href="{{ pathto('donate') }}"><i class="fa-solid fa-heart" aria-hidden="true"></i> {{ _('Donate') }}</a>
+      <a class="btn btn-ghost" href="{{ pathto('community') }}"><i class="fa-solid fa-users" aria-hidden="true"></i> {{ _('Community') }}</a>
+    </div>
+  </div>
+</section>
+
+</main>
+{%- endblock %}

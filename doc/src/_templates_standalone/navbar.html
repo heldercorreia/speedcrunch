@@ -1,55 +1,40 @@
-  <div id="navbar" class="{{ theme_navbar_class }} navbar-default {% if theme_navbar_fixed_top|tobool -%} navbar-fixed-top{%- endif -%}">
-    <div class="container">
-      <div class="navbar-header">
-        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
-        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand"  href="{{ pathto('index') }}">
-          {%- block sidebarlogo %}
-            {%- if logo_url %}
-              <span class=""><img src="{{ logo_url|e }}" alt="{{ logo_alt|e }}"></span>
-            {%- elif logo %}
-              <span class=""><img src="{{ pathto('_static/' + logo, 1) }}"></span>
-            {%- endif %}
-          {%- endblock %}
-          {% if theme_navbar_title -%}{{ theme_navbar_title|e }}{%- else -%}{{ project|e }}{%- endif -%}
-        </a>
-        <span class="navbar-text navbar-version pull-left hidden-sm hidden-xs"><b>{{ version|e }}</b></span>
-      </div>
-
-      {% block navcontent %}
-        <div class="collapse navbar-collapse nav-collapse">
-          <ul class="nav navbar-nav">
-            {% block navbartoc %}
-              {% include "globaltoc.html" %}
-              {% if theme_navbar_pagenav %}
-                {% include "navbartoc.html" %}
-              {% endif %}
-            {% endblock %}
-            {% if theme_navbar_sidebarrel %}
-              {% block sidebarrel %}
-                {% include "relations.html" %}
-              {% endblock %}
-            {% endif %}
-            {% block navbarextra %}
-            {% endblock %}
-            {% if theme_source_link_position == "nav" %}
-              <li class="hidden-sm hidden-xs">{% include "sourcelink.html" %}</li>
-            {% endif %}
-          </ul>
-          <ul class="nav navbar-nav navbar-right">
-          {% block navbarsearch %}
-            {% include "navbarsearchbox.html" %}
-          {% endblock %}
-
-          {% block language_selector %}
-            {% include "language.html" %}
-          {% endblock %}
-          </ul>
-        </div>
-      {% endblock %}
+{#- The home and manual pages show the chapter menu. Manual pages add search.
+    The theme's sidebar code reads the height of #navbar. #}
+{%- set in_manual = pagename not in website_titles %}
+{%- macro link(page, label) -%}
+  <a href="{{ pathto(page) }}"{% if pagename == page %} aria-current="page"{% endif %}>{{ label }}</a>
+{%- endmacro %}
+<header class="site-nav{% if pagename == 'index' %} site-nav-over-hero{% endif %}" id="navbar">
+  <div class="site-nav-inner">
+    <a class="site-brand" href="{{ '#top' if pagename == 'index' else pathto('index') }}">
+      <img src="{{ (logo_url or pathto('_static/logo.png', 1))|e }}" alt="" width="32" height="32">
+      <span>SpeedCrunch</span>
+      <span class="site-version">{{ version|e }}</span>
+    </a>
+    {%- if pagename != 'index' %}
+    {#- Light, dark or system mode, in turn (site-nav.js); the home page has
+        only one look. The icon and label show the current setting. #}
+    <button class="site-theme-toggle" type="button" aria-label="{{ _('Color mode')|e }}"
+            data-label-light="{{ _('Color mode: light (click for dark)')|e }}"
+            data-label-dark="{{ _('Color mode: dark (click to follow the system)')|e }}"
+            data-label-system="{{ _('Color mode: same as the system (click for light)')|e }}"><i class="fa-regular fa-sun" aria-hidden="true"></i><i class="fa-regular fa-moon" aria-hidden="true"></i><i class="fa-solid fa-desktop" aria-hidden="true"></i></button>
+    {%- endif %}
+    <button class="site-menu-toggle" type="button" aria-expanded="false" aria-controls="site-menu" aria-label="{{ _('Menu')|e }}"><i class="fa-solid fa-bars" aria-hidden="true"></i><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    <div class="site-menu" id="site-menu">
+      <nav class="site-nav-links" aria-label="{{ _('Main')|e }}">
+        {{ link('download', _('Download')) }}
+        {%- if in_manual or pagename == 'index' %}
+        {% include "globaltoc.html" %}
+        {%- else %}
+        {{ link('introduction', _('User Manual')) }}
+        {%- endif %}
+        {{ link('faq', _('FAQ')) }}
+        {{ link('community', _('Community')) }}
+        {{ link('donate', _('Donate')) }}
+      </nav>
+      {%- if in_manual %}
+      {% include "navbarsearchbox.html" %}
+      {%- endif %}
     </div>
   </div>
+</header>
