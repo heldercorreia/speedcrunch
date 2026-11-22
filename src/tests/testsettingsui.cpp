@@ -60,6 +60,7 @@ private slots:
     void editing_cursor_blinking_updates_all_open_editors();
     void editing_escape_clears_editor_is_shared_and_resets_to_off();
     void escape_clears_editor_survives_settings_reload();
+    void align_results_to_bottom_is_shared_and_resets_to_off();
     void accept_completion_with_enter_is_shared_and_resets_to_off();
     void accept_completion_with_enter_survives_settings_reload();
     void number_format_is_shared_and_refreshes_all_input_panes();
@@ -1251,6 +1252,70 @@ void TestSettingsUi::editing_escape_clears_editor_is_shared_and_resets_to_off()
     QVERIFY(!secondAction->isChecked());
     QVERIFY(!thirdAction->isChecked());
     QCOMPARE(editor->text(), QStringLiteral("123"));
+}
+
+void TestSettingsUi::align_results_to_bottom_is_shared_and_resets_to_off()
+{
+    Settings* settings = Settings::instance();
+    QVERIFY(!settings->alignResultsToBottom);
+    MainWindow first;
+    MainWindow second;
+    QVERIFY(QMetaObject::invokeMethod(&first, "splitActivePaneRight", Qt::DirectConnection));
+    QAction* action = first.findChild<QAction*>(QStringLiteral("AlignResultsToBottomAction"));
+    QAction* secondAction = second.findChild<QAction*>(QStringLiteral("AlignResultsToBottomAction"));
+    QVERIFY(action);
+    QVERIFY(secondAction);
+    QVERIFY(action->isCheckable());
+    QVERIFY(!action->isChecked());
+    const auto displays = [&first, &second]() {
+        return first.findChildren<ResultDisplay*>() + second.findChildren<ResultDisplay*>();
+    };
+    QVERIFY(displays().size() >= 3);
+    for (ResultDisplay* display : displays())
+        QVERIFY(!display->isBottomAligned());
+
+    action->trigger();
+    QVERIFY(settings->alignResultsToBottom);
+    QVERIFY(secondAction->isChecked());
+    for (ResultDisplay* display : displays())
+        QVERIFY(display->isBottomAligned());
+
+    // New panes and windows follow the setting.
+    QVERIFY(QMetaObject::invokeMethod(&second, "splitActivePaneDown", Qt::DirectConnection));
+    MainWindow third;
+    QAction* thirdAction = third.findChild<QAction*>(QStringLiteral("AlignResultsToBottomAction"));
+    QVERIFY(thirdAction);
+    QVERIFY(thirdAction->isChecked());
+    QVERIFY(displays().size() >= 4);
+    for (ResultDisplay* display : displays() + third.findChildren<ResultDisplay*>())
+        QVERIFY(display->isBottomAligned());
+
+    settings->save();
+    settings->alignResultsToBottom = false;
+    settings->load();
+    QVERIFY(settings->alignResultsToBottom);
+
+    secondAction->trigger();
+    QVERIFY(!settings->alignResultsToBottom);
+    QVERIFY(!action->isChecked());
+    QVERIFY(!thirdAction->isChecked());
+    for (ResultDisplay* display : displays() + third.findChildren<ResultDisplay*>())
+        QVERIFY(!display->isBottomAligned());
+    thirdAction->trigger();
+
+    QAction* reset = first.findChild<QAction*>(QStringLiteral("ResetAllSettingsAction"));
+    QVERIFY(reset);
+    QTimer::singleShot(0, &first, []() {
+        auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        QVERIFY(dialog);
+        dialog->button(QMessageBox::Yes)->click();
+    });
+    reset->trigger();
+    QVERIFY(!settings->alignResultsToBottom);
+    for (QAction* windowAction : {action, secondAction, thirdAction})
+        QVERIFY(!windowAction->isChecked());
+    for (ResultDisplay* display : displays() + third.findChildren<ResultDisplay*>())
+        QVERIFY(!display->isBottomAligned());
 }
 
 void TestSettingsUi::escape_clears_editor_survives_settings_reload()

@@ -253,6 +253,7 @@ public:
     StatusBarAppearance statusBarAppearance;
     ToolTipAppearance toolTipAppearance;
     EditorDisplayStyle editorDisplayStyle;
+    bool alignResultsToBottom; // Keep short history just above the editor.
     KeypadAppearance keypadAppearance;
     QString customColorSchemeJson;
     QString displayFont;

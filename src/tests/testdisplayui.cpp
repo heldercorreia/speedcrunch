@@ -35,6 +35,10 @@ private slots:
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
     void result_display_insets_viewport_horizontally();
+    void result_display_bottom_alignment_keeps_history_above_editor_data();
+    void result_display_bottom_alignment_keeps_history_above_editor();
+    void result_display_bottom_alignment_keeps_latest_results_visible_on_resize();
+    void result_display_bottom_alignment_space_acts_like_empty_space();
     void result_display_scrollbar_hover_keeps_viewport_width_stable();
     void result_display_hover_action_badges_use_hover_and_primary_colors_data();
     void result_display_hover_action_badges_use_hover_and_primary_colors();
@@ -786,6 +790,172 @@ void TestDisplayUi::result_display_insets_viewport_horizontally()
     const QRect viewportGeometry = display.viewport()->geometry();
     QVERIFY(viewportGeometry.left() > 0);
     QVERIFY(display.width() - viewportGeometry.right() - 1 > 0);
+}
+
+void TestDisplayUi::result_display_bottom_alignment_keeps_history_above_editor_data()
+{
+    QTest::addColumn<bool>("modern");
+    QTest::newRow("classic") << false;
+    QTest::newRow("modern") << true;
+}
+
+void TestDisplayUi::result_display_bottom_alignment_keeps_history_above_editor()
+{
+    QFETCH(bool, modern);
+    Settings::instance()->editorDisplayStyle = modern
+        ? Settings::EditorDisplayModern : Settings::EditorDisplayClassic;
+    Session session;
+    session.addHistoryEntry(HistoryEntry(QStringLiteral("1+1"), Quantity(2)));
+    ResultDisplay display;
+    QVERIFY(!display.isBottomAligned());
+    display.resize(360, 300);
+    display.setSession(&session);
+    display.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&display));
+
+    const QRect fullViewport = display.viewport()->geometry();
+    QScrollBar* bar = display.verticalScrollBar();
+    const auto historyBottom = [&display]() {
+        QTextCursor end(display.document());
+        end.movePosition(QTextCursor::End);
+        return display.viewport()->mapTo(&display, display.cursorRect(end).bottomLeft()).y();
+    };
+    // The space left below the history is less than one line.
+    const auto isJustAboveEditor = [&]() {
+        const int space = fullViewport.bottom() - historyBottom();
+        return space >= 0 && space < display.fontMetrics().height();
+    };
+    QVERIFY(fullViewport.bottom() - historyBottom() > fullViewport.height() / 2);
+
+    display.setBottomAligned(true);
+    QVERIFY(display.isBottomAligned());
+    QCOMPARE(bar->maximum(), 0);
+    QVERIFY(display.viewport()->geometry().top() > fullViewport.top());
+    QCOMPARE(display.viewport()->geometry().bottom(), fullViewport.bottom());
+    QCOMPARE(display.viewport()->geometry().left(), fullViewport.left());
+    QCOMPARE(display.viewport()->geometry().right(), fullViewport.right());
+    QVERIFY(isJustAboveEditor());
+    QTextCursor start(display.document());
+    QVERIFY(display.cursorRect(start).top() >= 0);
+
+    // New results are added below older ones, and the history grows upwards
+    // until the display is full. Then it scrolls with the latest result in view.
+    int previousTop = display.viewport()->geometry().top();
+    for (int i = 0; i < 100 && bar->maximum() == 0; ++i) {
+        session.addHistoryEntry(HistoryEntry(QString::number(i), Quantity(i)));
+        display.refresh();
+        const int top = display.viewport()->geometry().top();
+        QVERIFY(top < previousTop || top == fullViewport.top());
+        previousTop = top;
+        if (bar->maximum() == 0)
+            QVERIFY(isJustAboveEditor());
+    }
+    QVERIFY(bar->maximum() > 0);
+    QCOMPARE(display.viewport()->geometry().top(), fullViewport.top());
+    QCOMPARE(display.viewport()->geometry().bottom(), fullViewport.bottom());
+    QCOMPARE(bar->value(), bar->maximum());
+    // Showing the scroll bar narrows the viewport, but keeps the end in view.
+    QTRY_VERIFY(bar->isVisible());
+    QCOMPARE(bar->value(), bar->maximum());
+
+    // Showing a shorter history moves it back down.
+    Session shortSession;
+    shortSession.addHistoryEntry(HistoryEntry(QStringLiteral("6*7"), Quantity(42)));
+    display.setSession(&shortSession);
+    QCOMPARE(bar->maximum(), 0);
+    QVERIFY(display.viewport()->geometry().top() > fullViewport.top());
+    QVERIFY(isJustAboveEditor());
+    QTRY_VERIFY(!bar->isVisible());
+    QVERIFY(isJustAboveEditor());
+
+    display.setBottomAligned(false);
+    QCOMPARE(display.viewport()->geometry(), fullViewport);
+    QVERIFY(fullViewport.bottom() - historyBottom() > fullViewport.height() / 2);
+}
+
+void TestDisplayUi::result_display_bottom_alignment_keeps_latest_results_visible_on_resize()
+{
+    Session session;
+    for (int i = 0; i < 3; ++i)
+        session.addHistoryEntry(HistoryEntry(QString::number(i), Quantity(i)));
+    QWidget host;
+    host.resize(400, 500);
+    auto* display = new ResultDisplay(&host);
+    display->setBottomAligned(true);
+    display->setGeometry(0, 0, 360, 400);
+    display->setSession(&session);
+    host.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&host));
+
+    QScrollBar* bar = display->verticalScrollBar();
+    QCOMPARE(bar->maximum(), 0);
+    QVERIFY(display->viewport()->y() > display->contentsRect().top());
+
+    display->resize(360, display->fontMetrics().height() * 4);
+    QVERIFY(bar->maximum() > 0);
+    QCOMPARE(display->viewport()->y(), display->contentsRect().top());
+    QCOMPARE(bar->value(), bar->maximum());
+    QTRY_VERIFY(bar->isVisible());
+    QCOMPARE(bar->value(), bar->maximum());
+    display->resize(360, display->fontMetrics().height() * 3);
+    QCOMPARE(bar->value(), bar->maximum());
+
+    display->resize(360, 400);
+    QCOMPARE(bar->maximum(), 0);
+    QVERIFY(display->viewport()->y() > display->contentsRect().top());
+}
+
+void TestDisplayUi::result_display_bottom_alignment_space_acts_like_empty_space()
+{
+    Session session;
+    for (int i = 0; i < 2; ++i)
+        session.addHistoryEntry(HistoryEntry(QString::number(i + 1), Quantity(i + 1)));
+    MenuTestResultDisplay display;
+    display.setBottomAligned(true);
+    display.resize(360, 300);
+    display.setSession(&session);
+    display.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&display));
+
+    const int spaceHeight = display.viewport()->geometry().top();
+    QVERIFY(spaceHeight > 20);
+    const QPoint spacePoint(display.width() / 2, spaceHeight / 2);
+
+    display.selectAll();
+    QVERIFY(display.textCursor().hasSelection());
+    QSignalSpy clickedSpy(&display, &ResultDisplay::clicked);
+    QTest::mouseClick(&display, Qt::LeftButton, Qt::NoModifier, spacePoint);
+    QCOMPARE(clickedSpy.count(), 1);
+    QVERIFY(!display.textCursor().hasSelection());
+
+    QSignalSpy selectedSpy(&display, &ResultDisplay::expressionSelected);
+    QTest::mouseDClick(&display, Qt::LeftButton, Qt::NoModifier, spacePoint);
+    QCOMPARE(selectedSpy.count(), 0);
+
+    QSignalSpy zoomSpy(&display, &ResultDisplay::controlWheelUp);
+    QWheelEvent wheel(QPointF(spacePoint), QPointF(display.mapToGlobal(spacePoint)), QPoint(),
+                      QPoint(0, 120), Qt::NoButton, Qt::ControlModifier, Qt::NoScrollPhase, false);
+    QCoreApplication::sendEvent(&display, &wheel);
+    QCOMPARE(zoomSpy.count(), 1);
+
+    // The menu there offers no actions for a calculation, even though the
+    // nearest line belongs to the first one.
+    QTextCursor first = display.document()->find(QStringLiteral("1"));
+    QVERIFY(!first.isNull());
+    QScopedPointer<QMenu> calculationMenu(display.createContextMenu(display.cursorRect(first).center()));
+    QVERIFY(directSubmenuWithTitle(calculationMenu.data(), QStringLiteral("Remove")) != nullptr);
+    bool openedMenu = false;
+    QTimer::singleShot(0, &display, [&openedMenu]() {
+        auto* menu = qobject_cast<QMenu*>(QApplication::activePopupWidget());
+        QVERIFY(menu);
+        const auto close = qScopeGuard([menu]() { menu->close(); });
+        openedMenu = true;
+        QVERIFY(directSubmenuWithTitle(menu, QStringLiteral("Session")) != nullptr);
+        QVERIFY(directSubmenuWithTitle(menu, QStringLiteral("Remove")) == nullptr);
+    });
+    QContextMenuEvent menuEvent(QContextMenuEvent::Mouse, spacePoint, display.mapToGlobal(spacePoint));
+    QCoreApplication::sendEvent(&display, &menuEvent);
+    QVERIFY(openedMenu);
 }
 
 void TestDisplayUi::result_display_scrollbar_hover_keeps_viewport_width_stable()

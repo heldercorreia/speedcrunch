@@ -530,6 +530,7 @@ void TestKeyBindingsUi::settings_menu_offers_a_searchable_action_catalog()
              QStringLiteral("settingsSystemColorModeLight"),
              QStringLiteral("settingsSystemColorModeDark"),
              QStringLiteral("settingsBehaviorHoverHighlightResults"),
+             QStringLiteral("settingsDisplayAlignResultsToBottom"),
              QStringLiteral("settingsBehaviorSyntaxHighlighting"),
              QStringLiteral("settingsDisplayColorSchemeCustom"),
              QStringLiteral("settingsResetAll"),

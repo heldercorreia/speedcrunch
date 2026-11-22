@@ -44,6 +44,9 @@ public:
     bool isEmpty() const { return m_count==0; }
     QString exportHtml() const;
     void setHoverHighlightEnabled(bool enabled);
+    // Show short history just above the editor instead of at the top.
+    void setBottomAligned(bool enabled);
+    bool isBottomAligned() const { return m_bottomAligned; }
     void setEditingHistoryIndex(int index);
     void setLoadedSessionCount(int count);
     void setCloseSessionEnabled(bool enabled);
@@ -121,6 +124,7 @@ public slots:
 
 protected:
     virtual void contextMenuEvent(QContextMenuEvent*);
+    virtual bool event(QEvent* event);
     virtual bool eventFilter(QObject* watched, QEvent* event);
     virtual void leaveEvent(QEvent*);
     virtual void mouseDoubleClickEvent(QMouseEvent*);
@@ -144,6 +148,10 @@ protected:
     void updateSurfaceStyleSheet();
     void updateScrollToBottomButtonStyle();
     void updateScrollBarStyleSheet();
+    void updateViewportMargins();
+    void updateBottomAlignment();
+    int bottomAlignmentOffset() const;
+    bool isInBottomAlignmentOffset(const QPoint& pos) const;
     int historyIndexAtPosition(const QPoint& pos) const;
     bool blockRangeForHistoryIndex(int historyIndex, int& startBlock, int& endBlock) const;
     QRect removeGlyphRectForHistoryIndex(int historyIndex) const;
@@ -208,6 +216,7 @@ private:
     int m_firstDisplayedHistoryIndex;
     int m_loadedSessionCount;
     bool m_closeSessionEnabled;
+    bool m_bottomAligned;
     const Session* m_session;
     QColor m_themeSurfaceColor;
     QColor m_toolTipBackgroundColor;

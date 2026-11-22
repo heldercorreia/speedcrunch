@@ -1176,6 +1176,13 @@ User Interface Settings
     Enable or disable syntax highlighting.
 * :menuselection:`Settings --> Appearance --> Hover Highlighting`
     Enable or disable hover highlighting.
+* :menuselection:`Settings --> Appearance --> Align Results to Bottom`
+    Show calculations just above the expression editor, so the latest result
+    stays close to where you type. New calculations are still added below
+    older ones, and the history moves up as it grows. When the result display
+    is full, it scrolls as usual. The option is off by default.
+
+    .. versionadded:: 1.3
 * :menuselection:`Settings --> Language`
     Select the user interface language.
 

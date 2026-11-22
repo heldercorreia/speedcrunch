@@ -100,6 +100,7 @@ bool isConfigurable(const QString& id)
         QStringLiteral("settingsSystemColorModeLight"),
         QStringLiteral("settingsSystemColorModeDark"),
         QStringLiteral("settingsBehaviorHoverHighlightResults"),
+        QStringLiteral("settingsDisplayAlignResultsToBottom"),
         QStringLiteral("settingsBehaviorSyntaxHighlighting"),
         QStringLiteral("settingsDisplayColorSchemeCustom"),
         QStringLiteral("settingsResetAll"),

@@ -4275,6 +4275,8 @@ void MainWindow::createActions()
     m_actions.settingsEditingEscapeClearsEditor = createKeyBindingAction(QStringLiteral("settingsEditingEscapeClearsEditor"));
     m_actions.settingsEditingEscapeClearsEditor->setObjectName(QStringLiteral("EscapeClearsEditorAction"));
     m_actions.settingsBehaviorHoverHighlightResults = createKeyBindingAction(QStringLiteral("settingsBehaviorHoverHighlightResults"));
+    m_actions.settingsDisplayAlignResultsToBottom = createKeyBindingAction(QStringLiteral("settingsDisplayAlignResultsToBottom"));
+    m_actions.settingsDisplayAlignResultsToBottom->setObjectName(QStringLiteral("AlignResultsToBottomAction"));
     m_actions.settingsBehaviorDigitGroupingNone = createKeyBindingAction(QStringLiteral("settingsBehaviorDigitGroupingNone"));
     m_actions.settingsBehaviorDigitGroupingOneSpace = createKeyBindingAction(QStringLiteral("settingsBehaviorDigitGroupingOneSpace"));
     m_actions.settingsBehaviorDigitGroupingTwoSpaces = createKeyBindingAction(QStringLiteral("settingsBehaviorDigitGroupingTwoSpaces"));
@@ -4426,6 +4428,7 @@ void MainWindow::createActions()
     m_actions.settingsEditingCursorBlinking->setCheckable(true);
     m_actions.settingsEditingEscapeClearsEditor->setCheckable(true);
     m_actions.settingsBehaviorHoverHighlightResults->setCheckable(true);
+    m_actions.settingsDisplayAlignResultsToBottom->setCheckable(true);
     m_actions.settingsBehaviorDigitGroupingNone->setCheckable(true);
     m_actions.settingsBehaviorDigitGroupingNone->setData(0);
     m_actions.settingsBehaviorDigitGroupingOneSpace->setCheckable(true);
@@ -4893,6 +4896,26 @@ void MainWindow::setEditorDisplayStyle(QAction* action)
     updatePaneEditorCursorVisibility();
 }
 
+void MainWindow::setAlignResultsToBottomEnabled(bool enabled)
+{
+    m_settings->alignResultsToBottom = enabled;
+    for (const QPointer<MainWindow>& window : allMainWindows()) {
+        if (window)
+            window->applyResultAlignment();
+    }
+}
+
+void MainWindow::applyResultAlignment()
+{
+    const bool enabled = m_settings->alignResultsToBottom;
+    {
+        const QSignalBlocker blocker(m_actions.settingsDisplayAlignResultsToBottom);
+        m_actions.settingsDisplayAlignResultsToBottom->setChecked(enabled);
+    }
+    for (ResultDisplay* display : splitPaneDisplays())
+        display->setBottomAligned(enabled);
+}
+
 void MainWindow::applyEditorDisplayStyle()
 {
     StartupDiagnostics::Scope timing("Apply editor and display appearance");
@@ -5043,6 +5066,7 @@ void MainWindow::setActionsText()
     m_actions.settingsEditingEscapeClearsEditor->setText(MainWindow::tr("&Escape Clears Editor"));
     m_actions.settingsEditingEscapeClearsEditor->setToolTip(MainWindow::tr("Clear the focused expression editor with Escape after dismissing any popup or preview."));
     m_actions.settingsBehaviorHoverHighlightResults->setText(MainWindow::tr("Hover Highlighting"));
+    m_actions.settingsDisplayAlignResultsToBottom->setText(MainWindow::tr("Align Results to &Bottom"));
     m_actions.settingsBehaviorDigitGroupingNone->setText(MainWindow::tr("Disabled"));
     m_actions.settingsBehaviorDigitGroupingOneSpace->setText(MainWindow::tr("Small Space"));
     m_actions.settingsBehaviorDigitGroupingTwoSpaces->setText(MainWindow::tr("Medium Space"));
@@ -5596,6 +5620,7 @@ void MainWindow::createMenus()
     m_menus.display->addSeparator();
     m_menus.display->addAction(m_actions.settingsBehaviorSyntaxHighlighting);
     m_menus.display->addAction(m_actions.settingsBehaviorHoverHighlightResults);
+    m_menus.display->addAction(m_actions.settingsDisplayAlignResultsToBottom);
     m_menus.editing = m_menus.settings->addMenu("");
     m_menus.editing->addAction(m_actions.settingsEditingAutomaticInputAdjustments);
     m_menus.editing->addAction(m_actions.settingsBehaviorAutoAns);
@@ -9265,6 +9290,8 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsEditingEscapeClearsEditor, &QAction::toggled,
             this, &MainWindow::setEscapeClearsEditorEnabled);
     connect(m_actions.settingsBehaviorHoverHighlightResults, SIGNAL(toggled(bool)), SLOT(setHoverHighlightResultsEnabled(bool)));
+    connect(m_actions.settingsDisplayAlignResultsToBottom, &QAction::toggled,
+            this, &MainWindow::setAlignResultsToBottomEnabled);
     connect(m_actionGroups.digitGrouping, SIGNAL(triggered(QAction*)), SLOT(setDigitGrouping(QAction*)));
     connect(m_actions.settingsBehaviorDigitGroupingIntegerPartOnly, SIGNAL(toggled(bool)), SLOT(setDigitGroupingIntegerPartOnlyEnabled(bool)));
     connect(m_actions.settingsBehaviorLeaveLastExpression, SIGNAL(toggled(bool)), SLOT(setLeaveLastExpressionEnabled(bool)));
@@ -9646,6 +9673,7 @@ void MainWindow::applySettings(bool initializing)
         m_actions.settingsBehaviorHoverHighlightResults->setChecked(true);
     else
         setHoverHighlightResultsEnabled(false);
+    applyResultAlignment();
 
     if (m_settings->autoResultToClipboard)
         m_actions.settingsBehaviorAutoResultToClipboard->setChecked(true);

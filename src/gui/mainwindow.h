@@ -208,6 +208,7 @@ private slots:
     void setKeypadAppearance(QAction*);
     void applyKeypadAppearance();
     void setEditorDisplayStyle(QAction*);
+    void setAlignResultsToBottomEnabled(bool);
     void setKeypadZoom(QAction*);
     void setKeypadVisible(bool);
     void setLeaveLastExpressionEnabled(bool);
@@ -339,6 +340,7 @@ private:
     void applySettings(bool initializing = true);
     void setDisplayFont(const QFont& font);
     void applyEditorDisplayStyle();
+    void applyResultAlignment();
     void updateAppearancePresetActions();
     void applyToolTipAppearance();
     void applyStateLabelTheme();
@@ -597,6 +599,7 @@ private:
         QAction* settingsEditingCursorBlinking;
         QAction* settingsEditingEscapeClearsEditor;
         QAction* settingsBehaviorHoverHighlightResults;
+        QAction* settingsDisplayAlignResultsToBottom;
         QAction* settingsBehaviorDigitGroupingNone;
         QAction* settingsBehaviorDigitGroupingOneSpace;
         QAction* settingsBehaviorDigitGroupingTwoSpaces;

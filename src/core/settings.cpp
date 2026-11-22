@@ -352,6 +352,7 @@ Settings::Settings()
     cursorBlinking = true;
     escapeClearsEditor = false;
     skipClearSessionConfirmation = false;
+    alignResultsToBottom = false;
     digitGroupingIntegerPartOnly = true;
     numberFormatStyle = NumberFormatNoGroupingDot;
     hasNumberFormatStyleSetting = false;
@@ -738,6 +739,7 @@ void Settings::load()
         toolTipAppearance = settings->value(key + QLatin1String("ToolTipAppearance"), ToolTipAppearanceSpeedCrunch).toInt()
             == ToolTipAppearanceSystem ? ToolTipAppearanceSystem : ToolTipAppearanceSpeedCrunch;
     }
+    alignResultsToBottom = settings->value(key + QLatin1String("AlignResultsToBottom"), false).toBool();
     customColorSchemeJson = settings->value(key + QLatin1String("CustomColorSchemeJson"), QString()).toString();
 
     keyBindings.clear();
@@ -881,6 +883,7 @@ void Settings::save()
     settings->setValue(key + QLatin1String("ToolTipAppearance"), static_cast<int>(toolTipAppearance));
     settings->setValue(key + QLatin1String("EditorDisplayStyle"), static_cast<int>(editorDisplayStyle));
     settings->setValue(key + QLatin1String("KeypadAppearance"), static_cast<int>(keypadAppearance));
+    settings->setValue(key + QLatin1String("AlignResultsToBottom"), alignResultsToBottom);
     settings->setValue(key + QLatin1String("CustomColorSchemeJson"), customColorSchemeJson);
 
     settings->beginGroup(QStringLiteral("SpeedCrunch/KeyBindings"));

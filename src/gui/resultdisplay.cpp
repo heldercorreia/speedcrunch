@@ -29,6 +29,7 @@
 #include "core/sessionhistory.h"
 
 #include <QLatin1String>
+#include <QAbstractTextDocumentLayout>
 #include <QApplication>
 #include <QClipboard>
 #include <QContextMenuEvent>
@@ -49,6 +50,7 @@
 #include <QSet>
 #include <QTextDocumentFragment>
 #include <QToolButton>
+#include <QtMath>
 
 #include <limits>
 
@@ -487,6 +489,7 @@ ResultDisplay::ResultDisplay(QWidget* parent)
     , m_firstDisplayedHistoryIndex(0)
     , m_loadedSessionCount(1)
     , m_closeSessionEnabled(false)
+    , m_bottomAligned(Settings::instance()->alignResultsToBottom)
     , m_session(nullptr)
     , m_themeSurfaceColor()
     , m_toolTipBackgroundColor()
@@ -543,6 +546,12 @@ ResultDisplay::ResultDisplay(QWidget* parent)
     connect(m_scrollToBottomButton, &QToolButton::clicked, this, &ResultDisplay::scrollToBottom);
     m_scrollToBottomButton->hide();
     repositionScrollToBottomButton();
+
+    // Appending text blocks the layout's size signal, so also watch edits.
+    connect(document(), &QTextDocument::contentsChanged,
+            this, &ResultDisplay::updateBottomAlignment);
+    connect(document()->documentLayout(), &QAbstractTextDocumentLayout::documentSizeChanged,
+            this, &ResultDisplay::updateBottomAlignment);
 }
 
 bool ResultDisplay::eventFilter(QObject* watched, QEvent* event)
@@ -610,6 +619,15 @@ void ResultDisplay::setHoverHighlightEnabled(bool enabled)
     if (!m_hoverHighlightEnabled)
         m_hoveredHistoryIndex = -1;
     updateHoverHighlightSelection();
+}
+
+void ResultDisplay::setBottomAligned(bool enabled)
+{
+    if (m_bottomAligned == enabled)
+        return;
+
+    m_bottomAligned = enabled;
+    updateViewportMargins();
 }
 
 void ResultDisplay::setEditingHistoryIndex(int index)
@@ -788,12 +806,51 @@ void ResultDisplay::rehighlight()
 
 void ResultDisplay::applyEditorDisplayStyle()
 {
+    updateViewportMargins();
+}
+
+void ResultDisplay::updateViewportMargins()
+{
     const int inset = Settings::instance()->editorDisplayStyle == Settings::EditorDisplayClassic
         ? UiConfig::ClassicTextInset
         : kResultDisplayHorizontalPadding;
     const int padding = qMax(0, inset - qRound(document()->documentMargin()));
-    setViewportMargins(padding, 0, padding, 0);
+    const QMargins margins(padding, bottomAlignmentOffset(), padding, 0);
+    if (viewportMargins() == margins)
+        return;
+
+    setViewportMargins(margins);
     repositionScrollToBottomButton();
+}
+
+void ResultDisplay::updateBottomAlignment()
+{
+    if (m_bottomAligned || viewportMargins().top() > 0)
+        updateViewportMargins();
+}
+
+int ResultDisplay::bottomAlignmentOffset() const
+{
+    if (!m_bottomAligned)
+        return 0;
+
+    // Move the viewport down by the space the history leaves free, so that
+    // the latest result sits just above the editor. QPlainTextEdit shows every
+    // line without scrolling only when the lines, the top document margin and
+    // one more pixel fit, so measure the same way.
+    const int availableHeight = viewport()->height() + viewportMargins().top();
+    qreal contentHeight = document()->documentMargin() + 1;
+    for (QTextBlock block = document()->firstBlock(); block.isValid(); block = block.next()) {
+        contentHeight += blockBoundingRect(block).height();
+        if (contentHeight >= availableHeight)
+            return 0;
+    }
+    return qMax(0, availableHeight - qCeil(contentHeight));
+}
+
+bool ResultDisplay::isInBottomAlignmentOffset(const QPoint& pos) const
+{
+    return viewportMargins().top() > 0 && pos.y() < viewport()->geometry().top();
 }
 
 void ResultDisplay::setThemeSurfaceColor(const QColor& color)
@@ -1015,6 +1072,8 @@ void ResultDisplay::refresh()
     }
     const int historyCount = session->historySize();
     const int previousScrollValue = verticalScrollBar()->value();
+    const bool keepBottomInView = m_bottomAligned
+        && previousScrollValue >= verticalScrollBar()->maximum();
     const int firstDisplayedHistoryIndex = firstDisplayedHistoryIndexForCount(historyCount, session);
 
     const auto appendRenderedHistoryEntry = [this, session](int historyIndex) {
@@ -1126,7 +1185,8 @@ void ResultDisplay::refresh()
     phaseTiming.next("Identify simplified history lines");
     markSimplifiedExpressionBlocks(renderedEntries);
     phaseTiming.next("Restore history scroll and controls");
-    verticalScrollBar()->setValue(previousScrollValue);
+    verticalScrollBar()->setValue(keepBottomInView
+        ? verticalScrollBar()->maximum() : previousScrollValue);
 
     markHistoryBlockIndexCacheDirty();
     updateHoverHighlightSelection();
@@ -1595,6 +1655,63 @@ void ResultDisplay::contextMenuEvent(QContextMenuEvent* event)
     delete menu;
 }
 
+bool ResultDisplay::event(QEvent* event)
+{
+    // The space above bottom-aligned history is outside the viewport, so
+    // QAbstractScrollArea would pass its input to the parent. Handle it like
+    // the empty space below the history instead.
+    switch (event->type()) {
+    case QEvent::MouseButtonPress:
+    case QEvent::MouseButtonRelease:
+    case QEvent::MouseButtonDblClick: {
+        QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
+        if (!isInBottomAlignmentOffset(mouseEvent->position().toPoint()))
+            break;
+        if (event->type() == QEvent::MouseButtonPress) {
+            emit clicked();
+            QTextCursor cursor = textCursor();
+            if (mouseEvent->button() == Qt::LeftButton && cursor.hasSelection()) {
+                cursor.clearSelection();
+                setTextCursor(cursor);
+            }
+        }
+        event->accept();
+        return true;
+    }
+    case QEvent::MouseMove:
+        if (m_hoveredHistoryIndex >= 0
+            && isInBottomAlignmentOffset(static_cast<QMouseEvent*>(event)->position().toPoint()))
+            clearHoverFeedback();
+        break;
+    case QEvent::Wheel: {
+        QWheelEvent* wheel = static_cast<QWheelEvent*>(event);
+        if (!isInBottomAlignmentOffset(wheel->position().toPoint()))
+            break;
+        wheelEvent(wheel);
+        return wheel->isAccepted();
+    }
+    case QEvent::ContextMenu: {
+        QContextMenuEvent* menuEvent = static_cast<QContextMenuEvent*>(event);
+        if (menuEvent->reason() == QContextMenuEvent::Keyboard
+            || !isInBottomAlignmentOffset(menuEvent->pos()))
+            break;
+        QContextMenuEvent viewportMenuEvent(menuEvent->reason(),
+                                            viewport()->mapFrom(this, menuEvent->pos()),
+                                            menuEvent->globalPos(),
+                                            menuEvent->modifiers());
+        contextMenuEvent(&viewportMenuEvent);
+        return true;
+    }
+    default:
+        break;
+    }
+
+    const bool handled = QPlainTextEdit::event(event);
+    if (event->type() == QEvent::FontChange)
+        updateBottomAlignment();
+    return handled;
+}
+
 void ResultDisplay::leaveEvent(QEvent* event)
 {
     QPlainTextEdit::leaveEvent(event);
@@ -1839,7 +1956,14 @@ void ResultDisplay::paintEvent(QPaintEvent* event)
 
 void ResultDisplay::resizeEvent(QResizeEvent* event)
 {
+    // Keep the latest results in view when bottom-aligned history gets less
+    // space, for example when the window is made smaller.
+    QScrollBar* bar = verticalScrollBar();
+    const bool keepBottomInView = m_bottomAligned && bar->value() >= bar->maximum();
     QPlainTextEdit::resizeEvent(event);
+    updateBottomAlignment();
+    if (keepBottomInView)
+        bar->setValue(bar->maximum());
     repositionScrollToBottomButton();
 }
 
@@ -2019,6 +2143,10 @@ void ResultDisplay::updateScrollBarStyleSheet()
 
 int ResultDisplay::historyIndexAtPosition(const QPoint& pos) const
 {
+    // cursorForPosition() picks the nearest line even for points outside.
+    if (!viewport()->rect().contains(pos))
+        return -1;
+
     const QTextCursor cursor = cursorForPosition(pos);
     const int blockNumber = cursor.blockNumber();
     if (blockNumber < 0)
