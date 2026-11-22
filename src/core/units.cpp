@@ -1301,6 +1301,69 @@ QString unitSymbol(UnitId id)
     return s_unitSpecs().value(id).symbol;
 }
 
+const QList<UnitId>& builtInUnitIds()
+{
+    return s_unitSpecOrder();
+}
+
+QStringList unitAliases(UnitId id)
+{
+    const auto it = s_unitSpecs().constFind(id);
+    return it == s_unitSpecs().constEnd() ? QStringList() : it.value().aliases;
+}
+
+QList<UnitQuantity> unitQuantities(UnitId id)
+{
+    const auto it = s_unitSpecs().constFind(id);
+    return it == s_unitSpecs().constEnd() ? QList<UnitQuantity>() : it.value().quantities;
+}
+
+QList<PrefixedUnitVariant> prefixedUnitVariants(UnitId id)
+{
+    QList<PrefixedUnitVariant> variants;
+    const auto specIt = s_unitSpecs().constFind(id);
+    if (specIt == s_unitSpecs().constEnd() || specIt.value().prefixPolicy == NoPrefixes)
+        return variants;
+    const UnitSpec& spec = specIt.value();
+    const UnitRegistry& registry = s_unitRegistry();
+
+    // Use the identifiers that the registry made for this prefix. When two
+    // units make the same identifier, the registry keeps the first one.
+    const auto ownIdentifier = [&](const QString& identifier, const PrefixSpec& prefix) {
+        const auto it = registry.definitionsByIdentifier.constFind(identifier);
+        const bool own = it != registry.definitionsByIdentifier.constEnd()
+            && it.value().id == id && it.value().prefix == &prefix;
+        return own ? identifier : QString();
+    };
+    const auto addVariant = [&](const PrefixSpec& prefix, bool binaryPrefix) {
+        if (!unitPrefixPolicyAllows(spec.prefixPolicy, prefix, binaryPrefix))
+            return;
+        if (!binaryPrefix && (id == UnitId::SquareMetre || id == UnitId::CubicMetre))
+            return;
+        PrefixedUnitVariant variant;
+        variant.id = id;
+        variant.name = ownIdentifier(prefix.longName + spec.name, prefix);
+        if (variant.name.isEmpty())
+            return;
+        if (!spec.symbol.isEmpty())
+            variant.symbol = ownIdentifier(prefix.symbol + spec.symbol, prefix);
+        // Only SI prefixes use the first alias, as in the registry.
+        if (!binaryPrefix && !spec.aliases.isEmpty() && !spec.aliases.first().isEmpty()) {
+            const QString alias = ownIdentifier(prefix.symbol + spec.aliases.first(), prefix);
+            if (!alias.isEmpty())
+                variant.aliases.append(alias);
+        }
+        variant.localizedName = registry.localizedByIdentifier.value(variant.name);
+        variants.append(variant);
+    };
+
+    for (const PrefixSpec& prefix : s_siPrefixes())
+        addVariant(prefix, false);
+    for (const PrefixSpec& prefix : s_binaryPrefixes())
+        addVariant(prefix, true);
+    return variants;
+}
+
 QString Units::angleModeUnitSymbol(char angleMode)
 {
     if (angleMode == 'd')

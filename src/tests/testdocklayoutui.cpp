@@ -938,11 +938,11 @@ void TestDockLayoutUi::floating_docks_survive_repeated_quit()
     qApp->installEventFilter(&closeDocksFirst);
 
     const QStringList names {QStringLiteral("BookDock"), QStringLiteral("ConstantsDock"),
-        QStringLiteral("FunctionsDock"), QStringLiteral("HistoryDock"),
+        QStringLiteral("FunctionsDock"), QStringLiteral("UnitsDock"), QStringLiteral("HistoryDock"),
         QStringLiteral("VariablesDock"), QStringLiteral("UserFunctionsDock"),
         QStringLiteral("UserUnitsDock"), QStringLiteral("BitfieldDock")};
     const QList<QByteArray> setters {"setFormulaBookDockVisible", "setConstantsDockVisible",
-        "setFunctionsDockVisible", "setHistoryDockVisible", "setVariablesDockVisible",
+        "setFunctionsDockVisible", "setUnitsDockVisible", "setHistoryDockVisible", "setVariablesDockVisible",
         "setUserFunctionsDockVisible", "setUserUnitsDockVisible", "setBitfieldVisible"};
     QStringList expectedOpen = names;
     if (mixedLayout)
@@ -962,7 +962,7 @@ void TestDockLayoutUi::floating_docks_survive_repeated_quit()
         QVERIFY(QTest::qWaitForWindowExposed(&window));
         if (launch == 0) {
             for (int i = 0; i < names.size(); ++i) {
-                const bool opened = i == 7
+                const bool opened = setters.at(i) == "setBitfieldVisible"
                     ? QMetaObject::invokeMethod(&window, setters.at(i).constData(), Qt::DirectConnection,
                                                 Q_ARG(bool, true))
                     : QMetaObject::invokeMethod(&window, setters.at(i).constData(), Qt::DirectConnection,
@@ -972,7 +972,8 @@ void TestDockLayoutUi::floating_docks_survive_repeated_quit()
                 QVERIFY(dock);
                 dock->setFloating(!mixedLayout || i >= 2);
                 if (dock->isFloating()) {
-                    dock->move(160 + i * 20, 120 + i * 15);
+                    // Keep every dock inside the 800x600 offscreen screen.
+                    dock->move(160 + i * 15, 120 + i * 12);
                     dock->resize(480, 360);
                 }
                 if (!expectedOpen.contains(names.at(i)))
@@ -2267,6 +2268,8 @@ void TestDockLayoutUi::lone_side_dock_opens_wide_enough_for_columns_data()
             << QStringLiteral("&Constants") << QStringLiteral("ConstantsDock") << keypadVisible;
         QTest::addRow("functions, %s", keypad)
             << QStringLiteral("&Functions") << QStringLiteral("FunctionsDock") << keypadVisible;
+        QTest::addRow("units, %s", keypad)
+            << QStringLiteral("Uni&ts") << QStringLiteral("UnitsDock") << keypadVisible;
     }
 }
 
@@ -2282,6 +2285,7 @@ void TestDockLayoutUi::lone_side_dock_opens_wide_enough_for_columns()
     settings->windowGeometry.clear();
     settings->constantsDockVisible = false;
     settings->functionsDockVisible = false;
+    settings->unitsDockVisible = false;
     settings->historyDockVisible = false;
     settings->formulaBookDockVisible = false;
     settings->variablesDockVisible = false;
@@ -2607,6 +2611,7 @@ void TestDockLayoutUi::view_dock_menu_tracks_and_changes_only_active_window()
     settings->windowGeometry.clear();
     settings->constantsDockVisible = false;
     settings->functionsDockVisible = false;
+    settings->unitsDockVisible = false;
     settings->historyDockVisible = false;
     settings->keypadVisible = false;
     settings->formulaBookDockVisible = false;
@@ -2636,6 +2641,7 @@ void TestDockLayoutUi::view_dock_menu_tracks_and_changes_only_active_window()
         { "setFormulaBookDockVisible", "BookDock", "Formula &Book", true },
         { "setConstantsDockVisible", "ConstantsDock", "&Constants", true },
         { "setFunctionsDockVisible", "FunctionsDock", "&Functions", true },
+        { "setUnitsDockVisible", "UnitsDock", "Uni&ts", true },
         { "setVariablesDockVisible", "VariablesDock", "User &Variables", true },
         { "setUserFunctionsDockVisible", "UserFunctionsDock", "Use&r Functions", true },
         { "setUserUnitsDockVisible", "UserUnitsDock", "User &Units", true },

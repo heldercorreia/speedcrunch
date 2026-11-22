@@ -218,6 +218,7 @@ public:
 
     bool constantsDockVisible;
     bool functionsDockVisible;
+    bool unitsDockVisible;
     bool historyDockVisible;
     bool keypadVisible;
     KeypadMode keypadMode;
@@ -236,6 +237,9 @@ public:
     QString constantsDockSearchText;
     QString functionsDockDomain;
     QString functionsDockSearchText;
+    QString unitsDockQuantity;
+    QString unitsDockSearchText;
+    bool unitsDockShowsPrefixedUnits;
     QString userFunctionsDockSearchText;
     QString userUnitsDockSearchText;
     QString variablesDockSearchText;

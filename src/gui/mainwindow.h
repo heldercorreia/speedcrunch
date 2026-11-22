@@ -38,6 +38,7 @@ class ResultDisplay;
 class Session;
 class UserFunctionListWidget;
 class UserUnitListWidget;
+class UnitsWidget;
 class Variable;
 class VariableListWidget;
 #ifdef SPEEDCRUNCH_ENABLE_UPDATE_CHECKS
@@ -196,6 +197,7 @@ private slots:
     void setFullScreenEnabled(bool);
     void setFunctionsDockVisible(bool, bool takeFocus = true);
     void setHistoryDockVisible(bool, bool takeFocus = true);
+    void setUnitsDockVisible(bool, bool takeFocus = true);
     void setKeypadMode(QAction*);
     void setAppearancePreset(AppearancePreset);
     void setMenuAppearance(QAction*);
@@ -328,6 +330,7 @@ private:
     void createBookDock(bool takeFocus = true);
     void createConstantsDock(bool takeFocus = true);
     void createFunctionsDock(bool takeFocus = true);
+    void createUnitsDock(bool takeFocus = true);
     void createHistoryDock(bool takeFocus = true);
     void createVariablesDock(bool takeFocus = true);
     void createUserFunctionsDock(bool takeFocus = true);
@@ -353,6 +356,7 @@ private:
     void deleteBookDock();
     void deleteConstantsDock();
     void deleteFunctionsDock();
+    void deleteUnitsDock();
     void deleteHistoryDock();
     void deleteVariablesDock();
     void deleteUserFunctionsDock();
@@ -527,6 +531,7 @@ private:
         QAction* viewFormulaBook;
         QAction* viewConstants;
         QAction* viewFunctions;
+        QAction* viewUnits;
         QAction* viewVariables;
         QAction* viewUserFunctions;
         QAction* viewUserUnits;
@@ -749,6 +754,7 @@ private:
         BookDock* book;
         GenericDock<ConstantsWidget>* constants;
         GenericDock<FunctionsWidget>* functions;
+        GenericDock<UnitsWidget>* units;
         GenericDock<HistoryWidget>* history;
         GenericDock<VariableListWidget>* variables;
         GenericDock<UserFunctionListWidget>* userFunctions;

@@ -53,6 +53,15 @@ column order between launches, including for panels that are hidden.
 * Functions and User Functions
     Similar to the variables widget, these show built-in and :ref:`user-defined functions <user_functions>` respectively.
 
+* Units
+    The units widget lists all built-in units. The columns show each unit's
+    name, symbol, and other accepted symbols. Use the ``Quantity`` selector to
+    show only the units of one quantity, such as ``Length``. Search by name or
+    symbol, or by the unit's name. Turn on ``Include prefixed units`` to also
+    list the prefixed forms of each unit, such as ``kilometre`` or ``kibibyte``.
+    Press :kbd:`Enter` or double-click an entry to insert its symbol, for
+    example ``[m]`` for ``metre``.
+
 * User Units
     Similar to the user functions widget, this lists :ref:`user-defined units <user_units>`.
     Double-click inserts ``[name]`` in the editor, and the context menu supports edit/delete operations.
@@ -1326,6 +1335,8 @@ Widgets and Docks
     Show/hide history widget.
 * :kbd:`Ctrl+8`
     Show/hide bit field dock.
+* :kbd:`Ctrl+9`
+    Show/hide units widget.
 * :kbd:`Ctrl+B`
     Show/hide the status bar.
     The status bar provides quick selectors for :menuselection:`Angle Mode`,

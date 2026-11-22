@@ -6,10 +6,12 @@
 #include "core/numberformatter.h"
 #include "core/session.h"
 #include "core/settings.h"
+#include "core/units.h"
 #include "gui/constantswidget.h"
 #include "gui/genericdock.h"
 #include "gui/historywidget.h"
 #include "gui/splittertreeutils.h"
+#include "gui/unitswidget.h"
 #include "gui/userunitlistwidget.h"
 #include "gui/variablelistwidget.h"
 #include "uitestfixture.h"
@@ -18,6 +20,7 @@
 #include <QSignalSpy>
 #include <QTest>
 #include <QCoreApplication>
+#include <QCheckBox>
 #include <QComboBox>
 #include <QFrame>
 #include <QHeaderView>
@@ -93,6 +96,7 @@ private slots:
     void constants_summary_popup_ignores_header_and_padding_data();
     void constants_summary_popup_ignores_header_and_padding();
     void history_dock_updates_unchanged_history_in_place();
+    void units_dock_lists_filters_and_inserts_built_in_units();
     void user_units_dock_shows_rhs_and_description_after_definition();
     void user_variables_dock_keeps_existing_value_text_after_new_definition();
     void splitter_normalization_removes_single_child_nested_splitter_after_pane_close_shape();
@@ -472,6 +476,205 @@ void TestDocksUi::history_dock_updates_unchanged_history_in_place()
     QCOMPARE(list->item(0), original.at(1));
     QCOMPARE(list->item(2), original.at(3));
     QCOMPARE(expressions(), QStringList({"1+1", "12345", "67890", "3*4"}));
+}
+
+void TestDocksUi::units_dock_lists_filters_and_inserts_built_in_units()
+{
+    UnitsWidget widget;
+    auto* search = widget.findChild<QLineEdit*>();
+    auto* list = widget.findChild<QTreeWidget*>();
+    auto* quantity = widget.findChild<QComboBox*>();
+    auto* prefixed = widget.findChild<QCheckBox*>();
+    QVERIFY(search && list && quantity && prefixed);
+    widget.resize(600, 400);
+    widget.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&widget));
+
+    // One row for each unit spec, with name, symbol and aliases.
+    QCOMPARE(quantity->currentText(), QStringLiteral("All"));
+    QCOMPARE(widget.selectedQuantity(), QString());
+    QCOMPARE(list->columnCount(), 3);
+    QCOMPARE(list->topLevelItemCount(), builtInUnitIds().size());
+    const auto findRow = [list](const QString& name) -> QTreeWidgetItem* {
+        const QList<QTreeWidgetItem*> rows = list->findItems(name, Qt::MatchExactly, 0);
+        return rows.size() == 1 ? rows.first() : nullptr;
+    };
+    QTreeWidgetItem* metre = findRow(unitName(UnitId::Metre));
+    QVERIFY(metre);
+    QCOMPARE(metre->text(1), unitSymbol(UnitId::Metre));
+    QTreeWidgetItem* celsius = findRow(unitName(UnitId::DegreeCelsius));
+    QVERIFY(celsius);
+    QCOMPARE(celsius->text(2), unitAliases(UnitId::DegreeCelsius).join(QStringLiteral(", ")));
+
+    // Double-clicking a row inserts its symbol.
+    QSignalSpy inserted(&widget, &UnitsWidget::unitSelected);
+    list->scrollToItem(metre);
+    const QPoint metrePoint = list->visualItemRect(metre).center();
+    QTest::mouseClick(list->viewport(), Qt::LeftButton, Qt::NoModifier, metrePoint);
+    QTest::mouseDClick(list->viewport(), Qt::LeftButton, Qt::NoModifier, metrePoint);
+    QCOMPARE(inserted.count(), 1);
+    QCOMPARE(inserted.takeFirst().at(0).toString(), QStringLiteral("[m]"));
+
+    // Every inserted text evaluates as that unit.
+    Session session;
+    Evaluator* evaluator = session.evaluator();
+    const auto checkInsertedTexts = [&]() {
+        for (int i = 0; i < list->topLevelItemCount(); ++i) {
+            QTreeWidgetItem* item = list->topLevelItem(i);
+            QVERIFY(QMetaObject::invokeMethod(list, "itemActivated", Qt::DirectConnection,
+                                             Q_ARG(QTreeWidgetItem*, item), Q_ARG(int, 0)));
+            QCOMPARE(inserted.count(), 1);
+            const QString text = inserted.takeFirst().at(0).toString();
+            QVERIFY2(text.startsWith(QLatin1Char('[')) && text.endsWith(QLatin1Char(']')), qPrintable(text));
+            const auto evaluate = [evaluator](const QString& unit, Quantity* value) {
+                evaluator->setExpression(QStringLiteral("1") + unit);
+                *value = evaluator->evalUpdateAns();
+                return evaluator->error().isEmpty();
+            };
+            Quantity value;
+            Quantity nameValue;
+            QVERIFY2(evaluate(text, &value), qPrintable(text + QStringLiteral(": ") + evaluator->error()));
+            QVERIFY2(evaluate(QStringLiteral("[%1]").arg(item->text(0)), &nameValue),
+                     qPrintable(item->text(0) + QStringLiteral(": ") + evaluator->error()));
+            QVERIFY2(value == nameValue, qPrintable(text));
+        }
+    };
+    checkInsertedTexts();
+    if (QTest::currentTestFailed())
+        return;
+
+    // The prefixed units are listed only when the check box is on.
+    QCOMPARE(prefixed->text(), QStringLiteral("Include prefixed units"));
+    QVERIFY(!prefixed->isChecked());
+    QVERIFY(!widget.showsPrefixedUnits());
+    const QString kilometreName = QStringLiteral("kilo") + unitName(UnitId::Metre);
+    QVERIFY(!findRow(kilometreName));
+    prefixed->click();
+    QVERIFY(widget.showsPrefixedUnits());
+    qsizetype prefixedCount = 0;
+    for (const UnitId id : builtInUnitIds())
+        prefixedCount += prefixedUnitVariants(id).size();
+    QVERIFY(prefixedCount > 0);
+    QCOMPARE(list->topLevelItemCount(), builtInUnitIds().size() + prefixedCount);
+    QTreeWidgetItem* kilometre = findRow(kilometreName);
+    QVERIFY(kilometre);
+    QCOMPARE(kilometre->text(1), QStringLiteral("km"));
+    QTreeWidgetItem* kibibyte = findRow(QStringLiteral("kibi") + unitName(UnitId::Byte));
+    QVERIFY(kibibyte);
+    QCOMPARE(kibibyte->text(1), QStringLiteral("Ki") + unitSymbol(UnitId::Byte));
+    QVERIFY(findRow(QStringLiteral("milli") + unitName(UnitId::Gram)));
+    // Kilo + gram names the kilogram, which is listed only once.
+    QVERIFY(findRow(unitName(UnitId::Kilogram)));
+    checkInsertedTexts();
+    if (QTest::currentTestFailed())
+        return;
+    // The quantity and the search also filter the prefixed units.
+    widget.setSelectedQuantity(QStringLiteral("Length"));
+    QVERIFY(findRow(kilometreName));
+    QVERIFY(!findRow(QStringLiteral("kibi") + unitName(UnitId::Byte)));
+    search->setText(QStringLiteral("KM"));
+    QTRY_VERIFY(!findRow(unitName(UnitId::Metre)));
+    QVERIFY(findRow(kilometreName));
+    search->clear();
+    widget.setSelectedQuantity(QString());
+    widget.setShowsPrefixedUnits(false);
+    QVERIFY(!prefixed->isChecked());
+    QCOMPARE(list->topLevelItemCount(), builtInUnitIds().size());
+
+    // The quantity row shows only the units of that quantity. A unit with
+    // more than one quantity, such as the pascal, is listed under each one.
+    const auto selectQuantity = [quantity](const QString& text) {
+        const int index = quantity->findText(text);
+        if (index < 0)
+            return false;
+        quantity->setCurrentIndex(index);
+        emit quantity->activated(index);
+        return true;
+    };
+    const auto rowNames = [list]() {
+        QStringList names;
+        for (int i = 0; i < list->topLevelItemCount(); ++i)
+            names.append(list->topLevelItem(i)->text(0));
+        return names;
+    };
+    QVERIFY(selectQuantity(QStringLiteral("Stress")));
+    QCOMPARE(widget.selectedQuantity(), QStringLiteral("Stress"));
+    QStringList stressUnits;
+    for (const UnitId id : builtInUnitIds()) {
+        if (unitQuantities(id).contains(UnitQuantity::Stress))
+            stressUnits.append(unitName(id));
+    }
+    stressUnits.sort();
+    QCOMPARE(rowNames(), stressUnits);
+    QVERIFY(stressUnits.contains(unitName(UnitId::Pascal)));
+    QVERIFY(selectQuantity(QStringLiteral("Pressure")));
+    QVERIFY(rowNames().contains(unitName(UnitId::Pascal)));
+    QVERIFY(rowNames().contains(unitName(UnitId::Bar)));
+    QVERIFY(!rowNames().contains(unitName(UnitId::Metre)));
+    // The search filters within the selected quantity.
+    search->setText(QStringLiteral("PA"));
+    QTRY_VERIFY(!rowNames().contains(unitName(UnitId::Bar)));
+    QVERIFY(rowNames().contains(unitName(UnitId::Pascal)));
+    for (const QString& name : rowNames())
+        QVERIFY(unitQuantities(unitIdForName(name)).contains(UnitQuantity::Pressure));
+    search->clear();
+    QVERIFY(selectQuantity(QStringLiteral("All")));
+    QCOMPARE(widget.selectedQuantity(), QString());
+    QTRY_COMPARE(list->topLevelItemCount(), builtInUnitIds().size());
+    // The selection is kept by its English name.
+    widget.setSelectedQuantity(QStringLiteral("Length"));
+    QCOMPARE(quantity->currentText(), QStringLiteral("Length"));
+    QVERIFY(rowNames().contains(unitName(UnitId::Metre)));
+    QVERIFY(!rowNames().contains(unitName(UnitId::Pascal)));
+    widget.setSelectedQuantity(QStringLiteral("no such quantity"));
+    QCOMPARE(quantity->currentText(), QStringLiteral("All"));
+    QCOMPARE(list->topLevelItemCount(), builtInUnitIds().size());
+    {
+        UnitsWidget restored(nullptr, {QStringLiteral("Volume"), QStringLiteral("gallon")});
+        auto* restoredList = restored.findChild<QTreeWidget*>();
+        QCOMPARE(restored.selectedQuantity(), QStringLiteral("Volume"));
+        QCOMPARE(restored.searchText(), QStringLiteral("gallon"));
+        QVERIFY(restoredList->topLevelItemCount() > 0);
+        for (int i = 0; i < restoredList->topLevelItemCount(); ++i)
+            QVERIFY(restoredList->topLevelItem(i)->text(0).contains(QStringLiteral("gallon")));
+    }
+    {
+        UnitsWidget restored(nullptr, {QString(), kilometreName, true});
+        auto* restoredList = restored.findChild<QTreeWidget*>();
+        QVERIFY(restored.showsPrefixedUnits());
+        QVERIFY(restored.findChild<QCheckBox*>()->isChecked());
+        QVERIFY(!restoredList->findItems(kilometreName, Qt::MatchExactly, 0).isEmpty());
+    }
+
+    // The search matches any column, without case.
+    search->setText(QStringLiteral("CUBIC_"));
+    QTRY_VERIFY(findRow(unitName(UnitId::Metre)) == nullptr);
+    QVERIFY(list->topLevelItemCount() > 1);
+    for (int i = 0; i < list->topLevelItemCount(); ++i)
+        QVERIFY(list->topLevelItem(i)->text(0).startsWith(QStringLiteral("cubic_")));
+    const auto onlyRow = [list]() {
+        return list->topLevelItemCount() == 1 ? list->topLevelItem(0)->text(0) : QString();
+    };
+    // An alias.
+    search->setText(QStringLiteral("degC"));
+    QTRY_COMPARE(onlyRow(), unitName(UnitId::DegreeCelsius));
+    // The name in the user's language, which is not shown.
+    search->setText(QStringLiteral("astronomical unit"));
+    QTRY_COMPARE(onlyRow(), unitName(UnitId::AstronomicalUnit));
+    search->setText(QStringLiteral("no such unit 49236"));
+    QTRY_COMPARE(list->topLevelItemCount(), 0);
+    search->clear();
+    QTRY_COMPARE(list->topLevelItemCount(), builtInUnitIds().size());
+
+    // Enter inserts the current row. The shortcut needs an active window.
+    QVERIFY(QTest::qWaitForWindowActive(&widget));
+    metre = findRow(unitName(UnitId::Metre));
+    QVERIFY(metre);
+    list->setFocus();
+    list->setCurrentItem(metre);
+    QTest::keyClick(list, Qt::Key_Return);
+    QCOMPARE(inserted.count(), 1);
+    QCOMPARE(inserted.takeFirst().at(0).toString(), QStringLiteral("[m]"));
 }
 
 void TestDocksUi::user_units_dock_shows_rhs_and_description_after_definition()

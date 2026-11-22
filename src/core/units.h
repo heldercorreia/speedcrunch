@@ -288,6 +288,24 @@ const char* unitLocalizedName(UnitId id);
 QString unitLocalizedIdentifierName(const QString& identifier);
 bool isUnitLocalizedNameTranslatable(const QString& localizedName);
 QString unitSymbol(UnitId id);
+// Built-in units in UnitId order, as listed in the unit specs.
+const QList<UnitId>& builtInUnitIds();
+QStringList unitAliases(UnitId id);
+QList<UnitQuantity> unitQuantities(UnitId id);
+// A prefixed form of a built-in unit, such as kilometre.
+struct PrefixedUnitVariant {
+    UnitId id; // The unit without the prefix.
+    QString name;
+    // Empty when the unit has no symbol or another unit uses the same text.
+    QString symbol;
+    QStringList aliases;
+    // English source text in the "Editor" context, such as "kilometre".
+    QString localizedName;
+};
+// The prefixed forms that the evaluator accepts for a built-in unit: SI
+// prefixes from the smallest, then binary prefixes. A form whose name
+// belongs to another unit, such as kilo + gram, is left out.
+QList<PrefixedUnitVariant> prefixedUnitVariants(UnitId id);
 bool isPreferredCanonicalDisplayUnit(UnitId id);
 QStringView unitPhrase(UnitPhraseId key);
 PrefixId prefixId(const QString& normalizedName);

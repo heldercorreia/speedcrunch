@@ -673,6 +673,7 @@ void Settings::load()
     statusBarVisible = settings->value(key + QLatin1String("StatusBarVisible"), false).toBool();
     menuBarVisible = settings->value(key + QLatin1String("MenuBarVisible"), true).toBool();
     functionsDockVisible = settings->value(key + QLatin1String("FunctionsDockVisible"), false).toBool();
+    unitsDockVisible = settings->value(key + QLatin1String("UnitsDockVisible"), false).toBool();
     variablesDockVisible = settings->value(key + QLatin1String("VariablesDockVisible"), false).toBool();
     userFunctionsDockVisible = settings->value(key + QLatin1String("UserFunctionsDockVisible"), false).toBool();
     userUnitsDockVisible = settings->value(key + QLatin1String("UserUnitsDockVisible"), false).toBool();
@@ -685,6 +686,9 @@ void Settings::load()
     constantsDockSearchText = settings->value(key + QLatin1String("ConstantsDockSearchText"), QString()).toString();
     functionsDockDomain = settings->value(key + QLatin1String("FunctionsDockDomain"), QString()).toString();
     functionsDockSearchText = settings->value(key + QLatin1String("FunctionsDockSearchText"), QString()).toString();
+    unitsDockQuantity = settings->value(key + QLatin1String("UnitsDockQuantity"), QString()).toString();
+    unitsDockSearchText = settings->value(key + QLatin1String("UnitsDockSearchText"), QString()).toString();
+    unitsDockShowsPrefixedUnits = settings->value(key + QLatin1String("UnitsDockShowsPrefixedUnits"), false).toBool();
     userFunctionsDockSearchText = settings->value(key + QLatin1String("UserFunctionsDockSearchText"), QString()).toString();
     userUnitsDockSearchText = settings->value(key + QLatin1String("UserUnitsDockSearchText"), QString()).toString();
     variablesDockSearchText = settings->value(key + QLatin1String("VariablesDockSearchText"), QString()).toString();
@@ -829,6 +833,7 @@ void Settings::save()
     settings->setValue(key + QLatin1String("FormulaBookDockVisible"), formulaBookDockVisible);
     settings->setValue(key + QLatin1String("ConstantsDockVisible"), constantsDockVisible);
     settings->setValue(key + QLatin1String("FunctionsDockVisible"), functionsDockVisible);
+    settings->setValue(key + QLatin1String("UnitsDockVisible"), unitsDockVisible);
     settings->setValue(key + QLatin1String("HistoryDockVisible"), historyDockVisible);
     settings->setValue(key + QLatin1String("KeypadMode"), static_cast<int>(keypadMode));
     settings->setValue(key + QLatin1String("WindowOnFullScreen"), windowOnfullScreen);
@@ -856,6 +861,9 @@ void Settings::save()
     settings->setValue(key + QLatin1String("ConstantsDockSearchText"), constantsDockSearchText);
     settings->setValue(key + QLatin1String("FunctionsDockDomain"), functionsDockDomain);
     settings->setValue(key + QLatin1String("FunctionsDockSearchText"), functionsDockSearchText);
+    settings->setValue(key + QLatin1String("UnitsDockQuantity"), unitsDockQuantity);
+    settings->setValue(key + QLatin1String("UnitsDockSearchText"), unitsDockSearchText);
+    settings->setValue(key + QLatin1String("UnitsDockShowsPrefixedUnits"), unitsDockShowsPrefixedUnits);
     settings->setValue(key + QLatin1String("UserFunctionsDockSearchText"), userFunctionsDockSearchText);
     settings->setValue(key + QLatin1String("UserUnitsDockSearchText"), userUnitsDockSearchText);
     settings->setValue(key + QLatin1String("VariablesDockSearchText"), variablesDockSearchText);

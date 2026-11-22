@@ -34,6 +34,7 @@
 #include "gui/editorutils.h"
 #include "gui/fontdialogstyles.h"
 #include "gui/functionswidget.h"
+#include "gui/unitswidget.h"
 #include "gui/historywidget.h"
 #include "gui/userfunctionlistwidget.h"
 #include "gui/userunitlistwidget.h"
@@ -348,7 +349,7 @@ constexpr int DockLayoutStateVersion = 1;
 QStringList allDockNames()
 {
     return {QStringLiteral("BookDock"), QStringLiteral("ConstantsDock"),
-        QStringLiteral("FunctionsDock"), QStringLiteral("HistoryDock"),
+        QStringLiteral("FunctionsDock"), QStringLiteral("UnitsDock"), QStringLiteral("HistoryDock"),
         QStringLiteral("VariablesDock"), QStringLiteral("UserFunctionsDock"),
         QStringLiteral("UserUnitsDock"), QStringLiteral("BitfieldDock")};
 }
@@ -4193,6 +4194,7 @@ void MainWindow::createActions()
     m_actions.viewConstants = createKeyBindingAction(QStringLiteral("viewConstants"));
     m_actions.viewFullScreenMode = createKeyBindingAction(QStringLiteral("viewFullScreenMode"));
     m_actions.viewFunctions = createKeyBindingAction(QStringLiteral("viewFunctions"));
+    m_actions.viewUnits = createKeyBindingAction(QStringLiteral("viewUnits"));
     m_actions.viewHistory = createKeyBindingAction(QStringLiteral("viewHistory"));
     m_actions.viewKeypadDisabled = createKeyBindingAction(QStringLiteral("viewKeypadDisabled"));
     m_actions.viewKeypadBasicWide = createKeyBindingAction(QStringLiteral("viewKeypadBasicWide"));
@@ -4483,6 +4485,7 @@ void MainWindow::createActions()
     m_actions.viewConstants->setCheckable(true);
     m_actions.viewFullScreenMode->setCheckable(true);
     m_actions.viewFunctions->setCheckable(true);
+    m_actions.viewUnits->setCheckable(true);
     m_actions.viewHistory->setCheckable(true);
     m_actions.viewKeypadDisabled->setCheckable(true);
     m_actions.viewKeypadDisabled->setData(Settings::KeypadModeDisabled);
@@ -4979,6 +4982,7 @@ void MainWindow::setActionsText()
     m_actions.viewConstants->setText(MainWindow::tr("&Constants"));
     m_actions.viewFullScreenMode->setText(MainWindow::tr("Full Scr&een Mode"));
     m_actions.viewFunctions->setText(MainWindow::tr("&Functions"));
+    m_actions.viewUnits->setText(MainWindow::tr("Uni&ts"));
     m_actions.viewHistory->setText(MainWindow::tr("&History"));
     updateKeypadDisabledActionText();
     m_actions.viewKeypadBasicWide->setText(MainWindow::tr("&Basic"));
@@ -5306,6 +5310,7 @@ void MainWindow::createActionShortcuts()
     m_actions.viewConstants->setShortcut(Qt::CTRL | Qt::Key_2);
     m_actions.viewFullScreenMode->setShortcut(Qt::Key_F11);
     m_actions.viewFunctions->setShortcut(Qt::CTRL | Qt::Key_3);
+    m_actions.viewUnits->setShortcut(Qt::CTRL | Qt::Key_9);
     m_actions.viewHistory->setShortcut(Qt::CTRL | Qt::Key_7);
     m_actions.viewFormulaBook->setShortcut(Qt::CTRL | Qt::Key_1);
     m_actions.viewStatusBar->setShortcut(Qt::CTRL | Qt::Key_B);
@@ -5514,6 +5519,7 @@ void MainWindow::createMenus()
     m_menus.view->addAction(m_actions.viewFormulaBook);
     m_menus.view->addAction(m_actions.viewConstants);
     m_menus.view->addAction(m_actions.viewFunctions);
+    m_menus.view->addAction(m_actions.viewUnits);
     m_menus.view->addSeparator();
     m_menus.view->addAction(m_actions.viewVariables);
     m_menus.view->addAction(m_actions.viewUserFunctions);
@@ -6934,6 +6940,11 @@ void MainWindow::copyWindowLayoutFrom(const MainWindow* source)
     if (dockIsVisible(m_docks.functions) != functionsVisible)
         setFunctionsDockVisible(functionsVisible, false);
     m_actions.viewFunctions->setChecked(functionsVisible);
+
+    const bool unitsVisible = dockIsVisible(source->m_docks.units);
+    if (dockIsVisible(m_docks.units) != unitsVisible)
+        setUnitsDockVisible(unitsVisible, false);
+    m_actions.viewUnits->setChecked(unitsVisible);
 
     const bool historyVisible = dockIsVisible(source->m_docks.history);
     if (dockIsVisible(m_docks.history) != historyVisible)
@@ -8578,6 +8589,32 @@ void MainWindow::createFunctionsDock(bool takeFocus)
     m_settings->functionsDockVisible = true;
 }
 
+void MainWindow::createUnitsDock(bool takeFocus)
+{
+    StartupDiagnostics::Scope timing("Create units dock");
+    if (m_docks.units) {
+        m_docks.units->show();
+        m_docks.units->raise();
+        if (takeFocus)
+            m_docks.units->setFocus();
+        m_settings->unitsDockVisible = true;
+        return;
+    }
+
+    const UnitsWidget::InitialState state {m_settings->unitsDockQuantity,
+        m_settings->unitsDockSearchText, m_settings->unitsDockShowsPrefixedUnits};
+    m_docks.units = new GenericDock<UnitsWidget>("MainWindow", QT_TR_NOOP("Units"), this, state);
+    m_docks.units->setObjectName("UnitsDock");
+    m_docks.units->installEventFilter(this);
+    m_docks.units->setAllowedAreas(Qt::AllDockWidgetAreas);
+
+    connect(m_docks.units->widget(), &UnitsWidget::unitSelected,
+            this, &MainWindow::insertTextIntoEditor);
+
+    addTabifiedDock(m_docks.units, takeFocus);
+    m_settings->unitsDockVisible = true;
+}
+
 void MainWindow::createHistoryDock(bool)
 {
     StartupDiagnostics::Scope timing("Create history dock");
@@ -8906,6 +8943,8 @@ void MainWindow::fitDockToColumns(QDockWidget* dock, Qt::DockWidgetArea area, Do
             missingWidth = m_docks.constants->widget()->missingColumnsWidth();
         else if (target == m_docks.functions)
             missingWidth = m_docks.functions->widget()->missingColumnsWidth();
+        else if (target == m_docks.units)
+            missingWidth = m_docks.units->widget()->missingColumnsWidth();
         else if (target == m_docks.book)
             missingWidth = m_docks.book->missingContentWidth();
         if (missingWidth <= 0)
@@ -9154,6 +9193,13 @@ void MainWindow::createFixedConnections()
             window->setFunctionsDockVisible(visible);
             if (visible)
                 window->fitLoneSideDockToColumns(window->m_docks.functions);
+        });
+    connectViewToggleToActiveWindow(
+        m_actions.viewUnits,
+        [](MainWindow* window, bool visible) {
+            window->setUnitsDockVisible(visible);
+            if (visible)
+                window->fitLoneSideDockToColumns(window->m_docks.units);
         });
     connectViewToggleToActiveWindow(
         m_actions.viewHistory,
@@ -9704,6 +9750,11 @@ void MainWindow::resetAllSettings()
                 combo->setCurrentIndex(0);
             window->m_docks.functions->widget()->setSearchText(QString());
         }
+        if (window->m_docks.units) {
+            window->m_docks.units->widget()->setSelectedQuantity(QString());
+            window->m_docks.units->widget()->setSearchText(QString());
+            window->m_docks.units->widget()->setShowsPrefixedUnits(false);
+        }
         if (window->m_docks.variables)
             window->m_docks.variables->widget()->setSearchText(QString());
         if (window->m_docks.userFunctions)
@@ -9849,6 +9900,11 @@ void MainWindow::saveSettings()
         m_settings->functionsDockDomain = m_docks.functions->widget()->selectedDomain();
         m_settings->functionsDockSearchText = m_docks.functions->widget()->searchText();
     }
+    if (m_docks.units) {
+        m_settings->unitsDockQuantity = m_docks.units->widget()->selectedQuantity();
+        m_settings->unitsDockSearchText = m_docks.units->widget()->searchText();
+        m_settings->unitsDockShowsPrefixedUnits = m_docks.units->widget()->showsPrefixedUnits();
+    }
     if (m_docks.userFunctions)
         m_settings->userFunctionsDockSearchText = m_docks.userFunctions->widget()->searchText();
     if (m_docks.userUnits)
@@ -9871,6 +9927,7 @@ void MainWindow::saveSettings()
     m_settings->formulaBookDockVisible = openDocks.contains(QStringLiteral("BookDock"));
     m_settings->constantsDockVisible = openDocks.contains(QStringLiteral("ConstantsDock"));
     m_settings->functionsDockVisible = openDocks.contains(QStringLiteral("FunctionsDock"));
+    m_settings->unitsDockVisible = openDocks.contains(QStringLiteral("UnitsDock"));
     m_settings->historyDockVisible = openDocks.contains(QStringLiteral("HistoryDock"));
     m_settings->variablesDockVisible = openDocks.contains(QStringLiteral("VariablesDock"));
     m_settings->userFunctionsDockVisible = openDocks.contains(QStringLiteral("UserFunctionsDock"));
@@ -10374,6 +10431,7 @@ MainWindow::MainWindow(bool restorePreviousSession)
     m_docks.history = 0;
     m_docks.constants = 0;
     m_docks.functions = 0;
+    m_docks.units = 0;
     m_docks.variables = 0;
     m_docks.userFunctions = 0;
     m_docks.userUnits = 0;
@@ -10482,6 +10540,8 @@ MainWindow::~MainWindow()
         deleteUserUnitsDock();
     if (m_docks.functions)
         deleteFunctionsDock();
+    if (m_docks.units)
+        deleteUnitsDock();
     if (m_docks.history)
         deleteHistoryDock();
     qDeleteAll(m_loadedSessions);
@@ -13384,6 +13444,7 @@ void MainWindow::syncViewMenuActionState()
     const bool formulaBookVisible = dockIsVisible(m_docks.book);
     const bool constantsVisible = dockIsVisible(m_docks.constants);
     const bool functionsVisible = dockIsVisible(m_docks.functions);
+    const bool unitsVisible = dockIsVisible(m_docks.units);
     const bool historyVisible = dockIsVisible(m_docks.history);
     const bool variablesVisible = dockIsVisible(m_docks.variables);
     const bool userFunctionsVisible = dockIsVisible(m_docks.userFunctions);
@@ -13413,6 +13474,7 @@ void MainWindow::syncViewMenuActionState()
         setChecked(window->m_actions.viewFormulaBook, formulaBookVisible);
         setChecked(window->m_actions.viewConstants, constantsVisible);
         setChecked(window->m_actions.viewFunctions, functionsVisible);
+        setChecked(window->m_actions.viewUnits, unitsVisible);
         setChecked(window->m_actions.viewHistory, historyVisible);
         setChecked(window->m_actions.viewVariables, variablesVisible);
         setChecked(window->m_actions.viewUserFunctions, userFunctionsVisible);
@@ -14229,6 +14291,14 @@ bool MainWindow::eventFilter(QObject* o, QEvent* e)
         return false;
     }
 
+    if (o == m_docks.units) {
+        if (e->type() == QEvent::Close) {
+            deleteUnitsDock();
+            return true;
+        }
+        return false;
+    }
+
     if (o == m_docks.history) {
         if (e->type() == QEvent::Close) {
             deleteHistoryDock();
@@ -14369,6 +14439,16 @@ void MainWindow::deleteFunctionsDock()
     m_settings->functionsDockVisible = false;
 }
 
+void MainWindow::deleteUnitsDock()
+{
+    if (!m_docks.units)
+        return;
+
+    deleteDock(m_docks.units);
+    m_actions.viewUnits->setChecked(false);
+    m_settings->unitsDockVisible = false;
+}
+
 void MainWindow::deleteHistoryDock()
 {
     if (!m_docks.history)
@@ -14415,6 +14495,14 @@ void MainWindow::setFunctionsDockVisible(bool b, bool takeFocus)
         createFunctionsDock(takeFocus);
     else
         deleteFunctionsDock();
+}
+
+void MainWindow::setUnitsDockVisible(bool b, bool takeFocus)
+{
+    if (b)
+        createUnitsDock(takeFocus);
+    else
+        deleteUnitsDock();
 }
 
 void MainWindow::setFormulaBookDockVisible(bool b, bool takeFocus)
@@ -15851,7 +15939,7 @@ QStringList MainWindow::openDockNames() const
 QStringList MainWindow::configuredOpenDockNames() const
 {
     const bool enabled[] = {m_settings->formulaBookDockVisible, m_settings->constantsDockVisible,
-        m_settings->functionsDockVisible, m_settings->historyDockVisible,
+        m_settings->functionsDockVisible, m_settings->unitsDockVisible, m_settings->historyDockVisible,
         m_settings->variablesDockVisible, m_settings->userFunctionsDockVisible,
         m_settings->userUnitsDockVisible, m_settings->bitfieldVisible};
     QStringList names;
@@ -15869,6 +15957,7 @@ void MainWindow::applyOpenDocks(const QStringList& names)
     setFormulaBookDockVisible(names.contains(QStringLiteral("BookDock")), false);
     setConstantsDockVisible(names.contains(QStringLiteral("ConstantsDock")), false);
     setFunctionsDockVisible(names.contains(QStringLiteral("FunctionsDock")), false);
+    setUnitsDockVisible(names.contains(QStringLiteral("UnitsDock")), false);
     setHistoryDockVisible(names.contains(QStringLiteral("HistoryDock")), false);
     setVariablesDockVisible(names.contains(QStringLiteral("VariablesDock")), false);
     setUserFunctionsDockVisible(names.contains(QStringLiteral("UserFunctionsDock")), false);

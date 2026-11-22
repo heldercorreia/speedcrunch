@@ -66,6 +66,7 @@ gui/tooltipstyleutils.h
 gui/variablelistwidget.h
 gui/userfunctionlistwidget.h
 gui/userunitlistwidget.h
+gui/unitswidget.h
 gui/syntaxhighlighter.h
 gui/themedlineedit.h
 gui/uiconfig.h
@@ -152,6 +153,7 @@ gui/tooltipstyleutils.cpp
 gui/variablelistwidget.cpp
 gui/userfunctionlistwidget.cpp
 gui/userunitlistwidget.cpp
+gui/unitswidget.cpp
 math/floatnum/floatcommon.c
 math/floatnum/floatconst.c
 math/floatnum/floatconvert.c
@@ -429,6 +431,7 @@ gui/themedlineedit.cpp
 gui/tooltipstyleutils.cpp
 gui/variablelistwidget.cpp
 gui/userunitlistwidget.cpp
+gui/unitswidget.cpp
 math/floatnum/floatcommon.c
 math/floatnum/floatconst.c
 math/floatnum/floatconvert.c
@@ -508,6 +511,7 @@ gui/tooltipstyleutils.cpp
 gui/userfunctionlistwidget.cpp
 gui/variablelistwidget.cpp
 gui/userunitlistwidget.cpp
+gui/unitswidget.cpp
 math/floatnum/floatcommon.c
 math/floatnum/floatconst.c
 math/floatnum/floatconvert.c
