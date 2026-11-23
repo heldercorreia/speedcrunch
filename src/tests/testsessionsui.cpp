@@ -2596,6 +2596,7 @@ void TestSessionsUi::tab_context_delete_removes_only_selected_tab()
     QTimer confirm;
     confirm.setInterval(10);
     bool confirmed = false;
+    bool restoreFirstPaneOnConfirm = false;
     connect(&confirm, &QTimer::timeout, &window, [&]() {
         auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
         if (dialog == nullptr)
@@ -2603,6 +2604,8 @@ void TestSessionsUi::tab_context_delete_removes_only_selected_tab()
         confirm.stop();
         confirmed = true;
         dialog->done(QMessageBox::Yes);
+        if (restoreFirstPaneOnConfirm)
+            QVERIFY(QMetaObject::invokeMethod(&window, "activatePreviousChild"));
     });
     const auto deleteTab = [&](QTabBar* tabBar, int index) {
         confirmed = false;
@@ -2630,7 +2633,10 @@ void TestSessionsUi::tab_context_delete_removes_only_selected_tab()
     QCOMPARE(editor->text(), QStringLiteral("11 +"));
     QCOMPARE(tabBarForDisplay(other)->tabText(0), otherName);
 
+    // The window can restore focus to the first pane as the dialog closes.
+    restoreFirstPaneOnConfirm = true;
     QVERIFY(deleteTab(tabBarForDisplay(other), 0));
+    restoreFirstPaneOnConfirm = false;
     QCOMPARE(window.findChildren<ResultDisplay*>(), QList<ResultDisplay*> {display});
     QCOMPARE(tabs->count(), 1);
     QCOMPARE(tabs->tabText(0), firstName);

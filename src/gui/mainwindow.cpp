@@ -6340,8 +6340,9 @@ void MainWindow::setActiveEditorDisplayPane(ResultDisplay* display, Editor* edit
         && QApplication::activePopupWidget() == nullptr) {
         editor->setFocus(Qt::OtherFocusReason);
         QPointer<Editor> editorGuard(editor);
-        QTimer::singleShot(0, editor, [editorGuard]() {
+        QTimer::singleShot(0, this, [this, editorGuard]() {
             if (editorGuard != nullptr
+                && m_widgets.editor == editorGuard
                 && globallyActiveEditor() == editorGuard
                 && pendingDockFocusTarget() == nullptr
                 && pendingDockTextInputFocusTarget() == nullptr
@@ -8963,7 +8964,8 @@ void MainWindow::fitDockToColumns(QDockWidget* dock, Qt::DockWidgetArea area, Do
     // Each step measures again once the previous layout change has settled.
     QPointer<QDockWidget> target(dock);
     QTimer::singleShot(0, this, [this, target, area, step]() {
-        if (!target || target->isHidden() || target->isFloating() || dockWidgetArea(target) != area)
+        // Another dock can open in the same area between layout passes.
+        if (!dockIsAloneInArea(target) || dockWidgetArea(target) != area)
             return;
         // Wait until an older window size from the window system is undone.
         if (m_keptWindowSizeRestorePending) {
@@ -11492,9 +11494,10 @@ void MainWindow::closeCurrentPane()
 
 void MainWindow::deleteCurrentSession()
 {
-    Session* deletingSession = m_session;
+    Session* const deletingSession = m_session;
     if (deletingSession == nullptr)
         return;
+    const QString deletingName = deletingSession->name();
 
     QMessageBox confirmation(this);
     confirmation.setIcon(QMessageBox::Question);
@@ -11505,10 +11508,12 @@ void MainWindow::deleteCurrentSession()
     confirmation.setEscapeButton(QMessageBox::No);
     QShortcut deleteSessionEscape(QKeySequence(Qt::Key_Escape), &confirmation);
     connect(&deleteSessionEscape, &QShortcut::activated, &confirmation, &QMessageBox::reject);
-    if (confirmation.exec() != QMessageBox::Yes || m_session != deletingSession)
+    // Closing the dialog can restore focus to another pane.
+    if (confirmation.exec() != QMessageBox::Yes
+        || m_loadedSessions.value(deletingName) != deletingSession) {
         return;
+    }
 
-    const QString deletingName = deletingSession->name();
     if (!deletingSession->isPrivate()) {
         waitForAsyncSessionIo();
         const QString deletingPath = sessionFilePath(deletingName);
@@ -11526,13 +11531,15 @@ void MainWindow::deleteCurrentSession()
         }
     }
 
-    m_deferredSessionSaveTimer->stop();
-    m_sessionSavePending = false;
+    if (m_session == deletingSession) {
+        m_deferredSessionSaveTimer->stop();
+        m_sessionSavePending = false;
+        m_session = nullptr;
+        m_evaluator = nullptr;
+    }
     m_loadedSessions.remove(deletingName);
     m_sessionViewportAnchors.remove(deletingName);
     m_sessionScrollValues.remove(deletingName);
-    m_session = nullptr;
-    m_evaluator = nullptr;
 
     for (ResultDisplay* display : splitPaneDisplays())
         removeSessionTabFromPane(display, deletingName, m_paneTabBars.size() > 1);
@@ -15440,7 +15447,7 @@ void MainWindow::finishRestoreSessionLayout(const QJsonObject& layout,
     QTabBar* initialTabBar = m_paneTabBars.value(initialDisplay, nullptr);
     if (initialEditor != nullptr) {
         initialEditor->stopAutoCalc();
-        initialEditor->stopAutoComplete();
+        initialEditor->stopAutoComplete(false);
     }
     const QList<Session*> oldSessions = m_loadedSessions.values();
     m_loadedSessions = restoredSessions;

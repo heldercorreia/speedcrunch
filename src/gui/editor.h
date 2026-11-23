@@ -82,7 +82,7 @@ public:
     void setCursorPosition(int pos);
     void setText(const QString&);
     void stopAutoCalc();
-    void stopAutoComplete();
+    void stopAutoComplete(bool restoreFocus = true);
     void wrapSelection();
     QString text() const;
     QStringList matchFragment(const QString&, bool unitContext = false) const;

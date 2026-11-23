@@ -34,6 +34,11 @@ void TestStartupFocusUi::startup_focuses_editor_with_visible_dock_input_data()
     QTest::addColumn<QString>("dockName");
     QTest::addColumn<QString>("startupMode");
     QTest::addColumn<bool>("privateTab");
+    QTest::addColumn<bool>("backgroundStartup");
+    if (QGuiApplication::platformName() == QLatin1String("cocoa")) {
+        QTest::newRow("ConstantsDock-split-background")
+            << QStringLiteral("ConstantsDock") << QStringLiteral("split") << false << true;
+    }
     for (const QString& dock : {QStringLiteral("ConstantsDock"), QStringLiteral("FunctionsDock"),
                                QStringLiteral("VariablesDock"), QStringLiteral("UserFunctionsDock"),
                                QStringLiteral("UserUnitsDock")}) {
@@ -45,7 +50,7 @@ void TestStartupFocusUi::startup_focuses_editor_with_visible_dock_input_data()
                     continue;
                 const QString row = QStringLiteral("%1-%2-%3")
                     .arg(dock, mode, privateTab ? QStringLiteral("private") : QStringLiteral("ordinary"));
-                QTest::newRow(qPrintable(row)) << dock << mode << privateTab;
+                QTest::newRow(qPrintable(row)) << dock << mode << privateTab << false;
             }
         }
     }
@@ -56,6 +61,7 @@ void TestStartupFocusUi::startup_focuses_editor_with_visible_dock_input()
     QFETCH(QString, dockName);
     QFETCH(QString, startupMode);
     QFETCH(bool, privateTab);
+    QFETCH(bool, backgroundStartup);
     MainWindowStateGuard guard;
     PrivateSessionStorage storage;
     const auto resetSettings = qScopeGuard([]() { UiTestFixture::resetSettings(); });
@@ -109,42 +115,61 @@ void TestStartupFocusUi::startup_focuses_editor_with_visible_dock_input()
     }
 
     MainWindow window(startupMode != QLatin1String("new-window"));
-    window.show();
+    if (backgroundStartup)
+        window.setWindowFlag(Qt::WindowDoesNotAcceptFocus);
+    window.showWhenReady();
+    QTRY_VERIFY(window.isVisible());
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    if (backgroundStartup)
+        QVERIFY(QApplication::activeWindow() != &window);
     QDockWidget* dock = window.findChild<QDockWidget*>(dockName);
     QVERIFY(dock != nullptr);
     QTRY_VERIFY(dock->isVisible());
     QLineEdit* search = dock->findChild<QLineEdit*>();
     QVERIFY(search != nullptr);
-    const auto focusedDisplay = [&window]() -> ResultDisplay* {
+
+    // A window keeps its focus target even when another app takes focus.
+    const auto focusedWidget = [&window]() {
+        return QApplication::activeWindow() == &window
+            ? QApplication::focusWidget() : window.focusWidget();
+    };
+    const auto focusedDisplay = [&window, &focusedWidget]() -> ResultDisplay* {
+        const QWidget* focus = focusedWidget();
+        if (focus == nullptr)
+            return nullptr;
         for (ResultDisplay* display : window.findChildren<ResultDisplay*>()) {
             Editor* editor = paneWidgetForDisplay(display)->findChild<Editor*>();
-            if (editor != nullptr && focusIsWithin(editor))
+            if (editor != nullptr && (editor == focus || editor->isAncestorOf(focus)))
                 return display;
         }
         return nullptr;
     };
-    QTRY_VERIFY(focusedDisplay() != nullptr);
-    QTRY_COMPARE(window.findChildren<Editor*>().size(), startupMode == QLatin1String("split") ? 2 : 1);
-    QTRY_VERIFY(focusedDisplay() != nullptr && focusedDisplay()->session()->isPrivate() == privateTab);
-    if (!privateTab)
-        QTRY_VERIFY(focusedDisplay() != nullptr && focusedDisplay()->session()->name() == activeName);
+    QCOMPARE(window.findChildren<Editor*>().size(), startupMode == QLatin1String("split") ? 2 : 1);
+    const auto startupEditorHasFocus = [&]() {
+        const ResultDisplay* display = focusedDisplay();
+        return display != nullptr && display->session()->isPrivate() == privateTab
+            && (privateTab || display->session()->name() == activeName);
+    };
+    QTRY_VERIFY(startupEditorHasFocus());
+    ResultDisplay* display = focusedDisplay();
     if (!privateTab && (savedLayout || startupMode == QLatin1String("legacy")))
-        QTRY_VERIFY(focusedDisplay() != nullptr && focusedDisplay()->session()->historySize() == 1);
-    if (privateTab && (savedLayout || startupMode == QLatin1String("legacy")))
-        QTRY_VERIFY(focusedDisplay() != nullptr && tabBarForDisplay(focusedDisplay())->count() == 2);
+        QCOMPARE(display->session()->historySize(), 1);
+    if (privateTab && (savedLayout || startupMode == QLatin1String("legacy"))) {
+        QTabBar* tabs = tabBarForDisplay(display);
+        QVERIFY(tabs != nullptr);
+        QCOMPARE(tabs->count(), 2);
+    }
 
     // Delayed window activation must keep the editor selected after restoration.
     QTest::qWait(400);
-    QVERIFY(focusedDisplay() != nullptr);
-    QVERIFY(!search->hasFocus());
+    QCOMPARE(focusedDisplay(), display);
 
     // Once startup finishes, choosing the dock search must still work normally.
     QTest::mouseClick(search, Qt::LeftButton);
-    QTRY_VERIFY(search->hasFocus());
+    QTRY_COMPARE(focusedWidget(), static_cast<QWidget*>(search));
     // The dock input's delayed focus handling ends after 100 ms.
     QTest::qWait(150);
-    QVERIFY(search->hasFocus());
+    QCOMPARE(focusedWidget(), static_cast<QWidget*>(search));
 }
 
 int main(int argc, char** argv)

@@ -3,7 +3,14 @@
 
 #include "mainwindowtesthelpers.h"
 
+#include <QEventLoop>
+
 using namespace MainWindowTestHelpers;
+
+#ifdef Q_OS_MACOS
+void* createDockTestAutoreleasePool();
+void drainDockTestAutoreleasePool(void* pool);
+#endif
 
 namespace {
 
@@ -28,7 +35,9 @@ class ReportedWindowState : public QObject {
 public:
     explicit ReportedWindowState(QWidget* window) : m_window(window)
     {
+#ifdef Q_OS_MACOS
         qApp->installEventFilter(this);
+#endif
     }
 
     bool isFullScreen() const
@@ -40,20 +49,53 @@ public:
 #endif
     }
 
+    template<class Request>
+    bool changeFullScreen(bool fullscreen, Request request)
+    {
+        constexpr int timeout = 15000;
+#ifdef Q_OS_MACOS
+        // Run the request and wait in AppKit's normal event loop.
+        QEventLoop loop;
+        m_waitLoop = &loop;
+        m_expectedFullScreen = fullscreen;
+        QTimer::singleShot(timeout, &loop, &QEventLoop::quit);
+        QTimer::singleShot(0, &loop, [&]() {
+            request();
+            if (isFullScreen() == fullscreen)
+                loop.quit();
+        });
+        loop.exec();
+        m_waitLoop = nullptr;
+        return isFullScreen() == fullscreen;
+#else
+        request();
+        return QTest::qWaitFor([&]() { return isFullScreen() == fullscreen; }, timeout);
+#endif
+    }
+
+#ifdef Q_OS_MACOS
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override
     {
         // Only the platform sends spontaneous state changes to the QWindow.
         QWindow* handle = m_window->windowHandle();
         if (handle != nullptr && watched == handle && event->type() == QEvent::WindowStateChange
-            && event->spontaneous())
+            && event->spontaneous()) {
             m_states = handle->windowStates();
+            if (m_waitLoop != nullptr && isFullScreen() == m_expectedFullScreen)
+                m_waitLoop->quit();
+        }
         return false;
     }
+#endif
 
 private:
     QWidget* m_window;
+#ifdef Q_OS_MACOS
     Qt::WindowStates m_states = Qt::WindowNoState;
+    QEventLoop* m_waitLoop = nullptr;
+    bool m_expectedFullScreen = false;
+#endif
 };
 
 } // namespace
@@ -108,7 +150,10 @@ class TestDockLayoutUi : public QObject {
 
 private slots:
     void initTestCase();
-    void init() { UiTestFixture::resetSettings(); }
+    void init();
+#ifdef Q_OS_MACOS
+    void cleanup();
+#endif
     void lazy_docks_stay_uncreated_until_opened();
     void lazy_docks_restore_saved_layouts_data();
     void lazy_docks_restore_saved_layouts();
@@ -173,7 +218,29 @@ private slots:
     void restored_dock_lists_wait_behind_tabs();
     void reopened_dock_lists_refresh_with_retained_geometry_data();
     void reopened_dock_lists_refresh_with_retained_geometry();
+
+#ifdef Q_OS_MACOS
+private:
+    void* m_autoreleasePool = nullptr;
+#endif
 };
+
+void TestDockLayoutUi::init()
+{
+#ifdef Q_OS_MACOS
+    // Release Cocoa objects before the next test creates more windows.
+    m_autoreleasePool = createDockTestAutoreleasePool();
+#endif
+    UiTestFixture::resetSettings();
+}
+
+#ifdef Q_OS_MACOS
+void TestDockLayoutUi::cleanup()
+{
+    drainDockTestAutoreleasePool(m_autoreleasePool);
+    m_autoreleasePool = nullptr;
+}
+#endif
 
 void TestDockLayoutUi::reopened_dock_lists_refresh_with_retained_geometry_data()
 {
@@ -929,6 +996,9 @@ void TestDockLayoutUi::floating_docks_survive_repeated_quit()
                     if (auto* dock = qobject_cast<QDockWidget*>(widget))
                         dock->close();
                 }
+                // Close the windows while keeping the test app's event loop usable.
+                QApplication::closeAllWindows();
+                return true;
             }
             return false;
         }
@@ -1130,17 +1200,12 @@ void TestDockLayoutUi::fullscreen_dock_widths_survive_relaunch()
         const auto exitFullscreen = [&]() {
             if (!window.isFullScreen() && !reported.isFullScreen())
                 return true;
-            // Cocoa can ignore an exit request while entry is still animating.
-            (void)QTest::qWaitFor([&]() { return reported.isFullScreen(); }, 15000);
-            window.showNormal();
-            const bool exited = QTest::qWaitFor([&]() {
-                return !window.isFullScreen() && !reported.isFullScreen();
-            }, 15000);
+            const bool exited = reported.changeFullScreen(false, [&]() { window.showNormal(); });
             if (exited)
                 QTest::qWait(1500);
-            return exited;
+            return exited && !window.isFullScreen();
         };
-        const auto cleanupFullscreen = qScopeGuard([&]() { exitFullscreen(); });
+        auto cleanupFullscreen = qScopeGuard([&]() { exitFullscreen(); });
         if (launch == 0) {
             window.resize(720, 540);
             for (const char* setter : {"setConstantsDockVisible", "setVariablesDockVisible"})
@@ -1161,18 +1226,19 @@ void TestDockLayoutUi::fullscreen_dock_widths_survive_relaunch()
 #endif
             window.activateWindow();
             QVERIFY(QTest::qWaitForWindowActive(&window));
-            window.showFullScreen();
-        } else {
-            window.showWhenReady();
         }
+        const bool entered = reported.changeFullScreen(true, [&]() {
+            if (launch == 0)
+                window.showFullScreen();
+            else
+                window.showWhenReady();
+        });
+        QVERIFY2(entered, qPrintable(QStringLiteral("Launch %1 did not enter fullscreen "
+                                      "(active=%2, visible=%3, requested=%4)")
+                .arg(launch + 1).arg(window.isActiveWindow())
+                .arg(window.isVisible()).arg(window.isFullScreen())));
         QTRY_VERIFY(window.isVisible() && window.isFullScreen());
         QVERIFY(QTest::qWaitForWindowExposed(&window));
-        // The first fullscreen animation on a fresh CI machine can be slow.
-        QTRY_VERIFY2_WITH_TIMEOUT(reported.isFullScreen(),
-            qPrintable(QStringLiteral("Launch %1: native fullscreen transition does not complete "
-                                      "(active=%2, exposed=%3)")
-                .arg(launch + 1).arg(window.isActiveWindow())
-                .arg(window.windowHandle()->isExposed())), 15000);
         QTest::qWait(500);
         QTRY_COMPARE(window.findChildren<QDockWidget*>().size(), names.size());
         if (launch == 0) {
@@ -1194,6 +1260,7 @@ void TestDockLayoutUi::fullscreen_dock_widths_survive_relaunch()
         window.persistSessionAndSettingsForShutdown();
         // Leave the fullscreen Space before destroying the test window, so
         // its exit animation does not affect the next launch or test case.
+        cleanupFullscreen.dismiss();
         QVERIFY2(exitFullscreen(), "Native fullscreen exit does not complete");
     }
 }
@@ -2330,7 +2397,7 @@ void TestDockLayoutUi::lone_side_dock_opens_wide_enough_for_columns()
     action->trigger();
     QDockWidget* dock = window.findChild<QDockWidget*>(dockName);
     QVERIFY(dock != nullptr);
-    QTreeView* list = dock->widget()->findChild<QTreeView*>();
+    QTreeWidget* list = dock->widget()->findChild<QTreeWidget*>();
     QVERIFY(list != nullptr);
     QTRY_VERIFY(list->model()->rowCount() > 0);
     const int availableWidth = window.screen()->availableGeometry().width();
@@ -2341,20 +2408,28 @@ void TestDockLayoutUi::lone_side_dock_opens_wide_enough_for_columns()
     if (keypadVisible)
         return;
 
-    // A dock that joins an open area keeps the width the user chose.
-    action->trigger();
-    QTRY_VERIFY(dock->isHidden());
-    QVERIFY(QMetaObject::invokeMethod(&window, "setHistoryDockVisible", Qt::DirectConnection,
-                                      Q_ARG(bool, true), Q_ARG(bool, false)));
+    // Measure a width that can fit both docks and their tab bar.
+    window.setHistoryDockVisible(true, false);
     QDockWidget* history = window.findChild<QDockWidget*>(QStringLiteral("HistoryDock"));
     QVERIFY(history != nullptr);
-    window.resizeDocks({history}, {dock->minimumSizeHint().width() + 10}, Qt::Horizontal);
-    QCoreApplication::processEvents();
+    QVERIFY(window.tabifiedDockWidgets(history).contains(dock));
+    window.resizeDocks({history}, {1}, Qt::Horizontal);
+    window.applyPendingDockSizes();
+    const int tabbedWidth = history->width();
+
+    action->trigger();
+    QTRY_VERIFY(dock->isHidden());
+    window.resizeDocks({history}, {tabbedWidth}, Qt::Horizontal);
+    window.applyPendingDockSizes();
     const int historyWidth = history->width();
+    // Make a column wider than the shared area on every platform.
+    list->headerItem()->setSizeHint(0, QSize(historyWidth + 1, list->header()->height()));
+
+    // A dock that joins an open area keeps the width the user chose.
     action->trigger();
     QTRY_VERIFY(!dock->isHidden());
     QTest::qWait(50);
-    QCOMPARE(history->width(), historyWidth);
+    QCOMPARE(dock->width(), historyWidth);
     QVERIFY(list->viewport()->width() < columnsWidth(list));
 }
 

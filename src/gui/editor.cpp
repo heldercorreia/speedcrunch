@@ -4645,10 +4645,14 @@ void Editor::stopAutoCalc()
     emit autoCalcDisabled();
 }
 
-void Editor::stopAutoComplete()
+void Editor::stopAutoComplete(bool restoreFocus)
 {
     m_completionTimer->stop();
     m_completion->selectItem(QString());
+    if (!restoreFocus) {
+        m_completion->hideCompletion();
+        return;
+    }
     m_completion->doneCompletion();
     setFocus();
 }
