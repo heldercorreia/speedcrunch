@@ -1398,6 +1398,16 @@ public:
                        QPainter* painter,
                        const QWidget* widget = nullptr) const override
     {
+#if defined(Q_OS_WIN) && QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+        // The Windows 11 style draws bright frames around our own separators.
+        if (element == PE_FrameStatusBarItem && widget != nullptr
+            && qobject_cast<const QStatusBar*>(widget->parentWidget())
+            && Settings::instance()->statusBarAppearance == Settings::StatusBarAppearanceSystem
+            && baseStyle()->objectName().compare(QLatin1String("windows11"), Qt::CaseInsensitive) == 0
+            && QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark) {
+            return;
+        }
+#endif
 #ifdef Q_OS_MACOS
         if (MacLineEditStyle::drawPrimitive(baseStyle(), element, option, painter, widget))
             return;
