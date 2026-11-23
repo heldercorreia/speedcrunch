@@ -1260,6 +1260,7 @@ constexpr auto DockSeparatorActiveColorProperty = "speedcrunchDockSeparatorActiv
 constexpr auto DockSeparatorBackgroundColorProperty = "speedcrunchDockSeparatorBackgroundColor";
 constexpr auto DockSeparatorStrokeWidthProperty = "speedcrunchDockSeparatorStrokeWidth";
 constexpr auto DockChromeStyleInstalledProperty = "speedcrunchDockChromeStyleInstalled";
+constexpr auto ThemedDockCheckBoxProperty = "speedcrunchThemedDockCheckBox";
 
 QVariant dockSeparatorPropertyForWidget(const QWidget* widget, const char* propertyName)
 {
@@ -1383,15 +1384,21 @@ public:
         return type == CT_MenuItem ? MenuStyle::themedItemSize(option, size, result, widget) : result;
     }
 
-#ifdef Q_OS_MACOS
     void drawControl(ControlElement element, const QStyleOption* option, QPainter* painter,
                      const QWidget* widget = nullptr) const override
     {
+#ifdef Q_OS_MACOS
         if (element == CE_FocusFrame && MacLineEditStyle::drawFocusFrame(option, painter, widget))
             return;
+#endif
+        if (element == CE_CheckBox && widget && widget->property(ThemedDockCheckBoxProperty).toBool()) {
+            if (const auto* button = qstyleoption_cast<const QStyleOptionButton*>(option)) {
+                drawDockCheckBox(button, painter, widget);
+                return;
+            }
+        }
         QProxyStyle::drawControl(element, option, painter, widget);
     }
-#endif
 
     void drawPrimitive(PrimitiveElement element,
                        const QStyleOption* option,
@@ -1440,6 +1447,49 @@ public:
     }
 
 private:
+    void drawDockCheckBox(const QStyleOptionButton* option, QPainter* painter, const QWidget* widget) const
+    {
+        const QColor foreground = option->palette.color(QPalette::WindowText);
+        const QColor background = option->palette.color(QPalette::Window);
+        const bool checked = option->state.testFlag(State_On);
+        const QRect indicator = subElementRect(SE_CheckBoxIndicator, option, widget);
+        const int size = std::min({indicator.width(), indicator.height(), UiConfig::DockCheckBoxSize});
+        const QRectF box = QRectF(alignedRect(option->direction, Qt::AlignLeading | Qt::AlignVCenter,
+                                            QSize(size, size), indicator))
+                               .adjusted(0.75, 0.75, -0.75, -0.75);
+
+        painter->save();
+        painter->setRenderHint(QPainter::Antialiasing);
+        painter->setPen(QPen(foreground, 1.5));
+        painter->setBrush(checked ? foreground : background);
+        painter->drawRoundedRect(box, 3, 3);
+        if (checked) {
+            QPainterPath checkMark;
+            checkMark.moveTo(box.left() + box.width() * 0.24, box.top() + box.height() * 0.51);
+            checkMark.lineTo(box.left() + box.width() * 0.43, box.top() + box.height() * 0.70);
+            checkMark.lineTo(box.left() + box.width() * 0.77, box.top() + box.height() * 0.32);
+            painter->setPen(QPen(background, 1.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+            painter->strokePath(checkMark, painter->pen());
+        }
+        painter->restore();
+
+        int flags = visualAlignment(option->direction, Qt::AlignLeading | Qt::AlignVCenter)
+            | Qt::TextShowMnemonic;
+        if (!styleHint(SH_UnderlineShortcut, option, widget))
+            flags |= Qt::TextHideMnemonic;
+        drawItemText(painter, subElementRect(SE_CheckBoxContents, option, widget), flags,
+                     option->palette, option->state.testFlag(State_Enabled),
+                     option->text, QPalette::WindowText);
+
+        if (option->state.testFlag(State_HasFocus)) {
+            QStyleOptionFocusRect focus;
+            focus.initFrom(widget);
+            focus.rect = subElementRect(SE_CheckBoxFocusRect, option, widget);
+            focus.backgroundColor = background;
+            drawPrimitive(PE_FrameFocusRect, &focus, painter, widget);
+        }
+    }
+
     static bool usesLayoutStyle(PixelMetric metric)
     {
         switch (metric) {
@@ -2074,6 +2124,8 @@ void restoreNativeDockSurface(QWidget* widget, bool forceNativePolish)
     const QVariantList state = widget->property("speedcrunchNativeDockSurface").toList();
     if (state.size() < 3)
         return;
+    if (widget->property(ThemedDockCheckBoxProperty).isValid())
+        widget->setProperty(ThemedDockCheckBoxProperty, QVariant());
     const QString styleSheet = widget->property("dockListNoMatchLabel").toBool()
         ? QStringLiteral("QLabel { background: transparent; }") : state.at(0).toString();
     const bool styleSheetChanged = setStyleSheetIfChanged(widget, styleSheet);
@@ -2208,6 +2260,11 @@ void applyDockContentAppearance(MainWindow* owner, QDockWidget* dock,
     applySurfaceToStructuralDockWidget(dockContent, dockSurface);
     for (QWidget* child : dockContent->findChildren<QWidget*>())
         applySurfaceToStructuralDockWidget(child, dockSurface);
+    for (QCheckBox* checkBox : dockContent->findChildren<QCheckBox*>()) {
+        checkBox->setProperty(ThemedDockCheckBoxProperty, true);
+        setDockPaletteIfChanged(checkBox, paletteForThemeSurface(checkBox->palette(), dockSurface));
+        checkBox->update();
+    }
     if (bitField != nullptr) {
         const ThemeSurfaceColors bitfieldHover =
             themeSurfaceForShadeIndex(surfaces, UiConfig::BitfieldBitHoverShade);

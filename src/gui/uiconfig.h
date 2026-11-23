@@ -95,6 +95,7 @@ constexpr int DockTextInputOutlineShade = Shade400;
 constexpr int DockTextInputUnfocusedOutlineStrokeWidth = 1;
 constexpr int DockTextInputVerticalPadding = 4;
 constexpr int DockTextInputHorizontalPadding = 8;
+constexpr int DockCheckBoxSize = 14;
 constexpr int ConstantSearchVerticalPadding = 4;
 constexpr int ConstantSearchHorizontalPadding = 6;
 constexpr int DockSearchRowVerticalPadding = 6;

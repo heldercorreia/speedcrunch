@@ -24,6 +24,8 @@ private slots:
     void dock_appearance_defaults_to_theme_and_persists();
     void dock_appearance_switches_all_windows_data();
     void dock_appearance_switches_all_windows();
+    void units_checkbox_follows_dock_appearance_data();
+    void units_checkbox_follows_dock_appearance();
     void dock_tabs_follow_appearance_data();
     void dock_tabs_follow_appearance();
     void system_docks_follow_palette_and_theme_changes();
@@ -477,6 +479,72 @@ void TestDockAppearanceUi::dock_appearance_defaults_to_theme_and_persists()
     persisted.sync();
     settings->load();
     QCOMPARE(settings->dockAppearance, Settings::DockAppearanceSpeedCrunch);
+}
+
+void TestDockAppearanceUi::units_checkbox_follows_dock_appearance_data()
+{
+    QTest::addColumn<QString>("background");
+    QTest::newRow("dark") << QStringLiteral("#243537");
+    QTest::newRow("light") << QStringLiteral("#e8f3ed");
+}
+
+void TestDockAppearanceUi::units_checkbox_follows_dock_appearance()
+{
+    QFETCH(QString, background);
+    MainWindowStateGuard guard;
+    guard.settings->unitsDockVisible = true;
+    guard.settings->dockAppearance = Settings::DockAppearanceSystem;
+    guard.settings->colorScheme = QStringLiteral("Custom");
+    guard.settings->customColorSchemeJson = themeJsonString(
+        QJsonObject{{QStringLiteral("background"), background}});
+    MainWindow window(false);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QDockWidget* dock = window.findChild<QDockWidget*>(QStringLiteral("UnitsDock"));
+    QVERIFY(dock);
+    QCheckBox* checkBox = dock->findChild<QCheckBox*>();
+    QVERIFY(checkBox);
+    QVERIFY(checkBox->isVisible());
+    const QRgb nativeText = checkBox->palette().color(QPalette::WindowText).rgba();
+    QMenu* appearance = window.findChild<QMenu*>(QStringLiteral("DockAppearanceMenu"));
+    QVERIFY(appearance);
+    appearance->actions().at(1)->trigger();
+    QCoreApplication::processEvents();
+
+    const QColor foreground = dock->widget()->palette().color(QPalette::WindowText);
+    const auto foregroundPixels = [&](const QImage& image, QStyle::SubElement element) {
+        QStyleOptionButton option;
+        option.initFrom(checkBox);
+        option.text = checkBox->text();
+        const QRect rect = checkBox->style()->subElementRect(element, &option, checkBox);
+        const qreal dpr = image.devicePixelRatio();
+        const QRect pixels(rect.topLeft() * dpr, rect.size() * dpr);
+        QList<QPoint> points;
+        for (int x = pixels.left(); x <= pixels.right(); ++x) {
+            for (int y = pixels.top(); y <= pixels.bottom(); ++y) {
+                if (image.valid(x, y) && colorsAreClose(image.pixelColor(x, y), foreground, 32))
+                    points.append(QPoint(x, y));
+            }
+        }
+        return points;
+    };
+
+    checkBox->setChecked(false);
+    const QImage unchecked = checkBox->grab().toImage();
+    const auto label = foregroundPixels(unchecked, QStyle::SE_CheckBoxContents);
+    const auto outline = foregroundPixels(unchecked, QStyle::SE_CheckBoxIndicator);
+    QVERIFY(!label.isEmpty());
+    QVERIFY(!outline.isEmpty());
+    const int gap = label.first().x() - outline.last().x() - 1;
+    QVERIFY(gap >= qRound(6 * unchecked.devicePixelRatio()));
+    checkBox->setChecked(true);
+    const QImage checked = checkBox->grab().toImage();
+    QVERIFY(foregroundPixels(checked, QStyle::SE_CheckBoxIndicator).size() > outline.size());
+
+    appearance->actions().at(0)->trigger();
+    QCoreApplication::processEvents();
+    QCOMPARE(checkBox->palette().color(QPalette::WindowText).rgba(), nativeText);
+    QVERIFY(checkBox->isChecked());
 }
 
 void TestDockAppearanceUi::dock_appearance_switches_all_windows_data()
