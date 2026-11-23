@@ -134,6 +134,7 @@ private slots:
     void tab_context_split_targets_clicked_pane();
     void tab_context_clear_preserves_other_sessions_data();
     void tab_context_clear_preserves_other_sessions();
+    void tab_context_delete_removes_only_selected_tab();
     void clear_session_commands_data();
     void clear_session_commands();
     void persisting_layout_captures_visible_scroll_positions_for_all_panes();
@@ -2555,6 +2556,95 @@ void TestSessionsUi::tab_context_clear_preserves_other_sessions()
         QVERIFY(target->hasVariable(QStringLiteral("sharedvalue")));
     }
     QCOMPARE(editorForDisplay(other)->text(), QStringLiteral("456"));
+}
+
+void TestSessionsUi::tab_context_delete_removes_only_selected_tab()
+{
+    MainWindowStateGuard guard;
+    PrivateSessionStorage storage;
+    guard.settings->autoCalc = false;
+    MainWindow window(false);
+    window.resize(1000, 700);
+    window.show();
+    window.activateWindow();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    Editor* editor = editorForDisplay(display);
+    QTabBar* tabs = tabBarForDisplay(display);
+    QVERIFY(editor && tabs);
+    const QString firstName = tabs->tabText(0);
+    editor->setText(QStringLiteral("11 +"));
+    window.createNewSessionTab();
+    const QString deletedName = display->session()->name();
+    editor->setText(QStringLiteral("22"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
+    QTRY_VERIFY(QFileInfo::exists(storage.path(deletedName)));
+    window.createNewSessionTab();
+    const QString lastName = display->session()->name();
+    editor->setText(QStringLiteral("33 +"));
+    QCOMPARE(tabs->count(), 3);
+    QCOMPARE(tabs->tabText(1), deletedName);
+
+    QVERIFY(QMetaObject::invokeMethod(&window, "splitActivePaneRight"));
+    const auto displays = window.findChildren<ResultDisplay*>();
+    QCOMPARE(displays.size(), 2);
+    ResultDisplay* other = displays.first() == display ? displays.last() : displays.first();
+    const QString otherName = other->session()->name();
+    editorForDisplay(other)->setText(QStringLiteral("44 +"));
+
+    QTimer confirm;
+    confirm.setInterval(10);
+    bool confirmed = false;
+    connect(&confirm, &QTimer::timeout, &window, [&]() {
+        auto* dialog = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        if (dialog == nullptr)
+            return;
+        confirm.stop();
+        confirmed = true;
+        dialog->done(QMessageBox::Yes);
+    });
+    const auto deleteTab = [&](QTabBar* tabBar, int index) {
+        confirmed = false;
+        confirm.start();
+        chooseTabContextAction(tabBar, index, {QStringLiteral("Delete")});
+        confirm.stop();
+        return confirmed;
+    };
+
+    QVERIFY(deleteTab(tabs, 1));
+    QCOMPARE(tabs->count(), 2);
+    QCOMPARE(tabs->tabText(0), firstName);
+    QCOMPARE(tabs->tabText(1), lastName);
+    QVERIFY(!QFileInfo::exists(storage.path(deletedName)));
+    QCOMPARE(other->session()->name(), otherName);
+    QCOMPARE(editorForDisplay(other)->text(), QStringLiteral("44 +"));
+
+    tabs->setCurrentIndex(1);
+    QCOMPARE(editor->text(), QStringLiteral("33 +"));
+    QWidget* closeButton = tabs->tabButton(1, QTabBar::RightSide);
+    QVERIFY(closeButton != nullptr);
+    QTest::mouseClick(closeButton, Qt::LeftButton);
+    QCOMPARE(tabs->count(), 1);
+    QCOMPARE(tabs->tabText(0), firstName);
+    QCOMPARE(editor->text(), QStringLiteral("11 +"));
+    QCOMPARE(tabBarForDisplay(other)->tabText(0), otherName);
+
+    QVERIFY(deleteTab(tabBarForDisplay(other), 0));
+    QCOMPARE(window.findChildren<ResultDisplay*>(), QList<ResultDisplay*> {display});
+    QCOMPARE(tabs->count(), 1);
+    QCOMPARE(tabs->tabText(0), firstName);
+    QCOMPARE(editor->text(), QStringLiteral("11 +"));
+
+    confirmed = false;
+    confirm.start();
+    QVERIFY(QMetaObject::invokeMethod(display, "deleteSessionRequested"));
+    confirm.stop();
+    QVERIFY(confirmed);
+    QCOMPARE(tabs->count(), 1);
+    QVERIFY(editor->text().isEmpty());
+    QVERIFY(tabs->tabText(0) != lastName);
+    QCOMPARE(display->session()->historySize(), 0);
 }
 
 void TestSessionsUi::clear_session_commands_data()

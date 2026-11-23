@@ -6107,7 +6107,8 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
         showRenameSessionDialog();
     });
     tabBar->tabContextMenuRequested = [this, display, editor](const QString& sessionName, const QPoint& globalPos) {
-        switchPaneToSession(display, sessionName);
+        if (!switchPaneToSession(display, sessionName))
+            return;
 
         QMenu menu(this);
         QAction* renameSessionAction = menu.addAction(tr("Rename..."));
@@ -6168,11 +6169,11 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
             showRenameSessionDialog();
         else if (selectedAction == clearSessionAction)
             clearHistory();
-        else if (selectedAction == closeSessionAction)
+        else if (selectedAction == closeSessionAction && switchPaneToSession(display, sessionName))
             closeCurrentSession();
         else if (selectedAction == closePaneAction)
             closeCurrentPane();
-        else if (selectedAction == deleteSessionAction)
+        else if (selectedAction == deleteSessionAction && switchPaneToSession(display, sessionName))
             deleteCurrentSession();
     };
     tabBar->sessionTabDropped = [this, tabBar](SessionTabBar* sourceTabBar, const QString& sessionName, int targetIndex) {
@@ -6240,8 +6241,8 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
         saveSessionLayout(false);
     };
     tabBar->tabCloseRequested = [this, display](const QString& sessionName) {
-        switchPaneToSession(display, sessionName);
-        closeCurrentSession();
+        if (switchPaneToSession(display, sessionName))
+            closeCurrentSession();
     };
     pane->sessionTabDroppedOnPane = [this, display](SessionTabBar* sourceTabBar, const QString& sessionName, const QPoint& panePos) {
         moveSessionTabToPane(sourceTabBar, display, sessionName, panePos);
@@ -6268,7 +6269,7 @@ QWidget* MainWindow::createEditorDisplayPane(ResultDisplay* display, Editor* edi
 
 void MainWindow::setActiveEditorDisplayPane(ResultDisplay* display, Editor* editor, bool forceEditorFocus)
 {
-    if (display == nullptr || editor == nullptr)
+    if (display == nullptr || editor == nullptr || !m_paneTabBars.contains(display))
         return;
 
     if (forceEditorFocus) {
@@ -7015,8 +7016,10 @@ Session* MainWindow::createUntitledSession(bool activateCreatedSession)
             continue;
         // Unread sessions belong to tabs, which are skipped below, so don't
         // read their files to check them.
-        if (it.value()->hasDeferredFile() || !isReusableUntitledSession(it.value()))
+        if (it.value()->hasDeferredFile() || !it.value()->editorText().isEmpty()
+            || !isReusableUntitledSession(it.value())) {
             continue;
+        }
 
         bool alreadyAttachedToPane = false;
         for (auto paneIt = m_paneSessionTabs.constBegin(); paneIt != m_paneSessionTabs.constEnd(); ++paneIt) {
@@ -7127,23 +7130,23 @@ QTabBar* MainWindow::displayTabBar(ResultDisplay* display) const
     return m_paneTabBars.value(display, nullptr);
 }
 
-void MainWindow::switchPaneToSession(ResultDisplay* display, const QString& name)
+bool MainWindow::switchPaneToSession(ResultDisplay* display, const QString& name)
 {
     if (m_shutdownStateSaved)
-        return;
+        return false;
     if (display == nullptr || name.isEmpty())
-        return;
-    if (!m_paneTabBars.contains(display))
-        return;
+        return false;
+    if (!m_paneTabBars.contains(display) || !paneSessionNames(display).contains(name))
+        return false;
 
     Session* session = m_loadedSessions.value(name, nullptr);
     if (session == nullptr)
-        return;
+        return false;
 
     QWidget* page = display->parentWidget();
     Editor* editor = page ? page->findChild<Editor*>(QString(), Qt::FindDirectChildrenOnly) : nullptr;
     if (editor == nullptr)
-        return;
+        return false;
 
     const QString currentName = m_paneSessionNames.value(display);
     if (!currentName.isEmpty()
@@ -7157,6 +7160,8 @@ void MainWindow::switchPaneToSession(ResultDisplay* display, const QString& name
         && m_paneSessionNames.value(display).compare(name, Qt::CaseInsensitive) == 0;
 
     setActiveEditorDisplayPane(display, editor);
+    if (m_widgets.display != display)
+        return false;
     activateSession(session);
     if (!paneAlreadyShowsSession) {
         editor->setText(session->editorText());
@@ -7164,6 +7169,7 @@ void MainWindow::switchPaneToSession(ResultDisplay* display, const QString& name
     }
     if (!paneAlreadyShowsSession)
         updatePaneTabBars();
+    return true;
 }
 
 bool MainWindow::focusOpenSession(const QString& name)
@@ -7443,6 +7449,7 @@ void MainWindow::removeSessionTabFromPane(ResultDisplay* display, const QString&
                 } else {
                     display->setSession(session);
                     display->refresh();
+                    editor->setSession(session);
                     editor->setText(session->editorText());
                     editor->setCursorPosition(editor->text().size());
                     editor->updateHistory();
@@ -11485,7 +11492,8 @@ void MainWindow::closeCurrentPane()
 
 void MainWindow::deleteCurrentSession()
 {
-    if (m_session == nullptr)
+    Session* deletingSession = m_session;
+    if (deletingSession == nullptr)
         return;
 
     QMessageBox confirmation(this);
@@ -11497,54 +11505,40 @@ void MainWindow::deleteCurrentSession()
     confirmation.setEscapeButton(QMessageBox::No);
     QShortcut deleteSessionEscape(QKeySequence(Qt::Key_Escape), &confirmation);
     connect(&deleteSessionEscape, &QShortcut::activated, &confirmation, &QMessageBox::reject);
-    if (confirmation.exec() != QMessageBox::Yes)
+    if (confirmation.exec() != QMessageBox::Yes || m_session != deletingSession)
         return;
 
-    const QString deletingName = m_session->name();
-    const QString deletingPath = sessionFilePath(deletingName);
-    Session* deletingSession = m_session;
+    const QString deletingName = deletingSession->name();
+    if (!deletingSession->isPrivate()) {
+        waitForAsyncSessionIo();
+        const QString deletingPath = sessionFilePath(deletingName);
+        if (QFileInfo::exists(deletingPath) && !QFile::remove(deletingPath)) {
+            QMessageBox::warning(this, tr("Delete Session"),
+                                 tr("Could not delete session file %1.").arg(deletingPath));
+            return;
+        }
+        for (const QPointer<MainWindow>& window : allMainWindows()) {
+            if (window) {
+                window->m_closedSessionTabs.removeIf([&deletingName](const ClosedSessionTab& tab) {
+                    return tab.name == deletingName;
+                });
+            }
+        }
+    }
 
+    m_deferredSessionSaveTimer->stop();
+    m_sessionSavePending = false;
     m_loadedSessions.remove(deletingName);
     m_sessionViewportAnchors.remove(deletingName);
     m_sessionScrollValues.remove(deletingName);
     m_session = nullptr;
     m_evaluator = nullptr;
 
-    if (QFileInfo::exists(deletingPath))
-        QFile::remove(deletingPath);
-
-    Session* nextSession = nullptr;
-    bool createdReplacementSession = false;
-    if (m_loadedSessions.isEmpty()) {
-        const QString name = firstAvailableUntitledSessionName(m_loadedSessions);
-        nextSession = new Session();
-        nextSession->setName(name);
-        m_loadedSessions.insert(name, nextSession);
-        createdReplacementSession = true;
-    } else {
-        QStringList names = m_loadedSessions.keys();
-        names.sort(Qt::CaseInsensitive);
-        nextSession = m_loadedSessions.value(names.first(), nullptr);
-    }
-
+    for (ResultDisplay* display : splitPaneDisplays())
+        removeSessionTabFromPane(display, deletingName, m_paneTabBars.size() > 1);
     updatePaneLoadedSessionCounts();
-    activateSession(nextSession);
-    for (auto it = m_paneSessionNames.begin(); it != m_paneSessionNames.end(); ++it) {
-        if (it.value() == deletingName)
-            it.value() = nextSession->name();
-    }
-    for (auto it = m_paneSessionTabs.begin(); it != m_paneSessionTabs.end(); ++it) {
-        QStringList names = it.value();
-        names.removeAll(deletingName);
-        if (names.isEmpty() && nextSession != nullptr)
-            names.append(nextSession->name());
-        it.value() = names;
-    }
-    if (createdReplacementSession)
-        applyUserDefinitions();
 
     delete deletingSession;
-    m_conditions.autoAns = false;
     saveSessionLayout(false);
 }
 
