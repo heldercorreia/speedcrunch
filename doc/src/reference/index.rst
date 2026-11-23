@@ -17,6 +17,7 @@ Built-in Functions
    :maxdepth: 2
 
    basic
+   geometry
    integer
    statistical
    ieee754

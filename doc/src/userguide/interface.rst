@@ -523,6 +523,11 @@ On first launch, the default is :menuselection:`Automatic decimal`.
 
     .. versionadded:: 1.0
 
+:ref:`Geometry calculations <geometry-exact-results>` can show a simple
+exact form below the result in any decimal notation.
+In :menuselection:`Rational`, SpeedCrunch uses that form for the result
+line when one is available.
+
 Angle Mode
 ++++++++++
 

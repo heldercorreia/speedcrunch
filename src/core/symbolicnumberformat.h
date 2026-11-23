@@ -34,6 +34,48 @@ inline QString formatFraction(const QString& numerator, int denominator)
            + operatorSpace + QString::number(denominator);
 }
 
+inline QString formatConstantMultiple(const HNumber& value, const HNumber& factor,
+                                      const QString& symbol, const HNumber& tolerance,
+                                      int maxDenominator)
+{
+    Rational ratio;
+    if (!Rational::approximate(value / factor, maxDenominator, tolerance, &ratio))
+        return QString();
+
+    const int numerator = ratio.numerator();
+    const int denominator = ratio.denominator();
+    if (numerator == 0 || denominator <= 0)
+        return QString();
+
+    const HNumber expected = factor * HNumber(numerator) / HNumber(denominator);
+    const HNumber diff = HMath::abs(value - expected);
+    const HNumber scale = HMath::max(HMath::max(HMath::abs(value), HMath::abs(expected)), HNumber(1));
+    if (diff > tolerance * scale)
+        return QString();
+
+    const QString division = QString(MathDsl::DivWrap) + QString(MathDsl::DivOp) + QString(MathDsl::DivWrap);
+    const QString multiplication = QString(MathDsl::MulDotWrapSp) + QString(MathDsl::MulDotOp)
+        + QString(MathDsl::MulDotWrapSp);
+    const QString sign = (numerator < 0) ? QString(MathDsl::SubOp) : QString();
+    const int absNumerator = qAbs(numerator);
+
+    if (denominator == 1) {
+        if (absNumerator == 1)
+            return sign + symbol;
+        return sign + QString::number(absNumerator) + multiplication + symbol;
+    }
+
+    if (absNumerator == 1)
+        return sign + symbol + division + QString::number(denominator);
+
+    return sign
+        + QString::number(absNumerator)
+        + division
+        + QString::number(denominator)
+        + multiplication
+        + symbol;
+}
+
 inline QString formatPiMultiple(const HNumber& value)
 {
     constexpr int maxDenominator = 12;

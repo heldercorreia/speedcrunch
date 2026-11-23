@@ -18,6 +18,7 @@ struct NumberFormatter {
     static QString format(Quantity, char resultFormatOverride, int precisionOverride,
                           bool useComplexNotation, char complexNotationOverride);
     static QString formatTrigSymbolic(Quantity);
+    static QString formatGeometryExact(const HNumber& value);
     static QString formatNumericLiteralForDisplay(const QString& input);
     static QString numericLiteralDisplayFormatKey();
     static bool isSingleGroupedInteger(const QString& input);

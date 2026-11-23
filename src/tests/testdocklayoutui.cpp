@@ -167,6 +167,7 @@ private slots:
     void fullscreen_dock_widths_survive_relaunch();
     void dock_list_selected_row_keeps_primary_fill_while_hovered();
     void functions_dock_retranslates_domain_label_after_language_change();
+    void functions_dock_finds_geometry_by_name();
     void side_docks_keep_full_height_data();
     void side_docks_keep_full_height();
     void dock_search_rows_use_configured_vertical_padding_data();
@@ -1366,6 +1367,21 @@ void TestDockLayoutUi::functions_dock_retranslates_domain_label_after_language_c
     QCOMPARE(domainLabel->text(), QStringLiteral("Translated Domain"));
 
     QCoreApplication::removeTranslator(&translator);
+}
+
+void TestDockLayoutUi::functions_dock_finds_geometry_by_name()
+{
+    FunctionsWidget widget;
+    widget.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&widget));
+
+    widget.restoreState(QStringLiteral("Geometry"), QStringLiteral("Surface Area of a Cylinder"));
+    QCOMPARE(widget.selectedDomain(), QStringLiteral("Geometry"));
+
+    auto* list = widget.findChild<QTreeWidget*>();
+    QVERIFY(list);
+    QTRY_COMPARE(list->topLevelItemCount(), 1);
+    QCOMPARE(list->topLevelItem(0)->text(0), QStringLiteral("area_cylinder"));
 }
 
 void TestDockLayoutUi::side_docks_keep_full_height_data()

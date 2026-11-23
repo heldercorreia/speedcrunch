@@ -15,7 +15,12 @@
 #include "math/rational.h"
 #include "core/units.h"
 
+#include <QHash>
+
 #include <algorithm>
+#include <limits>
+#include <numeric>
+#include <utility>
 
 
 static const QChar g_dotChar = MathDsl::MulDotOp;
@@ -210,6 +215,140 @@ QString formatRationalDisplay(Quantity q)
     if (!unitName.isEmpty())
         result += QStringLiteral("[%1]").arg(unitName);
     return result;
+}
+
+bool isTerminatingDecimal(int denominator)
+{
+    for (int factor : {2, 5}) {
+        while (denominator % factor == 0)
+            denominator /= factor;
+    }
+    return denominator == 1;
+}
+
+struct SquareFactors {
+    int outside;
+    int inside;
+};
+
+SquareFactors separateSquareFactors(int number)
+{
+    int outside = 1;
+    for (int factor = 2; factor <= number / factor; ++factor) {
+        const int square = factor * factor;
+        while (number % square == 0) {
+            outside *= factor;
+            number /= square;
+        }
+    }
+    return {outside, number};
+}
+
+QString formatPositiveProduct(int coefficient, const QString& symbol)
+{
+    if (coefficient == 1)
+        return symbol;
+    const QString space(MathDsl::MulDotWrapSp);
+    return QString::number(coefficient) + space + MathDsl::MulDotOp + space + symbol;
+}
+
+QString formatSquareRootMultiple(const HNumber& value, const HNumber& tolerance)
+{
+    Rational squared;
+    if (!Rational::approximate(value * value, RationalFormatMaxDenominator, tolerance, &squared)
+        || squared.numerator() <= 0)
+        return QString();
+
+    const auto numerator = separateSquareFactors(squared.numerator());
+    const auto denominator = separateSquareFactors(squared.denominator());
+    const qint64 radicand = qint64(numerator.inside) * denominator.inside;
+    if (radicand == 1)
+        return QString();
+
+    QString result = formatPositiveProduct(numerator.outside, QStringLiteral("sqrt(%1)").arg(radicand));
+    if (value.isNegative())
+        result.prepend(MathDsl::SubOp);
+    const int divisor = denominator.outside * denominator.inside;
+    return divisor == 1 ? result : SymbolicNumberFormat::formatFraction(result, divisor);
+}
+
+constexpr int FractionalBuckets = 1000000;
+
+int fractionalBucket(const HNumber& value)
+{
+    const HNumber fraction = value - HMath::floor(value);
+    return HMath::round(fraction * HNumber(FractionalBuckets)).toInt() % FractionalBuckets;
+}
+
+struct ExactTerm {
+    HNumber value;
+    QString symbol;
+    int coefficient;
+};
+
+const QMultiHash<int, ExactTerm>& geometryTermsByFraction()
+{
+    static const auto terms = [] {
+        const std::pair<HNumber, QString> constants[] = {
+            {HMath::pi(), QString(UnicodeChars::Pi)},
+            {HMath::sqrt(2), QStringLiteral("sqrt(2)")},
+            {HMath::sqrt(3), QStringLiteral("sqrt(3)")},
+            {HMath::sqrt(5), QStringLiteral("sqrt(5)")}
+        };
+        constexpr int maxCoefficient = 128;
+        QMultiHash<int, ExactTerm> result;
+        for (const auto& [constant, symbol] : constants) {
+            for (int coefficient = -maxCoefficient; coefficient <= maxCoefficient; ++coefficient) {
+                if (coefficient == 0)
+                    continue;
+                const HNumber term = constant * HNumber(coefficient);
+                result.insert(fractionalBucket(term), {term, symbol, coefficient});
+            }
+        }
+        return result;
+    }();
+    return terms;
+}
+
+QString formatShiftedConstant(const HNumber& value, const HNumber& tolerance, int scale)
+{
+    const auto& terms = geometryTermsByFraction();
+    const HNumber maxInteger(std::numeric_limits<int>::max());
+    const int maxDivisor = std::min(64, RationalFormatMaxDenominator / scale);
+    for (int divisor = 1; divisor <= maxDivisor; ++divisor) {
+        const int denominator = divisor * scale;
+        const HNumber numerator = value * HNumber(denominator);
+        // An integer offset leaves the fractional part of the term unchanged.
+        // Buckets only find candidates. Check each at calculator precision.
+        const int bucket = fractionalBucket(numerator);
+        for (int delta : {-1, 0, 1}) {
+            const int key = (bucket + delta + FractionalBuckets) % FractionalBuckets;
+            const auto [first, last] = terms.equal_range(key);
+            for (auto it = first; it != last; ++it) {
+                const ExactTerm& term = it.value();
+                const HNumber integer = HMath::round(numerator - term.value);
+                if (integer.isZero() || HMath::abs(integer) > maxInteger)
+                    continue;
+                const HNumber error = HMath::abs(numerator - (integer + term.value));
+                if (error > HMath::abs(numerator) * tolerance)
+                    continue;
+
+                const int offset = integer.toInt();
+                const int coefficient = qAbs(term.coefficient);
+                const int commonFactor = std::gcd(std::gcd(offset, coefficient), denominator);
+                const int reducedDenominator = denominator / commonFactor;
+                const QString space(MathDsl::AddWrap);
+                const QChar op = term.coefficient < 0 ? MathDsl::SubOp : MathDsl::AddOp;
+                const QString sum = QString::number(offset / commonFactor) + space + op + space
+                    + formatPositiveProduct(coefficient / commonFactor, term.symbol);
+                if (reducedDenominator == 1)
+                    return sum;
+                return SymbolicNumberFormat::formatFraction(
+                    MathDsl::GroupStart + sum + MathDsl::GroupEnd, reducedDenominator);
+            }
+        }
+    }
+    return QString();
 }
 
 bool isValidDigitForBase(const QChar ch, int base)
@@ -432,6 +571,47 @@ QString NumberFormatter::formatTrigSymbolic(Quantity q)
         return QString();
 
     return formatTrigSymbolicDisplay(q, number.real);
+}
+
+QString NumberFormatter::formatGeometryExact(const HNumber& value)
+{
+    if (value.isNan() || value.isZero())
+        return QString();
+    static const HNumber tolerance = rationalFormatRelativeTolerance();
+    Rational rational;
+    if (Rational::approximate(value, RationalFormatMaxDenominator, tolerance, &rational)) {
+        if (isTerminatingDecimal(rational.denominator()))
+            return QString();
+        return SymbolicNumberFormat::formatFraction(
+            QString::number(rational.numerator()), rational.denominator());
+    }
+
+    const HNumber pi = HMath::pi();
+    const QString piSymbol(UnicodeChars::Pi);
+    QString result = SymbolicNumberFormat::formatConstantMultiple(
+        value, pi, piSymbol, tolerance, RationalFormatMaxDenominator);
+    if (!result.isEmpty())
+        return result;
+    result = SymbolicNumberFormat::formatConstantMultiple(
+        value, pi * pi, piSymbol + MathDsl::Pow2, tolerance, RationalFormatMaxDenominator);
+    if (!result.isEmpty())
+        return result;
+    result = formatSquareRootMultiple(value, tolerance);
+    if (!result.isEmpty())
+        return result;
+
+    const HNumber magnitude = HMath::abs(value);
+    if (magnitude > HNumber(std::numeric_limits<int>::max()))
+        return QString();
+    result = formatShiftedConstant(value, tolerance, 1);
+    if (!result.isEmpty())
+        return result;
+
+    // A conversion to a larger metric unit can put the result below 1.
+    int scale = 1;
+    while (scale < RationalFormatMaxDenominator && magnitude * HNumber(scale) < 1)
+        scale *= 10;
+    return scale == 1 ? QString() : formatShiftedConstant(value, tolerance, scale);
 }
 
 QString NumberFormatter::format(Quantity q, char resultFormatOverride)

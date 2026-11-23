@@ -103,6 +103,8 @@ core/constants.cpp
 core/colorscheme.cpp
 core/evaluator.cpp
 core/functions.cpp
+core/geometrycoordinates.cpp
+core/geometryfunctions.cpp
 core/mathdsl.cpp
 core/manualserver.cpp
 core/numberformatter.cpp
@@ -224,6 +226,8 @@ core/constants.cpp
 core/colorscheme.cpp
 core/evaluator.cpp
 core/functions.cpp
+core/geometrycoordinates.cpp
+core/geometryfunctions.cpp
 core/mathdsl.cpp
 core/settings.cpp
 core/userfunction.cpp
@@ -354,6 +358,8 @@ core/constants.cpp
 core/colorscheme.cpp
 core/evaluator.cpp
 core/functions.cpp
+core/geometrycoordinates.cpp
+core/geometryfunctions.cpp
 core/mathdsl.cpp
 core/settings.cpp
 core/userfunction.cpp
@@ -409,6 +415,8 @@ core/constants.cpp
 core/colorscheme.cpp
 core/evaluator.cpp
 core/functions.cpp
+core/geometrycoordinates.cpp
+core/geometryfunctions.cpp
 core/mathdsl.cpp
 core/settings.cpp
 core/userfunction.cpp
@@ -472,6 +480,8 @@ core/constants.cpp
 core/colorscheme.cpp
 core/evaluator.cpp
 core/functions.cpp
+core/geometrycoordinates.cpp
+core/geometryfunctions.cpp
 core/manualserver.cpp
 core/mathdsl.cpp
 core/pageserver.cpp

@@ -6,6 +6,7 @@
 
 #include "core/functions.h"
 
+#include "core/geometryfunctions.h"
 #include "core/mathdsl.h"
 #include "core/settings.h"
 #include "core/units.h"
@@ -51,6 +52,7 @@ static QString domainToDisplay(FunctionDomain domain)
     case FunctionDomain::FloatingPoint: return FunctionRepo::tr("Floating point");
     case FunctionDomain::DateTime: return FunctionRepo::tr("Date & Time");
     case FunctionDomain::LinearAlgebra: return FunctionRepo::tr("Linear algebra");
+    case FunctionDomain::Geometry: return FunctionRepo::tr("Geometry");
     }
     return QString();
 }
@@ -109,33 +111,9 @@ enum class ScalarRoundingMode {
     }
 
 #define CONVERT_ARGUMENT_ANGLE(angle) \
-    { \
-    const bool convertedExplicitAngleUnit = Units::tryConvertExplicitAngleToRadians(&(angle)); \
-    if (!convertedExplicitAngleUnit && Settings::instance()->angleUnit == 'd') { \
-        if (angle.isReal()) \
-            angle = DMath::deg2rad(angle); \
-        else { \
-            f->setError(OutOfDomain); \
-            return DMath::nan(); \
-        } \
-    } \
-    else if (!convertedExplicitAngleUnit && Settings::instance()->angleUnit == 'g') { \
-        if (angle.isReal()) \
-            angle = DMath::gon2rad(angle); \
-        else { \
-            f->setError(OutOfDomain); \
-            return DMath::nan(); \
-        } \
-    } \
-    else if (!convertedExplicitAngleUnit && (Settings::instance()->angleUnit == 't' \
-            || Settings::instance()->angleUnit == 'v')) { \
-        if (angle.isReal()) \
-            angle *= Quantity(2) * DMath::pi(); \
-        else { \
-            f->setError(OutOfDomain); \
-            return DMath::nan(); \
-        } \
-    } \
+    if (!Units::tryConvertAngleToRadians(angle, Settings::instance()->angleUnit)) { \
+        f->setError(OutOfDomain); \
+        return DMath::nan(); \
     }
 
 #define CONVERT_RESULT_ANGLE(result) \
@@ -2170,6 +2148,8 @@ void FunctionRepo::createFunctions()
     FUNCTION_INSERT(FunctionDomain::Trigonometry, tan);
     FUNCTION_INSERT(FunctionDomain::Trigonometry, tanh);
 
+    GeometryFunctions::registerFunctions(*this);
+
 // Symbol aliases.
     m_functions.insert(QString(UnicodeChars::Summation).toUpper(), find(QStringLiteral("summation")));
     m_functions.insert(QString(UnicodeChars::SquareRoot).toUpper(), find(QStringLiteral("sqrt")));
@@ -2271,6 +2251,7 @@ const QStringList& FunctionRepo::domains() const
         << domainToDisplay(FunctionDomain::Aggregation)
         << domainToDisplay(FunctionDomain::Statistics)
         << domainToDisplay(FunctionDomain::LinearAlgebra)
+        << domainToDisplay(FunctionDomain::Geometry)
         << domainToDisplay(FunctionDomain::Complex)
         << domainToDisplay(FunctionDomain::AngleConversion)
         << domainToDisplay(FunctionDomain::BaseConversion)
@@ -2603,4 +2584,5 @@ void FunctionRepo::retranslateText()
 {
     setFunctionNames();
     setTranslatableFunctionUsages();
+    GeometryFunctions::retranslateFunctions(*this);
 }

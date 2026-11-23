@@ -401,6 +401,7 @@ public:
                                          HNumber* valueOut);
     static bool isExplicitAngleUnitName(const QString& unitName);
     static bool tryConvertExplicitAngleToRadians(Quantity* angle);
+    static bool tryConvertAngleToRadians(Quantity& angle, char defaultUnit);
 
     // Base SI units.
     static const Quantity metre();

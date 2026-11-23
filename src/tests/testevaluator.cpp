@@ -3760,6 +3760,211 @@ void test_function_root()
     eval->initializeBuiltInVariables();
 }
 
+void test_geometry_functions()
+{
+    struct Example {
+        const char* expression;
+        const char* expected;
+    };
+    const Example examples[] = {
+        {"area_square(4)", "16"},
+        {"area_rectangle(4; 3)", "12"},
+        {"area_triangle(4; 3)", "6"},
+        {"area_triangle_from_sides(3; 4; 5)", "6"},
+        {"area_triangle_from_angle(3; 4; 90[deg])", "6"},
+        {"area_parallelogram(5; 3)", "15"},
+        {"area_trapezoid(3; 7; 2)", "10"},
+        {"area_rhombus(4; 6)", "12"},
+        {"area_kite(5; 8)", "20"},
+        {"area_regular_polygon(4; 3)", "9"},
+        {"numval(area_polygon({{0; 0}; {4; 0}; {4; 3}; {0; 3}}; 1[m]) -> [m^2])", "12"},
+        {"area_circle(2)", "4*pi"},
+        {"area_circular_sector(2; 90[deg])", "pi"},
+        {"area_circular_segment(2; 2)", "2*pi"},
+        {"area_circular_segment_from_angle(2; 180[deg])", "2*pi"},
+        {"area_ellipse(3; 2)", "6*pi"},
+        {"area_annulus(3; 2)", "5*pi"},
+        {"area_annular_sector(3; 2; 180[deg])", "2.5*pi"},
+        {"area_rounded_rectangle(4; 2; 1)", "4 + pi"},
+        {"area_stadium(3; 1)", "6 + pi"},
+        {"area_parabolic_segment(6; 2)", "8"},
+        {"area_circle_overlap(2; 1; 1)", "pi"},
+        {"area_cube(2)", "24"},
+        {"area_cube_lateral(2)", "16"},
+        {"volume_cube(3)", "27"},
+        {"area_cuboid(4; 3; 2)", "52"},
+        {"area_cuboid_lateral(4; 3; 2)", "28"},
+        {"volume_cuboid(4; 3; 2)", "24"},
+        {"area_prism(6; 12; 4)", "60"},
+        {"area_prism_lateral(12; 4)", "48"},
+        {"volume_prism(6; 4)", "24"},
+        {"area_triangular_prism(3; 4; 5; 4)", "60"},
+        {"area_triangular_prism_lateral(3; 4; 5; 4)", "48"},
+        {"volume_triangular_prism(3; 4; 5; 4)", "24"},
+        {"area_regular_prism(4; 3; 2)", "42"},
+        {"area_regular_prism_lateral(4; 3; 2)", "24"},
+        {"volume_regular_prism(4; 3; 2)", "18"},
+        {"volume_pyramid(16; 6)", "32"},
+        {"area_square_pyramid(6; 4)", "96"},
+        {"area_square_pyramid_lateral(6; 4)", "60"},
+        {"volume_square_pyramid(6; 4)", "48"},
+        {"area_rectangular_pyramid(6; 6; 4)", "96"},
+        {"area_rectangular_pyramid_lateral(8; 6; 4)", "40 + 24*sqrt(2)"},
+        {"volume_rectangular_pyramid(8; 6; 4)", "64"},
+        {"area_regular_pyramid(4; 6; 4)", "96"},
+        {"area_regular_pyramid_lateral(4; 6; 4)", "60"},
+        {"volume_regular_pyramid(4; 6; 4)", "48"},
+        {"area_regular_pyramid_frustum(4; 6; 0; 4)", "96"},
+        {"area_regular_pyramid_frustum_lateral(4; 6; 6; 4)", "96"},
+        {"volume_regular_pyramid_frustum(4; 6; 3; 4)", "84"},
+        {"volume_pyramid_frustum(36; 9; 4)", "84"},
+        {"volume_prismoid(9; 16; 25; 3)", "49"},
+        {"area_cylinder(2; 3)", "20*pi"},
+        {"area_cylinder_lateral(2; 3)", "12*pi"},
+        {"numval(volume_cylinder(10[cm]; 20[cm]) -> [L])", "2*pi"},
+        {"volume_cylindrical_segment(2; 4; 2)", "8*pi"},
+        {"area_cone(3; 4)", "24*pi"},
+        {"area_cone_lateral(3; 4)", "15*pi"},
+        {"volume_cone(3; 4)", "12*pi"},
+        {"area_cone_frustum(3; 0; 4)", "24*pi"},
+        {"area_cone_frustum_lateral(3; 3; 4)", "24*pi"},
+        {"volume_cone_frustum(3; 2; 3)", "19*pi"},
+        {"area_hollow_cylinder(3; 2; 4)", "50*pi"},
+        {"area_hollow_cylinder_lateral(3; 2; 4)", "40*pi"},
+        {"volume_hollow_cylinder(3; 2; 4)", "20*pi"},
+        {"area_sphere(2)", "16*pi"},
+        {"volume_sphere(3)", "36*pi"},
+        {"area_hemisphere(2)", "12*pi"},
+        {"area_hemisphere_lateral(2)", "8*pi"},
+        {"volume_hemisphere(3)", "18*pi"},
+        {"area_spherical_cap(2; 2)", "12*pi"},
+        {"area_spherical_cap_lateral(2; 2)", "8*pi"},
+        {"volume_spherical_cap(2; 1)", "5*pi/3"},
+        {"area_spherical_segment(2; -1; 1)", "14*pi"},
+        {"area_spherical_segment_lateral(2; -1; 1)", "8*pi"},
+        {"volume_spherical_segment(2; -1; 1)", "22*pi/3"},
+        {"area_spherical_shell(3; 2)", "52*pi"},
+        {"volume_spherical_shell(3; 2)", "76*pi/3"},
+        {"area_capsule(2; 3)", "28*pi"},
+        {"volume_capsule(3; 2)", "54*pi"},
+        {"area_torus(3; 1)", "12*pi^2"},
+        {"volume_torus(3; 1)", "6*pi^2"},
+        {"round(area_ellipsoid(3; 2; 1); 6)", "48.882146"},
+        {"volume_ellipsoid(3; 2; 1)", "8*pi"},
+        {"area_spheroid(2; 2)", "16*pi"},
+        {"volume_spheroid(3; 2)", "24*pi"},
+        {"area_elliptical_cylinder(2; 2; 3)", "20*pi"},
+        {"round(area_elliptical_cylinder_lateral(3; 2; 1); 6)", "15.865440"},
+        {"volume_elliptical_cylinder(3; 2; 4)", "24*pi"},
+        {"area_regular_tetrahedron(2)", "4*sqrt(3)"},
+        {"volume_regular_tetrahedron(2)", "2*sqrt(2)/3"},
+        {"area_regular_octahedron(2)", "8*sqrt(3)"},
+        {"volume_regular_octahedron(2)", "8*sqrt(2)/3"},
+        {"round(area_regular_dodecahedron(1); 6)", "20.645729"},
+        {"round(volume_regular_dodecahedron(1); 6)", "7.663119"},
+        {"area_regular_icosahedron(2)", "20*sqrt(3)"},
+        {"round(volume_regular_icosahedron(1); 6)", "2.181695"},
+        {"area_tetrahedron({{0; 0; 0}; {1; 0; 0}; {0; 1; 0}; {0; 0; 1}})", "(3 + sqrt(3))/2"},
+        {"volume_tetrahedron({{0; 0; 0}; {1; 0; 0}; {0; 1; 0}; {0; 0; 1}})", "1/6"},
+        {"area_parallelepiped({{4; 0; 0}; {0; 3; 0}; {0; 0; 2}})", "52"},
+        {"volume_parallelepiped({{4; 0; 0}; {0; 3; 0}; {0; 0; 2}})", "24"},
+        {"area_mesh({{0; 0; 0}; {1; 0; 0}; {0; 1; 0}; {0; 0; 1}}; {{1; 2; 3}})", "0.5"},
+        {"volume_mesh({{0; 0; 0}; {1; 0; 0}; {0; 1; 0}; {0; 0; 1}}; {{1; 3; 2}; {1; 2; 4}; {1; 4; 3}; {2; 3; 4}})", "1/6"},
+    };
+    for (const Example& example : examples) {
+        const QString comparison = QStringLiteral("round((%1)-(%2); 35)")
+                                       .arg(QLatin1String(example.expression), QLatin1String(example.expected));
+        checkEval(__FILE__, __LINE__, example.expression, comparison, "0");
+    }
+
+    CHECK_EVAL("area_rectangle(30[cm]; 2[m]) / [cm^2]", "6000");
+    CHECK_EVAL("AREA_SQUARE(4)", "16");
+    CHECK_EVAL("volume_prism(6[cm^2]; 40[mm]) / [cm^3]", "24");
+    CHECK_EVAL("area_cube(20[cm]) / [cm^2]", "2400");
+    CHECK_EVAL("volume_cylindrical_segment(1; 3; 0)", "0");
+    CHECK_EVAL("round(volume_cylindrical_segment(1; 3; 2) - 3*pi; 35)", "0");
+    CHECK_EVAL("round(area_circle_overlap(1; 1; 1) - (2*pi/3-sqrt(3)/2); 35)", "0");
+    CHECK_EVAL("area_circle_overlap(2; 1; 3)", "0");
+    CHECK_EVAL("round(area_circular_sector(2; 360[deg]) - 4*pi; 35)", "0");
+    CHECK_EVAL("round(area_circular_segment_from_angle(2; 360[deg]) - 4*pi; 35)", "0");
+    CHECK_EVAL("round(area_circular_segment(1; 1e-40)*1e60 - 4*sqrt(2)/3; 35)", "0");
+    CHECK_EVAL("round(area_triangle_from_sides(1; 1; 1e-40)*1e40; 35)", "0.5");
+    CHECK_EVAL("round(volume_spherical_cap(2; 4) - volume_sphere(2); 35)", "0");
+    CHECK_EVAL("round(area_ellipsoid(1; 3; 2) - area_ellipsoid(3; 2; 1); 35)", "0");
+    CHECK_EVAL_PRECISE("area_ellipsoid(3; 2; 1)", "48.88214630258205969571954572881548030819305253684992");
+    CHECK_EVAL_PRECISE("area_elliptical_cylinder_lateral(3; 2; 1)",
+                       "15.86543958929058979133166302778307249673008284832650");
+
+    const char previousAngleMode = Settings::instance()->angleUnit;
+    Settings::instance()->angleUnit = 'd';
+    eval->initializeAngleUnits();
+    CHECK_EVAL("round(area_triangle_from_angle(3; 4; 90); 35)", "6");
+    CHECK_EVAL("round(area_circular_sector(2; pi[rad]) - 2*pi; 35)", "0");
+    CHECK_EVAL_FAIL("area_triangle_from_angle(3; 4; 180[deg])");
+    Settings::instance()->angleUnit = 'g';
+    eval->initializeAngleUnits();
+    CHECK_EVAL("round(area_circular_sector(2; 400) - 4*pi; 35)", "0");
+    CHECK_EVAL("round(area_triangle_from_angle(3; 4; 90[deg]); 35)", "6");
+    Settings::instance()->angleUnit = 't';
+    eval->initializeAngleUnits();
+    CHECK_EVAL("round(area_circular_sector(2; 1) - 4*pi; 35)", "0");
+    Settings::instance()->angleUnit = previousAngleMode;
+    eval->initializeAngleUnits();
+
+    CHECK_EVAL("area_polygon({{0; 0}; {0; 3}; {2; 1}; {4; 3}; {4; 0}; {0; 0}})", "8");
+    CHECK_EVAL("area_polygon({{0; 0}; {1; 0}; {2; 0}; {2; 1}})", "1");
+    CHECK_EVAL("volume_tetrahedron({{0; 0; 0}; {1; 0; 0}; {0; 1; 0}; {0; 0; 1}}; 6[cm]) / [cm^3]",
+               "36");
+    CHECK_EVAL("volume_parallelepiped({{3; 0; 0}; {2; 4; 0}; {1; 1; 2}})", "24");
+
+    const QString cubeVertices = QStringLiteral(
+        "{{0;0;0};{1;0;0};{1;1;0};{0;1;0};{0;0;1};{1;0;1};{1;1;1};{0;1;1}}");
+    const QString cubeFaces = QStringLiteral(
+        "{{1;3;2};{1;4;3};{5;6;7};{5;7;8};{1;2;6};{1;6;5};"
+        "{2;3;7};{2;7;6};{3;4;8};{3;8;7};{4;1;5};{4;5;8}}");
+    CHECK_EVAL(QStringLiteral("area_mesh(%1; %2)").arg(cubeVertices, cubeFaces), "6");
+    CHECK_EVAL(QStringLiteral("volume_mesh(%1; %2; 3[cm]) / [cm^3]").arg(cubeVertices, cubeFaces), "27");
+    CHECK_EVAL("round(volume_mesh({{0;0;0};{1;0;0};{0;1;0};{0;0;1}};"
+               "{{1;2;3};{1;4;2};{1;3;4};{2;4;3}}) - 1/6; 35)", "0");
+
+    const QString bipyramidFaces = QStringLiteral("{{1;2;4};{2;3;4};{3;1;4};{2;1;5};{3;2;5};{1;3;5}}");
+    const QString bipyramid = QStringLiteral("volume_mesh({{0;0;0};{4;0;0};{0;4;0};{1;1;4};%1}; %2)");
+    CHECK_EVAL(bipyramid.arg(QStringLiteral("{1;1;-2}"), bipyramidFaces), "16");
+    CHECK_EVAL_FAIL(bipyramid.arg(QStringLiteral("{5;5;2}"), bipyramidFaces));
+    CHECK_EVAL_FAIL(bipyramid.arg(QStringLiteral("{1;1;0}"), bipyramidFaces));
+
+    CHECK_EVAL_FAIL("area_square()");
+    CHECK_EVAL_FAIL("area_trapezium(3; 7; 2)");
+    CHECK_EVAL_FAIL("volume_rectangular_prism(4; 3; 2)");
+    CHECK_EVAL_FAIL("area_square(2[rad])");
+    CHECK_EVAL_FAIL("area_square(2[kg])");
+    CHECK_EVAL_FAIL("area_rectangle(2; 3[m])");
+    CHECK_EVAL_FAIL("volume_prism(2[m]; 3[m])");
+    CHECK_EVAL_FAIL("area_circle(-1)");
+    CHECK_EVAL_FAIL("area_triangle_from_sides(1; 1; 2)");
+    CHECK_EVAL_FAIL("area_triangular_prism_lateral(1; 1; 2; 3)");
+    CHECK_EVAL_FAIL("area_regular_polygon(2.5; 1)");
+    CHECK_EVAL_FAIL("area_regular_polygon(6[m]; 1[m])");
+    CHECK_EVAL_FAIL("area_circular_sector(2; 90[m])");
+    CHECK_EVAL_FAIL("area_circular_sector(2; 361[deg])");
+    CHECK_EVAL_FAIL("area_circular_segment(2; 5)");
+    CHECK_EVAL_FAIL("area_annulus(2; 3)");
+    CHECK_EVAL_FAIL("area_rounded_rectangle(2; 3; 2)");
+    CHECK_EVAL_FAIL("volume_cone_frustum(0; 0; 4)");
+    CHECK_EVAL_FAIL("area_regular_pyramid_frustum(4; 0; 0; 4)");
+    CHECK_EVAL_FAIL("volume_torus(1; 1)");
+    CHECK_EVAL_FAIL("volume_spherical_segment(3; 2; 1)");
+    CHECK_EVAL_FAIL("area_polygon({{0;0};{2;3};{0;2};{3;0}})");
+    CHECK_EVAL_FAIL("area_polygon({{0;0};{3;0};{1;0};{1;1};{0;1}})");
+    CHECK_EVAL_FAIL("area_polygon({{0;0};{1;0};{1;1}}; 1[s])");
+    CHECK_EVAL_FAIL("volume_parallelepiped({{1;0;0};{0;1;0};{1;1;0}})");
+    CHECK_EVAL_FAIL("area_mesh({{0;0;0};{1;0;0};{0;1;0}}; {{0;1;2}})");
+    CHECK_EVAL_FAIL("area_mesh({{0;0;0};{1;0;0};{0;1;0}}; {{1;1;3}})");
+    CHECK_EVAL_FAIL("volume_mesh({{0;0;0};{1;0;0};{0;1;0};{0;0;1}}; {{1;2;3}})");
+    CHECK_EVAL_FAIL("volume_mesh({{0;0;0};{1;0;0};{0;1;0};{0;0;1}};"
+                    "{{1;2;3};{1;2;4};{1;4;3};{2;3;4}})");
+}
+
 void test_function_basic()
 {
     CHECK_EVAL("ABS(0)", "0");
@@ -11006,6 +11211,105 @@ void test_result_display_shows_pi_multiples_for_radian_angle_results()
     session->clearHistory();
 }
 
+void test_result_display_shows_exact_geometry_results()
+{
+    Settings* settings = Settings::instance();
+    const char oldAngle = settings->angleUnit;
+    const char oldFormat = settings->resultFormat;
+    const bool oldMultiple = settings->multipleResultLinesEnabled;
+    settings->multipleResultLinesEnabled = false;
+
+    struct Example {
+        const char* expression;
+        const char* lastLine;
+        qsizetype lineCount;
+        char angle = 'r';
+        char format = 'g';
+    };
+    const Example examples[] = {
+        {"area_circle(2)", "4·π", 2},
+        {"area_circle 2", "4·π", 2},
+        {"(2*AREA_CIRCLE(2))", "8·π", 2},
+        {"area_circular_sector(1; 90[deg])", "π/4", 2},
+        {"area_circular_sector(1; 90°)", "π/4", 2, 'd'},
+        {"area_circular_sector(1; arccos(0))", "π/4", 2},
+        {"area_circular_sector(1; 90[deg])", "π/4", 1, 'd', 'r'},
+        {"area_annular_sector(3; 2; 180[deg])", "5/2·π", 1, 'r', 'r'},
+        {"area_torus(3; 1)", "12·π²", 2},
+        {"volume_sphere(3)", "36·π", 2},
+        {"volume_cylinder(10[cm]; 20[cm]) -> [L]", "2·πL", 2},
+        {"area_circular_sector(1[m]; 90[deg]) -> [m^2]", "(π/4)m²", 2},
+        {"area_circle(1[cm]) -> [m^2]", "(π/10000)m²", 2},
+        {"area_circle(2) - area_circle(3)", "−5·π", 2},
+        {"arccos(-area_square(1))", "πrad", 2},
+        {"area_square(2)", "4", 1},
+        {"area_circular_sector(1; 0[deg])", "0", 1},
+        {"area_circular_sector(1; 89.999999999999999999999999[deg])", nullptr, 1},
+        {"area_rounded_rectangle(4; 2; 1)", "4+π", 2},
+        {"area_stadium(3; 1)", "6+π", 2},
+        {"area_square(1) - area_circle(1)", "1−π", 2},
+        {"area_stadium(3[m]; 1[m]) -> [m^2]", "(6+π)m²", 2},
+        {"area_rectangular_pyramid_lateral(8; 6; 4)", "40+24·√(2)", 2},
+        {"area_regular_tetrahedron(2)", "4·√(3)", 2},
+        {"volume_regular_tetrahedron(2)", "2·√(2)/3", 2},
+        {"volume_regular_dodecahedron(1)", "(15+7·√(5))/4", 2},
+        {"area_tetrahedron({{0;0;0}; {1;0;0}; {0;1;0}; {0;0;1}})", "(3+√(3))/2", 2},
+        {"-area_tetrahedron({{0;0;0}; {1;0;0}; {0;1;0}; {0;0;1}})", "(−3−√(3))/2", 2},
+        {"area_tetrahedron({{0;0;0}; {1;0;0}; {0;1;0}; {0;0;1}})", "(3+√(3))/2", 1, 'r', 'r'},
+        {"area_tetrahedron({{0;0;0}; {1;0;0}; {0;1;0}; {0;0;1}}; 1[cm]) -> [m^2]",
+         "((3+√(3))/20000)m²", 2},
+        {"volume_tetrahedron({{0;0;0}; {1;0;0}; {0;1;0}; {0;0;1}})", "1/6", 2},
+        {"area_rectangle(1/2; 1)", "0.5", 1},
+        {"area_ellipsoid(3; 2; 1)", nullptr, 1},
+        {"area_square(1) + sqrt(3) + 1e-27", nullptr, 1},
+        {"pi ? area_circle(1)", nullptr, 1}
+    };
+
+    for (const Example& example : examples) {
+        settings->angleUnit = example.angle;
+        settings->resultFormat = example.format;
+        eval->initializeAngleUnits();
+        const QString expression = QString::fromUtf8(example.expression);
+        eval->setExpression(expression);
+        const Quantity result = eval->evalUpdateAns();
+        const QStringList lines = ResultLineFormatUtils::formatResultLinesForDisplay(
+            expression, eval->interpretedExpression(), result, false, true, eval, true);
+        QString lastLine = lines.value(lines.size() - 1);
+        lastLine.remove(QRegularExpression(QStringLiteral("[\\s\\p{Zs}]+")));
+        const QString firstLine = lines.value(0).simplified();
+        const bool incorrectAngleUnit = expression.startsWith(QStringLiteral("area_"))
+            && (firstLine.endsWith(QStringLiteral(" rad")) || firstLine.endsWith(MathDsl::Deg));
+        ++eval_total_tests;
+        if (!eval->error().isEmpty() || lines.size() != example.lineCount
+            || incorrectAngleUnit
+            || (example.lastLine && lastLine != QString::fromUtf8(example.lastLine))) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\texact geometry result line\t[NEW]"
+                 << "\n\tExpression: " << example.expression
+                 << "\n\tResult: " << qPrintable(lines.join(QStringLiteral(" | "))) << endl;
+        }
+    }
+
+    settings->resultFormat = 'r';
+    const QString expression = QStringLiteral("area_circle(2)");
+    eval->setExpression(expression);
+    const Quantity result = eval->evalUpdateAns();
+    const QStringList comparisonLines = ResultLineFormatUtils::formatResultLinesForDisplay(
+        expression, eval->interpretedExpression(), result, false, true, eval, false, true);
+    ++eval_total_tests;
+    if (!comparisonLines.contains(QStringLiteral("= ") + NumberFormatter::format(result))) {
+        ++eval_failed_tests;
+        ++eval_new_failed_tests;
+        cerr << __FILE__ << "[" << __LINE__ << "]\tmatch saved decimal Geometry result\t[NEW]" << endl;
+    }
+
+    settings->angleUnit = oldAngle;
+    settings->resultFormat = oldFormat;
+    settings->multipleResultLinesEnabled = oldMultiple;
+    eval->initializeAngleUnits();
+}
+
 void test_result_display_compacts_bracketed_degree_inside_trig_call()
 {
     Settings* settings = Settings::instance();
@@ -11845,6 +12149,7 @@ int main(int argc, char* argv[])
 
     test_function_basic();
     test_function_root();
+    test_geometry_functions();
     test_function_trig();
     test_function_tanh_range();
     test_function_stat();
@@ -11923,6 +12228,7 @@ int main(int argc, char* argv[])
     test_result_display_adds_simplified_line_for_unit_conversion_when_interpreted_is_empty();
     test_result_display_adds_simplified_line_for_unit_conversion_with_interpreted_expression();
     test_result_display_shows_pi_multiples_for_radian_angle_results();
+    test_result_display_shows_exact_geometry_results();
     test_result_display_compacts_bracketed_degree_inside_trig_call();
     test_trig_symbolic_fraction_half();
     test_interpreted_quotient_simplification();

@@ -2758,6 +2758,32 @@ bool Units::tryConvertExplicitAngleToRadians(Quantity* angle)
     return true;
 }
 
+bool Units::tryConvertAngleToRadians(Quantity& angle, char defaultUnit)
+{
+    if (tryConvertExplicitAngleToRadians(&angle))
+        return true;
+
+    switch (defaultUnit) {
+    case 'd':
+    case 'g':
+    case 't':
+    case 'v':
+        if (!angle.isReal())
+            return false;
+        break;
+    default:
+        return true;
+    }
+
+    if (defaultUnit == 'd')
+        angle = DMath::deg2rad(angle);
+    else if (defaultUnit == 'g')
+        angle = DMath::gon2rad(angle);
+    else
+        angle *= Quantity(2) * DMath::pi();
+    return true;
+}
+
 DEFINE_BASE_UNIT(metre)
 DEFINE_BASE_UNIT(second)
 DEFINE_BASE_UNIT(kilogram)

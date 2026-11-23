@@ -373,10 +373,7 @@ Integer Division
     Returns the least common multiple of the arguments (at least two must be given).
     The result is always non-negative.
 
-    ``gcd()`` and ``lcm()`` are related by:
-
-    .. math::
-
-        lcm(n1; n2) = n1 * n2 / gcd(n1; n2)
+    For two positive integers, multiply them and divide the product
+    by their greatest common divisor to get the least common multiple.
 
     Only real, integer arguments are allowed.

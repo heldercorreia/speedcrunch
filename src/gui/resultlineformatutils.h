@@ -10,6 +10,7 @@
 #include "core/numberformatter.h"
 #include "core/regexpatterns.h"
 #include "core/settings.h"
+#include "core/symbolicnumberformat.h"
 #include "core/unitdisplayformat.h"
 #include "core/unicodechars.h"
 #include "core/units.h"
@@ -1098,6 +1099,33 @@ inline bool expressionUsesTrigFunction(const QString& sourceExpression,
     return false;
 }
 
+inline bool expressionUsesGeometryResult(const QString& expression)
+{
+    auto calls = RegExpPatterns::anyFunctionCall().globalMatch(expression);
+    qsizetype argumentsEnd = 0;
+    while (calls.hasNext()) {
+        const auto call = calls.next();
+        if (call.capturedStart() < argumentsEnd)
+            continue;
+        const Function* function = FunctionRepo::instance()->find(call.captured(1));
+        if (function && function->domainType() == FunctionDomain::Geometry)
+            return true;
+
+        // A call such as arccos(area_square(1)) returns an angle.
+        int depth = 1;
+        for (argumentsEnd = call.capturedEnd();
+             argumentsEnd < expression.size() && depth > 0;
+             ++argumentsEnd) {
+            const QChar ch = expression.at(argumentsEnd);
+            if (ch == MathDsl::GroupStart)
+                ++depth;
+            else if (ch == MathDsl::GroupEnd)
+                --depth;
+        }
+    }
+    return false;
+}
+
 inline bool expressionUsesPhasorOperator(const QString& sourceExpression,
                                          const QString& interpretedExpression)
 {
@@ -1219,50 +1247,6 @@ inline bool tryExtractRealRadiansFromResult(const Quantity& value, HNumber* radi
     return true;
 }
 
-inline QString formatPiMultipleForRadians(const HNumber& radians)
-{
-    static const HNumber tolerance("1e-20");
-    static const int maxDenominator = 3600;
-
-    Rational ratio;
-    if (!Rational::approximate(radians / HMath::pi(), maxDenominator, tolerance, &ratio))
-        return QString();
-
-    const int numerator = ratio.numerator();
-    const int denominator = ratio.denominator();
-    if (numerator == 0 || denominator <= 0)
-        return QString();
-
-    const HNumber expected = HMath::pi() * HNumber(numerator) / HNumber(denominator);
-    const HNumber diff = HMath::abs(radians - expected);
-    const HNumber scale = HMath::max(HMath::max(HMath::abs(radians), HMath::abs(expected)), HNumber(1));
-    if (diff > tolerance * scale)
-        return QString();
-
-    const QString division = QString(MathDsl::DivWrap) + QString(MathDsl::DivOp) + QString(MathDsl::DivWrap);
-    const QString multiplication = QString(MathDsl::MulDotWrapSp) + QString(MathDsl::MulDotOp)
-        + QString(MathDsl::MulDotWrapSp);
-    const QString pi = QString(UnicodeChars::Pi);
-    const QString sign = (numerator < 0) ? QString(MathDsl::SubOp) : QString();
-    const int absNumerator = qAbs(numerator);
-
-    if (denominator == 1) {
-        if (absNumerator == 1)
-            return sign + pi;
-        return sign + QString::number(absNumerator) + multiplication + pi;
-    }
-
-    if (absNumerator == 1)
-        return sign + pi + division + QString::number(denominator);
-
-    return sign
-        + QString::number(absNumerator)
-        + division
-        + QString::number(denominator)
-        + multiplication
-        + pi;
-}
-
 inline QString formatPiRadianResultLineIfNeeded(const Settings* settings,
                                                 const QString& sourceExpression,
                                                 const QString& interpretedExpression,
@@ -1280,12 +1264,42 @@ inline QString formatPiRadianResultLineIfNeeded(const Settings* settings,
     if (!tryExtractRealRadiansFromResult(value, &radians))
         return QString();
 
-    const QString piMultiple = formatPiMultipleForRadians(radians);
+    static const HNumber tolerance("1e-20");
+    const QString piMultiple = SymbolicNumberFormat::formatConstantMultiple(
+        radians, HMath::pi(), QString(UnicodeChars::Pi), tolerance, 3600);
     if (piMultiple.isEmpty())
         return QString();
 
     return DisplayFormatUtils::applyDigitGroupingForDisplay(
         piMultiple + QString(MathDsl::QuantSp) + Units::angleModeUnitSymbol('r'));
+}
+
+inline QString formatGeometryExactResultLine(Quantity value, bool stripUnitBrackets)
+{
+    if (value.isCollection() || value.isNan() || !value.isReal() || value.isZero())
+        return QString();
+    if (value.isDimensionless() && value.hasUnit())
+        return QString();
+
+    if (!value.hasUnit() && !value.isDimensionless()) {
+        value.cleanDimension();
+        Units::findUnit(value);
+    }
+    const HNumber number = (value.numericValue() / value.unit()).real;
+    QString result = NumberFormatter::formatGeometryExact(number);
+    if (result.isEmpty())
+        return result;
+    result.replace(MathDsl::SubOpAl1, MathDsl::SubOp);
+
+    if (value.hasUnit()) {
+        if (result.contains(MathDsl::DivOp) || result.contains(MathDsl::AddOp)
+            || result.indexOf(MathDsl::SubOp, 1) >= 0)
+            result = MathDsl::GroupStart + result + MathDsl::GroupEnd;
+        result += QString(MathDsl::QuantSp) + MathDsl::UnitStart
+            + UnitDisplayFormat::normalizeUnitTextForDisplay(value.unitName()) + MathDsl::UnitEnd;
+    }
+    result = DisplayFormatUtils::applyDigitGroupingForDisplay(result);
+    return stripUnitBrackets ? stripDisplayedUnitBrackets(result) : result;
 }
 
 inline QString normalizeResultLineForComparison(QString text)
@@ -1355,10 +1369,12 @@ inline QString formatNumericResultLine(const Quantity& value,
                                        bool complexNumbers,
                                        char complexFormat,
                                        bool stripUnitBrackets,
+                                       bool geometryResult,
                                        const Settings* settings,
                                        const Evaluator* evaluator = nullptr)
 {
-    if (!expressionUsesTrigFunction(sourceExpression, interpretedExpression, evaluator)
+    if (!geometryResult
+        && !expressionUsesTrigFunction(sourceExpression, interpretedExpression, evaluator)
         && shouldPreserveDetailedStandaloneSexagesimalAngle(
             sourceExpression, value, settings)) {
         resultFormat = 's';
@@ -1375,8 +1391,10 @@ inline QString formatNumericResultLine(const Quantity& value,
                                 complexFormat));
     formattedText = NumberFormatter::rewriteScientificNotationForDisplay(formattedText);
     formattedText.replace(QString::fromUtf8(" × 10⁰"), QString());
-    formattedText = appendAngleModeSuffixIfNeeded(
-        formattedText, sourceExpression, interpretedExpression, value, resultFormat, settings, evaluator);
+    if (!geometryResult) {
+        formattedText = appendAngleModeSuffixIfNeeded(
+            formattedText, sourceExpression, interpretedExpression, value, resultFormat, settings, evaluator);
+    }
     return stripUnitBrackets ? stripDisplayedUnitBrackets(formattedText) : formattedText;
 }
 
@@ -1405,6 +1423,10 @@ inline QStringList formatResultLinesForDisplay(const QString& commentedSourceExp
     // conversion, or function hints for any result line.
     const QString sourceExpression = commentedSourceExpression.section(MathDsl::CommentSep, 0, 0);
     const QString interpretedExpression = commentedInterpretedExpression.section(MathDsl::CommentSep, 0, 0);
+    const bool geometryResult = expressionUsesGeometryResult(
+        interpretedExpression.isEmpty() ? sourceExpression : interpretedExpression);
+    const QString geometryExactLine = geometryResult && (!classifySavedLine || settings->resultFormat == 'r')
+        ? formatGeometryExactResultLine(value, stripUnitBracketsInNumericLines) : QString();
 
     if (!resultOnly && !classifySavedLine) {
         const QString simplifiedLine = simplifiedExpressionLineForDisplay(
@@ -1431,78 +1453,63 @@ inline QStringList formatResultLinesForDisplay(const QString& commentedSourceExp
             + conversionTargetSuffixForDisplay(sourceExpression));
     }
 
-    appendUniqueLine(resultPrefix + formatNumericResultLine(
-        value,
-        sourceExpression,
-        interpretedExpression,
-        settings->resultFormat,
-        settings->resultPrecision,
-        settings->complexNumbers,
-        settings->resultComplexForm,
-        stripUnitBracketsInNumericLines,
-        settings,
-        evaluator));
+    const Quantity::Format valueFormat = value.format();
+    auto appendFormattedLine = [&](char format, int precision, bool complex, char complexFormat,
+                                   bool useGeometryFormat = true) {
+        if (useGeometryFormat && format == 'r' && !geometryExactLine.isEmpty()
+            && valueFormat.base == Quantity::Format::Base::Null
+            && valueFormat.mode == Quantity::Format::Mode::Null) {
+            appendUniqueLine(resultPrefix + geometryExactLine);
+            return;
+        }
+        appendUniqueLine(resultPrefix + formatNumericResultLine(
+            value, sourceExpression, interpretedExpression, format, precision, complex, complexFormat,
+            stripUnitBracketsInNumericLines, geometryResult && useGeometryFormat, settings, evaluator));
+    };
+    appendFormattedLine(settings->resultFormat, settings->resultPrecision,
+                        settings->complexNumbers, settings->resultComplexForm);
 
     // A saved simplified row precedes the first numeric result. Later formats
     // cannot change that boundary and need not be regenerated to identify it.
-    if (classifySavedLine)
+    if (classifySavedLine) {
+        // Older Geometry entries can still contain a decimal result or an
+        // angle suffix inherited from an input.
+        if (geometryResult) {
+            appendFormattedLine(settings->resultFormat, settings->resultPrecision,
+                                settings->complexNumbers, settings->resultComplexForm, false);
+        }
         return lines;
+    }
 
     if (settings->multipleResultLinesEnabled && settings->secondaryResultEnabled
         && settings->alternativeResultFormat != '\0') {
-        appendUniqueLine(resultPrefix + formatNumericResultLine(
-            value,
-            sourceExpression,
-            interpretedExpression,
-            settings->alternativeResultFormat,
-            settings->secondaryResultPrecision,
+        appendFormattedLine(settings->alternativeResultFormat, settings->secondaryResultPrecision,
             settings->complexNumbers && settings->secondaryComplexNumbers,
-            settings->secondaryResultComplexForm,
-            stripUnitBracketsInNumericLines,
-            settings,
-            evaluator));
+            settings->secondaryResultComplexForm);
     }
     if (settings->multipleResultLinesEnabled && settings->tertiaryResultEnabled
         && settings->tertiaryResultFormat != '\0') {
-        appendUniqueLine(resultPrefix + formatNumericResultLine(
-            value,
-            sourceExpression,
-            interpretedExpression,
-            settings->tertiaryResultFormat,
-            settings->tertiaryResultPrecision,
+        appendFormattedLine(settings->tertiaryResultFormat, settings->tertiaryResultPrecision,
             settings->complexNumbers && settings->tertiaryComplexNumbers,
-            settings->tertiaryResultComplexForm,
-            stripUnitBracketsInNumericLines,
-            settings,
-            evaluator));
+            settings->tertiaryResultComplexForm);
     }
     if (settings->multipleResultLinesEnabled && settings->quaternaryResultEnabled
         && settings->quaternaryResultFormat != '\0') {
-        appendUniqueLine(resultPrefix + formatNumericResultLine(
-            value,
-            sourceExpression,
-            interpretedExpression,
-            settings->quaternaryResultFormat,
-            settings->quaternaryResultPrecision,
+        appendFormattedLine(settings->quaternaryResultFormat, settings->quaternaryResultPrecision,
             settings->complexNumbers && settings->quaternaryComplexNumbers,
-            settings->quaternaryResultComplexForm,
-            stripUnitBracketsInNumericLines,
-            settings,
-            evaluator));
+            settings->quaternaryResultComplexForm);
     }
     if (settings->multipleResultLinesEnabled && settings->quinaryResultEnabled
         && settings->quinaryResultFormat != '\0') {
-        appendUniqueLine(resultPrefix + formatNumericResultLine(
-            value,
-            sourceExpression,
-            interpretedExpression,
-            settings->quinaryResultFormat,
-            settings->quinaryResultPrecision,
+        appendFormattedLine(settings->quinaryResultFormat, settings->quinaryResultPrecision,
             settings->complexNumbers && settings->quinaryComplexNumbers,
-            settings->quinaryResultComplexForm,
-            stripUnitBracketsInNumericLines,
-            settings,
-            evaluator));
+            settings->quinaryResultComplexForm);
+    }
+
+    if (geometryResult) {
+        if (!geometryExactLine.isEmpty())
+            appendUniqueLine(resultPrefix + geometryExactLine);
+        return lines;
     }
 
     const QString piRadianResultLine = formatPiRadianResultLineIfNeeded(
