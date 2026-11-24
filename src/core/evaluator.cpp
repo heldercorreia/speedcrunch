@@ -7249,6 +7249,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
     struct StackEntry {
         Quantity value;
         bool isPercentValue;
+        bool isDeferred;
     };
     QStack<StackEntry> stack;
     QHash<int, QString> refs;
@@ -7256,15 +7257,21 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
     Quantity val1, val2;
     bool val1IsPercent = false;
     bool rhsIsPercent = false;
+    bool hasDeferredOperand = false;
     QVector<Quantity> args;
     QString fname;
     Function* function;
     const UserFunction* userFunction = nullptr;
-    auto pushStackValue = [&stack](const Quantity& value, bool isPercentValue = false) {
-        stack.push(StackEntry{value, isPercentValue});
+    auto pushStackValue = [&stack, &hasDeferredOperand](const Quantity& value, bool isPercentValue = false) {
+        stack.push(StackEntry{value, isPercentValue, hasDeferredOperand});
     };
-    auto popStackValue = [&stack](Quantity& value, bool* isPercentValue = nullptr) {
+    // Track function placeholders through operations so conversions can wait.
+    auto pushDeferredValue = [&stack]() {
+        stack.push(StackEntry{CMath::nan(), false, true});
+    };
+    auto popStackValue = [&stack, &hasDeferredOperand](Quantity& value, bool* isPercentValue = nullptr) {
         const StackEntry entry = stack.pop();
+        hasDeferredOperand = hasDeferredOperand || entry.isDeferred;
         value = entry.value;
         if (isPercentValue)
             *isPercentValue = entry.isPercentValue;
@@ -7333,6 +7340,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
     for (int pc = 0; pc < opcodes.count(); ++pc) {
         const Opcode& opcode = opcodes.at(pc);
         index = opcode.index;
+        hasDeferredOperand = false;
         switch (opcode.type) {
             // No operation.
             case Opcode::Nop:
@@ -7611,6 +7619,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     m_error = tr("invalid expression");
                     return HMath::nan();
                 }
+                const bool targetIsDeferred = stack.top().isDeferred;
                 popStackValue(val1);
                 popStackValue(val2);
                 auto targetContainsUnitIdentifier = [this](const QString& targetText) {
@@ -7629,13 +7638,25 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     m_error = tr("conversion target must be a unit");
                     return HMath::nan();
                 }
+                if (targetIsDeferred) {
+                    // The target scale is unknown until the function is called.
+                    Quantity converted = CMath::nan();
+                    converted.copyDimension(val2);
+                    pushStackValue(converted);
+                    break;
+                }
                 if (val1.isZero()) {
                     m_error = tr("unit must not be zero");
                     return HMath::nan();
                 }
                 if (!val1.sameDimension(val2)) {
-                    m_error = tr("Conversion failed - dimension mismatch");
-                    return HMath::nan();
+                    if (!hasDeferredOperand) {
+                        m_error = tr("Conversion failed - dimension mismatch");
+                        return HMath::nan();
+                    }
+                    // A valid conversion will have the target's dimension.
+                    val2 = CMath::nan();
+                    val2.copyDimension(val1);
                 }
                 const bool targetIsAffineUnit = Units::isAffineUnitName(val1.unitName());
                 CNumber displayUnitValue =
@@ -7689,7 +7710,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 fname = identifiers.at(index);
                 if (m_assignArg.contains(fname)) {
                     // Argument.
-                    pushStackValue(CMath::nan());
+                    pushDeferredValue();
                 } else if (hasVariable(fname)) {
                     // Variable.
                     pushStackValue(getVariable(fname).value());
@@ -7702,7 +7723,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     } else if (m_assignFunc) {
                         // Allow arbitrary identifiers
                         // when declaring user functions.
-                        pushStackValue(CMath::nan());
+                        pushDeferredValue();
                         refs.insert(stack.count(), fname);
                     } else if (hasUserFunction(fname)) {
                         pushStackValue(CMath::nan());
@@ -7725,7 +7746,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
             case Opcode::UnitRef:
                 fname = identifiers.at(index);
                 if (m_assignArg.contains(fname)) {
-                    pushStackValue(CMath::nan());
+                    pushDeferredValue();
                     break;
                 }
                 if (tryGetAnyUnitQuantity(fname, &val1)) {
@@ -7785,8 +7806,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 }
 
                 if (m_assignFunc) {
-                    // Allow arbitrary identifiers for declaring user functions.
-                    pushStackValue(CMath::nan());
+                    pushDeferredValue();
                 } else if (userFunction) {
                     pushStackValue(execUserFunction(userFunction, args));
                     if (!m_error.isEmpty())

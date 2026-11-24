@@ -77,6 +77,7 @@ static const QString slash = space + QString(MathDsl::DivOp) + space;
 #define CHECK_AUTOFIX(s,p) checkAutoFix(__FILE__,__LINE__,#s,s,p)
 #define CHECK_DIV_BY_ZERO(s) checkDivisionByZero(__FILE__,__LINE__,#s,s)
 #define CHECK_EVAL(x,y) checkEval(__FILE__,__LINE__,#x,x,y)
+#define CHECK_EVAL_SUCCESS(x) checkEval(__FILE__,__LINE__,#x,x,nullptr)
 #define CHECK_EVAL_FORMAT(x,y) checkEval(__FILE__,__LINE__,#x,x,y,0,false,true)
 #define CHECK_EVAL_FORMAT_HAS_SLASH(x) checkEvalFormatSlash(__FILE__, __LINE__, #x, x, true)
 #define CHECK_EVAL_FORMAT_NO_SLASH(x) checkEvalFormatSlash(__FILE__, __LINE__, #x, x, false)
@@ -139,7 +140,7 @@ static void checkEval(const char* file, int line, const char* msg, const QString
             cerr << endl;
             cerr << "\tError: " << eval->error().toUtf8().constData() << endl;
         }
-    } else {
+    } else if (expected || shouldFail) {
         QString result = (format ? NumberFormatter::format(rn) : DMath::format(rn, Format::Fixed()));
         result.replace(QString::fromUtf8("−"), "-");
         QString expectedText = QString::fromUtf8(expected);
@@ -5211,6 +5212,32 @@ void test_user_functions()
     // Check redefining a variable without description clears it.
     CHECK_EVAL("vardesc = 8", "8");
     CHECK_USERVAR_DESC("vardesc", "");
+}
+
+void test_user_function_conversions()
+{
+    CHECK_EVAL_SUCCESS("tocm(x) = x in [cm]");
+    CHECK_EVAL("tocm(2 [m])", "200 cm");
+    CHECK_EVAL_FAIL("tocm(2 [s])");
+    CHECK_EVAL_FAIL("tocm(2)");
+
+    CHECK_EVAL_SUCCESS("tomm(x) = tocm(x) -> [mm]");
+    CHECK_EVAL("tomm(2 [m])", "2000 mm");
+    CHECK_EVAL_SUCCESS("lengthcount(x) = (((x + 1 [m]) -> [cm]) / [m])!");
+    CHECK_EVAL("lengthcount(2 [m])", "6");
+
+    CHECK_EVAL_SUCCESS("scaledlength(x) = 1 [m] in (x * [s])");
+    CHECK_EVAL("numval(scaledlength(2 [m/s]))", "0.5");
+    CHECK_EVAL_FAIL("scaledlength(0 [m/s])");
+
+    CHECK_USERFUNC_SET_FAIL("badconversion(x) = x + (1 [s] in [cm])");
+    CHECK_USERFUNC_SET_FAIL("badconversion(x) = x + ((1 [s] + 1 [m]) in [cm])");
+    CHECK_USERFUNC_SET_FAIL("badconversion(x) = x in 2");
+    CHECK_USERFUNC_SET_FAIL("badconversion(x) = x in (0 [m])");
+
+    CHECK_EVAL_SUCCESS(eval->autoFix(QString::fromUtf8(
+        "majoraxisc3(a) = −(6.67430e−11 [m³·kg⁻¹·s⁻²]·5.9722 [Rg]) / a in [km²·s⁻²]")));
+    CHECK_EVAL("round(numval(majoraxisc3(7000 [km])); 4)", "-56.9432");
 }
 
 void test_user_units()
@@ -12186,6 +12213,7 @@ int main(int argc, char* argv[])
     test_result_display_scroll_edge_gradient_height_scales_with_font_zoom();
 
     test_user_functions();
+    test_user_function_conversions();
     test_user_units();
     test_cubic_centimetre_display();
 
