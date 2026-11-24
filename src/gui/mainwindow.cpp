@@ -6614,6 +6614,13 @@ void MainWindow::cycleFocusRegion(int direction)
     if (!target->window()->isActiveWindow())
         target->window()->activateWindow();
     target->setFocus(Qt::ShortcutFocusReason);
+
+    if (Editor* editor = qobject_cast<Editor*>(target)) {
+        QWidget* page = editor->parentWidget();
+        ResultDisplay* display = page
+            ? page->findChild<ResultDisplay*>(QString(), Qt::FindDirectChildrenOnly) : nullptr;
+        setActiveEditorDisplayPane(display, editor, true);
+    }
 }
 
 void MainWindow::cycleFocusForward()

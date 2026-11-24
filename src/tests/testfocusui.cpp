@@ -704,15 +704,28 @@ void TestFocusUi::current_result_tooltip_hides_when_dragging_splitters()
 void TestFocusUi::f6_cycles_focus_between_editor_and_visible_dock_controls_data()
 {
     QTest::addColumn<bool>("savedDockLayout");
-    QTest::newRow("default-layout") << false;
-    QTest::newRow("saved-visible-dock") << true;
+    QTest::addColumn<int>("nextFocusKey");
+    QTest::newRow("default-layout") << false << int(Qt::Key_F6);
+    QTest::newRow("saved-visible-dock") << true << int(Qt::Key_F6);
+    QTest::newRow("tab-shortcut") << false << int(Qt::Key_Tab);
 }
 
 void TestFocusUi::f6_cycles_focus_between_editor_and_visible_dock_controls()
 {
     QFETCH(bool, savedDockLayout);
+    QFETCH(int, nextFocusKey);
     MainWindowStateGuard guard;
     Settings* settings = guard.settings;
+    const QColor primary(QStringLiteral("#e7a840"));
+    settings->editorDisplayStyle = Settings::EditorDisplayModern;
+    settings->cursorBlinking = false;
+    settings->colorScheme = QStringLiteral("Custom");
+    settings->customColorSchemeJson = themeJsonString(QJsonObject{
+        {QStringLiteral("background"), QStringLiteral("#454257")},
+        {QStringLiteral("primary"), primary.name()}
+    });
+    if (nextFocusKey == Qt::Key_Tab)
+        settings->keyBindings.insert(QStringLiteral("navigationNextFocus"), {QStringLiteral("Tab")});
     if (savedDockLayout) {
         settings->sessionLayoutJson.clear();
         settings->windowState.clear();
@@ -744,10 +757,20 @@ void TestFocusUi::f6_cycles_focus_between_editor_and_visible_dock_controls()
 
     Editor* editor = window.findChild<Editor*>();
     QVERIFY(editor != nullptr);
+    editor->setText(QString());
+    editor->setPlaceholderText(QString());
     editor->setFocus();
     QTRY_VERIFY(focusIsWithin(editor));
 
-    QTest::keyClick(editor, Qt::Key_F6);
+    const auto paintsCaret = [editor, primary]() {
+        const QImage image = editor->viewport()->grab().toImage();
+        const QRect caret = editor->cursorRect().adjusted(-2, 0, 2, 0);
+        return firstPixelMatchingColor(image, imageRectForWidgetRect(image, caret), primary, 4)
+            != QPoint(-1, -1);
+    };
+    QTRY_VERIFY(paintsCaret());
+
+    QTest::keyClick(editor, Qt::Key(nextFocusKey));
     QCoreApplication::processEvents();
     QVERIFY(focusIsWithin(editor));
 
@@ -775,19 +798,30 @@ void TestFocusUi::f6_cycles_focus_between_editor_and_visible_dock_controls()
     editor->setFocus();
     QTRY_VERIFY(focusIsWithin(editor));
 
-    QTest::keyClick(editor, Qt::Key_F6);
+    QTest::keyClick(editor, Qt::Key(nextFocusKey));
     QCoreApplication::processEvents();
     QTRY_VERIFY(focusIsWithin(searchBox));
+    QVERIFY(!editorHasPrimaryOutline(editor, primary));
+    QVERIFY(!paintsCaret());
 
-    QTest::keyClick(searchBox, Qt::Key_F6);
+    QTest::keyClick(searchBox, Qt::Key_F6, Qt::ShiftModifier);
+    QTRY_VERIFY(focusIsWithin(editor));
+    QVERIFY(editorHasPrimaryOutline(editor, primary));
+    QVERIFY(paintsCaret());
+
+    QTest::keyClick(editor, Qt::Key(nextFocusKey));
+    QTRY_VERIFY(focusIsWithin(searchBox));
+    QTest::keyClick(searchBox, Qt::Key(nextFocusKey));
     QCoreApplication::processEvents();
     QTRY_VERIFY(focusIsWithin(table));
     QTest::qWait(175);
     QVERIFY(focusIsWithin(table));
 
-    QTest::keyClick(table, Qt::Key_F6);
+    QTest::keyClick(table, Qt::Key(nextFocusKey));
     QCoreApplication::processEvents();
     QTRY_VERIFY(focusIsWithin(editor));
+    QVERIFY(editorHasPrimaryOutline(editor, primary));
+    QVERIFY(paintsCaret());
 
     QVERIFY(QMetaObject::invokeMethod(&window, "cycleFocusBackward", Qt::DirectConnection));
     QCoreApplication::processEvents();
