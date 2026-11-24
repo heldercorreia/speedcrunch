@@ -15,6 +15,7 @@
 #include <QString>
 #include <QStringList>
 
+#include <limits>
 #include <stdlib.h>
 #include <string.h>
 
@@ -626,6 +627,13 @@ CNumber CMath::raise(const CNumber& n1, int n)
  */
 CNumber CMath::raise(const CNumber& n1, const CNumber& n2)
 {
+    // Integer powers can stay exact without going through log and exp.
+    if (n1.isPositive() && n2.isInteger()
+        && HMath::abs(n2.real) <= HNumber(std::numeric_limits<int>::max())) {
+        const HNumber power = HMath::raise(n1.real, n2.real.toInt());
+        if (!power.isNan())
+            return CNumber(power);
+    }
     if (n1.isZero() && (n2.real > 0))
       return CNumber(0);
     return CMath::exp(CMath::ln(n1) * n2);

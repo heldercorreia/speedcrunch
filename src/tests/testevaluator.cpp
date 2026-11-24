@@ -5232,6 +5232,19 @@ void test_user_units()
     CHECK_USERUNIT_DESC("unit_desc", "speed alias");
 }
 
+void test_cubic_centimetre_display()
+{
+    CHECK_EVAL(u8"0.999 [cm³]", u8"999 µL");
+    CHECK_EVAL(u8"1 [cm³]", "1 mL");
+    CHECK_EVAL(u8"-1 [cm³]", "-1 mL");
+    CHECK_EVAL(u8"1000 [cm³]", "1 L");
+    CHECK_EVAL(u8"1 [cm³] -> [µL]", u8"1000 µL");
+    CHECK_EVAL(u8"[cmcub] = 1 [cm³]", "1 mL");
+    CHECK_EVAL("1 [cmcub]", "1 mL");
+    CHECK_EVAL("3 [cmcub]", "3 mL");
+    eval->unsetUserUnit(QStringLiteral("cmcub"));
+}
+
 void test_complex()
 {
     // Check for basic complex number processing
@@ -12174,6 +12187,7 @@ int main(int argc, char* argv[])
 
     test_user_functions();
     test_user_units();
+    test_cubic_centimetre_display();
 
     test_implicit_multiplication();
     test_display_interpreted_spacing();
@@ -12182,6 +12196,7 @@ int main(int argc, char* argv[])
     DMath::complexMode = true;
     eval->initializeBuiltInVariables();
     test_complex();
+    test_cubic_centimetre_display();
     test_function_tanh_range();
     test_format();
     test_result_rounding_mode_formatting();
