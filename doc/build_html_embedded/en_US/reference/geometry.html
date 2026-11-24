@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+
+<html lang="en-US" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta content="Calculate areas, surface areas, and volumes for polygons, solids, tanks, and triangle meshes in SpeedCrunch." name="description" />
+
+    <title>Geometry</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=0fbef478" />
+    <link rel="stylesheet" type="text/css" href="../_static/quark.css?v=b0b2863f" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="next" title="Integer &amp; Bitwise Arithmetic Functions" href="integer.html" />
+    <link rel="prev" title="Basic Math Functions" href="basic.html" />
+    <link rel="stylesheet" href="../" type="text/css" />
+
+  </head><body>
+  <table class="navbar navbar-top">
+    
+  <tr>
+    <td width="50%">
+      <a class="nav-item nav-item-0"
+         href="../contents.html">SpeedCrunch 1.2.0 documentation</a> &#187; <a class="nav-item nav-item-1"
+             href="index.html">Reference</a>
+          
+    </td>
+
+    <td align="right" width="50%">
+      <a class="rel-item rel-item-1"
+           href="basic.html"
+           title="Basic Math Functions"
+           accesskey="P">previous</a>
+         | 
+      <a class="rel-item rel-item-2"
+           href="integer.html"
+           title="Integer &amp; Bitwise Arithmetic Functions"
+           accesskey="N">next</a>
+         | 
+      <a class="rel-item rel-item-3"
+           href="../sc-functionindex.html"
+           title="Function Index"
+           >functions</a>
+         | 
+      <a class="rel-item rel-item-4"
+           href="../genindex.html"
+           title="General Index"
+           accesskey="I">index</a>
+        
+      
+    </td>
+
+  </tr>
+
+  </table>
+
+
+    <div class="document">
+      <div class="documentwrapper">
+          <div class="body" role="main">
+            
+  <section id="geometry">
+<h1>Geometry</h1>
+<p>Use <code class="docutils literal notranslate"><span class="pre">area_</span></code> for flat shapes and for the total surface area of solids.
+Use <code class="docutils literal notranslate"><span class="pre">volume_</span></code> for volume. The <code class="docutils literal notranslate"><span class="pre">_lateral</span></code> suffix gives the side or curved
+area. For a composite solid, add the volumes of its non-overlapping
+parts and count only its exposed faces for surface area.</p>
+<p>Enter measurements as plain numbers in a common unit, or give each
+measurement a unit. Physical lengths can use different units, such as
+meters and centimeters. Results have square or cubic units when the
+inputs carry units. Angles without units follow the current angle mode.
+An explicit unit such as <code class="docutils literal notranslate"><span class="pre">[deg]</span></code> works in any mode. Heights are
+perpendicular to the base. Use positive lengths and areas unless the
+function gives a range that includes zero or negative values.</p>
+<p>For shapes given by coordinates, enter a matrix with one point or
+vector per row. The optional scale is the length of one coordinate
+unit, for example <code class="docutils literal notranslate"><span class="pre">1[cm]</span></code>. With no scale, the result is a plain
+number.</p>
+<p class="rubric" id="geometry-exact-results">Exact results</p>
+<p>With any decimal notation, SpeedCrunch adds a line below the decimal
+result when it finds a simple exact form for a Geometry calculation.
+<span class="menuselection">Rational</span> uses that form on its result line. This also works
+in arithmetic such as <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">area_circle(2)</span></code>.</p>
+<p>The display recognizes fractions such as <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">/</span> <span class="pre">6</span></code>, multiples of π or π²,
+square roots, and some sums and differences. The exact form can help you
+check your work against a formula or reuse the value without rounding.
+For example, in
+<code class="docutils literal notranslate"><span class="pre">area_rectangular_pyramid_lateral(8;</span> <span class="pre">6;</span> <span class="pre">4)</span></code>, one pair of side faces
+contributes <code class="docutils literal notranslate"><span class="pre">40</span></code> and the other contributes <code class="docutils literal notranslate"><span class="pre">24</span> <span class="pre">·</span> <span class="pre">√(2)</span></code>.</p>
+<p>SpeedCrunch checks the calculated value before rounding it for display.
+For example, a sector of 90 degrees with radius 1 matches <code class="docutils literal notranslate"><span class="pre">π</span> <span class="pre">/</span> <span class="pre">4</span></code>.
+A sector just under 90 degrees can round to the same decimal and show
+only the decimal line.</p>
+<section id="plane-shapes">
+<h2>Plane shapes</h2>
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_square">
+<span class="sig-name descname"><span class="pre">area_square</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">side</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Square the side length.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_square</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 16</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_rectangle">
+<span class="sig-name descname"><span class="pre">area_rectangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">length</span></em>; <em class="sig-param"><span class="pre">width</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Multiply the length by the width.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_rectangle</span><span class="p">(</span><span class="mi">4</span><span class="p">;</span> <span class="mi">3</span><span class="p">)</span>
+<span class="ge">= 12</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_triangle">
+<span class="sig-name descname"><span class="pre">area_triangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">base</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Multiply the base by the perpendicular height and divide by 2. For a right
+triangle, use the two legs.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_triangle</span><span class="p">(</span><span class="mi">4</span><span class="p">;</span> <span class="mi">3</span><span class="p">)</span>
+<span class="ge">= 6</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_triangle_from_sides">
+<span class="sig-name descname"><span class="pre">area_triangle_from_sides</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">a</span></em>; <em class="sig-param"><span class="pre">b</span></em>; <em class="sig-param"><span class="pre">c</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use Heron’s formula, √(s(s − a)(s − b)(s − c)), where
+s = (a + b + c) / 2. The sides must form a triangle.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_triangle_from_sides</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">4</span><span class="p">;</span> <span class="mi">5</span><span class="p">)</span>
+<span class="ge">= 6</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_triangle_from_angle">
+<span class="sig-name descname"><span class="pre">area_triangle_from_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">a</span></em>; <em class="sig-param"><span class="pre">b</span></em>; <em class="sig-param"><span class="pre">angle</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use ab sin(θ) / 2, where θ is the angle between
+the two sides. It must be between 0 and 180 degrees.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_triangle_from_angle</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">4</span><span class="p">;</span> <span class="mi">90</span><span class="p">[</span><span class="n">deg</span><span class="p">])</span>
+<span class="ge">= 6</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_parallelogram">
+<span class="sig-name descname"><span class="pre">area_parallelogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">base</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Multiply the base by the perpendicular height.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_parallelogram</span><span class="p">(</span><span class="mi">5</span><span class="p">;</span> <span class="mi">3</span><span class="p">)</span>
+<span class="ge">= 15</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_trapezoid">
+<span class="sig-name descname"><span class="pre">area_trapezoid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">base_1</span></em>; <em class="sig-param"><span class="pre">base_2</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Average the lengths of the parallel bases and multiply by the
+perpendicular height. This shape is also called a trapezium.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_trapezoid</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">7</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 10</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_rhombus">
+<span class="sig-name descname"><span class="pre">area_rhombus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">diagonal_1</span></em>; <em class="sig-param"><span class="pre">diagonal_2</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Multiply the diagonal lengths and divide by 2.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_rhombus</span><span class="p">(</span><span class="mi">4</span><span class="p">;</span> <span class="mi">6</span><span class="p">)</span>
+<span class="ge">= 12</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_kite">
+<span class="sig-name descname"><span class="pre">area_kite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">diagonal_1</span></em>; <em class="sig-param"><span class="pre">diagonal_2</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Multiply the diagonal lengths and divide by 2.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_kite</span><span class="p">(</span><span class="mi">5</span><span class="p">;</span> <span class="mi">8</span><span class="p">)</span>
+<span class="ge">= 20</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_regular_polygon">
+<span class="sig-name descname"><span class="pre">area_regular_polygon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em>; <em class="sig-param"><span class="pre">side</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use n s² / (4 tan(π / n)) for side length s and a whole
+number of sides n ≥ 3. This covers equilateral triangles and
+regular polygons of any size.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_regular_polygon</span><span class="p">(</span><span class="mi">4</span><span class="p">;</span> <span class="mi">3</span><span class="p">)</span>
+<span class="ge">= 9</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_polygon">
+<span class="sig-name descname"><span class="pre">area_polygon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">vertices</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">scale</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
+<dd><p>Use the shoelace formula. For each edge from (x₁, y₁) to (x₂, y₂),
+compute x₁y₂ − y₁x₂. Add these values, take the absolute value, and
+divide by 2. Enter each vertex as an <code class="docutils literal notranslate"><span class="pre">{x;</span> <span class="pre">y}</span></code> row in boundary order,
+clockwise or counterclockwise. The last vertex connects to the first.
+Edges may meet at their shared endpoints. You can repeat the first
+vertex at the end.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_polygon</span><span class="p">(</span>{{<span class="mi">0</span><span class="p">;</span> <span class="mi">0</span>}<span class="p">;</span> {<span class="mi">4</span><span class="p">;</span> <span class="mi">0</span>}<span class="p">;</span> {<span class="mi">4</span><span class="p">;</span> <span class="mi">3</span>}<span class="p">;</span> {<span class="mi">0</span><span class="p">;</span> <span class="mi">3</span>}}<span class="p">;</span> <span class="mi">1</span><span class="p">[</span><span class="n">m</span><span class="p">])</span>
+<span class="ge">= 12 m²</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_circle">
+<span class="sig-name descname"><span class="pre">area_circle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use πr². For a diameter, pass half of it as the radius.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_circle</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 4pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_circular_sector">
+<span class="sig-name descname"><span class="pre">area_circular_sector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em>; <em class="sig-param"><span class="pre">angle</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use r²θ / 2, with the sweep angle θ converted to
+radians. Use 90 degrees for a quarter circle and 180 degrees for a
+semicircle. The sweep can range from 0 to 360 degrees.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_circular_sector</span><span class="p">(</span><span class="mi">2</span><span class="p">;</span> <span class="mi">90</span><span class="p">[</span><span class="n">deg</span><span class="p">])</span>
+<span class="ge">= pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_circular_segment">
+<span class="sig-name descname"><span class="pre">area_circular_segment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em>; <em class="sig-param"><span class="pre">depth</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Measure the depth from the chord to the arc along the perpendicular
+through the center. Depth ranges from zero to the diameter. Use the
+segment formula below with
+θ = 4 arcsin(√(depth / (2r))).</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_circular_segment</span><span class="p">(</span><span class="mi">2</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 2pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_circular_segment_from_angle">
+<span class="sig-name descname"><span class="pre">area_circular_segment_from_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em>; <em class="sig-param"><span class="pre">angle</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use r²(θ − sin(θ)) / 2, with the central angle
+θ converted to radians. The angle can range from 0 to 360
+degrees.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_circular_segment_from_angle</span><span class="p">(</span><span class="mi">2</span><span class="p">;</span> <span class="mi">180</span><span class="p">[</span><span class="n">deg</span><span class="p">])</span>
+<span class="ge">= 2pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_ellipse">
+<span class="sig-name descname"><span class="pre">area_ellipse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">semi_axis_1</span></em>; <em class="sig-param"><span class="pre">semi_axis_2</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Multiply the two semiaxes by π. A semiaxis is half of the full
+axis length.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_ellipse</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 6pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_annulus">
+<span class="sig-name descname"><span class="pre">area_annulus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">outer_radius</span></em>; <em class="sig-param"><span class="pre">inner_radius</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use π(R² − r²) for a ring with inner radius 0 ≤ r ≤ R.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_annulus</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 5pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_annular_sector">
+<span class="sig-name descname"><span class="pre">area_annular_sector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">outer_radius</span></em>; <em class="sig-param"><span class="pre">inner_radius</span></em>; <em class="sig-param"><span class="pre">angle</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use (R² − r²)θ / 2, with the sweep converted to radians. The
+inner radius can range from zero to the outer radius. The sweep can range
+from 0 to 360 degrees.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_annular_sector</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">;</span> <span class="mi">180</span><span class="p">[</span><span class="n">deg</span><span class="p">])</span>
+<span class="ge">= 2.5pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_rounded_rectangle">
+<span class="sig-name descname"><span class="pre">area_rounded_rectangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">length</span></em>; <em class="sig-param"><span class="pre">width</span></em>; <em class="sig-param"><span class="pre">corner_radius</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use lw − (4 − π)r² for four equally rounded corners. The corner
+radius is at most half the shorter side.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_rounded_rectangle</span><span class="p">(</span><span class="mi">4</span><span class="p">;</span> <span class="mi">2</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="ge">= 4 + pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_stadium">
+<span class="sig-name descname"><span class="pre">area_stadium</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">straight_length</span></em>; <em class="sig-param"><span class="pre">radius</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add the area of the rectangular middle to that of the two semicircles,
+2rL + π r². The straight length L is the distance between
+the arc centers. This shape is also called an obround.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_stadium</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="ge">= 6 + pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_parabolic_segment">
+<span class="sig-name descname"><span class="pre">area_parabolic_segment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">chord</span></em>; <em class="sig-param"><span class="pre">rise</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use 2bh / 3 for a chord of length b perpendicular to the
+symmetry axis. Measure the rise h from the chord to the vertex.
+A rise of zero gives zero area.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_parabolic_segment</span><span class="p">(</span><span class="mi">6</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 8</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_circle_overlap">
+<span class="sig-name descname"><span class="pre">area_circle_overlap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius_1</span></em>; <em class="sig-param"><span class="pre">radius_2</span></em>; <em class="sig-param"><span class="pre">center_distance</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Measure the separation between the centers. The overlap is the sum of two
+circular segments in the partial case. Circles that only touch have zero
+overlap. If one circle contains the other, use the smaller circle’s area.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_circle_overlap</span><span class="p">(</span><span class="mi">2</span><span class="p">;</span> <span class="mi">1</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="ge">= pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+</section>
+<section id="prisms-and-pyramids">
+<h2>Prisms and pyramids</h2>
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_cube">
+<span class="sig-name descname"><span class="pre">area_cube</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">edge</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add the areas of all six square faces, 6s².</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_cube</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 24</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_cube_lateral">
+<span class="sig-name descname"><span class="pre">area_cube_lateral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">edge</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add the areas of the four side faces, 4s².</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_cube_lateral</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 16</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_cube">
+<span class="sig-name descname"><span class="pre">volume_cube</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">edge</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Cube the edge length.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_cube</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="ge">= 27</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_cuboid">
+<span class="sig-name descname"><span class="pre">area_cuboid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">length</span></em>; <em class="sig-param"><span class="pre">width</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use 2(lw + lh + wh) for a rectangular prism.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_cuboid</span><span class="p">(</span><span class="mi">4</span><span class="p">;</span> <span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 52</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_cuboid_lateral">
+<span class="sig-name descname"><span class="pre">area_cuboid_lateral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">length</span></em>; <em class="sig-param"><span class="pre">width</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use 2(l + w)h for the four side faces around the length and width of
+the base.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_cuboid_lateral</span><span class="p">(</span><span class="mi">4</span><span class="p">;</span> <span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 28</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_cuboid">
+<span class="sig-name descname"><span class="pre">volume_cuboid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">length</span></em>; <em class="sig-param"><span class="pre">width</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Multiply length, width, and height.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_cuboid</span><span class="p">(</span><span class="mi">4</span><span class="p">;</span> <span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 24</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_prism">
+<span class="sig-name descname"><span class="pre">area_prism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">base_area</span></em>; <em class="sig-param"><span class="pre">base_perimeter</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use 2A + Ph, where A and P are the area and
+perimeter of one base.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_prism</span><span class="p">(</span><span class="mi">6</span><span class="p">;</span> <span class="mi">12</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 60</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_prism_lateral">
+<span class="sig-name descname"><span class="pre">area_prism_lateral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">base_perimeter</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Multiply the base perimeter by the height.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_prism_lateral</span><span class="p">(</span><span class="mi">12</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 48</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_prism">
+<span class="sig-name descname"><span class="pre">volume_prism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">base_area</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Multiply the base area by the perpendicular height. This also works for
+oblique prisms.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_prism</span><span class="p">(</span><span class="mi">6</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 24</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_triangular_prism">
+<span class="sig-name descname"><span class="pre">area_triangular_prism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">a</span></em>; <em class="sig-param"><span class="pre">b</span></em>; <em class="sig-param"><span class="pre">c</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Find the area of the triangular base from its three sides and use
+<a class="reference internal" href="#sc.area_prism" title="area_prism"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">area_prism()</span></code></a>. The height is the distance between the triangular faces.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_triangular_prism</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">4</span><span class="p">;</span> <span class="mi">5</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 60</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_triangular_prism_lateral">
+<span class="sig-name descname"><span class="pre">area_triangular_prism_lateral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">a</span></em>; <em class="sig-param"><span class="pre">b</span></em>; <em class="sig-param"><span class="pre">c</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Multiply the sum of the three base sides by the prism’s height.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_triangular_prism_lateral</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">4</span><span class="p">;</span> <span class="mi">5</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 48</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_triangular_prism">
+<span class="sig-name descname"><span class="pre">volume_triangular_prism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">a</span></em>; <em class="sig-param"><span class="pre">b</span></em>; <em class="sig-param"><span class="pre">c</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Multiply the base area from Heron’s formula by the prism’s height.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_triangular_prism</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">4</span><span class="p">;</span> <span class="mi">5</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 24</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_regular_prism">
+<span class="sig-name descname"><span class="pre">area_regular_prism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em>; <em class="sig-param"><span class="pre">side</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add both regular polygon bases and the sides. Use
+<a class="reference internal" href="#sc.area_regular_polygon" title="area_regular_polygon"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">area_regular_polygon()</span></code></a> for the base area.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_regular_prism</span><span class="p">(</span><span class="mi">4</span><span class="p">;</span> <span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 42</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_regular_prism_lateral">
+<span class="sig-name descname"><span class="pre">area_regular_prism_lateral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em>; <em class="sig-param"><span class="pre">side</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Multiply the height by the regular polygon’s perimeter ns.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_regular_prism_lateral</span><span class="p">(</span><span class="mi">4</span><span class="p">;</span> <span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 24</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_regular_prism">
+<span class="sig-name descname"><span class="pre">volume_regular_prism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em>; <em class="sig-param"><span class="pre">side</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Multiply the area of the regular polygon base by the height.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_regular_prism</span><span class="p">(</span><span class="mi">4</span><span class="p">;</span> <span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 18</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_pyramid">
+<span class="sig-name descname"><span class="pre">volume_pyramid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">base_area</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Multiply the base area by the perpendicular height and divide by 3.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_pyramid</span><span class="p">(</span><span class="mi">16</span><span class="p">;</span> <span class="mi">6</span><span class="p">)</span>
+<span class="ge">= 32</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_square_pyramid">
+<span class="sig-name descname"><span class="pre">area_square_pyramid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">side</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add the square base to the four triangular sides. The apex is above the
+center of the base.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_square_pyramid</span><span class="p">(</span><span class="mi">6</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 96</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_square_pyramid_lateral">
+<span class="sig-name descname"><span class="pre">area_square_pyramid_lateral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">side</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use 2s√(h² + (s / 2)²) for the four triangular sides.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_square_pyramid_lateral</span><span class="p">(</span><span class="mi">6</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 60</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_square_pyramid">
+<span class="sig-name descname"><span class="pre">volume_square_pyramid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">side</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use s²h / 3.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_square_pyramid</span><span class="p">(</span><span class="mi">6</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 48</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_rectangular_pyramid">
+<span class="sig-name descname"><span class="pre">area_rectangular_pyramid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">length</span></em>; <em class="sig-param"><span class="pre">width</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add the rectangular base to the four triangular sides. The apex is above
+the center of the base.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_rectangular_pyramid</span><span class="p">(</span><span class="mi">6</span><span class="p">;</span> <span class="mi">6</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 96</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_rectangular_pyramid_lateral">
+<span class="sig-name descname"><span class="pre">area_rectangular_pyramid_lateral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">length</span></em>; <em class="sig-param"><span class="pre">width</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use l√(h² + (w / 2)²) + w√(h² + (l / 2)²). Each pair of opposite
+faces shares a slant height.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_rectangular_pyramid_lateral</span><span class="p">(</span><span class="mi">8</span><span class="p">;</span> <span class="mi">6</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 73.94112549695428117124</span>
+<span class="o">=</span> <span class="mi">40 </span><span class="o">+</span> <span class="mi">24 </span>· √<span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_rectangular_pyramid">
+<span class="sig-name descname"><span class="pre">volume_rectangular_pyramid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">length</span></em>; <em class="sig-param"><span class="pre">width</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use lwh / 3.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_rectangular_pyramid</span><span class="p">(</span><span class="mi">8</span><span class="p">;</span> <span class="mi">6</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 64</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_regular_pyramid">
+<span class="sig-name descname"><span class="pre">area_regular_pyramid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em>; <em class="sig-param"><span class="pre">side</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add the regular polygon base and the lateral area. The apex is above the
+center of the base.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_regular_pyramid</span><span class="p">(</span><span class="mi">4</span><span class="p">;</span> <span class="mi">6</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 96</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_regular_pyramid_lateral">
+<span class="sig-name descname"><span class="pre">area_regular_pyramid_lateral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em>; <em class="sig-param"><span class="pre">side</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Multiply half the base perimeter by √(h² + a²), where
+a is the distance from the base center to a side.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_regular_pyramid_lateral</span><span class="p">(</span><span class="mi">4</span><span class="p">;</span> <span class="mi">6</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 60</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_regular_pyramid">
+<span class="sig-name descname"><span class="pre">volume_regular_pyramid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em>; <em class="sig-param"><span class="pre">side</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Multiply the regular polygon’s area by the height and divide by 3.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_regular_pyramid</span><span class="p">(</span><span class="mi">4</span><span class="p">;</span> <span class="mi">6</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 48</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_regular_pyramid_frustum">
+<span class="sig-name descname"><span class="pre">area_regular_pyramid_frustum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em>; <em class="sig-param"><span class="pre">side_1</span></em>; <em class="sig-param"><span class="pre">side_2</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add both regular polygon bases and the lateral area between them. A side
+length of zero gives a pyramid.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_regular_pyramid_frustum</span><span class="p">(</span><span class="mi">4</span><span class="p">;</span> <span class="mi">6</span><span class="p">;</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 96</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_regular_pyramid_frustum_lateral">
+<span class="sig-name descname"><span class="pre">area_regular_pyramid_frustum_lateral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em>; <em class="sig-param"><span class="pre">side_1</span></em>; <em class="sig-param"><span class="pre">side_2</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Average the two base perimeters and multiply by the slant height. The
+slant height is computed from the perpendicular height and the difference
+between the two base apothems.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_regular_pyramid_frustum_lateral</span><span class="p">(</span><span class="mi">4</span><span class="p">;</span> <span class="mi">6</span><span class="p">;</span> <span class="mi">6</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 96</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_regular_pyramid_frustum">
+<span class="sig-name descname"><span class="pre">volume_regular_pyramid_frustum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em>; <em class="sig-param"><span class="pre">side_1</span></em>; <em class="sig-param"><span class="pre">side_2</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Compute the two regular polygon base areas and use
+<a class="reference internal" href="#sc.volume_pyramid_frustum" title="volume_pyramid_frustum"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">volume_pyramid_frustum()</span></code></a>. At least one side length must be positive.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_regular_pyramid_frustum</span><span class="p">(</span><span class="mi">4</span><span class="p">;</span> <span class="mi">6</span><span class="p">;</span> <span class="mi">3</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 84</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_pyramid_frustum">
+<span class="sig-name descname"><span class="pre">volume_pyramid_frustum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">base_area_1</span></em>; <em class="sig-param"><span class="pre">base_area_2</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use h(A₁ + A₂ + √(A₁ A₂)) / 3 for two parallel cuts of a
+pyramid. A base area of zero gives the tip.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_pyramid_frustum</span><span class="p">(</span><span class="mi">36</span><span class="p">;</span> <span class="mi">9</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 84</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_prismoid">
+<span class="sig-name descname"><span class="pre">volume_prismoid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">end_area_1</span></em>; <em class="sig-param"><span class="pre">mid_area</span></em>; <em class="sig-param"><span class="pre">end_area_2</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use h(A₁ + 4Aₘ + A₂) / 6. Measure the middle area halfway between the
+parallel ends. This formula is exact when the cross-sectional area varies
+quadratically or less with height.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_prismoid</span><span class="p">(</span><span class="mi">9</span><span class="p">;</span> <span class="mi">16</span><span class="p">;</span> <span class="mi">25</span><span class="p">;</span> <span class="mi">3</span><span class="p">)</span>
+<span class="ge">= 49</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+</section>
+<section id="cylinders-cones-and-rounded-solids">
+<h2>Cylinders, cones and rounded solids</h2>
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_cylinder">
+<span class="sig-name descname"><span class="pre">area_cylinder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use 2π r² + 2π rh for a right circular cylinder, including both
+ends.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_cylinder</span><span class="p">(</span><span class="mi">2</span><span class="p">;</span> <span class="mi">3</span><span class="p">)</span>
+<span class="ge">= 20pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_cylinder_lateral">
+<span class="sig-name descname"><span class="pre">area_cylinder_lateral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use 2π rh for the curved wall.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_cylinder_lateral</span><span class="p">(</span><span class="mi">2</span><span class="p">;</span> <span class="mi">3</span><span class="p">)</span>
+<span class="ge">= 12pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_cylinder">
+<span class="sig-name descname"><span class="pre">volume_cylinder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use π r² h.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_cylinder</span><span class="p">(</span><span class="mi">10</span><span class="p">[</span><span class="n">cm</span><span class="p">];</span> <span class="mi">20</span><span class="p">[</span><span class="n">cm</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="n">L</span><span class="p">]</span>
+<span class="ge">= 2pi L</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_cylindrical_segment">
+<span class="sig-name descname"><span class="pre">volume_cylindrical_segment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em>; <em class="sig-param"><span class="pre">length</span></em>; <em class="sig-param"><span class="pre">depth</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Multiply the circular segment area by the cylinder length. For a
+horizontal cylinder with flat ends, depth is the liquid height above the
+inside bottom. Its range is zero to the diameter.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_cylindrical_segment</span><span class="p">(</span><span class="mi">2</span><span class="p">;</span> <span class="mi">4</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 8pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_cone">
+<span class="sig-name descname"><span class="pre">area_cone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add the circular base and curved wall of a right circular cone.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_cone</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 24pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_cone_lateral">
+<span class="sig-name descname"><span class="pre">area_cone_lateral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use π r√(r² + h²) for the curved wall.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_cone_lateral</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 15pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_cone">
+<span class="sig-name descname"><span class="pre">volume_cone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use π r² h / 3.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_cone</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 12pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_cone_frustum">
+<span class="sig-name descname"><span class="pre">area_cone_frustum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius_1</span></em>; <em class="sig-param"><span class="pre">radius_2</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add the two circular ends and the curved wall of a right circular cone
+frustum. A radius of zero gives the tip.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_cone_frustum</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 24pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_cone_frustum_lateral">
+<span class="sig-name descname"><span class="pre">area_cone_frustum_lateral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius_1</span></em>; <em class="sig-param"><span class="pre">radius_2</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use π(r₁ + r₂)√(h² + (r₁ − r₂)²) for the curved wall. At
+least one radius must be positive.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_cone_frustum_lateral</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">3</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 24pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_cone_frustum">
+<span class="sig-name descname"><span class="pre">volume_cone_frustum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius_1</span></em>; <em class="sig-param"><span class="pre">radius_2</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use π h(r₁² + r₁r₂ + r₂²) / 3. Enter the two radii in either
+order.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_cone_frustum</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">;</span> <span class="mi">3</span><span class="p">)</span>
+<span class="ge">= 19pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_hollow_cylinder">
+<span class="sig-name descname"><span class="pre">area_hollow_cylinder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">outer_radius</span></em>; <em class="sig-param"><span class="pre">inner_radius</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add the inner wall, the outer wall, and both ring-shaped ends. The inner
+radius must be smaller than the outer radius.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_hollow_cylinder</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 50pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_hollow_cylinder_lateral">
+<span class="sig-name descname"><span class="pre">area_hollow_cylinder_lateral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">outer_radius</span></em>; <em class="sig-param"><span class="pre">inner_radius</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use 2π(R + r)h for the inner and outer walls.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_hollow_cylinder_lateral</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 40pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_hollow_cylinder">
+<span class="sig-name descname"><span class="pre">volume_hollow_cylinder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">outer_radius</span></em>; <em class="sig-param"><span class="pre">inner_radius</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Multiply the area of the ring-shaped cross section by the height to get
+the material volume.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_hollow_cylinder</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 20pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_sphere">
+<span class="sig-name descname"><span class="pre">area_sphere</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use 4π r².</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_sphere</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 16pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_sphere">
+<span class="sig-name descname"><span class="pre">volume_sphere</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use 4π r³ / 3.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_sphere</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="ge">= 36pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_hemisphere">
+<span class="sig-name descname"><span class="pre">area_hemisphere</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add the flat disk and curved face, 3π r².</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_hemisphere</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 12pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_hemisphere_lateral">
+<span class="sig-name descname"><span class="pre">area_hemisphere_lateral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use 2π r² for the curved face.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_hemisphere_lateral</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 8pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_hemisphere">
+<span class="sig-name descname"><span class="pre">volume_hemisphere</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use 2π r³ / 3.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_hemisphere</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="ge">= 18pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_spherical_cap">
+<span class="sig-name descname"><span class="pre">area_spherical_cap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add the curved face and the flat disk of area π h(2r − h). Measure
+height from the cut plane to the tip. It can range from zero to the
+diameter.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_spherical_cap</span><span class="p">(</span><span class="mi">2</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 12pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_spherical_cap_lateral">
+<span class="sig-name descname"><span class="pre">area_spherical_cap_lateral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use 2π rh for the curved face.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_spherical_cap_lateral</span><span class="p">(</span><span class="mi">2</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 8pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_spherical_cap">
+<span class="sig-name descname"><span class="pre">volume_spherical_cap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use π h²(r − h / 3), with height measured from the cut plane to the
+tip.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_spherical_cap</span><span class="p">(</span><span class="mi">2</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="ge">= 5pi/3</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_spherical_segment">
+<span class="sig-name descname"><span class="pre">area_spherical_segment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em>; <em class="sig-param"><span class="pre">lower_z</span></em>; <em class="sig-param"><span class="pre">upper_z</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add the curved surface and the two cut disks. Enter the signed positions
+of the lower and upper planes relative to the sphere’s center, in
+ascending order and within the sphere.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_spherical_segment</span><span class="p">(</span><span class="mi">2</span><span class="p">;</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="ge">= 14pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_spherical_segment_lateral">
+<span class="sig-name descname"><span class="pre">area_spherical_segment_lateral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em>; <em class="sig-param"><span class="pre">lower_z</span></em>; <em class="sig-param"><span class="pre">upper_z</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use 2π r(z₂ − z₁) for the curved surface between two cuts.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_spherical_segment_lateral</span><span class="p">(</span><span class="mi">2</span><span class="p">;</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="ge">= 8pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_spherical_segment">
+<span class="sig-name descname"><span class="pre">volume_spherical_segment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em>; <em class="sig-param"><span class="pre">lower_z</span></em>; <em class="sig-param"><span class="pre">upper_z</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Take the volume between the two cuts. The section at position z
+has area π(r² − z²), so <a class="reference internal" href="#sc.volume_prismoid" title="volume_prismoid"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">volume_prismoid()</span></code></a> also gives the
+volume.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_spherical_segment</span><span class="p">(</span><span class="mi">2</span><span class="p">;</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="ge">= 22pi/3</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_spherical_shell">
+<span class="sig-name descname"><span class="pre">area_spherical_shell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">outer_radius</span></em>; <em class="sig-param"><span class="pre">inner_radius</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add the areas of the inner and outer spheres. The inner radius must be
+smaller than the outer radius.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_spherical_shell</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 52pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_spherical_shell">
+<span class="sig-name descname"><span class="pre">volume_spherical_shell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">outer_radius</span></em>; <em class="sig-param"><span class="pre">inner_radius</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Subtract the inner sphere volume from the outer sphere volume to get the
+material volume.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_spherical_shell</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 76pi/3</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_capsule">
+<span class="sig-name descname"><span class="pre">area_capsule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em>; <em class="sig-param"><span class="pre">straight_length</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add the cylinder’s curved wall and two hemispheres. Straight length is the
+length of the cylinder between the hemispheres.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_capsule</span><span class="p">(</span><span class="mi">2</span><span class="p">;</span> <span class="mi">3</span><span class="p">)</span>
+<span class="ge">= 28pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_capsule">
+<span class="sig-name descname"><span class="pre">volume_capsule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">radius</span></em>; <em class="sig-param"><span class="pre">straight_length</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add the cylinder and sphere volumes, π r² L + 4π r³ / 3.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_capsule</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 54pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_torus">
+<span class="sig-name descname"><span class="pre">area_torus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">major_radius</span></em>; <em class="sig-param"><span class="pre">minor_radius</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use 4π² Rr. The major radius goes from the torus center to the
+center of the tube, and must exceed the tube radius.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_torus</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="ge">= 12pi^2</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_torus">
+<span class="sig-name descname"><span class="pre">volume_torus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">major_radius</span></em>; <em class="sig-param"><span class="pre">minor_radius</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use 2π² Rr².</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_torus</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="ge">= 6pi^2</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_ellipsoid">
+<span class="sig-name descname"><span class="pre">area_ellipsoid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">semi_axis_1</span></em>; <em class="sig-param"><span class="pre">semi_axis_2</span></em>; <em class="sig-param"><span class="pre">semi_axis_3</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use Carlson’s symmetric elliptic integral
+4π R_G((bc)²,(ac)²,(ab)²) for semiaxes a, b, c.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_ellipsoid</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="ge">= about 48.882146</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_ellipsoid">
+<span class="sig-name descname"><span class="pre">volume_ellipsoid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">semi_axis_1</span></em>; <em class="sig-param"><span class="pre">semi_axis_2</span></em>; <em class="sig-param"><span class="pre">semi_axis_3</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use 4π abc / 3.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_ellipsoid</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="ge">= 8pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_spheroid">
+<span class="sig-name descname"><span class="pre">area_spheroid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">equatorial_radius</span></em>; <em class="sig-param"><span class="pre">polar_radius</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use <a class="reference internal" href="#sc.area_ellipsoid" title="area_ellipsoid"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">area_ellipsoid()</span></code></a> with both equatorial semiaxes set to the
+equatorial radius.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_spheroid</span><span class="p">(</span><span class="mi">2</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 16pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_spheroid">
+<span class="sig-name descname"><span class="pre">volume_spheroid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">equatorial_radius</span></em>; <em class="sig-param"><span class="pre">polar_radius</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use 4π a²c / 3 for equatorial radius a and polar radius
+c.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_spheroid</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 24pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_elliptical_cylinder">
+<span class="sig-name descname"><span class="pre">area_elliptical_cylinder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">semi_axis_1</span></em>; <em class="sig-param"><span class="pre">semi_axis_2</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add both elliptical ends and the curved wall of a right elliptical
+cylinder.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_elliptical_cylinder</span><span class="p">(</span><span class="mi">2</span><span class="p">;</span> <span class="mi">2</span><span class="p">;</span> <span class="mi">3</span><span class="p">)</span>
+<span class="ge">= 20pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_elliptical_cylinder_lateral">
+<span class="sig-name descname"><span class="pre">area_elliptical_cylinder_lateral</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">semi_axis_1</span></em>; <em class="sig-param"><span class="pre">semi_axis_2</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Multiply the perimeter of the ellipse by the height. For a ≥ b,
+the perimeter is 8R_G(0,b²,a²).</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_elliptical_cylinder_lateral</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="ge">= about 15.865440</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_elliptical_cylinder">
+<span class="sig-name descname"><span class="pre">volume_elliptical_cylinder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">semi_axis_1</span></em>; <em class="sig-param"><span class="pre">semi_axis_2</span></em>; <em class="sig-param"><span class="pre">height</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Multiply the area π ab of one elliptical end by the height.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_elliptical_cylinder</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">2</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>
+<span class="ge">= 24pi</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+</section>
+<section id="polyhedra-and-meshes">
+<h2>Polyhedra and meshes</h2>
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_regular_tetrahedron">
+<span class="sig-name descname"><span class="pre">area_regular_tetrahedron</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">edge</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add the four equilateral triangles to get √3s².</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_regular_tetrahedron</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 4sqrt(3)</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_regular_tetrahedron">
+<span class="sig-name descname"><span class="pre">volume_regular_tetrahedron</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">edge</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use √2s³ / 12.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_regular_tetrahedron</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 2sqrt(2)/3</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_regular_octahedron">
+<span class="sig-name descname"><span class="pre">area_regular_octahedron</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">edge</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add the eight equilateral triangles to get 2√3s².</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_regular_octahedron</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 8sqrt(3)</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_regular_octahedron">
+<span class="sig-name descname"><span class="pre">volume_regular_octahedron</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">edge</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use √2s³ / 3.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_regular_octahedron</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 8sqrt(2)/3</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_regular_dodecahedron">
+<span class="sig-name descname"><span class="pre">area_regular_dodecahedron</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">edge</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add the twelve regular pentagons to get 3√(25 + 10√5)s².</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_regular_dodecahedron</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="ge">= about 20.645729</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_regular_dodecahedron">
+<span class="sig-name descname"><span class="pre">volume_regular_dodecahedron</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">edge</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use (15 + 7√5)s³ / 4.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_regular_dodecahedron</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="ge">= 7.66311896062463196872</span>
+<span class="o">=</span> <span class="p">(</span><span class="mi">15 </span><span class="o">+</span> <span class="mi">7 </span>· √<span class="p">(</span><span class="mi">5</span><span class="p">))</span> <span class="o">/</span> <span class="mi">4</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_regular_icosahedron">
+<span class="sig-name descname"><span class="pre">area_regular_icosahedron</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">edge</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Add the twenty equilateral triangles to get 5√3s².</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_regular_icosahedron</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="ge">= 20sqrt(3)</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_regular_icosahedron">
+<span class="sig-name descname"><span class="pre">volume_regular_icosahedron</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">edge</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Use 5(3 + √5)s³ / 12.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_regular_icosahedron</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="ge">= about 2.181695</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_tetrahedron">
+<span class="sig-name descname"><span class="pre">area_tetrahedron</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">vertices</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">scale</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
+<dd><p>Enter four <code class="docutils literal notranslate"><span class="pre">{x;</span> <span class="pre">y;</span> <span class="pre">z}</span></code> rows for the vertices. Add the areas of the four
+triangular faces. Each face area is half the length of the cross product
+of two edges.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_tetrahedron</span><span class="p">(</span>{{<span class="mi">0</span><span class="p">;</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">0</span>}<span class="p">;</span> {<span class="mi">1</span><span class="p">;</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">0</span>}<span class="p">;</span> {<span class="mi">0</span><span class="p">;</span> <span class="mi">1</span><span class="p">;</span> <span class="mi">0</span>}<span class="p">;</span> {<span class="mi">0</span><span class="p">;</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">1</span>}}<span class="p">)</span>
+<span class="ge">= 2.36602540378443864676</span>
+<span class="o">=</span> <span class="p">(</span><span class="mi">3 </span><span class="o">+</span> √<span class="p">(</span><span class="mi">3</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_tetrahedron">
+<span class="sig-name descname"><span class="pre">volume_tetrahedron</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">vertices</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">scale</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
+<dd><p>Use one sixth of the absolute scalar triple product of three edges from
+the same vertex.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_tetrahedron</span><span class="p">(</span>{{<span class="mi">0</span><span class="p">;</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">0</span>}<span class="p">;</span> {<span class="mi">1</span><span class="p">;</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">0</span>}<span class="p">;</span> {<span class="mi">0</span><span class="p">;</span> <span class="mi">1</span><span class="p">;</span> <span class="mi">0</span>}<span class="p">;</span> {<span class="mi">0</span><span class="p">;</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">1</span>}}<span class="p">)</span>
+<span class="ge">= 1/6</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_parallelepiped">
+<span class="sig-name descname"><span class="pre">area_parallelepiped</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">edges</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">scale</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
+<dd><p>Provide three edge vectors from one corner, one per row. Sum the lengths
+of the three pairwise cross products and double the result.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_parallelepiped</span><span class="p">(</span>{{<span class="mi">4</span><span class="p">;</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">0</span>}<span class="p">;</span> {<span class="mi">0</span><span class="p">;</span> <span class="mi">3</span><span class="p">;</span> <span class="mi">0</span>}<span class="p">;</span> {<span class="mi">0</span><span class="p">;</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">2</span>}}<span class="p">)</span>
+<span class="ge">= 52</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_parallelepiped">
+<span class="sig-name descname"><span class="pre">volume_parallelepiped</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">edges</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">scale</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
+<dd><p>Use the absolute scalar triple product of three edge vectors from one
+corner.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_parallelepiped</span><span class="p">(</span>{{<span class="mi">4</span><span class="p">;</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">0</span>}<span class="p">;</span> {<span class="mi">0</span><span class="p">;</span> <span class="mi">3</span><span class="p">;</span> <span class="mi">0</span>}<span class="p">;</span> {<span class="mi">0</span><span class="p">;</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">2</span>}}<span class="p">)</span>
+<span class="ge">= 24</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.area_mesh">
+<span class="sig-name descname"><span class="pre">area_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">vertices</span></em>; <em class="sig-param"><span class="pre">faces</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">scale</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
+<dd><p>Sum the areas of the listed triangular faces. Give the vertices as rows of
+three coordinates and the faces as rows of three vertex numbers, starting
+at 1. The surface can be open.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">area_mesh</span><span class="p">(</span>{{<span class="mi">0</span><span class="p">;</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">0</span>}<span class="p">;</span> {<span class="mi">1</span><span class="p">;</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">0</span>}<span class="p">;</span> {<span class="mi">0</span><span class="p">;</span> <span class="mi">1</span><span class="p">;</span> <span class="mi">0</span>}<span class="p">;</span> {<span class="mi">0</span><span class="p">;</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">1</span>}}<span class="p">;</span> {{<span class="mi">1</span><span class="p">;</span> <span class="mi">2</span><span class="p">;</span> <span class="mi">3</span>}}<span class="p">)</span>
+<span class="ge">= 0.5</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.volume_mesh">
+<span class="sig-name descname"><span class="pre">volume_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">vertices</span></em>; <em class="sig-param"><span class="pre">faces</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">scale</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
+<dd><p>Use the absolute sum of signed tetrahedron volumes, one per face. Faces
+must form one closed shell with consistent winding and no crossing faces.
+Each edge must occur twice, in opposite directions.</p>
+<p>Example:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">volume_mesh</span><span class="p">(</span>{{<span class="mi">0</span><span class="p">;</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">0</span>}<span class="p">;</span> {<span class="mi">1</span><span class="p">;</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">0</span>}<span class="p">;</span> {<span class="mi">0</span><span class="p">;</span> <span class="mi">1</span><span class="p">;</span> <span class="mi">0</span>}<span class="p">;</span> {<span class="mi">0</span><span class="p">;</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">1</span>}}<span class="p">;</span> {{<span class="mi">1</span><span class="p">;</span> <span class="mi">3</span><span class="p">;</span> <span class="mi">2</span>}<span class="p">;</span> {<span class="mi">1</span><span class="p">;</span> <span class="mi">2</span><span class="p">;</span> <span class="mi">4</span>}<span class="p">;</span> {<span class="mi">1</span><span class="p">;</span> <span class="mi">4</span><span class="p">;</span> <span class="mi">3</span>}<span class="p">;</span> {<span class="mi">2</span><span class="p">;</span> <span class="mi">3</span><span class="p">;</span> <span class="mi">4</span>}}<span class="p">)</span>
+<span class="ge">= 1/6</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<table class="-x-quark-box -x-quark-admonition -x-quark-seealso"><tbody><tr><td width="100%" class="-x-quark-box-td"><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://dlmf.nist.gov/19.33">NIST reference on ellipsoid surface area</a>
+and <a class="reference external" href="https://dlmf.nist.gov/19.30">ellipse perimeter</a>.</p>
+</div>
+</td></tr></tbody></table></section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <table class="navbar navbar-bottom">
+    
+  <tr>
+    <td width="50%">
+      <a class="nav-item nav-item-0"
+         href="../contents.html">SpeedCrunch 1.2.0 documentation</a> &#187; <a class="nav-item nav-item-1"
+             href="index.html">Reference</a>
+          
+    </td>
+
+    <td align="right" width="50%">
+      <a class="rel-item rel-item-1"
+           href="basic.html"
+           title="Basic Math Functions"
+           >previous</a>
+         | 
+      <a class="rel-item rel-item-2"
+           href="integer.html"
+           title="Integer &amp; Bitwise Arithmetic Functions"
+           >next</a>
+         | 
+      <a class="rel-item rel-item-3"
+           href="../sc-functionindex.html"
+           title="Function Index"
+           >functions</a>
+         | 
+      <a class="rel-item rel-item-4"
+           href="../genindex.html"
+           title="General Index"
+           >index</a>
+        
+      
+    </td>
+
+  </tr>
+
+    <tr>
+      <td colspan="2" align="center">
+        
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2026, The SpeedCrunch Developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    </div>
+      </td>
+    </tr>
+  </table>
+
+  </body>
+</html>

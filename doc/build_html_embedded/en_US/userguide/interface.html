@@ -110,6 +110,17 @@ Additionally, it is possible to delete a variable by selecting it and pressing t
 </dl>
 </li>
 <li><dl class="simple">
+<dt>Units</dt><dd><p>The units widget lists all built-in units. The columns show each unit’s
+name, symbol, and other accepted symbols. Use the <code class="docutils literal notranslate"><span class="pre">Quantity</span></code> selector to
+show only the units of one quantity, such as <code class="docutils literal notranslate"><span class="pre">Length</span></code>. Search by name or
+symbol, or by the unit’s name. Turn on <code class="docutils literal notranslate"><span class="pre">Include</span> <span class="pre">prefixed</span> <span class="pre">units</span></code> to also
+list the prefixed forms of each unit, such as <code class="docutils literal notranslate"><span class="pre">kilometre</span></code> or <code class="docutils literal notranslate"><span class="pre">kibibyte</span></code>.
+Press <kbd class="kbd docutils literal notranslate">Enter</kbd> or double-click an entry to insert its symbol, for
+example <code class="docutils literal notranslate"><span class="pre">[m]</span></code> for <code class="docutils literal notranslate"><span class="pre">metre</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt>User Units</dt><dd><p>Similar to the user functions widget, this lists <a class="reference internal" href="advanced.html#user-units"><span class="std std-ref">user-defined units</span></a>.
 Double-click inserts <code class="docutils literal notranslate"><span class="pre">[name]</span></code> in the editor, and the context menu supports edit/delete operations.</p>
 </dd>
@@ -602,6 +613,10 @@ Example:</p>
 </dl>
 </li>
 </ul>
+<p><a class="reference internal" href="../reference/geometry.html#geometry-exact-results"><span class="std std-ref">Geometry calculations</span></a> can show a simple
+exact form below the result in any decimal notation.
+In <span class="menuselection">Rational</span>, SpeedCrunch uses that form for the result
+line when one is available.</p>
 </section>
 <section id="angle-mode">
 <h3>Angle Mode</h3>
@@ -1007,7 +1022,8 @@ text unchanged.</p>
 </ul>
 <ul id="automatic-result-reuse">
 <li><dl class="simple">
-<dt><span class="menuselection">Auto-Insert ans</span></dt><dd><p>If a new expression starts with <code class="docutils literal notranslate"><span class="pre">+</span></code>, <code class="docutils literal notranslate"><span class="pre">-</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span></code>, or <code class="docutils literal notranslate"><span class="pre">/</span></code>, SpeedCrunch inserts <code class="docutils literal notranslate"><span class="pre">ans</span></code> first.</p>
+<dt><span class="menuselection">Auto-Insert ans</span></dt><dd><p>If a new expression starts with <code class="docutils literal notranslate"><span class="pre">+</span></code>, <code class="docutils literal notranslate"><span class="pre">-</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span></code>, or <code class="docutils literal notranslate"><span class="pre">/</span></code>, SpeedCrunch inserts <code class="docutils literal notranslate"><span class="pre">ans</span></code> first.
+For example, type <code class="docutils literal notranslate"><span class="pre">+3</span></code> and you get <code class="docutils literal notranslate"><span class="pre">ans+3</span></code>. This option is off by default.</p>
 </dd>
 </dl>
 </li>
@@ -1361,6 +1377,17 @@ selected from <span class="menuselection">Settings ‣ Appearance ‣ Keypad ‣
 </dd>
 </dl>
 </li>
+<li><dl>
+<dt><span class="menuselection">Settings ‣ Appearance ‣ Align Results to Bottom</span></dt><dd><p>Show calculations just above the expression editor, so the latest result
+stays close to where you type. New calculations are still added below
+older ones, and the history moves up as it grows. When the result display
+is full, it scrolls as usual. The option is off by default.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 1.3.</span></p>
+</div>
+</dd>
+</dl>
+</li>
 <li><dl class="simple">
 <dt><span class="menuselection">Settings ‣ Language</span></dt><dd><p>Select the user interface language.</p>
 </dd>
@@ -1381,7 +1408,8 @@ to share the report when reporting a problem.</p>
 <li><dl class="simple">
 <dt><span class="menuselection">Help ‣ About SpeedCrunch</span></dt><dd><p>Show the SpeedCrunch version, the short source commit hash in parentheses,
 the Qt version, and the operating system and its version, in that order. Portable builds
-display <code class="docutils literal notranslate"><span class="pre">Portable</span></code> next to the SpeedCrunch version.</p>
+display <code class="docutils literal notranslate"><span class="pre">Portable</span></code> next to the SpeedCrunch version. Builds made from a source
+archive without Git information leave out the commit hash.</p>
 </dd>
 </dl>
 </li>
@@ -1592,6 +1620,11 @@ is checked.</p>
 </li>
 <li><dl class="simple">
 <dt><kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">8</kbd></dt><dd><p>Show/hide bit field dock.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">9</kbd></dt><dd><p>Show/hide units widget.</p>
 </dd>
 </dl>
 </li>

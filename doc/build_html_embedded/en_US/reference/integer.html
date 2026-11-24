@@ -11,7 +11,7 @@
     <link rel="stylesheet" type="text/css" href="../_static/quark.css?v=b0b2863f" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="next" title="Statistical Functions" href="statistical.html" />
-    <link rel="prev" title="Basic Math Functions" href="basic.html" />
+    <link rel="prev" title="Geometry" href="geometry.html" />
     <link rel="stylesheet" href="../" type="text/css" />
 
   </head><body>
@@ -27,8 +27,8 @@
 
     <td align="right" width="50%">
       <a class="rel-item rel-item-1"
-           href="basic.html"
-           title="Basic Math Functions"
+           href="geometry.html"
+           title="Geometry"
            accesskey="P">previous</a>
          | 
       <a class="rel-item rel-item-2"
@@ -216,13 +216,22 @@ angles and dimensionless values display as degrees, minutes, and seconds.</p>
 <dt class="sig sig-object sc" id="sc.eng">
 <span class="sig-name descname"><span class="pre">eng</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">n</span></em><span class="optional">[</span>; <em class="sig-param"><span class="pre">exponent</span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
 <dd><p>Format <code class="docutils literal notranslate"><span class="pre">n</span></code> in engineering notation.</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">exponent</span></code> is provided, force the <code class="docutils literal notranslate"><span class="pre">e</span></code> exponent suffix to that value. <code class="docutils literal notranslate"><span class="pre">exponent</span></code> can be:</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">exponent</span></code> is provided, force the <code class="docutils literal notranslate"><span class="pre">e</span></code> exponent suffix to that value.
+<code class="docutils literal notranslate"><span class="pre">exponent</span></code> can be:</p>
 <ul class="simple">
-<li><p>an integer exponent that is a multiple of 3 (for example, <code class="docutils literal notranslate"><span class="pre">-3</span></code> or <code class="docutils literal notranslate"><span class="pre">6</span></code>), or</p></li>
-<li><p>a power of ten with exponent a multiple of 3 (for example, <code class="docutils literal notranslate"><span class="pre">milli</span></code>, <code class="docutils literal notranslate"><span class="pre">micro</span></code>, <code class="docutils literal notranslate"><span class="pre">kilo</span></code>, <code class="docutils literal notranslate"><span class="pre">mega</span></code>, <code class="docutils literal notranslate"><span class="pre">pico</span></code>).</p></li>
+<li><p>an exponent that is a multiple of 3, for example <code class="docutils literal notranslate"><span class="pre">-3</span></code> or <code class="docutils literal notranslate"><span class="pre">6</span></code>, or</p></li>
+<li><p>the matching power of ten, for example <code class="docutils literal notranslate"><span class="pre">1e-3</span></code>, <code class="docutils literal notranslate"><span class="pre">0.001</span></code> or <code class="docutils literal notranslate"><span class="pre">1e6</span></code>.</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">eng(0.000123456;</span> <span class="pre">milli)</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">eng(0.000123456;</span> <span class="pre">-3)</span></code>.</p>
-</dd></dl>
+<p>Other values are rejected. <code class="docutils literal notranslate"><span class="pre">eng(0.000123456;</span> <span class="pre">1e-3)</span></code> is the same as
+<code class="docutils literal notranslate"><span class="pre">eng(0.000123456;</span> <span class="pre">-3)</span></code>:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">eng</span><span class="p">(</span><span class="mf">0.000123456</span><span class="p">;</span> <span class="o">-</span><span class="mi">3</span><span class="p">)</span>
+<span class="ge">= 0.123456e-3</span>
+
+<span class="n">eng</span><span class="p">(</span><span class="mf">123456789.123456789</span><span class="p">;</span> <span class="mi">1e-6</span><span class="p">)</span>
+<span class="ge">= 123456789123456.789e-6</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
 
 <dl class="sc function">
 <dt class="sig sig-object sc" id="sc.rat">
@@ -459,9 +468,8 @@ If a rational number is given as <code class="docutils literal notranslate"><spa
 </div>
 <p>Returns the least common multiple of the arguments (at least two must be given).
 The result is always non-negative.</p>
-<p><code class="docutils literal notranslate"><span class="pre">gcd()</span></code> and <code class="docutils literal notranslate"><span class="pre">lcm()</span></code> are related by:</p>
-<div class="math notranslate nohighlight">
-\[lcm(n1; n2) = n1 * n2 / gcd(n1; n2)\]</div>
+<p>For two positive integers, multiply them and divide the product
+by their greatest common divisor to get the least common multiple.</p>
 <p>Only real, integer arguments are allowed.</p>
 </dd></dl>
 
@@ -486,8 +494,8 @@ The result is always non-negative.</p>
 
     <td align="right" width="50%">
       <a class="rel-item rel-item-1"
-           href="basic.html"
-           title="Basic Math Functions"
+           href="geometry.html"
+           title="Geometry"
            >previous</a>
          | 
       <a class="rel-item rel-item-2"

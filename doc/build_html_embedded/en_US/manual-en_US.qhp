@@ -111,6 +111,12 @@
                             <section title="Complex Numbers" ref="reference/basic.html#complex-numbers"/>
                             <section title="Various" ref="reference/basic.html#various"/>
                         </section>
+                        <section title="Geometry" ref="reference/geometry.html">
+                            <section title="Plane shapes" ref="reference/geometry.html#plane-shapes"/>
+                            <section title="Prisms and pyramids" ref="reference/geometry.html#prisms-and-pyramids"/>
+                            <section title="Cylinders, cones and rounded solids" ref="reference/geometry.html#cylinders-cones-and-rounded-solids"/>
+                            <section title="Polyhedra and meshes" ref="reference/geometry.html#polyhedra-and-meshes"/>
+                        </section>
                         <section title="Integer &amp; Bitwise Arithmetic Functions" ref="reference/integer.html">
                             <section title="Bitwise Operations" ref="reference/integer.html#bitwise-operations"/>
                             <section title="Numeral Bases" ref="reference/integer.html#numeral-bases"/>
@@ -133,11 +139,13 @@
                             <section title="Display Policy" ref="reference/units.html#display-policy"/>
                             <section title="Unit Notation" ref="reference/units.html#unit-notation"/>
                             <section title="Authored Units" ref="reference/units.html#authored-units"/>
+                            <section title="CGS Units" ref="reference/units.html#cgs-units"/>
                             <section title="Composed Units" ref="reference/units.html#composed-units"/>
                             <section title="Conversions" ref="reference/units.html#conversions"/>
                             <section title="Built-in Units Table" ref="reference/units.html#built-in-units-table">
                                 <section title="Built-in Units by Quantity" ref="reference/units.html#built-in-units-by-quantity">
                                     <section title="Absorbed Dose" ref="reference/units.html#absorbed-dose"/>
+                                    <section title="Acceleration" ref="reference/units.html#acceleration"/>
                                     <section title="Activity Referred To A Radionuclide" ref="reference/units.html#activity-referred-to-a-radionuclide"/>
                                     <section title="Amount Of Heat" ref="reference/units.html#amount-of-heat"/>
                                     <section title="Amount Of Substance" ref="reference/units.html#amount-of-substance"/>
@@ -145,6 +153,7 @@
                                     <section title="Capacitance" ref="reference/units.html#capacitance"/>
                                     <section title="Catalytic Activity" ref="reference/units.html#catalytic-activity"/>
                                     <section title="Dose Equivalent" ref="reference/units.html#dose-equivalent"/>
+                                    <section title="Dynamic Viscosity" ref="reference/units.html#dynamic-viscosity"/>
                                     <section title="Electric" ref="reference/units.html#electric"/>
                                     <section title="Energy" ref="reference/units.html#energy"/>
                                     <section title="Force" ref="reference/units.html#force"/>
@@ -153,9 +162,11 @@
                                     <section title="Inductance" ref="reference/units.html#inductance"/>
                                     <section title="Information" ref="reference/units.html#information"/>
                                     <section title="Kerma" ref="reference/units.html#kerma"/>
+                                    <section title="Kinematic Viscosity" ref="reference/units.html#kinematic-viscosity"/>
                                     <section title="Length" ref="reference/units.html#length"/>
                                     <section title="Luminous Flux" ref="reference/units.html#luminous-flux"/>
                                     <section title="Luminous Intensity" ref="reference/units.html#luminous-intensity"/>
+                                    <section title="Magnetic Field Strength" ref="reference/units.html#magnetic-field-strength"/>
                                     <section title="Magnetic Flux" ref="reference/units.html#magnetic-flux"/>
                                     <section title="Magnetic Flux Density" ref="reference/units.html#magnetic-flux-density"/>
                                     <section title="Mass" ref="reference/units.html#mass"/>
@@ -188,6 +199,75 @@
             <keyword name="arcsin() (function)" id="function.arcsin" ref="reference/basic.html#sc.arcsin"/>
             <keyword name="arctan() (function)" id="function.arctan" ref="reference/basic.html#sc.arctan"/>
             <keyword name="arctan2() (function)" id="function.arctan2" ref="reference/basic.html#sc.arctan2"/>
+            <keyword name="area_annular_sector() (function)" id="function.area_annular_sector" ref="reference/geometry.html#sc.area_annular_sector"/>
+            <keyword name="area_annulus() (function)" id="function.area_annulus" ref="reference/geometry.html#sc.area_annulus"/>
+            <keyword name="area_capsule() (function)" id="function.area_capsule" ref="reference/geometry.html#sc.area_capsule"/>
+            <keyword name="area_circle() (function)" id="function.area_circle" ref="reference/geometry.html#sc.area_circle"/>
+            <keyword name="area_circle_overlap() (function)" id="function.area_circle_overlap" ref="reference/geometry.html#sc.area_circle_overlap"/>
+            <keyword name="area_circular_sector() (function)" id="function.area_circular_sector" ref="reference/geometry.html#sc.area_circular_sector"/>
+            <keyword name="area_circular_segment() (function)" id="function.area_circular_segment" ref="reference/geometry.html#sc.area_circular_segment"/>
+            <keyword name="area_circular_segment_from_angle() (function)" id="function.area_circular_segment_from_angle" ref="reference/geometry.html#sc.area_circular_segment_from_angle"/>
+            <keyword name="area_cone() (function)" id="function.area_cone" ref="reference/geometry.html#sc.area_cone"/>
+            <keyword name="area_cone_frustum() (function)" id="function.area_cone_frustum" ref="reference/geometry.html#sc.area_cone_frustum"/>
+            <keyword name="area_cone_frustum_lateral() (function)" id="function.area_cone_frustum_lateral" ref="reference/geometry.html#sc.area_cone_frustum_lateral"/>
+            <keyword name="area_cone_lateral() (function)" id="function.area_cone_lateral" ref="reference/geometry.html#sc.area_cone_lateral"/>
+            <keyword name="area_cube() (function)" id="function.area_cube" ref="reference/geometry.html#sc.area_cube"/>
+            <keyword name="area_cube_lateral() (function)" id="function.area_cube_lateral" ref="reference/geometry.html#sc.area_cube_lateral"/>
+            <keyword name="area_cuboid() (function)" id="function.area_cuboid" ref="reference/geometry.html#sc.area_cuboid"/>
+            <keyword name="area_cuboid_lateral() (function)" id="function.area_cuboid_lateral" ref="reference/geometry.html#sc.area_cuboid_lateral"/>
+            <keyword name="area_cylinder() (function)" id="function.area_cylinder" ref="reference/geometry.html#sc.area_cylinder"/>
+            <keyword name="area_cylinder_lateral() (function)" id="function.area_cylinder_lateral" ref="reference/geometry.html#sc.area_cylinder_lateral"/>
+            <keyword name="area_ellipse() (function)" id="function.area_ellipse" ref="reference/geometry.html#sc.area_ellipse"/>
+            <keyword name="area_ellipsoid() (function)" id="function.area_ellipsoid" ref="reference/geometry.html#sc.area_ellipsoid"/>
+            <keyword name="area_elliptical_cylinder() (function)" id="function.area_elliptical_cylinder" ref="reference/geometry.html#sc.area_elliptical_cylinder"/>
+            <keyword name="area_elliptical_cylinder_lateral() (function)" id="function.area_elliptical_cylinder_lateral" ref="reference/geometry.html#sc.area_elliptical_cylinder_lateral"/>
+            <keyword name="area_hemisphere() (function)" id="function.area_hemisphere" ref="reference/geometry.html#sc.area_hemisphere"/>
+            <keyword name="area_hemisphere_lateral() (function)" id="function.area_hemisphere_lateral" ref="reference/geometry.html#sc.area_hemisphere_lateral"/>
+            <keyword name="area_hollow_cylinder() (function)" id="function.area_hollow_cylinder" ref="reference/geometry.html#sc.area_hollow_cylinder"/>
+            <keyword name="area_hollow_cylinder_lateral() (function)" id="function.area_hollow_cylinder_lateral" ref="reference/geometry.html#sc.area_hollow_cylinder_lateral"/>
+            <keyword name="area_kite() (function)" id="function.area_kite" ref="reference/geometry.html#sc.area_kite"/>
+            <keyword name="area_mesh() (function)" id="function.area_mesh" ref="reference/geometry.html#sc.area_mesh"/>
+            <keyword name="area_parabolic_segment() (function)" id="function.area_parabolic_segment" ref="reference/geometry.html#sc.area_parabolic_segment"/>
+            <keyword name="area_parallelepiped() (function)" id="function.area_parallelepiped" ref="reference/geometry.html#sc.area_parallelepiped"/>
+            <keyword name="area_parallelogram() (function)" id="function.area_parallelogram" ref="reference/geometry.html#sc.area_parallelogram"/>
+            <keyword name="area_polygon() (function)" id="function.area_polygon" ref="reference/geometry.html#sc.area_polygon"/>
+            <keyword name="area_prism() (function)" id="function.area_prism" ref="reference/geometry.html#sc.area_prism"/>
+            <keyword name="area_prism_lateral() (function)" id="function.area_prism_lateral" ref="reference/geometry.html#sc.area_prism_lateral"/>
+            <keyword name="area_rectangle() (function)" id="function.area_rectangle" ref="reference/geometry.html#sc.area_rectangle"/>
+            <keyword name="area_rectangular_pyramid() (function)" id="function.area_rectangular_pyramid" ref="reference/geometry.html#sc.area_rectangular_pyramid"/>
+            <keyword name="area_rectangular_pyramid_lateral() (function)" id="function.area_rectangular_pyramid_lateral" ref="reference/geometry.html#sc.area_rectangular_pyramid_lateral"/>
+            <keyword name="area_regular_dodecahedron() (function)" id="function.area_regular_dodecahedron" ref="reference/geometry.html#sc.area_regular_dodecahedron"/>
+            <keyword name="area_regular_icosahedron() (function)" id="function.area_regular_icosahedron" ref="reference/geometry.html#sc.area_regular_icosahedron"/>
+            <keyword name="area_regular_octahedron() (function)" id="function.area_regular_octahedron" ref="reference/geometry.html#sc.area_regular_octahedron"/>
+            <keyword name="area_regular_polygon() (function)" id="function.area_regular_polygon" ref="reference/geometry.html#sc.area_regular_polygon"/>
+            <keyword name="area_regular_prism() (function)" id="function.area_regular_prism" ref="reference/geometry.html#sc.area_regular_prism"/>
+            <keyword name="area_regular_prism_lateral() (function)" id="function.area_regular_prism_lateral" ref="reference/geometry.html#sc.area_regular_prism_lateral"/>
+            <keyword name="area_regular_pyramid() (function)" id="function.area_regular_pyramid" ref="reference/geometry.html#sc.area_regular_pyramid"/>
+            <keyword name="area_regular_pyramid_frustum() (function)" id="function.area_regular_pyramid_frustum" ref="reference/geometry.html#sc.area_regular_pyramid_frustum"/>
+            <keyword name="area_regular_pyramid_frustum_lateral() (function)" id="function.area_regular_pyramid_frustum_lateral" ref="reference/geometry.html#sc.area_regular_pyramid_frustum_lateral"/>
+            <keyword name="area_regular_pyramid_lateral() (function)" id="function.area_regular_pyramid_lateral" ref="reference/geometry.html#sc.area_regular_pyramid_lateral"/>
+            <keyword name="area_regular_tetrahedron() (function)" id="function.area_regular_tetrahedron" ref="reference/geometry.html#sc.area_regular_tetrahedron"/>
+            <keyword name="area_rhombus() (function)" id="function.area_rhombus" ref="reference/geometry.html#sc.area_rhombus"/>
+            <keyword name="area_rounded_rectangle() (function)" id="function.area_rounded_rectangle" ref="reference/geometry.html#sc.area_rounded_rectangle"/>
+            <keyword name="area_sphere() (function)" id="function.area_sphere" ref="reference/geometry.html#sc.area_sphere"/>
+            <keyword name="area_spherical_cap() (function)" id="function.area_spherical_cap" ref="reference/geometry.html#sc.area_spherical_cap"/>
+            <keyword name="area_spherical_cap_lateral() (function)" id="function.area_spherical_cap_lateral" ref="reference/geometry.html#sc.area_spherical_cap_lateral"/>
+            <keyword name="area_spherical_segment() (function)" id="function.area_spherical_segment" ref="reference/geometry.html#sc.area_spherical_segment"/>
+            <keyword name="area_spherical_segment_lateral() (function)" id="function.area_spherical_segment_lateral" ref="reference/geometry.html#sc.area_spherical_segment_lateral"/>
+            <keyword name="area_spherical_shell() (function)" id="function.area_spherical_shell" ref="reference/geometry.html#sc.area_spherical_shell"/>
+            <keyword name="area_spheroid() (function)" id="function.area_spheroid" ref="reference/geometry.html#sc.area_spheroid"/>
+            <keyword name="area_square() (function)" id="function.area_square" ref="reference/geometry.html#sc.area_square"/>
+            <keyword name="area_square_pyramid() (function)" id="function.area_square_pyramid" ref="reference/geometry.html#sc.area_square_pyramid"/>
+            <keyword name="area_square_pyramid_lateral() (function)" id="function.area_square_pyramid_lateral" ref="reference/geometry.html#sc.area_square_pyramid_lateral"/>
+            <keyword name="area_stadium() (function)" id="function.area_stadium" ref="reference/geometry.html#sc.area_stadium"/>
+            <keyword name="area_tetrahedron() (function)" id="function.area_tetrahedron" ref="reference/geometry.html#sc.area_tetrahedron"/>
+            <keyword name="area_torus() (function)" id="function.area_torus" ref="reference/geometry.html#sc.area_torus"/>
+            <keyword name="area_trapezoid() (function)" id="function.area_trapezoid" ref="reference/geometry.html#sc.area_trapezoid"/>
+            <keyword name="area_triangle() (function)" id="function.area_triangle" ref="reference/geometry.html#sc.area_triangle"/>
+            <keyword name="area_triangle_from_angle() (function)" id="function.area_triangle_from_angle" ref="reference/geometry.html#sc.area_triangle_from_angle"/>
+            <keyword name="area_triangle_from_sides() (function)" id="function.area_triangle_from_sides" ref="reference/geometry.html#sc.area_triangle_from_sides"/>
+            <keyword name="area_triangular_prism() (function)" id="function.area_triangular_prism" ref="reference/geometry.html#sc.area_triangular_prism"/>
+            <keyword name="area_triangular_prism_lateral() (function)" id="function.area_triangular_prism_lateral" ref="reference/geometry.html#sc.area_triangular_prism_lateral"/>
             <keyword name="arsinh() (function)" id="function.arsinh" ref="reference/basic.html#sc.arsinh"/>
             <keyword name="artanh() (function)" id="function.artanh" ref="reference/basic.html#sc.artanh"/>
             <keyword name="average() (function)" id="function.average" ref="reference/statistical.html#sc.average"/>
@@ -336,6 +416,40 @@
             <keyword name="unmask() (function)" id="function.unmask" ref="reference/integer.html#sc.unmask"/>
             <keyword name="varp() (function)" id="function.varp" ref="reference/statistical.html#sc.varp"/>
             <keyword name="vars() (function)" id="function.vars" ref="reference/statistical.html#sc.vars"/>
+            <keyword name="volume_capsule() (function)" id="function.volume_capsule" ref="reference/geometry.html#sc.volume_capsule"/>
+            <keyword name="volume_cone() (function)" id="function.volume_cone" ref="reference/geometry.html#sc.volume_cone"/>
+            <keyword name="volume_cone_frustum() (function)" id="function.volume_cone_frustum" ref="reference/geometry.html#sc.volume_cone_frustum"/>
+            <keyword name="volume_cube() (function)" id="function.volume_cube" ref="reference/geometry.html#sc.volume_cube"/>
+            <keyword name="volume_cuboid() (function)" id="function.volume_cuboid" ref="reference/geometry.html#sc.volume_cuboid"/>
+            <keyword name="volume_cylinder() (function)" id="function.volume_cylinder" ref="reference/geometry.html#sc.volume_cylinder"/>
+            <keyword name="volume_cylindrical_segment() (function)" id="function.volume_cylindrical_segment" ref="reference/geometry.html#sc.volume_cylindrical_segment"/>
+            <keyword name="volume_ellipsoid() (function)" id="function.volume_ellipsoid" ref="reference/geometry.html#sc.volume_ellipsoid"/>
+            <keyword name="volume_elliptical_cylinder() (function)" id="function.volume_elliptical_cylinder" ref="reference/geometry.html#sc.volume_elliptical_cylinder"/>
+            <keyword name="volume_hemisphere() (function)" id="function.volume_hemisphere" ref="reference/geometry.html#sc.volume_hemisphere"/>
+            <keyword name="volume_hollow_cylinder() (function)" id="function.volume_hollow_cylinder" ref="reference/geometry.html#sc.volume_hollow_cylinder"/>
+            <keyword name="volume_mesh() (function)" id="function.volume_mesh" ref="reference/geometry.html#sc.volume_mesh"/>
+            <keyword name="volume_parallelepiped() (function)" id="function.volume_parallelepiped" ref="reference/geometry.html#sc.volume_parallelepiped"/>
+            <keyword name="volume_prism() (function)" id="function.volume_prism" ref="reference/geometry.html#sc.volume_prism"/>
+            <keyword name="volume_prismoid() (function)" id="function.volume_prismoid" ref="reference/geometry.html#sc.volume_prismoid"/>
+            <keyword name="volume_pyramid() (function)" id="function.volume_pyramid" ref="reference/geometry.html#sc.volume_pyramid"/>
+            <keyword name="volume_pyramid_frustum() (function)" id="function.volume_pyramid_frustum" ref="reference/geometry.html#sc.volume_pyramid_frustum"/>
+            <keyword name="volume_rectangular_pyramid() (function)" id="function.volume_rectangular_pyramid" ref="reference/geometry.html#sc.volume_rectangular_pyramid"/>
+            <keyword name="volume_regular_dodecahedron() (function)" id="function.volume_regular_dodecahedron" ref="reference/geometry.html#sc.volume_regular_dodecahedron"/>
+            <keyword name="volume_regular_icosahedron() (function)" id="function.volume_regular_icosahedron" ref="reference/geometry.html#sc.volume_regular_icosahedron"/>
+            <keyword name="volume_regular_octahedron() (function)" id="function.volume_regular_octahedron" ref="reference/geometry.html#sc.volume_regular_octahedron"/>
+            <keyword name="volume_regular_prism() (function)" id="function.volume_regular_prism" ref="reference/geometry.html#sc.volume_regular_prism"/>
+            <keyword name="volume_regular_pyramid() (function)" id="function.volume_regular_pyramid" ref="reference/geometry.html#sc.volume_regular_pyramid"/>
+            <keyword name="volume_regular_pyramid_frustum() (function)" id="function.volume_regular_pyramid_frustum" ref="reference/geometry.html#sc.volume_regular_pyramid_frustum"/>
+            <keyword name="volume_regular_tetrahedron() (function)" id="function.volume_regular_tetrahedron" ref="reference/geometry.html#sc.volume_regular_tetrahedron"/>
+            <keyword name="volume_sphere() (function)" id="function.volume_sphere" ref="reference/geometry.html#sc.volume_sphere"/>
+            <keyword name="volume_spherical_cap() (function)" id="function.volume_spherical_cap" ref="reference/geometry.html#sc.volume_spherical_cap"/>
+            <keyword name="volume_spherical_segment() (function)" id="function.volume_spherical_segment" ref="reference/geometry.html#sc.volume_spherical_segment"/>
+            <keyword name="volume_spherical_shell() (function)" id="function.volume_spherical_shell" ref="reference/geometry.html#sc.volume_spherical_shell"/>
+            <keyword name="volume_spheroid() (function)" id="function.volume_spheroid" ref="reference/geometry.html#sc.volume_spheroid"/>
+            <keyword name="volume_square_pyramid() (function)" id="function.volume_square_pyramid" ref="reference/geometry.html#sc.volume_square_pyramid"/>
+            <keyword name="volume_tetrahedron() (function)" id="function.volume_tetrahedron" ref="reference/geometry.html#sc.volume_tetrahedron"/>
+            <keyword name="volume_torus() (function)" id="function.volume_torus" ref="reference/geometry.html#sc.volume_torus"/>
+            <keyword name="volume_triangular_prism() (function)" id="function.volume_triangular_prism" ref="reference/geometry.html#sc.volume_triangular_prism"/>
             <keyword name="xor() (function)" id="function.xor" ref="reference/integer.html#sc.xor"/>
             <keyword name="π (constant)" id="constant.π" ref="reference/constants.html#sc.π"/>
             <keyword name="ℯ (constant)" id="constant.ℯ" ref="reference/constants.html#sc.ℯ"/>
@@ -362,6 +476,7 @@
             <file>userguide/theme_json_schema.html</file>
             <file>reference/basic.html</file>
             <file>reference/constants.html</file>
+            <file>reference/geometry.html</file>
             <file>reference/ieee754.html</file>
             <file>reference/index.html</file>
             <file>reference/integer.html</file>

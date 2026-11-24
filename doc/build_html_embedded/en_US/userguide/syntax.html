@@ -171,12 +171,15 @@ operations:</p>
 <span class="ge">= 12.341e3</span>
 </pre></div>
 </div>
-</td></tr></tbody></table><p>To force the exponent used by <a class="reference internal" href="../reference/integer.html#sc.eng" title="eng"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">eng()</span></code></a>, pass an optional second argument. It accepts either a direct exponent that is a multiple of 3, or a matching power of ten (including SI prefixes):</p>
-<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">eng</span><span class="p">(</span><span class="mf">0.000123456</span><span class="p">;</span> <span class="p">[</span><span class="n">milli</span><span class="p">])</span>
+</td></tr></tbody></table><p>To force the exponent used by <a class="reference internal" href="../reference/integer.html#sc.eng" title="eng"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">eng()</span></code></a>, pass an optional second argument. It can be an exponent that is a multiple of 3, or the matching power of ten:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">eng</span><span class="p">(</span><span class="mf">0.000123456</span><span class="p">;</span> <span class="o">-</span><span class="mi">3</span><span class="p">)</span>
 <span class="ge">= 0.123456e-3</span>
 
-<span class="n">eng</span><span class="p">(</span><span class="mf">0.000123456</span><span class="p">;</span> <span class="o">-</span><span class="mi">4</span><span class="p">)</span>
-<span class="ge">= 1.23456e-4</span>
+<span class="n">eng</span><span class="p">(</span><span class="mf">0.000123456</span><span class="p">;</span> <span class="o">-</span><span class="mi">6</span><span class="p">)</span>
+<span class="ge">= 123.456e-6</span>
+
+<span class="n">eng</span><span class="p">(</span><span class="mf">123456789.123456789</span><span class="p">;</span> <span class="mi">1e6</span><span class="p">)</span>
+<span class="ge">= 123.456789123456789e6</span>
 </pre></div>
 </div>
 </td></tr></tbody></table><p>For assembly-style fixed-width formatting, use <a class="reference internal" href="../reference/integer.html#sc.binpad" title="binpad"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">binpad()</span></code></a>, <a class="reference internal" href="../reference/integer.html#sc.octpad" title="octpad"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">octpad()</span></code></a>, or <a class="reference internal" href="../reference/integer.html#sc.hexpad" title="hexpad"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">hexpad()</span></code></a>.
