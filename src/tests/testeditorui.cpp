@@ -250,6 +250,7 @@ private slots:
     void enter_accepts_completion_for_names_and_units();
     void enter_evaluates_without_completion_when_accept_with_enter_is_enabled();
     void completion_popup_arrow_keys_change_selection();
+    void unit_completion_arrow_keys_scroll_selected_item_into_view();
     void completion_popup_tab_accepts_selected_item();
     void completion_popup_closes_when_clicking_elsewhere();
     void completion_popup_clicking_row_accepts_item();
@@ -5323,6 +5324,35 @@ void TestEditorUi::completion_popup_arrow_keys_change_selection()
     QVERIFY(popup->currentItem());
     QVERIFY(popup->currentItem() != initialItem);
     popup->hide();
+}
+
+void TestEditorUi::unit_completion_arrow_keys_scroll_selected_item_into_view()
+{
+    Editor editor;
+    editor.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&editor));
+    editor.setFocus();
+    editor.setText(QStringLiteral("[m"));
+    editor.setCursorPosition(editor.text().size());
+    QVERIFY(QMetaObject::invokeMethod(&editor, "triggerAutoComplete", Qt::DirectConnection));
+
+    QTreeWidget* popup = nullptr;
+    QTRY_VERIFY_WITH_TIMEOUT((popup = s_completionPopupTree()) != nullptr, 1000);
+    // Test pixel scrolling even when the platform style defaults to item scrolling.
+    popup->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    const QScrollBar* scrollBar = popup->verticalScrollBar();
+    QTRY_VERIFY(scrollBar->maximum() > scrollBar->minimum());
+
+    const int lastRow = popup->topLevelItemCount() - 1;
+    for (int row = 1; row <= lastRow; ++row)
+        QTest::keyClick(&editor, Qt::Key_Down);
+    QCOMPARE(popup->currentItem(), popup->topLevelItem(lastRow));
+    QVERIFY(popup->viewport()->rect().intersects(popup->visualItemRect(popup->currentItem())));
+
+    for (int row = lastRow; row > 0; --row)
+        QTest::keyClick(&editor, Qt::Key_Up);
+    QCOMPARE(popup->currentItem(), popup->topLevelItem(0));
+    QVERIFY(popup->viewport()->rect().intersects(popup->visualItemRect(popup->currentItem())));
 }
 
 void TestEditorUi::completion_popup_tab_accepts_selected_item()

@@ -4950,8 +4950,10 @@ bool EditorCompletion::handleCompletionKey(QKeyEvent* event)
             else if (key == Qt::Key_PageDown)
                 targetRow = currentRow + pageStep;
             targetRow = qBound(0, targetRow, m_popup->topLevelItemCount() - 1);
-            m_popup->setCurrentItem(m_popup->topLevelItem(targetRow));
-            m_popup->scrollToItem(m_popup->currentItem());
+            // Pixel scrolling needs a visible column.
+            const int firstVisibleColumn = m_popup->isColumnHidden(0) ? 1 : 0;
+            m_popup->setCurrentItem(m_popup->topLevelItem(targetRow), firstVisibleColumn);
+            m_popup->scrollTo(m_popup->currentIndex());
         }
         return true;
 
