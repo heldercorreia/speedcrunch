@@ -119,7 +119,9 @@ void BookDock::setContentSurfaceColors(const QColor& background, const QColor& f
 
 void BookDock::handleAnchorClick(const QUrl& url)
 {
-    if (url.toString().startsWith("formula:")) {
+    if (url.scheme() == QLatin1String("function")) {
+        emit functionSelected(url.path());
+    } else if (url.toString().startsWith("formula:")) {
 #if QT_VERSION >= QT_VERSION_CHECK(5,0,0)
         QString expression = url.toString(QUrl::DecodeReserved).mid(8);
 #else

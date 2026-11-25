@@ -35,6 +35,7 @@ public:
 
 signals:
     void expressionSelected(const QString&);
+    void functionSelected(const QString&);
 
 public slots:
     void openPage(const QUrl&);

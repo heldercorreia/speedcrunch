@@ -8630,9 +8630,8 @@ void MainWindow::createBookDock(bool)
     m_docks.book->installEventFilter(this);
     m_docks.book->setAllowedAreas(Qt::AllDockWidgetAreas);
 
-    connect(m_docks.book,
-            SIGNAL(expressionSelected(const QString&)),
-            SLOT(insertTextIntoEditor(const QString&)));
+    connect(m_docks.book, &BookDock::expressionSelected, this, &MainWindow::insertTextIntoEditor);
+    connect(m_docks.book, &BookDock::functionSelected, this, &MainWindow::insertFunctionIntoEditor);
 
     // No focus for this dock.
     addTabifiedDock(m_docks.book, false);

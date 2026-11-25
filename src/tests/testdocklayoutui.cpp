@@ -4,6 +4,7 @@
 #include "mainwindowtesthelpers.h"
 
 #include <QEventLoop>
+#include <QSet>
 
 using namespace MainWindowTestHelpers;
 
@@ -190,6 +191,8 @@ private slots:
     void formula_book_ignores_repeated_appearance_events();
     void formula_book_combines_palette_changes();
     void formula_book_text_requests_single_font_family();
+    void formula_book_covers_geometry_catalog();
+    void formula_book_inserts_geometry_function_calls();
     void functions_dock_lists_cbrt_without_its_symbol();
     void startup_styling_keeps_formula_book_document();
     void formula_book_retranslation_refreshes_cached_page();
@@ -1911,7 +1914,9 @@ void TestDockLayoutUi::formula_book_links_follow_dock_appearance()
                 const QTextCharFormat format = it.fragment().charFormat();
                 if (!format.isAnchor())
                     continue;
-                const bool formula = format.anchorHref().startsWith(QStringLiteral("formula:"));
+                const QString href = format.anchorHref();
+                const bool formula = href.startsWith(QStringLiteral("formula:"))
+                    || href.startsWith(QStringLiteral("function:"));
                 QCOMPARE(format.foreground().color().rgba(), (formula ? formulaColor : navigationColor).rgba());
                 if (formula)
                     ++formulaLinks;
@@ -1928,7 +1933,8 @@ void TestDockLayoutUi::formula_book_links_follow_dock_appearance()
         for (MainWindow* window : {&first, &second}) {
             BookDock* book = window->findChild<BookDock*>(QStringLiteral("BookDock"));
             QVERIFY(book);
-            for (const QString& page : {QStringLiteral("index"), QStringLiteral("electronics/ohmslaw")}) {
+            for (const QString& page : {QStringLiteral("index"), QStringLiteral("electronics/ohmslaw"),
+                                        QStringLiteral("geometry/circle")}) {
                 book->openPage(QUrl(page));
                 verifyLinks(book, system, native.color(QPalette::Link));
                 if (QTest::currentTestFailed())
@@ -1946,7 +1952,7 @@ void TestDockLayoutUi::formula_book_links_follow_dock_appearance()
         QTextBrowser* browser = book->findChild<QTextBrowser*>();
         QVERIFY(browser);
         QTRY_COMPARE(browser->palette().color(QPalette::Link).rgba(), native.color(QPalette::Link).rgba());
-        QCOMPARE(book->currentPage(), QStringLiteral("electronics/ohmslaw"));
+        QCOMPARE(book->currentPage(), QStringLiteral("geometry/circle"));
         verifyLinks(book, true, native.color(QPalette::Link));
         if (QTest::currentTestFailed())
             return;
@@ -3079,6 +3085,105 @@ void TestDockLayoutUi::formula_book_text_requests_single_font_family()
             }
         }
     }
+}
+
+void TestDockLayoutUi::formula_book_covers_geometry_catalog()
+{
+    BookDock dock;
+    auto* browser = dock.findChild<QTextBrowser*>();
+    QVERIFY(browser);
+    const auto pageLinks = [browser]() {
+        QSet<QString> links;
+        for (QTextBlock block = browser->document()->begin(); block.isValid(); block = block.next()) {
+            for (auto it = block.begin(); !it.atEnd(); ++it) {
+                const QString href = it.fragment().charFormat().anchorHref();
+                if (!href.isEmpty())
+                    links.insert(href);
+            }
+        }
+        return links;
+    };
+
+    QSet<QString> functions;
+    const QSet<QString> indexLinks = pageLinks();
+    for (const QString& chapter : {QStringLiteral("geometry/2d"), QStringLiteral("geometry/3d")}) {
+        QVERIFY2(indexLinks.contains(chapter), qPrintable(chapter));
+        dock.openPage(QUrl(chapter));
+        QSet<QString> shapes = pageLinks();
+        QVERIFY(shapes.remove(QStringLiteral("index")));
+        QVERIFY(!shapes.isEmpty());
+        for (const QString& shape : shapes) {
+            dock.openPage(QUrl(shape));
+            const QSet<QString> links = pageLinks();
+            QVERIFY2(links.contains(chapter) && links.contains(QStringLiteral("index")), qPrintable(shape));
+            const qsizetype count = functions.size();
+            for (const QString& href : links) {
+                const QUrl url(href);
+                if (url.scheme() != QLatin1String("function"))
+                    continue;
+                QVERIFY2(!functions.contains(url.path()), qPrintable(href));
+                functions.insert(url.path());
+            }
+            QVERIFY2(functions.size() > count, qPrintable(shape));
+        }
+    }
+
+    QSet<QString> geometryFunctions;
+    const FunctionRepo* repo = FunctionRepo::instance();
+    for (const QString& identifier : repo->getListedIdentifiers()) {
+        if (repo->find(identifier)->domainType() == FunctionDomain::Geometry)
+            geometryFunctions.insert(identifier);
+    }
+    QCOMPARE(functions, geometryFunctions);
+}
+
+void TestDockLayoutUi::formula_book_inserts_geometry_function_calls()
+{
+    MainWindowStateGuard guard;
+    guard.settings->formulaBookDockVisible = true;
+    guard.settings->formulaBookActivePage = QStringLiteral("index");
+    guard.settings->sessionLayoutJson.clear();
+    guard.settings->windowState.clear();
+    MainWindow window(false);
+    window.resize(900, 650);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    auto* dock = window.findChild<BookDock*>();
+    auto* editor = window.findChild<Editor*>();
+    QVERIFY(dock);
+    QVERIFY(editor);
+    auto* browser = dock->findChild<QTextBrowser*>();
+    QVERIFY(browser);
+    const auto clickLink = [browser](const QString& href) {
+        for (QTextBlock block = browser->document()->begin(); block.isValid(); block = block.next()) {
+            for (auto it = block.begin(); !it.atEnd(); ++it) {
+                const QTextFragment fragment = it.fragment();
+                if (fragment.charFormat().anchorHref() != href)
+                    continue;
+                QTextCursor cursor(block);
+                cursor.setPosition(fragment.position() + fragment.length() / 2);
+                browser->setTextCursor(cursor);
+                browser->ensureCursorVisible();
+                const QPoint point = browser->cursorRect(cursor).center();
+                QCOMPARE(browser->anchorAt(point), href);
+                QTest::mouseClick(browser->viewport(), Qt::LeftButton, Qt::NoModifier, point);
+                return;
+            }
+        }
+        QFAIL(qPrintable(href));
+    };
+
+    clickLink(QStringLiteral("geometry/3d"));
+    QCOMPARE(dock->currentPage(), QStringLiteral("geometry/3d"));
+    clickLink(QStringLiteral("geometry/cylinder"));
+    QCOMPARE(dock->currentPage(), QStringLiteral("geometry/cylinder"));
+    editor->setText(QStringLiteral("5 + "));
+    editor->moveCursor(QTextCursor::End);
+    clickLink(QStringLiteral("function:volume_cylinder"));
+    QCOMPARE(editor->text(), QStringLiteral("5 + volume_cylinder()"));
+    QCOMPARE(editor->textCursor().position(), editor->text().size() - 1);
+    QCOMPARE(dock->currentPage(), QStringLiteral("geometry/cylinder"));
 }
 
 void TestDockLayoutUi::functions_dock_lists_cbrt_without_its_symbol()

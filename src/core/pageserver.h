@@ -9,6 +9,9 @@
 #include <QObject>
 #include <QString>
 
+#include <functional>
+#include <utility>
+
 class PageServer : public QObject {
     Q_OBJECT
 public:
@@ -17,8 +20,8 @@ public:
     QString getCurrentPageContent();
 
 protected:
-    typedef QString (*PageMaker)();
-    void addPage(const QString& id, PageMaker maker) { m_toc[id] = maker; }
+    using PageMaker = std::function<QString()>;
+    void addPage(const QString& id, PageMaker maker) { m_toc[id] = std::move(maker); }
     virtual void createPages() = 0;
 
 private:
