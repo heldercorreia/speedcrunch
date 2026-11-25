@@ -111,6 +111,7 @@
                             <section title="Complex Numbers" ref="reference/basic.html#complex-numbers"/>
                             <section title="Various" ref="reference/basic.html#various"/>
                         </section>
+                        <section title="Calculus" ref="reference/calculus.html"/>
                         <section title="Geometry" ref="reference/geometry.html">
                             <section title="Plane shapes" ref="reference/geometry.html#plane-shapes"/>
                             <section title="Prisms and pyramids" ref="reference/geometry.html#prisms-and-pyramids"/>
@@ -297,6 +298,7 @@
             <keyword name="dec() (function)" id="function.dec" ref="reference/integer.html#sc.dec"/>
             <keyword name="degrees() (function)" id="function.degrees" ref="reference/basic.html#sc.degrees"/>
             <keyword name="det() (function)" id="function.det" ref="reference/basic.html#sc.det"/>
+            <keyword name="diff() (function)" id="function.diff" ref="reference/calculus.html#sc.diff"/>
             <keyword name="dms() (function)" id="function.dms" ref="reference/integer.html#sc.dms"/>
             <keyword name="dot() (function)" id="function.dot" ref="reference/basic.html#sc.dot"/>
             <keyword name="e (constant)" id="constant.e" ref="reference/constants.html#sc.e"/>
@@ -342,6 +344,7 @@
             <keyword name="ieee754_single_encode() (function)" id="function.ieee754_single_encode" ref="reference/ieee754.html#sc.ieee754_single_encode"/>
             <keyword name="imag() (function)" id="function.imag" ref="reference/basic.html#sc.imag"/>
             <keyword name="int() (function)" id="function.int" ref="reference/basic.html#sc.int"/>
+            <keyword name="integrate() (function)" id="function.integrate" ref="reference/calculus.html#sc.integrate"/>
             <keyword name="inv() (function)" id="function.inv" ref="reference/basic.html#sc.inv"/>
             <keyword name="j (constant)" id="constant.j" ref="reference/constants.html#sc.j"/>
             <keyword name="lcm() (function)" id="function.lcm" ref="reference/integer.html#sc.lcm"/>
@@ -475,6 +478,7 @@
             <file>userguide/syntax.html</file>
             <file>userguide/theme_json_schema.html</file>
             <file>reference/basic.html</file>
+            <file>reference/calculus.html</file>
             <file>reference/constants.html</file>
             <file>reference/geometry.html</file>
             <file>reference/ieee754.html</file>
