@@ -31,6 +31,7 @@ inline constexpr QChar TimeSep = UnicodeChars::Colon;
 inline constexpr QChar FunArgSep = UnicodeChars::Semicolon;
 inline constexpr QChar AddOp = UnicodeChars::PlusSign;
 inline constexpr QChar Equals = UnicodeChars::EqualsSign;
+inline constexpr QChar Approximate = UnicodeChars::AlmostEqual;
 inline constexpr QChar SubOp = UnicodeChars::MinusSign;
 inline constexpr QChar SubOpAl1 = UnicodeChars::HyphenMinus;
 inline constexpr QChar PercentOp = UnicodeChars::PercentSign;

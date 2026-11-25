@@ -227,6 +227,8 @@ void HistoryEntry::serialize(QJsonObject & json) const
     m_ctx.serialize(ctx);
     json[QLatin1String(SessionJsonKeys::HistoryEntry::Context)] = ctx;
     json[QLatin1String(SessionJsonKeys::HistoryEntry::EditTimestamp)] = m_editTimestamp;
+    if (!m_adjustedExpressionLine.isEmpty())
+        json[QLatin1String(SessionJsonKeys::HistoryEntry::AdjustedExpressionLine)] = m_adjustedExpressionLine;
     if (!m_renderedLines.isEmpty()) {
         QJsonArray renderedLines;
         for (const QString& line : m_renderedLines)
@@ -263,6 +265,7 @@ void HistoryEntry::readSavedFields(const QJsonObject& json)
         m_editTimestamp = currentEditTimestampMs();
 
     timing.next("Read saved history display lines");
+    m_adjustedExpressionLine = json.value(QLatin1String(SessionJsonKeys::HistoryEntry::AdjustedExpressionLine)).toString();
     if (json.contains(QLatin1String(SessionJsonKeys::HistoryEntry::PrintedLines))) {
         const QJsonArray renderedLines = json[QLatin1String(SessionJsonKeys::HistoryEntry::PrintedLines)].toArray();
         for (const QJsonValue& value : renderedLines) {

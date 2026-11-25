@@ -33,6 +33,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMouseEvent>
+#include <QScopedValueRollback>
 #include <QTextBlock>
 #include <QTextLayout>
 
@@ -674,6 +675,422 @@ void test_constants()
     CHECK_EVAL(QString::fromUtf8("f₀(2)"), "3");
     CHECK_EVAL(QString::fromUtf8("xᵢ=4"), "4");
     CHECK_EVAL(QString::fromUtf8("xᵢ*3"), "12");
+}
+
+static void test_symbolic_differentiation()
+{
+    Evaluator evaluator;
+    evaluator.initializeBuiltInVariables();
+    const QScopedValueRollback<Evaluator*> useEvaluator(eval, &evaluator);
+
+    const auto check = [](bool passed, const QString& description) {
+        ++eval_total_tests;
+        if (!passed) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << "diff: " << qPrintable(description) << endl;
+        }
+    };
+    const auto expectError = [&](const QString& expression, const QString& message) {
+        evaluator.setExpression(expression);
+        evaluator.evalUpdateAns();
+        check(evaluator.error().contains(message), expression + " returned " + evaluator.error());
+    };
+    const auto checkAt = [&](const QString& expression, const QString& expected) {
+        evaluator.setExpression(expression);
+        const Quantity derivative = evaluator.evalNoAssign();
+        const QString error = evaluator.error();
+        if (!error.isEmpty()) {
+            check(false, expression + " returned " + error);
+            return;
+        }
+        Quantity value = derivative;
+        if (derivative.isSymbolic()) {
+            evaluator.setExpression(derivative.symbolicExpression());
+            value = evaluator.evalNoAssign();
+            if (!evaluator.error().isEmpty()) {
+                check(false, derivative.symbolicExpression() + " returned " + evaluator.error());
+                return;
+            }
+        }
+        evaluator.setExpression(expected);
+        const Quantity target = evaluator.evalNoAssign();
+        const Quantity difference = DMath::abs(value - target);
+        check(evaluator.error().isEmpty() && !difference.isNan()
+                  && difference.numericValue().real < HNumber("1e-60"),
+              expression + " returned " + DMath::format(value) + ", expected " + DMath::format(target)
+                  + " (formula " + DMath::format(derivative) + ")");
+    };
+
+    const Function* function = FunctionRepo::instance()->find("diff");
+    check(function && function->name() == "Derivative"
+              && function->domainType() == FunctionDomain::Calculus
+              && FunctionRepo::instance()->domains().contains("Calculus"),
+          "function metadata");
+
+    CHECK_EVAL("diff(42)", "0");
+    CHECK_EVAL("diff(x)", "1");
+    CHECK_EVAL("DIFF(x^4)", "4*x^3");
+    CHECK_EVAL("diff(x^4; x)", "4*x^3");
+    CHECK_EVAL("diff(x^4; 2)", "12*x^2");
+    CHECK_EVAL("diff(x^4; x; 2)", "12*x^2");
+    CHECK_EVAL("diff(x^4; 1+1)", "12*x^2");
+    CHECK_EVAL("diff(x^4; sqrt(4))", "12*x^2");
+    CHECK_EVAL("diff(x^4; x; floor(2.5))", "12*x^2");
+    CHECK_EVAL("diff(x^4; 0)", "x^4");
+    CHECK_EVAL("diff(x^4; 4)", "24");
+    CHECK_EVAL("diff(x^4; 5)", "0");
+    CHECK_EVAL("diff(sin(x))", "cos(x)");
+    CHECK_EVAL("diff(sin(x); 2)", "-sin(x)");
+    CHECK_EVAL("diff(sin(x); 3)", "-cos(x)");
+    CHECK_EVAL("diff(sin(x); 4)", "sin(x)");
+    CHECK_EVAL("diff(exp(x); 100)", "exp(x)");
+    CHECK_EVAL("diff(ln(x))", "1/x");
+    CHECK_EVAL("diff(ln(x); 5)", "24/x^5");
+    CHECK_EVAL("diff(1/x; 7)", "-5040/x^8");
+    CHECK_EVAL("diff(sin(x^2))", "2*x*cos(x^2)");
+    CHECK_EVAL("diff(π*x^2)", "2*π*x");
+    CHECK_EVAL("diff(π+pi+e+ℯ)", "0");
+    CHECK_EVAL("diff(e^x)", "e^x");
+    CHECK_EVAL("diff(0^x)", "0");
+    CHECK_EVAL("diff(x*y; x)", "y");
+    CHECK_EVAL("diff(x*y; y)", "x");
+    CHECK_EVAL("diff(x^2*y^3; x; 2)", "2*y^3");
+    CHECK_EVAL("diff(x^2*y^3; y; 2)", "6*x^2*y");
+    CHECK_EVAL("diff(x*y; z)", "0");
+    CHECK_EVAL("diff(x*y; 0)", "x*y");
+    CHECK_EVAL("diff((x+y) * 1; x; 0)", "(x+y) * 1");
+    CHECK_EVAL("diff(x[m²]; 0)", "x[m^2]");
+    CHECK_EVAL("diff(floor(x); 0)", "floor(x)");
+    CHECK_EVAL("diff(1/0 + x; 0)", "1/0 + x");
+    CHECK_EVAL("diff(diff(x^5); x; 2)", "60*x^2");
+    CHECK_EVAL("2 + diff(x^4; 4)", "26");
+    CHECK_EVAL("diff((-x + x^2 + 2*x^2) - (x^0 + 0*x))", "-1+6*x");
+    CHECK_EVAL("diff(x*x*x + x^3)", "6*x^2");
+    CHECK_EVAL("diff((x^2+1)/x)", "(x^2-1)/x^2");
+    CHECK_EVAL("diff(x*y + y*x; x)", "2*y");
+    CHECK_EVAL("diff((x-x)*x)", "0");
+    CHECK_EVAL("diff((0.5+0.25)*x)", "3/4");
+    CHECK_EVAL("diff((0x4+0b11)*x)", "7");
+    CHECK_EVAL("diff(x/3)", "1/3");
+    CHECK_EVAL("diff(1/3*x/3)", "1/9");
+    CHECK_EVAL("diff(x^4; 1e40)", "0");
+    CHECK_EVAL("diff(2[m]; 1e40)", "0");
+    CHECK_EVAL("5", "5");
+    CHECK_EVAL("diff(x*ans)", "5");
+    CHECK_EVAL("diff(ans*x^2)", "10*x");
+    expectError("diff(ans*x)", "ans must hold a unitless number");
+    const char* preciseAnswer = "0.123456789012345678901234567890123456789";
+    evaluator.setVariable("ans", Quantity(HNumber(preciseAnswer)), Variable::BuiltIn);
+    checkAt("diff(ans*x)", QString::fromLatin1(preciseAnswer));
+
+    expectError("diff(x*y)", "ambiguous variable");
+    expectError("diff(x*y; 2)", "ambiguous variable");
+    expectError("diff(x-x+y)", "ambiguous variable");
+    expectError("diff()", "wrong number of arguments");
+    expectError("diff(x;x;1;0)", "wrong number of arguments");
+    expectError("diff(x;1;0)", "variable name");
+    expectError("diff(x;π;1)", "variable name");
+    expectError("diff(x;x+1;2)", "variable name");
+    expectError("diff(x;-1)", "invalid order");
+    expectError("diff(x;1.5)", "invalid order");
+    expectError("diff(x;2[m])", "invalid order");
+    expectError("diff(x;x;2[rad])", "invalid order");
+    expectError("diff(x;unknown+1)", "invalid order");
+    expectError("diff(x;x;1/0)", "invalid order");
+    expectError("diff(x; summation(1; 1e30; n))", "invalid order");
+    expectError("diff(x; rand())", "invalid order");
+    expectError("diff(floor(x))", "unsupported function floor");
+    expectError("diff(mystery(x))", "unsupported function mystery");
+    expectError("diff(sin(x;x);x)", "wrong number of arguments to sin");
+    expectError("diff(x!)", "unsupported expression");
+    expectError("diff(1+x%)", "unsupported expression");
+    expectError("diff(x[°C])", "units with an offset");
+    expectError("diff(sin(x[deg]))", "units in this function");
+    expectError("diff(x[nonexistentunit])", "unknown unit");
+    expectError("sqrt(diff(x^2))", "needs numeric values");
+    expectError("[newtestunit]=diff(x^2)", "needs a numeric value");
+    expectError("diff(exp(x); 10000000000)", "limit exceeded");
+    expectError("diff(sin(exp(x^x)); 80)", "limit exceeded");
+    expectError("diff(" + QString("sin(").repeated(110) + "x" + QString(")").repeated(111),
+                "limit exceeded");
+    expectError("diff(x; 1" + QString("+1").repeated(128) + ")", "limit exceeded");
+
+    CHECK_EVAL("x=2", "2");
+    CHECK_EVAL("y=3", "3");
+    CHECK_EVAL("diff(x^4; x)", "4*x^3");
+    CHECK_EVAL("diff(x^4; y)", "0");
+    CHECK_EVAL("diff(x^4; y+0)", "24*x");
+    CHECK_EVAL("diff(x*y; x)", "y");
+    CHECK_EVAL("diff(x*y; x; y)", "0");
+    CHECK_EVAL("diff(x[m])", "[m]");
+    checkAt("diff(x^2*[m])", "4[m]");
+    checkAt("diff(x[m/s])", "1[m/s]");
+    CHECK_EVAL_SUCCESS("[diffunit]=2[m]");
+    CHECK_EVAL("diff(x[diffunit])", "[diffunit]");
+    checkAt("diff(2x^3 - 3x + 5)", "21");
+    checkAt("diff((x+1)/(x-1))", "-2");
+    checkAt("diff(x^-2)", "-1/4");
+    checkAt("diff(x^(3/2))", "3*sqrt(2)/2");
+    checkAt("diff(x^x)", "4*(1+ln(2))");
+    checkAt("diff((x+2)^(3*x))", "4^6*(3*ln(4)+6/4)");
+    checkAt("diff(2^x)", "4*ln(2)");
+    checkAt("diff(sqrt(x))", "1/(2*sqrt(2))");
+    checkAt("diff(cbrt(x^3-9))", "4");
+    checkAt("diff(ln(x^2)+exp(x^2))", "1+4*exp(4)");
+    checkAt("diff(log10(x)+log2(x))", "1/(2*ln(10))+1/(2*ln(2))");
+    checkAt("diff(log(x; x^2))", "0");
+    checkAt("diff(log(2; x))", "1/(2*ln(2))");
+    checkAt("diff(cos(x)+tan(x)+cot(x)+sec(x)+csc(x))",
+            "-sin(2)+sec(2)^2-csc(2)^2+sec(2)*tan(2)-csc(2)*cot(2)");
+    checkAt("diff(arcsin(x/4))", "1/(2*sqrt(3))");
+    checkAt("diff(arccos(x/4))", "-1/(2*sqrt(3))");
+    checkAt("diff(arctan(x^2))", "4/17");
+    checkAt("diff(arctan2(x; x^2))", "1/5");
+    checkAt("diff(sinh(x^2)+cosh(x)+tanh(x))", "4*cosh(4)+sinh(2)+1/cosh(2)^2");
+    checkAt("diff(arsinh(x)+arcosh(x)+artanh(x/4))", "1/sqrt(5)+1/sqrt(3)+1/3");
+
+    Settings* settings = Settings::instance();
+    const QScopedValueRollback<char> restoreAngle(settings->angleUnit);
+    for (const auto& mode : {qMakePair('d', "π/180"), qMakePair('g', "π/200"),
+                             qMakePair('t', "2*π"), qMakePair('v', "2*π")}) {
+        settings->angleUnit = mode.first;
+        const QString scale = QString::fromUtf8(mode.second);
+        checkAt("diff(sin(x))", "(" + scale + ")*cos(x)");
+        checkAt("diff(sin(x);2)", "-(" + scale + ")^2*sin(x)");
+        checkAt("diff(arcsin(x/4))", "1/(2*sqrt(3)*(" + scale + "))");
+        checkAt("diff(sin(arctan(x)))", "cos(arctan(x))/(1+x^2)");
+    }
+    settings->angleUnit = 'r';
+    {
+        const QScopedValueRollback<bool> restoreComplex(settings->complexNumbers, true);
+        const QScopedValueRollback<bool> restoreDMath(DMath::complexMode, true);
+        evaluator.initializeBuiltInVariables();
+        CHECK_EVAL("diff(i*x^2)", "2*i*x");
+        expectError("diff(x;2+i)", "invalid order");
+    }
+    evaluator.initializeBuiltInVariables();
+
+    CHECK_USERFUNC_SET("derivative_with_order(x; n)=diff(x^4; x; n)");
+    CHECK_EVAL("derivative_with_order(2; 2)", "12*x^2");
+    expectError("diff(derivative_with_order(x; 2))", "unsupported function");
+
+    evaluator.setExpression("diff(x^4)");
+    const Quantity derivative = evaluator.evalUpdateAns();
+    const HistoryEntry entry(evaluator.expression(), derivative, evaluator.interpretedExpression());
+    QJsonObject serialized;
+    entry.serialize(serialized);
+    const HistoryEntry restored(serialized);
+    check(derivative.isSymbolic() && restored.result() == derivative
+              && evaluator.getVariable("ans").value() == derivative,
+          "symbolic history and ans");
+    const auto lines = ResultLineFormatUtils::formatResultLinesForDisplay(
+        entry.expr(), entry.interpretedExpr(), restored.result(), true, true, &evaluator);
+    check(lines.size() == 2
+              && lines.constLast() == "= " + Evaluator::formatInterpretedExpressionForDisplay("4*x^3", &evaluator),
+          "derivative display");
+}
+
+static void test_calculus_integration()
+{
+    Evaluator evaluator;
+    evaluator.initializeBuiltInVariables();
+    const QScopedValueRollback<Evaluator*> useEvaluator(eval, &evaluator);
+    Settings* settings = Settings::instance();
+    const QScopedValueRollback<int> precision(settings->resultPrecision, 40);
+    const QScopedValueRollback<char> angle(settings->angleUnit, 'r');
+
+    const auto check = [](bool passed, const QString& description) {
+        ++eval_total_tests;
+        if (!passed) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << "integrate: " << qPrintable(description) << endl;
+        }
+    };
+    const auto evaluate = [&](const QString& expression) {
+        evaluator.setExpression(expression);
+        return evaluator.evalNoAssign();
+    };
+    const auto expectError = [&](const QString& expression, const QString& message) {
+        evaluate(expression);
+        check(evaluator.error().contains(message), expression + " returned " + evaluator.error());
+    };
+    const auto compare = [&](const QString& expression, const QString& formula, bool approximate = false) {
+        const Quantity result = evaluate(expression);
+        if (!evaluator.error().isEmpty() || result.isNan()) {
+            check(false, expression + " returned " + evaluator.error());
+            return;
+        }
+        const Quantity numeric = result.isSymbolic() ? evaluate(result.symbolicExpression()) : result;
+        if (!evaluator.error().isEmpty()) {
+            check(false, DMath::format(result) + " returned " + evaluator.error());
+            return;
+        }
+        const Quantity expected = evaluate(formula);
+        const Quantity difference = DMath::abs(numeric - expected);
+        check(evaluator.error().isEmpty() && !difference.isNan() && numeric.sameDimension(expected)
+                  && difference.numericValue().real < HNumber("1e-32")
+                  && result.isApproximate() == approximate,
+              expression + " returned " + DMath::format(result) + ", expected " + formula);
+    };
+
+    const Function* function = FunctionRepo::instance()->find("integrate");
+    check(function && function->name() == "Integral" && function->domainType() == FunctionDomain::Calculus,
+          "function metadata");
+    CHECK_EVAL("x=2", "2");
+    CHECK_EVAL("y=3", "3");
+    CHECK_EVAL("integrate(0)", "0");
+    CHECK_EVAL("integrate(5)", "5*x");
+    CHECK_EVAL("integrate(1/x)", "ln(abs(x))");
+    CHECK_EVAL("integrate(2*x*cos(x^2))", "sin(x^2)");
+    CHECK_EVAL("integrate(π)", "π*x");
+
+    const std::pair<const char*, const char*> indefinite[] = {
+        {"integrate(x)", "x^2/2"},
+        {"integrate(x^2)", "x^3/3"},
+        {"integrate(x^2; x)", "x^3/3"},
+        {"integrate(x^2; y)", "x^2*y"},
+        {"integrate(3*x^2 + 2*x + 1)", "x^3 + x^2 + x"},
+        {"integrate((x+1)*(x+2))", "x^3/3+3*x^2/2+2*x"},
+        {"integrate(1/x^2)", "-1/x"},
+        {"integrate(sqrt(x))", "2*x^(3/2)/3"},
+        {"integrate(x^(3/2))", "2*x^(5/2)/5"},
+        {"integrate(exp(x))", "exp(x)"},
+        {"integrate(exp(2*x))", "exp(2*x)/2"},
+        {"integrate(2^x)", "2^x/ln(2)"},
+        {"integrate(sin(x))", "-cos(x)"},
+        {"integrate(cos(x))", "sin(x)"},
+        {"integrate(sin(2*x))", "-cos(2*x)/2"},
+        {"integrate(sinh(x))", "cosh(x)"},
+        {"integrate(cosh(x))", "sinh(x)"},
+        {"integrate(ln(x))", "x*ln(x)-x"},
+        {"integrate(x*exp(x))", "(x-1)*exp(x)"},
+        {"integrate(x*y; x)", "x^2*y/2"},
+        {"integrate(x*y; y)", "x*y^2/2"},
+        {"integrate((x+1)/(1+x^2))", "ln(1+x^2)/2+arctan(x)"},
+        {"integrate(1/(x+1))", "ln(abs(x+1))"},
+        {"integrate(x/(x+1))", "x-ln(abs(x+1))"},
+    };
+    for (const auto& pair : indefinite)
+        compare(pair.first, pair.second);
+
+    for (const char* expression : {"0", "5", "x", "x^3+2*x-5", "1/x", "1/x^2", "sqrt(x)",
+                                   "exp(2*x)", "sin(2*x)", "cos(x)", "sinh(x)", "cosh(x)",
+                                   "ln(x)", "x*exp(x)", "x^2*sin(x)", "2*x*cos(x^2)",
+                                   "(x+1)/(1+x^2)", "y*x^2", "abs(x)"}) {
+        compare(QStringLiteral("diff(integrate(%1; x); x)").arg(QString::fromLatin1(expression)), expression);
+    }
+    CHECK_EVAL("x=-2", "-2");
+    compare("diff(integrate(1/x); x)", "1/x");
+    CHECK_EVAL("x=2", "2");
+
+    CHECK_EVAL("integrate(x; 0; 1)", "1/2");
+    CHECK_EVAL("integrate(x; x; 0; 1)", "1/2");
+    CHECK_EVAL("integrate(x^2; 0; 3)", "9");
+    CHECK_EVAL("integrate(x^2; 3; 0)", "-9");
+    CHECK_EVAL("integrate(x^2; 2; 2)", "0");
+    CHECK_EVAL("integrate(exp(-x^2); 0; 0)", "0");
+    CHECK_EVAL("integrate(5; 0; 10)", "50");
+    CHECK_EVAL("integrate(sin(x); 0; π)", "2");
+    CHECK_EVAL("integrate(cos(x); 0; π/2)", "1");
+    CHECK_EVAL("integrate(1/x; 1; 2)", "ln(2)");
+    CHECK_EVAL("integrate(1/x; -2; -1)", "-ln(2)");
+    CHECK_EVAL("integrate(1/(1+x^2); 0; 1)", "1/4*π");
+    CHECK_EVAL("integrate(1/sqrt(x); 0; 1)", "2");
+    CHECK_EVAL("integrate(ln(x); 0; 1)", "-1");
+    CHECK_EVAL("integrate(ln(2-x); 1; 2)", "-1");
+    CHECK_EVAL("integrate(x; 0; floor(2.5))", "2");
+    CHECK_EVAL("integrate(exp(-x); 0; inf)", "1");
+    CHECK_EVAL("integrate(exp(-x); 0; INF)", "1");
+    CHECK_EVAL(QStringLiteral("integrate(exp(-x); 0; %1)").arg(UnicodeChars::Infinity), "1");
+    CHECK_EVAL("integrate(exp(-2*x); inf; 0)", "-1/2");
+    CHECK_EVAL("integrate(exp(x); -inf; 0)", "1");
+    CHECK_EVAL("integrate(1/x^2; 1; inf)", "1");
+    CHECK_EVAL("integrate(1/(1+x^2); 0; inf)", "1/2*π");
+    CHECK_EVAL("integrate(1/(1+x^2); -inf; inf)", "π");
+    CHECK_EVAL("integrate(0; -inf; inf)", "0");
+    CHECK_EVAL("integrate(x; a; a)", "0");
+    const Quantity parameter = evaluate("integrate(x; 0; a)");
+    check(parameter.isSymbolic() && parameter.symbolicExpression().contains("a^2"),
+          "a free bound should stay symbolic");
+    CHECK_EVAL("a=3", "3");
+    CHECK_EVAL("integrate(x; 0; a)", "9/2");
+    CHECK_EVAL("integrate(1; 0; a+π)", "3+π");
+    CHECK_USERFUNC_SET("area_to(a)=integrate(x; x; 0; a)");
+    CHECK_EVAL("area_to(4)", "8");
+    compare("integrate(y*x; x; 0; 1)", "3/2");
+    compare("integrate(log(2; x); 1; 2)", "(2*ln(2)-1)/ln(2)");
+    compare("integrate(3[m/s]; 0[s]; 2[s])", "6[m]");
+    compare("integrate(t*[m/s^2]; t; 0[s]; 2[s])", "2[m]");
+    compare("integrate(2[m/s]; 30[s]; 1[min])", "60[m]");
+    compare("integrate(1; 0[s]; 2[s])", "2[s]");
+
+    const QString gaussian = QStringLiteral("0.746824132812427025399467436131853005354499686812606");
+    compare("integrate(exp(-x^2); 0; 1)", gaussian, true);
+    compare("integrate(exp(-x^2); 1; 0)", "-" + gaussian, true);
+    compare("integrate(exp(-x^2); -inf; inf)", "sqrt(π)", true);
+    compare("integrate(exp(-x^2); 0; inf)", "sqrt(π)/2", true);
+    compare("integrate(exp(-x)/sqrt(x); 0; 1)", "sqrt(π)*erf(1)", true);
+    compare("integrate(exp(x-1)/sqrt(1-x); 0; 1)", "sqrt(π)*erf(1)", true);
+    compare("integrate(exp(-x^2)*[m]; 0; 1)", gaussian + "[m]", true);
+    compare("integrate(exp(-(t/[s])^2)*[m/s]; t; 0[s]; 1[s])", gaussian + "[m]", true);
+    compare("2*integrate(exp(-x^2); 0; 1)", "2*" + gaussian, true);
+    const Quantity approximate = evaluate("integrate(exp(-x^2); 0; 1)");
+    QJsonObject stored;
+    approximate.serialize(stored);
+    check(Quantity::deSerialize(stored).isApproximate(), "save the approximation marker");
+    const auto lines = ResultLineFormatUtils::formatResultLinesForDisplay(
+        "integrate(exp(-x^2); 0; 1)", {}, approximate, false, true, &evaluator);
+    check(lines.size() == 1 && lines.at(0).startsWith(
+              ResultLineFormatUtils::resultLinePrefix(MathDsl::Approximate)),
+          "show the approximation marker");
+
+    for (const auto& mode : {qMakePair('d', "180"), qMakePair('g', "200"),
+                             qMakePair('t', "1/2"), qMakePair('v', "1/2")}) {
+        settings->angleUnit = mode.first;
+        compare("integrate(sin(x); 0; " + QString::fromLatin1(mode.second) + ")",
+                "2*(" + QString::fromLatin1(mode.second) + ")/π");
+        compare("diff(integrate(cos(x); x); x)", "cos(x)");
+    }
+    settings->angleUnit = 'r';
+
+    expectError("integrate(x*y)", "ambiguous variable");
+    expectError("integrate(x*y; 0; 1)", "ambiguous variable");
+    expectError("integrate()", "wrong number of arguments");
+    expectError("integrate(x;x;0;1;2)", "wrong number of arguments");
+    expectError("integrate(x;2)", "variable name");
+    expectError("integrate(x;π;0;1)", "variable name");
+    expectError("integrate(x;0;1/0)", "invalid integration bound");
+    expectError("integrate(x;0[s];1[m])", "compatible units");
+    expectError("integrate(x+1[m];0[s];2[s])", "incompatible units");
+    expectError("integrate(1/x; -1; 1)", "divergent integral");
+    expectError("integrate(x^(-1); -1; 1)", "divergent integral");
+    expectError("integrate(exp(x)/x; 0; 1)", "divergent integral");
+    expectError("integrate(1/x^2; -1; 1)", "divergent integral");
+    expectError("integrate(1/x; 0; 1)", "divergent integral");
+    expectError("integrate(1/(x^2-1); -2; 2)", "divergent integral");
+    expectError("integrate(1/x; 0; 0)", "invalid integrand");
+    expectError("integrate(1/x; 1; inf)", "divergent integral");
+    expectError("integrate(exp(x); 0; inf)", "divergent integral");
+    expectError("integrate(1; -inf; inf)", "divergent integral");
+    expectError("integrate(tan(x); 0; π)", "domain or convergence");
+    expectError("integrate(sqrt(x); -1; 1)", "domain or convergence");
+    expectError("integrate(x; inf; inf)", "invalid infinite");
+    expectError("integrate(exp(-x^2))", "symbolic integration is unsupported");
+    expectError("integrate(floor(x); 0; 1)", "unsupported function");
+    expectError("integrate(cos(10^5*x^2); 0; 1)", "rapidly varying integrand");
+    expectError("integrate(exp(-10^8*(x-0.12345)^2); 0; 1)", "rapidly varying integrand");
+    expectError("integrate(" + QString("sin(").repeated(110) + "x" + QString(")").repeated(111),
+                "limit exceeded");
+    CHECK_EVAL("inf=2", "2");
+    CHECK_EVAL("integrate(x; 0; inf)", "2");
+    {
+        const QScopedValueRollback<bool> complex(settings->complexNumbers, true);
+        const QScopedValueRollback<bool> dmath(DMath::complexMode, true);
+        evaluator.initializeBuiltInVariables();
+        expectError("integrate(x; 0; i)", "real scalar");
+    }
 }
 
 void test_exponentiation()
@@ -12152,6 +12569,8 @@ int main(int argc, char* argv[])
     test_on_demand_unit_lookup_matches_complete_tables();
 
     test_constants();
+    test_symbolic_differentiation();
+    test_calculus_integration();
     test_exponentiation();
     test_unary();
     test_binary();

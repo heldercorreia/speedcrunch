@@ -53,6 +53,7 @@ static QString domainToDisplay(FunctionDomain domain)
     case FunctionDomain::DateTime: return FunctionRepo::tr("Date & Time");
     case FunctionDomain::LinearAlgebra: return FunctionRepo::tr("Linear algebra");
     case FunctionDomain::Geometry: return FunctionRepo::tr("Geometry");
+    case FunctionDomain::Calculus: return FunctionRepo::tr("Calculus");
     }
     return QString();
 }
@@ -274,8 +275,10 @@ static Quantity s_makeMatrix(const QVector<QVector<Quantity>>& rows)
 
 Quantity Function::exec(const Function::ArgumentList& args)
 {
-    if (!m_ptr)
-        return CMath::nan();
+    if (!m_ptr) {
+        setError(NotImplemented);
+        return CMath::nan(NotImplemented);
+    }
     setError(Success);
     Quantity result = (*m_ptr)(this, args);
     if(result.error())
@@ -1961,6 +1964,10 @@ Quantity function_molarity(Function* f, const Function::ArgumentList& args)
 
 void FunctionRepo::createFunctions()
 {
+    // The evaluator handles the unevaluated calculus arguments.
+    insert(new Function(QStringLiteral("diff"), nullptr, FunctionDomain::Calculus, this));
+    insert(new Function(QStringLiteral("integrate"), nullptr, FunctionDomain::Calculus, this));
+
     // Aggregation.
     FUNCTION_INSERT(FunctionDomain::Aggregation, max);
     FUNCTION_INSERT(FunctionDomain::Aggregation, min);
@@ -2248,6 +2255,7 @@ const QStringList& FunctionRepo::domains() const
         << domainToDisplay(FunctionDomain::Arithmetic)
         << domainToDisplay(FunctionDomain::Trigonometry)
         << domainToDisplay(FunctionDomain::ExponentialLogarithmic)
+        << domainToDisplay(FunctionDomain::Calculus)
         << domainToDisplay(FunctionDomain::Aggregation)
         << domainToDisplay(FunctionDomain::Statistics)
         << domainToDisplay(FunctionDomain::LinearAlgebra)
@@ -2400,6 +2408,7 @@ void FunctionRepo::setTranslatableFunctionUsages()
     FUNCTION_USAGE_TR(binompmf, tr("hits; trials; probability"));
     FUNCTION_USAGE_TR(binomvar, tr("trials; probability"));
     FUNCTION_USAGE_TR(datetime, tr("unix_timestamp; x hours offset to GMT"));
+    FUNCTION_USAGE_TR(diff, tr("expression [; variable or order] [; order]"));
     FUNCTION_USAGE_TR(epoch, tr("yyyymmdd.hhmmss; x hours offset to GMT"));
     FUNCTION_USAGE_TR(hypercdf, tr("max; total; hits; trials"));
     FUNCTION_USAGE_TR(hypermean, tr("total; hits; trials"));
@@ -2408,6 +2417,7 @@ void FunctionRepo::setTranslatableFunctionUsages()
     FUNCTION_USAGE_TR(idiv, tr("dividend; divisor"));
     FUNCTION_USAGE_TR(ieee754_decode, tr("x; exponent_bits; significand_bits [; exponent_bias]"));
     FUNCTION_USAGE_TR(ieee754_encode, tr("x; exponent_bits; significand_bits [; exponent_bias]"));
+    FUNCTION_USAGE_TR(integrate, tr("expression [; variable] [; lower; upper]"));
     FUNCTION_USAGE_TR(log, tr("base; x"));
     FUNCTION_USAGE_TR(rand, tr("[digits]"));
     FUNCTION_USAGE_TR(randint, tr("max [; min]"));
@@ -2428,6 +2438,8 @@ void FunctionRepo::setTranslatableFunctionUsages()
 
 void FunctionRepo::setFunctionNames()
 {
+    FUNCTION_NAME(diff, tr("Derivative"));
+    FUNCTION_NAME(integrate, tr("Integral"));
     FUNCTION_NAME(abs, tr("Absolute Value"));
     FUNCTION_NAME(absdev, tr("Absolute Deviation"));
     FUNCTION_NAME(list, tr("List Literal"));

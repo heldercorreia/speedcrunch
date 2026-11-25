@@ -238,7 +238,8 @@ void SyntaxHighlighter::highlightSyntaxBlock(const QString& text)
     const SyntaxHighlightBlockData* blockData =
         dynamic_cast<SyntaxHighlightBlockData*>(currentBlockUserData());
 
-    if (text.startsWith(MathDsl::Equals)) {
+    const bool approximateResult = text.startsWith(MathDsl::Approximate);
+    if (text.startsWith(MathDsl::Equals) || approximateResult) {
         setFormat(0, 1, colorForRole(ColorScheme::Operator));
         const int expressionOffset = text.size() > 1 && text.at(1) == UnicodeChars::Space ? 2 : 1;
         const QString expressionText = text.mid(expressionOffset);
@@ -250,7 +251,8 @@ void SyntaxHighlighter::highlightSyntaxBlock(const QString& text)
             if (Settings::instance()->digitGrouping > 0) {
                 // Use token-based grouping for result lines as well, so
                 // integer-only grouping works when lexer splits around radix chars.
-                const Tokens tokens = evaluator()->scan(text);
+                const Tokens tokens = evaluator()->scan(approximateResult ? expressionText : text);
+                const int tokenOffset = approximateResult ? expressionOffset : 0;
                 for (int i = 0; i < tokens.count(); ++i) {
                     const Token& token = tokens.at(i);
                     if (token.type() != Token::stxNumber)
@@ -265,7 +267,7 @@ void SyntaxHighlighter::highlightSyntaxBlock(const QString& text)
                         continue;
                     }
 
-                    groupDigits(text, token.pos(), token.size());
+                    groupDigits(text, tokenOffset + token.pos(), token.size());
                 }
             }
             return;

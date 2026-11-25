@@ -47,6 +47,11 @@ public:
     Quantity(const CNumber&);
     ~Quantity();
 
+    static Quantity symbolic(const QString& expression);
+    bool isSymbolic() const { return !m_symbolicExpression.isEmpty(); }
+    const QString& symbolicExpression() const { return m_symbolicExpression; }
+    bool isApproximate() const { return m_approximate; }
+    void markApproximate() { m_approximate = true; }
     bool isNan() const;
     bool isZero() const;
     bool isReal() const;
@@ -135,6 +140,8 @@ private:
     Format m_format;
     QVector<QVector<Quantity>> m_matrix;
     bool m_collectionIsMatrix;
+    QString m_symbolicExpression;
+    bool m_approximate = false;
 };
 
 /*

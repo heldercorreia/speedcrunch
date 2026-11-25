@@ -32,6 +32,11 @@ private slots:
     void user_definition_comments_survive_creation_and_editing();
     void result_display_keeps_comments_literal_data();
     void result_display_keeps_comments_literal();
+    void symbolic_derivative_is_displayed_and_copied();
+    void numerical_integral_is_marked_and_copied();
+    void integration_infinity_display_follows_input_adjustments_data();
+    void integration_infinity_display_follows_input_adjustments();
+    void integration_history_updates_infinity_display();
     void initTestCase();
     void init() { UiTestFixture::resetSettings(); }
     void result_display_insets_viewport_horizontally();
@@ -64,6 +69,238 @@ private slots:
     void result_display_remove_menu_targets_clicked_calculation();
     void function_identifier_cache_tracks_insertions();
 };
+
+void TestDisplayUi::symbolic_derivative_is_displayed_and_copied()
+{
+    MainWindow window;
+    Editor* editor = window.findChild<Editor*>();
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    QVERIFY(editor);
+    QVERIFY(display);
+    const Session* session = display->session();
+    QVERIFY(session);
+    const int historySize = session->historySize();
+
+    editor->setText(QStringLiteral("diff(x^4)"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
+    QCOMPARE(session->historySize(), historySize + 1);
+    const HistoryEntry& entry = session->historyEntryAtRef(historySize);
+    const QString formula = QStringLiteral("4*x^3");
+    QCOMPARE(entry.result().symbolicExpression(), formula);
+    const QString formatted = Evaluator::formatInterpretedExpressionForDisplay(formula, session->evaluator());
+    QVERIFY(display->toPlainText().contains(QStringLiteral("= ") + formatted));
+
+    QVERIFY(QMetaObject::invokeMethod(&window, "copyResultToClipboard"));
+    QCOMPARE(QApplication::clipboard()->text(), formula);
+}
+
+void TestDisplayUi::numerical_integral_is_marked_and_copied()
+{
+    MainWindow window;
+    Editor* editor = window.findChild<Editor*>();
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    QVERIFY(editor);
+    QVERIFY(display && display->session());
+    const Session* session = display->session();
+    const int index = session->historySize();
+
+    editor->setText(QStringLiteral("integrate(exp(-x^2)*[m]; 0; 1)"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
+    QCOMPARE(session->historySize(), index + 1);
+    const Quantity result = session->historyEntryAtRef(index).result();
+    QVERIFY(result.isApproximate());
+    const QString prefix = ResultLineFormatUtils::resultLinePrefix(MathDsl::Approximate);
+    QVERIFY(display->toPlainText().contains(prefix));
+
+    QVERIFY(QMetaObject::invokeMethod(&window, "copyResultToClipboard"));
+    QCOMPARE(QApplication::clipboard()->text(), NumberFormatter::format(result));
+
+    QJsonObject saved;
+    session->serialize(saved);
+    Session restored;
+    QVERIFY(restored.deSerialize(saved, false));
+    QVERIFY(restored.historyEntryAtRef(index).result().isApproximate());
+    restored.addHistoryEntry(HistoryEntry(QStringLiteral("6*7"), Quantity(42)));
+    MenuTestResultDisplay history;
+    history.setHoverHighlightEnabled(true);
+    history.resize(640, 300);
+    history.setSession(&restored);
+    history.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&history));
+
+    QTextBlock approximateRow;
+    for (QTextBlock block = history.document()->firstBlock(); block.isValid(); block = block.next()) {
+        if (block.text().startsWith(prefix))
+            approximateRow = block;
+    }
+    QVERIFY(approximateRow.isValid());
+    QVERIFY(!approximateRow.text().contains(MathDsl::UnitStart));
+    QTextCursor cursor(approximateRow);
+    cursor.movePosition(QTextCursor::NextCharacter);
+    history.setTextCursor(cursor);
+    history.ensureCursorVisible();
+    const QPoint point = history.cursorRect(cursor).center();
+    QVERIFY(history.viewport()->rect().contains(point));
+
+    const QSet<int> calculationBlocks{approximateRow.previous().blockNumber(), approximateRow.blockNumber()};
+    const auto highlightedBlocks = [&history]() {
+        QSet<int> blocks;
+        for (const auto& selection : history.extraSelections()) {
+            if (selection.format.boolProperty(QTextFormat::FullWidthSelection))
+                blocks.insert(selection.cursor.blockNumber());
+        }
+        return blocks;
+    };
+    QTest::mouseMove(history.windowHandle(), history.viewport()->mapTo(&history, QPoint(1, 1)));
+    QTest::mouseMove(history.windowHandle(), history.viewport()->mapTo(&history, point));
+    QTRY_COMPARE(highlightedBlocks(), calculationBlocks);
+    history.clearHoverFeedback();
+    history.setEditingHistoryIndex(index);
+    QCOMPARE(highlightedBlocks(), calculationBlocks);
+    history.setEditingHistoryIndex(-1);
+
+    QScopedPointer<QMenu> menu(history.createContextMenu(point));
+    QMenu* copyMenu = directSubmenuWithTitle(menu.data(), QStringLiteral("Copy"));
+    QVERIFY(copyMenu);
+    QAction* copyResult = directMenuActionWithText(copyMenu, QStringLiteral("Result"));
+    QAction* copyCalculation = directMenuActionWithText(copyMenu, QStringLiteral("Calculation"));
+    QAction* copySingleLine = directMenuActionWithText(copyMenu, QStringLiteral("Calculation as Single Line"));
+    QVERIFY(copyResult && copyCalculation && copySingleLine);
+    copyResult->trigger();
+    const QString copiedResult = QApplication::clipboard()->text();
+    QVERIFY(copiedResult.contains(MathDsl::UnitStart));
+    QVERIFY(!copiedResult.contains(MathDsl::Approximate));
+    QSignalSpy selected(&history, &ResultDisplay::expressionSelected);
+    QTest::mouseDClick(history.viewport(), Qt::LeftButton, Qt::NoModifier, point);
+    QCOMPARE(selected.size(), 1);
+    QCOMPARE(selected.at(0).at(0).toString(), copiedResult);
+
+    for (QAction* copy : {copyCalculation, copySingleLine}) {
+        copy->trigger();
+        QVERIFY(QApplication::clipboard()->text().contains(prefix));
+        editor->clear();
+        editor->paste();
+        QCOMPARE(session->historySize(), index + 1);
+        QVERIFY(editor->text().startsWith(QStringLiteral("integrate(")));
+        QVERIFY(!editor->text().contains(MathDsl::Approximate));
+    }
+
+    // A copied numeric row can also be pasted on its own.
+    QApplication::clipboard()->setText(prefix + QStringLiteral("0.75"));
+    editor->clear();
+    editor->paste();
+    QCOMPARE(editor->text(), QStringLiteral("0.75"));
+
+    const QString comment = QStringLiteral("2 ? estimate ") + prefix + QStringLiteral("3");
+    QApplication::clipboard()->setText(comment);
+    editor->clear();
+    editor->paste();
+    QCOMPARE(editor->text(), comment);
+
+    editor->setText(QStringLiteral("integrate(exp(-x); 0; inf)"));
+    QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
+    QCOMPARE(session->historySize(), index + 2);
+    QCOMPARE(session->historyEntryAtRef(index + 1).result(), Quantity(1));
+}
+
+void TestDisplayUi::integration_infinity_display_follows_input_adjustments_data()
+{
+    QTest::addColumn<bool>("adjustments");
+    QTest::newRow("on") << true;
+    QTest::newRow("off") << false;
+}
+
+void TestDisplayUi::integration_infinity_display_follows_input_adjustments()
+{
+    QFETCH(bool, adjustments);
+    Settings::instance()->automaticInputAdjustments = adjustments;
+    MainWindow window;
+    Editor* editor = window.findChild<Editor*>();
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    QVERIFY(editor);
+    QVERIFY(display && display->session());
+    const Session* session = display->session();
+    const auto verifyCalculation = [&](const QString& input, const Quantity& result, bool showInfinity) {
+        const int index = session->historySize();
+        const qsizetype previousDisplayLength = display->toPlainText().size();
+        editor->setText(input);
+        const QString entered = editor->text();
+        QVERIFY(!entered.contains(UnicodeChars::Infinity));
+        QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
+        QCOMPARE(session->historySize(), index + 1);
+        const HistoryEntry& entry = session->historyEntryAtRef(index);
+        QCOMPARE(entry.expr(), entered);
+        QCOMPARE(entry.result(), result);
+        QVERIFY(entry.hasRenderedLines());
+        const QString expression = display->toPlainText().mid(previousDisplayLength).trimmed()
+            .section(QLatin1Char('\n'), 0, 0);
+        QCOMPARE(expression.contains(UnicodeChars::Infinity), showInfinity);
+        if (showInfinity && input.contains(QStringLiteral("-INF"))) {
+            const QString beforeInfinity = expression.left(expression.indexOf(UnicodeChars::Infinity)).trimmed();
+            QVERIFY(!beforeInfinity.isEmpty());
+            QVERIFY(MathDsl::isSubtractionOperatorAlias(beforeInfinity.back()));
+        }
+        if (input.contains(MathDsl::CommentSep))
+            QVERIFY(expression.endsWith(QStringLiteral("? inf")));
+    };
+
+    verifyCalculation(QStringLiteral("integrate(exp(-x); 0; inf) ? inf"), Quantity(1), adjustments);
+    verifyCalculation(QStringLiteral("integrate(exp(x); x; -INF; 0)"), Quantity(1), adjustments);
+    verifyCalculation(QStringLiteral("inf=2"), Quantity(2), false);
+    verifyCalculation(QStringLiteral("integrate(x; 0; inf)"), Quantity(2), false);
+}
+
+void TestDisplayUi::integration_history_updates_infinity_display()
+{
+    Settings::instance()->automaticInputAdjustments = false;
+    MainWindow window(false);
+    ResultDisplay* display = window.findChild<ResultDisplay*>();
+    QVERIFY(display && display->session());
+    Editor* editor = editorForDisplay(display);
+    QVERIFY(editor);
+    QAction* adjustments = window.findChild<QAction*>(QStringLiteral("AutomaticInputAdjustmentsAction"));
+    QVERIFY(adjustments);
+    const Session* session = display->session();
+    const QString upper = QStringLiteral("integrate(exp(-x); 0; inf) ? inf");
+    const QString lower = QStringLiteral("integrate(exp(x); x; -INFINITY; 0)");
+    const QString finite = QStringLiteral("integrate(x; 0; inf)");
+    const QStringList inputs{upper, lower, QStringLiteral("inf=2"), finite};
+    for (const QString& input : inputs) {
+        editor->setText(input);
+        QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
+    }
+    QCOMPARE(session->historySize(), inputs.size());
+    const QString originalDisplay = display->toPlainText();
+    QVERIFY(!originalDisplay.contains(UnicodeChars::Infinity));
+
+    adjustments->setChecked(true);
+    const QString adjustedDisplay = display->toPlainText();
+    QCOMPARE(adjustedDisplay.count(UnicodeChars::Infinity), 2);
+    QVERIFY(adjustedDisplay.contains(QString(UnicodeChars::Infinity) + QStringLiteral(") ? inf")));
+    const QStringList originalRows = originalDisplay.split(QLatin1Char('\n'));
+    const QStringList adjustedRows = adjustedDisplay.split(QLatin1Char('\n'));
+    QCOMPARE(adjustedRows.size(), originalRows.size());
+    QCOMPARE(adjustedRows.mid(1, 2), originalRows.mid(1, 2));
+    QCOMPARE(adjustedRows.mid(4), originalRows.mid(4));
+    QCOMPARE(session->historyEntryAtRef(0).expr(), upper);
+    QCOMPARE(session->historyEntryAtRef(1).expr(), lower);
+    QCOMPARE(session->historyEntryAtRef(0).result(), Quantity(1));
+    QCOMPARE(session->historyEntryAtRef(1).result(), Quantity(1));
+    QCOMPARE(session->historyEntryAtRef(3).result(), Quantity(2));
+
+    QJsonObject saved;
+    session->serialize(saved);
+    Session restored;
+    QVERIFY(restored.deSerialize(saved, false));
+    ResultDisplay restoredDisplay;
+    restoredDisplay.setSession(&restored);
+    QCOMPARE(restoredDisplay.toPlainText(), adjustedDisplay);
+
+    adjustments->setChecked(false);
+    QCOMPARE(display->toPlainText(), originalDisplay);
+    restoredDisplay.refresh();
+    QCOMPARE(restoredDisplay.toPlainText(), originalDisplay);
+}
 
 void TestDisplayUi::spaced_conversion_arrows_preserve_tokens_data()
 {

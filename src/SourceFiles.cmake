@@ -14,6 +14,7 @@ core/manualserver.h
 core/session.h
 core/errors.h
 core/numberformatter.h
+core/numericalintegration.h
 core/pageserver.h
 core/settings.h
 core/singleinstance.h
@@ -21,6 +22,7 @@ core/processlaunch.h
 core/opcode.h
 core/sessionhistory.h
 core/sessionjsonkeys.h
+core/symboliccalculus.h
 core/symbolicnumberformat.h
 core/userdefinitions.h
 core/variable.h
@@ -102,6 +104,8 @@ core/book.cpp
 core/constants.cpp
 core/colorscheme.cpp
 core/evaluator.cpp
+core/symboliccalculus.cpp
+core/numericalintegration.cpp
 core/functions.cpp
 core/geometrycoordinates.cpp
 core/geometryfunctions.cpp
@@ -226,6 +230,8 @@ gui/menustyleutils.cpp
 core/constants.cpp
 core/colorscheme.cpp
 core/evaluator.cpp
+core/symboliccalculus.cpp
+core/numericalintegration.cpp
 core/functions.cpp
 core/geometrycoordinates.cpp
 core/geometryfunctions.cpp
@@ -358,6 +364,8 @@ gui/menustyleutils.cpp
 core/constants.cpp
 core/colorscheme.cpp
 core/evaluator.cpp
+core/symboliccalculus.cpp
+core/numericalintegration.cpp
 core/functions.cpp
 core/geometrycoordinates.cpp
 core/geometryfunctions.cpp
@@ -415,6 +423,8 @@ gui/menustyleutils.cpp
 core/constants.cpp
 core/colorscheme.cpp
 core/evaluator.cpp
+core/symboliccalculus.cpp
+core/numericalintegration.cpp
 core/functions.cpp
 core/geometrycoordinates.cpp
 core/geometryfunctions.cpp
@@ -480,6 +490,8 @@ core/book.cpp
 core/constants.cpp
 core/colorscheme.cpp
 core/evaluator.cpp
+core/symboliccalculus.cpp
+core/numericalintegration.cpp
 core/functions.cpp
 core/geometrycoordinates.cpp
 core/geometryfunctions.cpp

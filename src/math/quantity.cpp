@@ -1064,6 +1064,8 @@ bool operator<=(const Quantity& l, const Quantity& r)
 
 bool operator==(const Quantity& l, const Quantity& r)
 {
+    if (l.isSymbolic() || r.isSymbolic())
+        return l.m_symbolicExpression == r.m_symbolicExpression;
     if (l.isCollection() || r.isCollection())
         return l.m_matrix == r.m_matrix;
     if (l.sameDimension(r))
@@ -1074,6 +1076,8 @@ bool operator==(const Quantity& l, const Quantity& r)
 // Returns TRUE upon dimension mismatch.
 bool operator!=(const Quantity& l, const Quantity& r)
 {
+    if (l.isSymbolic() || r.isSymbolic())
+        return l.m_symbolicExpression != r.m_symbolicExpression;
     if (l.sameDimension(r))
         return l.m_numericValue != r.m_numericValue;
     return true;
@@ -1115,6 +1119,8 @@ Quantity::Quantity(const Quantity& other)
     , m_format(other.m_format)
     , m_matrix(other.m_matrix)
     , m_collectionIsMatrix(other.m_collectionIsMatrix)
+    , m_symbolicExpression(other.m_symbolicExpression)
+    , m_approximate(other.m_approximate)
 {
     if (other.hasUnit())
         this->m_unit = new CNumber(other.unit());
@@ -1148,8 +1154,17 @@ Quantity::~Quantity()
     delete m_unit;
 }
 
+Quantity Quantity::symbolic(const QString& expression)
+{
+    Quantity value(CMath::nan());
+    value.m_symbolicExpression = expression;
+    return value;
+}
+
 bool Quantity::isNan() const
 {
+    if (isSymbolic())
+        return false;
     if (isCollection()) {
         for (const QVector<Quantity>& row : m_matrix)
             for (const Quantity& element : row)
@@ -1169,6 +1184,8 @@ bool Quantity::isZero() const
 
 bool Quantity::isReal() const
 {
+    if (isSymbolic())
+        return false;
     if (isCollection()) {
         for (const QVector<Quantity>& row : m_matrix)
             for (const Quantity& element : row)
@@ -1484,6 +1501,10 @@ void Quantity::serialize(QJsonObject& json) const
     json["val"] = CMath::format(
         m_numericValue,
         CNumber::Format::Fixed() + CNumber::Format::Precision(DECPRECISION));
+    if (isSymbolic())
+        json["symbolic"] = m_symbolicExpression;
+    if (m_approximate)
+        json["approximate"] = true;
 
     if (hasDimension()) {
         QJsonObject dim_json;
@@ -1514,6 +1535,10 @@ void Quantity::serialize(QJsonObject& json) const
 
 Quantity Quantity::deSerialize(const QJsonObject& json)
 {
+    const QString expression = json.value(QLatin1String("symbolic")).toString();
+    if (!expression.isEmpty())
+        return Quantity::symbolic(expression);
+
     if (json.contains(QLatin1String("matrix"))) {
         QVector<QVector<Quantity>> rows;
         const QJsonArray rowsJson = json[QLatin1String("matrix")].toArray();
@@ -1530,6 +1555,7 @@ Quantity Quantity::deSerialize(const QJsonObject& json)
     }
 
     Quantity result;
+    result.m_approximate = json.value(QLatin1String("approximate")).toBool();
     if (json.contains(QLatin1String("val"))) {
         QString str = json[QLatin1String("val")].toString();
         str.replace(QLatin1Char(','), QLatin1Char('.'));
@@ -1562,6 +1588,8 @@ Quantity Quantity::deSerialize(const QJsonObject& json)
 
 Error Quantity::error() const
 {
+    if (isSymbolic())
+        return Success;
     if (isCollection()) {
         for (const QVector<Quantity>& row : m_matrix) {
             for (const Quantity& element : row) {
@@ -1581,6 +1609,8 @@ Quantity& Quantity::operator=(const Quantity& other)
     m_format = other.m_format;
     m_matrix = other.m_matrix;
     m_collectionIsMatrix = other.m_collectionIsMatrix;
+    m_symbolicExpression = other.m_symbolicExpression;
+    m_approximate = other.m_approximate;
     stripUnits();
     if(other.hasUnit()) {
         m_unit = new CNumber(*other.m_unit);
@@ -2841,6 +2871,9 @@ WRAPPER_DMATH_4(decodeIeee754)
 
 QString DMath::format(Quantity q, Quantity::Format format)
 {
+    if (q.isSymbolic())
+        return q.symbolicExpression();
+
     if (q.isCollection()) {
         const QString listStart(MathDsl::ListStart);
         const QString listEnd(MathDsl::ListEnd);

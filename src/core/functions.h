@@ -34,7 +34,8 @@ enum class FunctionDomain {
     FloatingPoint,
     DateTime,
     LinearAlgebra,
-    Geometry
+    Geometry,
+    Calculus
 };
 
 class Function : public QObject {

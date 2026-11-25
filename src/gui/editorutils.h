@@ -17,6 +17,7 @@
 #include <QString>
 #include <QStringList>
 #include <QRect>
+#include <algorithm>
 
 namespace EditorUtils {
 
@@ -491,8 +492,31 @@ inline QStringList parsePastedExpressionsImpl(const QString& text, NormalizeExpr
         text.split('\n', Qt::KeepEmptyParts, Qt::CaseSensitive);
     expressions.reserve(candidates.size());
 
-    for (const auto& candidate : candidates) {
-        const auto expression = normalizeExpression(candidate.trimmed());
+    const auto isApproximateResultLine = [](QStringView line) {
+        return line.size() > 1 && line.startsWith(MathDsl::Approximate) && line.at(1).isSpace();
+    };
+    const bool hasApproximation = text.contains(MathDsl::Approximate);
+    const bool hasExpression = hasApproximation
+        && std::any_of(candidates.cbegin(), candidates.cend(), [&](const QString& candidate) {
+            const QStringView line = QStringView(candidate).trimmed();
+            return !line.isEmpty() && !isApproximateResultLine(line);
+        });
+    for (const QString& candidate : candidates) {
+        QString line = candidate.trimmed();
+        if (isApproximateResultLine(line)) {
+            if (hasExpression)
+                continue;
+            line = line.mid(1).trimmed();
+        } else if (hasApproximation) {
+            const auto marker = line.indexOf(MathDsl::Approximate);
+            const auto comment = line.indexOf(MathDsl::CommentSep);
+            if (marker > 0 && line.at(marker - 1).isSpace()
+                && marker + 1 < line.size() && line.at(marker + 1).isSpace()
+                && (comment < 0 || marker < comment)) {
+                line = line.left(marker).trimmed();
+            }
+        }
+        const auto expression = normalizeExpression(line);
         if (!expression.isEmpty())
             expressions.append(expression);
     }

@@ -140,13 +140,14 @@ public:
     QString dump();
     QString error() const;
     QString interpretedExpression() const;
+    QString interpretedExpressionWithInfinityBounds() const;
     Quantity eval();
     Quantity evalNoAssign();
     Quantity evalUpdateAns();
     QString expression() const;
     bool hasImplicitMultiplication() const;
     bool isValid();
-    Tokens scan(const QString&) const;
+    Tokens scan(const QString&, QString* normalizedSource = nullptr) const;
     void setExpression(const QString&);
     Tokens tokens() const;
     bool isUserFunctionAssign() const;
@@ -196,7 +197,7 @@ public:
     void copySymbolContextFrom(const Evaluator& other);
 
 protected:
-    void compile(const Tokens&);
+    void compile(const Tokens&, const QString& source);
 
 private:
     Q_DISABLE_COPY(Evaluator)
@@ -205,6 +206,7 @@ private:
     QString m_error;
     QString m_expression;
     QString m_interpretedExpression;
+    QString m_interpretedExpressionWithInfinityBounds;
     bool m_valid;
     QString m_assignId;
     bool m_assignFunc;
@@ -217,7 +219,6 @@ private:
     bool m_assignUnit;
     QVector<Opcode> m_codes;
     QVector<Quantity> m_constants;
-    QStringList m_constantTexts;
     QStringList m_identifiers;
     QSet<int> m_implicitMultiplicationOpcodeIndices;
     SymbolContext m_symbols;
@@ -236,8 +237,9 @@ private:
     static QString stringFromFunctionError(Function*);
     Quantity exec(const QVector<Opcode>& opcodes,
                   const QVector<Quantity>& constants,
-                  const QStringList& identifiers);
-    QString buildInterpretedExpressionFromOpcodes() const;
+                  const QStringList& identifiers,
+                  const QHash<QString, Quantity>* parameters = nullptr);
+    QString buildInterpretedExpressionFromOpcodes(bool* adjustedInfinity = nullptr) const;
     Quantity execUserFunction(const UserFunction* function,
                               QVector<Quantity>& arguments);
     const UserFunction* getUserFunction(const QString&) const;

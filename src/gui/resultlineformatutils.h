@@ -27,6 +27,11 @@
 
 namespace ResultLineFormatUtils {
 
+inline QString resultLinePrefix(QChar marker)
+{
+    return QString(marker) + UnicodeChars::Space;
+}
+
 inline QString normalizeBracketedUnitTextForDisplay(const QString& text)
 {
     QString output;
@@ -1391,7 +1396,7 @@ inline QString formatNumericResultLine(const Quantity& value,
                                 complexFormat));
     formattedText = NumberFormatter::rewriteScientificNotationForDisplay(formattedText);
     formattedText.replace(QString::fromUtf8(" × 10⁰"), QString());
-    if (!geometryResult) {
+    if (!geometryResult && !value.isApproximate()) {
         formattedText = appendAngleModeSuffixIfNeeded(
             formattedText, sourceExpression, interpretedExpression, value, resultFormat, settings, evaluator);
     }
@@ -1408,7 +1413,8 @@ inline QStringList formatResultLinesForDisplay(const QString& commentedSourceExp
                                                bool classifySavedLine = false)
 {
     const Settings* settings = Settings::instance();
-    const QString resultPrefix = resultOnly ? QString() : QStringLiteral("= ");
+    const QString resultPrefix = value.isApproximate() ? resultLinePrefix(MathDsl::Approximate)
+        : resultOnly ? QString() : resultLinePrefix(MathDsl::Equals);
     QStringList lines;
     auto appendUniqueLine = [&lines](const QString& line) {
         if (!line.isEmpty() && !lines.contains(line))
@@ -1419,23 +1425,29 @@ inline QStringList formatResultLinesForDisplay(const QString& commentedSourceExp
         appendUniqueLine(formattedExpressionLineForDisplay(
             commentedSourceExpression, commentedInterpretedExpression, evaluator));
 
+    if (value.isSymbolic()) {
+        appendUniqueLine(resultPrefix + Evaluator::formatInterpretedExpressionForDisplay(
+            value.symbolicExpression(), evaluator));
+        return lines;
+    }
+
     // Comments belong on the expression line, but must not supply angle,
     // conversion, or function hints for any result line.
     const QString sourceExpression = commentedSourceExpression.section(MathDsl::CommentSep, 0, 0);
     const QString interpretedExpression = commentedInterpretedExpression.section(MathDsl::CommentSep, 0, 0);
-    const bool geometryResult = expressionUsesGeometryResult(
+    const bool geometryResult = !value.isApproximate() && expressionUsesGeometryResult(
         interpretedExpression.isEmpty() ? sourceExpression : interpretedExpression);
     const QString geometryExactLine = geometryResult && (!classifySavedLine || settings->resultFormat == 'r')
         ? formatGeometryExactResultLine(value, stripUnitBracketsInNumericLines) : QString();
 
-    if (!resultOnly && !classifySavedLine) {
+    if (!value.isApproximate() && !resultOnly && !classifySavedLine) {
         const QString simplifiedLine = simplifiedExpressionLineForDisplay(
             interpretedExpression, sourceExpression, settings->simplifyResultExpressions, evaluator);
         if (!simplifiedLine.isEmpty())
             appendUniqueLine(QStringLiteral("= ") + simplifiedLine);
     }
 
-    if (settings->simplifyResultExpressions
+    if (!value.isApproximate() && settings->simplifyResultExpressions
         && isPureTimeQuantity(value)
         && (SimplifiedExpressionUtils::isStandaloneSexagesimalTimeLiteral(sourceExpression)
             || SimplifiedExpressionUtils::containsSexagesimalTimeLiteral(sourceExpression))) {
@@ -1505,6 +1517,9 @@ inline QStringList formatResultLinesForDisplay(const QString& commentedSourceExp
             settings->complexNumbers && settings->quinaryComplexNumbers,
             settings->quinaryResultComplexForm);
     }
+
+    if (value.isApproximate())
+        return lines;
 
     if (geometryResult) {
         if (!geometryExactLine.isEmpty())

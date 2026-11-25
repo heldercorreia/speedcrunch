@@ -46,6 +46,7 @@ private:
     EvaluationContext m_ctx;
     bool m_hasCtx = false;
     QStringList m_renderedLines;
+    QString m_adjustedExpressionLine;
     qint64 m_editTimestamp = 0;
     void readSavedFields(const QJsonObject& json);
 public:
@@ -58,7 +59,8 @@ public:
     HistoryEntry(const HistoryEntry & other)
         : m_expr(other.m_expr), m_interpretedExpr(other.m_interpretedExpr),
           m_result(other.m_result), m_ctx(other.m_ctx), m_hasCtx(other.m_hasCtx),
-          m_renderedLines(other.m_renderedLines), m_editTimestamp(other.m_editTimestamp) {}
+          m_renderedLines(other.m_renderedLines), m_adjustedExpressionLine(other.m_adjustedExpressionLine),
+          m_editTimestamp(other.m_editTimestamp) {}
     HistoryEntry& operator=(const HistoryEntry& other) = default;    
 
     void setExpr(const QString & e);
@@ -66,6 +68,7 @@ public:
     void setResult(const Quantity & n);
     void setContext(const EvaluationContext& ctx);
     void setRenderedLines(const QStringList& lines);
+    void setAdjustedExpressionLine(const QString& line) { m_adjustedExpressionLine = line; }
     void setEditTimestamp(qint64 timestamp);
 
     QString expr() const;
@@ -75,6 +78,7 @@ public:
     const EvaluationContext& contextRef() const;
     bool hasContext() const;
     QStringList renderedLines() const;
+    const QString& adjustedExpressionLine() const { return m_adjustedExpressionLine; }
     bool hasRenderedLines() const;
     qint64 editTimestamp() const;
 

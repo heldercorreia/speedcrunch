@@ -107,6 +107,10 @@ Schema
            "edt": {
              "type": "integer"
            },
+           "adj": {
+             "type": "string",
+             "description": "Expression line shown with automatic input adjustments on."
+           },
            "prt": {
              "type": "array",
              "items": {
@@ -317,6 +321,12 @@ Schema
          "properties": {
            "val": {
              "type": "string"
+           },
+           "symbolic": {
+             "type": "string"
+           },
+           "approximate": {
+             "type": "boolean"
            },
            "dim": {
              "type": "object",

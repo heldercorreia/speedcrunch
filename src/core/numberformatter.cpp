@@ -628,15 +628,20 @@ QString NumberFormatter::format(Quantity q, char resultFormatOverride,
                                 int precisionOverride, bool useComplexNotation,
                                 char complexNotationOverride)
 {
+    if (q.isSymbolic())
+        return q.symbolicExpression();
+
     Settings* settings = Settings::instance();
     CMath::setImaginaryUnitSymbol(settings->imaginaryUnit);
     CMath::setPolarAngleUnit(settings->angleUnit);
-    const char activeResultFormat = resultFormatOverride == '\0' ? settings->resultFormat : resultFormatOverride;
+    char activeResultFormat = resultFormatOverride == '\0' ? settings->resultFormat : resultFormatOverride;
+    if (q.isApproximate() && activeResultFormat == 'r')
+        activeResultFormat = 'g';
     QString result;
 
     Quantity::Format format = q.format();
     // Check per-expression rational-display override encoded in format precision.
-    const bool forceRationalDisplay = format.precision == ForcedRationalPrecision;
+    const bool forceRationalDisplay = !q.isApproximate() && format.precision == ForcedRationalPrecision;
     const bool hasExplicitFormatOverride =
         format.base != Quantity::Format::Base::Null
         || format.mode != Quantity::Format::Mode::Null;

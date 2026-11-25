@@ -762,7 +762,7 @@ void applyEvaluationContext(Settings* settings, const EvaluationContext& ctx)
     setRuntimeResultRoundingMode(settings->resultRoundingMode);
 }
 
-QStringList renderedLinesForHistoryEntry(const HistoryEntry& entry, Settings* settings, const Evaluator* evaluator)
+void renderHistoryEntry(HistoryEntry& entry, Settings* settings, const Evaluator* evaluator)
 {
     const EvaluationContext previousContext = currentEvaluationContext(settings);
     applyEvaluationContext(settings, entry.contextRef());
@@ -772,6 +772,11 @@ QStringList renderedLinesForHistoryEntry(const HistoryEntry& entry, Settings* se
         entry.expr(),
         entry.interpretedExpr(),
         evaluator));
+    const QString adjustedExpression = evaluator->interpretedExpressionWithInfinityBounds();
+    if (!adjustedExpression.isEmpty()) {
+        entry.setAdjustedExpressionLine(ResultLineFormatUtils::formattedExpressionLineForDisplay(
+            entry.expr(), adjustedExpression, evaluator));
+    }
     if (!entry.result().isNan()) {
         lines.append(ResultLineFormatUtils::formatResultLinesForDisplay(
             entry.expr(),
@@ -783,7 +788,7 @@ QStringList renderedLinesForHistoryEntry(const HistoryEntry& entry, Settings* se
     }
 
     applyEvaluationContext(settings, previousContext);
-    return lines;
+    entry.setRenderedLines(lines);
 }
 }
 
@@ -13175,6 +13180,8 @@ void MainWindow::setAutomaticInputAdjustmentsEnabled(bool enabled)
         window->m_actions.settingsEditingAutomaticInputAdjustments->setChecked(enabled);
         for (Editor* editor : window->findChildren<Editor*>())
             editor->refreshInputMode();
+        for (ResultDisplay* display : window->findChildren<ResultDisplay*>())
+            display->refresh();
     }
 }
 
@@ -16260,7 +16267,7 @@ void MainWindow::evaluateEditorExpression()
     const QString interpretedExpr = m_evaluator->interpretedExpression();
     const bool warnHistoryLimitReached = m_session->nextHistoryEntryReachesLimit();
     HistoryEntry historyEntry(enteredExpr, result, interpretedExpr, evalContext);
-    historyEntry.setRenderedLines(renderedLinesForHistoryEntry(historyEntry, m_settings, m_evaluator));
+    renderHistoryEntry(historyEntry, m_settings, m_evaluator);
     m_session->addHistoryEntry(historyEntry);
     const bool userVariableAssign = m_evaluator->isUserVariableAssign();
     if (m_bulkEvaluationInProgress)
@@ -16514,7 +16521,7 @@ bool MainWindow::rebuildSessionFromEntries(const QList<HistoryEntry>& entries,
         const QString interpretedExpr = m_evaluator->interpretedExpression();
         HistoryEntry rebuiltEntry(currentExpr, result, interpretedExpr, entry.contextRef());
         rebuiltEntry.setEditTimestamp(entry.editTimestamp());
-        rebuiltEntry.setRenderedLines(renderedLinesForHistoryEntry(rebuiltEntry, m_settings, m_evaluator));
+        renderHistoryEntry(rebuiltEntry, m_settings, m_evaluator);
         m_session->addHistoryEntry(rebuiltEntry);
     }
 

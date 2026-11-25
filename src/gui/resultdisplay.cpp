@@ -340,6 +340,9 @@ QStringList formatResultLines(const HistoryEntry& entry, const Evaluator* evalua
 
 QString formattedExpressionForDisplay(const HistoryEntry& entry, const Evaluator* evaluator)
 {
+    if (Settings::instance()->automaticInputAdjustments && !entry.adjustedExpressionLine().isEmpty())
+        return entry.adjustedExpressionLine();
+
     return ResultLineFormatUtils::formattedExpressionLineForDisplay(
         entry.expr(),
         entry.interpretedExpr(),
@@ -447,8 +450,12 @@ bool isSimplifiedExpressionRenderLine(const QStringList& renderedLines, int line
 
 QStringList renderedHistoryLinesForDisplay(const HistoryEntry& entry, const Evaluator* evaluator)
 {
-    if (entry.hasRenderedLines())
-        return entry.renderedLines();
+    if (entry.hasRenderedLines()) {
+        QStringList lines = entry.renderedLines();
+        if (Settings::instance()->automaticInputAdjustments && !entry.adjustedExpressionLine().isEmpty())
+            lines.first() = entry.adjustedExpressionLine();
+        return lines;
+    }
 
     QStringList lines;
     lines.append(formattedExpressionForDisplay(entry, evaluator));
@@ -1354,7 +1361,8 @@ void ResultDisplay::mouseDoubleClickEvent(QMouseEvent* event)
         return;
     }
     QString text = cursor.selectedText();
-    QString resultMarker = QLatin1String("= ");
+    const QString resultMarker = ResultLineFormatUtils::resultLinePrefix(
+        text.startsWith(MathDsl::Approximate) ? MathDsl::Approximate : MathDsl::Equals);
     if (text.startsWith(resultMarker)) {
         // Display lines strip unit brackets for readability, but editor input
         // requires canonical expression syntax ("value[unit]") with QuantSp.
@@ -1391,7 +1399,7 @@ void ResultDisplay::mouseDoubleClickEvent(QMouseEvent* event)
                 }
             }
         }
-        text.remove(resultMarker);
+        text.remove(0, resultMarker.size());
     }
     emit expressionSelected(text);
 }

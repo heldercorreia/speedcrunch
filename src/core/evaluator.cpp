@@ -12,6 +12,7 @@
 #include "core/unicodechars.h"
 #include "core/mathdsl.h"
 #include "core/numberformatter.h"
+#include "core/symboliccalculus.h"
 #include "math/rational.h"
 #include "core/units.h"
 
@@ -4815,6 +4816,7 @@ bool Evaluator::isSeparatorChar(const QChar& ch)
         return false;
 
     if (ch == UnicodeChars::Summation
+        || ch == UnicodeChars::Infinity
         || ch == UnicodeChars::SquareRoot
         || ch == UnicodeChars::CubeRoot
         || ch == MathDsl::PhasorOp
@@ -5109,6 +5111,7 @@ void Evaluator::setExpression(const QString& expr)
     m_valid = false;
     m_error = QString();
     m_interpretedExpression = QString();
+    m_interpretedExpressionWithInfinityBounds.clear();
     m_hasImplicitMultiplication = false;
     m_allowGlobalUserDefinitionsOverride = false;
     m_skipUserFunctionDryRun = false;
@@ -5123,9 +5126,10 @@ QString Evaluator::expression() const
 bool Evaluator::isValid()
 {
     if (m_dirty) {
-        Tokens tokens = scan(m_expression);
+        QString source;
+        Tokens tokens = scan(m_expression, &source);
         if (!tokens.valid())
-            compile(tokens);
+            compile(tokens, source);
         else
             m_valid = false;
     }
@@ -5139,8 +5143,8 @@ void Evaluator::reset()
     m_valid = false;
     m_error = QString();
     m_interpretedExpression = QString();
+    m_interpretedExpressionWithInfinityBounds.clear();
     m_constants.clear();
-    m_constantTexts.clear();
     m_codes.clear();
     m_implicitMultiplicationOpcodeIndices.clear();
     m_assignId = QString();
@@ -5168,6 +5172,11 @@ QString Evaluator::interpretedExpression() const
     return m_interpretedExpression;
 }
 
+QString Evaluator::interpretedExpressionWithInfinityBounds() const
+{
+    return m_interpretedExpressionWithInfinityBounds;
+}
+
 bool Evaluator::hasImplicitMultiplication() const
 {
     return m_hasImplicitMultiplication;
@@ -5191,7 +5200,7 @@ bool isArcTime(QChar ch) {
             || ch == ':');
 }
 
-Tokens Evaluator::scan(const QString& expr) const
+Tokens Evaluator::scan(const QString& expr, QString* normalizedSource) const
 {
     // Associate character codes with the highest number base
     // they might belong to.
@@ -5365,6 +5374,10 @@ Tokens Evaluator::scan(const QString& expr) const
             } else if (ch == '~') {
                 int tokenSize = ++i - tokenStart;
                 tokens.append(Token(Token::stxOperator, "~", tokenStart, tokenSize));
+                state = Init;
+            } else if (unitBracketDepth == 0 && ch == UnicodeChars::Infinity) {
+                ++i;
+                tokens.append(Token(Token::stxIdentifier, QString(ch), tokenStart, i - tokenStart));
                 state = Init;
             } else if (unitBracketDepth > 0 && isUnitArcSymbol(ch)) {
                 // Inside explicit unit brackets, arcminute/arcsecond symbols
@@ -5717,10 +5730,14 @@ Tokens Evaluator::scan(const QString& expr) const
         // the case Bad won't be run.
         tokens.setValid(false);
 
+    if (normalizedSource) {
+        ex.chop(1);
+        *normalizedSource = std::move(ex);
+    }
     return tokens;
 }
 
-void Evaluator::compile(const Tokens& tokens)
+void Evaluator::compile(const Tokens& tokens, const QString& source)
 {
 #ifdef EVALUATOR_DEBUG
     QFile debugFile("eval.log");
@@ -5762,10 +5779,10 @@ void Evaluator::compile(const Tokens& tokens)
     m_codes.clear();
     m_implicitMultiplicationOpcodeIndices.clear();
     m_constants.clear();
-    m_constantTexts.clear();
     m_identifiers.clear();
     m_error = QString();
     m_interpretedExpression = QString();
+    m_interpretedExpressionWithInfinityBounds.clear();
     m_hasImplicitMultiplication = false;
 
     // Sanity check.
@@ -5778,6 +5795,25 @@ void Evaluator::compile(const Tokens& tokens)
     // Each call or list must push the argument count of its parent once.
     QStack<unsigned> argGroupStack;
     unsigned argCount = 1;
+    QHash<int, int> calculusReferences;
+    int savedDiffTextLength = 0;
+    auto appendFunction = [&](const Token& id, Opcode call, const Token& args = Token()) {
+        const auto ref = calculusReferences.constFind(id.pos());
+        if (ref != calculusReferences.constEnd()) {
+            Opcode& start = m_codes[*ref];
+            start.type = id.text().compare(QLatin1String("diff"), Qt::CaseInsensitive) == 0
+                ? Opcode::Diff : Opcode::Integrate;
+            start.index = m_codes.size();
+            if (start.type == Opcode::Diff && call.index > 1 && args.pos() >= 0 && args.size() > 0
+                && args.size() <= SymbolicCalculus::MaxSourceLength
+                && savedDiffTextLength + args.size() <= 2 * SymbolicCalculus::MaxSourceLength) {
+                const QString argText = source.mid(args.pos(), args.size());
+                start.text = splitTopLevelFunctionArguments(argText).value(0);
+                savedDiffTextLength += start.text.size();
+            }
+        }
+        m_codes.append(call);
+    };
 
     for (int i = 0; i <= tokens.count() && !syntaxStack.hasError(); ++i) {
         // Helper token: Invalid is end-of-expression.
@@ -5834,7 +5870,7 @@ void Evaluator::compile(const Tokens& tokens)
                         if (argList.count() == 2)
                             functionCall.text = argList.at(1);
                     }
-                    m_codes.append(functionCall);
+                    appendFunction(id, functionCall, arg);
 #ifdef EVALUATOR_DEBUG
                         dbg << "\tRule for function last argument "
                             << argCount << " \n";
@@ -6050,7 +6086,7 @@ void Evaluator::compile(const Tokens& tokens)
                               opPrecedence(token.asOperator())))
                {
                    ruleFound = true;
-                   m_codes.append(Opcode(Opcode::Function, 1));
+                   appendFunction(id, Opcode(Opcode::Function, 1));
                    syntaxStack.reduce(2);
 #ifdef EVALUATOR_DEBUG
                    dbg << "\tRule for simplified function syntax; function "
@@ -6184,7 +6220,7 @@ void Evaluator::compile(const Tokens& tokens)
                {
                    ruleFound = true;
                    syntaxStack.reduce(3, MAX_PRECEDENCE);
-                   m_codes.append(Opcode(Opcode::Function, 0));
+                   appendFunction(id, Opcode(Opcode::Function, 0));
 #ifdef EVALUATOR_DEBUG
                    dbg << "\tRule for function call with parentheses, "
                           "but without argument\n";
@@ -6212,7 +6248,6 @@ void Evaluator::compile(const Tokens& tokens)
                    m_error = tr("syntax error");
                    m_valid = false;
                    m_constants.clear();
-                   m_constantTexts.clear();
                    m_codes.clear();
                    m_identifiers.clear();
                    m_implicitMultiplicationOpcodeIndices.clear();
@@ -6455,6 +6490,11 @@ void Evaluator::compile(const Tokens& tokens)
                 tokenType == Token::stxUnitIdentifier
                 ? Opcode::UnitRef
                 : Opcode::Ref;
+            if (refOpcodeType == Opcode::Ref
+                && (token.text().compare(QLatin1String("diff"), Qt::CaseInsensitive) == 0
+                    || token.text().compare(QLatin1String("integrate"), Qt::CaseInsensitive) == 0)) {
+                calculusReferences.insert(token.pos(), m_codes.size());
+            }
             m_codes.append(Opcode(refOpcodeType, m_identifiers.count() - 1));
 #ifdef EVALUATOR_DEBUG
             dbg << "\tPush " << token.text() << " to identifier pools" << "\n";
@@ -6464,8 +6504,9 @@ void Evaluator::compile(const Tokens& tokens)
         // For constants, generate code to load from a constant.
         if (tokenType == Token::stxNumber) {
             m_constants.append(token.asNumber());
-            m_constantTexts.append(token.text());
-            m_codes.append(Opcode(Opcode::Load, m_constants.count() - 1));
+            Opcode load(Opcode::Load, m_constants.count() - 1);
+            load.text = token.text();
+            m_codes.append(load);
 #ifdef EVALUATOR_DEBUG
             dbg << "\tPush " << token.asNumber()
                 << " to constant pools" << "\n";
@@ -6492,9 +6533,15 @@ void Evaluator::compile(const Tokens& tokens)
             && !hasUnitConversionToken
             && !hasPhasorToken
             && m_implicitMultiplicationOpcodeIndices.isEmpty();
-        m_interpretedExpression = preserveSourceSexagesimalDisplay
-            ? QString()
-            : buildInterpretedExpressionFromOpcodes();
+        if (!preserveSourceSexagesimalDisplay) {
+            // Keep both spellings so the display can switch without recalculating.
+            bool adjustedInfinity = false;
+            m_interpretedExpression = buildInterpretedExpressionFromOpcodes(&adjustedInfinity);
+            if (adjustedInfinity && !m_interpretedExpression.isEmpty()) {
+                m_interpretedExpressionWithInfinityBounds = m_interpretedExpression;
+                m_interpretedExpression = buildInterpretedExpressionFromOpcodes();
+            }
+        }
     }
 
 #ifdef EVALUATOR_DEBUG
@@ -6505,7 +6552,6 @@ void Evaluator::compile(const Tokens& tokens)
     // Bad parsing? Clean-up everything.
     if (!m_valid) {
         m_constants.clear();
-        m_constantTexts.clear();
         m_codes.clear();
         m_identifiers.clear();
         m_implicitMultiplicationOpcodeIndices.clear();
@@ -6514,7 +6560,7 @@ void Evaluator::compile(const Tokens& tokens)
     }
 }
 
-QString Evaluator::buildInterpretedExpressionFromOpcodes() const
+QString Evaluator::buildInterpretedExpressionFromOpcodes(bool* adjustedInfinity) const
 {
     struct RenderNode {
         QString text;
@@ -6523,10 +6569,12 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
         bool isLiteralSymbol;
         bool isNumericOnly;
         bool isUnaryNegation;
+        int namedInfinitySign = 0;
     };
 
     QVector<RenderNode> stack;
     QHash<int, QString> refs;
+    const bool adjustInfinity = adjustedInfinity && !m_assignFunc;
 
     auto wrapInParentheses = [](const QString& text) {
         return QStringLiteral("(%1)").arg(text);
@@ -6735,7 +6783,7 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
         case Opcode::Nop:
             break;
         case Opcode::Load: {
-            QString constantText = m_constantTexts.value(opcode.index);
+            QString constantText = opcode.text;
             if (constantText.isEmpty()) {
                 constantText = DMath::format(m_constants.value(opcode.index),
                                              Quantity::Format::Fixed());
@@ -6751,16 +6799,24 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
             break;
         }
         case Opcode::Ref:
+        case Opcode::Diff:
+        case Opcode::Integrate:
         case Opcode::UnitRef: {
-            const QString identifier = m_identifiers.value(opcode.index);
+            const QString identifier = opcode.type == Opcode::Diff
+                ? QStringLiteral("diff") : opcode.type == Opcode::Integrate
+                    ? QStringLiteral("integrate") : m_identifiers.value(opcode.index);
             const bool isUnitReference = opcode.type == Opcode::UnitRef;
+            const bool unboundInfinity = adjustInfinity && opcode.type == Opcode::Ref
+                && SymbolicCalculus::isNamedInfinity(identifier)
+                && !hasVariable(identifier);
             stack.append({
                 identifier,
                 MAX_PRECEDENCE,
                 Opcode::Nop,
                 true,
                 false,
-                false
+                false,
+                unboundInfinity ? 1 : 0
             });
 
             if (isUnitReference)
@@ -6797,8 +6853,10 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
                 break;
             }
             const QString symbol = opcode.type == Opcode::Neg ? "-" : "~";
-            stack.append(makeUnaryNode(symbol, operand,
-                                       opcodePrecedence(opcode.type)));
+            RenderNode result = makeUnaryNode(symbol, operand, opcodePrecedence(opcode.type));
+            if (opcode.type == Opcode::Neg && operand.namedInfinitySign == 1)
+                result.namedInfinitySign = -1;
+            stack.append(result);
             break;
         }
         case Opcode::Fact:
@@ -6871,8 +6929,20 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes() const
                 return QString();
 
             QStringList arguments;
-            for (int i = 0; i < argumentCount; ++i)
-                arguments.prepend(stack.takeLast().text);
+            const bool hasIntegrationBounds = functionName == QLatin1String("integrate")
+                && (argumentCount == 3 || argumentCount == 4);
+            for (int i = 0; i < argumentCount; ++i) {
+                const RenderNode argument = stack.takeLast();
+                if (hasIntegrationBounds && i < 2 && argument.namedInfinitySign != 0) {
+                    *adjustedInfinity = true;
+                    QString bound(UnicodeChars::Infinity);
+                    if (argument.namedInfinitySign < 0)
+                        bound.prepend(MathDsl::SubOpAl1);
+                    arguments.prepend(bound);
+                } else {
+                    arguments.prepend(argument.text);
+                }
+            }
 
             // Discard function reference placeholder.
             stack.takeLast();
@@ -7073,6 +7143,7 @@ Quantity Evaluator::evalNoAssign()
         m_assignFuncDescription = QString();
         m_assignUnit = false;
         m_interpretedExpression = QString();
+        m_interpretedExpressionWithInfinityBounds.clear();
         m_hasImplicitMultiplication = false;
         QString expressionToParse = m_expression;
         QString trailingComment;
@@ -7101,7 +7172,8 @@ Quantity Evaluator::evalNoAssign()
             expressionToParse = expressionToParse.left(commentPos).trimmed();
         replacePowerOfTenScientificNotationWithDecimalExponent(expressionToParse);
         replaceSuperscriptPowersWithCaretEquivalent(expressionToParse);
-        Tokens tokens = scan(expressionToParse);
+        QString source;
+        Tokens tokens = scan(expressionToParse, &source);
 
         // Invalid expression?
         if (!tokens.valid()) {
@@ -7114,7 +7186,6 @@ Quantity Evaluator::evalNoAssign()
         if (tokens.count() == 0 && isCommentOnlyExpression(m_expression)) {
             m_valid = true;
             m_constants.clear();
-            m_constantTexts.clear();
             m_codes.clear();
             m_identifiers.clear();
             m_interpretedExpression = QString();
@@ -7195,7 +7266,7 @@ Quantity Evaluator::evalNoAssign()
             return CNumber(0);
         }
 
-        compile(tokens);
+        compile(tokens, source);
         if (!m_valid) {
             if (m_error.isEmpty())
                 m_error = tr("syntax error");
@@ -7207,32 +7278,27 @@ Quantity Evaluator::evalNoAssign()
         if (m_interpretedExpression.isEmpty() && !tokens.isEmpty())
             m_interpretedExpression = expressionToParse.trimmed();
 
-        if (!m_assignId.isEmpty() && !m_interpretedExpression.isEmpty()) {
-            if (m_assignFunc) {
-                const QString leftSide = QStringLiteral("%1(%2)").arg(
-                    m_assignId,
-                    m_assignArg.join(";")
-                );
-                m_interpretedExpression =
-                    leftSide + QStringLiteral("=") + m_interpretedExpression;
-            } else if (m_assignUnit) {
-                QString interpretedRightSide = m_interpretedExpression;
-                if (s_isBracketedExpression(m_assignUnitExpr)
-                    && !s_isBracketedExpression(interpretedRightSide))
-                {
-                    interpretedRightSide =
-                        QStringLiteral("[%1]").arg(interpretedRightSide.trimmed());
-                }
-                m_interpretedExpression =
-                    QStringLiteral("[%1]=%2").arg(m_assignId, interpretedRightSide);
-            } else {
-                m_interpretedExpression =
-                    m_assignId + QStringLiteral("=") + m_interpretedExpression;
-            }
-        }
+        const auto finishInterpretedExpression = [&](QString& interpreted) {
+            if (interpreted.isEmpty())
+                return;
 
-        if (!m_interpretedExpression.isEmpty() && !trailingComment.isEmpty())
-            m_interpretedExpression += QStringLiteral(" ? ") + trailingComment;
+            if (m_assignFunc) {
+                interpreted.prepend(QStringLiteral("%1(%2)=").arg(m_assignId, m_assignArg.join(";")));
+            } else if (m_assignUnit) {
+                if (s_isBracketedExpression(m_assignUnitExpr)
+                    && !s_isBracketedExpression(interpreted)) {
+                    interpreted = QStringLiteral("[%1]").arg(interpreted.trimmed());
+                }
+                interpreted.prepend(QStringLiteral("[%1]=").arg(m_assignId));
+            } else if (!m_assignId.isEmpty()) {
+                interpreted.prepend(m_assignId + MathDsl::Equals);
+            }
+
+            if (!trailingComment.isEmpty())
+                interpreted += QStringLiteral(" ? ") + trailingComment;
+        };
+        finishInterpretedExpression(m_interpretedExpression);
+        finishInterpretedExpression(m_interpretedExpressionWithInfinityBounds);
     }
 
     if (m_assignFunc && m_skipUserFunctionDryRun)
@@ -7244,7 +7310,8 @@ Quantity Evaluator::evalNoAssign()
 
 Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                          const QVector<Quantity>& constants,
-                         const QStringList& identifiers)
+                         const QStringList& identifiers,
+                         const QHash<QString, Quantity>* parameters)
 {
     struct StackEntry {
         Quantity value;
@@ -7258,20 +7325,26 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
     bool val1IsPercent = false;
     bool rhsIsPercent = false;
     bool hasDeferredOperand = false;
+    bool hasSymbolicValue = false;
+    bool hasApproximateOperand = false;
     QVector<Quantity> args;
     QString fname;
     Function* function;
     const UserFunction* userFunction = nullptr;
-    auto pushStackValue = [&stack, &hasDeferredOperand](const Quantity& value, bool isPercentValue = false) {
+    auto pushStackValue = [&](const Quantity& value, bool isPercentValue = false) {
         stack.push(StackEntry{value, isPercentValue, hasDeferredOperand});
+        if (hasApproximateOperand)
+            stack.top().value.markApproximate();
+        hasSymbolicValue = hasSymbolicValue || value.isSymbolic();
     };
     // Track function placeholders through operations so conversions can wait.
     auto pushDeferredValue = [&stack]() {
         stack.push(StackEntry{CMath::nan(), false, true});
     };
-    auto popStackValue = [&stack, &hasDeferredOperand](Quantity& value, bool* isPercentValue = nullptr) {
+    auto popStackValue = [&](Quantity& value, bool* isPercentValue = nullptr) {
         const StackEntry entry = stack.pop();
         hasDeferredOperand = hasDeferredOperand || entry.isDeferred;
+        hasApproximateOperand = hasApproximateOperand || entry.value.isApproximate();
         value = entry.value;
         if (isPercentValue)
             *isPercentValue = entry.isPercentValue;
@@ -7341,10 +7414,77 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
         const Opcode& opcode = opcodes.at(pc);
         index = opcode.index;
         hasDeferredOperand = false;
+        hasApproximateOperand = false;
+        if (hasSymbolicValue) {
+            const int operands = opcode.operandCount();
+            if (operands > 0 && operands <= stack.size()
+                && std::any_of(stack.cend() - operands, stack.cend(), [](const StackEntry& entry) {
+                    return entry.value.isSymbolic();
+                })) {
+                m_error = tr("this operation needs numeric values");
+                return CMath::nan();
+            }
+        }
         switch (opcode.type) {
             // No operation.
             case Opcode::Nop:
                 break;
+
+            case Opcode::Diff:
+            case Opcode::Integrate: {
+                if (index <= pc || index >= opcodes.size()
+                    || opcodes.at(index).type != Opcode::Function) {
+                    m_error = tr("invalid expression");
+                    return CMath::nan();
+                }
+                if (m_assignFunc) {
+                    pushDeferredValue();
+                } else {
+                    const auto evaluateSpan = [&](int first, int count, const QString& variable,
+                                                  const Quantity& sample) {
+                        const QString previousError = m_error;
+                        m_error.clear();
+                        QHash<QString, Quantity> bindings;
+                        if (!variable.isEmpty()) {
+                            if (parameters)
+                                bindings = *parameters;
+                            bindings.insert(variable, sample);
+                        }
+                        const Quantity value = exec(
+                            opcodes.sliced(first, count), constants, identifiers,
+                            variable.isEmpty() ? parameters : &bindings);
+                        const Quantity checked = !m_error.isEmpty() && !value.isNan()
+                            ? DMath::nan() : value;
+                        m_error = previousError;
+                        return checked;
+                    };
+                    const auto lookupUnit = [this](const QString& name, Quantity* value) {
+                        return tryGetAnyUnitQuantity(name, value);
+                    };
+                    const auto lookupVariable = [&](const QString& name) -> std::optional<Quantity> {
+                        if (parameters) {
+                            const auto binding = parameters->constFind(name);
+                            if (binding != parameters->constEnd())
+                                return binding.value();
+                        }
+                        return hasVariable(name) ? std::optional<Quantity>{getVariable(name).value()}
+                                                 : std::nullopt;
+                    };
+                    QString calculusError;
+                    const Quantity result = SymbolicCalculus::evaluate(
+                        *this, opcodes, pc, constants, identifiers, evaluateSpan,
+                        lookupUnit, lookupVariable, &calculusError);
+                    if (!calculusError.isEmpty()) {
+                        const QString name = opcode.type == Opcode::Diff
+                            ? QStringLiteral("diff") : QStringLiteral("integrate");
+                        m_error = QStringLiteral("<b>%1</b>: ").arg(name) + calculusError;
+                        return CMath::nan();
+                    }
+                    pushStackValue(result);
+                }
+                pc = index;
+                break;
+            }
 
             // Load a constant, push to stack.
             case Opcode::Load:
@@ -7708,6 +7848,13 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
             // Reference.
             case Opcode::Ref:
                 fname = identifiers.at(index);
+                if (parameters) {
+                    const auto parameter = parameters->constFind(fname);
+                    if (parameter != parameters->constEnd()) {
+                        pushStackValue(parameter.value());
+                        break;
+                    }
+                }
                 if (m_assignArg.contains(fname)) {
                     // Argument.
                     pushDeferredValue();
@@ -7785,8 +7932,11 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 }
 
                 args.clear();
-                for(; index; --index)
-                    args.insert(args.begin(), stack.pop().value);
+                for (; index; --index) {
+                    const Quantity value = stack.pop().value;
+                    hasApproximateOperand = hasApproximateOperand || value.isApproximate();
+                    args.prepend(value);
+                }
 
                 // Remove the NaN we put on the stack (needed to make the user
                 // functions declaration work with arbitrary identifiers).
@@ -7889,6 +8039,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                             const QString savedExpression = m_expression;
                             const bool savedValid = m_valid;
                             const QString savedInterpretedExpression = m_interpretedExpression;
+                            const QString savedInfinityExpression = m_interpretedExpressionWithInfinityBounds;
                             const QString savedAssignId = m_assignId;
                             const bool savedAssignFunc = m_assignFunc;
                             const QStringList savedAssignArg = m_assignArg;
@@ -7905,6 +8056,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                             m_expression = savedExpression;
                             m_valid = savedValid;
                             m_interpretedExpression = savedInterpretedExpression;
+                            m_interpretedExpressionWithInfinityBounds = savedInfinityExpression;
                             m_assignId = savedAssignId;
                             m_assignFunc = savedAssignFunc;
                             m_assignArg = savedAssignArg;
@@ -7921,6 +8073,12 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                             }
                         }
 
+                        if (term.isSymbolic()) {
+                            restoreN();
+                            m_error = QStringLiteral("<b>%1</b>: ").arg(fname)
+                                + tr("this operation needs numeric values");
+                            return CMath::nan();
+                        }
                         sigmaResult += term;
                     }
 
@@ -7980,28 +8138,12 @@ Quantity Evaluator::execUserFunction(const UserFunction* function,
     }
     m_functionsInUse.insert(function->name());
 
-    QVector<Opcode> newOpcodes;
-    auto newConstants = function->constants; // Copy.
+    QHash<QString, Quantity> parameters;
+    const QStringList names = function->arguments();
+    for (int i = 0; i < names.size(); ++i)
+        parameters.insert(names.at(i), arguments.at(i));
 
-    // Replace references to function arguments by constants.
-    for (int i = 0; i < function->opcodes.count(); ++i) {
-        Opcode opcode = function->opcodes.at(i);
-
-        if (opcode.type == Opcode::Ref) {
-            // Check if the identifier is an argument name.
-            QString name = function->identifiers.at(opcode.index);
-            int argIdx = function->arguments().indexOf(name);
-            if (argIdx >= 0) {
-                // Replace the reference by a constant value.
-                opcode = Opcode(Opcode::Load, newConstants.count());
-                newConstants.append(arguments.at(argIdx));
-            }
-        }
-
-        newOpcodes.append(opcode);
-    }
-
-    auto result = exec(newOpcodes, newConstants, function->identifiers);
+    auto result = exec(function->opcodes, function->constants, function->identifiers, &parameters);
     if (!m_error.isEmpty()) {
         // Tell the user where the error happened.
         m_error = "<b>" + function->name() + "</b>: " + m_error;
@@ -8030,7 +8172,7 @@ bool Evaluator::isBuiltInVariable(const QString& id) const
 {
     // Defining variables with the same name as existing functions
     // is not supported for now.
-    if (FunctionRepo::instance()->find(id))
+    if (id == QString(UnicodeChars::Infinity) || FunctionRepo::instance()->find(id))
         return true;
 
     if (!m_symbols.variables().contains(id))
@@ -8122,6 +8264,10 @@ Quantity Evaluator::eval()
             setUserFunction(userFunction);
 
         } else if (m_assignUnit) {
+            if (result.isSymbolic()) {
+                m_error = tr("a unit needs a numeric value");
+                return CMath::nan();
+            }
             if (s_isBuiltInUnitIdentifier(m_assignId)) {
                 m_error = tr("%1 is a built-in unit name, please choose another")
                     .arg(m_assignId);
@@ -9080,8 +9226,9 @@ QString Evaluator::dump()
     int c;
 
     if (m_dirty) {
-        Tokens tokens = scan(m_expression);
-        compile(tokens);
+        QString source;
+        Tokens tokens = scan(m_expression, &source);
+        compile(tokens, source);
     }
 
     result = QString("Expression: [%1]\n").arg(m_expression);
@@ -9116,6 +9263,12 @@ QString Evaluator::dump()
                 break;
             case Opcode::Function:
                 code = QString("Function (%1)").arg(m_codes.at(i).index);
+                break;
+            case Opcode::Diff:
+                code = QString("Diff (end %1)").arg(m_codes.at(i).index);
+                break;
+            case Opcode::Integrate:
+                code = QString("Integrate (end %1)").arg(m_codes.at(i).index);
                 break;
             case Opcode::List:
                 code = QString("List (%1)").arg(m_codes.at(i).index);

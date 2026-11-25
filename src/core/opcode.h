@@ -13,20 +13,38 @@ class Opcode
 public:
     enum  Type { Nop, Load, Ref, Function, List, Add, Sub, Neg, BNot, Mul, Div, Pow,
            Fact, Modulo, IntDiv, LSh, RSh, BAnd, BOr, Conv, Percent, Phasor,
-           UnitRef, Unit, DivUnit };
+           UnitRef, Unit, DivUnit, Diff, Integrate };
 
     Type type;
+    // Diff and Integrate use index to point to the closing Function opcode.
     // DivUnit uses index to record whether the divisor is negated.
     unsigned index;
 
-    // TODO: this is only needed for Conv Op. Maybe refactor this to a smarter place?
-    // TODO: only keep a pointer to the string
+    // Holds source text when an opcode needs it.
     QString text;
 
     Opcode() : type(Nop), index(0) {}
     Opcode(Type t) : type(t), index(0) {}
     Opcode(Type t, QString txt) : type(t), index(0), text(txt) {}
     Opcode(Type t, unsigned i): type(t), index(i) {}
+
+    int operandCount() const
+    {
+        switch (type) {
+        case Nop: case Load: case Ref: case UnitRef: case Diff: case Integrate:
+            return 0;
+        case Neg: case BNot: case Fact: case Percent:
+            return 1;
+        case DivUnit:
+            return 3;
+        case Function:
+            return static_cast<int>(index) + 1;
+        case List:
+            return static_cast<int>(index);
+        default:
+            return 2;
+        }
+    }
 };
 
 #endif // CORE_OPCODE_H

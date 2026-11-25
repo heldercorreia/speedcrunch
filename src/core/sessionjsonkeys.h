@@ -57,6 +57,7 @@
         "rst": { "$ref": "#/$defs/quantity" },
         "ctx": { "$ref": "#/$defs/evaluationContext" },
         "edt": { "type": "integer" },
+        "adj": { "type": "string" },
         "prt": {
           "type": "array",
           "items": { "type": "string" }
@@ -185,6 +186,8 @@
       "additionalProperties": true,
       "properties": {
         "val": { "type": "string" },
+        "symbolic": { "type": "string" },
+        "approximate": { "type": "boolean" },
         "dim": {
           "type": "object",
           "additionalProperties": { "type": "string" }
@@ -243,6 +246,7 @@ inline constexpr const char* Result = "rst";
 inline constexpr const char* Context = "ctx";
 inline constexpr const char* EditTimestamp = "edt";
 inline constexpr const char* PrintedLines = "prt";
+inline constexpr const char* AdjustedExpressionLine = "adj";
 }
 
 namespace EvaluationContext {

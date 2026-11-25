@@ -17,6 +17,7 @@ Built-in Functions
    :maxdepth: 2
 
    basic
+   calculus
    geometry
    integer
    statistical
