@@ -31,6 +31,7 @@
         ".caption {" \
             "font-style: italic;" \
             "font-size: small;" \
+            "padding-left: 10px;" \
         \
         "}" \
         \
@@ -58,9 +59,9 @@
 // Clickable formula without a unit block.
 #define FORMULA(link,text) "<span class=\"formula\"><a href=\"formula:"#link"\">"#text"</a></span><br />"
 // Clickable formula with the same unit text used for editor insertion and display.
-#define FORMULA_UNIT(link,text,unit) "<span class=\"formula\"><a href=\"formula:"#link" ["#unit"]\">"#text"</a></span> <span class=\"unit\">"#unit"</span><br />"
+#define FORMULA_UNIT(link,text,unit) "<span class=\"formula\"><a href=\"formula:"#link" ["#unit"]\">"#text"</a></span><span class=\"unit\">&nbsp;&nbsp;"#unit"</span><br />"
 // Clickable formula with editor unit text displayed "as" separate HTML unit markup.
-#define FORMULA_UNIT_AS(link,text,unit,displayUnit) "<span class=\"formula\"><a href=\"formula:"#link" ["#unit"]\">"#text"</a></span> <span class=\"unit\">"#displayUnit"</span><br />"
+#define FORMULA_UNIT_AS(link,text,unit,displayUnit) "<span class=\"formula\"><a href=\"formula:"#link" ["#unit"]\">"#text"</a></span><span class=\"unit\">&nbsp;&nbsp;"#displayUnit"</span><br />"
 #define TABLE "<table><tr>"
 #define ROW "</tr><tr>"
 #define _TABLE "</div></tr></table>"
@@ -569,8 +570,10 @@ QString makeGeometryChapterPage(const GeometryChapter& chapter)
 
 QString makeGeometryShapePage(const GeometryShape& shape, const GeometryChapter& chapter)
 {
-    QString html = BEGIN INDEX_LINK + " / " + pageLink(chapter.page, chapter.title) +
-                   TITLE(Book::tr(shape.title).toHtmlEscaped());
+    const QString title = Book::tr(shape.title).toHtmlEscaped();
+    QString html = BEGIN INDEX_LINK + " / " + pageLink(chapter.page, chapter.title) + TITLE(title);
+    html += QStringLiteral("<div><img src=\"book-diagram:%1\" alt=\"%2\" /></div>")
+        .arg(QString::fromLatin1(shape.page), title);
     for (const GeometryFormula& formula : shape.formulas) {
         html += QStringLiteral("<span class=\"formula\"><a href=\"function:%1\" title=\"%1()\">%2</a></span><br />")
             .arg(QString::fromLatin1(formula.function), QString::fromUtf8(formula.equation).toHtmlEscaped());

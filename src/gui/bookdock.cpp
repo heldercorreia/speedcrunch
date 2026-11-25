@@ -8,21 +8,66 @@
 #include "core/evaluator.h"
 #include "core/settings.h"
 #include "core/mathdsl.h"
+#include "gui/bookgeometrydiagrams.h"
 #include "gui/editorutils.h"
 #include "gui/menustyleutils.h"
 #include "gui/oklchutils.h"
 
 #include <QAbstractTextDocumentLayout>
 #include <QEvent>
+#include <QFontMetricsF>
 #include <QPalette>
 #include <QRegularExpression>
 #include <QScopedValueRollback>
 #include <QTextBrowser>
+#include <QTextCursor>
 #include <QTimer>
 #include <QVBoxLayout>
 #include <QtMath>
 
 namespace {
+
+constexpr QStringView diagramPrefix = u"book-diagram:geometry/";
+constexpr int diagramObjectType = QTextFormat::UserObject;
+
+class GeometryDiagramRenderer : public QObject, public QTextObjectInterface {
+    Q_OBJECT
+    Q_INTERFACES(QTextObjectInterface)
+
+public:
+    explicit GeometryDiagramRenderer(QTextBrowser* browser) : QObject(browser) {}
+
+    QSizeF intrinsicSize(QTextDocument* document, int, const QTextFormat&) override
+    {
+        const QFontMetricsF metrics(document->defaultFont(), document->documentLayout()->paintDevice());
+        return BookGeometryDiagrams::canvasSize * (metrics.height() / 16);
+    }
+
+    void drawObject(QPainter* painter, const QRectF& rect, QTextDocument*, int,
+                    const QTextFormat& format) override
+    {
+        const auto* browser = static_cast<QTextBrowser*>(parent());
+        const QString name = format.stringProperty(QTextFormat::ImageName);
+        const QPalette& palette = browser->palette();
+        BookGeometryDiagrams::draw(*painter, rect, QStringView(name).mid(diagramPrefix.size()),
+                                   palette.color(QPalette::Text), palette.color(QPalette::Base));
+    }
+};
+
+void setGeometryDiagramFormat(QTextDocument* document)
+{
+    // The HTML image gives the diagram a place and a text description.
+    QTextCursor cursor = document->find(QString(QChar::ObjectReplacementCharacter));
+    if (cursor.isNull())
+        return;
+
+    QTextCharFormat format = cursor.charFormat();
+    if (format.stringProperty(QTextFormat::ImageName).startsWith(diagramPrefix)) {
+        format.setObjectType(diagramObjectType);
+        cursor.setCharFormat(format);
+    }
+}
+
 QString toSuperscriptDigits(const QString& text)
 {
     QString out;
@@ -89,6 +134,8 @@ BookDock::BookDock(QWidget* parent)
     bookLayout->setSpacing(0);
 
     m_browser = new TextBrowser(this);
+    m_browser->document()->documentLayout()->registerHandler(
+        diagramObjectType, new GeometryDiagramRenderer(m_browser));
     m_browser->setFrameShape(QFrame::NoFrame);
     m_browser->setLineWrapMode(QTextEdit::NoWrap);
     m_browser->setOpenLinks(false);
@@ -220,6 +267,7 @@ void BookDock::refreshCurrentPage()
         return;
     m_styledContent = styledContent;
     m_browser->setHtml(styledContent);
+    setGeometryDiagramFormat(m_browser->document());
 }
 
 QString BookDock::applyPaletteStyle(const QString& content) const
@@ -261,3 +309,5 @@ void BookDock::updatePaletteStyle()
     m_browser->setPalette(palette);
     m_browser->viewport()->setPalette(palette);
 }
+
+#include "bookdock.moc"

@@ -123,6 +123,7 @@ gui/aboutbox.cpp
 gui/diagnosticsdialog.cpp
 gui/bitfieldwidget.cpp
 gui/bookdock.cpp
+gui/bookgeometrydiagrams.cpp
 gui/constantswidget.cpp
 gui/customkeypaddialog.cpp
 gui/displayformatutils.cpp
@@ -497,6 +498,7 @@ gui/aboutbox.cpp
 gui/diagnosticsdialog.cpp
 gui/bitfieldwidget.cpp
 gui/bookdock.cpp
+gui/bookgeometrydiagrams.cpp
 gui/constantswidget.cpp
 gui/customkeypaddialog.cpp
 gui/displayformatutils.cpp

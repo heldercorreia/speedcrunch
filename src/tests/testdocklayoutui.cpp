@@ -2014,8 +2014,19 @@ void TestDockLayoutUi::formula_book_text_scales_with_zoom()
         return runs.isEmpty() ? -1 : runs.first().rawFont().pixelSize();
     };
     const auto sizes = [&]() {
-        return QList<qreal> { pixelSize(QStringLiteral("Index")), pixelSize(formula),
-                             pixelSize(caption), pixelSize(variable, true) };
+        QList<qreal> result { pixelSize(QStringLiteral("Index")), pixelSize(formula),
+                              pixelSize(caption), pixelSize(variable, true) };
+        if (page.startsWith(QStringLiteral("geometry/"))) {
+            const QTextCursor image = browser->document()->find(QString(QChar::ObjectReplacementCharacter));
+            if (image.isNull()) {
+                result.append(-1);
+            } else {
+                const QTextBlock block = image.block();
+                const int offset = image.selectionStart() - block.position();
+                result.append(block.layout()->lineForTextPosition(offset).height());
+            }
+        }
+        return result;
     };
     const QList<qreal> original = sizes();
     for (qreal size : original)
@@ -3114,6 +3125,27 @@ void TestDockLayoutUi::formula_book_covers_geometry_catalog()
         QVERIFY(!shapes.isEmpty());
         for (const QString& shape : shapes) {
             dock.openPage(QUrl(shape));
+            QTextDocument* document = browser->document();
+            const QString replacement(QChar::ObjectReplacementCharacter);
+            const QTextCursor diagram = document->find(replacement);
+            QVERIFY2(!diagram.isNull(), qPrintable(shape));
+            QVERIFY(document->find(replacement, diagram.selectionEnd()).isNull());
+            const QTextCharFormat format = diagram.charFormat();
+            QVERIFY2(format.objectType() >= QTextFormat::UserObject, qPrintable(shape));
+            QVERIFY2(!format.stringProperty(QTextFormat::ImageAltText).isEmpty(), qPrintable(shape));
+            auto* renderer = document->documentLayout()->handlerForObject(format.objectType());
+            QVERIFY(renderer);
+            const int position = diagram.selectionStart();
+            const QSize size = renderer->intrinsicSize(document, position, format).toSize();
+            QVERIFY(size.width() > 0 && size.height() > 0);
+            QImage blank(size, QImage::Format_ARGB32_Premultiplied);
+            blank.fill(Qt::transparent);
+            QImage drawing = blank;
+            QPainter painter(&drawing);
+            renderer->drawObject(&painter, QRectF(drawing.rect()), document, position, format);
+            painter.end();
+            QVERIFY2(drawing != blank, qPrintable(shape));
+
             const QSet<QString> links = pageLinks();
             QVERIFY2(links.contains(chapter) && links.contains(QStringLiteral("index")), qPrintable(shape));
             const qsizetype count = functions.size();
