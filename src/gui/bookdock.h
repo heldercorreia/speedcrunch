@@ -11,6 +11,8 @@
 #include <QColor>
 #include <QTextBrowser>
 
+class QLabel;
+class QLineEdit;
 class QUrl;
 
 class TextBrowser : public QTextBrowser {
@@ -47,15 +49,19 @@ protected:
 
 private slots:
     void handleAnchorClick(const QUrl&);
+    void updateSearchResults();
     void schedulePaletteStyleRefresh();
     void refreshCurrentPage();
 
 private:
     QString applyPaletteStyle(const QString& content) const;
     void updatePaletteStyle();
+    void updateSearchLabelWidth();
 
     Q_DISABLE_COPY(BookDock)
     Book* m_book;
+    QLabel* m_searchLabel;
+    QLineEdit* m_search;
     TextBrowser* m_browser;
     QString m_currentPage;
     QString m_pageContent;

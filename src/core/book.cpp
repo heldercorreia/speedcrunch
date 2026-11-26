@@ -6,6 +6,10 @@
 
 #include "core/book.h"
 
+#include <QTextBlock>
+#include <QTextDocument>
+
+#include <algorithm>
 #include <initializer_list>
 
 // No font-family: Qt turns a family list into fallback families, and loading
@@ -546,10 +550,15 @@ const GeometryChapter geometryChapters[] = {
       {QT_TRANSLATE_NOOP("Book", "Polyhedra and Meshes"), polyhedraAndMeshes}}},
 };
 
-QString pageLink(const char* path, const char* title)
+QString pageLink(const QString& path, const QString& title)
 {
     return QStringLiteral("<span class=\"page-link\"><a href=\"%1\">%2</a></span>")
-        .arg(QString::fromLatin1(path), Book::tr(title).toHtmlEscaped());
+        .arg(path.toHtmlEscaped(), title.toHtmlEscaped());
+}
+
+QString pageLink(const char* path, const char* title)
+{
+    return pageLink(QString::fromLatin1(path), Book::tr(title));
 }
 
 QString geometryChapterLinks()
@@ -597,7 +606,7 @@ const auto makeRFAntennasPage = []() -> QString
     return
         BEGIN
         INDEX_LINK
-        TITLE(Book::tr("Radio Frequency"))
+        TITLE(Book::tr("Antennas"))
         FORMULA_UNIT_AS(Pd = Pin / (4 * π * r%5e2), Pd = P<sub>in</sub> / (4&middot;π&middot;r<sup>2</sup>), W/m%5e2, W&middot;m<sup>-2</sup>)
         FORMULA_UNIT_AS(E = sqrt(Pd * 120 * π), E = &radic;(P<sub>d</sub>&middot;120&middot;π), V/m, V&middot;m<sup>-1</sup>)
         FORMULA_UNIT_AS(E = sqrt((Pin * 120 * π) / (4 * π * r%5e2)), E = &radic;[(P<sub>in</sub>&middot;120&middot;π) / (4&middot;π&middot;r<sup>2</sup>)], V/m, V&middot;m<sup>-1</sup>)
@@ -682,6 +691,62 @@ const auto makeRFWavelengthPage = []() -> QString
 };
 
 } // namespace
+
+void Book::buildSearchIndex()
+{
+    QTextDocument document;
+    const auto& makers = pageMakers();
+    m_searchIndex.reserve(makers.size());
+    for (auto page = makers.cbegin(); page != makers.cend(); ++page) {
+        document.setHtml(page.value()());
+        QString title;
+        QString text;
+        for (QTextBlock block = document.begin(); block.isValid(); block = block.next()) {
+            if (block.blockFormat().headingLevel() == 1)
+                title = block.text().simplified();
+            if (title.isEmpty())
+                continue;
+
+            text += u' ';
+            for (auto it = block.begin(); !it.atEnd(); ++it) {
+                const QTextFragment fragment = it.fragment();
+                const QString href = fragment.charFormat().anchorHref();
+                // Skip navigation links so the results point to the page with the content.
+                if (href.isEmpty() || href.startsWith(QLatin1String("formula:"))
+                    || href.startsWith(QLatin1String("function:")))
+                    text += fragment.text();
+            }
+        }
+        if (!title.isEmpty())
+            m_searchIndex.append({page.key(), title, text.simplified()});
+    }
+    std::sort(m_searchIndex.begin(), m_searchIndex.end(), [](const SearchPage& lhs, const SearchPage& rhs) {
+        const int order = lhs.title.localeAwareCompare(rhs.title);
+        return order == 0 ? lhs.path < rhs.path : order < 0;
+    });
+}
+
+QString Book::searchResultsPage(const QString& query)
+{
+    if (m_searchIndex.isEmpty())
+        buildSearchIndex();
+
+    QString titleMatches;
+    QString textMatches;
+    for (const SearchPage& page : m_searchIndex) {
+        if (page.title.contains(query, Qt::CaseInsensitive))
+            titleMatches += pageLink(page.path, page.title) + BR;
+        else if (page.text.contains(query, Qt::CaseInsensitive))
+            textMatches += pageLink(page.path, page.title) + BR;
+    }
+
+    QString html = BEGIN INDEX_LINK TITLE(tr("Search Results").toHtmlEscaped());
+    if (titleMatches.isEmpty() && textMatches.isEmpty())
+        html += tr("No match found").toHtmlEscaped();
+    else
+        html += titleMatches + textMatches;
+    return html + "</div>" END;
+}
 
 void Book::createPages()
 {

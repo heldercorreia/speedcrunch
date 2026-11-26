@@ -10,15 +10,21 @@
 #include "core/mathdsl.h"
 #include "gui/bookgeometrydiagrams.h"
 #include "gui/editorutils.h"
+#include "gui/functionswidget.h"
 #include "gui/menustyleutils.h"
 #include "gui/oklchutils.h"
+#include "gui/themedlineedit.h"
+#include "gui/uiconfig.h"
 
 #include <QAbstractTextDocumentLayout>
 #include <QEvent>
 #include <QFontMetricsF>
+#include <QHBoxLayout>
+#include <QLabel>
 #include <QPalette>
 #include <QRegularExpression>
 #include <QScopedValueRollback>
+#include <QSignalBlocker>
 #include <QTextBrowser>
 #include <QTextCursor>
 #include <QTimer>
@@ -129,11 +135,25 @@ BookDock::BookDock(QWidget* parent)
     , m_book(new Book(this))
 {
     QWidget* widget = new QWidget(this);
-    QVBoxLayout* bookLayout = new QVBoxLayout;
+    QWidget* searchRow = new QWidget(widget);
+    m_searchLabel = new QLabel(searchRow);
+    m_search = new ThemedLineEdit(searchRow);
+    m_search->setClearButtonEnabled(true);
+    m_searchLabel->setBuddy(m_search);
+
+    constexpr int rowPadding = 8;
+    QHBoxLayout* searchLayout = new QHBoxLayout(searchRow);
+    searchLayout->setContentsMargins(rowPadding, UiConfig::DockSearchRowVerticalPadding,
+                                     rowPadding, UiConfig::DockSearchRowVerticalPadding);
+    searchLayout->setSpacing(6);
+    searchLayout->addWidget(m_searchLabel);
+    searchLayout->addWidget(m_search);
+
+    QVBoxLayout* bookLayout = new QVBoxLayout(widget);
     bookLayout->setContentsMargins(0, 0, 0, 0);
     bookLayout->setSpacing(0);
 
-    m_browser = new TextBrowser(this);
+    m_browser = new TextBrowser(widget);
     m_browser->document()->documentLayout()->registerHandler(
         diagramObjectType, new GeometryDiagramRenderer(m_browser));
     m_browser->setFrameShape(QFrame::NoFrame);
@@ -145,9 +165,11 @@ BookDock::BookDock(QWidget* parent)
 
     connect(m_browser, SIGNAL(anchorClicked(const QUrl&)), SLOT(handleAnchorClick(const QUrl&)));
     connect(m_browser, SIGNAL(paletteStyleChanged()), SLOT(schedulePaletteStyleRefresh()));
+    connect(m_search, &QLineEdit::textChanged, this, &BookDock::updateSearchResults);
 
+    bookLayout->addWidget(searchRow);
     bookLayout->addWidget(m_browser);
-    widget->setLayout(bookLayout);
+    setTabOrder(m_search, m_browser);
     setWidget(widget);
 
     retranslateText();
@@ -195,21 +217,30 @@ void BookDock::openPage(const QUrl& url)
 {
     const QString page = url.toString().isEmpty() ? QStringLiteral("index") : url.toString();
     const QString content = m_book->getPageContent(page);
-    if (!content.isNull()) {
-        m_pageContent = content;
-        refreshCurrentPage();
-    }
+    if (content.isNull())
+        return;
+
+    const QSignalBlocker blocker(m_search);
+    m_search->clear();
     m_currentPage = page;
+    m_pageContent = content;
+    refreshCurrentPage();
+}
+
+void BookDock::updateSearchResults()
+{
+    const QString query = m_search->text().simplified();
+    m_pageContent = query.isEmpty() ? m_book->getCurrentPageContent() : m_book->searchResultsPage(query);
+    refreshCurrentPage();
 }
 
 void BookDock::retranslateText()
 {
     setWindowTitle(tr("Formula Book"));
-    const QString content = m_book->getCurrentPageContent();
-    if (!content.isNull()) {
-        m_pageContent = content;
-        refreshCurrentPage();
-    }
+    m_searchLabel->setText(tr("Search"));
+    updateSearchLabelWidth();
+    m_book->invalidateSearchIndex();
+    updateSearchResults();
 }
 
 void BookDock::changeEvent(QEvent* event)
@@ -222,7 +253,16 @@ void BookDock::changeEvent(QEvent* event)
         schedulePaletteStyleRefresh();
     } else {
         QDockWidget::changeEvent(event);
+        if (event->type() == QEvent::FontChange)
+            QTimer::singleShot(0, this, &BookDock::updateSearchLabelWidth);
     }
+}
+
+void BookDock::updateSearchLabelWidth()
+{
+    // Match the label column in the Functions dock.
+    const QString domain = FunctionsWidget::tr("Domain");
+    m_searchLabel->setMinimumWidth(m_searchLabel->fontMetrics().size(0, domain).width());
 }
 
 QString BookDock::currentPage() const

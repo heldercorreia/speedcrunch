@@ -193,6 +193,8 @@ private slots:
     void formula_book_text_requests_single_font_family();
     void formula_book_covers_geometry_catalog();
     void formula_book_inserts_geometry_function_calls();
+    void formula_book_searches_across_pages();
+    void formula_book_search_matches_functions_spacing();
     void functions_dock_lists_cbrt_without_its_symbol();
     void startup_styling_keeps_formula_book_document();
     void formula_book_retranslation_refreshes_cached_page();
@@ -2571,7 +2573,8 @@ void TestDockLayoutUi::shown_dock_keeps_window_size_from_window_system()
     settings->userFunctionsDockVisible = false;
     settings->userUnitsDockVisible = false;
     settings->bitfieldVisible = false;
-    settings->keypadMode = Settings::KeypadModeScientificWide;
+    // Leave room for a smaller resize after the dock opens, even offscreen.
+    settings->keypadMode = Settings::KeypadModeScientificNarrow;
     settings->keypadVisible = true;
 
     MainWindow window;
@@ -3218,6 +3221,74 @@ void TestDockLayoutUi::formula_book_inserts_geometry_function_calls()
     QCOMPARE(dock->currentPage(), QStringLiteral("geometry/cylinder"));
 }
 
+void TestDockLayoutUi::formula_book_searches_across_pages()
+{
+    BookDock dock;
+    dock.resize(400, 360);
+    dock.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&dock));
+
+    auto* search = dock.findChild<QLineEdit*>();
+    auto* browser = dock.findChild<QTextBrowser*>();
+    QVERIFY(search);
+    QVERIFY(browser);
+    const auto startingPage = QStringLiteral("geometry/sphere");
+    dock.openPage(QUrl(startingPage));
+    const QString pageText = browser->toPlainText();
+
+    search->setText(QStringLiteral("  DIELECTRIC   constant  "));
+    const QTextDocument* results = browser->document();
+    QCOMPARE(results->find(QStringLiteral("Characteristic Impedance (coax)")).charFormat().anchorHref(),
+             QStringLiteral("rf/impedance"));
+    QCOMPARE(results->find(QStringLiteral("Velocity of Propagation (coax)")).charFormat().anchorHref(),
+             QStringLiteral("rf/propagation"));
+    QCOMPARE(dock.currentPage(), startingPage);
+
+    search->setText(QStringLiteral("xyz <&>"));
+    QVERIFY(browser->toPlainText().contains(QStringLiteral("No match found")));
+    search->clear();
+    QCOMPARE(browser->toPlainText(), pageText);
+    QCOMPARE(dock.currentPage(), startingPage);
+
+    search->setText(QStringLiteral("aNTeNNAs"));
+    QTextCursor result = results->find(QStringLiteral("Antennas"));
+    QVERIFY(!result.isNull());
+    result.setPosition(result.selectionStart() + 2);
+    const QPoint point = browser->cursorRect(result).center();
+    QCOMPARE(browser->anchorAt(point), QStringLiteral("rf/antennas"));
+    QTest::mouseClick(browser->viewport(), Qt::LeftButton, Qt::NoModifier, point);
+    QCOMPARE(dock.currentPage(), QStringLiteral("rf/antennas"));
+    QVERIFY(search->text().isEmpty());
+    QVERIFY(!browser->toPlainText().contains(QStringLiteral("Search Results")));
+}
+
+void TestDockLayoutUi::formula_book_search_matches_functions_spacing()
+{
+    BookDock book;
+    FunctionsWidget functions;
+    book.resize(360, 300);
+    functions.resize(360, 300);
+    book.show();
+    functions.show();
+    auto* bookSearch = book.findChild<QLineEdit*>();
+    auto* functionsSearch = functions.findChild<QLineEdit*>();
+    QVERIFY(bookSearch);
+    QVERIFY(functionsSearch);
+
+    const auto fieldStart = [](QLineEdit* search) {
+        return search->mapToParent(QPoint()).x();
+    };
+    const int initialStart = fieldStart(functionsSearch);
+    QCOMPARE(fieldStart(bookSearch), initialStart);
+
+    QFont font = functions.font();
+    font.setPointSize(font.pointSize() + 4);
+    book.setFont(font);
+    functions.setFont(font);
+    QTRY_VERIFY(fieldStart(functionsSearch) > initialStart);
+    QTRY_COMPARE(fieldStart(bookSearch), fieldStart(functionsSearch));
+}
+
 void TestDockLayoutUi::functions_dock_lists_cbrt_without_its_symbol()
 {
     MainWindowStateGuard guard;
@@ -3303,6 +3374,8 @@ void TestDockLayoutUi::formula_book_retranslation_refreshes_cached_page()
         {
             if (qstrcmp(context, "Book") == 0 && qstrcmp(source, "Index") == 0)
                 return QStringLiteral("Translated book index");
+            if (qstrcmp(context, "Book") == 0 && qstrcmp(source, "resistance") == 0)
+                return QStringLiteral("Translated resistance");
             return QString();
         }
     } translator;
@@ -3312,11 +3385,19 @@ void TestDockLayoutUi::formula_book_retranslation_refreshes_cached_page()
     auto* browser = dock.findChild<QTextBrowser*>();
     QVERIFY(browser);
     QVERIFY(!browser->toPlainText().contains(QStringLiteral("Translated book index")));
+    auto* search = dock.findChild<QLineEdit*>();
+    QVERIFY(search);
+    search->setText(QStringLiteral("Translated resistance"));
+    QVERIFY(browser->toPlainText().contains(QStringLiteral("No match found")));
+
     QCoreApplication::installTranslator(&translator);
     const auto removeTranslator = qScopeGuard([&]() {
         QCoreApplication::removeTranslator(&translator);
     });
     dock.retranslateText();
+    QCOMPARE(browser->document()->find(QStringLiteral("Ohm's Law")).charFormat().anchorHref(),
+             QStringLiteral("electronics/ohmslaw"));
+    search->clear();
     QVERIFY(browser->toPlainText().contains(QStringLiteral("Translated book index")));
     QCOMPARE(dock.currentPage(), QStringLiteral("electronics/ohmslaw"));
     QCoreApplication::processEvents();

@@ -22,6 +22,7 @@ public:
 protected:
     using PageMaker = std::function<QString()>;
     void addPage(const QString& id, PageMaker maker) { m_toc[id] = std::move(maker); }
+    const QHash<QString, PageMaker>& pageMakers() const { return m_toc; }
     virtual void createPages() = 0;
 
 private:
