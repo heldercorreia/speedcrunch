@@ -581,8 +581,7 @@ void TestDocksUi::units_dock_lists_filters_and_inserts_built_in_units()
     QVERIFY(!prefixed->isChecked());
     QCOMPARE(list->topLevelItemCount(), builtInUnitIds().size());
 
-    // The quantity row shows only the units of that quantity. A unit with
-    // more than one quantity, such as the pascal, is listed under each one.
+    // Each group lists its units once.
     const auto selectQuantity = [quantity](const QString& text) {
         const int index = quantity->findText(text);
         if (index < 0)
@@ -597,33 +596,35 @@ void TestDocksUi::units_dock_lists_filters_and_inserts_built_in_units()
             names.append(list->topLevelItem(i)->text(0));
         return names;
     };
-    QVERIFY(selectQuantity(QStringLiteral("Stress")));
-    QCOMPARE(widget.selectedQuantity(), QStringLiteral("Stress"));
-    QStringList stressUnits;
-    for (const UnitId id : builtInUnitIds()) {
-        if (unitQuantities(id).contains(UnitQuantity::Stress))
-            stressUnits.append(unitName(id));
-    }
-    stressUnits.sort();
-    QCOMPARE(rowNames(), stressUnits);
-    QVERIFY(stressUnits.contains(unitName(UnitId::Pascal)));
-    QVERIFY(selectQuantity(QStringLiteral("Pressure")));
-    QVERIFY(rowNames().contains(unitName(UnitId::Pascal)));
-    QVERIFY(rowNames().contains(unitName(UnitId::Bar)));
+    QVERIFY(selectQuantity(QStringLiteral("Pressure, stress")));
+    QCOMPARE(widget.selectedQuantity(), QStringLiteral("Pressure, stress"));
+    QVERIFY(findRow(unitName(UnitId::Pascal)));
+    QVERIFY(findRow(unitName(UnitId::Barye)));
+    QVERIFY(findRow(unitName(UnitId::Bar)));
     QVERIFY(!rowNames().contains(unitName(UnitId::Metre)));
-    // The search filters within the selected quantity.
+    // The search filters within the selected group.
     search->setText(QStringLiteral("PA"));
-    QTRY_VERIFY(!rowNames().contains(unitName(UnitId::Bar)));
-    QVERIFY(rowNames().contains(unitName(UnitId::Pascal)));
-    for (const QString& name : rowNames())
-        QVERIFY(unitQuantities(unitIdForName(name)).contains(UnitQuantity::Pressure));
+    QTRY_COMPARE(rowNames(), QStringList{unitName(UnitId::Pascal)});
     search->clear();
-    QVERIFY(selectQuantity(QStringLiteral("Affine temperature")));
-    QCOMPARE(list->topLevelItemCount(), 2);
+
+    QVERIFY(selectQuantity(QStringLiteral("Energy, work, heat")));
+    QVERIFY(findRow(unitName(UnitId::BritishThermalUnit)));
+    QVERIFY(findRow(unitName(UnitId::Erg)));
+    QVERIFY(findRow(unitName(UnitId::Joule)));
+    QVERIFY(selectQuantity(QStringLiteral("Absorbed dose, kerma")));
+    QCOMPARE(rowNames(), QStringList{unitName(UnitId::Gray)});
+    QVERIFY(selectQuantity(QStringLiteral("Radioactive decay rate")));
+    QCOMPARE(rowNames(), QStringList{unitName(UnitId::Becquerel)});
+    QVERIFY(selectQuantity(QStringLiteral("Frequency")));
+    QVERIFY(findRow(unitName(UnitId::Hertz)));
+    QVERIFY(findRow(unitName(UnitId::RevolutionPerMinute)));
+    QVERIFY(!rowNames().contains(unitName(UnitId::Becquerel)));
+
+    QVERIFY(selectQuantity(QStringLiteral("Temperature")));
+    QCOMPARE(list->topLevelItemCount(), 3);
+    QVERIFY(findRow(unitName(UnitId::Kelvin)));
     QVERIFY(findRow(unitName(UnitId::DegreeCelsius)));
     QVERIFY(findRow(unitName(UnitId::DegreeFahrenheit)));
-    QVERIFY(selectQuantity(QStringLiteral("Thermodynamic temperature")));
-    QCOMPARE(rowNames(), QStringList{unitName(UnitId::Kelvin)});
     QVERIFY(selectQuantity(QStringLiteral("All")));
     QCOMPARE(widget.selectedQuantity(), QString());
     QTRY_COMPARE(list->topLevelItemCount(), builtInUnitIds().size());

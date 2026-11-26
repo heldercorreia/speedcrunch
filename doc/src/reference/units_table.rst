@@ -7,8 +7,11 @@ Column meanings:
 * ``Symbol``: primary unit symbol.
 * ``Symbol aliases``: accepted alternate symbols/aliases.
 
-Absorbed Dose
-^^^^^^^^^^^^^
+.. _absorbed-dose:
+.. _kerma:
+
+Absorbed dose, kerma
+^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -31,47 +34,6 @@ Acceleration
      - Symbol aliases
    * - ``galileo``
      - ``Gal``
-     - ``—``
-
-Activity Referred To A Radionuclide
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. list-table::
-   :header-rows: 1
-
-   * - Canonical name
-     - Symbol
-     - Symbol aliases
-   * - ``becquerel``
-     - ``Bq``
-     - ``—``
-
-Amount Of Heat
-^^^^^^^^^^^^^^
-
-.. list-table::
-   :header-rows: 1
-
-   * - Canonical name
-     - Symbol
-     - Symbol aliases
-   * - ``british_thermal_unit``
-     - ``Btu``
-     - ``—``
-   * - ``calorie``
-     - ``cal``
-     - ``—``
-   * - ``joule``
-     - ``J``
-     - ``—``
-   * - ``kilocalorie``
-     - ``kcal``
-     - ``—``
-   * - ``kilowatt_hour``
-     - ``kWh``
-     - ``—``
-   * - ``quad``
-     - ``quad``
      - ``—``
 
 Amount Of Substance
@@ -201,8 +163,12 @@ Electric
      - ``V``
      - ``—``
 
-Energy
-^^^^^^
+.. _amount-of-heat:
+.. _energy:
+.. _work:
+
+Energy, work, heat
+^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -210,6 +176,12 @@ Energy
    * - Canonical name
      - Symbol
      - Symbol aliases
+   * - ``british_thermal_unit``
+     - ``Btu``
+     - ``—``
+   * - ``calorie``
+     - ``cal``
+     - ``—``
    * - ``electronvolt``
      - ``eV``
      - ``—``
@@ -222,8 +194,14 @@ Energy
    * - ``joule``
      - ``J``
      - ``—``
+   * - ``kilocalorie``
+     - ``kcal``
+     - ``—``
    * - ``kilowatt_hour``
      - ``kWh``
+     - ``—``
+   * - ``quad``
+     - ``quad``
      - ``—``
 
 Force
@@ -304,19 +282,6 @@ Information
      - ``—``
    * - ``nat``
      - ``nat``
-     - ``—``
-
-Kerma
-^^^^^
-
-.. list-table::
-   :header-rows: 1
-
-   * - Canonical name
-     - Symbol
-     - Symbol aliases
-   * - ``gray``
-     - ``Gy``
      - ``—``
 
 Kinematic Viscosity
@@ -544,8 +509,11 @@ Plane Angle
      - ``tr``
      - ``pla``
 
-Power
-^^^^^
+.. _power:
+.. _radiant-flux:
+
+Power, radiant flux
+^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -560,8 +528,11 @@ Power
      - ``W``
      - ``—``
 
-Pressure
-^^^^^^^^
+.. _pressure:
+.. _stress:
+
+Pressure, stress
+^^^^^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -591,8 +562,10 @@ Pressure
      - ``Torr``
      - ``—``
 
-Radiant Flux
-^^^^^^^^^^^^
+.. _activity-referred-to-a-radionuclide:
+
+Radioactive decay rate
+^^^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -600,8 +573,8 @@ Radiant Flux
    * - Canonical name
      - Symbol
      - Symbol aliases
-   * - ``watt``
-     - ``W``
+   * - ``becquerel``
+     - ``Bq``
      - ``—``
 
 Solid Angle
@@ -617,8 +590,11 @@ Solid Angle
      - ``sr``
      - ``—``
 
-Speed
-^^^^^
+.. _speed:
+.. _velocity:
+
+Speed, velocity
+^^^^^^^^^^^^^^^
 
 .. list-table::
    :header-rows: 1
@@ -634,22 +610,6 @@ Speed
      - ``—``
    * - ``mile_per_hour``
      - ``mph``
-     - ``—``
-
-Stress
-^^^^^^
-
-.. list-table::
-   :header-rows: 1
-
-   * - Canonical name
-     - Symbol
-     - Symbol aliases
-   * - ``barye``
-     - ``Ba``
-     - ``—``
-   * - ``pascal``
-     - ``Pa``
      - ``—``
 
 Temperature
@@ -706,25 +666,6 @@ Time
      - ``—``
    * - ``year_tropical``
      - ``a_trop``
-     - ``—``
-
-Velocity
-^^^^^^^^
-
-.. list-table::
-   :header-rows: 1
-
-   * - Canonical name
-     - Symbol
-     - Symbol aliases
-   * - ``kilometre_per_hour``
-     - ``kph``
-     - ``—``
-   * - ``knot``
-     - ``kn``
-     - ``—``
-   * - ``mile_per_hour``
-     - ``mph``
      - ``—``
 
 Volume
@@ -843,23 +784,4 @@ Volume
      - ``—``
    * - ``teaspoon_us``
      - ``tsp_us``
-     - ``—``
-
-Work
-^^^^
-
-.. list-table::
-   :header-rows: 1
-
-   * - Canonical name
-     - Symbol
-     - Symbol aliases
-   * - ``erg``
-     - ``erg``
-     - ``—``
-   * - ``joule``
-     - ``J``
-     - ``—``
-   * - ``kilowatt_hour``
-     - ``kWh``
      - ``—``

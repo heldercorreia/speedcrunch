@@ -37,14 +37,28 @@ enum Column { NameColumn, SymbolColumn, AliasesColumn, ColumnCount };
 constexpr int kControlRowHorizontalPadding = 8;
 constexpr int kControlRowSpacing = 6;
 
-const char* quantitySourceText(UnitQuantity quantity)
+UnitQuantity groupForQuantity(UnitQuantity quantity)
 {
     switch (quantity) {
+    case UnitQuantity::Stress: return UnitQuantity::Pressure;
+    case UnitQuantity::Work:
+    case UnitQuantity::AmountOfHeat: return UnitQuantity::Energy;
+    case UnitQuantity::RadiantFlux: return UnitQuantity::Power;
+    case UnitQuantity::AffineTemperature: return UnitQuantity::ThermodynamicTemperature;
+    case UnitQuantity::Kerma: return UnitQuantity::AbsorbedDose;
+    case UnitQuantity::Velocity: return UnitQuantity::Speed;
+    default: return quantity;
+    }
+}
+
+const char* quantityGroupSourceText(UnitQuantity group)
+{
+    switch (group) {
     case UnitQuantity::Length: return QT_TRANSLATE_NOOP("UnitsWidget", "Length");
     case UnitQuantity::Time: return QT_TRANSLATE_NOOP("UnitsWidget", "Time");
     case UnitQuantity::Mass: return QT_TRANSLATE_NOOP("UnitsWidget", "Mass");
     case UnitQuantity::ElectricCurrent: return QT_TRANSLATE_NOOP("UnitsWidget", "Electric current");
-    case UnitQuantity::ThermodynamicTemperature: return QT_TRANSLATE_NOOP("UnitsWidget", "Thermodynamic temperature");
+    case UnitQuantity::ThermodynamicTemperature: return QT_TRANSLATE_NOOP("UnitsWidget", "Temperature");
     case UnitQuantity::AmountOfSubstance: return QT_TRANSLATE_NOOP("UnitsWidget", "Amount of substance");
     case UnitQuantity::LuminousIntensity: return QT_TRANSLATE_NOOP("UnitsWidget", "Luminous intensity");
     case UnitQuantity::Information: return QT_TRANSLATE_NOOP("UnitsWidget", "Information");
@@ -52,13 +66,9 @@ const char* quantitySourceText(UnitQuantity quantity)
     case UnitQuantity::SolidAngle: return QT_TRANSLATE_NOOP("UnitsWidget", "Solid angle");
     case UnitQuantity::Frequency: return QT_TRANSLATE_NOOP("UnitsWidget", "Frequency");
     case UnitQuantity::Force: return QT_TRANSLATE_NOOP("UnitsWidget", "Force");
-    case UnitQuantity::Pressure: return QT_TRANSLATE_NOOP("UnitsWidget", "Pressure");
-    case UnitQuantity::Stress: return QT_TRANSLATE_NOOP("UnitsWidget", "Stress");
-    case UnitQuantity::Energy: return QT_TRANSLATE_NOOP("UnitsWidget", "Energy");
-    case UnitQuantity::Work: return QT_TRANSLATE_NOOP("UnitsWidget", "Work");
-    case UnitQuantity::AmountOfHeat: return QT_TRANSLATE_NOOP("UnitsWidget", "Amount of heat");
-    case UnitQuantity::Power: return QT_TRANSLATE_NOOP("UnitsWidget", "Power");
-    case UnitQuantity::RadiantFlux: return QT_TRANSLATE_NOOP("UnitsWidget", "Radiant flux");
+    case UnitQuantity::Pressure: return QT_TRANSLATE_NOOP("UnitsWidget", "Pressure, stress");
+    case UnitQuantity::Energy: return QT_TRANSLATE_NOOP("UnitsWidget", "Energy, work, heat");
+    case UnitQuantity::Power: return QT_TRANSLATE_NOOP("UnitsWidget", "Power, radiant flux");
     case UnitQuantity::ElectricCharge: return QT_TRANSLATE_NOOP("UnitsWidget", "Electric charge");
     case UnitQuantity::ElectricPotentialDifference: return QT_TRANSLATE_NOOP("UnitsWidget", "Electric potential difference");
     case UnitQuantity::Capacitance: return QT_TRANSLATE_NOOP("UnitsWidget", "Capacitance");
@@ -67,40 +77,46 @@ const char* quantitySourceText(UnitQuantity quantity)
     case UnitQuantity::MagneticFlux: return QT_TRANSLATE_NOOP("UnitsWidget", "Magnetic flux");
     case UnitQuantity::MagneticFluxDensity: return QT_TRANSLATE_NOOP("UnitsWidget", "Magnetic flux density");
     case UnitQuantity::Inductance: return QT_TRANSLATE_NOOP("UnitsWidget", "Inductance");
-    case UnitQuantity::AffineTemperature: return QT_TRANSLATE_NOOP("UnitsWidget", "Affine temperature");
     case UnitQuantity::LuminousFlux: return QT_TRANSLATE_NOOP("UnitsWidget", "Luminous flux");
     case UnitQuantity::Illuminance: return QT_TRANSLATE_NOOP("UnitsWidget", "Illuminance");
-    case UnitQuantity::ActivityReferredToARadionuclide: return QT_TRANSLATE_NOOP("UnitsWidget", "Activity referred to a radionuclide");
-    case UnitQuantity::AbsorbedDose: return QT_TRANSLATE_NOOP("UnitsWidget", "Absorbed dose");
-    case UnitQuantity::Kerma: return QT_TRANSLATE_NOOP("UnitsWidget", "Kerma");
+    case UnitQuantity::ActivityReferredToARadionuclide: return QT_TRANSLATE_NOOP("UnitsWidget", "Radioactive decay rate");
+    case UnitQuantity::AbsorbedDose: return QT_TRANSLATE_NOOP("UnitsWidget", "Absorbed dose, kerma");
     case UnitQuantity::DoseEquivalent: return QT_TRANSLATE_NOOP("UnitsWidget", "Dose equivalent");
     case UnitQuantity::CatalyticActivity: return QT_TRANSLATE_NOOP("UnitsWidget", "Catalytic activity");
     case UnitQuantity::Area: return QT_TRANSLATE_NOOP("UnitsWidget", "Area");
     case UnitQuantity::Volume: return QT_TRANSLATE_NOOP("UnitsWidget", "Volume");
-    case UnitQuantity::Speed: return QT_TRANSLATE_NOOP("UnitsWidget", "Speed");
-    case UnitQuantity::Velocity: return QT_TRANSLATE_NOOP("UnitsWidget", "Velocity");
+    case UnitQuantity::Speed: return QT_TRANSLATE_NOOP("UnitsWidget", "Speed, velocity");
     case UnitQuantity::DimensionlessRatio: return QT_TRANSLATE_NOOP("UnitsWidget", "Dimensionless ratio");
     case UnitQuantity::Acceleration: return QT_TRANSLATE_NOOP("UnitsWidget", "Acceleration");
     case UnitQuantity::DynamicViscosity: return QT_TRANSLATE_NOOP("UnitsWidget", "Dynamic viscosity");
     case UnitQuantity::KinematicViscosity: return QT_TRANSLATE_NOOP("UnitsWidget", "Kinematic viscosity");
     case UnitQuantity::MagneticFieldStrength: return QT_TRANSLATE_NOOP("UnitsWidget", "Magnetic field strength");
-    case UnitQuantity::Unspecified: break;
+    case UnitQuantity::Unspecified:
+    case UnitQuantity::Stress:
+    case UnitQuantity::Work:
+    case UnitQuantity::AmountOfHeat:
+    case UnitQuantity::RadiantFlux:
+    case UnitQuantity::AffineTemperature:
+    case UnitQuantity::Kerma:
+    case UnitQuantity::Velocity:
+        break;
     }
     return nullptr;
 }
 
-// Quantities that at least one built-in unit has, in UnitQuantity order.
-QList<UnitQuantity> listedQuantities()
+// Groups with at least one built-in unit.
+QList<UnitQuantity> listedQuantityGroups()
 {
-    QList<UnitQuantity> quantities;
+    QList<UnitQuantity> groups;
     for (const UnitId id : builtInUnitIds()) {
         for (const UnitQuantity quantity : unitQuantities(id)) {
-            if (quantitySourceText(quantity) && !quantities.contains(quantity))
-                quantities.append(quantity);
+            const UnitQuantity group = groupForQuantity(quantity);
+            if (quantityGroupSourceText(group) && !groups.contains(group))
+                groups.append(group);
         }
     }
-    std::sort(quantities.begin(), quantities.end());
-    return quantities;
+    std::sort(groups.begin(), groups.end());
+    return groups;
 }
 
 // The editor shows the same text in its unit completion list.
@@ -300,12 +316,17 @@ void UnitsWidget::updateList()
     setUpdatesEnabled(false);
     m_units->clear();
     QList<QTreeWidgetItem*> items;
+    const auto matchesGroup = [quantityData](UnitQuantity quantity) {
+        return static_cast<int>(groupForQuantity(quantity)) == quantityData;
+    };
     for (const UnitRow& unit : unitRows()) {
         if (unit.prefixed && !showsPrefixed)
             continue;
-        if (quantityData >= 0
-            && !unitQuantities(unit.id).contains(static_cast<UnitQuantity>(quantityData)))
-            continue;
+        if (quantityData >= 0) {
+            const QList<UnitQuantity> quantities = unitQuantities(unit.id);
+            if (std::none_of(quantities.cbegin(), quantities.cend(), matchesGroup))
+                continue;
+        }
         QStringList row(ColumnCount);
         row[NameColumn] = unit.name;
         row[SymbolColumn] = unit.symbol;
@@ -356,10 +377,10 @@ void UnitsWidget::retranslateText()
     updateControlLabelWidths();
     m_noMatchLabel->setText(tr("No match found"));
 
-    // Names sort in the user's language. Items keep the quantity as data.
+    // Sort group names in the user's language.
     QList<QPair<QString, int>> quantities;
-    for (const UnitQuantity quantity : listedQuantities())
-        quantities.append({tr(quantitySourceText(quantity)), static_cast<int>(quantity)});
+    for (const UnitQuantity group : listedQuantityGroups())
+        quantities.append({tr(quantityGroupSourceText(group)), static_cast<int>(group)});
     std::sort(quantities.begin(), quantities.end(), [](const auto& a, const auto& b) {
         return QString::localeAwareCompare(a.first, b.first) < 0;
     });
@@ -393,7 +414,7 @@ QString UnitsWidget::selectedQuantity() const
     const int data = m_quantity->currentData().toInt();
     if (data < 0)
         return QString();
-    const char* source = quantitySourceText(static_cast<UnitQuantity>(data));
+    const char* source = quantityGroupSourceText(static_cast<UnitQuantity>(data));
     return source ? QString::fromLatin1(source) : QString();
 }
 
@@ -401,7 +422,7 @@ void UnitsWidget::setSelectedQuantity(const QString& quantity)
 {
     int index = 0;
     for (int i = 1; i < m_quantity->count(); ++i) {
-        const char* source = quantitySourceText(static_cast<UnitQuantity>(m_quantity->itemData(i).toInt()));
+        const char* source = quantityGroupSourceText(static_cast<UnitQuantity>(m_quantity->itemData(i).toInt()));
         if (source && quantity == QLatin1String(source)) {
             index = i;
             break;
