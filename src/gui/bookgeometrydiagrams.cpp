@@ -1197,6 +1197,18 @@ constexpr Drawing drawings[] = {
         d.label({60, 45}, u"n = 6");
     }},
     {"rhombus", [](Diagram& d) { drawDiagonals(d, 45, 45); }},
+    {"right-triangle", [](Diagram& d) {
+        const QPointF corner(28, 74), right(98, 74), top(28, 18);
+        const QPointF inside = (corner + right + top) / 3;
+        d.solid(polygon({top, right, corner}));
+        QPainterPath square(corner + QPointF(8, 0));
+        square.lineTo(corner + QPointF(8, -8));
+        square.lineTo(corner + QPointF(0, -8));
+        d.mark(square);
+        markEdge(d, corner, top, u"a", inside);
+        markEdge(d, corner, right, u"b", inside);
+        markEdge(d, top, right, u"c", inside);
+    }},
     {"rounded-rectangle", [](Diagram& d) { drawRoundedRectangle(d, 9); }},
     {"square", [](Diagram& d) {
         d.solid(polygon(rectangleBase(60, 60)).translated(60, 45));

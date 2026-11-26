@@ -4975,6 +4975,46 @@ void test_hypot()
     eval->initializeBuiltInVariables();
 }
 
+// The simplified line keeps the sign of a subtracted term, and a fraction
+// without a short decimal form stays a fraction.
+void test_simplified_line_signs_and_fractions()
+{
+    struct Example {
+        const char* expression;
+        const char* expected;
+    };
+    const Example examples[] = {
+        {"y - 1/2", "y − 0.5"},
+        {"3*y - 1/2 - y", "2 · y − 0.5"},
+        {"y + y - 1/2", "2 · y − 0.5"},
+        {"1/8 + y", "y + 0.125"},
+        {"y - 2*35/3", "y − 70 / 3"},
+        {"y - 35/3", ""},
+        {"y + 2/3", ""},
+        {"y*35/3", ""},
+        {"rule3(3; 7; 5) - 35/3", ""},
+    };
+    eval->setVariable(QStringLiteral("y"), Quantity(5));
+    for (const Example& example : examples) {
+        ++eval_total_tests;
+        const QString expression = QString::fromUtf8(example.expression);
+        eval->setExpression(expression);
+        eval->evalUpdateAns();
+        const QString line = ResultLineFormatUtils::simplifiedExpressionLineForDisplay(
+            eval->interpretedExpression(), expression, true, eval);
+        const QString expected = QString::fromUtf8(example.expected);
+        if (!eval->error().isEmpty() || line != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\t" << example.expression << "\t[NEW]"
+                 << "\n\tError: " << qPrintable(eval->error())
+                 << "\n\tLine: " << line.toUtf8().constData()
+                 << "\n\tExpected: " << example.expected << endl;
+        }
+    }
+    eval->unsetVariable(QStringLiteral("y"));
+}
+
 void test_geometry_functions()
 {
     struct Example {
@@ -7848,7 +7888,7 @@ void test_display_interpreted_spacing()
             + QStringLiteral("[m]"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("12/68*1000"),
-        QStringLiteral("176.470588235294"));
+        QString::fromUtf8("12 / 68 × 1000"));
     CHECK_DISPLAY_SIMPLIFIED_INTERPRETED(
         QStringLiteral("2+cos(-pi^2)+pi+3+pi"),
         QStringLiteral("cos(")
@@ -13411,6 +13451,7 @@ int main(int argc, char* argv[])
     test_function_root();
     test_rule3();
     test_hypot();
+    test_simplified_line_signs_and_fractions();
     test_geometry_functions();
     test_function_trig();
     test_function_tanh_range();

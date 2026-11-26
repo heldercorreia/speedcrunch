@@ -594,6 +594,7 @@ inline QString foldRepeatedAdditiveTermsForDisplay(const QString& text)
     QHash<QString, double> coeffByKey;
     QHash<QString, QString> displayByKey;
     QVector<QString> keyOrder;
+    bool mergedTerms = false;
 
     int termStart = 0;
     for (int part = 0; part <= splitOps.size(); ++part) {
@@ -604,8 +605,10 @@ inline QString foldRepeatedAdditiveTermsForDisplay(const QString& text)
             continue;
         }
 
-        const QString opText = (part == 0) ? QString(MathDsl::AddOp)
-            : tokenRangeText(splitOps.at(part - 1), splitOps.at(part - 1));
+        // The token range can include the spaces around the operator, so
+        // read the sign from the token itself.
+        const bool minusOp = part > 0
+            && tokens.at(splitOps.at(part - 1)).asOperator() == Token::Subtraction;
         QString termText = tokenRangeText(termStart, termEnd).trimmed();
         termStart = opIndex + 1;
         if (termText.isEmpty())
@@ -645,15 +648,20 @@ inline QString foldRepeatedAdditiveTermsForDisplay(const QString& text)
         if (!ok || base.isEmpty())
             continue;
 
-        const bool minusOp = (opText.size() == 1 && isMinusChar(opText.at(0)));
         const double signedFactor = (minusOp ? -1.0 : 1.0) * (negFromTerm ? -numericFactor : numericFactor);
         const QString key = normalizeKey(base);
         if (!coeffByKey.contains(key)) {
             keyOrder.append(key);
             displayByKey.insert(key, base);
+        } else {
+            mergedTerms = true;
         }
         coeffByKey[key] += signedFactor;
     }
+
+    // Rebuilding drops the display spacing, so keep the text if nothing folds.
+    if (!mergedTerms)
+        return text;
 
     QString rebuilt;
     for (const QString& key : keyOrder) {

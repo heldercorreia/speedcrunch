@@ -1656,6 +1656,25 @@ static QString formatSimplifiedDecimal(double value)
     return text;
 }
 
+// A quotient such as 35/3 has no short decimal form. Fifteen significant
+// digits mean the double was rounded, so the display keeps the fraction.
+static bool isRoundedSimplifiedDecimal(double value)
+{
+    if (std::abs(value - std::round(value)) < 1e-12)
+        return false;
+
+    QString digits = QString::number(std::abs(value), 'g', 15);
+    const int exponentPos = digits.indexOf(QLatin1Char('e'));
+    if (exponentPos >= 0)
+        digits.truncate(exponentPos);
+    digits.remove(MathDsl::DotSep);
+    while (digits.startsWith(QLatin1Char('0')))
+        digits.remove(0, 1);
+    while (digits.endsWith(QLatin1Char('0')))
+        digits.chop(1);
+    return digits.size() >= 15;
+}
+
 static bool normalizeUnsignedIntegerEquivalentDecimalText(QString& text)
 {
     const QRegularExpressionMatch match = RegExpPatterns::unsignedIntegerEquivalentDecimal().match(text);
@@ -2654,7 +2673,7 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
 
                 bool okNum = false;
                 const double num = factors.at(i).toDouble(&okNum);
-                if (!okNum)
+                if (!okNum || isRoundedSimplifiedDecimal(num / den))
                     continue;
 
                 factors[i] = formatSimplifiedDecimal(num / den);
@@ -3063,8 +3082,13 @@ static QString simplifyRepeatedBasesInMultiplicativeTermForDisplay(const QString
             }
         }
 
-        if (!hasNonNumericBase)
+        if (!hasNonNumericBase) {
+            if (isRoundedSimplifiedDecimal(numericCoefficient)) {
+                negativeUnitFactorCount = previousNegativeFactorCount;
+                return text;
+            }
             return formatSimplifiedDecimal(numericCoefficient);
+        }
 
         // Moving a denominator into a leading coefficient does not simplify
         // anything. Keep the existing form unless factors actually reduce.
