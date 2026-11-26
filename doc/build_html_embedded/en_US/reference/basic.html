@@ -149,6 +149,36 @@ real even when complex numbers are enabled.</p>
 </dd></dl>
 
 <dl class="sc function">
+<dt class="sig sig-object sc" id="sc.rule3">
+<span class="sig-name descname"><span class="pre">rule3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">a</span></em>; <em class="sig-param"><span class="pre">b</span></em>; <em class="sig-param"><span class="pre">c</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Calculates the fourth quantity in a direct proportional relationship.
+If <code class="docutils literal notranslate"><span class="pre">a</span></code> corresponds to <code class="docutils literal notranslate"><span class="pre">b</span></code>, the value for <code class="docutils literal notranslate"><span class="pre">c</span></code> is <code class="docutils literal notranslate"><span class="pre">b*c/a</span></code>.
+Use real values and keep <code class="docutils literal notranslate"><span class="pre">a</span></code> nonzero. The first and third arguments must
+have the same dimensions. SpeedCrunch converts compatible units and keeps
+the dimensions of <code class="docutils literal notranslate"><span class="pre">b</span></code>.</p>
+<p>If 100 grams of food have 250 kilocalories, 350 grams have 875 kilocalories.
+The units of <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">c</span></code> can differ, as in the second example.</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">rule3</span><span class="p">(</span><span class="mi">100</span><span class="p">[</span><span class="n">g</span><span class="p">];</span> <span class="mi">250</span><span class="p">[</span><span class="n">kcal</span><span class="p">];</span> <span class="mi">350</span><span class="p">[</span><span class="n">g</span><span class="p">])</span> <span class="o">=</span> <span class="mi">875</span><span class="p">[</span><span class="n">kcal</span><span class="p">]</span>
+<span class="n">rule3</span><span class="p">(</span><span class="mi">1</span><span class="p">[</span><span class="n">kg</span><span class="p">];</span> <span class="mi">20</span><span class="p">;</span> <span class="mi">250</span><span class="p">[</span><span class="n">g</span><span class="p">])</span>        <span class="o">=</span> <span class="mi">5</span>
+</pre></div>
+</div>
+</td></tr></tbody></table><p>In Rational notation, <code class="docutils literal notranslate"><span class="pre">rule3(3;</span> <span class="pre">7;</span> <span class="pre">5)</span></code> shows <code class="docutils literal notranslate"><span class="pre">35/3</span></code>.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">b</span></code> is in Celsius or Fahrenheit, SpeedCrunch scales the reading
+in that unit. For example, <code class="docutils literal notranslate"><span class="pre">rule3(2;</span> <span class="pre">10[°C];</span> <span class="pre">6)</span></code> gives <code class="docutils literal notranslate"><span class="pre">30[°C]</span></code>.
+Convert <code class="docutils literal notranslate"><span class="pre">b</span></code> to kelvins first to scale an absolute temperature. Enter
+a temperature difference directly in kelvins. If <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">c</span></code> are
+temperatures, SpeedCrunch uses their values in kelvins for the ratio.</p>
+<p>For inverse proportionality, swap the first and third arguments. If 4
+workers take 6 hours at the same rate, 8 workers take 3 hours.</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">rule3</span><span class="p">(</span><span class="mi">8</span><span class="p">;</span> <span class="mi">6</span><span class="p">[</span><span class="n">h</span><span class="p">];</span> <span class="mi">4</span><span class="p">)</span> <span class="o">=</span> <span class="mi">3</span><span class="p">[</span><span class="n">h</span><span class="p">]</span>
+</pre></div>
+</div>
+</td></tr></tbody></table><div class="versionadded">
+<p><span class="versionmodified added">Added in version 1.3.</span></p>
+</div>
+</dd></dl>
+
+<dl class="sc function">
 <dt class="sig sig-object sc" id="sc.exp">
 <span class="sig-name descname"><span class="pre">exp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Compute the natural exponential function.</p>

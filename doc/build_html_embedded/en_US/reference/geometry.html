@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta content="Calculate areas, surface areas, and volumes for polygons, solids, tanks, and triangle meshes in SpeedCrunch." name="description" />
+<meta content="Calculate hypotenuses, areas, and volumes for polygons, solids, tanks, and triangle meshes in SpeedCrunch." name="description" />
 
     <title>Geometry</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=0fbef478" />
@@ -90,6 +90,28 @@ contributes <code class="docutils literal notranslate"><span class="pre">40</spa
 For example, a sector of 90 degrees with radius 1 matches <code class="docutils literal notranslate"><span class="pre">π</span> <span class="pre">/</span> <span class="pre">4</span></code>.
 A sector just under 90 degrees can round to the same decimal and show
 only the decimal line.</p>
+<section id="lengths">
+<h2>Lengths</h2>
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.hypot">
+<span class="sig-name descname"><span class="pre">hypot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x1</span></em>; <em class="sig-param"><span class="pre">x2</span></em>; <em class="sig-param"><span class="pre">...</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">Added in version 1.2.</span></p>
+</div>
+<p>Computes the square root of the sum of the squares of its arguments.
+Use two or more real scalar values with compatible dimensions. The result
+keeps those dimensions. If any value is <code class="docutils literal notranslate"><span class="pre">inf</span></code> or <code class="docutils literal notranslate"><span class="pre">-inf</span></code> and the
+other values are valid, the result is <code class="docutils literal notranslate"><span class="pre">inf</span></code>. A NaN gives an error
+even when another value is infinite.</p>
+<p>Examples:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">hypot</span><span class="p">(</span><span class="mi">3</span><span class="p">;</span> <span class="mi">4</span><span class="p">)</span>          <span class="o">=</span> <span class="mi">5</span>
+<span class="n">hypot</span><span class="p">(</span><span class="mi">1</span><span class="p">;</span> <span class="mi">1</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>       <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">hypot</span><span class="p">(</span><span class="mi">3</span><span class="p">[</span><span class="n">m</span><span class="p">];</span> <span class="mi">400</span><span class="p">[</span><span class="n">cm</span><span class="p">])</span> <span class="o">=</span> <span class="mi">5</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+</section>
 <section id="plane-shapes">
 <h2>Plane shapes</h2>
 <dl class="sc function">

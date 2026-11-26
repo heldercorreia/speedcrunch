@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta content="Find symbolic derivatives and integrals in SpeedCrunch." name="description" />
+<meta content="Find derivatives, integrals, and limits in SpeedCrunch." name="description" />
 
     <title>Calculus</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=0fbef478" />
@@ -69,7 +69,10 @@
 <span class="sig-name descname"><span class="pre">diff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">expression</span></em>; <em class="sig-param"><span class="pre">order</span></em><span class="sig-paren">)</span></dt>
 <dt class="sig sig-object sc">
 <span class="sig-name descname"><span class="pre">diff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">expression</span></em>; <em class="sig-param"><span class="pre">variable</span></em>; <em class="sig-param"><span class="pre">order</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Computes the symbolic derivative of an expression with respect to a
+<dd><div class="versionadded">
+<p><span class="versionmodified added">Added in version 1.3.</span></p>
+</div>
+<p>Computes the symbolic derivative of an expression with respect to a
 variable, optionally to a specified order.</p>
 <p>With no variable given, SpeedCrunch uses the only variable in the
 expression. A supported expression with no variables gives zero.
@@ -135,7 +138,10 @@ nesting, or work limits give an error.</p>
 <span class="sig-name descname"><span class="pre">integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">expression</span></em>; <em class="sig-param"><span class="pre">lower</span></em>; <em class="sig-param"><span class="pre">upper</span></em><span class="sig-paren">)</span></dt>
 <dt class="sig sig-object sc">
 <span class="sig-name descname"><span class="pre">integrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">expression</span></em>; <em class="sig-param"><span class="pre">variable</span></em>; <em class="sig-param"><span class="pre">lower</span></em>; <em class="sig-param"><span class="pre">upper</span></em><span class="sig-paren">)</span></dt>
-<dd><p>Computes the indefinite or definite integral of an expression with
+<dd><div class="versionadded">
+<p><span class="versionmodified added">Added in version 1.3.</span></p>
+</div>
+<p>Computes the indefinite or definite integral of an expression with
 respect to a variable.</p>
 <p>With no variable given, SpeedCrunch uses the only variable in the
 expression, or <code class="docutils literal notranslate"><span class="pre">x</span></code> if there are none. Give the variable name if the
@@ -206,6 +212,55 @@ multiplied by the integration variable’s dimensions.</p>
 <span class="n">integrate</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">^</span><span class="mi">2</span><span class="p">);</span> <span class="o">-</span><span class="n">inf</span><span class="p">;</span> <span class="n">inf</span><span class="p">)</span> <span class="o">=</span> √<span class="no">π</span>
 <span class="n">integrate</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="o">^</span><span class="mi">2</span><span class="p">);</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>     <span class="o">=</span> √<span class="no">π</span><span class="o">*</span><span class="n">erfi</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
 <span class="n">integrate</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">^</span><span class="mi">4</span><span class="p">);</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>    ≈ <span class="mf">0.8448385947571024008</span>
+</pre></div>
+</div>
+</td></tr></tbody></table></dd></dl>
+
+<dl class="sc function">
+<dt class="sig sig-object sc" id="sc.lim">
+<span class="sig-name descname"><span class="pre">lim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">expression</span></em>; <em class="sig-param"><span class="pre">point</span></em><span class="sig-paren">)</span></dt>
+<dt class="sig sig-object sc">
+<span class="sig-name descname"><span class="pre">lim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">expression</span></em>; <em class="sig-param"><span class="pre">variable</span></em>; <em class="sig-param"><span class="pre">point</span></em><span class="sig-paren">)</span></dt>
+<dt class="sig sig-object sc">
+<span class="sig-name descname"><span class="pre">lim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">expression</span></em>; <em class="sig-param"><span class="pre">point</span></em>; <em class="sig-param"><span class="pre">direction</span></em><span class="sig-paren">)</span></dt>
+<dt class="sig sig-object sc">
+<span class="sig-name descname"><span class="pre">lim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">expression</span></em>; <em class="sig-param"><span class="pre">variable</span></em>; <em class="sig-param"><span class="pre">point</span></em>; <em class="sig-param"><span class="pre">direction</span></em><span class="sig-paren">)</span></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">Added in version 1.3.</span></p>
+</div>
+<p>Computes the limit of an expression as a variable approaches a
+specified value.</p>
+<p>If the expression has one variable, SpeedCrunch can infer it. Give a
+variable name if the expression has several. The other variables stay
+symbolic and act as real parameters, even if they have saved values.
+SpeedCrunch infers the variable from the expression alone. A defined
+constant expression gives its own value.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">-1</span></code> to approach from below, <code class="docutils literal notranslate"><span class="pre">1</span></code> to approach from above, or
+<code class="docutils literal notranslate"><span class="pre">0</span></code> for both sides. The default is <code class="docutils literal notranslate"><span class="pre">0</span></code>. The direction must be
+a dimensionless integer. If both three-argument forms fit, SpeedCrunch
+reports an ambiguity. Use all four arguments or write the point as an
+expression such as <code class="docutils literal notranslate"><span class="pre">a+0</span></code>.</p>
+<p>Type <code class="docutils literal notranslate"><span class="pre">inf</span></code> or <code class="docutils literal notranslate"><span class="pre">-inf</span></code> for an infinite point. Use the default
+direction, or use <code class="docutils literal notranslate"><span class="pre">-1</span></code> for <code class="docutils literal notranslate"><span class="pre">inf</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code> for <code class="docutils literal notranslate"><span class="pre">-inf</span></code>.
+Trigonometric functions use the active angle mode. The point and
+limiting variable must have compatible units. The result keeps the
+expression’s dimensions.</p>
+<p>Exact and infinite results use <code class="docutils literal notranslate"><span class="pre">=</span></code>. A numerical estimate uses
+<code class="docutils literal notranslate"><span class="pre">≈</span></code>. SpeedCrunch reports that the limit does not exist when it can
+establish that the requested approach fails, such as when the two
+sides disagree. It reports that it is unable to determine the limit
+when the rules or numerical estimates are inconclusive, including
+cases that need more information about a parameter.</p>
+<p>Limits follow real paths and the real domains of the functions in the
+expression. The expression can be undefined at the point itself.</p>
+<p>Examples in radians:</p>
+<table class="-x-quark-literal-block"><tbody><tr><td width="100%" class="-x-quark-literal-block-td"><div class="highlight-speedcrunch notranslate"><div class="highlight"><pre><span></span><span class="n">lim</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">x</span><span class="p">;</span> <span class="mi">0</span><span class="p">)</span>                     <span class="o">=</span> <span class="mi">1</span>
+<span class="n">lim</span><span class="p">(</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">x</span><span class="p">;</span> <span class="mi">0</span><span class="p">;</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>                 <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+<span class="n">lim</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="o">^</span><span class="mi">2</span><span class="p">;</span> <span class="mi">0</span><span class="p">)</span>                       <span class="o">=</span> <span class="n">inf</span>
+<span class="n">lim</span><span class="p">(</span><span class="n">arctan</span><span class="p">(</span><span class="n">x</span><span class="p">);</span> <span class="o">-</span><span class="n">inf</span><span class="p">)</span>                 <span class="o">=</span> <span class="o">-</span><span class="no">pi</span><span class="o">/</span><span class="mi">2</span>
+<span class="n">lim</span><span class="p">((</span><span class="mi">1</span><span class="o">+</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">)</span><span class="o">^</span><span class="n">x</span><span class="p">;</span> <span class="n">inf</span><span class="p">)</span>                  <span class="o">=</span> <span class="no">e</span>
+<span class="n">lim</span><span class="p">((</span><span class="n">x</span><span class="o">^</span><span class="mi">2</span><span class="o">-</span><span class="n">a</span><span class="o">^</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">a</span><span class="p">);</span> <span class="n">x</span><span class="p">;</span> <span class="n">a</span><span class="p">)</span>           <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">a</span>
+<span class="n">lim</span><span class="p">((</span><span class="n">gamma</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="n">x</span><span class="p">)</span><span class="o">-</span><span class="n">gamma</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span><span class="o">/</span><span class="n">x</span><span class="p">;</span> <span class="mi">0</span><span class="p">)</span>      ≈ <span class="mf">0.4227843351</span>
 </pre></div>
 </div>
 </td></tr></tbody></table></dd></dl>

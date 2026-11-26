@@ -113,6 +113,7 @@
                         </section>
                         <section title="Calculus" ref="reference/calculus.html"/>
                         <section title="Geometry" ref="reference/geometry.html">
+                            <section title="Lengths" ref="reference/geometry.html#lengths"/>
                             <section title="Plane shapes" ref="reference/geometry.html#plane-shapes"/>
                             <section title="Prisms and pyramids" ref="reference/geometry.html#prisms-and-pyramids"/>
                             <section title="Cylinders, cones and rounded solids" ref="reference/geometry.html#cylinders-cones-and-rounded-solids"/>
@@ -145,10 +146,8 @@
                             <section title="Conversions" ref="reference/units.html#conversions"/>
                             <section title="Built-in Units Table" ref="reference/units.html#built-in-units-table">
                                 <section title="Built-in Units by Quantity" ref="reference/units.html#built-in-units-by-quantity">
-                                    <section title="Absorbed Dose" ref="reference/units.html#absorbed-dose"/>
+                                    <section title="Absorbed dose, kerma" ref="reference/units.html#absorbed-dose-kerma"/>
                                     <section title="Acceleration" ref="reference/units.html#acceleration"/>
-                                    <section title="Activity Referred To A Radionuclide" ref="reference/units.html#activity-referred-to-a-radionuclide"/>
-                                    <section title="Amount Of Heat" ref="reference/units.html#amount-of-heat"/>
                                     <section title="Amount Of Substance" ref="reference/units.html#amount-of-substance"/>
                                     <section title="Area" ref="reference/units.html#area"/>
                                     <section title="Capacitance" ref="reference/units.html#capacitance"/>
@@ -156,13 +155,12 @@
                                     <section title="Dose Equivalent" ref="reference/units.html#dose-equivalent"/>
                                     <section title="Dynamic Viscosity" ref="reference/units.html#dynamic-viscosity"/>
                                     <section title="Electric" ref="reference/units.html#electric"/>
-                                    <section title="Energy" ref="reference/units.html#energy"/>
+                                    <section title="Energy, work, heat" ref="reference/units.html#energy-work-heat"/>
                                     <section title="Force" ref="reference/units.html#force"/>
                                     <section title="Frequency" ref="reference/units.html#frequency"/>
                                     <section title="Illuminance" ref="reference/units.html#illuminance"/>
                                     <section title="Inductance" ref="reference/units.html#inductance"/>
                                     <section title="Information" ref="reference/units.html#information"/>
-                                    <section title="Kerma" ref="reference/units.html#kerma"/>
                                     <section title="Kinematic Viscosity" ref="reference/units.html#kinematic-viscosity"/>
                                     <section title="Length" ref="reference/units.html#length"/>
                                     <section title="Luminous Flux" ref="reference/units.html#luminous-flux"/>
@@ -172,17 +170,14 @@
                                     <section title="Magnetic Flux Density" ref="reference/units.html#magnetic-flux-density"/>
                                     <section title="Mass" ref="reference/units.html#mass"/>
                                     <section title="Plane Angle" ref="reference/units.html#plane-angle"/>
-                                    <section title="Power" ref="reference/units.html#power"/>
-                                    <section title="Pressure" ref="reference/units.html#pressure"/>
-                                    <section title="Radiant Flux" ref="reference/units.html#radiant-flux"/>
+                                    <section title="Power, radiant flux" ref="reference/units.html#power-radiant-flux"/>
+                                    <section title="Pressure, stress" ref="reference/units.html#pressure-stress"/>
+                                    <section title="Radioactive decay rate" ref="reference/units.html#radioactive-decay-rate"/>
                                     <section title="Solid Angle" ref="reference/units.html#solid-angle"/>
-                                    <section title="Speed" ref="reference/units.html#speed"/>
-                                    <section title="Stress" ref="reference/units.html#stress"/>
+                                    <section title="Speed, velocity" ref="reference/units.html#speed-velocity"/>
                                     <section title="Temperature" ref="reference/units.html#temperature"/>
                                     <section title="Time" ref="reference/units.html#time"/>
-                                    <section title="Velocity" ref="reference/units.html#velocity"/>
                                     <section title="Volume" ref="reference/units.html#volume"/>
-                                    <section title="Work" ref="reference/units.html#work"/>
                                 </section>
                             </section>
                         </section>
@@ -323,6 +318,7 @@
             <keyword name="hypermean() (function)" id="function.hypermean" ref="reference/statistical.html#sc.hypermean"/>
             <keyword name="hyperpmf() (function)" id="function.hyperpmf" ref="reference/statistical.html#sc.hyperpmf"/>
             <keyword name="hypervar() (function)" id="function.hypervar" ref="reference/statistical.html#sc.hypervar"/>
+            <keyword name="hypot() (function)" id="function.hypot" ref="reference/geometry.html#sc.hypot"/>
             <keyword name="i (constant)" id="constant.i" ref="reference/constants.html#sc.i"/>
             <keyword name="idiv() (function)" id="function.idiv" ref="reference/integer.html#sc.idiv"/>
             <keyword name="ieee754_decode() (function)" id="function.ieee754_decode" ref="reference/ieee754.html#sc.ieee754_decode"/>
@@ -349,6 +345,7 @@
             <keyword name="inv() (function)" id="function.inv" ref="reference/basic.html#sc.inv"/>
             <keyword name="j (constant)" id="constant.j" ref="reference/constants.html#sc.j"/>
             <keyword name="lcm() (function)" id="function.lcm" ref="reference/integer.html#sc.lcm"/>
+            <keyword name="lim() (function)" id="function.lim" ref="reference/calculus.html#sc.lim"/>
             <keyword name="ln() (function)" id="function.ln" ref="reference/basic.html#sc.ln"/>
             <keyword name="lngamma() (function)" id="function.lngamma" ref="reference/basic.html#sc.lngamma"/>
             <keyword name="log() (function)" id="function.log" ref="reference/basic.html#sc.log"/>
@@ -396,6 +393,7 @@
             <keyword name="round() (function)" id="function.round" ref="reference/integer.html#sc.round"/>
             <keyword name="roundeven() (function)" id="function.roundeven" ref="reference/integer.html#sc.roundeven"/>
             <keyword name="rows() (function)" id="function.rows" ref="reference/basic.html#sc.rows"/>
+            <keyword name="rule3() (function)" id="function.rule3" ref="reference/basic.html#sc.rule3"/>
             <keyword name="sci() (function)" id="function.sci" ref="reference/integer.html#sc.sci"/>
             <keyword name="sec() (function)" id="function.sec" ref="reference/basic.html#sc.sec"/>
             <keyword name="sgn() (function)" id="function.sgn" ref="reference/basic.html#sc.sgn"/>
@@ -487,7 +485,6 @@
             <file>reference/integer.html</file>
             <file>reference/statistical.html</file>
             <file>reference/units.html</file>
-            <file>reference/units_table.html</file>
         </files>
     </filterSection>
 </QtHelpProject>

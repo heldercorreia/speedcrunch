@@ -97,9 +97,8 @@ version = '.'.join(release.split('.')[:2])
 # Else, today_fmt is used as the format for a strftime call.
 #today_fmt = '%B %d, %Y'
 
-# List of patterns, relative to source directory, that match files and
-# directories to ignore when looking for source files.
-exclude_patterns = ['_build', 'extensions/**']
+# Read the units table through its include in the units reference.
+exclude_patterns = ['_build', 'extensions/**', 'reference/units_table.rst']
 
 highlight_language = 'speedcrunch'
 
@@ -146,8 +145,6 @@ if bundled:
 else:
     import sphinx_bootstrap_theme
     html_baseurl = 'https://www.speedcrunch.org/'
-    # The units table is included in the units reference, not a separate web page.
-    exclude_patterns.append('reference/units_table.rst')
     html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
     html_theme = 'bootstrap'
     html_theme_options = {
