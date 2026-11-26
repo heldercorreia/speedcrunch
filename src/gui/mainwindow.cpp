@@ -162,7 +162,10 @@
 #include <memory>
 #include <vector>
 #ifdef Q_OS_WIN32
-#include "windows.h"
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
 #include <shlobj.h>
 #endif // Q_OS_WIN32
 
