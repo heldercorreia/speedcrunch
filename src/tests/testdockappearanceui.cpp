@@ -1529,7 +1529,11 @@ void TestDockAppearanceUi::dock_header_buttons_keep_theme_before_hover()
     guard.settings->bitfieldVisible = false;
     const QPoint cursorPosition = QCursor::pos();
     const auto restoreCursor = qScopeGuard([cursorPosition]() { QCursor::setPos(cursorPosition); });
-    QCursor::setPos(0, 0);
+    // Keep the pointer off the right-side docks, but out of the screen corners:
+    // this is a real pointer move, so a corner can start a hot corner action
+    // (Mission Control on macOS), which blocks later tests' window changes.
+    const QRect screen = QGuiApplication::primaryScreen()->geometry();
+    QCursor::setPos(screen.left() + screen.width() / 4, screen.top());
 
     const QStringList dockNames {QStringLiteral("UserUnitsDock"), QStringLiteral("UserFunctionsDock"),
                                  QStringLiteral("VariablesDock"), QStringLiteral("HistoryDock"),
