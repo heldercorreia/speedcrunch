@@ -141,6 +141,13 @@ inline const QRegularExpression& unsignedDecimalInteger()
     return pattern;
 }
 
+// Captures the numerator and optional denominator of an exact value.
+inline const QRegularExpression& integerOrFraction()
+{
+    static const QRegularExpression pattern(QStringLiteral(R"(^(-?[0-9]+)(?:/([0-9]+))?$)"));
+    return pattern;
+}
+
 // Matches a full unsigned decimal number (integer or fixed-point).
 // Example input/output: "12.34" -> match; "+12.34" -> no match.
 inline const QRegularExpression& unsignedDecimalNumber()

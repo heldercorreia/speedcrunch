@@ -223,7 +223,8 @@ enum class UnitId {
     Galileo,
     Gauss,
     Maxwell,
-    Oersted
+    Oersted,
+    Kilocalorie
 };
 
 enum class UnitPhraseId {
@@ -575,6 +576,7 @@ public:
     // Energy.
     static const Quantity electronvolt();
     static const Quantity calorie();
+    static const Quantity kilocalorie();
     static const Quantity british_thermal_unit();
     // Information.
     static const Quantity nat();

@@ -184,6 +184,18 @@ QString formatRationalDisplay(Quantity q)
     if (q.isNan())
         return QString();
 
+    if (!q.exactExpression().isEmpty()) {
+        QString text = UnicodeChars::normalizeRootFunctionAliasesForDisplay(q.exactExpression());
+        const QString unitName = q.unitName();
+        if (!unitName.isEmpty() && !RegExpPatterns::integerOrFraction().match(text).hasMatch())
+            text = MathDsl::GroupStart + text + MathDsl::GroupEnd;
+        text.replace(MathDsl::MulOpAl1, QString(MathDsl::MulDotWrapSp) + g_dotChar + MathDsl::MulDotWrapSp);
+        text.replace(MathDsl::DivOp, QString(MathDsl::DivWrap) + MathDsl::DivOp + MathDsl::DivWrap);
+        if (!unitName.isEmpty())
+            text += MathDsl::UnitStart + unitName + MathDsl::UnitEnd;
+        return text;
+    }
+
     if (!q.hasUnit() && !q.isDimensionless()) {
         q.cleanDimension();
         Units::findUnit(q);

@@ -1532,6 +1532,15 @@ inline QStringList formatResultLinesForDisplay(const QString& commentedSourceExp
     if (value.isApproximate())
         return lines;
 
+    if (!value.exactExpression().isEmpty() && valueFormat.isNull()) {
+        const auto match = RegExpPatterns::integerOrFraction().match(value.exactExpression());
+        if (match.capturedStart(2) < 0) {
+            appendFormattedLine('r', settings->resultPrecision, settings->complexNumbers,
+                                settings->resultComplexForm);
+        }
+        return lines;
+    }
+
     if (geometryResult) {
         if (!geometryExactLine.isEmpty())
             appendUniqueLine(resultPrefix + geometryExactLine);

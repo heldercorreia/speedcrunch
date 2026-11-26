@@ -152,6 +152,8 @@ public:
     static HNumber gon2rad(const HNumber&);
     static HNumber max(const HNumber&, const HNumber&);
     static HNumber min(const HNumber&, const HNumber&);
+    static HNumber multiplyDivide(const HNumber&, const HNumber&, const HNumber& divisor,
+                                  bool* exact = nullptr);
     static HNumber abs(const HNumber&);
     static HNumber integer(const HNumber&);
     static HNumber frac(const HNumber&);

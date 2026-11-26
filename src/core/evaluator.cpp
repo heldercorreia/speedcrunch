@@ -91,9 +91,10 @@ static bool s_isMassFunctionIdentifier(const QString& identifier)
     return FunctionRepo::instance()->isIdentifierAliasOf(identifier, QStringLiteral("mass"));
 }
 
-static bool s_isHypotFunctionIdentifier(const QString& identifier)
+static bool s_acceptsInfinity(const QString& identifier)
 {
-    return identifier.compare(QLatin1String("hypot"), Qt::CaseInsensitive) == 0;
+    return identifier.compare(QLatin1String("hypot"), Qt::CaseInsensitive) == 0
+        || identifier.compare(QLatin1String("rule3"), Qt::CaseInsensitive) == 0;
 }
 
 static bool s_isUpperAsciiLetter(QChar ch)
@@ -7353,8 +7354,12 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
         bool isPercentValue;
         bool isDeferred;
     };
+    struct FunctionReference {
+        QString name;
+        int opcodeIndex;
+    };
     QStack<StackEntry> stack;
-    QHash<int, QString> refs;
+    QHash<int, FunctionReference> refs;
     int index;
     Quantity val1, val2;
     bool val1IsPercent = false;
@@ -7385,10 +7390,10 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
             *isPercentValue = entry.isPercentValue;
     };
     auto hasPendingDeferredSummationContext = [&refs](int stackSize) {
-        QHash<int, QString>::const_iterator it = refs.constBegin();
+        auto it = refs.constBegin();
         for (; it != refs.constEnd(); ++it) {
             if (it.key() <= stackSize
-                && s_isSummationFunctionIdentifier(it.value()))
+                && s_isSummationFunctionIdentifier(it.value().name))
             {
                 return true;
             }
@@ -7396,10 +7401,10 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
         return false;
     };
     auto hasPendingDeferredMolmassContext = [&refs](int stackSize) {
-        QHash<int, QString>::const_iterator it = refs.constBegin();
+        auto it = refs.constBegin();
         for (; it != refs.constEnd(); ++it) {
             if (it.key() <= stackSize
-                && s_isMolmassFunctionIdentifier(it.value()))
+                && s_isMolmassFunctionIdentifier(it.value().name))
             {
                 return true;
             }
@@ -7407,10 +7412,10 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
         return false;
     };
     auto hasPendingDeferredMassContext = [&refs](int stackSize) {
-        QHash<int, QString>::const_iterator it = refs.constBegin();
+        auto it = refs.constBegin();
         for (; it != refs.constEnd(); ++it) {
             if (it.key() <= stackSize
-                && s_isMassFunctionIdentifier(it.value()))
+                && s_isMassFunctionIdentifier(it.value().name))
             {
                 return true;
             }
@@ -7444,6 +7449,18 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
         }
         return checkOperatorResultWithDeferredNoOperand(DMath::multiplyByUnit(value, unit));
     };
+    const auto lookupUnit = [this](const QString& name, Quantity* value) {
+        return tryGetAnyUnitQuantity(name, value);
+    };
+    const auto lookupVariable = [&](const QString& name) -> std::optional<Quantity> {
+        if (parameters) {
+            const auto binding = parameters->constFind(name);
+            if (binding != parameters->constEnd())
+                return binding.value();
+        }
+        return hasVariable(name) ? std::optional<Quantity>{getVariable(name).value()}
+                                 : std::nullopt;
+    };
 
     for (int pc = 0; pc < opcodes.count(); ++pc) {
         const Opcode& opcode = opcodes.at(pc);
@@ -7454,7 +7471,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
             const int operands = opcode.operandCount();
             const bool acceptsInfinity = opcode.type == Opcode::Neg || opcode.type == Opcode::Unit
                 || opcode.type == Opcode::Conv || (opcode.type == Opcode::Function
-                    && s_isHypotFunctionIdentifier(refs.value(stack.count() - opcode.index)));
+                    && s_acceptsInfinity(refs.value(stack.count() - opcode.index).name));
             if (operands > 0 && operands <= stack.size()
                 && std::any_of(stack.cend() - operands, stack.cend(), [acceptsInfinity](const StackEntry& entry) {
                     return entry.value.isSymbolic() && (!acceptsInfinity || !entry.value.isInfinite());
@@ -7496,18 +7513,6 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                             ? DMath::nan() : value;
                         m_error = previousError;
                         return checked;
-                    };
-                    const auto lookupUnit = [this](const QString& name, Quantity* value) {
-                        return tryGetAnyUnitQuantity(name, value);
-                    };
-                    const auto lookupVariable = [&](const QString& name) -> std::optional<Quantity> {
-                        if (parameters) {
-                            const auto binding = parameters->constFind(name);
-                            if (binding != parameters->constEnd())
-                                return binding.value();
-                        }
-                        return hasVariable(name) ? std::optional<Quantity>{getVariable(name).value()}
-                                                 : std::nullopt;
                     };
                     QString calculusError;
                     const Quantity result = SymbolicCalculus::evaluate(
@@ -7903,19 +7908,19 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     function = FunctionRepo::instance()->find(fname);
                     if (function) {
                         pushStackValue(CMath::nan());
-                        refs.insert(stack.count(), fname);
+                        refs.insert(stack.count(), {fname, pc});
                     } else if (m_assignFunc) {
                         // Allow arbitrary identifiers
                         // when declaring user functions.
                         pushDeferredValue();
-                        refs.insert(stack.count(), fname);
+                        refs.insert(stack.count(), {fname, pc});
                     } else if (hasUserFunction(fname)) {
                         pushStackValue(CMath::nan());
-                        refs.insert(stack.count(), fname);
+                        refs.insert(stack.count(), {fname, pc});
                     } else if ((fname == QString(UnicodeChars::Infinity) || SymbolicCalculus::isNamedInfinity(fname))
                                && std::any_of(refs.constKeyValueBegin(), refs.constKeyValueEnd(),
                                               [&stack](const auto& ref) {
-                                   return ref.first <= stack.count() && s_isHypotFunctionIdentifier(ref.second);
+                                   return ref.first <= stack.count() && s_acceptsInfinity(ref.second.name);
                                })) {
                         pushStackValue(Quantity::infinity());
                     } else if (fname.compare("n", Qt::CaseInsensitive) == 0
@@ -7947,8 +7952,9 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 return CMath::nan();
 
             // Calling function.
-            case Opcode::Function:
-                fname = refs.take(stack.count() - index);
+            case Opcode::Function: {
+                const FunctionReference reference = refs.take(stack.count() - index);
+                fname = reference.name;
                 // Identifiers followed by () must resolve to a callable.
                 // Do not silently accept constants/variables as nullary calls.
                 if (fname.isEmpty()) {
@@ -8136,9 +8142,10 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     // checked again once the real values are known.
                     pushStackValue(CMath::nan());
                 } else {
-                    pushStackValue(function->exec(args));
+                    Quantity result = function->exec(args);
                     if (function->error()) {
-                        if (!args.count() && function->error() == InvalidParamCount) {
+                        if (args.isEmpty() && function->error() == InvalidParamCount
+                            && function->minimumArguments() < 0) {
                             m_error = QString::fromLatin1("<b>%1</b>(%2)").arg(
                                 fname,
                                 function->usage()
@@ -8148,8 +8155,15 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                         }
                         return CMath::nan();
                     }
+                    if (function->identifier() == QLatin1String("rule3")) {
+                        SymbolicCalculus::refineRule3(*this, opcodes, reference.opcodeIndex + 1, pc,
+                                                     constants, identifiers, args,
+                                                     lookupUnit, lookupVariable, result);
+                    }
+                    pushStackValue(result);
                 }
                 break;
+            }
 
             default:
                 break;

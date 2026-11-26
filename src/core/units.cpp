@@ -126,6 +126,7 @@ namespace UnitName {
     inline const QString SquareInch = QStringLiteral("square_inch");
     inline const QString CubicInch = QStringLiteral("cubic_inch");
     inline const QString Joule = QStringLiteral("joule");
+    inline const QString Kilocalorie = QStringLiteral("kilocalorie");
     inline const QString Karat = QStringLiteral("karat");
     inline const QString Katal = QStringLiteral("katal");
     inline const QString Kelvin = QStringLiteral("kelvin");
@@ -276,6 +277,7 @@ namespace UnitSymbol {
     inline const QString SquareInch = QStringLiteral("in²");
     inline const QString CubicInch = QStringLiteral("in³");
     inline const QString Joule = QStringLiteral("J");
+    inline const QString Kilocalorie = QStringLiteral("kcal");
     inline const QString Karat = QStringLiteral("Kt");
     inline const QString Katal = QStringLiteral("kat");
     inline const QString Kelvin = QStringLiteral("K");
@@ -720,6 +722,7 @@ const QHash<UnitId, UnitSpec>& s_unitSpecs()
         {UnitId::Gauss, UnitSpec{UnitName::Gauss, QT_TRANSLATE_NOOP("Editor", "gauss"), UnitSymbol::Gauss, {}, UnitFamily::Cgs, {UnitQuantity::MagneticFluxDensity}, EngineeringSiPrefixes, &Units::gauss, {}, true}},
         {UnitId::Maxwell, UnitSpec{UnitName::Maxwell, QT_TRANSLATE_NOOP("Editor", "maxwell"), UnitSymbol::Maxwell, {}, UnitFamily::Cgs, {UnitQuantity::MagneticFlux}, NoPrefixes, &Units::maxwell}},
         {UnitId::Oersted, UnitSpec{UnitName::Oersted, QT_TRANSLATE_NOOP("Editor", "oersted"), UnitSymbol::Oersted, {}, UnitFamily::Cgs, {UnitQuantity::MagneticFieldStrength}, PositiveEngineeringSiPrefixes, &Units::oersted}},
+        {UnitId::Kilocalorie, UnitSpec{UnitName::Kilocalorie, QT_TRANSLATE_NOOP("Editor", "kilocalorie"), UnitSymbol::Kilocalorie, {}, UnitFamily::Other, {UnitQuantity::AmountOfHeat}, NoPrefixes, &Units::kilocalorie}},
     };
     return specs;
 }
@@ -2916,6 +2919,7 @@ DEFINE_DERIVED_UNIT(torr, Units::atmosphere() / HNumber(760))
 DEFINE_DERIVED_UNIT(pounds_per_sqinch, Units::pound() * Units::gravity() / (Units::inch()*Units::inch()))
 
 DEFINE_DERIVED_UNIT(calorie, HNumber("4.184") * Units::joule()) // International Table calorie.
+DEFINE_DERIVED_UNIT(kilocalorie, Units::kilo() * Units::calorie())
 DEFINE_DERIVED_UNIT(british_thermal_unit, HNumber("1055.05585262") * Units::joule()) // International standard ISO 31-4
 DEFINE_DERIVED_UNIT(quad, Units::peta() * Units::british_thermal_unit())
 

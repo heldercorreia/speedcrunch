@@ -18,6 +18,7 @@
 #include <QStringList>
 
 #include <limits>
+#include <optional>
 
 #define RATIONAL_TOL HNumber("1e-20")
 
@@ -996,10 +997,10 @@ Quantity operator-(const Quantity& q)
     // -40[°C] means -40 °C (233.15 K) instead of -313.15 K.
     CNumber negatedAffineBaseValue;
     if (tryAffineScaleByRealScalar(q, HNumber(-1), &negatedAffineBaseValue)) {
-        res.m_numericValue = negatedAffineBaseValue;
+        res.setNumericValue(negatedAffineBaseValue);
         return res;
     }
-    res.m_numericValue = -res.m_numericValue;
+    res.setNumericValue(-res.m_numericValue);
     return res;
 }
 
@@ -1028,11 +1029,11 @@ Quantity operator-(const Quantity& a, const Quantity& b)
     if (lhsIsAffine && rhsIsAffine && lhsScale == rhsScale) {
         HNumber baseDiff;
         if (tryAffineBaseFromValue(lhsAffine - rhsAffine, lhsScale, &baseDiff))
-            res.m_numericValue = CNumber(baseDiff);
+            res.setNumericValue(baseDiff);
         else
-            res.m_numericValue -= b.m_numericValue;
+            res.setNumericValue(res.m_numericValue - b.m_numericValue);
     } else {
-        res.m_numericValue -= b.m_numericValue;
+        res.setNumericValue(res.m_numericValue - b.m_numericValue);
     }
     res.cleanDimension();
     CNumber readableUnit;
@@ -1128,6 +1129,7 @@ Quantity::Quantity(const Quantity& other)
     , m_matrix(other.m_matrix)
     , m_collectionIsMatrix(other.m_collectionIsMatrix)
     , m_symbolicExpression(other.m_symbolicExpression)
+    , m_exactExpression(other.m_exactExpression)
     , m_approximate(other.m_approximate)
 {
     if (other.hasUnit())
@@ -1192,6 +1194,18 @@ QString Quantity::symbolicExpression() const
     const QString unitName = UnitDisplayFormat::normalizeUnitTextForDisplay(
         normalizeDisplayUnitNameForOutput(value.unitName()));
     return m_symbolicExpression + MathDsl::UnitStart + unitName + MathDsl::UnitEnd;
+}
+
+void Quantity::setExactExpression(const QString& expression)
+{
+    m_exactExpression = expression;
+    m_approximate = false;
+}
+
+void Quantity::markApproximate()
+{
+    m_exactExpression.clear();
+    m_approximate = true;
 }
 
 bool Quantity::isNan() const
@@ -1383,6 +1397,12 @@ CNumber Quantity::numericValue() const
     return m_numericValue;
 }
 
+void Quantity::setNumericValue(const CNumber& value)
+{
+    m_numericValue = value;
+    m_exactExpression.clear();
+}
+
 Quantity& Quantity::setDisplayUnit(const CNumber unit, const QString& name)
 {
     if (unit.isNan())
@@ -1416,6 +1436,7 @@ Quantity& Quantity::setFormat(Format c)
 
 void Quantity::stripUnits()
 {
+    m_exactExpression.clear();
     delete m_unit;
     m_unit = nullptr;
     m_unitName = "";
@@ -1536,6 +1557,8 @@ void Quantity::serialize(QJsonObject& json) const
         CNumber::Format::Fixed() + CNumber::Format::Precision(DECPRECISION));
     if (isSymbolic())
         json["symbolic"] = m_symbolicExpression;
+    if (!m_exactExpression.isEmpty())
+        json["exact_expression"] = m_exactExpression;
     if (m_approximate)
         json["approximate"] = true;
 
@@ -1615,6 +1638,8 @@ Quantity Quantity::deSerialize(const QJsonObject& json)
         QJsonObject format_json = json[QLatin1String("format")].toObject();
         result.m_format = Quantity::Format::deSerialize(format_json);
     }
+    if (!result.isApproximate() && result.isReal())
+        result.m_exactExpression = json.value(QLatin1String("exact_expression")).toString();
     return result;
 }
 
@@ -1636,6 +1661,8 @@ Error Quantity::error() const
 
 Quantity& Quantity::operator=(const Quantity& other)
 {
+    if (this == &other)
+        return *this;
     m_numericValue = other.m_numericValue;
     m_dimension = other.m_dimension;
     m_format = other.m_format;
@@ -1648,6 +1675,7 @@ Quantity& Quantity::operator=(const Quantity& other)
         m_unit = new CNumber(*other.m_unit);
         m_unitName = other.m_unitName;
     }
+    m_exactExpression = other.m_exactExpression;
     cleanDimension();
     return *this;
 }
@@ -1703,11 +1731,11 @@ Quantity Quantity::operator+(const Quantity& other) const
     if (lhsIsAffine && rhsIsAffine && lhsScale == rhsScale) {
         HNumber baseSum;
         if (tryAffineBaseFromValue(lhsAffine + rhsAffine, lhsScale, &baseSum))
-            result.m_numericValue = CNumber(baseSum);
+            result.setNumericValue(baseSum);
         else
-            result.m_numericValue += other.m_numericValue;
+            result.setNumericValue(result.m_numericValue + other.m_numericValue);
     } else {
-        result.m_numericValue += other.m_numericValue;
+        result.setNumericValue(result.m_numericValue + other.m_numericValue);
     }
     if (info1 != InformationUnitFamily::None && info1 == info2
         && this->hasUnit() && other.hasUnit())
@@ -1759,11 +1787,11 @@ Quantity& Quantity::operator+=(const Quantity& other)
         if (lhsIsAffine && rhsIsAffine && lhsScale == rhsScale) {
             HNumber baseSum;
             if (tryAffineBaseFromValue(lhsAffine + rhsAffine, lhsScale, &baseSum))
-                this->m_numericValue = CNumber(baseSum);
+                setNumericValue(baseSum);
             else
-                this->m_numericValue += other.m_numericValue;
+                setNumericValue(m_numericValue + other.m_numericValue);
         } else {
-            this->m_numericValue += other.m_numericValue;
+            setNumericValue(m_numericValue + other.m_numericValue);
         }
         if (info1 != InformationUnitFamily::None && info1 == info2
             && this->hasUnit() && other.hasUnit())
@@ -1860,7 +1888,7 @@ Quantity Quantity::operator*(const Quantity& other) const
         CNumber scaledBaseValue;
         if (tryAffineScaleByRealScalar(other, this->numericValue().real, &scaledBaseValue)) {
             result = other;
-            result.m_numericValue = scaledBaseValue;
+            result.setNumericValue(scaledBaseValue);
             return result;
         }
     } else if (other.isDimensionless()
@@ -1871,12 +1899,12 @@ Quantity Quantity::operator*(const Quantity& other) const
         CNumber scaledBaseValue;
         if (tryAffineScaleByRealScalar(*this, other.numericValue().real, &scaledBaseValue)) {
             result = *this;
-            result.m_numericValue = scaledBaseValue;
+            result.setNumericValue(scaledBaseValue);
             return result;
         }
     }
 
-    result.m_numericValue *= other.m_numericValue;
+    result.setNumericValue(result.m_numericValue * other.m_numericValue);
     const bool lhsExplicitAngleUnit =
         this->hasUnit() && Units::isExplicitAngleUnitName(this->unitName());
     const bool rhsExplicitAngleUnit =
@@ -2156,7 +2184,7 @@ Quantity Quantity::operator*(const Quantity& other) const
 Quantity Quantity::operator*(const CNumber& other) const
 {
     Quantity result(*this);
-    result.m_numericValue *= other;
+    result.setNumericValue(result.m_numericValue * other);
     return result;
 }
 
@@ -2205,12 +2233,12 @@ Quantity Quantity::operator/(const Quantity& other) const
                                        &scaledBaseValue))
         {
             result = *this;
-            result.m_numericValue = scaledBaseValue;
+            result.setNumericValue(scaledBaseValue);
             return result;
         }
     }
 
-    result.m_numericValue /= other.m_numericValue;
+    result.setNumericValue(result.m_numericValue / other.m_numericValue);
     const auto isPureTimeQuantity = [](const Quantity& quantity) {
         QMap<UnitQuantity, Rational> dimension = quantity.getDimensionByQuantity();
         return dimension.size() == 1
@@ -2501,7 +2529,7 @@ Quantity Quantity::operator/(const HNumber& other) const
 Quantity Quantity::operator/(const CNumber& other) const
 {
     Quantity result(*this);
-    result.m_numericValue /= other;
+    result.setNumericValue(result.m_numericValue / other);
     result.cleanDimension();
     return result;
 }
@@ -2514,7 +2542,7 @@ Quantity &Quantity::operator/=(const Quantity& other)
 Quantity Quantity::operator%(const Quantity& other) const
 {
     Quantity result(*this);
-    result.m_numericValue = result.m_numericValue % other.m_numericValue;
+    result.setNumericValue(result.m_numericValue % other.m_numericValue);
     return result;
 }
 
@@ -2523,7 +2551,7 @@ Quantity Quantity::operator&(const Quantity& other) const
     ENSURE_DIMENSIONLESS(*this);
     ENSURE_DIMENSIONLESS(other);
     Quantity result(*this);
-    result.m_numericValue &= other.m_numericValue;
+    result.setNumericValue(result.m_numericValue & other.m_numericValue);
     return result;
 }
 
@@ -2537,7 +2565,7 @@ Quantity Quantity::operator|(const Quantity& other) const
     ENSURE_DIMENSIONLESS(*this);
     ENSURE_DIMENSIONLESS(other);
     Quantity result(*this);
-    result.m_numericValue |= other.m_numericValue;
+    result.setNumericValue(result.m_numericValue | other.m_numericValue);
     return result;
 }
 
@@ -2551,7 +2579,7 @@ Quantity Quantity::operator^(const Quantity& other) const
     ENSURE_DIMENSIONLESS(*this);
     ENSURE_DIMENSIONLESS(other);
     Quantity result(*this);
-    result.m_numericValue ^= other.m_numericValue;
+    result.setNumericValue(result.m_numericValue ^ other.m_numericValue);
     return result;
 }
 
@@ -2564,7 +2592,7 @@ Quantity Quantity::operator~() const
 {
     ENSURE_DIMENSIONLESS(*this);
     Quantity result(*this);
-    result.m_numericValue= ~result.m_numericValue;
+    result.setNumericValue(~result.m_numericValue);
     return result;
 }
 
@@ -2573,7 +2601,7 @@ Quantity Quantity::operator>>(const Quantity& other) const
     ENSURE_DIMENSIONLESS(*this);
     ENSURE_DIMENSIONLESS(other);
     Quantity result(*this);
-    result.m_numericValue = result.m_numericValue >> other.m_numericValue;
+    result.setNumericValue(result.m_numericValue >> other.m_numericValue);
     return result;
 }
 
@@ -2582,7 +2610,7 @@ Quantity Quantity::operator<<(const Quantity& other) const
     ENSURE_DIMENSIONLESS(*this);
     ENSURE_DIMENSIONLESS(other);
     Quantity result(*this);
-    result.m_numericValue = result.m_numericValue << other.m_numericValue;
+    result.setNumericValue(result.m_numericValue << other.m_numericValue);
     return result;
 }
 
@@ -2979,14 +3007,14 @@ QString DMath::format(Quantity q, Quantity::Format format)
 Quantity DMath::real(const Quantity& x)
 {
     Quantity result(x);
-    result.m_numericValue = result.m_numericValue.real;
+    result.setNumericValue(result.m_numericValue.real);
     return result;
 }
 
 Quantity DMath::imag(const Quantity& x)
 {
     Quantity result(x);
-    result.m_numericValue = result.m_numericValue.imag;
+    result.setNumericValue(result.m_numericValue.imag);
     return result;
 }
 
@@ -2994,9 +3022,9 @@ Quantity DMath::conj(const Quantity& n)
 {
     Quantity result = Quantity(n);
     // If in Real mode, just strip the imaginary part.
-    result.m_numericValue = complexMode ?
+    result.setNumericValue(complexMode ?
         CMath::conj(result.m_numericValue)
-        : CMath::real(result.m_numericValue);
+        : CMath::real(result.m_numericValue));
 
     return result;
 }
@@ -3004,7 +3032,7 @@ Quantity DMath::conj(const Quantity& n)
 Quantity DMath::abs(const Quantity& n)
 {
     Quantity result(n);
-    result.m_numericValue = COMPLEX_WRAP_1(abs, n.m_numericValue);
+    result.setNumericValue(COMPLEX_WRAP_1(abs, n.m_numericValue));
     return result;
 }
 
@@ -3108,6 +3136,70 @@ Quantity DMath::hypot(const QVector<Quantity>& args)
         }
     }
     return withUnits(HMath::scaleByPowerOfTen(HMath::sqrt(sum), scale));
+}
+
+Quantity DMath::rule3(const Quantity& a, const Quantity& b, const Quantity& c)
+{
+    for (const Quantity* arg : {&a, &b, &c}) {
+        if (arg->isCollection())
+            return nan(OutOfDomain);
+        if (arg->isNan())
+            return arg->error() == Success ? nan(NoOperand) : *arg;
+        if (!arg->isReal() && !arg->isInfinite())
+            return nan(OutOfDomain);
+    }
+    if (a.isZero())
+        return nan(ZeroDivide);
+    if (!a.sameDimension(c))
+        return nan(DimensionMismatch);
+
+    // Use the shown value when scaling a temperature in Celsius or Fahrenheit.
+    AffineTemperatureScale temperatureScale = AffineTemperatureScale::None;
+    std::optional<HNumber> shownTemperature;
+    if (!b.isInfinite() && Units::isAffineUnitName(b.m_unitName)) {
+        shownTemperature.emplace();
+        if (!tryAffineValueFromBase(b, &*shownTemperature, &temperatureScale))
+            shownTemperature.reset();
+    }
+    const HNumber& bValue = shownTemperature ? *shownTemperature : b.m_numericValue.real;
+
+    const auto withUnits = [&](Quantity result, bool exact = true) {
+        if (result.isNan())
+            return result;
+        result.copyDimension(b);
+        if (b.hasUnit())
+            result.setDisplayUnit(*b.m_unit, b.m_unitName);
+        if (!exact || a.isApproximate() || b.isApproximate() || c.isApproximate())
+            result.markApproximate();
+        return result;
+    };
+    const auto scaledResult = [&](const HNumber& value, bool exact = true) {
+        if (shownTemperature && !value.isNan()) {
+            HNumber baseValue;
+            tryAffineBaseFromValue(value, temperatureScale, &baseValue);
+            return withUnits(baseValue, exact);
+        }
+        return withUnits(value, exact);
+    };
+
+    if (b.isInfinite() || c.isInfinite()) {
+        if (a.isInfinite() || bValue.isZero() || c.isZero())
+            return nan(OutOfDomain);
+        const auto signIsNegative = [](const Quantity& value) {
+            return value.m_symbolicExpression.startsWith(MathDsl::SubOpAl1);
+        };
+        const bool negativeB = b.isInfinite() ? signIsNegative(b) : bValue.isNegative();
+        const bool negativeC = c.isInfinite() ? signIsNegative(c) : c.isNegative();
+        const bool negativeNumerator = negativeB != negativeC;
+        return withUnits(negativeNumerator != a.isNegative() ? -Quantity::infinity() : Quantity::infinity());
+    }
+    if (a.isInfinite() || bValue.isZero() || c.isZero())
+        return scaledResult(0);
+
+    bool exact;
+    const HNumber result = HMath::multiplyDivide(bValue, c.m_numericValue.real,
+                                                 a.m_numericValue.real, &exact);
+    return scaledResult(result, exact);
 }
 
 Quantity DMath::cbrt(const Quantity& n)

@@ -52,8 +52,10 @@ public:
     bool isSymbolic() const { return !m_symbolicExpression.isEmpty(); }
     QString symbolicExpression() const;
     bool isInfinite() const;
+    const QString& exactExpression() const { return m_exactExpression; }
+    void setExactExpression(const QString& expression);
     bool isApproximate() const { return m_approximate; }
-    void markApproximate() { m_approximate = true; }
+    void markApproximate();
     bool isNan() const;
     bool isZero() const;
     bool isReal() const;
@@ -132,6 +134,7 @@ public:
     Quantity& setFormat(Format);
 
 private:
+    void setNumericValue(const CNumber& value);
     Quantity& setCoherentSiDisplayUnit(const QString& name);
     Quantity& setAnglePerSecondDisplayUnit(const Quantity& angle);
 
@@ -143,6 +146,7 @@ private:
     QVector<QVector<Quantity>> m_matrix;
     bool m_collectionIsMatrix;
     QString m_symbolicExpression;
+    QString m_exactExpression;
     bool m_approximate = false;
 };
 
@@ -179,6 +183,7 @@ public:
     static Quantity trunc(const Quantity&, int prec = 0);
     static Quantity sqrt(const Quantity&);
     static Quantity hypot(const QVector<Quantity>&);
+    static Quantity rule3(const Quantity& a, const Quantity& b, const Quantity& c);
     static Quantity cbrt(const Quantity&);
     static Quantity root(const Quantity& n, const Quantity& x);
     static Quantity raise(const Quantity&, int);

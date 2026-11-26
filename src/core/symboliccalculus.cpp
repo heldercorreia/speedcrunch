@@ -6,6 +6,7 @@
 #include "core/anglemode.h"
 #include "core/evaluator.h"
 #include "core/numericalintegration.h"
+#include "core/regexpatterns.h"
 #include "core/settings.h"
 #include "core/unicodechars.h"
 #include "core/units.h"
@@ -235,7 +236,7 @@ std::optional<ExactNumber> fraction(Integer numerator, Integer denominator)
     return ExactNumber{numerator, denominator};
 }
 
-std::optional<ExactNumber> exactLiteral(const QString& text)
+std::optional<ExactNumber> exactLiteral(const QString& text, int maxDigits = LiteralDigits)
 {
     static const QRegularExpression decimal(QStringLiteral(
         R"(^([0-9]*)(?:\.([0-9]*))?(?:[eE]([+-]?[0-9]+))?$)"));
@@ -263,7 +264,7 @@ std::optional<ExactNumber> exactLiteral(const QString& text)
         ++scale;
     }
     const qsizetype length = last - first;
-    if (scale <= -LiteralDigits || length + qMax(qint64(0), scale) > LiteralDigits)
+    if (scale <= -maxDigits || length + qMax(qint64(0), scale) > maxDigits)
         return std::nullopt;
 
     digits = digits.mid(first, length);
@@ -350,6 +351,45 @@ public:
             return Quantity::symbolic(source);
         }
         return resultValue(differentiate(call, 0));
+    }
+
+    void refineRule3(int first, int end, Quantity& result)
+    {
+        m_readingProportion = true;
+        const QVector<Span> arguments = readArguments(first, end);
+        if (arguments.size() != 3)
+            return;
+
+        const Expr a = simplify(readExpression(arguments.at(0), 0));
+        const Expr b = simplify(readExpression(arguments.at(1), 0));
+        const Expr c = simplify(readExpression(arguments.at(2), 0));
+        const Expr base = divide(multiply({b, c}), a);
+        const auto& rational = node(base).number;
+        const HNumber numeric = rational
+            ? HMath::multiplyDivide(HNumber(rational->numerator.toString().toLatin1().constData()),
+                                    HNumber(1),
+                                    HNumber(rational->denominator.toString().toLatin1().constData()))
+            : result.numericValue().real;
+        if (numeric.isNan())
+            return;
+
+        Quantity exactResult(numeric);
+        exactResult.copyDimension(result);
+        if (result.hasUnit())
+            exactResult.setDisplayUnit(result.unit(), result.unitName());
+        else if (result.hasDimension())
+            Units::findUnit(exactResult);
+
+        const Expr displayed = exactResult.hasUnit()
+            ? divide(base, proportionScale(exactResult.unit(), exactResult.unitName())) : base;
+        const auto& displayedNumber = node(displayed).number;
+        if (!displayedNumber || displayedNumber->denominator != 1
+            || displayedNumber->numerator.digits() > DECPRECISION) {
+            QString text;
+            render(displayed, 0, text);
+            exactResult.setExactExpression(text);
+        }
+        result = exactResult;
     }
 
 private:
@@ -511,6 +551,7 @@ private:
     QHash<Key, Expr> m_interned;
     int m_remainingWork = MaxWork;
     bool m_samplingDomain = false;
+    bool m_readingProportion = false;
     Expr m_zero;
     Expr m_one;
     Expr m_minusOne = NoExpression;
@@ -633,11 +674,19 @@ private:
         const auto type = m_opcodes.at(first).type;
         if (count < (type == Opcode::Limit ? 2u : 1u) || count > (type == Opcode::Diff ? 3u : 4u))
             throw Failure{tr("wrong number of arguments")};
+        const QVector<Span> arguments = readArguments(first + 1, end);
+        if (arguments.size() != count)
+            throw Failure{tr("invalid expression")};
+        return arguments;
+    }
+
+    QVector<Span> readArguments(int first, int end)
+    {
         if (end - first > MaxNodes)
             limitExceeded();
 
         QVector<Span> arguments;
-        for (int pc = first + 1; pc < end; ++pc) {
+        for (int pc = first; pc < end; ++pc) {
             spend();
             const Opcode& opcode = m_opcodes.at(pc);
             if (opcode.type == Opcode::Nop)
@@ -655,9 +704,6 @@ private:
             arguments.resize(arguments.size() - operands);
             arguments.append({start, pc + 1});
         }
-        if (arguments.size() != count)
-            throw Failure{tr("invalid expression")};
-
         return arguments;
     }
 
@@ -757,6 +803,50 @@ private:
         return make(Opcode::Add, {real, imaginary});
     }
 
+    Expr proportionScale(const CNumber& scale, const QString& unitName)
+    {
+        if (!scale.isReal() || !scale.isPositive()
+            || Units::isAffineUnitName(unitName) || Units::isExplicitAngleUnitName(unitName)) {
+            throw Failure{};
+        }
+        const Expr literal = scalarLiteral(scale.real);
+        if (!node(literal).number)
+            throw Failure{};
+        return literal;
+    }
+
+    Expr proportionReference(const QString& name, const Quantity& binding)
+    {
+        if (!binding.isReal() || binding.isCollection() || binding.isApproximate())
+            throw Failure{};
+
+        if (m_evaluator.isBuiltInVariable(name) && binding == m_evaluator.getVariable(name).value()) {
+            if (name == QLatin1String("pi") || name == QStringLiteral("π"))
+                return reference(QStringLiteral("π"));
+            if (name == QLatin1String("e") || name == QStringLiteral("ℯ"))
+                return reference(QStringLiteral("e"));
+        }
+
+        const QString& stored = binding.exactExpression();
+        if (!stored.isEmpty()) {
+            const auto match = RegExpPatterns::integerOrFraction().match(stored);
+            if (!match.hasMatch() || stored.size() > 2 * ExactDigits + 2)
+                throw Failure{};
+            const Integer numerator = Integer::fromDigits(match.captured(1));
+            const Integer denominator = match.capturedStart(2) < 0
+                ? Integer(1) : Integer::fromDigits(match.captured(2));
+            const Expr value = number(exact(numerator, denominator));
+            return binding.hasUnit()
+                ? multiply({value, proportionScale(binding.unit(), binding.unitName())}) : value;
+        }
+
+        const HNumber value = binding.numericValue().real;
+        const Expr magnitude = scalarLiteral(HMath::abs(value));
+        if (!node(magnitude).number)
+            throw Failure{};
+        return value.isNegative() ? negate(magnitude) : magnitude;
+    }
+
     Expr readExpression(Span span, int nesting, bool* limitApproximation = nullptr)
     {
         if (nesting >= MaxDepth)
@@ -773,6 +863,8 @@ private:
             case Opcode::Nop:
                 break;
             case Opcode::Diff: {
+                if (m_readingProportion)
+                    throw Failure{};
                 const int end = callEnd(pc, span.end);
                 const Call inner = readCall(pc);
                 stack.append(inner.order.isZero() ? readExpression(inner.expression, nesting + 1)
@@ -782,6 +874,8 @@ private:
             }
             case Opcode::Integrate:
             case Opcode::Limit: {
+                if (m_readingProportion)
+                    throw Failure{};
                 const int end = callEnd(pc, span.end);
                 const bool isLimit = opcode.type == Opcode::Limit;
                 const CalculusResult inner = isLimit ? limit(pc, nesting + 1) : integrate(pc, nesting + 1);
@@ -804,7 +898,7 @@ private:
                 if (text.size() > SymbolicCalculus::MaxSourceLength)
                     limitExceeded();
                 spend(1 + text.size() / 32);
-                auto exact = exactLiteral(text);
+                auto exact = exactLiteral(text, m_readingProportion ? ExactDigits : LiteralDigits);
                 static const QRegularExpression integerWithBase(
                     QStringLiteral(R"(^0[boxd][0-9A-Fa-f]+$)"),
                     QRegularExpression::CaseInsensitiveOption);
@@ -819,6 +913,16 @@ private:
             }
             case Opcode::Ref: {
                 QString name = m_identifiers.value(opcode.index);
+                if (m_readingProportion) {
+                    const auto binding = m_lookupVariable(name);
+                    if (binding)
+                        stack.append(proportionReference(name, *binding));
+                    else if (FunctionRepo::instance()->find(name))
+                        stack.append(reference(name));
+                    else
+                        throw Failure{};
+                    break;
+                }
                 if (name == QLatin1String("ans")) {
                     stack.append(lastAnswer());
                     if (limitApproximation)
@@ -837,6 +941,14 @@ private:
                 Quantity unit;
                 if (!m_lookupUnit(name, &unit))
                     throw Failure{tr("unknown unit %1").arg(name.toHtmlEscaped())};
+                if (m_readingProportion) {
+                    if (unit.isApproximate() || Units::isAffineUnitName(name)
+                        || Units::isExplicitAngleUnitName(name)) {
+                        throw Failure{};
+                    }
+                    stack.append(proportionScale(unit.numericValue(), unit.unitName()));
+                    break;
+                }
                 if (Units::isAffineUnitName(name) || Units::isAffineUnitName(unit.unitName()))
                     throw Failure{tr("units with an offset are unsupported in symbolic differentiation")};
                 stack.append(make(Opcode::UnitRef, {}, name));
@@ -860,6 +972,14 @@ private:
                 const QString name = callable.key.text;
                 const Function* function = FunctionRepo::instance()->find(name);
                 const QString identifier = function ? function->identifier() : name;
+                if (m_readingProportion && identifier == QLatin1String("rule3") && count == 4) {
+                    const Expr a = simplify(stack.at(first + 1));
+                    const Expr b = simplify(stack.at(first + 2));
+                    const Expr c = simplify(stack.at(first + 3));
+                    stack[first] = divide(multiply({b, c}), a);
+                    stack.resize(first + 1);
+                    break;
+                }
                 const auto rule = functionRules().constFind(identifier);
                 const bool limitFunction = limitApproximation && (identifier == QLatin1String("floor")
                     || identifier == QLatin1String("ceil") || identifier == QLatin1String("gamma"));
@@ -1320,6 +1440,10 @@ private:
         case Opcode::Div: return divide(first, second);
         case Opcode::Pow: return power(first, second);
         case Opcode::Function:
+            if (m_readingProportion && key.text == QLatin1String("sqrt")
+                && node(first).number && node(first).number->numerator.isPositive()) {
+                return squareRoot(first).first;
+            }
             if (key.text == QLatin1String("log"))
                 return divide(function(QStringLiteral("ln"), second), function(QStringLiteral("ln"), first));
             if (children.size() == 1)
@@ -5040,5 +5164,33 @@ Quantity SymbolicCalculus::evaluate(const Evaluator& evaluator, const QVector<Op
     } catch (const Failure& failure) {
         *error = failure.message;
         return DMath::nan();
+    }
+}
+
+void SymbolicCalculus::refineRule3(const Evaluator& evaluator, const QVector<Opcode>& opcodes,
+                                 int first, int end, const QVector<Quantity>& constants,
+                                 const QStringList& identifiers, const QVector<Quantity>& arguments,
+                                 const UnitLookup& lookupUnit, const VariableLookup& lookupVariable,
+                                 Quantity& result)
+{
+    if (result.isZero() || result.isInfinite()
+        || std::any_of(arguments.cbegin(), arguments.cend(), [](const Quantity& arg) {
+            return arg.isApproximate() || arg.isInfinite();
+        })) {
+        return;
+    }
+    if (!result.isApproximate() && result.isInteger() && end - first == 3
+        && std::all_of(opcodes.cbegin() + first, opcodes.cbegin() + end, [](const Opcode& opcode) {
+            return opcode.type == Opcode::Load;
+        })) {
+        return;
+    }
+
+    try {
+        const EvaluateSpan evaluateSpan;
+        Calculus(evaluator, opcodes, constants, identifiers, evaluateSpan,
+                 lookupUnit, lookupVariable).refineRule3(first, end, result);
+    } catch (const Failure&) {
+        // The numeric result already uses the real values of the arguments.
     }
 }

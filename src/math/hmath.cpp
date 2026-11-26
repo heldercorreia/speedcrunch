@@ -1338,6 +1338,61 @@ HNumber HMath::scaleByPowerOfTen(const HNumber& n, int exponent)
     return result;
 }
 
+HNumber HMath::multiplyDivide(const HNumber& x, const HNumber& y, const HNumber& divisor,
+                              bool* exact)
+{
+    if (exact)
+        *exact = false;
+    for (const HNumber* operand : {&x, &y, &divisor}) {
+        if (operand->isNan())
+            return nan(checkNaNParam(*operand->d));
+    }
+    if (divisor.isZero())
+        return nan(ZeroDivide);
+    if (x.isZero() || y.isZero()) {
+        if (exact)
+            *exact = true;
+        return 0;
+    }
+
+    // Work on the significands so only the final result needs to fit the exponent range.
+    const qint64 scale = qint64(x.decimalExponent()) + y.decimalExponent() - divisor.decimalExponent();
+    HNumber product = scaleByPowerOfTen(x, -x.decimalExponent());
+    const HNumber factor = scaleByPowerOfTen(y, -y.decimalExponent());
+    const HNumber denominator = scaleByPowerOfTen(divisor, -divisor.decimalExponent());
+    floatnum numerator = &product.d->fnum;
+    const cfloatnum denominatorValue = &denominator.d->fnum;
+    const int productDigits = float_getlength(numerator) + float_getlength(&factor.d->fnum) - 1;
+    const int capacity = float_getprecision();
+    float_mul(numerator, numerator, &factor.d->fnum, qMin(productDigits, capacity));
+
+    HNumber result;
+    floatnum quotient = &result.d->fnum;
+    const int operandDigits = qMax(float_getlength(numerator), float_getlength(denominatorValue));
+    const int digits = qMin(qMax(evaluationPrecision(), operandDigits), capacity);
+    float_div(quotient, numerator, denominatorValue, digits);
+    roundSetError(result.d);
+    if (result.isNan())
+        return result;
+
+    const qint64 exponent = result.decimalExponent() + scale;
+    const int limit = maxDecimalExponent();
+    if (exponent > limit)
+        return nan(Overflow);
+    if (exponent < -limit - 1)
+        return nan(Underflow);
+
+    if (exact && productDigits <= capacity) {
+        HNumber check;
+        if (float_mul(&check.d->fnum, quotient, denominatorValue, EXACT))
+            *exact = float_cmp(&check.d->fnum, numerator) == 0;
+        float_geterror();
+    }
+
+    float_setexponent(quotient, static_cast<int>(exponent));
+    return result;
+}
+
 /**
  * Returns the cube root of n.
  */

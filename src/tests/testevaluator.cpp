@@ -4699,6 +4699,172 @@ void test_function_root()
     eval->initializeBuiltInVariables();
 }
 
+void test_rule3()
+{
+    const auto evaluate = [](const QString& expression) {
+        eval->setExpression(expression);
+        return eval->evalUpdateAns();
+    };
+    const auto check = [](bool condition, const QString& message) {
+        ++eval_total_tests;
+        if (!condition) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << '[' << __LINE__ << "]\t" << qPrintable(message)
+                 << "\t[NEW]\n\tError: " << qPrintable(eval->error()) << endl;
+        }
+    };
+
+    CHECK_EVAL("rule3(2; 10; 6)", "30");
+    CHECK_EVAL("rule3(100; 25; 200)", "50");
+    CHECK_EVAL("rule3(4; 20; 0)", "0");
+    CHECK_EVAL("rule3(4; 0; 20)", "0");
+    CHECK_EVAL("rule3(50; 100; 25)", "50");
+    CHECK_EVAL("rule3(0.5; 10; 1.5)", "30");
+    CHECK_EVAL("rule3(1/3; 2; 1/2)", "3");
+    CHECK_EVAL("rule3(-2; 10; 6)", "-30");
+    CHECK_EVAL("rule3(-2; 10; -6)", "30");
+    CHECK_EVAL("rule3(6; 12; 4)", "8");
+    CHECK_EVAL("rule3(pi; 2*pi; 3)", "6");
+    CHECK_EVAL("rule3(sqrt(2); sqrt(8); 5)", "10");
+    CHECK_EVAL("rule3(1; rule3(7; 1; 1); 7)", "1");
+    CHECK_EVAL("rule3(3; 7; 5) - 35/3", "0");
+    CHECK_USERFUNC_SET("proportion(x; y; z) = rule3(x; y; z)");
+    CHECK_EVAL("proportion(1; 20; 0.25)", "5");
+    eval->unsetUserFunction(QStringLiteral("proportion"));
+
+    const QScopedValueRollback<char> resultFormat(Settings::instance()->resultFormat, 'g');
+    CHECK_EVAL_FORMAT("rule3(100[g]; 250[kcal]; 350[g])", "875[kcal]");
+    CHECK_EVAL_FORMAT("rule3(2[h]; 120[km]; 5[h])", "300[km]");
+    CHECK_EVAL_FORMAT("rule3(1[kg]; 20; 250[g])", "5");
+    CHECK_EVAL_FORMAT("rule3(1; 5[m]; 3)", "15[m]");
+    CHECK_EVAL_FORMAT("rule3(1[m]; 2[s]; 50[cm])", "1[s]");
+    CHECK_EVAL_FORMAT("rule3(8; 6[h]; 4)", "3[h]");
+    CHECK_EVAL_FORMAT("rule3(1[m]; 2[s]; 0[cm])", "0[s]");
+    CHECK_EVAL_FORMAT("rule3(2[m]; 5[m]; 300[cm]) -> [cm]", "750[cm]");
+    CHECK_EVAL_FORMAT(QStringLiteral("rule3(2; 10[°C]; 6)"), u8"30[°C]");
+    CHECK_EVAL_FORMAT(QStringLiteral("rule3(2; 10[°C]; 0)"), u8"0[°C]");
+    CHECK_EVAL_FORMAT("1[kcal] -> [cal]", "1000[cal]");
+
+    const Quantity fraction = evaluate(QStringLiteral("rule3(3; 7; 5)"));
+    check(eval->error().isEmpty() && !fraction.isApproximate()
+          && NumberFormatter::format(fraction, 'r') == QStringLiteral("35") + slash + QStringLiteral("3"),
+          QStringLiteral("show 35/3 as an exact fraction"));
+
+    {
+        Settings* settings = Settings::instance();
+        const QScopedValueRollback<int> precision(settings->resultPrecision, 20);
+        const QScopedValueRollback<bool> multipleLines(settings->multipleResultLinesEnabled, false);
+        const Quantity result = evaluate(QStringLiteral("rule3(3.3;7.2;5)"));
+        const auto displayedLines = [&] {
+            return ResultLineFormatUtils::formatResultLinesForDisplay(
+                eval->expression(), eval->interpretedExpression(), result, false, false, eval);
+        };
+        check(eval->error().isEmpty() && displayedLines() == QStringList{QStringLiteral("= 10.90909090909090909091")},
+              QStringLiteral("show one decimal line for a real proportion"));
+
+        const QScopedValueRollback<char> rationalFormat(settings->resultFormat, 'r');
+        check(displayedLines() == QStringList{QStringLiteral("= 120") + slash + QStringLiteral("11")},
+              QStringLiteral("show the exact fraction in Rational notation"));
+    }
+
+    const Quantity longFraction = evaluate(QStringLiteral("rule3(100000000000000000003; 1; 2)"));
+    check(eval->error().isEmpty() && !longFraction.isApproximate()
+          && NumberFormatter::format(longFraction, 'r')
+              == QStringLiteral("2") + slash + QStringLiteral("100000000000000000003"),
+          QStringLiteral("keep a denominator larger than the rational formatter can infer"));
+
+    const Quantity nearPi = evaluate(QStringLiteral("rule3(1; 3.1415926535897932384626433832795; 1)"));
+    check(eval->error().isEmpty() && nearPi.exactExpression().contains(QLatin1Char('/'))
+          && !NumberFormatter::format(nearPi, 'r').contains(UnicodeChars::Pi),
+          QStringLiteral("keep a decimal near pi as a rational number"));
+
+    const Quantity symbol = evaluate(QStringLiteral("rule3(2; pi; 6)"));
+    check(eval->error().isEmpty() && !symbol.isApproximate() && symbol.exactExpression() == QStringLiteral("3*π"),
+          QStringLiteral("keep the exact multiple of pi"));
+    const auto lines = ResultLineFormatUtils::formatResultLinesForDisplay(
+        eval->expression(), eval->interpretedExpression(), symbol, false, false, eval);
+    check(lines.contains(QStringLiteral("= 3 · π")), QStringLiteral("show the exact result in decimal mode"));
+
+    const Quantity fractionWithUnit = evaluate(QStringLiteral("rule3(3[m]; 1[s]; 100[cm])"));
+    check(eval->error().isEmpty() && !fractionWithUnit.isApproximate()
+          && NumberFormatter::format(fractionWithUnit, 'r') == QStringLiteral("1") + slash + QStringLiteral("3[s]"),
+          QStringLiteral("show an exact fraction with its units"));
+    QJsonObject saved;
+    fractionWithUnit.serialize(saved);
+    const Quantity restored = Quantity::deSerialize(saved);
+    check(restored.exactExpression() == QStringLiteral("1/3") && !restored.isApproximate(),
+          QStringLiteral("keep the exact expression when reopening a result"));
+    check((restored * Quantity(3)).exactExpression().isEmpty(),
+          QStringLiteral("discard an old exact expression when the value changes"));
+    eval->setVariable(QStringLiteral("rule3_saved"), restored);
+    CHECK_EVAL_FORMAT("rule3(1; rule3_saved; 3)", "1[s]");
+    eval->unsetVariable(QStringLiteral("rule3_saved"));
+
+    Quantity approximate(HNumber("1.2345"));
+    approximate.markApproximate();
+    eval->setVariable(QStringLiteral("rule3_estimate"), approximate);
+    const Quantity estimate = evaluate(QStringLiteral("rule3(1; rule3_estimate; 2)"));
+    check(eval->error().isEmpty() && estimate.isApproximate() && estimate.exactExpression().isEmpty(),
+          QStringLiteral("keep the approximation marker from an argument"));
+    eval->unsetVariable(QStringLiteral("rule3_estimate"));
+
+    const auto checkValue = [&](const QString& expression, const QString& expected) {
+        const Quantity result = evaluate(expression);
+        check(eval->error().isEmpty() && result == Quantity(HNumber(qPrintable(expected))), expression);
+    };
+    const QString large = QStringLiteral("e%1").arg(EXPMAX);
+    const QString small = QStringLiteral("e%1").arg(EXPMIN);
+    checkValue(QStringLiteral("rule3(9.5%1; 9.1%1; 9.5%1)").arg(large), QStringLiteral("9.1") + large);
+    checkValue(QStringLiteral("rule3(1%1; 2%1; 3%1)").arg(small), QStringLiteral("6") + small);
+    checkValue(QStringLiteral("rule3(1%1; 1%1; 9%2)").arg(small, large), QStringLiteral("9") + large);
+    checkValue(QStringLiteral("rule3(2%1; 1%2; 3%1)").arg(large, small), QStringLiteral("1.5") + small);
+
+    const QString infinity(UnicodeChars::Infinity);
+    CHECK_EVAL("rule3(inf; 10; 5)", "0");
+    CHECK_EVAL("rule3(2; -inf; 4)", qUtf8Printable("-" + infinity));
+    CHECK_EVAL("rule3(-2; inf; -inf)", qUtf8Printable(infinity));
+    CHECK_EVAL_FORMAT("RULE3(1[m]; 2[s]; -inf[cm])", qUtf8Printable("-" + infinity + "[s]"));
+    CHECK_EVAL_FORMAT("rule3(-inf[m]; 2[s]; 100[cm])", "0[s]");
+
+    Function* function = FunctionRepo::instance()->find(QStringLiteral("rule3"));
+    check(function && function->domainType() == FunctionDomain::Arithmetic
+          && function->minimumArguments() == 3 && function->maximumArguments() == 3
+          && function->name() == QStringLiteral("Rule of Three")
+          && function->usage() == QStringLiteral("a; b; c")
+          && function->description() == QStringLiteral("Calculates the fourth quantity in a direct proportional relationship."),
+          QStringLiteral("register the Rule of Three metadata"));
+    const auto checkError = [&](const QString& expression, Error expected) {
+        const Quantity result = evaluate(expression);
+        check(result.isNan() && !eval->error().isEmpty() && function && function->error() == expected, expression);
+    };
+    checkError("rule3()", InvalidParamCount);
+    checkError("rule3(1; 2)", InvalidParamCount);
+    checkError("rule3(1; 2; 3; 4)", InvalidParamCount);
+    checkError("rule3(0; 10; 5)", ZeroDivide);
+    checkError("rule3(0; 0; 0)", ZeroDivide);
+    checkError("rule3(1[m]; 2; 3[s])", DimensionMismatch);
+    checkError("rule3(1[m]; 0; 0)", DimensionMismatch);
+    checkError("rule3(1; 0; inf)", OutOfDomain);
+    checkError("rule3(1; inf; 0)", OutOfDomain);
+    checkError("rule3(inf; 2; inf)", OutOfDomain);
+    checkError("rule3(1; 0; 0^0)", OutOfDomain);
+    checkError("rule3(1; ieee754_double_decode(0x7ff8000000000000); 0)", NoOperand);
+    checkError("rule3(1; {2; 3}; 4)", OutOfDomain);
+    checkError(QStringLiteral("rule3(1; 9%1; 2)").arg(large), Overflow);
+    checkError(QStringLiteral("rule3(2; 1%1; 1)").arg(small), Underflow);
+    {
+        const QScopedValueRollback<bool> complexNumbers(Settings::instance()->complexNumbers, true);
+        const QScopedValueRollback<bool> complexMode(DMath::complexMode, true);
+        eval->initializeBuiltInVariables();
+        CHECK_EVAL("rule3(1/3; -2; 1/2)", "-3");
+        checkError("rule3(1; 2; 3*i)", OutOfDomain);
+        checkError("rule3(i; 0; 2)", OutOfDomain);
+        checkError("rule3(1; i; 0)", OutOfDomain);
+    }
+    eval->initializeBuiltInVariables();
+}
+
 void test_hypot()
 {
     CHECK_EVAL("hypot(3; 4)", "5");
@@ -13243,6 +13409,7 @@ int main(int argc, char* argv[])
 
     test_function_basic();
     test_function_root();
+    test_rule3();
     test_hypot();
     test_geometry_functions();
     test_function_trig();

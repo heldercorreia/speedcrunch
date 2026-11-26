@@ -325,6 +325,9 @@ Schema
            "symbolic": {
              "type": "string"
            },
+           "exact_expression": {
+             "type": "string"
+           },
            "approximate": {
              "type": "boolean"
            },

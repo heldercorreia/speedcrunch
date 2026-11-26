@@ -275,6 +275,10 @@ static Quantity s_makeMatrix(const QVector<QVector<Quantity>>& rows)
 
 Quantity Function::exec(const Function::ArgumentList& args)
 {
+    if (m_argumentCount >= 0 && args.size() != m_argumentCount) {
+        setError(InvalidParamCount);
+        return CMath::nan(InvalidParamCount);
+    }
     if (!m_ptr) {
         setError(NotImplemented);
         return CMath::nan(NotImplemented);
@@ -570,6 +574,11 @@ Quantity function_root(Function* f, const Function::ArgumentList& args)
 {
     ENSURE_ARGUMENT_COUNT(2);
     return DMath::root(args[0], args[1]);
+}
+
+Quantity function_rule3(Function*, const Function::ArgumentList& args)
+{
+    return DMath::rule3(args.at(0), args.at(1), args.at(2));
 }
 
 Quantity function_exp(Function* f, const Function::ArgumentList& args)
@@ -2001,6 +2010,7 @@ void FunctionRepo::createFunctions()
     FUNCTION_INSERT(FunctionDomain::Arithmetic, roundeven);
     FUNCTION_INSERT(FunctionDomain::Arithmetic, sgn);
     FUNCTION_INSERT(FunctionDomain::Arithmetic, root);
+    insert(new Function(QStringLiteral("rule3"), function_rule3, FunctionDomain::Arithmetic, this, 3));
     FUNCTION_INSERT(FunctionDomain::Arithmetic, sqrt);
     FUNCTION_INSERT(FunctionDomain::Arithmetic, trunc);
 
@@ -2386,6 +2396,7 @@ void FunctionRepo::setNonTranslatableFunctionUsages()
     FUNCTION_USAGE(rat, "x");
     FUNCTION_USAGE(rectform, "x");
     FUNCTION_USAGE(root, "n; x");
+    FUNCTION_USAGE(rule3, "a; b; c");
     FUNCTION_USAGE(sci, "x");
     FUNCTION_USAGE(sec, "x)");
     FUNCTION_USAGE(sgn, "x");
@@ -2577,6 +2588,9 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(round, tr("Round Half Away from Zero"));
     FUNCTION_NAME(roundeven, tr("Round Half Even"));
     FUNCTION_NAME(root, tr("Nth Root"));
+    FUNCTION_NAME(rule3, tr("Rule of Three"));
+    find(QStringLiteral("rule3"))->setDescription(
+        tr("Calculates the fourth quantity in a direct proportional relationship."));
     FUNCTION_NAME(sci, tr("Convert to Scientific Notation"));
     FUNCTION_NAME(sec, tr("Secant"));
     FUNCTION_NAME(shl, tr("Arithmetic Shift Left"));

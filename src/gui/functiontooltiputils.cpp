@@ -241,12 +241,15 @@ QString activeFunctionUsageTooltip(const Evaluator* evaluator,
         if (usage.isEmpty())
             return QStringLiteral("<b>%1</b>()").arg(context.functionName.toHtmlEscaped());
 
-        return formatFunctionUsageTooltip(
+        QString tooltip = formatFunctionUsageTooltip(
             context.functionName,
             usage.split(';'),
             context.argumentIndex,
             false
         );
+        if (!function->description().isEmpty())
+            tooltip += QStringLiteral("<br>") + function->description().toHtmlEscaped();
+        return tooltip;
     }
 
     const auto userFunctions = evaluator->getUserFunctions();

@@ -44,16 +44,21 @@ public:
     typedef QVector<Quantity> ArgumentList;
     typedef Quantity (*FunctionImpl)(Function*, const ArgumentList&);
 
-    Function(const QString& identifier, FunctionImpl ptr, FunctionDomain domainType, QObject* parent = 0)
+    Function(const QString& identifier, FunctionImpl ptr, FunctionDomain domainType,
+             QObject* parent = nullptr, int argumentCount = -1)
         : QObject(parent)
         , m_identifier(identifier)
         , m_ptr(ptr)
         , m_domainType(domainType)
+        , m_argumentCount(argumentCount)
     { }
 
     const QString& identifier() const { return m_identifier; }
     const QString& name() const { return m_name; }
     const QString& usage() const { return m_usage; }
+    const QString& description() const { return m_description; }
+    int minimumArguments() const { return m_argumentCount; }
+    int maximumArguments() const { return m_argumentCount; }
     FunctionDomain domainType() const { return m_domainType; }
     const QString& domain() const { return m_domain; }
     Error error() const { return m_error; }
@@ -61,6 +66,7 @@ public:
 
     void setName(const QString& name) { m_name = name; }
     void setUsage(const QString& usage) { m_usage = usage; }
+    void setDescription(const QString& description) { m_description = description; }
     void setDomain(const QString& domain) { m_domain = domain; }
     void setError(Error error) { m_error = error; }
 
@@ -71,9 +77,11 @@ private:
     QString m_identifier;
     QString m_name;
     QString m_usage;
+    QString m_description;
     Error m_error;
     FunctionImpl m_ptr;
     FunctionDomain m_domainType;
+    int m_argumentCount;
     QString m_domain;
 };
 

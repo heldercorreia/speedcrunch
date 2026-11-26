@@ -26,6 +26,11 @@ Quantity evaluate(const Evaluator&, const QVector<Opcode>&, int first,
                   const QVector<Quantity>&, const QStringList& identifiers,
                   const EvaluateSpan&, const UnitLookup&, const VariableLookup&, QString* error);
 
+void refineRule3(const Evaluator&, const QVector<Opcode>&, int firstArgument, int end,
+                 const QVector<Quantity>& constants, const QStringList& identifiers,
+                 const QVector<Quantity>& arguments, const UnitLookup&, const VariableLookup&,
+                 Quantity& result);
+
 }
 
 #endif

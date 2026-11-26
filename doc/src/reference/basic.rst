@@ -85,6 +85,33 @@ General
 
     .. versionadded:: 1.1
 
+.. function:: rule3(a; b; c)
+
+    Calculates the fourth quantity in a direct proportional relationship.
+    If ``a`` corresponds to ``b``, the value for ``c`` is ``b*c/a``.
+    Use real values and keep ``a`` nonzero. The first and third arguments must
+    have the same dimensions. SpeedCrunch converts compatible units and keeps
+    the dimensions of ``b``.
+
+    If 100 grams of food have 250 kilocalories, 350 grams have 875 kilocalories.
+    The units of ``a`` and ``c`` can differ, as in the second example.
+
+    ::
+
+        rule3(100[g]; 250[kcal]; 350[g]) = 875[kcal]
+        rule3(1[kg]; 20; 250[g])        = 5
+
+    In Rational notation, ``rule3(3; 7; 5)`` shows ``35/3``.
+
+    For inverse proportionality, swap the first and third arguments. If 4
+    workers take 6 hours at the same rate, 8 workers take 3 hours.
+
+    ::
+
+        rule3(8; 6[h]; 4) = 3[h]
+
+    .. versionadded:: 1.2
+
 .. function:: exp(x)
 
     Compute the natural exponential function.

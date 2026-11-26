@@ -187,6 +187,7 @@
       "properties": {
         "val": { "type": "string" },
         "symbolic": { "type": "string" },
+        "exact_expression": { "type": "string" },
         "approximate": { "type": "boolean" },
         "dim": {
           "type": "object",

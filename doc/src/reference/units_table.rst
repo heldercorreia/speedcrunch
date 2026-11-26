@@ -64,6 +64,9 @@ Amount Of Heat
    * - ``joule``
      - ``J``
      - ``—``
+   * - ``kilocalorie``
+     - ``kcal``
+     - ``—``
    * - ``kilowatt_hour``
      - ``kWh``
      - ``—``
