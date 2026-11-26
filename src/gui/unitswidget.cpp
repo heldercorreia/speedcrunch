@@ -67,7 +67,7 @@ const char* quantitySourceText(UnitQuantity quantity)
     case UnitQuantity::MagneticFlux: return QT_TRANSLATE_NOOP("UnitsWidget", "Magnetic flux");
     case UnitQuantity::MagneticFluxDensity: return QT_TRANSLATE_NOOP("UnitsWidget", "Magnetic flux density");
     case UnitQuantity::Inductance: return QT_TRANSLATE_NOOP("UnitsWidget", "Inductance");
-    case UnitQuantity::CelsiusTemperature: return QT_TRANSLATE_NOOP("UnitsWidget", "Celsius temperature");
+    case UnitQuantity::AffineTemperature: return QT_TRANSLATE_NOOP("UnitsWidget", "Affine temperature");
     case UnitQuantity::LuminousFlux: return QT_TRANSLATE_NOOP("UnitsWidget", "Luminous flux");
     case UnitQuantity::Illuminance: return QT_TRANSLATE_NOOP("UnitsWidget", "Illuminance");
     case UnitQuantity::ActivityReferredToARadionuclide: return QT_TRANSLATE_NOOP("UnitsWidget", "Activity referred to a radionuclide");

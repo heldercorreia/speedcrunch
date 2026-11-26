@@ -618,6 +618,12 @@ void TestDocksUi::units_dock_lists_filters_and_inserts_built_in_units()
     for (const QString& name : rowNames())
         QVERIFY(unitQuantities(unitIdForName(name)).contains(UnitQuantity::Pressure));
     search->clear();
+    QVERIFY(selectQuantity(QStringLiteral("Affine temperature")));
+    QCOMPARE(list->topLevelItemCount(), 2);
+    QVERIFY(findRow(unitName(UnitId::DegreeCelsius)));
+    QVERIFY(findRow(unitName(UnitId::DegreeFahrenheit)));
+    QVERIFY(selectQuantity(QStringLiteral("Thermodynamic temperature")));
+    QCOMPARE(rowNames(), QStringList{unitName(UnitId::Kelvin)});
     QVERIFY(selectQuantity(QStringLiteral("All")));
     QCOMPARE(widget.selectedQuantity(), QString());
     QTRY_COMPARE(list->topLevelItemCount(), builtInUnitIds().size());

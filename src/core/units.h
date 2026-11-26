@@ -44,7 +44,7 @@ enum class UnitQuantity {
     MagneticFlux,
     MagneticFluxDensity,
     Inductance,
-    CelsiusTemperature,
+    AffineTemperature,
     LuminousFlux,
     Illuminance,
     ActivityReferredToARadionuclide,
