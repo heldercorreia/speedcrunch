@@ -1,5 +1,5 @@
 .. meta::
-   :description: Calculate areas, surface areas, and volumes for polygons,
+   :description: Calculate hypotenuses, areas, and volumes for polygons,
                  solids, tanks, and triangle meshes in SpeedCrunch.
 
 Geometry
@@ -43,6 +43,24 @@ SpeedCrunch checks the calculated value before rounding it for display.
 For example, a sector of 90 degrees with radius 1 matches ``π / 4``.
 A sector just under 90 degrees can round to the same decimal and show
 only the decimal line.
+
+Lengths
+-------
+
+.. function:: hypot(x1; x2; ...)
+
+    .. versionadded:: 1.2
+
+    Computes the square root of the sum of the squares of its arguments.
+    Use two or more real values with compatible dimensions. The result
+    keeps those dimensions. If any value is ``inf`` or ``-inf`` and the
+    other values are valid, the result is ``inf``.
+
+    Examples::
+
+        hypot(3; 4)          = 5
+        hypot(1; 1; 1)       = sqrt(3)
+        hypot(3[m]; 400[cm]) = 5[m]
 
 Plane shapes
 ------------

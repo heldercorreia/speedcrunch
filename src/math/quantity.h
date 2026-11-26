@@ -48,8 +48,10 @@ public:
     ~Quantity();
 
     static Quantity symbolic(const QString& expression);
+    static Quantity infinity();
     bool isSymbolic() const { return !m_symbolicExpression.isEmpty(); }
-    const QString& symbolicExpression() const { return m_symbolicExpression; }
+    QString symbolicExpression() const;
+    bool isInfinite() const;
     bool isApproximate() const { return m_approximate; }
     void markApproximate() { m_approximate = true; }
     bool isNan() const;
@@ -152,6 +154,7 @@ public:
     static bool complexMode;
 
     static QString format(const Quantity, Quantity::Format = Quantity::Format());
+    static Quantity multiplyByUnit(const Quantity&, const Quantity& unit);
 
     // CONSTANTS
     static Quantity e();
@@ -175,6 +178,7 @@ public:
     static Quantity round(const Quantity&, int prec = 0);
     static Quantity trunc(const Quantity&, int prec = 0);
     static Quantity sqrt(const Quantity&);
+    static Quantity hypot(const QVector<Quantity>&);
     static Quantity cbrt(const Quantity&);
     static Quantity root(const Quantity& n, const Quantity& x);
     static Quantity raise(const Quantity&, int);

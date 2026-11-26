@@ -9,6 +9,7 @@
 #include "core/unicodechars.h"
 #include "core/mathdsl.h"
 #include "core/settings.h"
+#include "core/unitdisplayformat.h"
 #include "rational.h"
 #include "core/units.h"
 
@@ -984,6 +985,13 @@ Quantity operator-(const Quantity& q)
         return q.isList() ? Quantity::list(rows.value(0)) : Quantity::matrix(rows);
     }
     Quantity res(q);
+    if (res.isInfinite()) {
+        if (res.m_symbolicExpression.size() == 1)
+            res.m_symbolicExpression.prepend(MathDsl::SubOpAl1);
+        else
+            res.m_symbolicExpression.remove(0, 1);
+        return res;
+    }
     // Negate °C/°F values in their shown scale, not in base Kelvin, so that
     // -40[°C] means -40 °C (233.15 K) instead of -313.15 K.
     CNumber negatedAffineBaseValue;
@@ -1065,7 +1073,7 @@ bool operator<=(const Quantity& l, const Quantity& r)
 bool operator==(const Quantity& l, const Quantity& r)
 {
     if (l.isSymbolic() || r.isSymbolic())
-        return l.m_symbolicExpression == r.m_symbolicExpression;
+        return l.m_symbolicExpression == r.m_symbolicExpression && l.sameDimension(r);
     if (l.isCollection() || r.isCollection())
         return l.m_matrix == r.m_matrix;
     if (l.sameDimension(r))
@@ -1077,7 +1085,7 @@ bool operator==(const Quantity& l, const Quantity& r)
 bool operator!=(const Quantity& l, const Quantity& r)
 {
     if (l.isSymbolic() || r.isSymbolic())
-        return l.m_symbolicExpression != r.m_symbolicExpression;
+        return !(l == r);
     if (l.sameDimension(r))
         return l.m_numericValue != r.m_numericValue;
     return true;
@@ -1159,6 +1167,31 @@ Quantity Quantity::symbolic(const QString& expression)
     Quantity value(CMath::nan());
     value.m_symbolicExpression = expression;
     return value;
+}
+
+Quantity Quantity::infinity()
+{
+    return symbolic(QString(UnicodeChars::Infinity));
+}
+
+bool Quantity::isInfinite() const
+{
+    return (m_symbolicExpression.size() == 1 && m_symbolicExpression.front() == UnicodeChars::Infinity)
+        || (m_symbolicExpression.size() == 2 && m_symbolicExpression.front() == MathDsl::SubOpAl1
+            && m_symbolicExpression.back() == UnicodeChars::Infinity);
+}
+
+QString Quantity::symbolicExpression() const
+{
+    if (!isInfinite() || (!hasUnit() && !hasDimension()))
+        return m_symbolicExpression;
+
+    Quantity value(*this);
+    if (!value.hasUnit())
+        Units::findUnit(value);
+    const QString unitName = UnitDisplayFormat::normalizeUnitTextForDisplay(
+        normalizeDisplayUnitNameForOutput(value.unitName()));
+    return m_symbolicExpression + MathDsl::UnitStart + unitName + MathDsl::UnitEnd;
 }
 
 bool Quantity::isNan() const
@@ -1535,10 +1568,6 @@ void Quantity::serialize(QJsonObject& json) const
 
 Quantity Quantity::deSerialize(const QJsonObject& json)
 {
-    const QString expression = json.value(QLatin1String("symbolic")).toString();
-    if (!expression.isEmpty())
-        return Quantity::symbolic(expression);
-
     if (json.contains(QLatin1String("matrix"))) {
         QVector<QVector<Quantity>> rows;
         const QJsonArray rowsJson = json[QLatin1String("matrix")].toArray();
@@ -1555,8 +1584,11 @@ Quantity Quantity::deSerialize(const QJsonObject& json)
     }
 
     Quantity result;
+    result.m_symbolicExpression = json.value(QLatin1String("symbolic")).toString();
     result.m_approximate = json.value(QLatin1String("approximate")).toBool();
-    if (json.contains(QLatin1String("val"))) {
+    if (result.isSymbolic()) {
+        result.m_numericValue = CMath::nan();
+    } else if (json.contains(QLatin1String("val"))) {
         QString str = json[QLatin1String("val")].toString();
         str.replace(QLatin1Char(','), QLatin1Char('.'));
         result.m_numericValue = CNumber(str.toLatin1().constData());
@@ -2870,6 +2902,26 @@ WRAPPER_DMATH_3(decodeIeee754)
 WRAPPER_DMATH_4(decodeIeee754)
 
 
+Quantity DMath::multiplyByUnit(const Quantity& value, const Quantity& unit)
+{
+    if (!value.isInfinite())
+        return value * unit;
+
+    // Get the units and sign of the product using a finite value.
+    Quantity finite(value);
+    finite.m_symbolicExpression.clear();
+    finite.m_numericValue = CNumber(1);
+    Quantity result = finite * unit;
+    if (result.isNan())
+        return result;
+    if (result.isCollection() || result.isZero() || !result.isReal())
+        return nan(OutOfDomain);
+
+    result.m_symbolicExpression = result.isNegative() ? (-value).m_symbolicExpression : value.m_symbolicExpression;
+    result.m_numericValue = CMath::nan();
+    return result;
+}
+
 QString DMath::format(Quantity q, Quantity::Format format)
 {
     if (q.isSymbolic())
@@ -2972,6 +3024,90 @@ Quantity DMath::sqrt(const Quantity& n)
         ++i;
     }
     return result;
+}
+
+Quantity DMath::hypot(const QVector<Quantity>& args)
+{
+    if (args.size() < 2)
+        return nan(InvalidParamCount);
+
+    const Quantity& first = args.first();
+    bool commonUnit = first.hasUnit();
+    bool hasInfinity = false;
+    qsizetype nonzeroCount = 0;
+    const HNumber* nonzeroValue = nullptr;
+    int minExponent = std::numeric_limits<int>::max();
+    int maxExponent = std::numeric_limits<int>::min();
+    for (const Quantity& arg : args) {
+        if (arg.isCollection())
+            return nan(OutOfDomain);
+        if (arg.isNan())
+            return arg.error() == Success ? nan(NoOperand) : arg;
+        const bool infinite = arg.isInfinite();
+        if (!infinite && !arg.isReal())
+            return nan(OutOfDomain);
+        if (!arg.sameDimension(first))
+            return nan(DimensionMismatch);
+
+        commonUnit = commonUnit && arg.hasUnit() && arg.m_unitName == first.m_unitName
+                     && *arg.m_unit == *first.m_unit;
+        hasInfinity = hasInfinity || infinite;
+        const HNumber& value = arg.m_numericValue.real;
+        if (!infinite && !value.isZero()) {
+            nonzeroValue = &value;
+            ++nonzeroCount;
+            const int exponent = value.decimalExponent();
+            minExponent = qMin(minExponent, exponent);
+            maxExponent = qMax(maxExponent, exponent);
+        }
+    }
+
+    const auto withUnits = [&](Quantity result) {
+        if (!result.isNan()) {
+            result.copyDimension(first);
+            if (commonUnit && first.m_unit->isPositive() && !Units::isAffineUnitName(first.m_unitName))
+                result.setDisplayUnit(*first.m_unit, first.m_unitName);
+        }
+        return result;
+    };
+
+    if (hasInfinity)
+        return withUnits(Quantity::infinity());
+    if (nonzeroCount == 0)
+        return withUnits(Quantity(0));
+    if (nonzeroCount == 1)
+        return withUnits(nonzeroValue->isNegative() ? -(*nonzeroValue) : *nonzeroValue);
+
+    // Leave room for an extra digit from squaring and for the sum to grow.
+    constexpr int sumGrowth = std::numeric_limits<qsizetype>::digits10 + 2;
+    const int limit = HMath::maxDecimalExponent();
+    const bool needsScaling = 2 * qint64(minExponent) < -limit - 1
+        || 2 * qint64(maxExponent) + sumGrowth >= limit;
+    // A power of ten keeps the input digits and puts the largest magnitude in [1, 10).
+    const int scale = needsScaling ? maxExponent : 0;
+
+    HNumber sum(0);
+    {
+        // Keep small terms through the sum before rounding the root.
+        const HMath::ScopedExtraPrecision precision(16);
+        for (const Quantity& arg : args) {
+            const HNumber& value = arg.m_numericValue.real;
+            if (value.isZero())
+                continue;
+            // A square below the scaled range is too small to affect the sum.
+            if (needsScaling && 2 * (qint64(value.decimalExponent()) - scale) < -limit - 1)
+                continue;
+            if (scale == 0) {
+                sum += value * value;
+            } else {
+                const HNumber scaled = HMath::scaleByPowerOfTen(value, -scale);
+                sum += scaled * scaled;
+            }
+            if (sum.isNan())
+                break;
+        }
+    }
+    return withUnits(HMath::scaleByPowerOfTen(HMath::sqrt(sum), scale));
 }
 
 Quantity DMath::cbrt(const Quantity& n)

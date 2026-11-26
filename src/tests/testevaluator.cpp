@@ -17,6 +17,7 @@
 #include "gui/resultlineformatutils.h"
 #include "gui/simplifiedexpressionutils.h"
 #include "math/cmath.h"
+#include "math/floatnum/floatconfig.h"
 #include "core/mathdsl.h"
 #include "core/units.h"
 #include "core/unitdisplayformat.h"
@@ -4695,6 +4696,116 @@ void test_function_root()
 
     settings->complexNumbers = oldComplexNumbers;
     DMath::complexMode = oldComplexMode;
+    eval->initializeBuiltInVariables();
+}
+
+void test_hypot()
+{
+    CHECK_EVAL("hypot(3; 4)", "5");
+    CHECK_EVAL("hypot(5; 12)", "13");
+    CHECK_EVAL("hypot(8; 15)", "17");
+    CHECK_EVAL("hypot(-3; 4)", "5");
+    CHECK_EVAL("hypot(-3; -4)", "5");
+    CHECK_EVAL("hypot(0; 0)", "0");
+    CHECK_EVAL("hypot(0; -5)", "5");
+    CHECK_EVAL("hypot(0.3; 0.4)", "0.5");
+    CHECK_EVAL_PRECISE("hypot(1/3; 1/4)", "0.41666666666666666666666666666666666666666666666667");
+    CHECK_EVAL_PRECISE("hypot(1; 1)", "1.41421356237309504880168872420969807856967187537695");
+    CHECK_EVAL_PRECISE("hypot(1; 1; 1)", "1.73205080756887729352744634150587236694280525381038");
+    CHECK_EVAL("hypot(2; 3; 6)", "7");
+    CHECK_EVAL("hypot(1; 2; 2; 4)", "5");
+    CHECK_EVAL_FORMAT("hypot(3[m]; 4[m])", "5[m]");
+    CHECK_EVAL_FORMAT("hypot(3[m]; 400[cm])", "5[m]");
+    CHECK_EVAL_FORMAT("hypot(400[cm]; 3[m])", "5[m]");
+    const char oldUnitStyle = runtimeUnitNegativeExponentStyle();
+    setRuntimeUnitNegativeExponentStyle(Settings::UnitNegativeExponentFraction);
+    CHECK_EVAL_FORMAT("hypot(3[m/s]; 4[m/s])", "5[m/s]");
+    setRuntimeUnitNegativeExponentStyle(oldUnitStyle);
+    CHECK_EVAL_FORMAT("hypot(0[cm]; 0[cm])", "0[m]");
+    CHECK_EVAL("hypot(3[m]; 4[m]) / [cm]", "500");
+
+    const QString infinity(UnicodeChars::Infinity);
+    CHECK_EVAL("hypot(inf; 1)", qUtf8Printable(infinity));
+    CHECK_EVAL("hypot(-inf; 1)", qUtf8Printable(infinity));
+    CHECK_EVAL("hypot(inf; -inf)", qUtf8Printable(infinity));
+    CHECK_EVAL("hypot(0; -HYPOT(inf; 1))", qUtf8Printable(infinity));
+    CHECK_EVAL("hypot(limit(x^2; inf); 1)", qUtf8Printable(infinity));
+    CHECK_EVAL_FORMAT("hypot(-inf[m]; 4[m])", qUtf8Printable(infinity + QStringLiteral("[m]")));
+    CHECK_EVAL_FORMAT("hypot(inf[m]; 400[cm]) -> [cm]", qUtf8Printable(infinity + QStringLiteral("[cm]")));
+    QJsonObject saved;
+    eval->getVariable(QStringLiteral("ans")).value().serialize(saved);
+    eval->setVariable(QStringLiteral("ans"), Quantity::deSerialize(saved), Variable::BuiltIn);
+    CHECK_EVAL_FORMAT("hypot(ans; 4[m])", qUtf8Printable(infinity + QStringLiteral("[m]")));
+    CHECK_EVAL("inf=12", "12");
+    CHECK_EVAL("hypot(5; inf)", "13");
+    eval->unsetVariable(QStringLiteral("inf"));
+
+    const auto checkValue = [](const QString& expression, const Quantity& expected) {
+        ++eval_total_tests;
+        eval->setExpression(expression);
+        const Quantity result = eval->evalUpdateAns();
+        if (!eval->error().isEmpty() || result != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\t" << qPrintable(expression) << "\t[NEW]"
+                 << "\n\tError: " << qPrintable(eval->error())
+                 << "\n\tResult: " << qPrintable(DMath::format(result, Format::Scientific()))
+                 << "\n\tExpected: " << qPrintable(DMath::format(expected, Format::Scientific())) << endl;
+        }
+    };
+    const auto checkScaled = [&](const QString& expression, const QString& result, int exponent) {
+        const QString suffix = QStringLiteral("e%1").arg(exponent);
+        checkValue(expression.arg(suffix), HNumber(qPrintable(result.arg(suffix))));
+    };
+    checkScaled("hypot(3%1; -4%1)", "5%1", EXPMAX);
+    checkScaled("hypot(-4%1; 0; -3%1)", "5%1", EXPMIN);
+    checkScaled("hypot(12%1; 5%1)", "13%1", EXPMAX - 1);
+    checkScaled("hypot(5%1; 12%1)", "13%1", EXPMIN);
+    checkScaled("hypot(6%1; 8%1)", "10%1", EXPMAX / 2);
+    checkScaled("hypot(1.2%1; 0.5%1)", "1.3%1", EXPMIN / 2);
+    checkScaled("hypot(1e-150; -3%1; 4%1)", "5%1", 150);
+    checkScaled("hypot(4%1; 3%1; -1e-150)", "5%1", 150);
+    checkValue(QStringLiteral("hypot(-2; 1e%1)").arg(EXPMIN), 2);
+    checkValue(QStringLiteral("hypot(1e%1; -1e%2)").arg(EXPMAX).arg(EXPMIN),
+               HNumber(qPrintable(QStringLiteral("1e%1").arg(EXPMAX))));
+
+    const QString manyArgs = QStringList(64, QStringLiteral("1")).join(QLatin1Char(';'));
+    checkValue(QStringLiteral("hypot(%1)").arg(manyArgs), 8);
+
+    // These small squares together change the last digit of the root.
+    const QString smallArgs = QStringList(200, QStringLiteral("1e-41")).join(QLatin1Char(';'));
+    const Quantity smallContribution = HNumber(1) + HNumber("1e-80");
+    checkValue(QStringLiteral("hypot(1; %1)").arg(smallArgs), smallContribution);
+    checkValue(QStringLiteral("hypot(%1; -1)").arg(smallArgs), smallContribution);
+
+    Function* function = FunctionRepo::instance()->find(QStringLiteral("hypot"));
+    const auto checkError = [&](const QString& expression, Error expected) {
+        ++eval_total_tests;
+        eval->setExpression(expression);
+        const Quantity result = eval->evalUpdateAns();
+        if (!result.isNan() || eval->error().isEmpty() || function->error() != expected) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << __FILE__ << "[" << __LINE__ << "]\t" << qPrintable(expression) << "\t[NEW]"
+                 << "\n\tError: " << qPrintable(eval->error()) << endl;
+        }
+    };
+    checkError("hypot()", InvalidParamCount);
+    checkError("hypot(3)", InvalidParamCount);
+    checkError("hypot(3[m]; 4[s])", DimensionMismatch);
+    checkError("hypot(0; 4[m])", DimensionMismatch);
+    checkError("hypot(inf[m]; 4[s])", DimensionMismatch);
+    checkError("hypot(inf; 0^0)", OutOfDomain);
+    checkError("hypot(inf; ieee754_double_decode(0x7ff8000000000000))", NoOperand);
+    checkError("hypot(1; {2; 3})", OutOfDomain);
+    checkError(QStringLiteral("hypot(9e%1; 9e%1)").arg(EXPMAX), Overflow);
+    {
+        const QScopedValueRollback<bool> complexNumbers(Settings::instance()->complexNumbers, true);
+        const QScopedValueRollback<bool> complexMode(DMath::complexMode, true);
+        eval->initializeBuiltInVariables();
+        checkError("hypot(3; 4*i)", OutOfDomain);
+        checkError("hypot(inf; 4*i)", OutOfDomain);
+    }
     eval->initializeBuiltInVariables();
 }
 
@@ -12204,6 +12315,9 @@ void test_result_display_shows_exact_geometry_results()
         char format = 'g';
     };
     const Example examples[] = {
+        {"hypot(1; 1)", "√(2)", 2},
+        {"hypot(1; 1; 1)", "√(3)", 1, 'r', 'r'},
+        {"hypot(1/3; 1/4)", "5/12", 2},
         {"area_circle(2)", "4·π", 2},
         {"area_circle 2", "4·π", 2},
         {"(2*AREA_CIRCLE(2))", "8·π", 2},
@@ -13129,6 +13243,7 @@ int main(int argc, char* argv[])
 
     test_function_basic();
     test_function_root();
+    test_hypot();
     test_geometry_functions();
     test_function_trig();
     test_function_tanh_range();

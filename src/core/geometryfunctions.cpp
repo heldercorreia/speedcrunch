@@ -728,6 +728,11 @@ HNumber volumeRegularIcosahedron(const HNumber& edge)
     return (HNumber(3) + HMath::sqrt(5)) * cube(edge) * HNumber(5) / HNumber(12);
 }
 
+Quantity hypot(Function*, const Function::ArgumentList& args)
+{
+    return DMath::hypot(args);
+}
+
 struct Entry {
     const char* identifier;
     const char* usage;
@@ -739,6 +744,8 @@ struct Entry {
 #define VOLUME(formula, ...) evaluate<3, formula, __VA_ARGS__>
 
 const Entry entries[] = {
+    {"hypot", "x<sub>1</sub>; x<sub>2</sub>; ...",
+     QT_TRANSLATE_NOOP("FunctionRepo", "Hypotenuse"), hypot},
     {"area_square", "side",
      QT_TRANSLATE_NOOP("FunctionRepo", "Area of a Square"),
      AREA(square, Length)},

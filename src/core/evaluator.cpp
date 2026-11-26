@@ -91,6 +91,11 @@ static bool s_isMassFunctionIdentifier(const QString& identifier)
     return FunctionRepo::instance()->isIdentifierAliasOf(identifier, QStringLiteral("mass"));
 }
 
+static bool s_isHypotFunctionIdentifier(const QString& identifier)
+{
+    return identifier.compare(QLatin1String("hypot"), Qt::CaseInsensitive) == 0;
+}
+
 static bool s_isUpperAsciiLetter(QChar ch)
 {
     return ch >= QLatin1Char('A') && ch <= QLatin1Char('Z');
@@ -7437,7 +7442,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
             absolute.setDisplayUnit(CNumber(1), unit.unitName());
             return checkOperatorResultWithDeferredNoOperand(absolute);
         }
-        return checkOperatorResultWithDeferredNoOperand(value * unit);
+        return checkOperatorResultWithDeferredNoOperand(DMath::multiplyByUnit(value, unit));
     };
 
     for (int pc = 0; pc < opcodes.count(); ++pc) {
@@ -7447,9 +7452,12 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
         hasApproximateOperand = false;
         if (hasSymbolicValue) {
             const int operands = opcode.operandCount();
+            const bool acceptsInfinity = opcode.type == Opcode::Neg || opcode.type == Opcode::Unit
+                || opcode.type == Opcode::Conv || (opcode.type == Opcode::Function
+                    && s_isHypotFunctionIdentifier(refs.value(stack.count() - opcode.index)));
             if (operands > 0 && operands <= stack.size()
-                && std::any_of(stack.cend() - operands, stack.cend(), [](const StackEntry& entry) {
-                    return entry.value.isSymbolic();
+                && std::any_of(stack.cend() - operands, stack.cend(), [acceptsInfinity](const StackEntry& entry) {
+                    return entry.value.isSymbolic() && (!acceptsInfinity || !entry.value.isInfinite());
                 })) {
                 m_error = tr("this operation needs numeric values");
                 return CMath::nan();
@@ -7904,6 +7912,12 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                     } else if (hasUserFunction(fname)) {
                         pushStackValue(CMath::nan());
                         refs.insert(stack.count(), fname);
+                    } else if ((fname == QString(UnicodeChars::Infinity) || SymbolicCalculus::isNamedInfinity(fname))
+                               && std::any_of(refs.constKeyValueBegin(), refs.constKeyValueEnd(),
+                                              [&stack](const auto& ref) {
+                                   return ref.first <= stack.count() && s_isHypotFunctionIdentifier(ref.second);
+                               })) {
+                        pushStackValue(Quantity::infinity());
                     } else if (fname.compare("n", Qt::CaseInsensitive) == 0
                                && hasPendingDeferredSummationContext(stack.count()))
                     {

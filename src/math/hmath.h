@@ -45,6 +45,7 @@ public:
     bool isPositive() const;
     bool isNegative() const;
     bool isInteger() const;
+    int decimalExponent() const;
 
     void serialize(QJsonObject&) const;
     static HNumber deSerialize(const QJsonObject&);
@@ -162,6 +163,8 @@ public:
     static HNumber round(const HNumber&, int prec = 0);
     static HNumber trunc(const HNumber&, int prec = 0);
     static HNumber sqrt(const HNumber&);
+    static int maxDecimalExponent();
+    static HNumber scaleByPowerOfTen(const HNumber&, int exponent);
     static HNumber cbrt(const HNumber&);
     static HNumber raise(const HNumber&, int);
     static HNumber raise(const HNumber&, const HNumber&);

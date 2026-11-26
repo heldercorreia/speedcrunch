@@ -342,6 +342,11 @@ bool HNumber::isInteger() const
     return float_isinteger(&d->fnum) != 0;
 }
 
+int HNumber::decimalExponent() const
+{
+    return float_getexponent(&d->fnum);
+}
+
 void HNumber::serialize(QJsonObject& json) const
 {
     json["value"] = HMath::format(*this, Format::Fixed() + Format::Precision(DECPRECISION));
@@ -1308,6 +1313,28 @@ HNumber HMath::sqrt(const HNumber& n)
 {
     HNumber result;
     call1Arg(result.d, n.d, float_sqrt);
+    return result;
+}
+
+int HMath::maxDecimalExponent()
+{
+    return float_getrange();
+}
+
+HNumber HMath::scaleByPowerOfTen(const HNumber& n, int exponent)
+{
+    if (exponent == 0 || n.isZero() || n.isNan())
+        return n;
+
+    const qint64 target = qint64(n.decimalExponent()) + exponent;
+    const int limit = maxDecimalExponent();
+    if (target > limit)
+        return nan(Overflow);
+    if (target < -limit - 1)
+        return nan(Underflow);
+
+    HNumber result(n);
+    float_setexponent(&result.d->fnum, static_cast<int>(target));
     return result;
 }
 
