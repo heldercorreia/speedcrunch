@@ -722,6 +722,67 @@ static void test_symbolic_differentiation()
                   + " (formula " + DMath::format(derivative) + ")");
     };
 
+    const auto symbolicResult = [&](const QString& expression) -> QString {
+        evaluator.setExpression(expression);
+        const Quantity result = evaluator.evalNoAssign();
+        if (!evaluator.error().isEmpty())
+            return expression + " returned " + evaluator.error();
+        return result.isSymbolic() ? result.symbolicExpression() : DMath::format(result, Format::Fixed());
+    };
+    // Counts operators, names and digits. Parentheses and a minus sign
+    // before a value are free.
+    const auto complexity = [](const QString& formula) {
+        int count = 0;
+        QChar previous = QLatin1Char('(');
+        for (int i = 0; i < formula.size(); ++i) {
+            const QChar c = formula.at(i);
+            if (c.isSpace())
+                continue;
+            if (c.isLetter() || c == QChar(0x03C0)) {
+                ++count;
+                while (i + 1 < formula.size() && formula.at(i + 1).isLetterOrNumber())
+                    ++i;
+            } else if (c.isDigit()) {
+                ++count;
+            } else if ((c == QLatin1Char('-') || c == QChar(0x2212))
+                       && QStringLiteral("(*/^;").contains(previous)) {
+                // A sign, not a subtraction.
+            } else if (QStringLiteral("+-*/^;").contains(c) || c == QChar(0x2212)) {
+                ++count;
+            }
+            previous = c;
+        }
+        return count;
+    };
+    const auto checkForm = [&](const QString& expression, const QString& expected) {
+        const QString formula = symbolicResult(expression);
+        bool equal = true;
+        QString detail;
+        for (const char* point : {"0.3", "0.7", "1.3", "2.9"}) {
+            evaluator.setVariable(QStringLiteral("x"), Quantity(HNumber(point)));
+            evaluator.setVariable(QStringLiteral("y"), Quantity(HNumber(point)) + Quantity(1));
+            evaluator.setExpression(formula);
+            const Quantity value = evaluator.evalNoAssign();
+            const bool valueOk = evaluator.error().isEmpty();
+            evaluator.setExpression(expected);
+            const Quantity target = evaluator.evalNoAssign();
+            const bool targetOk = evaluator.error().isEmpty();
+            const Quantity difference = DMath::abs(value - target);
+            const Quantity tolerance = (DMath::abs(target) + Quantity(1)) * Quantity(HNumber("1e-50"));
+            if (!valueOk || !targetOk || difference.isNan() || difference.numericValue().real > tolerance.numericValue().real) {
+                equal = false;
+                detail = QStringLiteral(" (at x = %1: %2 instead of %3)")
+                             .arg(QString::fromLatin1(point), DMath::format(value), DMath::format(target));
+            }
+        }
+        evaluator.unsetVariable(QStringLiteral("x"));
+        evaluator.unsetVariable(QStringLiteral("y"));
+        check(equal, expression + " returned " + formula + ", which differs from " + expected + detail);
+        check(complexity(formula) <= complexity(expected),
+              QStringLiteral("%1 returned %2 (complexity %3), expected a form like %4 (complexity %5)")
+                  .arg(expression, formula).arg(complexity(formula)).arg(expected).arg(complexity(expected)));
+    };
+
     const Function* function = FunctionRepo::instance()->find("diff");
     check(function && function->name() == "Derivative"
               && function->domainType() == FunctionDomain::Calculus
@@ -778,18 +839,71 @@ static void test_symbolic_differentiation()
     CHECK_EVAL("diff(cos(x)^2; 125)", "-42535295865117307932921825928971026432*cos(x)*sin(x)");
     CHECK_EVAL("diff(exp(2*x); 130)", "1361129467683753853853498429727072845824*exp(2*x)");
     expectError("diff(x^100; 70)", "limit exceeded");
-    // Quotients keep one fraction bar, so factors cancel and like terms combine.
     CHECK_EVAL("diff(x*ln(x); 3)", "-1/x^2");
-    CHECK_EVAL("diff(sin(ln(x)))", "cos(ln(x))/x");
-    CHECK_EVAL("diff(x/(x+1); 3)", "6/(x+1)^4");
-    CHECK_EVAL("diff(1/(1+x^2); 3)", "(24*x-24*x^3)/(1+x^2)^4");
-    CHECK_EVAL("diff(sin(x)/x; 2)", "-sin(x)/x-2*cos(x)/x^2+2*sin(x)/x^3");
-    CHECK_EVAL("diff(exp(x)/x; 3)", "exp(x)/x-3*exp(x)/x^2+6*exp(x)/x^3-6*exp(x)/x^4");
-    CHECK_EVAL("diff(x^x; 3)", "x^x*(ln(x)+1)^3+3*x^x*(ln(x)+1)/x-x^x/x^2");
-    CHECK_EVAL("diff(cos(x)/(1+sin(x)); 2)",
-               "(-cos(x)+cos(x)*sin(x)+2*cos(x)*sin(x)^2+2*cos(x)^3)/(1+sin(x))^3");
     CHECK_EVAL("diff(sqrt(x); 2)", "-1/(4*sqrt(x)^3)");
-    CHECK_EVAL("diff(sqrt(x); 20)", "-8200794532637891559375/(1048576*sqrt(x)^39)");
+
+    // A simplified result can take any equivalent canonical form. It must
+    // have the value of the expected form at several points and must not be
+    // more complex than it.
+    for (const auto& [expression, expected] : {
+             // Polynomial expansion, only when it gives a simpler form.
+             std::pair{"diff((x+1)^2 - x^2)", "2"},
+             std::pair{"diff(2*(x+1)*(x-1))", "4*x"},
+             std::pair{"diff((x+1)^3)", "3*(x+1)^2"},
+             std::pair{"diff((1+x^2)^5)", "10*x*(1+x^2)^4"},
+             // Like terms, with factors in any order. Zero terms vanish.
+             std::pair{"diff(x*sin(x) - sin(x)*x)", "0"},
+             std::pair{"diff(x^3*cos(x) - cos(x)*x^3 + x)", "1"},
+             std::pair{"diff(sin(x+1) + sin(1+x))", "2*cos(x+1)"},
+             std::pair{"diff(x^2*y + y*x^2; x)", "4*x*y"},
+             // Common denominators: equal and compatible denominators, powers
+             // of one base, and radicals as rational powers.
+             std::pair{"diff(1/x + 1/x^2)", "-(x+2)/x^3"},
+             std::pair{"diff(cos(x) + ln(x) - 1/x)", "-sin(x)+(x+1)/x^2"},
+             std::pair{"diff(sqrt(x)/x; 3)", "-15/(8*sqrt(x)^7)"},
+             std::pair{"diff(sqrt(x) + x^(1/2))", "1/sqrt(x)"},
+             std::pair{"diff(x^(3/2) - x*sqrt(x))", "0"},
+             std::pair{"diff(sqrt(1+x^2); 2)", "1/sqrt(1+x^2)^3"},
+             // Common factors: numbers, symbols and powers. A factor is only
+             // taken out when the result is simpler, as in 6*x^2-3.
+             std::pair{"diff(x^2*exp(x); 5)", "exp(x)*(20+10*x+x^2)"},
+             std::pair{"diff(cos(x)^2; 10)", "512*(sin(x)^2-cos(x)^2)"},
+             std::pair{"diff(x^3/6 + x^2/4)", "x*(x+1)/2"},
+             std::pair{"diff(exp(-x^2); 6)", "8*exp(-x^2)*(8*x^6-60*x^4+90*x^2-15)"},
+             std::pair{"diff(2x^3 - 3x + 5)", "6*x^2-3"},
+             // Cancellation with the denominator, also of polynomial factors.
+             std::pair{"diff(exp(x)/x; 3)", "exp(x)*(x^3-3*x^2+6*x-6)/x^4"},
+             std::pair{"diff((x^3+x^2)/(x+1))", "2*x"},
+             std::pair{"diff((x^2+2*x+1)/(x+1)^3)", "-1/(x+1)^2"},
+             std::pair{"diff((x^3-1)/(x-1); 2)", "2"},
+             // All techniques together, over several passes.
+             std::pair{"diff(1/(1+x^2); 3)", "24*x*(1-x^2)/(1+x^2)^4"},
+             std::pair{"diff(arctan(x); 12)",
+                       "159667200*x*(3-55*x^2+198*x^4-198*x^6+55*x^8-3*x^10)/(1+x^2)^12"},
+             std::pair{"diff(sqrt(1+x^2); 6)", "45*(1-12*x^2+8*x^4)/sqrt(1+x^2)^11"},
+             std::pair{"diff(√(1 + x²); 6)", "45*(1-12*x^2+8*x^4)/sqrt(1+x^2)^11"},
+             std::pair{"diff(x^x; 3)", "x^x*(x^2*(ln(x)+1)^3+3*x*(ln(x)+1)-1)/x^2"},
+             std::pair{"diff(sin(x)/x; 2)", "-sin(x)/x-2*cos(x)/x^2+2*sin(x)/x^3"},
+             std::pair{"diff(1/(x^2*(1+x)); 2)", "2*(3+8*x+6*x^2)/(x^4*(1+x)^3)"},
+             std::pair{"diff(sqrt(x); 20)", "-8200794532637891559375/(1048576*sqrt(x)^39)"},
+         }) {
+        checkForm(QString::fromUtf8(expression), QString::fromUtf8(expected));
+    }
+
+    // The same input always gives the same form, and differentiating a
+    // simplified result once more gives the next simplified result.
+    for (const char* function : {"1/(1+x^2)", "sqrt(1+x^2)", "exp(x)/x", "x^2*exp(x)"}) {
+        for (int order = 1; order <= 4; ++order) {
+            const QString lower = QStringLiteral("diff(%1; %2)").arg(QString::fromLatin1(function)).arg(order);
+            const QString higher = QStringLiteral("diff(%1; %2)").arg(QString::fromLatin1(function)).arg(order + 1);
+            const QString first = symbolicResult(lower);
+            check(first == symbolicResult(lower), lower + " is not deterministic");
+            const QString again = symbolicResult(QStringLiteral("diff(%1)").arg(first));
+            check(again == symbolicResult(higher),
+                  "diff(" + first + ") returned " + again + ", but " + higher + " returned "
+                      + symbolicResult(higher));
+        }
+    }
     CHECK_EVAL("diff(x^4; 1e40)", "0");
     CHECK_EVAL("diff(2[m]; 1e40)", "0");
     CHECK_EVAL("5", "5");
@@ -1020,7 +1134,7 @@ static void test_calculus_integration()
     CHECK_EVAL("integrate(cos(x); 0; π/2)", "1");
     CHECK_EVAL("integrate(1/x; 1; 2)", "ln(2)");
     CHECK_EVAL("integrate(1/x; -2; -1)", "-ln(2)");
-    CHECK_EVAL("integrate(1/(1+x^2); 0; 1)", "1/4*π");
+    CHECK_EVAL("integrate(1/(1+x^2); 0; 1)", "π/4");
     CHECK_EVAL("integrate(1/sqrt(x); 0; 1)", "2");
     CHECK_EVAL("integrate(ln(x); 0; 1)", "-1");
     CHECK_EVAL("integrate(ln(2-x); 1; 2)", "-1");
@@ -1031,7 +1145,7 @@ static void test_calculus_integration()
     CHECK_EVAL("integrate(exp(-2*x); inf; 0)", "-1/2");
     CHECK_EVAL("integrate(exp(x); -inf; 0)", "1");
     CHECK_EVAL("integrate(1/x^2; 1; inf)", "1");
-    CHECK_EVAL("integrate(1/(1+x^2); 0; inf)", "1/2*π");
+    CHECK_EVAL("integrate(1/(1+x^2); 0; inf)", "π/2");
     CHECK_EVAL("integrate(1/(1+x^2); -inf; inf)", "π");
     CHECK_EVAL("integrate(0; -inf; inf)", "0");
     CHECK_EVAL("integrate(x; a; a)", "0");

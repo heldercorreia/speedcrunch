@@ -16,6 +16,7 @@
 #include <QRegularExpression>
 #include <QScopedValueRollback>
 #include <QStringList>
+#include <algorithm>
 #include <deque>
 #include <optional>
 #include <variant>
@@ -27,6 +28,11 @@ constexpr int MaxNodes = 4096;
 constexpr int MaxWork = 60000;
 constexpr int MaxOrderSteps = 256;
 constexpr int MaxScalarOpcodes = 128;
+// Limits for the passes that look for a simpler form of a result.
+constexpr int MaxPasses = 4;
+constexpr int PassWork = 20000;
+constexpr int CandidateWork = 4000;
+constexpr int MaxCommonFactors = 8;
 
 struct Failure {
     QString message;
@@ -120,6 +126,7 @@ public:
 
     friend Integer abs(const Integer& value) { return value.isNegative() ? -value : value; }
     friend Integer operator+(const Integer& a, const Integer& b) { return apply(a, b, float_add); }
+    friend Integer operator-(const Integer& a, const Integer& b) { return apply(a, b, float_sub); }
     friend Integer operator*(const Integer& a, const Integer& b) { return apply(a, b, float_mul); }
 
     // Truncates towards zero, like integer division in C++.
@@ -156,6 +163,13 @@ public:
             b = remainder;
         }
         return b.isValid() ? a : b;
+    }
+
+    friend Integer lcm(const Integer& a, const Integer& b)
+    {
+        if (a.isZero() || b.isZero())
+            return 0;
+        return abs(a) / gcd(a, b) * abs(b);
     }
 
     friend bool operator==(const Integer& a, const Integer& b) { return float_cmp(&a.m_value, &b.m_value) == 0; }
@@ -270,6 +284,9 @@ struct Node {
     int size;
     int depth;
     bool containsUnit;
+    // The complexity used to choose between equal forms: one per operation,
+    // one per name and one per digit. A leading minus sign is free.
+    int cost;
 };
 
 struct Span {
@@ -296,6 +313,7 @@ public:
     {
         m_zero = number(0);
         m_one = number(1);
+        m_minusOne = number(-1);
     }
 
     Quantity evaluate(int first)
@@ -397,6 +415,11 @@ private:
     bool m_samplingDomain = false;
     Expr m_zero;
     Expr m_one;
+    Expr m_minusOne = NoExpression;
+    // Sums by their set of terms, so that x+1 and 1+x are the same sum.
+    QHash<QVector<Expr>, Expr> m_sums;
+    QHash<Expr, bool> m_depends;
+    QString m_dependsVariable;
 
     [[noreturn]] static void limitExceeded()
     {
@@ -426,17 +449,30 @@ private:
         int size = 1;
         int depth = 1;
         bool containsUnit = type == Opcode::UnitRef;
+        int cost = 1;
+        if (type == Opcode::Load && exact) {
+            cost = qMax(1, exact->numerator.digits());
+            if (exact->denominator != 1)
+                cost += exact->denominator.digits() + 1;
+        } else if (type == Opcode::Load) {
+            cost = qMax(1, int(text.size()));
+        } else if (type == Opcode::Add || type == Opcode::Mul) {
+            cost = int(children.size()) - 1;
+        }
         for (Expr child : children) {
             const Node& operand = node(child);
             size += operand.size;
             depth = qMax(depth, operand.depth + 1);
             containsUnit = containsUnit || operand.containsUnit;
+            cost += operand.cost;
         }
+        if (type == Opcode::Mul && !children.isEmpty() && children.at(0) == m_minusOne)
+            cost -= 2;
         if (size > MaxNodes || depth > MaxDepth)
             limitExceeded();
 
         const Expr expression = static_cast<int>(m_nodes.size());
-        m_nodes.push_back({key, exact, size, depth, containsUnit});
+        m_nodes.push_back({key, exact, size, depth, containsUnit, cost});
         m_interned.insert(key, expression);
         return expression;
     }
@@ -772,7 +808,7 @@ private:
                 limitExceeded();
             expression = derivative(expression, variable);
         }
-        return expression;
+        return simplified(expression, variable);
     }
 
     Expr multiply(QVector<Expr> factors)
@@ -819,6 +855,7 @@ private:
             const auto [base, exponent] = factorPower(factor);
             powers[base] += exponent;
         }
+        mergeRadicals(powers, powers);
         const Expr scalar = number(coefficient);
         if (scalar != m_one || (product.isEmpty() && powers.isEmpty()))
             product.prepend(scalar);
@@ -870,7 +907,18 @@ private:
         }
         if (sum.isEmpty())
             return m_zero;
-        return sum.size() == 1 ? sum.at(0) : make(Opcode::Add, sum);
+        if (sum.size() == 1)
+            return sum.at(0);
+        // The first order of a set of terms is kept for all later sums with
+        // the same terms, so that equal sums are equal expressions.
+        QVector<Expr> set = sum;
+        std::sort(set.begin(), set.end());
+        const auto existing = m_sums.constFind(set);
+        if (existing != m_sums.constEnd())
+            return existing.value();
+        const Expr result = make(Opcode::Add, sum);
+        m_sums.insert(set, result);
+        return result;
     }
 
     Expr negate(Expr operand)
@@ -930,6 +978,44 @@ private:
         return powers;
     }
 
+    // The radicand u when the expression is sqrt(u).
+    Expr radicand(Expr expression) const
+    {
+        const Key& key = node(expression).key;
+        return key.type == Opcode::Function && key.text == QLatin1String("sqrt")
+                && key.children.size() == 1
+            ? key.children.at(0) : NoExpression;
+    }
+
+    // Where sqrt(u) is a factor, u is sqrt(u)^2, so that x*sqrt(x) is
+    // sqrt(x)^3 and u^3/sqrt(u)^11 cancels to 1/sqrt(u)^5. The expression
+    // already needs sqrt(u), so this keeps its domain. Both maps can be the
+    // same, for a single product. Returns whether anything changed.
+    bool mergeRadicals(QMap<Expr, int>& first, QMap<Expr, int>& second)
+    {
+        QVector<Expr> roots;
+        for (const QMap<Expr, int>* powers : {&first, &second}) {
+            for (auto it = powers->cbegin(); it != powers->cend(); ++it) {
+                if (radicand(it.key()) != NoExpression && !roots.contains(it.key()))
+                    roots.append(it.key());
+            }
+        }
+        bool changed = false;
+        for (Expr root : roots) {
+            const Expr inner = radicand(root);
+            for (QMap<Expr, int>* powers : {&first, &second}) {
+                const auto plain = powers->find(inner);
+                if (plain == powers->end())
+                    continue;
+                const int exponent = plain.value();
+                powers->erase(plain);
+                (*powers)[root] += 2 * exponent;
+                changed = true;
+            }
+        }
+        return changed;
+    }
+
     Expr productOfPowers(const QMap<Expr, int>& powers)
     {
         QVector<Expr> factors;
@@ -966,7 +1052,7 @@ private:
 
         auto numeratorPowers = factorPowers(left);
         auto denominatorPowers = factorPowers(right);
-        bool cancelled = false;
+        bool cancelled = mergeRadicals(numeratorPowers, denominatorPowers);
         for (auto divisor = denominatorPowers.begin(); divisor != denominatorPowers.end(); ++divisor) {
             auto dividend = numeratorPowers.find(divisor.key());
             if (dividend != numeratorPowers.end()) {
@@ -1008,6 +1094,14 @@ private:
         }
         if (base == m_zero && exp && exp->numerator.isPositive())
             return m_zero;
+        // u^(n/2) is sqrt(u)^n, so that radicals and rational powers look the
+        // same and can combine.
+        if (exp && exp->denominator == 2) {
+            const Expr root = function(QStringLiteral("sqrt"), base);
+            if (exp->numerator.isNegative())
+                return divide(m_one, power(root, number(ExactNumber{-exp->numerator, 1})));
+            return power(root, number(ExactNumber{exp->numerator, 1}));
+        }
         if (value && exp && exp->denominator == 1 && abs(exp->numerator) <= MaxOrderSteps) {
             int n = exp->numerator.toInt();
             if (n < 0 && base == m_zero)
@@ -1154,38 +1248,448 @@ private:
         return add(sum);
     }
 
-    // Multiplies out an expression when that makes it shorter, so that terms
-    // such as -2*(1+x^2)+8*x^2 combine. A polynomial in the variable is
-    // written as a sum of powers.
-    Expr expanded(Expr expression, const QString& variable)
+    // Builds an optional, simpler form with part of the remaining work. When
+    // that work runs out, the caller keeps the form it has. A time limit still
+    // stops the whole calculation.
+    template <typename Build>
+    Expr attempt(int work, Build build)
     {
-        // Expanding can cost a lot, as in (1+x)^20, and it only gives a nicer
-        // form, so it gets a small part of the work budget. When it runs out,
-        // enough work is left for the rest of the calculation.
-        constexpr int ExpansionWork = 4000;
-        const int budget = qMin(m_remainingWork / 2, ExpansionWork);
+        const int budget = qMin(m_remainingWork / 2, work);
         const int reserve = m_remainingWork - budget;
         m_remainingWork = budget;
-        Expr result = expression;
+        Expr result = NoExpression;
         try {
-            Expr candidate = NoExpression;
+            result = build();
+        } catch (const Failure&) {
+        }
+        m_remainingWork += reserve;
+        spend(0);
+        return result;
+    }
+
+    int cost(Expr expression) const { return node(expression).cost; }
+
+    QVector<Expr> termsOf(Expr expression) const
+    {
+        const Key& key = node(expression).key;
+        return key.type == Opcode::Add ? key.children : QVector<Expr>{expression};
+    }
+
+    // Multiplies out an expression. A polynomial in the variable becomes a
+    // sum of powers in rising order.
+    Expr expansion(Expr expression, const QString& variable)
+    {
+        if (dependsOn(expression, variable)) {
             if (const auto coefficients = polynomial(expression, variable)) {
                 const Expr x = reference(variable);
                 QVector<Expr> terms;
                 for (int i = 0; i < coefficients->size(); ++i)
-                    terms.append(multiply({coefficients->at(i), power(x, number(i))}));
-                candidate = add(terms);
-            } else {
-                candidate = distribute(expression);
+                    terms.append(multiply({distribute(coefficients->at(i)), power(x, number(i))}));
+                return add(terms);
             }
-            if (node(candidate).size < node(expression).size)
-                result = candidate;
-        } catch (const Failure&) {
         }
-        m_remainingWork += reserve;
-        // A time limit still stops the whole calculation.
-        spend(0);
-        return result;
+        return distribute(expression);
+    }
+
+    // Multiplies out an expression between two steps of a derivative when
+    // that makes it smaller, so that terms such as -2*(1+x^2)+8*x^2 combine.
+    // This counts parts and not digits: large expanded coefficients are fine
+    // here, and the passes at the end choose the form that is shown.
+    Expr expanded(Expr expression, const QString& variable)
+    {
+        const Expr candidate = attempt(CandidateWork, [&] { return expansion(expression, variable); });
+        return candidate != NoExpression && node(candidate).size < node(expression).size
+            ? candidate : expression;
+    }
+
+    // Takes the greatest common factor out of a sum, as in 24*x-24*x^3 =
+    // 24*x*(1-x^2): the greatest common divisor of the coefficients and the
+    // lowest power of each shared factor. Its sign follows the first term, so
+    // the sum inside starts with a positive term.
+    Expr factorOut(Expr sum)
+    {
+        if (sum == NoExpression || node(sum).key.type != Opcode::Add)
+            return NoExpression;
+        const QVector<Expr> terms = node(sum).key.children;
+        QVector<QPair<ExactNumber, QMap<Expr, int>>> parts;
+        Integer numerators = 0;
+        Integer denominators = 1;
+        std::optional<QMap<Expr, int>> shared;
+        for (Expr term : terms) {
+            if (node(term).key.type == Opcode::Div)
+                return NoExpression;
+            const auto [coefficient, rest] = coefficientOf(term);
+            const QMap<Expr, int> powers = rest == m_one ? QMap<Expr, int>{} : factorPowers(rest);
+            numerators = gcd(numerators, coefficient.numerator);
+            denominators = lcm(denominators, coefficient.denominator);
+            if (!shared) {
+                shared = powers;
+            } else {
+                for (auto it = shared->begin(); it != shared->end();) {
+                    const int exponent = qMin(it.value(), powers.value(it.key()));
+                    if (exponent > 0) {
+                        it.value() = exponent;
+                        ++it;
+                    } else {
+                        it = shared->erase(it);
+                    }
+                }
+            }
+            parts.append({coefficient, powers});
+        }
+        ExactNumber content = exact(numerators, denominators);
+        if (parts.first().first.numerator.isNegative())
+            content.numerator = -content.numerator;
+        if (content.numerator == 1 && content.denominator == 1 && shared->isEmpty())
+            return NoExpression;
+
+        QVector<Expr> inner;
+        for (const auto& [coefficient, powers] : parts) {
+            QVector<Expr> factors{number(exact(coefficient.numerator * content.denominator,
+                                               coefficient.denominator * content.numerator))};
+            for (auto it = powers.cbegin(); it != powers.cend(); ++it) {
+                const int exponent = it.value() - shared->value(it.key());
+                if (exponent > 0)
+                    factors.append(power(it.key(), number(exponent)));
+            }
+            inner.append(multiply(factors));
+        }
+        QVector<Expr> outer{number(content)};
+        for (auto it = shared->cbegin(); it != shared->cend(); ++it)
+            outer.append(power(it.key(), number(it.value())));
+        outer.append(add(inner));
+        return multiply(outer);
+    }
+
+    // Writes terms over one denominator, as in 1/x+1/x^2 = (x+1)/x^2. Powers
+    // of the same base share the highest one, and u counts as sqrt(u)^2 when
+    // sqrt(u) is also below a bar.
+    Expr overCommonDenominator(const QVector<Expr>& terms)
+    {
+        struct Part {
+            Expr numerator;
+            Integer scale;
+            QMap<Expr, int> powers;
+        };
+        QVector<Part> parts;
+        bool fractions = false;
+        Integer scale = 1;
+        for (Expr term : terms) {
+            Expr numerator = term;
+            Expr denominator = m_one;
+            if (node(term).key.type == Opcode::Div) {
+                numerator = node(term).key.children.at(0);
+                denominator = node(term).key.children.at(1);
+                fractions = true;
+            }
+            const auto [below, rest] = coefficientOf(denominator);
+            if (below.denominator != 1 || !below.numerator.isPositive())
+                return NoExpression;
+            parts.append({numerator, below.numerator,
+                          rest == m_one ? QMap<Expr, int>{} : factorPowers(rest)});
+            scale = lcm(scale, below.numerator);
+        }
+        if (!fractions)
+            return NoExpression;
+
+        // Every sqrt(u) below a bar, so that u becomes sqrt(u)^2 in all terms.
+        QMap<Expr, int> roots;
+        for (const Part& part : parts) {
+            for (auto it = part.powers.cbegin(); it != part.powers.cend(); ++it) {
+                if (radicand(it.key()) != NoExpression)
+                    roots.insert(it.key(), 0);
+            }
+        }
+        QMap<Expr, int> common;
+        for (Part& part : parts) {
+            mergeRadicals(part.powers, roots);
+            for (auto it = part.powers.cbegin(); it != part.powers.cend(); ++it)
+                common[it.key()] = qMax(common.value(it.key()), it.value());
+        }
+        if (common.size() > MaxCommonFactors)
+            return NoExpression;
+
+        QVector<Expr> numerators;
+        for (const Part& part : parts) {
+            QVector<Expr> factors{part.numerator, number(ExactNumber{scale / part.scale, 1})};
+            for (auto it = common.cbegin(); it != common.cend(); ++it) {
+                const int missing = it.value() - part.powers.value(it.key());
+                if (missing > 0)
+                    factors.append(power(it.key(), number(missing)));
+            }
+            numerators.append(multiply(factors));
+        }
+        QVector<Expr> below{number(ExactNumber{scale, 1})};
+        for (auto it = common.cbegin(); it != common.cend(); ++it)
+            below.append(power(it.key(), number(it.value())));
+        return divide(add(numerators), multiply(below));
+    }
+
+    // The bases below the bar of a term, with sqrt(u) counted as u.
+    QSet<Expr> denominatorBases(Expr term)
+    {
+        QSet<Expr> bases;
+        if (node(term).key.type != Opcode::Div)
+            return bases;
+        const auto [below, rest] = coefficientOf(node(term).key.children.at(1));
+        if (rest == m_one)
+            return bases;
+        const QMap<Expr, int> powers = factorPowers(rest);
+        for (auto it = powers.cbegin(); it != powers.cend(); ++it) {
+            const Expr inner = radicand(it.key());
+            bases.insert(inner != NoExpression ? inner : it.key());
+        }
+        return bases;
+    }
+
+    // Combines only the fractions whose denominators share a base, as in
+    // cos(x)+1/x+1/x^2 = cos(x)+(x+1)/x^2, and keeps the other terms.
+    Expr groupedFractions(const QVector<Expr>& terms, const QString& variable)
+    {
+        QVector<QVector<Expr>> groups;
+        QVector<QSet<Expr>> groupBases;
+        QVector<Expr> rest;
+        for (Expr term : terms) {
+            QSet<Expr> bases = denominatorBases(term);
+            if (bases.isEmpty()) {
+                rest.append(term);
+                continue;
+            }
+            QVector<Expr> group{term};
+            for (int i = groups.size() - 1; i >= 0; --i) {
+                if (groupBases.at(i).intersects(bases)) {
+                    group = groups.at(i) + group;
+                    bases.unite(groupBases.at(i));
+                    groups.removeAt(i);
+                    groupBases.removeAt(i);
+                }
+            }
+            groups.append(group);
+            groupBases.append(bases);
+        }
+        bool combined = false;
+        for (const QVector<Expr>& group : groups) {
+            if (group.size() < 2) {
+                rest += group;
+                continue;
+            }
+            const Expr fraction = overCommonDenominator(group);
+            if (fraction == NoExpression) {
+                rest += group;
+                continue;
+            }
+            rest.append(node(fraction).key.type == Opcode::Div ? refineFraction(fraction, variable) : fraction);
+            combined = true;
+        }
+        return combined ? add(rest) : NoExpression;
+    }
+
+    // Inside a fraction whose denominator has sqrt(u), the fraction is only
+    // defined where sqrt(u) is, so even powers of sqrt(u) above the bar can be
+    // written as powers of u. Then they can be multiplied out.
+    Expr withoutEvenRadicals(Expr numerator, Expr denominator)
+    {
+        QSet<Expr> roots;
+        const QMap<Expr, int> below = factorPowers(denominator);
+        for (auto it = below.cbegin(); it != below.cend(); ++it) {
+            if (radicand(it.key()) != NoExpression)
+                roots.insert(it.key());
+        }
+        if (roots.isEmpty())
+            return numerator;
+        QVector<Expr> terms;
+        for (Expr term : termsOf(numerator)) {
+            const auto [coefficient, rest] = coefficientOf(term);
+            const QMap<Expr, int> powers = rest == m_one ? QMap<Expr, int>{} : factorPowers(rest);
+            QVector<Expr> factors{number(coefficient)};
+            for (auto it = powers.cbegin(); it != powers.cend(); ++it) {
+                if (roots.contains(it.key()) && it.value() >= 2) {
+                    factors.append(power(radicand(it.key()), number(it.value() / 2)));
+                    if (it.value() % 2)
+                        factors.append(it.key());
+                } else {
+                    factors.append(power(it.key(), number(it.value())));
+                }
+            }
+            terms.append(multiply(factors));
+        }
+        return add(terms);
+    }
+
+    // The exact coefficients of a polynomial in the variable, lowest first.
+    std::optional<QVector<ExactNumber>> exactPolynomial(Expr expression, const QString& variable)
+    {
+        const auto coefficients = polynomial(expression, variable);
+        if (!coefficients)
+            return std::nullopt;
+        QVector<ExactNumber> values;
+        for (Expr coefficient : *coefficients) {
+            const auto& value = node(coefficient).number;
+            if (!value)
+                return std::nullopt;
+            values.append(*value);
+        }
+        while (values.size() > 1 && values.last().numerator.isZero())
+            values.removeLast();
+        return values;
+    }
+
+    // The quotient when the divisor divides the polynomial exactly.
+    std::optional<QVector<ExactNumber>> exactQuotient(QVector<ExactNumber> dividend,
+                                                      const QVector<ExactNumber>& divisor)
+    {
+        const int degree = int(divisor.size()) - 1;
+        if (degree < 1 || dividend.size() <= degree)
+            return std::nullopt;
+        const ExactNumber& lead = divisor.last();
+        QVector<ExactNumber> quotient(dividend.size() - degree, ExactNumber{0, 1});
+        for (int i = int(dividend.size()) - 1; i >= degree; --i) {
+            spend();
+            const ExactNumber& top = dividend.at(i);
+            const ExactNumber factor = exact(top.numerator * lead.denominator, top.denominator * lead.numerator);
+            quotient[i - degree] = factor;
+            for (int j = 0; j <= degree; ++j) {
+                ExactNumber& term = dividend[i - degree + j];
+                const ExactNumber& d = divisor.at(j);
+                const Integer numerator = factor.numerator * d.numerator;
+                const Integer denominator = factor.denominator * d.denominator;
+                term = exact(term.numerator * denominator - numerator * term.denominator,
+                             term.denominator * denominator);
+            }
+        }
+        for (int i = 0; i < degree; ++i) {
+            if (!dividend.at(i).numerator.isZero())
+                return std::nullopt;
+        }
+        return quotient;
+    }
+
+    // Cancels polynomial factors of the denominator that divide the
+    // numerator, as in (x^3+x^2)/(x+1)^2 = x^2/(x+1).
+    Expr cancelPolynomialFactors(Expr numerator, Expr denominator, const QString& variable)
+    {
+        auto above = exactPolynomial(numerator, variable);
+        if (!above || above->size() < 2)
+            return NoExpression;
+        QMap<Expr, int> below = factorPowers(denominator);
+        bool cancelled = false;
+        for (auto it = below.begin(); it != below.end(); ++it) {
+            if (node(it.key()).key.type != Opcode::Add)
+                continue;
+            const auto divisor = exactPolynomial(it.key(), variable);
+            if (!divisor)
+                continue;
+            while (it.value() > 0) {
+                const auto quotient = exactQuotient(*above, *divisor);
+                if (!quotient)
+                    break;
+                *above = *quotient;
+                --it.value();
+                cancelled = true;
+            }
+        }
+        if (!cancelled)
+            return NoExpression;
+        const Expr x = reference(variable);
+        QVector<Expr> terms;
+        for (int i = 0; i < above->size(); ++i)
+            terms.append(multiply({number(above->at(i)), power(x, number(i))}));
+        return divide(add(terms), productOfPowers(below));
+    }
+
+    // Simplifies the numerator of a fraction and cancels the factors that it
+    // shares with the denominator.
+    Expr refineFraction(Expr fraction, const QString& variable)
+    {
+        const QVector<Expr> parts = node(fraction).key.children;
+        const Expr denominator = parts.at(1);
+        Expr best = fraction;
+        const auto consider = [&](Expr numerator) {
+            if (numerator == NoExpression)
+                return;
+            const Expr candidate = attempt(CandidateWork, [&] { return divide(numerator, denominator); });
+            if (candidate != NoExpression && cost(candidate) < cost(best))
+                best = candidate;
+        };
+        const Expr numerator = attempt(CandidateWork, [&] {
+            return withoutEvenRadicals(parts.at(0), denominator);
+        });
+        if (numerator == NoExpression)
+            return best;
+        const Expr expandedNumerator = attempt(CandidateWork, [&] { return expansion(numerator, variable); });
+        consider(numerator);
+        consider(expandedNumerator);
+        consider(attempt(CandidateWork, [&] { return factorOut(numerator); }));
+        consider(attempt(CandidateWork, [&] { return factorOut(expandedNumerator); }));
+        const Expr cancelled = attempt(CandidateWork, [&] {
+            return cancelPolynomialFactors(numerator, denominator, variable);
+        });
+        if (cancelled != NoExpression && cost(cancelled) < cost(best))
+            best = cancelled;
+        return best;
+    }
+
+    Expr refineSum(Expr sum, const QString& variable)
+    {
+        const QVector<Expr> terms = node(sum).key.children;
+        Expr best = sum;
+        const auto consider = [&](Expr candidate) {
+            if (candidate != NoExpression && cost(candidate) < cost(best))
+                best = candidate;
+        };
+        const Expr expandedSum = attempt(CandidateWork, [&] { return expansion(sum, variable); });
+        consider(expandedSum);
+        consider(attempt(CandidateWork, [&] { return factorOut(sum); }));
+        consider(attempt(CandidateWork, [&] { return factorOut(expandedSum); }));
+        consider(attempt(CandidateWork, [&] {
+            const Expr fraction = overCommonDenominator(terms);
+            return fraction != NoExpression && node(fraction).key.type == Opcode::Div
+                ? refineFraction(fraction, variable) : fraction;
+        }));
+        consider(attempt(CandidateWork, [&] { return groupedFractions(terms, variable); }));
+        return best;
+    }
+
+    // One pass from the leaves up. A part only changes when its new form has
+    // a lower complexity.
+    Expr refine(Expr expression, const QString& variable)
+    {
+        spend();
+        const Key key = node(expression).key;
+        if (key.children.isEmpty())
+            return expression;
+        QVector<Expr> children;
+        bool changed = false;
+        for (Expr child : key.children) {
+            const Expr refined = refine(child, variable);
+            changed = changed || refined != child;
+            children.append(refined);
+        }
+        Expr current = expression;
+        if (changed) {
+            const Expr rebuilt = rebuild(key, children);
+            if (cost(rebuilt) < cost(current))
+                current = rebuilt;
+        }
+        switch (node(current).key.type) {
+        case Opcode::Add: return refineSum(current, variable);
+        case Opcode::Div: return refineFraction(current, variable);
+        default: return current;
+        }
+    }
+
+    // Repeats the passes until nothing changes. Every change lowers the
+    // complexity, so expanding and factoring cannot undo each other, and the
+    // number of passes and the work they use are limited too.
+    Expr simplified(Expr expression, const QString& variable)
+    {
+        for (int pass = 0; pass < MaxPasses; ++pass) {
+            const Expr next = attempt(PassWork, [&] { return refine(expression, variable); });
+            if (next == NoExpression || next == expression)
+                break;
+            expression = next;
+        }
+        return expression;
     }
 
     Expr derivative(Expr expression, const QString& variable)
@@ -1249,10 +1753,6 @@ private:
             // The numerator is du*radical - u*(sum of terms). Only the outer
             // sums of du and u are multiplied out, so that inner factors such
             // as (ln(x)+1) stay as they are and can combine.
-            const auto termsOf = [this](Expr expression) {
-                const Key& sum = node(expression).key;
-                return sum.type == Opcode::Add ? sum.children : QVector<Expr>{expression};
-            };
             const Expr radical = multiply(bases);
             const Expr logSlope = add(terms);
             QVector<Expr> numeratorTerms;
@@ -1466,15 +1966,23 @@ private:
             break;
         case Opcode::Mul: {
             const auto& coefficient = node(children.at(0)).number;
-            const bool leadingMinus = coefficient && coefficient->numerator == -1 && coefficient->denominator == 1;
-            if (leadingMinus)
+            // A fractional coefficient goes below a bar at the end, as in
+            // x*(x+1)/2 instead of 1/2*x*(x+1).
+            const bool fractional = coefficient && coefficient->denominator != 1;
+            const bool unit = coefficient && abs(coefficient->numerator) == 1
+                && (fractional || coefficient->numerator.isNegative());
+            if (unit && coefficient->numerator.isNegative())
                 text += QLatin1Char('-');
-            const int start = leadingMinus ? 1 : 0;
+            if (fractional && !unit)
+                text += coefficient->numerator.toString() + QLatin1Char('*');
+            const int start = unit || fractional ? 1 : 0;
             for (int i = start; i < children.size(); ++i) {
                 if (i > start)
                     text += QLatin1Char('*');
                 render(children.at(i), i > start && negative(children.at(i)) ? 4 : 2, text);
             }
+            if (fractional)
+                text += QLatin1Char('/') + coefficient->denominator.toString();
             break;
         }
         case Opcode::Div:
@@ -1508,15 +2016,21 @@ private:
 
 bool Calculus::dependsOn(Expr expression, const QString& variable)
 {
+    // Expressions never change, so the answer is kept for each variable.
+    if (variable != m_dependsVariable) {
+        m_depends.clear();
+        m_dependsVariable = variable;
+    }
+    const auto known = m_depends.constFind(expression);
+    if (known != m_depends.constEnd())
+        return known.value();
     spend();
     const Key& key = node(expression).key;
-    if (key.type == Opcode::Ref)
-        return key.text == variable;
-    for (Expr child : key.children) {
-        if (dependsOn(child, variable))
-            return true;
-    }
-    return false;
+    bool result = key.type == Opcode::Ref && key.text == variable;
+    for (int i = 0; !result && i < key.children.size(); ++i)
+        result = dependsOn(key.children.at(i), variable);
+    m_depends.insert(expression, result);
+    return result;
 }
 
 Expr Calculus::substitute(Expr expression, Expr variable, Expr value)
@@ -1539,8 +2053,13 @@ std::optional<Calculus::PowerKernel> Calculus::powerKernel(Expr expression)
     const Key& key = node(expression).key;
     if (key.type == Opcode::Pow) {
         const Expr exponent = simplify(key.children.at(1));
-        if (node(exponent).number)
+        if (node(exponent).number) {
+            // sqrt(u)^n is u^(n/2).
+            const Expr inner = radicand(key.children.at(0));
+            if (inner != NoExpression)
+                return PowerKernel{inner, divide(exponent, number(2))};
             return PowerKernel{key.children.at(0), exponent};
+        }
     }
     if (key.type == Opcode::Function && key.text == QLatin1String("sqrt"))
         return PowerKernel{key.children.at(0), number(1, 2)};
@@ -1613,6 +2132,25 @@ std::optional<QVector<Expr>> Calculus::polynomial(Expr expression, const QString
     if (key.type == Opcode::Ref)
         return QVector<Expr>{m_zero, m_one};
 
+    // Numeric coefficients use exact arithmetic directly, which is much
+    // cheaper than building an expression for every partial sum.
+    const auto plus = [&](Expr a, Expr b) {
+        const auto& left = node(a).number;
+        const auto& right = node(b).number;
+        if (!left || !right)
+            return add({a, b});
+        spend();
+        return number(exact(left->numerator * right->denominator + right->numerator * left->denominator,
+                            left->denominator * right->denominator));
+    };
+    const auto times = [&](Expr a, Expr b) {
+        const auto& left = node(a).number;
+        const auto& right = node(b).number;
+        if (!left || !right)
+            return multiply({a, b});
+        spend();
+        return number(exact(left->numerator * right->numerator, left->denominator * right->denominator));
+    };
     const auto product = [&](const QVector<Expr>& left, const QVector<Expr>& right) {
         const int count = left.size() + right.size() - 1;
         if (count > maxDegree + 1)
@@ -1620,7 +2158,7 @@ std::optional<QVector<Expr>> Calculus::polynomial(Expr expression, const QString
         QVector<Expr> coefficients(count, m_zero);
         for (int i = 0; i < left.size(); ++i) {
             for (int j = 0; j < right.size(); ++j)
-                coefficients[i + j] = add({coefficients.at(i + j), multiply({left.at(i), right.at(j)})});
+                coefficients[i + j] = plus(coefficients.at(i + j), times(left.at(i), right.at(j)));
         }
         return coefficients;
     };
@@ -1634,7 +2172,7 @@ std::optional<QVector<Expr>> Calculus::polynomial(Expr expression, const QString
                 if (coefficients.size() < part->size())
                     coefficients += QVector<Expr>(part->size() - coefficients.size(), m_zero);
                 for (int i = 0; i < part->size(); ++i)
-                    coefficients[i] = add({coefficients.at(i), part->at(i)});
+                    coefficients[i] = plus(coefficients.at(i), part->at(i));
             } else {
                 coefficients = product(coefficients, *part);
                 if (coefficients.isEmpty())
@@ -1652,8 +2190,20 @@ std::optional<QVector<Expr>> Calculus::polynomial(Expr expression, const QString
         const auto base = polynomial(key.children.at(0), variable);
         if (!base)
             return std::nullopt;
+        const int degree = exponent->numerator.toInt();
+        // A single term c*x^k gives c^n*x^(k*n) directly.
+        const auto nonzero = std::count_if(base->cbegin(), base->cend(), [this](Expr c) { return c != m_zero; });
+        if (nonzero == 1) {
+            const int index = int(std::find_if(base->cbegin(), base->cend(),
+                                               [this](Expr c) { return c != m_zero; }) - base->cbegin());
+            if (index * degree > maxDegree)
+                return std::nullopt;
+            QVector<Expr> coefficients(index * degree + 1, m_zero);
+            coefficients[index * degree] = power(base->at(index), number(degree));
+            return coefficients;
+        }
         QVector<Expr> coefficients{m_one};
-        for (int i = 0; i < exponent->numerator.toInt(); ++i) {
+        for (int i = 0; i < degree; ++i) {
             coefficients = product(coefficients, *base);
             if (coefficients.isEmpty())
                 return std::nullopt;
