@@ -767,13 +767,29 @@ static void test_symbolic_differentiation()
     CHECK_EVAL("2 + diff(x^4; 4)", "26");
     CHECK_EVAL("diff((-x + x^2 + 2*x^2) - (x^0 + 0*x))", "-1+6*x");
     CHECK_EVAL("diff(x*x*x + x^3)", "6*x^2");
-    CHECK_EVAL("diff((x^2+1)/x)", "(x^2-1)/x^2");
+    CHECK_EVAL("diff((x^2+1)/x)", "1-1/x^2");
     CHECK_EVAL("diff(x*y + y*x; x)", "2*y");
     CHECK_EVAL("diff((x-x)*x)", "0");
     CHECK_EVAL("diff((0.5+0.25)*x)", "3/4");
     CHECK_EVAL("diff((0x4+0b11)*x)", "7");
     CHECK_EVAL("diff(x/3)", "1/3");
     CHECK_EVAL("diff(1/3*x/3)", "1/9");
+    // Large coefficients fold into one exact number.
+    CHECK_EVAL("diff(cos(x)^2; 125)", "-42535295865117307932921825928971026432*cos(x)*sin(x)");
+    CHECK_EVAL("diff(exp(2*x); 130)", "1361129467683753853853498429727072845824*exp(2*x)");
+    expectError("diff(x^100; 70)", "limit exceeded");
+    // Quotients keep one fraction bar, so factors cancel and like terms combine.
+    CHECK_EVAL("diff(x*ln(x); 3)", "-1/x^2");
+    CHECK_EVAL("diff(sin(ln(x)))", "cos(ln(x))/x");
+    CHECK_EVAL("diff(x/(x+1); 3)", "6/(x+1)^4");
+    CHECK_EVAL("diff(1/(1+x^2); 3)", "(24*x-24*x^3)/(1+x^2)^4");
+    CHECK_EVAL("diff(sin(x)/x; 2)", "-sin(x)/x-2*cos(x)/x^2+2*sin(x)/x^3");
+    CHECK_EVAL("diff(exp(x)/x; 3)", "exp(x)/x-3*exp(x)/x^2+6*exp(x)/x^3-6*exp(x)/x^4");
+    CHECK_EVAL("diff(x^x; 3)", "x^x*(ln(x)+1)^3+3*x^x*(ln(x)+1)/x-x^x/x^2");
+    CHECK_EVAL("diff(cos(x)/(1+sin(x)); 2)",
+               "(-cos(x)+cos(x)*sin(x)+2*cos(x)*sin(x)^2+2*cos(x)^3)/(1+sin(x))^3");
+    CHECK_EVAL("diff(sqrt(x); 2)", "-1/(4*sqrt(x)^3)");
+    CHECK_EVAL("diff(sqrt(x); 20)", "-8200794532637891559375/(1048576*sqrt(x)^39)");
     CHECK_EVAL("diff(x^4; 1e40)", "0");
     CHECK_EVAL("diff(2[m]; 1e40)", "0");
     CHECK_EVAL("5", "5");
@@ -849,6 +865,14 @@ static void test_symbolic_differentiation()
     checkAt("diff(arctan2(x; x^2))", "1/5");
     checkAt("diff(sinh(x^2)+cosh(x)+tanh(x))", "4*cosh(4)+sinh(2)+1/cosh(2)^2");
     checkAt("diff(arsinh(x)+arcosh(x)+artanh(x/4))", "1/sqrt(5)+1/sqrt(3)+1/3");
+    checkAt("diff(1/(1+x^2); 10)", "10!*sin(11*arctan(1/2))/5^5.5");
+    checkAt("diff(sqrt(x); 20)", "gamma(1.5)/gamma(1.5-20)*2^(-19.5)");
+    checkAt("diff(exp(x)/x; 3)", "exp(2)/8");
+    checkAt("diff(cos(x)/(1+sin(x)); 2)", "cos(2)/(1+sin(2))^2");
+    checkAt("diff(exp(x)/(1+exp(x)); 3)", "exp(2)*(1-4*exp(2)+exp(4))/(1+exp(2))^4");
+    checkAt("diff(1/(x^2*(1+x)); 2)", "6/2^4-2/2^3+2/3^3");
+    checkAt("diff(sqrt(x)/x; 3)", "-15/8*2^(-3.5)");
+    checkAt("diff(sqrt(1+x^2); 6)", "3645/5^5.5");
 
     Settings* settings = Settings::instance();
     const QScopedValueRollback<char> restoreAngle(settings->angleUnit);

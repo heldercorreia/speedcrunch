@@ -9,6 +9,7 @@
 #include "core/settings.h"
 #include "core/unicodechars.h"
 #include "core/units.h"
+#include "math/floatnum/floatcommon.h"
 
 #include <QCoreApplication>
 #include <QMap>
@@ -31,36 +32,175 @@ struct Failure {
     QString message;
 };
 
-// Keep room for cross products and their sum in the numeric engine.
-constexpr int ExactDigits = 36;
-static_assert(2 * ExactDigits + 1 < DECPRECISION);
+// A numeric value reaches the calculus as a literal with all its digits, but
+// most of them are rounded. Only short literals are taken as exact numbers.
+constexpr int LiteralDigits = 36;
+// Coefficients can grow much longer, for example in diff(exp(2*x); 125).
+// Keep room for cross products and their sum in exact arithmetic.
+constexpr int ExactDigits = 120;
+static_assert(2 * ExactDigits + 1 <= MAXDIGITS);
 
-struct ExactNumber {
-    HNumber numerator = 0;
-    HNumber denominator = 1;
+// An exact integer. HNumber rounds to its working precision, which is too
+// short for large coefficients.
+class Integer {
+public:
+    Integer(int value = 0)
+    {
+        float_create(&m_value);
+        float_setinteger(&m_value, value);
+    }
+
+    Integer(const Integer& other)
+    {
+        float_create(&m_value);
+        float_copy(&m_value, &other.m_value, EXACT);
+    }
+
+    Integer& operator=(const Integer& other)
+    {
+        if (this != &other)
+            float_copy(&m_value, &other.m_value, EXACT);
+        return *this;
+    }
+
+    ~Integer() { float_free(&m_value); }
+
+    // Decimal digits with an optional leading minus sign.
+    static Integer fromDigits(const QString& digits)
+    {
+        Integer result;
+        float_setscientific(&result.m_value, digits.toLatin1().constData(), NULLTERMINATED);
+        return result;
+    }
+
+    bool isValid() const { return !float_isnan(&m_value); }
+    bool isZero() const { return float_iszero(&m_value); }
+    bool isNegative() const { return float_getsign(&m_value) < 0; }
+    bool isPositive() const { return float_getsign(&m_value) > 0; }
+
+    // The number of decimal digits, or 0 for zero.
+    int digits() const { return isZero() ? 0 : float_getexponent(&m_value) + 1; }
+
+    // Only for values that fit, such as small exponents.
+    int toInt() const { return float_asinteger(&m_value); }
+
+    QString toString() const
+    {
+        if (!isValid())
+            return QStringLiteral("NaN");
+        if (isZero())
+            return QStringLiteral("0");
+        const int length = float_getlength(&m_value);
+        QByteArray significand(length, '0');
+        float_getsignificand(significand.data(), length, &m_value);
+        return (isNegative() ? QStringLiteral("-") : QString()) + QString::fromLatin1(significand)
+            + QString(digits() - length, QLatin1Char('0'));
+    }
+
+    HNumber toHNumber() const
+    {
+        if (!isValid())
+            return HMath::nan();
+        if (digits() <= DECPRECISION)
+            return HNumber(toString().toLatin1().constData());
+        // A number result only shows the leading digits.
+        const QString text = toString();
+        const int sign = isNegative() ? 1 : 0;
+        const QString scientific = text.left(sign + 1) + QLatin1Char('.')
+            + text.mid(sign + 1, DECPRECISION - 1) + QStringLiteral("e%1").arg(digits() - 1);
+        return HNumber(scientific.toLatin1().constData());
+    }
+
+    Integer operator-() const
+    {
+        Integer result(*this);
+        float_neg(&result.m_value);
+        return result;
+    }
+
+    friend Integer abs(const Integer& value) { return value.isNegative() ? -value : value; }
+    friend Integer operator+(const Integer& a, const Integer& b) { return apply(a, b, float_add); }
+    friend Integer operator*(const Integer& a, const Integer& b) { return apply(a, b, float_mul); }
+
+    // Truncates towards zero, like integer division in C++.
+    static void divide(const Integer& dividend, const Integer& divisor, Integer& quotient,
+                       Integer& remainder)
+    {
+        float_divmod(&quotient.m_value, &remainder.m_value, &dividend.m_value, &divisor.m_value, INTQUOT);
+        float_geterror();
+    }
+
+    friend Integer operator/(const Integer& dividend, const Integer& divisor)
+    {
+        Integer quotient;
+        Integer remainder;
+        divide(dividend, divisor, quotient, remainder);
+        return quotient;
+    }
+
+    friend Integer operator%(const Integer& dividend, const Integer& divisor)
+    {
+        Integer quotient;
+        Integer remainder;
+        divide(dividend, divisor, quotient, remainder);
+        return remainder;
+    }
+
+    friend Integer gcd(Integer a, Integer b)
+    {
+        a = abs(a);
+        b = abs(b);
+        while (b.isValid() && !b.isZero()) {
+            const Integer remainder = a % b;
+            a = b;
+            b = remainder;
+        }
+        return b.isValid() ? a : b;
+    }
+
+    friend bool operator==(const Integer& a, const Integer& b) { return float_cmp(&a.m_value, &b.m_value) == 0; }
+    friend bool operator!=(const Integer& a, const Integer& b) { return !(a == b); }
+    friend bool operator<(const Integer& a, const Integer& b) { return float_cmp(&a.m_value, &b.m_value) < 0; }
+    friend bool operator>(const Integer& a, const Integer& b) { return b < a; }
+    friend bool operator<=(const Integer& a, const Integer& b) { return !(b < a); }
+
+private:
+    using Operation = char (*)(floatnum, cfloatnum, cfloatnum, int);
+
+    static Integer apply(const Integer& a, const Integer& b, Operation operation)
+    {
+        Integer result;
+        operation(&result.m_value, &a.m_value, &b.m_value, EXACT);
+        // HMath reads the shared error state, so leave it clean.
+        float_geterror();
+        return result;
+    }
+
+    floatstruct m_value;
 };
 
-const HNumber& exactLimit()
-{
-    static const HNumber limit = HMath::raise(HNumber(10), ExactDigits);
-    return limit;
-}
+struct ExactNumber {
+    Integer numerator = 0;
+    Integer denominator = 1;
+};
 
-std::optional<ExactNumber> fraction(HNumber numerator, HNumber denominator)
+std::optional<ExactNumber> fraction(Integer numerator, Integer denominator)
 {
-    if (denominator.isZero())
+    if (!numerator.isValid() || !denominator.isValid() || denominator.isZero())
         return std::nullopt;
     if (denominator.isNegative()) {
         numerator = -numerator;
         denominator = -denominator;
     }
     if (denominator != 1) {
-        const HNumber gcd = HMath::gcd(HMath::abs(numerator), denominator);
-        numerator = HMath::idiv(numerator, gcd);
-        denominator = HMath::idiv(denominator, gcd);
+        const Integer divisor = gcd(numerator, denominator);
+        numerator = numerator / divisor;
+        denominator = denominator / divisor;
     }
-    if (HMath::abs(numerator) >= exactLimit() || denominator >= exactLimit())
+    if (!numerator.isValid() || !denominator.isValid()
+        || numerator.digits() > ExactDigits || denominator.digits() > ExactDigits) {
         return std::nullopt;
+    }
     return ExactNumber{numerator, denominator};
 }
 
@@ -92,7 +232,7 @@ std::optional<ExactNumber> exactLiteral(const QString& text)
         ++scale;
     }
     const qsizetype length = last - first;
-    if (scale <= -ExactDigits || length + qMax(qint64(0), scale) > ExactDigits)
+    if (scale <= -LiteralDigits || length + qMax(qint64(0), scale) > LiteralDigits)
         return std::nullopt;
 
     digits = digits.mid(first, length);
@@ -100,7 +240,7 @@ std::optional<ExactNumber> exactLiteral(const QString& text)
         digits += QString(scale, QLatin1Char('0'));
     const QString denominator = scale < 0
         ? QStringLiteral("1") + QString(-scale, QLatin1Char('0')) : QStringLiteral("1");
-    return fraction(HNumber(digits.toLatin1().constData()), HNumber(denominator.toLatin1().constData()));
+    return fraction(Integer::fromDigits(digits), Integer::fromDigits(denominator));
 }
 
 using Expr = int;
@@ -181,7 +321,7 @@ private:
     {
         const auto& exact = node(result).number;
         if (exact && exact->denominator == 1)
-            return Quantity(exact->numerator);
+            return Quantity(exact->numerator.toHNumber());
         QString rendered;
         render(result, 0, rendered);
         return Quantity::symbolic(rendered);
@@ -303,17 +443,25 @@ private:
 
     Expr number(const ExactNumber& value)
     {
-        const auto format = HNumber::Format::Fixed() + HNumber::Format::Point()
-            + HNumber::Format::Precision(0);
-        QString text = HMath::format(value.numerator, format);
+        QString text = value.numerator.toString();
         if (value.denominator != 1)
-            text += QLatin1Char('/') + HMath::format(value.denominator, format);
+            text += QLatin1Char('/') + value.denominator.toString();
         return make(Opcode::Load, {}, text, value);
+    }
+
+    // Every coefficient must fold into one number, or the result could show
+    // a long chain of numeric factors and terms that were not combined.
+    static ExactNumber exact(const Integer& numerator, const Integer& denominator)
+    {
+        const auto value = fraction(numerator, denominator);
+        if (!value)
+            limitExceeded();
+        return *value;
     }
 
     Expr number(int value, int denominator = 1)
     {
-        return number(ExactNumber{HNumber(value), HNumber(denominator)});
+        return number(ExactNumber{value, denominator});
     }
 
     Expr reference(const QString& name) { return make(Opcode::Ref, {}, name); }
@@ -520,9 +668,11 @@ private:
                 static const QRegularExpression integerWithBase(
                     QStringLiteral(R"(^0[boxd][0-9A-Fa-f]+$)"),
                     QRegularExpression::CaseInsensitiveOption);
-                if (!exact && text.size() <= ExactDigits && value.isInteger()
+                if (!exact && text.size() <= LiteralDigits && value.isInteger()
                     && integerWithBase.match(text).hasMatch()) {
-                    exact = fraction(value.numericValue().real, HNumber(1));
+                    const auto format = HNumber::Format::Fixed() + HNumber::Format::Point()
+                        + HNumber::Format::Precision(0);
+                    exact = fraction(Integer::fromDigits(HMath::format(value.numericValue().real, format)), 1);
                 }
                 stack.append(exact ? number(*exact) : make(Opcode::Load, {}, text));
                 break;
@@ -639,6 +789,21 @@ private:
         if (terms.size() == 1)
             return terms.at(0);
 
+        // Keep a single fraction bar, so that factors such as x*2/x^3 cancel.
+        QVector<Expr> numerators;
+        QVector<Expr> denominators;
+        for (Expr factor : terms) {
+            const Key& key = node(factor).key;
+            if (key.type == Opcode::Div) {
+                numerators.append(key.children.at(0));
+                denominators.append(key.children.at(1));
+            } else {
+                numerators.append(factor);
+            }
+        }
+        if (!denominators.isEmpty())
+            return divide(multiply(numerators), multiply(denominators));
+
         ExactNumber coefficient{1, 1};
         QVector<Expr> product;
         QMap<Expr, int> powers;
@@ -647,12 +812,8 @@ private:
             if (factor == m_zero)
                 return m_zero;
             if (value.number) {
-                const auto combined = fraction(coefficient.numerator * value.number->numerator,
-                                               coefficient.denominator * value.number->denominator);
-                if (combined)
-                    coefficient = *combined;
-                else
-                    product.append(factor);
+                coefficient = exact(coefficient.numerator * value.number->numerator,
+                                    coefficient.denominator * value.number->denominator);
                 continue;
             }
             const auto [base, exponent] = factorPower(factor);
@@ -683,32 +844,23 @@ private:
         QVector<Expr> bases;
         QVector<Expr> sum;
         for (Expr term : terms) {
-            Expr base = term;
-            ExactNumber coefficient{1, 1};
-            const Node& value = node(term);
-            if (value.number) {
-                coefficient = *value.number;
-                base = m_one;
-            } else if (value.key.type == Opcode::Mul) {
-                const auto& scalar = node(value.key.children.at(0)).number;
-                if (scalar) {
-                    coefficient = *scalar;
-                    const auto rest = value.key.children.sliced(1);
-                    base = rest.size() == 1 ? rest.at(0) : make(Opcode::Mul, rest);
-                }
+            auto [coefficient, base] = coefficientOf(term);
+            const Key& key = node(term).key;
+            if (key.type == Opcode::Div) {
+                // Like terms can also be fractions, as in 3/x^2 and -2/x^2.
+                const auto [above, numerator] = coefficientOf(key.children.at(0));
+                const auto [below, denominator] = coefficientOf(key.children.at(1));
+                coefficient = exact(above.numerator * below.denominator, above.denominator * below.numerator);
+                base = denominator == m_one ? numerator : make(Opcode::Div, {numerator, denominator});
             }
             auto existing = coefficients.find(base);
             if (existing == coefficients.end()) {
                 bases.append(base);
                 coefficients.insert(base, coefficient);
             } else {
-                const auto combined = fraction(
+                existing.value() = exact(
                     existing->numerator * coefficient.denominator + coefficient.numerator * existing->denominator,
                     existing->denominator * coefficient.denominator);
-                if (combined)
-                    existing.value() = *combined;
-                else
-                    sum.append(term);
             }
         }
         for (Expr base : bases) {
@@ -734,6 +886,23 @@ private:
     }
 
     Expr subtract(Expr left, Expr right) { return add({left, negate(right)}); }
+
+    // Splits c*rest into its exact coefficient c and the rest.
+    QPair<ExactNumber, Expr> coefficientOf(Expr expression)
+    {
+        const Node& value = node(expression);
+        if (value.number)
+            return {*value.number, m_one};
+        if (value.key.type == Opcode::Mul) {
+            const auto& scalar = node(value.key.children.at(0)).number;
+            if (scalar) {
+                const ExactNumber coefficient = *scalar;
+                const auto rest = value.key.children.sliced(1);
+                return {coefficient, rest.size() == 1 ? rest.at(0) : make(Opcode::Mul, rest)};
+            }
+        }
+        return {ExactNumber{1, 1}, expression};
+    }
 
     QPair<Expr, int> factorPower(Expr factor) const
     {
@@ -777,6 +946,15 @@ private:
             throw Failure{tr("division by zero")};
         if (left == m_zero || right == m_one)
             return left;
+        // Keep a single fraction bar, so that common factors can cancel.
+        if (node(left).key.type == Opcode::Div) {
+            const QVector<Expr> parts = node(left).key.children;
+            return divide(parts.at(0), multiply({parts.at(1), right}));
+        }
+        if (node(right).key.type == Opcode::Div) {
+            const QVector<Expr> parts = node(right).key.children;
+            return divide(multiply({left, parts.at(1)}), parts.at(0));
+        }
         const auto& denominator = node(right).number;
         if (denominator) {
             const auto inverse = fraction(denominator->denominator, denominator->numerator);
@@ -804,6 +982,13 @@ private:
             if (node(right).number)
                 return divide(left, right);
         }
+        // Keep an integer coefficient above the bar and a positive one below,
+        // as in 3/(8*x), so that equal fractions are equal expressions.
+        const auto [above, numerator] = coefficientOf(left);
+        const auto [below, rest] = coefficientOf(right);
+        const ExactNumber scale = exact(above.numerator * below.denominator, above.denominator * below.numerator);
+        left = multiply({number(ExactNumber{scale.numerator, 1}), numerator});
+        right = multiply({number(ExactNumber{scale.denominator, 1}), rest});
         return make(Opcode::Div, {left, right});
     }
 
@@ -823,7 +1008,7 @@ private:
         }
         if (base == m_zero && exp && exp->numerator.isPositive())
             return m_zero;
-        if (value && exp && exp->denominator == 1 && HMath::abs(exp->numerator) <= MaxOrderSteps) {
+        if (value && exp && exp->denominator == 1 && abs(exp->numerator) <= MaxOrderSteps) {
             int n = exp->numerator.toInt();
             if (n < 0 && base == m_zero)
                 throw Failure{tr("division by zero")};
@@ -847,7 +1032,7 @@ private:
     {
         const auto& exact = node(argument).number;
         if (name == QLatin1String("abs") && exact)
-            return number(ExactNumber{HMath::abs(exact->numerator), exact->denominator});
+            return number(ExactNumber{abs(exact->numerator), exact->denominator});
         if (name == QLatin1String("ln")) {
             if (argument == m_one)
                 return m_zero;
@@ -867,7 +1052,7 @@ private:
         if (name == QLatin1String("arctan") && exact) {
             if (argument == m_zero)
                 return m_zero;
-            if (exact->denominator == 1 && HMath::abs(exact->numerator) == 1) {
+            if (exact->denominator == 1 && abs(exact->numerator) == 1) {
                 const Expr quarterTurn = multiply({number(1, 4), reference(QStringLiteral("π"))});
                 return divide(exact->numerator.isNegative() ? negate(quarterTurn) : quarterTurn,
                               radiansPerAngle());
@@ -884,9 +1069,9 @@ private:
                 && node(angle.children.at(0)).number)) {
                 const ExactNumber multiplier = radians == pi
                     ? ExactNumber{1, 1} : *node(angle.children.at(0)).number;
-                const HNumber quarterTurns = multiplier.numerator * HNumber(2) / multiplier.denominator;
-                if (quarterTurns.isInteger()) {
-                    const int quadrant = ((quarterTurns % 4).toInt() + 4) % 4;
+                const Integer turns = multiplier.numerator * 2;
+                if ((turns % multiplier.denominator).isZero()) {
+                    const int quadrant = (((turns / multiplier.denominator) % 4).toInt() + 4) % 4;
                     const int sine[] = {0, 1, 0, -1};
                     const int cosine[] = {1, 0, -1, 0};
                     return number(name == QLatin1String("sin") ? sine[quadrant] : cosine[quadrant]);
@@ -931,6 +1116,78 @@ private:
         }
     }
 
+    // Multiplies out products and small powers of sums, such as 3*(a-2*b)
+    // and (1+a)^2, so that like terms can combine.
+    Expr distribute(Expr expression)
+    {
+        spend();
+        const Key key = node(expression).key;
+        if (key.type == Opcode::Add) {
+            QVector<Expr> terms;
+            for (Expr child : key.children)
+                terms.append(distribute(child));
+            return add(terms);
+        }
+        QVector<Expr> factors = key.children;
+        if (key.type == Opcode::Pow) {
+            const auto& exponent = node(key.children.at(1)).number;
+            if (!exponent || exponent->denominator != 1 || exponent->numerator < 2
+                || exponent->numerator > 8 || node(key.children.at(0)).key.type != Opcode::Add) {
+                return expression;
+            }
+            factors = QVector<Expr>(exponent->numerator.toInt(), key.children.at(0));
+        } else if (key.type != Opcode::Mul) {
+            return expression;
+        }
+        QVector<Expr> sum{m_one};
+        for (Expr child : factors) {
+            const Expr factor = distribute(child);
+            const Key& part = node(factor).key;
+            const QVector<Expr> terms = part.type == Opcode::Add ? part.children : QVector<Expr>{factor};
+            QVector<Expr> product;
+            for (Expr left : sum) {
+                for (Expr right : terms)
+                    product.append(multiply({left, right}));
+            }
+            sum = product;
+        }
+        return add(sum);
+    }
+
+    // Multiplies out an expression when that makes it shorter, so that terms
+    // such as -2*(1+x^2)+8*x^2 combine. A polynomial in the variable is
+    // written as a sum of powers.
+    Expr expanded(Expr expression, const QString& variable)
+    {
+        // Expanding can cost a lot, as in (1+x)^20, and it only gives a nicer
+        // form, so it gets a small part of the work budget. When it runs out,
+        // enough work is left for the rest of the calculation.
+        constexpr int ExpansionWork = 4000;
+        const int budget = qMin(m_remainingWork / 2, ExpansionWork);
+        const int reserve = m_remainingWork - budget;
+        m_remainingWork = budget;
+        Expr result = expression;
+        try {
+            Expr candidate = NoExpression;
+            if (const auto coefficients = polynomial(expression, variable)) {
+                const Expr x = reference(variable);
+                QVector<Expr> terms;
+                for (int i = 0; i < coefficients->size(); ++i)
+                    terms.append(multiply({coefficients->at(i), power(x, number(i))}));
+                candidate = add(terms);
+            } else {
+                candidate = distribute(expression);
+            }
+            if (node(candidate).size < node(expression).size)
+                result = candidate;
+        } catch (const Failure&) {
+        }
+        m_remainingWork += reserve;
+        // A time limit still stops the whole calculation.
+        spend(0);
+        return result;
+    }
+
     Expr derivative(Expr expression, const QString& variable)
     {
         spend();
@@ -963,10 +1220,63 @@ private:
             const Expr u = key.children.at(0);
             const Expr v = key.children.at(1);
             const Expr du = derivative(u, variable);
-            const Expr dv = derivative(v, variable);
-            if (dv == m_zero)
+            // With v = c*b1^n1*b2^n2..., write the derivative over v*b1*b2...
+            // instead of v^2. Repeated steps then add one power to each base,
+            // instead of doubling the denominator each time.
+            const QMap<Expr, int> powers = factorPowers(v);
+            QVector<Expr> bases;
+            QVector<Expr> slopes;
+            QVector<int> exponents;
+            for (auto it = powers.constBegin(); it != powers.constEnd(); ++it) {
+                const Expr slope = derivative(it.key(), variable);
+                if (slope != m_zero) {
+                    bases.append(it.key());
+                    slopes.append(slope);
+                    exponents.append(it.value());
+                }
+            }
+            if (bases.isEmpty())
                 return divide(du, v);
-            return divide(subtract(multiply({du, v}), multiply({u, dv})), power(v, number(2)));
+            QVector<Expr> terms;
+            for (int i = 0; i < bases.size(); ++i) {
+                QVector<Expr> factors{number(exponents.at(i)), slopes.at(i)};
+                for (int j = 0; j < bases.size(); ++j) {
+                    if (j != i)
+                        factors.append(bases.at(j));
+                }
+                terms.append(multiply(factors));
+            }
+            // The numerator is du*radical - u*(sum of terms). Only the outer
+            // sums of du and u are multiplied out, so that inner factors such
+            // as (ln(x)+1) stay as they are and can combine.
+            const auto termsOf = [this](Expr expression) {
+                const Key& sum = node(expression).key;
+                return sum.type == Opcode::Add ? sum.children : QVector<Expr>{expression};
+            };
+            const Expr radical = multiply(bases);
+            const Expr logSlope = add(terms);
+            QVector<Expr> numeratorTerms;
+            for (Expr term : termsOf(du))
+                numeratorTerms.append(multiply({term, radical}));
+            for (Expr term : termsOf(u)) {
+                for (Expr slope : termsOf(logSlope))
+                    numeratorTerms.append(negate(multiply({term, slope})));
+            }
+            const Expr numerator = add(numeratorTerms);
+            const Expr denominator = multiply({v, radical});
+            // Over a sum such as (1+x^2)^4, one fraction with the numerator
+            // multiplied out is shortest. Over powers such as x^4, each term is
+            // divided on its own, so that it can cancel and combine with like
+            // terms, as in the derivatives of x^x.
+            const bool sumBelow = std::any_of(bases.cbegin(), bases.cend(), [this](Expr base) {
+                return node(base).key.type == Opcode::Add;
+            });
+            if (sumBelow)
+                return divide(expanded(numerator, variable), denominator);
+            QVector<Expr> parts;
+            for (Expr term : termsOf(numerator))
+                parts.append(divide(term, denominator));
+            return add(parts);
         }
         case Opcode::Pow: {
             const Expr u = key.children.at(0);
@@ -1583,7 +1893,7 @@ HNumber Calculus::magnitude(Expr expression, const QString& variable, const HNum
     const Key& key = value.key;
     switch (key.type) {
     case Opcode::Load:
-        return value.number ? value.number->numerator / value.number->denominator
+        return value.number ? value.number->numerator.toHNumber() / value.number->denominator.toHNumber()
                             : HNumber(key.text.toLatin1().constData());
     case Opcode::Ref:
         if (!variable.isEmpty() && key.text == variable)
@@ -1988,7 +2298,7 @@ Calculus::Endpoint Calculus::verifyPowerIntegral(Expr raw, const QString& variab
         return {};
     }
     if (affine && left >= 0 && right >= 0 && left.isZero() != right.isZero()) {
-        const HNumber denominator = node(kernel->exponent).number->denominator;
+        const Integer denominator = node(kernel->exponent).number->denominator;
         return {left.isZero() ? -1 : 1, denominator <= 12 ? denominator.toInt() : 0};
     }
     return {};
