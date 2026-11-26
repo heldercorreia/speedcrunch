@@ -439,12 +439,13 @@ private:
 
     struct DomainUnknown {};
 
-    enum class LimitForm { Unknown, NoDomain, Term, Wave, Oscillatory, Vanishing, Divergent };
+    enum class LimitForm { Unknown, NoDomain, Term, Wave, Bound, Oscillatory, Vanishing, Divergent };
 
     // With h > 0 tending to zero, the term is (coefficient + o(1)) times
     // h^order * log(1/h)^logOrder * exp(exponent). The exponent is itself
     // an expression in the limiting variable. A wave has the same scale
-    // and takes both signs arbitrarily close to the endpoint.
+    // and takes both signs arbitrarily close to the endpoint. A bound
+    // gives an upper limit on the magnitude at that scale.
     struct LimitTerm {
         LimitForm form = LimitForm::Unknown;
         Expr coefficient = NoExpression;
@@ -3799,7 +3800,7 @@ Calculus::LimitValue Calculus::classifyLimit(const LimitTerm& value, LimitPath& 
         return {LimitStatus::Finite, m_zero};
     if (value.form == LimitForm::Divergent)
         return {LimitStatus::Infinite, NoExpression, value.coefficient == m_minusOne ? -1 : 1};
-    if (value.form != LimitForm::Term && value.form != LimitForm::Wave)
+    if (value.form != LimitForm::Term && value.form != LimitForm::Wave && value.form != LimitForm::Bound)
         return {};
     Expr coefficient = value.coefficient;
     LimitTerm rate = value;
@@ -3815,8 +3816,8 @@ Calculus::LimitValue Calculus::classifyLimit(const LimitTerm& value, LimitPath& 
         return {};
     if (*growth < 0 || (value.constant && coefficient == m_zero))
         return {LimitStatus::Finite, m_zero};
-    if (value.form == LimitForm::Wave) {
-        if (limitSign(coefficient).value_or(0))
+    if (value.form != LimitForm::Term) {
+        if (value.form == LimitForm::Wave && limitSign(coefficient).value_or(0))
             return {LimitStatus::DoesNotExist};
         return {};
     }
@@ -3933,7 +3934,7 @@ Calculus::LimitTerm Calculus::limitSum(Expr expression, LimitPath& path)
             break;
         }
         const auto relation = compareGrowth(leading, next, path);
-        if (!relation || (!*relation && (leading.form == LimitForm::Wave || next.form == LimitForm::Wave))) {
+        if (!relation || (!*relation && (leading.form != LimitForm::Term || next.form != LimitForm::Term))) {
             cancelled = true;
             break;
         }
@@ -4065,7 +4066,9 @@ Calculus::LimitTerm Calculus::limitProduct(const LimitTerm& left, const LimitTer
         const auto growth = compareGrowth(result, term(m_one), path);
         return growth && *growth < 0 ? LimitTerm{LimitForm::Vanishing} : LimitTerm{};
     }
-    if (left.form == LimitForm::Wave || right.form == LimitForm::Wave)
+    if (left.form == LimitForm::Bound || right.form == LimitForm::Bound)
+        result.form = LimitForm::Bound;
+    else if (left.form == LimitForm::Wave || right.form == LimitForm::Wave)
         result.form = LimitForm::Wave;
     return result;
 }
@@ -4218,10 +4221,14 @@ Calculus::LimitTerm Calculus::limitPower(Expr expression, LimitPath& path, bool 
                         && endBase.expression != m_zero && limitSign(endBase.expression).value_or(0));
         const bool analytic = u.analytic && ((integer && positive)
             || (endBase.status == LimitStatus::Finite && limitSign(endBase.expression).value_or(0)));
-        if (u.form == LimitForm::Term) {
-            return term(valuePower(u.coefficient, degree), u.constant, analytic,
-                        multiply({u.order, degree}), multiply({u.logOrder, degree}),
-                        multiply({u.exponent, degree}));
+        const bool boundedPower = integer && positive && (u.form == LimitForm::Wave || u.form == LimitForm::Bound);
+        if (u.form == LimitForm::Term || boundedPower) {
+            auto result = term(valuePower(u.coefficient, degree), u.constant, analytic,
+                               multiply({u.order, degree}), multiply({u.logOrder, degree}),
+                               multiply({u.exponent, degree}));
+            if (boundedPower)
+                result.form = LimitForm::Bound;
+            return result;
         }
         if (positive && endBase.status == LimitStatus::Finite && endBase.expression == m_zero)
             return {LimitForm::Vanishing};

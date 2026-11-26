@@ -110,7 +110,7 @@ General
 
         rule3(8; 6[h]; 4) = 3[h]
 
-    .. versionadded:: 1.2
+    .. versionadded:: 1.3
 
 .. function:: exp(x)
 

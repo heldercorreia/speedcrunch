@@ -9,6 +9,8 @@ Calculus
               diff(expression; order)
               diff(expression; variable; order)
 
+    .. versionadded:: 1.3
+
     Computes the symbolic derivative of an expression with respect to a
     variable, optionally to a specified order.
 
@@ -76,6 +78,8 @@ Calculus
               integrate(expression; variable)
               integrate(expression; lower; upper)
               integrate(expression; variable; lower; upper)
+
+    .. versionadded:: 1.3
 
     Computes the indefinite or definite integral of an expression with
     respect to a variable.
@@ -162,6 +166,8 @@ Calculus
               lim(expression; variable; point)
               lim(expression; point; direction)
               lim(expression; variable; point; direction)
+
+    .. versionadded:: 1.3
 
     Computes the limit of an expression as a variable approaches a
     specified value.

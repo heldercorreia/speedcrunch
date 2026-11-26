@@ -1422,10 +1422,15 @@ static void test_calculus_limits()
              std::pair{"lim((1-cos(x))/x^2; 0)", "1/2"},
              std::pair{"lim((exp(x)-1)/x; 0)", "1"},
              std::pair{"lim(ln(1+x)/x; 0)", "1"},
+             std::pair{"lim((sin(x)-x)/x^3; 0)", "-1/6"},
+             std::pair{"lim((exp(x)-1-x)/x^2; 0)", "1/2"},
+             std::pair{"lim((ln(1+x)-x)/x^2; 0)", "-1/2"},
              std::pair{"lim((x^2-1)/(x-1); 1)", "2"},
              std::pair{"lim((sqrt(1+x)-1)/x; 0)", "1/2"},
              std::pair{"lim((1-cos(sqrt(x)))/x; 0; 1)", "1/2"},
              std::pair{"lim(tan(x); 1)", "tan(1)"},
+             std::pair{"lim(abs(x); 0)", "0"},
+             std::pair{"lim(0*(1/x); 0)", "0"},
              std::pair{"lim(abs(x)/x; 0; -1)", "-1"},
              std::pair{"lim(abs(x)/x; 0; 1)", "1"},
              std::pair{"lim(abs(x)/x; x; 0; -1)", "-1"},
@@ -1446,6 +1451,9 @@ static void test_calculus_limits()
              std::pair{"lim(arctan(x); inf)", "pi/2"},
              std::pair{"lim(arctan(x); -inf)", "-pi/2"},
              std::pair{"lim(sin(x)/x; inf)", "0"},
+             std::pair{"lim(x*sin(1/x); 0)", "0"},
+             std::pair{"lim(sin(x)^2/x; inf)", "0"},
+             std::pair{"lim(exp(-x)*cos(x); inf)", "0"},
              std::pair{"lim(x*ln(x); 0; 1)", "0"},
              std::pair{"lim(sqrt(x^2+x)-x; inf)", "1/2"},
              std::pair{"lim(x^x; 0; 1)", "1"},
@@ -1489,6 +1497,8 @@ static void test_calculus_limits()
              std::pair{"lim((x^2-a^2)/(x-a); x; a)", "2*a"},
              std::pair{"lim((sin(x+h)-sin(x))/h; h; 0)", "cos(x)"},
              std::pair{"lim((x-x)+y; x; 0)", "y"},
+             std::pair{"lim((a*x+b)/x; x; inf)", "a"},
+             std::pair{"lim((x+a)^2-x^2-2*a*x; x; inf)", "a^2"},
              std::pair{"diff(lim(x*y^2; x; 2); y)", "4*y"}
          }) {
         const Quantity value = evaluate(expression);
@@ -1519,7 +1529,8 @@ static void test_calculus_limits()
               QString::fromLatin1(expression) + " returned " + DMath::format(value) + evaluator.error());
     }
     for (const char* expression : {
-             "lim(1/x; 0)", "lim(abs(x)/x; 0)", "lim(sin(1/x); 0)", "lim(cos(1/x); 0)",
+             "lim(1/x; 0)", "lim(abs(x)/x; 0)", "lim(x/abs(x); 0)", "lim(sqrt(x^2)/x; 0)",
+             "lim(sin(1/x); 0)", "lim(cos(1/x); 0)",
              "lim(sin(x); inf)", "lim(cos(x); inf)", "lim(floor(x); 2)", "lim(ceil(x); 2)",
              "lim(sqrt(x); 0)", "lim(0*sqrt(x); 0; -1)", "lim(1/(x-x); 0)", "lim(1/0; 0)",
              "lim(0^0; 1)", "lim(0^x; 0; -1)", "lim(arcsin(x); 1; 1)", "lim(tan(x); inf)"
@@ -4727,6 +4738,7 @@ void test_rule3()
     CHECK_EVAL("rule3(6; 12; 4)", "8");
     CHECK_EVAL("rule3(pi; 2*pi; 3)", "6");
     CHECK_EVAL("rule3(sqrt(2); sqrt(8); 5)", "10");
+    CHECK_EVAL("rule3(3; 1; 3)", "1");
     CHECK_EVAL("rule3(1; rule3(7; 1; 1); 7)", "1");
     CHECK_EVAL("rule3(3; 7; 5) - 35/3", "0");
     CHECK_USERFUNC_SET("proportion(x; y; z) = rule3(x; y; z)");
@@ -4786,6 +4798,12 @@ void test_rule3()
         eval->expression(), eval->interpretedExpression(), symbol, false, false, eval);
     check(lines.contains(QStringLiteral("= 3 · π")), QStringLiteral("show the exact result in decimal mode"));
 
+    const Quantity piProportion = evaluate(QStringLiteral("rule3(7; pi; 7)"));
+    check(eval->error().isEmpty() && !piProportion.isApproximate()
+          && piProportion.exactExpression() == QStringLiteral("π")
+          && NumberFormatter::format(piProportion, 'g') == NumberFormatter::format(DMath::pi(), 'g'),
+          QStringLiteral("rule3(7; pi; 7) keeps pi exact"));
+
     const Quantity fractionWithUnit = evaluate(QStringLiteral("rule3(3[m]; 1[s]; 100[cm])"));
     check(eval->error().isEmpty() && !fractionWithUnit.isApproximate()
           && NumberFormatter::format(fractionWithUnit, 'r') == QStringLiteral("1") + slash + QStringLiteral("3[s]"),
@@ -4815,6 +4833,8 @@ void test_rule3()
     };
     const QString large = QStringLiteral("e%1").arg(EXPMAX);
     const QString small = QStringLiteral("e%1").arg(EXPMIN);
+    checkValue("rule3(1e100; 1e100; 1e100)", "1e100");
+    checkValue("rule3(1e-100; 1e-100; 1e-100)", "1e-100");
     checkValue(QStringLiteral("rule3(9.5%1; 9.1%1; 9.5%1)").arg(large), QStringLiteral("9.1") + large);
     checkValue(QStringLiteral("rule3(1%1; 2%1; 3%1)").arg(small), QStringLiteral("6") + small);
     checkValue(QStringLiteral("rule3(1%1; 1%1; 9%2)").arg(small, large), QStringLiteral("9") + large);
@@ -4895,7 +4915,7 @@ void test_hypot()
     CHECK_EVAL("hypot(-inf; 1)", qUtf8Printable(infinity));
     CHECK_EVAL("hypot(inf; -inf)", qUtf8Printable(infinity));
     CHECK_EVAL("hypot(0; -HYPOT(inf; 1))", qUtf8Printable(infinity));
-    CHECK_EVAL("hypot(limit(x^2; inf); 1)", qUtf8Printable(infinity));
+    CHECK_EVAL("hypot(lim(x^2; inf); 1)", qUtf8Printable(infinity));
     CHECK_EVAL_FORMAT("hypot(-inf[m]; 4[m])", qUtf8Printable(infinity + QStringLiteral("[m]")));
     CHECK_EVAL_FORMAT("hypot(inf[m]; 400[cm]) -> [cm]", qUtf8Printable(infinity + QStringLiteral("[cm]")));
     QJsonObject saved;
@@ -4929,6 +4949,10 @@ void test_hypot()
     checkScaled("hypot(5%1; 12%1)", "13%1", EXPMIN);
     checkScaled("hypot(6%1; 8%1)", "10%1", EXPMAX / 2);
     checkScaled("hypot(1.2%1; 0.5%1)", "1.3%1", EXPMIN / 2);
+    checkScaled("hypot(3%1; 4%1)", "5%1", EXPMIN / 2);
+    checkScaled("hypot(3%1; 4%1)", "5%1", EXPMAX / 2);
+    checkValue("hypot(3e-200; 4e-200)", HNumber("5e-200"));
+    checkValue("hypot(3e200; 4e200)", HNumber("5e200"));
     checkScaled("hypot(1e-150; -3%1; 4%1)", "5%1", 150);
     checkScaled("hypot(4%1; 3%1; -1e-150)", "5%1", 150);
     checkValue(QStringLiteral("hypot(-2; 1e%1)").arg(EXPMIN), 2);
