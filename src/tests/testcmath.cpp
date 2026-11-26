@@ -469,6 +469,12 @@ void test_functions()
     CHECK(CMath::raise("2", "2"), "4");
     CHECK(CMath::raise("3", "3"), "27");
     CHECK(CMath::raise("4", "4"), "256");
+    // Integer powers of negative numbers stay real, with no rounding left
+    // over from the complex logarithm.
+    CHECK(CMath::raise("-2", "3"), "-8");
+    CHECK(CMath::raise("-1.5", "2"), "2.25");
+    CHECK(CMath::raise("-2", "-2"), "0.25");
+    CHECK(CNumber(CMath::raise("-7", "33").imag.isZero() ? 1 : 0), "1");
     CHECK(CMath::raise("-27", CNumber("1") / CNumber("3")), "1.5+2.59807621135331594029j");
     CHECK(CMath::raise("-27", CNumber("-1") / CNumber("3")), "0.16666666666666666667-0.28867513459481288225j");
     CHECK_PRECISE(CMath::raise("2", "0.1"), "1.07177346253629316421300632502334202290638460497756");

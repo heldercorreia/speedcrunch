@@ -266,7 +266,7 @@ private:
     void spend(int work = 1)
     {
         m_remainingWork -= work;
-        if (m_remainingWork < 0)
+        if (m_remainingWork < 0 || m_evaluator.shouldStopForTimeLimit())
             limitExceeded();
     }
 
@@ -2200,6 +2200,7 @@ IntegralResult Calculus::integrate(int first, int nesting)
     const Expr x = reference(variable);
     Endpoint endpoint;
     HNumber tailError(0);
+    bool mirrored = false;
     const int precision = Settings::instance()->resultPrecision;
     const int digits = qBound(28, precision < 0 ? 34 : qMin(precision, DECPRECISION) + 6, DECPRECISION - 12);
     const HNumber tolerance = HMath::raise(HNumber(10), -digits);
@@ -2242,6 +2243,12 @@ IntegralResult Calculus::integrate(int first, int nesting)
             tailError += tail(hi - center);
         }
         interval = Interval{lo, hi};
+        // A Gaussian is symmetric about its center, so over the whole line
+        // one half is enough.
+        if (lower.infinity && upper.infinity) {
+            interval->lower = center;
+            mirrored = true;
+        }
     } else {
         if (interval)
             endpoint = verifyPowerIntegral(raw, variable, *interval, &phaseWidth);
@@ -2296,10 +2303,10 @@ IntegralResult Calculus::integrate(int first, int nesting)
     const HNumber width = interval->upper - interval->lower;
     const Interval quadrature = endpoint.side ? Interval{0, 1} : *interval;
     const auto result = NumericalIntegration::integrate(
-        quadrature.lower, quadrature.upper, tolerance / HNumber(2), qMax(8, panels.toInt()),
+        quadrature.lower, quadrature.upper, tolerance / HNumber(2), qMax(2, panels.toInt()),
         [&](const HNumber& point) {
             sampleWork -= source.end - source.first;
-            if (sampleWork < 0)
+            if (sampleWork < 0 || m_evaluator.shouldStopForTimeLimit())
                 return HMath::nan(TooExpensive);
             HNumber samplePoint = point;
             HNumber jacobian(1);
@@ -2316,11 +2323,14 @@ IntegralResult Calculus::integrate(int first, int nesting)
         });
     if (result.status == NumericalIntegration::Result::InvalidSample)
         throw Failure{tr("invalid integrand value or incompatible units")};
+    const HNumber halves(mirrored ? 2 : 1);
+    const HNumber integral = halves * result.value;
+    const HNumber integralError = halves * result.error;
     if (result.status != NumericalIntegration::Result::Converged || tailError.isNan()
-        || (!tailError.isZero() && tailError + result.error > tolerance * HMath::abs(result.value))) {
+        || (!tailError.isZero() && tailError + integralError > tolerance * HMath::abs(integral))) {
         throw Failure{tr("numerical integration did not converge within the calculation limits")};
     }
-    Quantity value = withUnits(reversed ? -result.value : result.value, model);
+    Quantity value = withUnits(reversed ? -integral : integral, model);
     value.markApproximate();
     return value;
 }

@@ -1083,6 +1083,17 @@ static void test_calculus_integration()
     expectError("integrate(exp(-10^8*(x-0.12345)^2); 0; 1)", "rapidly varying integrand");
     expectError("integrate(" + QString("sin(").repeated(110) + "x" + QString(")").repeated(111),
                 "limit exceeded");
+
+    // Live results stop slow calculations when the time limit runs out. Quick
+    // ones do not check the limit, so they still give a result.
+    evaluator.setTimeLimit(QDeadlineTimer(0));
+    check(evaluate("1+2") == Quantity(3) && !evaluator.stoppedForTimeLimit(), "quick result with a time limit");
+    check(evaluate("integrate(exp(-x^2); 0; 1)").isNan() && evaluator.stoppedForTimeLimit(),
+          "stop a numerical integral for the time limit");
+    evaluator.setTimeLimit(QDeadlineTimer(QDeadlineTimer::Forever));
+    check(!evaluator.stoppedForTimeLimit(), "clear the time limit");
+    compare("integrate(exp(-x^2); 0; 1)", gaussian, true);
+
     CHECK_EVAL("inf=2", "2");
     CHECK_EVAL("integrate(x; 0; inf)", "2");
     {

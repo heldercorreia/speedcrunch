@@ -1419,6 +1419,28 @@ static QString formattedLiveResultWithAlternatives(const Quantity& quantity,
     return escapedLines.join(QStringLiteral("<br/>"));
 }
 
+namespace {
+
+// A live result runs on every key press, so a slow calculation such as a
+// numerical integral must give up instead of blocking the editor.
+constexpr int kLiveResultTimeLimitMs = 100;
+
+class LiveResultTimeLimit {
+public:
+    explicit LiveResultTimeLimit(Evaluator* evaluator)
+        : m_evaluator(evaluator)
+    {
+        m_evaluator->setTimeLimit(QDeadlineTimer(kLiveResultTimeLimitMs));
+    }
+    ~LiveResultTimeLimit() { m_evaluator->setTimeLimit(QDeadlineTimer(QDeadlineTimer::Forever)); }
+
+private:
+    Q_DISABLE_COPY(LiveResultTimeLimit)
+    Evaluator* m_evaluator;
+};
+
+}
+
 Editor::Editor(QWidget* parent)
     : QPlainTextEdit(parent)
 {
@@ -1499,6 +1521,7 @@ void Editor::setSession(Session* session)
 
 void Editor::refreshAutoCalc()
 {
+    m_tooSlowLiveCalculation.clear();
     if (m_isAutoCalcEnabled) {
       if (!textCursor().selectedText().isEmpty())
           checkSelectionAutoCalc();
@@ -2364,9 +2387,30 @@ void Editor::autoCalc()
     if (str.isEmpty())
         return;
 
-    // Same reason as above, do not update "ans".
-    m_evaluator->setExpression(str);
-    auto quantity = m_evaluator->evalNoAssign();
+    const LiveResultTimeLimit timeLimit(m_evaluator);
+    const auto showTooSlow = [this]() {
+        emit autoCalcMessageAvailable(
+            tr("Current result:<br/>Press Enter to calculate. This takes too long to show while typing."));
+    };
+    // A comment does not change the result, so typing one after a calculation
+    // that took too long does not try it again.
+    const auto evaluateLive = [this](const QString& expression, Quantity& quantity) {
+        const QString calculation = expression.section(MathDsl::CommentSep, 0, 0).trimmed();
+        if (!m_tooSlowLiveCalculation.isEmpty() && calculation == m_tooSlowLiveCalculation)
+            return false;
+        // Same reason as above, do not update "ans".
+        m_evaluator->setExpression(expression);
+        quantity = m_evaluator->evalNoAssign();
+        if (!m_evaluator->stoppedForTimeLimit())
+            return true;
+        m_tooSlowLiveCalculation = calculation;
+        return false;
+    };
+    Quantity quantity;
+    if (!evaluateLive(str, quantity)) {
+        showTooSlow();
+        return;
+    }
 
     if (m_evaluator->error().isEmpty()) {
         QString interpretedExpr = m_evaluator->interpretedExpression();
@@ -2397,8 +2441,11 @@ void Editor::autoCalc()
         if (usageTooltip.isEmpty()) {
             QString baseExpression;
             if (EditorUtils::expressionWithoutIgnorableTrailingToken(str, &baseExpression)) {
-                m_evaluator->setExpression(baseExpression);
-                auto baseQuantity = m_evaluator->evalNoAssign();
+                Quantity baseQuantity;
+                if (!evaluateLive(baseExpression, baseQuantity)) {
+                    showTooSlow();
+                    return;
+                }
                 if (m_evaluator->error().isEmpty()) {
                     const QString interpretedExpr = m_evaluator->interpretedExpression();
                     if (baseQuantity.isNan() && (m_evaluator->isUserFunctionAssign()
@@ -2462,7 +2509,15 @@ void Editor::autoCalcSelection(const QString& custom)
 
     // Same reason as above, do not update "ans".
     m_evaluator->setExpression(str);
+    const LiveResultTimeLimit timeLimit(m_evaluator);
+    const auto showTooSlow = [this]() {
+        emit autoCalcMessageAvailable(tr("Selection result: too slow to calculate here"));
+    };
     auto quantity = m_evaluator->evalNoAssign();
+    if (m_evaluator->stoppedForTimeLimit()) {
+        showTooSlow();
+        return;
+    }
 
     if (m_evaluator->error().isEmpty()) {
         const QString interpretedExpr = m_evaluator->interpretedExpression();
@@ -2490,6 +2545,10 @@ void Editor::autoCalcSelection(const QString& custom)
         if (EditorUtils::expressionWithoutIgnorableTrailingToken(str, &baseExpression)) {
             m_evaluator->setExpression(baseExpression);
             const auto baseQuantity = m_evaluator->evalNoAssign();
+            if (m_evaluator->stoppedForTimeLimit()) {
+                showTooSlow();
+                return;
+            }
             if (m_evaluator->error().isEmpty()) {
                 const QString interpretedExpr = m_evaluator->interpretedExpression();
                 if (baseQuantity.isNan() && (m_evaluator->isUserFunctionAssign()
@@ -4603,6 +4662,8 @@ void Editor::setThemePreviewColorScheme(const ColorScheme& scheme)
 
 void Editor::updateHistory()
 {
+    // New results can change variables, so slow calculations get another try.
+    m_tooSlowLiveCalculation.clear();
     const Session* session = m_session;
     if (session == nullptr)
         return;

@@ -82,6 +82,7 @@ private slots:
     void raw_input_preserves_text();
     void history_recall_respects_input_adjustments_data();
     void history_recall_respects_input_adjustments();
+    void live_result_stops_slow_calculations();
     void raw_input_keeps_character_navigation_and_deletion();
     void raw_input_preserves_calculator_commands();
     void raw_input_switch_preserves_document_and_restores_adjustments();
@@ -7633,6 +7634,37 @@ void TestEditorUi::history_recall_respects_input_adjustments()
     evaluator.setExpression(evaluator.autoFix(expected));
     QCOMPARE(NumberFormatter::format(evaluator.eval()), originalResult);
     QVERIFY2(evaluator.error().isEmpty(), qPrintable(evaluator.error()));
+}
+
+void TestEditorUi::live_result_stops_slow_calculations()
+{
+    Session session;
+    Editor editor;
+    editor.setSession(&session);
+    editor.setAutoCompletionEnabled(false);
+    QSignalSpy messages(&editor, &Editor::autoCalcMessageAvailable);
+    const auto lastMessage = [&messages]() { return messages.constLast().constFirst().toString(); };
+
+    editor.setText(QStringLiteral("integrate(x^2; 0; 3)"));
+    QCOMPARE(messages.count(), 1);
+    QVERIFY2(lastMessage().contains(QStringLiteral("Current result:"))
+                 && !lastMessage().contains(QStringLiteral("Press Enter")),
+             qPrintable(lastMessage()));
+
+    // Each of these numerical integrals takes longer than the time limit.
+    const QString slow = QStringLiteral("integrate(exp(x)/(10^-6+(x-0.37)^2); 0; 1)");
+    editor.setText(QStringList{slow, slow, slow}.join(QLatin1Char('+')));
+    QCOMPARE(messages.count(), 2);
+    QVERIFY2(lastMessage().contains(QStringLiteral("Press Enter")), qPrintable(lastMessage()));
+
+    // A comment does not change the calculation, so it is not tried again.
+    editor.setText(editor.text() + QStringLiteral(" ? note"));
+    QCOMPARE(messages.count(), 3);
+    QVERIFY2(lastMessage().contains(QStringLiteral("Press Enter")), qPrintable(lastMessage()));
+    QVERIFY(!session.evaluator()->expression().contains(QStringLiteral("note")));
+
+    // Pressing Enter evaluates without the limit.
+    QVERIFY(!session.evaluator()->shouldStopForTimeLimit());
 }
 
 void TestEditorUi::raw_input_preserves_text_data()

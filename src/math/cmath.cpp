@@ -627,8 +627,9 @@ CNumber CMath::raise(const CNumber& n1, int n)
  */
 CNumber CMath::raise(const CNumber& n1, const CNumber& n2)
 {
-    // Integer powers can stay exact without going through log and exp.
-    if (n1.isPositive() && n2.isInteger()
+    // Integer powers of real numbers can stay exact without going through log
+    // and exp. This also keeps a negative base away from the complex logarithm.
+    if ((n1.isPositive() || n1.isNegative()) && n2.isInteger()
         && HMath::abs(n2.real) <= HNumber(std::numeric_limits<int>::max())) {
         const HNumber power = HMath::raise(n1.real, n2.real.toInt());
         if (!power.isNan())

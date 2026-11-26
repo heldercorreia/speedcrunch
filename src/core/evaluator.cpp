@@ -8168,6 +8168,24 @@ bool Evaluator::isUserVariableAssign() const
     return !m_assignId.isEmpty() && !m_assignFunc && !m_assignUnit;
 }
 
+void Evaluator::setTimeLimit(QDeadlineTimer deadline)
+{
+    m_timeLimit = deadline;
+    m_stoppedForTimeLimit = false;
+}
+
+bool Evaluator::shouldStopForTimeLimit() const
+{
+    if (!m_stoppedForTimeLimit && m_timeLimit.hasExpired())
+        m_stoppedForTimeLimit = true;
+    return m_stoppedForTimeLimit;
+}
+
+bool Evaluator::stoppedForTimeLimit() const
+{
+    return m_stoppedForTimeLimit;
+}
+
 bool Evaluator::isBuiltInVariable(const QString& id) const
 {
     // Defining variables with the same name as existing functions

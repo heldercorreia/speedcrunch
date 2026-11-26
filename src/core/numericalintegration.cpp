@@ -6,6 +6,8 @@
 
 #include <QVector>
 
+#include <optional>
+
 namespace {
 
 constexpr int MaxEvaluations = 12000;
@@ -68,8 +70,9 @@ struct Panel {
     HNumber lower;
     HNumber upper;
     Estimate estimate;
-    HNumber error;
     int depth;
+    // Only the first panels have a quick error estimate from the coarse rule.
+    std::optional<HNumber> error;
 };
 
 }
@@ -84,7 +87,7 @@ NumericalIntegration::Result NumericalIntegration::integrate(
         return {Result::LimitExceeded, 0, 0};
 
     int evaluations = 0;
-    auto estimate = [&](const QVector<Node>& nodes, const HNumber& left, const HNumber& right) {
+    auto estimate = [&](const HNumber& left, const HNumber& right, const QVector<Node>& nodes) {
         Estimate result;
         const HNumber halfWidth = (right - left) / 2;
         const HNumber middle = left + halfWidth;
@@ -102,13 +105,8 @@ NumericalIntegration::Result NumericalIntegration::integrate(
         }
         return Estimate{result.value * halfWidth, result.magnitude * halfWidth};
     };
-
-    auto panel = [&](const HNumber& left, const HNumber& right, int depth) {
-        const Estimate high = estimate(fine, left, right);
-        if (high.value.isNan())
-            return Panel{left, right, high, 0, depth};
-        const Estimate low = estimate(coarse, left, right);
-        return Panel{left, right, high, HNumber(4) * HMath::abs(high.value - low.value), depth};
+    const auto failure = [](const HNumber& value) {
+        return Result{value.error() == TooExpensive ? Result::LimitExceeded : Result::InvalidSample, 0, 0};
     };
 
     const HNumber width = upper - lower;
@@ -118,8 +116,11 @@ NumericalIntegration::Result NumericalIntegration::integrate(
     HNumber left = lower;
     for (int i = 0; i < initialPanels; ++i) {
         const HNumber right = i + 1 == initialPanels ? upper : lower + HNumber(i + 1) * panelWidth;
-        pending.append(panel(left, right, 0));
-        magnitude += pending.constLast().estimate.magnitude;
+        Panel panel{left, right, estimate(left, right, fine), 0, std::nullopt};
+        if (!panel.estimate.value.isNan())
+            panel.error = HNumber(4) * HMath::abs(panel.estimate.value - estimate(left, right, coarse).value);
+        magnitude += panel.estimate.magnitude;
+        pending.append(panel);
         left = right;
     }
 
@@ -133,23 +134,45 @@ NumericalIntegration::Result NumericalIntegration::integrate(
     const HNumber errorBudget = tolerance * magnitude;
     HNumber total = 0;
     HNumber totalError = 0;
+    auto accept = [&](const Panel& panel, const HNumber& value, const HNumber& error) {
+        if (error > errorBudget * (panel.upper - panel.lower) / width)
+            return false;
+        total += value;
+        totalError += error;
+        return true;
+    };
     while (!pending.isEmpty()) {
         const Panel current = pending.takeLast();
-        if (current.estimate.value.isNan() || current.error.isNan()) {
-            const Error error = current.estimate.value.isNan()
-                ? current.estimate.value.error() : current.error.error();
-            return {error == TooExpensive ? Result::LimitExceeded : Result::InvalidSample, 0, 0};
+        if (current.estimate.value.isNan())
+            return failure(current.estimate.value);
+        if (current.error) {
+            if (current.error->isNan())
+                return failure(*current.error);
+            if (accept(current, current.estimate.value, *current.error))
+                continue;
         }
-        if (current.error <= errorBudget * (current.upper - current.lower) / width) {
-            total += current.estimate.value;
-            totalError += current.error;
-            continue;
-        }
+
         const HNumber middle = current.lower + (current.upper - current.lower) / 2;
         if (current.depth >= MaxDepth || middle == current.lower || middle == current.upper)
             return {Result::LimitExceeded, 0, 0};
-        pending.append(panel(current.lower, middle, current.depth + 1));
-        pending.append(panel(middle, current.upper, current.depth + 1));
+        const Panel first{current.lower, middle, estimate(current.lower, middle, fine), current.depth + 1, std::nullopt};
+        if (first.estimate.value.isNan())
+            return failure(first.estimate.value);
+        const Panel second{middle, current.upper, estimate(middle, current.upper, fine), current.depth + 1, std::nullopt};
+        if (second.estimate.value.isNan())
+            return failure(second.estimate.value);
+
+        // The coarse rule makes the error look much larger than it is. The halves
+        // are far more accurate than the whole panel, so the difference between
+        // the two is a closer bound for the error of the halves.
+        const HNumber refined = first.estimate.value + second.estimate.value;
+        const HNumber error = HMath::abs(refined - current.estimate.value);
+        if (error.isNan())
+            return failure(error);
+        if (accept(current, refined, error))
+            continue;
+        pending.append(first);
+        pending.append(second);
     }
 
     if (total.isNan() || totalError.isNan() || totalError > errorBudget)

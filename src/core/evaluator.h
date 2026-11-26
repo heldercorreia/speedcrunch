@@ -19,6 +19,7 @@
 #include "math/cmath.h"
 #include "math/quantity.h"
 
+#include <QDeadlineTimer>
 #include <QHash>
 #include <QObject>
 #include <QSet>
@@ -154,6 +155,12 @@ public:
     bool isUserUnitAssign() const;
     bool isUserVariableAssign() const;
 
+    // Live results set a time limit, so a slow calculation cannot block typing.
+    // Slow code asks shouldStopForTimeLimit() and gives up when it says yes.
+    void setTimeLimit(QDeadlineTimer deadline);
+    bool shouldStopForTimeLimit() const;
+    bool stoppedForTimeLimit() const;
+
     Variable getVariable(const QString&) const;
     QList<Variable> getVariables() const;
     QList<Variable> getUserDefinedVariables() const;
@@ -233,6 +240,8 @@ private:
     // every referenced unit to exist already (e.g. global units are applied
     // only after a session is restored).
     bool m_skipUserFunctionDryRun;
+    QDeadlineTimer m_timeLimit{QDeadlineTimer::Forever};
+    mutable bool m_stoppedForTimeLimit = false;
     const Quantity& checkOperatorResult(const Quantity&);
     static QString stringFromFunctionError(Function*);
     Quantity exec(const QVector<Opcode>& opcodes,

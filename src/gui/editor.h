@@ -187,6 +187,8 @@ private:
     bool m_updatingWrappedTextHeight = false;
     bool m_mouseSelectionInProgress = false;
     bool m_currentAutoCalcDismissed = false;
+    // The last live calculation, without its comment, that ran out of time.
+    QString m_tooSlowLiveCalculation;
     bool m_pendingDeadCaretPreedit = false;
     QColor m_themeSurfaceColor;
     QColor m_themeOuterSurfaceColor;
