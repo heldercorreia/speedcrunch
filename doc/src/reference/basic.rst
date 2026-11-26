@@ -103,6 +103,12 @@ General
 
     In Rational notation, ``rule3(3; 7; 5)`` shows ``35/3``.
 
+    If ``b`` is in Celsius or Fahrenheit, SpeedCrunch scales the reading
+    in that unit. For example, ``rule3(2; 10[°C]; 6)`` gives ``30[°C]``.
+    Convert ``b`` to kelvins first to scale an absolute temperature. Enter
+    a temperature difference directly in kelvins. If ``a`` and ``c`` are
+    temperatures, SpeedCrunch uses their values in kelvins for the ratio.
+
     For inverse proportionality, swap the first and third arguments. If 4
     workers take 6 hours at the same rate, 8 workers take 3 hours.
 

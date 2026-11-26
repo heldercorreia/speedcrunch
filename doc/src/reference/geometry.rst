@@ -52,9 +52,10 @@ Lengths
     .. versionadded:: 1.2
 
     Computes the square root of the sum of the squares of its arguments.
-    Use two or more real values with compatible dimensions. The result
+    Use two or more real scalar values with compatible dimensions. The result
     keeps those dimensions. If any value is ``inf`` or ``-inf`` and the
-    other values are valid, the result is ``inf``.
+    other values are valid, the result is ``inf``. A NaN gives an error
+    even when another value is infinite.
 
     Examples::
 
