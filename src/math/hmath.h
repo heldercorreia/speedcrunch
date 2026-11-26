@@ -184,6 +184,7 @@ public:
     static HNumber lnGamma(const HNumber&);
     static HNumber erf(const HNumber&);
     static HNumber erfc(const HNumber&);
+    static HNumber erfi(const HNumber&);
     // PROBABILITY
     static HNumber nCr(const HNumber& n, const HNumber& k);
     static HNumber nPr(const HNumber& n, const HNumber& r);

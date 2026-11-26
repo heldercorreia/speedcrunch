@@ -638,6 +638,12 @@ Special
 
     Note that currently only real arguments are allowed. Furthermore, the function only accepts dimensionless arguments.
 
+.. function:: erfi(x)
+
+    Compute the imaginary error function, evaluated in ``x``. It is defined by ``erfi(x) = -i*erf(i*x)``, and it grows like ``exp(x^2)``. Results for ``x`` above about 35000 are out of range and give an overflow error.
+
+    Note that currently only real arguments are allowed. Furthermore, the function only accepts dimensionless arguments.
+
 .. function:: gamma(x)
 
     Evaluates the gamma function (frequently denoted by the Greek letter Γ). The gamma function is an analytic extension to the factorial operation which is defined on real numbers as well. The relation between factorial and the gamma function is given by *Γ(n) = (n - 1)!*.

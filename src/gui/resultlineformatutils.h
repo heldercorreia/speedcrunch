@@ -1403,6 +1403,17 @@ inline QString formatNumericResultLine(const Quantity& value,
     return stripUnitBrackets ? stripDisplayedUnitBrackets(formattedText) : formattedText;
 }
 
+// Shows square roots in a symbolic result as √, without parentheses around a
+// single number or name, as in √2 · √π. A root with a power keeps them, as in
+// √(x)³.
+inline QString formatSymbolicRootsForDisplay(QString text)
+{
+    static const QRegularExpression atom(QStringLiteral("√\\(([\\p{L}\\p{Nd}_]+)\\)(?![⁰¹²³⁴⁵⁶⁷⁸⁹⁻])"));
+    text = UnicodeChars::normalizeRootFunctionAliasesForDisplay(text);
+    text.replace(atom, QStringLiteral("√\\1"));
+    return text;
+}
+
 inline QStringList formatResultLinesForDisplay(const QString& commentedSourceExpression,
                                                const QString& commentedInterpretedExpression,
                                                const Quantity& value,
@@ -1426,8 +1437,8 @@ inline QStringList formatResultLinesForDisplay(const QString& commentedSourceExp
             commentedSourceExpression, commentedInterpretedExpression, evaluator));
 
     if (value.isSymbolic()) {
-        appendUniqueLine(resultPrefix + Evaluator::formatInterpretedExpressionForDisplay(
-            value.symbolicExpression(), evaluator));
+        appendUniqueLine(resultPrefix + formatSymbolicRootsForDisplay(
+            Evaluator::formatInterpretedExpressionForDisplay(value.symbolicExpression(), evaluator)));
         return lines;
     }
 

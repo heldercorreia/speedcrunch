@@ -886,13 +886,25 @@ static void test_symbolic_differentiation()
              std::pair{"diff(sin(x)/x; 2)", "-sin(x)/x-2*cos(x)/x^2+2*sin(x)/x^3"},
              std::pair{"diff(1/(x^2*(1+x)); 2)", "2*(3+8*x+6*x^2)/(x^4*(1+x)^3)"},
              std::pair{"diff(sqrt(x); 20)", "-8200794532637891559375/(1048576*sqrt(x)^39)"},
+             // The error functions, also of composite and radical arguments.
+             std::pair{"diff(erf(x); 2)", "-4*x*exp(-x^2)/sqrt(π)"},
+             std::pair{"diff(erf(x); 6)", "-16*x*exp(-x^2)*(15-20*x^2+4*x^4)/sqrt(π)"},
+             std::pair{"diff(erfi(x); 3)", "4*exp(x^2)*(1+2*x^2)/sqrt(π)"},
+             std::pair{"diff(erfc(2*x+1))", "-4*exp(-(2*x+1)^2)/sqrt(π)"},
+             std::pair{"diff(erf(x) + erfc(x))", "0"},
+             std::pair{"diff(x*erfi(x))", "erfi(x)+2*x*exp(x^2)/sqrt(π)"},
+             std::pair{"diff(erfi(-x))", "-2*exp(x^2)/sqrt(π)"},
+             std::pair{"diff(erf(sqrt(x)))", "exp(-x)/(sqrt(x)*sqrt(π))"},
+             std::pair{"diff(erfc(x)^2)", "-4*erfc(x)*exp(-x^2)/sqrt(π)"},
+             std::pair{"diff(sqrt(π)*erf(x)/2)", "exp(-x^2)"},
+             std::pair{"diff(exp(-x^2); 4)", "4*exp(-x^2)*(3-12*x^2+4*x^4)"},
          }) {
         checkForm(QString::fromUtf8(expression), QString::fromUtf8(expected));
     }
 
     // The same input always gives the same form, and differentiating a
     // simplified result once more gives the next simplified result.
-    for (const char* function : {"1/(1+x^2)", "sqrt(1+x^2)", "exp(x)/x", "x^2*exp(x)"}) {
+    for (const char* function : {"1/(1+x^2)", "sqrt(1+x^2)", "exp(x)/x", "x^2*exp(x)", "erf(x)", "erfi(2*x)"}) {
         for (int order = 1; order <= 4; ++order) {
             const QString lower = QStringLiteral("diff(%1; %2)").arg(QString::fromLatin1(function)).arg(order);
             const QString higher = QStringLiteral("diff(%1; %2)").arg(QString::fromLatin1(function)).arg(order + 1);
@@ -1109,6 +1121,28 @@ static void test_calculus_integration()
         {"integrate((x+1)/(1+x^2))", "ln(1+x^2)/2+arctan(x)"},
         {"integrate(1/(x+1))", "ln(abs(x+1))"},
         {"integrate(x/(x+1))", "x-ln(abs(x+1))"},
+        {"integrate(exp(-x^2))", "sqrt(π)*erf(x)/2"},
+        {"integrate(x^2*exp(-x^2))", "sqrt(π)*erf(x)/4-x*exp(-x^2)/2"},
+        {"integrate(exp(1+x-2*x^2))", "sqrt(2*π)*exp(9/8)*erf(sqrt(2)*(x-1/4))/4"},
+        {"integrate(2^(-x^2))", "sqrt(π/ln(2))*erf(x*sqrt(ln(2)))/2"},
+        {"integrate(erf(x))", "x*erf(x)+exp(-x^2)/sqrt(π)"},
+        {"integrate(erfc(2*x))", "x*erfc(2*x)-exp(-4*x^2)/(2*sqrt(π))"},
+        {"diff(erf(x^2))", "4*x*exp(-x^4)/sqrt(π)"},
+        {"diff(erfc(x))", "-2*exp(-x^2)/sqrt(π)"},
+        {"integrate(exp(x^2))", "sqrt(π)*erfi(x)/2"},
+        {"integrate(x^2*exp(x^2))", "x*exp(x^2)/2-sqrt(π)*erfi(x)/4"},
+        {"integrate(exp(x^2+x+1))", "exp(3/4)*sqrt(π)*erfi(x+1/2)/2"},
+        {"integrate(erfi(x))", "x*erfi(x)-exp(x^2)/sqrt(π)"},
+        {"integrate(x*erfc(x))", "x^2*erfc(x)/2-x*exp(-x^2)/(2*sqrt(π))+erf(x)/4"},
+        {"integrate(x^2*erf(x))", "x^3*erf(x)/3+(1+x^2)*exp(-x^2)/(3*sqrt(π))"},
+        {"diff(erfi(x^2))", "4*x*exp(x^4)/sqrt(π)"},
+        {"erfi(1)", "1.65042575879754287602533772956136244389567987487402"},
+        {"erfi(-2)", "-18.56480241457555259870429191324101719885800172608341"},
+        {"erfi(0.5)", "0.614952094696510980839681185623641393051345617895404"},
+        {"erfi(-0.001)", "-0.00112837954322201444367725926230101222679458040458702"},
+        {"erfi(5)", "8298273880.676803516146223190746919951872735737541398"},
+        {"erfi(20)/1.474797539628786202447733153131835124599259283304478e172", "1"},
+        {"erfi(3)+erfi(-3)", "0"},
     };
     for (const auto& pair : indefinite)
         compare(pair.first, pair.second);
@@ -1116,7 +1150,11 @@ static void test_calculus_integration()
     for (const char* expression : {"0", "5", "x", "x^3+2*x-5", "1/x", "1/x^2", "sqrt(x)",
                                    "exp(2*x)", "sin(2*x)", "cos(x)", "sinh(x)", "cosh(x)",
                                    "ln(x)", "x*exp(x)", "x^2*sin(x)", "2*x*cos(x^2)",
-                                   "(x+1)/(1+x^2)", "y*x^2", "abs(x)"}) {
+                                   "(x+1)/(1+x^2)", "y*x^2", "abs(x)", "exp(-x^2)",
+                                   "x^3*exp(-x^2/2)", "(x+1)*exp(1+x-2*x^2)", "exp(-x^2)*exp(x)",
+                                   "2^(-x^2)", "erf(x)", "erfc(3*x)", "exp(x^2)", "erfi(2*x)",
+                                   "x*erfc(x)", "x^2*erfi(x)", "(x+1)*erf(2*x-1)", "x^9*erf(x)",
+                                   "x^5*exp(-x^2)", "exp(-x^2)*exp(x)", "erf(sqrt(2)*x)"}) {
         compare(QStringLiteral("diff(integrate(%1; x); x)").arg(QString::fromLatin1(expression)), expression);
     }
     CHECK_EVAL("x=-2", "-2");
@@ -1164,22 +1202,85 @@ static void test_calculus_integration()
     compare("integrate(2[m/s]; 30[s]; 1[min])", "60[m]");
     compare("integrate(1; 0[s]; 2[s])", "2[s]");
 
+    // A quadratic exponent gives the error function, and its limits at infinity.
     const QString gaussian = QStringLiteral("0.746824132812427025399467436131853005354499686812606");
-    compare("integrate(exp(-x^2); 0; 1)", gaussian, true);
-    compare("integrate(exp(-x^2); 1; 0)", "-" + gaussian, true);
-    compare("integrate(exp(-x^2); -inf; inf)", "sqrt(π)", true);
-    compare("integrate(exp(-x^2); 0; inf)", "sqrt(π)/2", true);
+    compare("integrate(exp(-x^2); 0; 1)", gaussian);
+    compare("integrate(exp(-x^2); 1; 0)", "-" + gaussian);
+    CHECK_EVAL("integrate(exp(-x^2); -inf; inf)", "sqrt(π)");
+    CHECK_EVAL(QString::fromUtf8("integrate(exp(−x²);−∞;∞)"), "sqrt(π)");
+    CHECK_EVAL("integrate(exp(-x^2); 0; inf)", "sqrt(π)/2");
+    CHECK_EVAL("integrate(exp(-π*x^2); -inf; inf)", "1");
+    CHECK_EVAL("integrate(x*exp(-x); 0; inf)", "1");
+    compare("integrate(exp(-x^2); -1; 1)", "sqrt(π)*erf(1)");
+    compare("integrate(exp(-(x-3)^2); 3; inf)", "sqrt(π)/2");
+    compare("integrate(exp(-x^2/2); -inf; inf)", "sqrt(2*π)");
+    compare("integrate(exp(-8*x^2); -inf; 0)", "sqrt(π/8)/2");
+    compare("integrate(x^2*exp(-x^2); -inf; inf)", "sqrt(π)/2");
+    compare("integrate(x^4*exp(-x^2); -inf; inf)", "3*sqrt(π)/4");
+    compare("integrate((x+1)^2*exp(x-x^2); -inf; inf)", "11*exp(1/4)*sqrt(π)/4");
+    compare("integrate(exp(-x^2)*exp(x); -inf; inf)", "exp(1/4)*sqrt(π)");
+    compare("integrate(2^(-x^2); 0; inf)", "sqrt(π/ln(2))/2");
+    // A quadratic exponent that opens upwards gives erfi.
+    compare("integrate(exp(x^2); 0; 1)", "sqrt(π)*erfi(1)/2");
+    compare("integrate(x^2*exp(x^2); -1; 1)", "exp(1)-sqrt(π)*erfi(1)/2");
+    // Where u grows, erfc(u) falls like exp(-u^2).
+    CHECK_EVAL("integrate(erfc(x); 0; inf)", "1/sqrt(π)");
+    CHECK_EVAL("integrate(x*erfc(x); 0; inf)", "1/4");
+    compare("integrate(x^2*erfc(x); 0; inf)", "1/(3*sqrt(π))");
+    CHECK_EVAL("integrate(erfc(-x); -inf; 0)", "1/sqrt(π)");
+    compare("integrate(erfi(x); 0; 1)", "erfi(1)-(e-1)/sqrt(π)");
+    // Shifted and scaled Gaussians, moments, reversed and free bounds.
+    compare("integrate(exp(-(x-1)^2); -inf; inf)", "sqrt(π)");
+    compare("integrate(x*exp(-(x-1)^2); -inf; inf)", "sqrt(π)");
+    compare("integrate(x^2*exp(-x^2/2); -inf; inf)", "sqrt(2*π)");
+    compare("integrate(x^2*exp(-x^2-2*x); -inf; inf)", "3*e*sqrt(π)/2");
+    compare("integrate(exp(-(x-3)^2/2)/sqrt(2*π); -inf; inf)", "1");
+    compare("integrate(exp(-2*x)*exp(-x^2); 0; inf)", "e*sqrt(π)*erfc(1)/2");
+    compare("integrate(x^24*exp(-x^2); -inf; inf)", "316234143225*sqrt(π)/4096");
+    compare("integrate(exp(-x^2)*y; x; -inf; inf)", "3*sqrt(π)");
+    CHECK_EVAL("integrate(x^3*exp(-x^2); -inf; inf)", "0");
+    CHECK_EVAL("integrate(exp(-x^2); inf; -inf)", "-sqrt(π)");
+    CHECK_EVAL("integrate(exp(-x^2); -b; b)", "sqrt(π)*erf(b)");
+    // The documented limits of these rules.
+    expectError("integrate(exp(-b*x^2); x)", "symbolic integration is unsupported");
+    expectError("integrate(x^25*exp(-x^2))", "symbolic integration is unsupported");
+    expectError("integrate(x^24*erf(x))", "symbolic integration is unsupported");
+    expectError("integrate(x*exp(-x^2)*erf(x))", "symbolic integration is unsupported");
+    expectError("integrate(exp(x^2)*exp(-x^2))", "symbolic integration is unsupported");
+    expectError("integrate(exp(-x^2)*erfi(x); 0; inf)", "could not establish convergence");
+    expectError("integrate(erf(x)-1; 0; inf)", "could not establish convergence");
+    expectError("integrate(exp(-(t/[s])^2); t; -inf[s]; inf[s])", "domain or convergence");
+    expectError("2*integrate(exp(-x^2); -inf; inf)", "needs numeric values");
+
+    // Symbolic roots show as √, and a root keeps its power outside.
+    const auto resultLine = [&](const QString& expression) {
+        const Quantity value = evaluate(expression);
+        const auto lines = ResultLineFormatUtils::formatResultLinesForDisplay(
+            expression, {}, value, false, true, &evaluator);
+        return lines.isEmpty() ? QString() : lines.constLast().simplified();
+    };
+    check(resultLine("integrate(2^(-x^2); -inf; inf)") == QString::fromUtf8("= √π / √(ln(2))"),
+          "show square roots as √");
+    check(resultLine("diff(sqrt(1+x^2); 6)") == QString::fromUtf8("= 45 · (1 − 12 · x² + 8 · x⁴) / √(1 + x²)¹¹"),
+          "show the power of a root outside");
+    check(Evaluator::formatInterpretedExpressionForDisplay(QString::fromUtf8("√(x)^2"), &evaluator)
+              == QString::fromUtf8("√(x)²")
+              && Evaluator::formatInterpretedExpressionForDisplay("sqrt(x)^3", &evaluator) == QString::fromUtf8("sqrt(x)³")
+              && Evaluator::formatInterpretedExpressionForDisplay("sin(x)^2", &evaluator) == QString::fromUtf8("sin²(x)"),
+          "keep the power of a root outside");
     compare("integrate(exp(-x)/sqrt(x); 0; 1)", "sqrt(π)*erf(1)", true);
     compare("integrate(exp(x-1)/sqrt(1-x); 0; 1)", "sqrt(π)*erf(1)", true);
-    compare("integrate(exp(-x^2)*[m]; 0; 1)", gaussian + "[m]", true);
+    compare("integrate(exp(-x^2)*[m]; 0; 1)", gaussian + "[m]");
     compare("integrate(exp(-(t/[s])^2)*[m/s]; t; 0[s]; 1[s])", gaussian + "[m]", true);
-    compare("2*integrate(exp(-x^2); 0; 1)", "2*" + gaussian, true);
-    const Quantity approximate = evaluate("integrate(exp(-x^2); 0; 1)");
+    const QString quartic = QStringLiteral("0.844838594757102400764046930699765966133066202288086");
+    compare("integrate(exp(-x^4); 0; 1)", quartic, true);
+    compare("2*integrate(exp(-x^4); 0; 1)", "2*" + quartic, true);
+    const Quantity approximate = evaluate("integrate(exp(-x^4); 0; 1)");
     QJsonObject stored;
     approximate.serialize(stored);
     check(Quantity::deSerialize(stored).isApproximate(), "save the approximation marker");
     const auto lines = ResultLineFormatUtils::formatResultLinesForDisplay(
-        "integrate(exp(-x^2); 0; 1)", {}, approximate, false, true, &evaluator);
+        "integrate(exp(-x^4); 0; 1)", {}, approximate, false, true, &evaluator);
     check(lines.size() == 1 && lines.at(0).startsWith(
               ResultLineFormatUtils::resultLinePrefix(MathDsl::Approximate)),
           "show the approximation marker");
@@ -1190,6 +1291,9 @@ static void test_calculus_integration()
         compare("integrate(sin(x); 0; " + QString::fromLatin1(mode.second) + ")",
                 "2*(" + QString::fromLatin1(mode.second) + ")/π");
         compare("diff(integrate(cos(x); x); x)", "cos(x)");
+        // The error functions do not depend on the angle mode.
+        CHECK_EVAL("integrate(exp(-x^2); -inf; inf)", "sqrt(π)");
+        compare("diff(erf(x))", "2*exp(-x^2)/sqrt(π)");
     }
     settings->angleUnit = 'r';
 
@@ -1215,10 +1319,18 @@ static void test_calculus_integration()
     expectError("integrate(tan(x); 0; π)", "domain or convergence");
     expectError("integrate(sqrt(x); -1; 1)", "domain or convergence");
     expectError("integrate(x; inf; inf)", "invalid infinite");
-    expectError("integrate(exp(-x^2))", "symbolic integration is unsupported");
+    expectError("integrate(exp(-x^4))", "symbolic integration is unsupported");
+    // Integrands that do not fall fast enough at an infinite bound.
+    for (const char* expression : {"integrate(exp(x^2); 0; inf)", "integrate(x*exp(x^2); -inf; 0)",
+                                   "integrate(erf(x); 0; inf)", "integrate(erfc(x); -inf; 0)",
+                                   "integrate(erfi(x); -inf; 0)", "integrate(x^2; 0; inf)",
+                                   "integrate(x/(x^2+1); 0; inf)", "integrate(1/(x+1); 0; inf)",
+                                   "integrate(exp(x^2-x); -inf; 0)", "integrate(x^3*exp(x^2/4); 1; inf)"}) {
+        expectError(expression, "divergent integral");
+    }
     expectError("integrate(floor(x); 0; 1)", "unsupported function");
     expectError("integrate(cos(10^5*x^2); 0; 1)", "rapidly varying integrand");
-    expectError("integrate(exp(-10^8*(x-0.12345)^2); 0; 1)", "rapidly varying integrand");
+    expectError("integrate(exp(-10^8*(x-0.12345)^4); 0; 1)", "rapidly varying integrand");
     expectError("integrate(" + QString("sin(").repeated(110) + "x" + QString(")").repeated(111),
                 "limit exceeded");
 
@@ -1226,11 +1338,19 @@ static void test_calculus_integration()
     // ones do not check the limit, so they still give a result.
     evaluator.setTimeLimit(QDeadlineTimer(0));
     check(evaluate("1+2") == Quantity(3) && !evaluator.stoppedForTimeLimit(), "quick result with a time limit");
-    check(evaluate("integrate(exp(-x^2); 0; 1)").isNan() && evaluator.stoppedForTimeLimit(),
+    check(evaluate("integrate(exp(-x^4); 0; 1)").isNan() && evaluator.stoppedForTimeLimit(),
           "stop a numerical integral for the time limit");
     evaluator.setTimeLimit(QDeadlineTimer(QDeadlineTimer::Forever));
     check(!evaluator.stoppedForTimeLimit(), "clear the time limit");
-    compare("integrate(exp(-x^2); 0; 1)", gaussian, true);
+    compare("integrate(exp(-x^4); 0; 1)", quartic, true);
+
+    const Function* imaginaryError = FunctionRepo::instance()->find("erfi");
+    check(imaginaryError && imaginaryError->name() == "Imaginary Error Function"
+              && imaginaryError->domainType() == FunctionDomain::SpecialFunctions,
+          "erfi metadata");
+    CHECK_EVAL("erfi(0)", "0");
+    expectError("erfi(1e10)", "overflow");
+    expectError("erfi(1[m])", "dimension");
 
     CHECK_EVAL("inf=2", "2");
     CHECK_EVAL("integrate(x; 0; inf)", "2");
@@ -1239,6 +1359,8 @@ static void test_calculus_integration()
         const QScopedValueRollback<bool> dmath(DMath::complexMode, true);
         evaluator.initializeBuiltInVariables();
         expectError("integrate(x; 0; i)", "real scalar");
+        // Only real arguments, as for erf and erfc.
+        expectError("erfi(1+i)", "undefined for argument domain");
     }
 }
 

@@ -104,7 +104,7 @@ void TestDisplayUi::numerical_integral_is_marked_and_copied()
     const Session* session = display->session();
     const int index = session->historySize();
 
-    editor->setText(QStringLiteral("integrate(exp(-x^2)*[m]; 0; 1)"));
+    editor->setText(QStringLiteral("integrate(exp(-x^4)*[m]; 0; 1)"));
     QVERIFY(QMetaObject::invokeMethod(&window, "evaluateEditorExpression"));
     QCOMPARE(session->historySize(), index + 1);
     const Quantity result = session->historyEntryAtRef(index).result();

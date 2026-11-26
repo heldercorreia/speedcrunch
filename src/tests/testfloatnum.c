@@ -52,6 +52,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef _FLOATNUMTEST
@@ -6964,6 +6965,102 @@ static int test_erf()
   return 1;
 }
 
+static int test_erfi()
+{
+  static const char* const references[][2] = {
+    /* the Taylor series */
+    {"1/7", "1.623003487622912966869745492287824371176300775290007967870666033089799264422721750679526846957206044000930e-1"},
+    {"1", "1.650425758797542876025337729561362443895679874874022877600257996316111304925645922533850168585456181425387"},
+    {"20/7", "7.480342409510084182511877188120969179439224002246468182310305519971341871586205442777634886281333935408891e2"},
+    {"93/7", "1.935026195446081958815992696877296716629264659286999133248401724520574408939450254107766181702174209445653e75"},
+    /* the asymptotic series */
+    {"17", "1.078539524015566115398387305586567110875378026055672717116525129898902070453700367302618494856169549716753e124"},
+    {"283.6", "1.419824789247768474370235191225816964863538290842729724682902611279143955426877776178350299061570618551268e34927"},
+  };
+  static const int precisions[] = {1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 100};
+  int prec, i, j;
+  floatstruct x, x1, expected;
+
+  printf("testing erfi\n");
+  float_create(&x);
+  float_create(&x1);
+  float_create(&expected);
+  printf("verifying special x\n");
+  float_setzero(&x);
+  if (!float_erfi(&x, 100) || !float_iszero(&x))
+    return 0;
+  /* erfi is odd, on both sides of the switch between the series */
+  for (i = 0; i < 2; ++i)
+  {
+    float_setinteger(&x, i == 0 ? 1 : 20);
+    float_copy(&x1, &x, EXACT);
+    float_neg(&x1);
+    if (!float_erfi(&x, 100) || !float_erfi(&x1, 100))
+      return 0;
+    float_neg(&x1);
+    if (float_cmp(&x, &x1) != 0)
+      return 0;
+  }
+  /* exp(x*x) is out of range */
+  float_setasciiz(&x, "1e10");
+  if (float_erfi(&x, 100) || !float_isnan(&x))
+    return 0;
+  printf("verifying results\n");
+  for (i = 0; i < (int)(sizeof(references) / sizeof(references[0])); ++i)
+  {
+    const char* slash = strchr(references[i][0], '/');
+    if (slash)
+    {
+      float_setinteger(&x, atoi(references[i][0]));
+      float_divi(&x, &x, atoi(slash + 1), 110);
+    }
+    else
+      float_setasciiz(&x, references[i][0]);
+    float_setasciiz(&expected, references[i][1]);
+    if (!float_erfi(&x, 100) || !_cmprelerror(&expected, &x, -99))
+    {
+      printf("FAILED for x == %s\n", references[i][0]);
+      return 0;
+    }
+  }
+  printf("precision test for erfi\n");
+  for (j = 0; j < (int)(sizeof(precisions) / sizeof(precisions[0])); ++j)
+  {
+    prec = precisions[j];
+    for (i = 0; ++i <= 40;)
+    {
+      if (i < 10)
+      {
+        float_copy(&x, &c1, EXACT);
+        float_setexponent(&x, -3-i*i);
+      }
+      else if (i < 30)
+      {
+        float_setinteger(&x, i-9);
+        float_divi(&x, &x, 4, 10);
+      }
+      else
+        float_setinteger(&x, 5 + 2*(i-30)*(i-30));
+      _sub_ulp(&x, prec);
+      float_copy(&x1, &x, EXACT);
+      if(!float_erfi(&x, prec) || !float_erfi(&x1, prec+4))
+      {
+        printf("evaluation FAILED for case %d with precision %d\n", i, prec);
+        return 0;
+      }
+      if (!_cmprelerror(&x, &x1, -prec))
+      {
+        printf("evaluation IMPRECISE for case %d with precision %d\n", i, prec);
+        return 0;
+      }
+    }
+  }
+  float_free(&x);
+  float_free(&x1);
+  float_free(&expected);
+  return 1;
+}
+
 static int testfailed(char* msg)
 {
   fprintf(stderr, "%s FAILED\n", msg);
@@ -7094,6 +7191,7 @@ int main(void)
   if(!test_erfcsum()) return testfailed("erfcsum");
   if(!test_erfc()) return testfailed("erfc");
   if(!test_erf()) return testfailed("erf");
+  if(!test_erfi()) return testfailed("erfi");
 
   printf("\nall tests PASSED\n");
 #endif /* _FLOATNUMTEST */

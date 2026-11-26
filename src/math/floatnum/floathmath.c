@@ -552,6 +552,12 @@ float_erfc(floatnum x, int digits)
 }
 
 char
+float_erfi(floatnum x, int digits)
+{
+  return chckmathparam(x, digits)? _erfi(x, digits) : 0;
+}
+
+char
 float_not(
   floatnum x)
 {

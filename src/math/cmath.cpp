@@ -1015,6 +1015,7 @@ REAL_WRAPPER_CMATH_NUM_NUM(arctan2, OutOfDomain)
 REAL_WRAPPER_CMATH_NUM_NUM(factorial, NotImplemented)
 REAL_WRAPPER_CMATH_NUM(erf, OutOfDomain)
 REAL_WRAPPER_CMATH_NUM(erfc, OutOfDomain)
+REAL_WRAPPER_CMATH_NUM(erfi, OutOfDomain)
 REAL_WRAPPER_CMATH_NUM(gamma, NotImplemented)
 REAL_WRAPPER_CMATH_NUM(lnGamma, NotImplemented)
 // CMath PROBABILITY

@@ -284,6 +284,12 @@ char float_erf(floatnum x, int digits);
            InvalidPrecision (digits > MATHPRECISION) */
 char float_erfc(floatnum x, int digits);
 
+/* evaluates erfi(x) = -i*erf(i*x).
+           Overflow
+           NaNOperand
+           InvalidPrecision (digits > MATHPRECISION) */
+char float_erfi(floatnum x, int digits);
+
 /* cuts off the fraction part of <x> and complements the bits
    in the 2's complement representation of <x> then. The
    corresponding integer of the result is stored back in <x>.

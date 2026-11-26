@@ -172,11 +172,27 @@ public:
         return abs(a) / gcd(a, b) * abs(b);
     }
 
+    // The largest integer whose square is at most a non-negative value.
+    friend Integer floorSqrt(const Integer& value)
+    {
+        if (value.isZero())
+            return 0;
+        // Newton's method falls to the root from any value above it.
+        Integer root = fromDigits(QLatin1Char('1') + QString((value.digits() + 1) / 2, QLatin1Char('0')));
+        for (;;) {
+            const Integer next = (root + value / root) / 2;
+            if (!next.isValid() || next >= root)
+                return root;
+            root = next;
+        }
+    }
+
     friend bool operator==(const Integer& a, const Integer& b) { return float_cmp(&a.m_value, &b.m_value) == 0; }
     friend bool operator!=(const Integer& a, const Integer& b) { return !(a == b); }
     friend bool operator<(const Integer& a, const Integer& b) { return float_cmp(&a.m_value, &b.m_value) < 0; }
     friend bool operator>(const Integer& a, const Integer& b) { return b < a; }
     friend bool operator<=(const Integer& a, const Integer& b) { return !(b < a); }
+    friend bool operator>=(const Integer& a, const Integer& b) { return !(a < b); }
 
 private:
     using Operation = char (*)(floatnum, cfloatnum, cfloatnum, int);
@@ -389,6 +405,11 @@ private:
     Expr integratePolynomial(const QVector<Expr>& coefficients, Expr variable);
     Expr powerPrimitive(const PowerKernel& kernel);
     Expr kernelPrimitive(Expr expression, Expr& argument);
+    std::optional<QVector<Expr>> exponentPolynomial(const QVector<Expr>& factors, const QString& variable,
+                                                    QVector<Expr>& kernels, QVector<Expr>& rest);
+    Expr gaussianPrimitive(const QVector<Expr>& factors, const QString& variable);
+    int signAtInfinity(const QVector<Expr>& coefficients, int direction);
+    Expr limitAtInfinity(Expr expression, const QString& variable, int direction);
     bool dependsOn(Expr expression, const QString& variable);
     Expr substitute(Expr expression, Expr variable, Expr value);
     HNumber magnitude(Expr expression, const QString& variable = {}, const HNumber& x = 0);
@@ -1143,6 +1164,13 @@ private:
             && (argument == m_zero || argument == m_one)) {
             return argument;
         }
+        if ((name == QLatin1String("erf") || name == QLatin1String("erfi")) && argument == m_zero)
+            return m_zero;
+        // The error functions erf and erfi are odd.
+        if ((name == QLatin1String("erf") || name == QLatin1String("erfi")) && negative(argument))
+            return negate(function(name, negate(argument)));
+        if (name == QLatin1String("erfc") && argument == m_zero)
+            return m_one;
         if (name == QLatin1String("arctan") && exact) {
             if (argument == m_zero)
                 return m_zero;
@@ -1305,7 +1333,8 @@ private:
     // Takes the greatest common factor out of a sum, as in 24*x-24*x^3 =
     // 24*x*(1-x^2): the greatest common divisor of the coefficients and the
     // lowest power of each shared factor. Its sign follows the first term, so
-    // the sum inside starts with a positive term.
+    // the sum inside starts with a positive term. A sum with a fraction among
+    // its terms is left as it is.
     Expr factorOut(Expr sum)
     {
         if (sum == NoExpression || node(sum).key.type != Opcode::Add)
@@ -1565,7 +1594,9 @@ private:
     }
 
     // Cancels polynomial factors of the denominator that divide the
-    // numerator, as in (x^3+x^2)/(x+1)^2 = x^2/(x+1).
+    // numerator, as in (x^3+x^2)/(x+1)^2 = x^2/(x+1). Only polynomials with
+    // exact numeric coefficients take part. Like x/x = 1, this can remove a
+    // point where the expression is undefined.
     Expr cancelPolynomialFactors(Expr numerator, Expr denominator, const QString& variable)
     {
         auto above = exactPolynomial(numerator, variable);
@@ -1680,7 +1711,11 @@ private:
 
     // Repeats the passes until nothing changes. Every change lowers the
     // complexity, so expanding and factoring cannot undo each other, and the
-    // number of passes and the work they use are limited too.
+    // number of passes and the work they use are limited too. Of two forms
+    // with the same complexity, the current one stays. The passes use no
+    // trigonometric identities and do not combine products of exponentials,
+    // as in exp(x^2)*exp(-x^2). Only diff() uses them: they would factor
+    // polynomial antiderivatives, which then read worse.
     Expr simplified(Expr expression, const QString& variable)
     {
         for (int pass = 0; pass < MaxPasses; ++pass) {
@@ -1804,7 +1839,7 @@ private:
 
     enum class Rule {
         Exp, Ln, Lg, Lb, Log, Abs, Sqrt, Cbrt, Sin, Cos, Tan, Cot, Sec, Csc,
-        Arcsin, Arccos, Arctan, Arctan2, Sinh, Cosh, Tanh, Arsinh, Arcosh, Artanh
+        Arcsin, Arccos, Arctan, Arctan2, Sinh, Cosh, Tanh, Arsinh, Arcosh, Artanh, Erf, Erfc, Erfi
     };
 
     struct FunctionRule {
@@ -1840,7 +1875,10 @@ private:
             {QStringLiteral("tanh"), {Rule::Tanh}},
             {QStringLiteral("arsinh"), {Rule::Arsinh}},
             {QStringLiteral("arcosh"), {Rule::Arcosh}},
-            {QStringLiteral("artanh"), {Rule::Artanh}}
+            {QStringLiteral("artanh"), {Rule::Artanh}},
+            {QStringLiteral("erf"), {Rule::Erf}},
+            {QStringLiteral("erfc"), {Rule::Erfc}},
+            {QStringLiteral("erfi"), {Rule::Erfi}}
         };
         return rules;
     }
@@ -1854,6 +1892,71 @@ private:
         case AngleMode::Turn: case AngleMode::Revolution: return multiply({number(2), pi});
         default: return m_one;
         }
+    }
+
+    // u^2, where sqrt(v)^2 is v. Only for the derivatives and integrals of
+    // the error functions, which keep a factor u' or u, so that sqrt(v) stays
+    // in the result and the domain does not grow.
+    Expr errorSquare(Expr u)
+    {
+        const Expr inner = radicand(u);
+        return inner != NoExpression ? inner : power(u, number(2));
+    }
+
+    // exp(-u^2), whose integral is the error function.
+    Expr gaussian(Expr u)
+    {
+        return function(QStringLiteral("exp"), negate(errorSquare(u)));
+    }
+
+    // The square root of a positive value and its inverse. For a fraction n/d
+    // both keep a whole number under the root, as sqrt(n*d)/d and sqrt(n*d)/n,
+    // so that equal roots can cancel.
+    QPair<Expr, Expr> squareRoot(Expr value)
+    {
+        const auto& ratio = node(value).number;
+        if (ratio && ratio->numerator.isPositive()) {
+            Integer product = ratio->numerator * ratio->denominator;
+            Integer outside = 1;
+            const Integer whole = floorSqrt(product);
+            if (whole * whole == product) {
+                outside = whole;
+                product = 1;
+            }
+            // Take square factors below 100 out of the root, as in sqrt(8) =
+            // 2*sqrt(2). Larger ones stay inside, which is still exact.
+            for (int factor = 2; factor < 100 && Integer(factor * factor) <= product; ++factor) {
+                while ((product % (factor * factor)).isZero()) {
+                    spend();
+                    product = product / (factor * factor);
+                    outside = outside * factor;
+                }
+            }
+            const Expr root = multiply({number(exact(outside, 1)),
+                                        function(QStringLiteral("sqrt"), number(exact(product, 1)))});
+            return {divide(root, number(ExactNumber{ratio->denominator, 1})),
+                    divide(root, number(ExactNumber{ratio->numerator, 1}))};
+        }
+        const Expr root = function(QStringLiteral("sqrt"), value);
+        return {root, divide(m_one, root)};
+    }
+
+    // The coefficients of a polynomial, also over a constant denominator,
+    // without leading zeros.
+    std::optional<QVector<Expr>> scaledPolynomial(Expr expression, const QString& variable)
+    {
+        const Key& key = node(expression).key;
+        const bool scaled = key.type == Opcode::Div && !dependsOn(key.children.at(1), variable);
+        auto coefficients = polynomial(scaled ? key.children.at(0) : expression, variable);
+        if (!coefficients)
+            return std::nullopt;
+        if (scaled) {
+            for (Expr& coefficient : *coefficients)
+                coefficient = divide(coefficient, key.children.at(1));
+        }
+        while (coefficients->size() > 1 && coefficients->constLast() == m_zero)
+            coefficients->removeLast();
+        return coefficients;
     }
 
     Expr derivativeOfFunction(Expr expression, const QString& variable)
@@ -1916,6 +2019,14 @@ private:
         case Rule::Arcosh:
             return divide(du, multiply({sqrt(subtract(u, m_one)), sqrt(add({u, m_one}))}));
         case Rule::Artanh: return divide(du, subtract(m_one, square(u)));
+        case Rule::Erf: case Rule::Erfc: {
+            const Expr slope = divide(multiply({number(2), du, gaussian(u)}),
+                                      sqrt(reference(QStringLiteral("π"))));
+            return rule->rule == Rule::Erf ? slope : negate(slope);
+        }
+        case Rule::Erfi:
+            return divide(multiply({number(2), du, function(QStringLiteral("exp"), errorSquare(u))}),
+                          sqrt(reference(QStringLiteral("π"))));
         case Rule::Log: break; // Simplified to a quotient of natural logarithms.
         }
         throw Failure{tr("unsupported function %1").arg(key.text.toHtmlEscaped())};
@@ -2123,6 +2234,8 @@ std::optional<Calculus::SquareOffset> Calculus::squareWithPositiveOffset(Expr ex
 
 std::optional<QVector<Expr>> Calculus::polynomial(Expr expression, const QString& variable)
 {
+    // Higher degrees are not supported. This also limits the integrals of a
+    // polynomial times an exponential or an error function.
     constexpr int maxDegree = 24;
     spend();
     if (!dependsOn(expression, variable))
@@ -2295,8 +2408,230 @@ Expr Calculus::kernelPrimitive(Expr expression, Expr& argument)
     case Rule::Cosh: return unary("sinh");
     case Rule::Tanh: return function(QStringLiteral("ln"), unary("cosh"));
     case Rule::Abs: return divide(multiply({argument, expression}), number(2));
+    case Rule::Erf: case Rule::Erfc: case Rule::Erfi: {
+        const Expr pi = reference(QStringLiteral("π"));
+        const Expr bump = rule->rule == Rule::Erfi
+            ? divide(function(QStringLiteral("exp"), errorSquare(argument)), function(QStringLiteral("sqrt"), pi))
+            : divide(gaussian(argument), function(QStringLiteral("sqrt"), pi));
+        const Expr term = multiply({argument, expression});
+        return rule->rule == Rule::Erf ? add({term, bump}) : subtract(term, bump);
+    }
     default: return NoExpression;
     }
+}
+
+// The factors that are exponentials, such as exp(u) and 2^u, go to kernels and
+// the others to rest. Returns the polynomial in the variable that is the sum of
+// their natural exponents, or nothing if one of them is not a polynomial or has
+// units.
+std::optional<QVector<Expr>> Calculus::exponentPolynomial(const QVector<Expr>& factors, const QString& variable,
+                                                          QVector<Expr>& kernels, QVector<Expr>& rest)
+{
+    QVector<Expr> sum{m_zero};
+    for (Expr factor : factors) {
+        const Key& key = node(factor).key;
+        Expr exponent = NoExpression;
+        if (key.type == Opcode::Function && key.text == QLatin1String("exp")
+            && dependsOn(key.children.at(0), variable)) {
+            exponent = key.children.at(0);
+        } else if (key.type == Opcode::Pow && !dependsOn(key.children.at(0), variable)
+                   && dependsOn(key.children.at(1), variable)) {
+            const HNumber base = magnitude(key.children.at(0));
+            if (base.isNan() || base <= 0 || base == 1)
+                return std::nullopt;
+            exponent = multiply({key.children.at(1), function(QStringLiteral("ln"), key.children.at(0))});
+        }
+        if (exponent == NoExpression) {
+            rest.append(factor);
+            continue;
+        }
+        if (node(factor).containsUnit)
+            return std::nullopt;
+        const auto part = scaledPolynomial(exponent, variable);
+        if (!part)
+            return std::nullopt;
+        if (sum.size() < part->size())
+            sum.resize(part->size(), m_zero);
+        for (int i = 0; i < part->size(); ++i)
+            sum[i] = add({sum.at(i), part->at(i)});
+        kernels.append(factor);
+    }
+    while (sum.size() > 1 && sum.constLast() == m_zero)
+        sum.removeLast();
+    return sum;
+}
+
+// The integral of p(x)*exp(q(x)), where p is a polynomial and q is a quadratic.
+// Dividing p by q' leaves p = q'*r + k, and q'*r*exp(q) integrates by parts to
+// r*exp(q) minus the integral of r'*exp(q). So each step lowers the degree of p
+// by two, down to a constant times erf if q opens downwards, or erfi if it opens
+// upwards. The sign of q2 must be known, so a variable in it is not supported.
+// When the exponents cancel, as in exp(x^2)*exp(-x^2), q is not a quadratic and
+// this rule does not apply.
+Expr Calculus::gaussianPrimitive(const QVector<Expr>& factors, const QString& variable)
+{
+    QVector<Expr> kernels;
+    QVector<Expr> rest;
+    const auto q = exponentPolynomial(factors, variable, kernels, rest);
+    if (!q || q->size() != 3)
+        return NoExpression;
+    const HNumber curvature = magnitude(q->at(2));
+    if (curvature.isNan() || curvature.isZero())
+        return NoExpression;
+    const bool opensDown = curvature.isNegative();
+    auto p = scaledPolynomial(multiply(rest), variable);
+    if (!p)
+        return NoExpression;
+
+    const Expr x = reference(variable);
+    const auto polynomialOf = [&](const QVector<Expr>& coefficients) {
+        QVector<Expr> terms;
+        for (int i = 0; i < coefficients.size(); ++i)
+            terms.append(multiply({coefficients.at(i), power(x, number(i))}));
+        return add(terms);
+    };
+    const Expr slope = multiply({number(2), q->at(2)});
+    QVector<Expr> parts;
+    while (p->size() > 1) {
+        spend(p->size());
+        QVector<Expr> remainder = *p;
+        QVector<Expr> quotient(p->size() - 1, m_zero);
+        for (int i = remainder.size() - 1; i > 0; --i) {
+            quotient[i - 1] = divide(remainder.at(i), slope);
+            remainder[i - 1] = subtract(remainder.at(i - 1), multiply({quotient.at(i - 1), q->at(1)}));
+        }
+        if (parts.size() < quotient.size())
+            parts.resize(quotient.size(), m_zero);
+        for (int i = 0; i < quotient.size(); ++i)
+            parts[i] = add({parts.at(i), quotient.at(i)});
+        QVector<Expr> next(qMax(1, int(quotient.size()) - 1), m_zero);
+        next[0] = remainder.at(0);
+        for (int i = 1; i < quotient.size(); ++i)
+            next[i - 1] = subtract(next.at(i - 1), multiply({number(i), quotient.at(i)}));
+        while (next.size() > 1 && next.constLast() == m_zero)
+            next.removeLast();
+        *p = next;
+    }
+
+    // If q opens downwards, q = c - u^2 with s = sqrt(-q2) and u = s*x - q1/(2*s).
+    // If it opens upwards, q = c + u^2 with s = sqrt(q2) and u = s*x + q1/(2*s).
+    // In both cases c = q0 - q1^2/(4*q2).
+    QVector<Expr> terms{multiply({polynomialOf(parts), multiply(kernels)})};
+    if (p->at(0) != m_zero) {
+        const auto [root, inverse] = squareRoot(opensDown ? negate(q->at(2)) : q->at(2));
+        const Expr shift = multiply({q->at(1), inverse, number(1, 2)});
+        const Expr argument = opensDown ? subtract(multiply({root, x}), shift) : add({multiply({root, x}), shift});
+        const Expr peak = function(QStringLiteral("exp"),
+                                   subtract(q->at(0), divide(power(q->at(1), number(2)),
+                                                             multiply({number(4), q->at(2)}))));
+        terms.append(multiply({p->at(0), peak, function(QStringLiteral("sqrt"), reference(QStringLiteral("π"))),
+                               inverse, number(1, 2),
+                               function(QLatin1String(opensDown ? "erf" : "erfi"), argument)}));
+    }
+    return add(terms);
+}
+
+// The sign of a polynomial of degree one or more at direction*inf, or 0.
+int Calculus::signAtInfinity(const QVector<Expr>& coefficients, int direction)
+{
+    const HNumber leading = magnitude(coefficients.constLast());
+    if (coefficients.size() < 2 || leading.isNan() || leading.isZero())
+        return 0;
+    const bool odd = coefficients.size() % 2 == 0;
+    return leading.isNegative() != (odd && direction < 0) ? -1 : 1;
+}
+
+// The limit as the variable goes to direction*inf of a sum of products of
+// constants, polynomials, exponentials of polynomials and error functions of
+// polynomials. Such a sum is continuous everywhere. Returns NoExpression for
+// other forms and when the limit is not finite. Limits that need terms or
+// factors to cancel, as in x*(erf(x)-1), are also NoExpression.
+Expr Calculus::limitAtInfinity(Expr expression, const QString& variable, int direction)
+{
+    spend();
+    if (!dependsOn(expression, variable))
+        return expression;
+    const Key& key = node(expression).key;
+    if (key.type == Opcode::Add) {
+        QVector<Expr> terms;
+        for (Expr child : key.children) {
+            const Expr limit = limitAtInfinity(child, variable, direction);
+            if (limit == NoExpression)
+                return NoExpression;
+            terms.append(limit);
+        }
+        return add(terms);
+    }
+    if (key.type == Opcode::Div) {
+        const Expr denominator = key.children.at(1);
+        if (dependsOn(denominator, variable))
+            return NoExpression;
+        const Expr limit = limitAtInfinity(key.children.at(0), variable, direction);
+        return limit == NoExpression ? NoExpression : divide(limit, denominator);
+    }
+
+    const auto sign = [&](const QVector<Expr>& coefficients) { return signAtInfinity(coefficients, direction); };
+    // Where u grows, erfc(u) is below exp(-u^2), and erfi(u) is always below
+    // exp(u^2) in size. That is enough to show that a product goes to zero, but
+    // for no other limit, and the check below allows no other.
+    QVector<Expr> factors = key.type == Opcode::Mul ? key.children : QVector<Expr>{expression};
+    for (Expr& factor : factors) {
+        const Key& part = node(factor).key;
+        const bool complement = part.type == Opcode::Function && part.text == QLatin1String("erfc");
+        if (!complement && (part.type != Opcode::Function || part.text != QLatin1String("erfi")))
+            continue;
+        const auto argument = scaledPolynomial(part.children.at(0), variable);
+        const int end = argument ? sign(*argument) : 0;
+        if (!end)
+            return NoExpression;
+        if (complement && end < 0)
+            continue;
+        const Expr square = power(part.children.at(0), number(2));
+        factor = function(QStringLiteral("exp"), complement ? negate(square) : square);
+    }
+    QVector<Expr> kernels;
+    QVector<Expr> rest;
+    const auto exponent = exponentPolynomial(factors, variable, kernels, rest);
+    if (!exponent)
+        return NoExpression;
+    // An exponential that falls wins over any polynomial.
+    const int growth = kernels.isEmpty() ? 0 : sign(*exponent);
+    if (!kernels.isEmpty() && growth >= 0)
+        return NoExpression;
+
+    QVector<Expr> limits;
+    bool grows = false;
+    for (Expr factor : rest) {
+        if (!dependsOn(factor, variable)) {
+            limits.append(factor);
+            continue;
+        }
+        const Key& part = node(factor).key;
+        const auto coefficients = scaledPolynomial(factor, variable);
+        if (coefficients) {
+            if (coefficients->size() > 1)
+                grows = true;
+            else
+                limits.append(coefficients->constFirst());
+        } else if (part.type == Opcode::Function
+                   && (part.text == QLatin1String("erf") || part.text == QLatin1String("erfc"))) {
+            const auto argument = scaledPolynomial(part.children.at(0), variable);
+            const int end = argument ? sign(*argument) : 0;
+            if (!end)
+                return NoExpression;
+            limits.append(number(part.text == QLatin1String("erf") ? end : 1 - end));
+        } else if (part.type == Opcode::Add) {
+            const Expr limit = limitAtInfinity(factor, variable, direction);
+            if (limit == NoExpression)
+                return NoExpression;
+            limits.append(limit);
+        } else {
+            return NoExpression;
+        }
+    }
+    if (growth < 0)
+        return m_zero;
+    return grows ? NoExpression : multiply(limits);
 }
 
 Expr Calculus::antiderivative(Expr expression, const QString& variable, int depth)
@@ -2383,6 +2718,10 @@ Expr Calculus::antiderivative(Expr expression, const QString& variable, int dept
         }
     }
 
+    const Expr gaussianTerm = gaussianPrimitive(factors, variable);
+    if (gaussianTerm != NoExpression)
+        return gaussianTerm;
+
     // Keep integration by parts to a polynomial times a function of a linear argument.
     if (factors.size() >= 2) {
         for (int i = 0; i < factors.size(); ++i) {
@@ -2411,6 +2750,30 @@ Expr Calculus::antiderivative(Expr expression, const QString& variable, int dept
                 multiply({derivative(polynomialFactor, variable), wavePrimitive}), variable, depth + 1);
             if (remainder != NoExpression)
                 return subtract(multiply({polynomialFactor, wavePrimitive}), remainder);
+        }
+
+        // A polynomial times an error function: integrate the polynomial and
+        // differentiate the error function, which leaves a polynomial times an
+        // exponential. The integrated polynomial must stay within the degree
+        // limit of polynomial(), so the polynomial here can have degree 23.
+        // Other products, such as x*exp(-x^2)*erf(x), are not supported.
+        for (int i = 0; i < factors.size(); ++i) {
+            const Key& part = node(factors.at(i)).key;
+            if (part.type != Opcode::Function)
+                continue;
+            const auto rule = functionRules().value(part.text).rule;
+            if (rule != Rule::Erf && rule != Rule::Erfc && rule != Rule::Erfi)
+                continue;
+            auto other = factors;
+            other.removeAt(i);
+            const auto coefficients = polynomial(multiply(other), variable);
+            if (!coefficients)
+                continue;
+            const Expr integral = integratePolynomial(*coefficients, x);
+            const Expr remainder = antiderivative(
+                multiply({integral, derivative(factors.at(i), variable)}), variable, depth + 1);
+            if (remainder != NoExpression)
+                return subtract(multiply({integral, factors.at(i)}), remainder);
         }
     }
     if (const auto coefficients = polynomial(expression, variable))
@@ -2675,7 +3038,7 @@ std::optional<Calculus::Interval> Calculus::enclosure(
 
     switch (rule) {
     case Rule::Exp: case Rule::Abs: case Rule::Cbrt: case Rule::Sinh: case Rule::Cosh:
-    case Rule::Tanh: case Rule::Arsinh: case Rule::Arctan:
+    case Rule::Tanh: case Rule::Arsinh: case Rule::Arctan: case Rule::Erf: case Rule::Erfc: case Rule::Erfi:
         break;
     case Rule::Ln: case Rule::Lg: case Rule::Lb:
         if (!first || first->lower <= 0)
@@ -2890,9 +3253,66 @@ Expr Calculus::infiniteLimit(Expr raw, Expr primitive, const QString& variable, 
             throw Failure{tr("divergent integral")};
         return NoExpression;
     }
+    const Expr x = reference(variable);
+    if (primitive != NoExpression) {
+        // A primitive made of polynomials, exponentials and error functions is
+        // continuous everywhere, so finite limits show that the integral
+        // converges.
+        const Expr a = lower.infinity ? limitAtInfinity(primitive, variable, -1)
+                                      : substitute(primitive, x, lower.expression);
+        const Expr b = upper.infinity ? limitAtInfinity(primitive, variable, 1)
+                                      : substitute(primitive, x, upper.expression);
+        if (a != NoExpression && b != NoExpression) {
+            verifyDomain(raw, variable, std::nullopt, nullptr);
+            return subtract(b, a);
+        }
+    }
+
+    // An integrand that goes to a limit other than zero, or that falls no faster
+    // than 1/x, has no finite integral up to infinity. So has one that grows
+    // like an exponential. Some integrands cannot be decided, such as
+    // exp(-x^2)*erfi(x), which falls like 1/x, or erf(x)-1, which falls like a
+    // Gaussian. They give the error about convergence later on.
+    const auto diverges = [&](int direction) {
+        const Expr limit = limitAtInfinity(expression, variable, direction);
+        if (limit != NoExpression) {
+            const HNumber value = magnitude(limit);
+            return !value.isNan() && !value.isZero();
+        }
+        const Key& top = node(expression).key;
+        const Expr above = top.type == Opcode::Div ? top.children.at(0) : expression;
+        QVector<Expr> below{top.type == Opcode::Div ? top.children.at(1) : m_one};
+        QVector<Expr> factors = node(above).key.type == Opcode::Mul ? node(above).key.children
+                                                                     : QVector<Expr>{above};
+        for (Expr& factor : factors) {
+            // Where u grows, erfi(u) grows faster than exp(u^2)/u^2.
+            const Key& part = node(factor).key;
+            if (part.type == Opcode::Function && part.text == QLatin1String("erfi")) {
+                const Expr square = power(part.children.at(0), number(2));
+                factor = function(QStringLiteral("exp"), square);
+                below.append(square);
+            }
+        }
+        QVector<Expr> kernels;
+        QVector<Expr> rest;
+        const auto exponent = exponentPolynomial(factors, variable, kernels, rest);
+        const auto numerator = scaledPolynomial(multiply(rest), variable);
+        const auto denominator = scaledPolynomial(multiply(below), variable);
+        if (!exponent || !numerator || !denominator)
+            return false;
+        if (!kernels.isEmpty() && exponent->size() > 1)
+            return signAtInfinity(*exponent, direction) > 0;
+        const HNumber leading = magnitude(numerator->constLast());
+        const HNumber divisor = magnitude(denominator->constLast());
+        return numerator->size() + 1 >= denominator->size() && !leading.isNan() && !leading.isZero()
+            && !divisor.isNan() && !divisor.isZero();
+    };
+    // These forms are defined for any large x, which is all that the test needs.
+    if ((lower.infinity && diverges(-1)) || (upper.infinity && diverges(1)))
+        throw Failure{tr("divergent integral")};
+
     const Bound& finite = lower.infinity ? upper : lower;
     const int direction = lower.infinity ? -1 : 1;
-    const Expr x = reference(variable);
     const Key& key = node(expression).key;
     Expr kernelExpr = expression;
     if (key.type == Opcode::Mul) {
@@ -2993,6 +3413,8 @@ IntegralResult Calculus::integrate(int first, int nesting)
         const Expr primitive = antiderivative(expression, variable);
         if (primitive == NoExpression)
             throw Failure{tr("symbolic integration is unsupported for this expression")};
+        // Not simplified() like derivatives, which would factor polynomial
+        // antiderivatives and make them harder to read.
         return primitive;
     }
 

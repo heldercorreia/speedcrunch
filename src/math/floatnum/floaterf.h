@@ -15,6 +15,7 @@ extern "C" {
 
 char _erf(floatnum x, int digits);
 char _erfc(floatnum x, int digits);
+char _erfi(floatnum x, int digits);
 
 #ifdef __cplusplus
 }

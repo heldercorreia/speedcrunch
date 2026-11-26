@@ -1019,6 +1019,26 @@ void test_functions()
     CHECK_FORMAT(Format::Fixed() + Format::Hexadecimal(), HMath::encodeIeee754("1.5", "2", "1"), "0x3");
 }
 
+void test_erfi()
+{
+    // The Taylor series for small arguments.
+    CHECK(HMath::erfi(0), "0");
+    CHECK_PRECISE(HMath::erfi(HNumber("0.25")), "0.28808361979497198403470006572693591693065894169653");
+    CHECK_PRECISE(HMath::erfi(1), "1.65042575879754287602533772956136244389567987487402");
+    CHECK_PRECISE(HMath::erfi(2), "18.56480241457555259870429191324101719885800172608341");
+    CHECK_PRECISE(HMath::erfi(-3), "-1629.99462260156565106164795207627416277888991091525999");
+    CHECK_PRECISE(HMath::erfi(10) / HNumber("1524307422708669699360546614726544062463812.0746988573105572"),
+                  "1.00000000000000000000000000000000000000000000000000");
+    // The asymptotic series for large arguments.
+    for (const auto& [x, value] : {std::pair<int, const char*>{16, "5.34004432460843677436831595079058976268676699297783e109"},
+                                   {20, "1.47479753962878620244773315313183512459925928330448e172"},
+                                   {30, "1.37904720563539832014395149301193459210279430381176e389"}}) {
+        CHECK_PRECISE(HMath::erfi(x) / HNumber(value), "1.00000000000000000000000000000000000000000000000000");
+        CHECK_PRECISE(HMath::erfi(-x) / HNumber(value), "-1.00000000000000000000000000000000000000000000000000");
+    }
+    CHECK(HMath::erfi(HNumber("1e10")), "NaN");
+}
+
 int main(int argc, char* argv[])
 {
     QCoreApplication app(argc, argv);
@@ -1034,6 +1054,7 @@ int main(int argc, char* argv[])
     test_format();
     test_op();
     test_functions();
+    test_erfi();
 
     if (!hmath_failed_tests)
         return 0;

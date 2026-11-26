@@ -170,6 +170,7 @@ public:
     static CNumber lnGamma(const CNumber&);
     static CNumber erf(const CNumber&);
     static CNumber erfc(const CNumber&);
+    static CNumber erfi(const CNumber&);
     // PROBABILITY
     static CNumber nCr(const CNumber&, const CNumber&);
     static CNumber nPr(const CNumber&, const CNumber&);

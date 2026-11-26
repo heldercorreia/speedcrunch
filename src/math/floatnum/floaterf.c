@@ -48,14 +48,47 @@ erfseries(floatnum x,
   return 1;
 }
 
-/* the asymptotic expansion of erfc, the bigger x is, the better.
-   returns sum( (2*i+1)! /i! / x^(2*i)
-   Relative error for x >= 16 and 100-digit evaluation is less than
-   9e-100 */
+/* The Taylor series of sqrt(pi)*erfi(x)/2 around x = 0.
+   erfi(x) = 2/sqrt(pi) * SUM[i>=0] (x^(2*i+1)/(i! * (2*i+1)))
+   All terms are positive, so the sum does not lose digits. It converges for
+   every x, but the terms grow until i is about x*x. */
 
-char
-erfcasymptotic(floatnum x,
-               int digits)
+static char
+erfiseries(floatnum x,
+           int digits)
+{
+  floatstruct xsqr, smd, pwr;
+  int i, workprec;
+
+  if (float_iszero(x))
+    return 1;
+  float_create(&xsqr);
+  float_create(&smd);
+  float_create(&pwr);
+  float_mul(&xsqr, x, x, digits + 5);
+  float_copy(&pwr, x, digits + 5);
+  i = 1;
+  do
+  {
+    float_mul(&pwr, &pwr, &xsqr, digits + 5);
+    float_divi(&pwr, &pwr, i, digits + 5);
+    float_divi(&smd, &pwr, 2 * i++ + 1, digits + 5);
+    float_add(x, x, &smd, digits + 5);
+    workprec = digits + float_getexponent(&smd) - float_getexponent(x) + 2;
+  } while (workprec > 0 && float_isvalidexp(float_getexponent(&pwr)));
+  float_free(&pwr);
+  float_free(&smd);
+  float_free(&xsqr);
+  return 1;
+}
+
+/* Returns sum( (2*i-1)!! * (sign/(2*x*x))^i ) for i >= 0. With sign -1, this
+   is the asymptotic expansion of erfc, and with sign 1 that of erfi. */
+
+static char
+_asymptoticseries(floatnum x,
+                  int digits,
+                  signed char sign)
 {
   floatstruct smd, fct;
   int i, workprec, newprec;
@@ -70,7 +103,8 @@ erfcasymptotic(floatnum x,
   }
   float_mul(&fct, x, x, digits + 1);
   float_div(&fct, &c1Div2, &fct, digits);
-  float_neg(&fct);
+  if (sign < 0)
+    float_neg(&fct);
   float_copy(&smd, &c1, EXACT);
   float_setzero(x);
   newprec = digits;
@@ -88,6 +122,18 @@ erfcasymptotic(floatnum x,
   float_free(&fct);
   float_free(&smd);
   return newprec <= workprec;
+}
+
+/* the asymptotic expansion of erfc, the bigger x is, the better.
+   returns sum( (2*i+1)! /i! / x^(2*i)
+   Relative error for x >= 16 and 100-digit evaluation is less than
+   9e-100 */
+
+char
+erfcasymptotic(floatnum x,
+               int digits)
+{
+  return _asymptoticseries(x, digits, -1);
 }
 
 /* this algorithm is based on a paper from Crandall, who in turn attributes
@@ -341,5 +387,48 @@ _erfc(
     float_move(x, &t3);
   }
   float_free(&tmp);
+  return result;
+}
+
+/* The imaginary error function erfi(x) = -i*erf(i*x), for real x only. It
+   grows like exp(x*x)/(x*sqrt(pi)), so a large x uses that factor and the
+   asymptotic series, and a small one the Taylor series. Above about
+   x = 35000, exp(x*x) is out of the exponent range and gives Overflow. */
+
+char
+_erfi(
+  floatnum x,
+  int digits)
+{
+  floatstruct tmp;
+  signed char sign;
+  char result = 1;
+
+  sign = float_getsign(x);
+  float_abs(x);
+  if (float_cmp(x, &c1Div2) > 0 && _asymptotic_good(x, digits + 2))
+  {
+    float_create(&tmp);
+    if (float_mul(&tmp, x, x, digits + 5)
+        && _exp(&tmp, digits + 3)
+        && float_div(&tmp, &tmp, x, digits + 3)
+        && float_mul(&tmp, &tmp, &c1DivSqrtPi, digits + 3))
+    {
+      if (!_asymptoticseries(x, digits + 2, 1))
+        result = _seterror(x, EvalUnstable);
+      else
+        result = float_mul(x, x, &tmp, digits + 4);
+    }
+    else
+      result = _seterror(x, Overflow);
+    float_free(&tmp);
+  }
+  else
+  {
+    erfiseries(x, digits);
+    float_mul(x, x, &c2DivSqrtPi, digits + 2);
+  }
+  if (result)
+    float_setsign(x, sign);
   return result;
 }

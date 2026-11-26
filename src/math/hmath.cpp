@@ -2060,6 +2060,16 @@ HNumber HMath::erfc(const HNumber& x)
 }
 
 /**
+ * Returns the imaginary error function, erfi(x) = -i*erf(i*x).
+ */
+HNumber HMath::erfi(const HNumber& x)
+{
+    HNumber result;
+    call1Arg(result.d, x.d, float_erfi);
+    return result;
+}
+
+/**
  * Restricts a logic value to a given bit size.
  */
 HNumber HMath::mask(const HNumber& val, const HNumber& bits)

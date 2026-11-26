@@ -214,6 +214,7 @@ public:
     static Quantity lnGamma(const Quantity&);
     static Quantity erf(const Quantity&);
     static Quantity erfc(const Quantity&);
+    static Quantity erfi(const Quantity&);
     // PROBABILITY
     static Quantity nCr(const Quantity& n, const Quantity& k);
     static Quantity nPr(const Quantity& n, const Quantity& r);

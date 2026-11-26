@@ -35,8 +35,28 @@ Calculus
         diff(x*y; 0)        = x*y
 
     ``diff()`` supports arithmetic, powers, square and cube roots,
-    exponential and logarithmic functions, and trigonometric and
-    hyperbolic functions and their inverses.
+    exponential and logarithmic functions, trigonometric and
+    hyperbolic functions and their inverses, and the error functions.
+
+    SpeedCrunch simplifies the result. Coefficients stay exact up to 120
+    digits, and longer ones give a limit error, as in ``diff(x^100; 70)``.
+    Like terms combine, polynomials are multiplied out or factored,
+    fractions go over a common denominator, and common factors cancel,
+    also polynomial factors with exact numeric coefficients. A new form is
+    only used when it is shorter, so of two forms with the same length the
+    first one stays, as in ``6*x^2-3``. The simplification has some limits:
+
+    - It does not use trigonometric identities such as
+      ``sin(x)^2+cos(x)^2 = 1``.
+    - It does not combine products of exponentials, as in
+      ``exp(x^2)*exp(-x^2)``.
+    - It does not take common factors out of a sum that contains fractions.
+    - Cancelling a common factor can remove a point where the expression
+      is undefined, as in ``diff(x^2/x) = 1``. A square root never becomes
+      something that is defined in more places, so its domain stays.
+
+    In the result display, square roots show as ``√``, and the power of a
+    root stays outside, as in ``√(1+x²)¹¹``.
 
     Trigonometric functions use the active angle mode. For example,
     ``diff(sin(x))`` gives ``cos(x)`` in radians and ``π/180*cos(x)``
@@ -72,7 +92,24 @@ Calculus
     polynomials, simple rational functions, and some combinations of
     exponential, logarithmic, trigonometric, and hyperbolic functions.
     This includes some forms that need substitution or integration by parts.
+    A polynomial times the exponential of a quadratic, such as
+    ``x^2*exp(-x^2)``, gives the error function :func:`erf` if the
+    quadratic opens downwards, or :func:`erfi` if it opens upwards.
+    A polynomial times an error function is also supported.
     If there is no supported rule, the calculation gives an error.
+
+    These rules have some limits:
+
+    - The leading coefficient of the quadratic must be a number, so
+      ``exp(-a*x^2)`` with a variable ``a`` is not supported. An exponent
+      with units only works with numerical integration over finite bounds.
+    - A polynomial can have a degree up to 24, or up to 23 next to an
+      error function.
+    - Other products with error functions, such as ``x*exp(-x^2)*erf(x)``,
+      and exponentials that cancel, such as ``exp(x^2)*exp(-x^2)``, are not
+      supported.
+    - Antiderivatives are not simplified like the results of :func:`diff`,
+      so equal antiderivatives can look different.
 
     With bounds, SpeedCrunch first tries to use an exact antiderivative.
     Bounds can be expressions. A bound can contain a free variable if
@@ -88,11 +125,21 @@ Calculus
 
     Some improper integrals are supported, such as ``1/sqrt(x)`` or
     ``ln(x)`` at zero, and a decaying exponential or a Gaussian over an
-    infinite interval. Type ``inf`` or ``-inf`` for an infinite bound.
+    infinite interval. Over an infinite interval, the error function
+    goes to 1 or -1, which gives exact results such as ``√π``. An
+    integrand that grows or falls no faster than ``1/x`` towards infinity,
+    such as ``exp(x^2)`` or ``x/(x^2+1)``, gives an error.
+    Type ``inf`` or ``-inf`` for an infinite bound.
     With automatic input adjustments on, the result display shows these
     bounds with ``∞``.
     Divergent integrals give an error even when opposite sides of a pole
-    would cancel.
+    would cancel. SpeedCrunch cannot decide every integral over an infinite
+    interval: ``erf(x)-1`` and ``exp(-x^2)*erfi(x)`` from 0 to ``inf`` give
+    an error, although the first converges and the second diverges.
+
+    An exact result such as ``π/4`` or ``√π`` cannot be used in further
+    arithmetic, as in ``2*integrate(exp(-x^2); -inf; inf)``. Numeric
+    operations need a numeric result.
 
     Trigonometric functions follow the active angle mode. Use bare angles
     in the integrand and bounds. For physical quantities, both bounds must
@@ -106,4 +153,7 @@ Calculus
         integrate(1/(1+x^2); 0; 1)    = π/4
         integrate(3[m/s]; 0[s]; 2[s])  = 6[m]
         integrate(exp(-x); 0; inf)   = 1
-        integrate(exp(-x^2); 0; 1)    ≈ 0.7468241328124270254
+        integrate(exp(-x^2); 0; 1)    = √π*erf(1)/2
+        integrate(exp(-x^2); -inf; inf) = √π
+        integrate(exp(x^2); 0; 1)     = √π*erfi(1)/2
+        integrate(exp(-x^4); 0; 1)    ≈ 0.8448385947571024008

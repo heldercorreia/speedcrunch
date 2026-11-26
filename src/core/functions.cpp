@@ -817,6 +817,12 @@ Quantity function_erfc(Function* f, const Function::ArgumentList& args)
     return DMath::erfc(args[0]);
 }
 
+Quantity function_erfi(Function* f, const Function::ArgumentList& args)
+{
+    ENSURE_ARGUMENT_COUNT(1);
+    return DMath::erfi(args[0]);
+}
+
 Quantity function_gamma(Function* f, const Function::ArgumentList& args)
 {
     ENSURE_ARGUMENT_COUNT(1);
@@ -2104,6 +2110,7 @@ void FunctionRepo::createFunctions()
     // Special functions.
     FUNCTION_INSERT(FunctionDomain::SpecialFunctions, erf);
     FUNCTION_INSERT(FunctionDomain::SpecialFunctions, erfc);
+    FUNCTION_INSERT(FunctionDomain::SpecialFunctions, erfi);
     FUNCTION_INSERT(FunctionDomain::SpecialFunctions, gamma);
     FUNCTION_INSERT(FunctionDomain::SpecialFunctions, lngamma);
 
@@ -2316,6 +2323,7 @@ void FunctionRepo::setNonTranslatableFunctionUsages()
     FUNCTION_USAGE(eng, "x [; exponent]");
     FUNCTION_USAGE(erf, "x");
     FUNCTION_USAGE(erfc, "x");
+    FUNCTION_USAGE(erfi, "x");
     FUNCTION_USAGE(exp, "x");
     FUNCTION_USAGE(expform, "x");
     FUNCTION_USAGE(floor, "x");
@@ -2484,6 +2492,7 @@ void FunctionRepo::setFunctionNames()
     FUNCTION_NAME(eng, tr("Convert to Engineering Notation"));
     FUNCTION_NAME(erf, tr("Error Function"));
     FUNCTION_NAME(erfc, tr("Complementary Error Function"));
+    FUNCTION_NAME(erfi, tr("Imaginary Error Function"));
     FUNCTION_NAME(exp, tr("Exponential"));
     FUNCTION_NAME(expform, tr("Convert to Exponential Complex Form"));
     FUNCTION_NAME(floor, tr("Round Down (Floor)"));

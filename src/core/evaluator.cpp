@@ -2010,6 +2010,14 @@ static QString renderIntegerPowersAsSuperscriptsForDisplay(
         }
 
         const QString funcName = rendered.mid(nameStart, openParen - nameStart);
+        // A root keeps its power outside, since √²(x) would read as a root
+        // of another degree.
+        if (funcName.compare(QLatin1String("sqrt"), Qt::CaseInsensitive) == 0
+            || funcName.compare(QLatin1String("cbrt"), Qt::CaseInsensitive) == 0
+            || funcName == QString(UnicodeChars::SquareRoot) || funcName == QString(UnicodeChars::CubeRoot)) {
+            i = superscriptEnd;
+            continue;
+        }
         const QString callArgs = rendered.mid(openParen, i - openParen + 1);
         const QString superscript = rendered.mid(i + 1, superscriptEnd - (i + 1));
         const QString replacement = funcName + superscript + callArgs;
