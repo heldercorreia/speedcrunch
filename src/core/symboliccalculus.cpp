@@ -10,6 +10,7 @@
 #include "core/unicodechars.h"
 #include "core/units.h"
 #include "math/floatnum/floatcommon.h"
+#include "math/rational.h"
 
 #include <QCoreApplication>
 #include <QMap>
@@ -274,7 +275,7 @@ std::optional<ExactNumber> exactLiteral(const QString& text)
 }
 
 using Expr = int;
-using IntegralResult = std::variant<Expr, Quantity>;
+using CalculusResult = std::variant<Expr, Quantity>;
 constexpr Expr NoExpression = -1;
 
 struct Key {
@@ -334,11 +335,12 @@ public:
 
     Quantity evaluate(int first)
     {
-        if (m_opcodes.at(first).type == Opcode::Integrate) {
-            const IntegralResult result = integrate(first, 0);
+        const auto type = m_opcodes.at(first).type;
+        if (type == Opcode::Integrate || type == Opcode::Limit) {
+            const CalculusResult result = type == Opcode::Limit ? limit(first, 0) : integrate(first, 0);
             if (const auto* numeric = std::get_if<Quantity>(&result))
                 return *numeric;
-            return resultValue(std::get<Expr>(result));
+            return resultValue(std::get<Expr>(result), type == Opcode::Limit);
         }
         const Call call = readCall(first);
         if (call.order.isZero()) {
@@ -351,11 +353,13 @@ public:
     }
 
 private:
-    Quantity resultValue(Expr result)
+    Quantity resultValue(Expr result, bool preserveLargeIntegers = false)
     {
         const auto& exact = node(result).number;
-        if (exact && exact->denominator == 1)
+        if (exact && exact->denominator == 1
+            && (!preserveLargeIntegers || exact->numerator.digits() <= DECPRECISION)) {
             return Quantity(exact->numerator.toHNumber());
+        }
         QString rendered;
         render(result, 0, rendered);
         return Quantity::symbolic(rendered);
@@ -395,7 +399,79 @@ private:
 
     struct DomainUnknown {};
 
-    IntegralResult integrate(int first, int nesting);
+    enum class LimitForm { Unknown, NoDomain, Term, Wave, Oscillatory, Vanishing, Divergent };
+
+    // With h > 0 tending to zero, the term is (coefficient + o(1)) times
+    // h^order * log(1/h)^logOrder * exp(exponent). The exponent is itself
+    // an expression in the limiting variable. A wave has the same scale
+    // and takes both signs arbitrarily close to the endpoint.
+    struct LimitTerm {
+        LimitForm form = LimitForm::Unknown;
+        Expr coefficient = NoExpression;
+        Expr order = NoExpression;
+        Expr logOrder = NoExpression;
+        Expr exponent = NoExpression;
+        bool constant = false;
+        bool analytic = false;
+    };
+
+    struct LimitPath {
+        QString variable;
+        Expr point;
+        int infinity;
+        int side;
+        QHash<Expr, LimitTerm> terms;
+        int depth = 0;
+        int hopitalSteps = 0;
+        bool oscillating = false;
+    };
+
+    enum class LimitStatus { Unknown, DoesNotExist, Finite, Infinite };
+
+    struct LimitValue {
+        LimitStatus status = LimitStatus::Unknown;
+        Expr expression = NoExpression;
+        int infinity = 0;
+    };
+
+    struct LimitEstimate { HNumber value; HNumber error; };
+
+    struct LimitPoint {
+        Expr expression = NoExpression;
+        Quantity units{1};
+        HNumber numeric = HMath::nan();
+        int infinity = 0;
+        bool approximate = false;
+    };
+
+    CalculusResult limit(int first, int nesting);
+    LimitPoint readLimitPoint(Span span, int nesting);
+    std::optional<int> readDirection(Span span);
+    int namedInfinity(Span span) const;
+    Expr stripLimitUnits(Expr expression, const QString& variable, const Quantity& variableUnits,
+                         Quantity& units, bool& approximate);
+    Expr attachLimitUnits(Expr expression, Quantity units);
+    LimitTerm term(Expr coefficient, bool constant = false, bool analytic = false,
+                   Expr order = NoExpression, Expr logOrder = NoExpression,
+                   Expr exponent = NoExpression) const;
+    LimitTerm limitTerm(Expr expression, LimitPath& path);
+    LimitTerm analyzeLimit(Expr expression, LimitPath& path);
+    LimitTerm limitSum(Expr expression, LimitPath& path);
+    LimitTerm limitProduct(const LimitTerm& left, const LimitTerm& right, bool quotient, LimitPath& path);
+    LimitTerm limitQuotient(Expr expression, LimitPath& path);
+    LimitTerm limitPower(Expr expression, LimitPath& path, bool cubeRoot = false);
+    LimitTerm limitFunction(Expr expression, LimitPath& path);
+    LimitTerm taylorTerm(Expr expression, LimitPath& path);
+    bool smoothOnPath(Expr expression, LimitPath& path);
+    bool canEstimateLimit(Expr expression, LimitPath& path);
+    std::optional<int> limitSign(Expr expression);
+    std::optional<int> circularSign(Expr angle, bool sine);
+    std::optional<int> termSign(const LimitTerm& term);
+    std::optional<int> compareGrowth(const LimitTerm& left, const LimitTerm& right, LimitPath& path);
+    LimitValue classifyLimit(const LimitTerm& term, LimitPath& path);
+    std::optional<LimitEstimate> estimateLimit(Expr raw, const LimitPoint& point, LimitPath& path);
+
+    CalculusResult integrate(int first, int nesting);
     Bound readBound(Span span, int nesting);
     Expr antiderivative(Expr expression, const QString& variable, int depth = 0);
     std::optional<PowerKernel> powerKernel(Expr expression);
@@ -411,10 +487,11 @@ private:
     int signAtInfinity(const QVector<Expr>& coefficients, int direction);
     Expr limitAtInfinity(Expr expression, const QString& variable, int direction);
     bool dependsOn(Expr expression, const QString& variable);
-    Expr substitute(Expr expression, Expr variable, Expr value);
+    Expr substitute(Expr expression, Expr variable, Expr value, bool simplifyResult = true);
     HNumber magnitude(Expr expression, const QString& variable = {}, const HNumber& x = 0);
     std::optional<Interval> enclosure(Expr expression, const QString& variable,
-                                      const std::optional<Interval>& interval, HNumber* phaseWidth);
+                                      const std::optional<Interval>& interval, HNumber* phaseWidth,
+                                      bool forLimit = false);
     void verifyDomain(Expr raw, const QString& variable, const std::optional<Interval>& interval,
                       HNumber* phaseWidth);
     Endpoint verifyPowerIntegral(Expr raw, const QString& variable, const Interval& interval,
@@ -441,6 +518,7 @@ private:
     QHash<QVector<Expr>, Expr> m_sums;
     QHash<Expr, bool> m_depends;
     QString m_dependsVariable;
+    QHash<Expr, Quantity> m_limitUnits;
 
     [[noreturn]] static void limitExceeded()
     {
@@ -552,7 +630,8 @@ private:
     {
         const int end = callEnd(first, m_opcodes.size());
         const unsigned count = m_opcodes.at(end).index;
-        if (count < 1 || count > (m_opcodes.at(first).type == Opcode::Diff ? 3u : 4u))
+        const auto type = m_opcodes.at(first).type;
+        if (count < (type == Opcode::Limit ? 2u : 1u) || count > (type == Opcode::Diff ? 3u : 4u))
             throw Failure{tr("wrong number of arguments")};
         if (end - first > MaxNodes)
             limitExceeded();
@@ -563,7 +642,7 @@ private:
             const Opcode& opcode = m_opcodes.at(pc);
             if (opcode.type == Opcode::Nop)
                 continue;
-            if (opcode.type == Opcode::Diff || opcode.type == Opcode::Integrate) {
+            if (opcode.isCalculus()) {
                 const int close = callEnd(pc, end);
                 arguments.append({pc, close + 1});
                 pc = close;
@@ -678,7 +757,7 @@ private:
         return make(Opcode::Add, {real, imaginary});
     }
 
-    Expr readExpression(Span span, int nesting)
+    Expr readExpression(Span span, int nesting, bool* limitApproximation = nullptr)
     {
         if (nesting >= MaxDepth)
             limitExceeded();
@@ -701,12 +780,16 @@ private:
                 pc = end;
                 break;
             }
-            case Opcode::Integrate: {
+            case Opcode::Integrate:
+            case Opcode::Limit: {
                 const int end = callEnd(pc, span.end);
-                const IntegralResult inner = integrate(pc, nesting + 1);
+                const bool isLimit = opcode.type == Opcode::Limit;
+                const CalculusResult inner = isLimit ? limit(pc, nesting + 1) : integrate(pc, nesting + 1);
                 const auto* expression = std::get_if<Expr>(&inner);
-                if (!expression)
-                    throw Failure{tr("the nested integral needs a symbolic result")};
+                if (!expression) {
+                    throw Failure{isLimit ? tr("the nested limit needs an exact symbolic result")
+                                          : tr("the nested integral needs a symbolic result")};
+                }
                 stack.append(*expression);
                 pc = end;
                 break;
@@ -738,6 +821,8 @@ private:
                 QString name = m_identifiers.value(opcode.index);
                 if (name == QLatin1String("ans")) {
                     stack.append(lastAnswer());
+                    if (limitApproximation)
+                        *limitApproximation |= m_evaluator.getVariable(name).value().isApproximate();
                     break;
                 }
                 if (name == QLatin1String("pi"))
@@ -776,16 +861,19 @@ private:
                 const Function* function = FunctionRepo::instance()->find(name);
                 const QString identifier = function ? function->identifier() : name;
                 const auto rule = functionRules().constFind(identifier);
-                if (rule == functionRules().constEnd())
+                const bool limitFunction = limitApproximation && (identifier == QLatin1String("floor")
+                    || identifier == QLatin1String("ceil") || identifier == QLatin1String("gamma"));
+                if (rule == functionRules().constEnd() && !limitFunction)
                     throw Failure{tr("unsupported function %1").arg(name.toHtmlEscaped())};
-                if (rule->arity != count - 1)
+                if ((limitFunction ? 1 : rule->arity) != count - 1)
                     throw Failure{tr("wrong number of arguments to %1").arg(name.toHtmlEscaped())};
                 stack[first] = make(Opcode::Function, stack.sliced(first + 1, count - 1), identifier);
                 stack.resize(first + 1);
                 break;
             }
             default:
-                throw Failure{tr("unsupported expression in symbolic differentiation")};
+                throw Failure{limitApproximation ? tr("unsupported expression in limit")
+                                                 : tr("unsupported expression in symbolic differentiation")};
             }
         }
         if (stack.size() != 1)
@@ -793,20 +881,23 @@ private:
         return stack.constLast();
     }
 
-    void infer(Expr expression, QSet<QString>& variables)
+    void infer(Expr expression, QSet<QString>& variables, bool forLimit = false)
     {
         spend();
         const Key& key = node(expression).key;
         if (key.type == Opcode::Ref) {
-            if (key.text == QString(UnicodeChars::Infinity))
-                throw Failure{tr("infinity is only supported as an integration bound")};
+            if (key.text == QString(UnicodeChars::Infinity)
+                || (forLimit && SymbolicCalculus::isNamedInfinity(key.text) && !m_lookupVariable(key.text))) {
+                throw Failure{forLimit ? tr("infinity is only supported as an approach point")
+                                       : tr("infinity is only supported as an integration bound")};
+            }
             if (isVariable(key.text))
                 variables.insert(key.text);
             else if (!isConstant(key.text) || m_evaluator.getVariable(key.text).value().isSymbolic())
                 throw Failure{tr("unsupported symbol %1").arg(key.text.toHtmlEscaped())};
         }
         for (Expr child : key.children)
-            infer(child, variables);
+            infer(child, variables, forLimit);
     }
 
     Expr differentiate(const Call& call, int nesting)
@@ -2144,7 +2235,7 @@ bool Calculus::dependsOn(Expr expression, const QString& variable)
     return result;
 }
 
-Expr Calculus::substitute(Expr expression, Expr variable, Expr value)
+Expr Calculus::substitute(Expr expression, Expr variable, Expr value, bool simplifyResult)
 {
     spend();
     if (expression == variable)
@@ -2155,8 +2246,8 @@ Expr Calculus::substitute(Expr expression, Expr variable, Expr value)
     QVector<Expr> children;
     children.reserve(key.children.size());
     for (Expr child : key.children)
-        children.append(substitute(child, variable, value));
-    return rebuild(key, children);
+        children.append(substitute(child, variable, value, simplifyResult));
+    return simplifyResult ? rebuild(key, children) : make(key.type, children, key.text);
 }
 
 std::optional<Calculus::PowerKernel> Calculus::powerKernel(Expr expression)
@@ -2862,7 +2953,7 @@ HNumber Calculus::magnitude(Expr expression, const QString& variable, const HNum
 
 std::optional<Calculus::Interval> Calculus::enclosure(
     Expr expression, const QString& variable, const std::optional<Interval>& interval,
-    HNumber* phaseWidth)
+    HNumber* phaseWidth, bool forLimit)
 {
     spend();
     const Key& key = node(expression).key;
@@ -2886,7 +2977,9 @@ std::optional<Calculus::Interval> Calculus::enclosure(
         const Interval two = ordered(a.upper * b.lower, a.upper * b.upper);
         return Interval{qMin(one.lower, two.lower), qMax(one.upper, two.upper)};
     };
-    const auto at = [&](int i) { return enclosure(key.children.at(i), variable, interval, phaseWidth); };
+    const auto at = [&](int i) {
+        return enclosure(key.children.at(i), variable, interval, phaseWidth, forLimit);
+    };
     const auto first = at(0);
 
     switch (key.type) {
@@ -2961,6 +3054,13 @@ std::optional<Calculus::Interval> Calculus::enclosure(
         throw DomainUnknown{};
     }
 
+    if (forLimit && key.text == QLatin1String("gamma")) {
+        if (!first || HMath::ceil(first->lower) <= qMin(HNumber(0), HMath::floor(first->upper)))
+            throw DomainUnknown{};
+        return std::nullopt;
+    }
+    if (forLimit && !functionRules().contains(key.text))
+        throw DomainUnknown{};
     const Rule rule = functionRules().value(key.text).rule;
     const bool circular = rule == Rule::Sin || rule == Rule::Cos || rule == Rule::Tan
         || rule == Rule::Cot || rule == Rule::Sec || rule == Rule::Csc;
@@ -2998,6 +3098,8 @@ std::optional<Calculus::Interval> Calculus::enclosure(
             }
         }
         if (!first) {
+            if (forLimit)
+                throw DomainUnknown{};
             if (rule == Rule::Sin || rule == Rule::Cos)
                 return Interval{-1, 1};
             throw DomainUnknown{};
@@ -3099,20 +3201,28 @@ void Calculus::verifyDomain(Expr raw, const QString& variable,
     }
 }
 
-Calculus::Bound Calculus::readBound(Span span, int nesting)
+int Calculus::namedInfinity(Span span) const
 {
     const int length = span.end - span.first;
-    if (length > MaxScalarOpcodes)
-        limitExceeded();
     const Opcode& first = m_opcodes.at(span.first);
     if (first.type == Opcode::Ref && (length == 1
         || (length == 2 && m_opcodes.at(span.first + 1).type == Opcode::Neg))) {
         const QString name = m_identifiers.value(first.index);
         if (name == QString(UnicodeChars::Infinity)
             || (SymbolicCalculus::isNamedInfinity(name) && !m_lookupVariable(name))) {
-            return {NoExpression, DMath::nan(), length == 1 ? 1 : -1};
+            return length == 1 ? 1 : -1;
         }
     }
+    return 0;
+}
+
+Calculus::Bound Calculus::readBound(Span span, int nesting)
+{
+    const int length = span.end - span.first;
+    if (length > MaxScalarOpcodes)
+        limitExceeded();
+    if (const int infinity = namedInfinity(span))
+        return {NoExpression, DMath::nan(), infinity};
 
     const Quantity value = canEvaluateScalar(span)
         ? m_evalSpan(span.first, length, {}, Quantity()) : DMath::nan();
@@ -3388,7 +3498,1300 @@ Expr Calculus::infiniteLimit(Expr raw, Expr primitive, const QString& variable, 
     return NoExpression;
 }
 
-IntegralResult Calculus::integrate(int first, int nesting)
+Calculus::LimitTerm Calculus::term(Expr coefficient, bool constant, bool analytic,
+                                   Expr order, Expr logOrder, Expr exponent) const
+{
+    return {LimitForm::Term, coefficient, order == NoExpression ? m_zero : order,
+            logOrder == NoExpression ? m_zero : logOrder,
+            exponent == NoExpression ? m_zero : exponent, constant, analytic};
+}
+
+std::optional<int> Calculus::limitSign(Expr expression)
+{
+    spend();
+    const Node& value = node(expression);
+    const Key& key = value.key;
+    if (value.number)
+        return value.number->numerator.isZero() ? 0 : value.number->numerator.isNegative() ? -1 : 1;
+    if (key.type == Opcode::Load || (key.type == Opcode::Ref && isConstant(key.text))) {
+        const HNumber numeric = magnitude(expression);
+        if (!numeric.isNan() && !numeric.isZero())
+            return numeric.isNegative() ? -1 : 1;
+    }
+    const auto sign = [&](int index) { return limitSign(key.children.at(index)); };
+    if (key.type == Opcode::Neg) {
+        if (const auto inner = sign(0))
+            return -*inner;
+    }
+    if (key.type == Opcode::Mul || key.type == Opcode::Div) {
+        int result = 1;
+        for (Expr child : key.children) {
+            const auto factor = limitSign(child);
+            if (!factor)
+                return std::nullopt;
+            result *= *factor;
+        }
+        return result;
+    }
+    if (key.type == Opcode::Add) {
+        int result = 0;
+        for (Expr child : key.children) {
+            const auto next = limitSign(child);
+            if (next && *next && result && result != *next)
+                return std::nullopt;
+            if (next && *next)
+                result = *next;
+        }
+        if (!result)
+            return std::nullopt;
+        for (Expr child : key.children) {
+            const auto next = limitSign(child);
+            if (next)
+                continue;
+            const Key& part = node(child).key;
+            const auto [base, n] = factorPower(child);
+            if (result < 0 || ((base == child || n % 2) && radicand(child) == NoExpression
+                               && !(part.type == Opcode::Function && part.text == QLatin1String("abs")))) {
+                return std::nullopt;
+            }
+        }
+        return result;
+    }
+    if (key.type == Opcode::Pow) {
+        const auto base = sign(0);
+        const auto& exponent = node(key.children.at(1)).number;
+        if (base && *base >= 0)
+            return base;
+        if (base && exponent && exponent->denominator == 1)
+            return (exponent->numerator % 2).isZero() ? 1 : -1;
+    }
+    if (key.type != Opcode::Function || key.children.size() != 1)
+        return std::nullopt;
+
+    const Expr u = key.children.at(0);
+    if (key.text == QLatin1String("sin") || key.text == QLatin1String("cos"))
+        return circularSign(u, key.text == QLatin1String("sin"));
+    if (key.text == QLatin1String("exp") || key.text == QLatin1String("erfc")
+        || key.text == QLatin1String("cosh")) {
+        return 1;
+    }
+    if (key.text == QLatin1String("ln") || key.text == QLatin1String("lg") || key.text == QLatin1String("lb"))
+        return limitSign(subtract(u, m_one));
+    if (key.text == QLatin1String("cbrt") || key.text == QLatin1String("sqrt")
+        || key.text == QLatin1String("erf") || key.text == QLatin1String("erfi")
+        || key.text == QLatin1String("arctan") || key.text == QLatin1String("sinh")
+        || key.text == QLatin1String("tanh") || key.text == QLatin1String("arsinh")) {
+        return sign(0);
+    }
+    if (key.text == QLatin1String("abs")) {
+        if (const auto inner = sign(0))
+            return qAbs(*inner);
+    }
+    return std::nullopt;
+}
+
+std::optional<int> Calculus::circularSign(Expr angle, bool sine)
+{
+    const auto coefficients = scaledPolynomial(multiply({angle, radiansPerAngle()}), QStringLiteral("π"));
+    if (!coefficients || coefficients->size() > 2)
+        return std::nullopt;
+    const Expr offset = coefficients->at(0);
+    const Expr multiplier = coefficients->value(1, m_zero);
+    if (!node(offset).number || !node(multiplier).number)
+        return std::nullopt;
+    // Locate the angle in an open quadrant using rational bounds on pi.
+    const auto quadrant = [&](const QString& bound) {
+        const Expr pi = number(*exactLiteral(bound));
+        const Expr scaled = multiply({number(2), add({multiplier, divide(offset, pi)})});
+        const auto& value = *node(scaled).number;
+        Integer whole;
+        Integer remainder;
+        Integer::divide(value.numerator, value.denominator, whole, remainder);
+        return std::pair{remainder.isNegative() ? whole - 1 : whole, !remainder.isZero()};
+    };
+    const auto [first, firstOpen] = quadrant(QStringLiteral("3.141592653589793238462643383279"));
+    const auto [last, lastOpen] = quadrant(QStringLiteral("3.141592653589793238462643383280"));
+    if (first != last)
+        return std::nullopt;
+    const int index = ((first % 4).toInt() + 4) % 4;
+    if (!firstOpen || !lastOpen) {
+        if (offset != m_zero)
+            return std::nullopt;
+        const int values[] = {0, 1, 0, -1};
+        return values[(index + (sine ? 0 : 1)) % 4];
+    }
+    return sine ? (index < 2 ? 1 : -1) : (index == 0 || index == 3 ? 1 : -1);
+}
+
+std::optional<int> Calculus::termSign(const LimitTerm& value)
+{
+    if (value.form != LimitForm::Term)
+        return std::nullopt;
+    const auto sign = limitSign(value.coefficient);
+    return sign && (*sign || value.constant) ? sign : std::nullopt;
+}
+
+std::optional<int> Calculus::compareGrowth(const LimitTerm& left, const LimitTerm& right, LimitPath& path)
+{
+    spend();
+    if (path.depth >= MaxDepth)
+        limitExceeded();
+    const QScopedValueRollback<int> depth(path.depth, path.depth + 1);
+    const Expr order = subtract(right.order, left.order);
+    const int power = limitSign(order).value_or(0);
+    const int logarithm = limitSign(subtract(left.logOrder, right.logOrder)).value_or(0);
+    const int algebraic = power ? power : logarithm;
+    if (left.exponent == right.exponent)
+        return algebraic;
+
+    const LimitTerm exponent = limitTerm(subtract(left.exponent, right.exponent), path);
+    if (exponent.form == LimitForm::Term) {
+        const auto sign = termSign(exponent);
+        const auto relativeToLog = compareGrowth(exponent, term(m_one, false, false, m_zero, m_one), path);
+        // An exponent that grows faster than log(1/h) dominates every
+        // power and logarithm. A bounded exponent changes only the coefficient.
+        if (sign && *sign && relativeToLog && *relativeToLog > 0)
+            return sign;
+        if (exponent.exponent == m_zero) {
+            if (exponent.order == m_zero && exponent.logOrder == m_one) {
+                const auto net = limitSign(add({exponent.coefficient, order}));
+                return net && *net ? net : std::nullopt;
+            }
+            const auto value = classifyLimit(exponent, path);
+            if (value.status == LimitStatus::Finite && (algebraic || value.expression == m_zero))
+                return algebraic;
+        }
+    }
+    if (exponent.form == LimitForm::Vanishing)
+        return algebraic;
+    return std::nullopt;
+}
+
+Calculus::LimitValue Calculus::classifyLimit(const LimitTerm& value, LimitPath& path)
+{
+    if (value.form == LimitForm::NoDomain || value.form == LimitForm::Oscillatory)
+        return {LimitStatus::DoesNotExist};
+    if (value.form == LimitForm::Vanishing)
+        return {LimitStatus::Finite, m_zero};
+    if (value.form == LimitForm::Divergent)
+        return {LimitStatus::Infinite, NoExpression, value.coefficient == m_minusOne ? -1 : 1};
+    if (value.form != LimitForm::Term && value.form != LimitForm::Wave)
+        return {};
+    Expr coefficient = value.coefficient;
+    LimitTerm rate = value;
+    if (value.exponent != m_zero) {
+        const auto exponent = classifyLimit(limitTerm(value.exponent, path), path);
+        if (exponent.status == LimitStatus::Finite) {
+            coefficient = multiply({coefficient, function(QStringLiteral("exp"), exponent.expression)});
+            rate.exponent = m_zero;
+        }
+    }
+    const auto growth = compareGrowth(rate, term(m_one), path);
+    if (!growth)
+        return {};
+    if (*growth < 0 || (value.constant && coefficient == m_zero))
+        return {LimitStatus::Finite, m_zero};
+    if (value.form == LimitForm::Wave) {
+        if (limitSign(coefficient).value_or(0))
+            return {LimitStatus::DoesNotExist};
+        return {};
+    }
+    if (*growth == 0)
+        return {LimitStatus::Finite, coefficient};
+    const int sign = limitSign(coefficient).value_or(0);
+    return sign ? LimitValue{LimitStatus::Infinite, NoExpression, sign} : LimitValue{};
+}
+
+Calculus::LimitTerm Calculus::limitTerm(Expr expression, LimitPath& path)
+{
+    spend();
+    const auto cached = path.terms.constFind(expression);
+    if (cached != path.terms.constEnd())
+        return cached.value();
+    if (path.depth >= MaxDepth)
+        limitExceeded();
+    const QScopedValueRollback<int> depth(path.depth, path.depth + 1);
+    path.terms.insert(expression, {});
+    const auto result = analyzeLimit(expression, path);
+    path.terms.insert(expression, result);
+    return result;
+}
+
+Calculus::LimitTerm Calculus::analyzeLimit(Expr expression, LimitPath& path)
+{
+    const Key& key = node(expression).key;
+    const auto at = [&](int index) { return limitTerm(key.children.at(index), path); };
+    switch (key.type) {
+    case Opcode::Load:
+        return term(expression, true, true);
+    case Opcode::Ref:
+        if (key.text == path.variable) {
+            if (path.infinity)
+                return term(number(path.infinity), false, false, m_minusOne);
+            if (!path.side)
+                return term(path.point, true, true);
+            return path.point == m_zero ? term(number(path.side), false, true, m_one)
+                                       : term(path.point, false, true);
+        }
+        if (key.text == QLatin1String("i") && Settings::instance()->complexNumbers)
+            return {LimitForm::NoDomain};
+        if (isConstant(key.text) && key.text != QLatin1String("π") && key.text != QLatin1String("e")) {
+            const auto value = m_lookupVariable(key.text);
+            if (value && (!value->isReal() || value->isNan() || value->isCollection()))
+                return {LimitForm::NoDomain};
+        }
+        return term(expression, true, true);
+    case Opcode::Neg: {
+        auto result = at(0);
+        if (result.form == LimitForm::Term || result.form == LimitForm::Wave || result.form == LimitForm::Divergent)
+            result.coefficient = negate(result.coefficient);
+        return result;
+    }
+    case Opcode::Add: case Opcode::Sub:
+        return limitSum(expression, path);
+    case Opcode::Mul: {
+        auto result = at(0);
+        for (int i = 1; i < key.children.size(); ++i)
+            result = limitProduct(result, at(i), false, path);
+        return result;
+    }
+    case Opcode::Div:
+        return limitQuotient(expression, path);
+    case Opcode::Pow:
+        return limitPower(expression, path);
+    case Opcode::Function:
+        return limitFunction(expression, path);
+    default:
+        return {};
+    }
+}
+
+Calculus::LimitTerm Calculus::limitSum(Expr expression, LimitPath& path)
+{
+    const Key& key = node(expression).key;
+    QVector<LimitTerm> terms;
+    bool analytic = true;
+    QVector<Expr> endpoints;
+    for (int i = 0; i < key.children.size(); ++i) {
+        auto next = limitTerm(key.children.at(i), path);
+        if (next.form == LimitForm::NoDomain || next.form == LimitForm::Unknown)
+            return next;
+        if (next.form == LimitForm::Oscillatory || next.form == LimitForm::Divergent)
+            return {};
+        if (i == 1 && key.type == Opcode::Sub && next.coefficient != NoExpression)
+            next.coefficient = negate(next.coefficient);
+        analytic &= next.analytic;
+        const auto value = classifyLimit(next, path);
+        if (value.status == LimitStatus::Finite)
+            endpoints.append(value.expression);
+        terms.append(next);
+    }
+
+    auto leading = term(m_zero, true, analytic);
+    bool cancelled = false;
+    for (const auto& next : terms) {
+        if (next.constant && next.coefficient == m_zero)
+            continue;
+        if (leading.constant && leading.coefficient == m_zero) {
+            leading = next;
+            continue;
+        }
+        if (leading.form == LimitForm::Vanishing || next.form == LimitForm::Vanishing) {
+            auto other = leading.form == LimitForm::Vanishing ? next : leading;
+            const auto value = classifyLimit(other, path);
+            if (value.status == LimitStatus::Infinite
+                || (value.status == LimitStatus::Finite && value.expression != m_zero)) {
+                leading = other;
+                leading.constant = false;
+                continue;
+            }
+            cancelled = true;
+            break;
+        }
+        const auto relation = compareGrowth(leading, next, path);
+        if (!relation || (!*relation && (leading.form == LimitForm::Wave || next.form == LimitForm::Wave))) {
+            cancelled = true;
+            break;
+        }
+        if (*relation) {
+            if (*relation < 0)
+                leading = next;
+            leading.constant = false;
+        } else {
+            const Expr coefficient = add({leading.coefficient, next.coefficient});
+            if (coefficient == m_zero && !(leading.constant && next.constant)) {
+                cancelled = true;
+                break;
+            }
+            leading.coefficient = coefficient;
+            leading.constant &= next.constant;
+        }
+    }
+    if (!cancelled) {
+        leading.analytic = analytic;
+        return leading;
+    }
+
+    // Domains have been checked on the original operands. Simplification
+    // can now cancel identical terms without hiding a domain restriction.
+    const Expr reduced = simplify(expression);
+    if (reduced != expression) {
+        const auto result = limitTerm(reduced, path);
+        if (result.form != LimitForm::Unknown && result.form != LimitForm::Vanishing)
+            return result;
+    }
+    const Expr fraction = attempt(CandidateWork, [&] {
+        return overCommonDenominator(termsOf(reduced));
+    });
+    if (fraction != NoExpression && fraction != reduced && fraction != expression) {
+        const auto result = limitTerm(fraction, path);
+        if (result.form != LimitForm::Unknown && result.form != LimitForm::Vanishing)
+            return result;
+    }
+    const auto parts = termsOf(reduced);
+    if (parts.size() == 2) {
+        for (int i = 0; i < 2; ++i) {
+            const Expr offset = parts.at(i);
+            const auto [factor, rest] = coefficientOf(parts.at(1 - i));
+            const Key& kernel = node(rest).key;
+            if (!node(offset).number || kernel.type != Opcode::Function || kernel.text != QLatin1String("erf"))
+                continue;
+            const Expr scale = number(factor);
+            const bool sum = offset == scale;
+            if (!sum && offset != negate(scale))
+                continue;
+            // erf(u) + 1 = erfc(-u), and erf(u) - 1 = -erfc(u).
+            const Expr u = kernel.children.at(0);
+            const Expr tail = function(QStringLiteral("erfc"), sum ? negate(u) : u);
+            const auto result = limitTerm(multiply({offset, tail}), path);
+            if (result.form != LimitForm::Unknown)
+                return result;
+        }
+    }
+    if (analytic && !path.infinity && path.side) {
+        const auto expanded = taylorTerm(expression, path);
+        if (expanded.form != LimitForm::Unknown)
+            return expanded;
+    }
+    if (path.infinity) {
+        if (const auto coefficients = scaledPolynomial(reduced, path.variable)) {
+            const int degree = int(coefficients->size()) - 1;
+            const Expr coefficient = coefficients->constLast();
+            return term(path.infinity < 0 && degree % 2 ? negate(coefficient) : coefficient,
+                        degree == 0, degree == 0, number(-degree));
+        }
+    }
+    if (key.type == Opcode::Sub) {
+        const Expr u = key.children.at(0);
+        const Expr v = key.children.at(1);
+        if (radicand(u) != NoExpression || radicand(v) != NoExpression) {
+            const auto squared = [&](Expr part) {
+                const Expr root = radicand(part);
+                return root != NoExpression ? root : power(part, number(2));
+            };
+            const Expr numerator = make(Opcode::Sub, {squared(u), squared(v)});
+            const Expr denominator = make(Opcode::Add, {u, v});
+            const auto result = limitTerm(make(Opcode::Div, {numerator, denominator}), path);
+            if (result.form != LimitForm::NoDomain && result.form != LimitForm::Unknown)
+                return result;
+        }
+    }
+    if (endpoints.size() != terms.size())
+        return {};
+    const Expr endpoint = add(endpoints);
+    return endpoint == m_zero ? LimitTerm{LimitForm::Vanishing, NoExpression, NoExpression, NoExpression,
+                                          NoExpression, false, analytic}
+                              : term(endpoint, false, analytic);
+}
+
+Calculus::LimitTerm Calculus::limitProduct(const LimitTerm& left, const LimitTerm& right,
+                                          bool quotient, LimitPath& path)
+{
+    if (left.form == LimitForm::NoDomain || right.form == LimitForm::NoDomain)
+        return {LimitForm::NoDomain};
+    if (left.form == LimitForm::Unknown || right.form == LimitForm::Unknown)
+        return {};
+    if (left.form == LimitForm::Oscillatory || right.form == LimitForm::Oscillatory
+        || left.form == LimitForm::Divergent || right.form == LimitForm::Divergent) {
+        return {};
+    }
+    if (quotient && right.constant && right.coefficient == m_zero)
+        return {LimitForm::NoDomain};
+    if (quotient && !termSign(right).value_or(0))
+        return {};
+    const bool analytic = left.analytic && right.analytic
+        && (!quotient || (right.order == m_zero && right.logOrder == m_zero && right.exponent == m_zero));
+    if ((left.constant && left.coefficient == m_zero) || (!quotient && right.constant && right.coefficient == m_zero))
+        return term(m_zero, true, analytic);
+    if (left.form == LimitForm::Vanishing || right.form == LimitForm::Vanishing) {
+        const auto& other = left.form == LimitForm::Vanishing ? right : left;
+        if (other.form == LimitForm::Vanishing)
+            return {LimitForm::Vanishing};
+        const auto growth = compareGrowth(other, term(m_one), path);
+        return growth && (quotient ? *growth >= 0 : *growth <= 0) ? LimitTerm{LimitForm::Vanishing}
+                                                                : LimitTerm{};
+    }
+
+    const Expr coefficient = quotient ? divide(left.coefficient, right.coefficient)
+                                      : multiply({left.coefficient, right.coefficient});
+    const auto combine = [&](Expr a, Expr b) { return quotient ? subtract(a, b) : add({a, b}); };
+    auto result = term(coefficient, left.constant && right.constant, analytic, combine(left.order, right.order),
+                       combine(left.logOrder, right.logOrder), combine(left.exponent, right.exponent));
+    if (left.form == LimitForm::Wave && right.form == LimitForm::Wave) {
+        const auto growth = compareGrowth(result, term(m_one), path);
+        return growth && *growth < 0 ? LimitTerm{LimitForm::Vanishing} : LimitTerm{};
+    }
+    if (left.form == LimitForm::Wave || right.form == LimitForm::Wave)
+        result.form = LimitForm::Wave;
+    return result;
+}
+
+Calculus::LimitTerm Calculus::taylorTerm(Expr expression, LimitPath& path)
+{
+    if (path.infinity || !path.side || !smoothOnPath(expression, path))
+        return {};
+    LimitPath fixed{path.variable, path.point, 0, 0, {}};
+    Expr differentiated = simplify(expression);
+    int factorial = 1;
+    constexpr int maxTerms = 8;
+    for (int order = 1; order <= maxTerms; ++order) {
+        differentiated = derivative(differentiated, path.variable);
+        if (differentiated == m_zero)
+            return term(m_zero, true, true);
+        factorial *= order;
+        const auto value = classifyLimit(limitTerm(differentiated, fixed), fixed);
+        if (value.status != LimitStatus::Finite)
+            return {};
+        if (value.expression != m_zero) {
+            const int sign = path.side < 0 && order % 2 ? -1 : 1;
+            return term(multiply({number(sign, factorial), value.expression}), false, true, number(order));
+        }
+    }
+    return {};
+}
+
+bool Calculus::smoothOnPath(Expr expression, LimitPath& path)
+{
+    spend();
+    const Key& key = node(expression).key;
+    if (key.type == Opcode::Function) {
+        const auto rule = functionRules().constFind(key.text);
+        if (rule == functionRules().constEnd())
+            return false;
+        const Expr argument = key.children.at(0);
+        if (rule->rule == Rule::Abs || rule->rule == Rule::Sqrt || rule->rule == Rule::Cbrt) {
+            if ((rule->rule == Rule::Abs && Settings::instance()->complexNumbers)
+                || !termSign(limitTerm(argument, path)).value_or(0)) {
+                return false;
+            }
+        }
+        if (rule->rule == Rule::Arcsin || rule->rule == Rule::Arccos || rule->rule == Rule::Arcosh) {
+            const auto offset = [&](Expr end) {
+                return termSign(limitTerm(make(Opcode::Sub, {argument, end}), path)).value_or(0);
+            };
+            if (!offset(m_one) || (rule->rule != Rule::Arcosh && !offset(m_minusOne)))
+                return false;
+        }
+        // The derivative of atan2 needs a continuous choice of branch.
+        if (rule->rule == Rule::Arctan2)
+            return false;
+    }
+    if (key.type == Opcode::Pow) {
+        const auto exponent = limitTerm(key.children.at(1), path);
+        const auto& exact = exponent.constant ? node(exponent.coefficient).number : std::nullopt;
+        if ((!exact || exact->denominator != 1 || !exact->numerator.isPositive())
+            && !termSign(limitTerm(key.children.at(0), path)).value_or(0)) {
+            return false;
+        }
+    }
+    return std::all_of(key.children.cbegin(), key.children.cend(),
+                       [&](Expr child) { return smoothOnPath(child, path); });
+}
+
+Calculus::LimitTerm Calculus::limitQuotient(Expr expression, LimitPath& path)
+{
+    const auto& children = node(expression).key.children;
+    const auto numerator = limitTerm(children.at(0), path);
+    const auto denominator = limitTerm(children.at(1), path);
+    const auto direct = limitProduct(numerator, denominator, true, path);
+    if (!path.side || direct.form == LimitForm::NoDomain || path.hopitalSteps >= 6)
+        return direct;
+    if (classifyLimit(direct, path).status != LimitStatus::Unknown)
+        return direct;
+    const auto a = classifyLimit(numerator, path);
+    const auto b = classifyLimit(denominator, path);
+    const bool zeroOverZero = a.status == LimitStatus::Finite && a.expression == m_zero
+        && b.status == LimitStatus::Finite && b.expression == m_zero;
+    const bool infinityOverInfinity = a.status == LimitStatus::Infinite && b.status == LimitStatus::Infinite;
+    if ((!zeroOverZero && !infinityOverInfinity)
+        || !smoothOnPath(children.at(0), path) || !smoothOnPath(children.at(1), path)) {
+        return direct;
+    }
+
+    // Both operands are differentiable along this approach. Check that the
+    // derivative of the denominator stays nonzero there before using the rule.
+    ++path.hopitalSteps;
+    const Expr below = derivative(simplify(children.at(1)), path.variable);
+    if (!termSign(limitTerm(below, path)).value_or(0))
+        return direct;
+    const Expr above = derivative(simplify(children.at(0)), path.variable);
+    const auto result = classifyLimit(limitTerm(make(Opcode::Div, {above, below}), path), path);
+    // The rule gives the limit of the quotient, but does not give its rate.
+    if (result.status == LimitStatus::Infinite)
+        return {LimitForm::Divergent, number(result.infinity)};
+    if (result.status == LimitStatus::Finite) {
+        if (result.expression == m_zero)
+            return {LimitForm::Vanishing};
+        return term(result.expression);
+    }
+    return direct;
+}
+
+Calculus::LimitTerm Calculus::limitPower(Expr expression, LimitPath& path, bool cubeRoot)
+{
+    const auto& children = node(expression).key.children;
+    const Expr base = children.at(0);
+    const Expr exponent = children.at(1);
+    const auto u = limitTerm(base, path);
+    const auto v = limitTerm(exponent, path);
+    if (u.form == LimitForm::NoDomain || v.form == LimitForm::NoDomain)
+        return {LimitForm::NoDomain};
+    if (u.form == LimitForm::Unknown || v.form == LimitForm::Unknown
+        || u.form == LimitForm::Oscillatory || v.form == LimitForm::Oscillatory) {
+        return {};
+    }
+    const auto sign = termSign(u);
+    const auto endBase = classifyLimit(u, path);
+    const auto endPower = classifyLimit(v, path);
+    const auto valuePower = [&](Expr value, Expr degree) {
+        if (cubeRoot)
+            return function(QStringLiteral("cbrt"), value);
+        if (degree == number(1, 2) && limitSign(value).value_or(0) > 0)
+            return squareRoot(value).first;
+        return power(value, degree);
+    };
+    const auto& exact = v.constant ? node(v.coefficient).number : std::nullopt;
+    if (exact) {
+        const bool integer = exact->denominator == 1;
+        const bool positive = exact->numerator.isPositive();
+        if (sign && *sign == 0) {
+            return positive ? term(m_zero, true, u.analytic && integer)
+                            : LimitTerm{LimitForm::NoDomain};
+        }
+        if (!integer && !cubeRoot && sign && *sign < 0)
+            return {LimitForm::NoDomain};
+        if (!positive && !sign)
+            return {};
+        if (!sign && !integer && !cubeRoot) {
+            const Expr reduced = simplify(base);
+            const auto [part, degree] = factorPower(reduced);
+            if (part == reduced || degree % 2)
+                return {};
+        }
+        const Expr degree = v.coefficient;
+        if (degree == m_zero && sign)
+            return term(m_one, true, u.analytic && endBase.status == LimitStatus::Finite
+                        && endBase.expression != m_zero && limitSign(endBase.expression).value_or(0));
+        const bool analytic = u.analytic && ((integer && positive)
+            || (endBase.status == LimitStatus::Finite && limitSign(endBase.expression).value_or(0)));
+        if (u.form == LimitForm::Term) {
+            return term(valuePower(u.coefficient, degree), u.constant, analytic,
+                        multiply({u.order, degree}), multiply({u.logOrder, degree}),
+                        multiply({u.exponent, degree}));
+        }
+        if (positive && endBase.status == LimitStatus::Finite && endBase.expression == m_zero)
+            return {LimitForm::Vanishing};
+        return {};
+    }
+
+    if (sign && *sign == 0) {
+        const auto exponentSign = termSign(v);
+        if (!exponentSign)
+            return {};
+        return *exponentSign > 0 ? term(m_zero, true) : LimitTerm{LimitForm::NoDomain};
+    }
+    if (!sign || *sign <= 0)
+        return {};
+    if (endBase.status == LimitStatus::Finite && limitSign(endBase.expression).value_or(0) > 0
+        && endPower.status == LimitStatus::Finite) {
+        return term(power(endBase.expression, endPower.expression), u.constant && v.constant,
+                    u.analytic && v.analytic);
+    }
+    // The logarithmic rewrite handles 0^0, 1^inf and inf^0 on positive bases.
+    const Expr log = make(Opcode::Function, {base}, QStringLiteral("ln"));
+    return limitTerm(make(Opcode::Function, {make(Opcode::Mul, {exponent, log})}, QStringLiteral("exp")), path);
+}
+
+Calculus::LimitTerm Calculus::limitFunction(Expr expression, LimitPath& path)
+{
+    const Key& key = node(expression).key;
+    const auto rule = functionRules().constFind(key.text);
+    const Expr argument = key.children.at(0);
+    const auto arg = limitTerm(argument, path);
+    if (arg.form == LimitForm::Unknown || arg.form == LimitForm::NoDomain)
+        return arg;
+
+    const auto endpoint = classifyLimit(arg, path);
+    const auto sign = termSign(arg);
+    const auto call = [&](const char* name, Expr child = NoExpression) {
+        return make(Opcode::Function, {child == NoExpression ? argument : child}, QLatin1String(name));
+    };
+    const auto offset = [&](Expr from) {
+        return limitTerm(make(Opcode::Sub, {argument, from}), path);
+    };
+    if (rule == functionRules().constEnd()) {
+        if (key.text == QLatin1String("gamma")) {
+            if (endpoint.status != LimitStatus::Finite)
+                return {};
+            const auto& exact = node(endpoint.expression).number;
+            if (arg.constant && exact && !exact->numerator.isPositive() && exact->denominator == 1)
+                return {LimitForm::NoDomain};
+            const bool nonInteger = exact && exact->denominator != 1;
+            if (limitSign(endpoint.expression).value_or(0) > 0 || nonInteger)
+                return term(function(key.text, endpoint.expression), arg.constant);
+            return {};
+        }
+        // floor and ceil are constant between adjacent integers.
+        if (endpoint.status != LimitStatus::Finite)
+            return {};
+        const auto& exact = node(endpoint.expression).number;
+        if (!exact)
+            return arg.constant ? term(function(key.text, endpoint.expression), true) : LimitTerm{};
+        Integer whole;
+        Integer remainder;
+        Integer::divide(exact->numerator, exact->denominator, whole, remainder);
+        const bool floor = key.text == QLatin1String("floor");
+        if (!remainder.isZero()) {
+            if ((floor && remainder.isNegative()) || (!floor && remainder.isPositive()))
+                whole = whole + (floor ? -1 : 1);
+        } else if (!arg.constant) {
+            const auto direction = termSign(offset(endpoint.expression));
+            if (!direction)
+                return {};
+            if ((floor && *direction < 0) || (!floor && *direction > 0))
+                whole = whole + *direction;
+        }
+        return term(number(ExactNumber{whole, 1}), true);
+    }
+
+    const auto quarterTurn = [&] {
+        return divide(reference(QStringLiteral("π")), multiply({number(2), radiansPerAngle()}));
+    };
+    switch (rule->rule) {
+    case Rule::Sqrt: case Rule::Cbrt:
+        return limitPower(make(Opcode::Pow, {argument, number(1, rule->rule == Rule::Sqrt ? 2 : 3)}),
+                          path, rule->rule == Rule::Cbrt);
+    case Rule::Abs:
+        if (arg.form == LimitForm::Term) {
+            auto result = arg;
+            result.coefficient = sign ? (*sign < 0 ? negate(arg.coefficient) : arg.coefficient)
+                                      : function(key.text, arg.coefficient);
+            result.analytic = arg.analytic && (arg.constant || (endpoint.status == LimitStatus::Finite
+                && limitSign(endpoint.expression).value_or(0)));
+            return result;
+        }
+        return arg.form == LimitForm::Vanishing ? arg : LimitTerm{};
+    case Rule::Tan: case Rule::Cot: case Rule::Sec: case Rule::Csc: {
+        const bool cosineDenominator = rule->rule == Rule::Tan || rule->rule == Rule::Sec;
+        if (endpoint.status == LimitStatus::Infinite && smoothOnPath(argument, path)) {
+            path.oscillating = true;
+            return {LimitForm::Oscillatory};
+        }
+        const bool reciprocal = rule->rule == Rule::Sec || rule->rule == Rule::Csc;
+        const Expr top = reciprocal ? m_one : call(cosineDenominator ? "sin" : "cos");
+        return limitTerm(make(Opcode::Div, {top, call(cosineDenominator ? "cos" : "sin")}), path);
+    }
+    case Rule::Log: {
+        const Expr value = key.children.at(1);
+        return limitTerm(make(Opcode::Div, {call("ln", value), call("ln")}), path);
+    }
+    case Rule::Lg: case Rule::Lb:
+        return limitTerm(make(Opcode::Div, {call("ln"), call("ln", number(rule->rule == Rule::Lg ? 10 : 2))}), path);
+    case Rule::Arctan2: {
+        const Expr y = key.children.at(1);
+        const auto ordinate = limitTerm(y, path);
+        if (ordinate.form == LimitForm::NoDomain)
+            return ordinate;
+        const auto ySign = termSign(ordinate);
+        if (!sign || (*sign <= 0 && !ySign))
+            return {};
+        if (*sign == 0) {
+            if (!*ySign)
+                return {LimitForm::NoDomain};
+            return term(multiply({number(*ySign), quarterTurn()}), true);
+        }
+        const Expr principal = call("arctan", make(Opcode::Div, {y, argument}));
+        if (*sign > 0)
+            return limitTerm(principal, path);
+        const Expr turn = multiply({number(*ySign < 0 ? -2 : 2), quarterTurn()});
+        return limitTerm(make(Opcode::Add, {turn, principal}), path);
+    }
+    case Rule::Arcsin: case Rule::Arccos: case Rule::Arcosh: case Rule::Artanh: {
+        const bool acosh = rule->rule == Rule::Arcosh;
+        const auto above = termSign(offset(acosh ? m_one : m_minusOne));
+        const auto below = acosh ? std::optional<int>{-1} : termSign(offset(m_one));
+        const bool strict = rule->rule == Rule::Artanh;
+        if ((above && (*above < 0 || (strict && !*above)))
+            || (below && (*below > 0 || (strict && !*below)))) {
+            return {LimitForm::NoDomain};
+        }
+        if (!above || !below)
+            return {};
+        if (strict) {
+            const Expr a = make(Opcode::Add, {m_one, argument});
+            const Expr b = make(Opcode::Sub, {m_one, argument});
+            return limitTerm(make(Opcode::Mul, {number(1, 2), call("ln", make(Opcode::Div, {a, b}))}), path);
+        }
+        break;
+    }
+    case Rule::Ln: {
+        if (sign && *sign <= 0)
+            return {LimitForm::NoDomain};
+        if (!sign || arg.form != LimitForm::Term)
+            return {};
+        if (endpoint.status == LimitStatus::Finite && endpoint.expression == m_one)
+            return arg.constant ? term(m_zero, true, arg.analytic) : offset(m_one);
+        if (endpoint.status == LimitStatus::Finite && endpoint.expression != m_zero)
+            break;
+        if (arg.exponent == m_zero && arg.order != m_zero)
+            return term(negate(arg.order), false, false, m_zero, m_one);
+        if (arg.exponent != m_zero) {
+            const auto dominant = limitTerm(arg.exponent, path);
+            if (dominant.form == LimitForm::Term && dominant.exponent == m_zero
+                && limitSign(dominant.order).value_or(0) < 0) {
+                return dominant;
+            }
+        }
+        return {};
+    }
+    default:
+        break;
+    }
+
+    if (endpoint.status == LimitStatus::Infinite) {
+        const Expr direction = number(endpoint.infinity);
+        switch (rule->rule) {
+        case Rule::Exp: {
+            const Expr reduced = simplify(argument);
+            const auto [factor, rest] = coefficientOf(reduced);
+            const Key& inner = node(rest).key;
+            if (inner.type == Opcode::Function && inner.text == QLatin1String("ln"))
+                return limitTerm(make(Opcode::Pow, {inner.children.at(0), number(factor)}), path);
+            return term(m_one, false, false, m_zero, m_zero, reduced);
+        }
+        case Rule::Sin: case Rule::Cos: {
+            if (!smoothOnPath(argument, path))
+                return {};
+            path.oscillating = true;
+            auto wave = term(m_one);
+            wave.form = LimitForm::Wave;
+            return wave;
+        }
+        case Rule::Arctan:
+            return term(multiply({direction, quarterTurn()}));
+        case Rule::Erf: case Rule::Tanh:
+            return term(direction);
+        case Rule::Erfc: case Rule::Erfi: {
+            const bool complement = rule->rule == Rule::Erfc;
+            if (complement && endpoint.infinity < 0)
+                return term(number(2));
+            if (arg.form != LimitForm::Term)
+                return {};
+            // erfc(u) and erfi(u) have tails exp(-u^2)/(sqrt(pi)*u)
+            // and exp(u^2)/(sqrt(pi)*u), respectively.
+            const Expr rootPi = function(QStringLiteral("sqrt"), reference(QStringLiteral("π")));
+            const Expr square = errorSquare(simplify(argument));
+            const auto tail = term(divide(m_one, rootPi), false, false, m_zero, m_zero,
+                                   complement ? negate(square) : square);
+            return limitProduct(tail, arg, true, path);
+        }
+        case Rule::Sinh: case Rule::Cosh:
+            return term(number(rule->rule == Rule::Cosh ? 1 : endpoint.infinity, 2), false, false,
+                        m_zero, m_zero, multiply({direction, simplify(argument)}));
+        case Rule::Arsinh: case Rule::Arcosh: {
+            const auto log = call("ln", make(Opcode::Mul, {direction, argument}));
+            return limitTerm(make(Opcode::Mul, {direction, log}), path);
+        }
+        default:
+            return {};
+        }
+    }
+    if (endpoint.status != LimitStatus::Finite)
+        return rule->rule == Rule::Exp && (arg.form == LimitForm::Term || arg.form == LimitForm::Wave)
+            ? term(m_one, false, false, m_zero, m_zero, simplify(argument)) : LimitTerm{};
+
+    const Expr value = endpoint.expression;
+    Expr result = function(key.text, value);
+    bool analytic = arg.analytic;
+    switch (rule->rule) {
+    case Rule::Arcsin: case Rule::Arccos: case Rule::Arcosh:
+        if (value == m_zero && rule->rule == Rule::Arcsin)
+            result = m_zero;
+        if (value == m_zero && rule->rule == Rule::Arccos)
+            result = quarterTurn();
+        if (value == m_one || value == m_minusOne) {
+            analytic = false;
+            if (rule->rule == Rule::Arcsin)
+                result = multiply({value, quarterTurn()});
+            else
+                result = value == m_one ? m_zero : multiply({number(2), quarterTurn()});
+        }
+        break;
+    case Rule::Sinh: case Rule::Tanh: case Rule::Arsinh:
+        if (value == m_zero)
+            result = m_zero;
+        break;
+    case Rule::Cosh:
+        if (value == m_zero)
+            result = m_one;
+        break;
+    default:
+        break;
+    }
+    if (result != m_zero || arg.constant)
+        return term(result, arg.constant, analytic);
+
+    if (analytic) {
+        const auto expanded = taylorTerm(expression, path);
+        if (expanded.form != LimitForm::Unknown)
+            return expanded;
+    }
+    // Linearize at a simple zero even if the argument itself has no
+    // Taylor series there, as in sin(1/x) at infinity.
+    const Expr local = reference(QStringLiteral("$limit"));
+    const Expr slope = derivative(call(key.text.toLatin1().constData(), local), node(local).key.text);
+    LimitPath fixed{node(local).key.text, value, 0, 0, {}};
+    const auto derivativeAtZero = classifyLimit(limitTerm(slope, fixed), fixed);
+    if (derivativeAtZero.status == LimitStatus::Finite && limitSign(derivativeAtZero.expression).value_or(0)) {
+        const auto delta = value == m_zero ? arg : offset(value);
+        return limitProduct(term(derivativeAtZero.expression, true, analytic), delta, false, path);
+    }
+    return {LimitForm::Vanishing};
+}
+
+bool Calculus::canEstimateLimit(Expr expression, LimitPath& path)
+{
+    spend();
+    const auto endpoint = classifyLimit(limitTerm(expression, path), path);
+    if (endpoint.status == LimitStatus::Finite)
+        return true;
+    if (endpoint.status != LimitStatus::Unknown)
+        return false;
+    const Key& key = node(expression).key;
+    // An unresolved calculation that involves growth or an unresolved
+    // oscillation can look stable at every scale we can sample.
+    return !key.children.isEmpty()
+        && std::all_of(key.children.cbegin(), key.children.cend(),
+                       [&](Expr child) { return canEstimateLimit(child, path); });
+}
+
+std::optional<Calculus::LimitEstimate> Calculus::estimateLimit(Expr raw, const LimitPoint& point, LimitPath& path)
+{
+    if (!path.side || path.oscillating || (!point.infinity && point.numeric.isNan())
+        || !canEstimateLimit(raw, path)) {
+        return std::nullopt;
+    }
+    const int precision = Settings::instance()->resultPrecision;
+    const int digits = qBound(12, precision < 0 ? 24 : precision, 32);
+    const HNumber tolerance = HMath::raise(HNumber(10), -digits);
+    const HNumber scale = point.infinity ? HNumber(1) : qMax(HNumber(1), HMath::abs(point.numeric));
+    // Use independent grids and extra working digits on the finer check.
+    // Extrapolate in the distance to the point, or in 1/|x| at infinity.
+    const auto sampleGrid = [&](const HNumber& offset, int extraDigits) -> std::optional<LimitEstimate> {
+        const HMath::ScopedExtraPrecision precision(extraDigits);
+        constexpr int window = 4;
+        constexpr int maxSamples = 12;
+        const HNumber noise = HMath::raise(HNumber(10), 6 - DECPRECISION);
+        QVector<HNumber> distances;
+        QVector<HNumber> samples;
+        HNumber previousPoint = HMath::nan();
+        HNumber previousError = HMath::nan();
+        HNumber previousEstimate = HMath::nan();
+        bool varied = false;
+        int stable = 0;
+        HNumber step = offset;
+        for (int i = 0; i < maxSamples; ++i, step /= HNumber(100)) {
+            spend();
+            const HNumber x = point.infinity ? HNumber(point.infinity) / step
+                                             : point.numeric + HNumber(path.side) * scale * step;
+            if (x.isNan() || (!point.infinity && x == point.numeric))
+                return std::nullopt;
+            if (!previousPoint.isNan()) {
+                HNumber phaseWidth(0);
+                try {
+                    enclosure(raw, path.variable, Interval{qMin(previousPoint, x), qMax(previousPoint, x)},
+                              &phaseWidth, true);
+                } catch (const DomainUnknown&) {
+                    return std::nullopt;
+                }
+                if (phaseWidth > HMath::pi() / HNumber(2))
+                    return std::nullopt;
+            }
+            previousPoint = x;
+            const HNumber value = magnitude(raw, path.variable, x);
+            if (value.isNan())
+                return std::nullopt;
+            varied |= !samples.isEmpty() && value != samples.constLast();
+            samples.append(value);
+            distances.append(step);
+            if (samples.size() < window)
+                continue;
+
+            QVector<HNumber> fitted = samples;
+            for (int n = 1; n < window; ++n) {
+                for (int j = 0; j + n < window; ++j) {
+                    fitted[j] = (distances.at(j) * fitted.at(j + 1) - distances.at(j + n) * fitted.at(j))
+                        / (distances.at(j) - distances.at(j + n));
+                }
+            }
+            samples.removeFirst();
+            distances.removeFirst();
+            const HNumber estimate = fitted.constFirst();
+            if (estimate.isNan())
+                return std::nullopt;
+            if (!previousEstimate.isNan()) {
+                const HNumber error = HMath::abs(estimate - previousEstimate);
+                const HNumber size = qMax(HNumber(1), HMath::abs(estimate));
+                const HNumber roundoff = qMax(HMath::abs(estimate), HMath::abs(previousEstimate)) * noise;
+                const bool contracts = !previousError.isNan()
+                    && (error * HNumber(4) < previousError || (error <= roundoff && previousError <= roundoff));
+                stable = contracts ? stable + 1 : 0;
+                const HNumber budget = size * tolerance;
+                const HNumber observed = qMax(previousError.isNan() ? error : previousError, error);
+                const HNumber uncertainty = HNumber(4) * observed + roundoff;
+                if (varied && stable >= 2 && uncertainty <= budget)
+                    return LimitEstimate{estimate, uncertainty};
+                previousError = error;
+            }
+            previousEstimate = estimate;
+        }
+        return std::nullopt;
+    };
+    const auto coarse = sampleGrid(HNumber("0.01"), 6);
+    if (!coarse)
+        return std::nullopt;
+    const auto fine = sampleGrid(HNumber("0.0037"), 14);
+    if (!fine)
+        return std::nullopt;
+    const HNumber disagreement = HMath::abs(coarse->value - fine->value);
+    if (disagreement > coarse->error + fine->error)
+        return std::nullopt;
+    const HNumber value = (coarse->value + fine->value) / HNumber(2);
+    // Only display digits supported by the requested error target.
+    const auto format = HNumber::Format::Scientific() + HNumber::Format::Point() + HNumber::Format::Precision(digits);
+    const HNumber rounded(HMath::format(value, format).toLatin1().constData());
+    if (rounded.isNan())
+        return std::nullopt;
+    return LimitEstimate{rounded, coarse->error + fine->error + disagreement + HMath::abs(rounded - value)};
+}
+
+std::optional<int> Calculus::readDirection(Span span)
+{
+    const int length = span.end - span.first;
+    if (length > MaxScalarOpcodes)
+        limitExceeded();
+    if (!canEvaluateScalar(span))
+        return std::nullopt;
+    const Quantity value = m_evalSpan(span.first, length, {}, Quantity());
+    if (value.isApproximate() || !value.isInteger())
+        return std::nullopt;
+    const HNumber direction = value.numericValue().real;
+    if (direction < -1 || direction > 1)
+        return std::nullopt;
+    return direction.toInt();
+}
+
+Expr Calculus::attachLimitUnits(Expr expression, Quantity units)
+{
+    if (!units.hasDimension())
+        return expression;
+    Units::findUnit(units);
+    if (units.unitName().isEmpty() || !units.unit().isReal() || units.unit().real <= 0)
+        throw Failure{tr("could not express the limit's units")};
+    const Expr unit = make(Opcode::UnitRef, {}, units.unitName());
+    Quantity scale(units.unit());
+    scale.copyDimension(units);
+    m_limitUnits.insert(unit, scale);
+    // Keep the unit on zero and infinity as well.
+    const Expr scalar = units.unit().real == 1 ? expression : divide(expression, scalarLiteral(units.unit().real));
+    return make(Opcode::Mul, {scalar, unit});
+}
+
+// Work in coherent units and check dimensions before doing scalar algebra.
+Expr Calculus::stripLimitUnits(Expr expression, const QString& variable, const Quantity& variableUnits,
+                               Quantity& units, bool& approximate)
+{
+    spend();
+    const Key& key = node(expression).key;
+    if (key.type == Opcode::Ref && key.text == variable) {
+        units = variableUnits;
+        return expression;
+    }
+    if (key.type == Opcode::UnitRef) {
+        Quantity unit;
+        const auto generated = m_limitUnits.constFind(expression);
+        if (generated != m_limitUnits.constEnd())
+            unit = generated.value();
+        else if (!m_lookupUnit(key.text, &unit))
+            throw Failure{tr("unknown unit %1").arg(key.text.toHtmlEscaped())};
+        if (!unit.isReal() || unit.isNan())
+            throw Failure{tr("limit units must have a real scale")};
+        approximate |= unit.isApproximate();
+        units.copyDimension(unit);
+        return scalarLiteral(unit.numericValue().real);
+    }
+    if (key.children.isEmpty())
+        return expression;
+
+    QVector<Expr> children;
+    QVector<Quantity> dimensions;
+    for (Expr child : key.children) {
+        Quantity dimension(1);
+        children.append(stripLimitUnits(child, variable, variableUnits, dimension, approximate));
+        dimensions.append(dimension);
+    }
+    units = dimensions.constFirst();
+    switch (key.type) {
+    case Opcode::Add: case Opcode::Sub:
+        for (const auto& dimension : dimensions) {
+            if (!dimension.sameDimension(units))
+                throw Failure{tr("incompatible units in limit expression")};
+        }
+        break;
+    case Opcode::Div:
+        units /= dimensions.at(1);
+        break;
+    case Opcode::Unit: case Opcode::Mul:
+        for (int i = 1; i < dimensions.size(); ++i)
+            units *= dimensions.at(i);
+        break;
+    case Opcode::Pow:
+        if (dimensions.at(1).hasDimension())
+            throw Failure{tr("limit exponents must be dimensionless")};
+        if (units.hasDimension()) {
+            const auto& exponent = node(simplify(children.at(1))).number;
+            if (!exponent || abs(exponent->numerator) > MaxNodes || exponent->denominator > MaxNodes)
+                throw Failure{tr("unit-bearing powers need a constant rational exponent")};
+            units = DMath::raise(units, Quantity(exponent->numerator.toHNumber() / exponent->denominator.toHNumber()));
+            if (units.isNan())
+                throw Failure{tr("unsupported power of units in limit expression")};
+        }
+        break;
+    case Opcode::Function:
+        if (key.text == QLatin1String("sqrt") || key.text == QLatin1String("cbrt")) {
+            units = key.text == QLatin1String("sqrt") ? DMath::sqrt(units) : DMath::cbrt(units);
+        } else if (key.text != QLatin1String("abs")) {
+            for (const auto& dimension : dimensions) {
+                if (dimension.hasDimension())
+                    throw Failure{tr("this function needs dimensionless arguments in a limit")};
+            }
+        }
+        break;
+    default:
+        break;
+    }
+    return make(key.type == Opcode::Unit ? Opcode::Mul : key.type, children, key.text);
+}
+
+Calculus::LimitPoint Calculus::readLimitPoint(Span span, int nesting)
+{
+    if (span.end - span.first > MaxScalarOpcodes)
+        limitExceeded();
+    LimitPoint point;
+    point.infinity = namedInfinity(span);
+    if (point.infinity)
+        return point;
+
+    const Expr raw = readExpression(span, nesting, &point.approximate);
+    const Key& key = node(raw).key;
+    if (key.type == Opcode::Ref && key.text == QString(UnicodeChars::Infinity)) {
+        point.infinity = 1;
+        return point;
+    }
+    const bool negative = key.type == Opcode::Neg || (key.type == Opcode::Mul && key.children.size() == 2
+        && key.children.constFirst() == m_minusOne);
+    if (negative && node(key.children.constLast()).key.text == QString(UnicodeChars::Infinity)) {
+        point.infinity = -1;
+        return point;
+    }
+    QSet<QString> variables;
+    infer(raw, variables, true);
+    Expr expression = raw;
+    for (const QString& name : variables) {
+        const auto saved = m_lookupVariable(name);
+        if (!saved)
+            continue;
+        if (!saved->isReal() || saved->isNan() || saved->isCollection())
+            throw Failure{tr("the approach point must be a real scalar")};
+        if (Units::isExplicitAngleUnitName(saved->unitName()) || Units::isAffineUnitName(saved->unitName()))
+            throw Failure{tr("use linear units and the active angle mode for the approach point")};
+        expression = substitute(expression, reference(name),
+                                attachLimitUnits(scalarLiteral(saved->numericValue().real), *saved), false);
+        point.approximate |= saved->isApproximate();
+    }
+
+    const Quantity scalar = canEvaluateScalar(span)
+        ? m_evalSpan(span.first, span.end - span.first, {}, Quantity()) : DMath::nan();
+    if (Units::isExplicitAngleUnitName(scalar.unitName()) || Units::isAffineUnitName(scalar.unitName()))
+        throw Failure{tr("use linear units and the active angle mode for the approach point")};
+    expression = stripLimitUnits(expression, {}, Quantity(1), point.units, point.approximate);
+    LimitPath fixed{{}, NoExpression, 0, 0, {}};
+    const LimitValue value = classifyLimit(limitTerm(expression, fixed), fixed);
+    if (value.status == LimitStatus::Unknown)
+        throw Failure{tr("unable to determine limit (could not establish a real approach point)")};
+    if (value.status != LimitStatus::Finite)
+        throw Failure{tr("invalid approach point (expected a defined real value)")};
+    point.expression = value.expression;
+    point.numeric = magnitude(point.expression);
+    return point;
+}
+
+CalculusResult Calculus::limit(int first, int nesting)
+{
+    if (nesting >= MaxDepth)
+        limitExceeded();
+    const QVector<Span> arguments = argumentsFor(first);
+    bool approximate = false;
+    const Expr source = readExpression(arguments.at(0), nesting, &approximate);
+    QSet<QString> variables;
+    infer(source, variables, true);
+    const QString inferred = variables.size() == 1 ? *variables.constBegin() : QString();
+
+    QString variable;
+    int pointIndex = 1;
+    int direction = 0;
+    if (arguments.size() >= 3) {
+        variable = namedInfinity(arguments.at(1)) ? QString() : variableArgument(arguments.at(1));
+        if (arguments.size() == 4 && variable.isEmpty())
+            throw Failure{tr("expected a variable name as the second argument")};
+        if (variable.isEmpty() || arguments.size() == 4) {
+            const auto specified = readDirection(arguments.constLast());
+            if (!specified)
+                throw Failure{tr("invalid direction (expected -1, 0 or 1 without units)")};
+            direction = *specified;
+        } else if (variables.size() <= 1) {
+            const auto specified = readDirection(arguments.constLast());
+            if (specified) {
+                const auto saved = m_lookupVariable(variable);
+                const auto measure = inferred.isEmpty() ? std::nullopt : m_lookupVariable(inferred);
+                const bool implicitPoint = saved
+                    ? saved->isReal() && !saved->isNan() && !saved->isCollection()
+                        && !Units::isExplicitAngleUnitName(saved->unitName())
+                        && !Units::isAffineUnitName(saved->unitName())
+                        && (!measure || measure->isNan() || measure->isSymbolic() || measure->isCollection()
+                            || saved->sameDimension(*measure))
+                    : variable != inferred && (!measure || !measure->hasDimension());
+                if (implicitPoint) {
+                    if (!saved || !saved->hasDimension()) {
+                        throw Failure{tr("ambiguous arguments (use four arguments or write the approach point as an expression)")};
+                    }
+                    variable.clear();
+                    direction = *specified;
+                }
+            }
+        }
+        if (!variable.isEmpty())
+            pointIndex = 2;
+    }
+    if (variable.isEmpty()) {
+        if (variables.size() > 1)
+            throw Failure{tr("ambiguous variable (specify the limiting variable)")};
+        variable = inferred;
+    }
+
+    LimitPoint point = readLimitPoint(arguments.at(pointIndex), nesting);
+    if (point.infinity && direction == point.infinity)
+        throw Failure{tr("incompatible direction for an infinite approach point")};
+    if (!point.infinity && !variable.isEmpty() && dependsOn(point.expression, variable))
+        throw Failure{tr("the approach point depends on the limiting variable")};
+    if (!variable.isEmpty()) {
+        const auto saved = m_lookupVariable(variable);
+        if (saved && !saved->isNan() && !saved->isSymbolic() && !saved->isCollection()) {
+            if (point.infinity)
+                point.units.copyDimension(*saved);
+            else if (!point.units.sameDimension(*saved))
+                throw Failure{tr("the limiting variable and approach point need compatible units")};
+        }
+    }
+
+    Quantity units(1);
+    approximate |= point.approximate && variables.contains(variable);
+    const Expr raw = stripLimitUnits(source, variable, point.units, units, approximate);
+    LimitPath left{variable, point.expression, point.infinity, -1, {}};
+    LimitPath right{variable, point.expression, point.infinity, 1, {}};
+    if (point.infinity)
+        direction = -point.infinity;
+    const auto evaluate = [&](LimitPath& path) {
+        if (variable.isEmpty())
+            path.side = 0;
+        return classifyLimit(limitTerm(raw, path), path);
+    };
+    const LimitValue a = direction > 0 ? LimitValue{} : evaluate(left);
+    const LimitValue b = direction < 0 ? LimitValue{} : evaluate(right);
+    if (a.status == LimitStatus::DoesNotExist || b.status == LimitStatus::DoesNotExist)
+        throw Failure{tr("limit does not exist")};
+
+    LimitValue result = direction > 0 ? b : a;
+    if (!direction) {
+        if (a.status == LimitStatus::Unknown || b.status == LimitStatus::Unknown) {
+            result = {};
+        } else if (a.status != b.status || a.infinity != b.infinity) {
+            throw Failure{tr("limit does not exist")};
+        } else if (a.status == LimitStatus::Finite && a.expression != b.expression) {
+            const Expr difference = simplified(subtract(a.expression, b.expression), variable);
+            if (difference != m_zero) {
+                if (limitSign(difference).value_or(0))
+                    throw Failure{tr("limit does not exist")};
+                result = {};
+            }
+        }
+    }
+    if (result.status == LimitStatus::Infinite) {
+        const Expr infinity = reference(QString(UnicodeChars::Infinity));
+        return attachLimitUnits(result.infinity < 0 ? negate(infinity) : infinity, units);
+    }
+    const auto numericResult = [&](const HNumber& value, bool approximation) {
+        Quantity result(value);
+        result.copyDimension(units);
+        if (approximation)
+            result.markApproximate();
+        return result;
+    };
+    if (result.status == LimitStatus::Finite) {
+        const Expr exact = simplified(result.expression, variable);
+        if (!approximate) {
+            if (units.hasDimension() && nesting == 0) {
+                const auto& scalar = node(exact).number;
+                if (scalar && scalar->denominator == 1 && scalar->numerator.digits() <= DECPRECISION)
+                    return numericResult(scalar->numerator.toHNumber(), false);
+            }
+            return attachLimitUnits(exact, units);
+        }
+        const HNumber value = magnitude(exact);
+        if (!value.isNan())
+            return numericResult(value, true);
+    } else if (variables.isEmpty() || (variables.size() == 1 && variables.contains(variable))) {
+        const auto estimate = [&](const LimitValue& known, LimitPath& path) -> std::optional<LimitEstimate> {
+            if (known.status == LimitStatus::Finite) {
+                const HNumber value = magnitude(known.expression);
+                if (!value.isNan())
+                    return LimitEstimate{value, 0};
+            }
+            return known.status == LimitStatus::Unknown ? estimateLimit(raw, point, path) : std::nullopt;
+        };
+        const auto l = direction <= 0 ? estimate(a, left) : std::nullopt;
+        const auto r = direction >= 0 ? estimate(b, right) : std::nullopt;
+        if (direction < 0 && l)
+            return numericResult(l->value, true);
+        if (direction > 0 && r)
+            return numericResult(r->value, true);
+        if (!direction && l && r && HMath::abs(l->value - r->value) <= l->error + r->error)
+            return numericResult((l->value + r->value) / HNumber(2), true);
+    }
+    throw Failure{tr("unable to determine limit")};
+}
+
+CalculusResult Calculus::integrate(int first, int nesting)
 {
     if (nesting >= MaxDepth)
         limitExceeded();

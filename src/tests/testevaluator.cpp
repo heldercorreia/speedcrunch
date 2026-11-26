@@ -41,6 +41,7 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <tuple>
 
 using namespace std;
 
@@ -1361,6 +1362,254 @@ static void test_calculus_integration()
         expectError("integrate(x; 0; i)", "real scalar");
         // Only real arguments, as for erf and erfc.
         expectError("erfi(1+i)", "undefined for argument domain");
+    }
+}
+
+static void test_calculus_limits()
+{
+    Settings* settings = Settings::instance();
+    const QScopedValueRollback<char> angle(settings->angleUnit, 'r');
+    const QScopedValueRollback<int> precision(settings->resultPrecision, 40);
+    const QScopedValueRollback<bool> complex(settings->complexNumbers, false);
+    const QScopedValueRollback<bool> dmath(DMath::complexMode, false);
+    Evaluator evaluator;
+    evaluator.initializeBuiltInVariables();
+    const QScopedValueRollback<Evaluator*> useEvaluator(eval, &evaluator);
+
+    const auto check = [](bool passed, const QString& description) {
+        ++eval_total_tests;
+        if (!passed) {
+            ++eval_failed_tests;
+            ++eval_new_failed_tests;
+            cerr << "lim: " << qPrintable(description) << endl;
+        }
+    };
+    const auto evaluate = [&](const QString& expression) {
+        evaluator.setExpression(expression);
+        return evaluator.evalNoAssign();
+    };
+    const auto expectError = [&](const QString& expression, const QString& message) {
+        const Quantity result = evaluate(expression);
+        check(result.isNan() && evaluator.error().contains(message), expression + " returned " + evaluator.error());
+    };
+    const auto compare = [&](const QString& expression, const QString& formula, bool approximate = false) {
+        const Quantity result = evaluate(expression);
+        if (!evaluator.error().isEmpty() || result.isNan()) {
+            check(false, expression + " returned " + evaluator.error());
+            return;
+        }
+        const Quantity actual = result.isSymbolic() ? evaluate(result.symbolicExpression()) : result;
+        const Quantity expected = evaluate(formula);
+        const Quantity difference = DMath::abs(actual - expected);
+        check(!difference.isNan() && actual.sameDimension(expected)
+                  && difference.numericValue().real < HNumber("1e-30")
+                  && result.isApproximate() == approximate,
+              expression + " returned " + DMath::format(result) + ", expected " + formula);
+    };
+
+    const Function* function = FunctionRepo::instance()->find("lim");
+    check(!FunctionRepo::instance()->find("limit"), "retire the old built-in name");
+    check(function && function->name() == "Limit" && function->domainType() == FunctionDomain::Calculus,
+          "function metadata");
+    for (const auto& [expression, result] : {
+             std::pair{"lim(5; 0)", "5"},
+             std::pair{"lim(x^2; 3)", "9"},
+             std::pair{"lim(x^2; x; 3)", "9"},
+             std::pair{"lim(sin(x)/x; 0)", "1"},
+             std::pair{"lim(tan(x)/x; 0)", "1"},
+             std::pair{"lim(arcsin(x)/x; 0)", "1"},
+             std::pair{"lim((1-cos(x))/x^2; 0)", "1/2"},
+             std::pair{"lim((exp(x)-1)/x; 0)", "1"},
+             std::pair{"lim(ln(1+x)/x; 0)", "1"},
+             std::pair{"lim((x^2-1)/(x-1); 1)", "2"},
+             std::pair{"lim((sqrt(1+x)-1)/x; 0)", "1/2"},
+             std::pair{"lim((1-cos(sqrt(x)))/x; 0; 1)", "1/2"},
+             std::pair{"lim(tan(x); 1)", "tan(1)"},
+             std::pair{"lim(abs(x)/x; 0; -1)", "-1"},
+             std::pair{"lim(abs(x)/x; 0; 1)", "1"},
+             std::pair{"lim(abs(x)/x; x; 0; -1)", "-1"},
+             std::pair{"lim(abs(x)/x; x; 0; 1)", "1"},
+             std::pair{"lim(sqrt(x); 0; 1)", "0"},
+             std::pair{"lim(floor(x); 2; -1)", "1"},
+             std::pair{"lim(floor(x); 2; 1)", "2"},
+             std::pair{"lim(ceil(x); 2; -1)", "2"},
+             std::pair{"lim(ceil(x); 2; 1)", "3"},
+             std::pair{"lim(1/x; inf)", "0"},
+             std::pair{"lim(1/x; -inf)", "0"},
+             std::pair{"lim(exp(x); -inf)", "0"},
+             std::pair{"lim(ln(x)/x; inf)", "0"},
+             std::pair{"lim(x^100/exp(x); inf)", "0"},
+             std::pair{"lim(exp(-exp(x)); inf)", "0"},
+             std::pair{"lim((2*x+1)/(3*x-2); inf)", "2/3"},
+             std::pair{"lim(x-x^2/(x+1); inf)", "1"},
+             std::pair{"lim(arctan(x); inf)", "pi/2"},
+             std::pair{"lim(arctan(x); -inf)", "-pi/2"},
+             std::pair{"lim(sin(x)/x; inf)", "0"},
+             std::pair{"lim(x*ln(x); 0; 1)", "0"},
+             std::pair{"lim(sqrt(x^2+x)-x; inf)", "1/2"},
+             std::pair{"lim(x^x; 0; 1)", "1"},
+             std::pair{"lim((1+1/x)^x; inf)", "e"},
+             std::pair{"lim(x^(1/x); inf)", "1"},
+             std::pair{"lim(erf(x); inf)", "1"},
+             std::pair{"lim(erf(x); -inf)", "-1"},
+             std::pair{"lim(erfc(x); inf)", "0"},
+             std::pair{"lim(erfc(x); -inf)", "2"},
+             std::pair{"lim(erf(x)/x; 0)", "2/sqrt(pi)"},
+             std::pair{"lim(erfi(x)/x; 0)", "2/sqrt(pi)"},
+             std::pair{"lim((erfc(x)-1)/x; 0)", "-2/sqrt(pi)"},
+             std::pair{"lim(x*exp(x^2)*erfc(x); inf)", "1/sqrt(pi)"},
+             std::pair{"lim(x*exp(x^2)*(1-erf(x)); inf)", "1/sqrt(pi)"},
+             std::pair{"lim(x*exp(-x^2)*erfi(x); inf)", "1/sqrt(pi)"},
+             std::pair{"lim(integrate(exp(-x); x; 0; t); t; inf)", "1"},
+             std::pair{"lim(integrate(exp(-x^2); x; -t; t); t; inf)", "sqrt(pi)"},
+             std::pair{"lim(diff(exp(-x^2); x); x; inf)", "0"},
+             std::pair{"lim(exp(a*x)*exp(-a*x); x; inf)", "1"},
+             std::pair{"lim(sqrt((a*x)^2); x; 0)", "0"},
+             std::pair{"lim((erf(x)-1)/exp(-x^2); inf)", "0"},
+             std::pair{"lim(lim(x*y; x; 2); y; 3)", "6"},
+             std::pair{"lim(1/x; lim(-t; inf))", "0"},
+             std::pair{"lim(1/x; x; inf; -1)", "0"},
+             std::pair{"lim(1/x; -inf; 1)", "0"},
+             std::pair{"lim(x/(x-1); x; 2)", "2"},
+             std::pair{"lim((x^2-4[m^2])/(x-2[m]); x; 200[cm])", "4[m]"},
+             std::pair{"lim(x^2*[m]; 3)", "9[m]"},
+             std::pair{"lim(1[m]*x; 0)", "0[m]"},
+             std::pair{"lim(x; pi[m])", "pi[m]"},
+             std::pair{"lim(gamma(x); 5/4)", "gamma(5/4)"}
+         }) {
+        compare(expression, result);
+    }
+
+    for (const auto& [expression, result] : {
+             std::pair{"lim(x*y; x; 2)", "2*y"},
+             std::pair{"lim(x; a)", "a"},
+             std::pair{"lim(sin(a*x)/x; x; 0)", "a"},
+             std::pair{"lim((exp(a*x)-1)/x; x; 0)", "a"},
+             std::pair{"lim((x^2-a^2)/(x-a); x; a)", "2*a"},
+             std::pair{"lim((sin(x+h)-sin(x))/h; h; 0)", "cos(x)"},
+             std::pair{"lim((x-x)+y; x; 0)", "y"},
+             std::pair{"diff(lim(x*y^2; x; 2); y)", "4*y"}
+         }) {
+        const Quantity value = evaluate(expression);
+        check(!value.isApproximate() && value.symbolicExpression() == QString::fromLatin1(result),
+              QString::fromLatin1(expression) + " returned " + DMath::format(value));
+    }
+
+    const QString infinity(UnicodeChars::Infinity);
+    const Quantity large = evaluate("lim(x^100; 7)");
+    check(large.symbolicExpression() == "3234476509624757991344647769100216810857203198904625400933895331391691459636928060001",
+          "preserve large exact integers");
+    for (const auto& [expression, negative] : {
+             std::pair{"lim(1/x; 0; -1)", true},
+             std::pair{"lim(1/x; 0; 1)", false},
+             std::pair{"lim(ln(x); 0; 1)", true},
+             std::pair{"lim(1/x^2; 0)", false},
+             std::pair{"lim(-1/x^2; 0)", true},
+             std::pair{"lim(x^2; -inf)", false},
+             std::pair{"lim(x^3; -inf)", true},
+             std::pair{"lim(exp(x); inf)", false},
+             std::pair{"lim(erfi(x); inf)", false},
+             std::pair{"lim(erfi(x); -inf)", true},
+             std::pair{"lim(tan(x); pi/2; -1)", false},
+             std::pair{"lim(tan(x); pi/2; 1)", true}
+         }) {
+        const Quantity value = evaluate(expression);
+        check(!value.isApproximate() && value.symbolicExpression() == (negative ? "-" + infinity : infinity),
+              QString::fromLatin1(expression) + " returned " + DMath::format(value) + evaluator.error());
+    }
+    for (const char* expression : {
+             "lim(1/x; 0)", "lim(abs(x)/x; 0)", "lim(sin(1/x); 0)", "lim(cos(1/x); 0)",
+             "lim(sin(x); inf)", "lim(cos(x); inf)", "lim(floor(x); 2)", "lim(ceil(x); 2)",
+             "lim(sqrt(x); 0)", "lim(0*sqrt(x); 0; -1)", "lim(1/(x-x); 0)", "lim(1/0; 0)",
+             "lim(0^0; 1)", "lim(0^x; 0; -1)", "lim(arcsin(x); 1; 1)", "lim(tan(x); inf)"
+         }) {
+        expectError(expression, "limit does not exist");
+    }
+    for (const auto& [expression, message] : {
+             std::pair{"lim(x*y; 0)", "ambiguous variable"},
+             std::pair{"lim(x; a; 0)", "ambiguous arguments"},
+             std::pair{"lim(x; 0; 2)", "invalid direction"},
+             std::pair{"lim(x; 0; 0.5)", "invalid direction"},
+             std::pair{"lim(x; x; 0; -2)", "invalid direction"},
+             std::pair{"lim(x; 0; 1[m])", "invalid direction"},
+             std::pair{"lim(x; inf; 1)", "incompatible direction"},
+             std::pair{"lim(x; -inf; -1)", "incompatible direction"},
+             std::pair{"lim(x; x)", "depends on the limiting variable"},
+             std::pair{"lim(x; 1/0)", "invalid approach point"},
+             std::pair{"lim(x)", "wrong number of arguments"},
+             std::pair{"lim(x; x+1; 0; 1)", "expected a variable"},
+             std::pair{"lim(sin(x); 1[m])", "dimensionless arguments"},
+             std::pair{"lim(x+1[s]; 1[m])", "incompatible units"},
+             std::pair{"lim(1/(a*x); x; 0; 1)", "unable to determine limit"},
+             std::pair{"lim((a*x)/(a*x); x; 0)", "unable to determine limit"},
+             std::pair{"lim(sqrt(a*x^2); x; 0)", "unable to determine limit"},
+             std::pair{"lim(exp(-a*x); x; inf)", "unable to determine limit"},
+             std::pair{"lim(a*abs(x)/x; x; 0)", "unable to determine limit"},
+             std::pair{"lim((gamma(2+1/x)-gamma(2))/(1/x)+1e-40*ln(x); inf)", "unable to determine limit"},
+             std::pair{"lim(sin(1/x)+cos(2/x); 0)", "unable to determine limit"}
+         }) {
+        expectError(expression, message);
+    }
+    const QString numericalLimit = "lim((gamma(2+x)-gamma(2))/x; 0)";
+    const QString gammaDerivative = "0.422784335098467139393487909917597569";
+    compare(numericalLimit, gammaDerivative, true);
+    compare("lim((gamma(2+1/x)-gamma(2))/(1/x); inf)", gammaDerivative, true);
+    evaluator.setExpression(numericalLimit);
+    const Quantity estimate = evaluator.evalUpdateAns();
+    const auto lines = ResultLineFormatUtils::formatResultLinesForDisplay(
+        numericalLimit, {}, estimate, false, true, &evaluator);
+    check(lines.size() == 1 && lines.at(0).startsWith(ResultLineFormatUtils::resultLinePrefix(MathDsl::Approximate)),
+          "show the approximation marker");
+    compare("lim(ans; 0)", gammaDerivative, true);
+    check(evaluate("lim(1/x; -inf)").isReal()
+              && evaluator.interpretedExpressionWithInfinityBounds().contains(UnicodeChars::Infinity),
+          "interpret named infinite approach points");
+
+    for (const auto& [mode, scale, quarterTurn] : {
+             std::tuple{'d', "pi/180", "90"}, std::tuple{'g', "pi/200", "100"},
+             std::tuple{'t', "2*pi", "1/4"}, std::tuple{'v', "2*pi", "1/4"}
+         }) {
+        settings->angleUnit = mode;
+        compare("lim(sin(x)/x; 0)", scale);
+        compare("lim(tan(x)/x; 0)", scale);
+        compare("lim(arcsin(x)/x; 0)", "1/(" + QString::fromLatin1(scale) + ")");
+        compare("lim(arctan(x); inf)", quarterTurn);
+    }
+    settings->angleUnit = 'r';
+
+    CHECK_EVAL("x=8", "8");
+    CHECK_EVAL("a=3", "3");
+    compare("lim(x^2; 3)", "9");
+    expectError("lim(x^2; x; 0)", "ambiguous arguments");
+    compare("lim(x^2; x; 0; 0)", "0");
+    compare("lim(x; a; 1; 0)", "8");
+    compare("lim(x; a)", "3");
+    compare("lim(x; a+0; -1)", "3");
+    compare("lim(x; x)", "8");
+    check(evaluate("lim(a*x; x; 2)").symbolicExpression() == "2*a", "keep assigned parameters symbolic");
+    CHECK_USERFUNC_SET("local_limit(t)=lim(x^2; x; t)");
+    compare("local_limit(3)", "9");
+    evaluator.setExpression("distance=8[m]");
+    check(evaluator.eval().sameDimension(Units::metre()), "assign the limiting variable with units");
+    compare("lim(2*distance; distance; 1[m])", "2[m]");
+    compare("lim(distance; distance; -1)", "8[m]");
+    expectError("lim(distance; distance; 1[s])", "compatible units");
+    CHECK_EVAL("inf=3", "3");
+    compare("lim(x^2; inf)", "9");
+
+    expectError("lim(" + QString("sin(").repeated(110) + "x" + QString(")").repeated(110) + "; 0)",
+                "limit exceeded");
+    expectError("lim(x; 1" + QString("+1").repeated(128) + ")", "limit exceeded");
+    evaluator.setTimeLimit(QDeadlineTimer(0));
+    check(evaluate(numericalLimit).isNan() && evaluator.stoppedForTimeLimit(), "honor the time limit");
+    evaluator.setTimeLimit(QDeadlineTimer::Forever);
+    compare("lim(sin(x)/x; 0)", "1");
+    {
+        const QScopedValueRollback<bool> allowComplex(settings->complexNumbers, true);
+        const QScopedValueRollback<bool> calculateComplex(DMath::complexMode, true);
+        evaluator.initializeBuiltInVariables();
+        expectError("lim(x; i)", "real");
+        expectError("lim(sqrt(x); 0; -1)", "limit does not exist");
     }
 }
 
@@ -12842,6 +13091,7 @@ int main(int argc, char* argv[])
     test_constants();
     test_symbolic_differentiation();
     test_calculus_integration();
+    test_calculus_limits();
     test_exponentiation();
     test_unary();
     test_binary();

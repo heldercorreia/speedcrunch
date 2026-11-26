@@ -5745,6 +5745,27 @@ Tokens Evaluator::scan(const QString& expr, QString* normalizedSource) const
     return tokens;
 }
 
+static Opcode::Type calculusOpcode(const QString& name)
+{
+    if (name.compare(QLatin1String("diff"), Qt::CaseInsensitive) == 0)
+        return Opcode::Diff;
+    if (name.compare(QLatin1String("integrate"), Qt::CaseInsensitive) == 0)
+        return Opcode::Integrate;
+    if (name.compare(QLatin1String("lim"), Qt::CaseInsensitive) == 0)
+        return Opcode::Limit;
+    return Opcode::Ref;
+}
+
+static QString calculusName(Opcode::Type type)
+{
+    switch (type) {
+    case Opcode::Diff: return QStringLiteral("diff");
+    case Opcode::Integrate: return QStringLiteral("integrate");
+    case Opcode::Limit: return QStringLiteral("lim");
+    default: return {};
+    }
+}
+
 void Evaluator::compile(const Tokens& tokens, const QString& source)
 {
 #ifdef EVALUATOR_DEBUG
@@ -5809,8 +5830,7 @@ void Evaluator::compile(const Tokens& tokens, const QString& source)
         const auto ref = calculusReferences.constFind(id.pos());
         if (ref != calculusReferences.constEnd()) {
             Opcode& start = m_codes[*ref];
-            start.type = id.text().compare(QLatin1String("diff"), Qt::CaseInsensitive) == 0
-                ? Opcode::Diff : Opcode::Integrate;
+            start.type = calculusOpcode(id.text());
             start.index = m_codes.size();
             if (start.type == Opcode::Diff && call.index > 1 && args.pos() >= 0 && args.size() > 0
                 && args.size() <= SymbolicCalculus::MaxSourceLength
@@ -6498,9 +6518,7 @@ void Evaluator::compile(const Tokens& tokens, const QString& source)
                 tokenType == Token::stxUnitIdentifier
                 ? Opcode::UnitRef
                 : Opcode::Ref;
-            if (refOpcodeType == Opcode::Ref
-                && (token.text().compare(QLatin1String("diff"), Qt::CaseInsensitive) == 0
-                    || token.text().compare(QLatin1String("integrate"), Qt::CaseInsensitive) == 0)) {
+            if (refOpcodeType == Opcode::Ref && calculusOpcode(token.text()) != Opcode::Ref) {
                 calculusReferences.insert(token.pos(), m_codes.size());
             }
             m_codes.append(Opcode(refOpcodeType, m_identifiers.count() - 1));
@@ -6809,10 +6827,10 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes(bool* adjustedInfinity)
         case Opcode::Ref:
         case Opcode::Diff:
         case Opcode::Integrate:
+        case Opcode::Limit:
         case Opcode::UnitRef: {
-            const QString identifier = opcode.type == Opcode::Diff
-                ? QStringLiteral("diff") : opcode.type == Opcode::Integrate
-                    ? QStringLiteral("integrate") : m_identifiers.value(opcode.index);
+            const QString identifier = opcode.isCalculus() ? calculusName(opcode.type)
+                                                          : m_identifiers.value(opcode.index);
             const bool isUnitReference = opcode.type == Opcode::UnitRef;
             const bool unboundInfinity = adjustInfinity && opcode.type == Opcode::Ref
                 && SymbolicCalculus::isNamedInfinity(identifier)
@@ -6939,9 +6957,13 @@ QString Evaluator::buildInterpretedExpressionFromOpcodes(bool* adjustedInfinity)
             QStringList arguments;
             const bool hasIntegrationBounds = functionName == QLatin1String("integrate")
                 && (argumentCount == 3 || argumentCount == 4);
+            const bool hasLimitPoint = functionName == QLatin1String("lim") && argumentCount >= 2;
             for (int i = 0; i < argumentCount; ++i) {
                 const RenderNode argument = stack.takeLast();
-                if (hasIntegrationBounds && i < 2 && argument.namedInfinitySign != 0) {
+                const bool isBound = (hasIntegrationBounds && i < 2)
+                    || (hasLimitPoint && ((argumentCount < 4 && i == 0)
+                                         || (argumentCount >= 3 && i == 1)));
+                if (isBound && argument.namedInfinitySign != 0) {
                     *adjustedInfinity = true;
                     QString bound(UnicodeChars::Infinity);
                     if (argument.namedInfinitySign < 0)
@@ -7439,7 +7461,8 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                 break;
 
             case Opcode::Diff:
-            case Opcode::Integrate: {
+            case Opcode::Integrate:
+            case Opcode::Limit: {
                 if (index <= pc || index >= opcodes.size()
                     || opcodes.at(index).type != Opcode::Function) {
                     m_error = tr("invalid expression");
@@ -7483,9 +7506,7 @@ Quantity Evaluator::exec(const QVector<Opcode>& opcodes,
                         *this, opcodes, pc, constants, identifiers, evaluateSpan,
                         lookupUnit, lookupVariable, &calculusError);
                     if (!calculusError.isEmpty()) {
-                        const QString name = opcode.type == Opcode::Diff
-                            ? QStringLiteral("diff") : QStringLiteral("integrate");
-                        m_error = QStringLiteral("<b>%1</b>: ").arg(name) + calculusError;
+                        m_error = QStringLiteral("<b>%1</b>: ").arg(calculusName(opcode.type)) + calculusError;
                         return CMath::nan();
                     }
                     pushStackValue(result);
@@ -9295,6 +9316,9 @@ QString Evaluator::dump()
                 break;
             case Opcode::Integrate:
                 code = QString("Integrate (end %1)").arg(m_codes.at(i).index);
+                break;
+            case Opcode::Limit:
+                code = QString("Limit (end %1)").arg(m_codes.at(i).index);
                 break;
             case Opcode::List:
                 code = QString("List (%1)").arg(m_codes.at(i).index);

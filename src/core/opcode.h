@@ -13,10 +13,10 @@ class Opcode
 public:
     enum  Type { Nop, Load, Ref, Function, List, Add, Sub, Neg, BNot, Mul, Div, Pow,
            Fact, Modulo, IntDiv, LSh, RSh, BAnd, BOr, Conv, Percent, Phasor,
-           UnitRef, Unit, DivUnit, Diff, Integrate };
+           UnitRef, Unit, DivUnit, Diff, Integrate, Limit };
 
     Type type;
-    // Diff and Integrate use index to point to the closing Function opcode.
+    // Calculus opcodes use index to point to the closing Function opcode.
     // DivUnit uses index to record whether the divisor is negated.
     unsigned index;
 
@@ -28,10 +28,12 @@ public:
     Opcode(Type t, QString txt) : type(t), index(0), text(txt) {}
     Opcode(Type t, unsigned i): type(t), index(i) {}
 
+    bool isCalculus() const { return type == Diff || type == Integrate || type == Limit; }
+
     int operandCount() const
     {
         switch (type) {
-        case Nop: case Load: case Ref: case UnitRef: case Diff: case Integrate:
+        case Nop: case Load: case Ref: case UnitRef: case Diff: case Integrate: case Limit:
             return 0;
         case Neg: case BNot: case Fact: case Percent:
             return 1;

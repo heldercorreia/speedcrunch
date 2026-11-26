@@ -1973,6 +1973,7 @@ void FunctionRepo::createFunctions()
     // The evaluator handles the unevaluated calculus arguments.
     insert(new Function(QStringLiteral("diff"), nullptr, FunctionDomain::Calculus, this));
     insert(new Function(QStringLiteral("integrate"), nullptr, FunctionDomain::Calculus, this));
+    insert(new Function(QStringLiteral("lim"), nullptr, FunctionDomain::Calculus, this));
 
     // Aggregation.
     FUNCTION_INSERT(FunctionDomain::Aggregation, max);
@@ -2426,6 +2427,7 @@ void FunctionRepo::setTranslatableFunctionUsages()
     FUNCTION_USAGE_TR(ieee754_decode, tr("x; exponent_bits; significand_bits [; exponent_bias]"));
     FUNCTION_USAGE_TR(ieee754_encode, tr("x; exponent_bits; significand_bits [; exponent_bias]"));
     FUNCTION_USAGE_TR(integrate, tr("expression [; variable] [; lower; upper]"));
+    FUNCTION_USAGE_TR(lim, tr("expression [; variable]; point [; direction]"));
     FUNCTION_USAGE_TR(log, tr("base; x"));
     FUNCTION_USAGE_TR(rand, tr("[digits]"));
     FUNCTION_USAGE_TR(randint, tr("max [; min]"));
@@ -2448,6 +2450,7 @@ void FunctionRepo::setFunctionNames()
 {
     FUNCTION_NAME(diff, tr("Derivative"));
     FUNCTION_NAME(integrate, tr("Integral"));
+    FUNCTION_NAME(lim, tr("Limit"));
     FUNCTION_NAME(abs, tr("Absolute Value"));
     FUNCTION_NAME(absdev, tr("Absolute Deviation"));
     FUNCTION_NAME(list, tr("List Literal"));

@@ -23,9 +23,27 @@
 
 #define RATIONAL_TOL HNumber("1e-20")
 
-//TODO make this configurable
-#define HMATH_WORKING_PREC (DECPRECISION + 3)
-#define HMATH_EVAL_PREC (HMATH_WORKING_PREC + 2)
+namespace {
+constexpr int DefaultWorkingPrecision = DECPRECISION + 3;
+static_assert(DefaultWorkingPrecision + 2 <= MATHPRECISION);
+thread_local int workingPrecision = DefaultWorkingPrecision;
+
+int evaluationPrecision()
+{
+    return workingPrecision + 2;
+}
+}
+
+HMath::ScopedExtraPrecision::ScopedExtraPrecision(int extraDigits)
+    : m_previous(workingPrecision)
+{
+    workingPrecision = qBound(m_previous, DefaultWorkingPrecision + extraDigits, MATHPRECISION - 2);
+}
+
+HMath::ScopedExtraPrecision::~ScopedExtraPrecision()
+{
+    workingPrecision = m_previous;
+}
 // If cancellation leaves only a handful of digits, treat the residual as noise.
 #define HMATH_CANCELLATION_GUARD_DIGITS 8
 
@@ -46,8 +64,8 @@ static void checkfullcancellation(cfloatnum op1, cfloatnum op2,
       && float_getlength(r) != 0) {
         // NaN or zero not involved in computation.
         int expr = float_getexponent(r);
-        if (float_getexponent(op1) - expr >= HMATH_WORKING_PREC - HMATH_CANCELLATION_GUARD_DIGITS
-            || float_getexponent(op2) - expr >= HMATH_WORKING_PREC - HMATH_CANCELLATION_GUARD_DIGITS)
+        if (float_getexponent(op1) - expr >= workingPrecision - HMATH_CANCELLATION_GUARD_DIGITS
+            || float_getexponent(op2) - expr >= workingPrecision - HMATH_CANCELLATION_GUARD_DIGITS)
             float_setzero(r);
     }
 }
@@ -83,7 +101,7 @@ static void checkpoleorzero(floatnum result, floatnum x)
 {
     if (float_getlength(result) == 0 || float_getlength(x) == 0)
         return;
-    int expx = float_getexponent(x)-HMATH_WORKING_PREC+1;
+    int expx = float_getexponent(x)-workingPrecision+1;
     int expr = float_getexponent(result);
     if (expr <= expx)
         float_setzero(result);
@@ -97,7 +115,7 @@ static char roundResult(floatnum x)
 {
     if (float_isnan(x)) // Avoids setting float_error.
         return 0;
-    return float_round(x, x, HMATH_WORKING_PREC, TONEAREST);
+    return float_round(x, x, workingPrecision, TONEAREST);
 }
 
 /*---------------------------   HNumberPrivate   --------------------*/
@@ -147,7 +165,7 @@ void roundSetError(HNumberPrivate* dest)
     if (dest->error != Success)
         float_setnan(dfnum);
     if (!float_isnan(dfnum))
-        float_round(dfnum, dfnum, HMATH_WORKING_PREC, TONEAREST);
+        float_round(dfnum, dfnum, workingPrecision, TONEAREST);
 }
 
 void call2Args(HNumberPrivate* dest, HNumberPrivate* n1, HNumberPrivate* n2, Float2Args func)
@@ -155,7 +173,7 @@ void call2Args(HNumberPrivate* dest, HNumberPrivate* n1, HNumberPrivate* n2, Flo
     dest->error = checkNaNParam(*n1, n2);
     if (dest->error == Success) {
         floatnum dfnum = &dest->fnum;
-        func(dfnum, &n1->fnum, &n2->fnum, HMATH_EVAL_PREC);
+        func(dfnum, &n1->fnum, &n2->fnum, evaluationPrecision());
         roundSetError(dest);
     }
 }
@@ -175,8 +193,8 @@ void call1Arg(HNumberPrivate* dest, HNumberPrivate* n, Float1Arg func)
     dest->error = checkNaNParam(*n);
     if (dest->error == Success) {
         floatnum dfnum = &dest->fnum;
-        float_copy(dfnum, &n->fnum, HMATH_EVAL_PREC);
-        func(dfnum, HMATH_EVAL_PREC);
+        float_copy(dfnum, &n->fnum, evaluationPrecision());
+        func(dfnum, evaluationPrecision());
         roundSetError(dest);
     }
 }
@@ -186,8 +204,8 @@ void call1ArgPoleCheck(HNumberPrivate* dest, HNumberPrivate* n, Float1Arg func)
     dest->error = checkNaNParam(*n);
     if (dest->error == Success) {
         floatnum dfnum = &dest->fnum;
-        float_copy(dfnum, &n->fnum, HMATH_EVAL_PREC);
-        if (func(dfnum, HMATH_EVAL_PREC))
+        float_copy(dfnum, &n->fnum, evaluationPrecision());
+        if (func(dfnum, evaluationPrecision()))
           checkpoleorzero(dfnum, &n->fnum);
         roundSetError(dest);
     }
@@ -199,7 +217,7 @@ void call1ArgND(HNumberPrivate* dest, HNumberPrivate* n, Float1ArgND func)
     if (dest->error == Success)
     {
         floatnum dfnum = &dest->fnum;
-        float_copy(dfnum, &n->fnum, HMATH_EVAL_PREC);
+        float_copy(dfnum, &n->fnum, evaluationPrecision());
         func(dfnum);
         roundSetError(dest);
     }
@@ -454,7 +472,7 @@ HNumber HNumber::operator%(const HNumber& num) const
  */
 int HNumber::compare(const HNumber& other) const
 {
-    int result = float_relcmp(&d->fnum, &other.d->fnum, HMATH_EVAL_PREC-1);
+    int result = float_relcmp(&d->fnum, &other.d->fnum, evaluationPrecision()-1);
     float_geterror(); // clears error, if one operand was a NaN
     return result;
 }
@@ -1036,7 +1054,7 @@ HNumber HMath::gon2rad(const HNumber& angle)
 HNumber HMath::e()
 {
     HNumber value;
-    float_copy(&value.d->fnum, &cExp, HMATH_EVAL_PREC);
+    float_copy(&value.d->fnum, &cExp, evaluationPrecision());
     return value;
 }
 
@@ -1046,7 +1064,7 @@ HNumber HMath::e()
 HNumber HMath::pi()
 {
     HNumber value;
-    float_copy(&value.d->fnum, &cPi, HMATH_EVAL_PREC);
+    float_copy(&value.d->fnum, &cPi, evaluationPrecision());
     return value;
 }
 
@@ -1056,7 +1074,7 @@ HNumber HMath::pi()
 HNumber HMath::phi()
 {
     HNumber value;
-    float_copy(&value.d->fnum, &cPhi, HMATH_EVAL_PREC);
+    float_copy(&value.d->fnum, &cPhi, evaluationPrecision());
     return value;
 }
 
@@ -1121,11 +1139,11 @@ HNumber HMath::round(const HNumber& n, int prec)
     int exp = float_getexponent(rnum);
 
     // Avoid exponent overflow later.
-    if (prec > HMATH_WORKING_PREC && exp > 0)
-    prec = HMATH_WORKING_PREC;
+    if (prec > workingPrecision && exp > 0)
+    prec = workingPrecision;
     if (prec < 0 && -exp-1 > prec)
         float_setzero(rnum);
-    else if (exp + prec < HMATH_WORKING_PREC) {
+    else if (exp + prec < workingPrecision) {
         float_addexp(rnum, prec);
         float_roundtoint(rnum, TONEAREST);
         float_addexp(rnum, -prec);
@@ -1144,11 +1162,11 @@ HNumber HMath::trunc(const HNumber& n, int prec)
     floatnum rnum = &result.d->fnum;
     int exp = float_getexponent(rnum);
     // Avoid exponent overflow later on.
-    if (prec > HMATH_WORKING_PREC && exp > 0)
-        prec = HMATH_WORKING_PREC;
+    if (prec > workingPrecision && exp > 0)
+        prec = workingPrecision;
     if (prec < 0 && -exp-1 > prec)
         float_setzero(rnum);
-    else if (exp + prec < HMATH_WORKING_PREC) {
+    else if (exp + prec < workingPrecision) {
         float_addexp(rnum, prec);
         float_roundtoint(rnum, TOZERO);
         float_addexp(rnum, -prec);
@@ -1313,7 +1331,7 @@ HNumber HMath::cbrt(const HNumber& n)
     floatstruct a, q;
     float_create(&a);
     float_create(&q);
-    float_copy(&a, &n.d->fnum, HMATH_EVAL_PREC);
+    float_copy(&a, &n.d->fnum, evaluationPrecision());
     signed char sign = float_getsign(&a);
     float_abs(&a);
     int expn = float_getexponent(&a);
@@ -1324,10 +1342,10 @@ HNumber HMath::cbrt(const HNumber& n)
     float_copy(&q, &a, 2);
     float_sqrt(&q, 2);
 
-    while (digits < HMATH_EVAL_PREC/2 + 3) {
+    while (digits < evaluationPrecision()/2 + 3) {
         digits = 4 * digits + 2;
-        if (digits > HMATH_EVAL_PREC+2)
-            digits = HMATH_EVAL_PREC+2;
+        if (digits > evaluationPrecision()+2)
+            digits = evaluationPrecision()+2;
         float_move(rnum, &q);
         float_mul(&q, rnum, rnum, digits);
         float_div(&q, &a, &q, digits);
@@ -1354,7 +1372,7 @@ HNumber HMath::cbrt(const HNumber& n)
 HNumber HMath::raise(const HNumber& n1, int n)
 {
     HNumber r;
-    float_raisei(&r.d->fnum, &n1.d->fnum, n, HMATH_EVAL_PREC);
+    float_raisei(&r.d->fnum, &n1.d->fnum, n, evaluationPrecision());
     roundSetError(r.d);
     return r;
 }
@@ -1660,18 +1678,18 @@ HNumber HMath::nCr(const HNumber& n, const HNumber& r)
         floatstruct fn, fr;
         float_create(&fn);
         float_create(&fr);
-        float_copy(&fr, &r1.d->fnum, HMATH_EVAL_PREC);
+        float_copy(&fr, &r1.d->fnum, evaluationPrecision());
         float_copy(&fn, rnum, EXACT);
-        float_sub(rnum, rnum, &fr, HMATH_EVAL_PREC)
-            && float_add(&fn, &fn, &c1, HMATH_EVAL_PREC)
-            && float_add(&fr, &fr, &c1, HMATH_EVAL_PREC)
-            && float_add(rnum, rnum, &c1, HMATH_EVAL_PREC)
-            && float_lngamma(&fn, HMATH_EVAL_PREC)
-            && float_lngamma(&fr, HMATH_EVAL_PREC)
-            && float_lngamma(rnum, HMATH_EVAL_PREC)
-            && float_add(rnum, rnum, &fr, HMATH_EVAL_PREC)
-            && float_sub(rnum, &fn, rnum, HMATH_EVAL_PREC)
-            && float_exp(rnum, HMATH_EVAL_PREC);
+        float_sub(rnum, rnum, &fr, evaluationPrecision())
+            && float_add(&fn, &fn, &c1, evaluationPrecision())
+            && float_add(&fr, &fr, &c1, evaluationPrecision())
+            && float_add(rnum, rnum, &c1, evaluationPrecision())
+            && float_lngamma(&fn, evaluationPrecision())
+            && float_lngamma(&fr, evaluationPrecision())
+            && float_lngamma(rnum, evaluationPrecision())
+            && float_add(rnum, rnum, &fr, evaluationPrecision())
+            && float_sub(rnum, &fn, rnum, evaluationPrecision())
+            && float_exp(rnum, evaluationPrecision());
         float_free(&fn);
         float_free(&fr);
         roundSetError(result.d);
@@ -1709,9 +1727,9 @@ HNumber HMath::factorial(const HNumber& x, const HNumber& base)
     }
     float_create(&tmp);
     HNumber r(base);
-    float_sub(&tmp, &x.d->fnum, &base.d->fnum, HMATH_EVAL_PREC)
-    && float_add(&tmp, &tmp, &c1, HMATH_EVAL_PREC)
-    && float_pochhammer(&r.d->fnum, &tmp, HMATH_EVAL_PREC);
+    float_sub(&tmp, &x.d->fnum, &base.d->fnum, evaluationPrecision())
+    && float_add(&tmp, &tmp, &c1, evaluationPrecision())
+    && float_pochhammer(&r.d->fnum, &tmp, evaluationPrecision());
     roundSetError(r.d);
     float_free(&tmp);
     return r;

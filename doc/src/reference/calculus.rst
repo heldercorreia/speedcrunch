@@ -1,5 +1,5 @@
 .. meta::
-   :description: Find symbolic derivatives and integrals in SpeedCrunch.
+   :description: Find derivatives, integrals, and limits in SpeedCrunch.
 
 Calculus
 ========
@@ -157,3 +157,49 @@ Calculus
         integrate(exp(-x^2); -inf; inf) = √π
         integrate(exp(x^2); 0; 1)     = √π*erfi(1)/2
         integrate(exp(-x^4); 0; 1)    ≈ 0.8448385947571024008
+
+.. function:: lim(expression; point)
+              lim(expression; variable; point)
+              lim(expression; point; direction)
+              lim(expression; variable; point; direction)
+
+    Computes the limit of an expression as a variable approaches a
+    specified value.
+
+    If the expression has one variable, SpeedCrunch can infer it. Give a
+    variable name if the expression has several. The other variables stay
+    symbolic and act as real parameters, even if they have saved values.
+    SpeedCrunch infers the variable from the expression alone. A defined
+    constant expression gives its own value.
+
+    Use ``-1`` to approach from below, ``1`` to approach from above, or
+    ``0`` for both sides. The default is ``0``. The direction must be
+    a dimensionless integer. If both three-argument forms fit, SpeedCrunch
+    reports an ambiguity. Use all four arguments or write the point as an
+    expression such as ``a+0``.
+
+    Type ``inf`` or ``-inf`` for an infinite point. Use the default
+    direction, or use ``-1`` for ``inf`` and ``1`` for ``-inf``.
+    Trigonometric functions use the active angle mode. The point and
+    limiting variable must have compatible units. The result keeps the
+    expression's dimensions.
+
+    Exact and infinite results use ``=``. A numerical estimate uses
+    ``≈``. SpeedCrunch reports that the limit does not exist when it can
+    establish that the requested approach fails, such as when the two
+    sides disagree. It reports that it is unable to determine the limit
+    when the rules or numerical estimates are inconclusive, including
+    cases that need more information about a parameter.
+
+    Limits follow real paths and the real domains of the functions in the
+    expression. The expression can be undefined at the point itself.
+
+    Examples in radians::
+
+        lim(sin(x)/x; 0)                     = 1
+        lim(abs(x)/x; 0; -1)                 = -1
+        lim(1/x^2; 0)                       = inf
+        lim(arctan(x); -inf)                 = -pi/2
+        lim((1+1/x)^x; inf)                  = e
+        lim((x^2-a^2)/(x-a); x; a)           = 2*a
+        lim((gamma(2+x)-gamma(2))/x; 0)      ≈ 0.4227843351

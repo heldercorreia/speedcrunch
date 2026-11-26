@@ -124,6 +124,17 @@ public:
 
 class HMath {
 public:
+    class ScopedExtraPrecision {
+    public:
+        explicit ScopedExtraPrecision(int extraDigits);
+        ~ScopedExtraPrecision();
+        ScopedExtraPrecision(const ScopedExtraPrecision&) = delete;
+        ScopedExtraPrecision& operator=(const ScopedExtraPrecision&) = delete;
+
+    private:
+        int m_previous;
+    };
+
     // FORMAT
     static QString format(const HNumber&, HNumber::Format = HNumber::Format());
     // PARSING
