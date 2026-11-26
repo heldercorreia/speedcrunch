@@ -741,6 +741,13 @@ to <code class="docutils literal notranslate"><span class="pre">1</span></code> 
 </dd></dl>
 
 <dl class="sc function">
+<dt class="sig sig-object sc" id="sc.erfi">
+<span class="sig-name descname"><span class="pre">erfi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
+<dd><p>Compute the imaginary error function, evaluated in <code class="docutils literal notranslate"><span class="pre">x</span></code>. It is defined by <code class="docutils literal notranslate"><span class="pre">erfi(x)</span> <span class="pre">=</span> <span class="pre">-i*erf(i*x)</span></code>, and it grows like <code class="docutils literal notranslate"><span class="pre">exp(x^2)</span></code>. Results for <code class="docutils literal notranslate"><span class="pre">x</span></code> above about 35000 are out of range and give an overflow error.</p>
+<p>Note that currently only real arguments are allowed. Furthermore, the function only accepts dimensionless arguments.</p>
+</dd></dl>
+
+<dl class="sc function">
 <dt class="sig sig-object sc" id="sc.gamma">
 <span class="sig-name descname"><span class="pre">gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x</span></em><span class="sig-paren">)</span></dt>
 <dd><p>Evaluates the gamma function (frequently denoted by the Greek letter Γ). The gamma function is an analytic extension to the factorial operation which is defined on real numbers as well. The relation between factorial and the gamma function is given by <em>Γ(n) = (n - 1)!</em>.</p>

@@ -307,6 +307,7 @@
             <keyword name="epoch() (function)" id="function.epoch" ref="reference/basic.html#sc.epoch"/>
             <keyword name="erf() (function)" id="function.erf" ref="reference/basic.html#sc.erf"/>
             <keyword name="erfc() (function)" id="function.erfc" ref="reference/basic.html#sc.erfc"/>
+            <keyword name="erfi() (function)" id="function.erfi" ref="reference/basic.html#sc.erfi"/>
             <keyword name="exp() (function)" id="function.exp" ref="reference/basic.html#sc.exp"/>
             <keyword name="expform() (function)" id="function.expform" ref="reference/basic.html#sc.expform"/>
             <keyword name="flatten() (function)" id="function.flatten" ref="reference/basic.html#sc.flatten"/>

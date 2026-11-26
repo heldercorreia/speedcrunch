@@ -92,8 +92,27 @@ number as the order, write <code class="docutils literal notranslate"><span clas
 </pre></div>
 </div>
 </td></tr></tbody></table><p><code class="docutils literal notranslate"><span class="pre">diff()</span></code> supports arithmetic, powers, square and cube roots,
-exponential and logarithmic functions, and trigonometric and
-hyperbolic functions and their inverses.</p>
+exponential and logarithmic functions, trigonometric and
+hyperbolic functions and their inverses, and the error functions.</p>
+<p>SpeedCrunch simplifies the result. Coefficients stay exact up to 120
+digits, and longer ones give a limit error, as in <code class="docutils literal notranslate"><span class="pre">diff(x^100;</span> <span class="pre">70)</span></code>.
+Like terms combine, polynomials are multiplied out or factored,
+fractions go over a common denominator, and common factors cancel,
+also polynomial factors with exact numeric coefficients. A new form is
+only used when it is shorter, so of two forms with the same length the
+first one stays, as in <code class="docutils literal notranslate"><span class="pre">6*x^2-3</span></code>. The simplification has some limits:</p>
+<ul class="simple">
+<li><p>It does not use trigonometric identities such as
+<code class="docutils literal notranslate"><span class="pre">sin(x)^2+cos(x)^2</span> <span class="pre">=</span> <span class="pre">1</span></code>.</p></li>
+<li><p>It does not combine products of exponentials, as in
+<code class="docutils literal notranslate"><span class="pre">exp(x^2)*exp(-x^2)</span></code>.</p></li>
+<li><p>It does not take common factors out of a sum that contains fractions.</p></li>
+<li><p>Cancelling a common factor can remove a point where the expression
+is undefined, as in <code class="docutils literal notranslate"><span class="pre">diff(x^2/x)</span> <span class="pre">=</span> <span class="pre">1</span></code>. A square root never becomes
+something that is defined in more places, so its domain stays.</p></li>
+</ul>
+<p>In the result display, square roots show as <code class="docutils literal notranslate"><span class="pre">√</span></code>, and the power of a
+root stays outside, as in <code class="docutils literal notranslate"><span class="pre">√(1+x²)¹¹</span></code>.</p>
 <p>Trigonometric functions use the active angle mode. For example,
 <code class="docutils literal notranslate"><span class="pre">diff(sin(x))</span></code> gives <code class="docutils literal notranslate"><span class="pre">cos(x)</span></code> in radians and <code class="docutils literal notranslate"><span class="pre">π/180*cos(x)</span></code>
 in degrees. Inverse trigonometric derivatives use the reciprocal
@@ -129,7 +148,24 @@ is that expression plus any constant. SpeedCrunch supports powers,
 polynomials, simple rational functions, and some combinations of
 exponential, logarithmic, trigonometric, and hyperbolic functions.
 This includes some forms that need substitution or integration by parts.
+A polynomial times the exponential of a quadratic, such as
+<code class="docutils literal notranslate"><span class="pre">x^2*exp(-x^2)</span></code>, gives the error function <a class="reference internal" href="basic.html#sc.erf" title="erf"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">erf()</span></code></a> if the
+quadratic opens downwards, or <a class="reference internal" href="basic.html#sc.erfi" title="erfi"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">erfi()</span></code></a> if it opens upwards.
+A polynomial times an error function is also supported.
 If there is no supported rule, the calculation gives an error.</p>
+<p>These rules have some limits:</p>
+<ul class="simple">
+<li><p>The leading coefficient of the quadratic must be a number, so
+<code class="docutils literal notranslate"><span class="pre">exp(-a*x^2)</span></code> with a variable <code class="docutils literal notranslate"><span class="pre">a</span></code> is not supported. An exponent
+with units only works with numerical integration over finite bounds.</p></li>
+<li><p>A polynomial can have a degree up to 24, or up to 23 next to an
+error function.</p></li>
+<li><p>Other products with error functions, such as <code class="docutils literal notranslate"><span class="pre">x*exp(-x^2)*erf(x)</span></code>,
+and exponentials that cancel, such as <code class="docutils literal notranslate"><span class="pre">exp(x^2)*exp(-x^2)</span></code>, are not
+supported.</p></li>
+<li><p>Antiderivatives are not simplified like the results of <a class="reference internal" href="#sc.diff" title="diff"><code class="xref sc sc-func docutils literal notranslate"><span class="pre">diff()</span></code></a>,
+so equal antiderivatives can look different.</p></li>
+</ul>
 <p>With bounds, SpeedCrunch first tries to use an exact antiderivative.
 Bounds can be expressions. A bound can contain a free variable if
 SpeedCrunch can find an exact result and check the domain. Reversing the
@@ -142,11 +178,20 @@ the error using the calculator’s precision and gives an error if the
 calculation cannot reach its target.</p>
 <p>Some improper integrals are supported, such as <code class="docutils literal notranslate"><span class="pre">1/sqrt(x)</span></code> or
 <code class="docutils literal notranslate"><span class="pre">ln(x)</span></code> at zero, and a decaying exponential or a Gaussian over an
-infinite interval. Type <code class="docutils literal notranslate"><span class="pre">inf</span></code> or <code class="docutils literal notranslate"><span class="pre">-inf</span></code> for an infinite bound.
+infinite interval. Over an infinite interval, the error function
+goes to 1 or -1, which gives exact results such as <code class="docutils literal notranslate"><span class="pre">√π</span></code>. An
+integrand that grows or falls no faster than <code class="docutils literal notranslate"><span class="pre">1/x</span></code> towards infinity,
+such as <code class="docutils literal notranslate"><span class="pre">exp(x^2)</span></code> or <code class="docutils literal notranslate"><span class="pre">x/(x^2+1)</span></code>, gives an error.
+Type <code class="docutils literal notranslate"><span class="pre">inf</span></code> or <code class="docutils literal notranslate"><span class="pre">-inf</span></code> for an infinite bound.
 With automatic input adjustments on, the result display shows these
 bounds with <code class="docutils literal notranslate"><span class="pre">∞</span></code>.
 Divergent integrals give an error even when opposite sides of a pole
-would cancel.</p>
+would cancel. SpeedCrunch cannot decide every integral over an infinite
+interval: <code class="docutils literal notranslate"><span class="pre">erf(x)-1</span></code> and <code class="docutils literal notranslate"><span class="pre">exp(-x^2)*erfi(x)</span></code> from 0 to <code class="docutils literal notranslate"><span class="pre">inf</span></code> give
+an error, although the first converges and the second diverges.</p>
+<p>An exact result such as <code class="docutils literal notranslate"><span class="pre">π/4</span></code> or <code class="docutils literal notranslate"><span class="pre">√π</span></code> cannot be used in further
+arithmetic, as in <code class="docutils literal notranslate"><span class="pre">2*integrate(exp(-x^2);</span> <span class="pre">-inf;</span> <span class="pre">inf)</span></code>. Numeric
+operations need a numeric result.</p>
 <p>Trigonometric functions follow the active angle mode. Use bare angles
 in the integrand and bounds. For physical quantities, both bounds must
 have compatible dimensions. The result has the integrand’s dimensions
@@ -157,7 +202,10 @@ multiplied by the integration variable’s dimensions.</p>
 <span class="n">integrate</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">x</span><span class="o">^</span><span class="mi">2</span><span class="p">);</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>    <span class="o">=</span> <span class="no">π</span><span class="o">/</span><span class="mi">4</span>
 <span class="n">integrate</span><span class="p">(</span><span class="mi">3</span><span class="p">[</span><span class="n">m</span><span class="o">/</span><span class="n">s</span><span class="p">];</span> <span class="mi">0</span><span class="p">[</span><span class="n">s</span><span class="p">];</span> <span class="mi">2</span><span class="p">[</span><span class="n">s</span><span class="p">])</span>  <span class="o">=</span> <span class="mi">6</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>
 <span class="n">integrate</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">);</span> <span class="mi">0</span><span class="p">;</span> <span class="n">inf</span><span class="p">)</span>   <span class="o">=</span> <span class="mi">1</span>
-<span class="n">integrate</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">^</span><span class="mi">2</span><span class="p">);</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>    ≈ <span class="mf">0.7468241328124270254</span>
+<span class="n">integrate</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">^</span><span class="mi">2</span><span class="p">);</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>    <span class="o">=</span> √<span class="no">π</span><span class="o">*</span><span class="n">erf</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+<span class="n">integrate</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">^</span><span class="mi">2</span><span class="p">);</span> <span class="o">-</span><span class="n">inf</span><span class="p">;</span> <span class="n">inf</span><span class="p">)</span> <span class="o">=</span> √<span class="no">π</span>
+<span class="n">integrate</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="o">^</span><span class="mi">2</span><span class="p">);</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>     <span class="o">=</span> √<span class="no">π</span><span class="o">*</span><span class="n">erfi</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+<span class="n">integrate</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">^</span><span class="mi">4</span><span class="p">);</span> <span class="mi">0</span><span class="p">;</span> <span class="mi">1</span><span class="p">)</span>    ≈ <span class="mf">0.8448385947571024008</span>
 </pre></div>
 </div>
 </td></tr></tbody></table></dd></dl>
